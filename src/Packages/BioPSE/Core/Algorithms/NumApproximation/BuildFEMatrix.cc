@@ -108,19 +108,9 @@ void BuildFEMatrix::parallel(int proc)
   //! Creating sparse matrix structure
   Array1<int> mycols(0, 15*ndof);
   
-  WallClockTimer t;
   if (proc==0){
-    t.start();
     hMesh_->compute_edges();
-    t.stop();
-    cerr << "SetupFEMatrix profiling:\n";
-    cerr << "   Time to compute edges (s) = "<<t.time()<<"\n";
-    t.clear();
-    t.start();
     hMesh_->compute_node_neighbors();
-    t.stop();
-    cerr << "   Time to compute node neighbors (s) = "<<t.time()<<"\n";
-    t.clear();
   }
 
   barrier_.wait(np_);
@@ -142,13 +132,6 @@ void BuildFEMatrix::parallel(int proc)
     }
   }
   
-  if (proc==0) {
-    t.stop();
-    cerr << "   Time to get all of the neighbors (p) = "<<t.time()<<"\n";
-    t.clear();
-    t.start();
-  }
-
   colIdx_[proc]=mycols.size();
   
   //! check point
@@ -209,13 +192,6 @@ void BuildFEMatrix::parallel(int proc)
     a[i]=0;
   }
   
-  if (proc==0) {
-    t.stop();
-    cerr << "   Time to alloc and initialize matrices (p) = "<<t.time()<<"\n";
-    t.clear();
-    t.start();
-  }
-
   //----------------------------------------------------------
   //! Filling the matrix
   TetVolMesh::cell_iterator ii;
