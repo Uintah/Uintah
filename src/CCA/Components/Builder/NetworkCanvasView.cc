@@ -78,7 +78,7 @@ void NetworkCanvasView::contentsMousePressEvent(QMouseEvent* e)
 	
     if (e->button() == Qt::RightButton) {
 	QCanvasItemList lst = canvas()->collisions(e->pos());
-	std::cerr << "Qt::RightButton (" << e->pos().x() << "," << e->pos().y() << "): lst.size=" << lst.size() << std::endl;
+	//	std::cerr << "Qt::RightButton (" << e->pos().x() << "," << e->pos().y() << "): lst.size=" << lst.size() << std::endl;
 	if (lst.size() > 0) {
 	    removeConnection(lst[0]);
 	}
@@ -112,30 +112,30 @@ void NetworkCanvasView::contentsMousePressEvent(QMouseEvent* e)
 //	}
 //#else
     } else if (e->button() == Qt::LeftButton) {
-	std::cerr << "Qt::LeftButton: pos=" << e->pos().x() << " " << e->pos().y() << std::endl;
-	for (std::vector<Module*>::iterator it = modules.begin();
-		it != modules.end();
-		it++) {
-	    if ((QWidget*)(*it) == who) {
-		QPoint localpos = e->pos()-QPoint(childX(who), childY(who));
-		std::cerr << "local point=" << localpos.x() << " " << localpos.y() << std::endl;	
-		if ((*it)->clickedPort(localpos, porttype, portname)) {
-		    connecting = *it;
-		    showPossibleConnections(connecting, portname, porttype);
-		    return;
-		}
-	    }
+      //std::cerr << "Qt::LeftButton: pos=" << e->pos().x() << " " << e->pos().y() << std::endl;
+      for (std::vector<Module*>::iterator it = modules.begin();
+	   it != modules.end();
+	   it++) {
+	if ((QWidget*)(*it) == who) {
+	  QPoint localpos = e->pos()-QPoint(childX(who), childY(who));
+	  //std::cerr << "local point=" << localpos.x() << " " << localpos.y() << std::endl;	
+	  if ((*it)->clickedPort(localpos, porttype, portname)) {
+	    connecting = *it;
+	    showPossibleConnections(connecting, portname, porttype);
+	    return;
+	  }
 	}
-	for (std::vector<Module*>::iterator it = modules.begin();
-		it != modules.end();
-		it++) {
-	    if ((QWidget*)(*it) == who) {
-		moving = *it;
-		moving_start = p;
-		return;
-	    }
+      }
+      for (std::vector<Module*>::iterator it = modules.begin();
+	   it != modules.end();
+	   it++) {
+	if ((QWidget*)(*it) == who) {
+	  moving = *it;
+	  moving_start = p;
+	  return;
 	}
-// #endif
+      }
+      // #endif
     }
 }
 
