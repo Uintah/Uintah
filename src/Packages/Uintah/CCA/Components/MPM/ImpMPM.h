@@ -32,6 +32,7 @@ using namespace SCIRun;
  class Patch;
  class VarLabel;
  class Task; 
+ class Solver;
 
 /**************************************
 
@@ -401,6 +402,7 @@ private:
   double           d_outputInterval;
   double           d_SMALL_NUM_MPM;
 
+  Solver* d_solver;
   SparseMatrix<double,int> KK;
 
   // right hand side

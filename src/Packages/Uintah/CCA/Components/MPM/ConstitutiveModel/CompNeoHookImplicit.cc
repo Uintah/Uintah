@@ -266,6 +266,7 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
 #ifdef HAVE_PETSC
 					      Mat &A,
 					      map<const Patch*, Array3<int> >& d_petscLocalToGlobal,
+						      Solver* solver,
 #endif
 					      const bool recursion)
 
@@ -295,7 +296,10 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
     IntVector lowIndex = patch->getNodeLowIndex();
     IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
+    solver->copyL2G(l2g,patch);
+#if 0
     l2g.copy(d_petscLocalToGlobal[patch]);
+#endif
 #endif
 
     Matrix3 velGrad,Shear,deformationGradientInc,dispGrad,fbar;
@@ -661,8 +665,12 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
 	  KK[dofi][dofj] = KK[dofi][dofj] + (kmat(I,J) + kgeo(I,J));
 #endif
 #ifdef HAVE_PETSC
+#if 0
 	  PetscScalar v = kmat(I,J) + kgeo(I,J);
 	  MatSetValues(A,1,&dofi,1,&dofj,&v,ADD_VALUES);
+#endif
+	  double v = kmat(I,J) + kgeo(I,J);
+	  solver->fillMatrix(dofi,dofj,v);
 #endif
 #ifdef OLD_SPARSE
 	  cerr << "KK[" << dofi << "][" << dofj << "]= " << KK[dofi][dofj] 
@@ -675,8 +683,11 @@ void CompNeoHookImplicit::computeStressTensorImplicit(const PatchSubset* patches
     }
   }
 #ifdef HAVE_PETSC
+  solver->flushMatrix();
+#if 0
   MatAssemblyBegin(A,MAT_FLUSH_ASSEMBLY);
   MatAssemblyEnd(A,MAT_FLUSH_ASSEMBLY);
+#endif
 #endif
   
 }

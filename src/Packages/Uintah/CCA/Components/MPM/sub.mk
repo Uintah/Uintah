@@ -7,7 +7,8 @@ SRCDIR   := Packages/Uintah/CCA/Components/MPM
 SRCS     += $(SRCDIR)/SerialMPM.cc \
 	$(SRCDIR)/ImpMPM.cc \
 	$(SRCDIR)/MPMLabel.cc \
-#	$(SRCDIR)/PetscSolver.cc 
+	$(SRCDIR)/Solver.cc 	\
+	$(SRCDIR)/PetscSolver.cc 
 
 SUBDIRS := $(SRCDIR)/ConstitutiveModel $(SRCDIR)/Contact \
 	$(SRCDIR)/ThermalContact \
