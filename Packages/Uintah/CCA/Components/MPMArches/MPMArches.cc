@@ -2,6 +2,7 @@
 
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArches.h>
 #include <Core/Containers/StaticArray.h>
+#include <Core/Geometry/Point.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
@@ -19,12 +20,16 @@
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
+#include <Packages/Uintah/Core/Grid/ParticleSet.h>
+#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
-
+#include <Packages/Uintah/Core/Grid/TemperatureBoundCond.h>
+#include <Packages/Uintah/Core/Grid/VarTypes.h>
+#include <Packages/Uintah/Core/Grid/VelocityBoundCond.h>
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -81,9 +86,53 @@ void MPMArches::scheduleInitialize(const LevelP& level,
 				SchedulerP& sched)
 {
   d_mpm->scheduleInitialize(      level, sched);
+
+  const PatchSet* patches = level->eachPatch();
+  const MaterialSet* arches_matls = d_sharedState->allArchesMaterials();
+  const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
+  const MaterialSet* all_matls = d_sharedState->allMaterials();
+
+  scheduleInterpolateParticlesToGrid(sched, patches, mpm_matls);
+  scheduleInterpolateNCToCC(sched, patches, mpm_matls);
+  scheduleComputeVoidFrac(sched, patches, arches_matls, mpm_matls, all_matls);
+
   d_arches->scheduleInitialize(      level, sched);
+
   cerr << "Doing Initialization \t\t\t MPMArches" <<endl;
   cerr << "--------------------------------\n"<<endl; 
+}
+
+//______________________________________________________________________
+//
+
+void MPMArches::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
+						   const PatchSet* patches,
+						   const MaterialSet* matls)
+{
+  /* interpolateParticlesToGrid
+   *   in(P.MASS, P.VELOCITY, P.NAT_X)
+   *   operation(interpolate the P.MASS and P.VEL to the grid
+   *             using P.NAT_X and some shape function evaluations)
+   *   out(G.MASS, G.VELOCITY) */
+
+  Task* t = scinew Task("MPMArches::interpolateParticlesToGrid",
+			this,&MPMArches::interpolateParticlesToGrid);
+
+  t->requires(Task::NewDW, Mlb->pMassLabel,          Ghost::AroundNodes,1);
+  t->requires(Task::NewDW, Mlb->pVolumeLabel,        Ghost::AroundNodes,1);
+  t->requires(Task::NewDW, Mlb->pXLabel,             Ghost::AroundNodes,1);
+  t->requires(Task::NewDW, Mlb->pVelocityLabel,      Ghost::AroundNodes,1);
+  //  t->requires(Task::NewDW, Mlb->pTemperatureLabel,   Ghost::AroundNodes,1);
+
+  t->computes(Mlb->gMassLabel);
+  t->computes(Mlb->gMassLabel, d_sharedState->getAllInOneMatl(),
+	      Task::OutOfDomain);
+  t->computes(Mlb->gVolumeLabel);
+  t->computes(Mlb->gVelocityLabel);
+  //  t->computes(Mlb->gTemperatureLabel);
+  t->computes(Mlb->TotalMassLabel);
+
+  sched->addTask(t, patches, matls);
 }
 
 //______________________________________________________________________
@@ -107,8 +156,6 @@ void MPMArches::scheduleTimeAdvance(const LevelP&   level,
   const MaterialSet* arches_matls = d_sharedState->allArchesMaterials();
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
   const MaterialSet* all_matls = d_sharedState->allMaterials();
-  //const MaterialSubset* arches_matls_sub = arches_matls->getUnion();
-  //const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
 
   if(d_fracture) {
     d_mpm->scheduleSetPositions(sched, patches, mpm_matls);
@@ -536,6 +583,9 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
 
 }
 
+//______________________________________________________________________
+//
+
 void MPMArches::schedulePutAllForcesOnCC(SchedulerP& sched,
 				         const PatchSet* patches,
 				         const MaterialSet* mpm_matls)
@@ -567,6 +617,9 @@ void MPMArches::schedulePutAllForcesOnCC(SchedulerP& sched,
   sched->addTask(t, patches, mpm_matls);
 }
 
+//______________________________________________________________________
+//
+
 void MPMArches::schedulePutAllForcesOnNC(SchedulerP& sched,
 				         const PatchSet* patches,
 				         const MaterialSet* mpm_matls)
@@ -582,6 +635,178 @@ void MPMArches::schedulePutAllForcesOnNC(SchedulerP& sched,
   t->computes(d_MAlb->AccArchesNCLabel,             mpm_matls->getUnion());
 
   sched->addTask(t, patches, mpm_matls);
+}
+
+//______________________________________________________________________
+//
+
+void MPMArches::interpolateParticlesToGrid(const ProcessorGroup*,
+					   const PatchSubset* patches,
+					   const MaterialSubset* ,
+					   DataWarehouse* old_dw,
+					   DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    int numMatls = d_sharedState->getNumMPMMatls();
+
+    NCVariable<double> gmassglobal;
+
+    new_dw->allocate(gmassglobal,Mlb->gMassLabel,
+		     d_sharedState->getAllInOneMatl()->get(0), patch);
+
+    gmassglobal.initialize(d_mpm->d_SMALL_NUM_MPM);
+
+    for(int m = 0; m < numMatls; m++){
+
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int matlindex = mpm_matl->getDWIndex();
+
+      // Create arrays for the particle data
+
+      constParticleVariable<Point>  px;
+      constParticleVariable<double> pmass;
+      constParticleVariable<double> pvolume;
+      constParticleVariable<Vector> pvelocity;
+      constParticleVariable<double> pTemperature;
+
+      ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch,
+						       Ghost::AroundNodes, 1,
+						       Mlb->pXLabel);
+
+      new_dw->get(px,             Mlb->pXLabel,             pset);
+      new_dw->get(pmass,          Mlb->pMassLabel,          pset);
+      new_dw->get(pvolume,        Mlb->pVolumeLabel,        pset);
+      new_dw->get(pvelocity,      Mlb->pVelocityLabel,      pset);
+      new_dw->get(pTemperature,   Mlb->pTemperatureLabel,   pset);
+
+      // Create arrays for the grid data
+
+      NCVariable<double> gmass;
+      NCVariable<double> gvolume;
+      NCVariable<Vector> gvelocity;
+      NCVariable<double> gTemperature;
+
+      new_dw->allocate(gmass,            Mlb->gMassLabel,        matlindex, patch);
+      new_dw->allocate(gvolume,          Mlb->gVolumeLabel,      matlindex, patch);
+      new_dw->allocate(gvelocity,        Mlb->gVelocityLabel,    matlindex, patch);
+      new_dw->allocate(gTemperature,     Mlb->gTemperatureLabel, matlindex, patch);
+
+      gmass.initialize(d_mpm->d_SMALL_NUM_MPM);
+      gvolume.initialize(0);
+      gvelocity.initialize(Vector(0,0,0));
+      gTemperature.initialize(0);
+
+      // Interpolate particle data to Grid data.
+      // This currently consists of the particle velocity and mass
+      // Need to compute the lumped global mass matrix and velocity
+      // Vector from the individual mass matrix and velocity vector
+      // GridMass * GridVelocity =  S^T*M_D*ParticleVelocity
+
+      double totalmass = 0;
+      Vector total_mom(0.0,0.0,0.0);
+
+      for(ParticleSubset::iterator iter = pset->begin();
+	  iter != pset->end(); iter++){
+
+	particleIndex idx = *iter;
+
+	// Get the node indices that surround the cell
+	IntVector ni[8];
+	double S[8];
+
+	patch->findCellAndWeights(px[idx], ni, S);
+
+	total_mom += pvelocity[idx]*pmass[idx];
+
+	// Add each particles contribution to the local mass & velocity 
+	// Must use the node indices
+
+	for(int k = 0; k < 8; k++) {
+
+	  if(patch->containsNode(ni[k])) {
+
+	    gmassglobal[ni[k]]    += pmass[idx]                     * S[k];
+	    gmass[ni[k]]          += pmass[idx]                     * S[k];
+	    gvolume[ni[k]]        += pvolume[idx]                   * S[k];
+	    gvelocity[ni[k]]      += pvelocity[idx]    * pmass[idx] * S[k];
+	    gTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
+	    totalmass             += pmass[idx]                     * S[k];
+
+	  }
+        }
+      }
+
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+
+	gvelocity[*iter] /= gmass[*iter];
+	gTemperature[*iter] /= gmass[*iter];
+
+      }
+
+      // Apply grid boundary conditions to the velocity before storing the data
+
+      IntVector offset = 
+	patch->getInteriorCellLowIndex() - patch->getCellLowIndex();
+      // cout << "offset = " << offset << endl;
+
+      for(Patch::FaceType face = Patch::startFace;
+	  face <= Patch::endFace; face=Patch::nextFace(face)){
+
+        BoundCondBase *vel_bcs, *temp_bcs, *sym_bcs;
+        if (patch->getBCType(face) == Patch::None) {
+
+	  vel_bcs  = patch->getBCValues(matlindex,"Velocity",face);
+	  temp_bcs = patch->getBCValues(matlindex,"Temperature",face);
+	  sym_bcs  = patch->getBCValues(matlindex,"Symmetric",face);
+
+        } else
+
+          continue;
+
+	  if (vel_bcs != 0) {
+
+	    VelocityBoundCond* bc = dynamic_cast<VelocityBoundCond*>(vel_bcs);
+	    if (bc->getKind() == "Dirichlet") {
+
+	      //cout << "Velocity bc value = " << bc->getValue() << endl;
+	      gvelocity.fillFace(patch, face, bc->getValue(),offset);
+
+	    }
+	  }
+
+	  if (sym_bcs != 0) {
+
+	     gvelocity.fillFaceNormal(patch, face, offset);
+
+	  }
+
+	  if (temp_bcs != 0) {
+
+	    TemperatureBoundCond* bc =
+	      dynamic_cast<TemperatureBoundCond*>(temp_bcs);
+	    if (bc->getKind() == "Dirichlet") {
+
+	      gTemperature.fillFace(patch, face, bc->getValue(),offset);
+
+	    }
+
+	  }
+
+      }
+
+      new_dw->put(sum_vartype(totalmass), Mlb->TotalMassLabel);
+      new_dw->put(gmass,         Mlb->gMassLabel,          matlindex, patch);
+      new_dw->put(gvolume,       Mlb->gVolumeLabel,        matlindex, patch);
+      new_dw->put(gvelocity,     Mlb->gVelocityLabel,      matlindex, patch);
+      new_dw->put(gTemperature,  Mlb->gTemperatureLabel,   matlindex, patch);
+
+    }  // End loop over materials
+    new_dw->put(gmassglobal, Mlb->gMassLabel,
+			d_sharedState->getAllInOneMatl()->get(0), patch);
+    // End loop over patches
+  }
 }
 
 //______________________________________________________________________

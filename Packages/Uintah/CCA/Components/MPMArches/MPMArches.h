@@ -54,54 +54,72 @@ public:
   MPMArches(const ProcessorGroup* myworld);
   virtual ~MPMArches();
 	 
-  //////////
-  // Insert Documentation Here:
+  // Read inputs from ups file for MPMArches case
   virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
 			    SimulationStateP&);
-	 
+
+  // Set up initial conditions for MPMArches problem	 
   virtual void scheduleInitialize(const LevelP& level,
 				  SchedulerP&);
 
+  // Interpolate particle information from particles to grid
+  // for the initial condition
+  virtual void scheduleInterpolateParticlesToGrid(SchedulerP& sched,
+						  const PatchSet* patches,
+						  const MaterialSet* matls);
+
   //////////
-  // Insert Documentation Here:
   virtual void scheduleComputeStableTimestep(const LevelP& level,
 					     SchedulerP&);
 	 
   //////////
-  // Insert Documentation Here:
   virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&);
 
-
+  // Interpolate Particle variables from Node-centered to cell-centered
   void scheduleInterpolateNCToCC(SchedulerP&,
 				 const PatchSet* patches,
 				 const MaterialSet* matls);
 
+  // Interpolate relevant particle variables from cell center to
+  // appropriate face centers
   void scheduleInterpolateCCToFC(SchedulerP&,
 				 const PatchSet* patches,
 				 const MaterialSet* matls);
 
-
+  // Calculate gas void fraction by subtraction of solid volume
+  // fraction from one
   void scheduleComputeVoidFrac(SchedulerP& sched,
 			       const PatchSet* patches,
 			       const MaterialSet* arches_matls,
 			       const MaterialSet* mpm_matls,
 			       const MaterialSet* all_matls);
 
+  // Calculate momentum exchange terms for gas-solid interface
   void scheduleMomExchange(SchedulerP& sched,
 			   const PatchSet* patches,
 			   const MaterialSet* arches_matls,
 			   const MaterialSet* mpm_matls,
 			   const MaterialSet* all_matls);
 
+  // Interpolate all momentum and energy exchange sources from
+  // face centers and accumulate with cell-center sources
   void schedulePutAllForcesOnCC(SchedulerP& sched,
 			        const PatchSet* patches,
 			        const MaterialSet* mpm_matls);
 
+  // Interpolate all momentum and energy sources from cell-centers
+  // to node centers for MPM use
   void schedulePutAllForcesOnNC(SchedulerP& sched,
 			        const PatchSet* patches,
 			        const MaterialSet* mpm_matls);
 
  protected:
+
+  void interpolateParticlesToGrid(const ProcessorGroup*,
+				  const PatchSubset* patches,
+				  const MaterialSubset* ,
+				  DataWarehouse* old_dw,
+				  DataWarehouse* new_dw);
 
   void interpolateNCToCC(const ProcessorGroup*,
 			 const PatchSubset* patches,
