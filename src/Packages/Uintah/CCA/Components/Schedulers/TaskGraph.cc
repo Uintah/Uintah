@@ -10,6 +10,7 @@
 #include <Packages/Uintah/Core/Grid/TypeDescription.h>
 #include <Packages/Uintah/Core/Grid/DetailedTask.h>
 
+#include <Core/Containers/FastHashTable.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
@@ -62,6 +63,7 @@ bool csoverlaps(const ComputeSubset<T>* s1, const ComputeSubset<T>* s2)
     return true;
   if(s1->size() == 0 || s2->size() == 0)
     return false;
+#if 0
   T el1 = s1->get(0);
   for(int i=1;i<s1->size();i++){
     T el = s1->get(i);
@@ -78,6 +80,7 @@ bool csoverlaps(const ComputeSubset<T>* s1, const ComputeSubset<T>* s2)
     }
     el2=el;
   }
+#endif
   int i1=0;
   int i2=0;
   for(;;){
@@ -269,9 +272,11 @@ TaskGraph::setupTaskConnections()
 	    req->addComp(edge);
 	    compiter->second->addReq(edge);
 	    count++;
-	    dbg << "Creating edge from task: " << *compiter->second->task << " to task: " << *task << '\n';
-	    dbg << "Req=" << *req << '\n';
-	    dbg << "Comp=" << *compiter->second << '\n';
+	    if(dbg.active()){
+	      dbg << "Creating edge from task: " << *compiter->second->task << " to task: " << *task << '\n';
+	      dbg << "Req=" << *req << '\n';
+	      dbg << "Comp=" << *compiter->second << '\n';
+	    }
 	  }
 	}
 	if(count == 0)
@@ -291,7 +296,8 @@ TaskGraph::setupTaskConnections()
 void
 TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks) const
 {
-  dbg << "Looking at task: " << task->getName() << '\n';
+  if(dbg.active())
+    dbg << "Looking at task: " << task->getName() << '\n';
 
   if(task->visited){
     ostringstream error;
@@ -340,7 +346,8 @@ TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks) const
   // All prerequisites are done - add this task to the list
   sortedTasks.push_back(task);
   task->sorted=true;
-  dbg << "Added task: " << task->getName() << '\n';
+  if(dbg.active())
+    dbg << "Added task: " << task->getName() << '\n';
 } // end processTask()
 
 void
@@ -382,7 +389,8 @@ TaskGraph::addTask(Task* task, const PatchSet* patchset,
   task->setSets(patchset, matlset);
   d_tasks.push_back(task);
 
-  dbg << "Adding task: " << *task << "\n";
+  if(dbg.active())
+    dbg << "Adding task: " << *task << "\n";
 }
 
 void
@@ -425,28 +433,30 @@ TaskGraph::createDetailedTasks(const ProcessorGroup* pg)
 
 class CompTable {
   struct Data {
+    Data* next;
     DetailedTask* task;
     Task::Dependency* comp;
-    const PatchSubset* patches;
-    const MaterialSubset* matls;
+    const Patch* patch;
+    int matl;
+    unsigned int hash;
     Data(DetailedTask* task, Task::Dependency* comp,
-	 const PatchSubset* patches, const MaterialSubset* matls)
-      : task(task), comp(comp), patches(patches), matls(matls)
+	 const Patch* patch, int matl)
+      : task(task), comp(comp), patch(patch), matl(matl)
     {
-      if(patches)
-	patches->addReference();
-      if(matls)
-	matls->addReference();
+      hash=(unsigned int)(((unsigned int)comp->dw<<3)
+	^(std::hash<string>()(comp->var->getName()))
+	^(patch->getID()<<4)
+	^matl);
     }
     ~Data()
     {
-      if(patches && patches->removeReference())
-	delete patches;
-      if(matls && matls->removeReference())
-	delete matls;
+    }
+    bool operator==(const Data& c) {
+      return matl == c.matl && patch == c.patch &&
+	comp->dw == c.comp->dw && comp->var->equals(c.comp->var);
     }
   };
-  vector<Data*> data;
+  FastHashTable<Data> data;
  public:
   CompTable();
   ~CompTable();
@@ -462,30 +472,33 @@ CompTable::CompTable()
 
 CompTable::~CompTable()
 {
-  for(int i=0;i<(int)data.size();i++)
-    delete data[i];
 }
 
 void CompTable::remembercomp(DetailedTask* task, Task::Dependency* comp,
 			     const PatchSubset* patches, const MaterialSubset* matls)
 {
-  data.push_back(new Data(task, comp, patches, matls));
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    for(int m=0;m<matls->size();m++){
+      int matl = matls->get(m);
+      data.insert(new Data(task, comp, patch, matl));
+    }
+  }
 }
 
 bool CompTable::findcomp(Task::Dependency* req, const Patch* patch,
 			 int matlIndex, DetailedTask*& dt,
 			 Task::Dependency*& comp)
 {
-  for(int i=0;i<(int)data.size();i++){
-    Data* d = data[i];
-    if(req->var->equals(d->comp->var) && d->patches->contains(patch) &&
-       d->matls->contains(matlIndex) && req->dw == d->comp->dw){
-      dt=d->task;
-      comp=d->comp;
-      return true;
-    }
+  Data key(0, req, patch, matlIndex);
+  Data* result;
+  if(data.lookup(&key, result)){
+    dt=result->task;
+    comp=result->comp;
+    return true;
+  } else {
+    return false;
   }
-  return false;
 }
 
 // Will need to do something about const-ness here.
@@ -569,10 +582,12 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
     if(task->task->getType() == Task::Reduction)
       continue;
 
-    dbg << "Looking at detailed task: " << *task << '\n';
+    if(dbg.active())
+      dbg << "Looking at detailed task: " << *task << '\n';
     for(Task::Dependency* req = task->task->getRequires();
 	req != 0; req = req->next){
-      dbg << "req: " << *req << '\n';
+      if(dbg.active())
+	dbg << "req: " << *req << '\n';
 
       const PatchSubset* patches = intersection(req->patches, task->patches);
       if(patches)
@@ -588,8 +603,10 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 	  patch->computeVariableExtents(req->var->typeDescription()->getType(),
 					req->gtype, req->numGhostCells,
 					neighbors, low, high);
-	  dbg << "Creating dependency on " << neighbors.size() << " neighbors\n";
-	  dbg << "Low=" << low << ", high=" << high << ", var=" << req->var->getName() << '\n';
+	  if(dbg.active()){
+	    dbg << "Creating dependency on " << neighbors.size() << " neighbors\n";
+	    dbg << "Low=" << low << ", high=" << high << ", var=" << req->var->getName() << '\n';
+	  }
 	  for(int i=0;i<neighbors.size();i++){
 	    const Patch* neighbor=neighbors[i];
 	    for(int m=0;m<matls->size();m++){
@@ -619,7 +636,8 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 	delete matls;
     }
   }
-  dbg << "Done creating detailed tasks\n";
+  if(dbg.active())
+    dbg << "Done creating detailed tasks\n";
 }
 
 int TaskGraph::findVariableLocation(LoadBalancer* lb,

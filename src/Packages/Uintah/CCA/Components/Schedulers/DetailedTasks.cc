@@ -50,7 +50,8 @@ DetailedTasks::assignMessageTags()
   for(int i=0;i<(int)batches.size();i++)
     batches[i]->messageTag = serial++;
   maxSerial=serial;
-  dbg << "MAXSERIAL=" << maxSerial << '\n';
+  if(dbg.active())
+    dbg << "MAXSERIAL=" << maxSerial << '\n';
 } // end assignMessageTags()
 
 void
@@ -128,14 +129,15 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
   // TODO - perhaps move at least some of this to TaskGraph?
   ASSERT(from->getAssignedResourceIndex() != -1);
   ASSERT(to->getAssignedResourceIndex() != -1);
-#if 1
-  dbg << "Dependency from " << *from << " to " << *to << "\n";
-  if(comp)
-    dbg << "From comp " << *comp;
-  else
-    dbg << "From OldDW ";
-  dbg << " to req " << *req << '\n';
-#endif
+  if(dbg.active()) {
+    dbg << "Dependency from " << *from << " to " << *to << "\n";
+    if(comp)
+      dbg << "From comp " << *comp;
+    else
+      dbg << "From OldDW ";
+    dbg << " to req " << *req << '\n';
+  }
+
   if(from->getAssignedResourceIndex() == to->getAssignedResourceIndex())
     return;
   int toresource = to->getAssignedResourceIndex();
@@ -149,7 +151,8 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     batches.push_back(batch);
     from->addComputes(batch);
     to->addRequires(batch);
-    dbg << "NEW BATCH!\n";
+    if(dbg.active())
+      dbg << "NEW BATCH!\n";
   }
   DetailedDep* dep = batch->head;
   for(;dep != 0; dep = dep->next){
@@ -162,7 +165,8 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
   if(!dep){
     dep = scinew DetailedDep(batch->head, comp, req, fromPatch, matl, low, high);
     batch->head = dep;
-    dbg << "ADDED " << low << " " << high << ", fromPatch = " << fromPatch->getID() << '\n';
+    if(dbg.active())
+      dbg << "ADDED " << low << " " << high << ", fromPatch = " << fromPatch->getID() << '\n';
   } else {
     IntVector l = Min(low, dep->low);
     IntVector h = Max(high, dep->high);
@@ -175,17 +179,24 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     if(v1 > v2+v3){
       // If we get this, perhaps we should allow multiple deps so
       // that we do not communicate more of the patch than necessary
-      cerr << "WARNING: Possible extra communication between patches!\n";
+      static int warned=false;
+      if(!warned){
+	cerr << "WARNING: Possible extra communication between patches!\n";
+	cerr << "This warning will only appear once\n";
+	warned=true;
+      }
     }
     dep->low=l;
     dep->high=h;
-    dbg << "EXTENDED from " << dep->low << " " << dep->high << " to " << l << " " << h << "\n";
-    dbg << *req->var << '\n';
-    dbg << *dep->req->var << '\n';
-    if(comp)
-      dbg << *comp->var << '\n';
-    if(dep->comp)
-      dbg << *dep->comp->var << '\n';
+    if(dbg.active()){
+      dbg << "EXTENDED from " << dep->low << " " << dep->high << " to " << l << " " << h << "\n";
+      dbg << *req->var << '\n';
+      dbg << *dep->req->var << '\n';
+      if(comp)
+	dbg << *comp->var << '\n';
+      if(dep->comp)
+	dbg << *dep->comp->var << '\n';
+    }
   }
 }
 
