@@ -28,7 +28,7 @@ using namespace rtrt;
 using SCIRun::Thread;
 
 // Whether or not to use the HVolumeVis code
-static bool use_hvolume = false;
+static bool use_hvolume = true;
 static int np = 1;
 static int depth = 3;
 
@@ -555,8 +555,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       g = atof(argv[++i]);
       b = atof(argv[++i]);
       bgcolor = Color(r,g,b);
-    } else if(strcmp(argv[i], "-usehv")==0){
-      use_hvolume = true;
+    } else if(strcmp(argv[i], "-nohv")==0){
+      use_hvolume = false;
     } else if(strcmp(argv[i], "-depth")==0) {
       depth = atoi(argv[++i]);
       if (depth < 2) {
@@ -595,6 +595,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       cerr << " -usehv - use the HVolumeVis code instead of VolumeVis.\n";
       cerr << " -depth - the number of depths to use for the HVolumeVis.\n";
       cerr << "          [defaults to "<<depth<<"]\n";
+      cerr << " -nohv  - do not use the fast version.\n";
       return 0;
     }
   }
