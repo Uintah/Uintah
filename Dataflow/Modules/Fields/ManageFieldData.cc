@@ -97,6 +97,7 @@ ManageFieldData::execute()
     svt_flag = 2;
   }
   
+  // Compute output matrix.
   CompileInfo *ci_field =
     ManageFieldDataAlgoField::
     get_compile_info(ifieldhandle->get_type_description(),
@@ -119,11 +120,14 @@ ManageFieldData::execute()
   MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
   if (!omp) {
     postMessage("Unable to initialize "+name+"'s oport\n");
-    return;
   }
-  omp->send(algo_field->execute(ifieldhandle));
+  else
+  {
+    omp->send(algo_field->execute(ifieldhandle));
+  }
 
-
+  // Compute output field.
+  FieldHandle result_field;
   MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Input Matrix");
   MatrixHandle imatrixhandle;
   if (!imatrix_port) {
@@ -133,26 +137,29 @@ ManageFieldData::execute()
   if (!imatrix_port->get(imatrixhandle) && (!imatrixhandle.get_rep()))
   {
     remark("No input matrix connected.");
-    return;
+    result_field = ifieldhandle;
   }
-  
-  CompileInfo *ci_mesh =
-    ManageFieldDataAlgoMesh::
-    get_compile_info(ifieldhandle->mesh()->get_type_description(),
-		     ifieldhandle->get_type_description(),
-		     svt_flag);
-  DynamicAlgoHandle algo_handle_mesh;
-  if (! DynamicLoader::scirun_loader().get(*ci_mesh, algo_handle_mesh))
+  else
   {
-    error("Could not compile mesh algorithm.");
-    return;
-  }
-  ManageFieldDataAlgoMesh *algo_mesh =
-    dynamic_cast<ManageFieldDataAlgoMesh *>(algo_handle_mesh.get_rep());
-  if (algo_mesh == 0)
-  {
-    error("Could not get mesh algorithm.");
-    return;
+    CompileInfo *ci_mesh =
+      ManageFieldDataAlgoMesh::
+      get_compile_info(ifieldhandle->mesh()->get_type_description(),
+		       ifieldhandle->get_type_description(),
+		       svt_flag);
+    DynamicAlgoHandle algo_handle_mesh;
+    if (! DynamicLoader::scirun_loader().get(*ci_mesh, algo_handle_mesh))
+    {
+      error("Could not compile mesh algorithm.");
+      return;
+    }
+    ManageFieldDataAlgoMesh *algo_mesh =
+      dynamic_cast<ManageFieldDataAlgoMesh *>(algo_handle_mesh.get_rep());
+    if (algo_mesh == 0)
+    {
+      error("Could not get mesh algorithm.");
+      return;
+    }
+    result_field = algo_mesh->execute(ifieldhandle->mesh(), imatrixhandle);
   }
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Field");
@@ -160,7 +167,7 @@ ManageFieldData::execute()
     postMessage("Unable to initialize "+name+"'s oport\n");
     return;
   }
-  ofp->send(algo_mesh->execute(ifieldhandle->mesh(), imatrixhandle));
+  ofp->send(result_field);
 }
 
 
