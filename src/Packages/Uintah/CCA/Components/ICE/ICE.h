@@ -217,6 +217,9 @@ using namespace SCIRun;
       void setBC(SFCZVariable<double>& variable,const std::string& type,
 		 const std::string& comp, const Patch* p, const int mat_id);   
 
+      void setBC(SFCXVariable<Vector>& variable,const std::string& type,
+		 const Patch* p, const int mat_id);   
+
       void printData(const  Patch* patch,int include_GC,char message1[],
 		     char message2[], const  CCVariable<int>& q_CC);
                    
