@@ -2034,6 +2034,7 @@ case SCIRun2 in
     sci_check_globus=yes
     sci_check_qt=yes
     sci_check_uuid=yes
+    sci_check_mpi=yes
   ;;
   Remote)
     sci_check_jpeg=yes
@@ -2158,6 +2159,7 @@ case $i in
     sci_check_globus=yes
     sci_check_qt=yes
     sci_check_uuid=yes
+    sci_check_mpi=yes
   ;;
   Remote)
     sci_check_jpeg=yes
@@ -3393,7 +3395,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:3396:" \
+echo "$as_me:3398:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
