@@ -27,9 +27,9 @@ static char *id="@(#) $Id$";
 
 using namespace Uintah::ArchesSpace;
 
-//****************************************************************************
+// ****************************************************************************
 // Default constructor for PicardNonlinearSolver
-//****************************************************************************
+// ****************************************************************************
 PicardNonlinearSolver::
 PicardNonlinearSolver(const ArchesLabel* label, 
 		      Properties* props, 
@@ -42,16 +42,16 @@ PicardNonlinearSolver(const ArchesLabel* label,
 {
 }
 
-//****************************************************************************
+// ****************************************************************************
 // Destructor
-//****************************************************************************
+// ****************************************************************************
 PicardNonlinearSolver::~PicardNonlinearSolver()
 {
 }
 
-//****************************************************************************
+// ****************************************************************************
 // Problem Setup 
-//****************************************************************************
+// ****************************************************************************
 void 
 PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
 {
@@ -86,9 +86,9 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
   }
 }
 
-//****************************************************************************
+// ****************************************************************************
 // Schedule non linear solve and carry out some actual operations
-//****************************************************************************
+// ****************************************************************************
 int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 					  SchedulerP& sched,
 					  DataWarehouseP& old_dw,
@@ -204,9 +204,9 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   return(0);
 }
 
-//****************************************************************************
+// ****************************************************************************
 // Schedule initialize 
-//****************************************************************************
+// ****************************************************************************
 void 
 PicardNonlinearSolver::sched_setInitialGuess(const LevelP& level,
 					     SchedulerP& sched,
@@ -260,9 +260,9 @@ PicardNonlinearSolver::sched_setInitialGuess(const LevelP& level,
   }
 }
 
-//****************************************************************************
+// ****************************************************************************
 // Schedule Interpolate from SFCX, SFCY, SFCZ to CC<Vector>
-//****************************************************************************
+// ****************************************************************************
 void 
 PicardNonlinearSolver::sched_interpolateFromFCToCC(const LevelP& level,
 						   SchedulerP& sched,
@@ -299,9 +299,9 @@ PicardNonlinearSolver::sched_interpolateFromFCToCC(const LevelP& level,
     }
   }
 }
-//****************************************************************************
+// ****************************************************************************
 // Actual initialize 
-//****************************************************************************
+// ****************************************************************************
 void 
 PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
 				       const Patch* patch,
@@ -395,11 +395,11 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
   new_dw->put(viscosity_new, d_lab->d_viscosityINLabel, matlIndex, patch);
 }
 
-//****************************************************************************
+// ****************************************************************************
 // Actual interpolation from FC to CC Variable of type Vector 
 // ** WARNING ** For multiple patches we need ghost information for
 //               interpolation
-//****************************************************************************
+// ****************************************************************************
 void 
 PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 					     const Patch* patch,
@@ -484,9 +484,9 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
   new_dw->put(newCCVel, d_lab->d_newCCVelocityLabel, matlIndex, patch);
 }
 
-//****************************************************************************
+// ****************************************************************************
 // compute the residual
-//****************************************************************************
+// ****************************************************************************
 double 
 PicardNonlinearSolver::computeResidual(const LevelP& /*level*/,
 				       SchedulerP& /*sched*/,
@@ -520,6 +520,9 @@ PicardNonlinearSolver::computeResidual(const LevelP& /*level*/,
 
 //
 // $Log$
+// Revision 1.45  2000/09/12 15:46:58  sparker
+// Changed formatting of comments to keep from confusing emacs
+//
 // Revision 1.44  2000/08/18 05:39:08  bbanerje
 // Small bug removed.
 //
