@@ -1,7 +1,8 @@
 #!/bin/sh
 
-# should have PATH, OS, PARALLELISM, TMPDIR, BUILD_DIR, VERBOSE
-# BUILDROOT, TEST_DATA, OPT_CONFIGURE,HTMLLOG,WEBLOG, and DBG_CONFIGURE all set
+# should have PATH, OS, PARALLELISM, TMPDIR, BUILD_DIR, VERBOSE,
+# BUILDROOT, TEST_DATA, OPT_CONFIGURE,HTMLLOG,WEBLOG, DBG_CONFIGURE,
+# OPT_CONFIGURE, SEND_MAIL_TO, REPLY_TO  all set
 PATH="$BUILDROOT"/src/Packages/Uintah/Test/helpers:"$PATH"
 export PATH OS MAKE_PARALLELISM PARALLELISM TMPDIR BUILD_DIR BUILDROOT TEST_DATA
 
@@ -121,6 +122,9 @@ if [ "$VERBOSE" = "no" -a "$SEND_MAIL_TO" != "" ]; then
 Subject: $subject
 To: $SEND_MAIL_TO
 EOF
+    if [ "$REPLY_TO" != "" ];
+        echo "Reply-To: $REPLY_TO" >> "$BUILDROOT"/mail.msg
+    fi
     cat "$BUILDROOT"/log >> "$BUILDROOT"/mail.msg
 
     if [ $use_html = "1" ]; then
