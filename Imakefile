@@ -12,10 +12,10 @@ all::
 OTHER_SOS = -lDatatypes -lMath -lMesaGL -lMesaGLU
 #endif
 
-SUBDIRS = Malloc tcl \
+SUBDIRS = Tester Malloc tcl \
 	Multitask Classlib TCL Math Comm Geometry \
 	Devices Constraints Geom Dataflow Datatypes Widgets \
-	Modules Tester convert
+	Modules convert
 
 SCISubdirs($(SUBDIRS))
 
