@@ -21,6 +21,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/NotFinished.h>
+#include <Core/Util/Endian.h>
 #include <Core/Thread/Time.h>
 
 #include <iomanip>
@@ -532,6 +533,7 @@ void DataArchiver::createIndexXML(Dir& dir)
    appendElement(metaElem, "username", getenv("LOGNAME"));
    time_t t = time(NULL) ;
    appendElement(metaElem, "date", ctime(&t));
+   appendElement(metaElem, "endianness", endianness().c_str() );
    
    string iname = dir.getName()+"/index.xml";
    ofstream out(iname.c_str());
