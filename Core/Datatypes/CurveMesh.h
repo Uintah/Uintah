@@ -136,7 +136,7 @@ public:
   void get_center(Point &, Cell::index_type) const {}
 
   //! Get the size of an elemnt (length, area, volume)
-  double get_size(Node::index_type idx) const { return 0.0; }
+  double get_size(Node::index_type /*idx*/) const { return 0.0; }
   double get_size(Edge::index_type idx) const 
   {
     Node::array_type arr;
@@ -146,16 +146,16 @@ public:
     get_center(p1, arr[1]);
     return (p1.asVector() - p0.asVector()).length();
   }
-  double get_size(Face::index_type idx) const { return 0.0; }
-  double get_size(Cell::index_type idx) const { return 0.0; }
+  double get_size(Face::index_type /*idx*/) const { return 0.0; }
+  double get_size(Cell::index_type /*idx*/) const { return 0.0; }
   double get_length(Edge::index_type idx) const { return get_size(idx); };
   double get_area(Face::index_type idx) const   { return get_size(idx); };
   double get_volume(Cell::index_type idx) const { return get_size(idx); };
 
   int get_valence(Node::index_type idx) const;
-  int get_valence(Edge::index_type idx) const { return 0; }
-  int get_valence(Face::index_type idx) const { return 0; }
-  int get_valence(Cell::index_type idx) const { return 0; }
+  int get_valence(Edge::index_type /*idx*/) const { return 0; }
+  int get_valence(Face::index_type /*idx*/) const { return 0; }
+  int get_valence(Cell::index_type /*idx*/) const { return 0; }
 
   bool locate(Node::index_type &, const Point &) const;
   bool locate(Edge::index_type &, const Point &) const;
