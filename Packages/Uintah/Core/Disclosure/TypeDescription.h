@@ -2,6 +2,7 @@
 #define UINTAH_HOMEBREW_TypeDescription_H
 
 #include <string>
+#include <sci_config.h> // For MPIPP_H on SGI
 #include <mpi.h>
 #include <Core/Thread/Mutex.h>
 
