@@ -62,7 +62,7 @@
     </inputs>
     <outputs>
       <port>
-        <name>WeightVec(Row)</name>
+        <name>WeightVec(Col)</name>
         <datatype>SCIRun::Matrix</datatype>
       </port>
       <port>
