@@ -1529,11 +1529,8 @@ ac_config_sub="$SHELL $ac_aux_dir/config.sub"
 ac_configure="$SHELL $ac_aux_dir/configure" # This should be Cygnus configure.
 
 
-## Cut off the /configure from the configure command (eg: ../src/configure)
-path_to_src=`echo $0 | sed 's/\/configure//'`
-
-## If user tried to configure in current directory, this will block it.
-if test "$path_to_src" = "configure" -o "$path_to_src" = "." -o "$path_to_src" = "../src"; then
+## If user tried to configure in the src directory, this will block it.
+if test -f Makefile.in; then
    { echo "$as_me:$LINENO: WARNING: DO NOT CONFIGURE IN THE SRC DIRECTORY:" >&5
 echo "$as_me: WARNING: DO NOT CONFIGURE IN THE SRC DIRECTORY:" >&2;}
    { echo "$as_me:$LINENO: WARNING: ___ Try creating a dir such as: ../archBITSdebug" >&5
@@ -4656,7 +4653,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4659:" \
+echo "$as_me:4656:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
