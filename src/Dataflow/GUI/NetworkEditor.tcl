@@ -625,7 +625,10 @@ proc addModule2 {package category module modid} {
 	Module $modid -name "$module"
     }
 
-    $modid make_icon 10 10 0
+    # fix for bug 2441: since SCIRun2's builder GUI takes care of
+    # creating and displaying module icons, make_icon should not be
+    # necessary
+    #$modid make_icon 10 10 0
 
     return $modid
 }
