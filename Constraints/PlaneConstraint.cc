@@ -32,20 +32,21 @@ PlaneConstraint::PlaneConstraint( const clString& name,
 
 
 void
-PlaneConstraint::Satisfy( const Index index )
+PlaneConstraint::Satisfy( const Index index, const Scheme scheme )
 {
    Variable& v0 = *vars[0];
    Variable& v1 = *vars[1];
    Variable& v2 = *vars[2];
 
-   ChooseChange(index);
+   ChooseChange(index, scheme);
    print();
    
-   switch (ChooseChange(index)) {
+   switch (ChooseChange(index, scheme)) {
    case 0:
       v0.Assign(v0.Get() - (v1.Get().vector()
 			    * ((v2.Get().x() + Dot(v1.Get(), v0.Get()))
-			       / Dot(v1.Get(), v1.Get()))));
+			       / Dot(v1.Get(), v1.Get()))),
+		scheme);
       break;
    case 1:
       NOT_FINISHED("Plane Constaint:  Assign norm");

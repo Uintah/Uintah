@@ -27,7 +27,7 @@ public:
     virtual ~DistanceConstraint();
 
 protected:
-   virtual void Satisfy( const Index index );
+   virtual void Satisfy( const Index index, const Scheme scheme );
 };
 
 #endif

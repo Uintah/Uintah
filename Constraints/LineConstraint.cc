@@ -32,7 +32,7 @@ LineConstraint::LineConstraint( const clString& name,
 
 
 void
-LineConstraint::Satisfy( const Index index )
+LineConstraint::Satisfy( const Index index, const Scheme scheme )
 {
    Variable& v0 = *vars[0];
    Variable& v1 = *vars[1];
@@ -40,10 +40,10 @@ LineConstraint::Satisfy( const Index index )
    Vector norm;
    double t;
 
-   ChooseChange(index);
+   ChooseChange(index, scheme);
    print();
    
-   switch (ChooseChange(index)) {
+   switch (ChooseChange(index, scheme)) {
    case 0:
       NOT_FINISHED("Line Constraint:  line_p1");
       break;
@@ -54,7 +54,7 @@ LineConstraint::Satisfy( const Index index )
       norm = (v1.Get() - v0.Get());
       t = -((Dot(v0.Get(), norm) - Dot(v2.Get(), norm))
 	    / Dot(v1.Get(), norm));
-      v2.Assign(v0.Get() + (v1.Get().vector() * t));
+      v2.Assign(v0.Get() + (v1.Get().vector() * t), scheme);
       break;
    default:
       cerr << "Unknown variable in Line Constraint!" << endl;

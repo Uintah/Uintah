@@ -32,7 +32,7 @@ SegmentConstraint::SegmentConstraint( const clString& name,
 
 
 void
-SegmentConstraint::Satisfy( const Index index )
+SegmentConstraint::Satisfy( const Index index, const Scheme scheme )
 {
    Variable& v0 = *vars[0];
    Variable& v1 = *vars[1];
@@ -41,10 +41,10 @@ SegmentConstraint::Satisfy( const Index index )
    double t;
    Point p;
 
-   ChooseChange(index);
+   ChooseChange(index, scheme);
    print();
    
-   switch (ChooseChange(index)) {
+   switch (ChooseChange(index, scheme)) {
    case 0:
       NOT_FINISHED("Segment Constraint:  segment_p1");
       break;
@@ -64,7 +64,7 @@ SegmentConstraint::Satisfy( const Index index )
 	 p = v0.Get();
       else if (t > 1.0)
 	 p = v1.Get();
-      v2.Assign(p);
+      v2.Assign(p, scheme);
       break;
    default:
       cerr << "Unknown variable in Segment Constraint!" << endl;
