@@ -67,7 +67,7 @@ int mitest_impl::d()
 
 bool mitest_impl::isa_mitest(const A& p)
 {
-    if(dynamic_cast<mitest_impl*>(static_cast<Object_interface*>(p)))
+    if(dynamic_cast<mitest_impl*>(p.getPointer()))
 	return true;
     else
 	return false;
@@ -75,7 +75,7 @@ bool mitest_impl::isa_mitest(const A& p)
 
 bool mitest_impl::isa_mitest(const B& p)
 {
-    if(dynamic_cast<mitest_impl*>(static_cast<Object_interface*>(p)))
+    if(dynamic_cast<mitest_impl*>(p.getPointer()))
 	return true;
     else
 	return false;
@@ -83,7 +83,7 @@ bool mitest_impl::isa_mitest(const B& p)
 
 bool mitest_impl::isa_mitest(const C& p)
 {
-    if(dynamic_cast<mitest_impl*>(static_cast<Object_interface*>(p)))
+    if(dynamic_cast<mitest_impl*>(p.getPointer()))
 	return true;
     else
 	return false;
@@ -91,7 +91,7 @@ bool mitest_impl::isa_mitest(const C& p)
 
 bool mitest_impl::isa_mitest(const D& p)
 {
-    if(dynamic_cast<mitest_impl*>(static_cast<Object_interface*>(p)))
+    if(dynamic_cast<mitest_impl*>(p.getPointer()))
 	return true;
     else
 	return false;
@@ -227,10 +227,9 @@ int main(int argc, char* argv[])
 
 	if(server) {
 	    cerr << "Creating mitest object\n";
-	    mitest_impl pp;
+	    mitest_impl* pp=new mitest_impl;
 	    cerr << "Waiting for mitest connections...\n";
-	    cerr << pp.getURL().getString() << '\n';
-	    PIDL::serveObjects();
+	    cerr << pp->getURL().getString() << '\n';
 	} else {
 	    Object obj=PIDL::objectFrom(client_url);
 	    bool failed=false;
@@ -332,6 +331,7 @@ int main(int argc, char* argv[])
 		cout << "tests successful!\n";
 	    }
 	}
+	PIDL::serveObjects();
     } catch(const SCICore::Exceptions::Exception& e) {
 	cerr << "Caught exception:\n";
 	cerr << e.message() << '\n';
@@ -345,6 +345,14 @@ int main(int argc, char* argv[])
 
 //
 // $Log$
+// Revision 1.2  1999/09/26 06:12:59  sparker
+// Added (distributed) reference counting to PIDL objects.
+// Began campaign against memory leaks.  There seem to be no more
+//   per-message memory leaks.
+// Added a test program to flush out memory leaks
+// Fixed other Component testprograms so that they work with ref counting
+// Added a getPointer method to PIDL handles
+//
 // Revision 1.1  1999/09/24 06:26:27  sparker
 // Further implementation of new Component model and IDL parser, including:
 //  - fixed bugs in multiple inheritance

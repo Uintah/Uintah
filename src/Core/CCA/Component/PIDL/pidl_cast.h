@@ -37,12 +37,12 @@ template<class T>
 T pidl_cast(const Component::PIDL::Object& obj)
 {
     // Try the direct cast before we go remote
-    T::interfacetype* iface=dynamic_cast<T::interfacetype*>(obj);
+    T::interfacetype* iface=dynamic_cast<T::interfacetype*>(obj.getPointer());
     if(iface)
         return iface;
 
     const Component::PIDL::TypeInfo* typeinfo = T::_getTypeInfo();
-    Component::PIDL::Object_interface* result=typeinfo->pidl_cast(obj);
+    Component::PIDL::Object_interface* result=typeinfo->pidl_cast(obj.getPointer());
     if(result){
 	T p=dynamic_cast<T::interfacetype*>(result);
 	if(!p)
@@ -57,6 +57,14 @@ T pidl_cast(const Component::PIDL::Object& obj)
 
 //
 // $Log$
+// Revision 1.4  1999/09/26 06:12:57  sparker
+// Added (distributed) reference counting to PIDL objects.
+// Began campaign against memory leaks.  There seem to be no more
+//   per-message memory leaks.
+// Added a test program to flush out memory leaks
+// Fixed other Component testprograms so that they work with ref counting
+// Added a getPointer method to PIDL handles
+//
 // Revision 1.3  1999/09/24 20:03:39  sparker
 // Added cocoon documentation
 //

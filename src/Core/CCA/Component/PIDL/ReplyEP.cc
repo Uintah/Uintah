@@ -51,10 +51,30 @@ static void unknown_handler(globus_nexus_endpoint_t* endpoint,
 ReplyEP::ReplyEP()
     : d_sema("Reply wait semaphore", 0)
 {
+    globus_nexus_endpointattr_t attr;
+    if(int gerr=globus_nexus_endpointattr_init(&attr))
+	throw GlobusError("endpointattr_init", gerr);
+    if(int gerr=globus_nexus_endpointattr_set_handler_table(&attr,
+							    reply_table,
+							    1))
+	throw GlobusError("endpointattr_set_handler_table", gerr);
+    if(int gerr=globus_nexus_endpointattr_set_unknown_handler(&attr,
+							      unknown_handler,
+							      GLOBUS_NEXUS_HANDLER_TYPE_THREADED))
+	throw GlobusError("endpointattr_set_unknown_handler", gerr);
+    if(int gerr=globus_nexus_endpoint_init(&d_ep, &attr))
+	throw GlobusError("endpoint_init", gerr);
+    globus_nexus_endpoint_set_user_pointer(&d_ep, this);
+    if(int gerr=globus_nexus_endpointattr_destroy(&attr))
+	throw GlobusError("endpointattr_destroy", gerr);
+
+    if(int gerr=globus_nexus_startpoint_bind(&d_sp, &d_ep))
+	throw GlobusError("bind_startpoint", gerr);
 }
 
 ReplyEP::~ReplyEP()
 {
+    // TODO: free endpoint...
 }
 
 ReplyEP* ReplyEP::acquire()
@@ -63,26 +83,6 @@ ReplyEP* ReplyEP::acquire()
     if(pool.size() == 0){
 	mutex.unlock();
 	ReplyEP* r=new ReplyEP;
-	globus_nexus_endpointattr_t attr;
-	if(int gerr=globus_nexus_endpointattr_init(&attr))
-	    throw GlobusError("endpointattr_init", gerr);
-	if(int gerr=globus_nexus_endpointattr_set_handler_table(&attr,
-								reply_table,
-								1))
-	    throw GlobusError("endpointattr_set_handler_table", gerr);
-	if(int gerr=globus_nexus_endpointattr_set_unknown_handler(&attr,
-								  unknown_handler,
-								  GLOBUS_NEXUS_HANDLER_TYPE_THREADED))
-	    throw GlobusError("endpointattr_set_unknown_handler", gerr);
-	if(int gerr=globus_nexus_endpoint_init(&r->d_ep, &attr))
-	    throw GlobusError("endpoint_init", gerr);
-	globus_nexus_endpoint_set_user_pointer(&r->d_ep, r);
-	if(int gerr=globus_nexus_endpointattr_destroy(&attr))
-	    throw GlobusError("endpointattr_destroy", gerr);
-
-	if(int gerr=globus_nexus_startpoint_bind(&r->d_sp, &r->d_ep))
-	    throw GlobusError("bind_startpoint", gerr);
-
 	return r;
     } else {
 	ReplyEP* r=pool.back();
@@ -94,14 +94,16 @@ ReplyEP* ReplyEP::acquire()
 
 void ReplyEP::release(ReplyEP* r)
 {
+    // TODO - limit the number of free ReplyEP's
     mutex.lock();
     pool.push_back(r);
     mutex.unlock();
 }
 
-void ReplyEP::get_startpoint(globus_nexus_startpoint_t* spp)
+void ReplyEP::get_startpoint_copy(globus_nexus_startpoint_t* spp)
 {
-    *spp=d_sp;
+    if(int gerr=globus_nexus_startpoint_copy(spp, &d_sp))
+	throw GlobusError("startpoint_copy", gerr);
 }
 
 globus_nexus_buffer_t ReplyEP::wait()
@@ -112,6 +114,14 @@ globus_nexus_buffer_t ReplyEP::wait()
 
 //
 // $Log$
+// Revision 1.5  1999/09/26 06:12:56  sparker
+// Added (distributed) reference counting to PIDL objects.
+// Began campaign against memory leaks.  There seem to be no more
+//   per-message memory leaks.
+// Added a test program to flush out memory leaks
+// Fixed other Component testprograms so that they work with ref counting
+// Added a getPointer method to PIDL handles
+//
 // Revision 1.4  1999/09/21 06:13:00  sparker
 // Fixed bugs in multiple inheritance
 // Added round-trip optimization
