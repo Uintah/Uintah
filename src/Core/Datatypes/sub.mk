@@ -31,8 +31,8 @@ SRCS += $(GENSRCS) $(SRCDIR)/TriSurface.cc $(SRCDIR)/BasicSurfaces.cc \
 	$(SRCDIR)/VoidStar.cc $(SRCDIR)/cDMatrix.cc \
 	$(SRCDIR)/cMatrix.cc $(SRCDIR)/cSMatrix.cc $(SRCDIR)/cVector.cc \
 	$(SRCDIR)/SurfTree.cc $(SRCDIR)/ScalarFieldRGCC.cc \
-	$(SRCDIR)/VectorFieldRGCC.cc $(SRCDIR)/templates.cc \
-     	$(SRCDIR)/Path.cc
+	$(SRCDIR)/VectorFieldRGCC.cc  \
+     	$(SRCDIR)/Path.cc $(SRCDIR)/CameraView.cc $(SRCDIR)/templates.cc
 
 
 $(SRCDIR)/ScalarFieldRG.h: $(SRCDIR)/ScalarFieldRGTYPE.h
@@ -99,6 +99,9 @@ clean::
 
 #
 # $Log$
+# Revision 1.9  2000/08/20 04:19:50  samsonov
+# path to CameraView.cc
+#
 # Revision 1.8  2000/08/09 07:15:55  samsonov
 # final version and Cocoon comments
 #
