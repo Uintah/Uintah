@@ -423,8 +423,8 @@ void ICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
                                                           press_matl,
                                                           all_matls);
                                                            
-  scheduleComputeLagrangianSpecificVolume(sched, patches, press_matl,
-                                                          ice_matls_sub, 
+  scheduleComputeLagrangianSpecificVolume(sched, patches, ice_matls_sub,
+                                                          mpm_matls_sub, 
                                                           all_matls);
 
   scheduleAdvectAndAdvanceInTime(         sched, patches, ice_matls_sub,
@@ -603,7 +603,6 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   task->requires( Task::NewDW, lb->speedSound_CCLabel, gn);
   task->requires( Task::NewDW, lb->created_vol_CCLabel,gn);
   
-  task->computes(lb->volFrac_advectedLabel); 
   task->computes(lb->press_CCLabel,        press_matl);
   task->computes(lb->delP_DilatateLabel,   press_matl);
   task->computes(lb->delP_MassXLabel,      press_matl);
@@ -767,8 +766,8 @@ void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
                                             const PatchSet* patches,
-                                            const MaterialSubset*/*press_matl*/,
-                                            const MaterialSubset*/*ice_matls*/,
+                                            const MaterialSubset* ice_matls,
+                                            const MaterialSubset* mpm_matls,
                                             const MaterialSet* matls)
 {
   Task* t;
@@ -782,7 +781,8 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
     t = scinew Task("ICE::computeLagrangianSpecificVolume",
                         this,&ICE::computeLagrangianSpecificVolume);
   }
-  Ghost::GhostType  gn  = Ghost::None;         
+  Ghost::GhostType  gn  = Ghost::None;  
+  Ghost::GhostType  gac = Ghost::AroundCells;       
   if (d_EqForm) {            // EQ FORM
     t->requires(Task::NewDW, lb->mass_L_CCLabel,      gn);     
     t->requires(Task::NewDW, lb->sp_vol_CCLabel,      gn);
@@ -791,14 +791,17 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
     t->computes(lb->spec_vol_L_CCLabel);
   } 
   else if (d_RateForm) {     // RATE FORM
-    t->requires(Task::NewDW, lb->volFrac_advectedLabel,      gn,0); 
     t->requires(Task::OldDW, lb->delTLabel);
     t->requires(Task::NewDW, lb->rho_CCLabel,         gn);
     t->requires(Task::NewDW, lb->sp_vol_CCLabel,      gn);
     t->requires(Task::NewDW, lb->vol_frac_CCLabel,    gn);
-    t->requires(Task::OldDW, lb->temp_CCLabel,        gn);
     t->requires(Task::NewDW, lb->Tdot_CCLabel,        gn);
     t->requires(Task::NewDW, lb->f_theta_CCLabel,     gn);
+    t->requires(Task::NewDW, lb->uvel_FCMELabel,      gac,1); 
+    t->requires(Task::NewDW, lb->vvel_FCMELabel,      gac,1); 
+    t->requires(Task::NewDW, lb->wvel_FCMELabel,      gac,1);
+    t->requires(Task::OldDW, lb->temp_CCLabel,   ice_matls,   gn);
+    t->requires(Task::NewDW, lb->temp_CCLabel,   mpm_matls,   gn);
     t->computes(lb->spec_vol_L_CCLabel);
     t->computes(lb->spec_vol_source_CCLabel);
   }
@@ -1849,7 +1852,6 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      CCVariable<double> volFrac_advected;
       constCCVariable<double> speedSound;
       constCCVariable<double> vol_frac;
       constCCVariable<double> rho_CC;
@@ -1867,7 +1869,6 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       new_dw->get(burnedMass,  lb->burnedMass_CCLabel, indx,patch,gn,0);
       new_dw->get(speedSound,  lb->speedSound_CCLabel, indx,patch,gn,0);
       new_dw->get(created_vol, lb->created_vol_CCLabel,indx,patch,gn,0);
-      new_dw->allocateAndPut(volFrac_advected,lb->volFrac_advectedLabel,indx, patch);  
     
       //---- P R I N T   D A T A ------  
       if (switchDebug_explicit_press ) {
@@ -1891,7 +1892,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       }
       //__________________________________
       //   First order advection of q_CC 
-      advector->advectQ(q_CC, patch, volFrac_advected); 
+      advector->advectQ(q_CC, patch, q_advected); 
 
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
@@ -1899,7 +1900,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         term1[c] += burnedMass[c] * (sp_vol_CC[m][c]/vol);
 
         //   Divergence of velocity * face area 
-        term2[c] -= volFrac_advected[c]; 
+        term2[c] -= q_advected[c]; 
 
 //        term3[c] += vol_frac[c] * sp_vol_CC[m][c]/
 //                            (speedSound[c]*speedSound[c]);
