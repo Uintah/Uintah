@@ -1,4 +1,3 @@
-#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/NullThermalContact.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
@@ -11,10 +10,11 @@
 using namespace Uintah;
 
 NullThermalContact::NullThermalContact(ProblemSpecP&,SimulationStateP& d_sS,
-								MPMLabel* Mlb)
+				       MPMLabel* Mlb,MPMFlags* MFlag)
 {
   d_sharedState = d_sS;
   lb = Mlb;
+  flag = MFlag;
 }
 
 NullThermalContact::~NullThermalContact()
@@ -42,13 +42,14 @@ void NullThermalContact::computeHeatExchange(const ProcessorGroup*,
 			     dwindex, patch);
 
       thermalContactHeatExchangeRate.initialize(0);
-#ifdef FRACTURE
       NCVariable<double> GthermalContactHeatExchangeRate;
-      new_dw->allocateAndPut(GthermalContactHeatExchangeRate,
-			     lb->GThermalContactHeatExchangeRateLabel, 
-			     dwindex, patch);
-      GthermalContactHeatExchangeRate.initialize(0);
-#endif
+      if (flag->d_fracture) {
+	new_dw->allocateAndPut(GthermalContactHeatExchangeRate,
+			       lb->GThermalContactHeatExchangeRateLabel, 
+			       dwindex, patch);
+	GthermalContactHeatExchangeRate.initialize(0);
+      }
+
     }
   }
 }
@@ -64,7 +65,6 @@ void NullThermalContact::addComputesAndRequires(Task* t,
 					    const MaterialSet*) const
 {
   t->computes(lb->gThermalContactHeatExchangeRateLabel);
-#ifdef FRACTURE
-  t->computes(lb->GThermalContactHeatExchangeRateLabel); 
-#endif
+  if (flag->d_fracture)
+    t->computes(lb->GThermalContactHeatExchangeRateLabel); 
 }

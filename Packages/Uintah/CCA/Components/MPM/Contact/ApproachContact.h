@@ -4,6 +4,7 @@
 #define __APPROACH_H__
 
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
@@ -58,14 +59,14 @@ WARNING
          double d_mu;
          // Nodal volume fraction that must occur before contact is applied
          double d_vol_const;
-         int d_8or27;
+
          int NGP;
          int NGN;
 
       public:
 	 // Constructor
 	 ApproachContact(ProblemSpecP& ps, SimulationStateP& d_sS,MPMLabel* lb,
-                                                                   int n8or27);
+			 MPMFlags* Mflag);
 	 
 	 // Destructor
 	 virtual ~ApproachContact();

@@ -1,5 +1,4 @@
 // RigidBodyContact.cc
-#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/RigidBodyContact.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
@@ -29,8 +28,8 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
-RigidBodyContact::RigidBodyContact(ProblemSpecP& ps, 
-				    SimulationStateP& d_sS, MPMLabel* Mlb)
+RigidBodyContact::RigidBodyContact(ProblemSpecP& ps,SimulationStateP& d_sS, 
+				   MPMLabel* Mlb, MPMFlags* MFlag)
 {
   // Constructor
 
@@ -56,6 +55,7 @@ RigidBodyContact::RigidBodyContact(ProblemSpecP& ps,
   
   d_sharedState = d_sS;
   lb = Mlb;
+  flag = MFlag;
 }
 
 RigidBodyContact::~RigidBodyContact()
@@ -148,12 +148,14 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
      new_dw->get(gmass[m], lb->gMassLabel,dwi ,patch, Ghost::None, 0);
      new_dw->getModifiable(gvelocity_star[m],lb->gVelocityStarLabel, dwi,patch);
      new_dw->getModifiable(gacceleration[m], lb->gAccelerationLabel, dwi,patch);
-#ifdef FRACTURE
-     new_dw->getModifiable(frictionWork[m],  lb->frictionalWorkLabel,dwi,patch);
-#else     
-     new_dw->allocateAndPut(frictionWork[m], lb->frictionalWorkLabel,dwi,patch);
-     frictionWork[m].initialize(0.);
-#endif
+     if (flag->d_fracture)
+       new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,
+			     patch);
+     else {
+       new_dw->allocateAndPut(frictionWork[m], lb->frictionalWorkLabel,dwi,
+			      patch);
+       frictionWork[m].initialize(0.);
+     }
     }
 
     delt_vartype delT;
@@ -225,11 +227,10 @@ void RigidBodyContact::addComputesAndRequiresIntegrated( Task* t,
   t->requires(Task::NewDW, lb->gMassLabel,              Ghost::None);
   t->modifies(             lb->gVelocityStarLabel, mss);
   t->modifies(             lb->gAccelerationLabel, mss);
-#ifdef FRACTURE
-  t->modifies(             lb->frictionalWorkLabel, mss);
-#else    
-  t->computes(             lb->frictionalWorkLabel);
-#endif
+  if (flag->d_fracture)
+    t->modifies(             lb->frictionalWorkLabel, mss);
+  else
+    t->computes(             lb->frictionalWorkLabel);
 
  //__________________________________
  //  add requirements for Northrup Grumman nozzle
