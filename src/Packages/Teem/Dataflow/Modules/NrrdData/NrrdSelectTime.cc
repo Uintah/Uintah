@@ -215,9 +215,8 @@ NrrdSelectTime::execute()
   
   if (time_axis == -1) {
     warning("This nrrd has no time axis (Must be labeled 'Time')");
-    warning("Using the first axis as the time axis.");
-    time_axis = 0;
-    //    return;
+    warning("Using the last axis as the time axis.");
+    time_axis = nrrd_handle->nrrd->dim - 1;
   }
 
   if (nrrd_handle->generation != last_input_)
