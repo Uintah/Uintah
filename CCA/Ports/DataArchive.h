@@ -173,6 +173,8 @@ public:
   // a list of corresponding data types
   void queryVariables( std::vector< std::string>& names,
 		       std::vector< const TypeDescription *>&  );
+  void queryGlobals( std::vector< std::string>& names,
+		     std::vector< const TypeDescription *>&  );
   void queryTimesteps( std::vector<int>& index,
 		       std::vector<double>& times );
   string queryEndianness();
@@ -269,6 +271,10 @@ private:
   DOM_Node getTimestep(double time, XMLURL& url);
   void query( Variable& var, DOM_Node vnode, XMLURL url,
 	      int matlIndex,	const Patch* patch );
+
+  void queryVariables( DOM_Node vars, vector<string>& names,
+		       vector<const TypeDescription*>& types);
+
   
   TimeHashMaps* getTopLevelVarHashMaps()
   {
