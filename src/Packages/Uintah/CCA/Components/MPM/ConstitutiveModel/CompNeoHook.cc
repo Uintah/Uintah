@@ -163,13 +163,13 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
             Ghost::AroundCells, 1);
     old_dw->get(delT, lb->delTLabel);
 
-    //particle cracking speed is used for time-step computation
-    ParticleVariable<double> pCrackingSpeed;
     ParticleVariable<int> pConnectivity;
+    ParticleVariable<Vector> pContactNormal;
     ParticleVariable<Vector> pRotationRate;
     ParticleVariable<double> pStrainEnergy;
     if(matl->getFractureModel()) {
       new_dw->get(pConnectivity, lb->pConnectivityLabel, pset);
+      new_dw->get(pContactNormal, lb->pContactNormalLabel, pset);
       new_dw->allocate(pRotationRate, lb->pRotationRateLabel, pset);
       new_dw->allocate(pStrainEnergy, lb->pStrainEnergyLabel, pset);
     }
@@ -189,35 +189,41 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
        patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
 
        if(matl->getFractureModel()) {
-         //ratation rate: (omega1,omega2,omega3)
-         double omega1 = 0;
-         double omega2 = 0;
-         double omega3 = 0;
+	 //ratation rate: (omega1,omega2,omega3)
+	 double omega1 = 0;
+	 double omega2 = 0;
+	 double omega3 = 0;
 
-         Connectivity connectivity(pConnectivity[idx]);
-         int conn[8];
-         connectivity.getInfo(conn);
-         connectivity.modifyShapeDerivatives(conn,d_S,Connectivity::connect);
-
-         for(int k = 0; k < 8; k++) {
-	   if(conn[k] == Connectivity::connect) {
-	      Vector& gvel = gvelocity[ni[k]];
-	      for (int j = 0; j<3; j++){
-	         for (int i = 0; i<3; i++) {
-	            velGrad(i+1,j+1) += gvel(i) * d_S[k](j) * oodx[j];		  
-	         }
-	      }
-
-	      //rotation rate computation, required for fracture
-              if(matl->getFractureModel()) {
-	        //NOTE!!! gvel(0) = gvel.x() !!!
-	        omega1 += gvel(2) * d_S[k](1) * oodx[1] - gvel(1) * d_S[k](2) * oodx[2];
-	        omega2 += gvel(0) * d_S[k](2) * oodx[2] - gvel(2) * d_S[k](0) * oodx[0];
-	        omega3 += gvel(1) * d_S[k](0) * oodx[0] - gvel(0) * d_S[k](1) * oodx[1];
-	      }
+	 Connectivity connectivity(pConnectivity[idx]);
+	 int conn[8];
+	 connectivity.getInfo(conn);
+	 connectivity.modifyShapeDerivatives(conn,d_S,Connectivity::contact);
+	
+	 for(int k = 0; k < 8; k++) {
+	   if( conn[k] == Connectivity::unconnect ) continue;
+	  
+	   Vector gvel;
+	   if( conn[k] == Connectivity::connect ) {
+	     gvel = gvelocity[ni[k]];
 	   }
-         }
-         pRotationRate[idx] = Vector(omega1/2,omega2/2,omega3/2);
+	   else {
+	     gvel = pContactNormal[idx] * 
+	     Dot(pContactNormal[idx], gvelocity[ni[k]]);
+	   }
+	  
+	   for (int j = 0; j<3; j++){
+	     for (int i = 0; i<3; i++) {
+	       velGrad(i+1,j+1) += gvel(i) * d_S[k](j) * oodx[j];
+	     }
+	   }
+
+	   //rotation rate computation, required for fracture
+	   //NOTE!!! gvel(0) = gvel.x() !!!
+	   omega1 += gvel(2) * d_S[k](1) * oodx[1] - gvel(1) * d_S[k](2)*oodx[2];
+	   omega2 += gvel(0) * d_S[k](2) * oodx[2] - gvel(2) * d_S[k](0)*oodx[0];
+           omega3 += gvel(1) * d_S[k](0) * oodx[0] - gvel(0) * d_S[k](1)*oodx[1];
+	 }
+	 pRotationRate[idx] = Vector(omega1/2,omega2/2,omega3/2);
        }
        else {
          for(int k = 0; k < 8; k++) {
@@ -267,8 +273,12 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
       W = .5*shear*(bElBar[idx].Trace() - 3.0);
 
       pvolume[idx]=Jinc*pvolume[idx];
+      
+      double e = (U + W)*pvolume[idx]/J;
 
-      se += (U + W)*pvolume[idx]/J;
+      if(matl->getFractureModel()) pStrainEnergy[idx] = e;
+
+      se += e;
 
       if(pmass[idx] > 0){
         c_dil = sqrt((bulk + 4.*shear/3.)*pvolume[idx]/pmass[idx]);
@@ -292,7 +302,8 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     new_dw->put(bElBar,                 bElBarLabel_preReloc);
 
     if( matl->getFractureModel() ) {
-        new_dw->put(pRotationRate,      lb->pRotationRateLabel);
+      new_dw->put(pRotationRate, lb->pRotationRateLabel);
+      new_dw->put(pStrainEnergy, lb->pStrainEnergyLabel);
     }
   }
 }
@@ -317,10 +328,12 @@ void CompNeoHook::addComputesAndRequires(Task* task,
    task->computes(bElBarLabel_preReloc,                  matlset);
    task->computes(lb->pVolumeDeformedLabel,              matlset);
    
-   if(matl->getFractureModel()) {
-      task->requires(Task::NewDW, lb->pConnectivityLabel, matlset, Ghost::None);
-      task->computes(lb->pRotationRateLabel,              matlset);
-   }
+  if(matl->getFractureModel()) {
+    task->requires(Task::NewDW, lb->pConnectivityLabel,  matlset,Ghost::None);
+    task->requires(Task::NewDW, lb->pContactNormalLabel, matlset,Ghost::None);
+    task->computes(lb->pRotationRateLabel, matlset);
+    task->computes(lb->pStrainEnergyLabel, matlset);
+  }
 }
 
 // The "CM" versions use the pressure-volume relationship of the CNH model
