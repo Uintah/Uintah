@@ -14,6 +14,7 @@ c*********************************************************************
 
       integer i, j, k
       double precision PMIXL, DMESH
+      double precision scale, scalw, scaln, scals, scalt, scalb
       double precision dfdx, dfdy, dfdz
 
 
@@ -46,9 +47,15 @@ C--------------------------------------------------------------------
 C--------------------------------------------------------------------
 C     CALCULATE GENERATION OF TURBULENCE
 C--------------------------------------------------------------------
-               dfdx = (Scalar(I,J,K) - Scalar(I-1,J,K))/dxpw(I)
-               dfdy = (Scalar(I,J,K) - Scalar(I,J-1,K))/dyps(J)
-               dfdz = (Scalar(I,J,K) - Scalar(I,J,K-1))/dzpb(K)
+               scale = 0.5*(Scalar(i,j,k)+Scalar(i+1,j,k))
+               scalw = 0.5*(Scalar(i,j,k)+Scalar(i-1,j,k))
+               scaln = 0.5*(Scalar(i,j,k)+Scalar(i,j+1,k))
+               scals = 0.5*(Scalar(i,j,k)+Scalar(i,j-1,k))
+               scalt = 0.5*(Scalar(i,j,k)+Scalar(i,j,k+1))
+               scalb = 0.5*(Scalar(i,j,k)+Scalar(i,j,k-1))
+               dfdx = (scale - scalw)/sew(I)
+               dfdy = (scaln - scals)/sns(J)
+               dfdz = (scalt - scalb)/stb(K)
                ScalarVar(I,J,K) = CFVar*(PMIXL**2)*
      $                            (dfdx**2 + dfdy**2 + dfdz**2)
  200        CONTINUE

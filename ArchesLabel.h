@@ -90,6 +90,9 @@ namespace Uintah {
       // for old_dw in computeTurbModel
       const VarLabel* d_viscosityCTSLabel;
 
+      const VarLabel* d_viscosityPredLabel;
+
+
       // Pressure Labels
 
       //computed for old_dw in paramInit

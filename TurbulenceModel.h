@@ -80,6 +80,10 @@ public:
       virtual void sched_reComputeTurbSubmodel(SchedulerP&, const PatchSet* patches,
 					       const MaterialSet* matls) = 0;
 
+      virtual void sched_computeTurbSubmodelPred(SchedulerP&,
+						 const PatchSet* patches,
+					       const MaterialSet* matls) = 0;
+
       virtual void sched_computeScalarVariance(SchedulerP&, const PatchSet* patches,
 					       const MaterialSet* matls) = 0;
       // GROUP: Action Computations :
