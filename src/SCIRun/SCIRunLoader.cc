@@ -77,7 +77,8 @@ SCIRunLoader::SCIRunLoader(const string &loaderName,  const string & frameworkUR
   */
 }
 
-int SCIRunLoader::createPInstance(const string& componentName, const string& componentType, SSIDL::array1<std::string> &componentURLs) {
+int SCIRunLoader::createPInstance(const string& componentName, const string& componentType, 
+				  const sci::cca::TypeMap::pointer& properties,SSIDL::array1<std::string> &componentURLs) {
 
   //TODO: assume type is always good?
 
@@ -124,7 +125,8 @@ int SCIRunLoader::createPInstance(const string& componentName, const string& com
 
 
 
-int SCIRunLoader::createInstance(const string& componentName, const string& componentType, std::string &componentURL) {
+int SCIRunLoader::createInstance(const string& componentName, const string& componentType, 
+				 const sci::cca::TypeMap::pointer& properties,std::string &componentURL) {
 
   //TODO: assume type is always good?
 

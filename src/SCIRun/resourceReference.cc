@@ -118,7 +118,7 @@ sci::cca::Component::pointer resourceReference::createInstance(const std::string
  
   cerr<<"comURLs1.size before create Instance="<<comURLs1.size()<<endl;
   cerr<<"ploader->createPInstance(name, type, comURLs1)...";
-  ploader->createPInstance(name, type, comURLs1);
+  ploader->createPInstance(name, type, sci::cca::TypeMap::pointer(0), comURLs1);
 
   cerr<<"Done\n";
   cerr<<"comURLs1.size="<<comURLs1.size()<<endl;
