@@ -68,6 +68,7 @@ class ShowField : public Module
   //! top level nodes for switching on and off..
   //! Options for rendering nodes.
   GuiInt                   nodes_on_;
+  GuiInt                   nodes_transparency_;
   GuiInt                   nodes_as_disks_;
   bool                     nodes_dirty_;
 
@@ -184,6 +185,7 @@ ShowField::ShowField(GuiContext* ctx) :
   data_id_(0),
   text_id_(0),
   nodes_on_(ctx->subVar("nodes-on")),
+  nodes_transparency_(ctx->subVar("nodes-transparency")),
   nodes_as_disks_(ctx->subVar("nodes-as-disks")),
   nodes_dirty_(true),
   edges_on_(ctx->subVar("edges-on")),
@@ -426,6 +428,7 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
       return false;
     }
     data_at_dirty_ = true; //we need to rerender colors..
+    nodes_dirty_ = true; // Nodes don't cache color.
     edges_dirty_ = true; // Edges don't cache color.
     faces_dirty_ = true; // Faces don't cache color.
     data_dirty_ = true; // Data doesn't cache color.
@@ -508,6 +511,7 @@ ShowField::execute()
     //warning("No ColorMap in port 2 ColorMap.");
     if (colormap_generation_ != -1) {
       data_at_dirty_ = true;
+      nodes_dirty_ = true;
       edges_dirty_ = true;
       faces_dirty_ = true;
       text_dirty_ = true;
@@ -517,6 +521,7 @@ ShowField::execute()
   } else if (colormap_generation_ != color_handle->generation) {
     colormap_generation_ = color_handle->generation;  
     data_at_dirty_ = true;
+    nodes_dirty_ = true;
     edges_dirty_ = true;
     faces_dirty_ = true;
     text_dirty_ = true;
@@ -610,7 +615,9 @@ ShowField::execute()
 		      def_mat_handle_, data_at_dirty_, color_handle,
 		      ndt, edt, ns, es, vscale, normalize_vectors_.get(),
 		      node_resolution_, edge_resolution_,
-		      faces_normals_.get(), edges_transparency_.get(),
+		      faces_normals_.get(),
+		      nodes_transparency_.get(),
+		      edges_transparency_.get(),
 		      faces_transparency_.get(),
 		      bidirectional_.get(), arrow_heads_on_.get());
   }
@@ -619,14 +626,15 @@ ShowField::execute()
   if (do_nodes) {
     nodes_dirty_ = false;
     if (renderer_.get_rep() && nodes_on_.get()) {
+      const char *name = nodes_transparency_.get()?"TransParent Nodes":"Nodes";
       if (node_id_) ogeom_->delObj(node_id_);
-      node_id_ = ogeom_->addObj(renderer_->node_switch_, "Nodes");
+      node_id_ = ogeom_->addObj(renderer_->node_switch_, name);
     }
   }
   if (do_edges) {
     edges_dirty_ = false;
     if (renderer_.get_rep() && edges_on_.get()) {
-      const char *name = faces_transparency_.get()?"TransParent Edges":"Edges";
+      const char *name = edges_transparency_.get()?"TransParent Edges":"Edges";
       if (edge_id_) ogeom_->delObj(edge_id_);
       edge_id_ = ogeom_->addObj(renderer_->edge_switch_, name);
     }
@@ -839,6 +847,13 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
       ogeom_->flushViews();
       edge_id_ = 0;
     }
+  } else if (args[1] == "rerender_nodes"){
+    nodes_dirty_ = true;
+    if (now && node_id_) {
+      ogeom_->delObj(node_id_);
+      node_id_ = 0;
+    }
+    maybe_execute(NODE);
   } else if (args[1] == "rerender_edges"){
     edges_dirty_ = true;
     if (now && edge_id_) {
