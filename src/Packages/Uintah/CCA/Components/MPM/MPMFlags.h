@@ -34,6 +34,8 @@ namespace Uintah {
     bool        d_doErosion; // Flag to decide whether to erode or not
     bool        d_with_color;         // to turn on the color variable
     bool        d_fracture;         // to turn on fracture
+
+    bool        d_finestLevelOnly; // turn off AMR work on all but 1 level
     
     std::string d_erosionAlgorithm; // Algorithm to erode material points
 

@@ -23,6 +23,7 @@ MPMFlags::MPMFlags()
   d_createNewParticles = false;
   d_with_color = false;
   d_fracture = false;
+  d_finestLevelOnly = false;
                       
   d_doErosion = false;
   d_erosionAlgorithm = "none";
@@ -49,6 +50,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   ps->get("use_load_curves", d_useLoadCurves);
   bool adiabaticHeatingOn = true;
   ps->get("turn_on_adiabatic_heating", adiabaticHeatingOn);
+  ps->get("finest_level_only", d_finestLevelOnly);
   if (!adiabaticHeatingOn) d_adiabaticHeating = 1.0;
   ps->get("ForceBC_force_increment_factor", d_forceIncrementFactor);
   ps->get("create_new_particles", d_createNewParticles);
