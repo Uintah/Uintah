@@ -136,6 +136,8 @@ GLTexture3D::init(double& min, double &max, bool use_minmax)
     return false;
   }
   LatVolMeshHandle mesh = (LatVolMesh *)(texfld_->mesh().get_rep());
+//   cerr<<"Field Bounds in init()  are "<<mesh->get_bounding_box().min()<<
+//     ", "<<mesh->get_bounding_box().max()<<"\n";
   transform_ = mesh->get_transform();
 
   if (xmax_ == 0 && ymax_ ==0 && zmax_== 0)
@@ -182,6 +184,9 @@ GLTexture3D::init(double& min, double &max, bool use_minmax)
 		  mesh->get_min_j() + mesh->get_nj(),
 		  mesh->get_min_k() + mesh->get_nk());
   }
+//   cerr<<"minP_, maxP_ = "<<minP_<<", "<<maxP_<<"\n";
+//   cerr<<"Transformed minP_, maxP_ = "<<transform_.project(minP_)<<
+//     ", "<<transform_.project(maxP_)<<"\n";
   if (use_minmax)
   {
     min_ = min;
@@ -224,7 +229,7 @@ void
 GLTexture3D::set_bounds()
 {
   Vector diag = maxP_ - minP_;
-  std::cerr<<"Bounds = "<<minP_<<", "<<maxP_<<std::endl;
+//   std::cerr<<"Bounds = "<<minP_<<", "<<maxP_<<std::endl;
 
   dx_ = diag.x()/(X_-1);
   dy_ = diag.y()/(Y_-1);
@@ -250,13 +255,13 @@ GLTexture3D::build_texture( Reporter *reporter)
   tg = scinew ThreadGroup( group_name.c_str());
 
   string type = texfld_->get_type_description(1)->get_name();
-  cerr << "Type = " << type << endl;
+//   cerr << "Type = " << type << endl;
 
 #define use_alg
 #ifdef use_alg
   // start new algorithm based code
   const TypeDescription *td = texfld_->get_type_description();
-  cerr << "DC: type description = " << td->get_name() << endl;
+//   cerr << "DC: type description = " << td->get_name() << endl;
   LockingHandle<GLTexture3DBuilderAlg> builder;
   CompileInfoHandle ci = GLTexture3DBuilderAlg::get_compile_info(td);
   if ( !DynamicCompilation::compile(ci, builder, reporter ) ) {
