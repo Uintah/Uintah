@@ -112,7 +112,7 @@ private:
       double QACCU, d_opl, af, qerr, totsrc;
       int iflag, iriter;
       int lambda;
-      double wavemin, wavemax, dom, omega;
+      double wavemin, wavemax, dom, omega, srcsum;
       int ffield;
       int wall;
       int symtry;

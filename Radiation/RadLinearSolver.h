@@ -109,6 +109,7 @@ private:
       int d_overlap;
       int d_fill;
       int d_maxSweeps;
+      bool d_shsolver;
       double d_tolerance; // convergence tolerence
       double d_underrelax;
       double d_initResid;

@@ -84,8 +84,8 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
     db->getWithDefault("spherical_harmonics",d_SHRadiationCalc,false);
   }
   else {
-    d_sn=2;
-    d_opl=6.0;
+    d_sn=6;
+    d_opl=0.18;
   }
   //  lshradmodel = false;
 
@@ -149,13 +149,14 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
 void
 DORadiationModel::computeOrdinatesOPL() {
 
+  /*
   //  if(lprobone==true){
     d_opl = 1.0*d_opl; 
     //  }
   if(lprobtwo==true){
     d_opl = 1.76;
   }
-
+  */
         d_totalOrds = d_sn*(d_sn+2);
 //      d_totalOrds = 8*d_sn*d_sn;
 
@@ -190,7 +191,6 @@ DORadiationModel::computeRadiationProps(const ProcessorGroup*,
 					 ArchesConstVariables* constvars)
 
 {
-  /*
       IntVector domLo = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
       IntVector domHi = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
 
@@ -199,12 +199,13 @@ DORadiationModel::computeRadiationProps(const ProcessorGroup*,
 
       idxLo = idxLo - IntVector(1,1,1);
       idxHi = idxHi + IntVector(1,1,1);
-  */
 
+      /*
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
   IntVector domLo = patch->getCellLowIndex();
   IntVector domHi = patch->getCellHighIndex();
+      */
 
     CCVariable<double> shgamma;
     vars->shgamma.allocate(domLo,domHi);
@@ -335,7 +336,7 @@ if(d_SHRadiationCalc==false) {
   }
 
   if(lradcal==true){    
-              fort_radcal(idxLo, idxHi, vars->ABSKG, vars->ESRCG,
+              fort_radcal(idxLo, idxHi, vars->ABSKG, vars->ESRCG, vars->shgamma,
 		cellinfo->xx, cellinfo->yy, cellinfo->zz, bands, constvars->cellType, ffield, constvars->co2, constvars->h2o, constvars->sootFV, vars->temperature, lprobone, lprobtwo, lplanckmean, lpatchmean, lambda, fraction, rgamma, sd15, sd, sd7, sd3, d_opl);
   }
 
@@ -391,7 +392,9 @@ if(d_SHRadiationCalc==false) {
     cerr << "Total Radiation Solve Time: " << Time::currentSeconds()-solve_start << " seconds\n";
   }
   /*
-   fort_rdombmcalc(idxLo, idxHi, cellinfo->xx, cellinfo->zz, srcbm, qfluxbbm, vars->src, vars->qfluxb, vars->qfluxw, lprobone, lprobtwo, lprobthree, srcpone, volq);
+  fort_rdombmcalc(idxLo, idxHi, constvars->cellType, ffield, cellinfo->xx, cellinfo->zz, cellinfo->sew, cellinfo->sns, cellinfo->stb, volume, areaew, arean, areatb, srcbm, qfluxbbm, vars->src, vars->qfluxe, vars->qfluxw, vars->qfluxn, vars->qfluxs, vars->qfluxt, vars->qfluxb, lprobone, lprobtwo, lprobthree, srcpone, volq, srcsum);
+
+   cerr << "Total radiative source =" << srcsum << " watts\n";
   */
 }//end discrete ordinates
 
@@ -409,7 +412,7 @@ if(d_SHRadiationCalc==false) {
   }
 
   if(lradcal==true){    
-              fort_radcal(idxLo, idxHi, vars->ABSKG, vars->ESRCG,
+              fort_radcal(idxLo, idxHi, vars->ABSKG, vars->ESRCG, vars->shgamma,
 		cellinfo->xx, cellinfo->yy, cellinfo->zz, bands, constvars->cellType, ffield, constvars->co2, constvars->h2o, constvars->sootFV, vars->temperature, lprobone, lprobtwo, lplanckmean, lpatchmean, lambda, fraction, rgamma, sd15, sd, sd7, sd3, d_opl);
   }
 
@@ -462,7 +465,9 @@ if(d_SHRadiationCalc==false) {
     cerr << "Total Radiation Solve Time: " << Time::currentSeconds()-solve_start << " seconds\n";
   }
   /*
-   fort_rdombmcalc(idxLo, idxHi, constvars->cellType, ffield, cellinfo->xx, cellinfo->zz, cellinfo->sew, cellinfo->sns, cellinfo->stb, volume, areaew, arean, areatb, srcbm, qfluxbbm, vars->src, vars->qfluxe, vars->qfluxw, vars->qfluxn, vars->qfluxs, vars->qfluxt, vars->qfluxb, lprobone, lprobtwo, lprobthree, srcpone, volq);
+   fort_rdombmcalc(idxLo, idxHi, constvars->cellType, ffield, cellinfo->xx, cellinfo->zz, cellinfo->sew, cellinfo->sns, cellinfo->stb, volume, areaew, arean, areatb, srcbm, qfluxbbm, vars->src, vars->qfluxe, vars->qfluxw, vars->qfluxn, vars->qfluxs, vars->qfluxt, vars->qfluxb, lprobone, lprobtwo, lprobthree, srcpone, volq, srcsum);
+
+   cerr << "Total radiative source =" << srcsum << " watts\n";
   */
   }
 }
