@@ -96,7 +96,7 @@ DESCRIPTION
 
           //////////
 	  // Returns the reference manager 
-	  ReferenceMgr* _proxyGetReferenceMgr();
+	  ReferenceMgr* _proxyGetReferenceMgr() const;
 
 	  //////////
 	  // Returns the unique identifier of this proxy 

@@ -33,6 +33,7 @@
 
 
 #include <Core/CCA/Component/PIDL/URL.h>
+#include <Core/CCA/Component/PIDL/ReferenceMgr.h>
 #include <Core/CCA/Component/PIDL/MxNArrayRep.h>
 #include <Core/CCA/Component/PIDL/MxNScheduler.h>
 #include <Core/CCA/Component/PIDL/HandlerStorage.h>
@@ -84,7 +85,7 @@ public:
   //////////
   // Internal method to get a reference (startpoint and
   // vtable base) to this object.
-  virtual void _getReference(Reference&, bool copy) const;
+  virtual void _getReferenceCopy(ReferenceMgr** ) const;
 
   //////////
   // Internal method to increment the reference count for

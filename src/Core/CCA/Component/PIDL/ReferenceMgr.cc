@@ -44,14 +44,6 @@ ReferenceMgr::ReferenceMgr(int rank, int size)
 {
 }
 
-ReferenceMgr& ReferenceMgr::operator=(const ReferenceMgr& copy)
-{
-  //for test only, will be removed.
-  // this method should never be called.
-  assert(false);
-  return *this;
-}
-
 ReferenceMgr::ReferenceMgr(const ReferenceMgr& copy)
   :localSize(copy.localSize),localRank(copy.localRank),
    s_lSize(copy.s_lSize), s_refSize(copy.s_refSize)
