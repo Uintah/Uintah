@@ -1498,177 +1498,177 @@ void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
     Vector vv(v/(nv-1));
     switch(di->get_drawtype()){
     case DrawInfoOpenGL::WireFrame:
-        {
-            Point rstart(corner);
-            for(int i=0;i<nu;i++){
-                Point p1(rstart);
-                glBegin(GL_LINE_STRIP);
-                for(int j=0;j<nv;j++){
-                    Point pp1(p1+w*verts(i, j));
-                    if(have_matls)
-                        di->set_matl(matls(i, j).get_rep());
-                    if(have_normals){
-                        Vector normal(normals(i, j));
-                        glNormal3d(normal.x(), normal.y(), normal.z());
-                    }
-                    glVertex3d(pp1.x(), pp1.y(), pp1.z());
+      {
+	Point rstart(corner);
+	for(int i=0;i<nu;i++){
+	  Point p1(rstart);
+	  glBegin(GL_LINE_STRIP);
+	  for(int j=0;j<nv;j++){
+	    Point pp1(p1+w*verts(i, j));
+	    if(have_matls)
+	      di->set_matl(matls(i, j).get_rep());
+	    if(have_normals){
+	      Vector normal(normals(i, j));
+	      glNormal3d(normal.x(), normal.y(), normal.z());
+	    }
+	    glVertex3d(pp1.x(), pp1.y(), pp1.z());
 
-                    p1+=vv;
-                }
-                glEnd();
-                rstart+=uu;
-            }
-            rstart=corner;
-            for(int j=0;j<nv;j++){
-                Point p1(rstart);
-                glBegin(GL_LINE_STRIP);
-                for(int i=0;i<nu;i++){
-                    Point pp1(p1+w*verts(i, j));
-                    if(have_matls)
-                        di->set_matl(matls(i, j).get_rep());
-                    if(have_normals){
-                        Vector normal(normals(i, j));
-                        glNormal3d(normal.x(), normal.y(), normal.z());
-                    }
-                    glVertex3d(pp1.x(), pp1.y(), pp1.z());
+	    p1+=vv;
+	  }
+	  glEnd();
+	  rstart+=uu;
+	}
+	rstart=corner;
+	for(int j=0;j<nv;j++){
+	  Point p1(rstart);
+	  glBegin(GL_LINE_STRIP);
+	  for(int i=0;i<nu;i++){
+	    Point pp1(p1+w*verts(i, j));
+	    if(have_matls)
+	      di->set_matl(matls(i, j).get_rep());
+	    if(have_normals){
+	      Vector normal(normals(i, j));
+	      glNormal3d(normal.x(), normal.y(), normal.z());
+	    }
+	    glVertex3d(pp1.x(), pp1.y(), pp1.z());
 
-                    p1+=uu;
-                }
-                glEnd();
-                rstart+=vv;
-            }
-        }
-        break;
+	    p1+=uu;
+	  }
+	  glEnd();
+	  rstart+=vv;
+	}
+      }
+      break;
     case DrawInfoOpenGL::Flat:
     case DrawInfoOpenGL::Gouraud:
-        {
+      {
 #if 0
-            if(!have_normals)
-                glNormal3d(w.x(), w.y(), w.z());
-            Point rstart(corner);
-            for(int i=0;i<nu-1;i++){
-                Point p1(rstart);
-                Point p2(rstart+uu);
-                rstart=p2;
-                glBegin(GL_TRIANGLE_STRIP);
-                for(int j=0;j<nv;j++){
-                    Point pp1(p1+w*verts(i, j));
-                    Point pp2(p2+w*verts(i+1, j));
-                    if(have_matls)
-                        di->set_matl(matls(i, j).get_rep());
-                    if(have_normals){
-                        Vector normal(normals(i, j));
-                        glNormal3d(normal.x(), normal.y(), normal.z());
-                    }
-                    glVertex3d(pp1.x(), pp1.y(), pp1.z());
+	if(!have_normals)
+	  glNormal3d(w.x(), w.y(), w.z());
+	Point rstart(corner);
+	for(int i=0;i<nu-1;i++){
+	  Point p1(rstart);
+	  Point p2(rstart+uu);
+	  rstart=p2;
+	  glBegin(GL_TRIANGLE_STRIP);
+	  for(int j=0;j<nv;j++){
+	    Point pp1(p1+w*verts(i, j));
+	    Point pp2(p2+w*verts(i+1, j));
+	    if(have_matls)
+	      di->set_matl(matls(i, j).get_rep());
+	    if(have_normals){
+	      Vector normal(normals(i, j));
+	      glNormal3d(normal.x(), normal.y(), normal.z());
+	    }
+	    glVertex3d(pp1.x(), pp1.y(), pp1.z());
 
-                    if(have_matls)
-                        di->set_matl(matls(i+1, j).get_rep());
-                    if(have_normals){
-                        Vector normal(normals(i+1, j));
-                        glNormal3d(normal.x(), normal.y(), normal.z());
-                    }
-                    glVertex3d(pp2.x(), pp2.y(), pp2.z());
-                    p1+=vv;
-                    p2+=vv;
-                }
-                glEnd();
-            }
+	    if(have_matls)
+	      di->set_matl(matls(i+1, j).get_rep());
+	    if(have_normals){
+	      Vector normal(normals(i+1, j));
+	      glNormal3d(normal.x(), normal.y(), normal.z());
+	    }
+	    glVertex3d(pp2.x(), pp2.y(), pp2.z());
+	    p1+=vv;
+	    p2+=vv;
+	  }
+	  glEnd();
+	}
 #endif
-            if(have_matls)
-              di->set_matl(matls(0,0).get_rep());
-            Point rstart(corner);
-            if(have_normals && have_matls){
-              for(int i=0;i<nu-1;i++){
-                Point p1(rstart);
-                Point p2(rstart+uu);
-                rstart=p2;
-                glBegin(GL_TRIANGLE_STRIP);
-                for(int j=0;j<nv;j++){
-                  Point pp1(p1+w*verts(i, j));
-                  Point pp2(p2+w*verts(i+1, j));
-                  float c[4];
-                  matls(i,j)->diffuse.get_color(c);
-                  glColor3fv(c);
-                  Vector& normal = normals(i, j);
-                  glNormal3d(normal.x(), normal.y(), normal.z());
-                  glVertex3d(pp1.x(), pp1.y(), pp1.z());
+	if(have_matls)
+	  di->set_matl(matls(0,0).get_rep());
+	Point rstart(corner);
+	if(have_normals && have_matls){
+	  for(int i=0;i<nu-1;i++){
+	    Point p1(rstart);
+	    Point p2(rstart+uu);
+	    rstart=p2;
+	    glBegin(GL_QUAD_STRIP);
+	    for(int j=0;j<nv;j++){
+	      Point pp1(p1+w*verts(i, j));
+	      Point pp2(p2+w*verts(i+1, j));
+	      float c[4];
+	      matls(i,j)->diffuse.get_color(c);
+	      glColor3fv(c);
+	      Vector& normal = normals(i, j);
+	      glNormal3d(normal.x(), normal.y(), normal.z());
+	      glVertex3d(pp1.x(), pp1.y(), pp1.z());
 
-                  matls(i+1, j)->diffuse.get_color(c);
-                  glColor3fv(c);
-                  Vector& normal2 = normals(i+1, j);
-                  glNormal3d(normal2.x(), normal2.y(), normal2.z());
-                  glVertex3d(pp2.x(), pp2.y(), pp2.z());
-                  p1+=vv;
-                  p2+=vv;
-                }
-                glEnd();
-              }
-            } else if(have_matls){
-              glNormal3d(w.x(), w.y(), w.z());
-              for(int i=0;i<nu-1;i++){
-                Point p1(rstart);
-                Point p2(rstart+uu);
-                rstart=p2;
-                glBegin(GL_TRIANGLE_STRIP);
-                for(int j=0;j<nv;j++){
-                  Point pp1(p1+w*verts(i, j));
-                  Point pp2(p2+w*verts(i+1, j));
-                  float c[4];
-                  matls(i,j)->diffuse.get_color(c);
-                  glColor3fv(c);
-                  glVertex3d(pp1.x(), pp1.y(), pp1.z());
+	      matls(i+1, j)->diffuse.get_color(c);
+	      glColor3fv(c);
+	      Vector& normal2 = normals(i+1, j);
+	      glNormal3d(normal2.x(), normal2.y(), normal2.z());
+	      glVertex3d(pp2.x(), pp2.y(), pp2.z());
+	      p1+=vv;
+	      p2+=vv;
+	    }
+	    glEnd();
+	  }
+	} else if(have_matls){
+	  glNormal3d(w.x(), w.y(), w.z());
+	  for(int i=0;i<nu-1;i++){
+	    Point p1(rstart);
+	    Point p2(rstart+uu);
+	    rstart=p2;
+	    glBegin(GL_QUAD_STRIP);
+	    for(int j=0;j<nv;j++){
+	      Point pp1(p1+w*verts(i, j));
+	      Point pp2(p2+w*verts(i+1, j));
+	      float c[4];
+	      matls(i,j)->diffuse.get_color(c);
+	      glColor3fv(c);
+	      glVertex3d(pp1.x(), pp1.y(), pp1.z());
 
-                  matls(i+1, j)->diffuse.get_color(c);
-                  glColor3fv(c);
-                  glVertex3d(pp2.x(), pp2.y(), pp2.z());
-                  p1+=vv;
-                  p2+=vv;
-                }
-                glEnd();
-              }
-            } else if(have_normals){
-              for(int i=0;i<nu-1;i++){
-                Point p1(rstart);
-                Point p2(rstart+uu);
-                rstart=p2;
-                glBegin(GL_TRIANGLE_STRIP);
-                for(int j=0;j<nv;j++){
-                  Point pp1(p1+w*verts(i, j));
-                  Point pp2(p2+w*verts(i+1, j));
-                  Vector& normal = normals(i, j);
-                  glNormal3d(normal.x(), normal.y(), normal.z());
-                  glVertex3d(pp1.x(), pp1.y(), pp1.z());
+	      matls(i+1, j)->diffuse.get_color(c);
+	      glColor3fv(c);
+	      glVertex3d(pp2.x(), pp2.y(), pp2.z());
+	      p1+=vv;
+	      p2+=vv;
+	    }
+	    glEnd();
+	  }
+	} else if(have_normals){
+	  for(int i=0;i<nu-1;i++){
+	    Point p1(rstart);
+	    Point p2(rstart+uu);
+	    rstart=p2;
+	    glBegin(GL_QUAD_STRIP);
+	    for(int j=0;j<nv;j++){
+	      Point pp1(p1+w*verts(i, j));
+	      Point pp2(p2+w*verts(i+1, j));
+	      Vector& normal = normals(i, j);
+	      glNormal3d(normal.x(), normal.y(), normal.z());
+	      glVertex3d(pp1.x(), pp1.y(), pp1.z());
 
-                  Vector& normal2 = normals(i+1, j);
-                  glNormal3d(normal2.x(), normal2.y(), normal2.z());
-                  glVertex3d(pp2.x(), pp2.y(), pp2.z());
-                  p1+=vv;
-                  p2+=vv;
-                }
-                glEnd();
-              }
-            } else {
-              glNormal3d(w.x(), w.y(), w.z());
-              for(int i=0;i<nu-1;i++){
-                Point p1(rstart);
-                Point p2(rstart+uu);
-                rstart=p2;
-                glBegin(GL_TRIANGLE_STRIP);
-                for(int j=0;j<nv;j++){
-                  Point pp1(p1+w*verts(i, j));
-                  Point pp2(p2+w*verts(i+1, j));
-                  glVertex3d(pp1.x(), pp1.y(), pp1.z());
+	      Vector& normal2 = normals(i+1, j);
+	      glNormal3d(normal2.x(), normal2.y(), normal2.z());
+	      glVertex3d(pp2.x(), pp2.y(), pp2.z());
+	      p1+=vv;
+	      p2+=vv;
+	    }
+	    glEnd();
+	  }
+	} else {
+	  glNormal3d(w.x(), w.y(), w.z());
+	  for(int i=0;i<nu-1;i++){
+	    Point p1(rstart);
+	    Point p2(rstart+uu);
+	    rstart=p2;
+	    glBegin(GL_QUAD_STRIP);
+	    for(int j=0;j<nv;j++){
+	      Point pp1(p1+w*verts(i, j));
+	      Point pp2(p2+w*verts(i+1, j));
+	      glVertex3d(pp1.x(), pp1.y(), pp1.z());
 
-                  glVertex3d(pp2.x(), pp2.y(), pp2.z());
-                  p1+=vv;
-                  p2+=vv;
-                }
-                glEnd();
-              }
-            }
-        }
-        break;
+	      glVertex3d(pp2.x(), pp2.y(), pp2.z());
+	      p1+=vv;
+	      p2+=vv;
+	    }
+	    glEnd();
+	  }
+	}
+      }
+      break;
     }
     post_draw(di);
 }
