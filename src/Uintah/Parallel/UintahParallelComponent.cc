@@ -1,5 +1,6 @@
-/* REFERENCED */
-static char *id="@(#) $Id$";
+//
+// $Id$
+//
 
 #include <Uintah/Parallel/UintahParallelComponent.h>
 #include <SCICore/Util/NotFinished.h>
@@ -56,6 +57,9 @@ void UintahParallelComponent::releasePort(const std::string&)
 
 //
 // $Log$
+// Revision 1.10  2000/09/25 20:40:23  sparker
+// Quiet g++ compiler warnings
+//
 // Revision 1.9  2000/08/09 03:18:11  jas
 // Changed new to scinew and added deletes to some of the destructors.
 //
