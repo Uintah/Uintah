@@ -3451,11 +3451,12 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
     // These arrays get re-used for each material, and for each
     // advected quantity
     const IntVector gc(1,1,1);
-    CCVariable<double> q_CC, q_advected, mass_new;
+    CCVariable<double> q_CC, q_advected, mass_new, mass_advected;
     CCVariable<Vector> qV_CC, qV_advected;
     Advector* advector = d_advector->clone(new_dw,patch);
     Ghost::GhostType  gac = Ghost::AroundCells;
     new_dw->allocateTemporary(mass_new,     patch);
+    new_dw->allocateTemporary(mass_advected,patch);
     new_dw->allocateTemporary(q_advected,   patch);
     new_dw->allocateTemporary(qV_advected,  patch);
     new_dw->allocateTemporary(qV_CC,        patch,gac,2);
@@ -3494,8 +3495,10 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       new_dw->allocateAndPut(vel_CC, lb->vel_CCLabel,   indx,patch);          
       rho_CC.initialize(0.0);
       temp.initialize(0.0);
-      vel_CC.initialize(Vector(0.0,0.0,0.0));
       q_advected.initialize(0.0); 
+       
+      mass_advected.initialize(0.0);
+      vel_CC.initialize(Vector(0.0,0.0,0.0));
       qV_advected.initialize(Vector(0.0,0.0,0.0));
 
       //__________________________________
@@ -3520,11 +3523,11 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
         q_CC[c] = mass_L[c] * invvol;
       }
 
-      advector->advectQ(q_CC,patch,q_advected, new_dw);
+      advector->advectQ(q_CC,patch,mass_advected, new_dw);
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
-        mass_new[c]  = (mass_L[c] + q_advected[c]);
+        mass_new[c]  = (mass_L[c] + mass_advected[c]);
         rho_CC[c]    = mass_new[c] * invvol;
       }   
   
@@ -3539,9 +3542,16 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 
       advector->advectQ(qV_CC,patch,qV_advected, new_dw);
 
+
+      Vector vel_L_ME, vel_advected;
       for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
         IntVector c = *iter;
-        vel_CC[c] = (mom_L_ME[c] + qV_advected[c])/mass_new[c] ;
+        vel_L_ME = mom_L_ME[c]/mass_L[c];
+        
+        vel_advected = (qV_advected[c] - vel_L_ME * mass_advected[c])/
+                       (mass_new[c]);
+        vel_CC[c]    = (vel_L_ME + vel_advected);
+//      vel_CC[c] = (mom_L_ME[c] + qV_advected[c])/mass_new[c] ; 
       }
       
       setBC(vel_CC, "Velocity", patch,indx);
@@ -3555,18 +3565,36 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 
       advector->advectQ(q_CC,patch,q_advected, new_dw);
       
+      double Temp_advected, Temp_cv_L_ME, Temp_L_ME;
       if (d_EqForm){         // EQ FORM
         for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
           IntVector c = *iter;
-          temp[c] = (int_eng_L_ME[c] + q_advected[c])/(mass_new[c]*cv);
+
+          
+          Temp_cv_L_ME  = int_eng_L_ME[c]/mass_L[c];
+          Temp_L_ME     = Temp_cv_L_ME/cv;
+          Temp_advected = (q_advected[c] - Temp_cv_L_ME * mass_advected[c])/
+                          (cv * mass_new[c] );
+                          
+          temp[c]       = Temp_L_ME + Temp_advected;
+//        temp[c] = (int_eng_L_ME[c] + q_advected[c])/(mass_new[c]*cv);
         }
       }
 
       if (d_RateForm){      // RATE FORM
         for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
           IntVector c = *iter;
-          double KE = 0.5 * mass_new[c] * vel_CC[c].length()*vel_CC[c].length();
-          temp[c] = (int_eng_L_ME[c] + q_advected[c] - KE)/(mass_new[c] * cv);
+          double KE = 0.5 * vel_CC[c].length() * vel_CC[c].length();
+
+          Temp_cv_L_ME  = int_eng_L_ME[c]/mass_L[c];
+          Temp_L_ME     = Temp_cv_L_ME/cv;
+          Temp_advected = (q_advected[c] - Temp_cv_L_ME * mass_advected[c])/
+                          (cv * mass_new[c]);
+                         
+          temp[c]       = (Temp_L_ME + Temp_advected - KE/cv);
+          
+//        double KE = 0.5 * mass_new[c] * vel_CC[c].length() * vel_CC[c].length();
+//        temp[c] = (int_eng_L_ME[c] + q_advected[c] - KE)/(mass_new[c] * cv);
         }
       } 
       setBC(temp, "Temperature", patch, d_sharedState, indx);
@@ -3574,16 +3602,21 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       //__________________________________
       // Advection of specific volume
       // Note sp_vol_L[m] is actually sp_vol[m] * mass
+      double sp_vol_tmp, sp_vol_advected;
       for(CellIterator iter=iterPlusGhost; !iter.done();iter++){
         IntVector c = *iter;
         q_CC[c] = spec_vol_L[c]*invvol;
       }
 
       advector->advectQ(q_CC,patch,q_advected, new_dw);
-
+      
       for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
         IntVector c = *iter;
-        sp_vol_CC[c] = (spec_vol_L[c] + q_advected[c])/mass_new[c];    
+        sp_vol_tmp      = spec_vol_L[c]/mass_L[c];        
+        sp_vol_advected = (q_advected[c] - sp_vol_tmp * mass_advected[c])/
+                          ( mass_new[c]);
+        sp_vol_CC[c]    = sp_vol_tmp + sp_vol_advected; 
+//      sp_vol_CC[c] = (spec_vol_L[c] + q_advected[c])/mass_new[c];  
       }
 
       //  Set Neumann = 0 if symmetric Boundary conditions
