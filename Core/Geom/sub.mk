@@ -17,6 +17,7 @@ SRCS     += $(SRCDIR)/GeomObj.cc $(SRCDIR)/GeomOpenGL.cc \
 	$(SRCDIR)/GeomBox.cc $(SRCDIR)/HeadLight.cc $(SRCDIR)/GeomScene.cc \
 	$(SRCDIR)/GeomTorus.cc $(SRCDIR)/Color.cc \
 	$(SRCDIR)/IndexedGroup.cc $(SRCDIR)/GeomSphere.cc \
+	$(SRCDIR)/GeomEllipsoid.cc \
 	$(SRCDIR)/GeomTransform.cc $(SRCDIR)/GeomCone.cc \
 	$(SRCDIR)/Light.cc $(SRCDIR)/Sticky.cc $(SRCDIR)/GeomTri.cc \
 	$(SRCDIR)/GeomContainer.cc $(SRCDIR)/Lighting.cc \
@@ -40,6 +41,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2000/09/15 20:57:53  kuzimmer
+#  resurrected GeomEllipse from old code
+#
 # Revision 1.5  2000/07/28 21:13:18  yarden
 # GeomDL: Create and manage a display list for its child.
 # the user can select to ignore it via check buttons in Salmon
