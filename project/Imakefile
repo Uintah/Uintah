@@ -1,15 +1,21 @@
 
 #include <config/sci.cf>
 
-OBJS = main.o
-SRCS = main.cc
+LOCALINCLUDES = -I. -I../modules
+OBJS = Module.o  Modules.o  ModuleList.o  \
+	Network.o  NetworkEditor.o  Scheduler.o  \
+	main.o
+SRCS = Module.cc Modules.cc ModuleList.cc \
+	Network.cc NetworkEditor.cc Scheduler.cc \
+	main.cc
 TARGET = project
 
 SCI_LIBS = \
+	../modules/libmodules.a \
 	SCI_MultitaskLib \
 	SCI_ClassLib
 
-SCI_LDFLAGS = SCI_LM SCI_LTHREAD
+SCI_LDFLAGS = SCI_LM SCI_LTHREAD SCI_LMOTIF SCI_LX11
 
 SCIDependTarget($(SRCS))
 SCIProgramTarget($(TARGET), $(OBJS), $(SCI_LIBS), $(SCI_LDFLAGS))
