@@ -34,6 +34,10 @@ HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb, MPMFlags* Mflag)
   ps->require("G",d_initialData.G);
   ps->require("K",d_initialData.K);
 
+  // Thermal expansion coefficient 
+  d_initialData.alpha=0.0;
+  ps->get("alpha",d_initialData.alpha); // for thermal stress 
+
   if (flag->d_fracture) {
     // Read in fracture criterion and the toughness curve
     ProblemSpecP curve_ps = ps->findBlock("fracture_toughness_curve");
@@ -87,6 +91,7 @@ HypoElastic::HypoElastic(const HypoElastic* cm)
   NGN = cm->NGN;
   d_initialData.G = cm->d_initialData.G;
   d_initialData.K = cm->d_initialData.K;
+  d_initialData.alpha = cm->d_initialData.alpha; // for thermal stress
   if (flag->d_fracture)
     d_initialData.Kc = cm->d_initialData.Kc;
 }
@@ -280,6 +285,8 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Vector> pvelocity, psize;
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
+    // for thermal stress
+    constParticleVariable<double> pTempPrevious, pTempCurrent; 
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
 
@@ -292,6 +299,9 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
+    // for thermal stress
+    old_dw->get(pTempPrevious,       lb->pTempPreviousLabel,       pset); 
+    new_dw->get(pTempCurrent,        lb->pTempCurrentLabel,        pset); 
 
     new_dw->get(gvelocity,lb->gVelocityLabel, dwi,patch, gac, NGN);
 
@@ -328,6 +338,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
 
     double G    = d_initialData.G;
     double bulk = d_initialData.K;
+    double alpha = d_initialData.alpha;   // for thermal stress    
 
     for(ParticleSubset::iterator iter = pset->begin();
                                         iter != pset->end(); iter++){
@@ -339,7 +350,6 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       // Get the node indices that surround the cell
       interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
 
-      
        Vector gvel;
        velGrad.set(0.0);
        for(int k = 0; k < flag->d_8or27; k++) {
@@ -357,9 +367,11 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
           }
       }
 
-      // Calculate rate of deformation D, and deviatoric rate DPrime
-    
-      Matrix3 D = (velGrad + velGrad.Transpose())*.5;
+      // Rate of particle temperature change for thermal stress
+      double ptempRate=(pTempCurrent[idx]-pTempPrevious[idx])/delT; 
+      // Calculate rate of deformation D, and deviatoric rate DPrime,
+      // including effect of thermal strain
+      Matrix3 D = (velGrad + velGrad.Transpose())*.5-Identity*alpha*ptempRate;
       Matrix3 DPrime = D - Identity*onethird*D.Trace();
 
       // Compute the deformation gradient increment using the time_step
@@ -380,7 +392,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       // Compute the local sound speed
       double rho_cur = rho_orig/J;
       c_dil = sqrt((bulk + 4.*G/3.)/rho_cur);
-
+      // 
       // This is the (updated) Cauchy stress
       pstress_new[idx] = pstress[idx] + 
                          (DPrime*2.*G + Identity*bulk*D.Trace())*delT;
@@ -408,10 +420,10 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       se += e;
 
       if (flag->d_fracture) {
-      // Update particle displacement gradients
-      pdispGrads_new[idx] = pdispGrads[idx] + velGrad * delT;
-      // Update particle strain energy density 
-      pstrainEnergyDensity_new[idx] = pstrainEnergyDensity[idx] + 
+        // Update particle displacement gradients
+        pdispGrads_new[idx] = pdispGrads[idx] + velGrad * delT;
+        // Update particle strain energy density 
+        pstrainEnergyDensity_new[idx] = pstrainEnergyDensity[idx] + 
                                          e/pvolume_deformed[idx];
       }
 
@@ -725,6 +737,11 @@ void HypoElastic::addComputesAndRequires(Task* task,
   // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForExplicit(task, matlset, patches);
+  
+  Ghost::GhostType gnone = Ghost::None;
+  // for thermal stress
+  task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
+  task->requires(Task::NewDW, lb->pTempCurrentLabel,  matlset, gnone); 
 
   // Other constitutive model and input dependent computes and requires
   if (flag->d_fracture) {
