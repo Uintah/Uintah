@@ -36,9 +36,9 @@ SymmMatrix3::eigen(Vector& eval, Matrix3& evec)
       d[ii] = d[kk];
       d[kk] = temp;
       for (int ll = 0; ll < 3; ++ll) {
-        temp = V[ii][ll];
-        V[ii][ll] = V[kk][ll];
-        V[kk][ll] = temp;
+        temp = V[ll][ii];
+        V[ll][ii] = V[ll][kk];
+        V[ll][kk] = temp;
       }
     }
   }
