@@ -548,20 +548,40 @@ cd ../sgi64
       containing the /bin, /lib, /include and directories for all the required
       thirdparty software.</td></tr>
       <tr><td>--with-tcl=INST_DIR</td><td>INST_DIR = the directory containing
-      the /bin, /lib, /include and directories for the Tcl distribution.
+      the /bin, /lib, and /include directories for the Tcl distribution.
       </td></tr>
       <tr><td>--with-tk=INST_DIR</td><td>INST_DIR = the directory containing
-      the /bin, /lib, /include and directories for the Tk distribution.
+      the /bin, /lib, and /include directories for the Tk distribution.
       defaults to value given by --with-tcl.</td></tr>
       <tr><td>--with-itcl=INST_DIR</td><td>INST_DIR = the directory containing
-      the /bin, /lib, /include and directories for the [incr Tcl/Tk]
+      the /bin, /lib, and /include directories for the [incr Tcl/Tk]
       distributions.  defaults to value given by --with-tcl.</td></tr>
       <tr><td>--with-blt=INST_DIR</td><td>INST_DIR = the directory containing
-      the /bin, /lib, /include and directories for the BLT distribution.
+      the /bin, /lib, and /include directories for the BLT distribution.
       defaults to value given by --with-tcl.</td></tr>
       <tr><td>--with-xerces=INST_DIR</td><td>INST_DIR = the directory
-      containing the /bin, /lib, /include and directories for the Xerces-C
+      containing the /bin, /lib, and /include directories for the Xerces-C
       distribution.
+      </td></tr>
+      <tr><td>--with-mpeg[=INST_DIR]</td><td>INST_DIR = an optional
+      argument for specifying the directory containing the /lib and
+      /include directories for the mpeg_encode distribution.  If an
+      INST_DIR is not specified, then the default SCIRun_Thirdparty
+      directory will be assumed.  If the required header and library
+      files are not found, or if this option is not specified, the
+      Viewer rendering module will not have support for saving out
+      MPEG movies.
+      </td></tr>
+      <tr><td>--with-nrrd=INST_DIR</td><td>INST_DIR = the directory
+      containing the /lib and /include directories for Gordon
+      Kindlmann's Nrrd (Nearly Raw Raster Data) distribution.  This
+      optional flag is only valid if the Nrrd pacakge has been enabled
+      (using --enable-package).  If it has, this flag is only
+      necessary to specify a location other than the default
+      SCIRun_Thirdparty directory.  The Nrrd package contains modules
+      for converting between SCIRun Fields and Nrrds, for reading and
+      writing Nrrds, and wrappers for invoking Nrrd raster processing
+      algorithms.
       </td></tr>
       </table>
     </p>
