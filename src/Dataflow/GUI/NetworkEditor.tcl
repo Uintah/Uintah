@@ -1634,6 +1634,7 @@ proc promptUserToCopySCIRunrc {} {
 	if [catch { set rcfile [open ~/.scirunrc "WRONLY APPEND"] }] return
 	puts $rcfile "\n\# This section added when the user chose 'Dont Ask This Question Again'"
 	puts $rcfile "\# when prompted about updating the .scirurc file version"
+	set version [netedit getenv SCIRUN_VERSION].[netedit getenv SCIRUN_RCFILE_SUBVERSION]
 	puts $rcfile "SCIRUN_RCFILE_VERSION=${version}"
 	close $rcfile
     }
