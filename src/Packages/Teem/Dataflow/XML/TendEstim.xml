@@ -32,11 +32,11 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>Bmat</name>
+        <name>DWI</name>
 	<datatype>Teem::Nrrd</datatype>
       </port>
       <port>
-        <name>DWI</name>
+        <name>Bmat</name>
 	<datatype>Teem::Nrrd</datatype>
       </port>
     </inputs>
