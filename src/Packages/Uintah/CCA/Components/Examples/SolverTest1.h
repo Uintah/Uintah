@@ -72,7 +72,8 @@ WARNING
     SimpleMaterial* mymat_;
     SolverInterface* solver;
     SolverParameters* solver_parameters;    
-
+    bool x_laplacian, y_laplacian, z_laplacian;
+    
     SolverTest1(const SolverTest1&);
     SolverTest1& operator=(const SolverTest1&);
 	 
