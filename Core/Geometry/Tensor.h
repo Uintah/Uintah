@@ -59,6 +59,7 @@ public:
   Tensor operator+(const Tensor&) const;
   Tensor& operator+=(const Tensor&);
   Tensor operator*(const double) const;
+  Vector operator*(const Vector) const;
 
   static string type_name(int i = -1);
   

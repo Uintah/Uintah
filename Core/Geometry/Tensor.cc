@@ -208,6 +208,13 @@ Tensor Tensor::operator*(const double s) const
   return t1;
 }
 
+Vector Tensor::operator*(const Vector v) const
+{
+  return Vector(v.x()*mat_[0][0]+v.y()*mat_[0][1]+v.z()*mat_[0][2],
+		v.x()*mat_[1][0]+v.y()*mat_[1][1]+v.z()*mat_[1][2],
+		v.x()*mat_[2][0]+v.y()*mat_[2][1]+v.z()*mat_[2][2]);
+}
+
 void Tensor::build_eigens_from_mat()
 {
   if (have_eigens_) return;
