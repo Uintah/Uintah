@@ -51,8 +51,7 @@
 <section id="sec.intro">
 <title>Introduction</title>
 
-<para>This document is for those who wish to write or build (or
-both) &sr; documentation.</para>
+<para>This document is for those want to write or build &sr; documentation.</para>
 
 <para>It describes:
 
@@ -64,8 +63,8 @@ both) &sr; documentation.</para>
 <para>The types of documents in the tree.</para >
 </listitem>
 <listitem>
-<para>Building document products from their sources (and the tools
-needed to do this).</para>
+<para>Building document products from their sources and the tools
+needed.</para>
 </listitem>
 <listitem>
 <para>Editing documents.</para>
@@ -193,7 +192,7 @@ guide.</para>
 <entry colname="docsubsub"><filename>FAQ/</filename></entry>
 <entry colname="descrip">
 <para>XML sources for developer FAQ and <filename>Makefile</filename>
-which generates the HTML version of the FAQ.</para>
+that generate the HTML version of the FAQ.</para>
 </entry>
 </row>
 <row>
@@ -210,8 +209,8 @@ Doxygen.
 <entry colname="descrip">
 <para>
 <filename>Makefile</filename> builds HTML versions of the module
-descriptions.  <filename>Index.rhtml</filename> is cover page for module
-descriptions. Note that module descriptionn sources live in the
+descriptions.  <filename>Index.rhtml</filename> is the cover page for module
+descriptions. Note that module description sources live in the
 <filename>XML</filename> and <filename>TeX</filename> directories on the
 <filename>src</filename> side of the tree.
 </para>
@@ -236,7 +235,7 @@ invokes sub-makes.  <filename>Index.rhtml</filename> is the cover page for
 <entry colname="docsubsub"><filename>FAQ/</filename></entry>
 <entry colname="descrip">
 <para>XML sources for installation FAQ and
-<filename>Makefile</filename> which generates the HTML version of the
+<filename>Makefile</filename> that generate the HTML version of the
 FAQ.</para>
 </entry>
 </row>
@@ -256,7 +255,7 @@ FAQ.</para>
 <title id="sec.builddocs.title">Building Docs</title>
 
 <para>
-&sr; documents are written in number of <firstterm><link
+&sr; documents are written in  <firstterm><link
 linkend="sec.docmls">markup</link></firstterm> languages: XML, &ltx;,
 and HTML (plus their <firstterm>eruby</firstterm>
 equivalents&mdash;see <xref endterm="sec.docmls.title"
@@ -268,35 +267,29 @@ build system and its use.
 
 <para>The term <firstterm>sources</firstterm> refers to files that are
 created and edited manually.  The term <firstterm>products</firstterm>
-refers to files that are generated from sources by a tool of some
-sort.  Sources are always part of the CVS repository and products
-never are.</para>
+refers to files that are generated from sources by a tool. Sources are always part of the CVS repository. Products are never part of the CVS repository.</para>
 
-<para>Makefiles are responsible for generating products from sources.
+<para>Makefiles generate products from sources.
 The doc tree uses a conventional recursive makefile approach to
-building documentation.  Some Makefiles generate products while others
+building documentation.  Some Makefiles generate products, while others
 (<filename>doc/Developer/Makefile</filename>,
 <filename>doc/Installation/Makefile</filename>,
-<filename>doc/User/Makefile</filename>) merely invoke sub-make
+<filename>doc/User/Makefile</filename>) invoke sub-make
 processes.  The topmost Makefile (<filename>doc/Makefile</filename>
-initiates the build of the entire documentation set.  Its other
-important function is to make a documentation tarball</para>
+initiates the build of the entire documentation set, and also creates a documentation tarball</para>
 
-<para>The doc tree and its build system were designed so that anyone with
-the proper <link linkend="sec.tools">tools</link> can build documentation.
-This facilitates the edit/compile/test/debug cycle.  The doc developer need
-not wait for the doc tree to be published on the internal web site before
-discovering bugs and errors.  The doc developer can edit sources, invoke
-make to build products, test and debug the docs with his web browser, and
-correct problems all before committing his changes to the CVS
+<para>The doc tree and its build system are designed so that anyone can build documentation with the proper <link linkend="sec.tools">tools</link>.
+This facilitates the edit/compile/test/debug cycle. Bugs and errors can be discovered before the doc tree is published on the internal website.  The doc developer can edit sources, invoke
+make to build products, test and debug the docs with his or her web browser, and
+correct problems before committing changes to the CVS
 repository.</para>
 
 <para>Note that Makefiles are written in the GNU make dialect.</para>
 
-<para>You will find source files with extensions
+<para>Source files with extensions
 <filename>.rxml</filename>, <filename>.rhtml</filename>, and
-<filename>.rtex</filename>.  These are <firstterm>eruby</firstterm>
-sources.  Information on these type of files can be found in <xref
+<filename>.rtex</filename>  are <firstterm>eruby</firstterm>
+sources.  Information on these files can be found in <xref
 endterm="sec.docmls.title" linkend="sec.docmls"/>.</para>
 
 <para>
@@ -326,7 +319,7 @@ linkend="sec.using-publish-rb">Publish.rb</link>
 <title id="sec.catalog.title">Catalog Files</title> 
 
 <para>
-This section assumes that OpenJade and the ISO character entity sets
+This section assumes OpenJade and the ISO character entity sets
 have been installed.  See <link endterm="sec.tools.title"
 linkend="sec.tools"/> for information on these tools.
 </para>
@@ -362,15 +355,14 @@ The second catalog lists system identifiers of other catalog files
   PUBLIC "ISO 8879:1986//ENTITIES Russian Cyrillic//EN" "ISOcyr1"
   PUBLIC "ISO 8879:1986//ENTITIES Non-Russian Cyrillic//EN" "ISOcyr2"
 </literallayout>
-The catalog entries above assume <filename>isoent.cat</filename> is in
-the directory containting the ISO entity sets.  If this is not true
-then the system identifiers above (e.g. <quote>ISOdia</quote>) must be
+The above catalog entries assume <filename>isoent.cat</filename> is in
+the directory containting the ISO entity sets.  If this is not true,
+the system identifiers (e.g. <quote>ISOdia</quote>) must be
 changed (e.g. <quote>/path/to/ISOdia</quote>) appropriately.
 </para>
 
-<para>The second catalog (call it the <quote>OpenJade</quote> catalog)
-lists system identifiers of other catalog files (including the ISO
-entity set catalog) needed by OpenJade.  This catalog file may be
+<para>The second catalog (<quote>OpenJade</quote> catalog)
+lists system identifiers of other catalog files needed by OpenJade, including the ISO entity set catalog. This catalog file can be
 located anywhere.  It has the following content:
 <literallayout class="monospaced">
   CATALOG /path/to/openjade/dsssl/catalog
@@ -424,7 +416,7 @@ catalog file.
 <listitem>
 <para>
 <envar>WITH_CV</envar> should be set to the string <quote>true</quote>
-if you want Doxygen to build the C++ based documentation.
+if Doxygen is to build the C++ based documentation.
 </para>
 </listitem>
 </itemizedlist>
@@ -444,20 +436,19 @@ For instance (assuming a Bourne type shell):
 <section id="sec.cmd-line-invoke">
 <title>Command line Invocation</title>
 
-<para>To make (all) docs <command>cd</command> to the toplevel
+<para>To make all docs <command>cd</command> to the toplevel
 <filename>doc</filename> directory and type <command>make</command>.
 </para>
 
-<para>To also make a doc tarball type this:
+<para>To also make a doc tarball type:
 <programlisting>
 cd doc                  # cd to toplevel doc directory
 make tarball
 </programlisting>
 </para>
 
-<para>You may want to build one particular doc or a particular set of docs.
-You can do 
-so by <command>cd</command>'ing to the directory of interest and typing
+<para>Build one particular doc or a particular set of docs
+by <command>cd</command>'ing to the directory of interest and typing
 <command>make</command>.  For example:
 <programlisting>
 cd doc/Developer        # Make all developer docs.
@@ -481,9 +472,9 @@ no products) from a directory (and its sub-directories) type:
 
 <section id="sec.using-publish-rb">
 <title>Publish.rb</title> <para>The script
-<filename>doc/Utilities/Publish/publish.rb</filename> is used for
-building &sr; documentation.  It can also deliver &sr; documentation
-to a local or remote site.  Driven by configuration files the script
+<filename>doc/Utilities/Publish/publish.rb</filename> is used to
+build &sr; documentation.  It can also deliver &sr; documentation
+to a local or remote site.  Driven by configuration files, the script
 can build the entire documentation tree or selected parts of
 it.</para>
 
@@ -499,7 +490,7 @@ configuration file.
 <filename>doc/Utilities/Publish</filename>.  One,
 <filename>template.conf</filename> builds all documentation.  The
 other, <filename>pwd.conf</filename>, builds documentation in the
-current working directory.  These should be copied elsewhere and
+current working directory.  The configuration files should be copied elsewhere and
 edited appropriately.  Read the comments in each configuration file
 for editing instructions.</para>
 </section>
@@ -534,13 +525,13 @@ url="http://docbook.org/tdg/en/html/docbook.html">&dbk;</ulink></para></listitem
 
 <para>A number of &dbk;, HTML, and &ltx; source documents contain
 snippets of Ruby code.  These <quote>eruby</quote> (embedded ruby)
-source documents may be identified by their extensions:
-<filename>.rxml</filename> for &dbk; (or other XML) sources,
+source documents can be identified by their extensions:
+<filename>.rxml</filename> for &dbk; or other XML sources,
 <filename>.rhtml</filename> for HTML sources, and
 <filename>.rtex</filename> for &ltx; documents.  Products
 (<filename>.xml</filename>, <filename>.html</filename>, and
-<filename>.tex</filename> files) are generated by replacing the code
-snippets with the results of their execution&mdash;the eruby tool
+<filename>.tex</filename> files) are generated by replacing  code
+snippets with  results of their execution&mdash;the eruby tool
 executes this code and performs the replacement.  <note> <para>Be sure
 to edit the eruby version of a document (if it exists) rather than its
 product equivalent.</para></note></para>
@@ -597,7 +588,7 @@ SCI.  It is defined by its DTD which is the file
 <filename>doc/Utilities/XML/component.dtd</filename>.
 </para>
 
-<para>This document (the one you are reading) is composed in the &dbk;
+<para>This document is composed in &dbk;
 ML.</para>
 
 
@@ -663,19 +654,18 @@ descriptions generated by
 </table>
 </para>
 
-<para><quote>Why so many bloody style sheets?</quote> you may
-ask. Because its too bloody hard to write, debug, and maintain a
+<para><quote>Why so many bloody style sheets?</quote>. Because it is too bloody hard to write, debug, and maintain a
 one-size-fits-all stylesheet!</para>
 
 <note>
 <title>A Philosophical Note</title> 
 
-<para>My personal philosophy is to:
+<para>My personal philosophy:
 <itemizedlist>
 <listitem>
 <para>Avoid writing a "one-size-fits-all" stylesheet.  Doing so
-creates a large stylesheet (filled with lots of classes) which is hard
-to understand and debug and which makes writing documents more
+creates a large stylesheet (filled with many classes) that is hard
+to understand and debug, which makes writing documents more
 difficult.</para>
 </listitem>
 <listitem>
@@ -684,13 +674,13 @@ so many stylesheets above.</para>
 </listitem>
 <listitem>
 <para>Write XHTML/HTML documents
-using no presentational markup nor using the inline
+using no presentational markup or inline
 <literal>style</literal> attribute (although I sometimes use the<sgmltag
 class="starttag">style</sgmltag> element).</para>
 </listitem>
 <listitem>
 <para>Write stylesheets using the minimum number of style classes.
-This rule simplifies stylesheets and the documents that use them
+This rule simplifies stylesheets and the documents that use them,
 although it increases the number of stylesheets needed.</para>
 </listitem>
 </itemizedlist>
@@ -705,36 +695,35 @@ although it increases the number of stylesheets needed.</para>
 <title>Editing XML Documents</title>
 <para>This section discusses the use of emacs to edit XML documents.</para>
 <para>
-An ordinary text editor may be used to edit XML document content.  However,
-it is easy to get lost in the noise of XML syntax.  Therefore, it is best
-to use an XML DTD aware editor.  This type of editor will help you
+It is easy to get lost in the noise of XML syntax.  Therefore, it is best
+to use an XML DTD aware editor.  This type of editor will help
 construct valid XML documents.
 </para>
 
 <para>Emacs is one such editor.  It supports an editing environment called
-XML mode (which is really a derivative of PSGML mode).  XML mode highlights
+XML mode, a derivative of PSGML mode.  XML mode highlights
 XML syntax, indents nested elements and their content, and automatically
 inserts elements and attributes based on the position of the insertion
-point.  It is still possible, though, to create invalid documents using
+point.  It is still possible, however, to create invalid documents using
 Emacs XML mode.
 </para>
 
 <para>Emacs XML mode can be used to edit XML based module descriptions,
-XHTML documents, &dbk; documents, and any XML based language which is
+XHTML documents, &dbk; documents, and any XML based language that is
 described by a DTD.</para>
 
 <para>
-Recent versions of Emacs come with XML mode installed.  You can check
-if yours does by typing <userinput>M-x xml-mode</userinput>.  You don't have
+Recent versions of Emacs come with XML mode installed.  Check to see if you have XML mode
+by typing <userinput>M-x xml-mode</userinput>.  You do not have
 XML mode if you get the message
 <screen>[No match]</screen> in return.
-If you don't have XML mode you may get it
+XML mode can be obtained
 <ulink url="http://www.lysator.liu.se/~lenst/about_psgml/psgml.html">online</ulink>.
 </para>
 
 <section id="sec.dotemacs">
 <title>Emacs Initialization (.emacs)</title>
-<para>The following lisp code should be inserted into your <filename>.emacs</filename>
+<para>The following lisp code should be inserted into the <filename>.emacs</filename>
 file:
 <programlisting>
 <![CDATA[
@@ -776,7 +765,7 @@ auto-mode-alist))
 <section id="sec.createxmldoc">
 <title>Creating an XML Document </title>
 <para>
-To start a new XML document do this:
+To start a new XML document:
 <itemizedlist>
 <listitem>
 <para>Create a new file (<userinput>C-x C-f</userinput>) with a suffix of <filename>.xml</filename></para>
@@ -797,27 +786,33 @@ To start a new XML document do this:
 <programlisting>
 <![CDATA[
 <!-- Keep this comment at the end of the file
+]]>
 Local variables:
 mode: xml
-sgml-default-dtd-file:"<top-of-cvs-tree>/doc/Utilities/XML/docbook.ced"
+sgml-default-dtd-file:"<replaceable>top-of-cvs-tree</replaceable>/Utilities/XML/docbook.ced"
 sgml-omittag:nil
 sgml-shorttag:nil
 End:
+<![CDATA[
 -->
 ]]>
 </programlisting>
-Where <quote>&lt;top-of-cvs-tree&gt;</quote> is a relative path from your
-document to the root of your &sr; CVS tree.
+Replace <quote>&lt;top-of-cvs-tree&gt;</quote> with the relative path from the
+document to the <filename>doc</filename> directory of the &sr; CVS tree.
 </para>
 <para>Note that the file <filename>docbook.ced</filename> is a precompiled
-DTD for the docbook language.  You will find a 2 other
-<filename>.ced</filename> files in <filename>doc/Utilities/XML/</filename>.
-These are <filename>component.ced</filename>, for module descriptions, and
-<filename>xhtml1-transitional.ced</filename> for XHTML.</para>
+DTD for the docbook language.  Replace
+<filename>docbook.ced</filename> with
+<filename>xhtml1-transitional.ced</filename> when creating a
+<acronym>XHTML</acronym> document.   Replace
+<filename>docbook.ced</filename> with
+<filename>component.ced</filename> when creating a
+module description document.
+</para>
 </listitem>
 <listitem>
 <para>
-Save your file, close it, and re-open it.  Now you may begin editing your
+Save the file, close it, and re-open it.  Now begin editing the
 file using xml mode.
 </para>
 </listitem>
@@ -827,15 +822,58 @@ file using xml mode.
 
 <section>
 <title>XML-Mode Survival</title>
-<para>This section presents a few of the most important XML-mode editing
-commands.  See the 
-<ulink url="http://www.lysator.liu.se/~lenst/about_psgml/psgml.html">online
-manual</ulink> 
-for complete documentation.  Note that the remainder of this section has been
-lifted from 
-<ulink url="http://www.lysator.liu.se/~lenst/about_psgml/psgml.html#Edit">this section</ulink> of the  online manual.
+<para>
+This section presents some of the most important XML-mode editing
+commands.  See the <ulink
+url="http://www.lysator.liu.se/~lenst/about_psgml/psgml.html">online
+manual</ulink> for complete documentation.  <emphasis>FIX
+ME!</emphasis> The following is taken from the <ulink
+url="http://www.lysator.liu.se/~lenst/about_psgml/psgml.html">online
+manual</ulink>.  It should be replaced by original text.
 
 <variablelist>
+<varlistentry>
+<term><userinput>C-c C-e</userinput></term>
+<listitem>
+<para>
+Inserts start and end-tags for an element (sgml-insert-element). The
+name of the element is read from the mini-buffer with completion on
+valid elements. If sgml-insert-end-tag-on-new-line is non-nil or the
+element has element content, the end-tag is inserted on a new line
+after the start-tag.
+</para>
+<para>
+If sgml-omittag-transparent is nil, the list of valid elements only
+contain the elements that can be in the content of the current
+element.  </para>
+<para>
+Required elements in the content are automatically inserted if the
+option sgml-auto-insert-required-elements is non-nil. When the content
+model demands an element, but there is more than one to choose from, a
+comment can be inserted with the available choices if the option
+sgml-insert-missing-element-comment is non-nil.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><userinput>C-c C-i</userinput></term>
+<listitem>
+<para>Inserts a new element in the current element where it is
+legal. Prompts for element name with completion. The completion list
+contains all elements that could be added to the current element, 
+without making the content invalid. This assumes the content is valid
+to begin with. Currently, this list only has regular elements, not
+inclusions. The new element is inserted as late as possible in the
+current element (unless prefix argument is given, then as early as
+possible.)  </para></listitem>
+</varlistentry>
+<varlistentry>
+<term><userinput>C-c C-r</userinput></term>
+<listitem>
+<para>Makes the region into a new element (sgml-tag-region). Reads element
+name from mini-buffer with completion as for C-c C-e.</para>
+</listitem>
+</varlistentry>
 <varlistentry>
 <term><userinput>C-c &lt;</userinput></term>
 <listitem>
@@ -849,7 +887,7 @@ contain:
 <orderedlist>
 <listitem>
 <para>The end-tag for the current element, if it can be ended at the
-position. Furthermore it will contain end-tags for enclosing elements if
+position. It will contain end-tags for enclosing elements if
 the necessary omissible end-tag declarations have been made in the DTD.
 </para>
 </listitem>
@@ -861,43 +899,6 @@ that can occur within the current element.</para> </listitem></orderedlist>
 </listitem>
 </varlistentry>
 <varlistentry>
-<term><userinput>C-c C-e</userinput></term>
-<listitem>
-<para>Insert start and end-tags for an element (sgml-insert-element). The
-name of the element is read from the mini-buffer with completion on valid
-elements. If sgml-insert-end-tag-on-new-line is non-nil or the element has
-element content, the end-tag will be inserted on a new line after the
-start-tag.
-</para>
-<para>If sgml-omittag-transparent is nil, the list of valid elements will
-only contain the elements that can be in the content of the current
-element.</para> <para>Required elements in the content will be
-automatically inserted if the option sgml-auto-insert-required-elements is
-non-nil. When the content model demands an element but there is more than
-one to choose from, a comment can be inserted with the available choices if
-the option sgml-insert-missing-element-comment is non-nil.</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term><userinput>C-c C-i</userinput></term>
-<listitem>
-<para>Inserts a new element in the current element where it is
-legal. Prompts for element name with completion. The completion list
-contains all elements that could be added to the current element somewhere,
-without making the content invalid. This assumes that the content is valid
-to begin with. Currently this list only has regular elements, not
-inclusions. The new element will be inserted as late as possible in the
-current element (unless prefix argument is given, then as early as
-possible.)  </para></listitem>
-</varlistentry>
-<varlistentry>
-<term><userinput>C-c C-r</userinput></term>
-<listitem>
-<para>Makes the region into a new element (sgml-tag-region). Reads element
-name from mini-buffer with completion as for C-c C-e.</para>
-</listitem>
-</varlistentry>
-<varlistentry>
 <term><userinput>C-c /</userinput></term>
 <listitem>
 <para>Inserts an end-tag for the current element (sgml-insert-end-tag).</para>
@@ -906,24 +907,33 @@ name from mini-buffer with completion as for C-c C-e.</para>
 <varlistentry>
 <term><userinput>C-c RET</userinput></term>
 <listitem>
-<para>Split the current element at point. If repeated, the containing
-element will be split before the beginning of then current element.</para>
+<para>Splits the current element at point. If repeated, the containing
+element is split before the beginning of then current element.</para>
 <para>Typical use is to start a new paragraph element when inside a
 paragraph.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
+<term><userinput>C-c C-a</userinput></term>
+<listitem>
+<para>
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
 <term><userinput>C-c +</userinput></term>
 <listitem>
-<para>Read attribute name and value from mini-buffer and insert attribute
+<para>
+Read attribute name and value from mini-buffer and insert attribute
 specification (sgml-insert-attribute). If point is immediately after a
-start-tag, this command operates on that start-tag. Otherwise the command
-will operate on the element after point.
+start-tag, this command operates on that start-tag. Otherwise, the command
+operates on the element after point.
 </para>
-<para>The attribute name will be read with completion. If the attribute has a
-token list as declared value the attribute value will also be read with
-completion. The prompt for attribute value will typically look like:</para>
+<para>The attribute name is read with completion. If the attribute has a
+token list as declared value, the attribute value also reads with
+completion. The prompt for attribute value typically looks like:
 <screen>Value for attribute (type Default: current value):</screen>
+</para>
 </listitem>
 </varlistentry>
 </variablelist>
@@ -934,7 +944,7 @@ completion. The prompt for attribute value will typically look like:</para>
 <title id="charenttitle">Charater Literals&mdash;Do's and Dont's</title>
 
 <para>Some characters or character combinations should not be used
-literally.  This is because they will not be typeset in an optimal
+literally, because they will not typeset in an optimal
 way.  Here is a list of things to watch for:
 <variablelist>
 <varlistentry>
@@ -1032,19 +1042,19 @@ class="genentity">mdash</sgmltag>Well, a little bit anyway</quote> rather than
 
 <section id="sec.editdocbkdocs">
 <title>Editing &dbk; Documents</title> <para>&dbk; is an XML based
-language for composing techical documents.  Especially documents about
+language for composing technical documents, specifically documents about
 computer software.  The <citetitle>Installation Guide</citetitle>,
 <citetitle>Developers Guide</citetitle>, and this document are
 composed in the &dbk; language.</para>
 
 <para>It is beyond the scope of this article to introduce the &dbk;
-language in any detail.  Please read the <ulink
+language in detail. Read the <ulink
 url="http://docbook.org/tdg/en/html/docbook.html">online &dbk;
-guide</ulink> for an introduction to &dbk;.  It also provides a complete
+guide</ulink> for an introduction to &dbk;, and a complete
 reference to all &dbk;'s elements and attributes.  
 </para>
 
-<para>You may want to peruse this document's XML source to get a feel for
+<para>Peruse this document's XML source to get a feel for
 the &dbk; language.  It is the file
 <filename>doc/Documentum/documentum.xml</filename>
 </para>
@@ -1052,16 +1062,16 @@ the &dbk; language.  It is the file
 <section>
 <title>Single File Document</title>
 
-<para>&dbk; documents may be contained in one file or may be segmented into
-several files.  A multi-file document will consist of a
+<para>&dbk; documents can be contained in one file, or segmented into
+several files.  A multi-file document consists of a
 <firstterm>main</firstterm> file and one or more additional file.</para>
 
 <para>
-A new single file document will look like this:
+A new single file document looks like this:
 <programlisting>
 <![CDATA[
 <?xml version="1.0" encoding="iso-8859-1" ?>
-<!DOCTYPE root-element PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+<!DOCTYPE]]> <replaceable>root-element</replaceable> <![CDATA[PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
 "http://www.oasis-open.org/docbook/xml/4.0/docbookx.dtd" [
 <!ENTITY sr "SCIRun">
 ]>
@@ -1095,9 +1105,10 @@ End:
 -->
 ]]>
 </programlisting>
-Where <quote>root-element</quote> should be replaced by your document's root
-element, usually <sgmltag>book</sgmltag> or <sgmltag>article</sgmltag>.  And
-the path to <filename>docbook.ced</filename> should be altered appropriately.
+In the DOCTYPE declaration, <replaceable>root-element</replaceable>
+should be replaced by the name of the document's root element, usually
+<sgmltag>book</sgmltag> or <sgmltag>article</sgmltag>.  The path to
+<filename>docbook.ced</filename> should be altered appropriately.
 </para>
 
 </section>
@@ -1105,8 +1116,8 @@ the path to <filename>docbook.ced</filename> should be altered appropriately.
 <section>
 <title>Multi-file Document</title>
 
-<para>A multi-file document will consist of a main file which usually does
-nothing more than <quote>include</quote> other files.  Here is the main
+<para>A multi-file document consists of a main file that usually does
+nothing but <quote>include</quote> other files.  Here is the main
 file for a book consisting of five chapters:
 <programlisting>
 <![CDATA[
@@ -1158,7 +1169,7 @@ End:
 -->
 ]]>
 </programlisting>
-And <filename>chap1.xml</filename> would look like this:
+<filename>chap1.xml</filename> look like this:
 <programlisting>
 <![CDATA[
 <!--
@@ -1203,15 +1214,14 @@ End:
 
 <section id="sec.editfaqdocs">
 <title>Editing FAQ Documents</title>
-<para>There are currently three FAQs:
+<para>Currently, there are three FAQs:
 <simplelist>
 <member>Installation FAQ - <filename>doc/Installation/FAQ/faq.rxml</filename></member>
 <member>User FAQ - <filename>doc/User/FAQ/faq.rxml</filename></member>
 <member>Developer FAQ - <filename>doc/Developer/FAQ/faq.rxml</filename></member>
 </simplelist>
 </para>
-<para>To add a new entry to one of these FAQs (using emacs/xemacs XML mode)
-do this:
+<para>To add a new entry to a FAQs (using emacs/xemacs XML mode):
 <orderedlist>
 <listitem>
 <para>Open the appropriate file with emacs/xemacs (recommended)</para>
@@ -1267,12 +1277,12 @@ creating/editing &ltx; based module descriptions.</para>
 
 <section id="sec.edithtmldocs">
 <title>Editing HTML and XHTML Documents</title> 
-<para>Avoid HTML/XHTML altogether.  Use a higher-level markup
-language like &dbk; or &ltx;.</para> 
-<para>If you must use HTML
+<para>Avoid HTML/XHTML.  Use a higher-level markup
+language such as &dbk; or &ltx;.</para> 
+<para>If HTML must be used,
 consider using XHTML instead.  XHTML is an XML formulation of HTML. It is
-not yet possible or practical to write pure XHTML but as much as possible
-we should be implementing our HTML-type documents using XHTML.  The
+not yet possible or practical to write pure XHTML, but as much as possible,
+implement  HTML-type documents using XHTML.  The
 following rules for composing XHTML (and HTML) documents should be
 followed:
 <itemizedlist>
@@ -1288,7 +1298,7 @@ followed:
 </listitem>
 <listitem>
 <para>Close all elements..  I.e. never omit end tags.  Empty
-elements should be closed by either an end tag or by ending the start tag
+elements should be closed by an end tag or by ending the start tag
 with <userinput>/&gt;</userinput>, e.g. the horizontal rule element should
 be written as <userinput>&lt;hr/&gt;</userinput></para>
 </listitem>
@@ -1300,23 +1310,23 @@ be written as <userinput>&lt;hr/&gt;</userinput></para>
 documents.</para>
 </listitem>
 <listitem>
-<para>Mind your character entities (see <xref endterm="charenttitle"
+<para>Mind character entities (see <xref endterm="charenttitle"
 linkend="charent"/>).</para>
 </listitem>
 <listitem>
 <para>Avoid presentational markup (e.g. <sgmltag
-class="starttag">font</sgmltag> elements) &mdash;Use external CSS stylesheets
-or the <sgmltag class="starttag">style</sgmltag> element (but avoid
-the inline <literal>style</literal> attribute) instead.</para>
+class="starttag">font</sgmltag> elements) &mdash; Instead, use external CSS stylesheets
+or the <sgmltag class="starttag">style</sgmltag> element ,but avoid
+the inline <literal>style</literal> attribute.</para>
 </listitem>
 </itemizedlist>
-These rules are explained more fully on the <ulink
+These rules are explained on the <ulink
 url="http://www.w3schools.com/xhtml/xhtml_html.asp">W3Schools.com</ulink>
 web site. </para>
 
-<para>Documents which live in the <filename>doc</filename> side of the tree
+<para>Documents that live in the <filename>doc</filename> side of the tree
 should be derived from
-<filename>doc/Documentum/doc_template.html</filename> and those that live
+<filename>doc/Documentum/doc_template.html</filename>. Documents that live
 in the <filename>src</filename> side of the tree should be based on
 <filename>doc/Documentum/src_template.html</filename>.</para>
 </section>
@@ -1343,7 +1353,7 @@ in the <filename>src</filename> side of the tree should be based on
 </para>
 
 <para>
-Documentation for the current &sr; release is published at <ulink
+Documentation for current &sr; release is published at <ulink
 url="http://software.sci.utah.edu/doc/present/doc">http://software.sci.utah.edu/doc/present/doc</ulink>.
 </para>
 <para>
@@ -1362,15 +1372,15 @@ documentation to these sites.</para>
 <section>
 <title>Publishing Current Release Documentation</title>
 
-<para>Documentation for the current &sr; release (from the current
+<para>Documentation for current &sr; release (from the current
 release branch of the CVS tree) is published on SCI's external web
 site.</para>
 
-<para>To publish docs on this web site do this:
+<para>To publish docs on this web site:
 <orderedlist>
 <listitem>
 <para>Build a doc tarball from the sources on the release branch.
-Rename the tarball to:
+Rename the tarball:
 <filename>docs-<replaceable>d.d.d</replaceable>.tar.gz</filename>,
 where <replaceable>d.d.d</replaceable> is the version
 number of the documentation set contained in the tarball.</para>
@@ -1392,7 +1402,7 @@ mv present past/1.6.1
 <listitem>
 <para>
 Create a new <filename>present</filename> directory. Copy the new
-doc tarball to it.
+doc tarball to the new directory.
 </para>
 </listitem>
 <listitem>
@@ -1401,7 +1411,7 @@ doc tarball to it.
 tarball using GNU tar.
 </para>
 <para>
-The resulting directory will contain <filename>doc</filename> and
+The resulting directory contains <filename>doc</filename> and
 <filename>src</filename> sub-directories.  Move
 <filename>doc</filename> and <filename>src</filename> up one level (so
 they are children of <filename>present</filename>).  Remove the
@@ -1427,17 +1437,17 @@ respectively.  Verify that this is so.
 <title>Publishing <quote>Trunk</quote> Documentation</title>
 
 <para>
-Documentation under developement (for a future &sr; release) is
+Documentation under developement for a future &sr; release, is
 derived from the trunk of the CVS tree and is published on SCI's
 external web site.
 </para>
 
 <para>
-To publish docs on this web site do this:
+To publish docs on this web site:
 <orderedlist>
 <listitem>
 <para>
-Build a doc tarball from the sources on the trunk.
+Build a doc tarball from sources on the trunk.
 </para>
 </listitem>
 <listitem>
@@ -1446,7 +1456,7 @@ Log on to virgil.sci.utah.edu. <command>Cd</command> to
 <filename>/w01/docs/scirun-biopse</filename>.
 </para>
 <para>
-Delete the current contents of the directory named
+Delete current contents of the directory named
 <filename>future</filename>.  Copy the new doc tarball to
 <filename>future</filename>.
 </para>
@@ -1457,7 +1467,7 @@ Delete the current contents of the directory named
 tarball using GNU tar.
 </para>
 <para>
-The resulting directory will contain <filename>doc</filename> and
+The resulting directory contains <filename>doc</filename> and
 <filename>src</filename> sub-directories.  Move
 <filename>doc</filename> and <filename>src</filename> up one level (so
 they are children of <filename>future</filename>).  Remove the
@@ -1481,17 +1491,17 @@ Verify that this is so.
 <title>Publishing Pre-release Documentation</title> 
 
 <para>
-Pre-release documentation is documentation derived from a branch which
-has been created in anticipation of a new &sr; release.  Is is
-published on the pre-release web site so that it may be tested and
+Pre-release documentation is documentation derived from a branch that
+has been created in anticipation of a new &sr; release.  It is
+published on the pre-release web site, so it can be tested and
 debugged prior to a release of &sr;
 </para>
 
-<para>To publish pre-release docs do this:
+<para>To publish pre-release docs:
 <orderedlist>
 <listitem>
-<para>Build a doc tarball from the sources on the newly created branch.
-Rename the tarball to:
+<para>Build a doc tarball from sources on the newly created branch.
+Rename the tarball:
 <filename>docs-<replaceable>d.d.d</replaceable>.tar.gz</filename>,
 where <replaceable>d.d.d</replaceable> is the version
 number of the documentation set contained in the tarball.</para>
@@ -1502,7 +1512,7 @@ Log on to virgil.sci.utah.edu. <command>Cd</command> to
 <filename>/w01/docs/scirun-biopse</filename>.
 </para>
 <para>
-Delete the current contents of the directory named
+Delete current contents of the directory named
 <filename>pre-release</filename>.  Copy the doc tarball to
 <filename>pre-release</filename>.
 </para>
@@ -1513,7 +1523,7 @@ Delete the current contents of the directory named
 tarball using GNU tar.
 </para>
 <para>
-The resulting directory will contain <filename>doc</filename> and
+The resulting directory contains <filename>doc</filename> and
 <filename>src</filename> sub-directories.  Move
 <filename>doc</filename> and <filename>src</filename> up one level (so
 they are children of <filename>pre-release</filename>).  Remove the
@@ -1532,11 +1542,11 @@ Verify that this is so.
 </note>
 
 <para>
-The pre-release site should be updated appropriately until the new
-version of &sr; is released.  After release the
+The pre-release site should be updated until the new
+version of &sr; is released.  After release, the
 <filename>pre-release</filename> directory should be emptied and the
 <filename>present</filename> directory should be updated with
-documentation for the new release.
+documentation for new release.
 </para>
 </section>
 
@@ -1583,7 +1593,7 @@ site</ulink>.
 <varlistentry>
 <term><ulink url="http://saxon.sourceforge.net/">Saxon</ulink> (6.5.2 or later)</term>
 <listitem>
-<para>Saxon is an XSLT processor which applies XSL stylesheets to XML
+<para>An XSLT processor that applies XSL stylesheets to XML
 sources to translate them to other forms (e.g. HTML).  Saxon is written in
 Java.  Saxon is used to translate the Developers guide, the Installation
 guide, the FAQs, and the XML based module descriptions to HTML and
@@ -1594,15 +1604,15 @@ guide, the FAQs, and the XML based module descriptions to HTML and
 <varlistentry>
 <term><ulink url="http://www.latex-project.org/">&ltx;</ulink></term>
 <listitem>
-<para>&ltx; is a document markup language and typesetting system.  The Users
+<para>A document markup language and typesetting system.  The User's
 guide and some module descriptions require &ltx;.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term><ulink url="http://www.latex2html.org">Latex2html</ulink></term>
 <listitem>
-<para>The latex2html tool translates &ltx; documents to HTML.  It is used to
-translate the Users guide and latex module descriptions to HTML.</para>
+<para>A tool that translates &ltx; documents to HTML.  Latex2html is used to
+translate the User's guide and latex module descriptions to HTML.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -1619,7 +1629,7 @@ for installation instructions.
 <varlistentry>
 <term>Dvipdfm</term>
 <listitem>
-<para>Dvipdfm converts dvi files to pdf.  Dvipdf is part of modern
+<para>Converts dvi files to pdf.  Dvipdf is part of modern
 &ltx; distributions.</para>
 </listitem>
 </varlistentry>
@@ -1627,7 +1637,7 @@ for installation instructions.
 <term><ulink url="http://openjade.sourceforge.net">OpenJade</ulink></term>
 <listitem>
 <para>An implementation of the <acronym>DSSSL</acronym> stylesheet
-language.  It applies a <acronym>DSSSL</acronym> stylesheet to
+language.  OpenJade applies a <acronym>DSSSL</acronym> stylesheet to
 <acronym>SGML</acronym>/<acronym>XML</acronym> input to produce TeX
 output.</para>
 </listitem>
@@ -1636,7 +1646,7 @@ output.</para>
 <term><ulink url="http://www.oasis-open.org/cover/ISOEnts.zip">ISO character entity sets</ulink></term>
 <listitem>
 <para>Needed Character entities sets.</para> <para>A catalog file must
-be prepared which references these entity sets.  See <citetitle><link
+that references these entity sets must be prepared.  See <citetitle><link
 endterm="sec.catalog.title" linkend="sec.catalog"/></citetitle> for
 instructions.</para>
 </listitem>
@@ -1648,8 +1658,8 @@ Sheets</ulink></term>
 <para>The &dbk; stylesheets translate &dbk; XML documents (Developers
 Guide, Installation Guide, and FAQs) to HTML.</para> 
 <para>
-&sr; specific stylesheets (which override templates in the &dbk;
-distribution) must be copied into the &dbk; distribution. Copy the
+&sr; specific stylesheets, which override templates in the &dbk;
+distribution, must be copied into the &dbk; distribution. Copy the
 files <filename>doc/Utilities/XML/srdocbook.xsl</filename>,
 <filename>doc/Utilities/XML/srdocbook-common.xsl</filename>,
 <filename>doc/Utilities/XML/srdocbook-chunk.xsl</filename>, and
@@ -1660,7 +1670,7 @@ files <filename>doc/Utilities/XML/srdocbook.xsl</filename>,
 <varlistentry>
 <term><ulink url="http://www.stack.nl/~dimitri/doxygen/">Doxygen</ulink></term>
 <listitem>
-<para>Doxygen is a documentation system for C++.  It both generates and extracts
+<para>A documentation system for C++.  Doxygen generates and extracts
 documentation from C++ source files.</para>
 </listitem>
 </varlistentry>
@@ -1692,8 +1702,8 @@ endterm="sec.docmls.title" linkend="sec.docmls"/></para>
 manipulate an image in any of the more popular image formats including GIF,
 JPEG, PNG, PDF, and Photo CD...</quote></para> 
 <para>The <command>convert</command> utility from the ImageMagick package
-is being used to translate jpg and gif files to eps for use in the
-printable version of the users guide.</para>
+is used to translate jpg and gif files to eps for use in the
+printable version of the user's guide.</para>
 </listitem>
 
 </varlistentry>
@@ -1735,13 +1745,13 @@ class="starttag">caption</sgmltag> elements.
 </para>
 </listitem>
 <listitem>
-<para>Don't require that basic flow patterns start with a <sgmltag
+<para>Do not require  basic flow patterns to start with a <sgmltag
 class="starttag">p</sgmltag> element.</para>
 </listitem>
 <listitem>
 <para>
 Extend <sgmltag class="starttag">gui</sgmltag> element to accommodate
-multiple panes.  This would basically change the
+multiple panes.  This would change the
 <sgmltag class="starttag">gui</sgmltag> grammer to look like this:
 <literallayout class="monospaced">
 <![CDATA[

@@ -92,7 +92,7 @@ This section introduces the component specification document.
 \subsection{\SUBSECwhySpec}
 \label{\SUBSECwhySpec}
 
-Writing the \xml{} ccomponent specification is one of the first steps in the
+Writing the \xml{} component specification is one of the first steps in the
 design and implementation of a component.
 
 The \xml{} component specification documents the use, design,
@@ -102,20 +102,19 @@ It also serves as data for applications and databases.  For example:
 
 \begin{itemize}
 \item Documentation (HTML and pdf forms) for component users and
-  developers will be generated from the component specification.
+  developers are generated from the component specification.
   
-\item The collection of all component specifications will be part of a 
+\item Collection of all component specifications are part of a 
   search-able database.
   
-\item The component specification will help drive the component code
+\item Component specification helps drive the component code
   generation process.
   
-\item The component specification may drive an automated testing process.
+\item Component specification may drive an automated testing process.
 \end{itemize}
 
 Component specifications are written in a special mark-up language.  This
-language (call it the component specification mark-up language if you
-like) is in turn formulated using the \dfn{eXtensible Mark-up Language}
+component specification mark-up language is formulated using the \dfn{eXtensible Mark-up Language}
 (\xml).
 
 % \Note{Components that are not accompanied by a valid and complete
@@ -129,20 +128,19 @@ An \xml{} formulation of the component specification is used to achieve
 the following goals:
 
 \begin{description}
-\item[Data centric viewpoint] We want the component specification to
-  represent a set of data that can be used in several contexts.
+\item[Data centric viewpoint] To represent the component specification as a set of data to be used in several contexts.
 
-\item[Uniformity] We want all components to be specified the same way.
+\item[Uniformity] To specify all components the same way.
   
-\item[Validation] We want to validate (check for correctness and
+\item[Validation] To validate (check for correctness and
   completeness) component specifications.
 \end{description}
 
-The component specification mark-up language is similar in concept to HTML but
-has a different (and much smaller) set of tags and a simpler and more
+The component specification mark-up language is similar in concept to HTML, but
+has a different, much smaller set of tags, and a more simple, more
 regular set of document composition rules.
 Section~\sechyperref{\SECcontent} describes
-the component specification mark-up language in detail.
+the component specification mark-up language.
 
 \subsection{\SUBSECwhatDtd}
 \label{\SUBSECwhatDtd}
@@ -152,15 +150,15 @@ element attributes), and the way they must be used in order to produce a
 valid \xml{} document.
 
 The component specification \dtd{} can be found here (relative to the top
-of your cvs tree):
+of the cvs tree):
 
 \begin{verbatim}
 doc/ReferenceGuide/component.dtd
 \end{verbatim}
 
 The component specification \dtd{} is used to validate component
-specifications.  More on validation can be found in
-section~\sechyperref{\SECvalidation}.
+specifications. See 
+section~\sechyperref{\SECvalidation} for more information on validation
 
 The component specification \dtd{} is used to create and edit component
 specifications.  See
@@ -170,13 +168,12 @@ information.
 \section{\SECcontent}
 \label{\SECcontent}
 
-This section describes the component specification mark-up language in
-detail.
+This section describes the component specification mark-up language.
 
 \subsection{\SUBSECrules}
 \label{\SUBSECrules}
 
-When writing a component specification a few simple composition rules
+When writing a component specification, a few simple composition rules
 must be followed:
 
 \begin{itemize}
@@ -185,7 +182,7 @@ must be followed:
   document and contain content (text) or nested elements or both.
   Every start tag \emph{must} have a corresponding end tag.
   
-\item A component specification document starts with 2 lines of preamble
+\item A component specification document starts with two lines of preamble
   text:
 
 \begin{verbatim}
@@ -194,19 +191,19 @@ must be followed:
     "<top-of-cvs-tree>/doc/Utilities/XML/component.dtd}">
 \end{verbatim}
 
-  where \filename{<top-of-cvs-tree>} is the path to the top of your
+  where \filename{<top-of-cvs-tree>} is the path to the top of the
   SCIRun \cvs{} tree. 
   
 \item The preamble is followed by a set of nested elements starting with
   the \element{component} element.
   
 \item Every element must be delimited with a start-tag and an end-tag.
-  Tags are enclosed in angle brackets.  This means you may not use
-  the literal forms of the characters \keyboard{\la} and
-  \keyboard{\ra} in your elements' content.  Instead you must type
+  Tags are enclosed in angle brackets. 
+  The literal forms of the characters \keyboard{\la} and
+  \keyboard{\ra} can not be used in the elements' content.  Instead, type
   \keyboard{\&lt;} and \keyboard{\&gt;} respectively.
 
-\item Tags are case sensitive and all tags must be lower case.
+\item Tags are case sensitive. All tags must be lower case.
   
 \item A few elements require an \dfn{attribute}.  Attributes are specified
   in an element's start tag.  An attribute looks like this:
@@ -215,7 +212,7 @@ must be followed:
   along side their corresponding element.
   
 \item The literal form of the character \& may not be used in element
-  content.  You must type \keyboard{\&amp;} instead.
+  content.  Instead, type \keyboard{\&amp;} instead.
 
 \end{itemize}
 
@@ -224,33 +221,31 @@ The set of valid elements are described next.
 \subsection{\SUBSECstructContent}
 \label{\SUBSECstructContent}
 
-Below, the component specification's \xml{} structure and corresponding
-logical content are described.  Each element's start tag is followed by a
+The component specification's \xml{} structure and corresponding
+logical content are described below.  Each element's start tag is followed by a
 description of its purpose and content, followed by its nested elements,
 and finally by its end tag.  Indentation is used to show nesting
-relationships among elements.  The rather complex \element{description}
-element, which is used in several contexts, is not described in detail
-here---section~\sechyperref{\SUBSECdescElement} describes it fully.
+relationships among elements. Section~\sechyperref{\SUBSECdescElement} describes the complex \element{description} element that is used in several contexts.
 
 \begin{description}
   \elementitem{component name="component-name" 
     category="category-name"} Starts the component specification.  All
   other elements are nested within this one.  This element requires the
   \icode{name} and \icode{category} attributes.  These
-  attributes name your component and specify
+  attributes name the component and specify
   the category the component belongs to respectively.
   \begin{description}
     \elementitem{overview} Starts the overview section.  Contains only
     nested elements.
     \begin{description}
-      \elementitem{authors}  List of component's authors.  Contains 1 or more
+      \elementitem{authors}  List of component's authors.  Contains one or more
       \element{author} elements.
       \begin{description}
-        \elementitem{author} Name of 1 author.
+        \elementitem{author} Name of one author.
         \elementitem{/author}
       \end{description}
       \elementitem{/authors}
-      \elementitem{summary} Short (1 or 2 sentence) summary of component's
+      \elementitem{summary} Short (one or two sentence) summary of component's
       function. \elementitem{/summary}
       \elementitem{description} Comprehensive description of component's
       function.  The \element{description} element is a mini-documentation
@@ -277,17 +272,17 @@ here---section~\sechyperref{\SUBSECdescElement} describes it fully.
     These elements may occur multiple times and in any order.
     Note that file name extensions are omitted.
     \begin{description}
-      \elementitem{ccfile} Names 1 c++ file,
+      \elementitem{ccfile} Names one c++ file,
       e.g. \element{ccfile}foo\element{/ccfile}. 
       \elementitem{/ccfile}
-      \elementitem{cfile} Names 1 c file.
+      \elementitem{cfile} Names one c file.
       \elementitem{/cfile}
-      \elementitem{ffile} Names 1 fortran file.
+      \elementitem{ffile} Names one fortran file.
       \elementitem{/ffile}
     \end{description}
     \elementitem{/implementation}
     \elementitem{io} Component's inputs and
-    outputs.  Contains 2 elements, \element{inputs} followed by
+    outputs.  Contains two elements, \element{inputs} followed by
     \element{outputs}.
     \begin{description}
       \elementitem{inputs lastportdynamic="(yes | no)"} Describes the
@@ -296,13 +291,13 @@ here---section~\sechyperref{\SUBSECdescElement} describes it fully.
       elements are used to describe inputs from ports.  Zero or more
       \element{file} elements are used to describe inputs from files.  Zero
       or more \element{device} elements are used to describe inputs from
-      devices.  There must be at least 1 \element{port} element or 1
-      \element{file} element or 1 \element{device} element.
+      devices.  There must be at least one \element{port} element or one
+      \element{file} element or one \element{device} element.
 
-      If your component's last port is dynamic then the
+      If the component's last port is dynamic then the
       \attribute{lastportdynamic} attribute should be set to \keyboard{yes}
-      (\attribute{lastportdynamic="yes"}).  If your component's last port
-      is not dynamic then you may omit this attribute or set its value to
+      (\attribute{lastportdynamic="yes"}).  If the component's last port
+      is not dynamic, then omit this attribute or set its value to
       \keyboard{no}.
 
       \begin{description}
@@ -350,7 +345,7 @@ here---section~\sechyperref{\SUBSECdescElement} describes it fully.
       \end{description}
       \elementitem{/inputs}
       \elementitem{outputs} Describes the component's outputs.  Outputs may
-      go to a port or to a file or to a device.  Use 0 or more
+      go to a port, to a file, or to a device.  Use 0 or more
       \element{port} elements to describe outputs to ports, 0 or more
       \element{file} elements to describe outputs to files, and 0 or more
       \element{device} elements to describe outputs to devices.
@@ -402,9 +397,9 @@ here---section~\sechyperref{\SUBSECdescElement} describes it fully.
       \elementitem{description} Describes the purpose of the \gui, e.g.
       ``The \gui{} allows you to steer the simulation.''
       \elementitem{/description}
-      \elementitem{parameter} Declares 1 \gui{}  parameter.  A parameter is a
+      \elementitem{parameter} Declares one \gui{}  parameter.  A parameter is a
       \gui{}  item that can be modified by the user.  Sub-elements describe the
-      parameter.  Use 1 parameter element for each item in the \gui.
+      parameter.  Use one parameter element for each item in the \gui.
       \begin{description}
         \elementitem{widget} The type name of parameter's tcl widget.
         \elementitem{/widget}
@@ -420,16 +415,16 @@ here---section~\sechyperref{\SUBSECdescElement} describes it fully.
     \end{description}
     \elementitem{/gui}%
     \elementitem{testing} Starts the testing section.  Sub-elements specify
-    1 or more testing plans.
+    1oneor more testing plans.
     \begin{description}
-      \elementitem{plan} Declares 1 testing plan.  Sub-elements specify the
+      \elementitem{plan} Declares one testing plan.  Sub-elements specify the
       testing plan's details.
       \begin{description}
         \elementitem{description}  High level description of the testing
-        plan.  The \element{description} element is followed by 1 or more
+        plan.  The \element{description} element is followed by one or more
         \element{step} elements.
         \elementitem{/description}
-        \elementitem{step} Detailed description of 1 step in the testing
+        \elementitem{step} Detailed description of one step in the testing
         procedure.   The content model of the \element{step} element is the
         same as the that of the \element{description} element (i.e., see
         section~\sechyperref{\SUBSECdescElement} for details).
@@ -445,7 +440,7 @@ here---section~\sechyperref{\SUBSECdescElement} describes it fully.
 \subsection{\SUBSECdescElement}
 \label{\SUBSECdescElement}
 
-This section describes the \element{description} element in detail.
+This section describes the \element{description} element.
 
 \paragraph{\SUBSUBSECdescElementIntro}
 \label{\SUBSUBSECdescElementIntro}
@@ -455,13 +450,13 @@ It allows you to organize your text into paragraphs, lists, and
 other structured content.
 
 Note that the literal forms of the characters \la, \ra, and \& may not be
-used in element content.  Instead you must type \keyboard{\&lt;},
+used in element content.  Instead, type \keyboard{\&lt;},
 \keyboard{\&gt;}, and \keyboard{\&amp;} respectively.
 
 \paragraph{\SUBSUBSECcommonUsage}
 \label{\SUBSUBSECcommonUsage}
 
-A \element{description} might contain only 1 or 2 sentences:
+A \element{description} might contain only one or two sentences:
 
 \begin{verbatim}
 <description>
@@ -470,7 +465,7 @@ information is needed. </p>
 </description>
 \end{verbatim}
 
-Note that even just 1 sentence must be enclosed in a paragraph element.
+Note that just one sentence must be enclosed in a paragraph element.
 
 A \element{description} may contain only a few paragraphs:
 
@@ -486,7 +481,7 @@ information is needed.</p>
 </description>
 \end{verbatim}
 
-You may refer to other material using the \element{cite}, \element{rlink},
+Refer to other material using the \element{cite}, \element{rlink},
 or \element{slink} elements:
 
 \begin{verbatim}
@@ -501,25 +496,24 @@ discussion of the xyz algorithm is
 \end{verbatim}
 
 The \element{cite} element marks text as the title of a paper or
-book (but is not itself a hyper-link).
+book, but is not itself a hyper-link.
 
 The \element{slink} and \element{rlink} elements allow you to reference
 online material.
 
 \element{Slink} links to material on the \sci{} 
-web site (\sciurl).  It requires a path 
+web site (\sciurl).  \element{Slink} requires a path 
 relative to \sciurl.  The path in the previous example resolves to
 \sciurl{}/ncrr/publications/xyz.html.
 
 \element{Rlink} links to material in the \acronym{CVS} tree
-(\element{rlink} actually links to material on the documentation web site
-but it is more easily explained as a path into the cvs tree).  It requires
-a path relative to the location of your component specification document.  For
+\element{rlink} links to material on the documentation web site,
+but it is more easily explained as a path into the cvs tree.  \element{Rlink} requires
+a path relative to the location of the component specification document.  For
 example, the path \keyboard{./stuff.html} resolves to the same directory
-where your component specification document lives.
+where the component specification document lives.
 
-A more general link element is not available because the documentation
-bureaucrats want some control over the material to which you link.
+Documentation bureaucrats want some control over the material, so a more general link is not available.
 
 The \element{developer} element encloses material that is of interest only to
 developers:
@@ -541,14 +535,14 @@ developers:
 \paragraph{\SUBSUBSECreference}
 \label{\SUBSUBSECreference}
 
-Below, the description element's \xml{} structure and corresponding logical
-content are described.  Each element's start tag is followed by a
+The description element's \xml{} structure and corresponding logical
+content are described below.  Each element's start tag is followed by a
 description of its purpose and content, followed by its nested elements,
 and finally by its end tag.  Basic nesting relationships among elements are
 shown by indentation.
 
-\Note{Additional features may be added to the \element{description}
-  element in the future.}
+\Note{In the future, additional features may be added to the \element{description.}
+
 
 \begin{description}
   \elementitem{description} Starts a description.  A description consists
@@ -563,37 +557,37 @@ shown by indentation.
     \element{rlink}), and inline latex source (see \element{latex}).
     \begin{description}
       \elementitem{term} Encloses a \dfn{term}.  A term is a word or short
-      phrase you are introducing to your readers for the first time.
+      phrase introduced to your readers for the first time.
       \elementitem{/term}
       \elementitem{keyword} Encloses a \dfn{keyword}.
       \elementitem{/keyword}
       \elementitem{keyboard} Encloses material that is typed at a keyboard.
       \elementitem{/keyboard}
       \elementitem{cite} Encloses a reference to a paper or other
-      publication.  Is not itself a hyper-link but it may be used within the
+      publication.  Is not itself a hyper-link, but it can be used within the
       \element{slink} and \element{rlink} elements.
       \elementitem{/cite}
       \elementitem{acronym} Encloses an acronym (e.g.
       \element{acronym}XML\element{/acronym}).
       \elementitem{/acronym}
       \elementitem{slink} Defines a \sci{} web site relative link.  It
-      requires 1 attribute which is the path of the target relative to
+      requires one attribute that is the path of the target relative to
       \sciurl.  Text bracketed by the start and end tags will be presented
       as a link in online documents.  The text may include phrase elements.
       \elementitem{/slink}%
-      \elementitem{rlink} Defines a \sr{} \cvs{} relative link
-      (\element{rlink} actually links to material on the documentation web
-      site but it is more easily explained as a path into the cvs tree).  It
-      requires a path relative to the location of your component
-      specification document.  Text bracketed by the start and end tags will
-      be presented as a link in online documents.  The bracketed text may
+      \elementitem{rlink} Defines a \sr{} \cvs{} relative link.
+      \element{rlink} links to material on the documentation web
+      site, but  is more easily explained as a path into the cvs tree.  \element{Rlink}
+      requires a path relative to the location of the component
+      specification document.  Text bracketed by the start and end tags are
+      presented as a link in online documents.  The bracketed text may
       include phrase elements.
       \elementitem{/rlink}%
       \elementitem{latex} Encloses a short bit of latex code such as an equation.
       \elementitem{/latex}%
     \end{description}
     \elementitem{/p}%
-    \elementitem{orderedlist}  An ordered (numbered) list.  Contains 1 or
+    \elementitem{orderedlist}  An ordered (numbered) list.  Contains one or
     more \element{listitem} elements.
     \begin{description}
       \elementitem{listitem}  An item in an ordered list.  A
@@ -601,7 +595,7 @@ shown by indentation.
       \elementitem{/listitem}%
     \end{description}
     \elementitem{/orderedlist}%
-    \elementitem{unorderedlist} An unordered list.  Contains 1 or
+    \elementitem{unorderedlist} An unordered list.  Contains one or
     more \element{listitem} elements.
     \begin{description}
       \elementitem{listitem}  An item in an unordered list.  A
@@ -611,10 +605,10 @@ shown by indentation.
     \elementitem{/unorderedlist}%
     \elementitem{desclist} A description list.  Contains a list of terms or
     short phrases
-    and their definitions or descriptions.  Consists of 1 or more \element{desclistitem}
+    and their definitions or descriptions.  Consists of one or more \element{desclistitem}
     elements. 
     \begin{description}
-      \elementitem{desclistitem} Contains 1 \element{desclistterm} and 1
+      \elementitem{desclistitem} Contains one \element{desclistterm} and one
       \element{desclistdef}. 
       \begin{description}
         \elementitem{desclistterm} A word or short phrase (not enclosed in
@@ -630,28 +624,28 @@ shown by indentation.
     \elementitem{/desclist}%
     \elementitem{note}  Calls attention to a piece of information.  Aimed
     towards users of the component.  Presumably the information within a
-    \element{note} element will be rendered in a special
+    \element{note} element is rendered in a unique
     way.  A note consists of paragraphs and lists only.
     \elementitem{/note}%
     \elementitem{tip} Contains an especially helpful piece of information.
-    Aimed towards users of the component.  Presumably the information
-    within a \element{tip} element will be rendered in a special way.  A
+    Aimed towards users of the component.  Presumably, the information
+    within a \element{tip} element is rendered in a unique way.  A
     tip consists of paragraphs and lists only.
     \elementitem{/tip}%
     \elementitem{warning} Contains a warning (e.g., ``Don't press the red
-    button!''). Aimed towards users of the component.  Presumably the
-    information within a \element{warning} element will be rendered in a
-    special way.  A warning consists of paragraphs and lists only.
+    button!''). Aimed towards users of the component.  Presumably, the
+    information within a \element{warning} element is rendered in a
+    unique way.  A warning consists of paragraphs and lists only.
     \elementitem{/warning}%
     \elementitem{developer}  Starts a developer section.  Material
     here should be aimed towards fellow programmers.  The
-    \element{developer} element acts like the \element{description} element
-    except that \element{developer} elements may not be nested.
+    \element{developer} element acts similar to the \element{description} element, 
+    \element{developer} elements can not be nested.
     \elementitem{/developer}%
     \elementitem{latex} Encloses a block of latex code.  Note that this is
     the block level version of the \element{latex} element -- the inline
-    version, which can only be used inside the \element{p} element, is
-    discussed above
+    version, which can only be used inside the \element{p} element 
+    (discussed above).
     \elementitem{/latex}%
   \end{description}
   \elementitem{/description} 
@@ -661,30 +655,29 @@ shown by indentation.
 \section{\SECediting}
 \label{\SECediting}
 
-An ordinary text editor may be used to create the component specification
+An ordinary text editor can be used to create the component specification
 document's content.  However, it is easy to get lost in the noise of the
-\xml{} syntax.  Therefore, it is best to use an \xml{}/\dtd{} aware editor.
-This type of editor will help you construct a valid component specification
+\xml{} syntax.  It is best to use an \xml{}/\dtd{} aware editor.
+This type of editor will help construct a valid component specification
 document.
 
 \Emacs{} is one such editor.  It supports an editing environment called
-\xml{} mode (which is really a derivative of \psgml{} mode).  \Xml{} mode
+\xml{} mode, a derivative of \psgml{} mode.  \Xml{} mode
 highlights \xml{} syntax, indents nested elements and their content, and
 automatically inserts elements and attributes based on the position of the
 insertion point.  It is still possible to create invalid documents using
 \emacs{} \xml{} mode.
-
-The following sections describe the use of \emacs{} \xml{} mode.
+Use of \emacs{} \xml{} mode is described in the following sections.
 
 \subsection{\SUBSECgettingSources}
 \label{\SUBSECgettingSources}
 
-Recent versions of \emacs{} come with \xml{} mode installed.  You can check
-if yours does by typing \keyboard{M-x xml-mode}.  You \emph{don't} have
+Recent versions of \emacs{} come with \xml{} mode installed.  To check
+if you have recent versions of \emacs{},  type \keyboard{M-x xml-mode}.  You \emph{don't} have
 \xml{} mode if you get the message
 \screen{[No match]} in return.
 
-If you don't have \xml{} mode you may get it
+ \xml{} mode can be obtained
 \htmladdnormallinkfoot{online}{\psgmlurl}.
 
 \subsection{\SUBSECdotEmacs}
@@ -732,7 +725,7 @@ auto-mode-alist))
 \label{\SUBSECgettingStarted}
 
 To start a new component specification or to edit an existing one with
-\emacs{} do this:
+\emacs{}:
 
 \begin{enumerate}
 \item Use the \keyboard{C-x C-f} (\keyboard{find-file}) command to create a
@@ -744,9 +737,9 @@ To start a new component specification or to edit an existing one with
 <!DOCTYPE component SYSTEM 
 "<top-of-cvs-tree>/doc/Utilities/XML/component.dtd">
 \end{verbatim}
-  Replace \screen{<top-of-cvs-tree>} with the path to the top of your
+  Replace \screen{<top-of-cvs-tree>} with the path to the top of the
   \sr{} \cvs{} tree.
-\item Insert the following \xml{} comment at the bottom of your file:
+\item Insert the following \xml{} comment at the bottom of the file:
 \begin{verbatim}
 <!-- Keep this comment at the end of the file
 Local variables:
@@ -762,17 +755,17 @@ End:
   pop-up menu (shift-button1 or shift-button3 for emacs and button3 for
   xemacs): Position the cursor after the \verb+<!DOCTYPE ...>+ declaration
   and select the item named \menuitem{component} from the pop-up menu.
-  After doing this you will be prompted for the \element{component}
+  \Emacs{} will prompt for the \element{component}
   element's \attribute{name} and \attribute{category} attributes. After
-  typing in each of the attributes \Emacs{} will  insert a number of
+  typing in each of the attributes, \Emacs{} will  insert a number of
   other required elements.
-\item Insert content into these elements.  For example, you may insert your
+\item Insert content into these elements.  For example, insert your
   name between the start and end tags of the \element{author} element.
-  Refer to section~\sechyperref{\SECcontent} if you have questions about
+  Refer to section~\sechyperref{\SECcontent} for information about
   the content of any elements.
 \item The \element{gui} element is not automatically inserted by \emacs{} 
-  because a gui is optional.  Most components will support a gui
-  though so you will probably need to insert the \element{gui}
+  because a gui is optional.  Most components will support a gui, 
+  so the \element{gui} will need to be inserted.
   element.  Do this by positioning the cursor after the end tag of
   the \element{io} element.  Then select the \element{gui} element
   from \emacs{} pop-up menu.  \Emacs{} will insert the \element{gui}
@@ -786,26 +779,26 @@ Note:
 \begin{itemize}
 \item Most elements (like the \element{description} element) are composed of
   sub-elements.  To add sub-elements, position the cursor between the
-  start and end tags of the element and then insert an element using
+  start and end tags of the element, then insert an element using
   \emacs{} pop-up menu.  The pop-up menu will list elements that are
   valid at the insertion point.
-\item A few elements (namely \element{slink} and \element{rlink})
-  elements take attributes.  If these elements are added via \emacs{}
-  pop-up menu then \emacs{} will prompt you for the element's
-  attribute values.  If these element's are added manually then you
-  may add the attributes via the pop-up menu: position the cursor
+\item A few elements, namely \element{slink} and \element{rlink}
+  elements, take attributes.  If these elements are added via \emacs{}
+  pop-up menu, \emacs{} will prompt for the element's
+  attribute values.  If these element's are added manually,
+  add the attributes via the pop-up menu: position the cursor
   anywhere within the element's start tag and select the desired
   attribute from the pop-up menu's list of attributes.  \Emacs{} will
-  prompt you for the value of the attribute and insert it in the
+  prompt for the value of the attribute and insert it in the
   element's start tag.
 \end{itemize}
 
 \section{\SECvalidation}
 \label{\SECvalidation}
 
-You should  validate your component specification document to ensure that it
+Validate the component specification document to ensure that it
 is complete and correct.  Do this before committing it to CVS otherwise you
-may break \sr{} for yourself and others.  You may wish to use the online \htmladdnormallinkfoot{Validation Tool for SCIRun XML Files}{\xmlvalidurl}.
+may break \sr{} for yourself and others.  Online \htmladdnormallinkfoot{Validation Tool for SCIRun XML Files}{\xmlvalidurl} can be used.
 
 \begin{htmlonly}
 \include{../Utilities/TeX/banner_bottom.tex}
