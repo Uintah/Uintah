@@ -93,11 +93,11 @@ itcl_class CardioWave_CreateModel_SetupFVM2 {
 	make_entry $w.f.vis "Vis file: " $this-visfile \
 		"$this-c needexecute"
 
-        global $this-visfile
-	make_entry $w.f.vis "ID file: " $this-idfile \
+        global $this-idfile
+	make_entry $w.f.id "ID file: " $this-idfile \
 		"$this-c needexecute"
 
-	pack $w.f.spr $w.f.vol $w.f.vol $w.f.vis $w.f.id -side top
+	pack $w.f.spr $w.f.vol $w.f.vis $w.f.id -side top
 
 	pack $w.bathsig $w.fibersig $w.f -side top
    }
