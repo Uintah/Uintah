@@ -17,6 +17,9 @@
 // friend inline bool lessFY(const _Tp &a, const _Tp &b);
 // friend inline bool lessFZ(const _Tp &a, const _Tp &b);
 
+#include <algorithm>
+using namespace std;
+
 namespace Remote {
 namespace Tools {
 
@@ -102,7 +105,7 @@ public:
 	right = new KDTree(MedP, Items.end());
 	Items.clear();
 
-	KDVertex Res;
+	//	KDVertex Res;
       }
   }
 
