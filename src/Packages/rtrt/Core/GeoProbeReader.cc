@@ -25,14 +25,13 @@ int read_geoprobe(const char *fname, int &nx, int &ny, int &nz,
     cerr << "Error -- we only know how to read 8-bit data right now.\n";
     return 0;
   }
+  // Because the data is backwards we need to assign these values in
+  // reverse order to what we think they should be.
   nx = hdr.zsize;
   ny = hdr.ysize;
   nz = hdr.xsize;
-  cout << "Data size = ("<<hdr.xsize<<", "<<hdr.ysize<<", "<<hdr.zsize<<")\n";
-  cout << "Return size = ("<<nx<<", "<<ny<<", "<<nz<<")\n";
-
-  hdr.xstep = hdr.ystep = hdr.zstep = 1;
-  hdr.xoffset = hdr.yoffset = hdr.zoffset = 0;
+  //  cout << "Data size = ("<<hdr.xsize<<", "<<hdr.ysize<<", "<<hdr.zsize<<")\n";
+  //  cout << "Return size = ("<<nx<<", "<<ny<<", "<<nz<<")\n";
 
   // This is the data structure that we are passing back, because of
   // the internal workings of this array, we need to make sure that
@@ -40,7 +39,6 @@ int read_geoprobe(const char *fname, int &nx, int &ny, int &nz,
   // It should be nx, ny, and nz.
   data.resize( nx , ny , nz);
 
-#if 1
   // Because the data is ordered backwards (z,y,z instead of x,y,z),
   // we simply can't just stuff all the memory into a single pointer.
   // We must iterate over the data and then store it one piece at a
@@ -49,7 +47,11 @@ int read_geoprobe(const char *fname, int &nx, int &ny, int &nz,
   unsigned char *buffer = new unsigned char[buffer_size];
   size_t total_size = nx*ny*nz;
   size_t total_read = 0;
- 
+
+  // This is akin to saying datamin = MAX_UCHAR and datamax = MIN_UCHAR
+  datamin = 255;
+  datamax = 0;
+  
   for(int x = 0; x < nx; x++) {
     if (fread(buffer, sizeof(unsigned char), buffer_size, data_file)
 	!= buffer_size) {
@@ -57,54 +59,35 @@ int read_geoprobe(const char *fname, int &nx, int &ny, int &nz,
       return 0;
     }
     total_read+=buffer_size;
-    // Copy the data over to our array, we could also compute min and
-    // max here if we wanted.
+    // Copy the data over to our array, we are also computing datamin and
+    // datamax for efficiency.
     unsigned char *buffp = buffer;
     for(int y = 0; y < ny; y++)
       for(int z = 0; z < nz; z++)
 	{
-	  data(x,y,z) = *buffp;
+	  unsigned char val = *buffp;
 	  buffp++;
+	  data(x,y,z) = val;
+	  if (val < datamin)
+	    datamin = val;
+	  else if (val > datamax)
+	    datamax = val;
 	}
   }
   if (total_read != total_size) {
     cerr << "Error -- got "<<total_size<<" bytes instead of "<<total_read<<" bytes\n";
     return 0;
   }
-#endif
 
-  int i,j,k;
-  unsigned char swap;
-
-#if 0
-  unsigned char *datap = scinew unsigned char[nx*ny*nz];
-  if (!datap) {
-    cerr << "Could not allocate datap memory\n";
-    return 0;
-  }
-  if (fread(datap, sizeof(unsigned char), nx*ny*nz, data_file) != nx*ny*nz) {
-    cerr << "Error -- did not find "<<nx*ny*nz<<" in input file!\n";
-    return 0;
-  }
-
-  // The data coming in is ordered fastest to slowest z,y,x.  This
-  // needs to be reordered to be x,y,z.
-  for (i = 0; i < nx; i++)
-    for (j = 0; j < ny; j++)
-      for (k = 0; k < nz; k++, datap++) {
-	swap=data(i,j,k);
-	data(i,j,k)=*datap;
-	*datap=swap;
-      }
-  delete datap;
-#endif
-  
-  bool flipx = false;
-  bool flipy = false;
-  bool flipz = false;
+  hdr.xstep = hdr.ystep = hdr.zstep = 1;
+  hdr.xoffset = hdr.yoffset = hdr.zoffset = 0;
 
   cerr << "hdr.offset="<<Vector(hdr.xoffset,hdr.yoffset,hdr.zoffset)<<"\n";
   cerr << "hdr.step="<<Vector(hdr.xstep,hdr.ystep,hdr.zstep)<<"\n";
+
+  bool flipx = false;
+  bool flipy = false;
+  bool flipz = false;
 
   if (hdr.xstep < 0) {
     flipx = true;
@@ -128,46 +111,36 @@ int read_geoprobe(const char *fname, int &nx, int &ny, int &nz,
 
 
 #if 0
-  // Compute the min and max of the data
-  datamin=datamax=data(0,0,0);
-  for (k=0; k<nz; k++)
-    for (j=0; j<ny; j++)
-      for (i=0; i<nx; i++)
-	if (data(i,j,k) < datamin)
-	  datamin=data(i,j,k);
-	else if (data(i,j,k) > datamax)
-	  datamax=data(i,j,k);
-#else
-  datamin = 0;
-  datamax = 255;
-#endif
+  // I'm not sure what is supposed to be happening here, so I
+  // commented it out. :)  
+  int i,j,k;
+  unsigned char swap;
 
-#if 0
   if (flipx)
     for (k=0; k<nz; k++)
       for (j=0; j<ny; j++)
 	for (i=0; i<nx; i++) {
-	  swap=data(i,j,k);
-	  data(i,j,k)=data(i,j,nz-k-1);
-	  data(j,i,nz-k-1)=swap;
+	  swap = data(i,j,k);
+	  data(i,j,k) = data(i,j,nz-k-1);
+	  data(i,j,nz-k-1) = swap;
 	}
 
   if (flipy)
     for (k=0; k<nz; k++)
       for (j=0; j<ny; j++)
 	for (i=0; i<nx; i++) {
-	  swap=data(i,j,k);
-	  data(i,j,k)=data(i,ny-j-1,k);
-	  data(i,ny-j-1,k)=swap;
+	  swap = data(i,j,k);
+	  data(i,j,k) = data(i,ny-j-1,k);
+	  data(i,ny-j-1,k) = swap;
 	}
 
   if (flipz)
     for (k=0; k<nz; k++)
       for (j=0; j<ny; j++)
 	for (i=0; i<nx; i++) {
-	  swap=data(i,j,k);
-	  data(i,j,k)=data(nx-i-1,j,k);
-	  data(nx-i-1,j,k)=swap;
+	  swap = data(i,j,k);
+	  data(i,j,k) = data(nx-i-1,j,k);
+	  data(nx-i-1,j,k) = swap;
 	}
 #endif
   
