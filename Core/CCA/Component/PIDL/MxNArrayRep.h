@@ -119,16 +119,28 @@ namespace SCIRun {
     /////////////
     // Retrieves the number specified as stride in the index representing
     // the dimension dimno. Note that dimensions are expected to begin with
-    // 1 and not 0 in this implementation.
+    // 1 and not 0 in this implementation. 
     unsigned int getStride(int dimno);
+
+    /////////////
+    // Retrieves the number specified as stride in the index representing
+    // the dimension dimno. Note that dimensions are expected to begin with
+    // 1 and not 0 in this implementation. 
+    // Note: if the index associated with this stride in NOT locally packed
+    // this method will return 1. 
+    // SPECIAL Note: This method should only be invoked by sidl generated code.
+    unsigned int sidl_getStride(int dimno);
 
     ////////////
     // Calculates the number of elements according to the first, last and
-    // stride for a given dimension (first & last inclusive). 
-    // Note that dimensions are expected to begin with 1 and not 0 in 
+    // stride for a given dimension (first & last inclusive).
+    // Note that dimensions are expected to begin with 1 and not 0 in
     // this implementation.
+    // Note: if the index associated with this stride in NOT locally packed
+    // this method will a different size.
     unsigned int getSize(int dimno);
-
+    
+    
     ///////////
     // Determines wether two array descriptions have an intersection. 
     // It calls Intersect() in order to make that determination.
@@ -191,7 +203,10 @@ namespace SCIRun {
     //////////////
     //Index constructor. It requires that first <= last. If this is not
     //the case it transposes first and last.
-    Index(unsigned int first, unsigned int last, unsigned int stride);
+    //@param locallyPacked -- whether this index represents data which is packed in
+    //		              the local array. If it is not we want to make special 
+    //		              considerations (see getStride()).	
+    Index(unsigned int first, unsigned int last, unsigned int stride, bool locallyPacked = true);
 
     ///////////
     // Prints this class to stdout.
@@ -202,6 +217,7 @@ namespace SCIRun {
     unsigned int myfirst;
     unsigned int mylast;
     unsigned int mystride;
+    bool locallyPacked;
   };      
   
   

@@ -41,7 +41,7 @@
 #include <Core/Thread/Time.h>
 
 
-#define SIZE 200               
+#define SIZE 5               
 
 using std::cerr;
 using std::cout;
@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
 	  
           //Set up server's requirement of the distribution array 
           Index** dr0 = new Index* [2];
-	  dr0[0] = new Index(0,SIZE,1);
+	  dr0[0] = new Index(myrank,SIZE,mysize,false);
           dr0[1] = new Index(0,SIZE,1);
           MxNArrayRep* arrr0 = new MxNArrayRep(2,dr0);
 	  lu->setCalleeDistribution("X",arrr0);
