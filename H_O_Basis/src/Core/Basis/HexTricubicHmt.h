@@ -343,7 +343,6 @@ public:
   void get_coords(vector<double> &coords, const T& value, 
 		  const CellData &cd) const;  
 
-  void blah(double (&arr)[7]);
   //! add derivative values (dx, dy, dz, dxy, dyz, dzx, dxyz) for nodes.
   void add_derivatives(const vector<T> &p) { derivs_.push_back(p); }
 
@@ -417,18 +416,6 @@ void
 HexTricubicHmt<T>::io(Piostream &stream)
 {
   stream.begin_class(type_name(-1), HEXTRICUBICHMT_VERSION);
-//   typename vector<T[7]>::size_type sz = derivs_.size();
-//   Pio(stream, sz);
-//   for(unsigned i = 0; i < sz; i++) {
-//     T (&arr)[7] = derivs_[i];
-//     Pio(stream, arr[0]);
-//     Pio(stream, arr[1]);
-//     Pio(stream, arr[2]);
-//     Pio(stream, arr[3]);
-//     Pio(stream, arr[4]);
-//     Pio(stream, arr[5]);
-//     Pio(stream, arr[6]);
-//   }
   Pio(stream, derivs_);
   stream.end_class();
 }
