@@ -381,6 +381,17 @@ public:
   void size(Face::size_type &) const;
   void size(Cell::size_type &) const;
 
+  // returns 26 pairs in ijk order
+  void	get_neighbors_stencil(vector<pair<bool,Cell::index_type> > &nbrs, 
+			      Cell::index_type &idx) const;
+  // return 26 pairs in ijk order
+  void	get_neighbors_stencil(vector<pair<bool,Node::index_type> > &nbrs, 
+			      Node::index_type &idx) const;
+
+  // return 8 pairs in ijk order
+  void	get_neighbors_stencil(vector<pair<bool,Cell::index_type> > &nbrs, 
+			      Node::index_type &idx) const;
+
 
   //! get the center point (in object space) of an element
   void get_center(Point &, const Node::index_type &) const;
@@ -423,18 +434,27 @@ public:
   virtual const TypeDescription *get_type_description() const;
 
 private:
-  bool	check_valid(Node::index_type idx) const;
-  bool	check_valid(Edge::index_type idx) const;
-  bool	check_valid(Face::index_type idx) const;
-  bool	check_valid(Cell::index_type idx) const;
-  bool	check_valid(Node::iterator idx) const;
-  bool	check_valid(Edge::iterator idx) const;
-  bool	check_valid(Face::iterator idx) const;
-  bool	check_valid(Cell::iterator idx) const;
+  set<unsigned>	masked_cells_;
+  unsigned	masked_nodes_count_;
+  unsigned	masked_edges_count_;
+  unsigned	masked_faces_count_;
+
+  void		convert_edge_indexing(Edge::index_type, 
+				      unsigned &, unsigned &, unsigned &, unsigned &) const;
+  bool		update_count(Cell::index_type, bool masking);
+  unsigned	num_missing_faces(Cell::index_type);
+  bool		check_valid(Node::index_type idx) const;
+  bool		check_valid(Edge::index_type idx) const;
+  bool		check_valid(Face::index_type idx) const;
+  bool		check_valid(Cell::index_type idx) const;
+  bool		check_valid(Node::iterator idx) const;
+  bool		check_valid(Edge::iterator idx) const;
+  bool		check_valid(Face::iterator idx) const;
+  bool		check_valid(Cell::iterator idx) const;
+  inline bool	check_valid(unsigned i, unsigned j, unsigned k) const
+  { return masked_cells_.find(unsigned(i)) == masked_cells_.end(); }
 
   
-  set<unsigned int>	masked_cells_;
-
   // returns a MaskedLatVolMesh
   static Persistent *maker() { return new MaskedLatVolMesh(); }
 };
