@@ -65,6 +65,7 @@ SRCS := \
 	$(SRCDIR)/FieldWriter.tcl \
 	$(SRCDIR)/FrameWidget.tcl \
 	$(SRCDIR)/GaugeWidget.tcl \
+	$(SRCDIR)/GenAxes.tcl \
 	$(SRCDIR)/GenStandardColorMaps.tcl \
 	$(SRCDIR)/GenTransferFunc.tcl \
 	$(SRCDIR)/GLTextureBuilder.tcl \
