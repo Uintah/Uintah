@@ -147,8 +147,12 @@ case $host in
              threads="irix"
            fi
 	   TIME_IMPL=Time_irix.cc
+	   if test "$is_64bit" = "yes" ; then
+             IMAGE_LIBS="-lifl"
+           else
+             IMAGE_LIBS="-lifl -lcl"
+           fi
 	   TRACEBACK_LIB=-lexc
-	   IMAGE_LIBS ="-lifl"
            ;;
   *-linux-gnu)
      AC_PROG_CC
@@ -163,7 +167,7 @@ case $host in
      TIME_IMPL=Time_unix.cc
      PLATFORM_LDFLAGS="-ldl"
      TRACEBACK_LIB=""
-     IMAGE_LIBS = ""
+     IMAGE_LIBS =""
      echo "checking for sstream"
      AC_CHECK_HEADER(sstream, SSTREAM_COMPAT="no", SSTREAM_COMPAT="yes")
            ;;
@@ -571,6 +575,10 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.56  2000/06/09 17:46:16  kuzimmer
+# Modified so that linux and 64bit compiles won't choke on the new image
+# and compression libraries
+#
 # Revision 1.55  2000/06/08 22:29:51  kuzimmer
 # fixed an error in IMAGE_LIBS
 #
