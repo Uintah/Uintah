@@ -427,7 +427,8 @@ double Mesh::get_grad(Element* elem, const Point&,
     double d4=+(x2*y3-x3*y2)+(x3*y1-x1*y3)+(x1*y2-x2*y1);
     g4=Vector(b4*iV6, c4*iV6, d4*iV6);
 
-    return((a1+a2+a3+a4)/6.0);
+    double vol=(1./iV6)/6.0;
+    return(vol);
 }
 
 int Mesh::locate(const Point& p, int& ix)
