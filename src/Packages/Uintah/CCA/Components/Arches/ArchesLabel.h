@@ -418,6 +418,7 @@ namespace Uintah {
       const VarLabel* d_mmgasVolFracLabel;
       // for reacting flows
       const VarLabel* d_tempINLabel;
+      const VarLabel* d_cpINLabel;
       const VarLabel* d_co2INLabel;
       const VarLabel* d_h2oINLabel;
       const VarLabel* d_denRefArrayLabel;
@@ -634,11 +635,21 @@ namespace Uintah {
       const VarLabel* d_enthNonLinSrcCorrLabel;
       // for radiation
       const VarLabel* d_fvtfiveINLabel;
+      const VarLabel* d_tfourINLabel;
+      const VarLabel* d_tfiveINLabel;
+      const VarLabel* d_tnineINLabel;
+      const VarLabel* d_qrgINLabel;
+      const VarLabel* d_qrsINLabel;
       const VarLabel* d_absorpINLabel;
       const VarLabel* d_sootFVINLabel;
       const VarLabel* d_abskgINLabel;
       const VarLabel* d_radiationSRCINLabel;
+      const VarLabel* d_radiationFluxEINLabel;
       const VarLabel* d_radiationFluxWINLabel;
+      const VarLabel* d_radiationFluxNINLabel;
+      const VarLabel* d_radiationFluxSINLabel;
+      const VarLabel* d_radiationFluxTINLabel;
+      const VarLabel* d_radiationFluxBINLabel;
       // reactive scalar source term from properties
       const VarLabel* d_reactscalarSRCINLabel;
       const VarLabel* d_absorpINPredLabel;

@@ -136,6 +136,7 @@ namespace Uintah {
       CCVariable<double> qfluxt;
       CCVariable<double> qfluxb;
       CCVariable<double> temperature;
+      CCVariable<double> cp;
       CCVariable<double> absorption;
       CCVariable<double> sootFV;
       CCVariable<double> h2o;

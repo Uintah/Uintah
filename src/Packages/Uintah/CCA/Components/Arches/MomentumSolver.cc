@@ -992,8 +992,6 @@ MomentumSolver::sched_buildLinearMatrixPred(SchedulerP& sched, const PatchSet* p
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-//    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-//		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
   }
 
   switch (index) {
@@ -1152,7 +1150,7 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 		      Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     }
-
+    
     switch (index) {
 
     case Arches::XDIR:
@@ -1231,7 +1229,10 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
       d_source->calculateVelocityPred(pc, patch, 
 				      delta_t, index,
 				      cellinfo, &velocityVars);
-
+      if (d_boundaryCondition->getIntrusionBC())
+	d_boundaryCondition->calculateIntrusionVel(pc, patch,
+						   index, cellinfo,
+						   &velocityVars);
     }
     d_boundaryCondition->velocityPressureBC(pc, patch, index, cellinfo,
 						&velocityVars);
@@ -2722,6 +2723,14 @@ MomentumSolver::buildLinearMatrixVelHatPred(const ProcessorGroup* pc,
       d_boundaryCondition->velocityBC(pc, patch, 
 				    index,
 				    cellinfo, &velocityVars);
+
+      if (d_boundaryCondition->getIntrusionBC()) {
+	d_boundaryCondition->intrusionMomExchangeBC(pc, patch, index,
+						    cellinfo, &velocityVars);
+	d_boundaryCondition->intrusionVelocityBC(pc, patch, index, 
+						 cellinfo, &velocityVars);
+
+      }
     // apply multimaterial velocity bc
     // treats multimaterial wall as intrusion
 

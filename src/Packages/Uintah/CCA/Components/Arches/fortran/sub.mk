@@ -41,6 +41,7 @@ SRCS += \
 	$(SRCDIR)/init.F \
 	$(SRCDIR)/initScal.F \
 	$(SRCDIR)/inlbcs.F \
+	$(SRCDIR)/intrusion_computevel.F \
 	$(SRCDIR)/linegs.F \
 	$(SRCDIR)/mascal.F \
 	$(SRCDIR)/mascal_scalar.F \
@@ -50,6 +51,8 @@ SRCS += \
 	$(SRCDIR)/mm_explicit_vel.F\
 	$(SRCDIR)/mm_modify_prescoef.F \
 	$(SRCDIR)/mmbcvelocity.F \
+	$(SRCDIR)/mmbcvelocity_momex.F \
+	$(SRCDIR)/mmbcenthalpy_energyex.F \
 	$(SRCDIR)/mmcelltypeinit.F \
 	$(SRCDIR)/mmmomsrc.F \
 	$(SRCDIR)/mmwallbc.F \
@@ -177,3 +180,7 @@ $(SRCDIR)/uvelcoeffupdate.o: $(SRCDIR)/uvelcoeffupdate_fort.h
 $(SRCDIR)/dynamic_1loop.o: $(SRCDIR)/dynamic_1loop_fort.h
 $(SRCDIR)/dynamic_2loop.o: $(SRCDIR)/dynamic_2loop_fort.h
 $(SRCDIR)/dynamic_3loop.o: $(SRCDIR)/dynamic_3loop_fort.h
+$(SRCDIR)/intrusion_computevel.o: $(SRCDIR)/intrusion_computevel_fort.h
+$(SRCDIR)/mmbcvelocity_momex.o: $(SRCDIR)/mmbcvelocity_momex_fort.h
+$(SRCDIR)/mmbcenthalpy_energyex.o: $(SRCDIR)/mmbcenthalpy_energyex_fort.h
+

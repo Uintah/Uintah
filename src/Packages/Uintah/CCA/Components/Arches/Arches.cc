@@ -292,11 +292,17 @@ Arches::sched_paramInit(const LevelP& level,
     }
     if (d_calcReactingScalar)
       tsk->computes(d_lab->d_reactscalarINLabel);
-    if (d_calcEnthalpy) { // move it to enthalpy solver
+    if (d_calcEnthalpy) {
       tsk->computes(d_lab->d_enthalpyINLabel); 
-      tsk->computes(d_lab->d_radiationSRCINLabel); 
-      tsk->computes(d_lab->d_radiationFluxWINLabel); 
+      tsk->computes(d_lab->d_radiationSRCINLabel);
+      tsk->computes(d_lab->d_radiationFluxEINLabel); 
+      tsk->computes(d_lab->d_radiationFluxWINLabel);
+      tsk->computes(d_lab->d_radiationFluxNINLabel);
+      tsk->computes(d_lab->d_radiationFluxSINLabel); 
+      tsk->computes(d_lab->d_radiationFluxTINLabel);
+      tsk->computes(d_lab->d_radiationFluxBINLabel); 
     }
+
     tsk->computes(d_lab->d_densityINLabel);
     tsk->computes(d_lab->d_viscosityINLabel);
     tsk->computes(d_lab->d_oldDeltaTLabel);
@@ -527,14 +533,38 @@ Arches::paramInit(const ProcessorGroup* ,
     if (d_calcEnthalpy) {
       new_dw->allocateAndPut(enthalpy, d_lab->d_enthalpyINLabel, matlIndex, patch);
       enthalpy.initialize(0.0);
+
+      CCVariable<double> qfluxe;
       CCVariable<double> qfluxw;
+      CCVariable<double> qfluxn;
+      CCVariable<double> qfluxs;
+      CCVariable<double> qfluxt;
+      CCVariable<double> qfluxb;
       CCVariable<double> radEnthalpySrc;;
+
       new_dw->allocateAndPut(radEnthalpySrc, d_lab->d_radiationSRCINLabel,
 			     matlIndex, patch);
       radEnthalpySrc.initialize(0.0);
+
+      new_dw->allocateAndPut(qfluxe, d_lab->d_radiationFluxEINLabel,
+			     matlIndex, patch);
+      qfluxe.initialize(0.0);
       new_dw->allocateAndPut(qfluxw, d_lab->d_radiationFluxWINLabel,
 			     matlIndex, patch);
       qfluxw.initialize(0.0);
+      new_dw->allocateAndPut(qfluxn, d_lab->d_radiationFluxNINLabel,
+			     matlIndex, patch);
+      qfluxn.initialize(0.0);
+      new_dw->allocateAndPut(qfluxs, d_lab->d_radiationFluxSINLabel,
+			     matlIndex, patch);
+      qfluxs.initialize(0.0);
+      new_dw->allocateAndPut(qfluxt, d_lab->d_radiationFluxTINLabel,
+			     matlIndex, patch);
+      qfluxt.initialize(0.0);
+      new_dw->allocateAndPut(qfluxb, d_lab->d_radiationFluxBINLabel,
+			     matlIndex, patch);
+      qfluxb.initialize(0.0);
+
     }
     new_dw->allocateAndPut(density, d_lab->d_densityINLabel, matlIndex, patch);
     new_dw->allocateAndPut(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch);

@@ -13,6 +13,8 @@ using namespace std;
 
 Stream::Stream()
 {
+  d_CO2index = 0;
+  d_H2Oindex = 0;
 }
 
 Stream::Stream(int numSpecies,  int numElements)
@@ -470,6 +472,9 @@ Stream::print(std::ostream& out, ChemkinInterface* chemInterf) {
 
 //
 // $Log$
+// Revision 1.21  2002/11/11 18:36:00  rawat
+// Added intrusion boundary conditions. Also, added radaition to work with intrusion and ArchesMPM.
+//
 // Revision 1.20  2002/10/02 21:25:36  rawat
 // Added:
 // a) Wing's HypreSolver. Added ifdef's so that hypre is not reqd if not using it

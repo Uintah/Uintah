@@ -8,6 +8,7 @@ SRCS += \
 	$(SRCDIR)/eico2.F \
 	$(SRCDIR)/eih2o.F \
 	$(SRCDIR)/find.F \
+	$(SRCDIR)/fixradval.F \
 	$(SRCDIR)/radcoef.F \
 	$(SRCDIR)/rdombc.F \
 	$(SRCDIR)/rdomcintm.F \

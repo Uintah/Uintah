@@ -159,6 +159,26 @@ FlameletMixingModel::tableLookUp(double mixfrac, double mixfracVars, int axial_l
 				w_nxhi*table[5][indexlo12])+
                         w_nyhi*(w_nxlo*table[5][indexhi21]+
 				w_nxhi*table[5][indexhi22]);
+  outStream.d_tfour = w_nylo*(w_nxlo*table[6][indexlo11]+
+				w_nxhi*table[6][indexlo12])+
+                        w_nyhi*(w_nxlo*table[6][indexhi21]+
+				w_nxhi*table[6][indexhi22]);
+  outStream.d_tfive = w_nylo*(w_nxlo*table[7][indexlo11]+
+				w_nxhi*table[7][indexlo12])+
+                        w_nyhi*(w_nxlo*table[7][indexhi21]+
+				w_nxhi*table[7][indexhi22]);
+  outStream.d_tnine = w_nylo*(w_nxlo*table[8][indexlo11]+
+				w_nxhi*table[8][indexlo12])+
+                        w_nyhi*(w_nxlo*table[8][indexhi21]+
+				w_nxhi*table[8][indexhi22]);
+  outStream.d_qrg = w_nylo*(w_nxlo*table[9][indexlo11]+
+				w_nxhi*table[9][indexlo12])+
+                        w_nyhi*(w_nxlo*table[9][indexhi21]+
+				w_nxhi*table[9][indexhi22]);
+  outStream.d_qrs = w_nylo*(w_nxlo*table[10][indexlo11]+
+				w_nxhi*table[10][indexlo12])+
+                        w_nyhi*(w_nxlo*table[10][indexhi21]+
+				w_nxhi*table[10][indexhi22]);
 
 }
 
@@ -171,7 +191,8 @@ FlameletMixingModel::readFlamelet()
   cerr << inputfile1 << endl;
   ifstream fd("chemtable", ios::in);
   fd >> d_numMixfrac >> d_numMixvars >>d_numAxialLocs >> d_numVars;
-  cerr << d_numMixfrac << d_numMixvars << d_numAxialLocs << d_numVars << endl;
+  cerr << d_numMixfrac << " " << d_numMixvars << " " << d_numAxialLocs << " " 
+       << d_numVars << endl;
   meanMix = vector<double>(d_numMixfrac);
   meanVars = vector<double>(d_numMixvars);
   meanAxialLocs = vector<int>(d_numAxialLocs);
@@ -194,7 +215,7 @@ FlameletMixingModel::readFlamelet()
     cerr << tags[ii] << endl;
     for (int index = 0; index < size; index++) {
       fd >> table[ii][index];
-      if (table[ii][index] < -99){
+      if ((table[ii][index]< -99)&&(ii < 7)){
 	table[ii][index-1] = 0.0;
 	index --;
       }
