@@ -37,10 +37,9 @@
 
 
 using namespace SCIRun;
+using namespace Uintah;
 using namespace std;
 
-
-namespace Uintah {
 
 // should match the values in the tcl code
 #define NC_VAR 0
@@ -86,11 +85,12 @@ VariablePlotter::~VariablePlotter()
 // assigns a grid based on the archive and the timestep to grid
 // return true if there was a new grid (either completely or just a new
 // timestep), false otherwise.
-bool VariablePlotter::getGrid()
+bool
+VariablePlotter::getGrid()
 {
   ArchiveHandle handle;
-  if(!in->get(handle)){
-    std::cerr<<"VariablePlotter::getGrid::Didn't get a handle\n";
+  if (!(in->get(handle) && handle.get_rep())) {
+    warning("VariablePlotter::getGrid - No input data\n");
     grid = NULL;
     return false;
   }
@@ -123,7 +123,8 @@ bool VariablePlotter::getGrid()
 }
 
 // Returns 0 on sucess, 1 otherwise.
-int VariablePlotter::add_type(string &type_list,const TypeDescription *subtype)
+int
+VariablePlotter::add_type(string &type_list,const TypeDescription *subtype)
 {
   switch ( subtype->getType() ) {
   case TypeDescription::double_type:
@@ -158,7 +159,9 @@ int VariablePlotter::add_type(string &type_list,const TypeDescription *subtype)
   return 0;
 }  
 
-void VariablePlotter::setVars(GridP grid) {
+void
+VariablePlotter::setVars(GridP grid) 
+{
   string varNames("");
   string type_list("");
   const Patch* patch = *(grid->getLevel(0)->patchesBegin());
@@ -209,12 +212,16 @@ void VariablePlotter::setVars(GridP grid) {
   gui->execute(id + " setType_list " + type_list.c_str());  
 }
 
-void VariablePlotter::initialize_ports() {
+void
+VariablePlotter::initialize_ports() 
+{
   // Create the input port
-  in= (ArchiveIPort *) get_iport("Data Archive");
+  in = (ArchiveIPort *) get_iport("Data Archive");
 }
 
-int VariablePlotter::initialize_grid() {
+int
+VariablePlotter::initialize_grid() 
+{
   // Get the handle on the grid and the number of levels
   bool new_grid = getGrid();
   if(!grid)
@@ -236,7 +243,9 @@ int VariablePlotter::initialize_grid() {
     return 0;
 }
 
-void VariablePlotter::update_tcl_window() {
+void
+VariablePlotter::update_tcl_window() 
+{
   string visible;
   gui->eval(id + " isVisible", visible);
   if ( visible == "1") {
@@ -248,20 +257,21 @@ void VariablePlotter::update_tcl_window() {
   }
 }
 
-void VariablePlotter::execute()
+void
+VariablePlotter::execute()
 {
-  cerr << "VariablePlotter::execute:start\n";
+  //cerr << "VariablePlotter::execute:start\n";
   initialize_ports();
   
-  if (initialize_grid() == 2)
-    return;
-  
-  update_tcl_window();
-  
-  cerr << "VariablePlotter::execute:end\n";
+  if (initialize_grid() != 2)
+    {
+      update_tcl_window();
+    }
+  //cerr << "VariablePlotter::execute:end\n";
 }
 
-void VariablePlotter::tcl_command(GuiArgs& args, void* userdata)
+void
+VariablePlotter::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2) {
     args.error("Streamline needs a minor command");
@@ -297,7 +307,9 @@ void VariablePlotter::tcl_command(GuiArgs& args, void* userdata)
   }
 }
 
-string VariablePlotter::currentNode_str() {
+string
+VariablePlotter::currentNode_str() 
+{
   ostringstream ostr;
   ostr << "Level-" << currentNode.level << "-(";
   ostr << currentNode.id.x()  << ",";
@@ -306,9 +318,11 @@ string VariablePlotter::currentNode_str() {
   return ostr.str();
 }
 
-void VariablePlotter::extract_data(string display_mode, string varname,
-				  vector <string> mat_list,
-				  vector <string> type_list, string index) {
+void
+VariablePlotter::extract_data( string display_mode, string varname,
+                               vector <string> mat_list,
+                               vector <string> type_list, string index) 
+{
 
   // update currentNode with the values in the tcl code
   pick();
@@ -477,12 +491,13 @@ void VariablePlotter::extract_data(string display_mode, string varname,
 	       +varname.c_str()+" "+currentNode_str().c_str()+" "
 	       +name_list.c_str());
   
-}
-
+} // end extract_data()
 
 
 // if a pick event was received extract the id from the picked
-void VariablePlotter::pick() {
+void
+VariablePlotter::pick()
+{
   reset_vars();
   currentNode.id.x(index_x.get());
   currentNode.id.y(index_y.get());
@@ -491,4 +506,4 @@ void VariablePlotter::pick() {
   cerr << "Extracting values for " << currentNode.id << ", level " << currentNode.level << endl;
 }
 
-} // End namespace Uintah
+
