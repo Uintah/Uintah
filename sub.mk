@@ -8,7 +8,8 @@ SRCS	+= \
 	$(SRCDIR)/ICEDebug.cc \
 	$(SRCDIR)/ICELabel.cc    \
 	$(SRCDIR)/ICEMaterial.cc \
-	$(SRCDIR)/GeometryObject2.cc
+	$(SRCDIR)/GeometryObject2.cc \
+       $(SRCDIR)/MathToolbox.cc \
 
 SUBDIRS := $(SRCDIR)/EOS 
 
