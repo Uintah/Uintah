@@ -25,12 +25,14 @@ OPENGLSRCS =
 OBJS = ClipField.o  ExtractSurfs.o  FieldFilter.o  FieldMedianFilter.o  \
 	FieldGainCorrect.o  FieldSeed.o \
 	GenSigmaSet.o  Gradient.o  GradientMagnitude.o  MMeshToSFUG.o  \
-	MergeTensor.o  TracePath.o  TransformField.o  $(OPENGLOBJS)
+	MergeTensor.o  SFRGfile.o  SFUGtoGeom.o  TracePath.o  \
+	TransformField.o  $(OPENGLOBJS)
 
 SRCS = ClipField.cc ExtractSurfs.cc FieldFilter.cc FieldMedianFilter.cc \
 	FieldGainCorrect.cc FieldSeed.cc \
 	GenSigmaSet.cc Gradient.cc GradientMagnitude.cc MMeshToSFUG.cc \
-	MergeTensor.cc TracePath.cc TransformField.cc $(OPENGLSRCS)
+	MergeTensor.cc SFRGfile.cc SFUGtoGeom.cc TracePath.cc \
+	TransformField.cc $(OPENGLSRCS)
 
 LIBNAME = Fields
 
@@ -38,7 +40,7 @@ LOCALINCLUDES = $(OPENGLINCS)
 SO_LIBS =
 
 SO_LDFLAGS = -L$(TOP)/lib -L/usr/openwin/lib -lDatatypes -lDataflow \
-	-lGeom -lTCL -lClasslib -lMultitask $(OPENGLLIBS) \
+	-lGeom -lTCL -lClasslib -lMultitask -lTester $(OPENGLLIBS) \
 	-lscitk -ltk -lMalloc -lWidgets -lGeometry \
 	-lm -lC -lc
 
