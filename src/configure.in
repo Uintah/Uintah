@@ -207,7 +207,7 @@ AC_DEFUN(SCI_CHECK_LIB,
        _SCI_CALL_=""
        EXTERN_BEGIN=""
        EXTERN_END=""
-       AC_MSG_CHECKING(for lib$2.so)
+       AC_MSG_CHECKING(for file lib$2.so and lib$2.a)
     else
       if test "$3" = "main"; then
          _SCI_DECL_=""
@@ -254,6 +254,9 @@ AC_DEFUN(SCI_CHECK_LIB,
         fi
 
         if test -e "$_CHECK_PATH_/lib$2.so"; then
+	  if test ! -e "$_CHECK_PATH_/lib$2.a"; then
+            AC_MSG_WARN(Could not find lib$2.a)
+	  fi
 
           if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
             "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
@@ -431,7 +434,7 @@ EOF
        AC_MSG_RESULT(no)
        if test "$_SCI_LIB_OPTIONAL_" = "not-optional"; then
           AC_MSG_WARN(Required library $_SCI_VAR_LIBNAME_ not found.)
-	  if test -z "$3"; then
+	  if test "$3"; then
             AC_MSG_WARN(Command line for test was: $ac_try)
             AC_MSG_WARN(Compile output is:)
             cat conftest.out
@@ -599,8 +602,8 @@ AC_DEFUN(SCI_CHECK_HEADERS,
                 eval $_SCI_HEADER_HAVE_=yes
 
 		if test "$debugging" = "yes"; then
-		   echo "Setting HAVE_$_SCI_HEADER_NAME_ to $_SCI_HEADER_HAVE_"
-		   echo "Setting INC_$_SCI_HEADER_NAME_ to $_SCI_INCLUDE_NAME_"
+		   eval echo "HAVE_$_SCI_HEADER_NAME_ is $"$_SCI_HEADER_HAVE_""
+		   eval echo "INC_$_SCI_HEADER_NAME_ is $"$_SCI_INCLUDE_NAME_""
 		fi
 
                 # Save a list of defines in confdefs.h.  Something
@@ -693,8 +696,8 @@ EOF
              eval $_SCI_HEADER_HAVE_=yes
 
 	     if test "$debugging" = "yes"; then
-	        eval echo "Setting HAVE_$_SCI_HEADER_NAME_: $"$_SCI_HEADER_HAVE_""
-		eval echo "Setting INC_$_SCI_HEADER_NAME_: $"$_SCI_INCLUDE_NAME_""
+	        eval echo "HAVE_$_SCI_HEADER_NAME_ is $"$_SCI_HEADER_HAVE_""
+		eval echo "INC_$_SCI_HEADER_NAME_ is $"$_SCI_INCLUDE_NAME_""
 	     fi
 
              # Save a list of defines in confdefs.h.  Something
@@ -1114,6 +1117,10 @@ SCI_ARG_WITH(glui,
   [  --with-glui=DIR                   Use the glui installation in DIR],
   [with_glui="$withval"],
   [with_glui=""])
+SCI_ARG_WITH(oogl,
+  [  --with-oogl=DIR                   Use the oogl installation in DIR],
+  [with_oogl="$withval"],
+  [with_oogl=""])
 
 
 SCI_ARG_ENABLE(verbosity,
@@ -1361,55 +1368,6 @@ else
 	AC_MSG_ERROR(You specified 32 bit compile but have 64 bit Thirdparty?)
   esac
 fi
-
-#########################################################################
-##  SCI_LAB_TP_DEFAULT is used to add "standard" library search paths
-##  for those of us who are too lazy to type out all the --with paths
-
-case $host in
-  *-irix*) 
-    no_optimize_flag=-O0
-    if test "$enable_64bit" = "yes"; then
-      SCI_LAB_TP_DEFAULT=/res/sci/data1/SCIRun_Thirdparty_64
-    else
-      SCI_LAB_TP_DEFAULT=/res/sci/data1/SCIRun_Thirdparty_32
-    fi
-    TIME_IMPL=Time_irix.cc
-    ;;
-  *linux*)
-    no_optimize_flag=-O0
-    SCI_LAB_TP_DEFAULT="/res/sci/data1/SCIRun_Thirdparty_32_linux \
-                        /local/SCIRun_Thirdparty_32 \
-                        /local"
-    ;;
-  *-aix*)
-
-    AC_MSG_WARN(AIX is not completely supported!)
-
-    # On AIX, don't automatically generate .so's.  Make .a's and then
-    # later we will make .so's from them.
-    SO_OR_ARCHIVE_EXTENSION=a
-    case $CXX in
-      *xlC*)
-         # xlC does not know the -O0 flag.
-         no_optimize_flag=
-	 ;;
-      *KCC*)
-         no_optimize_flag=-O0
-         ;;
-      *g++*)
-         no_optimize_flag=-O0
-	 ;;
-      *)
-         AC_MSG_WARN(Do not know this compiler.)
-         AC_MSG_WARN(Defaulting to -O0 for the no optimize flag.)
-         ;;
-    esac
-    SCI_LAB_TP_DEFAULT=""
-    ;;
-  *)
-    ;;
-esac
 
 AC_SUBST(SO_OR_ARCHIVE_EXTENSION)
 
@@ -1875,9 +1833,12 @@ else
     TP_COMPILER=unknown
   fi
 fi
+
 TP_BASE=/usr/sci/projects
 TP_SUBDIR=$TP_ARCH/$TP_COMPILER-${NBITS}bit
 TP_PATH=$TP_BASE/SCIRun/Thirdparty/$TP_VERSION/$TP_SUBDIR
+
+SCI_LAB_TP_DEFAULT="$TP_PATH"
 
 CCATP_VERSION=1.0.0
 CCATP_PATH=$TP_BASE/CCA/Thirdparty/$CCATP_VERSION/$TP_SUBDIR
@@ -1885,33 +1846,21 @@ CCATP_PATH=$TP_BASE/CCA/Thirdparty/$CCATP_VERSION/$TP_SUBDIR
 UINTAHTP_VERSION=1.0.0
 UINTAHTP_PATH=$TP_BASE/Uintah/Thirdparty/$UINTAHTP_VERSION/$TP_SUBDIR
 
+if test "$pkg_uintah"="yes"; then
+  SCI_LAB_TP_DEFAULT="$SCI_LAB_TP_DEFAULT $CCATP_PATH $UINTAHTP_PATH"
+fi
 
-SCI_LAB_TP_DEFAULT="$TP_PATH \
-                    $CCATP_PATH \
-                    $UINTAHTP_PATH"
-case $host in
-  *-irix*) 
-    if test "$enable_64bit" = "yes"; then
-      SCI_LAB_TP_DEFAULT="/res/sci/data1/SCIRun_Thirdparty_64 \
-                          $SCI_LAB_TP_DEFAULT"
-    else
-      SCI_LAB_TP_DEFAULT="/res/sci/data1/SCIRun_Thirdparty_32 \
-                          $SCI_LAB_TP_DEFAULT"
-    fi
-    ;;
-  *linux*)
-    SCI_LAB_TP_DEFAULT="/res/sci/data1/SCIRun_Thirdparty_32_linux \
-                        $SCI_LAB_TP_DEFAULT \
-                        /local/SCIRun_Thirdparty_32 \
-                        /local"
-    ;;
-  *-aix*)
-    AC_MSG_WARN(AIX is not completely supported!)
-    SCI_LAB_TP_DEFAULT=""
-    ;;
-  *)
-    ;;
-esac
+RTRTTP_VERSION=1.0.0
+RTRTTP_PATH=$TP_BASE/rtrt/Thirdparty/$RTRTTP_VERSION/$TP_SUBDIR
+
+if test "$pkg_rtrt"="yes"; then
+  SCI_LAB_TP_DEFAULT="$SCI_LAB_TP_DEFAULT $RTRTTP_PATH"
+fi
+
+if test "$thirdparty"; then
+  SCI_LAB_TP_DEFAULT="$thirdparty $SCI_LAB_TP_DEFAULT"
+fi
+
 
 for i in $SCI_LAB_TP_DEFAULT; do
   if test ! -d "$i"; then
@@ -1948,6 +1897,7 @@ dirs="$with_X11_lib /usr/lib /usr/X11R6/lib"
 SCI_CHECK_LIB($dirs,X11,main,,,not-optional)
 SCI_CHECK_LIB($dirs,Xext,main,,,not-optional)
 SCI_CHECK_LIB($dirs,Xaw,main,,,not-optional)
+SCI_CHECK_LIB($dirs,Xi,main,,,not-optional)
 SCI_CHECK_LIB($dirs,Xt,main,,,not-optional)
 SCI_CHECK_LIB($dirs,Xmu,main,,,not-optional)
 
@@ -1957,10 +1907,20 @@ if test "$HAVE_X11_XLIB_H"; then
    INC_XLIB_H=$INC_X_XLIB_H
 fi
 
+X_LIB_FLAG="$XMU_LIB_DIR_FLAG $XMU_LIB_FLAG $XI_LIB_DIR_FLAG $XI_LIB_FLAG $XEXT_LIB_DIR_FLAG $XEXT_LIB_FLAG $X11_LIB_DIR_FLAG $X11_LIB_FLAG"
+
 AC_SUBST(X11_LIB_FLAG)
 AC_SUBST(X11_LIB_DIR_FLAG)
 AC_SUBST(XEXT_LIB_FLAG)
 AC_SUBST(XEXT_LIB_DIR_FLAG)
+AC_SUBST(XI_LIB_FLAG)
+AC_SUBST(XI_LIB_DIR_FLAG)
+AC_SUBST(XT_LIB_FLAG)
+AC_SUBST(XT_LIB_DIR_FLAG)
+AC_SUBST(XMU_LIB_FLAG)
+AC_SUBST(XMU_LIB_DIR_FLAG)
+AC_SUBST(XAW_LIB_FLAG)
+AC_SUBST(XAW_LIB_DIR_FLAG)
 AC_SUBST(INC_XLIB_H)
 
 ##  --  search for the fortran library  ----------------------------------
@@ -2115,40 +2075,69 @@ AC_SUBST(GLU_LIB_DIR_FLAG)
 INC_GL_H=$INC_GL_GL_H
 AC_SUBST(INC_GL_H)
 
-##  --  search for glut and glui -----------------------------------------
+##  --  search for glut, glui and oogl -----------------------------------
 
 if test "$pkg_rtrt" = "yes"; then
 
-   libs="$GLU_LIB_DIR_FLAG $GLU_LIB_FLAG $GL_LIB_DIR_FLAG $GL_LIB_FLAG"
+   libs="$GLU_LIB_DIR_FLAG $GLU_LIB_FLAG $GL_LIB_DIR_FLAG $GL_LIB_FLAG $X_LIB_FLAG $GLU_OTHERS"
 
    if test "$with_glut"; then
-     dirs="$with_glut/$BASE_LIB_DIR $thirdparty/lib $SCI_LAB_TP_LIBS"
+     dirs="$with_glut/$BASE_LIB_DIR $SCI_LAB_TP_LIBS"
    else
-     dirs="$thirdparty/lib $SCI_LAB_TP_LIBS"
+     dirs="$SCI_LAB_TP_LIBS"
    fi
 
    SCI_CHECK_LIB($dirs,glut,main,$libs,,not-optional)
    SCI_CHECK_HEADERS($LIB_DIR_GLUT/../include,GL/glut.h,,,not-optional)
 
-
    if test "$with_glui"; then
-     dirs="$with_glui/$BASE_LIB_DIR $thirdparty/lib $SCI_LAB_TP_LIBS"
+     dirs="$with_glui/$BASE_LIB_DIR $SCI_LAB_TP_LIBS"
    else
-     dirs="$thirdparty/lib $SCI_LAB_TP_LIBS"
+     dirs="$SCI_LAB_TP_LIBS"
    fi
 
-   SCI_CHECK_LIB($dirs,glui,main,$libs $GL_LIB_DIR_FLAG $GL_LIB_FLAG,,not-optional)
+   SCI_CHECK_LIB($dirs,glui,main,$GLUT_LIB_DIR_FLAG $GLUT_LIB_FLAG $libs,,not-optional)
    SCI_CHECK_HEADERS($LIB_DIR_GLUI/../include,glui.h,$INC_GL_GLUT_H,,not-optional)
 
-   AC_SUBST(INC_GLUT_H)
-   AC_SUBST(INC_GLUI_H)
+  dirs=""
 
-   AC_SUBST(GLUT_LIB_FLAG)
-   AC_SUBST(GLUI_LIB_FLAG)
+  # Modify dirs to have correct path information:
+  for i in $SCI_LAB_TP_DEFAULT; do
+    if test ! -d "$i"; then
+      continue
+    fi
 
-   AC_SUBST(GLUT_LIB_DIR_FLAG)
-   AC_SUBST(GLUI_LIB_DIR_FLAG)
+    #this is where the lib actually lives
+    if test ! -d "$i/OOGL/lib"; then
+      continue
+    fi
+
+    dirs="$dirs $i/OOGL/lib"
+  done
+
+  if test "$with_oogl"; then
+    dirs="$with_oogl/lib $dirs"
+  fi
+
+  SCI_CHECK_LIB($dirs,oogl,main,,,not-optional)
+  SCI_CHECK_HEADERS($LIB_DIR_OOGL/../include,oogl/basicTexture.h oogl/shadedPrim.h,$INC_GL_GLUT_H $INC_GL_GLUI_H,,not-optional)
+
+  if test "$HAVE_OOGL_BASICTEXTURE_H"; then
+    INC_OOGL_H="$INC_OOGL_BASICTEXTURE_H"
+  fi
 fi
+
+AC_SUBST(INC_GL_GLUT_H)
+AC_SUBST(GLUT_LIB_FLAG)
+AC_SUBST(GLUT_LIB_DIR_FLAG)
+
+AC_SUBST(INC_GLUI_H)
+AC_SUBST(GLUI_LIB_FLAG)
+AC_SUBST(GLUI_LIB_DIR_FLAG)
+
+AC_SUBST(INC_OOGL_H)
+AC_SUBST(OOGL_LIB_FLAG)
+AC_SUBST(OOGL_LIB_DIR_FLAG)
 
 ##  --  search for dlopen  -----------------------------------------------
 
@@ -2223,9 +2212,9 @@ AC_CHECKING(for required Tcl components...)
 echo
 
 if test -z "$with_tcl"; then
-  dirs="$with_tcl/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
+  dirs="$with_tcl/lib $SCI_LAB_TP_LIBS"
 else
-  dirs="$thirdparty/lib $SCI_LAB_TP_LIBS"
+  dirs="$SCI_LAB_TP_LIBS"
 fi
 
 SCI_CHECK_LIB($dirs,tcl,main,,,not-optional)
@@ -2331,9 +2320,9 @@ AC_CHECKING(for required Xerces-C++ components...)
 echo
 
 if test "$with_xercesc"; then
-  dirs="$with_xercesc/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
+  dirs="$with_xercesc/lib $SCI_LAB_TP_LIBS"
 else
-  dirs="$thirdparty/lib $SCI_LAB_TP_LIBS"
+  dirs="$SCI_LAB_TP_LIBS"
 fi
 
 case $host in
@@ -2393,9 +2382,9 @@ case $host in
       # ;;
    *)
       if test "$with_mpi"; then
-         dirs="$with_mpi/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
+         dirs="$with_mpi/lib $SCI_LAB_TP_LIBS"
       else
-         dirs="$thirdparty/lib $SCI_LAB_TP_LIBS"
+         dirs="$SCI_LAB_TP_LIBS"
       fi
 
       SCI_CHECK_LIB($dirs,mpi,main,,,optional)
@@ -2437,9 +2426,9 @@ AC_SUBST(DEF_MPI)
 ##  --  search for mpi-uni  --------------------------------------------
 
 if test "$with_xercesc"; then
-  dirs="$with_mpiuni/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
+  dirs="$with_mpiuni/lib $SCI_LAB_TP_LIBS"
 else
-  dirs="$thirdparty/lib $SCI_LAB_TP_LIBS"
+  dirs="$SCI_LAB_TP_LIBS"
 fi
 
 
@@ -2531,9 +2520,9 @@ echo
 ##  --  search for teem  -------------------------------------------------
 
 if test "$with_teem"; then
-  dirs="$with_teem/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
+  dirs="$with_teem/lib $SCI_LAB_TP_LIBS"
 else
-  dirs="$thirdparty/lib $SCI_LAB_TP_LIBS"
+  dirs="$SCI_LAB_TP_LIBS"
 fi
 
 SCI_CHECK_LIB($dirs,air,main,,,optional)
@@ -2542,7 +2531,7 @@ SCI_CHECK_LIB($LIB_DIR_AIR,nrrd,main,$AIR_LIB_DIR_FLAG $BIFF_LIB_FLAG $AIR_LIB_F
 SCI_CHECK_LIB($LIB_DIR_AIR,ell, main,$AIR_LIB_DIR_FLAG $NRRD_LIB_FLAG $BIFF_LIB_DIR_FLAG $AIR_LIB_FLAG,,optional)
 SCI_CHECK_HEADERS($LIB_DIR_NRRD/../include,nrrd.h,,,optional)
 
-TEEM_LIB_FLAG="$ELL_LIB__FLAG $NRRD_LIB_FLAG $BIFF_LIB_DIR_FLAG $AIR_LIB_FLAG"
+TEEM_LIB_FLAG="$ELL_LIB_FLAG $NRRD_LIB_FLAG $BIFF_LIB_FLAG $AIR_LIB_FLAG"
 TEEM_LIB_DIR_FLAG="$AIR_LIB_DIR_FLAG"
 
 if test "$HAVE_LIB_AIR" && test "$HAVE_LIB_BIFF" && test "$HAVE_LIB_NRRD" &&
@@ -2565,9 +2554,9 @@ AC_SUBST(DEF_TEEM)
 ##  --  search for mpeg  -------------------------------------------------
 
 if test "$with_mpeg"; then
-  dirs="$with_mpeg/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
+  dirs="$with_mpeg/lib $SCI_LAB_TP_LIBS"
 else
-  dirs="$thirdparty/lib $SCI_LAB_TP_LIBS"
+  dirs="$SCI_LAB_TP_LIBS"
 fi
 
 SCI_CHECK_LIB($dirs,mpege,main,,,optional)
@@ -2589,9 +2578,9 @@ AC_SUBST(DEF_MPEG)
 ##  --  search for mdsplus  -------------------------------------------------
 
 if test "$with_mdsplus"; then
-  dirs="$with_mdsplus/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
+  dirs="$with_mdsplus/lib $SCI_LAB_TP_LIBS"
 else
-  dirs="$thirdparty/lib $SCI_LAB_TP_LIBS"
+  dirs="$SCI_LAB_TP_LIBS"
 fi
 
 SCI_CHECK_LIB($dirs,MdsLib_client,main,,no,optional)
@@ -2617,7 +2606,7 @@ AC_SUBST(DEF_MDSPLUS)
 
 ##  --  search for perfex  -----------------------------------------------
 
-dirs="$with_perfex $thirdparty/lib $SCI_LAB_TP_LIBS"
+dirs="$with_perfex $SCI_LAB_TP_LIBS"
 
 SCI_CHECK_LIB($dirs,perfex,main,,,optional)
 
@@ -2636,7 +2625,7 @@ AC_SUBST(DEF_PERFEX)
 
 ##  --  search for fastm  --------------------------------------------------
 
-dirs="$with_fastm $thirdparty/lib $SCI_LAB_TP_LIBS"
+dirs="$with_fastm $SCI_LAB_TP_LIBS"
 
 SCI_CHECK_LIB($dirs,fastm,main,,,optional)
 
@@ -2656,7 +2645,7 @@ AC_SUBST(DEF_FASTM)
 
 ##  --  search for ssl  --------------------------------------------------
 
-dirs="$with_ssl $thirdparty/lib $SCI_LAB_TP_LIBS"
+dirs="$with_ssl $SCI_LAB_TP_LIBS"
 
 SCI_CHECK_LIB($dirs,ssl,main,,,optional)
 
@@ -2676,7 +2665,7 @@ AC_SUBST(DEF_SSL)
 
 ##  --  search for crypto  -----------------------------------------------
 
-dirs="$with_crypto $thirdparty/lib $SCI_LAB_TP_LIBS"
+dirs="$with_crypto $SCI_LAB_TP_LIBS"
 
 SCI_CHECK_LIB($dirs,crypto,main,,,optional)
 
@@ -2696,7 +2685,7 @@ AC_SUBST(DEF_CRYPTO)
 
 ##  --  search for SGI'S traceback library  ------------------------------ 
 
-dirs="$with_exc $thirdparty/lib $SCI_LAB_TP_LIBS"
+dirs="$with_exc $SCI_LAB_TP_LIBS"
 
 SCI_CHECK_LIB($dirs,exc,main,,,optional)
 SCI_CHECK_HEADERS($LIB_DIR_EXE/../include,libexc.h,,,optional)
@@ -2719,9 +2708,9 @@ AC_SUBST(DEF_EXC)
 ##  --  globus nexus  ----------------------------------------------------
 
 if test "$with_globus"; then
-  dirs="$with_globus/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
+  dirs="$with_globus/lib $SCI_LAB_TP_LIBS"
 else
-  dirs="$thirdparty/lib $SCI_LAB_TP_LIBS"
+  dirs="$SCI_LAB_TP_LIBS"
 fi
 
 MISC_LIB_FLAG="$SSL_LIB_DIR_FLAG $SSL_LIB_FLAG $CRYPTO_LIB_DIR_FLAG $CRYPTO_LIB_FLAG"
@@ -2748,6 +2737,13 @@ if test "$with_globus" && test ! "$DEF_GLOBUS"; then
 fi
 
 if test "$is_linux" = "linux"; then
+  SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_utp,       main,,,optional)
+  SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_mp,        main,,,optional)
+  SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_gss_assist,main,,,optional)
+  SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_gss,       main,,,optional)
+  SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_gaa,       main,,,optional)
+
+
   SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_utp,       main,$GLOBUS_LIB_DIR_FLAG $GLOBUS_LIB_FLAG $MISC_LIB_FLAG,,optional)
   SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_mp,        main,$GLOBUS_LIB_DIR_FLAG $GLOBUS_LIB_FLAG $GLOBUS_UTP_LIB_FLAG $MISC_LIB_FLAG,,optional)
   SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_gss_assist,main,$GLOBUS_LIB_DIR_FLAG $GLOBUS_LIB_FLAG $GLOBUS_MP_LIB_FLAG $GLOBUS_UTP_LIB_FLAG $MISC_LIB_FLAG,,optional)
@@ -2768,9 +2764,9 @@ AC_SUBST(DEF_GLOBUS)
 ##  --  search for Qt  ----------------------------------------------------
 
 if test "$with_qt"; then
-  dirs="$with_qt/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
+  dirs="$with_qt/lib $SCI_LAB_TP_LIBS"
 else
-  dirs="$thirdparty/lib $SCI_LAB_TP_LIBS"
+  dirs="$SCI_LAB_TP_LIBS"
 fi
 
 SCI_CHECK_LIB($dirs,qt-mt,main,,,optional)
@@ -2799,7 +2795,7 @@ AC_SUBST(DEF_QT)
 ##  --  search for VDT  ----------------------------------------------------
 
 if test "$pkg_vdt" = "yes"; then
-  for i in $with_vdt $thirdparty $SCI_LAB_TP_DEFAULT; do
+  for i in $with_vdt $SCI_LAB_TP_DEFAULT; do
     if test ! -d "$i"; then
       continue
     fi
@@ -2867,7 +2863,7 @@ AC_SUBST(INC_VDT_H)
 
 ##  --  search for ImageMagick --------------------------------------
 
-for i in $with_imagemagick $thirdparty $SCI_LAB_TP_DEFAULT; do
+for i in $with_imagemagick $SCI_LAB_TP_DEFAULT; do
   if test ! -d "$i"; then
     continue
   fi
@@ -2918,9 +2914,9 @@ AC_SUBST(DEF_MAGICK)
 ##  --  search for gzopen (and related)  ----------------------------------
 
 if test "$with_zlib"; then
-  dirs="$with_zlib/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
+  dirs="$with_zlib/lib $SCI_LAB_TP_LIBS"
 else
-  dirs="$thirdparty/lib $SCI_LAB_TP_LIBS"
+  dirs="$SCI_LAB_TP_LIBS"
 fi
 
 SCI_CHECK_LIB($dirs,z,main,,,not-optional)
@@ -2944,9 +2940,9 @@ AC_SUBST(DEF_Z)
 ##  --  search for blas stuff  -------------------------------------------
 
 if test "$with_blas"; then
-  dirs="$with_blas/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
+  dirs="$with_blas/lib $SCI_LAB_TP_LIBS"
 else
-  dirs="$thirdparty/lib $SCI_LAB_TP_LIBS"
+  dirs="$SCI_LAB_TP_LIBS"
 fi
 
 case $host in
@@ -2982,12 +2978,12 @@ AC_SUBST(DEF_BLAS)
 
 if test "$HAVE_LIB_F" && test "$HAVE_LIB_BLAS"; then
   if test "$with_lapack"; then
-    dirs="$with_lapack/lib $LIB_DIR_BLAS $thirdparty/lib $SCI_LAB_TP_LIBS"
+    dirs="$with_lapack/lib $LIB_DIR_BLAS $SCI_LAB_TP_LIBS"
   else
-    dirs="$LIB_DIR_BLAS $thirdparty/lib $SCI_LAB_TP_LIBS"
+    dirs="$LIB_DIR_BLAS $SCI_LAB_TP_LIBS"
   fi
 
-  SCI_CHECK_LIB($dirs,lapack,main,$F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
+  SCI_CHECK_LIB($dirs,lapack,main,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
 
   if test ! "$HAVE_LIB_LAPACK"; then
     SCI_CHECK_LIB($dirs,complib.sgimath,main,,,optional)
@@ -3019,9 +3015,9 @@ AC_SUBST(LAPACK_LIB_DIR_FLAG)
 if test "$pkg_uintah" = "yes"; then
 
   if test "$with_hypre"; then
-    dirs="$with_hypre/lib $with_hypre/src/hypre/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
+    dirs="$with_hypre/lib $with_hypre/src/hypre/lib $SCI_LAB_TP_LIBS"
   else
-    dirs="$thirdparty/lib $SCI_LAB_TP_LIBS"
+    dirs="$SCI_LAB_TP_LIBS"
   fi
 
   SCI_CHECK_LIB($dirs,HYPRE_struct_mv,main,,,optional)
@@ -3097,10 +3093,9 @@ if test "$HAVE_LIB_MPI" &&
    test "$HAVE_LIB_LAPACK"; then 
 
   dirs=""
-  initial_dirs="$thirdparty $SCI_LAB_TP_DEFAULT"
 
   # Modify dirs to have correct path information:
-  for i in $initial_dirs; do
+  for i in $SCI_LAB_TP_DEFAULT; do
     if test ! -d "$i"; then
       continue
     fi
@@ -3178,10 +3173,9 @@ if test "$DEF_PETSC" &&
    test "$HAVE_LIB_LAPACK"; then 
 
   dirs=""
-  initial_dirs="$thirdparty $SCI_LAB_TP_DEFAULT"
 
   # Modify dirs to have correct path information:
-  for i in $initial_dirs; do
+  for i in $SCI_LAB_TP_DEFAULT; do
     if test ! -d "$i"; then
       continue
     fi
