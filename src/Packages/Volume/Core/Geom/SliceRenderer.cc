@@ -159,20 +159,28 @@ SliceRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
     drawWireFrame();
   } else {
     //AuditAllocator(default_allocator);
-    setup();
-    //AuditAllocator(default_allocator);
     draw();
-    //AuditAllocator(default_allocator);
-    cleanup();
-    //AuditAllocator(default_allocator);
   }
   di_ = 0;
   mutex_.unlock();
 }
 
 void
-SliceRenderer::setup()
+SliceRenderer::draw()
 {
+  Ray viewRay;
+  compute_view( viewRay );
+
+  vector<Brick*> bricks;
+  tex_->get_sorted_bricks( bricks, viewRay );
+
+  vector<Brick*>::iterator it = bricks.begin();
+  vector<Brick*>::iterator it_end = bricks.end();
+
+  BBox brickbounds;
+  tex_->get_bounds( brickbounds );
+
+
   if( cmap_.get_rep() ) {
     if( cmap_has_changed_ || r_count_ != 1) {
       BuildTransferFunction();
@@ -194,38 +202,8 @@ SliceRenderer::setup()
   glDepthMask(GL_TRUE);
   glEnable(GL_ALPHA_TEST);
   glAlphaFunc(GL_GREATER, 0.0);
-}
 
-void
-SliceRenderer::cleanup()
-{
-  glDisable(GL_ALPHA_TEST);
-  glDepthMask(GL_TRUE);
-  if( cmap_.get_rep() ){
-    glActiveTextureARB(GL_TEXTURE1_ARB);
-    glDisable(GL_TEXTURE_1D);
-    glActiveTextureARB(GL_TEXTURE0_ARB);
-  }
-  glDisable(GL_TEXTURE_3D);
-  // glEnable(GL_DEPTH_TEST);  
-}
-
-
-void
-SliceRenderer::draw()
-{
-  Ray viewRay;
-  compute_view( viewRay );
-
-  vector<Brick*> bricks;
-  tex_->get_sorted_bricks( bricks, viewRay );
-
-  vector<Brick*>::iterator it = bricks.begin();
-  vector<Brick*>::iterator it_end = bricks.end();
-
-  BBox brickbounds;
-  tex_->get_bounds( brickbounds );
-
+  
 
   GLboolean fog;
   glGetBooleanv(GL_FOG, &fog);
@@ -388,6 +366,16 @@ SliceRenderer::draw()
       break;
     }
   }
+
+  glDisable(GL_ALPHA_TEST);
+  glDepthMask(GL_TRUE);
+  if( cmap_.get_rep() ){
+    glActiveTextureARB(GL_TEXTURE1_ARB);
+    glDisable(GL_TEXTURE_1D);
+    glActiveTextureARB(GL_TEXTURE0_ARB);
+  }
+  glDisable(GL_TEXTURE_3D);
+  // glEnable(GL_DEPTH_TEST);  
 }
   
 

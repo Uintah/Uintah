@@ -44,7 +44,7 @@ class VolumeRenderer : public TextureRenderer
 {
 public:
 
-  enum vol_ren_mode{ OVEROP, MIP, ATTENUATE };
+  enum vol_ren_mode{ OVEROP, MIP };
 
   VolumeRenderer();
   VolumeRenderer(TextureHandle tex, ColorMapHandle map, Colormap2Handle cmap2);
@@ -67,8 +67,6 @@ public:
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
   virtual void draw();
   virtual void drawWireFrame();
-  virtual void setup();
-  virtual void cleanup();
   virtual void load_colormap();
 #endif
   
@@ -88,12 +86,16 @@ protected:
   
   FragmentProgramARB* VolShader1;
   FragmentProgramARB* VolShader4;
-  FragmentProgramARB* VolShader1_2;
-  FragmentProgramARB* VolShader4_2;
   FragmentProgramARB* FogVolShader1;
   FragmentProgramARB* FogVolShader4;
   FragmentProgramARB* LitVolShader;
   FragmentProgramARB* LitFogVolShader;
+  FragmentProgramARB* VolShader1_2;
+  FragmentProgramARB* VolShader4_2;
+  FragmentProgramARB* FogVolShader1_2;
+  FragmentProgramARB* FogVolShader4_2;
+  FragmentProgramARB* LitVolShader_2;
+  FragmentProgramARB* LitFogVolShader_2;
   VertexProgramARB* FogVertexShader;
 };
 

@@ -814,7 +814,7 @@ GenTransferFunc2::redraw()
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, histo_tex_);
-    glColor4f(0.5, 0.5, 0.5, 1.0);
+    glColor4f(0.7, 0.7, 0.7, 1.0);
     glBegin(GL_QUADS);
     {
       glTexCoord2f( 0.0,  0.0);

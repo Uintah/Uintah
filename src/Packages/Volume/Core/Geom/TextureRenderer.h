@@ -76,8 +76,6 @@ public:
   virtual void draw(DrawInfoOpenGL*, Material*, double time) = 0;
   virtual void draw() = 0;
   virtual void drawWireFrame() = 0;
-  virtual void setup() = 0;
-  virtual void cleanup() = 0;
   virtual void load_colormap() = 0;
 
 protected:

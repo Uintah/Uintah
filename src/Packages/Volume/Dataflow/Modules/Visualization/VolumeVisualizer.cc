@@ -106,11 +106,9 @@ VolumeVisualizer::~VolumeVisualizer(){
 void
 VolumeVisualizer::execute(){
 
-  cerr << "VolumeVisualizer::execute" << endl;
   static Point oldmin(0,0,0), oldmax(0,0,0);
   static int oldni = 0, oldnj = 0, oldnk = 0;
   static GeomID geomID  = 0;
-
   
   intexture = (TextureIPort *)get_iport("Texture");
   icmap = (ColorMapIPort *)get_iport("ColorMap");
@@ -194,8 +192,6 @@ VolumeVisualizer::execute(){
   case 1:
     volren_->SetRenderMode(VolumeRenderer::MIP);
     break;
-  case 2:
-    volren_->SetRenderMode(VolumeRenderer::ATTENUATE);
   }
   
   //AuditAllocator(default_allocator);

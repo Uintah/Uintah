@@ -142,7 +142,7 @@ NrrdTextureBuilderAlgo::filldata(BrickData* bdata,
   }
   
   int nc = bdata->nc();
-  
+    
   if (nvnrrd && ((gmnrrd && nc == 2) || nc == 1)) {
    
     int x0, y0, z0, x1, y1, z1;
