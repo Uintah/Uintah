@@ -16,6 +16,9 @@
 
 .PHONY: all latex html ps installhtml installps
 
+# Latex command
+LATEX=latex -interaction=nonstopmode
+
 # Provide name of root doc without its extension.
 BN = usersguide
 
@@ -54,16 +57,16 @@ ps: ${PSFILE}
 bib: ${BN}.bbl
 
 ${DVIFILE}: ${MAINFILE} ${SRCS} ${BN}.bbl
-	latex  ${BN}
+	${LATEX}  ${BN}
 	makeindex ${BN}.idx
-	latex ${BN}
+	${LATEX} ${BN}
 
-#	for i in 1 2 3; do latex ${MAINFILE}; done
+#	for i in 1 2 3; do ${LATEX} ${MAINFILE}; done
 
 ${BN}.bbl: ${MAINFILE} 
 	if [ ! -r ${BN}.aux ]; \
 	then \
-	latex ${BN}; \
+	${LATEX} ${BN}; \
 	fi; 
 	rm -f ${BN}.bbl
 	bibtex ${BN}
