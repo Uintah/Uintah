@@ -22,6 +22,7 @@
 #if !defined(StreamLines_h)
 #define StreamLines_h
 
+#include <Core/Thread/Thread.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/Field.h>
@@ -42,8 +43,8 @@ public:
 			      int direction,
 			      int color,
 			      bool remove_colinear_p,
-			      int method) = 0;
-
+			      int method, 
+			      int np) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *smesh,
@@ -61,6 +62,20 @@ class StreamLinesAlgoT : public StreamLinesAlgo
 {
 public:
   //! virtual interface. 
+  void parallel_generate(int proc,
+			 Array1<Array1<Point> >&pts,
+			 Array1<Array1<double> >&vals,
+			 Array1<Array1<pair<int,int> > >&edges,
+			 MeshHandle seed_mesh_h,
+			 VectorFieldInterface *vfi,
+			 double tolerance,
+			 double stepsize,
+			 int maxsteps,
+			 int direction,
+			 int color,
+			 bool rcp,
+			 int met,
+			 int np);
   virtual FieldHandle execute(MeshHandle seed_mesh_h,
 			      VectorFieldInterface *vfi,
 			      double tolerance,
@@ -69,43 +84,50 @@ public:
 			      int direction,
 			      int color,
 			      bool remove_colinear_p,
-			      int method);
+			      int method,
+			      int np);
 };
 
-
-
 template <class SMESH, class SLOC>
-FieldHandle
-StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
-				       VectorFieldInterface *vfi,
-				       double tolerance,
-				       double stepsize,
-				       int maxsteps,
-				       int direction,
-				       int color,
-				       bool rcp,
-				       int met)
-{
+void
+StreamLinesAlgoT<SMESH, SLOC>::parallel_generate( int proc,
+						  Array1<Array1<Point> >&pts,
+						  Array1<Array1<double> >&vals,
+						  Array1<Array1<pair<int,int> > >&edges,
+						  MeshHandle seed_mesh_h,
+						  VectorFieldInterface *vfi,
+						  double tolerance,
+						  double stepsize,
+						  int maxsteps,
+						  int direction,
+						  int color,
+						  bool rcp,
+						  int met,
+						  int np) {
   SMESH *smesh = dynamic_cast<SMESH *>(seed_mesh_h.get_rep());
 
   const double tolerance2 = tolerance * tolerance;
 
-  CurveMeshHandle cmesh = scinew CurveMesh();
-  CurveField<double> *cf = scinew CurveField<double>(cmesh, Field::NODE);
-
   Point seed;
   Vector test;
   vector<Point> nodes;
-  vector<Point>::iterator node_iter;
-  CurveMesh::Node::index_type n1, n2;
 
   // Try to find the streamline for each seed point.
   typename SLOC::iterator seed_iter, seed_iter_end;
+  int count=0;
   smesh->begin(seed_iter);
   smesh->end(seed_iter_end);
-  int cfsize = 0;
   while (seed_iter != seed_iter_end)
   {
+    // if this seed doesn't "belong" to this parallel thread,
+    //   ignore it and continue on the next seed...
+    if (count%np != proc) {
+      ++seed_iter;
+      ++count;
+      continue;
+    }
+
+    // this is one of our seeds -- generate its streamline
     smesh->get_point(seed, *seed_iter);
 
     // Is the seed point inside the field?
@@ -137,48 +159,74 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
       FindNodes(nodes, seed, tolerance2, stepsize, maxsteps, vfi, rcp, met);
     }
 
-    node_iter = nodes.begin();
-
-    if (node_iter != nodes.end())
-    {
-      n1 = cmesh->add_node(*node_iter);
-      cf->resize_fdata();
-      if( color )
-	cf->set_value((double)abs(cc), n1);
-      else
-	cf->set_value((double)(*seed_iter), n1);
-
-      cfsize++;
-      ++node_iter;
-
-      cc++;
-
-      while (node_iter != nodes.end())
-      {
-	n2 = cmesh->add_node(*node_iter);
-	cf->resize_fdata();
-
-	if( color )
-	  cf->set_value((double)abs(cc), n2);
-	else
-	  cf->set_value((double)(*seed_iter), n2);
-
-	cmesh->add_edge(n1, n2);
-
-	n1 = n2;
-	cfsize++;
-	++node_iter;
-
-	cc++;
+    for (i=0; i<nodes.size(); i++) {
+      pts[proc].add(nodes[i]);
+      int pt_idx=pts[proc].size();
+      if (color) {
+	vals[proc].add((double)abs(cc+i));
+      } else {
+	vals[proc].add((double)(*seed_iter));
+      }
+      if (i!=nodes.size()-2) {
+	edges[proc].add(pair<int,int>(pt_idx,pt_idx+1));
       }
     }
-
-    ++seed_iter;
   }
+}
+						  
+template <class SMESH, class SLOC>
+FieldHandle
+StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
+				       VectorFieldInterface *vfi,
+				       double tolerance,
+				       double stepsize,
+				       int maxsteps,
+				       int direction,
+				       int color,
+				       bool rcp,
+				       int met,
+				       int np)
+{
+  Array1<Array1<Point> > pts;
+  Array1<Array1<double> > vals;
+  Array1<Array1<pair<int,int> > > edges;
+  pts.resize(np);
+  edges.resize(np);
+  Thread::parallel (this,
+		    &StreamLinesAlgoT<SMESH, SLOC>::parallel_generate,
+		    np, true, pts, vals, edges, seed_mesh_h, vfi, tolerance,
+		    stepsize, maxsteps, direction, color, rcp, met, np);
 
+  CurveMeshHandle cmesh = scinew CurveMesh();
+  int count=0;
+  Array1<int> offsets(np);
+  CurveMesh::Node::index_type n1, n2;
+  Array1<CurveMesh::Node::index_type> nodemap;
+
+  int i,j;
+  for (i=0; i<np; i++) {
+    offsets[i]=count;
+    count+=pts[i].size();
+    for (j=0; j<pts[i].size(); j++) {
+      nodemap.insert(cmesh->add_node(pts[i][j]));
+    }
+  }
+  for (i=0; i<np; i++) {
+    for (j=0; j<edges[i].size(); j++) {
+      cmesh->add_edge(nodemap[edges[i][j].first+offsets[i]],
+		      nodemap[edges[i][j].second+offsets[i]]);
+    }
+  }
+  CurveField<double> *cf = scinew CurveField<double>(cmesh, Field::NODE);
+  int ctr=0;
+  for (i=0; i<np; i++) {
+    for (j=0; j<vals[i].size(); j++, ctr++) {
+      cf->fdata()[ctr]=vals[i][j];
+    }
+  }
   cf->freeze();
 
-  if (cfsize == 0)
+  if (count == 0)
   {
     delete cf;
     return 0;
