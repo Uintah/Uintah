@@ -47,6 +47,7 @@
 #include <sys/time.h>
 #include <Core/SystemCall/TempFileManager.h>
 #include <iostream>
+#include <fstream>
 #include <math.h>
  
 namespace SCIRun {
@@ -366,8 +367,27 @@ std::string TempFileManager::get_scirun_tmp_dir(std::string subdir)
     return(dirname);
 }
  
+std::string TempFileManager::get_homedirID()
+{
+    std::string tempdir = TempFileManager::get_scirun_tmp_dir("");
+ 
+    struct stat buf;
+    std::string filename = tempdir+std::string("homeid");
+    
+    if (::lstat(filename.c_str(),&buf) < 0)
+    {
+        std::ofstream IDfile(filename.c_str(),std::ios::out);
+        std::string ranid = create_randname("homeid=XXXXXX");
+        IDfile << ranid;
+    }
+
+    std::string homeidstring;
+    std::ifstream homeid(filename.c_str());
+    homeid >> homeidstring;
+    homeidstring = homeidstring.substr(7); 
+    return(homeidstring);
+}
  
  
- 
- } // end namespace
+} // end namespace
  

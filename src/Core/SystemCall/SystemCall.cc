@@ -294,40 +294,56 @@ SystemCall::~SystemCall()
 	// Kill any remaining process
 	// This function returns immediately if there is nothing to kill
 	// It will dolock() inside the function
-	
-	if (processid_)
-	{
-		systemcallmanager_->kill(processid_);
-		systemcallmanager_->close(processid_);
-	}
-	
-	// Make sure every handler got an end signal
-	std::list<SystemCallHandlerHandle>::iterator it;
-	for (it = stdouthandler_.begin(); it != stdouthandler_.end(); it++)
-	{
-		if ((*it)->end_ == false) (*it)->end();
-	}
+	try
+    {
+        
+        if (processid_)
+        {
+            systemcallmanager_->kill(processid_);
+            systemcallmanager_->close(processid_);
+        }
+        
+        // Make sure every handler got an end signal
+        std::list<SystemCallHandlerHandle>::iterator it;
+        for (it = stdouthandler_.begin(); it != stdouthandler_.end(); it++)
+        {
+            if ((*it)->end_ == false) (*it)->end();
+        }
 
-	for (it = stderrhandler_.begin(); it != stderrhandler_.end(); it++)
-	{
-		if ((*it)->end_ == false) (*it)->end();
-	}
+        stdouthandler_.clear();
 
-	for (it = exithandler_.begin(); it != exithandler_.end(); it++)
-	{
-		if ((*it)->end_ == false) (*it)->end();
-	}
+        for (it = stderrhandler_.begin(); it != stderrhandler_.end(); it++)
+        {
+            if ((*it)->end_ == false) (*it)->end();
+        }
+     
+        stderrhandler_.clear();
 
-	
-	if (isfile_) file_.close();
+        for (it = exithandler_.begin(); it != exithandler_.end(); it++)
+        {
+            if ((*it)->end_ == false) (*it)->end();
+        }
 
-	isfile_    = false;
-	isrunning_ = false;
-	fd_stdin_  = -1;
-	fd_stdout_ = -1;
-	fd_stderr_ = -1;
-	fd_exit_   = -1;
-	processid_ = 0;
+        exithandler_.clear();     
+        
+        if (isfile_) file_.close();
+
+        isfile_    = false;
+        isrunning_ = false;
+        fd_stdin_  = -1;
+        fd_stdout_ = -1;
+        fd_stderr_ = -1;
+        fd_exit_   = -1;
+        processid_ = 0;
+        
+        stdoutbuffer_.clear();
+        stderrbuffer_.clear();
+       
+    }
+    catch (...)
+    {
+        std::cerr << "Caught an exception in the destructor of SystemCall class" << std::endl;
+    }
 }
 
 
@@ -438,7 +454,10 @@ void SystemCall::wait()
 void SystemCall::kill(int secs)
 {
 	dolock();
-	if (processid_) systemcallmanager_->kill(processid_,secs);
+	if (processid_) 
+    {
+        if (isrunning_) systemcallmanager_->kill(processid_,secs);
+    }
 	isrunning_ = false;				// set state to not running
 	unlock();
 }
@@ -813,23 +832,6 @@ void SystemCall::rem_exit_handler(SystemCallHandlerHandle handle)
 	
 	unlock();
 }
-
-
-
-SystemCall* SystemCall::clone()
-{
-	// This function makes a new object
-	// not a copy, that would be to conflicting
-	// Though the LockingHandle::detach needs a clone
-	// function.
-	// Hence not to confuse certain compilers, I added this function
-	// though it does not function, as filedesciptors and file pointers
-	// are hard to copy 
-	
-	SystemCall* handle = scinew SystemCall();
-	return(handle);
-}
-
 
 } // namespace
 

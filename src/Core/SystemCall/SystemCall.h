@@ -138,7 +138,7 @@ class SystemCallThread : public Runnable, public SystemCallBase {
   public:
   
     SystemCallThread(SystemCallHandle syscall_);
-	~SystemCallThread();
+	virtual ~SystemCallThread();
 
 	// Entry point for the thread
 	void run();
@@ -161,11 +161,6 @@ class SystemCall : public SystemCallBase {
 
 	SystemCall();
 	virtual ~SystemCall();
-	
-	// This function exists for compatibility reasons
-	// The LockingHandle needs this function
-	SystemCall* clone();
-	
 	
 	// implementation for the SystemCall class
 	void	execute(std::string command);
@@ -237,8 +232,6 @@ class SystemCall : public SystemCallBase {
 	int		get_stderr();
 	int		get_exit();
 
-	
-
 
   ///////////////////////
   // Public objects needed by the LockingHandle
@@ -246,7 +239,7 @@ class SystemCall : public SystemCallBase {
 
   public:
 	Mutex				lock;				// Lock this structure
-	int					ref_cnt;			// Refernce count
+	int					ref_cnt;			// Reference count
 
   private:
 	bool				isrunning_;			// Is there a process running ?
