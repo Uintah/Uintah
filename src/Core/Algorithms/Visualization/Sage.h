@@ -56,7 +56,7 @@
 #include <Core/Algorithms/Visualization/mc_table.h>
 #include <Core/Algorithms/Visualization/Tree.h>
 
-
+#include <Core/Disclosure/DynamicLoader.h>
 namespace SCIRun {
 
 class Screen;
@@ -65,22 +65,23 @@ typedef Time  SysTime;
 
 // SageBase
 
-class SageAlg {
+class SageAlg : public DynamicAlgoBase {
 public:
-  SageAlg() {}
-  virtual ~SageAlg() {}
+  SageAlg();
+  virtual ~SageAlg();
 
   virtual void release() = 0;
   virtual void set_field( Field * ) = 0;
   virtual void search( double, GeomGroup*, GeomPts * ) {}
-  //virtual GeomObj* search( double ) = 0;
+
+  //! support the dynamically compiled algorithm concept
+  static const string& get_h_file_path();
+  static CompileInfo *get_compile_info(const TypeDescription *td);
 };
 
-template < class AI >
 class SageBase  : public SageAlg
 {
 protected:
-  AI *ai;
   int counter;
 
   Screen *screen;
@@ -112,8 +113,7 @@ protected:
   SysTime::SysClock scan_time;
   int scan_number, tri_number;
 public:
-  SageBase() {}
-  SageBase( AI *ai) : ai(ai), region_on(false) {}
+  SageBase() : region_on(false) {}
   virtual ~SageBase() {}
 
   void setScreen( Screen *s ) { screen = s; }
@@ -127,8 +127,8 @@ public:
 
 class SageStack;
 
-template <class AI, class F>
-class Sage : public SageBase<AI> 
+template <class F>
+class Sage : public SageBase 
 {
   typedef typename F::mesh_type              mesh_type;
   typedef typename F::mesh_handle_type       mesh_handle_type;
@@ -154,8 +154,7 @@ public:
   // no public variables
 
 public:
-  Sage() {}
-  Sage(AI *);
+  Sage();
   virtual ~Sage();
 	
   virtual void release() {}
@@ -183,11 +182,8 @@ static int trunc(double v ) { return v > 0 ? int(floor(v)) : int(floor(v+1)); }
 /*
  * SageBase class
  */
-
-
-template<class AI>
-void SageBase<AI>::setView (const View &view, double znear, double zfar, 
-			    int xres, int yres )
+void SageBase::setView (const View &view, double znear, double zfar, 
+			int xres, int yres )
 {
   //view = v;
   this->znear = znear;
@@ -229,9 +225,8 @@ void SageBase<AI>::setView (const View &view, double znear, double zfar,
   AW.z(AW.z() * sz );
 }
 
-template <class AI>
-void SageBase<AI>::setParameters( int scan, int vis, int reduce, 
-				  int all, int size)
+void SageBase::setParameters( int scan, int vis, int reduce, 
+			      int all, int size)
 {
   this->scan = scan;
   this->bbox_visibility = vis;
@@ -240,8 +235,7 @@ void SageBase<AI>::setParameters( int scan, int vis, int reduce,
   this->min_size = size;
 }
 
-template <class AI>
-void SageBase<AI>::setRegion( double x0, double x1, double y0,double y1)
+void SageBase::setRegion( double x0, double x1, double y0,double y1)
 {
   region_on = true;
   region_min0 = x0;
@@ -334,20 +328,20 @@ SageStack::push( int level, int i, int j, int k )
     
 // Sage
 
-template <class AI, class Field>
-Sage<AI,Field>::Sage( AI *ai ) : SageBase<AI>(ai), field(0), stack(0), tree(0)
+template <class Field>
+Sage<Field>::Sage() : SageBase(), field(0), stack(0), tree(0)
 {
 }
 
-template <class AI, class Field>
-Sage<AI,Field>::~Sage()
+template <class Field>
+Sage<Field>::~Sage()
 {
   delete stack;
   delete tree;
 }
 	    
-template<class AI, class F>
-void Sage<AI,F>::set_field( Field *gf )
+template<class F>
+void Sage<F>::set_field( Field *gf )
 {
   F *f = dynamic_cast<F *>(gf);
   if ( f ) {
@@ -386,8 +380,8 @@ void Sage<AI,F>::set_field( Field *gf )
 }
 
     
-template <class AI, class Field>
-void Sage<AI,Field>::project( const Point &p, Pt &q )
+template <class Field>
+void Sage<Field>::project( const Point &p, Pt &q )
 {
   Vector t = p - eye;
   double px = Dot(t, U );
@@ -411,8 +405,8 @@ int permutation[8][8] = {
   {7,6,3,5,4,1,2,0}
 };
 
-template <class AI, class Field>
-int Sage<AI,Field>::adjust( double left, double right, int &x )
+template <class Field>
+int Sage<Field>::adjust( double left, double right, int &x )
 {
   double l = left -0.5;
   double r = right -0.5;
@@ -429,8 +423,8 @@ int Sage<AI,Field>::adjust( double left, double right, int &x )
             (((val[u1]+val[u2]+val[u3]+val[u4])-\
 	     (val[d1]+val[d2]+val[d3]+val[d4]))/4.)
     
-template <class AI, class Field>
-void Sage<AI,Field>::search( double iso, 
+template <class Field>
+void Sage<Field>::search( double iso, 
 			   GeomGroup *group, GeomPts *points )
 {
   setParameters( 1, 1, 0, 1, 0 );
@@ -465,76 +459,10 @@ void Sage<AI,Field>::search( double iso,
   //double size = 5*Pow(dx*dy*dz,2.0/3);
   while ( !stack->empty() ) {
 
-//     if ( counter >  prev_counter * 1.5 ) {
-//       double progress = counter/size;
-//       ai->update_progress( progress );
-//       prev_counter = counter;
-//     }
-    
-//     if ( ai->get_abort() ) 
-//       return; 
-    
     int level, i, j, k;
     stack->pop( level, i, j, k );
 	
     int status = 1;
-#if 0
-    if ( bbox_visibility  ) {
-      double left, right, top, bottom;
-      double pw;
-
-      SysTime::SysClock  t =SysTime::currentTicks();
-      status = bbox_projection( i, j, k, dx+1, dy+1, dz+1, 
-				left, right, top, bottom, pw);
-      projection_time += SysTime::currentTicks() - t;
- 
-      if ( status < 0 ) continue;
-      if ( status > 0 ) {
-#if 0
-	if ( reduce ) {
-	  if ( (right-left) <= min_size  && (top-bottom) <= min_size ) {
-	    int px,py;
-	    if ( adjust( left, right, px ) && adjust( bottom, top, py ) ) {
-	      if ( screen->cover_pixel(px,py) ) {
-		double x = ((px+0.5)*2/xres-1);
-		double y = ((py+0.5)*2/yres-1);
-		double z = 1;
-		    
-		Point Q = eye+((X*x+Y*y+Z*z)*pw);
-		double val[8];
-		val[0]=field->grid(i,      j,      k);
-		val[1]=field->grid(i+dx+1, j,      k);
-		val[2]=field->grid(i+dx+1, j+dy+1, k);
-		val[3]=field->grid(i,      j+dy+1, k);
-		val[4]=field->grid(i,      j,      k+dz+1);
-		val[5]=field->grid(i+dx+1, j,      k+dz+1);
-		val[6]=field->grid(i+dx+1, j+dy+1, k+dz+1);
-		val[7]=field->grid(i,      j+dy+1, k+dz+1);
-		    
-		Vector N( Deriv(0,3,4,7, 1,2,5,6),
-			  Deriv(0,1,4,5, 2,3,6,7),
-			  Deriv(0,1,2,3, 4,5,6,7));
-		points->add( Q, 1, N );
-	      }
-	    }
-	    continue;
-	  }
-	}
-#endif
-	int l = trunc(left);
-	int r = trunc(right+1);
-	int b = trunc(bottom);
-	int t = trunc(top+1);
-	SysTime::SysClock vis_begin = SysTime::currentTicks();
-	//	int vis = screen->visible( l,b,r,t); //left, bottom, right, top );
-	//SysTime::SysClock vis_end = SysTime::currentTicks();
-	vis_time += SysTime::currentTicks()-vis_begin;
-	    
-	if ( !vis ) 
-	  continue;
-      }
-    }
-#endif
 	
     if ( tree->depth() == level ) {
       if ( status == 0 ) continue;
@@ -576,52 +504,6 @@ void Sage<AI,Field>::search( double iso,
 	    }
 	  }
     }
-#if 0
-    int start  = (eye.x() > (i+dx+1)*sx) ? 1 : 0;
-    if ( eye.y() > (j+dy+1)*sy ) start += 2;
-    if ( eye.z() > (k+dz+1)*sz ) start += 4;
-	
-    int *order = permutation[start];
-	
-    int type = node->type;
-    cell_type *child = node->child;
-	
-    for (int o=7; o>=0 ; o-- ) {
-      switch ( order[o] ) {
-      case 0:
-	stack->push( child, i, j, k, dx, dy, dz, mask );
-	break;
-      case 1:
-	if ( !(type & 1) )
-	  stack->push( child+1, i+dx+1, j, k, dx1, dy, dz, mask );
-	break;
-      case 2:
-	if ( !(type & 2) )
-	  stack->push( child+2, i, j+dy+1, k, dx, dy1, dz, mask );
-	break;
-      case 3:
-	if ( !(type & 3) )
-	  stack->push( child+3, i+dx+1, j+dy+1, k, dx1, dy1, dz, mask );
-	break;
-      case 4:
-	if ( !(type & 4) )
-	  stack->push( child+4, i, j, k+dz+1, dx, dy, dz1, mask );
-	break;
-      case 5:
-	if ( !(type & 5) )
-	  stack->push( child+5, i+dx+1, j, k+dz+1, dx1, dy, dz1, mask  );
-	break;
-      case 6:
-	if ( !(type & 6) )
-	  stack->push( child+6, i, j+dy+1, k+dz+1, dx, dy1, dz1, mask );
-	break;
-      case 7:
-	if ( !(type & 7) )
-	  stack->push( child+7, i+dx+1, j+dy+1, k+dz+1, dx1, dy1, dz1, mask );
-	break;
-      }
-    }
-#endif
   }
   SysTime::SysClock search_end = SysTime::currentTicks();
       
@@ -641,8 +523,8 @@ void Sage<AI,Field>::search( double iso,
 
 }
     
-template <class AI, class Field>
-void Sage<AI,Field>::extract( double iso, int x, int y, int z )
+template <class Field>
+void Sage<Field>::extract( double iso, int x, int y, int z )
 {
   SysTime::SysClock start = SysTime::currentTicks();
       
@@ -765,8 +647,8 @@ void Sage<AI,Field>::extract( double iso, int x, int y, int z )
 }
     
 
-template <class AI, class Field>
-int Sage<AI,Field>::bbox_projection( int i, int j, int k, 
+template <class Field>
+int Sage<Field>::bbox_projection( int i, int j, int k, 
 				   int dx, int dy, int dz,
 				   double &left, double &right, 
 				   double &top, double &bottom, 

@@ -31,24 +31,30 @@
 #define Noise_h
 
 #include <Core/Algorithms/Visualization/SpanSpace.h>
+#include <Core/Disclosure/DynamicLoader.h>
+#include <Core/Geom/GeomObj.h>
 
 namespace SCIRun {
 
 // NoiseBase
 
-class NoiseAlg {
+class NoiseAlg : public DynamicAlgoBase {
 public:
-  NoiseAlg() {}
-  virtual ~NoiseAlg() {}
+  NoiseAlg();
+  virtual ~NoiseAlg();
   
   virtual void release() = 0;
   virtual void set_field( Field * ) = 0;
   virtual GeomObj* search( double ) = 0;
+
+  //! support the dynamically compiled algorithm concept
+  static const string& get_h_file_path();
+  static CompileInfo *get_compile_info(const TypeDescription *td);
 };
 
-// Noise<T, AI>
+// Noise<T>
 
-template <class AI, class Tesselator>
+template <class Tesselator>
 class Noise : public NoiseAlg {
   typedef typename Tesselator::field_type       field_type;
   typedef typename field_type::value_type       value_type;
@@ -57,12 +63,10 @@ class Noise : public NoiseAlg {
 private:
   SpanSpace<value_type,cell_index_type> *space_;
   Tesselator *tess_;
-  AI *ai_;
   double v;
   
 public:
-  Noise() {}
-  Noise( AI *ai) : space_(0), tess_(0), ai_(ai) {}
+  Noise() : space_(0), tess_(0) {}
   virtual ~Noise() {}
   
   virtual void release();
@@ -88,14 +92,14 @@ public:
 
 // Noise
 
-template<class AI, class Tesselator>
-void Noise<AI, Tesselator>::release()
+template<class Tesselator>
+void Noise<Tesselator>::release()
 {
   if ( tess_ ) { delete tess_; tess_ = 0; }
 }
 
-template<class AI, class Tesselator>
-void Noise<AI, Tesselator>::set_field( Field *f )
+template<class Tesselator>
+void Noise<Tesselator>::set_field( Field *f )
 {
   if ( field_type *field = dynamic_cast<field_type *>(f) ) {
     if ( tess_ ) delete tess_;
@@ -108,8 +112,8 @@ void Noise<AI, Tesselator>::set_field( Field *f )
   }
 }
 
-template <class AI, class Tesselator> 
-int Noise<AI, Tesselator>::count( )
+template <class Tesselator> 
+int Noise<Tesselator>::count( )
 {
   int counter = 0;
   count_min_max( &space_->span[0], space_->span.size(), counter );
@@ -118,8 +122,8 @@ int Noise<AI, Tesselator>::count( )
 }
 
 
-template <class AI, class Tesselator>
-GeomObj *Noise<AI, Tesselator>::search( double iso )
+template <class Tesselator>
+GeomObj *Noise<Tesselator>::search( double iso )
 {
   v = iso;
   
@@ -131,8 +135,8 @@ GeomObj *Noise<AI, Tesselator>::search( double iso )
   return tess_->get_geom();
 }
 
-template <class AI, class Tesselator> 
-void Noise<AI, Tesselator>::search_min_max( span_point p[], int n )
+template <class Tesselator> 
+void Noise<Tesselator>::search_min_max( span_point p[], int n )
 {
   if ( n <= 0 )
     return;
@@ -151,8 +155,8 @@ void Noise<AI, Tesselator>::search_min_max( span_point p[], int n )
 }
 
 
-template <class AI, class Tesselator> 
-void Noise<AI, Tesselator>::search_max_min( span_point p[], int n )
+template <class Tesselator> 
+void Noise<Tesselator>::search_max_min( span_point p[], int n )
 {
   if ( n <= 0 )
     return;
@@ -172,8 +176,8 @@ void Noise<AI, Tesselator>::search_max_min( span_point p[], int n )
 }
 
 
-template <class AI, class Tesselator> 
-void Noise<AI, Tesselator>::search_min( span_point p[], int n)
+template <class Tesselator> 
+void Noise<Tesselator>::search_min( span_point p[], int n)
 {
   if ( n <= 0 )
     return;
@@ -209,8 +213,8 @@ void Noise<AI, Tesselator>::search_min( span_point p[], int n)
 }
 
 
-template <class AI, class Tesselator> 
-void Noise<AI, Tesselator>::search_max( span_point p[], int n )
+template <class Tesselator> 
+void Noise<Tesselator>::search_max( span_point p[], int n )
 {
   if ( n <= 0 )
     return;
@@ -244,8 +248,8 @@ void Noise<AI, Tesselator>::search_max( span_point p[], int n )
   
 }
 
-template <class AI, class Tesselator> 
-void Noise<AI, Tesselator>::collect( span_point p[], int n )
+template <class Tesselator> 
+void Noise<Tesselator>::collect( span_point p[], int n )
 {
   if ( n <= 0 )
     return;
@@ -260,8 +264,8 @@ void Noise<AI, Tesselator>::collect( span_point p[], int n )
  */
 
 
-template <class AI, class Tesselator> 
-void Noise<AI, Tesselator>::count_min_max( span_point p[], int n, int &counter)
+template <class Tesselator> 
+void Noise<Tesselator>::count_min_max( span_point p[], int n, int &counter)
 {
   if ( n <= 0 )
     return;
@@ -280,8 +284,8 @@ void Noise<AI, Tesselator>::count_min_max( span_point p[], int n, int &counter)
 }
 
 
-template <class AI, class Tesselator> 
-void Noise<AI, Tesselator>::count_max_min( span_point p[], int n, int &counter)
+template <class Tesselator> 
+void Noise<Tesselator>::count_max_min( span_point p[], int n, int &counter)
 {
   if ( n <= 0 )
     return;
@@ -300,8 +304,8 @@ void Noise<AI, Tesselator>::count_max_min( span_point p[], int n, int &counter)
 }
 
 
-template <class AI, class Tesselator> 
-void Noise<AI, Tesselator>::count_min( span_point p[], int n, int &counter )
+template <class Tesselator> 
+void Noise<Tesselator>::count_min( span_point p[], int n, int &counter )
 {
   if ( n <= 0 )
     return;
@@ -336,8 +340,8 @@ void Noise<AI, Tesselator>::count_min( span_point p[], int n, int &counter )
 }
 
 
-template <class AI, class Tesselator> 
-void Noise<AI, Tesselator>::count_max( span_point p[], int n, int &counter )
+template <class Tesselator> 
+void Noise<Tesselator>::count_max( span_point p[], int n, int &counter )
 {
   if ( n <= 0 )
     return;
@@ -372,8 +376,8 @@ void Noise<AI, Tesselator>::count_max( span_point p[], int n, int &counter )
 
 
 
-template <class AI, class Tesselator>
-void Noise<AI, Tesselator>::count_collect( int n, int &counter )
+template <class Tesselator>
+void Noise<Tesselator>::count_collect( int n, int &counter )
 {
   if ( n <= 0 )
     return;
