@@ -29,13 +29,13 @@
 how it fits
 
      To maximize their usefulness, all software systems must be able
-     to store data to disk at the end of a run, and retrieve that data
-     later for additional processing.  As the SW system becomes larger
-     and more complex, especially if numerous different groups are
-     contributing to it, there needs to be a consistent, powerful, and
-     straight forward strategy for performing this data storage and
-     retrieval.  Core/Persistent encapsulates the SCIRun data storage
-     and retrieval philosophy which attempts to provide such a
+     to store data to disk at the end of execution, and retrieve that
+     data later for additional processing.  As the SW system becomes
+     larger and more complex, especially if numerous different groups
+     are contributing to it, there needs to be a consistent, powerful,
+     and straight forward strategy for performing this data storage
+     and retrieval.  Core/Persistent encapsulates the SCIRun data
+     storage and retrieval philosophy which attempts to provide such a
      solution to this problem.
 
      Core/Persistent provides a direct and uniform method for saving
@@ -77,169 +77,187 @@ how it fits
        their codes as well as save the data stored in any of the
        SCIRun data structures that they use.
       </p>
+
+      <p>
+       Specifically, programmers will, for the most part, use the
+       Core/Persistent paradigm in "Datatypes" files.  Programmers are
+       also encouraged to use Core/Persistent for their own data
+       structures for two reasons: 1) If their data structure is every
+       used by other people (migrated to the "Datatypes" directory)
+       then it will need to use Persistent.  2) Using Core/Persistent
+       encourages the implementor to consider and provide for the
+       ability to handle multiple "versions" of data files,
+       transparently to the rest of the code.
+      </p>
+
     </when>
   </use>
 
 <!-- ************** phase 2 content ************** -->
 
   <definition>
-  <!-- Give the definition for a term, or concept, that is embodied
-       by this directory.  Please provide feature length rather than
-       short story definitions. -->
     <term>
-      Module
+      Persistent Data
     </term>
     <p>
-      From the most abstract perspective, a module is considered to
-      be a one or more algorithms that solves a single, specific and
-      coarse grained, problem.  For example, suppose you have a large
-      database of english words that you want to display in sorted
-      order.  There are several algorithms that you may employ to
-      to solve this problem such as bubble sort, quick sort, etc.
-      A module that solves this problem, likely named Sort, would
-      be a collection of one or more of these algorithms.
-    </p>
-
-    <p>
-      On a slightly more concrete level, a module can be compared 
-      to a function or procedure (of a high level text based
-      programming language) that also implements one or more
-      algorithms to solve a specific problem.  The prototype for
-      such a function (in C like syntax) might look like this:
-    </p>
-
-    <p>
-        int Sort(string *words_to_sort, int alg_to_use);
-    </p>
-
-    <p>
-      Where words_to_sort is a random , possibly large, list of words
-      to be sorted (the data), and alg_to_use is a single integer used
-      to control which of the implemented algorithms to use.
-    </p>
-
-    <p>
-      The Sort module is identical to the Sort function in many ways:
-      They both have input (data and control), they both have output,
-      they both have a single point of entry for execution, and they
-      can both be used modularly in any program, provided that they are
-      simultaneously specific and general enough to be used universally.
-    </p>
-
-    <p>
-      Some important differences include: The Sort module seperates
-      the mode for communicating inputs of different kinds (i.e. data
-      is treated differently and seperately from control) and the sort
-      module can have more than one output.
-    </p>
-    
-    <p>
-      On the lowest level a module is exactly like the function.  The
-      module is actually implemented as a C++ class with one member
-      function named execute().  The execute member function is
-      similar to the C function in many ways.  In fact, it is possible
-      to cut the contents out of the C function and paste them into
-      the execute function of the module and achieve the same 
-      functionality, with one exception: the module does not pass 
-      data to the execute function through formal parameters, instead
-      it passes them through the use of seperate member functions
-      (pseudo code):
-    </p>
-    
-    <p>
-      void execute() {
-        string *words_to_sort;
-	int alg_to_use;
-
-	words_to_sort = get_data_from_input_port() ;
-	alg_to_use = get_chosen_algorithm_from_gui();
-
-	/* paste contents of sort function here */
-	
-	send_data_to_output_port(words_to_sort);
-      }
-    </p>
-
-    <p>
-      Modules are often manifested as graphical boxes with ports, 
-      a name, a timer and a progress bar.  Modules can exist outside
-      this graphical representation as well.  Outside it's graphical
-      manifestation, a module can be viewed as a node in an dataflow
-      graph.
+      Persistent Data is a general term for any data that will at some
+      point need to be written to disk, and then, later, read back in
+      for further processing.
     </p>
   </definition>
 
   <definition>
     <term>
-      Port
+      Persistent Object
     </term>
     <p>
-      Ports are the analog of formal paramaters of a C function.
-      They are used to connect modules together and they enforce type
-      matching.
+      A Persistent Object is a specific instance of "Persistent Data"
+      and include all SCIRun datatypes that have been subclassed from
+      the Persistent class.  (Classes found in Core/Datatypes usually
+      inherit from Class Datatype, which in turn inherits from
+      Persistent.)  Persistent Objects have the ability to save and
+      restore themselves from disk.  The data is stored on disk by
+      specifying the "type" of object that created the data and
+      version of that object.
+    </p>
+  </definition>
+
+
+  <definition>
+    <term>
+      PersistentTypeID
+    </term>
+    <p>
+      Each "Persistent Object" has an unique "type id".  This type id
+      allows SCIRun to load the object back from disk by first,
+      creating a "new" object of this type, and then telling the
+      object to load its data.  "PersistentTypeID"s consist of a
+      string representing the type (similar to the C++ character
+      string that specifies the type), the parent class of the object,
+      and the "maker" function that will be used to create new objects
+      of this type.
+    </p>
+    <p>
+      For templated types, the "type_name()" function is implemented.
+      This function turns, for example, the type vector<int>, into the
+      string, "vector<int>".  
     </p>
   </definition>
 
   <definition>
     <term>
-      Connection
+      Maker Functions
     </term>
     <p>
+      Maker functions are used to created a new Persistent Object.
+      They are very straight forward consisting of code that
+      allocates an object and then returns a pointer to the object.
     </p>
   </definition>
 
   <definition>
     <term>
-      Network
+      Pio Streams
     </term>
     <p>
+      Pio Streams are used by Persistent Objects to read/write data
+      from/to disk.  There are several types of Pio Streams, all of
+      which inherit from the base class Piostream.  The subclasses of
+      Piostream are: BinaryPiostream, TextPiostream, and
+      GzipPiostream.  These correspond to binary output, text output,
+      and zipped output.  (The type of output is usually set by the
+      user at the time the data is to be written out.)
     </p>
   </definition>
 
   <definition>
     <term>
-      Network Editor
+      Pio() vs io()
     </term>
     <p>
+      Every persistent object has an a member function (and thus needs
+      to implement) the io() function.  This function (an example is
+      given below) implements the saving and loading of the data
+      unique to that object.  The Pio() functions are not member
+      functions.  They are defined for all data types and simply are
+      used to start the saving of the data (see below.)
     </p>
   </definition>
 
   <example>
-  <!-- give an example of how to use the classes and/or functions
-       here.  Again, more is better, however give only exactly 
-       that which is being explained, no superfluous text (i.e.
-       please don't cut and paste from existing code.) -->
-    
     <p>
-      To get data into and out of your module's execute function, you
-      need to use the module's ports.  In order to use the ports, 
-      you first need to get a pointer to a specific port.  Then, call
-      that port's get() function with a handle to the type of data
-      expected on the port.  On success, the handle passed to get()
-      will represent the data that is on that input port:
+      In order to make a "Datatype" (or any data structure for that
+      matter) persistent, you must follow these steps:
 
-      #include <Dataflow/Ports/MatrixPort.h>
+      <pre>
+      1) Inherit from class Persistent (or from class Datatype.)
+      2) Add the following to your class:
 
-      ...
+ 	 void    io(Piostream &stream);
+	 static  PersistentTypeID type_id;
 
-      void SomeModule::execute() {
+         static const string type_name(int n = -1);
+         virtual const string get_type_name(int n = -1) const;
 
-        //The input port for this module is of type Matrix, and is
-        // named "Input Matrix"
+       private:
+         static Persistent *maker();
+      </pre>
+    </p>
 
-        MatrixIPort *iport = get_iport("Input Matrix");
+    <p>
+      To save a persistent object, you simply create a persistent stream:
 
-        MatrixHandle InputMatrix;
+      Piostream * stream = auto_istream( file_name );
 
-        int connected = iport->get(InputMatrix);
+      Then you call the Pio function for the object, with the stream:
 
-        if (!connected) {
-          printf("There is no connection for 'Input Matrix'!");
-	  return;
+      Pio( *stream, object );
+
+      The Pio() function will use the io() function provided by (or,
+      in the case of built in types, provided for) the type.
+    </p>
+
+    <p>
+      All Persistent objects need to define their current version:
+
+      // Pio defs.
+      const int MY_CLASS_VERSION = 1;      
+
+      The version information can be used to successfully read in old
+      data files.  Various "new" object data members can be defaulted
+      to a reasonable value for these old data files.
+    </p>
+
+    <p>
+      All Persistent objects must implement the io() function.  This
+      is the function that will be called by Pio() to save/load the
+      object.  This is an example io() function:
+      
+      <pre>
+      void 
+      MyClass::io( Piostream & stream )
+      {
+        // All input/ouptut starts with this line:
+#IF THERE IS MORE THAN ONE VERSION
+        int version = stream.begin_class("ColorMap", MY_CLASS_VERSION);
+#ELSE IF YOU ONLY HAVE ONE VERSION CURRENTLY
+        stream.begin_class( type_name().c_str(), MY_CLASS_VERSION );
+
+	// Save/Load Base Class fields first:
+	MyBaseClass::io( stream );
+
+	if( version > 1 ) {
+	  Pio( stream, new_data_field_ );
         }
-        
-	...
+
+	// Save/Load individual fields:
+	Pio( stream, my_data_ );
+	Pio( stream, more_data_ );
+
+	// All input/output ends with this line:
+	stream.end_class();
       }
+      </pre>
     </p>
   </example>
 </dir>

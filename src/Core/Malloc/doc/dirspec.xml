@@ -88,120 +88,66 @@
        by this directory.  Please provide feature length rather than
        short story definitions. -->
     <term>
-      Module
+      Environment Variables
     </term>
     <p>
-      From the most abstract perspective, a module is considered to
-      be a one or more algorithms that solves a single, specific and
-      coarse grained, problem.  For example, suppose you have a large
-      database of english words that you want to display in sorted
-      order.  There are several algorithms that you may employ to
-      to solve this problem such as bubble sort, quick sort, etc.
-      A module that solves this problem, likely named Sort, would
-      be a collection of one or more of these algorithms.
+      The following environment variables can be set in order to help
+      monitor and control the allocation of memory.  The environment
+      variables are only used if DISABLE_SCI_MALLOC is NOT defined
+      during compilation.  If DISABLE_SCI_MALLOC is defined, then
+      SCIRun will use the built in new, free, alloc, etc.
     </p>
-
     <p>
-      On a slightly more concrete level, a module can be compared 
-      to a function or procedure (of a high level text based
-      programming language) that also implements one or more
-      algorithms to solve a specific problem.  The prototype for
-      such a function (in C like syntax) might look like this:
+      MALLOC_STRICT: Places markers in unused memory and uses them to
+      verify memory integrity.  Unless you wish to check memory
+      integrity explicitly using the "audit()" function, MALLOC_LAZY
+      should NOT be set.
     </p>
-
     <p>
-        int Sort(string *words_to_sort, int alg_to_use);
+      MALLOC_LAZY: By default, memory is audited for problems on each
+      allocation and deallocation.  If MALLOC_LAZY is set, then
+      auditing is turned off.  This can speed up code that allocates
+      and deallocates memory frequently.
     </p>
-
     <p>
-      Where words_to_sort is a random , possibly large, list of words
-      to be sorted (the data), and alg_to_use is a single integer used
-      to control which of the implemented algorithms to use.
+      MALLOC_TRACE [filename]: If MALLOC_TRACE is set, then every
+      memory allocation, reallocation, and deallocation will be
+      logged.  If "filename" is not provided, this information will be
+      printed to "stderr".
     </p>
-
     <p>
-      The Sort module is identical to the Sort function in many ways:
-      They both have input (data and control), they both have output,
-      they both have a single point of entry for execution, and they
-      can both be used modularly in any program, provided that they are
-      simultaneously specific and general enough to be used universally.
+      MALLOC_STATS [filename]: If MALLOC_STATS is set, when SCIRun
+      exits, it will output a list of statistics regarding memory
+      usage during the run.  This includes the number of alloc/free
+      calls, the amount of fragmentation, the amount of memory that is
+      free and that is in use, etc.  If "filename" is not provided,
+      then "stderr" is used.
     </p>
+  </definition>
 
+  <definition>
+    <term>
+       Overloaded Functions
+    </term>
     <p>
-      Some important differences include: The Sort module seperates
-      the mode for communicating inputs of different kinds (i.e. data
-      is treated differently and seperately from control) and the sort
-      module can have more than one output.
-    </p>
-    
-    <p>
-      On the lowest level a module is exactly like the function.  The
-      module is actually implemented as a C++ class with one member
-      function named execute().  The execute member function is
-      similar to the C function in many ways.  In fact, it is possible
-      to cut the contents out of the C function and paste them into
-      the execute function of the module and achieve the same 
-      functionality, with one exception: the module does not pass 
-      data to the execute function through formal parameters, instead
-      it passes them through the use of seperate member functions
-      (pseudo code):
-    </p>
-    
-    <p>
-      void execute() {
-        string *words_to_sort;
-	int alg_to_use;
+      The following memory management functions are overloaded to
+      allow Core/Malloc to provide memory management functionality:
+      <pre>
+        C Functions:
 
-	words_to_sort = get_data_from_input_port() ;
-	alg_to_use = get_chosen_algorithm_from_gui();
-
-	/* paste contents of sort function here */
+        void* malloc(size_t size);
+	void free(void* ptr);
+	void* calloc(size_t n, size_t s);
+	void* realloc(void* p, size_t s);
+	void* memalign(size_t alignment, size_t size);
+	void* valloc(size_t size);
 	
-	send_data_to_output_port(words_to_sort);
-      }
-    </p>
+	C++ Functions:
 
-    <p>
-      Modules are often manifested as graphical boxes with ports, 
-      a name, a timer and a progress bar.  Modules can exist outside
-      this graphical representation as well.  Outside it's graphical
-      manifestation, a module can be viewed as a node in an dataflow
-      graph.
-    </p>
-  </definition>
-
-  <definition>
-    <term>
-      Port
-    </term>
-    <p>
-      Ports are the analog of formal paramaters of a C function.
-      They are used to connect modules together and they enforce type
-      matching.
-    </p>
-  </definition>
-
-  <definition>
-    <term>
-      Connection
-    </term>
-    <p>
-    </p>
-  </definition>
-
-  <definition>
-    <term>
-      Network
-    </term>
-    <p>
-    </p>
-  </definition>
-
-  <definition>
-    <term>
-      Network Editor
-    </term>
-    <p>
+	void* operator new(size_t, SCIRun::Allocator*, char*);
+	void* operator new[](size_t, SCIRun::Allocator*, char*);
+	#define scinew new(SCIRun::default_allocator, __FILE__)
+      </pre>
     </p>
   </definition>
 
@@ -212,35 +158,23 @@
        please don't cut and paste from existing code.) -->
     
     <p>
-      To get data into and out of your module's execute function, you
-      need to use the module's ports.  In order to use the ports, 
-      you first need to get a pointer to a specific port.  Then, call
-      that port's get() function with a handle to the type of data
-      expected on the port.  On success, the handle passed to get()
-      will represent the data that is on that input port:
+      To take advantage of the SCIRun memory management utilities
+      provided by Core/Malloc, you should do the following:
 
-      #include <Dataflow/Ports/MatrixPort.h>
+      1) Make sure that DISABLE_SCI_MALLOC is not set.      
 
-      ...
+      2) Allocate memory using the following syntax (This can 
+      be transparently done by changing every "new" to "scinew"):
 
-      void SomeModule::execute() {
+      int * int_array = scinew int[ 128 ];
 
-        //The input port for this module is of type Matrix, and is
-        // named "Input Matrix"
+      Object * obj = scinew Object();
 
-        MatrixIPort *iport = get_iport("Input Matrix");
+      3) Delete objects as normal:
 
-        MatrixHandle InputMatrix;
+      delete int_array[];
+      delete obj;
 
-        int connected = iport->get(InputMatrix);
-
-        if (!connected) {
-          printf("There is no connection for 'Input Matrix'!");
-	  return;
-        }
-        
-	...
-      }
     </p>
   </example>
 </dir>
