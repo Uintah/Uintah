@@ -84,6 +84,7 @@ protected:
   int generation;
   int timestep;
   int material;
+  GuiInt level_;
   GridP grid;
   ArchiveHandle  archiveH;
   LatVolMeshHandle mesh_handle_;
@@ -137,6 +138,7 @@ void FieldExtractor::build_field(DataArchive& archive,
     } 
 
     IntVector range = hi - low;
+    cerr<<"patch indices: imin = "<<low<<", imax = "<<hi<<", range = "<<range<<endl;
 
     int z_min = low.z();
     int z_max = low.z() + hi.z() - low.z();

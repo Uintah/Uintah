@@ -72,6 +72,7 @@ using namespace SCIRun;
 				 const string& pack)
   : Module(name, ctx, Filter, cat, pack),
     generation(-1),  timestep(-1), material(-1), grid(0), 
+    level_(ctx->subVar("level")),
     archiveH(0), mesh_handle_(0)
 { 
 
@@ -117,7 +118,7 @@ double FieldExtractor::update()
    if (timestep != new_timestep) {
      time = times[new_timestep];
      grid = archive.queryGrid(time);
-     BBox gbox; grid->getSpatialRange(gbox);
+//      BBox gbox; grid->getSpatialRange(gbox);
      //     cerr<<"box: min("<<gbox.min()<<"), max("<<gbox.max()<<")\n";
      timestep = new_timestep;
    } else {
@@ -133,17 +134,22 @@ void FieldExtractor::update_GUI(const string& var,
   // update the variable list for the GUI
 {
   DataArchive& archive = *((*(archiveH.get_rep()))());
-  LevelP level = grid->getLevel( 0 );
+  int levels = grid->numLevels();
+  LevelP level = grid->getLevel( level_.get() );
+
   Patch* r = *(level->patchesBegin());
   ConsecutiveRangeSet matls = 
     archive.queryMaterials(var, r, times[timestep]);
+
+  ostringstream os;
+  os << levels;
 
   string visible;
   gui->eval(id + " isVisible", visible);
   if( visible == "1"){
     gui->execute(id + " destroyFrames");
     gui->execute(id + " build");
-      
+    gui->execute(id + " buildLevels "+ os.str());
     gui->execute(id + " buildMaterials " + matls.expandedString().c_str());
       
     gui->execute(id + " setVars " + varnames.c_str());
