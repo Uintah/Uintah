@@ -3,6 +3,7 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/Util/DebugStream.h>
 #include <Core/Containers/Array3.h>
 #include <Core/Thread/Time.h>
 #include <Core/OS/Dir.h>
@@ -30,11 +31,9 @@
 #include <iomanip>
 #include <values.h>
 
-#ifdef OUTPUT_AVG_ELAPSED_WALLTIME
 #include <list>
 #include <fstream>
 #include <math.h>
-#endif
 
 #include <Core/Malloc/Allocator.h> // for memory leak tests...
 
@@ -43,6 +42,8 @@ using std::cout;
 
 using namespace SCIRun;
 using namespace Uintah;
+
+static DebugStream dbg("SimpleSimCont", false);
 
 SimpleSimulationController::SimpleSimulationController(const ProcessorGroup* myworld) :
   SimulationController(myworld)
@@ -72,7 +73,6 @@ void SimpleSimulationController::doCombinePatches(std::string fromDir)
    d_fromDir = fromDir;
 }
 
-#ifdef OUTPUT_AVG_ELAPSED_WALLTIME
 double stdDeviation(list<double>& vals, double& mean)
 {
   if (vals.size() < 2)
@@ -91,7 +91,6 @@ double stdDeviation(list<double>& vals, double& mean)
   variance /= (vals.size() - 1);
   return sqrt(variance);
 }
-#endif
 
 void 
 SimpleSimulationController::run()
@@ -192,6 +191,9 @@ SimpleSimulationController::run()
    }   
    
    if(d_restarting){
+
+      dbg << "Restarting... loading data\n";
+
       // create a temporary DataArchive for reading in the checkpoints
       // archive for restarting.
       Dir restartFromDir(d_fromDir);
@@ -216,10 +218,14 @@ SimpleSimulationController::run()
       scheduler->get_dw(1)->finalize();
       sim->restartInitialize();
    } else {
+
+      dbg << "Setting up initial tasks\n";
+
       sharedState->setCurrentTopLevelTimeStep( 0 );
       // Initialize the CFD and/or MPM data
       for(int i=0;i<grid->numLevels();i++){
 	 LevelP level = grid->getLevel(i);
+	 dbg << "calling scheduleInitialize: \n";
 	 sim->scheduleInitialize(level, scheduler);
       }
    }
@@ -252,11 +258,9 @@ SimpleSimulationController::run()
    if(output)
      output->executedTimestep();
 
-#ifdef OUTPUT_AVG_ELAPSED_WALLTIME
    int n = 0;
    list<double> wallTimes;
    double prevWallTime;
-#endif
    
    bool first=true;
    int  iterations = 0;
@@ -381,19 +385,18 @@ SimpleSimulationController::run()
 	}
 	cout << endl;
 
-#ifdef OUTPUT_AVG_ELAPSED_WALLTIME
 	if (n > 1) // ignore first set of elapsed times
 	  wallTimes.push_back(wallTime - prevWallTime);
 
 	if (wallTimes.size() > 1) {
 	  double stdDev, mean;
 	  stdDev = stdDeviation(wallTimes, mean);
-	  ofstream timefile("avg_elapsed_walltime.txt");
-	  timefile << mean << " +- " << stdDev << endl;
+	  //	  ofstream timefile("avg_elapsed_walltime.txt");
+	  //	  timefile << mean << " +- " << stdDev << endl;
+	  cout << "Timestep mean: " << mean << " +- " << stdDev << endl;
 	}
 	prevWallTime = wallTime;
 	n++;
-#endif
       }
       scheduler->advanceDataWarehouse(grid);
 
@@ -581,12 +584,13 @@ SimpleSimulationController::problemSetup(const ProblemSpecP& params,
 bool
 SimpleSimulationController::need_recompile(double time, double delt,
 					   const GridP& grid,
-					   SimulationInterface* /*sim*/,
+					   SimulationInterface* sim,
 					   Output* output)
 {
-  // Currently, nothing but output can request a recompile.  This
-  // should be fixed - steve
+  // Currently, output and sim can request a recompile. --bryan
   if(output && output->need_recompile(time, delt, grid))
+    return true;
+  if (sim && sim->need_recompile(time, delt, grid))
     return true;
   return false;
 }
