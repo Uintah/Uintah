@@ -121,6 +121,30 @@ div.section div.titlepage h6.title {
   font-style: oblique;                                  
 }
 
+div.appendix div.titlepage h2.title {
+  color: rgb(73, 91, 105);
+  text-align: left;
+  font-size: 160%;
+  border: none;                                     
+  font-style: normal;                                  
+}
+
+div.appendix div.titlepage h3.title {
+  color: rgb(73, 91, 105);
+  text-align: left;
+  font-size: 130%;
+  border: none;                                     
+  font-style: normal;                                  
+}
+
+div.appendix div.titlepage h4.title {
+  color: rgb(73, 91, 105);
+  text-align: left;
+  font-size: 120%;
+  border: none;                                     
+  font-style: oblique;                                  
+}
+
 .subtitle {
   color: rgb(73, 91, 105);
   text-align: left
