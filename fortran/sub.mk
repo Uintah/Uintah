@@ -79,7 +79,10 @@ SRCS += \
 	$(SRCDIR)/vvelsrc.F \
 	$(SRCDIR)/wallbc.F \
 	$(SRCDIR)/wvelcoef.F \
-	$(SRCDIR)/wvelsrc.F
+	$(SRCDIR)/wvelsrc.F \
+	$(SRCDIR)/dynamic_1loop.F \
+	$(SRCDIR)/dynamic_2loop.F \
+	$(SRCDIR)/dynamic_3loop.F
 
 PSELIBS := \
 	Packages/Uintah/Core/ProblemSpec \
@@ -171,3 +174,6 @@ $(SRCDIR)/wvelcoef.o: $(SRCDIR)/wvelcoef_fort.h
 $(SRCDIR)/wvelsrc.o: $(SRCDIR)/wvelsrc_fort.h
 $(SRCDIR)/hatvelcalpbc.o: $(SRCDIR)/hatvelcalpbc_fort.h
 $(SRCDIR)/uvelcoeffupdate.o: $(SRCDIR)/uvelcoeffupdate_fort.h
+$(SRCDIR)/dynamic_1loop.o: $(SRCDIR)/dynamic_1loop_fort.h
+$(SRCDIR)/dynamic_2loop.o: $(SRCDIR)/dynamic_2loop_fort.h
+$(SRCDIR)/dynamic_3loop.o: $(SRCDIR)/dynamic_3loop_fort.h
