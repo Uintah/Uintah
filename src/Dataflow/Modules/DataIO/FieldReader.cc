@@ -120,7 +120,6 @@ FieldReader::execute()
   const string::size_type loc = ftpre.find_first_of(" (");
   const string ft = ftpre.substr(0, loc);
 
-  cout << "ft = '" << ft << "'\n";
   importing_ = !(ft == "" ||
 		 ft == "SCIRun Field File" ||
 		 ft == "SCIRun Field Any");
