@@ -27,7 +27,7 @@ ifeq ($(LARGESOS),yes)
 PSELIBS := Uintah
 LIBS :=
 else
-PSELIBS := Uintah/Parallel Uintah/Components/MPM \
+PSELIBS := Uintah/Grid Uintah/Parallel Uintah/Components/MPM \
 	Uintah/Components/SimulationController Uintah/Components/ICE \
 	Uintah/Components/Schedulers Uintah/Components/Arches \
 	Uintah/Components/ProblemSpecification \
@@ -39,6 +39,10 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.5  2000/05/07 06:01:57  sparker
+# Added beginnings of multiple patch support and real dependencies
+#  for the scheduler
+#
 # Revision 1.4  2000/04/11 07:10:29  sparker
 # Completing initialization and problem setup
 # Finishing Exception modifications
