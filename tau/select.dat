@@ -1,6 +1,5 @@
 # Selective instrumentation: Specify an exclude/include list.
 
-
 BEGIN_EXCLUDE_LIST
 
 void Uintah::Patch::findCellAndShapeDerivatives(const SCIRun::Point &, SCIRun::IntVector *, SCIRun::Vector *) const  
