@@ -1,13 +1,9 @@
 #include <Packages/Uintah/CCA/Components/ICE/ICELabel.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/PerPatch.h>
-#include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 
