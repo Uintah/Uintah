@@ -1,5 +1,6 @@
 /*
   TODO:
+1) Delete tracers!
 2) Square Widget
 6) Surfaces IMPLEMENTED, not tested
 8) RK4
