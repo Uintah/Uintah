@@ -18,3 +18,7 @@ typedef ScalarFieldHandle _dummy4_;
 #include <Classlib/Array1.h>
 
 typedef Array1<int> _dummy5_;
+
+#include <Matrix.h>
+
+typedef LockingHandle<Matrix> _dummy6_;

@@ -56,6 +56,7 @@ void VectorField::get_bounds(Point& min, Point& max)
     if(!have_bounds){
 	compute_bounds();
 	have_bounds=1;
+	diagonal=bmax-bmin;
     }
     min=bmin;
     max=bmax;

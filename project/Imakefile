@@ -6,7 +6,7 @@ OBJS = CallbackCloners.o \
 	Color.o ColorManager.o  Connection.o  \
 	ContourSet.o  ContourSetPort.o  DBContext.o  Datatype.o  Dialbox.o  \
 	Geom.o  GeometryPort.o  \
-	HelpUI.o  MemStats.o  Mesh.o  \
+	HelpUI.o  MatrixPort.o  MemStats.o  Mesh.o  MeshPort.o  \
 	MessageBase.o  MenuBar.o  ModuleHelper.o  \
 	Module.o  ModuleList.o  MotifCallbackBase.o  \
 	MUI.o  \
@@ -24,7 +24,7 @@ SRCS = CallbackCloners.cc \
 	Color.cc ColorManager.cc Connection.cc \
 	ContourSet.cc ContourSetPort.cc DBContext.cc Datatype.cc Dialbox.cc \
 	Geom.cc GeometryPort.cc \
-	HelpUI.cc MemStats.cc Mesh.cc \
+	HelpUI.cc MatrixPort.cc MemStats.cc Mesh.cc MeshPort.cc \
 	MessageBase.cc MenuBar.cc ModuleHelper.cc \
 	Module.cc ModuleList.cc MotifCallbackBase.cc \
 	MUI.cc \

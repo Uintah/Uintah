@@ -61,6 +61,17 @@ double ScalarField::longest_dimension()
     return Max(diagonal.x(), diagonal.y(), diagonal.z());
 }
 
+void ScalarField::get_bounds(Point& min, Point& max)
+{
+    if(!have_bounds){
+	compute_bounds();
+	have_bounds=1;
+	diagonal=bmax-bmin;
+    }
+    max=bmax;
+    min=bmin;
+}
+
 #define SCALARFIELD_VERSION 1
 
 void ScalarField::io(Piostream& stream)

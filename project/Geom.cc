@@ -547,6 +547,7 @@ GeomPolyLine::~GeomPolyLine() {
 }
 
 void GeomPolyLine::objdraw(DrawInfo* di) {
+    cerr << "Drawing polyline...\n";
     di->polycount+=pts.size()-1;
     glBegin(GL_LINE_STRIP);
     for(int i=0;i<pts.size();i++){
@@ -665,25 +666,17 @@ void MaterialProp::set(DrawInfo* di)
 	return;
     float color[4];
     di->current_matl=this;
-    switch(di->drawtype){
-    case DrawInfo::WireFrame:
-    case DrawInfo::Flat:
-	diffuse.get_color(color);
-	glColor4fv(color);
-	break;
-    case DrawInfo::Gouraud:
-    case DrawInfo::Phong:
-	ambient.get_color(color);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, color);
-	diffuse.get_color(color);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, color);
-	specular.get_color(color);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, color);
-	emission.get_color(color);
-	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color);
-	break;
-    }
+    ambient.get_color(color);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, color);
+    diffuse.get_color(color);
+    glColor4fv(color);
+    cerr << "Setting color: diffuse=" << color[0] << ", " << color[1] << ", " << color[2] << endl;
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, color);
+    specular.get_color(color);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, color);
+    emission.get_color(color);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color);
 }
 
 DrawInfo::DrawInfo()
