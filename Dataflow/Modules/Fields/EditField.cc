@@ -169,7 +169,8 @@ void EditField::update_input_attributes(FieldHandle f)
 
   Point center,right,down,in;
   Vector size;
-  if (box_) {
+// if (box_) {
+ if (0) {
     // use geom info from widget
     box_->GetPosition(center, right, down, in);
     size = Vector((right-center).x()*2.,
@@ -178,8 +179,8 @@ void EditField::update_input_attributes(FieldHandle f)
   } else {
     // use geom info from bbox
     const BBox bbox = f->mesh()->get_bounding_box();
-    size = Vector(bbox.max()-bbox.min());
-    center = Point(bbox.min()+size/2.);
+    size = bbox.diagonal();
+    center = bbox.center();
   }
   TCL::execute(string("set ")+id+"-cx "+to_string(center.x()));
   TCL::execute(string("set ")+id+"-cy "+to_string(center.y()));
@@ -351,12 +352,12 @@ EditField::execute()
     return;
   }
 
-  // get and display the attributes of the input field
-  update_input_attributes(fh);
 
   // build the transform widget
   if (generation_ != fh.get_rep()->generation) {
     generation_ = fh.get_rep()->generation;
+    // get and display the attributes of the input field
+    update_input_attributes(fh);
     build_widget(fh);
   }
 
@@ -519,15 +520,8 @@ EditField::execute()
   }  
 
   // convert the transform into a matrix and send it out   
-  DenseMatrix *matrix_transform = scinew DenseMatrix(4,4);
+  DenseMatrix *matrix_transform = scinew DenseMatrix(t);
   MatrixHandle mh = matrix_transform;
-  double dummy[16];   
-  t.get(dummy);   
-  double *p=&(dummy[0]);   
-  for (int i=0; i<4; ++i)     
-    for (int j=0; j<4; ++j,++p)       
-      (*matrix_transform)[i][j]=*p;
-
   moport->send(mh);
 }
 
