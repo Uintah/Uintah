@@ -1,6 +1,7 @@
 #include "EquationOfStateFactory.h"
 #include "IdealGas.h"
 #include "Harlow.h"
+#include "StiffGas.h"
 #include <Uintah/Interface/ProblemSpec.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <fstream>
@@ -22,6 +23,10 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
       }
       if (mat_type == "harlow") {
 		 return(scinew Harlow(child));
+      }
+      if (mat_type == "stiff_gas") {
+		 return(scinew StiffGas(child));
+      }
       } else {
 	 cerr << "Unknown Material Type R (" << mat_type << ")" << std::endl;;
 	 //      exit(1);
@@ -30,6 +35,9 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
    return 0;
 }
 //$Log$
+//Revision 1.3  2000/10/31 04:14:28  jas
+//Added stiff gas EOS type.  It is just a copy of IdealGas.
+//
 //Revision 1.2  2000/10/26 23:43:14  jas
 //Added Harlow to factory.
 //

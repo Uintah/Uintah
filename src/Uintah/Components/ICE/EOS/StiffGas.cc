@@ -1,4 +1,4 @@
-#include <Uintah/Components/ICE/EOS/IdealGas.h>
+#include <Uintah/Components/ICE/EOS/StiffGas.h>
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/CellIterator.h>
@@ -11,31 +11,24 @@
 
 using namespace Uintah::ICESpace;
 
-IdealGas::IdealGas(ProblemSpecP& ps)
+StiffGas::StiffGas(ProblemSpecP& ps)
 {
    // Constructor
-  ps->require("gas_constant",d_gas_constant);
   lb = scinew ICELabel();
 
 }
 
-IdealGas::~IdealGas()
+StiffGas::~StiffGas()
 {
   delete lb;
 }
 
-
-double IdealGas::getGasConstant() const
-{
-  return d_gas_constant;
-}
-
-void IdealGas::initializeEOSData(const Patch* patch, const ICEMaterial* matl,
+void StiffGas::initializeEOSData(const Patch* patch, const ICEMaterial* matl,
 			    DataWarehouseP& new_dw)
 {
 }
 
-void IdealGas::addComputesAndRequiresSS(Task* task,
+void StiffGas::addComputesAndRequiresSS(Task* task,
 				 const ICEMaterial* matl, const Patch* patch,
 				 DataWarehouseP& old_dw,
 				 DataWarehouseP& new_dw) const
@@ -50,7 +43,7 @@ void IdealGas::addComputesAndRequiresSS(Task* task,
 
 }
 
-void IdealGas::addComputesAndRequiresRM(Task* task,
+void StiffGas::addComputesAndRequiresRM(Task* task,
 				 const ICEMaterial* matl, const Patch* patch,
 				 DataWarehouseP& old_dw,
 				 DataWarehouseP& new_dw) const
@@ -65,7 +58,7 @@ void IdealGas::addComputesAndRequiresRM(Task* task,
 
 }
 
-void IdealGas::addComputesAndRequiresPEOS(Task* task,
+void StiffGas::addComputesAndRequiresPEOS(Task* task,
 				 const ICEMaterial* matl, const Patch* patch,
 				 DataWarehouseP& old_dw,
 				 DataWarehouseP& new_dw) const
@@ -82,7 +75,7 @@ void IdealGas::addComputesAndRequiresPEOS(Task* task,
 
 
 
-void IdealGas::computeSpeedSound(const Patch* patch,
+void StiffGas::computeSpeedSound(const Patch* patch,
                                  const ICEMaterial* matl,
                                  DataWarehouseP& old_dw,
                                  DataWarehouseP& new_dw)
@@ -106,23 +99,21 @@ void IdealGas::computeSpeedSound(const Patch* patch,
     double dp_de   = (gamma - 1.0) * rho_micro[*iter];
     double press   = (gamma - 1.0) * rho_micro[*iter]*cv[*iter]*temp[*iter];
     double denom = rho_micro[*iter]*rho_micro[*iter];
-    speedSound[*iter] =  sqrt(dp_drho + dp_de* (press/(denom)));
+    speedSound[*iter] =  sqrt(dp_drho + dp_de* (press/(denom*denom)));
   }
-
-
 
   new_dw->put(speedSound,lb->speedSound_CCLabel,vfindex,patch);
 
 }
 
-double IdealGas::computeRhoMicro(double& press, double& gamma,
+double StiffGas::computeRhoMicro(double& press, double& gamma,
 				 double& cv, double& Temp)
 {
   // Pointwise computation of microscopic density
   return  press/((gamma - 1.0)*cv*Temp);
 }
 
-void IdealGas::computePressEOS(double& rhoM, double& gamma,
+void StiffGas::computePressEOS(double& rhoM, double& gamma,
 			       double& cv, double& Temp,
 			       double& press, double& dp_drho, double& dp_de)
 {
@@ -133,7 +124,7 @@ void IdealGas::computePressEOS(double& rhoM, double& gamma,
 }
 
 
-void IdealGas::computeRhoMicro(const Patch* patch,
+void StiffGas::computeRhoMicro(const Patch* patch,
 			       const ICEMaterial* matl,
                                DataWarehouseP& old_dw,
                                DataWarehouseP& new_dw)
@@ -162,7 +153,7 @@ void IdealGas::computeRhoMicro(const Patch* patch,
 
 }
 
-void IdealGas::computePressEOS(const Patch* patch,
+void StiffGas::computePressEOS(const Patch* patch,
                                const ICEMaterial* matl,
                                DataWarehouseP& old_dw,
                                DataWarehouseP& new_dw)
@@ -192,37 +183,8 @@ void IdealGas::computePressEOS(const Patch* patch,
 
 
 //$Log$
-//Revision 1.7  2000/10/31 04:14:28  jas
+//Revision 1.1  2000/10/31 04:14:28  jas
 //Added stiff gas EOS type.  It is just a copy of IdealGas.
 //
-//Revision 1.6  2000/10/27 23:39:54  jas
-//Added gas constant to lookup.
-//
-//Revision 1.5  2000/10/14 02:49:50  jas
-//Added implementation of compute equilibration pressure.  Still need to do
-//the update of BCS and hydrostatic pressure.  Still some issues with
-//computes and requires - will compile but won't run.
-//
-//Revision 1.4  2000/10/10 22:18:27  guilkey
-//Added some simple functions
-//
-//Revision 1.3  2000/10/10 20:35:12  jas
-//Move some stuff around.
-//
-//Revision 1.2  2000/10/09 22:37:04  jas
-//Cleaned up labels and added more computes and requires for EOS.
-//
-//Revision 1.1  2000/10/06 04:02:16  jas
-//Move into a separate EOS directory.
-//
-//Revision 1.3  2000/10/06 03:47:26  jas
-//Added computes for the initialization so that step 1 works.  Added a couple
-//of CC labels for step 1. Can now go thru multiple timesteps doing work
-//only in step 1.
-//
-//Revision 1.2  2000/10/05 04:26:48  guilkey
-//Added code for part of the EOS evaluation.
-//
-//Revision 1.1  2000/10/04 23:40:12  jas
-//The skeleton framework for an EOS model.  Does nothing.
-//
+
+
