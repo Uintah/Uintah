@@ -66,7 +66,7 @@ class EditTransferFunc2 : public Module {
   Window win_;
   int width_, height_;
   bool button_;
-  vector<CM2Widget*> widget_;
+  vector<CM2Widget*> widgets_;
   CM2ShaderFactory* shader_factory_;
   Pbuffer* pbuffer_;
   Array3<float> array_;
@@ -77,16 +77,17 @@ class EditTransferFunc2 : public Module {
   bool histo_dirty_;
   GLuint histo_tex_;
 
-  Colormap2Handle cmap_;
   bool cmap_dirty_;
   bool cmap_size_dirty_;
-  bool cmap_exec_dirty_;
   GLuint cmap_tex_;
   
   int pick_widget_; // Which widget is selected.
   int pick_object_; // The part of the widget that is selected.
 
   bool updating_; // updating the tf or not
+
+  GuiInt gui_faux_;
+  GuiDouble gui_histo_;
   
 public:
   EditTransferFunc2(GuiContext* ctx);
@@ -114,12 +115,13 @@ EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
     ctx_(0), dpy_(0), win_(0), button_(0), shader_factory_(0),
     pbuffer_(0), use_pbuffer_(true), use_back_buffer_(true),
     histo_(0), histo_dirty_(false), histo_tex_(0),
-    cmap_(new Colormap2),
-    cmap_dirty_(true), cmap_exec_dirty_(true), cmap_tex_(0),
-    pick_widget_(-1), pick_object_(0), updating_(false)
+    cmap_dirty_(true), cmap_tex_(0),
+    pick_widget_(-1), pick_object_(0), updating_(false),
+    gui_faux_(ctx->subVar("faux")),
+    gui_histo_(ctx->subVar("histo"))
 {
-  widget_.push_back(scinew TriangleCM2Widget());
-  widget_.push_back(scinew RectangleCM2Widget());
+  widgets_.push_back(scinew TriangleCM2Widget());
+  widgets_.push_back(scinew RectangleCM2Widget());
   //widget_.push_back(scinew RectangleCM2Widget());
 }
 
@@ -131,7 +133,7 @@ EditTransferFunc2::~EditTransferFunc2()
   // Clean up currently unmemorymanaged widgets.
   //for (unsigned int i = 0; i < widget_.size(); i++)
   //{
-  //delete widget_[i];
+  //delete widgets_[i];
   //}
   //widget_.clear();
 }
@@ -171,6 +173,14 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
   } else if (args[1] == "expose") {
     //cerr << "EVENT: expose" << endl;
     redraw();
+  } else if (args[1] == "redraw") {
+    //cerr << "EVENT: expose" << endl;
+    reset_vars();
+    redraw();
+  } else if (args[1] == "redrawcmap") {
+    //cerr << "EVENT: expose" << endl;
+    cmap_dirty_ = true;
+    redraw();
   } else if (args[1] == "closewindow") {
     //cerr << "EVENT: close" << endl;
     ctx_ = 0;
@@ -190,34 +200,34 @@ EditTransferFunc2::push(int x, int y, int button)
 
   button_ = button;
 
-  for (i = 0; i < widget_.size(); i++)
+  for (i = 0; i < widgets_.size(); i++)
   {
-    widget_[i]->unselect_all();
+    widgets_[i]->unselect_all();
   }
 
   pick_widget_ = -1;
   pick_object_ = 0;
-  for (unsigned int i = 0; i < widget_.size(); i++)
+  for (unsigned int i = 0; i < widgets_.size(); i++)
   {
-    const int tmp = widget_[i]->pick1(x, height_-1-y, width_, height_);
+    const int tmp = widgets_[i]->pick1(x, height_-1-y, width_, height_);
     if (tmp)
     {
       pick_widget_ = i;
       pick_object_ = tmp;
-      widget_[i]->select(tmp);
+      widgets_[i]->select(tmp);
       break;
     }
   }
   if (pick_widget_ == -1)
   {
-    for (unsigned int i = 0; i < widget_.size(); i++)
+    for (unsigned int i = 0; i < widgets_.size(); i++)
     {
-      const int tmp = widget_[i]->pick2(x, height_-1-y, width_, height_);
+      const int tmp = widgets_[i]->pick2(x, height_-1-y, width_, height_);
       if (tmp)
       {
 	pick_widget_ = i;
 	pick_object_ = tmp;
-	widget_[i]->select(tmp);
+	widgets_[i]->select(tmp);
 	break;
       }
     }
@@ -236,11 +246,11 @@ EditTransferFunc2::motion(int x, int y)
 
   if (pick_widget_ != -1)
   {
-    widget_[pick_widget_]->move(pick_object_, x, height_-1-y, width_, height_);
+    widgets_[pick_widget_]->move(pick_object_, x, height_-1-y, width_, height_);
     cmap_dirty_ = true;
-    cmap_exec_dirty_ = true;
     updating_ = true;
     redraw();
+    want_to_execute();
   }
 }
 
@@ -254,11 +264,11 @@ EditTransferFunc2::release(int x, int y, int button)
   button_ = 0;
   if (pick_widget_ != -1)
   {
-    widget_[pick_widget_]->release(pick_object_, x, height_-1-y, width_, height_);
+    widgets_[pick_widget_]->release(pick_object_, x, height_-1-y, width_, height_);
     updating_ = false;
     cmap_dirty_ = true;
-    cmap_exec_dirty_ = true;
     redraw();
+    want_to_execute();
   }
 }
 
@@ -296,18 +306,10 @@ EditTransferFunc2::execute()
     redraw();
   }
 
-  if(cmap_exec_dirty_) {
-    cmap_->lock_widgets();
-    cmap_->set_widgets(widget_);
-    cmap_->set_updating(updating_);
-    cmap_->set_dirty(true);
-    cmap_->unlock_widgets();
-    cmap_exec_dirty_ = false;
-  }
-
   Colormap2OPort* cmap_port = (Colormap2OPort*)get_oport("Output Colormap");
   if(cmap_port) {
-    cmap_port->send(cmap_);
+    Colormap2Handle cmap(scinew Colormap2(widgets_, updating_, gui_faux_.get()));
+    cmap_port->send(cmap);
   }
 }
 
@@ -402,8 +404,8 @@ EditTransferFunc2::redraw()
       glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     
       // Rasterize widgets
-      for (unsigned int i=0; i<widget_.size(); i++) {
-        widget_[i]->rasterize(*shader_factory_);
+      for (unsigned int i=0; i<widgets_.size(); i++) {
+        widgets_[i]->rasterize(*shader_factory_, gui_faux_.get());
       }
 
       glDisable(GL_BLEND);
@@ -428,8 +430,8 @@ EditTransferFunc2::redraw()
         }
       }
       // rasterize widgets
-      for (unsigned int i=0; i<widget_.size(); i++) {
-	widget_[i]->rasterize(array_);
+      for (unsigned int i=0; i<widgets_.size(); i++) {
+	widgets_[i]->rasterize(array_, gui_faux_.get());
       }
       // update texture
       if(cmap_size_dirty) {
@@ -502,8 +504,8 @@ EditTransferFunc2::redraw()
     // rasterize widgets into back buffer
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    for(unsigned int i=0; i<widget_.size(); i++) {
-      widget_[i]->rasterize(*shader_factory_);
+    for(unsigned int i=0; i<widgets_.size(); i++) {
+      widgets_[i]->rasterize(*shader_factory_, gui_faux_.get());
     }
 
     glBlendFunc(GL_ONE, GL_DST_ALPHA);
@@ -513,7 +515,8 @@ EditTransferFunc2::redraw()
       glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
       glEnable(GL_TEXTURE_2D);
       glBindTexture(GL_TEXTURE_2D, histo_tex_);
-      glColor4f(0.75, 0.75, 0.75, 1.0);
+      double alpha = gui_histo_.get();
+      glColor4f(alpha, alpha, alpha, 1.0);
       glBegin(GL_QUADS);
       {
         glTexCoord2f( 0.0,  0.0);
@@ -547,7 +550,8 @@ EditTransferFunc2::redraw()
       glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
       glEnable(GL_TEXTURE_2D);
       glBindTexture(GL_TEXTURE_2D, histo_tex_);
-      glColor4f(0.75, 0.75, 0.75, 1.0);
+      double alpha = gui_histo_.get();
+      glColor4f(alpha, alpha, alpha, 1.0);
       glBegin(GL_QUADS);
       {
         glTexCoord2f( 0.0,  0.0);
@@ -595,8 +599,8 @@ EditTransferFunc2::redraw()
   }
   
   // draw widgets
-  for(unsigned int i=0; i<widget_.size(); i++) {
-    widget_[i]->draw();
+  for(unsigned int i=0; i<widgets_.size(); i++) {
+    widgets_[i]->draw();
   }
   
   glXSwapBuffers(dpy_, win_);

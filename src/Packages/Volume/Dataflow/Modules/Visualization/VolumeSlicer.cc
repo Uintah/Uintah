@@ -284,10 +284,7 @@ void
   ogeom_->flushViews();		  
   //AuditAllocator(default_allocator);
   
-  if(!ocmap_ || !cmap1.get_rep()) {
-    error("Unable to initialize oport 'Color Map'.");
-    return;
-  } else {
+  if(ocmap_ && cmap1.get_rep()) {
     ColorMapHandle outcmap;
     outcmap = new ColorMap(*cmap1.get_rep()); 
     double vmin, vmax, gmin, gmax;

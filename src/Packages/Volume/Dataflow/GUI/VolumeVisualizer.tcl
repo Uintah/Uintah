@@ -25,10 +25,6 @@ itcl_class Volume_Visualization_VolumeVisualizer {
 	set_defaults
     }
     method set_defaults {} {
-	global $this-num_slices_lo
-	set $this-num_slices_lo 128
-	global $this-num_slices_hi
-	set $this-num_slices_hi 768
 	global $this-sampling_rate_lo
 	set $this-sampling_rate_lo 1.0
 	global $this-sampling_rate_hi
@@ -37,6 +33,8 @@ itcl_class Volume_Visualization_VolumeVisualizer {
         set $this-adaptive 1
         global $this-cmap_size
         set $this-cmap_size 7
+        global $this-sw_raster
+        set $this-sw_raster 0
 	global $this-alpha_scale
 	set $this-alpha_scale 0
 	global $this-render_style
@@ -180,7 +178,7 @@ itcl_class Volume_Visualization_VolumeVisualizer {
         label $w.tf.l -text "Transfer Function"
 
 	scale $w.tf.stransp -variable $this-alpha_scale \
-		-from -1.0 -to 1.0 -label "Slice Transparency" \
+		-from -1.0 -to 1.0 -label "Global Opacity" \
 		-showvalue true -resolution 0.001 \
 		-orient horizontal 
 
@@ -189,7 +187,11 @@ itcl_class Volume_Visualization_VolumeVisualizer {
 		-showvalue true -resolution 1 \
 		-orient horizontal \
 
-	pack $w.tf.l $w.tf.stransp $w.tf.cmap_size \
+	checkbutton $w.tf.sw -text "Software Rasterization" -relief flat \
+            -variable $this-sw_raster -onvalue 1 -offvalue 0 \
+            -anchor w -command "$n"
+
+	pack $w.tf.l $w.tf.stransp $w.tf.cmap_size $w.tf.sw \
             -side top -fill x -padx 4 -pady 2
 
         bind $w.f6.ambient <ButtonRelease> $n

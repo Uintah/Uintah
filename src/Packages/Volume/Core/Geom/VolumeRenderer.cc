@@ -390,7 +390,7 @@ VolumeRenderer::draw()
   Ray viewRay;
   compute_view(viewRay);
 
-  if(adaptive_ && ((cmap2_.get_rep() && cmap2_->is_updating()) || di_->mouse_action))
+  if(adaptive_ && ((cmap2_.get_rep() && cmap2_->updating()) || di_->mouse_action))
     set_interactive_mode(true);
   else
     set_interactive_mode(false);
@@ -630,6 +630,9 @@ VolumeRenderer::draw_wireframe()
   glPushMatrix();
   glMultMatrixd(mvmat);
   glEnable(GL_DEPTH_TEST);
+  int lighting;
+  glGetIntegerv(GL_LIGHTING, &lighting);
+  glDisable(GL_LIGHTING);
   vector<Brick*> bricks;
   tex_->get_sorted_bricks(bricks, viewRay);
   vector<Brick*>::iterator it = bricks.begin();
@@ -656,7 +659,9 @@ VolumeRenderer::draw_wireframe()
     glVertex3d(brick[6].x(), brick[6].y(), brick[6].z());
     glEnd();
   }
-  glDisable(GL_DEPTH_TEST);
+  if(lighting)
+    glEnable(GL_LIGHTING);
+  //glDisable(GL_DEPTH_TEST);
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
 }

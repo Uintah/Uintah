@@ -71,6 +71,7 @@ public:
   void set_colormap2(Colormap2Handle cmap2);
   void set_colormap_size(int size);
   void set_slice_alpha(double alpha);
+  void set_sw_raster(bool b);
   inline void set_interp(bool i) { interp_ = i; }
   
   enum RenderMode { MODE_NONE, MODE_OVER, MODE_MIP, MODE_SLICE };
@@ -106,6 +107,7 @@ protected:
   double irate_;
   bool imode_;
   double slice_alpha_;
+  bool sw_raster_;
   DrawInfoOpenGL* di_;
 
 #ifdef SCI_OPENGL  

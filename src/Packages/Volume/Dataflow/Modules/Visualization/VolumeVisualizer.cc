@@ -84,6 +84,7 @@ private:
   GuiDouble gui_sampling_rate_lo_;
   GuiInt gui_adaptive_;
   GuiInt gui_cmap_size_;
+  GuiInt gui_sw_raster_;
   GuiInt gui_render_style_;
   GuiDouble gui_alpha_scale_;
   GuiInt gui_interp_mode_;
@@ -111,6 +112,7 @@ VolumeVisualizer::VolumeVisualizer(GuiContext* ctx)
     gui_sampling_rate_lo_(ctx->subVar("sampling_rate_lo")),
     gui_adaptive_(ctx->subVar("adaptive")),
     gui_cmap_size_(ctx->subVar("cmap_size")),
+    gui_sw_raster_(ctx->subVar("sw_raster")),
     gui_render_style_(ctx->subVar("render_style")),
     gui_alpha_scale_(ctx->subVar("alpha_scale")),
     gui_interp_mode_(ctx->subVar("interp_mode")),
@@ -167,28 +169,20 @@ VolumeVisualizer::execute(){
 
   bool cmap1_dirty = false;
   bool cmap2_dirty = false;
-  if(c1 && cmap1->generation != cmap1_prevgen) {
+  if(c1 && (cmap1->generation != cmap1_prevgen)) {
     cmap1_dirty = true;
   }    
-  if(c2 && cmap2->generation != cmap2_prevgen) {
+  if(c2 && (cmap2->generation != cmap2_prevgen)) {
     cmap2_dirty = true;
   }    
   if(c1) cmap1_prevgen = cmap1->generation;
   if(c2) cmap2_prevgen = cmap2->generation;
-  
-//   if(!control_widget){
-//     control_widget=scinew PointWidget(this, &control_lock, 0.2);
-//     Transform trans = tex->get_field_transform();
-//     Point Smin(trans.project(tex->min()));
-//     Point Smax(trans.project(tex->max()));
 
-//     double max =  std::max(Smax.x() - Smin.x(), Smax.y() - Smin.y());
-//     max = std::max( max, Smax.z() - Smin.z());
-//     control_widget->SetPosition(Interpolate(Smin,Smax,0.5));
-//     control_widget->SetScale(max/80.0);
-//   }
+//   cerr << "EXISTS: " << c1 << " " << c2 << endl;
+//   cerr << "DIRTY: " << cmap1_dirty << " " << cmap2_dirty << endl;
+//   if (c1) cerr << "GEN: " << cmap1->generation << " " << cmap1_prevgen << endl;
+//   if (c2) cerr << "GEN: " << cmap2->generation << " " << cmap2_prevgen << endl;
 
-  //AuditAllocator(default_allocator);
   if(!volren_) {
     volren_ = new VolumeRenderer(tex, cmap1, cmap2);
     oldmin = tex->min();
@@ -198,9 +192,9 @@ VolumeVisualizer::execute(){
     geomID = ogeom->addObj(volren_, "VolumeRenderer TransParent");
   } else {
     volren_->set_texture(tex);
-    if(cmap1_dirty)
+    if(c1 && cmap1_dirty)
       volren_->set_colormap1(cmap1);
-    if(cmap2_dirty)
+    if(c2 && cmap2_dirty)
       volren_->set_colormap2(cmap2);
     int ni, nj, nk;
     tex->get_dimensions(ni, nj, nk);
@@ -233,6 +227,7 @@ VolumeVisualizer::execute(){
   volren_->set_adaptive(gui_adaptive_.get());
   volren_->set_colormap_size(1 << gui_cmap_size_.get());
   volren_->set_slice_alpha(gui_alpha_scale_.get());
+  volren_->set_sw_raster(gui_sw_raster_.get());
   volren_->set_shading(gui_shading_.get());
   volren_->set_material(gui_ambient_.get(), gui_diffuse_.get(),
                         gui_specular_.get(), gui_shine_.get());

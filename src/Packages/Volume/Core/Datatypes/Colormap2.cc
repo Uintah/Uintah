@@ -53,24 +53,20 @@ void Colormap2::io(Piostream&)
 }
 
 Colormap2::Colormap2()
-  : dirty_(false), updating_(false),
-    widget_lock_("Colormap2 widget lock")
+  : updating_(false)
 {}
+
+Colormap2::Colormap2(vector<CM2Widget*>& widgets, bool updating, bool faux)
+  : updating_(updating), faux_(faux)
+{
+  for(unsigned int i=0; i<widgets.size(); i++)
+    widgets_.push_back(widgets[i]->clone());
+}
 
 Colormap2::~Colormap2()
 {
- for(unsigned int i=0; i<widget_.size(); i++)
-    delete widget_[i];
-}
-
-void
-Colormap2::set_widgets(vector<CM2Widget*>& widgets)
-{
-  for(unsigned int i=0; i<widget_.size(); i++)
-    delete widget_[i];
-  widget_.clear();
-  for(unsigned int i=0; i<widgets.size(); i++)
-    widget_.push_back(widgets[i]->clone());
+  for(unsigned int i=0; i<widgets_.size(); i++)
+    delete widgets_[i];
 }
 
 } // End namespace Volume
