@@ -13,7 +13,6 @@
 
 #include <config.h>
 #include <stdio.h>
-#include <Datatypes/Clock.h>
 
 #ifdef SCI_SPARSELIB
 #include "comprow_double.h"        //compressed row matrix storage
@@ -47,7 +46,6 @@
 #include <Datatypes/SparseRowMatrix.h>
 #include <Datatypes/MatrixPort.h>
 #include <Datatypes/SurfacePort.h>
-#include <Datatypes/Barrier.h>
 #include <Geometry/Point.h>
 #include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
@@ -55,11 +53,6 @@
 
 #include <Multitask/Task.h>
 
-//#define FAST_BARRIER
-
-volatile iotimer_t counter_value, *iotimer_addr;
-unsigned int cycleval;
-iotimer_t time[64][13];
 
 struct CGData;
 
@@ -140,8 +133,6 @@ SolveMatrix::SolveMatrix(const clString& id)
 
     solport=scinew ColumnMatrixOPort(this, "Solution", ColumnMatrixIPort::Atomic);
     add_oport(solport);
-
-    init_clock();
 }
 
 SolveMatrix::SolveMatrix(const SolveMatrix& copy, int deep)
@@ -904,19 +895,15 @@ struct CGData {
   ColumnMatrix* P1;
   Matrix *trans;
   //
-    double max_error;
-#ifdef FAST_BARRIER
-    FBarrier barrier;
-#else
-    Barrier barrier;
-#endif
-    int np;
-    Result* res1;
-    Result* res2;
-    Result* res3;
-    PStats* stats;
-    double err;
-    double bnorm;
+  double max_error;
+  Barrier barrier;
+  int np;
+  Result* res1;
+  Result* res2;
+  Result* res3;
+  PStats* stats;
+  double err;
+  double bnorm;
 };
 
 
