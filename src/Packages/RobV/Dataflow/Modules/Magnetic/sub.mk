@@ -10,12 +10,10 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/RobV/Dataflow/Modules/Quadratic
+SRCDIR   := Packages/RobV/Dataflow/Modules/Magnetic
 
 SRCS     += \
-	$(SRCDIR)/BuildFEMatrixQuadratic.cc\
-	$(SRCDIR)/DipoleMatrixSourceRHSQuadratic.cc\
-	$(SRCDIR)/TetVol2QuadraticTetVol.cc\
+	$(SRCDIR)/ForwardMEG.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
