@@ -93,26 +93,6 @@ public:
   virtual ScanlineMesh *clone() { return new ScanlineMesh(*this); }
   virtual ~ScanlineMesh() {}
 
-  template <class I> I tbegin(I*) const;
-  template <class I> I tend(I*) const;
-  template <class S> S tsize(S*) const;
-
-  Node::iterator  node_begin() const;
-  Node::iterator  node_end() const;
-  Node::size_type nodes_size() const;
-
-  Edge::iterator  edge_begin() const;
-  Edge::iterator  edge_end() const;
-  Edge::size_type edges_size() const;
-
-  Face::iterator  face_begin() const;
-  Face::iterator  face_end() const;
-  Face::size_type faces_size() const;
-
-  Cell::iterator  cell_begin() const;
-  Cell::iterator  cell_end() const;
-  Cell::size_type cells_size() const;
-
   //! get the mesh statistics
   unsigned get_length() const { return length_; }
   //Point get_min() const { return min_; }
@@ -120,6 +100,21 @@ public:
   Vector diagonal() const { return get_bounding_box().diagonal(); }
   virtual BBox get_bounding_box() const;
   virtual void transform(Transform &t);
+
+  void begin(Node::iterator &) const;
+  void begin(Edge::iterator &) const;
+  void begin(Face::iterator &) const;
+  void begin(Cell::iterator &) const;
+
+  void end(Node::iterator &) const;
+  void end(Edge::iterator &) const;
+  void end(Face::iterator &) const;
+  void end(Cell::iterator &) const;
+
+  void size(Node::size_type &) const;
+  void size(Edge::size_type &) const;
+  void size(Face::size_type &) const;
+  void size(Cell::size_type &) const;
 
   //! set the mesh statistics
   //void set_offset(unsigned int x) { offset_ = x; }
@@ -200,21 +195,6 @@ private:
 };
 
 typedef LockingHandle<ScanlineMesh> ScanlineMeshHandle;
-
-template <> ScanlineMesh::Node::size_type ScanlineMesh::tsize(ScanlineMesh::Node::size_type *) const;
-template <> ScanlineMesh::Edge::size_type ScanlineMesh::tsize(ScanlineMesh::Edge::size_type *) const;
-template <> ScanlineMesh::Face::size_type ScanlineMesh::tsize(ScanlineMesh::Face::size_type *) const;
-template <> ScanlineMesh::Cell::size_type ScanlineMesh::tsize(ScanlineMesh::Cell::size_type *) const;
-				
-template <> ScanlineMesh::Node::iterator ScanlineMesh::tbegin(ScanlineMesh::Node::iterator *) const;
-template <> ScanlineMesh::Edge::iterator ScanlineMesh::tbegin(ScanlineMesh::Edge::iterator *) const;
-template <> ScanlineMesh::Face::iterator ScanlineMesh::tbegin(ScanlineMesh::Face::iterator *) const;
-template <> ScanlineMesh::Cell::iterator ScanlineMesh::tbegin(ScanlineMesh::Cell::iterator *) const;
-				
-template <> ScanlineMesh::Node::iterator ScanlineMesh::tend(ScanlineMesh::Node::iterator *) const;
-template <> ScanlineMesh::Edge::iterator ScanlineMesh::tend(ScanlineMesh::Edge::iterator *) const;
-template <> ScanlineMesh::Face::iterator ScanlineMesh::tend(ScanlineMesh::Face::iterator *) const;
-template <> ScanlineMesh::Cell::iterator ScanlineMesh::tend(ScanlineMesh::Cell::iterator *) const;
 
 const TypeDescription* get_type_description(ScanlineMesh *);
 const TypeDescription* get_type_description(ScanlineMesh::Node *);

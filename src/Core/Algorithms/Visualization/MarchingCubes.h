@@ -123,8 +123,9 @@ MarchingCubes<Tesselator>::search( double iso, bool build_trisurf )
 {
   if ( np_ == 1 ) {
     tess_[0]->reset(0, build_trisurf);
-    typename mesh_type::Cell::iterator cell = mesh_->cell_begin(); 
-    while ( cell != mesh_->cell_end() )
+    typename mesh_type::Cell::iterator cell; mesh_->begin(cell); 
+    typename mesh_type::Cell::iterator cell_end; mesh_->end(cell_end); 
+    while ( cell != cell_end)
     {
       tess_[0]->extract( *cell, iso );
       ++cell;
@@ -156,16 +157,19 @@ MarchingCubes<Tesselator>::search( double iso, bool build_trisurf )
 template<class Tesselator>
 void 
 MarchingCubes<Tesselator>::parallel_search( int proc, 
-					       double iso, bool build_trisurf)
+					    double iso, bool build_trisurf)
 {
   tess_[proc]->reset(0, build_trisurf);
-  int n = mesh_->cells_size();
+  typename mesh_type::Cell::size_type csize;
+  mesh_->size(csize);
+  unsigned int n = csize;
   
-  typename mesh_type::Cell::iterator from = mesh_->cell_begin();
-  int i;
-  for ( i=0; i<(proc*(n/np_)); i++) ++from;
+  typename mesh_type::Cell::iterator from; mesh_->begin(from);
+  unsigned int i;
+  for ( i=0; i<(proc*(n/np_)); i++) { ++from; }
   
-  for ( int last = (proc < np_-1) ? (proc+1)*(n/np_) : n; i<last; i++) {
+  for ( int last = (proc < np_-1) ? (proc+1)*(n/np_) : n; i<last; i++)
+  {
     tess_[proc]->extract( *from, iso );
     ++from;
   }

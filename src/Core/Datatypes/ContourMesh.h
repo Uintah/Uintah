@@ -120,24 +120,20 @@ public:
   virtual ContourMesh *clone() { return new ContourMesh(*this); }
   virtual ~ContourMesh() {}
 
-  template <class I> I tbegin(I*) const;
-  template <class I> I tend(I*) const;
-  template <class S> S tsize(S*) const;
+  void begin(Node::iterator &) const;
+  void begin(Edge::iterator &) const;
+  void begin(Face::iterator &) const;
+  void begin(Cell::iterator &) const;
 
-  Node::iterator node_begin() const;
-  Node::iterator node_end() const;
-  Edge::iterator edge_begin() const;
-  Edge::iterator edge_end() const;
-  Face::iterator face_begin() const;
-  Face::iterator face_end() const;
-  Cell::iterator cell_begin() const;
-  Cell::iterator cell_end() const;
+  void end(Node::iterator &) const;
+  void end(Edge::iterator &) const;
+  void end(Face::iterator &) const;
+  void end(Cell::iterator &) const;
 
-  //! get the mesh statistics
-  Node::size_type nodes_size() const;
-  Edge::size_type edges_size() const;
-  Face::size_type faces_size() const;
-  Cell::size_type cells_size() const;
+  void size(Node::size_type &) const;
+  void size(Edge::size_type &) const;
+  void size(Face::size_type &) const;
+  void size(Cell::size_type &) const;
 
   virtual BBox get_bounding_box() const;
   virtual void transform(Transform &t);
@@ -217,21 +213,6 @@ private:
 };
 
 typedef LockingHandle<ContourMesh> ContourMeshHandle;
-
-template <> ContourMesh::Node::size_type ContourMesh::tsize(ContourMesh::Node::size_type *) const;
-template <> ContourMesh::Edge::size_type ContourMesh::tsize(ContourMesh::Edge::size_type *) const;
-template <> ContourMesh::Face::size_type ContourMesh::tsize(ContourMesh::Face::size_type *) const;
-template <> ContourMesh::Cell::size_type ContourMesh::tsize(ContourMesh::Cell::size_type *) const;
-				
-template <> ContourMesh::Node::iterator ContourMesh::tbegin(ContourMesh::Node::iterator *) const;
-template <> ContourMesh::Edge::iterator ContourMesh::tbegin(ContourMesh::Edge::iterator *) const;
-template <> ContourMesh::Face::iterator ContourMesh::tbegin(ContourMesh::Face::iterator *) const;
-template <> ContourMesh::Cell::iterator ContourMesh::tbegin(ContourMesh::Cell::iterator *) const;
-				
-template <> ContourMesh::Node::iterator ContourMesh::tend(ContourMesh::Node::iterator *) const;
-template <> ContourMesh::Edge::iterator ContourMesh::tend(ContourMesh::Edge::iterator *) const;
-template <> ContourMesh::Face::iterator ContourMesh::tend(ContourMesh::Face::iterator *) const;
-template <> ContourMesh::Cell::iterator ContourMesh::tend(ContourMesh::Cell::iterator *) const;
 
 const TypeDescription* get_type_description(ContourMesh *);
 const TypeDescription* get_type_description(ContourMesh::Node *);

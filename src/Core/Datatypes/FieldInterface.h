@@ -210,8 +210,8 @@ SFInterface<F>::compute_min_max(double &minout, double &maxout) const
   {
   case F::NODE:
     {
-      typename F::mesh_type::Node::iterator bi = mesh->node_begin();
-      typename F::mesh_type::Node::iterator ei = mesh->node_end();
+      typename F::mesh_type::Node::iterator bi; mesh->begin(bi);
+      typename F::mesh_type::Node::iterator ei; mesh->end(ei);
       while (bi != ei)
       {
 	typename F::value_type val;
@@ -228,8 +228,8 @@ SFInterface<F>::compute_min_max(double &minout, double &maxout) const
 
   case F::EDGE:
     {
-      typename F::mesh_type::Edge::iterator bi = mesh->edge_begin();
-      typename F::mesh_type::Edge::iterator ei = mesh->edge_end();
+      typename F::mesh_type::Edge::iterator bi; mesh->begin(bi);
+      typename F::mesh_type::Edge::iterator ei; mesh->end(ei);
       while (bi != ei)
       {
 	typename F::value_type val;
@@ -246,8 +246,8 @@ SFInterface<F>::compute_min_max(double &minout, double &maxout) const
 
   case F::FACE:
     {
-      typename F::mesh_type::Face::iterator bi = mesh->face_begin();
-      typename F::mesh_type::Face::iterator ei = mesh->face_end();
+      typename F::mesh_type::Face::iterator bi; mesh->begin(bi);
+      typename F::mesh_type::Face::iterator ei; mesh->end(ei);
       while (bi != ei)
       {
 	typename F::value_type val;
@@ -264,8 +264,8 @@ SFInterface<F>::compute_min_max(double &minout, double &maxout) const
 
   case F::CELL:
     {
-      typename F::mesh_type::Cell::iterator bi = mesh->cell_begin();
-      typename F::mesh_type::Cell::iterator ei = mesh->cell_end();
+      typename F::mesh_type::Cell::iterator bi; mesh->begin(bi);
+      typename F::mesh_type::Cell::iterator ei; mesh->end(ei);
       while (bi != ei)
       {
 	typename F::value_type val;
@@ -458,8 +458,8 @@ VFInterface<F>::compute_min_max(Vector  &minout, Vector  &maxout) const
   {
   case F::NODE:
     {
-      typename F::mesh_type::Node::iterator bi = mesh->node_begin();
-      typename F::mesh_type::Node::iterator ei = mesh->node_end();
+      typename F::mesh_type::Node::iterator bi; mesh->begin(bi);
+      typename F::mesh_type::Node::iterator ei; mesh->end(ei);
       while (bi != ei)
       {
 	typename F::value_type val;
@@ -481,8 +481,8 @@ VFInterface<F>::compute_min_max(Vector  &minout, Vector  &maxout) const
 
   case F::EDGE:
     {
-      typename F::mesh_type::Edge::iterator bi = mesh->edge_begin();
-      typename F::mesh_type::Edge::iterator ei = mesh->edge_end();
+      typename F::mesh_type::Edge::iterator bi; mesh->begin(bi);
+      typename F::mesh_type::Edge::iterator ei; mesh->end(ei);
       while (bi != ei)
       {
 	typename F::value_type val;
@@ -504,8 +504,8 @@ VFInterface<F>::compute_min_max(Vector  &minout, Vector  &maxout) const
 
   case F::FACE:
     {
-      typename F::mesh_type::Face::iterator bi = mesh->face_begin();
-      typename F::mesh_type::Face::iterator ei = mesh->face_end();
+      typename F::mesh_type::Face::iterator bi; mesh->begin(bi);
+      typename F::mesh_type::Face::iterator ei; mesh->end(ei);
       while (bi != ei)
       {
 	typename F::value_type val;
@@ -527,8 +527,8 @@ VFInterface<F>::compute_min_max(Vector  &minout, Vector  &maxout) const
 
   case F::CELL:
     {
-      typename F::mesh_type::Cell::iterator bi = mesh->cell_begin();
-      typename F::mesh_type::Cell::iterator ei = mesh->cell_end();
+      typename F::mesh_type::Cell::iterator bi; mesh->begin(bi);
+      typename F::mesh_type::Cell::iterator ei; mesh->end(ei);
       while (bi != ei)
       {
 	typename F::value_type val;

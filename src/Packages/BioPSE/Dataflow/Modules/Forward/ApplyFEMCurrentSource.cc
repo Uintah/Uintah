@@ -148,13 +148,15 @@ void ApplyFEMCurrentSource::execute()
   MatrixHandle  hRhsIn;
   ColumnMatrix* rhsIn;
   
-  ColumnMatrix* rhs = scinew ColumnMatrix(hMesh->nodes_size());
+  TetVolMesh::Node::size_type nsize; hMesh->size(nsize);
+  ColumnMatrix* rhs = scinew ColumnMatrix(nsize);
  
   // -- if the user passed in a vector the right size, copy it into ours 
   if (iportRhs_->get(hRhsIn) && 
       (rhsIn=dynamic_cast<ColumnMatrix*>(hRhsIn.get_rep())) && 
-      (rhsIn->nrows()==hMesh->nodes_size())){
-    for (int i=0; i<hMesh->nodes_size(); i++) 
+      (rhsIn->nrows() == nsize))
+  {
+    for (int i=0; i < nsize; i++) 
       (*rhs)[i]=(*rhsIn)[i];
   }
   else{
@@ -181,9 +183,11 @@ void ApplyFEMCurrentSource::execute()
   
     //! Computing contributions of dipoles to RHS
     PointCloudMesh::Node::iterator ii;
+    PointCloudMesh::Node::iterator ii_end;
     Array1<double> weights;
-    for (ii=hDipField->get_typed_mesh()->node_begin(); 
-	 ii!=hDipField->get_typed_mesh()->node_end(); ++ii) {
+    hDipField->get_typed_mesh()->begin(ii);
+    hDipField->get_typed_mesh()->end(ii_end);
+    for (; ii != ii_end; ++ii) {
       
       Vector dir = hDipField->value(*ii);
       Point p;
@@ -247,8 +251,8 @@ void ApplyFEMCurrentSource::execute()
 	return;
       }
     }
-    if (sourceNode >= hMesh->nodes_size() ||
-	sinkNode >= hMesh->nodes_size()) {
+    if (sourceNode >= nsize || sinkNode >= nsize)
+    {
       cerr << "SourceNode or SinkNode was out of mesh range.\n";
       return;
     }

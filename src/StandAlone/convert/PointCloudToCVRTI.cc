@@ -68,9 +68,13 @@ main(int argc, char **argv) {
   char fname[200];
   sprintf(fname, "%s.pts", argv[2]);
   FILE *fpts = fopen(fname, "wt");
-  PointCloudMesh::Node::iterator niter = tsm->node_begin();
-  cerr << "Writing "<<tsm->nodes_size()<<" points to "<<fname<<"\n";
-  while(niter != tsm->node_end()) {
+  PointCloudMesh::Node::iterator niter; tsm->begin(niter);
+  PointCloudMesh::Node::iterator niter_end; tsm->end(niter_end);
+  PointCloudMesh::Node::size_type nsize; tsm->size(nsize);
+  const unsigned int s = nsize;
+  cerr << "Writing "<< s << " points to " << fname << "\n";
+  while(niter != niter_end)
+  {
     Point p;
     tsm->get_center(p, *niter);
     fprintf(fpts, "%lf %lf %lf\n", p.x(), p.y(), p.z());
@@ -83,7 +87,7 @@ main(int argc, char **argv) {
     sprintf(fname, "%s.grad", argv[2]);
     FILE *fgrad = fopen(fname, "wt");
     cerr << "Writing "<<fld->fdata().size()<<" vectors to "<<fname<<"\n";
-    for (int i=0; i<fld->fdata().size(); i++) {
+    for (unsigned int i=0; i<fld->fdata().size(); i++) {
       Vector v = fld->fdata()[i];
       fprintf(fgrad, "%lf %lf %lf\n", v.x(), v.y(), v.z());
     }
@@ -92,7 +96,7 @@ main(int argc, char **argv) {
     sprintf(fname, "%s.pot", argv[2]);
     FILE *fpot = fopen(fname, "wt");
     cerr << "Writing "<<fld->fdata().size()<<" scalars to "<<fname<<"\n";
-    for (int i=0; i<fld->fdata().size(); i++) {
+    for (unsigned int i=0; i<fld->fdata().size(); i++) {
       fprintf(fpot, "%lf\n", fld->fdata()[i]);
     }
   } else {

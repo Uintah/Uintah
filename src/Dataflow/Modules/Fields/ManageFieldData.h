@@ -57,11 +57,11 @@ ManageFieldDataAlgoFieldScalar<Fld, Loc>::execute(FieldHandle ifield_h)
 {
   Fld *ifield = dynamic_cast<Fld *>(ifield_h.get_rep());
   typename Fld::mesh_handle_type mesh = ifield->get_typed_mesh();
-  ColumnMatrix *omatrix =
-    scinew ColumnMatrix(mesh->tsize((typename Loc::size_type *)0));
+  typename Loc::size_type ssize;  mesh->size(ssize);
+  ColumnMatrix *omatrix = scinew ColumnMatrix(ssize);
   int index = 0;
-  typename Loc::iterator iter = mesh->tbegin((typename Loc::iterator *)0);
-  typename Loc::iterator eiter = mesh->tend((typename Loc::iterator *)0);
+  typename Loc::iterator iter; mesh->begin(iter);
+  typename Loc::iterator eiter; mesh->end(eiter);
   while (iter != eiter)
   {
     typename Fld::value_type val = ifield->value(*iter);
@@ -87,11 +87,11 @@ ManageFieldDataAlgoFieldVector<Fld, Loc>::execute(FieldHandle ifield_h)
 {
   Fld *ifield = dynamic_cast<Fld *>(ifield_h.get_rep());
   typename Fld::mesh_handle_type mesh = ifield->get_typed_mesh();
-  DenseMatrix *omatrix =
-    scinew DenseMatrix(mesh->tsize((typename Loc::size_type *)0), 3);
+  typename Loc::size_type ssize;  mesh->size(ssize);
+  DenseMatrix *omatrix =  scinew DenseMatrix(ssize, 3);
   int index = 0;
-  typename Loc::iterator iter = mesh->tbegin((typename Loc::iterator *)0);
-  typename Loc::iterator eiter = mesh->tend((typename Loc::iterator *)0);
+  typename Loc::iterator iter; mesh->begin(iter);
+  typename Loc::iterator eiter; mesh->end(eiter);
   while (iter != eiter)
   {
     typename Fld::value_type val = ifield->value(*iter);
@@ -121,11 +121,11 @@ ManageFieldDataAlgoFieldTensor<Fld, Loc>::execute(FieldHandle ifield_h)
 {
   Fld *ifield = dynamic_cast<Fld *>(ifield_h.get_rep());
   typename Fld::mesh_handle_type mesh = ifield->get_typed_mesh();
-  DenseMatrix *omatrix =
-    scinew DenseMatrix(mesh->tsize((typename Loc::size_type *)0), 9);
+  typename Loc::size_type ssize;  mesh->size(ssize);
+  DenseMatrix *omatrix = scinew DenseMatrix(ssize, 9);
   int index = 0;
-  typename Loc::iterator iter = mesh->tbegin((typename Loc::iterator *)0);
-  typename Loc::iterator eiter = mesh->tend((typename Loc::iterator *)0);
+  typename Loc::iterator iter; mesh->begin(iter);
+  typename Loc::iterator eiter; mesh->end(eiter);
   while (iter != eiter)
   {
     typename Fld::value_type val = ifield->value(*iter);
@@ -178,48 +178,56 @@ ManageFieldDataAlgoMeshScalar<MSRC, FOUT>::execute(MeshHandle mesh,
   MSRC *imesh = dynamic_cast<MSRC *>(mesh.get_rep());
   const unsigned int rows = matrix->nrows();
   FOUT *ofield;
-  if (rows && rows == (unsigned int)imesh->nodes_size())
+  typename MSRC::Node::size_type nsize;
+  typename MSRC::Node::size_type esize;
+  typename MSRC::Node::size_type fsize;
+  typename MSRC::Node::size_type csize;
+  imesh->size(nsize);
+  imesh->size(esize);
+  imesh->size(fsize);
+  imesh->size(csize);
+  if (rows && rows == (unsigned int)nsize)
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::NODE);
-    typename MSRC::Node::iterator iter = imesh->node_begin();
-    typename MSRC::Node::iterator eiter = imesh->node_end();
+    typename MSRC::Node::iterator iter; imesh->begin(iter);
+    typename MSRC::Node::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
     {
       ofield->set_value(matrix->get(index++, 0), *iter);
       ++iter;
     }
   }
-  else if (rows && rows == (unsigned int)imesh->edges_size())
+  else if (rows && rows == (unsigned int)esize)
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::EDGE);
-    typename MSRC::Edge::iterator iter = imesh->edge_begin();
-    typename MSRC::Edge::iterator eiter = imesh->edge_end();
+    typename MSRC::Edge::iterator iter; imesh->begin(iter);
+    typename MSRC::Edge::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
     {
       ofield->set_value(matrix->get(index++, 0), *iter);
       ++iter;
     }
   }
-  else if (rows && rows == (unsigned int)imesh->faces_size())
+  else if (rows && rows == (unsigned int)fsize)
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::FACE);
-    typename MSRC::Face::iterator iter = imesh->face_begin();
-    typename MSRC::Face::iterator eiter = imesh->face_end();
+    typename MSRC::Face::iterator iter; imesh->begin(iter);
+    typename MSRC::Face::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
     {
       ofield->set_value(matrix->get(index++, 0), *iter);
       ++iter;
     }
   }
-  else if (rows && rows == (unsigned int)imesh->cells_size())
+  else if (rows && rows == (unsigned int)csize)
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::CELL);
-    typename MSRC::Cell::iterator iter = imesh->cell_begin();
-    typename MSRC::Cell::iterator eiter = imesh->cell_end();
+    typename MSRC::Cell::iterator iter; imesh->begin(iter);
+    typename MSRC::Cell::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
     {
       ofield->set_value(matrix->get(index++, 0), *iter);
@@ -253,12 +261,20 @@ ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(MeshHandle mesh,
   MSRC *imesh = dynamic_cast<MSRC *>(mesh.get_rep());
   const unsigned int rows = matrix->nrows();
   FOUT *ofield;
-  if (rows && rows == (unsigned int)imesh->nodes_size())
+  typename MSRC::Node::size_type nsize;
+  typename MSRC::Node::size_type esize;
+  typename MSRC::Node::size_type fsize;
+  typename MSRC::Node::size_type csize;
+  imesh->size(nsize);
+  imesh->size(esize);
+  imesh->size(fsize);
+  imesh->size(csize);
+  if (rows && rows == (unsigned int)nsize)
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::NODE);
-    typename MSRC::Node::iterator iter = imesh->node_begin();
-    typename MSRC::Node::iterator eiter = imesh->node_end();
+    typename MSRC::Node::iterator iter; imesh->begin(iter);
+    typename MSRC::Node::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
     {
       Vector v(imatrix->get(index, 0),
@@ -269,12 +285,12 @@ ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(MeshHandle mesh,
       ++iter;
     }
   }
-  else if (rows && rows == (unsigned int)imesh->edges_size())
+  else if (rows && rows == (unsigned int)esize)
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::EDGE);
-    typename MSRC::Edge::iterator iter = imesh->edge_begin();
-    typename MSRC::Edge::iterator eiter = imesh->edge_end();
+    typename MSRC::Edge::iterator iter; imesh->begin(iter);
+    typename MSRC::Edge::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
     {
       Vector v(imatrix->get(index, 0),
@@ -285,12 +301,12 @@ ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(MeshHandle mesh,
       ++iter;
     }
   }
-  else if (rows && rows == (unsigned int)imesh->faces_size())
+  else if (rows && rows == (unsigned int)fsize)
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::FACE);
-    typename MSRC::Face::iterator iter = imesh->face_begin();
-    typename MSRC::Face::iterator eiter = imesh->face_end();
+    typename MSRC::Face::iterator iter; imesh->begin(iter);
+    typename MSRC::Face::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
     {
       Vector v(imatrix->get(index, 0),
@@ -301,12 +317,12 @@ ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(MeshHandle mesh,
       ++iter;
     }
   }
-  else if (rows && rows == (unsigned int)imesh->cells_size())
+  else if (rows && rows == (unsigned int)csize)
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::CELL);
-    typename MSRC::Cell::iterator iter = imesh->cell_begin();
-    typename MSRC::Cell::iterator eiter = imesh->cell_end();
+    typename MSRC::Cell::iterator iter; imesh->begin(iter);
+    typename MSRC::Cell::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
     {
       Vector v(imatrix->get(index, 0),
@@ -345,12 +361,20 @@ ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(MeshHandle mesh,
   MSRC *imesh = dynamic_cast<MSRC *>(mesh.get_rep());
   const unsigned int rows = matrix->nrows();
   FOUT *ofield;
-  if (rows && rows == (unsigned int)imesh->nodes_size())
+  typename MSRC::Node::size_type nsize;
+  typename MSRC::Node::size_type esize;
+  typename MSRC::Node::size_type fsize;
+  typename MSRC::Node::size_type csize;
+  imesh->size(nsize);
+  imesh->size(esize);
+  imesh->size(fsize);
+  imesh->size(csize);
+  if (rows && rows == (unsigned int)nsize)
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::NODE);
-    typename MSRC::Node::iterator iter = imesh->node_begin();
-    typename MSRC::Node::iterator eiter = imesh->node_end();
+    typename MSRC::Node::iterator iter; imesh->begin(iter);
+    typename MSRC::Node::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
     {
       Tensor v;
@@ -370,12 +394,12 @@ ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(MeshHandle mesh,
       ++iter;
     }
   }
-  else if (rows && rows == (unsigned int)imesh->edges_size())
+  else if (rows && rows == (unsigned int)esize)
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::EDGE);
-    typename MSRC::Edge::iterator iter = imesh->edge_begin();
-    typename MSRC::Edge::iterator eiter = imesh->edge_end();
+    typename MSRC::Edge::iterator iter; imesh->begin(iter);
+    typename MSRC::Edge::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
     {
       Tensor v;
@@ -395,12 +419,12 @@ ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(MeshHandle mesh,
       ++iter;
     }
   }
-  else if (rows && rows == (unsigned int)imesh->faces_size())
+  else if (rows && rows == (unsigned int)fsize)
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::FACE);
-    typename MSRC::Face::iterator iter = imesh->face_begin();
-    typename MSRC::Face::iterator eiter = imesh->face_end();
+    typename MSRC::Face::iterator iter; imesh->begin(iter);
+    typename MSRC::Face::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
     {
       Tensor v;
@@ -420,12 +444,12 @@ ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(MeshHandle mesh,
       ++iter;
     }
   }
-  else if (rows && rows == (unsigned int)imesh->cells_size())
+  else if (rows && rows == (unsigned int)csize)
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::CELL);
-    typename MSRC::Cell::iterator iter = imesh->cell_begin();
-    typename MSRC::Cell::iterator eiter = imesh->cell_end();
+    typename MSRC::Cell::iterator iter; imesh->begin(iter);
+    typename MSRC::Cell::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
     {
       Tensor v;

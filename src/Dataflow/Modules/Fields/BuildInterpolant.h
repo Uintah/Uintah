@@ -63,8 +63,9 @@ template <class MSRC, class LSRC, class MDST, class LDST, class FOUT>
 double
 BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::find_closest(typename LSRC::index_type &index, MSRC *mesh, const Point &p)
 {
-  typename LSRC::iterator itr = mesh->tbegin((typename LSRC::iterator *)0);
-  typename LSRC::iterator eitr = mesh->tend((typename LSRC::iterator *)0);
+  typename LSRC::iterator itr, eiter;
+  mesh->begin(itr);
+  mesh->end(eitr);
   double mindist = BIA_MAX_DISTANCE;
   while (itr != eitr)
   {
@@ -90,9 +91,9 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, Me
   MDST *dst_mesh = dynamic_cast<MDST *>(dst_meshH.get_rep());
   FOUT *ofield = scinew FOUT(dst_mesh, loc);
 
-  typedef typename LDST::iterator DSTITR; 
-  DSTITR itr = dst_mesh->tbegin((DSTITR *)0);
-  DSTITR end_itr = dst_mesh->tend((DSTITR *)0);
+  typename LDST::iterator itr, end_itr;
+  dst_mesh->begin(itr);
+  dst_mesh->end(end_itr);
 
   while (itr != end_itr)
   {

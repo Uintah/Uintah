@@ -61,8 +61,8 @@ EditFieldAlgoCountT<MESH>::execute(MeshHandle mesh_h,
   MESH *mesh = dynamic_cast<MESH *>(mesh_h.get_rep());
 
   int count = 0;
-  node_iter_type ni = mesh->tbegin((node_iter_type *)0);
-  node_iter_type nie = mesh->tend((node_iter_type *)0);
+  node_iter_type ni; mesh->begin(ni);
+  node_iter_type nie; mesh->end(nie);
   while (ni != nie)
   {
     count++;
@@ -71,8 +71,8 @@ EditFieldAlgoCountT<MESH>::execute(MeshHandle mesh_h,
   num_nodes = count;
 
   count = 0;
-  elem_iter_type ei = mesh->tbegin((elem_iter_type *)0);
-  elem_iter_type eie = mesh->tend((elem_iter_type *)0);
+  elem_iter_type ei; mesh->begin(ei);
+  elem_iter_type eie; mesh->end(eie);
   while (ei != eie)
   {
     count++;
@@ -81,15 +81,19 @@ EditFieldAlgoCountT<MESH>::execute(MeshHandle mesh_h,
   num_elems = count;
 
   dimension = 0;
-  if (mesh->edge_begin() != mesh->edge_end())
+  
+  typename MESH::Edge::iterator eb, ee; mesh->begin(eb); mesh->end(ee);
+  if (eb != ee);
   {
     dimension = 1;
   }
-  if (mesh->face_begin() != mesh->face_end())
+  typename MESH::Face::iterator fb, fe; mesh->begin(fb); mesh->end(fe);
+  if (fb != fe)
   {
     dimension = 2;
   }
-  if (mesh->cell_begin() != mesh->cell_end())
+  typename MESH::Cell::iterator cb, ce; mesh->begin(cb); mesh->end(ce);
+  if (cb != ce)
   {
     dimension = 3;
   }

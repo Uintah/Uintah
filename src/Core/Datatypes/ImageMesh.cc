@@ -349,119 +349,81 @@ ImageMesh::type_name(int n)
   return name;
 }
 
-template<>
-ImageMesh::Node::iterator
-ImageMesh::tbegin(ImageMesh::Node::iterator *) const
+
+void
+ImageMesh::begin(ImageMesh::Node::iterator &itr) const
 {
-  return Node::iterator(this, min_x_, min_y_);
+  itr = Node::iterator(this, min_x_, min_y_);
 }
 
-template<>
-ImageMesh::Node::iterator
-ImageMesh::tend(ImageMesh::Node::iterator *) const
+void
+ImageMesh::end(ImageMesh::Node::iterator &itr) const
 {
-  return Node::iterator(this, min_x_, min_y_ + ny_);
+  itr = Node::iterator(this, min_x_, min_y_ + ny_);
 }
 
-template<>
-ImageMesh::Node::size_type
-ImageMesh::tsize(ImageMesh::Node::size_type *) const
+void
+ImageMesh::size(ImageMesh::Node::size_type &s) const
 {
-  return Node::size_type(nx_, ny_);
-}
-
-
-template<>
-ImageMesh::Edge::iterator
-ImageMesh::tbegin(ImageMesh::Edge::iterator *) const
-{
-  return Edge::iterator(this, 0);
-}
-
-template<>
-ImageMesh::Edge::iterator
-ImageMesh::tend(ImageMesh::Edge::iterator *) const
-{
-  return Edge::iterator(this, 0);
-}
-
-template<>
-ImageMesh::Edge::size_type
-ImageMesh::tsize(ImageMesh::Edge::size_type *) const
-{
-  return Edge::size_type(0);
-}
-
-template<>
-ImageMesh::Face::iterator
-ImageMesh::tbegin(ImageMesh::Face::iterator *) const
-{
-  return Face::iterator(this,  min_x_, min_y_);
-}
-
-template<>
-ImageMesh::Face::iterator
-ImageMesh::tend(ImageMesh::Face::iterator *) const
-{
-  return Face::iterator(this, min_x_, min_y_ + ny_ - 1);
-}
-
-template<>
-ImageMesh::Face::size_type
-ImageMesh::tsize(ImageMesh::Face::size_type *) const
-{
-  return Face::size_type(nx_-1, ny_-1);
+  s = Node::size_type(nx_, ny_);
 }
 
 
-template<>
-ImageMesh::Cell::iterator
-ImageMesh::tbegin(ImageMesh::Cell::iterator *) const
+void
+ImageMesh::begin(ImageMesh::Edge::iterator &itr) const
 {
-  return Cell::iterator(this, 0);
+  itr = Edge::iterator(this, 0);
 }
 
-template<>
-ImageMesh::Cell::iterator
-ImageMesh::tend(ImageMesh::Cell::iterator *) const
+void
+ImageMesh::end(ImageMesh::Edge::iterator &itr) const
 {
-  return Cell::iterator(this, 0);
+  itr = Edge::iterator(this, 0);
 }
 
-template<>
-ImageMesh::Cell::size_type
-ImageMesh::tsize(ImageMesh::Cell::size_type *) const
+void
+ImageMesh::size(ImageMesh::Edge::size_type &s) const
 {
-  return Cell::size_type(0);
+  s = Edge::size_type(0);
+}
+
+void
+ImageMesh::begin(ImageMesh::Face::iterator &itr) const
+{
+  itr = Face::iterator(this,  min_x_, min_y_);
+}
+
+void
+ImageMesh::end(ImageMesh::Face::iterator &itr) const
+{
+  itr = Face::iterator(this, min_x_, min_y_ + ny_ - 1);
+}
+
+void
+ImageMesh::size(ImageMesh::Face::size_type &s) const
+{
+  s = Face::size_type(nx_-1, ny_-1);
 }
 
 
-ImageMesh::Node::iterator ImageMesh::node_begin() const
-{ return tbegin((Node::iterator *)0); }
-ImageMesh::Edge::iterator ImageMesh::edge_begin() const
-{ return tbegin((Edge::iterator *)0); }
-ImageMesh::Face::iterator ImageMesh::face_begin() const
-{ return tbegin((Face::iterator *)0); }
-ImageMesh::Cell::iterator ImageMesh::cell_begin() const
-{ return tbegin((Cell::iterator *)0); }
+void
+ImageMesh::begin(ImageMesh::Cell::iterator &itr) const
+{
+  itr = Cell::iterator(this, 0);
+}
 
-ImageMesh::Node::iterator ImageMesh::node_end() const
-{ return tend((Node::iterator *)0); }
-ImageMesh::Edge::iterator ImageMesh::edge_end() const
-{ return tend((Edge::iterator *)0); }
-ImageMesh::Face::iterator ImageMesh::face_end() const
-{ return tend((Face::iterator *)0); }
-ImageMesh::Cell::iterator ImageMesh::cell_end() const
-{ return tend((Cell::iterator *)0); }
+void
+ImageMesh::end(ImageMesh::Cell::iterator &itr) const
+{
+  itr = Cell::iterator(this, 0);
+}
 
-ImageMesh::Node::size_type ImageMesh::nodes_size() const
-{ return tsize((Node::size_type *)0); }
-ImageMesh::Edge::size_type ImageMesh::edges_size() const
-{ return tsize((Edge::size_type *)0); }
-ImageMesh::Face::size_type ImageMesh::faces_size() const
-{ return tsize((Face::size_type *)0); }
-ImageMesh::Cell::size_type ImageMesh::cells_size() const
-{ return tsize((Cell::size_type *)0); }
+void
+ImageMesh::size(ImageMesh::Cell::size_type &s) const
+{
+  s = Cell::size_type(0);
+}
+
 
 const TypeDescription*
 ImageMesh::get_type_description() const

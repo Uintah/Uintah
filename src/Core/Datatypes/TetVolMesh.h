@@ -91,22 +91,20 @@ public:
   virtual BBox get_bounding_box() const;
   virtual void transform(Transform &t);
 
-  template <class I> I tbegin(I*) const;
-  template <class I> I tend(I*) const;
-  template <class S> S tsize(S*) const;
+  void begin(Node::iterator &) const;
+  void begin(Edge::iterator &) const;
+  void begin(Face::iterator &) const;
+  void begin(Cell::iterator &) const;
 
-  Node::iterator  node_begin() const;
-  Node::iterator  node_end() const;
-  Node::size_type nodes_size() const;
-  Edge::iterator  edge_begin() const;
-  Edge::iterator  edge_end() const;
-  Edge::size_type edges_size() const;
-  Face::iterator  face_begin() const;
-  Face::iterator  face_end() const;
-  Face::size_type faces_size() const;
-  Cell::iterator  cell_begin() const;
-  Cell::iterator  cell_end() const;
-  Cell::size_type cells_size() const;
+  void end(Node::iterator &) const;
+  void end(Edge::iterator &) const;
+  void end(Face::iterator &) const;
+  void end(Cell::iterator &) const;
+
+  void size(Node::size_type &) const;
+  void size(Edge::size_type &) const;
+  void size(Face::size_type &) const;
+  void size(Cell::size_type &) const;
 
   void get_nodes(Node::array_type &array, Edge::index_type idx) const;
   void get_nodes(Node::array_type &array, Face::index_type idx) const;
@@ -456,21 +454,6 @@ TetVolMesh::fill_neighbors(Iter begin, Iter end, Functor fill_ftor) {
   }
   nbors_lock_.unlock();
 }
-
-template <> TetVolMesh::Node::size_type TetVolMesh::tsize(TetVolMesh::Node::size_type *) const;
-template <> TetVolMesh::Edge::size_type TetVolMesh::tsize(TetVolMesh::Edge::size_type *) const;
-template <> TetVolMesh::Face::size_type TetVolMesh::tsize(TetVolMesh::Face::size_type *) const;
-template <> TetVolMesh::Cell::size_type TetVolMesh::tsize(TetVolMesh::Cell::size_type *) const;
-				
-template <> TetVolMesh::Node::iterator TetVolMesh::tbegin(TetVolMesh::Node::iterator *) const;
-template <> TetVolMesh::Edge::iterator TetVolMesh::tbegin(TetVolMesh::Edge::iterator *) const;
-template <> TetVolMesh::Face::iterator TetVolMesh::tbegin(TetVolMesh::Face::iterator *) const;
-template <> TetVolMesh::Cell::iterator TetVolMesh::tbegin(TetVolMesh::Cell::iterator *) const;
-				
-template <> TetVolMesh::Node::iterator TetVolMesh::tend(TetVolMesh::Node::iterator *) const;
-template <> TetVolMesh::Edge::iterator TetVolMesh::tend(TetVolMesh::Edge::iterator *) const;
-template <> TetVolMesh::Face::iterator TetVolMesh::tend(TetVolMesh::Face::iterator *) const;
-template <> TetVolMesh::Cell::iterator TetVolMesh::tend(TetVolMesh::Cell::iterator *) const;
 
 const TypeDescription* get_type_description(TetVolMesh *);
 const TypeDescription* get_type_description(TetVolMesh::Node *);

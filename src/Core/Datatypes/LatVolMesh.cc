@@ -374,117 +374,78 @@ LatVolMesh::type_name(int n)
 }
 
 
-template <>
-LatVolMesh::Node::iterator
-LatVolMesh::tbegin(LatVolMesh::Node::iterator *) const
+void
+LatVolMesh::begin(LatVolMesh::Node::iterator &itr) const
 {
-  return Node::iterator(this, min_x_, min_y_, min_z_);
+  itr = Node::iterator(this, min_x_, min_y_, min_z_);
 }
 
-template <>
-LatVolMesh::Node::iterator
-LatVolMesh::tend(LatVolMesh::Node::iterator *) const
+void
+LatVolMesh::end(LatVolMesh::Node::iterator &itr) const
 {
-  return Node::iterator(this, min_x_, min_y_, min_z_ + nz_);
+  itr = Node::iterator(this, min_x_, min_y_, min_z_ + nz_);
 }
 
-template <>
-LatVolMesh::Node::size_type
-LatVolMesh::tsize(LatVolMesh::Node::size_type *) const
+void
+LatVolMesh::size(LatVolMesh::Node::size_type &s) const
 {
-  return Node::size_type(nx_,ny_,nz_);
+  s = Node::size_type(nx_,ny_,nz_);
 }
 
-template <>
-LatVolMesh::Edge::iterator
-LatVolMesh::tbegin(LatVolMesh::Edge::iterator *) const
+void
+LatVolMesh::begin(LatVolMesh::Edge::iterator &itr) const
 {
-  return Edge::iterator(this,0);
+  itr = Edge::iterator(this,0);
 }
 
-template <>
-LatVolMesh::Edge::iterator
-LatVolMesh::tend(LatVolMesh::Edge::iterator *) const
+void
+LatVolMesh::end(LatVolMesh::Edge::iterator &itr) const
 {
-  return Edge::iterator(this,0);
+  itr = Edge::iterator(this,0);
 }
 
-template <>
-LatVolMesh::Edge::size_type
-LatVolMesh::tsize(LatVolMesh::Edge::size_type *) const
+void
+LatVolMesh::size(LatVolMesh::Edge::size_type &s) const
 {
-  return Edge::size_type(0);
+  s = Edge::size_type(0);
 }
 
-template <>
-LatVolMesh::Face::iterator
-LatVolMesh::tbegin(LatVolMesh::Face::iterator *) const
+void
+LatVolMesh::begin(LatVolMesh::Face::iterator &itr) const
 {
-  return Face::iterator(this,0);
+  itr = Face::iterator(this,0);
 }
 
-template <>
-LatVolMesh::Face::iterator
-LatVolMesh::tend(LatVolMesh::Face::iterator *) const
+void
+LatVolMesh::end(LatVolMesh::Face::iterator &itr) const
 {
-  return Face::iterator(this,0);
+  itr = Face::iterator(this,0);
 }
 
-template <>
-LatVolMesh::Face::size_type
-LatVolMesh::tsize(LatVolMesh::Face::size_type *) const
+void
+LatVolMesh::size(LatVolMesh::Face::size_type &s) const
 {
-  return Face::size_type(0);
+  s = Face::size_type(0);
 }
 
-template <>
-LatVolMesh::Cell::iterator
-LatVolMesh::tbegin(LatVolMesh::Cell::iterator *) const
+void
+LatVolMesh::begin(LatVolMesh::Cell::iterator &itr) const
 {
-  return Cell::iterator(this,  min_x_, min_y_, min_z_);
+  itr = Cell::iterator(this,  min_x_, min_y_, min_z_);
 }
 
-template <>
-LatVolMesh::Cell::iterator
-LatVolMesh::tend(LatVolMesh::Cell::iterator *) const
+void
+LatVolMesh::end(LatVolMesh::Cell::iterator &itr) const
 {
-  return Cell::iterator(this, min_x_, min_y_, min_z_ + nz_-1);
+  itr = Cell::iterator(this, min_x_, min_y_, min_z_ + nz_-1);
 }
 
-template <>
-LatVolMesh::Cell::size_type
-LatVolMesh::tsize(LatVolMesh::Cell::size_type *) const
+void
+LatVolMesh::size(LatVolMesh::Cell::size_type &s) const
 {
-  return Cell::size_type(nx_-1, ny_-1,nz_-1);
+  s = Cell::size_type(nx_-1, ny_-1,nz_-1);
 }
 
-
-LatVolMesh::Node::iterator LatVolMesh::node_begin() const
-{ return tbegin((Node::iterator *)0); }
-LatVolMesh::Edge::iterator LatVolMesh::edge_begin() const
-{ return tbegin((Edge::iterator *)0); }
-LatVolMesh::Face::iterator LatVolMesh::face_begin() const
-{ return tbegin((Face::iterator *)0); }
-LatVolMesh::Cell::iterator LatVolMesh::cell_begin() const
-{ return tbegin((Cell::iterator *)0); }
-
-LatVolMesh::Node::iterator LatVolMesh::node_end() const
-{ return tend((Node::iterator *)0); }
-LatVolMesh::Edge::iterator LatVolMesh::edge_end() const
-{ return tend((Edge::iterator *)0); }
-LatVolMesh::Face::iterator LatVolMesh::face_end() const
-{ return tend((Face::iterator *)0); }
-LatVolMesh::Cell::iterator LatVolMesh::cell_end() const
-{ return tend((Cell::iterator *)0); }
-
-LatVolMesh::Node::size_type LatVolMesh::nodes_size() const
-{ return tsize((Node::size_type *)0); }
-LatVolMesh::Edge::size_type LatVolMesh::edges_size() const
-{ return tsize((Edge::size_type *)0); }
-LatVolMesh::Face::size_type LatVolMesh::faces_size() const
-{ return tsize((Face::size_type *)0); }
-LatVolMesh::Cell::size_type LatVolMesh::cells_size() const
-{ return tsize((Cell::size_type *)0); }
 
 const string& 
 LatVolMesh::get_h_file_path() {

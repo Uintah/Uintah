@@ -68,9 +68,12 @@ main(int argc, char **argv) {
   char fname[200];
   sprintf(fname, "%s.pts", argv[2]);
   FILE *fpts = fopen(fname, "wt");
-  TriSurfMesh::Node::iterator niter = tsm->node_begin();
-  cerr << "Writing "<<tsm->nodes_size()<<" points to "<<fname<<"\n";
-  while(niter != tsm->node_end()) {
+  TriSurfMesh::Node::iterator niter; tsm->begin(niter);
+  TriSurfMesh::Node::iterator niter_end; tsm->end(niter_end);
+  TriSurfMesh::Node::size_type nsize; tsm->size(nsize);
+  cerr << "Writing "<< ((unsigned int)nsize) << " points to "<<fname<<"\n";
+  while(niter != niter_end)
+  {
     Point p;
     tsm->get_center(p, *niter);
     fprintf(fpts, "%lf %lf %lf\n", p.x(), p.y(), p.z());
@@ -80,11 +83,14 @@ main(int argc, char **argv) {
 
   sprintf(fname, "%s.fac", argv[2]);
   FILE *ffac = fopen(fname, "wt");
-  cerr << "Writing "<<tsm->faces_size()<<" faces to "<<fname<<"\n";
-  TriSurfMesh::Face::iterator fiter = tsm->face_begin();
+  TriSurfMesh::Face::size_type fsize; tsm->size(fsize);
+  cerr << "Writing "<< ((unsigned int)fsize)<<" faces to "<<fname<<"\n";
+  TriSurfMesh::Face::iterator fiter; tsm->begin(fiter);
+  TriSurfMesh::Face::iterator fiter_end; tsm->end(fiter_end);
   TriSurfMesh::Node::array_type fac_nodes(3);
 
-  while(fiter != tsm->face_end()) {
+  while(fiter != fiter_end)
+  {
     tsm->get_nodes(fac_nodes, *fiter);
     fprintf(ffac, "%d %d %d\n", fac_nodes[0]+1, fac_nodes[1]+1, fac_nodes[2]+1);
     ++fiter;
@@ -95,7 +101,7 @@ main(int argc, char **argv) {
     sprintf(fname, "%s.grad", argv[2]);
     FILE *fgrad = fopen(fname, "wt");
     cerr << "Writing "<<fld->fdata().size()<<" vectors to "<<fname<<"\n";
-    for (int i=0; i<fld->fdata().size(); i++) {
+    for (unsigned int i=0; i<fld->fdata().size(); i++) {
       Vector v = fld->fdata()[i];
       fprintf(fgrad, "%lf %lf %lf\n", v.x(), v.y(), v.z());
     }
@@ -104,7 +110,7 @@ main(int argc, char **argv) {
     sprintf(fname, "%s.pot", argv[2]);
     FILE *fpot = fopen(fname, "wt");
     cerr << "Writing "<<fld->fdata().size()<<" scalars to "<<fname<<"\n";
-    for (int i=0; i<fld->fdata().size(); i++) {
+    for (unsigned int i=0; i<fld->fdata().size(); i++) {
       fprintf(fpot, "%lf\n", fld->fdata()[i]);
     }
   } else {

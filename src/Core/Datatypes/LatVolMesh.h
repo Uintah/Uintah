@@ -103,6 +103,7 @@ public:
 
   struct EdgeIter : public UnfinishedIter
   {
+    EdgeIter() : UnfinishedIter(0, 0) {}
     EdgeIter(const LatVolMesh *m, unsigned i)
       : UnfinishedIter(m, i) {}
 
@@ -122,6 +123,7 @@ public:
 
   struct FaceIter : public UnfinishedIter
   {
+    FaceIter() : UnfinishedIter(0, 0) {}
     FaceIter(const LatVolMesh *m, unsigned i)
       : UnfinishedIter(m, i) {}
 
@@ -171,6 +173,7 @@ public:
 
   struct LatIter : public LatIndex
   {
+    LatIter() : LatIndex(0, 0, 0), mesh_(0) {}
     LatIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
       : LatIndex(i, j, k), mesh_(m) {}
 
@@ -192,6 +195,7 @@ public:
 
   struct NodeIter : public LatIter
   {
+    NodeIter() : LatIter() {}
     NodeIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
       : LatIter(m, i, j, k) {}
 
@@ -224,6 +228,7 @@ public:
 
   struct CellIter : public LatIter
   {
+    CellIter() : LatIter() {}
     CellIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
       : LatIter(m, i, j, k) {}
 
@@ -316,22 +321,20 @@ public:
   virtual ~LatVolMesh()
     {  Vector p = max_-min_; cell_volume_ = (p.x()/(nx_-1))*(p.y()/(ny_-1))*(p.z()/(nz_-1));}
 
-  template <class I> I tbegin(I*) const;
-  template <class I> I tend(I*) const;
-  template <class S> S tsize(S*) const;
+  void begin(Node::iterator &) const;
+  void begin(Edge::iterator &) const;
+  void begin(Face::iterator &) const;
+  void begin(Cell::iterator &) const;
 
-  Node::iterator  node_begin() const;
-  Node::iterator  node_end() const;
-  Node::size_type nodes_size() const;
-  Edge::iterator  edge_begin() const;
-  Edge::iterator  edge_end() const;
-  Edge::size_type edges_size() const;
-  Face::iterator  face_begin() const;
-  Face::iterator  face_end() const;
-  Face::size_type faces_size() const;
-  Cell::iterator  cell_begin() const;
-  Cell::iterator  cell_end() const;
-  Cell::size_type cells_size() const;
+  void end(Node::iterator &) const;
+  void end(Edge::iterator &) const;
+  void end(Face::iterator &) const;
+  void end(Cell::iterator &) const;
+
+  void size(Node::size_type &) const;
+  void size(Edge::size_type &) const;
+  void size(Face::size_type &) const;
+  void size(Cell::size_type &) const;
 
   //! get the mesh statistics
   unsigned get_nx() const { return nx_; }
@@ -432,21 +435,6 @@ private:
 };
 
 typedef LockingHandle<LatVolMesh> LatVolMeshHandle;
-
-template <> LatVolMesh::Node::size_type LatVolMesh::tsize(LatVolMesh::Node::size_type *) const;
-template <> LatVolMesh::Edge::size_type LatVolMesh::tsize(LatVolMesh::Edge::size_type *) const;
-template <> LatVolMesh::Face::size_type LatVolMesh::tsize(LatVolMesh::Face::size_type *) const;
-template <> LatVolMesh::Cell::size_type LatVolMesh::tsize(LatVolMesh::Cell::size_type *) const;
-				
-template <> LatVolMesh::Node::iterator LatVolMesh::tbegin(LatVolMesh::Node::iterator *) const;
-template <> LatVolMesh::Edge::iterator LatVolMesh::tbegin(LatVolMesh::Edge::iterator *) const;
-template <> LatVolMesh::Face::iterator LatVolMesh::tbegin(LatVolMesh::Face::iterator *) const;
-template <> LatVolMesh::Cell::iterator LatVolMesh::tbegin(LatVolMesh::Cell::iterator *) const;
-				
-template <> LatVolMesh::Node::iterator LatVolMesh::tend(LatVolMesh::Node::iterator *) const;
-template <> LatVolMesh::Edge::iterator LatVolMesh::tend(LatVolMesh::Edge::iterator *) const;
-template <> LatVolMesh::Face::iterator LatVolMesh::tend(LatVolMesh::Face::iterator *) const;
-template <> LatVolMesh::Cell::iterator LatVolMesh::tend(LatVolMesh::Cell::iterator *) const;
 
 const TypeDescription* get_type_description(LatVolMesh *);
 const TypeDescription* get_type_description(LatVolMesh::Node *);

@@ -120,9 +120,6 @@ SeedFieldAlgoT<Mesh>::build_weight_table_sfi(MeshHandle mesh_h,
 					     DistTable &table,
 					     const string &dist)
 {
-  typedef typename Mesh::Elem::iterator   elem_iterator;
-  typedef typename Mesh::Elem::index_type elem_index;
-  
   long double size = 1;
 
   Mesh *mesh = dynamic_cast<Mesh *>(mesh_h.get_rep());
@@ -132,9 +129,10 @@ SeedFieldAlgoT<Mesh>::build_weight_table_sfi(MeshHandle mesh_h,
     return false;
   }
 
-  elem_iterator ei = mesh->tbegin((elem_iterator *)0);
-  elem_iterator endi = mesh->tend((elem_iterator *)0);
-  if (ei == endi) // empty mesh
+  typename Mesh::Elem::iterator ei, ei_end;
+  mesh->begin(ei);
+  mesh->end(ei_end);
+  if (ei == ei_end) // empty mesh
     return false;
 
   // the tables are to be filled with increasing values.
@@ -217,10 +215,6 @@ SeedFieldAlgoT<Mesh>::build_weight_table_vfi(MeshHandle mesh_h,
 					     DistTable &table,
 					     const string &dist)
 {
-  typedef typename Mesh::Elem::iterator   elem_iterator;
-  typedef typename Mesh::Elem::index_type elem_index;
-  
-//  long double size = 2.e-300;
   long double size = 1;
 
   Mesh *mesh = dynamic_cast<Mesh *>(mesh_h.get_rep());
@@ -230,9 +224,10 @@ SeedFieldAlgoT<Mesh>::build_weight_table_vfi(MeshHandle mesh_h,
     return false;
   }
 
-  elem_iterator ei = mesh->tbegin((elem_iterator *)0);
-  elem_iterator endi = mesh->tend((elem_iterator *)0);
-  if (ei == endi) // empty mesh
+  typename Mesh::Elem::iterator ei, ei_end;
+  mesh->begin(ei);
+  mesh->end(ei_end);
+  if (ei == ei_end) // empty mesh
     return false;
 
   // the tables are to be filled with increasing values.

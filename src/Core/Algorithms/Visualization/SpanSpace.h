@@ -171,10 +171,11 @@ namespace SCIRun {
       
       typename Field::mesh_handle_type mesh = field->get_typed_mesh();
 
-      typename mesh_type::Cell::iterator cell = mesh->cell_begin();
+      typename mesh_type::Cell::iterator cell; mesh->begin(cell);
+      typename mesh_type::Cell::iterator cell_end; mesh->end(cell_end);
       typename mesh_type::Node::array_type nodes;
 
-      for ( ; cell != mesh->cell_end(); ++cell) {
+      for ( ; cell != cell_end; ++cell) {
 	mesh->get_nodes( nodes, *cell );
 
 	// compute  min max of cell

@@ -630,7 +630,7 @@ GLTexture3D::run_make_brick_data<T>::run()
   if( tex_->data_at() == Field::CELL){
     typename T::mesh_type mesh(m, xoff_, yoff_, zoff_, 
 			       xsize_+1, ysize_+1, zsize_+1);
-    typename T::mesh_type::Cell::iterator it = mesh.cell_begin();
+    typename T::mesh_type::Cell::iterator it; mesh.begin(it);
     for(kk = 0, k = zoff_; kk < zsize_; kk++, k++)
       for(jj = 0, j = yoff_; jj < ysize_; jj++, j++)
 	for(ii = 0, i = xoff_; ii < xsize_; ii++, i++){
@@ -639,7 +639,7 @@ GLTexture3D::run_make_brick_data<T>::run()
 	}
   } else {
     typename T::mesh_type mesh(m, xoff_, yoff_, zoff_, xsize_, ysize_, zsize_);
-    typename T::mesh_type::Node::iterator it = mesh.node_begin();
+    typename T::mesh_type::Node::iterator it; mesh.begin(it);
     for(kk = 0, k = zoff_; kk < zsize_; kk++, k++)
       for(jj = 0, j = yoff_; jj < ysize_; jj++, j++)
 	for(ii = 0, i = xoff_; ii < xsize_; ii++, i++){

@@ -91,7 +91,9 @@ void TetMC<Field>::reset( int n, bool build_trisurf )
   triangles_->reserve_clear((int)(1.3*n));
 
   vertex_map_.clear();
-  nnodes_ = mesh_->nodes_size();
+  typename Field::mesh_type::Node::size_type nsize;
+  mesh_->size(nsize);
+  nnodes_ = nsize;
   if (build_trisurf_)
     trisurf_ = new TriSurfMesh; 
   else 

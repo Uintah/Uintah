@@ -215,117 +215,78 @@ ScanlineMesh::type_name(int n)
 }
 
 
-template<>
-ScanlineMesh::Node::iterator
-ScanlineMesh::tbegin(ScanlineMesh::Node::iterator *) const
+void
+ScanlineMesh::begin(ScanlineMesh::Node::iterator &itr) const
 {
-  return Node::iterator(offset_);
+  itr = Node::iterator(offset_);
 }
 
-template<>
-ScanlineMesh::Node::iterator
-ScanlineMesh::tend(ScanlineMesh::Node::iterator *) const
+void
+ScanlineMesh::end(ScanlineMesh::Node::iterator &itr) const
 {
-  return Node::iterator(offset_ + length_);
+  itr = Node::iterator(offset_ + length_);
 }
 
-template<>
-ScanlineMesh::Node::size_type
-ScanlineMesh::tsize(ScanlineMesh::Node::size_type *) const
+void
+ScanlineMesh::size(ScanlineMesh::Node::size_type &s) const
 {
-  return Node::size_type(length_);
+  s = Node::size_type(length_);
 }
 
-template<>
-ScanlineMesh::Edge::iterator
-ScanlineMesh::tbegin(ScanlineMesh::Edge::iterator *) const
+void
+ScanlineMesh::begin(ScanlineMesh::Edge::iterator &itr) const
 {
-  return Edge::iterator(offset_);
+  itr = Edge::iterator(offset_);
 }
 
-template<>
-ScanlineMesh::Edge::iterator
-ScanlineMesh::tend(ScanlineMesh::Edge::iterator *) const
+void
+ScanlineMesh::end(ScanlineMesh::Edge::iterator &itr) const
 {
-  return Edge::iterator(offset_+length_-1);
+  itr = Edge::iterator(offset_+length_-1);
 }
 
-template<>
-ScanlineMesh::Edge::size_type
-ScanlineMesh::tsize(ScanlineMesh::Edge::size_type *) const
+void
+ScanlineMesh::size(ScanlineMesh::Edge::size_type &s) const
 {
-  return Edge::size_type(length_ - 1);
+  s = Edge::size_type(length_ - 1);
 }
 
-template<>
-ScanlineMesh::Face::iterator
-ScanlineMesh::tbegin(ScanlineMesh::Face::iterator *) const
+void
+ScanlineMesh::begin(ScanlineMesh::Face::iterator &itr) const
 {
-  return Face::iterator(0);
+  itr = Face::iterator(0);
 }
 
-template<>
-ScanlineMesh::Face::iterator
-ScanlineMesh::tend(ScanlineMesh::Face::iterator *) const
+void
+ScanlineMesh::end(ScanlineMesh::Face::iterator &itr) const
 {
-  return Face::iterator(0);
+  itr = Face::iterator(0);
 }
 
-template<>
-ScanlineMesh::Face::size_type
-ScanlineMesh::tsize(ScanlineMesh::Face::size_type *) const
+void
+ScanlineMesh::size(ScanlineMesh::Face::size_type &s) const
 {
-  return Face::size_type(0);
+  s = Face::size_type(0);
 }
 
-template<>
-ScanlineMesh::Cell::iterator
-ScanlineMesh::tbegin(ScanlineMesh::Cell::iterator *) const
+void
+ScanlineMesh::begin(ScanlineMesh::Cell::iterator &itr) const
 {
-  return Cell::iterator(0);
+  itr = Cell::iterator(0);
 }
 
-template<>
-ScanlineMesh::Cell::iterator
-ScanlineMesh::tend(ScanlineMesh::Cell::iterator *) const
+void
+ScanlineMesh::end(ScanlineMesh::Cell::iterator &itr) const
 {
-  return Cell::iterator(0);
+  itr = Cell::iterator(0);
 }
 
-template<>
-ScanlineMesh::Cell::size_type
-ScanlineMesh::tsize(ScanlineMesh::Cell::size_type *) const
+void
+ScanlineMesh::size(ScanlineMesh::Cell::size_type &s) const
 {
-  return Cell::size_type(0);
+  s = Cell::size_type(0);
 }
 
-
-ScanlineMesh::Node::iterator ScanlineMesh::node_begin() const
-{ return tbegin((Node::iterator *)0); }
-ScanlineMesh::Edge::iterator ScanlineMesh::edge_begin() const
-{ return tbegin((Edge::iterator *)0); }
-ScanlineMesh::Face::iterator ScanlineMesh::face_begin() const
-{ return tbegin((Face::iterator *)0); }
-ScanlineMesh::Cell::iterator ScanlineMesh::cell_begin() const
-{ return tbegin((Cell::iterator *)0); }
-
-ScanlineMesh::Node::iterator ScanlineMesh::node_end() const
-{ return tend((Node::iterator *)0); }
-ScanlineMesh::Edge::iterator ScanlineMesh::edge_end() const
-{ return tend((Edge::iterator *)0); }
-ScanlineMesh::Face::iterator ScanlineMesh::face_end() const
-{ return tend((Face::iterator *)0); }
-ScanlineMesh::Cell::iterator ScanlineMesh::cell_end() const
-{ return tend((Cell::iterator *)0); }
-
-ScanlineMesh::Node::size_type ScanlineMesh::nodes_size() const
-{ return tsize((Node::size_type *)0); }
-ScanlineMesh::Edge::size_type ScanlineMesh::edges_size() const
-{ return tsize((Edge::size_type *)0); }
-ScanlineMesh::Face::size_type ScanlineMesh::faces_size() const
-{ return tsize((Face::size_type *)0); }
-ScanlineMesh::Cell::size_type ScanlineMesh::cells_size() const
-{ return tsize((Cell::size_type *)0); }
 
 const TypeDescription*
 ScanlineMesh::get_type_description() const

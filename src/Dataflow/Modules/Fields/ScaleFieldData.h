@@ -59,8 +59,9 @@ ScaleFieldDataAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
 
   int index = 0;
   int rows = matrix->nrows();
-  typename LOC::iterator itr = mesh->tbegin((typename LOC::iterator *) 0);
-  typename LOC::iterator eitr = mesh->tend((typename LOC::iterator *) 0);
+  typename LOC::iterator itr, eitr;
+  mesh->begin(itr);
+  mesh->end(eitr);
   while (itr != eitr)
   {
     typename FIELD::value_type val;

@@ -37,15 +37,15 @@ public:
   IntVector size(data_.getHighIndex() - min - offset_);
   typename ScalarField::mesh_type mesh(m, min.x(), min.y(), min.z(),
 				       size.x(), size.y(), size.z());
-  if( sf_->data_at() == Field::CELL ){
-    typename ScalarField::mesh_type::Cell::iterator s_it = mesh.cell_begin();
-    typename ScalarField::mesh_type::Cell::iterator s_it_end = mesh.cell_end();
+  if( sf_->data_at() == Field::CELL ) {
+    typename ScalarField::mesh_type::Cell::iterator s_it; mesh.begin(s_it);
+    typename ScalarField::mesh_type::Cell::iterator s_it_end; mesh.end(s_it_end);
     for(; s_it != s_it_end; ++it, ++s_it){
       sf_->fdata()[*s_it] = op_( *it );
     }
   } else {
-    typename ScalarField::mesh_type::Node::iterator s_it = mesh.node_begin();
-    typename ScalarField::mesh_type::Node::iterator s_it_end = mesh.node_end();
+    typename ScalarField::mesh_type::Node::iterator s_it; mesh.begin(s_it);
+    typename ScalarField::mesh_type::Node::iterator s_it_end; mesh.end(s_it_end);
     for(; s_it != s_it_end; ++it, ++s_it){
       sf_->fdata()[*s_it] = op_( *it );
     }

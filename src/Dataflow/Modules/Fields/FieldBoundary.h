@@ -71,8 +71,9 @@ FieldBoundaryAlgoAuxT<Msh>::execute(const MeshHandle mesh_untyped,
   TriSurfMeshHandle tmesh = scinew TriSurfMesh;
   // Walk all the cells in the mesh.
   Point center;
-  typename Msh::Cell::iterator citer = mesh->cell_begin();
-  while (citer != mesh->cell_end()) {
+  typename Msh::Cell::iterator citer; mesh->begin(citer);
+  typename Msh::Cell::iterator citere; mesh->end(citere);
+  while (citer != citere) {
     typename Msh::Cell::index_type ci = *citer;
     ++citer;
     mesh->get_center(center, ci);

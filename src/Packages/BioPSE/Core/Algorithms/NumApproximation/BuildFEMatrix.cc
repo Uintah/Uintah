@@ -55,7 +55,8 @@ BuildFEMatrix::BuildFEMatrix(TetVolIntHandle hField,
   tens_(tens)
 {
   hMesh_=hField->get_typed_mesh();
-  int nNodes = hMesh_->nodes_size();
+  TetVolMesh::Node::size_type nsize; hMesh_->size(nsize);
+  unsigned int nNodes = nsize;
   rows_ = scinew int[nNodes+1];
 }
 BuildFEMatrix::~BuildFEMatrix(){}
@@ -99,7 +100,8 @@ bool BuildFEMatrix::build_FEMatrix(TetVolIntHandle hField,
 void BuildFEMatrix::parallel(int proc)
 {
   //! dividing nodes among processors
-  int nNodes     = hMesh_->nodes_size();
+  TetVolMesh::Node::size_type nsize; hMesh_->size(nsize);
+  int nNodes     = nsize;
   int start_node = nNodes * proc/np_;
   int end_node   = nNodes * (proc+1)/np_;
   int ndof       = end_node - start_node;
@@ -196,12 +198,13 @@ void BuildFEMatrix::parallel(int proc)
   
   //----------------------------------------------------------
   //! Filling the matrix
-  TetVolMesh::Cell::iterator ii;
+  TetVolMesh::Cell::iterator ii, iie;
   
   double lcl_matrix[4][4];
    
   TetVolMesh::Node::array_type cell_nodes(4);
-  for (ii=hMesh_->cell_begin(); ii!=hMesh_->cell_end(); ++ii){
+  hMesh_->begin(ii); hMesh_->end(iie);
+  for (; ii != iie; ++ii){
  
     if (hMesh_->test_nodes_range(*ii, start_node, end_node)){ 
       build_local_matrix(lcl_matrix, *ii);

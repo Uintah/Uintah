@@ -142,11 +142,14 @@ void DipoleInSphere::execute() {
       PointCloudMeshHandle hMesh = pDips->get_typed_mesh();
       
       PointCloudMesh::Node::iterator ii;
+      PointCloudMesh::Node::iterator ii_end;
       Point p;
       Vector qdip;
       vector<Vector> dips;
       vector<Point>  pos;
-      for (ii=hMesh->node_begin(); ii!=hMesh->node_end(); ++ii){
+      hMesh->begin(ii);
+      hMesh->end(ii_end);
+      for (; ii != ii_end; ++ii) {
 	if (pDips->value(qdip, *ii)){
 	  dips.push_back(qdip);
 	  hMesh->get_point(p, *ii);
@@ -184,7 +187,8 @@ void DipoleInSphere::fillOneSpherePotentials(DenseMatrix& dips, TriSurfHandle hS
   
   TriSurfMeshHandle hMesh = hSurf->get_typed_mesh();
   vector<double>& data = hSurf->fdata();
-  data.resize(*(hMesh->node_end()), 0);
+  TriSurfMesh::Node::size_type nsize; hMesh->size(nsize);
+  data.resize(nsize, 0);
   BBox bbox = hMesh->get_bounding_box();
   
   if (!bbox.valid()){
@@ -199,40 +203,38 @@ void DipoleInSphere::fillOneSpherePotentials(DenseMatrix& dips, TriSurfHandle hS
   msgStream_ << "Radius of the sphere is " << R << endl;
   Point p;
 
-  if (hMesh->node_begin()!=hMesh->node_end()){ // don't want to iterate if no dipoles
-    
-    TriSurfMesh::Node::iterator niter = hMesh->node_begin();
-    
-    // -- for every point
-    while(niter!=hMesh->node_end()) {
+  TriSurfMesh::Node::iterator niter; hMesh->begin(niter);
+  TriSurfMesh::Node::iterator niter_end; hMesh->end(niter_end);
+
+  // -- for every point
+  while (niter != niter_end) {
       
-      hMesh->get_point(p, *niter);
+    hMesh->get_point(p, *niter);
       
-      // -- for every dipole
-      int id;
-      for (id = 0; id < dips.nrows(); ++id){
+    // -- for every dipole
+    int id;
+    for (id = 0; id < dips.nrows(); ++id){
 	
-	double V = 0.0;
-	E[0] = p.x();
-	E[1] = p.y();
-	E[2] = p.z();
+      double V = 0.0;
+      E[0] = p.x();
+      E[1] = p.y();
+      E[2] = p.z();
 	
-	double rho = sqrt( pow((E[0] - dips[id][0]),2) + pow((E[1] - dips[id][1]),2) + pow((E[2] - dips[id][2]),2));
-	double S = E[0]*dips[id][0] + E[1]*dips[id][1] + E[2]*dips[id][2];
+      double rho = sqrt( pow((E[0] - dips[id][0]),2) + pow((E[1] - dips[id][1]),2) + pow((E[2] - dips[id][2]),2));
+      double S = E[0]*dips[id][0] + E[1]*dips[id][1] + E[2]*dips[id][2];
 	
-	for(int k=0;k<3;k++) {
-	  double F[3];
-	  F[k] = (1/(4*M_PI*gamma*rho)) * (2*(E[k]-dips[id][k])/pow(rho,2) +
-					   (1/pow(R,2)) * (E[k] + (E[k]*S/R - R*dips[id][k])/(rho+R-S/R)));
-	  V += F[k]*dips[id][k+3];
+      for(int k=0;k<3;k++) {
+	double F[3];
+	F[k] = (1/(4*M_PI*gamma*rho)) * (2*(E[k]-dips[id][k])/pow(rho,2) +
+					 (1/pow(R,2)) * (E[k] + (E[k]*S/R - R*dips[id][k])/(rho+R-S/R)));
+	V += F[k]*dips[id][k+3];
 	  
-	}
-	
-	data[*niter] += V;
       }
-      ++niter;
+	
+      data[*niter] += V;
     }
-  }    
+    ++niter;
+  }
 }
 
 } // End namespace BioPSE

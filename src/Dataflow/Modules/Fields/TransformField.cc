@@ -100,8 +100,9 @@ TransformField::callback(Field *ifield, M *)
   ofield->mesh_detach();
 
   M *mesh = (M *)(ofield->mesh().get_rep());
-  const int sz = mesh->nodes_size();
-  for (int i = 0; i < sz; i++)
+  typename M::Node::size_type nsize;  mesh->size(nsize);
+  const unsigned int sz = nsize;
+  for (unsigned int i = 0; i < sz; i++)
   {
     Point p;
     mesh->get_point(p, i);

@@ -48,10 +48,13 @@ PointCloudMesh::get_bounding_box() const
 {
   BBox result;
 
-  for (Node::iterator i = node_begin();
-       i!=node_end();
-       ++i)
+  Node::iterator i, ie;
+  begin(i);
+  end(ie);
+  for ( ; i != ie; ++i)
+  {
     result.extend(points_[*i]);
+  }
 
   return result;
 }
@@ -73,17 +76,24 @@ PointCloudMesh::transform(Transform &t)
 bool
 PointCloudMesh::locate(Node::index_type &idx, const Point &p) const
 {
-  Node::iterator ni = node_begin();
-  idx = *node_begin();
+  Node::iterator ni, nie;
+  begin(ni);
+  end(nie);
 
-  if (ni==node_end())
+  idx = *ni;
+
+  if (ni == nie)
+  {
     return false;
+  }
 
   double closest = (p-points_[*ni]).length2();
 
   ++ni;
-  for (; ni != node_end(); ++ni) {
-    if ( (p-points_[*ni]).length2() < closest ) {
+  for (; ni != nie; ++ni)
+  {
+    if ( (p-points_[*ni]).length2() < closest )
+    {
       closest = (p-points_[*ni]).length2();
       idx = *ni;
     }
@@ -136,117 +146,78 @@ PointCloudMesh::type_name(int n)
   return name;
 }
 
-template<>
-PointCloudMesh::Node::iterator
-PointCloudMesh::tbegin(PointCloudMesh::Node::iterator *) const
+void
+PointCloudMesh::begin(PointCloudMesh::Node::iterator &itr) const
 {
-  return 0;
+  itr = 0;
 }
 
-template<>
-PointCloudMesh::Node::iterator
-PointCloudMesh::tend(PointCloudMesh::Node::iterator *) const
+void
+PointCloudMesh::end(PointCloudMesh::Node::iterator &itr) const
 {
-  return (unsigned)points_.size();
+  itr = (unsigned)points_.size();
 }
 
-template<>
-PointCloudMesh::Node::size_type
-PointCloudMesh::tsize(PointCloudMesh::Node::size_type *) const
+void
+PointCloudMesh::size(PointCloudMesh::Node::size_type &s) const
 {
-  return (unsigned)points_.size();
+  s = (unsigned)points_.size();
 }
 
-template<>
-PointCloudMesh::Edge::iterator
-PointCloudMesh::tbegin(PointCloudMesh::Edge::iterator *) const
+void
+PointCloudMesh::begin(PointCloudMesh::Edge::iterator &itr) const
 {
-  return 0;
+  itr = 0;
 }
 
-template<>
-PointCloudMesh::Edge::iterator
-PointCloudMesh::tend(PointCloudMesh::Edge::iterator *) const
+void
+PointCloudMesh::end(PointCloudMesh::Edge::iterator &itr) const
 {
-  return 0;
+  itr = 0;
 }
 
-template<>
-PointCloudMesh::Edge::size_type
-PointCloudMesh::tsize(PointCloudMesh::Edge::size_type *) const
+void
+PointCloudMesh::size(PointCloudMesh::Edge::size_type &s) const
 {
-  return 0;
+  s = 0;
 }
 
-template<>
-PointCloudMesh::Face::iterator
-PointCloudMesh::tbegin(PointCloudMesh::Face::iterator *) const
+void
+PointCloudMesh::begin(PointCloudMesh::Face::iterator &itr) const
 {
-  return 0;
+  itr = 0;
 }
 
-template<>
-PointCloudMesh::Face::iterator
-PointCloudMesh::tend(PointCloudMesh::Face::iterator *) const
+void
+PointCloudMesh::end(PointCloudMesh::Face::iterator &itr) const
 {
-  return 0;
+  itr = 0;
 }
 
-template<>
-PointCloudMesh::Face::size_type
-PointCloudMesh::tsize(PointCloudMesh::Face::size_type *) const
+void
+PointCloudMesh::size(PointCloudMesh::Face::size_type &s) const
 {
-  return 0;
+  s = 0;
 }
 
-template<>
-PointCloudMesh::Cell::iterator
-PointCloudMesh::tbegin(PointCloudMesh::Cell::iterator *) const
+void
+PointCloudMesh::begin(PointCloudMesh::Cell::iterator &itr) const
 {
-  return 0;
+  itr = 0;
 }
 
-template<>
-PointCloudMesh::Cell::iterator
-PointCloudMesh::tend(PointCloudMesh::Cell::iterator *) const
+void
+PointCloudMesh::end(PointCloudMesh::Cell::iterator &itr) const
 {
-  return 0;
+  itr = 0;
 }
 
-template<>
-PointCloudMesh::Cell::size_type
-PointCloudMesh::tsize(PointCloudMesh::Cell::size_type *) const
+void
+PointCloudMesh::size(PointCloudMesh::Cell::size_type &s) const
 {
-  return 0;
+  s = 0;
 }
 
-
-PointCloudMesh::Node::iterator PointCloudMesh::node_begin() const
-{ return tbegin((Node::iterator *)0); }
-PointCloudMesh::Edge::iterator PointCloudMesh::edge_begin() const
-{ return tbegin((Edge::iterator *)0); }
-PointCloudMesh::Face::iterator PointCloudMesh::face_begin() const
-{ return tbegin((Face::iterator *)0); }
-PointCloudMesh::Cell::iterator PointCloudMesh::cell_begin() const
-{ return tbegin((Cell::iterator *)0); }
-
-PointCloudMesh::Node::iterator PointCloudMesh::node_end() const
-{ return tend((Node::iterator *)0); }
-PointCloudMesh::Edge::iterator PointCloudMesh::edge_end() const
-{ return tend((Edge::iterator *)0); }
-PointCloudMesh::Face::iterator PointCloudMesh::face_end() const
-{ return tend((Face::iterator *)0); }
-PointCloudMesh::Cell::iterator PointCloudMesh::cell_end() const
-{ return tend((Cell::iterator *)0); }
-
-PointCloudMesh::Node::size_type PointCloudMesh::nodes_size() const
-{ return tsize((Node::size_type *)0); }
-PointCloudMesh::Edge::size_type PointCloudMesh::edges_size() const
-{ return tsize((Edge::size_type *)0); }
-PointCloudMesh::Face::size_type PointCloudMesh::faces_size() const
-{ return tsize((Face::size_type *)0); }
-PointCloudMesh::Cell::size_type PointCloudMesh::cells_size() const
-{ return tsize((Cell::size_type *)0); }
 
 const TypeDescription*
 PointCloudMesh::get_type_description() const
