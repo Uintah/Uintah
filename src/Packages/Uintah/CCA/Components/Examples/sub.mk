@@ -9,8 +9,11 @@ SRCS     += \
 	$(SRCDIR)/Poisson2.cc \
 	$(SRCDIR)/Burger.cc \
 	$(SRCDIR)/Poisson3.cc \
+	$(SRCDIR)/SimpleCFD.cc \
 	$(SRCDIR)/Interpolator.cc \
-	$(SRCDIR)/ExamplesLabel.cc
+	$(SRCDIR)/ExamplesLabel.cc \
+	$(SRCDIR)/BoundaryConditions.cc \
+	$(SRCDIR)/RegionDB.cc
 
 PSELIBS :=  Packages/Uintah/Core/Grid Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/CCA/Ports Packages/Uintah/Core/Exceptions \
