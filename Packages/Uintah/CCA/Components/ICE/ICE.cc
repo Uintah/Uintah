@@ -3478,14 +3478,15 @@ void ICE::getExchangeCoefficients( FastMatrix& K, FastMatrix& H  )
 }
 /*---------------------------------------------------------------------
  Function~  ICE::upwindCell--
- purpose:   find the upwind cell in each direction
+ purpose:   find the upwind cell in each direction  This is a knock off
+            of Bucky's logic
  ---------------------------------------------------------------------  */
 IntVector ICE::upwindCell_X(const IntVector& c, 
                             const double & var,              
                             double is_logical_R_face )     
 {
   double  plus_minus_half = 0.5 * (var + d_SMALL_NUM)/fabs(var + d_SMALL_NUM);
-  int one_or_zero = -0.5 - plus_minus_half + is_logical_R_face; 
+  int one_or_zero = int(-0.5 - plus_minus_half + is_logical_R_face); 
   IntVector tmp = c + IntVector(one_or_zero,0,0);
   return tmp;
 }
@@ -3495,7 +3496,7 @@ IntVector ICE::upwindCell_Y(const IntVector& c,
                             double is_logical_R_face )     
 {
   double  plus_minus_half = 0.5 * (var + d_SMALL_NUM)/fabs(var + d_SMALL_NUM);
-  int one_or_zero = -0.5 - plus_minus_half + is_logical_R_face; 
+  int one_or_zero = int(-0.5 - plus_minus_half + is_logical_R_face); 
   IntVector tmp = c + IntVector(0,one_or_zero,0);
   return tmp;
 }
@@ -3505,7 +3506,7 @@ IntVector ICE::upwindCell_Z(const IntVector& c,
                             double is_logical_R_face )     
 {
   double  plus_minus_half = 0.5 * (var + d_SMALL_NUM)/fabs(var + d_SMALL_NUM);
-  int one_or_zero = -0.5 - plus_minus_half + is_logical_R_face; 
+  int one_or_zero = int(-0.5 - plus_minus_half + is_logical_R_face); 
   IntVector tmp = c + IntVector(0,0,one_or_zero);
   return tmp;
 }
