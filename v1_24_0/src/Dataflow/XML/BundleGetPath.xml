@@ -32,7 +32,19 @@
 <component name="BundleGetPath" category="Bundle">
   <overview>
     <authors>
+    Jeroen Stinstra
     </authors>
+    <summary>
+      This module retrieves a 'path' object from a bundle. 
+    </summary>
+    <description>
+      This module retrieves a 'path' object from a bundle by specifying the
+      name of that object. The module has three output ports that each can be 
+      programmed to retrieve a specific 'path' object. 
+      
+      The module's first bundle output port just generates a copy of the input
+      bundle.
+    </description>
   </overview>
   <implementation>
   </implementation>

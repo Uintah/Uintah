@@ -32,7 +32,18 @@
 <component name="BundleMerge" category="Bundle">
   <overview>
     <authors>
+    Jeroen Stinstra
     </authors>
+    <summary>
+      This merges the contents of multiple bundles into one
+      bundle. 
+    </summary>
+    <description>
+      This merges the contents of multiple bundles into one
+      bundle. If the same object name exists in multiple bundles
+      the one from the right most input is chosen and the other
+      one will be purged.
+    </description>
   </overview>
   <implementation>
   </implementation>

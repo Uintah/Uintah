@@ -32,7 +32,15 @@
 <component name="BundleInfo" category="Bundle">
   <overview>
     <authors>
+    Jeroen Stinstra
     </authors>
+    <summary>
+      This module lists all the objects stored in a bundle. 
+    </summary>
+    <description>
+      This module lists all the objects stored in a bundle. The
+      names of all the objects are listed as well their types.
+    </description>
   </overview>
   <implementation>
   </implementation>

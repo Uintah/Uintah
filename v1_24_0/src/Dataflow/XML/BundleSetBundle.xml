@@ -32,7 +32,19 @@
 <component name="BundleSetBundle" category="Bundle">
   <overview>
     <authors>
+    Jeroen Stinstra
     </authors>
+    <summary>
+      This module adds a 'bundle' object to a bundle stream.
+    </summary>
+    <description>
+      This module adds a 'bundle' object to a bundle stream.
+      In the GUI a name can be specified for the object, which
+      will be used to cataloge the object in the stream. In case
+      the 'bundle' object has a name property this one can be used as well
+      to name the object in the stream. The module has three input ports,
+      so three 'bundle' objects can be inserted at the same time.
+    </description>
   </overview>
   <implementation>
   </implementation>
