@@ -1,3 +1,5 @@
+
+C:\Blythe\SCIRun\src\Packages\BioPSE\Dataflow\XML>mycvs -d :ext:blythe@csf.cs.utah.edu:/csafe_noexport/cvs/cvsroot update -p -r1.7 DipoleInSphere.xml 
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
 
@@ -27,7 +29,7 @@
       <author>Alexei Samsonov</author>
     </authors>
 
-    <summary>Due to the specified dipoles, DipoleInSphere fills the sphere field with potentials values.</summary>
+    <summary>Due to the specified dipoles, the DipoleInSphere module fills the sphere field with potentials values.</summary>
 
     <description>
       <p>Version Date: March 2001</p>
