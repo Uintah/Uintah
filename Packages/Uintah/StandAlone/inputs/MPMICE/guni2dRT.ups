@@ -10,7 +10,7 @@
     <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            1.90e-5    </maxTime>
+       <maxTime>            2.00e-6     </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           1.0e-12     </delt_min>
        <delt_max>           1.0         </delt_max>
@@ -64,17 +64,7 @@
         </BCType>
       </Face>                  
       <Face side = "z+">
-        <BCType id = "0" label = "Pressure" var = "Neumann">
-                              <value>  0.0   </value>
-        </BCType>
-        <BCType id = "all" label = "Velocity" var = "Dirichlet">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "Temperature" var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all" label = "Density" var = "Neumann">
-                              <value> 0.0  </value>
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>
     </BoundaryConditions>
