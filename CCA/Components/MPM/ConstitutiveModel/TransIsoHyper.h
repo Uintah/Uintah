@@ -38,6 +38,7 @@ namespace Uintah {
     };
 
     const VarLabel* pStretchLabel;  // For diagnostic
+    const VarLabel* pStretchLabel_preReloc;  // For diagnostic
 
   private:
     CMData d_initialData;
