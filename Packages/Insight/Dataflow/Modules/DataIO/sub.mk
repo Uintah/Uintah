@@ -16,6 +16,10 @@ SRCDIR   := Packages/Insight/Dataflow/Modules/DataIO
 SRCS     += \
 	$(SRCDIR)/ImageFileReader.cc\
 	$(SRCDIR)/ImageFileWriter.cc\
+	$(SRCDIR)/ImageReaderUChar2D.cc \
+	$(SRCDIR)/Switch.cc\
+	$(SRCDIR)/ImageReaderFloat2D.cc\
+	$(SRCDIR)/ImageReaderFloat3D.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/Insight/Core/Datatypes Dataflow/Network \
