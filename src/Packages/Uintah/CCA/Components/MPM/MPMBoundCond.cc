@@ -1,10 +1,10 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMBoundCond.h>
-#include <Packages/Uintah/Core/BoundaryConditions/VelocityBoundCond.h>
-#include <Packages/Uintah/Core/BoundaryConditions/SymmetryBoundCond.h>
-#include <Packages/Uintah/Core/BoundaryConditions/TemperatureBoundCond.h>
-#include <Packages/Uintah/Core/BoundaryConditions/fillFace.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/VelocityBoundCond.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/SymmetryBoundCond.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/TemperatureBoundCond.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/fillFace.h>
 #include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/BoundaryConditions/BCDataArray.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <vector>
 #include <iostream>
 

@@ -11,8 +11,8 @@
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
-#include <Packages/Uintah/Core/Variables/ParticleSet.h>
-#include <Packages/Uintah/Core/Variables/ParticleVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
+#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 
 namespace Uintah {
 

@@ -3,7 +3,7 @@
 #define Packages_Uintah_CCA_Components_Examples_Mixing_h
 
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
-#include <Packages/Uintah/Core/Variables/ComputeSet.h>
+#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/CCA/Components/Models/test/MaterialProperties.h>
 
 namespace Uintah {

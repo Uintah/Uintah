@@ -1,7 +1,7 @@
 
 #include <Packages/Uintah/CCA/Components/Models/test/ArchesTable.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Thread/Time.h>
 #include <iostream>

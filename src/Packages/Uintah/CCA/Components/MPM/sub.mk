@@ -41,6 +41,7 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 PSELIBS := \
 	Packages/Uintah/CCA/Ports        \
 	Packages/Uintah/Core/Grid        \
+	Packages/Uintah/Core/Util        \
 	Packages/Uintah/Core/Disclosure  \
 	Packages/Uintah/Core/Labels      \
 	Packages/Uintah/Core/ProblemSpec \

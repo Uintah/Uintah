@@ -15,10 +15,10 @@
 #include <Packages/Uintah/CCA/Ports/ModelMaker.h>
 
 #include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/BoundaryConditions/TemperatureBoundCond.h>
-#include <Packages/Uintah/Core/Variables/VarTypes.h>
+#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
+#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/TemperatureBoundCond.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Math/MiscMath.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Exceptions/MaxIteration.h>

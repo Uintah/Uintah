@@ -2,7 +2,7 @@
 #define UINTAH_MPMBOUNDCOND_H
 
 #include <Core/Geometry/Vector.h>
-#include <Packages/Uintah/Core/Variables/NCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
 
 
 namespace Uintah {
