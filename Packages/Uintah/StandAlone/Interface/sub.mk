@@ -11,7 +11,8 @@ SRCS     += $(SRCDIR)/CFDInterface.cc $(SRCDIR)/DataArchive.cc \
 	$(SRCDIR)/DataWarehouse.cc \
 	$(SRCDIR)/MPMInterface.cc $(SRCDIR)/Output.cc \
 	$(SRCDIR)/ProblemSpec.cc $(SRCDIR)/ProblemSpecInterface.cc \
-	$(SRCDIR)/Scheduler.cc $(SRCDIR)/DWMpiHandler.cc
+	$(SRCDIR)/Scheduler.cc $(SRCDIR)/DWMpiHandler.cc \
+	$(SRCDIR)/MDInterface.cc
 
 PSELIBS := Uintah/Parallel Uintah/Grid Uintah/Exceptions PSECore/XMLUtil \
 	SCICore/Thread SCICore/Exceptions SCICore/Geometry
@@ -21,6 +22,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.10  2000/06/09 16:52:24  tan
+# Created MDInterface for molecular dynamics simulation.
+#
 # Revision 1.9  2000/05/20 08:09:39  sparker
 # Improved TypeDescription
 # Finished I/O
