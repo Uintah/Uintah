@@ -22,7 +22,6 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/SoleVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
-//#include <Packages/Uintah/Core/Grid/BoundCond.h>
 #include <Packages/Uintah/Core/Grid/PressureBoundCond.h>
 #include <Packages/Uintah/Core/Grid/VelocityBoundCond.h>
 #include <Packages/Uintah/Core/Grid/TemperatureBoundCond.h>
@@ -38,8 +37,6 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <vector>
 #include <Core/Geometry/Vector.h>
-
-
 
 using std::vector;
 using std::max;
@@ -200,6 +197,14 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
     for (int i = 0; i<(int)d_K_heat.size(); i++)
       cout << "K_heat = " << d_K_heat[i] << endl;
     cerr << "Pulled out exchange coefficients of the input file" << endl;
+  }
+  else {
+    ProblemSpecP mpm_ice_ps   =  mat_ps->findBlock("MPMICE");
+    ProblemSpecP exch_ps = mpm_ice_ps->findBlock("exchange_coefficients");
+    exch_ps->require("momentum",d_K_mom);
+    exch_ps->require("heat",d_K_heat);
+    cerr << "Pulled out exchange coefficients of the input file \t\t MPMICE" <<
+endl;
   }
 //__________________________________
 //  Print out what I've found
@@ -1039,6 +1044,11 @@ void ICE::computeEquilibrationPressure(
      }
      double vol_frac_not_close_packed = 1.;
      delPress = (A - vol_frac_not_close_packed - B)/C;
+
+  // EEEK!!
+     if(count>5){
+        delPress*=2.;
+     }
      
      press_new[*iter] += delPress;
      
@@ -1408,8 +1418,7 @@ void ICE::addExchangeContributionToFCVel(
 
   // Extract the momentum exchange coefficients
   vector<double> b(numMatls);
-  DenseMatrix beta(numMatls,numMatls),a(numMatls,numMatls),
-    K(numMatls,numMatls);
+  DenseMatrix beta(numMatls,numMatls),a(numMatls,numMatls),K(numMatls,numMatls);
   beta.zero();
   a.zero();
   K.zero();
@@ -1434,14 +1443,7 @@ void ICE::addExchangeContributionToFCVel(
     new_dw->allocate(wvel_FCME[m], lb->wvel_FCMELabel, dwindex, patch);
   }
   
-  for (int m = 0; m < numMatls; m++)  {
-    uvel_FCME[m] = uvel_FC[m];
-    vvel_FCME[m] = vvel_FC[m];
-    wvel_FCME[m] = wvel_FC[m];
-  }
-  
-  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();
-      iter++){
+  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
     IntVector curcell = *iter;
     //__________________________________
     //    B O T T O M  F A C E -- B  E  T  A      
@@ -1453,8 +1455,7 @@ void ICE::addExchangeContributionToFCVel(
       
       for(int m = 0; m < numMatls; m++) {
 	for(int n = 0; n < numMatls; n++) {
-	  tmp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) * 
-	    K[n][m];
+	  tmp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) * K[n][m];
 	  
 	  beta[m][n] = delT * tmp/
 	    (rho_micro_CC[m][curcell] + rho_micro_CC[m][adjcell]);
@@ -1498,9 +1499,7 @@ void ICE::addExchangeContributionToFCVel(
       IntVector adjcell(curcell.x()-1,curcell.y(),curcell.z()); 
       for(int m = 0; m < numMatls; m++)  {
 	for(int n = 0; n < numMatls; n++)  {
-	  tmp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) * 
-	    K[n][m];
-	  
+	  tmp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) * K[n][m];
 	  beta[m][n] = delT * tmp/
 	    (rho_micro_CC[m][curcell] + rho_micro_CC[m][adjcell]);
 	  
@@ -1545,9 +1544,7 @@ void ICE::addExchangeContributionToFCVel(
       IntVector adjcell(curcell.x(),curcell.y(),curcell.z()-1); 
       for(int m = 0; m < numMatls; m++)  {
 	for(int n = 0; n < numMatls; n++) {
-	  tmp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) *
-	    K[n][m];
-	  
+	  tmp = (vol_frac_CC[n][adjcell] + vol_frac_CC[n][curcell]) * K[n][m];
 	  beta[m][n] = delT * tmp/
 	    (rho_micro_CC[m][curcell] + rho_micro_CC[m][adjcell]);
 	  
@@ -2418,7 +2415,9 @@ void ICE::advectAndAdvanceInTime(
   Vector dx = patch->dCell();
   double vol = dx.x()*dx.y()*dx.z(),mass;
   double invvol = 1.0/vol;
-  
+
+  Vector total_mom(0.,0.,0.);
+
   int numALLmatls = d_sharedState->getNumMatls();
   int numICEmatls = d_sharedState->getNumICEMatls();
   
@@ -2557,7 +2556,7 @@ void ICE::advectAndAdvanceInTime(
     // Advect 1/rho_micro_CC only needed by MPMICE
     // BOUNDARY CONDITIONS FOR SP_VOL??
     if (numICEmatls != numALLmatls)  {
-      for(CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
+      for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
         q_CC[*iter] = sp_vol_equil[*iter] * invvol;
       }
 
@@ -2576,6 +2575,9 @@ void ICE::advectAndAdvanceInTime(
     setBC(vel_CC,   "Velocity",             patch);
     for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
       mass_CC[*iter] = rho_CC[*iter] * vol;
+
+      // Calculate the momentum at the end of the step.
+      total_mom += vel_CC[*iter]*mass_CC[*iter];
     }
     
     /*`==========DEBUG============*/  
@@ -2604,7 +2606,9 @@ void ICE::advectAndAdvanceInTime(
     new_dw->put(visc_CC,  lb->viscosity_CCLabel,     dwindex,patch);
     new_dw->put(cv,       lb->cv_CCLabel,            dwindex,patch);
   }
-  
+
+  cout << "Fluid momentum after advection = " << total_mom << endl;
+
 }
 /* --------------------------------------------------------------------- 
  Function~  ICE::setBC--
