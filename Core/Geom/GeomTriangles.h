@@ -32,6 +32,7 @@
 #define SCI_Geom_Triangles_h 1
 
 #include <Core/Geom/GeomVertexPrim.h>
+#include <vector>
 
 namespace SCIRun {
 
@@ -75,6 +76,33 @@ public:
     static PersistentTypeID type_id;
     virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
+
+
+
+class SCICORESHARE GeomTranspTriangles : public GeomTriangles {
+
+public:
+  bool sorted_p_;
+
+  vector<pair<float, unsigned int> > xlist_;
+  vector<pair<float, unsigned int> > ylist_;
+  vector<pair<float, unsigned int> > zlist_;
+
+  GeomTranspTriangles();
+  GeomTranspTriangles(const GeomTranspTriangles&);
+  virtual ~GeomTranspTriangles();
+  virtual GeomObj* clone();
+
+  void SortPolys();
+
+#ifdef SCI_OPENGL
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+};
+
 
 class SCICORESHARE GeomTrianglesP: public GeomObj {
 protected:
@@ -140,19 +168,14 @@ public:
 
 class SCICORESHARE GeomTranspTrianglesP : public GeomTrianglesP {
 protected:
-  Array1<int> xlist;
-  Array1<int> ylist;
-  Array1<int> zlist;
+  double alpha_;
 
-  Array1<float> xc;
-  Array1<float> yc;
-  Array1<float> zc;
+  bool sorted_p_;
 
-  double alpha;
-  int sorted;
+  vector<pair<float, unsigned int> > xlist_;
+  vector<pair<float, unsigned int> > ylist_;
+  vector<pair<float, unsigned int> > zlist_;
 
-  // also save off some of the other stuff...
-  int list_pos; // posistion in the list
 public:
   GeomTranspTrianglesP();
   GeomTranspTrianglesP(double);
@@ -166,7 +189,7 @@ public:
   void SortPolys();
 
   // function below merges in another "list" - also clears
-  void MergeStuff(GeomTranspTrianglesP*);
+  //void MergeStuff(GeomTranspTrianglesP*);
 
 #ifdef SCI_OPENGL
     virtual void draw(DrawInfoOpenGL*, Material*, double time);
@@ -175,6 +198,7 @@ public:
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 };
+
 
 class SCICORESHARE GeomTrianglesPC: public GeomTrianglesP {
     Array1<float> colors;

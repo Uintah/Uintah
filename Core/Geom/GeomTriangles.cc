@@ -34,11 +34,22 @@
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
+#include <functional>
+#include <algorithm>
+
 using std::cerr;
 using std::ostream;
 #include <stdio.h>
 
 namespace SCIRun {
+
+static bool
+pair_less(const pair<float, unsigned int> &a,
+	  const pair<float, unsigned int> &b)
+{
+  return a.first < b.first;
+}
+
 
 Persistent* make_GeomTriangles()
 {
@@ -46,6 +57,14 @@ Persistent* make_GeomTriangles()
 }
 
 PersistentTypeID GeomTriangles::type_id("GeomTriangles", "GeomObj", make_GeomTriangles);
+
+Persistent* make_GeomTranspTriangles()
+{
+    return scinew GeomTranspTriangles;
+}
+
+PersistentTypeID GeomTranspTriangles::type_id("GeomTranspTriangles", "GeomTriangles", make_GeomTranspTriangles);
+
 
 Persistent* make_GeomTrianglesP()
 {
@@ -234,6 +253,63 @@ bool GeomTriangles::saveobj(ostream&, const string&, GeomSave*)
     NOT_FINISHED("GeomTriangles::saveobj");
     return false;
 }
+
+
+
+GeomTranspTriangles::GeomTranspTriangles()
+  : sorted_p_(false)
+{
+}
+
+GeomTranspTriangles::GeomTranspTriangles(const GeomTranspTriangles& copy)
+  : GeomTriangles(copy), sorted_p_(false)
+{
+}
+
+GeomTranspTriangles::~GeomTranspTriangles() {
+}
+
+
+GeomObj* GeomTranspTriangles::clone()
+{
+    return scinew GeomTranspTriangles(*this);
+}
+
+void
+GeomTranspTriangles::SortPolys()
+{
+  xlist_.clear();
+  ylist_.clear();
+  zlist_.clear();
+  
+  for (int i=0; i < verts.size(); i+=3)
+  {
+    const Vector center =
+      verts[i+0]->p.asVector() +
+      verts[i+1]->p.asVector() +
+      verts[i+2]->p.asVector();
+    xlist_.push_back(pair<float, unsigned int>(center.x(), i));
+    ylist_.push_back(pair<float, unsigned int>(center.y(), i));
+    zlist_.push_back(pair<float, unsigned int>(center.z(), i));
+  }
+
+  std::sort(xlist_.begin(), xlist_.end(), pair_less);
+  std::sort(ylist_.begin(), ylist_.end(), pair_less);
+  std::sort(zlist_.begin(), zlist_.end(), pair_less);
+  sorted_p_ = true;
+}
+
+
+#define GEOMTRANSPTRIANGLES_VERSION 1
+
+void GeomTranspTriangles::io(Piostream& stream)
+{
+
+    stream.begin_class("GeomTranspTriangles", GEOMTRANSPTRIANGLES_VERSION);
+    GeomTriangles::io(stream);
+    stream.end_class();
+}
+
 
 GeomTrianglesPT1d::GeomTrianglesPT1d()
 :GeomTrianglesP(),cmap(0)
@@ -476,119 +552,49 @@ bool GeomTrianglesPT1d::saveobj(ostream& out, const string& format,
 }
 
 GeomTranspTrianglesP::GeomTranspTrianglesP()
-  : alpha(0.2), sorted(0), list_pos(0)
+  : alpha_(0.2), sorted_p_(false)
 {
 }
 
 GeomTranspTrianglesP::GeomTranspTrianglesP(double aval)
-  : alpha(aval), sorted(0), list_pos(0)
+  : alpha_(aval), sorted_p_(false)
 {
 }
 
 GeomTranspTrianglesP::~GeomTranspTrianglesP()
 {
-  // nothing to worry about...
 }
 
-int GeomTranspTrianglesP::vadd(const Point& p1, 
-			       const Point& p2, const Point& p3)
+int
+GeomTranspTrianglesP::vadd(const Point& p1, 
+			   const Point& p2,
+			   const Point& p3)
 {
   if (add(p1,p2,p3)) {
-    Vector center = (p1.vector()+p2.vector()+p3.vector())*(1.0/3.0);
-    xc.add(center.x());
-    yc.add(center.y());
-    zc.add(center.z());
+    const unsigned int index = xlist_.size();
+    const Vector center = (p1.vector()+p2.vector()+p3.vector())*(1.0/3.0);
+    xlist_.push_back(pair<float, unsigned int>(center.x(), index));
+    ylist_.push_back(pair<float, unsigned int>(center.y(), index));
+    zlist_.push_back(pair<float, unsigned int>(center.z(), index));
+    sorted_p_ = false;
     return 1;
   } 
   return 0;
 }
 
 
-struct SortHelper {
-  static float* ctr_array;
-  int                  id; // id for this guy...
-};
-
-float * SortHelper::ctr_array = 0;
-
-int SimpComp(const void* e1, const void* e2)
+void
+GeomTranspTrianglesP::SortPolys()
 {
-  SortHelper *a = (SortHelper*)e1;
-  SortHelper *b = (SortHelper*)e2;
-
-  if (SortHelper::ctr_array[a->id] >
-      SortHelper::ctr_array[b->id])
-    return 1;
-  if (SortHelper::ctr_array[a->id] <
-      SortHelper::ctr_array[b->id])
-    return -1;
-
-  return 0; // they are equal...  
+  std::sort(xlist_.begin(), xlist_.end(), pair_less);
+  std::sort(ylist_.begin(), ylist_.end(), pair_less);
+  std::sort(zlist_.begin(), zlist_.end(), pair_less);
+  sorted_p_ = true;
 }
 
-void GeomTranspTrianglesP::SortPolys()
-{
-  cerr << "Starting sort...\n";
-  
-  SortHelper::ctr_array = &xc[0];
-
-  xlist.setsize(size());
-  ylist.setsize(size());
-  zlist.setsize(size());
-
-  Array1<SortHelper> help;
-
-  help.resize(size());
-
-  int i;
-  for(i=0;i<size();i++) {
-    help[i].id = i;
-  }
-
-  qsort(&help[0],help.size(),sizeof(SortHelper),SimpComp);
-
-  // now dump them back...
-
-  for(i=0;i<size();i++) {
-    xlist[i] = help[i].id;
-    help[i].id = i; // reset for next pass...
-  }
-
-  SortHelper::ctr_array = &yc[0];
-
-  for(i=0;i<size();i++) {
-    help[i].id = i;
-  }
-
-  qsort(&help[0],help.size(),sizeof(SortHelper),SimpComp);
-
-  // now dump them back...
-
-  for(i=0;i<size();i++) {
-    ylist[i] = help[i].id;
-    help[i].id = i; // reset for next pass...
-  }
-
-  SortHelper::ctr_array = &zc[0];
-
-  for(i=0;i<size();i++) {
-    help[i].id = i;
-  }
-
-  qsort(&help[0],help.size(),sizeof(SortHelper),SimpComp);
-
-  // now dump them back...
-
-  for(i=0;i<size();i++) {
-    zlist[i] = help[i].id;
-  }
-
-  cerr << "Done sorting!\n";
-  
-}
 
 // grows points, normals and centers...
-
+#if 0
 void GeomTranspTrianglesP::MergeStuff(GeomTranspTrianglesP* other)
 {
   points.resize(points.size() + other->points.size());
@@ -620,6 +626,7 @@ void GeomTranspTrianglesP::MergeStuff(GeomTranspTrianglesP* other)
   other->yc.resize(0);
   other->zc.resize(0);
 }
+#endif
 
 #define GeomTranspTrianglesP_VERSION 1
 
@@ -628,7 +635,7 @@ void GeomTranspTrianglesP::io(Piostream& stream)
 
     stream.begin_class("GeomTranspTrianglesP", GeomTranspTrianglesP_VERSION);
     GeomTrianglesP::io(stream);
-    Pio(stream, alpha); // just save transparency value...
+    Pio(stream, alpha_); // just save transparency value...
     stream.end_class();
 }
 
@@ -680,14 +687,14 @@ int GeomTrianglesP::add(const Point& p1, const Point& p2, const Point& p3)
 
     int idx=normals.size();
     normals.grow(3);
-    normals[idx]=n.x();
+    normals[idx+0]=n.x();
     normals[idx+1]=n.y();
     normals[idx+2]=n.z();
 
 
     idx=points.size();
     points.grow(9);
-    points[idx]=p1.x();
+    points[idx+0]=p1.x();
     points[idx+1]=p1.y();
     points[idx+2]=p1.z();
     points[idx+3]=p2.x();
