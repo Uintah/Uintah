@@ -5,7 +5,7 @@ eval 'exec perl -wS -x $0 ${1+"$@"}'
     if $running_under_some_shell;
 
 BEGIN {
-print $ENV{PERL_LIB_PATH}, "\n";
+#print STDERR $ENV{PERL_LIB_PATH}, "\n";
 if(exists $ENV{PERL_LIB_PATH}) {
     foreach my $lib(split(/:/, $ENV{PERL_LIB_PATH})) {
         eval "use lib '$lib'";
@@ -71,7 +71,7 @@ my $sth;
 while(my $q = <>) {
     trace("#$q#");
     if($q =~ /^at_end:/) {
-        print STDERR "AT_END\n";
+        #print STDERR "AT_END\n";
         &get_row;
         if($at_end) {
             send_cmd "ok: true\n";
@@ -137,7 +137,7 @@ sub get_row {
             $at_end = 1;
         } else {
             $at_end = 0;
-            print STDERR join(":", @row), "\n";
+            #print STDERR join(":", @row), "\n";
         }
     }
 }
@@ -156,10 +156,10 @@ sub print_bool {
 }
 
 sub trace {
-    print STDERR @_;
+    #print STDERR @_;
 }
 
 sub send_cmd {
-    print STDERR @_;
+    #print STDERR @_;
     print @_;
 }
