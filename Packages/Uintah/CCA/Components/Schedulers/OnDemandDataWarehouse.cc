@@ -469,6 +469,9 @@ OnDemandDataWarehouse::recvMPIGridVar(DWDatabase& db, BufferInfo& buffer,
     db.put(label, matlIndex, patch, var, true);
     d_lock.writeUnlock();
   }
+
+  ASSERTEQ(Min(var->getLow(), dep->low), var->getLow());
+  ASSERTEQ(Max(var->getHigh(), dep->high), var->getHigh());
   
   getMPIBuffLock.lock(); // Dd: ??
   var->getMPIBuffer(buffer, dep->low, dep->high);
@@ -1478,124 +1481,144 @@ allocateAndPutGridVar(VariableBase& var, DWDatabase& db,
   }
   
  if (exists) {
-   d_lock.writeUnlock();
-    // it was actually allocated and put along with another patch    
-    getGridVar<basis>(var, db, label, matlIndex, patch, Ghost::None, 0);
-    var.rewindow(lowIndex, highIndex);    
-    return;
-  }
-  else {
-    IntVector superLowIndex, superHighIndex;
-    const vector<const Patch*>* superPatchGroup =
-      d_scheduler->getSuperPatchExtents(label, patch, gtype, numGhostCells,
-					superLowIndex, superHighIndex);
+    // it had been allocated and put as part of the superpatch of
+    // another patch
+    db.get(label, matlIndex, patch, var);
     
-    ASSERT(superPatchGroup != 0);
+    // The var's window should be the size of the patch or smaller than it.
+    ASSERTEQ(Min(var.getLow(), lowIndex), lowIndex);
+    ASSERTEQ(Max(var.getHigh(), highIndex), highIndex);
+    
+    if (var.getLow() != patch->getLowIndex(basis) ||
+	var.getHigh() != patch->getHighIndex(basis)) {
+      // It wasn't allocated as part of another patch's superpatch;
+      // it existed as ghost patch of another patch.. so we have no
+      // choice but to blow it away and replace it.
+      db.put(label, matlIndex, patch, 0, true);
 
-#ifdef WAYNE_DEBUG
-    IntVector diff = superHighIndex - superLowIndex;
-    int allocSize = diff.x() * diff.y() * diff.z();
-    totalGridAlloc += allocSize;
-    cerr << "Allocate " << label->getName() << ", matl " << matlIndex << ": " << superLowIndex << " - " << superHighIndex << " = " << allocSize << endl;  
-#endif
-    
-    var.allocate(superLowIndex, superHighIndex);
-    
-    Level::selectType encompassedPatches;
-    if (numGhostCells == 0 && \
-	superLowIndex == lowIndex && superHighIndex == highIndex) {
-      // only encompassing the patch currently being allocated
-      encompassedPatches.push_back(patch);
+      // this is just a tricky way to uninitialize var
+      VariableBase* tmpVar = var.cloneType();
+      var.copyPointer(*tmpVar);
     }
     else {
-      patch->getLevel()->selectPatches(superLowIndex, superHighIndex,
-				       encompassedPatches);
+      // It was allocated and put as part of the superpatch of another patch
+      var.rewindow(lowIndex, highIndex);
+     d_lock.writeUnlock();      
+      return; // got it -- done
     }
+  }
 
-    // Make a set of the non ghost patches that
-    // has quicker lookup than the vector.
-    set<const Patch*> nonGhostPatches;
-    for (unsigned int i = 0; i < superPatchGroup->size(); ++i) {
-      nonGhostPatches.insert((*superPatchGroup)[i]);
+  IntVector superLowIndex, superHighIndex;
+  const vector<const Patch*>* superPatchGroup =
+    d_scheduler->getSuperPatchExtents(label, patch, gtype, numGhostCells,
+				      superLowIndex, superHighIndex);
+ 
+  ASSERT(superPatchGroup != 0);
+
+#ifdef WAYNE_DEBUG
+  IntVector diff = superHighIndex - superLowIndex;
+  int allocSize = diff.x() * diff.y() * diff.z();
+  totalGridAlloc += allocSize;
+  cerr << "Allocate " << label->getName() << ", matl " << matlIndex << ": " << superLowIndex << " - " << superHighIndex << " = " << allocSize << endl;  
+#endif
+  
+  var.allocate(superLowIndex, superHighIndex);
+  
+  Level::selectType encompassedPatches;
+  if (numGhostCells == 0 && \
+      superLowIndex == lowIndex && superHighIndex == highIndex) {
+    // only encompassing the patch currently being allocated
+    encompassedPatches.push_back(patch);
+  }
+  else {
+    patch->getLevel()->selectPatches(superLowIndex, superHighIndex,
+				     encompassedPatches);
+  }
+  
+  // Make a set of the non ghost patches that
+  // has quicker lookup than the vector.
+  set<const Patch*> nonGhostPatches;
+  for (unsigned int i = 0; i < superPatchGroup->size(); ++i) {
+    nonGhostPatches.insert((*superPatchGroup)[i]);
+  }
+  
+  Level::selectType::iterator iter = encompassedPatches.begin();    
+  for (; iter != encompassedPatches.end(); ++iter) {
+    const Patch* patchGroupMember = *iter;
+    VariableBase* clone = var.clone();
+    IntVector groupMemberLowIndex = patchGroupMember->getLowIndex(basis);
+    IntVector groupMemberHighIndex = patchGroupMember->getHighIndex(basis);
+    IntVector enclosedLowIndex = Max(groupMemberLowIndex, superLowIndex);
+    IntVector enclosedHighIndex = Min(groupMemberHighIndex, superHighIndex);
+    
+    clone->rewindow(enclosedLowIndex, enclosedHighIndex);
+    if (patchGroupMember == patch) {
+      // this was checked already
+      exists = false;
     }
-
-    Level::selectType::iterator iter = encompassedPatches.begin();    
-    for (; iter != encompassedPatches.end(); ++iter) {
-      const Patch* patchGroupMember = *iter;
-      VariableBase* clone = var.clone();
-      IntVector groupMemberLowIndex = patchGroupMember->getLowIndex(basis);
-      IntVector groupMemberHighIndex = patchGroupMember->getHighIndex(basis);
-      IntVector enclosedLowIndex = Max(groupMemberLowIndex, superLowIndex);
-      IntVector enclosedHighIndex = Min(groupMemberHighIndex, superHighIndex);
-
-      clone->rewindow(enclosedLowIndex, enclosedHighIndex);
-      if (patchGroupMember == patch) {
-	// this was checked already
-	exists = false;
+    else {
+      exists = db.exists(label, matlIndex, patchGroupMember);
+    }
+    if (patchGroupMember->isVirtual()) {
+      // Virtual patches can only be ghost patches.
+      ASSERT(nonGhostPatches.find(patchGroupMember) ==
+	     nonGhostPatches.end());
+      clone->offsetGrid(IntVector(0,0,0) -
+			patchGroupMember->getVirtualOffset());
+      enclosedLowIndex = clone->getLow();
+      enclosedHighIndex = clone->getHigh();
+      patchGroupMember = patchGroupMember->getRealPatch();
+      IntVector tmpLowIndex, tmpHighIndex;
+      if (d_scheduler->
+	  getSuperPatchExtents(label, patchGroupMember, gtype, numGhostCells,
+			       tmpLowIndex, tmpHighIndex) != 0) {
+	// The virtual patch refers to a real patch in which the label
+	// is computed locally, so don't overwrite the local copy.
+	delete clone;
+	continue;
+      }
+    }
+    if (exists) {
+      // variable section already exists in this patchGroupMember
+      // (which is assumed to be a ghost patch)
+      // so check if one is enclosed in the other.
+      
+      // Assumption is that it is a ghost patch -- so assert that.
+      ASSERT(nonGhostPatches.find(patchGroupMember)
+	     == nonGhostPatches.end());
+      
+      VariableBase* existingGhostVar =
+	db.get(label, matlIndex, patchGroupMember);
+      IntVector existingLow = existingGhostVar->getLow();
+      IntVector existingHigh = existingGhostVar->getHigh();
+      IntVector minLow = Min(existingLow, enclosedLowIndex);
+      IntVector maxHigh = Max(existingHigh, enclosedHighIndex);
+      
+      if (minLow == enclosedLowIndex && maxHigh == enclosedHighIndex) {
+	// this new ghost variable section encloses the old one,
+	// so replace the old one
+	// Note: it is important for this case to come first since
+	// you want to be able to replace null-data place holders
+	// when existingLow/High == enclosedLow/High.
+	db.put(label, matlIndex, patchGroupMember, clone, true);
+      }
+      else if (minLow == existingLow && maxHigh == existingHigh) {
+	// old ghost variable section encloses this new one, so leave it
+	delete clone;
       }
       else {
-	exists = db.exists(label, matlIndex, patchGroupMember);
+	// Neither encloses the other, so put in a place holder with
+	// null data so it will (unless it is replaced with a window
+	// that encompasses it) allocate for this patchGroupMember
+	// during recvMPI.
+	VariableBase* placeHolder = clone->makePlaceHolder(minLow, maxHigh);
+	delete clone;	  
+	db.put(label, matlIndex, patchGroupMember, placeHolder, true);
       }
-      if (patchGroupMember->isVirtual()) {
-	  // Virtual patches can only be ghost patches.
-	ASSERT(nonGhostPatches.find(patchGroupMember) ==
-	       nonGhostPatches.end());
-	clone->offsetGrid(IntVector(0,0,0) -
-			  patchGroupMember->getVirtualOffset());
-	enclosedLowIndex = clone->getLow();
-	enclosedHighIndex = clone->getHigh();
-	patchGroupMember = patchGroupMember->getRealPatch();
-	if (d_scheduler->
-	    getSuperPatchExtents(label, patchGroupMember, gtype, numGhostCells,
-				 superLowIndex, superHighIndex) != 0) {
-	  // The virtual patch refers to a real patch in which the label
-	  // is computed locally, so don't overwrite the local copy.
-	  delete clone;
-	  continue;
-	}
-      }
-      if (exists) {
-	// variable section already exists in this patchGroupMember
-	// (which is assumed to be a ghost patch)
-	// so check if one is enclosed in the other.
-	
-	// Assumption is that it is a ghost patch -- so assert that.
-	ASSERT(nonGhostPatches.find(patchGroupMember)
-	       == nonGhostPatches.end());
-	
-	VariableBase* existingGhostVar =
-	  db.get(label, matlIndex, patchGroupMember);
-	IntVector existingLow = existingGhostVar->getLow();
-	IntVector existingHigh = existingGhostVar->getHigh();
-	IntVector minLow = Min(existingLow, enclosedLowIndex);
-	IntVector maxHigh = Max(existingHigh, enclosedHighIndex);
-
-	if (minLow == enclosedLowIndex && maxHigh == enclosedHighIndex) {
-	  // this new ghost variable section encloses the old one,
-	  // so replace the old one
-	  // Note: it is important for this case to come first since
-	  // you want to be able to replace null-data place holders
-	  // when existingLow/High == enclosedLow/High.
-	  db.put(label, matlIndex, patchGroupMember, clone, true);
-	}
-	else if (minLow == existingLow && maxHigh == existingHigh) {
-	  // old ghost variable section encloses this new one, so leave it
-	  delete clone;
-	}
-	else {
-	  // Neither encloses the other, so put in a place holder with
-	  // null data so it will (unless it is replaced with a window
-	  // that encompasses it) allocate for this patchGroupMember
-	  // during recvMPI.
-	  VariableBase* placeHolder = clone->makePlaceHolder(minLow, maxHigh);
-	  delete clone;	  
-	  db.put(label, matlIndex, patchGroupMember, placeHolder, true);
-	}
-      }
-      else {
-	// it didn't exist before -- add it
-	db.put(label, matlIndex, patchGroupMember, clone, false);
-      }
+    }
+    else {
+      // it didn't exist before -- add it
+      db.put(label, matlIndex, patchGroupMember, clone, false);
     }
   }
  d_lock.writeUnlock();
