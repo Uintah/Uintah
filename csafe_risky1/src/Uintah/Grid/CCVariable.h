@@ -91,6 +91,9 @@ class CCVariable : public Array3<T>, public CCVariableBase {
       virtual const TypeDescription* virtualGetTypeDescription() const;
       virtual void getSizes(IntVector& low, IntVector& high,
 			   IntVector& siz) const;
+      virtual void getSizes(IntVector& low, IntVector& high,
+			    IntVector& siz, IntVector& strides) const;
+
 
      // Replace the values on the indicated face with value
       void fillFace(Patch::FaceType face, const T& value)
@@ -388,10 +391,25 @@ class CCVariable : public Array3<T>, public CCVariableBase {
        siz = size();
      }
 
+   template<class T>
+     void
+     CCVariable<T>::getSizes(IntVector& low, IntVector& high, IntVector& siz,
+			      IntVector& strides) const
+      {
+	 low=getLowIndex();
+	 high=getHighIndex();
+	 siz=size();
+	 strides = IntVector(sizeof(T), (int)(sizeof(T)*siz.x()),
+			     (int)(sizeof(T)*siz.y()*siz.x()));
+      }
+
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.24.4.2  2000/10/20 02:06:37  rawat
+// modified cell centered and staggered variables to optimize communication
+//
 // Revision 1.24.4.1  2000/10/19 05:18:03  sparker
 // Merge changes from main branch into csafe_risky1
 //

@@ -404,215 +404,6 @@ IntVector Patch::getCellFORTHighIndex() const
 
 }
 
-void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
-				   int numGhostCells,
-				   Level::selectType& neighbors,
-				   IntVector& low, IntVector& high) const
-{
-    IntVector l(d_lowIndex);
-    IntVector h(d_highIndex);
-    IntVector g(numGhostCells, numGhostCells, numGhostCells);
-    switch(basis){
-    case CellBased:
-	switch(gtype){
-	case Ghost::None:
-	    if(gtype != 0)
-		throw InternalError("ghost cells should not be specified with Ghost::None");
-	    break;
-	case Ghost::AroundCells:    // Cells around cells
-	    l-=g;
-	    h+=g;
-	    break;
-	case Ghost::AroundNodes:    // Cells around nodes
-	    l-=g;
-	    h+=g-IntVector(1,1,1);
-	    break;
-	case Ghost::AroundXFaces:   // Cells around x faces
-	    l-=IntVector(numGhostCells,0,0);
-	    h+=IntVector(numGhostCells-1,0,0);
-	    break;
-	case Ghost::AroundYFaces:   // Cells around y faces
-	    l-=IntVector(0,numGhostCells,0);
-	    h+=IntVector(0,numGhostCells-1,0);
-	    break;
-	case Ghost::AroundZFaces:   // Cells around z faces
-	    l-=IntVector(0,0,numGhostCells);
-	    h+=IntVector(0,0,numGhostCells-1);
-	    break;
-	case Ghost::AroundAllFaces: // Cells around all faces
-	    l-=g;
-	    h+=g-IntVector(1,1,1);
-	    break;
-	}
-	break;
-    case NodeBased:
-	switch(gtype){
-	case Ghost::None:
-	    if(gtype != 0)
-		throw InternalError("ghost cells should not be specified with Ghost::None");
-	    break;
-	case Ghost::AroundCells:    // Nodes around cells
-	    l-=g-IntVector(1,1,1);
-	    h+=g;
-	    break;
-	case Ghost::AroundNodes:    // Nodes around nodes
-	    l-=g;
-	    h+=g;
-	    break;
-	case Ghost::AroundXFaces:   // Nodes around x faces
-	    l-=IntVector(numGhostCells-1,0,0);
-	    h+=IntVector(numGhostCells,0,0);
-	    break;
-	case Ghost::AroundYFaces:   // Nodes around y faces
-	    l-=IntVector(0,numGhostCells-1,0);
-	    h+=IntVector(0,numGhostCells,0);
-	    break;
-	case Ghost::AroundZFaces:   // Nodes around z faces
-	    l-=IntVector(0,0,numGhostCells-1);
-	    h+=IntVector(0,0,numGhostCells);
-	    break;
-	case Ghost::AroundAllFaces: // Nodes around all faces
-	    l-=g-IntVector(1,1,1);
-	    h+=g;
-	    break;
-	}
-	break;
-    case XFaceBased:
-	switch(gtype){
-	case Ghost::None:
-	    if(gtype != 0)
-		throw InternalError("ghost cells should not be specified with Ghost::None");
-	    break;
-	case Ghost::AroundCells:    // X faces around cells
-	    l-=IntVector(numGhostCells-1,0,0);
-	    h+=IntVector(numGhostCells,0,0);
-	    break;
-	case Ghost::AroundNodes:    // X faces around nodes
-	    throw InternalError("X faces around nodes not implemented");
-	case Ghost::AroundXFaces:   // X faces around x faces
-	    l-=IntVector(numGhostCells,0,0);
-	    h+=IntVector(numGhostCells,0,0);
-	    break;
-	case Ghost::AroundYFaces:   // X faces around y faces
-	    throw InternalError("X faces around y faces not implemented");
-	case Ghost::AroundZFaces:   // X faces around z faces
-	    throw InternalError("X faces around z faces not implemented");
-	case Ghost::AroundAllFaces: // X faces around all faces
-	    throw InternalError("X faces around all faces not implemented");
-	}
-	break;
-    case YFaceBased:
-	switch(gtype){
-	case Ghost::None:
-	    if(gtype != 0)
-		throw InternalError("ghost cells should not be specified with Ghost::None");
-	    break;
-	case Ghost::AroundCells:    // Y faces around cells
-	    l-=IntVector(0,numGhostCells-1,0);
-	    h+=IntVector(0,numGhostCells,0);
-	    break;
-	case Ghost::AroundNodes:    // Y faces around nodes
-	    throw InternalError("Y faces around nodes not implemented");
-	case Ghost::AroundXFaces:   // Y faces around x faces
-	    throw InternalError("Y faces around x faces not implemented");
-	case Ghost::AroundYFaces:   // Y faces around y faces
-	    l-=IntVector(0,numGhostCells,0);
-	    h+=IntVector(0,numGhostCells,0);
-	    break;
-	case Ghost::AroundZFaces:   // Y faces around z faces
-	    throw InternalError("Y faces around z faces not implemented");
-	case Ghost::AroundAllFaces: // Y faces around all faces
-	    throw InternalError("Y faces around all faces not implemented");
-	}
-	break;
-    case ZFaceBased:
-	switch(gtype){
-	case Ghost::None:
-	    if(gtype != 0)
-		throw InternalError("ghost cells should not be specified with Ghost::None");
-	    break;
-	case Ghost::AroundCells:    // Z faces around cells
-	    l-=IntVector(0,0,numGhostCells-1);
-	    h+=IntVector(0,0,numGhostCells);
-	    break;
-	case Ghost::AroundNodes:    // Z faces around nodes
-	    throw InternalError("Z faces around nodes not implemented");
-	case Ghost::AroundXFaces:   // Z faces around x faces
-	    throw InternalError("Z faces around x faces not implemented");
-	case Ghost::AroundYFaces:   // Z faces around y faces
-	    throw InternalError("Z faces around y faces not implemented");
-	case Ghost::AroundZFaces:   // Z faces around z faces
-	    l-=IntVector(0,0,numGhostCells);
-	    h+=IntVector(0,0,numGhostCells);
-	    break;
-	case Ghost::AroundAllFaces: // Z faces around all faces
-	    throw InternalError("Z faces around all faces not implemented");
-	}
-	break;
-    case AllFaceBased:
-	switch(gtype){
-	case Ghost::None:
-	    if(gtype != 0)
-		throw InternalError("ghost cells should not be specified with Ghost::None");
-	    break;
-	case Ghost::AroundCells:    // All faces around cells
-	    throw InternalError("All faces around cells not implemented");
-	case Ghost::AroundNodes:    // All faces around nodes
-	    throw InternalError("All faces around nodes not implemented");
-	case Ghost::AroundXFaces:   // All faces around x faces
-	    throw InternalError("All faces around x faces not implemented");
-	case Ghost::AroundYFaces:   // All faces around y faces
-	    throw InternalError("All faces around y faces not implemented");
-	case Ghost::AroundZFaces:   // All faces around z faces
-	    throw InternalError("All faces around z faces not implemented");
-	case Ghost::AroundAllFaces: // All faces around all faces
-	    throw InternalError("All faces around all faces not implemented");
-	}
-	break;
-    }
-    low=l;
-    high=h;
-    d_level->selectPatches(l, h, neighbors);
-}
-
-void Patch::computeVariableExtents(TypeDescription::Type basis,
-				   Ghost::GhostType gtype,
-				   int numGhostCells,
-				   Level::selectType& neighbors,
-				   IntVector& low, IntVector& high) const
-{
-    VariableBasis translation;
-    switch(basis){
-    case TypeDescription::CCVariable:
-	translation=CellBased;
-	break;
-    case TypeDescription::NCVariable:
-	translation=NodeBased;
-	break;
-    case TypeDescription::FCVariable:
-	translation=AllFaceBased;
-	break;
-    case TypeDescription::SFCXVariable:
-	translation=XFaceBased;
-	break;
-    case TypeDescription::SFCYVariable:
-	translation=YFaceBased;
-	break;
-    case TypeDescription::SFCZVariable:
-	translation=ZFaceBased;
-	break;
-    case TypeDescription::ParticleVariable:
-	translation=CellBased;
-	break;
-    default:
-       if(gtype == Ghost::None)
-	  translation=CellBased;  // Shouldn't matter what it is
-       else
-	  throw InternalError("Unknown variable type in Patch::getVariableExtents (from TypeDescription::Type)");
-    }
-    computeVariableExtents(translation, gtype, numGhostCells,
-			   neighbors, low, high);
-}
 
 // numGC = number of ghost cells
 IntVector Patch::getGhostCellLowIndex(const int numGC) const
@@ -682,8 +473,321 @@ IntVector Patch::getGhostSFCZHighIndex(const int numGC) const
    return h;
 }
 
+void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
+				   int numGhostCells,
+				   Level::selectType& neighbors,
+				   IntVector& low, IntVector& high) const
+{
+    IntVector l(d_lowIndex);
+    IntVector h(d_highIndex);
+    IntVector lg(l);
+    IntVector hg(h);
+    IntVector g(numGhostCells, numGhostCells, numGhostCells);
+    switch(basis){
+    case CellBased:
+	switch(gtype){
+	case Ghost::None:
+	    if(gtype != 0)
+		throw InternalError("ghost cells should not be specified with Ghost::None");
+	    break;
+	case Ghost::AroundCells:    // Cells around cells
+	    l-=g;
+	    h+=g;
+	    lg = l;
+	    hg = h;
+	    break;
+	case Ghost::AroundNodes:    // Cells around nodes
+	    l-=g;
+	    h+=g-IntVector(1,1,1);
+	    lg = l;
+	    hg = h;
+	    break;
+	case Ghost::AroundXFaces:   // Cells around x faces
+	    l-=IntVector(numGhostCells,0,0);
+	    h+=IntVector(numGhostCells-1,0,0);
+	    lg = l;
+	    hg = h;
+	    break;
+	case Ghost::AroundYFaces:   // Cells around y faces
+	    l-=IntVector(0,numGhostCells,0);
+	    h+=IntVector(0,numGhostCells-1,0);
+	    lg = l;
+	    hg = h;
+	    break;
+	case Ghost::AroundZFaces:   // Cells around z faces
+	    l-=IntVector(0,0,numGhostCells);
+	    h+=IntVector(0,0,numGhostCells-1);
+	    lg = l;
+	    hg = h;
+	    break;
+	case Ghost::AroundAllFaces: // Cells around all faces
+	    l-=g;
+	    h+=g-IntVector(1,1,1);
+	    lg = l;
+	    hg = h;
+	    break;
+	}
+	break;
+    case NodeBased:
+	switch(gtype){
+	case Ghost::None:
+	    if(gtype != 0)
+		throw InternalError("ghost cells should not be specified with Ghost::None");
+	    break;
+	case Ghost::AroundCells:    // Nodes around cells
+	    l-=g-IntVector(1,1,1);
+	    h+=g;
+	    lg = l;
+	    hg = h;
+	    break;
+	case Ghost::AroundNodes:    // Nodes around nodes
+	    l-=g;
+	    h+=g;
+	    lg = l;
+	    hg = h;
+	    break;
+	case Ghost::AroundXFaces:   // Nodes around x faces
+	    l-=IntVector(numGhostCells-1,0,0);
+	    h+=IntVector(numGhostCells,0,0);
+	    lg = l;
+	    hg = h;
+	    break;
+	case Ghost::AroundYFaces:   // Nodes around y faces
+	    l-=IntVector(0,numGhostCells-1,0);
+	    h+=IntVector(0,numGhostCells,0);
+	    lg = l;
+	    hg = h;
+	    break;
+	case Ghost::AroundZFaces:   // Nodes around z faces
+	    l-=IntVector(0,0,numGhostCells-1);
+	    h+=IntVector(0,0,numGhostCells);
+	    lg = l;
+	    hg = h;
+	    break;
+	case Ghost::AroundAllFaces: // Nodes around all faces
+	    l-=g-IntVector(1,1,1);
+	    h+=g;
+	    lg = l;
+	    hg = h;
+	    break;
+	}
+	break;
+    case CellFaceBased:
+	switch(gtype){
+	case Ghost::None:
+	    if(gtype != 0)
+		throw InternalError("ghost cells should not be specified with Ghost::None");
+	    break;
+	case Ghost::AroundCells:    // Cells around cells
+	    l = getGhostCellLowIndex(numGhostCells);
+	    h = getGhostCellHighIndex(numGhostCells);
+	    lg = l;
+	    hg = h;
+
+#if 0
+	    l-=g;
+	    h+=g;
+#endif
+	    break;
+	case Ghost::AroundNodes:    // Cells around nodes
+	    l-=g;
+	    h+=g-IntVector(1,1,1);
+	    break;
+	case Ghost::AroundXFaces:   // Cells around x faces
+	    l-=IntVector(numGhostCells,0,0);
+	    h+=IntVector(numGhostCells-1,0,0);
+	    break;
+	case Ghost::AroundYFaces:   // Cells around y faces
+	    l-=IntVector(0,numGhostCells,0);
+	    h+=IntVector(0,numGhostCells-1,0);
+	    break;
+	case Ghost::AroundZFaces:   // Cells around z faces
+	    l-=IntVector(0,0,numGhostCells);
+	    h+=IntVector(0,0,numGhostCells-1);
+	    break;
+	case Ghost::AroundAllFaces: // Cells around all faces
+	    l-=g;
+	    h+=g-IntVector(1,1,1);
+	    break;
+	}
+	break;
+    case XFaceBased:
+	switch(gtype){
+	case Ghost::None:
+	    if(gtype != 0)
+		throw InternalError("ghost cells should not be specified with Ghost::None");
+	    break;
+	case Ghost::AroundCells:    // X faces around cells
+#if 0
+	    l-=IntVector(numGhostCells-1,0,0);
+	    h+=IntVector(numGhostCells,0,0);
+#endif
+	    l = getGhostSFCXLowIndex(numGhostCells);
+	    h = getGhostSFCXHighIndex(numGhostCells);
+#if 0
+	    lg = getGhostCellLowIndex(numGhostCells);
+	    hg = getGhostCellHighIndex(numGhostCells);
+#endif
+	    lg = l;
+	    hg = h;
+	    break;
+	case Ghost::AroundNodes:    // X faces around nodes
+	    throw InternalError("X faces around nodes not implemented");
+	case Ghost::AroundXFaces:   // X faces around x faces
+	    l-=IntVector(numGhostCells,0,0);
+	    h+=IntVector(numGhostCells,0,0);
+	    break;
+	case Ghost::AroundYFaces:   // X faces around y faces
+	    throw InternalError("X faces around y faces not implemented");
+	case Ghost::AroundZFaces:   // X faces around z faces
+	    throw InternalError("X faces around z faces not implemented");
+	case Ghost::AroundAllFaces: // X faces around all faces
+	    throw InternalError("X faces around all faces not implemented");
+	}
+	break;
+    case YFaceBased:
+	switch(gtype){
+	case Ghost::None:
+	    if(gtype != 0)
+		throw InternalError("ghost cells should not be specified with Ghost::None");
+	    break;
+	case Ghost::AroundCells:    // Y faces around cells
+	    l = getGhostSFCYLowIndex(numGhostCells);
+	    h = getGhostSFCYHighIndex(numGhostCells);
+#if 0
+	    lg = getGhostCellLowIndex(numGhostCells);
+	    hg = getGhostCellHighIndex(numGhostCells);
+#endif
+	    lg = l;
+	    hg = h;
+
+
+#if 0
+	    l-=IntVector(0,numGhostCells-1,0);
+	    h+=IntVector(0,numGhostCells,0);
+#endif
+	    break;
+	case Ghost::AroundNodes:    // Y faces around nodes
+	    throw InternalError("Y faces around nodes not implemented");
+	case Ghost::AroundXFaces:   // Y faces around x faces
+	    throw InternalError("Y faces around x faces not implemented");
+	case Ghost::AroundYFaces:   // Y faces around y faces
+	    l-=IntVector(0,numGhostCells,0);
+	    h+=IntVector(0,numGhostCells,0);
+	    break;
+	case Ghost::AroundZFaces:   // Y faces around z faces
+	    throw InternalError("Y faces around z faces not implemented");
+	case Ghost::AroundAllFaces: // Y faces around all faces
+	    throw InternalError("Y faces around all faces not implemented");
+	}
+	break;
+    case ZFaceBased:
+	switch(gtype){
+	case Ghost::None:
+	    if(gtype != 0)
+		throw InternalError("ghost cells should not be specified with Ghost::None");
+	    break;
+	case Ghost::AroundCells:    // Z faces around cells
+	    l = getGhostSFCZLowIndex(numGhostCells);
+	    h = getGhostSFCZHighIndex(numGhostCells);
+#if 0
+	    lg = getGhostCellLowIndex(numGhostCells);
+	    hg = getGhostCellHighIndex(numGhostCells);
+#endif
+	    lg = l;
+	    hg = h;
+
+
+#if 0
+	    l-=IntVector(0,0,numGhostCells-1);
+	    h+=IntVector(0,0,numGhostCells);
+#endif
+	    break;
+	case Ghost::AroundNodes:    // Z faces around nodes
+	    throw InternalError("Z faces around nodes not implemented");
+	case Ghost::AroundXFaces:   // Z faces around x faces
+	    throw InternalError("Z faces around x faces not implemented");
+	case Ghost::AroundYFaces:   // Z faces around y faces
+	    throw InternalError("Z faces around y faces not implemented");
+	case Ghost::AroundZFaces:   // Z faces around z faces
+	    l-=IntVector(0,0,numGhostCells);
+	    h+=IntVector(0,0,numGhostCells);
+	    break;
+	case Ghost::AroundAllFaces: // Z faces around all faces
+	    throw InternalError("Z faces around all faces not implemented");
+	}
+	break;
+    case AllFaceBased:
+	switch(gtype){
+	case Ghost::None:
+	    if(gtype != 0)
+		throw InternalError("ghost cells should not be specified with Ghost::None");
+	    break;
+	case Ghost::AroundCells:    // All faces around cells
+	    throw InternalError("All faces around cells not implemented");
+	case Ghost::AroundNodes:    // All faces around nodes
+	    throw InternalError("All faces around nodes not implemented");
+	case Ghost::AroundXFaces:   // All faces around x faces
+	    throw InternalError("All faces around x faces not implemented");
+	case Ghost::AroundYFaces:   // All faces around y faces
+	    throw InternalError("All faces around y faces not implemented");
+	case Ghost::AroundZFaces:   // All faces around z faces
+	    throw InternalError("All faces around z faces not implemented");
+	case Ghost::AroundAllFaces: // All faces around all faces
+	    throw InternalError("All faces around all faces not implemented");
+	}
+	break;
+    }
+    low=l;
+    high=h;
+    d_level->selectPatches(lg, hg, neighbors);
+}
+
+void Patch::computeVariableExtents(TypeDescription::Type basis,
+				   Ghost::GhostType gtype,
+				   int numGhostCells,
+				   Level::selectType& neighbors,
+				   IntVector& low, IntVector& high) const
+{
+    VariableBasis translation;
+    switch(basis){
+    case TypeDescription::CCVariable:
+	translation=CellFaceBased;
+	break;
+    case TypeDescription::NCVariable:
+	translation=NodeBased;
+	break;
+    case TypeDescription::FCVariable:
+	translation=AllFaceBased;
+	break;
+    case TypeDescription::SFCXVariable:
+	translation=XFaceBased;
+	break;
+    case TypeDescription::SFCYVariable:
+	translation=YFaceBased;
+	break;
+    case TypeDescription::SFCZVariable:
+	translation=ZFaceBased;
+	break;
+    case TypeDescription::ParticleVariable:
+	translation=CellBased;
+	break;
+    default:
+       if(gtype == Ghost::None)
+	  translation=CellBased;  // Shouldn't matter what it is
+       else
+	  throw InternalError("Unknown variable type in Patch::getVariableExtents (from TypeDescription::Type)");
+    }
+    computeVariableExtents(translation, gtype, numGhostCells,
+			   neighbors, low, high);
+}
+
+
 //
 // $Log$
+// Revision 1.22.4.4  2000/10/20 02:06:37  rawat
+// modified cell centered and staggered variables to optimize communication
+//
 // Revision 1.22.4.3  2000/10/19 05:18:03  sparker
 // Merge changes from main branch into csafe_risky1
 //
