@@ -43,6 +43,7 @@ namespace SCIRun {
   class InternalComponentModel;
   class CCAComponentModel;
   class BabelComponentModel;
+  class VtkComponentModel;
   class SCIRunFramework : public sci::cca::AbstractFramework {
   public:
     SCIRunFramework();
@@ -101,6 +102,7 @@ namespace SCIRun {
     InternalComponentModel* internalServices;
     CCAComponentModel* cca;
     BabelComponentModel* babel;
+    VtkComponentModel* vtk;
     //Semaphore d_slave_sema;
     
   };
