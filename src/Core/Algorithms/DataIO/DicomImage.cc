@@ -83,7 +83,7 @@ DicomImage::DicomImage()
 // Arguments   : none
 //
  
-DicomImage::DicomImage( itk::DicomImageIO::Pointer io, 
+DicomImage::DicomImage( itk::DICOMImageIO2::Pointer io, 
                         ImageNDType::Pointer image, string id )
 {
   ImageNDType::RegionType region = image->GetLargestPossibleRegion();
