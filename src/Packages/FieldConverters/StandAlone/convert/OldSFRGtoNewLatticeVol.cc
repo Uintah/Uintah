@@ -69,9 +69,9 @@ int main(int argc, char **argv) {
   cerr << "object space extents     = "
        << mesh->get_min() << ", " << mesh->get_max() << endl;
 
-  // create storage for the data, and copy base's data into it
-  FData3d<double> fdata = lf->fdata();
-  fdata.newsize(base->nx+1,base->ny+1,base->nz+1);
+  // get the storage for the data, and copy base's data into it
+  FData3d<double> &fdata = lf->fdata();
+  fdata.newsize(base->nx,base->ny,base->nz);
   LatVolMesh::NodeIter iter = mesh->node_begin();
   int i=0,j=0,k=0;
   while (iter != mesh->node_end()) {
@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
       }
     }
   }
-  
+
   TextPiostream out_stream(argv[2], Piostream::Write);
   Pio(out_stream, fH);
 
