@@ -65,8 +65,8 @@ int DebugBuf::overflow(int ch)
 }
 
 
-DebugStream::DebugStream(string iname, bool defaulton):
-  std::ostream(new DebugBuf()), std::ios(0)
+DebugStream::DebugStream(const string& iname, bool defaulton):
+    std::ostream(0), std::ios(0)
 {
   dbgbuf = new DebugBuf();
   init(dbgbuf);
@@ -76,6 +76,8 @@ DebugStream::DebugStream(string iname, bool defaulton):
   isactive = defaulton;
   if(isactive){
     outstream = &cerr;
+  } else {
+    outstream = 0;
   }
   // check SCI_DEBUG to see if this instance is mentioned
   checkenv(iname);
@@ -84,7 +86,7 @@ DebugStream::DebugStream(string iname, bool defaulton):
 
 DebugStream::~DebugStream()
 {
-  if(outstream != &cerr){
+  if(outstream && outstream != &cerr){
     delete(outstream);
   }
   delete dbgbuf;
