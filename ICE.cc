@@ -176,8 +176,8 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   // Pull out from CFD-ICE section
   ProblemSpecP cfd_ps = prob_spec->findBlock("CFD");
   cfd_ps->require("cfl",d_CFL);
-  d_canAddMaterial=false;
-  cfd_ps->get("CanAddMaterial",d_canAddMaterial);
+  d_canAddICEMaterial=false;
+  cfd_ps->get("CanAddICEMaterial",d_canAddICEMaterial);
   ProblemSpecP cfd_ice_ps = cfd_ps->findBlock("ICE"); 
   
   cfd_ice_ps->require("max_iteration_equilibration",d_max_iter_equilibration);
@@ -788,7 +788,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
                                                           all_matls); 
   }
 
-  if(d_canAddMaterial){
+  if(d_canAddICEMaterial){
     //  This checks to see if the model on THIS patch says that it's
     //  time to add a new material
     scheduleCheckNeedAddMaterial(           sched, level,   all_matls);
