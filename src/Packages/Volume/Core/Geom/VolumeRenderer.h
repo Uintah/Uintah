@@ -33,14 +33,8 @@
 #define VolumeRenderer_h
 
 #include <Core/Thread/Mutex.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Ray.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/Transform.h>
 #include <Core/Geom/ColorMap.h>
 #include <Core/Geom/GeomObj.h>
-
-#include <Core/Containers/BinaryTree.h>
 
 #include <Packages/Volume/Core/Datatypes/Brick.h>
 #include <Packages/Volume/Core/Datatypes/Texture.h>
@@ -56,7 +50,8 @@ class VolShaderFactory;
 class VolumeRenderer : public TextureRenderer
 {
 public:
-  VolumeRenderer(TextureHandle tex, ColorMapHandle cmap1, Colormap2Handle cmap2);
+  VolumeRenderer(TextureHandle tex, ColorMapHandle cmap1, Colormap2Handle cmap2,
+                 int tex_mem);
   VolumeRenderer(const VolumeRenderer&);
   ~VolumeRenderer();
 

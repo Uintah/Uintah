@@ -25,24 +25,53 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : TexturePort.h
+//    File   : GLinfo.h
 //    Author : Milan Ikits
-//    Date   : Thu Jul 15 15:00:29 2004
+//    Date   : Wed Jul 14 15:55:55 2004
 
-#ifndef Volume_TexturePort_h
-#define Volume_TexturePort_h
+#ifndef Volume_GLinfo_h
+#define Volume_GLinfo_h
 
-#include <Dataflow/Ports/SimplePort.h>
-#include <Packages/Volume/Core/Datatypes/Texture.h>
+#include <sci_gl.h>
 
 namespace Volume {
 
-using SCIRun::SimpleIPort;
-using SCIRun::SimpleOPort;
+template <typename T>
+struct GLinfo
+{
+  static const GLenum type = GL_NONE;
+};
 
-typedef SimpleIPort<TextureHandle> TextureIPort;
-typedef SimpleOPort<TextureHandle> TextureOPort;
+template <>
+struct GLinfo<unsigned char>
+{
+  static const GLenum type = GL_UNSIGNED_BYTE;
+};
 
-} // namespace Volume
+template <>
+struct GLinfo<char>
+{
+  static const GLenum type = GL_UNSIGNED_BYTE;
+};
 
-#endif // Volume_TexturePort_h
+template <>
+struct GLinfo<unsigned short>
+{
+  static const GLenum type = GL_UNSIGNED_SHORT;
+};
+
+template <>
+struct GLinfo<short>
+{
+  static const GLenum type = GL_SHORT;
+};
+
+template <>
+struct GLinfo<float>
+{
+  static const GLenum type = GL_FLOAT;
+};
+
+} // end namespace Volume
+
+#endif // Volume_GLinfo_h

@@ -34,7 +34,6 @@
 #include <Packages/Volume/Core/Geom/SliceRenderer.h>
 #include <Packages/Volume/Core/Geom/VolShader.h>
 #include <Packages/Volume/Core/Datatypes/Brick.h>
-#include <Packages/Volume/Core/Util/SliceTable.h>
 #include <Packages/Volume/Core/Util/ShaderProgramARB.h>
 
 using std::string;

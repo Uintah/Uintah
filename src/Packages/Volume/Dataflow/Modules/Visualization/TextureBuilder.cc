@@ -1,11 +1,33 @@
-/*
- *  Texture.cc:
- *
- *  Written by:
- *   kuzimmer
- *   TODAY'S DATE HERE
- *
- */
+//  
+//  For more information, please see: http://software.sci.utah.edu
+//  
+//  The MIT License
+//  
+//  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+//  University of Utah.
+//  
+//  License for the specific language governing rights and limitations under
+//  Permission is hereby granted, free of charge, to any person obtaining a
+//  copy of this software and associated documentation files (the "Software"),
+//  to deal in the Software without restriction, including without limitation
+//  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+//  and/or sell copies of the Software, and to permit persons to whom the
+//  Software is furnished to do so, subject to the following conditions:
+//  
+//  The above copyright notice and this permission notice shall be included
+//  in all copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+//  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+//  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+//  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+//  DEALINGS IN THE SOFTWARE.
+//  
+//    File   : TextureBuilder.cc
+//    Author : Milan Ikits
+//    Date   : Fri Jul 16 00:11:18 2004
 
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/LatVolField.h>
@@ -22,21 +44,26 @@
 #include <Packages/Volume/Dataflow/Ports/TexturePort.h>
 #include <Packages/Volume/Core/Algorithms/TextureBuilderAlgo.h>
 
-namespace Volume {
+#include <Core/Util/DebugStream.h>
 
 using namespace SCIRun;
 
-class PSECORESHARE TextureBuilder : public Module {
+namespace Volume {
+
+static SCIRun::DebugStream dbg("TextureBuilder", false);
+
+class PSECORESHARE TextureBuilder : public Module
+{
 public:
   TextureBuilder(GuiContext*);
-
   virtual ~TextureBuilder();
 
   virtual void execute();
-
   virtual void tcl_command(GuiArgs&, void*);
 
 private:
+  TextureHandle texture_;
+  
   GuiDouble gui_vminval_;
   GuiDouble gui_vmaxval_;
   GuiDouble gui_gminval_;
@@ -53,13 +80,10 @@ private:
   double gminval_, gmaxval_;
   
   ProgressReporter my_reporter_;
+  
   template<class Reporter> bool build_texture(Reporter*, FieldHandle, FieldHandle);
-  template<class Reporter> bool replace_texture(Reporter*, FieldHandle, FieldHandle);
-
   bool new_vfield(FieldHandle field);
   bool new_gfield(FieldHandle field);
-
-  TextureHandle texture_;
 };
 
 
@@ -67,6 +91,7 @@ DECLARE_MAKER(TextureBuilder)
   
 TextureBuilder::TextureBuilder(GuiContext* ctx)
   : Module("TextureBuilder", ctx, Source, "Visualization", "Volume"),
+    texture_(new Texture),
     gui_vminval_(ctx->subVar("vmin")),
     gui_vmaxval_(ctx->subVar("vmax")),
     gui_gminval_(ctx->subVar("gmin")),
@@ -74,26 +99,23 @@ TextureBuilder::TextureBuilder(GuiContext* ctx)
     gui_fixed_(ctx->subVar("is_fixed")),
     gui_card_mem_(ctx->subVar("card_mem")),
     gui_card_mem_auto_(ctx->subVar("card_mem_auto")),
-    vfield_last_generation_(-1), gfield_last_generation_(-1),
-    texture_(0)
-{
-  card_mem_ = video_card_memory_size();
-}
+    card_mem_(video_card_memory_size()),
+    vfield_last_generation_(-1), gfield_last_generation_(-1)
+{}
 
-TextureBuilder::~TextureBuilder() {
-}
+TextureBuilder::~TextureBuilder()
+{}
 
 void
 TextureBuilder::execute()
 {
   if(card_mem_ != 0 && gui_card_mem_auto_.get()) {
-    ostringstream cmd;
-    cmd << id << " set_card_mem " << card_mem_ << "; " <<  id << " state";
-    gui->execute(cmd.str().c_str());
+    gui_card_mem_.set(card_mem_);
   } else if(card_mem_ == 0) {
-    ostringstream cmd;
-    cmd << id << " set_card_mem_auto 0; " << id << " state";
-    gui->execute(cmd.str().c_str());
+    gui_card_mem_auto_.set(0);
+//     ostringstream cmd;
+//     cmd << id << " set_card_mem_auto 0; " << id << " state";
+//     gui->execute(cmd.str().c_str());
   }
 
   FieldIPort* ivfield = (FieldIPort *)get_iport("Scalar Field");
@@ -114,7 +136,7 @@ TextureBuilder::execute()
   
   if (vfield->generation != vfield_last_generation_) {
     // new field
-    if (!new_vfield(vfield)) return;
+    if(!new_vfield(vfield)) return;
     vfield_last_generation_ = vfield->generation;
   }
 
@@ -124,12 +146,12 @@ TextureBuilder::execute()
     if(gfield.get_rep()) {
       if (gfield->generation != gfield_last_generation_) {
         // new field
-        if (!new_gfield(gfield)) return;
+        if(!new_gfield(gfield)) return;
         gfield_last_generation_ = gfield->generation;
       }
     }
   }
-
+  
   if(build_texture(&my_reporter_, vfield, gfield)) {
     otexture->send(texture_);
   }
@@ -145,22 +167,12 @@ TextureBuilder::build_texture(Reporter* reporter, FieldHandle vfield, FieldHandl
   LockingHandle<TextureBuilderAlgoBase> builder;
   CompileInfoHandle ci = TextureBuilderAlgoBase::get_compile_info(td);
   if (!DynamicCompilation::compile(ci, builder, reporter)) {
-    reporter->error("Texture Builder can not work on this Field");
+    reporter->error("Texture Builder can not work with this type of field.");
     return false;
   }
-  texture_ = TextureHandle(builder->build(vfield, gfield,
-                                          gui_card_mem_.get(), 
-                                          vminval_, vmaxval_, gminval_, gmaxval_));
+  builder->build(texture_, vfield, vminval_, vmaxval_,
+                 gfield, gminval_, gmaxval_, gui_card_mem_.get());
   return true;
-}
-
-
-template<class Reporter>
-bool
-TextureBuilder::replace_texture(Reporter *reporter,
-                                FieldHandle vfield, FieldHandle gfield)
-{
-  return false;
 }
 
 void
@@ -173,13 +185,11 @@ bool
 TextureBuilder::new_vfield(FieldHandle vfield)
 {
   const string type = vfield->get_type_description()->get_name();
-
   ScalarFieldInterfaceHandle sfi = vfield->query_scalar_interface(this);
-  if (!sfi.get_rep()) {
-    error("Input field does not contain scalar data.");
+  if(!sfi.get_rep()) {
+    error("Input scalar field does not contain scalar data.");
     return false;
   }
-
   // set vmin/vmax
   pair<double, double> vminmax;
   sfi->compute_min_max(vminmax.first, vminmax.second);
@@ -191,10 +201,8 @@ TextureBuilder::new_vfield(FieldHandle vfield)
     vminval_ = vminmax.first;
     vmaxval_ = vminmax.second;
   }
-
   return true;
 }
-
   
 bool
 TextureBuilder::new_gfield(FieldHandle gfield)
@@ -202,36 +210,29 @@ TextureBuilder::new_gfield(FieldHandle gfield)
   // set gmin/gmax
   LatVolField<Vector>* gfld = 
     dynamic_cast<LatVolField<Vector>*>(gfield.get_rep());
-
-  if (gfld) {
-    
-    FData3d<Vector>::const_iterator bi, ei;
-    bi = gfld->fdata().begin();
-    ei = gfld->fdata().end();
-
-    double gminval = std::numeric_limits<double>::max();
-    double gmaxval = -gminval;
-    while (bi != ei)
-    {
-      Vector v = *bi;
-      double g = v.length();
-      if (g < gminval) gminval = g;
-      if (g > gmaxval) gmaxval = g;
-      ++bi;
-    }
-
-    if(!gui_fixed_.get()) {
-      gui_gminval_.set(gminval);
-      gui_gmaxval_.set(gmaxval);
-    }
-    
-    gminval_ = gminval;
-    gmaxval_ = gmaxval;
-  }  
-
+  if(!gfld) {
+    error("Input gradient field does not contain vector data.");
+    return false;
+  }
+  FData3d<Vector>::const_iterator bi, ei;
+  bi = gfld->fdata().begin();
+  ei = gfld->fdata().end();
+  double gminval = std::numeric_limits<double>::max();
+  double gmaxval = -gminval;
+  while (bi != ei) {
+    Vector v = *bi;
+    double g = v.length();
+    if (g < gminval) gminval = g;
+    if (g > gmaxval) gmaxval = g;
+    ++bi;
+  }
+  if(!gui_fixed_.get()) {
+    gui_gminval_.set(gminval);
+    gui_gmaxval_.set(gmaxval);
+  }
+  gminval_ = gminval;
+  gmaxval_ = gmaxval;
   return true;
 }
 
-} // End namespace Volume
-
-
+} // end namespace Volume

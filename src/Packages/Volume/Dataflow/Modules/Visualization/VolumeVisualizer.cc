@@ -46,6 +46,7 @@
 #include <Packages/Volume/Core/Datatypes/Texture.h>
 #include <Packages/Volume/Dataflow/Ports/TexturePort.h>
 #include <Packages/Volume/Dataflow/Ports/Colormap2Port.h>
+#include <Packages/Volume/Core/Util/VideoCardInfo.h>
 
 #include <iostream>
 #ifdef __sgi
@@ -68,13 +69,14 @@ public:
 private:
   TextureHandle tex;
 
+  TextureIPort* intexture;
   ColorMapIPort* icmap1;
   Colormap2IPort* icmap2;
-  TextureIPort* intexture;
   GeometryOPort* ogeom;
   ColorMapOPort* ocmap;
   int cmap1_prevgen;
   int cmap2_prevgen;
+  int card_mem_;
    
   CrowdMonitor control_lock; 
   PointWidget* control_widget;
@@ -126,6 +128,7 @@ VolumeVisualizer::VolumeVisualizer(GuiContext* ctx)
     gui_blend_res_(ctx->subVar("blend_res")),
     volren_(0)
 {
+  card_mem_ = video_card_memory_size();
 }
 
 VolumeVisualizer::~VolumeVisualizer(){
@@ -168,12 +171,12 @@ VolumeVisualizer::execute(){
   bool c1 = icmap1->get(cmap1);
   bool c2 = icmap2->get(cmap2);
   if(!c1 && !c2) return;
-
+  
   bool cmap1_dirty = false;
   bool cmap2_dirty = false;
   if(c1 && (cmap1->generation != cmap1_prevgen)) {
     cmap1_dirty = true;
-  }    
+  }
   if(c2 && (cmap2->generation != cmap2_prevgen)) {
     cmap2_dirty = true;
   }    
@@ -186,10 +189,12 @@ VolumeVisualizer::execute(){
 //   if (c2) cerr << "GEN: " << cmap2->generation << " " << cmap2_prevgen << endl;
 
   if(!volren_) {
-    volren_ = new VolumeRenderer(tex, cmap1, cmap2);
-    oldmin = tex->min();
-    oldmax = tex->max();
-    tex->get_dimensions(oldni, oldnj, oldnk);
+    volren_ = new VolumeRenderer(tex, cmap1, cmap2, int(card_mem_*1024*1024*0.8));
+    oldmin = tex->bbox().min();
+    oldmax = tex->bbox().max();
+    oldni = tex->nx();
+    oldnj = tex->ny();
+    oldnk = tex->nz();
     //    ogeom->delAll();
     geomID = ogeom->addObj(volren_, "VolumeRenderer TransParent");
   } else {
@@ -198,15 +203,16 @@ VolumeVisualizer::execute(){
       volren_->set_colormap1(cmap1);
     if(c2 && cmap2_dirty)
       volren_->set_colormap2(cmap2);
-    int ni, nj, nk;
-    tex->get_dimensions(ni, nj, nk);
-    if(oldmin != tex->min() || oldmax != tex->max() ||
+    int ni = tex->nx();
+    int nj = tex->ny();
+    int nk = tex->nz();
+    if(oldmin != tex->bbox().min() || oldmax != tex->bbox().max() ||
        ni != oldni || nj != oldnj || nk != oldnk) {
       ogeom->delObj(geomID);
       geomID = ogeom->addObj(volren_, "VolumeRenderer TransParent");
       oldni = ni; oldnj = nj; oldnk = nk;
-      oldmin = tex->min();
-      oldmax = tex->max();
+      oldmin = tex->bbox().min();
+      oldmax = tex->bbox().max();
     }
   }
  
@@ -256,9 +262,7 @@ VolumeVisualizer::execute(){
     if(c1) {
       ColorMapHandle outcmap;
       outcmap = new ColorMap(*cmap1.get_rep()); 
-      double vmin, vmax, gmin, gmax;
-      tex->get_min_max(vmin, vmax, gmin, gmax);
-      outcmap->Scale(vmin, vmax);
+      outcmap->Scale(tex->vmin(), tex->vmax());
       ocmap->send(outcmap);
     }
   }    

@@ -78,7 +78,7 @@ CM2Widget::CM2Widget(CM2Widget& copy)
 void
 CM2Widget::set_alpha(float a)
 {
-  alpha_ = CLAMP((double)a, 0.0, 1.0);
+  alpha_ = Clamp((double)a, 0.0, 1.0);
 }
 
 
@@ -169,8 +169,8 @@ TriangleCM2Widget::rasterize(Array3<float>& array, bool faux)
   float top_right = top_x_+std::abs(width_)/2;
   int lb = (int)(bottom_*top_y_*size_y);
   int le = (int)(top_y_*size_y);
-  int ilb = CLAMP(lb, 0, size_y-1);
-  int ile = CLAMP(le, 0, size_y-1);
+  int ilb = Clamp(lb, 0, size_y-1);
+  int ile = Clamp(le, 0, size_y-1);
   //cerr << lb << " | " << le << endl;
   if(faux) {
     for(int i=ilb; i<=ile; i++) {
@@ -180,9 +180,9 @@ TriangleCM2Widget::rasterize(Array3<float>& array, bool faux)
       int rb = (int)(fb*size_x);
       int re = (int)(fe*size_x);
       int rm = (int)(fm*size_x);
-      int jrb = CLAMP(rb, 0, size_x-1);
-      int jre = CLAMP(re, 0, size_x-1);
-      int jrm = CLAMP(rm, 0, size_x-1);
+      int jrb = Clamp(rb, 0, size_x-1);
+      int jre = Clamp(re, 0, size_x-1);
+      int jrm = Clamp(rm, 0, size_x-1);
       float da = alpha_/(rm-rb);
       float dr = color_.r()/(rm-rb);
       float dg = color_.g()/(rm-rb);
@@ -192,10 +192,10 @@ TriangleCM2Widget::rasterize(Array3<float>& array, bool faux)
       float g = color_.g()-std::abs(rm-jrm+1)*dg;
       float b = color_.b()-std::abs(rm-jrm+1)*db;
       for(int j=jrm-1; j>=jrb; j--, a-=da, r-=dr, b-=db, g-=dg) {
-        array(i,j,0) = CLAMP(array(i,j,0)*(1-a) + r, 0.0f, 1.0f);
-        array(i,j,1) = CLAMP(array(i,j,1)*(1-a) + g, 0.0f, 1.0f);
-        array(i,j,2) = CLAMP(array(i,j,2)*(1-a) + b, 0.0f, 1.0f);
-        array(i,j,3) = CLAMP(array(i,j,3)*(1-a) + a, 0.0f, 1.0f);
+        array(i,j,0) = Clamp(array(i,j,0)*(1-a) + r, 0.0f, 1.0f);
+        array(i,j,1) = Clamp(array(i,j,1)*(1-a) + g, 0.0f, 1.0f);
+        array(i,j,2) = Clamp(array(i,j,2)*(1-a) + b, 0.0f, 1.0f);
+        array(i,j,3) = Clamp(array(i,j,3)*(1-a) + a, 0.0f, 1.0f);
       }
       da = alpha_/(re-rm);
       dr = color_.r()/(re-rm);
@@ -222,26 +222,26 @@ TriangleCM2Widget::rasterize(Array3<float>& array, bool faux)
       int rb = (int)(fb*size_x);
       int re = (int)(fe*size_x);
       int rm = (int)(fm*size_x);
-      int jrb = CLAMP(rb, 0, size_x-1);
-      int jre = CLAMP(re, 0, size_x-1);
-      int jrm = CLAMP(rm, 0, size_x-1);
+      int jrb = Clamp(rb, 0, size_x-1);
+      int jre = Clamp(re, 0, size_x-1);
+      int jrm = Clamp(rm, 0, size_x-1);
       float da = alpha_/(rm-rb);
       float a = alpha_-std::abs(rm-jrm+1)*da;
       for(int j=jrm-1; j>=jrb; j--, a-=da) {
-        array(i,j,0) = CLAMP(array(i,j,0)*(1.0f-a) + (float)color_.r(), 0.0f, 1.0f);
-        array(i,j,1) = CLAMP(array(i,j,1)*(1.0f-a) + (float)color_.g(), 0.0f, 1.0f);
-        array(i,j,2) = CLAMP(array(i,j,2)*(1.0f-a) + (float)color_.b(), 0.0f, 1.0f);
-        array(i,j,3) = CLAMP(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
+        array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + (float)color_.r(), 0.0f, 1.0f);
+        array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + (float)color_.g(), 0.0f, 1.0f);
+        array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + (float)color_.b(), 0.0f, 1.0f);
+        array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
       }
       da = alpha_/(re-rm);
       a = alpha_-std::abs(rm-jrm)*da;
       //cerr << mTop.x << " " << fm << " -> " << fe << std::endl;
       for (int j=jrm; j<=jre; j++, a-=da)
       {
-        array(i,j,0) = CLAMP(array(i,j,0)*(1.0f-a) + (float)color_.r(), 0.0f, 1.0f);
-        array(i,j,1) = CLAMP(array(i,j,1)*(1.0f-a) + (float)color_.g(), 0.0f, 1.0f);
-        array(i,j,2) = CLAMP(array(i,j,2)*(1.0f-a) + (float)color_.b(), 0.0f, 1.0f);
-        array(i,j,3) = CLAMP(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
+        array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + (float)color_.r(), 0.0f, 1.0f);
+        array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + (float)color_.g(), 0.0f, 1.0f);
+        array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + (float)color_.b(), 0.0f, 1.0f);
+        array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
       }
     }
   }
@@ -385,7 +385,7 @@ TriangleCM2Widget::move (int obj, int ix, int iy, int w, int h)
     break;
 
   case 3:
-    bottom_ = CLAMP(y / top_y_, 0.0, 1.0);
+    bottom_ = Clamp(y / top_y_, 0.0, 1.0);
     break;
 
   case 4:
@@ -530,15 +530,15 @@ RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
 
   int lb = int(bottom*size_y);
   int le = int(top*size_y);
-  int ilb = CLAMP(lb, 0, size_y-1);
-  int ile = CLAMP(le, 0, size_y-1);
+  int ilb = Clamp(lb, 0, size_y-1);
+  int ile = Clamp(le, 0, size_y-1);
   //int la = int((mBall.y*mSize.y+bottom)*size.y);
   int rb = int(left*size_x);
   int re = int(right*size_x);
   int ra = int((offset_*width_+left)*size_x);
-  int jrb = CLAMP(rb, 0, size_x-1);
-  int jre = CLAMP(re, 0, size_x-1);
-  int jra = CLAMP(ra, 0, size_x-1);
+  int jrb = Clamp(rb, 0, size_x-1);
+  int jre = Clamp(re, 0, size_x-1);
+  int jra = Clamp(ra, 0, size_x-1);
   switch(type_) {
     case CM2_RECTANGLE_ELLIPSOID: {
       for(int i=ilb; i<=ile; i++) {
@@ -554,10 +554,10 @@ RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
           float r = faux ? color_.r()*w : color_.r();
           float g = faux ? color_.r()*w : color_.g();
           float b = faux ? color_.r()*w : color_.b();
-          array(i,j,0) = CLAMP(array(i,j,0)*(1.0f-a) + r, 0.0f, 1.0f);
-          array(i,j,1) = CLAMP(array(i,j,1)*(1.0f-a) + g, 0.0f, 1.0f);
-          array(i,j,2) = CLAMP(array(i,j,2)*(1.0f-a) + b, 0.0f, 1.0f);
-          array(i,j,3) = CLAMP(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
+          array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + r, 0.0f, 1.0f);
+          array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + g, 0.0f, 1.0f);
+          array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + b, 0.0f, 1.0f);
+          array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
         }
       }
     } break;
@@ -575,10 +575,10 @@ RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
         for(int j=jra-1; j>=jrb; j--, a-=da, r-=dr, b-=db, g-=dg) {
           for(int i=ilb; i<=ile; i++) {
           
-            array(i,j,0) = CLAMP(array(i,j,0)*(1.0f-a) + r, 0.0f, 1.0f);
-            array(i,j,1) = CLAMP(array(i,j,1)*(1.0f-a) + g, 0.0f, 1.0f);
-            array(i,j,2) = CLAMP(array(i,j,2)*(1.0f-a) + b, 0.0f, 1.0f);
-            array(i,j,3) = CLAMP(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
+            array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + r, 0.0f, 1.0f);
+            array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + g, 0.0f, 1.0f);
+            array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + b, 0.0f, 1.0f);
+            array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
           }
         }
         da = ra < re-1 ? alpha_/(re-ra-1) : 0.0;
@@ -591,10 +591,10 @@ RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
         b = color_.b()-std::abs(ra-jra)*db;
         for(int j=jra; j<=jre; j++, a-=da, r-=dr, b-=db, g-=dg) {
           for(int i=ilb; i<=ile; i++) {
-            array(i,j,0) = CLAMP(array(i,j,0)*(1.0f-a) + r, 0.0f, 1.0f);
-            array(i,j,1) = CLAMP(array(i,j,1)*(1.0f-a) + g, 0.0f, 1.0f);
-            array(i,j,2) = CLAMP(array(i,j,2)*(1.0f-a) + b, 0.0f, 1.0f);
-            array(i,j,3) = CLAMP(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
+            array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + r, 0.0f, 1.0f);
+            array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + g, 0.0f, 1.0f);
+            array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + b, 0.0f, 1.0f);
+            array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
           }
         }
       } else { // !faux
@@ -602,20 +602,20 @@ RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
         float a = ra <= rb+1 ? alpha_ : alpha_-std::abs(ra-jra)*da;
         for(int j=jra-1; j>=jrb; j--, a-=da) {
           for(int i=ilb; i<=ile; i++) {
-            array(i,j,0) = CLAMP(array(i,j,0)*(1.0f-a) + (float)color_.r(), 0.0f, 1.0f);
-            array(i,j,1) = CLAMP(array(i,j,1)*(1.0f-a) + (float)color_.g(), 0.0f, 1.0f);
-            array(i,j,2) = CLAMP(array(i,j,2)*(1.0f-a) + (float)color_.b(), 0.0f, 1.0f);
-            array(i,j,3) = CLAMP(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
+            array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + (float)color_.r(), 0.0f, 1.0f);
+            array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + (float)color_.g(), 0.0f, 1.0f);
+            array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + (float)color_.b(), 0.0f, 1.0f);
+            array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
           }
         }
         da = ra < re-1 ? alpha_/(re-ra-1) : 0.0;
         a = alpha_-std::abs(ra-jra)*da;
         for(int j=jra; j<=jre; j++, a-=da) {
           for(int i=ilb; i<=ile; i++) {
-            array(i,j,0) = CLAMP(array(i,j,0)*(1.0f-a) + (float)color_.r(), 0.0f, 1.0f);
-            array(i,j,1) = CLAMP(array(i,j,1)*(1.0f-a) + (float)color_.g(), 0.0f, 1.0f);
-            array(i,j,2) = CLAMP(array(i,j,2)*(1.0f-a) + (float)color_.b(), 0.0f, 1.0f);
-            array(i,j,3) = CLAMP(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
+            array(i,j,0) = Clamp(array(i,j,0)*(1.0f-a) + (float)color_.r(), 0.0f, 1.0f);
+            array(i,j,1) = Clamp(array(i,j,1)*(1.0f-a) + (float)color_.g(), 0.0f, 1.0f);
+            array(i,j,2) = Clamp(array(i,j,2)*(1.0f-a) + (float)color_.b(), 0.0f, 1.0f);
+            array(i,j,3) = Clamp(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
           }
         }
       }
@@ -789,7 +789,7 @@ RectangleCM2Widget::move (int obj, int ix, int iy, int w, int h)
     break;
 
   case 6:
-    offset_ = CLAMP((x - left_x_) / width_, 0.0, 1.0);
+    offset_ = Clamp((x - left_x_) / width_, 0.0, 1.0);
     break;
   }
 }

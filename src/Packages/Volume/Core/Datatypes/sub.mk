@@ -2,17 +2,14 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Volume/Core/Datatypes
+SRCDIR := Packages/Volume/Core/Datatypes
 
-SRCS     += \
-	 $(SRCDIR)/Brick.cc \
-	 $(SRCDIR)/BrickData.cc \
-	 $(SRCDIR)/BrickNode.cc \
-	 $(SRCDIR)/BrickWindow.cc \
-	 $(SRCDIR)/Colormap2.cc \
-	 $(SRCDIR)/CM2Shader.cc \
-	 $(SRCDIR)/CM2Widget.cc \
-	 $(SRCDIR)/Texture.cc \
+SRCS += \
+	$(SRCDIR)/Brick.cc \
+	$(SRCDIR)/Colormap2.cc \
+	$(SRCDIR)/CM2Shader.cc \
+	$(SRCDIR)/CM2Widget.cc \
+	$(SRCDIR)/Texture.cc \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Exceptions Core/Geometry \
