@@ -40,6 +40,7 @@ class  Light;
 class  SelectableGroup;
 class  SpinningInstance;
 class  CutGroup;
+class  Sound;
 
 class Gui {
 
@@ -74,9 +75,28 @@ public:
   // This must be called after glutInit(...)!
   //   If showGui is false, the gui window will not be displayed.  Use
   //   'G' or right mouse menu to bring it up.
-  static void createMenus( int winId, bool showGui = true );
+  static void createMenus( int winId, bool soundOn = false,
+			   bool showGui = true );
 
   static void idleFunc();
+
+  ///////////////////////////////////////////////////////////////////
+  // 
+  // Functions that allow the sound thread to interact with the gui.
+  // 
+  // - Tells the Gui that the sound thread has finished loading
+  //   the sounds and is now active.  Gui will allow user interaction
+  //   with the sound thread now.
+  void    soundThreadNowActive();
+
+  // - The SoundThread will get the current sound from us so it can
+  //   later tell us things about the sound.
+  //Sound * getCurrentSound() { return currentSound_; }
+  // - To avoid a circular dependency (I wish I didn't have to) the
+  //   sound thread will fill in this information (instead of us being
+  //   able to query it) 
+  //void    setSoundInformation();
+
 private:
 
   friend class Dpy;
@@ -85,7 +105,8 @@ private:
   struct DpyPrivate * priv;
   Camera            * camera_;
   Stealth           * stealth_;
-
+  Sound             * currentSound_;
+  
   int                 glutDisplayWindowId;
 
   // Gui Component Variables
@@ -104,6 +125,8 @@ private:
   GLUI         * objectsWindow;
   GLUI         * soundsWindow;
 
+  GLUI_Button  * openSoundPanelBtn_;
+
   GLUI         * getStringWindow;
 
   bool routeWindowVisible;
@@ -111,6 +134,8 @@ private:
   bool objectsWindowVisible;
   bool soundsWindowVisible;
   bool mainWindowVisible;
+
+  bool enableSounds_;
 
   // Last x/y of a mouse down/move:
   int   last_x_;
@@ -130,6 +155,8 @@ private:
   std::vector<Light*> lights_;
   bool                lightsOn_;
   bool                lightsBeingRendered_;
+
+  std::vector<Sound*> sounds_;
 
   ////////////////////////////////////////////////////////////////
   //
@@ -238,6 +265,10 @@ private:
   GLUI_Listbox  * soundList_;
   GLUI_EditText * leftVolume_;
   GLUI_EditText * rightVolume_;
+  GLUI_Button   * startSoundThreadBtn_;
+  GLUI_EditText * soundOriginX_;
+  GLUI_EditText * soundOriginY_;
+  GLUI_EditText * soundOriginZ_;
 
   ////////////////////////////////////////////////////////////////
 
@@ -255,6 +286,8 @@ private:
   void createGetStringWindow( GLUI * window );
   GLUI_Panel  * getStringPanel;
   GLUI_Button * getStringButton;
+  GLUI_EditText * getStringText_;
+  static void hideGetStringWindowCB( int id );
   static void getStringCB( int id );
 
   // Route Window Callbacks
@@ -297,6 +330,7 @@ private:
   // Sounds Window Callbacks
   void createSoundsWindow( GLUI * window );
   static void updateSoundCB( int id );
+  static void startSoundThreadCB( int id );
   static void toggleSoundWindowCB( int id );
 
   ////////////////////////////////////////////////////////////////
@@ -325,6 +359,7 @@ private:
   void cycleAmbientMode();
   void quit();
   void setupFonts();
+  void updateSoundPanel();
 
   // Functions to draw text, etc on GL window.
   void displayText(GLuint fontbase, double x, double y,
