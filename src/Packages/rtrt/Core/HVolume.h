@@ -70,6 +70,13 @@ public:
 };
 
 template<>
+class TypeInfo<unsigned short> {
+public:
+  static short get_min() { return 0; }
+  static short get_max() { return USHRT_MAX; }
+};
+
+template<>
 class TypeInfo<int> {
 public:
   static int get_min() { return -MAXINT-1; }
