@@ -96,7 +96,7 @@ WARNING
 				       ParticleVariable<int>& pissurf,
 				       ParticleVariable<double>& temperature,
 				       ParticleVariable<double>& tensilestrength,
-				       ParticleVariable<long>& particleID,
+				       ParticleVariable<long64>& particleID,
 				       CCVariable<short int>& cellNAPID,
 				       const Patch*);
 

@@ -1879,7 +1879,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->put(pvolumeNew,      lb->pVolumeLabel_preReloc);
       new_dw->put(pTemperatureNew, lb->pTemperatureLabel_preReloc);
 
-      ParticleVariable<long> pids;
+      ParticleVariable<long64> pids;
       old_dw->get(pids, lb->pParticleIDLabel, pset);
       new_dw->put(pids, lb->pParticleIDLabel_preReloc);
     }
