@@ -1067,6 +1067,7 @@ void ReadComponentNodeFromFile(component_node* n, const char* filename)
 		filename+"'\nException message is:  "+
 		xmlto_string(toCatch.getMessage());
     handler.foundError=true;
+    return;
   }
   
   DOM_Document doc = parser.getDocument();
