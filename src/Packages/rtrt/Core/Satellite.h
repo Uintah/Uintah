@@ -79,22 +79,22 @@ class Satellite : public UVSphere
       Point center = parent_->get_center();
       bbox.extend(center);
       Point extent = 
-        Point(center.x()+parent_->get_orb_radius()+orb_radius_+radius,
-              center.y()+parent_->get_orb_radius()+orb_radius_+radius,
+        Point(center.x()+parent_->get_orb_radius()+orb_radius_+radius+offset,
+              center.y()+parent_->get_orb_radius()+orb_radius_+radius+offset,
               center.z());
       bbox.extend( extent );
       extent = 
-        Point(center.x()-(parent_->get_orb_radius()+orb_radius_+radius),
-              center.y()-(parent_->get_orb_radius()+orb_radius_+radius),
+        Point(center.x()-(parent_->get_orb_radius()+orb_radius_+radius+offset),
+              center.y()-(parent_->get_orb_radius()+orb_radius_+radius+offset),
               center.z());
       bbox.extend( extent );
 
       extent = Point(center.x(),center.y(),
-                     center.z()+radius);
+                     center.z()+radius+offset);
       bbox.extend( extent );
 
       extent = Point(center.x(),center.y(),
-                     center.z()-radius);
+                     center.z()-(radius+offset));
       bbox.extend( extent );
 
     } else {
