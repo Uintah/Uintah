@@ -48,6 +48,7 @@
 #include <qtextedit.h>
 #include <qmainwindow.h>
 #include "Module.h"
+#include "Connection.h"
 
 class NetworkCanvasView;
 
@@ -113,15 +114,17 @@ public:
     void displayMsg(const QString &);
     void buildRemotePackageMenus(const sci::cca::ports::ComponentRepository::pointer &reg,
 				 const std::string &frameworkURL);
+    QPopupMenu* componentContextMenu() const { return componentMenu; }
 
     std::vector<Module*> updateMiniView_modules;
-    std::vector<int> packageMenuIDs;
+    std::vector<Connection*> updateMiniView_connections;
 
 public slots:
     void updateMiniView();
 
 protected:
     void closeEvent( QCloseEvent* );
+    std::vector<int> packageMenuIDs;
 
 private:
     BuilderWindow(const BuilderWindow&);
@@ -153,6 +156,7 @@ private:
 	*addClusterAction,
 	*rmClusterAction,
 	*refreshAction;
+    QPopupMenu *componentMenu;
 
     QString filename;
     sci::cca::Services::pointer services;

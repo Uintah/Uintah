@@ -43,7 +43,6 @@
 #ifndef SCIRun_Framework_NetworkCanvas_h
 #define SCIRun_Framework_NetworkCanvas_h
 
-#define BOOL int
 
 #include <CCA/Components/Builder/BuilderWindow.h>
 #include <qcanvas.h>
@@ -53,36 +52,45 @@
 #include "Core/CCA/PIDL/PIDL.h"
 #include "Core/CCA/spec/cca_sidl.h"
 
-using namespace std;
-
-//namespace SCIRun {
 
 class NetworkCanvasView:public QCanvasView
 {
   Q_OBJECT
 public:
 
-  NetworkCanvasView(BuilderWindow* p2BuilderWindow, QCanvas* canvas, QWidget* parent=0);
-  void setServices(const sci::cca::Services::pointer &services);
+  NetworkCanvasView(BuilderWindow* p2BuilderWindow,
+	    QCanvas* canvas, QWidget* parent=0);
   virtual ~NetworkCanvasView();
-  Module* addModule(const std::string& name, int x, int y, SSIDL::array1<std::string> & up, SSIDL::array1<std::string> &pp, const sci::cca::ComponentID::pointer &cid, bool reposition);
-  void addConnection(Module *m1, const std::string & portname1, Module *m2, const std::string & portname2);	
+
+  void setServices(const sci::cca::Services::pointer &services);
+
+  Module* addModule(const std::string& name,
+		    int x, int y,
+		    SSIDL::array1<std::string> &up,
+		    SSIDL::array1<std::string> &pp,
+		    const sci::cca::ComponentID::pointer &cid,
+		    bool reposition);
+  std::vector<Module*> getModules();
+
+  void addConnection(Module *m1, const std::string & portname1,
+		    Module *m2, const std::string & portname2);	
+  void removeConnection(QCanvasItem *c);
 
   //Bridge:
   void addBridgeConnection(Module *m1, const std::string& portname1, Module *m2, const std::string& portname2);
 
-  void removeConnection(QCanvasItem *c);
   void highlightConnection(QCanvasItem *c);
   void showPossibleConnections(Module *m, 
-			       const std::string &protname, Module::PortType);
+			       const std::string &protname,
+				Module::PortType);
   void clearPossibleConnections();
   void removeAllConnections(Module *module);
 
-  std::vector<Module*> getModules();
   std::vector<Connection*> getConnections();
+  // make this private?
   BuilderWindow* p2BuilderWindow;
 
-  void addChild( Module* child, int x, int y, bool reposition);
+  void addChild(Module* child, int x, int y, bool reposition);
 
 public slots:
   void removeModule(Module *);
@@ -91,6 +99,9 @@ protected:
   void contentsMousePressEvent(QMouseEvent*);
   void contentsMouseMoveEvent(QMouseEvent*);
   void contentsMouseReleaseEvent(QMouseEvent*);
+
+  void contentsContextMenuEvent(QContextMenuEvent*) { p2BuilderWindow->componentContextMenu()->exec(QCursor::pos()); }
+
   //void contentsMouseDoubleClickEvent( QMouseEvent * );
   void NetworkCanvasView::viewportResizeEvent( QResizeEvent* );
 
