@@ -294,9 +294,9 @@ itcl_class Fusion_Fields_EditFusionField {
 	global $this-kskip2
 
 
-	if { [set $this-istart2] < 0 } { set $this-istart2 1 }
-	if { [set $this-jstart2] < 0 } { set $this-jstart2 1 }
-	if { [set $this-kstart2] < 0 } { set $this-kstart2 1 }
+	if { [set $this-istart2] < 0 } { set $this-istart2 0 }
+	if { [set $this-jstart2] < 0 } { set $this-jstart2 0 }
+	if { [set $this-kstart2] < 0 } { set $this-kstart2 0 }
 	
 	if { [set $this-idelta2] < 1 } { set $this-idelta2 1 }
 	if { [set $this-jdelta2] < 1 } { set $this-jdelta2 1 }
@@ -366,7 +366,7 @@ itcl_class Fusion_Fields_EditFusionField {
 	set $this-jdim $jdim
 	set $this-kdim $kdim
 
-# Reset all of the slider values to the start values.
+	# Reset all of the slider values to the start values.
 	set $this-istart 0
 	set $this-kstart 0
 	set $this-jstart 0
@@ -381,7 +381,7 @@ itcl_class Fusion_Fields_EditFusionField {
 
 	if [ expr [winfo exists $w] ] {
 
-# Update the sliders to have the new end values.
+	    # Update the sliders to have the new end values.
 	    $w.i.start.s configure -from 0 -to [expr $idim - 2]
 	    $w.j.start.s configure -from 0 -to [expr $jdim - 1]
 	    $w.k.start.s configure -from 0 -to [expr $kdim - 1]
@@ -391,12 +391,12 @@ itcl_class Fusion_Fields_EditFusionField {
 	    $w.k.delta.s configure -from 1 -to $kdim
 	}
 
-# Update the delta values to be at the initials values.
+	# Update the delta values to be at the initials values.
 	set $this-idelta $idim
 	set $this-jdelta $jdim
 	set $this-kdelta $kdim
 
-# Update the text values.
+	# Update the text values.
 	set $this-istart2 [set $this-istart]
 	set $this-jstart2 [set $this-jstart]
 	set $this-kstart2 [set $this-kstart]

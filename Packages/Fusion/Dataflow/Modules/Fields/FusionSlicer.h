@@ -38,11 +38,16 @@ public:
 			      int axis) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *fsrc);
+  static CompileInfo *get_compile_info(const TypeDescription *fsrc,
+				       const TypeDescription *type);
 };
 
 
-template <class IFIELD, class OFIELD>
+#ifdef __sgi
+template< class FIELD, class TYPE >
+#else
+template< template<class> class FIELD, class TYPE >
+#endif
 class FusionSlicerAlgoT : public FusionSlicerAlgo
 {
 public:
@@ -53,16 +58,21 @@ public:
 };
 
 
-template <class IFIELD, class OFIELD>
+#ifdef __sgi
+template< class FIELD, class TYPE >
+#else
+template< template<class> class FIELD, class TYPE >
+#endif
 FieldHandle
-FusionSlicerAlgoT<IFIELD, OFIELD>::execute(FieldHandle field_h,
-					   unsigned int index,
-					   int axis)
+FusionSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
+					unsigned int index,
+					int axis)
 {
-  IFIELD *ifield = dynamic_cast<IFIELD *>(field_h.get_rep());
-  typename IFIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
+  FIELD<TYPE> *ifield = (FIELD<TYPE> *) field_h.get_rep();
 
-  typename OFIELD::mesh_type *omesh = scinew typename OFIELD::mesh_type;
+  typename FIELD<TYPE>::mesh_handle_type imesh = ifield->get_typed_mesh();
+  typename QuadSurfField<TYPE>::mesh_type *omesh =
+    scinew typename QuadSurfField<TYPE>::mesh_type;
 
   const unsigned int onx = imesh->get_nx();
   const unsigned int ony = imesh->get_ny();
@@ -70,100 +80,87 @@ FusionSlicerAlgoT<IFIELD, OFIELD>::execute(FieldHandle field_h,
 
   unsigned int nx, ny;
 
-  if (axis == 0)
-  {
+  if (axis == 0) {
     nx = ony;
     ny = onz;
   }
-  else if (axis == 1)
-  {
+  else if (axis == 1) {
     nx = onx;
     ny = onz;
   }
-  else
-  {
+  else {
     nx = onx;
     ny = ony;
   }
 
-  for (unsigned int i = 0; i < nx; i++)
-  {
-    for (unsigned int j = 0; j < ny; j++)
-    {
-      unsigned int x, y, z;
-      if (axis == 0)
-      {
-	x = index;
-	y = i;
-	z = j;
-      }
-      else if (axis == 1)
-      {
-	x = i;
-	y = index;
-	z = j;
-      }
-      else
-      {
-	x = i;
-	y = j;
-	z = index;
-      }
-      typename IFIELD::mesh_type::Node::index_type node(x, y, z);
-      Point p;
-      imesh->get_center(p, node);
+  typename FIELD<TYPE>::mesh_type::Node::index_type node;
+  Point p;
 
+  for (unsigned int i = 0; i < nx; i++) {
+    for (unsigned int j = 0; j < ny; j++) {
+      if (axis == 0) {
+	node.i_ = index;
+	node.j_ = i;
+	node.k_ = j;
+      }
+      else if (axis == 1) {
+	node.i_ = i;
+	node.j_ = index;
+	node.k_ = j;
+      }
+      else {
+	node.i_ = i;
+	node.j_ = j;
+	node.k_ = index;
+      }
+
+      imesh->get_center(p, node);
       omesh->add_point(p);
     }
   }
 
-  for (unsigned int i = 0; i < nx-1; i++)
-  {
-    for (unsigned int j = 0; j < ny-1; j++)
-    {
-      typename OFIELD::mesh_type::Node::index_type a = (i+0) * ny + (j+0);
-      typename OFIELD::mesh_type::Node::index_type b = (i+1) * ny + (j+0);
-      typename OFIELD::mesh_type::Node::index_type c = (i+1) * ny + (j+1);
-      typename OFIELD::mesh_type::Node::index_type d = (i+0) * ny + (j+1);
+  typename QuadSurfField<TYPE>::mesh_type::Node::index_type a, b, c, d;
+
+  for (unsigned int i=1, i0=0, i1=ny; i<nx; i++, i0+=ny, i1+=ny) {
+    for (unsigned int j0=0, j1=1; j1<ny; j0++, j1++) {
+      a = i0 + j0;
+      b = i1 + j0;
+      c = i1 + j1;
+      d = i0 + j1;
 
       omesh->add_quad(a, b, c, d);
     }
   }
 
-  OFIELD *ofield = scinew OFIELD(omesh, Field::NODE);
+  QuadSurfField<TYPE> *ofield = scinew QuadSurfField<TYPE>(omesh, Field::NODE);
 
+  typename FIELD<TYPE>::value_type v;
+
+  typename QuadSurfField<TYPE>::mesh_type::Node::index_type onode = 0;
   unsigned int counter = 0;
-  for (unsigned int i = 0; i < nx; i++)
-  {
-    for (unsigned int j = 0; j < ny; j++)
-    {
-      unsigned int x, y, z;
-      if (axis == 0)
-      {
-	x = index;
-	y = i;
-	z = j;
+  
+  for (unsigned int i = 0; i < nx; i++) {
+    for (unsigned int j = 0; j < ny; j++) {
+      if (axis == 0) {
+	node.i_ = index;
+	node.j_ = i;
+	node.k_ = j;
       }
-      else if (axis == 1)
-      {
-	x = i;
-	y = index;
-	z = j;
+      else if (axis == 1) {
+	node.i_ = i;
+	node.j_ = index;
+	node.k_ = j;
       }
-      else
-      {
-	x = i;
-	y = j;
-	z = index;
+      else {
+	node.i_ = i;
+	node.j_ = j;
+	node.k_ = index;
       }
-      typename IFIELD::mesh_type::Node::index_type node(x, y, z);
-      typename IFIELD::value_type v;
 
       ifield->value(v, node);
-      
-      typename OFIELD::mesh_type::Node::index_type onode(counter);
       ofield->set_value(v, onode);
-      counter++;
+
+      onode = counter++;
     }
   }
 
@@ -173,3 +170,7 @@ FusionSlicerAlgoT<IFIELD, OFIELD>::execute(FieldHandle field_h,
 } // end namespace SCIRun
 
 #endif // FusionSlicer_h
+
+
+
+

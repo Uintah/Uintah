@@ -94,7 +94,7 @@ itcl_class Fusion_Fields_FusionSlicer {
 	pack $w.i.l -side left
 
 	scaleEntry2 $w.i.index \
-		1 [expr [set $this-idim] - 2] 200 $this-iindex $this-iindex2
+		0 [expr [set $this-idim] - 1] 200 $this-iindex $this-iindex2
 
 	pack $w.i.l $w.i.index -side left
 
@@ -175,12 +175,12 @@ itcl_class Fusion_Fields_FusionSlicer {
 	global $this-kindex2
 	global $this-kindex2
 
-	if { [set $this-iindex2] < 1 } { set $this-iindex2 1 }
-	if { [set $this-jindex2] < 0 } { set $this-jindex2 1 }
-	if { [set $this-kindex2] < 0 } { set $this-kindex2 1 }
+	if { [set $this-iindex2] < 0 } { set $this-iindex2 0 }
+	if { [set $this-jindex2] < 0 } { set $this-jindex2 0 }
+	if { [set $this-kindex2] < 0 } { set $this-kindex2 0 }
 	
-	if { [set $this-iindex2] > [expr [set $this-idim] - 2] } {
-	    set $this-iindex2 [expr [set $this-idim] - 2] }
+	if { [set $this-iindex2] > [expr [set $this-idim] - 1] } {
+	    set $this-iindex2 [expr [set $this-idim] - 1] }
 	if { [set $this-jindex2] > [expr [set $this-jdim] - 1] } {
 	    set $this-jindex2 [expr [set $this-jdim] - 1] }
 	if { [set $this-kindex2] > [expr [set $this-kdim] - 1] } {
@@ -207,14 +207,14 @@ itcl_class Fusion_Fields_FusionSlicer {
 	set $this-kdim $kdim
 
 	# Reset all of the slider values to the index values.
-	set $this-iindex 1
+	set $this-iindex 0
 	set $this-kindex 0
 	set $this-jindex 0
 
 	if [ expr [winfo exists $w] ] {
 
 	    # Update the sliders to have the new end values.
-	    $w.i.index.s configure -from 1 -to [expr $idim - 2]
+	    $w.i.index.s configure -from 0 -to [expr $idim - 1]
 	    $w.j.index.s configure -from 0 -to [expr $jdim - 1]
 	    $w.k.index.s configure -from 0 -to [expr $kdim - 1]
 	}
