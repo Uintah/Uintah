@@ -42,6 +42,7 @@ namespace SCIRun {
     GuiContext(GuiInterface* ctx, const std::string& name, bool save=true);
 
     GuiContext* subVar(const std::string& name, bool save=true);
+    void erase( const std::string& subname );
 
     void lock();
     void unlock();
