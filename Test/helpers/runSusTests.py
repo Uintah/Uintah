@@ -173,7 +173,6 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
           failcode = 1
       mkdir("restart")
       chdir("restart")
-      system("cp ../replace_gold_standard .")
       # call the callback function before running each test
       callback(test, susdir, inputsdir, compare_root, algo, mode, max_parallelism);
 
@@ -270,13 +269,19 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     print '\t<A href=\"%s/sus.log.txt\">See sus.log</a> for details' % (logpath)
     return 1
   else:
+    # determine path of replace_msg in 2 places to not have 2 different msgs.
+    replace_msg = "\tTo replace the gold standard uda and memory usage with these results,\n\trun: "
+
     if do_restart == "yes":
       chdir("..")
+      replace_msg = "%s%s/replace_gold_standard" % (replace_msg, getcwd())
       system("rm *.uda")
       system("ln -s restart/*.uda .")
       chdir("restart")
+    else:
+      replace_msg = "%s%s/replace_gold_standard" % (replace_msg, getcwd())
     print "\tComparing udas on %s" % (date())
-    replace_msg = "\tTo replace the gold standard uda and memory usage with these results,\n\trun: %s/replace_gold_standard" % (getcwd())
+
     cu_rc = system("compare_sus_runs %s %s %s %s > compare_sus_runs.log.txt 2>&1" % (testname, getcwd(), compare_root, susdir))
     if cu_rc != 0:
 	if cu_rc == 5 * 256:
