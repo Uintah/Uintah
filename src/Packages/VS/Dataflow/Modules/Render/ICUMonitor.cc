@@ -777,6 +777,7 @@ ICUMonitor::draw_plots()
   CHECK_OPENGL_ERROR();
   
   glDrawBuffer(GL_BACK);
+  //glClearColor(1.0, 1.0, 1.0, 1.0);
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
   glEnable(GL_BLEND);
@@ -896,9 +897,9 @@ ICUMonitor::draw_plots()
       g.label_->draw((cur_x + (w*cw)) - xoff, cur_y, sx, sy);
     }
 
-	 if (g.use_plot_color_ == 1)
-      glColor4f(g.r_, g.g_, g.b_, 1.0);
-	 else
+    if (g.use_plot_color_ == 1)
+      glColor4f(g.b_, g.r_, g.g_, 1.0);
+    else
       glColor4f(1.0, 1.0, 1.0, 1.0);
 
     if (g.draw_aux_data_ == 1) { 
@@ -954,9 +955,15 @@ ICUMonitor::draw_plots()
       glLineWidth(1.5);
       glBegin(GL_LINE_STRIP);
       for (int i = 0; i < (int)samples; i++) {
+	bool last_tick = false;
+	static bool wrapping = false;
 	int idx = i + cur_idx_;
 	if (idx > data_->nrrd->axis[1].size - 1) {
-	  idx = 1;
+	  idx -= data_->nrrd->axis[1].size - 1;
+	   last_tick = !wrapping;
+	   wrapping = true;
+	} else {
+	  wrapping = false;
 	}
 	
 	float *dat = (float*)data_->nrrd->data;
@@ -971,7 +978,7 @@ ICUMonitor::draw_plots()
 
 	glVertex2f((cur_x + (i * pix_per_sample)) * sx, (start_y + val) * sy);
 
-	if (idx % (int)samp_rate == 0){
+	if (idx % (int)samp_rate == 0 || last_tick){
 	  float tick = gr_ht * .15;// * norm;
 	  if (gui_time_markers_mode_.get()) {
 	    glColor4f(1.0, 1.0, 0.0, 1.0);
@@ -987,12 +994,12 @@ ICUMonitor::draw_plots()
       }
       glEnd();
 
-		if (data2_.get_rep() && g.snd_ == 1) {
+      if (data2_.get_rep() && g.snd_ == 1) {
         glBegin(GL_LINE_STRIP);
         for (int i = 0; i < (int)samples; i++) {
           int idx = i + cur_idx_;
           if (idx > data2_->nrrd->axis[1].size - 1) {
-            idx = 1;
+	    idx -= data2_->nrrd->axis[1].size - 1; 
           }
           float *dat = (float*)data2_->nrrd->data;
           int dat_index = idx * data2_->nrrd->axis[0].size + g.index_;
@@ -1006,7 +1013,7 @@ ICUMonitor::draw_plots()
           glVertex2f((cur_x + (i * pix_per_sample)) * sx, 
 		     (start_y + val) * sy);
           //glColor4f(.8, .8, .8, 0.8);
-			 glColor4f(gui_2ndred_.get(), gui_2ndgreen_.get(), gui_2ndblue_.get(), 0.8);
+	  glColor4f(gui_2ndred_.get(), gui_2ndgreen_.get(), gui_2ndblue_.get(), 0.8);
         }
         glEnd();
       }
@@ -1159,7 +1166,7 @@ void
 ICUMonitor::setConfigFromData()
 {
   string value;
-  int intValue, idxDigits, numPlots;
+  int intValue, idxDigits;
   double floatValue;
   string name;
 
