@@ -93,7 +93,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     d_properties->computeProperties(level, sched, new_dw, nonlinear_dw);
     // LES Turbulence model to compute turbulent viscosity
     // that accounts for sub-grid scale turbulence
-    d_turbModel->computeTurbulenceSubmodel(level, sched, new_dw, nonlinear_dw);
+    d_turbModel->sched_computeTurbSubmodel(level, sched, new_dw, nonlinear_dw);
     // residual represents the degrees of inaccuracies
     nlResidual = computeResidual(level, sched, new_dw, nonlinear_dw);
     ++nlIterations;

@@ -40,6 +40,7 @@ void BoundaryCondition::problemSetup(const ProblemSpecP& params,
   int numMixingScalars;
   // set number of scalars in properties based on
   // num of streams read
+  // change
   dw->get(numMixingScalars, "NumMixingScalars");
   for (int i = 0; i < numFlowInlets; i++) {
     FlowInlet* flow_inlet = new FlowInlet(numMixingScalars);
@@ -295,10 +296,10 @@ void BoundaryCondition::sched_velocityBC(const int index,
 }
 
 void BoundaryCondition::velocityBC(const ProcessorContext* pc,
-				     const Region* region,
-				     const DataWarehouseP& old_dw,
-				     DataWarehouseP& new_dw,
-				     const int index) 
+				   const Region* region,
+				   const DataWarehouseP& old_dw,
+				   DataWarehouseP& new_dw,
+				   const int index) 
 {
   FCVariable<Vector> velocity;
   old_dw->get(velocity, "velocity", region, 1);
