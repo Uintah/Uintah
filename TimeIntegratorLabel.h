@@ -62,6 +62,7 @@ namespace Uintah {
     bool multiple_steps;
     bool integrator_last_step;
     bool use_old_values;
+    bool recursion;
     double time_multiplier;
     double factor_old;
     double factor_new;
@@ -94,6 +95,7 @@ namespace Uintah {
             multiple_steps = false;
 	    integrator_last_step = true;
 	    use_old_values = true;
+	    recursion = true;
             time_multiplier = 1.0;
 	    factor_old = 1.0;
 	    factor_new = 1.0;
@@ -121,6 +123,7 @@ namespace Uintah {
             multiple_steps = false;
 	    integrator_last_step = true;
 	    use_old_values = true;
+	    recursion = false;
             time_multiplier = 1.0;
 	    factor_old = 1.0;
 	    factor_new = 1.0;
@@ -148,6 +151,7 @@ namespace Uintah {
             multiple_steps = true;
 	    integrator_last_step = false;
 	    use_old_values = true;
+	    recursion = false;
             time_multiplier = 1.0;
 	    factor_old = 1.0;
 	    factor_new = 1.0;
@@ -175,6 +179,7 @@ namespace Uintah {
             multiple_steps = true;
 	    integrator_last_step = false;
 	    use_old_values = true;
+	    recursion = false;
             time_multiplier = 0.5;
 	    factor_old = 1.0;
 	    factor_new = 1.0;
@@ -202,6 +207,7 @@ namespace Uintah {
             multiple_steps = true;
 	    integrator_last_step = true;
 	    use_old_values = false;
+	    recursion = false;
             time_multiplier = 1.0;
 	    factor_old = 1.0;
 	    factor_new = 1.0;
@@ -229,6 +235,7 @@ namespace Uintah {
             multiple_steps = true;
 	    integrator_last_step = true;
 	    use_old_values = true;
+	    recursion = false;
             time_multiplier = 1.0;
 	    factor_old = 1.0;
 	    factor_new = 1.0;
@@ -256,6 +263,7 @@ namespace Uintah {
             multiple_steps = true;
 	    integrator_last_step = true;
 	    use_old_values = false;
+	    recursion = false;
             time_multiplier = 1.0;
 	    factor_old = 1.0;
 	    factor_new = 2.0;
@@ -283,6 +291,7 @@ namespace Uintah {
             multiple_steps = true;
 	    integrator_last_step = false;
 	    use_old_values = false;
+	    recursion = false;
             time_multiplier = 1.0;
 	    factor_old = 3.0;
 	    factor_new = 1.0;
@@ -310,6 +319,7 @@ namespace Uintah {
             multiple_steps = true;
 	    integrator_last_step = false;
 	    use_old_values = true;
+	    recursion = false;
             time_multiplier = 1.0;
 	    factor_old = 1.0;
 	    factor_new = 1.0;
@@ -337,6 +347,7 @@ namespace Uintah {
             multiple_steps = true;
 	    integrator_last_step = false;
 	    use_old_values = true;
+	    recursion = false;
             time_multiplier = 1.0;
 	    factor_old = 1.0;
 	    factor_new = 1.0;
@@ -364,6 +375,7 @@ namespace Uintah {
             multiple_steps = true;
 	    integrator_last_step = true;
 	    use_old_values = true;
+	    recursion = false;
             time_multiplier = 1.0;
 	    factor_old = 1.0;
 	    factor_new = 1.0;

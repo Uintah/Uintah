@@ -56,8 +56,6 @@ ArchesLabel::ArchesLabel()
      ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
   d_netflowOUTBCLabel = VarLabel::create("netflowOUTBC",
      ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
-  d_totalflowOUToutbcLabel = VarLabel::create("totalflowOUToutbc",
-     ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
   d_totalAreaOUTLabel = VarLabel::create("totalAreaOUT",
      ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
   d_denAccumLabel = VarLabel::create("denAccum",
@@ -500,7 +498,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_totalflowINLabel);
   VarLabel::destroy(d_totalflowOUTLabel);
   VarLabel::destroy(d_netflowOUTBCLabel);
-  VarLabel::destroy(d_totalflowOUToutbcLabel);
   VarLabel::destroy(d_totalAreaOUTLabel);
   VarLabel::destroy(d_denAccumLabel);
   VarLabel::destroy(d_enthalpyRes);

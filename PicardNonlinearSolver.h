@@ -117,7 +117,7 @@ public:
 				       const MaterialSet* matls,
 				       const TimeIntegratorLabel* timelabels);
 
-      void sched_probeData(SchedulerP&, const PatchSet* patches,
+      void sched_probeData(SchedulerP& sched, const PatchSet* patches,
 			   const MaterialSet* matls);
 
       // GROUP: Action Computations :
@@ -212,6 +212,12 @@ private:
 			  DataWarehouse* new_dw,
 			  const TimeIntegratorLabel* timelabels);
 
+      void recursiveSolver(const ProcessorGroup* pg,
+			   const PatchSubset* patches,
+			   const MaterialSubset* matls,
+			   DataWarehouse* old_dw,
+			   DataWarehouse* new_dw,
+			   LevelP level, Scheduler* sched);
 private:
       // const VarLabel*
       const ArchesLabel* d_lab;
@@ -230,6 +236,8 @@ private:
       TurbulenceModel* d_turbModel;
       bool d_reactingScalarSolve;
       bool d_enthalpySolve;
+      bool d_radiationCalc;
+      bool d_DORadiationCalc;
       vector<IntVector> d_probePoints;
       // nonlinear residual tolerance
       double d_resTol;
