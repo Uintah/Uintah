@@ -124,6 +124,9 @@ public:
   virtual bool interior_value( double& /*value*/, const Ray &/*ray*/,
 			       const double /*t*/)
   { return false; }; 
+  virtual bool interior_valuepair( double& /*value1*/, double &/*value2*/,
+				   const Ray &/*ray*/, const double /*t*/)
+  { return false; }; 
 
   string get_name() const { return Names::getName(this); }
   void set_name(const string &s) { Names::nameObject(s, this); }
