@@ -237,6 +237,7 @@ template<class T>
                            const IntVector& refineRatio,
                            const IntVector& fl,
                            const IntVector& fh,
+                           const Vector& patchMidPoint,
                            CCVariable<T>& q_FineLevel)
 {
   //int ncell = 0;  // needed by interpolation test
@@ -250,18 +251,23 @@ template<class T>
     IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
     //__________________________________
     // Offset for coarse level surrounding cells:
-    //  -find the normalized distance between the coarse and fine level cell centers  
+    //  -find the distance between the center of the patch and fine level cell centers
+    //   This tells which direction the offset should be  
     Point coarse_cell_pos = coarseLevel->getCellPosition(c_cell);
     Point fine_cell_pos   = fineLevel->getCellPosition(f_cell);
     Vector dist = (fine_cell_pos.asVector() - coarse_cell_pos.asVector()) * inv_c_dx;
+    Vector dir  = (patchMidPoint - fine_cell_pos.asVector());
   
-    // take the sign to determing which cells are the surrounding cells 
-    int i = Sign(dist.x());
-    int j = Sign(dist.y());
-    int k = Sign(dist.z());
+    // determine the direction to the surrounding interpolation cells
+    int i = Sign(dir.x());
+    int j = Sign(dir.y());
+    int k = Sign(dir.z());
     
-    cout << " c_cell " << c_cell << " f_cell " << f_cell << " offset ["<<i<<","<<j<<","<<k<<endl;
-    
+    #if 0
+    cout << " c_cell " << c_cell << " f_cell " << f_cell << " offset ["<<i<<","<<j<<","<<k<<"]  "
+         << " dist " << dist << " dir "<< dir <<  " patchMidPoint " << patchMidPoint
+         << " f_cell_pos " << fine_cell_pos.asVector()<< endl;
+    #endif
     dist = Abs(dist);  
     //__________________________________
     //  Find the weights      
@@ -470,6 +476,15 @@ void refine_CF_interfaceOperator(const Patch* patch,
 {
   cout_dbg << *patch << endl;
   
+  // compute the mid point of the patch, needed by linear interpolation
+  IntVector f_lo = patch->getLowIndex();
+  IntVector f_hi = patch->getHighIndex();
+  Point     f_loPos = fineLevel->getCellPosition(f_lo);
+  Point     f_hiPos = fineLevel->getCellPosition(f_hi);
+  Vector patchMidPoint= f_loPos.asVector() + (f_hiPos.asVector() - f_loPos.asVector())/2.0;
+  
+  cout_dbg << " f_low " << f_lo << " f_hi " << f_hi << " f_loPos " << f_loPos << " f_hiPos " << f_hiPos << " mid point " << patchMidPoint << endl;
+  
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
 
@@ -482,7 +497,7 @@ void refine_CF_interfaceOperator(const Patch* patch,
       IntVector fh = iter_tmp.end(); 
       IntVector refineRatio = fineLevel->getRefinementRatio();
       IntVector coarseLow  = fineLevel->mapCellToCoarser(fl);
-      IntVector coarseHigh = fineLevel->mapCellToCoarser(fh+refineRatio-IntVector(1,1,1));
+      IntVector coarseHigh = fineLevel->mapCellToCoarser(fh+refineRatio - IntVector(1,1,1));
       //IntVector coarseHigh = fineLevel->mapCellToCoarser(fh);
 
       //__________________________________
@@ -498,7 +513,7 @@ void refine_CF_interfaceOperator(const Patch* patch,
                                || face == Patch::zplus) {
         coarseLow -= oneCell;
       }
-      cout<< " face " << face << " refineRatio "<< refineRatio
+      cout_dbg<< " face " << face << " refineRatio "<< refineRatio
                << " FineLevel iterator" << fl << " " << fh 
                << " \t coarseLevel iterator " << coarseLow << " " << coarseHigh<<endl;
       
@@ -511,7 +526,7 @@ void refine_CF_interfaceOperator(const Patch* patch,
                                 coarseLow, coarseHigh);
 
        linearInterpolation<varType>(q_OldDW, coarseLevel, fineLevel,
-                                    refineRatio, fl,fh, Q);      
+                                    refineRatio, fl,fh, patchMidPoint, Q);      
                                     
                                     
      //  interpolationInterface<varType>(q_OldDW,coarse_new_dw, coarseLevel, fineLevel,
@@ -527,7 +542,7 @@ void refine_CF_interfaceOperator(const Patch* patch,
                              coarseLow, coarseHigh);
 
        linearInterpolation<varType>(q_NewDW, coarseLevel, fineLevel,
-                                    refineRatio, fl,fh, Q); 
+                                    refineRatio, fl,fh,patchMidPoint, Q); 
       } else {    
                       
       //__________________________________
@@ -547,10 +562,10 @@ void refine_CF_interfaceOperator(const Patch* patch,
         Q_new.initialize(varType(-9));
                              
         linearInterpolation<varType>(q_OldDW, coarseLevel, fineLevel,
-                                     refineRatio, fl,fh, Q_old);
+                                     refineRatio, fl,fh, patchMidPoint,Q_old);
                                       
         linearInterpolation<varType>(q_NewDW, coarseLevel, fineLevel,
-                                     refineRatio, fl,fh, Q_new);
+                                     refineRatio, fl,fh, patchMidPoint,Q_new);
         // Linear interpolation in time
         for(CellIterator iter(fl,fh); !iter.done(); iter++){
           IntVector f_cell = *iter;
@@ -598,15 +613,16 @@ void AMRICE::refineCoarseFineBoundaries(const Patch* patch,
                            int matl,
                            double subCycleProgress_var)
 {
+  const Level* level = patch->getLevel();
+  const Level* coarseLevel = level->getCoarserLevel().get_rep();
+
   cout_dbg << "\t refineCoarseFineBoundaries ("<<label->getName() << ") \t" 
-           << " subCycleProgress_var " << subCycleProgress_var<< '\n';
+           << " subCycleProgress_var " << subCycleProgress_var
+           << " Level-" << level->getIndex()<< '\n';
   DataWarehouse* coarse_old_dw = 
                  fine_new_dw->getOtherDataWarehouse(Task::CoarseOldDW);
   DataWarehouse* coarse_new_dw = 
                  fine_new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
-  
-  const Level* level = patch->getLevel();
-  const Level* coarseLevel = level->getCoarserLevel().get_rep();
   
   refine_CF_interfaceOperator<double>
     (patch, level, coarseLevel, val, label, subCycleProgress_var, matl,
@@ -622,15 +638,16 @@ void AMRICE::refineCoarseFineBoundaries(const Patch* patch,
                            int matl,
                            double subCycleProgress_var)
 {
+  const Level* level = patch->getLevel();
+  const Level* coarseLevel = level->getCoarserLevel().get_rep();
+
   cout_dbg << "\t refineCoarseFineBoundaries ("<<label->getName() << ") \t" 
-           << " subCycleProgress_var " << subCycleProgress_var<< '\n';
+           << " subCycleProgress_var " << subCycleProgress_var
+           << " Level-" << level->getIndex()<< '\n';
   DataWarehouse* coarse_old_dw = 
                  fine_new_dw->getOtherDataWarehouse(Task::CoarseOldDW);
   DataWarehouse* coarse_new_dw = 
                  fine_new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
-  
-  const Level* level = patch->getLevel();
-  const Level* coarseLevel = level->getCoarserLevel().get_rep();
 
   refine_CF_interfaceOperator<Vector>
     (patch, level, coarseLevel, val, label, subCycleProgress_var, matl,
@@ -803,14 +820,17 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
     fl = Max(fl, finePatch->getCellLowIndex());
     fh = Min(fh, finePatch->getCellHighIndex());
     
-    cout_dbg << " coarseToFineOperator: coarsePatch " << *coarsePatch
-             << " finePatch " << *finePatch << endl;
+    cout_dbg << " coarseToFineOperator: coarsePatch " << cl<< " " << ch
+             << " finePatch " << fl << " " << fh << endl;
     IntVector refineRatio = coarseLevel->getRefinementRatio();
     
-    
+      // compute the mid point of the patch, needed by linear interpolation
+    Point  f_loPos = fineLevel->getCellPosition(fl);   
+    Point  f_hiPos = fineLevel->getCellPosition(fh);
+    Vector patchMidPoint= f_loPos.asVector() + (f_hiPos.asVector() - f_loPos.asVector())/2.0;
 /*`==========TESTING==========*/
     linearInterpolation<T>(coarse_q_CC, coarseLevel, fineLevel,
-                                  refineRatio, fl,fh, q_CC); 
+                                  refineRatio, fl,fh, patchMidPoint,q_CC); 
 /*===========TESTING==========`*/
 
 #if 0
@@ -980,7 +1000,7 @@ void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
     const Patch* finePatch = finePatches[i];
     
     constCCVariable<T> fine_q_CC;
-    new_dw->get(fine_q_CC, varLabel, indx, finePatch,Ghost::None, 0);
+    new_dw->get(fine_q_CC, varLabel, indx, finePatch,Ghost::AroundCells, 1);
 
     IntVector fl(finePatch->getInteriorCellLowIndex());
     IntVector fh(finePatch->getInteriorCellHighIndex());
