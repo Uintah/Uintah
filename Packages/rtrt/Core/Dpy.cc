@@ -161,7 +161,7 @@ Dpy::Dpy(Scene* scene, char* criteria1, char* criteria2,
     showLights_( false ), lightsShowing_( false ),
     turnOffAllLights_( false ), turnOnAllLights_( false ),
     turnOnLight_( false ), turnOffLight_( false ),
-    attachedObject_(NULL)
+    attachedObject_(NULL), turnOnTransmissionMode_(false)
 {
   ppc = new PerProcessorContext( pp_size, scratchsize );
 
@@ -283,6 +283,13 @@ Dpy::checkGuiFlags()
   float & full_threshold= priv->full_threshold;
 
   bool changed = true;
+
+  // Display image as a "transmission".  Ie: turn off every other scan line.
+  if( turnOnTransmissionMode_ ){
+    scene->transmissionMode_ = true;
+  } else {
+    scene->transmissionMode_ = false;
+  }
 
   if( showLights_ && !lightsShowing_ ){
     scene->renderLights( true );
