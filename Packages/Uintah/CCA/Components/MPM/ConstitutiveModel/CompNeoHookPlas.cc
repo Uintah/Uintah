@@ -338,6 +338,7 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
     }
 
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
+    new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
   }
 }
 
