@@ -31,9 +31,8 @@ namespace Uintah {
       const VarLabel* pExternalForceLabel;
       const VarLabel* pXLabel;
       const VarLabel* pSurfLabel;
+      const VarLabel* pIsBrokenLabel; //for fracture
       const VarLabel* pCrackSurfaceNormalLabel; //for fracture
-      const VarLabel* pSurfaceNormalLabel; //for fracture
-      const VarLabel* pAverageMicrocrackLength; //for fracture
       const VarLabel* pTemperatureLabel; //for heat conduction
       const VarLabel* pTemperatureGradientLabel; //for heat conduction
       const VarLabel* pTemperatureRateLabel; //for heat conduction
@@ -50,9 +49,8 @@ namespace Uintah {
       const VarLabel* pExternalForceLabel_preReloc;
       const VarLabel* pXLabel_preReloc;
       const VarLabel* pSurfLabel_preReloc;
+      const VarLabel* pIsBrokenLabel_preReloc; //for fracture
       const VarLabel* pCrackSurfaceNormalLabel_preReloc; //for fracture
-      const VarLabel* pSurfaceNormalLabel_preReloc; //for fracture
-      const VarLabel* pAverageMicrocrackLength_preReloc; //for fracture
       const VarLabel* pTemperatureLabel_preReloc; //for heat conduction
       const VarLabel* pTemperatureGradientLabel_preReloc; //for heat conduction
       const VarLabel* pTemperatureRateLabel_preReloc; //for heat conduction
@@ -83,9 +81,6 @@ namespace Uintah {
       const VarLabel* gVolumeLabel; //for heat conduction
       const VarLabel* gWeightLabel; //for who knows what?
       
-      const VarLabel* cSelfContactLabel; //for fracture, CCVariable
-      const VarLabel* cCrackedCellLabel; //for fracture, CCVariable
-      const VarLabel* cSurfaceNormalLabel; //for fracture, CCVariable
       const VarLabel* cBurnedMassLabel; //for burn models
 
       const VarLabel* StrainEnergyLabel;
@@ -104,6 +99,9 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.23  2000/09/05 05:15:49  tan
+// Moved Fracture Model to MPMMaterial class.
+//
 // Revision 1.22  2000/08/30 00:12:42  guilkey
 // Added some stuff for interpolating particle data to the grid solely
 // for the purpose of saving to an uda.  This doesn't work yet.

@@ -106,11 +106,11 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
        lb->registerPermanentParticleState(m,lb->pIsIgnitedLabel,
 					  lb->pIsIgnitedLabel_preReloc);
      }
-     if(MPMPhysicalModules::fractureModel){
-       lb->registerPermanentParticleState(m,lb->pSurfaceNormalLabel,
-					  lb->pSurfaceNormalLabel_preReloc); 
-       lb->registerPermanentParticleState(m,lb->pAverageMicrocrackLength,
-				  lb->pAverageMicrocrackLength_preReloc); 
+     if(mpm_matl->getFractureModel()){
+       lb->registerPermanentParticleState(m,lb->pCrackSurfaceNormalLabel,
+					  lb->pCrackSurfaceNormalLabel_preReloc); 
+       lb->registerPermanentParticleState(m,lb->pIsBrokenLabel,
+					  lb->pIsBrokenLabel_preReloc); 
      }
      
      lb->registerPermanentParticleState(m,lb->pTemperatureLabel,
@@ -171,8 +171,6 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 				    DataWarehouseP& old_dw, 
 				    DataWarehouseP& new_dw)
 {
-   int fieldIndependentVariable = 0;
-
    int numMatls = d_sharedState->getNumMatls();
 
    //   const MPMLabel* lb = MPMLabel::getLabels();
@@ -182,35 +180,41 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 
       const Patch* patch=*iter;
     
-      if(MPMPhysicalModules::fractureModel) {
+#if 0
+      {
 	 /*
-	  * labelSelfContactNodesAndCells
+	  * labelBrokenCells
 	  *   in(C.SURFACENORMAL,P.SURFACENORMAL)
 	  *   operation(label the nodes and cells that has self-contact)
 	  *   out(C.SELFCONTACTLABEL)
 	  */
-	 Task* t = scinew Task("Fracture::labelSelfContactNodesAndCells",
+	 Task* t = scinew Task("SerialMPM::labelBrokenCells",
 			    patch, old_dw, new_dw,
-			    MPMPhysicalModules::fractureModel,
-			    &Fracture::labelSelfContactNodesAndCells);
+			    this,
+			    &SerialMPM::labelBrokenCells);
 
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
-	    t->requires( old_dw, lb->pSurfaceNormalLabel, idx, patch,
-			 Ghost::None);
-	 }
+            MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);     
+	    if(mpm_matl->getFractureModel()) {
 
-         t->requires( old_dw, lb->cSurfaceNormalLabel,
-                      d_sharedState->getMaterial(fieldIndependentVariable)
+              t->requires( old_dw, lb->pSurfaceNormalLabel, idx, patch,
+			 Ghost::None);
+
+              t->requires( old_dw, lb->cSurfaceNormalLabel,
+                         d_sharedState->getMaterial(fieldIndependentVariable)
                                    ->getDWIndex(), patch, Ghost::None);
 
-         t->computes( new_dw, lb->cSelfContactLabel,
-                      d_sharedState->getMaterial(fieldIndependentVariable)
+              t->computes( new_dw, lb->cSelfContactLabel,
+                         d_sharedState->getMaterial(fieldIndependentVariable)
                                    ->getDWIndex(), patch );
+	    }
+	 }
 
 	 sched->addTask(t);
       }
+#endif
 
       {
 	 /*
@@ -337,32 +341,6 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	 sched->addTask(t);
       }
 
-      if(MPMPhysicalModules::fractureModel) {
-	 /*
-	  * updateSurfaceNormalOfBoundaryParticle
-	  *   in(P.DEFORMATIONMEASURE)
-	  *   operation(update the surface normal of each boundary particles)
-	  * out(P.SURFACENORMAL)
-	  */
-	 Task* t = scinew Task("Fracture::updateSurfaceNormalOfBoundaryParticle",
-			    patch, old_dw, new_dw,
-			    MPMPhysicalModules::fractureModel,
-			    &Fracture::updateSurfaceNormalOfBoundaryParticle);
-
-	 for(int m = 0; m < numMatls; m++){
-	    Material* matl = d_sharedState->getMaterial(m);
-	    int idx = matl->getDWIndex();
-	    t->requires( old_dw, lb->pDeformationMeasureLabel, idx, patch,
-			 Ghost::None);
-	    t->requires( old_dw, lb->pSurfaceNormalLabel, idx, patch,
-			 Ghost::None);
-
-	    t->computes( new_dw, lb->pSurfaceNormalLabel_preReloc, idx, patch );
-	 }
-
-	 sched->addTask(t);
-      }
-      
       {
 	 /*
 	  * computeInternalForce
@@ -553,41 +531,6 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	sched->addTask(t);
       }
 
-      if(MPMPhysicalModules::fractureModel) {
-	 /*
-	  * updateNodeInformationInContactCells
-	  *   in(C.SELFCONTACT,G.VELOCITY,G.ACCELERATION)
-	  *   operation(update the node information including velocities and
-	  *   accelerations in nodes of contact-cells)
-	  *   out(G.VELOCITY,G.ACCELERATION)
-	  */
-	 Task* t = scinew Task("Fracture::updateNodeInformationInContactCells",
-			    patch, old_dw, new_dw,
-			    MPMPhysicalModules::fractureModel,
-			    &Fracture::updateNodeInformationInContactCells);
-
-	 for(int m = 0; m < numMatls; m++){
-	    Material* matl = d_sharedState->getMaterial(m);
-	    int idx = matl->getDWIndex();
-	    t->requires( old_dw, lb->gVelocityLabel, idx, patch,
-			 Ghost::None);
-	    t->requires( old_dw, lb->gAccelerationLabel, idx, patch,
-			 Ghost::None);
-
-	    t->computes( new_dw, lb->gVelocityLabel, idx, patch );
-	    t->computes( new_dw, lb->gAccelerationLabel, idx, patch );
-	 }
-
-         t->requires( old_dw,
-                      lb->gSelfContactLabel,
-                      d_sharedState->getMaterial(fieldIndependentVariable)
-                                   ->getDWIndex(),
-                      patch,
-	              Ghost::None);
-
-	 sched->addTask(t);
-      }
-      
       {
 	 /*
 	  * interpolateToParticlesAndUpdate
@@ -671,49 +614,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 
       }
 
-      if(MPMPhysicalModules::fractureModel) {
-	 /*
-	  * updateParticleInformationInContactCells
-	  *   in(P.DEFORMATIONMEASURE)
-	  *   operation(update the surface normal of each boundary particles)
-	  * out(P.SURFACENORMAL)
-	  */
-	 Task* t = scinew Task("Fracture::updateParticleInformationInContactCells",
-			    patch, old_dw, new_dw,
-			    MPMPhysicalModules::fractureModel,
-			    &Fracture::updateParticleInformationInContactCells);
-
-	 for(int m = 0; m < numMatls; m++){
-	    Material* matl = d_sharedState->getMaterial(m);
-	    int idx = matl->getDWIndex();
-	    t->requires( old_dw, lb->pXLabel, idx, patch,
-			 Ghost::None);
-	    t->requires( old_dw, lb->pVelocityLabel, idx, patch,
-			 Ghost::None);
-	    t->requires( old_dw, lb->pExternalForceLabel, idx, patch,
-			 Ghost::None);
-	    t->requires( old_dw, lb->pDeformationMeasureLabel, idx, patch,
-			 Ghost::None);
-	    t->requires( old_dw, lb->pStressLabel, idx, patch,
-			 Ghost::None);
-
-	    t->computes( new_dw, lb->pXLabel_preReloc, idx, patch );
-	    t->computes( new_dw, lb->pVelocityLabel_preReloc, idx, patch );
-	    t->computes( new_dw, lb->pDeformationMeasureLabel_preReloc, idx, patch );
-	    t->computes( new_dw, lb->pStressLabel_preReloc, idx, patch );
-	 }
-
-         t->requires( old_dw,
-                      lb->cSelfContactLabel,
-                      d_sharedState->getMaterial(fieldIndependentVariable)
-                                   ->getDWIndex(),
-                      patch,
-	              Ghost::None);
-
-	 sched->addTask(t);
-      }
-
-      if(MPMPhysicalModules::fractureModel) {
+#if 0
+      {
 	 /*
 	  * crackGrow
 	  *   in(P.STRESS)
@@ -722,26 +624,30 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 	  *             more interior particles become boundary particles)
 	  * out(P.SURFACENORMAL)
 	  */
-	 Task* t = scinew Task("Fracture::crackGrow",
+	 Task* t = scinew Task("SerialMPM::crackGrow",
 			    patch, old_dw, new_dw,
-			    MPMPhysicalModules::fractureModel,
-			    &Fracture::crackGrow);
+			    this,&SerialMPM::crackGrow);
 
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
-	    t->requires( new_dw, lb->pStressLabel, idx, patch,
+	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);     
+	    if(mpm_matl->getFractureModel()) {
+	      t->requires( new_dw, lb->pStressLabel, idx, patch,
 			 Ghost::None);
-	    t->requires( new_dw, lb->pXLabel, idx, patch,
+ 	      t->requires( new_dw, lb->pXLabel, idx, patch,
 			 Ghost::None);
-	    t->requires( new_dw, lb->pSurfaceNormalLabel, idx, patch,
+	      t->requires( new_dw, lb->pCrackSurfaceNormalLabel, idx, patch,
 			 Ghost::None);
 
-	    t->computes( new_dw, lb->pSurfaceNormalLabel_preReloc, idx, patch );
+	      t->computes( new_dw, lb->pCrackSurfaceNormalLabel_preReloc, idx, patch );
+	    }
 	 }
 
 	 sched->addTask(t);
       }
+#endif
+
 #if 0
       {
 	 Task *t = scinew Task("SerialMPM::interpolateParticlesForSaving",
@@ -776,10 +682,6 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 				     lb->d_particleState_preReloc,
 				     lb->pXLabel, lb->d_particleState,
 				     numMatls);
-
-   if(MPMPhysicalModules::fractureModel) {
-      new_dw->pleaseSave(lb->pDeformationMeasureLabel, numMatls);
-   }
 
    new_dw->pleaseSave(lb->pXLabel, numMatls);
    new_dw->pleaseSave(lb->pVelocityLabel, numMatls);
@@ -823,7 +725,7 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 					      DataWarehouseP& old_dw,
 					      DataWarehouseP& new_dw)
 {
-  double nextOutputTime = 0.;
+//  double nextOutputTime = 0.;
 //  if(time > nextOutputTime){
 
 //   cout << "Time = " << time << endl;
@@ -997,13 +899,15 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 						mpm_matl, new_dw);
        mpm_matl->getBurnModel()->initializeBurnModelData(patch,
 						mpm_matl, new_dw);
+       if(mpm_matl->getFractureModel()) {
+	 mpm_matl->getFractureModel()->initializeFractureModelData( patch,
+						mpm_matl, new_dw);
+       }       
+
        int vfindex = matl->getVFIndex();
 
        MPMPhysicalModules::contactModel->initializeContact(patch,vfindex,new_dw);
        
-       if(MPMPhysicalModules::fractureModel) {
-	 MPMPhysicalModules::fractureModel->initializeFracture( patch, new_dw );
-       }       
     }
   }
 
@@ -1194,12 +1098,23 @@ void SerialMPM::computeMassRate(const ProcessorGroup*,
    }
 }
 
-void SerialMPM::updateSurfaceNormalOfBoundaryParticle(const ProcessorGroup*,
+void SerialMPM::labelBrokenCells(const ProcessorGroup*,
+			 	const Patch* patch,
+				DataWarehouseP& old_dw,
+				DataWarehouseP& new_dw)
+{
+   for(int m = 0; m < d_sharedState->getNumMatls(); m++){
+      Material* matl = d_sharedState->getMaterial(m);
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+      mpm_matl->getFractureModel()->labelBrokenCells(patch, mpm_matl, old_dw, new_dw);
+   }
+}
+
+void SerialMPM::crackGrow(const ProcessorGroup*,
 				    const Patch* /*patch*/,
 				    DataWarehouseP& /*old_dw*/,
 				    DataWarehouseP& /*new_dw*/)
 {
-  //Tan: not finished yet. 
 }
 
 void SerialMPM::computeInternalForce(const ProcessorGroup*,
@@ -1821,9 +1736,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 #endif
 }
 
+
 // $Log$
-// Revision 1.122  2000/09/04 23:37:31  tan
-// Made the code clean for PhysicalBC.
+// Revision 1.123  2000/09/05 05:11:31  tan
+// Moved Fracture Model to MPMMaterial class.
 //
 // Revision 1.121  2000/08/30 00:12:42  guilkey
 // Added some stuff for interpolating particle data to the grid solely

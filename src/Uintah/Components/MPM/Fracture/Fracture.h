@@ -9,6 +9,7 @@
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Components/MPM/MPMLabel.h>
+#include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 
 #include "Lattice.h"
 #include "Cell.h"
@@ -28,103 +29,27 @@ namespace MPM {
 
 class Fracture {
 public:
-  enum CellStatus { HAS_ONE_BOUNDARY_SURFACE,
-                    HAS_SEVERAL_BOUNDARY_SURFACE,
-                    INTERIOR_CELL
-                  };
 
-  enum ParticleStatus { BOUNDARY_PARTICLE,
-                        INTERIOR_PARTICLE
-                      };
+  void   initializeFractureModelData(const Patch* patch,
+                            const MPMMaterial* matl,
+                            DataWarehouseP& new_dw);
 
-  void   materialDefectsInitialize(const Patch* patch,
-                                   DataWarehouseP& new_dw);
+  void   labelBrokenCells( const Patch* patch,
+                  MPMMaterial* mpm_matl, 
+		  DataWarehouseP& old_dw, 
+		  DataWarehouseP& new_dw);
   
-  void   initializeFracture(const Patch* patch,
-                           DataWarehouseP& new_dw);
-  
-  void   updateSurfaceNormalOfBoundaryParticle(
-           const ProcessorGroup*,
-           const Patch* patch,
-           DataWarehouseP& old_dw,
-           DataWarehouseP& new_dw);
-  
-  void   labelSelfContactNodesAndCells (
-           const ProcessorGroup*,
-           const Patch* patch,
-           DataWarehouseP& old_dw,
-           DataWarehouseP& new_dw);
-
-  void   updateParticleInformationInContactCells (
-           const ProcessorGroup*,
-           const Patch* patch,
-           DataWarehouseP& old_dw,
-           DataWarehouseP& new_dw);
-
-  void   updateNodeInformationInContactCells (
-           const ProcessorGroup*,
-           const Patch* patch,
-           DataWarehouseP& old_dw,
-           DataWarehouseP& new_dw);
-
-  void   updateParticleInformationInContactCells(
-           int matlindex,
-           int vfindex,
-           const Patch* patch,
-           DataWarehouseP& old_dw,
-           DataWarehouseP& new_dw);
-
-  void   crackGrow(
-           const ProcessorGroup*,
-           const Patch* patch,
-           DataWarehouseP& old_dw,
-           DataWarehouseP& new_dw);
+  void   crackGrow(const Patch* patch,
+                  MPMMaterial* mpm_matl, 
+		  DataWarehouseP& old_dw, 
+		  DataWarehouseP& new_dw);
 
          Fracture();
-	 Fracture(ProblemSpecP& ps, SimulationStateP& d_sS);
-	 ~Fracture();
+	 Fracture(ProblemSpecP& ps);
+        ~Fracture();
                 
 private:
-  void   labelCellSurfaceNormal (
-           int matlindex,
-           int vfindex,
-           const Patch* patch,
-           DataWarehouseP& old_dw,
-           DataWarehouseP& new_dw);
-
-  void   labelSelfContactNodes(
-           int matlindex,
-           int vfindex,
-           const Patch* patch,
-           DataWarehouseP& old_dw,
-           DataWarehouseP& new_dw);
-
-  void   labelSelfContactCells(
-           int matlindex,
-           int vfindex,
-           const Patch* patch,
-           DataWarehouseP& old_dw,
-           DataWarehouseP& new_dw);
-
-  static bool isSelfContactNode(const IntVector& nodeIndex,const Patch* patch,
-    const CCVariable<Vector>& cSurfaceNormal);
-
-  static Fracture::CellStatus  cellStatus(
-           const Vector& cellSurfaceNormal);
-  static void setCellStatus(Fracture::CellStatus status,
-           Vector* cellSurfaceNormal);
-
-  static Fracture::ParticleStatus  particleStatus(
-           const Vector& particleSurfaceNormal);
-  static void setParticleStatus(Fracture::ParticleStatus status,
-           Vector* particleSurfaceNormal);
-
-  double           d_averageMicrocrackLength;
-  double           d_toughness;
-  SimulationStateP d_sharedState;
-
-  LeastSquare      d_ls;
-  CubicSpline      d_spline;
+  double           d_tensileStrength;
 
   MPMLabel*        lb;
 };
@@ -135,6 +60,9 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.24  2000/09/05 05:13:09  tan
+// Moved Fracture Model to MPMMaterial class.
+//
 // Revision 1.23  2000/08/09 03:18:02  jas
 // Changed new to scinew and added deletes to some of the destructors.
 //

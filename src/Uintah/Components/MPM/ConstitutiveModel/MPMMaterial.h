@@ -24,6 +24,7 @@ namespace Uintah {
       class GeometryPiece;
       class ConstitutiveModel;
       class HEBurn;
+      class Fracture;
       using SCICore::Geometry::Point;
       using SCICore::Geometry::Vector;
       
@@ -68,6 +69,9 @@ WARNING
 
 	 // Return correct burn model pointer for this material
 	 HEBurn * getBurnModel();
+
+	 // Return correct burn fracture pointer for this material
+	 Fracture * getFractureModel();
 	 
 	 particleIndex countParticles(const Patch*) const;
 	 particleIndex countParticles(GeometryObject* obj,
@@ -106,6 +110,9 @@ WARNING
 
          // Burn model
 	 HEBurn *d_burn;
+
+         // Burn model
+	 Fracture *d_fracture;
 	 
 	 double d_density;
 
@@ -132,6 +139,9 @@ WARNING
 #endif // __MPM_MATERIAL_H__
 
 // $Log$
+// Revision 1.28  2000/09/05 05:14:43  tan
+// Moved Fracture Model to MPMMaterial class.
+//
 // Revision 1.27  2000/07/05 23:43:34  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling

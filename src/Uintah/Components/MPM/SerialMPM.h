@@ -109,6 +109,13 @@ protected:
 
   //////////
   // Insert Documentation Here:
+  void labelBrokenCells(const ProcessorGroup*,
+			 	const Patch* patch,
+				DataWarehouseP& old_dw,
+				DataWarehouseP& new_dw);
+
+  //////////
+  // Insert Documentation Here:
   void interpolateParticlesToGrid(const ProcessorGroup*,
 				  const Patch* patch,
 				  DataWarehouseP& old_dw,
@@ -134,15 +141,6 @@ protected:
 		       const Patch* patch,
 		       DataWarehouseP& old_dw,
 		       DataWarehouseP& new_dw);
-
-  //////////
-  // update the Surface Normal Of Boundary Particles according to their
-  // velocity gradient during the deformation
-  //
-  void updateSurfaceNormalOfBoundaryParticle(const ProcessorGroup*,
-					     const Patch* patch,
-					     DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw);
 
   //////////
   // Insert Documentation Here:
@@ -196,6 +194,13 @@ protected:
 
   //////////
   // Insert Documentation Here:
+  void crackGrow(const ProcessorGroup*,
+				    const Patch* /*patch*/,
+				    DataWarehouseP& /*old_dw*/,
+				    DataWarehouseP& /*new_dw*/);
+
+  //////////
+  // Insert Documentation Here:
   void checkLeave(const ProcessorGroup*,
 		  const Patch* patch,
 		  DataWarehouseP& /*old_dw*/,
@@ -214,8 +219,8 @@ protected:
    
 //
 // $Log$
-// Revision 1.52  2000/09/04 23:37:18  tan
-// Made the code clean for PhysicalBC.
+// Revision 1.53  2000/09/05 05:11:16  tan
+// Moved Fracture Model to MPMMaterial class.
 //
 // Revision 1.51  2000/08/30 00:12:42  guilkey
 // Added some stuff for interpolating particle data to the grid solely

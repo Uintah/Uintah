@@ -12,7 +12,6 @@ static char *id="@(#) $Id$";
 using namespace Uintah::MPM;
 
 HeatConduction*  MPMPhysicalModules::heatConductionModel;
-Fracture*        MPMPhysicalModules::fractureModel;
 Contact*         MPMPhysicalModules::contactModel;
 ThermalContact*  MPMPhysicalModules::thermalContactModel;
 
@@ -25,9 +24,6 @@ void MPMPhysicalModules::build(const ProblemSpecP& prob_spec,
    //solid heat conduction
    heatConductionModel = HeatConductionFactory::create(prob_spec,sharedState);
 
-   //solid fracture
-   fractureModel = FractureFactory::create(prob_spec,sharedState);
-
    //solid thermal contact
    thermalContactModel = ThermalContactFactory::create(prob_spec,
      sharedState);
@@ -36,6 +32,9 @@ void MPMPhysicalModules::build(const ProblemSpecP& prob_spec,
 
 //
 // $Log$
+// Revision 1.3  2000/09/05 05:12:14  tan
+// Moved Fracture Model to MPMMaterial class.
+//
 // Revision 1.2  2000/06/22 22:59:38  tan
 // Moved heat conduction physical parameters (thermalConductivity, specificHeat,
 // and heatTransferCoefficient) from MPMMaterial class to HeatConduction class.
