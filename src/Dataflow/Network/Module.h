@@ -43,7 +43,6 @@
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/DynamicCompilation.h>
 #include <Core/Util/Timer.h>
-//#include <Core/Util/ModuleReporter.h>
 #include <Core/Util/ProgressReporter.h>
 #include <iosfwd>
 #include <string>
@@ -145,7 +144,7 @@ PortManager<T>::operator[](string item)
   return port_range_type(namemap_.equal_range(item));
 }
 
-class Module : public /*ModuleReporter*/ ProgressReporter, public ModulePickable, public GuiCallback
+class Module : public ProgressReporter, public ModulePickable, public GuiCallback
 {
 public:
   enum SchedClass {
