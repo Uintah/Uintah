@@ -44,7 +44,7 @@ Scene* make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
     for( int j = 0; j < 3; j++ )
       {
 	Transform *tr = new Transform;
-//	tr->post_scale(Vector(i*.3+1,j*.6+1,1));
+	tr->post_scale(Vector(i*.3+1,j*.6+1,1));
 	tr->post_translate(Vector(i*10,j*10,0));
 	group->add(new Instance(new InstanceWrapperObject(s), tr));
       }
