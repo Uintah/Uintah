@@ -108,7 +108,7 @@ class ShowField : public Module
   GuiInt                   resolution_;
   int                      res_;
   DynamicLoader            loader_;
-  RenderFieldBase         *renderer_;
+  DynamicAlgoHandle        renderer_;
 
 public:
   ShowField(const string& id);
@@ -181,23 +181,16 @@ ShowField::execute()
 
     error(td->get_h_file_path().c_str());
 
-    // Do I have the algorithm already?
-    DynamicAlgoHandle alg = 0;
+    // Get the Algorithm.
     CompileInfo *ci = RenderFieldBase::get_compile_info(td);
-    if (! loader_.get(ci->filename_, alg)) {
-      if (loader_.compile_and_store(*ci)) {
-	// fetch the algorithm.
-	loader_.get(ci->filename_, alg);
-      }
-      else {
-	fld_gen_ = -1;
-	error("Could not compile algorithm for ShowField -");
-	error(td->get_name().c_str());
-	return;
-      }
+    if (! loader_.get(*ci, renderer_)) {
+      fld_gen_ = -1;
+      error("Could not compile algorithm for ShowField -");
+      error(td->get_name().c_str());
+      return;
     }
-    renderer_ = dynamic_cast<RenderFieldBase*>(alg.get_rep());
-    if (renderer_ == 0) {
+    
+    if (renderer_.get_rep() == 0) {
       error("ShowField could not get algorithm!!");
       return;
     }
@@ -242,7 +235,9 @@ ShowField::execute()
   edge_scale_.reset();
   double es = edge_scale_.get();
 
-  renderer_->render(fld_handle, nodes_dirty_, edges_dirty_, faces_dirty_, 
+  RenderFieldBase* alg = dynamic_cast<RenderFieldBase*>(renderer_.get_rep());
+
+  alg->render(fld_handle, nodes_dirty_, edges_dirty_, faces_dirty_, 
 		    def_mat_handle_, use_def_color_, color_handle_,
 		    ndt, edt, ns, es, res_);
 
@@ -251,23 +246,23 @@ ShowField::execute()
     if (node_id_) ogeom_->delObj(node_id_);
     node_id_ = 0;
     nodes_dirty_ = false;
-    if (renderer_ && nodes_on_.get()) 
-      node_id_ = ogeom_->addObj(renderer_->node_switch_, "Nodes");
+    if (alg && nodes_on_.get()) 
+      node_id_ = ogeom_->addObj(alg->node_switch_, "Nodes");
   }
   if (edges_dirty_) {
     if (edge_id_) ogeom_->delObj(edge_id_); 
     edge_id_ = 0;
     edges_dirty_ = false;
-    if (renderer_ && edges_on_.get()) edge_id_ = 
-					ogeom_->addObj(renderer_->edge_switch_, "Edges");
+    if (alg && edges_on_.get()) 
+      edge_id_ = ogeom_->addObj(alg->edge_switch_, "Edges");
 
   }
   if (faces_dirty_) {
     if (face_id_) ogeom_->delObj(face_id_); 
     face_id_ = 0;
     faces_dirty_ = false;
-    if (renderer_ && faces_on_.get()) 
-      face_id_ = ogeom_->addObj(renderer_->face_switch_, "Faces");
+    if (alg && faces_on_.get()) 
+      face_id_ = ogeom_->addObj(alg->face_switch_, "Faces");
   }  
   ogeom_->flushViews();
 }
@@ -279,7 +274,7 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
     args.error("ShowField needs a minor command");
     return;
   }
-
+  RenderFieldBase* alg = dynamic_cast<RenderFieldBase*>(renderer_.get_rep());
   if (args[1] == "node_scale") {
     if (node_display_type_.get() == "Points") { return; }
     nodes_dirty_ = true;
@@ -302,8 +297,8 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
   } else if (args[1] == "toggle_display_nodes"){
     // Toggle the GeomSwitches.
     nodes_on_.reset();
-    if (renderer_ && renderer_->node_switch_) 
-      renderer_->node_switch_->set_state(nodes_on_.get());
+    if (alg && alg->node_switch_) 
+      alg->node_switch_->set_state(nodes_on_.get());
 
     if ((nodes_on_.get()) && (node_id_ == 0)) {
       nodes_dirty_ = true;
@@ -314,8 +309,8 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
   } else if (args[1] == "toggle_display_edges"){
     // Toggle the GeomSwitch.
     edges_on_.reset();
-    if (renderer_ && renderer_->edge_switch_) 
-      renderer_->edge_switch_->set_state(edges_on_.get());
+    if (alg && alg->edge_switch_) 
+      alg->edge_switch_->set_state(edges_on_.get());
     
     if ((edges_on_.get()) && (edge_id_ == 0)) {
       edges_dirty_ = true;
@@ -326,8 +321,8 @@ ShowField::tcl_command(TCLArgs& args, void* userdata) {
   } else if (args[1] == "toggle_display_faces"){
     // Toggle the GeomSwitch.
     faces_on_.reset();
-    if (renderer_ && renderer_->face_switch_) 
-      renderer_->face_switch_->set_state(faces_on_.get());
+    if (alg && alg->face_switch_) 
+      alg->face_switch_->set_state(faces_on_.get());
 
     if ((faces_on_.get()) && (face_id_ == 0)) {
       faces_dirty_ = true;
