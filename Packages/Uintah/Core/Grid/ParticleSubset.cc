@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/ProgressiveWarning.h>
 #include <algorithm>
 #include <iostream>
 
@@ -144,14 +145,9 @@ ParticleSubset::expand(particleIndex amount)
     amount = minAmount;
   d_allocatedSize += minAmount;
   if(d_numExpansions++ > 18){
-    static bool warned = false;
-    if(!warned){
-      cerr << "Performance warning in ParticleSubset: " << d_numExpansions << " expansions occured\n";
-      cerr << "Talk to Steve about a potential performance hit\n";
-      cerr << "This message will only appear once per processor\n";
-      cerr << "size=" << d_allocatedSize << ", numparticles=" << d_numParticles << '\n';
-      warned = true;
-    }
+    static ProgressiveWarning warn("Performance warning in ParticleSubset",10);
+    warn.changeMessage("Performance warning in ParticleSubset, more than 18 expansions occured");
+    warn.invoke();
   }
   particleIndex* newparticles = scinew particleIndex[d_allocatedSize];
   if(d_particles){
