@@ -83,7 +83,7 @@ public:
     
   //////////
   //Class Destructor
-  ~Array3();
+  virtual ~Array3();
     
   //////////
   //Access the nXnXn element of the array
