@@ -170,6 +170,30 @@ bool RescaleColorMap::get_minmax(Field* field, pair<double,double>& pair) {
   } else if (LatticeVol<char> *f = 
 	     dynamic_cast<LatticeVol<char> *>(field)) {
     return field_minmax(*f, pair);
+  } else if (TriSurf<double> *f = 
+      dynamic_cast<TriSurf<double> *>(field)) {
+    return field_minmax(*f, pair);
+  } else if (TriSurf<float> *f = 
+	     dynamic_cast<TriSurf<float> *>(field)) {
+    return field_minmax(*f, pair);
+  } else if (TriSurf<unsigned int> *f = 
+	     dynamic_cast<TriSurf<unsigned int> *>(field)) {
+    return field_minmax(*f, pair);
+  } else if (TriSurf<int> *f = 
+	     dynamic_cast<TriSurf<int> *>(field)) {
+    return field_minmax(*f, pair);
+  } else if (TriSurf<unsigned short> *f = 
+	     dynamic_cast<TriSurf<unsigned short> *>(field)) {
+    return field_minmax(*f, pair);
+  } else if (TriSurf<short> *f = 
+	     dynamic_cast<TriSurf<short> *>(field)) {
+    return field_minmax(*f, pair);
+  } else if (TriSurf<unsigned char> *f = 
+	     dynamic_cast<TriSurf<unsigned char> *>(field)) {
+    return field_minmax(*f, pair);
+  } else if (TriSurf<char> *f = 
+	     dynamic_cast<TriSurf<char> *>(field)) {
+    return field_minmax(*f, pair);
   } else if (ContourField<double> *f = 
       dynamic_cast<ContourField<double> *>(field)) {
     return field_minmax(*f, pair);
@@ -231,6 +255,7 @@ RescaleColorMap::execute()
   if(!imap->get(cmap)) {
     return;
   }
+  cmap = new ColorMap(*cmap.get_rep());
   if( isFixed.get() ){
     cmap->Scale(min.get(), max.get());
   } else {

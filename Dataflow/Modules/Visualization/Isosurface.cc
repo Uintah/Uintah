@@ -297,7 +297,7 @@ Isosurface::send_results()
   if (build_trisurf) {
     TriSurf<double> *ts = new TriSurf<double>(trisurf_mesh_, Field::NODE);
     vector<double>::iterator iter = ts->fdata().begin();
-    while (iter != ts->fdata().end()) (*iter)=iso_value;
+    while (iter != ts->fdata().end()) { (*iter)=iso_value; ++iter; }
     FieldHandle fH(ts);
     osurf->send(fH);
   }
