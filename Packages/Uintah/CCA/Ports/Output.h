@@ -60,6 +60,10 @@ WARNING
       virtual void restartSetup(Dir& restartFromDir, int startTimestep,
 				int timestep, double time, bool fromScratch,
 				bool removeOldDir) = 0;
+      //////////
+      // Call this when doing a combine_patches run after calling
+      // problemSetup.  
+      virtual void combinePatchSetup(Dir& fromDir) = 0;
 
      virtual bool need_recompile(double time, double delt,
 				 const LevelP& level) = 0;
