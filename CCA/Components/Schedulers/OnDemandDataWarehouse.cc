@@ -493,8 +493,9 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
 {
   const MaterialSubset* matls;
   if(!matls){
-    matls = scinew MaterialSubset();
-    matls->add(-1);
+    MaterialSubset* tmpmatls = scinew MaterialSubset();
+    tmpmatls->add(-1);
+    matls = tmpmatls;
   } else {
     matls = inmatls;
   }
@@ -519,7 +520,7 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
     int sendcount;
     MPI_Datatype senddatatype;
     MPI_Op sendop;
-    var->getMPIBuffer(sendbuf, sendcount, senddatatype, sendop);
+    var->getMPIInfo(sendcount, senddatatype, sendop);
     if(m==0){
       op=sendop;
       datatype=senddatatype;
@@ -530,8 +531,8 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
     count += sendcount;
   }
   int packsize;
-  MPI_Pack_size(count, senddatatype, world->getComm(), &packsize);
-  vector<char*> sendbuf(packsize);
+  MPI_Pack_size(count, datatype, world->getComm(), &packsize);
+  vector<char> sendbuf(packsize);
 
   int packindex=0;
   for(int m=0;m<nmatls;m++){
@@ -548,7 +549,7 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
   }
   d_lock.readUnlock();
 
-  vector<char*> recvbuf(packsize);
+  vector<char> recvbuf(packsize);
 
   if( mixedDebug.active() ) {
     cerrLock.lock(); mixedDebug << "calling MPI_Allreduce\n";
