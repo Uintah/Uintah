@@ -29,6 +29,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Dataflow/Modules/Math
 
 SRCS     += \
+	$(SRCDIR)/AppendMatrix.cc\
 	$(SRCDIR)/BuildNoise.cc\
 	$(SRCDIR)/BuildTransform.cc\
 	$(SRCDIR)/CastMatrix.cc\
