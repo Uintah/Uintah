@@ -26,18 +26,31 @@ FileGeometryPiece::FileGeometryPiece(ProblemSpecP& ps)
   setName("file");
   ps->require("name",d_file_name);
   
-  int iparam=0;
-  string next_var_name;
-  while(ps->get(numbered_str("var", iparam++), next_var_name))
-  {
-    if      (next_var_name=="p.volume")         d_vars.push_back(IVvolume);
-    else if (next_var_name=="p.externalforces") d_vars.push_back(IVextforces);
-    else if (next_var_name=="p.fiberdir")       d_vars.push_back(IVfiberdirn);
+  for(ProblemSpecP varblock = ps->findBlock("var");
+      varblock;varblock=varblock->findNextBlock("var")) {
+    string next_var_name("EMPTY!");
+    varblock->get(next_var_name);
+    if      (next_var_name=="p.volume")        d_vars.push_back(IVvolume);
+    else if (next_var_name=="p.externalforce") d_vars.push_back(IVextforces);
+    else if (next_var_name=="p.fiberdir")      d_vars.push_back(IVfiberdirn);
     else 
       throw ProblemSetupException("Unexpected field variable of '"+next_var_name+"'");
   }
   
+  cerr << "reading: positions";
+  for(list<InputVar>::const_iterator vit(d_vars.begin());vit!=d_vars.end();vit++) {
+    if       (*vit==IVvolume) {
+      cerr << " volume";
+    } else if(*vit==IVextforces) {
+      cerr << " externalforce";
+    } else if(*vit==IVfiberdirn) {
+      cerr << " fiberdirn";
+    }
+  }
+  cerr << endl;
+  
   d_file_format = FFSplit; // default expects input to have been been processed with pfs
+
   string fformat_txt;
   if(ps->get("format",fformat_txt)) {
     if     (fformat_txt=="split") d_file_format = FFSplit;
@@ -68,7 +81,7 @@ FileGeometryPiece::FileGeometryPiece(ProblemSpecP& ps)
     min = min - fudge;
     max = max + fudge;
     d_box = Box(min,max);
-    cout << "bbox of " << min << " " << max << endl;
+    cerr << "bbox of " << min << " " << max << endl;
     
   } else {
     // if not using split format, have to read points now to find bounding box
@@ -228,6 +241,6 @@ void FileGeometryPiece::readPoints(int pid)
 
 int FileGeometryPiece::createPoints()
 {
-  cout << "You should be reading points .. not creating them" << endl;  
+  cerr << "You should be reading points .. not creating them" << endl;  
   return 0;
 }
