@@ -108,7 +108,7 @@ Texture::tagBricksForReloading(BinaryTree< BrickNode *> *tree)
 }
 
 void
-Texture::sortBricks( BinaryTree< BrickNode *> *tree,
+Texture::sortBricks(BinaryTree< BrickNode *> *tree,
                     vector<Brick *>& bricks, const Ray& vr)
 {
   //char str[80];

@@ -994,7 +994,7 @@ void
 TextureRenderer::release_colormap2()
 {
   glActiveTexture(GL_TEXTURE2_ARB);
-  if(use_pbuffer_) {
+  if(!sw_raster_ && use_pbuffer_) {
     cmap2_buffer_->release(GL_FRONT);
   } else {
     glDisable(GL_TEXTURE_2D);
