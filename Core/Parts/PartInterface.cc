@@ -31,13 +31,29 @@
 
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Parts/PartInterface.h>
+#include <Core/Parts/GraphPart.h>
+
 
 namespace SCIRun {
-  
 
-PartInterface::PartInterface( Part *part, PartInterface *parent )
-  : part_(part), parent_(parent)
+PartInterface::PartInterface( Part *part, PartInterface *parent, 
+			      const string &type )
+  : type_(type), part_(part),  parent_(parent)
 {
+  cerr << "PI = " << part->name() << endl;
+  cerr << this << "  part = " << part << endl;
+  if ( !dynamic_cast<GraphPart *>(this) )
+    cerr <<"could not cast\n";
+  else
+    cerr <<"ok\n";
+
+  if ( !dynamic_cast<GraphPart *>(part) )
+    cerr <<"could not cast part\n";
+  else
+    cerr <<"part ok\n";
+  if ( parent )
+    parent->add_child(this);
+  
 }
  
 PartInterface::~PartInterface()
@@ -52,8 +68,9 @@ PartInterface::add_child( PartInterface *child )
 {
   children_.push_back(child);
 
+  cerr << "PartInterface emit has_child\n";
   // signal you have a new child
-  has_child( child );
+  has_child( child  );
 }
 
 

@@ -31,17 +31,25 @@
 #ifndef SCI_GraphPart_h
 #define SCI_GraphPart_h 
 
+#include <vector>
+#include <Core/Util/Signals.h>
 #include <Core/Parts/Part.h>
+#include <Core/Parts/PartInterface.h>
 
 namespace SCIRun {
   
-class SCICORESHARE GraphPart {
+class SCICORESHARE GraphPart : public Part, public PartInterface  {
+private:
+  vector< vector<double> > data_;
+
 public:
-  GraphPart( Interface *parent = 0, const string &name="GraphPart");
+  GraphPart( PartInterface *parent = 0, const string &name="GraphPart");
   virtual ~GraphPart();
 
-  void add( Array1<double> *);
-  
+  void set_num_lines( int );
+  void add_values( vector<double> &);
+
+  Signal1< vector<double> & > new_values;
 };
 
 } // namespace SCIRun
