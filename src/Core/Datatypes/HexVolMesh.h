@@ -154,8 +154,18 @@ public:
   }
   double get_size(Cell::index_type idx) const 
   { 
-    ASSERTFAIL("dont know how to compute the volume for an arbitrary hex");
-    return 0.0;
+    Face::array_type faces;
+    get_faces(faces, idx);
+    Point center; 
+    get_center(center, idx);
+    double volume = 0.0;
+    for (int f = 0; f < faces.size(); f++)
+      {
+	Node::array_type nodes;
+	get_nodes(nodes, faces[f]);
+	volume += pyramid_volume(nodes, center);
+      }
+    return volume;
   };
   double get_length(Edge::index_type idx) const { return get_size(idx); };
   double get_area(Face::index_type idx) const   { return get_size(idx); };
@@ -255,6 +265,10 @@ public:
 
   const Point &point(Node::index_type i) { return points_[i]; }
   virtual bool		synchronize(unsigned int);
+
+
+  double pyramid_volume(const Node::array_type &, const Point &) const;
+  double polygon_area(const Node::array_type &, const Vector) const;
 
 private:
 
