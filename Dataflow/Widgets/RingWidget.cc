@@ -334,6 +334,17 @@ RingWidget::redraw()
 }
 
 
+void
+RingWidget::geom_pick( GeomPick*p, ViewWindow*vw, int data, const BState& bs)
+{
+  BaseWidget::geom_pick(p, vw, data, bs);
+  pick_pointrvar_ = variables[PointRVar]->point();
+  pick_pointdvar_ = variables[PointDVar]->point();
+  pick_centervar_ = variables[CenterVar]->point();
+  pick_slidervar_ = variables[SliderVar]->point();
+}
+
+
 /***************************************************************************
  * The widget's geom_moved method receives geometry move requests from
  *      the widget's picks.  The widget's variables must be altered to
@@ -362,19 +373,35 @@ RingWidget::geom_moved( GeomPick*, int axis, double dist,
   switch(pick)
   {
   case PickSphU:
-    variables[PointDVar]->SetDelta(-delta);
+    variables[PointRVar]->Move(pick_pointrvar_);
+    variables[PointDVar]->Move(pick_pointdvar_);
+    variables[CenterVar]->Move(pick_centervar_);
+    variables[SliderVar]->Move(pick_slidervar_);
+    variables[PointDVar]->SetDelta(-pick_offset);
     break;
 
   case PickSphR:
-    variables[PointRVar]->SetDelta(delta);
+    variables[PointRVar]->Move(pick_pointrvar_);
+    variables[PointDVar]->Move(pick_pointdvar_);
+    variables[CenterVar]->Move(pick_centervar_);
+    variables[SliderVar]->Move(pick_slidervar_);
+    variables[PointRVar]->SetDelta(pick_offset);
     break;
 
   case PickSphD:
-    variables[PointDVar]->SetDelta(delta);
+    variables[PointRVar]->Move(pick_pointrvar_);
+    variables[PointDVar]->Move(pick_pointdvar_);
+    variables[CenterVar]->Move(pick_centervar_);
+    variables[SliderVar]->Move(pick_slidervar_);
+    variables[PointDVar]->SetDelta(pick_offset);
     break;
 
   case PickSphL:
-    variables[PointRVar]->SetDelta(-delta);
+    variables[PointRVar]->Move(pick_pointrvar_);
+    variables[PointDVar]->Move(pick_pointdvar_);
+    variables[CenterVar]->Move(pick_centervar_);
+    variables[SliderVar]->Move(pick_slidervar_);
+    variables[PointRVar]->SetDelta(-pick_offset);
     break;
 
   case PickResizeU:
@@ -430,7 +457,11 @@ RingWidget::geom_moved( GeomPick*, int axis, double dist,
     break;
 
   case PickRing:
-    MoveDelta(delta);
+    variables[PointRVar]->Move(pick_pointrvar_);
+    variables[PointDVar]->Move(pick_pointdvar_);
+    variables[CenterVar]->Move(pick_centervar_);
+    variables[SliderVar]->Move(pick_slidervar_);
+    MoveDelta(pick_offset);
     break;
   }
   execute(0);
