@@ -606,6 +606,7 @@ public:
   {
   }
   ~CGSolverParams() {}
+  bool restart;
 };
 
 template<class Types>
@@ -1186,8 +1187,14 @@ public:
              << niter << " iterations, " << dt << " seconds (" 
 	      << mflops<< " MFLOPS, " << memrate << " GB/sec)\n";
       }else{
+        if(params->restart){
+	   cerr << "CGSolver not converging, requesting smaller timestep\n";
+          new_dw->abortTimestep();
+          new_dw->restartTimestep();
+        }else {
         throw ConvergenceFailure("CGSolve variable: "+X_label->getName(), 
 			  niter, e, params->tolerance);
+        }
       }
     }
   }
@@ -1251,6 +1258,8 @@ SolverParameters* CGSolver::readParameters(ProblemSpecP& params, const string& v
       }
     }
   }
+  p->restart=true;
+  
   if(p->norm == CGSolverParams::L2)
     p->tolerance *= p->tolerance;
   return p;
