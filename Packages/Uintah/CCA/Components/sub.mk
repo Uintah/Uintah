@@ -16,7 +16,8 @@ SUBDIRS := \
 	$(SRCDIR)/Arches/Mixing \
 	$(SRCDIR)/ProblemSpecification \
 	$(SRCDIR)/HETransformation \
-	$(SRCDIR)/PatchCombiner
+	$(SRCDIR)/PatchCombiner \
+	$(SRCDIR)/Solvers
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
