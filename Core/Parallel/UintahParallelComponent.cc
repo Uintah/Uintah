@@ -1,6 +1,5 @@
 
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Core/Util/NotFinished.h>
 #include <Core/Malloc/Allocator.h>
 #include <algorithm>
 

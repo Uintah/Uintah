@@ -4,14 +4,12 @@
 namespace Uintah {
   //__________________________________
   //   compute Nan
-  double getNan(){
+  inline double getNan(){
     double nanvalue;
     unsigned int* ntmp = reinterpret_cast<unsigned int*>(&nanvalue);
     ntmp[0] = 0xffff5a5a;
     ntmp[1] = 0xffff5a5a;
     return nanvalue;
   }
-  
-  double nanValue = getNan();
 } // namespace Uintah
 #endif

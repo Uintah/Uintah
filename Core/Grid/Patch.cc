@@ -14,7 +14,6 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Math/MiscMath.h>
 
-#include <values.h>
 #include <iostream>
 #include <sstream>
 #include <stdio.h>

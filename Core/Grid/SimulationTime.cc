@@ -1,7 +1,13 @@
 
 #include <Packages/Uintah/Core/Grid/SimulationTime.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#if defined(_WIN32) || defined(__APPLE__)
+#include <float.h>
+#define MAXDOUBLE DBL_MAX
+#define MAXINT INT_MAX
+#else
 #include <values.h>
+#endif
 #include <string>
 #include <iostream>
 
