@@ -26,7 +26,7 @@
 \begin{htmlonly}
   \include{../Utilities/TeX/scirun-doc.tex}
 \end{htmlonly}
-
+\newcommand{\latexenv}[1]{\texttt{#1}}
 \begin{document}
 
 \begin{htmlonly}
@@ -222,12 +222,19 @@ See also the Quick Start instructions above and the notes in
 \section{Including Images}
 \label{sec:inclimg}
 
-The \secname{Use}{sec:use} section of your document must include at least 1
-image of your module's graphical user interface. Create your images in
-either \acronym{JPEG} or \acronym{GIF} formats.  Note that an EPS version
-is needed but it will be generated automatically from the JPG or GIF figure
-when it is needed (i.e. you needn't and shouldn't provide EPS versions of
-your figures).
+The \secname{Use}{sec:use} section of your document must include at
+least 1 image of your module's graphical user interface. Create your
+images in either \acronym{JPEG} or \acronym{GIF} formats.  Note that
+you needn't and shouldn't provide EPS versions of your figures.  These
+will be generated automatically as needed.
+
+Including images is a two step process.  You must first create an
+\dfn{image command} for each image.   Then you must use each
+image command at the approiate place in the text.
+
+
+\subsection{Creating an Image Command}
+\label{sec:crimgcmd}
 
 Create an image command for each image using the template below.  Copy the
 following template (make a copy of the template for each image).  Then
@@ -237,7 +244,8 @@ replace angle-bracketed text with appropriate values.  Here is the template:
 \begin{verbatim}
 %begin{latexonly}
   \newcommand{\<image-command-name>}%
-  {\centerline{\includegraphics[<options>]{\ModuleRefFigName{<figure-name>.eps}}}}
+  {\centerline{\includegraphics[<options>]
+               {\ModuleRefFigName{<figure-name>.eps}}}}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\<image-command-name>}{%
@@ -250,11 +258,13 @@ replace angle-bracketed text with appropriate values.  Here is the template:
   <PRE>
   &#37begin{latexonly}
   \newcommand{\&lt;image-command-name&gt;}
-  {\centerline{\includegraphics[&lt;options&gt;]{\ModuleRefFigName{&lt;<figure-name>.eps&gt;}}}}
+  {\centerline{\includegraphics[&lt;options&gt;]
+               {\ModuleRefFigName{&lt;<figure-name>.eps&gt;}}}}
   &#37end{latexonly}
   &#92begin{htmlonly}
   \newcommand{\&lt;image-command-name&gt;}
-  &nbsp&nbsp   {\htmladdimg[&lt;options&gt;]{\ModuleRefFigName{&lt;<figure-name.jpg-or-gif>&gt;}}}
+  &nbsp&nbsp   {\htmladdimg[&lt;options&gt;]
+                {\ModuleRefFigName{&lt;<figure-name.jpg-or-gif>&gt;}}}
   &#92end{htmlonly}
   </PRE>
 \end{rawhtml}
@@ -265,8 +275,8 @@ Typically the options specify graphic width or height, scale, and bounding
 box.  See \etitle{The Latex Graphics Companion} for more information.  Note
 that we are using the \latexcommand{includegraphics} command from the
 \latexpackage{graphicx} package (also note that you should not delete the 2
-comment characters before the \verb|%begin{latexonly}| and
-\verb|%end{latexonly}|). 
+comment characters before the \verb|\%begin{latexonly}| and
+\verb|\%end{latexonly}|). 
 
 In the ``htmlonly'' part ``options'' is a comma separated of list options
 such as ``align'', ``width'', ``height'', and ``alt''.  See \etitle{The
@@ -280,10 +290,12 @@ Here is a typical example:
 %begin{latexonly}
 \begin{verbatim}
 %begin{latexonly}
-  \newcommand{\testfig}{\centerline{\includegraphics[scale=.75]{\ModuleRefFigName{testfig.eps}}}}
+  \newcommand{\testfig}{\centerline{\includegraphics[scale=.75]
+                        {\ModuleRefFigName{testfig.eps}}}}
 %end{latexonly}
 \begin{htmlonly}
-  \newcommand{\testfig}{\htmladdimg[align=top,alt="Test Figure"]{\ModuleRefFigName{testfig.jpg}}}
+  \newcommand{\testfig}{\htmladdimg[align=top,alt="Test Figure"]
+              {\ModuleRefFigName{testfig.jpg}}}
 \end{htmlonly}
 \end{verbatim}
 %end{latexonly}
@@ -292,7 +304,8 @@ Here is a typical example:
 \begin{rawhtml}
   <PRE>
   &#37begin{latexonly}
-  \newcommand{\testfig}{\centerline{\includegraphics[scale=.75]{\ModuleRefFigName{testfig.eps}}}}
+  \newcommand{\testfig}{\centerline{\includegraphics[scale=.75]
+              {\ModuleRefFigName{testfig.eps}}}}
   &#37end{latexonly}
   &#92begin{htmlonly}
   \newcommand{\testfig}{\htmladdimg[align=top,alt="Test Figure"]{\ModuleRefFigName{testfig.jpg}}}
@@ -300,8 +313,12 @@ Here is a typical example:
   </PRE>
 \end{rawhtml}
 
-To actually create figures using your image commands enclose each image
-command within a \latexcommand{figure} command as follows:
+
+\subsection{Using an Image Command}
+\label{sec:useimgcmd}
+
+Use image commands by enclosing each image
+command within a \latexenv{figure} environment as follows:
 
 %begin{latexonly}
 \begin{verbatim}
@@ -350,7 +367,7 @@ and replace labels and names appropriately.  For example:
   </PRE>
 \end{rawhtml}
 
-\section{Using Packages}
+\section{Using \LaTeX{} Packages}
 
 You may use the \latexcommand{usepackage} command only if the package it is
 including is part of the standard \LaTeX{} distribution.  
@@ -362,6 +379,7 @@ You may use commands from packages \latexpackage{graphicx} and
 \section{Creating Citations}
 
 Cite references to other publications with the \latexcommand{cite} command.
+
 You should provide a ``bib'' file containing bibliographic entries
 referenced in your document.
 
