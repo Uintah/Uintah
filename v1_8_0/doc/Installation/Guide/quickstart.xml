@@ -55,15 +55,15 @@ RPM installation consists of the following steps:
 <para>Downloading the &sr; rpm distribution.</para>
 </listitem>
 <listitem>
-<para>Installing &sr;</para>
+<para>Installing  &sr; using the <command>rpm</command> command.</para>
 </listitem>
 <listitem>
 <para>Unpacking &sr;'s sample data sets.</para>
 </listitem>
 </orderedlist>
 </para>
-<para>See <xref endterm="title.starting" linkend="sec.starting"/>
-before starting &sr;</para>
+<para>See <xref endterm="title.preparing_qs"
+linkend="sec.preparing_qs"/> before starting &sr;</para>
 
 </section>
 
@@ -149,8 +149,8 @@ third party software, and sample data sets.</para>
 </orderedlist>
 </para> 
 
-<para>See <xref endterm="title.starting"
-linkend="sec.starting"/> before starting &sr;</para>
+<para>See <xref endterm="title.preparing_qs"
+linkend="sec.preparing_qs"/> before starting &sr;</para>
 
 </section>
 
@@ -336,10 +336,10 @@ executable.
 
 </section>
 
-<section id="sec.starting">
-<title id="title.starting">Starting &sr;</title> 
+<section id="sec.preparing_qs">
+<title id="title.preparing_qs">Preparing &sr;</title> 
 <para>Before starting &sr; you should
-initialize 2 environment variables:</para>
+initialize 2 environment variables:
 <orderedlist>
 <listitem>
 <para>Set <envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar>.</para>
@@ -382,13 +382,19 @@ setenv SCIRUN_DATA <replaceable>/path/to/</replaceable>SCIRunData
 </para>
 </listitem>
 </orderedlist>
+</para>
+</section>
 
+<section>
+<title>Starting &sr;</title>
 <para>
 If you installed &sr; from it's rpm you can test it's installation by
-typing <command>scirun</command>.  If you installed &sr; from it's
-source code tarballs then you can test it's installation by typing
-(from it's build directory) <command>./scirun</command>.  You should
-see &sr;'s network editor window and the &sr; shell prompt.
+typing <command>scirun</command>.</para>
+
+<para>If you installed &sr; from it's source code tarballs then you
+can test it's installation by typing (from it's build directory)
+<command>./scirun</command>.  You should see &sr;'s network editor
+window and the &sr; shell prompt.
 </para>
 
 </section>

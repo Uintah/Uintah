@@ -28,7 +28,7 @@
 &sr; is officially compatible with two platforms: SGI and Linux.
 <xref linkend="tbl.min_sys_rec"/> lists the recommened system requirements.
 </para>
-
+ 
 <para>&recommendations;</para>
 
 <para>
@@ -82,7 +82,10 @@ RPM installation consists of the following steps:
 <para>Downloading the &sr; rpm distribution.</para>
 </listitem>
 <listitem>
-<para>Installing &sr;</para>
+<para>Installing &sr; using the <command>rpm</command> command.</para>
+</listitem>
+<listitem>
+<para>Unpacking &sr;'s sample data sets.</para>
 </listitem>
 </orderedlist>
 </para>
@@ -105,7 +108,7 @@ archive</ulink> page.
 </section>
 
 <section>
-<title>Installing &sr;</title>
+<title>Installing</title>
 
 <para>
 Become superuser:
@@ -122,18 +125,20 @@ or
 <literallayout class="monospaced">
 rpm -ivh SCIRun-<replaceable>x.x.x</replaceable>-rh8.0.i386.rpm
 </literallayout>
-<xref linkend="fig.rpm_cmd"/> shows this process (assuming
-<filename>/tmp</filename> is where the rpm was downloaded).  Type
-<command>exit</command> to leave the root account.
-
+Type <command>exit</command> to leave the root account.
+<xref linkend="fig.rpm_cmd"/> shows this process.  
 </para>
-
 <figure id="fig.rpm_cmd">
-<title>RPM Installation Command</title>
 <mediaobject>
 <imageobject>
 <imagedata fileref="rpm_cmd.gif" format="GIF"/>
 </imageobject>
+<caption>
+<para>
+RPM installation command.  Assumes rpm file was downloaded to
+<filename>/tmp</filename>.
+</para>
+</caption>
 </mediaobject>
 </figure>
 </section>
@@ -430,14 +435,15 @@ machine will often significantly reduce the time to build &sr;.
 <title id="title.prepare">Preparing &sr;</title>
 
 <para>
-Before starting &sr; you should initialize the environment
-variables <envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar> and
-<envar>SCIRUN_DATA</envar>.
+Before starting &sr; you should initialize the environment variables
+<envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar> and
+<envar>SCIRUN_DATA</envar>.  The following sections describe how to do
+this.
 </para>
 
 <section id="sec.dyncomp">
-<title><envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar></title> 
-<subtitle id="title.dyncomp">Dynamic Compilation</subtitle>
+<title id="title.dyncomp">Dynamic
+Compilation (and <envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar>)</title>
 
 <para>Before executing &sr; you
 should be aware of a feature called <firstterm>Dynamic
@@ -458,22 +464,27 @@ the value of the environment variable
 <envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar> to the desired directory, for
 example:
 <literallayout class="monospaced">
-SCIRUN_ON_THE_FLY_LIBS_DIR=$HOME/on-the-fly-libs; export SCIRUN_ON_THE_FLY_LIBS_DIR
+SCIRUN_ON_THE_FLY_LIBS_DIR=~/&sr;_otf export SCIRUN_ON_THE_FLY_LIBS_DIR
 </literallayout>
 for Bourne-like shells (sh, ksh, bash, etc.) or
 <literallayout class="monospaced">
-setenv SCIRUN_ON_THE_FLY_LIBS_DIR $HOME/on-the-fly-libs
+setenv SCIRUN_ON_THE_FLY_LIBS_DIR ~/&sr;_otf
 </literallayout>
 for csh-like shells.
 </para> 
 
-<para>It can also be changed by setting the value of this variable in
+<para>
+It can also be changed by setting the value of this variable in
 your <filename>.scirunrc</filename>
 file. Your <filename>.scirunrc</filename> file would contain, for example:
 <literallayout class="monospaced">
-SCIRUN_ON_THE_FLY_LIBS_DIR=/home/me/on-the-fly-libs
+SCIRUN_ON_THE_FLY_LIBS_DIR=$(HOME)/&sr;_otf
 </literallayout>
 Your <filename>.scirunrc</filename> file is read by &sr; at startup.
+See the <ulink
+url="../../User/Guide/usersguide/srug3.html#SECTION00045000000000000000">&sr;
+Users Guide</ulink> for more information on the use of
+<filename>.scirunrc</filename>.
 </para>
 
 <para>Customizing the value of this variable for each &sr; user has
@@ -503,7 +514,7 @@ between instances of &sr;.</para>
 </section>
 
 <section>
-<title><envar>SCIRUN_DATA</envar></title>
+<title>Accessing Data Sets (and <envar>SCIRUN_DATA</envar>)</title>
 
 <para>
 <envar>SCIRUN_DATA</envar> specifies the default data directory
