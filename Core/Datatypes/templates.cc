@@ -43,6 +43,10 @@ template class GenericField<LatVolMesh, FData3d<double> >;
 template class LatticeVol<Vector>;
 template class GenericField<LatVolMesh, FData3d<Vector> >;
 
+#include <Core/Datatypes/ContourField.h>
+template class ContourField<double>;
+template class GenericField<ContourMesh, vector<double> >;
+
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/PersistentSTL.h>
 
