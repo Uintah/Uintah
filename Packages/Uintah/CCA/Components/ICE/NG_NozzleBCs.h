@@ -22,7 +22,6 @@ struct NG_BC_vars{
   Output* dataArchiver;
   IntVector c;
   bool dumpNow;
-  bool setNGBcs;
 };
 
 void computeStagnationProperties(double &stag_press,
@@ -95,8 +94,8 @@ void getVars_for_NGNozzle( DataWarehouse* old_dw,
                            DataWarehouse* new_dw,
                            ICELabel* lb,
                            const Patch* patch,
-                           const int indx,
                            const string& where,
+                           bool& setNGBcs,
                            NG_BC_vars* ng );
  
 void BC_values_using_IsentropicRelations(const double stag_press,
@@ -138,10 +137,7 @@ void setNGC_Nozzle_BC(const Patch* patch,
   
   //__________________________________
   // if on the x- face and inside the nozzle
-  if(bc_kind == "Custom" && 
-     face == Patch::xminus && 
-     nozzle(bc_geom_type)  &&
-     ng->setNGBcs) {
+  if(bc_kind == "Custom" && face == Patch::xminus && nozzle(bc_geom_type) ) {
  
     //__________________________________
     // problem specific hard coded variables

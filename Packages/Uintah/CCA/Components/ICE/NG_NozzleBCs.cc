@@ -569,8 +569,8 @@ Uintah::setNGCVelocity_BC(const Patch* patch,
                           const string& var_desc,
                           const vector<IntVector> bound,
                           const string& bc_kind,
-			  const int mat_id,
-			  const int child,
+			     const int mat_id,
+			     const int child,
                           SimulationStateP& sharedState,
                           NG_BC_vars* ng)
 {
@@ -632,6 +632,8 @@ Uintah::addRequires_NGNozzle(Task* t,
   if(where == "CC_Exchange"){
     t->requires(Task::NewDW, lb->rho_CCLabel,   ice_matls,   gn,0);
     t->requires(Task::NewDW, lb->press_CCLabel, press_matl, oims, gn);
+    t->computes(lb->vel_CC_XchangeLabel);
+    t->computes(lb->temp_CC_XchangeLabel);
   }
   if(where == "Advection"){
     t->requires(Task::NewDW, lb->press_CCLabel, press_matl, oims, gn);
@@ -645,87 +647,108 @@ Uintah::getVars_for_NGNozzle( DataWarehouse* old_dw,
                               DataWarehouse* new_dw,
                               ICELabel* lb,
                               const Patch* patch,
-                              int indx,
                               const string& where,
+                              bool& setNG_Bcs,
                               NG_BC_vars* ng)
 {
 
   cout_doing <<  "Doing getVars_for_NGNozzle Patch:" << patch->getID() 
              << " " << where << endl;
   Ghost::GhostType  gn  = Ghost::None;
+  int hardCodedIndx = 1;  // index of ICE matl   
+  ng->dumpNow = false;    // dump out gnuplot of boundary condition
+  setNG_Bcs   = true;     // set boundary conditions in every task.
+  
+  new_dw->allocateTemporary(ng->press_CC, patch);
+  new_dw->allocateTemporary(ng->rho_CC,   patch);
+  new_dw->allocateTemporary(ng->vel_CC,   patch);
+  
   //__________________________________
   //    EqPress
   if(where == "EqPress"){
+    int hardCodedIndx = 1;
     constCCVariable<Vector> vel;
-    old_dw->get(vel,      lb->vel_CCLabel,    indx,patch,gn,0);
-    
-    new_dw->allocateTemporary(ng->vel_CC,   patch);    
+    old_dw->get(vel, lb->vel_CCLabel, hardCodedIndx,patch,gn,0);
+       
     ng->vel_CC.copyData(vel);
-    ng->dumpNow = false;
   }
+  if(where == "EqPressMPMICE"){
+    constCCVariable<Vector> vel;
+    CCVariable<double> press, rho;
+    new_dw->getCopy(press, lb->press_equil_CCLabel, 0,      patch,gn,0);
+    new_dw->getCopy(rho,   lb->rho_CCLabel,   hardCodedIndx,patch,gn,0);
+    old_dw->get(vel,       lb->vel_CCLabel,   hardCodedIndx,patch,gn,0);
+
+    ng->press_CC.copyData(press);
+    ng->vel_CC.copyData(vel);
+    ng->rho_CC.copyData(rho);
+  }
+  
   //__________________________________
   //    FC exchange
   if(where == "velFC_Exchange"){
     constCCVariable<double> rho, press;
     constCCVariable<Vector> vel;
     
-    old_dw->get(rho,      lb->rho_CCLabel,    indx,patch,gn,0);
-    old_dw->get(vel,      lb->vel_CCLabel,    indx,patch,gn,0);
-    new_dw->get(press,    lb->press_equil_CCLabel, 0,  patch,gn,0);
+    old_dw->get(rho,      lb->rho_CCLabel,    hardCodedIndx,patch,gn,0);
+    old_dw->get(vel,      lb->vel_CCLabel,    hardCodedIndx,patch,gn,0);
+    new_dw->get(press,    lb->press_equil_CCLabel, 0,       patch,gn,0);
     
-    new_dw->allocateTemporary(ng->rho_CC,   patch);
-    new_dw->allocateTemporary(ng->press_CC, patch);
-    new_dw->allocateTemporary(ng->vel_CC,   patch);
-    
-    ng->rho_CC.copyData(rho);
     ng->press_CC.copyData(press);
+    ng->rho_CC.copyData(rho);
     ng->vel_CC.copyData(vel);
-    ng->dumpNow = false;
   }
+  
   //__________________________________
   //    update pressure
   if(where == "update_press_CC"){
     constCCVariable<Vector> vel;
     constCCVariable<double> rho;
-    old_dw->get(vel,      lb->vel_CCLabel, indx,patch,gn,0);
-    old_dw->get(rho,      lb->rho_CCLabel, indx,patch,gn,0);
+    CCVariable<double> press;
+    new_dw->getCopy(press, lb->press_CCLabel, 0,          patch,gn,0);
+    old_dw->get(vel,       lb->vel_CCLabel, hardCodedIndx,patch,gn,0);     
+    old_dw->get(rho,       lb->rho_CCLabel, hardCodedIndx,patch,gn,0);  
     
-    new_dw->allocateTemporary(ng->rho_CC,   patch);
-    new_dw->allocateTemporary(ng->vel_CC,   patch);
-    
+    ng->press_CC.copyData(press);
     ng->vel_CC.copyData(vel);
-    ng->rho_CC.copyData(rho);
-    ng->dumpNow = false;
+    ng->rho_CC.copyData(rho); 
   }
   //__________________________________
   //    cc_ Exchange
   if(where == "CC_Exchange"){
-    constCCVariable<double> p, rho;
-    old_dw->get(rho,      lb->rho_CCLabel,    indx,patch,gn,0);
-    new_dw->get(p,        lb->press_CCLabel,  0,   patch,gn,0);
-    
-    new_dw->allocateTemporary(ng->press_CC, patch);
-    new_dw->allocateTemporary(ng->rho_CC,   patch);
+    constCCVariable<double> press, rho;
+    constCCVariable<Vector> vel_CC;
+    old_dw->get(rho,     lb->rho_CCLabel,         hardCodedIndx,patch,gn,0);    
+    new_dw->get(press,   lb->press_CCLabel,       0,            patch,gn,0);
+    new_dw->get(vel_CC,  lb->vel_CC_XchangeLabel, hardCodedIndx,patch,gn,0); 
         
-    ng->press_CC.copyData(p);
+    ng->press_CC.copyData(press);
     ng->rho_CC.copyData(rho);
-    ng->dumpNow = false;
+    ng->vel_CC.copyData(vel_CC);
+  cout << " done with get_Vars for NG " << endl;
   }
   //__________________________________
   //    Advection
   if(where == "Advection"){
-    constCCVariable<double> p;
-    new_dw->get(p,        lb->press_CCLabel, 0,   patch,gn,0);
-    new_dw->allocateTemporary(ng->press_CC, patch);
-    ng->press_CC.copyData(p);
+    constCCVariable<double> press;
+    CCVariable<double> rho;
+    CCVariable<Vector> vel;
+    
+    new_dw->getCopy(rho, lb->rho_CCLabel,   hardCodedIndx, patch,gn,0);
+    new_dw->getCopy(vel, lb->vel_CCLabel,   hardCodedIndx, patch,gn,0);
+    new_dw->get(press,   lb->press_CCLabel, 0,             patch,gn,0);
+    
+    ng->press_CC.copyData(press);
+    ng->rho_CC.copy(rho);
+    ng->vel_CC.copy(vel);
     ng->dumpNow = true;
   }
 }
 
-/* ---------------------------------------------------------------------
+/* ______________________________________________________________________
  Function~  using_NG_hack
  Purpose~   returns if we are using the Northrup Grumman BC hack on any face,
- ---------------------------------------------------------------------  */
+ ______________________________________________________________________  */
 bool
 Uintah::using_NG_hack(const ProblemSpecP& prob_spec)
 {
