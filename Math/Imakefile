@@ -8,8 +8,11 @@ SRCS = Mat.cc MusilRNG.cc TrigTable.cc CatmullRomSpline.cc
 
 LIBNAME = Math
 
+SO_LIBS =
+SO_LDFLAGS = -L$(TOP)/lib -lClasslib -lMalloc -lC -lc -lm
+
 SCIDependTarget($(SRCS))
-SCINormalLibraryTarget($(LIBNAME),$(OBJS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS), $(SO_LDFLAGS))
 
 #else
 all:

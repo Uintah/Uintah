@@ -80,7 +80,7 @@ T CatmullRomSpline<T>::operator()( double x ) const
 {
    ASSERT(nset >= 4);
    double xs(x*nintervals);
-   int idx(int(xs));
+   int idx((int)xs);
    double t(xs-idx);
    if(idx<0){idx=0;t=0;}
    if(idx>mx){idx=mx;t=1;}
