@@ -291,7 +291,7 @@ RenderTensorFieldBase::add_item(GeomGroup *g,
     ten[6] = t.mat_[2][2];
     float eval[3];
     float evec[9];
-    tenEigensolve(eval, evec, ten);
+    tenEigensolve_f(eval, evec, ten);
 
     const Vector e1(evec[0], evec[1], evec[2]);
     const Vector e2(evec[3], evec[4], evec[5]);
@@ -390,7 +390,7 @@ RenderTensorFieldBase::add_super_quadric(GeomGroup *g,
     ten[6] = t.mat_[2][2];
     float eval[3];
     float evec[9];
-    tenEigensolve(eval, evec, ten);
+    tenEigensolve_f(eval, evec, ten);
 
     v1 = eval[0];
     v2 = eval[1];

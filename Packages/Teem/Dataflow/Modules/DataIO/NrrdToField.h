@@ -617,7 +617,7 @@ execute(MeshHandle& mHandle,
 	    
 	    if (build_eigens == 1) {
 	      float eval[3], evec[9], eval_scl[3], evec_scl[9];
-	      tenEigensolve(eval, evec, ptr);
+	      tenEigensolve_f(eval, evec, ptr);
 	      
 	      //float scl = ptr[0] > 0.5;
 	      float scl = 1.0;
@@ -669,7 +669,7 @@ execute(MeshHandle& mHandle,
 	    
 	    if (build_eigens == 1) {
 	      float eval[3], evec[9], eval_scl[3], evec_scl[9];
-	      tenEigensolve(eval, evec, ptr);
+	      tenEigensolve_f(eval, evec, ptr);
 	      
 	      float scl = ptr[0] > 0.5;
 	      for (int cc=0; cc<3; cc++) {
@@ -730,7 +730,7 @@ execute(MeshHandle& mHandle,
 	    
 	    if (build_eigens == 1) {
 	      float eval[3], evec[9], eval_scl[3], evec_scl[9];
-	      tenEigensolve(eval, evec, ptr);
+	      tenEigensolve_f(eval, evec, ptr);
 	      
 	      //float scl = ptr[0] > 0.5;
 	      float scl = 1.0;
@@ -832,7 +832,7 @@ execute(MeshHandle& mHandle,
 
 	if (build_eigens == 1) {
 	  float eval[3], evec[9], eval_scl[3], evec_scl[9];
-	  tenEigensolve(eval, evec, ptr);
+	  tenEigensolve_f(eval, evec, ptr);
 	  
 	  float scl = 1.0;
 	  for (int cc=0; cc<3; cc++) {
@@ -866,7 +866,7 @@ execute(MeshHandle& mHandle,
 	
 	if (build_eigens == 1) {
 	  float eval[3], evec[9], eval_scl[3], evec_scl[9];
-	  tenEigensolve(eval, evec, ptr);
+	  tenEigensolve_f(eval, evec, ptr);
 	  
 	  float scl = ptr[0] > 0.5;
 	  for (int cc=0; cc<3; cc++) {
@@ -929,7 +929,7 @@ execute(MeshHandle& mHandle,
 
 	if (build_eigens == 1) {
 	  float eval[3], evec[9], eval_scl[3], evec_scl[9];
-	  tenEigensolve(eval, evec, ptr);
+	  tenEigensolve_f(eval, evec, ptr);
 	  
 	  //float scl = ptr[0] > 0.5;
 	  float scl = 1.0;
