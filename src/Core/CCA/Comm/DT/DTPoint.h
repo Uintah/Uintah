@@ -46,7 +46,7 @@ namespace SCIRun {
     ///////////
     //This method blocks until a message is available in the 
     //DataTransmitter and then return this message.
-    DTMessage* getMessage();
+    DTMessage* getMessage(int tag);
     
     ///////////
     //Put msg into the sending message queue.

@@ -60,7 +60,7 @@ namespace SCIRun {
 
     //interfaces:
     void putMessage(DTMessage *msg);
-    DTMessage *getMessage(DTPoint *pt);
+    DTMessage *getMessage(DTPoint *pt, int tag);
 
     void registerPoint(DTPoint *pt);
     void unregisterPoint(DTPoint *pt);

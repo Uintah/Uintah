@@ -156,11 +156,11 @@ DataTransmitter::putMessage(DTMessage *msg){
 }
 
 DTMessage *
-DataTransmitter::getMessage(DTPoint *pt){
+DataTransmitter::getMessage(DTPoint *pt, int tag){
   recvQ_mutex->lock();
   DTMessage *msg=NULL;
   for(vector<DTMessage*>::iterator iter=recv_msgQ.begin(); iter!=recv_msgQ.end(); iter++){
-    if( (*iter)->recver==pt){
+    if( (*iter)->recver==pt && (*iter)->tag==tag){
       msg=*iter;
       recv_msgQ.erase(iter);
       break;

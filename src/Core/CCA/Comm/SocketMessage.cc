@@ -141,11 +141,13 @@ SocketMessage::sendMessage(int handler){
   wmsg->autofree=true;
   msg=NULL;   //DT is responsible to delete it.
   if(dtmsg!=NULL){
+    wmsg->tag=dtmsg->tag;  //reply
     wmsg->recver=dtmsg->sender;
     wmsg->to_addr=dtmsg->fr_addr;
     dtmsg->recver->putMessage(wmsg);
   }
   else{
+    wmsg->tag=(int)this;  //initial message
     wmsg->recver=spchan->ep;
     wmsg->to_addr= spchan->ep_addr;
     spchan->sp->putMessage(wmsg);
@@ -154,7 +156,7 @@ SocketMessage::sendMessage(int handler){
 
 void 
 SocketMessage::waitReply(){
-  DTMessage *wmsg=spchan->sp->getMessage();
+  DTMessage *wmsg=spchan->sp->getMessage((int)this);
   msg_length=wmsg->length;
   wmsg->autofree=false;
   if(msg!=NULL) free(msg);
