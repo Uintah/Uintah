@@ -97,9 +97,10 @@ Exec_setup_command(const char *cfilename, const string &precommand,
 
 
 static bool
-Exec_execute_command(const string &icommand, const string &tmpfilename)
+Exec_execute_command(ProgressReporter *pr,
+		     const string &icommand, const string &tmpfilename)
 {
-  cerr << "ExecConverter - Executing: " << icommand << endl;
+  pr->remark("ExecConverter - Executing: " + icommand + ".");
 
   FILE *pipe = 0;
   bool result = true;
@@ -108,7 +109,7 @@ Exec_execute_command(const string &icommand, const string &tmpfilename)
   pipe = popen(command.c_str(), "r");
   if (pipe == NULL)
   {
-    cerr << "ExecConverter syscal error, command was: '" << command << "'\n";
+    pr->error("ExecConverter syscal error, command was: '" + command + ".");
     result = false;
   }
 #else
@@ -116,8 +117,8 @@ Exec_execute_command(const string &icommand, const string &tmpfilename)
   const int status = sci_system(command.c_str());
   if (status != 0)
   {
-    cerr << "ExecConverter syscal error " << status << ": "
-	 << "command was '" << command << "'" << endl;
+    pr->error("ExecConverter syscal error " + to_string(status) + ": "
+	      + "command was '" + command + "'.");
     result = false;
   }
   pipe = fopen((tmpfilename + ".log").c_str(), "r");
@@ -126,7 +127,7 @@ Exec_execute_command(const string &icommand, const string &tmpfilename)
   char buffer[256];
   while (pipe && fgets(buffer, 256, pipe) != NULL)
   {
-    cerr << buffer;
+    pr->msgStream() << buffer;
   }
 
 #ifdef __sgi
@@ -149,12 +150,13 @@ Exec_reader(ProgressReporter *pr, const char *cfilename, const string &precomman
   string command, tmpfilename;
   Exec_setup_command(cfilename, precommand, command, tmpfilename);
 
-  if (Exec_execute_command(command, tmpfilename))
+  if (Exec_execute_command(pr, command, tmpfilename))
   {
     Piostream *stream = auto_istream(tmpfilename);
     if (!stream)
     {
-      cerr << "Error reading converted file '" + tmpfilename + "'." << endl;
+      pr->error("ExecConverter - Error reading converted file '" +
+		tmpfilename + "'.");
       return 0;
     }
     
@@ -162,7 +164,8 @@ Exec_reader(ProgressReporter *pr, const char *cfilename, const string &precomman
     FieldHandle field;
     Pio(*stream, field);
 
-    cerr << "ExecConverter - Successfully converted " << cfilename << endl;
+    pr->remark(string("ExecConverter - Successfully converted ")
+	       + cfilename + ".");
 
     unlink(tmpfilename.c_str());
     
@@ -187,15 +190,15 @@ Exec_writer(ProgressReporter *pr,
   Piostream *stream = scinew BinaryPiostream(tmpfilename, Piostream::Write);
   if (stream->error())
   {
-    cerr << "Could not open temporary file '" + tmpfilename +
-      "' for writing." << endl;
+    pr->error("ExecConverter - Could not open temporary file '" + tmpfilename +
+	      "' for writing.");
     result = false;
   }
   else
   {
     Pio(*stream, field);
     
-    result = Exec_execute_command(command, tmpfilename);
+    result = Exec_execute_command(pr, command, tmpfilename);
   }
   unlink(tmpfilename.c_str());
   delete stream;
@@ -212,7 +215,7 @@ TextCurveField_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
-    "TextToCurveFieldToText %e.pts %e.edges %t";
+    "TextToCurveFieldToText %e.pts %e.edge %t";
   return Exec_reader(pr, filename, command);
 }
 
@@ -222,13 +225,13 @@ TextCurveField_writer(ProgressReporter *pr,
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
-    "CurveFieldToText %t %e.pts %e.edges";
+    "CurveFieldToText %t %e.pts %e.edge";
   return Exec_writer(pr, field, filename, command);
 }
 
 static FieldIEPlugin
 TextCurveField_plugin("TextCurveField",
-		      "{.pts} {.edges}", "",
+		      "{.pts} {.edge}", "",
 		      TextCurveField_reader,
 		      TextCurveField_writer);
 
@@ -240,7 +243,7 @@ TextHexVolField_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
-    "TextToHexVolField %e.pts %e.hexes %t -binOutput";
+    "TextToHexVolField %e.pts %e.hex %t -binOutput";
   return Exec_reader(pr, filename, command);
 }
 
@@ -250,13 +253,13 @@ TextHexVolField_writer(ProgressReporter *pr,
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
-    "HexVolFieldToText %t %e.pts %e.hexes";
+    "HexVolFieldToText %t %e.pts %e.hex";
   return Exec_writer(pr, field, filename, command);
 }
 
 static FieldIEPlugin
 TextHexVolField_plugin("TextHexVolField",
-		       "", "",
+		       "{.pts} {.hex}", "",
 		       TextHexVolField_reader,
 		       TextHexVolField_writer);
 
@@ -268,7 +271,7 @@ TextQuadSurfField_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
-    "TextToQuadSurfField %e.pts %e.quads %t -binOutput";
+    "TextToQuadSurfField %e.pts %e.quad %t -binOutput";
   return Exec_reader(pr, filename, command);
 }
 
@@ -278,13 +281,13 @@ TextQuadSurfField_writer(ProgressReporter *pr,
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
-    "QuadSurfFieldToText %t %e.pts %e.quads";
+    "QuadSurfFieldToText %t %e.pts %e.quad";
   return Exec_writer(pr, field, filename, command);
 }
 
 static FieldIEPlugin
 TextQuadSurfField_plugin("TextQuadSurfField",
-			 "", "",
+			 "{.pts} {.quad}", "",
 			 TextQuadSurfField_reader,
 			 TextQuadSurfField_writer);
 
@@ -296,7 +299,7 @@ TextTetVolField_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
-    "TextToTetVolField %e.pts %e.tets %t -binOutput";
+    "TextToTetVolField %e.pts %e.tet %t -binOutput";
   return Exec_reader(pr, filename, command);
 }
 
@@ -306,13 +309,13 @@ TextTetVolField_writer(ProgressReporter *pr,
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
-    "TetVolFieldToText %t %e.pts %e.tets";
+    "TetVolFieldToText %t %e.pts %e.tet";
   return Exec_writer(pr, field, filename, command);
 }
 
 static FieldIEPlugin
 TextTetVolField_plugin("TextTetVolField",
-		       "", "",
+		       "{.pts} {.tet}", "",
 		       TextTetVolField_reader,
 		       TextTetVolField_writer);
 
@@ -324,7 +327,7 @@ TextTriSurfField_reader(ProgressReporter *pr, const char *filename)
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
-    "TextToTriSurfField %e.pts %e.tets %t -binOutput";
+    "TextToTriSurfField %e.pts %e.fac %t -binOutput";
   return Exec_reader(pr, filename, command);
 }
 
@@ -334,13 +337,13 @@ TextTriSurfField_writer(ProgressReporter *pr,
 {
   const string command =
     string(SCIRUN_OBJDIR) + "/StandAlone/convert/" +
-    "TriSurfFieldToText %t %e.pts %e.tets";
+    "TriSurfFieldToText %t %e.pts %e.fac";
   return Exec_writer(pr, field, filename, command);
 }
 
 static FieldIEPlugin
 TextTriSurfField_plugin("TextTriSurfField",
-			"", "",
+			"{.pts} {.fac} {.tri}", "",
 			TextTriSurfField_reader,
 			TextTriSurfField_writer);
 
@@ -369,7 +372,7 @@ TextPointCloudField_writer(ProgressReporter *pr,
 
 static FieldIEPlugin
 TextPointCloudField_plugin("TextPointCloudField",
-			   "", "",
+			   ".pts", "",
 			   TextPointCloudField_reader,
 			   TextPointCloudField_writer);
 
@@ -396,7 +399,7 @@ TextStructCurveField_writer(ProgressReporter *pr,
 
 static FieldIEPlugin
 TextStructCurveField_plugin("TextStructCurveField",
-			    "", "",
+			    ".pts", "",
 			    TextStructCurveField_reader,
 			    TextStructCurveField_writer);
 
@@ -423,7 +426,7 @@ TextStructHexVolField_writer(ProgressReporter *pr,
 
 static FieldIEPlugin
 TextStructHexVolField_plugin("TextStructHexVolField",
-			     "", "",
+			     ".pts", "",
 			     TextStructHexVolField_reader,
 			     TextStructHexVolField_writer);
 
@@ -449,7 +452,7 @@ TextStructQuadSurfField_writer(ProgressReporter *pr,
 
 static FieldIEPlugin
 TextStructQuadSurfField_plugin("TextStructQuadSurfField",
-			       "", "",
+			       ".pts", "",
 			       TextStructQuadSurfField_reader,
 			       TextStructQuadSurfField_writer);
 
