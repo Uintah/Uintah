@@ -341,5 +341,28 @@ itcl_class SCIRun_Render_ViewSlices {
 
     }
 
+    method raise_color {button color module_command} {
+        global $color
+        set windowname .ui[modname]_color
+        if {[winfo exists $windowname]} {
+	    destroy $windowname
+	}
+	# makeColorPicker now creates the $window.color toplevel.
+	makeColorPicker $windowname $color \
+	    "$this set_color $button $color $module_command" \
+	    "destroy $windowname"
+    }
+    
+    method set_color { button color { module_command "" } } {
+	upvar \#0 $color-r r $color-g g $color-b b
+	# format the r,g,b colors into a hexadecimal string representation
+	set colstr [format \#%04x%04x%04x [expr int($r * 65535)] \
+			[expr int($g * 65535)] [expr int($b * 65535)]]
+	$button config -background $colstr -activebackground $colstr
+	if { [string length $module_command] } {
+	    $this-c $module_command
+	}
+    }
+
 }
     
