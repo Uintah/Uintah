@@ -413,11 +413,6 @@ else
 fi
 rm -f wow.c wow.o
 
-##-- One Rarely Finds This ---------------------------------------------------
-
-AC_CHECK_LIB(Kenny,life_signs,true,
-             echo "  Oh my God!  They killed Kenny!  You bastards!")
-
 ##-- Dependency Regen Switch -------------------------------------------------
 
 echo -n "Determining cc dependency regen switch: "
