@@ -26,6 +26,7 @@ class DpyBase;
 class Gui;
 class Material;
 class ShadowBase;
+class Group;
 
 struct DepthStats;
 struct PerProcessorContext;
@@ -132,6 +133,15 @@ public:
     background->updateAmbient( scale );
   }
   
+  // Render a sphere in the scene for each light.
+  void renderLights( bool on ); 
+  // Remove lights from active light list.
+  void turnOffAllLights( Light * exceptThisLight = NULL ); 
+  // Put all lights back in the active light list.
+  void turnOnAllLights();
+  void turnOffLight( Light * light );
+  void turnOnLight( Light * light );
+
   inline int nlights() {
     return lights.size();
   }
@@ -206,7 +216,12 @@ private:
   friend class Dpy;
   friend class Gui;
 
-  Object* obj;
+  // Points to either mainGroup_ or mainGroupWithLights_;
+  Object * obj;
+
+  Object * mainGroup_;
+  Group  * mainGroupWithLights_;
+
   Camera* camera0;
   Camera* camera1;
   Image* image0;
@@ -222,8 +237,15 @@ private:
                        // distance guage is based on normal length
   int shadow_mode;
   int lightbits;
+
+  // Lights that are on.
   Array1<Light*> lights;
   Array1<Light*> per_matl_lights;
+
+  // Lights that have been turned off.
+  Array1<Light*> nonActiveLights_;
+  Array1<Light*> nonActivePerMatlLights_;
+
   RTRT *rtrt_engine;
   Array1<DpyBase*> displays;
   
