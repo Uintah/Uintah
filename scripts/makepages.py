@@ -34,7 +34,7 @@ def create_customs_file(webtop, urltop, tmptop, l) :
     cust = [
         'customize\n',
         '        usetable\n',
-        '        logo            /images/csafe.jpg\n',
+        '        logo            /images/SCI_logo.gif\n',
         '        showprivates\n',
         '        nobacktotop\n',
         '        backcolor white\n',
@@ -145,5 +145,6 @@ if __name__ == '__main__' :
         for ln in fptr.readlines() :
             print ln[:-1]
         fptr.close()
-
+        #error is in the high-byte of the 16 bit return value.
+        sys.exit(status >> 8) # signal the same error
     os.remove(cfn)
