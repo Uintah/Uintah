@@ -47,9 +47,10 @@ ILDMReactionModel::problemSetup(const ProblemSpecP& params,
   rxn_db->require("ComputeSoot", d_lsoot);
   int numSpecInTbl;
   rxn_db->require("SpeciesInTable", numSpecInTbl);
+  d_mixModel = mixModel;
   d_numMixVars = mixModel->getNumMixVars();
   d_numRxnVars =  mixModel->getNumRxnVars();
-  int rxnTableDimension = d_numMixVars + d_numRxnVars + !(mixModel->isAdiabatic());
+  int rxnTableDimension = d_numMixVars + d_numRxnVars + !(d_adiabatic);
   d_rxnTableInfo = new MixRxnTableInfo(rxnTableDimension);
   bool mixTable = false;
   d_rxnTableInfo->problemSetup(rxn_db, mixTable, mixModel);
@@ -107,13 +108,12 @@ ILDMReactionModel::problemSetup(const ProblemSpecP& params,
   //Look for flag, then read vector data
   char flagKey[6];
   vector<double> vec_stateSpaceVars(d_depStateSpaceVars, 0.0);
-  //cerr << "depstatevars = " << d_depStateSpaceVars << endl;
   vector<double> indepVars(rxnTableDimension, 0.0);
   double value = 0.0;
   double minParamValue = 0.0;
   double maxParamValue = 0.0;
   int dataCount = 0;
-  int rxnCount = d_numMixVars + !(mixModel->isAdiabatic());
+  int rxnCount = d_numMixVars + !(d_adiabatic);
   while(ildmfile)
     { 
       //Look for ILDM table input until the end of the file is reached.
@@ -122,25 +122,21 @@ ILDMReactionModel::problemSetup(const ProblemSpecP& params,
       if (strcmp(flagKey, "ENTRY") == 0) // If keyword is found, start reading
 	//subsequent lines
 	{
-	  //cerr << "found ENTRY" << endl;
 	  //First line after ENTRY line contains values for linearized enthalpy,
 	  //mixture fractions(s), min/max values of parameter(s)
 	  //Remove enthalpy from indepVars if problem adiabatic
 	  int kk = 0;
 	  ildmfile>>value;
-	  if (!(mixModel->isAdiabatic())) {
+	  if (!(d_adiabatic)) {
 	    indepVars[kk] = value;
-	    //cout << "hindepVars = " << indepVars[kk] << " " << kk << endl;
 	    kk++;
 	  }
 	  for (int ii = 0; ii < d_numMixVars; ii++) {
 	    ildmfile>>value;
 	    indepVars[kk] = value;
-	    //cout << "findepVars = " << indepVars[kk] << " " << kk <<endl;
 	    kk++;
 	  }
 	  ildmfile>>minParamValue>>maxParamValue;
-	  //cerr << "Min = " << minParamValue << " " << "Max = " << maxParamValue << endl;
 	  ildmfile.ignore(200,'\n');    //Move to next line
 	  //Read lines containing state space information
 	  for(int ii = 0; ii < (d_rxnTableInfo->getNumDivsBelow(rxnCount)+
@@ -173,14 +169,12 @@ ILDMReactionModel::problemSetup(const ProblemSpecP& params,
 		 }	 
 		 Stream sensStream = mixModel->speciesStateSpace(mixVar);
 		 double adiabaticEnthalpy = sensStream.d_enthalpy;
-		 vector<double> initMassFract;
+		 vector<double> initMassFract(d_reactionData->getNumSpecies());
 		 if (sensStream.d_mole) 
 		   initMassFract = d_reactionData->convertMolestoMass(
 				   sensStream.d_speciesConcn);
 		 else
-		   initMassFract = sensStream.d_speciesConcn;
-		 //for (int jj=0; jj<11; jj++)
-		 //  cout<<initMassFract[jj]<<endl;   
+		   initMassFract = sensStream.d_speciesConcn; 
 		 // Calculate the sensible enthalpy based on a reference 
 		 // temperature, TREF   
 		 double trefEnthalpy =  
@@ -191,7 +185,6 @@ ILDMReactionModel::problemSetup(const ProblemSpecP& params,
 		 //cout<<"ILDM::sensH = "<<sensibleEnthalpy<<endl;
 	      }	      
 	      vec_stateSpaceVars[vecCount++] = sensibleEnthalpy;
-	      //cerr << "ILDM::vec_sensh = " << vec_stateSpaceVars[4] << endl;
 	      ildmfile>>value; //Read in mix MW
 	      vec_stateSpaceVars[vecCount++] = value;
 	      ildmfile>>value; //Read in mix heat capacity in ergs/(g-K)
@@ -222,9 +215,6 @@ ILDMReactionModel::problemSetup(const ProblemSpecP& params,
 	      //ildmfile.ignore(200,'\n');    //Move to next line
 	      indepVars[rxnCount] = (rxnParam - minParamValue)/
 		(maxParamValue - minParamValue);
-	      //cout << "computed indepVars " << indepVars[0] << " " 
-	      //<< indepVars[1] << endl;
-	      //cerr << "count = " << ii <<" vecCount = " << vecCount << endl;
 	      //for (int kk = 0; kk < vec_stateSpaceVars.size(); kk++) {
 	      //	cout.width(10);
 	      //	cout << vec_stateSpaceVars[kk] << " " ; 
@@ -236,13 +226,10 @@ ILDMReactionModel::problemSetup(const ProblemSpecP& params,
 	      //Convert indepVars to tableKeyIndex
 	      int* tableIndex = new int[rxnTableDimension];//??+1??
 	      double tableValue;
-	      //cerr << "rxnTableDimension = " << rxnTableDimension << endl;
 	      for (int i = 0; i < rxnTableDimension; i++)
 		{
 		  // calculates index in the table
 		  double midPt = d_rxnTableInfo->getStoicValue(i);
-		  //cerr << "indepVar = " << indepVars[i] << " midpt = " << midPt 
-		  //  << " minValue = " << d_rxnTableInfo->getMinValue(i) << endl;
 		  if (indepVars[i] <= midPt) 
 		    tableValue = (indepVars[i] - d_rxnTableInfo->getMinValue(i))/  
 		      d_rxnTableInfo->getIncrValueBelow(i);
@@ -250,24 +237,16 @@ ILDMReactionModel::problemSetup(const ProblemSpecP& params,
 		    {
 		      tableValue = ((indepVars[i] - midPt)/d_rxnTableInfo->getIncrValueAbove(i))
 			+ d_rxnTableInfo->getNumDivsBelow(i);
-		    //cerr << d_rxnTableInfo->getIncrValueAbove(i) << " " <<     
-		    //d_rxnTableInfo->getNumDivsBelow(i)<< endl;
 		    }
-		  //cout << "computed table value = " << tableValue << endl;
-		  //if (i == 0)
-		  //cerr << "indepVar= " << indepVars[i] << " " <<
-		  //  d_rxnTableInfo->getMinValue(i) << " " <<  
-		  //  d_rxnTableInfo->getIncrValueAbove(i) << endl;
 		  tableValue = tableValue + 0.5;
 		  tableIndex[i] = (int) tableValue; // cast to int
-		  //cerr << "tableValue = " << tableValue << endl;
-		  //cerr << "tableIndex = " << tableIndex[i] << endl;
 		  if (tableIndex[i] > (d_rxnTableInfo->getNumDivsBelow(i)+
 					d_rxnTableInfo->getNumDivsAbove(i))||
 		      (tableIndex[i] < 0))	
 		    cerr<<"Index value out of range in RxnTable"<<endl;		   
 		}
 	      d_rxnTable->Insert(tableIndex, vec_stateSpaceVars);
+	      delete [] tableIndex;
 	    } // for(i = 0 to total number of lines under ENTRY 
 	} //if (strcmp(flagKey, "ENTRY") == 0)
     } //while(ildmfile)
@@ -277,78 +256,63 @@ ILDMReactionModel::problemSetup(const ProblemSpecP& params,
       //specified above
       cerr << "dataCount = " << dataCount << " totalEntries = " << totalEntries << endl;
       assert(dataCount==totalEntries);
-      //cout<<"ERROR in ILDMReactionModel"<<endl;
-      //cout<<"Entries in ParamData don't match specified number of table dimensions"<<endl;
-      //exit(1);
 }
 
 
 //****************************************************************************
 // Read manifold data from kdtree here
 //****************************************************************************
-Stream
-ILDMReactionModel::computeRxnStateSpace(Stream& unreactedMixture,
-					vector<double>& varsHFPi,
-					bool adiabatic)
+void
+ILDMReactionModel::getRxnStateSpace(Stream& unreactedMixture, 
+				    vector<double>& varsHFPi, Stream& reactedStream)
 {
   // WARNING - The following line is hardcoded for one mixing variable and
   // one rxn variable!!!
-  Stream reactedStream = unreactedMixture;
+  reactedStream = unreactedMixture;
   //Stream reactedStream(d_reactionData->getNumSpecies(), 
   //	       d_reactionData->getNumElements(), 1, 1, d_lsoot);
   // Define what happens if h, f or pi are outside tabulated range
   int count = 0;
-  if (!(adiabatic)) {
-    if (varsHFPi[count] < -0.5 ) {
-      varsHFPi[count] = -0.5;
+  if (!(d_adiabatic)) {
+    if (varsHFPi[count] <  d_rxnTableInfo->getMinValue(count)) {
+      varsHFPi[count] =  d_rxnTableInfo->getMinValue(count);
       cout<< "Linearized enthalpy (=" << varsHFPi[count] << ") less than" <<
-	" lowest value in table (=-0.5)" << endl;
-      cout << "So, value set to -0.5" << endl;
+	" lowest value in table (=" << d_rxnTableInfo->getMinValue(count) << ")" << endl;
+      cout << "So, value set to " <<  d_rxnTableInfo->getMinValue(count) << endl;
     }
-    if (varsHFPi[count] > 0.00) {
-      varsHFPi[count] = 0.00;
+    if (varsHFPi[count] >  d_rxnTableInfo->getMaxValue(count)) {
+      varsHFPi[count] =  d_rxnTableInfo->getMaxValue(count);
       cout << "Linearized enthalpy (=" << varsHFPi[count] << ") greater than" <<
-	" highest value in table (= 0.0)" << endl;
-      cout << "So, value set to 0.0" << endl;  
+	" highest value in table (= " <<  d_rxnTableInfo->getMaxValue(count) << ")" << endl;
+      cout << "So, value set to " << d_rxnTableInfo->getMaxValue(count) << endl;  
     }
     count++;
   }
   // If f outside tabulated range, return unreacted values
   if ((varsHFPi[count] < d_rxnTableInfo->getMinValue(count))||
       (varsHFPi[count] > d_rxnTableInfo->getMaxValue(count))) {
-    return reactedStream;
+    return;
     //Should I change enthalpy if it was out of range???
   }
   else {
     //cerr << "ILDM::rxnStateSpace::getProps = " << varsHFPi[0] << " " <<
     //varsHFPi[1] << " " << varsHFPi[2] << endl;
     reactedStream = getProps(varsHFPi); //function in DynamicTable
-    //cout << "ILDM::rxnStateSpace = " << reactedStream.d_sootData[0] << " " 
-    //	 << reactedStream.d_sootData[1] << endl;
     //What about radiation properties??
-    return reactedStream;
+    return;
   }
 }
 
 Stream
 ILDMReactionModel::tableLookUp(int* tableKeyIndex) 
 {
-  //cout << "ILDM::tableLookUp" << endl;
   Stream stateSpaceVars;
   vector<double> vec_stateSpaceVars;
-  //cout << "ILDM::tableKeyIndex = "<<tableKeyIndex[0]<<" "<<
-  //      tableKeyIndex[1]<<endl;
    if (d_rxnTable->Lookup(tableKeyIndex, vec_stateSpaceVars)) 
     {
       bool flag = false;
-      //cout << "ILDM::tableLookup soot = " << d_lsoot << endl;
       stateSpaceVars.convertVecToStream(vec_stateSpaceVars, flag, 
 					d_numMixVars, d_numRxnVars, d_lsoot);
-      //cout << "ILDM::rxnVarNorm = " << stateSpaceVars.d_rxnVarNorm[0] <<
-      //	" " << stateSpaceVars.d_rxnVarNorm[1] << endl;
-      //cout << "ILDM::soot logical = " << stateSpaceVars.d_lsoot << endl;
-      //cout << "ILDM::sootData = " << stateSpaceVars.d_sootData[0] <<
-      //	" " << stateSpaceVars.d_sootData[1] << endl;
       //stateSpaceVars.print(cout);
     
     } 
