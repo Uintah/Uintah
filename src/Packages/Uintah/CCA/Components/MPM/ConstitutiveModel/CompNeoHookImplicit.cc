@@ -70,7 +70,7 @@ void CompNeoHookImplicit::initializeCMData(const Patch* patch,
 	  bElBar[*iter] = Identity;
    }
 
-   computeStableTimestep(patch, matl, new_dw);
+//   computeStableTimestep(patch, matl, new_dw);
 }
 
 void CompNeoHookImplicit::addParticleState(std::vector<const VarLabel*>& from,
