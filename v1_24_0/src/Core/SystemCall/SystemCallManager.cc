@@ -61,8 +61,6 @@ SystemCallProcess::~SystemCallProcess()
 void SystemCallProcess::kill(int secs, bool processexit)
 {
 #ifndef _WIN32
-    int pid;
-    int fd_exit;
 
     // Make the critical zone as tiny as possible
     // We do not want the exit routine to get stuck in here
@@ -70,7 +68,7 @@ void SystemCallProcess::kill(int secs, bool processexit)
     // cannot be freed
     dolock();
     
-    if ((pid > 0)&&(processexit == false))
+    if ((pid_ > 0)&&(processexit == false))
     {
         bool killprocess = true; // Do we need to kill the child process
 
