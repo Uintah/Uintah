@@ -111,6 +111,23 @@ void Level::getIndexRange(BBox& b)
   }
 }
 
+void Level::getIndexRange(IntVector& lowIndex,IntVector& highIndex) const
+{
+  lowIndex = d_patches[0]->getNodeLowIndex();
+  highIndex = d_patches[0]->getNodeHighIndex();
+  
+  for(int p=1;p<d_patches.size();p++)
+  {
+    Patch* patch = d_patches[p];
+    IntVector l( patch->getNodeLowIndex() );
+    IntVector u( patch->getNodeHighIndex() );
+    for(int i=1;i<=3;i++) {
+      if( l(i) < lowIndex(i) ) lowIndex(i) = l(i);
+      if( u(i) > highIndex(i) ) highIndex(i) = u(i);
+    }
+  }
+}
+
 void Level::getSpatialRange(BBox& b)
 {
   for(int i=0;i<d_patches.size();i++){
@@ -250,6 +267,10 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
 
 //
 // $Log$
+// Revision 1.15  2000/07/07 03:08:24  tan
+// It is better that IndexRange expressed by IntVector instead of BBox,
+// and the function is const.
+//
 // Revision 1.14  2000/06/28 03:29:33  jas
 // Got rid of a bunch of ugly code in assignBCS that was commented out.
 //
