@@ -85,10 +85,10 @@ ICE::ICE(const ProcessorGroup* myworld)
   d_delT_knob         = 1.0;
   d_delT_scheme       = "aggressive";
 
-  d_dbgVar1      = 0;     //inputs for debugging
-  d_dbgVar2      = 0;
-  d_SMALL_NUM    = 1.0e-100; 
-  d_TINY_RHO     = 1.0e-12;// also defined ICEMaterial.cc and MPMMaterial.cc
+  d_dbgVar1   = 0;     //inputs for debugging                               
+  d_dbgVar2   = 0;                                                          
+  d_SMALL_NUM = 1.0e-100;                                                   
+  d_TINY_RHO  = 1.0e-12;// also defined ICEMaterial.cc and MPMMaterial.cc   
   d_modelInfo = 0;
 }
 
@@ -401,6 +401,8 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   if (switchTestConservation == true)
     cout_norm << "switchTestConservation is ON" << endl;
 
+  //__________________________________
+  //  Load Model info.
   ModelMaker* modelMaker = dynamic_cast<ModelMaker*>(getPort("modelmaker"));
   if(modelMaker){
     modelMaker->makeModels(prob_spec, grid, sharedState, d_models);
@@ -412,9 +414,9 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     }
 
     d_modelInfo = scinew ModelInfo(d_sharedState->get_delt_label(),
-				   lb->model_mass_source_CCLabel,
-				   lb->model_momentum_source_CCLabel,
-				   lb->model_energy_source_CCLabel,
+				   lb->modelMass_srcLabel,
+				   lb->modelMom_srcLabel,
+				   lb->modelEng_srcLabel,
 				   lb->rho_CCLabel,
 				   lb->vel_CCLabel,
 				   lb->temp_CCLabel,
@@ -489,7 +491,9 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
   }
   t->computes(d_sharedState->get_delt_label());
   sched->addTask(t,level->eachPatch(), all_matls); 
-
+  
+  //__________________________________
+  //  If model needs to further restrict the timestep
   if(d_models.size() != 0){
     for(vector<ModelInterface*>::iterator iter = d_models.begin();
 	iter != d_models.end(); iter++){
@@ -529,8 +533,8 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
                                                            mpm_matls_sub,         
                                                            all_matls);    
                                                                  
-  scheduleMassExchange(                   sched, patches, all_matls);                                                           
-  scheduleModelMassExchange(              sched, level,   all_matls);
+  scheduleMassExchange(                    sched, patches, all_matls);                                                           
+  scheduleModelMassExchange(               sched, level,   all_matls);
 
   if(d_impICE) {        //  I M P L I C I T                                           
     scheduleImplicitPressureSolve(         sched, level,   patches,       
@@ -766,11 +770,12 @@ void ICE::scheduleModelMassExchange(SchedulerP& sched, const LevelP& level,
 				    const MaterialSet* matls)
 {
   if(d_models.size() != 0){
+    cout_doing << "ICE::scheduleModelMassExchange" << endl;
     Task* task = scinew Task("ICE::zeroModelSources",
 			     this, &ICE::zeroModelSources);
-    task->computes(lb->model_mass_source_CCLabel);
-    task->computes(lb->model_momentum_source_CCLabel);
-    task->computes(lb->model_energy_source_CCLabel);
+    task->computes(lb->modelMass_srcLabel);
+    task->computes(lb->modelMom_srcLabel);
+    task->computes(lb->modelEng_srcLabel);
     sched->addTask(task, level->eachPatch(), matls);
 
     for(vector<ModelInterface*>::iterator iter = d_models.begin();
@@ -943,8 +948,6 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
     t->requires(Task::NewDW, lb->vol_frac_CCLabel,           gac,1);          
   }
 
-
-  
   t->computes(lb->int_eng_source_CCLabel);
   
   sched->addTask(t, patches, matls);
@@ -959,29 +962,29 @@ void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
                                      const MaterialSet* ice_matls)
 {
   cout_doing << "ICE::scheduleComputeLagrangianValues" << endl;
-  Task* task = scinew Task("ICE::computeLagrangianValues",
+  Task* t = scinew Task("ICE::computeLagrangianValues",
                       this,&ICE::computeLagrangianValues);
-
-  task->requires(Task::NewDW,lb->rho_CCLabel,             Ghost::None);
-  task->requires(Task::OldDW,lb->vel_CCLabel,             Ghost::None);
-  task->requires(Task::OldDW,lb->temp_CCLabel,            Ghost::None);
-  task->requires(Task::NewDW,lb->mom_source_CCLabel,      Ghost::None);
-  task->requires(Task::NewDW,lb->mom_comb_CCLabel,        Ghost::None);
-  task->requires(Task::NewDW,lb->burnedMass_CCLabel,      Ghost::None);
-  task->requires(Task::NewDW,lb->int_eng_comb_CCLabel,    Ghost::None);
-  task->requires(Task::NewDW,lb->int_eng_source_CCLabel,  Ghost::None);
+  Ghost::GhostType  gn  = Ghost::None; 
+  t->requires(Task::NewDW,lb->rho_CCLabel,             gn);
+  t->requires(Task::OldDW,lb->vel_CCLabel,             gn);
+  t->requires(Task::OldDW,lb->temp_CCLabel,            gn);
+  t->requires(Task::NewDW,lb->mom_source_CCLabel,      gn);
+  t->requires(Task::NewDW,lb->mom_comb_CCLabel,        gn);
+  t->requires(Task::NewDW,lb->burnedMass_CCLabel,      gn);
+  t->requires(Task::NewDW,lb->int_eng_comb_CCLabel,    gn);
+  t->requires(Task::NewDW,lb->int_eng_source_CCLabel,  gn);
 
   if(d_models.size() > 0){
-    task->requires(Task::NewDW, lb->model_mass_source_CCLabel, Ghost::None);
-    task->requires(Task::NewDW, lb->model_momentum_source_CCLabel, Ghost::None);
-    task->requires(Task::NewDW, lb->model_energy_source_CCLabel, Ghost::None);
+    t->requires(Task::NewDW, lb->modelMass_srcLabel,   gn);
+    t->requires(Task::NewDW, lb->modelMom_srcLabel,    gn);
+    t->requires(Task::NewDW, lb->modelEng_srcLabel,    gn);
   }
 
-  task->computes(lb->mom_L_CCLabel);
-  task->computes(lb->int_eng_L_CCLabel);
-  task->computes(lb->mass_L_CCLabel);
+  t->computes(lb->mom_L_CCLabel);
+  t->computes(lb->int_eng_L_CCLabel);
+  t->computes(lb->mass_L_CCLabel);
  
-  sched->addTask(task, patches, ice_matls);
+  sched->addTask(t, patches, ice_matls);
 }
 
 /* ---------------------------------------------------------------------
@@ -2419,15 +2422,16 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         term3[c] += (vol_frac[c] + created_vol[c]/vol)*sp_vol_CC[m][c]/
                                              (speedSound[c]*speedSound[c]);
       }  //iter loop 
+      
+      //__________________________________
+      //   Contributions from models
       if(d_models.size() > 0){
-	constCCVariable<double> model_mass_source;
-	new_dw->get(model_mass_source, lb->model_mass_source_CCLabel,
-		    indx, patch, Ghost::None, 0);
-	for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+	 constCCVariable<double> modelMass_src;
+	 new_dw->get(modelMass_src, lb->modelMass_srcLabel, indx, patch, gn, 0);
+	 for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
 	  IntVector c = *iter;
-	  //   Contributions from models
-	  term1[c] += model_mass_source[c] * (sp_vol_CC[m][c]/vol);
-	}
+	  term1[c] += modelMass_src[c] * (sp_vol_CC[m][c]/vol);
+	 }
       }
 	  
       //__________________________________
@@ -2469,10 +2473,11 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     if (switchDebug_explicit_press) {
       ostringstream desc;
       desc << "BOT_explicit_Pressure_patch_" << patch->getID();
+//    printData( 0, patch, 1,desc.str(), "term1",         term1);
       printData( 0, patch, 1,desc.str(), "term2",         term2);
       printData( 0, patch, 1,desc.str(), "term3",         term3); 
       printData( 0, patch, 1,desc.str(), "delP_Dilatate", delP_Dilatate);
-    //printData( 0, patch, 1,desc.str(), "delP_MassX",    delP_MassX);
+      printData( 0, patch, 1,desc.str(), "delP_MassX",    delP_MassX);
       printData( 0, patch, 1,desc.str(), "Press_CC",      press_CC);
     }
   }  // patch loop
@@ -2689,18 +2694,16 @@ void ICE::zeroModelSources(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     for(int m=0;m<matls->size();m++){
       int matl = matls->get(m);
-      CCVariable<double> mass_source;
-      new_dw->allocateAndPut(mass_source, lb->model_mass_source_CCLabel,
-			     matl, patch);
-      mass_source.initialize(0.0);
-      CCVariable<double> energy_source;
-      new_dw->allocateAndPut(energy_source, lb->model_energy_source_CCLabel,
-			     matl, patch);
-      energy_source.initialize(0.0);
-      CCVariable<Vector> mom_source;
-      new_dw->allocateAndPut(mom_source, lb->model_momentum_source_CCLabel,
-			     matl, patch);
-      mom_source.initialize(Vector(0.0, 0.0, 0.0));
+      CCVariable<double> mass_src, energy_src;
+      CCVariable<Vector> mom_src;
+      
+      new_dw->allocateAndPut(mass_src,   lb->modelMass_srcLabel,matl, patch);
+      new_dw->allocateAndPut(energy_src, lb->modelEng_srcLabel, matl, patch);
+      new_dw->allocateAndPut(mom_src,    lb->modelMom_srcLabel, matl, patch);
+      
+      energy_src.initialize(0.0);
+      mass_src.initialize(0.0);
+      mom_src.initialize(Vector(0.0, 0.0, 0.0));
     }
   }
 }
@@ -3158,6 +3161,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
        }  //  if (mass exchange)
 
       //__________________________________
+      //      M O D E L - B A S E D   E X C H A N G E
       //  WITH "model-based" mass exchange
       // Note that the mass exchange can't completely
       // eliminate all the mass, momentum and internal E
@@ -3165,20 +3169,17 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
       // after advection.  Thus there is always a mininum amount
       if(d_models.size() > 0)  {
 
-	constCCVariable<double> model_mass_source;
-	new_dw->get(model_mass_source, lb->model_mass_source_CCLabel,
-		    indx, patch, Ghost::None, 0);
-	constCCVariable<Vector> model_mom_source;
-	new_dw->get(model_mom_source, lb->model_momentum_source_CCLabel,
-		    indx, patch, Ghost::None, 0);
-	constCCVariable<double> model_energy_source;
-	new_dw->get(model_energy_source, lb->model_energy_source_CCLabel,
-		    indx, patch, Ghost::None, 0);
+	constCCVariable<double> modelMass_src;
+       constCCVariable<double> modelEng_src;
+       constCCVariable<Vector> modelMom_src;
+	new_dw->get(modelMass_src,lb->modelMass_srcLabel,indx, patch, gn, 0);
+	new_dw->get(modelMom_src, lb->modelMom_srcLabel, indx, patch, gn, 0);
+	new_dw->get(modelEng_src, lb->modelEng_srcLabel, indx, patch, gn, 0);
 
         double massGain = 0.;
         for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
          IntVector c = *iter;
-         massGain += model_mass_source[c];
+         massGain += modelMass_src[c];
         }
         for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
            iter++) {
@@ -3187,13 +3188,13 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           double mass = rho_CC[c] * vol;
           double min_mass = d_TINY_RHO * vol;
 
-          mass_L[c] = std::max( (mass + model_mass_source[c] ), min_mass);
+          mass_L[c] = std::max( (mass + modelMass_src[c] ), min_mass);
 
           //  must have a minimum momentum   
           for (int dir = 0; dir <3; dir++) {  //loop over all three directons
             double min_mom_L = vel_CC[c][dir] * min_mass;
             double mom_L_tmp = vel_CC[c][dir] * mass
-                             + model_mom_source[c][dir];
+                             + modelMom_src[c][dir];
   
              // Preserve the original sign on momemtum     
              // Use d_SMALL_NUMs to avoid nans when mom_L_temp = 0.0
@@ -3212,7 +3213,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           //  int_eng_tmp    = the amount of internal energy for this
           //                   matl in this cell coming into this task
           //  int_eng_source = thermodynamic work = f(delP_Dilatation)
-          //  model_energy_source   = enthalpy of reaction gained by the
+          //  modelEng_src   = enthalpy of reaction gained by the
           //                   product gas, PLUS (OR, MINUS) the
           //                   internal energy of the reactant
           //                   material that was liberated in the
@@ -3222,7 +3223,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
 
           int_eng_L[c] = int_eng_tmp +
                              int_eng_source[c] +
-                             model_energy_source[c];
+                             modelEng_src[c];
 
           int_eng_L[c] = std::max(int_eng_L[c], min_int_eng);
          }
