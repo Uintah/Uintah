@@ -153,7 +153,10 @@ public:
     NetworkEditor* netedit;
     Network* network;
     clString name;
-    int abort_flag;
+    clString categoryName;
+    clString packageName;
+    clString moduleName;
+  int abort_flag;
 public:
     int niports();
     int noports();
@@ -182,6 +185,9 @@ typedef Module* (*ModuleMaker)(const clString& id);
 
 //
 // $Log$
+// Revision 1.2  1999/07/30 17:12:28  kuzimmer
+// Fixed Saving and loading
+//
 // Revision 1.1  1999/07/27 16:55:58  mcq
 // Initial commit
 //

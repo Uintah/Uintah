@@ -15,6 +15,7 @@ MP(cfdGridLines)
 
 // Readers
 MP(ParticleSetReader)
+MP(TriangleReader)
 
 using namespace PSECommon::Dataflow;
 using namespace Uintah::Modules;
@@ -33,6 +34,8 @@ void initPackage(const clString& tcl) {
 
   // Readers
   RM("Readers", "Particle Set Reader", make_ParticleSetReader, "");
+  RM("Readers", "Triangle Reader", make_TriangleReader, tcl+"/TriangleReader.tcl");
 
+cerr << "Initfn done -- TCL path was " << tcl << "\n";
 }
 }
