@@ -704,6 +704,15 @@ Thread::numProcessors()
 }
 
 /*
+ * Yield the CPU
+ */
+void
+Thread::yield()
+{
+    sginap(0);
+}
+
+/*
  * Migrate the thread to a CPU.
  */
 void
@@ -1083,6 +1092,12 @@ AtomicCounter::set(int v)
 
 //
 // $Log$
+// Revision 1.8  1999/08/31 08:59:05  sparker
+// Configuration and other updates for globus
+// First import of beginnings of new component library
+// Added yield to Thread_irix.cc
+// Added getRunnable to Thread.{h,cc}
+//
 // Revision 1.7  1999/08/29 00:47:02  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

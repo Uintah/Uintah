@@ -19,6 +19,9 @@
 #include <globus_nexus.h>
 #include <vector>
 
+using Component::PIDL::ReplyEP;
+using SCICore::Thread::Mutex;
+
 static Mutex mutex("ReplyEP pool lock");
 static std::vector<ReplyEP*> pool;
 
@@ -109,6 +112,12 @@ globus_nexus_buffer_t ReplyEP::wait()
 }
 //
 // $Log$
+// Revision 1.2  1999/08/31 08:59:02  sparker
+// Configuration and other updates for globus
+// First import of beginnings of new component library
+// Added yield to Thread_irix.cc
+// Added getRunnable to Thread.{h,cc}
+//
 // Revision 1.1  1999/08/30 17:39:48  sparker
 // Updates to configure script:
 //  rebuild configure if configure.in changes (Bug #35)

@@ -14,6 +14,8 @@
 
 #include <Component/PIDL/InvalidReference.h>
 
+using Component::PIDL::InvalidReference;
+
 InvalidReference::InvalidReference(const std::string& msg)
     : d_msg(msg)
 {
@@ -29,6 +31,12 @@ std::string InvalidReference::message() const
 }
 //
 // $Log$
+// Revision 1.2  1999/08/31 08:59:00  sparker
+// Configuration and other updates for globus
+// First import of beginnings of new component library
+// Added yield to Thread_irix.cc
+// Added getRunnable to Thread.{h,cc}
+//
 // Revision 1.1  1999/08/30 17:39:45  sparker
 // Updates to configure script:
 //  rebuild configure if configure.in changes (Bug #35)
