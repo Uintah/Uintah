@@ -98,7 +98,7 @@ TendNorm::execute()
 
   if (tenSizeNormalize(nout, nin, weights, (float)amount_.get(), target_.get())) {
     char *err = biffGetDone(TEN);
-    error(string("Error making aniso volume: ") + err);
+    error(string("Error in TendNorm: ") + err);
     free(err);
     return;
   }
