@@ -1441,6 +1441,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   
   double tempRate; /* tan: tempRate stands for "temperature variation
                            time rate", used for heat conduction.  */
+  double temp;
+
   double ke=0;
   Vector CMX(0.0,0.0,0.0);
   Vector CMV(0.0,0.0,0.0);
@@ -1551,6 +1553,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         if(MPMPhysicalModules::heatConductionModel) {
           pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
           tempRate = 0;
+          temp = 0;
         }
 
         // Accumulate the contribution from each surrounding vertex
@@ -1559,6 +1562,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	   acc += gacceleration[ni[k]]   * S[k];
 	   
 	   if(MPMPhysicalModules::heatConductionModel) {
+              temp += gTemperature[ni[k]]   * S[k];
 	      tempRate += gTemperatureRate[ni[k]] * S[k];
 	      for (int j = 0; j<3; j++){
 		 pTemperatureGradient[idx](j) += 
@@ -1572,7 +1576,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pvelocity[idx] += acc * delT;
         if(MPMPhysicalModules::heatConductionModel) {
           pTemperatureRate[idx] = tempRate;
-          pTemperature[idx] += tempRate * delT;
+          pTemperature[idx] = temp;
+          //pTemperature[idx] += tempRate * delT;
         }
         
         ke += .5*pmass[idx]*pvelocity[idx].length2();
@@ -1665,6 +1670,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.101  2000/07/19 20:49:06  tan
+// Modified particle temperature updating algorithm.
+//
 // Revision 1.100  2000/07/17 23:45:03  tan
 // Fixed problems in MPM heat conduction.
 //
