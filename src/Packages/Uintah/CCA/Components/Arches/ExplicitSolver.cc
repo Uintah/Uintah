@@ -235,6 +235,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     d_turbModel->sched_computeTurbSubmodelPred(sched, patches, matls);
   #else
     d_boundaryCondition->sched_lastcomputePressureBC(sched, patches, matls);
+    // ***warning* fix it for multiple step rk...required for scalesimilarity model
+    sched_interpolateFromFCToCC(sched, patches, matls);
     d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls);
   #endif
 
@@ -345,8 +347,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
  
   // Schedule an interpolation of the face centered velocity data 
   // to a cell centered vector for used by the viz tools
-
-  sched_interpolateFromFCToCC(sched, patches, matls);
+    // ***warning fix it for multiple step RK
+    //  sched_interpolateFromFCToCC(sched, patches, matls);
   
   // print information at probes provided in input file
 

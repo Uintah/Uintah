@@ -209,8 +209,10 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
     double mol_viscos; // molecular viscosity
     mol_viscos = d_physicalConsts->getMolecularViscosity();
     double CF = d_CF;
+#if 0
     if (time < 0.5 ) 
       CF *= (time+ 0.0001);
+#endif
     fort_smagmodel(uVelocity, vVelocity, wVelocity, density, viscosity,
 		   lowIndex, highIndex,
 		   cellinfo->sew, cellinfo->sns, cellinfo->stb,
@@ -320,9 +322,10 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
     double CF = d_CF;
+#if 0
     if (time < 2.0 ) 
       CF *= (time+ 0.0001)*0.5;
-      
+#endif      
     fort_smagmodel(uVelocity, vVelocity, wVelocity, density, viscosity,
 		   idxLo, idxHi,
 		   cellinfo->sew, cellinfo->sns, cellinfo->stb,
@@ -531,9 +534,10 @@ SmagorinskyModel::computeTurbSubmodelPred(const ProcessorGroup*,
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
     double CF = d_CF;
+#if 0
     if (time < 2.0 ) 
       CF *= (time+ 0.0001)*0.5;
-
+#endif
     fort_smagmodel(uVelocity, vVelocity, wVelocity, density, viscosity,
 		   idxLo, idxHi,
 		   cellinfo->sew, cellinfo->sns, cellinfo->stb,
@@ -743,10 +747,12 @@ SmagorinskyModel::computeTurbSubmodelInterm(const ProcessorGroup*,
     // compatible with fortran index
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
+
     double CF = d_CF;
+#if 0
     if (time < 2.0 ) 
       CF *= (time+ 0.0001)*0.5;
-
+#endif
     fort_smagmodel(uVelocity, vVelocity, wVelocity, density, viscosity,
 		   idxLo, idxHi,
 		   cellinfo->sew, cellinfo->sns, cellinfo->stb,

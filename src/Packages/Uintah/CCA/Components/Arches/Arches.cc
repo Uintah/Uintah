@@ -10,6 +10,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/PicardNonlinearSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/Properties.h>
 #include <Packages/Uintah/CCA/Components/Arches/SmagorinskyModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
@@ -143,9 +144,14 @@ Arches::problemSetup(const ProblemSpecP& params,
   if (turbModel == "smagorinsky") 
     d_turbModel = scinew SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts,
 					  d_boundaryCondition);
+  else if (turbModel == "mixmodel") { 
+    d_turbModel = scinew ScaleSimilarityModel(d_lab, d_MAlab, d_physicalConsts,
+					      d_boundaryCondition);
+  }
   else 
     throw InvalidValue("Turbulence Model not supported" + turbModel);
-  d_turbModel->problemSetup(db);
+  if (d_turbModel)
+    d_turbModel->problemSetup(db);
 
   d_props->setBC(d_boundaryCondition);
 

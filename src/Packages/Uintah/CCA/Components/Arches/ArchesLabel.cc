@@ -25,6 +25,18 @@ ArchesLabel::ArchesLabel()
     d_stencilMatl->add(i);
   d_stencilMatl->addReference();
 
+  int noStressComp = 9;
+  d_stressTensorMatl = scinew MaterialSubset();
+  for (int i = 0; i < noStressComp; i++)
+    d_stressTensorMatl->add(i);
+  d_stressTensorMatl->addReference();
+
+  int noScalarFluxComp = 3;
+  d_scalarFluxMatl = scinew MaterialSubset();
+  for (int i = 0; i < noScalarFluxComp; i++)
+    d_scalarFluxMatl->add(i);
+  d_scalarFluxMatl->addReference();
+
   // Cell Information
   d_cellInfoLabel = VarLabel::create("cellInformation",
 			    PerPatch<CellInformationP>::getTypeDescription());
@@ -706,6 +718,15 @@ ArchesLabel::ArchesLabel()
   // Scalar temp storage
   d_reactscalarTempLabel = VarLabel::create("reactscalarTemp",
 				   CCVariable<double>::getTypeDescription() );
+
+  // required for scalesimilarity
+  d_stressTensorCompLabel = VarLabel::create("stressTensorComp",
+					     CCVariable<double>::getTypeDescription() );
+
+  d_scalarFluxCompLabel = VarLabel::create("scalarFluxComp",
+					     CCVariable<double>::getTypeDescription() );
+
+
   
   // Runge-Kutta 3d order properties labels
   d_densityIntermLabel = VarLabel::create("densityInterm",
@@ -816,6 +837,12 @@ ArchesLabel::~ArchesLabel()
 {
   if (d_stencilMatl->removeReference())
     delete d_stencilMatl;
+
+  if (d_stressTensorMatl->removeReference())
+    delete d_stressTensorMatl;
+
+  if (d_scalarFluxMatl->removeReference())
+    delete d_scalarFluxMatl;
 
   VarLabel::destroy(d_cellInfoLabel);
   VarLabel::destroy(d_cellTypeLabel);
@@ -1091,6 +1118,8 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_uVelocityIntermLabel);
   VarLabel::destroy(d_vVelocityIntermLabel);
   VarLabel::destroy(d_wVelocityIntermLabel);
+  VarLabel::destroy(d_stressTensorCompLabel);
+  VarLabel::destroy(d_scalarFluxCompLabel);
 //  VarLabel::destroy(d_velocityDivergenceLabel);
 //  VarLabel::destroy(d_velocityDivergenceBCLabel);
 

@@ -24,6 +24,7 @@ SRCS     += $(SRCDIR)/Arches.cc \
 	$(SRCDIR)/RBGSSolver.cc \
 	$(SRCDIR)/ScalarSolver.cc \
 	$(SRCDIR)/SmagorinskyModel.cc \
+	$(SRCDIR)/ScaleSimilarityModel.cc \
 	$(SRCDIR)/Source.cc \
 	$(SRCDIR)/TurbulenceModel.cc
 

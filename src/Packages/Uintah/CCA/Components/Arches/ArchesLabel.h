@@ -47,6 +47,9 @@ namespace Uintah {
 
       // material subset for stencils
       MaterialSubset* d_stencilMatl;
+      // material subset for turbulent stress, required by scalesimilarity model
+      MaterialSubset* d_stressTensorMatl;
+      MaterialSubset* d_scalarFluxMatl;
 
       // Cell Information
       // for old_dw, perpatch var
@@ -330,6 +333,13 @@ namespace Uintah {
       // Reactscalar NonLinear Src
 
       const VarLabel* d_reactscalNonLinSrcSBLMLabel;
+
+      // labels for scalesimilaritymodels
+
+      const VarLabel* d_stressTensorCompLabel;
+
+      const VarLabel* d_scalarFluxCompLabel;
+      
 
 
       // label for ref_density and pressure
