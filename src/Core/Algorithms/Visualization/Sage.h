@@ -395,7 +395,7 @@ void Sage<Field>::project( const Point &p, Pt &q )
 
 
 
-
+#if 0
 static 
 int permutation[8][8] = {
   {0,4,1,2,6,3,5,7},
@@ -407,6 +407,7 @@ int permutation[8][8] = {
   {6,7,2,4,5,0,3,1},
   {7,6,3,5,4,1,2,0}
 };
+#endif
 
 template <class Field>
 int Sage<Field>::adjust( double left, double right, int &x )

@@ -53,7 +53,7 @@ GeomText::GeomText()
 
 GeomText::GeomText( const string &text, const Point &at, const Color &c,
 		    const string &fontsize)
-  : GeomObj(), text(text), at(at), c(c), fontsize(fontsize)
+  : GeomObj(), text(text), fontsize(fontsize), at(at), c(c)
 {
 }
 

@@ -265,7 +265,7 @@ Isosurface::execute()
     v = &value_str;
     strcpy(value_str, vlist.c_str());
     char *val;
-    while (val = strtok(value_str, " ")) {
+    while ((val = strtok(value_str, " "))) {
       value_str = 0;
       isovals.push_back(atof(val));
     }
