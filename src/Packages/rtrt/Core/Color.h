@@ -8,6 +8,13 @@ using namespace std;
 
 namespace rtrt {
 
+// This gets rid of compiler warnings on the SGI.
+#if defined(__sgi)
+#  define BREAK 
+#else
+#  define BREAK break;
+#endif
+
 class Color {
     float r,g,b;
 public:
@@ -39,19 +46,19 @@ public:
 
     inline float operator[](int i ) const {
 	switch( i ) {
-	case 0: return r; break;
-	case 1: return g; break;
-	case 2: return b; break;
-	default: return 0.0; break;
+	case 0: return r; BREAK
+	case 1: return g; BREAK
+	case 2: return b; BREAK
+	default: return 0.0; BREAK
 	}
     }
 
     inline float& operator[](int i ) {
 	switch( i ) {
-	case 0: return r; break;
-	case 1: return g; break;
-	case 2: return b; break;
-	default: return r; break;
+	case 0: return r; BREAK
+	case 1: return g; BREAK
+	case 2: return b; BREAK
+	default: return r; BREAK
 	}
     }
 
