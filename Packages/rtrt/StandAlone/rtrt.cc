@@ -21,6 +21,7 @@
 #include <Packages/rtrt/Core/rtrt.h>
 #include <Packages/rtrt/Core/Gui.h>
 
+#include <sys/stat.h>
 #include <iostream>
 
 #include <dlfcn.h>
@@ -333,26 +334,41 @@ main(int argc, char* argv[])
     exit(1);
   }
   char scenefile[MAXPATHLEN];
-  sprintf(scenefile, "./%s.mo", scenename);
-  void* handle=dlopen(scenefile, RTLD_NOW);
-  if(!handle){
-//    cerr << "Error opening scene: " << scenefile << '\n';
-//    cerr << dlerror() << '\n';
-//    cerr << "Trying: "<< scenename << "\n";
-    handle=dlopen(scenename, RTLD_NOW);
+  char pioscenefile[MAXPATHLEN];
+
+  // test for pio'd version
+  sprintf(pioscenefile, "./%s.scn", scenename);
+  Scene* scene = 0;
+  struct stat buf;
+  if (! stat(pioscenefile, &buf)) {
+    cerr << "pio read: " << pioscenefile << endl;
+    SceneHandle sh(scene);
+    SCIRun::Piostream *str;
+    str = new SCIRun::FastPiostream (pioscenefile, SCIRun::Piostream::Read);
+    SCIRun::Pio(*str, sh);
+    scene = sh.get_rep();
+  } else {
+    sprintf(scenefile, "./%s.mo", scenename);
+    void* handle=dlopen(scenefile, RTLD_NOW);
     if(!handle){
-      cerr << "Error opening scene: " << scenename << '\n';
-      cerr << dlerror() << '\n';
+      //    cerr << "Error opening scene: " << scenefile << '\n';
+      //    cerr << dlerror() << '\n';
+      //    cerr << "Trying: "<< scenename << "\n";
+      handle=dlopen(scenename, RTLD_NOW);
+      if(!handle){
+	cerr << "Error opening scene: " << scenename << '\n';
+	cerr << dlerror() << '\n';
+	exit(1);
+      }
+    }
+    void* scene_fn=dlsym(handle, "make_scene");
+    if(!scene_fn){
+      cerr << "Scene file found, but make_scene() function not found\n";
       exit(1);
     }
+    Scene* (*make_scene)(int,char**,int) = (Scene*(*)(int,char**,int))scene_fn;
+    scene=(*make_scene)(scene_argc, scene_argv, rtrt_engine->nworkers);
   }
-  void* scene_fn=dlsym(handle, "make_scene");
-  if(!scene_fn){
-    cerr << "Scene file found, but make_scene() function not found\n";
-    exit(1);
-  }
-  Scene* (*make_scene)(int,char**,int) = (Scene*(*)(int,char**,int))scene_fn;
-  Scene* scene=(*make_scene)(scene_argc, scene_argv, rtrt_engine->nworkers);
   if(!scene){
     cerr << "Scene creation failed!\n";
     exit(1);
@@ -361,11 +377,15 @@ main(int argc, char* argv[])
   if (serialize_scene) {
     // Create a stream to save to.
     SCIRun::Piostream *str;
-    str = new SCIRun::FastPiostream ("/tmp/test.scn", 
-			    SCIRun::Piostream::Write);
+    char scnfile[MAXPATHLEN];
+    
+    // test for pio'd version
+    sprintf(scnfile, "./%s.scn", scenename);
+    str = new SCIRun::FastPiostream (scnfile,SCIRun::Piostream::Write);
 
     // Write it out.
-    SCIRun::Pio(*str, *scene);
+    SceneHandle sh(scene);
+    SCIRun::Pio(*str, sh);
     cerr << "Saved scene to " << scenename << ".scn" << endl;
     exit(0);
   }

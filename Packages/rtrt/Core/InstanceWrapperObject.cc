@@ -34,7 +34,7 @@ namespace SCIRun {
     stream.io(pobj, rtrt::InstanceWrapperObject::type_id);
     if(stream.reading()) {
       obj=dynamic_cast<rtrt::InstanceWrapperObject*>(pobj);
-      ASSERT(obj != 0);
+      //ASSERT(obj != 0);
     }
   }
 } // end namespace SCIRun

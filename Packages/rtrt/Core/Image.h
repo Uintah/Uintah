@@ -3,67 +3,90 @@
 #ifndef IMAGE_H
 #define IMAGE_H 1
 
+#include <Core/Persistent/Persistent.h>
 #include <Packages/rtrt/Core/Color.h>
-
 #include <Packages/rtrt/Core/Array1.h>
 
 namespace rtrt {
+class Pixel;
+class Image;
+}
 
-struct Pixel {
-    unsigned char r;
-    unsigned char g;
-    unsigned char b;
-    unsigned char a;
-    inline Pixel(unsigned char r, unsigned char g, unsigned char b,
-		 unsigned char a) : r(r), g(g), b(b), a(a)
-    {
-    }
-    inline Pixel()
-    {
-    }
-    inline void set(const Color& color) {
-	float rr=color.r;
-	rr=rr<0.f?0.f:rr>1.f?1.f:rr;
-	float gg=color.g;
-	gg=gg<0.f?0.f:gg>1.f?1.f:gg;
-	float bb=color.b;
-	bb=bb<0.f?0.f:bb>1.f?1.f:bb;
-	r=(unsigned char)(rr*255.f);
-	g=(unsigned char)(gg*255.f);
-	b=(unsigned char)(bb*255.f);
-	a=255;
-    }
+namespace SCIRun {
+void Pio(Piostream&, rtrt::Pixel*&);
+void Pio(Piostream&, rtrt::Image*&);
+}
+
+namespace rtrt {
+
+struct Pixel : SCIRun::Persistent {
+  unsigned char r;
+  unsigned char g;
+  unsigned char b;
+  unsigned char a;
+  inline Pixel(unsigned char r, unsigned char g, unsigned char b,
+	       unsigned char a) : r(r), g(g), b(b), a(a)
+  {
+  }
+  inline Pixel()
+  {
+  }
+
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, Pixel*&);
+
+  inline void set(const Color& color) {
+    float rr=color.r;
+    rr=rr<0.f?0.f:rr>1.f?1.f:rr;
+    float gg=color.g;
+    gg=gg<0.f?0.f:gg>1.f?1.f:gg;
+    float bb=color.b;
+    bb=bb<0.f?0.f:bb>1.f?1.f:bb;
+    r=(unsigned char)(rr*255.f);
+    g=(unsigned char)(gg*255.f);
+    b=(unsigned char)(bb*255.f);
+    a=255;
+  }
 };
 
-class Image {
-    char* buf;
-    Pixel** image;
-    int xres, yres;
-    bool stereo;
+class Image : public SCIRun::Persistent {
+  char* buf;
+  Pixel** image;
+  int xres, yres;
+  bool stereo;
 public:
-    Image(int xres, int yres, bool stereo);
-    ~Image();
-    void resize_image();
+  Image(int xres, int yres, bool stereo);
+  ~Image();
+  Image() {} // for Pio.
+
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, Image*&);
+
+  void resize_image();
   void resize_image(const int new_xres, const int new_yres);
   
-    inline int get_xres() const {
-	return xres;
-    }
-    inline int get_yres() const {
-	return yres;
-    }
-    inline bool get_stereo() const {
-	return stereo;
-    }
-    void draw();
-    void set(const Pixel& value);
-    inline Pixel& operator()(int x, int y) {
-	return image[y][x];
-    }
+  inline int get_xres() const {
+    return xres;
+  }
+  inline int get_yres() const {
+    return yres;
+  }
+  inline bool get_stereo() const {
+    return stereo;
+  }
+  void draw();
+  void set(const Pixel& value);
+  inline Pixel& operator()(int x, int y) {
+    return image[y][x];
+  }
   void set(int x, int y, const Color& value) {
     image[y][x].set(value);
   }
-    void save(char* file);
+  void save(char* file);
 };
 #if 0
 class ImageTile;

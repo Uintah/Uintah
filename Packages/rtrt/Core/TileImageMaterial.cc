@@ -14,6 +14,16 @@
 
 using namespace rtrt;
 using namespace std;
+using namespace SCIRun;
+
+Persistent* tileImageMaterial_maker() {
+  return new TileImageMaterial();
+}
+
+// initialize the static member type_id
+PersistentTypeID TileImageMaterial::type_id("TileImageMaterial", "Material", 
+					    tileImageMaterial_maker);
+
 
 TileImageMaterial::TileImageMaterial( int /*oldstyle*/, const string &texfile, 
 				      double Kd,
@@ -70,3 +80,24 @@ void TileImageMaterial::shade(Color& result, const Ray& ray,
              accumcolor, cx);
 }
 
+const int TILEIMAGEMATERIAL_VERSION = 1;
+
+void 
+TileImageMaterial::io(SCIRun::Piostream &str)
+{
+  str.begin_class("TileImageMaterial", TILEIMAGEMATERIAL_VERSION);
+  ImageMaterial::io(str);
+  str.end_class();
+}
+
+namespace SCIRun {
+void Pio(SCIRun::Piostream& stream, rtrt::TileImageMaterial*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::TileImageMaterial::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::TileImageMaterial*>(pobj);
+    //ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

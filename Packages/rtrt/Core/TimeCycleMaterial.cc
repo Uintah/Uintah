@@ -10,13 +10,22 @@
 #include <Core/Thread/Time.h>
 
 using namespace rtrt;
+using namespace SCIRun;
+
+Persistent* timeCycleMaterial_maker() {
+  return new TimeCycleMaterial();
+}
+
+// initialize the static member type_id
+PersistentTypeID TimeCycleMaterial::type_id("TimeCycleMaterial", "Material", 
+					    timeCycleMaterial_maker);
 
 TimeCycleMaterial::TimeCycleMaterial( void )
     : CycleMaterial(),
-      _curTime( 0.0 )
+      cur_time_( 0.0 )
 {
-    _timeArray.initialize( 0.0 );
-    _time = SCIRun::Time::currentSeconds();
+    time_array_.initialize( 0.0 );
+    time_ = SCIRun::Time::currentSeconds();
 }
 
 TimeCycleMaterial::~TimeCycleMaterial( void )
@@ -27,8 +36,8 @@ void
 TimeCycleMaterial::add( Material* mat, double time ) 
 {
     members.add( mat );
-    _timeArray.add( time );
-    _curTime = _timeArray[0];
+    time_array_.add( time );
+    cur_time_ = time_array_[0];
 }
 
 void 
@@ -37,13 +46,37 @@ TimeCycleMaterial::shade( Color& result, const Ray& ray,
 			  double atten, const Color& accumcolor,
 			  Context* cx )
 {
-    double etime = SCIRun::Time::currentSeconds() - _time;
+    double etime = SCIRun::Time::currentSeconds() - time_;
     
-    if( etime > _curTime ) {
+    if( etime > cur_time_ ) {
 	next();
-	_time += _curTime;
-	_curTime = _timeArray[current];
+	time_ += cur_time_;
+	cur_time_ = time_array_[current];
     }
     members[current]->shade(result, ray, hit, depth, atten, accumcolor, cx);
 }
 
+const int TIMECYCLEMATERIAL_VERSION = 1;
+
+void 
+TimeCycleMaterial::io(SCIRun::Piostream &str)
+{
+  str.begin_class("TimeCycleMaterial", TIMECYCLEMATERIAL_VERSION);
+  Material::io(str);
+  SCIRun::Pio(str, time_array_);
+  SCIRun::Pio(str, time_);
+  SCIRun::Pio(str, cur_time_);
+  str.end_class();
+}
+
+namespace SCIRun {
+void Pio(SCIRun::Piostream& stream, rtrt::TimeCycleMaterial*& obj)
+{
+  SCIRun::Persistent* pobj=obj;
+  stream.io(pobj, rtrt::TimeCycleMaterial::type_id);
+  if(stream.reading()) {
+    obj=dynamic_cast<rtrt::TimeCycleMaterial*>(pobj);
+    //ASSERT(obj != 0)
+  }
+}
+} // end namespace SCIRun

@@ -130,12 +130,12 @@ Vector MeshedNormedTri::normal(const Point&, const HitInfo& hitinfo)
   return norm;
 }
 
-SCIRun::Persistent* obj_maker() {
+SCIRun::Persistent* meshedtri_maker() {
   return new MeshedColoredTri();
 }
 
 // initialize the static member type_id
-SCIRun::PersistentTypeID MeshedColoredTri::type_id("MeshedColoredTri", "Object", obj_maker);
+SCIRun::PersistentTypeID MeshedColoredTri::type_id("MeshedColoredTri", "Object", meshedtri_maker);
 
 const int MESHEDCOLOREDTRI_VERSION = 1;
 

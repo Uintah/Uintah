@@ -58,6 +58,7 @@ public:
   Scene(Object*, const Camera&, const Color& bgcolor,
 	const Color& cdown, const Color& cup, const Plane& groundplane,
 	double ambientscale, AmbientType ambient_mode=Constant_Ambient);
+  Scene(); // for Pio.
   ~Scene();
   
   inline Image* get_image(int which) const {

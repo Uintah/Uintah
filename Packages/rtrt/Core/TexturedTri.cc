@@ -553,7 +553,7 @@ void Pio(SCIRun::Piostream& stream, rtrt::TexturedTri*& obj)
   stream.io(pobj, rtrt::TexturedTri::type_id);
   if(stream.reading()) {
     obj=dynamic_cast<rtrt::TexturedTri*>(pobj);
-    ASSERT(obj != 0)
+    //ASSERT(obj != 0)
   }
 }
 } // end namespace SCIRun

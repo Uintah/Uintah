@@ -6,6 +6,14 @@
 #include <vector>
 
 namespace rtrt {
+class SubMaterial;
+}
+
+namespace SCIRun {
+void Pio(Piostream&, rtrt::SubMaterial*&);
+}
+
+namespace rtrt {
 
 class SubMaterial : public Material
 {
@@ -19,6 +27,11 @@ class SubMaterial : public Material
   SubMaterial() {}
   virtual ~SubMaterial() {}
 
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, SubMaterial*&);
+  
   Material *operator[](unsigned index) { 
     if (index>=materials_.size())
       return 0;

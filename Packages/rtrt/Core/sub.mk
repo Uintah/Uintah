@@ -16,6 +16,8 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/Camera.cc \
 	$(SRCDIR)/Stealth.cc \
 	$(SRCDIR)/Sphere.cc \
+	$(SRCDIR)/Satellite.cc \
+	$(SRCDIR)/SubMaterial.cc \
 	$(SRCDIR)/Background.cc \
 	$(SRCDIR)/Object.cc \
 	$(SRCDIR)/Phong.cc \
@@ -25,6 +27,8 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/InvisibleMaterial.cc \
 	$(SRCDIR)/CycleMaterial.cc \
 	$(SRCDIR)/MetalMaterial.cc \
+	$(SRCDIR)/MultiMaterial.cc \
+	$(SRCDIR)/MapBlendMaterial.cc \
 	$(SRCDIR)/PhongMaterial.cc \
 	$(SRCDIR)/Material.cc \
 	$(SRCDIR)/LambertianMaterial.cc \
@@ -76,6 +80,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/Volume16.cc \
 	$(SRCDIR)/MIPHVB16.cc \
 	$(SRCDIR)/TimeObj.cc \
+	$(SRCDIR)/Plane.cc \
 	$(SRCDIR)/CutPlane.cc \
 	$(SRCDIR)/PlaneDpy.cc \
 	$(SRCDIR)/MIPGroup.cc \

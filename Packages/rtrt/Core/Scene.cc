@@ -30,8 +30,18 @@ using namespace rtrt;
 using namespace SCIRun;
 using namespace std;
 
+Persistent* scene_maker() {
+  return new Scene();
+}
+
 // initialize the static member type_id
-PersistentTypeID Scene::type_id("Scene", "Persistent", 0);
+PersistentTypeID Scene::type_id("Scene", "Persistent", scene_maker);
+
+Scene::Scene() : 
+  work("frame tiles"),
+  ref_cnt(0),
+  lock("rtrt::Scene lock")
+{}
 
 Scene::Scene(Object* ob, const Camera& cam, Image* image0, Image* image1,
 	     const Color& bgcolor,
@@ -42,6 +52,9 @@ Scene::Scene(Object* ob, const Camera& cam, Image* image0, Image* image1,
 	     AmbientType ambient_mode) : 
   work("frame tiles"),
   ambient_mode(ambient_mode),
+  ambientScale_(ambientscale),
+  ref_cnt(0),
+  lock("rtrt::Scene lock"),
   soundVolume_(100),
   obj(ob), 
   mainGroup_(ob), 
@@ -53,10 +66,7 @@ Scene::Scene(Object* ob, const Camera& cam, Image* image0, Image* image1,
   cup(cup), 
   cdown(cdown), 
   groundplane(groundplane),
-  transmissionMode_(false),
-  ref_cnt(0),
-  ambientScale_(ambientscale),
-  lock("rtrt::Scene lock")
+  transmissionMode_(false)
 {
   init(cam, bgcolor);
 }
@@ -128,6 +138,9 @@ Scene::Scene(Object* ob, const Camera& cam, const Color& bgcolor,
 	     AmbientType ambient_mode) :     
   work("frame tiles"),
   ambient_mode(ambient_mode),
+  ambientScale_(ambientscale),
+  ref_cnt(0),
+  lock("rtrt::Scene lock"),
   soundVolume_(100),
   obj(ob), 
   mainGroup_(ob ),
@@ -139,10 +152,7 @@ Scene::Scene(Object* ob, const Camera& cam, const Color& bgcolor,
   cup(cup), 
   cdown(cdown), 
   groundplane(groundplane), 
-  transmissionMode_(false),
-  ambientScale_(ambientscale),
-  ref_cnt(0),
-  lock("rtrt::Scene lock")
+  transmissionMode_(false)
 {
   init(cam, bgcolor);
 }
@@ -396,9 +406,8 @@ Scene::io(SCIRun::Piostream &stream) {
   SCIRun::Pio(stream, stereo);
   SCIRun::Pio(stream, animate);
   SCIRun::Pio(stream, ambient_mode);
-#if 0
   SCIRun::Pio(stream, frameno);
-  SCIRun::Pio(stream, frametime_fp);
+  //  SCIRun::Pio(stream, frametime_fp);
   SCIRun::Pio(stream, lasttime);
   SCIRun::Pio(stream, obj);
   SCIRun::Pio(stream, mainGroup_);
@@ -420,13 +429,12 @@ Scene::io(SCIRun::Piostream &stream) {
   SCIRun::Pio(stream, per_matl_lights);
   SCIRun::Pio(stream, nonActiveLights_);
   SCIRun::Pio(stream, nonActivePerMatlLights_);
-  SCIRun::Pio(stream, rtrt_engine);
-  SCIRun::Pio(stream, displays);
+  //  SCIRun::Pio(stream, rtrt_engine);
+  //  SCIRun::Pio(stream, displays);
   SCIRun::Pio(stream, ambientColor_);
   SCIRun::Pio(stream, origAmbientColor_);
   SCIRun::Pio(stream, hotspots);
   SCIRun::Pio(stream, materials);
-#endif
   stream.end_class();
 }
 

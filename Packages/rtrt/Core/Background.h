@@ -3,68 +3,93 @@
 
 #include <Packages/rtrt/Core/Color.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Persistent/Persistent.h>
 #include <Packages/rtrt/Core/Array2.h>
 #include <Packages/rtrt/Core/ppm.h>
+
+namespace rtrt {
+class Background;
+class ConstantBackground;
+}
+
+namespace SCIRun {
+void Pio(Piostream&, rtrt::Background*&);
+void Pio(Piostream&, rtrt::ConstantBackground*&);
+}
 
 namespace rtrt {
 
 using SCIRun::Vector;
 using SCIRun::Dot;
 
-class Background {
-    Color avg;
-    Color origAvg_;
+class Background : public SCIRun::Persistent {
+  Color avg;
+  Color origAvg_;
 public:
-    Background(const Color& avg);
-    virtual ~Background();
+  Background(const Color& avg);
+  virtual ~Background();
 
-    // expects a unit vector
-    virtual void color_in_direction( const Vector& v, Color& c) const = 0;
+  Background() {} // for Pio.
 
-    // gives some approximate value
-    inline const Color& average( ) const {
-      return avg;
-    }
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, Background*&);
 
-    virtual void updateAmbient( double scale ) {
-      avg = origAvg_ * scale;
-    }
+  // expects a unit vector
+  virtual void color_in_direction( const Vector& v, Color& c) const = 0;
+
+  // gives some approximate value
+  inline const Color& average( ) const {
+    return avg;
+  }
+
+  virtual void updateAmbient( double scale ) {
+    avg = origAvg_ * scale;
+  }
 
 };
 
 class ConstantBackground : public Background {
 protected:
-    Color C;
-    Color origC_;
+  Color C;
+  Color origC_;
 public:
-    ConstantBackground(const Color& C);
-    virtual ~ConstantBackground();
+  ConstantBackground(const Color& C);
+  virtual ~ConstantBackground();
 
-    virtual void color_in_direction(const Vector& v, Color& c) const; 
-    virtual void updateAmbient( double scale ) {
-      C = origC_ * scale;
-    }
+  ConstantBackground() {} // for Pio.
+
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, ConstantBackground*&);
+
+  virtual void color_in_direction(const Vector& v, Color& c) const; 
+  virtual void updateAmbient( double scale ) {
+    C = origC_ * scale;
+  }
 };
 
 
 class LinearBackground : public Background {
 protected:
-    Color C1;
-    Color C2;
-    Color origC1_;
-    Color origC2_;
-    Vector direction_to_C1;
+  Color C1;
+  Color C2;
+  Color origC1_;
+  Color origC2_;
+  Vector direction_to_C1;
 public:
-    LinearBackground( const Color& C1, const Color& C2,  const Vector& direction_to_C1);
+  LinearBackground( const Color& C1, const Color& C2,  const Vector& direction_to_C1);
 
-    virtual ~LinearBackground();   
+  virtual ~LinearBackground();   
     
-    virtual void color_in_direction(const Vector& v, Color& c) const ;
+  virtual void color_in_direction(const Vector& v, Color& c) const ;
 
-    virtual void updateAmbient( double scale ) {
-      C1 = origC1_ * scale;
-      C2 = origC2_ * scale;
-    }
+  virtual void updateAmbient( double scale ) {
+    C1 = origC1_ * scale;
+    C2 = origC2_ * scale;
+  }
 };
 
 class EnvironmentMapBackground : public Background {

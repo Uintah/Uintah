@@ -11,6 +11,14 @@
 #include <iostream>
 
 namespace rtrt {
+class NormalMapMaterial;
+}
+
+namespace SCIRun {
+void Pio(Piostream&, rtrt::NormalMapMaterial*&);
+}
+
+namespace rtrt {
 
 class NormalMapMaterial : public Material {
   Material *material;
@@ -24,13 +32,21 @@ public:
   FILE* readcomments(FILE *fin);
   int readfromppm6(char *filename);
   int readfromppm(char *filename);
-    NormalMapMaterial(Material *, char *, double);
-    virtual ~NormalMapMaterial();
-    virtual void shade(Color& result, const Ray& ray,
-		       const HitInfo& hit, int depth,
-		       double atten, const Color& accumcolor,
-		       Context* cx);
-    void perturbnormal(Vector &, const Ray &, const HitInfo &);
+  NormalMapMaterial(Material *, char *, double);
+  virtual ~NormalMapMaterial();
+
+  NormalMapMaterial() : Material() {} // for Pio.
+
+  //! Persistent I/O.
+  static  SCIRun::PersistentTypeID type_id;
+  virtual void io(SCIRun::Piostream &stream);
+  friend void SCIRun::Pio(SCIRun::Piostream&, NormalMapMaterial*&);
+
+  virtual void shade(Color& result, const Ray& ray,
+		     const HitInfo& hit, int depth,
+		     double atten, const Color& accumcolor,
+		     Context* cx);
+  void perturbnormal(Vector &, const Ray &, const HitInfo &);
 
   // added for file bumpmaps
   int read_file(char *filename);

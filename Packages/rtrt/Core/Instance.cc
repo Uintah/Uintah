@@ -32,7 +32,7 @@ void Pio( Piostream& stream, rtrt::Instance*& obj )
   stream.io(pobj, rtrt::Instance::type_id);
   if(stream.reading()) {
     obj=dynamic_cast<rtrt::Instance*>(pobj);
-    ASSERT(obj != 0)
+    //ASSERT(obj != 0)
   }
 }
 } // end namespace SCIRun
