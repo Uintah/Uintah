@@ -107,7 +107,9 @@ class Matrix3 {
   inline Matrix3 Transpose() const;
 
   // Returns number of real eigen values and passes back
-  // the values.
+  // the values.  There will either be one eigenvalue
+  // passed back via e1, or three eigenvalue in which case
+  // they will be sorted such that e1 <= e2 <= e3.
   int getEigenValues(double& e1, double& e2, double& e3) const;
 
   // Returns an array of eigenvectors that form the basis
@@ -484,6 +486,9 @@ inline SCICore::Geometry::Vector operator*(const SCICore::Geometry::Vector& v, c
 #endif  // __MATRIX3_H__
 
 // $Log$
+// Revision 1.6  2000/08/15 22:01:59  witzel
+// Sorting eigenvalues e1, e2, e3.
+//
 // Revision 1.5  2000/08/15 19:15:19  witzel
 // Added methods for finding eigenvalues, eigenvectors and solving
 // equation systems of the form Ax=b and Ax=0.  Also added M*v
