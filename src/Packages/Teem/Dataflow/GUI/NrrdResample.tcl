@@ -35,15 +35,15 @@ itcl_class Teem_Filters_NrrdResample {
     }
     method set_defaults {} {
         global $this-filtertype
-        global $this-resampAxis0
         global $this-resampAxis1
         global $this-resampAxis2
+        global $this-resampAxis3
 	global $this-sigma
 	global $this-extent
         set $this-filtertype gaussian
-        set $this-resampAxis0 x1
         set $this-resampAxis1 x1
         set $this-resampAxis2 x1
+        set $this-resampAxis3 x1
 	set $this-sigma 1
 	set $this-extent 6
     }
@@ -82,12 +82,12 @@ itcl_class Teem_Filters_NrrdResample {
 	make_entry $w.f.e "   Guassian extent:" $this-extent "$this-c needexecute"
 	frame $w.f.f
 	label $w.f.f.l -text "Number of samples (e.g. `128')\nor, if preceded by an x,\nthe resampling ratio\n(e.g. `x0.5' -> half as many samples)"
-	global $this-resampAxis0
-	make_entry $w.f.f.fi "Axis0:" $this-resampAxis0 "$this-c needexecute"
 	global $this-resampAxis1
-	make_entry $w.f.f.fj "Axis1:" $this-resampAxis1 "$this-c needexecute"
+	make_entry $w.f.f.fi "Axis1:" $this-resampAxis1 "$this-c needexecute"
 	global $this-resampAxis2
-	make_entry $w.f.f.fk "Axis2:" $this-resampAxis2 "$this-c needexecute"
+	make_entry $w.f.f.fj "Axis2:" $this-resampAxis2 "$this-c needexecute"
+	global $this-resampAxis3
+	make_entry $w.f.f.fk "Axis3:" $this-resampAxis3 "$this-c needexecute"
 	pack $w.f.f.l $w.f.f.fi $w.f.f.fj $w.f.f.fk -side top -expand 1 -fill x
 	button $w.f.b -text "Execute" -command "$this-c needexecute"
 	pack $w.f.t $w.f.s $w.f.e $w.f.f $w.f.b -side top -expand 1 -fill x
