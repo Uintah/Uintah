@@ -6,6 +6,7 @@ from helpers.runSusTests import runSusTests
 TESTS = [   ("advect_mpmice", "advect.ups", "", 1, "ALL"),	\
             ("thermx", "thermx.ups", "", 1, "ALL"),     \
             ("massX", "massX.ups", "", 1, "ALL"),     \
+            ("guni2d", "guni2dRT.ups", "", 4, "ALL"),     \
             ("thermx8patch", "thermx8patch.ups", "", 8, "ALL"),     \
     	]
 
