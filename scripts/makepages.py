@@ -25,8 +25,8 @@ def copy_doc(arg, dirname, names) :
     trim = arg[1]
     os.path.walk(dirname, copy_doc1, (webtop, trim))
 
-def deepcopy_doc_dirs(psetop, webtop) :
-    os.path.walk(psetop, copy_doc, (webtop, len(psetop)) )
+def deepcopy_doc_dirs(srtop, webtop) :
+    os.path.walk(srtop, copy_doc, (webtop, len(srtop)) )
 
 
 def create_customs_file(webtop, urltop, tmptop, l) :
@@ -60,20 +60,22 @@ def create_customs_file(webtop, urltop, tmptop, l) :
         # see if this is on the skip list
         skip_p = 0
         for skip in skip_list[1:] :
-            if webname[4:] == skip[:-1] :
-                #print 'skipping -- ' + webname[4:]
+            sk = skip[:-1]
+            slen = len(sk)
+            wn = webname[4:4+slen]
+            if wn == sk :
                 skip_p = 1
                 break
         if skip_p : continue
         # make the libname out of the path
         libname = re.sub('/', '::', webname)
         if(libname == '') :
-            libname="PSE"
+            libname="SCIRun"
             webname="."
             exit(1)
 
         #build list of strings to send to file
-        src = psetop + os.sep + webname
+        src = srtop + os.sep + webname
         clist.append("library " + libname + ' ' + src + ' ' + webname + '\n')
 
         # If there is a doc/cocoon.cust file, use it.
@@ -109,9 +111,9 @@ def hfile_p(arg, dirname, names) :
             arg[0].append(dirname[arg[1]+1:])
             break
 
-def all_h_dirs(psetop) :
+def all_h_dirs(srtop) :
     hlist = []
-    os.path.walk(psetop, hfile_p, (hlist, len(psetop)))
+    os.path.walk(srtop, hfile_p, (hlist, len(srtop)))
     return hlist
 
 
@@ -119,22 +121,22 @@ def all_h_dirs(psetop) :
 if __name__ == '__main__' :
 
     webtop = ''
-    psetop = ''
+    srtop = ''
     urltop = ''
     try:
         webtop = sys.argv[1:][0]
-        psetop = sys.argv[1:][1]
+        srtop = sys.argv[1:][1]
         urltop = sys.argv[1:][2]
     except IndexError:
-        print "usage: makepages.py WEBTOP PSETOP URLTOP"
+        print "usage: makepages.py WEBTOP SCIRun URLTOP"
         print "WEBTOP is the root of the web directory"
-        print "PSETOP is the location of the PSE/src directory"
+        print "SCIRunTOP is the location of the SCIRun/src directory"
         print "URLTOP is the web location of the pages"
         sys.exit(1) #no need to continue
 
-    tmptop = psetop + '/..'
-    deepcopy_doc_dirs(psetop, webtop)
-    l = all_h_dirs(psetop)
+    tmptop = srtop + '/..'
+    deepcopy_doc_dirs(srtop, webtop)
+    l = all_h_dirs(srtop)
     cfn = create_customs_file(webtop, urltop, tmptop, l)
     # run cocoon...
     cmmd = 'time cocoon ' + cfn
