@@ -521,7 +521,6 @@ EditColorMap2D::tcl_command(GuiArgs& args, void* userdata)
 	
         delete stream;
 
-	cmap_dirty_ = true;
         redraw(true);
         update_to_gui();
 	force_execute();
@@ -924,20 +923,20 @@ EditColorMap2D::motion(int x, int y)
     return;
   }
 
+  const int selected = gui_selected_widget_.get();
+  if (selected < 0 || selected >= (int)widgets_.size()) return;
+
   if (button_ == 1 && paint_widget_) {
     paint_widget_->add_coordinate(rescaled_val(x,y));
   } else {
-    const int selected = gui_selected_widget_.get();
-    if (selected >= 0 && selected < (int)widgets_.size())
+    if (!gui_selected_object_.get()) return;
+    if (first_motion_)
     {
-      if (first_motion_)
-      {
-	undo_stack_.push(UndoItem(UndoItem::UNDO_CHANGE, selected,
-				  widgets_[selected]->clone()));
-	first_motion_ = false;
-      }
-      widgets_[selected]->move(x, height_-1-y, width_, height_);
+      undo_stack_.push(UndoItem(UndoItem::UNDO_CHANGE, selected,
+				widgets_[selected]->clone()));
+      first_motion_ = false;
     }
+    widgets_[selected]->move(x, height_-1-y, width_, height_);
   }
   redraw(true);
   updating_ = true;
@@ -958,6 +957,7 @@ EditColorMap2D::release(int x, int y)
   const int selected = gui_selected_widget_.get();
   if (selected >= 0 && selected < (int)widgets_.size())
   {
+    if (!paint_widget_ && !gui_selected_object_.get()) return;
     widgets_[selected]->release(x, height_-1-y, width_, height_);
     updating_ = false;
     force_execute();
