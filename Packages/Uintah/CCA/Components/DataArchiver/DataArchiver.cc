@@ -1,3 +1,5 @@
+#include <TauProfilerForSCIRun.h>
+
 #include <Packages/Uintah/CCA/Components/DataArchiver/DataArchiver.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -41,6 +43,12 @@
 
 #define PADSIZE 1024L
 
+// RNJ - Leave a define that will turn on and off
+//       the PVFS fix just in case someone has a
+//       problem and needs a way to turn it off.
+
+#define PVFS_FIX
+
 using namespace Uintah;
 using namespace std;
 using namespace SCIRun;
@@ -58,6 +66,9 @@ DataArchiver::DataArchiver(const ProcessorGroup* myworld)
   d_saveP_x = false;
   d_currentTime=-1;
   d_currentTimestep=-1;
+
+  d_XMLIndexDoc = NULL;
+  d_CheckpointXMLIndexDoc = NULL;
 }
 
 DataArchiver::~DataArchiver()
@@ -684,7 +695,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
     
     dbg << "Created reduction variable output task" << endl;
     if (d_wasOutputTimestep){
-      scheduleOutputTimestep(d_dir, d_saveLabels, grid, sched);
+      scheduleOutputTimestep(d_dir, d_saveLabels, grid, sched, false);
       do_output=true;
     }
   }
@@ -705,7 +716,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
     dbg << "Created checkpoint reduction variable output task" << endl;
 
     scheduleOutputTimestep(d_checkpointsDir, d_checkpointLabels,
-			   grid, sched);
+			   grid, sched, true);
     do_output=true;
   }
   if(do_output && delt == 0)
@@ -926,22 +937,46 @@ void DataArchiver::outputTimestep(Dir& baseDir,
       
 void DataArchiver::executedTimestep()
 {
+  TAU_PROFILE("DataArchiver::executedTimestep()", "void ()" , TAU_USER);
+
   vector<Dir*> baseDirs;
   if (d_wasOutputTimestep)
     baseDirs.push_back(&d_dir);
   if (d_wasCheckpointTimestep)
     baseDirs.push_back(&d_checkpointsDir);
 
-  for (int i = 0; i < static_cast<int>(baseDirs.size()); i++) {
-    int timestep = d_currentTimestep;
+  int timestep = d_currentTimestep;
     
-    ostringstream tname;
-    tname << "t" << setw(5) << setfill('0') << timestep;
+  ostringstream tname;
+  tname << "t" << setw(5) << setfill('0') << timestep;
+
+  for (int i = 0; i < static_cast<int>(baseDirs.size()); i++) {
     
     // Reference this timestep in index.xml
     if(d_writeMeta){
       string iname = baseDirs[i]->getName()+"/index.xml";
+
+#ifdef PVFS_FIX
+      // RNJ - If we already have the XML Index Doc
+      //       loaded, don't load it again.
+
+      ProblemSpecP indexDoc;
+
+      if ( baseDirs[i] == &d_dir ) {
+	indexDoc = d_XMLIndexDoc;
+	d_XMLIndexDoc = NULL;
+      }
+      else if ( baseDirs[i] == &d_checkpointsDir ) {
+	indexDoc = d_CheckpointXMLIndexDoc;
+	d_CheckpointXMLIndexDoc = NULL;
+      }
+      else {
+	throw "DataArchiver::executedTimestep(): Unknown directory!";
+      }
+#else
       ProblemSpecP indexDoc = loadDocument(iname);
+#endif
+
       ProblemSpecP ts = indexDoc->findBlock("timesteps");
       if(ts == 0){
 	ts = indexDoc->appendChild("timesteps");
@@ -976,12 +1011,136 @@ void DataArchiver::executedTimestep()
       indexDoc->releaseDocument();
     }
   }
+
+#ifdef PVFS_FIX
+
+  d_outputLock.lock(); 
+  {
+    // Close data file handles used in regular outputs.
+      
+    map< int, int >::iterator dataFileHandleIdx = d_DataFileHandles.begin();
+    map< int, int >::iterator dataFileHandleEnd = d_DataFileHandles.end();
+
+    while ( dataFileHandleIdx != dataFileHandleEnd ) {
+
+      int fd = dataFileHandleIdx->second;
+
+      if ( close( fd ) == -1 ) {
+	throw ErrnoException("DataArchiver::executedTimestep (close call)", errno);
+      }
+
+      dataFileHandleIdx++;  
+    }
+
+    d_DataFileHandles.clear();
+
+
+    // Close data file handles used in checkpoint outputs.
+
+    dataFileHandleIdx = d_CheckpointDataFileHandles.begin();
+    dataFileHandleEnd = d_CheckpointDataFileHandles.end();
+    
+    while ( dataFileHandleIdx != dataFileHandleEnd ) {
+      
+      int fd = dataFileHandleIdx->second;
+      
+      if ( close( fd ) == -1 ) {
+	throw ErrnoException("DataArchiver::executedTimestep (close call)", errno);
+      }
+      
+      dataFileHandleIdx++;  
+    }
+    
+    d_CheckpointDataFileHandles.clear();
+    
+    
+    // Write out XML data files used in regular outputs.
+
+    map< int, ProblemSpecP >::iterator xmlDocIdx = d_XMLDataDocs.begin();
+    map< int, ProblemSpecP >::iterator xmlDocEnd = d_XMLDataDocs.end();
+
+    Dir tdir = d_dir.getSubdir(tname.str());
+
+    while ( xmlDocIdx != xmlDocEnd ) {
+
+      ProblemSpecP tempXMLDataFile = xmlDocIdx->second;
+
+      // Get the file name
+      
+      ostringstream lname;
+      lname << "l" << xmlDocIdx->first;
+      Dir ldir = tdir.getSubdir(lname.str());        
+      ostringstream pname;
+      pname << "p" << setw(5) << setfill('0') << d_myworld->myrank();
+      string xmlFilename;	
+      xmlFilename = ldir.getName() + "/" + pname.str() + ".xml";
+	
+      // Open the file and write out the XML Doc.
+      
+      ofstream out(xmlFilename.c_str());
+      ASSERT( out );
+      out << tempXMLDataFile << endl;
+	
+      // Release the XML Doc.
+	
+      tempXMLDataFile->releaseDocument();
+	
+      xmlDocIdx++;
+
+    } // while ( xmlDocIdx != xmlDocEnd ) {
+
+    d_XMLDataDocs.clear();
+
+
+    // Write out XML data files used in checkpoint outputs.
+
+    xmlDocIdx = d_CheckpointXMLDataDocs.begin();
+    xmlDocEnd = d_CheckpointXMLDataDocs.end();
+
+    tdir = d_checkpointsDir.getSubdir(tname.str());
+
+    while ( xmlDocIdx != xmlDocEnd ) {
+
+      ProblemSpecP tempXMLDataFile = xmlDocIdx->second;
+
+      // Get the file name
+      
+      ostringstream lname;
+      lname << "l" << xmlDocIdx->first;
+      Dir ldir = tdir.getSubdir(lname.str());        
+      ostringstream pname;
+      pname << "p" << setw(5) << setfill('0') << d_myworld->myrank();
+      string xmlFilename;	
+      xmlFilename = ldir.getName() + "/" + pname.str() + ".xml";
+	
+      // Open the file and write out the XML Doc.
+      
+      ofstream out(xmlFilename.c_str());
+      ASSERT( out );
+      out << tempXMLDataFile << endl;
+	
+      // Release the XML Doc.
+	
+      tempXMLDataFile->releaseDocument();
+	
+      xmlDocIdx++;
+
+    } // while ( xmlDocIdx != xmlDocEnd ) {
+
+    d_CheckpointXMLDataDocs.clear();
+
+  }
+  d_outputLock.unlock();
+
+#endif // #ifdef PVFS_FIX
+
 }
 
 void
 DataArchiver::scheduleOutputTimestep(Dir& baseDir,
 				     vector<DataArchiver::SaveItem>& saveLabels,
-				     const GridP& grid, SchedulerP& sched)
+				     const GridP& grid, SchedulerP& sched,
+				     bool isThisCheckpoint )
 {
   // Schedule a bunch o tasks - one for each variable, for each patch
   int n=0;
@@ -994,7 +1153,7 @@ DataArchiver::scheduleOutputTimestep(Dir& baseDir,
       const MaterialSet* matls = (*saveIter).getMaterialSet();
       Task* t = scinew Task("DataArchiver::output", 
 			    this, &DataArchiver::output,
-			    &baseDir, (*saveIter).label_);
+			    &baseDir, (*saveIter).label_, isThisCheckpoint);
       t->requires(Task::NewDW, (*saveIter).label_, Ghost::None);
       sched->addTask(t, patches, matls);
       n++;
@@ -1107,7 +1266,7 @@ void DataArchiver::outputCheckpointReduction(const ProcessorGroup* world,
     const MaterialSubset* matls = saveItem.getMaterialSet()->getUnion();
     PatchSubset* patches = scinew PatchSubset(0);
     patches->add(0);
-    output(world, patches, matls, old_dw, new_dw, &d_checkpointsDir, var);
+    output(world, patches, matls, old_dw, new_dw, &d_checkpointsDir, var, true);
     delete patches;
   }
 }
@@ -1118,7 +1277,8 @@ void DataArchiver::output(const ProcessorGroup*,
 			  DataWarehouse* /*old_dw*/,
 			  DataWarehouse* new_dw,
 			  Dir* p_dir,
-			  const VarLabel* var)
+			  const VarLabel* var,
+			  bool isThisCheckpoint )
 {
   bool isReduction = var->typeDescription()->isReductionVariable();
 
@@ -1152,11 +1312,13 @@ void DataArchiver::output(const ProcessorGroup*,
   string xmlFilename;
   string dataFilebase;
   string dataFilename;
+  const Level* level = NULL;
+
   if (!isReduction) {
     ostringstream lname;
     ASSERT(patches->size() != 0);
     ASSERT(patches->get(0) != 0);
-    const Level* level = patches->get(0)->getLevel();
+    level = patches->get(0)->getLevel();
 #if SCI_ASSERTION_LEVEL >= 1
     for(int i=0;i<patches->size();i++)
       ASSERT(patches->get(i)->getLevel() == level);
@@ -1181,12 +1343,46 @@ void DataArchiver::output(const ProcessorGroup*,
   d_outputLock.lock(); 
   { // make sure doc's constructor is called after the lock.
     ProblemSpecP doc; 
-    ifstream test(xmlFilename.c_str());
-    if(test){
-      doc = loadDocument(xmlFilename);
-    } else {
-      doc = ProblemSpec::createDocument("Uintah_Output");
+
+#ifdef PVFS_FIX
+    if ( isReduction )
+#endif
+    {
+      ifstream test(xmlFilename.c_str());
+      if(test){
+	doc = loadDocument(xmlFilename);
+      } else {
+	doc = ProblemSpec::createDocument("Uintah_Output");
+      }
     }
+#ifdef PVFS_FIX
+    else
+    {
+      map< int, ProblemSpecP >* currentXMLDataDocMap;
+      map< int, ProblemSpecP >::iterator currentXMLDataDoc;
+
+      if ( isThisCheckpoint ) {
+	currentXMLDataDocMap = &d_CheckpointXMLDataDocs;
+      }
+      else {
+	currentXMLDataDocMap = &d_XMLDataDocs;
+      }
+      
+      currentXMLDataDoc = currentXMLDataDocMap->find(level->getIndex());
+
+      // RNJ - If we don't have an XML Index Doc, go ahead
+      //       and create one, otherwise use the one we
+      //       already have.
+
+      if ( currentXMLDataDoc == currentXMLDataDocMap->end() ) {
+	doc = ProblemSpec::createDocument("Uintah_Output");
+	(*currentXMLDataDocMap)[level->getIndex()] = doc;
+      }
+      else {
+	doc = (*currentXMLDataDocMap)[level->getIndex()];
+      }
+    }
+#endif
 
     // Find the end of the file
     ASSERT(doc != 0);
@@ -1205,14 +1401,55 @@ void DataArchiver::output(const ProcessorGroup*,
       n = n->findNextBlock("Variable");
     }
 
-
-    // Open the data file
-    int fd = open(dataFilename.c_str(), O_WRONLY|O_CREAT, 0666);
-    if(fd == -1){
-      cerr << "Cannot open dataFile: " << dataFilename << '\n';
-      throw ErrnoException("DataArchiver::output (open call)", errno);
+    int fd;
+#ifdef PVFS_FIX
+    if ( isReduction )
+#endif
+    {
+      // Open the data file
+      fd = open(dataFilename.c_str(), O_WRONLY|O_CREAT, 0666);
+      if ( fd == -1 ) {
+	cerr << "Cannot open dataFile: " << dataFilename << '\n';
+	throw ErrnoException("DataArchiver::output (open call)", errno);
+      }
     }
-    
+#ifdef PVFS_FIX
+    else
+    {
+      map< int, int >* currentDataFileHandleMap;
+      map< int, int >::iterator currentDataFileHandle;
+
+      if ( isThisCheckpoint ) {
+	currentDataFileHandleMap = &d_CheckpointDataFileHandles;
+      }
+      else {
+	currentDataFileHandleMap = &d_DataFileHandles;
+      }
+
+      currentDataFileHandle = currentDataFileHandleMap->find(level->getIndex());
+      // RNJ - If we haven't created a data file, go ahead
+      //       and create one, otherwise use the one we
+      //       already have.
+
+      if ( currentDataFileHandle == currentDataFileHandleMap->end() ) {
+
+	fd = open(dataFilename.c_str(), O_WRONLY|O_CREAT, 0666);
+
+	if ( fd == -1 ) {
+	  cerr << "Cannot open dataFile: " << dataFilename << '\n';
+	  throw ErrnoException("DataArchiver::output (open call)", errno);
+	}
+	else {
+	  (*currentDataFileHandleMap)[level->getIndex()] = fd;
+	}
+      }
+      else {
+	fd = (*currentDataFileHandleMap)[level->getIndex()];
+      }
+    }
+#endif    
+
+#if SCI_ASSERTION_LEVEL >= 1
     struct stat st;
     int s = fstat(fd, &st);
     if(s == -1){
@@ -1220,6 +1457,7 @@ void DataArchiver::output(const ProcessorGroup*,
       throw ErrnoException("DataArchiver::output (stat call)", errno);
     }
     ASSERTEQ(cur, st.st_size);
+#endif
     
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
@@ -1258,26 +1496,59 @@ void DataArchiver::output(const ProcessorGroup*,
 	new_dw->emit(oc, var, matlIndex, patch);
 	pdElem->appendElement("end", oc.cur);
 	pdElem->appendElement("filename", dataFilebase.c_str());
+
+#if SCI_ASSERTION_LEVEL >= 1
 	s = fstat(fd, &st);
 	if(s == -1)
 	  throw ErrnoException("DataArchiver::output (stat call)", errno);
 	ASSERTEQ(oc.cur, st.st_size);
+#endif
+
 	cur=oc.cur;
       }
     }
-  
-    s = close(fd);
-    if(s == -1)
-      throw ErrnoException("DataArchiver::output (close call)", errno);
-    
-    ofstream out(xmlFilename.c_str());
-    out << doc << endl;
-    doc->releaseDocument();
+
+#ifdef PVFS_FIX
+    if ( isReduction )
+#endif
+    {
+      int s = close(fd);
+      if(s == -1)
+	throw ErrnoException("DataArchiver::output (close call)", errno);
+    }
+
+#ifdef PVFS_FIX
+    if ( isReduction )
+#endif
+    {
+      ofstream out(xmlFilename.c_str());
+      out << doc << endl;
+      doc->releaseDocument();
+    }
 
     if(d_writeMeta){
       // Rewrite the index if necessary...
       string iname = p_dir->getName()+"/index.xml";
-      ProblemSpecP indexDoc = loadDocument(iname);
+      ProblemSpecP indexDoc;
+
+#ifdef PVFS_FIX
+      if ( isThisCheckpoint ) {
+	if ( !d_CheckpointXMLIndexDoc ) {
+	  d_CheckpointXMLIndexDoc = loadDocument(iname);
+	}
+
+	indexDoc = d_CheckpointXMLIndexDoc;
+      }
+      else {
+	if ( !d_XMLIndexDoc ) {
+	  d_XMLIndexDoc = loadDocument(iname);
+	}
+
+	indexDoc = d_XMLIndexDoc;
+      }
+#else
+      indexDoc = loadDocument(iname);
+#endif
 
       ProblemSpecP vs;
       string variableSection = (isReduction) ? "globals" : "variables";
@@ -1307,12 +1578,16 @@ void DataArchiver::output(const ProcessorGroup*,
 	vs->appendText("\n");
       }
 
+#ifndef PVFS_FIX
       ofstream indexOut(iname.c_str());
       indexOut << indexDoc << endl;  
       indexDoc->releaseDocument();
+#endif
+
     }
   }
   d_outputLock.unlock(); 
+
 } // end output()
 
 static
@@ -1519,8 +1794,7 @@ void DataArchiver::initCheckpoints(SchedulerP& sched)
      saveItem.setMaterials(globalMatl, prevMatls_, prevMatlSet_);
      ASSERT(saveItem.label_->typeDescription()->isReductionVariable());
      d_checkpointReductionLabels.push_back(saveItem);
-   }
-     
+   }     
 }
 
 void DataArchiver::SaveItem::setMaterials(const ConsecutiveRangeSet& matls,
@@ -1587,6 +1861,7 @@ bool DataArchiver::need_recompile(double time, double dt,
     dbg << "We do request recompile\n";
   else
     dbg << "We do not request recompile\n";
+
   return recompile;
 }
 
