@@ -18,7 +18,7 @@
 
 #include <iostream>
 
-using namespace std;
+//using namespace std;
 
 class Index
 {
@@ -39,7 +39,7 @@ public:
   inline Index &operator=(const Index & I){
     start_ = I.start_; end_ = I.end_;return(*this);}
 
-  inline friend ostream& operator<<(ostream& output, Index& I){
+  inline friend std::ostream& operator<<(std::ostream& output, Index& I){
     output << "(" << I.start() << ":"  << I.end() << ")";
     return output;}
 
