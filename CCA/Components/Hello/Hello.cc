@@ -16,7 +16,7 @@
 */
 
 /*
- *  Hello.c:
+ *  Hello.cc:
  *
  *  Written by:
  *   Keming Zhang
@@ -57,52 +57,27 @@ Hello::~Hello()
 
 void Hello::setServices(const gov::cca::Services::pointer& svc)
 {
-  //cerr<<"Hello::serService is  called#################\n";
-
   services=svc;
   //register provides ports here ...  
 
   gov::cca::TypeMap::pointer props = svc->createTypeMap();
-  myUIPort::pointer p(&port0);
-  svc->addProvidesPort(p,"ui","gov.cca.UIPort", props);
-  svc->addProvidesPort(p,"UIPort1","gov.cca.UIPort", props);
-  svc->addProvidesPort(p,"UIPort2","gov.cca.UIPort", props);
-
+  myUIPort::pointer uip(&uiPort);
+  myGoPort::pointer gop(&goPort);
+  svc->addProvidesPort(uip,"ui","gov.cca.UIPort", props);
+  svc->addProvidesPort(gop,"go","gov.cca.GoPort", props);
   // Remember that if the PortInfo is created but not used in a call to the svc object
   // then it must be freed.
   // Actually - the ref counting will take care of that automatically - Steve
-  svc->registerUsesPort("UU#0", "gov.cca.UIPort", props);
-  svc->registerUsesPort("UU#1", "gov.cca.UIPort", props);
-  svc->registerUsesPort("UU#2", "gov.cca.UIPort", props);
-
-
-  QApplication* app = QtUtils::getApplication();
-  
-
-#ifdef QT_THREAD_SUPPORT
-  app->lock();
-#endif
-  //int argc=0;
-  //char* argv[]={""};
-  //QApplication a( argc, argv );
-  //QPushButton hello( "Hello world!", 0 );
-  //hello.resize( 100, 30 );
-
-  //app->setMainWidget( &hello );
-  //hello.show();
-  // a.exec();
-  //builder = new BuilderWindow(services);
-  //builder->addReference();
-  //builder->show(); 
-#ifdef QT_THREAD_SUPPORT 
-	app->unlock(); 
-#endif
-
 }
 
 void myUIPort::ui() 
 {
-  QMessageBox::warning(0, "Hello", "Hello World!");
-  //cerr<<"$$$ui() is not implemented."<<endl;
+  QMessageBox::warning(0, "Hello", "You have clicked the UI button!");
 }
 
+
+int myGoPort::go() 
+{
+  QMessageBox::warning(0, "Hello", "Go ...");
+  return 0;
+}

@@ -33,12 +33,17 @@
 
 //namespace SCIRun {
   
-  class myUIPort : public virtual gov::cca::ports::UIPort {
+class myUIPort : public virtual gov::cca::ports::UIPort {
+public:
+   virtual ~myUIPort(){}
+   virtual void ui();
+};
 
-  public:
-    virtual ~myUIPort(){}
-    virtual void ui();
-  };
+class myGoPort : public virtual gov::cca::ports::GoPort {
+public:
+   virtual ~myGoPort(){}
+   virtual int go();
+};
 
 
 class Hello : public gov::cca::Component{
@@ -52,7 +57,8 @@ class Hello : public gov::cca::Component{
 
     Hello(const Hello&);
     Hello& operator=(const Hello&);
-    myUIPort port0;
+    myUIPort uiPort;
+    myGoPort goPort;
     gov::cca::Services::pointer services;
   };
 //}
