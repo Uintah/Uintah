@@ -99,7 +99,7 @@ bool
 TendEpireg::extract_gradients(vector<double> &d)
 {
   istringstream str(gradient_list_.get().c_str());
-  while (true)
+  for (;;)
   {
     double tmp;
     str >> tmp;
