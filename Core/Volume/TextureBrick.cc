@@ -129,8 +129,8 @@ TextureBrick::~TextureBrick()
 // compute polygon of edge plane intersections
 void
 TextureBrick::compute_polygon(const Ray& view, double t,
-			      Array1<float>& vertex, Array1<float>& texcoord,
-			      Array1<int>& size) const
+			      vector<float>& vertex, vector<float>& texcoord,
+			      vector<int>& size) const
 {
   compute_polygons(view, t, t, 1.0, vertex, texcoord, size);
 }
@@ -138,8 +138,8 @@ TextureBrick::compute_polygon(const Ray& view, double t,
 
 void
 TextureBrick::compute_polygons(const Ray& view, double dt,
-			       Array1<float>& vertex, Array1<float>& texcoord,
-			       Array1<int>& size) const
+			       vector<float>& vertex, vector<float>& texcoord,
+			       vector<int>& size) const
 {
   const Point &pmin(bbox_.min());
   const Point &pmax(bbox_.max());
@@ -174,8 +174,8 @@ TextureBrick::compute_polygons(const Ray& view, double dt,
 void
 TextureBrick::compute_polygons(const Ray& view,
 			       double tmin, double tmax, double dt,
-			       Array1<float>& vertex, Array1<float>& texcoord,
-			       Array1<int>& size) const
+			       vector<float>& vertex, vector<float>& texcoord,
+			       vector<int>& size) const
 {
   Vector vv[6], tt[6]; // temp storage for vertices and texcoords
   double t = tmax; // start at tmax
@@ -251,12 +251,12 @@ TextureBrick::compute_polygons(const Ray& view,
       // output polygon
       for (int j=0; j<degree; j++)
       {
-        vertex.add(vv[idx[j]].x());
-        vertex.add(vv[idx[j]].y());
-        vertex.add(vv[idx[j]].z());
-        texcoord.add(tt[idx[j]].x());
-        texcoord.add(tt[idx[j]].y());
-        texcoord.add(tt[idx[j]].z());
+        vertex.push_back(vv[idx[j]].x());
+        vertex.push_back(vv[idx[j]].y());
+        vertex.push_back(vv[idx[j]].z());
+        texcoord.push_back(tt[idx[j]].x());
+        texcoord.push_back(tt[idx[j]].y());
+        texcoord.push_back(tt[idx[j]].z());
       }
     }
     else if (degree == 3)
@@ -264,12 +264,12 @@ TextureBrick::compute_polygons(const Ray& view,
       // output a single triangle
       for (int j=0; j<degree; j++)
       {
-        vertex.add(vv[j].x());
-        vertex.add(vv[j].y());
-        vertex.add(vv[j].z());
-        texcoord.add(tt[j].x());
-        texcoord.add(tt[j].y());
-        texcoord.add(tt[j].z());
+        vertex.push_back(vv[j].x());
+        vertex.push_back(vv[j].y());
+        vertex.push_back(vv[j].z());
+        texcoord.push_back(tt[j].x());
+        texcoord.push_back(tt[j].y());
+        texcoord.push_back(tt[j].z());
       }
     }
     // else we don't care
@@ -278,7 +278,7 @@ TextureBrick::compute_polygons(const Ray& view,
     if(degree >= 3)
     {
       k += degree;
-      size.add(degree);
+      size.push_back(degree);
     }
 
     // decrement ray parameter

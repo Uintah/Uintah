@@ -164,10 +164,13 @@ VolumeRenderer::draw()
   const double dt = cell_diag.length()/rate;
   const int num_slices = (int)(diag.length()/dt);
   
-  Array1<float> vertex(0, 100, num_slices*6);
-  Array1<float> texcoord(0, 100, num_slices*6);
-  Array1<int> size(0, 100, num_slices*6);
-  
+  vector<float> vertex;
+  vector<float> texcoord;
+  vector<int> size;
+  vertex.reserve(num_slices*6);
+  texcoord.reserve(num_slices*6);
+  size.reserve(num_slices*6);
+
   //--------------------------------------------------------------------------
 
   int nc = bricks[0]->nc();
@@ -319,9 +322,9 @@ VolumeRenderer::draw()
   for(unsigned int i=0; i<bricks.size(); i++) {
     TextureBrick* b = bricks[i];
     load_brick(b);
-    vertex.resize(0);
-    texcoord.resize(0);
-    size.resize(0);
+    vertex.clear();
+    texcoord.clear();
+    size.clear();
     b->compute_polygons(view_ray, dt, vertex, texcoord, size);
     draw_polygons(vertex, texcoord, size, false, use_fog,
                   blend_num_bits_ > 8 ? blend_buffer_ : 0);
@@ -438,9 +441,12 @@ VolumeRenderer::draw_wireframe()
   const double dt = cell_diag.length()/rate;
   const int num_slices = (int)(diag.length()/dt);
   
-  Array1<float> vertex(0, 100, num_slices*6);
-  Array1<float> texcoord(0, 100, num_slices*6);
-  Array1<int> size(0, 100, num_slices*6);
+  vector<float> vertex;
+  vector<float> texcoord;
+  vector<int> size;
+  vertex.reserve(num_slices*6);
+  texcoord.reserve(num_slices*6);
+  size.reserve(num_slices*6);
 
   for (unsigned int i=0; i<bricks.size(); i++)
   {
@@ -486,9 +492,9 @@ VolumeRenderer::draw_wireframe()
 
     glColor4f(0.4, 0.4, 0.4, 1.0);
 
-    vertex.resize(0);
-    texcoord.resize(0);
-    size.resize(0);
+    vertex.clear();
+    texcoord.clear();
+    size.clear();
 
     // Scale out dt such that the slices are artificially further apart.
     b->compute_polygons(view_ray, dt * 10, vertex, texcoord, size);

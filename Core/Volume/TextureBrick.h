@@ -36,11 +36,14 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Ray.h>
 #include <Core/Geometry/BBox.h>
-#include <Core/Containers/Array1.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Volume/GLinfo.h>
 
+#include <vector>
+
 namespace SCIRun {
+
+using std::vector;
 
 class TextureBrick 
 {
@@ -73,14 +76,14 @@ public:
   inline void set_dirty(bool b) { dirty_ = b; }
   
   void compute_polygons(const Ray& view, double tmin, double tmax, double dt,
-                        Array1<float>& vertex, Array1<float>& texcoord,
-                        Array1<int>& size) const;
+                        vector<float>& vertex, vector<float>& texcoord,
+                        vector<int>& size) const;
   void compute_polygons(const Ray& view, double dt,
-                        Array1<float>& vertex, Array1<float>& texcoord,
-                        Array1<int>& size) const;
+                        vector<float>& vertex, vector<float>& texcoord,
+                        vector<int>& size) const;
   void compute_polygon(const Ray& view, double t,
-                       Array1<float>& vertex, Array1<float>& texcoord,
-                       Array1<int>& size) const;
+                       vector<float>& vertex, vector<float>& texcoord,
+                       vector<int>& size) const;
 
 protected:
   int nx_, ny_, nz_; // axis sizes (pow2)
