@@ -241,6 +241,47 @@ LevelMesh::type_name(int n)
   return name;
 }
 
+void
+LevelMesh::get_weights(const Point &p,
+			Cell::array_type &l, vector<double> &w)
+{
+  Cell::index_type idx;
+  if (locate(idx, p))
+  {
+    l.push_back(idx);
+    w.push_back(1.0);
+  }
+}
+
+void
+LevelMesh::get_weights(const Point &p,
+			Node::array_type &l, vector<double> &w)
+{
+  Cell::index_type idx;
+  if (locate(idx, p))
+  {
+    get_nodes( l, idx );
+    w.resize(l.size());
+    vector<double>::iterator wit = w.begin();
+    Node::array_type::iterator it = l.begin();
+
+    Point np, pmin, pmax;
+    get_point(pmin, l[0]);
+    get_point(pmax, l[6]);
+
+    Vector diag(pmax - pmin);
+
+    while( it != l.end()) {
+      Node::index_type ni = *it;
+      ++it;
+      get_point(np, ni);
+      *wit = ( 1 - fabs(p.x() - np.x())/diag.x() ) *
+	( 1 - fabs(p.y() - np.y())/diag.y() ) *
+	( 1 - fabs(p.z() - np.z())/diag.z() );
+      ++wit;
+    }
+  }
+}
 
 const SCIRun::TypeDescription*
 LevelMesh::get_type_description() const

@@ -24,6 +24,9 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <string>
 #include <vector>
+#include <iostream>
+using std::cerr;
+using std::endl;
 
 using SCIRun::Point;
 using SCIRun::LockingHandle;
@@ -319,6 +322,7 @@ public:
    Cell::iterator cell_begin() const { return Cell::iterator(this, 0, 0, 0); }
   Cell::iterator cell_end() const { return Cell::iterator(this, 0, 0, nz_-1); }
   Cell::size_type cells_size() const {
+    cerr<<"in cells_size with "<<nx_-1<<","<< ny_-1<<","<< nz_-1<<endl;
     return Cell::size_type(this, nx_-1, ny_-1, nz_-1);
   }
 
@@ -372,6 +376,11 @@ public:
   bool locate(Cell::index_type &cell, const Point &p) const;
 
   void unlocate(Point &result, const Point &p) const { result =  p; };
+
+  void get_weights(const Point &p, Node::array_type &l, vector<double> &w);
+  void get_weights(const Point &, Edge::array_type &, vector<double> &) {ASSERTFAIL("LatVolMesh::get_weights for edges isn't supported");}
+  void get_weights(const Point &, Face::array_type &, vector<double> &) {ASSERTFAIL("LatVolMesh::get_weights for faces isn't supported");}
+  void get_weights(const Point &p, Cell::array_type &l, vector<double> &w);
 
   void get_point(Point &result, Node::index_type index) const;
 
