@@ -39,7 +39,7 @@ namespace Uintah {
 
     The flow stress (\f$ \sigma \f$) is given by
     \f[
-    \sigma = \sigma_0 \left[1 + \beta(\epsilon_p - \epsilon_{p0})\right]^n
+    \sigma = \sigma_0 \left[1 + \beta(\epsilon_p + \epsilon_{p0})\right]^n
         \left(\frac{\mu}{\mu_0}\right)
     \f]
     where, \n
@@ -49,7 +49,7 @@ namespace Uintah {
 
     The value of the flow stress is limited by the condition
     \f[
-      \sigma_0\left[1 + \beta(\epsilon_p - \epsilon_{p0})\right]^n \le Y_{max}
+      \sigma_0\left[1 + \beta(\epsilon_p + \epsilon_{p0})\right]^n \le Y_{max}
     \f]
     where, 
     \f$ Y_{max} \f$ is the maximum value of uniaxial yield at the reference
