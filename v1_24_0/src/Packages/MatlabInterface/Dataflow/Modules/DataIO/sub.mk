@@ -51,6 +51,8 @@ SRCS     += \
 	$(SRCDIR)/MatlabMatricesWriter.cc \
 	$(SRCDIR)/MatlabNrrdsReader.cc \
 	$(SRCDIR)/MatlabNrrdsWriter.cc \
+	$(SRCDIR)/MatlabBundlesReader.cc \
+	$(SRCDIR)/MatlabBundlesWriter.cc \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Persistent Core/Containers Core/Util \
