@@ -5,11 +5,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
-/*`==========TESTING==========*/
-#include <Packages/Uintah/CCA/Ports/SolverInterface.h> 
-/*==========TESTING==========`*/
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
@@ -435,6 +430,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
   MaterialSubset* press_matl    = scinew MaterialSubset();
   press_matl->add(0);
   press_matl->addReference();
+  MaterialSubset* one_matl = press_matl;
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
 
@@ -462,16 +458,14 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
                                                           mpm_matls_sub,
                                                           all_matls);
   }
-                                                          
-  if(d_impICE) {
-   scheduleImplicitPressureSolve(  sched, level,        solver,
-                                                        solver_parameters,
-                                                        patches,
-                                                        press_matl,
-                                                        ice_matls_sub,
-                                                        mpm_matls_sub,
-                                                        all_matls);
+                                                       
+  if(d_impICE) {                                                
+   scheduleImplicitPressureSolve(         sched, level,   patches, 
+                                                          one_matl,
+                                                          press_matl,
+                                                          all_matls);
   }
+
 /*==========TESTING==========`*/                                                          
                                                           
 
