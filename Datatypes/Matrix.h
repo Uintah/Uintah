@@ -20,6 +20,7 @@
 #include <Classlib/String.h>
 
 class SymSparseRowMatrix;
+class SparseRowMatrix;
 class DenseMatrix;
 class ColumnMatrix;
 class Matrix;
@@ -33,6 +34,7 @@ protected:
         symmetric,
     };
     enum Representation {
+	sparse,
 	symsparse,
 	dense,
 	tridiagonal,
@@ -46,6 +48,7 @@ private:
 public:
     clString getType();
     SymSparseRowMatrix* getSymSparseRow();
+    SparseRowMatrix* getSparseRow();
     DenseMatrix* getDense();
     int is_symmetric();
     void is_symmetric(int symm);

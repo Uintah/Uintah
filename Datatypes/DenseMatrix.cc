@@ -6,6 +6,18 @@
 #include <Math/MiscMath.h>
 #include <iostream.h>
 
+static Persistent* maker()
+{
+    return scinew DenseMatrix;
+}
+
+PersistentTypeID DenseMatrix::type_id("DenseMatrix", "Matrix", maker);
+
+DenseMatrix::DenseMatrix()
+: Matrix(Matrix::non_symmetric, Matrix::dense), nr(0), nc(0)
+{
+}
+
 DenseMatrix::DenseMatrix(int r, int c)
 : Matrix(Matrix::non_symmetric, Matrix::dense)
 {
@@ -266,6 +278,34 @@ void DenseMatrix::print()
 MatrixRow DenseMatrix::operator[](int row)
 {
     return MatrixRow(this, row);
+}
+
+#define DENSEMATRIX_VERSION 1
+
+void DenseMatrix::io(Piostream& stream)
+{
+    stream.begin_class("DenseMatrix", DENSEMATRIX_VERSION);
+    // Do the base class first...
+    Matrix::io(stream);
+
+    stream.io(nr);
+    stream.io(nc);
+    if(stream.reading()){
+	data=scinew double*[nr];
+	double* tmp=scinew double[nr*nc];
+	dataptr=tmp;
+	for(int i=0;i<nr;i++){
+	    data[i]=tmp;
+	    tmp+=nc;
+	}
+    }
+    stream.begin_cheap_delim();
+    int idx=0;
+    for(int i=0;i<nr;i++)
+	for (int j=0; j<nc; j++, idx++)
+	    stream.io(dataptr[idx]);
+    stream.end_cheap_delim();
+    stream.end_class();
 }
 
 void DenseMatrix::invert()

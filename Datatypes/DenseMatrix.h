@@ -24,6 +24,7 @@ class DenseMatrix : public Matrix {
     double** data;
     double* dataptr;
 public:
+    DenseMatrix();
     DenseMatrix(int, int);
     virtual ~DenseMatrix();
     DenseMatrix(const DenseMatrix&);
@@ -46,6 +47,9 @@ public:
     virtual void print();
 
     MatrixRow operator[](int r);
+    // Persistent representation...
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
 
     void invert();
     void mult(double s);

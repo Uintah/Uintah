@@ -45,10 +45,20 @@ clString Matrix::getType()
 	return ("symsparse");
     else if (rep==dense)
 	return ("dense");
+    else if (rep==sparse)
+	return ("sparse");
     else
 	return ("unknown");
 }
-	
+
+SparseRowMatrix* Matrix::getSparseRow()
+{
+    if (rep==sparse)
+	return (SparseRowMatrix*)this;
+    else
+	return 0;
+}
+
 SymSparseRowMatrix* Matrix::getSymSparseRow()
 {
     if (rep==symsparse)
