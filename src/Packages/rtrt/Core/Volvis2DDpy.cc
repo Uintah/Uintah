@@ -19,6 +19,7 @@ using namespace SCIRun;
 
 
 // creates the background texture
+// template<class T>
 void
 Volvis2DDpy::createBGText( float vmin, float vmax, float gmin, float gmax ) {
   int i, j;
@@ -26,13 +27,13 @@ Volvis2DDpy::createBGText( float vmin, float vmax, float gmin, float gmax ) {
   // creates volume-data scatter plot
   for( int n = 0; n < volumes.size(); n++ ) {
     // declare/initialize histogram array
-    float hist[textureHeight*2][textureWidth*2];
+    GLfloat hist[textureHeight*2][textureWidth*2];
     for( int y = 0; y < textureHeight; y++ )
       for( int x = 0; x < textureWidth; x++ )
 	hist[y][x] = 0.0f;
     
     // create histogram scatter plot
-    float data_max = 0.0f;
+    float data_max = 0;
     float g_textureFactor = textureHeight/(gmax-gmin);
     float v_textureFactor = textureWidth/(vmax-vmin);
     for( int z = 0; z < volumes[n]->nz; z++ )
@@ -76,6 +77,7 @@ Volvis2DDpy::createBGText( float vmin, float vmax, float gmin, float gmax ) {
 
 
 // makes transfer function invisible (transparent)
+// template<class T>
 void
 Volvis2DDpy::loadCleanTexture( void ) {
   for( int i = 0; i < textureHeight; i++ )
@@ -103,6 +105,7 @@ Volvis2DDpy::loadCleanTexture( void ) {
 
 
 // draws the background texture
+// template<class T>
 void
 Volvis2DDpy::drawBackground( void ) {
   glEnable( GL_TEXTURE_2D );
@@ -111,10 +114,10 @@ Volvis2DDpy::drawBackground( void ) {
   glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, 
 		textureHeight, 0, GL_RGBA, GL_FLOAT, bgTextImage );
   glBegin( GL_QUADS );        // maps the histogram onto worldspace
-  glTexCoord2f( 0.0, 0.0 );	glVertex2i( 5, 55 );
-  glTexCoord2f( 0.0, 1.0 );	glVertex2i( 5, 295 );
-  glTexCoord2f( 1.0, 1.0 );	glVertex2i( 495, 295 );
-  glTexCoord2f( 1.0, 0.0 );	glVertex2i( 495, 55 );
+  glTexCoord2f( 0.0, 0.0 );	glVertex2f( 5.0, 55.0 );
+  glTexCoord2f( 0.0, 1.0 );	glVertex2f( 5.0, 295.0 );
+  glTexCoord2f( 1.0, 1.0 );	glVertex2f( 495.0, 295.0 );
+  glTexCoord2f( 1.0, 0.0 );	glVertex2f( 495.0, 55.0 );
   glEnd();
   glEnable( GL_BLEND );
   glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
@@ -123,10 +126,10 @@ Volvis2DDpy::drawBackground( void ) {
   glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, 
 		textureHeight, 0, GL_RGBA, GL_FLOAT, transTexture1 );
   glBegin( GL_QUADS );        // blends transfer functions onto histogram
-  glTexCoord2f( 0.0, 0.0 );	glVertex2i( 5, 55 );
-  glTexCoord2f( 0.0, 1.0 );	glVertex2i( 5, 295 );
-  glTexCoord2f( 1.0, 1.0 );	glVertex2i( 495, 295 );
-  glTexCoord2f( 1.0, 0.0 );	glVertex2i( 495, 55 );
+  glTexCoord2f( 0.0, 0.0 );	glVertex2f( 5.0, 55.0 );
+  glTexCoord2f( 0.0, 1.0 );	glVertex2f( 5.0, 295.0 );
+  glTexCoord2f( 1.0, 1.0 );	glVertex2f( 495.0, 295.0 );
+  glTexCoord2f( 1.0, 0.0 );	glVertex2f( 495.0, 55.0 );
   glEnd();
   glDisable( GL_BLEND );
   glDisable( GL_TEXTURE_2D );
@@ -139,6 +142,7 @@ Volvis2DDpy::drawBackground( void ) {
 
 
 // adds a new widget to the end of the vector
+// template<class T>
 void
 Volvis2DDpy::addWidget( int x, int y ) {
   float color[3] = {0.0,0.6,0.85};
@@ -154,6 +158,7 @@ Volvis2DDpy::addWidget( int x, int y ) {
 
 
 // cycles through widget types: tri->rect(ellipse)->rect(1d)->rect("rainbow")->tri...
+// template<class T>
 void
 Volvis2DDpy::cycleWidgets( int type ) {
   int switchFlag;
@@ -176,20 +181,20 @@ Volvis2DDpy::cycleWidgets( int type ) {
   widgets.pop_back();
   switch( (++type)%4 ) {
   case 0:
-    widgets.push_back( new TriWidget( left+width/2, width, top-55, top-height, color,
-				      alpha, opac_x, opac_y, temp, switchFlag ) );
+    widgets.push_back(new TriWidget(left+width/2,width,top-55,top-height,color,
+				    alpha,opac_x,opac_y,temp,switchFlag));
     break;
   case 1:   // elliptical
-    widgets.push_back( new RectWidget( left, top, width, top-height, color, alpha, 
-				       1, opac_x, opac_y, temp, switchFlag ) );
+    widgets.push_back(new RectWidget(left,top,width,top-height,color,alpha, 
+				     1,opac_x,opac_y,temp,switchFlag));
     break;
   case 2:   // one-dimensional
-    widgets.push_back( new RectWidget( left, top, width, height, color, alpha, 
-				       2, opac_x, opac_y, temp, switchFlag ) );
+    widgets.push_back(new RectWidget(left,top,width,height,color,alpha, 
+				     2,opac_x,opac_y,temp,switchFlag));
     break;
   case 3:   // rainbow
-    widgets.push_back( new RectWidget( left, top, width, height, color, alpha,
-				       3, opac_x, opac_y, temp, switchFlag ) );
+    widgets.push_back(new RectWidget(left,top,width,height,color,alpha,
+				     3,opac_x,opac_y,temp,switchFlag));
   } // switch()
   redraw = true;
 } // cycleWidgets()
@@ -197,6 +202,7 @@ Volvis2DDpy::cycleWidgets( int type ) {
 
 
 // draws all widgets in widgets vector
+// template<class T>
 void
 Volvis2DDpy::drawWidgets( GLenum mode ) {
   int count = 0;
@@ -209,6 +215,7 @@ Volvis2DDpy::drawWidgets( GLenum mode ) {
 
 
 // paints widget textures onto the background
+// template<class T>
 void
 Volvis2DDpy::bindWidgetTextures( void ) {
   for( int i = 0; i < widgets.size(); i++ )
@@ -219,6 +226,7 @@ Volvis2DDpy::bindWidgetTextures( void ) {
 
 
 // determines whether a pixel is inside of a widget
+// template<class T>
 bool
 Volvis2DDpy::insideAnyWidget( int x, int y ) {
   for( int i = (int)(widgets.size()-1); i >= 0; i-- )
@@ -233,6 +241,7 @@ Volvis2DDpy::insideAnyWidget( int x, int y ) {
 
 
 // moves user-selected widget to end of widgets vector to be drawn last ("on top")
+// template<class T>
 void
 Volvis2DDpy::prioritizeWidgets( void ) {
   if ( pickedIndex < 0 )  // if no widget was selected
@@ -248,6 +257,7 @@ Volvis2DDpy::prioritizeWidgets( void ) {
 
 
 // retrieves information about picked widgets, determines which widget was picked
+// template<class T>
 void
 Volvis2DDpy::processHits( GLint hits, GLuint buffer[] ) {
   GLuint *ptr;
@@ -262,6 +272,7 @@ Volvis2DDpy::processHits( GLint hits, GLuint buffer[] ) {
 
 
 // determines which widget the user picked
+// template<class T>
 void
 Volvis2DDpy::pickShape( int x, int y ) {
   old_x = x;   // updates old_x
@@ -297,11 +308,9 @@ Volvis2DDpy::pickShape( int x, int y ) {
 
 
 // Called at the start of run.
+// template<class T>
 void
 Volvis2DDpy::init() {
-  // clamps ridiculously high gradient magnitudes
-  gmax = min( gmax, MAXFLOAT );
-  vmax = min( vmax, MAXFLOAT );
   selected_vmin = current_vmin = vmin;
   selected_vmax = current_vmax = vmax;
   selected_gmin = current_gmin = gmin;
@@ -342,6 +351,7 @@ Volvis2DDpy::init() {
 
 
 // Called whenever the window needs to be redrawn
+// template<class T>
 void
 Volvis2DDpy::display() {
   glClear( GL_COLOR_BUFFER_BIT );
@@ -389,6 +399,7 @@ Volvis2DDpy::display() {
 
 // Called when the window is resized.  Note: xres and yres will not be
 // updated by the event handler.  That's what this function is for.
+// template<class T>
 void
 Volvis2DDpy::resize(const int width, const int height) {
   x_pixel_width = (float)width/500.0;
@@ -405,6 +416,7 @@ Volvis2DDpy::resize(const int width, const int height) {
 
 
 // adjusts the ray sample interval to create a more/less precise rendered volume
+// template<class T>
 void
 Volvis2DDpy::adjustRaySize( unsigned long key ) {
   switch( key ) {
@@ -424,6 +436,7 @@ Volvis2DDpy::adjustRaySize( unsigned long key ) {
 
 // Key is pressed/released.  Use the XK_xxx constants to determine
 // which key was pressed/released
+// template<class T>
 void
 Volvis2DDpy::key_pressed(unsigned long key) {
   switch (key) {
@@ -438,8 +451,8 @@ Volvis2DDpy::key_pressed(unsigned long key) {
     hist_adjust = !hist_adjust;
     redraw = true;
     break;
-  case XK_c:
-  case XK_C:
+  case XK_b:
+  case XK_B:
     current_vmin = selected_vmin;
     current_vmax = selected_vmax;
     current_gmin = selected_gmin;
@@ -493,6 +506,16 @@ Volvis2DDpy::key_pressed(unsigned long key) {
     else
       saveUIState( key );
     break;
+  case XK_c:
+  case XK_C:
+    render_mode = CLEAN;
+    break;
+  case XK_f:
+    render_mode = FAST;
+    break;
+  case XK_F:
+    render_mode = SUPERFAST;
+    break;
   } // switch()
 } // key_pressed()
 
@@ -501,22 +524,10 @@ Volvis2DDpy::key_pressed(unsigned long key) {
 // These handle mouse button events.  button indicates which button.
 // x and y are the location measured from the upper left corner of the
 // window.
+// template<class T>
 void
 Volvis2DDpy::button_pressed(MouseButton button, const int x, const int y) {
   if( hist_adjust ) {
-//      selected_vmin = (float)x/x_pixel_width-5.0f;
-//      if( selected_vmin < 0.0f )
-//        selected_vmin = 0.0f;
-//      else if( selected_vmin > 490.0f )
-//        selected_vmin = 490.0f;
-//      selected_vmin *= (current_vmax-current_vmin)/490.0f;
-
-//      selected_gmin = (500.0f-(float)y)/y_pixel_width-255.0f;
-//      if( selected_gmin < 0.0f )
-//        selected_gmin = 0.0f;
-//      else if( selected_gmin > 240.0f )
-//        selected_gmin = 240.0f;
-//      selected_gmin *= (current_gmax-current_gmin)/240.0f;
     float fx = ((float)x/x_pixel_width-5.0f)/490.0f;
     selected_vmin = fx*(current_vmax-current_vmin)+current_vmin;
     float fy = ((300.0f-(float)y)/y_pixel_width-55.0f)/240.0f;
@@ -575,25 +586,10 @@ Volvis2DDpy::button_pressed(MouseButton button, const int x, const int y) {
 
 
 
+// template<class T>
 void
 Volvis2DDpy::button_released(MouseButton button, const int x, const int y) {
   if( hist_adjust ) {
-//      float hist_x = (float)x/x_pixel_width-5.0f;
-//      float hist_y = (500.0f-(float)y)/y_pixel_width-255.0f;
-
-//      if( hist_x < 0.0f )
-//        hist_x = 0.0f;
-//      else if( hist_x > 490.0f )
-//        hist_x = 490.0f;
-
-//      if( hist_y < 0.0f )
-//        hist_y = 0.0f;
-//      else if( hist_y > 240.0f )
-//        hist_y = 240.0f;
-
-//      hist_x *= (current_vmax-current_vmin)/490.0f;
-//      hist_y *= (current_gmax-current_gmin)/240.0f;
-
     float hist_x = ((float)x/x_pixel_width-5.0f)/490.0f;
     float hist_y = ((300.0f-(float)y)/y_pixel_width-55.0f)/240.0f;
 
@@ -637,13 +633,10 @@ Volvis2DDpy::button_released(MouseButton button, const int x, const int y) {
 
 
 
+// template<class T>
 void
 Volvis2DDpy::button_motion(MouseButton button, const int x, const int y) {
   if( hist_adjust ) {
-//      selected_vmax = (((float)x/x_pixel_width-5.0f)*
-//  		     (current_vmax-current_vmin))/490.0f;
-//      selected_gmax = (((500.0f-(float)y)/y_pixel_width-255.0f)*
-//  		     (current_gmax-current_gmin))/240.0f;
     float fx = ((float)x/x_pixel_width-5.0f)/490.0f;
     selected_vmax = fx*(current_vmax-current_vmin)+current_vmin;
     float fy = ((300.0f-(float)y)/y_pixel_width-55.0f)/240.0f;
@@ -685,6 +678,7 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y) {
 
 
 // adjusts the master alpha control located below the histogram scatter plot
+// template<class T>
 void
 Volvis2DDpy::adjustMasterAlpha( float dx ) {
   if( !(m_alpha_slider->left + dx < m_alpha_bar->left || 
@@ -699,8 +693,9 @@ Volvis2DDpy::adjustMasterAlpha( float dx ) {
 
 
 // attaches a new volume to this display
+// template<class T>
 void
-Volvis2DDpy::attach( VolumeVis2D* volume ) {
+Volvis2DDpy::attach( VolumeVis2D *volume ) {
   volumes.push_back(volume);
 
   // this needs to be done here, because we can't guarantee
@@ -716,7 +711,34 @@ Volvis2DDpy::attach( VolumeVis2D* volume ) {
 
 
 
+// template<class T>
+bool
+Volvis2DDpy::skip_alpha( Voxel2D<float> v1, Voxel2D<float> v2,
+			 Voxel2D<float> v3, Voxel2D<float> v4 ) {
+  int x_index = (int)((v1.v()-current_vmin)*text_x_convert);
+  int y_index = (int)((v1.g()-current_gmin)*text_y_convert);
+  if( transTexture1->textArray[y_index][x_index][3] == 0.0f ) {
+    x_index = (int)((v2.v()-current_vmin)*text_x_convert);
+    y_index = (int)((v2.g()-current_gmin)*text_y_convert);
+    if( transTexture1->textArray[y_index][x_index][3] == 0.0f ) {
+      x_index = (int)((v3.v()-current_vmin)*text_x_convert);
+      y_index = (int)((v3.g()-current_gmin)*text_y_convert);
+      if( transTexture1->textArray[y_index][x_index][3] == 0.0f ) {
+	x_index = (int)((v4.v()-current_vmin)*text_x_convert);
+	y_index = (int)((v4.g()-current_gmin)*text_y_convert);
+	if( transTexture1->textArray[y_index][x_index][3] == 0.0f ) {
+	  return true;
+	}
+      }
+    }
+  }
+  return false;
+}
+
+
+
 // retrieves RGBA values from a voxel
+// template<class T>
 void
 Volvis2DDpy::lookup( Voxel2D<float> voxel, Color &color, float &alpha ) {
   if( voxel.g() < current_gmax && voxel.v() < current_vmax &&
@@ -741,6 +763,7 @@ Volvis2DDpy::lookup( Voxel2D<float> voxel, Color &color, float &alpha ) {
 
 
 // saves widget information so that it can later be restored
+// template<class T>
 void
 Volvis2DDpy::saveUIState( unsigned long key ) {
   char *file;
@@ -876,6 +899,7 @@ Volvis2DDpy::saveUIState( unsigned long key ) {
 
 
 // restores previously saved widget information
+// template<class T>
 void
 Volvis2DDpy::loadUIState( unsigned long key ) {
   char *file;
@@ -934,7 +958,8 @@ Volvis2DDpy::loadUIState( unsigned long key ) {
   string token;
   infile >> token;
   if( token == "HistogramParameters:" ) {
-    float vmn, vmx, gmn, gmx;
+    float vmn, vmx;
+    float gmn, gmx;
     infile >> vmn >> vmx >> gmn >> gmx;
     createBGText( vmn, vmx, gmn, gmx );
     current_vmin = selected_vmin = vmn;
@@ -1074,10 +1099,12 @@ Volvis2DDpy::loadUIState( unsigned long key ) {
 
 
 // sets window res. and initializes textures before any other calls are made
+// template<class T>
 Volvis2DDpy::Volvis2DDpy( float t_inc ):DpyBase("Volvis2DDpy"),
 					t_inc(t_inc), vmin(MAXFLOAT),
 					vmax(-MAXFLOAT), gmin(MAXFLOAT),
 					gmax(-MAXFLOAT) {
+  render_mode = CLEAN;
   hist_adjust = false;
   master_alpha = 1.0f;
   m_alpha_adjusting = false;
@@ -1090,6 +1117,7 @@ Volvis2DDpy::Volvis2DDpy( float t_inc ):DpyBase("Volvis2DDpy"),
   set_resolution( 500, 300 );
 } // Volvis2DDpy()
 
+// template<class T>
 void Volvis2DDpy::animate(bool &/*changed*/) {
   
 }
