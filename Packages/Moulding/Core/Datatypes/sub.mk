@@ -5,7 +5,7 @@
 # if you want to edit this file by hand, see the "Create A New Core/CCA/Component"
 # documentation on how to do it correctly.
 
-include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
+include $(SRCTOP_ABS)/scripts/smallso_prologue.mk
 
 SRCDIR   := Packages/Moulding/Core/Datatypes
 
@@ -15,5 +15,5 @@ SRCS     += \
 PSELIBS :=
 LIBS :=
 
-include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk
+include $(SRCTOP_ABS)/scripts/smallso_epilogue.mk
 
