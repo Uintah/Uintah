@@ -82,14 +82,10 @@ void SimpleRxn::problemSetup(GridP&, SimulationStateP& in_state,
   d_matl_set->addAll(m);
   d_matl_set->addReference();
 
-  // determine the specific heat of that matl.
-  Material* matl = sharedState->getMaterial( m[0] );
-  ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-  if (ice_matl){
-    d_cp = ice_matl->getSpecificHeat();
-  }   
   //__________________________________
   // - create Label names
+  // - Let ICE know that this model computes the 
+  //   thermoTransportProperties.
   // - register the scalar to be transported
   d_scalar = new Scalar();
   d_scalar->index = 0;
@@ -101,7 +97,8 @@ void SimpleRxn::problemSetup(GridP&, SimulationStateP& in_state,
   d_scalar->scalar_source_CCLabel = 
                                  VarLabel::create("scalar-f_src",  td_CCdouble);
 
-
+  d_modelComputesThermoTransportProps = true;
+  
   setup->registerTransportedVariable(d_matl_set->getSubset(0),
                                      d_scalar->scalar_CCLabel,
                                      d_scalar->scalar_source_CCLabel);  
@@ -117,20 +114,33 @@ void SimpleRxn::problemSetup(GridP&, SimulationStateP& in_state,
    }
     
   const_ps->getWithDefault("f_stoichometric",d_scalar->f_stoic,    -9);         
-  const_ps->getWithDefault("diffusivity",    d_scalar->diff_coeff, -9);       
+
+  const_ps->getWithDefault("rho_air",          d_rho_air,         -9);
+  const_ps->getWithDefault("rho_fuel",         d_rho_fuel,        -9);
+  const_ps->getWithDefault("cv_air",           d_cv_air,          -9);
+  const_ps->getWithDefault("cv_fuel",          d_cv_fuel,         -9);
+  const_ps->getWithDefault("R_air",            d_R_air,           -9);
+  const_ps->getWithDefault("R_fuel",           d_R_fuel,          -9);
+  const_ps->getWithDefault("thermalCond_air",  d_thermalCond_air,  0);
+  const_ps->getWithDefault("thermalCond_fuel", d_thermalCond_fuel, 0);
+  const_ps->getWithDefault("viscosity_air",    d_viscosity_air,    0);
+  const_ps->getWithDefault("viscosity_fuel",   d_viscosity_fuel,   0);
+  const_ps->getWithDefault("diffusivity",      d_scalar->diff_coeff, -9);       
   const_ps->getWithDefault("initialize_diffusion_knob",       
                             d_scalar->initialize_diffusion_knob,   0);
-  const_ps->getWithDefault("rho_air",  d_rho_air,  -9);
-  const_ps->getWithDefault("rho_fuel", d_rho_fuel, -9);   
   
-  if( d_scalar->f_stoic == -9 || d_rho_air == -9 ||
-      d_rho_fuel == -9  ) {
+  if( d_scalar->f_stoic == -9 || 
+      d_rho_air   == -9  || d_rho_fuel == -9 ||    
+      d_cv_air    == -9  || d_cv_fuel  == -9 ||  
+      d_R_air     == -9  || d_R_fuel   == -9  ) {
     ostringstream warn;
     warn << " ERROR SimpleRxn: Input variable(s) not specified \n" 
          << "\n f_stoichometric  "<< d_scalar->f_stoic 
          << "\n diffusivity      "<< d_scalar->diff_coeff
          << "\n rho_air          "<< d_rho_air
-         << "\n rho_fuel         "<< d_rho_fuel<<endl;
+         << "\n rho_fuel         "<< d_rho_fuel
+         << "\n R_fuel           "<< d_R_fuel
+         << "\n R_air            "<< d_R_air<<endl;
     throw ProblemSetupException(warn.str());
   } 
 
@@ -165,6 +175,13 @@ void SimpleRxn::scheduleInitialize(SchedulerP& sched,
 {
   cout_doing << "SIMPLERXN::scheduleInitialize " << endl;
   Task* t = scinew Task("SimpleRxn::initialize", this, &SimpleRxn::initialize);
+  
+  t->modifies(lb->sp_vol_CCLabel);
+  t->modifies(lb->rho_CCLabel);
+  t->modifies(lb->specific_heatLabel);
+  t->modifies(lb->gammaLabel);
+  t->modifies(lb->thermalCondLabel);
+  t->modifies(lb->viscosityLabel);
   t->computes(d_scalar->scalar_CCLabel);
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -180,10 +197,17 @@ void SimpleRxn::initialize(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     int indx = d_matl->getDWIndex();
-    CCVariable<double>  f;
-    new_dw->allocateAndPut(f, d_scalar->scalar_CCLabel, indx, patch);
     
-    ///__________________________________
+    CCVariable<double>  f, cv, gamma, thermalCond, viscosity, rho_CC, sp_vol;
+    new_dw->allocateAndPut(f, d_scalar->scalar_CCLabel, indx, patch);
+    new_dw->getModifiable(rho_CC,      lb->rho_CCLabel,       indx,patch);
+    new_dw->getModifiable(sp_vol,      lb->sp_vol_CCLabel,    indx,patch);
+    new_dw->getModifiable(gamma,       lb->gammaLabel,        indx,patch);
+    new_dw->getModifiable(cv,          lb->specific_heatLabel,indx,patch);
+    new_dw->getModifiable(thermalCond, lb->thermalCondLabel,  indx,patch);
+    new_dw->getModifiable(viscosity,   lb->viscosityLabel,    indx,patch);
+    
+    //__________________________________
     //  initialize the scalar field in a region
     f.initialize(0);
 
@@ -197,6 +221,16 @@ void SimpleRxn::initialize(const ProcessorGroup*,
         Point p = patch->cellPosition(c);            
         if(region->piece->inside(p)) {
           f[c] = region->initialScalar;
+
+          double oneMinus_f = 1.0 - f[c];       
+          cv[c]          = f[c] * d_cv_fuel          + oneMinus_f*d_cv_air;          
+          viscosity[c]   = f[c] * d_viscosity_fuel   + oneMinus_f*d_viscosity_air;   
+          thermalCond[c] = f[c] * d_thermalCond_fuel + oneMinus_f*d_thermalCond_air;
+          double R_mix   = f[c] * d_R_fuel           + oneMinus_f*d_R_air;
+          gamma[c]       = R_mix/cv[c]  + 1.0;
+          
+          rho_CC[c]      = d_rho_fuel * d_rho_air /( f[c] * d_rho_air + oneMinus_f * d_rho_fuel);
+          sp_vol[c]      = 1.0/rho_CC[c];
         }
       } // Over cells
     } // regions
@@ -230,24 +264,80 @@ void SimpleRxn::scheduleModifyThermoTransportProperties(SchedulerP& sched,
 
   Task* t = scinew Task("SimpleRxn::modifyThermoTransportProperties", 
                    this,&SimpleRxn::modifyThermoTransportProperties);
+                   
+  t->requires(Task::OldDW, d_scalar->scalar_CCLabel, Ghost::None,0);  
+  t->modifies(lb->specific_heatLabel);
+  t->modifies(lb->gammaLabel);
+  t->modifies(lb->thermalCondLabel);
+  t->modifies(lb->viscosityLabel);
   t->computes(d_scalar->diffusionCoefLabel);
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 //______________________________________________________________________
+// Purpose:  Compute the thermo and transport properties.  This gets
+//           called at the top of the timestep.
+// TO DO:   FIGURE OUT A WAY TO ONLY COMPUTE CV ONCE
 void SimpleRxn::modifyThermoTransportProperties(const ProcessorGroup*, 
                                                 const PatchSubset* patches,
                                                 const MaterialSubset*,
-                                                DataWarehouse*,
+                                                DataWarehouse* old_dw,
                                                 DataWarehouse* new_dw)
 { 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing modifyThermoTransportProperties on patch "<<patch->getID()<< "\t SIMPLERXN" << endl;
+   
     int indx = d_matl->getDWIndex();
-    CCVariable<double> diffusionCoeff;
+    CCVariable<double> diffusionCoeff, gamma, cv, thermalCond, viscosity;
+    constCCVariable<double> f_old;
+    
     new_dw->allocateAndPut(diffusionCoeff, 
                            d_scalar->diffusionCoefLabel,indx, patch);  
+    
+    new_dw->getModifiable(gamma,       lb->gammaLabel,        indx,patch);
+    new_dw->getModifiable(cv,          lb->specific_heatLabel,indx,patch);
+    new_dw->getModifiable(thermalCond, lb->thermalCondLabel,  indx,patch);
+    new_dw->getModifiable(viscosity,   lb->viscosityLabel,    indx,patch);
+    
+    old_dw->get(f_old,  d_scalar->scalar_CCLabel,  indx, patch, Ghost::None,0);
+    
+    //__________________________________
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+      double  f = f_old[c];
+      double oneMinus_f = 1.0 - f;       
+      cv[c]          = f * d_cv_fuel          + oneMinus_f*d_cv_air;          
+      viscosity[c]   = f * d_viscosity_fuel   + oneMinus_f*d_viscosity_air;   
+      thermalCond[c] = f * d_thermalCond_fuel + oneMinus_f*d_thermalCond_air; 
+      double R_mix   = f * d_R_fuel           + oneMinus_f*d_R_air;
+      gamma[c]       = R_mix/cv[c]  + 1.0;
+    }     
     diffusionCoeff.initialize(d_scalar->diff_coeff);
+  }
+} 
+
+//______________________________________________________________________
+// Purpose:  Compute the specific heat at time.  This gets called immediately
+//           after (f) is advected
+//  TO DO:  FIGURE OUT A WAY TO ONLY COMPUTE CV ONCE
+void SimpleRxn::computeSpecificHeat(CCVariable<double>& cv_new,
+                                    const Patch* patch,
+                                    DataWarehouse* new_dw,
+                                    const int indx)
+{ 
+  cout_doing << "Doing computeSpecificHeat on patch "<<patch->getID()<< "\t SIMPLERXN" << endl;
+
+  int test_indx = d_matl->getDWIndex();
+  //__________________________________
+  //  Compute cv for only one matl.
+  if (test_indx == indx) {
+    constCCVariable<double> f;
+    new_dw->get(f,  d_scalar->scalar_CCLabel,  indx, patch, Ghost::None,0);
+
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+      cv_new[c]  = f[c] * d_cv_fuel + (1.0 - f[c])*d_cv_air;
+    }
   }
 } 
 
@@ -341,7 +431,6 @@ void SimpleRxn::momentumAndEnergyExchange(const ProcessorGroup*,
                                                       
     new_dw->getModifiable(mom_src,    mi->momentum_source_CCLabel,indx,patch);
     new_dw->getModifiable(eng_src,    mi->energy_source_CCLabel,  indx,patch);
-
 
     //__________________________________
     // rho=1/(f/rho_fuel+(1-f)/rho_air)
