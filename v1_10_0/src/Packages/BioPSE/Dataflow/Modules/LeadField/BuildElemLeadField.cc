@@ -154,12 +154,8 @@ void BuildElemLeadField::execute() {
     return;
   }
 
-  if (leadfield_.get_rep() && 
-      mesh_in->generation == last_mesh_generation_ &&
-      interp_in->generation == last_interp_generation_) {
-    leadfield_oport_->send(leadfield_);
-    return;
-  }
+  // can't shortcut return, downstream from the send intermediate may be 
+  // waiting for output, so don't hang.
   last_mesh_generation_ = mesh_in->generation;
   last_interp_generation_ = interp_in->generation;
 
@@ -193,10 +189,12 @@ void BuildElemLeadField::execute() {
       (*rhs)[idx]-=val;
       ++iter;
     }
-
-    if (counter<(nelecs-2)) rhs_oport_->send_intermediate(rhs);
-    else rhs_oport_->send(rhs);
     
+    if (counter<(nelecs-2)) {
+      rhs_oport_->send_intermediate(rhs);
+    } else {
+      rhs_oport_->send(rhs);
+    }
     // read sol'n
     MatrixHandle sol_in;
     if (!sol_iport_->get(sol_in)) {
