@@ -81,7 +81,7 @@ MatrixIEPlugin::MatrixIEPlugin(const string& pname,
 
   string tmppname = pluginname_;
   int counter = 2;
-  while (1)
+  for (;;)
   {
     map<string, MatrixIEPlugin *>::iterator loc = matrix_plugin_table->find(tmppname);
     if (loc == matrix_plugin_table->end())

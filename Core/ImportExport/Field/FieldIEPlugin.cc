@@ -124,7 +124,7 @@ FieldIEPlugin::FieldIEPlugin(const string& pname,
 
   string tmppname = pluginname;
   int counter = 2;
-  while (1)
+  for (;;)
   {
     map<string, FieldIEPlugin *>::iterator loc = field_plugin_table->find(tmppname);
     if (loc == field_plugin_table->end())
