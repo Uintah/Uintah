@@ -29,7 +29,7 @@ using namespace rtrt;
 // // initialize the static member type_id
 // PersistentTypeID VolumeVis2D::type_id("VolumeVis2D", "Object", vv_maker);
 
-VolumeVis2D::VolumeVis2D(BrickArray3<Voxel2D<float>>& _data,
+VolumeVis2D::VolumeVis2D(BrickArray3<Voxel2D<float> >& _data,
 			 Voxel2D<float> data_min, Voxel2D<float> data_max,
 			 int nx, int ny, int nz,
 			 Point min, Point max,
@@ -43,13 +43,13 @@ VolumeVis2D::VolumeVis2D(BrickArray3<Voxel2D<float>>& _data,
 {
   if (data_max.v() < data_min.v()) {
     float temp = data_max.v();
-    data_max.v() = data_min.v();
-    data_min.v() = temp;
+    data_max.vref() = data_min.v();
+    data_min.vref() = temp;
   }
   if (data_max.g() < data_min.g()) {
     float temp = data_max.g();
-    data_max.g() = data_min.g();
-    data_min.g() = temp;
+    data_max.gref() = data_min.g();
+    data_min.gref() = temp;
   }
 
   cerr << "VolumeVis2D::data_min = "<<data_min<<", data_max = "<<data_max<<"\n";
@@ -400,7 +400,7 @@ void VolumeVis2D::animate(double, bool& changed)
   dpy->animate(changed);
 }
 
-const int VVIS_VERSION = 1;
+const int VVIS2D_VERSION = 1;
 
 void 
 VolumeVis2D::io(SCIRun::Piostream &str)
