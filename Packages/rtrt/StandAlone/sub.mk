@@ -27,7 +27,7 @@ else
 	Core/Exceptions
 
 endif
-LIBS := -L/usr/sci/local/lib64 -loogl $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBS) $(X11_LIBS) -lXi -lXmu $(FASTM_LIBRARY) -lm $(THREAD_LIBS) $(PERFEX_LIBRARY) $(SOUNDLIBS)
+LIBS := $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBS) $(X11_LIBS) -lXi -lXmu $(FASTM_LIBRARY) -lm $(THREAD_LIBS) $(PERFEX_LIBRARY) $(SOUNDLIBS)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -77,48 +77,6 @@ else
 
 endif
 LIBS := $(GL_LIBS) $(FASTM_LIBRARY) -lm $(THREAD_LIBS) $(PERFEX_LIBRARY)
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-# mkbc
-SRCDIR := Packages/rtrt/StandAlone
-
-SRCS := $(SRCDIR)/mkbc.cc
-
-PROGRAM := Packages/rtrt/StandAlone/mkbc
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Packages/rtrt
-else
-
-  PSELIBS := \
-	Packages/rtrt/Core \
-	Core/Persistent \
-	Core/Thread \
-	Core/Exceptions
-
-endif
-LIBS := $(GL_LIBS) -lfastm -lm -lfetchop -lperfex
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
-# test2
-SRCDIR := Packages/rtrt/StandAlone
-
-SRCS := $(SRCDIR)/test2.cc
-
-PROGRAM := Packages/rtrt/StandAlone/test2
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Packages/rtrt
-else
-
-  PSELIBS := \
-	Packages/rtrt/Core \
-	Core/Thread \
-	Core/Persistent \
-	Core/Exceptions
-
-endif
-LIBS := $(GL_LIBS) $(FASTM_LIBRARY) -lm -lXmu $(THREAD_LIBS) $(PERFEX_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
