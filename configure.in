@@ -734,7 +734,7 @@ if test -z "$XML_LIB_DIR"; then
   exit 1
 fi
 
-if (test $xerces -a
+if (test $xerces &&
     test -d "$xerces/include/util" &&
     test -d "$xerces/include/sax" &&
     test -d "$xerces/include/dom" &&
