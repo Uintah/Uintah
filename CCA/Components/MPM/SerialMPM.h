@@ -66,7 +66,14 @@ public:
 	 
   virtual void scheduleInitialize(const LevelP& level,
 				  SchedulerP&);
-	 
+
+  virtual void addMaterial(const ProblemSpecP& params,
+                           GridP& grid,
+                           SimulationStateP&);
+
+  virtual void scheduleInitializeAddedMaterial(const LevelP& level,
+                                               SchedulerP&);
+
   void schedulePrintParticleCount(const LevelP& level, 
                                   SchedulerP& sched);
   //////////
@@ -141,6 +148,12 @@ protected:
 				  const MaterialSubset* matls,
 				  DataWarehouse* old_dw,
 				  DataWarehouse* new_dw);
+
+  virtual void actuallyInitializeAddedMaterial(const ProcessorGroup*,
+                                               const PatchSubset* patches,
+                                               const MaterialSubset* matls,
+                                               DataWarehouse* old_dw,
+                                               DataWarehouse* new_dw);
 
   void printParticleCount(const ProcessorGroup*,
 			  const PatchSubset* patches,
@@ -439,6 +452,20 @@ protected:
 					const PatchSet* patches,
 					const MaterialSet* matls);
 
+   void scheduleCheckNeedAddMaterial(SchedulerP&,
+                                     const LevelP& level,
+                                     const MaterialSet*);
+                                                                             
+   void scheduleSetNeedAddMaterialFlag(SchedulerP&,
+                                       const LevelP& level,
+                                       const MaterialSet*);
+
+
+   void setNeedAddMaterialFlag(const ProcessorGroup*,
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse*,
+                               DataWarehouse*);
 
 
   SimulationStateP d_sharedState;
@@ -460,6 +487,7 @@ protected:
   bool             d_fracture;
   bool             d_with_ice;
   bool             d_with_arches;
+  bool             d_canAddMPMMaterial;
   IntegratorType d_integrator;
 
 private:
