@@ -8,10 +8,7 @@
 
 #include <stdlib.h>
 
-class LibMutex;
-
 class MemoryManager {
-    static LibMutex* lock;
     static unsigned long nnew;
     static unsigned long nfillbin;
     static unsigned long snew;
@@ -72,6 +69,7 @@ public:
 				 long& nfillbin_,
 				 long& ndelete_, long& sdelete_,
 				 long& nsbrk_, long& ssbrk_);
+    static void set_locker(void (*)(), void (*)());
 };
 
 #endif

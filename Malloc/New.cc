@@ -42,7 +42,29 @@ static FILE* log_fp;
 static int logging;
 static int lognew=1;
 #endif
-LibMutex* MemoryManager::lock=0;
+
+static int have_locks=0;
+static void (*locker)();
+static void (*unlocker)();
+
+void MemoryManager::set_locker(void (*l)(), void (*u)())
+{
+    locker=l;
+    unlocker=u;
+    have_locks=1;
+}
+
+static inline void lock()
+{
+    if(have_locks)
+	(*locker)();
+}
+
+static inline void unlock()
+{
+    if(have_locks)
+	(*unlocker)();
+}
 
 #define NBITS 28
 
@@ -94,7 +116,6 @@ void MemoryManager::initialize()
     }
     if(n != nbins)error("Bad mismatch!");
     largest_bin=bins[nbins-1].lsize;
-    lock=new LibMutex;
 #ifdef SCI_LOGNEW
     if(lognew){
 	log_fp=fopen("new.log", "w");
@@ -131,7 +152,7 @@ void* MemoryManager::malloc(size_t size)
     bin=m; // Store in global in case the next one is the same size...
     
     // Now lock it up...
-    if(lock)lock->lock();
+    lock();
     nnew++;
     snew+=size;
     last_freed=0;
@@ -153,7 +174,7 @@ void* MemoryManager::malloc(size_t size)
     }
 #endif
     // Safe to unlock now...
-    if(lock)lock->unlock();
+    unlock();
 
     ovr->magic=MAGIC;
     ovr->size=size;
@@ -176,7 +197,7 @@ void MemoryManager::free(void* ptr)
     if(ovr->magic != MAGIC)error("Bad Magic number on free");
 
     // Lock it up...
-    if(lock)lock->lock();
+    lock();
     last_freed=ptr;
     ndelete++;
 #ifdef SCI_LOGNEW
@@ -197,7 +218,7 @@ void MemoryManager::free(void* ptr)
     bins[b].n_inlist++;
     bins[b].n_inuse--;
     bins[b].n_deld++;
-    if(lock)lock->unlock();
+    unlock();
 }
 
 void* malloc(size_t size)
@@ -358,11 +379,11 @@ void MemoryManager::lock_last_freed()
 
 void MemoryManager::unlock_last_freed()
 {
-    lock->lock();
+    lock();
     BinList* binptr=(BinList*)lockedptr;
     binptr->next=bins[lockedbin].first;
     bins[lockedbin].first=binptr;
-    lock->unlock();
+    unlock();
 }
 
 size_t MemoryManager::blocksize(void* ptr)
