@@ -2820,7 +2820,9 @@ BoundaryCondition::mmuVelocityBC(const Patch* patch,
 		    vars->uVelocityCoeff[Arches::AT],
 		    vars->uVelocityCoeff[Arches::AB],
 		    vars->uVelNonlinearSrc, vars->uVelLinearSrc,
-		    vars->cellType, d_mmWallID, ioff, joff, koff);
+		    vars->cellType, 
+		    d_mmWallID, d_flowfieldCellTypeVal,
+		    ioff, joff, koff);
 }
 
 void 
@@ -2836,14 +2838,16 @@ BoundaryCondition::mmvVelocityBC(const Patch* patch,
   int koff = 0;
 
   fort_mmbcvelocity(idxLoU, idxHiU,
-		    vars->vVelocityCoeff[Arches::AE],
-		    vars->vVelocityCoeff[Arches::AW],
 		    vars->vVelocityCoeff[Arches::AN],
 		    vars->vVelocityCoeff[Arches::AS],
 		    vars->vVelocityCoeff[Arches::AT],
 		    vars->vVelocityCoeff[Arches::AB],
+		    vars->vVelocityCoeff[Arches::AE],
+		    vars->vVelocityCoeff[Arches::AW],
 		    vars->vVelNonlinearSrc, vars->vVelLinearSrc,
-		    vars->cellType, d_mmWallID, ioff, joff, koff);
+		    vars->cellType, 
+		    d_mmWallID, d_flowfieldCellTypeVal,
+		    ioff, joff, koff);
 }
 
 void 
@@ -2858,14 +2862,16 @@ BoundaryCondition::mmwVelocityBC( const Patch* patch,
   int koff = 1;
 
   fort_mmbcvelocity(idxLoU, idxHiU,
+		    vars->wVelocityCoeff[Arches::AT],
+		    vars->wVelocityCoeff[Arches::AB],
 		    vars->wVelocityCoeff[Arches::AE],
 		    vars->wVelocityCoeff[Arches::AW],
 		    vars->wVelocityCoeff[Arches::AN],
 		    vars->wVelocityCoeff[Arches::AS],
-		    vars->wVelocityCoeff[Arches::AT],
-		    vars->wVelocityCoeff[Arches::AB],
 		    vars->wVelNonlinearSrc, vars->wVelLinearSrc,
-		    vars->cellType, d_mmWallID, ioff, joff, koff);
+		    vars->cellType, 
+		    d_mmWallID, d_flowfieldCellTypeVal,
+		    ioff, joff, koff);
 }
 
 void 
