@@ -13,6 +13,7 @@
 
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
+#include <Packages/Uintah/Core/Grid/CellIterator.h>
 
 #include <Core/Datatypes/DenseMatrix.h>
 
