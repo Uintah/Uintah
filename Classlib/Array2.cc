@@ -15,6 +15,8 @@
 #include <Classlib/String.h>
 #include <Malloc/Allocator.h>
 
+#include <Tester/RigorousTest.h>
+
 #ifdef __GNUG__
 #pragma interface
 #endif
@@ -29,11 +31,15 @@ Array2<T>::Array2()
 template<class T>
 void Array2<T>::allocate()
 {
-    objs=new T*[dm1];
-    T* p=new T[dm1*dm2];
-    for(int i=0;i<dm1;i++){
-	objs[i]=p;
-	p+=dm2;
+    if(dm1 == 0 || dm2 == 0){
+	objs=0;
+    } else {
+	objs=new T*[dm1];
+	T* p=new T[dm1*dm2];
+	for(int i=0;i<dm1;i++){
+	    objs[i]=p;
+	    p+=dm2;
+	}
     }
 }
 
@@ -76,7 +82,7 @@ Array2<T>::~Array2()
 template<class T>
 void Array2<T>::initialize(const T& t)
 {
-    ASSERT(objs != 0);
+    ASSERT(dm1==0 || dm2==0 || objs != 0);
     for(int i=0;i<dm1;i++){
 	for(int j=0;j<dm2;j++){
 	    objs[i][j]=t;
@@ -128,3 +134,183 @@ Array2<T>& Array2<T>::operator=(const Array2<T> &copy)
       objs[i][j] = copy.objs[i][j];
     return( *this );
 }
+
+
+#include <Classlib/String.h>
+
+
+void Array2<int>::test_rigorous(RigorousTest* __test)
+{
+    for(int x=0;x<=10;x++){
+	for (int y=0;y<=10;y++){
+	    Array2<int> my_array(x,y);
+	    TEST (my_array.dim1()==x);
+	    TEST (my_array.dim2()==y);
+	}
+    }
+
+    Array2<int> array2(0,0);
+    TEST (array2.dim1()==0);
+    TEST (array2.dim2()==0);
+    
+    for(x=0;x<=100;x++){
+	for (int y=0;y<=100;y++){
+	    array2.newsize(x,y);
+	    TEST (array2.dim1()==x);
+	    TEST (array2.dim2()==y);
+	
+	    array2.initialize(x);
+	    
+	    for (int x1=0;x1<x;x1++){
+		for (int y1=0;y1<y;y1++){
+		    TEST(array2(x1,y1)==x);
+		}
+	    }
+	}
+    }
+
+    
+    //for(x=0;x<=100;x++){
+    //	for (int y=0;y<=100;y++){
+    //	    Array2<clString> string_array(x,y);
+    //	    TEST (string_array.dim1()==x);
+    //	    TEST (string_array.dim2()==y);
+    //
+    //	    string_array.initialize("hi there");
+    //	    
+    //	    for (int x1=0;x1<x;x++){
+    //		for (int y1=0;y1<y;y++){
+    //		    TEST (string_array(x1,y1)=="hi there");
+    //		}
+    //	    }
+    //	}
+    //}
+}
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

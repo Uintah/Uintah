@@ -28,15 +28,19 @@ Array3<T>::Array3()
 template<class T>
 void Array3<T>::allocate()
 {
-    objs=scinew T**[dm1];
-    T** p=scinew T*[dm1*dm2];
-    T* pp=scinew T[dm1*dm2*dm3];
-    for(int i=0;i<dm1;i++){
-	objs[i]=p;
-	p+=dm2;
-	for(int j=0;j<dm2;j++){
-	    objs[i][j]=pp;
-	    pp+=dm3;
+    if(dm1 == 0 || dm2 == 0 || dm3 == 0){
+	objs=0;
+    } else {
+	objs=scinew T**[dm1];
+	T** p=scinew T*[dm1*dm2];
+	T* pp=scinew T[dm1*dm2*dm3];
+	for(int i=0;i<dm1;i++){
+	    objs[i]=p;
+	    p+=dm2;
+	    for(int j=0;j<dm2;j++){
+		objs[i][j]=pp;
+		pp+=dm3;
+	    }
 	}
     }
 }
@@ -83,7 +87,7 @@ Array3<T>::~Array3()
 template<class T>
 void Array3<T>::initialize(const T& t)
 {
-    ASSERT(objs != 0);
+    ASSERT(dm1 == 0 || dm2 == 0 || dm3 == 0 || objs != 0);
     for(int i=0;i<dm1;i++){
 	for(int j=0;j<dm2;j++){
 	    for(int k=0;k<dm3;k++){
