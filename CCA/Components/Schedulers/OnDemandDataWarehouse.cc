@@ -11,7 +11,7 @@
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SendState.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/DeniedAccess.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/DependencyException.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/IncorrectAllocation.h>
 #include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
 #include <Packages/Uintah/Core/Grid/UnknownVariable.h>
@@ -1403,17 +1403,13 @@ getGridVar(VariableBase& var, DWDatabase& db,
        // (This will be an issue whenever the taskgraph changes to require
        // more ghost cells from the old datawarehouse).
        bool ignore = d_isInitializationDW && d_finalized;
-       if (show_warnings && !ignore) {
-	 cerr << "Reallocation Warning: Reallocation needed for " << label->getName();
+       if (!ignore) {
+	 ostringstream errmsg;
+	 errmsg << "Reallocation Error: Reallocation needed for " << label->getName();
 	 if (patch)
-	   cerr << " on patch " << patch->getID();
-	 cerr << " for material " << matlIndex;
-	 const Task* currentTask = getCurrentTask();
-	 if (currentTask != 0) {
-	   cerr << " in " << currentTask->getName() << ". " <<endl;
-	 }
-	 else
-	   cerr << ".\n";
+	   errmsg << " on patch " << patch->getID();
+	 errmsg << " for material " << matlIndex;
+	 throw InternalError(errmsg.str().c_str());
        }
      }
      
@@ -1538,13 +1534,7 @@ OnDemandDataWarehouse::checkAllocation(const Variable& var,
 	(string(currentTask->getName()) != "Relocate::relocateParticles")) {
       // throw IncorrectAllocation(label, var.getAllocationLabel());
 
-      if (show_warnings) {
-	cerr << IncorrectAllocation::makeMessage(label,  var.getAllocationLabel());
-	if (currentTask)
-	  cerr << " in " << currentTask->getName() << ".\n";
-	else
-	  cerr << ".\n";
-      }
+      throw IncorrectAllocation(label,  var.getAllocationLabel());
     }
   }
 #endif
@@ -1574,10 +1564,11 @@ inline void OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
       const Task* currentTask = getCurrentTask();
       if (currentTask == 0 ||
 	  (string(currentTask->getName()) != "Relocate::relocateParticles")) {
-	//throw DeniedAccess(label, currentTask, matlIndex, patch, "requires", isFinalized() ? "get from oldDW" : "get from newDW");
-	if (show_warnings) {
-	  cerr << DeniedAccess::makeMessage(label, currentTask, matlIndex, patch, "requires", isFinalized() ? "get from oldDW" : "get from newDW") << endl;
-	}
+	string has = (isFinalized() ? "old" : "new");
+	has += " datawarehouse get";
+	string needs = "task requires";
+	throw DependencyException(currentTask, label, matlIndex, patch,
+				  has, needs);
       }
     }
     else {
@@ -1601,11 +1592,17 @@ OnDemandDataWarehouse::checkPutAccess(const VarLabel* label, int matlIndex,
   
   if (!hasPutAccess(currentTask, label, matlIndex, patch, replace)) {
     if (string(currentTask->getName()) != "Relocate::relocateParticles") {
-      //throw DeniedAccess(label, currentTask, matlIndex, patch,replace ? "modifies" : "computes", replace ? "modify into the datawarehouse" : "put into the datawarehouse");
-      
-      if (show_warnings) {
-	cerr << DeniedAccess::makeMessage(label, currentTask, matlIndex, patch,replace ? "modifies" : "computes", replace ? "modify into the datawarehouse" : "put into the datawarehouse") << endl;
+      string has, needs;
+      if (replace) {
+	has = "datawarehouse modify";
+	needs = "task modifies";
       }
+      else {
+	has = "datawarehouse put";
+	needs = "task computes";
+      }
+      throw DependencyException(currentTask, label, matlIndex, patch,
+				has, needs);
     }
   }
   else {
@@ -1764,22 +1761,24 @@ OnDemandDataWarehouse::checkAccesses(const Task* currentTask,
 	if (find_iter == currentTaskAccesses.end() ||
 	    (*find_iter).second != accessType) {
 	  if (show_warnings) {
-	    cerr << "Task Dependency Warning: " << currentTask->getName() << " was supposed to ";
-	    if (accessType == PutAccess) {
-	      cerr << "put " << label->getName();
-	    }
-	    else if (accessType == GetAccess) {
-	      cerr << "get " << label->getName();
+	    string has, needs;
+	    if (accessType == GetAccess) {
+	      has = "task requires";
 	      if (isFinalized())
-		cerr << " from the old datawarehouse";
+		needs = "get from the old datawarehouse";
+	      else
+		needs = "get from the new datawarehouse";
+	    }
+	    else if (accessType == PutAccess) {
+	      has = "task computes";
+	      needs = "datawarehouse put";
 	    }
 	    else {
-	      cerr << "modify " << label->getName();
+	      has = "task modifies";
+	      needs = "datawarehouse modify";
 	    }
-	    if (patch)
-	      cerr << " on patch " << patch->getID();
-	    cerr << " for material " << matl;
-	    cerr << " but didn't.\n";
+	    throw DependencyException(currentTask, label, matl, patch,
+				      has, needs);
 	  }
 	}
       }
