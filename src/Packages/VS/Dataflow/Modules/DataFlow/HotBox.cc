@@ -374,8 +374,9 @@ HotBox::execute()
   }
   // get bounding box of input field
   inFieldBBox_ = InputFieldHandle_->mesh()->get_bounding_box();
-  Point bmin = inFieldBBox_.min();
-  Point bmax = inFieldBBox_.max();
+  Point bmin, bmax;
+  bmin = inFieldBBox_.min();
+  bmax = inFieldBBox_.max();
   Vector inFieldBBextent = bmax - bmin;
   l2norm_ = inFieldBBextent.length() + 0.001;
 
@@ -639,9 +640,9 @@ HotBox::execute()
 
   // compare the bounding box of the input field
   // with the largest bounding volume of the segmentation
-  cerr << "HotBox::execute(): input field(" << inFieldBBox_.min();
-  cerr << "," << inFieldBBox_.max() << "), extent(" << inFieldBBextent;
-  cerr << ")" << endl;
+  cerr << "HotBox::execute(): input field(";
+  cerr << inFieldBBox_.min() << "," << inFieldBBox_.max();
+  cerr << "), extent(" << inFieldBBextent << ")" << endl;
   cerr << "                  segmentation([" << maxSegmentVol_->get_minX();
   cerr << "," << maxSegmentVol_->get_minY() << ",";
   cerr << maxSegmentVol_->get_minZ();
@@ -2279,6 +2280,7 @@ HotBox::executeProbe() {
                   0, edgestr,
                   0, facestr,
                   1, cellstr);
+  //algo->execute populates nodestr with mesh node index
 
   ScalarFieldInterfaceHandle sfi = 0;
   if ((sfi = InputFieldHandle_->query_scalar_interface(this)).get_rep())
