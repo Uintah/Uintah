@@ -39,12 +39,8 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Util/DynamicLoader.h>
-#ifdef _WIN32
-#include <float.h>
-#define MAXDOUBLE DBL_MAX
-#else
-#include <values.h>
-#endif
+#include <float.h> // for DBL_MAX
+
 
 namespace SCIRun {
 
@@ -151,24 +147,22 @@ SFInterface<F, L>::compute_min_max(double &minout, double &maxout) const
 {
   bool result = false;
 
-  typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
-  mesh->synchronize(Mesh::ALL_ELEMENTS_E);
+  typename F::fdata_type::const_iterator bi, ei;
+  bi = fld_->fdata().begin();
+  ei = fld_->fdata().end();
 
-  typename L::iterator bi, ei;
-  mesh->begin(bi);
-  mesh->end(ei);
-  int index = 0;
+  if (bi != ei)
+  {
+    result = true;
+    minout = DBL_MAX;
+    maxout = -DBL_MAX;
+  }
 
   while (bi != ei)
   {
-    typename F::value_type val;
-    if (fld_->value(val, (typename L::index_type)index))
-    {
-      if (!result || val < minout) minout = val;
-      if (!result || val > maxout) maxout = val;
-      result = true;
-    }
-    ++index;
+    typename F::value_type val = *bi;
+    if (!result || val < minout) minout = val;
+    if (!result || val > maxout) maxout = val;
     ++bi;
   }      
 
@@ -180,7 +174,7 @@ template <class F, class L>
 double
 SFInterface<F, L>::find_closest(double &minout, const Point &p) const
 {
-  double mindist = MAXDOUBLE;
+  double mindist = DBL_MAX;
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
   mesh->synchronize(Mesh::ALL_ELEMENTS_E);
 
@@ -310,28 +304,31 @@ bool
 VFInterface<F, L>::compute_min_max(Vector &minout, Vector &maxout) const
 {
   bool result = false;
+  typename F::fdata_type::const_iterator bi, ei;
+  bi = fld_->fdata().begin();
+  ei = fld_->fdata().end();
 
-  typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
-  mesh->synchronize(Mesh::ALL_ELEMENTS_E);
-
-  typename L::iterator bi, ei;
-  mesh->begin(bi);
-  mesh->end(ei);
+  if (bi != ei)
+  {
+    result = true;
+    minout.x(DBL_MAX);
+    minout.y(DBL_MAX);
+    minout.z(DBL_MAX);
+    maxout.x(-DBL_MAX);
+    maxout.y(-DBL_MAX);
+    maxout.z(-DBL_MAX);
+  }
 
   while (bi != ei)
   {
-    typename F::value_type val;
-    if (fld_->value(val, *bi))
-    {
-      if (!result ||val.x() < minout.x()) minout.x(val.x());
-      if (!result ||val.y() < minout.y()) minout.y(val.y());
-      if (!result ||val.z() < minout.z()) minout.z(val.z());
-
-      if (!result ||val.x() > maxout.x()) maxout.x(val.x());
-      if (!result ||val.y() > maxout.y()) maxout.y(val.y());
-      if (!result ||val.z() > maxout.z()) maxout.z(val.z());
-      result = true;
-    }
+    typename F::value_type val = *bi;
+    if (!result ||val.x() < minout.x()) minout.x(val.x());
+    if (!result ||val.y() < minout.y()) minout.y(val.y());
+    if (!result ||val.z() < minout.z()) minout.z(val.z());
+    
+    if (!result ||val.x() > maxout.x()) maxout.x(val.x());
+    if (!result ||val.y() > maxout.y()) maxout.y(val.y());
+    if (!result ||val.z() > maxout.z()) maxout.z(val.z());
     ++bi;
   }      
 
@@ -343,7 +340,7 @@ template <class F, class L>
 double
 VFInterface<F, L>::find_closest(Vector &minout, const Point &p) const
 {
-  double mindist = MAXDOUBLE;
+  double mindist = DBL_MAX;
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
   mesh->synchronize(Mesh::ALL_ELEMENTS_E);
 
@@ -468,7 +465,7 @@ template <class F, class L>
 double
 TFInterface<F, L>::find_closest(Tensor &minout, const Point &p) const
 {
-  double mindist = MAXDOUBLE;
+  double mindist = DBL_MAX;
   typename F::mesh_handle_type mesh = fld_->get_typed_mesh();
   mesh->synchronize(Mesh::ALL_ELEMENTS_E);
 
