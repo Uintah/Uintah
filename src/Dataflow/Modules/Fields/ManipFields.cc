@@ -9,12 +9,13 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/SField.h>
+#include <Core/Datatypes/Field.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/share/share.h>
 #include <Core/TclInterface/TCLvar.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Dataflow/Network/StrX.h>
+#include <Core/Util/DebugStream.h>
 #include <dlfcn.h>
 
 namespace SCIRun {
