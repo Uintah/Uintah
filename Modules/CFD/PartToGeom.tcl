@@ -24,6 +24,14 @@ itcl_class PartToGeom {
 	expscale $w.time -label "Time:" -orient horizontal \
 		-variable $this-current_time -command "$this-c needexecute"
 	pack $w.time -side top -fill x
+
+	make_labeled_radio $w.geom "Particle Geometry" "$this-c needexecute" \
+		top $this-drawspheres { {Points 0} {Spheres 1} }
+	pack $w.geom -side top -fill x
+
+	expscale $w.radius -label "Radius:" -orient horizontal \
+		-variable $this-radius -command "$this-c needexecute"
+	pack $w.radius -side top -fill x
     }
 }
 
