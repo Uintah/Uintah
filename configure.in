@@ -3102,7 +3102,7 @@ if test -a "$dir/lib/InsightToolkit/ITKConfig.cmake"; then
 
 else
   echo
-  AC_MSG_ERROR(Insight instalation not found.)
+  AC_MSG_RESULT(not found.)
   echo
 fi
 
