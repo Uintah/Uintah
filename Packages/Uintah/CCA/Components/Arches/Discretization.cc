@@ -21,11 +21,9 @@
 #include <Packages/Uintah/Core/Grid/Stencil.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 
-#ifdef Scalar_ENO
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Math/Expon.h>
 #include <Core/Math/MiscMath.h>
-#endif
 
 #include <iostream>
 
