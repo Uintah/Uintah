@@ -805,4 +805,4 @@ CuttingPlane::interpolate(FieldHandle texfld_, const Point& p, double& val)
 }
 
 
-} // End namespace SCIRun
+} // End namespace Uintah
