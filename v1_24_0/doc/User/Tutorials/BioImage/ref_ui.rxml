@@ -28,134 +28,180 @@ DEALINGS IN THE SOFTWARE.
 
 <chapter>
   <title>User Interface</title>
+  <para>
+      BioImage is divided into three main panes: the Processing Pane on the left, 
+      the Rendering Windows in the center, and the Visualization Pane on the right. 
+      The two side panes can be detached from the Rendering Windows by clicking on 
+      the pane detachment/attachment controls.  These are the vertical dashed lines 
+      separating the panes.  Detaching these panes allows the user to resize the 
+      Rendering Windows for better viewing.
+  </para>
   <section>
     <title>Processing Pane</title>
-    <para>
-    </para>
     <section>
-      <title>Dynamic Filters</title>
+      <title>File and Help Menus</title>
       <para>
-	Not every user's pre-processing steps will be the same nor in the same
-	order.  One user may want to crop first then resample while another may
-	prefer to resample first and crop later.  BioImage does not impose an order
-	to the processing steps.  The user can add and delete steps to form the
-	desired pipeline.  This pipeline is represented in the History section
-	of the Processing Pane.
+	The Processing Pane guides the user through processing their data for 
+	visualization.  It has two top-level menus: File and Help. The File menu 
+	items Save Session... and Load Session... allow the user to stop and resume 
+	BioImage sessions. After loading a saved session with Load Session..., 
+	resume processing and visualization by clicking Update.  The Help menu item 
+	Show Tooltips toggles tooltips. &quot;Hovering&quot; the mouse pointer over 
+	a control displays a tooltip describing a control. 
       </para>
+    </section> <!-- End of File and Help Menus section -->
+    <section>
+      <title>Filter Buttons</title>
       <para>
-	The history will always start with a Load Data step and 
-	corresponding user interface.  All subsequent filters will appear under the
-	Load Data UI.  
+	Under the Processing Pane menus are the filter buttons.  These buttons allow
+	the user to add steps to a dynamic pipeline. See 
+	<xref linkend="s.dynamic_filters"/> 
+	below for more information regarding adding filters to the pipeline.
       </para>
-      <section>
-	<title>Anatomy of a Filter UI</title>
+    </section> <!-- End of Filter Buttons section -->
+    <section>
+      <title>History</title>
+      <para>
+	Directly below the filter buttons, is a scrolled window containing the History
+	of steps in the user's dynamic pipeline.  A BioImage pipeline will always
+	contain a Load section as the first step in the pipeline.  See  
+	<xref linkend="ch.ref_data"/> for more information regarding loading data. 
+	Any filters added by the user will appear in the pipeline with their unique UI.
+      </para>
+      <section id="s.dynamic_filters">
+	<title>Dynamic Filters</title>
 	<para>
+	  Not every user's pre-processing steps will be the same nor in the same
+	  order.  One user may want to crop first then resample while another may
+	  prefer to resample first and crop later.  BioImage does not impose an order
+	  to the processing steps.  The user can add and delete steps to form the
+	  desired pipeline.  This pipeline is represented in the History section
+	  of the Processing Pane.
+	</para>
+	<para>
+	  The history will always start with a Load Data step and 
+	  corresponding user interface.  All subsequent filters will appear under the
+	  Load Data UI.  
+	</para>
+	<section>
+	  <title>Anatomy of a Filter UI</title>
+	  <para>
 	  Each filter UI contains four main components: the visibility icon, label
 	  insert bar, and close button as highlighted in 
 	  <xref linkend="fig.anatomy-filter"/>.  In addition to these four things, 
 	  each filter contains a unique interface representing its particular parameters.
-	</para>
-	<para>
-	  The visibility icon is located in the top left of each filter UI.  This icon
-	  controls whether the entire filter UI is displayed and in full view or just 
-	  the label and close button.  By clicking this icon, the user can hide or 
-	  show the filter UI.
-	</para>
-	<para>
-	  To the right of the visibility icon is a label which will remain visible whether
-	  the UI is in full view or hidden.  The label defaults to be the
-	  string &quot;Filter - Unknown&quot;.  By right clicking on the label, the
-	  user can edit the label to be something more meaningful.  This is especially
-	  useful when a pipeline contains many filters.
-	</para>
-	<para>
-	  The insert bar is used for inserting new filters between existing filters
-	  and is discussed more in the Adding and Inserting Filters section.
-	</para>
-	<para>
-	  The red close button will delete the filter from the pipeline.  See
-	  the section Deleting Filters for more information.
-	</para>
-	<figure id="fig.anatomy-filter">
-	  <title>Each filter UI contains four main components: the visibility icon, label insert bar, and close button.</title>
-	  <mediaobject>
-	    <textobject>
-	      <phrase>Anatomy of a filter.</phrase>
-	    </textobject>
-	    <imageobject>
-	      <imagedata fileref="Figures/anatomy-filter.jpg" align="center" format="JPG"/>
-	    </imageobject>
-	    <imageobject>
-	      <imagedata fileref="Figures/anatomy-filter.eps" align="center" format="EPS"/>
-	    </imageobject>
-	  </mediaobject>
-	</figure>
-      </section>
-      <section>
-	<title>Adding and Inserting Filters</title>
-	<para>
-	  There are two ways to add a new filter to the pipeline.  The first approach
-	  is to click the button for the corresponding filter.  These buttons are 
-	  located directly above the history section as shown in 
-	  <xref linkend="fig.filter-buttons"/>. When clicking one of these
-	  buttons, the filter will always be added to the end of the pipeline.
-	</para>
-
-	<figure id="fig.filter-buttons">
-	  <title>Filter butttons available in BioImage.</title>
-	  <mediaobject>
-	    <textobject>
-	      <phrase>Filter buttons.</phrase>
-	    </textobject>
-	    <imageobject>
-	      <imagedata fileref="Figures/filter-buttons.jpg" align="center" format="JPG"/>
-	    </imageobject>
-	    <imageobject>
-	      <imagedata fileref="Figures/filter-butons.eps" align="center" format="EPS"/>
-	    </imageobject>
-	  </mediaobject>
-	</figure>
-	<para>
-	  There is another approach to adding filters to the pipeline which allows
-	  the user to insert a filter between two existing filters.  One of these
-	  filters may also be the Load Data step.  To insert a filter, the user
-	  must click the blue bar which separates the two filters, causing a menu
-	  of available filters to appear.  Selecting one of these filters will 
-	  add the appropriate filter in the specified location into the pipeline.
-	</para>
-      </section>
-      <section>
-	<title>Deleting Filters</title>
-	<para>
-	  The red close button is located in the top right corner. Clicking
-	  this button will delete the filter from the pipeline and remove the UI from
-	  the history.  All settings for that filter will be lost. Since there must
-	  always be data to process, the Load Data UI does not have the close button.
-	</para>
-      </section>
-      <section>
-	<title>Currently Viewed Data - The Eye</title>
-	<para>
-	  The radiobuttons to the left of the filters indicate the currenlty viewed data
-	  or the eye.  For example, if the radiobutton next to a crop filter is 
-	  selected, the cropped image will be shown in the 2D and 3D windows. As filters
-	  are added or inserted, the eye will update to be the set to the output of the
-	  new filter.  It is especially helpful when editing Crop value to have the eye
-	  selected for the Crop filter being edited. Note: If a filter hasn't been 
-	  executed yet, the last generated output will be shown. 
-	</para>
-      </section>
-      <section>
-	<title>Update Button</title>
-	<para>
-	  Anytime a filter parameter has changed, or the eye has been moved, the user
-	  must click the green Update button located towards the bottom of the
-	  Processing Pane to see the results. The Update button is only enabled
-	  when a change has been made which requires re-execution.
-	</para>
-      </section>
+	  </para>
+	  <para>
+	    The visibility icon is located in the top left of each filter UI.  This icon
+	    controls whether the entire filter UI is displayed and in full view or just 
+	    the label and close button.  By clicking this icon, the user can hide or 
+	    show the filter UI.
+	  </para>
+	  <para>
+	    To the right of the visibility icon is a label which will remain visible 
+	    whether the UI is in full view or hidden.  The label defaults to be the
+	    string &quot;Filter - Unknown&quot;.  By right clicking on the label, the
+	    user can edit the label to be something more meaningful.  This is especially
+	    useful when a pipeline contains many filters.
+	  </para>
+	  <para>
+	    The insert bar is used for inserting new filters between existing filters
+	    and is discussed more in the Adding and Inserting Filters section.
+	  </para>
+	  <para>
+	    The red close button will delete the filter from the pipeline.  See
+	    the section Deleting Filters for more information.
+	  </para>
+	  <figure id="fig.anatomy-filter">
+	    <title>Each filter UI contains four main components: the visibility icon, label insert bar, and close button.</title>
+	    <mediaobject>
+	      <textobject>
+		<phrase>Anatomy of a filter.</phrase>
+	      </textobject>
+	      <imageobject>
+		<imagedata fileref="Figures/anatomy-filter.jpg" align="center" format="JPG"/>
+	      </imageobject>
+	      <imageobject>
+		<imagedata fileref="Figures/anatomy-filter.eps" align="center" format="EPS"/>
+	      </imageobject>
+	    </mediaobject>
+	  </figure>
+	</section> <!-- End of Anatomy of a Filter section -->
+	<section>
+	  <title>Adding and Inserting Filters</title>
+	  <para>
+	    There are two ways to add a new filter to the pipeline.  The first approach
+	    is to click the button for the corresponding filter.  These buttons are 
+	    located directly above the history section as shown in 
+	    <xref linkend="fig.filter-buttons"/>. When clicking one of these
+	    buttons, the filter will always be added to the end of the pipeline.
+	  </para>
+	  
+	  <figure id="fig.filter-buttons">
+	    <title>Filter butttons available in BioImage.</title>
+	    <mediaobject>
+	      <textobject>
+		<phrase>Filter buttons.</phrase>
+	      </textobject>
+	      <imageobject>
+		<imagedata fileref="Figures/filter-buttons.jpg" align="center" format="JPG"/>
+	      </imageobject>
+	      <imageobject>
+		<imagedata fileref="Figures/filter-butons.eps" align="center" format="EPS"/>
+	      </imageobject>
+	    </mediaobject>
+	  </figure>
+	  <para>
+	    There is another approach to adding filters to the pipeline which allows
+	    the user to insert a filter between two existing filters.  One of these
+	    filters may also be the Load Data step.  To insert a filter, the user
+	    must click the blue bar which separates the two filters, causing a menu
+	    of available filters to appear.  Selecting one of these filters will 
+	    add the appropriate filter in the specified location into the pipeline.
+	  </para>
+	</section> <!-- End of Adding and Inserting Filters section -->
+	<section>
+	  <title>Deleting Filters</title>
+	  <para>
+	    The red close button is located in the top right corner. Clicking
+	    this button will delete the filter from the pipeline and remove the UI from
+	    the history.  All settings for that filter will be lost. Since there must
+	    always be data to process, the Load Data UI does not have the close button.
+	  </para>
+	</section> <!-- End of Deleting Filters section -->
+	<section>
+	  <title>Currently Viewed Data - The Eye</title>
+	  <para>
+	    The radiobuttons to the left of the filters indicate the currenlty viewed data
+	    or the eye.  For example, if the radiobutton next to a crop filter is 
+	    selected, the cropped image will be shown in the 2D and 3D windows. As filters
+	    are added or inserted, the eye will update to be the set to the output of the
+	    new filter.  It is especially helpful when editing Crop value to have the eye
+	    selected for the Crop filter being edited. Note: If a filter hasn't been 
+	    executed yet, the last generated output will be shown. 
+	  </para>
+	</section> <!-- End of Currently Viewed Data section-->
+      </section> <!-- End of Dynamic Filters Section -->
+    </section> <!-- End of History section -->
+    <section>
+      <title>Update Button</title>
+      <para>
+	Anytime a filter parameter has changed, or the eye has been moved, the user
+	must click the green Update button located towards the bottom of the
+	Processing Pane to see the results. The Update button is only enabled
+	when a change has been made which requires re-execution.
+      </para>
     </section>
-  </section>
+    <section>
+      <title>Progress Indicator</title>
+      <para>
+	The bottom of the Processing Pane contains a Progress Indicator, a text 
+	description indicating the current state of the application, and suggests 
+	the next processing step. The Progress Indicator indicates an error if an 
+	error occurs. Clicking on the Progress Indicator displays an error log. 
+      </para>
+    </section>
+  </section> <!-- End of the Processing Pane Section -->
   <section>
     <title>Rendering Windows</title>
     <para>
@@ -163,7 +209,7 @@ DEALINGS IN THE SOFTWARE.
       more information on navigating inside of the Viewer Window.
       <ulink url="../../Guide/usersguide/srug6_3.html"><citetitle>Section 6.3 of the SCIRun Userguide:
       "Mouse Control in the Viewer Window"</citetitle></ulink>.
-       http://software.sci.utah.edu/doc/Guide/usersguide/srug6_3.html
+      http://software.sci.utah.edu/doc/Guide/usersguide/srug6_3.html
     </para>
   </section>
   <section>
