@@ -40,7 +40,6 @@ MP(cPhase)
 // Readers
 MP(ColorMapReader)
 MP(ColumnMatrixReader)
-MP(ContourSetReader)
 MP(GeomReader)
 MP(GeometryReader)
 MP(ImageReader)
@@ -55,7 +54,6 @@ MP(VectorFieldReader)
 MP(Salmon)
 
 // Surface
-MP(ContoursToSurf)
 MP(GenSurface)
 MP(LabelSurface)
 MP(SFUGtoSurf)
@@ -93,7 +91,6 @@ MP(WidgetTest)
 
 MP(ColorMapWriter)
 MP(ColumnMatrixWriter)
-MP(ContourSetWriter)
 MP(GeometryWriter)
 MP(MatrixWriter)
 MP(MeshWriter)
@@ -144,7 +141,6 @@ void initPackage(const clString& tcl) {
   // Readers
   RM("Readers",       "ColorMap Reader",         make_ColorMapReader,       tcl+"/ColorMapReader.tcl");
   RM("Readers",       "Column Matrix Reader",    make_ColumnMatrixReader,   tcl+"/ColumnMatrixReader.tcl");
-  RM("Readers",       "Contour Set Reader",      make_ContourSetReader,     tcl+"/ContourSetReader.tcl");
   RM("Readers",       "Geom Reader",             make_GeomReader,           tcl+"/GeomReader.tcl");
   RM("Readers",       "Geometry Reader",         make_GeometryReader,       tcl+"/GeometryReader.tcl");
   RM("Readers",       "Image Reader",            make_ImageReader,          tcl+"/ImageReader.tcl");
@@ -159,7 +155,6 @@ void initPackage(const clString& tcl) {
   RM("Salmon",        "Salmon",                  make_Salmon,               tcl+"/Salmon.tcl");
 
   // Surface
-  RM("Surface",       "Contours To Surf",        make_ContoursToSurf,       "");
   RM("Surface",       "Gen Surface",             make_GenSurface,           tcl+"/GenSurface.tcl");
   RM("Surface",       "Label Surface",           make_LabelSurface,         "");
   RM("Surface",       "SFUG to Surf",            make_SFUGtoSurf,           "");
@@ -196,7 +191,6 @@ void initPackage(const clString& tcl) {
   // Writers
   RM("Writers",       "Color Map Writer",        make_ColorMapWriter,       tcl+"/ColorMapWriter.tcl");
   RM("Writers",       "Column Matrix Writer",    make_ColumnMatrixWriter,   tcl+"/ColumnMatrixWriter.tcl");
-  RM("Writers",       "Contour Set Writer",      make_ContourSetWriter,     tcl+"/ContourSetWriter.tcl");
   RM("Writers",       "Geometry Writer",         make_GeometryWriter,       tcl+"/GeometryWriter.tcl");
   RM("Writers",       "Matrix Writer",           make_MatrixWriter,         tcl+"/MatrixWriter.tcl");
   RM("Writers",       "Mesh Writer",             make_MeshWriter,           tcl+"/MeshWriter.tcl");
