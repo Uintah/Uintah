@@ -248,6 +248,16 @@ class BioImageApp {
     # the error state.  This should be done using the change_indicate_val
     # and change_indicator_labels methods. We catch errors from
     method indicate_error { which msg_state } {
+
+        # disregard UnuCrop errors, hopefully they are due to 
+	# upstream crops changing bounds
+	#if {[string first "UnuCrop" $which] != -1 && $msg_state == "Warning"} {
+	    #puts "Reseting value to M so we should make it a hard number corresponding to the NrrdInfo"
+# 	    tk_messageBox -message "One of your cropping values was out of range.  This could be due to recent changes to an upstream crop filter's settings affecting a downstream crop filter. The downstream crop values were reset to the bounding box." -type ok -icon info 
+# 	    return
+	#}         
+
+
 	if {$msg_state == "Error"} {
 	    if {[string first "ViewImage" $which] != -1} {
 		# hopefully, getting here means that we have new data, and that NrrdInfo
@@ -369,10 +379,10 @@ class BioImageApp {
  		set [set UnuJhisto]-maxs "$max nan"
  		set [set UnuJhisto]-mins "$min nan"
 
-		global planes_threshold
-		set planes_threshold $min
+		global planes_threshold $mods(ViewImage)-min
+		set planes_threshold [set $mods(ViewImage)-min]
 
-		$this update_planes_threshold_slider_min_max
+
 
  	    # turn off MIP stuff
               after 100 "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-MIP Slice0 (1)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
@@ -386,6 +396,11 @@ class BioImageApp {
 		set has_autoviewed 1
 		after 200 "$mods(Viewer)-ViewWindow_0-c autoview"
 	    }
+
+	    global $mods(ViewImage)-min $mods(ViewImage)-max
+
+	    $this update_planes_threshold_slider_min_max [set $mods(ViewImage)-min] [set $mods(ViewImage)-max]
+
 	} elseif {[string first "Teem_NrrdData_NrrdInfo_1" $which] != -1 && $state == "Completed"} {
 	    # update slice sliders
 	    global $which-size0 
@@ -700,10 +715,11 @@ class BioImageApp {
     }
 
     method build_viewers {viewer viewimage} {
+	set w $win.viewers
+	
 	global mods
 	set mods(ViewImage) $viewimage
 
-	set w $win.viewers
 	iwidgets::panedwindow $w.topbot -orient horizontal -thickness 0 \
 	    -sashwidth 5000 -sashindent 0 -sashborderwidth 2 -sashheight 6 \
 	    -sashcursor sb_v_double_arrow -width $viewer_width -height $viewer_height
@@ -714,7 +730,7 @@ class BioImageApp {
 
 	set top [$w.topbot childsite top]
 	set bot [$w.topbot childsite bottom]
-	
+
 	Linkedpane $top.lr -orient vertical -thickness 0 \
 	    -sashheight 5000 -sashwidth 6 -sashindent 0 -sashborderwidth 2 \
 	    -sashcursor sb_h_double_arrow
@@ -741,7 +757,7 @@ class BioImageApp {
 
 	$viewimage control_panel $w.cp
 	$viewimage add_nrrd_tab $w 1
-	
+
 	# modes for axial
 	frame $topr.modes
 	pack $topr.modes -side bottom -padx 0 -pady 0  -expand yes -fill x
@@ -805,6 +821,7 @@ class BioImageApp {
 	    -cursor based_arrow_down \
 	    -command "$this hide_control_panel $topr.modes"
 	pack $topr.modes.expand -side bottom -fill both
+
 
 
 	# modes for sagittal
@@ -872,7 +889,6 @@ class BioImageApp {
 	    -command "$this hide_control_panel $botl.modes"
 	pack $botl.modes.expand -side bottom -fill both
 
-
 	# modes for coronal
 	frame $botr.modes
 	pack $botr.modes -side bottom -padx 0 -pady 0 -expand yes -fill x
@@ -938,7 +954,6 @@ class BioImageApp {
 	    -command "$this hide_control_panel $botr.modes"
 	pack $botr.modes.expand -side bottom -fill both
 
-
 	# embed viewer in top left
 	global mods
  	set eviewer [$mods(Viewer) ui_embedded]
@@ -999,7 +1014,7 @@ class BioImageApp {
 	    set [set UnuJhisto]-mins "$min nan"
 
 	    # update background threshold slider min/max 
-	    $this update_planes_threshold_slider_min_max
+	    # $this update_planes_threshold_slider_min_max
 
 	    $this update_planes_threshold
 
@@ -1543,7 +1558,7 @@ class BioImageApp {
 	pack $page.file.l $page.file.e -side left -padx 3 -pady 0 -anchor nw \
 	    -fill x 
 
-	bind $page.file.e <Return> "$this execute_Data"
+	bind $page.file.e <Return> "$this update_changes"
 	bind $page.file.e <ButtonPress-1> "$this check_crop"
 
 	button $page.load -text "Browse" \
@@ -3638,11 +3653,10 @@ class BioImageApp {
 		    }
                 }
             }
+            $mod-c needexecute
 	} else {
-	    set mod [lindex [lindex $filters(0) $input] 0]
+            $this execute_Data
 	}
-
-	$mod-c needexecute
 
         set has_executed 1
 
@@ -3678,13 +3692,6 @@ class BioImageApp {
 		 set filters($i) [lreplace $filters($i) 11 11 $pad_vals]
   	    }
   	}
-
-#         # If crop widget is on, call update on it to recenter the widget
-#         if {$turn_off_crop == 1} {
-#             global mods
-#             $mods(ViewImage)-c stopcrop
-#             set turn_off_crop 0
-#         }
 
         $this disable_update
     }
@@ -3886,7 +3893,7 @@ class BioImageApp {
 	    set [set UnuResample]-filtertype gaussian
 	}
 
-        $this disable_update 1 1 1
+        $this enable_update 1 2 3
 
 	# update attach/detach one
         $history0.$num.f$num.childsite.ui.kernel select $which
@@ -3936,9 +3943,6 @@ class BioImageApp {
     # for the specific app.
     method save_session {} {
 
-        tk_messageBox -message "Save not implemented yet." -type ok -icon info -parent .standalone
-        return	
-
 	global mods
 
 	if {$saveFile == ""} {
@@ -3981,23 +3985,24 @@ class BioImageApp {
 	foreach v [info variable] {
 	    set var [get_class_variable_name $v]
 	    if {$var != "this" && $var != "filters"} {
-		puts $fileid "set $var \{[set $var]\}"
+		puts $fileid "app set_saved_class_var $var \{[set $var]\}"
 	    }
 	}
 	
 	# print out arrays
 	for {set i 0} {$i < $num_filters} {incr i} {
 	    if {[info exists filters($i)]} {
-		puts $fileid "set filters($i) \{[set filters($i)]\}"
+		puts $fileid "app set_saved_class_var filters($i) \{[set filters($i)]\}"
 	    }
 	}
 
         # save globals
+        puts "FIX ME: add more global"
         global eye
         puts $fileid "global eye"
         puts $fileid "set eye \{[set eye]\}"
 
-	puts $fileid "set loading 1"
+	puts $fileid "app set_saved_class_var loading 1"
     }
 
     #########################
@@ -4039,9 +4044,6 @@ class BioImageApp {
     # all messed up.
     method load_session {} {
 
-        tk_messageBox -message "Load not implemented yet." -type ok -icon info -parent .standalone
-        return	
-
 	set types {
 	    {{App Settings} {.ses} }
 	    {{Other} { * }}
@@ -4054,35 +4056,21 @@ class BioImageApp {
 	}
    }
 
+
    method load_session_data {} {
        # Clear all modules
        ClearCanvas 0
-
-       #destroy 2D viewer windows
-       destroy $win.viewers.topbot
-       destroy $win.viewers.cp
-       
-       puts "FIX ME: figure out how to wait until Network Changed"
-#      global NetworkChanged
-#      tkwait variable NetworkChanged
-       # This is a hack.  Unless I kill some time, the new modules
-       # try to instantiate before the old ones are done clearing.
-       for {set i 0} {$i < 900000} {incr i} {
-	   set b 5
-       }
        
        # configure title
        wm title .standalone "BioImage - [getFileName $saveFile]" 
        
-       # remove all UIs
+       # remove all UIs from history
        for {set i 0} {$i < $num_filters} {incr i} {
 	   if {[info exists filters($i)]} {
                set tmp_row [lindex $filters($i) $which_row]
                if {$tmp_row != -1 } {
-		   destroy $history0.$i.f$i
-		   destroy $history0.$i.eye$i
-		   destroy $history1.$i.f$i
-		   destroy $history1.$i.eye$i
+		   destroy $history0.$i
+		   destroy $history1.$i
 	       }
            }
        }
@@ -4091,26 +4079,19 @@ class BioImageApp {
        $attachedPFr.f.p.sf justify top
        $detachedPFr.f.p.sf justify top
 
-       # load new net
+       #destroy 2D viewer windows and control panel
+       destroy $win.viewers.cp
+       destroy $win.viewers.topbot
 
+       # load new net
        foreach g [info globals] {
 	   global $g
        }
 
-       global mods
-
        update
 
        # source at the global level for module settings
-       set saveFile2 "$saveFile.net"
-       uplevel \#0 source \{$saveFile2\}
-
-       # source in class scope for class variables
-       source $saveFile
-
-       puts "FIX ME: module settings not being set properly"
-
-       $this build_viewers $mods(Viewer) $mods(ViewImage)
+       uplevel \#0 source \{$saveFile\}
 
        set loading_ui 1
        set last_valid 0
@@ -4125,28 +4106,41 @@ class BioImageApp {
 		    set t [lindex $filters($i) $filter_type]
 		    set last_valid $i
 		    if {[string equal $t "load"]} {
-			$this add_Load_UI $history0 $status $i
-			$this add_Load_UI $history1 $status $i
+			set f [add_Load_UI $history0 $status $i]
+                        $this add_insert_bar $f $i
+			set f [add_Load_UI $history1 $status $i]
+                        $this add_insert_bar $f $i
 		    } elseif {[string equal $t "resample"]} {
-			$this add_Resample_UI $history0 $status $i
-			$this add_Resample_UI $history1 $status $i
+			set f [add_Resample_UI $history0 $status $i]
+                        $this add_insert_bar $f $i
+			set f [add_Resample_UI $history1 $status $i]
+                        $this add_insert_bar $f $i
 			$this update_kernel $i
 		    } elseif {[string equal $t "crop"]} {
-			$this add_Crop_UI $history0 $status $i
-			$this add_Crop_UI $history1 $status $i
+			set f [add_Crop_UI $history0 $status $i]
+                        $this add_insert_bar $f $i
+			set f [add_Crop_UI $history1 $status $i]
+                        $this add_insert_bar $f $i
 		    } elseif {[string equal $t "cmedian"]} {
-			$this add_Cmedian_UI $history0 $status $i
-			$this add_Cmedian_UI $history1 $status $i
+			set f [add_Cmedian_UI $history0 $status $i]
+                        $this add_insert_bar $f $i
+			set f [add_Cmedian_UI $history1 $status $i]
+                        $this add_insert_bar $f $i
 		    } elseif {[string equal $t "histo"]} {
-			$this add_Histo_UI $history0 $status $i
-			$this add_Histo_UI $history1 $status $i
+			set f [add_Histo_UI $history0 $status $i]
+                        $this add_insert_bar $f $i
+			set f [add_Histo_UI $history1 $status $i]
+                        $this add_insert_bar $f $i
 		    } else {
 			puts "Error: Unknown filter type - $t"
 		    }
 		    $history0.$p configure -background grey75 -foreground black -borderwidth 2
-		$history1.$p configure -background grey75 -foreground black -borderwidth 2
+		    $history1.$p configure -background grey75 -foreground black -borderwidth 2
             }
 	}
+
+        # rebuild the viewer windows
+        $this build_viewers $mods(Viewer) $mods(ViewImage)
 
         set loading_ui 0
 
@@ -4233,30 +4227,16 @@ class BioImageApp {
   	}
     }
 
-    method update_planes_threshold_slider_min_max { } {
-        global mods
-	global $mods(ViewImage)-axial-viewport0-clut_ww 
-	global $mods(ViewImage)-axial-viewport0-clut_wl
-
-	set ww [set $mods(ViewImage)-axial-viewport0-clut_ww]
-        set wl [set $mods(ViewImage)-axial-viewport0-clut_wl]
-        set min [expr $wl-$ww/2]
-	set max [expr $wl+$ww/2]
-	
-	$attachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.tnb.canvas.notebook.cs.page1.cs.thresh.s configure -from $min -to $max
-	$detachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.tnb.canvas.notebook.cs.page1.cs.thresh.s configure -from $min -to $max
-
+    method update_planes_threshold_slider_min_max { min max } {
+	$attachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.thresh.s configure -from $min -to $max
+	$detachedVFr.f.vis.childsite.tnb.canvas.notebook.cs.page1.cs.thresh.s configure -from $min -to $max
     }
 
     method update_planes_threshold {} {
 	global mods planes_threshold 
-	global $mods(ViewImage)-axial-viewport0-clut_ww 
-	global $mods(ViewImage)-axial-viewport0-clut_wl
-
-	set ww [set $mods(ViewImage)-axial-viewport0-clut_ww]
-        set wl [set $mods(ViewImage)-axial-viewport0-clut_wl]
-        set min [expr $wl-$ww/2]
-	set max [expr $wl+$ww/2]
+	global $mods(ViewImage)-min $mods(ViewImage)-max
+        set min [set $mods(ViewImage)-min]
+	set max [set $mods(ViewImage)-max]
 
 	set m1 [lindex [lindex $filters(0) $modules] 26]
         global $m1-nodeList $m1-positionList
@@ -4522,6 +4502,11 @@ class BioImageApp {
             $mods(ViewImage)-c rebind .standalone.viewers.topbot.pane1.childsite.lr.pane1.childsite.coronal
 	}
     }
+
+    method set_saved_class_var {var val} {
+	set $var $val
+    }
+
 
 
     # Application placing and size
