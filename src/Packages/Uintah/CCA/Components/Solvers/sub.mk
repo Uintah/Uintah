@@ -5,7 +5,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Uintah/CCA/Components/Solvers
 
 SRCS     += \
-	$(SRCDIR)/CGSolver.cc
+	$(SRCDIR)/CGSolver.cc \
+	$(SRCDIR)/DirectSolve.cc
 
 PSELIBS := \
 	Core/Exceptions                  \
