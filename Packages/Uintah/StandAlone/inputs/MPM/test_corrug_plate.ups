@@ -10,7 +10,7 @@
   </Meta>
 
   <Time>
-    <maxTime>0.006</maxTime>
+    <maxTime>0.0016</maxTime>
     <initTime>0.0</initTime>
     <delt_min>1.0e-10</delt_min>
     <delt_max>1.0</delt_max>
@@ -19,6 +19,7 @@
 
   <DataArchiver>
     <filebase>test_corrug_plate.uda</filebase>
+    <outputInitTimestep/>
     <outputTimestepInterval>2</outputTimestepInterval>
     <save label = "KineticEnergy"/>
     <save label = "TotalMass"/>
@@ -37,11 +38,12 @@
     <save label = "p.plasticTemp"/>
     <save label = "p.damage"/>
     <save label = "p.porosity"/>
-    -->
     <save label = "g.mass"/>
     <save label = "g.volume"/>
     <save label = "g.stressFS"/>
     <checkpoint cycle = "2" interval = "2.0e-6"/>
+    -->
+    <checkpoint cycle = "2" timestepInterval = "10"/>
   </DataArchiver>
 
   <MPM>
@@ -53,6 +55,7 @@
     <artificial_viscosity> false </artificial_viscosity>
     <accumulate_strain_energy> false </accumulate_strain_energy>
     <use_load_curves> false </use_load_curves>
+    <do_contact_friction_heating> false </do_contact_friction_heating>
     <erosion algorithm = "none"/>
   </MPM>
 
@@ -63,14 +66,9 @@
   <MaterialProperties>
     <MPM>
       <material>
-        <burn type = "null" />
-        <density>1.e9</density>
-        <toughness>10.e12</toughness>
-        <thermal_conductivity>1.0</thermal_conductivity>
-        <specific_heat>400</specific_heat>
-        <constitutive_model type="hypo_elastic">
-          <G>12.e12</G>
-          <K>32.e12</K>
+        <include href="inputs/MPM/MaterialData/MatConst6061T6Al.xml"/>
+        <constitutive_model type="rigid">
+          <include href="inputs/MPM/MaterialData/IsoElastic6061T6Al.xml"/>
         </constitutive_model>
         <geom_object>
           <corrugated> 
@@ -83,22 +81,34 @@
             <wavelength> 2.0              </wavelength>
             <amplitude>  0.5              </amplitude>
           </corrugated>
-          <res>[2,2,2]</res>
+          <res>[3,3,3]</res>
           <velocity>[0.0,500.0,0.0]</velocity>
           <temperature>294</temperature>
         </geom_object>
         <velocity_field>0</velocity_field>
       </material>
       <material>
-        <burn type = "null" />
-        <gamma> 1.4 </gamma>           
-        <density>2.e3</density>
-        <toughness>10.e12</toughness>
-        <thermal_conductivity>1.0</thermal_conductivity>
-        <specific_heat>400</specific_heat>
-        <constitutive_model type="hypo_elastic">
-          <G>12.e8</G>
-          <K>32.e8</K>
+        <include href="inputs/MPM/MaterialData/MatConst6061T6Al.xml"/>
+        <constitutive_model type="hypoelastic_plastic">
+          <tolerance>5.0e-10</tolerance>
+          <include href="inputs/MPM/MaterialData/IsoElastic6061T6Al.xml"/>
+          <include href="inputs/MPM/MaterialData/VonMisesYield.xml"/>
+          <include href="inputs/MPM/MaterialData/DruckerStabilityCheck.xml"/>
+          <include href="inputs/MPM/MaterialData/JCPlastic6061T6Al.xml"/>
+          <include href="inputs/MPM/MaterialData/JCDamage6061T6Al.xml"/>
+          <include href="inputs/MPM/MaterialData/MieGrunEOS6061T6Al.xml"/>
+          <initial_material_temperature>  294.0 </initial_material_temperature>
+          <initial_mean_porosity>         0.001 </initial_mean_porosity>
+          <initial_std_porosity>          0.0005 </initial_std_porosity>
+          <critical_porosity>             0.7   </critical_porosity>
+          <frac_nucleation>               0.5   </frac_nucleation>
+          <meanstrain_nucleation>         0.5   </meanstrain_nucleation>
+          <stddevstrain_nucleation>       0.05   </stddevstrain_nucleation>
+          <initial_porosity_distrib>      gauss </initial_porosity_distrib>
+          <initial_mean_scalar_damage>    0.001  </initial_mean_scalar_damage>
+          <initial_std_scalar_damage>     0.0005 </initial_std_scalar_damage>
+          <critical_scalar_damage>        1.0   </critical_scalar_damage>
+          <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
         </constitutive_model>
         <geom_object>
           <corrugated> 
@@ -119,7 +129,6 @@
       </material>
       <contact>
         <type>rigid</type>
-        <vel_fields>[0,0,0]</vel_fields>
         <direction>[0,1,0]</direction>
         <stop_time>999999.9</stop_time>
       </contact>
@@ -129,15 +138,16 @@
   <Grid>
     <Level>
       <Box label = "1">
-        <lower>[-1.0,-1.0,-2.5]</lower>
-        <upper>[22.0,21.0,2.5]</upper>
-        <resolution>[23,23,5]</resolution>
+        <lower>[1.0,   4.0, 0.0]</lower>
+        <upper>[21.0, 21.0, 1.0]</upper>
+        <resolution>[21,25,1]</resolution>
         <patches>[2,2,1]</patches>
+        <extraCells>[0,0,0]</extraCells>
         <!--
+        <lower>[-1.0,-1.0,-2.5]</lower>
         <resolution>[92,92,8]</resolution>
         <resolution>[115,115,10]</resolution>
         <patches>[4,4,2]</patches>
-        <extraCells>[1,1,1]</extraCells>
         -->
       </Box>
     </Level>
@@ -146,17 +156,13 @@
         <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
       </Face>
       <Face side = "x+">
-        <BCType id = "all" var = "Dirichlet" label = "Velocity">
-          <value> [0.0,0.0,0.0] </value>
-        </BCType>
+        <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
       </Face>
       <Face side = "y-">
         <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
       </Face>                  
       <Face side = "y+">
-        <BCType id = "all" var = "Dirichlet" label = "Velocity">
-          <value> [0.0,0.0,0.0] </value>
-        </BCType>
+        <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
       </Face>                  
       <Face side = "z-">
         <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
