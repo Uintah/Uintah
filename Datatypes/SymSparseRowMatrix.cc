@@ -4,9 +4,23 @@
 #include <Math/MinMax.h>
 #include <Classlib/Assert.h>
 #include <Classlib/Exceptions.h>
+#include <Classlib/String.h>
 #include <Datatypes/ColumnMatrix.h>
 #include <Malloc/Allocator.h>
 #include <iostream.h>
+
+static Persistent* maker()
+{
+    return scinew SymSparseRowMatrix;
+}
+
+PersistentTypeID SymSparseRowMatrix::type_id("SymSparseRowMatrix", "Matrix", maker);
+
+SymSparseRowMatrix::SymSparseRowMatrix()
+: Matrix(Matrix::symmetric), nnrows(0), nncols(0), a(0),
+  columns(0), rows(0), nnz(0)
+{
+}
 
 SymSparseRowMatrix::SymSparseRowMatrix(int nnrows, int nncols,
 				       Array1<int>& in_rows,
@@ -16,7 +30,7 @@ SymSparseRowMatrix::SymSparseRowMatrix(int nnrows, int nncols,
     nnz=in_cols.size();
     a=scinew double[nnz];
     columns=scinew int[nnz];
-    rows=scinew int[nnz];
+    rows=scinew int[nnrows+1];
     int i;
     for(i=0;i<in_rows.size();i++){
 	rows[i]=in_rows[i];
@@ -28,9 +42,12 @@ SymSparseRowMatrix::SymSparseRowMatrix(int nnrows, int nncols,
 
 SymSparseRowMatrix::~SymSparseRowMatrix()
 {
-    delete[] a;
-    delete[] columns;
-    delete[] rows;
+    if(a)
+	delete[] a;
+    if(columns)
+	delete[] columns;
+    if(rows)
+	delete[] rows;
 }
 
 double& SymSparseRowMatrix::get(int i, int j)
@@ -49,11 +66,16 @@ double& SymSparseRowMatrix::get(int i, int j)
 	    return a[m];
 	}
 	if(h<l){
+#if 0
 	    cerr << "column " << j << " not found in row: ";
 	    for(int idx=row_idx;idx<next_idx;idx++)
 		cerr << columns[idx] << " ";
 	    cerr << endl;
 	    ASSERT(0);
+#endif
+	    static double zero;
+	    zero=0;
+	    return zero;
 	}
     }
 }
@@ -85,7 +107,7 @@ void SymSparseRowMatrix::solve(ColumnMatrix&)
     EXCEPTION(General("SymSparseRowMatrix can't do a direct solve!"));
 }
 
-void SymSparseRowMatrix::mult(ColumnMatrix& x, ColumnMatrix& b,
+int SymSparseRowMatrix::mult(ColumnMatrix& x, ColumnMatrix& b,
 			      int beg, int end)
 {
     // Compute A*x=b
@@ -93,18 +115,22 @@ void SymSparseRowMatrix::mult(ColumnMatrix& x, ColumnMatrix& b,
     ASSERT(b.nrows() == nnrows);
     if(beg==-1)beg=0;
     if(end==-1)end=nnrows;
+    double* xp=&x[0];
+    double* bp=&b[0];
     for(int i=beg;i<end;i++){
 	double sum=0;
 	int row_idx=rows[i];
 	int next_idx=rows[i+1];
 	for(int j=row_idx;j<next_idx;j++){
-	    sum+=a[j]*x[columns[j]];
+	    sum+=a[j]*xp[columns[j]];
 	}
-	b[i]=sum;
+	bp[i]=sum;
+   
     }
+    return 2*(rows[end]-rows[beg]); // FLOPS
 }
 
-void SymSparseRowMatrix::mult_transpose(ColumnMatrix& x, ColumnMatrix& b,
+int SymSparseRowMatrix::mult_transpose(ColumnMatrix& x, ColumnMatrix& b,
 					int beg, int end)
 {
     // Compute At*x=b
@@ -113,19 +139,57 @@ void SymSparseRowMatrix::mult_transpose(ColumnMatrix& x, ColumnMatrix& b,
     ASSERT(b.nrows() == nnrows);
     if(beg==-1)beg=0;
     if(end==-1)end=nnrows;
+    double* xp=&x[0];
+    double* bp=&b[0];
     for(int i=beg;i<end;i++){
 	double sum=0;
 	int row_idx=rows[i];
 	int next_idx=rows[i+1];
 	for(int j=row_idx;j<next_idx;j++){
-	    sum+=a[j]*x[columns[j]];
+	    sum+=a[j]*xp[columns[j]];
 	}
-	b[i]=sum;
+	bp[i]=sum;
     }
+    return 2*(rows[end]-rows[beg]); // FLOPS
 }
 
 void SymSparseRowMatrix::print()
 {
     cerr << "Sparse RowMatrix: " << endl;
+}
+
+#define SYMSPARSEROWMATRIX_VERSION 1
+
+void SymSparseRowMatrix::io(Piostream& stream)
+{
+    stream.begin_class("SymSparseRowMatrix", SYMSPARSEROWMATRIX_VERSION);
+    // Do the base class first...
+    Matrix::io(stream);
+
+    stream.io(nnrows);
+    stream.io(nncols);
+    stream.io(nnz);
+    if(stream.reading()){
+	a=new double[nnz];
+	columns=new int[nnz];
+	rows=new int[nnrows+1];
+    }
+    int i;
+    stream.begin_cheap_delim();
+    for(i=0;i<=nnrows;i++)
+	stream.io(rows[i]);
+    stream.end_cheap_delim();
+
+    stream.begin_cheap_delim();
+    for(i=0;i<nnz;i++)
+	stream.io(columns[i]);
+    stream.end_cheap_delim();
+
+    stream.begin_cheap_delim();
+    for(i=0;i<nnz;i++)
+	stream.io(a[i]);
+    stream.end_cheap_delim();
+
+    stream.end_class();
 }
 

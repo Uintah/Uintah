@@ -162,7 +162,7 @@ void DenseMatrix::solve(ColumnMatrix& sol)
     }
 }
 
-void DenseMatrix::mult(ColumnMatrix& x, ColumnMatrix& b,
+int DenseMatrix::mult(ColumnMatrix& x, ColumnMatrix& b,
 		       int beg, int end)
 {
     // Compute A*x=b
@@ -179,9 +179,10 @@ void DenseMatrix::mult(ColumnMatrix& x, ColumnMatrix& b,
 	}
 	b[i]=sum;
     }
+    return (end-beg)*nc;
 }
     
-void DenseMatrix::mult_transpose(ColumnMatrix& x, ColumnMatrix& b,
+int DenseMatrix::mult_transpose(ColumnMatrix& x, ColumnMatrix& b,
 				 int beg, int end)
 {
     // Compute At*x=b
@@ -197,6 +198,7 @@ void DenseMatrix::mult_transpose(ColumnMatrix& x, ColumnMatrix& b,
 	}
 	b[i]=sum;
     }
+    return (end-beg)*nr;
 }
 
 void DenseMatrix::print()

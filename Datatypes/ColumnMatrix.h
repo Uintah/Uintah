@@ -31,7 +31,7 @@ public:
     virtual ColumnMatrix* clone() const;
     ColumnMatrix& operator=(const ColumnMatrix&);
     int nrows();
-    double& operator[](int);
+    inline double& operator[](int);
     double vector_norm();
 
     void zero();
@@ -45,8 +45,6 @@ public:
 
 inline double& ColumnMatrix::operator[](int i)
 {
-    ASSERTL3(i>=0);
-    ASSERTL3(i<rows);
     return data[i];
 }
 

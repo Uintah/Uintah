@@ -29,6 +29,7 @@ class Mesh;
 struct Element {
     int faces[4];
     int n[4];
+    int generation; // For insert_delaunay
     int cond; // index to the conductivities array for the cond
               // tensor of this element
     Mesh* mesh;
@@ -36,7 +37,7 @@ struct Element {
     Element(const Element&, Mesh* mesh);
     void* operator new(size_t);
     void operator delete(void*, size_t);
-    int face(int);
+    inline int face(int);
 
     double volume();
     int orient();
@@ -77,10 +78,17 @@ struct NodeVersion1 {
 void Pio(Piostream& stream, NodeVersion1& node);
 
 struct Face {
+    Face* next;
+    int hash;
+    int face_idx;
     int n[3];
     Face(int, int, int);
-    int hash(int hash_size) const;
-    int operator==(const Face&) const;
+    inline int operator==(const Face& f) const {
+	return n[0]==f.n[0] && n[1]==f.n[1] && n[2]==f.n[2];
+    }
+
+    void* operator new(size_t);
+    void operator delete(void*, size_t);
 };
 
 struct Edge{
@@ -106,6 +114,8 @@ public:
     Mesh(int nnodes, int nelems);
     virtual Mesh* clone();
     virtual ~Mesh();
+
+    int current_generation;
 
     void detach_nodes();
     void compute_neighbors();
@@ -136,5 +146,20 @@ public:
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 };
+
+inline int Element::face(int i)
+{
+    if(faces[i] == -2){
+	int i1=n[(i+1)%4];
+        int i2=n[(i+2)%4];
+	int i3=n[(i+3)%4];
+	Node* n1=mesh->nodes[i1].get_rep();
+	Node* n2=mesh->nodes[i2].get_rep();
+	Node* n3=mesh->nodes[i3].get_rep();
+	// Compute it...
+	faces[i]=mesh->unify(this, n1->elems, n2->elems, n3->elems);
+    }
+    return faces[i];
+}
 
 #endif

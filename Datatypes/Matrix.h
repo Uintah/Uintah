@@ -22,12 +22,6 @@ class Matrix;
 class MatrixRow;
 typedef LockingHandle<Matrix> MatrixHandle;
 
-class MatrixUpdater {
-public:
-    virtual void update(int, double, double, double,
-			const ColumnMatrix& solution)=0;
-};
-
 class Matrix : public Datatype {
 protected:
     enum Sym {
@@ -44,14 +38,12 @@ public:
     inline MatrixRow operator[](int r);
 
     virtual void zero()=0;
-    int isolve(ColumnMatrix& lhs, ColumnMatrix& rhs,
-	       double error, MatrixUpdater* updater=0);
     virtual int nrows()=0;
     virtual int ncols()=0;
-    virtual void mult(ColumnMatrix& product, ColumnMatrix& multiplier,
-		      int b=-1, int e=-1)=0;
-    virtual void mult_transpose(ColumnMatrix& product, ColumnMatrix& multiplier,
-				int b=-1, int e=-1)=0;
+    virtual int mult(ColumnMatrix& product, ColumnMatrix& multiplier,
+		     int b=-1, int e=-1)=0;
+    virtual int mult_transpose(ColumnMatrix& product, ColumnMatrix& multiplier,
+			       int b=-1, int e=-1)=0;
 
     // Persistent representation...
     virtual void io(Piostream&);

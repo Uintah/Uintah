@@ -27,6 +27,7 @@ class SymSparseRowMatrix : public Matrix {
     int nnz;
     double dummy;
 public:
+    SymSparseRowMatrix();
     SymSparseRowMatrix(int, int, Array1<int>&, Array1<int>&);
     virtual ~SymSparseRowMatrix();
     SymSparseRowMatrix(const SymSparseRowMatrix&);
@@ -37,12 +38,16 @@ public:
     virtual int ncols();
     virtual void solve(ColumnMatrix&);
     virtual void zero();
-    virtual void mult(ColumnMatrix& product, ColumnMatrix& multiplier,
-		      int b=-1, int e=-1);
-    virtual void mult_transpose(ColumnMatrix& product, ColumnMatrix& multiplier,
-				int b=-1, int e=-1);
+    virtual int mult(ColumnMatrix& product, ColumnMatrix& multiplier,
+		     int b=-1, int e=-1);
+    virtual int mult_transpose(ColumnMatrix& product, ColumnMatrix& multiplier,
+			       int b=-1, int e=-1);
     virtual void print();
     MatrixRow operator[](int r);
+
+    // Persistent representation...
+    virtual void io(Piostream&);
+    static PersistentTypeID type_id;
 };
 
 #endif
