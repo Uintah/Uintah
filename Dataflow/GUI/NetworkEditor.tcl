@@ -73,7 +73,7 @@ proc makeNetworkEditor {} {
     menu .main_menu.file.menu.new -tearoff false
     .main_menu.file.menu.new add command -label "Module..." \
         -underline 0 -command "CreateNewModule"
-    .main_menu.file.menu add command -label "Save..." -underline 0 \
+    .main_menu.file.menu add command -label "Save" -underline 0 \
 	-command "popupSaveMenu"
     .main_menu.file.menu add command -label "Save As..." -underline 0 \
 	-command "popupSaveAsMenu"
@@ -741,6 +741,7 @@ proc ClearCanvas {} {
     # destroy all modules
     global modules
     foreach m $modules {
+	puts $m
 	moduleDestroy .bot.neteditFrame.canvas .top.globalViewFrame.canvas $m
     }
     
