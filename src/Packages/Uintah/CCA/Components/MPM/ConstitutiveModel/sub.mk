@@ -13,6 +13,7 @@ SRCS     += \
 	$(SRCDIR)/ViscoScram.cc               	\
 	$(SRCDIR)/ViscoScramForBinder.cc      	\
 	$(SRCDIR)/HypoElastic.cc              	\
+	$(SRCDIR)/HypoElasticImplicit.cc      	\
 	$(SRCDIR)/MWViscoElastic.cc           	\
 	$(SRCDIR)/IdealGasMP.cc               	\
 	$(SRCDIR)/Membrane.cc 			\
