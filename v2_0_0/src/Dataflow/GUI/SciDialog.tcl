@@ -100,9 +100,7 @@ proc createSciDialog { args } {
 
   set minBtnSize 8
 
-  # Used for placing the dialog near the mouse
-  set mouseXLoc [expr [winfo pointerx .] - 70]
-  set mouseYLoc [expr [winfo pointery .] - 70]
+  set placeInParent "false"
 
   # Parse the arguments to make the dialog.
   for {set arg 0} {$arg < [llength $args] } { incr arg } {
@@ -146,8 +144,9 @@ proc createSciDialog { args } {
 	  # This is a hack at finding the middle... someone needs to think about it more
 	  # a few seconds longer.... probably need to know the size of this window... but
 	  # we don't have that yet... so perhaps we need to delay this calculation.
-	  set mouseXLoc [expr [winfo rootx $parent] + ([winfo width $parent]/5)]
-	  set mouseYLoc [expr [winfo rooty $parent] + ([winfo height $parent]/5)]
+	  set windowXLoc [expr [winfo rootx $parent] + ([winfo width $parent]/5)]
+	  set windowYLoc [expr [winfo rooty $parent] + ([winfo height $parent]/5)]
+	  set placeInParent "true"
       } elseif { $argName == "-question" } {
 	  if { $title == "" } { set title "Question" }
 	  set icon $question_bits
@@ -213,9 +212,14 @@ proc createSciDialog { args } {
   label .sci_dialog.msgBox.icon -image iconImg
   pack .sci_dialog.msgBox.icon -side left -padx 10 -pady $outside_pad
 
-  # Place the window (either at mouse location or parent windows
-  # location.  mouse?Loc vars used for both.)
-  wm geometry .sci_dialog +$mouseXLoc+$mouseYLoc
+
+  if { $placeInParent == "false" } {
+      # Move window to mouse location
+      moveToCursor .sci_dialog
+  } else {
+      # Place the window 
+      wm geometry .sci_dialog +$windowXLoc+$windowYLoc
+  }
 
   # Don't let it be resized.
   wm resizable .sci_dialog 0 0
