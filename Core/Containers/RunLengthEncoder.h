@@ -368,6 +368,7 @@ bool EqualElementSequencer<T>::defaultSequenceRule = true; // arbitrary
 
 // EqualElementSequencer for compressing equal interval runs.
 // The following operations must be defined for this to work:
+// Tdiff(0) constructor
 // Tdiff operator-(T, T)
 // Tdiff operator*(Tdiff, int)
 // T operator+(T, Tdiff)
@@ -394,7 +395,7 @@ private:
 };
 
 template <class T, class Tdiff>
-Tdiff EqualIntervalSequencer<T, Tdiff>::defaultSequenceRule = Tdiff() * 0;
+Tdiff EqualIntervalSequencer<T, Tdiff>::defaultSequenceRule = Tdiff(0);
 
 #ifdef __sgi
 #pragma set woff 1375
