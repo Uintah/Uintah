@@ -113,6 +113,15 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 		      DataWarehouseP   & old_dw,
 		      DataWarehouseP   & dw )
 {
+   // We do not use many Bsends, so this doesn't need to be
+   // big.  We make it moderately large anyway.
+   void* old_mpibuffer;
+   int old_mpibuffersize;
+   MPI_Buffer_detach(&old_mpibuffer, &old_mpibuffersize);
+#define MPI_BUFSIZE (10000+MPI_BSEND_OVERHEAD)
+   char* mpibuffer = new char[MPI_BUFSIZE];
+   MPI_Buffer_attach(mpibuffer, MPI_BUFSIZE);
+
    UintahParallelPort* lbp = getPort("load balancer");
    LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
    lb->assignResources(graph, d_myworld);
@@ -484,6 +493,11 @@ MPIScheduler::execute(const ProcessorGroup * pc,
    }
    dw->finalize();
    finalizeNodes(me);
+   int junk;
+   MPI_Buffer_detach(&mpibuffer, &junk);
+   if(old_mpibuffersize)
+      MPI_Buffer_attach(old_mpibuffer, old_mpibuffersize);
+
    log.finishTimestep();
 }
 
@@ -874,6 +888,9 @@ MPIScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.21  2000/09/25 18:10:52  sparker
+// Correctly use MPI_Buffer_attach necessary for bsend
+//
 // Revision 1.20  2000/09/22 19:32:07  sparker
 // Do not send/recv particle variables when there are no particles on the
 //   patch
