@@ -167,7 +167,7 @@ itcl_class SCIRun_Math_ManipMatrix {
 	#add frame for compilation related ui
 	frame $window.all.compilation -borderwidth 2
 	
-	#add bottom frame for execute and dismiss buttons
+	#add bottom frame for execute and close buttons
 	frame $window.all.control -borderwidth 2
 
 	pack $window.all.frameTitle $window.all.options \
@@ -185,7 +185,7 @@ itcl_class SCIRun_Math_ManipMatrix {
 		#compile the code
 	button $window.all.control.compile -text compile \
 		-command "$this launchCompile"
-	button $window.all.control.dismiss -text Dismiss \
+	button $window.all.control.close -text Close \
 		-command "destroy $window"
 	pack $window.all.control.execute $window.all.control.compile \
 		$window.all.control.dismiss -padx 2 -pady 2 -side left
