@@ -72,31 +72,34 @@ void VolumeVis::intersect(const Ray& ray, HitInfo& hit, DepthStats*,
   // determines the min and max t of the intersections with the boundaries
    double t1, t2, tx1, tx2, ty1, ty2, tz1, tz2;
 
+   Point sub_min = Max(min, min);
+   Point sub_max = Max(max, max);
+   
    if (ray.direction().x() > 0) {
-     tx1 = (min.x() - ray.origin().x()) / ray.direction().x();
-     tx2 = (max.x() - ray.origin().x()) / ray.direction().x();
+     tx1 = (sub_min.x() - ray.origin().x()) / ray.direction().x();
+     tx2 = (sub_max.x() - ray.origin().x()) / ray.direction().x();
    }
    else {
-     tx1 = (max.x() - ray.origin().x()) / ray.direction().x();
-     tx2 = (min.x() - ray.origin().x()) / ray.direction().x();
+     tx1 = (sub_max.x() - ray.origin().x()) / ray.direction().x();
+     tx2 = (sub_min.x() - ray.origin().x()) / ray.direction().x();
    }
    
    if (ray.direction().y() > 0) {
-     ty1 = (min.y() - ray.origin().y()) / ray.direction().y();
-     ty2 = (max.y() - ray.origin().y()) / ray.direction().y();
+     ty1 = (sub_min.y() - ray.origin().y()) / ray.direction().y();
+     ty2 = (sub_max.y() - ray.origin().y()) / ray.direction().y();
    }
    else {
-     ty1 = (max.y() - ray.origin().y()) / ray.direction().y();
-     ty2 = (min.y() - ray.origin().y()) / ray.direction().y();
+     ty1 = (sub_max.y() - ray.origin().y()) / ray.direction().y();
+     ty2 = (sub_min.y() - ray.origin().y()) / ray.direction().y();
    }
    
    if (ray.direction().z() > 0) {
-     tz1 = (min.z() - ray.origin().z()) / ray.direction().z();
-     tz2 = (max.z() - ray.origin().z()) / ray.direction().z();
+     tz1 = (sub_min.z() - ray.origin().z()) / ray.direction().z();
+     tz2 = (sub_max.z() - ray.origin().z()) / ray.direction().z();
    }
    else {
-     tz1 = (max.z() - ray.origin().z()) / ray.direction().z();
-     tz2 = (min.z() - ray.origin().z()) / ray.direction().z();
+     tz1 = (sub_max.z() - ray.origin().z()) / ray.direction().z();
+     tz2 = (sub_min.z() - ray.origin().z()) / ray.direction().z();
    }
    
    t1 =  DBL_MIN; 
@@ -169,13 +172,46 @@ Color VolumeVis::color(const Vector &N, const Vector &V, const Vector &L,
 
   double L_N_dot = Dot(L, N);
 
+#if 1 // Double Sided shading
+  double attenuation = 1;
+  Vector L_use;
+
   // the dot product is negative then the objects face points
-  // away from the light and should be shaded.
+  // away from the light and the normal should be reversed.
+  if (L_N_dot >= 0) {
+    L_use = L;
+  } else {
+    L_N_dot = -L_N_dot;
+    L_use = -L;
+  }
+
+  // do the ambient, diffuse, and specular calculations
+  double exponent;
+#if 0 // Use Halfway vector instead of reflection vector
+  //  Vector H = (L + V) * 0.5f;
+  Vector H = (L_use + V) * 0.5f;
+  exponent = Dot(N, H);
+#else
+  Vector R = N * (2.0 * L_N_dot) - L_use;
+  exponent = Dot(R, V);
+#endif
+  double spec;
+  if (exponent > 0) {
+    spec = attenuation * specular * pow(exponent, spec_coeff*0.5);
+  } else {
+    spec = 0;
+  }
+  
+  result = light_color * (object_color *(ambient+attenuation*diffuse*L_N_dot)
+			  + Color(spec, spec, spec));
+#else
+  // the dot product is negative then the objects face points
+  // away from the light and should only contribute an ambient term
   if (L_N_dot > 0) {
     // do the ambient, diffuse, and specular calculations
     double attenuation = 1;
 
-    Vector R = N * (2.0 * Dot(N, L)) - L;
+    Vector R = N * (2.0 * L_N_dot) - L;
     double spec = attenuation * specular * pow(Max(Dot(R, V),0.0), spec_coeff);
 
     result = light_color * (object_color *(ambient+attenuation*diffuse*L_N_dot)
@@ -185,7 +221,8 @@ Color VolumeVis::color(const Vector &N, const Vector &V, const Vector &L,
     // do only the ambient calculations
     result = light_color * object_color * ambient;
   }
-
+#endif
+  
   return result;
 }
 	
