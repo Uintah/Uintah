@@ -14,7 +14,7 @@ c    $     VOL,RV,RA,RONE,
      &     sew,sns,stb,
      $     cee,cwe,cww,cnn,csn,css,ctt,cbt,cbb,
      $     efac,wfac,enfac,sfac,tfac,bfac,
-     $     dxpw,dyps,dzpb)
+     $     dxpw, dxep, dyps, dynp, dzpb, dztp)
 c    $     L2UP)
 C-----------------------------------------------------------------------
 C     WRITTEN BY SESHADRI KUMAR, OCTOBER 14, 1996
@@ -220,6 +220,9 @@ c     double precision rone(domLo(2):domHi(2))
       double precision dxpw(domLo(1):domHi(1))
       double precision dyps(domLo(2):domHi(2))
       double precision dzpb(domLo(3):domHi(3))
+      double precision dxep(domLo(1):domHi(1))
+      double precision dynp(domLo(2):domHi(2))
+      double precision dztp(domLo(3):domHi(3))
 
 
 *-----------------------------------------------------------------------
@@ -227,21 +230,31 @@ c     double precision rone(domLo(2):domHi(2))
 *
       double precision prinv
       double precision crn
-      logical l2up
+      logical l2up, lsmpt, lcend
       double precision vol
-
+      double precision arean, areas, areaew, areatb
+      double precision dene, denw, denn, dens, dent, denb
+      double precision ceo, cwo, cno, cso, cto, cbo
+      double precision ce, cw, cn, cs, ct, cb
+      double precision gup, cpe, cpw, gvp, cpn, cps, gwp, cpt, cpb
+      double precision game, gamw, gamn, gams, gamt, gamb
+      double precision deo, dwo, dno, dso, dto, dbo
+      double precision de, dw, dn, ds, dt, db
+      double precision coefe, coefw, coefn, coefs, coeft, coefb
+      double precision tew, tns, ttb
+      double precision aec, awc, anc, asc, atc, abc
       double precision crn0
 
       integer i, j, k
       integer IST, JST, KST
       integer IEND, JEND, KEND
-      integer ioff, joff, koff
-      integer indexflo, indext1, indext2
 *-----------------------------------------------------------------------
 
       prinv = 0.01
       crn = zero
       l2up = .true.
+      lcend = .false.
+      lsmpt = .false.
       vol = zero
 
       IST = idxLo(1)
@@ -257,80 +270,153 @@ c     double precision rone(domLo(2):domHi(2))
 
 c-----compute areas and volume------------------------------------------
 
-               crn0 = zero
-
-c              vol(i,j,k) = ra(j)*sns(j)*sew(i)*stb(k)
+               AREAN = SEW(I)*STB(K)
+               AREAS = SEW(I)*STB(K)
+               AREAEW = SNS(J)*STB(K)
+               AREATB = SEW(I)*SNS(J)
                vol = sns(j)*sew(i)*stb(k)
+C-----------------------------------------------------------------------
+C     CALCULATE CONVECTION COEFFICIENTS
+C-----------------------------------------------------------------------
+               DENE = 0.5*(DEN(I,J,K)+DEN(I+1,J,K))
+               DENW = 0.5*(DEN(I,J,K)+DEN(I-1,J,K))
+               DENN = 0.5*(DEN(I,J,K)+DEN(I,J+1,K))
+               DENS = 0.5*(DEN(I,J,K)+DEN(I,J-1,K))
+               DENT = 0.5*(DEN(I,J,K)+DEN(I,J,K+1))
+               DENB = 0.5*(DEN(I,J,K)+DEN(I,J,K-1))
+               CEO = DENE*UU(I+1,J,K)*AREAEW
+               CWO = DENW*UU(I,J,K)*AREAEW
+               CNO = DENN*VV(I,J+1,K)*AREAN
+               CSO = DENS*VV(I,J,K)*AREAS
+               CTO = DENT*WW(I,J,K+1)*AREATB
+               CBO = DENB*WW(I,J,K)*AREATB
+C-----------------------------------------------------------------------
+C      NEW DIFFERENCING STUFF
+C-----------------------------------------------------------------------
+               CE = CEE(I)*CEO + CWE(I)*CWO
+               CW = CWW(I)*CWO - CWE(I)*CEO   
+               CN = CNN(J)*CNO + CSN(J)*CSO
+               CS = CSS(J)*CSO - CSN(J)*CNO
+               CT = CTT(K)*CTO + CBT(K)*CBO
+               CB = CBB(K)*CBO - CBT(K)*CTO
+               CESAV(I,J,K) = CE
+               CWSAV(I,J,K) = CW
+               CNSAV(I,J,K) = CN
+               CSSAV(I,J,K) = CS
+               CTSAV(I,J,K) = CT
+               CBSAV(I,J,K) = CB
+C-----------------------------------------------------------------------
+C      UPWIND DIFFERENCING STUFF
+C-----------------------------------------------------------------------
+               GUP = DEN(I,J,K)*(EFAC(I)*UU(I+1,J,K)+WFAC(I)*UU(I,J,K))
+               CPE = GUP*VOL/DXEP(I)
+               CPW = GUP*VOL/DXPW(I)
+               GVP = DEN(I,J,K)*(ENFAC(J)*VV(I,J+1,K)+SFAC(J)*VV(I,J,K))
+               CPN = GVP*VOL/DYNP(J)
+               CPS = GVP*VOL/DYPS(J)
+               GWP = DEN(I,J,K)*(TFAC(K)*WW(I,J,K+1)+BFAC(K)*WW(I,J,K))
+               CPT = GWP*VOL/DZTP(K)
+               CPB = GWP*VOL/DZPB(K)
+C--------------------------------------------------------------------
+C     CALCULATE DIFFUSION COEFFICIENTS
+C--------------------------------------------------------------------
+               GAME = 0.5*(VIS(I,J,K)+VIS(I+1,J,K))
+               GAMW = 0.5*(VIS(I,J,K)+VIS(I-1,J,K))
+               GAMN = 0.5*(VIS(I,J,K)+VIS(I,J+1,K))
+               GAMS = 0.5*(VIS(I,J,K)+VIS(I,J-1,K))
+               GAMT = 0.5*(VIS(I,J,K)+VIS(I,J,K+1))
+               GAMB = 0.5*(VIS(I,J,K)+VIS(I,J,K-1))
+               DEO = GAME*AREAEW/DXEP(I)
+               DWO = GAMW*AREAEW/DXPW(I)
+               DNO = GAMN*AREAN/DYNP(J)
+               DSO = GAMS*AREAS/DYPS(J)
+               DTO = GAMT*AREATB/DZTP(K)
+               DBO = GAMB*AREATB/DZPB(K)
+C-----------------------------------------------------------------------
+C     NEW DIFFUSION TERMS
+C-----------------------------------------------------------------------
+               DE = CEE(I)*DEO + CWE(I)*DWO*DXPW(I)/DXEP(I)
+               DW = CWW(I)*DWO - CWE(I)*DEO*DXEP(I)/DXPW(I)   
+               DN = CNN(J)*DNO + CSN(J)*DSO*DYPS(J)/DYNP(J)
+               DS = CSS(J)*DSO - CSN(J)*DNO*DYNP(J)/DYPS(J)
+               DT = CTT(K)*DTO + CBT(K)*DBO*DZPB(K)/DZTP(K)
+               DB = CBB(K)*DBO - CBT(K)*DTO*DZTP(K)/DZPB(K)
+C-----------------------------------------------------------------------
+C     CONVECTION DIFFERENCING SCHEME SELECTION
+C-----------------------------------------------------------------------
+               COEFE = DE - 0.5*ABS(CE)
+               COEFW = DW - 0.5*ABS(CW)
+               COEFN = DN - 0.5*ABS(CN)
+               COEFS = DS - 0.5*ABS(CS)
+               COEFT = DT - 0.5*ABS(CT)
+               COEFB = DB - 0.5*ABS(CB)
+               TEW = 1.0
+               TNS = 1.0
+               TTB = 1.0
+               IF (COEFE.LT.0.0 .OR. COEFW.LT.0.0) TEW = 0.0
+               IF (COEFN.LT.0.0 .OR. COEFS.LT.0.0) TNS = 0.0
+               IF (COEFT.LT.0.0 .OR. COEFB.LT.0.0) TTB = 0.0
+               AEC = -0.5*CE*TEW + MAX(0.0,-CPE)*(1.0-TEW)
+               AWC = 0.5*CW*TEW + MAX(0.0,CPW)*(1.0-TEW)
+               ANC = -0.5*CN*TNS + MAX(0.0,-CPN)*(1.0-TNS)
+               ASC = 0.5*CS*TNS + MAX(0.0,CPS)*(1.0-TNS)
+               ATC = -0.5*CT*TTB + MAX(0.0,-CPT)*(1.0-TTB)
+               ABC = 0.5*CB*TTB + MAX(0.0,CPB)*(1.0-TTB)
+C----------------------------------------------------------------------
+C      PROVISIONS FOR VARIOUS DIFFERENCING SCHEMES
+C----------------------------------------------------------------------
+               IF (LSMPT) THEN
+                  AE(I,J,K) = DE
+                  AW(I,J,K) = DW
+                  AN(I,J,K) = DN
+                  AS(I,J,K) = DS
+                  AT(I,J,K) = DT
+                  AB(I,J,K) = DB
+c                  AC(I,J,K) = AEC+AWC+ANC+ASC+ATC+ABC
+               ELSE IF (LCEND) THEN
+                  AE(I,J,K) = DE-CE*0.5
+                  AW(I,J,K) = DW+CW*0.5
+                  AN(I,J,K) = DN-CN*0.5
+                  AS(I,J,K) = DS+CS*0.5
+                  AT(I,J,K) = DT-CT*0.5
+                  AB(I,J,K) = DB+CB*0.5
+c                  AC(I,J,K) = 0.0
+               ELSE IF (L2UP) THEN
+                  AE(I,J,K) = DE*(1.0-MAX(0.0,SIGN(1.0,COEFE)))
+     &                 + MAX(0.0,COEFE) + MAX(0.0,-CE)
+                  AW(I,J,K) = DW*(1.0-MAX(0.0,SIGN(1.0,COEFW)))
+     &                 + MAX(0.0,COEFW) + MAX(0.0,CW)
+                  AN(I,J,K) = DN*(1.0-MAX(0.0,SIGN(1.0,COEFN)))
+     &                 + MAX(0.0,COEFN) + MAX(0.0,-CN)
+                  AS(I,J,K) = DS*(1.0-MAX(0.0,SIGN(1.0,COEFS)))
+     &                 + MAX(0.0,COEFS) + MAX(0.0,CS)
+                  AT(I,J,K) = DT*(1.0-MAX(0.0,SIGN(1.0,COEFT)))
+     &                 + MAX(0.0,COEFT) + MAX(0.0,-CT)
+                  AB(I,J,K) = DB*(1.0-MAX(0.0,SIGN(1.0,COEFB)))
+     &                 + MAX(0.0,COEFB) + MAX(0.0,CB)
+c                  AC(I,J,K) = 0.0
+               ELSE
+                  AE(I,J,K) = AEC + DE
+                  AW(I,J,K) = AWC + DW
+                  AN(I,J,K) = ANC + DN
+                  AS(I,J,K) = ASC + DS
+                  AT(I,J,K) = ATC + DT
+                  AB(I,J,K) = ABC + DB
+c                  AC(I,J,K) = 0.0
+               END IF
 
-c-----calculate e-w coefficients----------------------------------------
-               ioff = 1
-               joff = 0
-               koff = 0
-               indexflo = 1
-               indext1 = 2
-               indext2 = 3
-               call coeffb(domLoU, domHiU, uu,
-     &              domLo, domHi, den,vis,ae,aw,cesav,cwsav,
-     $              cee,cwe,cww,efac,wfac,sns,stb,
-c    &              ra,
-     &              vol,
-     $              dxpw,
-c    &              rone,
-     &              prinv,crn0,i,j,k,ioff,joff,koff,i,j,k,
-     $              indexflo, indext1, indext2,
-     $              l2up)
-
-c-----calculate n-s coefficients----------------------------------------
-               ioff = 0
-               joff = 1
-               koff = 0
-               indexflo = 2
-               indext1 = 3
-               indext2 = 1
-
-               call coeffb(domLoV, domHiV, vv,
-     &              domLo, domHi, den,vis,an,as,cnsav,cssav,
-     $              cnn,csn,css,enfac,sfac,stb,sew,
-c    &              rv,
-     &              vol,
-     $              dyps,
-c    &              rone,
-     &              prinv,crn0,j,k,i,ioff,joff,koff,i,j,k,
-     $              indexflo, indext1, indext2,
-     $              l2up)
-
-c-----calculate t-b coefficients----------------------------------------
-               ioff = 0
-               joff = 0
-               koff = 1
-               indexflo = 3
-               indext1 = 1
-               indext2 = 2
-
-               call coeffb(domLoW, domHiW, ww,
-     &              den,vis,at,ab,ctsav,cbsav,
-     $              ctt,cbt,cbb,tfac,bfac,sew,sns,
-c    &              rone,
-     &              vol,
-     $              dzpb,
-c    &              ra,
-     &              prinv,crn0,k,i,j,ioff,joff,koff,i,j,k,
-     $              indexflo, indext1, indext2,
-     $              l2up)
-
-               crn = crn + crn0/six
-c-----------------------------------------------------------------------
  203        continue
  210     continue
  220  continue
-
-      crn = crn/((IEND-IST+1)*(JEND-JST+1)*(KEND-KST+1))
 
       return
       end
 
 c
 c $Log$
+c Revision 1.3  2000/08/09 20:19:27  rawat
+c modified scalcoef.F
+c
 c Revision 1.2  2000/08/08 23:34:20  rawat
 c fixed some bugs in profv.F and Properties.cc
 c

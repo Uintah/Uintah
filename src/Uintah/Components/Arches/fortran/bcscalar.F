@@ -134,7 +134,7 @@ c                 areaew = ra(j)*sns(j)*stb(k)
                   areaew = sns(j)*stb(k)
                   ae(idxHi(1),j,k) = zero
                   su(idxHi(1),j,k) = su(idxHi(1),j,k) - 
-c    $                 uinlt(j,k)*
+     $                 u(idxHi(1)+2,j,k)*
      &                 den(idxHi(1)+1,j,k)*f(idxHi(1)+1,j,k)*
      $                 areaew
                end if
@@ -161,7 +161,7 @@ c                 arean = rv(idxHi(2)+1)*sew(i)*stb(k)
                   arean = sew(i)*stb(k)
                   an(i,idxHi(2),k) = zero
                   su(i,idxHi(2),k) = su(i,idxHi(2),k) - 
-c    $                 vinlt(i,k)*
+     $                 v(i,idxHi(2)+2,k)*
      &                 den(i,idxHi(2)+1,k)*f(i,idxHi(2)+1,k)*
      $                 arean
                end if
@@ -187,7 +187,7 @@ c--------------------------------------------------------------------
                   areatb = sew(i)*sns(j)
                   at(i,j,idxHi(3)) = zero
                   su(i,j,idxHi(3)) = su(i,j,idxHi(3)) - 
-c    $                 winlt(i,j)*
+     $                 w(i,j,idxHi(3)+2)*
      &                 den(i,j,idxHi(3)+1)*f(i,j,idxHi(3)+1)*
      $                 areatb
                end if
@@ -296,6 +296,9 @@ c    $         w(i,j,idxLo(3)-1).lt.zero)) then
 
 c
 c $Log$
+c Revision 1.2  2000/08/09 20:19:27  rawat
+c modified scalcoef.F
+c
 c Revision 1.1  2000/07/30 22:21:26  bbanerje
 c Added bcscalar.F (originally bcf.f in Kumar's code) needs more work
 c in C++ side.

@@ -1278,8 +1278,9 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
 		   cellinfo->efac.get_objs(), cellinfo->wfac.get_objs(),
 		   cellinfo->enfac.get_objs(), cellinfo->sfac.get_objs(),
 		   cellinfo->tfac.get_objs(), cellinfo->bfac.get_objs(),
-		   cellinfo->dxpw.get_objs(), cellinfo->dyps.get_objs(), 
-		   cellinfo->dzpb.get_objs());
+		   cellinfo->dxpw.get_objs(), cellinfo->dxep.get_objs(),
+		   cellinfo->dyps.get_objs(), cellinfo->dynp.get_objs(),
+		   cellinfo->dzpb.get_objs(), cellinfo->dztp.get_objs());
 }
 
 //****************************************************************************
@@ -1417,6 +1418,9 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.40  2000/08/09 20:19:25  rawat
+// modified scalcoef.F
+//
 // Revision 1.39  2000/08/08 23:34:18  rawat
 // fixed some bugs in profv.F and Properties.cc
 //
