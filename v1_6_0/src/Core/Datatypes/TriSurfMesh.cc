@@ -255,6 +255,7 @@ TriSurfMesh::get_neighbor(Face::index_type &neighbor, Edge::index_type idx) cons
 void
 TriSurfMesh::compute_node_neighbors()
 {
+  node_neighbors_.clear();
   node_neighbors_.resize(points_.size(),set<int>());
   unsigned int nfaces = faces_.size();
   for (unsigned int f = 0; f < nfaces; ++f)
@@ -272,7 +273,9 @@ TriSurfMesh::get_neighbors(Node::array_type &array, Node::index_type idx)
 {
   ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E, 
 	    "Must call synchronize NODE_NEIGHBORS_E on TriSurfMesh first"); 
-  copy(node_neighbors_[idx].begin(), node_neighbors_[idx].end(), array.end());
+
+  array.resize(node_neighbors_[idx].size());
+  copy(node_neighbors_[idx].begin(), node_neighbors_[idx].end(), array.begin());
 }
 
 

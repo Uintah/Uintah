@@ -91,7 +91,7 @@ SampleLattice::execute()
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
   {
     datatype = SCALAR;
-    minb = Point(0.0, 0.0, 0.0);
+    minb = Point(-1.0, -1.0, -1.0);
     maxb = Point(1.0, 1.0, 1.0);
   }
   else
@@ -130,18 +130,18 @@ SampleLattice::execute()
     return;
   }
 
-  if (datatype == VECTOR)
+  if (datatype == SCALAR)
+  {
+    ofh = scinew LatVolField<double>(mesh, data_at);
+  } 
+  else if (datatype == VECTOR)
   {
     ofh = scinew LatVolField<Vector>(mesh, data_at);
   }				    
-  else if (datatype == TENSOR)	    
+  else // if (datatype == TENSOR)	    
   {				    
     ofh = scinew LatVolField<Tensor>(mesh, data_at);
   }				    
-  else				    
-  {				    
-    ofh = scinew LatVolField<double>(mesh, data_at);
-  }
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Sample Field");
   if (!ofp) {
