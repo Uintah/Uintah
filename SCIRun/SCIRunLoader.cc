@@ -82,7 +82,7 @@ int SCIRunLoader::createInstance(const string& componentName, const string& comp
   //TODO: assume type is always good?
   
   string lastname=componentType.substr(componentType.find('.')+1);  
-  string so_name("/home/sci/kzhang/SCIRun/debug/lib/libCCA_Components_");
+  string so_name("/lib/libCCA_Components_");
   so_name=so_name+lastname+".so";
   cerr<<"componentType="<<componentType<<" soname="<<so_name<<endl;
     
@@ -204,7 +204,7 @@ void SCIRunLoader::buildComponentList()
   }
 
   destroyComponentList();
-  string component_path ="/home/sci/kzhang/SCIRun/src/CCA/Components/xml";
+  string component_path ="../src/CCA/Components/xml";
 // "../src/CCA/Components/xml";
   while(component_path != ""){
     unsigned int firstColon = component_path.find(':');
