@@ -1308,16 +1308,15 @@ proc moduleReplaceMenu { module menu } {
     set moduleList [findModuleReplacements $module]
     if { ![llength $moduleList] } { return 0 }
     # destroy the old menu
-    if [winfo exists $menu] {
-	destroy $menu
-    }
-     # create a new menu
+    if { [winfo exists $menu] } { destroy $menu }
+    # create a new menu
     menu $menu -tearoff false -disabledforeground black
 
     set added ""
     foreach path $moduleList {
 	set last [lindex $added end]
 	lappend added $path
+
 	if { ![string equal [lindex $path 0] [lindex $last 0]] } {
 	    # Add a menu separator if this package isn't the first one
 	    if { [$menu index end] != "none" } {
@@ -1328,13 +1327,14 @@ proc moduleReplaceMenu { module menu } {
 	}
 
 	if { ![string equal [lindex $path 1] [lindex $last 1]] } {
-	    $menu add cascade -label "  [lindex $path 1]" \
-		-menu $menu.menu_[lindex $path 1]
-	    menu $menu.menu_[lindex $path 1] -tearoff false
+	    set submenu $menu.menu_[join [lrange $path 0 1] _]
+	    menu $submenu -tearoff false
+	    $menu add cascade -label "  [lindex $path 1]" -menu $submenu
 	}
 
 	if { ![string equal [lindex $path 2] [lindex $last 2]] } {
-	    $menu.menu_[lindex $path 1] add command -label [lindex $path 2] \
+	    set submenu $menu.menu_[join [lrange $path 0 1] _]
+	    $submenu add command -label [lindex $path 2] \
 		-command "replaceModule $module $path"
 	}
     }
