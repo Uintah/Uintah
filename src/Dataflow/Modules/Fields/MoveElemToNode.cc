@@ -30,10 +30,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/LatVolField.h>
-#include <Core/Geometry/Transform.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Math/MiscMath.h>
+#include <Dataflow/Modules/Fields/MoveElemToNode.h>
 #include <iostream>
 
 namespace SCIRun {
@@ -81,40 +78,52 @@ MoveElemToNode::execute()
     return;
   }
 
+  string ext = "Lat";
+
   if (ifield_generation_ != ifield->generation)
   {
-    ifield_generation_ = ifield->generation;
+    const TypeDescription *ftd = ifield->get_type_description();
+    CompileInfoHandle ci = MoveElemToNodeAlgo::get_compile_info(ftd, ext);
+    Handle<MoveElemToNodeAlgo> algo;
+    if (!DynamicCompilation::compile(ci, algo, false, this))
+    {
+      error("Unable to compile MoveElemToNode algorithm.");
+      return;
+    }
 
-    LatVolMesh *imesh = dynamic_cast<LatVolMesh *>(ifield->mesh().get_rep());
-
-    const int ni = imesh->get_ni();
-    const int nj = imesh->get_nj();
-    const int nk = imesh->get_nk();
-
-    const double ioff = (1.0 - ((ni-2.0) / (ni-1.0))) * 0.5;
-    const double joff = (1.0 - ((nj-2.0) / (nj-1.0))) * 0.5;
-    const double koff = (1.0 - ((nk-2.0) / (nk-1.0))) * 0.5;
-    cout << "offsets: " << ioff << " " << joff << " " << koff << "\n";
-    const Point minp(ioff, joff, koff);
-    const Point maxp(1.0-ioff, 1.0-joff, 1.0-koff);
-
-    LatVolMesh *omesh = scinew LatVolMesh(ni-1, nj-1, nk-1, minp, maxp);
-
-    Transform trans;
-    imesh->get_canonical_transform(trans);
-    omesh->transform(trans);
-
-    LatVolField<double> *ofield =
-      scinew LatVolField<double>(omesh, Field::CELL);
-
+    FieldHandle ofield = algo->execute(this, ifield);
+  
     FieldOPort *ofp = (FieldOPort *)get_oport("Node Field");
     if (!ofp) {
       error("Unable to initialize oport 'Node Field'.");
       return;
     }
 
-    ofp->send(FieldHandle(ofield));
+    ofp->send(ofield);
   }
+}
+
+
+CompileInfoHandle
+MoveElemToNodeAlgo::get_compile_info(const TypeDescription *fsrc, string ext)
+{
+  // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  const string template_class_name("MoveElemToNodeAlgo" + ext);
+  static const string base_class_name("MoveElemToNodeAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       fsrc->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       fsrc->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  fsrc->fill_compile_info(rval);
+
+  return rval;
 }
 
 

@@ -61,6 +61,7 @@ SRCS     += \
 	$(SRCDIR)/ManageFieldMesh.cc\
 	$(SRCDIR)/MapDataToMeshCoord.cc\
 	$(SRCDIR)/MaskLattice.cc\
+	$(SRCDIR)/MoveElemToNode.cc\
 	$(SRCDIR)/QuadToTri.cc\
 	$(SRCDIR)/Probe.cc\
 	$(SRCDIR)/ReplaceScalarDataValue.cc\
