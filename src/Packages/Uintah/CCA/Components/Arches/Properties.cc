@@ -78,9 +78,12 @@ void
 Properties::computeInletProperties(const InletStream& inStream, 
 				   Stream& outStream)
 {
-  //  d_mixingModel->computeProps(inStream, outStream);
-  vector<double> mixVars = inStream.d_mixVars;
-  outStream = d_mixingModel->speciesStateSpace(mixVars);
+  if (dynamic_cast<const ColdflowMixingModel*>(d_mixingModel))
+    d_mixingModel->computeProps(inStream, outStream);
+  else {
+    vector<double> mixVars = inStream.d_mixVars;
+    outStream = d_mixingModel->speciesStateSpace(mixVars);
+  }
 }
   
 //****************************************************************************
