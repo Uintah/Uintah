@@ -444,7 +444,8 @@ WARNING
                 
      IntVector faceDirection(FaceType face) const;
      
-     string getFaceName(FaceType face) const;
+     // Returns a string equivalent of the face name (eg: "xminus")
+     static string getFaceName(FaceType face);
      
      void getFaceNodes(FaceType face, int offset, IntVector& l,
 		       IntVector& h) const;
