@@ -36,7 +36,21 @@ const LevelP& Grid::getLevel( int l ) const
 
 Level* Grid::addLevel(const Point& anchor, const Vector& dcell, int id)
 {
-  Level* level = scinew Level(this, anchor, dcell, (int)d_levels.size(), id);  
+  // find the new level's refinement ratio
+  // this should only be called when a new grid is created, so if this level index 
+  // is > 0, then there is a coarse-fine relationship between this level and the 
+  // previous one.
+
+  IntVector ratio;
+  if (d_levels.size() > 0) {
+    Vector r = d_levels[d_levels.size()-1]->dCell() / dcell;
+    ratio = IntVector(r.x(), r.y(), r.z());
+  }
+  else
+    ratio = IntVector(1,1,1);
+  
+  Level* level = scinew Level(this, anchor, dcell, (int)d_levels.size(), ratio, id);  
+
   d_levels.push_back( level );
   return level;
 }
