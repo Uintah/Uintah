@@ -45,16 +45,6 @@ module TeX_Source
   end
 end
 
-module HTML_Source
-  def commentBeg
-    "<!--"
-  end
-
-  def commentEnd
-    "-->"
-  end
-end
-
 module XML_Source
   def commentBeg
     "<!--"
@@ -77,6 +67,36 @@ module XML_Source
       raise "Bogus entity"
     end
     "<!ENTITY #{entity} SYSTEM \"#{dir}/#{file}.#{ext}\">"
+  end
+
+  def docType(rootElement, public, sys, entities=nil, sysentities=nil)
+    docType = "<!DOCTYPE #{rootElement} PUBLIC \"#{public}\" \"#{sys}\""
+    if entities or sysentities
+      docType += " [\n"
+    end
+    if entities != nil
+      entities.each do |key, value|
+	docType += "<!ENTITY #{key} \"#{value}\">\n"
+      end
+    end
+    if sysentities != nil
+      sysentities.each do |name|
+	docType += sysEntity(name) + "\n"
+      end
+    end
+    if entities or sysentities
+      docType += "]"
+    end
+    docType += ">\n"
+  end
+end
+
+module DocBook_Source
+  include(XML_Source)
+  DB_VER = "4.1.2"
+  def insertDocType(rootElement, entities=nil, sysentities=nil)
+    print(docType(rootElement, "-//OASIS//DTD DocBook XML V#{DB_VER}//EN",
+	  "http://www.oasis-open.org/docbook/xml/#{DB_VER}/docbookx.dtd", entities, sysentities))
   end
 end
 
@@ -298,7 +318,7 @@ end
 
 # HTML doc, i.e. all index.rhtml files.
 class HTMLDoc < Doc
-  include(HTML_Source)
+  include(XML_Source)
 end
 
 # TeX document - no knowledge of output mode.
@@ -320,13 +340,13 @@ end
 
 # DocBook document generating HTML output.
 class DocBook_HTML < Doc
-  include(XML_Source)
+  include(DocBook_Source)
   include(XML_HTML_Output)
 end
 
 # DocBook document generating print output.
 class DocBook_Print < Doc
-  include(XML_Source)
+  include(DocBook_Source)
   include(XML_Print_Output)
 end
 
