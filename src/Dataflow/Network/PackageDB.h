@@ -93,6 +93,11 @@ namespace SCIRun {
       void setGui(GuiInterface* gui);
       ModuleInfo* GetModuleInfo(const string& name, const string& catname,
 				const string& packname);
+
+      // Used if the module has changed categories.
+      string getCategoryName(const string &packName,
+			     const string &catName,
+			     const string &modName);
     private:
       LIBRARY_HANDLE findLibInPath(string,string);
       bool findMaker(ModuleInfo* info);
