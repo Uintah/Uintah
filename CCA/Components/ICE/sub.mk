@@ -2,10 +2,23 @@
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Uintah/CCA/Components/ICE
+#---------------------
+# remove rate form files
+#
+RF= $(RateForm)
+ifeq ($(RF),true)
+SRCS     += \
+	$(SRCDIR)/ICERF.cc \
+       $(SRCDIR)/ICEDebugRF.cc
+       
+ else
+SRCS     += \
+	$(SRCDIR)/ICE.cc \
+       $(SRCDIR)/ICEDebug.cc
+endif
+#---------------------
 
 SRCS	+= \
-	$(SRCDIR)/ICE.cc         \
-	$(SRCDIR)/ICEDebug.cc \
 	$(SRCDIR)/ICELabel.cc    \
 	$(SRCDIR)/ICEMaterial.cc \
 	$(SRCDIR)/GeometryObject2.cc \
