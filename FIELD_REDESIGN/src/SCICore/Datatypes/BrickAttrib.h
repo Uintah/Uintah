@@ -24,6 +24,7 @@
 #include <sstream>
 
 #define MIKE_DEBUG
+#define BITBOUND 0
 
 namespace SCICore {
 namespace Datatypes {
@@ -102,11 +103,21 @@ public:
   static PersistentTypeID type_id;
 
 protected:
+#if BITBOUND
   static const int XBRICKSIZE = 4;
   static const int YBRICKSIZE = 2;
   static const int ZBRICKSIZE = 2;
-  int xbrickcount, ybrickcount, zbrickcount;
+#else
+  static const int XBRICKBITS = 4;
+  static const int YBRICKBITS = 2;
+  static const int ZBRICKBITS = 2;
 
+  static const int XBRICKSPACE = ((1 << XBRICKBITS) - 1);
+  static const int YBRICKSPACE = ((1 << YBRICKBITS) - 1);
+  static const int ZBRICKSPACE = ((1 << ZBRICKBITS) - 1);
+#endif
+
+  int xbrickcount, ybrickcount, zbrickcount;
   void update_brick_counts();
 
   unsigned int linearize(int x, int y);
@@ -121,6 +132,7 @@ template <class T> PersistentTypeID BrickAttrib<T>::type_id("BrickAttrib", "Data
 template <class T> void
 BrickAttrib<T>::update_brick_counts()
 {
+#if BITBOUND
   xbrickcount = nx / XBRICKSIZE;
   if (nx % XBRICKSIZE) xbrickcount++;
 
@@ -129,6 +141,16 @@ BrickAttrib<T>::update_brick_counts()
 
   zbrickcount = nz / ZBRICKSIZE;
   if (nz % ZBRICKSIZE) zbrickcount++;
+#else
+  xbrickcount = nx >> XBRICKBITS;
+  if (nx & XBRICKSPACE) xbrickcount++;
+
+  ybrickcount = ny >> YBRICKBITS;
+  if (ny & YBRICKSPACE) ybrickcount++;
+
+  zbrickcount = nz >> ZBRICKBITS;
+  if (nz & ZBRICKSPACE) zbrickcount++;
+#endif  
 }
 
 
@@ -173,7 +195,7 @@ BrickAttrib<T>::~BrickAttrib()
 {
 }
 
-#if 0
+#if BITBOUND
 template <class T> unsigned int
 BrickAttrib<T>::linearize(int x, int y)
 {
@@ -209,13 +231,33 @@ BrickAttrib<T>::linearize(int x, int y, int z)
 template <class T> unsigned int
 BrickAttrib<T>::linearize(int x, int y)
 {
-  return y * nx + x;
+  int xb = x >> XBRICKBITS;
+  int yb = y >> YBRICKBITS;
+
+  int xr = x & XBRICKSPACE;
+  int yr = y & YBRICKSPACE;
+
+  int brick = yb * xbrickcount + xb;
+  int baddr = (yr << XBRICKBITS) + xr;
+
+  return (brick << (XBRICKBITS + YBRICKBITS)) + baddr;
 }
 
 template <class T> unsigned int
 BrickAttrib<T>::linearize(int x, int y, int z)
 {
-  return z * (nx * ny) + y * nx + x;
+  int xb = x >> XBRICKBITS;
+  int yb = y >> YBRICKBITS;
+  int zb = z >> ZBRICKBITS;
+
+  int xr = x & XBRICKSPACE;	
+  int yr = y & YBRICKSPACE;
+  int zr = z & ZBRICKSPACE;
+
+  int brick = zb * xbrickcount * ybrickcount + yb * xbrickcount + xb;
+  int baddr = (zr << (XBRICKBITS + YBRICKBITS)) + (yr << XBRICKBITS) + xr;
+
+  return (brick << (XBRICKBITS + YBRICKBITS + ZBRICKBITS)) + baddr;
 }
 #endif
 
@@ -410,9 +452,14 @@ BrickAttrib<T>::resize(int x, int y, int z)
 {
   DiscreteAttrib<T>::resize(x, y, z);
   update_brick_counts();
+#if BITBOUND
   data.resize(xbrickcount * XBRICKSIZE *
 	      ybrickcount * YBRICKSIZE *
 	      zbrickcount * XBRICKSIZE);
+#else
+  data.resize((xbrickcount * ybrickcount * zbrickcount) <<
+	      (XBRICKBITS + YBRICKBITS + ZBRICKBITS));
+#endif
 }
 
 
@@ -421,8 +468,13 @@ BrickAttrib<T>::resize(int x, int y)
 {
   DiscreteAttrib<T>::resize(x, y);
   update_brick_counts();
+#if BITBOUND
   data.resize(xbrickcount * XBRICKSIZE *
 	      ybrickcount * YBRICKSIZE);
+#else
+  data.resize((xbrickcount * ybrickcount) <<
+	      (XBRICKBITS + YBRICKBITS));
+#endif
 }
 
 
@@ -430,7 +482,11 @@ template <class T> void
 BrickAttrib<T>::resize(int x)
 {
   DiscreteAttrib<T>::resize(x);
+#if BITBOUND
   data.resize(xbrickcount * XBRICKSIZE);
+#else
+  data.resize(xbrickcount << XBRICKBITS);
+#endif
 }
 
 
@@ -495,13 +551,18 @@ template <class T> string BrickAttrib<T>::get_info(){
     "Dim = " << dim << ": " << nx << ' ' << ny << ' ' << nz << endl <<
     "Brickcounts = " 
 	 << xbrickcount << ' ' << ybrickcount << ' ' << zbrickcount << endl <<
+#if BITBOUND
+#else
     "Bricksizes = "
-	 << XBRICKSIZE << ' ' << YBRICKSIZE << ' ' << ZBRICKSIZE << endl <<
+	 << (1 << XBRICKBITS) << ' '
+	 << (1 << YBRICKBITS) << ' '
+	 << (1 << ZBRICKBITS) << endl <<
+#endif
     "Size = " << size() << endl <<
     "Data = ";
   vector<T>::iterator itr = data.begin();
   int i = 0;
-  for(;itr!=data.end() && i < 1000; itr++, i++) {
+  for(;itr!=data.end() && i < 200; itr++, i++) {
     retval << *itr << " ";
   }
   if (itr != data.end()) { retval << "..."; }
