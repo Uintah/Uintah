@@ -12,6 +12,7 @@ FractureParticleCreator::FractureParticleCreator(MPMMaterial* matl,
   :  ParticleCreator(matl,lb,flags)
 {
   registerPermanentParticleState(matl,lb);
+  d_fracture = flags->d_fracture = true;
 
   // Transfer to the lb's permanent particle state array of vectors
 
