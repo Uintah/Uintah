@@ -34,7 +34,7 @@ public:
 
     void addObj(GeomObj*, int);  // adds an object to the table
     GeomObj* getObj(int);        // gets an object from the table
-    void delObj(int);		 // removes object from table
+    void delObj(int, int del);	 // removes object from table
     void delAll(void);		 // deletes everything
 
     HashTableIter<int,GeomObj*> getIter(void); // gets an iter

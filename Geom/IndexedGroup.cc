@@ -97,13 +97,14 @@ GeomObj* GeomIndexedGroup::getObj(int id)
     return 0;
 }
 
-void GeomIndexedGroup::delObj(int id)
+void GeomIndexedGroup::delObj(int id, int del)
 {
     GeomObj* obj;
 
     if (objs.lookup(id,obj)) {
 	objs.remove(id);
-	delete obj;
+	if(del)
+	    delete obj;
     }
     else {
 	cerr << "invalid id in GeomIndexedGroup::delObj()!\n";

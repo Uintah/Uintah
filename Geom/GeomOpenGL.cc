@@ -100,9 +100,7 @@ static void quad_error(GLenum code)
 DrawInfoOpenGL::DrawInfoOpenGL()
 : current_matl(0),lighting(1),currently_lit(1),pickmode(1),fog(0)
 {
-    cerr << "Drawinfo::drawinfo\n";
     qobj=gluNewQuadric();
-    cerr << "calling gluquadriccallback\n";
     gluQuadricCallback(qobj, GLU_ERROR, (void (*)())quad_error);
 }
 
@@ -683,7 +681,6 @@ void GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
 	unsigned int o2=o&0xffffffff;
 	glPushName(o1);
 	glPushName(o2);
-	cerr << "pick: " << this << endl;
 #else
 	glPushName((GLuint)this);
 #endif
@@ -1651,10 +1648,8 @@ void GeomTriStripList::draw(DrawInfoOpenGL* di, Material* matl, double)
     if (di->currently_lit) {
 #ifdef SCI_NORM_OGL	
 	glEnable(GL_NORMALIZE);
-	cerr << "doing slist...enable norm\n";
 #else
 	glDisable(GL_NORMALIZE);
-	cerr << "doing slist...disable norm\n";
 #endif
 	switch(di->get_drawtype()){
 	case DrawInfoOpenGL::WireFrame:
