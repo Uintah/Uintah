@@ -164,7 +164,7 @@ map<string,int> taskname_to_id_map;
 int unique_id = 9999;
 
 int
-tau_mapping_create( const string & taskname )
+create_tau_mapping( const string & taskname )
 {
   map<string,int>::iterator iter = taskname_to_id_map.find( taskname );
   if( iter != taskname_to_id_map.end() )
@@ -173,8 +173,9 @@ tau_mapping_create( const string & taskname )
     }
   else
     {
-      TAU_MAPPING_CREATE( taskname, "[MPIScheduler::execute()]",
-			  (TauGroup_t) unique_id, taskname, 0 );
+      string name = taskname;
+      TAU_MAPPING_CREATE( name, "[MPIScheduler::execute()]",
+			  (TauGroup_t) unique_id, name.c_str(), 0 );
       taskname_to_id_map[ taskname ] = unique_id;
       unique_id++;
       return (unique_id - 1);
@@ -311,7 +312,7 @@ MPIScheduler::execute(const ProcessorGroup * pg )
 	dbg << '\n';
 
 	int id;
-	id = tau_mapping_create( task->getTask()->getName() );
+	id = create_tau_mapping( task->getTask()->getName() );
 
   TAU_MAPPING_OBJECT(tautimer)
   TAU_MAPPING_LINK(tautimer, (TauGroup_t)id);  // EXTERNAL ASSOCIATION
