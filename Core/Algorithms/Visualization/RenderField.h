@@ -65,7 +65,7 @@ public:
   void set_mat_map(ind_mat_t *mm) { mats_ = mm; }
 
   virtual void render(FieldHandle f, bool nodes, bool edges, 
-		      bool faces, bool data, MaterialHandle def_mat, 
+		      bool faces, MaterialHandle def_mat, 
 		      bool def_col, ColorMapHandle color_handle,
 		      const string &ndt, const string &edt, 
 		      double ns, double es, double vs, bool normalize, 
@@ -74,7 +74,7 @@ public:
 		      bool node_transparency,
 		      bool edge_transparency,
 		      bool face_transparency,
-		      bool bidirectional, bool arrow_heads) = 0;
+		      bool bidirectional) = 0;
 
   virtual GeomSwitch *render_text(FieldHandle fld,
 				  bool use_default_material,
@@ -99,7 +99,6 @@ public:
   GeomHandle               node_switch_;
   GeomHandle               edge_switch_;
   GeomHandle               face_switch_;
-  GeomHandle               data_switch_;
 
 protected:
   MaterialHandle           def_mat_handle_;
@@ -128,7 +127,7 @@ class RenderField : public RenderFieldBase
 public:
   //! virtual interface. 
   virtual void render(FieldHandle fh,  
-		      bool nodes, bool edges, bool faces, bool data,
+		      bool nodes, bool edges, bool faces,
 		      MaterialHandle def_mat,
 		      bool data_at, ColorMapHandle color_handle,
 		      const string &ndt, const string &edt, 
@@ -138,7 +137,7 @@ public:
 		      bool node_transparency,
 		      bool edge_transparency,
 		      bool face_transparency,
-		      bool bidirectional, bool arrow_heads);
+		      bool bidirectional);
 
   virtual GeomSwitch *render_text(FieldHandle fld,
 				  bool use_default_material,
@@ -206,11 +205,6 @@ private:
 				int precision,
 				bool render_locations);
 
-  GeomSwitch *render_data(const Fld *fld, 
-			  const string &data_display_mode,
-			  double scale, bool normalize, bool bidirectional,
-			  bool arrow_heads);
-
   void render_materials(const Fld *fld, const string &data_display_mode);
 };
 
@@ -268,7 +262,7 @@ add_data(const Point &, const Tensor &, GeomArrows *,
 template <class Fld, class Loc>
 void 
 RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes, 
-			      bool edges, bool faces, bool data,
+			      bool edges, bool faces,
 			      MaterialHandle def_mat,
 			      bool def_col, ColorMapHandle color_handle,
 			      const string &ndt, const string &edt,
@@ -278,7 +272,7 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
 			      bool n_transp,
 			      bool e_transp,
 			      bool f_transp,
-			      bool bidirectional, bool arrow_heads)
+			      bool bidirectional)
 {
   Fld *fld = dynamic_cast<Fld*>(fh.get_rep());
   ASSERT(fld != 0);
@@ -300,53 +294,6 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
   {
     face_switch_ = render_faces(fld, use_normals, f_transp);
   }
-  if (data)
-  {
-    data_switch_ = render_data(fld, ndt, vs, normalize, bidirectional,
-			       arrow_heads);
-  }
-}
-
-
-
-template <class Fld, class Loc>
-GeomSwitch *
-RenderField<Fld, Loc>::render_data(const Fld *fld,
-				   const string &display_mode,
-				   double scale, 
-				   bool normalize,
-				   bool bidirectional,
-				   bool arrow_heads)
-{
-  GeomArrows *vec_node;
-  if (arrow_heads)
-  {
-    vec_node = scinew GeomArrows(0.15, 0.6);
-  }
-  else
-  {
-    vec_node = scinew GeomArrows(0, 0.6);
-  }
-  GeomSwitch *data_switch = scinew GeomSwitch(vec_node);
-
-  typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
-
-  typename Loc::iterator iter, end;
-  mesh->begin(iter);
-  mesh->end(end);
-  while (iter != end) {
-    typename Fld::value_type tmp;
-    if (fld->value(tmp, *iter)) {
-      Point p;
-      mesh->get_center(p, *iter);
-      //to_double(tmp, val);
-      MaterialHandle m = choose_mat(false, *iter);
-      add_data(p, tmp, vec_node,
-	       m, display_mode, scale, normalize, bidirectional); 
-    }
-    ++iter;
-  }
-  return data_switch;
 }
 
 
@@ -532,7 +479,6 @@ RenderField<Fld, Loc>::render_materials(const Fld *sfld,
   if (node_switch_.get_rep()) { node_switch_->reset_bbox(); }
   if (edge_switch_.get_rep()) { edge_switch_->reset_bbox(); }
   if (face_switch_.get_rep()) { face_switch_->reset_bbox(); }
-  if (data_switch_.get_rep()) { data_switch_->reset_bbox(); }
 }
 
 
@@ -1360,7 +1306,6 @@ public:
 				  const string &data_display_mode,
 				  double scale, bool normalize,
 				  bool bidirectional,
-				  bool arrow_heads,
 				  int resolution) = 0;
 
 
@@ -1399,7 +1344,6 @@ public:
 				  double scale,
 				  bool normalize,
 				  bool bidirectional,
-				  bool arrow_heads,
 				  int resolution);
 };
 
@@ -1414,7 +1358,6 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 						double scale, 
 						bool normalize,
 						bool bidirectional,
-						bool arrow_heads,
 						int resolution)
 {
   VFld *vfld = dynamic_cast<VFld*>(vfld_handle.get_rep());
@@ -1425,8 +1368,11 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
   GeomGroup *disks;
   GeomArrows *vec_node;
   GeomCLines *lines;
-  const bool disks_p = (display_mode == "Disks");
+  const bool lines_p = (display_mode == "Lines");
+  const bool needles_p = (display_mode == "Needles");
   const bool cones_p = (display_mode == "Cones");
+  const bool arrows_p = (display_mode == "Arrows");
+  const bool disks_p = (display_mode == "Disks");
   GeomSwitch *data_switch;
   if (disks_p || cones_p)
   {
@@ -1435,18 +1381,29 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
       scinew GeomSwitch(scinew GeomDL(scinew GeomMaterial(disks,
 							  default_material)));
   }
-  else if (arrow_heads)
+  else if (arrows_p)
   {
     vec_node = scinew GeomArrows(0.15, 0.6);
     data_switch = scinew GeomSwitch(scinew GeomDL(vec_node));
   }
-  else
+  else if (lines_p || needles_p)
   {
-    lines = scinew GeomCLines();
+    if (lines_p)
+    {
+      lines = scinew GeomCLines();
+    }
+    else
+    {
+      lines = scinew GeomTranspLines();
+    }
+
     data_switch =
       scinew GeomSwitch(scinew GeomDL(scinew GeomMaterial(lines,
 							  default_material)));
   }
+
+  MaterialHandle tdefmat = default_material->clone();
+  tdefmat->transparency = 0.0;
 
   typename VFld::mesh_handle_type mesh = vfld->get_typed_mesh();
 
@@ -1479,14 +1436,18 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 		 (cmap.get_rep())?(cmap->lookup(ctmpd)):0,
 		 normalize, colorify);
       }
-      else if (arrow_heads)
+      else if (arrows_p)
       {
 	add_data(p, tmp, vec_node,
 		 (cmap.get_rep())?(cmap->lookup(ctmpd)):default_material,
 		 display_mode, scale, normalize, bidirectional);
       }
-      else
+      else if (lines_p)
       {
+	if (normalize)
+	{
+	  tmp.safe_normalize();
+	}
 	tmp *= scale;
 	if (bidirectional)
 	{
@@ -1510,6 +1471,33 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	  else
 	  {
 	    lines->add(p, p + tmp);
+	  }
+	}
+      }
+      else // Needles
+      {
+	if (normalize)
+	{
+	  tmp.safe_normalize();
+	}
+	tmp *= scale;
+	if (cmap.get_rep())
+	{
+	  MaterialHandle color = cmap->lookup(ctmpd);
+	  MaterialHandle tcolor = color->clone();
+	  tcolor->transparency = 0.0;
+	  lines->add(p, color, p + tmp, tcolor);
+	  if (bidirectional)
+	  {
+	    lines->add(p, color, p - tmp, tcolor);
+	  }
+	}
+	else
+	{
+	  lines->add(p, default_material, p + tmp, tdefmat);
+	  if (bidirectional)
+	  {
+	    lines->add(p, default_material, p - tmp, tdefmat);
 	  }
 	}
       }

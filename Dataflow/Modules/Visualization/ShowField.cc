@@ -88,7 +88,6 @@ class ShowField : public Module
   GuiInt                   normalize_vectors_;
   GuiInt                   has_vector_data_;
   GuiInt                   bidirectional_;
-  GuiInt                   arrow_heads_on_;
   bool                     data_dirty_;
   string                   cur_field_data_type_;
   Field::data_location     cur_field_data_at_;
@@ -206,7 +205,6 @@ ShowField::ShowField(GuiContext* ctx) :
   normalize_vectors_(ctx->subVar("normalize-vectors")),
   has_vector_data_(ctx->subVar("has_vector_data")),
   bidirectional_(ctx->subVar("bidirectional")),
-  arrow_heads_on_(ctx->subVar("arrow-heads-on")),
   data_dirty_(true),
   cur_field_data_type_("none"),
   cur_field_data_at_(Field::NONE),
@@ -289,9 +287,9 @@ ShowField::check_for_vector_data(FieldHandle fld_handle) {
   // Test for vector data possibility
   if (fld_handle.get_rep() == 0) { return false; }
 
-  has_vector_data_.reset();
-  has_tensor_data_.reset();
-  has_scalar_data_.reset();
+  has_vector_data_.set(0);
+  has_tensor_data_.set(0);
+  has_scalar_data_.set(0);
   nodes_as_disks_.reset();
   if (fld_handle->query_vector_interface(this).get_rep() != 0)
   {
@@ -314,7 +312,7 @@ ShowField::check_for_vector_data(FieldHandle fld_handle) {
   }
   else if (fld_handle->query_scalar_interface(this).get_rep() != 0)
   {
-    if (!has_scalar_data_.get())
+    if (! has_scalar_data_.get())
     {
       has_scalar_data_.set(1);
     }
@@ -662,7 +660,7 @@ ShowField::execute()
 
     renderer_->set_mat_map(&idx_mats_);
     renderer_->render(fld_handle, 
-		      do_nodes, do_edges, do_faces, false,
+		      do_nodes, do_edges, do_faces,
 		      def_mat_handle_, data_at_dirty_, color_handle,
 		      ndt, edt, ns, es, vscale, normalize_vectors_.get(),
 		      node_resolution_, edge_resolution_,
@@ -670,7 +668,7 @@ ShowField::execute()
 		      nodes_transparency_.get(),
 		      edges_transparency_.get(),
 		      faces_transparency_.get(),
-		      bidirectional_.get(), arrow_heads_on_.get());
+		      bidirectional_.get());
   }
 
   // cleanup...
@@ -715,9 +713,9 @@ ShowField::execute()
 					   vdt, vscale,
 					   normalize_vectors_.get(),
 					   bidirectional_.get(),
-					   arrow_heads_on_.get(),
 					   data_resolution_);
-      data_id_ = ogeom_->addObj(data, "Vectors");
+      const string vdname = (vdt=="Needles")?"TransParent Vectors":"Vectors";
+      data_id_ = ogeom_->addObj(data, vdname);
     }
     else if (vfld_handle.get_rep() &&
 	     data_tensor_renderer_.get_rep() &&
@@ -1030,11 +1028,6 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
   } else if (args[1] == "toggle_bidirectional"){
     // Toggle the GeomSwitch.
     bidirectional_.reset();
-    data_dirty_ = true;
-    maybe_execute(DATA); // Must redraw the vectors.
-  } else if (args[1] == "toggle_arrowheads"){
-    // Toggle the GeomSwitch.
-    arrow_heads_on_.reset();
     data_dirty_ = true;
     maybe_execute(DATA); // Must redraw the vectors.
   } else if (args[1] == "execute_policy"){
