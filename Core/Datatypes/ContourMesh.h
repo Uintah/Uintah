@@ -90,9 +90,11 @@ public:
   virtual ~ContourMesh() {}
 
   node_iterator node_begin() const { return 0; }
-  node_iterator node_end() const { return nodes_.size(); }
+  node_iterator node_end() const 
+    { return NodeIterator<index_type>(nodes_.size()); }
   edge_iterator edge_begin() const { return 0; }
-  edge_iterator edge_end() const { return edges_.size(); }
+  edge_iterator edge_end() const 
+    { return EdgeIterator<index_type>(edges_.size()); }
   face_iterator face_begin() const { return 0; }
   face_iterator face_end() const { return 0; }
   cell_iterator cell_begin() const { return 0; }
