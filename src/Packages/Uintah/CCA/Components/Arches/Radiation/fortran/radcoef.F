@@ -8,7 +8,7 @@ C***********************************************************************
       double precision PI,PI1,PATM,OPF,EMG,PCO2,PH2O,PCO2F,PH2OF,
      &PSUMF,PAVE,PML,PRES,PWPC,TGI,CCO2,CH2O,DELE,EMGI,EMGF,FV,ECO2,
      &EH2O,TGF,SIG,xxx,yyy,zzz,xxxx,yyyy,zzzz,small,QSRC,M,scatcoef, 
-     &phfunc
+     &phfunc,abskgtemp
 
       double precision AEM(3)
       double precision AEK(3)
@@ -236,14 +236,15 @@ C-----------------------------------------------------------------------
 	    ABSKG(I,J,K) = ABSKG(I,J,K) + MIN( 25.0d0,((4.0d0/OPL) 
      1                 * DLOG(1.0d0 + 350.0d0*FV*TG(I,J,K)*OPL)) )
 
-        if(abskg(i,j,k).eq.0.0d0)abskg(i,j,k) = 1.0d-06
+	    abskgtemp = abskg(i,j,k)
+        if(abskgtemp.le.1.0d-06)abskgtemp = 1.0d-06
 
 c     Anisotropic scattering properties for the interior nodes
 c     (for spherical harmonics only)
 
             scatcoef = 0.0d0
             phfunc   = 0.0d0
-            shgamma(i,j,k) = 3.0d0*(abskg(i,j,k) + scatcoef) - 
+            shgamma(i,j,k) = 3.0d0*(abskgtemp + scatcoef) - 
      &      phfunc*scatcoef
 
             shgamma(i,j,k) = 1.0d0/shgamma(i,j,k)
