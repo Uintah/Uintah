@@ -11,19 +11,15 @@
   <instantiations>
     <instance num="1">
       <type name="InputImageType">
-        <datatype>ITKDatatype</datatype>
         <value>itk::Image&lt;float, 3&gt;</value>
       </type>
       <type name="LabeledImageType">
-        <datatype>ITKDatatype</datatype>
         <value>itk::Image&lt;float, 3 &gt;</value>
       </type>
       <type name="SegmentTableType">
-        <datatype>ITKDatatype</datatype>
         <value>SegmentTable&lt;float&gt;</value>
       </type>
       <type name="BoundaryType">
-        <datatype>ITKDatatype</datatype>
         <value>Boundary&lt;float, 3 &gt;</value>
       </type>
      </instance>

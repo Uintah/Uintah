@@ -11,15 +11,12 @@
   <instantiations>
     <instance num="1">
       <type name="FeatureImageType">
-        <datatype>ITKDatatype</datatype>
         <value>itk::Image&lt;unsigned char, 2&gt;</value>
       </type>
       <type name="SeedImageType">
-        <datatype>ITKDatatype</datatype>
         <value>itk::Image&lt;float, 2&gt;</value>
       </type>
       <type name="OutputPixelType">
-        <datatype>ITKDatatype</datatype>
         <value>float</value>
       </type>
      </instance>
