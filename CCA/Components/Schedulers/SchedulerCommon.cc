@@ -283,6 +283,11 @@ void SchedulerCommon::replaceDataWarehouse(int index, const GridP& grid)
   dws[index] = scinew OnDemandDataWarehouse(d_myworld, this, d_generation++, grid);
 }
 
+void SchedulerCommon::setRestartable(bool restartable)
+{
+  this->restartable = restartable;
+}
+
 const vector<const Patch*>* SchedulerCommon::
 getSuperPatchExtents(const VarLabel* label, int matlIndex, const Patch* patch,
                      Ghost::GhostType requestedGType, int requestedNumGCells,

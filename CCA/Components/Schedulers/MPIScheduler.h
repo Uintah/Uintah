@@ -136,6 +136,7 @@ WARNING
     double           d_lasttime;
     vector<char*>    d_labels;
     vector<double>   d_times;
+    bool             d_logTimes;
 
     void emitTime(char* label);
     void emitTime(char* label, double time);
