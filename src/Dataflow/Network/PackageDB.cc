@@ -18,6 +18,7 @@
 // PackageDB.cc - Interface to module-finding and loading mechanisms
 
 #include <Core/Util/soloader.h>
+#include <Core/Util/scirun_env.h>
 #ifdef ASSERT
 #undef ASSERT
 #endif
@@ -52,7 +53,14 @@ using std::vector;
 #pragma reset woff 1375
 #endif
 
+#include <sys/stat.h>
+
 namespace SCIRun {
+
+extern env_map scirunrc;
+extern string SCIRUN_SRCTOP;
+extern string DEFAULT_LOAD_PACKAGE;
+
 
 typedef struct {
   string name;
@@ -87,9 +95,9 @@ PackageDB::~PackageDB(void)
 
 typedef void (*pkgInitter)(const string& tclPath);
 
-void PackageDB::loadPackage(const string& packPath)
+void PackageDB::loadPackage()
 {
-  string packagePath = packPath;
+  string loadPackage;
   string result;
   std::map<int,package*> packages;
   package* new_package = 0;
@@ -102,45 +110,97 @@ void PackageDB::loadPackage(const string& packPath)
   component_node* node = 0;
   int mod_count = 0;
   string notset(NOT_SET);
+  string packagePath;
 
   postMessage("Loading packages, please wait...\n", false);
 
+  // the format of PACKAGE_PATH is a colon seperated list of paths to the
+  // root(s) of package source trees.
+  // build the complete package path (var in .scirunrc + default)
+  env_iter i = scirunrc.find(string("PACKAGE_SRC_PATH"));
+  if (i!=scirunrc.end())
+    packagePath = (*i).second + ":" + SCIRUN_SRCTOP +"/Packages";
+  else
+    packagePath = SCIRUN_SRCTOP + "/Packages";
 
-  // The format of a package path element is either URL,URL,...
-  // Where URL is a filename or a url to an XML file that
-  // describes the components in the package.
-  
-  while(packagePath!="") {
-    // Strip off the first element, leave the rest in the path for the next
+  // the format of LOAD_PACKAGE is a comma seperated list of package names.
+  // build the complete list of packages to load
+  i = scirunrc.find(string("LOAD_PACKAGE"));
+  if (i!=scirunrc.end())
+    loadPackage = (*i).second;
+  else
+    loadPackage = DEFAULT_LOAD_PACKAGE;
+
+  while(loadPackage!="") {
+    // Strip off the first element, leave the rest for the next
     // iteration.
-    const unsigned int firstComma = packagePath.find(',');
-    if(firstComma < packagePath.size()) {
-      packageElt=packagePath.substr(0,firstComma);
-      packagePath=packagePath.substr(firstComma+1,-1);
+    const unsigned int firstComma = loadPackage.find(',');
+    if(firstComma < loadPackage.size()) {
+      packageElt=loadPackage.substr(0,firstComma);
+      loadPackage=loadPackage.substr(firstComma+1,-1);
     } else {
-      packageElt=packagePath;
-      packagePath="";
+      packageElt=loadPackage;
+      loadPackage="";
     }
 
-    TCL::execute(string("lappend auto_path ")+packageElt+"/Dataflow/GUI");
+    string tmpPath = packagePath;
+    string pathElt;
+
+    for (;tmpPath!="";) {
+      if (packageElt=="SCIRun") {
+	tmpPath = "found";
+	break;
+      }
+      const unsigned int firstColon = tmpPath.find(':');
+      if(firstColon < tmpPath.size()) {
+	pathElt=tmpPath.substr(0,firstColon);
+	tmpPath=tmpPath.substr(firstColon+1,-1);
+      } else {
+	pathElt=tmpPath;
+	tmpPath="";
+      }
+      
+      struct stat buf;
+      lstat((pathElt+"/"+packageElt).c_str(),&buf);
+      if (S_ISDIR(buf.st_mode)) {
+	tmpPath = "found";
+	break;
+      }
+    }
+
+    if (tmpPath=="") {
+      postMessage("Unable to load package " + packageElt +
+		  ":\n - Can't find " + packageElt + 
+		  " directory in package path\n");
+      continue;
+    }
+
+    TCL::execute(string("lappend auto_path ")+pathElt+"/"+packageElt+
+		 "/Dataflow/GUI");
     
-    string bname = basename(packageElt);
-    string pname = basename(packageElt);
+    string bname = packageElt;
+    string pname = packageElt;
+    string xmldir;
     
-    if(bname == "src") {
+    if(bname == "SCIRun") {
       bname = "";
       pname = "SCIRun";
+      xmldir = SCIRUN_SRCTOP + "/Dataflow/XML";
+      TCL::execute(string("lappend auto_path ")+SCIRUN_SRCTOP+
+		   "/Dataflow/GUI");
     } else {
       bname = "Packages_" + bname + "_";
+      xmldir = pathElt+"/"+packageElt+"/Dataflow/XML";
+      TCL::execute(string("lappend auto_path ")+pathElt+"/"+packageElt+
+		   "/Dataflow/GUI");
     }
 
-    string xmldir = packageElt+"/Dataflow/XML";
     std::map<int,char*>* files;
     files = GetFilenamesEndingWith((char*)xmldir.c_str(),".xml");
 
     if (!files) {
       postMessage("Unable to load package " + pname +
-		  ":\n - Couldn't find " + xmldir + " directory");
+		  ":\n - Couldn't find *.xml in " + xmldir +"\n");
       continue;
     }
 

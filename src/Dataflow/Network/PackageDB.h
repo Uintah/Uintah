@@ -65,7 +65,7 @@ namespace SCIRun {
         PackageDB(void);
         ~PackageDB(void);
 
-        void loadPackage(const string& packagePath);
+        void loadPackage();
         void registerModule(ModuleInfo* info);
 	void createAlias(const string& fromPackageName,
 			 const string& fromCategoryName,

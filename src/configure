@@ -1024,9 +1024,9 @@ for i in $package; do
  PACKAGE_DIRS=$PACKAGE_DIRS" Packages/$i"
 done
 
-PACKAGE_PATH="\$(SRCTOP_ABS)"
+LOAD_PACKAGE="SCIRun"
 for i in $package; do
- PACKAGE_PATH=$PACKAGE_PATH,"\$(SRCTOP_ABS)/Packages/$i"
+ LOAD_PACKAGE=$LOAD_PACKAGE,"$i"
 done
 
 ##-- check for user supplied tcl paths --------------------------------------
@@ -4207,7 +4207,7 @@ s%@mandir@%$mandir%g
 s%@CC@%$CC%g
 s%@CXX@%$CXX%g
 s%@PACKAGE_DIRS@%$PACKAGE_DIRS%g
-s%@PACKAGE_PATH@%$PACKAGE_PATH%g
+s%@LOAD_PACKAGE@%$LOAD_PACKAGE%g
 s%@EXENAME@%$EXENAME%g
 s%@host@%$host%g
 s%@host_alias@%$host_alias%g

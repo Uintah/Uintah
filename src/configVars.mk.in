@@ -52,7 +52,7 @@ VPATH := $(SRCTOP)
 # Optional pieces
 
 PACKAGE_DIRS := @PACKAGE_DIRS@
-PACKAGE_PATH := @PACKAGE_PATH@
+LOAD_PACKAGE := @LOAD_PACKAGE@
 BUILD_PARALLEL := @BUILD_PARALLEL@
 # Dd: don't need to do it explicitly this way... I think.
 #ifeq ($(BUILD_PARALLEL),yes)
