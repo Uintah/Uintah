@@ -1679,7 +1679,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "// Marshal the arguments\n";
   if(!isCollective) {
     //Special subsetting for independent calls  
-    e.out << leader2 << "rm->createSubset(1,0);\n";
+    e.out << leader2 << "_rm->createSubset(1,0);\n";
   } 
   argNum=0;
   for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
@@ -1693,7 +1693,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
   }
   if(!isCollective) {
     //RESETTING Special subsetting for independent calls
-    e.out << leader2 << "rm->createSubset(0,0);\n";
+    e.out << leader2 << "_rm->createSubset(0,0);\n";
   }
 	  
   e.out << leader2 << "// Send the message\n";
