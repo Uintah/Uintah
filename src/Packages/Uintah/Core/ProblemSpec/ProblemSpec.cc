@@ -10,24 +10,37 @@
 #include <map>
 #include <sstream>
 
+#ifdef __sgi
+#define IRIX
+#pragma set woff 1375
+#endif
+#include <util/PlatformUtils.hpp>
+#include <parsers/DOMParser.hpp>
+#include <dom/DOM_Node.hpp>
+#include <dom/DOM_NamedNodeMap.hpp>
+#ifdef __sgi
+#pragma reset woff 1375
+#endif
+
 using namespace Uintah;
 using namespace SCIRun;
 
 using namespace std;
 
 ProblemSpec::ProblemSpec(const DOM_Node& node, bool doWrite)
-  : d_node(node), d_write(doWrite)
+  : d_node(scinew DOM_Node(node)), d_write(doWrite)
 {
 }
 ProblemSpec::~ProblemSpec()
 {
+  delete d_node;
 }
 
 ProblemSpecP ProblemSpec::findBlock() const
 {
-  ProblemSpecP prob_spec = scinew ProblemSpec(d_node, d_write);
+  ProblemSpecP prob_spec = scinew ProblemSpec(*d_node, d_write);
 
-  DOM_Node child = d_node.getFirstChild();
+  DOM_Node child = d_node->getFirstChild();
   if (child != 0) {
     if (child.getNodeType() == DOM_Node::TEXT_NODE) {
       child = child.getNextSibling();
@@ -42,7 +55,7 @@ ProblemSpecP ProblemSpec::findBlock() const
 
 ProblemSpecP ProblemSpec::findBlock(const std::string& name) const 
 {
-   DOM_Node found_node = findNode(name,d_node);
+   DOM_Node found_node = findNode(name,*d_node);
 
   if (found_node.isNull()) {
     return 0;
@@ -54,7 +67,7 @@ ProblemSpecP ProblemSpec::findBlock(const std::string& name) const
 
 ProblemSpecP ProblemSpec::findNextBlock() const
 {
-  DOM_Node found_node = d_node.getNextSibling();
+  DOM_Node found_node = d_node->getNextSibling();
   
   if (found_node != 0) {
     if (found_node.getNodeType() == DOM_Node::TEXT_NODE) {
@@ -74,7 +87,7 @@ ProblemSpecP ProblemSpec::findNextBlock(const std::string& name) const
 {
   // Iterate through all of the child nodes that have this name
 
-  DOM_Node found_node = d_node.getNextSibling();
+  DOM_Node found_node = d_node->getNextSibling();
 
   DOMString search_name(name.c_str());
   while(found_node != 0){
@@ -102,7 +115,7 @@ ProblemSpecP ProblemSpec::findNextBlock(const std::string& name) const
 std::string ProblemSpec::getNodeName() const
 {
 
-  DOMString node_name = d_node.getNodeName();
+  DOMString node_name = d_node->getNodeName();
   char *s = node_name.transcode();
   std::string name(s);
   delete[] s;
@@ -115,7 +128,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name, double &value)
 {
   ProblemSpecP ps = this;
 
-  DOM_Node found_node = findNode(name,this->d_node);
+  DOM_Node found_node = findNode(name,*d_node);
   if (found_node.isNull()) {
     ps = 0;
     return ps;
@@ -138,7 +151,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name, double &value)
 ProblemSpecP ProblemSpec::get(const std::string& name, int &value)
 {
   ProblemSpecP ps = this;
-  DOM_Node found_node = findNode(name,this->d_node);
+  DOM_Node found_node = findNode(name,*d_node);
   if (found_node.isNull()) {
     ps = 0;
     return ps;
@@ -162,7 +175,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name, int &value)
 ProblemSpecP ProblemSpec::get(const std::string& name, bool &value)
 {
   ProblemSpecP ps = this;
-  DOM_Node found_node = findNode(name,this->d_node);
+  DOM_Node found_node = findNode(name,*d_node);
   if (found_node.isNull()) {
     ps = 0;
     return ps;
@@ -191,7 +204,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name, bool &value)
 ProblemSpecP ProblemSpec::get(const std::string& name, std::string &value)
 {
   ProblemSpecP ps = this;
-  DOM_Node found_node = findNode(name,this->d_node);
+  DOM_Node found_node = findNode(name,*d_node);
   if (found_node.isNull()) {
     ps = 0;
     return ps;
@@ -227,7 +240,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 
   std::string string_value;
   ProblemSpecP ps = this;
-  DOM_Node found_node = findNode(name, this->d_node);
+  DOM_Node found_node = findNode(name, *d_node);
   if (found_node.isNull()) {
     ps = 0;
     return ps;
@@ -268,7 +281,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 
   std::string string_value;
   ProblemSpecP ps = this;
-  DOM_Node found_node = findNode(name, this->d_node);
+  DOM_Node found_node = findNode(name, *d_node);
   if (found_node.isNull()) {
     ps = 0;
     return ps;
@@ -312,7 +325,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 
   std::string string_value;
   ProblemSpecP ps = this;
-  DOM_Node found_node = findNode(name, this->d_node);
+  DOM_Node found_node = findNode(name, *d_node);
   if (found_node.isNull()) {
     ps = 0;
     return ps;
@@ -436,7 +449,7 @@ ProblemSpecP ProblemSpec::getOptional(const std::string& name,
 {
   ProblemSpecP ps = this;
   DOM_Node attr_node;
-  DOM_Node found_node = findNode(name,this->d_node);
+  DOM_Node found_node = findNode(name,*d_node);
   std::cout << "node name = " << found_node.getNodeName() << std::endl;
   if (found_node.isNull()) {
     ps = 0;
@@ -479,7 +492,7 @@ void ProblemSpec::requireOptional(const std::string& name, std::string& value)
 void ProblemSpec::getAttributes(map<string,string>& attributes)
 {
 
-  DOM_NamedNodeMap attr = d_node.getAttributes();
+  DOM_NamedNodeMap attr = d_node->getAttributes();
   int num_attr = attr.getLength();
 
   for (int i = 0; i<num_attr; i++) {
@@ -494,7 +507,7 @@ void ProblemSpec::getAttributes(map<string,string>& attributes)
 bool ProblemSpec::getAttribute(const string& attribute, string& result)
 {
 
-  DOM_NamedNodeMap attr = d_node.getAttributes();
+  DOM_NamedNodeMap attr = d_node->getAttributes();
   DOMString search_name(attribute.c_str());
   DOM_Node n = attr.getNamedItem(search_name);
   if(n == 0)
