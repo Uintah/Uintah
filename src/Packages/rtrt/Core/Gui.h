@@ -13,7 +13,6 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/MouseCallBack.h>
 
 // Foward declare GLUI objects
@@ -44,6 +43,8 @@ class  SpinningInstance;
 class  CutGroup;
 class  Sound;
 class  Trigger;
+class  Object;
+class  Material;
 
 // Because we have to use static functions, only one Gui object may be
 // active at a time.  (My guess is that there will only be one Gui
@@ -152,6 +153,7 @@ private:
   GLUI         * routeWindow;
   GLUI         * lightsWindow;
   GLUI         * objectsWindow;
+  GLUI         * materialsWindow;
   GLUI         * soundsWindow;
   GLUI         * triggersWindow_;
 
@@ -162,6 +164,7 @@ private:
   bool routeWindowVisible;
   bool lightsWindowVisible;
   bool objectsWindowVisible;
+  bool materialsWindowVisible;
   bool soundsWindowVisible;
   bool triggersWindowVisible;
   bool mainWindowVisible;
@@ -355,6 +358,8 @@ private:
   // Object Window Callbacks
   void createObjectWindow( GLUI * window );
   static void toggleObjectsWindowCB( int id );
+  void createMaterialsWindow( GLUI * window );
+  static void toggleMaterialsWindowCB( int id );
   static void SGAutoCycleCB( int id );
   static void SGNoSkipCB( int id );
   static void SGNextItemCB( int id );
