@@ -1023,116 +1023,60 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
 	  const VelocityBoundCond* bc =
 	    dynamic_cast<const VelocityBoundCond*>(vel_bcs);
 	  if (bc->getKind() == "Dirichlet") {
-	    fillFace(gvelocity,patch, face,bc->getValue(),offset);
+	    fillFace(gvelocity,    patch, face,bc->getValue(),offset);
 	    fillFace(gacceleration,patch, face,bc->getValue(),offset);
+	    IntVector l,h;
+	    patch->getFaceNodes(face,0,l,h);
+            for(NodeIterator it(l,h); !it.done(); it++) {
+               IntVector n = *it;
+               int dof[3];
+               int l2g_node_num = l2g[n];
+               dof[0] = l2g_node_num;
+               dof[1] = l2g_node_num+1;
+               dof[2] = l2g_node_num+2;
+               d_solver->d_DOF.insert(dof[0]);
+               d_solver->d_DOF.insert(dof[1]);
+               d_solver->d_DOF.insert(dof[2]);
+            }
 	  }
 	}
+
 	if (sym_bcs != 0) { 
-	  fillFaceNormal(gvelocity,patch, face,offset);
+	  fillFaceNormal(gvelocity,    patch, face,offset);
 	  fillFaceNormal(gacceleration,patch, face,offset);
-#if 1
+
 	  IntVector l,h;
 	  patch->getFaceNodes(face,0,l,h);
 	  for(NodeIterator it(l,h); !it.done(); it++) {
 	    IntVector n = *it;
 
-	    // We need to determined if the node is one of three cases:
-	    // corner pt - all 3 components added to DOF array
-	    // edge pt - 2 components added to DOF array
-	    // face pt - 1 component added to DOF array
+            // The DOF is an IntVector which is initially (0,0,0).
+            // Inserting a 1 into any of the components indicates that 
+            // the component should be inserted into the DOF array.
+            IntVector DOF(0,0,0);
 	    
-	    // edge pt example -- xy plane intersects xz plane -- points
-	    // vary from xmin to xmax but y and z are fixed.  in this case
-	    // insert y and z components into the DOF array.
-	    
-	    // face pt example -- xy plane (zminus face) insert z component
-	    // into the DOF array.
+            if (face == Patch::xminus || face == Patch::xplus){
+              DOF = IntVector(max(DOF.x(),1),max(DOF.y(),0),max(DOF.z(),0));
+            }
+            if (face == Patch::yminus || face == Patch::yplus){
+              DOF = IntVector(max(DOF.x(),0),max(DOF.y(),1),max(DOF.z(),0));
+            }
+            if (face == Patch::zminus || face == Patch::zplus){
+              DOF = IntVector(max(DOF.x(),0),max(DOF.y(),0),max(DOF.z(),1));
+            }
 
-	    // The DOF is an IntVector which is initially (0,0,0).
-	    // Inserting a 1 into any of the components indicates that 
-	    // the component should be inserted into the DOF array.
-	    
-	    IntVector DOF(0,0,0);
-	    // Determine if the node is a corner node
-	    bool corner = false;
-	    bool edge = false;
-	    if (n == IntVector(low.x(),low.y(),low.z()))         corner = true;
-	    else if (n == IntVector(low.x(),low.y(),high.z()))   corner = true;
-	    else if (n == IntVector(low.x(),high.y(),low.z()))   corner = true;
-	    else if (n == IntVector(low.x(),high.y(),high.z()))  corner = true;
-	    else if (n == IntVector(high.x(),low.y(),low.z()))   corner = true;
-	    else if (n == IntVector(high.x(),low.y(),high.z()))  corner = true;
-	    else if (n == IntVector(high.x(),high.y(),low.z()))  corner = true;
-	    else if (n == IntVector(high.x(),high.y(),high.z())) corner = true;
-
-	    // Set all dofs to be 1, -> component values won't float.
-	    if (corner) DOF = IntVector(1,1,1); 
-
-	    // Determine if the node is an edge node (x edge)
-	    if (corner == false) {
-	      if (n.x() > low.x() && n.x() < high.x() && n.y() == low.y() && 
-		  n.z() == low.z()) DOF = IntVector(0,1,1);
-	      if (n.x() > low.x() && n.x() < high.x() && n.y() == high.y() && 
-		  n.z() == low.z()) DOF = IntVector(0,1,1);
-	      if (n.x() > low.x() && n.x() < high.x() && n.y() == low.y() && 
-		  n.z() == high.z()) DOF = IntVector(0,1,1);
-	      if (n.x() > low.x() && n.x() < high.x() && n.y() == high.y() && 
-		  n.z() == high.z()) DOF = IntVector(0,1,1);
-	      
-	      // Determine if the node is an edge node (y edge)
-	      if (DOF == IntVector(0,0,0)) {
-		if (n.y() > low.y() && n.y() < high.y() && n.x() == low.x() && 
-		    n.z() == low.z()) DOF = IntVector(1,0,1);
-		if (n.y() > low.y() && n.y() < high.y() && n.x() == high.x() 
-		    &&  n.z() == low.z()) DOF = IntVector(1,0,1);
-		if (n.y() > low.y() && n.y() < high.y() && n.x() == low.x() && 
-		    n.z() == high.z()) DOF = IntVector(1,0,1);
-		if (n.y() > low.y() && n.y() < high.y() && n.x() == high.x() 
-		    &&  n.z() == high.z()) DOF = IntVector(1,0,1);
-	      }
-	      // Determine if the node is an edge node (z edge)
-	      if (DOF == IntVector(0,0,0)) {
-		if (n.z() > low.z() && n.z() < high.z() && n.x() == low.x() && 
-		    n.y() == low.y()) DOF = IntVector(1,1,0);
-		if (n.z() > low.z() && n.z() < high.z() && n.x() == high.x() 
-		    &&  n.y() == low.y()) DOF = IntVector(1,1,0);
-		if (n.z() > low.z() && n.z() < high.z() && n.x() == low.x() && 
-		    n.y() == high.y()) DOF = IntVector(1,1,0);
-		if (n.z() > low.z() && n.z() < high.z() && n.x() == high.x() 
-		    &&  n.y() == high.y()) DOF = IntVector(1,1,0);
-	      }
-              if (DOF != IntVector(0,0,0)) edge = true;
-	    }
-	    
-	    // Determine if the node is a face node
-	    if (corner == false && edge == false ) {
-              if (face == Patch::xminus && DOF == IntVector(0,0,0)) 
-                DOF = IntVector(1,0,0);
-              if (face == Patch::xplus  && DOF == IntVector(0,0,0)) 
-                DOF = IntVector(1,0,0);
-              if (face == Patch::yminus && DOF == IntVector(0,0,0)) 
-                DOF = IntVector(0,1,0);
-              if (face == Patch::yplus  && DOF == IntVector(0,0,0)) 
-                DOF = IntVector(0,1,0);
-              if (face == Patch::zminus && DOF == IntVector(0,0,0)) 
-                DOF = IntVector(0,0,1);
-              if (face == Patch::zplus  && DOF == IntVector(0,0,0)) 
-                DOF = IntVector(0,0,1);
-	    }
-	    int dof[3];
-	    int l2g_node_num = l2g[n];
-	    dof[0] = l2g_node_num;
-	    dof[1] = l2g_node_num+1;
-	    dof[2] = l2g_node_num+2;
-	    if (DOF.x())
-	      d_solver->d_DOF.insert(dof[0]);
-	    if (DOF.y())
-	      d_solver->d_DOF.insert(dof[1]);
-	    if (DOF.z())
-	      d_solver->d_DOF.insert(dof[2]);
-	    
+            int dof[3];
+            int l2g_node_num = l2g[n];
+            dof[0] = l2g_node_num;
+            dof[1] = l2g_node_num+1;
+            dof[2] = l2g_node_num+2;
+            if (DOF.x())
+              d_solver->d_DOF.insert(dof[0]);
+            if (DOF.y())
+              d_solver->d_DOF.insert(dof[1]);
+            if (DOF.z())
+              d_solver->d_DOF.insert(dof[2]);
 	  }
-#endif
 	}
       }
     }
