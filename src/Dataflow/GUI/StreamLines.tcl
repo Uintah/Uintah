@@ -94,7 +94,7 @@ itcl_class SCIRun_Visualization_StreamLines {
 
 
 	frame $w.meth -relief groove -borderwidth 2
-	label $w.meth.label -text "Sreamline Computation Method"
+	label $w.meth.label -text "Streamline Computation Method"
 	radiobutton $w.meth.cw -text "Cell Walk" \
 	    -variable $this-method -value 5
 	radiobutton $w.meth.ab -text "Adams-Bashforth Multi-Step" \
