@@ -62,8 +62,7 @@ PTWPlastic::computeFlowStress(const PlasticityState* state,
   // Check if temperature is correct
   double T = state->temperature;
   double Tm = state->meltingTemp;
-  ASSERT(T > 0.0);
-  ASSERT(!(T > Tm));
+  ASSERT(T > 0.0); ASSERT(!(T > Tm));
 
   // Check if shear modulus is correct
   double mu = state->shearModulus;
@@ -71,12 +70,20 @@ PTWPlastic::computeFlowStress(const PlasticityState* state,
 
   // Get the current mass density
   double rho = state->density;
-
+  
   // Compute invxidot - the time required for a transverse wave to cross at atom
+  if (mu < 0.0 || rho < 0.0) {
+    cerr << "**ERROR** PTWPlastic::computeFlowStress: mu = " << mu 
+         << " rho = " << rho << endl;
+  }
   double xidot = 0.5*pow(4.0*M_PI*rho/(3.0*d_CM.M),(1.0/3.0))*sqrt(mu/rho);
 
   // Compute the dimensionless plastic strain rate
   double edot = epdot/xidot;
+  if (!(xidot > 0.0) || !(edot > 0.0)) {
+    cerr << "**ERROR** PTWPlastic::computeFlowStress: xidot = " << xidot 
+         << " edot = " << edot << endl;
+  }
 
   // Compute the dimensionless temperature
   double That = T/Tm;
@@ -86,32 +93,39 @@ PTWPlastic::computeFlowStress(const PlasticityState* state,
 
   // Calculate the saturation hardening flow stress in the thermally 
   // activated glide regime
-  double thermal_tauhat_s = d_CM.s0 - (d_CM.s0 - d_CM.sinf)*erf(arrhen);
-
-  // Calculate the saturation hardening flow stress in the overdriven 
-  // shock regime
-  double shock_tauhat_s = d_CM.s0*pow(edot/d_CM.gamma,d_CM.beta);
+  double tauhat_s = d_CM.s0 - (d_CM.s0 - d_CM.sinf)*erf(arrhen);
 
   // Calculate the yield stress in the thermally activated glide regime
-  double thermal_tauhat_y = d_CM.y0 - (d_CM.y0 - d_CM.yinf)*erf(arrhen);
+  double tauhat_y = d_CM.y0 - (d_CM.y0 - d_CM.yinf)*erf(arrhen);
 
-  // Calculate the yield stress in the overdriven shock regime
-  double shock_tauhat_y_jump = d_CM.y1*pow(edot/d_CM.gamma,d_CM.y2);
-  double shock_tauhat_y = min(shock_tauhat_y_jump,shock_tauhat_s);
+  // The overdriven shock regime
+  if (epdot > 1.0e8) {
 
-  // Calculate the saturation stress and yield stress
-  double tauhat_s = max(thermal_tauhat_s, shock_tauhat_s);
-  double tauhat_y = max(thermal_tauhat_y, shock_tauhat_y);
+    // Calculate the saturation hardening flow stress in the overdriven 
+    // shock regime
+    double shock_tauhat_s = d_CM.s0*pow(edot/d_CM.gamma,d_CM.beta);
+
+    // Calculate the yield stress in the overdriven shock regime
+    double shock_tauhat_y_jump = d_CM.y1*pow(edot/d_CM.gamma,d_CM.y2);
+    double shock_tauhat_y = min(shock_tauhat_y_jump,shock_tauhat_s);
+
+    // Calculate the saturation stress and yield stress
+    tauhat_s = max(tauhat_s, shock_tauhat_s);
+    tauhat_y = max(tauhat_y, shock_tauhat_y);
+  }
 
   // Compute the dimensionless flow stress
-  double A = (d_CM.s0 - tauhat_y)/d_CM.p;
-  double B = tauhat_s - tauhat_y;
-  double D = exp(B/A);
-  double C = D - 1.0;
-  double F = C/D;
-  double E = d_CM.theta/(A*C);
-  double exp_EEp = 1.0/exp(E*ep);
-  double tauhat = tauhat_s + A*log(1.0 - F*exp_EEp);
+  double tauhat = tauhat_s;
+  if (tauhat_s != tauhat_y) {
+    double A = (d_CM.s0 - tauhat_y)/d_CM.p;
+    double B = tauhat_s - tauhat_y;
+    double D = exp(B/A);
+    double C = D - 1.0;
+    double F = C/D;
+    double E = d_CM.theta/(A*C);
+    double exp_EEp = 1.0/exp(E*ep);
+    tauhat = tauhat_s + A*log(1.0 - F*exp_EEp);
+  }
   double sigma = 2.0*tauhat*mu;
   return sigma;
 }

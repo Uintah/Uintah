@@ -3,6 +3,7 @@
 #include "JohnsonCookPlastic.h"
 #include "MTSPlastic.h"
 #include "SCGPlastic.h"
+#include "PTWPlastic.h"
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
@@ -34,6 +35,8 @@ PlasticityModel* PlasticityModelFactory::create(ProblemSpecP& ps)
       return(scinew MTSPlastic(child));
    else if (mat_type == "steinberg_cochran_guinan")
       return(scinew SCGPlastic(child));
+   else if (mat_type == "preston_tonks_wallace")
+      return(scinew PTWPlastic(child));
    else 
       throw ProblemSetupException("Unknown Plasticity Model ("+mat_type+")");
 }
@@ -52,6 +55,8 @@ PlasticityModelFactory::createCopy(const PlasticityModel* pm)
 
    else if (dynamic_cast<const SCGPlastic*>(pm))
       return(scinew SCGPlastic(dynamic_cast<const SCGPlastic*>(pm)));
+   else if (dynamic_cast<const PTWPlastic*>(pm))
+      return(scinew PTWPlastic(dynamic_cast<const PTWPlastic*>(pm)));
 
    else 
       throw ProblemSetupException("Cannot create copy of unknown plasticity model");
