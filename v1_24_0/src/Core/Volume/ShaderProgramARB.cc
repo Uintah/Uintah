@@ -226,17 +226,18 @@ ShaderProgramARB::create()
       glBindProgramARB(mType, 0);
       switch(mType) {
       case GL_VERTEX_PROGRAM_ARB:
-        cerr << "Vertex" << endl;
+        cerr << "Vertex ";
         break;
       case GL_FRAGMENT_PROGRAM_ARB:
-        cerr << "Fragment" << endl;
+        cerr << "Fragment ";
         break;
       default:
         break;
       }
-      cerr << "program error at line " << l << ", character "
-           << position-start << endl << endl << line << endl
-           << underline << endl;
+      cerr << "Program error at line " << l << ", character "
+           << position-start << ":" << endl << line << endl
+           << underline << endl << endl
+	   << "Entire Program Listing:\n" << mProgram << endl;
       return true;
     }
     return false;
