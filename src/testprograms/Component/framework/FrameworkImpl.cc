@@ -66,12 +66,12 @@ FrameworkImpl::getPort( const ComponentID &id, const string &name )
   ports_lock_.readUnlock();
 
   // find in component record
-  registry_->connections_.readLock();
+  //  registry_->connections_.readLock();
 
-  ComponentRecord *c = registry_->components_[id];
+  ComponentRecord *c = registry_->components_[id->toString()];
   Port port =  c->getPort( name );
-
-  registry_->connections_.readUnlock();
+  
+  //registry_->connections_.readUnlock();
 
   return port;
 }
@@ -81,7 +81,8 @@ FrameworkImpl::registerUsesPort( const ComponentID &id, const PortInfo &info)
 {
   registry_->connections_.writeLock();
 
-  ComponentRecord *c = registry_->components_[id];
+  ComponentRecord *c = registry_->components_[id->toString()];
+
   c->registerUsesPort( info );
   
   registry_->connections_.writeUnlock();
@@ -93,7 +94,7 @@ FrameworkImpl::unregisterUsesPort( const ComponentID &id, const string &name )
 {
   registry_->connections_.writeLock();
   
-  ComponentRecord *c = registry_->components_[id];
+  ComponentRecord *c = registry_->components_[id->toString()];
   c->unregisterUsesPort( name );
   
   registry_->connections_.writeUnlock();
@@ -105,7 +106,7 @@ FrameworkImpl::addProvidesPort( const ComponentID &id, const Port &port,
 {
   registry_->connections_.writeLock();
   
-  ComponentRecord *c = registry_->components_[id];
+  ComponentRecord *c = registry_->components_[id->toString()];
   c->addProvidesPort( port, info );
   
   registry_->connections_.writeUnlock();
@@ -116,7 +117,7 @@ FrameworkImpl::removeProvidesPort( const ComponentID &id, const string &name)
 {
   registry_->connections_.writeLock();
   
-  ComponentRecord *c = registry_->components_[id];
+  ComponentRecord *c = registry_->components_[id->toString()];
   c->removeProvidesPort( name );
   
   registry_->connections_.writeUnlock();
@@ -132,7 +133,7 @@ FrameworkImpl::releasePort( const ComponentID &id, const string &name)
   if ( !found ) {
     registry_->connections_.writeLock();
 
-    ComponentRecord *c = registry_->components_[id];
+    ComponentRecord *c = registry_->components_[id->toString()];
     c->releasePort( name );
 
     registry_->connections_.writeUnlock();
@@ -158,9 +159,20 @@ FrameworkImpl::registerComponent( const string &hostname,
   cr->component_ = c;
   cr->services_ = svc;
 
+  map<string,ComponentRecord*>::iterator i; 
+//   cerr << "Framework::before...\n";
+//   for ( i=registry_->components_.begin(); i!=registry_->components_.end(); i++)
+//     cerr << "component " << i->first << " -> " 
+// 	 << i->second->id_->toString() << endl;
+
   registry_->connections_.writeLock();
-  registry_->components_[id] = cr;
+  registry_->components_[id->toString()] = cr;
   registry_->connections_.writeUnlock();
+
+//   cerr << "Framework::after...\n";
+//   for ( i=registry_->components_.begin(); i!=registry_->components_.end(); i++)
+//     cerr << "component " << i->first << " -> " 
+// 	 << i->second->id_->toString() << endl;
 
   // initialized component
   c->setServices( svc );
@@ -171,15 +183,13 @@ FrameworkImpl::registerComponent( const string &hostname,
 void
 FrameworkImpl::unregisterComponent( const ComponentID &id )
 {
-  cerr << "framework::unregister \n";
-
   registry_->connections_.writeLock();
 
   // find the record
-  ComponentRecord *cr = registry_->components_[id];
+  ComponentRecord *cr = registry_->components_[id->toString()];
 
   // erase the entry
-  registry_->components_.erase( id );
+  registry_->components_.erase( id->toString() );
 
   registry_->connections_.writeUnlock();
 

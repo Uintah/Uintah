@@ -17,6 +17,11 @@ static Mutex lock("Component generation counter initialization lock");
 
 ComponentIdImpl::ComponentIdImpl()
 {
+}
+
+void
+ComponentIdImpl::init( const string &host, const string &program )
+{
   if (!generation) {
     lock.lock();
     if(!generation)
@@ -25,11 +30,7 @@ ComponentIdImpl::ComponentIdImpl()
   }
 
   number_ = (*generation)++;
-}
 
-void
-ComponentIdImpl::init( const string &host, const string &program )
-{
   host_ = host;
   program_ = program;
 

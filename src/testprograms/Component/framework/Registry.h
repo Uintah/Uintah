@@ -50,7 +50,7 @@ public:
 class FrameworkImpl;
 
 class ComponentRecord {
-private:
+public:
   typedef map<string,ProvidePortRecord *>::iterator provide_iterator;
   typedef map<string,UsePortRecord *>::iterator use_iterator;
 
@@ -79,9 +79,9 @@ public:
 
 class Registry {
 public:
-  map<ComponentID, ComponentRecord *> components_;
+  map<string, ComponentRecord *> components_;
 
-  typedef map<ComponentID, ComponentRecord *>::iterator component_iterator;
+  typedef map<string, ComponentRecord *>::iterator component_iterator;
 
   CrowdMonitor connections_;
 

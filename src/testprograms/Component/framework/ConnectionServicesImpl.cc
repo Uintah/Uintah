@@ -43,24 +43,29 @@ ConnectionServicesImpl::connect( const ComponentID &uses,
 							    provide_port );
   if ( !provide ) {
     // error: could not find provider's port
+    cerr <<"provide not found\n";
     return false;
   }
 
   if ( provide->connection_ ) {
     // error: provide port in use
+    cerr << "provide port in use\n";
     return false;
   }
 
   // get use port record
+  cerr << "connections: uses id is " << uses->toString() << endl;
   UsePortRecord *use = registry_->getUseRecord( uses, use_port );
 
   if ( !use ) {
     // error: could not find use's port
+    cerr << "uses not found\n";
     return false;
   }
 
   if ( use->connection_ ) {
     // error: uses port in use
+    cerr << "use connection in use\n";
     return false;
   }
 

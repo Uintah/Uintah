@@ -1,5 +1,8 @@
 
+#include <testprograms/Component/framework/cca.h>
 #include <testprograms/Component/framework/BuilderImpl.h>
+#include <testprograms/Component/framework/SenderImpl.h>
+#include <testprograms/Component/framework/ProviderImpl.h>
 
 #include <sstream>
 #include <iostream>
@@ -10,7 +13,6 @@ using std::cerr;
 
 BuilderImpl::BuilderImpl()
 {
-  cerr << "Builder::\n";
 }
 
 BuilderImpl::~BuilderImpl()
@@ -20,21 +22,31 @@ BuilderImpl::~BuilderImpl()
 void 
 BuilderImpl::setServices( const Services &svc )
 {
-  cerr << "Builder set serevices\n";
   ComponentImpl::setServices( svc );
 
   if ( svc ) {
-    Port port = svc->getPort("ConnectionServices");
+    ConnectionServices port = pidl_cast<ConnectionServices>(svc->getPort("ConnectionServices"));
     if ( !port ) {
       cerr << "Could not get connection port\n";
+      return;
     }
-    else {
-      cerr << "releasing connection port..\n";
-      svc->releasePort( "ConnectionServices");
-    }
-  }
-  cerr << "Builder set services done\n";
 
+    Sender sender = new SenderImpl;
+    Component s = sender;
+    CCA::init( s );
+    ComponentID sid = sender->getComponentID();
+  
+    Provider provider = new ProviderImpl;
+    Component p = provider;
+    CCA::init( p );
+    ComponentID pid = provider->getComponentID();
+    
+    port->connect( sid, "Uses", pid, "Provides");
+    
+    sender->go();
+    
+    svc->releasePort( "ConnectionServices");
+  }
 }
 
 } // namespace sci_cca

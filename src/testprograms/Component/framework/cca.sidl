@@ -93,6 +93,19 @@ package sci_cca {
   interface Builder extends Component {
   };
 
+  interface Sender extends Component {
+    ComponentID getComponentID();
+    void go();
+  };
+
+  interface Provider extends Component {
+    ComponentID getComponentID();
+  };
+   
+  interface TestPort extends Port {
+    void test();
+  };
+
 }; // package sci_cca
 
 
