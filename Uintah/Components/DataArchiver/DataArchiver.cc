@@ -12,15 +12,14 @@
 #include <Uintah/Interface/OutputContext.h>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/Scheduler.h>
+#include <PSECore/XMLUtil/SimpleErrorHandler.h>
+#include <PSECore/XMLUtil/XMLUtil.h>
 #include <iomanip>
 #include <errno.h>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <sax/SAXException.hpp>
-#include <sax/SAXParseException.hpp>
-#include <sax/ErrorHandler.hpp>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -33,265 +32,7 @@ using namespace Uintah;
 using namespace std;
 using namespace SCICore::OS;
 using namespace SCICore::Exceptions;
-void          outputContent(ostream& target, const DOMString &s);
-ostream& operator<<(ostream& target, const DOMString& toWrite);
-ostream& operator<<(ostream& target, DOM_Node& toWrite);
-
-class DAErrorHandler : public ErrorHandler {
-public:
-    bool foundError;
-
-    DAErrorHandler();
-    ~DAErrorHandler();
-
-    void warning(const SAXParseException& e);
-    void error(const SAXParseException& e);
-    void fatalError(const SAXParseException& e);
-    void resetErrors();
-
-private :
-    DAErrorHandler(const DAErrorHandler&);
-    void operator=(const DAErrorHandler&);
-};
-
-DAErrorHandler::DAErrorHandler()
-{
-    foundError=false;
-}
-
-DAErrorHandler::~DAErrorHandler()
-{
-}
-
-static void postMessage(const string& errmsg, bool err=true)
-{
-   if(err)
-      cerr << "ERROR: ";
-   else
-      cerr << "WARNING: ";
-   cerr << errmsg << '\n';
-}
-
-static string xmlto_string(const XMLCh* const str)
-{
-    char* s = XMLString::transcode(str);
-    string ret = string(s);
-    delete[] s;
-    return ret;
-}
-
-static string to_string(int i)
-{
-    char buf[20];
-    sprintf(buf, "%d", i);
-    return string(buf);
-}
-
-void DAErrorHandler::error(const SAXParseException& e)
-{
-    foundError=true;
-    postMessage(string("Error at (file ")+xmlto_string(e.getSystemId())
-		+", line "+to_string((int)e.getLineNumber())
-		+", char "+to_string((int)e.getColumnNumber())
-		+"): "+xmlto_string(e.getMessage()));
-}
-
-void DAErrorHandler::fatalError(const SAXParseException& e)
-{
-    foundError=true;
-    postMessage(string("Fatal Error at (file ")+xmlto_string(e.getSystemId())
-		+", line "+to_string((int)e.getLineNumber())
-		+", char "+to_string((int)e.getColumnNumber())
-		+"): "+xmlto_string(e.getMessage()));
-}
-
-void DAErrorHandler::warning(const SAXParseException& e)
-{
-    postMessage(string("Warning at (file ")+xmlto_string(e.getSystemId())
-		+", line "+to_string((int)e.getLineNumber())
-		+", char "+to_string((int)e.getColumnNumber())
-		+"): "+xmlto_string(e.getMessage()));
-}
-
-void DAErrorHandler::resetErrors()
-{
-}
-
-// ---------------------------------------------------------------------------
-//
-//  ostream << DOM_Node   
-//
-//                Stream out a DOM node, and, recursively, all of its children.
-//                This function is the heart of writing a DOM tree out as
-//                XML source.  Give it a document node and it will do the whole thing.
-//
-// ---------------------------------------------------------------------------
-ostream& operator<<(ostream& target, const DOM_Node& toWrite)
-{
-   // Get the name and value out for convenience
-   DOMString   nodeName = toWrite.getNodeName();
-   DOMString   nodeValue = toWrite.getNodeValue();
-   
-   switch (toWrite.getNodeType()) {
-   case DOM_Node::TEXT_NODE:
-      {
-	 outputContent(target, nodeValue);
-	 break;
-      }
-   
-   case DOM_Node::PROCESSING_INSTRUCTION_NODE :
-      {
-	 target  << "<?"
-		 << nodeName
-		 << ' '
-		 << nodeValue
-		 << "?>";
-	 break;
-      }
-   
-   case DOM_Node::DOCUMENT_NODE :
-      {
-	 // Bug here:  we need to find a way to get the encoding name
-	 //   for the default code page on the system where the
-	 //   program is running, and plug that in for the encoding
-	 //   name.  
-	 target << "<?xml version='1.0' encoding='ISO-8859-1' ?>\n";
-	 DOM_Node child = toWrite.getFirstChild();
-	 while( child != 0)
-            {
-	       target << child << endl;
-	       child = child.getNextSibling();
-            }
-	 
-	 break;
-      }
-   
-   case DOM_Node::ELEMENT_NODE :
-      {
-	 // Output the element start tag.
-	 target << '<' << nodeName;
-	 
-	 // Output any attributes on this element
-	 DOM_NamedNodeMap attributes = toWrite.getAttributes();
-	 int attrCount = attributes.getLength();
-	 for (int i = 0; i < attrCount; i++) {
-	    DOM_Node  attribute = attributes.item(i);
-	    
-	    target  << ' ' << attribute.getNodeName()
-		    << " = \"";
-	    //  Note that "<" must be escaped in attribute values.
-	    outputContent(target, attribute.getNodeValue());
-	    target << '"';
-	 }
-	 
-	 //
-	 //  Test for the presence of children, which includes both
-	 //  text content and nested elements.
-	 //
-	 DOM_Node child = toWrite.getFirstChild();
-	 if (child != 0) {
-	    // There are children. Close start-tag, and output children.
-	    target << ">";
-	    while( child != 0) {
-	       target << child;
-	       child = child.getNextSibling();
-	    }
-
-	    // Done with children.  Output the end tag.
-	    target << "</" << nodeName << ">";
-	 } else {
-	    //
-	    //  There were no children.  Output the short form close of the
-	    //  element start tag, making it an empty-element tag.
-	    //
-	    target << "/>";
-	 }
-	 break;
-      }
-   
-   case DOM_Node::ENTITY_REFERENCE_NODE:
-      {
-	 DOM_Node child;
-	 for (child = toWrite.getFirstChild(); child != 0; child = child.getNextSibling())
-	    target << child;
-	 break;
-      }
-   
-   case DOM_Node::CDATA_SECTION_NODE:
-      {
-	 target << "<![CDATA[" << nodeValue << "]]>";
-	 break;
-      }
-   
-   case DOM_Node::COMMENT_NODE:
-      {
-	 target << "<!--" << nodeValue << "-->";
-	 break;
-      }
-   
-   default:
-      cerr << "Unrecognized node type = "
-	   << (long)toWrite.getNodeType() << endl;
-   }
-   return target;
-}
-
-
-// ---------------------------------------------------------------------------
-//
-//  outputContent  - Write document content from a DOMString to a C++ ostream.
-//                   Escape the XML special characters (<, &, etc.) unless this
-//                   is suppressed by the command line option.
-//
-// ---------------------------------------------------------------------------
-void outputContent(ostream& target, const DOMString &toWrite)
-{
-   int            length = toWrite.length();
-   const XMLCh*   chars  = toWrite.rawBuffer();
-   
-   int index;
-   for (index = 0; index < length; index++) {
-      switch (chars[index]) {
-      case chAmpersand :
-	 target << "&amp;";
-	 break;
-	 
-      case chOpenAngle :
-	 target << "&lt;";
-	 break;
-	 
-      case chCloseAngle:
-	 target << "&gt;";
-	 break;
-	 
-      case chDoubleQuote :
-	 target << "&quot;";
-	 break;
-	 
-      default:
-	 // If it is none of the special characters, print it as such
-	 target << toWrite.substringData(index, 1);
-	 break;
-      }
-   }
-}
-
-
-// ---------------------------------------------------------------------------
-//
-//  ostream << DOMString    Stream out a DOM string.
-//                          Doing this requires that we first transcode
-//                          to char * form in the default code page
-//                          for the system
-//
-// ---------------------------------------------------------------------------
-ostream& operator<<(ostream& target, const DOMString& s)
-{
-   char *p = s.transcode();
-   target << p;
-   delete [] p;
-   return target;
-}
+using namespace PSECore::XMLUtil;
 
 DataArchiver::DataArchiver(int MpiRank, int MpiProcesses)
    : UintahParallelComponent(MpiRank, MpiProcesses)
@@ -302,59 +43,6 @@ DataArchiver::~DataArchiver()
 {
 }
 
-void appendElement(DOM_Element& root, const DOMString& name,
-		   const std::string& value)
-{
-   DOM_Text leader = root.getOwnerDocument().createTextNode("\n\t");
-   root.appendChild(leader);
-   DOM_Element newElem = root.getOwnerDocument().createElement(name);
-   root.appendChild(newElem);
-   DOM_Text newVal = root.getOwnerDocument().createTextNode(value.c_str());
-   newElem.appendChild(newVal);
-   DOM_Text trailer = root.getOwnerDocument().createTextNode("\n");
-   root.appendChild(trailer);
-}
-      
-void appendElement(DOM_Element& root, const DOMString& name,
-		   int value)
-{
-   ostringstream val;
-   val << value;
-   appendElement(root, name, val.str());
-}
-      
-void appendElement(DOM_Element& root, const DOMString& name,
-		   const IntVector& value)
-{
-   ostringstream val;
-   val << '[' << value.x() << ", " << value.y() << ", " << value.z() << ']';
-   appendElement(root, name, val.str());
-}
-      
-void appendElement(DOM_Element& root, const DOMString& name,
-		   const Point& value)
-{
-   ostringstream val;
-   val << '[' << setprecision(17) << value.x() << ", " << setprecision(17) << value.y() << ", " << setprecision(17) << value.z() << ']';
-   appendElement(root, name, val.str());
-}
-      
-void appendElement(DOM_Element& root, const DOMString& name,
-		   long value)
-{
-   ostringstream val;
-   val << value;
-   appendElement(root, name, val.str());
-}
-      
-void appendElement(DOM_Element& root, const DOMString& name,
-		   double value)
-{
-   ostringstream val;
-   val << setprecision(17) << value;
-   appendElement(root, name, val.str());
-}
-      
 void DataArchiver::problemSetup(const ProblemSpecP& params)
 {
    ProblemSpecP p = params->findBlock("DataArchiver");
@@ -386,7 +74,7 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
 
    string inputname = d_filebase+"/input.xml";
    ofstream out2(inputname.c_str());
-   out2 << params->getDocument() << endl;
+   out2 << params->getNode().getOwnerDocument() << endl;
 }
 
 void DataArchiver::finalizeTimestep(double time, double delt,
@@ -415,7 +103,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
       DOM_Element timeElem = doc.createElement("Time");
       rootElem.appendChild(timeElem);
 
-      appendElement(timeElem, "timestepNumber", timestep-1);
+      appendElement(timeElem, "timestepNumber", timestep);
       appendElement(timeElem, "currentTime", time);
       appendElement(timeElem, "delt", delt);
 
@@ -446,6 +134,25 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 	    appendElement(regionElem, "upper", box.upper());
 	    appendElement(regionElem, "totalCells", region->totalCells());
 	 }
+      }
+      DOM_Element dataElem = doc.createElement("Data");
+      rootElem.appendChild(dataElem);
+      ostringstream lname;
+      lname << "l0"; // Hard coded - steve
+      for(int i=0;i<d_MpiProcesses;i++){
+	 ostringstream pname;
+	 pname << lname.str() << "/p" << setw(5) << setfill('0') << i << ".xml";
+	 DOM_Text leader = doc.createTextNode("\n\t");
+	 dataElem.appendChild(leader);
+	 DOM_Element df = doc.createElement("Datafile");
+	 dataElem.appendChild(df);
+	 df.setAttribute("href", pname.str().c_str());
+	 ostringstream labeltext;
+	 labeltext << "Processor " << i << " of " << d_MpiProcesses;
+	 DOM_Text label = doc.createTextNode(labeltext.str().c_str());
+	 df.appendChild(label);
+	 DOM_Text trailer = doc.createTextNode("\n");
+	 dataElem.appendChild(trailer);
       }
       string name = tdir.getName()+"/timestep.xml";
       ofstream out(name.c_str());
@@ -495,58 +202,19 @@ void DataArchiver::finalizeTimestep(double time, double delt,
    cerr << "Created " << n << " output tasks\n";
 }
 
-static DOM_Node findNextNode(const std::string& name, DOM_Node node)
-{
-  // Iterate through all of the child nodes that have this name
-  DOM_Node found_node = node.getNextSibling();
-
-  DOMString search_name(name.c_str());
-  while(found_node != 0){
-    DOMString node_name = found_node.getNodeName();
-    if (search_name.equals(node_name) ) {
-      break;
-    }
-    found_node = found_node.getNextSibling();
-  }
-  return found_node;
-}
-
-
-static DOM_Node findNode(const std::string &name,DOM_Node node)
-{
-  // Convert string name to a DOMString;
-  
-  DOMString search_name(name.c_str());
-      
-  // Do the child nodes now
-  DOM_Node child = node.getFirstChild();
-  while (child != 0) {
-    DOMString child_name = child.getNodeName();
-#if 0
-    char *s = child_name.transcode();
-    cerr << "child_name=" << s << ", searching for: " << name << "\n";
-    delete[] s;
-#endif
-    if (search_name.equals(child_name) ) {
-      return child;
-    }
-    //DOM_Node tmp = findNode(name,child);
-    child = child.getNextSibling();
-  }
-  DOM_Node unknown;
-  return unknown;
-}
-
-static DOM_Node findTextNode(DOM_Node node)
+static bool get(const DOM_Node& node, int &value)
 {
    for (DOM_Node child = node.getFirstChild(); child != 0;
 	child = child.getNextSibling()) {
       if (child.getNodeType() == DOM_Node::TEXT_NODE) {
-	 return child;
+	 DOMString val = child.getNodeValue();
+	 char* s = val.transcode();
+	 value = atoi(s);
+	 delete[] s;
+	 return true;
       }
    }
-  DOM_Node unknown;
-  return unknown;   
+   return false;
 }
 
 void DataArchiver::output(const ProcessorContext*,
@@ -572,7 +240,6 @@ void DataArchiver::output(const ProcessorContext*,
    ostringstream pname;
    pname << ldir.getName() << "/p" << setw(5) << setfill('0') << d_MpiRank << ".xml";
 
-   ProblemSpecP prob_spec;
    DOM_Document doc;
    string pname_s = pname.str();
    ifstream test(pname_s.c_str());
@@ -581,7 +248,7 @@ void DataArchiver::output(const ProcessorContext*,
       DOMParser parser;
       parser.setDoValidation(false);
 
-      DAErrorHandler handler;
+      SimpleErrorHandler handler;
       parser.setErrorHandler(&handler);
 
       // Parse the input file
@@ -593,8 +260,6 @@ void DataArchiver::output(const ProcessorContext*,
 	 throw InternalError("Error reading file: "+pname_s);
 
       // Add the parser contents to the ProblemSpecP d_doc
-
-      prob_spec = new ProblemSpec;
       doc = parser.getDocument();
    } else {
       DOM_DOMImplementation impl;
@@ -633,12 +298,15 @@ void DataArchiver::output(const ProcessorContext*,
    appendElement(pdElem, "variable", var->getName());
    appendElement(pdElem, "index", matlIndex);
    appendElement(pdElem, "region", region->getID());
+   pdElem.setAttribute("type", var->typeDescription()->getName().c_str());
 
    // Open the data file
+   ostringstream base;
+   base << "p" << setw(5) << setfill('0') << d_MpiRank << ".data";
    ostringstream dname;
-   dname << ldir.getName() << "/p" << setw(5) << setfill('0') << d_MpiRank << ".data";
+   dname << ldir.getName() << "/" << base.str();
    string datafile = dname.str();
-   int fd = fd = open(datafile.c_str(), O_WRONLY|O_CREAT, 0666);
+   int fd = open(datafile.c_str(), O_WRONLY|O_CREAT, 0666);
    if(fd == -1)
       throw ErrnoException("DataArchiver::output (open call)", errno);
 
@@ -663,9 +331,10 @@ void DataArchiver::output(const ProcessorContext*,
    ASSERTEQ(cur%PADSIZE, 0);
    appendElement(pdElem, "start", cur);
 
-   OutputContext oc(fd, cur);
+   OutputContext oc(fd, cur, pdElem);
    new_dw->emit(oc, var, matlIndex, region);
    appendElement(pdElem, "end", oc.cur);
+   appendElement(pdElem, "filename", base.str());
    s = fstat(fd, &st);
    if(s == -1)
       throw ErrnoException("DataArchiver::output (stat call)", errno);
@@ -677,10 +346,101 @@ void DataArchiver::output(const ProcessorContext*,
 
    ofstream out(pname_s.c_str());
    out << doc << endl;
+
+   // Rewrite the index if necessary...
+   string iname = d_filebase+"/index.xml";
+   // Instantiate the DOM parser.
+   DOMParser parser;
+   parser.setDoValidation(false);
+
+   SimpleErrorHandler handler;
+   parser.setErrorHandler(&handler);
+
+   // Parse the input file
+   // No exceptions just yet, need to add
+
+   parser.parse(iname.c_str());
+
+   if(handler.foundError)
+      throw InternalError("Error reading file: "+pname_s);
+
+   // Add the parser contents to the ProblemSpecP d_doc
+   DOM_Document topDoc = parser.getDocument();
+   DOM_Node ts = findNode("timesteps", topDoc.getDocumentElement());
+   if(ts == 0){
+      ts = topDoc.createElement("timesteps");
+      topDoc.getDocumentElement().appendChild(ts);
+   }
+   bool found=false;
+   for(DOM_Node n = ts.getFirstChild(); n != 0; n=n.getNextSibling()){
+      if(n.getNodeName().equals(DOMString("timestep"))){
+	 int readtimestep;
+	 if(!get(n, readtimestep))
+	    throw InternalError("Error parsing timestep number");
+	 if(readtimestep == timestep){
+	    found=true;
+	    break;
+	 }
+      }
+
+   }
+   if(!found){
+      string timestepindex = tname.str()+"/timestep.xml";      
+      DOM_Text leader = topDoc.createTextNode("\n\t");
+      ts.appendChild(leader);
+      DOM_Element newElem = topDoc.createElement("timestep");
+      ts.appendChild(newElem);
+      ostringstream value;
+      value << timestep;
+      DOM_Text newVal = topDoc.createTextNode(value.str().c_str());
+      newElem.appendChild(newVal);
+      newElem.setAttribute("href", timestepindex.c_str());
+      DOM_Text trailer = topDoc.createTextNode("\n");
+      ts.appendChild(trailer);
+   }
+
+   DOM_Node vs = findNode("variables", topDoc.getDocumentElement());
+   if(vs == 0){
+      vs = topDoc.createElement("variables");
+      topDoc.getDocumentElement().appendChild(vs);
+   }
+   found=false;
+   for(DOM_Node n = vs.getFirstChild(); n != 0; n=n.getNextSibling()){
+      if(n.getNodeName().equals(DOMString("variable"))){
+	 DOM_NamedNodeMap attributes = n.getAttributes();
+	 DOM_Node varname = attributes.getNamedItem("name");
+	 if(varname == 0)
+	    throw InternalError("varname not found");
+	 string vn = toString(varname.getNodeValue());
+	 if(vn == var->getName()){
+	    found=true;
+	    break;
+	 }
+      }
+
+   }
+   if(!found){
+      DOM_Text leader = topDoc.createTextNode("\n\t");
+      vs.appendChild(leader);
+      DOM_Element newElem = topDoc.createElement("variable");
+      vs.appendChild(newElem);
+      newElem.setAttribute("type", var->typeDescription()->getName().c_str());
+      newElem.setAttribute("name", var->getName().c_str());
+      DOM_Text trailer = topDoc.createTextNode("\n");
+      vs.appendChild(trailer);
+   }
+
+   ofstream topout(iname.c_str());
+   topout << topDoc << endl;
 }
 
 //
 // $Log$
+// Revision 1.2  2000/05/20 08:09:03  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.1  2000/05/15 19:39:35  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups

@@ -1,16 +1,59 @@
 
 #include <Uintah/Grid/TypeDescription.h>
+#include <map>
+#include <iostream>
 
 using namespace Uintah;
+using namespace std;
 
-TypeDescription::TypeDescription(bool reductionvar, Basis basis, Type type)
-   : d_reductionvar(reductionvar), d_basis(basis), d_type(type)
+static map<string, const TypeDescription*> types;
+
+TypeDescription::TypeDescription(Type type, const std::string& name,
+				 bool isFlat)
+   : d_type(type), d_name(name), d_isFlat(isFlat), d_subtype(0)
 {
 }
 
+TypeDescription::TypeDescription(Type type, const std::string& name,
+				 const TypeDescription* subtype)
+   : d_type(type), d_name(name), d_isFlat(false), d_subtype(subtype)
+{
+}
+
+string TypeDescription::getName() const
+{
+   if(d_subtype) {
+      return d_name+"<"+d_subtype->getName()+">";
+   } else {
+      return d_name;
+   }
+}
+
+const TypeDescription* TypeDescription::lookupType(const std::string& t)
+{
+   map<string, const TypeDescription*>::iterator iter = types.find(t);
+   if(iter == types.end())
+      return 0;
+   return iter->second;
+}
+
+TypeDescription::Register::Register(const TypeDescription* td)
+{
+   cerr << "Register: td=" << td << ", name=" << td->getName() << '\n';
+   types[td->getName()]=td;
+}
+
+TypeDescription::Register::~Register()
+{
+}
 
 //
 // $Log$
+// Revision 1.3  2000/05/20 08:09:28  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.2  2000/05/18 18:41:14  kuzimmer
 // Added Particle to Basis enum, created Type enum with Scalar,Point,Vector,Tensor,& Other
 //

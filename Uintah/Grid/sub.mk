@@ -18,7 +18,8 @@ SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/SimulationState.cc \
 	$(SRCDIR)/SimulationTime.cc $(SRCDIR)/SubRegion.cc \
 	$(SRCDIR)/Task.cc $(SRCDIR)/TypeDescription.cc \
-	$(SRCDIR)/VarLabel.cc 
+	$(SRCDIR)/TypeUtils.cc $(SRCDIR)/VarLabel.cc \
+	$(SRCDIR)/templates.cc
 
 PSELIBS := Uintah/Math Uintah/Exceptions SCICore/Thread SCICore/Exceptions \
 	SCICore/Geometry
@@ -28,6 +29,11 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.14  2000/05/20 08:09:31  sparker
+# Improved TypeDescription
+# Finished I/O
+# Use new XML utility libraries
+#
 # Revision 1.13  2000/05/12 18:12:37  sparker
 # Added CCVariableBase.cc to sub.mk
 # Fixed copyPointer and other CCVariable methods - still not implemented

@@ -15,6 +15,13 @@ using std::endl;
 #include <fstream>
 using std::ostream;
 #include <stdlib.h>
+#include <Uintah/Grid/TypeDescription.h>
+#include <SCICore/Util/FancyAssert.h>
+#ifdef __sgi
+#define IRIX
+#pragma set woff 1209
+#endif
+
 
 void Matrix3::set(const int i, const int j, const double value)
 {
@@ -67,7 +74,24 @@ ostream & operator << (ostream &out_file, const Matrix3 &m3)
 
 }
 
+namespace Uintah {
+   const TypeDescription* fun_getTypeDescription(Matrix3*)
+   {
+      static TypeDescription* td = 0;
+      if(!td){
+	 ASSERTEQ(sizeof(Matrix3), sizeof(double)*9);
+	 td = new TypeDescription(TypeDescription::Matrix3, "Matrix3", true);
+      }
+      return td;
+   }
+}
+
 //$Log$
+//Revision 1.2  2000/05/20 08:09:12  sparker
+//Improved TypeDescription
+//Finished I/O
+//Use new XML utility libraries
+//
 //Revision 1.1  2000/03/14 22:12:43  jas
 //Initial creation of the utility directory that has old matrix routines
 //that will eventually be replaced by the PSE library.

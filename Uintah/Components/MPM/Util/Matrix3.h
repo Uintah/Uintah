@@ -15,6 +15,10 @@
 #include <math.h>
 #include <assert.h>
 #include <iosfwd>
+namespace Uintah {
+   class TypeDescription;
+}
+
 
 class Matrix3 {
  private:
@@ -98,6 +102,9 @@ class Matrix3 {
 };
 
 std::ostream & operator << (std::ostream &out_file, const Matrix3 &m3);
+namespace Uintah {
+const TypeDescription* fun_getTypeDescription(Matrix3*);
+}
 
 inline double Matrix3::Trace()
 {
@@ -363,6 +370,11 @@ inline SCICore::Geometry::Vector operator*(const SCICore::Geometry::Vector& v, c
 #endif  // __MATRIX3_H__
 
 // $Log$
+// Revision 1.4  2000/05/20 08:09:12  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.3  2000/05/05 15:08:30  guilkey
 // Added += operator to Matrix3.
 //

@@ -22,11 +22,14 @@ using SCICore::Math::Floor;
 static SCICore::Thread::AtomicCounter ids("Region ID counter");
 
 Region::Region(const Point& lower, const Point& upper,
-	       const IntVector& lowIndex, const IntVector& highIndex)
-    : d_box(lower, upper), d_lowIndex(lowIndex), d_highIndex(highIndex)
+	       const IntVector& lowIndex, const IntVector& highIndex,
+	       int id)
+    : d_box(lower, upper), d_lowIndex(lowIndex), d_highIndex(highIndex),
+      d_id(id)
 {
    d_res = highIndex - lowIndex;
-   id = ids++;
+   if(d_id == -1)
+      d_id = ids++;
    for(int i=0;i<27;i++)
       neighbors[i]=0;
    neighbors[1*9+1*3+1]=this;
@@ -303,6 +306,11 @@ void Region::setNeighbor(const IntVector& n, const Region* neighbor)
 
 //
 // $Log$
+// Revision 1.19  2000/05/20 08:09:26  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.18  2000/05/15 19:39:49  sparker
 // Implemented initial version of DataArchive (output only so far)
 // Other misc. cleanups

@@ -157,12 +157,17 @@ Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
 
   cSelfContactLabel = new VarLabel( "c.selfContact",
                       CCVariable<bool>::getTypeDescription() );
-};
+}
   
 } //namespace MPM
 } //namespace Uintah
 
 // $Log$
+// Revision 1.9  2000/05/20 08:09:09  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.8  2000/05/15 18:59:10  tan
 // Initialized NCVariables and CCVaribles for Fracture.
 //

@@ -1,24 +1,18 @@
-#ifndef UINTAH_HOMEBREW_OutputContext_H
-#define UINTAH_HOMEBREW_OutputContext_H
-
-#ifdef __sgi
-#define IRIX
-#pragma set woff 1375
-#endif
-#include <dom/DOM_Element.hpp>
+#ifndef UINTAH_HOMEBREW_InputContext_H
+#define UINTAH_HOMEBREW_InputContext_H
 
 namespace Uintah {
    
    /**************************************
      
      CLASS
-       OutputContext
+       InputContext
       
        Short Description...
       
      GENERAL INFORMATION
       
-       OutputContext.h
+       InputContext.h
       
        Steven G. Parker
        Department of Computer Science
@@ -29,7 +23,7 @@ namespace Uintah {
        Copyright (C) 2000 SCI Group
       
      KEYWORDS
-       OutputContext
+       InputContext
       
      DESCRIPTION
        Long description...
@@ -38,34 +32,29 @@ namespace Uintah {
       
      ****************************************/
     
-   class OutputContext {
+   class InputContext {
    public:
-      OutputContext(int fd, long cur, const DOM_Element& varnode)
-	 : fd(fd), cur(cur), varnode(varnode)
+      InputContext(int fd, long cur)
+	 : fd(fd), cur(cur)
       {
       }
-      ~OutputContext() {}
+      ~InputContext() {}
 
       int fd;
       long cur;
-      DOM_Element varnode;
    private:
-      OutputContext(const OutputContext&);
-      OutputContext& operator=(const OutputContext&);
+      InputContext(const InputContext&);
+      InputContext& operator=(const InputContext&);
       
    };
 } // end namespace Uintah
 
 //
 // $Log$
-// Revision 1.2  2000/05/20 08:09:36  sparker
+// Revision 1.1  2000/05/20 08:09:36  sparker
 // Improved TypeDescription
 // Finished I/O
 // Use new XML utility libraries
-//
-// Revision 1.1  2000/05/15 19:39:53  sparker
-// Implemented initial version of DataArchive (output only so far)
-// Other misc. cleanups
 //
 //
 

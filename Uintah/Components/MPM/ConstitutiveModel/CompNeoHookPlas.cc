@@ -368,6 +368,25 @@ void CompNeoHookPlas::readParameters(ProblemSpecP ps, double *p_array)
 
 }
 
+#ifdef __sgi
+#define IRIX
+#pragma set woff 1209
+#endif
+
+namespace Uintah {
+   namespace MPM {
+const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::CMData*)
+{
+   static TypeDescription* td = 0;
+   if(!td){
+      ASSERTEQ(sizeof(CompNeoHookPlas::CMData), sizeof(double)*5);
+      td = new TypeDescription(TypeDescription::Other, "CompNeoHookPlas::CMData", true);
+   }
+   return td;   
+}
+   }
+}
+
 #ifdef WONT_COMPILE_YET
 ConstitutiveModel* CompNeoHookPlas::readParametersAndCreate(ProblemSpecP ps)
 {
@@ -417,6 +436,11 @@ p_array[2],
 #endif
 
 // $Log$
+// Revision 1.14  2000/05/20 08:09:06  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.13  2000/05/18 16:06:25  guilkey
 // Implemented computeStrainEnergy for CompNeoHookPlas.  In both working
 // constitutive models, moved the carry forward of the particle volume to

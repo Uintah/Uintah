@@ -56,14 +56,13 @@ void SimulationController::run()
    ProblemSpecInterface* psi = dynamic_cast<ProblemSpecInterface*>(pp);
    
    // Get the problem specification
-   ProblemSpecP params = psi->readInputFile();
-   if(!params)
+   ProblemSpecP ups = psi->readInputFile();
+   if(!ups)
       throw ProblemSetupException("Cannot read problem specification");
    
    releasePort("problem spec");
    
-   ProblemSpecP ups = params->findBlock("Uintah_specification");
-   if(!ups)
+   if(ups->getNodeName() != "Uintah_specification")
       throw ProblemSetupException("Input file is not a Uintah specification");
    
    Output* output = dynamic_cast<Output*>(getPort("output"));
@@ -425,6 +424,11 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.22  2000/05/20 08:09:18  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.21  2000/05/18 18:49:16  jas
 // SimulationState constructor now uses the input file.
 //

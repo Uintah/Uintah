@@ -49,8 +49,7 @@ WARNING
 	    double K;
             double Alpha;
 	 };	 
-
-	 friend bool isFlat(const CMData&);
+	 friend const TypeDescription* fun_getTypeDescription(CMData*);
 
 	 CMData d_initialData;
 	 
@@ -120,6 +119,11 @@ WARNING
 #endif  // __NEOHOOK_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.12  2000/05/20 08:09:06  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.11  2000/05/15 22:24:34  dav
 // Added isFlat declaration to CompNeoHookPlas.h
 //

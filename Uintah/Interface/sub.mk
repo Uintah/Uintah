@@ -7,19 +7,25 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Interface
 
-SRCS     += $(SRCDIR)/CFDInterface.cc $(SRCDIR)/DataWarehouse.cc \
+SRCS     += $(SRCDIR)/CFDInterface.cc $(SRCDIR)/DataArchive.cc \
+	$(SRCDIR)/DataWarehouse.cc \
 	$(SRCDIR)/MPMInterface.cc $(SRCDIR)/Output.cc \
 	$(SRCDIR)/ProblemSpec.cc $(SRCDIR)/ProblemSpecInterface.cc \
 	$(SRCDIR)/Scheduler.cc $(SRCDIR)/DWMpiHandler.cc
 
-PSELIBS := Uintah/Parallel Uintah/Grid Uintah/Exceptions SCICore/Thread \
-	SCICore/Exceptions
+PSELIBS := Uintah/Parallel Uintah/Grid Uintah/Exceptions PSECore/XMLUtil \
+	SCICore/Thread SCICore/Exceptions SCICore/Geometry
 LIBS := $(XML_LIBRARY) -lmpi
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.9  2000/05/20 08:09:39  sparker
+# Improved TypeDescription
+# Finished I/O
+# Use new XML utility libraries
+#
 # Revision 1.8  2000/05/12 18:12:01  sparker
 # Link against exceptions
 #

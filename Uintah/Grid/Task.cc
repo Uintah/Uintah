@@ -66,13 +66,14 @@ Task::requires(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
    case Ghost::AroundNodes:
       if(numGhostCells == 0)
 	 throw InternalError("No ghost cells specified with Task::AroundNodes");
-      switch(td->getBasis()){
-      case TypeDescription::Node:
+      switch(td->getType()){
+      case TypeDescription::NCVariable:
 	 // All 27 neighbors
 	 l=-1;
 	 h=1;
 	 break;
-      case TypeDescription::Cell:
+      case TypeDescription::CCVariable:
+      case TypeDescription::ParticleVariable:
 	 // Lower neighbors
 	 l=-1;
 	 h=0;
@@ -84,13 +85,14 @@ Task::requires(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
    case Ghost::AroundCells:
       if(numGhostCells == 0)
 	 throw InternalError("No ghost cells specified with Task::AroundCells");
-      switch(td->getBasis()){
-      case TypeDescription::Node:
+      switch(td->getType()){
+      case TypeDescription::NCVariable:
 	 // Upper neighbors
 	 l=0;
 	 h=1;
          break;
-      case TypeDescription::Cell:
+      case TypeDescription::CCVariable:
+      case TypeDescription::ParticleVariable:
 	 // All 27 neighbors
 	 l=-1;
 	 h=1;
@@ -161,6 +163,11 @@ Task::getRequires() const
 
 //
 // $Log$
+// Revision 1.11  2000/05/20 08:09:27  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.10  2000/05/10 20:03:03  sparker
 // Added support for ghost cells on node variables and particle variables
 //  (work for 1 patch but not debugged for multiple)

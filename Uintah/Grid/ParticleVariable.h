@@ -4,19 +4,23 @@
 #include <SCICore/Util/FancyAssert.h>
 #include <SCICore/Exceptions/ErrnoException.h>
 #include <SCICore/Exceptions/InternalError.h>
-#include <Uintah/Grid/EmitUtils.h>
+#include <SCICore/Util/Assert.h>
+#include <PSECore/XMLUtil/XMLUtil.h>
 #include <Uintah/Grid/ParticleVariableBase.h>
+#include <Uintah/Interface/InputContext.h>
 #include <Uintah/Interface/OutputContext.h>
 #include <Uintah/Exceptions/TypeMismatchException.h>
 #include <Uintah/Grid/ParticleData.h>
 #include <Uintah/Grid/ParticleSubset.h>
 #include <Uintah/Grid/TypeDescription.h>
+#include <Uintah/Grid/TypeUtils.h>
 #include <unistd.h>
 #include <errno.h>
 
 namespace Uintah {
    using SCICore::Exceptions::ErrnoException;
    using SCICore::Exceptions::InternalError;
+   using namespace PSECore::XMLUtil;
    class TypeDescription;
 
 /**************************************
@@ -95,6 +99,7 @@ WARNING
 			  std::vector<ParticleSubset*> subsets,
 			  std::vector<ParticleVariableBase*> srcs);
       virtual void emit(OutputContext&);
+      virtual void read(InputContext&);
    private:
       
       //////////
@@ -102,15 +107,22 @@ WARNING
       ParticleData<T>* d_pdata;
       ParticleSubset*  d_pset;
       
+      static TypeDescription::Register registerMe;
    };
-   
+
+   template<class T>
+      TypeDescription::Register ParticleVariable<T>::registerMe(getTypeDescription());
+
    template<class T>
       const TypeDescription*
       ParticleVariable<T>::getTypeDescription()
       {
 	 static TypeDescription* td;
-	 if(!td)
-	    td = new TypeDescription(false, TypeDescription::Cell);
+	 if(!td){
+	    td = new TypeDescription(TypeDescription::ParticleVariable,
+				     "ParticleVariable",
+				     fun_getTypeDescription((T*)0));
+	 }
 	 return td;
       }
    
@@ -233,8 +245,9 @@ WARNING
       void
       ParticleVariable<T>::emit(OutputContext& oc)
       {
-	 T* t=0;
-	 if(isFlat(*t)){
+	 const TypeDescription* td = fun_getTypeDescription((T*)0);
+	 appendElement(oc.varnode, "numParticles", d_pset->numParticles());
+	 if(td->isFlat()){
 	    // This could be optimized...
 	    ParticleSubset::iterator iter = d_pset->begin();
 	    while(iter != d_pset->end()){
@@ -255,10 +268,42 @@ WARNING
 	    throw InternalError("Cannot yet write non-flat objects!\n");
 	 }
       }
+
+   template<class T>
+      void
+      ParticleVariable<T>::read(InputContext& ic)
+      {
+	 const TypeDescription* td = fun_getTypeDescription((T*)0);
+	 if(td->isFlat()){
+	    // This could be optimized...
+	    ParticleSubset::iterator iter = d_pset->begin();
+	    while(iter != d_pset->end()){
+	       particleIndex start = *iter;
+	       iter++;
+	       particleIndex end = start+1;
+	       while(iter != d_pset->end() && *iter == end) {
+		  end++;
+		  iter++;
+	       }
+	       size_t size = sizeof(T)*(end-start);
+	       ssize_t s=::read(ic.fd, &(*this)[start], size);
+	       if(size != s)
+		  throw ErrnoException("ParticleVariable::emit (write call)", errno);
+	       ic.cur+=size;
+	    }
+	 } else {
+	    throw InternalError("Cannot yet write non-flat objects!\n");
+	 }
+      }
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.14  2000/05/20 08:09:25  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.13  2000/05/20 02:36:06  kuzimmer
 // Multiple changes for new vis tools and DataArchive
 //

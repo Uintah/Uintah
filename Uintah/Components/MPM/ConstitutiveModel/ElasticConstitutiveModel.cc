@@ -441,6 +441,25 @@ void ElasticConstitutiveModel::printParameterNames(ofstream& out) const
       << "Pois. Rat" << endl;
 }
 
+#ifdef __sgi
+#define IRIX
+#pragma set woff 1209
+#endif
+
+namespace Uintah {
+   namespace MPM {
+const TypeDescription* fun_getTypeDescription(ElasticConstitutiveModel::CMData*)
+{
+   static TypeDescription* td = 0;
+   if(!td){
+      ASSERTEQ(sizeof(ElasticConstitutiveModel::CMData), sizeof(double)*2);
+      td = new TypeDescription(TypeDescription::Other, "ElasticConstitutiveModel::CMData", true);
+   }
+   return td;   
+}
+   }
+}
+
 ConstitutiveModel*
 ElasticConstitutiveModel::copy() const
 {
@@ -479,6 +498,11 @@ int ElasticConstitutiveModel::getSize() const
 
 
 // $Log$
+// Revision 1.12  2000/05/20 08:09:07  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.11  2000/05/11 20:10:14  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //

@@ -6,6 +6,7 @@
 namespace Uintah {
 
    typedef int particleIndex;
+   typedef int particleId;
 
 /**************************************
 
@@ -74,6 +75,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.8  2000/05/20 08:09:24  sparker
+// Improved TypeDescription
+// Finished I/O
+// Use new XML utility libraries
+//
 // Revision 1.7  2000/05/20 02:36:06  kuzimmer
 // Multiple changes for new vis tools and DataArchive
 //
