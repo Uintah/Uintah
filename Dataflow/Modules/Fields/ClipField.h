@@ -59,12 +59,14 @@ ClipFieldAlgoT<FIELD>::execute(FieldHandle fieldh, ClipperHandle clipper)
     dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
   typename FIELD::mesh_type *clipped = scinew typename FIELD::mesh_type();
 
-  typedef hash_map<unsigned int, unsigned int, hash<unsigned int>,
+  typedef hash_map<unsigned int,
+    typename FIELD::mesh_type::Node::index_type,
+    hash<unsigned int>,
     equal_to<unsigned int> > hash_type;
 
   hash_type nodemap;
 
-  vector<unsigned int> elemmap;
+  vector<typename FIELD::mesh_type::Elem::index_type> elemmap;
 
   typename FIELD::mesh_type::Elem::iterator bi, ei;
   mesh->begin(bi); mesh->end(ei);
@@ -81,13 +83,13 @@ ClipFieldAlgoT<FIELD>::execute(FieldHandle fieldh, ClipperHandle clipper)
 
       for (unsigned int i=0; i<onodes.size(); i++)
       {
-	if (nodemap.find(onodes[i]) == nodemap.end())
+	if (nodemap.find((unsigned int)onodes[i]) == nodemap.end())
 	{
 	  Point np;
 	  mesh->get_center(np, onodes[i]);
-	  nodemap[onodes[i]] = clipped->add_point(np);
+	  nodemap[(unsigned int)onodes[i]] = clipped->add_point(np);
 	}
-	nnodes[i] = nodemap[onodes[i]];
+	nnodes[i] = nodemap[(unsigned int)onodes[i]];
       }
 
       clipped->add_elem(nnodes);
