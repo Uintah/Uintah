@@ -73,6 +73,7 @@ namespace Uintah {
     const VarLabel* pLeftStretchLabel;  // For Hypoelastic-plasticity
     const VarLabel* pRotationLabel;  // For Hypoelastic-plasticity
     const VarLabel* pStrainRateLabel;  
+    const VarLabel* pPlasticStrainLabel;  
     const VarLabel* pDamageLabel;  
     const VarLabel* pPorosityLabel;  
     const VarLabel* pPlasticTempLabel;  
@@ -82,6 +83,7 @@ namespace Uintah {
     const VarLabel* pLeftStretchLabel_preReloc;  // For Hypoelastic-plasticity
     const VarLabel* pRotationLabel_preReloc;  // For Hypoelastic-plasticity
     const VarLabel* pStrainRateLabel_preReloc;  
+    const VarLabel* pPlasticStrainLabel_preReloc;  
     const VarLabel* pDamageLabel_preReloc;  
     const VarLabel* pPorosityLabel_preReloc;  
     const VarLabel* pPlasticTempLabel_preReloc;  

@@ -2,6 +2,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/IsoHardeningPlastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/JohnsonCookPlastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MTSPlastic.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/SCGPlastic.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
@@ -31,6 +32,8 @@ PlasticityModel* PlasticityModelFactory::create(ProblemSpecP& ps)
       return(scinew JohnsonCookPlastic(child));
    else if (mat_type == "mts_model")
       return(scinew MTSPlastic(child));
+   else if (mat_type == "steinberg_cochran_guinan")
+      return(scinew SCGPlastic(child));
    else 
       throw ProblemSetupException("Unknown Plasticity Model ("+mat_type+")");
 }

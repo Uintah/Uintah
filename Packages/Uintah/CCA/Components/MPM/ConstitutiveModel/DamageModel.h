@@ -43,7 +43,7 @@ namespace Uintah {
       Calculate the scalar damage parameter 
     */
     //////////////////////////////////////////////////////////////////////////
-    virtual double computeScalarDamage(const Matrix3& rateOfDeformation,
+    virtual double computeScalarDamage(const double& plasticStrainRate,
 				       const Matrix3& stress,
 				       const double& temperature,
 				       const double& delT,

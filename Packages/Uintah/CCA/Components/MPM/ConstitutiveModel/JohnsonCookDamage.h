@@ -27,7 +27,7 @@ namespace Uintah {
     \f$ D \f$ = damage variable \n
     where \f$ D \f$ = 0 for virgin material, 
     \f$ D \f$ = 1 for fracture \n
-    \f$ \epsislon_p^f\f$  = value of fracture strain given by \n
+    \f$ \epsilon_p^f\f$  = value of fracture strain given by \n
     \f$ 
     \epsilon_p^f = (D1 + D2 \exp (D3 \sigma*)][1+\dot{p}^*]^(D4)[1+D5 T^*
     \f$ \n 
@@ -83,7 +83,7 @@ namespace Uintah {
     
     //////////
     // Calculate the scalar damage parameter 
-    virtual double computeScalarDamage(const Matrix3& rateOfDeformation,
+    virtual double computeScalarDamage(const double& plasticStrainRate,
 				       const Matrix3& stress,
 				       const double& temperature,
 				       const double& delT,

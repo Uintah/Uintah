@@ -46,13 +46,9 @@ namespace Uintah {
 
     constParticleVariable<double> pAlpha;
     ParticleVariable<double> pAlpha_new;
-    constParticleVariable<double> pPlasticStrain;
-    ParticleVariable<double> pPlasticStrain_new;
 
     const VarLabel* pAlphaLabel;  // For Isotropic Hardening Plasticity
     const VarLabel* pAlphaLabel_preReloc;  // For Isotropic Hardening Plasticity
-    const VarLabel* pPlasticStrainLabel; 
-    const VarLabel* pPlasticStrainLabel_preReloc; 
 
   private:
 
@@ -86,7 +82,8 @@ namespace Uintah {
 
     virtual void allocateCMDataAdd(DataWarehouse* new_dw,
 				   ParticleSubset* addset,
-				   map<const VarLabel*, ParticleVariableBase*>* newState,
+				   map<const VarLabel*, 
+                                     ParticleVariableBase*>* newState,
 				   ParticleSubset* delset,
 				   DataWarehouse* old_dw);
 
@@ -110,10 +107,9 @@ namespace Uintah {
 
     virtual void updatePlastic(const particleIndex idx, const double& delGamma);
 
-    double getUpdatedPlasticStrain(const particleIndex idx);
-
     /*! compute the flow stress*/
-    virtual double computeFlowStress(const Matrix3& rateOfDeformation,
+    virtual double computeFlowStress(const double& plasticStrainRate,
+				     const double& plasticStrain,
 				     const double& temperature,
 				     const double& delT,
 				     const double& tolerance,
@@ -124,7 +120,8 @@ namespace Uintah {
     **WARNING** Assumes vonMises yield condition and the
     associated flow rule */
     virtual void computeTangentModulus(const Matrix3& stress,
-				       const Matrix3& rateOfDeform, 
+				       const double& plasticStrainRate,
+				       const double& plasticStrain,
 				       double temperature,
 				       double delT,
 				       const particleIndex idx,
@@ -144,6 +141,7 @@ namespace Uintah {
     */
     ///////////////////////////////////////////////////////////////////////////
     void evalDerivativeWRTScalarVars(double edot,
+                                     double ep,
                                      double T,
                                      const particleIndex idx,
                                      Vector& derivs);
@@ -169,7 +167,7 @@ namespace Uintah {
 
     */
     ///////////////////////////////////////////////////////////////////////////
-    double evalDerivativeWRTPlasticStrain(double edot, double T,
+    double evalDerivativeWRTPlasticStrain(double edot, double ep, double T,
                                           const particleIndex idx);
 
   protected:
@@ -191,7 +189,7 @@ namespace Uintah {
       \return Derivative \f$ d\sigma_Y / dT \f$.
     */
     ///////////////////////////////////////////////////////////////////////////
-    double evalDerivativeWRTTemperature(double edot, double T,
+    double evalDerivativeWRTTemperature(double edot, double ep, double T,
 					const particleIndex idx);
 
     ///////////////////////////////////////////////////////////////////////////
@@ -211,7 +209,7 @@ namespace Uintah {
       \return Derivative \f$ d\sigma_Y / d\dot\epsilon_p \f$.
     */
     ///////////////////////////////////////////////////////////////////////////
-    double evalDerivativeWRTStrainRate(double edot, double T,
+    double evalDerivativeWRTStrainRate(double edot, double ep, double T,
 				       const particleIndex idx);
 
     ///////////////////////////////////////////////////////////////////////////
@@ -232,7 +230,7 @@ namespace Uintah {
 
     */
     ///////////////////////////////////////////////////////////////////////////
-    double evalDerivativeWRTAlpha(double edot, double T,
+    double evalDerivativeWRTAlpha(double edot, double ep, double T,
 				  const particleIndex idx);
 
 

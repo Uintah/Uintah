@@ -34,6 +34,7 @@ SRCS     += \
 	$(SRCDIR)/IsoHardeningPlastic.cc \
 	$(SRCDIR)/JohnsonCookPlastic.cc \
 	$(SRCDIR)/MTSPlastic.cc \
+	$(SRCDIR)/SCGPlastic.cc \
 	$(SRCDIR)/YieldCondition.cc \
 	$(SRCDIR)/YieldConditionFactory.cc \
 	$(SRCDIR)/GursonYield.cc \
