@@ -21,8 +21,8 @@
 
   <sect1>
     <para>
-      This chapter describes the elements of a SCIRun dataflow
-      program.
+      This chapter describes dataflow programming in general, and provides
+      specific details for dataflow programming within SCIRun.
     </para>
   </sect1>
 
@@ -30,184 +30,325 @@
     <title>Introduction</title>
 
     <para>
-      Dataflow/Network provides the basic functionality of the SCIRun
-      dataflow paradigm.  The notions of Modules, Ports, Connections
-      and Networks are defined here.  It also provides the
-      implementation for the NetworkEditor, which is the tool used by
-      a network designer to build Networks.
+      The goal of SCIRun is to provide a problem solving environment in which
+      a scientist, with little programming experience, can easily 
+      solve a problem using powerful tools such as parallel super computing
+      for number crunching, and high performance graphics for interactive
+      visualization.  SCIRun accomplishes this goal by employing a programming
+      paradigm called <term>dataflow</term>.
     </para>
 
+    <para>
+      Dataflow programming essentially provides coarse grained, configurable
+      algorithms that, when tied together, can be thought of as a program for
+      solving a problem.  A dataflow programmer needs to know very little about
+      how to program a parallel super computer, or how to use the latest
+      graphics hardware to generate a visualization, in order to use those
+      tools - all she needs to do is focus on the science behind the problem
+      being solved.  
+    </para>
+
+    <para>
+      In SCIRun the dataflow paradigm is manifested visually as a set of boxes,
+      called modules, each of which contains a variety of pre-implemented
+      algorithms.  The modules have data ports, both input and output, for
+      accepting and relaying data.  The flow of data through the modules is 
+      dictated by connections made between input and output ports: The output
+      port of one module is connected to the input port of one or more other
+      modules.  A series of connected modules is called a network, which can 
+      be thought of as a program for solving a particular type of problem.
+    </para>
+    
+    <para>
+      There are several pre-implemented modules and ports in SCIRun that
+      allow a dataflow network programmer to build networks that solve a
+      variety of novel problems.  However, the the real power of SCIRun is the
+      it's ability to be extended through the development of new modules and
+      new ports which expand the number of types of solvable problems.
+      The development of a new module or port requires a working knowledge
+      of C++ programming.
+    </para>
   </sect1>
 
   <sect1>
-    <title>Programming SCIRun Dataflow</title>
+    <title>Developing SCIRun dataflow elements</title>
+
+    <sect2>
+      <title>Module</title>
 
       <para>
-        One of the useful features of SCIRun is that it can easily
-	be extended by developing new modules (algorithms) and new 
-	ports (datatypes) for it.  To do this, a developer would
-	write code that inherits functionality from the classes
-	in this directory.  By inheriting from these classes, a
-	developer can focus on the code needed to quickly implement
-	a new algorithm.
+        From the most abstract perspective, a module is considered one or more
+        algorithms that solves a single, specific and coarse grained, problem.
+        For example, suppose you have a large list of english words that you
+        want to sort.  There are several algorithms that you may employ to
+        to solve this problem such as bubble sort, quick sort, etc.
+        A module that also solves this problem, likely named Sort, would
+        be a collection of one or more of these algorithms.
       </para>
 
       <para>
-        Most of the code in this directory is meant to be used
-	internally by the SCIRun PSE only.  There are three instances
-	in which a developer would use code in this directory
-	external to the PSE: When writing modules, When writing ports,
-	and when a developer would like to post a message to the 
-	NetworkEditor's message window.
+        On a slightly more concrete level, a module can be compared 
+        to a function or procedure (of a high level text based
+        programming language) that also implements one or more
+        algorithms to solve a specific problem.  The prototype for
+        such a function that solves the sort problem might look like this:
       </para>
 
-     <sect2>
-       <title>Module</title>
+      <computeroutput>
+        void Sort(string *words_to_sort, int alg_to_use);
+      </computeroutput>
 
-    <para>
-      From the most abstract perspective, a module is considered to
-      be a one or more algorithms that solves a single, specific and
-      coarse grained, problem.  For example, suppose you have a large
-      database of english words that you want to display in sorted
-      order.  There are several algorithms that you may employ to
-      to solve this problem such as bubble sort, quick sort, etc.
-      A module that solves this problem, likely named Sort, would
-      be a collection of one or more of these algorithms.
-    </para>
+      <para>
+        Where words_to_sort is a random , possibly large, list of words
+        to be sorted (the data), and alg_to_use is a single integer (the
+        control) which is used to select one of the implemented algorithms.
+      </para>
 
-    <para>
-      On a slightly more concrete level, a module can be compared 
-      to a function or procedure (of a high level text based
-      programming language) that also implements one or more
-      algorithms to solve a specific problem.  The prototype for
-      such a function (in C like syntax) might look like this:
-    </para>
+      <para>
+        The Sort module is similar to the Sort function in many ways:
+        They both have input (data and control), they both have output,
+        they both have a single point of entry for execution, and they
+        can both be used modularly in any program.
+        The ports of a module serve some of the same functions as the
+        formal parameters to a function: they can accept and relay data
+        from/to their callers and they enforce type matching.
+      </para>
 
-    <computeroutput>
-        int Sort(string *words_to_sort, int alg_to_use);
-    </computeroutput>
-
-    <para>
-      Where words_to_sort is a random , possibly large, list of words
-      to be sorted (the data), and alg_to_use is a single integer used
-      to control which of the implemented algorithms to use.
-    </para>
-
-    <para>
-      The Sort module is identical to the Sort function in many ways:
-      They both have input (data and control), they both have output,
-      they both have a single point of entry for execution, and they
-      can both be used modularly in any program, provided that they are
-      simultaneously specific and general enough to be used universally.
-    </para>
-
-    <para>
-      Some important differences include: The Sort module seperates
-      the mode for communicating inputs of different kinds (i.e. data
-      is treated differently and seperately from control) and the sort
-      module can have more than one output.
-    </para>
+      <para>
+        One important difference is that the Sort module seperates
+        the mode for communicating inputs of different kinds, i.e. data
+        is treated differently and seperately from control.
+      </para>
     
-    <para>
-      On the lowest level a module is exactly like the function.  The
-      module is actually implemented as a C++ class with one member
-      function named execute().  The execute member function is
-      similar to the C function in many ways.  In fact, it is possible
-      to cut the contents out of the C function and paste them into
-      the execute function of the module and achieve the same 
-      functionality, with one exception: the module does not pass 
-      data to the execute function through formal parameters, instead
-      it passes them through the use of seperate member functions
-      (pseudo code):
-    </para>
+      <para>
+        On the lowest level a module is almost exactly like the function.
+        The module is actually implemented as a C++ class with one member
+        function named execute().  The execute member function is
+        identical to the C function in many ways.  In fact, it is possible
+        to cut the contents out of the C function and paste them into
+        the execute function of the module and achieve the same 
+        functionality, with one caveat: the module does not pass 
+        data or control to the execute function through formal parameters,
+        like the C function.  Instead, the execute function acquires the data
+        and control by using addition function calls:
+      </para>
     
-    <computeroutput>
-      void execute() {
-        string *words_to_sort;
-	int alg_to_use;
+      <computeroutput>
+        void Sort::execute() 
+        {
+          string *words = get_data();    // get the data from the input port
+	  int alg       = get_control(); // get the control from the GUI
 
-	words_to_sort = get_data_from_input_port() ;
-	alg_to_use = get_chosen_algorithm_from_gui();
-
-	/* paste contents of sort function here */
+	  //
+          //  one can either paste the contents of the sort
+          //  function here, or simply call it:
+          //
+          
+          sort(words,alg);
 	
-	send_data_to_output_port(words_to_sort);
-      }
-    </computeroutput>
+	  send_data(words);  // send the result to the output port
+        }
+      </computeroutput>
 
-    <para>
-      Modules are often manifested as graphical boxes with ports, 
-      a name, a timer and a progress bar.  Modules can exist outside
-      this graphical representation as well.  Outside it's graphical
-      manifestation, a module can be viewed as a node in an dataflow
-      graph.
-    </para>
-   </sect2>
+      <para>
+        So, a module is simply a C++ class, and in order to develop a new
+        module, one simply needs to create a new class.  Creating a new module
+        can be done semi-automatically using SCIRun's Module Wizard, or can
+        be done by hand.  The Module Wizard will be discussed in greater detail
+        later in this chapter.  Regardless of how the new module is created,
+        there are some conventions that must be followed in order to have the
+        new module be usable from within SCIRun.  Let's build the example
+        module, Sort, by hand as an example.
+      </para>
 
-   <sect2>
-     <title>Port</title>
-    <para>
-      Ports are the analog of formal paramaters of a C function.
-      They are used to connect modules together and they enforce type
-      matching.
-    </para>
-   </sect2>
+      <para>
+        To get started, we need to declare a skeleton class that will
+        eventually become the Sort module:
+      </para>
 
-   <sect2>
-     <title>Connection</title>
-    <para>
-    </para>
-   </sect2>
+      <computeroutput>
+        #include <Dataflow/Network/Module.h>     // module base class
+        #include <Dataflow/Ports/WordListPort.h> // wordlist port classes 
+        #include <Core/GuiInterface/GuiVar.h>    // GUI data interface
 
-   <sect2>
-     <title>Network</title>
-    <para>
-    </para>
-   </sect2>
+        class Sort : public Module
+        {
+        protected:
 
-   <sect2>
-     <title>Network Editor</title>
-    <para>
-    </para>
-   </sect2>
+          // port and control data members
+          WordListIPort *iport_;
+          WordListOPort *oport_;
+          GuiInt algo_;
 
-   <sect2>
-     <title>Examples</title>
+          // Sort specific member functions
+          string* get_data();
+          int get_control();
+          void send_data();
+
+        public:
+
+          // all modules need to declare and implement these
+          Sort(const string& id) :
+            Module("Sort", id, Source),
+            algo_("alg_to_use", id, this),
+            iport_(0),
+            oport_(0),
+            algo_(0) { /* do nothing */ }
+
+          virtual ~Sort() { /* do nothing */ };
+
+          virtual void execute();
+        
+        };
+      </computeroutput>
+
+      <para>
+        We've already implemented the execute function, but it depends on
+        get_data(), get_control() and send_data().  Let's write those now.
+        Assuming that our module actually has the ports we need, we now 
+        need to be able to get the data from the input port:
+      </para>
+
+      <computeroutput>
+        string *Sort::get_data()
+        {
+          // data is passed between modules as handles
+          WordListHandle wlh;
+
+          // first get a pointer to the input port named "InList"
+          iport_ = (WordListIPort*)get_iport("InList");
+
+          // verify that the port was found
+          if (!iport_) return 0;
+
+          // verify that the port is connected and has data (blocking call!)
+          // if so, the handle will be associated with the data
+          if (!iport_->get(wlh)) return 0;
+
+          // verify that the data pointer associated with the handle 
+          // is not NULL
+          if (!wlh.get_rep()) return 0;
+
+          return wlh.get_rep();
+        }
+      </computeroutput>
+
+      <para>
+        Now we can get the data, but we can't call the sort function until
+        we know which sort algorithm to use, so we have to query the state 
+        of the GUI:
+      </para>
+
+      <computeroutput>
+        int Sort::get_control()
+        {
+          // prep the GUI element associated with algo_
+          algo_.reset();
+
+          // return the state of algo_'s GUI element
+          return algo_.get();
+        }
+      </computeroutput>
+
+      <para>
+        Now we have enough information (the data and control) to call the
+        sort function.  After that we'll want to relay the results to the
+        next module (or modules) in the network, i.e. we have to send the
+        results of the sort function to the output port:
+      </para>
+
+      <computeroutput>
+        void Sort::send_data(string *list)
+        {
+          // get a pointer to the output port name "OutList"
+          oport_ = (WorldListOPort*)get_oport("OutList");
+
+          // send the data to the port.  the pointer is automatically
+          // wrapped into a WordListHandle by the send
+          oport_->send(list);
+        }
+      </computeroutput>
+
+    </sect2>
+
+    <sect2>
+      <title>Port</title>
+      
+      <para>
+        Ports are the analog of formal paramaters of a C function.
+        They are used to connect modules together and they enforce type
+        matching.
+      </para>
+    </sect2>
+
+    <sect2>
+      <title>Connection</title>
+      <para>
+      </para>
+    </sect2>
+    
+    <sect2>
+      <title>Network</title>
+      <para>
+      </para>
+    </sect2>
+
+    <sect2>
+      <title>Network Editor</title>
+      <para>
+      </para>
+    </sect2>
+
+    <sect2>
+      <title>Examples</title>
    
     
-    <para>
-      To get data into and out of your module's execute function, you
-      need to use the module's ports.  In order to use the ports, 
-      you first need to get a pointer to a specific port.  Then, call
-      that port's get() function with a handle to the type of data
-      expected on the port.  On success, the handle passed to get()
-      will represent the data that is on that input port:
-    </para>
-    <computeroutput>
-      #include &lt;Dataflow/Ports/MatrixPort.h&gt;
+      <para>
+        To get data into and out of your module's execute function, you
+        need to use the module's ports.  In order to use the ports, 
+        you first need to get a pointer to a specific port.  Then, call
+        that port's get() function with a handle to the type of data
+        expected on the port.  On success, the handle passed to get()
+        will represent the data that is on that input port:
+      </para>
+    
+      <computeroutput>
+        #include &lt;Dataflow/Ports/MatrixPort.h&gt;
 
-      ...
+        ...
 
-      void SomeModule::execute() {
+        void SomeModule::execute() {
 
-        //The input port for this module is of type Matrix, and is
-        // named "Input Matrix"
+          //The input port for this module is of type Matrix, and is
+          // named "Input Matrix"
 
-        MatrixIPort *iport = get_iport("Input Matrix");
+          MatrixIPort *iport = get_iport("Input Matrix");
 
-        MatrixHandle InputMatrix;
+          MatrixHandle InputMatrix;
 
-        int connected = iport->get(InputMatrix);
+          int connected = iport->get(InputMatrix);
 
-        if (!connected) {
-          printf("There is no connection for 'Input Matrix'!");
-	  return;
-        }
+          if (!connected) {
+            printf("There is no connection for 'Input Matrix'!");
+	    return;
+          }
         
-	...
-      }
-    </computeroutput>
-   </sect2>
+	  ...
+        }
+      </computeroutput>
+    </sect2>
   </sect1>
 </chapter>
+
+
+
+
+
+
+
+
+
+
+
+
 
