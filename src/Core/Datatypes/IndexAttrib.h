@@ -51,15 +51,19 @@ public:
   T &fget2(int x, int y);
   T &fget3(int x, int y, int z);
   
-#if 0
-  virtual void set1(int x, const T &val);
-  virtual void set2(int x, int y, const T &val);
-  virtual void set3(int x, int y, int z, const T &val);
 
-  void fset1(int x, const T &val);
-  void fset2(int x, int y, const T &val);
-  void fset3(int x, int y, int z, const T &val);
-#endif
+  virtual void iset1(int x, const I &val);
+  virtual void iset2(int x, int y, const I &val);
+  virtual void iset3(int x, int y, int z, const I &val);
+
+  void fiset1(int x, const I &val);
+  void fiset2(int x, int y, const I &val);
+  void fiset3(int x, int y, int z, const I &val);
+
+  virtual void tset(int x, const T &val);
+  void ftset(int x, const T &val);
+
+
 
   // Implement begin()
   // Implement end()
@@ -191,47 +195,61 @@ IndexAttrib<T, I, A>::get3(int ix, int iy, int iz)
 
 
 
-#if 0
 template <class T, class I, class A> void
-IndexAttrib<T, I, A>::fset1(int, const T &val)
+IndexAttrib<T, I, A>::fiset1(int x, const I &val)
 {
-  iattrib.defval = val;
+  iattrib.fset1(x, val);
 }
 
 
 template <class T, class I, class A> void
-IndexAttrib<T, I, A>::fset2(int, int, const T &val)
+IndexAttrib<T, I, A>::fiset2(int x, int y, const I &val)
 {
-  defval = val;
+  iattrib.fset2(x, y, val);
 }
 
 
 template <class T, class I, class A> void
-IndexAttrib<T, I, A>::fset3(int, int, int, const T &val)
+IndexAttrib<T, I, A>::fiset3(int x, int y, int z, const I &val)
 {
-  defval = val;
+  iattrib.fset3(x, y, z, val);
 }
 
 
 // Generic setters for Index type
 template <class T, class I, class A> void
-IndexAttrib<T, I, A>::set1(int x, const T &val)
+IndexAttrib<T, I, A>::iset1(int x, const I &val)
 {
-  fset1(x, val);
+  fiset1(x, val);
 }
 
 template <class T, class I, class A> void
-IndexAttrib<T, I, A>::set2(int x, int y, const T &val)
+IndexAttrib<T, I, A>::iset2(int x, int y, const I &val)
 {
-  fset2(x, y, val);
+  fiset2(x, y, val);
 }
 
 template <class T, class I, class A> void
-IndexAttrib<T, I, A>::set3(int x, int y, int z, const T &val)
+IndexAttrib<T, I, A>::iset3(int x, int y, int z, const I &val)
 {
-  fset3(x, y, z, val);
+  fiset3(x, y, z, val);
 }
-#endif
+
+
+template <class T, class I, class A> void
+IndexAttrib<T, I, A>::ftset(int x, const T &val)
+{
+  index[x] = val;
+}
+
+
+template <class T, class I, class A> void
+IndexAttrib<T, I, A>::tset(int x, const T &val)
+{
+  ftset(x, val);
+}
+
+
 
 
 // template <class T, class I, class A> bool IndexAttrib<T, I, A>::compute_minmax(){
