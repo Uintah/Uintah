@@ -43,7 +43,7 @@ GZPDFFILE = ${PDFFILE}.gz
 HTMLDIR = ${BN}
 HTMLFILE = ${HTMLDIR}/${BN}.html
 
-all: dvi html ps
+all: dvi html ps bib
 
 dvi: ${DVIFILE}
 
