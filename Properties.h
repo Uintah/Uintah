@@ -250,6 +250,7 @@ private:
       int d_numMixingVars;
       int d_numMixStatVars;
       double d_denUnderrelax;
+      double d_opl;
       IntVector d_denRef;
       MixingModel* d_mixingModel;
       BoundaryCondition* d_bc;
