@@ -176,6 +176,12 @@ void FieldSlicer::execute(){
     return;
   }
 
+  if( fHandle->data_at() != Field::NODE ) {
+    error( fHandle->get_type_description(0)->get_name() );
+    error( "Currently only availible for node data." );
+    return;
+  }
+
   // Check to see if the dimensions have changed.
   if( idim_ != iDim_.get() ||
       jdim_ != jDim_.get() ||
