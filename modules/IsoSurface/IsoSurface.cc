@@ -76,6 +76,7 @@ IsoSurface::IsoSurface()
 				MUI_widget::Immediate));
     old_min=-1.e30;
     old_max=1.e30;
+    need_seed=0;
 }
 
 IsoSurface::IsoSurface(const IsoSurface& copy, int deep)
@@ -110,6 +111,10 @@ void IsoSurface::execute()
 	value_slider->set_minmax(min, max);
 	old_min=min;
 	old_max=max;
+    }
+    if(need_seed){
+	find_seed_from_value(field);
+	need_seed=0;
     }
     if(do_3dwidget){
 	GeomSphere* ptobj=new GeomSphere(seed_point, 0.5);
@@ -406,10 +411,11 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
 	error("Isosurface Seed Point not in field\n");
 	return;
     }
-    int px=nx*tx;
-    int py=ny*ty;
-    int pz=nz*tz;
-    double isoval=field->get(px,py,pz);
+    int px=int(nx*tx);
+    int py=int(ny*ty);
+    int pz=int(nz*tz);
+    isoval=field->get(px,py,pz);
+    value_slider->set_value(isoval);
     cerr << "Isoval = " << isoval << "\n";
     HashTable<int, int> visitedPts;
     Queue<int> surfQ;
@@ -417,7 +423,15 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
     int dummy;
     visitedPts.insert(pLoc, 0);
     surfQ.append(pLoc);
+    int counter=1;
+    GeomID groupid;
     while(!surfQ.is_empty()) {
+	if (counter%100 == 0) {
+	    if (counter != 100)
+		ogeom->delObj(groupid);
+	    groupid=ogeom->addObj(group->clone());
+	    ogeom->flushViews();
+	}
 	if(abort_flag)
 	    return;
 	pLoc=surfQ.pop();
@@ -474,7 +488,10 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
 	    }
 	    pLoc-=nx*ny;
 	}
-    }	    
+	counter++;
+    }
+    if (counter > 100)
+	ogeom->delObj(groupid);
 }
 
 
@@ -490,10 +507,23 @@ void IsoSurface::iso_tetrahedra(const Field3DHandle&, double,
     NOT_FINISHED("IsoSurface::iso_tetrahedra");
 }
 
-void IsoSurface::find_seed_from_value()
+void IsoSurface::find_seed_from_value(const Field3DHandle& field)
 {
-    NOT_FINISHED("find_seed_from_value()");
-    seed_point=Point(0,0,1);
+    int nx=field->get_nx();
+    int ny=field->get_ny();
+    int nz=field->get_nz();
+    ObjGroup group;
+    for (int i=0; i<nx-1;i++) {
+	for (int j=0; j<ny-1; j++) {
+	    for (int k=0; k<nz-1; k++) {
+		if(iso_cube(i,j,k,isoval, &group, field)) {
+		    seed_point=Point(i,j,k);
+		    cerr << "New seed=" << seed_point.string() << endl;
+		    return;
+		}
+	    }
+	}
+    }
 }
 
 void IsoSurface::mui_callback(void*, int which)
@@ -506,7 +536,7 @@ void IsoSurface::mui_callback(void*, int which)
     if(do_3dwidget){
 	if(!have_seedpoint){
 	    have_seedpoint=1;
-	    find_seed_from_value();
+	    need_seed=1;
 	}
     }
 }

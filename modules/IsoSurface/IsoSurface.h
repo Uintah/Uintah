@@ -33,6 +33,7 @@ class IsoSurface : public UserModule {
 
     int have_seedpoint;
     Point seed_point;
+    int need_seed;
     double isoval;
     int make_normals;
     int do_3dwidget;
@@ -52,7 +53,7 @@ class IsoSurface : public UserModule {
     void iso_tetrahedra(const Field3DHandle&, const Point&, ObjGroup*);
     void iso_tetrahedra(const Field3DHandle&, double, ObjGroup*);
 
-    void find_seed_from_value();
+    void find_seed_from_value(const Field3DHandle&);
 public:
     IsoSurface();
     IsoSurface(const IsoSurface&, int deep);
