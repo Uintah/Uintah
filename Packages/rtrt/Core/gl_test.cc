@@ -1,5 +1,6 @@
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/FontString.h>
+#include <Packages/rtrt/Core/DpyBase.h>
 #include <Packages/rtrt/visinfo/visinfo.h>
 
 #include <Core/Thread/Time.h>
@@ -25,10 +26,6 @@ using namespace std;
 using namespace rtrt;
 using namespace SCIRun;
 
-namespace rtrt {
-  extern Mutex xlock;
-} // end namespace rtrt
-
 static void printString(GLuint fontbase, double x, double y,
 			char *s, const Color& c)
 {
@@ -49,7 +46,7 @@ void run_gl_test() {
   char* criteria1="db, stereo, max rgb, max accumrgb";
   char* criteria2="db, max rgb, max accumrgb";
   // Open an OpenGL window
-  xlock.lock();
+  DpyBase::xlock();
   dpy=XOpenDisplay(NULL);
   if(!dpy){
     cerr << "Cannot open display\n";
@@ -151,7 +148,7 @@ void run_gl_test() {
 
   // Window Created
   cerr << "Created Window\n";
-  xlock.unlock();
+  DpyBase::xunlock();
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
