@@ -3,6 +3,7 @@
 
 #include <Uintah/Components/Schedulers/MPIScheduler.h>
 #include <Uintah/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <Uintah/Components/Schedulers/SendState.h>
 #include <Uintah/Interface/LoadBalancer.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/ParticleVariable.h>
@@ -113,6 +114,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 		      DataWarehouseP   & old_dw,
 		      DataWarehouseP   & dw )
 {
+   SendState ss;
    // We do not use many Bsends, so this doesn't need to be
    // big.  We make it moderately large anyway.
    void* old_mpibuffer;
@@ -151,11 +153,14 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	    if(dep->d_dw->haveParticleSubset(dep->d_matlIndex, dep->d_patch)){
 	       DestType ddest(dep->d_matlIndex, dep->d_patch, dest);
 	       if(sent.find(ddest) == sent.end()){
+		  int size;
 		  ParticleSubset* pset = dep->d_dw->getParticleSubset(dep->d_matlIndex, dep->d_patch);
-		  int numParticles = pset->numParticles();
-		  ASSERT(dep->d_serialNumber >= 0);
-		  MPI_Bsend(&numParticles, 1, MPI_INT, dest, PARTICLESET_TAG|dep->d_serialNumber, d_myworld->getComm());
-		  log.logSend(dep, sizeof(int), "particleSet size");
+		  OnDemandDataWarehouse* newdw = dynamic_cast<OnDemandDataWarehouse*>(dw.get_rep());
+		  if(!dw)
+		     throw InternalError("Wrong Datawarehouse?");
+		  newdw->sendParticleSubset(ss, pset, reloc_new_posLabel,
+					    dep, task->getPatch(), d_myworld, &size);
+		  log.logSend(dep, size, "particleSet size");
 		  sent.insert(ddest);
 	       }
 	    }
@@ -217,7 +222,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 		  ASSERT(dep->d_serialNumber >= 0);
 		  dbg << me << " --> sending initial " << dep->d_var->getName() << " serial " << dep->d_serialNumber << ", to " << dep->d_task->getAssignedResourceIndex() << '\n';
 		  int size;
-		  dw->sendMPI(dep->d_var, dep->d_matlIndex,
+		  dw->sendMPI(ss, dep->d_var, dep->d_matlIndex,
 			      dep->d_patch, d_myworld, dep,
 			      dep->d_task->getAssignedResourceIndex(),
 			      dep->d_serialNumber, &size, &requestid);
@@ -267,7 +272,7 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	       ASSERT(dep->d_serialNumber >= 0);
 	       dbg << me << " <-- receiving initial " << dep->d_var->getName() << " serial " << dep->d_serialNumber << '\n';
 	       int size;
-	       dw->recvMPI(old_dw, dep->d_var, dep->d_matlIndex,
+	       dw->recvMPI(ss, old_dw, dep->d_var, dep->d_matlIndex,
 			   dep->d_patch, d_myworld, dep,
 			   MPI_ANY_SOURCE,
 			   dep->d_serialNumber, &size, &requestid);
@@ -360,12 +365,14 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 			ASSERT(req->d_serialNumber >= 0);
 			dbg << me << " <-- receiving " << req->d_var->getName() << " serial " << req->d_serialNumber << ' ' << *req << '\n';
 			int size;
-			dw->recvMPI(old_dw, req->d_var, req->d_matlIndex,
+			dw->recvMPI(ss, old_dw, req->d_var, req->d_matlIndex,
 				    req->d_patch, d_myworld, req,
 				    MPI_ANY_SOURCE,
 				    req->d_serialNumber, &size, &requestid);
-			log.logRecv(req, size);
-			recv_ids.push_back(requestid);	
+			if(size != -1){
+			   log.logRecv(req, size);
+			   recv_ids.push_back(requestid);
+			}
 			dbg << "there are now " << recv_ids.size() << " waiters\n";
 		     }
 		  }
@@ -444,13 +451,15 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 			   ASSERT(dep->d_serialNumber >= 0);
 			   dbg << me << " --> sending " << dep->d_var->getName() << " serial " << dep->d_serialNumber << ", to " << dep->d_task->getAssignedResourceIndex() << " " << *dep << '\n';
 			   int size;
-			   dw->sendMPI(dep->d_var, dep->d_matlIndex,
+			   dw->sendMPI(ss, dep->d_var, dep->d_matlIndex,
 				       dep->d_patch, d_myworld, dep,
 				       dep->d_task->getAssignedResourceIndex(),
 				       dep->d_serialNumber,
 				       &size, &requestid);
-			   log.logSend(dep, size);
-			   send_ids.push_back(requestid);
+			   if(size != -1){
+			      log.logSend(dep, size);
+			      send_ids.push_back(requestid);
+			   }
 			   varsent.insert(ddest);
 			}
 		     }
@@ -883,6 +892,9 @@ MPIScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.25.4.2  2000/10/02 15:02:45  sparker
+// Send only boundary particles
+//
 // Revision 1.25.4.1  2000/09/29 06:09:54  sparker
 // g++ warnings
 // Support for sending only patch edges

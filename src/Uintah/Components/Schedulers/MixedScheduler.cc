@@ -8,6 +8,7 @@
 #include <SCICore/Malloc/Allocator.h>
 
 #include <Uintah/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <Uintah/Components/Schedulers/SendState.h>
 #include <Uintah/Grid/Patch.h>
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Grid/ScatterGatherBase.h>
@@ -453,6 +454,7 @@ MixedScheduler::makeAllRecvRequests( vector<Task*>       & tasks,
 				   DataWarehouseP      & old_dw,
 				   DataWarehouseP      & new_dw )
 {
+   SendState ss;
   vector<DependData> invalidDependencies;
 
   // Must be called before I start making recv calls, as the recv
@@ -507,7 +509,7 @@ MixedScheduler::makeAllRecvRequests( vector<Task*>       & tasks,
 	  cerrLock->unlock();
 #endif
 	  int size;
-	  dw->recvMPI(old_dw, need->d_var, need->d_matlIndex,
+	  dw->recvMPI(ss, old_dw, need->d_var, need->d_matlIndex,
 		      need->d_patch, d_myworld, need,
 		      MPI_ANY_SOURCE,
 		      need->d_serialNumber, &size, &requestid);
@@ -969,6 +971,7 @@ void
 MixedScheduler::sendInitialData( vector<Task*> & tasks,
                                int             me )
 {
+   SendState ss; // SHOULD BE PASSED IN! - Steve
 #if DAV_DEBUG
   cerr << "Initial DW Data Send\n";
 #endif
@@ -1008,7 +1011,7 @@ MixedScheduler::sendInitialData( vector<Task*> & tasks,
                  << dep->d_task->getAssignedResourceIndex() << '\n';
 #endif
 	    int size;
-            dw->sendMPI(dep->d_var, dep->d_matlIndex,
+            dw->sendMPI(ss, dep->d_var, dep->d_matlIndex,
                         dep->d_patch, d_myworld, dep,
                         dep->d_task->getAssignedResourceIndex(),
                         dep->d_serialNumber, &size, &requestid);
@@ -1035,6 +1038,7 @@ MixedScheduler::recvInitialData( vector<Task*>  & tasks,
                                DataWarehouseP & old_dw,
                                int              me )
 {
+   SendState ss; // SHOULD BE PASSED IN! - Steve
 #if DAV_DEBUG
   cerr << "start: recvInitialData\n";
 #endif
@@ -1077,7 +1081,7 @@ MixedScheduler::recvInitialData( vector<Task*>  & tasks,
 		    << dep->d_serialNumber << '\n';
 #endif
 	       int size;
-               dw->recvMPI(old_dw, dep->d_var, dep->d_matlIndex,
+               dw->recvMPI(ss, old_dw, dep->d_var, dep->d_matlIndex,
                            dep->d_patch, d_myworld, dep,
                            MPI_ANY_SOURCE,
                            dep->d_serialNumber, &size, &requestid);
@@ -1531,6 +1535,7 @@ MixedScheduler::dependencySatisfied( const Task::Dependency * comp,
 				   vector<MPI_Request> & send_ids,
 				   bool sendData )
 {
+   SendState ss; // SHOULD BE PASSED IN! - Steve
     DependData		    d( comp );
     vector<Task *>	    tasks = depToTasks[ d ];
     vector<Task*>::iterator taskIter;
@@ -1610,7 +1615,7 @@ MixedScheduler::dependencySatisfied( const Task::Dependency * comp,
 	  cerrLock->unlock();
 #endif
 	  int size;
-	  dw->sendMPI(req->d_var, req->d_matlIndex,
+	  dw->sendMPI(ss, req->d_var, req->d_matlIndex,
 		      req->d_patch, d_myworld, req,
 		      req->d_task->getAssignedResourceIndex(),
 		      req->d_serialNumber, &size, &requestid);
@@ -1697,6 +1702,9 @@ MixedScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.5.2.2  2000/10/02 15:02:45  sparker
+// Send only boundary particles
+//
 // Revision 1.5.2.1  2000/09/29 06:09:54  sparker
 // g++ warnings
 // Support for sending only patch edges
