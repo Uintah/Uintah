@@ -53,9 +53,6 @@ void ThermalContact::computeHeatExchange(const ProcessorGroup*,
     }
   }
 
-  double heatTransferCoefficient =
-     MPMPhysicalModules::heatConductionModel->getHeatTransferCoefficient();
-
   for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++)
   {
     for(n = 0; n < NVFs; n++)
@@ -71,7 +68,7 @@ void ThermalContact::computeHeatExchange(const ProcessorGroup*,
           if( !compare(gTemperature[vfindex][*iter],temp) )
           {
             gExternalHeatRate[n][*iter] += 
-              heatTransferCoefficient *
+              mpm_matl->getHeatTransferCoefficient() *
                 ( gmass[vfindex][*iter] * gTemperature[vfindex][*iter] 
                 - gmass[n][*iter] * temp );
           }
@@ -110,6 +107,10 @@ void ThermalContact::addComputesAndRequires(Task* t,
 
 //
 // $Log$
+// Revision 1.9  2000/06/26 18:42:19  tan
+// Different heat_conduction properties for different materials are allowed
+// in the MPM simulation.
+//
 // Revision 1.8  2000/06/22 22:33:29  tan
 // Moved heat conduction physical parameters (thermalConductivity, specificHeat,
 // and heatTransferCoefficient) from MPMMaterial class to HeatConduction class.

@@ -1103,8 +1103,6 @@ void SerialMPM::computeInternalHeatRate(
   const MPMLabel* lb = MPMLabel::getLabels();
 
   ASSERT(MPMPhysicalModules::heatConductionModel);
-  double thermalConductivity = 
-     MPMPhysicalModules::heatConductionModel->getThermalConductivity();
 
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
@@ -1112,6 +1110,7 @@ void SerialMPM::computeInternalHeatRate(
     if(mpm_matl){
       int matlindex = matl->getDWIndex();
       int vfindex = matl->getVFIndex();
+      double thermalConductivity = mpm_matl->getThermalConductivity();
       
       ParticleVariable<Point>  px;
       ParticleVariable<double> pvol;
@@ -1220,14 +1219,13 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
   const MPMLabel* lb = MPMLabel::getLabels();
 
   ASSERT(MPMPhysicalModules::heatConductionModel);
-  double specificHeat = 
-     MPMPhysicalModules::heatConductionModel->getSpecificHeat();
 
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
       int vfindex = matl->getVFIndex();
+      double specificHeat = mpm_matl->getSpecificHeat();
      
       // Get required variables for this patch
       NCVariable<double> mass,internalHeatRate,externalHeatRate;
@@ -1548,6 +1546,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.94  2000/06/26 18:47:13  tan
+// Different heat_conduction properties for different materials are allowed
+// in the MPM simulation.
+//
 // Revision 1.93  2000/06/24 04:06:40  tan
 // SerialMPM works for heat-conduction now!
 //
