@@ -214,6 +214,7 @@ SimpleSimulationController::run()
 
       scheduler->get_dw(1)->setID( output->getCurrentTimestep() );
       
+      // just in case you want to change the delt on a restart....
       if (timeinfo.override_restart_delt != 0) {
         double newdelt = timeinfo.override_restart_delt;
         if (d_myworld->myrank() == 0)
