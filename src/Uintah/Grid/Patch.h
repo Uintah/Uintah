@@ -173,7 +173,6 @@ WARNING
      IntVector getCellFORTLowIndex() const;
      IntVector getCellFORTHighIndex() const;
 
-#if 0
      // returns ghost cell index
      IntVector getGhostCellLowIndex(const int numGC) const;
      IntVector getGhostCellHighIndex(const int numGC) const;
@@ -183,7 +182,6 @@ WARNING
      IntVector getGhostSFCYHighIndex(const int numGC) const;
      IntVector getGhostSFCZLowIndex(const int numGC) const;
      IntVector getGhostSFCZHighIndex(const int numGC) const;
-#endif
      
      inline Box getBox() const {
        return Box(d_level->getNodePosition(d_lowIndex),
@@ -241,10 +239,8 @@ WARNING
        return d_level->getCellPosition(idx);
      }
 
-#if 0
      Box getGhostBox(const IntVector& lowOffset,
 		     const IntVector& highOffset) const;
-#endif
      
      string toString() const;
      
@@ -307,6 +303,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
 
 //
 // $Log$
+// Revision 1.18  2000/09/25 20:58:14  sparker
+// Removed a few "if 0" statements.
+//
 // Revision 1.17  2000/09/25 20:37:43  sparker
 // Quiet g++ compiler warnings
 // Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
