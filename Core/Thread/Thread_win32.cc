@@ -20,7 +20,10 @@
 #include <afxwin.h>
 #include <string.h>
 #include <stdio.h>
-#include <iostream.h>
+#include <iostream>
+
+using std::cerr;
+using std::endl;
 
 #define MAX(x,y) ((x>y)?x:y)
 #define MIN(x,y) ((x<y)?x:y)
@@ -220,7 +223,8 @@ static void exit_handler()
 
 void Thread::initialize()
 {
-    atexit(exit_handler);
+	// atexit() has a semantic bug in win32, so we block in main.cc instead.
+    //atexit(exit_handler);
 
 	sched_lock = CreateMutex(0,0,"sched_lock");
 	if (!sched_lock) {
