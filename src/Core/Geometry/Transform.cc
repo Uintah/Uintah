@@ -317,7 +317,7 @@ void Transform::post_permute(int xmap, int ymap, int zmap) {
   inverse_valid=0;
 }
 
-Point Transform::project(const Point& p)
+Point Transform::project(const Point& p) const
 {
   return Point(mat[0][0]*p.x()+mat[0][1]*p.y()+mat[0][2]*p.z()+mat[0][3],
 	       mat[1][0]*p.x()+mat[1][1]*p.y()+mat[1][2]*p.z()+mat[1][3],
@@ -325,20 +325,25 @@ Point Transform::project(const Point& p)
 	       mat[3][0]*p.x()+mat[3][1]*p.y()+mat[3][2]*p.z()+mat[3][3]);
 }
 
-Vector Transform::project(const Vector& p)
+Vector Transform::project(const Vector& p) const
 {
   return Vector(mat[0][0]*p.x()+mat[0][1]*p.y()+mat[0][2]*p.z(),
 		mat[1][0]*p.x()+mat[1][1]*p.y()+mat[1][2]*p.z(),
 		mat[2][0]*p.x()+mat[2][1]*p.y()+mat[2][2]*p.z());
 }
 
-Point Transform::unproject(const Point& p)
+Point Transform::const_unproject(const Point& p) const
 {
-  if(!inverse_valid)compute_imat();
   return Point(imat[0][0]*p.x()+imat[0][1]*p.y()+imat[0][2]*p.z()+imat[0][3],
 	       imat[1][0]*p.x()+imat[1][1]*p.y()+imat[1][2]*p.z()+imat[1][3],
 	       imat[2][0]*p.x()+imat[2][1]*p.y()+imat[2][2]*p.z()+imat[2][3],
 	       imat[3][0]*p.x()+imat[3][1]*p.y()+imat[3][2]*p.z()+imat[3][3]);
+}
+
+Point Transform::unproject(const Point& p)
+{
+  if(!inverse_valid) compute_imat();
+  return const_unproject(p);
 }
 
 void Transform::get(double* gmat)
