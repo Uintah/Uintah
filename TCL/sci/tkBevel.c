@@ -193,7 +193,7 @@ BevelCmd(clientData, interp, argc, argv)
     BevelPtr->bgBorder = NULL;
     BevelPtr->relief = TK_RELIEF_RAISED;
     BevelPtr->gc = None;
-    BevelPtr->doubleBuffer = 1;
+    BevelPtr->doubleBuffer = 0;
     BevelPtr->updatePending = 0;
 
     Tk_CreateEventHandler(BevelPtr->tkwin, ExposureMask|StructureNotifyMask,
@@ -423,6 +423,8 @@ BevelDisplay(clientData)
     /*
      * Create a pixmap for double-buffering, if necessary.
      */
+    /* double buffering is broken... */
+    BevelPtr->doubleBuffer=0;
 
     if (BevelPtr->doubleBuffer) {
 	pm = XCreatePixmap(Tk_Display(tkwin), Tk_WindowId(tkwin),

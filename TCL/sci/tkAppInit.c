@@ -63,8 +63,20 @@ Tcl_AppInit(interp)
     Tcl_Interp *interp;		/* Interpreter for application. */
 {
     Tk_Window main;
+    Visual* visual;
+    int depth;
+    Colormap colormap;
 
     main = Tk_MainWindow(interp);
+
+    /* Use a truecolor visual if one is available */
+    visual = Tk_GetVisual(interp, main, "best", &depth, &colormap);
+    if (visual == NULL) {
+	return TCL_ERROR;
+    }
+    if (!Tk_SetWindowVisual(main, visual, (unsigned) depth, colormap)) {
+	return TCL_ERROR;
+    }
 
     /*
      * Call the init procedures for included packages.  Each call should
