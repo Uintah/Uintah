@@ -27,7 +27,7 @@ SRCS     += $(SRCDIR)/NrrdPort.cc  \
 PSELIBS := Dataflow/Network Dataflow/Ports Core/Containers \
 	Core/Thread Core/Geom Core/Geometry Core/Exceptions \
 	Core/Persistent Core/Datatypes Core/Util \
-	Packages/Nrrd/Core/Datatypes
+	Packages/Teem/Core/Datatypes
 
 LIBS := $(TEEM_LIBRARY) -lnrrd -lbiff -lair
 
