@@ -112,6 +112,14 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 		{255 204 55}   {255 228 80}
 		{255 247 120}   {255 255 180}
 		{255 255 255}}}
+	    { "Inverse Blackbody" {
+		{255 255 255}
+		{255 255 180} {255 247 120}   
+		{255 228 80}  {255 204 55}   
+		{255 163 20}  {255 120 0}   
+		{230 71 0}    {200 41 0}   
+		{153 18 0}    {102 2 0}   
+		{52 0 0}      {0 0 0}}}
 	    { "Don" {
 		{   0  90 255 }    {  51 104 255 }
 		{ 103 117 255 }    { 166 131 245 }
@@ -184,8 +192,9 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
 		    { "Inverse Darkhue" 5} \
 		    { "Lighthue" 6} \
 		    { "Blackbody" 7} \
-		    { "Don" 8} \
-		    { "Dark Gray" 9} \
+		    { "Inverse Blackbody" 8} \
+		    { "Don" 9} \
+		    { "Dark Gray" 10} \
 		}
 	    
 	pack $w.f2.types -in $w.f2 -side left
