@@ -277,24 +277,41 @@ Gui::handleTriggers()
       Trigger * next = NULL;
       // next is NULL if no next trigger associated with this trigger.
       bool result = activeGui->activeMTT_->advance( next );
-      if( result == false ) // remove from active list.
+      if( result == false ) // done, remove from active list.
 	{
-	  if( activeGui->queuedMTT_ ) 
+	  if( activeGui->queuedMTT_ )
 	    {
-	      cout << "moving in queued trigger: " << 
-		activeGui->queuedMTT_->getName() << "\n";
-	      activeGui->activeMTT_ = activeGui->queuedMTT_;
-	      activeGui->activeMTT_->activate();
-	      activeGui->queuedMTT_ = NULL;
+	      if( next )
+		{
+		  double quedPriority = activeGui->queuedMTT_->getPriority();
+		  double nextPriority = next->getPriority();
+		  if( quedPriority < nextPriority )
+		    {
+		      cout << "using 'next' trigger: " <<next->getName()<<"\n";
+		      cout << " priorities: " << nextPriority << ", "
+			   << quedPriority << "\n";
+		      activeGui->activeMTT_ = next;
+		      activeGui->activeMTT_->activate();
+		    }
+		  else
+		    {
+		      activeGui->activeMTT_ = activeGui->queuedMTT_;
+		      activeGui->activeMTT_->activate();
+		      activeGui->queuedMTT_ = NULL;
+		    }
+		}
+	      else
+		{
+		  cout << "moving in queued trigger: " << 
+		    activeGui->queuedMTT_->getName() << "\n";
+		  activeGui->activeMTT_ = activeGui->queuedMTT_;
+		  activeGui->activeMTT_->activate();
+		  activeGui->queuedMTT_ = NULL;
+		}
 	    }
 	  else
 	    {
 	      activeGui->activeMTT_ = next;
-	      if( next ) 
-		{
-		  cout << "done now activating " << next->getName() << "\n";
-		  next->activate();
-		}
 	    }
 	}
     }
@@ -309,11 +326,31 @@ Gui::handleTriggers()
 	{
 	  if( activeGui->activeMTT_ )
 	    {
-	      cout << "deactivating current trigger: " <<
-		activeGui->activeMTT_->getName() << " to start " <<
-		trigger->getName() << "\n";
-	      activeGui->activeMTT_->deactivate();
-	      activeGui->queuedMTT_ = trigger;
+	      if( trigger == activeGui->queuedMTT_ ) // already queued.
+		continue;
+	      double trigPriority = trigger->getPriority();
+	      double currPriority = activeGui->activeMTT_->getPriority();
+	      if( currPriority <= trigPriority )
+		{
+		  cout << "deactivating current trigger: " <<
+		    activeGui->activeMTT_->getName() << " to start " <<
+		    trigger->getName() << "\n";
+		  activeGui->activeMTT_->deactivate();
+		  activeGui->queuedMTT_ = trigger;
+		}
+	      else if( activeGui->queuedMTT_ )
+		{
+		  double quedPriority = activeGui->queuedMTT_->getPriority();
+		  if( trigPriority > quedPriority )
+		    {
+		      activeGui->queuedMTT_ = trigger;
+		    }
+		  
+		}
+	      else
+		{
+		  activeGui->queuedMTT_ = trigger;
+		}
 	    }
 	  else
 	    {
@@ -1507,6 +1544,15 @@ Gui::activateTriggerCB( int /* id */ )
     }
   else // image trigger
     {
+      // Turn the Priority up so the trigger will be sure to run.
+      trig->setPriority( Trigger::HighTriggerPriority );
+      Trigger * next = trig->getNext();
+      while( next && next != trig )
+	{ // Set priorities of all triggers in sequence.
+	  next->setPriority( Trigger::HighTriggerPriority );
+	  next = next->getNext();
+	}
+
       if( activeGui->activeMTT_ ) // If a trigger is already running...
 	{
 	  cout << "QUEUING trigger: " << trig->getName() << "\n";
