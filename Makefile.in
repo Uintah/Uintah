@@ -256,10 +256,11 @@ $(MAKEFILEDIRS):
 	@mkdir -p $@
 
 $(CREATETCLINDEX): $(CREATETCLINDEX).in
-	-sed -e 's,ITCL_BIN_DIR,$(ITCL_BIN_DIR),g' \
+	@echo creating scripts/createTclIndex
+	-@sed -e 's,ITCL_BIN_DIR,$(ITCL_BIN_DIR),g' \
              -e 's,TCL_LIB_DIR,$(TCL_LIB_DIR),g' \
             $(CREATETCLINDEX).in > $(CREATETCLINDEX)
-	-chmod a+x $(CREATETCLINDEX)
+	-@chmod a+x $(CREATETCLINDEX)
 
 $(LIBDIR):
 	mkdir -p $(LIBDIR)
@@ -375,6 +376,9 @@ endif
 
 #
 # $Log$
+# Revision 1.41  2000/09/05 19:09:50  moulding
+# made sed and chmod command for createTclIndex silent.
+#
 # Revision 1.40  2000/09/04 21:19:08  moulding
 # force use of startup script for tcl specified at configure time
 #
