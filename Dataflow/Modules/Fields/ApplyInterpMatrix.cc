@@ -119,7 +119,9 @@ ApplyInterpMatrix::execute()
     Handle<ManageFieldDataAlgoField> algo_field;
     if (!DynamicCompilation::compile(ci_field, algo_field, true, this))
     {
-      error("Dynamic compilation failed: Unable to extract data from input field.");
+      char errormsg[2048];
+      sprintf( errormsg, "Dynamic compilation failed: Unable to extract data from input field.\nFile was %s", ci_field->filename_.c_str() );
+      error( errormsg );
       return;
     }
     else
