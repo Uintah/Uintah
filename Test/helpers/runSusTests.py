@@ -516,7 +516,11 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
         # debug
         return 2;
     if pf_rc == 2*256:
-        system("echo '  -- %s%s test failed performance tests' >> %s/%s-short.log" % (testname,restart_text,startpath,upper(algo)))
+        # For the present, hard code the PERFORMANCE as the algo, as
+        # performance is a test set and not an algorithm.  This follows the
+        # current model of performance tests (all in one test file), but will
+        # need to change if the model changes
+        system("echo '  -- %s%s test failed performance tests' >> %s/PERFORMANCE-short.log" % (testname,restart_text,startpath))
         return 2;
     if mem_rc == 1*256 or mem_rc == 2*256:
         # debug
