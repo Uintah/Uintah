@@ -68,11 +68,14 @@ public:
   virtual void io(SCIRun::Piostream &stream);
   friend void SCIRun::Pio(SCIRun::Piostream&, Camera*&);
 
-  virtual void makeRay(Ray& ray, double x, double y, double xres, double yres);
-  virtual void makeRayL(Ray& ray, double x, double y, double xres, 
-			double yres);
-  virtual void makeRayR(Ray& ray, double x, double y, double xres, 
-			double yres);
+  virtual void makeRay(Ray& ray, double x, double y,
+                       double ixres, double iyres);
+  virtual void makeRayL(Ray& ray, double x, double y,
+                        double ixres, double iyres);
+  virtual void makeRayR(Ray& ray, double x, double y,
+                        double ixres, double iyres);
+  virtual void makeRayLR(Ray& rayL, Ray& rayR, double x, double y,
+                         double ixres, double iyres);
   void get_viewplane(Vector& u, Vector& v) const;
   virtual void setup();
   void print();
