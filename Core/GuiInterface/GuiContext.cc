@@ -134,14 +134,14 @@ void GuiContext::set(double value)
 {
   cached=false;
   ostringstream val;
-  val << setw(17) << value;
+  val << setprecision(17) << value;
   gui->set(name, val.str());
 }
 
 void GuiContext::setSub(const std::string& subname, double value)
 {
   ostringstream val;
-  val << setw(17) << value;
+  val << setprecision(17) << value;
   gui->set(name+"-"+subname, val.str());
 }
 
