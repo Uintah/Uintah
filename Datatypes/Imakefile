@@ -125,3 +125,11 @@ ScalarFieldRG.cc: ScalarFieldRGdouble.cc
 	sed 's/ScalarFieldRGdouble/ScalarFieldRG/g' < ScalarFieldRGdouble.cc > ScalarFieldRG.cc
 
 Octree.o: ScalarFieldRG.h
+
+OctreePort.o: ScalarFieldRG.h
+
+SurfOctree.o:   ScalarFieldRGint.h
+
+SurfOctreeTopPort.o: ScalarFieldRG.h
+
+ManhattanDist.o:        ScalarFieldRGint.h

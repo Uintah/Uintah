@@ -44,13 +44,17 @@ public:
     double      *rawBlue;
     double      *rawAlpha;
 
-    Array1<float> *rawRampAlpha;
-    Array1<float> *rawRampAlphaT;
-    Array1<Color> *rawRampColor;
-    Array1<float> *rawRampColorT;
-
+    Array1<float> rawRampAlpha;
+    Array1<float> rawRampAlphaT;
+    Array1<Color> rawRampColor;
+    Array1<float> rawRampColorT;
+  
     unsigned int            flag;
+
+    unsigned int            pre_mult_alpha; // set if you want it...
     
+    unsigned char*          raw1d;
+
     int non_diffuse_constant;   // 1 if non diffuse materials are constant
     ColorMap();
     ColorMap(const ColorMap&);
@@ -63,6 +67,8 @@ public:
     void SetRaw(const Array1<Color>& rgb, Array1<float>& rgbT,
 		const Array1<float>& alphas, const Array1<float>& alphaT,
 		const int size=2000);
+
+    void Build1d(const int size=256);
 
     MaterialHandle& lookup(double value);
     MaterialHandle& lookup2(double value);
