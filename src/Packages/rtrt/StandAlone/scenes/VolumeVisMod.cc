@@ -206,7 +206,7 @@ int get_alpha_nrrd(char * filename, Array1<AlphaPos> &alphas) {
   return 0;
 }
 
-VolumeVis *create_volume_from_nrrd(char *filename,
+VolumeVisBase *create_volume_from_nrrd(char *filename,
 				   bool override_data_min, double data_min_in,
 				   bool override_data_max, double data_max_in,
 				   double spec_coeff, double ambient,
@@ -317,14 +317,14 @@ VolumeVis *create_volume_from_nrrd(char *filename,
 
   cout << "minP = "<<minP<<", maxP = "<<maxP<<endl;
 
-  return new VolumeVis(data, data_min, data_max,
-		       nx, ny, nz,
-		       minP, maxP,
-		       spec_coeff, ambient, diffuse,
-		       specular, dpy);
+  return new VolumeVis<float>(data, data_min, data_max,
+			      nx, ny, nz,
+			      minP, maxP,
+			      spec_coeff, ambient, diffuse,
+			      specular, dpy);
 }  
 
-VolumeVis *create_volume_default(int scene_type, double val,
+VolumeVisBase *create_volume_default(int scene_type, double val,
 				 int nx, int ny, int nz,
 				 bool override_data_min, double data_min_in,
 				 bool override_data_max, double data_max_in,
@@ -404,11 +404,11 @@ VolumeVis *create_volume_default(int scene_type, double val,
   if (override_data_max)
     data_max = data_max_in;
 
-  return new VolumeVis(data, data_min, data_max,
-		       nx, ny, nz,
-		       minP, maxP,
-		       spec_coeff, ambient, diffuse,
-		       specular, dpy);
+  return new VolumeVis<float>(data, data_min, data_max,
+			      nx, ny, nz,
+			      minP, maxP,
+			      spec_coeff, ambient, diffuse,
+			      specular, dpy);
 }
 
 #define RAINBOW_COLOR_MAP 0
