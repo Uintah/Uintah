@@ -18,6 +18,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/Camera.cc \
 	$(SRCDIR)/Stealth.cc \
 	$(SRCDIR)/Sphere.cc \
+	$(SRCDIR)/Hemisphere.cc \
 	$(SRCDIR)/Satellite.cc \
 	$(SRCDIR)/SubMaterial.cc \
 	$(SRCDIR)/Background.cc \
