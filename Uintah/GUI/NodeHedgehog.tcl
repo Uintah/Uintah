@@ -2,12 +2,12 @@
 #  NodeHedgehog.tcl
 #
 #  Written by:
-#   Steve Parker
+#   James Bigler & Steve Parker
 #   Department of Computer Science
 #   University of Utah
-#   May. 1995
+#   June 2000
 #
-#  Copyright (C) 1995 SCI Group
+#  Copyright (C) 2000 SCI Group
 #
 
 itcl_class Uintah_Visualization_NodeHedgehog {
@@ -31,6 +31,9 @@ itcl_class Uintah_Visualization_NodeHedgehog {
 	global $this-skip_node
 	set $this-skip_node 1
 	$this-c needexecute
+
+	global $this-var_orientation
+	set $this-var_orientation 0
     }
     method make_entry {w text v c} {
 	frame $w
@@ -63,6 +66,21 @@ itcl_class Uintah_Visualization_NodeHedgehog {
 		top $this-drawcylinders { {Lines 0} {Cylinders 1} }
 	pack $w.f.shaft -side left -padx 5 -anchor w
 
+	frame $w.f.var
+	pack $w.f.var -side left -anchor w -pady 2 -ipadx 3
+
+	radiobutton $w.f.var.node -variable $this-var_orientation \
+		-command $n -text "Node Centered" -value 0
+	pack $w.f.var.node -side top -anchor w -pady 2 -ipadx 3
+
+	radiobutton $w.f.var.cell -variable $this-var_orientation \
+		-command $n -text "Cell Centered" -value 1
+	pack $w.f.var.cell -side top -anchor w -pady 2 -ipadx 3
+	
+	radiobutton $w.f.var.face -variable $this-var_orientation \
+		-command $n -text "Face Centered" -value 2
+	pack $w.f.var.face -side top -anchor w -pady 2 -ipadx 3
+
 	button $w.f.findxy -text "Find XY" -command "$this-c findxy"
 	pack $w.f.findxy -pady 2 -side top -ipadx 3 -anchor e
 	
@@ -72,13 +90,13 @@ itcl_class Uintah_Visualization_NodeHedgehog {
 	button $w.f.findxz -text "Find XZ" -command "$this-c findxz"
 	pack $w.f.findxz -pady 2 -side top -ipadx 3 -anchor e
 
-	global $this-exhaustive_flag
-	checkbutton $w.f.exh -text "Exhaustive search?" -variable \
-		$this-exhaustive_flag
-	pack $w.f.exh -pady 2 -side top -ipadx 3 -anchor e
-
 	frame $w.fskip
 	pack $w.fskip -side top -fill x
+
+	global $this-exhaustive_flag
+	checkbutton $w.fskip.exh -text "Exhaustive search?" -variable \
+		$this-exhaustive_flag
+	pack $w.fskip.exh -pady 2 -side right -ipadx 3 -anchor e
 
 	make_entry $w.fskip.skip "Node Skip:" $this-skip_node $n
 	pack $w.fskip.skip -side left -padx 5 -anchor w
