@@ -77,6 +77,7 @@ Properties::problemSetup(const ProblemSpecP& params)
   ProblemSpecP db = params->findBlock("Properties");
   db->getWithDefault("filter_drhodt",d_filter_drhodt,false);
   db->getWithDefault("first_order_drhodt",d_first_order_drhodt,false);
+  db->getWithDefault("inverse_density_average",d_inverse_density_average,false);
   db->require("ref_point", d_denRef);
   db->require("radiation",d_radiationCalc);
   if (d_radiationCalc) {
@@ -1345,24 +1346,24 @@ Properties::averageRKProps(const ProcessorGroup*,
           double predicted_density;
 	  if (old_density[currCell] > 0.0)
 //            predicted_density = rho1_density[currCell];
-//            predicted_density = 1.0/((factor_old/old_density[currCell] +
-//			       factor_new/new_density[currCell])/factor_divide);
-            predicted_density = (factor_old*old_density[currCell] +
-			       factor_new*new_density[currCell])/factor_divide;
+	    if (d_inverse_density_average)
+              predicted_density = 1.0/((factor_old/old_density[currCell] +
+			         factor_new/new_density[currCell])/factor_divide);
+	    else
+              predicted_density = (factor_old*old_density[currCell] +
+			         factor_new*new_density[currCell])/factor_divide;
 	  else
 	    predicted_density = new_density[currCell];
 
 	  bool average_failed = false;
 	  for (int ii = 0; ii < d_numMixingVars; ii++ ) {
-	    (new_scalar[ii])[currCell] = (factor_old*old_density[currCell]*
-		(old_scalar[ii])[currCell] + factor_new*new_density[currCell]*
-		(new_scalar[ii])[currCell])/(factor_divide*predicted_density);
-	    /*(new_scalar[ii])[currCell] = (factor_old*old_density[currCell]*
-		(old_scalar[ii])[currCell] + factor_new*new_density[currCell]*
-		(new_scalar[ii])[currCell])/factor_divide;
-	    (new_scalar[ii])[currCell] = (new_scalar[ii])[currCell] *
-		    0.133/(0.133*1.184344+(new_scalar[ii])[currCell]*
-				    (0.133-1.184344));*/
+	    if (d_inverse_density_average)
+	      (new_scalar[ii])[currCell] = (factor_old*(old_scalar[ii])[currCell] +
+		  factor_new*(new_scalar[ii])[currCell])/factor_divide;
+	    else
+	      (new_scalar[ii])[currCell] = (factor_old*old_density[currCell]*
+		  (old_scalar[ii])[currCell] + factor_new*new_density[currCell]*
+		  (new_scalar[ii])[currCell])/(factor_divide*predicted_density);
             if ((new_scalar[ii])[currCell] > 1.0) {
 //		(new_scalar[ii])[currCell] = 1.0;
 	      cout << "average failed with scalar > 1 at " << currCell << endl;

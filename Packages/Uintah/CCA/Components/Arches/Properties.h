@@ -247,6 +247,7 @@ private:
       BoundaryCondition* d_bc;
       bool d_empirical_soot;
       bool d_3d_periodic;
+      bool d_inverse_density_average;
 #ifdef PetscFilter
       Filter* d_filter;
 #endif
