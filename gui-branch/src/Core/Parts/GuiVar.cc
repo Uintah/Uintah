@@ -56,6 +56,7 @@ GuiVar::update()
   part_->var_set( this ); 
 }
 
+
 template class GuiTriple<Point>;
 template class GuiTriple<Vector>;
 

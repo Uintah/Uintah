@@ -63,15 +63,19 @@ public:
   const string &type();
 
   // value set by the a GUI 
-  template<class T> void set_var( const string& name, T &v ) 
+  template<class T> void set_var( const string& name, const T &v ) 
   { 
-    GuiTypedVar<T> *var;
-    var = part_->find_var(name);
-    if ( ! var ) {
+    GuiVar *var = part_->find_var(name);
+    if ( !var ) {
+      cerr << "PartPort::setvar - can not find var " << name << endl;
+      return;
+    }
+    GuiTypedVar<T> *typed_var = dynamic_cast<GuiTypedVar<T> *>(var);
+    if ( ! typed_var ) {
       cerr << "Bug: asking for the wrong type of variable\n";
       return;
     }
-    var->value_ = v;
+    typed_var->value_ = v;
   }
 
   void command( TCLArgs & );

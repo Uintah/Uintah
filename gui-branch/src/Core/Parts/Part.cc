@@ -140,7 +140,7 @@ Part::get_gui_intvar(const string &base, const string &name, int &value )
 void
 Part::set_gui_var(const string &base, const string &name, const string &value )
 {
-  return gm->set_guivar( base, name, value );
+  gm->set_guivar( base, name, value );
 }
 
 void
@@ -152,6 +152,7 @@ Part::var_set( GuiVar *var )
 void 
 Part::command( const string &cmd )
 {
+  cerr << "Part send command: " << cmd << endl;
   port_->command_signal( cmd );
 }
 
@@ -159,6 +160,16 @@ void
 Part::eval( const string &cmd, string &results )
 {
   port_->eval_signal( cmd, results );
+}
+
+GuiVar *
+Part::find_var( const string &name ) 
+{
+  VarList::iterator i = vars_.find(name);
+  if ( i == vars_.end() )
+    return 0;
+  else
+    return i->second;
 }
 
 // 
@@ -175,6 +186,17 @@ void
 PartPort::command( TCLArgs &args ) 
 {
   part_->tcl_command( args, 0 );
+}
+
+template<> void
+PartPort::set_var( const string &name, const string &value )
+{
+  GuiVar *var = part_->find_var<GuiVar>(name);
+  if ( !var ) {
+    cerr << "PartPort::set_var : Error- gui var " << name <<" does not exit\n";
+  } else {
+    var->string_set( value );
+  }
 }
 
 } // namespace SCIRun

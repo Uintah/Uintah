@@ -32,6 +32,7 @@
 #define GuiVar_h 
 
 #include <Core/share/share.h>
+#include <Core/Containers/StringUtil.h>
 #include <string>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
@@ -48,6 +49,7 @@ namespace SCIRun {
 namespace SCIRun {
 
 class Part;
+class PartPort;
 
 class GuiVar {
 protected:
@@ -82,10 +84,26 @@ public:
 
   const T &get() { return value_; }
   void set( const T &v ) { value_ = v; update(); }
+  virtual void string_set( const string &v ) { cerr << "set_string ignored\n";}
   virtual void emit(std::ostream& out, string& midx) {
     out << "set " << midx << "-" << name_ << " {" << value_ << "}" << endl;
   }
+
+  friend PartPort;
 };
+
+template<> void 
+GuiTypedVar<int>::string_set( const string &value )
+{
+  string_to_int( value, value_ );
+}
+
+template<> void
+GuiTypedVar<double>::string_set( const string &value )
+{
+  string_to_double( value, value_ );
+}
+
 
 
 typedef GuiTypedVar<int> GuiInt;
