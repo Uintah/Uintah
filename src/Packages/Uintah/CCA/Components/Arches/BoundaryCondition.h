@@ -356,7 +356,13 @@ private:
       // GROUP:  Local DataTypes :
       ////////////////////////////////////////////////////////////////////////
       // FlowInlet
-      struct FlowInlet {
+      class FlowInlet {
+      public:
+	FlowInlet();
+	FlowInlet(const FlowInlet& copy);
+	FlowInlet(int numMix, int cellID);
+	~FlowInlet();
+	FlowInlet& operator=(const FlowInlet& copy);
 	int d_cellTypeID;          // define enum for cell type
 	// inputs
 	double flowRate;           
@@ -366,10 +372,9 @@ private:
 	Stream calcStream;
 	// stores the geometry information, read from problem specs
 	std::vector<GeometryPiece*> d_geomPiece;
-	FlowInlet(int numMix, int cellID);
 	void problemSetup(ProblemSpecP& params);
 	// reduction variable label to get area
-	const VarLabel* d_area_label;
+	VarLabel* d_area_label;
       };
 
       ////////////////////////////////////////////////////////////////////////

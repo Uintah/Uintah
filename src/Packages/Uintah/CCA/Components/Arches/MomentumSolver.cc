@@ -45,6 +45,9 @@ MomentumSolver(const ArchesLabel* label, const MPMArchesLabel* MAlb,
                                    d_boundaryCondition(bndry_cond),
 				   d_physicalConsts(physConst)
 {
+  d_discretize = 0;
+  d_source = 0;
+  d_linearSolver = 0;
 }
 
 //****************************************************************************
@@ -52,6 +55,9 @@ MomentumSolver(const ArchesLabel* label, const MPMArchesLabel* MAlb,
 //****************************************************************************
 MomentumSolver::~MomentumSolver()
 {
+  delete d_discretize;
+  delete d_source;
+  delete d_linearSolver;
 }
 
 //****************************************************************************
