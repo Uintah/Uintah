@@ -77,8 +77,7 @@ set m18 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 634 320]
 set m19 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 204 395]
 set m20 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 409 395]
 set m21 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 616 394]
-set m22 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 10 200]
-set m23 [addModuleAtPosition "SCIRun" "Fields" "InterpolantToTransferMatrix" 10 259]
+set m22 [addModuleAtPosition "SCIRun" "Fields" "BuildMappingMatrix" 10 200]
 set m24 [addModuleAtPosition "SCIRun" "Fields" "ChangeFieldDataAt" 10 141]
 set m25 [addModuleAtPosition "SCIRun" "Math" "LinAlgBinary" 186 460]
 set m26 [addModuleAtPosition "SCIRun" "Math" "LinAlgBinary" 391 462]
@@ -123,7 +122,6 @@ addConnection $m17 0 $m20 1
 addConnection $m18 0 $m21 1
 addConnection $m13 0 $m21 0
 addConnection $m13 0 $m20 0
-addConnection $m22 0 $m23 0
 addConnection $m24 0 $m22 0
 addConnection $m0 0 $m24 0
 addConnection $m25 0 $m4 0
@@ -132,9 +130,9 @@ addConnection $m20 0 $m26 1
 addConnection $m26 0 $m4 1
 addConnection $m21 0 $m27 1
 addConnection $m27 0 $m4 2
-addConnection $m23 0 $m25 0
-addConnection $m23 0 $m26 0
-addConnection $m23 0 $m27 0
+addConnection $m22 0 $m25 0
+addConnection $m22 0 $m26 0
+addConnection $m22 0 $m27 0
 addConnection $m5 1 $m28 0
 addConnection $m28 1 $m3 3
 addConnection $m29 0 $m9 0
@@ -143,7 +141,7 @@ addConnection $m8 0 $m29 0
 addConnection $m30 0 $m31 1
 addConnection $m0 0 $m31 0
 addConnection $m31 0 $m32 1
-addConnection $m23 0 $m33 0
+addConnection $m22 0 $m33 0
 addConnection $m32 0 $m33 1
 addConnection $m8 0 $m34 0
 addConnection $m8 0 $m22 1
@@ -523,8 +521,6 @@ set $m22-map_source_to_single_dest {0}
 set $m22-exhaustive_search {1}
 set $m22-exhaustive_search_max_dist {-1}
 set $m22-np {1}
-set $m23-notes {}
-set $m23-show_status {1}
 set $m24-notes {}
 set $m24-show_status {1}
 set $m24-outputdataat {Nodes}
