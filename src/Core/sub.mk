@@ -55,10 +55,11 @@ SUBDIRS := \
 	$(SRCDIR)/TkExtensions \
 	$(SRCDIR)/Util \
 	$(SRCDIR)/Volume \
-#	$(SRCDIR)/Util/Comm \
 	$(SRCDIR)/2d \
+#	$(SRCDIR)/Util/Comm \
 #	$(SRCDIR)/Parts \
-#	$(SRCDIR)/PartsGui
+#	$(SRCDIR)/PartsGui \
+#[INSERT NEW CATEGORY DIR HERE]
 
 
 ifeq ($(BUILD_SCIRUN2),yes)
