@@ -23,6 +23,7 @@
 #include <Geom/Cylinder.h>
 #include <Geom/Disc.h>
 #include <Geom/Geom.h>
+#include <Geom/TriStrip.h>
 #include <Geom/Group.h>
 #include <Geom/Pick.h>
 #include <Geom/Polyline.h>
@@ -121,6 +122,68 @@ public:
     SLine(GeomGroup*, const Point&);
     int advance(const VectorFieldHandle&, int rk4, double);
 };
+
+// ---------------------------------------------------
+class SRibon                // Stream Ribon class
+{
+    Point p;                // initial point
+    Point lp, rp;           // left and right tracer 
+    Vector perturb;         // initial perturb vector
+    GeomTriStrip* tri;      // triangle trip
+    double width;           // the fixed width of ribons
+    int outside;            
+public:
+    SRibon(GeomGroup*, const Point&, double, const Vector&); 
+    int advance(const VectorFieldHandle&, int rk4, double); 
+}; 
+
+SRibon::SRibon(GeomGroup* group, const Point& p, double w, 
+const Vector& ptb)
+: p(p), perturb(ptb), tri(new GeomTriStrip), width(w)
+{
+    group->add(tri);       
+    outside=0;    
+    lp = p + perturb; 
+    rp = p - perturb;    
+}
+int SRibon::advance(const VectorFieldHandle& field, int rk4,
+		   double stepsize)
+{
+    if(outside)
+	return 0;
+    if(rk4){
+	    NOT_FINISHED("SRibon::advance for RK4");
+    } else {
+        Vector v1, v2; 
+        Vector tmp, diag, n1, n2;
+
+	if(!field->interpolate(lp, v1)){
+	    outside=1;
+	    return 0;
+	}
+	lp+=(v1*stepsize);  // trace the left point
+
+	if(!field->interpolate(rp, v2)){
+	    outside=1;
+	    return 0;
+	}
+	rp+=(v2*stepsize);  // trace the right point
+ 
+        tmp = lp-rp; 
+        p = lp + tmp/2.0;  // define the center point        
+        diag = tmp.normal() * width; // only want fixed sized ribon
+        Point p1 = p +  diag;  
+        Point p2 = p -  diag; 
+        n1 = Cross(v1, diag); // the normals here are not percise,
+        n2 = Cross(v2, diag); // need to be improved .....
+
+        tri->add(p1, n1); tri->add(p2, n2); 
+      }
+    return 1;
+}
+
+// ------------------------------------------------------
+
 
 Streamline::Streamline(const clString& id)
 : Module(streamline_name, id, Filter),
@@ -405,3 +468,6 @@ int SLine::advance(const VectorFieldHandle& field, int rk4,
     line->pts.add(p);
     return 1;
 }
+
+
+
