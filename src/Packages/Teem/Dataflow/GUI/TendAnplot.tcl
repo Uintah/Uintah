@@ -69,25 +69,44 @@ itcl_class Teem_Tend_TendAnplot {
         pack $w.f.options.resolution -side top -expand yes -fill x
 
         checkbutton $w.f.options.whole \
-	    -text "Sample Whole Triangle of Constant Trace:" \
+	    -text "Sample Whole Triangle of Constant Trace" \
 	    -variable $this-whole
-        pack $w.f.options.whole -side top -expand yes -fill x
+        pack $w.f.options.whole -side top -anchor nw
 
 
         checkbutton $w.f.options.values \
-	    -text "Set Outside Pixel Values to NaN:" \
+	    -text "Set Outside Pixel Values to NaN istead of 0" \
 	    -variable $this-values
-        pack $w.f.options.values -side top -expand yes -fill x
+        pack $w.f.options.values -side top -anchor nw
 
-        iwidgets::entryfield $w.f.options.anisotropy \
+	iwidgets::optionmenu $w.f.options.anisotropy \
 	    -labeltext "Anisotropy Metric to Plot:" \
-	    -textvariable $this-anisotropy
-        pack $w.f.options.anisotropy -side top -expand yes -fill x
+	    -labelpos w \
+	    -command "$this update_anisotropy $w.f.options.anisotropy"
+	$w.f.options.anisotropy insert end cl1 cl2 cp1 cp2 \
+	    ca1 ca2 cs1 cs2 ct1 ct2 ra fa vf tr
+
+	pack $w.f.options.anisotropy -side top -anchor nw -padx 3 -pady 3
+	$w.f.options.anisotropy select [set $this-anisotropy]
 
 	makeSciButtonPanel $w.f $w $this
 	moveToCursor $w
 
 	pack $w.f -expand 1 -fill x
+    }
+
+    method update_anisotropy {menu} {
+	global $this-anisotropy
+	set which [$menu get]
+	set $this-anisotropy $which
+    }
+
+    method set_anisotropy { name1 name2 op } {
+	set w .ui[modname]
+	set menu $w.f.options.anisotropy
+	if {[winfo exists $menu]} {
+	    $menu select [set $this-anisotropy]
+	}
     }
 }
 

@@ -57,10 +57,18 @@ itcl_class Teem_Tend_TendAnhist {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 
-       iwidgets::entryfield $w.f.options.westin \
-	    -labeltext "Version of Westin's Anisotropy\nMetric Triple: (1 or 2):" \
-	    -textvariable $this-westin
-        pack $w.f.options.westin -side top -expand yes -fill x
+	radiobutton $w.f.options.westin1 \
+	    -text "Version 1 of Westin's Anisotropy Metric Triple" \
+	    -variable $this-westin \
+	    -value 1
+
+	radiobutton $w.f.options.westin2 \
+	    -text "Version 2 of Westin's Anisotropy Metric Triple" \
+	    -variable $this-westin \
+	    -value 2
+
+        pack $w.f.options.westin1 $w.f.options.westin2 \
+	    -side top -expand yes -fill x
 	
 
         iwidgets::entryfield $w.f.options.resolution \

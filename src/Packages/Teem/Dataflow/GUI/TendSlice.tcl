@@ -71,10 +71,24 @@ itcl_class Teem_Tend_TendSlice {
 	    -textvariable $this-position
         pack $w.f.options.position -side top -expand yes -fill x
 
-        iwidgets::entryfield $w.f.options.dimension \
-	    -labeltext "Dimension:" \
-	    -textvariable $this-dimension
-        pack $w.f.options.dimension -side top -expand yes -fill x
+	iwidgets::labeledframe $w.f.options.dimension \
+	    -labeltext "Dimension" \
+	    -labelpos nw
+	pack $w.f.options.dimension -side top -expand yes -fill x
+	
+	set dimension [$w.f.options.dimension childsite]
+	radiobutton $dimension.1 \
+	    -text "2 dimensional" \
+	    -variable $this-dimension \
+	    -value 2
+
+	radiobutton $dimension.2 \
+	    -text "3 dimensional" \
+	    -variable $this-dimension \
+	    -value 3
+
+	pack $dimension.1 $dimension.2 \
+	    -side top -anchor nw -padx 3 -pady 3
 
 	makeSciButtonPanel $w.f $w $this
 	moveToCursor $w
