@@ -45,6 +45,8 @@
 using std::cerr;
 using std::string;
 
+#define LINUXCOMPAT 0
+
 namespace SCIRun {
 
 static const string Cmap2ShaderStringNV =
@@ -370,8 +372,14 @@ TextureRenderer::load_brick(TextureBrickHandle brick)
         glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, nx, ny, nz, format,
                         brick->tex_type(), brick->tex_data(c));
       } else {
+#if LINUXCOMPAT
+        glTexImage3D(GL_TEXTURE_3D, 0, GL_COLOR_INDEX8_EXT,
+		     nx, ny, nz, 0, GL_COLOR_INDEX,
+                     brick->tex_type(), brick->tex_data(c));
+#else
         glTexImage3D(GL_TEXTURE_3D, 0, format, nx, ny, nz, 0, format,
                      brick->tex_type(), brick->tex_data(c));
+#endif
       }
     }
   }
@@ -742,6 +750,9 @@ TextureRenderer::build_colormap2()
       }      
     }
   }
+
+  CHECK_OPENGL_ERROR("");
+
 #endif
   cmap2_dirty_ = false;
   alpha_dirty_ = false;
@@ -751,6 +762,23 @@ void
 TextureRenderer::bind_colormap1(unsigned int cmap_tex)
 {
 #ifdef HAVE_AVR_SUPPORT
+#if LINUXCOMPAT
+  glEnable(GL_SHARED_TEXTURE_PALETTE_EXT);
+  float cmap[256*4];
+  memcpy(cmap, cmap1_->get_rgba(), 256*4*sizeof(float));
+  for (int i = 0; i < 256; i++)
+  {
+    cmap[i*4+0] *= cmap[i*4+3];
+    cmap[i*4+1] *= cmap[i*4+3];
+    cmap[i*4+2] *= cmap[i*4+3];
+  }
+  glColorTable(GL_SHARED_TEXTURE_PALETTE_EXT,
+               GL_RGBA,
+               256,
+               GL_RGBA,
+               GL_FLOAT,
+               cmap);
+#else
   // bind texture to unit 2
   glActiveTexture(GL_TEXTURE2_ARB);
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -761,6 +789,8 @@ TextureRenderer::bind_colormap1(unsigned int cmap_tex)
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   glEnable(GL_TEXTURE_3D);
   glActiveTexture(GL_TEXTURE0_ARB);
+#endif
+  CHECK_OPENGL_ERROR("");
 #endif
 }
 
@@ -791,6 +821,10 @@ void
 TextureRenderer::release_colormap1()
 {
 #ifdef HAVE_AVR_SUPPORT
+#if LINUXCOMPAT
+  glDisable(GL_SHARED_TEXTURE_PALETTE_EXT);
+#else
+  // bind texture to unit 2
   glActiveTexture(GL_TEXTURE2_ARB);
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   glDisable(GL_TEXTURE_1D);
@@ -800,6 +834,7 @@ TextureRenderer::release_colormap1()
   glDisable(GL_TEXTURE_3D);
   glBindTexture(GL_TEXTURE_3D, 0);
   glActiveTexture(GL_TEXTURE0_ARB);
+#endif
 #endif
 }
 
@@ -823,3 +858,7 @@ TextureRenderer::release_colormap2()
 }
 
 } // namespace SCIRun
+
+
+
+
