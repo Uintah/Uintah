@@ -16,10 +16,6 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/NotFinished.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
-#if HAVE_EXT_ALGORITHM
-#include <ext/algorithm>
-using namespace __gnu_cxx;
-#endif
 
 #include "sci_algorithm.h"
 #include <fstream>
