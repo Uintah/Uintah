@@ -36,12 +36,15 @@ namespace rtrt {
 
 
 GridSpheresDpy::GridSpheresDpy(int colordata, char *in_file) :
-  hist(0), xres(500), yres(500), ndata(-1),
+  DpyBase("GridSpheresDpy"),
+  hist(0), ndata(-1),
   colordata(colordata), newcolordata(colordata),
   shade_method(1), new_shade_method(1),
   radius_index(-1), new_radius_index(-1),
-  in_file(in_file)
+  in_file(in_file),
+  need_hist(true), redraw_range(-1)
 {
+  set_resolution(500,500);
 }
 
 GridSpheresDpy::~GridSpheresDpy()
@@ -146,293 +149,157 @@ void GridSpheresDpy::setup_vars() {
   cerr << "GridSpheresDpy:setup_vars:end\n";
 }
 
-void GridSpheresDpy::run()
-{
-  //cerr << "GridSpheresDpy:run\n";
-  xlock.lock();
-  // Open an OpenGL window
-  Display* dpy=XOpenDisplay(NULL);
-  if(!dpy){
-    cerr << "Cannot open display\n";
-    Thread::exitAll(1);
-  }
-  int error, event;
-  if ( !glXQueryExtension( dpy, &error, &event) ) {
-    cerr << "GL extension NOT available!\n";
-    XCloseDisplay(dpy);
-    dpy=0;
-    Thread::exitAll(1);
-  }
-  int screen=DefaultScreen(dpy);
-  
-  char* criteria="sb, max rgb";
-  if(!visPixelFormat(criteria)){
-    cerr << "Error setting pixel format for visinfo\n";
-    cerr << "Syntax error in criteria: " << criteria << '\n';
-    Thread::exitAll(1);
-  }
-  int nvinfo;
-  XVisualInfo* vi=visGetGLXVisualInfo(dpy, screen, &nvinfo);
-  if(!vi || nvinfo == 0){
-    cerr << "Error matching OpenGL Visual: " << criteria << '\n';
-    Thread::exitAll(1);
-  }
-  Colormap cmap = XCreateColormap(dpy, RootWindow(dpy, screen),
-				  vi->visual, AllocNone);
-  XSetWindowAttributes atts;
-  int flags=CWColormap|CWEventMask|CWBackPixmap|CWBorderPixel;
-  atts.background_pixmap = None;
-  atts.border_pixmap = None;
-  atts.border_pixel = 0;
-  atts.colormap=cmap;
-  atts.event_mask=StructureNotifyMask|ExposureMask|ButtonPressMask|ButtonReleaseMask|ButtonMotionMask|KeyPressMask|KeyReleaseMask;
-  Window win=XCreateWindow(dpy, RootWindow(dpy, screen),
-			   0, 0, xres, yres, 0, vi->depth,
-			   InputOutput, vi->visual, flags, &atts);
-  char* p="GridSpheres histogram";
-  XTextProperty tp;
-  XStringListToTextProperty(&p, 1, &tp);
-  XSizeHints sh;
-  sh.flags = USSize;
-  XSetWMProperties(dpy, win, &tp, &tp, 0, 0, &sh, 0, 0);
-  
-  XMapWindow(dpy, win);
-  
-  GLXContext cx=glXCreateContext(dpy, vi, NULL, True);
-  if(!glXMakeCurrent(dpy, win, cx)){
-    cerr << "glXMakeCurrent failed!\n";
-  }
+void GridSpheresDpy::init() {
   glShadeModel(GL_FLAT);
-  for(;;){
-    XEvent e;
-    XNextEvent(dpy, &e);
-    if(e.type == MapNotify)
-      break;
-  }
-  XFontStruct* fontInfo = XLoadQueryFont(dpy, __FONTSTRING__);
-
-  if (fontInfo == NULL) {
-    cerr << "no font found\n";
-    Thread::exitAll(1);
-  }
-
-  Font id = fontInfo->fid;
-  unsigned int first = fontInfo->min_char_or_byte2;
-  unsigned int last = fontInfo->max_char_or_byte2;
-  GLuint fontbase = glGenLists((GLuint) last+1);
-  if (fontbase == 0) {
-    printf ("out of display lists\n");
-    exit (0);
-  }
-  glXUseXFont(id, first, last-first+1, fontbase+first);
-  
 
   setup_vars();
-  bool need_hist=true;
-  bool redraw=true;
-  bool control_pressed=false;
-  bool shift_pressed=false;
-  int redraw_range=-1;
-  xlock.unlock();
-  for(;;){
-    //cerr << "GridSpheresDpy:run:eventloop\n";
-    if(need_hist){
-      need_hist=false;
-      compute_hist(fontbase);
-      redraw=true;
+}
+
+void GridSpheresDpy::display() {
+  if(need_hist){
+    need_hist=false;
+    compute_hist(fontbase);
+  }
+
+  draw_hist(fontbase, fontInfo, redraw_range);
+  glXSwapBuffers(dpy, win);
+}
+
+void GridSpheresDpy::resize(const int width, const int height) {
+  if (width != xres)
+    need_hist = true;
+  xres = width;
+  yres = height;
+  redraw = true;
+}
+
+void GridSpheresDpy::key_pressed(unsigned long key) {
+  switch(key) {
+  case XK_w:
+  case XK_W:
+    write_data_file("gridspheredpy.cfg");
+    break;
+  case XK_s:
+  case XK_S:
+    // The modulous is the number of shade methods
+    new_shade_method = (new_shade_method+1)%5;
+    cerr<<"Shade method:  ";
+    switch (new_shade_method) {
+    case 0:
+      cerr<<"Color mapping with lambertian shading"<<endl;
+      break;
+    case 1:
+      cerr<<"Constant color with lambertian shading"<<endl;
+      break;
+    case 2:
+      cerr<<"Color mapping with textured luminance"<<endl;
+      break;
+    case 3:
+      cerr<<"Constant color with textured luminance"<<endl;
+      break;
+    case 4:
+      cerr<<"Color mapping with textured luminance as ambient term"<<endl;
+      break;
+    case 5:
+      cerr<<"Constant color with textured luminance as ambient term"<<endl;
+      break;
     }
-    if(redraw){
-      draw_hist(fontbase, fontInfo, redraw_range);
-      redraw=false;
-    }
-    XEvent e;
-    XNextEvent(dpy, &e);	
-    switch(e.type){
-    case Expose:
-      // Ignore expose events, since we will be refreshing
-      // constantly anyway
-      redraw=true;
-      break;
-    case ConfigureNotify:
-      yres=e.xconfigure.height;
-      if(e.xconfigure.width != xres){
-	xres=e.xconfigure.width;
-	need_hist=true;
-      } else {
-	redraw=true;
-      }
-      break;
-    case KeyPress:
-      switch(XKeycodeToKeysym(dpy, e.xkey.keycode, 0)){
-      case XK_Control_L:
-      case XK_Control_R:
-	//	cerr << "Pressed control\n";
-	control_pressed = true;
-	break;
-      case XK_Shift_L:
-      case XK_Shift_R:
-	//	cerr << "Pressed shift\n";
-	shift_pressed = true;
-	break;
-      case XK_w:
-      case XK_W:
-	write_data_file("gridspheredpy.cfg");
-	break;
-      case XK_s:
-      case XK_S:
-        // The modulous is the number of shade methods
-        new_shade_method = (new_shade_method+1)%5;
-        cerr<<"Shade method:  ";
-        switch (new_shade_method) {
-        case 0:
-          cerr<<"Color mapping with lambertian shading"<<endl;
-          break;
-        case 1:
-          cerr<<"Constant color with lambertian shading"<<endl;
-          break;
-        case 2:
-          cerr<<"Color mapping with textured luminance"<<endl;
-          break;
-        case 3:
-          cerr<<"Constant color with textured luminance"<<endl;
-          break;
-        case 4:
-          cerr<<"Color mapping with textured luminance as ambient term"<<endl;
-          break;
-        case 5:
-          cerr<<"Constant color with textured luminance as ambient term"<<endl;
-          break;
-        }
-        break;
-      case XK_0:
-        new_shade_method=0;
-        cerr<<"Shade method:  Color mapping with lambertian shading"<<endl;
-        break;
-      case XK_1:
-        new_shade_method=1;
-        cerr<<"Shade method:  Constant color with lambertian shading"<<endl;
-        break;
-      case XK_2:
-        new_shade_method=2;
-        cerr<<"Shade method:  Color mapping with textured luminance"<<endl;
-        break;
-      case XK_3:
-        new_shade_method=3;
-        cerr<<"Shade method:  Constant color with textured luminance"<<endl;
-        break;
-      case XK_4:
-        new_shade_method=4;
-        cerr<<"Shade method:  Color mapping with textured luminance as ambient term"<<endl;
-        break;
-      case XK_5:
-        new_shade_method=5;
-        cerr<<"Shade method:  Constant color with textured luminance as ambient term"<<endl;
-        break;
-      }
-      break;
-    case KeyRelease:
-      switch(XKeycodeToKeysym(dpy, e.xkey.keycode, 0)){
-      case XK_Control_L:
-      case XK_Control_R:
-	control_pressed = false;
-	//	cerr << "Releassed control\n";
-	break;
-      case XK_Shift_L:
-      case XK_Shift_R:
-	//	cerr << "Releassed shift\n";
-	shift_pressed = false;
-      }
-      break;
-    case ButtonRelease:
-      break;
-    case ButtonPress:
-      switch(e.xbutton.button){
-      case Button1:
-	if (shift_pressed) {
-	  //cerr << "Left button pressed with shift\n";
-	  move_min_max(min, e.xbutton.x, e.xbutton.y, redraw_range);
-	} else if (control_pressed) {
-	  //cerr << "Left button pressed with control\n";
-	  move(new_color_begin, e.xbutton.x, e.xbutton.y, redraw_range);
-	} else {
-	  move(new_range_begin, e.xbutton.x, e.xbutton.y, redraw_range);
-	}
-	redraw=true;
-	break;
-      case Button2:
-	if (shift_pressed) {
-	  //cerr << "Middle button pressed with shift\n";
-	  restore_min_max(e.xbutton.y, redraw_range);
-	  redraw=true;
-	} else if (control_pressed) {
-	  //cerr << "Middle button pressed with control\n";
-	  move(new_color_begin, 0, e.xbutton.y, redraw_range);
-	  move(new_color_end, xres, e.xbutton.y, redraw_range);
-	  redraw=true;
-	} else {
-	  changecolor(e.xbutton.y);
-	}
-	break;
-      case Button3:
-	if (shift_pressed) {
-	  //cerr << "Right button pressed with shift\n";
-	  move_min_max(max, e.xbutton.x, e.xbutton.y, redraw_range);
-	} else if (control_pressed) {
-	  //cerr << "Right button pressed with control\n";
-	  move(new_color_end, e.xbutton.x, e.xbutton.y, redraw_range);
-	} else {
-	  move(new_range_end, e.xbutton.x, e.xbutton.y, redraw_range);
-	}
-	redraw=true;
-	break;
-      }
-      break;
-    case MotionNotify:
-      if (shift_pressed || control_pressed) break;
-      switch(e.xmotion.state&(Button1Mask|Button2Mask|Button3Mask)){
-      case Button1Mask:
-	if (shift_pressed) {
-	  //cerr << "Left button pressed with shift\n";
-	} else if (control_pressed) {
-	  //cerr << "Left button pressed with control\n";
-	  move(new_color_begin, e.xbutton.x, e.xbutton.y, redraw_range);
-	} else {
-	  move(new_range_begin, e.xbutton.x, e.xbutton.y, redraw_range);
-	}
-	redraw=true;
-	break;
-      case Button2Mask:
-	break;
-      case Button3Mask:
-	if (shift_pressed) {
-	  //cerr << "Right button pressed with shift\n";
-	} else if (control_pressed) {
-	  //cerr << "Right button pressed with control\n";
-	  move(new_color_end, e.xbutton.x, e.xbutton.y, redraw_range);
-	} else {
-	  move(new_range_end, e.xbutton.x, e.xbutton.y, redraw_range);
-	}
-	redraw=true;
-	break;
-      }
-      break;
-    default:
-      cerr << "Unknown event, type=" << e.type << '\n';
-    }
+    break;
+  case XK_0:
+    new_shade_method=0;
+    cerr<<"Shade method:  Color mapping with lambertian shading"<<endl;
+    break;
+  case XK_1:
+    new_shade_method=1;
+    cerr<<"Shade method:  Constant color with lambertian shading"<<endl;
+    break;
+  case XK_2:
+    new_shade_method=2;
+    cerr<<"Shade method:  Color mapping with textured luminance"<<endl;
+    break;
+  case XK_3:
+    new_shade_method=3;
+    cerr<<"Shade method:  Constant color with textured luminance"<<endl;
+    break;
+  case XK_4:
+    new_shade_method=4;
+    cerr<<"Shade method:  Color mapping with textured luminance as ambient term"<<endl;
+    break;
+  case XK_5:
+    new_shade_method=5;
+    cerr<<"Shade method:  Constant color with textured luminance as ambient term"<<endl;
+    break;
   }
 }
 
-static void printString(GLuint fontbase, double x, double y,
-			const char *s, const Color& c)
-{
-  glColor3f(c.red(), c.green(), c.blue());
-  
-  glRasterPos2d(x,y);
-  /*glBitmap(0, 0, x, y, 1, 1, 0);*/
-  glPushAttrib (GL_LIST_BIT);
-  glListBase(fontbase);
-  glCallLists((int)strlen(s), GL_UNSIGNED_BYTE, (GLubyte *)s);
-  glPopAttrib ();
+void GridSpheresDpy::button_pressed(MouseButton button,
+			     const int x_mouse, const int y_mouse) {
+  switch(button) {
+  case MouseButton1:
+    if (shift_pressed) {
+      //cerr << "Left button pressed with shift\n";
+      move_min_max(min, x_mouse, y_mouse, redraw_range);
+    } else if (control_pressed) {
+      //cerr << "Left button pressed with control\n";
+      move(new_color_begin, x_mouse, y_mouse, redraw_range);
+    } else {
+      move(new_range_begin, x_mouse, y_mouse, redraw_range);
+    }
+    redraw=true;
+    break;
+  case MouseButton2:
+    if (shift_pressed) {
+      //cerr << "Middle button pressed with shift\n";
+      restore_min_max(y_mouse, redraw_range);
+    } else if (control_pressed) {
+      //cerr << "Middle button pressed with control\n";
+      move(new_color_begin, 0, y_mouse, redraw_range);
+      move(new_color_end, xres, y_mouse, redraw_range);
+    } else {
+      changecolor(y_mouse);
+    }
+    post_redraw();
+    break;
+  case MouseButton3:
+    if (shift_pressed) {
+      //cerr << "Right button pressed with shift\n";
+      move_min_max(max, x_mouse, y_mouse, redraw_range);
+    } else if (control_pressed) {
+      //cerr << "Right button pressed with control\n";
+      move(new_color_end, x_mouse, y_mouse, redraw_range);
+    } else {
+      move(new_range_end, x_mouse, y_mouse, redraw_range);
+    }
+    redraw=true;
+    break;
+  }
+}
+
+void GridSpheresDpy::button_motion(MouseButton button,
+			    const int x_mouse, const int y_mouse) {
+  if (shift_pressed || control_pressed) return;
+  switch(button) {
+  case MouseButton1:
+    if (control_pressed) {
+      //cerr << "Left button pressed with control\n";
+      move(new_color_begin, x_mouse, y_mouse, redraw_range);
+    } else {
+      move(new_range_begin, x_mouse, y_mouse, redraw_range);
+    }
+    redraw=true;
+    break;
+  case MouseButton2:
+    break;
+  case MouseButton3:
+    if (control_pressed) {
+      //cerr << "Right button pressed with control\n";
+      move(new_color_end, x_mouse, y_mouse, redraw_range);
+    } else {
+      move(new_range_end, x_mouse, y_mouse, redraw_range);
+    }
+    redraw=true;
+    break;
+  }
 }
 
 void GridSpheresDpy::compute_hist(GLuint fid)
@@ -449,12 +316,13 @@ void GridSpheresDpy::compute_hist(GLuint fid)
   glLoadIdentity();
   
   printString(fid, .1, .5, "Recomputing histogram...\n", Color(1,1,1));
+  glXSwapBuffers(dpy, win);
   glFlush();
   int n=ndata;
   if (n == -1) {
     cerr <<"GridSpheresDpy::compute_hist: GridSpheresDpy::attach not called\n";
     cerr << "GridSpheresDpy::ndata = -1\n";
-    Thread::exitAll(-1);
+    return;
   }
   int nhist=xres;
   int total=n*nhist;
@@ -506,15 +374,6 @@ void GridSpheresDpy::compute_hist(GLuint fid)
     histmax[j]=max;
   }
   //cerr << "GridSpheresDpy:compute_hist:end\n";
-}
-
-static int calc_width(XFontStruct* font_struct, const char* str)
-{
-  XCharStruct overall;
-  int ascent, descent;
-  int dir;
-  XTextExtents(font_struct, str, (int)strlen(str), &dir, &ascent, &descent, &overall);
-  return overall.width;
 }
 
 void GridSpheresDpy::draw_hist(GLuint fid, XFontStruct* font_struct,
@@ -873,6 +732,8 @@ void GridSpheresDpy::changecolor(int y) {
     int e=(j+1)*yres/ndata-2;
     if(y>=s && y<e){
       newcolordata = j;
+      redraw_range = -1;
+      redraw = true;
       break;
     }
   }
