@@ -81,11 +81,10 @@
 	        <radiation>false</radiation>
 	        <mixing_model>meanMixingModel</mixing_model>
 	        <MeanMixingModel>
-	          <TableType>dynamic</TableType>
-                  <TableStorage>KDTree</TableStorage>
 		  <adiabatic>true</adiabatic>
                   <mixstatvars>0</mixstatvars>
                   <rxnvars>0</rxnvars>
+                  <PDFShape>Beta</PDFShape>
 		  <reaction_model>EquilibriumReactionModel</reaction_model>
 		  <Stream>
 		    <pressure>1.01325e+05</pressure>
@@ -113,7 +112,6 @@
 		  </Stream>
 		  <MixRxnTableInfo>
                     <Enthalpy>
-                       <NumDivs>40</NumDivs>
                        <MaxValue>1.0</MaxValue>
                        <MinValue>-1.0</MinValue>
                        <MidValue>0.0</MidValue>
@@ -121,7 +119,6 @@
      		       <NumDivsAbove>20</NumDivsAbove>
                     </Enthalpy>
                     <MixtureFraction>
-                       <NumDivs>40</NumDivs>
                        <MaxValue>1.0</MaxValue>
                        <MinValue>0.0</MinValue>
                        <MidValue>0.1</MidValue>
@@ -129,13 +126,12 @@
      		       <NumDivsAbove>20</NumDivsAbove>
                      </MixtureFraction>
                   </MixRxnTableInfo>
+	          <TableType>dynamic</TableType>
+                  <TableStorage>2DVector</TableStorage>
 		  <Integrator>
 		     <favre>true</favre>
-                     <PDFSHAPE>BetaPDFShape</PDFSHAPE>
                   </Integrator>
                   <EquilibriumReactionModel>
-                     <TableType>dynamic</TableType>
-                     <TableStorage>KDTree</TableStorage>
                      <MixRxnTableInfo>
                         <Enthalpy>
                           <MaxValue>1.0</MaxValue>
@@ -152,6 +148,8 @@
                           <NumDivsAbove>100</NumDivsAbove>
                        </MixtureFraction>
                     </MixRxnTableInfo>
+	            <TableType>dynamic</TableType>
+                    <TableStorage>2DVector</TableStorage>
                   </EquilibriumReactionModel>
                 </MeanMixingModel>
 	    </Properties>

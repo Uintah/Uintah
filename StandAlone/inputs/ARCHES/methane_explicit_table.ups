@@ -84,12 +84,12 @@
 		<denUnderrelax>0.9</denUnderrelax>
 	        <ref_point>[3,3,3]</ref_point>
 	        <radiation>true</radiation>
-	        <mixing_model>pdfMixingModel</mixing_model>
-	        <PDFMixingModel>
+	        <mixing_model>meanMixingModel</mixing_model>
+	        <MeanMixingModel>
                   <adiabatic>false</adiabatic>
                   <mixstatvars>0</mixstatvars>
                   <rxnvars>0</rxnvars>
-	          <TableStorage>KDTree</TableStorage>
+                  <PDFShape>Beta</PDFShape>
 		  <reaction_model>EquilibriumReactionModel</reaction_model>
 		  <Stream>
 		    <pressure>1.01325e+05</pressure>
@@ -117,7 +117,6 @@
 		  </Stream>
 		  <MixRxnTableInfo>
                     <Enthalpy>
-                       <NumDivs>20</NumDivs>
                        <MaxValue>1.0</MaxValue>
                        <MinValue>-1.0</MinValue>
                        <MidValue>0.0</MidValue>
@@ -125,7 +124,6 @@
      		       <NumDivsAbove>10</NumDivsAbove>
                     </Enthalpy>
                     <MixtureFraction>
-                       <NumDivs>40</NumDivs>
                        <MaxValue>1.0</MaxValue>
                        <MinValue>0.0</MinValue>
                        <MidValue>0.1</MidValue>
@@ -133,13 +131,12 @@
      		       <NumDivsAbove>20</NumDivsAbove>
                      </MixtureFraction>
                   </MixRxnTableInfo>
+    		  <TableType>dynamic</TableType>
+                  <TableStorage>2DVector</TableStorage>
 		  <Integrator>
 		     <favre>true</favre>
-                     <PDFSHAPE>BetaPDFShape</PDFSHAPE>
                   </Integrator>
                   <EquilibriumReactionModel>
-                     <TableType>dynamic</TableType>
-                     <TableStorage>KDTree</TableStorage>
                      <MixRxnTableInfo>
                         <Enthalpy>
                           <MaxValue>1.0</MaxValue>
@@ -156,8 +153,10 @@
                           <NumDivsAbove>20</NumDivsAbove>
                        </MixtureFraction>
                     </MixRxnTableInfo>
+ 		    <TableType>dynamic</TableType>
+                    <TableStorage>2DVector</TableStorage>
                   </EquilibriumReactionModel>
-                </PDFMixingModel>
+                </MeanMixingModel>
 	    </Properties>
 
 	    <BoundaryConditions>
