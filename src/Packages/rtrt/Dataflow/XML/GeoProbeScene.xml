@@ -6,7 +6,7 @@
 <component name="GeoProbeScene" category="Scenes">
   <overview>
     <authors>
-      <author>David Weinstein</author>
+      <author>James Bigler</author>
     </authors>
     <summary>GeoProbe Scene for RTRT in SCIRun</summary>
     <description>
@@ -14,7 +14,7 @@
     </description>
   </overview>
   <io>
-    <inputs lastportdynamic="yes">
+    <inputs lastportdynamic="no">
      <port>
        <name>Colormap</name>
        <datatype>SCIRun::ColorMap</datatype>
