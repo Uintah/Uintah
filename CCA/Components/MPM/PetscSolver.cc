@@ -1,9 +1,12 @@
 #define PETSC_USE_LOG
 
+#include <sci_defs/petsc_defs.h>
+
 #include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
+
 #include <vector>
 #include <iostream>
 
