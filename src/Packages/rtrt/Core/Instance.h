@@ -37,15 +37,8 @@ public:
 
 	    o->compute_bounds(bbox,1E-5);
 
-	    //cerr << "B IBBMIN" << bbox.min() << endl;
-	    //cerr << "B IBBMAX" << bbox.max() << endl;
-
 	    bbox.transform_inplace(t);
 
-	    //cerr << "A IBBMIN" << bbox.min() << endl;
-	    //cerr << "A IBBMAX" << bbox.max() << endl;
-
-	    this->set_matl(this);
 	}
 
     Instance(InstanceWrapperObject* o, Transform* trans, BBox& b) 
@@ -55,43 +48,45 @@ public:
 		t->compute_imat();
 
 	    bbox = b.transform(t);
-	    
-	    this->set_matl(this);
 	}
 	    
     virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 			   PerProcessorContext* ppc)
 	{
-
 	  double min_t = hit.min_t;
 	  if (!bbox.intersect(ray, min_t)) return;	  
 	  min_t = hit.min_t;
 
 	  Ray tray;
-	  HitInfo thit=hit;
-	  
+
 	  ray.transform(t,tray);
+	  //double scale = tray.direction().length() / ray.direction().length();
+
+	  HitInfo thit;
+	  if (hit.was_hit) thit.min_t = hit.min_t;// * scale;
 
 	  o->intersect(tray,thit,st,ppc);
 	  
 	  // if the ray hit one of our objects....
-	  if (min_t > thit.min_t)
+	  if (thit.was_hit)
 	    {
-	      InstanceHit* i = (InstanceHit*)(thit.scratchpad);
-	      Point p = ray.origin() + thit.min_t*ray.direction();
-	      i->normal = thit.hit_obj->normal(p,thit);
-	      i->obj = thit.hit_obj;
-	      thit.hit_obj = this;
-	      hit = thit;
+	      min_t = thit.min_t;// / scale;
+	      if(hit.hit(this, min_t)){
+		InstanceHit* i = (InstanceHit*)(hit.scratchpad);
+		Point p = ray.origin() + min_t*ray.direction();
+		i->normal = thit.hit_obj->normal(p,thit);
+		i->obj = thit.hit_obj;
+	      }
 	    }	      
 	}
     
     virtual Vector normal(const Point&, const HitInfo& hit)
 	{
 	  InstanceHit* i = (InstanceHit*)(hit.scratchpad);
-	  t->project_normal_inplace(i->normal);
-	  i->normal.normalize();
-	  return i->normal;
+	  Vector n;
+	  t->project_normal(i->normal, n);
+	  n.normalize();
+	  return n;
 	}
 
     virtual void compute_bounds(BBox& b, double /*offset*/)
@@ -113,8 +108,8 @@ public:
       mat->shade(result, ray, hit, depth, atten, accumcolor, cx);
     }
 
-    virtual void animate(double t, bool& changed) {
-      o->animate(t, changed);
+    virtual void animate(double time, bool& changed) {
+      o->animate(time, changed);
     }
 
     bool interior_value(double& ret_val, const Ray &ref, const double _t) {
