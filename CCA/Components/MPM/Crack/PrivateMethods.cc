@@ -69,6 +69,81 @@ void Crack::FindSegsFromNode(const int& m,const int& node, int segs[])
   }
 }
 
+// Find the previous index, and the minimum & maximum indexes
+// for each crack-front node. The subroutine should be referenced 
+// once a new crack-front is generated
+void Crack::FindCrackFrontNodeIndexes(const int& m)
+{   
+  /* Task 1: cfSegPreIdx --- The previous index of a crack-front node
+             node[i]=node[preIdx] (preIdx<i)
+  */
+  cfSegPreIdx[m].clear();
+  int num=(int)cfSegNodes[m].size();
+  cfSegPreIdx[m].resize(num);
+  for(int i=0; i<num; i++) {
+    int preIdx=-1;
+    int thisNode=cfSegNodes[m][i];
+    for(int j=i-1; j>=0; j--) {
+      int preNode=cfSegNodes[m][j];
+      if(thisNode==preNode) {
+        preIdx=j;
+        break;
+      }
+    }
+    cfSegPreIdx[m][i]=preIdx;
+    if(cfSegPreIdx[m][i]>=i) {
+      cout << "   ! Error in finding cfSegPreIdx. Program terminated." << endl;    
+      exit(1);
+    }
+  }
+
+  /* Task 2: cfSegMinIdx and cfSegMaxIdx -- The minimum and maximum indexes of 
+             of the sub-crack which the node is located on
+  */
+  cfSegMaxIdx[m].clear();
+  cfSegMinIdx[m].clear();
+  cfSegMaxIdx[m].resize(num);
+  cfSegMinIdx[m].resize(num);
+    
+  int maxIdx=-1,minIdx=0;
+  for(int i=0; i<num; i++) {
+    if(!(i>=minIdx && i<=maxIdx)) { // node i not within the sub-crack
+      // Find maxIdx
+      for(int j=((i%2)!=0?i:i+1); j<num; j+=2) {
+        if(j==num-1 ||
+           (j<num-1 && cfSegNodes[m][j]!=cfSegNodes[m][j+1])) {
+          maxIdx=j;
+          break;
+        }
+      }
+    }
+    cfSegMinIdx[m][i]=minIdx;
+    cfSegMaxIdx[m][i]=maxIdx;
+    if(i==maxIdx) minIdx=maxIdx+1;
+  }
+
+  for(int i=0; i<num; i++) {
+    if(!(i>=cfSegMinIdx[m][i] && i<=cfSegMaxIdx[m][i]) ||
+      cfSegMinIdx[m][i]<0 ||
+      cfSegMaxIdx[m][i]>num-1 ||
+      cfSegMinIdx[m][i]%2!=0 ||
+      cfSegMaxIdx[m][i]%2==0) {
+      int pid;
+      MPI_Comm_rank(mpi_crack_comm, &pid);
+      if(pid==0) {
+        cout << "   ! Error in finding cfSegMinIdx and cfSegMaxIdx."
+             << " Program terminated. " << endl;
+        cout << "     i=" << i << ", cfSegMinIdx[m][i]=" << cfSegMinIdx[m][i]
+             << ", cfSegMaxIdx[m][i]=" << cfSegMaxIdx[m][i] << endl;
+        for(int j=0; j<num; j++)
+          cout << "j=" << j << ", cfSegNodes[m][j]=" << cfSegNodes[m][j] 
+               << ", preIdx=" << cfSegPreIdx[m][j] << endl;
+      }
+      exit(1);
+    } 
+  }
+}
+  
 // Find if a point is within the real global grid  
 short Crack::PhysicalGlobalGridContainsPoint(const double& dx,const Point& pt)
 {
@@ -528,7 +603,7 @@ short Crack::PointInTriangle(const Point& p,const Point& pt1,
 }
 
 // Detect if doing fracture analysis at this time step
-void Crack::FindTimeStepForFractureAnalysis(double time)
+void Crack::DetectIfDoingFractureAnalysisAtThisTimeStep(double time)
 {
   static double timeforcalculateJK=0.0;
   static double timeforpropagation=0.0;
@@ -536,11 +611,11 @@ void Crack::FindTimeStepForFractureAnalysis(double time)
   double calJKInterval=0.0;
   if(d_calFractParameters=="true") {
     if(time>=timeforcalculateJK) {
-      calFractParameters=1;
+      calFractParameters=YES;
       timeforcalculateJK+=calJKInterval;
     }
     else {
-     calFractParameters=0;
+     calFractParameters=NO;
     }
   }
   else if(d_calFractParameters=="false") {
@@ -553,11 +628,11 @@ void Crack::FindTimeStepForFractureAnalysis(double time)
   double propagationInterval=0.0;
   if(d_doCrackPropagation=="true") {
     if(time>=timeforpropagation){
-      doCrackPropagation=1;
+      doCrackPropagation=YES;
       timeforpropagation+=propagationInterval;
     }
     else {
-      doCrackPropagation=0;
+      doCrackPropagation=NO;
     }
   }
   else if(d_doCrackPropagation=="false") {
@@ -600,7 +675,7 @@ short Crack::CalculateCrackFrontNormals(const int& mm)
   int cfNodeSize=(int)cfSegNodes[mm].size();
 
   /* Task 1: Calculate tangential normals at crack-front nodes
-             by cubic spline fitting, and smooth crack points
+             by cubic spline fitting, and/or smooth crack front
   */
   short  flag=1;       // Smooth successfully
   double ep=1.e-6;     // Tolerance
@@ -609,7 +684,9 @@ short Crack::CalculateCrackFrontNormals(const int& mm)
   cfSegV3[mm].resize(cfNodeSize);
 
   // Minimum and maximum index of each sub-crack
-  int min_idx=0,max_idx=-1,numSegs=-1;
+  int minIdx=-1,maxIdx=-1;
+  int minNode=-1,maxNode=-1;
+  int numSegs=-1,numPts=-1;
   vector<Point>  pts; // Crack-front point subset of the sub-crack
   vector<Vector> V3;  // Crack-front point tangential vector
   vector<double> dis; // Arc length from the starting point
@@ -621,43 +698,38 @@ short Crack::CalculateCrackFrontNormals(const int& mm)
     int segs[2];
     FindSegsFromNode(mm,node,segs);
 
-    if(k>max_idx) { // The next sub-crack
-      int segsT[2];
-      // The minimum index of the sub-crack
-      min_idx=k;
-      segsT[R]=segs[R];
-      while(segsT[R]>=0 && min_idx>0)
-        FindSegsFromNode(mm,cfSegNodes[mm][--min_idx],segsT);
+    if(k>maxIdx) { // The next sub-crack
+      maxIdx=cfSegMaxIdx[mm][k];
+      minIdx=cfSegMinIdx[mm][k];
 
-      // The maximum index of the sub-crack
-      max_idx=k;
-      segsT[L]=segs[L];
-      while(segsT[L]>=0 && max_idx<cfNodeSize-1)
-        FindSegsFromNode(mm,cfSegNodes[mm][++max_idx],segsT);
+      // numbers of segs and points of this sub-crack  
+      minNode=cfSegNodes[mm][minIdx];
+      maxNode=cfSegNodes[mm][maxIdx];
+      numSegs=(maxIdx-minIdx+1)/2;
+      numPts=numSegs+1; 
 
       // Allocate memory for the sub-crack
-      numSegs=(max_idx-min_idx+1)/2;
-      pts.resize(numSegs+1);
-      V3.resize(numSegs+1);
-      dis.resize(numSegs+1);
-      idx.resize(max_idx+1);
+      pts.resize(numPts);
+      V3.resize(numPts);
+      dis.resize(numPts);
+      idx.resize(maxIdx+1);
     }
 
-    if(k>=min_idx && k<=max_idx) { // For the sub-crack
-      short pre_idx=cfSegPreIdx[mm][k];
-      if(pre_idx<0) {
-        int ki=(k-min_idx+1)/2;
+    if(k>=minIdx && k<=maxIdx) { // For the sub-crack
+      short preIdx=cfSegPreIdx[mm][k];
+      int ki=(k-minIdx+1)/2;
+      if(preIdx<0 || preIdx==minIdx) {
         pts[ki]=cx[mm][cfSegNodes[mm][k]];
         // Arc length
-        if(k==min_idx) dis[ki]=0.;
+        if(k==minIdx) dis[ki]=0.;
         else dis[ki]=dis[ki-1]+(pts[ki]-pts[ki-1]).length();
       }
-      idx[k]=(k-min_idx+1)/2;
-      if(k<max_idx) continue; // Collect next point
+      idx[k]=ki; 
+      if(k<maxIdx) continue; // Collect next points
     }
 
     // Step b: Define how to smooth the sub-crack
-    int n=numSegs+1;          // number of points (>=2)
+    int n=numPts;             // number of points (>=2)
     int m=(int)(numSegs/2)+2; // number of intervals (>=2)
     int n1=7*m-3;
 
@@ -733,8 +805,8 @@ short Crack::CalculateCrackFrontNormals(const int& mm)
     else { // Not smooth successfully, use the raw data
       flag=0;
       for(i=0; i<n; i++) {
-        Point pt1=(i==0   ? pts[i]: pts[i-1]);
-        Point pt2=(i==n-1 ? pts[i]: pts[i+1]);
+        Point pt1=(i==0   ? pts[i] : pts[i-1]);
+        Point pt2=(i==n-1 ? pts[i] : pts[i+1]);
         V3[i]=TwoPtsDirCos(pt1,pt2);
       }
     }
@@ -750,12 +822,25 @@ short Crack::CalculateCrackFrontNormals(const int& mm)
     delete [] Y;
     delete [] Z;
 
-    // Step d: Store tangential vectors and modify cx
-    for(i=min_idx;i<=max_idx;i++) { // Loop over
+    // Step d: Smooth crack-front points and store tangential vectors
+    for(i=minIdx;i<=maxIdx;i++) { // Loop over all nodes on the sub-crack 
       int ki=idx[i];
-      //int nd=cfSegNodes[mm][i];
-      //cx[mm][nd]=pts[ki];
-      cfSegV3[mm][i]=-V3[ki]/V3[ki].length();
+      
+      // Smooth crack-front points
+      // int ni=cfSegNodes[mm][i];
+      // cx[mm][ni]=pts[ki];  
+
+      // Store tangential vectors
+      if(minNode==maxNode && (i==minIdx || i==maxIdx)) {
+        // for the first and last points (They coincide) of enclosed cracks
+        int k1=idx[minIdx];
+        int k2=idx[maxIdx];
+        Vector averageV3=(V3[k1]+V3[k2])/2.;
+        cfSegV3[mm][i]=-averageV3/averageV3.length();
+      }
+      else {
+        cfSegV3[mm][i]=-V3[ki]/V3[ki].length();
+      }
     }
     pts.clear();
     idx.clear();
@@ -769,9 +854,9 @@ short Crack::CalculateCrackFrontNormals(const int& mm)
   cfSegV2[mm].resize(cfNodeSize);
   for(k=0; k<cfNodeSize; k++) {
     int node=cfSegNodes[mm][k];
-    int pre_idx=cfSegPreIdx[mm][k];
+    int preIdx=cfSegPreIdx[mm][k];
 
-    if(pre_idx<0) {// Not operated
+    if(preIdx<0) {// Not operated
       Vector v2T=Vector(0.,0.,0.);
       double totalArea=0.;
       for(i=0; i<(int)ce[mm].size(); i++) { //Loop over crack elems
@@ -804,7 +889,7 @@ short Crack::CalculateCrackFrontNormals(const int& mm)
       cfSegV2[mm][k]=v2T/v2T.length();
     }
     else { // Calculated
-      cfSegV2[mm][k]=cfSegV2[mm][pre_idx];
+      cfSegV2[mm][k]=cfSegV2[mm][preIdx];
     }
   } // End of loop over crack-front nodes
 
@@ -996,28 +1081,5 @@ short Crack::CubicSpline(const int& n, const int& m, const int& n1,
   }
 
   return flag;
-}
-
-// Find crack-front nodes' previous indexes
-void Crack::FindCrackFrontNodePreIdx(const int& m)
-{
-  /* What is the previous index (preIdx) of a crack-front node?
-     node[i]=node[preIdx] (preIdx<i)  
-  */
-  cfSegPreIdx[m].clear();
-  int num=(int)cfSegNodes[m].size();
-  cfSegPreIdx[m].resize(num);
-  for(int i=0; i<num; i++) {
-    int preIdx=-1;
-    int thisNode=cfSegNodes[m][i];
-    for(int j=i-1; j>=0; j--) {
-      int preNode=cfSegNodes[m][j];
-      if(thisNode==preNode) {
-        preIdx=j;
-        break;
-      }
-    }
-    cfSegPreIdx[m][i]=preIdx;
-  }
 }
 
