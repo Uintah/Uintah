@@ -101,13 +101,13 @@ class PowerAppBase {
                          \t\tsave your [appname] session\n\
                          \t\tload at a later time\n\
         Save Image...    \tSave the viewer image\n\
-        Quit             \tQuit BioTensor} ]
+        Quit             \tQuit [appname]} ]
 
 	set tips(HelpMenu) [subst {\
         Show Tooltips   \tTurn tooltips on or off\n\
-        Help Contents   \tHelp for BioTensor\n\
-        About BioTensor \tInformation about\n\
-		        \t\tBioTensor } ]
+        Help Contents   \tHelp for [appname]\n\
+        About [appname] \tInformation about\n\
+ 	  	        \t\t[appname] } ]
  	# Indicator
  	set tips(IndicatorBar) \
  	    "Indicates the status of\napplication. Click when\nred to view error message."
