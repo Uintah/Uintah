@@ -205,13 +205,13 @@ int NCScalarField<T>::interpolate(const Point& p, double& value, double eps,
 {
   static const Patch* patch = 0;
   static int i = 0;
-
+  
   IntVector ni[8];
   double S[8];
   
-  if( patch !=0 ){
+  if( patch !=0 && patch->findCell( p, *ni )){
     patch->findCellAndWeights(p, ni, S);
-      value=0;
+    value=0;
       for(int k = 0; k < 8; k++){
 	if(patch->containsNode(ni[k])){
 	  value += _vars[i][ni[k]]*S[k];
@@ -230,34 +230,36 @@ int NCScalarField<T>::interpolate(const Point& p, double& value, double eps,
   } else {
     Level::const_patchIterator r;
     for(i = 0, r = _level->patchesBegin();
-      r != _level->patchesEnd(); r++, i++){
-    
+	r != _level->patchesEnd(); r++, i++){
+      
       if (i >= _vars.size()){
 	patch = 0;
 	return 0;
       }
-
+      
       IntVector ni[8];
       double S[8];
-      (*r)->findCellAndWeights(p, ni, S);
-      value=0;
-      for(int k = 0; k < 8; k++){
-	if((*r)->containsNode(ni[k])){
-	  value += _vars[i][ni[k]]*S[k];
-	  patch = (*r);
-	} else {
-	  Level::const_patchIterator r1;
-	  int j;
-	  for(j = 0, r1 = _level->patchesBegin();
-	      r1 != _level->patchesEnd(); r1++, j++)
-	    if( (*r1)->containsNode(ni[k])){
-	      value += _vars[j][ni[k]]*S[k];
-	      break;
-	    }
+      if( patch->findCell( p, *ni) ){
+	(*r)->findCellAndWeights(p, ni, S);
+	value=0;
+	for(int k = 0; k < 8; k++){
+	  if((*r)->containsNode(ni[k])){
+	    value += _vars[i][ni[k]]*S[k];
+	    patch = (*r);
+	  } else {
+	    Level::const_patchIterator r1;
+	    int j;
+	    for(j = 0, r1 = _level->patchesBegin();
+		r1 != _level->patchesEnd(); r1++, j++)
+	      if( (*r1)->containsNode(ni[k])){
+		value += _vars[j][ni[k]]*S[k];
+		break;
+	      }
+	  }
 	}
+	return 1;
       }
     }
-    return 1;
   }
   patch = 0;
   return 0;

@@ -50,7 +50,7 @@ NCTensorField::NCTensorField(GridP grid, LevelP level,
     _vars.push_back( vars[i]);
   }
   computeHighLowIndices();
-  cerr<<"low index = "<<low<<", high index = "<<high<<endl;
+  //  cerr<<"low index = "<<low<<", high index = "<<high<<endl;
   nx = high.x() - low.x();
   ny = high.y() - low.y();
   nz = high.z() - low.z();
