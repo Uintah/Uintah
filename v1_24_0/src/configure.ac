@@ -3067,10 +3067,10 @@ if test "$sci_required_insight" = "yes"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff -litkjpeg8 -litkjpeg12 -litkjpeg16"
     fi
     if test "$INSIGHT_VERSION_MINOR" = "8" || test "$INSIGHT_VERSION_MINOR" = "6"; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff -litkjpg"
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff -litkjpeg"
     fi
     if test "$INSIGHT_VERSION_MINOR" = "4"; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpg"
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg"
     fi
 
     if ! test "$HAVE_PNG" = "yes"; then
