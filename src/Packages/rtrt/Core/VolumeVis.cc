@@ -23,19 +23,15 @@
 using namespace std;
 using namespace rtrt;
 
-static float t_inc = 1;
-
 VolumeVis::VolumeVis(BrickArray3<float>& _data, float data_min, float data_max,
 		     int nx, int ny, int nz,
-		     Point min, Point max, const Array1<Color*> &matls,
-		     int nmatls, const Array1<float> &alphas, int nalphas,
+		     Point min, Point max,
 		     double spec_coeff, double ambient, double diffuse,
-		     double specular, float _t_inc, VolumeVisDpy *dpy):
+		     double specular, VolumeVisDpy *dpy):
   Object(this), diag(max - min),
   data_min(data_min), data_max(data_max),
   nx(nx), ny(ny), nz(nz),
-  min(min), max(max), matls(matls), nmatls(nmatls),
-  alphas(alphas), nalphas(nalphas), spec_coeff(spec_coeff),
+  min(min), max(max), spec_coeff(spec_coeff),
   ambient(ambient), diffuse(diffuse), specular(specular), dpy(dpy)
 {
   if (data_max < data_min) {
@@ -43,10 +39,6 @@ VolumeVis::VolumeVis(BrickArray3<float>& _data, float data_min, float data_max,
     data_max = data_min;
     data_min = temp;
   }
-  if (data_min != data_max)
-    data_diff_inv = 1/(data_max - data_min);
-  else
-    data_diff_inv = 0;
 
   data.share(_data);
   delta_x2 = 2 * (max.x() - min.x())/nx;
@@ -67,20 +59,6 @@ VolumeVis::VolumeVis(BrickArray3<float>& _data, float data_min, float data_max,
     inv_diag.z(0);
   else
     inv_diag.z(1.0/diag.z());
-
-  t_inc = _t_inc;
-  // modify the alpha matrix by the t_inc
-  // we are assuming the base delta_t is 1 and that the new delta_t is t_inc
-  // the formula:
-  //    a_1 : original opacity
-  //    a_2 : resulting opacity
-  //    d_1 : original sampling distance
-  //    d_2 : new sampling distance
-  // a_2 = 1 - (1 - a_1)^(d_2/d_1)
-  for(unsigned int i = 0; i < alphas.size(); i++) {
-    alphas[i] = 1 - powf(1 - alphas[i], t_inc);
-    cout << "ALPHAS[i="<<i<<"] = "<<alphas[i]<<endl;
-  }
 
   dpy->attach(this);
 }
@@ -196,8 +174,6 @@ Color VolumeVis::color(const Vector &N, const Vector &V, const Vector &L,
     // do the ambient, diffuse, and specular calculations
     double attenuation = 1;
 
-    //    R = vector_norm(vector_sub(vector_mult(N, 2* L_N_dot),L));
-    //    Vector R = (2.0 * N.dot(L) * N - L).normal();
     Vector R = 2.0 * N.dot(L) * N - L;
     double spec = attenuation * specular * pow(Max(R.dot(V),0.0), spec_coeff);
 
@@ -244,8 +220,7 @@ void VolumeVis::shade(Color& result, const Ray& ray,
   Color total(0,0,0);
   Vector p;
 
-  //  float t_inc = cx->scene->rtrt_engine->t_inc;
-  for(float t = t_min; t < t_max; t += t_inc) {
+  for(float t = t_min; t < t_max; t += dpy->t_inc) {
     // opaque values are 0, so terminate the ray at alpha values close to zero
     if (alpha < RAY_TERMINATION_THRESHOLD) {
       // get the point to interpolate
@@ -298,10 +273,10 @@ void VolumeVis::shade(Color& result, const Ray& ray,
       value = ly1 * x_weight_low + ly2 * (1 - x_weight_low);
       
       //cout << "value = " << value << endl;
-      float normalized = (value - data_min) * data_diff_inv;
-      int alpha_idx = bound((int)(normalized*(nalphas -1 )), 0, nalphas - 1);
-      if ((alphas[alpha_idx] * (1-alpha)) > 0.001) {
-      //      if (true) {
+
+      float alpha_factor = dpy->alpha_transform.lookup(value) * (1-alpha);
+      if (alpha_factor > 0.001) {
+	//      if (true) {
 	// the point is contributing, so compute the color
 
 	// compute the gradient
@@ -328,22 +303,16 @@ void VolumeVis::shade(Color& result, const Ray& ray,
 	} else
 	  gradient = Vector(0,0,0);
 
-	int idx=bound((int)(normalized*(nmatls-1)), 0, nmatls - 1);
 	Light* light=cx->scene->light(0);
 	Vector light_dir;
 	light_dir = light->get_pos()-p;
-#if 1
+
 	Color temp = color(gradient, ray.direction(), light_dir.normal(), 
-			   *(matls[idx]), light->get_color());
-#else
-	Color temp = *(matls[idx]);
-#endif
-	total += temp * (alphas[alpha_idx] * (1-alpha));
-	alpha += alphas[alpha_idx] * (1-alpha);
+			   *(dpy->color_transform.lookup(value)),
+			   light->get_color());
+	total += temp * alpha_factor;
+	alpha += alpha_factor;
       }
-      //cout << "total = " << total << ", temp = " << temp << ", alpha = " << alpha;
-      //cout << ", new alpha = " << alpha << endl;
-      //cout << "result = " << result << ", atten = " << atten << ", accumcolor = " << accumcolor << endl;
     } else {
       break;
     }
