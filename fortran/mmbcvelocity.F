@@ -5,6 +5,19 @@ c*********************************************************************
 
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
 #include "param4.h"
+
+#undef normalbc
+#undef tangentialbc
+c#define normalbc
+c#define tangentialbc
+
+c     The "usual" normal and tangential bcs involve severing
+c     connections to the cell under consideration.
+c     These usual bcs are the ones that are true if normalbc
+c     and tangentialbc are true in this routine.
+c     If not, we use implicit bcs.
+c     Currently (08/29) we use implicit bcs.
+
 C---------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION
 C     THIS SUBROUTINE WILL compute matrix coefficients for uvelocity
@@ -51,9 +64,9 @@ C     VELOCITY TO ZERO
      $                 as(i,j,k),at(i,j,k),ab(i,j,k),
      $                 su(i,j,k),sp(i,j,k),const)
                else
-c     This first if 0 is called modbc (modified bc for normal
-c     boundary conditions)
-#if 0
+
+#ifdef normalbc
+
 C     CELL ON FAR WEST IS A WALL: SET COEFFICIENT IN THAT 
 C     DIRECTION TO ZERO
                   if (pcell(i-2*ioff,j-2*joff,k-2*koff).eq.
@@ -66,10 +79,9 @@ C     TO ZERO
                      ae(i,j,k) = 0.0D0
                   endif
 #endif
-c     This second if 0 is called modbc2 (modified bc for 
-c     tangential boundary conditions) (modbc2 requires modbc
-c     as well)
-#if 0
+
+#ifdef tangentialbc
+
 C     WALL ON SOUTH
                   if ((pcell(i-idt1,j-jdt1,k-kdt1).eq.mmwallid).or.
      $                (pcell(i-ioff-idt1,j-joff-jdt1,k-koff-kdt1)
