@@ -88,11 +88,12 @@ protected:
     FaceValuesSome			// we have values at some faces
   };
   Type typ;
-  Array1<double> data;		// optional data at nodes/faces
-  Array1<int> idx;			// optional indices - when "some" data
   int valid_bboxes;
 
 public:
+  Array1<double> data;		// optional data at nodes/faces
+  Array1<int> idx;		// optional indices - when "some" data
+
   SurfTree(Representation r=STree);
   SurfTree(const SurfTree& copy, Representation r=STree);
   virtual ~SurfTree();
@@ -103,6 +104,7 @@ public:
   static PersistentTypeID type_id;
 
   void buildNormals();
+  void buildNodeInfo();
 
   virtual void construct_grid(int, int, int, const Point &, double);
   virtual void construct_grid();
@@ -113,6 +115,9 @@ public:
 
   virtual GeomObj* get_obj(const ColorMapHandle&);
 
+  int extractTriSurface(TriSurface*, Array1<int>&, Array1<int>&, int, 
+			int RemapPoints=1);
+
 protected:
   void compute_bboxes();
   void distance(const Point &p, int &have_hit, double &distBest, 
@@ -121,10 +126,7 @@ protected:
 
   void get_surfnodes(Array1<NodeHandle>&, clString name);
   void set_surfnodes(const Array1<NodeHandle>&, clString name);
-  void bldNodeInfo();
   void printNbrInfo();
-  int extractTriSurface(TriSurface*, Array1<int>&, Array1<int>&, int, 
-			int RemapPoints=1);
 
 };
 

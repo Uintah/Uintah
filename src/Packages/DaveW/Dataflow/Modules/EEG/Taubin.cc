@@ -95,7 +95,7 @@ Taubin::~Taubin()
 }
 
 void Taubin::bldNbrs() {
-    st->bldNodeInfo();
+    st->buildNodeInfo();
     nbrs.resize(st->nodeI.size());
     int i;
     for (i=0; i<st->nodeI.size(); i++) 

@@ -177,12 +177,12 @@ protected:
   //Array1<NodeHandle> nodes;
   //Array1<Element*> elems;
   //Array1<Array1<double> > cond_tensors;
-  int have_all_neighbors;
 
 public:
   Array1<NodeHandle> nodes;
   Array1<Element *> elems;
   Array1<Array1<double> > cond_tensors;
+  int have_all_neighbors;
 
   const Node &node(int i) { return *(nodes[i].get_rep()); }
   Element *element(int i) { return elems[i]; }

@@ -113,14 +113,13 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 
+  SurfTree *toSurfTree();
+  void buildNodeInfo();
+
 protected:
   // pass in allocated surfaces for conn and d_conn. NOTE: contents will be
   // overwritten
   void separate(int idx, TriSurface* conn, TriSurface* d_conn, int updateConnIndices=1, int updateDConnIndices=1);
-
-  SurfTree* toSurfTree();
-
-  void buildNodeInfo();
 
   // NOTE: if elements have been added or removed from the surface
   // remove_empty_index() MUST be called before passing a TriSurface

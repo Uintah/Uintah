@@ -522,7 +522,7 @@ void fldToTree(SegFld &field, SurfTree &surf) {
 	cerr << "No white matter (material 5) found.\n";
     }
     cerr << "BUILDING NODE INFORMATION...\n";
-    surf.bldNodeInfo();
+    surf.buildNodeInfo();
     cerr << "DONE!\n";
 
 
