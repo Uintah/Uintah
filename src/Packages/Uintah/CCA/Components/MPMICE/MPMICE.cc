@@ -1646,7 +1646,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     Lodi_vars_pressBC* lv = new Lodi_vars_pressBC(0);
     lv->setLodiBcs = false;
     
-    setBC(press_new,   rho_micro, placeHolder,
+    setBC(press_new,   rho_micro, placeHolder,d_ice->d_surroundingMatl_indx,
           "rho_micro", "Pressure", patch , d_sharedState, 0, new_dw, lv);
     delete lv;
               
