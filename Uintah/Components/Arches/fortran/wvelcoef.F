@@ -139,7 +139,7 @@ c*********************************************************************
 c*********************************************************************
 c     Set all flags except one to false (** WARNING ** need to change)
 c*********************************************************************
-      L2UP = .TRUE.
+      L2UP = .FALSE.
       LSMPT = .FALSE.
       LCEND = .FALSE.
 
@@ -341,6 +341,9 @@ c                 SU(I,J,K) = 0.0
 c*********************************************************************
 c
 c $Log$
+c Revision 1.4  2000/08/10 00:56:38  rawat
+c added pressure bc for scalar and changed discretization option for velocity
+c
 c Revision 1.3  2000/07/14 03:45:49  rawat
 c completed velocity bc and fixed some bugs
 c

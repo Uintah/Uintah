@@ -107,8 +107,8 @@ c*********************************************************************
       KEND = idxHi(3)
       
       FACK = 1.0
-      URFBC = 1.0
-      LNORM = .TRUE.
+      URFBC = 0.5
+      LNORM = .FALSE.
 C     
 C       First define what will be the variables on INLETS
 C
@@ -256,6 +256,7 @@ C
                 IF (VVEL.LT.0.0) THEN
                   UU(I,J,K) = UVEL
                   WW(I,J,K) = WVEL
+                  PP(I,J,K) = PPP
                 END IF
 	      END IF
 280	    CONTINUE
@@ -341,6 +342,9 @@ C
 c*********************************************************************
 c
 c $Log$
+c Revision 1.3  2000/08/10 00:56:38  rawat
+c added pressure bc for scalar and changed discretization option for velocity
+c
 c Revision 1.2  2000/07/07 23:07:47  rawat
 c added inlet bc's
 c

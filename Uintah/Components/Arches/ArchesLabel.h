@@ -193,6 +193,8 @@ namespace Uintah {
       const VarLabel* d_scalarINLabel;  
       // computed for old_dw in setProfile
       const VarLabel* d_scalarSPLabel;
+      // computed as a part of pressure boundary calculations
+      const VarLabel* d_scalarCPBCLabel;
 
       // Scalar Coef
       const VarLabel* d_scalCoefSBLMLabel;
@@ -239,6 +241,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.6  2000/08/10 00:56:33  rawat
+// added pressure bc for scalar and changed discretization option for velocity
+//
 // Revision 1.5  2000/08/01 23:28:43  skumar
 // Added residual calculation procedure and modified templates in linear
 // solver.  Added template for order-of-magnitude term calculation.

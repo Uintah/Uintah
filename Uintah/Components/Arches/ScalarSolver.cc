@@ -144,7 +144,7 @@ ScalarSolver::sched_buildLinearMatrix(const LevelP& level,
 		    Ghost::None, numGhostCells);
       tsk->requires(old_dw, d_lab->d_densityCPLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
-      tsk->requires(new_dw, d_lab->d_scalarINLabel, index, patch, 
+      tsk->requires(new_dw, d_lab->d_scalarCPBCLabel, index, patch, 
 		    Ghost::None, numGhostCells);
       tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
@@ -194,7 +194,7 @@ ScalarSolver::sched_scalarLinearSolve(const LevelP& level,
       int nofStencils = 7;
 
       // coefficient for the variable for which solve is invoked
-      tsk->requires(new_dw, d_lab->d_scalarINLabel, index, patch, 
+      tsk->requires(new_dw, d_lab->d_scalarCPBCLabel, index, patch, 
 		    Ghost::None, numGhostCells);
       for (int ii = 0; ii < nofStencils; ii++) 
 	tsk->requires(matrix_dw, d_lab->d_scalCoefSBLMLabel, 
@@ -243,7 +243,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 	      matlIndex, patch, Ghost::None, numGhostCells);
   new_dw->get(d_scalarVars->viscosity, d_lab->d_viscosityINLabel, 
 	      matlIndex, patch, Ghost::None, numGhostCells);
-  new_dw->get(d_scalarVars->scalar, d_lab->d_scalarINLabel, 
+  new_dw->get(d_scalarVars->scalar, d_lab->d_scalarCPBCLabel, 
 	      index, patch, Ghost::None, numGhostCells);
   new_dw->get(d_scalarVars->uVelocity, d_lab->d_uVelocitySPBCLabel, 
 	      matlIndex, patch, Ghost::None, numGhostCells);
@@ -319,7 +319,7 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
   int matlIndex = 0;
   int numGhostCells = 0;
   int nofStencils = 7;
-  new_dw->get(d_scalarVars->scalar, d_lab->d_scalarINLabel, 
+  new_dw->get(d_scalarVars->scalar, d_lab->d_scalarCPBCLabel, 
 	      index, patch, Ghost::None, numGhostCells);
   for (int ii = 0; ii < nofStencils; ii++)
     matrix_dw->get(d_scalarVars->scalarCoeff[ii], d_lab->d_scalCoefSBLMLabel, 
@@ -348,6 +348,9 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.20  2000/08/10 00:56:33  rawat
+// added pressure bc for scalar and changed discretization option for velocity
+//
 // Revision 1.19  2000/08/01 23:28:43  skumar
 // Added residual calculation procedure and modified templates in linear
 // solver.  Added template for order-of-magnitude term calculation.
