@@ -35,7 +35,7 @@
 #include <algorithm>
 #include <cmath>
 #include <math.h>
-#include <Core/CCA/Component/SIDL/array.h>
+#include <Core/CCA/Component/SSIDL/array.h>
 #include <Core/CCA/Component/PIDL/Reference.h>
 
 /**************************************
@@ -89,7 +89,7 @@ namespace SCIRun {
     // first,last, and stride in all of the dimensions. 
     // Also the constructor accepts an optional Object reference 
     // if the object that associated with this representation is not this object.
-    MxNArrayRep(SIDL::array2<int>& arr, Reference* remote_ref = NULL);
+    MxNArrayRep(SSIDL::array2<int>& arr, Reference* remote_ref = NULL);
 
     ///////////////
     // Destructor
@@ -98,7 +98,7 @@ namespace SCIRun {
     //////////////
     // Creates and retrieves a two-dimensional array consisted of 
     // first,last, and stride in all of the dimensions. 
-    SIDL::array2<int> getArray();
+    SSIDL::array2<int> getArray();
 
     /////////////
     // Retrieves the number of dimensions
