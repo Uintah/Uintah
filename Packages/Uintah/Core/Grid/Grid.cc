@@ -235,6 +235,9 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg)
       }
       level->assignBCS(grid_ps);
    }
+   if(numLevels() >1) {  // bullet proofing
+    throw ProblemSetupException("Grid.cc:problemSetup: Multiple levels encountered in non-AMR grid");
+   }
 } // end problemSetup()
 
 void Grid::problemSetupAMR(const ProblemSpecP& params, const ProcessorGroup *pg)
