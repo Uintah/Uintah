@@ -8,9 +8,9 @@
  #  Copyright (C) 1999 SCI Group
  ##
 
-catch {rename SCIRun_FEM_ErrorMetric ""}
+catch {rename SCIRun_Math_ErrorMetric ""}
 
-itcl_class SCIRun_FEM_ErrorMetric {
+itcl_class SCIRun_Math_ErrorMetric {
     inherit Module
     constructor {config} {
         set name ErrorMetric

@@ -48,8 +48,8 @@ itcl_class SCIRun_DataIO_FieldWriter {
 	set defext ".fld"
 	
 	# name to appear initially
-	set defname "field1"
-	set title "Save Field File"
+	set defname "MyField"
+	set title "Save field file"
 
 	# file types to appers in filter box
 	set types {

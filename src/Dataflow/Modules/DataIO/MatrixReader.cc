@@ -1,6 +1,5 @@
-
 /*
- *  MatrixReader.cc: Matrix Reader class
+ *  MatrixReader.cc: Read a persistent matrix from a file
  *
  *  Written by:
  *   Steven G. Parker
@@ -11,21 +10,18 @@
  *  Copyright (C) 1994 SCI Group
  */
 
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Core/Datatypes/Matrix.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/TCLTask.h>
-#include <Core/GuiInterface/GuiVar.h>
 
 namespace SCIRun {
 
-
 class MatrixReader : public Module {
-    MatrixOPort* outport;
-    GuiString filename;
-    MatrixHandle handle;
-    clString old_filename;
+    MatrixOPort* outport_;
+    GuiString filename_;
+    MatrixHandle handle_;
+    clString old_filename_;
 public:
     MatrixReader(const clString& id);
     virtual ~MatrixReader();
@@ -37,58 +33,43 @@ extern "C" Module* make_MatrixReader(const clString& id) {
 }
 
 MatrixReader::MatrixReader(const clString& id)
-: Module("MatrixReader", id, Source), filename("filename", id, this)
+: Module("MatrixReader", id, Source), filename_("filename", id, this)
 {
-    // Create the output data handle and port
-    outport=scinew MatrixOPort(this, "Output Data", MatrixIPort::Atomic);
-    add_oport(outport);
+    // Create the output port
+    outport_=scinew MatrixOPort(this, "Output Data", MatrixIPort::Atomic);
+    add_oport(outport_);
 }
 
 MatrixReader::~MatrixReader()
 {
 }
 
-#ifdef BROKEN
-static void watcher(double pd, void* cbdata)
-{
-    MatrixReader* reader=(MatrixReader*)cbdata;
-    if(TCLTask::try_lock()){
-	// Try the malloc lock once before we call update_progress
-	// If we can't get it, then back off, since our caller might
-	// have it locked
-	if(!Task::test_malloc_lock()){
-	    TCLTask::unlock();
-	    return;
-	}
-	reader->update_progress(pd);
-	TCLTask::unlock();
-    }
-}
-#endif
-
 void MatrixReader::execute()
 {
+    clString fn(filename_.get());
 
-    clString fn(filename.get());
-    if(!handle.get_rep() || fn != old_filename){
-	old_filename=fn;
+    // If we haven't read yet, or if it's a new filename, then read
+    if(!handle_.get_rep() || fn != old_filename_){
+	old_filename_=fn;
 	Piostream* stream=auto_istream(fn);
 	if(!stream){
-	    error(clString("Error reading file: ")+filename.get());
-	    return; // Can't open file...
+	    error(clString("Error reading file: ")+filename_.get());
+	    return;
 	}
-	// Read the file...
-//	stream->watch_progress(watcher, (void*)this);
-	Pio(*stream, handle);
-	if(!handle.get_rep() || stream->error()){
-	    error("Error reading Matrix from file");
+
+	// Read the file
+	Pio(*stream, handle_);
+	if(!handle_.get_rep() || stream->error()){
+	    error(clString("Error reading Matrix from file: ")+
+		  filename_.get());
 	    delete stream;
 	    return;
 	}
 	delete stream;
     }
-    outport->send(handle);
+
+    // Send the data downstream
+    outport_->send(handle_);
 }
 
 } // End namespace SCIRun
-

@@ -451,6 +451,7 @@ void DenseMatrix::io(Piostream& stream)
 		Pio(stream, raw_filename);
 		FILE *f=fopen(raw_filename(), "r");
 		fread(data[0], sizeof(double), nr*nc, f);
+		fclose(f);
 	    }
 	} else {
 	    separate_raw=0;
@@ -475,6 +476,7 @@ void DenseMatrix::io(Piostream& stream)
 	    Pio(stream, filename);
 	    FILE *f=fopen(filename(), "w");
 	    fwrite(data[0], sizeof(double), nr*nc, f);
+	    fclose(f);
 	}
     }
 

@@ -1,93 +1,75 @@
 /*
- *  FieldWriter.cc: Write Field datatype persistent objects
+ *  FieldWriter.cc: Save persistent representation of a field to a file
  *
  *  Written by:
- *   Alexei Samsonov
+ *   Steven G. Parker
  *   Department of Computer Science
  *   University of Utah
- *   December 2000
+ *   July 1994
  *
- *  Copyright (C) 2000 SCI Group
+ *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Network/Module.h>
-#include <Core/Datatypes/Field.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Core/Persistent/Pstreams.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Malloc/Allocator.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/FieldPort.h>
 
 namespace SCIRun {
 
 class FieldWriter : public Module {
-  
-  // GROUP: private data
-  //////////
-  // 
-  FieldIPort*     d_iport;
-  GuiString       d_filename;
-  GuiString       d_filetype;
-
+  FieldIPort* inport_;
+  GuiString filename_;
+  GuiString filetype_;
 public:
-  // GROUP: Constructor/Destructor
-  //////////
-  //
   FieldWriter(const clString& id);
   virtual ~FieldWriter();
-
-  // GROUP: public member functions
-  //////////
-  //
   virtual void execute();
 };
 
-//////////
-// Module maker function
 extern "C" Module* make_FieldWriter(const clString& id) {
   return new FieldWriter(id);
 }
 
-//////////
-// Constructor/Desctructor
-FieldWriter::FieldWriter(const clString& id): 
-  Module("FieldWriter", id, Source), 
-  d_filename("d_filename", id, this),
-  d_filetype("d_filetype", id, this)
+FieldWriter::FieldWriter(const clString& id)
+  : Module("FieldWriter", id, Source), filename_("filename", id, this),
+    filetype_("filetype", id, this)
 {
-  d_iport=scinew FieldIPort(this, "Input Data", FieldIPort::Atomic);
-  add_iport(d_iport);
+  // Create the output port
+  inport_=scinew FieldIPort(this, "Persistent Data", FieldIPort::Atomic);
+  add_iport(inport_);
 }
 
 FieldWriter::~FieldWriter()
 {
 }
 
-//////////
-//
 void FieldWriter::execute()
 {
+  // Read data from the input port
   FieldHandle handle;
-  
-  if(!d_iport->get(handle))
+  if(!inport_->get(handle))
     return;
-  
-  clString fn(d_filename.get());
-  
-  if(fn == "")
+
+  // If no name is provided, return
+  clString fn(filename_.get());
+  if(fn == "") {
+    error("Warning: no filename in FieldWriter");
     return;
-  
+  }
+   
+  // Open up the output stream
   Piostream* stream;
-  clString ft(d_filetype.get());
-  
+  clString ft(filetype_.get());
   if(ft=="Binary"){
     stream=scinew BinaryPiostream(fn, Piostream::Write);
-  } else {
+  } else { // "ASCII"
     stream=scinew TextPiostream(fn, Piostream::Write);
   }
-  
+
+  // Write the file
   Pio(*stream, handle);
   delete stream;
 }
 
 } // End namespace SCIRun
-
