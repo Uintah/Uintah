@@ -76,6 +76,7 @@ TextureVolVis::TextureVolVis(GuiContext* ctx)
     render_style(ctx->subVar("render_style")),
     alpha_scale(ctx->subVar("alpha_scale")),
     interp_mode(ctx->subVar("interp_mode")),
+    geom_lock_("TextureVolVis geometry lock"),
     volren(0)
 {
 }
@@ -145,12 +146,15 @@ void TextureVolVis::execute(void)
 //       interp_mode.set(0);
 //     }
     //    ogeom->delAll();
-    ogeom->addObj( volren, "VolumeRenderer TransParent");
+    ogeom->addObj( volren, "VolumeRenderer TransParent", &geom_lock_);
   } else {
-    volren->SetVol( tex );
+    geom_lock_.writeLock();
+    volren->SetVol( tex.get_rep() );
     volren->SetColorMap( cmap );
+    geom_lock_.writeUnlock();
   }
  
+  geom_lock_.writeLock();
   //AuditAllocator(default_allocator);
   volren->SetInterp( bool(interp_mode.get()));
   //AuditAllocator(default_allocator);
@@ -192,6 +196,7 @@ void TextureVolVis::execute(void)
   //AuditAllocator(default_allocator);
   volren->SetNSlices( num_slices.get() );
   volren->SetSliceAlpha( alpha_scale.get() );
+  geom_lock_.writeUnlock();
   //AuditAllocator(default_allocator);
   ogeom->flushViews();				  
   //AuditAllocator(default_allocator);
