@@ -2,6 +2,7 @@
 #define __CONTACT_H__
 
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
@@ -11,7 +12,6 @@
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 
 #include <math.h>
 
@@ -83,29 +83,15 @@ WARNING
 					   const PatchSet* patches,
 					   const MaterialSet* matls) const = 0;
 
-
-         // VarLabels common to all contact models go here
-	 /*
-         const VarLabel* deltLabel;
-         const VarLabel* gMassLabel;
-         const VarLabel* gAccelerationLabel;
-         const VarLabel* gMomExedAccelerationLabel;
-         const VarLabel* gVelocityLabel;
-         const VarLabel* gMomExedVelocityLabel;
-         const VarLabel* gVelocityStarLabel;
-         const VarLabel* gMomExedVelocityStarLabel;
-	 */
-
       protected:
 	 MPMLabel* lb;
       };
       
-      inline bool compare(double num1, double num2)
-	 {
+      inline bool compare(double num1, double num2) {
 	    double EPSILON=1.e-16;
 	    
 	    return (fabs(num1-num2) <= EPSILON);
-	 }
+      }
 
 } // End namespace Uintah
 
