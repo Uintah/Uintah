@@ -76,6 +76,19 @@ public:
   // Changes size, makes exact if currently smaller...
   void setsize(int newsize);
 
+  //////////
+  // This will allocate an array which is equal to the number of
+  // elements in the array and copy the values over.
+  //
+  // _size is not changed.
+  //
+  // newsize is an optional parameter which indicates the desired
+  // size.  If newsize is greater than _size the new array will have
+  // newsize elements in it (nalloc = newsize).  If newsize is less
+  // than _size or less than or equal to 0, then _size elemets will be
+  // allocated (nalloc = _size).
+  void trim(int newsize=0);
+
   // Initialize all elements of the array
   void initialize(const T& val);
 
