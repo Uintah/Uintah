@@ -28,16 +28,12 @@ itcl_class SCIRun_Fields_ChangeFieldBounds {
 	set $this-firstwidth 12
 
 	# these won't be saved 
-	global $this-inputdatamin
-	global $this-inputdatamax
         global $this-inputcenterx
         global $this-inputcentery
         global $this-inputcenterz
         global $this-inputsizex
         global $this-inputsizey
         global $this-inputsizez
-	set $this-inputdatamin "---"
-	set $this-inputdatamax "---"
         set $this-inputcenterx "---"
         set $this-inputcentery "---"
         set $this-inputcenterz "---"
@@ -46,9 +42,6 @@ itcl_class SCIRun_Fields_ChangeFieldBounds {
         set $this-inputsizez "---"
 
 	# these will be saved
-	global $this-outputdatamin
-	global $this-outputdatamax
-	global $this-useoutputminmax
         global $this-outputcenterx
         global $this-outputcentery
         global $this-outputcenterz
@@ -57,9 +50,6 @@ itcl_class SCIRun_Fields_ChangeFieldBounds {
         global $this-outputsizey
         global $this-outputsizez
 	global $this-useoutputsize
-	set $this-outputdatamin 0
-	set $this-outputdatamax 0
-	set $this-useoutputminmax 0
         set $this-outputcenterx 0
         set $this-outputcentery 0
         set $this-outputcenterz 0
@@ -88,9 +78,7 @@ itcl_class SCIRun_Fields_ChangeFieldBounds {
 	    "[set $this-inputcenterx], [set $this-inputcentery], [set $this-inputcenterz]"
         labelpairmulti $att.l2 "Size (x,y,z)" "[set $this-inputsizex], \
                                [set $this-inputsizey], [set $this-inputsizez]"
-	labelpairmulti $att.l3 "Data min,max" "[set $this-inputdatamin], \
-		                          [set $this-inputdatamax]"
-	pack $att.l1 $att.l2 $att.l3 -side top 
+	pack $att.l1 $att.l2 -side top 
 
 	frame $w.copy
 	pack $w.copy -side top -padx 5 -pady 5
@@ -110,11 +98,8 @@ itcl_class SCIRun_Fields_ChangeFieldBounds {
 	    $this-outputsizex $this-outputsizey \
 	    $this-outputsizez "$this-c needexecute" \
 	    $this-useoutputsize
-	labelentry2 $edit.l3 "Data min,max" \
-	    $this-outputdatamin $this-outputdatamax \
-	    $this-useoutputminmax
 
-	pack $edit.l1 $edit.l2 $edit.l3 -side top 
+	pack $edit.l1 $edit.l2 -side top 
 
 	frame $w.exec
 	pack $w.exec -side bottom -padx 5 -pady 5
@@ -132,8 +117,6 @@ itcl_class SCIRun_Fields_ChangeFieldBounds {
 	    "[set $this-inputcenterx], [set $this-inputcentery], [set $this-inputcenterz]"
 	$att.l2.l2 configure -text \
 	    "[set $this-inputsizex], [set $this-inputsizey], [set $this-inputsizez]"
-	$att.l3.l2 configure -text \
-	    "[set $this-inputdatamin], [set $this-inputdatamax]"
     }
 
     method labelpairmulti { win text1 text2 } {
@@ -194,8 +177,6 @@ itcl_class SCIRun_Fields_ChangeFieldBounds {
 	}
 	set att [$w.att childsite]
 	set edit [$w.edit childsite]
-	set $this-outputdatamin [set $this-inputdatamin]
-	set $this-outputdatamax [set $this-inputdatamax]
 	set $this-outputcenterx [set $this-inputcenterx]
 	set $this-outputcentery [set $this-inputcentery]
 	set $this-outputcenterz [set $this-inputcenterz]
