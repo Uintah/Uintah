@@ -237,8 +237,8 @@ void AMRSimulationController::run()
        cout << "---------- NEW GRID ----------" << endl << *(currentGrid.get_rep());
        if (currentGrid == oldGrid)
          break;
-       scheduler->advanceDataWarehouse(currentGrid);
        scheduler->initialize(1, 1);
+       scheduler->advanceDataWarehouse(currentGrid);
 
        // for dynamic lb's, set up patch config after changing grid
        lb->possiblyDynamicallyReallocate(currentGrid, false); 
@@ -299,16 +299,24 @@ void AMRSimulationController::run()
      if (regridder->needsToReGrid() && !first) {
        cout << "REGRIDDING!!!!!\n";
        currentGrid = regridder->regrid(oldGrid.get_rep(), scheduler, ups);
-       scheduler->advanceDataWarehouse(currentGrid);
-
-       OnDemandDataWarehouse* oldDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(scheduler->get_dw(0));
-       OnDemandDataWarehouse* newDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(scheduler->get_dw(1));
-
        cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
        cout << "---------- NEW GRID ----------" << endl << *(currentGrid.get_rep());
 
        cout << "---------- ABOUT TO RESCHEDULE ----------" << endl;
-       scheduler->initialize();
+
+       // Compute number of dataWarehouses
+       //int numDWs=1;
+       //for(int i=1;i<oldGrid->numLevels();i++)
+       //numDWs *= oldGrid->getLevel(i)->timeRefinementRatio();
+
+       scheduler->advanceDataWarehouse(currentGrid);
+       scheduler->initialize(1, 1);
+       scheduler->clearMappings();
+       scheduler->mapDataWarehouse(Task::OldDW, 0);
+       scheduler->mapDataWarehouse(Task::NewDW, 1);
+
+       OnDemandDataWarehouse* oldDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(scheduler->get_dw(0));
+       OnDemandDataWarehouse* newDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(scheduler->getLastDW());
 
        for ( int levelIndex = 0; levelIndex < currentGrid->numLevels(); levelIndex++ ) {
 	 Task* task = new Task("SchedulerCommon::copyDataToNewGrid",
