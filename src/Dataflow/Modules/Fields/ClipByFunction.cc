@@ -196,6 +196,12 @@ ClipByFunction::execute()
     algo->u4 = gui_uservar4_.get();
     algo->u5 = gui_uservar5_.get();
 
+    if (!(fHandle->basis_order() == 0 && gMode == 0 ||
+          fHandle->basis_order() == 1 && gMode != 0))
+    {
+      warning("Basis doesn't match clip location, value will always be zero.");
+    }
+
     fHandle_ = algo->execute(this, fHandle, gMode, mHandle_);
   }
 
