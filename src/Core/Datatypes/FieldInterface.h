@@ -23,7 +23,7 @@ namespace SCIRun {
 
 class InterpolateToScalar {
 public:
-  virtual bool interpolate(const Point& p, double& value) = 0;
+  virtual bool interpolate(const Point& p, double& value) const = 0;
   
   // TODO: Memory management of queried interfaces
 };

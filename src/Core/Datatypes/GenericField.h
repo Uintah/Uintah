@@ -38,7 +38,7 @@ public:
   { return MeshBaseHandle(mesh_.get_rep()); }
 
   //! Required interfaces from field base.
-  //virtual InterpolateToScalar* query_interpolate_to_scalar() const {};
+  virtual InterpolateToScalar* query_interpolate_to_scalar() const;
 
   //! Required interface to support Field Concept.
   bool value(value_type &val, typename mesh_type::node_index i)
@@ -50,6 +50,16 @@ public:
   bool value(value_type &val, typename mesh_type::cell_index i)
   { val = fdata_[i]; return true; }
 
+  //! No safety check for the following calls, be sure you know where data is.
+  value_type value(typename mesh_type::node_index i)
+  { return fdata_[i]; }
+  value_type value(typename mesh_type::edge_index i)
+  { return fdata_[i]; }
+  value_type value(typename mesh_type::face_index i)
+  { return fdata_[i]; }
+  value_type value(typename mesh_type::cell_index i)
+  { return fdata_[i]; }
+
   mesh_handle_type get_typed_mesh() { return mesh_; };
 
   //! Persistent I/O.
@@ -59,12 +69,39 @@ public:
   virtual const string get_type_name(int n) const { return type_name(n); }
 
 private:
+  //! generic interpolate object.
+  struct GInterp : public InterpolateToScalar {
+    
+    bool interpolate(const Point& p, double& value) const;
+  };
+
+
   //! A Tetrahedral Mesh.
   mesh_handle_type             mesh_;
   //! Data container.
   fdata_type                   fdata_;
-};
+}; 
 
+// Virtual interface.
+// internal interp object 
+template <class Mesh, class FData>
+bool 
+GenericField<Mesh, FData>::GInterp::interpolate(const Point& p, 
+						double& value) const
+{
+  cerr << "Error: NO interp defined!" << endl;
+  assert(0);
+}
+
+template <class Mesh, class FData>
+InterpolateToScalar* 
+GenericField<Mesh, FData>::query_interpolate_to_scalar() const
+{
+  return new GInterp();
+}
+   
+
+// PIO
 const double GENERICFIELD_VERSION = 1.0;
 
 template <class Mesh, class FData>
