@@ -193,7 +193,7 @@ void initPackage(const clString& tcl) {
   RM("Visualization", "Iso Surface DW",          make_IsoSurfaceDW,         tcl+"/IsoSurfaceDW.tcl");
   RM("Visualization", "Iso Surface MSRG",        make_IsoSurfaceMSRG,       tcl+"/IsoSurfaceMSRG.tcl");
   RM("Visualization", "Rescale Color Map",       make_RescaleColorMap,      tcl+"/RescaleColorMap.tcl");
-  RM("Visualization", "Simp Vol vis",            make_SimpVolVis,           tcl+"/SimpVolVis.tcl");
+  RM("Visualization", "Simp Vol Vis",            make_SimpVolVis,           tcl+"/SimpVolVis.tcl");
   RM("Visualization", "Streamline",              make_Streamline,           tcl+"/Streamline.tcl");
   RM("Visualization", "Vector Seg",              make_VectorSeg,            tcl+"/VectorSeg.tcl");
   RM("Visualization", "Vol Rend Tex Slices",     make_VolRendTexSlices,     tcl+"/VolRendTexSlices.tcl");
