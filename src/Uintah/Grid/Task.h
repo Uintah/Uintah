@@ -248,12 +248,13 @@ WARNING
       };
 
       Task(const string&         taskName)
-	 : d_taskName(taskName),
+	:  d_resourceIndex(-1),
+	   d_taskName(taskName),
 	   d_patch(0),
 	   d_action(0),
 	   d_fromDW(0),
-	   d_toDW(0),
-	   d_resourceIndex(-1)
+	   d_toDW(0)
+	
       {
 	 d_completed = false;
 	 d_usesThreads = false;
@@ -272,12 +273,13 @@ WARNING
 			  const Patch*,
 			  DataWarehouseP&,
 			  DataWarehouseP&) )
-	 : d_taskName( taskName ), 
+	: d_resourceIndex( -1 ),
+	  d_taskName( taskName ), 
 	   d_patch( patch ),
 	   d_action( scinew Action<T>(ptr, pmf) ),
 	   d_fromDW( fromDW ),
-	   d_toDW( toDW ),
-	   d_resourceIndex( -1 )
+	   d_toDW( toDW )
+
       {
 	 d_completed = false;
 	 d_usesThreads = false;
@@ -561,6 +563,10 @@ ostream & operator << ( ostream & out, const Uintah::Task::Dependency & dep );
 
 //
 // $Log$
+// Revision 1.25  2000/09/28 23:22:01  jas
+// Added (int) to remove g++ warnings for STL size().  Reordered initialization
+// to coincide with *.h declarations.
+//
 // Revision 1.24  2000/09/26 21:38:36  dav
 // minor updates
 //

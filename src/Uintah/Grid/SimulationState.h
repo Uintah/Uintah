@@ -9,9 +9,11 @@
 #include <SCICore/Geometry/Vector.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/ProblemSpec.h>
+
 using std::cerr;
 using std::endl;
 using SCICore::Math::Max;
+using SCICore::Geometry::Vector;
 using Uintah::Material;
 using SCICore::Geometry::Vector;
 
@@ -70,9 +72,12 @@ namespace Uintah {
       Material* getMaterial(int idx) const {
 	 return matls[idx];
       }
+
+
       Vector getGravity() const {
 	return d_gravity;
       }
+
    private:
       SimulationState(const SimulationState&);
       SimulationState& operator=(const SimulationState&);
@@ -80,12 +85,17 @@ namespace Uintah {
       const VarLabel* delt_label;
       std::vector<Material*> matls;
       Vector d_gravity;
+
    };
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.12  2000/09/28 23:22:01  jas
+// Added (int) to remove g++ warnings for STL size().  Reordered initialization
+// to coincide with *.h declarations.
+//
 // Revision 1.11  2000/08/09 03:18:05  jas
 // Changed new to scinew and added deletes to some of the destructors.
 //
