@@ -26,7 +26,7 @@ namespace rtrt {
     }
 
     T textArray[textureHeight][textureWidth][4];
-    GLuint TextName;
+/*      GLuint TextName; */
     float current_color[3];
     int colormap_x_offset;
     int colormap_y_offset;
@@ -181,47 +181,51 @@ namespace rtrt {
 	}
       }
 			
-      glPixelStoref( GL_UNPACK_ALIGNMENT, 1 );
-      glGenTextures( 1, &TextName );
-      glBindTexture( GL_TEXTURE_2D, TextName );
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-      glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, 
-		    textureHeight, 0, GL_RGBA, GL_FLOAT, textArray );
+/*        glPixelStoref( GL_UNPACK_ALIGNMENT, 1 ); */
+/*        glGenTextures( 1, &TextName ); */
+/*        glBindTexture( GL_TEXTURE_2D, TextName ); */
+/*        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT ); */
+/*        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT ); */
+/*        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST ); */
+/*        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST ); */
+/*        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth,  */
+/*  		    textureHeight, 0, GL_RGBA, GL_FLOAT, textArray ); */
     }
 
 
 
     void
       makeEllipseTextureImage( void ) {
-      //      float intensity;
-      //      float halfHeight = (float)textureHeight*0.5f;
-      //      float halfWidth = (float)textureWidth*0.5f;
-      for( int i = 0; i < textureHeight; i++ )
+      float halfHeight = (float)textureHeight*0.5f;
+      float halfWidth = (float)textureWidth*0.5f;
+      float halfHeightSqrd = halfHeight*halfHeight;
+      float halfWidthSqrd = halfWidth*halfWidth;
+      for( int i = 0; i < textureHeight; i++ ) {
+	float I_const = 1.0f - (i-halfHeight)*(i-halfHeight)/halfHeightSqrd;
 	for( int j = 0; j < textureWidth; j++ ) {
-	  //  intensity = 1.0f - 5.0f*(((j-halfHeight)*(j-halfHeight)+
-	  //			(i-halfWidth)*(i-halfWidth))/
-	  //		   (halfHeight*halfHeight+
-	  //		    halfWidth*halfWidth));
-	  //if( intensity < 0 )
-	  // intensity = 0;
+	  float intensity = I_const-(j-halfWidth)*(j-halfWidth)/halfWidthSqrd;
+	  /*  	  intensity = 1.0f - (((j-halfHeight)*(j-halfHeight)+ */
+	  /*  			       (i-halfWidth)*(i-halfWidth))/ */
+	  /*  			      (halfHeight*halfHeight+ */
+	  /*  			       halfWidth*halfWidth)); */
+	  if( intensity < 0 )
+	    intensity = 0;
 	  textArray[i][j][0] = current_color[0];
 	  textArray[i][j][1] = current_color[1];
 	  textArray[i][j][2] = current_color[2];
-	  textArray[i][j][3] = 0.0f;
+	  textArray[i][j][3] = intensity;
 	}
+      }
 
-      glPixelStoref( GL_UNPACK_ALIGNMENT, 1 );
-      glGenTextures( 1, & TextName );
-      glBindTexture( GL_TEXTURE_2D, TextName );
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-      glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, 
-		    textureHeight, 0, GL_RGBA, GL_FLOAT, textArray );
+/*        glPixelStoref( GL_UNPACK_ALIGNMENT, 1 ); */
+/*        glGenTextures( 1, & TextName ); */
+/*        glBindTexture( GL_TEXTURE_2D, TextName ); */
+/*        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT ); */
+/*        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT ); */
+/*        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST ); */
+/*        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST ); */
+/*        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth,  */
+/*  		    textureHeight, 0, GL_RGBA, GL_FLOAT, textArray ); */
     }
 
 
@@ -269,15 +273,15 @@ namespace rtrt {
 	  }
 	}			
 			
-      glPixelStoref( GL_UNPACK_ALIGNMENT, 1 );
-      glGenTextures( 1, & TextName );
-      glBindTexture( GL_TEXTURE_2D, TextName );
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-      glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, 
-		    textureHeight, 0, GL_RGBA, GL_FLOAT, textArray );
+/*        glPixelStoref( GL_UNPACK_ALIGNMENT, 1 ); */
+/*        glGenTextures( 1, & TextName ); */
+/*        glBindTexture( GL_TEXTURE_2D, TextName ); */
+/*        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT ); */
+/*        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT ); */
+/*        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST ); */
+/*        glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST ); */
+/*        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth,  */
+/*  		    textureHeight, 0, GL_RGBA, GL_FLOAT, textArray ); */
     }
   }; // class Texture
 
