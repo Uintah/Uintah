@@ -24,6 +24,7 @@
 #include <Packages/rtrt/Core/Glyph.h>
 #include <Packages/rtrt/Core/Instance.h>
 #include <Packages/rtrt/Core/InstanceWrapperObject.h>
+#include <Packages/rtrt/Core/Array1.h>
 #include <Core/Geometry/Transform.h>
 #include <fcntl.h>
 #include <fstream>
@@ -45,6 +46,8 @@
 
 using namespace rtrt;
 using namespace std;
+
+#define USE_GLYPH_GROUP
 
 int
 dtiParseNrrd(void *ptr, char *str, char err[AIR_STRLEN_HUGE]) {
@@ -138,6 +141,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   char *me, *err;
   float glyphScale, anisoThresh;
   Nrrd *nin;
+  int gridcellsize;
 
   hestOptAdd(&opt, NULL, "input", airTypeOther, 1, 1, &nin, NULL,
 	     "input tensor volume, in nrrd format, with 7 floats per voxel.",
@@ -159,11 +163,13 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	     "over-all glyph scaling");
   hestOptAdd(&opt, NULL, "thresh", airTypeFloat, 1, 1, &anisoThresh, NULL,
 	     "anisotropy threshold for testing");
+  hestOptAdd(&opt, NULL, "gridcellsize", airTypeInt, 1, 1, &gridcellsize, "3",
+	     "size of the grid cells to put around the GlyphGroup");
 	     
   mop = airMopInit();
   airMopAdd(mop, opt, (airMopper)hestOptFree, airMopAlways);
   me = argv[0];
-  if (argc != 5) {
+  if (argc < 5) {
     hestInfo(stderr, me, dtiINFO, NULL);
     hestUsage(stderr, opt, me, NULL);
     hestGlossary(stderr, opt, NULL);
@@ -212,6 +218,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     c[TEN_ANISO_MAX+1];  // all possible anisotropies
   tdata = (float*)nin->data;
   numGlyphs = 0;
+#ifdef USE_GLYPH_GROUP
+  Array1<Glyph*> glyphs;
+#endif
   for (zi = 0; zi < sz; zi++) {
     z = zs * zi;
     for (yi = 0; yi < sy; yi++) {
@@ -257,8 +266,10 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	//Sphere *obj = new Sphere(matl, Point(x,y,z), glyphScale);
 	//	all->add(obj);
 
-#if 1
-	//BBox b (Point(x-10,y-10,z-10), Point(x+10,y+10,z+10));
+#ifdef USE_GLYPH_GROUP
+	glyphs.add(new Glyph(new Instance(new InstanceWrapperObject(obj),tr),
+		 c[anisoType]));
+#else
 	all->add(new Glyph(new Instance(new InstanceWrapperObject(obj),tr),
 		 c[anisoType]));
 #endif
@@ -266,6 +277,10 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     }
   }
   printf("%s: created %d glyphs!\n", me, numGlyphs);
+#ifdef USE_GLYPH_GROUP
+  all->add(new GlyphGroup(glyphs, 3));
+  printf("%s: created GlyphGroup\n", me);
+#endif
 
   //////////////////////////////////////////////////////
   // all the scene stuff
