@@ -37,7 +37,7 @@
   
 
 class FileReader;
-class myUIPort : public virtual gov::cca::ports::UIPort {
+class myUIPort : public virtual sci::cca::ports::UIPort {
 public:
    virtual ~myUIPort(){}
    virtual int ui();
@@ -45,37 +45,37 @@ public:
    FileReader *com;
 };
 
-class myPDEDescriptionPort : public virtual gov::cca::ports::PDEDescriptionPort {
+class myPDEDescriptionPort : public virtual sci::cca::ports::PDEDescriptionPort {
 public:
    virtual ~myPDEDescriptionPort(){}
-   virtual SIDL::array1<double> getNodes();
-   virtual SIDL::array1<int> getBoundaries();
-   virtual SIDL::array1<int> getDirichletNodes();
-   virtual SIDL::array1<double> getDirichletValues();
+   virtual SSIDL::array1<double> getNodes();
+   virtual SSIDL::array1<int> getBoundaries();
+   virtual SSIDL::array1<int> getDirichletNodes();
+   virtual SSIDL::array1<double> getDirichletValues();
    void setParent(FileReader *com){this->com=com;}
    FileReader *com;
 };
 
 
-class FileReader : public gov::cca::Component{
+class FileReader : public sci::cca::Component{
                 
   public:
     FileReader();
     virtual ~FileReader();
 
-    virtual void setServices(const gov::cca::Services::pointer& svc);
+    virtual void setServices(const sci::cca::Services::pointer& svc);
     
-    SIDL::array1<double> nodes;
-    SIDL::array1<int> boundaries;
-    SIDL::array1<int> dirichletNodes;
-    SIDL::array1<double> dirichletValues;
+    SSIDL::array1<double> nodes;
+    SSIDL::array1<int> boundaries;
+    SSIDL::array1<int> dirichletNodes;
+    SSIDL::array1<double> dirichletValues;
   private:
 
     FileReader(const FileReader&);
     FileReader& operator=(const FileReader&);
     myUIPort uiPort;
     myPDEDescriptionPort pdePort;
-    gov::cca::Services::pointer services;
+    sci::cca::Services::pointer services;
   };
 //}
 
