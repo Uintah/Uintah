@@ -34,7 +34,6 @@ protected:
   int map_idx(int, int, int, int);
   int depth;
   float radius;
-  float iradius;
   RegularColorMap* cmap;
   string *var_names;
   double specpow;
