@@ -2173,10 +2173,10 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	string templeader = e.out.leader;
 	for(int i=arr_t->dim-1; i >= 0; i--) {
 	  e.out << leader2 << "  for(int adj" << i << "=_this_rep->getFirst(" << i+1  
-		<< "), str" << i << "=_this_rep->sidl_getStride(" << i+1 << "), " 
+		<< "), str" << i << "=_this_rep->getStride(" << i+1 << "), " 
 		<< "i" << i << "=" << "_meta_rep[0][" << i << "]; " << "i" << i << "<=" 
-		<< "_meta_rep[1][" << i << "]; " << "i" << i << "+=" << "_meta_rep[2][" 
-		<< i << "])\n"; 
+		<< "_meta_rep[1][" << i << "]; " << "i" << i << "+=" << "(_meta_rep[2]["
+	        << i << "] * _this_rep->getLocalStride(" << i+1 << ")) )\n";
 	  e.out.push_leader();
 	}
 	e.out.push_leader(); 
@@ -2233,10 +2233,10 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	string templeader = e.out.leader;
 	for(int i=arr_t->dim-1; i >= 0; i--) {
 	  e.out << leader2 << "  for(int adj" << i << "=_this_rep->getFirst(" << i+1  
-		<< "), str" << i << "=_this_rep->sidl_getStride(" << i+1 << "), " 
+		<< "), str" << i << "=_this_rep->getStride(" << i+1 << "), " 
 		<< "i" << i << "=" << "_meta_arr[0][" << i << "]; " << "i" << i << "<=" 
-		<< "_meta_arr[1][" << i << "]; " << "i" << i << "+=" << "_meta_arr[2][" 
-		<< i << "])\n"; 
+		<< "_meta_arr[1][" << i << "]; " << "i" << i << "+=" << "(_meta_arr[2]["
+	        << i << "] * _this_rep->getLocalStride(" << i+1 << ")) )\n";
 	  e.out.push_leader();
 	}
 	e.out.push_leader(); 
@@ -2480,10 +2480,10 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	string templeader = e.out.leader;
 	for(int i=arr_t->dim-1; i >= 0; i--) {
 	  e.out << leader2 << "  for(int adj" << i << "=this_rep->getFirst(" << i+1  
-		<< "), str" << i << "=this_rep->sidl_getStride(" << i+1 << "), " 
+		<< "), str" << i << "=this_rep->getStride(" << i+1 << "), " 
 		<< "i" << i << "=" << "_meta_arr[0][" << i << "]; " << "i" << i << "<=" 
-		<< "_meta_arr[1][" << i << "]; " << "i" << i << "+=" << "_meta_arr[2][" 
-		<< i << "]) \n"; 
+		<< "_meta_arr[1][" << i << "]; " << "i" << i << "+=" << "(_meta_arr[2][" 
+		<< i << "] * this_rep->getLocalStride(" << i+1 << ")) )\n"; 
 	  e.out.push_leader();
 	}
 	e.out.push_leader(); 
@@ -2528,10 +2528,10 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	string templeader = e.out.leader;
 	for(int i=arr_t->dim-1; i >= 0; i--) {
 	  e.out << leader2 << "  for(int adj" << i << "=_this_rep->getFirst(" << i+1  
-		<< "), str" << i << "=_this_rep->sidl_getStride(" << i+1 << "), " 
+		<< "), str" << i << "=_this_rep->getStride(" << i+1 << "), " 
 		<< "i" << i << "=" << "_meta_rep[0][" << i << "]; " << "i" << i << "<=" 
-		<< "_meta_rep[1][" << i << "]; " << "i" << i << "+=" << "_meta_rep[2][" 
-		<< i << "])\n"; 
+		<< "_meta_rep[1][" << i << "]; " << "i" << i << "+=" << "(_meta_rep[2]["
+	        << i << "] * _this_rep->getLocalStride(" << i+1 << ")) )\n";
 	  e.out.push_leader();
 	}
 	e.out.push_leader(); 
