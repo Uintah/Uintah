@@ -51,7 +51,7 @@ itcl_class BioPSE_Visualization_ShowDipoles {
 	set $this-showLastVecGui_ 0
 	set $this-showLinesGui_ 1
 	set $this-num-dipoles 0
-	set $this-force-field-reset 0
+	set $this-force-field-reset 1
     }
     method make_entry {w text v c} {
         frame $w
