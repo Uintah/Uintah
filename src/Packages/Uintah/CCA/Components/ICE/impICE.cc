@@ -1043,9 +1043,9 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
       SFCYVariable<double> vvel_FCME_new;
       SFCZVariable<double> wvel_FCME_new;
       
-      subNewDW->get(uvel_FCME, lb->uvel_FCLabel, indx, patch,gn,0);
-      subNewDW->get(vvel_FCME, lb->vvel_FCLabel, indx, patch,gn,0);
-      subNewDW->get(wvel_FCME, lb->wvel_FCLabel, indx, patch,gn,0);
+      subNewDW->get(uvel_FCME, lb->uvel_FCMELabel, indx, patch,gn,0);
+      subNewDW->get(vvel_FCME, lb->vvel_FCMELabel, indx, patch,gn,0);
+      subNewDW->get(wvel_FCME, lb->wvel_FCMELabel, indx, patch,gn,0);
       
       ParentNewDW->getModifiable(uvel_FCME_new, lb->uvel_FCMELabel,indx,patch);
       ParentNewDW->getModifiable(vvel_FCME_new, lb->vvel_FCMELabel,indx,patch);
