@@ -110,6 +110,22 @@
 	<datatype>SCIRun::Matrix</datatype>
 	<componentname>MatrixReader</componentname>
       </port>
+      <port>
+	<name>Boundary</name>
+	<description>
+	  <p>Takes handle to the boundary field</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+	<componentname>FieldReader</componentname>
+      </port>
+      <port>
+	<name>Boundary Transfer Matrix</name>
+	<description>
+	  <p>Takes a handle to a SparseRowMatrix relating boundary nodes to mesh nodes</p>
+	</description>
+	<datatype>SCIRun::Matrix</datatype>
+	<componentname>MatrixReader</componentname>
+      </port>
     </inputs>
 
     <outputs>
@@ -125,6 +141,10 @@
       </port>
       <port>
         <name>Output Weights</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>Mesh to Electrode Map</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>
