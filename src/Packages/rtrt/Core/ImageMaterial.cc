@@ -134,6 +134,11 @@ void ImageMaterial::read_image(char* filename)
   unsigned char color[3];
   string token;
 
+  if (!indata.is_open()) {
+    cerr << "ImageMaterial: WARNING: I/O fault: no such file: " << filename << endl;
+  }
+    
+
   indata >> token; // P6
   eat_comments_and_whitespace(indata);
   indata >> nu >> nv;
