@@ -556,9 +556,9 @@ main(int argc, char* argv[])
   }
   
   if( fullscreen ) {
-    double fov = scene->get_camera(0)->get_fov();
-    scene->get_camera(0)->setVerticalFov( 0.5625 * fov );
-    scene->get_camera(1)->setVerticalFov( 0.5625 * fov );
+    // 0.5625 is the 9 to 5 (ish?) aspect ratio.
+    scene->get_camera(0)->setWindowAspectRatio( 0.5625 );
+    scene->get_camera(1)->setWindowAspectRatio( 0.5625 );
   }
 
   // Start up display thread...
