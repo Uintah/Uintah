@@ -72,12 +72,12 @@ itcl_class MIT_Bayer_Metropolis {
 
 	button $w.f.exec -text "Execute" -command "$this-c needexecute"
 
-	frame $w.f.graph
+	iwidgets::Labeledframe $w.f.graph -labeltext "Progress"
 
 	pack $w.f.burning $w.f.monitor $w.f.thin $w.f.cvode $w.f.exec -anchor w
 	pack $w.f.graph -expand yes -fill both
 
-	$this-c graph-window $w.f.graph
+	$this-c graph-window [$w.f.graph childsite]
     }
 
     
