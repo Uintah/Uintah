@@ -29,7 +29,7 @@ SUBDIRS := \
 	$(SRCDIR)/spectest      \
         $(SRCDIR)/pp            
 
-ifeq ($(HAVE_MPI),1)
+ifeq ($(HAVE_MPI),yes)
 SUBDIRS += \
 	$(SRCDIR)/pingpongArr   \
 	$(SRCDIR)/mxn  	        \
