@@ -27,6 +27,8 @@
  */
 
 #include <SCIRun/Internal/BuilderService.h>
+#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/CCA/Component/PIDL/PIDL.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/CCA/CCAException.h>
 #include <SCIRun/PortInstance.h>
@@ -40,6 +42,7 @@ BuilderService::BuilderService(SCIRunFramework* framework,
 			       const std::string& name)
   : InternalComponentInstance(framework, name, "internal:BuilderService")
 {
+    this->framework=framework;
 }
 
 BuilderService::~BuilderService()
@@ -133,16 +136,14 @@ void BuilderService::destroyInstance(const gov::cca::ComponentID::pointer& toDie
 
 CIA::array1<std::string> BuilderService::getProvidedPortNames(const gov::cca::ComponentID::pointer& cid)
 {
-  cerr << "BuilderService::getProvidedPortNames not finished\n";
-  CIA::array1<std::string> junk(0);
-  return junk;
+   ComponentInstance *ci=framework->getComponent(cid->getInstanceName());
+   return ci->getProvidesPortNames();
 }
 
 CIA::array1<std::string> BuilderService::getUsedPortNames(const gov::cca::ComponentID::pointer& cid)
 {
-  cerr << "BuilderService::getUsedPortNames not finished\n";
-  CIA::array1<std::string> junk(0);
-  return junk;
+   ComponentInstance *ci=framework->getComponent(cid->getInstanceName());
+   return ci->getUsesPortNames();
 }
 
 gov::cca::TypeMap::pointer BuilderService::getPortProperties(const gov::cca::ComponentID::pointer& cid,
@@ -192,3 +193,25 @@ void BuilderService::disconnectAll(const gov::cca::ComponentID::pointer& id1,
   cerr << "BuilderService::disconnectAll not finished\n";
 }
 
+
+std::string BuilderService::getFrameworkURL()
+{
+   return framework->getURL().getString();
+}
+
+::CIA::array1< gov::cca::Port::pointer > 
+BuilderService::listPorts(const std::string &com_name)
+{
+   cerr<<"listPorts() not implemented"<<endl;
+//   ComponentInstance *ci=framework->getComponent(com_name);
+//   ci->listPortMap();
+   CIA::array1<gov::cca::Port::pointer> ports;
+   return	ports;
+}
+
+gov::cca::Port::pointer BuilderService::getUIPort(const std::string &com_name)
+{
+   cerr<<"getUIPort() not implemented"<<endl;
+   ComponentInstance *ci=framework->getComponent(com_name);
+   return ci->getUIPort();
+}
