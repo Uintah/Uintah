@@ -3041,6 +3041,8 @@ if test "$HAVE_LIB_SIDL" && test $BABEL_BIN != "NONE"; then
    HAVE_BABEL="yes"
 fi
 
+SCI_CHECK_HEADERS($LIB_DIR_SIDL/../include, SIDL.h,,,optional)
+
 if test "$with_babel" && test ! "$DEF_BABEL"; then
   echo
   AC_MSG_ERROR(One or more of the Babel components is missing.)
@@ -3050,7 +3052,7 @@ fi
 AC_SUBST(HAVE_BABEL)
 AC_SUBST(SIDL_LIB_FLAG)
 AC_SUBST(SIDL_LIB_DIR_FLAG)
-AC_SUBST(INC_BABEL_H)
+AC_SUBST(INC_SIDL_H)
 AC_SUBST(DEF_BABEL)
 AC_SUBST(BABEL_BIN)
 
