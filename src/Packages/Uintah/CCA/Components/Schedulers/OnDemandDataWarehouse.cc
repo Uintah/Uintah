@@ -1609,12 +1609,11 @@ putGridVar(VariableBase& var, DWDatabase& db,
      msg_str << "put: Variable's window (" << var.getLow() << " - " << var.getHigh() << ") must encompass patches extent (" << low << " - " << high;
      throw InternalError(msg_str.str());
    }
-   VariableBase* clone = var.clone();
-   bool no_realloc = clone->rewindow(low, high);
+   bool no_realloc = var.rewindow(low, high);
    // error would have been thrown above if the any reallocation would be
    // needed
    ASSERT(no_realloc);
-   db.put(label, matlIndex, patch, clone, true);
+   db.put(label, matlIndex, patch, &var, true);
   d_lock.writeUnlock();
 }
 
