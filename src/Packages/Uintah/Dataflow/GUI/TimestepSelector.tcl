@@ -20,6 +20,8 @@
 #    Created January 5, 1999
 ########################################
 
+package require Iwidgets 3.0 
+
 catch {rename TimestepSelector ""}
 
 itcl_class Uintah_Selectors_TimestepSelector { 
@@ -37,11 +39,18 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	global $this-time;
 	global $this-timeval 
 	global $this-max_time
+	global $this-def-color-r
+	global $this-def-color-g
+	global $this-def-color-b
+
 	set $this-time 0
 	set $this-max_time 100
 	set $this-timeval 0
 	set $this-animate 0
 	set $this-anisleep 0
+	set $this-def-color-r 1.0
+	set $this-def-color-g 1.0
+	set $this-def-color-b 1.0
     } 
     
     method ui {} { 
@@ -107,6 +116,12 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	scale $w.s  -variable $this-anisleep  \
 	    -orient horizontal -from 0 -to 600 -resolution 1
 	pack $w.l $w.s -side top -fill x
+
+	frame $w.cs -relief groove -borderwidth 2
+	addColorSelection $w.cs  $this-def-color \
+		"default_color_change"
+	pack $w.cs -side top -fill x
+
 	button $w.b -text "Close" -command "wm withdraw $w"
 	pack $w.b -side top -fill x -padx 2 -pady 2
 
@@ -137,6 +152,52 @@ itcl_class Uintah_Selectors_TimestepSelector {
     method isOn { bval } {
 	return  [set $this-$bval]
     }
+    method raiseColor {col color colMsg} {
+	 global $color
+	 set window .ui[modname]
+	 if {[winfo exists $window.color]} {
+	     raise $window.color
+	     return;
+	 } else {
+	     toplevel $window.color
+	     makeColorPicker $window.color $color \
+		     "$this setColor $col $color $colMsg" \
+		     "destroy $window.color"
+	 }
+    }
+    method setColor {col color colMsg} {
+	 global $color
+	 global $color-r
+	 global $color-g
+	 global $color-b
+	 set ir [expr int([set $color-r] * 65535)]
+	 set ig [expr int([set $color-g] * 65535)]
+	 set ib [expr int([set $color-b] * 65535)]
 
+	 set window .ui[modname]
+	 $col config -background [format #%04x%04x%04x $ir $ig $ib]
+	 $this-c $colMsg
+    }
+    method addColorSelection {frame color colMsg} {
+	#add node color picking 
+	global $color
+	global $color-r
+	global $color-g
+	global $color-b
+	set ir [expr int([set $color-r] * 65535)]
+	set ig [expr int([set $color-g] * 65535)]
+	set ib [expr int([set $color-b] * 65535)]
+	
+	frame $frame.colorFrame
+	frame $frame.colorFrame.col -relief ridge -borderwidth \
+	    4 -height 0.8c -width 1.0c \
+	    -background [format #%04x%04x%04x $ir $ig $ib]
+	set cmmd "$this raiseColor $frame.colorFrame.col $color $colMsg"
+        button $frame.colorFrame.set_color \
+            -text "Geom Color" -command $cmmd
+        #pack the node color frame
+	pack $frame.colorFrame.set_color $frame.colorFrame.col -side left
+	pack $frame.colorFrame -side left
+    }
 	    	    
 }
