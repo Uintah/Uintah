@@ -129,7 +129,7 @@ SetupBEMatrix::execute()
 
       fields.push_back(field);
       meshes.push_back(mesh);
-      conductivities.push_back(abs(condVal));
+      conductivities.push_back(Abs(condVal));
       if(first_time_run)
        {
         filed_generation_no_old.push_back(-1);
@@ -164,9 +164,9 @@ SetupBEMatrix::execute()
    int no_of_fields =  nesting.size();
    for (int i=0; i < no_of_fields; i++)
     {
-      new_fields += abs( filed_generation_no_new[i] - filed_generation_no_old[i] );
-      new_nesting += abs( nesting[i] - old_nesting[i] );
-      new_conductivities += abs( conductivities[i] - old_conductivities[i] );
+      new_fields += Abs( filed_generation_no_new[i] - filed_generation_no_old[i] );
+      new_nesting += Abs( nesting[i] - old_nesting[i] );
+      new_conductivities += Abs( conductivities[i] - old_conductivities[i] );
       filed_generation_no_old[i] = filed_generation_no_new[i];
       old_nesting[i] = nesting[i];
       old_conductivities[i] = conductivities[i];
