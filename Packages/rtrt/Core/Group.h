@@ -2,6 +2,7 @@
 #ifndef GROUP_H
 #define GROUP_H 1
 
+#include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/Object.h>
 #include <Core/Geometry/Point.h>
 #include <Packages/rtrt/Core/Array1.h>
@@ -10,8 +11,10 @@ namespace rtrt {
 
 class Group : public Object {
 protected:
-    Array1<Object*> objs;
 public:
+    BBox bbox;
+    bool all_children_are_groups;
+    Array1<Object*> objs;
     Group();
     virtual ~Group();
     virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
