@@ -54,3 +54,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 PROGRAM := $(SRCDIR)/TriSurfToOBJ
 SRCS := $(SRCDIR)/TriSurfToOBJ.cc
 include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/FieldTextToBin
+SRCS := $(SRCDIR)/FieldTextToBin.cc
+include $(SCIRUN_SCRIPTS)/program.mk
