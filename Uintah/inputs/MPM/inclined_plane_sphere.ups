@@ -19,7 +19,7 @@
 
    <DataArchiver>
         <filebase>incplane.uda</filebase>
-        <outputInterval>5</outputInterval>
+        <outputInterval>.005</outputInterval>
    </DataArchiver>
 
     <MPM>

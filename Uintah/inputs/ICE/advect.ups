@@ -20,7 +20,7 @@
 
    <DataArchiver>
 	<filebase>advect.uda</filebase>
-	<outputInterval>1</outputInterval>
+	<outputInterval>.1</outputInterval>
    </DataArchiver>
 
    <OutputVars>

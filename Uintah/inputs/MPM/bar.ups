@@ -19,7 +19,7 @@
 
    <DataArchiver>
         <filebase>bar.uda</filebase>
-        <outputInterval>100</outputInterval>
+        <outputInterval>.1</outputInterval>
    </DataArchiver>
 
     <MPM>

@@ -18,8 +18,8 @@
    </Time>
 
    <DataArchiver>
-        <filebase>tmp.uda</filebase>
-	<outputInterval>5</outputInterval>
+        <filebase>arches.uda</filebase>
+	<outputInterval>1.0</outputInterval>
    </DataArchiver>
 
    <OutputVars>
