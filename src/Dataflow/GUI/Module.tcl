@@ -1174,19 +1174,23 @@ proc moduleHelp {modid} {
     wm title $w $t
 	
     frame $w.help
-    iwidgets::scrolledhtml $w.help.txt -update 0 -alink yellow -link purple
-#    text $w.help.txt -relief sunken -wrap word -bd 2 -yscrollcommand "$w.help.sb set"
-    $w.help.txt render [$modid-c help]
+#    iwidgets::scrolledhtml $w.help.txt -update 0 -alink yellow -link purple
+    text $w.help.txt -relief sunken -wrap word -bd 2 -yscrollcommand "$w.help.sb set"
+#    $w.help.txt render [$modid-c help]
     scrollbar $w.help.sb -relief sunken -command "$w.help.txt yview"
-    pack $w.help.txt $w.help.sb -side left -padx 5 -pady 5 -fill y
+    pack $w.help.sb -side right -padx 5 -pady 5 -fill y
+    pack $w.help.txt -side left -padx 5 -pady 5 -expand 1 -fill both 
+
 
     frame $w.fbuttons 
     button $w.fbuttons.ok -text "Close" -command "destroy $w"
-    
-    pack $w.help $w.fbuttons -side top -padx 5 -pady 5
-    pack $w.fbuttons.ok -side right -padx 5 -pady 5 -ipadx 3 -ipady 3
 
-#    $w.help.txt insert end [$modid-c help]
+    pack $w.fbuttons.ok -side top -padx 5 -pady 5
+    pack $w.fbuttons -side bottom     
+    pack $w.help -side top -padx 5 -pady 5 -expand 1 -fill both
+
+
+    $w.help.txt insert end [$modid-c help]
 }
 
 proc moduleDestroy {modid} {
