@@ -9,6 +9,7 @@
 #include <Core/Thread/Time.h>
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Stats.h>
+#include <Packages/rtrt/Core/DpyBase.h>
 #include <iostream>
 #include <stdlib.h>
 #include <unistd.h>
@@ -137,3 +138,8 @@ void Scene::waitForEmpty(int which)
     work[which].waitForEmpty();
 }
 #endif
+
+void Scene::attach_display(DpyBase *dpy) {
+  displays.add(dpy);
+  dpy->set_scene(this);
+}
