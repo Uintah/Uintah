@@ -935,7 +935,7 @@ ICUMonitor::draw_plots()
       for (int i = 0; i < (int)samples; i++) {
 	int idx = i + cur_idx_;
 	if (idx > data_->nrrd->axis[1].size - 1) {
-	  idx = 0;
+	  idx = 1;
 	}
 
 	float *dat = (float*)data_->nrrd->data;
@@ -977,7 +977,7 @@ ICUMonitor::draw_plots()
         for (int i = 0; i < (int)samples; i++) {
           int idx = i + cur_idx_;
           if (idx > data2_->nrrd->axis[1].size - 1) {
-            idx = 0;
+            idx = 1;
           }
           float *dat = (float*)data2_->nrrd->data;
           int dat_index = idx * data2_->nrrd->axis[0].size + g.index_;
