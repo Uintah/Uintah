@@ -51,9 +51,9 @@ itcl_class SCIRun_Math_CastMatrix {
         make_labeled_radio $w.f.n "Cast to:" "" \
                 top $this-newtype \
 		{{"Same (pass-through)" Same} \
-		{ColumnMatrix Column} \
-		{DenseMatrix Dense} \
-		{SparseRowMatrix Sparse}}
+		{ColumnMatrix ColumnMatrix} \
+		{DenseMatrix DenseMatrix} \
+		{SparseRowMatrix SparseRowMatrix}}
 	
 	pack $w.f.o $w.f.n -side top -expand 1 -fill x
 	pack $w.f -expand 1 -fill x
