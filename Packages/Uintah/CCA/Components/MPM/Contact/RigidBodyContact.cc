@@ -44,9 +44,9 @@ RigidBodyContact::RigidBodyContact(ProblemSpecP& ps,
     cerr << "Default contact direction is Z-direction (0,0,1)\n";
     d_direction.x(0); d_direction.y(0); d_direction.z(1);
   }
-  d_direction.x(1^d_direction.x());
-  d_direction.y(1^d_direction.y());
-  d_direction.z(1^d_direction.z());
+  d_direction.x(1^d_direction.x());  // Change 1 to 0, or 0 to 1
+  d_direction.y(1^d_direction.y());  // Change 1 to 0, or 0 to 1
+  d_direction.z(1^d_direction.z());  // Change 1 to 0, or 0 to 1
   if (d_direction.x() < 0 || d_direction.x() > 1 || d_direction.y() < 0 ||
       d_direction.y() > 1 || d_direction.z() < 0 || d_direction.z() > 1) {
     throw ProblemSetupException(" E R R O R----->MPM:Dir. of rigid contact should be 0 or 1");
@@ -111,6 +111,8 @@ void RigidBodyContact::exMomInterpolated(const ProcessorGroup*,
           int xn = d_direction.x()*n;
           int yn = d_direction.y()*n;
           int zn = d_direction.z()*n;
+          // set each velocity component either to it's own velocity
+          // or that of the rigid body
 	  gvelocity[n][c].x( gvelocity[xn][c].x() );
 	  gvelocity[n][c].y( gvelocity[yn][c].y() );
 	  gvelocity[n][c].z( gvelocity[zn][c].z() );
