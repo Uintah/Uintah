@@ -84,6 +84,10 @@ public:
 						 const PatchSet* patches,
 					       const MaterialSet* matls) = 0;
 
+      virtual void sched_computeTurbSubmodelInterm(SchedulerP&,
+						 const PatchSet* patches,
+					       const MaterialSet* matls) = 0;
+
       virtual void sched_computeScalarVariance(SchedulerP&, const PatchSet* patches,
 					       const MaterialSet* matls) = 0;
       // GROUP: Action Computations :

@@ -501,10 +501,22 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 #ifdef correctorstep
   delta_t /= 2.0;
 #endif
+#ifdef Runge_Kutta_2nd
+  delta_t *= 2.0; 
+#endif
+#ifdef Runge_Kutta_3d
+  double gamma_1 = 8.0/15.0;
+  delta_t *= 2.0; // since correctorstep is also defined for Runge-Kutta
+  delta_t *= gamma_1; 
+#ifdef Runge_Kutta_3d_ssp
+  delta_t /= gamma_1; 
+#endif
+#endif
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = d_lab->d_sharedState->
+		    getArchesMaterial(archIndex)->getDWIndex(); 
     ArchesVariables enthalpyVars;
     int numGhostCells = 1;
     int zeroGhostCells = 0;
@@ -693,7 +705,7 @@ EnthalpySolver::sched_enthalpyLinearSolvePred(SchedulerP& sched,
 
   // coefficient for the variable for which solve is invoked
   tsk->requires(Task::OldDW, d_lab->d_densityINLabel, 
-		Ghost::None, zeroGhostCells);
+  		Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
 		Ghost::AroundCells, numGhostCells+1);
   tsk->requires(Task::NewDW, d_lab->d_enthalpyOUTBCLabel, 
@@ -708,6 +720,13 @@ EnthalpySolver::sched_enthalpyLinearSolvePred(SchedulerP& sched,
 #else
   tsk->computes(d_lab->d_enthalpySPLabel);
 #endif
+  
+#ifdef Runge_Kutta_3d
+#ifndef Runge_Kutta_3d_ssp
+  tsk->computes(d_lab->d_enthalpyTempLabel);
+#endif
+#endif
+  
   sched->addTask(tsk, patches, matls);
 }
 //****************************************************************************
@@ -725,6 +744,17 @@ EnthalpySolver::enthalpyLinearSolvePred(const ProcessorGroup* pc,
   double delta_t = delT;
 #ifdef correctorstep
   delta_t /= 2.0;
+#endif
+#ifdef Runge_Kutta_2nd
+  delta_t *= 2.0; 
+#endif
+#ifdef Runge_Kutta_3d
+  double gamma_1 = 8.0/15.0;
+  delta_t *= 2.0; // since correctorstep is also defined for Runge-Kutta
+  delta_t *= gamma_1; 
+#ifdef Runge_Kutta_3d_ssp
+  delta_t /= gamma_1; 
+#endif
 #endif
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -786,6 +816,37 @@ EnthalpySolver::enthalpyLinearSolvePred(const ProcessorGroup* pc,
     cerr << "print enthalpy solve after predict" << endl;
     enthalpyVars.enthalpy.print(cerr);
 #endif
+
+#ifdef Runge_Kutta_3d
+#ifndef Runge_Kutta_3d_ssp
+    CCVariable<double> temp_enthalpy;
+    constCCVariable<double> old_density;
+
+    new_dw->get(old_density, d_lab->d_densityINLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->allocate(temp_enthalpy, d_lab->d_enthalpyTempLabel, 
+		matlIndex, patch);
+    temp_enthalpy.initialize(0.0);
+    
+    IntVector indexLow = patch->getCellFORTLowIndex();
+    IntVector indexHigh = patch->getCellFORTHighIndex();
+    
+    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+            IntVector currCell(colX, colY, colZ);
+
+            temp_enthalpy[currCell] = old_density[currCell]*
+	    (enthalpyVars.enthalpy[currCell]-
+	    enthalpyVars.old_enthalpy[currCell])/gamma_1;
+        }
+      }
+    }
+    new_dw->put(temp_enthalpy, d_lab->d_enthalpyTempLabel, matlIndex, patch);
+#endif
+#endif
+
 #ifdef correctorstep
     new_dw->put(enthalpyVars.enthalpy, d_lab->d_enthalpyPredLabel, 
                 matlIndex, patch);
@@ -793,6 +854,7 @@ EnthalpySolver::enthalpyLinearSolvePred(const ProcessorGroup* pc,
     new_dw->put(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
                 matlIndex, patch);
 #endif
+
   }
 }
 
@@ -838,15 +900,35 @@ EnthalpySolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
   //DataWarehouseP old_dw = new_dw->getTop();
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::AroundCells, numGhostCells);
-  tsk->requires(Task::NewDW, d_lab->d_enthalpyOUTBCLabel,
-		Ghost::None, zeroGhostCells);
-  tsk->requires(Task::NewDW, d_lab->d_enthalpyPredLabel,
+  #ifdef Runge_Kutta_3d
+//  tsk->requires(Task::NewDW, d_lab->d_enthalpyPredLabel,
+//		Ghost::None, zeroGhostCells);
+//  tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
+//		Ghost::None, zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_densityIntermLabel, 
+		Ghost::AroundCells, numGhostCells+1);
+  tsk->requires(Task::NewDW, d_lab->d_viscosityIntermLabel,
 		Ghost::AroundCells, numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_enthalpyIntermLabel,
+		Ghost::AroundCells, numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocityIntermLabel,
+		Ghost::AroundFaces, numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocityIntermLabel,
+		Ghost::AroundFaces, numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocityIntermLabel,
+		Ghost::AroundFaces, numGhostCells);
+  #else
+  #ifndef Runge_Kutta_2nd
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
 		Ghost::None, zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_enthalpyOUTBCLabel,
+		Ghost::None, zeroGhostCells);
+  #endif
   tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
 		Ghost::AroundCells, numGhostCells+1);
-  tsk->requires(Task::NewDW, d_lab->d_viscosityINLabel,
+  tsk->requires(Task::NewDW, d_lab->d_viscosityPredLabel,
+		Ghost::AroundCells, numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_enthalpyPredLabel,
 		Ghost::AroundCells, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
 		Ghost::AroundFaces, numGhostCells);
@@ -854,12 +936,20 @@ EnthalpySolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 		Ghost::AroundFaces, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_wVelocityPredLabel,
 		Ghost::AroundFaces, numGhostCells);
+  #endif
 
   if (d_radiationCalc) {
+  #ifdef Runge_Kutta_3d
+    tsk->requires(Task::NewDW, d_lab->d_tempINIntermLabel,
+		  Ghost::AroundCells, numGhostCells);
+    tsk->requires(Task::NewDW, d_lab->d_absorpINIntermLabel,
+		  Ghost::None, zeroGhostCells);
+  #else
     tsk->requires(Task::NewDW, d_lab->d_tempINPredLabel,
 		  Ghost::AroundCells, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_absorpINPredLabel,
 		  Ghost::None, zeroGhostCells);
+  #endif
   }      // added one more argument of index to specify enthalpy component
       // added one more argument of index to specify enthalpy component
   tsk->computes(d_lab->d_enthCoefCorrLabel, d_lab->d_stencilMatl,
@@ -885,6 +975,13 @@ void EnthalpySolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
   delt_vartype delT;
   old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
+#ifdef Runge_Kutta_3d
+  double gamma_3 = 3.0/4.0;
+  delta_t *= gamma_3;
+#ifdef Runge_Kutta_3d_ssp
+  delta_t /= gamma_3;
+#endif
+#endif
   
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -911,26 +1008,58 @@ void EnthalpySolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     // from old_dw get PCELL, DENO, FO(index)
     new_dw->getCopy(enthalpyVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+
+    // from new_dw get DEN, VIS, F(index), U, V, W
+  #ifdef Runge_Kutta_3d
+    // old_density and old_enthalpy for Runge-Kutta are NOT from initial 
+    // timestep but from previous (Interm) time step
+    new_dw->getCopy(enthalpyVars.old_density, d_lab->d_densityIntermLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->getCopy(enthalpyVars.old_enthalpy, d_lab->d_enthalpyIntermLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->getCopy(enthalpyVars.density, d_lab->d_densityIntermLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->getCopy(enthalpyVars.viscosity, d_lab->d_viscosityIntermLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->getCopy(enthalpyVars.enthalpy, d_lab->d_enthalpyIntermLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+  #else
+  #ifdef Runge_Kutta_2nd
+    new_dw->getCopy(enthalpyVars.old_density, d_lab->d_densityPredLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->getCopy(enthalpyVars.old_enthalpy, d_lab->d_enthalpyPredLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+  #else
     // ***warning* 21st July changed from IN to Pred
     new_dw->getCopy(enthalpyVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     new_dw->getCopy(enthalpyVars.old_enthalpy, d_lab->d_enthalpyOUTBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
+  #endif
 
-    // from new_dw get DEN, VIS, F(index), U, V, W
     new_dw->getCopy(enthalpyVars.density, d_lab->d_densityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
-    new_dw->getCopy(enthalpyVars.viscosity, d_lab->d_viscosityINLabel, 
+    new_dw->getCopy(enthalpyVars.viscosity, d_lab->d_viscosityPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->getCopy(enthalpyVars.enthalpy, d_lab->d_enthalpyPredLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
+  #endif
     // for explicit get old values
+  #ifdef Runge_Kutta_3d
+    new_dw->getCopy(enthalpyVars.uVelocity, d_lab->d_uVelocityIntermLabel, 
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
+    new_dw->getCopy(enthalpyVars.vVelocity, d_lab->d_vVelocityIntermLabel, 
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
+    new_dw->getCopy(enthalpyVars.wVelocity, d_lab->d_wVelocityIntermLabel, 
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
+  #else
     new_dw->getCopy(enthalpyVars.uVelocity, d_lab->d_uVelocityPredLabel, 
 		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(enthalpyVars.vVelocity, d_lab->d_vVelocityPredLabel, 
 		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
     new_dw->getCopy(enthalpyVars.wVelocity, d_lab->d_wVelocityPredLabel, 
 		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
+  #endif
 
   // allocate matrix coeffs
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
@@ -966,10 +1095,17 @@ void EnthalpySolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
       enthalpyVars.qfluxb.allocate(patch->getCellLowIndex(),
 				   patch->getCellHighIndex());
       enthalpyVars.qfluxb.initialize(0.0);
+  #ifdef Runge_Kutta_3d
+      new_dw->getCopy(enthalpyVars.temperature, d_lab->d_tempINIntermLabel, 
+		      matlIndex, patch, Ghost::AroundCells, numGhostCells);
+      new_dw->getCopy(enthalpyVars.absorption, d_lab->d_absorpINIntermLabel, 
+		      matlIndex, patch, Ghost::None, zeroGhostCells);
+  #else
       new_dw->getCopy(enthalpyVars.temperature, d_lab->d_tempINPredLabel, 
 		      matlIndex, patch, Ghost::AroundCells, numGhostCells);
       new_dw->getCopy(enthalpyVars.absorption, d_lab->d_absorpINPredLabel, 
 		      matlIndex, patch, Ghost::None, zeroGhostCells);
+  #endif
 
     }
 
@@ -1047,15 +1183,38 @@ EnthalpySolver::sched_enthalpyLinearSolveCorr(SchedulerP& sched,
 
   // coefficient for the variable for which solve is invoked
   //***warning changed in to pred
+  #ifdef Runge_Kutta_3d
+  tsk->requires(Task::NewDW, d_lab->d_densityIntermLabel, 
+		Ghost::None, zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_enthalpyIntermLabel, 
+		Ghost::AroundCells, numGhostCells);
+  #ifndef Runge_Kutta_3d_ssp
+  tsk->requires(Task::NewDW, d_lab->d_enthalpyTempLabel, 
+		Ghost::None, zeroGhostCells);
+  #endif
+  #else
   tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
 		Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_enthalpyPredLabel, 
 		Ghost::AroundCells, numGhostCells);
+  #endif 
   tsk->requires(Task::NewDW, d_lab->d_enthCoefCorrLabel, 
 		d_lab->d_stencilMatl, Task::OutOfDomain,
 		Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_enthNonLinSrcCorrLabel, 
 		Ghost::None, zeroGhostCells);
+  #ifdef Runge_Kutta_2nd
+  tsk->requires(Task::NewDW, d_lab->d_enthalpyOUTBCLabel,
+		Ghost::None, zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
+		Ghost::None, zeroGhostCells);
+  #endif
+  #ifdef Runge_Kutta_3d_ssp
+  tsk->requires(Task::NewDW, d_lab->d_enthalpyOUTBCLabel,
+		Ghost::None, zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
+		Ghost::None, zeroGhostCells);
+  #endif
   tsk->computes(d_lab->d_enthalpySPLabel);
   
   sched->addTask(tsk, patches, matls);
@@ -1073,6 +1232,458 @@ EnthalpySolver::enthalpyLinearSolveCorr(const ProcessorGroup* pc,
   delt_vartype delT;
   old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
+#ifdef Runge_Kutta_3d
+  double gamma_3 = 3.0/4.0;
+  double zeta_2 = -5.0/12.0;
+  delta_t *= gamma_3;
+#ifdef Runge_Kutta_3d_ssp
+  delta_t /= gamma_3;
+#endif
+#endif
+  
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->
+                    getArchesMaterial(archIndex)->getDWIndex(); 
+    ArchesVariables enthalpyVars;
+    int numGhostCells = 1;
+    int zeroGhostCells = 0;
+    // Get the PerPatch CellInformation data
+    PerPatch<CellInformationP> cellInfoP;
+    // get old_dw from getTop function
+    // checkpointing
+    //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    //  new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    else {
+      cellInfoP.setData(scinew CellInformation(patch));
+      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    }
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+    // ***warning* 21st July changed from IN to Pred
+  #ifdef Runge_Kutta_3d
+    new_dw->getCopy(enthalpyVars.old_density, d_lab->d_densityIntermLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+  #else
+    new_dw->getCopy(enthalpyVars.old_density, d_lab->d_densityPredLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+  #endif
+    // for explicit calculation
+    {
+    new_dw->allocate(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+  #ifdef Runge_Kutta_3d
+    new_dw->copyOut(enthalpyVars.enthalpy, d_lab->d_enthalpyIntermLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+  #else
+    new_dw->copyOut(enthalpyVars.enthalpy, d_lab->d_enthalpyPredLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+  #endif
+    }
+    enthalpyVars.old_enthalpy.allocate(enthalpyVars.enthalpy.getLowIndex(),
+				   enthalpyVars.enthalpy.getHighIndex());
+    enthalpyVars.old_enthalpy.copy(enthalpyVars.enthalpy);
+    
+    for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
+      new_dw->getCopy(enthalpyVars.scalarCoeff[ii], d_lab->d_enthCoefCorrLabel, 
+		  ii, patch, Ghost::None, zeroGhostCells);
+    new_dw->getCopy(enthalpyVars.scalarNonlinearSrc, d_lab->d_enthNonLinSrcCorrLabel,
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->allocate(enthalpyVars.residualEnthalpy, d_lab->d_enthalpyRes,
+		     matlIndex, patch);
+
+  // apply underelax to eqn
+    d_linearSolver->computeEnthalpyUnderrelax(pc, patch,
+					    &enthalpyVars);
+    // make it a separate task later
+    d_linearSolver->enthalpyLisolve(pc, patch, delta_t, 
+				  &enthalpyVars, cellinfo, d_lab);
+  #ifdef Runge_Kutta_3d
+  #ifndef Runge_Kutta_3d_ssp
+    constCCVariable<double> temp_enthalpy;
+    constCCVariable<double> old_density;
+
+    new_dw->get(old_density, d_lab->d_densityIntermLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->get(temp_enthalpy, d_lab->d_enthalpyTempLabel,
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    
+    IntVector indexLow = patch->getCellFORTLowIndex();
+    IntVector indexHigh = patch->getCellFORTHighIndex();
+    
+    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+            IntVector currCell(colX, colY, colZ);
+
+            enthalpyVars.enthalpy[currCell] += zeta_2*temp_enthalpy[currCell]/
+            old_density[currCell];
+        }
+      }
+    }
+  #endif
+  #endif
+  #ifdef Runge_Kutta_2nd
+    constCCVariable<double> old_enthalpy;
+    constCCVariable<double> old_density;
+    constCCVariable<double> new_density;
+
+    new_dw->get(old_enthalpy, d_lab->d_enthalpyOUTBCLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->get(old_density, d_lab->d_densityINLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->get(new_density, d_lab->d_densityPredLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    
+    IntVector indexLow = patch->getCellFORTLowIndex();
+    IntVector indexHigh = patch->getCellFORTHighIndex();
+    
+    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+            IntVector currCell(colX, colY, colZ);
+
+            enthalpyVars.enthalpy[currCell] = (enthalpyVars.enthalpy[currCell]+
+            old_density[currCell]/new_density[currCell]*
+	    old_enthalpy[currCell])/2.0;
+        }
+      }
+    }
+  #endif
+  #ifdef Runge_Kutta_3d_ssp
+    constCCVariable<double> old_enthalpy;
+    constCCVariable<double> old_density;
+    constCCVariable<double> new_density;
+
+    new_dw->get(old_enthalpy, d_lab->d_enthalpyOUTBCLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->get(old_density, d_lab->d_densityINLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->get(new_density, d_lab->d_densityIntermLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    
+    IntVector indexLow = patch->getCellFORTLowIndex();
+    IntVector indexHigh = patch->getCellFORTHighIndex();
+    
+    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+            IntVector currCell(colX, colY, colZ);
+
+            enthalpyVars.enthalpy[currCell] = 
+	    (2.0*enthalpyVars.enthalpy[currCell]+
+            old_density[currCell]/new_density[currCell]*
+	    old_enthalpy[currCell])/3.0;
+        }
+      }
+    }
+  #endif
+
+  // put back the results
+    new_dw->put(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
+		matlIndex, patch);
+  }
+}
+
+//****************************************************************************
+// Schedule solve of linearized enthalpy equation, intermediate step
+//****************************************************************************
+void 
+EnthalpySolver::solveInterm(SchedulerP& sched,
+			const PatchSet* patches,
+			const MaterialSet* matls)
+{
+  //computes stencil coefficients and source terms
+  // requires : enthalpyIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN
+  // computes : scalCoefSBLM, scalLinSrcSBLM, scalNonLinSrcSBLM
+  sched_buildLinearMatrixInterm(sched, patches, matls);
+  
+  // Schedule the enthalpy solve
+  // require : enthalpyIN, scalCoefSBLM, scalNonLinSrcSBLM
+  // compute : scalResidualSS, scalCoefSS, scalNonLinSrcSS, enthalpySP
+  //d_linearSolver->sched_enthalpySolve(level, sched, new_dw, matrix_dw, index);
+  sched_enthalpyLinearSolveInterm(sched, patches, matls);
+}
+
+//****************************************************************************
+// Schedule build of linear matrix
+//****************************************************************************
+void 
+EnthalpySolver::sched_buildLinearMatrixInterm(SchedulerP& sched,
+					  const PatchSet* patches,
+					  const MaterialSet* matls)
+{
+  Task* tsk = scinew Task("EnthalpySolver::BuildCoeffInterm",
+			  this,
+			  &EnthalpySolver::buildLinearMatrixInterm);
+
+  int numGhostCells = 1;
+  int zeroGhostCells = 0;
+
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+  
+  // This task requires enthalpy and density from old time step for transient
+  // calculation
+  //DataWarehouseP old_dw = new_dw->getTop();
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
+		Ghost::AroundCells, numGhostCells);
+//  tsk->requires(Task::NewDW, d_lab->d_enthalpyOUTBCLabel,
+//		Ghost::None, zeroGhostCells);
+//  tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
+//		Ghost::None, zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
+		Ghost::AroundCells, numGhostCells+1);
+  tsk->requires(Task::NewDW, d_lab->d_viscosityPredLabel,
+		Ghost::AroundCells, numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_enthalpyPredLabel,
+		Ghost::AroundCells, numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocityPredLabel,
+		Ghost::AroundFaces, numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocityPredLabel,
+		Ghost::AroundFaces, numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocityPredLabel,
+		Ghost::AroundFaces, numGhostCells);
+
+  if (d_radiationCalc) {
+    tsk->requires(Task::NewDW, d_lab->d_tempINPredLabel,
+		  Ghost::AroundCells, numGhostCells);
+    tsk->requires(Task::NewDW, d_lab->d_absorpINPredLabel,
+		  Ghost::None, zeroGhostCells);
+  }      // added one more argument of index to specify enthalpy component
+      // added one more argument of index to specify enthalpy component
+  tsk->computes(d_lab->d_enthCoefIntermLabel, d_lab->d_stencilMatl,
+		Task::OutOfDomain);
+  tsk->computes(d_lab->d_enthDiffCoefIntermLabel, d_lab->d_stencilMatl,
+		Task::OutOfDomain);
+  tsk->computes(d_lab->d_enthNonLinSrcIntermLabel);
+
+  sched->addTask(tsk, patches, matls);
+}
+
+      
+//****************************************************************************
+// Actually build linear matrix
+//****************************************************************************
+void EnthalpySolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
+					 const PatchSubset* patches,
+					 const MaterialSubset*,
+					 DataWarehouse* old_dw,
+					 DataWarehouse* new_dw)
+{
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  double gamma_2 = 5.0/12.0;
+  delta_t *= gamma_2; 
+  #ifdef Runge_Kutta_3d_ssp
+  delta_t /= gamma_2; 
+  #endif
+  
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->
+                    getArchesMaterial(archIndex)->getDWIndex(); 
+    ArchesVariables enthalpyVars;
+    int numGhostCells = 1;
+    int zeroGhostCells = 0;
+    
+    // Get the PerPatch CellInformation data
+    PerPatch<CellInformationP> cellInfoP;
+    // checkpointing
+    //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    // new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    else {
+      cellInfoP.setData(scinew CellInformation(patch));
+      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    }
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+
+    // from old_dw get PCELL, DENO, FO(index)
+    new_dw->getCopy(enthalpyVars.cellType, d_lab->d_cellTypeLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    // ***warning* 21st July changed from IN to Pred
+    new_dw->getCopy(enthalpyVars.old_density, d_lab->d_densityPredLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->getCopy(enthalpyVars.old_enthalpy, d_lab->d_enthalpyPredLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+
+    // from new_dw get DEN, VIS, F(index), U, V, W
+    new_dw->getCopy(enthalpyVars.density, d_lab->d_densityPredLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->getCopy(enthalpyVars.viscosity, d_lab->d_viscosityPredLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->getCopy(enthalpyVars.enthalpy, d_lab->d_enthalpyPredLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    // for explicit get old values
+    new_dw->getCopy(enthalpyVars.uVelocity, d_lab->d_uVelocityPredLabel, 
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
+    new_dw->getCopy(enthalpyVars.vVelocity, d_lab->d_vVelocityPredLabel, 
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
+    new_dw->getCopy(enthalpyVars.wVelocity, d_lab->d_wVelocityPredLabel, 
+		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
+
+  // allocate matrix coeffs
+    for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
+      new_dw->allocate(enthalpyVars.scalarCoeff[ii], 
+		       d_lab->d_enthCoefIntermLabel, ii, patch);
+      new_dw->allocate(enthalpyVars.scalarConvectCoeff[ii],
+		       d_lab->d_enthConvCoefIntermLabel, ii, patch);
+      new_dw->allocate(enthalpyVars.scalarDiffusionCoeff[ii],
+		       d_lab->d_enthDiffCoefIntermLabel, ii, patch);
+    }
+    new_dw->allocate(enthalpyVars.scalarLinearSrc, 
+		     d_lab->d_enthLinSrcIntermLabel, matlIndex, patch);
+    new_dw->allocate(enthalpyVars.scalarNonlinearSrc, 
+		     d_lab->d_enthNonLinSrcIntermLabel, matlIndex, patch);
+    enthalpyVars.scalarNonlinearSrc.initialize(0.0);
+    if (d_radiationCalc) {
+      enthalpyVars.qfluxe.allocate(patch->getCellLowIndex(),
+				   patch->getCellHighIndex());
+      enthalpyVars.qfluxe.initialize(0.0);
+      enthalpyVars.qfluxw.allocate(patch->getCellLowIndex(),
+				   patch->getCellHighIndex());
+      enthalpyVars.qfluxw.initialize(0.0);
+      enthalpyVars.qfluxn.allocate(patch->getCellLowIndex(),
+				   patch->getCellHighIndex());
+      enthalpyVars.qfluxn.initialize(0.0);
+      enthalpyVars.qfluxs.allocate(patch->getCellLowIndex(),
+				   patch->getCellHighIndex());
+      enthalpyVars.qfluxs.initialize(0.0);
+      enthalpyVars.qfluxt.allocate(patch->getCellLowIndex(),
+				   patch->getCellHighIndex());
+      enthalpyVars.qfluxt.initialize(0.0);
+      enthalpyVars.qfluxb.allocate(patch->getCellLowIndex(),
+				   patch->getCellHighIndex());
+      enthalpyVars.qfluxb.initialize(0.0);
+      new_dw->getCopy(enthalpyVars.temperature, d_lab->d_tempINPredLabel, 
+		      matlIndex, patch, Ghost::AroundCells, numGhostCells);
+      new_dw->getCopy(enthalpyVars.absorption, d_lab->d_absorpINPredLabel, 
+		      matlIndex, patch, Ghost::None, zeroGhostCells);
+
+    }
+
+  // compute ith component of enthalpy stencil coefficients
+  // inputs : enthalpySP, [u,v,w]VelocityMS, densityCP, viscosityCTS
+  // outputs: scalCoefSBLM
+    int index = 0;
+    d_discretize->calculateScalarCoeff(pc, patch,
+				       delta_t, index, cellinfo, 
+				       &enthalpyVars);
+
+    // Calculate enthalpy source terms
+    // inputs : [u,v,w]VelocityMS, enthalpySP, densityCP, viscosityCTS
+    // outputs: scalLinSrcSBLM, scalNonLinSrcSBLM
+    d_source->calculateEnthalpySource(pc, patch,
+				    delta_t, cellinfo, 
+				    &enthalpyVars );
+
+    // Calculate the enthalpy boundary conditions
+    // inputs : enthalpySP, scalCoefSBLM
+    // outputs: scalCoefSBLM
+    d_boundaryCondition->enthalpyBC(pc, patch,  cellinfo, 
+				  &enthalpyVars);
+  // apply multimaterial intrusion wallbc
+#if 0
+    if (d_MAlab)
+      d_boundaryCondition->mmenthalpyWallBC(pc, patch, cellinfo,
+					  &enthalpyVars);
+
+#endif
+    if (d_radiationCalc) {
+      d_source->computeEnthalpyRadThinSrc(pc, patch,
+					  cellinfo, &enthalpyVars);
+    }
+
+    // similar to mascal
+    // inputs :
+    // outputs:
+    d_source->modifyEnthalpyMassSource(pc, patch, delta_t,  &enthalpyVars);
+    
+    // Calculate the enthalpy diagonal terms
+    // inputs : scalCoefSBLM, scalLinSrcSBLM
+    // outputs: scalCoefSBLM
+    d_discretize->calculateScalarDiagonal(pc, patch, index, &enthalpyVars);
+    for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
+      new_dw->put(enthalpyVars.scalarCoeff[ii], 
+		  d_lab->d_enthCoefIntermLabel, ii, patch);
+      new_dw->put(enthalpyVars.scalarDiffusionCoeff[ii],
+		  d_lab->d_enthDiffCoefIntermLabel, ii, patch);
+    }
+    new_dw->put(enthalpyVars.scalarNonlinearSrc, 
+		d_lab->d_enthNonLinSrcIntermLabel, matlIndex, patch);
+
+  }
+}
+
+
+//****************************************************************************
+// Schedule linear solve of enthalpy
+//****************************************************************************
+void
+EnthalpySolver::sched_enthalpyLinearSolveInterm(SchedulerP& sched,
+					  const PatchSet* patches,
+					  const MaterialSet* matls)
+{
+  Task* tsk = scinew Task("EnthalpySolver::enthalpyLinearSolveInterm",
+			  this,
+			  &EnthalpySolver::enthalpyLinearSolveInterm);
+  int numGhostCells = 1;
+  int zeroGhostCells = 0;
+  
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+
+  // coefficient for the variable for which solve is invoked
+  //***warning changed in to pred
+  tsk->requires(Task::NewDW, d_lab->d_densityPredLabel, 
+		Ghost::None, zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_enthalpyPredLabel, 
+		Ghost::AroundCells, numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_enthCoefIntermLabel, 
+		d_lab->d_stencilMatl, Task::OutOfDomain,
+		Ghost::None, zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_enthNonLinSrcIntermLabel, 
+		Ghost::None, zeroGhostCells);
+  #ifndef Runge_Kutta_3d_ssp
+  tsk->modifies(d_lab->d_enthalpyTempLabel);
+  #endif
+  #ifdef Runge_Kutta_3d_ssp
+  tsk->requires(Task::NewDW, d_lab->d_enthalpyOUTBCLabel,
+		Ghost::None, zeroGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_densityINLabel, 
+		Ghost::None, zeroGhostCells);
+  #endif
+  tsk->computes(d_lab->d_enthalpyIntermLabel);
+  
+  sched->addTask(tsk, patches, matls);
+}
+//****************************************************************************
+// Actual enthalpy solve .. may be changed after recursive tasks are added
+//****************************************************************************
+void 
+EnthalpySolver::enthalpyLinearSolveInterm(const ProcessorGroup* pc,
+				const PatchSubset* patches,
+				const MaterialSubset*,
+				DataWarehouse* old_dw,
+				DataWarehouse* new_dw)
+{
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  double gamma_2 = 5.0/12.0;
+  double zeta_1 = -17.0/60.0;
+  delta_t *= gamma_2; 
+  #ifdef Runge_Kutta_3d_ssp
+  delta_t /= gamma_2; 
+  #endif
   
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -1101,7 +1712,7 @@ EnthalpySolver::enthalpyLinearSolveCorr(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     // for explicit calculation
     {
-    new_dw->allocate(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
+    new_dw->allocate(enthalpyVars.enthalpy, d_lab->d_enthalpyIntermLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
     new_dw->copyOut(enthalpyVars.enthalpy, d_lab->d_enthalpyPredLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
@@ -1111,9 +1722,9 @@ EnthalpySolver::enthalpyLinearSolveCorr(const ProcessorGroup* pc,
     enthalpyVars.old_enthalpy.copy(enthalpyVars.enthalpy);
     
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
-      new_dw->getCopy(enthalpyVars.scalarCoeff[ii], d_lab->d_enthCoefCorrLabel, 
+      new_dw->getCopy(enthalpyVars.scalarCoeff[ii], d_lab->d_enthCoefIntermLabel, 
 		  ii, patch, Ghost::None, zeroGhostCells);
-    new_dw->getCopy(enthalpyVars.scalarNonlinearSrc, d_lab->d_enthNonLinSrcCorrLabel,
+    new_dw->getCopy(enthalpyVars.scalarNonlinearSrc, d_lab->d_enthNonLinSrcIntermLabel,
 		matlIndex, patch, Ghost::None, zeroGhostCells);
     new_dw->allocate(enthalpyVars.residualEnthalpy, d_lab->d_enthalpyRes,
 		     matlIndex, patch);
@@ -1124,8 +1735,67 @@ EnthalpySolver::enthalpyLinearSolveCorr(const ProcessorGroup* pc,
     // make it a separate task later
     d_linearSolver->enthalpyLisolve(pc, patch, delta_t, 
 				  &enthalpyVars, cellinfo, d_lab);
+
+  #ifndef Runge_Kutta_3d_ssp
+    CCVariable<double> temp_enthalpy;
+    constCCVariable<double> old_density;
+
+    new_dw->get(old_density, d_lab->d_densityPredLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->getModifiable(temp_enthalpy, d_lab->d_enthalpyTempLabel,
+                matlIndex, patch);
+    
+    IntVector indexLow = patch->getCellFORTLowIndex();
+    IntVector indexHigh = patch->getCellFORTHighIndex();
+    
+    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+            IntVector currCell(colX, colY, colZ);
+
+            enthalpyVars.enthalpy[currCell] += zeta_1*temp_enthalpy[currCell]/
+            old_density[currCell];
+            temp_enthalpy[currCell] = old_density[currCell]*
+	    (enthalpyVars.enthalpy[currCell]-
+	    enthalpyVars.old_enthalpy[currCell])/
+            gamma_2-zeta_1*temp_enthalpy[currCell]/gamma_2;
+        }
+      }
+    }
+//    new_dw->put(temp_enthalpy, d_lab->d_enthalpyTempLabel, matlIndex, patch);
+  #endif
+  #ifdef Runge_Kutta_3d_ssp
+    constCCVariable<double> old_enthalpy;
+    constCCVariable<double> old_density;
+    constCCVariable<double> new_density;
+
+    new_dw->get(old_enthalpy, d_lab->d_enthalpyOUTBCLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->get(old_density, d_lab->d_densityINLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    new_dw->get(new_density, d_lab->d_densityPredLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+    
+    IntVector indexLow = patch->getCellFORTLowIndex();
+    IntVector indexHigh = patch->getCellFORTHighIndex();
+    
+    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+            IntVector currCell(colX, colY, colZ);
+
+            enthalpyVars.enthalpy[currCell] = (enthalpyVars.enthalpy[currCell]+
+            old_density[currCell]/new_density[currCell]*
+	    3.0*old_enthalpy[currCell])/4.0;
+        }
+      }
+    }
+  #endif
+  
   // put back the results
-    new_dw->put(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
+    new_dw->put(enthalpyVars.enthalpy, d_lab->d_enthalpyIntermLabel, 
 		matlIndex, patch);
   }
 }

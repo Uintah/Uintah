@@ -150,15 +150,16 @@ C--------------------------------------------------------------------
       if (xminus.or.xplus) then
          DO 210 K = kst,kend
             DO 200 J = jst,jend
-               IF (PCELL(iEndGhost,J,K).EQ.PBCFLD
-     &              .AND. UU(iEndGhost+1,J,K).GT.0.0) THEN
+               IF ((PCELL(iEndGhost,J,K).EQ.PBCFLD
+     &              .AND. UU(iEndGhost+1,J,K).GT.0.0).or.
+     $          (PCELL(iEndGhost, J, K).EQ.outletfld)) THEN
                   VV(iEndGhost,J,K) = VV(iend,J,K)
-c                  AE(iend,J,K) = 2.0*TINY
+                  AE(iend,J,K) = 2.0*TINY
                END IF
                IF (PCELL(iBegGhost,J,K).EQ.PBCFLD
      &              .AND.UU(iBegGhost,J,K).LT.0.0) THEN
                   VV(iBegGhost,J,K) = VV(ist,J,K)
-c                  AW(ist,J,K) = 2.0*TINY
+                  AW(ist,J,K) = 2.0*TINY
                END IF
  200        CONTINUE
  210     CONTINUE
@@ -188,12 +189,12 @@ C--------------------------------------------------------------------
             IF (PCELL(I,J,kEndGhost).EQ.PBCFLD
      &           .AND.WW(I,J,kEndGhost+1).GT.0.0) THEN
                VV(I,J,kEndGhost) = VV(I,J,kend)
-c               AT(I,J,kend) = 2.0*TINY
+               AT(I,J,kend) = 2.0*TINY
             END IF
             IF (PCELL(I,J,kBegGhost).EQ.PBCFLD
      &           .AND.WW(I,J,kBegGhost).LT.0.0) THEN
                VV(I,J,kBegGhost) = VV(I,J,kst)
-c               AB(I,J,kst) = 2.0*TINY
+               AB(I,J,kst) = 2.0*TINY
             END IF
  400     CONTINUE
  410  CONTINUE

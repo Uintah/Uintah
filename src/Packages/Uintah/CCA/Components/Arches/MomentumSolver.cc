@@ -1077,6 +1077,17 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 #ifdef correctorstep
   delta_t /= 2.0;
 #endif
+#ifdef Runge_Kutta_2nd
+  delta_t *= 2.0;
+#endif
+#ifdef Runge_Kutta_3d
+  double gamma_1 = 8.0/15.0;
+  delta_t *= 2.0; // since correctorstep is also defined for Runge-Kutta
+  delta_t *= gamma_1; 
+#ifdef Runge_Kutta_3d_ssp
+  delta_t /= gamma_1; 
+#endif
+#endif
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
@@ -1292,6 +1303,7 @@ MomentumSolver::sched_buildLinearMatrixCorr(SchedulerP& sched, const PatchSet* p
 			  this, &MomentumSolver::buildLinearMatrixCorr,
 			  index);
   int numGhostCells = 1;
+  int zeroGhostCells = 0;
 
   tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
   
@@ -1299,6 +1311,14 @@ MomentumSolver::sched_buildLinearMatrixCorr(SchedulerP& sched, const PatchSet* p
 		Ghost::AroundCells, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_pressureSPBCLabel,
 		Ghost::AroundCells, numGhostCells);
+  #ifdef Runge_Kutta_2nd
+  tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
+		Ghost::AroundCells, numGhostCells);
+  #endif 
+  #ifdef Runge_Kutta_3d_ssp
+  tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
+		Ghost::AroundCells, numGhostCells);
+  #endif 
 
   if (d_MAlab)
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel,
@@ -1310,6 +1330,14 @@ MomentumSolver::sched_buildLinearMatrixCorr(SchedulerP& sched, const PatchSet* p
 
     tsk->requires(Task::NewDW, d_lab->d_uVelRhoHatCorrLabel,
 		  Ghost::AroundFaces, numGhostCells);
+  #ifdef Runge_Kutta_2nd
+    tsk->requires(Task::NewDW, d_lab->d_uVelocityOUTBCLabel,
+		  Ghost::None, zeroGhostCells);
+  #endif 
+  #ifdef Runge_Kutta_3d_ssp
+    tsk->requires(Task::NewDW, d_lab->d_uVelocityOUTBCLabel,
+		  Ghost::None, zeroGhostCells);
+  #endif 
     tsk->computes(d_lab->d_uVelocitySPBCLabel);
 
     break;
@@ -1320,6 +1348,14 @@ MomentumSolver::sched_buildLinearMatrixCorr(SchedulerP& sched, const PatchSet* p
     
     tsk->requires(Task::NewDW, d_lab->d_vVelRhoHatCorrLabel, 
 		  Ghost::AroundFaces, numGhostCells);
+  #ifdef Runge_Kutta_2nd
+    tsk->requires(Task::NewDW, d_lab->d_vVelocityOUTBCLabel,
+		  Ghost::None, zeroGhostCells);
+  #endif 
+  #ifdef Runge_Kutta_3d_ssp
+    tsk->requires(Task::NewDW, d_lab->d_vVelocityOUTBCLabel,
+		  Ghost::None, zeroGhostCells);
+  #endif 
     tsk->computes(d_lab->d_vVelocitySPBCLabel);
 
     break;
@@ -1330,6 +1366,14 @@ MomentumSolver::sched_buildLinearMatrixCorr(SchedulerP& sched, const PatchSet* p
 
     tsk->requires(Task::NewDW, d_lab->d_wVelRhoHatCorrLabel, 
 		  Ghost::AroundFaces, numGhostCells);
+  #ifdef Runge_Kutta_2nd
+    tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel,
+		  Ghost::None, zeroGhostCells);
+  #endif 
+  #ifdef Runge_Kutta_3d_ssp
+    tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel,
+		  Ghost::None, zeroGhostCells);
+  #endif 
     tsk->computes(d_lab->d_wVelocitySPBCLabel);
 
     break;
@@ -1359,6 +1403,14 @@ MomentumSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
   delt_vartype delT;
   old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
+#ifdef Runge_Kutta_3d
+  double gamma_3 = 3.0/4.0;
+  double zeta_2 = -5.0/12.0;
+  delta_t *= (gamma_3+zeta_2);
+#ifdef Runge_Kutta_3d_ssp
+  delta_t /= (gamma_3+zeta_2);
+#endif
+#endif
 
   for (int p = 0; p < patches->size(); p++) {
 
@@ -1367,6 +1419,7 @@ MomentumSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     ArchesVariables velocityVars;
     int numGhostCells = 1;
+    int zeroGhostCells = 0;
 
     // Get the required data
 
@@ -1450,6 +1503,195 @@ MomentumSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     d_source->calculateVelocityPred(pc, patch, 
 				    delta_t, index,
 				    cellinfo, &velocityVars);
+  #ifdef Runge_Kutta_2nd
+    constSFCXVariable<double> old_uVelocity;
+    constSFCYVariable<double> old_vVelocity;
+    constSFCZVariable<double> old_wVelocity;
+    constCCVariable<double> old_density;
+    constCCVariable<double> new_density;
+    IntVector indexLow;
+    IntVector indexHigh;
+    
+    new_dw->get(old_density, d_lab->d_densityINLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->get(new_density, d_lab->d_densityCPLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+
+    switch (index) {
+    case Arches::XDIR:
+
+      new_dw->get(old_uVelocity, d_lab->d_uVelocityOUTBCLabel, 
+		      matlIndex, patch, Ghost::None, zeroGhostCells);
+    
+      indexLow = patch->getSFCXFORTLowIndex();
+      indexHigh = patch->getSFCXFORTHighIndex();
+    
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+              IntVector currCell(colX, colY, colZ);
+              IntVector xshiftedCell(colX-1, colY, colZ);
+
+              velocityVars.uVelRhoHat[currCell] = 
+              (velocityVars.uVelRhoHat[currCell]+
+               (old_density[currCell]+old_density[xshiftedCell])/
+               (new_density[currCell]+new_density[xshiftedCell])*
+	       old_uVelocity[currCell])/2.0;
+          }
+        }
+      }
+
+      break;
+    case Arches::YDIR:
+
+      new_dw->get(old_vVelocity, d_lab->d_vVelocityOUTBCLabel, 
+		      matlIndex, patch, Ghost::None, zeroGhostCells);
+    
+      indexLow = patch->getSFCYFORTLowIndex();
+      indexHigh = patch->getSFCYFORTHighIndex();
+    
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+              IntVector currCell(colX, colY, colZ);
+              IntVector yshiftedCell(colX, colY-1, colZ);
+
+              velocityVars.vVelRhoHat[currCell] = 
+              (velocityVars.vVelRhoHat[currCell]+
+               (old_density[currCell]+old_density[yshiftedCell])/
+               (new_density[currCell]+new_density[yshiftedCell])*
+	       old_vVelocity[currCell])/2.0;
+          }
+        }
+      }
+
+      break;
+    case Arches::ZDIR:
+
+      new_dw->get(old_wVelocity, d_lab->d_wVelocityOUTBCLabel, 
+		      matlIndex, patch, Ghost::None, zeroGhostCells);
+    
+      indexLow = patch->getSFCZFORTLowIndex();
+      indexHigh = patch->getSFCZFORTHighIndex();
+    
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+              IntVector currCell(colX, colY, colZ);
+              IntVector zshiftedCell(colX, colY, colZ-1);
+
+              velocityVars.wVelRhoHat[currCell] = 
+              (velocityVars.wVelRhoHat[currCell]+
+               (old_density[currCell]+old_density[zshiftedCell])/
+               (new_density[currCell]+new_density[zshiftedCell])*
+	       old_wVelocity[currCell])/2.0;
+          }
+        }
+      }
+
+      break;
+    default:
+      throw InvalidValue("Invalid index in RK2 step");
+    }
+  #endif
+  #ifdef Runge_Kutta_3d_ssp
+    constSFCXVariable<double> old_uVelocity;
+    constSFCYVariable<double> old_vVelocity;
+    constSFCZVariable<double> old_wVelocity;
+    constCCVariable<double> old_density;
+    constCCVariable<double> new_density;
+    IntVector indexLow;
+    IntVector indexHigh;
+    
+    new_dw->get(old_density, d_lab->d_densityINLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->get(new_density, d_lab->d_densityCPLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+
+    switch (index) {
+    case Arches::XDIR:
+
+      new_dw->get(old_uVelocity, d_lab->d_uVelocityOUTBCLabel, 
+		      matlIndex, patch, Ghost::None, zeroGhostCells);
+    
+      indexLow = patch->getSFCXFORTLowIndex();
+      indexHigh = patch->getSFCXFORTHighIndex();
+    
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+              IntVector currCell(colX, colY, colZ);
+              IntVector xshiftedCell(colX-1, colY, colZ);
+
+              velocityVars.uVelRhoHat[currCell] = 
+              (2.0*velocityVars.uVelRhoHat[currCell]+
+               (old_density[currCell]+old_density[xshiftedCell])/
+               (new_density[currCell]+new_density[xshiftedCell])*
+	       old_uVelocity[currCell])/3.0;
+          }
+        }
+      }
+
+      break;
+    case Arches::YDIR:
+
+      new_dw->get(old_vVelocity, d_lab->d_vVelocityOUTBCLabel, 
+		      matlIndex, patch, Ghost::None, zeroGhostCells);
+    
+      indexLow = patch->getSFCYFORTLowIndex();
+      indexHigh = patch->getSFCYFORTHighIndex();
+    
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+              IntVector currCell(colX, colY, colZ);
+              IntVector yshiftedCell(colX, colY-1, colZ);
+
+              velocityVars.vVelRhoHat[currCell] = 
+              (2.0*velocityVars.vVelRhoHat[currCell]+
+               (old_density[currCell]+old_density[yshiftedCell])/
+               (new_density[currCell]+new_density[yshiftedCell])*
+	       old_vVelocity[currCell])/3.0;
+          }
+        }
+      }
+
+      break;
+    case Arches::ZDIR:
+
+      new_dw->get(old_wVelocity, d_lab->d_wVelocityOUTBCLabel, 
+		      matlIndex, patch, Ghost::None, zeroGhostCells);
+    
+      indexLow = patch->getSFCZFORTLowIndex();
+      indexHigh = patch->getSFCZFORTHighIndex();
+    
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+              IntVector currCell(colX, colY, colZ);
+              IntVector zshiftedCell(colX, colY, colZ-1);
+
+              velocityVars.wVelRhoHat[currCell] = 
+              (2.0*velocityVars.wVelRhoHat[currCell]+
+               (old_density[currCell]+old_density[zshiftedCell])/
+               (new_density[currCell]+new_density[zshiftedCell])*
+	       old_wVelocity[currCell])/3.0;
+          }
+        }
+      }
+
+      break;
+    default:
+      throw InvalidValue("Invalid index in RK3 step");
+    }
+  #endif
+
     switch (index) {
     case Arches::XDIR:
 #if 0
@@ -1474,6 +1716,346 @@ MomentumSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 #endif
       new_dw->put(velocityVars.wVelRhoHat,
 		  d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
+      break;
+    default:
+      throw InvalidValue("Invalid index in MomentumSolver");
+    }
+
+  }
+}
+
+//****************************************************************************
+// Schedule linear momentum solve, intermediate step
+//****************************************************************************
+void 
+MomentumSolver::solveInterm(SchedulerP& sched,
+			  const PatchSet* patches,
+			  const MaterialSet* matls,
+			  int index)
+{
+  //computes stencil coefficients and source terms
+  // require : pressureCPBC, [u,v,w]VelocityCPBC, densityIN, viscosityIN (new_dw)
+  //           [u,v,w]SPBC, densityCP (old_dw)
+  // compute : [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM
+  //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
+
+  sched_buildLinearMatrixInterm(sched, patches, matls, index);
+    
+
+}
+
+//****************************************************************************
+// Schedule the build of the linear matrix
+//****************************************************************************
+void 
+MomentumSolver::sched_buildLinearMatrixInterm(SchedulerP& sched, const PatchSet* patches,
+					    const MaterialSet* matls,
+					    int index)
+{
+  Task* tsk = scinew Task( "MomentumSolver::BuildCoeffInterm",
+			  this, &MomentumSolver::buildLinearMatrixInterm,
+			  index);
+  int numGhostCells = 1;
+  int zeroGhostCells = 0;
+
+  tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+  
+  tsk->requires(Task::NewDW, d_lab->d_densityIntermLabel,
+		Ghost::AroundCells, numGhostCells);
+  tsk->requires(Task::NewDW, d_lab->d_pressureIntermLabel,
+		Ghost::AroundCells, numGhostCells);
+  #ifdef Runge_Kutta_3d_ssp
+  tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
+		Ghost::AroundCells, numGhostCells);
+  #endif 
+
+  if (d_MAlab)
+    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel,
+		  Ghost::AroundCells, numGhostCells);
+
+  switch (index) {
+
+  case Arches::XDIR:
+
+    tsk->requires(Task::NewDW, d_lab->d_uVelRhoHatIntermLabel,
+		  Ghost::AroundFaces, numGhostCells);
+  #ifdef Runge_Kutta_3d_ssp
+    tsk->requires(Task::NewDW, d_lab->d_uVelocityOUTBCLabel,
+		  Ghost::None, zeroGhostCells);
+  #endif 
+    tsk->computes(d_lab->d_uVelocityIntermLabel);
+
+    break;
+
+  case Arches::YDIR:
+
+    // use new uvelocity for v coef calculation
+    
+    tsk->requires(Task::NewDW, d_lab->d_vVelRhoHatIntermLabel, 
+		  Ghost::AroundFaces, numGhostCells);
+  #ifdef Runge_Kutta_3d_ssp
+    tsk->requires(Task::NewDW, d_lab->d_vVelocityOUTBCLabel,
+		  Ghost::None, zeroGhostCells);
+  #endif 
+    tsk->computes(d_lab->d_vVelocityIntermLabel);
+
+    break;
+
+  case Arches::ZDIR:
+
+    // use new uvelocity for v coef calculation
+
+    tsk->requires(Task::NewDW, d_lab->d_wVelRhoHatIntermLabel, 
+		  Ghost::AroundFaces, numGhostCells);
+  #ifdef Runge_Kutta_3d_ssp
+    tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel,
+		  Ghost::None, zeroGhostCells);
+  #endif 
+    tsk->computes(d_lab->d_wVelocityIntermLabel);
+
+    break;
+
+  default:
+
+    throw InvalidValue("Invalid index in MomentumSolver");
+    
+  }
+	
+  sched->addTask(tsk, patches, matls);
+
+
+}
+
+//****************************************************************************
+// Actual build of the linear matrix
+//****************************************************************************
+void 
+MomentumSolver::buildLinearMatrixInterm(const ProcessorGroup* pc,
+				      const PatchSubset* patches,
+				      const MaterialSubset* /*matls*/,
+				      DataWarehouse* old_dw,
+				      DataWarehouse* new_dw,
+				      int index)
+{
+  delt_vartype delT;
+  old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+  double delta_t = delT;
+  double gamma_2 = 5.0/12.0;
+  double zeta_1 = -17.0/60.0;
+  delta_t *= (gamma_2+zeta_1); 
+  #ifdef Runge_Kutta_3d_ssp
+  delta_t /= (gamma_2+zeta_1); 
+  #endif
+
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    ArchesVariables velocityVars;
+    int numGhostCells = 1;
+    int zeroGhostCells = 0;
+
+    // Get the required data
+
+    new_dw->getCopy(velocityVars.pressure, d_lab->d_pressureIntermLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->getCopy(velocityVars.density, d_lab->d_densityIntermLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->getCopy(velocityVars.old_density, d_lab->d_densityIntermLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+
+    // Get the PerPatch CellInformation data
+
+    PerPatch<CellInformationP> cellInfoP;
+
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    else {
+      cellInfoP.setData(scinew CellInformation(patch));
+      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    }
+
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+
+    if (d_MAlab)
+      new_dw->getCopy(velocityVars.voidFraction, d_lab->d_mmgasVolFracLabel,
+		  matlIndex, patch, 
+		  Ghost::AroundCells, numGhostCells);
+    switch (index) {
+
+    case Arches::XDIR:
+
+      {
+      new_dw->allocate(velocityVars.uVelRhoHat, 
+		  d_lab->d_uVelocityIntermLabel, matlIndex, patch, Ghost::AroundFaces, numGhostCells);
+      new_dw->copyOut(velocityVars.uVelRhoHat, d_lab->d_uVelRhoHatIntermLabel, 
+		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
+      }
+
+      break;
+
+    case Arches::YDIR:
+
+      // getting new value of u velocity
+
+      {
+      new_dw->allocate(velocityVars.vVelRhoHat, 
+		  d_lab->d_vVelocityIntermLabel, matlIndex, patch, Ghost::AroundFaces, numGhostCells);
+      new_dw->copyOut(velocityVars.vVelRhoHat, d_lab->d_vVelRhoHatIntermLabel, 
+		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
+      }
+
+      break;
+
+    case Arches::ZDIR:
+
+      // getting new value of u velocity
+
+      {
+      new_dw->allocate(velocityVars.wVelRhoHat,
+		  d_lab->d_wVelocityIntermLabel, matlIndex, patch, Ghost::AroundFaces, numGhostCells);
+      new_dw->copyOut(velocityVars.wVelRhoHat, d_lab->d_wVelRhoHatIntermLabel, 
+		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
+      }
+      break;
+
+    default:
+
+      throw InvalidValue("Invalid index in MomentumSolver");
+
+    }
+
+#ifdef ARCHES_MOM_DEBUG
+    cerr << "momentum solver: pressure=\n";
+    velocityVars.pressure.print(cerr);
+    if (patch->containsCell(IntVector(2,3,3))) {
+      cerr << "[2,3,3] press[2,3,3]" << velocityVars.pressure[IntVector(2,3,3)] 
+	   << " " << velocityVars.pressure[IntVector(1,3,3)] << endl;
+    }
+#endif
+    
+    d_source->calculateVelocityPred(pc, patch, 
+				    delta_t, index,
+				    cellinfo, &velocityVars);
+  #ifdef Runge_Kutta_3d_ssp
+    constSFCXVariable<double> old_uVelocity;
+    constSFCYVariable<double> old_vVelocity;
+    constSFCZVariable<double> old_wVelocity;
+    constCCVariable<double> old_density;
+    constCCVariable<double> new_density;
+    IntVector indexLow;
+    IntVector indexHigh;
+    
+    new_dw->get(old_density, d_lab->d_densityINLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+    new_dw->get(new_density, d_lab->d_densityIntermLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+
+    switch (index) {
+    case Arches::XDIR:
+
+      new_dw->get(old_uVelocity, d_lab->d_uVelocityOUTBCLabel, 
+		      matlIndex, patch, Ghost::None, zeroGhostCells);
+    
+      indexLow = patch->getSFCXFORTLowIndex();
+      indexHigh = patch->getSFCXFORTHighIndex();
+    
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+              IntVector currCell(colX, colY, colZ);
+              IntVector xshiftedCell(colX-1, colY, colZ);
+
+              velocityVars.uVelRhoHat[currCell] = 
+              (velocityVars.uVelRhoHat[currCell]+
+               (old_density[currCell]+old_density[xshiftedCell])/
+               (new_density[currCell]+new_density[xshiftedCell])*
+	       3.0*old_uVelocity[currCell])/4.0;
+          }
+        }
+      }
+
+      break;
+    case Arches::YDIR:
+
+      new_dw->get(old_vVelocity, d_lab->d_vVelocityOUTBCLabel, 
+		      matlIndex, patch, Ghost::None, zeroGhostCells);
+    
+      indexLow = patch->getSFCYFORTLowIndex();
+      indexHigh = patch->getSFCYFORTHighIndex();
+    
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+              IntVector currCell(colX, colY, colZ);
+              IntVector yshiftedCell(colX, colY-1, colZ);
+
+              velocityVars.vVelRhoHat[currCell] = 
+              (velocityVars.vVelRhoHat[currCell]+
+               (old_density[currCell]+old_density[yshiftedCell])/
+               (new_density[currCell]+new_density[yshiftedCell])*
+	       3.0*old_vVelocity[currCell])/4.0;
+          }
+        }
+      }
+
+      break;
+    case Arches::ZDIR:
+
+      new_dw->get(old_wVelocity, d_lab->d_wVelocityOUTBCLabel, 
+		      matlIndex, patch, Ghost::None, zeroGhostCells);
+    
+      indexLow = patch->getSFCZFORTLowIndex();
+      indexHigh = patch->getSFCZFORTHighIndex();
+    
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+              IntVector currCell(colX, colY, colZ);
+              IntVector zshiftedCell(colX, colY, colZ-1);
+
+              velocityVars.wVelRhoHat[currCell] = 
+              (velocityVars.wVelRhoHat[currCell]+
+               (old_density[currCell]+old_density[zshiftedCell])/
+               (new_density[currCell]+new_density[zshiftedCell])*
+	       3.0*old_wVelocity[currCell])/4.0;
+          }
+        }
+      }
+
+      break;
+    default:
+      throw InvalidValue("Invalid index in RK3 step");
+    }
+  #endif
+    switch (index) {
+    case Arches::XDIR:
+#if 0
+      cerr << "Print uvelRhoHat after solve" << endl;
+      velocityVars.uVelRhoHat.print(cerr);
+#endif
+      new_dw->put(velocityVars.uVelRhoHat, 
+		  d_lab->d_uVelocityIntermLabel, matlIndex, patch);
+      break;
+    case Arches::YDIR:
+#if 0
+      cerr << "Print vvelRhoHat after solve" << endl;
+      velocityVars.vVelRhoHat.print(cerr);
+#endif
+      new_dw->put(velocityVars.vVelRhoHat, 
+		  d_lab->d_vVelocityIntermLabel, matlIndex, patch);
+      break;
+    case Arches::ZDIR:
+#if 0
+      cerr << "Print wvelRhoHat after solve" << endl;
+      velocityVars.wVelRhoHat.print(cerr);
+#endif
+      new_dw->put(velocityVars.wVelRhoHat,
+		  d_lab->d_wVelocityIntermLabel, matlIndex, patch);
       break;
     default:
       throw InvalidValue("Invalid index in MomentumSolver");

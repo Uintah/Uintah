@@ -152,15 +152,16 @@ C       EAST AND/OR WEST WALLS
 C--------------------------------------------------------------------
       DO 210 K = kst,kend
          DO 200 J = jst,jend
-            IF (PCELL(iEndGhost,J,K).EQ.PBCFLD
-     &           .AND. UU(iEndGhost+1,J,K).GT.0.0) THEN
+            IF ((PCELL(iEndGhost,J,K).EQ.PBCFLD
+     &           .AND. UU(iEndGhost+1,J,K).GT.0.0).or.
+     $          (PCELL(iEndGhost, J, K).EQ.outletfld)) THEN
                WW(iEndGhost,J,K) = WW(iend,J,K)
-c               AE(iend,J,K) = 2.0*TINY
+               AE(iend,J,K) = 2.0*TINY
             END IF
             IF (PCELL(iBegGhost,J,K).EQ.PBCFLD
      &           .AND. UU(iBegGhost,J,K).LT.0.0) THEN
                WW(iBegGhost,J,K) = WW(ist,J,K)
-c               AW(ist,J,K) = 2.0*TINY
+               AW(ist,J,K) = 2.0*TINY
             END IF
  200     CONTINUE
  210  CONTINUE
@@ -172,12 +173,12 @@ C-------------------------------------------------------------------
           IF (PCELL(I,jEndGhost,K).EQ.PBCFLD
      &          .AND. VV(I,jEndGhost+1,K).GT.0.0) THEN
              WW(I,jEndGhost,K) = WW(I,jend,K)
-c             AN(I,jend,K) = 2.0*TINY
+             AN(I,jend,K) = 2.0*TINY
           END IF
           IF (PCELL(I,jBegGhost,K).EQ.PBCFLD
      &         .AND. VV(I,jBegGhost,K).LT.0.0) THEN
             WW(I,jBegGhost,K) = WW(I,jst,K)
-c            AS(I,jst,K) = 2.0*TINY
+            AS(I,jst,K) = 2.0*TINY
           END IF
   300   CONTINUE
   310 CONTINUE

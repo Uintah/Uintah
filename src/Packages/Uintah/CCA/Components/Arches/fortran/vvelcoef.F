@@ -79,6 +79,9 @@ C-----------------------------------------------------------------------
                GN = 0.5*(DEN(I,J+1,K)+DEN(I,J,K))*VV(I,J+1,K)
                GP = 0.5*(DEN(I,J,K)+DEN(I,J-1,K))*VV(I,J,K)
                GS = 0.5*(DEN(I,J-1,K)+DEN(I,J-2,K))*VV(I,J-1,K)
+c               GN = DEN(I,J,K)*(VV(I,J+1,K)+VV(I,J,K))
+c               GP = 0.0D0
+c               GS = DEN(I,J-1,K)*(VV(I,J,K)+VV(I,J-1,K))
 c******************
 c ** WARNING ** RAWAT : What does J==2 mean in the patch context ?
 c******************
