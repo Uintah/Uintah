@@ -94,14 +94,14 @@ DEALINGS IN THE SOFTWARE.
     
     <para>
       The 3 slice windows should show the sagittal, coronal, and axial views
-      and be labeld accordingly. Depending on the order of the axes in the 
-      loaded volume, the data need to be flipped or permuted so that the axis
+      and be labeled accordingly. Depending on the order of the axes in the 
+      loaded volume, the data may need to be flipped or permuted so that the axis
       labels are correct.  The Viewing Cube, located in the Load Data window
       labeled 3 in <xref linkend="fig.load"/> allows
       the user to change the orientation of the slices presented in the
       4 windows.  The orientation of each view can be changed by
       altering the abbreviation next to the proper arrow.  By default,
-      the axial, sagittal, and coronal slices are a view from the
+      the axial, sagittal, and coronal slices are viewed from the
       superior, anterior, and left views respectively.  To change this,
       simply select the appropriate arrow entry box, change the value, and then
       click the cube button in the middle.  This will change all four
@@ -145,8 +145,8 @@ DEALINGS IN THE SOFTWARE.
     This window allows for resampling in each dimension as well as a
     parameterized method for resampling.  To downsample this data set
     in each dimension, change the "x1" to "x0.5" in each dimension.
-    This indicates to multiply the number of samples by 0.5 which will 
-    resample the dataset to 1/2 of the samples in each dimension.</para>
+    The "x0.5" is a magnification factor applied to 
+    the dataset along each dimension.</para>
 
     <para>Click the "Update" button to finalize and apply the Resample
     filter.</para>
@@ -185,7 +185,7 @@ DEALINGS IN THE SOFTWARE.
     <para>
       Notice that each of these filters are applied sequentially
       from the Load Data window to the last filter in the list.  To
-      remove a filter from the list of filters to apply to the data,
+      remove a filter from the list of filters applied to the data,
       simply click on the red 'X' button in the appropriate filter.  
       This will remove the filter from the pipeline completely. See
       <xref linkend="sec.dynamic_filters"/> for more information regarding
@@ -193,22 +193,22 @@ DEALINGS IN THE SOFTWARE.
     </para>
   </section><!-- end:Resampling and Cropping -->
 
-  <section><title>Visualization</title>
+  <section><title>Viewing the Data</title>
     <section><title>Viewer Layout</title>
       <para>
-        The viewer is composed of four main windows. The upper left
+        The viewer is composed of four main windows. The upper
         window is the 3D viewer window. By default the 3D viewer displays
         slice planes of the axial, sagittal and coronal planes oriented 
         relative to each other in 3-space.
       </para>
     </section><!-- end:Viewer Layout -->    
     <section id="sec.2dviewers">
-      <title>The 2D Viewers</title>
+      <title>Viewing 2D Slices</title>
       <para>
         The remaining viewer windows display 2D images of the individual
         slice planes and can be used to change the location of the slice planes
-        inside of the dataset. The upper right window controls the axial plane, the lower right
-        window controls the coronal plane, and the bottom left window controls the saggital plane,
+        inside of the dataset. The lower right window controls the axial plane, the lower center
+        window controls the coronal plane, and the lower left window controls the saggital plane,
       </para>
       <figure id="fig.2dview">
         <title>2d Viewer Windows</title>
@@ -249,7 +249,7 @@ DEALINGS IN THE SOFTWARE.
 	  placed at the center of the volume, which for the tooth
 	  dataset corresponds to the 51st slice along the saggital axis.
         </para>
-        <section><title>Moving the slice plane</title>
+        <section><title>Moving the slices</title>
 	  <para>
 	    If we move the slice plane slider over to the left until it reads 68,
 	    we see the 68th saggital slice displayed in both the 2D and 3D viewers.
@@ -280,7 +280,7 @@ DEALINGS IN THE SOFTWARE.
 	  </para>
         </section><!-- end:Moving the slice plane -->
       
-        <section><title>Changing slice colormaps</title>
+        <section><title>Changing slice colors</title>
 	  <para>
 	    The colors displayed in the viewers are greyscale and
 	    represent the underlying values of the data. The colors may
@@ -342,7 +342,7 @@ DEALINGS IN THE SOFTWARE.
 	    hairs and change the location of the corresponding planes.
 	  </para>
 	</section><!-- end:Moving the slice planes with the mouse -->
-        <section><title>Using a "window width" and "level" to emphasize values in the dataset</title>
+        <section><title>Emphasizing features using a "window width" and "level" </title>
           <para>
 	    The "window width" and "level" controls can be used to emphasise data values in Viewers. The default
 	    "level" (or center value) is the center value of the dataset, and the "range" (range of displayed values)
