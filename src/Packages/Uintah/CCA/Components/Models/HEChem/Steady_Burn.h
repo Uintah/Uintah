@@ -51,38 +51,26 @@ WARNING
   public:
     Steady_Burn(const ProcessorGroup* myworld, ProblemSpecP& params);
     virtual ~Steady_Burn();
-
-    //////////
-    // Insert Documentation Here:
+    
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
 			      ModelSetup* setup);
       
-    //////////
-    // Insert Documentation Here:
     virtual void scheduleInitialize(SchedulerP&,
 				    const LevelP& level,
 				    const ModelInfo*);
 
-    //////////
-    // Insert Documentation Here:
     virtual void initialize(const ProcessorGroup*,
                             const PatchSubset*,
                             const MaterialSubset*,
                             DataWarehouse*,
                             DataWarehouse*);
     
-    //////////
-    // Insert Documentation Here:
     virtual void restartInitialize() {}
       
-    //////////
-    // Insert Documentation Here:
     virtual void scheduleComputeStableTimestep(SchedulerP&,
 					       const LevelP& level,
 					       const ModelInfo*);
       
-    //////////
-    // Insert Documentation Here:
     virtual void scheduleComputeModelSources(SchedulerP&,
 					     const LevelP& level,
 					     const ModelInfo*);
@@ -94,6 +82,9 @@ WARNING
 				     const Patch*,
 				     DataWarehouse*,
 				     const int);
+                                    
+   virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
+                                      SchedulerP& sched);
 
 
   private:    

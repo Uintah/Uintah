@@ -74,7 +74,10 @@ WARNING
    virtual void computeSpecificHeat(CCVariable<double>&,
                                     const Patch*,
                                     DataWarehouse*,
-                                    const int);                 
+                                    const int);
+                                    
+   virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
+                                      SchedulerP& sched);           
 
   private:
     void initialize(const ProcessorGroup*, 
