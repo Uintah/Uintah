@@ -116,7 +116,7 @@ void SetupFVM2::execute(){
   FILE *IDFILE=0;
   if (idfile != "") {
     IDFILE = fopen(idfile.c_str(), "w");
-    fprintf(IDFILE, "%d\n", nnodes);
+    fprintf(IDFILE, "%d\n", (int)nnodes);
   }
 
   while(nb != ne) {
