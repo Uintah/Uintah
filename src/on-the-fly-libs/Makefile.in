@@ -23,7 +23,7 @@ default: all
 include @abs_conftop_dir@/configVars.mk
 SCIRUN_SRCTOP   := @abs_srcdir@
 SCIRUN_OBJTOP   := @abs_conftop_dir@
-LIB_DIR	        := $(SCIRUN_OBJTOP)/lib/
+LIBDIR	        := $(SCIRUN_OBJTOP)/lib/
 # get libraries in ./lib
 LIBS_FULLNAMES  := $(wildcard ../lib/*.$(SO_OR_A_FILE))
 # remove extension
