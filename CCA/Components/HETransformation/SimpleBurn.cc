@@ -32,39 +32,19 @@ void SimpleBurn::computeBurn(double gasTemperature,
 			       double materialMass,
 			       double materialTemperature,
 			       double &burnedMass,
-			       double &releasedHeat)
+			       double &releasedHeat,
+			       double &delT)
 {
-  if ((gasTemperature > thresholdTemp) && (gasPressure > thresholdPressure)) 
-    {
+  if ((gasTemperature > thresholdTemp) && (gasPressure > thresholdPressure)) {
       burnedMass = BurnCoeff * pow(gasPressure,0.778);
-      releasedHeat = burnedMass * Enthalpy;
-    }
-  else
-    {
+  }
+  else {
       burnedMass = 0;
-      releasedHeat = 0;
-    }
+  }
 
-  if (burnedMass > materialMass)
-    {
-      burnedMass = materialMass;
-      releasedHeat = burnedMass * Enthalpy;
-    }
+  burnedMass *= delT;
+  if(burnedMass > materialMass){
+    burnedMass = materialMass;
+  }
+  releasedHeat = burnedMass * Enthalpy * delT;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

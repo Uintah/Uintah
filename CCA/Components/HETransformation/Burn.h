@@ -51,7 +51,8 @@ WARNING
 				   double materialMass,
 				   double materialTemp,
 				   double &burnedMass,
-				   double &releasedHeat) = 0;
+				   double &releasedHeat,
+				   double &delT) = 0;
 
        protected:
 	  bool d_burnable;

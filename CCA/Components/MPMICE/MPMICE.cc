@@ -1601,6 +1601,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
           sprintf(warning, 
           " cell[%d][%d][%d], mat %d, iter %d, n_passes %d,Now exiting ",
           i,j,k,m,count,n_passes);
+	  cout << rho_micro[m][*iter] << " " << vol_frac[m][*iter] << " "
+               << Temp[m][*iter] << " " << press_new[*iter] << " "
+	       << mat_vol[m][*iter] << endl;
           d_ice->Message(1," calc_equilibration_press:", 
               " rho_micro < 0 || vol_frac < 0", warning);
       }
@@ -1726,6 +1729,8 @@ void MPMICE::computeMassBurnRate(const ProcessorGroup*,
 		    Ghost::None, 0);
         new_dw->get(solidMass, MIlb->cMassLabel, dwindex, patch,Ghost::None, 0);
 
+        double delt = delT;
+
         for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
 	  // For clarity, this should be renamed computeBurnRate
           matl->getBurnModel()->computeBurn(gasTemperature[*iter],
@@ -1733,9 +1738,8 @@ void MPMICE::computeMassBurnRate(const ProcessorGroup*,
 					    solidMass[*iter],
 					    solidTemperature[*iter],
 					    burnedMass[m][*iter],
-					    releasedHeat[m][*iter]);
-	  burnedMass[m][*iter] *= delT;
-	  releasedHeat[m][*iter] *= delT;
+					    releasedHeat[m][*iter],
+					    delt);
 
           sumBurnedMass[*iter]    += burnedMass[m][*iter];
           sumReleasedHeat[*iter]  += releasedHeat[m][*iter];
