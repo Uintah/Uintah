@@ -1,15 +1,15 @@
 /* share.h */
 
-#undef Packages/RobVSHARE
+#undef RobVSHARE
 
 #ifdef _WIN32
-  #if defined(BUILD_Packages/RobV)
-    #define Packages/RobVSHARE __declspec(dllexport)
+  #if defined(BUILD_RobV)
+    #define RobVSHARE __declspec(dllexport)
   #else
-    #define Packages/RobVSHARE __declspec(dllimport)
+    #define RobVSHARE __declspec(dllimport)
   #endif
 #else
-  #define Packages/RobVSHARE
+  #define RobVSHARE
 #endif
 
 
