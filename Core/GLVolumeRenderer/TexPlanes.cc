@@ -169,8 +169,6 @@ TexPlanes::draw()
   polys.push_back( poly );
   loadColorMap( b );
   loadTexture( b );
-//   makeTextureMatrix( b );
-//   enableTexCoords();
   setAlpha( b );
 #if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture) && defined(__APPLE__)
   if( !VolShader->created() ){
@@ -178,12 +176,16 @@ TexPlanes::draw()
     VolShader->create();
   }
   VolShader->bind();
+#else
+  makeTextureMatrix( b );
+  enableTexCoords();
 #endif
   drawPolys( polys );
 #if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture) && defined(__APPLE__)
   VolShader->release();
+#else
+  disableTexCoords();
 #endif
-//   disableTexCoords();
 }
 
   void
