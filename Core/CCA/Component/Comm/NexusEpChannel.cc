@@ -16,9 +16,19 @@
 */
 
 
-using namespace std;
 #include "NexusEpChannel.h"
 #include "NexusHandlerThread.h"
+#include <Core/CCA/Component/PIDL/PIDL.h>
+#include <Core/CCA/Component/PIDL/Warehouse.h>
+#include <Core/CCA/Component/PIDL/ServerContext.h>
+#include <Core/CCA/Component/Comm/CommError.h>
+#include <Core/CCA/Component/Comm/NexusEpMessage.h>
+#include <Core/CCA/Component/Comm/NexusSpChannel.h>
+#include <Core/Thread/Thread.h>
+#include <iostream>
+#include <sstream>
+using namespace SCIRun;
+using namespace std;
 
 /////////////
 // Hostname of this computer
@@ -28,7 +38,7 @@ static char* hostname;
 // Port to listen to. Nexus assigns this.
 static unsigned short port;
 
-void NexusEpChannel::printDebug(string d) {
+void NexusEpChannel::printDebug(const string& d) {
   cout << d << endl;
 }
 
@@ -41,7 +51,7 @@ void unknown_handler(globus_nexus_endpoint_t* endpoint,
 		     int handler_id)
 {
   void* v=globus_nexus_endpoint_get_user_pointer(endpoint);
-  ::PIDL::ServerContext* sc=static_cast< ::PIDL::ServerContext*>(v); 
+  ServerContext* sc=static_cast< ServerContext*>(v); 
   NexusEpChannel *chan = dynamic_cast<NexusEpChannel*>(sc->chan);
   if (chan) {
     if (handler_id >= chan->table_size)
@@ -58,9 +68,9 @@ void unknown_handler(globus_nexus_endpoint_t* endpoint,
 static int approval_fn(void*, char* urlstring, globus_nexus_startpoint_t* sp)
 {
   try {
-    ::PIDL::Object* obj;
-    ::PIDL::URL url(urlstring);
-    ::PIDL::Warehouse* wh=::PIDL::PIDL::getWarehouse();
+    Object* obj;
+    URL url(urlstring);
+    Warehouse* wh=PIDL::getWarehouse();
     obj = wh->lookupObject(url.getSpec());
     if(!obj){
       std::cerr << "Unable to find object: " << urlstring
@@ -89,7 +99,7 @@ static int approval_fn(void*, char* urlstring, globus_nexus_startpoint_t* sp)
 }
 
 
-int NexusEpChannel::approve(globus_nexus_startpoint_t* sp, ::PIDL::Object* obj)
+int NexusEpChannel::approve(globus_nexus_startpoint_t* sp, Object* obj)
 { 
   if (kDEBUG) printDebug("NexusEpChannel::approve()");
   if(int gerr=globus_nexus_startpoint_bind(sp, &d_endpoint)){

@@ -23,59 +23,58 @@
 #include <Core/Exceptions/Exception.h>
 #include <string>
 
-/**************************************
+namespace SCIRun {
+  /**************************************
  
-CLASS
-   CommError
+  CLASS
+     CommError
    
-KEYWORDS
-   Exception, Error, PIDL
+  KEYWORDS
+     Exception, Error, PIDL
    
-DESCRIPTION
-   Exception class for communication functions.  An unhandled negative return
-   code from a socket function will get mapped to this exception.  The
-   message is a description of the call, and the code is the result
-   returned from the particular communication class.
+  DESCRIPTION
+     Exception class for communication functions.  An unhandled negative return
+     code from a socket function will get mapped to this exception.  The
+     message is a description of the call, and the code is the result
+     returned from the particular communication class.
 
-****************************************/
-	class CommError : public SCIRun::Exception {
-	public:
-	    //////////
-	    // Construct the exception with the given reason and the
-	    // return code from the Communication class
-	    CommError(const std::string& msg, int code);
+  ****************************************/
+  class CommError : public SCIRun::Exception {
+  public:
+    //////////
+    // Construct the exception with the given reason and the
+    // return code from the Communication class
+    CommError(const std::string& msg, int code);
 
-	    //////////
-	    // Copy ctor
-	    CommError(const CommError&);
+    //////////
+    // Copy ctor
+    CommError(const CommError&);
 
-	    //////////
-	    // Destructor
-	    virtual ~CommError();
+    //////////
+    // Destructor
+    virtual ~CommError();
 
-	    //////////
-	    // An explanation message, containing the msg string and the
-	    // return code passed into the constructor.
-	    const char* message() const;
+    //////////
+    // An explanation message, containing the msg string and the
+    // return code passed into the constructor.
+    const char* message() const;
 
-	    //////////
-	    // The name of this class
-	    const char* type() const;
-	protected:
-	private:
-	    //////////
-	    // The explanation string (usually the name of the offending
-	    // call).
-	    std::string d_msg;
+    //////////
+    // The name of this class
+    const char* type() const;
+  protected:
+  private:
+    //////////
+    // The explanation string (usually the name of the offending
+    // call).
+    std::string d_msg;
 
-	    //////////
-	    // The globus error code.
-	    int d_code;
+    //////////
+    // The globus error code.
+    int d_code;
 
-	    CommError& operator=(const CommError&);
-	};
+    CommError& operator=(const CommError&);
+  };
+}
 
 #endif
-
-
-

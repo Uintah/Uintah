@@ -35,7 +35,6 @@
 #include <globus_nexus.h>
 #include <vector>
 
-using ::ReplyEP;
 using namespace SCIRun;
 
 static Mutex mutex("ReplyEP pool lock");

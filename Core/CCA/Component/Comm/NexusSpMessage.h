@@ -18,6 +18,8 @@
 #ifndef NEXUS_SP_MESSAGE_H
 #define NEXUS_SP_MESSAGE_H 
 
+#include <string>
+
 /**************************************
  
 CLASS
@@ -34,85 +36,75 @@ SEE ALSO
 
 ****************************************/
 
-using namespace std;
-#include <string>
-#include <globus_nexus.h>
-#include <Core/CCA/Component/Comm/CommError.h>
 #include <Core/CCA/Component/Comm/Message.h>
-#include <Core/CCA/Component/Comm/ReplyEP.h>
-#include <Core/Util/NotFinished.h>
-#include <Core/CCA/Component/Comm/SpChannel.h>
-#include <Core/CCA/Component/Comm/NexusSpChannel.h>
+#include <globus_nexus.h>
 
+namespace SCIRun {
+  class ReplyEP;
+  class NexusSpMessage : public Message {
+  public:
 
+    NexusSpMessage(globus_nexus_startpoint_t* );
+    virtual ~NexusSpMessage();
+    
+    //////////////////
+    // The SP does not have a local object so lets try to
+    // get the object from the EP that this SP is associated.
+    void* getLocalObj();
 
-class NexusSpMessage : public Message {
-public:
+    void createMessage();
+    void marshalInt(int *i, int size = 1);
+    void marshalSpChannel(SpChannel* channel);
+    void marshalByte(char *b, int size = 1);
+    void marshalChar(char *c, int size = 1);
+    void marshalFloat(float *f, int size = 1);
+    void marshalDouble(double *d, int size = 1);
+    void marshalLong(long *l, int size = 1);
+    void sendMessage(int handler);
+    void waitReply();
+    void unmarshalReply();
+    void unmarshalInt(int *i, int size = 1); 
+    void unmarshalByte(char *b, int size = 1);
+    void unmarshalChar(char *c, int size = 1);
+    void unmarshalFloat(float *f, int size = 1);
+    void unmarshalDouble(double *d, int size = 1);
+    void unmarshalLong(long *l, int size = 1);
+    void unmarshalSpChannel(SpChannel* channel);
+    void destroyMessage();
 
-  NexusSpMessage(globus_nexus_startpoint_t* );
-  virtual ~NexusSpMessage();
+  private:
 
-  //////////////////
-  // The SP does not have a local object so lets try to
-  // get the object from the EP that this SP is associated.
-  void* getLocalObj();
+    /////////////////
+    // Reply endpoint to facilitate receiving a reply
+    ReplyEP* _reply;
 
-  void createMessage();
-  void marshalInt(int *i, int size = 1);
-  void marshalSpChannel(SpChannel* channel);
-  void marshalByte(char *b, int size = 1);
-  void marshalChar(char *c, int size = 1);
-  void marshalFloat(float *f, int size = 1);
-  void marshalDouble(double *d, int size = 1);
-  void marshalLong(long *l, int size = 1);
-  void sendMessage(int handler);
-  void waitReply();
-  void unmarshalReply();
-  void unmarshalInt(int *i, int size = 1); 
-  void unmarshalByte(char *b, int size = 1);
-  void unmarshalChar(char *c, int size = 1);
-  void unmarshalFloat(float *f, int size = 1);
-  void unmarshalDouble(double *d, int size = 1);
-  void unmarshalLong(long *l, int size = 1);
-  void unmarshalSpChannel(SpChannel* channel);
-  void destroyMessage();
+    ////////////////
+    // Buffer for original message
+    globus_nexus_buffer_t* _buffer;
 
-private:
+    ////////////////
+    // Beffer in which to store the reply
+    globus_nexus_buffer_t* _recvbuff;
 
-  /////////////////
-  // Reply endpoint to facilitate receiving a reply
-  ::ReplyEP* _reply;
+    ////////////////
+    // Startpoint which we marshal together with the
+    // message in order to recieve a reply.
+    globus_nexus_startpoint_t _reply_sp;
 
-  ////////////////
-  // Buffer for original message
-  globus_nexus_buffer_t* _buffer;
+    ///////////////
+    // Size of the current message
+    int msgsize;
 
-  ////////////////
-  // Beffer in which to store the reply
-  globus_nexus_buffer_t* _recvbuff;
-
-  ////////////////
-  // Startpoint which we marshal together with the
-  // message in order to recieve a reply.
-  globus_nexus_startpoint_t _reply_sp;
-
-  ///////////////
-  // Size of the current message
-  int msgsize;
-
-  ///////////////
-  // Original startpoint associated with this
-  // Communication Channel
-  globus_nexus_startpoint_t* d_sp;
+    ///////////////
+    // Original startpoint associated with this
+    // Communication Channel
+    globus_nexus_startpoint_t* d_sp;
   
-  void printDebug(string );
-  
-  //Toggles on/off whether debugging info gets printed
-  static const int kDEBUG=0;
-};
-
-
+    void printDebug( const std::string& );
+    
+    //Toggles on/off whether debugging info gets printed
+    static const int kDEBUG=0;
+  };
+}
 
 #endif
-
-

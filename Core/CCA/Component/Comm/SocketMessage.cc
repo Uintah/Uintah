@@ -16,13 +16,12 @@
 */
 
 #include "SocketMessage.h"
+using namespace SCIRun;
 
-SocketMessage::SocketMessage(Communication* new_comm) { 
-  comm = new_comm;
+SocketMessage::SocketMessage() { 
 }
 
 SocketMessage::~SocketMessage() {
-  if (comm) delete comm; 
 }
 
 void SocketMessage::createMessage()  {  }
@@ -44,10 +43,6 @@ void SocketMessage::unmarshalDouble(double *d, int size = 1) {  }
 void SocketMessage::unmarshalLong(long *l, int size = 1) {  }
 void SocketMessage::unmarshalSpChannel(SpChannel* channel) {  }
 
-void* SocketMessage::getLocalObj() {  }
+void* SocketMessage::getLocalObj() {  return 0; }
 
 void SocketMessage::destroyMessage() {  }
-
-
-
-

@@ -19,63 +19,60 @@
 #ifndef EP_CHANNEL_INTERFACE_H
 #define EP_CHANNEL_INTERFACE_H 
 
-using namespace std;
 #include <string>
-#include <Core/CCA/Component/Comm/CommError.h>
-#include <Core/CCA/Component/PIDL/URL.h> 
-#include <Core/CCA/Component/Comm/Message.h>
-#include <Core/CCA/Component/Comm/SpChannel.h>
-#include <Core/CCA/Component/PIDL/TypeInfo.h>
 
-//Handler function type
-typedef void (*HPF)(Message* ); 
+namespace SCIRun {
+  using namespace std;
+  class Message;
+  class SpChannel;
+  class TypeInfo;
 
-/**************************************
+  /**************************************
  
-CLASS
-   EpChannel
+  CLASS
+  EpChannel
    
-DESCRIPTION
-   The base class for all communication-specific endpoint 
-   channel abstractions. An endpoint channel is a server
-   channel in the sense that waits for one (or more depending
-   on implementation) clients to bind to it. It also contains
-   handler functions which are invoked when a message bound 
-   for them is recieved.
+  DESCRIPTION
+     The base class for all communication-specific endpoint 
+     channel abstractions. An endpoint channel is a server
+     channel in the sense that waits for one (or more depending
+     on implementation) clients to bind to it. It also contains
+     handler functions which are invoked when a message bound 
+     for them is recieved.
 
-****************************************/
+  ****************************************/
 
-class EpChannel {
-public:
+  class EpChannel {
+  public:
 
-  //Initializing methods used to establish the
-  //connection. These are called from the PIDL.
-  virtual void openConnection() = 0;
-  virtual void activateConnection(void* obj) = 0;
-  virtual void closeConnection() = 0;
-  virtual string getUrl() = 0; 
+    //Handler function type
+    typedef void (*HPF)(Message* ); 
+
+    //Initializing methods used to establish the
+    //connection. These are called from the PIDL.
+    virtual void openConnection() = 0;
+    virtual void activateConnection(void* obj) = 0;
+    virtual void closeConnection() = 0;
+    virtual string getUrl() = 0; 
   
-  ///////////////
-  // Retrieves a Message associated with this particular object
-  virtual Message* getMessage() = 0;
+    ///////////////
+    // Retrieves a Message associated with this particular object
+    virtual Message* getMessage() = 0;
 
-  //////////////
-  // Used in order to directly bind a SpChannel to
-  // this EpChannel.
-  virtual void bind(SpChannel* spchan) = 0;
+    //////////////
+    // Used in order to directly bind a SpChannel to
+    // this EpChannel.
+    virtual void bind(SpChannel* spchan) = 0;
 
-  //////////////
-  // Functions used to establish the handler functions
-  virtual void allocateHandlerTable(int size)=0;
-  virtual void registerHandler(int num, void* handle)=0;
+    //////////////
+    // Functions used to establish the handler functions
+    virtual void allocateHandlerTable(int size)=0;
+    virtual void registerHandler(int num, void* handle)=0;
   
-  //////////
-  // A pointer to the type information.
-  const PIDL::TypeInfo* d_typeinfo;
-};
-
-
+    //////////
+    // A pointer to the type information.
+    const TypeInfo* d_typeinfo;
+  };
+}
 
 #endif
-
-

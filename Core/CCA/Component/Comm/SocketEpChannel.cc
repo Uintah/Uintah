@@ -16,10 +16,14 @@
 */
 
 
-using namespace std;
-#include <sstream>
 #include "SocketEpChannel.h"
-
+#include <Core/CCA/Component/Comm/CommError.h>
+#include <Core/CCA/Component/Comm/SocketMessage.h>
+#include <sstream>
+#include <unistd.h>
+using namespace std;
+using namespace SCIRun;
+#define PORT 7675
 
 SocketEpChannel::SocketEpChannel() { 
   char name [255];
@@ -36,12 +40,12 @@ SocketEpChannel::~SocketEpChannel() { }
 
 void SocketEpChannel::openConnection() {
   //Call listener and pass it the args
-  connfd = openListener(PORT);
+  //connfd = openListener(PORT);
 
 }
 
 void SocketEpChannel::closeConnection() {
-  closeListener(connfd);
+  //closeListener(connfd);
 
 }
 
@@ -58,7 +62,7 @@ Message* SocketEpChannel::getMessage() {
   if (connfd == 0)
     return NULL;
   if (msg == NULL)
-    msg = new SocketMessage(new Communication(connfd));
+    msg = new SocketMessage();
   return msg;
 }
 
