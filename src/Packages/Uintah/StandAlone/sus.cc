@@ -139,6 +139,7 @@ usage( const std::string & message,
       cerr << "-mpmf                : \n";  // option for Fracture
       cerr << "-rmpm                : \n";  // option for rigid MPM
       cerr << "-smpm                : \n";  // option for shell MPM
+      cerr << "-smpmice             : \n";  // option for shell MPM with ICE
       cerr << "-ice                 : \n";
       cerr << "-arches              : \n";
       cerr << "-AMR                 : use AMR simulation controller\n";
@@ -251,6 +252,9 @@ main( int argc, char** argv )
           do_rmpm=true;
 	} else if(s == "-smpm"){
           do_smpm=true;
+	} else if(s == "-smpmice"){
+          do_smpm=true;
+          do_ice=true;
 	} else if(s == "-impm"){
 	  do_impmpm=true;
 	} else if(s == "-arches"){
@@ -466,6 +470,10 @@ main( int argc, char** argv )
           ShellMPM* smpm = scinew ShellMPM(world);
 	  sim = smpm;
 	  comp = smpm;
+	} else if(do_smpm && do_ice){
+	  MPMICE* mpmice = scinew MPMICE(world, SHELL_MPMICE);
+	  sim = mpmice;
+	  comp = mpmice;
 	} else if(do_impmpm){
 	  ImpMPM* impm = scinew ImpMPM(world);
 	  sim = impm;
