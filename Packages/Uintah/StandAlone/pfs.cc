@@ -131,12 +131,14 @@ main(int argc, char *argv[])
               if(var_name1=="0" && var_name2 == "0"){
                 while (source >> x >> y >> z) {
                   Point pp(x,y,z);
-                  const Patch* currentpatch =
+                  if(level->containsPoint(pp)){
+                    const Patch* currentpatch =
                        level->selectPatchForCellIndex(level->getCellIndex(pp));
-                  int pid = currentpatch->getID();
-                  min = Min(pp,min);
-                  max = Max(pp,max);
-                  points[pid].push_back(pp);
+                    int pid = currentpatch->getID();
+                    min = Min(pp,min);
+                    max = Max(pp,max);
+                    points[pid].push_back(pp);
+                  }
                 }
                 source.close();
                 for(Level::const_patchIterator iter = level->patchesBegin();
@@ -165,13 +167,15 @@ main(int argc, char *argv[])
                 vector<vector<double> > volumes(level->numPatches());
                 while (source >> x >> y >> z >> vol) {
                   Point pp(x,y,z);
-                  const Patch* currentpatch =
+                  if(level->containsPoint(pp)){
+                    const Patch* currentpatch =
                        level->selectPatchForCellIndex(level->getCellIndex(pp));
-                  int pid = currentpatch->getID();
-                  min = Min(pp,min);
-                  max = Max(pp,max);
-                  points[pid].push_back(pp);
-                  volumes[pid].push_back(vol);
+                    int pid = currentpatch->getID();
+                    min = Min(pp,min);
+                    max = Max(pp,max);
+                    points[pid].push_back(pp);
+                    volumes[pid].push_back(vol);
+                  }
                 }
                 source.close();
                 for(Level::const_patchIterator iter = level->patchesBegin();
@@ -199,14 +203,16 @@ main(int argc, char *argv[])
                 double nx,ny,nz;
                 while (source >> x >> y >> z >> nx >> ny >> nz) {
                   Point pp(x,y,z);
-                  Vector norm(nx,ny,nz);
-                  const Patch* currentpatch =
+                  if(level->containsPoint(pp)){
+                    Vector norm(nx,ny,nz);
+                    const Patch* currentpatch =
                        level->selectPatchForCellIndex(level->getCellIndex(pp));
-                  int pid = currentpatch->getID();
-                  min = Min(pp,min);
-                  max = Max(pp,max);
-                  points[pid].push_back(pp);
-                  normals[pid].push_back(norm);
+                    int pid = currentpatch->getID();
+                    min = Min(pp,min);
+                    max = Max(pp,max);
+                    points[pid].push_back(pp);
+                    normals[pid].push_back(norm);
+                  }
                 }
                 source.close();
                 for(Level::const_patchIterator iter = level->patchesBegin();
