@@ -68,9 +68,11 @@ GeometryIPort::~GeometryIPort()
 
 GeometryOPort::GeometryOPort(Module* module, const string& portname)
   : OPort(module, Geometry_type, portname, Geometry_color),
-    save_msgs(0), outbox(0)
+    serial(1),
+    dirty(false),
+    save_msgs(0),
+    outbox(0)
 {
-    serial=1;
 }
 
 GeometryOPort::~GeometryOPort()
@@ -104,7 +106,7 @@ void GeometryOPort::reset()
 	portid=reply.portid;
 	if (module->showStats()) turn_off();
     }
-    dirty=0;
+    dirty=false;
 }
 
 void GeometryOPort::flush()
@@ -142,7 +144,7 @@ GeomID GeometryOPort::addObj(GeomHandle obj, const string& name,
     } else {
 	save_msg(msg);
     }
-    dirty=1;
+    dirty=true;
     if (module->showStats()) turn_off();
     return id;
 }
@@ -177,7 +179,7 @@ void GeometryOPort::delObj(GeomID id, int del)
 	outbox->send(msg);
     else
 	save_msg(msg);
-    dirty=1;
+    dirty=true;
     if (module->showStats()) turn_off();
 }
 
@@ -189,7 +191,7 @@ void GeometryOPort::delAll()
 	outbox->send(msg);
     else
 	save_msg(msg);
-    dirty=1;
+    dirty=true;
     if (module->showStats()) turn_off();
 }
 
@@ -201,7 +203,7 @@ void GeometryOPort::flushViews()
 	outbox->send(msg);
     else
 	save_msg(msg);
-    dirty=0;
+    dirty=false;
     if (module->showStats()) turn_off();
 }
 
@@ -215,7 +217,7 @@ void GeometryOPort::flushViewsAndWait()
     else
 	save_msg(msg);
     waiter.down();
-    dirty=0;
+    dirty=false;
     if (module->showStats()) turn_off();
 }
 
