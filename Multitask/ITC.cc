@@ -16,6 +16,7 @@
 #endif
 
 #include <Multitask/ITC.h>
+#include <Multitask/Task.h>
 #include <iostream.h>
 
 struct CrowdMonitor_private {
@@ -26,6 +27,8 @@ struct CrowdMonitor_private {
     int nreaders;
     int nwriters;
     Mutex lock;
+    int ndeep;
+    Task* owner;
 };
 
 CrowdMonitor::CrowdMonitor()
@@ -35,6 +38,8 @@ CrowdMonitor::CrowdMonitor()
     priv->nwriters_waiting=0;
     priv->nreaders=0;
     priv->nwriters=0;
+    priv->ndeep=0;
+    priv->owner=0;
 }
 
 CrowdMonitor::~CrowdMonitor()
@@ -45,7 +50,7 @@ CrowdMonitor::~CrowdMonitor()
 void CrowdMonitor::read_lock()
 {
     priv->lock.lock();
-    while(priv->nwriters_waiting > 0){
+    while(priv->nwriters > 0){
 	priv->nreaders_waiting++;
 	priv->read_waiters.wait(priv->lock);
 	priv->nreaders_waiting--;
@@ -65,6 +70,11 @@ void CrowdMonitor::read_unlock()
 
 void CrowdMonitor::write_lock()
 {
+    Task* self=Task::self();
+    if(priv->owner == self){
+	priv->ndeep++;
+	return;
+    }
     priv->lock.lock();
     while(priv->nwriters || priv->nreaders){
 	// Have to wait...
@@ -73,16 +83,21 @@ void CrowdMonitor::write_lock()
 	priv->nwriters_waiting--;
     }
     priv->nwriters++;
+    priv->ndeep++;
     priv->lock.unlock();
 }
 
 void CrowdMonitor::write_unlock()
 {
+    Task* self=Task::self();
+    if(priv->owner == self && --priv->ndeep > 0)
+	return;
     priv->lock.lock();
     priv->nwriters--;
     if(priv->nwriters_waiting)
 	priv->write_waiters.cond_signal(); // Wake one of them up...
     else if(priv->nreaders_waiting)
 	priv->read_waiters.broadcast(); // Wait all of them up...
+    priv->owner=0;
     priv->lock.unlock();
 }
