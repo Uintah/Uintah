@@ -1623,7 +1623,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     }
     setBC(press_new,   rho_micro, placeHolder,
           "rho_micro", "Pressure", patch , d_sharedState, 0, new_dw, lv);
-          
+    delete lv;
+              
     press_copy.copyData(press_new);   
      
     //__________________________________
