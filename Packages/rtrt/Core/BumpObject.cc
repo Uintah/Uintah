@@ -32,6 +32,7 @@ void BumpObject::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 
 
 
+/*
 void BumpObject::light_intersect(Light* light, const Ray& ray, HitInfo&,
 			     double dist, Color& atten, DepthStats* st,
 			     PerProcessorContext*)
@@ -39,6 +40,7 @@ void BumpObject::light_intersect(Light* light, const Ray& ray, HitInfo&,
 
   cout << "If you're light interesecting this object - stop it. This is the Bump Object and should only be used for its normal." << endl;
 }
+*/
 
 void BumpObject::multi_light_intersect(Light*, const Point& orig,
 				   const Array1<Vector>& dirs,
