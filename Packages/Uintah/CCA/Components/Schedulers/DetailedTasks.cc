@@ -294,7 +294,9 @@ void DetailedTasks::createScrublists(bool init_timestep)
 	// Only scrub if it is not part of the original requires and
 	// This is not an initialization timestep
 	if(!init_timestep && initreqs.find(req->var) == initreqs.end()){
-	  newmap[req->var]=dtask;
+	  if(!dtask->getTask()->isReductionTask()){
+	    newmap[req->var]=dtask;
+	  }
 	}
       }
     }
@@ -309,8 +311,10 @@ void DetailedTasks::createScrublists(bool init_timestep)
 	 && newmap.find(comp->var) == newmap.end()){
 	// Only scrub if it is not part of the original requires and
 	// This is not timestep 0
-	newmap[comp->var]=dtask;
-	cerr << "Warning: Variable " << comp->var->getName() << " computed by " << dtask->getTask()->getName() << " and never used\n";
+	if(!dtask->getTask()->isReductionTask()){
+	  newmap[comp->var]=dtask;
+	  cerr << "Warning: Variable " << comp->var->getName() << " computed by " << dtask->getTask()->getName() << " and never used\n";
+	}
       }
     }
   }
