@@ -64,6 +64,10 @@ protected:
   GuiString sShotNumber_;
   GuiString sSliceNumber_;
 
+  GuiInt iSliceRange_;
+  GuiString sSliceStart_;
+  GuiString sSliceStop_;
+
   GuiInt iScalar0_;
   GuiInt iVector0_;
   GuiInt iVector1_;
@@ -76,6 +80,9 @@ protected:
   string tree_;
   int shot_;
   int slice_;
+  int sliceRange_;
+  int sliceStart_;
+  int sliceStop_;
 
   int bScalar_[MAX_SCALAR];
   int bVector_[MAX_VECTOR];
@@ -105,6 +112,9 @@ MDSPlusFieldReader::MDSPlusFieldReader(GuiContext *context)
     sTreeName_(context->subVar("treeName")),
     sShotNumber_(context->subVar("shotNumber")),
     sSliceNumber_(context->subVar("sliceNumber")),
+    iSliceRange_(context->subVar("sliceRange")),
+    sSliceStart_(context->subVar("sliceStart")),
+    sSliceStop_(context->subVar("sliceStop")),
     iScalar0_(context->subVar("bPressure")),
     iVector0_(context->subVar("bBField")),
     iVector1_(context->subVar("bVField")),
@@ -132,7 +142,6 @@ void MDSPlusFieldReader::execute(){
 
   string sPortStr[MAX_SCALAR] = {"Output Pressure Field" };
   string vPortStr[MAX_VECTOR] = {"Output B Field", "Output V Field", "Output J Field", };
-
   string gridStr[MAX_GRID] = {"R", "Z", "PHI", "K" };
   string spaceStr[3] = {"REALSPACE", "PERTURBED.REAL", "PERTURBED.IMAG" };
 
@@ -148,6 +157,9 @@ void MDSPlusFieldReader::execute(){
   std::string tree(sTreeName_.get());     // MDS+ Tree 
   int shot = atoi( sShotNumber_.get().c_str() );  // NIMROD shot to be opened
   int slice =  atoi( sSliceNumber_.get().c_str() );
+  int sliceRange =  iSliceRange_.get();
+  int sliceStart =  atoi( sSliceStart_.get().c_str() );
+  int sliceStop =  atoi( sSliceStop_.get().c_str() );
 
   bool update = false;
 
@@ -174,7 +186,7 @@ void MDSPlusFieldReader::execute(){
   int space = iSpace_.get();
   int mode = iMode_.get();
 
-  bool readData;
+  bool readAll, readGrid, readData;
   bool modeChange;
 
   if( error_  == true ||
@@ -183,22 +195,35 @@ void MDSPlusFieldReader::execute(){
 
       server_ != server ||
       tree_   != tree   ||
-      shot_   != shot   ||
-      slice_  != slice  ||
+      shot_   != shot ) {
 
-      space_ != space ) {
-    
     error_ = false;
 
     server_ = server;
     tree_   = tree;
     shot_   = shot;
-    slice_  = slice;
 
+    readAll = readGrid = true;
+  } else
+    readAll = readGrid = false;
+
+  if( sliceRange_  != sliceRange ||
+      sliceStart_ != sliceStart ||
+      sliceStop_ != sliceStop ||
+      slice_ != slice ||
+      space_ != space ) {
+
+    sliceRange_ = sliceRange;
+    sliceStart_ = sliceStart;
+    sliceStop_ = sliceStop;
+
+    slice_  = slice;
     space_ = space;
 
     readData = true;
-  } else
+  } else if( sliceRange_ )
+    readData = true;
+  else
     readData = false;
     
   if( mode_ != mode ) {
@@ -207,15 +232,8 @@ void MDSPlusFieldReader::execute(){
   } else
     modeChange = false;
 
-  if( readData ) {
-    std::string sNode("SCALARS");                 // Node/Data to fetch
-    std::string vNode("VECTORS.CYLINDRICAL");     // Node/Data to fetch
+  if( readAll || readGrid || readData ) {
    
-    char *name = NULL;          // Used to hold the name of the slice 
-    double time;                // Used to hold the time of the slice 
-    int nSlices;                // Number of time slices.
-    int *nids;                  // IDs to the time slice nodes in the tree 
-
     for( int n=0; n<MAX_GRID; n++ )
       grid_data[n] = NULL;
 
@@ -236,6 +254,7 @@ void MDSPlusFieldReader::execute(){
     }
     else
       remark( "Conecting to MdsPlus Server --> " + server );
+
     // Open tree
     if( MDS_Open( tree.c_str(), shot) , 0 ) {
       ostringstream str;
@@ -249,6 +268,10 @@ void MDSPlusFieldReader::execute(){
       str << "Opening " << tree << " tree for shot " << shot;
       remark( str.str() );
     }
+  }
+
+
+  if( readAll || readGrid  || readData ) {
 
     int dims[3];
 
@@ -297,8 +320,21 @@ void MDSPlusFieldReader::execute(){
       str << "Grid size: " << nRadial << " " << nTheta << " " << nPhi << " " << nMode;
       remark( str.str() );
     }
+  }
+
+  if( readAll || readData ) {
+
+    std::string sNode("SCALARS");                 // Node/Data to fetch
+    std::string vNode("VECTORS.CYLINDRICAL");     // Node/Data to fetch
 
     std::string buf;
+
+    int dims[3];
+
+    char *name = NULL;          // Used to hold the name of the slice 
+    double time;                // Used to hold the time of the slice 
+    int nSlices;                // Number of time slices.
+    int *nids;                  // IDs to the time slice nodes in the tree 
 
     // Query the server for the number of slices in the tree
     nSlices = get_slice_ids( &nids );
@@ -309,266 +345,343 @@ void MDSPlusFieldReader::execute(){
       remark( str.str() );
     }
 
-    if( slice<0 || nSlices<=slice ) {
-      ostringstream str;
-      str << "Slice " << slice_ << " is outside of the range [0-" << nSlices << ").";
-      error( str.str() );
-      error_ = true;
+    
+    if( sliceRange_ ) {
+
+      if( sliceStart_< 0 || nSlices<=sliceStop_ ) {
+	ostringstream str;
+	str << "Slice range is outside of the range [0-" << nSlices << ").";
+	error( str.str() );
+	error_ = true;
+	return;
+      } else if( sliceStop_ < sliceStart_ ) {
+	ostringstream str;
+	str << "Improper slice range";
+	error( str.str() );
+	error_ = true;
+	return;
+      }
+    } else {
+
+      if( slice_< 0 || nSlices<=slice_ ) {
+	ostringstream str;
+	str << "Slice " << slice_ << " is outside of the range [0-" << nSlices << ").";
+	error( str.str() );
+	error_ = true;
+	return;
+      }
+
+      sliceStart = slice;
+      sliceStop  = slice;
     }
 
-    name = get_slice_name( nids, slice );
-    time = get_slice_time( name );
+    for( slice=sliceStart; slice<=sliceStop; slice++ ) {
+      name = get_slice_name( nids, slice );
+      time = get_slice_time( name );
 
-    ostringstream str;
-    str << "Processing slice " << name << " at time " << time;
-    remark( str.str() );
-      
-    // Fetch the Scalar data from the node
-    for( int n=0; n<MAX_SCALAR; n++ ) {
-      if( bScalar_[n] ) {
+      {
+	ostringstream str;
+	str << "Processing slice " << name << " at time " << time;
+	remark( str.str() );
+      }
+
+
+      if( sliceRange_ ) {
+	slice_ = slice;
+
+	ostringstream str;
+	str << slice_;
+
+	sSliceNumber_.set( str.str().c_str() );
+      }
+
+      // Fetch the Scalar data from the node
+      for( int n=0; n<MAX_SCALAR; n++ ) {
+	if( bScalar_[n] ) {
 	
-	buf = sNode + sFieldStr[n];
+	  buf = sNode + sFieldStr[n];
 
-	if( space_ == REALSPACE ) {
-	  remark( spaceStr[0] + "." + buf );
+	  if( space_ == REALSPACE ) {
+	    remark( spaceStr[0] + "." + buf );
 
-	  scalar_data[n][0] =
-	    get_slice_data( name, spaceStr[0].c_str(), buf.c_str(), dims );
+	    scalar_data[n][0] =
+	      get_slice_data( name, spaceStr[0].c_str(), buf.c_str(), dims );
 
-	  if( nRadial != dims[0] || nTheta != dims[1] || nPhi != dims[2] ) {
-	    error( "Error dimensions do not match Grid dimensions" );
-	    error_ = true;
-	    return;
-	  }
-	}
-	else if( space_ == PERTURBED ){
-	  for( int i=1; i<3; i++ ) { // Real and imaginary perturbed parts
-	    remark( spaceStr[i] + "." + buf );
-
-	    scalar_data[n][i] =
-	      get_slice_data( name, spaceStr[i].c_str(), buf.c_str(), dims );
-
-	    if( nRadial != dims[0] || nTheta != dims[1] || nMode != dims[2] ) {
+	    if( nRadial != dims[0] || nTheta != dims[1] || nPhi != dims[2] ) {
 	      error( "Error dimensions do not match Grid dimensions" );
 	      error_ = true;
 	      return;
 	    }
 	  }
-	}
-      }
-    }
-
-    // Fetch the Vector data from the node
-    for( int n=0; n<MAX_VECTOR; n++ ) {
-      if( bVector_[n] ) {
-
-	if( space == REALSPACE ) {
-	  for( int j=0; j<3; j++ ) {  // R, Z, Phi parts.
-	    buf = vNode + vFieldStr[n][j];
-
-	    remark( spaceStr[0] + "." + buf );
-
-	    vector_data[n][0][j] =
-	      get_slice_data( name, spaceStr[0].c_str(), buf.c_str(), dims );
-	  }
-
-	  if( nRadial != dims[0] || nTheta != dims[1] || nPhi != dims[2] ) {
-	    error( "Error Magnetic Field dimensions do not match Grid dimensions" );
-	    error_ = true;
-	    return;
-	  }
-	} else if( space_ == PERTURBED ) {
-	  for( int i=1; i<3; i++ ) { // Real and imaginary perturbed parts
-	    for( int j=0; j<3; j++ ) {  // R, Z, Phi parts.
-	      buf = vNode + vFieldStr[n][j];
-
+	  else if( space_ == PERTURBED ){
+	    for( int i=1; i<3; i++ ) { // Real and imaginary perturbed parts
 	      remark( spaceStr[i] + "." + buf );
 
-	      vector_data[n][i][j] =
+	      scalar_data[n][i] =
 		get_slice_data( name, spaceStr[i].c_str(), buf.c_str(), dims );
 
 	      if( nRadial != dims[0] || nTheta != dims[1] || nMode != dims[2] ) {
 		error( "Error dimensions do not match Grid dimensions" );
 		error_ = true;
 		return;
-	    }
+	      }
 	    }
 	  }
 	}
       }
-    }
-  }
 
-  if( readData || modeChange ) {
+      // Fetch the Vector data from the node
+      for( int n=0; n<MAX_VECTOR; n++ ) {
+	if( bVector_[n] ) {
 
-    StructHexVolMesh *hvm = scinew StructHexVolMesh(nRadial, nTheta, nPhi);
+	  if( space == REALSPACE ) {
+	    for( int j=0; j<3; j++ ) {  // R, Z, Phi parts.
+	      buf = vNode + vFieldStr[n][j];
 
-    StructHexVolField<double> *sField[MAX_SCALAR];
-    StructHexVolField<Vector> *vField[MAX_VECTOR];
+	      remark( spaceStr[0] + "." + buf );
 
-    for( int i=0; i<MAX_SCALAR; i++ ) {
-      if( bScalar_[i] ) {
-	sField[i] = scinew StructHexVolField<double>(hvm, Field::NODE);
-	sHandle_[i] = sField[i];
-      } else {
-	sField[i] = NULL;
-      }
-    }
+	      vector_data[n][0][j] =
+		get_slice_data( name, spaceStr[0].c_str(), buf.c_str(), dims );
+	    }
 
-    for( int i=0; i<MAX_VECTOR; i++ ) {
-      if( bVector_[i] ) {
-	vField[i] = scinew StructHexVolField<Vector>(hvm, Field::NODE);
-	vHandle_[i] = vField[i]; 
-      } else {
-	vField[i] = NULL;
-      }
-    }
+	    if( nRadial != dims[0] || nTheta != dims[1] || nPhi != dims[2] ) {
+	      error( "Error Magnetic Field dimensions do not match Grid dimensions" );
+	      error_ = true;
+	      return;
+	    }
+	  } else if( space_ == PERTURBED ) {
+	    for( int i=1; i<3; i++ ) { // Real and imaginary perturbed parts
+	      for( int j=0; j<3; j++ ) {  // R, Z, Phi parts.
+		buf = vNode + vFieldStr[n][j];
 
-    unsigned int idim = nRadial;
-    unsigned int jdim = nTheta;
-    unsigned int kdim = nPhi;
-    unsigned int mdim = nMode;
+		remark( spaceStr[i] + "." + buf );
 
-    remark( "Creating mesh and field. ");
+		vector_data[n][i][j] =
+		  get_slice_data( name, spaceStr[i].c_str(), buf.c_str(), dims );
 
-    // Convert the data and place in the mesh and field.
-    double xVal, yVal, zVal, pVal, rad, phi, angle;
-
-    StructHexVolMesh::Node::index_type node;
-
-    register unsigned int i, j, k, l, m, n, index, cc = 0;
-
-    //  Combime the real and imaginary parts.
-    if( space_ == PERTURBED ) {
- 
-      for( n=0; n<MAX_SCALAR; n++ ) {
-	if( bScalar_[n] )
-	  scalar_data[n][0] = scinew double[idim*jdim*kdim];
-      }
-
-      for( n=0; n<MAX_VECTOR; n++ ) {
-	if( bVector_[n] )
-	  for( l=0; l<3; l++ )
-	    vector_data[n][0][l] = scinew double[idim*jdim*kdim];
-      }
-
-      if( mode_ == 3 ) {
-	ostringstream str;
-	str << " K Values " << grid_data[3][0] << "  " << grid_data[3][1] << "  " << grid_data[3][2];
-	remark( str.str() );
-      }
-      else {
-	ostringstream str;
-	str << " Mode "  << mode_ << " and K Value " << grid_data[3][mode_];
-	remark( str.str() );
-      }
-
-      for( k=0; k<kdim; k++ ) {  // Phi loop.
-
-	phi = grid_data[2][k];
-
-	for( j=0; j<jdim; j++ ) {  // Theta loop.
-	  for( i=0; i<idim; i++ ) {  // R loop.
-
-	    for( n=0; n<MAX_SCALAR; n++ ) {
-	      if( bScalar_[n] ) {
-		scalar_data[n][0][cc] = 0;
-
-		//  If summing start at 0 otherwise start with the mode
-		if( mode_ == 3 ) m = 0;
-		else             m = mode_;
-
-		for( ; m<mdim; m++ ) {  // Mode loop.
-
-		  index = m*idim*jdim + j*idim + i;
-
-		  angle = grid_data[3][m] * phi;
-
-		  scalar_data[n][0][cc] +=
-		    2.0 * ( cos( angle ) * scalar_data[n][1][index] -
-			    sin( angle ) * scalar_data[n][2][index] );
-
-		  //  Not summing so quit.
-		  if( mode_ < 3 )
-		    break;
-		}
-	      }
-	    }	   
- 
-	    for( n=0; n<MAX_VECTOR; n++ ) {
-	      if( bVector_[n] ) {
-		for( l=0; l<3; l++ )
-		  vector_data[n][0][l][cc] = 0;
-
-		if( mode_ == 3 ) m = 0;
-		else	       m = mode_;
-
-		for( ; m<mdim; m++ ) {
-
-		  index = m*idim*jdim + j*idim + i;
-
-		  angle = grid_data[3][m] * phi;
-
-		  for( l=0; l<3; l++ )
-		    vector_data[n][0][l][cc] +=
-		      2.0 * ( cos( angle ) * vector_data[n][1][l][index] -
-			      sin( angle ) * vector_data[n][2][l][index] );
-
-		  if( mode_ < 3 )
-		    break;
+		if( nRadial != dims[0] || nTheta != dims[1] || nMode != dims[2] ) {
+		  error( "Error dimensions do not match Grid dimensions" );
+		  error_ = true;
+		  return;
 		}
 	      }
 	    }
-	     
-	    cc++;
 	  }
 	}
       }
-    }
 
-    cc = 0;
+      if( readAll || readData || modeChange ) {
+	StructHexVolMesh *hvm = scinew StructHexVolMesh(nRadial, nTheta, nPhi);
 
-    for( k=0; k<kdim; k++ ) {
+	StructHexVolField<double> *sField[MAX_SCALAR];
+	StructHexVolField<Vector> *vField[MAX_VECTOR];
 
-      phi = grid_data[2][k];
+	for( int i=0; i<MAX_SCALAR; i++ ) {
+	  if( bScalar_[i] ) {
+	    sField[i] = scinew StructHexVolField<double>(hvm, Field::NODE);
+	    sHandle_[i] = sField[i];
+	  } else {
+	    sField[i] = NULL;
+	  }
+	}
 
-      for( j=0; j<jdim; j++ ) {
-	for( i=0; i<idim; i++ ) {
+	for( int i=0; i<MAX_VECTOR; i++ ) {
+	  if( bVector_[i] ) {
+	    vField[i] = scinew StructHexVolField<Vector>(hvm, Field::NODE);
+	    vHandle_[i] = vField[i]; 
+	  } else {
+	    vField[i] = NULL;
+	  }
+	}
 
-	  node.i_ = i;
-	  node.j_ = j;
-	  node.k_ = k;
+	unsigned int idim = nRadial;
+	unsigned int jdim = nTheta;
+	unsigned int kdim = nPhi;
+	unsigned int mdim = nMode;
 
-	  rad = grid_data[0][i+j*idim];
+	remark( "Creating mesh and field. ");
 
-	  xVal =  rad * cos( phi );
-	  yVal = -rad * sin( phi );
-	  zVal =  grid_data[1][i+j*idim];
+	// Convert the data and place in the mesh and field.
+	double xVal, yVal, zVal, pVal, rad, phi, angle;
 
-	  hvm->set_point(node, Point( xVal, yVal, zVal ) );
+	StructHexVolMesh::Node::index_type node;
 
+	register unsigned int i, j, k, l, m, n, index, cc = 0;
+
+	//  Combime the real and imaginary parts.
+	if( space_ == PERTURBED ) {
+ 
 	  for( n=0; n<MAX_SCALAR; n++ ) {
-	    if( bScalar_[n] ) {
-	      pVal = scalar_data[n][0][cc];
-	      
-	      sField[n]->set_value(pVal, node);
-	    }
+	    if( bScalar_[n] )
+	      scalar_data[n][0] = scinew double[idim*jdim*kdim];
 	  }
-	     
+
 	  for( n=0; n<MAX_VECTOR; n++ ) {
-	    if( bVector_[n] ) {
-	      xVal =  vector_data[n][0][0][cc] * cos(phi) -
-		vector_data[n][0][2][cc] * sin(phi);
-	      yVal = -vector_data[n][0][0][cc] * sin(phi) -
-		vector_data[n][0][2][cc] * cos(phi);
-	      
-	      zVal =  vector_data[n][0][1][cc];
-
-	      vField[n]->set_value(Vector(xVal, yVal, zVal), node);
-	    }
+	    if( bVector_[n] )
+	      for( l=0; l<3; l++ )
+		vector_data[n][0][l] = scinew double[idim*jdim*kdim];
 	  }
 
-	  cc++;
+	  if( mode_ == 3 ) {
+	    ostringstream str;
+	    str << " K Values ";
+	    str << grid_data[3][0] << "  ";
+	    str << grid_data[3][1] << "  ";
+	    str << grid_data[3][2];
+	    remark( str.str() );
+	  }
+	  else {
+	    ostringstream str;
+	    str << " Mode "  << mode_ << " and K Value " << grid_data[3][mode_];
+	    remark( str.str() );
+	  }
+
+	  for( k=0; k<kdim; k++ ) {  // Phi loop.
+
+	    phi = grid_data[2][k];
+
+	    for( j=0; j<jdim; j++ ) {  // Theta loop.
+	      for( i=0; i<idim; i++ ) {  // R loop.
+
+		for( n=0; n<MAX_SCALAR; n++ ) {
+		  if( bScalar_[n] ) {
+		    scalar_data[n][0][cc] = 0;
+
+		    //  If summing start at 0 otherwise start with the mode
+		    if( mode_ == 3 ) m = 0;
+		    else             m = mode_;
+
+		    for( ; m<mdim; m++ ) {  // Mode loop.
+
+		      index = m*idim*jdim + j*idim + i;
+
+		      angle = grid_data[3][m] * phi;
+
+		      scalar_data[n][0][cc] +=
+			2.0 * ( cos( angle ) * scalar_data[n][1][index] -
+				sin( angle ) * scalar_data[n][2][index] );
+
+		      //  Not summing so quit.
+		      if( mode_ < 3 )
+			break;
+		    }
+		  }
+		}	   
+ 
+		for( n=0; n<MAX_VECTOR; n++ ) {
+		  if( bVector_[n] ) {
+		    for( l=0; l<3; l++ )
+		      vector_data[n][0][l][cc] = 0;
+
+		    if( mode_ == 3 ) m = 0;
+		    else	       m = mode_;
+
+		    for( ; m<mdim; m++ ) {
+
+		      index = m*idim*jdim + j*idim + i;
+
+		      angle = grid_data[3][m] * phi;
+
+		      for( l=0; l<3; l++ )
+			vector_data[n][0][l][cc] +=
+			  2.0 * ( cos( angle ) * vector_data[n][1][l][index] -
+				  sin( angle ) * vector_data[n][2][l][index] );
+
+		      if( mode_ < 3 )
+			break;
+		    }
+		  }
+		}
+	     
+		cc++;
+	      }
+	    }
+	  }
+	}
+
+	cc = 0;
+
+	for( k=0; k<kdim; k++ ) {
+
+	  phi = grid_data[2][k];
+
+	  for( j=0; j<jdim; j++ ) {
+	    for( i=0; i<idim; i++ ) {
+
+	      node.i_ = i;
+	      node.j_ = j;
+	      node.k_ = k;
+
+	      rad = grid_data[0][i+j*idim];
+
+	      xVal =  rad * cos( phi );
+	      yVal = -rad * sin( phi );
+	      zVal =  grid_data[1][i+j*idim];
+
+	      hvm->set_point(node, Point( xVal, yVal, zVal ) );
+
+	      for( n=0; n<MAX_SCALAR; n++ ) {
+		if( bScalar_[n] ) {
+		  pVal = scalar_data[n][0][cc];
+	      
+		  sField[n]->set_value(pVal, node);
+		}
+	      }
+	     
+	      for( n=0; n<MAX_VECTOR; n++ ) {
+		if( bVector_[n] ) {
+		  xVal =  vector_data[n][0][0][cc] * cos(phi) -
+		    vector_data[n][0][2][cc] * sin(phi);
+		  yVal = -vector_data[n][0][0][cc] * sin(phi) -
+		    vector_data[n][0][2][cc] * cos(phi);
+	      
+		  zVal =  vector_data[n][0][1][cc];
+
+		  vField[n]->set_value(Vector(xVal, yVal, zVal), node);
+		}
+	      }
+
+	      cc++;
+	    }
+	  }
+	}
+      }
+    
+      // Send the intermediate data.
+      if( sliceRange_ && slice != sliceStop ) {
+	// Get a handle to the output pressure field port.
+	for( int n=0; n<MAX_SCALAR; n++ ) {
+	  if( sHandle_[n].get_rep() ) {
+	    FieldOPort *ofield_port = (FieldOPort *) get_oport(sPortStr[n]);
+      
+	    if (!ofield_port) {
+	      ostringstream str;
+	      str << "Unable to initialize " << name << "'s oport";
+	      error( str.str() );
+	      return;
+	    }
+
+	    // Send the data downstream
+	    ofield_port->send_intermediate( sHandle_[n] );
+	  }
+	}
+
+	// Get a handle to the output B Field field port.
+	for( int n=0; n<MAX_VECTOR; n++ ) {
+	  if( vHandle_[n].get_rep() ) {
+	    FieldOPort *ofield_port =
+	      (FieldOPort *)get_oport(vPortStr[n]);
+
+	    if (!ofield_port) {
+	      ostringstream str;
+	      str << "Unable to initialize " << name << "'s oport";
+	      error( str.str() );
+	      return;
+	    }
+
+	    // Send the data downstream
+	    ofield_port->send_intermediate( vHandle_[n] );
+	  }
 	}
       }
     }
