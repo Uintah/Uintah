@@ -120,6 +120,7 @@ proc makeNetworkEditor {} {
 	-command  "licenseDialog"
 
     pack .main_menu.help -side right
+    Tooltip .main_menu.file $ToolTipText(HelpMenu)
     
     tk_menuBar .main_menu .main_menu.file
 
@@ -329,6 +330,10 @@ proc createPackageMenu {index} {
 	-menu .main_menu.$pack.menu
     menu .main_menu.$pack.menu
     pack .main_menu.$pack -side left
+
+    global ToolTipText
+    Tooltip .main_menu.$pack $ToolTipText(PackageMenus)
+
     foreach cat $ModuleMenu(${pack}_categories) {
 	# Add the category to the menu bar menu
 	.main_menu.$pack.menu add cascade -label "$ModuleMenu($cat)" \
@@ -948,22 +953,31 @@ proc showSpash { steps image_file } {
 
 proc showSplash { {steps none} } {
     global SCIRUN_SRCDIR
+
+    if {[winfo exists .splash]} {
+        wm deiconify .splash
+	raise .splash
+	return;
+    }
+
     set filename [file join $SCIRUN_SRCDIR main scisplash.ppm]
-    toplevel .loading
-    wm geometry .loading 504x482+135+170
-    wm title .loading {Welcome to SCIRun}
-    update idletasks
     image create photo ::img::splash -file "$filename"
-    label .loading.splash -image ::img::splash
-    pack .loading.splash
+    toplevel .splash
+
+    wm protocol .splash WM_DELETE_WINDOW "wm withdraw .splash"
+
+    wm title .splash {Welcome to SCIRun}
+    label .splash.splash -image ::img::splash
+    pack .splash.splash
     if { ![string equal $steps none ] } {
-	iwidgets::feedback .loading.fb -steps $steps -labeltext \
+        wm geometry .splash 504x462+135+170
+	iwidgets::feedback .splash.fb -steps $steps -labeltext \
 	    "{Loading package:                 }"
-	pack .loading.fb -padx 5 -fill x
+	pack .splash.fb -padx 5 -fill x
     } else {
-	button .loading.ok -text "OK" \
-	    -command "destroy .loading"
-	pack .loading.ok -side bottom -padx 5 -pady 5 -fill none
+        wm geometry .splash 504x435+135+170
+	button .splash.ok -text " OK " -command "wm withdraw .splash"
+	pack .splash.ok -side bottom -padx 5 -pady 5 -fill none
     }
 
     update idletasks
@@ -1004,8 +1018,8 @@ proc licenseDialog { {firsttime 0} } {
 	button .license.b.decline -text Decline -command {destroy .license}
 	pack .license.b.accept .license.b.decline -padx 5 -pady 5 -side right
     } else {
-	button .license.b.OK -text OK -command {destroy .license}
-	pack .license.b.OK -padx 5 -pady 5 -side bottom
+	button .license.b.ok -text OK -command {destroy .license}
+	pack .license.b.ok -padx 5 -pady 5 -side bottom
     }
     raise .license
     grab .license
