@@ -765,6 +765,24 @@ ConditionVariable::wait(Mutex& m)
 }
 
 void
+ConditionVariable::timedWait(Mutex& m, const struct timespec* abstime)
+{
+    Thread_private* p=Thread::self()->d_priv;
+    int oldstate=Thread::push_bstack(p, Thread::BLOCK_ANY, d_name);
+    if(abstime){
+	if(pthread_cond_timedwait(&d_priv->cond, &m.d_priv->mutex,
+				  abstime) != 0)
+	    throw ThreadError(std::string("pthread_cond_timedwait: ")
+			      +strerror(errno));
+    } else {
+	if(pthread_cond_wait(&d_priv->cond, &m.d_priv->mutex) != 0)
+	    throw ThreadError(std::string("pthread_cond_wait: ")
+			      +strerror(errno));
+    }
+    Thread::pop_bstack(p, oldstate);
+}
+
+void
 ConditionVariable::conditionSignal()
 {
     if(pthread_cond_signal(&d_priv->cond) != 0)
@@ -781,6 +799,12 @@ ConditionVariable::conditionBroadcast()
 
 //
 // $Log$
+// Revision 1.9  1999/09/22 19:10:29  sparker
+// Implemented timedWait method for ConditionVariable.  A default
+// implementation of CV is no longer possible, so the code is moved
+// to Thread_irix.cc.  The timedWait method for irix uses uspollsema
+// and select.
+//
 // Revision 1.8  1999/08/29 08:07:39  sparker
 // Fixed bug on linux where main exit before other threads are done.
 //
