@@ -1,5 +1,7 @@
 #include "Fracture.h"
 
+#include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+
 #include <Uintah/Components/MPM/MPMLabel.h>
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Grid/CCVariable.h>
@@ -19,7 +21,25 @@ namespace MPM {
 
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
- 
+
+Fracture::CellStatus
+Fracture::
+cellStatus(const Vector& cellSurfaceNormal)
+{
+  if(cellSurfaceNormal.x() > 1000) return HAS_SEVERAL_BOUNDARY_SURFACE;
+  else if( fabs(cellSurfaceNormal.x()) +
+           fabs(cellSurfaceNormal.y()) +
+           fabs(cellSurfaceNormal.z()) < 0.1 ) return INTERIOR;
+  else return HAS_ONE_BOUNDARY_SURFACE;
+} 
+
+void
+Fracture::
+setCellStatus(Fracture::CellStatus status,Vector* cellSurfaceNormal)
+{
+  if(status == HAS_SEVERAL_BOUNDARY_SURFACE) cellSurfaceNormal->x(1000.1);
+  else if(INTERIOR) (*cellSurfaceNormal) = Vector(0.,0.,0.);
+}
  
 void
 Fracture::
@@ -78,12 +98,97 @@ initializeFracture(const Patch* patch,
 
 void
 Fracture::
+labelCellSurfaceNormal (
+           const ProcessorContext*,
+           const Patch* patch,
+           DataWarehouseP& old_dw,
+           DataWarehouseP& new_dw)
+{
+#if 0
+  int numMatls = d_sharedState->getNumMatls();
+  const MPMLabel* lb = MPMLabel::getLabels();
+
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = d_sharedState->getMaterial( m );
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(mpm_matl){
+      int matlindex = matl->getDWIndex();
+      int vfindex = matl->getVFIndex();
+
+      ParticleVariable<Point> px;
+      ParticleVariable<Vector> pSurfaceNormal;
+
+      old_dw->get(px, lb->pXLabel, matlindex, patch,
+		  Ghost::None, 0);
+      old_dw->get(pSurfaceNormal, lb->pSurfaceNormalLabel, matlindex, patch,
+		  Ghost::None, 0);
+
+      CCVariable<Vector> cSurfaceNormal;
+      new_dw->allocate(cSurfaceNormal, lb->cSurfaceNormalLabel, vfindex, patch);
+
+      ParticleSubset* pset = px.getParticleSubset();
+      cSurfaceNormal.initialize(Vector(0,0,0));
+
+      for(ParticleSubset::iterator iter = pset->begin();
+	  iter != pset->end(); iter++)
+      {
+	 particleIndex pIdx = *iter;
+	 IntVector cIdx = patch->findCell(px[pIdx]);
+
+	 Vector cellSurfaceNormal = cSurfaceNormal[cIdx];
+	 if( finsStatus(cellSurfaceNormal) ==  )
+	 
+	 Vector particleSurfaceNormal = cSurfaceNormal[pIdx];
+	 Dot(cellSurfaceNormal,particleSurfaceNormal) <
+	 
+          +=
+           pSurfaceNormal[idx];
+      };
+
+      new_dw->put(cSurfaceNormal, lb->cSurfaceNormalLabel, vfindex, patch);
+    }
+  }
+#endif
+}
+
+void
+Fracture::
 labelSelfContactNodesAndCells(
            const ProcessorContext*,
            const Patch* patch,
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw)
 {
+#if 0
+  int vfindex = d_sharedState->getMaterial(0)->getVFIndex();
+
+  CCVariable<bool> cSelfContact;
+  CCVariable<Vector> cSurfaceNormal;
+
+  new_dw->allocate(cSelfContact, cSelfContactLabel, vfindex, region);
+  new_dw->allocate(cSurfaceNormal cSurfaceNormalLabel, vfindex, region);
+
+  //Label out the cells having non-directly connected boundary particles
+  //The information is saved temperary in cSelfContact
+
+  //Label out the self-contact nodes
+
+  for(NodeIterator nodeIter = region->getNodeIterator();
+                   !nodeIter.done(); 
+                   nodeIter++)
+  {
+    cSelfContact[*cellIter] = false;
+  }
+
+  //Label out the self-contact cells
+
+  for(CellIterator cellIter = region->getCellIterator();
+                   !cellIter.done(); 
+                   cellIter++)
+  {
+    cSelfContact[*cellIter] = false;
+  }
+#endif
 
 }
 
@@ -142,6 +247,10 @@ Fracture(ProblemSpecP& ps,SimulationStateP& d_sS)
 } //namespace Uintah
 
 // $Log$
+// Revision 1.13  2000/06/01 23:56:00  tan
+// Added CellStatus to determine if a cell HAS_ONE_BOUNDARY_SURFACE,
+// HAS_SEVERAL_BOUNDARY_SURFACE or is INTERIOR cell.
+//
 // Revision 1.12  2000/05/30 20:19:12  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
