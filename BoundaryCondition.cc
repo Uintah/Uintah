@@ -58,6 +58,7 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/outarea_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/outletbc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/outletbcenth_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/outletbcrscal_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/bcscalar_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/bcuvel_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/bcvvel_fort.h>
@@ -1091,7 +1092,7 @@ BoundaryCondition::sched_transOutletBC(SchedulerP& sched,
 		  Ghost::None, zeroGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_uvwoutLabel);
   if (d_reactingScalarSolve) {
-    tsk->requires(Task::NewDW, d_lab->d_reactscalarINLabel, 
+    tsk->requires(Task::NewDW, d_lab->d_reactscalarCPBCLabel, 
 		  Ghost::None, zeroGhostCells);
     tsk->computes(d_lab->d_reactscalarOUTBCLabel);
   }
@@ -1223,29 +1224,30 @@ BoundaryCondition::transOutletBC(const ProcessorGroup* ,
 
     if (d_reactingScalarSolve) {
       CCVariable<double> reactscalar;
-      new_dw->allocate(reactscalar, d_lab->d_reactscalarOUTBCLabel, matlIndex, patch);
       constCCVariable<double> old_reactscalar;
-      new_dw->get(old_reactscalar, d_lab->d_reactscalarCPBCLabel, matlIndex, patch, 
-		  Ghost::None,
-		  nofGhostCells);
-      reactscalar.copyData(old_reactscalar);
+      new_dw->get(old_reactscalar, d_lab->d_reactscalarCPBCLabel, matlIndex,
+                  patch, Ghost::None, nofGhostCells);
+      new_dw->allocate(reactscalar, d_lab->d_reactscalarOUTBCLabel, matlIndex, patch);
+      new_dw->copyOut(reactscalar, d_lab->d_reactscalarCPBCLabel, matlIndex, patch);
     // assuming outlet to be pos x
 
-      fort_outletbcenth(reactscalar, old_reactscalar, idxLo, idxHi, cellType,
-			d_outletBC->d_cellTypeID, uvwout,
-			xminus, xplus, yminus, yplus, zminus, zplus,
-			delta_t, cellinfo->dxpw);
-      new_dw->put(reactscalar, d_lab->d_reactscalarOUTBCLabel, matlIndex, patch);
+      if (d_outletBoundary) {
 
+        fort_outletbcrscal(reactscalar, old_reactscalar, idxLo, idxHi,
+			  cellType, d_outletBC->d_cellTypeID, uvwout,
+			  xminus, xplus, yminus, yplus, zminus, zplus,
+			  delta_t, cellinfo->dxpw);
+
+      }
+      new_dw->put(reactscalar, d_lab->d_reactscalarOUTBCLabel, matlIndex, patch);
     }
 
 
     if (d_enthalpySolve) {
-      constCCVariable<double> old_enthalpy;
       CCVariable<double> enthalpy;
+      constCCVariable<double> old_enthalpy;
       new_dw->get(old_enthalpy, d_lab->d_enthalpyCPBCLabel, matlIndex, patch,
-		  Ghost::None,
-		  nofGhostCells);
+		  Ghost::None, nofGhostCells);
       new_dw->allocate(enthalpy, d_lab->d_enthalpyOUTBCLabel, matlIndex,
 		       patch);
       new_dw->copyOut(enthalpy, d_lab->d_enthalpyCPBCLabel, matlIndex, patch);
@@ -1258,10 +1260,9 @@ BoundaryCondition::transOutletBC(const ProcessorGroup* ,
 			  d_outletBC->d_cellTypeID, uvwout,
 			  xminus, xplus, yminus, yplus, zminus, zplus,
 			  delta_t, cellinfo->dxpw);
-	new_dw->put(enthalpy, d_lab->d_enthalpyOUTBCLabel, matlIndex, patch);
 
       }
-
+	new_dw->put(enthalpy, d_lab->d_enthalpyOUTBCLabel, matlIndex, patch);
     }
 
   // Put the calculated data into the new DW
@@ -1401,6 +1402,12 @@ BoundaryCondition::sched_recomputePressureBC(SchedulerP& sched,
     tsk->computes(d_lab->d_enthalpyCPBCLabel);
   }
   
+  if (d_reactingScalarSolve) {
+    tsk->requires(Task::NewDW, d_lab->d_reactscalarINLabel, 
+		  Ghost::None, numGhostCells);
+    tsk->computes(d_lab->d_reactscalarCPBCLabel);
+  }
+
   // This task computes new uVelocity, vVelocity and wVelocity
   tsk->computes(d_lab->d_uVelocityCPBCLabel);
   tsk->computes(d_lab->d_vVelocityCPBCLabel);
@@ -2224,6 +2231,21 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
 		      xminus, xplus, yminus, yplus, zminus, zplus);
     }
 #endif
+    if (d_reactingScalarSolve) {
+      CCVariable<double> reactscalar;
+      new_dw->allocate(reactscalar, d_lab->d_reactscalarCPBCLabel, matlIndex, patch);
+      new_dw->copyOut(reactscalar, d_lab->d_reactscalarINLabel, matlIndex, patch, 
+		      Ghost::None, nofGhostCells);
+      // Get the low and high index for the patch and the variables
+#if 0
+      fort_profscalar(idxLo, idxHi, reactscalar, cellType,
+		      d_pressureBdry->calcStream.d_reactscalar,
+		      d_pressureBdry->d_cellTypeID,
+		      xminus, xplus, yminus, yplus, zminus, zplus);
+#endif
+      new_dw->put(reactscalar, d_lab->d_reactscalarCPBCLabel, matlIndex, patch);
+    }
+
     if (d_enthalpySolve) {
       CCVariable<double> enthalpy;
       new_dw->allocate(enthalpy, d_lab->d_enthalpyCPBCLabel, matlIndex, patch);

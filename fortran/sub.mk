@@ -54,6 +54,7 @@ SRCS += \
 	$(SRCDIR)/outarea.F \
 	$(SRCDIR)/outletbc.F \
 	$(SRCDIR)/outletbcenth.F \
+	$(SRCDIR)/outletbcrscal.F \
 	$(SRCDIR)/prescoef.F \
         $(SRCDIR)/prescoef_var.F \
         $(SRCDIR)/pressrcpred_var.F \

@@ -482,7 +482,8 @@ Properties::reComputeProps(const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = d_lab->d_sharedState->
+		     getArchesMaterial(archIndex)->getDWIndex(); 
 
     // Get the CCVariable (density) from the old datawarehouse
     // just write one function for computing properties
@@ -513,9 +514,6 @@ Properties::reComputeProps(const ProcessorGroup*,
       absorption.initialize(0.0);
       sootFV.initialize(0.0);
     }
-    new_dw->allocate(new_density, d_lab->d_densityCPLabel, matlIndex, patch);
-    new_dw->allocate(drhodf, d_lab->d_drhodfCPLabel, matlIndex, patch);
-    drhodf.initialize(0.0);
     StaticArray<constCCVariable<double> > scalar(d_numMixingVars);
 
     constCCVariable<double> enthalpy_comp;
@@ -523,7 +521,10 @@ Properties::reComputeProps(const ProcessorGroup*,
     //    CCVariable<double> denMicro_old;
 
     int nofGhostCells = 0;
+    new_dw->allocate(drhodf, d_lab->d_drhodfCPLabel, matlIndex, patch);
+    drhodf.initialize(0.0);
 
+    new_dw->allocate(new_density, d_lab->d_densityCPLabel, matlIndex, patch);
     new_dw->get(density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, nofGhostCells);
     new_density.copyData(density);
@@ -575,7 +576,8 @@ Properties::reComputeProps(const ProcessorGroup*,
 	  // construct an InletStream for input to the computeProps of mixingModel
 
 	  IntVector currCell(colX, colY, colZ);
-	  InletStream inStream(d_numMixingVars, d_mixingModel->getNumMixStatVars(),
+	  InletStream inStream(d_numMixingVars,
+			       d_mixingModel->getNumMixStatVars(),
 			       d_mixingModel->getNumRxnVars());
 
 	  for (int ii = 0; ii < d_numMixingVars; ii++ ) {
@@ -689,8 +691,6 @@ Properties::reComputeProps(const ProcessorGroup*,
     if (d_MAlab)
       new_dw->put(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch);
   }
-
-  
 }
 
 //****************************************************************************
@@ -865,8 +865,7 @@ Properties::computePropsPred(const ProcessorGroup*,
     new_dw->allocate(drhodf, d_lab->d_drhodfPredLabel, matlIndex, patch);
     drhodf.initialize(0.0);
 
-    new_dw->allocate(new_density, d_lab->d_densityPredLabel, 
-		     matlIndex, patch);
+    new_dw->allocate(new_density, d_lab->d_densityPredLabel, matlIndex, patch);
     new_dw->get(density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, nofGhostCells);
     new_density.copyData(density);
@@ -894,12 +893,6 @@ Properties::computePropsPred(const ProcessorGroup*,
     if (d_mixingModel->getNumRxnVars() > 0) {
       for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++)
 	new_dw->get(reactScalar[ii], d_lab->d_reactscalarPredLabel, 
-		    matlIndex, patch, Ghost::None, nofGhostCells);
-    }
-
-    if (d_mixingModel->getNumRxnVars() > 0) {
-      for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++)
-	new_dw->get(reactScalar[ii], d_lab->d_reactscalarSPLabel, 
 		    matlIndex, patch, Ghost::None, nofGhostCells);
     }
 
@@ -941,6 +934,12 @@ Properties::computePropsPred(const ProcessorGroup*,
 	    }
 
 	  }
+
+	  if (d_mixingModel->getNumRxnVars() > 0) {
+	    for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++ ) 
+	      inStream.d_rxnVars[ii] = (reactScalar[ii])[currCell];
+	  }
+
 	  // after computing variance get that too, for the time being setting the 
 	  // value to zero
 	  //	  inStream.d_mixVarVariance[0] = 0.0;
@@ -957,6 +956,8 @@ Properties::computePropsPred(const ProcessorGroup*,
 	    temperature[currCell] = outStream.getTemperature();
 	    co2[currCell] = outStream.getCO2();
 	    enthalpy[currCell] = outStream.getEnthalpy();
+	    if (d_mixingModel->getNumRxnVars())
+	      reactscalarSRC[currCell] = outStream.getRxnSource();
 	  }
 	  if (d_radiationCalc) {
 	    // bc is the mass-atoms 0f carbon per mas of reactnat mixture
@@ -964,22 +965,26 @@ Properties::computePropsPred(const ProcessorGroup*,
 	    //	double bc = d_mixingModel->getCarbonAtomNumber(inStream)*local_den;
 	    // optical path length
 	    double opl = 3.0;
-	    if (temperature[currCell] > 1000) {
-	      double bc = inStream.d_mixVars[0]*(84.0/100.0)*local_den;
-	      double c3 = 0.1;
-	      double rhosoot = 1950.0;
-	      double cmw = 12.0;
+	    if (d_mixingModel->getNumRxnVars()) 
+	      sootFV[currCell] = outStream.getSootFV();
+	    else {
+	      if (temperature[currCell] > 1000) {
+	        double bc = inStream.d_mixVars[0]*(84.0/100.0)*local_den;
+	        double c3 = 0.1;
+	        double rhosoot = 1950.0;
+	        double cmw = 12.0;
 	      
-	      double factor = 0.01;
-	      if (inStream.d_mixVars[0] > 0.1)
-		sootFV[currCell] = c3*bc*cmw/rhosoot*factor;
-	      else
-		sootFV[currCell] = 0.0;
+	        double factor = 0.01;
+	        if (inStream.d_mixVars[0] > 0.1)
+		  sootFV[currCell] = c3*bc*cmw/rhosoot*factor;
+	        else
+		  sootFV[currCell] = 0.0;
+	      }
+	      else 
+	        sootFV[currCell] = 0.0;
 	    }
-	    else 
-	      sootFV[currCell] = 0.0;
-	    absorption[currCell] = Min(0.5,(4.0/opl)*log(1.0+350.0*
-						 sootFV[currCell]*temperature[currCell]*opl));
+	    absorption[currCell] = 0.01+ Min(0.5,(4.0/opl)*log(1.0+350.0*
+				   sootFV[currCell]*temperature[currCell]*opl));
 	  }
 
 	  if (d_MAlab) {
@@ -1019,8 +1024,6 @@ Properties::computePropsPred(const ProcessorGroup*,
       new_dw->put(absorption, d_lab->d_absorpINPredLabel, matlIndex, patch);
       new_dw->put(sootFV, d_lab->d_sootFVINPredLabel, matlIndex, patch);
     }
-
-  
   }
 }
 
@@ -1136,8 +1139,7 @@ Properties::computePropsInterm(const ProcessorGroup*,
     new_dw->allocate(drhodf, d_lab->d_drhodfIntermLabel, matlIndex, patch);
     drhodf.initialize(0.0);
 
-    new_dw->allocate(new_density, d_lab->d_densityIntermLabel, 
-		     matlIndex, patch);
+    new_dw->allocate(new_density, d_lab->d_densityIntermLabel, matlIndex, patch);
     new_dw->get(density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, nofGhostCells);
     new_density.copyData(density);
@@ -1165,12 +1167,6 @@ Properties::computePropsInterm(const ProcessorGroup*,
     if (d_mixingModel->getNumRxnVars() > 0) {
       for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++)
 	new_dw->get(reactScalar[ii], d_lab->d_reactscalarIntermLabel, 
-		    matlIndex, patch, Ghost::None, nofGhostCells);
-    }
-
-    if (d_mixingModel->getNumRxnVars() > 0) {
-      for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++)
-	new_dw->get(reactScalar[ii], d_lab->d_reactscalarSPLabel, 
 		    matlIndex, patch, Ghost::None, nofGhostCells);
     }
 
@@ -1212,6 +1208,12 @@ Properties::computePropsInterm(const ProcessorGroup*,
 	    }
 
 	  }
+
+	  if (d_mixingModel->getNumRxnVars() > 0) {
+	    for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++ ) 
+	      inStream.d_rxnVars[ii] = (reactScalar[ii])[currCell];
+	  }
+
 	  // after computing variance get that too, for the time being setting the 
 	  // value to zero
 	  //	  inStream.d_mixVarVariance[0] = 0.0;
@@ -1228,6 +1230,8 @@ Properties::computePropsInterm(const ProcessorGroup*,
 	    temperature[currCell] = outStream.getTemperature();
 	    co2[currCell] = outStream.getCO2();
 	    enthalpy[currCell] = outStream.getEnthalpy();
+	    if (d_mixingModel->getNumRxnVars())
+	      reactscalarSRC[currCell] = outStream.getRxnSource();
 	  }
 	  if (d_radiationCalc) {
 	    // bc is the mass-atoms 0f carbon per mas of reactnat mixture
@@ -1235,22 +1239,26 @@ Properties::computePropsInterm(const ProcessorGroup*,
 	    //	double bc = d_mixingModel->getCarbonAtomNumber(inStream)*local_den;
 	    // optical path length
 	    double opl = 3.0;
-	    if (temperature[currCell] > 1000) {
-	      double bc = inStream.d_mixVars[0]*(84.0/100.0)*local_den;
-	      double c3 = 0.1;
-	      double rhosoot = 1950.0;
-	      double cmw = 12.0;
+	    if (d_mixingModel->getNumRxnVars()) 
+	      sootFV[currCell] = outStream.getSootFV();
+	    else {
+	      if (temperature[currCell] > 1000) {
+	        double bc = inStream.d_mixVars[0]*(84.0/100.0)*local_den;
+	        double c3 = 0.1;
+	        double rhosoot = 1950.0;
+	        double cmw = 12.0;
 	      
-	      double factor = 0.01;
-	      if (inStream.d_mixVars[0] > 0.1)
-		sootFV[currCell] = c3*bc*cmw/rhosoot*factor;
-	      else
-		sootFV[currCell] = 0.0;
+	        double factor = 0.01;
+	        if (inStream.d_mixVars[0] > 0.1)
+		  sootFV[currCell] = c3*bc*cmw/rhosoot*factor;
+	        else
+		  sootFV[currCell] = 0.0;
+	      }
+	      else 
+	        sootFV[currCell] = 0.0;
 	    }
-	    else 
-	      sootFV[currCell] = 0.0;
-	    absorption[currCell] = Min(0.5,(4.0/opl)*log(1.0+350.0*
-						 sootFV[currCell]*temperature[currCell]*opl));
+	    absorption[currCell] = 0.01+ Min(0.5,(4.0/opl)*log(1.0+350.0*
+				   sootFV[currCell]*temperature[currCell]*opl));
 	  }
 
 	  if (d_MAlab) {
@@ -1288,7 +1296,5 @@ Properties::computePropsInterm(const ProcessorGroup*,
       new_dw->put(absorption, d_lab->d_absorpINIntermLabel, matlIndex, patch);
       new_dw->put(sootFV, d_lab->d_sootFVINIntermLabel, matlIndex, patch);
     }
-
-  
   }
 }

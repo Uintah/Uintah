@@ -242,6 +242,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       // the same subroutine can be used to solve multiple scalars
       d_scalarSolver->solveInterm(sched, patches, matls, index);
     }
+    if (d_reactingScalarSolver) {
+      int index = 0;
+      // in this case we're only solving for one scalar...but
+      // the same subroutine can be used to solve multiple scalars
+      d_reactingScalarSolver->solveInterm(sched, patches, matls, index);
+    }
     if (d_enthalpySolve)
       d_enthalpySolver->solveInterm(sched, patches, matls);
     // same as corrector
@@ -283,6 +289,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       // in this case we're only solving for one scalar...but
       // the same subroutine can be used to solve multiple scalars
       d_scalarSolver->solveCorr(sched, patches, matls, index);
+    }
+    if (d_reactingScalarSolver) {
+      int index = 0;
+      // in this case we're only solving for one scalar...but
+      // the same subroutine can be used to solve multiple scalars
+      d_reactingScalarSolver->solveCorr(sched, patches, matls, index);
     }
     if (d_enthalpySolve)
       d_enthalpySolver->solveCorr(sched, patches, matls);
