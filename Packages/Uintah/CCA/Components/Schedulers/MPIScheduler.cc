@@ -112,6 +112,7 @@ MPIScheduler::~MPIScheduler()
 void
 MPIScheduler::compile(const ProcessorGroup* pg)
 {
+  dbg << "MPIScheduler starting compile\n";
   if(dt)
     delete dt;
   dt = graph.createDetailedTasks(pg);
@@ -136,6 +137,7 @@ MPIScheduler::compile(const ProcessorGroup* pg)
   //  - make a flag to turn this off
   //  - make the checksum more sophisticated
   int checksum = dt->getMaxMessageTag();
+  dbg << "Checking checksum of " << checksum << '\n';
   int result_checksum;
   MPI_Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN,
 		d_myworld->getComm());
@@ -146,6 +148,7 @@ MPIScheduler::compile(const ProcessorGroup* pg)
 	 << " and global is " << result_checksum << '\n';
     MPI_Abort(d_myworld->getComm(), 1);
   }
+  dbg << "MPIScheduler finished compile\n";
 }
 
 void
