@@ -128,6 +128,11 @@ DEALINGS IN THE SOFTWARE.
   <section>
     <title>Rendering Windows</title>
     <para>
+      The Volume Rendering Window is manipulated using the mouse. Please see the SCIRun Userguide for
+      more information on navigating inside of the Viewer Window.
+      <ulink url="../../Guide/usersguide/srug6_3.html"><citetitle>Section 6.3 of the SCIRun Userguide:
+      "Mouse Control in the Viewer Window"</citetitle></ulink>.
+       http://software.sci.utah.edu/doc/Guide/usersguide/srug6_3.html
     </para>
   </section>
   <section>
