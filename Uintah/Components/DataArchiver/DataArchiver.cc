@@ -89,7 +89,6 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
 
 void DataArchiver::finalizeTimestep(double time, double delt,
 				    const LevelP& level, SchedulerP& sched,
-				    DataWarehouseP& /*old_dw*/,
 				    DataWarehouseP& new_dw)
 {
   
@@ -557,6 +556,9 @@ static Dir makeVersionedDir(const std::string nameBase)
 
 //
 // $Log$
+// Revision 1.12  2000/06/16 19:48:19  sparker
+// Use updated output interface
+//
 // Revision 1.11  2000/06/15 21:56:59  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

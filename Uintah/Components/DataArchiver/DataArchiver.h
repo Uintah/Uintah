@@ -51,7 +51,6 @@ namespace Uintah {
       // Insert Documentation Here:
       virtual void finalizeTimestep(double t, double delt, const LevelP&,
 				    SchedulerP&,
-				    DataWarehouseP& old_dw,
 				    DataWarehouseP&);
 
       //////////
@@ -85,6 +84,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.7  2000/06/16 19:48:19  sparker
+// Use updated output interface
+//
 // Revision 1.6  2000/06/14 21:50:54  guilkey
 // Changed DataArchiver to create uda files based on a per time basis
 // rather than a per number of timesteps basis.
