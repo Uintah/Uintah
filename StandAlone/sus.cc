@@ -21,6 +21,7 @@
 #include <Uintah/Components/Arches/Arches.h>
 #include <Uintah/Components/ICE/ICE.h>
 #include <Uintah/Components/Schedulers/BrainDamagedScheduler.h>
+#include <Uintah/Components/DataArchiver/DataArchiver.h>
 #include <SCICore/Exceptions/Exception.h>
 
 #include <iostream>
@@ -153,7 +154,8 @@ int main(int argc, char** argv)
 	    sim->attachPort("cfd", cfd);
 
 	// Output
-
+	Output* output = new DataArchiver(MpiRank, MpiProcesses );
+	sim->attachPort("output", output);
 
 	// Scheduler
 	BrainDamagedScheduler* sched = 
@@ -181,6 +183,10 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.10  2000/05/15 19:39:29  sparker
+// Implemented initial version of DataArchive (output only so far)
+// Other misc. cleanups
+//
 // Revision 1.9  2000/05/09 22:58:34  sparker
 // Changed namespace names
 //
