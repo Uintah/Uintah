@@ -1044,8 +1044,10 @@ proc disableModule { module state } {
     foreach modid $mods { ;# Iterate through the modules
 	foreach conn $Subnet(${modid}_connections) { ;# all module connections
 	    setIfExists disabled Disabled([makeConnID $conn]) 0
-	    if { $disabled != $state } {
-		disableConnection $conn
+	    if { $state } {
+		connectionDisable $conn
+	    } else {
+		connectionEnable $conn
 	    }
 	}
     }
@@ -2027,32 +2029,58 @@ proc notesTrace { ArrayName Index mode } {
 proc disabledTrace { ArrayName Index mode } {
     if ![string length $Index] return
     networkHasChanged
-    global Subnet Disabled Notes Color    
-    if { [info exists Subnet($Index)] } {
-	return
-    } else {
-	if { [info exists Disabled($Index)] && $Disabled($Index) } {
-	    set Notes($Index-Color) $Color(ConnDisabled)
-	} else {	    
-	    setIfExists Notes($Index-Color) Color($Index)
-	}
-	set conn [parseConnectionID $Index]
-	if [string equal w $mode] {
-	    if { !$Disabled($Index) } {
-		foreach rconn [findRealConnections $conn] {
-		    eval netedit addconnection $rconn
-		}
-	    } else {
-		foreach conn [findRealConnections $conn] {
-		    netedit deleteconnection [makeConnID $conn] 1
+    global Subnet Disabled Color disableDisabledTrace
+    # If disabled index is a module id, do nothing and return
+    if { [info exists Subnet($Index)] } return
+
+    # disabled is the state we just set the connection $conn to
+    set conn [parseConnectionID $Index]
+    setIfExists disabled Disabled($Index) 0
+
+    set iPorts ""
+    set oPorts ""
+    lappend portsTodo [iPort conn] [oPort conn]
+    while { [llength $portsTodo]} {
+	set port [lindex $portsTodo end]
+	set portsTodo [lrange $portsTodo 0 end-1]
+	if { ![isaSubnet [pMod port]] } {
+	    lappend [pType port]Ports $port
+	} else {
+	    if { [isaSubnetIcon [pMod port]] } {
+		set mod Subnet$Subnet([pMod port]_num)
+	    } elseif { [isaSubnetEditor [pMod port]] } {
+		set mod SubnetIcon$Subnet([pMod port])
+	    }
+	    foreach sconn [portConnections "$mod [pNum port] [invType port]"] {
+		setIfExists pathblocked Disabled([makeConnID $sconn]) 0
+		if { !$pathblocked } {
+		    lappend portsTodo [[pType port]Port sconn]
 		}
 	    }
-
-	    drawConnections [list $conn]
-	    $Subnet(Subnet$Subnet([oMod conn])_canvas) raise $Index
-	    checkForDisabledModules [oMod conn] [iMod conn]
 	}
     }
+	
+    if { $disabled } {
+	setGlobal Notes($Index-Color) $Color(ConnDisabled)
+    } else {	    
+	setGlobal Notes($Index-Color) $Color($Index)
+    }
+
+    foreach iPort $iPorts {
+	foreach oPort $oPorts {
+	    set rconn [makeConn $iPort $oPort]
+	    if { $disabled } {
+		netedit deleteconnection [makeConnID $rconn] 1
+	    } else {
+		eval netedit addconnection $rconn
+	    }
+	}
+    }
+
+    drawConnections [list $conn]
+    $Subnet(Subnet$Subnet([oMod conn])_canvas) raise $Index
+    checkForDisabledModules [oMod conn] [iMod conn]
+
     return 1
 }
 
