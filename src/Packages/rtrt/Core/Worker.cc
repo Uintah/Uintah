@@ -30,7 +30,7 @@
 #endif
 
 using namespace rtrt;
-//using SCIRun:Thread;
+using SCIRun::Thread;
 //using SCIRun:Mutex;
 //using SCIRun:Barrier;
 using SCIRun::Time;
@@ -143,6 +143,11 @@ void Worker::run()
       //stats[showing_scene]->add(Thread::currentSeconds(), Color(0,1,0));
       stats[showing_scene]->add(Time::currentSeconds(), Color(0,1,0));
       barrier->wait(dpy->get_num_procs()+1);
+
+      // exit if you are supposed to
+      if (scene->get_rtrt_engine()->stop_execution())
+	Thread::exit();
+
       counters->end_frame();
 #if 0
       ssrt_caliper_point(0);
@@ -610,6 +615,10 @@ void Worker::run()
     //int doAverage=0;
 
     for(;;){
+      // exit if you are supposed to
+      if (scene->get_rtrt_engine()->stop_execution())
+	Thread::exit();
+      
       //stats[showing_scene]->add(Thread::currentSeconds(), Color(0,1,0));
       iteration++;
       Stats* st=stats[rendering_scene];
