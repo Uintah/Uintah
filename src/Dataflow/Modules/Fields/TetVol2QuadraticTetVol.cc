@@ -90,34 +90,34 @@ void
 TetVol2QuadraticTetVol::debug_tets(TetVolMeshHandle in, 
 				   QuadraticTetVolMeshHandle out)
 {
-  cout << "-------- Linear Tets -----------------" << endl;
+  cout << "-------- Linear Tets -----------------\n";
   TetVolMesh::Cell::iterator iter, endit;
   in->begin(iter);
   in->end(endit);
   int tet = 1;
   while (iter != endit) {
-    cout << "Tet num: " << tet++ << endl;
+    cout << "Tet num: " << tet++ << "\n";
     TetVolMesh::Cell::index_type idx = *iter;
     ++iter;
     TetVolMesh::Node::array_type n;
     in->get_nodes(n, idx);
     TetVolMesh::Node::array_type::iterator niter = n.begin();
     while (niter != n.end()) {
-      cout << "Node: " << *niter + 1 << endl;
+      cout << "Node: " << *niter + 1 << "\n";
       Point p;
       in->get_center(p, *niter);
       ++niter;
-      cout << p << endl << endl;
+      cout << p << "\n\n";
     }
   }
 
-  cout << "-------- Quadratic Tets -----------------" << endl;
+  cout << "-------- Quadratic Tets -----------------" << "\n";
   QuadraticTetVolMesh::Cell::iterator qiter, qendit;
   out->begin(qiter);
   out->end(qendit);
   int qtet = 1;
   while (qiter != qendit) {
-    cout << "Tet num: " << qtet++ << endl;
+    cout << "Tet num: " << qtet++ << "\n";
     QuadraticTetVolMesh::Cell::index_type idx = *qiter;
     ++qiter;
     QuadraticTetVolMesh::Node::array_type n;
@@ -125,11 +125,11 @@ TetVol2QuadraticTetVol::debug_tets(TetVolMeshHandle in,
     int nnum = 1;
     QuadraticTetVolMesh::Node::array_type::iterator niter = n.begin();
     while (niter != n.end()) {
-      cout << "Node: " << nnum++ << endl;
+      cout << "Node: " << nnum++ << "\n";
       Point p;
       out->get_center(p, *niter);
       ++niter;
-      cout << p << endl << endl;
+      cout << p << "\n\n";
     }
   }
 
