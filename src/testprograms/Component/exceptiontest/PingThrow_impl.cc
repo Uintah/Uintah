@@ -57,5 +57,6 @@ int PingThrow_impl::pingthrow(int arg)
     PPException* ppe = new PPException();
     throw (ppe);
   }
+  sleep(2);
   return arg;
 }
