@@ -165,7 +165,7 @@ BLAS_LIB_DIR      := @LIBBLAS@
 BLAS_LIBS         := -lblas
 
 LAPACK_LIB_DIR    := @LIBLAPACK@
-LAPACK_LIBS       := -llapack
+LAPACK_LIBS       := @LAPACK@
 
 LDRUN_PREFIX      := @LDRUN_PREFIX@
 
