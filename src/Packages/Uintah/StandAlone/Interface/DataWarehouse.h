@@ -9,6 +9,7 @@
 #include <Uintah/Grid/RefCounted.h>
 #include <Uintah/Grid/ParticleVariableBase.h>
 #include <Uintah/Grid/NCVariableBase.h>
+#include <Uintah/Grid/FCVariableBase.h>
 #include <Uintah/Grid/ReductionVariableBase.h>
 #include <Uintah/Grid/PerPatchBase.h>
 #include <Uintah/Interface/DataWarehouseP.h>
@@ -99,6 +100,14 @@ WARNING
       virtual void put(const CCVariableBase&, const VarLabel*,
 		       int matlIndex, const Patch*) = 0;
 
+      // Face  Centered (FC) Variables
+      virtual void allocate(FCVariableBase&, const VarLabel*,
+			    int matlIndex, const Patch*) = 0;
+      virtual void get(FCVariableBase&, const VarLabel*, int matlIndex,
+		       const Patch*, Ghost::GhostType, int numGhostCells) = 0;
+      virtual void put(const FCVariableBase&, const VarLabel*,
+		       int matlIndex, const Patch*) = 0;
+
       // PerPatch Variables
       virtual void get(PerPatchBase&, const VarLabel*,
 				int matlIndex, const Patch*) = 0;
@@ -160,6 +169,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.28  2000/06/14 23:38:55  jas
+// Added FCVariables.
+//
 // Revision 1.27  2000/06/05 19:45:43  guilkey
 // Added some functionality to the DW for PerPatch variables.
 //

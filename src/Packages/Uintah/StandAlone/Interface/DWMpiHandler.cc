@@ -116,6 +116,12 @@ DWMpiHandler::run()
     cerr << "Tag:    " << status.MPI_TAG << "\n";
     cerr << "Error:  " << status.MPI_ERROR << "\n";
     cerr << "Size:   " << status.size << "\n";
+    // According to mpich this is the proper way to get the size info.
+    // Also size is not consistent across mpi implementations - jas
+    // The big reason is to get it to compile on linux.
+    int mpi_size;
+    MPI_Get_count(&status,MPI_INT,&mpi_size);
+    cerr << "Size:   " << mpi_size << "\n";
 
     if( d_dw->d_MpiRank != request->toMpiRank || 
 	status.MPI_SOURCE != request->fromMpiRank ) {
@@ -162,6 +168,9 @@ DWMpiHandler::run()
 
 //
 // $Log$
+// Revision 1.4  2000/06/14 23:38:54  jas
+// Added FCVariables.
+//
 // Revision 1.3  2000/06/05 19:45:43  guilkey
 // Added some functionality to the DW for PerPatch variables.
 //
