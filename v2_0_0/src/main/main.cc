@@ -56,8 +56,9 @@ using std::endl;
 #include <afxwin.h>
 #endif
 
-#define VERSION "1.20.1" // this needs to be synced with the contents of
-                         // SCIRun/doc/edition.xml
+// This needs to be synced with the contents of
+// SCIRun/doc/edition.xml and Dataflow/GUI/NetworkEditor.tcl
+#define VERSION "1.20.1"                         
 
 using namespace SCIRun;
 
