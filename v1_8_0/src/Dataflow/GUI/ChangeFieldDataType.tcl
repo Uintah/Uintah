@@ -45,6 +45,7 @@ itcl_class SCIRun_Fields_ChangeFieldDataType {
             return
         }
         toplevel $w
+	wm maxsize $w 397 187
 
 	iwidgets::Labeledframe $w.input -labelpos nw \
 		               -labeltext "Input Field Type" 
