@@ -50,32 +50,41 @@ using std::setw;
 namespace PSECommon {
 namespace Modules {
 
+using SCICore::Datatypes::ColorMap;
+using PSECore::Datatypes::ColorMapIPort;
+
 // ---------------------------------------------------------------------- // 
-void
+bool
 GenStandardColorMaps::genMap(const clString& s)
 {
   int m = resolution.get();
   int r,g,b;
   double a;
   istringstream is( s() );
-  Array1< Color > rgbs;
-  Array1< float > rgbT;
-  Array1< float > alphas;
-  Array1< float > alphaT;
-  rgbs.setsize(m);
-  rgbT.setsize(m);
-  alphas.setsize(m);
-  alphaT.setsize(m);
+  // got to check that library function...
+  if( is.good() ){
+    Array1< Color > rgbs;
+    Array1< float > rgbT;
+    Array1< float > alphas;
+    Array1< float > alphaT;
+    rgbs.setsize(m);
+    rgbT.setsize(m);
+    alphas.setsize(m);
+    alphaT.setsize(m);
 
-  for(int i = 0; i < m; i++){
-    is >> r >> g >> b >> a;
-    rgbs[i] = Color(r/255.0, g/255.0, b/255.0);
-    rgbT[i] = i/float(m-1);
-    alphas[i] = a;
-    alphaT[i] = i/float(m-1);
-  }
+    for(int i = 0; i < m; i++){
+      is >> r >> g >> b >> a;
+      rgbs[i] = Color(r/255.0, g/255.0, b/255.0);
+      rgbT[i] = i/float(m-1);
+      alphas[i] = a;
+      alphaT[i] = i/float(m-1);
+    }
   
-  cmap = scinew ColorMap(rgbs,rgbT,alphas,alphaT,m);
+    cmap = scinew ColorMap(rgbs,rgbT,alphas,alphaT,m);
+    return true;
+  } else {
+    return false;
+  }
 }
 
 
@@ -101,7 +110,7 @@ GenStandardColorMaps::GenStandardColorMaps(const clString& id)
 
 { 
  // Create the output port
-  outport = scinew ColorMapOPort(this,"ColorMap",ColorMapIPort::Atomic);
+  outport = scinew ColorMapOPort(this,"ColorMap", ColorMapIPort::Atomic);
   add_oport(outport);
  // Initialization code goes here 
 } 
@@ -109,26 +118,6 @@ GenStandardColorMaps::GenStandardColorMaps(const clString& id)
 //---------------------------------------------------------- 
 GenStandardColorMaps::~GenStandardColorMaps(){} 
 
-//-------------------------------------------------------------- 
-/* void GenStandardColorMaps::tcl_command( TCLArgs& args, void* userdata)
-{
-
-  int i;
-  if (args[1] == "setColors") {
-    if (args.count() != 3) {
-      args.error("GenStandardColorMaps::setColors wrong number of args.");
-      return;
-    }
-    reset_vars();
-    int m = resolution.get();
-    if (m < minRes.get()) return;
-    genMap( args[2] );
-    
-  } else {
-    Module::tcl_command(args, userdata);
-  }
-}
-*/
 //-------------------------------------------------------------- 
 
 void GenStandardColorMaps::execute() 
@@ -142,15 +131,8 @@ void GenStandardColorMaps::execute()
    
    clString tclRes;
    TCL::eval(id+" getColorMapString", tclRes);
-   genMap(tclRes);
-   
-
-   // if( !cmap.get_rep() ) return;
-   //
-   // cmap.detach();
-   // cmap->ResetScale();
-     
-   outport->send(cmap);
+   if ( genMap(tclRes) ) 
+     outport->send(cmap);
 } 
 //--------------------------------------------------------------- 
 } // end namespace Modules
