@@ -1,10 +1,11 @@
 #ifndef __RTRT_VOLUMEVIS_H__
 #define __RTRT_VOLUMEVIS_H__
 
-#include "Object.h"
-#include "Material.h"
-#include "Point.h"
-#include "BrickArray3.h"
+#include <Packages/rtrt/Core/Object.h>
+#include <Packages/rtrt/Core/Material.h>
+#include <Packages/rtrt/Core/Point.h>
+#include <Packages/rtrt/Core/BrickArray3.h>
+#include <Packages/rtrt/Core/ScalarTransform1D.h>
 #include <stdlib.h>
 
 namespace rtrt {
@@ -13,15 +14,11 @@ namespace rtrt {
 #define MAXUNSIGNEDSHORT 65535
 #endif
 
-struct Voxel {
-  float val;
-  //  unsigned short gradient_index;
-};
-
 class VolumeVis : public Object, public Material {
 protected:
   Vector diag;
-  BrickArray3<Voxel> data;
+  BrickArray3<float> data;
+  //ScalarTransform1D<float,Material*> *matl_transform;
   float data_min, data_max, data_diff_inv;
   int nx, ny, nz;
   Point min, max;
@@ -29,15 +26,12 @@ protected:
   int nmatls;
   float *alphas;
   int nalphas;
+  //  ScalarTransform1D<float,float> *alpha_transform;
   float delta_x2, delta_y2, delta_z2;
   int bound(const int val, const int min, const int max);
-  Vector gradient(const int x, const int y, const int z);
-  Vector compute_gradient(const int x, const int y, const int z);
-  unsigned short get_index(const Vector &v);
-  Vector get_vector(const unsigned short index);
   
 public:
-  VolumeVis(BrickArray3<Voxel>& data, float data_min, float data_max,
+  VolumeVis(BrickArray3<float>& data, float data_min, float data_max,
 	    int nx, int ny, int nz,
 	    Point min, Point max, Material** matls, int nmatls,
 	    float *alphas, int nalphas);
