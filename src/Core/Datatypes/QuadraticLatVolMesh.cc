@@ -193,7 +193,9 @@ QuadraticLatVolMesh::get_nodes(Node::array_type &array,
   array.push_back(Node::index_type(nodes[1]));
 
   // Push back edge index;
-  array.push_back(Node::index_type(idx));
+  LatVolMesh::Node::iterator nend;
+  LatVolMesh::end(nend);
+  array.push_back(Node::index_type(*nend, idx));
 }
 
 
@@ -214,11 +216,14 @@ QuadraticLatVolMesh::get_nodes(Node::array_type &array,
   }
 
   // Push back edge indices.
+  LatVolMesh::Node::iterator nend;
+  LatVolMesh::end(nend);
+
   LatVolMesh::Edge::array_type edges;
   LatVolMesh::get_edges(edges, idx);
   for (i = 0; i < edges.size(); i++)
   {
-    array.push_back(Node::index_type(edges[i]));
+    array.push_back(Node::index_type(*nend, edges[i]));
   }
 }
 
@@ -240,11 +245,14 @@ QuadraticLatVolMesh::get_nodes(Node::array_type &array,
   }
 
   // Push back edge indices.
+  LatVolMesh::Node::iterator nend;
+  LatVolMesh::end(nend);
+
   LatVolMesh::Edge::array_type edges;
   LatVolMesh::get_edges(edges, idx);
   for (i = 0; i < edges.size(); i++)
   {
-    array.push_back(Node::index_type(edges[i]));
+    array.push_back(Node::index_type(*nend, edges[i]));
   }
 }
 

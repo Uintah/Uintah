@@ -35,8 +35,9 @@ struct SequentialIndex {
     node_index_(n)
   {}
 
-  SequentialIndex(E e) :
+  SequentialIndex(N n, E e) :
     which_(1),
+    node_index_(n),
     edge_index_(e)
   {}
 
@@ -46,7 +47,7 @@ struct SequentialIndex {
     if (which_ == 0) 
       return (unsigned int)node_index_;
     else
-      return (unsigned int)edge_index_;
+      return ((unsigned int)node_index_) + (unsigned int)edge_index_;
   }
 
   unsigned char which_;
