@@ -784,7 +784,7 @@ BASENAME_IS=`which dirname`
 
 ## We use both of these in a number of spots, so I think this is fair:
 ## (Eventually we could write our own if necessary...
-if test -z "$DIRNAME_IS" || test -z "$BASENAME_IS"; then
+if test -z "$DIRNAME_IS" -o -z "$BASENAME_IS"; then
   { echo "configure: error: dirname or basename not found.  Configure script won't work!" 1>&2; exit 1; }
 fi
 
@@ -824,7 +824,7 @@ else
 fi
  
 
-    if test -n "$thirdparty" && test ! -e "$thirdparty"; then
+    if test -n "$thirdparty" -a ! -e "$thirdparty"; then
       { echo "configure: error: The file or directory parameter ($thirdparty) specified for --with-thirdparty does not exist!  Please verify that the path and file are correct." 1>&2; exit 1; }
     fi
 
@@ -842,7 +842,7 @@ else
 fi
  
 
-    if test -n "$tcl" && test ! -e "$tcl"; then
+    if test -n "$tcl" -a ! -e "$tcl"; then
       { echo "configure: error: The file or directory parameter ($tcl) specified for --with-tcl does not exist!  Please verify that the path and file are correct." 1>&2; exit 1; }
     fi
 
@@ -860,7 +860,7 @@ else
 fi
  
 
-    if test -n "$xercesc" && test ! -e "$xercesc"; then
+    if test -n "$xercesc" -a ! -e "$xercesc"; then
       { echo "configure: error: The file or directory parameter ($xercesc) specified for --with-xercesc does not exist!  Please verify that the path and file are correct." 1>&2; exit 1; }
     fi
 
@@ -878,7 +878,7 @@ else
 fi
  
 
-    if test -n "$teem" && test ! -e "$teem"; then
+    if test -n "$teem" -a ! -e "$teem"; then
       { echo "configure: error: The file or directory parameter ($teem) specified for --with-teem does not exist!  Please verify that the path and file are correct." 1>&2; exit 1; }
     fi
 
@@ -896,7 +896,7 @@ else
 fi
  
 
-    if test -n "$mpeg" && test ! -e "$mpeg"; then
+    if test -n "$mpeg" -a ! -e "$mpeg"; then
       { echo "configure: error: The file or directory parameter ($mpeg) specified for --with-mpeg does not exist!  Please verify that the path and file are correct." 1>&2; exit 1; }
     fi
 
@@ -914,7 +914,7 @@ else
 fi
  
 
-    if test -n "$blas" && test ! -e "$blas"; then
+    if test -n "$blas" -a ! -e "$blas"; then
       { echo "configure: error: The file or directory parameter ($blas) specified for --with-blas does not exist!  Please verify that the path and file are correct." 1>&2; exit 1; }
     fi
 
@@ -932,7 +932,7 @@ else
 fi
  
 
-    if test -n "$lapack" && test ! -e "$lapack"; then
+    if test -n "$lapack" -a ! -e "$lapack"; then
       { echo "configure: error: The file or directory parameter ($lapack) specified for --with-lapack does not exist!  Please verify that the path and file are correct." 1>&2; exit 1; }
     fi
 
@@ -950,7 +950,7 @@ else
 fi
  
 
-    if test -n "$mpi" && test ! -e "$mpi"; then
+    if test -n "$mpi" -a ! -e "$mpi"; then
       { echo "configure: error: The file or directory parameter ($mpi) specified for --with-mpi does not exist!  Please verify that the path and file are correct." 1>&2; exit 1; }
     fi
 
@@ -968,7 +968,7 @@ else
 fi
  
 
-    if test -n "$mpiuni" && test ! -e "$mpiuni"; then
+    if test -n "$mpiuni" -a ! -e "$mpiuni"; then
       { echo "configure: error: The file or directory parameter ($mpiuni) specified for --with-mpiuni does not exist!  Please verify that the path and file are correct." 1>&2; exit 1; }
     fi
 
@@ -986,7 +986,7 @@ else
 fi
  
 
-    if test -n "$petsc" && test ! -e "$petsc"; then
+    if test -n "$petsc" -a ! -e "$petsc"; then
       { echo "configure: error: The file or directory parameter ($petsc) specified for --with-petsc does not exist!  Please verify that the path and file are correct." 1>&2; exit 1; }
     fi
 
@@ -1004,7 +1004,7 @@ else
 fi
  
 
-    if test -n "$unipetsc" && test ! -e "$unipetsc"; then
+    if test -n "$unipetsc" -a ! -e "$unipetsc"; then
       { echo "configure: error: The file or directory parameter ($unipetsc) specified for --with-unipetsc does not exist!  Please verify that the path and file are correct." 1>&2; exit 1; }
     fi
 
@@ -1022,7 +1022,7 @@ else
 fi
  
 
-    if test -n "$tau" && test ! -e "$tau"; then
+    if test -n "$tau" -a ! -e "$tau"; then
       { echo "configure: error: The file or directory parameter ($tau) specified for --with-tau does not exist!  Please verify that the path and file are correct." 1>&2; exit 1; }
     fi
 
@@ -1040,7 +1040,7 @@ else
 fi
  
 
-    if test -n "$globus" && test ! -e "$globus"; then
+    if test -n "$globus" -a ! -e "$globus"; then
       { echo "configure: error: The file or directory parameter ($globus) specified for --with-globus does not exist!  Please verify that the path and file are correct." 1>&2; exit 1; }
     fi
 
@@ -1058,7 +1058,7 @@ else
 fi
  
 
-    if test -n "$qt" && test ! -e "$qt"; then
+    if test -n "$qt" -a ! -e "$qt"; then
       { echo "configure: error: The file or directory parameter ($qt) specified for --with-qt does not exist!  Please verify that the path and file are correct." 1>&2; exit 1; }
     fi
 
@@ -1076,7 +1076,7 @@ else
 fi
  
 
-    if test -n "$opengl" && test ! -e "$opengl"; then
+    if test -n "$opengl" -a ! -e "$opengl"; then
       { echo "configure: error: The file or directory parameter ($opengl) specified for --with-opengl does not exist!  Please verify that the path and file are correct." 1>&2; exit 1; }
     fi
 
@@ -1094,7 +1094,7 @@ else
 fi
  
 
-    if test -n "$zlib" && test ! -e "$zlib"; then
+    if test -n "$zlib" -a ! -e "$zlib"; then
       { echo "configure: error: The file or directory parameter ($zlib) specified for --with-zlib does not exist!  Please verify that the path and file are correct." 1>&2; exit 1; }
     fi
 
@@ -1112,7 +1112,7 @@ else
 fi
  
 
-    if test -n "$vdt" && test ! -e "$vdt"; then
+    if test -n "$vdt" -a ! -e "$vdt"; then
       { echo "configure: error: The file or directory parameter ($vdt) specified for --with-vdt does not exist!  Please verify that the path and file are correct." 1>&2; exit 1; }
     fi
 
@@ -1130,7 +1130,7 @@ else
 fi
  
 
-    if test -n "$imagemagick" && test ! -e "$imagemagick"; then
+    if test -n "$imagemagick" -a ! -e "$imagemagick"; then
       { echo "configure: error: The file or directory parameter ($imagemagick) specified for --with-imagemagick does not exist!  Please verify that the path and file are correct." 1>&2; exit 1; }
     fi
 
@@ -1148,7 +1148,7 @@ else
 fi
  
 
-    if test -n "$mdsplus" && test ! -e "$mdsplus"; then
+    if test -n "$mdsplus" -a ! -e "$mdsplus"; then
       { echo "configure: error: The file or directory parameter ($mdsplus) specified for --with-mdsplus does not exist!  Please verify that the path and file are correct." 1>&2; exit 1; }
     fi
 
@@ -3832,8 +3832,8 @@ echo
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="not-optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -3917,9 +3917,8 @@ echo "configure:3887: checking for main in -lm" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -4055,8 +4054,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_HEADER_OPTIONAL_="not-optional"
 
-    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_HEADER_OPTIONAL_" != "optional"; then
+    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
+            "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -4088,7 +4087,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:4092: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:4091: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -4200,7 +4199,7 @@ echo "configure:4092: checking for all headers at the same time: $_HEADER_LIST_"
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:4204: checking for $_HEADER_" >&5
+echo "configure:4203: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -4315,7 +4314,7 @@ EOF
 # Uses ac_ vars as temps to allow command line to override cache and checks.
 # --without-x overrides everything else, but does not touch the cache.
 echo $ac_n "checking for X""... $ac_c" 1>&6
-echo "configure:4319: checking for X" >&5
+echo "configure:4318: checking for X" >&5
 
 # Check whether --with-x or --without-x was given.
 if test "${with_x+set}" = set; then
@@ -4377,12 +4376,12 @@ if test "$ac_x_includes" = NO; then
 
   # First, try using that file with no special directory specified.
 cat > conftest.$ac_ext <<EOF
-#line 4381 "configure"
+#line 4380 "configure"
 #include "confdefs.h"
 #include <$x_direct_test_include>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:4386: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:4385: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -4451,14 +4450,14 @@ if test "$ac_x_libraries" = NO; then
   ac_save_LIBS="$LIBS"
   LIBS="-l$x_direct_test_library $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 4455 "configure"
+#line 4454 "configure"
 #include "confdefs.h"
 
 int main() {
 ${x_direct_test_function}()
 ; return 0; }
 EOF
-if { (eval echo configure:4462: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4461: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   LIBS="$ac_save_LIBS"
 # We can link X programs with no special library path.
@@ -4564,17 +4563,17 @@ else
     case "`(uname -sr) 2>/dev/null`" in
     "SunOS 5"*)
       echo $ac_n "checking whether -R must be followed by a space""... $ac_c" 1>&6
-echo "configure:4568: checking whether -R must be followed by a space" >&5
+echo "configure:4567: checking whether -R must be followed by a space" >&5
       ac_xsave_LIBS="$LIBS"; LIBS="$LIBS -R$x_libraries"
       cat > conftest.$ac_ext <<EOF
-#line 4571 "configure"
+#line 4570 "configure"
 #include "confdefs.h"
 
 int main() {
 
 ; return 0; }
 EOF
-if { (eval echo configure:4578: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4577: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   ac_R_nospace=yes
 else
@@ -4590,14 +4589,14 @@ rm -f conftest*
       else
 	LIBS="$ac_xsave_LIBS -R $x_libraries"
 	cat > conftest.$ac_ext <<EOF
-#line 4594 "configure"
+#line 4593 "configure"
 #include "confdefs.h"
 
 int main() {
 
 ; return 0; }
 EOF
-if { (eval echo configure:4601: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4600: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   ac_R_space=yes
 else
@@ -4629,7 +4628,7 @@ rm -f conftest*
     # libraries were built with DECnet support.  And karl@cs.umb.edu says
     # the Alpha needs dnet_stub (dnet does not exist).
     echo $ac_n "checking for dnet_ntoa in -ldnet""... $ac_c" 1>&6
-echo "configure:4633: checking for dnet_ntoa in -ldnet" >&5
+echo "configure:4632: checking for dnet_ntoa in -ldnet" >&5
 ac_lib_var=`echo dnet'_'dnet_ntoa | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -4637,7 +4636,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-ldnet  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 4641 "configure"
+#line 4640 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 #ifdef __cplusplus
@@ -4651,7 +4650,7 @@ int main() {
 dnet_ntoa()
 ; return 0; }
 EOF
-if { (eval echo configure:4655: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4654: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -4673,7 +4672,7 @@ fi
 
     if test $ac_cv_lib_dnet_dnet_ntoa = no; then
       echo $ac_n "checking for dnet_ntoa in -ldnet_stub""... $ac_c" 1>&6
-echo "configure:4677: checking for dnet_ntoa in -ldnet_stub" >&5
+echo "configure:4676: checking for dnet_ntoa in -ldnet_stub" >&5
 ac_lib_var=`echo dnet_stub'_'dnet_ntoa | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -4681,7 +4680,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-ldnet_stub  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 4685 "configure"
+#line 4684 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 #ifdef __cplusplus
@@ -4695,7 +4694,7 @@ int main() {
 dnet_ntoa()
 ; return 0; }
 EOF
-if { (eval echo configure:4699: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4698: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -4724,12 +4723,12 @@ fi
     # The nsl library prevents programs from opening the X display
     # on Irix 5.2, according to dickey@clark.net.
     echo $ac_n "checking for gethostbyname""... $ac_c" 1>&6
-echo "configure:4728: checking for gethostbyname" >&5
+echo "configure:4727: checking for gethostbyname" >&5
 if eval "test \"`echo '$''{'ac_cv_func_gethostbyname'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 4733 "configure"
+#line 4732 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char gethostbyname(); below.  */
@@ -4755,7 +4754,7 @@ gethostbyname();
 
 ; return 0; }
 EOF
-if { (eval echo configure:4759: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4758: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_func_gethostbyname=yes"
 else
@@ -4776,7 +4775,7 @@ fi
 
     if test $ac_cv_func_gethostbyname = no; then
       echo $ac_n "checking for gethostbyname in -lnsl""... $ac_c" 1>&6
-echo "configure:4780: checking for gethostbyname in -lnsl" >&5
+echo "configure:4779: checking for gethostbyname in -lnsl" >&5
 ac_lib_var=`echo nsl'_'gethostbyname | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -4784,7 +4783,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lnsl  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 4788 "configure"
+#line 4787 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 #ifdef __cplusplus
@@ -4798,7 +4797,7 @@ int main() {
 gethostbyname()
 ; return 0; }
 EOF
-if { (eval echo configure:4802: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4801: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -4828,12 +4827,12 @@ fi
     # -lsocket must be given before -lnsl if both are needed.
     # We assume that if connect needs -lnsl, so does gethostbyname.
     echo $ac_n "checking for connect""... $ac_c" 1>&6
-echo "configure:4832: checking for connect" >&5
+echo "configure:4831: checking for connect" >&5
 if eval "test \"`echo '$''{'ac_cv_func_connect'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 4837 "configure"
+#line 4836 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char connect(); below.  */
@@ -4859,7 +4858,7 @@ connect();
 
 ; return 0; }
 EOF
-if { (eval echo configure:4863: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4862: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_func_connect=yes"
 else
@@ -4880,7 +4879,7 @@ fi
 
     if test $ac_cv_func_connect = no; then
       echo $ac_n "checking for connect in -lsocket""... $ac_c" 1>&6
-echo "configure:4884: checking for connect in -lsocket" >&5
+echo "configure:4883: checking for connect in -lsocket" >&5
 ac_lib_var=`echo socket'_'connect | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -4888,7 +4887,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lsocket $X_EXTRA_LIBS $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 4892 "configure"
+#line 4891 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 #ifdef __cplusplus
@@ -4902,7 +4901,7 @@ int main() {
 connect()
 ; return 0; }
 EOF
-if { (eval echo configure:4906: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4905: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -4926,12 +4925,12 @@ fi
 
     # gomez@mi.uni-erlangen.de says -lposix is necessary on A/UX.
     echo $ac_n "checking for remove""... $ac_c" 1>&6
-echo "configure:4930: checking for remove" >&5
+echo "configure:4929: checking for remove" >&5
 if eval "test \"`echo '$''{'ac_cv_func_remove'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 4935 "configure"
+#line 4934 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char remove(); below.  */
@@ -4957,7 +4956,7 @@ remove();
 
 ; return 0; }
 EOF
-if { (eval echo configure:4961: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:4960: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_func_remove=yes"
 else
@@ -4978,7 +4977,7 @@ fi
 
     if test $ac_cv_func_remove = no; then
       echo $ac_n "checking for remove in -lposix""... $ac_c" 1>&6
-echo "configure:4982: checking for remove in -lposix" >&5
+echo "configure:4981: checking for remove in -lposix" >&5
 ac_lib_var=`echo posix'_'remove | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -4986,7 +4985,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lposix  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 4990 "configure"
+#line 4989 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 #ifdef __cplusplus
@@ -5000,7 +4999,7 @@ int main() {
 remove()
 ; return 0; }
 EOF
-if { (eval echo configure:5004: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:5003: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -5024,12 +5023,12 @@ fi
 
     # BSDI BSD/OS 2.1 needs -lipc for XOpenDisplay.
     echo $ac_n "checking for shmat""... $ac_c" 1>&6
-echo "configure:5028: checking for shmat" >&5
+echo "configure:5027: checking for shmat" >&5
 if eval "test \"`echo '$''{'ac_cv_func_shmat'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 5033 "configure"
+#line 5032 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char shmat(); below.  */
@@ -5055,7 +5054,7 @@ shmat();
 
 ; return 0; }
 EOF
-if { (eval echo configure:5059: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:5058: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_func_shmat=yes"
 else
@@ -5076,7 +5075,7 @@ fi
 
     if test $ac_cv_func_shmat = no; then
       echo $ac_n "checking for shmat in -lipc""... $ac_c" 1>&6
-echo "configure:5080: checking for shmat in -lipc" >&5
+echo "configure:5079: checking for shmat in -lipc" >&5
 ac_lib_var=`echo ipc'_'shmat | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -5084,7 +5083,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lipc  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 5088 "configure"
+#line 5087 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 #ifdef __cplusplus
@@ -5098,7 +5097,7 @@ int main() {
 shmat()
 ; return 0; }
 EOF
-if { (eval echo configure:5102: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:5101: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -5131,7 +5130,7 @@ fi
   # libraries we check for below, so use a different variable.
   #  --interran@uluru.Stanford.EDU, kb@cs.umb.edu.
   echo $ac_n "checking for IceConnectionNumber in -lICE""... $ac_c" 1>&6
-echo "configure:5135: checking for IceConnectionNumber in -lICE" >&5
+echo "configure:5134: checking for IceConnectionNumber in -lICE" >&5
 ac_lib_var=`echo ICE'_'IceConnectionNumber | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -5139,7 +5138,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lICE $X_EXTRA_LIBS $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 5143 "configure"
+#line 5142 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 #ifdef __cplusplus
@@ -5153,7 +5152,7 @@ int main() {
 IceConnectionNumber()
 ; return 0; }
 EOF
-if { (eval echo configure:5157: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:5156: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -5221,8 +5220,8 @@ case $host in
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -5266,13 +5265,13 @@ case $host in
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lftn""... $ac_c" 1>&6
-echo "configure:5270: checking for -lftn" >&5
+echo "configure:5269: checking for -lftn" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lftn""... $ac_c" 1>&6
-echo "configure:5276: checking for main in -lftn" >&5
+echo "configure:5275: checking for main in -lftn" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -5306,9 +5305,8 @@ echo "configure:5276: checking for main in -lftn" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -5433,8 +5431,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -5478,13 +5476,13 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lfortran""... $ac_c" 1>&6
-echo "configure:5482: checking for -lfortran" >&5
+echo "configure:5480: checking for -lfortran" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lfortran""... $ac_c" 1>&6
-echo "configure:5488: checking for main in -lfortran" >&5
+echo "configure:5486: checking for main in -lfortran" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -5518,9 +5516,8 @@ echo "configure:5488: checking for main in -lfortran" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -5652,8 +5649,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="not-optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -5697,13 +5694,13 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lxlf90""... $ac_c" 1>&6
-echo "configure:5701: checking for -lxlf90" >&5
+echo "configure:5698: checking for -lxlf90" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lxlf90""... $ac_c" 1>&6
-echo "configure:5707: checking for main in -lxlf90" >&5
+echo "configure:5704: checking for main in -lxlf90" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -5737,9 +5734,8 @@ echo "configure:5707: checking for main in -lxlf90" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -5868,8 +5864,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -5913,13 +5909,13 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lg2c""... $ac_c" 1>&6
-echo "configure:5917: checking for -lg2c" >&5
+echo "configure:5913: checking for -lg2c" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lg2c""... $ac_c" 1>&6
-echo "configure:5923: checking for main in -lg2c" >&5
+echo "configure:5919: checking for main in -lg2c" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -5953,9 +5949,8 @@ echo "configure:5923: checking for main in -lg2c" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -6085,8 +6080,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -6130,13 +6125,13 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lfor""... $ac_c" 1>&6
-echo "configure:6134: checking for -lfor" >&5
+echo "configure:6129: checking for -lfor" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lfor""... $ac_c" 1>&6
-echo "configure:6140: checking for main in -lfor" >&5
+echo "configure:6135: checking for main in -lfor" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -6170,9 +6165,8 @@ echo "configure:6140: checking for main in -lfor" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -6302,8 +6296,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -6347,13 +6341,13 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lF77""... $ac_c" 1>&6
-echo "configure:6351: checking for -lF77" >&5
+echo "configure:6345: checking for -lF77" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lF77""... $ac_c" 1>&6
-echo "configure:6357: checking for main in -lF77" >&5
+echo "configure:6351: checking for main in -lF77" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -6387,9 +6381,8 @@ echo "configure:6357: checking for main in -lF77" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -6519,9 +6512,41 @@ fi
 
 case $host in
   *-irix*)
-    if test "$threads" = "unknown" ||
-       test "$threads" = "irix"; then
+    if test "$threads" = "unknown"; then
       threads=irix
+    elif test "$threads" != "pthreads" -a "$threads" != "irix"; then
+      
+      ## SCI_MSG_ERROR
+      if test -z "$debugging"; then
+         echo
+         echo "configure: warning: Adding '--enable-verbosity' to configure line" 1>&2
+         echo "configure: warning: _may_ give more information about what is breaking" 1>&2
+      fi
+      echo
+      { echo "configure: error: unknown thread type for host $host: $threads. exiting." 1>&2; exit 1; }
+  
+    fi
+    ;;
+  *)
+    if test "$threads" = "unknown"; then
+      threads=pthreads
+    elif test "$threads" != "pthreads"; then
+      
+      ## SCI_MSG_ERROR
+      if test -z "$debugging"; then
+         echo
+         echo "configure: warning: Adding '--enable-verbosity' to configure line" 1>&2
+         echo "configure: warning: _may_ give more information about what is breaking" 1>&2
+      fi
+      echo
+      { echo "configure: error: unknown thread type for host $host: $threads. exiting." 1>&2; exit 1; }
+  
+    fi
+    ;;
+esac
+
+case $threads in
+   irix)
       
     #######################################################
     ##  Begin: SCI_CHECK_LIB macro...
@@ -6542,8 +6567,8 @@ case $host in
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="not-optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -6587,13 +6612,13 @@ case $host in
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lfetchop""... $ac_c" 1>&6
-echo "configure:6591: checking for -lfetchop" >&5
+echo "configure:6616: checking for -lfetchop" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lfetchop""... $ac_c" 1>&6
-echo "configure:6597: checking for main in -lfetchop" >&5
+echo "configure:6622: checking for main in -lfetchop" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -6627,9 +6652,8 @@ echo "configure:6597: checking for main in -lfetchop" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -6737,11 +6761,10 @@ EOF
       if test "$HAVE_LIBFETCHOP"; then
          CFLAGS="$CFLAGS -DSTL_SGI_THREADS"
          THREAD_LIBS=-lfetchop
-         THREAD_DEFINE=      
+         THREAD_DEFINE=
       fi
-    elif test "$threads" = "unknown" ||
-       test "$threads" = "pthreads"; then
-      threads=pthreads
+      ;;
+   pthreads)
       
     #######################################################
     ##  Begin: SCI_CHECK_LIB macro...
@@ -6762,8 +6785,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="not-optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -6807,13 +6830,13 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lpthread""... $ac_c" 1>&6
-echo "configure:6811: checking for -lpthread" >&5
+echo "configure:6834: checking for -lpthread" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lpthread""... $ac_c" 1>&6
-echo "configure:6817: checking for main in -lpthread" >&5
+echo "configure:6840: checking for main in -lpthread" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -6847,9 +6870,8 @@ echo "configure:6817: checking for main in -lpthread" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -6956,47 +6978,41 @@ EOF
   
       if test "$HAVE_LIBPTHREAD"; then
         THREAD_LIBS=-lpthread
-        THREAD_DEFINE=yes
-      fi 
-    else
-      
-      ## SCI_MSG_ERROR
-      if test -z "$debugging"; then
-         echo
-         echo "configure: warning: Adding '--enable-verbosity' to configure line" 1>&2
-         echo "configure: warning: _may_ give more information about what is breaking" 1>&2
+        THREAD_DEFINE="#define SCI_PTHREAD"
       fi
-      echo
-      { echo "configure: error: unknown thread type for host $host: $threads. exiting." 1>&2; exit 1; }
-  
-    fi
-    ;;
-  *)
-    if test "$threads" = "unknown" ||
-       test "$threads" = "pthreads"; then
-      threads=pthreads
       
     #######################################################
-    ##  Begin: SCI_CHECK_LIB macro...
+    ##  Begin: SCI_CHECK_HEADERS macro...
 
     if test "$debugging" = "yes"; then
-       echo "SCI CHECK LIB:"
-       echo "   paths:      "
-       echo "   lib name:   pthread"
-       echo "   function:   main"
-       echo "   other-libs: "
-       echo "   c++ lib:    "
-       echo "   optional:   not-optional"
+       echo "SCI CHECK HEADERS:"
+       echo "   paths:       "
+       echo "   headers:     pthread.h semaphore.h"
+       echo "   other-paths: "
+       echo "   c++ lib:     "
+       echo "   optional:    not-optional"
     fi
 
-    ##########################
-    ## CXX and OPTIONAL parameters
+    ########################
+    # PATHS parameter:
+    #
+    #   NO_EXPLICIT_PATHS: this flag is used to check a "blank" path.
+    # In other words, to see if the compiler can find it by itself
+    # before we test explicit paths.
 
+    _SCI_CHECK_PATHS_=" NO_EXPLICIT_PATH"
+
+    ########################
+    # HEADERS parameter:
+
+    _HEADER_LIST_="pthread.h semaphore.h"
+
+    ##  SCI_CHECK_HEADERS
     _SCI_USING_CXX_=""
-    _SCI_LIB_OPTIONAL_="not-optional"
+    _SCI_HEADER_OPTIONAL_="not-optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
+            "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -7005,175 +7021,234 @@ EOF
          echo "configure: warning: _may_ give more information about what is breaking" 1>&2
       fi
       echo
-      { echo "configure: error: SCI CHECK LIB macro (for pthread) optional parameter must be set to 'optional' or 'not-optional'" 1>&2; exit 1; }
+      { echo "configure: error: SCI CHECK HEADERS macro (for pthread.h semaphore.h) optional parameter must be set to 'optional' or 'not-optional'" 1>&2; exit 1; }
   
     fi
 
-    ##########################
-    ## LIB parameter: The following 'sed' capitalizes pthread (the library name.)
-    ##
-    ## EXAMPLE: if lib name is 'pthread'
-    ##     Temp Var Name     Real Var Name        Value
-    ##     -------------     -------------        -----
-    ##   _SCI_VAR_LIBNAME_ => PTHREAD             (none)
-    ##   _SCI_VAR_NAME_    => LIBPTHREAD          /usr/lib   || ''
-    ##   _SCI_VAR_HAVE_    => HAVE_LIBPTHREAD     yes        || ''
-    ##   _SCI_VAR_LIBRARY_ => PTHREAD_LIBRARY     -L/usr/lib || ''
+    ## Testing for all headers at the same time...  Should be a lot
+    ## faster... if this fails, we will try one by one to figure out
+    ## which one is broken.
 
-    _SCI_VAR_LIBNAME_=`echo pthread | sed 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
-    _SCI_VAR_NAME_=LIB$_SCI_VAR_LIBNAME_
-    _SCI_VAR_HAVE_="HAVE_$_SCI_VAR_NAME_"
-    _SCI_VAR_LIBRARY_="$_SCI_VAR_LIBNAME_"_LIBRARY
+    # Make num_headers into an "integer"
+    num_headers=`echo $_HEADER_LIST_ | wc -w`
 
-    if test "$debugging" = "yes"; then
-       echo "_SCI_VAR_NAME_ is $_SCI_VAR_NAME_"
-       echo "_SCI_VAR_HAVE_ is $_SCI_VAR_HAVE_"
-       echo "_SCI_VAR_LIBRARY_ is $_SCI_VAR_LIBRARY_"
-    fi
+    first_header=
+    for the_header in $_HEADER_LIST_; do
+        if test "$first_header" = ""; then
+           first_header=$the_header
+        fi
+    done
+
+    SUCCESS="no"
+    ## If more than one header...
+    if test $num_headers -gt 1; then
+
+       echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
+echo "configure:7048: checking for all headers at the same time: $_HEADER_LIST_" >&5
+       for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
-    ##########################
-    ## FUNCTION parameter
-    if test "main" = "main"; then
-       _SCI_DECL_=""
-       _SCI_CALL_=""
-       EXTERN_BEGIN=""
-       EXTERN_END=""
-       echo $ac_n "checking for -lpthread""... $ac_c" 1>&6
-echo "configure:7044: checking for -lpthread" >&5
-    else
-       _SCI_DECL_="char main();"
-       _SCI_CALL_="main();"
-
-       echo $ac_n "checking for main in -lpthread""... $ac_c" 1>&6
-echo "configure:7050: checking for main in -lpthread" >&5
-       if test "$_SCI_USING_CXX_" != "yes"; then
-          EXTERN_BEGIN="extern \"C\" {"
-          EXTERN_END="}"
-       fi
-    fi
-
-    ##########################
-    ## OTHER-LIBRARIES parameter
-
-    _SCI_OTHER_LIBS_=""
-
-    # NO_EXPLICIT_PATHS: this flag is used to check a "blank" path.
-    # In other words, to see if the compiler can find it by itself...
-    _SCI_CHECK_PATHS_=" NO_EXPLICIT_PATH"
-
-    ## WARNING... in some cases it might be an error if we specify 
-    ##            a path to a lib, but the compiler has a default.
-    ##            For example, if we want libm.so and we specify
-    ##            to look in /usr/lib, and then we use a compiler
-    ##            that has its own version of libm (say in /usr/compiler/lib)
-    ##            then things will break.  However, in some cases
-    ##            this is not a problem: eg. /res/sci/lib/libtcl.so.
-    ##            I'm not sure how we should resolve this.
-
-    # Remove any old output file.
-    rm -f conftest.out
-
-    for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
-
-       if test "$debugging" = "yes"; then
-          echo "Checking in path: $_CHECK_PATH_"
-       fi
-
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
-            if test "$debugging" = "yes"; then
-               echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
-            fi
-            continue
-       fi
-
-       if test "$_CHECK_PATH_" = "NO_EXPLICIT_PATH"; then
-          _CHECK_PATH_=""
-          LIBRARY=
-       else
-          if test ! -d "$_CHECK_PATH_"; then 
-             if test "$debugging" = "yes"; then
-                echo "No such path!"
-             fi
-             continue
+          if test "$debugging" = "yes"; then
+             echo "Checking all .h files at once in: $_CHECK_PATH_"
           fi
-          LIBRARY=-L$_CHECK_PATH_
-       fi
+          if test "$_CHECK_PATH_" = "/usr/include"; then
+             
+      ## SCI_MSG_ERROR
+      if test -z "$debugging"; then
+         echo
+         echo "configure: warning: Adding '--enable-verbosity' to configure line" 1>&2
+         echo "configure: warning: _may_ give more information about what is breaking" 1>&2
+      fi
+      echo
+      { echo "configure: error: Do not specify /usr/include in SCI CHECK HEADERS" 1>&2; exit 1; }
+  
+          fi
 
-       cat > conftest.cc <<EOF
-       #include "confdefs.h"
-       $EXTERN_BEGIN
-       $_SCI_DECL_
-       $EXTERN_END
-       int main() {
-         $_SCI_CALL_
-         return 0;
-       }
-EOF
-
-       rm -f a.out
-       ac_try="$CXX $CFLAGS conftest.cc $LIBRARY -lpthread $_SCI_OTHER_LIBS_ >/dev/null >> conftest.out 2>> conftest.out"
-       (eval $ac_try) 2>&5
-
-       if test -f a.out; then
-          if test "$_CHECK_PATH_" = ""; then
-             echo "$ac_t""yes" 1>&6
+          INCLUDE_FLAGS=""
+          if test "$_CHECK_PATH_" = "NO_EXPLICIT_PATH"; then
+             _CHECK_PATH_=""
           else
-             if test -f "$_CHECK_PATH_/libpthread.a" -o -f "$_CHECK_PATH_/libpthread.so"; then
-                echo "$ac_t""$_CHECK_PATH_" 1>&6
-             else
-                # Even though the compilation was successful,
-                # it was because the library was in the generic
-                # compiler path, not because it was in the path we just
-                # tested.  Thus, we really did not succeed.
-
-                if test "$debugging" = "yes"; then
-                   echo "false alarm on lib, will keep trying"
-                fi
-                eval $_SCI_VAR_NAME_=''
-                eval $_SCI_VAR_HAVE_=''
-                eval $_SCI_VAR_LIBRARY_=''
+             if test ! -d "$_CHECK_PATH_"; then 
                 continue
              fi
+             INCLUDE_FLAGS="-I$_CHECK_PATH_"
           fi
-          if test "$debugging" = "yes"; then
-             echo "Found it"
-          fi
-          eval $_SCI_VAR_NAME_=$_CHECK_PATH_
-          eval $_SCI_VAR_HAVE_=yes
-          if test "$_CHECK_PATH_" != ""; then
-             eval $_SCI_VAR_LIBRARY_=-L$_CHECK_PATH_
-          fi
-          eval $_SCI_FOUND_
-          break
-       else
-          if test "$debugging" = "yes"; then
-             echo "Did NOT find it"
-          fi
-          eval $_SCI_VAR_NAME_=''
-          eval $_SCI_VAR_HAVE_=''
-          eval $_SCI_VAR_LIBRARY_=''
-       fi
-    done # loop over all libs.
 
-    # For some reason putting the eval statement in the following "if test" 
-    # statement doesn't work... so I do it here.
-    eval result='$'$_SCI_VAR_HAVE_
+          include_list="#include \"confdefs.h\"\n"
+          for _HEADER_ in $_HEADER_LIST_; do
+             include_list="$include_list""#include <$_HEADER_>\n"
+          done
 
-    if test "$result" = ""; then
-       if test "$debugging" = "yes"; then
-          echo "Did not find it at all"
+          include_list="\n""$include_list\n""int main() { return 0; }\n"
+
+	  echo $use_minus_e $include_list > conftest.cc
+
+          rm -f conftest.o
+          ac_try="$CXX $CFLAGS -c conftest.cc $INCLUDE_FLAGS  >/dev/null 2>conftest.out"
+          (eval $ac_try) 2>&5
+
+          if test -f conftest.o; then
+             # Succeeded... need to run through all header files and
+             # create/save appropriate flags.
+
+             if test "$_CHECK_PATH_" = ""; then
+                echo "$ac_t""yes" 1>&6
+             else
+                if test -f "$_CHECK_PATH_/$first_header"; then
+                   echo "$ac_t""$_CHECK_PATH_" 1>&6
+                else
+                   # Even though the compilation was successful,
+                   # it was because the header was in the generic
+                   # compiler path, not because it was in the path we just
+                   # tested.  Thus, we really did not succeed.
+                   if test "$debugging" = "yes"; then
+                      echo "False alarm, will keep trying"
+                   fi
+                   continue
+                fi
+             fi
+
+             SUCCESS="yes"
+
+             define_list=
+
+             for _HEADER_ in $_HEADER_LIST_; do
+                # Using set to capitalize the string and replace / with _
+                _SCI_HEADER_NAME_=`echo $_HEADER_ | sed -e 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
+                eval $_SCI_HEADER_NAME_=''
+                _SCI_HEADER_HAVE_=HAVE_$_SCI_HEADER_NAME_
+                _SCI_INCLUDE_NAME_=INC$_SCI_HEADER_NAME_
+
+                if test "$_CHECK_PATH_" != ""; then
+                   eval $_SCI_INCLUDE_NAME_=-I$_CHECK_PATH_
+                fi
+                eval $_SCI_HEADER_HAVE_=yes
+
+                # Save a list of defines in confdefs.h.  Something
+	        # later removes a bunch of them... haven't been able
+                # to figure out what yet.
+                define_list="#define $_SCI_HEADER_HAVE_ 1\n$define_list"
+             done
+
+	     # Saving all the defines into one string and then echoing
+             # that string to confdefs.h is much faster than sending
+             # them one at a time as opening the file on some file systems
+             # (ASCI computers?) takes forever.
+             echo $use_minus_e $define_list >> confdefs.h
+
+             # Found it so stop looking in other locations.
+             break
+          fi ## end if success
+       done ## for _CHECK_PATH_
+    fi ## end if more than 1 header
+
+    # If we succeeded in testing all the .h files in one test above,
+    # then skip the individual tests below.
+    if test "$SUCCESS" = "yes"; then
+       _HEADER_LIST_=""
+    else
+       if test $num_headers -gt 1; then
+          echo "no.  (One or more missing, will check individually)"
        fi
-       # Didn't find the library (or function)...
-       echo "$ac_t""no" 1>&6
-       if test "$_SCI_LIB_OPTIONAL_" = "not-optional"; then
-          echo "configure: warning: Required library $_SCI_VAR_LIBNAME_ not found." 1>&2
-          echo "configure: warning: Command line for test was: $ac_try" 1>&2
-          echo "configure: warning: Compile output is:" 1>&2
-          cat conftest.out
-          
+    fi
+
+    ## Begin: HEADER for loop
+    for _HEADER_ in $_HEADER_LIST_; do
+
+       echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
+echo "configure:7160: checking for $_HEADER_" >&5
+
+       for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
+
+          if test "$debugging" = "yes"; then
+             echo "Checking in: $_CHECK_PATH_"
+          fi
+          if test "$_CHECK_PATH_" = "/usr/include"; then
+             
+      ## SCI_MSG_ERROR
+      if test -z "$debugging"; then
+         echo
+         echo "configure: warning: Adding '--enable-verbosity' to configure line" 1>&2
+         echo "configure: warning: _may_ give more information about what is breaking" 1>&2
+      fi
+      echo
+      { echo "configure: error: Do not specify /usr/include in SCI CHECK HEADERS" 1>&2; exit 1; }
+  
+          fi
+
+          INCLUDE_FLAGS=""
+          if test "$_CHECK_PATH_" = "NO_EXPLICIT_PATH"; then
+             _CHECK_PATH_=""
+          else
+             if test ! -d "$_CHECK_PATH_"; then 
+                continue
+             fi
+             INCLUDE_FLAGS="-I$_CHECK_PATH_"
+          fi
+
+          # Using set to capitalize the string and replace / with _
+          _SCI_HEADER_NAME_=`echo $_HEADER_ | sed -e 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
+          eval $_SCI_HEADER_NAME_=''
+          _SCI_HEADER_HAVE_=HAVE_$_SCI_HEADER_NAME_
+          _SCI_INCLUDE_NAME_=INC$_SCI_HEADER_NAME_
+
+          ac_try="$CXX $CFLAGS -c conftest.cc $INCLUDE_FLAGS  >/dev/null 2>conftest.out"
+          cat > conftest.cc <<EOF
+          #include "confdefs.h"
+          #include <$_HEADER_>
+          int main() {
+            return 0;
+          }
+EOF
+          rm -f conftest.o
+          (eval $ac_try) 2>&5
+
+          if test -f conftest.o; then
+             if test "$_CHECK_PATH_" != ""; then
+                if test -e "$_CHECK_PATH_/$_HEADER_"; then
+                   echo "$ac_t""$_CHECK_PATH_" 1>&6
+                   eval $_SCI_INCLUDE_NAME_=-I$_CHECK_PATH_
+                else
+                   # Even though the compilation was successful,
+                   # it was because the header was in the generic
+                   # compiler path, not because it was in the path we just
+                   # tested.  Thus, we really did not succeed.
+                   if test "$debugging" = "yes"; then
+                      echo "False alarm, will keep trying"
+                   fi
+                   continue
+                fi
+             fi
+             eval $_SCI_HEADER_HAVE_=yes
+             if test "$_CHECK_PATH_" = ""; then
+	        echo "$ac_t""yes" 1>&6
+             else
+	        echo "$ac_t""$_CHECK_PATH_" 1>&6
+             fi
+             # Save a list of defines in confdefs.h.  Something
+	     # later removes a bunch of them... haven't been able
+             # to figure out what yet.
+	     cat >> confdefs.h <<EOF
+#define $_SCI_HEADER_HAVE_ 1
+EOF
+             break
+          fi
+       done ## End: loop over paths to search
+
+       # For some reason putting the eval statement directly in the
+       # following "if test" statement doesn't work... so I do it here.
+       eval result='$'$_SCI_HEADER_HAVE_
+
+       if test "$result" = ""; then
+          # Didn't find the .h file.
+          echo "$ac_t""no" 1>&6
+
+          if test "$_SCI_HEADER_OPTIONAL_" = "not-optional"; then
+             echo "configure: warning: Required include file $_HEADER_ not found." 1>&2
+             echo "configure: warning: Command line for test was: $ac_try" 1>&2
+             echo "configure: warning: Compile output was:" 1>&2
+             cat conftest.out
+             
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
          echo
@@ -7183,15 +7258,56 @@ EOF
       echo
       { echo "configure: error: Exiting configure script. Bye." 1>&2; exit 1; }
   
+          fi
        fi
-    fi
+
+    done ## End: loop over .h files
 
   
-      if test "$HAVE_LIBPTHREAD"; then
-         THREAD_DEFINE=yes
-         THREAD_LIBS=-lpthread
-      fi 
-    else
+      echo $ac_n "checking for semaphore library""... $ac_c" 1>&6
+echo "configure:7269: checking for semaphore library" >&5
+      old_LIBS=$LIBS
+      SEMAPHORE_LIB=unknown
+      for i in "" -lrt; do
+        LIBS="$old_LIBS $i"
+        cat > conftest.$ac_ext <<EOF
+#line 7275 "configure"
+#include "confdefs.h"
+
+#include <semaphore.h>
+      
+int main() {
+
+    sem_t sem;
+    sem_init(&sem, 0, 0);
+    sem_post(&sem);
+      
+; return 0; }
+EOF
+if { (eval echo configure:7288: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+  rm -rf conftest*
+  
+         SEMAPHORE_LIB=$i
+         break
+         
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+fi
+rm -f conftest*
+      done
+      if test "$SEMPAPHORE_LIB" = unknown; then
+        echo "$ac_t""not found" 1>&6
+        { echo "configure: error: semaphore library(sem_post, sem_wait, etc) needed for pthreads" 1>&2; exit 1; }
+      else
+        if test -z "$SEMAPHORE_LIB"; then
+          echo "$ac_t""none required" 1>&6
+        else
+          echo "$ac_t""$SEMAPHORE_LIB" 1>&6
+        fi
+      fi
+      ;;
+   *)
       
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -7202,15 +7318,11 @@ EOF
       echo
       { echo "configure: error: unknown thread type for host $host: $threads. exiting." 1>&2; exit 1; }
   
-    fi
-    ;;
-esac
-
-if test "$THREAD_DEFINE" = "yes"; then
-  THREAD_DEFINE="#define SCI_PTHREAD"
-fi
+      ;;
+esac      
 
 THREAD_IMPL="Thread_$threads.cc"
+
 
 
 
@@ -7250,8 +7362,8 @@ dirs="$opengl_lib /usr/lib /usr/X11R6/lib"
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="not-optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -7295,13 +7407,13 @@ dirs="$opengl_lib /usr/lib /usr/X11R6/lib"
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lGL""... $ac_c" 1>&6
-echo "configure:7299: checking for -lGL" >&5
+echo "configure:7411: checking for -lGL" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lGL""... $ac_c" 1>&6
-echo "configure:7305: checking for main in -lGL" >&5
+echo "configure:7417: checking for main in -lGL" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -7335,9 +7447,8 @@ echo "configure:7305: checking for main in -lGL" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -7462,8 +7573,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="not-optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -7507,13 +7618,13 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lGLU""... $ac_c" 1>&6
-echo "configure:7511: checking for -lGLU" >&5
+echo "configure:7622: checking for -lGLU" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lGLU""... $ac_c" 1>&6
-echo "configure:7517: checking for main in -lGLU" >&5
+echo "configure:7628: checking for main in -lGLU" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -7547,9 +7658,8 @@ echo "configure:7517: checking for main in -lGLU" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -7686,8 +7796,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_HEADER_OPTIONAL_="not-optional"
 
-    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_HEADER_OPTIONAL_" != "optional"; then
+    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
+            "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -7719,7 +7829,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:7723: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:7833: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -7831,7 +7941,7 @@ echo "configure:7723: checking for all headers at the same time: $_HEADER_LIST_"
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:7835: checking for $_HEADER_" >&5
+echo "configure:7945: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -7966,8 +8076,8 @@ GL_INCLUDE=$INCGL_GL_H
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -8011,13 +8121,13 @@ GL_INCLUDE=$INCGL_GL_H
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lc""... $ac_c" 1>&6
-echo "configure:8015: checking for -lc" >&5
+echo "configure:8125: checking for -lc" >&5
     else
        _SCI_DECL_="char dlopen();"
        _SCI_CALL_="dlopen();"
 
        echo $ac_n "checking for dlopen in -lc""... $ac_c" 1>&6
-echo "configure:8021: checking for dlopen in -lc" >&5
+echo "configure:8131: checking for dlopen in -lc" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -8051,9 +8161,8 @@ echo "configure:8021: checking for dlopen in -lc" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -8181,8 +8290,8 @@ else
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="not-optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -8226,13 +8335,13 @@ else
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -ldl""... $ac_c" 1>&6
-echo "configure:8230: checking for -ldl" >&5
+echo "configure:8339: checking for -ldl" >&5
     else
        _SCI_DECL_="char dlopen();"
        _SCI_CALL_="dlopen();"
 
        echo $ac_n "checking for dlopen in -ldl""... $ac_c" 1>&6
-echo "configure:8236: checking for dlopen in -ldl" >&5
+echo "configure:8345: checking for dlopen in -ldl" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -8266,9 +8375,8 @@ echo "configure:8236: checking for dlopen in -ldl" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -8409,8 +8517,8 @@ fi
     _SCI_USING_CXX_=""
     _SCI_HEADER_OPTIONAL_="optional"
 
-    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_HEADER_OPTIONAL_" != "optional"; then
+    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
+            "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -8442,7 +8550,7 @@ fi
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:8446: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:8554: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -8554,7 +8662,7 @@ echo "configure:8446: checking for all headers at the same time: $_HEADER_LIST_"
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:8558: checking for $_HEADER_" >&5
+echo "configure:8666: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -8728,8 +8836,8 @@ PLATFORM_LDFLAGS=$LIBDL_FLAG
     _SCI_USING_CXX_=""
     _SCI_HEADER_OPTIONAL_="not-optional"
 
-    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_HEADER_OPTIONAL_" != "optional"; then
+    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
+            "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -8766,7 +8874,7 @@ PLATFORM_LDFLAGS=$LIBDL_FLAG
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:8770: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:8878: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -8878,7 +8986,7 @@ echo "configure:8770: checking for all headers at the same time: $_HEADER_LIST_"
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:8882: checking for $_HEADER_" >&5
+echo "configure:8990: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -9018,8 +9126,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_HEADER_OPTIONAL_="optional"
 
-    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_HEADER_OPTIONAL_" != "optional"; then
+    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
+            "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -9051,7 +9159,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:9055: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:9163: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -9163,7 +9271,7 @@ echo "configure:9055: checking for all headers at the same time: $_HEADER_LIST_"
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:9167: checking for $_HEADER_" >&5
+echo "configure:9275: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -9305,8 +9413,8 @@ if test "$host" = "irix"; then
     _SCI_USING_CXX_=""
     _SCI_HEADER_OPTIONAL_="not-optional"
 
-    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_HEADER_OPTIONAL_" != "optional"; then
+    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
+            "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -9338,7 +9446,7 @@ if test "$host" = "irix"; then
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:9342: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:9450: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -9450,7 +9558,7 @@ echo "configure:9342: checking for all headers at the same time: $_HEADER_LIST_"
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:9454: checking for $_HEADER_" >&5
+echo "configure:9562: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -9594,8 +9702,8 @@ fi
     _SCI_USING_CXX_="yes"
     _SCI_HEADER_OPTIONAL_="not-optional"
 
-    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_HEADER_OPTIONAL_" != "optional"; then
+    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
+            "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -9627,7 +9735,7 @@ fi
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:9631: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:9739: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -9739,7 +9847,7 @@ echo "configure:9631: checking for all headers at the same time: $_HEADER_LIST_"
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:9743: checking for $_HEADER_" >&5
+echo "configure:9851: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -9849,10 +9957,10 @@ EOF
   
 
 echo $ac_n "checking for location of hash_map""... $ac_c" 1>&6
-echo "configure:9853: checking for location of hash_map" >&5
+echo "configure:9961: checking for location of hash_map" >&5
 DEF_HASHMAP=None
 cat > conftest.$ac_ext <<EOF
-#line 9856 "configure"
+#line 9964 "configure"
 #include "confdefs.h"
 #include <hash_map>
                 std::hash_map<int, int> xx;
@@ -9860,7 +9968,7 @@ int main() {
 
 ; return 0; }
 EOF
-if { (eval echo configure:9864: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:9972: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   DEF_HASHMAP=HAVE_STD_HASHMAP
 else
@@ -9870,7 +9978,7 @@ fi
 rm -f conftest*
 if test "$DEF_HASHMAP" = "None"; then
   cat > conftest.$ac_ext <<EOF
-#line 9874 "configure"
+#line 9982 "configure"
 #include "confdefs.h"
 #include <ext/hash_map>
                  std::hash_map<int, int> xx;
@@ -9878,7 +9986,7 @@ int main() {
 
 ; return 0; }
 EOF
-if { (eval echo configure:9882: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:9990: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   DEF_HASHMAP=HAVE_EXT_HASHMAP
 else
@@ -9889,7 +9997,7 @@ rm -f conftest*
 fi
 if test "$DEF_HASHMAP" = "None"; then
   cat > conftest.$ac_ext <<EOF
-#line 9893 "configure"
+#line 10001 "configure"
 #include "confdefs.h"
 #include <ext/hash_map>
                  __gnu_cxx::hash_map<int, int> xx;
@@ -9897,7 +10005,7 @@ int main() {
 
 ; return 0; }
 EOF
-if { (eval echo configure:9901: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:10009: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   DEF_HASHMAP=HAVE_GNU_HASHMAP
 else
@@ -9920,17 +10028,17 @@ for ac_hdr in ext/algorithm
 do
 ac_safe=`echo "$ac_hdr" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for $ac_hdr""... $ac_c" 1>&6
-echo "configure:9924: checking for $ac_hdr" >&5
+echo "configure:10032: checking for $ac_hdr" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 9929 "configure"
+#line 10037 "configure"
 #include "confdefs.h"
 #include <$ac_hdr>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:9934: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:10042: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -9960,7 +10068,7 @@ done
 ##  --  search for tcl stuff  ---------------------------------------------
 echo 
 echo "checking for required Tcl components..." 1>&6
-echo "configure:9964: checking for required Tcl components..." >&5
+echo "configure:10072: checking for required Tcl components..." >&5
 echo
 
 dirs="$tcl/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
@@ -9985,8 +10093,8 @@ dirs="$tcl/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="not-optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -10030,13 +10138,13 @@ dirs="$tcl/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -ltcl""... $ac_c" 1>&6
-echo "configure:10034: checking for -ltcl" >&5
+echo "configure:10142: checking for -ltcl" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -ltcl""... $ac_c" 1>&6
-echo "configure:10040: checking for main in -ltcl" >&5
+echo "configure:10148: checking for main in -ltcl" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -10070,9 +10178,8 @@ echo "configure:10040: checking for main in -ltcl" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -10209,8 +10316,8 @@ if test -f "$LIBTCL/tclConfig.sh"; then . $LIBTCL/tclConfig.sh; fi
     _SCI_USING_CXX_=""
     _SCI_HEADER_OPTIONAL_="not-optional"
 
-    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_HEADER_OPTIONAL_" != "optional"; then
+    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
+            "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -10242,7 +10349,7 @@ if test -f "$LIBTCL/tclConfig.sh"; then . $LIBTCL/tclConfig.sh; fi
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:10246: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:10353: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -10354,7 +10461,7 @@ echo "configure:10246: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:10358: checking for $_HEADER_" >&5
+echo "configure:10465: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -10483,8 +10590,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="not-optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -10528,13 +10635,13 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -ltk""... $ac_c" 1>&6
-echo "configure:10532: checking for -ltk" >&5
+echo "configure:10639: checking for -ltk" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -ltk""... $ac_c" 1>&6
-echo "configure:10538: checking for main in -ltk" >&5
+echo "configure:10645: checking for main in -ltk" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -10568,9 +10675,8 @@ echo "configure:10538: checking for main in -ltk" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -10711,8 +10817,8 @@ fi
     _SCI_USING_CXX_=""
     _SCI_HEADER_OPTIONAL_="not-optional"
 
-    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_HEADER_OPTIONAL_" != "optional"; then
+    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
+            "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -10744,7 +10850,7 @@ fi
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:10748: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:10854: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -10856,7 +10962,7 @@ echo "configure:10748: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:10860: checking for $_HEADER_" >&5
+echo "configure:10966: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -10985,8 +11091,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="not-optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -11030,13 +11136,13 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -litcl""... $ac_c" 1>&6
-echo "configure:11034: checking for -litcl" >&5
+echo "configure:11140: checking for -litcl" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -litcl""... $ac_c" 1>&6
-echo "configure:11040: checking for main in -litcl" >&5
+echo "configure:11146: checking for main in -litcl" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -11070,9 +11176,8 @@ echo "configure:11040: checking for main in -litcl" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -11208,8 +11313,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_HEADER_OPTIONAL_="not-optional"
 
-    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_HEADER_OPTIONAL_" != "optional"; then
+    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
+            "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -11241,7 +11346,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:11245: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:11350: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -11353,7 +11458,7 @@ echo "configure:11245: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:11357: checking for $_HEADER_" >&5
+echo "configure:11462: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -11482,8 +11587,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="not-optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -11527,13 +11632,13 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -litk""... $ac_c" 1>&6
-echo "configure:11531: checking for -litk" >&5
+echo "configure:11636: checking for -litk" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -litk""... $ac_c" 1>&6
-echo "configure:11537: checking for main in -litk" >&5
+echo "configure:11642: checking for main in -litk" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -11567,9 +11672,8 @@ echo "configure:11537: checking for main in -litk" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -11705,8 +11809,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_HEADER_OPTIONAL_="not-optional"
 
-    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_HEADER_OPTIONAL_" != "optional"; then
+    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
+            "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -11738,7 +11842,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:11742: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:11846: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -11850,7 +11954,7 @@ echo "configure:11742: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:11854: checking for $_HEADER_" >&5
+echo "configure:11958: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -11979,8 +12083,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="not-optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -12024,13 +12128,13 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lBLT""... $ac_c" 1>&6
-echo "configure:12028: checking for -lBLT" >&5
+echo "configure:12132: checking for -lBLT" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lBLT""... $ac_c" 1>&6
-echo "configure:12034: checking for main in -lBLT" >&5
+echo "configure:12138: checking for main in -lBLT" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -12064,9 +12168,8 @@ echo "configure:12034: checking for main in -lBLT" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -12202,8 +12305,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_HEADER_OPTIONAL_="not-optional"
 
-    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_HEADER_OPTIONAL_" != "optional"; then
+    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
+            "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -12235,7 +12338,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:12239: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:12342: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -12347,7 +12450,7 @@ echo "configure:12239: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:12351: checking for $_HEADER_" >&5
+echo "configure:12454: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -12470,7 +12573,7 @@ CORRECT_ITCL_VERSION=no
     _CUR_2_=""
 
     echo $ac_n "checking for Tcl version 8.3.2""... $ac_c" 1>&6
-echo "configure:12474: checking for Tcl version 8.3.2" >&5
+echo "configure:12577: checking for Tcl version 8.3.2" >&5
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -12527,7 +12630,7 @@ echo "configure:12474: checking for Tcl version 8.3.2" >&5
     _CUR_2_=""
 
     echo $ac_n "checking for Tk version 8.3.2""... $ac_c" 1>&6
-echo "configure:12531: checking for Tk version 8.3.2" >&5
+echo "configure:12634: checking for Tk version 8.3.2" >&5
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -12584,7 +12687,7 @@ echo "configure:12531: checking for Tk version 8.3.2" >&5
     _CUR_2_=""
 
     echo $ac_n "checking for equal Tcl and Tk version $TK_VERSION$TK_PATCH_LEVEL""... $ac_c" 1>&6
-echo "configure:12588: checking for equal Tcl and Tk version $TK_VERSION$TK_PATCH_LEVEL" >&5
+echo "configure:12691: checking for equal Tcl and Tk version $TK_VERSION$TK_PATCH_LEVEL" >&5
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -12657,7 +12760,7 @@ echo "configure:12588: checking for equal Tcl and Tk version $TK_VERSION$TK_PATC
 ##  --  search for xerces-c++ stuff  --------------------------------------
 echo
 echo "checking for required Xerces-C++ components..." 1>&6
-echo "configure:12661: checking for required Xerces-C++ components..." >&5
+echo "configure:12764: checking for required Xerces-C++ components..." >&5
 echo
 
 case $host in
@@ -12690,8 +12793,8 @@ dirs="$xercesc/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
     _SCI_USING_CXX_="yes"
     _SCI_LIB_OPTIONAL_="not-optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -12735,13 +12838,13 @@ dirs="$xercesc/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lxerces-c""... $ac_c" 1>&6
-echo "configure:12739: checking for -lxerces-c" >&5
+echo "configure:12842: checking for -lxerces-c" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lxerces-c""... $ac_c" 1>&6
-echo "configure:12745: checking for main in -lxerces-c" >&5
+echo "configure:12848: checking for main in -lxerces-c" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -12775,9 +12878,8 @@ echo "configure:12745: checking for main in -lxerces-c" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -12921,8 +13023,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_HEADER_OPTIONAL_="not-optional"
 
-    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_HEADER_OPTIONAL_" != "optional"; then
+    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
+            "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -12958,7 +13060,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:12962: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:13064: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -13070,7 +13172,7 @@ echo "configure:12962: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:13074: checking for $_HEADER_" >&5
+echo "configure:13176: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -13203,12 +13305,12 @@ fi
 if test "$uintah" = "yes"; then
   echo
   echo "checking for required MPI components..." 1>&6
-echo "configure:13207: checking for required MPI components..." >&5
+echo "configure:13309: checking for required MPI components..." >&5
   echo
 else
   echo
   echo "checking for optional components..." 1>&6
-echo "configure:13212: checking for optional components..." >&5
+echo "configure:13314: checking for optional components..." >&5
   echo
 fi
 
@@ -13258,8 +13360,8 @@ case $host in
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -13303,13 +13405,13 @@ case $host in
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lmpi""... $ac_c" 1>&6
-echo "configure:13307: checking for -lmpi" >&5
+echo "configure:13409: checking for -lmpi" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lmpi""... $ac_c" 1>&6
-echo "configure:13313: checking for main in -lmpi" >&5
+echo "configure:13415: checking for main in -lmpi" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -13343,9 +13445,8 @@ echo "configure:13313: checking for main in -lmpi" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -13472,8 +13573,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -13517,13 +13618,13 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lmpich""... $ac_c" 1>&6
-echo "configure:13521: checking for -lmpich" >&5
+echo "configure:13622: checking for -lmpich" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lmpich""... $ac_c" 1>&6
-echo "configure:13527: checking for main in -lmpich" >&5
+echo "configure:13628: checking for main in -lmpich" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -13557,9 +13658,8 @@ echo "configure:13527: checking for main in -lmpich" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -13703,8 +13803,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_HEADER_OPTIONAL_="optional"
 
-    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_HEADER_OPTIONAL_" != "optional"; then
+    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
+            "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -13736,7 +13836,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:13740: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:13840: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -13848,7 +13948,7 @@ echo "configure:13740: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:13852: checking for $_HEADER_" >&5
+echo "configure:13952: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -14052,7 +14152,7 @@ fi
 if test "$uintah" = "yes"; then
   echo
   echo "checking for optional components..." 1>&6
-echo "configure:14056: checking for optional components..." >&5
+echo "configure:14156: checking for optional components..." >&5
   echo
 fi
 
@@ -14080,8 +14180,8 @@ dirs="$teem/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -14125,13 +14225,13 @@ dirs="$teem/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lair""... $ac_c" 1>&6
-echo "configure:14129: checking for -lair" >&5
+echo "configure:14229: checking for -lair" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lair""... $ac_c" 1>&6
-echo "configure:14135: checking for main in -lair" >&5
+echo "configure:14235: checking for main in -lair" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -14165,9 +14265,8 @@ echo "configure:14135: checking for main in -lair" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -14292,8 +14391,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -14337,13 +14436,13 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lbiff""... $ac_c" 1>&6
-echo "configure:14341: checking for -lbiff" >&5
+echo "configure:14440: checking for -lbiff" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lbiff""... $ac_c" 1>&6
-echo "configure:14347: checking for main in -lbiff" >&5
+echo "configure:14446: checking for main in -lbiff" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -14377,9 +14476,8 @@ echo "configure:14347: checking for main in -lbiff" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -14504,8 +14602,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -14549,13 +14647,13 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lnrrd""... $ac_c" 1>&6
-echo "configure:14553: checking for -lnrrd" >&5
+echo "configure:14651: checking for -lnrrd" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lnrrd""... $ac_c" 1>&6
-echo "configure:14559: checking for main in -lnrrd" >&5
+echo "configure:14657: checking for main in -lnrrd" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -14589,9 +14687,8 @@ echo "configure:14559: checking for main in -lnrrd" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -14716,8 +14813,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -14761,13 +14858,13 @@ EOF
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lell""... $ac_c" 1>&6
-echo "configure:14765: checking for -lell" >&5
+echo "configure:14862: checking for -lell" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lell""... $ac_c" 1>&6
-echo "configure:14771: checking for main in -lell" >&5
+echo "configure:14868: checking for main in -lell" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -14801,9 +14898,8 @@ echo "configure:14771: checking for main in -lell" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -14939,8 +15035,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_HEADER_OPTIONAL_="optional"
 
-    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_HEADER_OPTIONAL_" != "optional"; then
+    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
+            "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -14972,7 +15068,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:14976: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:15072: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -15084,7 +15180,7 @@ echo "configure:14976: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:15088: checking for $_HEADER_" >&5
+echo "configure:15184: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -15229,8 +15325,8 @@ dirs="$mpeg/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -15274,13 +15370,13 @@ dirs="$mpeg/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lmpege""... $ac_c" 1>&6
-echo "configure:15278: checking for -lmpege" >&5
+echo "configure:15374: checking for -lmpege" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lmpege""... $ac_c" 1>&6
-echo "configure:15284: checking for main in -lmpege" >&5
+echo "configure:15380: checking for main in -lmpege" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -15314,9 +15410,8 @@ echo "configure:15284: checking for main in -lmpege" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -15456,8 +15551,8 @@ dirs="$mdsplus/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -15501,13 +15596,13 @@ dirs="$mdsplus/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lMdsLib_client""... $ac_c" 1>&6
-echo "configure:15505: checking for -lMdsLib_client" >&5
+echo "configure:15600: checking for -lMdsLib_client" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lMdsLib_client""... $ac_c" 1>&6
-echo "configure:15511: checking for main in -lMdsLib_client" >&5
+echo "configure:15606: checking for main in -lMdsLib_client" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -15541,9 +15636,8 @@ echo "configure:15511: checking for main in -lMdsLib_client" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -15683,8 +15777,8 @@ fi
     _SCI_USING_CXX_=""
     _SCI_HEADER_OPTIONAL_="optional"
 
-    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_HEADER_OPTIONAL_" != "optional"; then
+    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
+            "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -15716,7 +15810,7 @@ fi
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:15720: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:15814: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -15828,7 +15922,7 @@ echo "configure:15720: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:15832: checking for $_HEADER_" >&5
+echo "configure:15926: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -15977,8 +16071,8 @@ dirs="$perfex $thirdparty $SCI_LAB_TP_LIBS"
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -16022,13 +16116,13 @@ dirs="$perfex $thirdparty $SCI_LAB_TP_LIBS"
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lperfex""... $ac_c" 1>&6
-echo "configure:16026: checking for -lperfex" >&5
+echo "configure:16120: checking for -lperfex" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lperfex""... $ac_c" 1>&6
-echo "configure:16032: checking for main in -lperfex" >&5
+echo "configure:16126: checking for main in -lperfex" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -16062,9 +16156,8 @@ echo "configure:16032: checking for main in -lperfex" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -16200,8 +16293,8 @@ fi
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -16245,13 +16338,13 @@ fi
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lfastm""... $ac_c" 1>&6
-echo "configure:16249: checking for -lfastm" >&5
+echo "configure:16342: checking for -lfastm" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lfastm""... $ac_c" 1>&6
-echo "configure:16255: checking for main in -lfastm" >&5
+echo "configure:16348: checking for main in -lfastm" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -16285,9 +16378,8 @@ echo "configure:16255: checking for main in -lfastm" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -16423,8 +16515,8 @@ fi
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -16468,13 +16560,13 @@ fi
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lssl""... $ac_c" 1>&6
-echo "configure:16472: checking for -lssl" >&5
+echo "configure:16564: checking for -lssl" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lssl""... $ac_c" 1>&6
-echo "configure:16478: checking for main in -lssl" >&5
+echo "configure:16570: checking for main in -lssl" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -16508,9 +16600,8 @@ echo "configure:16478: checking for main in -lssl" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -16646,8 +16737,8 @@ fi
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -16691,13 +16782,13 @@ fi
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lcrypto""... $ac_c" 1>&6
-echo "configure:16695: checking for -lcrypto" >&5
+echo "configure:16786: checking for -lcrypto" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lcrypto""... $ac_c" 1>&6
-echo "configure:16701: checking for main in -lcrypto" >&5
+echo "configure:16792: checking for main in -lcrypto" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -16731,9 +16822,8 @@ echo "configure:16701: checking for main in -lcrypto" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -16869,8 +16959,8 @@ fi
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -16914,13 +17004,13 @@ fi
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lexc""... $ac_c" 1>&6
-echo "configure:16918: checking for -lexc" >&5
+echo "configure:17008: checking for -lexc" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lexc""... $ac_c" 1>&6
-echo "configure:16924: checking for main in -lexc" >&5
+echo "configure:17014: checking for main in -lexc" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -16954,9 +17044,8 @@ echo "configure:16924: checking for main in -lexc" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -17093,8 +17182,8 @@ if test "$HAVE_LIBEXC"; then
     _SCI_USING_CXX_=""
     _SCI_HEADER_OPTIONAL_="optional"
 
-    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_HEADER_OPTIONAL_" != "optional"; then
+    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
+            "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -17126,7 +17215,7 @@ if test "$HAVE_LIBEXC"; then
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:17130: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:17219: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -17238,7 +17327,7 @@ echo "configure:17130: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:17242: checking for $_HEADER_" >&5
+echo "configure:17331: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -17384,8 +17473,8 @@ dirs="$with_globus/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -17429,13 +17518,13 @@ dirs="$with_globus/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lglobus_dc""... $ac_c" 1>&6
-echo "configure:17433: checking for -lglobus_dc" >&5
+echo "configure:17522: checking for -lglobus_dc" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lglobus_dc""... $ac_c" 1>&6
-echo "configure:17439: checking for main in -lglobus_dc" >&5
+echo "configure:17528: checking for main in -lglobus_dc" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -17469,9 +17558,8 @@ echo "configure:17439: checking for main in -lglobus_dc" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -17620,8 +17708,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_HEADER_OPTIONAL_="optional"
 
-    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_HEADER_OPTIONAL_" != "optional"; then
+    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
+            "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -17653,7 +17741,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:17657: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:17745: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -17765,7 +17853,7 @@ echo "configure:17657: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:17769: checking for $_HEADER_" >&5
+echo "configure:17857: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -17893,9 +17981,9 @@ fi
 
 # This is typical on SGI and ??
 echo $ac_n "checking for uuid_create in sys/uuid.h""... $ac_c" 1>&6
-echo "configure:17897: checking for uuid_create in sys/uuid.h" >&5
+echo "configure:17985: checking for uuid_create in sys/uuid.h" >&5
 cat > conftest.$ac_ext <<EOF
-#line 17899 "configure"
+#line 17987 "configure"
 #include "confdefs.h"
 #include <sys/types.h>
              extern "C" {
@@ -17908,7 +17996,7 @@ char* uuid_str;
 	 uuid_create(&uuid, &status);
 ; return 0; }
 EOF
-if { (eval echo configure:17912: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:18000: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   have_uuid=yes
          cat >> confdefs.h <<\EOF
@@ -17927,9 +18015,9 @@ echo "$ac_t""$have_uuid" 1>&6
 if test "$have_uuid" != "yes"; then
   # This is typical on linux and ??
   echo $ac_n "checking for uuid_generate in uuid/uuid.h""... $ac_c" 1>&6
-echo "configure:17931: checking for uuid_generate in uuid/uuid.h" >&5
+echo "configure:18019: checking for uuid_generate in uuid/uuid.h" >&5
   cat > conftest.$ac_ext <<EOF
-#line 17933 "configure"
+#line 18021 "configure"
 #include "confdefs.h"
 
 extern "C" { // The linux uuid.h doesn't have this, so we need exter C here
@@ -17942,7 +18030,7 @@ uuid_t uuid;
 	 uuid_unparse(uuid, uuid_str);
 ; return 0; }
 EOF
-if { (eval echo configure:17946: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:18034: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   have_uuid=yes
          cat >> confdefs.h <<\EOF
@@ -17961,13 +18049,13 @@ fi
 
 if test "$have_uuid" = "yes"; then
   echo $ac_n "checking for uuid library""... $ac_c" 1>&6
-echo "configure:17965: checking for uuid library" >&5
+echo "configure:18053: checking for uuid library" >&5
   old_LIBS=$LIBS
-  found_uuidlib=no
+  UUID_LIB=unknown
   for i in "" -luuid; do
     LIBS="$old_LIBS $i"
     cat > conftest.$ac_ext <<EOF
-#line 17971 "configure"
+#line 18059 "configure"
 #include "confdefs.h"
 
 #if HAVE_SYS_UUID_H
@@ -18005,11 +18093,10 @@ int main() {
 	
 ; return 0; }
 EOF
-if { (eval echo configure:18009: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:18097: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   
   UUID_LIB=$i
-  found_uuidlib=yes
   break
 	
 else
@@ -18018,7 +18105,7 @@ else
 fi
 rm -f conftest*
   done
-  if test "$found_uuidlib" = yes; then
+  if test "$UUID_LIB" != unknown; then
     if test -z "$UUID_LIB"; then
       echo "$ac_t""none required" 1>&6
     else
@@ -18061,8 +18148,8 @@ dirs="$with_qt/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -18106,13 +18193,13 @@ dirs="$with_qt/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lqt-mt""... $ac_c" 1>&6
-echo "configure:18110: checking for -lqt-mt" >&5
+echo "configure:18197: checking for -lqt-mt" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lqt-mt""... $ac_c" 1>&6
-echo "configure:18116: checking for main in -lqt-mt" >&5
+echo "configure:18203: checking for main in -lqt-mt" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -18146,9 +18233,8 @@ echo "configure:18116: checking for main in -lqt-mt" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -18255,11 +18341,11 @@ EOF
   
 
 echo "checking for moc in $LIBGQ_MT/.." 1>&6
-echo "configure:18259: checking for moc in $LIBGQ_MT/.." >&5
+echo "configure:18345: checking for moc in $LIBGQ_MT/.." >&5
 # Extract the first word of "moc", so it can be a program name with args.
 set dummy moc; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:18263: checking for $ac_word" >&5
+echo "configure:18349: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_QT_MOC_BIN'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -18491,8 +18577,8 @@ dirs="$with_zlib/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="not-optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -18536,13 +18622,13 @@ dirs="$with_zlib/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lz""... $ac_c" 1>&6
-echo "configure:18540: checking for -lz" >&5
+echo "configure:18626: checking for -lz" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lz""... $ac_c" 1>&6
-echo "configure:18546: checking for main in -lz" >&5
+echo "configure:18632: checking for main in -lz" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -18576,9 +18662,8 @@ echo "configure:18546: checking for main in -lz" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -18714,8 +18799,8 @@ EOF
     _SCI_USING_CXX_=""
     _SCI_HEADER_OPTIONAL_="not-optional"
 
-    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_HEADER_OPTIONAL_" != "optional"; then
+    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
+            "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -18747,7 +18832,7 @@ EOF
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:18751: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:18836: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -18859,7 +18944,7 @@ echo "configure:18751: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:18863: checking for $_HEADER_" >&5
+echo "configure:18948: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -19000,8 +19085,8 @@ dirs="$blas/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -19045,13 +19130,13 @@ dirs="$blas/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lblas""... $ac_c" 1>&6
-echo "configure:19049: checking for -lblas" >&5
+echo "configure:19134: checking for -lblas" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lblas""... $ac_c" 1>&6
-echo "configure:19055: checking for main in -lblas" >&5
+echo "configure:19140: checking for main in -lblas" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -19085,9 +19170,8 @@ echo "configure:19055: checking for main in -lblas" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -19295,7 +19379,7 @@ case $host in
 esac
 
 echo "checking for an MPI PETSc..." 1>&6
-echo "configure:19299: checking for an MPI PETSc..." >&5
+echo "configure:19383: checking for an MPI PETSc..." >&5
 echo "$ac_t""using PETSC_ARCH: $PETSC_ARCH" 1>&6
 
 if test "$PETSC_ARCH" = "unknown"; then
@@ -19333,8 +19417,8 @@ done
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -19378,13 +19462,13 @@ done
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lpetsc""... $ac_c" 1>&6
-echo "configure:19382: checking for -lpetsc" >&5
+echo "configure:19466: checking for -lpetsc" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lpetsc""... $ac_c" 1>&6
-echo "configure:19388: checking for main in -lpetsc" >&5
+echo "configure:19472: checking for main in -lpetsc" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -19421,9 +19505,8 @@ echo "configure:19388: checking for main in -lpetsc" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -19563,8 +19646,8 @@ if test "$HAVE_LIBPETSC" = "yes"; then
     _SCI_USING_CXX_=""
     _SCI_HEADER_OPTIONAL_="optional"
 
-    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_HEADER_OPTIONAL_" != "optional"; then
+    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
+            "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -19596,7 +19679,7 @@ if test "$HAVE_LIBPETSC" = "yes"; then
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:19600: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:19683: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -19709,7 +19792,7 @@ echo "configure:19600: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:19713: checking for $_HEADER_" >&5
+echo "configure:19796: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -19864,7 +19947,7 @@ fi
 ##  --  search for uni-petsc  --------------------------------------------
 
 echo "checking for an mpiuni PETSc..." 1>&6
-echo "configure:19868: checking for an mpiuni PETSc..." >&5
+echo "configure:19951: checking for an mpiuni PETSc..." >&5
 
 FOUND_ALL_UNIPETSC=no
 initial_dirs="$unipetsc $thirdparty $SCI_LAB_TP_DEFAULT"
@@ -19901,8 +19984,8 @@ fi
     _SCI_USING_CXX_=""
     _SCI_LIB_OPTIONAL_="optional"
 
-    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_LIB_OPTIONAL_" != "optional"; then
+    if test "$_SCI_LIB_OPTIONAL_" != "not-optional" -a \
+       "$_SCI_LIB_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -19946,13 +20029,13 @@ fi
        EXTERN_BEGIN=""
        EXTERN_END=""
        echo $ac_n "checking for -lpetsc""... $ac_c" 1>&6
-echo "configure:19950: checking for -lpetsc" >&5
+echo "configure:20033: checking for -lpetsc" >&5
     else
        _SCI_DECL_="char main();"
        _SCI_CALL_="main();"
 
        echo $ac_n "checking for main in -lpetsc""... $ac_c" 1>&6
-echo "configure:19956: checking for main in -lpetsc" >&5
+echo "configure:20039: checking for main in -lpetsc" >&5
        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
@@ -19990,9 +20073,8 @@ echo "configure:19956: checking for main in -lpetsc" >&5
           echo "Checking in path: $_CHECK_PATH_"
        fi
 
-       if test "$_CHECK_PATH_" = "/usr/lib" || test "$_CHECK_PATH_" = "/lib" ||
-          test "$_CHECK_PATH_" = "/usr/lib/" ||
-          test "$_CHECK_PATH_" = "/lib/"; then
+       if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+          "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
             if test "$debugging" = "yes"; then
                echo "configure: warning: Skipping generic lib: SCI CHECK LIB" 1>&2
             fi
@@ -20133,8 +20215,8 @@ if test "$HAVE_LIBPETSC" = "yes"; then
     _SCI_USING_CXX_=""
     _SCI_HEADER_OPTIONAL_="optional"
 
-    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_HEADER_OPTIONAL_" != "optional"; then
+    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
+            "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -20166,7 +20248,7 @@ if test "$HAVE_LIBPETSC" = "yes"; then
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:20170: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:20252: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -20280,7 +20362,7 @@ echo "configure:20170: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:20284: checking for $_HEADER_" >&5
+echo "configure:20366: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -20462,8 +20544,8 @@ fi
     _SCI_USING_CXX_=""
     _SCI_HEADER_OPTIONAL_="optional"
 
-    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" && 
-       test "$_SCI_HEADER_OPTIONAL_" != "optional"; then
+    if test "$_SCI_HEADER_OPTIONAL_" != "not-optional" -a \
+            "$_SCI_HEADER_OPTIONAL_" != "optional"; then
        
       ## SCI_MSG_ERROR
       if test -z "$debugging"; then
@@ -20495,7 +20577,7 @@ fi
     if test $num_headers -gt 1; then
 
        echo $ac_n "checking for all headers at the same time: $_HEADER_LIST_""... $ac_c" 1>&6
-echo "configure:20499: checking for all headers at the same time: $_HEADER_LIST_" >&5
+echo "configure:20581: checking for all headers at the same time: $_HEADER_LIST_" >&5
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
 
@@ -20607,7 +20689,7 @@ echo "configure:20499: checking for all headers at the same time: $_HEADER_LIST_
     for _HEADER_ in $_HEADER_LIST_; do
 
        echo $ac_n "checking for $_HEADER_""... $ac_c" 1>&6
-echo "configure:20611: checking for $_HEADER_" >&5
+echo "configure:20693: checking for $_HEADER_" >&5
 
        for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
 
@@ -20961,6 +21043,7 @@ s%@FLIBS@%$FLIBS%g
 s%@THREAD_IMPL@%$THREAD_IMPL%g
 s%@THREAD_LIBS@%$THREAD_LIBS%g
 s%@THREAD_DEFINE@%$THREAD_DEFINE%g
+s%@SEMAPHORE_LIB@%$SEMAPHORE_LIB%g
 s%@LIBGL@%$LIBGL%g
 s%@GL_INCLUDE@%$GL_INCLUDE%g
 s%@PLATFORM_LDFLAGS@%$PLATFORM_LDFLAGS%g
