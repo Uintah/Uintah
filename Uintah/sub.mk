@@ -29,6 +29,7 @@ else
 PSELIBS := Uintah/Grid Uintah/Parallel Uintah/Components/MPM \
 	Uintah/Components/DataArchiver \
 	Uintah/Components/SimulationController Uintah/Components/ICE \
+	Uintah/Components/MPMICE \
 	Uintah/Components/Schedulers Uintah/Components/Arches \
 	Uintah/Components/ProblemSpecification \
 	SCICore/Exceptions Uintah/Interface SCICore/Thread
@@ -55,6 +56,10 @@ include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.17  2000/12/01 22:59:16  guilkey
+# Adding code to allow MPM to work with a CFD code, specifics are directed
+# towards ICE, but most work is generic for either ICE or Arches.
+#
 # Revision 1.16  2000/08/23 21:02:52  witzel
 # added testprograms sub-directory
 #
