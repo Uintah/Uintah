@@ -77,6 +77,11 @@ namespace Uintah {
     vector<double>* getVolume();
 
     //////////////////////////////////////////////////////////////////////
+    /*! Returns the vector containing the set of particle forces */
+    //////////////////////////////////////////////////////////////////////
+    vector<Vector>* getForces();
+
+    //////////////////////////////////////////////////////////////////////
     /*! Deletes the vector containing the set of particle locations */
     //////////////////////////////////////////////////////////////////////
     void deletePoints();
@@ -106,6 +111,7 @@ namespace Uintah {
 
     vector<Point> d_points;
     vector<double> d_volume;
+    vector<Vector> d_forces;
     double d_dx;
   };
 } // End namespace Uintah
