@@ -2,6 +2,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/AcousticTensorCheck.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DruckerCheck.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/BeckerCheck.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DruckerBeckerCheck.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
@@ -28,6 +29,8 @@ StabilityCheck* StabilityCheckFactory::create(ProblemSpecP& ps)
       return(scinew DruckerCheck(child));
    else if (mat_type == "becker")
       return(scinew BeckerCheck(child));
+   else if (mat_type == "drucker_becker")
+      return(scinew DruckerBeckerCheck(child));
    else if (mat_type == "none")
       return 0;
    else 
