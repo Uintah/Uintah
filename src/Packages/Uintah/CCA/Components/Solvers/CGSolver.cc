@@ -27,12 +27,14 @@
 
 using namespace Uintah;
 
+#define OPT 1
+
 void Mult(Array3<double>& B, const Array3<Stencil7>& A,
 	  const Array3<double>& X, CellIterator iter,
 	  const IntVector& l, const IntVector& h1, long64& flops, long64& memrefs)
 {
   // Center
-#if 1
+#if OPT
   IntVector  ll(iter.begin());
   IntVector hh(iter.end());
   // Zlow
@@ -212,7 +214,7 @@ void Mult(Array3<double>& B, const Array3<Stencil7>& A,
 	  long64& memrefs, double& dotresult)
 {
   // Center
-#if 1
+#if OPT
   double dot=0;
   IntVector  ll(iter.begin());
   IntVector hh(iter.end());
@@ -482,7 +484,7 @@ void ScMult_Add(Array3<double>& r, double s,
 		const Array3<double>& a, const Array3<double>& b,
 		CellIterator iter, long64& flops, long64& memrefs)
 {
-#if 1
+#if OPT
   IntVector ll(iter.begin());
   IntVector hh(iter.end());
   for(int z=ll.z();z<hh.z();z++){
@@ -722,7 +724,7 @@ public:
 	long64 memrefs = 0;
 	double a=d/aden;
 
-#if 1
+#if OPT
 	IntVector  ll(iter.begin());
 	IntVector hh(iter.end());
 	double dnew = 0;
