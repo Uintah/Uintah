@@ -1,9 +1,8 @@
-Config:
-    Button for optimized version
-    Conversion directories
 
 Add bline back in...
-Use Itcl_AppInit
+Convert directory
+Checkin procedures to update work_lib
+
 
 Linux:
     X11
@@ -27,6 +26,10 @@ Finish and FIX:
    Delete modules
    Disconnect
    Salmon:
+      Chase down all bounding box accesses and add if(bb.valid())
+      Valid initial states for all Geometry objects - default CTOR
+      Make Geom keep track of parents
+      Reset bounding boxes when changed
       Resizable window
       Fix +/- button
       Better in/out buttons
@@ -105,6 +108,7 @@ Features/improvements:
    Better locks for Irix
    Make SurfToGeom use TriStrip's
    Better threads for IRIX
+   Be able to specify thread sizes when creating tasks
    Optimize/finish threads on Linux
    Dynamically loadable modules
    Stand alone modules
@@ -158,6 +162,7 @@ Modules that need work:
    ApplyBC - implement
    BuildFEMatrix - optimize, UI, finish
    CrossFader - UI
+   FrameTest - finish/rename
    GenSurface - UI/finish
    GenerateMesh - implement
    Hedgehog - implement

@@ -44,6 +44,7 @@ SR_LIBS = \
 	Multitask/libMultitask.a \
 	Malloc/libMalloc.a \
 	tcl/sci/libscitk.a \
+	tcl/itcl/src/libitcl.a \
 	tcl/tk/libtk.a \
 	tcl/tcl/libtcl.a \
 	$(TMPL_LIB)

@@ -320,7 +320,7 @@ itcl_class ConfigDir {
 
 	    # Get vname
 	    set opt 0
-	    if {$value == olib} {
+	    if {$value == "olib"} {
 		set opt 1
 	    }
 	    set vname [ConfigBase :: vname $opt]
