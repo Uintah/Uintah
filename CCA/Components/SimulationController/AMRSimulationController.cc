@@ -433,13 +433,11 @@ void AMRSimulationController::doRegridding(GridP& currentGrid)
         
         // only schedule a compute once (rather than once per patch/matl)
         if (labels.find(currentVar.label_) == labels.end()) {
+          task->requires(Task::OldDW, currentVar.label_, 0, Task::OtherGridDomain, 0, Task::NormalDomain, Ghost::None, 0);
           task->computes(currentVar.label_);
           labels[currentVar.label_] = currentVar.label_;
-          //cout << d_myworld->myrank() << "  COMPUTING " << currentVar.label_->getName() << endl;
         }
       }
-      //           cout << "RANDY: Going to copy data for level " << levelIndex << " with ID of ";
-      //           cout << currentGrid->getLevel(levelIndex)->getID() << endl;
       d_scheduler->addTask(task, currentGrid->getLevel(levelIndex)->eachPatch(), d_sharedState->allMaterials());
       if ( levelIndex != 0 ) {
         d_sim->scheduleRefine(currentGrid->getLevel(levelIndex), d_scheduler);
