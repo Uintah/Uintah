@@ -5,9 +5,11 @@ c
 c*********************************************************************
 
       SUBROUTINE profscalar(domainLow, domainHigh,
+     $     domainLowCT, domainHighCT,
      &     indexLow, indexHigh,
      &     SCALAR, PCELL,
      &     SVAL, PFIELD,
+     $     xminus, xplus, yminus, yplus, zminus, zplus,
      &     ierr)
 C---------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION
@@ -27,44 +29,45 @@ c     Arguments :
 c*********************************************************************
       integer domainLow(3)
       integer domainHigh(3)
+      integer domainLowCT(3)
+      integer domainHighCT(3)
       integer indexLow(3)
       integer indexHigh(3)
-      integer PCELL(domainLow(1):domainHigh(1), 
-     &     domainLow(2):domainHigh(2), 
-     &     domainLow(3):domainHigh(3))
+      integer PCELL(domainLowCT(1):domainHighCT(1), 
+     &     domainLowCT(2):domainHighCT(2), 
+     &     domainLowCT(3):domainHighCT(3))
       double precision SCALAR(domainLow(1):domainHigh(1), 
      &     domainLow(2):domainHigh(2), domainLow(3):domainHigh(3))
       double precision SVAL
       integer PFIELD
+      integer xminus, xplus, yminus, yplus, zminus, zplus
       integer ierr
 
 c*********************************************************************
 c     Local Variables :
 c*********************************************************************
-      integer iBegGhost, jBegGhost, kBegGhost
-      integer iEndGhost, jEndGhost, kEndGhost
       integer IST, JST, KST, IEND, JEND, KEND
       integer I, J, K
 
 c*********************************************************************
 c     Start :
 c*********************************************************************
-      iBegGhost = domainLow(1)
-      jBegGhost = domainLow(2)
-      kBegGhost = domainLow(3)
-      iEndGhost = domainHigh(1)
-      jEndGhost = domainHigh(2)
-      kEndGhost = domainHigh(3)
       IST = indexLow(1)
       JST = indexLow(2)
       KST = indexLow(3)
       IEND = indexHigh(1)
       JEND = indexHigh(2)
       KEND = indexHigh(3)
+      if (xminus) ist = ist-1
+      if (xplus) iend = iend+1
+      if (yminus) jst = jst-1
+      if (yplus) jst = jst +1
+      if (zminus) kst = kst - 1
+      if (zplus) kend = kend +1
 
-      DO 200 K = kBegGhost,kEndGhost
-         DO 190 J = jBegGhost,jEndGhost
-            DO 180 I = iBegGhost,iEndGhost
+      DO 200 K = kst,kend
+         DO 190 J = jst,jend
+            DO 180 I = ist,iend
                IF (PCELL(I,J,K).EQ.PFIELD) THEN
                   SCALAR(I,J,K) = SVAL
                END IF
@@ -78,6 +81,9 @@ c*********************************************************************
 c*********************************************************************
 c
 c $Log$
+c Revision 1.3  2000/10/11 16:37:31  rawat
+c modified calpbc for ghost cells
+c
 c Revision 1.2  2000/06/30 22:41:19  bbanerje
 c Corrected behavior of profv and profscalar
 c

@@ -61,18 +61,6 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
   double gravity = d_physicalConsts->getGravity(index);
   // get iref, jref, kref and ref density by broadcasting from a patch that contains
   // iref, jref and kref
-#if 0
-  if (patch->containsCell(d_denRef)) {
-    double den_ref = vars->density[d_denRef];
-    new_dw->put(sum_vartype(den_ref),d_lab.d_refDensity_label);
-  }
-  else
-    new_dw->put(sum_vartype(0), d_lab.d_refDensity_label);
-  sum_vartype den_ref_var;
-  new_de->get(den_ref_var, d_lab.d_refDensity_label);
-  double den_Ref = den_ref_var;
-  
-#endif
   double den_ref = vars->den_Ref;
 
 
@@ -773,7 +761,10 @@ Source::addPressureSource(const ProcessorGroup* ,
   IntVector domHi = vars->pressure.getFortHighIndex();
   IntVector domLong = vars->old_density.getFortLowIndex();
   IntVector domHing = vars->old_density.getFortHighIndex();
-
+  if (patch->containsCell(IntVector(2,3,3))) {
+    cerr << "[2,3,3] press" << vars->pressure[IntVector(2,3,3)] << " " <<
+      vars->pressure[IntVector(1,3,3)] << endl;
+  }
   int ioff, joff, koff;
   switch(index) {
   case Arches::XDIR:
@@ -867,6 +858,9 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.47  2000/10/11 16:37:29  rawat
+//modified calpbc for ghost cells
+//
 //Revision 1.46  2000/10/10 19:30:57  rawat
 //added scalarsolver
 //

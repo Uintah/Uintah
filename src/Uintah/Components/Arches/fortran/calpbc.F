@@ -7,8 +7,10 @@ c*********************************************************************
       SUBROUTINE calpbc(domLoU, domHiU, UU,
      &     domLoV, domHiV, VV,
      &     domLoW, domHiW, WW,
-     &     domLo, domHi, idxLo, idxHi, PP, DEN, PCELL,
+     &     domLoDen, domHiDen, domLoPress, domHiPress,domLoCT, domHiCT,
+     $     idxLo, idxHi, PP, DEN, PCELL,
      &     PFIELD, BndryPress,
+     $     xminus, xplus, yminus, yplus, zminus, zplus,
      &     ierr)
 C-----------------------------------------------------------------------
 C
@@ -64,22 +66,26 @@ c*********************************************************************
       integer domLoW(3), domHiW(3)
       double precision WW(domLoW(1):domHiW(1), domLoW(2):domHiW(2), 
      &     domLoW(3):domHiW(3))
-      integer domLo(3), domHi(3), idxLo(3), idxHi(3)
-      double precision PP(domLo(1):domHi(1), domLo(2):domHi(2), 
-     &     domLo(3):domHi(3))
-      double precision DEN(domLo(1):domHi(1), domLo(2):domHi(2), 
-     &     domLo(3):domHi(3))
-      integer PCELL(domLo(1):domHi(1), domLo(2):domHi(2), 
-     &     domLo(3):domHi(3))
+      integer domLoDen(3), domHiDen(3), domLoPress(3), domHiPress(3),
+     $     domLoCT(3), domHiCT(3)
+      integer idxLo(3), idxHi(3)
+      double precision PP(domLoPress(1):domHiPress(1), 
+     $     domLoPress(2):domHiPress(2), 
+     &     domLoPress(3):domHiPress(3))
+      double precision DEN(domLoDen(1):domHiDen(1), 
+     $     domLoDen(2):domHiDen(2), 
+     &     domLoDen(3):domHiDen(3))
+      integer PCELL(domLoCT(1):domHiCT(1), domLoCT(2):domHiCT(2), 
+     &     domLoCT(3):domHiCT(3))
       double precision BndryPress
       integer PFIELD
+      integer xminus, xplus, yminus, yplus, zminus, zplus
       integer ierr
 
 c*********************************************************************
 c     Local Variables :
 c*********************************************************************
       logical LNORM
-      integer iBegGhost, jBegGhost, kBegGhost, NI, NJ, NK
       integer IST, JST, KST, IEND, JEND, KEND
       integer i, j, k
       double precision DXPRD, DTPRD, DPMAG, PPP, P0, FACK, URFBC
@@ -92,13 +98,6 @@ c*********************************************************************
 c*********************************************************************
 c     Start :
 c*********************************************************************
-      iBegGhost = domLoU(1)
-      jBegGhost = domLoV(2)
-      kBegGhost = domLoW(3)
-      NI = domHi(1)
-      NJ = domHi(2)
-      NK = domHi(3)
-
       IST = idxLo(1)
       JST = idxLo(2)
       KST = idxLo(3)
@@ -111,9 +110,6 @@ c*********************************************************************
       print*,'iend',iend
       print*,'jend',jend
       print*,'kend',kend
-      print*,'NI',ni
-      print*,'NJ',nj
-      print*,'NK',nk
       FACK = 1.0
       URFBC = 0.5
       LNORM = .FALSE.
@@ -124,232 +120,248 @@ C
 C     
 C	Calculate pbc for I=1 (West) side of domain
 C
-      I = iBegGhost
-      DO 140 K=KST,KEND
-         DO 130 J=JST,JEND
-            IF (PCELL(I,J,K) .EQ. PFIELD) THEN
-                PPP = BndryPress
-                PP(I,J,K) = PPP
-                DENFACE = 0.5*(DEN(I,J,K)+DEN(I+1,J,K))
-                DELP = PPP - PP(I+1,J,K)
-                UMAG = SIGN(SQRT(2.0*ABS(DELP)/DENFACE),DELP)
-                UMAG = UMAG/SQRT(FACK)
-                UVEL = UU(I+2,J,K)
-                VVEL = VV(I+1,J,K)
-                WVEL = WW(I+1,J,K)
-                UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
-                IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
-                  UVEL = UMAG
-                  VVEL = 0.0
-                  WVEL = 0.0
-                ELSE
-                  UVEL = UMAG*ABS(UVEL)/UMAGINT
-                  VVEL = VVEL*ABS(UMAG)/UMAGINT
-                  WVEL = WVEL*ABS(UMAG)/UMAGINT
-                END IF
-                UVEL = UVEL*URFBC + UU(I,J,K)*(1.0-URFBC)
-                UU(I+1,J,K) = UVEL
-                UU(I,J,K) = UVEL
-                IF (UVEL.GT.0.0) THEN
-                  VV(I,J,K) = VVEL
-                  WW(I,J,K) = WVEL
+      if (xminus) then
+         I = ist -1
+         DO 140 K=KST,KEND
+            DO 130 J=JST,JEND
+               IF (PCELL(I,J,K) .EQ. PFIELD) THEN
+                  PPP = BndryPress
                   PP(I,J,K) = PPP
-                END IF
-	      END IF
-130	    CONTINUE
-140	  CONTINUE
+                  DENFACE = 0.5*(DEN(I,J,K)+DEN(I+1,J,K))
+                  DELP = PPP - PP(I+1,J,K)
+                  UMAG = SIGN(SQRT(2.0*ABS(DELP)/DENFACE),DELP)
+                  UMAG = UMAG/SQRT(FACK)
+                  UVEL = UU(I+2,J,K)
+                  VVEL = VV(I+1,J,K)
+                  WVEL = WW(I+1,J,K)
+                  UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
+                  IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
+                     UVEL = UMAG
+                     VVEL = 0.0
+                     WVEL = 0.0
+                  ELSE
+                     UVEL = UMAG*ABS(UVEL)/UMAGINT
+                     VVEL = VVEL*ABS(UMAG)/UMAGINT
+                     WVEL = WVEL*ABS(UMAG)/UMAGINT
+                  END IF
+                  UVEL = UVEL*URFBC + UU(I,J,K)*(1.0-URFBC)
+                  UU(I+1,J,K) = UVEL
+                  UU(I,J,K) = UVEL
+                  IF (UVEL.GT.0.0) THEN
+                     VV(I,J,K) = VVEL
+                     WW(I,J,K) = WVEL
+                     PP(I,J,K) = PPP
+                  END IF
+               END IF
+ 130        CONTINUE
+ 140     CONTINUE
+      endif
 C
 C	Calculate PBC for I=NI (East) side of domain
 C
-          I = NI
-	  DO 190 K=KST,KEND
+      if (xplus) then
+         I = iend+1
+         DO 190 K=KST,KEND
 	    DO 180 J=JST,JEND
-	      IF (PCELL(I,J,K) .EQ. PFIELD) THEN
-                PPP = BndryPress
-                PP(I,J,K) = PPP
-                DENFACE = 0.5*(DEN(I,J,K)+DEN(I-1,J,K))
-                DELP = PPP - PP(I-1,J,K)
-                UMAG = -SIGN(SQRT(2.0*ABS(DELP)/DENFACE),DELP)
-                UMAG = UMAG/SQRT(FACK)
-                UVEL = UU(I-1,J,K)
-                VVEL = VV(I-1,J,K)
-                WVEL = WW(I-1,J,K)
-                UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
-                IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
-                  UVEL = UMAG
-                  VVEL = 0.0
-                  WVEL = 0.0
-                ELSE
-                  UVEL = UMAG*ABS(UVEL)/UMAGINT
-                  VVEL = VVEL*ABS(UMAG)/UMAGINT
-                  WVEL = WVEL*ABS(UMAG)/UMAGINT
-                END IF
-                UVEL = UVEL*URFBC + UU(I+1,J,K)*(1.0-URFBC)
-                UU(NI,J,K) = UVEL
-                UU(NI+1,J,K) = UVEL
-                IF (UVEL.LT.0.0) THEN
-                  VV(I,J,K) = VVEL
-                  WW(I,J,K) = WVEL
+               IF (PCELL(I,J,K) .EQ. PFIELD) THEN
+                  PPP = BndryPress
                   PP(I,J,K) = PPP
-                END IF
-	      END IF
-180	    CONTINUE
-190	  CONTINUE
+                  DENFACE = 0.5*(DEN(I,J,K)+DEN(I-1,J,K))
+                  DELP = PPP - PP(I-1,J,K)
+                  UMAG = -SIGN(SQRT(2.0*ABS(DELP)/DENFACE),DELP)
+                  UMAG = UMAG/SQRT(FACK)
+                  UVEL = UU(I-1,J,K)
+                  VVEL = VV(I-1,J,K)
+                  WVEL = WW(I-1,J,K)
+                  UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
+                  IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
+                     UVEL = UMAG
+                     VVEL = 0.0
+                     WVEL = 0.0
+                  ELSE
+                     UVEL = UMAG*ABS(UVEL)/UMAGINT
+                     VVEL = VVEL*ABS(UMAG)/UMAGINT
+                     WVEL = WVEL*ABS(UMAG)/UMAGINT
+                  END IF
+                  UVEL = UVEL*URFBC + UU(I+1,J,K)*(1.0-URFBC)
+                  UU(I,J,K) = UVEL
+                  UU(I+1,J,K) = UVEL
+                  IF (UVEL.LT.0.0) THEN
+                     VV(I,J,K) = VVEL
+                     WW(I,J,K) = WVEL
+                     PP(I,J,K) = PPP
+                  END IF
+               END IF
+ 180        CONTINUE
+ 190     CONTINUE
+      endif
 C
 C	Compute PBC for J=1 (South) side of domain
 C
-	  J = jBegGhost
-	  DO 240 K=KST,KEND
-	    DO 230 I=IST,IEND
-	      IF (PCELL(I,J,K) .EQ. PFIELD) THEN
-                PPP = BndryPress
-                PP(I,J,K) = PPP
-                DENFACE = 0.5*(DEN(I,J,K)+DEN(I,J+1,K))
-                DELP = PPP - PP(I,J+1,K)
-                UMAG = SIGN(SQRT(2.0*ABS(DELP)/DENFACE),DELP)
-                UMAG = UMAG/SQRT(FACK)
-                UVEL = UU(I,J+1,K)
-                VVEL = VV(I,J+2,K)
-                WVEL = WW(I,J+1,K)
-                UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
-                IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
-                  UVEL = 0.0
-                  VVEL = UMAG
-                  WVEL = 0.0
-                ELSE
-                  UVEL = UVEL*ABS(UMAG)/UMAGINT
-                  VVEL = ABS(VVEL)*UMAG/UMAGINT
-                  WVEL = WVEL*ABS(UMAG)/UMAGINT
-                END IF
-                VVEL = URFBC*VVEL + VV(I,J,K)*(1.0-URFBC)
-                VV(I,J+1,K) = VVEL
-                VV(I,J,K) = VVEL
-                IF (VVEL.GT.0.0) THEN
-                  UU(I,J,K) = UVEL
-                  WW(I,J,K) = WVEL
+      if (yminus) then
+         J = jst-1
+         DO 240 K=KST,KEND
+            DO 230 I=IST,IEND
+               IF (PCELL(I,J,K) .EQ. PFIELD) THEN
+                  PPP = BndryPress
                   PP(I,J,K) = PPP
-                END IF
-	      END IF
-230	    CONTINUE
-240	  CONTINUE
+                  DENFACE = 0.5*(DEN(I,J,K)+DEN(I,J+1,K))
+                  DELP = PPP - PP(I,J+1,K)
+                  UMAG = SIGN(SQRT(2.0*ABS(DELP)/DENFACE),DELP)
+                  UMAG = UMAG/SQRT(FACK)
+                  UVEL = UU(I,J+1,K)
+                  VVEL = VV(I,J+2,K)
+                  WVEL = WW(I,J+1,K)
+                  UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
+                  IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
+                     UVEL = 0.0
+                     VVEL = UMAG
+                     WVEL = 0.0
+                  ELSE
+                     UVEL = UVEL*ABS(UMAG)/UMAGINT
+                     VVEL = ABS(VVEL)*UMAG/UMAGINT
+                     WVEL = WVEL*ABS(UMAG)/UMAGINT
+                  END IF
+                  VVEL = URFBC*VVEL + VV(I,J,K)*(1.0-URFBC)
+                  VV(I,J+1,K) = VVEL
+                  VV(I,J,K) = VVEL
+                  IF (VVEL.GT.0.0) THEN
+                     UU(I,J,K) = UVEL
+                     WW(I,J,K) = WVEL
+                     PP(I,J,K) = PPP
+                  END IF
+               END IF
+ 230        CONTINUE
+ 240     CONTINUE
+      endif
 C
 C	Compute PBC for J=NJ (North) side of domain
 C
-	  J = NJ
-	  DO 290 K=KST,KEND
+      if (yplus) then
+         J = jend+1
+         DO 290 K=KST,KEND
 	    DO 280 I=IST,IEND
-	      IF (PCELL(I,J,K) .EQ. PFIELD) THEN
-                PPP = BndryPress
-                PP(I,J,K) = PPP
-                DENFACE = 0.5*(DEN(I,J,K)+DEN(I,J-1,K))
-                DELP = PPP - PP(I,J-1,K)
-                UMAG = -SIGN(SQRT(2.0*ABS(DELP)/DENFACE),DELP)
-                UMAG = UMAG/SQRT(FACK)
-                UVEL = UU(I,J-1,K)
-                VVEL = VV(I,J-1,K)
-                WVEL = WW(I,J-1,K)
-                UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
-                IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
-                  UVEL = 0.0
-                  VVEL = UMAG
-                  WVEL = 0.0
-                ELSE
-                  UVEL = UVEL*ABS(UMAG)/UMAGINT
-                  VVEL = ABS(VVEL)*UMAG/UMAGINT
-                  WVEL = WVEL*ABS(UMAG)/UMAGINT
-                END IF
-                VVEL = URFBC*VVEL + VV(I,J+1,K)*(1.0-URFBC)
-                VV(I,NJ,K) = VVEL
-                VV(I,J+1,K) = VVEL
-                IF (VVEL.LT.0.0) THEN
-                  UU(I,J,K) = UVEL
-                  WW(I,J,K) = WVEL
+               IF (PCELL(I,J,K) .EQ. PFIELD) THEN
+                  PPP = BndryPress
                   PP(I,J,K) = PPP
-                END IF
-	      END IF
-280	    CONTINUE
-290	  CONTINUE
+                  DENFACE = 0.5*(DEN(I,J,K)+DEN(I,J-1,K))
+                  DELP = PPP - PP(I,J-1,K)
+                  UMAG = -SIGN(SQRT(2.0*ABS(DELP)/DENFACE),DELP)
+                  UMAG = UMAG/SQRT(FACK)
+                  UVEL = UU(I,J-1,K)
+                  VVEL = VV(I,J-1,K)
+                  WVEL = WW(I,J-1,K)
+                  UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
+                  IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
+                     UVEL = 0.0
+                     VVEL = UMAG
+                     WVEL = 0.0
+                  ELSE
+                     UVEL = UVEL*ABS(UMAG)/UMAGINT
+                     VVEL = ABS(VVEL)*UMAG/UMAGINT
+                     WVEL = WVEL*ABS(UMAG)/UMAGINT
+                  END IF
+                  VVEL = URFBC*VVEL + VV(I,J+1,K)*(1.0-URFBC)
+                  VV(I,J,K) = VVEL
+                  VV(I,J+1,K) = VVEL
+                  IF (VVEL.LT.0.0) THEN
+                     UU(I,J,K) = UVEL
+                     WW(I,J,K) = WVEL
+                     PP(I,J,K) = PPP
+                  END IF
+               END IF
+ 280        CONTINUE
+ 290     CONTINUE
+      endif
+
 C
 C	Calculate PBC for K=1 (Bottom) side of domain
 C
-	  K = kBegGhost
-	  DO 340 J=JST,JEND
+      if (zminus) then
+         K = kst-1
+         DO 340 J=JST,JEND
 	    DO 330 I=IST,IEND
-	      IF (PCELL(I,J,K) .EQ. PFIELD) THEN
-                PPP = BndryPress
-                PP(I,J,K) = PPP
-                DENFACE = 0.5*(DEN(I,J,K)+DEN(I,J,K+1))
-                DELP = PPP - PP(I,J,K+1)
-                UMAG = SIGN(SQRT(2.0*ABS(DELP)/DENFACE),DELP)
-                UMAG = UMAG/SQRT(FACK)
-                UVEL = UU(I,J,K+1)
-                VVEL = VV(I,J,K+1)
-                WVEL = WW(I,J,K+2)
-                UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
-                IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
-                  UVEL = 0.0
-                  VVEL = 0.0
-                  WVEL = UMAG
-                ELSE
-                  UVEL = UVEL*ABS(UMAG)/UMAGINT
-                  VVEL = VVEL*ABS(UMAG)/UMAGINT
-                  WVEL = ABS(WVEL)*UMAG/UMAGINT
-                END IF
-                WVEL = URFBC*WVEL + WW(I,J,K)*(1.0-URFBC)
-                WW(I,J,K+1) = WVEL
-                WW(I,J,K) = WVEL
-                IF (WVEL.GT.0.0) THEN
-                  UU(I,J,K) = UVEL
-                  VV(I,J,K) = VVEL
+               IF (PCELL(I,J,K) .EQ. PFIELD) THEN
+                  PPP = BndryPress
                   PP(I,J,K) = PPP
-                END IF
-	      END IF
-330	    CONTINUE
-340	  CONTINUE
+                  DENFACE = 0.5*(DEN(I,J,K)+DEN(I,J,K+1))
+                  DELP = PPP - PP(I,J,K+1)
+                  UMAG = SIGN(SQRT(2.0*ABS(DELP)/DENFACE),DELP)
+                  UMAG = UMAG/SQRT(FACK)
+                  UVEL = UU(I,J,K+1)
+                  VVEL = VV(I,J,K+1)
+                  WVEL = WW(I,J,K+2)
+                  UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
+                  IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
+                     UVEL = 0.0
+                     VVEL = 0.0
+                     WVEL = UMAG
+                  ELSE
+                     UVEL = UVEL*ABS(UMAG)/UMAGINT
+                     VVEL = VVEL*ABS(UMAG)/UMAGINT
+                     WVEL = ABS(WVEL)*UMAG/UMAGINT
+                  END IF
+                  WVEL = URFBC*WVEL + WW(I,J,K)*(1.0-URFBC)
+                  WW(I,J,K+1) = WVEL
+                  WW(I,J,K) = WVEL
+                  IF (WVEL.GT.0.0) THEN
+                     UU(I,J,K) = UVEL
+                     VV(I,J,K) = VVEL
+                     PP(I,J,K) = PPP
+                  END IF
+               END IF
+ 330        CONTINUE
+ 340     CONTINUE
+      endif
 C
 C	Compute PBC for K=NK (Top) side of domain
 C
-	  K = NK
-	  DO 390 J=JST,JEND
+      if (zplus) then
+         K = kend+1
+         DO 390 J=JST,JEND
 	    DO 380 I=IST,IEND
-	      IF (PCELL(I,J,K) .EQ. PFIELD) THEN
-                PPP = BndryPress
-                PP(I,J,K) = PPP
-                DENFACE = 0.5*(DEN(I,J,K)+DEN(I,J,K-1))
-                DELP = PPP - PP(I,J,K-1)
-                UMAG = -SIGN(SQRT(2.0*ABS(DELP)/DENFACE),DELP)
-                UMAG = UMAG/SQRT(FACK)
-                UVEL = UU(I,J,K-1)
-                VVEL = VV(I,J,K-1)
-                WVEL = WW(I,J,K-1)
-                UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
-                IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
-                  UVEL = 0.0
-                  VVEL = 0.0
-                  WVEL = UMAG
-                ELSE
-                  UVEL = UVEL*ABS(UMAG)/UMAGINT
-                  VVEL = VVEL*ABS(UMAG)/UMAGINT
-                  WVEL = ABS(WVEL)*UMAG/UMAGINT
-                END IF
-                WVEL = URFBC*WVEL + WW(I,J,K+1)*(1.0-URFBC)
-                WW(I,J,NK) = WVEL
-                WW(I,J,K+1) = WVEL
-                IF (WVEL.LT.0.0) THEN
-                  UU(I,J,K) = UVEL
-                  VV(I,J,K) = VVEL
+               IF (PCELL(I,J,K) .EQ. PFIELD) THEN
+                  PPP = BndryPress
                   PP(I,J,K) = PPP
-                END IF
-	      END IF
-380	    CONTINUE
-390	  CONTINUE
+                  DENFACE = 0.5*(DEN(I,J,K)+DEN(I,J,K-1))
+                  DELP = PPP - PP(I,J,K-1)
+                  UMAG = -SIGN(SQRT(2.0*ABS(DELP)/DENFACE),DELP)
+                  UMAG = UMAG/SQRT(FACK)
+                  UVEL = UU(I,J,K-1)
+                  VVEL = VV(I,J,K-1)
+                  WVEL = WW(I,J,K-1)
+                  UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
+                  IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
+                     UVEL = 0.0
+                     VVEL = 0.0
+                     WVEL = UMAG
+                  ELSE
+                     UVEL = UVEL*ABS(UMAG)/UMAGINT
+                     VVEL = VVEL*ABS(UMAG)/UMAGINT
+                     WVEL = ABS(WVEL)*UMAG/UMAGINT
+                  END IF
+                  WVEL = URFBC*WVEL + WW(I,J,K+1)*(1.0-URFBC)
+                  WW(I,J,K) = WVEL
+                  WW(I,J,K+1) = WVEL
+                  IF (WVEL.LT.0.0) THEN
+                     UU(I,J,K) = UVEL
+                     VV(I,J,K) = VVEL
+                     PP(I,J,K) = PPP
+                  END IF
+               END IF
+ 380        CONTINUE
+ 390     CONTINUE
+      endif
 C
-	RETURN
-	END
+      RETURN
+      END
 
 c*********************************************************************
 c
 c $Log$
+c Revision 1.5  2000/10/11 16:37:31  rawat
+c modified calpbc for ghost cells
+c
 c Revision 1.4  2000/10/10 19:31:03  rawat
 c added scalarsolver
 c

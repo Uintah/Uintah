@@ -425,6 +425,11 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
   default:
     throw InvalidValue("Invalid index in MomentumSolver");
   }
+  if (patch->containsCell(IntVector(2,3,3))) {
+    cerr << "[2,3,3] press[2,3,3]" << velocityVars.pressure[IntVector(2,3,3)] 
+	 << " " << velocityVars.pressure[IntVector(1,3,3)] << endl;
+  }
+
   // compute ith componenet of velocity stencil coefficients
   // inputs : [u,v,w]VelocityCPBC, densityIN, viscosityIN
   // outputs: [u,v,w]VelConvCoefPBLM, [u,v,w]VelCoefPBLM
@@ -715,6 +720,9 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   
 //
 // $Log$
+// Revision 1.34  2000/10/11 16:37:29  rawat
+// modified calpbc for ghost cells
+//
 // Revision 1.33  2000/10/10 19:30:57  rawat
 // added scalarsolver
 //
