@@ -402,11 +402,6 @@ void MatlabEngineThread::run()
 }
 
 
-// Temp solution for removing processes after exit
-std::list<Matlab*> matlab_list;
-SCIRun::Mutex matlab_list_lock("matlab_list_lock");
-// end temp solution
-
 DECLARE_MAKER(Matlab)
 
 Matlab::Matlab(GuiContext *context) :
