@@ -41,16 +41,16 @@
 \begin{document}
 \setlength{\abovedisplayskip}{0.1in}
 \setlength{\mathindent}{0.0in}
-\section{\underline{Overview of implicit ICE\hspace{ 0.5in}10/04/04}  }
+\section{\underline{Overview of implicit ICE\hspace{ 0.5in}03/31/05}  }
 
 \begin{algorithmic}
-\WHILE{ $| \text{outer residual} | <$ convergence criteria}
-    \STATE --Compute $ \velFC$ (add Exchange contribution, set boundary
-             conditions on $\velFC$, compute $ \rhoMFC $)
+\STATE --Compute $ \velFC$ (add Exchange contribution, set boundary
+             conditions on $\velFC$ )
              
-    \STATE --Form RHS $B = -\beta (P^{ \iter} - P^{old}) - \SUM{m}$ \text{Advection} $(\theta,\velFC)$,\\ \quad
-             where outer residual = $Max(RHS^2), \beta = \SUM{m} \frac{\theta_m}{\rhoM c_m^2}$
+\STATE --Form RHS $B = -\beta (P^{ \iter} - P^{old}) - \SUM{m}$ \text{Advection} $(\theta_m \velFC)$
     
+\WHILE{ $| \text{outer residual} | <$ convergence criteria}
+
     \STATE --Compute $A$ matrix \\ \quad
       $A_r = \frac{\delt^2}{\delx^2} \SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_{r}$ \quad
       $A_l = \frac{\delt^2}{\delx^2} \SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_{l}$ \\ \quad
@@ -62,10 +62,15 @@
       
     \STATE --Solve for $\delta{P}$
     \STATE --Update pressure $P^{\iter} = P^{\iter -1 } + \delta{P}$, set boundary condition on $P^{\iter}$
+    \STATE --Compute $ \velFC$ (add Exchange contribution, set boundary
+             conditions on $\velFC$, compute $ \rhoMFC $)
+             
+    \STATE --Form RHS $B = -\beta (P^{ \iter} - P^{old}) - \SUM{m}$ \text{Advection} $(\theta_m \velFC)$,\\ \quad
+             where outer residual = $Max(RHS^2), \beta = \SUM{m} \frac{\theta_m}{\rhoM c_m^2}$
+    
 \ENDWHILE
 
 \STATE --Compute $\Delta{P} = P^{\iter} - P^{Old}$
-\STATE --Compute $\velFC$ add exchange contribution, set boundary conditions on $\velFC$
 \end{algorithmic}
 %______________________________________________________________________
 \newpage
