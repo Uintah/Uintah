@@ -138,7 +138,7 @@ TriSurfMesh::get_nodes(node_array &array, edge_index idx) const
 
   const int off = idx % 3;
   const int node = idx - off;
-
+  array.clear();
   array.push_back(faces_[node + table[off][0]]);
   array.push_back(faces_[node + table[off][1]]);
 }
@@ -147,6 +147,7 @@ TriSurfMesh::get_nodes(node_array &array, edge_index idx) const
 void
 TriSurfMesh::get_nodes(node_array &array, face_index idx) const
 {
+  array.clear();
   array.push_back(faces_[idx * 3 + 0]);
   array.push_back(faces_[idx * 3 + 1]);
   array.push_back(faces_[idx * 3 + 2]);
@@ -155,6 +156,7 @@ TriSurfMesh::get_nodes(node_array &array, face_index idx) const
 void
 TriSurfMesh::get_nodes(node_array &array, cell_index cidx) const
 {
+  array.clear();
   array.push_back(faces_[cidx * 3 + 0]);
   array.push_back(faces_[cidx * 3 + 1]);
   array.push_back(faces_[cidx * 3 + 2]);
@@ -164,6 +166,7 @@ TriSurfMesh::get_nodes(node_array &array, cell_index cidx) const
 void
 TriSurfMesh::get_edges(edge_array &array, face_index idx) const
 {
+  array.clear();
   array.push_back(idx * 3 + 0);
   array.push_back(idx * 3 + 1);
   array.push_back(idx * 3 + 2);

@@ -119,7 +119,7 @@ public:
   void get_center(Point &p, node_index i) const { get_point(p, i); }
   void get_center(Point &p, edge_index i) const;
   void get_center(Point &p, face_index i) const;
-  void get_center(Point &p, cell_index i) const {}
+  void get_center(Point &, cell_index) const {}
 
   void get_point(Point &result, node_index index) const
   { result = points_[index]; }
