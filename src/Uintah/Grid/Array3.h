@@ -4,6 +4,7 @@
 #include "Array3Window.h"
 #include <SCICore/Geometry/IntVector.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <iostream>
 
 /**************************************
 
@@ -143,6 +144,23 @@ namespace Uintah {
 	return (d_window->getPointer());
       }
 
+      void print(std::ostream& out) const {
+	 IntVector l = d_window->getLowIndex();
+	 IntVector h = d_window->getHighIndex();
+	 out << "Variable from " << l << " to " << h << '\n';
+	 for (int ii = l.x(); ii < h.x(); ii++) {
+	    out << "variable for ii = " << ii << endl;
+	    for (int jj = l.y(); jj < h.y(); jj++) {
+	       for (int kk = l.z(); kk < h.z(); kk++) {
+		  out.width(10);
+		  out << (*this)[IntVector(ii,jj,kk)] << " " ; 
+	       }
+	       out << endl;
+	    }
+	 }
+      }
+
+	 
    private:
       Array3Window<T>* d_window;
    };
@@ -158,6 +176,9 @@ namespace Uintah {
    
 //
 // $Log$
+// Revision 1.18  2000/09/26 19:58:23  sparker
+// Added print method to arrays
+//
 // Revision 1.17  2000/09/20 15:48:30  sparker
 // Added .copy() method to copy one Array3 from another
 //
