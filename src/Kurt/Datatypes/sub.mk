@@ -2,6 +2,7 @@
 # Makefile fragment for this subdirectory
 # $Id$
 #
+include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Kurt/Datatypes
 
@@ -13,6 +14,7 @@ SRCS     += $(SRCDIR)/Brick.cc \
 	 $(SRCDIR)/GLAttenuate.cc \
 	 $(SRCDIR)/GLOverOp.cc \
 	 $(SRCDIR)/GLMIP.cc \
+	 $(SRCDIR)/GLPlanes.cc \
 	 $(SRCDIR)/GLVolRenState.cc \
 	 $(SRCDIR)/FullRes.cc \
 	 $(SRCDIR)/FullResIterator.cc \
@@ -20,16 +22,26 @@ SRCS     += $(SRCDIR)/Brick.cc \
 	 $(SRCDIR)/LOSIterator.cc \
 	 $(SRCDIR)/ROI.cc \
 	 $(SRCDIR)/ROIIterator.cc \
+	 $(SRCDIR)/TexPlanes.cc \
 	 $(SRCDIR)/GLVolumeRenderer.cc \
 	 $(SRCDIR)/Octree.cc \
 	 $(SRCDIR)/Polygon.cc \
 	 $(SRCDIR)/SliceTable.cc \
 	 $(SRCDIR)/VolumeUtils.cc 
 
+PSELIBS := SCICore/Exceptions SCICore/Geometry \
+	SCICore/Persistent SCICore/Datatypes \
+	SCICore/Containers  SCICore/Geom
 
+LIBS :=  $(LINK) $(GL_LIBS) -lm
+
+include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2  2000/05/20 02:23:28  kuzimmer
+# modifications for a texture slicing module
+#
 # Revision 1.1  2000/05/16 20:52:39  kuzimmer
 # files for new volume renderer
 #

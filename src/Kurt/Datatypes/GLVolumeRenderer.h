@@ -20,6 +20,8 @@
 #include "FullRes.h"
 #include "ROI.h"
 #include "LOS.h"
+#include "GLPlanes.h"
+#include "TexPlanes.h"
 #include "GLMIP.h"
 #include "GLAttenuate.h"
 #include "GLOverOp.h"
@@ -40,9 +42,11 @@ class GLVolumeRenderer : public GeomObj
   friend class GLAttenuate;
   friend class GLOverOp;
   friend class GLMIP;
+  friend class GLPlanes;
   friend class FullRes;
   friend class ROI;
   friend class LOS;
+  friend class TexPlanes;
 public:
 
   GLVolumeRenderer(int id);
@@ -62,10 +66,16 @@ public:
   void DrawFullRes(){ _state = FullRes::Instance(this);}
   void DrawLOS(){ _state = LOS::Instance(this);}
   void DrawROI(){ _state = ROI::Instance(this);}
-
+  void DrawPlanes(){ _state = TexPlanes::Instance(this); }
+  void SetX(bool b){ if(b){drawView = false;} drawX = b; }
+  void SetY(bool b){ if(b){drawView = false;} drawY = b; }
+  void SetZ(bool b){ if(b){drawView = false;} drawZ = b; }
+  void SetView(bool b){ if(b){drawX=false; drawY=false; drawZ=false;}
+                        drawView = b; }
   void GLOverOp(){ _gl_state = GLOverOp::Instance( this ); }
   void GLMIP(){ _gl_state = GLMIP::Instance( this ); }
   void GLAttenuate(){ _gl_state = GLAttenuate::Instance( this ); }
+  void GLPlanes(){ _gl_state = GLPlanes::Instance(this);}
 
   GLVolumeRenderer(const GLVolumeRenderer&);
   ~GLVolumeRenderer();
@@ -91,15 +101,15 @@ public:
 protected:
   int slices;
 private:
-  
+
   const GLTexture3D *tex;
   unsigned char* cmap;
   Point controlPoint;
   
-
   double slice_alpha;
 
   bool cmapHasChanged;
+  bool drawX, drawY, drawZ, drawView;
   
   GLVolRenState* _state;
   GLTexRenState* _gl_state;
