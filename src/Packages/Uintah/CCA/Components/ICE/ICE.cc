@@ -37,6 +37,7 @@ using std::istringstream;
 using namespace SCIRun;
 using namespace Uintah;
 
+
 #undef  CONVECT
 //#define CONVECT
 
@@ -599,6 +600,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
 
   scheduleAdvectAndAdvanceInTime(         sched, patches, ice_matls_sub,
                                                           mpm_matls_sub,
+                                                          press_matl,
                                                           all_matls);
   if(switchTestConservation) {
     schedulePrintConservedQuantities(     sched, patches, ice_matls_sub,
@@ -797,8 +799,8 @@ _____________________________________________________________________*/
 void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSubset* press_matl,
-                                            const MaterialSubset* /*iceMatls*/,
-                                            const MaterialSubset* /*mpmMatls*/,
+                                            const MaterialSubset* ice_matls,
+                                            const MaterialSubset* mpm_matls,
                                             const MaterialSet* matls)
 {
   cout_doing << "ICE::scheduleComputeDelPressAndUpdatePressCC" << endl;
@@ -826,6 +828,14 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
     task->requires(Task::NewDW, lb->modelVol_srcLabel,  gn);
     task->requires(Task::NewDW, lb->modelMass_srcLabel, gn);
   }
+  
+/*`==========TESTING==========*/
+#ifdef LODI_BCS
+  task->requires(Task::OldDW, lb->temp_CCLabel,     ice_matls, gn);    
+  task->requires(Task::NewDW,MIlb->temp_CCLabel,    mpm_matls, gn);    
+  task->requires(Task::NewDW, lb->f_theta_CCLabel,             gn);
+#endif 
+/*==========TESTING==========`*/
   
   task->modifies(lb->press_CCLabel,        press_matl);
   task->computes(lb->delP_DilatateLabel,   press_matl);
@@ -1126,34 +1136,47 @@ _____________________________________________________________________*/
 void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
                                     const PatchSet* patches,
                                     const MaterialSubset* ice_matls,
-                                    const MaterialSubset* /*mpm_matls*/,
+                                    const MaterialSubset* mpm_matls,
+                                    const MaterialSubset* press_matl,
                                     const MaterialSet* matls)
 {
+  Ghost::GhostType  gac  = Ghost::AroundCells; 
+  Ghost::GhostType  gn  = Ghost::None; 
+  //__________________________________
+  // task for 
   if(d_modelSetup && d_modelSetup->tvars.size() > 0){
     Task* task = scinew Task("ICE::transportModelVariables",
-			     this, &ICE::transportModelVariables);
+			  this, &ICE::transportModelVariables);
     for(vector<TransportedVariable*>::iterator iter = d_modelSetup->tvars.begin();
 	iter != d_modelSetup->tvars.end(); iter++){
       TransportedVariable* tvar = *iter;
-      task->requires(Task::OldDW, tvar->var, tvar->matls,
-		     Ghost::AroundCells, 0);
-      task->computes(tvar->Lvar, tvar->matls);
+      task->requires(Task::OldDW, tvar->var, tvar->matls,gac, 0);
+      task->computes(tvar->Lvar,  tvar->matls);
     }
-    task->requires(Task::NewDW,  lb->mass_L_CCLabel, Ghost::AroundCells, 0);
+    task->requires(Task::NewDW,  lb->mass_L_CCLabel, gac, 0);
     sched->addTask(task, patches, matls);
   } 
+  //__________________________________
+  //
   cout_doing << "ICE::scheduleAdvectAndAdvanceInTime" << endl;
   Task* task = scinew Task("ICE::advectAndAdvanceInTime",
                      this, &ICE::advectAndAdvanceInTime);
   task->requires(Task::OldDW, lb->delTLabel);
-  task->requires(Task::NewDW, lb->uvel_FCMELabel,      Ghost::AroundCells,2);
-  task->requires(Task::NewDW, lb->vvel_FCMELabel,      Ghost::AroundCells,2);
-  task->requires(Task::NewDW, lb->wvel_FCMELabel,      Ghost::AroundCells,2);
-  task->requires(Task::NewDW, lb->mom_L_ME_CCLabel,    Ghost::AroundCells,2);
-  task->requires(Task::NewDW, lb->mass_L_CCLabel,      Ghost::AroundCells,2);
-  task->requires(Task::NewDW, lb->eng_L_ME_CCLabel,    Ghost::AroundCells,2);
-  task->requires(Task::NewDW, lb->spec_vol_L_CCLabel,  Ghost::AroundCells,2);
- 
+  task->requires(Task::NewDW, lb->uvel_FCMELabel,      gac,2);
+  task->requires(Task::NewDW, lb->vvel_FCMELabel,      gac,2);
+  task->requires(Task::NewDW, lb->wvel_FCMELabel,      gac,2);
+  task->requires(Task::NewDW, lb->mom_L_ME_CCLabel,    gac,2);
+  task->requires(Task::NewDW, lb->mass_L_CCLabel,      gac,2);
+  task->requires(Task::NewDW, lb->eng_L_ME_CCLabel,    gac,2);
+  task->requires(Task::NewDW, lb->spec_vol_L_CCLabel,  gac,2);
+  
+/*`==========TESTING==========*/
+#ifdef LODI_BCS  
+  task->requires(Task::NewDW, lb->press_CCLabel,       press_matl, gn, 0);
+  task->requires(Task::NewDW, lb->speedSound_CCLabel,              gn, 0); 
+  task->requires(Task::NewDW, lb->vol_frac_CCLabel,                gn, 0);
+#endif
+/*==========TESTING==========`*/
   task->modifies(lb->rho_CCLabel,   ice_matls);
   task->modifies(lb->sp_vol_CCLabel,ice_matls);
   task->computes(lb->temp_CCLabel,  ice_matls);
@@ -1163,7 +1186,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
     for(vector<TransportedVariable*>::iterator iter = d_modelSetup->tvars.begin();
 	iter != d_modelSetup->tvars.end(); iter++){
       TransportedVariable* tvar = *iter;
-      task->requires(Task::NewDW, tvar->Lvar, Ghost::AroundCells, 2);
+      task->requires(Task::NewDW, tvar->Lvar, gac, 2);
       task->computes(tvar->var, tvar->matls);
     }
   } 
@@ -2322,9 +2345,11 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
                         adj_offset[2],  numMatls,    K, 
                         delT,           vol_frac_CC, sp_vol_CC,
                         wvel_FC,        sp_vol_ZFC,  wvel_FCME);
-                                    
-    //__________________________________
-    //    Boundary Conditons
+
+    //_________________________________
+    //  For LODI, How to do ?	                             			
+    //    Boundary Conditons for Dirichlet and Neumann ONLY
+    //    For LODI they are computed above.
     for (int m = 0; m < numMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
@@ -2423,8 +2448,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       new_dw->get(rho_CC,      lb->rho_CCLabel,        indx,patch,gn,0);
       new_dw->get(sp_vol_CC[m],lb->sp_vol_CCLabel,     indx,patch,gn,0);
       new_dw->get(speedSound,  lb->speedSound_CCLabel, indx,patch,gn,0);
-
-    
+          
       //---- P R I N T   D A T A ------  
       if (switchDebug_explicit_press ) {
         ostringstream desc;
@@ -2512,9 +2536,35 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         press_CC[c] = max(1.0e-12, press_CC[c]);  
       }
     }
+ /*`==========TESTING==========*/
+#ifndef LODI_BCS
     setBC(press_CC, sp_vol_CC[SURROUND_MAT],
           "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw);
-          
+#else 
+    StaticArray<constCCVariable<double> > Temp_CC(numMatls);
+    StaticArray<constCCVariable<double> > f_theta(numMatls);  
+    
+    for(int m = 0; m < numMatls; m++) {
+      Material* matl = d_sharedState->getMaterial( m );
+      int indx = matl->getDWIndex();
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+         
+      if(ice_matl){                // I C E
+        old_dw->get(Temp_CC[m],  lb->temp_CCLabel,    indx,patch,gn,0);
+        new_dw->get(f_theta[m],  lb->f_theta_CCLabel, indx,patch,gn,0); 
+      }
+      if(mpm_matl){                // M P M
+        new_dw->get(Temp_CC[m],  lb->temp_CCLabel,    indx,patch,gn,0);
+        new_dw->get(f_theta[m],  lb->f_theta_CCLabel, indx,patch,gn,0);
+      }
+    }
+    setBCPress_LODI( press_CC, sp_vol_CC, Temp_CC, f_theta,
+                    "Pressure", patch ,d_sharedState, 0, new_dw); 
+#endif
+/*==========TESTING==========`*/
+
+                             
    //---- P R I N T   D A T A ------  
     if (switchDebug_explicit_press) {
       ostringstream desc;
@@ -3798,8 +3848,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       }      // if mpm_matl
     }        // for ALL matls
 #endif
- 
-
+#ifndef LODI_BCS
     //__________________________________
     //  Set the Boundary conditions 
     for (int m = 0; m < numALLMatls; m++)  {
@@ -3808,6 +3857,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       setBC(vel_CC[m], "Velocity",   patch,dwindex);
       setBC(Temp_CC[m],"Temperature",patch, d_sharedState, dwindex);
     }
+#endif
     //__________________________________
     // Convert vars. primitive-> flux 
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
@@ -3835,7 +3885,8 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     }
   } //patches
 }
-
+//______________________________________________________________________
+//
 void ICE::transportModelVariables(const ProcessorGroup*,  
 				  const PatchSubset* patches,
 				  const MaterialSubset* /*matls*/,
@@ -3910,7 +3961,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
     new_dw->allocateTemporary(q_advected,   patch);
     new_dw->allocateTemporary(qV_advected,  patch);
 
-
     int numALLMatls = d_sharedState->getNumMatls();
 
     for (int m = 0; m < numALLMatls; m++ ) {
@@ -3966,9 +4016,11 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
         mass_new[c]  = (mass_L[c] + mass_advected[c]);
         rho_CC[c]    = mass_new[c] * invvol;
       }   
-  
-      setBC(rho_CC, "Density", patch, d_sharedState, indx);
       
+#ifndef LODI_BCS
+      setBC(rho_CC, "Density", patch, d_sharedState, indx);
+#endif
+
       //__________________________________
       // Advect  momentum and backout vel_CC
       advector->advectQ(mom_L_ME,patch,qV_advected, new_dw);
@@ -3984,7 +4036,9 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 //      vel_CC[c] = (mom_L_ME[c] + qV_advected[c])/mass_new[c] ; 
       }
       
+#ifndef LODI_BCS    
       setBC(vel_CC, "Velocity", patch,indx);
+#endif
 
       //__________________________________
       // Advect internal energy and backout Temp_CC
@@ -4021,9 +4075,12 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 //        double KE = 0.5 * mass_new[c] * vel_CC[c].length() * vel_CC[c].length();
 //        temp[c] = (int_eng_L_ME[c] + q_advected[c] - KE)/(mass_new[c] * cv);
         }
-      } 
+      }
+
+#ifndef LODI_BCS     
       setBC(temp, "Temperature", patch, d_sharedState, indx);
-     
+#endif
+
       //__________________________________
       // Advection of specific volume
       // Note sp_vol_L[m] is actually sp_vol[m] * mass
@@ -4054,6 +4111,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 	    advector->advectQ(q_L,patch,q_advected, new_dw); 
 	    CCVariable<double> q_CC;
 	    new_dw->allocateAndPut(q_CC, tvar->var, indx, patch);
+ 
       
 	    for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
 	      IntVector c = *iter;
@@ -4067,13 +4125,136 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 	      q_CC[c]    = q_tmp + q_a; 
 	      cerr << ", q_CC=" << q_CC[c] << '\n';
 	    }
-
 	    //  Set Neumann = 0 if symmetric Boundary conditions
 	    //setBC(q_CC, "set_if_sym_BC",patch, d_sharedState, indx); 
 	  }
 	}
       }
+//______________________ L O D I__________________________________
+#ifdef LODI_BCS  
+      Ghost::GhostType  gn  = Ghost::None;  
+      constCCVariable<double> press_new, speedSound,vol_frac_new;
+      CCVariable<double> rho_L;
+      CCVariable<Vector> vel_L_CC;
+      CCVariable<double> press_tmp;
+      CCVariable<double> nux, nuy, nuz, e;
+      CCVariable<double> d1_x, d2_x, d3_x, d4_x, d5_x;
+      CCVariable<double> d1_y, d2_y, d3_y, d4_y, d5_y;
+      CCVariable<double> d1_z, d2_z, d3_z, d4_z, d5_z;      
+
+      new_dw->get(vol_frac_new,lb->vol_frac_CCLabel,      indx,patch,gn,0);
+      new_dw->get(press_new,   lb->press_CCLabel,         0,   patch,gn,0);
+      new_dw->get(speedSound,  lb->speedSound_CCLabel,    indx,patch,gn,0);  
+ 
+      new_dw->allocateTemporary(press_tmp,  patch);
+      new_dw->allocateTemporary(rho_L,      patch);
+      new_dw->allocateTemporary(vel_L_CC,   patch);  
+      new_dw->allocateTemporary(nux, patch);  
+      new_dw->allocateTemporary(nuy, patch);  
+      new_dw->allocateTemporary(nuz, patch);  
+      new_dw->allocateTemporary(e,   patch); 
+       
+      new_dw->allocateTemporary(d1_x, patch);
+      new_dw->allocateTemporary(d2_x, patch); 
+      new_dw->allocateTemporary(d3_x, patch);
+      new_dw->allocateTemporary(d4_x, patch);  
+      new_dw->allocateTemporary(d5_x, patch);  
+     
+      new_dw->allocateTemporary(d1_y, patch);
+      new_dw->allocateTemporary(d2_y, patch); 
+      new_dw->allocateTemporary(d3_y, patch);
+      new_dw->allocateTemporary(d4_y, patch);  
+      new_dw->allocateTemporary(d5_y, patch);
       
+      new_dw->allocateTemporary(d1_z, patch);
+      new_dw->allocateTemporary(d2_z, patch); 
+      new_dw->allocateTemporary(d3_z, patch);
+      new_dw->allocateTemporary(d4_z, patch);  
+      new_dw->allocateTemporary(d5_z, patch);
+     
+      d1_x.initialize(0.0);
+      d2_x.initialize(0.0);
+      d3_x.initialize(0.0);
+      d4_x.initialize(0.0);
+      d5_x.initialize(0.0);
+      d1_y.initialize(0.0);
+      d2_y.initialize(0.0);
+      d3_y.initialize(0.0);
+      d4_y.initialize(0.0);
+      d5_y.initialize(0.0);
+      d1_z.initialize(0.0);
+      d2_z.initialize(0.0);
+      d3_z.initialize(0.0);
+      d4_z.initialize(0.0);
+      d5_z.initialize(0.0);
+      nux.initialize(0.0);
+      nuy.initialize(0.0);  
+      nuz.initialize(0.0);  
+    
+      for(CellIterator iter = patch->getExtraCellIterator();
+		                       !iter.done();iter++){
+        IntVector c = *iter;
+        rho_L[c]      = mass_L[c] * invvol;              
+        vel_L_CC[c]   = mom_L_ME[c]/mass_L[c];           
+	 e[c]          = int_eng_L_ME[c] * invvol;        
+        press_tmp[c]  = vol_frac_new[c] * press_new[c];  
+      } 
+
+      double gamma = ice_matl->getGamma();
+      double R_gas = cv * (gamma - 1.0);
+ 
+      //__________________________________
+      //compute dissipation coefficients
+      computeNu(nux, nuy, nuz, press_tmp, patch);
+      
+#if 1       
+      ostringstream desc1;
+       desc1 <<"BOT_Advection_after_BC_Mat_" <<indx<<"_patch_"<<patch->getID();           
+       printData(   indx, patch,1, desc1.str(), "nux",    nux);
+       printData(   indx, patch,1, desc1.str(), "nuy",    nuy);
+       printData(   indx, patch,1, desc1.str(), "nuz",    nuz);
+#endif
+      //__________________________________
+      //compute the total energy
+      computeEnergy(e, vel_L_CC, rho_L, patch);
+     
+      //compute Di at boundary cells
+      computeLODIFirstOrder(d1_x, d2_x, d3_x, d4_x, d5_x, 
+                            d1_y, d2_y, d3_y, d4_y, d5_y,
+                            d1_z, d2_z, d3_z, d4_z, d5_z, 
+                            rho_L,  press_tmp, vel_L_CC, speedSound, 
+                            patch, indx);
+#if 0                                
+      computeLODISecondOrder(d1_x, d2_x, d3_x, d4_x, d5_x, 
+                             d1_y, d2_y, d3_y, d4_y, d5_y,
+                             d1_z, d2_z, d3_z, d4_z, d5_z, 
+                             rho_L,  press_tmp, vel_L_CC, speedSound, 
+                             patch, indx);
+#endif          
+                     
+                       
+      //__________________________________
+      ///compute density at boundary cells
+      setBCDensityLODI(rho_CC,d1_x, d1_y, d1_z, nux, nuy, nuz, rho_L, press_tmp, 
+		                vel_L_CC, speedSound, delT, gamma, R_gas, patch, 
+                              indx);
+
+      //compute velocity at boundary cells
+      setBCVelLODI(vel_CC, d1_x, d3_x, d4_x, 
+                           d1_y, d3_y, d4_y, 
+                           d1_z, d3_z, d4_z,   
+                   nux, nuy, nuz, rho_L, press_tmp, 
+		     vel_L_CC, speedSound, delT, gamma, 
+		     R_gas, patch, indx);
+ 
+      //compute temperature at boundary cells
+      setBCTempLODI(temp, d1_x, d2_x, d3_x, d4_x, d5_x, 
+                          d1_y, d2_y, d3_y, d4_y, d5_y,
+                          d1_z, d2_z, d3_z, d4_z, d5_z, e, rho_CC, nux, nuy, 
+		      nuz, rho_L, press_tmp, vel_L_CC, speedSound, 
+		      delT, cv, gamma, patch, indx);
+#endif
+
       //---- P R I N T   D A T A ------   
       if (switchDebug_advance_advect ) {
        ostringstream desc;
