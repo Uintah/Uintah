@@ -34,16 +34,23 @@
 # if you want to edit this file by hand, see the "Create A New Core/CCA/Component"
 # documentation on how to do it correctly.
 
-SRCDIR := Packages/BioPSE/Dataflow/Modules
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SUBDIRS := \
-	$(SRCDIR)/DataIO\
-	$(SRCDIR)/Forward\
-	$(SRCDIR)/Inverse\
-	$(SRCDIR)/LeadField\
-	$(SRCDIR)/Modeling\
-	$(SRCDIR)/NeuroFEM\
-	$(SRCDIR)/Visualization\
-#[INSERT NEW CATEGORY DIR HERE]
+SRCDIR   := Packages/BioPSE/Dataflow/Modules/NeuroFEM
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+
+SRCS     += $(SRCDIR)/ForwardIPM.cc\
+	    $(SRCDIR)/InverseIPM.cc\
+#[INSERT NEW CODE FILE HERE]	
+
+
+PSELIBS := Packages/BioPSE/Core/Datatypes \
+	Dataflow/Network Dataflow/Ports \
+	Core/Datatypes Core/Persistent Core/Containers \
+	Core/Util Core/Exceptions Core/Thread Core/GuiInterface \
+        Core/Geom Core/Geometry Core/GeomInterface Core/TkExtensions \
+	Core/ImportExport
+
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
