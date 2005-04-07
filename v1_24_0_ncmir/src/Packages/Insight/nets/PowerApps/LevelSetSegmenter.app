@@ -37,291 +37,507 @@ init_DATADIR_and_DATASET
 
 ::netedit dontschedule
 
+# Create a Teem->DataIO->NrrdReader Module
 set m1 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 10 10]
+
+# Create a Teem->DataIO->DicomNrrdReader Module
 set m2 [addModuleAtPosition "Teem" "DataIO" "DicomNrrdReader" 183 10]
+
+# Create a Teem->DataIO->AnalyzeNrrdReader Module
 set m3 [addModuleAtPosition "Teem" "DataIO" "AnalyzeNrrdReader" 355 10]
+
+# Create a Teem->NrrdData->ChooseNrrd Module
 set m4 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 88]
 set Notes($m4) {Determines which
 file type is read.}
 set Notes($m4-Position) {def}
 set Notes($m4-Color) {white}
+
+# Create a Teem->UnuAtoM->UnuCrop Module
 set m5 [addModuleAtPosition "Teem" "UnuAtoM" "UnuCrop" 28 393]
+
+# Create a Teem->NrrdData->ChooseNrrd Module
 set m6 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 456]
 set Notes($m6) {Use cropped vs. original
 volume for smoothing.}
 set Notes($m6-Position) {def}
 set Notes($m6-Color) {white}
+
+# Create a Teem->Converters->NrrdToField Module
 set m7 [addModuleAtPosition "Teem" "Converters" "NrrdToField" 82 167]
+
+# Create a SCIRun->FieldsOther->ScalarFieldStats Module
 set m8 [addModuleAtPosition "SCIRun" "FieldsOther" "ScalarFieldStats" 82 226]
+
+# Create a Teem->NrrdData->NrrdInfo Module
 set m9 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 254 228]
+
+# Create a Teem->UnuAtoM->UnuMinmax Module
 set m10 [addModuleAtPosition "Teem" "UnuAtoM" "UnuMinmax" 279 166]
-set m11 [addModuleAtPosition "Insight" "Converters" "NrrdToImage" 452 802]
-set m12 [addModuleAtPosition "Insight" "Filters" "GradientAnisotropicDiffusionImageFilter" 470 886]
-set m13 [addModuleAtPosition "Insight" "Filters" "CurvatureAnisotropicDiffusionImageFilter" 766 887]
-set m14 [addModuleAtPosition "Insight" "Filters" "DiscreteGaussianImageFilter" 1080 886]
-set m15 [addModuleAtPosition "Insight" "Filters" "ThresholdSegmentationLevelSetImageFilter" 338 2066]
-set m16 [addModuleAtPosition "Insight" "Filters" "ExtractImageFilter" 452 1214]
+
+# Create a Insight->Converters->NrrdToImage Module
+set m11 [addModuleAtPosition "Insight" "Converters" "NrrdToImage" 454 560]
+
+# Create a Insight->Filters->GradientAnisotropicDiffusionImageFilter Module
+set m12 [addModuleAtPosition "Insight" "Filters" "GradientAnisotropicDiffusionImageFilter" 473 961]
+
+# Create a Insight->Filters->CurvatureAnisotropicDiffusionImageFilter Module
+set m13 [addModuleAtPosition "Insight" "Filters" "CurvatureAnisotropicDiffusionImageFilter" 769 962]
+
+# Create a Insight->Filters->DiscreteGaussianImageFilter Module
+set m14 [addModuleAtPosition "Insight" "Filters" "DiscreteGaussianImageFilter" 1074 961]
+
+# Create a Insight->Filters->ThresholdSegmentationLevelSetImageFilter Module
+set m15 [addModuleAtPosition "Insight" "Filters" "ThresholdSegmentationLevelSetImageFilter" 338 2086]
+
+# Create a Insight->Filters->ExtractImageFilter Module
+set m16 [addModuleAtPosition "Insight" "Filters" "ExtractImageFilter" 454 1246]
 set Notes($m16) {Pull out
 current slice.}
 set Notes($m16-Position) {def}
 set Notes($m16-Color) {white}
-set m17 [addModuleAtPosition "Insight" "DataIO" "ChooseImage" 452 965]
+
+# Create a Insight->DataIO->ChooseImage Module
+set m17 [addModuleAtPosition "Insight" "DataIO" "ChooseImage" 473 1042]
+
+# Create a Insight->Filters->BinaryThresholdImageFilter Module
 set m18 [addModuleAtPosition "Insight" "Filters" "BinaryThresholdImageFilter" 60 2209]
-set m19 [addModuleAtPosition "SCIRun" "FieldsCreate" "SeedPoints" 707 1549]
-set m20 [addModuleAtPosition "Insight" "Filters" "BinaryThresholdImageFilter" 397 1492]
+
+# Create a SCIRun->FieldsCreate->SeedPoints Module
+set m19 [addModuleAtPosition "SCIRun" "FieldsCreate" "SeedPoints" 709 1584]
+
+# Create a Insight->Filters->BinaryThresholdImageFilter Module
+set m20 [addModuleAtPosition "Insight" "Filters" "BinaryThresholdImageFilter" 399 1527]
 set Notes($m20) {Thresholding
 seed.}
 set Notes($m20-Position) {def}
 set Notes($m20-Color) {white}
-set m21 [addModuleAtPosition "Insight" "Converters" "ImageToField" 707 1491]
+
+# Create a Insight->Converters->ImageToField Module
+set m21 [addModuleAtPosition "Insight" "Converters" "ImageToField" 709 1526]
 set Notes($m21) {Positive
 seed points.}
 set Notes($m21-Position) {def}
 set Notes($m21-Color) {white}
-set m22 [addModuleAtPosition "Insight" "Filters" "ExtractImageFilter" 127 1486]
+
+# Create a Insight->Filters->ExtractImageFilter Module
+set m22 [addModuleAtPosition "Insight" "Filters" "ExtractImageFilter" 129 1521]
 set Notes($m22) {Prev, next, or
 current seed.}
 set Notes($m22-Position) {def}
 set Notes($m22-Color) {white}
+
+# Create a Insight->DataIO->ImageFileWriter Module
 set m23 [addModuleAtPosition "Insight" "DataIO" "ImageFileWriter" 99 2749]
 set Notes($m23) {Writer for 
 binary volume.}
 set Notes($m23-Position) {def}
 set Notes($m23-Color) {white}
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
 set m24 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 422 2445]
-set m25 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 127 1543]
+
+# Create a Insight->Converters->ImageToNrrd Module
+set m25 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 129 1578]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
 set m26 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 898 2442]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
 set m27 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 664 2439]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
 set m28 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1159 2435]
+
+# Create a Insight->Filters->PasteImageFilter Module
 set m29 [addModuleAtPosition "Insight" "Filters" "PasteImageFilter" 60 2671]
 set Notes($m29) {Execute from
 pressing Commit.}
 set Notes($m29-Position) {def}
 set Notes($m29-Color) {white}
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
 set m30 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 175 3109]
-set m31 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 1250 1059]
+
+# Create a Insight->Converters->ImageToNrrd Module
+set m31 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 1262 1206]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
 set m32 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 175 3171]
-set m33 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1268 1268]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m33 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1280 1412]
+
+# Create a Teem->UnuAtoM->UnuMinmax Module
 set m34 [addModuleAtPosition "Teem" "UnuAtoM" "UnuMinmax" 547 3026]
-set m35 [addModuleAtPosition "SCIRun" "Render" "ViewSlices" 1232 1330]
+
+# Create a SCIRun->Render->ViewSlices Module
+set m35 [addModuleAtPosition "SCIRun" "Render" "ViewSlices" 1244 1474]
 set Notes($m35) {Viewer 3}
 set Notes($m35-Position) {def}
 set Notes($m35-Color) {#ff02ff}
-set m36 [addModuleAtPosition "Insight" "Converters" "BuildSeedVolume" 725 1616]
+
+# Create a Insight->Converters->BuildSeedVolume Module
+set m36 [addModuleAtPosition "Insight" "Converters" "BuildSeedVolume" 727 1651]
+
+# Create a SCIRun->Render->Viewer Module
 set m37 [addModuleAtPosition "SCIRun" "Render" "Viewer" 1069 3149]
+
+# Create a SCIRun->Visualization->ShowField Module
 set m38 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 404 2504]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
 set m39 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 422 2384]
+
+# Create a Insight->Converters->ImageToField Module
 set m40 [addModuleAtPosition "Insight" "Converters" "ImageToField" 404 2323]
 set Notes($m40) {Current
 slice.}
 set Notes($m40-Position) {def}
 set Notes($m40-Color) {white}
+
+# Create a Insight->Converters->ImageToField Module
 set m41 [addModuleAtPosition "Insight" "Converters" "ImageToField" 880 2322]
 set Notes($m41) {Segmentation
 result slice.}
 set Notes($m41-Position) {def}
 set Notes($m41-Color) {white}
+
+# Create a SCIRun->Visualization->ShowField Module
 set m42 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 880 2503]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
 set m43 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 898 2382]
+
+# Create a Insight->Converters->ImageToField Module
 set m44 [addModuleAtPosition "Insight" "Converters" "ImageToField" 1141 2313]
 set Notes($m44) {Speed
 image slice}
 set Notes($m44-Position) {def}
 set Notes($m44-Color) {white}
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
 set m45 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1159 2373]
+
+# Create a SCIRun->Visualization->ShowField Module
 set m46 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1141 2500]
-set m47 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 397 1554]
+
+# Create a Insight->Converters->ImageToNrrd Module
+set m47 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 399 1589]
+
+# Create a SCIRun->Visualization->GenTitle Module
 set m48 [addModuleAtPosition "SCIRun" "Visualization" "GenTitle" 910 3070]
+
+# Create a SCIRun->Visualization->GenTitle Module
 set m49 [addModuleAtPosition "SCIRun" "Visualization" "GenTitle" 933 3010]
+
+# Create a Insight->Filters->PasteImageFilter Module
 set m50 [addModuleAtPosition "Insight" "Filters" "PasteImageFilter" 338 2672]
 set Notes($m50) {Execute from
 pressing Commit.}
 set Notes($m50-Position) {def}
 set Notes($m50-Color) {white}
+
+# Create a Insight->Converters->ImageToNrrd Module
 set m51 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 338 2936]
 set Notes($m51) {Volume rendering
 modules}
 set Notes($m51-Position) {e}
 set Notes($m51-Color) {#fffeff}
+
+# Create a SCIRun->Render->Viewer Module
 set m52 [addModuleAtPosition "SCIRun" "Render" "Viewer" 501 3609]
+
+# Create a Teem->UnuNtoZ->UnuQuantize Module
 set m53 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 387 3109]
+
+# Create a SCIRun->Visualization->NrrdTextureBuilder Module
 set m54 [addModuleAtPosition "SCIRun" "Visualization" "NrrdTextureBuilder" 369 3171]
+
+# Create a SCIRun->Visualization->EditColorMap2D Module
 set m55 [addModuleAtPosition "SCIRun" "Visualization" "EditColorMap2D" 537 3479]
+
+# Create a SCIRun->Visualization->VolumeVisualizer Module
 set m56 [addModuleAtPosition "SCIRun" "Visualization" "VolumeVisualizer" 501 3544]
+
+# Create a Teem->NrrdData->NrrdSetupTexture Module
 set m57 [addModuleAtPosition "Teem" "NrrdData" "NrrdSetupTexture" 369 3025]
+
+# Create a SCIRun->Visualization->GenTitle Module
 set m58 [addModuleAtPosition "SCIRun" "Visualization" "GenTitle" 709 3481]
+
+# Create a Teem->UnuAtoM->UnuHeq Module
 set m59 [addModuleAtPosition "Teem" "UnuAtoM" "UnuHeq" 555 3293]
+
+# Create a Teem->UnuAtoM->UnuGamma Module
 set m60 [addModuleAtPosition "Teem" "UnuAtoM" "UnuGamma" 555 3355]
+
+# Create a Teem->UnuNtoZ->UnuQuantize Module
 set m61 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 555 3417]
+
+# Create a Teem->UnuAtoM->UnuJhisto Module
 set m62 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJhisto" 573 3109]
+
+# Create a Teem->UnuAtoM->Unu2op Module
 set m63 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 555 3171]
+
+# Create a Teem->UnuAtoM->Unu1op Module
 set m64 [addModuleAtPosition "Teem" "UnuAtoM" "Unu1op" 555 3232]
-set m65 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 1232 1121]
+
+# Create a Teem->NrrdData->ChooseNrrd Module
+set m65 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 1244 1265]
 set Notes($m65) {Toggle for ViewSlices
 to view original or smoothed.}
 set Notes($m65-Position) {def}
 set Notes($m65-Color) {white}
+
+# Create a Teem->NrrdData->NrrdInfo Module
 set m66 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 75 597]
+
+# Create a Teem->UnuAtoM->UnuMinmax Module
 set m67 [addModuleAtPosition "Teem" "UnuAtoM" "UnuMinmax" 94 535]
-set m68 [addModuleAtPosition "Teem" "UnuAtoM" "UnuMinmax" 1275 1201]
-set m69 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 452 1276]
-set m70 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxdelete" 452 1334]
-set m71 [addModuleAtPosition "Insight" "Converters" "NrrdToImage" 452 1395]
-set m72 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxdelete" 127 1602]
+
+# Create a Teem->UnuAtoM->UnuMinmax Module
+set m68 [addModuleAtPosition "Teem" "UnuAtoM" "UnuMinmax" 1287 1345]
+
+# Create a Insight->Converters->ImageToNrrd Module
+set m69 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 454 1310]
+
+# Create a Teem->UnuAtoM->UnuAxdelete Module
+set m70 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxdelete" 454 1368]
+
+# Create a Insight->Converters->NrrdToImage Module
+set m71 [addModuleAtPosition "Insight" "Converters" "NrrdToImage" 454 1429]
+
+# Create a Teem->UnuAtoM->UnuAxdelete Module
+set m72 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxdelete" 129 1637]
+
+# Create a Insight->Converters->FloatToUChar Module
 set m73 [addModuleAtPosition "Insight" "Converters" "FloatToUChar" 60 2607]
+
+# Create a Insight->DataIO->ImageFileWriter Module
 set m74 [addModuleAtPosition "Insight" "DataIO" "ImageFileWriter" 382 2749]
 set Notes($m74) {Writer for
 float volume.}
 set Notes($m74-Position) {def}
 set Notes($m74-Color) {white}
+
+# Create a Teem->Converters->NrrdToField Module
 set m75 [addModuleAtPosition "Teem" "Converters" "NrrdToField" 646 2318]
 set Notes($m75) {Current
 seed slice}
 set Notes($m75-Position) {def}
 set Notes($m75-Color) {white}
+
+# Create a SCIRun->Visualization->ShowField Module
 set m76 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 646 2498]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
 set m77 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 664 2380]
-set m78 [addModuleAtPosition "Insight" "Converters" "ImageToField" 961 1489]
+
+# Create a Insight->Converters->ImageToField Module
+set m78 [addModuleAtPosition "Insight" "Converters" "ImageToField" 963 1524]
 set Notes($m78) {Negative 
 seed points.}
 set Notes($m78-Position) {def}
 set Notes($m78-Color) {white}
-set m79 [addModuleAtPosition "SCIRun" "FieldsCreate" "SeedPoints" 961 1546]
-set m80 [addModuleAtPosition "Insight" "Converters" "BuildSeedVolume" 979 1612]
-set m81 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 379 1684]
+
+# Create a SCIRun->FieldsCreate->SeedPoints Module
+set m79 [addModuleAtPosition "SCIRun" "FieldsCreate" "SeedPoints" 963 1581]
+
+# Create a Insight->Converters->BuildSeedVolume Module
+set m80 [addModuleAtPosition "Insight" "Converters" "BuildSeedVolume" 981 1647]
+
+# Create a Teem->NrrdData->ChooseNrrd Module
+set m81 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 381 1719]
 set Notes($m81) {Change when
 seeding method
 changes.}
 set Notes($m81-Position) {def}
 set Notes($m81-Color) {white}
-set m82 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 839 1762]
+
+# Create a Teem->UnuAtoM->Unu2op Module
+set m82 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 841 1798]
 set Notes($m82) {Add positive seeds
 to selected seed
 method output.}
 set Notes($m82-Position) {def}
 set Notes($m82-Color) {white}
-set m83 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 821 1829]
+
+# Create a Teem->NrrdData->ChooseNrrd Module
+set m83 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 823 1865]
 set Notes($m83) {Change if using
 seeds only or
 combination.}
 set Notes($m83-Position) {def}
 set Notes($m83-Color) {white}
-set m84 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 821 1889]
+
+# Create a Teem->UnuAtoM->Unu2op Module
+set m84 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 823 1925]
 set Notes($m84) {Subtract
 negative seeds.}
 set Notes($m84-Position) {def}
 set Notes($m84-Color) {white}
-set m85 [addModuleAtPosition "Insight" "Converters" "NrrdToImage" 793 1967]
+
+# Create a Insight->Converters->NrrdToImage Module
+set m85 [addModuleAtPosition "Insight" "Converters" "NrrdToImage" 795 2003]
+
+# Create a Insight->DataIO->ChooseImage Module
+set m86 [addModuleAtPosition "Insight" "DataIO" "ChooseImage" 473 639]
+set Notes($m86) {Change depending on
+if Go or Reset was pressed.}
+set Notes($m86-Position) {def}
+set Notes($m86-Color) {white}
+
+# Create a Insight->Filters->PasteImageFilter Module
+set m87 [addModuleAtPosition "Insight" "Filters" "PasteImageFilter" 473 1103]
+set Notes($m87) {Every time Paste finishes,
+increment Extract min/maxs
+and execute ExtractImageFilter.}
+set Notes($m87-Position) {def}
+set Notes($m87-Color) {white}
+
+# Create a Insight->Filters->ExtractImageFilter Module
+set m88 [addModuleAtPosition "Insight" "Filters" "ExtractImageFilter" 473 699]
+set Notes($m88) {With each slice 
+iteration, change
+axis min/max.}
+set Notes($m88-Position) {def}
+set Notes($m88-Color) {white}
+
+# Create a Insight->Converters->ImageToNrrd Module
+set m89 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 473 762]
+
+# Create a Teem->UnuAtoM->UnuAxdelete Module
+set m90 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxdelete" 473 820]
+
+# Create a Insight->Converters->NrrdToImage Module
+set m91 [addModuleAtPosition "Insight" "Converters" "NrrdToImage" 473 881]
+
+# Create a Insight->DataIO->ChooseImage Module
+set m92 [addModuleAtPosition "Insight" "DataIO" "ChooseImage" 454 1180]
+
+# Create a Insight->DataIO->ChooseImage Module
+set m93 [addModuleAtPosition "Insight" "DataIO" "ChooseImage" 286 674]
 
 # Create the Connections between Modules
-set c1 [addConnection $m36 0 $m83 0]
-set c2 [addConnection $m36 0 $m82 0]
-set c3 [addConnection $m73 0 $m29 0]
-set c4 [addConnection $m21 0 $m19 0]
-set c5 [addConnection $m40 0 $m38 0]
-set c6 [addConnection $m41 0 $m42 0]
-set c7 [addConnection $m44 0 $m46 0]
-set c8 [addConnection $m78 0 $m79 0]
-set c9 [addConnection $m25 0 $m72 0]
-set c10 [addConnection $m51 0 $m57 0]
-set c11 [addConnection $m51 0 $m34 0]
-set c12 [addConnection $m69 0 $m70 0]
-set c13 [addConnection $m11 0 $m17 0]
-set c14 [addConnection $m11 0 $m13 0]
-set c15 [addConnection $m11 0 $m14 0]
-set c16 [addConnection $m11 0 $m12 0]
-set c17 [addConnection $m71 0 $m21 0]
-set c18 [addConnection $m71 0 $m40 0]
-set c19 [addConnection $m71 0 $m78 0]
-set c20 [addConnection $m71 0 $m20 0]
-set c21 [addConnection $m85 0 $m15 0]
-set c22 [addConnection $m17 0 $m31 0]
-set c23 [addConnection $m17 0 $m16 0]
-set c24 [addConnection $m18 0 $m73 0]
-set c25 [addConnection $m18 0 $m41 0]
-set c26 [addConnection $m20 0 $m47 0]
-set c27 [addConnection $m16 0 $m69 0]
-set c28 [addConnection $m22 0 $m25 0]
-set c29 [addConnection $m29 0 $m23 0]
-set c30 [addConnection $m29 0 $m22 0]
-set c31 [addConnection $m50 0 $m51 0]
-set c32 [addConnection $m50 0 $m74 0]
-set c33 [addConnection $m15 0 $m18 0]
-set c34 [addConnection $m15 0 $m50 0]
-set c35 [addConnection $m15 1 $m44 0]
-set c36 [addConnection $m19 1 $m36 0]
-set c37 [addConnection $m79 1 $m80 0]
-set c38 [addConnection $m30 0 $m32 0]
-set c39 [addConnection $m39 0 $m24 0]
-set c40 [addConnection $m43 0 $m26 0]
-set c41 [addConnection $m45 0 $m28 0]
-set c42 [addConnection $m77 0 $m27 0]
-set c43 [addConnection $m48 0 $m37 0]
-set c44 [addConnection $m54 0 $m56 0]
-set c45 [addConnection $m56 0 $m52 0]
-set c46 [addConnection $m7 0 $m8 0]
-set c47 [addConnection $m75 0 $m76 0]
-set c48 [addConnection $m1 0 $m4 0]
-set c49 [addConnection $m4 0 $m6 0]
-set c50 [addConnection $m4 0 $m9 0]
-set c51 [addConnection $m4 0 $m5 0]
-set c52 [addConnection $m4 0 $m10 0]
-set c53 [addConnection $m6 0 $m11 0]
-set c54 [addConnection $m6 0 $m65 0]
-set c55 [addConnection $m6 0 $m66 0]
-set c56 [addConnection $m6 0 $m67 0]
-set c57 [addConnection $m65 0 $m35 0]
-set c58 [addConnection $m65 0 $m68 0]
-set c59 [addConnection $m83 0 $m84 0]
-set c60 [addConnection $m57 0 $m54 0]
-set c61 [addConnection $m57 1 $m53 0]
-set c62 [addConnection $m64 0 $m59 0]
-set c63 [addConnection $m63 0 $m64 0]
-set c64 [addConnection $m84 0 $m85 0]
-set c65 [addConnection $m70 0 $m71 0]
-set c66 [addConnection $m72 0 $m81 0]
-set c67 [addConnection $m60 0 $m61 0]
-set c68 [addConnection $m59 0 $m60 0]
-set c69 [addConnection $m80 0 $m84 1]
-set c70 [addConnection $m40 0 $m24 1]
-set c71 [addConnection $m41 0 $m26 1]
-set c72 [addConnection $m44 0 $m28 1]
-set c73 [addConnection $m31 0 $m65 1]
-set c74 [addConnection $m47 0 $m81 1]
-set c75 [addConnection $m51 0 $m62 1]
-set c76 [addConnection $m71 0 $m36 1]
-set c77 [addConnection $m71 0 $m80 1]
-set c78 [addConnection $m71 0 $m15 1]
-set c79 [addConnection $m12 0 $m17 1]
-set c80 [addConnection $m49 0 $m37 1]
-set c81 [addConnection $m58 0 $m52 1]
-set c82 [addConnection $m24 0 $m38 1]
-set c83 [addConnection $m26 0 $m42 1]
-set c84 [addConnection $m27 0 $m76 1]
-set c85 [addConnection $m28 0 $m46 1]
-set c86 [addConnection $m32 0 $m56 1]
-set c87 [addConnection $m75 0 $m27 1]
-set c88 [addConnection $m2 0 $m4 1]
-set c89 [addConnection $m81 0 $m82 1]
-set c90 [addConnection $m82 0 $m83 1]
-set c91 [addConnection $m5 0 $m6 1]
-set c92 [addConnection $m62 0 $m63 1]
-set c93 [addConnection $m53 0 $m54 1]
-set c94 [addConnection $m61 0 $m55 1]
-set c95 [addConnection $m13 0 $m17 2]
-set c96 [addConnection $m55 0 $m56 2]
-set c97 [addConnection $m33 0 $m35 2]
-set c98 [addConnection $m38 0 $m37 2]
-set c99 [addConnection $m3 0 $m4 2]
-set c100 [addConnection $m4 0 $m7 2]
-set c101 [addConnection $m57 1 $m62 2]
-set c102 [addConnection $m84 0 $m75 2]
-set c103 [addConnection $m14 0 $m17 3]
-set c104 [addConnection $m42 0 $m37 3]
-set c105 [addConnection $m46 0 $m37 4]
-set c106 [addConnection $m76 0 $m37 5]
-set c107 [addConnection $m19 0 $m37 6]
-set c108 [addConnection $m79 0 $m37 7]
+ set c1 [addConnection $m36 0 $m83 0]
+ set c2 [addConnection $m36 0 $m82 0]
+ set c3 [addConnection $m73 0 $m29 0]
+ set c4 [addConnection $m21 0 $m19 0]
+ set c5 [addConnection $m40 0 $m38 0]
+ set c6 [addConnection $m41 0 $m42 0]
+ set c7 [addConnection $m44 0 $m46 0]
+ set c8 [addConnection $m78 0 $m79 0]
+ set c9 [addConnection $m25 0 $m72 0]
+ set c10 [addConnection $m51 0 $m57 0]
+ set c11 [addConnection $m51 0 $m34 0]
+ set c12 [addConnection $m69 0 $m70 0]
+ set c13 [addConnection $m89 0 $m90 0]
+ set c14 [addConnection $m11 0 $m86 0]
+ set c15 [addConnection $m11 0 $m92 0]
+ set c16 [addConnection $m71 0 $m21 0]
+ set c17 [addConnection $m71 0 $m40 0]
+ set c18 [addConnection $m71 0 $m78 0]
+ set c19 [addConnection $m71 0 $m20 0]
+ set c20 [addConnection $m85 0 $m15 0]
+ set c21 [addConnection $m91 0 $m13 0]
+ set c22 [addConnection $m91 0 $m14 0]
+ set c23 [addConnection $m91 0 $m12 0]
+ set c24 [addConnection $m17 0 $m87 0]
+ set c25 [addConnection $m86 0 $m93 0]
+ set c26 [addConnection $m92 0 $m16 0]
+ set c27 [addConnection $m93 0 $m88 0]
+ set c28 [addConnection $m18 0 $m73 0]
+ set c29 [addConnection $m18 0 $m41 0]
+ set c30 [addConnection $m20 0 $m47 0]
+ set c31 [addConnection $m16 0 $m69 0]
+ set c32 [addConnection $m22 0 $m25 0]
+ set c33 [addConnection $m88 0 $m89 0]
+ set c34 [addConnection $m12 0 $m17 0]
+ set c35 [addConnection $m29 0 $m23 0]
+ set c36 [addConnection $m29 0 $m22 0]
+ set c37 [addConnection $m50 0 $m51 0]
+ set c38 [addConnection $m50 0 $m74 0]
+ set c39 [addConnection $m87 0 $m31 0]
+ set c40 [addConnection $m15 0 $m18 0]
+ set c41 [addConnection $m15 0 $m50 0]
+ set c42 [addConnection $m15 1 $m44 0]
+ set c43 [addConnection $m19 1 $m36 0]
+ set c44 [addConnection $m79 1 $m80 0]
+ set c45 [addConnection $m30 0 $m32 0]
+ set c46 [addConnection $m39 0 $m24 0]
+ set c47 [addConnection $m43 0 $m26 0]
+ set c48 [addConnection $m45 0 $m28 0]
+ set c49 [addConnection $m77 0 $m27 0]
+ set c50 [addConnection $m48 0 $m37 0]
+ set c51 [addConnection $m54 0 $m56 0]
+ set c52 [addConnection $m56 0 $m52 0]
+ set c53 [addConnection $m7 0 $m8 0]
+ set c54 [addConnection $m75 0 $m76 0]
+ set c55 [addConnection $m1 0 $m4 0]
+ set c56 [addConnection $m4 0 $m6 0]
+ set c57 [addConnection $m4 0 $m9 0]
+ set c58 [addConnection $m4 0 $m5 0]
+ set c59 [addConnection $m4 0 $m10 0]
+ set c60 [addConnection $m6 0 $m11 0]
+ set c61 [addConnection $m6 0 $m65 0]
+ set c62 [addConnection $m6 0 $m66 0]
+ set c63 [addConnection $m6 0 $m67 0]
+ set c64 [addConnection $m65 0 $m35 0]
+ set c65 [addConnection $m65 0 $m68 0]
+ set c66 [addConnection $m83 0 $m84 0]
+ set c67 [addConnection $m57 0 $m54 0]
+ set c68 [addConnection $m57 1 $m53 0]
+ set c69 [addConnection $m64 0 $m59 0]
+ set c70 [addConnection $m63 0 $m64 0]
+ set c71 [addConnection $m84 0 $m85 0]
+ set c72 [addConnection $m70 0 $m71 0]
+ set c73 [addConnection $m72 0 $m81 0]
+ set c74 [addConnection $m90 0 $m91 0]
+ set c75 [addConnection $m60 0 $m61 0]
+ set c76 [addConnection $m59 0 $m60 0]
+ set c77 [addConnection $m80 0 $m84 1]
+ set c78 [addConnection $m40 0 $m24 1]
+ set c79 [addConnection $m41 0 $m26 1]
+ set c80 [addConnection $m44 0 $m28 1]
+ set c81 [addConnection $m31 0 $m65 1]
+ set c82 [addConnection $m47 0 $m81 1]
+ set c83 [addConnection $m51 0 $m62 1]
+ set c84 [addConnection $m71 0 $m36 1]
+ set c85 [addConnection $m71 0 $m80 1]
+ set c86 [addConnection $m71 0 $m15 1]
+ set c87 [addConnection $m13 0 $m17 1]
+ set c88 [addConnection $m87 0 $m86 1]
+ set c89 [addConnection $m87 0 $m92 1]
+ set c90 [addConnection $m49 0 $m37 1]
+ set c91 [addConnection $m58 0 $m52 1]
+ set c92 [addConnection $m24 0 $m38 1]
+ set c93 [addConnection $m26 0 $m42 1]
+ set c94 [addConnection $m27 0 $m76 1]
+ set c95 [addConnection $m28 0 $m46 1]
+ set c96 [addConnection $m32 0 $m56 1]
+ set c97 [addConnection $m75 0 $m27 1]
+ set c98 [addConnection $m2 0 $m4 1]
+ set c99 [addConnection $m81 0 $m82 1]
+ set c100 [addConnection $m82 0 $m83 1]
+ set c101 [addConnection $m5 0 $m6 1]
+ set c102 [addConnection $m62 0 $m63 1]
+ set c103 [addConnection $m53 0 $m54 1]
+ set c104 [addConnection $m61 0 $m55 1]
+ set c105 [addConnection $m14 0 $m17 2]
+ set c106 [addConnection $m55 0 $m56 2]
+ set c107 [addConnection $m33 0 $m35 2]
+ set c108 [addConnection $m38 0 $m37 2]
+ set c109 [addConnection $m3 0 $m4 2]
+ set c110 [addConnection $m4 0 $m7 2]
+ set c111 [addConnection $m57 1 $m62 2]
+ set c112 [addConnection $m84 0 $m75 2]
+ set c113 [addConnection $m42 0 $m37 3]
+ set c114 [addConnection $m46 0 $m37 4]
+ set c115 [addConnection $m76 0 $m37 5]
+ set c116 [addConnection $m19 0 $m37 6]
+ set c117 [addConnection $m79 0 $m37 7]
 
 
 # Set GUI variables
@@ -633,6 +849,12 @@ setGlobal $m83-port-index {1}
 # Unu2op_2
 setGlobal $m84-operator {max}
 
+# ExtractImageFilter_0
+setGlobal $m88-uis 3
+
+# UnuAxdelete_2
+setGlobal $m90-axis 2
+
 
 ::netedit scheduleok
 
@@ -665,6 +887,13 @@ set mods(Smooth-Gradient) $m12
 set mods(Smooth-Curvature) $m13
 set mods(Smooth-Blur) $m14
 set mods(ChooseImage-Smooth) $m17
+set mods(ChooseImage-ToSmooth) $m92
+set mods(PasteImageFilter-Smooth) $m87
+set mods(Extract-Smooth) $m88
+set mods(UnuAxdelete-Smooth) $m90
+set mods(ChooseImage-SmoothInput) $m86
+set mods(ChooseImage-Hack) $m93
+
 
 # Segmenting
 set mods(LevelSet) $m15
@@ -712,6 +941,7 @@ set mods(ShowField-Speed) $m46
 set mods(ShowField-Seed) $m76
 
 set mods(GenTitle-Speed) $m49
+set mods(ImageToNrrd-ViewSlices) $m31
 
 
 # Binary/Float Segmented Volume
@@ -737,6 +967,7 @@ global axis
 set axis 2
 setGlobal $m70-axis $axis
 setGlobal $m72-axis $axis
+setGlobal $m90-axis $axis
 
 global smooth_region
 set smooth_region vol
@@ -859,6 +1090,12 @@ class LevelSetSegmenterApp {
 
 	set updating_crop_widget 0
 
+	set smoothing 0
+
+	set smoothing_method "None"
+
+	set smoothing_type "Reset"
+
 
 	### Define Tooltips
 	##########################
@@ -891,6 +1128,8 @@ class LevelSetSegmenterApp {
 	disableModule $mods(Smooth-Gradient) 1
 	disableModule $mods(Smooth-Curvature) 1
 	disableModule $mods(Smooth-Blur) 1
+	disableModule $mods(PasteImageFilter-Smooth) 1
+	disableModule $mods(Extract-Smooth) 1
 	
 	# Disable prev/next segmentation as seeds
 	disableModule $mods(ImageToNrrd-Prev) 1
@@ -913,6 +1152,7 @@ class LevelSetSegmenterApp {
 	# Seed Points
 	disableModule $mods(ImageToField-Seeds) 1
 
+	disableModule $mods(ImageToNrrd-ViewSlices) 1
     }
 
     
@@ -1285,11 +1525,22 @@ class LevelSetSegmenterApp {
 	    pack $smooth.blur.var $smooth.blur.err -side left	 
 
 	    # Smooth button
-	    button $smooth.button -text "Smooth" \
+	    frame $smooth.buttons
+	    pack $smooth.buttons -side bottom -anchor n -padx 3 \
+		-pady 4
+
+	    button $smooth.buttons.reset -text "Reset" \
 		-background $execute_color \
 		-activebackground $execute_active_color \
-		-command "$this smooth_data" -width 10
-	    pack $smooth.button -side bottom -anchor n -padx 3 \
+		-command "$this smooth_data Reset" -width 10
+
+	    button $smooth.buttons.go -text "Go" \
+		-background $execute_color \
+		-activebackground $execute_active_color \
+		-command "$this smooth_data Go" -width 10
+
+	    pack $smooth.buttons.reset $smooth.buttons.go  \
+		-side left -anchor nw -padx 3 \
 		-pady 4 -ipadx 2   
 
 	    # ViewSlices toggle
@@ -1857,7 +2108,7 @@ class LevelSetSegmenterApp {
 	if {$initialized} {
 	    if {$which == "Segment" && !$loading} {
 		if {$has_smoothed == 0} {
-		    $this smooth_data
+		    # $this smooth_data
 		}
 		# get speed image
 		$this initialize_segmentation
@@ -1997,7 +2248,81 @@ class LevelSetSegmenterApp {
     method update_progress { which state } {
 	global mods
 	
-	if {$which == $mods(ChooseNrrd-Reader) && $state == "JustStarted"} {
+	if {$which == $mods(PasteImageFilter-Smooth) \
+		&& $state == "Completed"} {
+
+	    global axis
+
+	    # determine if this was the last run
+	    set last 0
+	    if {$axis == 0} {
+		set last [expr $size0 - 1]
+	    } elseif {$axis == 1} {
+		set last [expr $size1 - 1]
+	    } else {
+		set last [expr $size2 - 1]
+	    }
+	    
+	    global $mods(PasteImageFilter-Smooth)-index
+	    if {[set $mods(PasteImageFilter-Smooth)-index] == $last} {
+		# set 2D viewer to use smoothed data as input
+		global $mods(ChooseNrrd-2D)-port-index
+		set $mods(ChooseNrrd-2D)-port-index 1
+		
+		set which [$filter_menu1 get]
+		set has_smoothed 1
+		set region_changed 0
+		set smoothing 0
+
+ 		# enable modules downstream of smoothing and execute
+ 		# them
+###  		disableModule $mods(ImageToNrrd-ViewSlices) 0
+		after 500 "$mods(ImageToNrrd-ViewSlices)-c needexecute"
+	    } else {
+		# increment Extract values and Paste index
+		if {$axis == 0} {
+		    global $mods(Extract-Smooth)-minDim0
+		    global $mods(Extract-Smooth)-maxDim0
+
+		    set prev [expr [set $mods(Extract-Smooth)-minDim0] + 1]
+		    set $mods(Extract-Smooth)-minDim0 $prev
+		    set $mods(Extract-Smooth)-maxDim0 [expr $prev + 1]
+		} elseif {$axis == 1} {
+		    global $mods(Extract-Smooth)-minDim1
+		    global $mods(Extract-Smooth)-maxDim1
+
+		    set prev [expr [set $mods(Extract-Smooth)-minDim1] + 1]
+		    set $mods(Extract-Smooth)-minDim1 $prev
+		    set $mods(Extract-Smooth)-maxDim1 [expr $prev + 1]
+		} else {
+		    global $mods(Extract-Smooth)-minDim2
+		    global $mods(Extract-Smooth)-maxDim2
+
+		    set prev [expr [set $mods(Extract-Smooth)-minDim2] + 1]
+		    set $mods(Extract-Smooth)-minDim2 $prev
+		    set $mods(Extract-Smooth)-maxDim2 [expr $prev + 1]
+		}
+		
+		global $mods(PasteImageFilter-Smooth)-index
+		set $mods(PasteImageFilter-Smooth)-index \
+		    [expr [set $mods(PasteImageFilter-Smooth)-index] + 1]
+
+		# Execute Extract Again
+		after 500 "$mods(Extract-Smooth)-c needexecute"
+	    }
+	} elseif {$which == $mods(ChooseImage-Hack) && \
+		      $state == "Completed"} {	    
+	    if {$smoothing_type == "Reset"} {
+		disableModule $mods(ChooseImage-SmoothInput) 1
+	    } else {
+		# Data has gotten to Choose module so disable it
+		# and then enable Extract and execute it
+		disableModule $mods(ChooseImage-SmoothInput) 1
+		disableModule $mods(Extract-Smooth) 0
+		
+		$mods(Extract-Smooth)-c needexecute
+	    }
+	} elseif {$which == $mods(ChooseNrrd-Reader) && $state == "JustStarted"} {
 	    change_indicate_val 1
 	    change_indicator_labels "Loading Volume..."
 	} elseif {$which == $mods(ChooseNrrd-Reader) && $state == "Completed"} {
@@ -2055,19 +2380,59 @@ class LevelSetSegmenterApp {
 
 	    configure_slice_sliders
 
-	    # Initialize segs array
+	    # Set Smoothing Paste and Extract values
 	    global axis
+	    global $mods(PasteImageFilter-Smooth)-size0
+	    global $mods(PasteImageFilter-Smooth)-size1
+	    global $mods(PasteImageFilter-Smooth)-size2
+	    global $mods(PasteImageFilter-Smooth)-index
+	    global $mods(PasteImageFilter-Smooth)-axis
+	    global $mods(PasteImageFilter-Smooth)-fill_value
+#  	    set $mods(PasteImageFilter-Smooth)-size0 [expr $size0 - 1]
+#  	    set $mods(PasteImageFilter-Smooth)-size1 [expr $size1 - 1]
+#  	    set $mods(PasteImageFilter-Smooth)-size2 [expr $size2 - 1]
+ 	    set $mods(PasteImageFilter-Smooth)-size0 $size0
+ 	    set $mods(PasteImageFilter-Smooth)-size1 $size1
+ 	    set $mods(PasteImageFilter-Smooth)-size2 $size2
+	    set $mods(PasteImageFilter-Smooth)-index 0
+	    set $mods(PasteImageFilter-Smooth)-axis $axis
+	    set $mods(PasteImageFilter-Smooth)-fill_value 0
+
+	    global $mods(Extract-Smooth)-minDim0
+	    global $mods(Extract-Smooth)-minDim1
+	    global $mods(Extract-Smooth)-minDim2
+	    global $mods(Extract-Smooth)-maxDim0
+	    global $mods(Extract-Smooth)-maxDim1
+	    global $mods(Extract-Smooth)-maxDim2
+	    
+	    set $mods(Extract-Smooth)-minDim0 0
+	    set $mods(Extract-Smooth)-minDim1 0
+	    set $mods(Extract-Smooth)-minDim2 0
+# 	    set $mods(Extract-Smooth)-maxDim0 [expr $size0 - 1]
+# 	    set $mods(Extract-Smooth)-maxDim1 [expr $size1 - 1]
+# 	    set $mods(Extract-Smooth)-maxDim2 [expr $size2 - 1]
+	    set $mods(Extract-Smooth)-maxDim0 $size0
+	    set $mods(Extract-Smooth)-maxDim1 $size1
+	    set $mods(Extract-Smooth)-maxDim2 $size2
+
+	    # Initialize segs array
 	    set extent 0
 	    set scale 0
 	    if {$axis == 0} {
 		set extent $size0
 		set scale $size2
+		set $mods(Extract-Smooth)-minDim0 0
+		set $mods(Extract-Smooth)-maxDim0 1
 	    } elseif {$axis == 1} {
 		set extent $size1
 		set scale $size1
+		set $mods(Extract-Smooth)-minDim1 0
+		set $mods(Extract-Smooth)-maxDim1 1
 	    } else {
 		set extent $size2
 		set scale $size0
+		set $mods(Extract-Smooth)-minDim2 0
+		set $mods(Extract-Smooth)-maxDim2 1
 	    }
 
 	    for {set i 0} {$i < $extent} {incr i} {
@@ -2125,19 +2490,25 @@ class LevelSetSegmenterApp {
 	    change_indicator_labels "Peforming GradientAnisotropicDiffusion Smoothing..."
 	} elseif {$which == $mods(Smooth-Gradient) && $state == "Completed"} { 
 	    change_indicate_val 2
-	    change_indicator_labels "Done Performing GradientAnisotropicDiffusion Smoothing"
+	    if {$smoothing == 0} {
+		change_indicator_labels "Done Performing GradientAnisotropicDiffusion Smoothing"
+	    }
 	} elseif {$which == $mods(Smooth-Curvature) && $state == "JustStarted"} {
 	    change_indicate_val 1
 	    change_indicator_labels "Peforming CurvatureAnisotropicDiffusion Smoothing..."
 	} elseif {$which == $mods(Smooth-Curvature) && $state == "Completed"} { 
 	    change_indicate_val 2
-	    change_indicator_labels "Done Performing CurvatureAnisotropicDiffusion Smoothing"
+	    if {$smoothing == 0} {
+		change_indicator_labels "Done Performing CurvatureAnisotropicDiffusion Smoothing"
+	    }
 	} elseif {$which == $mods(Smooth-Blur) && $state == "JustStarted"} {
 	    change_indicate_val 1
 	    change_indicator_labels "Peforming Gaussian Blurring..."
 	} elseif {$which == $mods(Smooth-Blur) && $state == "Completed"} { 
 	    change_indicate_val 2
-	    change_indicator_labels "Done Performing Gaussian Blurring"
+	    if {$smoothing == 0} {
+		change_indicator_labels "Done Performing Gaussian Blurring"
+	    }
 	} elseif {$which == $mods(ShowField-Feature) && $state == "JustStarted"} { 
 	    change_indicate_val 1
 	} elseif {$which == $mods(ShowField-Feature) && $state == "Completed"} { 
@@ -2312,15 +2683,17 @@ class LevelSetSegmenterApp {
 	    } elseif {$v == 2} {
 		# Complete
 		set executing_modules [expr $executing_modules - 1]
-		if {$executing_modules == 0} {
-		    # only change indicator if progress isn't running
-		    set indicate 2
-		    change_indicator
-		} elseif {$executing_modules < 0} {
-		    # something wasn't caught, reset
-		    set executing_modules 0
-		    set indicate 2
-		    change_indicator
+		if {$smoothing == 0} {
+		    if {$executing_modules == 0} {
+			# only change indicator if progress isn't running
+			set indicate 2
+			change_indicator
+		    } elseif {$executing_modules < 0} {
+			# something wasn't caught, reset
+			set executing_modules 0
+			set indicate 2
+			change_indicator
+		    }
 		}
 	    }
 	}
@@ -2628,8 +3001,10 @@ class LevelSetSegmenterApp {
 	# Change UnuAxdelete axis
 	global $mods(UnuAxdelete-Feature)-axis
 	global $mods(UnuAxdelete-Prev)-axis
+	global $mods(UnuAxdelete-Smooth)-axis
 	set $mods(UnuAxdelete-Feature)-axis $axis
 	set $mods(UnuAxdelete-Prev)-axis $axis
+	set $mods(UnuAxdelete-Smooth)-axis $axis
 
 	# ExtractImageFilter
 	if {$axis == 0} {
@@ -2646,8 +3021,10 @@ class LevelSetSegmenterApp {
 	# PasteImageFilters
 	global $mods(PasteImageFilter-Binary)-axis
 	global $mods(PasteImageFilter-Float)-axis
+	global $mods(PasteImageFilter-Smooth)-axis
 	set $mods(PasteImageFilter-Binary)-axis $axis
 	set $mods(PasteImageFilter-Float)-axis $axis
+	set $mods(PasteImageFilter-Smooth)-axis $axis
 
 	# execute needed modules
 	$mods(ViewSlices)-c rebind $slice_frame
@@ -2698,19 +3075,21 @@ class LevelSetSegmenterApp {
 	# change attached/detached menu
 	$filter_menu1 select $which
 	$filter_menu2 select $which
-
 	
 	# enable/disable appropriate modules
 	# change ChooseImage port
 	# pack/forget appropriate ui
 
 	global $mods(ChooseImage-Smooth)-port-index
+	global $mods(ChooseImage-ToSmooth)-port-index
+	set $mods(ChooseImage-ToSmooth)-port-index 1
 	if {$which == "GradientAnisotropicDiffusion"} {
+	    set smoothing_method "GradientAnisotropicDiffusion"
 	    disableModule $mods(Smooth-Gradient) 0
 	    disableModule $mods(Smooth-Curvature) 1
 	    disableModule $mods(Smooth-Blur) 1
 
-	    set $mods(ChooseImage-Smooth)-port-index 1
+	    set $mods(ChooseImage-Smooth)-port-index 0
 
 	    pack forget $attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.curvature
 	    pack forget $detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.curvature
@@ -2722,11 +3101,12 @@ class LevelSetSegmenterApp {
 
 	    pack $detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.gradient -side top -anchor n -pady 4
 	} elseif {$which == "CurvatureAnisotropicDiffusion"} {
+	    set smoothing_method "CurvatureAnisotropicDiffusion"
 	    disableModule $mods(Smooth-Gradient) 1
 	    disableModule $mods(Smooth-Curvature) 0
 	    disableModule $mods(Smooth-Blur) 1
 
-	    set $mods(ChooseImage-Smooth)-port-index 2
+	    set $mods(ChooseImage-Smooth)-port-index 1
 
 	    pack forget $attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.gradient
 	    pack forget $detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.gradient
@@ -2738,11 +3118,12 @@ class LevelSetSegmenterApp {
 
 	    pack $detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.curvature -side top -anchor n -pady 4
 	} elseif {$which == "Gaussian"} {
+	    set smoothing_method "Gaussian"
 	    disableModule $mods(Smooth-Gradient) 1
 	    disableModule $mods(Smooth-Curvature) 1
 	    disableModule $mods(Smooth-Blur) 0
 
-	    set $mods(ChooseImage-Smooth)-port-index 3
+	    set $mods(ChooseImage-Smooth)-port-index 2
 
 	    pack forget $attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.gradient
 	    pack forget $detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.gradient
@@ -2754,55 +3135,117 @@ class LevelSetSegmenterApp {
 
 	    pack $detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.blur -side top -anchor n -pady 4
 	} else {
+	    set smoothing_method "None"
 	    # no smoothing
 	    disableModule $mods(Smooth-Gradient) 1
 	    disableModule $mods(Smooth-Curvature) 1
 	    disableModule $mods(Smooth-Blur) 1
 
+	    # Doesn't matter
 	    set $mods(ChooseImage-Smooth)-port-index 0
+
+	    # Change ToSmooth
+	    set $mods(ChooseImage-ToSmooth)-port-index 0
+
 	}
 
 #	set filter_enabled 1
     }
 
-    method smooth_data {} {
+    method smooth_data {type} {
 	global mods
 
-	# make sure one of the filters is enabled, if not
-	# enable GradientAnistropicDiffusion smoother
-# 	if {$filter_enabled == 0} {
-# 	    $filter_menu1 select "GradientAnisotropicDiffusion"
-# 	    $this change_filter $filter_menu1
-# 	}
-
-# 	# enable Next button
-# 	$attachedPFr.$next_smooth configure -state normal \
-# 	    -activebackground $next_color \
-# 	    -background $next_color 
-# 	$detachedPFr.$next_smooth configure -state normal \
-# 	    -activebackground $next_color \
-# 	    -background $next_color
-	
-
-	# set 2D viewer to use smoothed data as input
-	global $mods(ChooseNrrd-2D)-port-index
-	set $mods(ChooseNrrd-2D)-port-index 1
-	
-	set which [$filter_menu1 get]
-	# execute appropriate filter
-	if {$region_changed == 1} {
-	    $mods(ChooseNrrd-Crop)-c needexecute
-	} elseif {$which == "GradientAnisotropicDiffusion"} {
-	    $mods(Smooth-Gradient)-c needexecute
-	} elseif {$which == "CurvatureAnisotropicDiffusion"} {
-	    $mods(Smooth-Curvature)-c needexecute
-	} elseif {$which == "Gaussian"} {
-	    $mods(Smooth-Blur)-c needexecute
+	global $mods(ChooseImage-SmoothInput)-port-index
+	if {$type == "Go" && $has_smoothed == 1} {
+	    set $mods(ChooseImage-SmoothInput)-port-index 1
+	    set type "Go"
+	    set smoothing_type "Go"
 	} else {
-	    $mods(ChooseImage-Smooth)-c needexecute
+	    set $mods(ChooseImage-SmoothInput)-port-index 0
+	    set type "Reset"
+	    set smoothing_type "Reset"
 	}
-	set has_smoothed 1
-	set region_changed 0
+
+	# Reset Paste and Extract values
+	global axis
+
+	global $mods(PasteImageFilter-Smooth)-size0
+	global $mods(PasteImageFilter-Smooth)-size1
+	global $mods(PasteImageFilter-Smooth)-size2
+	global $mods(PasteImageFilter-Smooth)-index
+	global $mods(PasteImageFilter-Smooth)-axis
+	global $mods(PasteImageFilter-Smooth)-fill_value
+# 	set $mods(PasteImageFilter-Smooth)-size0 [expr $size0 - 1]
+# 	set $mods(PasteImageFilter-Smooth)-size1 [expr $size1 - 1]
+# 	set $mods(PasteImageFilter-Smooth)-size2 [expr $size2 - 1]
+	set $mods(PasteImageFilter-Smooth)-size0 $size0
+	set $mods(PasteImageFilter-Smooth)-size1 $size1
+	set $mods(PasteImageFilter-Smooth)-size2 $size2
+	set $mods(PasteImageFilter-Smooth)-index 0
+	set $mods(PasteImageFilter-Smooth)-axis $axis
+	set $mods(PasteImageFilter-Smooth)-fill_value 0
+
+	global $mods(Extract-Smooth)-minDim0
+	global $mods(Extract-Smooth)-minDim1
+	global $mods(Extract-Smooth)-minDim2
+	global $mods(Extract-Smooth)-maxDim0
+	global $mods(Extract-Smooth)-maxDim1
+	global $mods(Extract-Smooth)-maxDim2
+	
+	set $mods(Extract-Smooth)-minDim0 0
+	set $mods(Extract-Smooth)-minDim1 0
+	set $mods(Extract-Smooth)-minDim2 0
+# 	set $mods(Extract-Smooth)-maxDim0 [expr $size0 - 1]
+# 	set $mods(Extract-Smooth)-maxDim1 [expr $size1 - 1]
+# 	set $mods(Extract-Smooth)-maxDim2 [expr $size2 - 1]
+	set $mods(Extract-Smooth)-maxDim0 $size0
+	set $mods(Extract-Smooth)-maxDim1 $size1
+	set $mods(Extract-Smooth)-maxDim2 $size2
+
+	if {$axis == 0} {
+	    set $mods(Extract-Smooth)-minDim0 0
+	    set $mods(Extract-Smooth)-maxDim0 1
+	} elseif {$axis == 1} {
+	    set $mods(Extract-Smooth)-minDim1 0
+	    set $mods(Extract-Smooth)-maxDim1 1
+	} else {
+	    set $mods(Extract-Smooth)-minDim2 0
+	    set $mods(Extract-Smooth)-maxDim2 1
+	}
+
+	# Make sure a filter has been selected
+	if {[string equal $smoothing_method "None"] == 0} {
+
+	    if {$type == "Reset"} {
+		# Enable extract and paste module
+		disableModule $mods(Extract-Smooth) 0
+		disableModule $mods(PasteImageFilter-Smooth) 0
+		
+		# disable downstream modules so loop of smoothing
+		# can execute
+		disableModule $mods(ChooseImage-ToSmooth) 1
+		disableModule $mods(ImageToNrrd-ViewSlices) 0
+		
+		# execute
+		set smoothing 1
+		disableModule $mods(ChooseImage-SmoothInput) 0
+		
+		after 500 "$mods(ChooseImage-SmoothInput)-c needexecute"
+	    } else {
+		disableModule $mods(PasteImageFilter-Smooth) 0
+
+		# We have to get previously blurred data to
+		# Choose module before enabling downstream modules
+		disableModule $mods(ChooseImage-SmoothInput) 0
+		disableModule $mods(Extract-Smooth) 1
+
+		set smoothing 1
+		
+		# Execute choose, when it finishes, we will disable it
+		# and then enable downstream modules and execute them
+		after 500 "$mods(ChooseImage-SmoothInput)-c needexecute"
+	    }
+	}
     }
 
     method update_speed_image {} {
@@ -2833,6 +3276,8 @@ class LevelSetSegmenterApp {
     method initialize_segmentation {} {
 	if {!$segmentation_initialized} {
 	    global mods slice
+
+	    disableModule $mods(ChooseImage-ToSmooth) 0
 	    
 	    # Set segmenting slice to 0
 	    set slice 0
@@ -2904,12 +3349,12 @@ class LevelSetSegmenterApp {
 	    global $mods(PasteImageFilter-Binary)-index
 	    global $mods(PasteImageFilter-Binary)-axis
 	    global $mods(PasteImageFilter-Binary)-fill_value
- 	    set $mods(PasteImageFilter-Binary)-size0 [expr $size0 - 1]
- 	    set $mods(PasteImageFilter-Binary)-size1 [expr $size1 - 1]
- 	    set $mods(PasteImageFilter-Binary)-size2 [expr $size2 - 1]
-#	    set $mods(PasteImageFilter-Binary)-size0 $size0
-#	    set $mods(PasteImageFilter-Binary)-size1 $size1
-#	    set $mods(PasteImageFilter-Binary)-size2 $size2
+#  	    set $mods(PasteImageFilter-Binary)-size0 [expr $size0 - 1]
+#  	    set $mods(PasteImageFilter-Binary)-size1 [expr $size1 - 1]
+#  	    set $mods(PasteImageFilter-Binary)-size2 [expr $size2 - 1]
+ 	    set $mods(PasteImageFilter-Binary)-size0 $size0
+ 	    set $mods(PasteImageFilter-Binary)-size1 $size1
+ 	    set $mods(PasteImageFilter-Binary)-size2 $size2
 	    set $mods(PasteImageFilter-Binary)-index 0
 	    set $mods(PasteImageFilter-Binary)-axis $axis
 	    set $mods(PasteImageFilter-Binary)-fill_value 0
@@ -2920,12 +3365,12 @@ class LevelSetSegmenterApp {
 	    global $mods(PasteImageFilter-Float)-index
 	    global $mods(PasteImageFilter-Float)-axis
 	    global $mods(PasteImageFilter-Float)-fill_value
- 	    set $mods(PasteImageFilter-Float)-size0 [expr $size0 - 1]
- 	    set $mods(PasteImageFilter-Float)-size1 [expr $size1 - 1]
- 	    set $mods(PasteImageFilter-Float)-size2 [expr $size2 - 1]
-# 	    set $mods(PasteImageFilter-Float)-size0 $size0
-# 	    set $mods(PasteImageFilter-Float)-size1 $size1
-# 	    set $mods(PasteImageFilter-Float)-size2 $size2
+#  	    set $mods(PasteImageFilter-Float)-size0 [expr $size0 - 1]
+#  	    set $mods(PasteImageFilter-Float)-size1 [expr $size1 - 1]
+#  	    set $mods(PasteImageFilter-Float)-size2 [expr $size2 - 1]
+ 	    set $mods(PasteImageFilter-Float)-size0 $size0
+ 	    set $mods(PasteImageFilter-Float)-size1 $size1
+ 	    set $mods(PasteImageFilter-Float)-size2 $size2
 	    set $mods(PasteImageFilter-Float)-index 0
 	    set $mods(PasteImageFilter-Float)-axis $axis
 	    set $mods(PasteImageFilter-Float)-fill_value 0
@@ -2939,22 +3384,12 @@ class LevelSetSegmenterApp {
 	    disableModule $mods(ExtractSlice) 0
 
 	    # disable downstream modules
-#	    disableModule $mods(ImageToField-Seeds) 1
-#	    disableModule $mods(ImageToField-Seg) 1
-#	    disableModule $mods(GenStandard-Seg) 1
 	    disableModule $mods(PasteImageFilter-Binary) 1
 	    disableModule $mods(PasteImageFilter-Float) 1
 
-#	    disableModule $mods(ImageToField-Seeds) 1
-#	    disableModule $mods(SampleField-Seeds) 1
-#	    disableModule $mods(BuildSeedVolume) 1
-#	    disableModule $mods(ImageToField-SeedsNeg) 1
-#	    disableModule $mods(SampleField-SeedsNeg) 1
-#	    disableModule $mods(BuildSeedVolume-Neg) 1
 	    disableModule $mods(ImageToNrrd-Vol) 1
 
 	    # execute feature image stuff
-	    #$mods(ExtractSlice)-c needexecute
 	    $mods(SampleField-Seeds) send
 	    $mods(SampleField-SeedsNeg) send
 
@@ -3223,7 +3658,7 @@ class LevelSetSegmenterApp {
 	set segmenting 1
 	$mods(LevelSet)-c needexecute
 	
-	after 800 "set $mods(LevelSet)-max_iterations 0"
+	after 500 "set $mods(LevelSet)-max_iterations 0"
 
 	global slice
 	if {$segs($slice) == 2} {
@@ -3749,6 +4184,12 @@ class LevelSetSegmenterApp {
     variable region_changed
 
     variable updating_crop_widget
+
+    variable smoothing
+
+    variable smoothing_method
+
+    variable smoothing_type
 }
 
 LevelSetSegmenterApp app
