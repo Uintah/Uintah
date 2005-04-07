@@ -67,6 +67,15 @@ ForwardIPM::ForwardIPM(GuiContext* ctx)
 void
 ForwardIPM::execute()
 {
+  // Construct our command line.
+  string command = "echo Hello World";
+
+  // Execute the command.  Last arg just a tmp file for logging.
+  if (!Exec_execute_command(this, command, "/tmp/ForwardIPM"))
+  {
+    error("The ipm program failed to run for some unknown reason.");
+    return;
+  }
 }
 
 
