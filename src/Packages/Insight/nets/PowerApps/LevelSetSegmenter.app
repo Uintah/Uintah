@@ -3326,9 +3326,12 @@ class LevelSetSegmenterApp {
 	    set $mods(ExtractSlice)-minDim0 0
 	    set $mods(ExtractSlice)-minDim1 0
 	    set $mods(ExtractSlice)-minDim2 0
-	    set $mods(ExtractSlice)-maxDim0 [expr $size0 - 1]
-	    set $mods(ExtractSlice)-maxDim1 [expr $size1 - 1]
-	    set $mods(ExtractSlice)-maxDim2 [expr $size2 - 1]
+# 	    set $mods(ExtractSlice)-maxDim0 [expr $size0 - 1]
+# 	    set $mods(ExtractSlice)-maxDim1 [expr $size1 - 1]
+# 	    set $mods(ExtractSlice)-maxDim2 [expr $size2 - 1]
+	    set $mods(ExtractSlice)-maxDim0 $size0
+	    set $mods(ExtractSlice)-maxDim1 $size1
+	    set $mods(ExtractSlice)-maxDim2 $size2
 
 	    global axis
 	    if {$axis == 0} {
@@ -3504,9 +3507,12 @@ class LevelSetSegmenterApp {
 	    set $mods(Extract-Prev)-minDim0 0
 	    set $mods(Extract-Prev)-minDim1 0
 	    set $mods(Extract-Prev)-minDim2 0
-	    set $mods(Extract-Prev)-maxDim0 [expr $size0 - 1]
-	    set $mods(Extract-Prev)-maxDim1 [expr $size1 - 1]
-	    set $mods(Extract-Prev)-maxDim2 [expr $size2 - 1]
+# 	    set $mods(Extract-Prev)-maxDim0 [expr $size0 - 1]
+# 	    set $mods(Extract-Prev)-maxDim1 [expr $size1 - 1]
+# 	    set $mods(Extract-Prev)-maxDim2 [expr $size2 - 1]
+	    set $mods(Extract-Prev)-maxDim0 $size0
+	    set $mods(Extract-Prev)-maxDim1 $size1
+	    set $mods(Extract-Prev)-maxDim2 $size2
 	    global axis
 	    global slice
 	    if {$slice == 0} {
@@ -3552,9 +3558,12 @@ class LevelSetSegmenterApp {
 	    set $mods(Extract-Prev)-minDim0 0
 	    set $mods(Extract-Prev)-minDim1 0
 	    set $mods(Extract-Prev)-minDim2 0
-	    set $mods(Extract-Prev)-maxDim0 [expr $size0 - 1]
-	    set $mods(Extract-Prev)-maxDim1 [expr $size1 - 1]
-	    set $mods(Extract-Prev)-maxDim2 [expr $size2 - 1]
+# 	    set $mods(Extract-Prev)-maxDim0 [expr $size0 - 1]
+# 	    set $mods(Extract-Prev)-maxDim1 [expr $size1 - 1]
+# 	    set $mods(Extract-Prev)-maxDim2 [expr $size2 - 1]
+	    set $mods(Extract-Prev)-maxDim0 $size0
+	    set $mods(Extract-Prev)-maxDim1 $size1
+	    set $mods(Extract-Prev)-maxDim2 $size2
 	    global axis
 	    global slice
 	    set next [expr $slice + 1]
@@ -3603,9 +3612,12 @@ class LevelSetSegmenterApp {
 	    set $mods(Extract-Prev)-minDim0 0
 	    set $mods(Extract-Prev)-minDim1 0
 	    set $mods(Extract-Prev)-minDim2 0
-	    set $mods(Extract-Prev)-maxDim0 [expr $size0 - 1]
-	    set $mods(Extract-Prev)-maxDim1 [expr $size1 - 1]
-	    set $mods(Extract-Prev)-maxDim2 [expr $size2 - 1]
+# 	    set $mods(Extract-Prev)-maxDim0 [expr $size0 - 1]
+# 	    set $mods(Extract-Prev)-maxDim1 [expr $size1 - 1]
+# 	    set $mods(Extract-Prev)-maxDim2 [expr $size2 - 1]
+	    set $mods(Extract-Prev)-maxDim0 $size0
+	    set $mods(Extract-Prev)-maxDim1 $size1
+	    set $mods(Extract-Prev)-maxDim2 $size2
 	    global axis
 	    global slice
 	    set next [expr $slice + 1]
