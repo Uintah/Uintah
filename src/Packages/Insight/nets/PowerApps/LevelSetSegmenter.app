@@ -88,7 +88,7 @@ set m13 [addModuleAtPosition "Insight" "Filters" "CurvatureAnisotropicDiffusionI
 set m14 [addModuleAtPosition "Insight" "Filters" "DiscreteGaussianImageFilter" 1074 961]
 
 # Create a Insight->Filters->ThresholdSegmentationLevelSetImageFilter Module
-set m15 [addModuleAtPosition "Insight" "Filters" "ThresholdSegmentationLevelSetImageFilter" 338 2086]
+set m15 [addModuleAtPosition "Insight" "Filters" "ThresholdSegmentationLevelSetImageFilter" 338 2328]
 
 # Create a Insight->Filters->ExtractImageFilter Module
 set m16 [addModuleAtPosition "Insight" "Filters" "ExtractImageFilter" 454 1246]
@@ -101,7 +101,7 @@ set Notes($m16-Color) {white}
 set m17 [addModuleAtPosition "Insight" "DataIO" "ChooseImage" 473 1042]
 
 # Create a Insight->Filters->BinaryThresholdImageFilter Module
-set m18 [addModuleAtPosition "Insight" "Filters" "BinaryThresholdImageFilter" 60 2209]
+set m18 [addModuleAtPosition "Insight" "Filters" "BinaryThresholdImageFilter" 60 2413]
 
 # Create a SCIRun->FieldsCreate->SeedPoints Module
 set m19 [addModuleAtPosition "SCIRun" "FieldsCreate" "SeedPoints" 709 1584]
@@ -128,29 +128,29 @@ set Notes($m22-Position) {def}
 set Notes($m22-Color) {white}
 
 # Create a Insight->DataIO->ImageFileWriter Module
-set m23 [addModuleAtPosition "Insight" "DataIO" "ImageFileWriter" 99 2749]
+set m23 [addModuleAtPosition "Insight" "DataIO" "ImageFileWriter" 99 2823]
 set Notes($m23) {Writer for 
 binary volume.}
 set Notes($m23-Position) {def}
 set Notes($m23-Color) {white}
 
 # Create a SCIRun->Visualization->RescaleColorMap Module
-set m24 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 422 2445]
+set m24 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 424 2614]
 
 # Create a Insight->Converters->ImageToNrrd Module
 set m25 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 129 1578]
 
 # Create a SCIRun->Visualization->RescaleColorMap Module
-set m26 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 898 2442]
+set m26 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 900 2611]
 
 # Create a SCIRun->Visualization->RescaleColorMap Module
-set m27 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 664 2439]
+set m27 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 666 2608]
 
 # Create a SCIRun->Visualization->RescaleColorMap Module
-set m28 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1159 2435]
+set m28 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1161 2604]
 
 # Create a Insight->Filters->PasteImageFilter Module
-set m29 [addModuleAtPosition "Insight" "Filters" "PasteImageFilter" 60 2671]
+set m29 [addModuleAtPosition "Insight" "Filters" "PasteImageFilter" 60 2745]
 set Notes($m29) {Execute from
 pressing Commit.}
 set Notes($m29-Position) {def}
@@ -184,43 +184,43 @@ set m36 [addModuleAtPosition "Insight" "Converters" "BuildSeedVolume" 727 1651]
 set m37 [addModuleAtPosition "SCIRun" "Render" "Viewer" 1069 3149]
 
 # Create a SCIRun->Visualization->ShowField Module
-set m38 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 404 2504]
+set m38 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 406 2673]
 
 # Create a SCIRun->Visualization->GenStandardColorMaps Module
-set m39 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 422 2384]
+set m39 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 424 2553]
 
 # Create a Insight->Converters->ImageToField Module
-set m40 [addModuleAtPosition "Insight" "Converters" "ImageToField" 404 2323]
+set m40 [addModuleAtPosition "Insight" "Converters" "ImageToField" 406 2491]
 set Notes($m40) {Current
 slice.}
 set Notes($m40-Position) {def}
 set Notes($m40-Color) {white}
 
 # Create a Insight->Converters->ImageToField Module
-set m41 [addModuleAtPosition "Insight" "Converters" "ImageToField" 880 2322]
+set m41 [addModuleAtPosition "Insight" "Converters" "ImageToField" 882 2491]
 set Notes($m41) {Segmentation
 result slice.}
 set Notes($m41-Position) {def}
 set Notes($m41-Color) {white}
 
 # Create a SCIRun->Visualization->ShowField Module
-set m42 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 880 2503]
+set m42 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 882 2672]
 
 # Create a SCIRun->Visualization->GenStandardColorMaps Module
-set m43 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 898 2382]
+set m43 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 900 2551]
 
 # Create a Insight->Converters->ImageToField Module
-set m44 [addModuleAtPosition "Insight" "Converters" "ImageToField" 1141 2313]
+set m44 [addModuleAtPosition "Insight" "Converters" "ImageToField" 1143 2482]
 set Notes($m44) {Speed
 image slice}
 set Notes($m44-Position) {def}
 set Notes($m44-Color) {white}
 
 # Create a SCIRun->Visualization->GenStandardColorMaps Module
-set m45 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1159 2373]
+set m45 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1161 2542]
 
 # Create a SCIRun->Visualization->ShowField Module
-set m46 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1141 2500]
+set m46 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1143 2669]
 
 # Create a Insight->Converters->ImageToNrrd Module
 set m47 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 399 1589]
@@ -232,7 +232,7 @@ set m48 [addModuleAtPosition "SCIRun" "Visualization" "GenTitle" 910 3070]
 set m49 [addModuleAtPosition "SCIRun" "Visualization" "GenTitle" 933 3010]
 
 # Create a Insight->Filters->PasteImageFilter Module
-set m50 [addModuleAtPosition "Insight" "Filters" "PasteImageFilter" 338 2672]
+set m50 [addModuleAtPosition "Insight" "Filters" "PasteImageFilter" 338 2746]
 set Notes($m50) {Execute from
 pressing Commit.}
 set Notes($m50-Position) {def}
@@ -307,33 +307,33 @@ set m69 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 454 1310]
 set m70 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxdelete" 454 1368]
 
 # Create a Insight->Converters->NrrdToImage Module
-set m71 [addModuleAtPosition "Insight" "Converters" "NrrdToImage" 454 1429]
+set m71 [addModuleAtPosition "Insight" "Converters" "NrrdToImage" 454 1428]
 
 # Create a Teem->UnuAtoM->UnuAxdelete Module
 set m72 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxdelete" 129 1637]
 
 # Create a Insight->Converters->FloatToUChar Module
-set m73 [addModuleAtPosition "Insight" "Converters" "FloatToUChar" 60 2607]
+set m73 [addModuleAtPosition "Insight" "Converters" "FloatToUChar" 60 2681]
 
 # Create a Insight->DataIO->ImageFileWriter Module
-set m74 [addModuleAtPosition "Insight" "DataIO" "ImageFileWriter" 382 2749]
+set m74 [addModuleAtPosition "Insight" "DataIO" "ImageFileWriter" 382 2823]
 set Notes($m74) {Writer for
 float volume.}
 set Notes($m74-Position) {def}
 set Notes($m74-Color) {white}
 
 # Create a Teem->Converters->NrrdToField Module
-set m75 [addModuleAtPosition "Teem" "Converters" "NrrdToField" 646 2318]
+set m75 [addModuleAtPosition "Teem" "Converters" "NrrdToField" 648 2487]
 set Notes($m75) {Current
 seed slice}
 set Notes($m75-Position) {def}
 set Notes($m75-Color) {white}
 
 # Create a SCIRun->Visualization->ShowField Module
-set m76 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 646 2498]
+set m76 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 648 2667]
 
 # Create a SCIRun->Visualization->GenStandardColorMaps Module
-set m77 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 664 2380]
+set m77 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 666 2549]
 
 # Create a Insight->Converters->ImageToField Module
 set m78 [addModuleAtPosition "Insight" "Converters" "ImageToField" 963 1524]
@@ -380,7 +380,7 @@ set Notes($m84-Position) {def}
 set Notes($m84-Color) {white}
 
 # Create a Insight->Converters->NrrdToImage Module
-set m85 [addModuleAtPosition "Insight" "Converters" "NrrdToImage" 795 2003]
+set m85 [addModuleAtPosition "Insight" "Converters" "NrrdToImage" 801 2004]
 
 # Create a Insight->DataIO->ChooseImage Module
 set m86 [addModuleAtPosition "Insight" "DataIO" "ChooseImage" 473 639]
@@ -420,124 +420,141 @@ set m92 [addModuleAtPosition "Insight" "DataIO" "ChooseImage" 454 1180]
 # Create a Insight->DataIO->ChooseImage Module
 set m93 [addModuleAtPosition "Insight" "DataIO" "ChooseImage" 286 674]
 
+# Create a Insight->DataIO->ChooseImage Module
+set m94 [addModuleAtPosition "Insight" "DataIO" "ChooseImage" 338 2130]
+
+# Create a Insight->DataIO->ChooseImage Module
+set m95 [addModuleAtPosition "Insight" "DataIO" "ChooseImage" 338 2191]
+
+# Create a Insight->DataIO->ChooseImage Module
+set m96 [addModuleAtPosition "Insight" "DataIO" "ChooseImage" 338 2255]
+
+# Create a Insight->Converters->ImageToNrrd Module
+set m97 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 660 2338]
+
 # Create the Connections between Modules
- set c1 [addConnection $m36 0 $m83 0]
- set c2 [addConnection $m36 0 $m82 0]
- set c3 [addConnection $m73 0 $m29 0]
- set c4 [addConnection $m21 0 $m19 0]
- set c5 [addConnection $m40 0 $m38 0]
- set c6 [addConnection $m41 0 $m42 0]
- set c7 [addConnection $m44 0 $m46 0]
- set c8 [addConnection $m78 0 $m79 0]
- set c9 [addConnection $m25 0 $m72 0]
- set c10 [addConnection $m51 0 $m57 0]
- set c11 [addConnection $m51 0 $m34 0]
- set c12 [addConnection $m69 0 $m70 0]
- set c13 [addConnection $m89 0 $m90 0]
- set c14 [addConnection $m11 0 $m86 0]
- set c15 [addConnection $m11 0 $m92 0]
- set c16 [addConnection $m71 0 $m21 0]
- set c17 [addConnection $m71 0 $m40 0]
- set c18 [addConnection $m71 0 $m78 0]
- set c19 [addConnection $m71 0 $m20 0]
- set c20 [addConnection $m85 0 $m15 0]
- set c21 [addConnection $m91 0 $m13 0]
- set c22 [addConnection $m91 0 $m14 0]
- set c23 [addConnection $m91 0 $m12 0]
- set c24 [addConnection $m17 0 $m87 0]
- set c25 [addConnection $m86 0 $m93 0]
- set c26 [addConnection $m92 0 $m16 0]
- set c27 [addConnection $m93 0 $m88 0]
- set c28 [addConnection $m18 0 $m73 0]
- set c29 [addConnection $m18 0 $m41 0]
- set c30 [addConnection $m20 0 $m47 0]
- set c31 [addConnection $m16 0 $m69 0]
- set c32 [addConnection $m22 0 $m25 0]
- set c33 [addConnection $m88 0 $m89 0]
- set c34 [addConnection $m12 0 $m17 0]
- set c35 [addConnection $m29 0 $m23 0]
- set c36 [addConnection $m29 0 $m22 0]
- set c37 [addConnection $m50 0 $m51 0]
- set c38 [addConnection $m50 0 $m74 0]
- set c39 [addConnection $m87 0 $m31 0]
- set c40 [addConnection $m15 0 $m18 0]
- set c41 [addConnection $m15 0 $m50 0]
- set c42 [addConnection $m15 1 $m44 0]
- set c43 [addConnection $m19 1 $m36 0]
- set c44 [addConnection $m79 1 $m80 0]
- set c45 [addConnection $m30 0 $m32 0]
- set c46 [addConnection $m39 0 $m24 0]
- set c47 [addConnection $m43 0 $m26 0]
- set c48 [addConnection $m45 0 $m28 0]
- set c49 [addConnection $m77 0 $m27 0]
- set c50 [addConnection $m48 0 $m37 0]
- set c51 [addConnection $m54 0 $m56 0]
- set c52 [addConnection $m56 0 $m52 0]
- set c53 [addConnection $m7 0 $m8 0]
- set c54 [addConnection $m75 0 $m76 0]
- set c55 [addConnection $m1 0 $m4 0]
- set c56 [addConnection $m4 0 $m6 0]
- set c57 [addConnection $m4 0 $m9 0]
- set c58 [addConnection $m4 0 $m5 0]
- set c59 [addConnection $m4 0 $m10 0]
- set c60 [addConnection $m6 0 $m11 0]
- set c61 [addConnection $m6 0 $m65 0]
- set c62 [addConnection $m6 0 $m66 0]
- set c63 [addConnection $m6 0 $m67 0]
- set c64 [addConnection $m65 0 $m35 0]
- set c65 [addConnection $m65 0 $m68 0]
- set c66 [addConnection $m83 0 $m84 0]
- set c67 [addConnection $m57 0 $m54 0]
- set c68 [addConnection $m57 1 $m53 0]
- set c69 [addConnection $m64 0 $m59 0]
- set c70 [addConnection $m63 0 $m64 0]
- set c71 [addConnection $m84 0 $m85 0]
- set c72 [addConnection $m70 0 $m71 0]
- set c73 [addConnection $m72 0 $m81 0]
- set c74 [addConnection $m90 0 $m91 0]
- set c75 [addConnection $m60 0 $m61 0]
- set c76 [addConnection $m59 0 $m60 0]
- set c77 [addConnection $m80 0 $m84 1]
- set c78 [addConnection $m40 0 $m24 1]
- set c79 [addConnection $m41 0 $m26 1]
- set c80 [addConnection $m44 0 $m28 1]
- set c81 [addConnection $m31 0 $m65 1]
- set c82 [addConnection $m47 0 $m81 1]
- set c83 [addConnection $m51 0 $m62 1]
- set c84 [addConnection $m71 0 $m36 1]
- set c85 [addConnection $m71 0 $m80 1]
- set c86 [addConnection $m71 0 $m15 1]
- set c87 [addConnection $m13 0 $m17 1]
- set c88 [addConnection $m87 0 $m86 1]
- set c89 [addConnection $m87 0 $m92 1]
- set c90 [addConnection $m49 0 $m37 1]
- set c91 [addConnection $m58 0 $m52 1]
- set c92 [addConnection $m24 0 $m38 1]
- set c93 [addConnection $m26 0 $m42 1]
- set c94 [addConnection $m27 0 $m76 1]
- set c95 [addConnection $m28 0 $m46 1]
- set c96 [addConnection $m32 0 $m56 1]
- set c97 [addConnection $m75 0 $m27 1]
- set c98 [addConnection $m2 0 $m4 1]
- set c99 [addConnection $m81 0 $m82 1]
- set c100 [addConnection $m82 0 $m83 1]
- set c101 [addConnection $m5 0 $m6 1]
- set c102 [addConnection $m62 0 $m63 1]
- set c103 [addConnection $m53 0 $m54 1]
- set c104 [addConnection $m61 0 $m55 1]
- set c105 [addConnection $m14 0 $m17 2]
- set c106 [addConnection $m55 0 $m56 2]
- set c107 [addConnection $m33 0 $m35 2]
- set c108 [addConnection $m38 0 $m37 2]
- set c109 [addConnection $m3 0 $m4 2]
- set c110 [addConnection $m4 0 $m7 2]
- set c111 [addConnection $m57 1 $m62 2]
- set c112 [addConnection $m84 0 $m75 2]
- set c113 [addConnection $m42 0 $m37 3]
- set c114 [addConnection $m46 0 $m37 4]
- set c115 [addConnection $m76 0 $m37 5]
- set c116 [addConnection $m19 0 $m37 6]
- set c117 [addConnection $m79 0 $m37 7]
+set c1 [addConnection $m36 0 $m83 0]
+set c2 [addConnection $m36 0 $m82 0]
+set c3 [addConnection $m73 0 $m29 0]
+set c4 [addConnection $m21 0 $m19 0]
+set c5 [addConnection $m40 0 $m38 0]
+set c6 [addConnection $m41 0 $m42 0]
+set c7 [addConnection $m44 0 $m46 0]
+set c8 [addConnection $m78 0 $m79 0]
+set c9 [addConnection $m25 0 $m72 0]
+set c10 [addConnection $m51 0 $m57 0]
+set c11 [addConnection $m51 0 $m34 0]
+set c12 [addConnection $m69 0 $m70 0]
+set c13 [addConnection $m89 0 $m90 0]
+set c14 [addConnection $m11 0 $m86 0]
+set c15 [addConnection $m11 0 $m92 0]
+set c16 [addConnection $m71 0 $m21 0]
+set c17 [addConnection $m71 0 $m40 0]
+set c18 [addConnection $m71 0 $m78 0]
+set c19 [addConnection $m71 0 $m20 0]
+set c20 [addConnection $m85 0 $m94 0]
+set c21 [addConnection $m91 0 $m13 0]
+set c22 [addConnection $m91 0 $m14 0]
+set c23 [addConnection $m91 0 $m12 0]
+set c24 [addConnection $m17 0 $m87 0]
+set c25 [addConnection $m86 0 $m93 0]
+set c26 [addConnection $m92 0 $m16 0]
+set c27 [addConnection $m93 0 $m88 0]
+set c28 [addConnection $m94 0 $m95 0]
+set c29 [addConnection $m95 0 $m96 0]
+set c30 [addConnection $m96 0 $m97 0]
+set c31 [addConnection $m96 0 $m15 0]
+set c32 [addConnection $m18 0 $m73 0]
+set c33 [addConnection $m18 0 $m41 0]
+set c34 [addConnection $m20 0 $m47 0]
+set c35 [addConnection $m16 0 $m69 0]
+set c36 [addConnection $m22 0 $m25 0]
+set c37 [addConnection $m88 0 $m89 0]
+set c38 [addConnection $m12 0 $m17 0]
+set c39 [addConnection $m29 0 $m23 0]
+set c40 [addConnection $m29 0 $m22 0]
+set c41 [addConnection $m50 0 $m51 0]
+set c42 [addConnection $m50 0 $m74 0]
+set c43 [addConnection $m87 0 $m31 0]
+set c44 [addConnection $m15 0 $m18 0]
+set c45 [addConnection $m15 0 $m50 0]
+set c46 [addConnection $m15 1 $m44 0]
+set c47 [addConnection $m19 1 $m36 0]
+set c48 [addConnection $m79 1 $m80 0]
+set c49 [addConnection $m30 0 $m32 0]
+set c50 [addConnection $m39 0 $m24 0]
+set c51 [addConnection $m43 0 $m26 0]
+set c52 [addConnection $m45 0 $m28 0]
+set c53 [addConnection $m77 0 $m27 0]
+set c54 [addConnection $m48 0 $m37 0]
+set c55 [addConnection $m54 0 $m56 0]
+set c56 [addConnection $m56 0 $m52 0]
+set c57 [addConnection $m7 0 $m8 0]
+set c58 [addConnection $m75 0 $m76 0]
+set c59 [addConnection $m1 0 $m4 0]
+set c60 [addConnection $m4 0 $m6 0]
+set c61 [addConnection $m4 0 $m9 0]
+set c62 [addConnection $m4 0 $m5 0]
+set c63 [addConnection $m4 0 $m10 0]
+set c64 [addConnection $m6 0 $m11 0]
+set c65 [addConnection $m6 0 $m65 0]
+set c66 [addConnection $m6 0 $m66 0]
+set c67 [addConnection $m6 0 $m67 0]
+set c68 [addConnection $m65 0 $m35 0]
+set c69 [addConnection $m65 0 $m68 0]
+set c70 [addConnection $m83 0 $m84 0]
+set c71 [addConnection $m57 0 $m54 0]
+set c72 [addConnection $m57 1 $m53 0]
+set c73 [addConnection $m64 0 $m59 0]
+set c74 [addConnection $m63 0 $m64 0]
+set c75 [addConnection $m84 0 $m85 0]
+set c76 [addConnection $m70 0 $m71 0]
+set c77 [addConnection $m72 0 $m81 0]
+set c78 [addConnection $m90 0 $m91 0]
+set c79 [addConnection $m60 0 $m61 0]
+set c80 [addConnection $m59 0 $m60 0]
+set c81 [addConnection $m80 0 $m84 1]
+set c82 [addConnection $m40 0 $m24 1]
+set c83 [addConnection $m41 0 $m26 1]
+set c84 [addConnection $m44 0 $m28 1]
+set c85 [addConnection $m31 0 $m65 1]
+set c86 [addConnection $m47 0 $m81 1]
+set c87 [addConnection $m51 0 $m62 1]
+set c88 [addConnection $m71 0 $m36 1]
+set c89 [addConnection $m71 0 $m80 1]
+set c90 [addConnection $m71 0 $m15 1]
+set c91 [addConnection $m18 0 $m94 1]
+set c92 [addConnection $m13 0 $m17 1]
+set c93 [addConnection $m87 0 $m86 1]
+set c94 [addConnection $m87 0 $m92 1]
+set c95 [addConnection $m49 0 $m37 1]
+set c96 [addConnection $m58 0 $m52 1]
+set c97 [addConnection $m24 0 $m38 1]
+set c98 [addConnection $m26 0 $m42 1]
+set c99 [addConnection $m27 0 $m76 1]
+set c100 [addConnection $m28 0 $m46 1]
+set c101 [addConnection $m32 0 $m56 1]
+set c102 [addConnection $m75 0 $m27 1]
+set c103 [addConnection $m2 0 $m4 1]
+set c104 [addConnection $m81 0 $m82 1]
+set c105 [addConnection $m82 0 $m83 1]
+set c106 [addConnection $m5 0 $m6 1]
+set c107 [addConnection $m62 0 $m63 1]
+set c108 [addConnection $m53 0 $m54 1]
+set c109 [addConnection $m61 0 $m55 1]
+set c110 [addConnection $m97 0 $m75 2]
+set c111 [addConnection $m14 0 $m17 2]
+set c112 [addConnection $m55 0 $m56 2]
+set c113 [addConnection $m33 0 $m35 2]
+set c114 [addConnection $m38 0 $m37 2]
+set c115 [addConnection $m3 0 $m4 2]
+set c116 [addConnection $m4 0 $m7 2]
+set c117 [addConnection $m57 1 $m62 2]
+set c118 [addConnection $m42 0 $m37 3]
+set c119 [addConnection $m46 0 $m37 4]
+set c120 [addConnection $m76 0 $m37 5]
+set c121 [addConnection $m19 0 $m37 6]
+set c122 [addConnection $m79 0 $m37 7]
 
 
 # Set GUI variables
@@ -593,6 +610,7 @@ setGlobal $m19-widget 1
 setGlobal $m19-red 0.5
 setGlobal $m19-green 0.0
 setGlobal $m19-blue 0.0
+setGlobal $m19-auto_execute 0
 
 # BinaryThresholdImageFilter_1
 setGlobal $m20-inside_value {0}
@@ -832,6 +850,7 @@ setGlobal $m79-widget 1
 setGlobal $m79-red 0.0
 setGlobal $m79-green 0.0
 setGlobal $m79-blue 0.5
+setGlobal $m79-auto_execute 0
 
 # BuildSeedVolume_1
 setGlobal $m80-inside_value {1}
@@ -901,6 +920,9 @@ set mods(ExtractSlice) $m16
 set mods(BinaryThreshold-Slice) $m18
 set mods(ImageToField-Seg) $m41
 set mods(GenStandard-Seg) $m43
+set mods(ChooseImage-SegInput) $m94
+set mods(ChooseImage-Hack2) $m95
+set mods(ChooseImage-Hack3) $m96
 
 # Seeds
 set mods(BinaryThreshold-Seeds) $m20 
@@ -1091,10 +1113,10 @@ class LevelSetSegmenterApp {
 	set updating_crop_widget 0
 
 	set smoothing 0
-
 	set smoothing_method "None"
-
 	set smoothing_type "Reset"
+
+	set segmenting_type "Reset"
 
 
 	### Define Tooltips
@@ -1790,10 +1812,14 @@ class LevelSetSegmenterApp {
 	    pack $segment.params.iter $segment.params.rms \
 		-side left -anchor nw
 	    frame $segment.buttons
-	    button $segment.buttons.start -text "Start" \
+	    button $segment.buttons.reset -text "Reset" \
 		-background $execute_color \
 		-activebackground $execute_active_color \
-		-command "$this start_segmentation"
+		-command "$this start_segmentation Reset"
+	    button $segment.buttons.go -text "Go" \
+		-background $execute_color \
+		-activebackground $execute_active_color \
+		-command "$this start_segmentation Go"
 	    button $segment.buttons.stop -text "Stop" \
 		-background "#990000" \
 		-activebackground "#CC0000" \
@@ -1802,8 +1828,8 @@ class LevelSetSegmenterApp {
 		-activebackground $next_color \
 		-background $next_color \
 		-command "$this commit_segmentation"
-	    pack $segment.buttons.start $segment.buttons.stop \
-		$segment.buttons.commit \
+	    pack $segment.buttons.reset $segment.buttons.go \
+		$segment.buttons.stop $segment.buttons.commit \
 		-side left -anchor n -padx 4 -pady 3 -expand yes \
 		-ipadx 2
 
@@ -2322,6 +2348,18 @@ class LevelSetSegmenterApp {
 		
 		$mods(Extract-Smooth)-c needexecute
 	    }
+	} elseif {$which == $mods(ChooseImage-Hack2) && \
+		      $state == "Completed"} {	    
+	    if {$segmenting_type == "Reset"} {
+		disableModule $mods(ChooseImage-SegInput) 1
+	    } else {
+		# Data has gotten to Choose module so disable it
+		# and then enable next Choose and execute it
+		disableModule $mods(ChooseImage-SegInput) 1
+		disableModule $mods(ChooseImage-Hack3) 0
+		
+		$mods(ChooseImage-Hack3)-c needexecute
+	    }
 	} elseif {$which == $mods(ChooseNrrd-Reader) && $state == "JustStarted"} {
 	    change_indicate_val 1
 	    change_indicator_labels "Loading Volume..."
@@ -2560,10 +2598,13 @@ class LevelSetSegmenterApp {
 		change_indicator_labels "Done Updating Speed Image"
 	    } elseif {$segmenting == 1} {
 		change_indicator_labels "Done Performing LevelSet Segmentation"
+		set has_segmented 1
 	    } 
 	    change_indicate_val 2
 	    set updating_speed 0
 	    set segmenting 0
+
+	    after 500 "set $mods(LevelSet)-max_iterations 0"
 	} elseif {$which == $mods(PasteImageFilter-Binary) && $state == "Completed"} { 
 	    if {$pasting_binary == 1} {
 #		disableModule $mods(Image2DTo3D-Binary) 1
@@ -3492,6 +3533,9 @@ class LevelSetSegmenterApp {
 	set show_seeds 1
 	$this seeds_changed 1 2 3
 
+	# Enable Choose module and disable Level Set
+	disableModule $mods(ChooseImage-SegInput) 0
+	disableModule $mods(LevelSet) 1
 
 	if {$seed_method == "points"} {
 	    $mods(SampleField-Seeds) send
@@ -3507,9 +3551,6 @@ class LevelSetSegmenterApp {
 	    set $mods(Extract-Prev)-minDim0 0
 	    set $mods(Extract-Prev)-minDim1 0
 	    set $mods(Extract-Prev)-minDim2 0
-# 	    set $mods(Extract-Prev)-maxDim0 [expr $size0 - 1]
-# 	    set $mods(Extract-Prev)-maxDim1 [expr $size1 - 1]
-# 	    set $mods(Extract-Prev)-maxDim2 [expr $size2 - 1]
 	    set $mods(Extract-Prev)-maxDim0 $size0
 	    set $mods(Extract-Prev)-maxDim1 $size1
 	    set $mods(Extract-Prev)-maxDim2 $size2
@@ -3558,9 +3599,6 @@ class LevelSetSegmenterApp {
 	    set $mods(Extract-Prev)-minDim0 0
 	    set $mods(Extract-Prev)-minDim1 0
 	    set $mods(Extract-Prev)-minDim2 0
-# 	    set $mods(Extract-Prev)-maxDim0 [expr $size0 - 1]
-# 	    set $mods(Extract-Prev)-maxDim1 [expr $size1 - 1]
-# 	    set $mods(Extract-Prev)-maxDim2 [expr $size2 - 1]
 	    set $mods(Extract-Prev)-maxDim0 $size0
 	    set $mods(Extract-Prev)-maxDim1 $size1
 	    set $mods(Extract-Prev)-maxDim2 $size2
@@ -3612,9 +3650,6 @@ class LevelSetSegmenterApp {
 	    set $mods(Extract-Prev)-minDim0 0
 	    set $mods(Extract-Prev)-minDim1 0
 	    set $mods(Extract-Prev)-minDim2 0
-# 	    set $mods(Extract-Prev)-maxDim0 [expr $size0 - 1]
-# 	    set $mods(Extract-Prev)-maxDim1 [expr $size1 - 1]
-# 	    set $mods(Extract-Prev)-maxDim2 [expr $size2 - 1]
 	    set $mods(Extract-Prev)-maxDim0 $size0
 	    set $mods(Extract-Prev)-maxDim1 $size1
 	    set $mods(Extract-Prev)-maxDim2 $size2
@@ -3649,8 +3684,24 @@ class LevelSetSegmenterApp {
 	}
     }
 
-    method start_segmentation {} {
+    method start_segmentation {type} {
 	global max_iter mods
+
+
+	global $mods(ChooseImage-SegInput)-port-index
+	if {$type == "Go" && $has_segmented == 1} {
+	    set $mods(ChooseImage-SegInput)-port-index 1
+	    set type "Go"
+	    set segmenting_type "Go"
+	} else {
+	    set $mods(ChooseImage-SegInput)-port-index 0
+	    set type "Reset"
+	    set segmenting_type "Reset"
+	}
+
+	# enable LevelSet
+	disableModule $mods(LevelSet) 0
+
 	global $mods(LevelSet)-max_iterations
 	# set level set max iterations to be what 
 	# global max_iter is and then after execute
@@ -3666,11 +3717,20 @@ class LevelSetSegmenterApp {
 	set show_seeds 0
 	$this seeds_changed 1 2 3 
 	
-	# execute Level Set
 	set segmenting 1
-	$mods(LevelSet)-c needexecute
-	
-	after 500 "set $mods(LevelSet)-max_iterations 0"
+	if {$type == "Reset"} {
+	    disableModule $mods(ChooseImage-Hack3) 0
+	    disableModule $mods(ChooseImage-SegInput) 0
+
+	    # execute Level Set
+#	    $mods(LevelSet)-c needexecute
+	    $mods(ChooseImage-SegInput)-c needexecute	   
+	} else {
+	    disableModule $mods(ChooseImage-SegInput) 0
+	    disableModule $mods(ChooseImage-Hack3) 1
+	    
+	    after 500 "$mods(ChooseImage-SegInput)-c needexecute"
+	}
 
 	global slice
 	if {$segs($slice) == 2} {
@@ -3736,6 +3796,12 @@ class LevelSetSegmenterApp {
 	global slice mods axis
 	# slice value changed via spinner so update
 
+	# Set ChooseImage-SegInput back to not use a this
+	# slice's previous segmentation since we are one a
+	# new slice
+	global $mods(ChooseImage-SegInput)-port-index
+	set $mods(ChooseImage-SegInput)-port-index 0
+	
 	# extract modules 
 	if {$axis == 0} {
 	    global $mods(ExtractSlice)-minDim0
@@ -3770,6 +3836,8 @@ class LevelSetSegmenterApp {
 
 	# udpate indicator
 	$this change_slice_icon $segs($slice)
+
+	set has_segmented 0
     }
 
     method update_volume_rendering {} {
@@ -4185,7 +4253,6 @@ class LevelSetSegmenterApp {
     variable has_segmented
     variable segmentation_initialized
     variable updating_speed
-    variable segmenting
     variable pasting_binary
     variable pasting_float
     
@@ -4198,10 +4265,11 @@ class LevelSetSegmenterApp {
     variable updating_crop_widget
 
     variable smoothing
-
     variable smoothing_method
-
     variable smoothing_type
+
+    variable segmenting_type
+    variable segmenting 
 }
 
 LevelSetSegmenterApp app
