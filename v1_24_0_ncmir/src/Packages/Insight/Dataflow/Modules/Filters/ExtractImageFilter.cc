@@ -132,8 +132,11 @@ void ExtractImageFilter::execute(){
     error("Unable to initialize oport 'OutputImage'.");
     return;
   }
-  if (!iimg_->get(imgH))
+  if (!iimg_->get(imgH)) {
+    error("Empty InputImage");
     return;
+  }
+
   if (!imgH.get_rep()) {
     error("Empty input Image.");
     return;
