@@ -31,7 +31,8 @@ using namespace Uintah;
 using namespace SCIRun;
 
 SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
-                                           ProblemSpecP& ps,SimulationStateP& d_sS, 
+                                           ProblemSpecP& ps,
+                                           SimulationStateP& d_sS, 
                                            MPMLabel* Mlb, MPMFlags* MFlag)
   : Contact(myworld, Mlb, MFlag, ps)
 {
@@ -40,7 +41,8 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
   std::string fname;
   ps->get("filename", fname);
   
-  ps->require("direction",d_direction);
+  IntVector defaultDir(0,0,1);
+  ps->getWithDefault("direction",d_direction, defaultDir);
   
   ps->getWithDefault("master_material", d_material, 0);
   d_matls.add(d_material); // always need specified material
