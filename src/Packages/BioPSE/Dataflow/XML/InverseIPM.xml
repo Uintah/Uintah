@@ -46,55 +46,23 @@
     <inputs lastportdynamic="no">
       <!-- one of (device port file) -->
       <port>
-	<name>Mesh</name>
-	<description>
-	  <p>Field containing the volume mesh</p>
-	</description>
+        <name>CondMesh</name>
 	<datatype>SCIRun::Field</datatype>
-	<componentname>FieldReader</componentname>
       </port>
       <port>
-	<name>Sources</name>
-	<description>
-	  <p>Either a PointCloudField&lt;Vector> (for dipoles) or a
-	  PointCloudField&lt;double> for current densities.</p>
-	</description>
+	<name>Electrodes</name>
 	<datatype>SCIRun::Field</datatype>
-	<componentname>FieldReader</componentname>
       </port>
       <port>
-	<name>Mapping</name>
-	<description>
-	  <p>Maps source nodes indicies to volume mesh nodes indices.</p>
-	</description>
+	<name>ElectrodePotentials</name>
 	<datatype>SCIRun::Matrix</datatype>
-	<componentname>MatrixReader</componentname>
-      </port>
-      <port>
-	<name>Input RHS</name>
-	<description>
-	  <p>(Optional) Handle to the matrix containing RHS for FE
-	  discretization obtained from SetupFEMatrix.</p>
-	</description>
-	<datatype>SCIRun::Matrix</datatype>
-	<componentname>SetupFEMatrix</componentname>
-	<componentname>MatrixReader</componentname>
       </port>
     </inputs>
 
     <outputs>
       <!-- one of (device port file) -->
       <port>
-	<name>Output RHS</name>
-	<description>
-	  <p>Sends handle to Matrix containing dipole terms to downstream modules</p>
-	</description>
-	<datatype>SCIRun::Matrix</datatype>
-	<componentname>SolveMatrix</componentname>
-	<componentname>MatrixWriter</componentname>
-      </port>
-      <port>
-        <name>Output Weights</name>
+	<name>Dipole</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>
