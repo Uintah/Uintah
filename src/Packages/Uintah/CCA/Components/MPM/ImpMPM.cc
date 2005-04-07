@@ -2406,6 +2406,8 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
     delt_vartype old_delT;
     old_dw->get(old_delT, d_sharedState->get_delt_label(), patch->getLevel());
 
+    double L = dx.minComponent();
+ 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -2426,6 +2428,16 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
       }
       ParticleSpeed = dx/ParticleSpeed;
       double delT_new = .8*ParticleSpeed.minComponent();
+
+      // Now find the stable dt for explicit conduction
+      double cp = mpm_matl->getSpecificHeat();
+      double kappa = mpm_matl->getThermalConductivity();
+      double rho_orig = mpm_matl->getInitialDensity();
+      double inv_thermalDiffusivity = cp*rho_orig/kappa;
+      double delT_cond = (L*L)*inv_thermalDiffusivity;
+
+      delT_new = min(delT_new, delT_cond);
+
       double old_dt=old_delT;
       if(d_numIterations <= d_num_iters_to_increase_delT){
         old_dt = d_delT_increase_factor*old_delT;
@@ -2434,8 +2446,12 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
         old_dt = d_delT_decrease_factor*old_delT;
       }
       delT_new = min(delT_new, old_dt);
+
+
       new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
                   lb->delTLabel);
+
+      
     }
    }
   }
