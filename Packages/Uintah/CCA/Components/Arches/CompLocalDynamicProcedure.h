@@ -194,6 +194,7 @@ private:
 			            const TimeIntegratorLabel* timelabels);
 
  protected:
+      double d_CF;
       double d_factorMesh; // lengthscale = fac_mesh*meshsize
       double d_filterl; // prescribed filter length scale
       double d_CFVar; // model constant for mixture fraction variance
