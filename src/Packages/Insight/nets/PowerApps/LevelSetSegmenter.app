@@ -558,11 +558,50 @@ set c122 [addConnection $m79 0 $m37 7]
 
 
 # Set GUI variables
-# NrrdReader_0
+# Determine if load file was passed in, 
+# and if it is an analyze file, otherwise it
+# defaults to use the nrrd reader (generic tab)
+global load_file
+set load_file ""
+global load_file_type
+set load_file_type "Generic"
 if {[netedit getenv LEVELSETSEGMENTER_LOAD_FILE] == ""} {
-    setGlobal $m1-filename "/usr/sci/data/Medical/ucsd/king_filt/king_filt-full.nhdr"
+    set load_file  "/usr/sci/data/Medical/ucsd/king_filt/king_filt-full.nhdr"
+    set load_file_type "Generic"
 } else {
-    setGlobal $m1-filename "[netedit getenv LEVELSETSEGMENTER_LOAD_FILE]"
+    # Determine which reader to use by looking at file extension
+    set index [string last "." [netedit getenv LEVELSETSEGMENTER_LOAD_FILE]]
+    if {$index > 0} {
+	set ext [string range [netedit getenv LEVELSETSEGMENTER_LOAD_FILE] $index end]
+
+	if {[string equal $ext ".hdr"] == 1} {
+	    # Analyze file
+	    set load_file [netedit getenv LEVELSETSEGMENTER_LOAD_FILE]
+	    set load_file_type "Analyze"
+	} else {
+	    # Some other file, hopefully something the generic
+	    # tab (NrrdReader) can handle -- DICOM can't be read
+	    # in via command line
+	    set load_file [netedit getenv LEVELSETSEGMENTER_LOAD_FILE]
+	    set load_file_type "Generic"
+	}
+    } else {
+	set load_file  "/usr/sci/data/Medical/ucsd/king_filt/king_filt-full.nhdr"
+	set load_file_type "Generic"
+    }
+}
+
+# NrrdReader_0
+if {[string equal $load_file_type "Generic"] == 1} {
+    setGlobal $m1-filename $load_file
+}
+
+
+# AnalyzeNrrdReader_0
+if {[string equal $load_file_type "Analyze"] == 1} {
+    setGlobal $m3-file $load_file
+    setGlobal $m3-num-files {1}
+    setGlobal $m3-filenames0 $load_file
 }
 
 # UnuCrop_0
@@ -1063,7 +1102,8 @@ class LevelSetSegmenterApp {
 	set curr_proc_tab "Load"
 	set proc_tab1 ""
 	set proc_tab2 ""
-	set curr_data_tab "Generic"
+	global load_file_type
+	set curr_data_tab $load_file_type
 	set data_tab1 ""
 	set data_tab2 ""
 	set eviewer2 ""
@@ -1117,6 +1157,8 @@ class LevelSetSegmenterApp {
 	set smoothing_type "Reset"
 
 	set segmenting_type "Reset"
+
+	set has_committed 0
 
 
 	### Define Tooltips
@@ -1338,12 +1380,13 @@ class LevelSetSegmenterApp {
 			  -command "$this set_curr_data_tab Analyze; $this configure_readers Analyze"]
 	    
 	    button $page.load -text "Analyze Loader" \
-		-command "this analyze_ui"
+		-command "$this analyze_ui"
 	    
 	    pack $page.load -side top -anchor n \
 		-padx 3 -pady 10 -ipadx 2 -ipady 2
 
-	    $load.tnb view "Generic"
+	    global load_file_type
+	    $load.tnb view $load_file_type
 
 	    # Viewing slices axis
 	    frame $load.axis
@@ -1862,7 +1905,7 @@ class LevelSetSegmenterApp {
 	    
 	    global $mods(ImageFileWriter-Binary)-filename
 	    button $step_tab.savebin.btn -text "Save Binary" \
-		-command "$this save_binary"
+		-command "$this save_binary" -state disabled
 	    label $step_tab.savebin.l -text "File:"
 	    entry $step_tab.savebin.e \
 		-textvariable $mods(ImageFileWriter-Binary)-filename
@@ -1873,7 +1916,7 @@ class LevelSetSegmenterApp {
 
 	    global $mods(ImageFileWriter-Float)-filename
 	    button $step_tab.savefl.btn -text " Save Float " \
-		-command "$this save_binary"
+		-command "$this save_float" -state disabled
 	    label $step_tab.savefl.l -text "File:"
 	    entry $step_tab.savefl.e \
 		-textvariable $mods(ImageFileWriter-Float)-filename
@@ -3790,6 +3833,13 @@ class LevelSetSegmenterApp {
 	    configure -background $execute_color \
 	    -activebackground $execute_active_color -state normal
 
+	set has_committed 1
+	# enable saving buttons
+	$attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page3.cs.savefl.btn configure -state normal
+	$detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page3.cs.savefl.btn configure -state normal
+
+	$attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page3.cs.savebin.btn configure -state normal
+	$detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page3.cs.savebin.btn configure -state normal
     }
 
     method current_slice_changed {} {
@@ -4270,6 +4320,8 @@ class LevelSetSegmenterApp {
 
     variable segmenting_type
     variable segmenting 
+
+    variable has_committed
 }
 
 LevelSetSegmenterApp app
