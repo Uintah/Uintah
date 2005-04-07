@@ -35,28 +35,22 @@
 #ifndef JGS_CARDIOWAVE_TIMEDATATILE_H
 #define JGS_CARDIOWAVE_TIMEDATATILE_H 1
 
+#include <Core/Thread/Time.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/NrrdString.h>
 #include <Core/Exceptions/Exception.h>
 
-#include <sci_defs/config_defs.h>
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#include <fcntl.h>
-#endif
 
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <string>
 #include <map>
 #include <vector>
+#include <list>
 #include <sgi_stl_warnings_on.h>
 
-
-#include <stdio.h>
 
 using namespace SCIRun;
 using namespace std;
@@ -110,6 +104,7 @@ class TimeDataFile {
   private:
   
     std::string datafilename;
+    std::list<std::string> datafilenames;
     std::string content;
     std::string encoding;
     std::string endian;
@@ -124,6 +119,12 @@ class TimeDataFile {
     int         ntype;
     int         dimension;
     std::map<std::string,std::string> keyvalue;
+    
+    int         start;
+    int         end;
+    int         step;
+    int         subdim;
+    bool        useformatting;
     
     
     bool        swapbytes;
