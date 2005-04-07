@@ -46,6 +46,9 @@
 #include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
 #include <Core/ImportExport/ExecConverter.h>
 #include <Core/Containers/StringUtil.h>
+#include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/PointCloudField.h>
+
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -58,6 +61,10 @@ public:
   ForwardIPM(GuiContext* ctx);
 
   virtual void execute();
+
+private:
+
+  bool write_par_file(string filename);
 };
 
 
@@ -67,6 +74,94 @@ ForwardIPM::ForwardIPM(GuiContext* ctx)
   : Module("ForwardIPM", ctx, Filter, "NeuroFEM", "BioPSE")
 {
 }
+
+
+static bool
+write_geo_file(ProgressReporter *pr, FieldHandle field, const char *filename)
+{
+  TetVolMesh *mesh = dynamic_cast<TetVolMesh *>(field->mesh().get_rep());
+  if (mesh == 0)
+  {
+    pr->error("Field does not contain a TetVolMesh.");
+    return false;
+  }
+
+  FILE *f = fopen(filename, "w");
+  if (f == NULL)
+  {
+    pr->error(string("Unable to open file '") + filename + "' for writing.");
+    return false;
+  }
+  
+  // Write it out.
+
+  fclose(f);
+  return true;
+}
+
+
+static bool
+write_elc_file(ProgressReporter *pr, FieldHandle fld, const char *filename)
+{
+  PointCloudMesh *mesh = dynamic_cast<PointCloudMesh *>(fld->mesh().get_rep());
+  if (mesh == 0)
+  {
+    pr->error("Field does not contain a PointCloudMesh.");
+    return false;
+  }
+
+  FILE *f = fopen(filename, "w");
+  if (f == NULL)
+  {
+    pr->error(string("Unable to open file '") + filename + "' for writing.");
+    return false;
+  }
+
+  fclose(f);
+  return true;
+}
+
+
+
+static bool
+write_dip_file(ProgressReporter *pr, FieldHandle fld, const char *filename)
+{
+  PointCloudField<Vector> *pcv =
+    dynamic_cast<PointCloudField<Vector> *>(fld.get_rep());
+  if (pcv == 0)
+  {
+    pr->error("Field is not a vector point cloud.");
+    return false;
+  }
+
+  FILE *f = fopen(filename, "w");
+  if (f == NULL)
+  {
+    pr->error(string("Unable to open file '") + filename + "' for writing.");
+    return false;
+  }
+
+  fclose(f);
+  return true;
+}
+
+
+bool
+ForwardIPM::write_par_file(string filename)
+{
+  FILE *f = fopen(filename.c_str(), "w");
+  if (f == NULL)
+  {
+    error("Unable to open file '" + filename + "' for writing.");
+    return false;
+  }
+
+  fprintf(f, "Random parameters\n");
+  
+  fclose(f);
+  return true;
+}
+
 
 
 void
@@ -120,48 +215,78 @@ ForwardIPM::execute()
 
   // Make our tmp directory
   const string tmpdir = "/tmp/ForwardIPM" + to_string(getpid());
-  mode_t umsk = umask(00);
-  mkdir(tmpdir.c_str(), 0700);
-  umask(umsk);
-
   const string tmplog = tmpdir + "forward.log";
   const string resultfile = tmpdir + "result.msr";
-
-  // Write out condmesh
   const string condmeshfile = tmpdir + "condmesh.geo";
   const string condtensfile = tmpdir + "ca_perm.knw";
-
-  // Write out Electrodes
   const string electrodefile = tmpdir + "electrode.elc";
-
-  // Write out Dipole
   const string dipolefile = tmpdir + "dipole.dip";
-
-  // Write out parameter file.
   const string parafile = tmpdir + "forward.par";
 
-  // Construct our command line.
-  const string impfile = "imp";
-  const string command = "(cd tmpfile;" + impfile + " -i sourcesimulation" +
-    " -h " + condmeshfile + " -p " + parafile + " -s " + electrodefile +
-    " -d " + dipolefile + " -o " + resultfile + " -fwd FEM -sens EEG)";
+  try {
+    // Make our tmp directory.
+    mode_t umsk = umask(00);
+    if (mkdir(tmpdir.c_str(), 0700) == -1)
+    {
+      error("Unable to open a temporary working directory.");
+      throw false;
+    }
+    umask(umsk);
 
-  // Execute the command.  Last arg just a tmp file for logging.
-  if (!Exec_execute_command(this, command, tmplog))
-  {
-    error("The ipm program failed to run for some unknown reason.");
-    return;
+    // Write out condmesh
+    if (!write_geo_file(this, condmesh, condmeshfile.c_str()))
+    {
+      error("Unable to export CondMesh file.");
+      throw false;
+    }
+
+    // Write out Electrodes
+    if (!write_elc_file(this, electrodes, electrodefile.c_str()))
+    {
+      error("Unable to export electrode file.");
+      throw false;
+    }
+
+    // Write out Dipole
+    if (!write_dip_file(this, dipole, dipolefile.c_str()))
+    {
+      error("Unable to export dipole file.");
+      throw false;
+    }
+
+    // Write out our parameter file.
+    if (!write_par_file(parafile)) { throw false; }
+
+    // Construct our command line.
+    const string impfile = "imp";
+    const string command = "(cd tmpfile;" + impfile + " -i sourcesimulation" +
+      " -h " + condmeshfile + " -p " + parafile + " -s " + electrodefile +
+      " -d " + dipolefile + " -o " + resultfile + " -fwd FEM -sens EEG)";
+
+    // Execute the command.  Last arg just a tmp file for logging.
+    if (!Exec_execute_command(this, command, tmplog))
+    {
+      error("The ipm program failed to run for some unknown reason.");
+      throw false;
+    }
+
+    // Read in the results and send them along.
+
+
+    throw true; // cleanup.
   }
-
-  // Clean up our temporary files.
-  unlink(condmeshfile.c_str());
-  unlink(condtensfile.c_str());
-  unlink(parafile.c_str());
-  unlink(electrodefile.c_str());
-  unlink(dipolefile.c_str());
-  unlink(resultfile.c_str());
-  unlink(tmplog.c_str());
-  rmdir(tmpdir.c_str());
+  catch (...)
+  {
+    // Clean up our temporary files.
+    unlink(condmeshfile.c_str());
+    unlink(condtensfile.c_str());
+    unlink(parafile.c_str());
+    unlink(electrodefile.c_str());
+    unlink(dipolefile.c_str());
+    unlink(resultfile.c_str());
+    unlink(tmplog.c_str());
+    rmdir(tmpdir.c_str());
+  }
 }
 
 
