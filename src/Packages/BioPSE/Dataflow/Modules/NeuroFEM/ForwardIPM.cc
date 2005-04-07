@@ -45,6 +45,11 @@
 #include <Core/ImportExport/Field/FieldIEPlugin.h>
 #include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
 #include <Core/ImportExport/ExecConverter.h>
+#include <Core/Containers/StringUtil.h>
+
+#include <sys/stat.h>
+#include <sys/types.h>
+
 
 namespace SCIRun {
 
@@ -67,15 +72,96 @@ ForwardIPM::ForwardIPM(GuiContext* ctx)
 void
 ForwardIPM::execute()
 {
+  FieldIPort *condmesh_port = (FieldIPort *)get_iport("CondMesh");
+  FieldHandle condmesh;
+  if (!(condmesh_port->get(condmesh) && condmesh.get_rep()))
+  {
+    warning("CondMesh field required to continue.");
+    return;
+  }
+
+  if (condmesh->mesh()->get_type_description()->get_name() != "TetVolMesh")
+  {
+    error("CondMesh must contain a TetVolMesh.");
+    return;
+  }
+  if (condmesh->query_tensor_interface(this) == 0)
+  {
+    error("CondMesh must be a tensor field.");
+    return;
+  }
+  if (condmesh->basis_order() != 0)
+  {
+    error("CondMesh must have conductivities at the cell centers.");
+    return;
+  }
+
+  FieldIPort *electrodes_port = (FieldIPort *)get_iport("Electrodes");
+  FieldHandle electrodes;
+  if (!(electrodes_port->get(electrodes) && electrodes.get_rep()))
+  {
+    warning("Electrodes field required to continue.");
+    return;
+  }
+  
+  FieldIPort *dipole_port = (FieldIPort *)get_iport("Dipole");
+  FieldHandle dipole;
+  if (!(dipole_port->get(dipole) && dipole.get_rep()))
+  {
+    warning("Dipole required to continue.");
+    return;
+  }
+
+  if (false) // Some dipole error checking.
+  {
+    error("Dipole must contain Vectors at Nodes.");
+    return;
+  }
+
+  // Make our tmp directory
+  const string tmpdir = "/tmp/ForwardIPM" + to_string(getpid());
+  mode_t umsk = umask(00);
+  mkdir(tmpdir.c_str(), 0700);
+  umask(umsk);
+
+  const string tmplog = tmpdir + "forward.log";
+  const string resultfile = tmpdir + "result.msr";
+
+  // Write out condmesh
+  const string condmeshfile = tmpdir + "condmesh.geo";
+  const string condtensfile = tmpdir + "ca_perm.knw";
+
+  // Write out Electrodes
+  const string electrodefile = tmpdir + "electrode.elc";
+
+  // Write out Dipole
+  const string dipolefile = tmpdir + "dipole.dip";
+
+  // Write out parameter file.
+  const string parafile = tmpdir + "forward.par";
+
   // Construct our command line.
-  string command = "echo Hello World";
+  const string impfile = "imp";
+  const string command = "(cd tmpfile;" + impfile + " -i sourcesimulation" +
+    " -h " + condmeshfile + " -p " + parafile + " -s " + electrodefile +
+    " -d " + dipolefile + " -o " + resultfile + " -fwd FEM -sens EEG)";
 
   // Execute the command.  Last arg just a tmp file for logging.
-  if (!Exec_execute_command(this, command, "/tmp/ForwardIPM"))
+  if (!Exec_execute_command(this, command, tmplog))
   {
     error("The ipm program failed to run for some unknown reason.");
     return;
   }
+
+  // Clean up our temporary files.
+  unlink(condmeshfile.c_str());
+  unlink(condtensfile.c_str());
+  unlink(parafile.c_str());
+  unlink(electrodefile.c_str());
+  unlink(dipolefile.c_str());
+  unlink(resultfile.c_str());
+  unlink(tmplog.c_str());
+  rmdir(tmpdir.c_str());
 }
 
 
