@@ -168,7 +168,6 @@ void ImageToNrrd::create_nrrd(ITKDatatypeHandle &img) {
     img_iter.operator++();
     ++i;
   }
-
   onrrd_handle_ = nout;
   
 }
@@ -275,7 +274,6 @@ bool ImageToNrrd::run( itk::Object* obj1)
 template<class InputImageType, unsigned nrrdtype>
 bool ImageToNrrd::run2( itk::Object* obj1) 
 {
-  cerr << "run2\n";
   InputImageType* n = dynamic_cast< InputImageType * >(obj1);
   if( !n ) {
     return false;
@@ -304,9 +302,11 @@ void ImageToNrrd::execute() {
 
   inport1_->get(inhandle1_);
   
-  if(!inhandle1_.get_rep())
+  if(!inhandle1_.get_rep()) {
+    error("No Data in InputImage port.");
     return;
-  
+  }
+
   // get input
   itk::Object *n = inhandle1_.get_rep()->data_.GetPointer();
   // can we operate on it?
