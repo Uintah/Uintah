@@ -603,7 +603,9 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
       return(false);  
     }
      
-    std::string header('\0',static_cast<size_t>(128));
+     
+    std::string header(static_cast<size_t>(128),'\0');
+
     header[0] = 'B';
     header[1] = 'B';
     header[2] = '1'; // We do not yet support byte vectors of size 2
@@ -614,13 +616,16 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
     std::ostringstream oss;
     oss << size;
     std::string ssize = oss.str();
+    std::cout << "before replace\n";
     header.replace(5,ssize.size(),ssize);
     
     // OK we created a header
+
     
     char *buffer = scinew char[size];
     
     for (int p=0;p<size;p++) buffer[p] = static_cast<char>(data[p]);
+
     
     FILE *fid =fopen(filename.c_str(),"w");
     if (fid == 0)
@@ -675,7 +680,8 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
       return(false);  
     }
      
-    std::string header('\0',static_cast<size_t>(128));
+    std::string header(static_cast<size_t>(128),'\0');
+
     header[0] = 'I';
     header[1] = 'B';
     header[2] = '4'; // We do not yet support byte vectors of size 2
@@ -747,7 +753,8 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
       return(false);  
     }
      
-    std::string header('\0',static_cast<size_t>(128));
+    std::string header(static_cast<size_t>(128),'\0');
+
     header[0] = 'B';
     header[1] = 'B';
     header[2] = '8'; // We do not yet support byte vectors of size 2
@@ -822,10 +829,11 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
         if (bwp < (cc[r]-p)) bwp = cc[r]-p;
         if (bwn > (cc[r]-p)) bwn = cc[r]-p;
       }
-      if ((rr[p+1]-rr[p]+diag)<nz) nz = (rr[p+1]-rr[p])+diag;
+      if ((rr[p+1]-rr[p]+diag)>nz) nz = (rr[p+1]-rr[p])+diag;
     }
     
-    std::string header('\0',static_cast<size_t>(128));
+    std::string header(static_cast<size_t>(128),'\0');
+
     header[0] = 'S';
     header[1] = 'B';
     header[2] = '8'; // We do not yet support byte vectors of size 2
@@ -860,16 +868,16 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
         s = cc[r];
         if (s == p)
         {
-          coef[s] = d[r];
+          coef[p] = d[r];
         }
         else
         {
           for (int t=1; t < nz; t++)
           {
-            if (jcoef[s+t*nrows] == p+1)
+            if (jcoef[p+t*nrows] == p+1)
             {
-              jcoef[s+t*nrows] = s+1;
-              coef[s+t*nrows] = d[r];
+              jcoef[p+t*nrows] = s+1;
+              coef[p+t*nrows] = d[r];
               break;
             }
           }  
