@@ -94,7 +94,7 @@ public:
   GuiDouble red_;
   GuiDouble green_;
   GuiDouble blue_;
-
+  GuiInt    gui_auto_execute_;
 };
 
 
@@ -109,7 +109,8 @@ SeedPoints::SeedPoints(GuiContext* ctx)
     gui_widget_(ctx->subVar("widget")),
     red_(ctx->subVar("red")),
     green_(ctx->subVar("green")),
-    blue_(ctx->subVar("blue"))
+    blue_(ctx->subVar("blue")),
+    gui_auto_execute_(ctx->subVar("auto_execute"))
 {
 }
 
@@ -438,7 +439,9 @@ SeedPoints::widget_moved(bool last, BaseWidget*)
 {
   if (last)
   {
-    want_to_execute();
+    if (gui_auto_execute_.get() == 1) {
+      want_to_execute();
+    }
   }
 }
 
