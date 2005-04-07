@@ -54,6 +54,9 @@ itcl_class SCIRun_FieldsCreate_SeedPoints {
 	set $this-green 0.5
 	global $this-blue
 	set $this-blue 0.5
+
+	global $this-auto_execute
+	set $this-auto_execute 1
     }
 
     method send {} {
@@ -139,6 +142,9 @@ itcl_class SCIRun_FieldsCreate_SeedPoints {
 
 	pack $w.f.slide $w.f.g -side bottom -expand yes -fill x
 	pack $w.f -side top -expand yes -fill both -padx 5 -pady 5
+
+	checkbutton $w.ex -text "Auto execute" \
+	    -variable $this-auto_execute
 	
     }
 }
