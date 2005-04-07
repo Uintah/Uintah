@@ -91,6 +91,7 @@ void
 CompLocalDynamicProcedure::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("Turbulence");
+  db->require("cf", d_CF);
   db->require("fac_mesh", d_factorMesh);
   db->require("filterl", d_filterl);
   db->require("var_const",d_CFVar); // const reqd by variance eqn
@@ -2662,6 +2663,25 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           new_dw->get(SHATIJ[ii], d_lab->d_filterStrainTensorCompLabel,
 		  ii, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
       }
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+	  IntVector currCell(colX, colY, colZ);
+	  double delta = cellinfo->sew[colX]*
+			 cellinfo->sns[colY]*cellinfo->stb[colZ];
+	  double filter = pow(delta, 1.0/3.0);
+
+	  double alphaIJ0, alphaIJ1, alphaIJ2, alphaIJ3, alphaIJ4, alphaIJ5;
+	  double alphaalpha, Lalpha, cbetaHATalpha;
+		(cbetaIJ[0])[currCell] =CsOld[currCell]*(betaIJ[0])[currCell]*filter*filter;
+		(cbetaIJ[1])[currCell] =CsOld[currCell]*(betaIJ[1])[currCell]*filter*filter;
+		(cbetaIJ[2])[currCell] =CsOld[currCell]*(betaIJ[2])[currCell]*filter*filter;
+		(cbetaIJ[3])[currCell] =CsOld[currCell]*(betaIJ[3])[currCell]*filter*filter;
+		(cbetaIJ[4])[currCell] =CsOld[currCell]*(betaIJ[4])[currCell]*filter*filter;
+		(cbetaIJ[5])[currCell] =CsOld[currCell]*(betaIJ[5])[currCell]*filter*filter;
+	  }
+	}
+      }
       for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++) {
           d_filter->applyFilter(pc, patch, cbetaIJ[ii], cbetaHATIJ[ii]);   
       }
@@ -2694,12 +2714,6 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 
 	  double alphaIJ0, alphaIJ1, alphaIJ2, alphaIJ3, alphaIJ4, alphaIJ5;
 	  double alphaalpha, Lalpha, cbetaHATalpha;
-		(cbetaIJ[0])[currCell] =CsOld[currCell]*(betaIJ[0])[currCell]*filter*filter;
-		(cbetaIJ[1])[currCell] =CsOld[currCell]*(betaIJ[1])[currCell]*filter*filter;
-		(cbetaIJ[2])[currCell] =CsOld[currCell]*(betaIJ[2])[currCell]*filter*filter;
-		(cbetaIJ[3])[currCell] =CsOld[currCell]*(betaIJ[3])[currCell]*filter*filter;
-		(cbetaIJ[4])[currCell] =CsOld[currCell]*(betaIJ[4])[currCell]*filter*filter;
-		(cbetaIJ[5])[currCell] =CsOld[currCell]*(betaIJ[5])[currCell]*filter*filter;
 		alphaIJ0 = filterDencur*IshatIcur*(shatij0-trace)*filter*filter*2.0*2.0;
 		alphaIJ1 = filterDencur*IshatIcur*(shatij1-trace)*filter*filter*2.0*2.0;
 		alphaIJ2 = filterDencur*IshatIcur*(shatij2-trace)*filter*filter*2.0*2.0;
