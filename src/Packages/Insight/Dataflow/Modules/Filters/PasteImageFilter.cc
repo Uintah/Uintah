@@ -282,8 +282,8 @@ void PasteImageFilter::execute(){
       
       int z = index_.get();
       if (mode_ == 0) {
-	for(int x=0; x<(int)size0_.get(); x++)
-	  for(int y=0; y<(int)size1_.get(); y++) {
+	for(int x=0; x<=(int)size0_.get(); x++)
+	  for(int y=0; y<=(int)size1_.get(); y++) {
 	    
 	    SliceImageTypeUChar::IndexType slice_pixel;
 	    VolumeImageTypeUChar::IndexType vol_pixel;
@@ -297,8 +297,8 @@ void PasteImageFilter::execute(){
 	    volume0->SetPixel(vol_pixel, slice0->GetPixel(slice_pixel));
 	  }
       } else {
-	for(int x=0; x<(int)size0_.get(); x++)
-	  for(int y=0; y<(int)size1_.get(); y++) {
+	for(int x=0; x<=(int)size0_.get(); x++)
+	  for(int y=0; y<=(int)size1_.get(); y++) {
 	    
 	    SliceImageTypeFloat::IndexType slice_pixel;
 	    VolumeImageTypeFloat::IndexType vol_pixel;
