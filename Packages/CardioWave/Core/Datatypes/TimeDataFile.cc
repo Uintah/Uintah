@@ -47,6 +47,21 @@
 #include <Packages/CardioWave/Core/Datatypes/TimeDataFile.h>
 
 using namespace SCIRun;
+using namespace std;
+
+#include <sys/stat.h>
+#include <Core/OS/Dir.h>  // for LSTAT
+
+#include <sci_defs/config_defs.h>
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#include <fcntl.h>
+#endif
+
+#include <stdio.h>
+#include <ctype.h>
+
 
 namespace CardioWave {
 
@@ -90,17 +105,43 @@ TimeDataFile::~TimeDataFile()
 {
 }
 
+
 void TimeDataFile::open(std::string filename)
 {
     std::ifstream file;
-    file.open(filename.c_str());
     
+    int ntries = 0;
+    bool success = false;
+    
+    // Since the header file maybe being updated
+    // This way the reader will try several times durin 5
+    // seconds to get access to it.
+    // It is not the best synchronization, unfortunately the
+    // nrrd format is ill designed and does not allow for
+    // dynamically adding files by using only a template of a
+    // file. Hence the use of this hack.
+    
+    while ((ntries < 10)&&(success == false))
+    {
+      try
+      {
+        file.open(filename.c_str());
+        success = true;
+        ntries++;
+      }
+      catch(...)
+      {
+        SCIRun::Time::waitFor(0.5);
+      }
+    }
+      
     ncols = 0;
     nrows = 0;
     byteskip = 0;
     lineskip = 0;
     keyvalue.clear();
     datafilename = "";
+    datafilenames.clear();
     content = "";
     endian = "";
     type = "";
@@ -108,6 +149,11 @@ void TimeDataFile::open(std::string filename)
     dimension = 0;
     ntype = 0;
     elemsize = 0;
+    subdim = 0;
+    start = 0;
+    end = 0;
+    step = 0;
+    useformatting = false;
 
     std::string line;
     
@@ -144,7 +190,43 @@ void TimeDataFile::open(std::string filename)
         
         if (cmp_nocase(keyword,"encoding") == 0) encoding = remspaces(attribute);
         if (cmp_nocase(keyword,"type") == 0) type = remspaces(attribute);
-        if (cmp_nocase(keyword,"datafile") == 0) datafilename = remspaces(attribute);
+        if (cmp_nocase(keyword,"datafile") == 0) 
+        {
+          std::string::size_type percent = attribute.find('%');
+          if (percent < attribute.size())
+          {
+             std::istringstream iss(attribute); 
+             iss >> datafilename;
+             iss >> start;
+             iss >> end;
+             iss >> step;
+             iss >> subdim;
+             useformatting = true;
+          }
+          else
+          {
+              datafilename = remspaces(attribute);
+          }
+
+          if (datafilename.size() >= 4)
+          {
+            if (datafilename.substr(0,4) == "LIST")
+            {
+              if(datafilename.size() > 4)
+              {
+                std::istringstream iss(datafilename.substr(4));
+                subdim = 0;
+                iss >> subdim;
+              }
+              while(!file.eof())
+              { 
+                getline(file,line);
+                numlines++;
+                datafilenames.push_back(remspaces(line));
+              }
+            }
+          }
+        }
         if (cmp_nocase(keyword,"content") == 0) content = attribute;
         if (cmp_nocase(keyword,"sampleunits") == 0) unit = remspaces(attribute);
         if (cmp_nocase(keyword,"endian") == 0) endian = remspaces(attribute);
@@ -156,7 +238,7 @@ void TimeDataFile::open(std::string filename)
         if (cmp_nocase(keyword,"lineskip") == 0)
         { 
           std::istringstream iss(attribute);
-          iss >> dimension;
+          iss >> lineskip;
         }
 
         if (cmp_nocase(keyword,"sizes") == 0)
@@ -165,8 +247,15 @@ void TimeDataFile::open(std::string filename)
           iss >> nrows;
           iss >> ncols;
         }
-      }
+           }
     }
+    
+    // Correct the subdim values
+    if ((subdim > 2)&&(subdim < 0))
+    {
+      throw TimeDataFileException("Improper subdim value encountered");    
+    }
+    if (subdim == 0) subdim = 1;
   
     // We only support one of Gordon's types
     // If some wants more it would be easier to fix teem library
@@ -182,6 +271,46 @@ void TimeDataFile::open(std::string filename)
       throw TimeDataFileException("Unknown encoding encounterd");    
     }
 
+    if (useformatting)
+    {
+      std::string newfilename('\0',datafilename.size()+20);
+      
+      bool foundend = false;
+      
+      for (int p=start;(p<=end)&&(!foundend);p+=step)
+      {
+        ::snprintf(&(newfilename[0]),newfilename.size(),datafilename.c_str(),p);
+        datafile = fopen(newfilename.c_str(),"rb");
+        if (datafile == 0)
+        {
+          std::string::size_type slash = filename.size();
+          std::string fn = filename;
+          slash = fn.rfind("/");
+          if (slash  < filename.size())
+          {
+            datafilename = filename.substr(0,slash+1) + datafilename;
+          }
+        
+          datafile = fopen(newfilename.c_str(),"rb");
+          if (datafile == 0)
+          {
+            if (ncols == -1)
+            {
+              foundend = true;
+            }
+            else
+            {
+              throw TimeDataFileException("Could not find/open datafile: "+newfilename);    
+            }
+          }
+          else
+          {
+            datafilenames.push_back(newfilename);
+          }
+        }
+      }
+    }
+   
     if (datafilename == "")
     {
       throw TimeDataFileException("No data file specified, separate headers are required");    
@@ -203,25 +332,55 @@ void TimeDataFile::open(std::string filename)
       throw TimeDataFileException("Improper NRRD dimensions: number of columns/rows is smaller then one");  
     }
     
-    datafile = fopen(datafilename.c_str(),"rb");
-    if (datafile == 0)
+    if (datafilenames.size() == 0)
     {
-        std::string::size_type slash = filename.size();
-        std::string fn = filename;
-        slash = fn.rfind("/");
-        if (slash  < filename.size())
+      datafile = fopen(datafilename.c_str(),"rb");
+      if (datafile == 0)
+      {
+          std::string::size_type slash = filename.size();
+          std::string fn = filename;
+          slash = fn.rfind("/");
+          if (slash  < filename.size())
+          {
+            datafilename = filename.substr(0,slash+1) + datafilename;
+          }
+          
+          datafile = fopen(datafilename.c_str(),"rb");
+          if (datafile == 0)
+          {
+            throw TimeDataFileException("Could not find/open datafile: "+datafilename);    
+          }
+      }
+
+      fclose(datafile);    
+    }  
+    
+    if (ncols == -1)
+    {
+      if (datafilenames.size() == 0)
+      {
+        struct stat buf;
+        if (LSTAT(datafilename.c_str(),&buf) < 0)
         {
-          datafilename = filename.substr(0,slash+1) + datafilename;
+          throw TimeDataFileException("Could not determine size of datafile");          
         }
-        
-      
-        datafile = fopen(datafilename.c_str(),"rb");
-        if (datafile == 0)
+        ncols = static_cast<int>((buf.st_size)/static_cast<off_t>(nrows));
+      }
+      else
+      {
+        ncols = 0;
+        std::list<std::string>::iterator p = datafilenames.begin();
+        while (p != datafilenames.end())
         {
-          throw TimeDataFileException("Could not find/open datafile");    
+           struct stat buf;
+          if (LSTAT((*p).c_str(),&buf) < 0)
+          {
+              throw TimeDataFileException("Could not determine size of datafile");          
+          }
+          ncols += static_cast<int>((buf.st_size)/static_cast<off_t>(nrows));
         }
+      }
     }
-    fclose(datafile);
 }
 
 int TimeDataFile::getncols()
