@@ -44,14 +44,13 @@
 #ifndef SCI_project_Project_Constraint_h
 #define SCI_project_Project_Constraint_h 1
 
-#include <Dataflow/share/share.h>
 #include <Dataflow/Constraints/BaseConstraint.h>
 
 namespace SCIRun {
 
 // This constraint only finds the projection or the point.
 
-class PSECORESHARE ProjectConstraint : public BaseConstraint {
+class ProjectConstraint : public BaseConstraint {
 public:
    ProjectConstraint( const string& name,
 		      const Index numSchemes,

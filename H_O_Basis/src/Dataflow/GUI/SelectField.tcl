@@ -57,7 +57,6 @@ itcl_class SCIRun_FieldsOther_SelectField {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
         toplevel $w
@@ -77,6 +76,9 @@ itcl_class SCIRun_FieldsOther_SelectField {
 
 	button $w.row4.execute -text "Accumulate" -command "$this accumulate"
 	pack $w.row4.execute -side top -e n -f both
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }
 

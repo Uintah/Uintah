@@ -36,6 +36,11 @@
 
 namespace SCIRun {
 
+#if defined(_WIN32) && !defined(uint)
+  // for some reason, this isn't defined...
+#define uint unsigned
+#endif
+
 //---------------------------------------------------------------------------
 // Power of 2 functions
 //---------------------------------------------------------------------------

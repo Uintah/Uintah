@@ -231,7 +231,7 @@ HexToTetAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
   typename FSRC::value_type val;
 
   if (hvfield->basis_order() == 1) {
-    for (int i = 0; i < hnsize; i++)
+    for (unsigned int i = 0; i < hnsize; i++)
     {
       hvfield->value(val, (typename FSRC::mesh_type::Node::index_type)(i));
       tvfield->set_value(val, (TVMesh::Node::index_type)(i));

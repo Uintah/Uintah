@@ -48,7 +48,7 @@
 
 namespace SCIRun {
 
-class PSECORESHARE ChooseColorMap : public Module {
+class ChooseColorMap : public Module {
 private:
   GuiInt port_index_;
   GuiInt usefirstvalid_;
@@ -74,11 +74,6 @@ void
 ChooseColorMap::execute()
 {
   ColorMapOPort *ofld = (ColorMapOPort *)get_oport("ColorMap");
-  if (!ofld) {
-    error("Unable to initialize oport 'ColorMap'.");
-    return;
-  }
-
   port_range_type range = get_iports("ColorMap");
   if (range.first == range.second)
     return;
@@ -119,10 +114,6 @@ ChooseColorMap::execute()
     }
 
     icolormap = (ColorMapIPort *)get_iport(port_number);
-    if (!icolormap) {
-      error("Unable to initialize iport '" + to_string(port_number) + "'.");
-      return;
-    }
     icolormap->get(colormap);
   }
   

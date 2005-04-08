@@ -74,14 +74,6 @@ IndicesToTensors::~IndicesToTensors()
 void IndicesToTensors::execute() {
   FieldIPort* ifieldport = (FieldIPort *) get_iport("IndexField");
   FieldOPort* ofieldport = (FieldOPort *) get_oport("TensorField");
-  if (!ifieldport) {
-    error("Unable to initialize iport 'IndexField'.");
-    return;
-  }
-  if (!ofieldport) {
-    error("Unable to initialize iport 'TensorField'.");
-    return;
-  }
 
   FieldHandle ifieldH;
   if (!ifieldport->get(ifieldH))

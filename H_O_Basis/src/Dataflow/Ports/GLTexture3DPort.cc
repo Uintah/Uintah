@@ -29,7 +29,6 @@
 
 
 #include <Dataflow/Ports/GLTexture3DPort.h>
-#include <Dataflow/share/share.h>
 #include <Core/Malloc/Allocator.h>
 
 namespace SCIRun {
@@ -37,11 +36,11 @@ namespace SCIRun {
 
 
 extern "C" {
-PSECORESHARE IPort* make_GLTexture3DIPort(Module* module,
+IPort* make_GLTexture3DIPort(Module* module,
 					 const string& name) {
   return scinew SimpleIPort<GLTexture3DHandle>(module,name);
 }
-PSECORESHARE OPort* make_GLTexture3DOPort(Module* module,
+OPort* make_GLTexture3DOPort(Module* module,
 					 const string& name) {
   return scinew SimpleOPort<GLTexture3DHandle>(module,name);
 }

@@ -39,7 +39,8 @@
  *  Copyright (C) 2002 SCI Group
  */
 
-#include <Core/Datatypes/CurveField.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Datatypes/CurveMesh.h>
 #include <Core/Persistent/Pstreams.h>
 
 #include <iostream>

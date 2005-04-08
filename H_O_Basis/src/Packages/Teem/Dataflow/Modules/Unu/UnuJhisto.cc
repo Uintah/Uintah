@@ -47,7 +47,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class PSECORESHARE UnuJhisto : public Module {
+class UnuJhisto : public Module {
 public:
   UnuJhisto(GuiContext*);
 
@@ -103,19 +103,6 @@ void
   inrrd1_ = (NrrdIPort *)get_iport("InputNrrd1");
   onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!weight_) {
-    error("Unable to initialize iport 'WeightNrrd'.");
-    return;
-  }
-  if (!inrrd1_) {
-    error("Unable to initialize iport 'InputNrrd1'.");
-    return;
-  }
-  if (!onrrd_) {
-    error("Unable to initialize oport 'OutputNrrd'.");
-    return;
-  }
-
   Nrrd *weight = 0;
   Nrrd *nin1 = 0;
   Nrrd *nout = nrrdNew();
@@ -160,11 +147,6 @@ void
   while (pi != nrange.second)
   {
     NrrdIPort *inrrd = (NrrdIPort *)get_iport(pi->second);
-    if (!inrrd) {
-      error("Unable to initialize iport '" + to_string(pi->second) + "'.");
-      return;
-    }
-
     NrrdDataHandle nrrd;
     if (inrrd->get(nrrd) && nrrd.get_rep()) {
       if (nrrd->nrrd->dim > max_dim)
@@ -416,18 +398,35 @@ void
       free(err);
       return;
     }
+
+
+    NrrdData *nrrd = scinew NrrdData;
+    nrrd->nrrd = nout;    
+    last_nrrdH_ = nrrd;
+
+    if (nrrds.size()) {
+
+      if (airIsNaN(range[0]->min) || airIsNaN(range[0]->max)) {
+	NrrdRange *minmax = nrrdRangeNewSet(nrrds[0], nrrdBlind8BitRangeFalse);
+	if (airIsNaN(range[0]->min)) range[0]->min = minmax->min;
+	if (airIsNaN(range[0]->max)) range[0]->max = minmax->max;
+	nrrdRangeNix(minmax);
+      }
+      nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_min", 
+		      to_string(range[0]->min).c_str());
+      nrrdKeyValueAdd(last_nrrdH_->nrrd, "jhisto_nrrd0_max", 
+		      to_string(range[0]->max).c_str());
+    }
     
-    // make call
-    
+    for (int d=0; d < (int)nrrds.size(); ++d) {
+      nrrdRangeNix(range[d]);
+    }
+    free(range);
+
+
     delete bin;
     delete min;
     delete max;
-    
-    
-    NrrdData *nrrd = scinew NrrdData;
-    nrrd->nrrd = nout;
-    
-    last_nrrdH_ = nrrd;
     
   }
   onrrd_->send(last_nrrdH_);

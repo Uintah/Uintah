@@ -104,27 +104,6 @@ void ApplyFEMVoltageSource::execute()
   MatrixOPort *oportMatrix_ = (MatrixOPort *)get_oport("Forward Matrix");
   MatrixOPort *oportRhs_ = (MatrixOPort *)get_oport("RHS");
 
-  if (!iportField_) {
-    error("Unable to initialize iport 'Mesh'.");
-    return;
-  }
-  if (!iportMatrix_) {
-    error("Unable to initialize iport 'Stiffness Matrix'.");
-    return;
-  }
-  if (!iportRhs_) {
-    error("Unable to initialize iport 'RHS'.");
-    return;
-  }
-  if (!oportMatrix_) {
-    error("Unable to initialize oport 'Forward Matrix'.");
-    return;
-  }
-  if (!oportRhs_) {
-    error("Unable to initialize oport 'RHS'.");
-    return;
-  }
-  
   //! Obtaining handles to computation objects
   FieldHandle hField;
   
@@ -169,13 +148,13 @@ void ApplyFEMVoltageSource::execute()
   // -- if the user passed in a vector the right size, copy it into ours 
   if (iportRhs_->get(hRhsIn) && 
       (rhsIn=dynamic_cast<ColumnMatrix*>(hRhsIn.get_rep())) && 
-      (rhsIn->nrows() == nsize))
+      ((unsigned int)(rhsIn->nrows()) == nsize))
   {
     string units;
     if (rhsIn->get_property("units", units))
       rhs->set_property("units", units, false);
 
-    for (int i=0; i < nsize; i++) 
+    for (unsigned int i=0; i < nsize; i++) 
       (*rhs)[i]=(*rhsIn)[i];
   }
   else{
@@ -199,7 +178,7 @@ void ApplyFEMVoltageSource::execute()
     error("Input stiffness matrix wasn't square.");
     return;
   }
-  if (nsize != matIn->nrows()) {
+  if (nsize != (unsigned int)(matIn->nrows())) {
     error("Input stiffness matrix was " + to_string(nsize)  +
 	  " nodes, matrix has " + to_string(matIn->nrows()) + " rows.");
     return;
@@ -208,8 +187,10 @@ void ApplyFEMVoltageSource::execute()
   SparseRowMatrix *mat = matIn->clone();
 
   //! adjusting matrix for Dirichlet BC
-  Array1<int> idcNz;
-  Array1<double> valNz;
+  int *idcNz;
+  double *valNz;
+  int idcNzsize;
+  int idcNzstride;
 
   TVMesh::Node::array_type nind;
   vector<double> dbc;
@@ -219,12 +200,12 @@ void ApplyFEMVoltageSource::execute()
     double val = dirBC[idx].second;
     
     // -- getting column indices of non-zero elements for the current row
-    mat->getRowNonzeros(ni, idcNz, valNz);
+    mat->getRowNonzerosNoCopy(ni, idcNzsize, idcNzstride, idcNz, valNz);
     
     // -- updating rhs
-    for (int i=0; i<idcNz.size(); ++i){
-      int j = idcNz[i];
-      (*rhs)[j] +=-val*valNz[i]; 
+    for (int i=0; i<idcNzsize; ++i){
+      int j = idcNz?idcNz[i*idcNzstride]:i;
+      (*rhs)[j] += - val * valNz[i*idcNzstride]; 
     }
   }
   
@@ -233,12 +214,12 @@ void ApplyFEMVoltageSource::execute()
     int ni = dirBC[idx].first;
     double val = dirBC[idx].second;
     
-    mat->getRowNonzeros(ni, idcNz, valNz);
+    mat->getRowNonzerosNoCopy(ni, idcNzsize, idcNzstride, idcNz, valNz);
       
-    for (int i=0; i<idcNz.size(); ++i){
-      int j = idcNz[i];
-      mat->put(ni, j, 0);
-      mat->put(j, ni, 0); 
+    for (int i=0; i<idcNzsize; ++i){
+      int j = idcNz?idcNz[i*idcNzstride]:i;
+      mat->put(ni, j, 0.0);
+      mat->put(j, ni, 0.0); 
     }
       
     //! updating dirichlet node and corresponding entry in rhs

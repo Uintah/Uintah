@@ -90,23 +90,6 @@ TendEstim::execute()
   otens_ = (NrrdOPort *)get_oport("Tensors");
   //  oerr_ = (NrrdOPort *)get_oport("Error");
 
-  if (!inbmat_) {
-    error("Unable to initialize iport 'Bmat'.");
-    return;
-  }
-  if (!indwi_) {
-    error("Unable to initialize iport 'DWI'.");
-    return;
-  }
-  if (!otens_) {
-    error("Unable to initialize oport 'Tensors'.");
-    return;
-  }
-//   if (!oerr_) {
-//     error("Unable to initialize oport 'Error'.");
-//     return;
-//   }
-
   //Nrrd *sliced_bmat = 0;
   if (inbmat_->get(bmat_handle)){
     if (!bmat_handle.get_rep()) {
@@ -158,7 +141,7 @@ TendEstim::execute()
   nrrdNuke(dummy);
 
   //nrrdNuke(sliced_bmat);
-  nout->axis[0].kind = nrrdKind3DMaskedSymTensor;
+  nout->axis[0].kind = nrrdKind3DMaskedSymMatrix;
   NrrdData *output = scinew NrrdData;
   output->nrrd = nout;
   //output->copy_sci_data(*dwi_handle.get_rep());

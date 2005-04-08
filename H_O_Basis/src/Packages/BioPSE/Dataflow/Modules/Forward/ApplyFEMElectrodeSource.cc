@@ -47,11 +47,11 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/HexVolField.h>
-#include <Core/Datatypes/TriSurfField.h>
-#include <Core/Datatypes/PointCloudField.h>
-#include <Core/Datatypes/CurveField.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Datatypes/CurveMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Widgets/BoxWidget.h>
@@ -68,14 +68,20 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class ApplyFEMElectrodeSource : public Module {
-private:
+  typedef TriSurfMesh<TriLinearLgn<Point> >              TSMesh;
+  typedef TriLinearLgn<int>                              FDintBasis;
+  typedef GenericField<TSMesh, FDintBasis, vector<int> > TSField; 
+  typedef CurveMesh<CrvLinearLgn<Point> >                CMesh;
+  typedef CrvLinearLgn<double>                CFDdoubleBasis;
+  typedef GenericField<CMesh, CFDdoubleBasis, vector<double> > CField; 
+
   enum ElectrodeModelType
     {
       CONTINUUM_MODEL = 0,
       GAP_MODEL
     };
 
-  void ProcessTriElectrodeSet( ColumnMatrix* rhs, TriSurfMeshHandle hTriMesh );
+  void ProcessTriElectrodeSet(ColumnMatrix* rhs, TSMesh::handle_type hTriMesh);
   double CalcContinuumTrigCurrent(Point p, int index, int numBoundaryNodes);
   double ComputeTheta(Point);
 
@@ -117,8 +123,8 @@ ApplyFEMElectrodeSource::execute()
     return;
   }
 
-  TriSurfMesh *hTriMesh = 0;
-  if ((hTriMesh = dynamic_cast<TriSurfMesh*> (hField->mesh().get_rep())))
+  TSMesh *hTriMesh = 0;
+  if ((hTriMesh = dynamic_cast<TSMesh*> (hField->mesh().get_rep())))
   {
     remark("Input is a 'TriSurfField'");
   }
@@ -128,7 +134,7 @@ ApplyFEMElectrodeSource::execute()
     return;
   }
 
-  TriSurfMesh::Node::size_type nsizeTri; hTriMesh->size(nsizeTri);
+  TSMesh::Node::size_type nsizeTri; hTriMesh->size(nsizeTri);
   const int nsize = nsizeTri;
   if (nsize <= 0)
   {
@@ -177,7 +183,7 @@ ApplyFEMElectrodeSource::execute()
 // ApplyFEMElectrodeSource::ProcessTriElectrodeSet
 //
 // Description: This method isolates a specialized block of code that
-// handles the TriSurfMesh and 'Electrode Set' mode.
+// handles the TSMesh and 'Electrode Set' mode.
 //
 // Inputs:
 //
@@ -187,7 +193,7 @@ ApplyFEMElectrodeSource::execute()
 
 void
 ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
-                                               TriSurfMeshHandle hTriMesh )
+						 TSMesh::handle_type hTriMesh )
 {
   MatrixIPort *iportMapping = (MatrixIPort *)get_iport("Mapping");
   MatrixIPort *iportCurrentPattern =
@@ -262,8 +268,8 @@ ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
   // Get the FieldBoundary input
   // ---------------------------
   FieldHandle      hFieldBoundary;
-  CurveMeshHandle  hBoundaryMesh;
-  LockingHandle<CurveField<double> > hCurveBoundary;
+  CMesh::handle_type  hBoundaryMesh;
+  LockingHandle<CField > hCurveBoundary;
   bool boundary = false;
   if ( iportFieldBoundary->get(hFieldBoundary) )
   {
@@ -274,8 +280,8 @@ ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
       if ( (hFieldBoundary->get_type_name(0) == "CurveField") &&
            (hFieldBoundary->get_type_name(1) == "double") )
       {
-        remark("Field boundary input is a CurveField<double>");
-        hCurveBoundary = dynamic_cast<CurveField<double>*> ( hFieldBoundary.get_rep() );
+        remark("Field boundary input is a CField");
+        hCurveBoundary = dynamic_cast<CField*> ( hFieldBoundary.get_rep() );
         hBoundaryMesh = hCurveBoundary->get_typed_mesh();
         boundary = true;
       }
@@ -333,7 +339,7 @@ ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
 
   // Allocate vector for the mesh-to-electrode-map
   ColumnMatrix* meshToElectrodeMap;
-  TriSurfMesh::Node::size_type msize;
+  TSMesh::Node::size_type msize;
   hTriMesh->size(msize);
   int numMeshNodes = (int) msize;
 
@@ -353,8 +359,8 @@ ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
     if (boundary)
     {
       // Visit each node on the boundary mesh.
-      CurveMesh::Node::iterator nodeItr;
-      CurveMesh::Node::iterator nodeItrEnd;
+      CMesh::Node::iterator nodeItr;
+      CMesh::Node::iterator nodeItrEnd;
   	
       hBoundaryMesh->begin(nodeItr);
       hBoundaryMesh->end(nodeItrEnd);
@@ -410,23 +416,23 @@ ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
 
     // Iterate over edges in the boundary and build a look-up-table
     // that maps each node index to its neighbor node indices.
-    CurveMesh::Node::size_type nsize;
+    CMesh::Node::size_type nsize;
     hBoundaryMesh->size(nsize);
     int numBoundaryNodes = (int) nsize;
 
-    Array1<Array1<CurveMesh::Node::index_type> > neighborNodes;
+    Array1<Array1<CMesh::Node::index_type> > neighborNodes;
     neighborNodes.resize(numBoundaryNodes);
 
-    Array1<Array1<CurveMesh::Edge::index_type> > neighborEdges;
+    Array1<Array1<CMesh::Edge::index_type> > neighborEdges;
     neighborEdges.resize(numBoundaryNodes);
 
     Array1<double> edgeLength;
     edgeLength.resize(numBoundaryNodes);
 
-    CurveMesh::Node::array_type childNodes;
+    CMesh::Node::array_type childNodes;
 
-    CurveMesh::Edge::iterator edgeItr;
-    CurveMesh::Edge::iterator edgeItrEnd;
+    CMesh::Edge::iterator edgeItr;
+    CMesh::Edge::iterator edgeItrEnd;
 
     hBoundaryMesh->begin(edgeItr);
     hBoundaryMesh->end(edgeItrEnd);
@@ -766,7 +772,7 @@ ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
         int meshNodeIndexsize;
         int meshNodeIndexstride;
 
-        // Find the corresponding TriSurfMesh node index
+        // Find the corresponding TSMesh node index
         hBoundaryToMesh->getRowNonzerosNoCopy(i, meshNodeIndexsize,
                                               meshNodeIndexstride,
                                               meshNodeIndex, weight);

@@ -40,8 +40,8 @@
 
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/PointCloudField.h>
-#include <Core/Datatypes/TetVolField.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Datatypes/TetVolMesh.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
@@ -54,14 +54,15 @@
 
 
 namespace SCIRun {
-vector<pair<TetVolMesh::Node::index_type, double> > 
-operator*(const vector<pair<TetVolMesh::Node::index_type, double> >&r, double &) {
+typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
+vector<pair<TVMesh::Node::index_type, double> > 
+operator*(const vector<pair<TVMesh::Node::index_type, double> >&r, double &) {
   ASSERTFAIL("BuildElemLeadField.cc Bogus operator");
   return r;
 }
-vector<pair<TetVolMesh::Node::index_type, double> > 
-operator+=(const vector<pair<TetVolMesh::Node::index_type, double> >&r, 
-	   const vector<pair<TetVolMesh::Node::index_type, double> >&) {
+vector<pair<TVMesh::Node::index_type, double> > 
+operator+=(const vector<pair<TVMesh::Node::index_type, double> >&r, 
+	   const vector<pair<TVMesh::Node::index_type, double> >&) {
   ASSERTFAIL("BuildElemLeadField.cc Bogus operator");
   return r;
 }
@@ -108,27 +109,6 @@ void BuildElemLeadField::execute() {
   MatrixOPort* leadfield_oport = 
     (MatrixOPort *)get_oport("Leadfield (nelecs x nelemsx3)");
 
-  if (!mesh_iport) {
-    error("Unable to initialize iport 'Domain Mesh'.");
-    return;
-  }
-  if (!interp_iport) {
-    error("Unable to initialize iport 'Electrode Interpolant'.");
-    return;
-  }
-  if (!sol_iport) {
-    error("Unable to initialize iport 'Solution Vectors'.");
-    return;
-  }
-  if (!rhs_oport) {
-    error("Unable to initialize oport 'RHS Vector'.");
-    return;
-  }
-  if (!leadfield_oport) {
-    error("Unable to initialize oport 'Leadfield (nelecs x nelemsx3)'.");
-    return;
-  }
-  
   int nnodes;
   int nelems;
   FieldHandle mesh_in;
@@ -164,21 +144,23 @@ void BuildElemLeadField::execute() {
     int i;
     for (i=0; i<nnodes; i++) (*rhs)[i]=0;
 
-    Array1<int> idx;
-    Array1<double> val;
+    int *idx;
+    double *val;
+    int idxsize;
+    int idxstride;
 
-    interp_in->getRowNonzeros(0, idx, val);
-    if (!idx.size()) ASSERTFAIL("No mesh node assigned to this element!");
-    for (i=0; i<idx.size(); i++) {
-      if (idx[i] >= nnodes) ASSERTFAIL("Mesh node out of range!");
-      (*rhs)[idx[i]]+=val[i];
+    interp_in->getRowNonzerosNoCopy(0, idxsize, idxstride, idx, val);
+    if (!idxsize) ASSERTFAIL("No mesh node assigned to this element!");
+    for (i=0; i<idxsize; i++) {
+      if (idx[i*idxstride] >= nnodes) ASSERTFAIL("Mesh node out of range!");
+      (*rhs)[idx?idx[i*idxstride]:i]+=val[i*idxstride];
     }
 
-    interp_in->getRowNonzeros(counter+1, idx, val);
-    if (!idx.size()) ASSERTFAIL("No mesh node assigned to this element!");
-    for (i=0; i<idx.size(); i++) {
-      if (idx[i] >= nnodes) ASSERTFAIL("Mesh node out of range!");
-      (*rhs)[idx[i]]-=val[i];
+    interp_in->getRowNonzerosNoCopy(counter+1, idxsize, idxstride, idx, val);
+    if (!idxsize) ASSERTFAIL("No mesh node assigned to this element!");
+    for (i=0; i<idxsize; i++) {
+      if (idx[i*idxstride] >= nnodes) ASSERTFAIL("Mesh node out of range!");
+      (*rhs)[idx?idx[i*idxstride]:i]-=val[i*idxstride];
     }
 
     if (counter<(nelecs-2)) {
@@ -194,7 +176,7 @@ void BuildElemLeadField::execute() {
     }
     for (i=0; i<nelems; i++)
       for (int j=0; j<3; j++) {
-	(*leadfield_mat)[counter+1][i*3+j]=-(*sol_in.get_rep())[i][j];
+	(*leadfield_mat)[counter+1][i*3+j] =- sol_in->get(i, j);
       }
     counter++;
   }

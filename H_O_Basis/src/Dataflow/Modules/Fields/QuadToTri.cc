@@ -86,10 +86,6 @@ void
 QuadToTri::execute()
 {
   FieldIPort *ifieldport = (FieldIPort *)get_iport("QuadSurf");
-  if (!ifieldport) {
-    error("Unable to initialize iport 'QuadSurf'.");
-    return;
-  }
   FieldHandle ifieldhandle;
   if(!(ifieldport->get(ifieldhandle) && ifieldhandle.get_rep()))
   {
@@ -98,11 +94,6 @@ QuadToTri::execute()
   }
 
   FieldOPort *ofp = (FieldOPort *)get_oport("TriSurf");
-  if (!ofp)
-  {
-    error("Unable to initialize " + name + "'s Output port.");
-    return;
-  }
 
   // Cache generation.
   if (ifieldhandle->generation == last_generation_)

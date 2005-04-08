@@ -71,110 +71,47 @@ using std::cerr;
 using std::ifstream;
 using std::endl;
 
+int
+parse_lin_vec_data(ifstream &nodal_in, vector<Vector> &data_vals, 
+		   HVLinMesh *hvm) 
+{
+  int npts = 0;
+  while (! nodal_in.eof()) {
+    ++npts;
+    double x[3];
+    for (int j=0; j<3; j++) 
+      nodal_in >> x[j];
 
-bool ptsCountHeader;
-int baseIndex;
-bool elementsCountHeader;
-bool binOutput;
-bool debugOn;
+    double f[3];
+    for (int j=0; j<3; j++) 
+      nodal_in >> f[j];
 
-void setDefaults() {
-  ptsCountHeader=true;
-  baseIndex=1;
-  elementsCountHeader=true;
-  binOutput=false;
-  debugOn=false;
-}
+    Vector fib_dir(f[0], f[1], f[2]);
+    data_vals.push_back(fib_dir);
 
-int parseArgs(int argc, char *argv[]) {
-  int currArg = 4;
-  while (currArg < argc) {
-    if (!strcmp(argv[currArg],"-noPtsCount")) {
-      ptsCountHeader=false;
-      currArg++;
-    } else if (!strcmp(argv[currArg], "-noElementsCount")) {
-      elementsCountHeader=false;
-      currArg++;
-    } else if (!strcmp(argv[currArg], "-oneBasedIndexing")) {
-      baseIndex=1;
-      currArg++;
-    } else if (!strcmp(argv[currArg], "-binOutput")) {
-      binOutput=true;
-      currArg++;
-    } else if (!strcmp(argv[currArg], "-debug")) {
-      debugOn=true;
-      currArg++;
-    } else {
-      cerr << "Error - unrecognized argument: "<<argv[currArg]<<"\n";
-      return 0;
-    }
+    string label;
+    int n;
+    nodal_in >> label >> n;
+    hvm->add_point(Point(x[0],x[1],x[2]));
   }
-  return 1;
-}
-
-void printUsageInfo(char *progName) {
-  cerr << "\n Usage: "<<progName<<" pts hexes HexVolMesh [-noPtsCount] [-noElementsCount] [-oneBasedIndexing] [-binOutput] [-debug]\n\n";
-  cerr << "\t This program will read in a .pts (specifying the x/y/z \n";
-  cerr << "\t coords of each point, one per line, entries separated by \n";
-  cerr << "\t white space, file can have an optional one line header \n";
-  cerr << "\t specifying number of points... and if it doesn't, you have \n";
-  cerr << "\t to use the -noPtsCount command-line argument) and a .hex \n";
-  cerr << "\t file (specifying i/j/k/l/m/n/o/p indices for each hex, also \n";
-  cerr << "\t one per line, again with an optional one line header (use \n";
-  cerr << "\t -noElementsCount if it's not there).  The hex entries are \n";
-  cerr << "\t assumed to be zero-based, unless you specify \n";
-  cerr << "\t -oneBasedIndexing.  And the SCIRun output file is written \n";
-  cerr << "\t in ASCII, unless you specify -binOutput.\n\n";
+  cerr << "done adding " << npts << " points." << endl;
+  return npts;
 }
 
 int
-main(int argc, char **argv) {
-  if (argc < 4 || argc > 9) {
-    printUsageInfo(argv[0]);
-    return 0;
-  }
-#if defined(__APPLE__)  
-  macForceLoad(); // Attempting to force load (and thus instantiation of
-	          // static constructors) Core/Datatypes;
-#endif
-  setDefaults();
-  vector<Vector> data_vals;
-  HVLinMesh *hvm = new HVLinMesh();
-  
-  char *ptsName = argv[1];
-  char *hexesName = argv[2];
-  char *fieldName = argv[3];
-  if (!parseArgs(argc, argv)) {
-    printUsageInfo(argv[0]);
-    return 0;
-  }
+parse_ho_data(ifstream &nodal_in, vector<Vector> &data_vals, HVLinMesh *hvm) 
+{
   int npts = 0;
-  npts = getNumNonEmptyLines(ptsName) - 1;
-  ifstream ptsstream(ptsName);
-  cerr << "number of points = "<< npts << endl;
-  
-  // parse header out.
-  vector<string> header;
-  for (int i = 0; i < 8 * 5 * 3 + 2; i++) {
-    string s;
-    ptsstream >> s;
-    header.push_back(s);
-  }
-  vector<string>::iterator iter = header.begin();
-  while (iter != header.end()) {
-    cerr << *iter++ << endl;
-  }
-  
-
-  for (int i=0; i<npts; i++) {
+  while (! nodal_in.eof()) {
+    ++npts;
     double x[3], xdx[3], xdy[3], xdxy[3], xdz[3], xdyz[3], xdxz[3], xdxyz[3];
     for (int j=0; j<3; j++) 
-      ptsstream >> x[j] >> xdx[j] >> xdy[j] >> xdxy[j] >> xdz[j] 
+      nodal_in >> x[j] >> xdx[j] >> xdy[j] >> xdxy[j] >> xdz[j] 
 		>> xdyz[j] >> xdxz[j] >> xdxyz[j];
 
     double f[3], fdx[3], fdy[3], fdxy[3], fdz[3], fdyz[3], fdxz[3], fdxyz[3];
     for (int j=0; j<3; j++) 
-      ptsstream >> f[j] >> fdx[j] >> fdy[j] >> fdxy[j] >> fdz[j] 
+      nodal_in >> f[j] >> fdx[j] >> fdy[j] >> fdxy[j] >> fdz[j] 
 		>> fdyz[j] >> fdxz[j] >> fdxyz[j];
 
     double phi, theta;
@@ -191,16 +128,17 @@ main(int argc, char **argv) {
     //cerr << fib_dir << " len ->" << fib_dir.length() << endl;
     data_vals.push_back(fib_dir);
 
-    double v[3][3], vdx[3][3], vdy[3][3], vdxy[3][3], vdz[3][3], vdyz[3][3], vdxz[3][3], vdxyz[3][3];
+    double v[3][3], vdx[3][3], vdy[3][3], vdxy[3][3], vdz[3][3], 
+      vdyz[3][3], vdxz[3][3], vdxyz[3][3];
     for (int j=0; j<3; j++) 
       for (int k=0; k<3; k++) 
-	ptsstream >> v[j][k] >> vdx[j][k] >> vdy[j][k] >> vdxy[j][k] 
+	nodal_in >> v[j][k] >> vdx[j][k] >> vdy[j][k] >> vdxy[j][k] 
 		  >> vdz[j][k] >> vdyz[j][k] >> vdxz[j][k] >> vdxyz[j][k];
 
     string label;
     int n;
-    ptsstream >> label >> n;
-    const double sf = 12.0;
+    nodal_in >> label >> n;
+    //    const double sf = 12.0;
     hvm->add_point(Point(x[0],x[1],x[2]));
 //     vector<Point> arr(7);
 //     arr[0].x(sf * xdx[0]);
@@ -232,10 +170,66 @@ main(int argc, char **argv) {
   }
 
   cerr << "done adding points.\n";
+  return npts;
+}
+
+
+int
+main(int argc, char **argv) {
+#if defined(__APPLE__)  
+  macForceLoad(); // Attempting to force load (and thus instantiation of
+	          // static constructors) Core/Datatypes;
+#endif
+  HVLinMesh *hvm = new HVLinMesh();
+  
+  char *nodal_file = argv[1];
+  char *elem_file = argv[2];
+  char *out_file = argv[3];
+
+  if (nodal_file == 0 || elem_file == 0 || out_file == 0) {
+    cerr << "Error: expecting 3 arguments: <nodal data file> "
+	 << "<element data file> <output file name>" << endl;
+    return 1;
+  }
+  
+  ifstream col_str(nodal_file);
+  //count the columns:
+  int cols = 1;
+  char c;
+  do{
+    col_str.get(c);
+    if (c == '\t') { cols++; }
+  } while (c != '\n');
+  col_str.close();
+
+
+  vector<string> labels(cols);
+  cout << "Parsing labels:" << endl;
+  ifstream nodal_in(nodal_file);
+  for (int i = 0; i < cols; ++i) {
+    string str;
+    nodal_in >> str;
+    cout << str << ", ";
+    labels[i] = str;
+  }
+  cout << endl << "There are " << labels.size() << " columns." << endl;
+  
+  int npts = 0;
+  vector<Vector> data_vals;
+  if (cols == 8) {
+    npts = parse_lin_vec_data(nodal_in, data_vals, hvm);
+  } else if (cols == 122) {
+    npts = parse_ho_data(nodal_in, data_vals, hvm);
+  } else {
+    cerr << "Dont know what to do with " << cols << " columns of data" << endl;
+    return (1 << 1);
+  }
+  
+
 
   int nhexes;
-  nhexes = getNumNonEmptyLines(hexesName) - 1;
-  ifstream hexesstream(hexesName);
+  nhexes = getNumNonEmptyLines(elem_file) - 1;
+  ifstream hexesstream(elem_file);
 
   cerr << "number of hexes = "<< nhexes <<"\n";
 
@@ -246,11 +240,11 @@ main(int argc, char **argv) {
     hexesstream >> s;
     eheader.push_back(s);
   }
-  iter = eheader.begin();
+  vector<string>::iterator iter = eheader.begin();
   while (iter != eheader.end()) {
     cerr << *iter++ << endl;
   }
-
+  int baseIndex = 1;
   for (int i = 0; i < nhexes; i++) {
     int n1, n2, n3, n4, n5, n6, n7, n8;
     string label;
@@ -298,8 +292,9 @@ main(int argc, char **argv) {
     }
     
     hvm->add_hex(n1, n2, n4, n3, n5, n6, n8, n7);
-    if (debugOn) 
-      cerr << "Added hex #"<<i<<": ["<<n1<<" "<<n2<<" "<<n3<<" "<<n4<<" "<<n5<<" "<<n6<<" "<<n7<<" "<<n8<<"]\n";
+    cerr << "Added hex #"<< i << ": [" << n1 << " " << n2 << " " << n3 << " "
+	 << n4 << " " << n5 << " " << n6 << " " << n7 << " " << n8 << "]" 
+	 << endl;
   }
   cerr << "done adding elements.\n";
 
@@ -312,13 +307,9 @@ main(int argc, char **argv) {
   hv->fdata() = data_vals;
   
 
-  
-  if (binOutput) {
-    BinaryPiostream out_stream(fieldName, Piostream::Write);
-    Pio(out_stream, hvH);
-  } else {
-    TextPiostream out_stream(fieldName, Piostream::Write);
-    Pio(out_stream, hvH);
-  }
+  cerr << "loading in vector data" << endl;
+
+  BinaryPiostream out_stream(out_file, Piostream::Write);
+  Pio(out_stream, hvH);
   return 0;  
 }    

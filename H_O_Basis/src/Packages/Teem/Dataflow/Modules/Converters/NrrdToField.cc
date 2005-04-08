@@ -57,7 +57,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class PSECORESHARE NrrdToField : public Module {
+class NrrdToField : public Module {
 public:
   enum {UNKNOWN=0,UNSTRUCTURED=1,STRUCTURED=2,IRREGULAR=4,REGULAR=8};
 
@@ -98,7 +98,7 @@ public:
 
   // connectH is a handle to the nrrd of connections. The connections
   // nrrd should be a 2D array of pxn where n is the number of connections
-  // and p is the number of points per cell type.
+  // and p is the number of points per element type.
 
   // build_eigens should be set to 1 if the for a field of vectors,
   // the eigendecomposition should be computed.  if data is scalar
@@ -106,7 +106,7 @@ public:
 
   // permute should be 1 if the data is in k x j x i format (FORTRAN)
 
-  // For unstructured data with 4 points per cell, there is ambiguity
+  // For unstructured data with 4 points per element, there is ambiguity
   // whether or not it is a tet or quad.  Set to "Auto" to try to 
   // determine based on Nrrd properties or "Tet" or "Quad".  If it
   // in unclear and "Auto" has been selected, it will default to "Tet".
@@ -157,27 +157,6 @@ void
   ifield_ = (FieldIPort *)get_iport("OriginalField");
   ofield_ = (FieldOPort *)get_oport("OutputField");
 
-  if (!ndata_) {
-    error("Unable to initialize iport 'Data'.");
-    return;
-  }
-  if (!npoints_) {
-    error("Unable to initialize iport 'Points'.");
-    return;
-  }
-  if (!nconnect_) {
-    error("Unable to initialize iport 'Connections'.");
-    return;
-  }
-  if (!ifield_) {
-    error("Unable to initialize iport 'OriginalField'.");
-    return;
-  }
-  if (!ofield_) {
-    error("Unable to initialize oport 'OutputField'.");
-    return;
-  }
-  
   NrrdDataHandle dataH;
   NrrdDataHandle pointsH;
   NrrdDataHandle connectH;
@@ -504,85 +483,85 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
       }
     }
 
-    // If there is a cell type property make sure it matches what is 
+    // If there is an elem type property make sure it matches what is 
     // found automatically.
-    string cell_type = "Auto";
+    string elem_type = "Auto";
     int nconnections = 0;
 
-    if ( connectH->get_property( "Cell Type",property )) {
+    if ( connectH->get_property( "Elem Type",property )) {
       if( property.find( "Curve" ) != string::npos ) {
-	cell_type = "Curve";
+	elem_type = "Curve";
 	nconnections = 2;
       } else if( property.find( "Tri" ) != string::npos ) {
-	cell_type = "Tri";
+	elem_type = "Tri";
 	nconnections = 3;
       } else if( property.find( "Tet" ) != string::npos ) {
-	cell_type = "Tet";
+	elem_type = "Tet";
 	nconnections = 4;
       } else if( property.find( "Quad" ) != string::npos ) {
-	cell_type = "Quad";
+	elem_type = "Quad";
 	nconnections = 4;
       } else if( property.find( "Prism" ) != string::npos ) {
-	cell_type = "Prism";
+	elem_type = "Prism";
 	nconnections = 6;
       } else if( property.find( "Hex" ) != string::npos ) {
-	cell_type = "Hex";
+	elem_type = "Hex";
 	nconnections = 8;
       }
     }
 
     if( nconnections == 0 ) {
-      if (pointsH->get_property( "Cell Type",property )) {
-	warning("Cell Type defined in Points nrrd instead of Connectivity nrrd.");
+      if (pointsH->get_property( "Elem Type",property )) {
+	warning("Elem Type defined in Points nrrd instead of Connectivity nrrd.");
 	if( property.find( "Curve" ) != string::npos ) {
-	  cell_type = "Curve";
+	  elem_type = "Curve";
 	  nconnections = 2;
 	} else if( property.find( "Tri" ) != string::npos ) {
-	  cell_type = "Tri";
+	  elem_type = "Tri";
 	  nconnections = 3;
 	} else if( property.find( "Tet" ) != string::npos ) {
-	  cell_type = "Tet";
+	  elem_type = "Tet";
 	  nconnections = 4;
 	} else if( property.find( "Quad" ) != string::npos ) {
-	  cell_type = "Quad";
+	  elem_type = "Quad";
 	  nconnections = 4;
 	} else if( property.find( "Prism" ) != string::npos ) {
-	  cell_type = "Prism";
+	  elem_type = "Prism";
 	  nconnections = 6;
 	} else if( property.find( "Hex" ) != string::npos ) {
-	  cell_type = "Hex";
+	  elem_type = "Hex";
 	  nconnections = 8;
 	}
       }
     }
 
     if( nconnections == 0 && has_data_ ) {
-      if (dataH->get_property( "Cell Type",property )) {
-	warning("Cell Type defined in Data nrrd instead of Connectivity nrrd.");
+      if (dataH->get_property( "Elem Type",property )) {
+	warning("Elem Type defined in Data nrrd instead of Connectivity nrrd.");
 	if( property.find( "Curve" ) != string::npos ) {
-	  cell_type = "Curve";
+	  elem_type = "Curve";
 	  nconnections = 2;
 	} else if( property.find( "Tri" ) != string::npos ) {
-	  cell_type = "Tri";
+	  elem_type = "Tri";
 	  nconnections = 3;
 	} else if( property.find( "Tet" ) != string::npos ) {
-	  cell_type = "Tet";
+	  elem_type = "Tet";
 	  nconnections = 4;
 	} else if( property.find( "Quad" ) != string::npos ) {
-	  cell_type = "Quad";
+	  elem_type = "Quad";
 	  nconnections = 4;
 	} else if( property.find( "Prism" ) != string::npos ) {
-	  cell_type = "Prism";
+	  elem_type = "Prism";
 	  nconnections = 6;
 	} else if( property.find( "Hex" ) != string::npos ) {
-	  cell_type = "Hex";
+	  elem_type = "Hex";
 	  nconnections = 8;
 	}
       }
     }
 
     if( nconnections && nconnections != pts ) {
-      warning("The cell type properties and the number of connections found do not match.");
+      warning("The elem type properties and the number of connections found do not match.");
     }
 
     int connectivity = 0;
@@ -608,14 +587,14 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
       } else  if (quad_or_tet == "Tet") {
 	mHandle = scinew TetVolMesh();
 	connectivity = 4;
-      } else if (cell_type == "Tet") {
+      } else if (elem_type == "Tet") {
 	mHandle = scinew TetVolMesh();
 	connectivity = 4;	    
-      } else if (cell_type == "Quad") {
+      } else if (elem_type == "Quad") {
 	mHandle = scinew QuadSurfMesh();
 	connectivity = 4;
       } else {
-	error("Auto detection of Cell Type using properties failed.");
+	error("Auto detection of Elem Type using properties failed.");
 	error("Connections Nrrd indicates 4 points per connection. Please indicate whether a Tet or Quad in UI.");
 	has_error_ = true;
 	return 0;
@@ -639,7 +618,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
       
     // create mesh
     const TypeDescription *mtd = mHandle->get_type_description();
-      
+
     remark( "Creating an unstructured " + mtd->get_name() );
       
     CompileInfoHandle ci_mesh =
@@ -693,7 +672,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 	}
 	
 	if( topology_ == UNKNOWN ) {
-	  if (pointsH->get_property( "Cell Type", property)) { 
+	  if (pointsH->get_property( "Elem Type", property)) { 
 	    if ( property.find( "Curve") != string::npos ) {
 	      topology_ = UNSTRUCTURED;
 	      mHandle = scinew PointCloudMesh();
@@ -719,7 +698,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 	  }
 	
 	  if( topology_ == UNKNOWN ) {
-	    if (dataH->get_property( "Cell Type", property)) { 
+	    if (dataH->get_property( "Elem Type", property)) { 
 	      if ( property.find( "Curve") != string::npos ) {
 		topology_ = UNSTRUCTURED;
 		mHandle = scinew PointCloudMesh();
@@ -771,14 +750,21 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
     if (topology_ == UNSTRUCTURED) {
       // This would only get here for point clouds with no connectivity
       const TypeDescription *mtd = mHandle->get_type_description();
-	  
+
       remark( "Creating an unstructured " + mtd->get_name() );
-	  
-      CompileInfoHandle ci_mesh =
-	NrrdToFieldMeshAlgo::get_compile_info("Unstructured",
+
+      CompileInfoHandle ci_mesh = 0;
+      if (has_data_) {
+	ci_mesh = NrrdToFieldMeshAlgo::get_compile_info("Unstructured",
 					      mtd,
 					      pointsH->nrrd->type,
 					      dataH->nrrd->type);
+      } else {
+	ci_mesh = NrrdToFieldMeshAlgo::get_compile_info("Unstructured",
+					      mtd,
+					      pointsH->nrrd->type,
+					      pointsH->nrrd->type);
+      }
 	  
       Handle<UnstructuredNrrdToFieldMeshAlgo> algo_mesh;
 	  
@@ -823,12 +809,12 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
       data_off = 1;
 
     for (int i=data_off; i<dataH->nrrd->dim; i++) {
-      if (!(airExists_d(data->axis[i].min) && airExists_d(data->axis[i].max))) {
+      if (!(airExists(data->axis[i].min) && airExists(data->axis[i].max))) {
 	has_min_pt = false;
 	nrrdAxisInfoMinMaxSet(data, i, nrrdCenterNode);
       }
 
-      if (airExists_d(data->axis[i].spacing))
+      if (airExists(data->axis[i].spacing))
 	sp.push_back(data->axis[i].spacing);
       else
 	sp.push_back(1.0);
@@ -851,42 +837,55 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
     geometry_ = REGULAR;
 
     Point minpt(0,0,0), maxpt(1,1,1);
+    string trans_str;
+    const bool has_transform = dataH->get_property("Transform", trans_str) &&
+      trans_str != "Unknown";
 
     switch (dataH->nrrd->dim-data_off) {
     case 1:
-      //get data from x axis and stuff into a Scanline
-      if (has_min_pt)
-	minpt = Point (data->axis[data_off].min, 0, 0);
-      
-      maxpt = Point ((data->axis[data_off].size - pt_off) * sp[0] + minpt.x(), 0, 0);
-      
+      if (!has_transform)
+      {
+        //get data from x axis and stuff into a Scanline
+        if (has_min_pt)
+        {
+          minpt = Point (data->axis[data_off].min, 0, 0);
+        }
+        maxpt = Point ((data->axis[data_off].size - pt_off) * sp[0] + minpt.x(), 0, 0);
+      }
       mHandle = scinew ScanlineMesh( data->axis[data_off].size + mesh_off,
 				     minpt, maxpt );
       break;
 
     case 2:
-      //get data from x,y axes and stuff into an Image
-      if (has_min_pt)
-	minpt = Point ( data->axis[data_off].min, data->axis[data_off+1].min, 0);
-
-      maxpt = Point( (data->axis[data_off  ].size - pt_off) * sp[0] + minpt.x(), 
-		     (data->axis[data_off+1].size - pt_off) * sp[1] + minpt.y(), 0);
-
+      if (!has_transform)
+      {
+        //get data from x,y axes and stuff into an Image
+        if (has_min_pt)
+        {
+          minpt = Point ( data->axis[data_off].min, data->axis[data_off+1].min, 0);
+        }
+        maxpt = Point( (data->axis[data_off  ].size - pt_off) * sp[0] + minpt.x(), 
+                       (data->axis[data_off+1].size - pt_off) * sp[1] + minpt.y(), 0);
+      }
       mHandle = scinew ImageMesh( data->axis[data_off  ].size + mesh_off, 
 				  data->axis[data_off+1].size + mesh_off, 
 				  minpt, maxpt);
       break;
 
     case 3:
-      //get data from x,y,z axes and stuff into a LatVol
-      if (has_min_pt) 
-	minpt = Point ( data->axis[data_off  ].min,
-			data->axis[data_off+1].min,
-			data->axis[data_off+2].min);
-      
-      maxpt = Point( (data->axis[data_off  ].size - pt_off) * sp[0] + minpt.x(), 
-		     (data->axis[data_off+1].size - pt_off) * sp[1] + minpt.y(), 
-		     (data->axis[data_off+2].size - pt_off) * sp[2] + minpt.z());
+      if (!has_transform)
+      {
+        //get data from x,y,z axes and stuff into a LatVol
+        if (has_min_pt)
+        {
+          minpt = Point ( data->axis[data_off  ].min,
+                          data->axis[data_off+1].min,
+                          data->axis[data_off+2].min);
+        }
+        maxpt = Point( (data->axis[data_off  ].size - pt_off) * sp[0] + minpt.x(), 
+                       (data->axis[data_off+1].size - pt_off) * sp[1] + minpt.y(), 
+                       (data->axis[data_off+2].size - pt_off) * sp[2] + minpt.z());
+      }
 
       mHandle = scinew LatVolMesh( data->axis[data_off  ].size + mesh_off, 
 				   data->axis[data_off+1].size + mesh_off, 

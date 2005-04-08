@@ -62,6 +62,7 @@ private:
   GuiDouble    background_;
   GuiDouble    gray_;
   GuiDouble    gamma_;
+  GuiDouble    threshold_;
 };
 
 DECLARE_MAKER(TendEvecRGB)
@@ -72,7 +73,8 @@ TendEvecRGB::TendEvecRGB(SCIRun::GuiContext *ctx) :
   aniso_metric_(ctx->subVar("aniso_metric")),
   background_(ctx->subVar("background")),
   gray_(ctx->subVar("gray")),
-  gamma_(ctx->subVar("gamma"))
+  gamma_(ctx->subVar("gamma")),
+  threshold_(ctx->subVar("threshold"))
 {
 }
 
@@ -136,14 +138,6 @@ TendEvecRGB::execute()
   inrrd_ = (NrrdIPort *)get_iport("nin");
   onrrd_ = (NrrdOPort *)get_oport("nout");
 
-  if (!inrrd_) {
-    error("Unable to initialize iport 'Nrrd'.");
-    return;
-  }
-  if (!onrrd_) {
-    error("Unable to initialize oport 'Nrrd'.");
-    return;
-  }
   if (!inrrd_->get(nrrd_handle))
     return;
 
@@ -157,7 +151,8 @@ TendEvecRGB::execute()
   Nrrd *nout = nrrdNew();
 
   if (tenEvecRGB(nout, nin, evec_.get(), get_method(aniso_metric_.get()), 
-		 gamma_.get(), background_.get(), gray_.get())) {
+		 threshold_.get(), gamma_.get(), background_.get(), 
+		 gray_.get())) {
     char *err = biffGetDone(TEN);
     error(string("Error making tendEvecRGB volume: ") + err);
     free(err);

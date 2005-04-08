@@ -189,7 +189,13 @@ public:
   virtual std::ostream &msgStream() { return msgStream_; }
   virtual void msgStream_flush() { msgStream_.flush(); }
 
+  // Compilation progress.  Should probably have different name.
   virtual void report_progress( ProgressState );
+
+  // Execution time progress.
+  // Percent is number between 0.0-1.0
+  virtual void update_progress(double percent); 
+  virtual void update_progress(unsigned int n, unsigned int max);
 
   port_range_type getIPorts(const string &name);
   port_range_type getOPorts(const string &name);
@@ -215,11 +221,12 @@ public:
   // Used by ModuleHelper
   void setPid(int pid);
   virtual void do_execute();
+  virtual void do_synchronize();
   virtual void execute() = 0;
 
   void request_multisend(OPort*);
   Mailbox<MessageBase*> mailbox;
-  void set_context(Scheduler* sched, Network* network);
+  virtual void set_context(Scheduler* sched, Network* network);
 
   // Callbacks
   virtual void connection(Port::ConnectionState, int, bool);
@@ -265,11 +272,7 @@ protected:
   friend class IPort;
   string id;
   bool abort_flag;
-  virtual void update_progress(double);
-  virtual void update_progress(double, Timer &);
-  virtual void update_progress(int, int);
-  virtual void update_progress(int, int, Timer &);
-  virtual void accumulate_progress(int);
+
   enum State {
     NeedData,
     JustStarted,

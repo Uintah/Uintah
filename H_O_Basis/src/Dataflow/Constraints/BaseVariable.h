@@ -44,8 +44,6 @@
 #ifndef SCI_project_Base_Variable_h
 #define SCI_project_Base_Variable_h 1
 
-#include <Dataflow/share/share.h>
-
 #include <Dataflow/Constraints/VarCore.h>
 #include <string>
 #include <vector>
@@ -67,7 +65,7 @@ enum Scheme { Scheme1, Scheme2, Scheme3, Scheme4,
 
 class BaseConstraint;
 
-class PSECORESHARE BaseVariable {
+class BaseVariable {
    friend class BaseConstraint;
    friend class ConstraintSolver;
 public:
@@ -123,14 +121,14 @@ private:
    void RegisterPriority( const Index index, const VPriority p );
    void printc( std::ostream& os, const Index c );
 };
-inline PSECORESHARE std::ostream& operator<<( std::ostream& os, BaseVariable& v );
+inline std::ostream& operator<<( std::ostream& os, BaseVariable& v );
 
 
 /* Miscellaneous */
 char* PriorityString( const VPriority p );
 char* SchemeString( const Scheme s );
 
-inline PSECORESHARE int HigherPriority( const VPriority p1, const VPriority p2 )
+inline int HigherPriority( const VPriority p1, const VPriority p2 )
 {
    return (p1 > p2);
 }
@@ -164,7 +162,7 @@ BaseVariable::operator double() const
 }
 
 
-inline PSECORESHARE std::ostream&
+inline std::ostream&
 operator<<( std::ostream& os, BaseVariable& v )
 {
    v.print(os);

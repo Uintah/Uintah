@@ -47,7 +47,6 @@
 #ifndef SCI_project_Network_h
 #define SCI_project_Network_h 1
 
-#include <Dataflow/share/share.h>
 #include <Core/Thread/Mutex.h>
 #include <string>
 #include <vector>
@@ -69,7 +68,7 @@ class DeleteModuleThread;
 class ViewServer;
 // CollabVis code end
   
-class PSECORESHARE Network {
+class Network {
   friend class DeleteModuleThread;
 public:
     

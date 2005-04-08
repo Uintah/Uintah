@@ -38,8 +38,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/share/share.h>
-
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Math/Trig.h>
@@ -50,7 +48,7 @@ namespace BioPSE {
 
 using namespace SCIRun;
 
-class PSECORESHARE TrigCurrentPattern : public Module {
+class TrigCurrentPattern : public Module {
 public:
   GuiDouble magnitudeTCL_;
 
@@ -88,19 +86,6 @@ void
   iportElectrodeParams_ = (MatrixIPort *)get_iport("Electrode Parameters");
 
   oportCurrentVector_ = (MatrixOPort *)get_oport("CurrentPatternVector");
-
-  if (!iportCurrentPatternIndex_) {
-    error("Unable to initialize iport 'Current Pattern Index'.");
-    return;
-  }
-  if (!iportElectrodeParams_) {
-    error("Unable to initialize iport 'Electrode Parameters'.");
-    return;
-  }
-  if (!oportCurrentVector_) {
-    error("Unable to initialize oport 'Current Pattern Vector'.");
-    return;
-  }
 
   double currentMagnitude = Max(magnitudeTCL_.get(), 0.0);
 

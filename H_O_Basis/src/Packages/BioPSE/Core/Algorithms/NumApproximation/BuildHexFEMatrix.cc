@@ -198,7 +198,7 @@ void BuildHexFEMatrix::addLocal2GlobalMatrix(double localMatrix[8][8], HVMesh::N
 	int row = (int)cell_nodes[i]; 
 	for(int j=0; j<8; j++) {
 	  int col = (int)cell_nodes[j]; 
-	  dA_->get(row, col) += localMatrix[i][j];
+	  dA_->add(row, col, localMatrix[i][j]);
 	}
   }
 }

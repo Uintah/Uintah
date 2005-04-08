@@ -75,14 +75,6 @@ UnuAxsplit::execute()
   inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
   onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!inrrd_) {
-    error("Unable to initialize iport 'InputNrrd'.");
-    return;
-  }
-  if (!onrrd_) {
-    error("Unable to initialize oport 'OutputNrrd'.");
-    return;
-  }
   if (!inrrd_->get(nrrd_handle))
     return;
 
@@ -106,8 +98,7 @@ UnuAxsplit::execute()
   NrrdDataHandle out(nrrd);
 
   // Copy the properties.
-  *((PropertyManager *) out.get_rep()) =
-    *((PropertyManager *) nrrd_handle.get_rep());
+  out->copy_properties(nrrd_handle.get_rep());
 
   onrrd_->send(out);
 }

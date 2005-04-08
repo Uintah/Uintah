@@ -272,14 +272,9 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
 
     Field *ofield = 0;
     typedef vector<TYPE> FData;
-    if (ifield->basis_order() == -1) {
-      typedef GenericField<PCMesh, NoDataBasis<TYPE>, FData > OField;
-      ofield = scinew OField(omesh);
-    } else {
-      typedef GenericField<PCMesh, ConstantBasis<TYPE>, FData > OField;
-      ofield = scinew OField(omesh);
-    }
-
+    typedef GenericField<PCMesh, ConstantBasis<TYPE>, FData > OField;
+    ofield = scinew OField(omesh);
+ 
     ofield->copy_properties(ifield);
     ofield_h = ofield;
 

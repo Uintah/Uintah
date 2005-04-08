@@ -47,7 +47,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class PSECORESHARE UnuCCmerge : public Module {
+class UnuCCmerge : public Module {
 public:
   UnuCCmerge(GuiContext*);
 
@@ -88,15 +88,6 @@ void
   update_state(NeedData);
   inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
   onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
-
-  if (!inrrd_) {
-    error("Unable to initialize iport 'InputNrrd'.");
-    return;
-  }
-  if (!onrrd_) {
-    error("Unable to initialize oport 'OutputNrrd'.");
-    return;
-  }
 
   if (!inrrd_->get(nrrd_handle))
     return;

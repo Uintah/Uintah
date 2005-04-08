@@ -87,16 +87,6 @@ UnuConvert::execute()
   inrrd_ = (NrrdIPort *)get_iport("Nrrd");
   onrrd_ = (NrrdOPort *)get_oport("Nrrd");
 
-  if (!inrrd_) {
-    error("Unable to initialize iport 'Nrrd'.");
-    return;
-  }
-  if (!onrrd_) {
-    error("Unable to initialize oport 'Nrrd'.");
-    return;
-  }
-
-
   if (!inrrd_->get(nrrdH))
     return;
   if (!nrrdH.get_rep()) {

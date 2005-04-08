@@ -94,7 +94,7 @@ int parseArgs(int argc, char *argv[]) {
 }
 
 void printUsageInfo(char *progName) {    
-  cerr << "\n Usage: "<<progName<<" textfile ColumnMatix [-noHeader] [-binOutput] [-debugOn]\n\n";
+  cerr << "\n Usage: "<<progName<<" textfile ColumnMatrix [-noHeader] [-binOutput] [-debugOn]\n\n";
   cerr << "\t This program will read in a .txt file specifying a matrix. \n";
   cerr << "\t The .txt file will have whitespace-separated matrix entries \n";
   cerr << "\t and a one line header indicating the number of rows in the \n";

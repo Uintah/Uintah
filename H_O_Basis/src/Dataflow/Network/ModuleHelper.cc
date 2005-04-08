@@ -51,6 +51,7 @@
 
 #include <iostream>
 #include <unistd.h>
+
 using namespace std;
 
 #define DEFAULT_MODULE_PRIORITY 90
@@ -62,17 +63,24 @@ ModuleHelper::ModuleHelper(Module* module)
 {
 }
 
+
 ModuleHelper::~ModuleHelper()
 {
 }
 
-void ModuleHelper::run()
+
+void
+ModuleHelper::run()
 {
   module->setPid(getpid());
   if(module->have_own_dispatch)
+  {
     module->do_execute();
-  else {
-    for(;;){
+  }
+  else
+  {
+    for(;;)
+    {
       MessageBase* msg = module->mailbox.receive();
       switch(msg->type) {
       case MessageTypes::GoAway:
@@ -83,8 +91,15 @@ void ModuleHelper::run()
 	break;
 
       case MessageTypes::ExecuteModule:
-	module->do_execute();
+        module->do_execute();
+        module->do_synchronize();
+        module->sched->report_execution_finished(msg);
 	break;
+
+      case MessageTypes::SynchronizeModule:
+        module->do_synchronize();
+        module->sched->report_execution_finished(msg);
+        break;
 
       case MessageTypes::TriggerPort:
 	{
@@ -94,7 +109,8 @@ void ModuleHelper::run()
 	break;
 
       default:
-	cerr << "(ModuleHelper.cc)Illegal Message type: " << msg->type << std::endl;
+	cerr << "(ModuleHelper.cc) Illegal Message type: " << msg->type
+             << std::endl;
 	break;
       }
 
@@ -102,6 +118,7 @@ void ModuleHelper::run()
     }
   }
 }
+
 
 } // End namespace SCIRun
 

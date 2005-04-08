@@ -49,11 +49,9 @@
 #include <vector>
 #include <math.h>
 
-#include <Dataflow/share/share.h>
-
 namespace SCIRun {
 
-class PSECORESHARE StreamLines : public Module {
+class StreamLines : public Module {
 public:
   StreamLines(GuiContext* ctx);
 
@@ -112,7 +110,7 @@ StreamLines::~StreamLines()
 
 
 //! interpolate using the generic linear interpolator
-static bool
+static inline bool
 interpolate(const VectorFieldInterfaceHandle &vfi, const Point &p, Vector &v)
 {
   return vfi->interpolate(v, p) && (v.safe_normalize() > 0.0);
@@ -135,7 +133,7 @@ static const double rkf_d[][5]=
    {-8.0/27, 2.0, -3544.0/2565, 1859.0/4104, -11.0/40}};
 
 static int
-ComputeRKFTerms(vector<Vector> &v, // storage for terms
+ComputeRKFTerms(Vector v[6],       // storage for terms
 		const Point &p,    // previous point
 		double s,          // current step size
 		const VectorFieldInterfaceHandle &vfi)
@@ -193,18 +191,13 @@ FindRKF(vector<Point> &v, // storage for points
 	int n,            // max number of steps
 	const VectorFieldInterfaceHandle &vfi) // the field
 {
-  vector <Vector> terms(6, Vector(0.0, 0.0, 0.0));
+  Vector terms[6];
 
   if (!interpolate(vfi, x, terms[0])) { return; }
   for (int i=0; i<n; i++)
   {
     // Compute the next set of terms.
-    int tmp = ComputeRKFTerms(terms, x, s, vfi);
-    if (tmp == -1)
-    {
-      break;
-    }
-    else if (tmp < 5)
+    if (ComputeRKFTerms(terms, x, s, vfi) < 5)
     {
       s /= 1.5;
       continue;
@@ -214,9 +207,11 @@ FindRKF(vector<Point> &v, // storage for points
     const Vector err = terms[0]*rkf_ab[0] + terms[1]*rkf_ab[1]
       + terms[2]*rkf_ab[2] + terms[3]*rkf_ab[3] + terms[4]*rkf_ab[4]
       + terms[5]*rkf_ab[5];
-    const double err2 = err.x()*err.x() + err.y()*err.y() + err.z()*err.z();
+    const double err2 = err.length2();
     
-    // Is the error tolerable?  Adjust the step size accordingly.
+    // Is the error tolerable?  Adjust the step size accordingly.  Too
+    // small?  Grow it for next time but keep small-error result.  Too
+    // big?  Recompute with smaller size.
     if (err2 * 16384.0 < t2)
     {
       s *= 2.0;
@@ -271,7 +266,6 @@ FindRK4(vector<Point> &v,
 	int n,
 	const VectorFieldInterfaceHandle &vfi)
 {
-  vector<Vector> terms(6, Vector(0.0, 0.0, 0.0));
   Vector f[4];
   int i;
 
@@ -298,24 +292,26 @@ FindRK4(vector<Point> &v,
 static void
 FindAdamsBashforth(vector<Point> &v, // storage for points
 		   Point x,          // initial point
-		   double t2,       // square error tolerance
+		   double t2,        // square error tolerance
 		   double s,         // initial step size
 		   int n,            // max number of steps
 		   const VectorFieldInterfaceHandle &vfi) // the field
 {
   FindRK4(v, x, t2, s, Min(n, 5), vfi);
-  if (v.size() < 5) { return; }
+  if (v.size() < 5) {
+    cerr << "Streamlines - FindAdamsBashforth: Ending early, less than 5 points.\n\n";
+    return;
+  }
+
   Vector f[5];
   int i;
 
   for (i = 0; i < 5; i++)
-  {
     interpolate(vfi, v[v.size() - 1 - i], f[i]);
-  }
+  
   x = v[v.size() - 1];
-
-  for (i = 5; i < n; i++)
-  {
+  
+  for (i = 5; i < n; i++) {
     x += (s/720.) * (1901.0 * f[0] - 2774.0 * f[1] +
 		     2616.0 * f[2] - 1274.0 * f[3] +
 		     251.0 * f[4]);
@@ -324,32 +320,40 @@ FindAdamsBashforth(vector<Point> &v, // storage for points
     f[3] = f[2];
     f[2] = f[1];
     f[1] = f[0];
-    if (!interpolate(vfi, x, f[0])) { break; }
+
+    if (!interpolate(vfi, x, f[0])) {
+      cerr << "Streamlines - FindAdamsBashforth: Ending early, can not interpolate\n";
+      cerr << "vfi interpolate returned " << vfi->interpolate(f[0], x) << "\n";
+      cerr << "Point " << x.x() << "  " << x.y() << "  " << x.z() << "\n";
+      cerr << "Value " << f[0].x() << "  " << f[0].y() << "  " << f[0].z() << "\n";
+      cerr << "safe_normalize returned " << f[0].safe_normalize() << "\n\n";
+
+      break; 
+    }
+
     v.push_back(x);
   }
 }
 
 
-void
-StreamLinesCleanupPoints(vector<Point> &v, const vector<Point> &input,
-			 double e2)
+vector<Point>::iterator
+StreamLinesCleanupPoints(vector<Point> &input, double e2)
 {
   unsigned int i, j;
-  v.push_back(input[0]);
   j = 0;
   for (i=1; i < input.size()-1; i++)
   {
-    const Vector v0 = input[i] - v[j];
+    const Vector v0 = input[i] - input[j];
     const Vector v1 = input[i] - input[i+1];
     if (Cross(v0, v1).length2() > e2 && Dot(v0, v1) < 0.0)
     {
-      v.push_back(input[i]);
       j++;
+      if (i != j) { input[j] = input[i]; }
     }
   }
-  if (input.size() > 1) v.push_back(input[input.size()-1]);
+  if (input.size() > 1) { j++; input[j] = input[input.size()-1]; }
+  return input.begin() + j + 1;
 }
-
 
 
 void
@@ -385,9 +389,7 @@ StreamLinesAlgo::FindNodes(vector<Point> &v, // storage for points
 
   if (remove_colinear_p)
   {
-    vector<Point> tmp;
-    StreamLinesCleanupPoints(tmp, v, t2);
-    v = tmp;
+    v.erase(StreamLinesCleanupPoints(v, t2), v.end());
   }
 }
 
@@ -430,12 +432,6 @@ StreamLines::execute()
   FieldHandle vfHandle;
   Field *vField;  // vector field
   
-  //must find vector field input port
-  if (!vfport) {
-    error("Unable to initialize iport 'Flow field'.");
-    return;
-  }
-   
   // the vector field input is required
   if (!vfport->get(vfHandle) || !(vField = vfHandle.get_rep())) {
     error( "No Vector field handle or representation" );
@@ -459,12 +455,6 @@ StreamLines::execute()
   FieldIPort* sfport = (FieldIPort*)get_iport("Seeds");
   FieldHandle sfHandle;
   Field *sField;  // seed point field
-
-  // must find seed field input port
-  if (!sfport) {
-    error("Unable to initialize iport 'Seeds'.");
-    return;
-  }
 
   // the seed field input is required
   if (!sfport->get(sfHandle) || !(sField = sfHandle.get_rep())) {
@@ -563,17 +553,10 @@ StreamLines::execute()
     update_state(Completed);
   }
    
-  // Get a handle to the output field port.
-  if( fHandle_.get_rep() ) {
-    FieldOPort *ofield_port = 
-      (FieldOPort *) get_oport("Streamlines");
-
-    if (!ofield_port) {
-      error("Unable to initialize "+name+"'s oport\n");
-      return;
-    }
-
-    // Send the data downstream
+  // Send the data downstream
+  if( fHandle_.get_rep() )
+  {
+    FieldOPort *ofield_port = (FieldOPort *) get_oport("Streamlines");
     ofield_port->send( fHandle_ );
   }
 }

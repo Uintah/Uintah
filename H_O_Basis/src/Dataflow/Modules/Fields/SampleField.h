@@ -261,7 +261,7 @@ SampleFieldRandomAlgoT<Mesh>::execute(ProgressReporter *mod,
     }
     pcmesh->add_node(p);
   }
-  typedef ConstantBasis<double>                DatBasis;
+  typedef ConstantBasis<double>                            DatBasis;
   typedef GenericField<PCMesh, DatBasis, vector<double> >  PCField;   
   PCField *seeds = scinew PCField(pcmesh);
 

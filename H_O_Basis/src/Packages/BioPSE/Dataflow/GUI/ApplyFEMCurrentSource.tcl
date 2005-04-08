@@ -64,7 +64,7 @@ itcl_class BioPSE_Forward_ApplyFEMCurrentSource {
 	toplevel $w
 	
 	make_labeled_radio $w.mode "Source model:" "" left $this-modeTCL \
-	    {dipole {"sources and sinks"} {"electrode set"}}
+	    {dipole {"sources and sinks"}}
 	make_entry $w.source "Source electrode:" $this-sourceNodeTCL "$this-c needexecute"
 	make_entry $w.sink "Sink electrode:" $this-sinkNodeTCL "$this-c needexecute"
 	bind $w.source <Return> "$this-c needexecute"

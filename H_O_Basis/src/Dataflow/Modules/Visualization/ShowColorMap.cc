@@ -114,9 +114,9 @@ ShowColorMap::execute()
 
   GeomGroup *all = scinew GeomGroup();
 
-  Point  ref1;
-  Vector out;
-  Vector along;
+  Point  ref1(0.0, 0.0, 0.0);
+  Vector out(0.0, 0.0, 0.0);
+  Vector along(0.0, 0.0, 0.0);
 
   Color text_color;
   if( gui_text_color_.get() == 0 ){
@@ -195,11 +195,28 @@ ShowColorMap::execute()
   }
 
   const Point  ref0(ref1 - out);
+  // Create a new colormap that we can send to ColorMapTex.  We need
+  // to do this, because if the colormap min/max are too close you get
+  // problems.  This is because the min and max are used to lookup
+  // into the texture as floats.  Precion problems occur when the min
+  // == max in floats, but not as doubles.
+  ColorMapHandle cmap_rescaled;
+  // Only rescale it when the min != max or min and max are too close.
+  float too_close = fabsf((float)(cmap->getMin()) - (float)(cmap->getMax()));
+  // Replace zero compared with too_close with an epsilon if desired.
+  if (too_close <= 0) {
+    // Make a copy of the colormap we can rescale
+    cmap_rescaled = cmap->clone();
+    cmap_rescaled->Scale(0, 1);
+  } else {
+    cmap_rescaled = cmap;
+  }
+    
   ColorMapTex *sq = scinew ColorMapTex(ref0,
 				       ref0 + along,
 				       ref0 + along + out,
 				       ref0 + out,
-				       cmap);
+				       cmap_rescaled);
   all->add( sq );
 
   double scale = gui_scale_.get();

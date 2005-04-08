@@ -56,6 +56,11 @@ using std::endl;
 
 using namespace SCIRun;
 
+#define check_error(str) \
+  if (str.fail()) { \
+    cerr << "fail state at line: " << __LINE__ << " " << endl; \
+    return 66; }
+
 bool bin_out;
 bool swap_endian;
 
@@ -119,13 +124,14 @@ void swap_endianess_4(unsigned *dw)
 }
 
 template <class T>
-void
+int
 read_n_points(TSMesh *tsm, int n, ifstream &str) {
   T arr[3];
-  if (str.fail()) { cerr << "fail state on stream" << endl; return;}
+  check_error(str);
+
   for(int i = 0; i < n; i++) {
     str.read((char*)arr, sizeof(T) * 3);
-    if (str.fail()) { cerr << "fail state on stream " << i << endl; return;}
+    check_error(str);
     switch (sizeof(T)) {
     case 2 :
 
@@ -142,17 +148,18 @@ read_n_points(TSMesh *tsm, int n, ifstream &str) {
     tsm->add_point(Point(arr[0], arr[1], arr[2]));
     //cout << arr[0] << ", " << arr[1] << ", " << arr[2] << endl;
   }
+  return 0;
 }
 
 template <class T>
-void
+int
 read_n_polys(TSMesh *tsm, int n, ifstream &str) {
   T arr[3];
-  if (str.fail()) { cerr << "fail state on stream" << endl; return;}
+  check_error(str);
   for(int i = 0; i < n; i++) {
     T val;
     str.read((char*)&val, sizeof(T));
-    if (str.fail()) { cerr << "fail state on stream " << i << endl; return;}
+    check_error(str);
     swap_endianess_4(&val);
 
     if (val != 3) {
@@ -161,7 +168,7 @@ read_n_polys(TSMesh *tsm, int n, ifstream &str) {
     }
 
     str.read((char*)arr, sizeof(T) * 3);
-    if (str.fail()) { cerr << "fail state on stream " << i << endl; return;}
+    check_error(str);
 
     swap_endianess_4((unsigned*)&arr[0]);
     swap_endianess_4((unsigned*)&arr[1]);
@@ -170,25 +177,28 @@ read_n_polys(TSMesh *tsm, int n, ifstream &str) {
     tsm->add_triangle(arr[0], arr[1], arr[2]);
     //cout << arr[0] << ", " << arr[1] << ", " << arr[2] << endl;
   }
+  return 0;
 }
 
 template <class FLD>
-void
+int
 read_scalar_lookup(FLD *fld, int n, ifstream &str) {
   fld->resize_fdata();
   typedef typename FLD::value_type val_t;
   //val_t last = 0;
   int vset = 0;
-  if (str.fail()) { cerr << "fail state on stream" << endl; return;}
+  check_error(str);
+
   for(int i = 0; i < n; i++) {
     typedef typename FLD::value_type val_t;
     val_t val;
     str.read((char*)&val, sizeof(val_t));
-    if (str.fail()) { cerr << "fail state on stream " << i << endl; return;}
+    check_error(str);
     swap_endianess_4((unsigned*)&val);
     vset++;
     fld->set_value(val, (typename FLD::mesh_type::Face::index_type)i);    
   }
+  return 0;
 }
 
 
@@ -217,11 +227,8 @@ main(int argc, char **argv) {
     status = 1;
     return 1;
   }
-  ifstream vtk(in, std::ios_base::binary);
-  if (vtk.fail()) {
-    cerr << "Error -- Could not open file " << in << "\n";
-    return 2;
-  }
+  ifstream vtk(in, ios::binary);
+  check_error(vtk);
 
   char id[256], header[256], format[256];
 
@@ -229,7 +236,7 @@ main(int argc, char **argv) {
   vtk.getline(header, 256);
 
   vtk >> format;
-  //cout << format << endl;  
+  cout << format << endl;  
 
   string dataset;
   vtk >> dataset;
@@ -246,6 +253,8 @@ main(int argc, char **argv) {
 	return 5;
       }
   }
+  check_error(vtk);
+  
   string attrib;
   vtk >> attrib;
 
@@ -255,10 +264,13 @@ main(int argc, char **argv) {
   string type;
   vtk >> type;
   //cout << "attrib is : " << attrib << " " << n << " type is " << type << endl;
+  check_error(vtk);
   vtk.get(); // eat a newline
 
   read_n_points<float>(tsm, n, vtk);
   
+  check_error(vtk);
+
   string poly;
   vtk >> poly;
 
@@ -270,62 +282,77 @@ main(int argc, char **argv) {
   vtk >> n;
   int sz;
   vtk >> sz;
-  //cout << poly << " " << n << " " << sz << endl;
+  cout << poly << " " << n << " " << sz << endl;
 
   vtk.get(); // eat a newline
   read_n_polys<unsigned>(tsm, n, vtk);
+  check_error(vtk);
   
   string dat;
   vtk >> dat; 
   vtk >> n;
-  //cout << dat << " " << n << endl;
-  Field *tsf;
+
+  check_error(vtk)
+  cout << dat << " " << n << endl;
+
+  if (dat == "CELL_DATA") {
+    vtk >> dat; 
+    vtk >> n;
+    check_error(vtk)
+    cout << dat << " " << n << endl;
+  }
+  
+  
+
+  FieldHandle ts_handle;
   string data, name;
-  vtk >> data >> name >> type;
-  //cout << data << " " << name << " " << type << endl;
+//   vtk >> data;
+//   check_error(vtk);
+//   cout << data << endl;
+//   vtk >> name;
+//   check_error(vtk);
+//   cout << name << endl;
+//   vtk >> type;
+//   check_error(vtk);
+//   cout << type << endl;
 
   if (dat == "CELL_DATA") {
     if (type != "float") {
       cerr << "supporting float only atm..." << endl;
       return 1;
     }
-    TSFieldC *ts = scinew TSFieldC(TSMesh::handle_type(tsm));
-    ts->resize_fdata();
-    tsf = ts;
+    TSFieldC *tsc = scinew TSFieldC(TSMesh::handle_type(tsm));
+    tsc->resize_fdata();
     //cout << "putting data at faces" << endl;
     string table, tname;
     vtk >> table >> tname;
     //cout << table << " " << tname << endl;
     vtk.get(); // eat a newline
-    read_scalar_lookup(ts, n, vtk);
+    read_scalar_lookup(tsc, n, vtk);
+    ts_handle = tsc;
   } else {
     // node centered data ...
     if (type != "float") {
       cerr << "supporting float only atm..." << endl;
       return 1;
     }
-    TSFieldL *ts = scinew TSFieldL(TSMesh::handle_type(tsm));
-    ts->resize_fdata();
-    tsf = ts;
+    TSFieldL *tsl = scinew TSFieldL(TSMesh::handle_type(tsm));
+    tsl->resize_fdata();
+
     string table, tname;
     vtk >> table >> tname;
     //cout << table << " " << tname << endl;
     vtk.get(); // eat a newline
-    read_scalar_lookup(ts, n, vtk);
+    read_scalar_lookup(tsl, n, vtk);
+    ts_handle = tsl;
   }
 
-
-  vtk >> dat; 
-  vtk >> n;
-  //cout << dat << " " << n << endl;
-  if (vtk.fail()) { cerr << "fail state on stream" << endl; return 66;}
-  
   while (!vtk.eof()) {
     vtk.get();
   }
 
-  FieldHandle ts_handle(tsf);
-  
+
+
   if (bin_out) {
     BinaryPiostream out_stream(out, Piostream::Write);
     Pio(out_stream, ts_handle);

@@ -97,17 +97,9 @@ RefineTetVol::execute()
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input TetVol");
   FieldHandle ifieldhandle;
-  if (!ifp) {
-    error("Unable to initialize Input TetVol iport.");
-    return;
-  }
 
   FieldIPort *control_port = (FieldIPort *)get_iport("Refinement Control");
   FieldHandle control_handle;
-  if (!control_port) {
-    error("Unable to initialize Refinement Control iport.");
-    return;
-  }
   
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep())) {
     error("RefineTetvol must have an input field to work with");

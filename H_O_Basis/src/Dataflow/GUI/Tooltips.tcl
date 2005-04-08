@@ -74,7 +74,8 @@ proc TooltipMultiline { w args } {
 #  TooltipMultiWidget "widgets" msg
 #
 #     This convenience function creates the same tooltip for multiple
-#     widgets.  "widgets" must be a list of widgets.
+#     widgets.  "widgets" must be a list of widgets (Use "" around the
+#     names of each widget.).
 #
 proc TooltipMultiWidget {widgets msg} {
     for {set arg 0} {$arg < [llength $widgets] } { incr arg } {
@@ -85,6 +86,7 @@ proc TooltipMultiWidget {widgets msg} {
 
 proc Tooltip {w args} {
     set msg [join $args ""]
+    set msg [join [split $msg \"] \\\"]
     global tooltipDelayMS tooltipID tooltipsOn
     bind $w <Enter> "global tooltipID tooltipsOn
                      if \[set tooltipsOn\] \{

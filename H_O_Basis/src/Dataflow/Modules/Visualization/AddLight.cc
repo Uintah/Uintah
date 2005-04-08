@@ -38,7 +38,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Core/share/share.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Core/Geom/PointLight.h>
@@ -59,7 +58,7 @@ namespace SCIRun {
 
 static string control_name("Control Widget");
 
-class SCICORESHARE AddLight : public Module {
+class AddLight : public Module {
 public:
   AddLight(GuiContext*);
 
@@ -136,12 +135,7 @@ AddLight::execute()
   static LightType lt = DirectionalLight;
   bool need_new_light = false;
   GeometryOPort *ogeom_ = (GeometryOPort *)get_oport("Geometry");
-  
-  if (!ogeom_) {
-    error("Unable to initialize oport 'Geometry'.");
-    return;
-  }
-  
+
   if(!light_widget_){
     
     if( control_pos_saved_.get() == 1 ) {

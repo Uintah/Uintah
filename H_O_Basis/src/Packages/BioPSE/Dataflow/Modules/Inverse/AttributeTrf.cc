@@ -34,8 +34,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Algorithms/Geometry/SurfaceLaplacian.h>
 
-#include <Packages/BioPSE/share/share.h>
-
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 
@@ -43,6 +41,7 @@
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Basis/TriLinearLgn.h>
 #include <Core/Datatypes/TriSurfMesh.h>
 
 #include <math.h>
@@ -52,8 +51,8 @@ namespace BioPSE {
 
 using namespace SCIRun;
 
-class BioPSESHARE AttributeTrf : public Module {
-
+class AttributeTrf : public Module {
+  typedef SCIRun::TriSurfMesh<TriLinearLgn<Point> > TSMesh;
 public:
 
   // CONSTRUCTOR
@@ -81,28 +80,19 @@ AttributeTrf::~AttributeTrf(){
 ///////////////////////////////////////////////
 // MODULE EXECUTION
 ///////////////////////////////////////////////
-void AttributeTrf::execute(){
-
+void AttributeTrf::execute()
+{
   FieldIPort *iportGeomF = (FieldIPort *)get_iport("InputFld");
   MatrixOPort *oportAttrib = (MatrixOPort *)get_oport("OutputMat");
 
-  if (!iportGeomF) {
-    error("Unable to initialize iport 'InputFld'.");
-    return;
-  }
-  if (!oportAttrib) {
-    error("Unable to initialize oport 'OutputMat'.");
-    return;
-  }
-
-  // getting input field
+  // Getting input field.
   FieldHandle hFieldGeomF;
   if(!iportGeomF->get(hFieldGeomF) || !hFieldGeomF.get_rep()) { 
     error("Couldn't get handle to the Input Field.");
     return;
   }
 
-  TriSurfMesh *tsm=dynamic_cast<TriSurfMesh *>(hFieldGeomF->mesh().get_rep());
+  TSMesh *tsm=dynamic_cast<TSMesh *>(hFieldGeomF->mesh().get_rep());
   if (!tsm) {
     error("Input field was not a TriSurfField.");
     return;

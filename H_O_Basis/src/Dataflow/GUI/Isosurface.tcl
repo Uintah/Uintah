@@ -47,9 +47,11 @@ itcl_class SCIRun_Visualization_Isosurface {
 	global $this-isoval-typed
 	global $this-isoval-quantity
 	global $this-quantity-range
+	global $this-quantity-clusive
 	global $this-quantity-min
 	global $this-quantity-max
 	global $this-isoval-list
+	global $this-isoval-matrix
 	global $this-active-isoval-selection-tab
 	global $this-continuous
 	global $this-extract-from-new-field
@@ -69,9 +71,11 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-isoval-typed 0
 	set $this-isoval-quantity 1
 	set $this-quantity-range "field"
+	set $this-quantity-clusive "exclusive"
 	set $this-quantity-min 0
 	set $this-quantity-max 100
 	set $this-isoval-list "0.0 1.0 2.0 3.0"
+	set $this-isoval-matrix "No matrix present - execution needed."
 	set $this-active-isoval-selection-tab 0
 	set $this-continuous 0
 	set $this-extract-from-new-field 1
@@ -187,7 +191,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	iwidgets::labeledframe $w.f.iso -labelpos nw -labeltext "Isovalue Selection"
 	set isf [$w.f.iso childsite]
 	global Color
-	iwidgets::tabnotebook $isf.tabs -raiseselect true -height 130 \
+	iwidgets::tabnotebook $isf.tabs -raiseselect true -height 160 \
 	    -backdrop $Color(Basecolor)
 	pack $isf.tabs -side top -fill x -expand 1
 	pack $w.f.iso -side top -fill x -expand 1
@@ -199,7 +203,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	scaleEntry2 $sel.isoval \
 	    [set $this-isoval-min] [set $this-isoval-max] \
-	     4c $this-isoval $this-isoval2
+	     4c $this-isoval $this-isoval-typed
 
 	pack $sel.isoval  -fill x
 
@@ -243,7 +247,17 @@ itcl_class SCIRun_Visualization_Isosurface {
 	pack $sel.m.c $sel.m.f -side top -anchor w
 	pack $sel.m.m $sel.m.t -side left -anchor w
 
-	pack $sel.f $sel.m -side top -expand 1 -fill x -pady 5
+	frame $sel.t
+	radiobutton $sel.t.e -text "Exclusive" \
+		-variable $this-quantity-clusive -value "exclusive" \
+		-command "$this-c needexecute"
+	radiobutton $sel.t.i -text "Inclusive" \
+		-variable $this-quantity-clusive -value "inclusive" \
+		-command "$this-c needexecute"
+
+	pack $sel.t.e $sel.t.i -side left -anchor w
+
+	pack $sel.f $sel.m $sel.t -side top -expand 1 -fill x -pady 5
 
 	# Iso Value using list
 	
@@ -255,6 +269,18 @@ itcl_class SCIRun_Visualization_Isosurface {
 	bind $isolist.f.e <Return> "$this-c needexecute"
 	pack $isolist.f.l $isolist.f.e -side left -fill both -expand 1
 	pack $isolist.f -fill x
+
+
+	# Iso Value using matrix
+
+	set isomatrix [$isf.tabs add -label "Matrix" -command "set $this-active-isoval-selection-tab 3"]
+
+	frame $isomatrix.f
+	label $isomatrix.f.l -text "List of Isovals:"
+	entry $isomatrix.f.e -width 40 -text $this-isoval-matrix
+	bind $isomatrix.f.e <Return> "$this-c needexecute"
+	pack $isomatrix.f.l $isomatrix.f.e -side left -fill both -expand 1
+	pack $isomatrix.f -fill x
 
 	# Pack the Iso Value Selection Tabs
 
@@ -334,6 +360,12 @@ itcl_class SCIRun_Visualization_Isosurface {
 	}
     }
     
+    method set-isomatrix { vals } {
+	global $this-isoval-matrix
+	
+	set $this-isoval-matrix $vals
+    }
+    
     method orient { tab page { val 4 }} {
 	global $page
 	global $tab
@@ -393,16 +425,20 @@ itcl_class SCIRun_Visualization_Isosurface {
 		set scale [expr pow(10.0, $lg-5 )]
 	    }
 
-	    $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval.l.s \
-		configure -from $min -to $max
-	    $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval.l.s \
-		configure -resolution [expr $range/(1.0e4*$scale)]
-	    $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval.l.s \
-		configure -tickinterval [expr ($max - $min)]
+	    set win $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval
+
+	    $win.l.s configure -from $min -to $max
+	    $win.l.s configure -resolution [expr $range/(1.0e4*$scale)]
+	    $win.l.s configure -tickinterval [expr ($max - $min)]
+
+	    bind $win.r.e <Return> "$this manualSliderEntryReturn \
+             $min $max $this-isoval $this-isoval-typed"
+	    bind $win.r.e <KeyRelease> "$this manualSliderEntry \
+             $min $max $this-isoval $this-isoval-typed"
 	}
     }
 
-    method scaleEntry2 { win start stop length var1 var2 } {
+    method scaleEntry2 { win start stop length var_slider var_typed } {
 	frame $win 
 
 	frame $win.l
@@ -420,18 +456,19 @@ itcl_class SCIRun_Visualization_Isosurface {
 	scale $win.l.s \
 	    -from $start -to $stop \
 	    -length $length \
-	    -variable $var1 -orient horizontal -showvalue false \
-	    -command "$this updateSliderEntry $var1 $var2" \
+	    -variable $var_slider -orient horizontal -showvalue false \
+	    -command "$this updateSliderEntry $var_slider $var_typed" \
 	    -resolution [expr $range/(1.0e4*$scale)] \
 	    -tickinterval [expr ($stop - $start)]
 
-	entry $win.r.e -width 7 -text $var2
+	entry $win.r.e -width 7 -text $var_typed
 
 	bind $win.l.s <ButtonRelease> "$this set-isoval"
 
-	bind $win.r.e <Return> "$this-c needexecute"
+	bind $win.r.e <Return> "$this manualSliderEntryReturn \
+             $start $stop $var_slider $var_typed"
 	bind $win.r.e <KeyRelease> "$this manualSliderEntry \
-             $start $stop $var1 $var2"
+             $start $stop $var_slider $var_typed"
 
 	pack $win.l.s -side top -expand 1 -fill x -padx 5
 	pack $win.r.e -side top -padx 5 -pady 3
@@ -439,8 +476,8 @@ itcl_class SCIRun_Visualization_Isosurface {
 	pack $win.r -side right -fill y
     }
 
-    method updateSliderEntry {var1 var2 someUknownVar} {
-	set $var2 [set $var1]
+    method updateSliderEntry {var_slider var_typed someUknownVar} {
+	set $var_typed [set $var_slider]
 
 	global $this-continuous
 
@@ -450,26 +487,56 @@ itcl_class SCIRun_Visualization_Isosurface {
 	    set $this-continuous 1
 	}
     }
-    
-    method manualSliderEntry { start stop var1 var2 } {
-	if { ![string is double [set $var2]] } {
-	    set $var2 [set $var1] }
 
-	if { [set $var2] < $start } {
-	    set $var2 $start
-	}
-	if { [set $var2] > $stop } {
-	    set $var2 $stop 
+    method manualSliderEntryReturn { start stop var_slider var_typed } {
+	# Since the user has typed in a value and hit return, we know
+	# they are done and if their value is not valid or within range,
+	# we can change it to be either the old value, or the min or max
+	# depending on what is appropriate.
+  	if { ![string is double [set $var_typed]] } {
+  	    set $var_typed [set $var_slider] 
+  	}
+
+	if {[set $var_typed] < $start} {
+	    set $var_typed $start
+	} elseif {[set $var_typed] > $stop} {
+	    set $var_typed $stop
 	}
 
 	# Force the update to be manual
 	global $this-continuous
 	set continuous [set $this-continuous]
-
+	
 	set $this-continuous 0
 	
-	set $var1 [set $var2]
-
+	set $var_slider [set $var_typed]
+	
 	set $this-continuous $continuous
+    }
+    
+    method manualSliderEntry { start stop var_slider var_typed } {
+	# Evaluate as the user types in an isoval but never change the value
+	# they are typing in because they might not be done. Only update the
+	# actual isoval when user has typed in a double and it is within range.
+	
+ 	set var_new [set $var_slider]
+
+ 	# only update the value if it evaluates to a double 
+	# and is within range
+ 	if {[string is double [set $var_typed]] && 
+ 	    $start <= [set $var_typed] && 
+ 	    [set $var_typed] <= $stop} {
+ 	    set var_new [set $var_typed]
+ 	}
+	
+	# Force the update to be manual
+  	global $this-continuous
+  	set continuous [set $this-continuous]
+	
+  	set $this-continuous 0
+	
+  	set $var_slider $var_new
+	
+  	set $this-continuous $continuous
     }
 }

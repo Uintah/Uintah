@@ -91,13 +91,12 @@ typedef struct NodeInfo {
 //  friend void SCIRun::Pio(Piostream& stream, Datatypes::NodeInfo& node);
 } NodeInfo;
 
-
 typedef ConstantBasis<int>                SSQSBasis;
 typedef QuadSurfMesh<QuadBilinearLgn<Point> > SSQSMesh;
 typedef GenericField<SSQSMesh, SSQSBasis, vector<int> > SSQSField;  
 
 
-class SCICORESHARE SepSurf : public SSQSField {
+class SepSurf : public SSQSField {
 public:
   Array1<SSQSMesh::Node::index_type> nodes; // array of all nodes
   Array1<SSQSMesh::Face::index_type> faces;	// array of all faces/elements

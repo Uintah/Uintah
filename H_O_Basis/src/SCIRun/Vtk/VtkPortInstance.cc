@@ -42,10 +42,11 @@
 #include <SCIRun/Vtk/Port.h>
 #include <SCIRun/Vtk/InPort.h>
 #include <SCIRun/Vtk/OutPort.h>
+#include <SCIRun/Vtk/VtkComponentInstance.h>
 #include <iostream>
 
-namespace SCIRun {
-namespace vtk {
+using namespace SCIRun;
+using namespace vtk;
 
 VtkPortInstance::VtkPortInstance(VtkComponentInstance* ci,
                                  vtk::Port* port, PortType porttype)
@@ -83,15 +84,24 @@ bool VtkPortInstance::connect(PortInstance* to)
   // record the connections.
   if(!canConnectTo(to))
     return false;
+
   // VtkPortInstance* p2 = dynamic_cast<VtkPortInstance*>(to);
   VtkPortInstance* peer=(VtkPortInstance*)to;
+
+  port->addConnectedPort(peer->port);
+  peer->port->addConnectedPort(port);
+
   nConnections++;
+  peer->nConnections++;
   
   //  Network* net = port->get_module()->getNetwork();
   if(porttype == Output){
     ((vtk::InPort*)peer->port)->connect((vtk::OutPort*)port);
+    port->update(Port::REFRESH);
+    //    ((vtk::OutPort*)port)->setOutput(((vtk::OutPort*)port)->getOutput());
   } else {
-    ((vtk::InPort*)port)->connect((vtk::OutPort*)port);
+    ((vtk::InPort*)port)->connect((vtk::OutPort*)peer->port);
+    port->update(Port::REFRESH);
   }
   return true;
 }
@@ -99,6 +109,19 @@ bool VtkPortInstance::connect(PortInstance* to)
 bool VtkPortInstance::disconnect(PortInstance*)
 {
   //TODO: need decrement nConnections for both instances.
+  //  nConnections++;
+  //  peer->nConnections++;
+  /*  if(porttype == Output){
+    ((vtk::InPort*)peer->port)->disconnect((vtk::OutPort*)port);
+    port->update();
+    //    ((vtk::OutPort*)port)->setOutput(((vtk::OutPort*)port)->getOutput());
+  } else {
+    ((vtk::InPort*)port)->connect((vtk::OutPort*)peer->port);
+    port->update(); //((vtk::OutPort*)peer->port)->setOutput(((vtk::OutPort*)peer->port)->getOutput());
+  }
+  */
+  
+// need setOutput(0) ?
   return false;
 }
 
@@ -125,5 +148,4 @@ bool VtkPortInstance::canConnectTo(PortInstance *to)
   return false;
 }
 
-} // end namespace vtk
-} // end namespace SCIRun
+

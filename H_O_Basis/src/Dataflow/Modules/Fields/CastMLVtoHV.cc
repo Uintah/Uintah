@@ -44,8 +44,6 @@
 #include <Core/Containers/Handle.h>
 #include <math.h>
 
-#include <Core/share/share.h>
-
 #include <vector>
 #include <iostream>
 
@@ -53,7 +51,7 @@ namespace SCIRun {
 
 using namespace std;
 
-class PSECORESHARE CastMLVtoHV : public Module {
+class CastMLVtoHV : public Module {
 private:
   int            last_gen_;
   FieldHandle    ofieldH_;
@@ -80,17 +78,7 @@ void CastMLVtoHV::execute()
 {
   // must find ports and have valid data on inputs
   FieldIPort *iport_ = (FieldIPort*)get_iport("MaskedLatVolField");
-
-  if (!iport_) {
-    error("Unable to initialize iport 'MaskedLatVolField'.");
-    return;
-  }
-  
   FieldOPort *oport_ = (FieldOPort*)get_oport("HexVolField");
-  if (!oport_) {
-    error("Unable to initialize oport 'HexVolField'.");
-    return;
-  }
 
   FieldHandle ifieldH;
   if (!iport_->get(ifieldH) || 

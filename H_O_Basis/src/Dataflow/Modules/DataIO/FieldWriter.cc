@@ -31,12 +31,20 @@
  *  FieldWriter.cc: Save persistent representation of a field to a file
  *
  *  Written by:
+ *   Elisha R. Hughes
+ *   CVRTI
+ *   University of Utah
+ *   November 2004
+
+ *  based on:
  *   Steven G. Parker
  *   Department of Computer Science
  *   University of Utah
  *   July 1994
  *
  *  Copyright (C) 1994 SCI Group
+ *
+ *
  */
 
 #include <Dataflow/Ports/FieldPort.h>
@@ -51,6 +59,8 @@ class FieldWriter : public GenericWriter<FieldHandle> {
 protected:
   GuiString gui_types_;
   GuiString gui_exporttype_;
+  GuiInt gui_increment_;
+  GuiInt gui_current_;
 
   virtual bool call_exporter(const string &filename);
 
@@ -67,9 +77,11 @@ DECLARE_MAKER(FieldWriter)
 FieldWriter::FieldWriter(GuiContext* ctx)
   : GenericWriter<FieldHandle>("FieldWriter", ctx, "DataIO", "SCIRun"),
     gui_types_(ctx->subVar("types", false)),
-    gui_exporttype_(ctx->subVar("exporttype"))
+    gui_exporttype_(ctx->subVar("exporttype")),
+    gui_increment_(ctx->subVar("increment")),
+    gui_current_(ctx->subVar("current"))
 {
-  FieldIEPluginManager mgr;
+    FieldIEPluginManager mgr;
   vector<string> exporters;
   mgr.get_exporter_list(exporters);
   
@@ -107,9 +119,7 @@ FieldWriter::call_exporter(const string &filename)
   FieldIEPlugin *pl = mgr.get_plugin(ft);
   if (pl)
   {
-    const bool result = pl->filewriter(this, handle_, filename.c_str());
-    msgStream_flush();
-    return result;
+    return pl->filewriter(this, handle_, filename.c_str());
   }
   return false;
 }
@@ -130,8 +140,33 @@ FieldWriter::execute()
   string ab = "Binary";
   if (ft == "SCIRun Field ASCII") ab = "ASCII";
   filetype_.set(ab);
+  
+  //get the current file name
+  const string oldfilename=filename_.get();
+  
+//determine if we should increment an index in the file name
+  if (gui_increment_.get()) {
+
+//warn the user if they try to use 'Increment' incorrectly	
+	const string::size_type loc2 = oldfilename.find("%d");
+	if(loc2 == string::npos) {
+	remark("To use the increment function, there must be a '%d' in the file name.");
+	}
+	
+	char buf[1024];
+   
+    int current=gui_current_.get();
+    sprintf(buf, filename_.get().c_str(), current);
+    
+	filename_.set(buf);
+    gui_current_.set(current+1);
+  }
 
   GenericWriter<FieldHandle>::execute();
+
+   if (gui_increment_.get())
+   filename_.set(oldfilename);
+
 }
 
 

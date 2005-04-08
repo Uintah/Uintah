@@ -56,6 +56,8 @@ public:
   virtual ~TransformData();
   virtual void execute();
 
+  virtual void presave();
+
 private:
   GuiString gFunction_;
   GuiString gOutputDataType_;
@@ -66,8 +68,6 @@ private:
   FieldHandle fHandle_;
 
   int fGeneration_;
-
-  bool error_;
 };
 
 
@@ -78,8 +78,7 @@ TransformData::TransformData(GuiContext* ctx)
   : Module("TransformData", ctx, Filter,"FieldsData", "SCIRun"),
     gFunction_(ctx->subVar("function")),
     gOutputDataType_(ctx->subVar("outputdatatype")),
-    fGeneration_(-1),
-    error_(0)
+    fGeneration_(-1)
 {
 }
 
@@ -95,10 +94,6 @@ TransformData::execute()
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle fHandle;
-  if (!ifp) {
-    error("Unable to initialize iport 'Input Field'.");
-    return;
-  }
   if (!(ifp->get(fHandle) && fHandle.get_rep())) {
     error("Input field is empty.");
     return;
@@ -118,23 +113,20 @@ TransformData::execute()
   }
 
   string outputDataType = gOutputDataType_.get();
+  gui->execute(id + " update_text"); // update gFunction_ before get.
   string function = gFunction_.get();
 
-  if( outputDataType_ != outputDataType ||
-      function_       != function ) {
+  if ( outputDataType_ != outputDataType ||
+       function_       != function )
+  {
     update = true;
-    
     outputDataType_ = outputDataType;
     function_       = function;
   }
 
-  if( !fHandle_.get_rep() ||
-      update ||
-      error_ ) {
-
-    error_ = false;
-
-    // remove trailing white-space from the function string
+  if ( !fHandle_.get_rep() || update )
+  {
+    // Remove trailing white-space from the function string.
     while (function.size() && isspace(function[function.size()-1]))
       function.resize(function.size()-1);
 
@@ -169,12 +161,15 @@ TransformData::execute()
 
   if( fHandle_.get_rep() ) {
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
-    if (!ofield_port) {
-      error("Unable to initialize oport 'Output Field'.");
-      return;
-    }
     ofield_port->send(fHandle_);
   }
+}
+
+
+void
+TransformData::presave()
+{
+  gui->execute(id + " update_text"); // update gFunction_ before saving.
 }
 
 

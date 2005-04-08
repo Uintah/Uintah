@@ -128,19 +128,6 @@ void AppendMatrix::execute() {
   imatB_ = (MatrixIPort *)get_iport("SubMatrix");
   omat_ = (MatrixOPort *)get_oport("CompositeMatrix");
 
-  if (!imatA_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
-    return;
-  }
-  if (!imatB_) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
-    return;
-  }
-  if (!omat_) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
-    return;
-  }
-  
   update_state(NeedData);
   MatrixHandle aH, bH;
   if (!imatA_->get(aH)) {

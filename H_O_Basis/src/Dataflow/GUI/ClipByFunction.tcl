@@ -69,12 +69,14 @@ itcl_class SCIRun_FieldsCreate_ClipByFunction {
 	    -variable $this-clipmode -value cell -command $c
 	radiobutton $w.location.nodeone -text "One Node" \
 	    -variable $this-clipmode -value onenode -command $c
+	radiobutton $w.location.nodemost -text "Most Nodes" \
+	    -variable $this-clipmode -value majoritynodes -command $c
 	radiobutton $w.location.nodeall -text "All Nodes" \
 	    -variable $this-clipmode -value allnodes -command $c
 
 	pack $w.location.label -side top -expand yes -fill both
-	pack $w.location.cell $w.location.nodeone $w.location.nodeall \
-	    -side top -anchor w
+	pack $w.location.cell $w.location.nodeone $w.location.nodemost\
+	    $w.location.nodeall -side top -anchor w
 
 	frame $w.function -borderwidth 2
 	label $w.function.l -text "F(x, y, z, v)"

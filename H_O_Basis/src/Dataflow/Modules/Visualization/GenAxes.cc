@@ -66,7 +66,7 @@
 #include <map>
 namespace SCIRun {
 
-class PSECORESHARE GenAxes : public Module {
+class GenAxes : public Module {
 private:
 #ifdef HAVE_FTGL
   GeomFTGLFontRendererHandle    label_font_;

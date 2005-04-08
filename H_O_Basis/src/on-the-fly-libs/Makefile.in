@@ -37,8 +37,6 @@ default: all
 OBJTOP      := ..
 OBJTOP_ABS  := $(shell cd $(OBJTOP) ; pwd)
 
-include @scirun_obj_dir@/configVars.mk
-
 SCIRUN_SRCTOP   := @scirun_src_dir@
 SCIRUN_OBJTOP   := @scirun_obj_dir@
 
@@ -49,6 +47,8 @@ endif
 ifneq ($(SCIRUN_SRCDIR),)
   SCIRUN_SRCTOP := $(SCIRUN_SRCDIR)
 endif
+
+include $(SCIRUN_OBJTOP)/configVars.mk
 
 LIBDIR	        := $(SCIRUN_OBJTOP)/lib
 # get libraries in ./lib
@@ -97,7 +97,7 @@ all: $(OTF_LIBS)
           [ -s $@ ] || rm -f $@
 
 %.o : %.cc %.d
-	rm -f $@ $(*).so $(*).dylib
+	rm -f $@ $(*).so $(*).dylib $(*).dll
 	$(CXX) -c $(CFLAGS) $(INCLUDES) $< -o $@ 
 
 %.so : %.o 
@@ -106,5 +106,8 @@ all: $(OTF_LIBS)
 %.dylib : %.o 
 	$(CXX) $(CFLAGS) $(LIBRARY) $(SOFLAGS) $< -o $@ -L$(LIBDIR) $(LIBS) $(SCI_THIRDPARTY_LIBRARY) $(BABEL_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY)
 
+%.dll : %.o
+	$(CXX) $(CFLAGS) $(LIBRARY) $(SOFLAGS) $< -o $@ -L$(LIBDIR) $(LIBS) $(SCI_THIRDPARTY_LIBRARY) $(BABEL_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY)
+
 clean::
-	@rm -rf *.o *.d *.cc *.h *.dylib *.so *.log *~ ii_files
+	@rm -rf *.o *.d *.cc *.h *.dll *.dylib *.so *.log *~ ii_files

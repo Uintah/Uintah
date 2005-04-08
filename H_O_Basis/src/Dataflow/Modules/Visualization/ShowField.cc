@@ -50,6 +50,10 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Datatypes/ImageMesh.h>
+#include <Core/Datatypes/GenericField.h>
+
 
 #include <typeinfo>
 #include <iostream>
@@ -58,6 +62,7 @@ namespace SCIRun {
 
 class ShowField : public Module
 {
+  typedef ImageMesh<QuadBilinearLgn<Point> > IMesh;
   //! Private Data
 
   //! input ports
@@ -96,6 +101,7 @@ class ShowField : public Module
   GuiInt                   faces_normals_;
   GuiInt                   faces_transparency_;
   GuiInt                   faces_usedefcolor_;
+  GuiInt                   faces_usetexture_;
   bool                     faces_dirty_;
 
   //! Options for rendering non-scalar data.
@@ -224,6 +230,7 @@ ShowField::ShowField(GuiContext* ctx) :
   faces_normals_(ctx->subVar("use-normals")),
   faces_transparency_(ctx->subVar("use-transparency")),
   faces_usedefcolor_(ctx->subVar("faces-usedefcolor")),
+  faces_usetexture_(ctx->subVar("faces-usetexture")),
   faces_dirty_(true),
   vectors_on_(ctx->subVar("vectors-on")),
   normalize_vectors_(ctx->subVar("normalize-vectors")),
@@ -552,22 +559,8 @@ ShowField::execute()
   ColorMapIPort *color_iport = (ColorMapIPort *)get_iport("ColorMap");
   ogeom_ = (GeometryOPort *)get_oport("Scene Graph");
 
-  if (!field_iport) {
-    error("Unable to initialize iport 'Field'.");
-    return;
-  }
-  if (!color_iport) {
-    error("Unable to initialize iport 'ColorMap'.");
-    return;
-  }
-  if (!ogeom_) {
-    error("Unable to initialize oport 'Scene Graph'.");
-    return;
-  }
-
   FieldHandle fld_handle;
-  field_iport->get(fld_handle);
-  if(!fld_handle.get_rep())
+  if (!(field_iport->get(fld_handle) && fld_handle.get_rep()))
   {
     warning("No Data in port 1 field.");
     return;
@@ -575,8 +568,7 @@ ShowField::execute()
 
   FieldIPort *vfield_iport = (FieldIPort *)get_iport("Orientation Field");
   FieldHandle vfld_handle;
-  vfield_iport->get(vfld_handle);
-  if (vfld_handle.get_rep())
+  if (vfield_iport->get(vfld_handle) && vfld_handle.get_rep())
   {
     if (vfld_handle->mesh().get_rep() != fld_handle->mesh().get_rep())
     {
@@ -646,6 +638,11 @@ ShowField::execute()
     data_dirty_ = true;
   }
   data_resolution_ = gui_data_resolution_.get();
+
+  if (color_map_changed && faces_usetexture_.get() &&
+      dynamic_cast<IMesh *>(fld_handle->mesh().get_rep())){
+    faces_dirty_ = true;
+  }
 
   // check to see if we have something to do.
   if ((!nodes_dirty_) && (!edges_dirty_) &&
@@ -760,7 +757,8 @@ ShowField::execute()
 		      nodes_usedefcolor_.get(),
 		      edges_usedefcolor_.get(),
 		      faces_usedefcolor_.get(),
-		      approx_div_.get());
+		      approx_div_.get(),
+		      faces_usetexture_.get());
   }
 
   // Cleanup.
@@ -797,8 +795,14 @@ ShowField::execute()
       if (face_id_) ogeom_->delObj(face_id_);
       GeomHandle gmat =
 	scinew GeomMaterial(renderer_->face_switch_, def_material_);
-      GeomHandle geom =
-	scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
+      GeomHandle geom;
+      if (faces_usetexture_.get() &&
+	  dynamic_cast<IMesh *>(fld_handle->mesh().get_rep()))
+      {
+	geom = scinew GeomSwitch(gmat);
+      } else {
+	geom = scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
+      }
       face_id_ = ogeom_->addObj(geom, fname + name);
     }
   }

@@ -47,23 +47,12 @@ using std::ostringstream;
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Datatypes/FieldInterface.h>
 
-#include <Core/Algorithms/Visualization/TetMC.h>
-#include <Core/Algorithms/Visualization/HexMC.h>
 #include <Core/Algorithms/Visualization/MarchingCubes.h>
 #include <Core/Algorithms/Visualization/Noise.h>
 #include <Core/Algorithms/Visualization/Sage.h>
 #include <Core/Containers/StringUtil.h>
 
 #include <Dataflow/Network/Module.h>
-
-// Temporaries
-#include <Core/Basis/TriLinearLgn.h>
-#include <Core/Basis/CrvLinearLgn.h>
-#include <Core/Basis/QuadBilinearLgn.h>
-#include <Core/Datatypes/TriSurfMesh.h>
-#include <Core/Datatypes/CurveMesh.h>
-#include <Core/Datatypes/QuadSurfMesh.h>
-#include <Core/Datatypes/GenericField.h>
 
 namespace SCIRun {
 
@@ -78,9 +67,11 @@ Isosurface::Isosurface(GuiContext* ctx) :
   gui_iso_value_typed_(ctx->subVar("isoval-typed")),
   gui_iso_value_quantity_(ctx->subVar("isoval-quantity")),
   gui_iso_quantity_range_(ctx->subVar("quantity-range")),
+  gui_iso_quantity_clusive_(ctx->subVar("quantity-clusive")),
   gui_iso_quantity_min_(ctx->subVar("quantity-min")),
   gui_iso_quantity_max_(ctx->subVar("quantity-max")),
   gui_iso_value_list_(ctx->subVar("isoval-list")),
+  gui_iso_value_matrix_(ctx->subVar("isoval-matrix")),
   gui_extract_from_new_field_(ctx->subVar("extract-from-new-field")),
   gui_use_algorithm_(ctx->subVar("algorithm")),
   gui_build_field_(ctx->subVar("build_trisurf")),
@@ -103,7 +94,7 @@ Isosurface::Isosurface(GuiContext* ctx) :
   cmGeneration_(-1),
   mGeneration_(-1),
 
-  geomID_(-1),
+  geomID_(0),
 
   error_(0)  
 {
@@ -165,11 +156,6 @@ Isosurface::execute()
   bool update = false;
 
   FieldIPort *ifield_port = (FieldIPort *)get_iport("Field");
-  if (!ifield_port) {
-    error("Unable to initialize iport 'Field'.");
-    return;
-  }
-
   FieldHandle fHandle;
   if (!(ifield_port->get(fHandle) && fHandle.get_rep())) {
     error( "No field handle or representation." );
@@ -208,12 +194,6 @@ Isosurface::execute()
 
   // Color the Geometry.
   ColorMapIPort *icmap_port = (ColorMapIPort *)get_iport("Optional Color Map");
-
-  if (!icmap_port) {
-    error("Unable to initialize iport 'Optional Color Map'.");
-    return;
-  }
-
   ColorMapHandle cmHandle;
   bool have_ColorMap = false;
   if (icmap_port->get(cmHandle)) {
@@ -232,102 +212,127 @@ Isosurface::execute()
   
   vector<double> isovals(0);
 
-  MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Optional Isovalues");
-  if (!imatrix_port) {
-    error("Unable to initialize iport 'Optional Isovalues'.");
-    return;
-  }
+  double qmax = iso_value_max_;
+  double qmin = iso_value_min_;
 
-  MatrixHandle mHandle;
-  if (imatrix_port->get(mHandle)) {
-    if(!mHandle.get_rep()) {
+  if (gui_active_isoval_selection_tab_.get() == "0") { // slider / typed
+    const double val = gui_iso_value_.get();
+    const double valTyped = gui_iso_value_typed_.get();
+    if (val != valTyped) {
+      char s[1000];
+      sprintf(s, "Typed isovalue %g was out of range.  Using isovalue %g instead.", valTyped, val);
+      warning(s);
+      gui_iso_value_typed_.set(val);
+    }
+    if ( qmin <= val && val <= qmax )
+      isovals.push_back(val);
+    else {
+      error("Typed isovalue out of range -- skipping isosurfacing.");
+      return;
+    }
+  } else if (gui_active_isoval_selection_tab_.get() == "1") { // quantity
+    int num = gui_iso_value_quantity_.get();
+
+    if (num < 1) {
+      error("Isosurface quantity must be at least one -- skipping isosurfacing.");
+      return;
+    }
+
+    string range = gui_iso_quantity_range_.get();
+
+    if (range == "colormap") {
+      if (!have_ColorMap) {
+	error("No color colormap for isovalue quantity");
+	return;
+      }
+      qmin = cmHandle->getMin();
+      qmax = cmHandle->getMax();
+    } else if (range == "manual") {
+      qmin = gui_iso_quantity_min_.get();
+      qmax = gui_iso_quantity_max_.get();
+    } // else we're using "field" and qmax and qmin were set above
+    
+    if (qmin >= qmax) {
+      error("Can't use quantity tab if the minimum and maximum are the same.");
+      return;
+    }
+
+    string clusive = gui_iso_quantity_clusive_.get();
+
+    if (clusive == "exclusive") {
+      // if the min - max range is 2 - 4, and the user requests 3 isovals,
+      // the code below generates 2.333, 3.0, and 3.666 -- which is nice
+      // since it produces evenly spaced slices in torroidal data.
+	
+      double di=(qmax - qmin)/(double)num;
+      for (int i=0; i<num; i++) 
+	isovals.push_back(qmin + ((double)i+0.5)*di);
+
+    } else if (clusive == "inclusive") {
+      // if the min - max range is 2 - 4, and the user requests 3 isovals,
+      // the code below generates 2.0, 3.0, and 4.0.
+
+      double di=(qmax - qmin)/(double)(num-1.0);
+      for (int i=0; i<num; i++) 
+	isovals.push_back(qmin + ((double)i*di));
+    }
+  } else if (gui_active_isoval_selection_tab_.get() == "2") { // list
+    istringstream vlist(gui_iso_value_list_.get());
+    double val;
+    while(!vlist.eof()) {
+      vlist >> val;
+      if (vlist.fail()) {
+	if (!vlist.eof()) {
+	  vlist.clear();
+	  warning("List of Isovals was bad at character " +
+		  to_string((int)(vlist.tellg())) +
+		  "('" + ((char)(vlist.peek())) + "').");
+	}
+	break;
+      }
+      else if (!vlist.eof() && vlist.peek() == '%') {
+	vlist.get();
+	val = iso_value_min_ + (iso_value_max_ - iso_value_min_) * val / 100.0;
+      }
+      isovals.push_back(val);
+    }
+  } else if (gui_active_isoval_selection_tab_.get() == "3") { // matrix
+
+    MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Optional Isovalues");
+    MatrixHandle mHandle;
+
+    if (!imatrix_port->get(mHandle)) {
+      gui->execute("set-isomatrix \"No matrix present\"");
+      error("Matrix selected - but no matrix is present.");
+      return;
+    } else if(!mHandle.get_rep()) {
+      gui->execute("set-isomatrix \"No matrix representation\"");
       error( "No matrix representation." );
       return;
     }
 
-    if( mGeneration_ != mHandle->generation ) {
+    if( mGeneration_ != mHandle->generation )
       mGeneration_ = mHandle->generation;
-    }
     
+    ostringstream str;
+
+    str << id << " set-isomatrix \"";
+
     for (int i=0; i < mHandle->nrows(); i++) {
       for (int j=0; j < mHandle->ncols(); j++) {
 	isovals.push_back(mHandle->get(i, j));
+
+	str << " " << isovals[i];
       }
     }
+
+    str << "\"";
+
+    gui->execute(str.str().c_str());
+
   } else {
-    double qmax = iso_value_max_;
-    double qmin = iso_value_min_;
-
-    if (gui_active_isoval_selection_tab_.get() == "0") { // slider / typed
-      const double val = gui_iso_value_.get();
-
-      if ( qmin <= val && val <= qmax )
-	isovals.push_back(val);
-      else {
-	warning("Typed isovalue out of range -- skipping isosurfacing.");
-	return;
-      }
-    }
-    else if (gui_active_isoval_selection_tab_.get() == "1") { // quantity
-      int num = gui_iso_value_quantity_.get();
-
-      if (num < 1) {
-	warning("Isosurface quantity must be at least one -- skipping isosurfacing.");
-	return;
-      }
-
-      string range = gui_iso_quantity_range_.get();
-
-      if (range == "colormap") {
-	if (!have_ColorMap) {
-	  error("Error - No color colormap for isovalue quantity");
-	  return;
-	}
-	qmin = cmHandle->getMin();
-	qmax = cmHandle->getMax();
-      } else if (range == "manual") {
-	qmin = gui_iso_quantity_min_.get();
-	qmax = gui_iso_quantity_max_.get();
-      } // else we're using "field" and qmax and qmin were set above
-    
-      if (qmin >= qmax) {
-	error("Can't use quantity tab if the minimum and maximum are the same.");
-	return;
-      }
-
-      // if the min - max range is 2 - 4, and the user requests 3 isovals,
-      // the code below generates 2.333, 3.0, and 3.666 -- which is nice
-      // since it produces evenly spaced slices in torroidal data.
-
-      double di=(qmax - qmin)/(double)num;
-      for (int i=0; i<num; i++) 
-	isovals.push_back(qmin + ((double)i+0.5)*di);
-    }
-    else if (gui_active_isoval_selection_tab_.get() == "2") { // list
-      istringstream vlist(gui_iso_value_list_.get());
-      double val;
-      while(!vlist.eof()) {
-	vlist >> val;
-	if (vlist.fail()) {
-	  if (!vlist.eof()) {
-	    vlist.clear();
-	    warning("List of Isovals was bad at character " +
-		    to_string((int)(vlist.tellg())) +
-		    "('" + ((char)(vlist.peek())) + "').");
-	  }
-	  break;
-	}
-	else if (!vlist.eof() && vlist.peek() == '%') {
-	  vlist.get();
-	  val = iso_value_min_ + (iso_value_max_ - iso_value_min_) * val / 100.0;
-	}
-	isovals.push_back(val);
-      }
-    }
-    else {
-      error("Bad active_isoval_selection_tab value");
-      return;
-    }
+    error("Bad active_isoval_selection_tab value");
+    return;
   }
 
   // See if any of the isovalues have changed.
@@ -374,19 +379,13 @@ Isosurface::execute()
   }
 
   // Decide if an interpolant will be computed for the output field.
-  MatrixOPort *omatrix_port = 
-    (MatrixOPort *) get_oport("Interpolant");
-
-  if (!omatrix_port) {
-    error("Unable to initialize "+name+"'s oport\n");
-    return;
-  }
+  MatrixOPort *omatrix_port = (MatrixOPort *) get_oport("Mapping");
 
   const bool build_interp = build_field && omatrix_port->nconnections();
 
   if( (build_field  && !fHandle_.get_rep()) ||
       (build_interp && !mHandle_.get_rep()) ||
-      (build_geom   && geomID_ == -1   ) ||
+      (build_geom   && geomID_ == 0   ) ||
       update ||
       error_ ) {
 
@@ -499,49 +498,13 @@ Isosurface::execute()
 
       // Multiple fields.
       else {
-	string mesh_type = fields[0]->get_type_description(1)->get_name();
-	if( mesh_type.find("TriSurfMesh") != string::npos ) 
-	{
-
-	  typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
-	  typedef TriLinearLgn<double>              DatBasis;
-	  typedef GenericField<TSMesh, DatBasis, vector<double> > TSField; 
-
-	  vector<TSField *> tfields(fields.size());
-	  for (unsigned int i=0; i < fields.size(); i++) {
-	    tfields[i] = (TSField *)(fields[i].get_rep());
-	  }
-
-	  fHandle_ = append_fields(tfields);
-
-	} else if( mesh_type.find("CurveMesh") != string::npos ) {
-
-	  typedef CurveMesh<CrvLinearLgn<Point> > CMesh;
-	  typedef CrvLinearLgn<double>            DatBasis;
-	  typedef GenericField<CMesh, DatBasis, vector<double> > CField;
-
-	  vector<CField *> cfields(fields.size());
-	  for (unsigned int i=0; i < fields.size(); i++) {
-	    cfields[i] = (CField *)(fields[i].get_rep());
-	  }
-
-	  fHandle_ = append_fields(cfields);
-	  
-	} else if( mesh_type.find("QuadSurfMesh") != string::npos ) {
-	  
-	  typedef QuadSurfMesh<QuadBilinearLgn<Point> > QSMesh;
-	  typedef QuadBilinearLgn<double>             DatBasis;
-	  typedef GenericField<QSMesh, DatBasis, vector<double> > QSField;
-  
-	  vector<QSField *> qfields(fields.size());
-	  for (unsigned int i=0; i < fields.size(); i++) {
-	    qfields[i] = (QSField *)(fields[i].get_rep());
-	  }
-
-	  fHandle_ = append_fields(qfields);
-
-	} else
-	  fHandle_ = fields[0];
+	const TypeDescription *ftd = fields[0]->get_type_description(0);
+	CompileInfoHandle ci = IsosurfaceAlgo::get_compile_info(ftd);
+	
+	Handle<IsosurfaceAlgo> algo;
+	if (!module_dynamic_compile(ci, algo)) return;
+	
+	fHandle_ = algo->execute(fields);
       }
 
       // Get the output interpolant handle.
@@ -560,10 +523,6 @@ Isosurface::execute()
 
     // Output geometry.
     GeometryOPort *ogeom_port = (GeometryOPort *)get_oport("Geometry");
-    if (!ogeom_port) {
-      error("Unable to initialize oport 'Geometry'.");
-      return;
-    }
 
     // Stop showing the previous geometry.
     bool geomflush = false;
@@ -611,32 +570,39 @@ Isosurface::execute()
     update_state(Completed);
   }
 
-  // Get a handle to the output field port.
-  if( build_field && fHandle_.get_rep() ) {
-    FieldOPort *ofield_port = 
-      (FieldOPort *) get_oport("Surface");
-
-    if (!ofield_port) {
-      error("Unable to initialize "+name+"'s oport\n");
-      return;
-    }
-
-    // Send the data downstream
+  // Send the isosurface field downstream
+  if( build_field && fHandle_.get_rep() )
+  {
+    FieldOPort *ofield_port = (FieldOPort *) get_oport("Surface");
     ofield_port->send( fHandle_ );
   }
 
-  // Get a handle to the output matrix port.
-  if( build_interp && mHandle_.get_rep() ) {
-    MatrixOPort *omatrix_port = 
-      (MatrixOPort *) get_oport("Interpolant");
-
-    if (!omatrix_port) {
-      error("Unable to initialize "+name+"'s oport\n");
-      return;
-    }
-
-    // Send the data downstream
+  // Send the mapping matrix downstream
+  if( build_interp && mHandle_.get_rep() )
+  {
+    MatrixOPort *omatrix_port = (MatrixOPort *) get_oport("Mapping");
     omatrix_port->send( mHandle_ );
   }
+}
+
+CompileInfoHandle
+IsosurfaceAlgo::get_compile_info(const TypeDescription *ftd)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("IsosurfaceAlgoT");
+  static const string base_class_name("IsosurfaceAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       ftd->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       ftd->get_name() + "<double> ");
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  ftd->fill_compile_info(rval);
+  return rval;
 }
 } // End namespace SCIRun

@@ -47,7 +47,9 @@
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/NoData.h>
 #include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/ImageMesh.h>
+#include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
@@ -68,11 +70,14 @@ private:
 
   GuiInt size_x_;
   GuiInt size_y_;
+  GuiInt auto_size_;
   GuiInt axis_;
   GuiDouble padpercent_;
   GuiDouble position_;
   GuiString data_at_;
   GuiString update_type_;
+  GuiPoint custom_origin_;
+  GuiVector custom_normal_;
 
   enum DataTypeEnum { SCALAR, VECTOR, TENSOR };
 };
@@ -84,11 +89,14 @@ SamplePlane::SamplePlane(GuiContext* ctx) :
   Module("SamplePlane", ctx, Filter, "FieldsCreate", "SCIRun"),
   size_x_(ctx->subVar("sizex")),
   size_y_(ctx->subVar("sizey")),
+  auto_size_(ctx->subVar("auto_size")),
   axis_(ctx->subVar("axis")),
   padpercent_(ctx->subVar("padpercent")),
   position_(ctx->subVar("pos")),
   data_at_(ctx->subVar("data-at")),
-  update_type_(ctx->subVar("update_type"))
+  update_type_(ctx->subVar("update_type")),
+  custom_origin_(ctx->subVar("corigin")),
+  custom_normal_(ctx->subVar("cnormal"))
 {
 }
 
@@ -103,6 +111,7 @@ SamplePlane::execute()
 {
   update_state(NeedData);
   const int axis = Min(2, Max(0, axis_.get()));
+
   Transform trans;
   trans.load_identity();
 
@@ -130,12 +139,27 @@ SamplePlane::execute()
   }
   trans.pre_rotate(angle, axis_vector);
 
+  if (axis_.get() == 3)
+  {
+    Vector tmp_normal(custom_normal_.get());
+    Vector fakey(Cross(Vector(0.0, 0.0, 1.0), tmp_normal));
+    if (fakey.length2() < 1.0e-6)
+    {
+      fakey = Cross(Vector(1.0, 0.0, 0.0), tmp_normal);
+    }
+    Vector fakex(Cross(tmp_normal, fakey));
+    tmp_normal.safe_normalize();
+    fakex.safe_normalize();
+    fakey.safe_normalize();
+
+    trans.load_identity();
+    trans.load_basis(Point(0, 0, 0), fakex, fakey, tmp_normal);
+    const Vector &origin(custom_origin_.get().asVector());
+    trans.pre_translate(origin - fakex * 0.5 - fakey * 0.5);
+  }
+
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-  if (!ifp) {
-    error("Unable to initialize iport 'Input Field'.");
-    return;
-  }
   DataTypeEnum datatype;
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
   {
@@ -156,37 +180,80 @@ SamplePlane::execute()
     // Compute Transform.
     BBox box = ifieldhandle->mesh()->get_bounding_box();
 
-    Point loc(box.min());
     Vector diag(box.diagonal());
-    position_.reset();
-    double dist = position_.get()/2.0 + 0.5;
-    switch (axis)
-    {
-    case 0:
-      loc.x(loc.x() + diag.x() * dist);
-      break;
-
-    case 1:
-      loc.y(loc.y() + diag.y() * dist);
-      break;
-
-    case 2:
-      loc.z(loc.z() + diag.z() * dist);
-      break;
-      
-    default:
-      break;
-    }
-
     trans.pre_scale(diag);
-    trans.pre_translate(Vector(loc));
+
+    if (axis_.get() != 3)
+    {
+      Point loc(box.min());
+      position_.reset();
+      double dist = position_.get()/2.0 + 0.5;
+      switch (axis)
+      {
+      case 0:
+        loc.x(loc.x() + diag.x() * dist);
+        break;
+
+      case 1:
+        loc.y(loc.y() + diag.y() * dist);
+        break;
+
+      case 2:
+        loc.z(loc.z() + diag.z() * dist);
+        break;
+      
+      default:
+        break;
+      }
+
+      trans.pre_translate(Vector(loc));
+    }
   }
   
-  // Create blank mesh.
-  unsigned int sizex = Max(2, size_x_.get());
-  unsigned int sizey = Max(2, size_y_.get());
+  unsigned int sizex, sizey;
+  if( auto_size_.get() ){   // Guess at the size of the sample plane.
+    // Currently we have only a simple algorithm for LatVolFields.
+    typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+    if(LVMesh *lvm = dynamic_cast<LVMesh *>((ifieldhandle->mesh()).get_rep())) 
+    {
+      switch( axis ) {
+      case 0:
+        sizex = Max(2, (int)lvm->get_nj());
+        size_x_.set( sizex );
+        sizey = Max(2, (int)lvm->get_nk());
+        size_y_.set( sizey );
+        break;
+      case 1: 
+        sizex =  Max(2, (int)lvm->get_ni());
+        size_x_.set( sizex );
+        sizey =  Max(2, (int)lvm->get_nk());
+        size_y_.set( sizey );
+        break;
+      case 2:
+        sizex =  Max(2, (int)lvm->get_ni());
+        size_x_.set( sizex );
+        sizey =  Max(2, (int)lvm->get_nj());
+        size_y_.set( sizey );
+        break;
+      default:
+        warning("Custom axis, resize manually.");
+        sizex = Max(2, size_x_.get());
+        sizey = Max(2, size_y_.get());
+        break;
+      }
+    } else {
+      warning("No autosize algorithm for this field type, resize manually.");
+      sizex = Max(2, size_x_.get());
+      sizey = Max(2, size_y_.get());
+    }
+  } else {
+    // Create blank mesh.
+    sizex = Max(2, size_x_.get());
+    sizey = Max(2, size_y_.get());
+  }
+
   Point minb(0.0, 0.0, 0.0);
-  Point maxb(1.0, 1.0, 1.0);
+  Point maxb(1.0, 1.0, 0.0);
   Vector diag((maxb.asVector() - minb.asVector()) * (padpercent_.get()/100.0));
   minb -= diag;
   maxb += diag;
@@ -202,9 +269,6 @@ SamplePlane::execute()
     error("Unsupported data_at location " + data_at_.get() + ".");
     return;
   }
-
-  if (data_at_.get() == "Faces") basis_order = 0;
-  else basis_order = 1;
 
   // Create Image Field.
   FieldHandle ofh;
@@ -273,10 +337,6 @@ SamplePlane::execute()
   ofh->mesh()->transform(trans);
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Sample Field");
-  if (!ofp) {
-    error("Unable to initialize oport 'Output Sample Field'.");
-    return;
-  }
   ofp->send(ofh);
 }
 

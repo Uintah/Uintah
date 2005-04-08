@@ -44,12 +44,11 @@
 #ifndef SCI_project_Line_Constraint_h
 #define SCI_project_Line_Constraint_h 1
 
-#include <Dataflow/share/share.h>
 #include <Dataflow/Constraints/BaseConstraint.h>
 
 namespace SCIRun {
 
-class PSECORESHARE LineConstraint : public BaseConstraint {
+class LineConstraint : public BaseConstraint {
 public:
    LineConstraint( const string& name,
 		   const Index numSchemes,

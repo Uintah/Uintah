@@ -29,8 +29,10 @@
 //    Author : Martin Cole
 //    Date   : Wed Mar 30 13:02:39 2005
 
-#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Persistent/Pstreams.h>
+#include <Core/Datatypes/Field.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
@@ -44,10 +46,11 @@ using std::ifstream;
 using std::endl;
 
 using namespace SCIRun;
+typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
 
 // generate a mesh with bad orientations to test the fix with.
-void randomizie_orientation(TriSurfMesh *tsm) {
-  TriSurfMesh::Face::iterator fiter, fend;
+void randomizie_orientation(TSMesh *tsm) {
+  TSMesh::Face::iterator fiter, fend;
   tsm->begin(fiter);
   tsm->end(fend);
   srand(69);
@@ -77,7 +80,7 @@ main(int argc, char **argv) {
   }
   
   MeshHandle mb = handle->mesh();
-  TriSurfMesh *tsm = dynamic_cast<TriSurfMesh *>(mb.get_rep());
+  TSMesh *tsm = dynamic_cast<TSMesh *>(mb.get_rep());
   if (! tsm) { cerr << "Error: not a TriSurf." << endl; return 99;}
 
 

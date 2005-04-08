@@ -379,8 +379,7 @@ SurfaceToSurface::buildAc(double **Ac, int ns, int nc,
   if (np>4) np/=2;	// being nice - just using half the processors. :)
   msgStream_ << "np="<<np<<"\n";
   msgStream_ << "Starting back substitution ("<<nc<<")...("<<timer.time()<<")... ";
-  Thread::parallel(Parallel<SurfaceToSurface>(this, &SurfaceToSurface::parallel),
-		   np, true);
+  Thread::parallel(this, &SurfaceToSurface::parallel, np);
   msgStream_ << "Done! (timer="<<timer.time()<<")\n";
 
   free(fwdMap);
@@ -450,8 +449,10 @@ SurfaceToSurface::splitMatrix(double **Ass, double **Asv, double **Asc,
   lastS=ns;
   lastV=nv+lastS;
   double tt;
-  Array1<int> idx;
-  Array1<double> v;
+  int *idx;
+  double *v;
+  int idxsize;
+  int idxstride;
   int maxvrow = 0;
   Array1<int> vrowlengths(nv+1);
   vrowlengths.initialize(0);
@@ -459,12 +460,12 @@ SurfaceToSurface::splitMatrix(double **Ass, double **Asv, double **Asc,
   int xx;
   for (xx=0; xx<nn; xx++)
   {
-    mh->getRowNonzeros(xx, idx, v);
-    for (int yy=0; yy<idx.size(); yy++)
+    mh->getRowNonzerosNoCopy(xx, idxsize, idxstride, idx, v);
+    for (int yy=0; yy<idxsize; yy++)
     {
-      tt=v[yy];
+      tt=v[yy*idxstride];
       x=xx+1;
-      y=idx[yy]+1;
+      y=(idx?idx[yy*idxstride]:yy)+1;
       if (x<=lastS)
       {
 	if (y<=lastS)
@@ -508,12 +509,12 @@ SurfaceToSurface::splitMatrix(double **Ass, double **Asv, double **Asc,
 
   for (xx=0; xx<nn; xx++)
   {
-    mh->getRowNonzeros(xx, idx, v);
-    for (int yy=0; yy<idx.size(); yy++)
+    mh->getRowNonzerosNoCopy(xx, idxsize, idxstride, idx, v);
+    for (int yy=0; yy<idxsize; yy++)
     {
-      tt=v[yy];
+      tt=v[yy*idxstride];
       x=xx+1;
-      y=idx[yy]+1;
+      y=(idx?idx[yy]:yy)+1;
       if (x>lastS && x<=lastV &&y>lastS && y<=lastV)
       {
 	int last=Avv[x-lastS][0];

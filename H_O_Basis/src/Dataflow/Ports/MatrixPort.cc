@@ -40,18 +40,16 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/share/share.h>
-
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Malloc/Allocator.h>
 
 namespace SCIRun {
 
 extern "C" {
-PSECORESHARE IPort* make_MatrixIPort(Module* module, const string& name) {
+IPort* make_MatrixIPort(Module* module, const string& name) {
   return scinew SimpleIPort<MatrixHandle>(module,name);
 }
-PSECORESHARE OPort* make_MatrixOPort(Module* module, const string& name) {
+OPort* make_MatrixOPort(Module* module, const string& name) {
   return scinew SimpleOPort<MatrixHandle>(module,name);
 }
 }

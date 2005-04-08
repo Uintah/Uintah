@@ -130,7 +130,9 @@ public:
   void			getData(int mask, FutureValue<GeometryData*>* result);
   GeomHandle		createGenAxes();   
 
+  void                  setMovie( int state );
   void                  setMovieFrame( int movieframe );
+  void                  setMessage( string message );
 
   // UNICAM START
   void			unicam_choose(int X, int Y);
@@ -180,6 +182,7 @@ public:
   GuiDouble             gui_fog_start_;
   GuiDouble             gui_fog_end_;
   GuiInt                gui_fog_visibleonly_;
+  GuiInt		gui_total_frames_;
 
 private:
   ViewWindow(const ViewWindow&); // Should not be called

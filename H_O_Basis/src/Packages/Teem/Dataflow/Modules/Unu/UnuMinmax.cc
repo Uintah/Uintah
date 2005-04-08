@@ -43,8 +43,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/StringUtil.h>
 
-#include <Dataflow/share/share.h>
-
 #include <Dataflow/Ports/NrrdPort.h>
 
 
@@ -52,7 +50,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class PSECORESHARE UnuMinmax : public Module {
+class UnuMinmax : public Module {
 public:
   UnuMinmax(GuiContext*);
 
@@ -98,11 +96,6 @@ void
   while (pi != range.second)
   {
     NrrdIPort *inrrd = (NrrdIPort *)get_iport(pi->second);
-    if (!inrrd) {
-      error("Unable to initialize iport '" + to_string(pi->second) + "'.");
-      return;
-    }
-
     NrrdDataHandle nrrd;
     
     if (inrrd->get(nrrd) && nrrd.get_rep()) {

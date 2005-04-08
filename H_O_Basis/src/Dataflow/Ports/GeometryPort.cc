@@ -57,10 +57,10 @@ using std::cerr;
 namespace SCIRun {
 
 extern "C" {
-  PSECORESHARE IPort* make_GeometryIPort(Module* module, const string& name) {
+  IPort* make_GeometryIPort(Module* module, const string& name) {
     return scinew GeometryIPort(module,name);
   }
-  PSECORESHARE OPort* make_GeometryOPort(Module* module, const string& name) {
+  OPort* make_GeometryOPort(Module* module, const string& name) {
     return scinew GeometryOPort(module,name);
   }
 }
@@ -141,6 +141,17 @@ GeometryOPort::finish()
   }
 }
 
+
+void
+GeometryOPort::synchronize()
+{
+  for (unsigned int i=0; i<outbox_.size(); i++)
+  {
+    GeometryComm* msg =
+      scinew GeometryComm(MessageTypes::GeometrySynchronize, portid_[i]);
+    outbox_[i]->send(msg);
+  }
+}
 
 
 GeomID

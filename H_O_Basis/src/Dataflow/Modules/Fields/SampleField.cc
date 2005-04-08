@@ -200,7 +200,8 @@ SampleField::widget_moved(bool last, BaseWidget*)
     if (rake_) {
       rake_->GetEndpoints(endpoint0_, endpoint1_);
       double ratio = rake_->GetRatio();
-      if (ratio < 0.0001) ratio = 0.0001; // To avoid infinte loop
+      const double smax = 1.0 / (200 - 1);  // Max the slider at 200 samples.
+      if (ratio < smax) ratio = smax;
       double num_seeds = Max(0.0, 1.0/ratio+1.0);
       gui_maxSeeds_.set(num_seeds);
 
@@ -291,9 +292,9 @@ SampleField::execute_rake(FieldHandle ifield)
     endpoint1_ = Point(gui_endpoint1x_.get(),gui_endpoint1y_.get(),gui_endpoint1z_.get()); 
 
     if (rake_) {
+      rake_->SetScale(gui_widgetscale_.get()); // do first, widget_moved resets
       rake_->SetEndpoints(endpoint0_, endpoint1_);
       rake_->SetRatio(1/16.0);
-      rake_->SetScale(gui_widgetscale_.get());
       if (wtype_ == 1) { ogport_->flushViews(); }
     }
 
@@ -304,8 +305,8 @@ SampleField::execute_rake(FieldHandle ifield)
   if (!rake_) {
     rake_ = scinew GaugeWidget(this, &gui_widget_lock_, gui_widgetscale_.get(), true);
     rake_->Connect(ogport_);
+    rake_->SetScale(gui_widgetscale_.get()); // do first, widget_moved resets
     rake_->SetEndpoints(endpoint0_,endpoint1_);
-    rake_->SetScale(gui_widgetscale_.get());
     rake_->SetRatio(1/16.0);
   }
 
@@ -409,9 +410,9 @@ SampleField::execute_ring(FieldHandle ifield)
     ns = (s * scale).length() / sqrt(3.0);
 
     // Apply the new coordinates.
+    ring_->SetScale(ns); // do first, widget_moved resets
     ring_->SetPosition(nc, nn, nr);
     ring_->SetRadius(nr);
-    ring_->SetScale(ns);
     gui_widgetscale_.set(ns);
 
     ring_bbox_ = ibox;
@@ -443,7 +444,7 @@ SampleField::execute_ring(FieldHandle ifield)
   mesh->freeze();
   PCField *seeds =  scinew PCField(mesh);
   PCField::fdata_type &fdata = seeds->fdata();
-  
+
   for (int loop=0; loop<num_seeds; ++loop) {
     fdata[loop]=loop;
   }
@@ -510,8 +511,8 @@ SampleField::execute_frame(FieldHandle ifield)
     ns = (s * scale).length() / sqrt(3.0);
 
     // Apply the new coordinates.
+    frame_->SetScale(ns); // do first, widget_moved resets
     frame_->SetPosition(nc, nr, nd);
-    frame_->SetScale(ns);
     gui_widgetscale_.set(ns);
 
     frame_bbox_ = ibox;
@@ -598,16 +599,7 @@ SampleField::execute()
 {
   ogport_ = (GeometryOPort *)get_oport("Sampling Widget");
 
-  if (!ogport_) {
-    error("Unable to initialize oport 'Sampling Widget'.");
-    return;
-  }
-
   FieldIPort *ifport = (FieldIPort *)get_iport("Field to Sample");
-  if (!ifport) {
-    error("Unable to initialize iport 'Field to Sample'.");
-    return;
-  }
 
   FieldHandle fHandle;
   // The field input is required.
@@ -696,11 +688,6 @@ SampleField::execute()
 
   if( fHandle_.get_rep() ) {
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Samples");
-    if (!ofield_port) {
-      error("Unable to initialize oport 'Samples'.");
-      return;
-    }
-
     ofield_port->send(fHandle_);
   }
 }

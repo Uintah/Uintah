@@ -26,3 +26,34 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#ifndef SCIRun_PortDescription_h
+#define SCIRun_PortDescription_h
+
+#include <Core/CCA/spec/cca_sidl.h>
+
+namespace SCIRun {
+
+class PortDescription {
+public:
+    // port types left in PortInstance base & subclasses
+    PortDescription();
+    virtual ~PortDescription();
+
+    /** */
+    virtual std::string getName() const = 0;
+
+    /** */
+    virtual std::string getType() const = 0;
+
+    /** */
+    virtual sci::cca::TypeMap::pointer& getProperties() const = 0;
+
+private:
+    PortDescription(const PortDescription&);
+    PortDescription& operator=(const PortDescription&);
+};
+
+}
+
+
+#endif

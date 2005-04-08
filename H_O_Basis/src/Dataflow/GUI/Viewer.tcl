@@ -61,13 +61,22 @@ itcl_class SCIRun_Render_Viewer {
     method addViewer { { old_vw "" } } {
 	set i 0
 	set rid [makeViewWindowID]
+
 	$this-c addviewwindow $rid
-	ViewWindow $rid -viewer $this 
+	ViewWindow $rid -viewer $this
 	lappend openViewersList $rid
-	if { [string length $old_vw] } { ;# set view to same view as old_vw
-	    set $rid-pos ViewWindow[$old_vw number]
-	    $rid-c Views
+
+	if { [string length $old_vw] } {
+	    set oldvars [uplevel \#0 info vars $old_vw-view-*]
+	    foreach oldvar $oldvars {
+		set pieces [split $oldvar -]
+		set newvar [join [lreplace $pieces 0 1 $rid] -]
+		upvar \#0 $newvar newView $oldvar oldView
+		set newView $oldView
+	    }
 	}
+	$rid-c redraw
+
 	return $rid
     }
 
@@ -237,6 +246,7 @@ itcl_class BaseViewWindow {
 	setGlobal $this-global-movieName "./movie.%04d"
 	setGlobal $this-global-movieFrame 0
 	setGlobal $this-global-resize 0
+	setGlobal $this-global-message "Waiting ..."
 	setGlobal $this-x-resize 700
 	setGlobal $this-y-resize 512
 	setGlobal $this-do_bawgl 0
@@ -246,7 +256,7 @@ itcl_class BaseViewWindow {
 
     method bindEvents {w} {
 	bind $w <Expose> "$this-c redraw"
-	bind $w <Configure> "$this-c redraw"
+	bind $w <Configure> "$this-c redraw 1"
 
 	bind $w <ButtonPress-1> "$this-c mtranslate start %x %y"
 	bind $w <Button1-Motion> "$this-c mtranslate move %x %y"
@@ -293,20 +303,22 @@ itcl_class BaseViewWindow {
 	if {[winfo exists $renderWindow]} {
 	    destroy $renderWindow
 	}
-	$this-c listvisuals .standalone
-	$this-c switchvisual $renderWindow 0 $width $height
+
+	upvar \#0 $this-currentvisual visual
+	$this-c setgl $renderWindow $visual $width $height
 	bindEvents $renderWindow
 	$this-c startup
     }
 
     method addObject {objid name} {
-	initGlobal "$this-$objid-type" Default
+	initGlobal "$this-$objid-useglobal" 1
 	initGlobal "$this-$objid-light" 1
 	initGlobal "$this-$objid-fog" 0
 	initGlobal "$this-$objid-debug" 0
 	initGlobal "$this-$objid-clip" 1
 	initGlobal "$this-$objid-cull" 0
 	initGlobal "$this-$objid-dl" 0
+	initGlobal "$this-$objid-type" Gouraud
 	global ModuleSavedVars
 	set vid [$viewer modname]
 	foreach state {type light fog debug clip cull dl} {
@@ -460,7 +472,8 @@ itcl_class ViewWindow {
 	    -menu $w.menu.visual.menu
 	menu $w.menu.visual.menu
 	set i 0
-	foreach t [$this-c listvisuals $w] {
+	upvar \#0 $this-currentvisual visual
+	foreach t [$this-c listvisuals] {
 	    $w.menu.visual.menu add radiobutton -value $i -label $t \
 		-variable $this-currentvisual \
 		-font "-Adobe-Helvetica-bold-R-Normal-*-12-75-*" \
@@ -469,7 +482,7 @@ itcl_class ViewWindow {
 	}
 
 	# New ViewWindow button
-	button $w.menu.newviewer -text "NewViewer" \
+	button $w.menu.newviewer -text "NewWindow" \
 	    -command "$viewer addViewer [modname]" -borderwidth 0
 	
 	pack $w.menu.file -side left
@@ -581,9 +594,7 @@ itcl_class ViewWindow {
 	init_frame $detachedFr.f "Double-click here to attach - - - - - - - - - - - - - - - - - - - - -"
 	init_frame $msframe.f "Double-click here to detach - - - - - - - - - - - - - - - - - - - - -"
 	# End initialization of attachment
-
-	switchvisual
-
+        
 	$this-c startup
 	
 	pack slaves $w
@@ -595,9 +606,10 @@ itcl_class ViewWindow {
            # appear after all the other windows and thus on systems without
            # pbuffers, we don't get the drawing window obscured.  Three seconds
            # seems to be enough time.
-           after 3000 "SciRaise $w"
+            after 3000 "SciRaise $w; $this switchvisual"
         } else {
-           SciRaise $w
+            SciRaise $w
+            switchvisual
         }
     }
     # end constructor()
@@ -618,7 +630,7 @@ itcl_class ViewWindow {
 	    if { [string equal $myviewer $viewer_id] } {
 		if { ![string equal $mywindow $window] } {
 		    set num [lindex [split $window _] end]
-		    $m add command -label "Get View from Viewer $num" \
+		    $m add command -label "Get View from Window [expr $num+1]" \
 			-command "set $this-pos ViewWindow$actual; \
                                   $this-c Views"
 		}
@@ -630,7 +642,7 @@ itcl_class ViewWindow {
     method create_view_menu { m } {
 	menu $m -postcommand \
 	    "$this create_other_viewers_view_menu $m.otherviewers"
-	$m add checkbutton -label "Track View Window 0" \
+	$m add checkbutton -label "Track Window 1" \
 	    -variable $this-trackViewWindow0
 	$m add cascade -menu $m.otherviewers -label "Other Viewers"
 
@@ -895,7 +907,7 @@ itcl_class ViewWindow {
 	if { [winfo exists $renderWindow] } {
 	    destroy $renderWindow
 	}
-	$this-c switchvisual $renderWindow $visual 640 512
+	$this-c setgl $renderWindow $visual
 	if { [winfo exists $renderWindow] } {
 	    bindEvents $renderWindow
 	    pack $renderWindow -expand yes -fill both
@@ -1070,9 +1082,8 @@ itcl_class ViewWindow {
 		-relief raised -menu $menun
 	menu $menun
 
-	$menun add radiobutton -label "Use Global Controls" \
-	    -variable $this-$objid-type -value "Default"\
-	    -command "$this-c redraw"
+	$menun add checkbutton -label "Use Global Controls" \
+	    -variable $this-$objid-useglobal -command "$this-c redraw"
 
 	$menun add separator
 
@@ -1092,7 +1103,7 @@ itcl_class ViewWindow {
 	$menun add separator
 
 	$menun add radiobutton -label Wire -variable $this-$objid-type \
-	    -command "$this-c redraw"	    
+	    -command "$this-c redraw"
 	$menun add radiobutton -label Flat -variable $this-$objid-type \
 	    -command "$this-c redraw"
 	$menun add radiobutton -label Gouraud -variable $this-$objid-type \
@@ -1294,7 +1305,7 @@ itcl_class ViewWindow {
 	    -variable $this-global-light$i -command "$this lightSwitch $i"
 	pack $w.f$i.b$i
 
-	upvar $this-lightColors lightColors $this-lightVectors lightVectors
+	upvar \#0 $this-lightColors lightColors $this-lightVectors lightVectors
 	set ir [expr int([lindex [lindex $lightColors $i] 0] * 65535)]
 	set ig [expr int([lindex [lindex $lightColors $i] 1] * 65535)]
 	set ib [expr int([lindex [lindex $lightColors $i] 2] * 65535)]
@@ -1339,7 +1350,7 @@ itcl_class ViewWindow {
     }
     
     method resetLights { w } {
-	upvar $this-lightColors lCol $this-lightVectors lVec
+	upvar \#0 $this-lightColors lCol $this-lightVectors lVec
 	for { set i 0 } { $i < 4 } { incr i 1 } {
 	    if { $i == 0 } {
 		set $this-global-light$i 1
@@ -1371,8 +1382,8 @@ itcl_class ViewWindow {
 
     method moveLight { c i x y } {
 	if { $i == 0 } return
-	upvar $this-global-light$i light 
-	upvar $this-lightColors lCol $this-lightVectors lVec
+	upvar \#0 $this-global-light$i light 
+	upvar \#0 $this-lightColors lCol $this-lightVectors lVec
 	set cw [winfo width $c]
 	set ch [winfo height $c]
 	set selected [$c find withtag current]
@@ -1421,14 +1432,20 @@ itcl_class ViewWindow {
 	wm geometry .ui[modname] $geometry
     }
 
-    method makeSaveMoviePopup {} {
-	set w .ui[modname]-saveMovie
+    method checkMPGlicense {} {
 
 	# check license env var
 	if { [$this-c have_mpeg] && ![envBool SCIRUN_MPEG_LICENSE_ACCEPT]} {
 	    tk_messageBox -message "License information describing the mpeg_encode software can be found in SCIRun's Thirdparty directory, in the mpeg_encode/README file.\n\nThe MPEG software is freely distributed and may be used for any non-commercial purpose.  However, patents are held by several companies on various aspects of the MPEG video standard. Companies or individuals who want to develop commercial products that include this code must acquire licenses from these companies. For information on licensing, see Appendix F in the standard. For more information, please see the mpeg_encode README file.\n\nIf you are allowed to use the MPEG functionality based on the above license, you may enable MPEG movie recording in SCIRun (accessible via the SCIRun Viewer's \"File->Record Movie\" menu) by setting the value of SCIRUN_MPEG_LICENSE_ACCEPT to \"true\". This can be done by uncommenting the reference to the SCIRUN_MPEG_LICENSE_ACCEPT variable in your scirunrc and changing the value from false to true." -type ok -icon info -parent .ui[modname] -title "MPEG License"
-	    return
+
+	    set $this-global-movie 0
+	} else {
+	    $this-c redraw
 	}
+    }
+
+    method makeSaveMoviePopup {} {
+	set w .ui[modname]-saveMovie
 
 	if {[winfo exists $w]} {
 	   SciRaise $w
@@ -1445,7 +1462,7 @@ itcl_class ViewWindow {
 	radiobutton $w.raw -text "PPM Frames" \
             -variable $this-global-movie -value 1 -command "$this-c redraw"
 	radiobutton $w.mpeg -text "Mpeg" \
-	    -variable $this-global-movie -value 2 -command "$this-c redraw"
+	    -variable $this-global-movie -value 2 -command "$this checkMPGlicense"
 	
 	Tooltip $w.none "Press to stop recording the movie."
 	Tooltip $w.raw \
@@ -1461,15 +1478,15 @@ itcl_class ViewWindow {
 
 	frame $w.moviebase
 	label $w.moviebase.label -text "Name:" -width 6
-        entry $w.moviebase.entry -relief sunken -width 13 \
+        entry $w.moviebase.entry -relief sunken -width 15 \
 	    -textvariable "$this-global-movieName" 
 
         TooltipMultiWidget "$w.moviebase.label $w.moviebase.entry" \
             "Name of the movie file.  The %%#d specifies number of digits\nto use in the frame number.  Eg: movie.%%04d will\nproduce names such as movie.0001.ppm"
 
 	frame $w.movieframe
-	label $w.movieframe.label -text "Frame:" -width 6
-        entry $w.movieframe.entry -relief sunken -width 13 \
+	label $w.movieframe.label -text "Next Frame No:" -width 15
+        entry $w.movieframe.entry -relief sunken -width 6 \
 	    -textvariable "$this-global-movieFrame" 
 
         TooltipMultiWidget "$w.movieframe.label $w.movieframe.entry" \
@@ -1488,7 +1505,11 @@ itcl_class ViewWindow {
 	bind $w.resize_f.e1 <Return> "$this resize"
 	bind $w.resize_f.e2 <Return> "$this resize"
 
-	button $w.close -text "Close" -command "wm withdraw $w"
+	entry $w.message -textvariable $this-global-message \
+	    -relief flat -width 20 -state disabled
+	frame $w.separator -height 2 -relief sunken -borderwidth 2
+	button $w.close -width 10 -text "Close" \
+	  -command "wm withdraw $w"
 
         pack $w.l -padx 4 -anchor w
         pack $w.none $w.raw $w.mpeg -padx 4 -anchor w
@@ -1503,7 +1524,9 @@ itcl_class ViewWindow {
                -side left -pady 5 -padx 4
         pack $w.resize_f -padx 4 -anchor w
 
-        pack $w.close -padx 4
+	pack $w.message -fill x -padx 4 -pady 5
+	pack $w.separator -fill x -pady 5
+        pack $w.close -padx 4 -anchor e
 
 	if {[set $this-global-resize] == 0} {
 	    set color "#505050"

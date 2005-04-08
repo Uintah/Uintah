@@ -44,6 +44,7 @@
 #include <Dataflow/Comm/MessageTypes.h>
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/ModuleHelper.h>
+#include <Dataflow/Network/Scheduler.h>
 #include <Core/Geom/GeomObj.h>
 #include <Dataflow/Modules/Render/ViewGeom.h>
 #include <Dataflow/Modules/Render/OpenGL.h>
@@ -54,6 +55,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Util/Environment.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/Thread/CleanupManager.h>
 #include <iostream>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -65,6 +67,23 @@ using std::ostream;
 
 namespace SCIRun {
 
+
+#ifdef __linux
+// This is a workaround for an unusual crash on exit bug on newer
+// linux systems.  It appears that if a viewer is created at SCIRun
+// start from within a command line network that SCIRun will crash on
+// exit in the tcl thread unless the viewer is deleted first.  So we
+// just add them to the cleanup manager and have it destroy the
+// viewers before it goes away.  Once the bug is fixed we should
+// revert this back to just deleting the viewwindow directly.
+static void delete_viewwindow_callback(void *vwptr)
+{
+  if (sci_getenv("SCI_REGRESSION_TESTING")) return;
+  ViewWindow *vw = (ViewWindow *)vwptr;
+  delete vw;
+}
+#endif
+
 //----------------------------------------------------------------------
 DECLARE_MAKER(Viewer)
 //----------------------------------------------------------------------
@@ -74,7 +93,8 @@ Viewer::Viewer(GuiContext* ctx)
     geomlock_("Viewer geometry lock"), 
     view_window_lock_("Viewer view window lock"),
     max_portno_(0),
-    stop_rendering_(false)
+    stop_rendering_(false),
+    synchronized_debt_(0)
 {
 
   map<LightID, int> li;
@@ -98,7 +118,6 @@ Viewer::Viewer(GuiContext* ctx)
   // light source icons, etc.
   ports_.addObj(new GeomViewerPort(0),0);
   max_portno_ = 1;
-
 }
 
 //----------------------------------------------------------------------
@@ -107,7 +126,12 @@ Viewer::~Viewer()
   for(unsigned int i=0;i<view_window_.size();i++)
   {
     view_window_lock_.lock();
+#ifdef __linux    
+    CleanupManager::invoke_remove_callback(delete_viewwindow_callback,
+                                           (void *)view_window_[i]);
+#else
     delete view_window_[i];
+#endif
     view_window_lock_.unlock();
   }
 
@@ -121,7 +145,7 @@ Viewer::do_execute()
   {
     if(!stop_rendering_ && mailbox.numItems() == 0)
     {
-      // See if anything needs to be redrawn...
+      // See if anything needs to be redrawn.
       int did_some=1;
       while(did_some)
       {
@@ -155,6 +179,7 @@ Viewer::do_execute()
   }
 }
 
+
 //----------------------------------------------------------------------
 int 
 Viewer::process_event()
@@ -168,14 +193,28 @@ Viewer::process_event()
 
   case MessageTypes::GoAwayWarn:
     stop_rendering_ = true;
-    //stop spinning windows...
+    //stop spinning windows.
     for(unsigned i = 0; i < view_window_.size(); i++) {
       view_window_[i]->inertia_mode_ = 0;
     }    
     break;
 
   case MessageTypes::ExecuteModule:
-    // We ignore these messages...
+    if (synchronized_debt_ < 0)
+    {
+      synchronized_debt_++;
+      sched->report_execution_finished(msg);
+    }
+    else
+    {
+      Scheduler_Module_Message *smmsg = (Scheduler_Module_Message *)msg;
+      synchronized_serials_.push_back(smmsg->serial);
+    }
+    break;
+
+  case MessageTypes::SynchronizeModule:
+    // We (mostly) ignore these messages.
+    sched->report_execution_finished(msg);
     break;
 
   case MessageTypes::ViewWindowRedraw:
@@ -200,7 +239,7 @@ Viewer::process_event()
       }
       else
       {
-	// Do animation...
+	// Do animation.
 	r->redraw(rmsg->tbeg, rmsg->tend, rmsg->nframes,
 		  rmsg->framerate);
       }
@@ -344,7 +383,7 @@ Viewer::process_event()
 	      break;
 	    }
 	    if( i == lighting_.lights.size() )
-	      error("Error deleting light, light not in database...(lserial=" +
+	      error("Error deleting light, light not in database.(lserial=" +
 		    to_string(gmsg->lserial));
 	  }
 	}
@@ -368,13 +407,20 @@ Viewer::process_event()
   case MessageTypes::GeometryDelObj:
   case MessageTypes::GeometryDelAll:
     append_port_msg(gmsg);
-    msg=0; // Don't delete it yet...
+    msg=0; // Don't delete it yet.
     break;
 
   case MessageTypes::GeometryFlush:
     geomlock_.writeLock();
     flushPort(gmsg->portno);
     geomlock_.writeUnlock();
+    break;
+
+  case MessageTypes::GeometrySynchronize:
+    // Port finish message.  Synchronize viewer.
+    //geomlock_.writeLock();
+    finishPort(gmsg->portno);
+    //geomlock_.writeUnlock();
     break;
 
   case MessageTypes::GeometryFlushViews:
@@ -384,7 +430,7 @@ Viewer::process_event()
     flushViews();
     if(gmsg->wait)
     {
-      // Synchronized redraw - do it now and signal them...
+      // Synchronized redraw - do it now and signal them.
       for(unsigned int i=0;i<view_window_.size();i++)
 	view_window_[i]->redraw_if_needed();
       gmsg->wait->up();
@@ -431,7 +477,7 @@ Viewer::initPort(Mailbox<GeomReply>* reply)
 {
   int portid=max_portno_++;
   portno_map_.push_back(portid);
-  syncronized_map_.push_back(false);
+  synchronized_map_.push_back(0);
   ports_.addObj(new GeomViewerPort(portid), portid);   // Create the port
   reply->send(GeomReply(portid));
 }
@@ -498,7 +544,7 @@ Viewer::delete_patch_portnos(int portid)
   if (found >= 0)
   {
     portno_map_.erase(portno_map_.begin() + found);
-    syncronized_map_.erase(syncronized_map_.begin() + found);
+    synchronized_map_.erase(synchronized_map_.begin() + found);
   }
 
 }
@@ -555,8 +601,8 @@ Viewer::delObj(GeomViewerPort* port, int serial)
   }
   else
   {
-    error("Error deleting object, object not in database...(serial=" +
-	  to_string(serial));
+    error("Error deleting object, object not in database.(serial=" +
+	  to_string(serial) + ")" );
   }
 }
 
@@ -586,7 +632,12 @@ Viewer::delete_viewwindow(const string &id)
     if(view_window_[i]->id_ == id)
     {
       view_window_lock_.lock();
+#ifdef __linux
+      CleanupManager::invoke_remove_callback(delete_viewwindow_callback,
+                                             (void *)view_window_[i]);
+#else
       delete view_window_[i];
+#endif
       view_window_.erase(view_window_.begin() + i);
       view_window_lock_.unlock();
       return;
@@ -613,6 +664,9 @@ Viewer::tcl_command(GuiArgs& args, void* userdata)
     }
     view_window_lock_.lock();
     ViewWindow* r=scinew ViewWindow(this, gui, gui->createContext(args[2]));
+#ifdef __linux
+    CleanupManager::add_callback(delete_viewwindow_callback, (void *)r);
+#endif
     view_window_.push_back(r);
     view_window_lock_.unlock();
   } else if (args[1] == "deleteviewwindow") {
@@ -633,7 +687,7 @@ Viewer::tcl_command(GuiArgs& args, void* userdata)
 void
 Viewer::execute()
 {
-  // Never gets called...
+  // Never gets called.
   ASSERTFAIL("Viewer::execute() should not ever be called.");
 }
 
@@ -699,7 +753,7 @@ ViewerMessage::~ViewerMessage()
 void
 Viewer::append_port_msg(GeometryComm* gmsg)
 {
-  // Look up the right port number
+  // Look up the right port number.
   GeomViewerPort *pi;
   if (!(pi = ((GeomViewerPort*)ports_.getObj(gmsg->portno).get_rep())))
   {
@@ -707,8 +761,7 @@ Viewer::append_port_msg(GeometryComm* gmsg)
     return;
   }
   
-  // Queue up the messages until the
-  // flush...
+  // Queue up the messages until the flush.
   if(pi->msg_tail)
   {
     pi->msg_tail->next=gmsg;
@@ -724,7 +777,7 @@ Viewer::append_port_msg(GeometryComm* gmsg)
 void
 Viewer::flushPort(int portid)
 {
-  // Look up the right port number
+  // Look up the right port number.
   GeomViewerPort* pi;
   if(!(pi = ((GeomViewerPort*)ports_.getObj(portid).get_rep())))
   {
@@ -757,40 +810,108 @@ Viewer::flushPort(int portid)
     flushViews();
     pi->msg_head=pi->msg_tail=0;
   }
+}
 
-  syncronized_map_[real_portno(portid)-1] = true;
-  bool all = true;
-  
-  for (unsigned int i=0; i+1 < (unsigned int)numIPorts(); i++)
+
+//----------------------------------------------------------------------
+void
+Viewer::finishPort(int portid)
+{
+  synchronized_map_[real_portno(portid)-1]++;
+
+#if 0
+  // Debugging junk.  Whole block not needed.
+  if (synchronized_serials_.size())
   {
-    if (syncronized_map_[i] == false)
+    unsigned int serial = synchronized_serials_.front();
+    cout << "   finishPort " << real_portno(portid) <<
+      " (" << serial << ")   :";
+    for (unsigned int k = 0; k < synchronized_map_.size(); k++)
+    {
+      cout << " " << synchronized_map_[k];
+    }
+    cout << "\n";
+  }
+  else
+  {
+    cout << "   finishPort " << real_portno(portid) << " (...)   :";
+    for (unsigned int k = 0; k < synchronized_map_.size(); k++)
+    {
+      cout << " " << synchronized_map_[k];
+    }
+    cout << "\n";
+  }
+#endif
+
+  bool all = true;
+  for (unsigned int i=0; i < synchronized_map_.size(); i++)
+  {
+    if (synchronized_map_[i] == 0)
     {
       all = false;
       break;
     }
   }
+  
   if (all)
   {
-    if (sci_getenv("SCI_REGRESSION_TESTING"))
+    // Clear the entries from the map.
+    for (unsigned int i = 0; i < synchronized_map_.size(); i++)
     {
-      geomlock_.writeUnlock();
-      for (unsigned int i = 0; i < view_window_.size(); i++)
-      {
-	const string name = string("snapshot") + to_string(i) + ".ppm";
-	view_window_[i]->redraw_if_needed();
-	view_window_[i]->renderer_->saveImage(name, "ppm", 640, 512);
-      }
-      geomlock_.writeLock();
-      flushViews();
+      synchronized_map_[i]--;
     }
 
-    for (unsigned int i = 0; i < syncronized_map_.size(); i++)
+    // Push the serial number back to the scheduler.
+    if (synchronized_serials_.size())
     {
-      syncronized_map_[i] = false;
+      unsigned int serial = synchronized_serials_.front();
+      synchronized_serials_.pop_front();
+
+#if 0      
+      // Debugging.
+      cout << " Finished, sending " << serial << "   :";
+      for (unsigned int k = 0; k < synchronized_map_.size(); k++)
+      {
+        cout << " " << synchronized_map_[k]-1;
+      }
+      cout << "\n";
+#endif
+      
+      sched->report_execution_finished(serial);
+    }
+    else
+    {
+      // Serial number hasn't arrived yet, defer until we get it.
+      synchronized_debt_--;
     }
   }
 }
 
+
+void
+Viewer::set_context(Scheduler* sched, Network* network)
+{
+  Module::set_context(sched, network);
+  if (sci_getenv("SCI_REGRESSION_TESTING"))
+  {
+    sched->add_callback(regression_callback, this);
+  }
+}
+
+
+void
+Viewer::regression_callback(void *ths)
+{
+  Viewer *viewer = (Viewer *)ths;
+  for (unsigned int i = 0; i < viewer->view_window_.size(); i++)
+  {
+    const string name = string("snapshot") + to_string(i) + ".ppm";
+    viewer->view_window_[i]->redraw_if_needed();
+    // Make sure that the 640x480 here matches up with ViewWindow.cc defaults.
+    viewer->view_window_[i]->renderer_->saveImage(name, "ppm", 640, 480);
+    viewer->view_window_[i]->redraw(); // flushes saveImage.
+  }
+}
 
 
 } // End namespace SCIRun

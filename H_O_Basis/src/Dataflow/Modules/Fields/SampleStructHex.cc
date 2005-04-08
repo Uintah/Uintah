@@ -205,10 +205,6 @@ SampleStructHex::execute()
 {
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-  if (!ifp) {
-    error("Unable to initialize iport 'Input Field'.");
-    return;
-  }
 
   Point minb, maxb;
   DataTypeEnum datatype;
@@ -371,11 +367,6 @@ SampleStructHex::execute()
   }				    
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Sample Field");
-  if (!ofp) {
-    error("Unable to initialize oport 'Output Sample Field'.");
-    return;
-  }
-
   ofp->send(ofh);
 }
 

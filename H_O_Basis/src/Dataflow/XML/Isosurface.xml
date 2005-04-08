@@ -150,7 +150,7 @@
 	<datatype>SCIRun::Geometry</datatype>
       </port>
       <port>
-        <name>Interpolant</name>
+        <name>Mapping</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>

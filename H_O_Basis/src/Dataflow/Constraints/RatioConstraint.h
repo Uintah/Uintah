@@ -44,12 +44,11 @@
 #ifndef SCI_project_Ratio_Constraint_h
 #define SCI_project_Ratio_Constraint_h 1
 
-#include <Dataflow/share/share.h>
 #include <Dataflow/Constraints/BaseConstraint.h>
 
 namespace SCIRun {
 
-class PSECORESHARE RatioConstraint : public BaseConstraint {
+class RatioConstraint : public BaseConstraint {
 public:
    RatioConstraint( const string& name,
 		    const Index numSchemes,

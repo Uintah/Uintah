@@ -55,14 +55,11 @@
 #include <iostream>
 
 
-
-#include <Packages/BioPSE/share/share.h>
-
 namespace BioPSE {
 
 using namespace SCIRun;
 
-class BioPSESHARE ElectrodeManager : public Module {
+class ElectrodeManager : public Module {
   //! Private data
 
   //! Output port
@@ -104,16 +101,6 @@ void
 {
   electrodeParams_ = (MatrixOPort *)get_oport("Electrode Parameters");
   currPattIndicies_ = (MatrixOPort *)get_oport("Current Pattern Index Vector");
-
-  if (!electrodeParams_) {
-    error("Unable to initialize oport 'Electrode Parameters'.");
-    return;
-  }
-
-  if (!currPattIndicies_) {
-    error("Unable to initialize oport 'Current Pattern Index Vector'.");
-    return;
-  }
 
   unsigned int model = modelTCL_.get();
   unsigned int numEl = Max(numElTCL_.get(), 0);

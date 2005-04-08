@@ -156,10 +156,6 @@ ClipLattice::execute()
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-  if (!ifp) {
-    error("Unable to initialize " +name + "'s iport.");
-    return;
-  }
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
   {
     return;
@@ -228,10 +224,6 @@ ClipLattice::execute()
 
     GeometryOPort *ogport=0;
     ogport = (GeometryOPort*)get_oport("Selection Widget");
-    if (!ogport) {
-      error("Unable to initialize " + name + "'s oport.");
-      return;
-    }
     widgetid_ = ogport->addObj(widget_group, "ClipLattice Selection Widget",
 			       &widget_lock_);
     ogport->flushViews();
@@ -281,11 +273,6 @@ ClipLattice::execute()
     FieldHandle ofield = algo->execute(ifieldhandle, top, bottom);
 
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
-    if (!ofield_port) {
-      error("Unable to initialize " + name + "'s oport.");
-      return;
-    }
-    
     ofield_port->send(ofield);
   }
 }

@@ -22,11 +22,11 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
-        Core/Persistent Core/Containers Core/Util \
+        Dataflow/Widgets Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry  Core/GeomInterface \
-        Core/TkExtensions
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) 
+        Core/TkExtensions Dataflow/Modules/Fields Dataflow/XMLUtil
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(XML_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

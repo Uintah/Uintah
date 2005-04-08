@@ -38,11 +38,13 @@
  *
  */
 #include <SCIRun/Vtk/OutPort.h>
-
+#include <SCIRun/Vtk/InPort.h>
+#include <iostream>
 class vtkObject;
 
-namespace SCIRun {
-namespace vtk {
+
+using namespace SCIRun;
+using namespace vtk;
 
 OutPort::OutPort(){
   vtkobj=NULL;
@@ -54,14 +56,19 @@ OutPort::setOutput(vtkObject* vtkobj){
   this->vtkobj=vtkobj;
 }
 
-vtkObject*
-OutPort::getOutput(){
-  return vtkobj;
+void  
+OutPort::update(int flag){
+  if(vtkobj!=getOutput()){
+    setOutput(getOutput());
+    for(unsigned i=0; i<connPortList.size();i++){
+      dynamic_cast<InPort*>(connPortList[i])->connect(this);
+    }
+  }
+  for(unsigned i=0; i<connPortList.size();i++){
+    connPortList[i]->update(flag);
+  }
 }
-
 
 OutPort::~OutPort(){
 }
 
-}
-}

@@ -8,33 +8,41 @@
     <summary>KnowledgeBase queries in a Field.</summary>
     <description>
       <p>
-      This UI accepts input from a Probe widget then allows the user
-      to make queries on the values in a data field by X-Y-Z location
-      through a lookup table which maps voxels to the type of material
-      being represented in that region of the data field.
+      This UI accepts on input a volume data field then allows the user
+      to make queries on the values in the data field by X-Y-Z location
+      using an internal 3-D cursor (Probe widget).  The values captured
+      by the 3-D cursor are passed through a lookup table which maps the
+      voxels to the type of material being represented in that region of
+      the data field.
       </p>
       <p>
       An ASCII label translation file is required to translate from
       indices in the 16-bit binary volume segmentation map to anatomical
       names.  These names are then used to make the query.  The query
-      can be made through several different means.  A static adjacency map
-      file can be used to obtain the names of adjacent structures to the
-      currently selected structure.  The anatomical name of the currently
-      selected structure can be used in a query to the Foundational Model
-      of Anatomy (FMA) knowledgebase through a Web service called OQAFMA.  Also,
-      the named structure may be passed to a local Web browser to direct it
-      to the corresponding entity in the Foundational Model Explorer
-      browser interface to the FMA.
+      can be made through several different means.
       </p>
       <p>
-      Results of the query populate the HotBox UI with the names of the
-      entities adjacent to and/or otherwise related to the element being
-      Probed.  Bounding box information, obtained from another file,
-      corresponding to the volume segmentation, for the selected structure
-      is output from the Hotbox matrix port to enable highlighted recoloring
-      of the selected structure in the Viewer.  Note: Bounding box information
-      refers to voxels in the original segmented volume -- may not correspond
-      if the volume in SCIRun has been re-sized.
+      A static adjacency map file, derived from segmentation, is required
+      to obtain the names of adjacent structures to the currently selected
+      structure.  The anatomical name of the currently selected structure
+      is used in a query to the Foundational Model of Anatomy (FMA)
+      knowledgebase through a Web service called OQAFMA.
+      </p>
+      <p>
+      Also, the named structure may be passed to a local Web browser to
+      direct it to the corresponding entity in the Foundational Model
+      Explorer browser interface to the FMA.  Results of the query populate
+      the HotBox UI with the names of the entities adjacent to and/or
+      hierarchically related to the element being Probed.
+      </p>
+      <p>
+      Bounding box information for the selected structure, obtained from
+      another file corresponding to the volume segmentation, is used to
+      move the cursor to the center of the structure being selected from
+      the hierarchy of adjacency.  The HotBox also outputs highlighted
+      geometry for the selected entity.  Note: Bounding box information
+      refers to voxels in the original segmented volume -- may not
+      correspond if the volume in SCIRun has been re-sized.
       </p>
     </description>
   </overview>
@@ -43,22 +51,77 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>Input Field</name>
+        <description>
+          <p>Input port -- the label map as a field</p>
+        </description>
+        <name>Input Label Volume</name>
         <datatype>SCIRun::Field</datatype>
       </port>
       <port>
-        <name>Input Matrix</name>
+        <description>
+          <p>Input port -- Time as a matrix</p>
+        </description>
+        <name>Input TimeStep</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <description>
+          <p>Input port -- Transform Matrix</p>
+        </description>
+        <name>Input Transform</name>
         <datatype>SCIRun::Matrix</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
+        <description>
+          <p>Geometry drawn to the viewer -- 2-D text boxes for
+             HotBox adjacency selection</p>
+        </description>
         <name>HotBox Widget</name>
         <datatype>SCIRun::Geometry</datatype>
       </port>
       <port>
-	<name>Bounding Box</name>
-        <datatype>SCIRun::Matrix</datatype>
+        <description>
+          <p>The 3-D Cursor of the HotBox</p>
+        </description>
+	<name>Probe Widget</name>
+        <datatype>SCIRun::Geometry</datatype>
+      </port>
+      <port>
+        <description>
+          <p>Simple field which dynamically changes with HotBox selection.</p>
+        </description>
+        <name>Selection Highlight</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <description>
+          <p>Simple field which dynamically changes with Injury List.</p>
+        </description>
+        <name>Injury 0 Highlight</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <description>
+          <p>Simple field which dynamically changes with Injury List.</p>
+        </description>
+        <name>Injury 1 Highlight</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <description>
+          <p>Simple field showing injury icon geometry.</p>
+        </description>
+        <name>Injury Icon</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <description>
+          <p>NrrdData port with physiology data.</p>
+        </description>
+        <name>Physiology Data</name>
+        <datatype>SCIRun::Nrrd</datatype>
       </port>
     </outputs>
   </io>

@@ -30,10 +30,13 @@
 //    Date   : Sun Jun 27 17:49:45 2004
 
 #include <Core/Volume/Pbuffer.h>
-#include <Core/Volume/ShaderProgramARB.h>
-#include <iostream>
+#include <Core/Geom/ShaderProgramARB.h>
+#include <Core/Util/Environment.h>
 
+#include <iostream>
 #include <string>
+
+#include <stdio.h>
 
 #include <sci_glu.h>
 #include <sci_glx.h>
@@ -41,8 +44,6 @@
 using std::cerr;
 using std::endl;
 using std::string;
-
-#ifndef HAVE_GLEW
 
 #ifndef GLX_ATI_pixel_format_float
 
@@ -90,8 +91,10 @@ using std::string;
 #define GLX_BIND_TO_TEXTURE_LUMINANCE_ATI 0x9821
 #define GLX_BIND_TO_TEXTURE_INTENSITY_ATI 0x9822
 
+#ifndef _WIN32
 typedef void ( * PFNGLXBINDTEXIMAGEATIPROC) (Display *dpy, GLXPbuffer pbuf, int buffer);
 typedef void ( * PFNGLXRELEASETEXIMAGEATIPROC) (Display *dpy, GLXPbuffer pbuf, int buffer);
+#endif
 
 #endif /* GLX_ATI_render_texture */
 
@@ -165,10 +168,10 @@ static void *NSGLGetProcAddress (const GLubyte *name)
 
 #endif
 
+#ifndef _WIN32
 static PFNGLXBINDTEXIMAGEATIPROC glXBindTexImageATI = 0;
 static PFNGLXRELEASETEXIMAGEATIPROC glXReleaseTexImageATI = 0;
-
-#endif /* HAVE_GLEW */
+#endif
 
 static bool mInit = false;
 static bool mSupported = false;
@@ -189,6 +192,7 @@ namespace SCIRun {
 
 struct PbufferImpl
 {
+#ifndef _WIN32
   PbufferImpl ()
    : mDisplay(0), mPbuffer(0), mContext(0) {}
   Display* mDisplay;
@@ -198,32 +202,24 @@ struct PbufferImpl
   Display* mSaveDisplay;
   GLXDrawable mSaveDrawable;
   GLXContext mSaveContext;
+#endif
 };
 
 bool
 Pbuffer::create ()
 {
-#ifdef __ECC
-  // For now no Pbuffer support on the Altix system
+  if (sci_getenv_p("SCIRUN_DISABLE_PBUFFERS"))
+  {
+    mSupported = false;
+    return true;
+  }
+
+#if defined(__ECC) || defined(_WIN32)
+  // For now no Pbuffer support on the Altix or windows system
   mSupported = false;
-  return false;
+  return true;
 #else
   if(!mInit) {
-#ifdef HAVE_GLEW
-    // extension check
-    mATI_render_texture = GLXEW_ATI_render_texture;
-    mATI_pixel_format_float = GLXEW_ATI_pixel_format_float;
-    mNV_float_buffer = GLXEW_NV_float_buffer && GLEW_NV_float_buffer && GLEW_ARB_fragment_program;
-    mNV_texture_rectangle = GLEW_NV_texture_rectangle;
-    if (!GLXEW_VERSION_1_3
-        || (mFormat == GL_FLOAT // float buffer extensions
-            && !(mATI_pixel_format_float || mNV_float_buffer))) {
-      mSupported = false;
-    } else {
-      mSupported = true;
-    }
-    //        || (mRenderTex && !mATI_render_texture) // render texture extensions
-#else
     /* query GLX version */
     int major, minor;
     const char* version = glXGetClientString(glXGetCurrentDisplay(), GLX_VERSION);
@@ -272,8 +268,6 @@ Pbuffer::create ()
       }
     }
 
-    
-#endif
     mInit = true;
   }
   
@@ -498,6 +492,7 @@ Pbuffer::create ()
 void
 Pbuffer::destroy ()
 {
+#ifndef _WIN32
   if (mSeparate && mImpl->mContext != 0)
   {
     //glXMakeCurrent(mImpl->mDisplay, mImpl->mPbuffer, 0);
@@ -507,11 +502,13 @@ Pbuffer::destroy ()
     glXDestroyPbuffer(mImpl->mDisplay, mImpl->mPbuffer);
   if(mShader)
     mShader->destroy();
+#endif
 }
 
 void
 Pbuffer::makeCurrent ()
 {
+#ifndef _WIN32
   // set read/write context to pbuffer
   //if (mImpl->mPbuffer != glXGetCurrentDrawable()
   //    || mImpl->mContext != glXGetCurrentContext())
@@ -520,11 +517,13 @@ Pbuffer::makeCurrent ()
     //			  mImpl->mPbuffer, mImpl->mContext);
     glXMakeCurrent(mImpl->mDisplay, mImpl->mPbuffer, mImpl->mContext);
   }
+#endif
 }
 
 void
 Pbuffer::swapBuffers ()
 {
+#ifndef _WIN32
   if(mRenderTex && !mATI_render_texture) {
     GLint buffer;
     glGetIntegerv(GL_DRAW_BUFFER, &buffer);
@@ -537,11 +536,13 @@ Pbuffer::swapBuffers ()
     glXSwapBuffers(mImpl->mDisplay, mImpl->mPbuffer);
   else
     glFinish();
+#endif
 }
 
 void
 Pbuffer::bind (unsigned int buffer)
 {
+#ifndef _WIN32
   if(mRenderTex)
   {
     glEnable(mTexTarget);
@@ -563,11 +564,13 @@ Pbuffer::bind (unsigned int buffer)
       }
     }
   }
+#endif
 }
 
 void
 Pbuffer::release (unsigned int buffer)
 {
+#ifndef _WIN32
   if(mRenderTex)
   {
     if(mATI_render_texture) {
@@ -587,23 +590,28 @@ Pbuffer::release (unsigned int buffer)
       }
     }
   }
+#endif
 }
 
 void
 Pbuffer::activate ()
 {
+#ifndef _WIN32
   // save context state
   mImpl->mSaveDisplay = glXGetCurrentDisplay();
   mImpl->mSaveDrawable = glXGetCurrentDrawable();
   mImpl->mSaveContext = glXGetCurrentContext();
   // set read/write context to pbuffer
   glXMakeCurrent(mImpl->mDisplay, mImpl->mPbuffer, mImpl->mContext);
+#endif
 }
 
 void
 Pbuffer::deactivate ()
 {
+#ifndef _WIN32
   glXMakeCurrent(mImpl->mSaveDisplay, mImpl->mSaveDrawable, mImpl->mSaveContext);
+#endif
 }
 
 bool

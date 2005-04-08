@@ -43,8 +43,6 @@
 #include <Core/Util/DynamicCompilation.h>
 #include <math.h>
 
-#include <Core/share/share.h>
-
 #include <vector>
 #include <iostream>
 
@@ -52,7 +50,7 @@ namespace SCIRun {
 
 using namespace std;
 
-class PSECORESHARE Centroids : public Module {
+class Centroids : public Module {
 public:
   Centroids(GuiContext* ctx);
   virtual ~Centroids();
@@ -80,19 +78,8 @@ Centroids::execute()
 {
   // must find ports and have valid data on inputs
   FieldIPort *ifieldPort = (FieldIPort*)get_iport("TetVolField");
-
-  if (!ifieldPort) {
-    error("Unable to initialize iport 'TetVolField'.");
-    return;
-  }
   FieldHandle ifieldhandle;
   if (!ifieldPort->get(ifieldhandle) || !ifieldhandle.get_rep()) return;
-
-  FieldOPort *ofieldPort = (FieldOPort*)get_oport("PointCloudField");
-  if (!ofieldPort) {
-    error("Unable to initialize oport 'PointCloudField'.");
-    return;
-  }
 
   const TypeDescription *ftd = ifieldhandle->get_type_description();
   CompileInfoHandle ci = CentroidsAlgo::get_compile_info(ftd);
@@ -101,6 +88,7 @@ Centroids::execute()
 
   FieldHandle ofieldhandle(algo->execute(ifieldhandle));
   
+  FieldOPort *ofieldPort = (FieldOPort*)get_oport("PointCloudField");
   ofieldPort->send(ofieldhandle);
 }
 

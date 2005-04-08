@@ -48,7 +48,7 @@ proc regenConnectionMenu { menu_id conn } {
     for {set c 0} {$c <= 10 } {incr c } {
 	$menu_id delete $c
     }
-    global Subnet Disabled
+    global Subnet Disabled ConnectionRoutes
     $menu_id add command -label "Connection" -state disabled
     $menu_id add separator
     $menu_id add command -label "Delete" -command "destroyConnection {$conn} 1"
@@ -58,9 +58,16 @@ proc regenConnectionMenu { menu_id conn } {
     set connid [makeConnID $conn]
     setIfExists disabled Disabled($connid) 0
     set label [expr $disabled?"Enable":"Disable"]
-    $menu_id add command -command "disableConnection {$conn}" -label $label
-    set subnet $Subnet([lindex $conn 0])
+    $menu_id add command -command "connection$label {$conn}" -label $label
+
     $menu_id add command -label "Notes" -command "notesWindow $connid"
+    if {  [array exists ConnectionRoutes] && \
+	      [array names ConnectionRoutes $connid] != "" } {
+	$menu_id add command -label "Auto Path" \
+	    -command "array unset ConnectionRoutes $connid
+                      drawConnections \{\{$conn\}\}"
+    }
+
 }
 
 
@@ -77,6 +84,7 @@ proc drawConnections { connlist } {
     foreach conn $connlist {
 	if { [llength $conn] != 4 } { 
 	    puts "Not drawing invalid connection: $conn" 
+	    continue
 	}
 
 	set id [makeConnID $conn]
@@ -117,6 +125,13 @@ proc drawConnections { connlist } {
 	    $canvas bind $id <Control-Button-1> "$canvas raise $id
 						 traceConnection {$conn} 1"
 	    $canvas bind $id <Control-Button-2> "destroyConnection {$conn} 1"
+	    $canvas bind $id <ButtonPress-2> "setGlobal ClosestSegment -1"
+	    $canvas bind $id <B2-Motion> \
+		"changeConnectionRoute %x %y \{$conn\}"
+	    $canvas bind $id <Shift-Button-2> \
+		"splitConnectionRoute %x %y \{$conn\}"
+	    $canvas bind $id <ButtonRelease-2> "setGlobal ClosestSegment -1"
+#	    $canvas bind $id <Shift-Button-2-Motion> "changeConnectionRoute %x %y \{$conn\}"
 	    $canvas bind $id <3> "connectionMenu %X %Y {$conn} %x %y"
 	    canvasTooltip $canvas $id $ToolTipText(Connection)
 	} else {
@@ -130,6 +145,128 @@ proc drawConnections { connlist } {
     }
 }
 
+proc getPathLength { path } {
+    return [expr [llength $path]/2-1]
+}
+
+proc getPathSegment { path seg } {
+    if { $seg < [getPathLength $path] } {
+	return [lrange $path [expr $seg*2] [expr $seg*2+3]]
+    }
+}
+
+proc setPathSegment { path segnum seg } {
+    if { $segnum >= [getPathLength $path] } return
+    return [eval lreplace \{$path\} [expr $segnum*2] [expr $segnum*2+3] $seg]
+}
+
+proc setPathSegmentX { path seg newx } {
+    set newseg [getPathSegment $path $seg]
+    set newseg "$newx [lindex $newseg 1] $newx [lindex $newseg 3]"
+    return [setPathSegment $path $seg $newseg]
+}
+
+proc setPathSegmentY { path seg newy } {
+    set newseg [getPathSegment $path $seg]
+    set newseg "[lindex $newseg 0] $newy [lindex $newseg 2] $newy"
+    return [setPathSegment $path $seg $newseg]
+}
+
+### projectPointLine
+# projects point pX, pY along a perpendicular line onto
+# the line segment defined by x1,y1 to x2, y2
+# returns 1000000,1000000 if the point projects beyond the endpoints
+# of the segment
+proc projectPointLine { pX pY x1 y1 x2 y2 } {
+    set u [computeDist $x1 $y1 $x2 $y2]
+    if { $u <= 0.0 } { return "1000000 1000000" }
+    set u [expr (($pX-$x1)*($x2-$x1)+($pY-$y1)*($y2-$y1))/($u*$u)]
+    if { $u < 0.0 || $u > 1.0 } { return "1000000 1000000" }
+    set x [expr $x1+$u*($x2-$x1)]
+    set y [expr $y1+$u*($y2-$y1)]
+    return "$x $y"
+}
+
+### pointLineDist
+# The shortest distance from the point (pX,pY) to the line
+# segment (x1,y1),(x2,y2)
+proc pointLineDist { pX pY x1 y1 x2 y2 } {
+    set xy [projectPointLine $pX $pY $x1 $y1 $x2 $y2]
+    return [computeDist $pX $pY [lindex $xy 0] [lindex $xy 1]]
+}
+
+proc segmentIsHorizontal { seg } {
+    return [expr [lindex $seg 1] == [lindex $seg 3]]
+}
+
+proc segmentIsVertical { seg } {
+    return [expr [lindex $seg 0] == [lindex $seg 2]]
+}
+
+
+proc insertSegmentMidpoint { path segnum } {
+    set seg [getPathSegment $path $segnum]
+    set mx [expr ([lindex $seg 0]+[lindex $seg 2])/2]
+    set my [expr ([lindex $seg 1]+[lindex $seg 3])/2]
+    set seg [list \
+		 [lindex $seg 0] [lindex $seg 1] \
+		 $mx $my $mx $my \
+		 [lindex $seg 2] [lindex $seg 3]]
+    return [setPathSegment $path $segnum $seg]
+}
+
+
+proc closestConnectionSegment { path mx my } {
+    global ClosestSegment
+    if { $ClosestSegment == -1 } {
+	set shortest 1000000
+	set closest -1
+	for {set s 0} {$s < [getPathLength $path] } {incr s} {
+	    set dist [eval pointLineDist $mx $my [getPathSegment $path $s]]
+	    if { $dist < $shortest } {
+		set closest $s
+		set shortest $dist
+	    }
+	}
+	setGlobal ClosestSegment $closest
+    }
+    return $ClosestSegment
+}
+
+proc splitConnectionRoute { X Y conn } {
+    global Subnet
+    set canvas $Subnet(Subnet$Subnet([oMod conn])_canvas)
+    set mx [expr $X + [$canvas canvasx 0]]
+    set my [expr $Y + [$canvas canvasy 0]]
+    set path [routeConnection $conn]
+    set closest [closestConnectionSegment $path $mx $my]
+    if { $closest == -1 } return
+    set path [insertSegmentMidpoint $path $closest]
+    setGlobal ConnectionRoutes([makeConnID $conn]) $path
+    setGlobal ClosestSegment -1
+}
+
+
+proc changeConnectionRoute { X Y conn } {
+    global Subnet ConnectionRoutes
+    set canvas $Subnet(Subnet$Subnet([oMod conn])_canvas)
+    set mx [expr $X + [$canvas canvasx 0]]
+    set my [expr $Y + [$canvas canvasy 0]]
+    set path [routeConnection $conn]
+    set closest [closestConnectionSegment $path $mx $my]
+
+    if { $closest <= 0 || $closest >= [getPathLength $path] } return
+
+    set seg [getPathSegment $path $closest]
+    if { [lindex $seg 1] == [lindex $seg 3] } {
+	set path [setPathSegmentY $path $closest $my]
+    } elseif { [lindex $seg 0] == [lindex $seg 2] } {
+	set path [setPathSegmentX $path $closest $mx]
+    }
+
+    set ConnectionRoutes([makeConnID $conn]) $path
+    drawConnections [list $conn]
+}
 
 proc traceConnection { conn { traverse 0 } } {
     global Color TracedConnections
@@ -165,14 +302,28 @@ proc disableConnectionID { connid state } {
     }
 }
 
-proc disableConnection { conn } {
+proc connectionEnable { conn } {
     global Disabled
     set connid [makeConnID $conn]
     setIfExists disabled Disabled($connid) 0
+    if { !$disabled } return
     # disabledTrace is called when Disabled is written to,
     # it does the actual disabling of the connection in the network
-    set Disabled($connid) [expr $disabled?0:1]
+    set Disabled($connid) 0
 }
+
+proc connectionDisable { conn } {
+    global Disabled
+    set connid [makeConnID $conn]
+    setIfExists disabled Disabled($connid) 0
+    if { $disabled } return
+    # disabledTrace is called when Disabled is written to,
+    # it does the actual disabling of the connection in the network
+    set Disabled($connid) 1
+}
+
+
+
 
 proc drawConnectionTrace { conn } {
     global Subnet Color TracedSubnets
@@ -514,6 +665,23 @@ proc routeConnection { conn } {
     set oy [expr int([lindex $outpos 1])]
     set ix [expr int([lindex $inpos 0])]
     set iy [expr int([lindex $inpos 1])]
+
+    global ConnectionRoutes
+    set connid [makeConnID $conn]
+    if {  [array exists ConnectionRoutes] && \
+	      [array names ConnectionRoutes $connid] != "" } {
+	set path $ConnectionRoutes($connid)
+	set path [setPathSegmentX $path 0 $ox]
+	set path [lreplace $path 1 1 $oy]
+	set last [expr [getPathLength $path]-1]
+	set path [setPathSegmentX $path $last $ix]
+	set path [lreplace $path end end $iy]
+	if { ![string equal $path $ConnectionRoutes($connid)] } {
+	    set ConnectionRoutes($connid) $path
+	}
+	return $path
+    }
+
     if {[envBool SCIRUN_STRAIGHT_CONNECTIONS] } {
 	return [list $ox $oy $ox [expr $oy+2] $ix [expr $iy-3] $ix $iy]
     } elseif { $ox == $ix && $oy <= $iy } {
@@ -679,4 +847,14 @@ proc iNum { connection_varname } {
 proc iPort { connection_varname } {
     upvar $connection_varname connection
     return "[lrange $connection 2 3] i"
+}
+
+
+
+trace variable ConnectionRoutes wu routeChanged
+
+proc routeChanged { args } {
+    set conn [parseConnectionID [lindex $args 1]]
+    drawConnections [list $conn]
+
 }

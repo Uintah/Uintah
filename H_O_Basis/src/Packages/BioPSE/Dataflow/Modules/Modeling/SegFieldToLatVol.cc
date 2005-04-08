@@ -43,7 +43,10 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Packages/BioPSE/Core/Datatypes/SegLatVolField.h>
-#include <Core/Datatypes/LatVolField.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 
@@ -53,6 +56,10 @@ using namespace SCIRun;
 
 class SegFieldToLatVol : public Module
 {
+  typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+  typedef ConstantBasis<int>                FDBasis;
+  typedef GenericField<LVMesh, FDBasis, FData3d<int, LVMesh> > LVField;
+
   GuiString latVolData_;
 public:
   SegFieldToLatVol(GuiContext* ctx);
@@ -78,20 +85,12 @@ SegFieldToLatVol::~SegFieldToLatVol()
 void
 SegFieldToLatVol::execute()
 {
-  // make sure the ports exist
+  // Make sure the ports exist.
   FieldIPort *ifp = (FieldIPort *)get_iport("SegField");
-  FieldHandle ifieldH;
-  if (!ifp) {
-    error("Unable to initialize iport 'SegField'.");
-    return;
-  }
   FieldOPort *ofp = (FieldOPort *)get_oport("LatVolField");
-  if (!ofp) {
-    error("Unable to initialize oport 'LatVolField'.");
-    return;
-  }
 
-  // make sure the input data exists
+  // Make sure the input data exists.
+  FieldHandle ifieldH;
   if (!ifp->get(ifieldH) || !ifieldH.get_rep()) {
     error("No input data");
     return;
@@ -103,7 +102,7 @@ SegFieldToLatVol::execute()
   }
 
   // send a LatVolField with the user's chosen data as output
-  LatVolField<int> *lvf = new LatVolField<int>(slvf->get_typed_mesh(), 0);
+  LVField *lvf = new LVField(slvf->get_typed_mesh());
   if (latVolData_.get() == "componentMatl") {
     for (int i=0; i<lvf->fdata().dim1(); i++)
       for (int j=0; j<lvf->fdata().dim2(); j++)

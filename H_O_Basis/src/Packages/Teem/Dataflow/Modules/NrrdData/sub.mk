@@ -45,6 +45,7 @@ SRCS     += \
 	$(SRCDIR)/NrrdInfo.cc\
 	$(SRCDIR)/NrrdSelectTime.cc\
 	$(SRCDIR)/NrrdSetProperty.cc\
+	$(SRCDIR)/NrrdSetupTexture.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Core/Persistent Core/Containers Core/Util \

@@ -43,7 +43,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Packages/BioPSE/Core/Datatypes/SepSurf.h>
-#include <Core/Datatypes/QuadSurfField.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <map>
 #include <queue>
@@ -56,6 +55,7 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class ExtractSingleSurface : public Module {
+
   GuiInt surfid_;
   GuiString data_;
 public:
@@ -76,21 +76,15 @@ ExtractSingleSurface::~ExtractSingleSurface()
 {
 }
 
-void ExtractSingleSurface::execute() {
-  // make sure the ports exist
+void
+ExtractSingleSurface::execute()
+{
+  // Make sure the ports exist.
   FieldIPort *ifp = (FieldIPort *)get_iport("SepSurf");
-  FieldHandle ifieldH;
-  if (!ifp) {
-    error("Unable to initialize iport 'SepSurf'.");
-    return;
-  }
   FieldOPort *ofp = (FieldOPort *)get_oport("QuadSurf");
-  if (!ofp) {
-    error("Unable to initialize oport 'QuadSurf'.");
-    return;
-  }
 
-  // make sure the input data exists
+  // Make sure the input data exists.
+  FieldHandle ifieldH;
   if (!ifp->get(ifieldH) || !ifieldH.get_rep()) {
     error("No input data");
     return;
@@ -111,7 +105,7 @@ void ExtractSingleSurface::execute() {
   //    for (int i=0; i<st->bcIdx.size(); i++)
   //	 cerr <<"  "<<i<<"  "<<st->bcVal[i]<<"  "<<st->points[st->bcIdx[i]]<<"\n";
 
-  QuadSurfField<int> *qsf = ss->extractSingleComponent(comp, data_.get());
+  SSQSField *qsf = ss->extractSingleComponent(comp, data_.get());
 
   //    cerr << "surface11 "<<ts->name<<" has "<<ts->points.size()<<" points, "<<ts->elements.size()<<" elements and "<<ts->bcVal.size()<<" known vals.\n";
 

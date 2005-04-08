@@ -35,6 +35,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Mutex.h>
+#include <Core/Geometry/Tensor.h>
 #include <sci_hash_map.h>
 
 namespace BioPSE {
@@ -217,11 +218,11 @@ CalcFMField<ElecField, CondField, PointField, MagField>::calc_parallel(int proc,
     //cout <<  "scalar: " << p.first << endl;
     //cout << "vector: " << p.second << endl;
     data_out_[proc].push_back(p);
-    if (++count % 100) {
-      mod->accumulate_progress(prog);
-    }
+    //if (++count % 100) {
+      //mod->accumulate_progress(prog);
+    //}
   }
-  mod->accumulate_progress(chunk - count);
+  //mod->accumulate_progress(chunk - count);
 }
 
 //! Assume that the value_type for the input fields are Vector.
@@ -285,10 +286,9 @@ CalcFMField<ElecField, CondField, PointField, MagField>::calc_forward_magnetic_f
   mod->update_progress(1, sz);
  
   data_out_.resize(np_);
+
   // do the parallel work.
-  Thread::parallel(Parallel1<AlgoType, ProgressReporter*>(this, 
-						     &AlgoType::calc_parallel,
-						      mod), np_, true);
+  Thread::parallel(this, &AlgoType::calc_parallel, np_, mod);
   
   //iterate over output fields and set the values...
   set_parallel_data(fout, fscalarout);

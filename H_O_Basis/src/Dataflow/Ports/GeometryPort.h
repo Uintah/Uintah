@@ -43,7 +43,6 @@
 #ifndef SCI_project_GeometryPort_h
 #define SCI_project_GeometryPort_h 1
 
-#include <Dataflow/share/share.h>
 #include <Dataflow/Network/Port.h>
 #include <Dataflow/Comm/MessageBase.h>
 #include <Core/Thread/Mailbox.h>
@@ -67,7 +66,7 @@ class GeometryComm;
 typedef int GeomID;
 typedef short LightID;
 
-class PSECORESHARE GeometryIPort : public IPort {
+class GeometryIPort : public IPort {
 public:
   GeometryIPort(Module*, const string& name);
   virtual ~GeometryIPort();
@@ -111,7 +110,7 @@ struct GeometryData {
 // CollabVis code end
 
   
-class PSECORESHARE GeometryOPort : public OPort {
+class GeometryOPort : public OPort {
 private:
 
   GeomID serial_;
@@ -143,6 +142,7 @@ public:
 
   virtual void reset();
   virtual void finish();
+  virtual void synchronize();
 
   virtual void attach(Connection *c);
   virtual void detach(Connection *c, bool blocked);

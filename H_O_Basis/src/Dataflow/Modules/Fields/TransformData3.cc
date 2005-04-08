@@ -73,6 +73,7 @@ public:
   TransformData3(GuiContext* ctx);
   virtual ~TransformData3();
   virtual void execute();
+  virtual void presave();
 };
 
 
@@ -102,10 +103,6 @@ TransformData3::execute()
   // Get input field.
   FieldIPort *ifp0 = (FieldIPort *)get_iport("Input Field 0");
   FieldHandle fHandle0;
-  if (!ifp0) {
-    error("Unable to initialize iport 'Input Field 0'.");
-    return;
-  }
   if (!(ifp0->get(fHandle0) && fHandle0.get_rep()))
   {
     error("Input field 0 is empty.");
@@ -120,10 +117,6 @@ TransformData3::execute()
 
   FieldIPort *ifp1 = (FieldIPort *)get_iport("Input Field 1");
   FieldHandle fHandle1;
-  if (!ifp1) {
-    error("Unable to initialize iport 'Input Field 1'.");
-    return;
-  }
   if (!(ifp1->get(fHandle1) && fHandle1.get_rep()))
   {
     error("Input field 1 is empty.");
@@ -138,10 +131,6 @@ TransformData3::execute()
 
   FieldIPort *ifp2 = (FieldIPort *)get_iport("Input Field 2");
   FieldHandle fHandle2;
-  if (!ifp2) {
-    error("Unable to initialize iport 'Input Field 2'.");
-    return;
-  }
   if (!(ifp2->get(fHandle2) && fHandle2.get_rep()))
   {
     error("Input field 2 is empty.");
@@ -175,6 +164,7 @@ TransformData3::execute()
   }
 
   string outputDataType = gOutputDataType_.get();
+  gui->execute(id + " update_text"); // update gFunction_ before get.
   string function = gFunction_.get();
 
   if( outputDataType_ != outputDataType ||
@@ -286,12 +276,15 @@ TransformData3::execute()
 
   if( fHandle_.get_rep() ) {
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
-    if (!ofield_port) {
-      error("Unable to initialize oport 'Output Field'.");
-      return;
-    }
     ofield_port->send(fHandle_);
   }
+}
+
+
+void
+TransformData3::presave()
+{
+  gui->execute(id + " update_text"); // update gFunction_ before saving.
 }
 
 

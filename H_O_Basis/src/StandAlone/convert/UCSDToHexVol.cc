@@ -41,7 +41,9 @@
 // specify -oneBasedIndexing.  And the SCIRun output file is written in 
 // ASCII, unless you specify -binOutput.
 
-#include <Core/Datatypes/HexVolField.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/HexVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <StandAlone/convert/FileUtils.h>
@@ -54,13 +56,19 @@
 
 using namespace SCIRun;
 
+typedef HexTrilinearLgn<Vector>                FDVectorBasis;
+typedef HexTrilinearLgn<double>                FDdoubleBasis;
+typedef HexVolMesh<HexTrilinearLgn<Point> >    HVMesh;
+typedef GenericField<HVMesh, FDVectorBasis, vector<Vector> > HVFieldV;       
+typedef GenericField<HVMesh, FDdoubleBasis, vector<double> > HVField;   
+
 using std::cerr;
 using std::ifstream;
 using std::endl;
 
 int
 parse_lin_vec_data(ifstream &nodal_in, vector<Vector> &data_vals, 
-		   HexVolMesh *hvm) 
+		   HVMesh *hvm) 
 {
   int npts = 0;
   while (! nodal_in.eof()) {
@@ -90,7 +98,7 @@ parse_lin_vec_data(ifstream &nodal_in, vector<Vector> &data_vals,
 
 int
 parse_lin_strain_data25(ifstream &nodal_in, vector<double> &data_vals, 
-			HexVolMesh *hvm) 
+			HVMesh *hvm) 
 {
   int npts = 0;
   while (! nodal_in.eof()) {
@@ -114,7 +122,7 @@ parse_lin_strain_data25(ifstream &nodal_in, vector<double> &data_vals,
 
 int
 parse_lin_strain_data5(ifstream &nodal_in, vector<double> &data_vals, 
-		      HexVolMesh *hvm) 
+		      HVMesh *hvm) 
 {
   int npts = 0;
   while (! nodal_in.eof()) {
@@ -142,7 +150,7 @@ parse_lin_strain_data5(ifstream &nodal_in, vector<double> &data_vals,
 
 int
 parse_lin_strain_data(ifstream &nodal_in, vector<double> &data_vals, 
-		      HexVolMesh *hvm) 
+		      HVMesh *hvm) 
 {
   int npts = 0;
   while (! nodal_in.eof()) {
@@ -174,7 +182,7 @@ parse_lin_strain_data(ifstream &nodal_in, vector<double> &data_vals,
 }
 
 int
-parse_ho_data(ifstream &nodal_in, vector<Vector> &data_vals, HexVolMesh *hvm) 
+parse_ho_data(ifstream &nodal_in, vector<Vector> &data_vals, HVMesh *hvm) 
 {
   int npts = 0;
   while (! nodal_in.eof()) {
@@ -231,7 +239,7 @@ main(int argc, char **argv) {
 	          // static constructors) Core/Datatypes;
 #endif
 
-  HexVolMesh *hvm = new HexVolMesh();
+  HVMesh *hvm = new HVMesh();
   
   char *nodal_file = argv[1];
   char *elem_file = argv[2];
@@ -426,13 +434,13 @@ main(int argc, char **argv) {
   FieldHandle hvH;  
   if (cols == 13 || cols == 5 || cols == 25) { 
     cerr << "loading in strain data" << endl;
-    HexVolField<double> *hv = scinew HexVolField<double>(hvm, 1);
+    HVField *hv = scinew HVField(hvm);
     hv->resize_fdata();
     hv->fdata() = data_vals_scalar;
     hvH = hv;
   } else {
     cerr << "loading in vector data" << endl;
-    HexVolField<Vector> *hv = scinew HexVolField<Vector>(hvm, 1);
+    HVFieldV *hv = scinew HVFieldV(hvm);
     hv->resize_fdata();
     hv->fdata() = data_vals;
     hvH = hv;
