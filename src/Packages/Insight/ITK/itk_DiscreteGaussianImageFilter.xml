@@ -72,6 +72,12 @@
       <call>SetMaximumError</call>
       <default>0.001</default>
     </param>
+    <param>
+      <name>maximum_kernel_width</name>
+      <type>int</type>
+      <call>SetMaximumKernelWidth</call>
+      <default>32</default>
+    </param>
   </parameters>
   <includes>
     <file>itkDiscreteGaussianImageFilter.h</file>
