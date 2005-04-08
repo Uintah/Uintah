@@ -1584,10 +1584,13 @@ class LevelSetSegmenterApp {
 	    frame $smooth.blur
 	    global $mods(Smooth-Blur)-variance
 	    global $mods(Smooth-Blur)-maximum_error
+	    global $mods(Smooth-Blur)-maximum_kernel_width
 	    make_entry $smooth.blur.var "Variance" $mods(Smooth-Blur)-variance 
-	    make_entry $smooth.blur.err "Maximum_Error" $mods(Smooth-Blur)-maximum_error 
+	    make_entry $smooth.blur.err "Max Error" $mods(Smooth-Blur)-maximum_error 
+	    make_entry $smooth.blur.kern "Kernel Width" $mods(Smooth-Blur)-maximum_kernel_width 
 	    
-	    pack $smooth.blur.var $smooth.blur.err -side left	 
+	    pack $smooth.blur.var $smooth.blur.err $smooth.blur.kern \
+		-side left	 
 
 	    # Smooth button
 	    frame $smooth.buttons
