@@ -86,3 +86,11 @@ PROGRAM := $(SRCDIR)/test14
 SRCS := $(SRCDIR)/test14.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PSELIBS := Core/Util Core/Containers Core/Exceptions Core/Thread
+LIBS := $(XML_LIBRARY) $(DL_LIBRARY) $(THREAD_LIBRARY)
+PROGRAM := $(SRCDIR)/test15
+SRCS := $(SRCDIR)/test15.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PSELIBS :=
+
