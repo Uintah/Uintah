@@ -35,7 +35,6 @@ HeatConduction::HeatConduction(SimulationStateP& sS,MPMLabel* labels,
     NGP=2;
     NGN=2;
   }
-
 }
 
 HeatConduction::~HeatConduction()
@@ -205,8 +204,8 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
 #ifdef EROSION      
       new_dw->get(pErosion,     d_lb->pErosionLabel_preReloc, pset);
 #endif      
-      new_dw->get(gTemperature, d_lb->gTemperatureLabel,   dwi, patch, gac,2*NGN);
-      new_dw->get(gMass,        d_lb->gMassLabel,          dwi, patch, gnone, 0);
+      new_dw->get(gTemperature, d_lb->gTemperatureLabel, dwi, patch, gac,2*NGN);
+      new_dw->get(gMass,        d_lb->gMassLabel,        dwi, patch, gnone, 0);
       new_dw->allocateAndPut(internalHeatRate, d_lb->gInternalHeatRateLabel,
                              dwi, patch);
       new_dw->allocateTemporary(pTemperatureGradient, pset);
@@ -220,8 +219,8 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
       NCVariable<double> GinternalHeatRate;
       if(d_flag->d_fracture) { 
         new_dw->get(pgCode,       d_lb->pgCodeLabel, pset);
-        new_dw->get(GTemperature, d_lb->GTemperatureLabel, dwi, patch, gac,2*NGN);
-        new_dw->get(GMass,        d_lb->GMassLabel,        dwi, patch, gnone, 0);
+        new_dw->get(GTemperature, d_lb->GTemperatureLabel, dwi,patch,gac,2*NGN);
+        new_dw->get(GMass,        d_lb->GMassLabel,        dwi,patch,gnone, 0);
         new_dw->allocateAndPut(GinternalHeatRate, d_lb->GInternalHeatRateLabel,
 	                       dwi, patch);	      
         GinternalHeatRate.initialize(0.);
@@ -356,27 +355,29 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
         double alpha = kappa*pvol[idx]/Cv; 
         Vector T_i = pTemperatureGradient[idx];
         double T_ii = 0.0;
+        double d_f_aH=d_flag->d_adiabaticHeating;
         IntVector node(0,0,0);
         for (int k = 0; k < d_flag->d_8or27; k++){
           node = ni[k];
           if(patch->containsNode(node)){
-            Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
-                       d_S[k].z()*oodx[2]);
+           Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
 	    if(d_flag->d_fracture) { // for FractureMPM
 	      if(pgCode[idx][k]==1) { // above crack    
-                T_ii = Dot(div, T_i)*(alpha/gMass[node])*d_flag->d_adiabaticHeating;
+                T_ii = Dot(div, T_i)*(alpha/gMass[node])*d_f_aH;
 	        internalHeatRate[node] -= T_ii;
 	      }
               else if(pgCode[idx][k]==2) { // below crack
-	        T_ii = Dot(div, T_i)*(alpha/GMass[node])*d_flag->d_adiabaticHeating;
+	        T_ii = Dot(div, T_i)*(alpha/GMass[node])*d_f_aH;
 	        GinternalHeatRate[node] -= T_ii;
               }		      		    
 	    }
 	    else { // for SerialMPM
-              T_ii = Dot(div, T_i)*(alpha/gMass[node])*d_flag->d_adiabaticHeating;
+              T_ii = Dot(div, T_i)*(alpha/gMass[node])*d_f_aH;
               internalHeatRate[node] -= T_ii;
             }
 	    
+
+
             if (cout_heat.active()) {
               cout_heat << "   node = " << node << " div = " << div 
                         << " T_i = " << T_i << " alpha = " << alpha*Cv 
@@ -457,13 +458,13 @@ void HeatConduction::solveHeatEquations(const ProcessorGroup*,
       // Create variables for the results
       NCVariable<double> tempRate, GtempRate;
       if(d_flag->d_fracture) { // for FractureMPM
-	new_dw->allocateAndPut(tempRate, d_lb->gTemperatureRateLabel, dwi, patch);
-        new_dw->allocateAndPut(GtempRate,d_lb->GTemperatureRateLabel, dwi, patch);
+	new_dw->allocateAndPut(tempRate, d_lb->gTemperatureRateLabel,dwi,patch);
+        new_dw->allocateAndPut(GtempRate,d_lb->GTemperatureRateLabel,dwi,patch);
 	tempRate.initialize(0.0);
 	GtempRate.initialize(0.0);
       }
       else { // for SerialMPM
-        new_dw->allocateAndPut(tempRate, d_lb->gTemperatureRateLabel, dwi, patch);
+        new_dw->allocateAndPut(tempRate,d_lb->gTemperatureRateLabel,dwi,patch);
         tempRate.initialize(0.0);
       }
 
@@ -472,14 +473,14 @@ void HeatConduction::solveHeatEquations(const ProcessorGroup*,
         IntVector c = *iter;
 	if(d_flag->d_fracture) { // for FractureMPM
           tempRate[c] = internalHeatRate[c]*((mass[c]-1.e-200)/mass[c]) +
-	      (externalHeatRate[c])/(mass[c]*Cv)+thermalContactHeatExchangeRate[c];
+	   (externalHeatRate[c])/(mass[c]*Cv)+thermalContactHeatExchangeRate[c];
 	  GtempRate[c]=GinternalHeatRate[c]*((Gmass[c]-1.e-200)/Gmass[c]) +
-	      (GexternalHeatRate[c])/(Gmass[c]*Cv)+GthermalContactHeatExchangeRate[c];
+           (GexternalHeatRate[c])/
+                               (Gmass[c]*Cv)+GthermalContactHeatExchangeRate[c];
 	}  
 	else { // for SerialMPM
           tempRate[c] = internalHeatRate[c]*((mass[c]-1.e-200)/mass[c]) +
-	      (externalHeatRate[c])/(mass[c]*Cv)+thermalContactHeatExchangeRate[c];
-
+           (externalHeatRate[c])/(mass[c]*Cv)+thermalContactHeatExchangeRate[c];
 	}
       } // End of loop over iter
     }
@@ -522,11 +523,11 @@ void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
       constNCVariable<double> Gtemp_old,Gtemp_oldNoBC;
       NCVariable<double> Gtemp_rate,GtempStar;
       if(d_flag->d_fracture) {
-	new_dw->get(Gtemp_old,    d_lb->GTemperatureLabel,     dwi,patch,gnone,0);
-	new_dw->get(Gtemp_oldNoBC,d_lb->GTemperatureNoBCLabel, dwi,patch,gnone,0);
-	new_dw->getModifiable(Gtemp_rate, d_lb->GTemperatureRateLabel,dwi,patch);
-        new_dw->allocateAndPut(GtempStar, d_lb->GTemperatureStarLabel, dwi,patch);
-        GtempStar.initialize(0.0);
+       new_dw->get(Gtemp_old,    d_lb->GTemperatureLabel,    dwi,patch,gnone,0);
+       new_dw->get(Gtemp_oldNoBC,d_lb->GTemperatureNoBCLabel,dwi,patch,gnone,0);
+       new_dw->getModifiable(Gtemp_rate,d_lb->GTemperatureRateLabel,dwi,patch);
+       new_dw->allocateAndPut(GtempStar,d_lb->GTemperatureStarLabel,dwi,patch);
+       GtempStar.initialize(0.0);
       }
       
       int n8or27=d_flag->d_8or27;
