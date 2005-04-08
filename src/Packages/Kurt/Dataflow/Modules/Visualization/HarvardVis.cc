@@ -285,16 +285,23 @@ static int parseDisk(ifstream &infile, Disk &disk) {
   return 0;
 }
 
-static int parsefile(const char* filename, Array1<Disk> &data) {
+// Returns 0 if there was success 1 otherwise.
+int HarvardVis::parsefile(const char* filename, Array1<Disk> &data) {
   char me[] = "parsefile";
   cout << "Attempting to parse "<<filename<<"\n";
   
   // Open the file
   ifstream infile(filename);
   if(!infile){
-    fprintf(stderr, "%s: Error opening file: %s\n", me, filename);
+    char buf[1000];
+    sprintf(buf, "%s: Error opening file: %s\n", me, filename);
+    error(buf);
     return 1;
   }
+
+  // Reset the data structure
+  time_data.resize(0);
+  
   // Parse the name of the file
   string filenameP(""), token("");
 
@@ -344,20 +351,21 @@ bool HarvardVis::read_data() {
     reread_datafile = true;
   // If we need to reread the data, empty the geometry
   if (reread_datafile) {
-    time_data.resize(0);
     // Parse the data
-    parsefile(file_name_.get().c_str(),time_data);
-    reread_datafile = false;
-    current_filename = newfilename;
+    if (parsefile(file_name_.get().c_str(),time_data) == 0) {
+      // Then things went well with the file parsing
+      reread_datafile = false;
+      current_filename = newfilename;
+
+      // Update the gui state relating to the number of time steps
+      num_timesteps_.set(time_data.size()-1);
+      if (which_timestep_.get() > num_timesteps_.get()) {
+	which_timestep_.set(num_timesteps_.get());
+      }
+      gui->execute(id + " update_slider");
+    }
   }
 
-  // Update the gui state relating to the number of time steps
-  num_timesteps_.set(time_data.size()-1);
-  if (which_timestep_.get() > num_timesteps_.get()) {
-    which_timestep_.set(num_timesteps_.get());
-  }
-  gui->execute(id + " update_slider");
-  
   return true;
 }
 
