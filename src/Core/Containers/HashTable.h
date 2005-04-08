@@ -46,7 +46,7 @@
 
 #include <sci_defs/template_defs.h>
 
-#include <Core/share/share.h>
+#include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/Persistent.h>
 
@@ -81,19 +81,19 @@ inline int Hash(const std::string& s, int hash_size)
   return h % hash_size;
 }
 
-inline SCICORESHARE int Hash(const int& k, int hash_size)
+inline int Hash(const int& k, int hash_size)
 {
   return (k^(3*hash_size+1))%hash_size;
 }
 
-inline SCICORESHARE int Hash(const unsigned long& k, int hash_size)
+inline int Hash(const unsigned long& k, int hash_size)
 {
   return (int)(k^(3*hash_size+1))%hash_size;
 }   
 
 typedef void* HashVoid;
 
-inline SCICORESHARE int Hash(const HashVoid& k, int hash_size)
+inline int Hash(const HashVoid& k, int hash_size)
 {
   return (int)(((long)k^(3*hash_size+1))%hash_size);
 }

@@ -65,6 +65,7 @@ namespace SCIRun {
       //InPort interface
       void connect(OutPort* port);
 
+      vtkObject* getOutput();
     private:
       vtkPolyDataMapper *mapper;
       

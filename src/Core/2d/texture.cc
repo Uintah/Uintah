@@ -29,9 +29,9 @@
 */
 
 
-#include "texture.h"
+#include <Core/2d/texture.h>
 #ifdef _WIN32
-#include <afxwin.h>
+#  include <windows.h>
 #endif
 #include <sci_gl.h>
 #include <sci_glu.h>

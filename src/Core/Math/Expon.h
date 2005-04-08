@@ -43,15 +43,13 @@
 #ifndef SCI_Math_Expon_h
 #define SCI_Math_Expon_h 1
 
-#include <Core/share/share.h>
-
 #include <sgi_stl_warnings_off.h>
 #include <math.h>
 #include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 
-  inline SCICORESHARE double Pow(double d, double p)
+  inline double Pow(double d, double p)
   {
     return pow(d,p);
   }
@@ -93,12 +91,12 @@ namespace SCIRun {
     }
   }
 
-  inline SCICORESHARE int Sqrt(int i)
+  inline int Sqrt(int i)
   {
     return (int)sqrt((double)i);
   }
 
-  inline SCICORESHARE double Sqrt(double d)
+  inline double Sqrt(double d)
   {
     return sqrt(d);
   }
@@ -115,7 +113,7 @@ namespace SCIRun {
   }
 #endif
 
-  inline SCICORESHARE double Sqr(double x)
+  inline double Sqr(double x)
   {
     return x*x;
   }

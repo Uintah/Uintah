@@ -58,7 +58,7 @@
 namespace SCIRun {
 
 template <class Basis>
-class SCICORESHARE HexVolMesh : public Mesh
+class HexVolMesh : public Mesh
 {
 public:
   typedef LockingHandle<HexVolMesh<Basis> > handle_type;

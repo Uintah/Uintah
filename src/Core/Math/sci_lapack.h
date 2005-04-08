@@ -42,8 +42,6 @@
 #ifndef SCI_Math_sci_lapack_h
 #define SCI_Math_sci_lapack_h 1
 
-#include <Core/share/share.h>
-
 namespace SCIRun {
 
 bool lapackinvert(double *A, int n);  

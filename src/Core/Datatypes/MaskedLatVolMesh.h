@@ -67,7 +67,7 @@ namespace SCIRun {
 using std::string;
 
 template <class Basis>
-class SCICORESHARE MaskedLatVolMesh : public LatVolMesh<Basis>
+class MaskedLatVolMesh : public LatVolMesh<Basis>
 {
 public:
   typedef Basis                                   basis_type;

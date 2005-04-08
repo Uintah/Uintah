@@ -43,32 +43,53 @@
 
 #include <Core/Thread/Thread_unix.h>
 #include <stdio.h>
+#ifdef _WIN32
+#include <signal.h>
+#include <errno.h>
+#else
 #include <sys/errno.h>
 #include <sys/signal.h>
-
+#endif
 
 char*
 Core_Thread_signal_name(int sig, void* addr)
 {
     static char buf[1000];
     switch(sig){
-    case SIGHUP:
-	sprintf(buf, "SIGHUP (hangup)");
-	break;
     case SIGINT:
 	sprintf(buf, "SIGINT (interrupt)");
-	break;
-    case SIGQUIT:
-	sprintf(buf, "SIGQUIT (quit)");
 	break;
     case SIGILL:
 	sprintf(buf, "SIGILL at address %p (illegal instruction)", addr);
 	break;
-    case SIGTRAP:
-	sprintf(buf, "SIGTRAP (trace trap)");
-	break;
     case SIGABRT:
 	sprintf(buf, "SIGABRT (Abort)");
+	break;
+    case SIGSEGV:
+	sprintf(buf, "SIGSEGV at address %p (segmentation violation)", addr);
+	break;
+    case SIGTERM:
+	sprintf(buf, "SIGTERM (killed)");
+	break;
+    case SIGFPE:
+	sprintf(buf, "SIGFPE (floating point exception)");
+	break;
+#ifdef SIGBREAK
+    case SIGBREAK:
+	sprintf(buf, "SIGBREAK (CTRL-Break sequence)");
+	break;
+#endif
+
+// these signals don't exist in win32
+#ifndef _WIN32 
+    case SIGHUP:
+	sprintf(buf, "SIGHUP (hangup)");
+	break;
+    case SIGQUIT:
+	sprintf(buf, "SIGQUIT (quit)");
+	break;
+    case SIGTRAP:
+	sprintf(buf, "SIGTRAP (trace trap)");
 	break;
 #ifdef SIGEMT
     case SIGEMT:
@@ -85,14 +106,8 @@ Core_Thread_signal_name(int sig, void* addr)
     case SIGBUS:
 	sprintf(buf, "SIGBUS at address %p (bus error)", addr);
 	break;
-    case SIGFPE:
-	sprintf(buf, "SIGFPE (floating point exception)");
-	break;
     case SIGKILL:
 	sprintf(buf, "SIGKILL (kill)");
-	break;
-    case SIGSEGV:
-	sprintf(buf, "SIGSEGV at address %p (segmentation violation)", addr);
 	break;
 #ifdef SIGSYS
     case SIGSYS:
@@ -104,9 +119,6 @@ Core_Thread_signal_name(int sig, void* addr)
 	break;
     case SIGALRM:
 	sprintf(buf, "SIGALRM (alarm clock)");
-	break;
-    case SIGTERM:
-	sprintf(buf, "SIGTERM (killed)");
 	break;
     case SIGUSR1:
 	sprintf(buf, "SIGUSR1 (user defined signal 1)");
@@ -158,6 +170,7 @@ Core_Thread_signal_name(int sig, void* addr)
     case SIGXFSZ:
 	sprintf(buf, "SIGXFSZ (Filesize limit exceeded)");
 	break;
+#endif
     default:
 	sprintf(buf, "unknown signal(%d)", sig);
 	break;

@@ -46,7 +46,6 @@
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <limits>
 #include <sgi_stl_warnings_on.h>
 
 using std::cerr;
@@ -59,6 +58,13 @@ using std::vector;
 namespace SCIRun {
 
 void break_in_me();
+
+// Currently located in NrrdTextureBuilderAlgo.cc
+void texture_build_bricks(vector<TextureBrickHandle>& bricks,
+                          int nx, int ny, int nz,
+                          int nc, int* nb,
+                          const BBox& bbox, int brick_mem,
+                          bool use_nrrd_brick);
 
 class TextureBuilderAlgoBase : public SCIRun::DynamicAlgoBase
 {
@@ -74,16 +80,13 @@ public:
   static CompileInfoHandle get_compile_info(const TypeDescription* td);
 
 protected:
-  virtual void build_bricks(vector<TextureBrickHandle>& bricks,
-			    int nx, int ny, int nz,
-                            int nc, int* nb,
-			    const BBox& bbox, int brick_mem) = 0;
   virtual void fill_brick(TextureBrickHandle &brick,
                           FieldHandle vfield, double vmin, double vmax,
                           FieldHandle gfield, double gmin, double gmax) = 0;
 
   typedef LatVolMesh<HexTrilinearLgn<Point> >                        LVMesh;
 };
+
 
 template <class FieldType>
 class TextureBuilderAlgo : public TextureBuilderAlgoBase
@@ -100,10 +103,6 @@ public:
                      int card_mem);
   
 protected:
-  virtual void build_bricks(vector<TextureBrickHandle>& bricks,
-			    int nx, int ny, int nz,
-                            int nc, int* nb,
-			    const BBox& bbox, int brick_mem);
   virtual void fill_brick(TextureBrickHandle &brick,
                           FieldHandle vfield, double vmin, double vmax,
                           FieldHandle gfield, double gmin, double gmax);
@@ -241,7 +240,8 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
 		  tform.unproject( mesh->get_bounding_box().max() ));
 
        	vector<TextureBrickHandle> patch_bricks;
-  	build_bricks(patch_bricks, nx, ny, nz, nc, nb, bbox, card_mem);
+  	texture_build_bricks(patch_bricks, nx, ny, nz, nc, nb, bbox,
+                             card_mem, false);
 	
 	if( i == 0 ){
 	  texture->set_size(nx, ny, nz, nc, nb);
@@ -276,17 +276,16 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
     nb[1] = gfield.get_rep() ? 1 : 0;
     Transform tform;
     mesh->get_canonical_transform(tform);
-    //
+
     texture->lock_bricks();
     texture->clear();
     vector<TextureBrickHandle>& bricks = texture->bricks();
     const BBox bbox(Point(0,0,0), Point(1,1,1)); 
     if(nx != texture->nx() || ny != texture->ny() || nz != texture->nz()
        || nc != texture->nc() || card_mem != texture->card_mem() ||
-       bbox.min() != texture->bbox().min()) {
-
-//        build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem);
-      build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem);
+       bbox.min() != texture->bbox().min())
+    {
+      texture_build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem, false);
       texture->set_size(nx, ny, nz, nc, nb);
       texture->set_card_mem(card_mem);
     }
@@ -302,162 +301,6 @@ TextureBuilderAlgo<FieldType>::build(TextureHandle texture,
   }
 }
 
-template<typename FieldType>
-void
-TextureBuilderAlgo<FieldType>::build_bricks(vector<TextureBrickHandle>& bricks,
-					    int nx, int ny, int nz,
-					    int nc, int* nb,
-                                            const BBox& bbox, int card_mem)
-{
-  int brick_mem = card_mem*1024*1024/2;
-  const int data_size[3] = { nx, ny, nz };
-  int brick_size[3];
-  int brick_offset[3];
-  int brick_pad[3];
-  int num_brick[3];
-  int brick_nb;
-  // figure out largest possible brick size
-  int size[3];
-  size[0] = data_size[0]; size[1] = data_size[1]; size[2] = data_size[2];
-  // initial brick size
-  brick_size[0] = NextPowerOf2(data_size[0]);
-  brick_size[1] = NextPowerOf2(data_size[1]);
-  brick_size[2] = NextPowerOf2(data_size[2]);
-  // number of bytes per brick
-  brick_nb = brick_size[0]*brick_size[1]*brick_size[2]*nb[0];
-  // find brick size
-  if(brick_nb > brick_mem)
-  {
-    // subdivide until fits
-    while(brick_nb > brick_mem)
-    {
-      // number of bricks along the axes
-      // the divisions have to satisfy the equation:
-      // data_size <= (brick_size-1)*num_brick + 1
-      // we assume that brick_size > 1
-      num_brick[0] = (int)ceil((double)(data_size[0]-1)/(brick_size[0]-1));
-      num_brick[1] = (int)ceil((double)(data_size[1]-1)/(brick_size[1]-1));
-      num_brick[2] = (int)ceil((double)(data_size[2]-1)/(brick_size[2]-1));
-      // size of leftover volumes
-      int sp[3];
-      sp[0] = data_size[0] - (num_brick[0]-1)*(brick_size[0]-1);
-      sp[1] = data_size[1] - (num_brick[1]-1)*(brick_size[1]-1);
-      sp[2] = data_size[2] - (num_brick[2]-1)*(brick_size[2]-1);
-      // size of padding
-      brick_pad[0] = NextPowerOf2(sp[0]) - sp[0];
-      brick_pad[1] = NextPowerOf2(sp[1]) - sp[1];
-      brick_pad[2] = NextPowerOf2(sp[2]) - sp[2];
-      // sort padding
-      int idx[3];
-      SortIndex(brick_pad, idx);
-      // split largest one
-      size[idx[2]] = (int)ceil(size[idx[2]]/2.0);
-      brick_size[idx[2]] = NextPowerOf2(size[idx[2]]);
-      brick_nb = brick_size[0]*brick_size[1]*brick_size[2]*nb[0];
-    }
-  }
-  // number of bricks along the axes
-  // the divisions have to satisfy the equation:
-  // data_size <= (brick_size-1)*num_brick + 1
-  // we assume that brick_size > 1
-  num_brick[0] = (int)ceil((double)(data_size[0]-1)/(brick_size[0]-1));
-  num_brick[1] = (int)ceil((double)(data_size[1]-1)/(brick_size[1]-1));
-  num_brick[2] = (int)ceil((double)(data_size[2]-1)/(brick_size[2]-1));
-
-  brick_pad[0] = NextPowerOf2(data_size[0] - (num_brick[0]-1)*(brick_size[0]-1));
-  brick_pad[1] = NextPowerOf2(data_size[1] - (num_brick[1]-1)*(brick_size[1]-1));
-  brick_pad[2] = NextPowerOf2(data_size[2] - (num_brick[2]-1)*(brick_size[2]-1));
-
-  // delete previous bricks (if any)
-  bricks.clear();
-  bricks.reserve(num_brick[0]*num_brick[1]*num_brick[2]);
-  // create bricks
-  // data bbox
-  double data_bbmin[3], data_bbmax[3];
-  data_bbmin[0] = bbox.min().x();
-  data_bbmin[1] = bbox.min().y();
-  data_bbmin[2] = bbox.min().z();
-  data_bbmax[0] = bbox.max().x();
-  data_bbmax[1] = bbox.max().y();
-  data_bbmax[2] = bbox.max().z();
-  // bbox and tbox parameters
-  double bmin[3], bmax[3], tmin[3], tmax[3];
-  brick_offset[2] = 0;
-  bmin[2] = data_bbmin[2];
-  bmax[2] = num_brick[2] > 1 ?
-    (double)(brick_size[2] - 0.5)/(double)data_size[2] *
-    (data_bbmax[2] - data_bbmin[2]) + data_bbmin[2] : data_bbmax[2];
-  tmin[2] = 0.0;
-  tmax[2] = num_brick[2] > 1 ? (double)(brick_size[2] - 0.5)/(double)brick_size[2] :
-    (double)data_size[2]/(double)brick_size[2];
-  for (int k=0; k<num_brick[2]; k++)
-  {
-    brick_offset[1] = 0;
-    bmin[1] = data_bbmin[1];
-    bmax[1] = num_brick[1] > 1 ?
-      (double)(brick_size[1] - 0.5)/(double)data_size[1] *
-      (data_bbmax[1] - data_bbmin[1]) + data_bbmin[1] : data_bbmax[1];
-    tmin[1] = 0.0;
-    tmax[1] = num_brick[1] > 1 ?
-      (double)(brick_size[1] - 0.5)/(double)brick_size[1] :
-      (double)data_size[1]/(double)brick_size[1];
-    for (int j=0; j<num_brick[1]; j++)
-    {
-      brick_offset[0] = 0;
-      bmin[0] = data_bbmin[0];
-      bmax[0] = num_brick[0] > 1 ?
-        (double)(brick_size[0] - 0.5)/(double)data_size[0] *
-        (data_bbmax[0] - data_bbmin[0]) + data_bbmin[0] : data_bbmax[0];
-      tmin[0] = 0.0;
-      tmax[0] = num_brick[0] > 1 ? (double)(brick_size[0] - 0.5)/(double)brick_size[0] :
-        (double)data_size[0]/(double)brick_size[0];
-      for (int i=0; i<num_brick[0]; i++)
-      {
-        TextureBrick* b = scinew TextureBrickT<unsigned char>(
-          i < num_brick[0]-1 ? brick_size[0] : brick_pad[0],
-          j < num_brick[1]-1 ? brick_size[1] : brick_pad[1],
-          k < num_brick[2]-1 ? brick_size[2] : brick_pad[2],
-          nc, nb,
-          brick_offset[0], brick_offset[1], brick_offset[2],
-          i < num_brick[0]-1 ? brick_size[0] : data_size[0] - (num_brick[0]-1)*(brick_size[0]-1),
-          j < num_brick[1]-1 ? brick_size[1] : data_size[1] - (num_brick[1]-1)*(brick_size[1]-1),
-          k < num_brick[2]-1 ? brick_size[2] : data_size[2] - (num_brick[2]-1)*(brick_size[2]-1),
-          BBox(Point(bmin[0], bmin[1], bmin[2]),
-               Point(bmax[0], bmax[1], bmax[2])),
-          BBox(Point(tmin[0], tmin[1], tmin[2]),
-               Point(tmax[0], tmax[1], tmax[2])));
-	//          true);
-
-	bricks.push_back(b);
-
-        // update x parameters                     
-        brick_offset[0] += brick_size[0]-1;
-        bmin[0] = bmax[0];
-        bmax[0] += i < num_brick[0]-2 ?
-          (double)(brick_size[0]-1)/(double)data_size[0]*(data_bbmax[0] - data_bbmin[0]) :
-          (double)(data_size[0]-brick_offset[0]-0.5)/(double)data_size[0]*(data_bbmax[0]-data_bbmin[0]);
-        tmin[0] = i < num_brick[0]-2 ? 0.5/(double)brick_size[0] : 0.5/(double)brick_pad[0];
-        tmax[0] = i < num_brick[0]-2 ? (double)(brick_size[0]-0.5)/(double)brick_size[0] : (data_size[0] - brick_offset[0])/(double)brick_pad[0];
-      }
-      // update y parameters
-      brick_offset[1] += brick_size[1]-1;
-      bmin[1] = bmax[1];
-      bmax[1] += j < num_brick[1]-2 ?
-        (double)(brick_size[1]-1)/(double)data_size[1] * (data_bbmax[1]-data_bbmin[1]) :
-        (double)(data_size[1]-brick_offset[1]-0.5)/(double)data_size[1] * (data_bbmax[1]-data_bbmin[1]);
-      tmin[1] = j < num_brick[1]-2 ? 0.5/(double)brick_size[1] : 0.5/(double)brick_pad[1];
-      tmax[1] = j < num_brick[1]-2 ? (double)(brick_size[1]-0.5)/(double)brick_size[1] : (data_size[1]-brick_offset[1])/(double)brick_pad[1];
-    } // j
-    // update z parameters
-    brick_offset[2] += brick_size[2]-1;
-    bmin[2] = bmax[2];
-    bmax[2] += k < num_brick[2]-2 ?
-      (double)(brick_size[2]-1)/(double)data_size[2] * (data_bbmax[2]-data_bbmin[2]) :
-      (double)(data_size[2]-brick_offset[2]-0.5)/(double)data_size[2] * (data_bbmax[2]-data_bbmin[2]);
-    tmin[2] = k < num_brick[2]-2 ? 0.5/(double)brick_size[2] : 0.5/(double)brick_pad[2];
-    tmax[2] = k < num_brick[2]-2 ? (double)(brick_size[2]-0.5)/(double)brick_size[2] : (data_size[2] - brick_offset[2])/(double)brick_pad[2];
-  } // k
-}
 
 template <class FieldType>
 void 
@@ -515,8 +358,8 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
     if (!gfld) { // fill only values
       unsigned char* tex = br->data(0);
       if(vfield->basis_order() == 0) {
-        typename FieldType::mesh_type::RangeCellIter iter(mesh, x0, y0, z0,
-                                                          x1, y1, z1);
+        typename FieldType::mesh_type::Cell::range_iter iter(mesh, x0, y0, z0,
+                                                             x1, y1, z1);
         for(k=0, kk=z0; kk<z1; kk++, k++) {
           for(j=0, jj=y0; jj<y1; jj++, j++) {
             for(i=0, ii=x0; ii<x1; ii++, i++) {
@@ -526,25 +369,25 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
               ++iter;
             }
             if(nx != brick->mx()) {
-              tex[k*ny*nx+j*nx+i] = 0;
+              tex[k*ny*nx+j*nx+i] = tex[k*ny*nx+j*nx+(brick->mx()-1)];
             }
           }
           if(ny != brick->my()) {
             for(i=0; i<Min(nx, brick->mx()+1); i++) {
-              tex[k*ny*nx+j*nx+i] = 0;
+              tex[k*ny*nx+j*nx+i] = tex[k*ny*nx+(brick->my()-1)*nx+i];
             }
           }
         }
         if(nz != brick->mz()) {
           for(j=0; j<Min(ny, brick->my()+1); j++) {
             for(i=0; i<Min(nx, brick->mx()+1); i++) {
-              tex[k*ny*nx+j*nx+i] = 0;
+              tex[k*ny*nx+j*nx+i] = tex[(brick->mz()-1)*ny*nx+j*nx+i];
             }
           }
         }
       } else {
-        typename FieldType::mesh_type::RangeNodeIter iter(mesh, x0, y0, z0,
-                                                          x1, y1, z1);
+        typename FieldType::mesh_type::Node::range_iter iter(mesh, x0, y0, z0,
+                                                             x1, y1, z1);
         for(k=0, kk=z0; kk<z1; kk++, k++) {
           for(j=0, jj=y0; jj<y1; jj++, j++) {
             for(i=0, ii=x0; ii<x1; ii++, i++) {
@@ -554,19 +397,19 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
               ++iter;
             }
             if(nx != brick->mx()) {
-              tex[k*ny*nx+j*nx+i] = 0;
+              tex[k*ny*nx+j*nx+i] = tex[k*ny*nx+j*nx+(brick->mx()-1)];
             }
           }
           if(ny != brick->my()) {
             for(i=0; i<Min(nx, brick->mx()+1); i++) {
-              tex[k*ny*nx+j*nx+i] = 0;
+              tex[k*ny*nx+j*nx+i] = tex[k*ny*nx+(brick->my()-1)*nx+i];
             }
           }
         }
         if(nz != brick->mz()) {
           for(j=0; j<Min(ny, brick->my()+1); j++) {
             for(i=0; i<Min(nx, brick->mx()+1); i++) {
-              tex[k*ny*nx+j*nx+i] = 0;
+              tex[k*ny*nx+j*nx+i] = tex[(brick->mz()-1)*ny*nx+j*nx+i];
             }
           }
         }
@@ -576,8 +419,8 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
       unsigned char* tex1 = br->data(1);
       
       if(vfield->basis_order() == 0) {
-        typename FieldType::mesh_type::RangeCellIter iter(mesh, x0, y0, z0,
-                                                          x1, y1, z1);
+        typename FieldType::mesh_type::Cell::range_iter iter(mesh, x0, y0, z0,
+                                                             x1, y1, z1);
         for(k=0, kk=z0; kk<z1; kk++, k++) {
           for(j=0, jj=y0; jj<y1; jj++, j++) {
             for(i=0, ii=x0; ii<x1; ii++, i++) {
@@ -586,100 +429,98 @@ TextureBuilderAlgo<FieldType>::fill_brick(TextureBrickHandle &brick,
               tex0[idx*4+3] =
                 (unsigned char)(Clamp((v - vmin)/(vmax-vmin), 0.0, 1.0)*255.0);
               Vector g = gfld->fdata()[*iter];
-              double gn = g.length();
-              if(gn > std::numeric_limits<float>::epsilon())
-                g.normalize();
-              else
-                g = Vector(0.0, 0.0, 0.0);
+              const double gn = g.safe_normalize();
               tex0[idx*4+0] = (unsigned char)((g.x()*0.5 + 0.5)*255);
               tex0[idx*4+1] = (unsigned char)((g.y()*0.5 + 0.5)*255);
               tex0[idx*4+2] = (unsigned char)((g.z()*0.5 + 0.5)*255);
-              tex1[idx] = (unsigned char)((gn-gmin)/(gmax-gmin))*255;
+              tex1[idx] = (unsigned char)(((gn-gmin)/(gmax-gmin))*255);
               ++iter;
             }
             if(nx != brick->mx()) {
-              int idx = k*ny*nx+j*nx+i;
-              tex0[idx*4+0] = 0;
-              tex0[idx*4+1] = 0;
-              tex0[idx*4+2] = 0;
-              tex0[idx*4+3] = 0;
-              tex1[idx] = 0;
+              const int idx = k*ny*nx+j*nx+i;
+              const int idx1 = k*ny*nx+j*nx+(brick->mx()-1);
+              tex0[idx*4+0] = tex0[idx1*4+0];
+              tex0[idx*4+1] = tex0[idx1*4+1];
+              tex0[idx*4+2] = tex0[idx1*4+2];
+              tex0[idx*4+3] = tex0[idx1*4+3];
+              tex1[idx] = tex1[idx1];
             }
           }
           if(ny != brick->my()) {
             for(i=0; i<Min(nx, brick->mx()+1); i++) {
-              int idx = k*ny*nx+j*nx+i;
-              tex0[idx*4+0] = 0;
-              tex0[idx*4+1] = 0;
-              tex0[idx*4+2] = 0;
-              tex0[idx*4+3] = 0;
-              tex1[idx] = 0;
+              const int idx = k*ny*nx+j*nx+i;
+              const int idx1 = k*ny*nx+(brick->my()-1)*nx+i;
+              tex0[idx*4+0] = tex0[idx1*4+0];
+              tex0[idx*4+1] = tex0[idx1*4+1];
+              tex0[idx*4+2] = tex0[idx1*4+2];
+              tex0[idx*4+3] = tex0[idx1*4+3];
+              tex1[idx] = tex1[idx1];
             }
           }
         }
         if(nz != brick->mz()) {
           for(j=0; j<Min(ny, brick->my()+1); j++) {
             for(i=0; i<Min(nx, brick->mx()+1); i++) {
-              int idx = k*ny*nx+j*nx+i;
-              tex0[idx*4+0] = 0;
-              tex0[idx*4+1] = 0;
-              tex0[idx*4+2] = 0;
-              tex0[idx*4+3] = 0;
-              tex1[idx] = 0;
+              const int idx = k*ny*nx+j*nx+i;
+              const int idx1 = (brick->mz()-1)*ny*nx+j*nx+i;
+              tex0[idx*4+0] = tex0[idx1*4+0];
+              tex0[idx*4+1] = tex0[idx1*4+1];
+              tex0[idx*4+2] = tex0[idx1*4+2];
+              tex0[idx*4+3] = tex0[idx1*4+3];
+              tex1[idx] = tex1[idx1];
             }
           }
         }
       } else {
-        typename FieldType::mesh_type::RangeNodeIter iter(mesh, x0, y0, z0,
-                                                          x1, y1, z1);
+        typename FieldType::mesh_type::Node::range_iter iter(mesh, x0, y0, z0,
+                                                             x1, y1, z1);
         for(k=0, kk=z0; kk<z1; kk++, k++) {
           for(j=0, jj=y0; jj<y1; jj++, j++) {
             for(i=0, ii=x0; ii<x1; ii++, i++) {
               double v = vfld->fdata()[*iter];
-              int idx = k*ny*nx+j*nx+i;
+              const int idx = k*ny*nx+j*nx+i;
               tex0[idx*4+3] =
                 (unsigned char)(Clamp((v - vmin)/(vmax-vmin), 0.0, 1.0)*255.0);
               Vector g = gfld->fdata()[*iter];
-              double gn = g.length();
-              if(gn > std::numeric_limits<float>::epsilon())
-                g.normalize();
-              else
-                g = Vector(0.0, 0.0, 0.0);
+              const double gn = g.safe_normalize();
               tex0[idx*4+0] = (unsigned char)((g.x()*0.5 + 0.5)*255);
               tex0[idx*4+1] = (unsigned char)((g.y()*0.5 + 0.5)*255);
               tex0[idx*4+2] = (unsigned char)((g.z()*0.5 + 0.5)*255);
-              tex1[idx] = (unsigned char)((gn-gmin)/(gmax-gmin))*255;
+              tex1[idx] = (unsigned char)(((gn-gmin)/(gmax-gmin))*255);
               ++iter;
             }
             if(nx != brick->mx()) {
-              int idx = k*ny*nx+j*nx+i;
-              tex0[idx*4+0] = 0;
-              tex0[idx*4+1] = 0;
-              tex0[idx*4+2] = 0;
-              tex0[idx*4+3] = 0;
-              tex1[idx] = 0;
+              const int idx = k*ny*nx+j*nx+i;
+              const int idx1 = k*ny*nx+j*nx+(brick->mx()-1);
+              tex0[idx*4+0] = tex0[idx1*4+0];
+              tex0[idx*4+1] = tex0[idx1*4+1];
+              tex0[idx*4+2] = tex0[idx1*4+2];
+              tex0[idx*4+3] = tex0[idx1*4+3];
+              tex1[idx] = tex1[idx1];
             }
           }
           if(ny != brick->my()) {
             for(i=0; i<Min(nx, brick->mx()+1); i++) {
-              int idx = k*ny*nx+j*nx+i;
-              tex0[idx*4+0] = 0;
-              tex0[idx*4+1] = 0;
-              tex0[idx*4+2] = 0;
-              tex0[idx*4+3] = 0;
-              tex1[idx] = 0;
+              const int idx = k*ny*nx+j*nx+i;
+              const int idx1 = k*ny*nx+(brick->my()-1)*nx+i;
+              tex0[idx*4+0] = tex0[idx1*4+0];
+              tex0[idx*4+1] = tex0[idx1*4+1];
+              tex0[idx*4+2] = tex0[idx1*4+2];
+              tex0[idx*4+3] = tex0[idx1*4+3];
+              tex1[idx] = tex1[idx1];
             }
           }
         }
         if(nz != brick->mz()) {
           for(j=0; j<Min(ny, brick->my()+1); j++) {
             for(i=0; i<Min(nx, brick->mx()+1); i++) {
-              int idx = k*ny*nx+j*nx+i;
-              tex0[idx*4+0] = 0;
-              tex0[idx*4+1] = 0;
-              tex0[idx*4+2] = 0;
-              tex0[idx*4+3] = 0;
-              tex1[idx] = 0;
+              const int idx = k*ny*nx+j*nx+i;
+              const int idx1 = (brick->mz()-1)*ny*nx+j*nx+i;
+              tex0[idx*4+0] = tex0[idx1*4+0];
+              tex0[idx*4+1] = tex0[idx1*4+1];
+              tex0[idx*4+2] = tex0[idx1*4+2];
+              tex0[idx*4+3] = tex0[idx1*4+3];
+              tex1[idx] = tex1[idx1];
             }
           }
         }

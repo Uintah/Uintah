@@ -26,110 +26,60 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#ifndef Core_Datatypes_LatVolField_h
+#define Core_Datatypes_LatVolField_h
 
-
-#ifndef Datatypes_CurveField_h
-#define Datatypes_CurveField_h
-
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Core/Datatypes/CurveMesh.h>
-#include <Core/Containers/LockingHandle.h>
-#include <Core/Containers/Array3.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Util/Assert.h>
+#include <Core/Containers/FData.h>
+
 #include <sgi_stl_warnings_off.h>
-#include <string>
 #include <vector>
-#include <sgi_stl_warnings_off.h>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
+using std::vector;
 
-using std::string;
+typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh_;
 
-template <class T>
-class CurveField: public GenericField< CurveMesh, vector<T> >
+template <class Data>
+struct MultiResLevel 
+{  
+  typedef HexTrilinearLgn<Data> LVBasis;
+  typedef GenericField<LVMesh_, LVBasis, FData3d<Data, LVMesh_> > LVF;
+  MultiResLevel(){};
+  MultiResLevel( vector<typename LVF::handle_type> p, int l):
+    level(l), patches(p) {}
+
+  int level;
+  vector<typename LVF::handle_type> patches;
+};
+
+template <class Data> 
+class MRLatVolField : 
+    public GenericField<LVMesh_, HexTrilinearLgn<Data>, FData3d<Data, LVMesh_> >
 {
 public:
-
-  CurveField();
-  CurveField(int order);
-  CurveField(CurveMeshHandle mesh, int order);
-  virtual CurveField<T> *clone() const;
-  virtual ~CurveField();
-
-  //! Persistent IO
-  static PersistentTypeID type_id;
-  virtual void io(Piostream &stream);
-
+  typedef HexTrilinearLgn<Data> LVBasis;
+  typedef GenericField<LVMesh_, LVBasis, FData3d<Data, LVMesh_> > LVF;
+  MRLatVolField(){}
+  MRLatVolField(vector<MultiResLevel<Data>* >& levels):   
+    LVF( *((levels[0])->patches[0].get_rep()) ), levels_(levels) {}
+  int nlevels() { return levels_.size(); }
+  MultiResLevel<Data>* level(int i) { return levels_[i]; }
+  virtual ~MRLatVolField(){}
   static const string type_name(int n = -1);
   virtual const TypeDescription* get_type_description(int n = -1) const;
 
 private:
-  static Persistent* maker();
+  vector<MultiResLevel<Data>* > levels_;
 };
 
-#define CURVE_FIELD_VERSION 1
 
-template <class T>
-Persistent*
-CurveField<T>::maker()
-{
-  return scinew CurveField<T>;
-}
-
-template <class T>
-PersistentTypeID
-CurveField<T>::type_id(type_name(-1),
-		GenericField<CurveMesh, vector<T> >::type_name(-1),
-                maker);
-
-template <class T>
-void
-CurveField<T>::io(Piostream &stream)
-{
-  /*int version=*/stream.begin_class(type_name(-1), CURVE_FIELD_VERSION);
-  GenericField<CurveMesh, vector<T> >::io(stream);
-  stream.end_class();
-}
-
-
-template <class T>
-CurveField<T>::CurveField()
-  : GenericField<CurveMesh, vector<T> >()
-{
-}
-
-
-template <class T>
-CurveField<T>::CurveField(int order)
-  : GenericField<CurveMesh, vector<T> >(order)
-{
-}
-
-
-template <class T>
-CurveField<T>::CurveField(CurveMeshHandle mesh,
-			  int order)
-  : GenericField<CurveMesh, vector<T> >(mesh, order)
-{
-}
-
-template <class T>
-CurveField<T>::~CurveField()
-{
-}
-
-template <class T>
-CurveField<T> *
-CurveField<T>::clone() const
-{
-  return new CurveField<T>(*this);
-}
-
-
-template <class T>
+template <class Data>
 const string
-CurveField<T>::type_name(int n)
+MRLatVolField<Data>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
@@ -140,17 +90,17 @@ CurveField<T>::type_name(int n)
   }
   else if (n == 0)
   {
-    return "CurveField";
+    return "MRLatVolField";
   }
   else
   {
-    return find_type_name((T *)0);
+    return find_type_name((Data *)0);
   }
-}
+} 
 
-template <class T> 
+template <class Data> 
 const TypeDescription*
-CurveField<T>::get_type_description(int n) const
+MRLatVolField<Data>::get_type_description(int n) const
 {
   ASSERT((n >= -1) && n <= 1);
 
@@ -162,7 +112,7 @@ CurveField<T>::get_type_description(int n) const
   if (n == -1) {
     static TypeDescription* tdn1 = 0;
     if (tdn1 == 0) {
-      const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+      const TypeDescription *sub = SCIRun::get_type_description((Data*)0);
       TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
       (*subs)[0] = sub;
       tdn1 = scinew TypeDescription(name, subs, path, namesp);
@@ -179,7 +129,7 @@ CurveField<T>::get_type_description(int n) const
   else {
     static TypeDescription* tdnn = 0;
     if (tdnn == 0) {
-      tdnn = (TypeDescription *) SCIRun::get_type_description((T*)0);
+      tdnn = (TypeDescription *) SCIRun::get_type_description((Data*)0);
     }
     td = tdnn;
   }
@@ -188,18 +138,4 @@ CurveField<T>::get_type_description(int n) const
 
 } // end namespace SCIRun
 
-#endif // Datatypes_CurveField_h
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#endif

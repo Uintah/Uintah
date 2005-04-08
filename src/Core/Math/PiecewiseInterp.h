@@ -46,7 +46,6 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Sort.h>
-#include <Core/share/share.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
@@ -56,7 +55,7 @@
 namespace SCIRun {
 
 
-template <class T> class SCICORESHARE PiecewiseInterp {
+template <class T> class PiecewiseInterp {
 protected:
   bool data_valid;			// set to true in an interpolation specific cases
   int  curr_intrv;			// number of last interval used

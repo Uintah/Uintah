@@ -43,8 +43,6 @@
 #ifndef Core_Thread_AtomicCounter_h
 #define Core_Thread_AtomicCounter_h
 
-#include <Core/share/share.h>
-
 namespace SCIRun {
 
 class AtomicCounter_private;
@@ -68,7 +66,7 @@ class AtomicCounter_private;
  use of a statement like: x=x+2, which would NOT be thread safe.
 
 ****************************************/
-class SCICORESHARE AtomicCounter {
+class AtomicCounter {
 public:
   //////////
   // Create an atomic counter with an unspecified initial value.

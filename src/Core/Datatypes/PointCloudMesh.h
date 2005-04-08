@@ -61,7 +61,7 @@ using std::string;
 using std::vector;
 
 template <class Basis>
-class SCICORESHARE PointCloudMesh : public Mesh
+class PointCloudMesh : public Mesh
 {
 public:
   typedef LockingHandle<PointCloudMesh<Basis> > handle_type;

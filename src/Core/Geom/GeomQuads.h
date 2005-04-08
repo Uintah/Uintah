@@ -48,7 +48,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE GeomFastQuads : public GeomObj {
+class GeomFastQuads : public GeomObj {
 protected:
   vector<float> points_;
   vector<unsigned char> colors_;
@@ -99,7 +99,7 @@ public:
 
 
 
-class SCICORESHARE GeomTranspQuads : public GeomFastQuads
+class GeomTranspQuads : public GeomFastQuads
 {
 protected:
   vector<unsigned int> xlist_;

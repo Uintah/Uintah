@@ -49,7 +49,6 @@
 #include <Core/Thread/Parallel1.h>
 #include <Core/Thread/Parallel2.h>
 #include <Core/Thread/Parallel3.h>
-#include <Core/share/share.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
@@ -70,7 +69,7 @@ class 	ThreadPoolHelper;
  The ThreadPool class groups a bunch of worker threads.
    
 ****************************************/
-class SCICORESHARE ThreadPool {
+class ThreadPool {
 public:
   //////////
   // Create a thread pool.  <tt>name</tt> should be a static
@@ -98,7 +97,7 @@ public:
   //////////
   // Another overloaded version of parallel that passes 1 argument
   template<class T, class Arg1>
-  void parallel(T* ptr, void (T::*)(int, Arg1),
+  void parallel(T* ptr, void (T::*pmf)(int, Arg1),
 		int numThreads,
 		Arg1 a1) {
     parallel(Parallel1<T, Arg1>(ptr, pmf, a1),

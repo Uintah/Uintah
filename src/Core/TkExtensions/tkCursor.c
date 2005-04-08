@@ -29,13 +29,18 @@
 
 #include "tk.h"
 #include <string.h>
+#if (TCL_MINOR_VERSION >= 4)
+#define TCLCONST const
+#else
+#define TCLCONST
+#endif
 
 int
 Tk_CursorCmd(clientData, interp, argc, argv)
      ClientData clientData;
      Tcl_Interp *interp;                 /* Current interpreter. */
      int argc;                           /* Number of arguments. */
-     char **argv;                        /* Argument strings. */
+     TCLCONST char **argv;               /* Argument strings. */
 {
   int length;
   char c;

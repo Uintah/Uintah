@@ -1,29 +1,29 @@
 /*
-   For more information, please see: http://software.sci.utah.edu
+  For more information, please see: http://software.sci.utah.edu
 
-   The MIT License
+  The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
+  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  University of Utah.
 
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
+  License for the specific language governing rights and limitations under
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
 
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
 */
 
  
@@ -35,6 +35,8 @@
  *
  */
  
+#include <Core/SystemCall/TempFileManager.h>
+
 #include <Core/Util/Environment.h>
 #include <Core/Util/sci_system.h>
  
@@ -45,25 +47,32 @@
 #include <math.h>
 #include <sys/stat.h>
 #include <sys/types.h> 
+#include <Core/OS/Dir.h> // for LSTAT, MKDIR
+#include <Core/Thread/Time.h>
 #include <sys/time.h>
-#include <Core/SystemCall/TempFileManager.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
 #include <sgi_stl_warnings_on.h> 
  
-namespace SCIRun {
+using namespace SCIRun;
+using namespace std;
  
 TempFileManager::TempFileManager()
 {
+#ifndef _WIN32
     struct timeval  tv;
     ::gettimeofday(&tv,0);
     rand_ = MusilRNG(static_cast<int>(tv.tv_usec));
+#else
+    rand_ = MusilRNG(static_cast<int>(Time::currentTicks()));
+#endif
 }
 
 
-std::string TempFileManager::create_randname(std::string str)
+string
+TempFileManager::create_randname(string str)
 {
   int size = static_cast<int>(str.size());
   int p = size-1;
@@ -97,300 +106,343 @@ std::string TempFileManager::create_randname(std::string str)
 }
  
  
-bool TempFileManager::create_tempdir(std::string pattern,std::string &dirname)
+bool
+TempFileManager::create_tempdir(string pattern,string &dirname)
 {
 
-    // Try to create or obtain the SCIRun/tmp directory in the HOME directory
-    // If we cannot create this one or not obtain it fail and return to user code
-    std::string tempdir = get_scirun_tmp_dir();
-    if (tempdir == "") 
+  // Try to create or obtain the SCIRun/tmp directory in the HOME directory
+  // If we cannot create this one or not obtain it fail and return to user code
+  string tempdir = get_scirun_tmp_dir();
+  if (tempdir == "") 
     { 
-        std::cerr << "Could not find/create $HOME/SCIRun/tmp directory" << std::endl;
-        dirname = ""; 
-        return(false); 
+      cerr << "Could not find/create $HOME/SCIRun/tmp directory" << endl;
+      dirname = ""; 
+      return(false); 
     }
  
-    bool done = false;
-    int attempts = 0;
-    std::string newtempdir;
+  bool done = false;
+  int attempts = 0;
+  string newtempdir;
     
-    while (!done)
+  while (!done)
     {
-        std::string ranfilename = create_randname(pattern);
-        newtempdir = tempdir + ranfilename;
+      string ranfilename = create_randname(pattern);
+      newtempdir = tempdir + ranfilename;
     
-        struct stat buf;
-        if (::lstat(newtempdir.c_str(),&buf) < 0)
+      struct stat buf;
+      if (::LSTAT(newtempdir.c_str(),&buf) < 0)
         {
-            std::string cmd = std::string("mkdir ")+ newtempdir;
-            int exitcode = sci_system(cmd.c_str());
-            if (exitcode == 0) { done = true; break; }
+          int exitcode = MKDIR(newtempdir.c_str(), 0777);
+          if (exitcode == 0) { done = true; break; }
         }        
-        else
+      else
         {
-            if (S_ISDIR(buf.st_mode))
+          if (S_ISDIR(buf.st_mode))
             {
-                if (pattern == ranfilename)
+              if (pattern == ranfilename)
                 {    
-                    // User did not want an unique file name
-                    // so if it exists there is no problem
-                    done = true;
-                    break;
+                  // User did not want an unique file name
+                  // so if it exists there is no problem
+                  done = true;
+                  break;
                 }
             }
         }
         
-        
-        attempts++;
-        if (attempts == 50)
+      attempts++;
+      if (attempts == 50)
         {
-            std::cerr << "Error could not create temporary directory (50 attempts failed)" << std::endl;
-            std::cerr << "The directory name that failed was: " << newtempdir << std::endl;
-            dirname = "";
-            return(false);
+          cerr << "Error could not create temporary directory (50 attempts failed)" << endl;
+          cerr << "The directory name that failed was: " << newtempdir << endl;
+          dirname = "";
+          return(false);
         }
     }
 
-    // Make the dirname usable for adding other names to the end of it.
-    dirname = newtempdir;
-    dirname += std::string("/");
-    return(true);
+  // Make the dirname usable for adding other names to the end of it.
+  dirname = newtempdir;
+  dirname += string("/");
+  return(true);
 } 
 
 
-bool TempFileManager::create_tempfile(std::string dir,std::string pattern,std::string &filename)
+bool
+TempFileManager::create_tempfile(string dir,string pattern,string &filename)
 {
-    if (dir[dir.size()-1] != '/') dir += '/';
+  if (dir[dir.size()-1] != '/') dir += '/';
 
-    bool done = false;
-    int attempts = 0;
+  bool done = false;
+  int attempts = 0;
     
-    std::string newtempfile;
+  string newtempfile;
     
-    while (!done)
+  while (!done)
     {
-        std::string ranfilename = create_randname(pattern);
-        newtempfile = dir + ranfilename;
+      string ranfilename = create_randname(pattern);
+      newtempfile = dir + ranfilename;
     
-        struct stat buf;
-        if (::lstat(newtempfile.c_str(),&buf) < 0)
+      struct stat buf;
+      if (LSTAT(newtempfile.c_str(),&buf) < 0)
         {
-            int fd = ::open(newtempfile.c_str(),O_EXCL|O_CREAT,0700);
-            if (fd > -1)
+          int fd = open(newtempfile.c_str(),O_EXCL|O_CREAT,0700);
+          if (fd > -1)
             {
-                done = true;
-                ::close(fd);
-                break;
+              done = true;
+              close(fd);
+              break;
             }
-            // An error occured: file already existed/ could not be opened etc...
+          // An error occured: file already existed/ could not be opened etc...
         }    
-        else
+      else
         {
-            if (S_ISREG(buf.st_mode))
+          if (S_ISREG(buf.st_mode))
             {
-                if (pattern == ranfilename)
+              if (pattern == ranfilename)
                 {    
-                    // User did not want an unique file name
-                    // so if it exists there is no problem
-                    done = true;
-                    break;
+                  // User did not want an unique file name
+                  // so if it exists there is no problem
+                  done = true;
+                  break;
                 }
             }
         }
             
                     
-        attempts++;
-        if (attempts == 50)
+      attempts++;
+      if (attempts == 50)
         {
-            std::cerr << "Error could not create temporary file (50 attempts failed)" << std::endl;
-            std::cerr << "The filename that failed was: " << newtempfile << std::endl;
-            filename = "";
-            return(false);
+          cerr << "Error could not create temporary file (50 attempts failed)" << endl;
+          cerr << "The filename that failed was: " << newtempfile << endl;
+          filename = "";
+          return(false);
         }
     }
 
-    // We successfully open and created the file
-    // We closed it again so the program can open it with the proper interface
-    filename = newtempfile;
-    return(true);
+  // We successfully open and created the file
+  // We closed it again so the program can open it with the proper interface
+  filename = newtempfile;
+  return(true);
 } 
 
 
-bool TempFileManager::create_tempfilename(std::string dir,std::string pattern,std::string &filename)
+bool
+TempFileManager::create_tempfilename(string dir,string pattern,string &filename)
 {
-    // This function has become obsolete
-    return(create_tempfile(dir,pattern,filename));
+  // This function has become obsolete
+  return(create_tempfile(dir,pattern,filename));
 } 
 
-bool TempFileManager::create_tempfifo(std::string dir,std::string pattern,std::string &fifoname)
+bool TempFileManager::create_tempfifo(string dir,string pattern,string &fifoname)
 {
 
-    if (dir[dir.size()-1] != '/') dir += '/';
+  if (dir[dir.size()-1] != '/') dir += '/';
 
-    bool done = false;
-    int attempts = 0;
+  bool done = false;
+  int attempts = 0;
     
-    std::string newfifo;
+  string newfifo;
     
-    while (!done)
+  while (!done)
     {
-        std::string ranfilename = create_randname(pattern);
-        newfifo = dir + ranfilename;
-    
-        struct stat buf;
-        if (::lstat(newfifo.c_str(),&buf) < 0)
+      string ranfilename = create_randname(pattern);
+      newfifo = dir + ranfilename;
+      struct stat buf;
+
+      if ( LSTAT(newfifo.c_str(),&buf) < 0 )
         {
-            if (::mkfifo(newfifo.c_str(),0600) == 0)
+#ifndef _WIN32
+          // this is not supported on win32
+          if ( mkfifo(newfifo.c_str(),0600) == 0 )
             {
-                // We were successful in creating a new fifo
-                // with a unique filename
-                done = true;
+              // We were successful in creating a new fifo
+              // with a unique filename
+              done = true;
 
-            }            
-            // An error occured: file already existed/ could not be opened etc...
+            } 
+#endif
+          // An error occured: file already existed/ could not be opened etc...
         }        
-        attempts++;
-        if (attempts == 50)
+      attempts++;
+      if (attempts == 50)
         {
-            std::cerr << "Error could not create temporary file (50 attempts failed)" << std::endl;
-            std::cerr << "The filename that failed was: " << newfifo << std::endl;
-            fifoname = "";
-            return(false);
+          cerr << "Error could not create temporary file (50 attempts failed)" << endl;
+          cerr << "The filename that failed was: " << newfifo << endl;
+          fifoname = "";
+          return(false);
         }
     }
     
-    fifoname = newfifo;
-    return(true);
+  fifoname = newfifo;
+  return(true);
 } 
  
  
-bool TempFileManager::delete_tempdir(std::string dirname)
+bool
+TempFileManager::delete_tempdir(string dirname)
 {
-    struct stat buf;
-    if(::lstat(dirname.c_str(),&buf) < 0)
+  struct stat buf;
+  if( LSTAT(dirname.c_str(),&buf) < 0 )
     {
-        return(false);
+      return(false);
     }
-    if (S_ISDIR(buf.st_mode))
+  if (S_ISDIR(buf.st_mode))
     {
-        std::string cmd = std::string("rm -fr ") + dirname;
-        sci_system(cmd.c_str());
-        return(true);
+      string cmd = string("rm -fr ") + dirname;
+      sci_system(cmd.c_str());
+      return(true);
     }
-    return(false);
+  return(false);
 }
 
-bool TempFileManager::delete_tempfile(std::string filename)
+bool
+TempFileManager::delete_tempfile(string filename)
 {
-    struct stat buf;
-    if(::lstat(filename.c_str(),&buf) < 0)
+  struct stat buf;
+  if( LSTAT(filename.c_str(),&buf) < 0 )
     {
-        return(false);
+      return(false);
     }
-    if (S_ISREG(buf.st_mode))
+  if (S_ISREG(buf.st_mode))
     {
-        std::string cmd = std::string("rm -f ") + filename;
-        sci_system(cmd.c_str());
-        return(true);
+      string cmd = string("rm -f ") + filename;
+      sci_system(cmd.c_str());
+      return(true);
     }
-    return(false);
+  return(false);
 }
 
-bool TempFileManager::delete_tempfifo(std::string fifoname)
+bool
+TempFileManager::delete_tempfifo(string fifoname)
 {
-    ::unlink(fifoname.c_str());
-    return(true);
+  unlink(fifoname.c_str());
+  return(true);
 }
 
  
-std::string TempFileManager::get_scirun_tmp_dir(std::string subdir)
+string
+TempFileManager::get_scirun_tmp_dir(string subdir)
 {
+  struct stat buf;
 
-    char *HOME = getenv("HOME");
-    if (HOME == 0) 
+  const char *TMPDIR = sci_getenv("SCIRUN_SERV_TMP_DIR");
+  if (TMPDIR != 0)
     {
-        return(std::string(""));
-    }
-
-    bool direxists = false;
-    struct stat buf;
+      string dirname = string(TMPDIR);
     
-    std::string dirname = HOME+std::string("/SCIRun");
-    
-    if (::lstat(dirname.c_str(),&buf) < 0)
-    {
-        std::string cmd = std::string("mkdir ")+ std::string(HOME) + std::string("/SCIRun/");
-        sci_system(cmd.c_str());
-        direxists = true;        
-    }
-    else
-    {
-        direxists = true;
-    }
-    
-    if (!direxists) return(std::string(""));
-    
-    direxists = false;
-    dirname = HOME+std::string("/SCIRun/tmp/");
-    
-    if( ::lstat(dirname.c_str(),&buf) < 0)
-    {
-        std::string cmd = std::string("mkdir ")+ std::string(HOME) + std::string("/SCIRun/tmp/");
-        sci_system(cmd.c_str());
-        direxists = true;
-    }
-    else
-    {
-        direxists = true;
-    }
-    
-    if (!direxists) return(std::string(""));
-    
-    if (subdir.size() > 0)
-    {
-    
-        direxists = false;
-        dirname = HOME+std::string("/SCIRun/tmp/") + subdir + std::string("/");
-    
-        if( ::lstat(dirname.c_str(),&buf) < 0)
+      if ( LSTAT(dirname.c_str(),&buf) < 0 )
         {
-            std::string cmd = std::string("mkdir ")+ std::string(HOME) + std::string("/SCIRun/tmp/")+subdir;
-            sci_system(cmd.c_str());
-            direxists = true;
+          cout << "could not locate the directory called '" << dirname << "', using default temp directory" << endl;
         }
-        else
+      else
         {
-            direxists = true;
+          if (dirname[dirname.size()-1] != '/') dirname += '/';
+            
+          if (subdir.size() > 0)
+            {
+            
+              bool direxists = false;
+
+              string subdirname = dirname + subdir + string("/");
+            
+              if( LSTAT(dirname.c_str(),&buf) < 0)
+                {
+                  MKDIR(subdirname.c_str(), 0700);
+                  direxists = true;
+                }
+              else
+                {
+                  direxists = true;
+                }
+            
+              if (!direxists) return(string(""));
+    
+              dirname = subdirname;
+            }
+
+          return(dirname);
+        }
+
+    }
+
+  char *HOME = getenv("HOME");
+  if (HOME == 0) 
+    {
+      return(string(""));
+    }
+
+  bool direxists = false;
+    
+  string dirname = HOME+string("/SCIRun");
+    
+  if ( LSTAT(dirname.c_str(),&buf) < 0 )
+    {
+      MKDIR(dirname.c_str(), 0700);
+      direxists = true;        
+    }
+  else
+    {
+      direxists = true;
+    }
+    
+  if (!direxists) return(string(""));
+    
+  direxists = false;
+  dirname = HOME+string("/SCIRun/tmp/");
+    
+  if( LSTAT(dirname.c_str(),&buf) < 0 )
+    {
+      MKDIR(dirname.c_str(), 0700);
+      direxists = true;
+    }
+  else
+    {
+      direxists = true;
+    }
+    
+  if (!direxists) return(string(""));
+    
+  if (subdir.size() > 0)
+    {
+    
+      direxists = false;
+      dirname = HOME+string("/SCIRun/tmp/") + subdir + string("/");
+    
+      if( LSTAT(dirname.c_str(),&buf) < 0 )
+        {
+          MKDIR(dirname.c_str(), 0700);
+          direxists = true;
+        }
+      else
+        {
+          direxists = true;
         }
     
-        if (!direxists) return(std::string(""));
+      if (!direxists) return(string(""));
 
     }
     
-    return(dirname);
+  return(dirname);
 }
  
-std::string TempFileManager::get_homedirID()
+string
+TempFileManager::get_homedirID()
 {
-    std::string tempdir = TempFileManager::get_scirun_tmp_dir("");
+  string tempdir = get_scirun_tmp_dir("");
  
-    struct stat buf;
-    std::string filename = tempdir+std::string("homeid");
+  struct stat buf;
+  string filename = tempdir+string("homeid");
     
-    if (::lstat(filename.c_str(),&buf) < 0)
+  if (LSTAT(filename.c_str(),&buf) < 0 )
     {
-        std::ofstream IDfile(filename.c_str(),std::ios::out);
-        std::string ranid = create_randname("homeid=XXXXXX");
-        IDfile << ranid;
+      ofstream IDfile(filename.c_str(),ios::out);
+      string ranid = create_randname("homeid=XXXXXX");
+      IDfile << ranid;
     }
 
-    std::string homeidstring;
-    std::ifstream homeid(filename.c_str());
-    homeid >> homeidstring;
-    homeidstring = homeidstring.substr(7); 
-    return(homeidstring);
+  string homeidstring;
+  ifstream homeid(filename.c_str());
+  homeid >> homeidstring;
+  homeidstring = homeidstring.substr(7); 
+  return(homeidstring);
 }
- 
- 
-} // end namespace
  

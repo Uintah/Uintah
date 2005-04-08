@@ -55,7 +55,7 @@ namespace SCIRun {
 using std::string;
 
 template <class Basis>
-class SCICORESHARE LatVolMesh : public Mesh
+class LatVolMesh : public Mesh
 {
 public:
   typedef LockingHandle<LatVolMesh<Basis> > handle_type;

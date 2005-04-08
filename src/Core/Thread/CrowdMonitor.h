@@ -43,8 +43,6 @@
 #ifndef Core_Thread_CrowdMonitor_h
 #define Core_Thread_CrowdMonitor_h
 
-#include <Core/share/share.h>
-
 namespace SCIRun {
   class CrowdMonitor_private;
 /**************************************
@@ -77,7 +75,7 @@ WARNING
    
 ****************************************/
 
-	class SCICORESHARE CrowdMonitor {
+	class CrowdMonitor {
 	public:
 	    //////////
 	    // Create and initialize the CrowdMonitor. <i>name</i> should

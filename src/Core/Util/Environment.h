@@ -45,14 +45,15 @@
 #include <string>
 
 namespace SCIRun {
-  using std::string;
-  void create_sci_environment(char **environ, char *execname);
+
+  void create_sci_environment(char **env, char *execname);
   bool find_and_parse_scirunrc();
-  bool parse_scirunrc( const string &filename );
+  bool parse_scirunrc( const std::string &filename );
 
   // Use the following functions to get/put environment variables.
-  void sci_putenv( const string & key, const string & val );
-  const char *sci_getenv( const string & key );
+  void sci_putenv( const std::string & key, const std::string & val );
+  // Returns NULL if 'key' not found. 
+  const char *sci_getenv( const std::string & key );
 
   // sci_getenv_p
   // will return a bool representing the value of environment variable 'key'
@@ -62,7 +63,8 @@ namespace SCIRun {
   //   or is equal (Case insensitive) to 'false', 'no', 'off', or '0' 
   // returns TRUE:
   //   otherwise.
-  bool sci_getenv_p( const string & key );
-}
+  bool sci_getenv_p( const std::string & key );
+
+} // end namespace SCIRun
 
 #endif // #ifndef Core_Util_Environment_h

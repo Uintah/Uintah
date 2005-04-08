@@ -62,7 +62,7 @@ using std::vector;
 using std::pair;
 
 template <class Basis>
-class SCICORESHARE CurveMesh : public Mesh
+class CurveMesh : public Mesh
 {
 public:
   typedef LockingHandle<CurveMesh<Basis> > handle_type;

@@ -73,7 +73,7 @@ namespace SCIRun {
 using std::string;
 
 template <class Basis>
-class SCICORESHARE StructHexVolMesh : public LatVolMesh<Basis>
+class StructHexVolMesh : public LatVolMesh<Basis>
 {
 public:
   typedef LockingHandle<StructHexVolMesh<Basis> > handle_type;

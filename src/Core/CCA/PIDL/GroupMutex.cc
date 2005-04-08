@@ -43,8 +43,6 @@
 #ifndef Core_Thread_Group_Mutex_h
 #define Core_Thread_Group_Mutex_h
 
-#include <Core/share/share.h>
-
 using namespace SCIRun;
 
 GroupMutex::GroupMutex(const char* name){

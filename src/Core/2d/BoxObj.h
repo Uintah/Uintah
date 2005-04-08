@@ -47,7 +47,7 @@
 
 namespace SCIRun {
   
-class SCICORESHARE BoxObj :  public Widget {
+class BoxObj :  public Widget {
 private:
   BBox2d screen_;
   double sx_, sy_;

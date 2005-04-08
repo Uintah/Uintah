@@ -193,6 +193,8 @@ PrismMC<Field>::TSMesh::Node::index_type
 PrismMC<Field>::find_or_add_edgepoint(int u0, int u1, double d0,
 				      const Point &p) 
 {
+  if (d0 <= 0.0) { u1 = -1; }
+  if (d0 >= 1.0) { u0 = -1; }
   edgepair_t np;
   if (u0 < u1)  { np.first = u0; np.second = u1; np.dfirst = d0; }
   else { np.first = u1; np.second = u0; np.dfirst = 1.0 - d0; }
@@ -235,7 +237,8 @@ void PrismMC<Field>::extract( cell_index_type cell, double v )
 }
 
 template<class Field>
-void PrismMC<Field>::extract_c( cell_index_type cell, double iso )
+void
+PrismMC<Field>::extract_c( cell_index_type cell, double iso )
 {
   value_type selfvalue, nbrvalue;
   if (!field_->value( selfvalue, cell )) return;
@@ -281,7 +284,8 @@ void PrismMC<Field>::extract_c( cell_index_type cell, double iso )
 
 
 template<class Field>
-void PrismMC<Field>::extract_n( cell_index_type cell, double iso )
+void
+PrismMC<Field>::extract_n( cell_index_type cell, double iso )
 {
   typename mesh_type::Node::array_type node;
   Point p[8];
@@ -353,7 +357,12 @@ void PrismMC<Field>::extract_n( cell_index_type cell, double iso )
       }
       if (build_field_)
       {
-	trisurf_->add_triangle(surf_node[v0], surf_node[v1], surf_node[v2]);
+        if (surf_node[v0] != surf_node[v1] &&
+            surf_node[v1] != surf_node[v2] &&
+            surf_node[v2] != surf_node[v0])
+        {
+          trisurf_->add_triangle(surf_node[v0], surf_node[v1], surf_node[v2]);
+        }
       }
     }
   }
@@ -399,12 +408,27 @@ PrismMC<Field>::get_interpolant()
       ++eiter;
     }
 
-    for (int i = 0; i <= nrows; i++)
+    int nnz = 0;
+    int i;
+    for (i = 0; i < nrows; i++)
     {
-      rr[i] = i * 2;
+      rr[i] = nnz;
+      if (cc[i * 2 + 0] > 0)
+      {
+        cc[nnz] = cc[i * 2 + 0];
+        dd[nnz] = dd[i * 2 + 0];
+        nnz++;
+      }
+      if (cc[i * 2 + 1] > 0)
+      {
+        cc[nnz] = cc[i * 2 + 1];
+        dd[nnz] = dd[i * 2 + 1];
+        nnz++;
+      }
     }
+    rr[i] = nnz;
 
-    return scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows*2, dd);
+    return scinew SparseRowMatrix(nrows, ncols, rr, cc, nnz, dd);
   }
   else
   {

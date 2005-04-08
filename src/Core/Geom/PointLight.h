@@ -49,7 +49,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE PointLight : public Light {
+class PointLight : public Light {
     Point p;
     Color c;
 public:

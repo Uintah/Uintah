@@ -37,6 +37,12 @@
 #include <Core/TkExtensions/tkOpenGL.h>
 #include <string.h>
 
+#if (TCL_MINOR_VERSION >= 4)
+#define TCLCONST const
+#else
+#define TCLCONST
+#endif
+
 #ifdef HAVE_GLEW
 int sci_glew_init()
 {
@@ -104,7 +110,7 @@ static Tk_ConfigSpec configSpecs[] = {
      "left_ptr", Tk_Offset(OpenGLClientData, cursor), 0, 0},
     {TK_CONFIG_END, (char *) NULL, (char *) NULL, (char *) NULL,
 	(char *) NULL, 0, 0, 0}
-};
+    };
 
 /*
  * Forward declarations for procedures defined later in this file:
@@ -147,8 +153,9 @@ OpenGLCmd(clientData, interp, argc, argv)
     ClientData clientData;	/* Main window associated with interpreter. */
     Tcl_Interp *interp;		/* Current interpreter. */
     int argc;			/* Number of arguments. */
-    char **argv;		/* Argument strings. */
+    TCLCONST char **argv;	/* Argument strings. */
 {
+#ifndef _WIN32
     Tk_Window mainwin = (Tk_Window) clientData;
     OpenGLClientData *OpenGLPtr;
     Colormap cmap;
@@ -156,8 +163,9 @@ OpenGLCmd(clientData, interp, argc, argv)
     int attributes[50];
     XVisualInfo temp_vi;
     int tempid;
-    int n;
+    int n, i;
     int idx = 0;
+
 
 
     if (argc < 2) {
@@ -321,6 +329,7 @@ OpenGLCmd(clientData, interp, argc, argv)
     XSync(OpenGLPtr->display, False);
 
     interp->result = Tk_PathName(OpenGLPtr->tkwin);
+#endif
     return TCL_OK;
 }
 
@@ -376,6 +385,7 @@ OpenGLWidgetCmd(clientData, interp, argc, argv)
 			       TK_CONFIG_ARGV_ONLY);
     }
   } 
+#ifndef _WIN32
   else if ((c == 'c') && (strncmp(argv[1], "cget", length) == 0)) {
     if (argc == 3) {
       result = Tk_ConfigureValue(interp, OpenGLPtr->tkwin, configSpecs,
@@ -400,6 +410,7 @@ OpenGLWidgetCmd(clientData, interp, argc, argv)
   }
   
   Tk_Release((ClientData) OpenGLPtr);
+#endif
   return result;
 }
 
@@ -433,7 +444,8 @@ OpenGLConfigure(interp, OpenGLPtr, argc, argv, flags)
     int flags;				/* Flags to pass to
 					 * Tk_ConfigureWidget. */
 {
-    int height, width;
+#ifndef _WIN32
+  int height, width;
 
     if (Tk_ConfigureWidget(interp, OpenGLPtr->tkwin, configSpecs,
 	    argc, argv, (char *) OpenGLPtr, flags) != TCL_OK) {
@@ -448,7 +460,7 @@ OpenGLConfigure(interp, OpenGLPtr, argc, argv, flags)
 
     Tk_GeometryRequest(OpenGLPtr->tkwin, width, height);
     Tk_DefineCursor(OpenGLPtr->tkwin, OpenGLPtr->cursor);
-
+#endif
     return TCL_OK;
 }
 
@@ -475,6 +487,7 @@ OpenGLEventProc(clientData, eventPtr)
      ClientData clientData;	/* Information about window. */
      XEvent *eventPtr;		/* Information about event. */
 {
+#ifndef _WIN32
   OpenGLClientData *OpenGLPtr = (OpenGLClientData *) clientData;
   if (eventPtr->type == DestroyNotify) {
     
@@ -488,6 +501,7 @@ OpenGLEventProc(clientData, eventPtr)
       OpenGLPtr->tkwin = NULL;
       Tk_EventuallyFree((ClientData) OpenGLPtr, (Tcl_FreeProc*)OpenGLDestroy);
     }
+#endif
 }
 
 
@@ -513,6 +527,7 @@ static void
 OpenGLDestroy(clientData)
     ClientData clientData;	/* Info about OpenGL widget. */
 {
+#ifndef _WIN32
     OpenGLClientData *OpenGLPtr = (OpenGLClientData *) clientData;
 #ifdef _WIN32
     /* this needs some additional checking first */
@@ -520,11 +535,14 @@ OpenGLDestroy(clientData)
 #endif
     Tk_FreeOptions(configSpecs, (char *) OpenGLPtr, OpenGLPtr->display, 0);
     ckfree((char *) OpenGLPtr);
+#endif
 }
 
+#ifndef _WIN32
 static GLXContext first_context = 0;
 
-SCICORESHARE GLXContext OpenGLGetContext(interp, name)
+
+GLXContext OpenGLGetContext(interp, name)
     Tcl_Interp* interp;
     char* name;
 {
@@ -616,12 +634,13 @@ SCICORESHARE GLXContext OpenGLGetContext(interp, name)
 
     return OpenGLPtr->cx;
 }
+#endif
 
-
-SCICORESHARE void OpenGLSwapBuffers(interp, name)
+void OpenGLSwapBuffers(interp, name)
     Tcl_Interp* interp;
     char* name;
 {
+#ifndef _WIN32
     Tcl_CmdInfo info;
     OpenGLClientData* OpenGLPtr;
     if(!Tcl_GetCommandInfo(interp, name, &info))
@@ -629,13 +648,15 @@ SCICORESHARE void OpenGLSwapBuffers(interp, name)
 
     OpenGLPtr=(OpenGLClientData*)info.clientData;
     glXSwapBuffers(OpenGLPtr->display, OpenGLPtr->glx_win);
+#endif
 }
 
 
-SCICORESHARE int OpenGLMakeCurrent(interp, name)
+int OpenGLMakeCurrent(interp, name)
     Tcl_Interp* interp;
     char* name;
 {
+#ifndef _WIN32
     Tcl_CmdInfo info;
     OpenGLClientData* OpenGLPtr;
 
@@ -651,7 +672,7 @@ SCICORESHARE int OpenGLMakeCurrent(interp, name)
       printf("%s failed make current.\n", Tk_PathName(OpenGLPtr->tkwin));
       return 0;
     }
-
+#endif
     return 1;
 }
 
@@ -677,6 +698,7 @@ OpenGLListVisuals(interp, OpenGLPtr)
      Tcl_Interp *interp;
      OpenGLClientData *OpenGLPtr;	
 {
+#ifndef _WIN32
   int  i;
   int  score=0;
   char buf[200];
@@ -735,6 +757,7 @@ OpenGLListVisuals(interp, OpenGLPtr)
 	     samples_string, score);
     Tcl_AppendResult(interp, buf, (char *)NULL);
   }
+#endif
   return TCL_OK;
 };
 

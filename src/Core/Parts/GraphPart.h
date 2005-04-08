@@ -53,7 +53,7 @@
 
 namespace SCIRun {
   
-class SCICORESHARE GraphPart : public Part, public PartInterface  {
+class GraphPart : public Part, public PartInterface  {
 private:
   vector< vector<double> > data_;
 

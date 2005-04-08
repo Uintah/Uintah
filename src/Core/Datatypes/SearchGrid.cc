@@ -114,18 +114,16 @@ void
 SearchGridBase::unsafe_locate(unsigned int &i, unsigned int &j,
 			      unsigned int &k, const Point &p) const
 {
-  const Point r = transform_.unproject(p);
+  Point r;
+  transform_.unproject(p, r);
   
-  const double rx = floor(r.x());
-  const double ry = floor(r.y());
-  const double rz = floor(r.z());
+  r.x(floor(r.x()));
+  r.y(floor(r.y()));
+  r.z(floor(r.z()));
 
-  //ASSERT(!(rx < 0.0      || ry < 0.0      || rz < 0.0    ||
-  //	   rx >= ni_     || ry >= nj_     || rz >= nk_   ));
-
-  i = (unsigned int)rx;
-  j = (unsigned int)ry;
-  k = (unsigned int)rz;
+  i = (unsigned int)r.x();
+  j = (unsigned int)r.y();
+  k = (unsigned int)r.z();
 }
 
 

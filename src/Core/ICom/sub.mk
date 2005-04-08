@@ -49,6 +49,6 @@ PSELIBS := \
 	Core/Exceptions \
 	Core/Containers 
 
-LIBS := 
+LIBS := $(SOCKET_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

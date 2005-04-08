@@ -29,16 +29,20 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := CCA/Components/VtkTest
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-INCLUDES := $(VTK_INCLUDE) $(INCLUDES)
-LIBS := $(VTK_LIBRARY) $(LIBS)
+SRCDIR   := Core/Bundle
 
-SUBDIRS := $(SRCDIR)/Renderer \
-	   $(SRCDIR)/Actor \
-	   $(SRCDIR)/PolyDataMapper \
-	   $(SRCDIR)/ContourFilter \
-	   $(SRCDIR)/StructuredPointsReader
+SRCS += $(SRCDIR)/Bundle.cc		    	
+	
+PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
+	Core/Thread Core/Geometry Core/GuiInterface \
+	Core/Math Core/Util Core/Geom Core/Datatypes Core/Volume
+LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY) \
+	$(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+
+INCLUDES += $(TEEM_INCLUDE)
+INCLUDES += $(BLAS_INCLUDE)
 

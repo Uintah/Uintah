@@ -43,14 +43,13 @@
 #ifndef SCI_GAUSSIAN_H__
 #define SCI_GAUSSIAN_H__
 
-#include <Core/share/share.h>
 #include <Core/Math/MusilRNG.h>
 #include <math.h>
 
 namespace SCIRun {
 
 //   http://mathworld.wolfram.com/GaussianDistribution.html
-class SCICORESHARE Gaussian {
+class Gaussian {
 public:
   double mean_;
   double sigma_;

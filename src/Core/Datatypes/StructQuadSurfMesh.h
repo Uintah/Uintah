@@ -70,7 +70,7 @@ namespace SCIRun {
 using std::string;
 
 template <class Basis>
-class SCICORESHARE StructQuadSurfMesh : public ImageMesh<Basis>
+class StructQuadSurfMesh : public ImageMesh<Basis>
 {
 public:
   StructQuadSurfMesh();

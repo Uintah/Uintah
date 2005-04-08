@@ -97,6 +97,7 @@
 #include <Core/Geom/GeomTetra.h>
 #include <Core/Geom/GeomTexSlices.h>
 #include <Core/Geom/TexSquare.h>
+#include <Core/Geom/GeomTexRectangle.h>
 #include <Core/Geom/ColorMapTex.h>
 #include <Core/Geom/HistogramTex.h>
 #include <Core/Geom/GeomTorus.h>
@@ -111,6 +112,7 @@
 #include <Core/Datatypes/Color.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Math/Trig.h>
 #include <Core/Math/TrigTable.h>
 #include <Core/Geometry/Plane.h>
@@ -125,10 +127,10 @@ using std::endl;
 #include <GL/gls.h>
 #endif
 
-
+#ifndef _WIN32
 #include <X11/X.h>
 #include <X11/Xlib.h>
-
+#endif
 
 #include <stdio.h>
 
@@ -241,7 +243,7 @@ DrawInfoOpenGL::DrawInfoOpenGL() :
     }
 
 #ifdef _WIN32
-  gluQuadricCallback(qobj, (GLenum)GLU_ERROR, (void (__stdcall*)())quad_error);
+  gluQuadricCallback(qobj, /* FIX (GLenum)GLU_ERROR*/ 0, (void (__stdcall*)())quad_error);
 #else
   gluQuadricCallback(qobj, (GLenum)GLU_ERROR, (gluQuadricCallbackType)quad_error);
 #endif
@@ -1033,7 +1035,9 @@ GeomColorMap::draw(DrawInfoOpenGL* di, Material *m, double time)
     glTexImage1D(GL_TEXTURE_1D, 0, 4, 256, 0, GL_RGBA, GL_FLOAT,
 		 cmap_->rawRGBA_);
 
+#ifndef _WIN32
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+#endif
     if (cmap_->resolution_ == 256)
     {
       glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -3238,7 +3242,7 @@ void GeomTexSlices::draw(DrawInfoOpenGL* di, Material* matl, double) {
     }
     
     Point pts[4];
-    Vector v;
+    Vector v(0, 0, 0);
     switch (which) {
     case 0:	// x
 	pts[0] = min;
@@ -6221,60 +6225,211 @@ void HistogramTex::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 void TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double) 
 {
-  if(!pre_draw(di, matl, 0)) return;
-
+  if(!pre_draw(di, matl, 1)) return;
+  glEnable(GL_TEXTURE_2D);
   bool bound = glIsTexture(texname_);
-
-  if(!bound){
-    cerr << texname_ << "Not bound!\n"; 
+  if(!bound)
     glGenTextures(1, &texname_);
-  }
-
   glBindTexture(GL_TEXTURE_2D, texname_);
-
-  if (!bound) {
+  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+  if (!bound && texture) {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
     glPixelTransferi(GL_MAP_COLOR,0);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width_, height_, 0,
-		 GL_LUMINANCE, GL_UNSIGNED_BYTE, texture );
+		 GL_RGBA, GL_UNSIGNED_BYTE, texture);
+  }
+  if (GL_NO_ERROR == glGetError()){
+    glAlphaFunc(GL_GEQUAL, alpha_cutoff_);
+    glEnable(GL_ALPHA_TEST);
+    glDisable(GL_BLEND);
+    glColor4d(1., 1., 1., 1.);
+    glBegin( GL_QUADS );    
+    for (int i = 0; i < 4; i++) {
+      glNormal3d(normal_.x(), normal_.y(), normal_.z());
+      glTexCoord2fv(tex_coords_+i*2);
+      glVertex3fv(pos_coords_+i*3);
+    }
+    glEnd();
+    glDisable(GL_ALPHA_TEST);
+  } 
+  glBindTexture(GL_TEXTURE_2D, 0);
+  glDisable(GL_TEXTURE_2D);
+  post_draw(di);
+}
+
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#define FRAG \
+"!!ARBfp1.0 \n" \
+"ATTRIB t = fragment.texcoord[1]; \n" \
+"TEMP c; \n" \
+"ATTRIB cf = fragment.color; \n" \
+"TEX c, t, texture[1], 2D; \n" \
+"MUL c, c, cf; \n" \
+"MOV result.color, c; \n" \
+"END"
+
+#define FOG \
+"!!ARBfp1.0 \n" \
+"PARAM fc = state.fog.color; \n" \
+"PARAM fp = state.fog.params; \n" \
+"TEMP fctmp; \n" \
+"ATTRIB t = fragment.texcoord[1]; \n" \
+"ATTRIB tf = fragment.texcoord[2]; \n" \
+"TEMP c; \n" \
+"TEMP v; \n" \
+"ATTRIB cf = fragment.color; \n" \
+"TEX c, t, texture[1], 2D; \n" \
+"MUL c, c, cf; \n" \
+"SUB v.x, fp.z, tf.x; \n" \
+"MUL_SAT v.x, v.x, fp.w; \n" \
+"MUL fctmp, c.w, fc; \n" \
+"LRP c.xyz, v.x, c.xyzz, fctmp.xyzz; \n" \
+"MOV result.color, c; \n" \
+"END"
+#endif
+
+void GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double) 
+{
+  if(!pre_draw(di, matl, 1)) return;
+  GLboolean use_fog = glIsEnabled(GL_FOG);
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+  if( !shader_ || !fog_shader_ ){
+    shader_ = new FragmentProgramARB( FRAG );
+    shader_->create();
+    fog_shader_ = new FragmentProgramARB( FOG );
+    fog_shader_->create();
+  }
+
+  if(use_fog) {
+    // enable texture unit 2 for fog
+    glActiveTexture(GL_TEXTURE2);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    glEnable(GL_TEXTURE_3D);
+  }
+
+  glActiveTexture(GL_TEXTURE1);
+
+#endif
+
+  bool bound = glIsTexture(texname_);
+
+  if(!bound){
+    glGenTextures(1, &texname_);
+  }
+
+  glBindTexture(GL_TEXTURE_2D, texname_);
+
+
+  if (!bound) {
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width_, height_, 0,
+		 GL_RGBA, GL_UNSIGNED_BYTE, texture_ );
   }
 
 
   if (GL_NO_ERROR == glGetError()){
     glEnable(GL_TEXTURE_2D);
-    glShadeModel(GL_FLAT);
 
-    glAlphaFunc(GL_GREATER, float(4/256.0));
-    glEnable(GL_ALPHA_TEST);
-    glDisable(GL_BLEND);
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_LIGHTING);
-    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glShadeModel(GL_FLAT);
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    if(interp_){
+      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    } else {
+      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    }
+
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
+    if(use_fog) {
+      fog_shader_->bind();
+    } else {
+      shader_->bind();
+    }
+#endif
+
     GLfloat ones[4] = {1.0, 1.0, 1.0, 1.0};
     glColor4fv(ones);
-    glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, ones);
+//     glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, ones);
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    glDepthMask(GL_TRUE);
+
+    
+    if(trans_){
+#if !defined(GL_ARB_fragment_program) && !defined(GL_ATI_fragment_shader) 
+      glAlphaFunc(GL_GREATER, alpha_cutoff_);
+      glEnable(GL_ALPHA_TEST);
+#endif
+      glEnable(GL_BLEND);
+// Workaround for old bad nvidia headers.
+#if !defined(_WIN32) && defined(GL_FUNC_ADD) 
+      glBlendEquation(GL_FUNC_ADD);
+#else
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+#endif
+    }
+
+    float mvmat[16];
+    if(use_fog) {
+      glGetFloatv(GL_MODELVIEW_MATRIX, mvmat);
+    }
 
     glBegin( GL_QUADS );
+    if( use_normal_ ){
+      glNormal3fv( normal_ );
+    }
+
+
     for (int i = 0; i < 4; i++) {
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
+      glMultiTexCoord2fv(GL_TEXTURE1,tex_coords_+i*2);
+      if(use_fog) {
+	float *pos = pos_coords_+i*3;
+	float vz = mvmat[2]* pos[0]
+	  + mvmat[6]*pos[1] 
+	  + mvmat[10]*pos[2] + mvmat[14];
+	glMultiTexCoord3f(GL_TEXTURE2, -vz, 0.0, 0.0);
+      }
+#else
       glTexCoord2fv(tex_coords_+i*2);
+#endif
       glVertex3fv(pos_coords_+i*3);
     }
     glEnd();
+
     glFlush();
-    glDisable(GL_ALPHA_TEST);
+    if( trans_ ){
+       glDisable(GL_ALPHA_TEST);
+    }
+    glDisable(GL_BLEND);
     glDisable(GL_TEXTURE_2D);
-    glEnable(GL_LIGHTING);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
+    if( use_fog ) {
+      fog_shader_->release();
+      glActiveTexture(GL_TEXTURE2);
+      glDisable(GL_TEXTURE_3D);
+    } else {
+      shader_->release();
+    }
+#endif
+      
   } else {
     cerr<<"Some sort of texturing error\n";
   }
+
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
+    glActiveTexture(GL_TEXTURE0);
+#endif
+  di->polycount++;
   post_draw(di);
 }
 

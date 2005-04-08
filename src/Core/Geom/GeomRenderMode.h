@@ -48,7 +48,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE GeomRenderMode : public GeomContainer {
+class GeomRenderMode : public GeomContainer {
 public:
     enum DrawType {
         WireFrame,

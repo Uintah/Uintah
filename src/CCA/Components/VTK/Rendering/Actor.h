@@ -47,6 +47,7 @@
 #include <vector>
 
 class vtkActor;
+class vtkObject;
 
 namespace SCIRun {
   namespace vtk{
@@ -64,7 +65,8 @@ namespace SCIRun {
       
       //InPort interface
       void connect(OutPort* p);
-      
+
+      vtkObject* getOutput();      
     private:
       vtkActor *actor;
       

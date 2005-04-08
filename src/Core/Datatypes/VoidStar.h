@@ -59,7 +59,7 @@ namespace SCIRun {
 class VoidStar;
 typedef LockingHandle<VoidStar> VoidStarHandle;
 
-class SCICORESHARE VoidStar : public Datatype {
+class VoidStar : public Datatype {
 protected:
     VoidStar();
 public:

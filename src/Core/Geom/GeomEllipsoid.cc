@@ -27,7 +27,7 @@
 */
 
 
-#include "GeomEllipsoid.h"
+#include <Core/Geom/GeomEllipsoid.h>
 #include <Core/Geometry/BBox.h>
 //#include <Core/Geometry/BSphere.h>
 #include <Core/Malloc/Allocator.h>

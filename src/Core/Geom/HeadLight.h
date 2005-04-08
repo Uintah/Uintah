@@ -43,15 +43,13 @@
 #ifndef SCI_Geom_HeadLight_h
 #define SCI_Geom_HeadLight_h 1
 
-#include <Core/share/share.h>
-
 #include <Core/Geom/Light.h>
 #include <Core/Datatypes/Color.h>
 
 namespace SCIRun {
 
 
-class SCICORESHARE HeadLight : public Light {
+class HeadLight : public Light {
     Color c;
 public:
     HeadLight(const string& name, const Color&, bool on = true);

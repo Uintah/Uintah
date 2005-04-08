@@ -43,7 +43,6 @@
 #ifndef Geometry_BBox_h
 #define Geometry_BBox_h
 
-#include <Core/share/share.h>
 #include <Core/Geometry/Point.h>
 
 namespace SCIRun {
@@ -51,10 +50,10 @@ namespace SCIRun {
   class Vector;
   class Piostream;
 
-  class SCICORESHARE BBox {
+  class BBox {
     
   protected:
-    friend SCICORESHARE void Pio( Piostream &, BBox& );
+    friend void Pio( Piostream &, BBox& );
 
   public:
     BBox();

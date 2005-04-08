@@ -50,7 +50,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE Material : public Persistent {
+class Material : public Persistent {
 public:
   int ref_cnt;
   Mutex lock;
@@ -78,7 +78,7 @@ public:
 
 typedef LockingHandle<Material> MaterialHandle;
 
-class SCICORESHARE GeomMaterial : public GeomContainer {
+class GeomMaterial : public GeomContainer {
   MaterialHandle matl;
 public:
   GeomMaterial(GeomHandle, const MaterialHandle&);

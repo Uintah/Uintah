@@ -69,7 +69,7 @@ namespace SCIRun {
 using std::string;
 
 template <class Basis>
-class SCICORESHARE StructCurveMesh : public ScanlineMesh<Basis>
+class StructCurveMesh : public ScanlineMesh<Basis>
 {
 public:
   StructCurveMesh() {}

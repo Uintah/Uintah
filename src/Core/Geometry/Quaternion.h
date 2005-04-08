@@ -68,7 +68,6 @@ POSSIBLE REVISIONS
 #ifndef Geometry_Quaternion_h
 #define Geometry_Quaternion_h 1
 
-#include <Core/share/share.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Geometry/Point.h>
@@ -81,15 +80,15 @@ namespace SCIRun {
 class Point;
 class Transform;
 
-class SCICORESHARE Quaternion {
+class Quaternion {
   double a;
   Vector v;
   inline Quaternion log();
   inline Quaternion exp();          // exp-function should be used only after log()
 				    // doesn't make sense otherwise in most cases	 
   void from_matrix(const double matr[4][4]);
-  friend SCICORESHARE Quaternion Slerp(const Quaternion&, const Quaternion&, double);
-  friend SCICORESHARE Quaternion pow(const Quaternion&, double);
+  friend Quaternion Slerp(const Quaternion&, const Quaternion&, double);
+  friend Quaternion pow(const Quaternion&, double);
 public:
 
   Quaternion(): a(1), v(Vector(0, 0, 0)){};
@@ -123,8 +122,8 @@ public:
   friend inline Quaternion operator*(const Quaternion&, const Quaternion&);   
 
   friend inline double Dot(const Quaternion&, const Quaternion&);
-  friend SCICORESHARE std::ostream& operator<<(std::ostream&, const Quaternion&);
-  friend SCICORESHARE void Pio(Piostream&, Quaternion&);
+  friend std::ostream& operator<<(std::ostream&, const Quaternion&);
+  friend void Pio(Piostream&, Quaternion&);
 };
 
 inline void Quaternion::normalize(){

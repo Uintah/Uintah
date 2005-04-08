@@ -43,7 +43,6 @@ SCIRun::vtk::ImageReader::ImageReader()
   //set output port name
   OutPort::setName("ImageReader::output");
   this->reader = vtkImageReader::New();
-  OutPort::setOutput(this->reader->GetOutput());
   addPort(this);
   enableUI();
 }
@@ -65,4 +64,9 @@ SCIRun::vtk::ImageReader::popupUI()
   reader->Update();
 
   return 0;
+}
+
+vtkObject*
+SCIRun::vtk::ImageReader::getOutput(){
+  return reader->GetOutput();
 }

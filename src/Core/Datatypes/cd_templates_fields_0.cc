@@ -34,10 +34,10 @@
 #include <Core/Containers/FData.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/MaskedLatVolMesh.h>
+#include <Core/Datatypes/MRLatVolField.h>
 
-//#include <Core/Datatypes/LatVolField.h>
 //#include <Core/Datatypes/MaskedLatVolField.h>
-//#include <Core/Datatypes/MRLatVolField.h>
+
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 /*
@@ -97,7 +97,6 @@ template class GenericField<MLVMesh, FDulongBasis,
 			    FData3d<unsigned long, MLVMesh> >;
 
 
-#if 0
 template class MRLatVolField<Tensor>;
 template class MRLatVolField<Vector>;
 template class MRLatVolField<double>;
@@ -121,7 +120,6 @@ const TypeDescription* get_type_description(MRLatVolField<unsigned short> *);
 const TypeDescription* get_type_description(MRLatVolField<unsigned char> *);
 
 
-#endif
 
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)

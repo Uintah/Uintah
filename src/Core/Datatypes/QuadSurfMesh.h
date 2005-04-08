@@ -60,7 +60,7 @@ namespace SCIRun {
 using std::vector;
 
 template <class Basis>
-class SCICORESHARE QuadSurfMesh : public Mesh
+class QuadSurfMesh : public Mesh
 {
 public:
   typedef LockingHandle<QuadSurfMesh<Basis> > handle_type;

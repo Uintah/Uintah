@@ -48,7 +48,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE GeomBillboard: public GeomContainer {
+class GeomBillboard: public GeomContainer {
   Point at;
 
 public:

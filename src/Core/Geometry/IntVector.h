@@ -47,7 +47,6 @@
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
 
-#include <Core/share/share.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Geometry/Vector.h>
 
@@ -196,7 +195,7 @@ public:
    //! support dynamic compilation
   static const string& get_h_file_path();
 
- friend SCICORESHARE void Pio( Piostream&, IntVector& );
+ friend void Pio( Piostream&, IntVector& );
 
 private:
   int value_[3];
@@ -226,7 +225,7 @@ inline IntVector Abs(const IntVector& v)
 }
 
 
-//SCICORESHARE std::ostream& operator<<(std::ostream&, const SCIRun::IntVector&);
+//std::ostream& operator<<(std::ostream&, const SCIRun::IntVector&);
 
 } // End namespace SCIRun
 

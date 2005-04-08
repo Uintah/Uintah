@@ -55,6 +55,7 @@
 #include <vector>
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
+#include <Core/Geom/share.h>
 
 namespace SCIRun {
 
@@ -69,7 +70,7 @@ class  Vector;
 class  Point;
 class  IntVector;
 
-class SCICORESHARE GeomObj : public Persistent {
+class SHARE GeomObj : public Persistent {
 public:
   int ref_cnt;
   Mutex &lock;

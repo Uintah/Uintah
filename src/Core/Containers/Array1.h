@@ -47,11 +47,6 @@
 
 #include <Core/Persistent/Persistent.h>
 
-#ifdef _WIN32
-#pragma warning(disable:4786)
-#endif
-
-
 namespace SCIRun {
 
 class Piostream;

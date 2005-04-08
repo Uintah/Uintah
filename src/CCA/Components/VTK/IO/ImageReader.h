@@ -51,6 +51,7 @@ public:
   //Component interface
   int popupUI();
   
+  vtkObject* getOutput();  
 private:
   vtkImageReader *reader;
   ImageReader(const ImageReader&);

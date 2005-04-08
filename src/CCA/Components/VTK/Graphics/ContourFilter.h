@@ -47,7 +47,7 @@
 #include <vector>
 
 class vtkContourFilter;
-
+class vtkObject;
 namespace SCIRun {
   namespace vtk{
 
@@ -64,7 +64,9 @@ namespace SCIRun {
       
       //InPort interface
       void connect(OutPort* port);
-      
+     
+      vtkObject* getOutput();
+ 
     private:
       vtkContourFilter *filter;
       

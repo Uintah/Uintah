@@ -55,8 +55,7 @@ using std::endl;
 typedef void (Tcl_LockProc)();
 
 #ifdef _WIN32
-#undef ASSERT
-#include <afxwin.h>
+#include <windows.h>
 #define GLXContext HGLRC
 #ifdef __cplusplus
 extern "C" {
@@ -117,8 +116,9 @@ static int x_error_handler(Display* dpy, XErrorEvent* error)
     return 0; // Never reached...
 }
 
-static int exitproc(ClientData, Tcl_Interp*, int, char* [])
+static int exitproc(ClientData, Tcl_Interp*, int, TCLCONST char* [])
 {
+
   Thread::exitAll(0);
   return TCL_OK; // not reached
 }

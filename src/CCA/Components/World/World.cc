@@ -39,28 +39,78 @@
  */
 
 #include <CCA/Components/World/World.h>
+#include <qinputdialog.h>
+#include <qstring.h>
 #include <iostream>
 
-using namespace std;
+//using namespace std;
 using namespace SCIRun;
 
 extern "C" sci::cca::Component::pointer make_SCIRun_World()
 {
-  return sci::cca::Component::pointer(new World());
+    return sci::cca::Component::pointer(new World());
 }
 
 
-World::World(){
+World::World()
+{
+    strPort.setParent(this);
+    uiPort.setParent(this);
+    ciPort.setParent(this);
+    text = "World";
 }
 
-World::~World(){
+World::~World()
+{
 }
 
-void World::setServices(const sci::cca::Services::pointer& svc){
+void World::setServices(const sci::cca::Services::pointer& svc)
+{
+    services = svc;
+    sci::cca::TypeMap::pointer props = svc->createTypeMap();
+    StringPort::pointer strp(&strPort);
+    WUIPort::pointer uip(&uiPort);
+    ComponentIcon::pointer cip(&ciPort);
 
-  services=svc;
-  sci::cca::TypeMap::pointer props = svc->createTypeMap();
-  StringPort::pointer strport=StringPort::pointer(new StringPort);
-  svc->addProvidesPort(strport,"stringport","sci.cca.ports.StringPort", props);
+    svc->addProvidesPort(strp, "stringport",
+                         "sci.cca.ports.StringPort", props);
+    svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", props);
+    svc->addProvidesPort(cip, "icon",
+                         "sci.cca.ports.ComponentIcon", props);
+    //svc->registerUsesPort();
 }
 
+std::string StringPort::getString() { return com->text; }
+
+int WUIPort::ui()
+{
+    bool ok;
+    QString t = QInputDialog::getText("World", "Enter some text:",
+        QLineEdit::Normal, QString::null, &ok);
+    if (ok && !t.isEmpty()) {
+        com->text = t.ascii();
+    }
+    return 0;
+}
+
+
+std::string ComponentIcon::getDisplayName()
+{
+    return "World";
+}
+
+std::string ComponentIcon::getDescription()
+{
+    return "The World component is a sample CCA component that provides a sci::cca::StringPort.";
+}
+
+int ComponentIcon::getProgressBar()
+{
+    return 0;
+}
+ 
+std::string ComponentIcon::getIconShape()
+{
+    return "RECT";
+}
+ 

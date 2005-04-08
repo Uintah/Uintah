@@ -2050,7 +2050,9 @@ void ArrayType::emit_unmarshal(EmitState& e, const string& arg,
       e.out << arg << "_dim[" << i << "]";
     }
     e.out << ";\n";
-    e.out << leader2 << cppfullname(0) << "::pointer " << pname << "=const_cast< " << cppfullname(0) << "::pointer>(&" << arg << "[0]);\n";
+    //This is is wrong if the array dimension >= 2.
+    //    e.out << leader2 << cppfullname(0) << "::pointer " << pname << "=const_cast< " << cppfullname(0) << "::pointer>(&" << arg << "[0]);\n";
+    e.out << leader2 << cppfullname(0) << "::pointer " << pname << "=const_cast< " << cppfullname(0) << "::pointer>(" << arg << ".buffer());\n";
     subtype->emit_unmarshal(e, pname, sizename, handler, ctx, false, false);
   } else {
     string pname=arg+"_iter";
@@ -2115,7 +2117,7 @@ void ArrayType::emit_marshal(EmitState& e, const string& arg,
     }
     else {
       e.out << leader2 << cppfullname(0) << " " << arg << " = *((" << cppfullname(0) << "*)(_sc->storage->get(" 
-	    << e.handlerNum << "," << arg[arg.size()-1] << ",sessionID,_callID)));\n";      
+	    << e.handlerNum << "," << arg[arg.size()-1] << ",_sessionID,_callID)));\n";      
     }
   }
 
@@ -2124,7 +2126,9 @@ void ArrayType::emit_marshal(EmitState& e, const string& arg,
   string pname;
   if(subtype->array_use_pointer()){
     pname=arg+"_mptr";
-    e.out << leader2 << cppfullname(0) << "::pointer " << pname << "=const_cast< " << cppfullname(0) << "::pointer>(&" << arg << "[0]);\n";
+    //This is wrong if the array dimension>=2 
+    //    e.out << leader2 << cppfullname(0) << "::pointer " << pname << "=const_cast< " << cppfullname(0) << "::pointer>(&" << arg << "[0]);\n";
+    e.out << leader2 << cppfullname(0) << "::pointer " << pname << "=const_cast< " << cppfullname(0) << "::pointer>(" << arg << ".buffer());\n";
   } else {
     pname=arg+"_iter";
   }

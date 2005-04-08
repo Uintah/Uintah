@@ -31,6 +31,8 @@
 
 #include <Core/Algorithms/Visualization/NrrdTextureBuilderAlgo.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Containers/StringUtil.h>
+#include <Core/Geom/ShaderProgramARB.h>
 
 #include <iostream>
 
@@ -38,108 +40,13 @@ namespace SCIRun {
 
 using namespace std;
 
-static DebugStream dbg("NrrdTextureBuilderAlgo", false);
-
-NrrdTextureBuilderAlgo::NrrdTextureBuilderAlgo()
-{}
-
-NrrdTextureBuilderAlgo::~NrrdTextureBuilderAlgo() 
-{}
-
-bool
-NrrdTextureBuilderAlgo::build(ProgressReporter *report,
-			      TextureHandle texture,
-                              const NrrdDataHandle &nvn,
-			      const NrrdDataHandle &gmn,
-                              int card_mem)
-{
-  Nrrd* nv_nrrd = nvn->nrrd;
-  if (nv_nrrd->dim != 3 && nv_nrrd->dim != 4)
-  {
-    report->error("Invalid dimension for input value nrrd.");
-    return false;
-  }
-
-  Nrrd* gm_nrrd = 0;
-  int axis_size[4];
-  int nc;
-  if (gmn.get_rep())
-  {
-    gm_nrrd = gmn->nrrd;
-    if (gm_nrrd)
-    {
-      if (gm_nrrd->dim != 3 && gm_nrrd->dim != 4)
-      {
-        report->error("Invalid dimension for input gradient magnitude nrrd.");
-        return false;
-      }
-      nrrdAxisInfoGet_nva(gm_nrrd, nrrdAxisInfoSize, axis_size);
-      if (gm_nrrd->dim > 3 && axis_size[0] != 1)
-      {
-        report->error("Invalid size for gradient magnitude nrrd.");
-        return false;
-      }
-      nc = 2;
-    }
-    else
-    {
-      nc = 1;
-    }
-  }
-  else
-  {
-    nc = 1;
-  }
-
-  nrrdAxisInfoGet_nva(nv_nrrd, nrrdAxisInfoSize, axis_size);
-  double axis_min[4];
-  nrrdAxisInfoGet_nva(nv_nrrd, nrrdAxisInfoMin, axis_min);
-  double axis_max[4];
-  nrrdAxisInfoGet_nva(nv_nrrd, nrrdAxisInfoMax, axis_max);
-
-  const int nx = axis_size[nv_nrrd->dim-3];
-  const int ny = axis_size[nv_nrrd->dim-2];
-  const int nz = axis_size[nv_nrrd->dim-1];
-  int nb[2];
-  nb[0] = nv_nrrd->dim > 3 ? axis_size[0] : 1;
-  nb[1] = gm_nrrd ? 1 : 0;
-
-  BBox bbox;
-  bbox.extend(Point(axis_min[nv_nrrd->dim-3],
-                    axis_min[nv_nrrd->dim-2],
-                    axis_min[nv_nrrd->dim-1]));
-  bbox.extend(Point(axis_max[nv_nrrd->dim-3],
-                    axis_max[nv_nrrd->dim-2],
-                    axis_max[nv_nrrd->dim-1]));
-
-  texture->lock_bricks();
-  vector<TextureBrickHandle>& bricks = texture->bricks();
-  if (nx != texture->nx() || ny != texture->ny() || nz != texture->nz() ||
-      nc != texture->nc() || card_mem != texture->card_mem() ||
-      bbox.min() != texture->bbox().min() ||
-      bbox.max() != texture->bbox().max())
-  {
-    build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem);
-    texture->set_size(nx, ny, nz, nc, nb);
-    texture->set_card_mem(card_mem);
-  }
-  texture->set_bbox(bbox);
-  texture->set_minmax(0.0, 255.0, 0.0, 255.0);
-  for (unsigned int i=0; i<bricks.size(); i++)
-  {
-    fill_brick(bricks[i], nvn, gmn, nx, ny, nz);
-    bricks[i]->set_dirty(true);
-  }
-  texture->unlock_bricks();
-  return true;
-}
-
 
 void
-NrrdTextureBuilderAlgo::build_bricks(vector<TextureBrickHandle>& bricks,
-				     int nx, int ny, int nz,
-				     int nc, int* nb,
-                                     const BBox& bbox, int card_mem)
+texture_build_bricks(vector<TextureBrickHandle>& bricks,
+                     int nx, int ny, int nz,
+                     int nc, int* nb,
+                     const BBox& bbox, int card_mem,
+                     bool use_nrrd_brick)
 {
   int brick_mem = card_mem*1024*1024/2;
   const int data_size[3] = { nx, ny, nz };
@@ -151,43 +58,47 @@ NrrdTextureBuilderAlgo::build_bricks(vector<TextureBrickHandle>& bricks,
   // figure out largest possible brick size
   int size[3];
   size[0] = data_size[0]; size[1] = data_size[1]; size[2] = data_size[2];
+
+  const unsigned int max_texture_size =
+    (nb[0] == 1)?
+    ShaderProgramARB::max_texture_size_1() :
+    ShaderProgramARB::max_texture_size_4();
   // initial brick size
-  brick_size[0] = NextPowerOf2(data_size[0]);
-  brick_size[1] = NextPowerOf2(data_size[1]);
-  brick_size[2] = NextPowerOf2(data_size[2]);
+  brick_size[0] = Min(NextPowerOf2(data_size[0]), max_texture_size);
+  brick_size[1] = Min(NextPowerOf2(data_size[1]), max_texture_size);
+  brick_size[2] = Min(NextPowerOf2(data_size[2]), max_texture_size);
   // number of bytes per brick
   brick_nb = brick_size[0]*brick_size[1]*brick_size[2]*nb[0];
+  
   // find brick size
-  if (brick_nb > brick_mem)
+  // subdivide until fits
+  while (brick_nb > brick_mem)
   {
-    // subdivide until fits
-    while(brick_nb > brick_mem)
-    {
-      // number of bricks along the axes
-      // the divisions have to satisfy the equation:
-      // data_size <= (brick_size-1)*num_brick + 1
-      // we assume that brick_size > 1
-      num_brick[0] = (int)ceil((double)(data_size[0]-1)/(brick_size[0]-1));
-      num_brick[1] = (int)ceil((double)(data_size[1]-1)/(brick_size[1]-1));
-      num_brick[2] = (int)ceil((double)(data_size[2]-1)/(brick_size[2]-1));
-      // size of leftover volumes
-      int sp[3];
-      sp[0] = data_size[0] - (num_brick[0]-1)*(brick_size[0]-1);
-      sp[1] = data_size[1] - (num_brick[1]-1)*(brick_size[1]-1);
-      sp[2] = data_size[2] - (num_brick[2]-1)*(brick_size[2]-1);
-      // size of padding
-      brick_pad[0] = NextPowerOf2(sp[0]) - sp[0];
-      brick_pad[1] = NextPowerOf2(sp[1]) - sp[1];
-      brick_pad[2] = NextPowerOf2(sp[2]) - sp[2];
-      // sort padding
-      int idx[3];
-      SortIndex(brick_pad, idx);
-      // split largest one
-      size[idx[2]] = (int)ceil(size[idx[2]]/2.0);
-      brick_size[idx[2]] = NextPowerOf2(size[idx[2]]);
-      brick_nb = brick_size[0]*brick_size[1]*brick_size[2]*nb[0];
-    }
+    // number of bricks along the axes
+    // the divisions have to satisfy the equation:
+    // data_size <= (brick_size-1)*num_brick + 1
+    // we assume that brick_size > 1
+    num_brick[0] = (int)ceil((double)(data_size[0]-1)/(brick_size[0]-1));
+    num_brick[1] = (int)ceil((double)(data_size[1]-1)/(brick_size[1]-1));
+    num_brick[2] = (int)ceil((double)(data_size[2]-1)/(brick_size[2]-1));
+    // size of leftover volumes
+    int sp[3];
+    sp[0] = data_size[0] - (num_brick[0]-1)*(brick_size[0]-1);
+    sp[1] = data_size[1] - (num_brick[1]-1)*(brick_size[1]-1);
+    sp[2] = data_size[2] - (num_brick[2]-1)*(brick_size[2]-1);
+    // size of padding
+    brick_pad[0] = NextPowerOf2(sp[0]) - sp[0];
+    brick_pad[1] = NextPowerOf2(sp[1]) - sp[1];
+    brick_pad[2] = NextPowerOf2(sp[2]) - sp[2];
+    // sort padding
+    int idx[3];
+    SortIndex(brick_pad, idx);
+    // split largest one
+    size[idx[2]] = (int)ceil(size[idx[2]]/2.0);
+    brick_size[idx[2]] = NextPowerOf2(size[idx[2]]);
+    brick_nb = brick_size[0]*brick_size[1]*brick_size[2]*nb[0];
   }
+
   // number of bricks along the axes
   // the divisions have to satisfy the equation:
   // data_size <= (brick_size-1)*num_brick + 1
@@ -245,7 +156,8 @@ NrrdTextureBuilderAlgo::build_bricks(vector<TextureBrickHandle>& bricks,
         (double)data_size[0]/(double)brick_size[0];
       for (int i=0; i<num_brick[0]; i++)
       {
-        if (num_brick[0] * num_brick[1] * num_brick[2] == 1 &&
+        if (use_nrrd_brick &&
+            num_brick[0] * num_brick[1] * num_brick[2] == 1 &&
 	    brick_pad[0] == nx && brick_pad[1] == ny && brick_pad[2] == nz)
 	{
 	  NrrdTextureBrick *b = scinew NrrdTextureBrick(0, 0,
@@ -311,6 +223,127 @@ NrrdTextureBuilderAlgo::build_bricks(vector<TextureBrickHandle>& bricks,
 }
 
 
+
+NrrdTextureBuilderAlgo::NrrdTextureBuilderAlgo()
+{}
+
+NrrdTextureBuilderAlgo::~NrrdTextureBuilderAlgo() 
+{}
+
+bool
+NrrdTextureBuilderAlgo::build(ProgressReporter *report,
+			      TextureHandle texture,
+                              const NrrdDataHandle &nvn,
+			      const NrrdDataHandle &gmn,
+                              int card_mem)
+{
+  Nrrd* nv_nrrd = nvn->nrrd;
+  if (nv_nrrd->dim != 3 && nv_nrrd->dim != 4)
+  {
+    report->error("Invalid dimension for input value nrrd.");
+    return false;
+  }
+
+  Nrrd* gm_nrrd = 0;
+  int axis_size[4];
+  int nc;
+  if (gmn.get_rep())
+  {
+    gm_nrrd = gmn->nrrd;
+    if (gm_nrrd)
+    {
+      if (gm_nrrd->dim != 3 && gm_nrrd->dim != 4)
+      {
+        report->error("Invalid dimension for input gradient magnitude nrrd.");
+        return false;
+      }
+      nrrdAxisInfoGet_nva(gm_nrrd, nrrdAxisInfoSize, axis_size);
+      if (gm_nrrd->dim > 3 && axis_size[0] != 1)
+      {
+        report->error("Invalid size for gradient magnitude nrrd.");
+        return false;
+      }
+      nc = 2;
+    }
+    else
+    {
+      nc = 1;
+    }
+  }
+  else
+  {
+    nc = 1;
+  }
+
+  nrrdAxisInfoGet_nva(nv_nrrd, nrrdAxisInfoSize, axis_size);
+  double axis_min[4];
+  nrrdAxisInfoGet_nva(nv_nrrd, nrrdAxisInfoMin, axis_min);
+  double axis_max[4];
+  nrrdAxisInfoGet_nva(nv_nrrd, nrrdAxisInfoMax, axis_max);
+
+  const int nx = axis_size[nv_nrrd->dim-3];
+  const int ny = axis_size[nv_nrrd->dim-2];
+  const int nz = axis_size[nv_nrrd->dim-1];
+  int nb[2];
+  nb[0] = nv_nrrd->dim > 3 ? axis_size[0] : 1;
+  nb[1] = gm_nrrd ? 1 : 0;
+
+  const BBox bbox(Point(0,0,0), Point(1,1,1)); 
+
+  Transform tform;
+  string trans_str;
+  // See if it's stored in the nrrd first.
+  if (nvn->get_property("Transform", trans_str) && trans_str != "Unknown")
+  {
+    double t[16];
+    int old_index=0, new_index=0;
+    for(int i=0; i<16; i++)
+    {
+      new_index = trans_str.find(" ", old_index);
+      string temp = trans_str.substr(old_index, new_index-old_index);
+      old_index = new_index+1;
+      string_to_double(temp, t[i]);
+    }
+    tform.set(t);
+  } 
+  else
+  {
+    // Reconstruct the axis aligned transform.
+    const Point nmin(axis_min[nv_nrrd->dim-3],
+                     axis_min[nv_nrrd->dim-2],
+                     axis_min[nv_nrrd->dim-1]);
+    const Point nmax(axis_max[nv_nrrd->dim-3],
+                     axis_max[nv_nrrd->dim-2],
+                     axis_max[nv_nrrd->dim-1]);
+    tform.pre_scale(nmax - nmin);
+    tform.pre_translate(nmin.asVector());
+  }
+
+  texture->lock_bricks();
+  vector<TextureBrickHandle>& bricks = texture->bricks();
+  if (nx != texture->nx() || ny != texture->ny() || nz != texture->nz() ||
+      nc != texture->nc() || nb[0] != texture->nb(0) ||
+      card_mem != texture->card_mem() ||
+      bbox.min() != texture->bbox().min() ||
+      bbox.max() != texture->bbox().max())
+  {
+    texture_build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem, true);
+    texture->set_size(nx, ny, nz, nc, nb);
+    texture->set_card_mem(card_mem);
+  }
+  texture->set_bbox(bbox);
+  texture->set_minmax(0.0, 255.0, 0.0, 255.0);
+  texture->set_transform(tform);
+  for (unsigned int i=0; i<bricks.size(); i++)
+  {
+    fill_brick(bricks[i], nvn, gmn, nx, ny, nz);
+    bricks[i]->set_dirty(true);
+  }
+  texture->unlock_bricks();
+  return true;
+}
+
+
 void
 NrrdTextureBuilderAlgo::fill_brick(TextureBrickHandle &brick,
 				   const NrrdDataHandle &nvn,
@@ -358,16 +391,18 @@ NrrdTextureBuilderAlgo::fill_brick(TextureBrickHandle &brick,
           }
           if (nx != brick->mx()) {
             for (int b=0; b<nb; b++) {
-              int tex_idx = (k*ny*nx+j*nx+i)*nb+b;
-              tex[tex_idx] = 0;
+              int idx0 = (k*ny*nx+j*nx+i)*nb+b;
+              int idx1 = (k*ny*nx+j*nx+(brick->mx()-1))*nb+b;
+              tex[idx0] = tex[idx1];
             }
           }
         }
         if (ny != brick->my()) {
           for (i=0; i<Min(nx, brick->mx()+1); i++) {
             for (int b=0; b<nb; b++) {
-              int tex_idx = (k*ny*nx+j*nx+i)*nb+b;
-              tex[tex_idx] = 0;
+              int idx0 = (k*ny*nx+j*nx+i)*nb+b;
+              int idx1 = (k*ny*nx+(brick->my()-1)*nx+i)*nb+b;
+              tex[idx0] = tex[idx1];
             }
           }
         }
@@ -376,8 +411,9 @@ NrrdTextureBuilderAlgo::fill_brick(TextureBrickHandle &brick,
         for (j=0; j<Min(ny, brick->my()+1); j++) {
           for (i=0; i<Min(nx, brick->mx()+1); i++) {
             for (int b=0; b<nb; b++) {
-              int tex_idx = (k*ny*nx+j*nx+i)*nb+b;
-              tex[tex_idx] = 0;
+              int idx0 = (k*ny*nx+j*nx+i)*nb+b;
+              int idx1 = ((brick->mz()-1)*ny*nx+j*nx+i)*nb+b;
+              tex[idx0] = tex[idx1];
             }
           }
         }
@@ -405,24 +441,28 @@ NrrdTextureBuilderAlgo::fill_brick(TextureBrickHandle &brick,
           }
           if (nx != brick->mx()) {
             for (int b=0; b<nb0; b++) {
-              int tex_idx = (k*ny*nx+j*nx+i)*nb0+b;
-              tex0[tex_idx] = 0;
+              int idx0 = (k*ny*nx+j*nx+i)*nb0+b;
+              int idx1 = (k*ny*nx+j*nx+(brick->mx()-1))*nb0+b;
+              tex0[idx0] = tex0[idx1];
             }
             for (int b=0; b<nb1; b++) {
-              int tex_idx = (k*ny*nx+j*nx+i)*nb1+b;
-              tex1[tex_idx] = 0;
+              int idx0 = (k*ny*nx+j*nx+i)*nb1+b;
+              int idx1 = (k*ny*nx+j*nx+(brick->mx()-1))*nb1+b;
+              tex1[idx0] = tex1[idx1];
             }
           }
         }
         if (ny != brick->my()) {
           for (i=0; i<Min(nx, brick->mx()+1); i++) {
             for (int b=0; b<nb0; b++) {
-              int tex_idx = (k*ny*nx+j*nx+i)*nb0+b;
-              tex0[tex_idx] = 0;
+              int idx0 = (k*ny*nx+j*nx+i)*nb0+b;
+              int idx1 = (k*ny*nx+(brick->my()-1)*nx+i)*nb0+b;
+              tex0[idx0] = tex0[idx1];
             }
             for (int b=0; b<nb1; b++) {
-              int tex_idx = (k*ny*nx+j*nx+i)*nb1+b;
-              tex1[tex_idx] = 0;
+              int idx0 = (k*ny*nx+j*nx+i)*nb1+b;
+              int idx1 = (k*ny*nx+(brick->my()-1)*nx+i)*nb1+b;
+              tex1[idx0] = tex1[idx1];
             }
           }
         }
@@ -431,12 +471,14 @@ NrrdTextureBuilderAlgo::fill_brick(TextureBrickHandle &brick,
         for (j=0; j<Min(ny, brick->my()+1); j++) {
           for (i=0; i<Min(nx, brick->mx()+1); i++) {
             for (int b=0; b<nb0; b++) {
-              int tex_idx = (k*ny*nx+j*nx+i)*nb0+b;
-              tex0[tex_idx] = 0;
+              int idx0 = (k*ny*nx+j*nx+i)*nb0+b;
+              int idx1 = ((brick->mz()-1)*ny*nx+j*nx+i)*nb0+b;
+              tex0[idx0] = tex0[idx1];
             }
             for (int b=0; b<nb1; b++) {
-              int tex_idx = (k*ny*nx+j*nx+i)*nb1+b;
-              tex1[tex_idx] = 0;
+              int idx0 = (k*ny*nx+j*nx+i)*nb1+b;
+              int idx1 = ((brick->mz()-1)*ny*nx+j*nx+i)*nb1+b;
+              tex1[idx0] = tex1[idx1];
             }
           }
         }

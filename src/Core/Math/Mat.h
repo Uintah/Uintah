@@ -43,14 +43,12 @@
 #ifndef sci_Math_Mat_h
 #define sci_Math_Mat_h 1
 
-#include <Core/share/share.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-    void SCICORESHARE matsolve3by3(double mat[3][3], double rhs[3]);
-    void SCICORESHARE matsolve3by3_cond(double mat[3][3], double rhs[3], double* rcond);
-    void SCICORESHARE min_norm_least_sq_3(double *A[3], double *b, double *x, double *bprime, int size);
+    void matsolve3by3(double mat[3][3], double rhs[3]);
+    void matsolve3by3_cond(double mat[3][3], double rhs[3], double* rcond);
+    void min_norm_least_sq_3(double *A[3], double *b, double *x, double *bprime, int size);
 
 #ifdef __cplusplus
 }

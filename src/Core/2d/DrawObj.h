@@ -62,7 +62,7 @@ class  BBox2D;
 class  OpenGLWindow;
 using std::vector;
 
-class SCICORESHARE DrawObj : public Datatype {
+class DrawObj : public Datatype {
 private:
   string name_;
   DrawObj *parent_;

@@ -45,12 +45,6 @@
 
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geometry/Transform.h>
-#ifdef _WIN32
-#define WINGDIAPI __declspec(dllimport)
-#define APIENTRY __stdcall
-#define CALLBACK APIENTRY
-#endif
-
 
 #include <Core/Datatypes/Color.h>
 
@@ -59,7 +53,7 @@ class FTGLTextureFont;
 
 namespace SCIRun {
 
-class SCICORESHARE GeomText : public GeomObj {
+class GeomText : public GeomObj {
 public:
   string text;
   string fontsize;
@@ -88,7 +82,7 @@ public:
 };
 
 
-class SCICORESHARE GeomTexts : public GeomObj {
+class GeomTexts : public GeomObj {
 protected:
   int fontindex_;
   vector<string> text_;
@@ -119,7 +113,7 @@ public:
 };
 
 
-class SCICORESHARE GeomTextsCulled : public GeomTexts {
+class GeomTextsCulled : public GeomTexts {
 protected:
   vector<Vector> normal_;
 
@@ -170,7 +164,7 @@ typedef LockingHandle<GeomFTGLFontRenderer> GeomFTGLFontRendererHandle;
 #endif
 
 
-class SCICORESHARE GeomTextTexture : public GeomObj {
+class GeomTextTexture : public GeomObj {
 public:
   enum anchor_e { n, e, s, w, ne, se, sw, nw, c};
 private:

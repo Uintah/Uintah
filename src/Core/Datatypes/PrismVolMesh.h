@@ -91,7 +91,7 @@ PrismNodeNeighborTable[PRISM_NNODES][3] = { { 1,2,3 },
 					    { 1,3,5 },
 					    { 2,3,4 } };
 template <class Basis>
-class SCICORESHARE PrismVolMesh : public Mesh
+class PrismVolMesh : public Mesh
 {
 public:
   typedef Basis        basis_type;

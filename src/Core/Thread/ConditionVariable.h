@@ -43,8 +43,6 @@
 #ifndef Core_Thread_ConditionVariable_h
 #define Core_Thread_ConditionVariable_h
 
-#include <Core/share/share.h>
-
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Mutex.h>
 
@@ -77,7 +75,7 @@ class CrowdMonitor_private;
    
 ****************************************/
 
-class SCICORESHARE ConditionVariable {
+class ConditionVariable {
 public:
   //////////
   // Create a condition variable. <i>name</i> should be a static

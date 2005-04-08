@@ -48,7 +48,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE GeomBBoxCache: public GeomContainer {
+class GeomBBoxCache: public GeomContainer {
   
     bool bbox_cached;
     BBox bbox;

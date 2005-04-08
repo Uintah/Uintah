@@ -51,7 +51,7 @@ namespace SCIRun {
 
 class Diagram;
 
-class SCICORESHARE XAxis :  public TclObj, public XAxisObj {
+class XAxis :  public TclObj, public XAxisObj {
 protected:
   Array1< Polyline *> poly_;
   Diagram *parent_;
@@ -80,7 +80,7 @@ public:
   
 };  
 
-class SCICORESHARE YAxis :  public TclObj, public YAxisObj {
+class YAxis :  public TclObj, public YAxisObj {
 protected:
   Array1< Polyline *> poly_;
   Diagram *parent_;

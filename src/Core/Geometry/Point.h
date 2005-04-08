@@ -43,7 +43,6 @@
 #ifndef Geometry_Point_h
 #define Geometry_Point_h 1
 
-#include <Core/share/share.h>
 #include <Core/Math/MinMax.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
@@ -58,7 +57,7 @@ class RigorousTest;
 class Piostream;
 class Vector;
 
-class SCICORESHARE Point {
+class Point {
   double _x,_y,_z;
 public:
   inline explicit Point(const Vector& v);
@@ -97,24 +96,24 @@ public:
   //! support dynamic compilation
   static const string& get_h_file_path();
     
-  friend SCICORESHARE class Vector;
-  friend SCICORESHARE inline double Dot(const Point&, const Point&);
-  friend SCICORESHARE inline double Dot(const Vector&, const Point&);
-  friend SCICORESHARE inline double Dot(const Point&, const Vector&);
+  friend class Vector;
+  friend inline double Dot(const Point&, const Point&);
+  friend inline double Dot(const Vector&, const Point&);
+  friend inline double Dot(const Point&, const Vector&);
   //    friend inline double Dot(const Point&, const Vector&);
-  friend SCICORESHARE inline Point Min(const Point&, const Point&);
-  friend SCICORESHARE inline Point Max(const Point&, const Point&);
-  friend SCICORESHARE Point Interpolate(const Point&, const Point&, double);
-  friend SCICORESHARE Point AffineCombination(const Point&, double,
+  friend inline Point Min(const Point&, const Point&);
+  friend inline Point Max(const Point&, const Point&);
+  friend Point Interpolate(const Point&, const Point&, double);
+  friend Point AffineCombination(const Point&, double,
 					      const Point&, double,
 					      const Point&, double,
 					      const Point&, double);
-  friend SCICORESHARE Point AffineCombination(const Point&, double,
+  friend Point AffineCombination(const Point&, double,
 					      const Point&, double,
 					      const Point&, double);
-  friend SCICORESHARE Point AffineCombination(const Point&, double,
+  friend Point AffineCombination(const Point&, double,
 					      const Point&, double);
-  friend SCICORESHARE void Pio( Piostream&, Point& );
+  friend void Pio( Piostream&, Point& );
 
 
 
@@ -137,8 +136,9 @@ Point operator+(const Vector &v, const Point &p) {
   return p+v;
 }
 
-SCICORESHARE std::ostream& operator<<(std::ostream& os, const Point& p);
-SCICORESHARE std::istream& operator>>(std::istream& os, Point& p);
+std::ostream& operator<<(std::ostream& os, const Point& p);
+std::istream& operator>>(std::istream& os, Point& p);
+
 
 } // End namespace SCIRun
 

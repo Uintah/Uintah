@@ -43,8 +43,6 @@
 #ifndef SCI_Geom_Lighting_h
 #define SCI_Geom_Lighting_h 1
 
-#include <Core/share/share.h>
-
 #include <Core/Geom/Light.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Datatypes/Color.h>
@@ -52,7 +50,7 @@
 namespace SCIRun {
 
 
-class SCICORESHARE Lighting {
+class Lighting {
 public:
     Lighting();
     ~Lighting();
@@ -63,7 +61,7 @@ public:
     Array1<LightHandle> lights;
     Color amblight;
 
-    friend SCICORESHARE void Pio( Piostream&, Lighting& );
+    friend void Pio( Piostream&, Lighting& );
 };
 
 } // End namespace SCIRun

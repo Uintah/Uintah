@@ -35,6 +35,10 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+#ifdef _WIN32
+#include <io.h>
+#endif
+
 namespace SCIRun {
    
    /**************************************
@@ -106,5 +110,14 @@ namespace SCIRun {
    };
 } // End namespace SCIRun
 
+#ifdef _WIN32
+// windows mkdir doesn't take permissions
+#  define MKDIR(dir, perm) mkdir(dir)
+// windows doesn't have lstat
+#  define LSTAT(file, buf) stat(file, buf)
+#else
+#  define MKDIR(dir, perm) mkdir(dir, perm)
+#  define LSTAT(file, buf) lstat(file, buf)
 #endif
 
+#endif

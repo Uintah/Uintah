@@ -47,7 +47,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE GeomContainer : public GeomObj {
+class GeomContainer : public GeomObj {
 protected:
     GeomHandle child_;
 

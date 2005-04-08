@@ -45,29 +45,57 @@
 
 namespace SCIRun {
 
-  class World : public sci::cca::Component{
-    
-  public:
+class World;
+
+class WUIPort : public sci::cca::ports::UIPort {
+public:
+    int ui();
+    void setParent(World *com) { this->com = com; }
+    World *com;
+};
+
+class StringPort : public sci::cca::ports::StringPort {
+public:
+    std::string getString();
+    void setParent(World *com) { this->com = com; }
+    World *com;
+};
+
+
+class ComponentIcon : public virtual sci::cca::ports::ComponentIcon {
+public:
+  virtual ~ComponentIcon() {}
+
+  virtual std::string getDisplayName();
+  virtual std::string getDescription();
+  virtual std::string getIconShape();
+  virtual int getProgressBar();
+  void setParent(World *com) { this->com = com; }
+  World *com;
+};
+
+
+class World : public sci::cca::Component {
+public:
     World();
-    ~World();
+    virtual ~World();
     void setServices(const sci::cca::Services::pointer& svc);
-  private:
+    std::string text;
+
+private:
     World(const World&);
     World& operator=(const World&);
-    void setCommunicator(int comm){
-      //MPI_COMM_COM=MPI_COMM_WORLD; //*(MPI_Comm*)(comm);
-    }    
-    sci::cca::Services::pointer services;
-  };
-  
-  
-  class StringPort: public sci::cca::ports::StringPort{
-  public:
-    std::string getString(){
-      return "World";
+    void setCommunicator(int comm) {
+        //MPI_COMM_COM=MPI_COMM_WORLD; //*(MPI_Comm*)(comm);
     }
-  };
-  
+    sci::cca::Services::pointer services;
+    StringPort strPort;
+    WUIPort uiPort;
+    ComponentIcon ciPort;
+    //Progress progPort;
+};
+
+
 } //namepace SCIRun
 
 

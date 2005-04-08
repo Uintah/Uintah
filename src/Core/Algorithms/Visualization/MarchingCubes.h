@@ -157,11 +157,9 @@ MarchingCubes<Tesselator>::search( double iso, bool bf, bool bg )
     geom_ = tess_[0]->get_geom();
   }
   else {
-    Thread::parallel( this,  
-		      &MarchingCubes<Tesselator>::parallel_search, 
-		      np_, 
-		      true,    // block
-		      iso, bf, bg );
+    Thread::parallel(this,
+                     &MarchingCubes<Tesselator>::parallel_search,
+                     np_, iso, bf, bg);
     GeomGroup *group = scinew GeomGroup;
     for (int i=0; i<np_; i++) {
       GeomHandle obj = tess_[i]->get_geom();

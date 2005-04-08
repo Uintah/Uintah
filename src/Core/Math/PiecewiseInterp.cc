@@ -42,7 +42,6 @@
 
 #include <Core/Math/PiecewiseInterp.h>
 #include <Core/Containers/Array1.h>
-#include <Core/share/share.h>
 
 namespace SCIRun {
 

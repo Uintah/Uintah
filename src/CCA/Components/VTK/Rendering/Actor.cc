@@ -72,12 +72,16 @@ Actor::Actor(){
 
   actor=vtkActor::New();
 
-  setOutput(actor);
-
   addPort( dynamic_cast<InPort*>(this));
   addPort( dynamic_cast<OutPort*>(this));
 }
 
 Actor::~Actor(){
   actor->Delete();
+}
+
+
+vtkObject*
+Actor::getOutput(){
+  return actor;
 }

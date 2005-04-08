@@ -54,7 +54,7 @@ namespace SCIRun {
 using std::string;
 
 template <class Basis>
-class SCICORESHARE ScanlineMesh : public Mesh
+class ScanlineMesh : public Mesh
 {
 public:
   typedef Basis           basis_type;

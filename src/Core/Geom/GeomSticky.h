@@ -47,7 +47,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE GeomSticky : public GeomContainer {
+class GeomSticky : public GeomContainer {
 
 public:
   GeomSticky( GeomHandle obj);

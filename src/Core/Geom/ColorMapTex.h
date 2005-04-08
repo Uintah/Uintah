@@ -48,7 +48,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE ColorMapTex : public GeomContainer {
+class ColorMapTex : public GeomContainer {
 public:
   ColorMapTex(const Point &p1, const Point &p2, 
 	      const Point &p3,const Point &p4,

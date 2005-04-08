@@ -49,6 +49,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/Environment.h>
+#include <Core/Exceptions/GuiException.h>
 #include <tcl.h>
 #include <tk.h>
 #include <iostream>
@@ -133,11 +134,18 @@ void TCLInterface::source_once(const string& filename)
   }
 }
 
-static int do_command(ClientData cd, Tcl_Interp*, int argc, char* argv[])
+static int do_command(ClientData cd, Tcl_Interp*, int argc, TCLCONST char* argv[])
 {
   TCLCommandData* td=(TCLCommandData*)cd;
   GuiArgs args(argc, argv);
-  td->object->tcl_command(args, td->userdata);
+  try {
+    td->object->tcl_command(args, td->userdata);
+  } catch (const GuiException &exception) {
+    args.string_ = exception.message();
+    args.have_error_ = true;
+    args.have_result_ = true;
+  }
+
   if(args.have_result_) {
     Tcl_SetResult(the_interp,
 		  strdup(args.string_.c_str()),
@@ -208,7 +216,7 @@ bool
 TCLInterface::get(const std::string& name, std::string& value)
 {
   TCLTask::lock();
-  char* l=Tcl_GetVar(the_interp, ccast_unsafe(name),
+  TCLCONST char* l=Tcl_GetVar(the_interp, ccast_unsafe(name),
 		     TCL_GLOBAL_ONLY);
   if(!l){
     value="";
@@ -298,5 +306,6 @@ TCLInterface::complete_command(const string &command)
   Tcl_Parse parse;
   const int ret_val = Tcl_ParseCommand(0, src, len, 1, &parse);
   TCLTask::unlock();
+  delete[] src;
   return (ret_val == TCL_OK);
 }

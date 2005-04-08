@@ -120,6 +120,7 @@ TextPointCloudString_reader(ProgressReporter *pr, const char *filename)
   }
 
   PCField *pc = scinew PCField(pcm);
+
   for (unsigned int i=0; i < strings.size(); i++)
   {
     pc->set_value(strings[i], PCMesh::Node::index_type(i));

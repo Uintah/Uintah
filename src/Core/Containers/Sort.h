@@ -37,13 +37,11 @@
 #ifndef SCI_Containers_SORT_H_
 #define SCI_Containers_SORT_H_ 1
 
-#include <Core/share/share.h>
-
 #include <Core/Containers/Array1.h>
 
 namespace SCIRun {
 
-class SCICORESHARE SortObjs {
+class SortObjs {
 public:
   SortObjs() {};
 

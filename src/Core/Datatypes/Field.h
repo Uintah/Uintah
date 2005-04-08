@@ -38,13 +38,15 @@
 #include <Core/Util/ProgressReporter.h>
 #include <Core/Util/DynamicCompilation.h>
 
+#include <Core/Datatypes/share.h>
+
 namespace SCIRun {
  
 typedef LockingHandle<ScalarFieldInterface> ScalarFieldInterfaceHandle;
 typedef LockingHandle<VectorFieldInterface> VectorFieldInterfaceHandle;
 typedef LockingHandle<TensorFieldInterface> TensorFieldInterfaceHandle;
 
-class  SCICORESHARE Field: public PropertyManager
+class SHARE Field: public PropertyManager
 {
 public:
   Field();
@@ -77,6 +79,7 @@ public:
   virtual const string get_type_name(int n = -1) const;
   virtual bool is_scalar() const = 0;
 
+  virtual unsigned int data_size() const = 0;
 };
 
 typedef LockingHandle<Field> FieldHandle;

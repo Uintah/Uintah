@@ -1,29 +1,29 @@
 /*
-   For more information, please see: http://software.sci.utah.edu
+  For more information, please see: http://software.sci.utah.edu
 
-   The MIT License
+  The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
+  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  University of Utah.
 
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
+  License for the specific language governing rights and limitations under
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
 
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
 */
 
 
@@ -49,11 +49,10 @@
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
-using std::cerr;
-using std::endl;
 #include <stdio.h>
 
-namespace SCIRun {
+using namespace SCIRun;
+using namespace std;
 
 Persistent* transform_maker() {
   return new Transform();
@@ -61,7 +60,7 @@ Persistent* transform_maker() {
 
 // initialize the static member type_id
 PersistentTypeID Transform::type_id("Transform", "Persistent", 
-				    transform_maker);
+                                    transform_maker);
 
 Transform::Transform()
 {
@@ -81,7 +80,7 @@ Transform::Transform(const Transform& copy)
 }
 
 Transform::Transform(const Point& p, const Vector& i, 
-		     const Vector& j, const Vector& k){
+                     const Vector& j, const Vector& k){
   load_frame(p, i, j, k);
 }
 
@@ -89,20 +88,22 @@ Transform::~Transform()
 {
 }
 
-void Transform::load_basis(const Point &p,
-                           const Vector &x,
-                           const Vector &y,
-                           const Vector &z)
+void
+Transform::load_basis(const Point &p,
+                      const Vector &x,
+                      const Vector &y,
+                      const Vector &z)
 {
   load_frame(p,x,y,z);
   post_translate(-(p.asVector()));
   compute_imat();
 }
 
-void Transform::load_frame(const Point&,
-			   const Vector& x, 
-			   const Vector& y, 
-			   const Vector& z)
+void
+Transform::load_frame(const Point&,
+                      const Vector& x, 
+                      const Vector& y, 
+                      const Vector& z)
 {
   mat[3][3] = imat[3][3] = 1.0;
   mat[0][3] = mat[1][3] = mat[2][3] = 0.0; // no perspective
@@ -138,25 +139,29 @@ void Transform::load_frame(const Point&,
   inverse_valid = 1;
 }
 
-void Transform::change_basis(Transform& T)
+void
+Transform::change_basis(Transform& T)
 {
   T.compute_imat();
   pre_mulmat(T.imat);
 }
 
-void Transform::post_trans(const Transform& T)
+void
+Transform::post_trans(const Transform& T)
 {
   post_mulmat(T.mat);
   inverse_valid = 0;
 }
 
-void Transform::pre_trans(const Transform& T)
+void
+Transform::pre_trans(const Transform& T)
 {
   pre_mulmat(T.mat);
   inverse_valid = 0;
 }
 
-void Transform::print(void)
+void
+Transform::print(void)
 {
   for(int i=0;i<4;i++) {
     for(int j=0;j<4;j++)
@@ -164,10 +169,11 @@ void Transform::print(void)
     printf("\n");
   }
   printf("\n");
-	
+        
 }
 
-void Transform::printi(void)
+void
+Transform::printi(void)
 {
   for(int i=0;i<4;i++) {
     for(int j=0;j<4;j++)
@@ -175,10 +181,11 @@ void Transform::printi(void)
     printf("\n");
   }
   printf("\n");
-	
+        
 }
 
-void Transform::build_scale(double m[4][4], const Vector& v)
+void
+Transform::build_scale(double m[4][4], const Vector& v)
 {
   load_identity(m);
   m[0][0]=v.x();
@@ -187,7 +194,8 @@ void Transform::build_scale(double m[4][4], const Vector& v)
   inverse_valid = 0;
 }
     
-void Transform::pre_scale(const Vector& v)
+void
+Transform::pre_scale(const Vector& v)
 {
   double m[4][4];
   build_scale(m,v);
@@ -195,7 +203,8 @@ void Transform::pre_scale(const Vector& v)
   inverse_valid=0;
 }
 
-void Transform::post_scale(const Vector& v)
+void
+Transform::post_scale(const Vector& v)
 {
   double m[4][4];
   build_scale(m,v);
@@ -205,24 +214,25 @@ void Transform::post_scale(const Vector& v)
 
 // rotate into a new frame (z=shear-fixed-plane, y=projected shear vector),
 //    shear in y (based on value of z), rotate back to original frame
-void Transform::build_shear(double mat[4][4], const Vector& s, const Plane& p) 
+void
+Transform::build_shear(double mat[4][4], const Vector& s, const Plane& p) 
 {    
   load_identity(mat);
-  Vector sv(p.project(s));	// s projected onto p
-  Vector dn(s-sv);	// difference (in normal direction) btwn s and sv
+  Vector sv(p.project(s));      // s projected onto p
+  Vector dn(s-sv);      // difference (in normal direction) btwn s and sv
   double d=Dot(dn,p.normal());
   if (fabs(d)<0.00001) {
-      cerr << "Transform - shear vector lies in shear fixed plane.  Returning identity." << endl;
+    cerr << "Transform - shear vector lies in shear fixed plane.  Returning identity." << endl;
     return;
   }
   double yshear=sv.length()/d; // compute the length of the shear vector,
   // after the normal-to-shear-plane component
   // has been made unit-length.
   Vector svn(sv);
-  svn.normalize();	// normalized vector for building orthonormal basis
+  svn.normalize();      // normalized vector for building orthonormal basis
   //    Vector su(Cross(sv,p.normal()));
   Vector su(Cross(p.normal(),sv));
-  Transform r;	// the rotation to take the z-axis to the shear normal
+  Transform r;  // the rotation to take the z-axis to the shear normal
   // and the y-axis to the projected shear vector
   Point dummy;
   r.load_frame(dummy, su, sv, p.normal());
@@ -242,7 +252,8 @@ void Transform::build_shear(double mat[4][4], const Vector& s, const Plane& p)
   inverse_valid = 0;
 }
 
-void Transform::pre_shear(const Vector& s, const Plane& p)
+void
+Transform::pre_shear(const Vector& s, const Plane& p)
 {
   double m[4][4];
   build_shear(m,s,p);
@@ -250,7 +261,8 @@ void Transform::pre_shear(const Vector& s, const Plane& p)
   inverse_valid=0;
 }
 
-void Transform::post_shear(const Vector& s, const Plane& p)
+void
+Transform::post_shear(const Vector& s, const Plane& p)
 {
   double m[4][4];
   build_shear(m,s,p);
@@ -258,7 +270,8 @@ void Transform::post_shear(const Vector& s, const Plane& p)
   inverse_valid=0;
 }
 
-void Transform::build_translate(double m[4][4], const Vector& v)
+void
+Transform::build_translate(double m[4][4], const Vector& v)
 {
   load_identity(m);
   m[0][3]=v.x();
@@ -267,7 +280,8 @@ void Transform::build_translate(double m[4][4], const Vector& v)
   inverse_valid = 0;
 }
 
-void Transform::pre_translate(const Vector& v)
+void
+Transform::pre_translate(const Vector& v)
 {
   double m[4][4];
   build_translate(m,v);
@@ -275,7 +289,8 @@ void Transform::pre_translate(const Vector& v)
   inverse_valid=0;
 }
 
-void Transform::post_translate(const Vector& v)
+void
+Transform::post_translate(const Vector& v)
 {
   double m[4][4];
   build_translate(m,v);    
@@ -283,7 +298,8 @@ void Transform::post_translate(const Vector& v)
   inverse_valid=0;
 }
 
-void Transform::build_rotate(double m[4][4], double angle, const Vector& axis)
+void
+Transform::build_rotate(double m[4][4], double angle, const Vector& axis)
 {
   // From Foley and Van Dam, Pg 227
   // NOTE: Element 0,1 is wrong in the text!
@@ -315,37 +331,40 @@ void Transform::build_rotate(double m[4][4], double angle, const Vector& axis)
   inverse_valid=0;
 }
 
-void Transform::pre_rotate(double angle, const Vector& axis)
+void
+Transform::pre_rotate(double angle, const Vector& axis)
 {
   double m[4][4];
   build_rotate(m, angle, axis);
   pre_mulmat(m);
   inverse_valid=0;
-}	
+}       
 
-void Transform::post_rotate(double angle, const Vector& axis)
+void
+Transform::post_rotate(double angle, const Vector& axis)
 {
   double m[4][4];
   build_rotate(m, angle, axis);
   post_mulmat(m);
   inverse_valid=0;
-}	
+}       
 
-void Transform::rotate(const Vector& from, const Vector& to)
+bool
+Transform::rotate(const Vector& from, const Vector& to)
 {
   Vector t(to); t.normalize();
   Vector f(from); f.normalize();
   Vector axis(Cross(f,t));
-  if (axis.length2() < 0.00001) {
-    Vector j, k;
-    t.find_orthogonal(j,k);
-    axis=j.normal();
+  if (axis.length2() < 1e-8) {
+    // Vectors are too close to each other to get a stable axis of
+    // rotation, so return.
+    return false;
   }
   double sinth=axis.length();
   double costh=Dot(f,t);
   if(Abs(sinth) < 1.e-9){
     if(costh > 0)
-      return; // no rotate;
+      return false; // no rotate;
     else {
       // from and to are in opposite directions, find an axis of rotation
       // Try the Z axis first.  This will fail if from is along Z, so try
@@ -359,17 +378,19 @@ void Transform::rotate(const Vector& from, const Vector& to)
   } else {
     pre_rotate(atan2(sinth, costh), axis.normal());
   }
+  return true;
 }
 
-void Transform::build_permute(double m[4][4],int xmap, int ymap, int zmap, 
-			      int pre){
+void
+Transform::build_permute(double m[4][4],int xmap, int ymap, int zmap, 
+                         int pre){
   load_zero(m);
   m[3][3]=1;
-  if (pre) {	// for each row, set the mapped column
+  if (pre) {    // for each row, set the mapped column
     if (xmap<0) m[0][-1-xmap]=-1; else m[0][xmap-1]=1;
     if (ymap<0) m[1][-1-ymap]=-1; else m[1][ymap-1]=1;
     if (zmap<0) m[2][-1-zmap]=-1; else m[2][zmap-1]=1;
-  } else {	// for each column, set the mapped row
+  } else {      // for each column, set the mapped row
     if (xmap<0) m[-1-xmap][0]=-1; else m[xmap-1][0]=1;
     if (ymap<0) m[-1-ymap][1]=-1; else m[ymap-1][1]=1;
     if (zmap<0) m[-1-zmap][2]=-1; else m[zmap-1][2]=1;
@@ -377,35 +398,43 @@ void Transform::build_permute(double m[4][4],int xmap, int ymap, int zmap,
   inverse_valid = 0;
 }
 
-void Transform::pre_permute(int xmap, int ymap, int zmap) {
+void
+Transform::pre_permute(int xmap, int ymap, int zmap)
+{
   double m[4][4];
   build_permute(m, xmap, ymap, zmap, 1);
   pre_mulmat(m);
   inverse_valid=0;
 }
 
-void Transform::post_permute(int xmap, int ymap, int zmap) {
+void
+Transform::post_permute(int xmap, int ymap, int zmap)
+{
   double m[4][4];
   build_permute(m, xmap, ymap, zmap, 0);
   post_mulmat(m);
   inverse_valid=0;
 }
 
-Point Transform::project(const Point& p) const
+Point
+Transform::project(const Point& p) const
 {
   return Point(mat[0][0]*p.x()+mat[0][1]*p.y()+mat[0][2]*p.z()+mat[0][3],
-	       mat[1][0]*p.x()+mat[1][1]*p.y()+mat[1][2]*p.z()+mat[1][3],
-	       mat[2][0]*p.x()+mat[2][1]*p.y()+mat[2][2]*p.z()+mat[2][3],
-	       mat[3][0]*p.x()+mat[3][1]*p.y()+mat[3][2]*p.z()+mat[3][3]);
-}
-void Transform::project(const Vector& p, Vector& res) const
-{
-    res.x(mat[0][0]*p.x()+mat[0][1]*p.y()+mat[0][2]*p.z());
-    res.y(mat[1][0]*p.x()+mat[1][1]*p.y()+mat[1][2]*p.z());
-    res.z(mat[2][0]*p.x()+mat[2][1]*p.y()+mat[2][2]*p.z());
+               mat[1][0]*p.x()+mat[1][1]*p.y()+mat[1][2]*p.z()+mat[1][3],
+               mat[2][0]*p.x()+mat[2][1]*p.y()+mat[2][2]*p.z()+mat[2][3],
+               mat[3][0]*p.x()+mat[3][1]*p.y()+mat[3][2]*p.z()+mat[3][3]);
 }
 
-void Transform::project_inplace(Vector& p) const
+void
+Transform::project(const Vector& p, Vector& res) const
+{
+  res.x(mat[0][0]*p.x()+mat[0][1]*p.y()+mat[0][2]*p.z());
+  res.y(mat[1][0]*p.x()+mat[1][1]*p.y()+mat[1][2]*p.z());
+  res.z(mat[2][0]*p.x()+mat[2][1]*p.y()+mat[2][2]*p.z());
+}
+
+void
+Transform::project_inplace(Vector& p) const
 {
   Vector t = p;
   t.x(mat[0][0]*p.x()+mat[0][1]*p.y()+mat[0][2]*p.z());
@@ -414,21 +443,24 @@ void Transform::project_inplace(Vector& p) const
   p = t;
 }
 
-Vector Transform::project(const Vector& p) const
+Vector
+Transform::project(const Vector& p) const
 {
   return Vector(mat[0][0]*p.x()+mat[0][1]*p.y()+mat[0][2]*p.z(),
-		mat[1][0]*p.x()+mat[1][1]*p.y()+mat[1][2]*p.z(),
-		mat[2][0]*p.x()+mat[2][1]*p.y()+mat[2][2]*p.z());
+                mat[1][0]*p.x()+mat[1][1]*p.y()+mat[1][2]*p.z(),
+                mat[2][0]*p.x()+mat[2][1]*p.y()+mat[2][2]*p.z());
 }
-void Transform::project(const Point& p, Point& res) const
+void
+Transform::project(const Point& p, Point& res) const
 {
-    double invw=1./(mat[3][0]*p.x()+mat[3][1]*p.y()+mat[3][2]*p.z()+mat[3][3]);
-    res.x(invw*(mat[0][0]*p.x()+mat[0][1]*p.y()+mat[0][2]*p.z()+mat[0][3]));
-    res.y(invw*(mat[1][0]*p.x()+mat[1][1]*p.y()+mat[1][2]*p.z()+mat[1][3]));
-    res.z(invw*(mat[2][0]*p.x()+mat[2][1]*p.y()+mat[2][2]*p.z()+mat[2][3]));
+  double invw=1./(mat[3][0]*p.x()+mat[3][1]*p.y()+mat[3][2]*p.z()+mat[3][3]);
+  res.x(invw*(mat[0][0]*p.x()+mat[0][1]*p.y()+mat[0][2]*p.z()+mat[0][3]));
+  res.y(invw*(mat[1][0]*p.x()+mat[1][1]*p.y()+mat[1][2]*p.z()+mat[1][3]));
+  res.z(invw*(mat[2][0]*p.x()+mat[2][1]*p.y()+mat[2][2]*p.z()+mat[2][3]));
 }
 
-void Transform::project_inplace(Point& p) const
+void
+Transform::project_inplace(Point& p) const
 {
  
   Point t = p;
@@ -439,30 +471,33 @@ void Transform::project_inplace(Point& p) const
   p = t;
 }
 
-Point Transform::unproject(const Point& p) const
+Point
+Transform::unproject(const Point& p) const
 {
   if(!inverse_valid) compute_imat();
   return Point(imat[0][0]*p.x()+imat[0][1]*p.y()+imat[0][2]*p.z()+imat[0][3],
-	       imat[1][0]*p.x()+imat[1][1]*p.y()+imat[1][2]*p.z()+imat[1][3],
-	       imat[2][0]*p.x()+imat[2][1]*p.y()+imat[2][2]*p.z()+imat[2][3],
-	       imat[3][0]*p.x()+imat[3][1]*p.y()+imat[3][2]*p.z()+imat[3][3]);
+               imat[1][0]*p.x()+imat[1][1]*p.y()+imat[1][2]*p.z()+imat[1][3],
+               imat[2][0]*p.x()+imat[2][1]*p.y()+imat[2][2]*p.z()+imat[2][3],
+               imat[3][0]*p.x()+imat[3][1]*p.y()+imat[3][2]*p.z()+imat[3][3]);
 }
 
-void Transform::unproject(const Point& p, Point& res) const
+void
+Transform::unproject(const Point& p, Point& res) const
 {
       
   if(!inverse_valid) compute_imat();
   double invw=
     1./(imat[3][0]*p.x()+imat[3][1]*p.y()+imat[3][2]*p.z()+imat[3][3]);
   res.x(invw*
-	(imat[0][0]*p.x()+imat[0][1]*p.y()+imat[0][2]*p.z()+imat[0][3]));
+        (imat[0][0]*p.x()+imat[0][1]*p.y()+imat[0][2]*p.z()+imat[0][3]));
   res.y(invw*
-	(imat[1][0]*p.x()+imat[1][1]*p.y()+imat[1][2]*p.z()+imat[1][3]));
+        (imat[1][0]*p.x()+imat[1][1]*p.y()+imat[1][2]*p.z()+imat[1][3]));
   res.z(invw*
-	(imat[2][0]*p.x()+imat[2][1]*p.y()+imat[2][2]*p.z()+imat[2][3]));
+        (imat[2][0]*p.x()+imat[2][1]*p.y()+imat[2][2]*p.z()+imat[2][3]));
 }
 
-void Transform::unproject_inplace(Point& p) const
+void
+Transform::unproject_inplace(Point& p) const
 {
   Point t = p;
 
@@ -478,15 +513,17 @@ void Transform::unproject_inplace(Point& p) const
   p = t;
 }
 
-Vector Transform::unproject(const Vector& p) const
+Vector
+Transform::unproject(const Vector& p) const
 {
   if(!inverse_valid) compute_imat();
   return Vector(imat[0][0]*p.x()+imat[0][1]*p.y()+imat[0][2]*p.z(),
-		imat[1][0]*p.x()+imat[1][1]*p.y()+imat[1][2]*p.z(),
-		imat[2][0]*p.x()+imat[2][1]*p.y()+imat[2][2]*p.z());
+                imat[1][0]*p.x()+imat[1][1]*p.y()+imat[1][2]*p.z(),
+                imat[2][0]*p.x()+imat[2][1]*p.y()+imat[2][2]*p.z());
 }
 
-void Transform::unproject(const Vector& v, Vector& res) const
+void
+Transform::unproject(const Vector& v, Vector& res) const
 {
   if(!inverse_valid) compute_imat();
   res.x(imat[0][0]*v.x()+imat[0][1]*v.y()+imat[0][2]*v.z());
@@ -494,7 +531,8 @@ void Transform::unproject(const Vector& v, Vector& res) const
   res.z(imat[2][0]*v.x()+imat[2][1]*v.y()+imat[2][2]*v.z());
 }
 
-void Transform::unproject_inplace(Vector& v) const
+void
+Transform::unproject_inplace(Vector& v) const
 {
   Vector t = v;
   if(!inverse_valid) compute_imat();
@@ -504,7 +542,8 @@ void Transform::unproject_inplace(Vector& v) const
   v = t;
 }
 
-Vector Transform::project_normal(const Vector& p) const
+Vector
+Transform::project_normal(const Vector& p) const
 {
   if(!inverse_valid) compute_imat();
   double x=imat[0][0]*p.x()+imat[1][0]*p.y()+imat[2][0]*p.z();
@@ -513,7 +552,8 @@ Vector Transform::project_normal(const Vector& p) const
   return Vector(x, y, z);
 }
 
-void Transform::project_normal(const Vector& p, Vector& res)  const
+void
+Transform::project_normal(const Vector& p, Vector& res)  const
 {
   if(!inverse_valid) compute_imat();
   res.x(imat[0][0]*p.x()+imat[1][0]*p.y()+imat[2][0]*p.z());
@@ -521,7 +561,8 @@ void Transform::project_normal(const Vector& p, Vector& res)  const
   res.z(imat[0][2]*p.x()+imat[1][2]*p.y()+imat[2][2]*p.z());
 }
 
-void Transform::project_normal_inplace(Vector& p) const
+void
+Transform::project_normal_inplace(Vector& p) const
 {
   if(!inverse_valid) compute_imat();
   Vector res;
@@ -531,7 +572,8 @@ void Transform::project_normal_inplace(Vector& p) const
   p = res;
 }
 
-void Transform::get(double* gmat) const
+void
+Transform::get(double* gmat) const
 {
   double* p=gmat;
   for(int i=0;i<4;i++){
@@ -542,7 +584,8 @@ void Transform::get(double* gmat) const
 }
 
 // GL stores its matrices column-major.  Need to take the transpose...
-void Transform::get_trans(double* gmat) const
+void
+Transform::get_trans(double* gmat) const
 {
   double* p=gmat;
   for(int i=0;i<4;i++){
@@ -552,7 +595,8 @@ void Transform::get_trans(double* gmat) const
   }
 }
 
-void Transform::set(double* pmat)
+void
+Transform::set(double* pmat)
 {
   double* p=pmat;
   for(int i=0;i<4;i++){
@@ -563,7 +607,8 @@ void Transform::set(double* pmat)
   inverse_valid=0;
 }
 
-void Transform::set_trans(double* pmat)
+void
+Transform::set_trans(double* pmat)
 {
   double* p=pmat;
   for(int i=0;i<4;i++){
@@ -574,46 +619,43 @@ void Transform::set_trans(double* pmat)
   inverse_valid=0;
 }
 
-void Transform::load_zero(double m[4][4])
+void
+Transform::load_zero(double m[4][4])
 {
-  for(int i=0;i<4;i++){
-    for(int j=0;j<4;j++){
-      m[i][j]=0;
-    }
-  }
+  m[0][0] = 0.0; m[0][1] = 0.0; m[0][2] = 0.0; m[0][3] = 0.0;
+  m[1][0] = 0.0; m[1][1] = 0.0; m[1][2] = 0.0; m[1][3] = 0.0;
+  m[2][0] = 0.0; m[2][1] = 0.0; m[2][2] = 0.0; m[2][3] = 0.0;
+  m[3][0] = 0.0; m[3][1] = 0.0; m[3][2] = 0.0; m[3][3] = 0.0;
 }
 
-void Transform::load_identity()
+void
+Transform::load_identity()
 {
-  for(int i=0;i<4;i++){
-    for(int j=0;j<4;j++){
-      mat[i][j]=0;
-    }
-    mat[i][i]=1.0;
-  }
+  mat[0][0] = 1.0; mat[0][1] = 0.0; mat[0][2] = 0.0; mat[0][3] = 0.0;
+  mat[1][0] = 0.0; mat[1][1] = 1.0; mat[1][2] = 0.0; mat[1][3] = 0.0;
+  mat[2][0] = 0.0; mat[2][1] = 0.0; mat[2][2] = 1.0; mat[2][3] = 0.0;
+  mat[3][0] = 0.0; mat[3][1] = 0.0; mat[3][2] = 0.0; mat[3][3] = 1.0;
   inverse_valid=0;
 }
 
-void Transform::install_mat(double m[4][4])
+void
+Transform::install_mat(double m[4][4])
 {
-  for(int i=0;i<4;i++){
-    for(int j=0;j<4;j++){
-      mat[i][j]=m[i][j];
-    }
-  }
+  memcpy(mat, m, sizeof(double) * 16);
 }
 
-void Transform::load_identity(double m[4][4]) 
+void
+Transform::load_identity(double m[4][4]) 
 {
-  for(int i=0;i<4;i++){
-    for(int j=0;j<4;j++){
-      m[i][j]=0;
-    }
-    m[i][i]=1.0;
-  }
+  m[0][0] = 1.0; m[0][1] = 0.0; m[0][2] = 0.0; m[0][3] = 0.0;
+  m[1][0] = 0.0; m[1][1] = 1.0; m[1][2] = 0.0; m[1][3] = 0.0;
+  m[2][0] = 0.0; m[2][1] = 0.0; m[2][2] = 1.0; m[2][3] = 0.0;
+  m[3][0] = 0.0; m[3][1] = 0.0; m[3][2] = 0.0; m[3][3] = 1.0;
 }
 
-void Transform::invert() {
+void
+Transform::invert()
+{
   double tmp;
   compute_imat();
   for (int i=0; i<4; i++)
@@ -624,7 +666,8 @@ void Transform::invert() {
     }
 }
 
-void Transform::compute_imat() const
+void
+Transform::compute_imat() const
 {
   double a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p;
   a=mat[0][0]; b=mat[0][1]; c=mat[0][2]; d=mat[0][3];
@@ -646,7 +689,7 @@ void Transform::compute_imat() const
     imat[1][0]=imat[1][2]=imat[1][3]=0;
     imat[2][0]=imat[2][1]=imat[2][3]=0;
     imat[3][0]=imat[3][1]=imat[3][2]=0;
-//    cerr << "Transform - matrix is singular!!!" << endl;
+    //    cerr << "Transform - matrix is singular!!!" << endl;
     return;
   }
   imat[0][0]=(f*k*p - f*l*o - j*g*p + j*h*o + n*g*l - n*h*k)/q;
@@ -672,38 +715,41 @@ void Transform::compute_imat() const
   inverse_valid=1;
 }
 
-void Transform::post_mulmat(const double mmat[4][4])
+void
+Transform::post_mulmat(const double mmat[4][4])
 {
   double newmat[4][4];
   for(int i=0;i<4;i++){
     for(int j=0;j<4;j++){
       newmat[i][j]=0.0;
       for(int k=0;k<4;k++){
-	newmat[i][j]+=mat[i][k]*mmat[k][j];
+        newmat[i][j]+=mat[i][k]*mmat[k][j];
       }
     }
   }
   install_mat(newmat);
 }
 
-void Transform::pre_mulmat(const double mmat[4][4])
+void
+Transform::pre_mulmat(const double mmat[4][4])
 {
   double newmat[4][4];
   for(int i=0;i<4;i++){
     for(int j=0;j<4;j++){
       newmat[i][j]=0.0;
       for(int k=0;k<4;k++){
-	newmat[i][j]+=mmat[i][k]*mat[k][j];
+        newmat[i][j]+=mmat[i][k]*mat[k][j];
       }
     }
   }
   install_mat(newmat);
 }
 
-void Transform::perspective(const Point& eyep, const Point& lookat,
-			    const Vector& up, double fov,
-			    double znear, double zfar,
-			    int xres, int yres)
+void
+Transform::perspective(const Point& eyep, const Point& lookat,
+                       const Vector& up, double fov,
+                       double znear, double zfar,
+                       int xres, int yres)
 {
   Vector lookdir(lookat-eyep);
   Vector z(lookdir);
@@ -738,11 +784,12 @@ void Transform::perspective(const Point& eyep, const Point& lookat,
 
   pre_scale(Vector(1,-1,1)); // X starts at the top...
   pre_translate(Vector(1,1,0));
-  pre_scale(Vector(xres/2., yres/2., 1.0));	
+  pre_scale(Vector(xres/2., yres/2., 1.0));     
   m[3][3]+=1.0; // hack
 }
 
-void Transform::invmat(double m[4][4])
+void
+Transform::invmat(double m[4][4])
 {
 
   double imat[4][4];
@@ -761,8 +808,8 @@ void Transform::invmat(double m[4][4])
     int j;
     for(j=i+i;j<4;j++){
       if(Abs(m[j][i]) > max){
-	max=Abs(m[j][i]);
-	row=j;
+        max=Abs(m[j][i]);
+        row=j;
       }
     }
     ASSERT(max!=0);
@@ -800,7 +847,8 @@ void Transform::invmat(double m[4][4])
   }
 }
 
-void Transform::switch_rows(double m[4][4], int r1, int r2) const
+void
+Transform::switch_rows(double m[4][4], int r1, int r2) const
 {
   for(int i=0;i<4;i++){
     double tmp=m[r1][i];
@@ -810,19 +858,27 @@ void Transform::switch_rows(double m[4][4], int r1, int r2) const
 }
 
 
-void Transform::sub_rows(double m[4][4], int r1, int r2, double mul) const
+void
+Transform::sub_rows(double m[4][4], int r1, int r2, double mul) const
 {
   for(int i=0;i<4;i++)
     m[r1][i] -= m[r2][i]*mul;
 }
 
-Transform& Transform::operator=(const Transform& copy)
+Transform&
+Transform::operator=(const Transform& copy)
 {
   for(int i=0;i<4;i++)
     for(int j=0;j<4;j++)
       mat[i][j]=copy.mat[i][j];
   inverse_valid=0;
   return *this;
+}
+
+const string& 
+Transform::get_h_file_path() {
+  static const string path(TypeDescription::cc_to_h(__FILE__));
+  return path;
 }
 
 const int TRANSFORM_VERSION = 1;
@@ -842,20 +898,23 @@ Transform::io(Piostream& stream) {
   stream.end_class();
 }
 
-void Pio_old(Piostream& stream, Transform& obj) {
+void
+SCIRun::Pio_old(Piostream& stream, Transform& obj) {
   stream.begin_cheap_delim();
-  for (int i=0; i<4; i++)
-    for (int j=0; j<4; j++){
+  for (int i=0; i<4; i++) {
+    for (int j=0; j<4; j++) {
       Pio(stream, obj.mat[i][j]);
       Pio(stream, obj.imat[i][j]);
     }
+  }
  
   Pio(stream, obj.inverse_valid);
   
   stream.end_cheap_delim();
 }
 
-void Pio(Piostream& stream, Transform*& obj)
+void
+SCIRun::Pio(Piostream& stream, Transform*& obj)
 {
   SCIRun::Persistent* pobj=obj;
   stream.io(pobj, Transform::type_id);
@@ -864,25 +923,19 @@ void Pio(Piostream& stream, Transform*& obj)
   }
 }
 
-const string& 
-Transform::get_h_file_path() {
-  static const string path(TypeDescription::cc_to_h(__FILE__));
-  return path;
-}
-
-const TypeDescription* get_type_description(Transform*)
+const TypeDescription*
+SCIRun::get_type_description(Transform*)
 {
   static TypeDescription* td = 0;
   if(!td){
     td = scinew TypeDescription("Transform", Transform::get_h_file_path(), 
-				"SCIRun");
+                                "SCIRun");
   }
   return td;
 }
 
-
 Point
-operator*(Transform &t, const Point &d)
+SCIRun::operator*(Transform &t, const Point &d)
 {
   float result[4], tmp[4];
   result[0] = result[1] = result[2] = result[3] = 0;
@@ -904,7 +957,7 @@ operator*(Transform &t, const Point &d)
 }
 
 Vector
-operator*(Transform &t, const Vector &d)
+SCIRun::operator*(Transform &t, const Vector &d)
 {
   float result[4], tmp[4];
   result[0] = result[1] = result[2] = result[3] = 0;
@@ -926,6 +979,3 @@ operator*(Transform &t, const Vector &d)
 }
 
 
-
-
-} // End namespace SCIRun

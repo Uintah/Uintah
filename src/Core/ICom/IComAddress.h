@@ -44,11 +44,38 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Containers/LockingHandle.h>
 
+#ifndef _WIN32
 #include <sys/socket.h>
-#include <netdb.h>
-#include <arpa/inet.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 #include <sys/utsname.h>
+#else
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#define socklen_t int
+// define constants in terms of windows constants
+#define EPROTONOSUPPORT WSAEPROTONOSUPPORT 
+#define ENOBUFS WSAENOBUFS
+#define ENOTSOCK WSAENOTSOCK
+#define EADDRNOTAVAIL WSAEADDRNOTAVAIL
+#define EADDRINUSE WSAEADDRINUSE
+#define EAFNOSUPPORT WSAEAFNOSUPPORT
+#define EISCONN WSAEISCONN
+#define ETIMEDOUT WSAETIMEDOUT
+#define ECONNREFUSED WSAECONNREFUSED
+#define EHOSTUNREACH WSAEHOSTUNREACH
+#define ENETUNREACH WSAENETUNREACH
+#define EOPNOTSUPP WSAEOPNOTSUPP
+#define ENOPROTOOPT WSAENOPROTOOPT
+#define EWOULDBLOCK WSAEWOULDBLOCK
+#define EMSGSIZE WSAEMSGSIZE
+#define EMSGSIZE WSAEMSGSIZE
+#define ENOTCONN WSAENOTCONN
+#define EINPROGRESS WSAEINPROGRESS
+
+
+#endif
 
 #include <sgi_stl_warnings_off.h>
 #include <string>
@@ -56,10 +83,6 @@
 #include <iostream>
 #include <sstream>
 #include <sgi_stl_warnings_on.h>
-
-
-
-
 
 #ifndef INET6_ADDRSTRLEN
 #define INET6_ADDRSTRLEN 46
@@ -69,7 +92,7 @@
 #define INET_ADDRSTRLEN 16
 #endif
 
-#if defined(__sgi)||(defined(__APPLE))
+#if defined(__sgi)||(defined(__APPLE__))
     // No simulation of getaddrinfo needed
     // On OSX and IRIX the function in the clib
     // works just fine
@@ -77,12 +100,12 @@
     // Some LINUX Systems have buggy versions of this
     // function. If so we use a simulation of that function
     // whose functionality is pretty limitted.
-#define HAVE_BAD_GETADDRINFO    1
+#   define HAVE_BAD_GETADDRINFO    1
 
-struct ga_search {
-  const char	*host;	/* hostname or address string */
-  int			family;	/* AF_xxx */
-};
+    struct ga_search {
+      const char	*host;	/* hostname or address string */
+      int			family;	/* AF_xxx */
+    };
 
 #endif
 

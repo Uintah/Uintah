@@ -69,9 +69,12 @@ public:
   // Separate raw files.
   void set_embed_object(bool v) { embed_object_ = v; }
   bool get_embed_object() { return embed_object_; }
+
   void set_filename( string &f )
   { nrrd_fname_ = f; embed_object_ = false; }
   const string get_filename() const { return nrrd_fname_; }
+
+  bool    write_nrrd_;
 
 protected:
   bool    embed_object_;

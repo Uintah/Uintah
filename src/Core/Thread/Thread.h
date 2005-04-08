@@ -47,7 +47,7 @@
 #include <Core/Thread/Parallel1.h>
 #include <Core/Thread/Parallel2.h>
 #include <Core/Thread/Parallel3.h>
-#include <Core/share/share.h>
+#include <Core/Thread/share.h>
 
 namespace SCIRun {
 	struct Thread_private;
@@ -70,7 +70,7 @@ DESCRIPTION
    executed in another thread.
    
 ****************************************/
-	class SCICORESHARE Thread {
+	class SHARE Thread {
 	public:
 	    //////////
 	    // Possible thread start states
@@ -182,7 +182,7 @@ DESCRIPTION
 	    // If <i>block</i> is true, then the caller will block until all
 	    // of the threads return.  Otherwise, the call will return
 	    // immediately.
-	    static ThreadGroup* parallel(const ParallelBase& helper,
+	    static ThreadGroup* parallel(ParallelBase& helper,
 					 int nthreads, bool block,
 					 ThreadGroup* threadGroup=0);
 
@@ -193,46 +193,64 @@ DESCRIPTION
 	    // immediately.
 	    template<class T>
 	    static void parallel(T* ptr, void (T::*pmf)(int),
-				 int numThreads, bool block) {
-		parallel(Parallel<T>(ptr, pmf),
-			 numThreads, block);
+				 int numThreads)
+            {
+              if (numThreads <= 1) { (ptr->*pmf)(0); }
+              else
+              {
+                Parallel<T> p(ptr, pmf);
+                parallel(p, numThreads, true);
+              }
 	    }
 
 	    //////////
 	    // Another overloaded version of parallel that passes 1 argument
 	    template<class T, class Arg1>
 	    static void parallel(T* ptr, void (T::*pmf)(int, Arg1),
-				 int numThreads, bool block,
-				 Arg1 a1) {
-		parallel(Parallel1<T, Arg1>(ptr, pmf, a1),
-			 numThreads, block);
+				 int numThreads, Arg1 a1)
+            {
+              if (numThreads <= 1) { (ptr->*pmf)(0, a1); }
+              else
+              {
+                Parallel1<T, Arg1> p(ptr, pmf, a1);
+                parallel(p, numThreads, true);
+              }
 	    }
 
 	    //////////
 	    // Another overloaded version of parallel that passes 2 arguments
 	    template<class T, class Arg1, class Arg2>
 	    static void parallel(T* ptr, void (T::* pmf)(int, Arg1, Arg2),
-				 int numThreads, bool block,
-				 Arg1 a1, Arg2 a2) {
-		parallel(Parallel2<T, Arg1, Arg2>(ptr, pmf, a1, a2),
-			 numThreads, block);
+				 int numThreads, Arg1 a1, Arg2 a2)
+            {
+              if (numThreads <= 1) { (ptr->*pmf)(0, a1, a2); }
+              else
+              {
+                Parallel2<T, Arg1, Arg2> p(ptr, pmf, a1, a2);
+                parallel(p, numThreads, true);
+              }
 	    }
 
 	    //////////
 	    // Another overloaded version of parallel that passes 3 arguments
 	    template<class T, class Arg1, class Arg2, class Arg3>
 	    static void parallel(T* ptr, void (T::* pmf)(int, Arg1, Arg2, Arg3),
-				 int numThreads, bool block,
-				 Arg1 a1, Arg2 a2, Arg3 a3) {
-		parallel(Parallel3<T, Arg1, Arg2, Arg3>(ptr, pmf, a1, a2, a3),
-			 numThreads, block);
+				 int numThreads, Arg1 a1, Arg2 a2, Arg3 a3)
+            {
+              if (numThreads <= 1) { (ptr->*pmf)(0, a1, a2, a3); }
+              else
+              {
+                Parallel3<T, Arg1, Arg2, Arg3> p(ptr, pmf, a1, a2, a3);
+                parallel(p, numThreads, true);
+              }
 	    }
 
 	    //////////
 	    // Abort the current thread, or the process.  Prints a message on
 	    // stderr, and the user may choose one of:
 	    // <pre>continue(c)/dbx(d)/cvd(v)/kill thread(k)/exit(e)</pre>
-	    static void niceAbort();
+            // context is necesary on Windows to catch a segfault
+	    static void niceAbort(void* Context = 0);
 	    
 	    //////////
 	    // Mark a section as one that could block for debugging purposes.
