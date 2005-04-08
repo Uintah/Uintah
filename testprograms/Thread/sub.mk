@@ -43,3 +43,13 @@ SRCS := $(SRCDIR)/bps.cc
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/threadexit
+SRCS := $(SRCDIR)/threadexit.cc
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/parallel
+SRCS := $(SRCDIR)/parallel.cc
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
