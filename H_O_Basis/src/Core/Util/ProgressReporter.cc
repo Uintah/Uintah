@@ -44,7 +44,74 @@
 
 namespace SCIRun {
 
+ProgressReporter::ProgressReporter() :
+  current_(0),
+  progress_lock_("ProgressReporter")
+{
+}
+
+
 ProgressReporter::~ProgressReporter()
+{
+}
+
+
+void
+ProgressReporter::error(const std::string& msg)
+{
+  std::cerr << "Error: " << msg << std::endl;
+}
+
+
+void
+ProgressReporter::warning(const std::string& msg)
+{
+  std::cerr << "Warning: " << msg << std::endl;
+}
+
+
+void
+ProgressReporter::remark(const std::string& msg)
+{
+  std::cerr << "Remark: " << msg << std::endl;
+}
+
+
+void
+ProgressReporter::postMessage(const std::string&msg)
+{
+  std::cerr << "Message: " << msg << std::endl;
+}
+
+
+std::ostream &
+ProgressReporter::msgStream()
+{
+  return std::cerr;
+}
+
+
+void
+ProgressReporter::msgStream_flush()
+{
+  std::cerr.flush();
+}
+
+
+void
+ProgressReporter::report_progress( ProgressState )
+{
+}
+
+
+void
+ProgressReporter::update_progress(double)
+{
+}
+
+
+void
+ProgressReporter::update_progress(unsigned int, unsigned int)
 {
 }
 

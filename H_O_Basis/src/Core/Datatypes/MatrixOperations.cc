@@ -139,6 +139,12 @@ operator*(MatrixHandle A, MatrixHandle B)
     Mult(*cd, *(A.get_rep()), *(B->column()));
     return cd;
   }
+  else if (A->is_sparse() && B->is_sparse())
+  {
+    SparseRowMatrix *as = A->sparse();
+    SparseRowMatrix *bs = B->sparse();
+    return as->sparse_sparse_mult(*bs);
+  }
   else if (A->is_sparse())
   {
     SparseRowMatrix *ad = A->sparse();

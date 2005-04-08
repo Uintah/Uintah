@@ -64,7 +64,7 @@
 namespace SCIRun {
 
 template <class Basis>
-class SCICORESHARE TetVolMesh : public Mesh
+class TetVolMesh : public Mesh
 {
 public:
   typedef LockingHandle<TetVolMesh<Basis> > handle_type;
@@ -2792,7 +2792,7 @@ TetVolMesh<Basis>::orient(typename Cell::index_type ci) {
   }
 
   if(sgn < 1.e-9){ // return 0; // Degenerate...
-    cerr << "Warning - small element, volume=" << sgn << endl;
+    cerr << "Warning - small element, volume=" << sgn << std::endl;
   }
 }
 

@@ -44,7 +44,6 @@
 #define SCI_project_FieldIEPlugin_h 1
 
 #include <Core/Util/Assert.h>
-#include <Core/share/share.h>
 #include <Core/Datatypes/Field.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -58,7 +57,7 @@ using std::map;
 
 
 //----------------------------------------------------------------------
-class SCICORESHARE FieldIEPlugin {
+class FieldIEPlugin {
 public:
   const string pluginname;
 
@@ -84,7 +83,7 @@ public:
 
 
 
-class SCICORESHARE FieldIEPluginManager {
+class FieldIEPluginManager {
 public:
   void get_importer_list(vector<string> &results);
   void get_exporter_list(vector<string> &results);

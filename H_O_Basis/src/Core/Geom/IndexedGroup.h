@@ -53,7 +53,7 @@ namespace SCIRun {
 
 using namespace std;
 
-class SCICORESHARE GeomIndexedGroup: public GeomObj {
+class GeomIndexedGroup: public GeomObj {
     
 public:
     typedef map< int, GeomHandle, less<int> > MapIntGeomObj;

@@ -39,7 +39,6 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <Core/share/share.h>
 #include <Core/Math/CubicPWI.h>
 #include <Core/Containers/Array1.h>
 //#include <Core/Malloc/Allocator.h>
@@ -56,7 +55,7 @@ CubicPWI::CubicPWI(const Array1<double>& pts, const Array1<double>& vals) {
 }
   // function calculates tangents at pts[i] that is adhere to C2 continuity of splines in pts[i]
   // in case of clamped ends, the function should get end tangents as two last elements of vals-array
-bool SCICORESHARE set_tangents(const Array1<double>& pts, const Array1<double>& vals, Array1<double>& r, EndCondition end_conds){
+bool set_tangents(const Array1<double>& pts, const Array1<double>& vals, Array1<double>& r, EndCondition end_conds){
  
   int psz=pts.size();
   int vsz=vals.size();

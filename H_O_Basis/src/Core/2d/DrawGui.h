@@ -49,7 +49,7 @@
 
 namespace SCIRun {
   
-class SCICORESHARE DrawGui : public TclObj, public DrawObj {
+class DrawGui : public TclObj, public DrawObj {
 protected:
   string menu_, tb_, ui_;
 

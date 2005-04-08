@@ -36,7 +36,7 @@ SRCDIR   := Core/OS
 SRCS     += $(SRCDIR)/Dir.cc $(SRCDIR)/sock.cc $(SRCDIR)/ProcessInfo.cc 
 
 PSELIBS := Core/Exceptions
-LIBS :=
+LIBS := $(SOCKET_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

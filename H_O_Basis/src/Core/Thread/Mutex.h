@@ -43,8 +43,6 @@
 #ifndef Core_Thread_Mutex_h
 #define Core_Thread_Mutex_h
 
-#include <Core/share/share.h>
-
 namespace SCIRun {
 
 class Mutex_private;
@@ -64,7 +62,7 @@ class Mutex_private;
  lock() in a nested call will result in an error or deadlock.
 
 ****************************************/
-class SCICORESHARE Mutex {
+class Mutex {
 public:
   //////////
   // Create the mutex.  The mutex is allocated in the unlocked

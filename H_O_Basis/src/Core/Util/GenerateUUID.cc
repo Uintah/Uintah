@@ -42,7 +42,7 @@
 #include <cstdlib>
 
 #include <Core/Util/Assert.h>
-#include "GenerateUUID.h"
+#include <Core/Util/GenerateUUID.h>
 
 /*
   GenerateUUID.cc: custom UUID utility for those who don't have uuid.h available

@@ -53,6 +53,7 @@ using namespace SCIRun;
 #include <Core/Geometry/Tensor.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/NrrdData.h>
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Datatypes/PropertyManager.h>
 #include <Core/Datatypes/GenericField.h>
@@ -92,6 +93,8 @@ const TypeDescription* get_type_description(vector<CellIndex<int> >*);
 // Property types
 template class Property<int>;
 template class Property<string>;
+template class Property<double>;
+template class Property<float>;
 template class Property<Array1<double> >;
 template class Property<Array1<Tensor> >;
 template class Property<pair<int,double> >;
@@ -105,6 +108,8 @@ template class Property<pair<unsigned char,unsigned char> >;
 template class Property<pair<char,char> >;
 template class Property<vector<pair<string,Tensor> > >;
 template class Property<vector<pair<int,double> > >;
+template class Property<LockingHandle<Matrix> >;
+template class Property<LockingHandle<NrrdData> >;
 
 #if 0
 //! Compute the gradient g in cell ci.

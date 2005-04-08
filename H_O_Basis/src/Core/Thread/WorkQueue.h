@@ -43,8 +43,6 @@
 #ifndef Core_Thread_WorkQueue_h
 #define Core_Thread_WorkQueue_h
 
-#include <Core/share/share.h>
-
 #include <Core/Thread/AtomicCounter.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -68,7 +66,7 @@ DESCRIPTION
    towards the end in an effort to equalize the total effort.
    
 ****************************************/
-	class SCICORESHARE WorkQueue {
+	class WorkQueue {
 	public:
 	    //////////
 	    // Make an empty work queue with no assignments.

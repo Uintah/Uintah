@@ -41,7 +41,6 @@
  *  Copyright (C) 2002 SCI Group
  */
 
-#include <Core/share/share.h>
 #include <Core/Math/Gaussian.h>
 #include <Core/Math/MusilRNG.h>
 

@@ -70,6 +70,7 @@ Renderer::connect(OutPort* port){
 }
 
 Renderer::Renderer(){
+  renWindowActive=false;
   //Set Input port name
   setName("Renderer::input");
 
@@ -86,27 +87,45 @@ Renderer::Renderer(){
 
 Renderer::~Renderer(){
   ren1->Delete();
+  //  renWin->Delete();
+}
+
+void 
+Renderer::refresh(int flag){
+  if(!renWindowActive) return;
+  /*  if(flag==Port::RESETCAMERA){
+    ren1->ResetCamera();
+    renWin->Render();
+    iren->Render(); 
+  }
+  if(flag==Port::REFRESH){
+    ren1->ResetCamera();
+    renWin->Render();
+    iren->Render(); 
+  }
+  */
 }
 
 int
 Renderer::popupUI(){
-  vtkRenderWindow *renWin;
-  vtkRenderWindowInteractor *iren;
 
   renWin=vtkRenderWindow::New();
   renWin->SetSize( 500, 500);
   renWin->AddRenderer(ren1);
-
+  ren1->ResetCamera();
+  // set the user-defined C-style ExitMethod as the new exit method
   iren=vtkRenderWindowInteractor::New();
   iren->SetRenderWindow(renWin);
-
-  renWin->Render();
-
+  renWindowActive=true;
   iren->Initialize();
-
-  iren->Start();  
-
-  renWin->Delete();
-  iren->Delete();
+  iren->Start();
+  /*  while(1){
+    iren->Render(); 
+    sleep(1);
+    }*/
+  //  iren->Delete();
+  //  renWin->Delete();
+  //  renWindowActive=false;
   return 0;
 }
+

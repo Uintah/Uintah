@@ -53,7 +53,7 @@ class GeomColormapInterface;
 
 namespace SCIRun {
 
-class SCICORESHARE TimeGrid : public GeomObj {
+class TimeGrid : public GeomObj {
     Array1<float *> tmap;
 
     float *bmap; // blend map...

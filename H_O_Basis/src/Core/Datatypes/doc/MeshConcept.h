@@ -60,7 +60,7 @@ using std::vector;
 //! The Mesh Concept, a sample mesh with all the required interface.
 /*! This is all the things that belong in a Mesh.
  */ 
-class SCICORESHARE MeshConcept : public Mesh
+class MeshConcept : public Mesh
 {
 private:
   typedef unsigned int under_type;

@@ -61,7 +61,7 @@ class ModulePickable;
 class WidgetPickable;
 class BState;
 
-class SCICORESHARE GeomPick : public GeomContainer {
+class GeomPick : public GeomContainer {
 private:
   ModulePickable*   module_;
   void*             cbdata_;

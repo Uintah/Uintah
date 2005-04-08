@@ -55,7 +55,7 @@ namespace SCIRun {
 using std::string;
 
 template <class Basis>
-class SCICORESHARE ImageMesh : public Mesh{
+class ImageMesh : public Mesh {
 public:
   typedef LockingHandle<ImageMesh<Basis> > handle_type;
   typedef Basis        basis_type;
@@ -268,6 +268,7 @@ public:
   virtual BBox get_bounding_box() const;
   virtual void transform(const Transform &t);
   virtual void get_canonical_transform(Transform &t);
+  virtual bool synchronize(unsigned int);
 
   //! set the mesh statistics
   void set_min_i(unsigned i) {min_i_ = i; }
@@ -406,6 +407,8 @@ protected:
 
   //! the object space extents of a ImageMesh
   Transform              transform_;
+
+  Vector                 normal_;
   
   //! The basis class 
   Basis                  basis_;
@@ -430,6 +433,10 @@ ImageMesh<Basis>::ImageMesh<Basis>(unsigned i, unsigned j,
   transform_.pre_scale(max - min);
   transform_.pre_translate(Vector(min));
   transform_.compute_imat();
+
+  normal_ = Vector(0.0, 0.0, 0.0);
+  transform_.project_normal(normal_);
+  normal_.safe_normalize();
 }
 
 template<class Basis>
@@ -462,6 +469,20 @@ ImageMesh<Basis>::get_canonical_transform(Transform &t)
 {
   t = transform_;
   t.post_scale(Vector(ni_ - 1.0, nj_ - 1.0, 1.0));
+}
+
+template<class Basis>
+bool
+ImageMesh<Basis>::synchronize(unsigned int flag)
+{
+  if (flag & NORMALS_E)
+  {
+    normal_ = Vector(0.0, 0.0, 0.0);
+    transform_.project_normal(normal_);
+    normal_.safe_normalize();
+    return true;
+  }
+  return false;
 }
 
 template<class Basis>

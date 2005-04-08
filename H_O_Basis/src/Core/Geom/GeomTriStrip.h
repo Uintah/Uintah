@@ -47,7 +47,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE GeomTriStrip : public GeomVertexPrim {
+class GeomTriStrip : public GeomVertexPrim {
 public:
     GeomTriStrip();
     GeomTriStrip(const GeomTriStrip&);
@@ -64,7 +64,7 @@ public:
     static PersistentTypeID type_id;
 };
 
-class SCICORESHARE GeomTriStripList : public GeomObj {
+class GeomTriStripList : public GeomObj {
     int n_strips;
     Array1<float> pts;
     Array1<float> nrmls;

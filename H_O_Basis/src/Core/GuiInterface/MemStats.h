@@ -53,7 +53,7 @@ namespace SCIRun {
 struct Allocator;
   class GuiInterface;
 
-class SCICORESHARE MemStats : public GuiCallback {
+class MemStats : public GuiCallback {
     Allocator* a;
     int textwidth;
     int graphwidth;

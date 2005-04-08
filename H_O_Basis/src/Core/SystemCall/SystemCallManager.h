@@ -58,6 +58,9 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifndef _WIN32
+#include <sys/signal.h>
+#endif
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -70,14 +73,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/signal.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Thread.h>
+#include <Core/Thread/CleanupManager.h>
 #include <Core/SystemCall/SystemCallError.h>
 #include <Core/SystemCall/TempFileManager.h>
 #include <Core/Containers/LockingHandle.h>
+#include <Core/Containers/Handle.h>
 
 namespace SCIRun {
 
@@ -181,6 +185,9 @@ class SystemCallManager : public SystemCallBase {
                                                                          // is not running anymore, put processexit to true
      void       close(int processid);    // close the communication descriptors
 
+    // Cleanup routine
+    static void cleanup(void *data);
+
     // Get the descriptors to the communication channels
     int        getstdin(int processid);    // Receives the stdin
     int        getstdout(int processid);    // Receives the stdout
@@ -204,11 +211,12 @@ class SystemCallManager : public SystemCallBase {
     // Communication channel with child process
     Mutex    lock;                        // Lock communication with child, parent is a multi threaded application
     int      ref_cnt;
+    bool     exit_;
     
   private:
     pid_t    childpid_;                    // Pid for process launching the children
-    int        child_in_;                    // input to child stream
-    int        child_out_;                    // output from child stream
+    int      child_in_;                    // input to child stream
+    int      child_out_;                   // output from child stream
     
     int                              processidcnt_;  // Each processes gets a new internal process ID
     std::list<SystemCallProcess*>    processlist_;   // Keep track of all processes launched
@@ -229,14 +237,10 @@ inline void    SystemCallManager::unlock()
     lock.unlock();
 }
 
-// We will only use the handle to make sure that the object is destroyed
-// We already implemented 
-typedef LockingHandle<SystemCallManager> SystemCallManagerHandle;
-
 // The systemcallmanager_ will be allocated in main and will be used by 
 // classes making use of this class.
 
-extern SystemCallManagerHandle systemcallmanager_;
+extern SystemCallManager* systemcallmanager_;
 
 }
 

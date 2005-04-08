@@ -36,6 +36,7 @@ SRCDIR := Core
 SUBDIRS := \
 	$(SRCDIR)/Algorithms \
 	$(SRCDIR)/Basis \
+	$(SRCDIR)/Bundle \
 	$(SRCDIR)/Containers \
 	$(SRCDIR)/Datatypes \
 	$(SRCDIR)/Exceptions \
@@ -44,9 +45,7 @@ SUBDIRS := \
 	$(SRCDIR)/Geom \
 	$(SRCDIR)/GeomInterface \
 	$(SRCDIR)/Geometry \
-	$(SRCDIR)/GLVolumeRenderer \
 	$(SRCDIR)/GuiInterface \
-	$(SRCDIR)/ICom \
 	$(SRCDIR)/ImportExport \
 	$(SRCDIR)/Malloc \
 	$(SRCDIR)/Math \
@@ -56,10 +55,12 @@ SUBDIRS := \
 	$(SRCDIR)/Services \
 	$(SRCDIR)/SystemCall \
 	$(SRCDIR)/Thread \
+	$(SRCDIR)/TCLThread \
 	$(SRCDIR)/TkExtensions \
 	$(SRCDIR)/Util \
 	$(SRCDIR)/Volume \
 	$(SRCDIR)/2d \
+	$(SRCDIR)/ICom \
 #	$(SRCDIR)/Util/Comm \
 #	$(SRCDIR)/Parts \
 #	$(SRCDIR)/PartsGui \

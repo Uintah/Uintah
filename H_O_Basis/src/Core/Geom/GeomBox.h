@@ -49,7 +49,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE GeomBox : public GeomObj {
+class GeomBox : public GeomObj {
   Point min, max;
   int opacity[6];
 public:
@@ -72,7 +72,7 @@ public:
 };
 
 
-class SCICORESHARE GeomSimpleBox : public GeomObj {
+class GeomSimpleBox : public GeomObj {
 protected:
   Point min, max;
 
@@ -94,7 +94,7 @@ public:
 };
 
 
-class SCICORESHARE GeomCBox : public GeomSimpleBox {
+class GeomCBox : public GeomSimpleBox {
 public:
   GeomCBox( const Point& p, const Point& q);
   GeomCBox(const GeomCBox&);
@@ -111,7 +111,7 @@ public:
 };
 
 
-class SCICORESHARE GeomBoxes : public GeomObj {
+class GeomBoxes : public GeomObj {
 private:
   vector<Point> centers_;
   vector<double> edges_;

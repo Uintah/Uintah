@@ -47,7 +47,7 @@
 // irix64 KCC stuff
 #include <strings.h>
 
-#if defined(__sun)
+#if defined(__sun) || defined(_WIN32)
 #include <string.h>
 #define bzero(p,sz)  memset(p,0, sz);
 #elif defined(__linux) || defined(__sgi) || defined(__digital__) || defined(_AIX) || defined(__APPLE__)
@@ -94,7 +94,7 @@ void* malloc(size_t size) THROWCLAUSE
 {
     if(!default_allocator)
 	MakeDefaultAllocator();
-    return default_allocator->alloc(size, default_malloc_tag);
+    return default_allocator->alloc(size, default_malloc_tag, 0);
 }
 
 void free(void* ptr) THROWCLAUSE

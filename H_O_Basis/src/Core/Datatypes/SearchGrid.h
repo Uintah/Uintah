@@ -53,7 +53,7 @@ namespace SCIRun {
 
 typedef unsigned int under_type;
 
-class SCICORESHARE SearchGridBase
+class SearchGridBase
 {
 public:
 
@@ -95,9 +95,9 @@ protected:
 };
 
 
- class SCICORESHARE SearchGridConstructor : public SearchGridBase
- {
-   friend class SearchGrid;
+class SearchGridConstructor : public SearchGridBase
+{
+  friend class SearchGrid;
   
 public:
   SearchGridConstructor(unsigned int x, unsigned int y, unsigned int z,
@@ -112,7 +112,7 @@ protected:
 
 
 
-class SCICORESHARE SearchGrid : public Datatype, public SearchGridBase
+class SearchGrid : public Datatype, public SearchGridBase
 {
 public:
   SearchGrid(const SearchGridConstructor &c);

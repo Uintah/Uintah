@@ -43,14 +43,12 @@
 #ifndef sci_Containers_TrivialAllocator_h
 #define sci_Containers_TrivialAllocator_h 1
 
-#include <Core/share/share.h>
-
 #include <Core/Thread/Mutex.h>
 #include <Core/Malloc/Allocator.h>
 
 namespace SCIRun {
 
-class SCICORESHARE TrivialAllocator {
+class TrivialAllocator {
     struct List {
 	List* next;
 	void* pad; // For 8 byte alignment

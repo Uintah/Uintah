@@ -44,39 +44,37 @@
 #ifndef SCI_Math_MiscMath_h
 #define SCI_Math_MiscMath_h 1
 
-#include <Core/share/share.h>
-
 namespace SCIRun {
 
 // Absolute value
-inline SCICORESHARE double Abs(double d)
+inline double Abs(double d)
 {
   return d<0?-d:d;
 }
 
-inline SCICORESHARE int Abs(int i)
+inline int Abs(int i)
 {
     return i<0?-i:i;
 }
 
 // Signs
-inline SCICORESHARE int Sign(double d)
+inline int Sign(double d)
 {
   return d<0?-1:1;
 }
 
-inline SCICORESHARE int Sign(int i)
+inline int Sign(int i)
 {
   return i<0?-1:1;
 }
 
 // Clamp a number to a specific range
-inline SCICORESHARE double Clamp(double d, double min, double max)
+inline double Clamp(double d, double min, double max)
 {
   return d<=min?min:d>=max?max:d;
 }
 
-inline SCICORESHARE int Clamp(int i, int min, int max)
+inline int Clamp(int i, int min, int max)
 {
   return i<min?min:i>max?max:i;
 }
@@ -85,7 +83,7 @@ inline SCICORESHARE int Clamp(int i, int min, int max)
 // return:   min - if d<=min
 //	     max - if d>=max
 //	     hermite curve if d>min && d<max
-inline SCICORESHARE double SmoothStep(double d, double min, double max)
+inline double SmoothStep(double d, double min, double max)
 {
   double ret;
   if(d <= min){
@@ -102,7 +100,7 @@ inline SCICORESHARE double SmoothStep(double d, double min, double max)
 
 // Interpolation:
 template <class T>
-inline SCICORESHARE T Interpolate(T d1, T d2, double weight)
+inline T Interpolate(T d1, T d2, double weight)
 {
   return T(d2*weight+d1*(1.0-weight));
 }
@@ -111,7 +109,7 @@ inline SCICORESHARE T Interpolate(T d1, T d2, double weight)
 
 
 // Integer/double conversions
-inline SCICORESHARE double Fraction(double d)
+inline double Fraction(double d)
 {
   if(d>0){
     return d-(int)d;
@@ -120,7 +118,7 @@ inline SCICORESHARE double Fraction(double d)
   }
 }
 
-inline SCICORESHARE int RoundDown(double d)
+inline int RoundDown(double d)
 {
   if(d>=0){
     return (int)d;
@@ -133,7 +131,7 @@ inline SCICORESHARE int RoundDown(double d)
   }
 }
 
-inline SCICORESHARE int RoundUp(double d)
+inline int RoundUp(double d)
 {
     if(d>=0){
 	if((d-(int)d) == 0)
@@ -145,13 +143,13 @@ inline SCICORESHARE int RoundUp(double d)
     }
 }
 
-inline SCICORESHARE int Round(double d)
+inline int Round(double d)
 {
   return (int)(d+0.5);
 }
 
 
-inline SCICORESHARE int Floor(double d)
+inline int Floor(double d)
 {
   if(d<0){
     int i=-(int)-d;
@@ -164,7 +162,7 @@ inline SCICORESHARE int Floor(double d)
   }
 }
 
-inline SCICORESHARE int Ceil(double d)
+inline int Ceil(double d)
 {
   if(d<0){
     int i=-(int)-d;
@@ -178,7 +176,7 @@ inline SCICORESHARE int Ceil(double d)
   }
 }
 
-inline SCICORESHARE int Tile(int tile, int tf)
+inline int Tile(int tile, int tf)
 {
   if(tf<0){
     // Tile in negative direction
@@ -193,7 +191,39 @@ inline SCICORESHARE int Tile(int tile, int tf)
   }
 }
 
-SCICORESHARE double MakeReal(double value);
+double MakeReal(double value);
+
+
+template <class T>
+inline void SWAP(T& a, T& b) {
+  T temp;
+  temp = a;
+  a = b;
+  b = temp;
+}
+
+// Returns the next higher number that is a power of 2
+// Used for determining what size of texture to
+// allocate to store an image
+inline unsigned int
+Pow2(const unsigned int dim) {
+  unsigned int val = 1;
+  while (val < dim) { val = val << 1; };
+  return val;
+}
+
+
+// Returns the power of 2 of the next higher number
+// See above function
+inline unsigned int
+Log2(const unsigned int dim) {
+  unsigned int log = 0;
+  unsigned int val = 1;
+  while (val < dim) { val = val << 1; log++; };
+  return log;
+}
+
+
 
 } // End namespace SCIRun
 

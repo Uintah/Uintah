@@ -28,54 +28,44 @@
 
 
 /*
- *  StructuredPointsReader.cc:
- *
- *  Written by:
- *   Keming Zhang
- *   Department of Computer Science
- *   University of Utah
- *   January 2004
- *
+ * FILE: NrrdString.h
+ * AUTH: Jeroen Stinstra
+ * DATE: 29 Nov  2004
  */
 
-#include <iostream>
-#include <vtkStructuredPointsReader.h>
-#include <vtkStructuredPoints.h>
-#include <vtkPolyData.h>
+#ifndef CORE_DATATYPES_NRRDSTRING_H
+#define CORE_DATATYPES_NRRDSTRING_H 1
+ 
+#include <Core/Datatypes/NrrdData.h>
+#include <string> 
+ 
+namespace SCIRun {
 
-#include <CCA/Components/VtkTest/StructuredPointsReader/StructuredPointsReader.h>
-#include <qfiledialog.h>
+class NrrdString {
+  public:
+    // constructors
+    NrrdString();
+    NrrdString(const std::string str);
+    NrrdString(const char *str);
+    NrrdString(const NrrdString& nrrdstring);
+    NrrdString(const NrrdDataHandle& handle);
+    
+    virtual ~NrrdString();
+    
+    bool            setstring(const std::string str);
+    std::string     getstring();
+    NrrdDataHandle  gethandle();
+    
+  private:
+    NrrdDataHandle nrrdstring_;
 
-using namespace std;
-using namespace SCIRun;
-using namespace vtk;
+};
 
-extern "C" vtk::Component* make_Vtk_StructuredPointsReader()
+inline NrrdDataHandle NrrdString::gethandle()
 {
-  return new StructuredPointsReader;
+    return(nrrdstring_);
 }
 
-StructuredPointsReader::StructuredPointsReader(){
-  //set output port name
-  OutPort::setName("StructuredPointsReader::output");
-  reader=vtkStructuredPointsReader::New();
-  setOutput(reader->GetOutput());
-  addPort(this);
-  enableUI();
-}
+} // end namespace 
 
-StructuredPointsReader::~StructuredPointsReader(){
-  reader->Delete();
-}
-
-
-int
-StructuredPointsReader::popupUI(){
-  QString fn = QFileDialog::getOpenFileName(
-	    "./","Vtk StructuredPoints Files(*.vtk)");
-  if(fn.isNull())   return 1;
-  reader->SetFileName(fn);
-  reader->Update();
-
-  return 0;
-}
+#endif

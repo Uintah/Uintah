@@ -56,7 +56,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE GeomQMesh : public GeomObj {
+class GeomQMesh : public GeomObj {
   Array1<float> pts;    // data points
   Array1<float> nrmls;  // normals for above (central differences???)
   Array1<Colorub> clrs; // colors

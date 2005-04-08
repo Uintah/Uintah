@@ -118,22 +118,13 @@ TCLThread::run()
 void
 show_license_and_copy_scirunrc(GuiInterface *gui) {
   const string tclresult = gui->eval("licenseDialog 1");
-  if (tclresult == "cancel") {
+  if (tclresult == "cancel")
+  {
     Thread::exitAll(1);
   }
   // check to make sure home directory is there
   const char* HOME = sci_getenv("HOME");
   const char* srcdir = sci_getenv("SCIRUN_SRCDIR");
-  const char* temp_rcfile_version = sci_getenv("SCIRUN_RCFILE_VERSION");
-  string SCIRUN_RCFILE_VERSION;
-
-  // If the .scirunrc file does not have a SCIRUN_RCFILE_VERSION variable...
-  if( temp_rcfile_version == NULL ) {
-    SCIRUN_RCFILE_VERSION = "bak";
-  } else {
-    SCIRUN_RCFILE_VERSION = temp_rcfile_version;
-  }
-
   ASSERT(HOME);
   ASSERT(srcdir);
   if (!HOME) return;
@@ -142,7 +133,8 @@ show_license_and_copy_scirunrc(GuiInterface *gui) {
     string homerc = string(HOME)+"/.scirunrc";
     string cmd;
     if (gui->eval("validFile "+homerc) == "1") {
-      string backuprc = homerc + "." + SCIRUN_RCFILE_VERSION;
+      string backuprc = homerc+"."+string(SCIRUN_VERSION)+"."+
+        string(SCIRUN_RCFILE_SUBVERSION);
       cmd = string("cp -f ")+homerc+" "+backuprc;
       std::cout << "Backing up " << homerc << " to " << backuprc << std::endl;
       if (sci_system(cmd.c_str())) {

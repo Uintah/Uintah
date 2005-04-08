@@ -58,8 +58,8 @@ struct Cell : public pair<T,T> {
 
   Cell() {}
   Cell( T f, T s) : pair<T,T>(f,s) {}
-  T min() { return first; }
-  T max() { return second; }
+  T min() { return this->first; }
+  T max() { return this->second; }
 };
 
 

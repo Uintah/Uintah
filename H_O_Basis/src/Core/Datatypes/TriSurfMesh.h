@@ -66,7 +66,7 @@ namespace SCIRun {
 using std::vector;
 
 template <class Basis>
-class SCICORESHARE TriSurfMesh : public Mesh
+class TriSurfMesh : public Mesh
 {
 public:
   typedef LockingHandle<TriSurfMesh<Basis> > handle_type;
@@ -143,16 +143,24 @@ public:
   void get_faces(typename Face::array_type &, typename Cell::index_type) const;
 
   //! get the parent element(s) of the given index
-  unsigned get_edges(typename Edge::array_type &, typename Node::index_type) const { return 0; }
-  unsigned get_faces(typename Face::array_type &, typename Node::index_type) const { return 0; }
-  unsigned get_faces(typename Face::array_type &, typename Edge::index_type) const { return 0; }
-  unsigned get_cells(typename Cell::array_type &, typename Node::index_type) const { return 0; }
-  unsigned get_cells(typename Cell::array_type &, typename Edge::index_type) const { return 0; }
-  unsigned get_cells(typename Cell::array_type &, typename Face::index_type) const { return 0; }
+  unsigned get_edges(typename Edge::array_type &, 
+		     typename Node::index_type) const { return 0; }
+  unsigned get_faces(typename Face::array_type &, 
+		     typename Node::index_type) const { return 0; }
+  unsigned get_faces(typename Face::array_type &, 
+		     typename Edge::index_type) const { return 0; }
+  unsigned get_cells(typename Cell::array_type &, 
+		     typename Node::index_type) const { return 0; }
+  unsigned get_cells(typename Cell::array_type &, 
+		     typename Edge::index_type) const { return 0; }
+  unsigned get_cells(typename Cell::array_type &, 
+		     typename Face::index_type) const { return 0; }
 
-  bool get_neighbor(typename Face::index_type &neighbor, typename Face::index_type face,
+  bool get_neighbor(typename Face::index_type &neighbor, 
+		    typename Face::index_type face,
 		    typename Edge::index_type edge) const;
-  void get_neighbors(typename Node::array_type &array, typename Node::index_type idx) const;
+  void get_neighbors(typename Node::array_type &array, 
+		     typename Node::index_type idx) const;
 
   //! Get the size of an elemnt (length, area, volume)
   double get_size(typename Node::index_type /*idx*/) const { return 0.0; };
@@ -238,8 +246,20 @@ public:
 
   // Extra functionality needed by this specific geometry.
 
-  typename Node::index_type add_find_point(const Point &p, double err = 1.0e-3);
-  void add_triangle(typename Node::index_type, typename Node::index_type, typename Node::index_type);
+  typename Node::index_type add_find_point(const Point &p, 
+					   double err = 1.0e-3);
+  void add_triangle(typename Node::index_type, typename Node::index_type, 
+		    typename Node::index_type);
+
+  //! swap the shared edge between 2 faces, if they share an edge.
+  bool swap_shared_edge(typename Face::index_type, typename Face::index_type);
+  bool remove_face(typename Face::index_type);
+  //! walk all the faces, enforcing consistent face orientations.
+  void orient_faces();  
+  //! flip the orientaion of all the faces 
+  //! orient could make all faces face inward...
+  void flip_faces();
+  void flip_face(typename Face::index_type face);
   void add_triangle(const Point &p0, const Point &p1, const Point &p2);
   typename Elem::index_type add_elem(typename Node::array_type a);
   void node_reserve(size_t s) { points_.reserve(s); }
@@ -262,6 +282,8 @@ public:
   static const TypeDescription* face_type_description();
   static const TypeDescription* cell_type_description();
 private:
+  void                  walk_face_orient(typename Face::index_type face, 
+					 vector<bool> &tested);
   void			compute_normals();
   void			compute_node_neighbors();  
   void			compute_edges();
@@ -345,6 +367,17 @@ typedef map<pair<int, int>, int, edgecompare> EdgeMapType;
 #endif
 
 };
+
+using std::set;
+
+struct less_int
+{
+  bool operator()(const int s1, const int s2) const
+  {
+    return s1 < s2;
+  }
+};
+
 
 template <class Basis>
 PersistentTypeID 
@@ -611,6 +644,7 @@ TriSurfMesh<Basis>::get_edges(typename Edge::array_type &array, typename Face::i
       }
     }
   }
+  ASSERT(array.size() == 3);
 }
 
 
@@ -624,7 +658,7 @@ TriSurfMesh<Basis>::get_neighbor(typename Face::index_type &neighbor,
   ASSERTMSG(synchronized_ & EDGE_NEIGHBORS_E,
 	    "Must call synchronize EDGE_NEIGHBORS_E on TriSurfMesh first");
   unsigned int n = edge_neighbors_[edges_[edge]];
-  if (n != MESH_NO_NEIGHBOR && (n % 3) == face)
+  if (n != MESH_NO_NEIGHBOR && (n / 3) == face)
   {
     n = edge_neighbors_[n];
   }
@@ -1025,23 +1059,12 @@ TriSurfMesh<Basis>::compute_normals()
     typename vector<typename Face::index_type>::const_iterator fiter = 
       v.begin();
     Vector ave(0.L,0.L,0.L);
-    Vector sum(0.L,0.L,0.L);
     while(fiter != v.end()) {
-      sum += face_normals[*fiter];
+      ave += face_normals[*fiter];
       ++fiter;
     }
-    fiter = v.begin();
-    while(fiter != v.end()) {
-      if (Dot(face_normals[*fiter],sum)>0)
-	ave += face_normals[*fiter];
-      else
-	ave -= face_normals[*fiter];
-      ++fiter;
-    }
-    if (ave.length2()) {
-      ave.safe_normalize();
-      normals_[i] = ave; ++i;
-    }
+    ave.safe_normalize();
+    normals_[i] = ave; ++i;
     ++nif_iter;
   }
   synchronized_ |= NORMALS_E;
@@ -1378,6 +1401,77 @@ TriSurfMesh<Basis>::add_find_point(const Point &p, double err)
   }
 }
 
+// swap the shared edge between 2 faces. If faces don't share an edge, 
+// do nothing.
+template <class Basis>
+bool
+TriSurfMesh<Basis>::swap_shared_edge(typename Face::index_type f1, 
+				     typename Face::index_type f2) 
+{
+  const int face1 = f1 * 3;
+  set<int, less_int> shared;
+  shared.insert(faces_[face1]);
+  shared.insert(faces_[face1 + 1]);
+  shared.insert(faces_[face1 + 2]);
+  
+  int not_shar[2];
+  int *ns = not_shar;
+  const int face2 = f2 * 3;
+  pair<set<int, less_int>::iterator, bool> p = shared.insert(faces_[face2]);
+  if (!p.second) { *ns = faces_[face2]; ++ns;}
+  p = shared.insert(faces_[face2 + 1]);
+  if (!p.second) { *ns = faces_[face2 + 1]; ++ns;}
+  p = shared.insert(faces_[face2 + 2]);
+  if (!p.second) { *ns = faces_[face2]; }
+
+  // no shared nodes means no shared edge.
+  if (shared.size() > 4) return false;  
+
+  set<int>::iterator iter = shared.find(not_shar[0]);
+  shared.erase(iter);
+
+  iter = shared.find(not_shar[1]);
+  shared.erase(iter);
+
+  iter = shared.begin();
+  int s1 = *iter++;
+  int s2 = *iter;
+  face_lock_.lock();
+  faces_[face1] = s1;
+  faces_[face1 + 1] = not_shar[0];
+  faces_[face1 + 2] = s2;
+
+  faces_[face2] = s2;
+  faces_[face2 + 1] = not_shar[1];
+  faces_[face2 + 2] = s1;
+
+  synchronized_ &= ~EDGE_NEIGHBORS_E;
+  synchronized_ &= ~NODE_NEIGHBORS_E;
+  synchronized_ &= ~NORMALS_E;
+  face_lock_.unlock();
+  return true;
+}
+
+template <class Basis>
+bool
+TriSurfMesh<Basis>::remove_face(typename Face::index_type f)
+{
+  bool rval = true;
+  face_lock_.lock();
+  vector<under_type>::iterator fb = faces_.begin() + f*3;
+  vector<under_type>::iterator fe = fb + 3;
+
+  if (fe <= faces_.end())
+    faces_.erase(fb, fe);
+  else {
+    rval = false;
+  }
+  synchronized_ &= ~EDGE_NEIGHBORS_E;
+  synchronized_ &= ~NODE_NEIGHBORS_E;
+  synchronized_ &= ~NORMALS_E;
+  face_lock_.unlock();
+  return rval;
+}
 
 template <class Basis>
 void
@@ -1408,6 +1502,121 @@ TriSurfMesh<Basis>::add_elem(typename Node::array_type a)
   return static_cast<typename Elem::index_type>((faces_.size() - 1) / 3);
 }
 
+template <class Basis>
+void
+TriSurfMesh<Basis>::flip_faces() 
+{
+  face_lock_.lock();
+  typename Face::iterator fiter, fend;
+  begin(fiter);
+  end(fend);
+  while (fiter != fend) {
+    flip_face(*fiter);
+    ++fiter;
+  }
+  synchronized_ &= ~EDGES_E;
+  synchronized_ &= ~EDGE_NEIGHBORS_E;
+  synchronized_ &= ~NODE_NEIGHBORS_E;
+  synchronized_ &= ~NORMALS_E;
+  face_lock_.unlock();
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::flip_face(typename Face::index_type face)
+{
+  unsigned int base = face * 3;
+  int tmp = faces_[base + 1];
+  faces_[base + 1] = faces_[base + 2];  
+  faces_[base + 2] = tmp;
+
+  synchronized_ &= ~EDGES_E;
+  synchronized_ &= ~EDGE_NEIGHBORS_E;
+  synchronized_ &= ~NODE_NEIGHBORS_E;
+  synchronized_ &= ~NORMALS_E;
+}
+
+template <class Basis>
+void 
+TriSurfMesh<Basis>::walk_face_orient(typename Face::index_type face, 
+				     vector<bool> &tested)
+{
+  typename Face::index_type nbor;
+  typename Edge::array_type edges(3);
+  get_edges(edges, face);
+
+  typename Node::array_type nodes;
+  get_nodes(nodes, face);
+
+
+  typename Edge::array_type::iterator iter = edges.begin();
+  while(iter != edges.end()) {
+
+    unsigned a = edges_[*iter];
+    unsigned b = faces_[a - a % 3 + (a+1) % 3];
+    a = faces_[a];
+    //set order according to orientation in face
+    if (((nodes[0] == b) && (nodes[1] == a)) || 
+	((nodes[1] == b) && (nodes[2] == a)) ||
+	((nodes[0] == a) && (nodes[2] == b)))
+    {
+      //swap 
+      unsigned tmp = b;
+      b = a;
+      a = tmp;
+    } 
+
+    if (get_neighbor(nbor, face, *iter) && !tested[nbor]) {
+      tested[nbor] = true;
+
+      typename Node::array_type nbor_nodes;
+      get_nodes(nbor_nodes, nbor);
+
+      //order should be opposite of a,b
+      if (((nbor_nodes[0] == a) && (nbor_nodes[1] == b)) || 
+	  ((nbor_nodes[1] == a) && (nbor_nodes[2] == b)) ||
+	  ((nbor_nodes[0] == b) && (nbor_nodes[2] == a)))
+      {
+	flip_face(nbor);
+	synchronized_ &= ~EDGES_E;
+	synchronized_ &= ~EDGE_NEIGHBORS_E;
+	edges_.clear();
+	compute_edges();
+	compute_edge_neighbors(0.0);
+      } 
+
+      // recurse...
+      walk_face_orient(nbor, tested);
+    }
+    ++iter;
+  }
+}
+
+template <class Basis>
+void
+TriSurfMesh<Basis>::orient_faces() 
+{
+  face_lock_.lock();
+  synchronize(EDGES_E | EDGE_NEIGHBORS_E);
+  int nfaces = (int)faces_.size() / 3;
+  vector<bool> tested(nfaces, false);
+
+  typename Face::iterator fiter, fend;
+  begin(fiter);
+  end(fend);
+  while (fiter != fend) {
+    if (! tested[*fiter]) {
+      tested[*fiter] = true;
+      walk_face_orient(*fiter, tested);
+    }
+    ++fiter;
+  }
+
+  synchronized_ &= ~EDGE_NEIGHBORS_E;
+  synchronized_ &= ~NODE_NEIGHBORS_E;
+  synchronized_ &= ~NORMALS_E;
+  face_lock_.unlock();
+}
 
 template <class Basis>
 void

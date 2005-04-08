@@ -67,8 +67,6 @@
 #define __mbstate_t mbstate_t
 #endif
 
-#include <Core/share/share.h>
-
 #include <stdlib.h> // for getenv()
 #include <sgi_stl_warnings_off.h>
 #include <string>
@@ -124,6 +122,7 @@ namespace SCIRun {
       DebugStream(const string& name, bool defaulton = true);
       ~DebugStream();
       bool active() {return isactive;};
+      void setActive(bool active) { isactive = active; };
       // the ostream that output should be redirected to. cerr by default.
       ostream *outstream;
     };

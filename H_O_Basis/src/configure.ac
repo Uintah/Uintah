@@ -69,7 +69,7 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([SCIRun],[1.22],[scirun-users@sci.utah.edu])
+AC_INIT([SCIRun],[1.24],[scirun-users@sci.utah.edu])
 
 ##  require autoconf version 2.59 
 ##  type "autoconf --version" to find out what version you have.
@@ -105,6 +105,15 @@ AC_COPYRIGHT(
 ##
 )
 
+##
+## Any error/warning/note/remark messages that need to be turned off
+## globally should be appended to this variable.  This should only be
+## done if the message is pervasive and has been determined to be
+## benign.  WOFF_NUMBERS should be a 'space' delimited list of numbers.
+## Eg: '123 124 155'
+##
+WOFF_NUMBERS=
+
 ## Clean up files that could be left around if configure was 
 ## interrupted (by control-c, ^c) because I do not know how to add
 ## cleanup to the builtin AC function that uses the 'trap' command.
@@ -115,11 +124,8 @@ AC_CONFIG_SRCDIR(configVars.mk.in)
 ##  set the location of config.guess, config.sub, and install.sh
 AC_CONFIG_AUX_DIR(scripts)
 
-## Cut off the /configure from the configure command (eg: ../src/configure)
-path_to_src=`echo $0 | sed 's/\/configure//'`
-
-## If user tried to configure in current directory, this will block it.
-if test "$path_to_src" = "configure" -o "$path_to_src" = "."; then
+## If user tried to configure in the src directory, this will block it.
+if test -f Makefile.in; then
    AC_MSG_WARN(DO NOT CONFIGURE IN THE SRC DIRECTORY:)
    AC_MSG_WARN(___ Try creating a dir such as: ../archBITSdebug)
    AC_MSG_WARN(___ eg: ../sgi32opt or ../linux32debug)
@@ -493,8 +499,7 @@ SCI_ARG_ENABLE(perfex,
 SCI_ARG_ENABLE(package,
   AC_HELP_STRING(--enable-package=<list>,
                  Use the SCIRun packages specified by list.
-                 example: --enable-package='BioPSE Teem'
-                 default: all directories under SCIRun/src/Packages),
+                 example: --enable-package='BioPSE Teem'),
   [package="$enableval"],
   [package=""])
 SCI_ARG_ENABLE(exename,
@@ -587,6 +592,9 @@ myargs=`echo $args | sed 's%\^% %g'`
 # It thinks we are cross compiling. Don't set it.
 #IFS=' '
 
+## Cut off the /configure from the configure command (eg: ../src/configure)
+path_to_src=`echo $0 | sed 's/\/configure//'`
+
 if test "$package" = "all"; then
   AC_MSG_RESULT(Enabling all the packages in your SCIRun/src/Packages directory.)
   _sci_tmp=`ls $path_to_src/Packages`
@@ -635,9 +643,18 @@ if test "$pkg_Ptolemy" = "yes"; then
   SCI_SET_PACKAGE_CHECKS(Ptolemy, $host)
 fi
 
+# Make sure the Package directories exist.
+#   Do an 'ls' of all files in the Packages directory and then grep for the
+#   package in this list.  (We used to just do a "test -d $package", but on
+#   a case-insensitive Mac file system, this fails.)
+
+packages_list=`ls $path_to_src/Packages`
 for i in $package; do
-   # Make sure the Package directories exist.
-   if test ! -d "$path_to_src/Packages/$i"; then
+   found_package=`echo $packages_list | grep $i`
+   if test -z "$found_package"; then
+      if test "$i" = "TEEM"; then
+         AC_MSG_WARN(Try using 'Teem' instead of 'TEEM')
+      fi
       AC_MSG_ERROR(Package '$i' does not exist (in $path_to_src/Packages/)!)
    fi
 done
@@ -646,13 +663,6 @@ if test "$sci_required_unipetsc" = "yes"; then
    sci_required_blas=yes
    sci_required_lapack=yes
 fi
-
-# Set the subdir name in the bin tree for matlab engine.
-if test "$pkg_MatlabInterface" = "yes"; then
-  MATLAB_ENG=matlab
-fi
-
-AC_SUBST(MATLAB_ENG)
 
 # Set the collaborative vars.
 if test "$pkg_CollabVis" = "yes"; then
@@ -694,6 +704,7 @@ fi
 
 echo 
 IS_OSX="no"
+IS_WIN="no"
 unset NUM_CPUS
 case $host in
   *-irix*)
@@ -717,6 +728,14 @@ case $host in
   *-aix*)
     NUM_CPUS=4
     ;;
+  *-mingw*)
+    NUM_CPUS=2
+    IS_WIN="yes"
+    ;;
+  *-pc*)
+    echo
+    AC_MSG_ERROR(Currently Windows only handles mingw.  See install instructions)
+    ;;
   *)
     echo
     AC_MSG_WARN( !!!!!! This system is untested - You are on your own !!!!!!)
@@ -726,6 +745,7 @@ case $host in
 esac
 
 AC_SUBST(IS_OSX)
+AC_SUBST(IS_WIN)
 sci_defs_files="$sci_defs_files include/sci_defs/osx_testdefs.h"
 
 AC_MSG_CHECKING(physical processor count)
@@ -837,7 +857,11 @@ fi
 ##  DO NOT "hardcode" ANY libraries (i.e. no -l or -L or -I allowed).
 ##
 
-TIME_IMPL=Time_unix.cc
+if test "$IS_WIN" = "yes"; then
+  TIME_IMPL=Time_win32.cc
+else
+  TIME_IMPL=Time_unix.cc
+fi
 TEMPLATE_TAG=
 TEMPLATE_BOX="<>"
 case $host in
@@ -857,6 +881,9 @@ case $host in
         # later we will make .so's from them.
 	SO_OR_ARCHIVE_EXTENSION=a
 	;;
+     *-pc-mingw*)
+        SO_OR_ARCHIVE_EXTENSION=dll
+        ;;
      *)
 	SO_OR_ARCHIVE_EXTENSION=so 
         ;;
@@ -960,9 +987,21 @@ if test $sci_required_fortran = "yes"; then
   fi
 fi
 
+# This flag is for the windows compiler - so it can generate correct
+# SHARE flags.
+WIN_DLLFLAGS=""
+
 case $host in 
   *-irix*)
     ac_objext=o
+
+    # Check for the use of the 7.4 compiler (so that we can turn off
+    # some extra warnings.)
+    SCI_CHECK_VERSION($CXX,-version,7.4,USING_74=yes,)
+    if test "$USING_74" = "yes"; then
+      WOFF_NUMBERS="$WOFF_NUMBERS 3625 3649"
+    fi
+
     SCI_CHECK_VERSION($CC,-version,7.3.1.1,,
                       echo configure: error: wrong $CC version.; exit)
     SCI_CHECK_VERSION($CXX,-version,7.3.1.1,,
@@ -1121,6 +1160,46 @@ case $host in
     AC_SUBST(DEF_NEED_OSX_HACK)
     ;;
 
+  *-pc-mingw*)
+    ac_objext=o
+    CFLAGS=" -Wall"
+    CXXFLAGS=" -Wall"
+    WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@)))'
+    SCI_CHECK_VERSION($CC,--version,2.95.3,,
+      echo configure: error: wrong $CC version.; exit)
+    if test $sci_required_fortran = "yes"; then
+      SCI_CHECK_VERSION($F77,--version,0.5.25,,
+        echo configure: error: wrong $F77 version.; exit)
+    fi
+    SCI_CHECK_VERSION($CXX,--version,2.95.3,,
+      echo configure: error: wrong $CXX version.; exit)
+    AC_PROG_CPP
+    AC_PROG_CXXCPP
+    AC_CHECK_PROG(AS,as,as)
+    AC_CHECK_PROG(LD,ld,ld)
+    WOFF=" -w"
+    CPPFLAGS="$CPPFLAGS $WOFF"
+    CFLAGS="$CFLAGS $extra_cflags"
+
+    case $F77 in
+      *g77*)
+         # extra_fflags has array checking if in debug mode.
+         FFLAGS="$FFLAGS $extra_cflags $extra_fflags"
+
+         # put '_' at end and two '_'s if there is a '_' in name.
+         # This flag is used by the genfspec.pl script in Uintah (generated
+         # from fspec.pl.in).
+         FORTRAN_UNDERSCORE=linux
+         ;;
+      *)
+         FFLAGS="$FFLAGS $extra_cflags"
+         ;;
+    esac
+
+    CXXFLAGS="$CXXFLAGS $extra_cflags"
+    SOFLAGS="-shared ${SOFLAGS}"
+    NEED_SONAME=yes
+    ;;
   *)
     # linux
     ac_objext=o
@@ -1134,7 +1213,9 @@ case $host in
     fi
 
     if test "$enable_64bit" = "yes"; then
+       FFLAGS="-fPIC $FFLAGS"
        CFLAGS="-fPIC $CFLAGS"
+       FFLAGS="-fPIC $FFLAGS"
        CXXFLAGS="-fPIC $CXXFLAGS"
     fi
 
@@ -1176,6 +1257,8 @@ case $host in
     NEED_SONAME=yes
     ;;
 esac
+
+AC_SUBST(WIN_DLLFLAGS)
 
 AC_MSG_CHECKING($CC dependency regen switch)
 rm -f configure-test.*
@@ -1276,11 +1359,15 @@ AC_SUBST(F77_DEPEND_REGEN)
 AC_SUBST(F77_DEPEND_EXT)
 
 # Other programs
-AC_PATH_PROG(GMAKE,gmake,NOT_FOUND,,)
-if test "$GMAKE" = "NOT_FOUND"; then
-  AC_PATH_PROG(MAKE,make,NOT_FOUND,,)
+if test "$IS_WIN" = "yes"; then
+  AC_CHECK_PROG(MAKE,make,make,NOT_FOUND,)
 else
-  MAKE=$GMAKE
+  AC_PATH_PROG(GMAKE,gmake,NOT_FOUND,,)
+  if test "$GMAKE" = "NOT_FOUND"; then
+    AC_PATH_PROG(MAKE,make,NOT_FOUND,,)
+  else
+    MAKE=$GMAKE
+  fi
 fi
 if test "$MAKE" = "NOT_FOUND"; then
   SCI_MSG_ERROR(GNU make not found.)
@@ -1293,6 +1380,11 @@ SCI_CHECK_VERSION($MAKE,--version,3.78.1,,
   echo configure: error: wrong GNU make version.; exit)
 
 AC_PROG_AWK
+
+## ignore some software tests on windows (for now at least)
+if test "$IS_WIN" = "yes"; then
+  echo "skipping bison, lex, etags, perl tests"
+else
 
 ## test for bison. yacc is not sufficient as it has no -o option.
 AC_CHECK_PROG(YACC, bison, bison, nobison, $PATH /usr/bin)
@@ -1328,6 +1420,8 @@ fi
 if test "$PERL" = "perl"; then
   PERL=`type perl | sed 's%^.* %%'`
 fi
+
+fi # end if IS_WIN = yes
 
 ##  Create the Packages/Uintah/tools dir for later use.
 if test "$sci_required_tools" = "yes" ; then
@@ -1427,7 +1521,7 @@ fi
 ##  if thirdparty not set use defaults
 
 if test -z "$thirdparty"; then
-  sci_tp_version=1.22
+  sci_tp_version=1.24.1
   sci_tp_arch=`uname -s`
   sci_compiler_vers=gcc-3.0.4
 
@@ -1578,6 +1672,9 @@ AC_SUBST(M_LIB_DIR_FLAG)
 
 ##  --  search for X  ----------------------------------------------------
 
+if test "$IS_WIN" = "yes"; then
+  echo "skipping X test"
+else
 _sci_optional=required
 if test "$with_X11_lib"; then
   _x_lib_dir="$with_X11_lib"
@@ -1600,10 +1697,14 @@ if test "$X_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
   AC_MSG_WARN("$X_LIB_DIR_FLAG")
 fi
 
+fi # end "$IS_WIN" = "yes"
+
 AC_SUBST(X_LIB_FLAG)
 AC_SUBST(X_LIB_DIR_FLAG)
 
 ##  --  check for the required thread library  ---------------------------
+
+SOCKET_LIBRARY=""
 
 case $host in
   *-irix*)
@@ -1612,6 +1713,10 @@ case $host in
     elif test "$threads" != "pthreads" -a "$threads" != "irix"; then
       SCI_MSG_ERROR(unknown thread type for host $host: $threads. exiting.)
     fi
+    ;;
+  *-pc-mingw*)
+    threads=win32
+    SOCKET_LIB_FLAG="-lws2_32"
     ;;
   *)
     if test "$threads" = "unknown"; then
@@ -1675,6 +1780,11 @@ case $threads in
       DEF_THREAD="#define SCI_NOTHREAD 1"
       AC_MSG_WARN(threads disabled - software may work incorrectly)
       ;;
+   win32)
+     # for time functions in windows
+     DEF_THREAD=
+     THREAD_LIB_FLAG=-lwinmm
+     ;;
    *)
       SCI_MSG_ERROR(unknown thread type for host $host: $threads. exiting.)
       ;;
@@ -1684,6 +1794,7 @@ THREAD_IMPL="Thread_$threads.cc"
 AC_SUBST(THREAD_IMPL)
 
 AC_SUBST(THREAD_LIB_FLAG)
+AC_SUBST(SOCKET_LIB_FLAG)
 AC_SUBST(DEF_THREAD)
 sci_defs_files="$sci_defs_files include/sci_defs/thread_testdefs.h"
 
@@ -1739,8 +1850,13 @@ esac
 
 AC_LANG(C++)
 
-SCI_TRY_LINK(GL,OpenGL libraries and headers,GL/gl.h GL/glu.h GL/glx.h,
-	     $_sci_inc,GLU GL $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
+if test "$IS_WIN" = "yes"; then
+  SCI_TRY_LINK(GL,OpenGL libraries and headers,windows.h GL/gl.h GL/glu.h,
+               $_sci_inc,glu32 opengl32 $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
+else
+  SCI_TRY_LINK(GL,OpenGL libraries and headers,GL/gl.h GL/glu.h GL/glx.h,
+	       $_sci_inc,GLU GL $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
+fi
 
 if test "$GL_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
   AC_MSG_WARN("$GL_LIB_DIR_FLAG")
@@ -1843,6 +1959,11 @@ else
       dlopen("bogus", 0);
     ],required)
     ;;
+  *-pc-mingw*)
+    echo "Using Windows dynamic loader"
+    DL_LIB_FLAG=""
+    DL_LIB_DIR_FLAG=""
+    ;;
   *)
     SCI_TRY_LINK(DL,dlopen in libdl,dlfcn.h,,dl,,,[
       dlopen("bogus", 0);
@@ -1876,19 +1997,25 @@ AC_SUBST(DEF_STAT64)
 sci_defs_files="$sci_defs_files include/sci_defs/stat64_testdefs.h"  
 
 ##  --  required standard headers
-SCI_TRY_LINK(STD_HDRS,standard headers,stdio.h stdlib.h stddef.h stdarg.h string.h limits.h errno.h fcntl.h float.h memory.h unistd.h netdb.h ctype.h signal.h locale.h dirent.h assert.h sys/select.h sys/types.h sys/time.h sys/stat.h sys/socket.h sys/timeb.h sys/mman.h sys/param.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h,,,,,,required)
+SCI_TRY_LINK(STD_HDRS,standard headers,stdio.h stdlib.h stddef.h stdarg.h string.h limits.h errno.h fcntl.h float.h memory.h unistd.h ctype.h signal.h locale.h dirent.h assert.h sys/types.h sys/time.h sys/stat.h sys/timeb.h sys/param.h,,,,,,required)
 
 # don't test for malloc.h or values.h on darwin
+# don't test a bunch of then on win32
 case $host in
   *-darwin*)
+    SCI_TRY_LINK(STD_HDRS, standard headers-2,netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h,,,,,,required)
     ;;
   *-irix*)
     # test for required sqi headers as well
-    SCI_TRY_LINK(STD_HDRS,SGI standard headers,ieeefp.h ulocks.h values.h malloc.h,,,,,,required)
+    SCI_TRY_LINK(STD_HDRS,SGI standard headers,ieeefp.h ulocks.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h,,,,,,required)
     DEF_IEEEFP="#define HAVE_IEEEFP_H 1"
     ;;
+  *-pc-mingw*)
+    ;;
+
   *)
-    SCI_TRY_LINK(STD_HDRS,standard headers-2,values.h malloc.h,,,,,,required)
+    # default system headers that cannot be tested on all systems
+    SCI_TRY_LINK(STD_HDRS,standard headers-2,values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h,,,,,,required)
     ;;
 esac
 
@@ -1954,6 +2081,11 @@ fi
 SCI_TRY_LINK(TCL,tcl library and headers,tcl.h tclPort.h tclMath.h tclInt.h,
              $_sci_tcl_inc,tcl,$_sci_lib,,,$_sci_optional)
 
+if test "$IS_WIN" = "yes"; then
+  # change the unix-style dir to a windows-style dir for tclsh to read
+  LIB_DIR_TCL=`echo "$LIB_DIR_TCL" | sed 's,/,,' | sed 's,/,:/,'`
+fi
+
 SCI_SUBST_THIRDPARTY_DIR(LIB_DIR_TCL)
 SCI_SUBST_THIRDPARTY_DIR(TCL_LIB_DIR_FLAG)
 SCI_SUBST_THIRDPARTY_DIR(INC_TCL_H)
@@ -1984,6 +2116,11 @@ AC_SUBST(INC_TK_H)
 SCI_TRY_LINK(ITCL,itcl library and headers, itcl.h,
              $_sci_inc,itcl,$_sci_lib,$TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,required)
 
+if test "$IS_WIN" = "yes"; then
+  # change the unix-style dir to a windows-style dir for tclsh to read
+  LIB_DIR_ITCL=`echo "$LIB_DIR_ITCL" | sed 's,/,,' | sed 's,/,:/,'`
+fi
+
 SCI_SUBST_THIRDPARTY_DIR(LIB_DIR_ITCL)
 SCI_SUBST_THIRDPARTY_DIR(ITCL_LIB_DIR_FLAG_H)
 SCI_SUBST_THIRDPARTY_DIR(INC_ITCL_H)
@@ -2005,6 +2142,11 @@ AC_SUBST(INC_ITK_H)
 
 # -- blt --
 SCI_TRY_LINK(BLT,BLT library and headers, blt.h,$_sci_inc,BLT,$_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,required) 
+
+if test "$IS_WIN" = "yes"; then
+  # Windows BLT needs these other libs
+  BLT_LIB_FLAG="$BLT_LIB_FLAG -lgdi32 -lwinspool -lcomdlg32"
+fi
 
 SCI_SUBST_THIRDPARTY_DIR(BLT_LIB_DIR_FLAG)
 SCI_SUBST_THIRDPARTY_DIR(INC_BLT_H)
@@ -2077,7 +2219,7 @@ fi
 
 AC_SUBST(SSTREAM_COMPAT)
 
-##  --  search for SGI'S traceback library  ------------------------------ 
+##  --  search for SGI'S or Win32's traceback library  ------------------------------ 
 
 _sci_optional=optional
 if test "$with_exc"; then
@@ -2089,9 +2231,15 @@ else
   _sci_inc=
 fi
 
-SCI_TRY_LINK(EXC,traceback library and headers,libexc.h,$_sci_inc,exc,$_sci_lib,,,$_sci_optional)
+if test "$IS_WIN" = "yes"; then
+  # it's 'imagehlp' but call it EXC anyway so we don't have to change
+  # other config parameters
+  SCI_TRY_LINK(EXC,WIN32 traceback library and headers,windows.h imagehlp.h,$_sci_inc,imagehlp,$_sci_lib,,,required)
+else
+  SCI_TRY_LINK(EXC,traceback library and headers,libexc.h,$_sci_inc,exc,$_sci_lib,,,$_sci_optional)
+fi
 
-if test "$HAVE_EXC" = "yes"; then
+if test "$HAVE_EXC" = "yes" -a "$IS_WIN" != "yes"; then
   DEF_EXC="#define HAVE_EXC 1"
 fi
 
@@ -2154,11 +2302,12 @@ if test "$with_jpeg"; then
       _sci_optional=required
    else
       _sci_lib="$with_jpeg/lib"
+      _sci_inc="$with_jpeg/include"
       _sci_optional=specific
    fi
 fi
 
-SCI_TRY_LINK(JPEG,jpeg library,,,jpeg,$_sci_lib,,,$_sci_optional)
+SCI_TRY_LINK(JPEG,jpeg library,,$_sci_inc,jpeg,$_sci_lib,,,$_sci_optional)
 
 AC_SUBST(JPEG_LIB_FLAG)
 AC_SUBST(JPEG_LIB_DIR_FLAG)
@@ -2172,11 +2321,12 @@ if test "$with_tiff"; then
       _sci_optional=required
    else
       _sci_lib="$with_tiff/lib"
+      _sci_inc="$with_tiff/include"
       _sci_optional=specific
    fi
 fi
 
-SCI_TRY_LINK(TIFF,tiff library,,,tiff,$_sci_lib,$M_LIB_DIR_FLAG $M_LIB_FLAG,,$_sci_optional)
+SCI_TRY_LINK(TIFF,tiff library,tiff.h,$_sci_inc,tiff,$_sci_lib,$M_LIB_DIR_FLAG $M_LIB_FLAG,,$_sci_optional)
 
 AC_SUBST(TIFF_LIB_FLAG)
 AC_SUBST(TIFF_LIB_DIR_FLAG)
@@ -2253,6 +2403,7 @@ if test "$HAVE_PNG" = "no"; then
   fi
 else
   if test "$_sci_optional" = "specific"; then
+       AC_MSG_CHECKING(that PNG is in requestion location '$with_png/lib')
        # verify that it was found in the location requested.
        if test ! -e $with_png/lib/libpng.so &&
           test ! -e $with_png/lib/libpng.a &&
@@ -2260,6 +2411,7 @@ else
             echo
             AC_MSG_ERROR(Found libpng but not in requested directory: $with_png/lib)
        fi
+       AC_MSG_RESULT(yes.)
     fi
 fi
 
@@ -2447,7 +2599,15 @@ case $host in
     ;;
   *-darwin*)
     # OSX Library Check
-    SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,g2c,$_sci_lib,,,$_sci_optional)
+    if test "$F77" = "xlf"; then
+      SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,xlf90,$_sci_lib,,,$_sci_optional)
+    else
+      SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,g2c,$_sci_lib,,,$_sci_optional)
+    fi
+    ;;
+  *-pc-mingw*)
+    # Mingw g77 and libg2c
+    SCI_TRY_LINK(F,fortran libraries,,,g2c,$_sci_lib,,,$_sci_optional)
     ;;
   *)
     SCI_TRY_LINK(F,fortran libraries,,,F77,$_sci_lib,,,$_sci_optional)
@@ -2873,6 +3033,9 @@ case $host in
   *-darwin*)
     PETSC_ARCH=ppc
     ;;
+  *-pc-mingw*)
+    PETSC_ARCH=win
+    ;;
   *)
     PETSC_ARCH=""
     ;;
@@ -2978,14 +3141,14 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
     done  
   fi
 
-# For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
+# For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
 # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
 
   SCI_TRY_LINK(PETSC,
                petsc libraries and headers,
                petsc.h,
                $_sci_inc /usr/include/petsc,
-               petsc petscvec petscmat petscdm petscsnes petscts petscksp petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
+               petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
                $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG,
                $INC_MPI_H -DMPIPP_H,
                ,
@@ -3000,7 +3163,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
                    petsc libraries and headers (old),
                    petsc.h,
                    $_sci_inc /usr/include/petsc,
-                   petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
+                   petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
                    $_sci_lib_dir $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG,
                    $INC_MPI_H -DMPIPP_H,
                    ,
@@ -3031,13 +3194,13 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
       _sci_inc="$with_unipetsc/bmake/$PETSC_ARCH $with_unipetsc/include"
     fi
 
-# For petsc 2.2 use this line below:  petsc petscvec petscmat petscdm petscsnes petscts petscfortran petscksp,
+# For petsc 2.2 use this line below:  petsc petscvec petscmat petscdm petscsnes petscts petscksp,
 # Use -DMPIPP_H soe we don't include mpi++.h where we don't want it.
     SCI_TRY_LINK(PETSC_UNI,
                  petsc-uni libraries and headers,
                  petsc.h,
                  $_sci_inc /usr/include/petsc,
-                 petsc petscvec petscmat petscdm petscsnes petscts petscfortran petscksp,
+                 petsc petscvec petscmat petscdm petscsnes petscts petscksp,
                  $_sci_lib,
                  $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_FLAG -DMPIPP_H,
                  ,
@@ -3051,7 +3214,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
                    petsc libraries and headers (old),
                    petsc.h,
                    $_sci_inc /usr/include/petsc,
-                   petsc petscvec petscmat petscdm petscsnes petscts petscfortran,
+                   petsc petscvec petscmat petscdm petscsnes petscts,
                    $_sci_lib,
                    $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_FLAG -DMPIPP_H,
                    ,
@@ -3114,12 +3277,20 @@ if test "$sci_required_insight" = "yes"; then
     insight_libs_dir="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS \"/;/' | sed 's/\")//' | sed 's/;//g' | sed 's/
 //'`"
     INSIGHT_LIB_DIR_FLAG="$LDRUN_PREFIX$insight_libs_dir -L$insight_libs_dir"
-    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon  -litkvnl -litkvnl_algo -litknetlib -litksys -litkjpeg -lITKDICOMParser -litkzlib"
+    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon  -litkvnl -litkvnl_algo -litknetlib -litksys -lITKDICOMParser -litkzlib"
 
     INSIGHT_VERSION_MINOR="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_VERSION_MINOR' | sed 's/SET(ITK_VERSION_MINOR \"//' | sed 's/\")//' | sed 's/
 //'`"
-    if test "$INSIGHT_VERSION_MINOR" = "6"; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff"
+    INSIGHT_VERSION_MAJOR="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_VERSION_MAJOR' | sed 's/SET(ITK_VERSION_MAJOR \"//' | sed 's/\")//' | sed 's/
+//'`"
+    if test "$INSIGHT_VERSION_MAJOR" = "2"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -lITKNrrdIO -litktiff -litkjpeg8 -litkjpeg12 -litkjpeg16"
+    elif test "$INSIGHT_VERSION_MINOR" = "9"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff -litkjpeg8 -litkjpeg12 -litkjpeg16"
+    elif test "$INSIGHT_VERSION_MINOR" = "8" || test "$INSIGHT_VERSION_MINOR" = "6"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff -litkjpeg"
+    elif test "$INSIGHT_VERSION_MINOR" = "4"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg"
     fi
 
     if ! test "$HAVE_PNG" = "yes"; then
@@ -3579,10 +3750,8 @@ if test -e $freetype_bin/freetype-config; then
     AC_MSG_RESULT(Using $freetype_bin/freetype-config to set freetype variables.)
 
     includes=`$freetype_bin/freetype-config --cflags`
-    FREETYPE_LIB_FLAG=`$freetype_bin/freetype-config --libs`
-
     SCI_TRY_LINK(FREETYPE,freetype library and headers,ft2build.h,
-                 $_sci_inc,$FREETYPE_LIB_FLAG,$_sci_lib,$includes,,$_sci_optional)
+                 $_sci_inc,freetype,$_sci_lib,$includes,,$_sci_optional)
 
     INC_FREETYPE_H="$INC_FREETYPE_H $includes"
 
@@ -3590,7 +3759,7 @@ if test -e $freetype_bin/freetype-config; then
 fi
 
 if test "$found_freetype_config" = "no"; then
-   AC_MSG_RESULT(no.)
+   AC_MSG_RESULT(No 'freetype-config' file found in $freetype_bin.  Skipping Freetype check.)
    if test "$_sci_optional" != "optional"; then
      echo
      AC_MSG_WARN(Cannot find a freetype-config file to get freetype variables.)
@@ -3619,11 +3788,11 @@ if test "$with_ftgl" = "yes"; then
   _sci_optional=required
 elif test "$with_ftgl"; then
   _sci_lib="$with_ftgl/lib"
-  _sci_inc="$with_ftgl/include/FTGL"
+  _sci_inc="$with_ftgl/include"
   _sci_optional=specific
 fi
 
-SCI_TRY_LINK(FTGL,ftgl library,FTGLTextureFont.h,$_sci_inc,ftgl,$_sci_lib,$INC_FREETYPE_H $FREETYPE_LIB_DIR_FLAG $FREETYPE_LIB_FLAG,,$_sci_optional)
+SCI_TRY_LINK(FTGL,ftgl library,FTGL/FTGLTextureFont.h,$_sci_inc,ftgl,$_sci_lib,$INC_FREETYPE_H $FREETYPE_LIB_DIR_FLAG $FREETYPE_LIB_FLAG,,$_sci_optional)
 
 if test "$HAVE_FTGL" = "yes"; then
   DEF_FTGL="#define HAVE_FTGL 1"
@@ -4298,10 +4467,29 @@ AC_SUBST(BUILD_SCIRUN2)
 ##  ---------------------------------------------------------------------
 ##  --------------------  generate output files  ------------------------
 ##  ---------------------------------------------------------------------
+
+if test -n "$WOFF_NUMBERS"; then
+  for num in $WOFF_NUMBERS; do
+    if test -z "$WOFF_COMMA_LIST"; then
+       WOFF_COMMA_LIST="$num"
+    else
+       WOFF_COMMA_LIST="$WOFF_COMMA_LIST,$num"
+    fi
+    WOFF_STRING="$WOFF_STRING -Wl,-woff -Wl,$num"
+  done
+  WOFF_STRING="-woff $WOFF_COMMA_LIST $WOFF_STRING"
+fi
+AC_SUBST(WOFF_STRING)
+
 SCI_ARG_VAR(CXXFLAGS,C++ compiler flags)
 
 scirun_obj_dir=`pwd`;
 scirun_src_dir=`(cd ${srcdir};pwd)`
+
+if test "$IS_WIN" = "yes"; then
+  scirun_obj_dir=`echo "$scirun_obj_dir" | sed 's,/,,' | sed 's,/,:/,'`
+  scirun_src_dir=`echo "$scirun_src_dir" | sed 's,/,,' | sed 's,/,:/,'`
+fi
 
 AC_SUBST(scirun_obj_dir)
 AC_SUBST(scirun_src_dir)

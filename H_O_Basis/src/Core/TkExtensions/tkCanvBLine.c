@@ -110,8 +110,10 @@ static void		TranslateBLine _ANSI_ARGS_((Tk_Canvas canvas,
  * values in CreateBLine.
  */
 
-static Tk_CustomOption tagsOption = {Tk_CanvasTagsParseProc,
-                                     Tk_CanvasTagsPrintProc, (ClientData) NULL};
+// initialize in createBLine
+static Tk_CustomOption tagsOption;
+//= {Tk_CanvasTagsParseProc,
+//                                     Tk_CanvasTagsPrintProc, (ClientData) NULL};
 
 static Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_CAP_STYLE, "-capstyle", (char *) NULL, (char *) NULL,
@@ -200,6 +202,9 @@ CreateBLine(interp, canvas, itemPtr, argc, argv)
 {
     BLineItem *linePtr = (BLineItem *) itemPtr;
     int i;
+
+    tagsOption.parseProc = Tk_CanvasTagsParseProc;
+    tagsOption.printProc = Tk_CanvasTagsPrintProc;
 
     if (argc < 4) {
 	Tcl_AppendResult(interp, "wrong # args:  should be \"",

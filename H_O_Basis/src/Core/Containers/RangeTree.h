@@ -476,7 +476,7 @@ private:
     Traverser(RangeTreeNode* vsplit, int d)
       : node_(vsplit), D_(d) { }
     Traverser(Traverser& traverser)
-      : node_(traverser.node_), D_(traverse.D_) {}
+      : node_(traverser.node_), D_(traverser.D_) {}
 
     template <class BoundTester>
     inline bool goNext(const BoundTester& boundTester) {
@@ -514,13 +514,11 @@ private:
   {
   public:
     CascadeTraverser(RangeTreeNode* vsplit, int subIndex)
-      : RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
-    Traverser<SIDE>(vsplit, 1), subIndex_(subIndex)
+      : Traverser<SIDE>(vsplit, 1), subIndex_(subIndex)
     { ASSERT(subIndex != -1); }
 
     CascadeTraverser(CascadeTraverser& traverser)
-      : RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
-    Traverser<SIDE>(traverser), subIndex_(traverser.subIndex_) {}
+      : Traverser<SIDE>(traverser), subIndex_(traverser.subIndex_) {}
 
     // quitOnBadIndex is only relevant if BOUND_FROM_SIDE == RANGE_LEFT,
     // otherwise it will quit regardless (because it can't handle negative
@@ -529,12 +527,12 @@ private:
     inline bool goNext(const BoundTester& boundTester,
 		       bool quitOnBadIndex = true) {
       const int OTHER_SIDE = (SIDE + 1) % 2;
-      ASSERT(!node_->isLeaf());
-      BaseLevelSet* parentSub = node_->lowerLevel_.bls;
+      ASSERT(!this->node_->isLeaf());
+      BaseLevelSet* parentSub = this->node_->lowerLevel_.bls;
       BaseLevelSet* sub;
   
-      node_ = getChild<SIDE>(node_);
-      sub = node_->lowerLevel_.bls;
+      this->node_ = getChild<SIDE>(this->node_);
+      sub = this->node_->lowerLevel_.bls;
       subIndex_ =
 	getCascadedSubIndex<SIDE, BOUND_FROM_SIDE>(parentSub, subIndex_, sub);
       if (((BOUND_FROM_SIDE == RANGE_RIGHT) || quitOnBadIndex) &&
@@ -542,11 +540,11 @@ private:
 	return false; // no more points in range at the base level
       }
   
-      while (!node_->isLeaf() &&
-	     !boundTester.isInBound((*node_->point_)[D_])){
+      while (!this->node_->isLeaf() &&
+	     !boundTester.isInBound((*this->node_->point_)[this->D_])){
 	parentSub = sub;    
-	node_ = getChild<OTHER_SIDE>(node_);
-	sub = node_->lowerLevel_.bls;
+	this->node_ = getChild<OTHER_SIDE>(this->node_);
+	sub = this->node_->lowerLevel_.bls;
 	subIndex_ = getCascadedSubIndex<OTHER_SIDE, BOUND_FROM_SIDE>
 	  (parentSub, subIndex_, sub);
 	if (((BOUND_FROM_SIDE == RANGE_RIGHT) || quitOnBadIndex) &&
@@ -555,7 +553,7 @@ private:
 	}
       }
 
-      return !node_->isLeaf();
+      return !this->node_->isLeaf();
     }
 
     int getCurrentCascadedIndex()
@@ -1209,9 +1207,9 @@ dump()
     cout << (*points_[i])[0] << " "; //(" << points_[i]->getId() << ") ";
   }
   cout << endl;
-  if (leftSubset_ != NULL) {
-    leftSubset_->dump();
-    rightSubset_->dump();
+  if (this->leftSubset_ != NULL) {
+    this->leftSubset_->dump();
+    this->rightSubset_->dump();
   }
 }
 

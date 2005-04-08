@@ -1,4 +1,4 @@
-/*
+ /*
    For more information, please see: http://software.sci.utah.edu
 
    The MIT License
@@ -190,6 +190,12 @@ replace_substring(string str,
   return str;
 }
 
+
+bool
+ends_with(string str, string substr)
+{
+  return str.rfind(substr) == str.size()-substr.size();
+}  
 
 
 } // End namespace SCIRun

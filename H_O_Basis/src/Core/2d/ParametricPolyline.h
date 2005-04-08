@@ -53,7 +53,7 @@ namespace SCIRun {
 using std::map;
 using std::pair;
 
-class SCICORESHARE ParametricPolyline : public DrawObj {
+class ParametricPolyline : public DrawObj {
 
   typedef map<double, pair<double, double> >::iterator iter;
 

@@ -44,36 +44,62 @@
 #include <Core/CCA/spec/cca_sidl.h>
 
 namespace SCIRun {
-  
-  class myUIPort : public virtual sci::cca::ports::UIPort {
-  public:
+
+class Hello;
+
+class myUIPort : public virtual sci::cca::ports::UIPort {
+public:
     int ui();
-  };
-  
-  class myGoPort : public virtual sci::cca::ports::GoPort {
-  public:
+    void setParent(Hello *com) { this->com = com; }
+    Hello *com;
+};
+
+class myGoPort : public virtual sci::cca::ports::GoPort {
+public:
     myGoPort(const sci::cca::Services::pointer& svc);
     int go();
-  private:
+    void setParent(Hello *com) { this->com = com; }
+    Hello *com;
+
+private:
     sci::cca::Services::pointer services;
-  };
-  
-  
-  class Hello : public sci::cca::Component{
-    
-  public:
+};
+
+class myComponentIcon : public virtual sci::cca::ports::ComponentIcon {
+public:
+  myComponentIcon();
+  virtual ~myComponentIcon() {}
+
+  virtual std::string getDisplayName();
+  virtual std::string getDescription();
+  virtual std::string getIconShape();
+  virtual int getProgressBar();
+  void setParent(Hello *com) { this->com = com; }
+  Hello *com;
+
+private:
+  int steps;
+};
+
+class Hello : public sci::cca::Component {
+public:
     Hello();
-    ~Hello();
-    void setServices(const sci::cca::Services::pointer& svc);
-  private:
-    void setCommunicator(int comm){
-      //MPI_COMM_COM=MPI_COMM_WORLD; //*(MPI_Comm*)(comm);
-    }    
+    virtual ~Hello();
+    virtual void setServices(const sci::cca::Services::pointer& svc);
+    std::string text;
+
+private:
+    void setCommunicator(int comm) {
+        //MPI_COMM_COM=MPI_COMM_WORLD; //*(MPI_Comm*)(comm);
+    }
     Hello(const Hello&);
     Hello& operator=(const Hello&);
+
     sci::cca::Services::pointer services;
-  };
-  
+    myUIPort *uiPort;
+    myGoPort *goPort;
+    myComponentIcon *ciPort;
+};
   
 } //namespace SCIRun
 

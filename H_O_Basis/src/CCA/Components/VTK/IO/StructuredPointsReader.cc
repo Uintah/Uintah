@@ -46,6 +46,22 @@
 #include "StructuredPointsReader.h"
 #include <qfiledialog.h>
 
+
+
+
+#include "vtkStructuredPoints.h"
+#include "vtkStructuredGrid.h"
+#include "vtkImageData.h"
+#include "vtkPolyData.h"
+
+#include "vtkPointData.h"
+#include "vtkFloatArray.h"
+#include "vtkUnsignedCharArray.h"
+#include "vtkPoints.h"
+#include "vtkCellArray.h"
+
+
+
 using namespace std;
 using namespace SCIRun;
 using namespace vtk;
@@ -59,7 +75,20 @@ StructuredPointsReader::StructuredPointsReader(){
   //set output port name
   OutPort::setName("StructuredPointsReader::output");
   reader=vtkStructuredPointsReader::New();
-  setOutput(reader->GetOutput());
+
+  vol=vtkStructuredPoints::New();
+  vol->SetDimensions(1, 1, 1);
+  float origin[3]={0,0,0};
+  float spacing[3]={0,0,0};
+  vol->SetScalarTypeToFloat();
+  vtkFloatArray *scalars=vtkFloatArray::New();
+  scalars->SetNumberOfValues(1);
+  int offset=0;
+  scalars->SetValue(0, 0);
+  vol->GetPointData()->SetScalars(scalars);
+  scalars->Delete();
+
+  //reader->SetFileName("./feet50.vtk");
   addPort(this);
   enableUI();
 }
@@ -75,7 +104,15 @@ StructuredPointsReader::popupUI(){
 	    "./","Vtk StructuredPoints Files(*.vtk)");
   if(fn.isNull())   return 1;
   reader->SetFileName(fn);
-  reader->Update();
-
+  update(Port::RESETCAMERA);
   return 0;
+}
+
+vtkObject*
+StructuredPointsReader::getOutput(){
+  if(reader->IsFileStructuredPoints()){
+    return reader->GetOutput();
+  }else{
+    return vol;
+  }
 }

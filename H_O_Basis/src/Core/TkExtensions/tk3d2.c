@@ -32,14 +32,12 @@
 #include <tk.h>
 #include <tk3d.h>
 
-#include <Core/share/share.h>
-
-SCICORESHARE GC Tk_BorderDarkGC(Tk_3DBorder border);
-SCICORESHARE GC Tk_BorderLightGC(Tk_3DBorder border);
-SCICORESHARE GC Tk_BorderBgGC(Tk_3DBorder border);
-SCICORESHARE void Tk_BorderShiftLine(XPoint *p1Ptr, XPoint *p2Ptr,
+GC Tk_BorderDarkGC(Tk_3DBorder border);
+GC Tk_BorderLightGC(Tk_3DBorder border);
+GC Tk_BorderBgGC(Tk_3DBorder border);
+void Tk_BorderShiftLine(XPoint *p1Ptr, XPoint *p2Ptr,
 			int distance, XPoint *p3Ptr);
-SCICORESHARE int Tk_BorderIntersect(XPoint *a1Ptr, XPoint *a2Ptr, XPoint *b1Ptr,
+int Tk_BorderIntersect(XPoint *a1Ptr, XPoint *a2Ptr, XPoint *b1Ptr,
 		       XPoint *b2Ptr, XPoint *iPtr);
 
 

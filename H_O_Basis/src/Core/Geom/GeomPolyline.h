@@ -48,7 +48,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE GeomPolyline : public GeomVertexPrim {
+class GeomPolyline : public GeomVertexPrim {
 public:
     GeomPolyline();
     GeomPolyline(const GeomPolyline&);
@@ -64,7 +64,7 @@ public:
     static PersistentTypeID type_id;
 };
 
-class SCICORESHARE GeomPolylineTC: public GeomObj {
+class GeomPolylineTC: public GeomObj {
 protected:
     Array1<float> data;
     BBox bbox;

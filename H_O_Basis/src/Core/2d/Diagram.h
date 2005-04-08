@@ -55,7 +55,7 @@ namespace SCIRun {
   
 class ScrolledOpenGLWindow;
 
-class SCICORESHARE Diagram : public DrawGui {
+class Diagram : public DrawGui {
 private:
   ScrolledOpenGLWindow *ogl_;
 

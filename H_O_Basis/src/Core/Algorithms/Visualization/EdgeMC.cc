@@ -26,66 +26,19 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+//    File   : EdgeMC.cc
+//    Author : Michael Callahan
+//    Date   : Sept 2002
 
-#ifndef GL_ATTENUATE_H
-#define GL_ATTENUATE_H
-
-#include <Core/GLVolumeRenderer/GLTexRenState.h>
+#include <Core/Algorithms/Visualization/EdgeMC.h>
+#include <Core/Util/TypeDescription.h>
 
 namespace SCIRun {
 
-/**************************************
+const string& 
+EdgeMCBase::get_h_file_path() {
+  static const string path(TypeDescription::cc_to_h(__FILE__));
+  return path;
+}
 
-CLASS
-   GLAttenuate
-   
-   GLAttenuate Class.
-
-GENERAL INFORMATION
-
-   GLAttenuate.h
-
-   Kurt Zimmerman
-   Department of Computer Science
-   University of Utah
-
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
-   Copyright (C) 2000 SCI Group
-
-KEYWORDS
-   GLAttenuate
-
-DESCRIPTION
-   GLAttenuate class.  A GLdrawing State
-   for the GLVolumeRenderer.
-  
-WARNING
-  
-****************************************/
-
-class GLAttenuate : public GLTexRenState {
-public:
-
-  // GROUP: Constructors:
-  //////////
-  // Constructor
-  GLAttenuate(const GLVolumeRenderer* glvr);
-  // GROUP: Destructors
-  //////////
-  // Destructor
-  ~GLAttenuate(){}
-  // GROUP: Operations
-  //////////
-  // predrawing gl functions
-  virtual void preDraw();
-  //////////
-  // postdrawing functions
-  virtual void postDraw();
-  //////////
-private:
-
-};
-
-} // End namespace SCIRun
-#endif
+}

@@ -51,7 +51,7 @@
 
 namespace SCIRun {
 
-class SCICORESHARE GeomGrid : public GeomObj {
+class GeomGrid : public GeomObj {
     Array1<float> data;
     int have_matls;
     int have_normals;
@@ -173,7 +173,7 @@ inline void GeomGrid::set(int i, int j, double h, const Vector& normal,
 namespace SCIRun {
 
 
-class SCICORESHARE GeomGrid : public GeomObj {
+class GeomGrid : public GeomObj {
     Array2<double> verts;
     Array2<MaterialHandle> matls;
     Array2<Vector> normals;

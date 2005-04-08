@@ -50,8 +50,6 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/Tensor.h>
 #include <Core/Util/DynamicLoader.h>
 #include <float.h> // for DBL_MAX
 

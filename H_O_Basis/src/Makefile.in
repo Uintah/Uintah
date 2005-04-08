@@ -73,8 +73,6 @@ TCLSH          := @TCL_PREFIX@/bin/tclsh@TCL_VERSION@
 TCL_VERSION    := @TCL_VERSION@
 LIB_DIR_ITCL   := @LIB_DIR_ITCL@
 
-MATLAB_ENGINE_FILES := @MATLAB_ENG@
-
 # etags generation
 TCL_FILES := $(patsubst %,%/*.tcl, $(ALLSUBDIRS))
 C_FILES := $(patsubst %,%/*.c, $(ALLSUBDIRS))
@@ -86,21 +84,16 @@ TCL_ETAGS_FILES := $(wildcard $(TCL_FILES))
 ETAGS := @ETAGS@
 CTAGS := ctags
 
-SCIRUN_APP_DIR := $(OBJTOP_ABS)/../$(SCIRUN_APP_NAME).app/Contents
+SCIRUN_APP_DIR := $(OBJTOP_ABS)/../SCIRun/
 
 all:: prereqs packmaker $(ALLTARGETS) ontheflylibs BioTensor BioFEM BioImage FusionViewer
 
 .PHONY: prereqs
-prereqs: $(MAKEFILEDIRS) $(MATLAB_ENGINE_FILES) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN)
+prereqs: $(MAKEFILEDIRS) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN)
 
 $(MAKEFILEDIRS):
 	@echo creating directory $@
 	@mkdir -p $@
-
-$(MATLAB_ENGINE_FILES):
-	@echo creating engine files for MatlabInterface package.
-	mkdir -p $@
-	cp -r $(SRCTOP)/Packages/MatlabInterface/matlab/engine ./$@
 
 $(CREATETCLINDEX): $(SRCTOP)/scripts/createTclIndex.in $(OBJTOP)/Makefile
 	@echo creating createTclIndex
@@ -123,21 +116,34 @@ ontheflylibs:
 	@(cd on-the-fly-libs;$(MAKE))
 
 app: all
-	@echo making $(SCIRUN_APP_NAME).app in $(SCIRUN_APP_DIR)
-	@mkdir -p $(SCIRUN_APP_DIR)/MacOS
-	@mkdir -p $(SCIRUN_APP_DIR)/src
-	@mkdir -p $(SCIRUN_APP_DIR)/Thirdparty
-	@cp -rp $(OBJTOP)/* $(SCIRUN_APP_DIR)/MacOS
-	@cp -rp $(SRCTOP)/* $(SCIRUN_APP_DIR)/src
-	@cp -rp $(SCIRUN_THIRDPARTY_DIR)/* $(SCIRUN_APP_DIR)/Thirdparty
-	@mv $(SCIRUN_APP_DIR)/MacOS/scirun $(SCIRUN_APP_DIR)/MacOS/scirun-bin
-	@cp -rp $(SCIRUN_APP_DIR)/src/scripts/SCIRun* $(SCIRUN_APP_DIR)/MacOS/
-	chmod a+x $(SCIRUN_APP_DIR)/MacOS/SCIRun*
-	@cp -rp $(SCIRUN_APP_DIR)/src/scripts/Info.plist $(SCIRUN_APP_DIR)
-	touch app
+	@echo making SCIRun.app in $(SCIRUN_APP_DIR)
+	@mkdir -p $(SCIRUN_APP_DIR)/SCIRun.app/Contents/MacOS
+	@mkdir -p $(SCIRUN_APP_DIR)/SCIRun.app/Contents/src
+	@mkdir -p $(SCIRUN_APP_DIR)/SCIRun.app/Contents/Thirdparty
+	@cp -rp $(OBJTOP)/* $(SCIRUN_APP_DIR)/SCIRun.app/Contents/MacOS
+	@cp -rp $(SRCTOP)/* $(SCIRUN_APP_DIR)/SCIRun.app/Contents/src
+	@cp -rp $(SCIRUN_THIRDPARTY_DIR)/* $(SCIRUN_APP_DIR)/SCIRun.app/Contents/Thirdparty
+	@cp -rp $(SRCTOP)/scripts/Info.plist $(SCIRUN_APP_DIR)/SCIRun.app
+	@echo Copying SCIRun
+	@mv $(SCIRUN_APP_DIR)/SCIRun.app/Contents/MacOS/scirun $(SCIRUN_APP_DIR)/SCIRun.app/Contents/MacOS/scirun-bin
+	@cp -rp $(SRCTOP)/scripts/SCIRun $(SCIRUN_APP_DIR)/SCIRun.app/Contents/MacOS/
+	chmod a+x $(SCIRUN_APP_DIR)/SCIRun.app/Contents/MacOS/SCIRun*
+	@echo Copying BioImage
+	@mkdir -p $(SCIRUN_APP_DIR)/BioImage.app/Contents/MacOS
+	@cp -rp $(SRCTOP)/scripts/BioImage $(SCIRUN_APP_DIR)/BioImage.app/Contents/MacOS
+	@chmod a+x $(SCIRUN_APP_DIR)/BioImage.app/Contents/MacOS/BioImage
+	@echo Copying BioTensor
+	@mkdir -p $(SCIRUN_APP_DIR)/BioTensor.app/Contents/MacOS
+	@cp -rp $(SRCTOP)/scripts/BioTensor $(SCIRUN_APP_DIR)/BioTensor.app/Contents/MacOS
+	@chmod a+x $(SCIRUN_APP_DIR)/BioTensor.app/Contents/MacOS/BioTensor
+	@echo Copying BioFEM
+	@mkdir -p $(SCIRUN_APP_DIR)/BioFEM.app/Contents/MacOS
+	@cp -rp $(SRCTOP)/scripts/BioFEM $(SCIRUN_APP_DIR)/BioFEM.app/Contents/MacOS
+	@chmod a+x $(SCIRUN_APP_DIR)/BioFEM.app/Contents/MacOS/BioFEM
+	@touch app
 
 dmg: app
-	hdiutil create -fs "HFS+J" -volname $(SCIRUN_APP_NAME) -srcfolder $(shell cd $(SCIRUN_APP_DIR)/..; pwd) $(shell cd $(OBJTOP_ABS)/..; pwd)/$(SCIRUN_APP_NAME).dmg
+	hdiutil create -fs "HFS+J" -volname $(SCIRUN_APP_NAME) -srcfolder $(shell cd $(SCIRUN_APP_DIR); pwd) $(shell cd $(OBJTOP_ABS)/..; pwd)/$(SCIRUN_APP_NAME).dmg
 	touch dmg
 
 
@@ -218,7 +224,6 @@ endif
 	rm -Rf $(LIBDIR)
 	-rm -f sciTAGS
 	rm -f on-the-fly-libs/*.*
-	rm -f include/sci_defs/*.h
 	rm -f BioTensor BioFEM BioImage FusionViewer
 
 distclean:: clean

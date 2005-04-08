@@ -49,6 +49,10 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 namespace SCIRun {
 
 using namespace std;
@@ -59,6 +63,8 @@ using namespace std;
   // in Persistent.cc.
   Mutex persistentTypeIDMutex("Persistent Type ID Table Lock");
   const string ext("dylib");
+#elif defined(_WIN32)
+  const string ext("dll");
 #else
   const string ext("so");
 #endif
@@ -72,6 +78,7 @@ using namespace std;
 
 DynamicLoader *DynamicLoader::scirun_loader_ = 0;
 Mutex DynamicLoader::scirun_loader_init_lock_("SCIRun loader init lock");
+
 
 CompileInfo::CompileInfo(const string &fn, const string &bcn, 
 			 const string &tcn, const string &tcdec) :
@@ -136,7 +143,16 @@ CompileInfo::create_cc(ostream &fstr, bool empty) const
 	string::size_type endloc = loc+srcdir.size()+1;
 	fstr << "#include <" << s.substr(endloc) << ">\n";
       } else {
-	fstr << "#include \"" << s << "\"\n";
+	// when using TAU, we will have the prefix .inst.h instead of .h
+        // we fix it here
+        if (s.find(".inst.") != string::npos) {
+          int pos = s.find(".inst.");
+          string newString = s;
+          newString.replace(pos,6,".");
+          fstr << "#include \"" << newString << "\"\n";
+        } else {
+          fstr << "#include \"" << s << "\"\n";
+        }
       }
     }
     ++iter;
@@ -400,14 +416,71 @@ DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
   }
 #else
   command += " > " + info.filename_ + "log 2>&1";
+  
+#ifdef _WIN32
+  // we need to create a separate process here, because TCL's interpreter is active.
+  // For some reason, calling make in 'system' will hang until the interpreter closes.
+  // the batch file is for convenience of not having to create files manually
+
+  STARTUPINFO si_;
+  PROCESS_INFORMATION pi_;
+
+  memset(&si_, 0, sizeof(si_));
+  memset(&pi_, 0, sizeof(pi_));
+  
+  DWORD status = 1;
+  
+  HANDLE logfile;
+  char logfilename[256];
+  char otfdir[256];
+  strcpy(otfdir, otf_dir().c_str());
+  // We need to make Windows create a command and read it since windows
+  // system can't handle a ';' to split commands
+  int loc = command.find(';');
+
+  // give it \ instead of / so windows can read it correctly
+  string command1 = command.substr(0, loc);
+  for (unsigned i = 0; i < command1.length(); i++)
+    if (command1[i] == '/') {
+      command1[i] = '\\';
+    }
+  for (unsigned i = 0; i < strlen(otfdir); i++)
+    if (otfdir[i] == '/') {
+      otfdir[i] = '\\';
+    }
+  string command2 = command.substr(loc+1, command.length());
+
+  string batch_filename = string(otfdir)+"\\" + info.filename_ + "bat";
+  FILE* batch = fopen(batch_filename.c_str(), "w");
+  fprintf(batch, "\n%s\n%s\n", command1.c_str(), command2.c_str());
+  fclose(batch);
+
+  si_.cb = sizeof(STARTUPINFO); 
+
+  // the CREATE_NO_WINDOW is so the process will not run in the same shell.
+  // Otherwise it will get confused while trying to run in the same shell as the 
+  // tcl interpreter.
+  bool retval = 
+    CreateProcess(batch_filename.c_str(),0,0,0,0,CREATE_NO_WINDOW,0,0, &si_, &pi_);
+  if (!retval) {
+    cerr << SOError() << "\n";
+  }
+  else {
+    WaitForSingleObject(pi_.hProcess, INFINITE);
+    GetExitCodeProcess(pi_.hProcess, &status);
+    CloseHandle(pi_.hProcess);
+    CloseHandle(pi_.hThread);
+  }
+#else
   const int status = sci_system(command.c_str());
+#endif // def _WIN32
   if(status != 0) {
     serr << "DynamicLoader::compile_so() syscal error " << status << ": "
 	 << "command was '" << command << "'\n";
     result = false;
   }
   pipe = fopen(string(otf_dir() + "/" + info.filename_ + "log").c_str(), "r");
-#endif
+#endif // __sgi
 
   char buffer[256];
   while (pipe && fgets(buffer, 256, pipe) != NULL)
@@ -423,7 +496,7 @@ DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
 
   if (result)
   {
-    serr << "DynamicLoader - Successfully compiled " << info.filename_ + "so" 
+    serr << "DynamicLoader - Successfully compiled " << info.filename_ + ext 
 	 << endl;
   }
   return result;

@@ -27,9 +27,7 @@
 */
 
 
-#include <Core/share/share.h>
-
-SCICORESHARE void ssmult(int beg, int end, int* rows, int* columns,
+void ssmult(int beg, int end, int* rows, int* columns,
 	    double* a, double* xp, double* bp)
 {
     int i, j;
@@ -45,7 +43,7 @@ SCICORESHARE void ssmult(int beg, int end, int* rows, int* columns,
     }
 }
 
-SCICORESHARE void ssmult_upper(int beg, int end, int* rows, int* columns,
+void ssmult_upper(int beg, int end, int* rows, int* columns,
 		  double* a, double* xp, double* bp)
 {
     int i, j;
@@ -69,7 +67,7 @@ SCICORESHARE void ssmult_upper(int beg, int end, int* rows, int* columns,
 
 
 /* This is too slow....*/
-SCICORESHARE void ssmult_uppersub(int nrows, int beg, int end, int* rows, int* columns,
+void ssmult_uppersub(int nrows, int beg, int end, int* rows, int* columns,
 		     double* a, double* xp, double* bp)
 {
     int i, j;

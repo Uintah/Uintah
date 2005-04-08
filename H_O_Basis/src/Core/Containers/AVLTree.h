@@ -43,10 +43,6 @@
 #ifndef SCI_Containers_AVLTree_h
 #define SCI_Containers_AVLTree_h 1
 
-#ifdef _WIN32
-#pragma warning(disable:4786)
-#endif
-
 #include <Core/Util/Assert.h>
 #include <Core/Malloc/Allocator.h>
 

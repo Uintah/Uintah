@@ -43,8 +43,6 @@
 #ifndef Core_Thread_ThreadError_h
 #define Core_Thread_ThreadError_h
 
-#include <Core/share/share.h>
-
 #include <Core/Exceptions/Exception.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
@@ -64,7 +62,7 @@ DESCRIPTION
    often not recoverable.
 
 ****************************************/
-	class SCICORESHARE ThreadError : public Exception {
+	class ThreadError : public Exception {
 	public:
 	    //////////
 	    // Constructor for the ThreadError class.  Message is

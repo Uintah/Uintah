@@ -43,8 +43,6 @@
 #ifndef GeomScene_h
 #define GeomScene_h 1
 
-#include <Core/share/share.h>
-
 #include <Core/Persistent/Persistent.h>
 
 #include <Core/Datatypes/Color.h>
@@ -60,7 +58,7 @@ namespace SCIRun {
 class Lighting;
 class GeomObj;
 
-struct SCICORESHARE GeomScene : public Persistent {
+struct GeomScene : public Persistent {
     GeomScene();
     GeomScene(const Color& bgcolor, const View& view, Lighting* lighting,
 	     GeomObj* topobj);

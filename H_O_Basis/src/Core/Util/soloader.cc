@@ -64,7 +64,7 @@ void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
   }
   
 #ifdef _WIN32
-  return GetProcAddress(LibraryHandle,symbolname);
+  return (void*) GetProcAddress(LibraryHandle,symbolname);
 #else
   return dlsym(LibraryHandle,symbolname);
 #endif
@@ -73,7 +73,7 @@ void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
 void* GetHandleSymbolAddress(LIBRARY_HANDLE handle, const char* symbolname)
 {
 #ifdef _WIN32
-  return GetProcAddress(handle,symbolname);
+  return (void*) GetProcAddress(handle,symbolname);
 #else
  return dlsym(handle,symbolname);
 #endif
@@ -119,7 +119,11 @@ void CloseLibrary(LIBRARY_HANDLE LibraryHandle)
 const char* SOError( )
 {
 #ifdef _WIN32
-  return 0;
+  char* lpMsgBuf;
+  FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+    NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR) &lpMsgBuf, 0, NULL);
+
+  return lpMsgBuf;
 #else
   return dlerror();
 #endif

@@ -45,7 +45,7 @@
 #include <vtkPolyData.h>
 
 #include <SCIRun/Vtk/Port.h>
-#include "ContourFilter.h"
+#include <CCA/Components/VTK/Graphics/ContourFilter.h>
 
 using namespace std;
 using namespace SCIRun;
@@ -77,10 +77,14 @@ ContourFilter::ContourFilter(){
 
   filter=vtkContourFilter::New();
 
-  setOutput(filter->GetOutput());
 
   addPort(dynamic_cast<InPort*>(this));
   addPort(dynamic_cast<OutPort*>(this));
+}
+
+vtkObject *
+ContourFilter::getOutput(){
+  return filter->GetOutput();
 }
 
 ContourFilter::~ContourFilter(){

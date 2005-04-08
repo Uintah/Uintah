@@ -43,14 +43,12 @@
 #ifndef SCI_Geom_Group_h
 #define SCI_Geom_Group_h 1
 
-#include <Core/share/share.h>
-
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geometry/BBox.h>
 
 namespace SCIRun {
 
-class SCICORESHARE GeomGroup : public GeomObj {
+class GeomGroup : public GeomObj {
     vector<GeomHandle> objs;
 
 public:

@@ -43,8 +43,6 @@
 #ifndef SCI_project_DenseMatrix_h
 #define SCI_project_DenseMatrix_h 1
 
-#include <Core/share/share.h>
-
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Math/MiscMath.h>
@@ -59,47 +57,52 @@ using std::vector;
 class ColumnMatrix;
 class SparseRowMatrix;
 
-class SCICORESHARE DenseMatrix : public Matrix {
-  //!private data
-  int nc;
-  int nr;
-//  double   minVal;
-//  double   maxVal;
+class DenseMatrix : public Matrix {
   double** data;
-  double*  dataptr;
+  double*  dataptr_;
+
 public:
   //! Constructors
   DenseMatrix();
   DenseMatrix(int r, int c);
   DenseMatrix(const DenseMatrix&);
   DenseMatrix(const Transform &t);
-
-  virtual DenseMatrix *dense();
-  virtual SparseRowMatrix *sparse();
-  virtual ColumnMatrix *column();
-
   //! Destructor
   virtual ~DenseMatrix();
   
   //! Public member functions
+  virtual DenseMatrix* clone();
   DenseMatrix& operator=(const DenseMatrix&);
   
+  virtual DenseMatrix *dense();
+  virtual SparseRowMatrix *sparse();
+  virtual ColumnMatrix *column();
+
+  virtual double *get_data_pointer();
+  virtual size_t get_data_size();
+
   //! slow setters/getter for polymorphic operations
-  virtual double& get(int r, int c) const;
-  virtual void    put(int r, int c, double val);
-  
-  virtual DenseMatrix* transpose();
-  
-  virtual string type_name() { return "DenseMatrix"; }
-
-  virtual int     nrows() const;
-  virtual int     ncols() const;
- 
   virtual void    zero();
-
-  virtual double  sumOfCol(int);
-  virtual double  sumOfRow(int);
+  virtual double  get(int r, int c) const;
+  virtual void    put(int r, int c, double val);
+  virtual void    add(int r, int c, double val);
   virtual void    getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);
+  virtual void    getRowNonzerosNoCopy(int r, int &size, int &stride,
+                                       int *&cols, double *&vals);
+
+  virtual DenseMatrix* transpose();
+  virtual void    mult(const ColumnMatrix& x, ColumnMatrix& b,
+		       int& flops, int& memrefs, int beg=-1, int end=-1, 
+		       int spVec=0) const;
+  virtual void    mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
+				 int& flops, int& memrefs,
+				 int beg=-1, int end=-1, int spVec=0) const;
+  virtual void scalar_multiply(double s);
+  virtual MatrixHandle submatrix(int r1, int c1, int r2, int c2);
+
+
+  double  sumOfCol(int);
+  double  sumOfRow(int);
   
   int     solve(ColumnMatrix&, int overwrite=0);
   int     solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
@@ -107,18 +110,6 @@ public:
   int     solve(vector<double>& sol, int overwrite=0);
   int     solve(const vector<double>& rhs, vector<double>& lhs,
 		int overwrite=0);
-
-  virtual void    mult(const ColumnMatrix& x, ColumnMatrix& b,
-		       int& flops, int& memrefs, int beg=-1, int end=-1, 
-		       int spVec=0) const;
-  virtual void    mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
-				 int& flops, int& memrefs,
-				 int beg=-1, int end=-1, int spVec=0) const;
-  virtual void    print() const;
-  virtual void    print(ostream&) const;
-  
-  virtual void scalar_multiply(double s);
-  virtual MatrixHandle submatrix(int r1, int c1, int r2, int c2);
 
   //! fast accessors
   inline double*  operator[](int r) {
@@ -128,18 +119,10 @@ public:
     return data[r];
   };
   
-  inline double* getData() { 
-    return dataptr;
-  }
-  
-  inline double** getData2D() { 
-    return data; 
+  inline double* getData() {
+    return dataptr_;
   }
 
-  //! Persistent representation...
-  virtual void io(Piostream&);
-  static PersistentTypeID type_id;
-  
   //! return false if not invertable.
   bool invert();
 
@@ -147,21 +130,32 @@ public:
   double determinant();
 
   void mult(double s);
-  virtual DenseMatrix* clone();
   
   void svd(DenseMatrix&, SparseRowMatrix&, DenseMatrix&);
   void eigenvalues(ColumnMatrix&, ColumnMatrix&);
   void eigenvectors(ColumnMatrix&, ColumnMatrix&, DenseMatrix&);
 
+  virtual void    print() const;
+  virtual void    print(ostream&) const;
+  
+  //! Persistent representation...
+  virtual string type_name() { return "DenseMatrix"; }
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+
   //! Friend functions
-  friend SCICORESHARE void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-  friend SCICORESHARE void Sub(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-  friend SCICORESHARE void Add(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-  friend SCICORESHARE void Add(DenseMatrix&, double, const DenseMatrix&, double, const DenseMatrix&);
-  friend SCICORESHARE void Add(double, DenseMatrix&, double, const DenseMatrix&);
-  friend SCICORESHARE void Mult_trans_X(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-  friend SCICORESHARE void Mult_X_trans(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+  friend void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
 };
+
+
+//! Friend functions
+void Sub(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+void Add(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+void Add(DenseMatrix&, double, const DenseMatrix&, double, const DenseMatrix&);
+void Add(double, DenseMatrix&, double, const DenseMatrix&);
+void Mult_trans_X(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+void Mult_X_trans(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+
 
 } // End namespace SCIRun
 
