@@ -46,10 +46,10 @@ namespace SCIRun {
 
 
 extern "C" {
-PSECORESHARE IPort* make_PathIPort(Module* module, const string& name) {
+IPort* make_PathIPort(Module* module, const string& name) {
   return scinew SimpleIPort<PathHandle>(module,name);
 }
-PSECORESHARE OPort* make_PathOPort(Module* module, const string& name) {
+OPort* make_PathOPort(Module* module, const string& name) {
   return scinew SimpleOPort<PathHandle>(module,name);
 }
 }

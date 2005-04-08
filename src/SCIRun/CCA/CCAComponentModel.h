@@ -123,7 +123,6 @@ private:
   componentDB_type components;
     
   void readComponentDescription(const std::string& file);
-  std::string getSidlXMLPath();
   resourceReference *getLoader(std::string loaderName);
 
   CCAComponentModel(const CCAComponentModel&);

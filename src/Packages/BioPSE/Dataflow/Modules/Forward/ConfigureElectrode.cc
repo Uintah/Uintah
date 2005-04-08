@@ -38,8 +38,9 @@
  *  Copyright (C) 2002 SCI Group
  */
 
-#include <Core/Datatypes/CurveField.h>
-#include <Core/Datatypes/TetVolField.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Datatypes/CurveMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -48,7 +49,9 @@
 namespace BioPSE {
 
 using namespace SCIRun;
-
+typedef CurveMesh<CrvLinearLgn<Point> >                     CMesh;
+typedef CrvLinearLgn<double>                                CBasis;
+typedef GenericField<CMesh, CBasis, vector<double> >        CField;  
 class ConfigureElectrode : public Module {
   GuiString active_;
   GuiDouble voltage_;
@@ -74,15 +77,6 @@ void ConfigureElectrode::execute() {
   FieldIPort* ielec = (FieldIPort *) get_iport("Electrode");
   FieldOPort* oelec = (FieldOPort *) get_oport("Electrode");
   
-  if (!ielec) {
-    error("Unable to initialize iport 'Electrode'.");
-    return;
-  }
-  if (!oelec) {
-    error("Unable to initialize oport 'Electrode'.");
-    return;
-  }
-  
   FieldHandle ielecH;
 
   if (!ielec->get(ielecH))
@@ -91,7 +85,7 @@ void ConfigureElectrode::execute() {
     error("Empty input electrode.");
     return;
   }
-  CurveField<double> *elecFld = dynamic_cast<CurveField<double>*>(ielecH.get_rep());
+  CField *elecFld = dynamic_cast<CField*>(ielecH.get_rep());
   if (!elecFld) {
     error("Input electrode wasn't a CurveField<double>.");
     return;
@@ -100,7 +94,7 @@ void ConfigureElectrode::execute() {
   double voltage = voltage_.get();
   string active = active_.get();
 
-  CurveMesh::Node::iterator ni;
+  CMesh::Node::iterator ni;
   elecFld->get_typed_mesh()->begin(ni);
   elecFld->fdata()[*ni]=voltage;
 

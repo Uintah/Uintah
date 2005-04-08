@@ -81,22 +81,6 @@ TendSim::execute()
 
   onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!bmat_) {
-    error("Unable to initialize iport 'BMatrixNrrd'.");
-    return;
-  }
-  if (!referenceimg_) {
-    error("Unable to initialize iport 'ReferenceNrrd'.");
-    return;
-  }
-  if (!tensor_) {
-    error("Unable to initialize iport 'TensorNrrd'.");
-    return;
-  }
-  if (!onrrd_) {
-    error("Unable to initialize oport 'OutputNrrd'.");
-    return;
-  }
   if (!bmat_->get(bmat_handle))
     return;
   if (!referenceimg_->get(referenceimg_handle))

@@ -86,10 +86,6 @@ void
 HexToTet::execute()
 {
   FieldIPort *ifieldport = (FieldIPort *)get_iport("HexVol");
-  if (!ifieldport) {
-    error("Unable to initialize iport 'HexVol'.");
-    return;
-  }
   FieldHandle ifieldhandle;
   if(!(ifieldport->get(ifieldhandle) && ifieldhandle.get_rep()))
   {
@@ -98,11 +94,6 @@ HexToTet::execute()
   }
 
   FieldOPort *ofp = (FieldOPort *)get_oport("TetVol");
-  if (!ofp)
-  {
-    error("Unable to initialize " + name + "'s Output port.");
-    return;
-  }
 
   // Cache generation.
   if (ifieldhandle->generation == last_generation_)

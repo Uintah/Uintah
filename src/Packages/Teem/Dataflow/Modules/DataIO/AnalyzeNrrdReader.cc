@@ -51,7 +51,6 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/Teem/share/share.h>
 #include <Dataflow/Ports/NrrdPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 
@@ -70,7 +69,7 @@ using namespace SCIRun;
 // *************************** Class: AnalyzeNrrdReader ***************************
 // ****************************************************************************
  
-class TeemSHARE AnalyzeNrrdReader : public Module 
+class  AnalyzeNrrdReader : public Module 
 {
 
 public:
@@ -193,15 +192,8 @@ void AnalyzeNrrdReader::execute(){
   // Create handle to data
   NrrdDataHandle sciNrrdHandle(sciNrrd);
 
-  // Initialize output port
-  onrrd_ = (NrrdOPort *)get_oport("Nrrd");
-
-  if( !onrrd_ ) {
-    error("(AnalyzeNrrdReader::execute) Unable to initialize oport 'Nrrd'.");
-    return;
-  }
-
   // Send nrrd data downstream
+  onrrd_ = (NrrdOPort *)get_oport("Nrrd");
   onrrd_->send(sciNrrdHandle);
 
   /*

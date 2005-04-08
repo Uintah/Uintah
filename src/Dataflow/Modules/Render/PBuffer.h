@@ -59,9 +59,15 @@ public:
   ~PBuffer() {}
 
   // Returns false if the creation fails.
+#ifndef _WIN32
   bool create( Display* dpy, int screen, GLXContext sharedcontext,
 	       int width, int height, 
 	       int colorBits, int depthBits /* 8, 16 */);
+#else
+  bool create( Display* dpy, int screen, /*GLXContext sharedcontext,*/
+	       int width, int height, 
+	       int colorBits, int depthBits /* 8, 16 */);
+#endif
   void destroy();
   void makeCurrent();
   inline bool is_valid(){ return valid_; }
@@ -77,7 +83,9 @@ private:
   int depthBits_;
   bool valid_;
 
+#ifndef _WIN32
   GLXContext cx_;
+#endif
 #ifdef HAVE_PBUFFER
   GLXFBConfig* fbc_;
   GLXPbuffer pbuffer_;  //win_

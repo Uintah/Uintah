@@ -30,19 +30,18 @@
 //    Date   : Thu Jul 15 15:01:21 2004
 
 #include <Dataflow/Ports/TexturePort.h>
-#include <Dataflow/share/share.h>
 #include <Core/Malloc/Allocator.h>
 
 namespace SCIRun {
 
 extern "C" {
   
-PSECORESHARE IPort* make_TextureIPort(Module* module,
+IPort* make_TextureIPort(Module* module,
                                       const string& name) {
   return scinew SimpleIPort<TextureHandle>(module,name);
 }
   
-PSECORESHARE OPort* make_TextureOPort(Module* module,
+OPort* make_TextureOPort(Module* module,
                                       const string& name) {
   return scinew SimpleOPort<TextureHandle>(module,name);
 }
@@ -50,6 +49,6 @@ PSECORESHARE OPort* make_TextureOPort(Module* module,
 }
 
 template<> string SimpleIPort<TextureHandle>::port_type_("Texture");
-template<> string SimpleIPort<TextureHandle>::port_color_("wheat");
+template<> string SimpleIPort<TextureHandle>::port_color_("wheat3");
 
 } // namespace SCIRun

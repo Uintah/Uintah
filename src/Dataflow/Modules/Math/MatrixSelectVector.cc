@@ -63,9 +63,11 @@ class MatrixSelectVector : public Module {
   GuiInt    delay_;
   GuiInt    inc_amount_;
   GuiInt    send_amount_;
+  GuiInt    data_series_done_;
   int       inc_;
   bool      loop_;
   int       use_row_;
+  int       last_gen_;
 
   void send_selection(MatrixHandle mh, int which, int ncopy, bool cache);
   int increment(int which, int lower, int upper);
@@ -96,9 +98,11 @@ MatrixSelectVector::MatrixSelectVector(GuiContext* ctx)
     delay_(ctx->subVar("delay")),
     inc_amount_(ctx->subVar("inc-amount")),
     send_amount_(ctx->subVar("send-amount")),
+    data_series_done_(ctx->subVar("data_series_done")),
     inc_(1),
     loop_(false),
-    use_row_(-1)
+    use_row_(-1),
+    last_gen_(-1)
 {
 }
 
@@ -113,16 +117,7 @@ MatrixSelectVector::send_selection(MatrixHandle mh, int which,
 				   int ncopy, bool cache)
 {
   MatrixOPort *ovec = (MatrixOPort *)get_oport("Vector");
-  if (!ovec) {
-    error("Unable to initialize oport 'Vector'.");
-    return;
-  }
-
   MatrixOPort *osel = (MatrixOPort *)get_oport("Selected Index");
-  if (!osel) {
-    error("Unable to initialize oport 'Selected Index'.");
-    return;
-  }
 
   MatrixHandle matrix(0);
   if (use_row_) {
@@ -173,6 +168,10 @@ MatrixSelectVector::send_selection(MatrixHandle mh, int which,
 int
 MatrixSelectVector::increment(int which, int lower, int upper)
 {
+  data_series_done_.reset();
+  if (playmode_.get() == "autoplay" && data_series_done_.get()) {
+    return which;
+  }
   // Do nothing if no range.
   if (upper == lower) {
     if (playmode_.get() == "once")
@@ -190,6 +189,9 @@ MatrixSelectVector::increment(int which, int lower, int upper)
     } else if (playmode_.get() == "bounce2") {
       inc_ *= -1;
       return upper;
+    } else if (playmode_.get() == "autoplay") {
+      data_series_done_.set(1);
+      return lower;
     } else {
       if (playmode_.get() == "once")
 	execmode_.set( "stop" );
@@ -220,19 +222,24 @@ MatrixSelectVector::execute()
   update_state(NeedData);
 
   MatrixIPort *imat = (MatrixIPort *)get_iport("Matrix");
-  if (!imat) {
-    error("Unable to initialize iport 'Matrix'.");
-    return;
-  }
-
   MatrixHandle mh;
   if (!(imat->get(mh) && mh.get_rep()))
   {
     error("Empty input matrix.");
     return;
   }
-  
   update_state(JustStarted);
+  if (playmode_.get() == "autoplay") {
+    data_series_done_.reset();
+    while (last_gen_ == mh->generation && data_series_done_.get()) {
+      //cerr << "waiting" << std::endl;
+      //want_to_execute();
+      return;
+    } 
+    last_gen_ = mh->generation;
+    data_series_done_.set(0);
+  }
+
   
   bool changed_p = false;
 
@@ -254,7 +261,7 @@ MatrixSelectVector::execute()
       changed_p = true;
     }
 
-    double minlabel;
+    double minlabel = 0.0;
     if (!mh->get_property("row_min", minlabel))
       minlabel = 0.0;
 
@@ -263,7 +270,7 @@ MatrixSelectVector::execute()
       changed_p = true;
     }
 
-    double maxlabel;
+    double maxlabel = 0.0;
     if (!mh->get_property("row_max", maxlabel))
       maxlabel = mh->nrows() - 1.0;
 
@@ -288,7 +295,7 @@ MatrixSelectVector::execute()
       changed_p = true;
     }
 
-    double minlabel;
+    double minlabel = 0.0;
     if (!mh->get_property("col_min", minlabel))
       minlabel = 0.0;
 
@@ -297,7 +304,7 @@ MatrixSelectVector::execute()
       changed_p = true;
     }
 
-    double maxlabel;
+    double maxlabel = 0.0;
     if (!mh->get_property("col_max", maxlabel))
       maxlabel = mh->ncols() - 1.0;
 
@@ -323,17 +330,9 @@ MatrixSelectVector::execute()
   // Specialized matrix multiply, with Weight Vector given as a sparse
   // matrix.  It's not clear what this has to do with MatrixSelectVector.
   MatrixIPort *ivec = (MatrixIPort *)get_iport("Weight Vector");
-  if (!ivec) {
-    error("Unable to initialize iport 'Weight Vector'.");
-    return;
-  }
   MatrixHandle weightsH;
   if (ivec->get(weightsH) && weightsH.get_rep()) {
     MatrixOPort *ovec = (MatrixOPort *)get_oport("Vector");
-    if (!ovec) {
-      error("Unable to initialize oport 'Vector'.");
-      return;
-    }
 
     ColumnMatrix *w = dynamic_cast<ColumnMatrix*>(weightsH.get_rep());
     if (w == 0)  {
@@ -373,11 +372,6 @@ MatrixSelectVector::execute()
 
   // If there is a current index matrix, use it.
   MatrixIPort *icur = (MatrixIPort *)get_iport("Current Index");
-  if (!icur) {
-    error("Unable to initialize iport 'Current Index'.");
-    return;
-  }
-
   MatrixHandle currentH;
   if (icur->get(currentH) && currentH.get_rep()) {
     which = (int)(currentH->get(0, 0));
@@ -397,8 +391,10 @@ MatrixSelectVector::execute()
 
 
     // Update the increment.
-    if (changed_p || playmode_.get() == "once" || playmode_.get() == "loop")
+    if (changed_p || playmode_.get() == "once" || 
+	playmode_.get() == "autoplay" || playmode_.get() == "loop") {
       inc_ = (start>end)?-1:1;
+    }
 
     // If the current value is invalid, reset it to the start.
     if (current_.get() < lower || current_.get() > upper) {
@@ -428,7 +424,13 @@ MatrixSelectVector::execute()
       if( !loop_ ) {
 	if (playmode_.get() == "once" && which >= end)
 	  which = start;
-      }
+	if (playmode_.get() == "autoplay" && which >= end)
+	{
+	  which = start;
+	  cerr << "setting to wait" << std::endl;
+	  data_series_done_.set(1);
+	}
+    }
 
       send_selection(mh, which, send_amount, cache);
 
@@ -448,9 +450,8 @@ MatrixSelectVector::execute()
 
 	// Incrementing may cause a stop in the execmode so recheck.
 	execmode_.reset();
-	if( loop_ = (execmode_.get() == "play") ) {
+	if(loop_ = (execmode_.get() == "play")) {
 	  which = next;
-
 	  want_to_execute();
 	}
       }
@@ -478,6 +479,11 @@ MatrixSelectVector::tcl_command(GuiArgs& args, void* userdata)
   if (args.count() < 2) {
     args.error("MatrixSelectVector needs a minor command");
     return;
+
+  }
+
+  if (args[1] == "restart") {
+
   } else Module::tcl_command(args, userdata);
 }
 

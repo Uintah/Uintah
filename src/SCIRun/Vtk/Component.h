@@ -110,6 +110,8 @@ public:
   /** Implements the UI.  Each component type must reimplement this method if
       it provides a user interface. */
   virtual int popupUI();
+
+  void updateAllOutPorts(int flag);
   
 private:
   /** A list of all the input ports. */

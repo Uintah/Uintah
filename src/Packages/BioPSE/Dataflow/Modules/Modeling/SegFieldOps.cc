@@ -43,7 +43,9 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Packages/BioPSE/Core/Datatypes/SegLatVolField.h>
-#include <Core/Datatypes/LatVolField.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -56,6 +58,10 @@ using namespace SCIRun;
 
 class SegFieldOps : public Module
 {
+  typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
+  typedef HexTrilinearLgn<int>                FDintBasis;
+  typedef GenericField<LVMesh, FDintBasis, FData3d<int, LVMesh> > LVField;
+
   string tclCmd_;
   FieldHandle origFldH_;
   SegLatVolField* origFld_;
@@ -88,20 +94,12 @@ SegFieldOps::~SegFieldOps()
 void
 SegFieldOps::execute()
 {
-  // make sure the ports exist
+  // Make sure the ports exist.
   FieldIPort *ifp = (FieldIPort *)get_iport("LatVol or SegField");
-  FieldHandle ifieldH;
-  if (!ifp) {
-    error("Unable to initialize iport 'LatVol of SegField'.");
-    return;
-  }
   FieldOPort *ofp = (FieldOPort *)get_oport("SegField");
-  if (!ofp) {
-    error("Unable to initialize oport 'SegField'.");
-    return;
-  }
 
-  // make sure the input data exists
+  // Make sure the input data exists.
+  FieldHandle ifieldH;
   if (!ifp->get(ifieldH) || !ifieldH.get_rep()) {
     error("No input data");
     return;
@@ -148,10 +146,10 @@ SegFieldOps::execute()
     return;
   }
 
-  LatVolField<int> *lvf;
+  LVField *lvf;
   SegLatVolField *slvf = dynamic_cast<SegLatVolField *>(ifieldH.get_rep());
   if (!slvf) {
-    lvf = dynamic_cast<LatVolField<int> *>(ifieldH.get_rep());
+    lvf = dynamic_cast<LVField *>(ifieldH.get_rep());
     if (!lvf) {
       error("SegFieldOps requires either a SegLatVolField or a LatVolField<int> (data at cells) as input.");
       return;

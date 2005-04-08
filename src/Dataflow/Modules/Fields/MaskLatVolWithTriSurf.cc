@@ -88,15 +88,6 @@ MaskLatVolWithTriSurf::execute()
   LVMesh::handle_type latvolM;
   TSMesh::handle_type trisurfM;
   
-  if (!latvol) {
-    error("Unable to initialize iport 'LatVolField'.");
-    return;
-  }
-  if (!trisurf) {
-    error("Unable to initialize iport 'TriSurfField'.");
-    return;
-  }
-
   if (!latvol->get(latvolH)) {
     warning("No input on LatVol port.");
     return;
@@ -118,10 +109,6 @@ MaskLatVolWithTriSurf::execute()
   }
 
   FieldOPort *omask = (FieldOPort *) get_oport("LatVol Mask");
-  if (!omask) {
-    error("Unable to initialize oport 'Mask'.");
-    return;
-  }
 
   typedef HexTrilinearLgn<char>                                  DatBasis;
   typedef GenericField<LVMesh, DatBasis, FData3d<char, LVMesh> > LVField;

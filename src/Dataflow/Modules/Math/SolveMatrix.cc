@@ -159,9 +159,9 @@ class SolveMatrix : public Module {
   
 #ifdef PETSC_UNI
   friend int PETSc_monitor(KSP,int n,PetscReal rnorm,void *);
-  Array1<double> PETSc_errlist;
-  Array1<double> PETSc_targetlist;
-  Array1<int> PETSc_targetidx;
+  vector<double> PETSc_errlist;
+  vector<double> PETSc_targetlist;
+  vector<int> PETSc_targetidx;
   double PETSc_log_orig;
   double PETSc_log_targ;
   double PETSc_max_err;
@@ -176,9 +176,9 @@ class SolveMatrix : public Module {
   void conjugate_gradient_sci(Matrix*,ColumnMatrix&, ColumnMatrix&);
   void bi_conjugate_gradient_sci(Matrix*,ColumnMatrix&, ColumnMatrix&);
   
-  void append_values(int niter, const Array1<double>& errlist,
-		     int& last_update, const Array1<int>& targetidx,
-		     const Array1<double>& targetlist,
+  void append_values(int niter, const vector<double>& errlist,
+		     int& last_update, const vector<int>& targetidx,
+		     const vector<double>& targetlist,
 		     int& last_errupdate);
 public:
   void parallel_conjugate_gradient(int proc);
@@ -261,19 +261,6 @@ void SolveMatrix::execute()
   matrixport = (MatrixIPort *)get_iport("Matrix");
   rhsport = (MatrixIPort *)get_iport("RHS");
   solport = (MatrixOPort *)get_oport("Solution");
-  
-  if (!matrixport) {
-    error("Unable to initialize iport 'Matrix'.");
-    return;
-  }
-  if (!rhsport) {
-    error("Unable to initialize iport 'RHS'.");
-    return;
-  }
-  if (!solport) {
-    error("Unable to initialize oport 'Solution'.");
-    return;
-  }
   
   MatrixHandle matrix;
   MatrixHandle rhs;
@@ -557,15 +544,15 @@ void SolveMatrix::petsc_solve(const char* prec, const char* meth,
 }
 #endif
 
-void SolveMatrix::append_values(int niter, const Array1<double>& errlist,
+void SolveMatrix::append_values(int niter, const vector<double>& errlist,
 				int& last_update,
-				const Array1<int>& targetidx,
-				const Array1<double>& targetlist,
+				const vector<int>& targetidx,
+				const vector<double>& targetlist,
 				int& last_errupdate)
 {
     std::ostringstream str;
     str << id << " append_graph " << niter << " \"";
-    int i;
+    unsigned int i;
     for(i=last_update;i<errlist.size();i++){
       double err = MakeReal(errlist[i]);
       if (err < 1000000) 
@@ -643,15 +630,15 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
     memref=memref%1000000000;
     
     gui->execute(id+" reset_graph");
-    Array1<double> errlist;
-    errlist.add(err);
+    vector<double> errlist;
+    errlist.push_back(err);
     int last_update=0;
 
-    Array1<int> targetidx;
-    Array1<double> targetlist;
+    vector<int> targetidx;
+    vector<double> targetlist;
     int last_errupdate=0;
-    targetidx.add(0);
-    targetlist.add(max_error);
+    targetidx.push_back(0);
+    targetlist.push_back(max_error);
 
     append_values(1, errlist, last_update, targetidx, targetlist, last_errupdate);
 
@@ -663,12 +650,12 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
 	target_error.reset();
 	double new_error = target_error.get();
 	if(new_error != max_error){
-	  targetidx.add(niter);
-	  targetlist.add(max_error);
+	  targetidx.push_back(niter);
+	  targetlist.push_back(max_error);
 	  max_error=new_error;
 	}
-	targetidx.add(niter);
-	targetlist.add(max_error);
+	targetidx.push_back(niter);
+	targetlist.push_back(max_error);
 	if(err < max_error)
 	    break;
 	if(err > 10){
@@ -686,7 +673,7 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
 
 	if (!(err < 10000000)) err=1000000;
 
-	errlist.add(err);
+	errlist.push_back(err);
 
 	gflop+=flop/1000000000;
 	flop=flop%1000000000;
@@ -746,11 +733,12 @@ void SolveMatrix::conjugate_gradient_sci(Matrix* matrix,
   data.mat=matrix;
   data.timer=new WallClockTimer;
   data.stats=new PStats[data.np];
-  Thread::parallel(Parallel<SolveMatrix>(this, &SolveMatrix::parallel_conjugate_gradient),
-		   data.np, true);
+
+  Thread::parallel(this, &SolveMatrix::parallel_conjugate_gradient, data.np);
+
   delete data.timer;
   delete data.stats;
-//  delete data;
+
   timer.stop();
 }
 
@@ -766,9 +754,9 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
   stats->memref=0;
   stats->gflop=0;
   stats->grefs=0;
-  Array1<int> targetidx;
-  Array1<double> targetlist;
-  Array1<double> errlist;
+  vector<int> targetidx;
+  vector<double> targetlist;
+  vector<double> errlist;
   
   int last_update=0;
   
@@ -854,9 +842,9 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     memrate.set((stats->grefs*1.e3+stats->memref*1.e-6)/time);
     
     gui->execute(id+" reset_graph");
-    errlist.add(data.err);
-    targetidx.add(0);
-    targetlist.add(data.max_error);
+    errlist.push_back(data.err);
+    targetidx.push_back(0);
+    targetlist.push_back(data.max_error);
     
     append_values(1, errlist, last_update, targetidx, targetlist, last_errupdate);
   }
@@ -876,12 +864,12 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
       target_error.reset();
       double new_error = target_error.get();
       if(new_error != data.max_error){
-	targetidx.add(data.niter+1);
-	targetlist.add(data.max_error);
+	targetidx.push_back(data.niter+1);
+	targetlist.push_back(data.max_error);
 	data.max_error=new_error;
       }
-      targetidx.add(data.niter);
-      targetlist.add(data.max_error);
+      targetidx.push_back(data.niter);
+      targetlist.push_back(data.max_error);
     }
     data.reducer.wait(data.np);
     if(err < 1.e-15 || err < data.max_error)
@@ -932,7 +920,7 @@ void SolveMatrix::parallel_conjugate_gradient(int processor)
     stats->memref=stats->memref%1000000000;
     
     if(processor == 0){
-      errlist.add(err);
+      errlist.push_back(err);
       
       stats->gflop+=stats->flop/1000000000;
       stats->flop=stats->flop%1000000000;
@@ -995,7 +983,6 @@ SolveMatrix::bi_conjugate_gradient_sci(Matrix* matrix,
   int np = tcl_np.get();
   Matrix *trans = matrix->transpose();
 
-//  data=new CGData;
   data.module=this;
   data.np=np;
   data.rhs=&rhs;
@@ -1005,12 +992,12 @@ SolveMatrix::bi_conjugate_gradient_sci(Matrix* matrix,
   data.stats=new PStats[data.np];
   data.trans = trans;
   
-//   int i,p;
-  Thread::parallel(Parallel<SolveMatrix>(this, &SolveMatrix::parallel_bi_conjugate_gradient),
-		   data.np, true);
+  Thread::parallel(this, &SolveMatrix::parallel_bi_conjugate_gradient,
+                   data.np);
+
   delete data.timer;
   delete data.stats;
-//  delete data;
+
   timer.stop();
   remark("bi_cg done in " + to_string(timer.time()) + " seconds");
 }
@@ -1029,9 +1016,9 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
   stats->memref=0;
   stats->gflop=0;
   stats->grefs=0;
-  Array1<int> targetidx;
-  Array1<double> targetlist;
-  Array1<double> errlist;
+  vector<int> targetidx;
+  vector<double> targetlist;
+  vector<double> errlist;
   
   int last_update=0;
   
@@ -1123,9 +1110,9 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     memrate.set((stats->grefs*1.e3+stats->memref*1.e-6)/time);
     
     gui->execute(id+" reset_graph");
-    errlist.add(data.err);
-    targetidx.add(0);
-    targetlist.add(data.max_error);
+    errlist.push_back(data.err);
+    targetidx.push_back(0);
+    targetlist.push_back(data.max_error);
     
     append_values(1, errlist, last_update, targetidx, targetlist, last_errupdate);
   }
@@ -1147,12 +1134,12 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
       target_error.reset();
       double new_error = target_error.get();
       if(new_error != data.max_error){
-	targetidx.add(data.niter+1);
-	targetlist.add(data.max_error);
+	targetidx.push_back(data.niter+1);
+	targetlist.push_back(data.max_error);
 	data.max_error=new_error;
       }
-      targetidx.add(data.niter);
-      targetlist.add(data.max_error);
+      targetidx.push_back(data.niter);
+      targetlist.push_back(data.max_error);
     }
     data.reducer.wait(data.np);
 
@@ -1228,7 +1215,7 @@ void SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     stats->memref=stats->memref%1000000000;
     
     if(processor == 0){
-      errlist.add(err);
+      errlist.push_back(err);
       
       stats->gflop+=stats->flop/1000000000;
       stats->flop=stats->flop%1000000000;

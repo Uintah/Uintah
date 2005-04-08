@@ -46,7 +46,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class PSECORESHARE UnuSave : public Module {
+class UnuSave : public Module {
 public:
   UnuSave(GuiContext*);
 
@@ -86,11 +86,6 @@ void
 
   update_state(NeedData);
   inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
-
-  if (!inrrd_) {
-    error("Unable to initialize iport 'InputNrrd'.");
-    return;
-  }
 
   if (!inrrd_->get(nrrd_handle))
     return;

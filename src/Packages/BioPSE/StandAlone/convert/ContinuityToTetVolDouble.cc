@@ -39,7 +39,9 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Datatypes/TetVolField.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/Array1.h>
 #include <iostream>
@@ -53,6 +55,11 @@ using std::endl;
 using std::stack;
 
 using namespace SCIRun;
+
+typedef TetLinearLgn<double>                TFDdoubleBasis;
+typedef TetVolMesh<TetLinearLgn<Point> >    TVMesh;
+typedef GenericField<TVMesh, TFDdoubleBasis, vector<double> > TVField;
+
 
 void sort_and_add(int a, int b, int c, int d, Array1<int>& sorted) {
   sorted.resize(4);
@@ -256,7 +263,7 @@ main(int argc, char **argv) {
     }
   }
 
-  TetVolMesh *tvm = new TetVolMesh();
+  TVMesh *tvm = new TVMesh();
   for (i=0; i<nnodes; i++) tvm->add_point(nodes[i]);
 
   for (i=0; i<nelems; i++) {
@@ -285,8 +292,8 @@ main(int argc, char **argv) {
     }
   }
 
-  TetVolMeshHandle tvmH(tvm);
-  TetVolField<double> *tv = scinew TetVolField<double>(tvmH, 1);
+  TVMesh::handle_type tvmH(tvm);
+  TVField *tv = scinew TVField(tvmH);
 
   for (i=0; i<nnodes; i++)
     tv->fdata()[i]=vals[i];

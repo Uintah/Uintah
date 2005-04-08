@@ -33,12 +33,14 @@ source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Connection.tcl
 source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Port.tcl
 source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Subnet.tcl
 source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/UIvar.tcl
+source [netedit getenv SCIRUN_SRCDIR]/Core/GUI/Range.tcl
 
 set SCIRUN_SRCDIR [netedit getenv SCIRUN_SRCDIR]
 set smallIcon [image create photo -file "$SCIRUN_SRCDIR/pixmaps/scirun-icon-small.ppm"]
 set splashImageFile "$SCIRUN_SRCDIR/main/scisplash.ppm"
 set bioTensorSplashImageFile "$SCIRUN_SRCDIR/Packages/Teem/Dataflow/GUI/splash-tensor.ppm"
 set bioFEMSplashImageFile "$SCIRUN_SRCDIR/Packages/BioPSE/Dataflow/GUI/splash-biofem.ppm"
+set bioImageSplashImageFile "$SCIRUN_SRCDIR/Packages/Teem/Dataflow/GUI/splash-bioimage.ppm"
 set fusionViewerSplashImageFile "$SCIRUN_SRCDIR/Packages/Fusion/Dataflow/GUI/splash-fusionviewer.ppm"
 
 set modname_font "-Adobe-Helvetica-Bold-R-Normal-*-12-120-75-*"
@@ -114,22 +116,20 @@ proc makeNetworkEditor {} {
     wm protocol . WM_DELETE_WINDOW { NiceQuit }
     wm minsize . 100 100
 
-    set neWidth  800
-    set neHeight 800
 
-    # Check screen geometry before creating window.  Then create window
-    # to fit on screen.
-    set screenwidth [winfo screenwidth .]
-    set screenheight [winfo screenheight .]
-
-    if { $screenwidth < $neWidth } {
-	set neWidth [expr $screenwidth - 30]
+    if { [validFile ~/.scirun.geom] } {
+	set geomfile [open ~/.scirun.geom r]
+        wm geometry . [gets $geomfile]
+	close $geomfile
+    } else {
+	# Check screen geometry before creating window.  
+	# To ensure window fits on screen.
+	set swidth [winfo screenwidth .]
+	set sheight [winfo screenheight .]
+	set neWidth  [expr ($swidth <  800) ? ($swidth-30) : 800]
+	set neHeight [expr ($sheight < 800) ? ($sheight-30) : 800]
+	wm geometry . ${neWidth}x${neHeight}
     }
-    if { $screenheight < $neHeight } {
-	set neHeight [expr $screenheight - 30]
-    }
-
-    wm geometry . ${neWidth}x${neHeight}
 
     wm title . "SCIRun v[netedit getenv SCIRUN_VERSION]"
     setIcons . large
@@ -143,7 +143,7 @@ proc makeNetworkEditor {} {
 	-menu .main_menu.file.menu
     menu .main_menu.file.menu -tearoff false
     menu .main_menu.file.menu.new -tearoff false
-    .main_menu.file.menu.new add command -label "Module..." \
+    .main_menu.file.menu.new add command -label "Create Module Skeleton..." \
         -underline 0 -command "ComponentWizard"
 
     # Create the "File" Menu sub-menus.  Create (most of) them in the
@@ -173,7 +173,7 @@ proc makeNetworkEditor {} {
 	-command "updateRunDateAndTime 0; netedit scheduleall" -state disabled
 
     .main_menu.file.menu add separator
-    .main_menu.file.menu add cascade -label "New" -underline 0\
+    .main_menu.file.menu add cascade -label "Wizards" -underline 0 \
         -menu .main_menu.file.menu.new -state disabled
     .main_menu.file.menu add separator
 
@@ -365,6 +365,8 @@ proc redrawMinicanvas {} {
     global SCALEX SCALEY minicanvas maincanvas mainCanvasWidth mainCanvasHeight
     set w [expr [winfo width $minicanvas]-2]
     set h [expr [winfo height $minicanvas]-2]
+    set w [expr ($w<=0)?1:$w]
+    set h [expr ($h<=0)?1:$h]
     set SCALEX [expr $mainCanvasWidth/$w]
     set SCALEY [expr $mainCanvasHeight/$h]
     updateViewAreaBox
@@ -528,6 +530,7 @@ proc createSubnetMenu { menu { subnet 0 } } {
 
 proc networkHasChanged {args} {
     upvar \#0 NetworkChanged changed
+#    puts "$changed networkHasChanged [info level [expr [info level]-1]]"
     set changed 1
 }
 
@@ -547,7 +550,34 @@ proc addModuleAtMouse { pack cat mod subnet_id } {
 
 
 proc findMovedModulePath { packvar catvar modvar } {
-    set xlat "{Fusion Fields NrrdFieldConverter} {Teem Converters NrrdToField} {SCIRun FieldsCreate GatherPoints} {SCIRun FieldsCreate GatherFields} {Teem DataIO ColorMapToNrrd } {Teem Converters ColorMapToNrrd} {Teem DataIO FieldToNrrd} {Teem Converters FieldToNrrd} {Teem DataIO NrrdToMatrix} {Teem Converters NrrdToMatrix} {Teem DataIO MatrixToNrrd} {Teem Converters MatrixToNrrd} {Teem DataIO NrrdToField} {Teem Converters NrrdToField} {SCIRun Visualization NrrdToColorMap2} {Teem Converters NrrdToColorMap2}"
+    # Deprecated module translation table.
+    set xlat "
+{Fusion Fields NrrdFieldConverter} {Teem Converters NrrdToField}
+{SCIRun FieldsCreate GatherPoints} {SCIRun FieldsCreate GatherFields}
+{SCIRun Fields GatherPoints} {SCIRun FieldsCreate GatherFields}
+{Teem DataIO ColorMapToNrrd} {Teem Converters ColorMapToNrrd}
+{Teem DataIO FieldToNrrd} {Teem Converters FieldToNrrd}
+{Teem DataIO NrrdToMatrix} {Teem Converters NrrdToMatrix}
+{Teem DataIO MatrixToNrrd} {Teem Converters MatrixToNrrd}
+{Teem DataIO NrrdToField} {Teem Converters NrrdToField}
+{SCIRun Visualization NrrdToColorMap2} {Teem Converters NrrdToColorMap2}
+{SCIRun Visualization GLTextureBuilder} {SCIRun Visualization TextureBuilder}
+{SCIRun Visualization TextureVolVis} {SCIRun Visualization VolumeVisualizer}
+{SCIRun Visualization TexCuttingPlanes} {SCIRun Visualization VolumeSlicer}
+{SCIRun FieldsData ChangeFieldDataAt} {SCIRun FieldsData ChangeFieldBasis}
+{SCIRun Fields ChangeFieldDataAt} {SCIRun FieldsData ChangeFieldBasis}
+{SCIRun Visualization GenTransferFunc} {SCIRun Visualization EditColorMap}
+{SCIRun Visualization EditTransferFunc2} {SCIRun Visualization EditColorMap2D}
+{SCIRun FieldsData BuildInterpMatrix} {SCIRun FieldsData BuildMappingMatrix}
+{SCIRun FieldsData ApplyInterpMatrix} {SCIRun FieldsData ApplyMappingMatrix}
+{SCIRun FieldsData DirectInterpolate} {SCIRun FieldsData DirectMapping}
+{SCIRun Fields DirectInterpolate} {SCIRun FieldsData DirectMapping}
+{SCIRun FieldsData BuildInterpolant} {SCIRun FieldsData BuildMappingMatrix}
+{SCIRun FieldsData ApplyInterpolant} {SCIRun FieldsData ApplyMappingMatrix}
+{SCIRun Fields BuildInterpolant} {SCIRun FieldsData BuildMappingMatrix}
+{SCIRun Fields ApplyInterpolant} {SCIRun FieldsData ApplyMappingMatrix}
+"
+
     upvar 1 $packvar package $catvar category $modvar module
     set newpath [string map $xlat "$package $category $module"]
     set package  [lindex $newpath 0]
@@ -610,6 +640,8 @@ proc addModuleAtPosition {package category module { xpos 10 } { ypos 10 } } {
     return $modid
 }
 
+# addModule2 creates a SCIRun module to be used in the SCIRun2 framework
+# as an instance of the SCIRunComponentModel.
 proc addModule2 {package category module modid} {  
     global Subnet
     set Subnet($modid) $Subnet(Loading)
@@ -618,14 +650,17 @@ proc addModule2 {package category module modid} {
 
     set className [join "${package}_${category}_${module}" ""]
     if {[catch "$className $modid" exception]} {
-	# Use generic module
-	if {$exception != "invalid command name \"$className\""} {
-	    bgerror "Error instantiating iTcl class for module:\n$exception";
-	}
-	Module $modid -name "$module"
+        # Use generic module
+        if {$exception != "invalid command name \"$className\""} {
+            bgerror "Error instantiating iTcl class for module:\n$exception";
+        }
+        Module $modid -name "$module"
     }
 
-    $modid make_icon 10 10 0
+    # fix for bug 2441: since SCIRun2's builder GUI takes care of
+    # creating and displaying module icons, make_icon should not be
+    # necessary
+    #$modid make_icon 10 10 0
 
     return $modid
 }
@@ -824,18 +859,21 @@ proc popupLoadMenu {} {
     loadnet $netedit_loadnet
 }
 
-proc ClearCanvas { {confirm 1} {subnet 0} } {
+proc ClearCanvas { { confirm 1 } { subnet 0 } } {
     # destroy all modules
     global NetworkChanged
     if { !$NetworkChanged } { set confirm 0 }
-    set result "ok"    
+    set do_clear yes
     if { $confirm } {
-	set result \
-	    [tk_messageBox -title "Warning" -type yesno -parent . -icon warning -message \
-		 "Your network has not been saved.\n\nAll modules and connections will be deleted.\n\nReally clear?"]	
+	set message [list "Your network has not been saved." \
+			 "All Moduels and connections will be deleted." \
+			 "Really clear?"]
+	set do_clear [tk_messageBox -title "Warning" -type yesno -parent . \
+			  -icon warning -message [join $message "\n\n"] ]
     }
-    if {!$confirm || [string compare "yes" $result] == 0} {
-	global Subnet netedit_savefile CurrentlySelectedModules
+
+    if { $do_clear == "yes" } {
+	global Subnet
 	foreach module $Subnet(Subnet${subnet}_Modules) {
 	    if { [string first Render_Viewer $module] != -1 } {
 		moduleDestroy $module
@@ -846,9 +884,9 @@ proc ClearCanvas { {confirm 1} {subnet 0} } {
 	}
 
 	wm title . "SCIRun" ;# Reset Main Window Title
-	set netedit_savefile ""
-	set CurrentlySelectedModules ""
-	set NetworkChanged 0
+	setGlobal netedit_savefile ""
+	setGlobal CurrentlySelectedModules ""
+	setGlobal NetworkChanged 0
     }   
 }
 
@@ -871,6 +909,9 @@ proc NiceQuit {} {
 	    }
 	}
     }
+    set geom [open ~/.scirun.geom w]
+    puts $geom [wm geom .]
+    close $geom
     puts "Goodbye!"
     netedit quit
 }
@@ -1196,6 +1237,7 @@ proc sourceSettingsFile {} {
 		1 "set data [showChooseDatasetPrompt $initialdir]"
 		2 { 
 		    displayErrorWarningOrInfo "*** SCIRUN_DATA not set.  Reader modules will need to be manually set to valid filenames." warning
+		    uplevel \#0 source "[netedit getenv SCIRUN_SRCDIR]/nets/default.settings"
 		    return
 		}
 		3 "netedit quit"
@@ -1252,29 +1294,6 @@ proc displayErrorWarningOrInfo { msg status } {
 }
 
 
-#centers window w1 over window w2
-proc centerWindow { w1 w2 } {
-    update
-#    wm overrideredirect $w1 1
-    wm geometry $w1 ""
-    update idletasks
-    set w [winfo width $w2]
-    set h [winfo height $w2]
-
-    if {$w < 2} { set w [winfo screenwidth .] }
-    if {$h < 2} { set h [winfo screenheight .] }    
-
-    set x [expr [winfo x $w2]+($w - [winfo width $w1])/2]
-    set y [expr [winfo y $w2]+($h - [winfo height $w1])/2]
-    wm geometry $w1 +${x}+${y}
-    if { [winfo ismapped $w1] } {
-	raise $w1
-    } else {
-	wm deiconify $w1
-    }
-    grab $w1
-}
-
 proc hideProgress { args } {
     if { ![winfo exists .splash] } return
     update idletasks
@@ -1285,7 +1304,7 @@ proc hideProgress { args } {
 }
 
 proc showProgress { { show_image 0 } { steps none } { okbutton 0 } } {
-    if { [envBool SCIRUN_HIDE_PROGRESS] } return
+    if { [envBool SCIRUN_HIDE_PROGRESS] && ![winfo exists .standalone] } return
     update idletasks
     set w .splash
     if { ![winfo exists $w] } {
@@ -1293,15 +1312,26 @@ proc showProgress { { show_image 0 } { steps none } { okbutton 0 } } {
 	wm withdraw $w
 	wm protocol $w WM_DELETE_WINDOW hideProgress
     }
-    setProgressTitle "Welcome to SCIRun v[netedit getenv SCIRUN_VERSION]"
+    if { $show_image} {
+	wm title $w "Welcome to SCIRun v[netedit getenv SCIRUN_VERSION]"
+    } else {
+	wm title $w "Loading Network..."
+    }
+
     if { ![winfo exists $w.frame] } {
 	frame $w.frame
 	pack $w.frame -expand 1 -fill both
     }
     set w $w.frame
 
+    # do not show if either env vars are set to true, the only 
+    # exception is when we are calling this from a powerapp's
+    # show_help
     if { [envBool SCIRUN_NOSPLASH] || [envBool SCI_NOSPLASH] } {
 	set show_image 0
+    }
+    if {[winfo exists .standalone]} {
+	set show_image 1
     }
 
     if { [winfo exists $w.fb] } {
@@ -1380,13 +1410,6 @@ proc setProgressText { text } {
 	update idletasks
     }
 }
-
-proc setProgressTitle { text } {
-    if { ![info exists .splash] } return
-    wm title .splash $text
-    update idletasks
-}
-
 
 proc incrProgress { { steps 1 } } {
     global progressMeter
@@ -1583,6 +1606,55 @@ proc licenseAccept { } {
     }
 }
 
+
+proc promptUserToCopySCIRunrc {} {
+
+    global dontAskAgain copyResult
+    set w .copyRCprompt
+
+    toplevel $w
+    wm withdraw $w
+
+    set copyResult 0
+    set dontAskAgain 0
+
+    set version [netedit getenv SCIRUN_RCFILE_VERSION]
+    if { $version == "" } {
+        set version "bak"
+    }
+
+    wm title $w "Copy v$version .scirunrc file?"
+    label $w.message -text "A newer version of the .scirunrc file is avaliable with this release.\n\nThis file contains SCIRun environment variables that are\nneccesary for some new features like fonts.\n\nPlease note: If you have made changes to your ~/.scirunrc file\nthey will be undone by this action.  Your existing file will be copied\nto ~/.scirunrc.$version\n\nWould you like SCIRun to copy over the new .scirunrc?" -justify left
+    frame $w.but
+    button $w.but.ok -text Copy -command "set copyResult 1"
+    button $w.but.no -text "Don't Copy" -command "set copyResult 0"
+    checkbutton $w.dontAskAgain -text "Don't ask me this question again." -variable dontAskAgain -offvalue 0 -onvalue 1
+#    pack $w.but.dontAskAgain -side topy -pady 5
+
+    pack $w.but.ok $w.but.no -side left -padx 5 -ipadx 5
+
+    pack $w.message $w.dontAskAgain $w.but -pady 5 -padx 5
+
+    # Override the destroy window decoration and make it not do anything
+    wm protocol $w WM_DELETE_WINDOW "SciRaise $w"
+
+    moveToCursor $w
+    SciRaise $w
+
+    vwait copyResult
+    if { $dontAskAgain && !$copyResult } {
+	if [catch { set rcfile [open ~/.scirunrc "WRONLY APPEND"] }] return
+	puts $rcfile "\n\# This section added when the user chose 'Dont Ask This Question Again'"
+	puts $rcfile "\# when prompted about updating the .scirurc file version"
+	set version [netedit getenv SCIRUN_VERSION].[netedit getenv SCIRUN_RCFILE_SUBVERSION]
+	puts $rcfile "SCIRUN_RCFILE_VERSION=${version}"
+	close $rcfile
+    }
+    destroy $w
+    unset dontAskAgain
+    return $copyResult
+}
+    
 proc validFile { args } {
     set name [lindex $args 0]
     return [expr [file isfile $name] && [file readable $name]]
@@ -1613,6 +1685,12 @@ proc getOnTheFlyLibsDir {} {
 
     if ![validDir $dir] {
 	set dir $binOTF
+	
+	# if this is a windows dir, it won't think this is a valid dir with the '/'s in the name
+        set ostype [netedit getenv OS]
+        if { [string equal $ostype "Windows_NT"] } {
+            return $binOTF
+        }
     }
 
     if ![validDir $dir] {
@@ -1732,7 +1810,11 @@ proc setVarStates { var save substitute } {
 proc printvars { pattern } {
     foreach name [lsort [uplevel \#0 "info vars *${pattern}*"]] { 
 	upvar \#0 $name var
-	puts "set \"$name\" \{$var\}"
+	if { [uplevel \#0 array exists \"$name\"] } {
+	    uplevel \#0 parray \"$name\"
+	} else {
+	    puts "set \"$name\" \{$var\}"
+	}
     }
 }
 
@@ -1804,6 +1886,16 @@ proc init_DATADIR_and_DATASET {} {
     
 
 proc writeNetwork { filename { subnet 0 } } {
+    # if the file already exists, back it up to "#filename"
+    if { [file exists $filename] } {
+	set src  "[file split [pwd]] [file split ${filename}]"
+	set src [eval file join $src]
+	set parts [file split $src]
+	set parts [lreplace $parts end end \#[lindex $parts end]]
+	set dest [eval file join $parts]
+	catch [file rename -force $src $dest]
+    }
+
     set out [open $filename {WRONLY CREAT TRUNC}]
     puts $out "\# SCIRun Network v[netedit getenv SCIRUN_VERSION]\n"
     maybeWriteTCLStyleCopyright $out
@@ -1813,3 +1905,34 @@ proc writeNetwork { filename { subnet 0 } } {
     puts $out "\n::netedit scheduleok"    
     close $out
 }
+
+
+# Numerically compares two version strings and returns:
+#  -1 if ver1 < ver2,
+#   0 if ver1 == ver2
+#   1 if ver1 > ver2
+proc compareVersions { ver1 ver2 } {
+    set v1 [split $ver1 .]
+    set v2 [split $ver2 .]
+    set l1 [llength $v1]
+    set l2 [llength $v2]
+    set len [expr ($l1 > $l2) ? $l1 : $l2]
+    for { set i 0 } {$i < $len} {incr i} {
+	set n1 -1
+	set n2 -1
+	if {$i < $l1} {
+	    set n1 [lindex $v1 $i]
+	}
+	if {$i < $l2} {
+	    set n2 [lindex $v2 $i]
+	}
+	if { $n1 < $n2 } {
+	    return -1
+	}
+	if { $n2 < $n1 } {
+	    return 1
+	}
+    }
+    return 0
+}
+    

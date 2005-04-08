@@ -33,7 +33,7 @@
 #if !defined(ConvertToNrrd_h)
 #define ConvertToNrrd_h
 
-
+#include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/ImageField.h>
@@ -267,7 +267,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
   if (data_name == ten) {
     pad_data = 7; // copy the data, and pad for tensor values
     sink_size = 7;
-    kind = nrrdKind3DMaskedSymTensor;
+    kind = nrrdKind3DMaskedSymMatrix;
     sink_label = label + string(":Tensor");
   } else if (data_name== vec) {
     pad_data = 3; // copy the data and pad for vector values
@@ -287,14 +287,29 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
     minP = bbox.min();
     maxP = bbox.max();
     spc = maxP - minP;
-    spc.x(spc.x() / (ndims[0] - 1));
-    if (ndims.size() > 1)
+    if (f->basis_order() == 0)
     {
-      spc.y(spc.y() / (ndims[1] - 1));
+      spc.x(spc.x() / ndims[0]);
+      if (ndims.size() > 1)
+      {
+        spc.y(spc.y() / ndims[1]);
+      }
+      if (ndims.size() > 2)
+      {
+        spc.z(spc.z() / ndims[2]);
+      }
     }
-    if (ndims.size() > 2)
+    else
     {
-      spc.z(spc.z() / (ndims[2] - 1));
+      spc.x(spc.x() / (ndims[0] - 1));
+      if (ndims.size() > 1)
+      {
+        spc.y(spc.y() / (ndims[1] - 1));
+      }
+      if (ndims.size() > 2)
+      {
+        spc.z(spc.z() / (ndims[2] - 1));
+      }
     }
     ddims = ndims;
     if (f->basis_order() == 0)
@@ -324,7 +339,12 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
       break;
     case 0:
       {
-	if (m->dimensionality() == 1) {
+	if (m->dimensionality() == 0) {
+	  typename Fld::mesh_type::Node::size_type size;
+	  m->synchronize(Mesh::NODES_E);
+	  m->size(size);
+	  sz = size;
+	} else if (m->dimensionality() == 1) {
 	  typename Fld::mesh_type::Edge::size_type size;
 	  m->synchronize(Mesh::EDGES_E);
 	  m->size(size);
@@ -498,7 +518,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 	}
 
 	if (pad_data > 0) {
-	  // 1D nrrd with vector/tenssor
+	  // 1D nrrd with vector/tensor
 	  ndata->nrrd->axis[0].label = strdup(sink_label.c_str());
 	  ndata->nrrd->axis[1].label = strdup("x");
 
@@ -511,7 +531,7 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
 	  // 2D nrrd of scalars
 	  ndata->nrrd->axis[0].label = strdup("x");
 	  ndata->nrrd->axis[1].label = strdup("y");
-	
+
 	  if (with_spacing) {
 	    ndata->nrrd->axis[0].min=minP.x();
 	    ndata->nrrd->axis[0].max=maxP.x();
@@ -654,7 +674,27 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
     default:
       break;
     }
-    dataH = ndata;
+
+    // check for transform
+    const string meshstr =
+      ifh->get_type_description(0)->get_name().substr(0, 6);
+    
+    if (!(ifh->mesh()->is_editable() && meshstr != "Struct"))
+    {
+      Transform t;
+      m->get_canonical_transform(t);
+      double trans[16];
+      t.get(trans);
+      string trans_string = "";
+      for(int i=0; i<16; i++) {
+	trans_string += to_string(trans[i]);
+	trans_string += " ";
+      }
+      dataH = ndata;
+      dataH->set_property("Transform", trans_string, false);
+    } else {
+      dataH = ndata;
+    }
   }
   return true;
 }

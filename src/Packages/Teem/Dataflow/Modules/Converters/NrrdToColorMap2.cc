@@ -82,9 +82,8 @@ NrrdToColorMap2::execute()
         error("Invalid input dimension. Must be 3d");
 	return;
       }
-      if (h->nrrd->axis[0].size != 4 && h->nrrd->axis[1].size != 512 && 
-	  h->nrrd->axis[2].size != 256) {
-        error("Invalid input size. Must be 4x512x256");
+      if (h->nrrd->dim != 3 || h->nrrd->axis[0].size != 4) {
+        error("Invalid input size. Must be 4xWidthxHeigh");
 	return;
       }
 
@@ -93,10 +92,13 @@ NrrdToColorMap2::execute()
 	return;
       }
 
-      vector<CM2WidgetHandle> widget;
-      widget.push_back(scinew ImageCM2Widget(h));
+      NrrdDataHandle temp = scinew NrrdData;
+      nrrdFlip(temp->nrrd, h->nrrd, 2);
 
-      ocmap_h_ = scinew ColorMap2(widget, false, false);
+      vector<CM2WidgetHandle> widget;
+      widget.push_back(scinew ImageCM2Widget(temp));
+
+      ocmap_h_ = scinew ColorMap2(widget, false, -1, make_pair(0.0, -1.0));
     } else if (!h.get_rep()) {
       error("No data in input port.");
       return;

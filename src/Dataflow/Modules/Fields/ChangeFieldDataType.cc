@@ -36,7 +36,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/FieldInterface.h>
-#include <Dataflow/share/share.h>
 
 #include <Core/Containers/Handle.h>
 #include <Dataflow/Ports/FieldPort.h>
@@ -51,7 +50,7 @@ namespace SCIRun {
 using std::endl;
 using std::pair;
 
-class PSECORESHARE ChangeFieldDataType : public Module {
+class ChangeFieldDataType : public Module {
 public:
   ChangeFieldDataType(GuiContext* ctx);
   virtual ~ChangeFieldDataType();
@@ -99,11 +98,7 @@ void
 ChangeFieldDataType::execute()
 {
   FieldIPort *iport = (FieldIPort*)get_iport("Input Field"); 
-  if (!iport) {
-    error("Unable to initialize iport 'Input Field'.");
-    return;
-  }
-  
+
   // The input port (with data) is required.
   FieldHandle fh;
   if (!iport->get(fh) || !fh.get_rep())
@@ -115,10 +110,6 @@ ChangeFieldDataType::execute()
 
   // The output port is required.
   FieldOPort *oport = (FieldOPort*)get_oport("Output Field");
-  if (!oport) {
-    error("Unable to initialize oport 'Output Field'.");
-    return;
-  }
 
   const string old_data_type = fh->get_type_description(1)->get_name();
   const string new_data_type = outputdatatype_.get();

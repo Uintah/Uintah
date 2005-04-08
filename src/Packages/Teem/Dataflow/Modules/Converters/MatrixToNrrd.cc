@@ -39,8 +39,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/share/share.h>
-
 #include <Dataflow/Ports/NrrdPort.h>
 
 #include <Core/Datatypes/ColumnMatrix.h>
@@ -53,7 +51,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class PSECORESHARE MatrixToNrrd : public Module {
+class MatrixToNrrd : public Module {
 public:
 
   MatrixIPort* imat_;
@@ -95,23 +93,6 @@ void
   ndata_ = (NrrdOPort *)get_oport("Data");
   nrows_ = (NrrdOPort *)get_oport("Rows");
   ncols_ = (NrrdOPort *)get_oport("Columns");
-
-  if (!imat_) {
-    error("Unable to initialize iport 'Matrix'.");
-    return;
-  }
-  if (!ndata_) {
-    error("Unable to initialize oport 'Data'.");
-    return;
-  }
-  if (!nrows_) {
-    error("Unable to initialize oport 'Rows'.");
-    return;
-  }
-  if (!ncols_) {
-    error("Unable to initialize oport 'Columns'.");
-    return;
-  }
 
   // Determine if it is a Column, Dense or Sparse matrix
   MatrixHandle matH;
@@ -173,7 +154,7 @@ MatrixToNrrd::create_and_send_dense_matrix_nrrd(MatrixHandle matH) {
   nd->nrrd->axis[1].kind = nrrdKindDomain;
 
   double *val = (double*)nd->nrrd->data;
-  double *data = matrix->getData();
+  double *data = matrix->get_data_pointer();
 
   for(int r=0; r<rows; r++) {
     for(int c=0; c<cols; c++) {

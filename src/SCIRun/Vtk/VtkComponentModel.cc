@@ -128,23 +128,33 @@ void VtkComponentModel::buildComponentList()
   
   destroyComponentList();
 
-  std::string component_path(this->getSidlXMLPath());
-
-  std::vector< std::string > paths = splitPathString(component_path);
-
-  for (std::vector< std::string>::const_iterator it = paths.begin();
-       it != paths.end(); ++it) {
-    Dir d(*it);
-    std::cerr << "VTK Component Model: Looking at directory: " << *it << std::endl;
-    std::vector<std::string> files;
-    d.getFilenamesBySuffix(".xml", files);
-
-    for(std::vector<std::string>::iterator iter = files.begin();
-        iter != files.end(); iter++) {
-      std::string& file = *iter;
-      std::cerr << "VTK Component Model: Looking at file" << file << std::endl;
-      readComponentDescription(*it+"/"+file);
+   SSIDL::array1<std::string> sArray;
+   sci::cca::TypeMap::pointer tm;
+   sci::cca::ports::FrameworkProperties::pointer fwkProperties =
+    pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
+        framework->getFrameworkService("cca.FrameworkProperties", "")
+    );
+    if (fwkProperties.isNull()) {
+        std::cerr << "Error: Cannot find framework properties" << std::cerr;
+        //return sci_getenv("SCIRUN_SRCDIR") + DEFAULT_PATH;
+    } else {
+        tm = fwkProperties->getProperties();
+        sArray = tm->getStringArray("sidl_xml_path", sArray);
     }
+    framework->releaseFrameworkService("cca.FrameworkProperties", "");
+
+    for (SSIDL::array1<std::string>::iterator it = sArray.begin(); it != sArray.end(); it++) {
+        Dir d(*it);
+        std::cerr << "VTK Component Model: Looking at directory: " << *it << std::endl;
+        std::vector<std::string> files;
+        d.getFilenamesBySuffix(".xml", files);
+
+        for(std::vector<std::string>::iterator iter = files.begin();
+            iter != files.end(); iter++) {
+          std::string& file = *iter;
+          std::cerr << "VTK Component Model: Looking at file" << file << std::endl;
+          readComponentDescription(*it+"/"+file);
+        }
   }
 }
 
@@ -183,7 +193,7 @@ void VtkComponentModel::readComponentDescription(const std::string& file)
 
   std::string compModelName
     = to_char_ptr(metacomponentmodel->getAttribute(to_xml_ch_ptr("name")));
-  std::cout << "Component model name = " << compModelName << std::endl;
+  //std::cout << "Component model name = " << compModelName << std::endl;
 
   if ( compModelName != std::string(this->prefixName) ) {
     return;
@@ -208,7 +218,7 @@ void VtkComponentModel::readComponentDescription(const std::string& file)
       DOMElement *component = static_cast<DOMElement *>(comps->item(j));
       std::string
         component_name(to_char_ptr(component->getAttribute(to_xml_ch_ptr("name"))));
-      std::cout << "Component name = ->" << component_name << "<-" << std::endl;
+      //std::cout << "Component name = ->" << component_name << "<-" << std::endl;
 
       // Register this component
       VtkComponentDescription* cd = new VtkComponentDescription(this, component_name);
@@ -224,7 +234,7 @@ bool VtkComponentModel::haveComponent(const std::string& type)
 }
 
 ComponentInstance* VtkComponentModel::createInstance(const std::string& name,
-						     const std::string& type)
+                             const std::string& type)
 {
   vtk::Component *component;
 
@@ -268,7 +278,7 @@ ComponentInstance* VtkComponentModel::createInstance(const std::string& name,
   component = (*maker)();
   
   VtkComponentInstance* ci = new VtkComponentInstance(framework, name, type,
-						      component);
+                              component);
   return ci;
 }
 
@@ -285,32 +295,12 @@ std::string VtkComponentModel::getName() const
 }
 
 void VtkComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list,
-					      bool /*listInternal*/)
+                          bool /*listInternal*/)
 {
   for(componentDB_type::iterator iter=components.begin();
       iter != components.end(); iter++){
     list.push_back(iter->second);
   }
-}
-
-std::string VtkComponentModel::getSidlXMLPath()
-{
-   sci::cca::ports::FrameworkProperties::pointer fwkProperties =
-	pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
-	    framework->getFrameworkService("cca.FrameworkProperties", "")
-	);
-    if (fwkProperties.isNull()) {
-	std::cerr << "Error: Cannot find framework properties" << std::cerr;
-	return sci_getenv("SCIRUN_SRCDIR") + DEFAULT_PATH;
-    }
-    sci::cca::TypeMap::pointer tm = fwkProperties->getProperties();
-    std::string s = tm->getString("sidl_xml_path", "");
-
-    if (s.empty()) {
-	s = sci_getenv("SCIRUN_SRCDIR") + DEFAULT_PATH;
-    }
-    framework->releaseFrameworkService("cca.FrameworkProperties", "");
-    return s;
 }
 
 

@@ -34,14 +34,16 @@
  *   Jan, 2003
  *
  */
-#include <vector>
 #include <Dataflow/Network/Module.h>
+#include <Dataflow/Network/Scheduler.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/GeometryComm.h>
 #include <Dataflow/Comm/MessageTypes.h>
 #include <Dataflow/Comm/MessageBase.h>
 #include <Core/Containers/StringUtil.h>
+
+#include <vector>
 
 namespace SCIRun {
 
@@ -105,13 +107,6 @@ void
 SynchronizeGeometry::do_execute()
 {
   ogeom_ = (GeometryOPort*)getOPort("Output Geometry");
-
-  if (ogeom_ == NULL)
-  {
-    error("Unable to initialize iport 'Output Geometry");
-    return;
-  }
-
   for (;;)
   {
     MessageBase *msg = mailbox.receive();
@@ -271,6 +266,7 @@ SynchronizeGeometry::process_event(MessageBase* msg)
     {
       flush_all_msgs();
     }
+    sched->report_execution_finished(msg);
     break;
 
   default:

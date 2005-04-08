@@ -29,8 +29,10 @@
 //    Author : Martin Cole
 //    Date   : Sun Feb 27 07:36:54 2005
 
-#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Persistent/Pstreams.h>
+#include <Core/Datatypes/Field.h>
 #include <algorithm>
 #include <iostream>
 #include <fstream>
@@ -41,6 +43,7 @@ using std::ifstream;
 using std::endl;
 
 using namespace SCIRun;
+typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
 
 int
 main(int argc, char **argv) {
@@ -59,7 +62,7 @@ main(int argc, char **argv) {
   }
   
   MeshHandle mb = handle->mesh();
-  TriSurfMesh *tsm = dynamic_cast<TriSurfMesh *>(mb.get_rep());
+  TSMesh *tsm = dynamic_cast<TSMesh *>(mb.get_rep());
 
   vector<int> faces;
   for (int i = 2; i < argc - 1; i++) {

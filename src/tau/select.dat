@@ -30,6 +30,28 @@ const SCIRun::Point &Uintah::ForceBC::getLowerRange() const
 
 bool SCIRun::Thread::isInitialized()  
 
+bool SCIRun::pair_less#
+double &SCIRun::SparseRowMatrix::get#
+void SCIRun::BBox::extend#
+SCIRun::Point SCIRun::BBox::min#
+SCIRun::Point SCIRun::BBox::max#
+
+void Uintah::LinearInterpolator::findCellAndWeightsAndShapeDerivatives#
+SCIRun::Point Uintah::Patch::nodePosition#
+SCIRun::IntVector Uintah::Patch::getInteriorNodeLowIndex#
+void Uintah::LinearInterpolator::findCellAndWeights#
+bool Uintah::Level::containsPoint#
+void Uintah::LinearInterpolator::findCellAndShapeDerivatives#
+double Uintah::MPMMaterial::getInitialDensity#
+SCIRun::IntVector Uintah::GeometryObject::getNumParticlesPerCell#
+SCIRun::Vector Uintah::Patch::dCell#
+Uintah::ConstitutiveModel *Uintah::MPMMaterial::getConstitutiveModel#
+SCIRun::IntVector Uintah::Level::getCellIndex#
+SCIRun::Vector Uintah::ConstitutiveModel::getInitialFiberDir#
+bool Uintah::Patch::findCell#
+void Uintah::ParticleCreator::applyForceBC#
+void Uintah::ParticleCreator::initializeParticle#
+
 END_EXCLUDE_LIST
 
 BEGIN_FILE_EXCLUDE_LIST
@@ -38,4 +60,6 @@ BEGIN_FILE_EXCLUDE_LIST
 *malloc.cc
 *new.cc
 *sus.cc
+*Thread_pthreads.cc
+*main.cc
 END_FILE_EXCLUDE_LIST

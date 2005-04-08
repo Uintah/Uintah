@@ -71,15 +71,6 @@ void SetProperty::execute() {
   FieldIPort *ifield = (FieldIPort *)get_iport("Input");
   FieldOPort *ofield = (FieldOPort *)get_oport("Output");
 
-  if (!ifield) {
-    error("Unable to initialize iport 'Input'.");
-    return;
-  }
-  if (!ofield) {
-    error("Unable to initialize oport 'Output'.");
-    return;
-  }
-  
   FieldHandle fldH;
   if (!ifield->get(fldH))
     return;

@@ -70,7 +70,7 @@ int
 TypeMap::getInt(const std::string& key, int dflt)
 {
   IntMap::iterator found = intMap.find(key);
-  if (found!=intMap.end()) {
+  if (found != intMap.end()) {
     return found->second;
   }
   return dflt;
@@ -80,7 +80,10 @@ TypeMap::getInt(const std::string& key, int dflt)
 long
 TypeMap::getLong(const std::string& key, long dflt)
 {
-  std::cerr<<"method not implemented" << std::endl;  
+  LongMap::iterator found = longMap.find(key);
+  if (found != longMap.end()) {
+    return found->second;
+  }
   return dflt;  
 }
    
@@ -88,16 +91,22 @@ TypeMap::getLong(const std::string& key, long dflt)
 float
 TypeMap::getFloat(const std::string& key, float dflt)
 {
-  std::cerr<<"method not implemented" << std::endl;  
-  return dflt;
+    FloatMap::iterator found = floatMap.find(key);
+    if (found != floatMap.end()) {
+        return found->second;
+    }
+    return dflt;
 }
 
 // double .sci.cca.TypeMap.getDouble(in string key, in double dflt)throws .sci.cca.TypeMismatchException
 double
 TypeMap::getDouble(const std::string& key, double dflt)
 {
-  std::cerr<<"method not implemented" << std::endl;  
-  return dflt;
+    DoubleMap::iterator found = doubleMap.find(key);
+    if (found != doubleMap.end()) {
+        return found->second;
+    }
+    return dflt;
 }
 
 // std::complex<float>  .sci.cca.TypeMap.getFcomplex(in string key, in std::complex<float>  dflt)throws .sci.cca.TypeMismatchException
@@ -120,9 +129,8 @@ TypeMap::getDcomplex(const std::string& key, std::complex<double>  dflt)
 std::string
 TypeMap::getString(const std::string& key, const std::string& dflt)
 {
-  //std::cerr<<"method not implemented" << std::endl;  
   StringMap::iterator found = stringMap.find(key);
-  if (found!=stringMap.end()) {
+  if (found != stringMap.end()) {
     return found->second;
   }
   return dflt;
@@ -132,8 +140,11 @@ TypeMap::getString(const std::string& key, const std::string& dflt)
 bool
 TypeMap::getBool(const std::string& key, bool dflt)
 {
-  std::cerr<<"method not implemented" << std::endl;  
-  return dflt;
+    BoolMap::iterator found = boolMap.find(key);
+    if (found != boolMap.end()) {
+        return found->second;
+    }
+    return dflt;
 }
 
 // array1< int, 1> .sci.cca.TypeMap.getIntArray(in string key, in array1< int, 1> dflt)throws .sci.cca.TypeMismatchException
@@ -150,7 +161,10 @@ TypeMap::getIntArray(const std::string& key, const ::SSIDL::array1< int>& dflt){
 SSIDL::array1< long>
 TypeMap::getLongArray(const std::string& key, const SSIDL::array1< long>& dflt)
 {
-  std::cerr<<"method not implemented" << std::endl;  
+  LongArrayMap::iterator found = longArrayMap.find(key);
+  if (found != longArrayMap.end()) {
+    return found->second;
+  }
   return dflt;
 }
 
@@ -221,7 +235,7 @@ TypeMap::putInt(const std::string& key, int value)
 void
 TypeMap::putLong(const std::string& key, long value)
 {
-  std::cerr<<"method not implemented" << std::endl;  
+  longMap[key] = value;
   return;
 }
 
@@ -271,14 +285,15 @@ TypeMap::putString(const std::string& key, const std::string& value)
 void
 TypeMap::putBool(const std::string& key, bool value)
 {
-  std::cerr<<"method not implemented" << std::endl;  
-  return;
+    boolMap[key] = value;
+    return;
 }
    
 // void .sci.cca.TypeMap.putIntArray(in string key, in array1< int, 1> value)
 void
 TypeMap::putIntArray(const std::string& key, const ::SSIDL::array1<int>& value) {
-  intArrayMap.insert(IntArrayMap::value_type(key, value));
+  //intArrayMap.insert(IntArrayMap::value_type(key, value));
+  intArrayMap[key] = value;
   return;
 }
 
@@ -286,7 +301,7 @@ TypeMap::putIntArray(const std::string& key, const ::SSIDL::array1<int>& value) 
 void
 TypeMap::putLongArray(const std::string& key, const SSIDL::array1< long>& value)
 {
-  std::cerr<<"method not implemented" << std::endl;  
+  longArrayMap[key] = value;
   return;
 }
 
@@ -330,7 +345,8 @@ void
 TypeMap::putStringArray(const std::string& key,
                         const SSIDL::array1< std::string>& value)
 {
-  stringArrayMap.insert(StringArrayMap::value_type(key, value));
+  //stringArrayMap.insert(StringArrayMap::value_type(key, value));
+  stringArrayMap[key] = value;
   return;
 }
     

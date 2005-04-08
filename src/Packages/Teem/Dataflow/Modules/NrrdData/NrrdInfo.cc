@@ -31,7 +31,6 @@
 //    Date   : Tue Feb  4 08:55:34 2003
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/share/share.h>
 
 #include <Dataflow/Ports/NrrdPort.h>
 
@@ -85,37 +84,37 @@ NrrdInfo::clear_vals()
   for (int i = 0; i < nh->nrrd->dim; i++) {
     ostringstream str;
     
-    str << "set " << id.c_str() << "-size" << i 
+    str << "set " << id << "-size" << i 
 	<< " \"---\"";    
     gui->execute(str.str());
     str.clear();
 
-    str << "set " << id.c_str() << "-center" << i 
+    str << "set " << id << "-center" << i 
 	<< " \"---\"";    
     gui->execute(str.str());
     str.clear();
 
-    str << "set " << id.c_str() << "-label" << i 
+    str << "set " << id << "-label" << i 
 	<< " \"---\"";    
     gui->execute(str.str());
     str.clear();
 
-    str << "set " << id.c_str() << "-kind" << i 
+    str << "set " << id << "-kind" << i 
 	<< " \"---\"";    
     gui->execute(str.str());
     str.clear();
 
-    str << "set " << id.c_str() << "-spacing" << i 
+    str << "set " << id << "-spacing" << i 
 	<< " \"---\"";    
     gui->execute(str.str());
     str.clear();
 
-    str << "set " << id.c_str() << "-min" << i 
+    str << "set " << id << "-min" << i 
 	<< " \"---\"";    
     gui->execute(str.str());
     str.clear();
 
-    str << "set " << id.c_str() << "-max" << i 
+    str << "set " << id << "-max" << i 
 	<< " \"---\"";    
     gui->execute(str.str());
   }
@@ -182,12 +181,12 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
   for (int i = 0; i < nh->nrrd->dim; i++) {
     ostringstream sz, cntr, lab, kind, spac, min, max;
     
-    sz << "set " << id.c_str() << "-size" << i 
+    sz << "set " << id << "-size" << i 
 	<< " " << nh->nrrd->axis[i].size;
     
     gui->execute(sz.str());
 
-    cntr << "set " << id.c_str() << "-center" << i << " ";
+    cntr << "set " << id << "-center" << i << " ";
 
     switch (nh->nrrd->axis[i].center) {
     case nrrdCenterUnknown :
@@ -204,83 +203,83 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
     gui->execute(cntr.str());
 
     if (nh->nrrd->axis[i].label == NULL || string(nh->nrrd->axis[i].label).length() == 0) {
-      lab << "set " << id.c_str() << "-label" << i 
+      lab << "set " << id << "-label" << i 
 	  << " {" << "---" << "}";
       gui->execute(lab.str());
     } else {
-      lab << "set " << id.c_str() << "-label" << i 
+      lab << "set " << id << "-label" << i 
 	  << " {" << nh->nrrd->axis[i].label << "}";
       gui->execute(lab.str());
     }
 
     switch(nh->nrrd->axis[i].kind) {
     case nrrdKindDomain:
-      kind << "set " << id.c_str() << "-kind" << i 
+      kind << "set " << id << "-kind" << i 
            << " {nrrdKindDomain}";
       gui->execute(kind.str());
       break;
     case nrrdKindScalar:
-      kind << "set " << id.c_str() << "-kind" << i 
+      kind << "set " << id << "-kind" << i 
            << " {nrrdKindScalar}";
       gui->execute(kind.str());
       break;
     case nrrdKind3Color:
-      kind << "set " << id.c_str() << "-kind" << i 
+      kind << "set " << id << "-kind" << i 
            << " {nrrdKind3Color}";
       gui->execute(kind.str());
       break;
     case nrrdKind3Vector:
-      kind << "set " << id.c_str() << "-kind" << i 
+      kind << "set " << id << "-kind" << i 
            << " {nrrdKind3Vector}";
       gui->execute(kind.str());
       break;
     case nrrdKind3Normal:
-      kind << "set " << id.c_str() << "-kind" << i 
+      kind << "set " << id << "-kind" << i 
            << " {nrrdKind3Normal}";
       gui->execute(kind.str());
       break;
-    case nrrdKind3DSymTensor:
-      kind << "set " << id.c_str() << "-kind" << i 
-           << " {nrrdKind3DSymTensor}";
+    case nrrdKind3DSymMatrix:
+      kind << "set " << id << "-kind" << i 
+           << " {nrrdKind3DSymMatrix}";
       gui->execute(kind.str());
       break;
-    case nrrdKind3DMaskedSymTensor:
-      kind << "set " << id.c_str() << "-kind" << i 
-           << " {nrrdKind3DMaskedSymTensor}";
+    case nrrdKind3DMaskedSymMatrix:
+      kind << "set " << id << "-kind" << i 
+           << " {nrrdKind3DMaskedSymMatrix}";
       gui->execute(kind.str());
       break;
-    case nrrdKind3DTensor:
-      kind << "set " << id.c_str() << "-kind" << i 
-           << " {nrrdKind3DTensor}";
+    case nrrdKind3DMatrix:
+      kind << "set " << id << "-kind" << i 
+           << " {nrrdKind3DMatrix}";
       gui->execute(kind.str());
       break;
     case nrrdKindList:
-      kind << "set " << id.c_str() << "-kind" << i 
+      kind << "set " << id << "-kind" << i 
            << " {nrrdKindList}";
       gui->execute(kind.str());
       break;	
     case nrrdKindStub:
-      kind << "set " << id.c_str() << "-kind" << i 
+      kind << "set " << id << "-kind" << i 
            << " {nrrdKindStub}";
       gui->execute(kind.str());
       break;	
     default:
       nh->nrrd->axis[i].kind = nrrdKindUnknown;
-      kind << "set " << id.c_str() << "-kind" << i 
+      kind << "set " << id << "-kind" << i 
            << " {" << "nrrdKindUnknown" << "}";
       gui->execute(kind.str());
       break;
     }
 
-    spac << "set " << id.c_str() << "-spacing" << i 
+    spac << "set " << id << "-spacing" << i 
 	 << " " << nh->nrrd->axis[i].spacing;
     gui->execute(spac.str());
 
-    min << "set " << id.c_str() << "-min" << i 
+    min << "set " << id << "-min" << i 
 	<< " " << nh->nrrd->axis[i].min;
     gui->execute(min.str());
 
-    max << "set " << id.c_str() << "-max" << i 
+    max << "set " << id << "-max" << i 
 	<< " " << nh->nrrd->axis[i].max;
     gui->execute(max.str());
   }
@@ -293,11 +292,6 @@ void
 NrrdInfo::execute()
 {
   NrrdIPort *iport = (NrrdIPort*)get_iport("Query Nrrd"); 
-  if (!iport) 
-  {
-    error("Unable to initialize iport 'Query Nrrd'.");
-    return;
-  }
   
   // The input port (with data) is required.
   NrrdDataHandle nh;

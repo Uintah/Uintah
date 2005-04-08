@@ -110,12 +110,8 @@ void
 AttractNormals::execute()
 {
   // Get input field.
-  FieldIPort *ifp = (FieldIPort *)getIPort("Input Field");
+  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-  if (!ifp) {
-    error("Unable to initialize iport 'Input Field'.");
-    return;
-  }
   if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
   {
     return;
@@ -123,10 +119,6 @@ AttractNormals::execute()
 
   FieldIPort *ipp = (FieldIPort *)get_iport("Input Point");
   FieldHandle ipointhandle;
-  if (!ipp) {
-    error("Unable to initialize iport 'Input Point'.");
-    return;
-  }
   if (!(ipp->get(ipointhandle) && ipointhandle.get_rep()))
   {
     return;
@@ -182,11 +174,6 @@ AttractNormals::execute()
   FieldHandle ofieldhandle(algo->execute(ifieldhandle, attractor));
 
   FieldOPort *ofield_port = (FieldOPort *)getOPort("Output Field");
-  if (!ofield_port) {
-    error("Unable to initialize oport 'Output Field'.");
-    return;
-  }
-
   ofield_port->send(ofieldhandle);
 }
 

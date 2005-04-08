@@ -88,21 +88,8 @@ UnuHisto::execute()
   wnrrd_ = (NrrdIPort *)get_iport("WeightNrrd");
   onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!inrrd_) {
-    error("Unable to initialize iport 'InputNrrd'.");
-    return;
-  }
-  if (!wnrrd_) {
-    error("Unable to initialize iport 'WeightNrrd'.");
-    return;
-  }
-  if (!onrrd_) {
-    error("Unable to initialize oport 'OutputNrrd'.");
-    return;
-  }
   if (!inrrd_->get(nrrd_handle)) 
     return;
-
 
   if (!nrrd_handle.get_rep()) {
     error("Empty InputNrrd.");

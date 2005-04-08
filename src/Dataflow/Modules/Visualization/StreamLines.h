@@ -41,7 +41,6 @@
 #include <Core/Basis/CrvLinearLgn.h>
 #include <Core/Datatypes/CurveMesh.h>
 #include <Core/Datatypes/FieldInterface.h>
-#include <Core/Containers/Array1.h>
 #include <algorithm>
 
 namespace SCIRun {
@@ -66,9 +65,9 @@ typedef struct _SLData {
   _SLData() : lock("StreamLines Lock") {}
 } SLData;
 
-void StreamLinesCleanupPoints(vector<Point> &v, const vector<Point> &input,
-			      double e2);
 
+vector<Point>::iterator
+StreamLinesCleanupPoints(vector<Point> &input, double e2);
 
 class StreamLinesAlgo : public DynamicAlgoBase
 {
@@ -280,16 +279,9 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
   
   d.cf = cf;
 
-  if (np > 1)
-  {
-    Thread::parallel (this,
-		      &StreamLinesAlgoT<SMESH, SLOC>::parallel_generate,
-		      np, true, &d);
-  }
-  else
-  {
-    parallel_generate(0, &d);
-  }
+  Thread::parallel(this,
+                   &StreamLinesAlgoT<SMESH, SLOC>::parallel_generate,
+                   np, &d);
 
   cf->freeze();
 
@@ -416,9 +408,7 @@ StreamLinesAccAlgoT<SMESH, SLOC, VFLD>::FindNodes(vector<Point> &v,
 
   if (remove_colinear_p)
   {
-    vector<Point> tmp;
-    StreamLinesCleanupPoints(tmp, v, 1.0e-6);
-    v = tmp;
+    v.erase(StreamLinesCleanupPoints(v, 1.0e-6), v.end());
   }
 }
 						  
@@ -532,7 +522,6 @@ StreamLinesAccAlgoT<SMESH, SLOC, VFLD>::execute(MeshHandle seed_mesh_h,
 
   return FieldHandle(cf);
 }
-
 
 
 } // end namespace SCIRun

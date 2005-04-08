@@ -53,18 +53,18 @@
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/PointCloudMesh.h>
 #include <Packages/BioPSE/Core/Algorithms/Forward/SphericalVolumeConductor.h>
-#include <Packages/BioPSE/share/share.h>
 
 namespace BioPSE {
 
 using namespace SCIRun;
 
-class BioPSESHARE AnisoSphereModel : public Module {
+class AnisoSphereModel : public Module {
   typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
   typedef ConstantBasis<int>                DatBasisi;
   typedef ConstantBasis<double>                DatBasisd;
   typedef GenericField<PCMesh, DatBasisi, vector<int> > PCFieldi;  
   typedef GenericField<PCMesh, DatBasisd, vector<double> > PCFieldd;  
+
   // ports
   FieldIPort  *hInElectrodes;
   MatrixIPort *hInConductivities;
@@ -127,18 +127,10 @@ void AnisoSphereModel::execute() {
   
   // get input ports
   hInElectrodes = (FieldIPort*)get_iport("ElectrodePositions");
-  if(!hInElectrodes) {
-    error("DipoleInAnisoSpheres::execute() -> impossible to initialize input port 'ElectrodePositions'");
-    return;
-  }
   hInConductivities = (MatrixIPort *)get_iport("AnisoConductivities");
 
   // get output ports
   hOutElectrodes = (FieldOPort*)get_oport("ElectrodePositions");
-  if(!hOutElectrodes) {
-    error("impossible to initialize output port 'ElectrodePositions'");
-    return;
-  }
 
   hOutRadii = (MatrixOPort*)get_oport("SphereRadii");
   hOutConductivities = (MatrixOPort*)get_oport("AnisoConductivities");
@@ -224,8 +216,10 @@ void AnisoSphereModel::execute() {
     p *= radii->get(SCALP) / rad;
     electrodeMesh->add_point(p);
   }
+
   PCMesh::handle_type hElectrodeMesh(electrodeMesh);
   PCFieldi *newElectrodePositions = scinew PCFieldi(hElectrodeMesh);
+
   // enumerate the nodes
   electrodeMesh->begin(nii);
   electrodeMesh->end(nie);

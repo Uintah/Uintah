@@ -42,6 +42,7 @@
 #include <Core/Basis/TriLinearLgn.h>
 #include <Core/Basis/CrvLinearLgn.h>
 #include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Basis/NoData.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Datatypes/QuadSurfMesh.h>
@@ -59,19 +60,23 @@ class FieldBoundaryAlgoAux : public DynamicAlgoBase
 public:
   typedef TriSurfMesh<TriLinearLgn<Point> >                    TSMesh;
   typedef ConstantBasis<double>                                ConBasis;
+  typedef NoDataBasis<double>                                  NoDataBasis;
   typedef TriLinearLgn<double>                                 TLBasis;
   typedef GenericField<TSMesh, TLBasis, vector<double> >       TSField;  
   typedef GenericField<TSMesh, ConBasis, vector<double> >      TSFieldC; 
+  typedef GenericField<TSMesh, NoDataBasis, vector<double> >   TSFieldND;
 
   typedef QuadSurfMesh<QuadBilinearLgn<Point> >                QSMesh;
   typedef QuadBilinearLgn<double>                              QBasis;
   typedef GenericField<QSMesh, QBasis, vector<double> >        QSField; 
   typedef GenericField<QSMesh, ConBasis, vector<double> >      QSFieldC; 
+  typedef GenericField<QSMesh, NoDataBasis, vector<double> >   QSFieldND; 
 
   typedef CurveMesh<CrvLinearLgn<Point> >                      CMesh;
   typedef CrvLinearLgn<double>                                 CrvBasis;
   typedef GenericField<CMesh, CrvBasis, vector<double> >       CField; 
   typedef GenericField<CMesh, ConBasis, vector<double> >       CFieldC; 
+  typedef GenericField<CMesh, NoDataBasis, vector<double> >    CFieldND; 
 
   virtual void execute(const MeshHandle mesh,
 		       FieldHandle &bndry,
@@ -112,6 +117,7 @@ FieldBoundaryAlgoTriT<Msh>::execute(const MeshHandle mesh_untyped,
   Msh *mesh = dynamic_cast<Msh *>(mesh_untyped.get_rep());
   map<typename Msh::Node::index_type, typename TSMesh::Node::index_type> vertex_map;
   typename map<typename Msh::Node::index_type, typename TSMesh::Node::index_type>::iterator node_iter;
+
   vector<typename Msh::Node::index_type> reverse_map;
   vector<unsigned int> face_map;
 
@@ -245,6 +251,9 @@ FieldBoundaryAlgoTriT<Msh>::execute(const MeshHandle mesh_untyped,
   }
   else
   {
+    TSFieldND *ts = scinew TSFieldND(tmesh);
+    boundary_fh = ts;
+
     interp = 0;
   }
 }
@@ -410,6 +419,9 @@ FieldBoundaryAlgoQuadT<Msh>::execute(const MeshHandle mesh_untyped,
   }
   else
   {
+    QSFieldND *ts = scinew QSFieldND(tmesh);
+    boundary_fh = ts;
+
     interp = 0;
   }
 }
@@ -566,6 +578,9 @@ FieldBoundaryAlgoCurveT<Msh>::execute(const MeshHandle mesh_untyped,
   }
   else
   {
+    CFieldND *ts = scinew CFieldND(tmesh);
+    boundary_fh = ts;
+
     interp = 0;
   }
 }

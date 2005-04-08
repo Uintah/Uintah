@@ -31,16 +31,16 @@
 
 ::netedit dontschedule
 
-set m0 [addModuleAtPosition "SCIRun" "Fields" "SampleLattice" 304 2]
+set m0 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleLattice" 304 2]
 set m1 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 346 242]
-set m2 [addModuleAtPosition "SCIRun" "Fields" "TransformData" 304 143]
+set m2 [addModuleAtPosition "SCIRun" "FieldsData" "TransformData" 304 143]
 set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 124 665]
 set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 15 489]
 set m5 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 11 9]
 set m6 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 346 402]
 set m7 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 364 570]
 set m8 [addModuleAtPosition "Teem" "Tend" "TendAnvol" 346 324]
-set m9 [addModuleAtPosition "SCIRun" "Fields" "ChangeFieldDataType" 304 70]
+set m9 [addModuleAtPosition "SCIRun" "FieldsData" "ChangeFieldDataType" 304 70]
 set m10 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 186 489]
 
 addConnection $m2 0 $m6 3

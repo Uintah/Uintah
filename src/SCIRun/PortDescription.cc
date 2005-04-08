@@ -26,3 +26,12 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#include <SCIRun/PortDescription.h>
+
+namespace SCIRun {
+
+PortDescription::PortDescription() {}
+
+PortDescription::~PortDescription() {}
+
+}

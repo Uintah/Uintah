@@ -64,6 +64,8 @@ public:
   /** Returns \em true if a connection can be made with the output port \em
       port.  Must be defined by a subclass. */
   virtual bool accept(OutPort* port)=NULL;
+
+  void update(int flag);  //virtual 
 };
 
 }

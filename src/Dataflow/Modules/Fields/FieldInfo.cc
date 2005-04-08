@@ -34,7 +34,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/FieldInterface.h>
-#include <Dataflow/share/share.h>
 
 #include <Core/Containers/Handle.h>
 #include <Core/Geometry/BBox.h>
@@ -50,9 +49,10 @@ namespace SCIRun {
 using std::endl;
 using std::pair;
 
-class PSECORESHARE FieldInfo : public Module {
+class FieldInfo : public Module {
 private:
   GuiString gui_fldname_;
+  GuiString gui_generation_;
   GuiString gui_typename_;
   GuiString gui_datamin_;
   GuiString gui_datamax_;
@@ -82,6 +82,7 @@ public:
 FieldInfo::FieldInfo(GuiContext* ctx)
   : Module("FieldInfo", ctx, Sink, "FieldsOther", "SCIRun"),
     gui_fldname_(ctx->subVar("fldname", false)),
+    gui_generation_(ctx->subVar("generation", false)),
     gui_typename_(ctx->subVar("typename", false)),
     gui_datamin_(ctx->subVar("datamin", false)),
     gui_datamax_(ctx->subVar("datamax", false)),
@@ -97,6 +98,7 @@ FieldInfo::FieldInfo(GuiContext* ctx)
     generation_(-1)
 {
   gui_fldname_.set("---");
+  gui_generation_.set("---");
   gui_typename_.set("---");
   gui_datamin_.set("---");
   gui_datamax_.set("---");
@@ -122,6 +124,7 @@ void
 FieldInfo::clear_vals()
 {
   gui_fldname_.set("---");
+  gui_generation_.set("---");
   gui_typename_.set("---");
   gui_datamin_.set("---");
   gui_datamax_.set("---");
@@ -140,17 +143,34 @@ FieldInfo::clear_vals()
 void
 FieldInfo::update_input_attributes(FieldHandle f)
 {
-  const string &tname = f->get_type_description()->get_name();
+  // Name
+  string fldname;
+  if (f->get_property("name",fldname))
+  {
+    gui_fldname_.set(fldname);
+  }
+  else
+  {
+    gui_fldname_.set("--- Name Not Assigned ---");
+  }
 
+  // Generation
+  gui_generation_.set(to_string(f->generation));
+
+  // Typename
+  const string &tname = f->get_type_description()->get_name();
   gui_typename_.set(tname);
 
+  // Basis
+  static char *at_table[4] = { "Nodes", "Edges", "Faces", "Cells" };
   switch(f->basis_order())
   {
   case 1:
-    gui_dataat_.set("Nodes");
+    gui_dataat_.set("Nodes (linear basis)");
     break;
   case 0:
-    gui_dataat_.set("Cells");
+    gui_dataat_.set(at_table[f->mesh()->dimensionality()] +
+                    string(" (constant basis)"));
     break;
   case -1:
     gui_dataat_.set("None");
@@ -159,7 +179,6 @@ FieldInfo::update_input_attributes(FieldHandle f)
 
   Point center;
   Vector size;
-
 
   const BBox bbox = f->mesh()->get_bounding_box();
   if (bbox.valid())
@@ -198,16 +217,6 @@ FieldInfo::update_input_attributes(FieldHandle f)
     gui_datamax_.set("--- N/A ---");
   }
 
-  string fldname;
-  if (f->get_property("name",fldname))
-  {
-    gui_fldname_.set(fldname);
-  }
-  else
-  {
-    gui_fldname_.set("--- Name Not Assigned ---");
-  }
-
   // Do this last, sometimes takes a while.
   const TypeDescription *meshtd = f->mesh()->get_type_description();
   CompileInfoHandle ci = FieldInfoAlgoCount::get_compile_info(meshtd);
@@ -228,11 +237,6 @@ void
 FieldInfo::execute()
 {
   FieldIPort *iport = (FieldIPort*)get_iport("Input Field");
-  if (!iport)
-  {
-    error("Unable to initialize iport 'Input Field'.");
-    return;
-  }
 
   // The input port (with data) is required.
   FieldHandle fh;
@@ -247,9 +251,9 @@ FieldInfo::execute()
   {
     generation_ = fh.get_rep()->generation;
     update_input_attributes(fh);
-
   }
 }
+
 
 CompileInfoHandle
 FieldInfoAlgoCount::get_compile_info(const TypeDescription *mesh_td)

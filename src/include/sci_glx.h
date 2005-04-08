@@ -31,14 +31,12 @@
 
 #include <sci_defs/ogl_defs.h>
 
-#if defined(HAVE_GLEW)
-
-#include <GL/glxew.h>
-
-#else /* !HAVE_GLEW */
-
-#include <GL/glx.h>
-
+#ifndef _WIN32
+#  if defined(HAVE_GLEW)
+#    include <GL/glxew.h>
+#  else /* !HAVE_GLEW */
+#    include <GL/glx.h>
+#  endif
 #endif
 
 #endif  /* #define SCI_GLX_H */

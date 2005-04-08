@@ -76,14 +76,6 @@ TendEvalPow::execute()
   inrrd_ = (NrrdIPort *)get_iport("nin");
   onrrd_ = (NrrdOPort *)get_oport("nout");
 
-  if (!inrrd_) {
-    error("Unable to initialize iport 'Nrrd'.");
-    return;
-  }
-  if (!onrrd_) {
-    error("Unable to initialize oport 'Nrrd'.");
-    return;
-  }
   if (!inrrd_->get(nrrd_handle))
     return;
 

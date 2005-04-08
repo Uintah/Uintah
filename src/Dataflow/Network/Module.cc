@@ -68,6 +68,8 @@ typedef std::map<int,OPortInfo*>::iterator oport_iter;
 
 #ifdef __APPLE__
 const string ext = ".dylib";
+#elif defined(_WIN32)
+const string ext = ".dll";
 #else
 const string ext = ".so";
 #endif
@@ -393,6 +395,7 @@ void Module::update_msg_state(MsgState st)
   }
 }
 
+
 void Module::update_progress(double p)
 {
   if (state == JustStarted)
@@ -408,41 +411,10 @@ void Module::update_progress(double p)
   }
 }
 
-void Module::update_progress(double p, Timer &t)
-{
-  if (state == JustStarted)
-    update_state(Executing);
-  if (p < 0.0) p = 0.0;
-  if (p > 1.0) p = 1.0;
-  int opp=(int)(progress*100);
-  int npp=(int)(p*100);
-  if(opp != npp){
-    double time=t.time();
-    gui->execute(id+" set_progress "+to_string(p)+" "+to_string(time));
-    progress=p;
-  }
-}
 
-void Module::update_progress(int n, int max)
+void Module::update_progress(unsigned int n, unsigned int max)
 {
-  current_ = n;
-  max_ = max;
   update_progress(double(n)/double(max));
-}
-
-void Module::update_progress(int n, int max, Timer &t)
-{
-  current_ = n;
-  max_ = max;
-  update_progress(double(n)/double(max), t);
-}
-
-void Module::accumulate_progress(int n)
-{
-  progress_lock_.lock();
-  current_ += n;
-  progress_lock_.unlock();
-  update_progress(double(current_)/double(max_));
 }
 
 
@@ -499,12 +471,16 @@ OPort* Module::get_oport(int item)
 
 IPort* Module::get_iport(const string& name)
 {
-  return getIPort(name);
+  IPort *p = getIPort(name);
+  if (p == 0) throw "Unable to initialize iport '" + name + "'.";
+  return p;
 }
 
 OPort* Module::get_oport(const string& name)
 {
-  return getOPort(name);
+  OPort *p = getOPort(name);
+  if (p == 0) throw "Unable to initialize oport '" + name + "'.";
+  return p;
 }
 
 IPort* Module::getIPort(const string &name)
@@ -870,6 +846,14 @@ void Module::do_execute()
 	error(e.stackTrace());
       }
   }
+  catch (const string a)
+  {
+    error(a);
+  }
+  catch (const char *a)
+  {
+    error(string(a));
+  }
   catch (...)
   {
     error("Module crashed with no reason given.");
@@ -888,6 +872,17 @@ void Module::do_execute()
     oports[i]->finish();
   }
 }
+
+
+void
+Module::do_synchronize()
+{
+  for (int i=0; i<oports.size(); i++)
+  {
+    oports[i]->synchronize();
+  }
+}
+
 
 void Module::request_multisend(OPort* p1)
 {

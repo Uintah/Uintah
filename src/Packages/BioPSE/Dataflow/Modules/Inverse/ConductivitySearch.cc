@@ -46,7 +46,6 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Math/MusilRNG.h>
 #include <Core/Math/Gaussian.h>
@@ -142,8 +141,8 @@ ConductivitySearch::~ConductivitySearch(){}
 
 
 void ConductivitySearch::build_basis_matrices() {
-  TetVolFieldIntHandle tviH;
-  tviH = dynamic_cast<TetVolField<int> *>(mesh_in_.get_rep());
+  TVFieldi::handle_type tviH;
+  tviH = dynamic_cast<TVFieldi *>(mesh_in_.get_rep());
   TetVolFieldTensorHandle tvtH;
   Tensor zero(0);
   Tensor identity(1);
@@ -206,10 +205,10 @@ void ConductivitySearch::initialize_search() {
   int i, j;
   for (i=0; i<NDIM_; i++) {
     double val, min, max, sigma, avg;
-    avg=(*(cond_params_.get_rep()))[i][0];
-    sigma=(*(cond_params_.get_rep()))[i][1];
-    min=(*(cond_params_.get_rep()))[i][2];
-    max=(*(cond_params_.get_rep()))[i][3];
+    avg = cond_params_->get(i, 0);
+    sigma = cond_params_->get(i, 1);
+    min = cond_params_->get(i, 2);
+    max = cond_params_->get(i, 3);
     Gaussian g(avg, sigma);
     for (j=0; j<NDIM_+2; j++) {
       do {
@@ -261,6 +260,7 @@ void ConductivitySearch::send_and_get_data(int which_conductivity) {
     conds.push_back(pair<string, Tensor>(to_string(i), Tensor(c)));
     (*cm)[i]=c;
   }
+  mesh_out_->freeze();
   mesh_out_->set_property("conductivity_table", conds, true);
 
   fem_mat_ = build_composite_matrix(which_conductivity);
@@ -273,12 +273,11 @@ void ConductivitySearch::send_and_get_data(int which_conductivity) {
 
   // read back data, and set the caches and search matrix
   MatrixHandle mH;
-  Matrix* m;
-  if (!misfit_iport_->get(mH) || !(m = mH.get_rep())) {
+  if (!misfit_iport_->get(mH) || !(mH.get_rep())) {
     error("ConductivitySearch::failed to read back error");
     return;
   }
-  misfit_[which_conductivity]=(*m)[0][0];
+  misfit_[which_conductivity] = mH->get(0, 0);
 }  
 
 
@@ -311,9 +310,9 @@ void ConductivitySearch::eval_test_conductivity() {
   
   int in_range=1;
   for (int i=0; i<NDIM_; i++)
-    if (conductivities_(NSEEDS_,i)<(*(cond_params_.get_rep()))[i][2]) 
+    if (conductivities_(NSEEDS_,i) < cond_params_->get(i, 2))
       in_range=0;
-    else if (conductivities_(NSEEDS_,i)>(*(cond_params_.get_rep()))[i][3])
+    else if (conductivities_(NSEEDS_,i) > cond_params_->get(i, 3))
       in_range=0;
 
   if (in_range) {
@@ -464,7 +463,7 @@ void ConductivitySearch::read_mesh_and_cond_param_ports(int &valid_data,
     warning("Didn't get a valid VolumeMesh.");
   }
 
-  TetVolField<int> *meshTV = dynamic_cast<TetVolField<int> *>(mesh.get_rep());
+  TVFieldi *meshTV = dynamic_cast<TVFieldi *>(mesh.get_rep());
   Array1<Tensor> tens;
   pair<int,int> minmax;
   minmax.second=1;
@@ -504,31 +503,6 @@ void ConductivitySearch::execute() {
   cond_vector_oport_ = (MatrixOPort *)get_oport("OldAndNewConductivities");
   fem_mat_oport_ = (MatrixOPort *)get_oport("FiniteElementMatrix");
 
-  if (!mesh_iport_) {
-    error("Unable to initialize iport 'FiniteElementMesh'.");
-    return;
-  }
-  if (!cond_params_iport_) {
-    error("Unable to initialize iport 'ConductivityParameters'.");
-    return;
-  }
-  if (!misfit_iport_) {
-    error("Unable to initialize iport 'TestMisfit'.");
-    return;
-  }
-  if (!mesh_oport_) {
-    error("Unable to initialize oport 'FiniteElementMesh'.");
-    return;
-  }
-  if (!cond_vector_oport_) {
-    error("Unable to initialize oport 'OldAndNewConductivities'.");
-    return;
-  }
-  if (!fem_mat_oport_) {
-    error("Unable to initialize oport 'FiniteElementMatrix'.");
-    return;
-  }
-  
   read_mesh_and_cond_param_ports(valid_data, new_data);
   if (!valid_data) return;
   if (!new_data) {

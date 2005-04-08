@@ -45,6 +45,7 @@
 #include <SCIRun/PortInstanceIterator.h>
 #include <SCIRun/Vtk/Port.h>
 #include <SCIRun/Vtk/Component.h>
+#include <SCIRun/Vtk/VtkPortInstance.h>
 #include <string>
 #include <vector>
 
@@ -63,6 +64,7 @@ class Module;
  *
  */
 class VtkComponentInstance : public ComponentInstance {
+  friend class VtkPortInstance;
 public:
   /** Constructor specifies the SCIRunFramework to which this instance belongs
       (\em fwk), the unique \em instanceName of the component instance, and a

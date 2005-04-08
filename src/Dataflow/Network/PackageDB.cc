@@ -43,6 +43,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/GuiInterface.h>
 #include <Core/Util/Environment.h>
+#include <Core/OS/Dir.h> // for LSTAT
 #include <stdio.h>
 #include <iostream>
 #include <ctype.h>
@@ -68,6 +69,8 @@ using namespace std;
 
 #ifdef __APPLE__
 static string lib_ext = ".dylib";
+#elif defined(_WIN32)
+const string lib_ext = ".dll";
 #else
 static string lib_ext = ".so";
 #endif
@@ -120,7 +123,12 @@ LIBRARY_HANDLE PackageDB::findLib(string lib)
   // try to find the library in the specified path
   while (tempPaths!="") {
     string dir;
+#ifdef _WIN32
+    // make sure we don't throw away the drive letter
+    const unsigned int firstColon = tempPaths.find(':',2);
+#else
     const unsigned int firstColon = tempPaths.find(':');
+#endif
     if(firstColon < tempPaths.size()) {
       dir=tempPaths.substr(0,firstColon);
       tempPaths=tempPaths.substr(firstColon+1);
@@ -186,16 +194,10 @@ bool PackageDB::findMaker(ModuleInfo* moduleInfo)
       (ModuleMaker)GetHandleSymbolAddress(package_so,makename.c_str());
   if (!moduleInfo->maker) {
     // the messages happen elsewere...
-    #if 0 
-    if (moduleInfo->optional == "true") {
-      printMessage("Optional module '" + moduleInfo->moduleName +
-		   "' is not available in this build. \n");
-    } else {
-      
+    if (moduleInfo->optional != "true") {
       printMessage("Unable to load module '" + moduleInfo->moduleName +
 		   "' :\n - can't find symbol '" + makename + "'\n");
     }
-    #endif
     return false;
   }
   return true;
@@ -262,7 +264,12 @@ void PackageDB::loadPackage(bool resolve)
 	tmpPath = "found";
 	break;
       }
+#ifdef _WIN32
+      // don't find the drive letter name's ':'...
+      const unsigned int firstColon = tmpPath.find(':',2);
+#else
       const unsigned int firstColon = tmpPath.find(':');
+#endif
       if(firstColon < tmpPath.size()) {
 	pathElt=tmpPath.substr(0,firstColon);
 	tmpPath=tmpPath.substr(firstColon+1);
@@ -272,7 +279,7 @@ void PackageDB::loadPackage(bool resolve)
       }
       
       struct stat buf;
-      lstat((pathElt+"/"+packageElt).c_str(),&buf);
+      LSTAT((pathElt+"/"+packageElt).c_str(),&buf);
       if (S_ISDIR(buf.st_mode)) {
 	tmpPath = "found";
 	break;
@@ -403,10 +410,7 @@ void PackageDB::loadPackage(bool resolve)
 	    numreg++;
 	  } else {
 	    string mname = (*mi).second->moduleName;
-	    if (((*mi).second)->optional == "true") {
-	      printMessage("Optional module '" + mname +
-			   "' is not available in this build.");
-	    } else {
+	    if (((*mi).second)->optional != "true") {
 	      printMessage("Unable to load module '" + mname +
 			   "' :\n - can't find symbol 'make_" + mname + "'");
 	    }
@@ -613,27 +617,13 @@ PackageDB::getCategoryName(const string &packName,
     return catName;
   }
 
+  // Look up the package name somewhere else.  Find a remapping.
   PackageIter iter(package);
   for (iter.first(); iter.ok();++iter)
   {
     if (iter.get_data()->lookup(modName, modinfo))
     {
-      string newcatname = iter.get_key();
-      if (newcatname != catName &&
-	  !(packName == "SCIRun" && catName == "Fields"))
-      {
-	cerr << "WARNING: Remapping " <<
-	  packName << "_" << catName << "_" << modName << " to " <<
-	  packName << "_" << newcatname << "_" << modName << "\n";
-      }
-      else if (newcatname != catName &&
-	  !(packName == "Teem" && catName == "Unu"))
-      {
-	cerr << "WARNING: Remapping " <<
-	  packName << "_" << catName << "_" << modName << " to " <<
-	  packName << "_" << newcatname << "_" << modName << "\n";
-      }
-      return newcatname;
+      return iter.get_key();
     }
   }
   return catName;

@@ -93,7 +93,11 @@ $(LIBNAME): $(OBJS) $(patsubst %,$(SCIRUN_LIBDIR)/%,$(CORE_PSELIBS)) $(patsubst 
   ifeq ($(IS_OSX),yes)
 	$(CXX) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(SOFLAGS) -install_name $(SCIRUN_LIBDIR_ABS)/$(patsubst lib/%,%,$@) -o $@ $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) $(TAU_MPI_LIBS) $(TAU_SHLIBS)
   else
+  ifeq ($(IS_WIN),yes)
+	$(CXX) -o $@ $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.$(SO_OR_A_FILE),-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) $(TAU_MPI_LIBS) $(TAU_SHLIBS) $(LDFLAGS) $(SOFLAGS) $(SCI_THIRDPARTY_LIBRARY) -Wl,--output-def=$(subst dll,def,$@) -Wl,--export-all-symbols -Wl,--out-implib=$(subst dll,a,$@) -Wl,--enable-auto-image-base
+  else
 	$(CXX) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.o,$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) $(TAU_MPI_LIBS) $(TAU_SHLIBS)
+  endif
   endif
   endif
 

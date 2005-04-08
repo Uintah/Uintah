@@ -73,6 +73,7 @@ private:
   GuiInt          num_axes_;
   GuiInt          uis_;
   GuiInt          reset_data_;
+  GuiInt          digits_only_;
   vector<int>     lastmin_;
   vector<int>     lastmax_;
   int             last_generation_;
@@ -89,6 +90,7 @@ UnuCrop::UnuCrop(SCIRun::GuiContext *ctx) :
   num_axes_(ctx->subVar("num-axes")),
   uis_(ctx->subVar("uis")),
   reset_data_(ctx->subVar("reset_data")),
+  digits_only_(ctx->subVar("digits_only")),
   last_generation_(-1), 
   last_nrrdH_(0)
 {
@@ -123,11 +125,6 @@ UnuCrop::execute()
   NrrdDataHandle nrrdH;
   NrrdIPort* inrrd = (NrrdIPort *)get_iport("Nrrd");
 
-  if (!inrrd) {
-    error("Unable to initialize iport 'Nrrd'.");
-    return;
-  }
-
   if (!inrrd->get(nrrdH) || !nrrdH.get_rep()) {
     error( "No handle or representation" );
     return;
@@ -135,11 +132,6 @@ UnuCrop::execute()
 
   MatrixHandle matrixH;
   MatrixIPort* imatrix = (MatrixIPort *)get_iport("Current Index");
-
-  if (!imatrix) {
-    error("Unable to initialize iport 'Current Index'.");
-    return;
-  }
 
   num_axes_.reset();
 
@@ -202,8 +194,12 @@ UnuCrop::execute()
       str4 << i;
       mins_.push_back(new GuiString(ctx->subVar(str.str())));
       maxs_.push_back(new GuiString(ctx->subVar(str2.str())));
-      //maxs_[i]->set(nrrdH->nrrd->axis[i].size - 1);
-      maxs_[i]->set("M");
+      if (digits_only_.get() == 1) {
+	maxs_[i]->set(to_string(nrrdH->nrrd->axis[i].size - 1));
+      }
+      else {
+	maxs_[i]->set("M");
+      }
       absmaxs_.push_back(new GuiInt(ctx->subVar(str3.str())));
       absmaxs_[i]->set(nrrdH->nrrd->axis[i].size - 1);
 
@@ -218,14 +214,28 @@ UnuCrop::execute()
 
   if (new_dataset) {
     for (int a=0; a<num_axes_.get(); a++) {
-	int max = nrrdH->nrrd->axis[a].size - 1;
+      int max = nrrdH->nrrd->axis[a].size - 1;
       maxs_[a]->reset();
       absmaxs_[a]->set(nrrdH->nrrd->axis[a].size - 1);
       absmaxs_[a]->reset();
       if (parse(nrrdH, maxs_[a]->get(),a) > max) {
-	warning("Out of bounds, setting each axis min/max to 0 to M");
-	maxs_[a]->set("M");
-	maxs_[a]->reset();
+	if (digits_only_.get() == 1) {
+	  warning("Out of bounds, resetting axis min/max");
+	  mins_[a]->set(to_string(0));
+	  mins_[a]->reset();
+	  maxs_[a]->set(to_string(max));
+	  maxs_[a]->reset();
+	  lastmin_[a] = 0;
+	  lastmax_[a] = max;
+	} else {
+	  warning("Out of bounds, setting axis min/max to 0 to M");
+	  mins_[a]->set(to_string(0));
+	  mins_[a]->reset();
+	  maxs_[a]->set("M");
+	  maxs_[a]->reset();
+	  lastmin_[a] = 0;
+	  lastmax_[a] = max;
+	}
       }
     }
 
@@ -285,7 +295,6 @@ UnuCrop::execute()
     int max = parse(nrrdH, maxs_[i]->get(),i);
     if (lastmax_[i] != max) {
       update = true;
-	lastmax_[i] = max;
     }
   }
 
@@ -315,52 +324,59 @@ UnuCrop::execute()
       }
     }
 
+    bool crop_successful = true;
     if (nrrdCrop(nout, nin, min, max)) {
       char *err = biffGetDone(NRRD);
-      error(string("Trouble cropping: ") + err);
+      error(string("Trouble cropping: ") + err + "\nOutputting input Nrrd");
       msgStream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
       free(err);
+      for(int a=0; a<nin->dim; a++) {
+	mins_[a]->set(to_string(0));
+	maxs_[a]->set(to_string(nin->axis[a].size-1));
+	lastmin_[a] = min[a];
+	lastmax_[a] = max[a];
+      }
+      crop_successful = false;
+    } else {
+      for(int a=0; a<nin->dim; a++) {
+	lastmin_[a] = min[a];
+	lastmax_[a] = max[a];
+      }
     }
 
     delete min;
     delete max;
 
     NrrdData *nrrd = scinew NrrdData;
-    nrrd->nrrd = nout;
+    if (crop_successful)
+      nrrd->nrrd = nout;
+    else
+      nrrd->nrrd = nin;
+
     last_nrrdH_ = NrrdDataHandle(nrrd);
 
     // Copy the properies, kinds, and labels.
-    *((PropertyManager *)nrrd) = *((PropertyManager *)(nrrdH.get_rep()));
+    nrrd->copy_properties(nrrdH.get_rep());
 
     for( int i=0; i<nin->dim; i++ ) {
       nout->axis[i].kind  = nin->axis[i].kind;
-      nout->axis[i].label = nin->axis[i].label;
+      nout->axis[i].label = strdup(nin->axis[i].label);
     }
 
     if( (nout->axis[0].kind == nrrdKind3Vector     && nout->axis[0].size != 3) ||
-	(nout->axis[0].kind == nrrdKind3DSymTensor && nout->axis[0].size != 6) )
+	(nout->axis[0].kind == nrrdKind3DSymMatrix && nout->axis[0].size != 6) )
       nout->axis[0].kind = nrrdKindDomain;
   }
 
-  if (last_nrrdH_.get_rep()) {
-
+  if (last_nrrdH_.get_rep())
+  {
     NrrdOPort* onrrd = (NrrdOPort *)get_oport("Nrrd");
-    if (!onrrd) {
-      error("Unable to initialize oport 'Nrrd'.");
-      return;
-    }
-
     onrrd->send(last_nrrdH_);
   }
 
-  if (last_matrixH_.get_rep()) {
+  if (last_matrixH_.get_rep())
+  {
     MatrixOPort* omatrix = (MatrixOPort *)get_oport("Selected Index");
-    
-    if (!omatrix) {
-      error("Unable to initialize oport 'Selected Index'.");
-      return;
-    }
-    
     omatrix->send( last_matrixH_ );
   }
 }

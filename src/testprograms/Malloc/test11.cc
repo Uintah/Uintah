@@ -34,7 +34,7 @@
 #if defined(__sun)
 #include <string.h>
 #define bcopy(src,dest,n) memcpy(dest,src,n)
-#elif defined(__linux) || defined(__digital__) || defined __sgi || defined __APPLE__
+#elif defined(__linux) || defined(__digital__) || defined __sgi || defined __APPLE__ || defined _WIN32
 #include <string.h>
 #else
 #error "Need bcopy idfdef for this architecture"
@@ -53,7 +53,7 @@ main(char **, int )
 	    int s=rand()%(65536-8);
 	    p[j]=malloc(s);
 	    bytes+=s;
-	    bzero(p[j], s);
+	    memset(p[j], 0, s);
 	}
 	for(j=0;j<n;j++){
 	    free(p[j]);

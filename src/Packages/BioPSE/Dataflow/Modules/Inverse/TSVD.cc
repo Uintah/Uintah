@@ -35,8 +35,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Packages/BioPSE/share/share.h>
-
 #include <stdio.h>
 #include <math.h>
 #include <Dataflow/Ports/MatrixPort.h>
@@ -59,7 +57,7 @@ namespace BioPSE
 
   using namespace SCIRun;
 
-  class BioPSESHARE TSVD : public Module 
+  class TSVD : public Module 
   {
     GuiInt	 	lambda_fix_;
     GuiDouble 	lambda_sld_;
@@ -492,50 +490,9 @@ namespace BioPSE
     MatrixOPort *oportRegParam = (MatrixOPort *)get_oport("RegParam");
     MatrixOPort *oportRegInvMat = (MatrixOPort *)get_oport("RegInverseMat");
 
-
-    if (!iportMeasDat) 
-      {
-        error("Unable to initialize iport 'MeasuredPots'.");
-        return;
-      }
-    if (!iportU) 
-      {
-        error("Unable to initialize iport 'U'.");
-        return;
-      }
-
-    if (!iportS) 
-      {
-        error("Unable to initialize iport 'S'.");
-        return;
-      }
-
-    if (!iportV) 
-      {
-        error("Unable to initialize iport 'V'.");
-        return;
-      }
-    /*	if (!iportX) 
-     	{
-        error("Unable to initialize iport 'X'.");
-        return;
-     	}*/
-    if (!oportInvSol) 
-      {
-        error("Unable to initialize oport 'InverseSoln'.");
-        return;
-      }
-    if (!oportRegInvMat) 
-      {
-        error("Unable to initialize oport 'RegInverseMat'.");
-        return;
-      }
-    	
     //DEFINE MATRIX HANDLES FOR INPUT/OUTPUT PORTS
-    	
     MatrixHandle hMatrixMeasDat, hMatrixU, hMatrixS, hMatrixV, hMatrixX;
     	    
-    	
     if( (!iportU->get(hMatrixU)) || (!iportS->get(hMatrixS)) || (!iportV->get(hMatrixV)) )
       {
         error("Couldn't get handle to the U, S or V Matrices.");
@@ -615,8 +572,10 @@ namespace BioPSE
             return;
           }
       }
+#if 0
     else
       N=matrixX->nrows();
+#endif
 
     ColumnMatrix *Uy=scinew ColumnMatrix(matrixU->ncols());
     ColumnMatrix *solution = scinew ColumnMatrix(N);

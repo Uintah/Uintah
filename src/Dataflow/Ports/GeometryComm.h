@@ -43,8 +43,6 @@
 #ifndef SCI_Datatypes_GeometryComm_h
 #define SCI_Datatypes_GeometryComm_h 1
 
-#include <Dataflow/share/share.h>
-
 #include <Dataflow/Comm/MessageBase.h>
 #include <Core/Geom/View.h>
 #include <Core/Thread/FutureValue.h>
@@ -61,7 +59,7 @@ struct GeomReply {
   GeomReply(int);
 };
 
-class PSECORESHARE GeometryComm : public MessageBase {
+class GeometryComm : public MessageBase {
 public:
   GeometryComm(Mailbox<GeomReply> *);
   GeometryComm(int, GeomID, GeomHandle,

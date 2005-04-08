@@ -482,10 +482,10 @@ class PowerAppBase {
     ### create_viewer_tab
     #############################
     # Build the Viewer tab.  This is actually labeled the "Viewer Options"
-    method create_viewer_tab { vis } {
+    method create_viewer_tab { vis {l "Viewer Options"}} {
 	global tips
 	global mods
-	set page [$vis.tnb add -label "Viewer Options" -command "$this change_vis_frame \"Viewer Options\""]
+	set page [$vis.tnb add -label $l -command "$this change_vis_frame \"$l\""]
 	
 	iwidgets::labeledframe $page.viewer_opts \
 	    -labelpos nw -labeltext "Global Render Options"
@@ -685,7 +685,6 @@ class PowerAppBase {
 	pack $view_opts.buttons.v2.sethome $view_opts.buttons.v2.gohome \
 	    -side top -padx 2 -pady 2 -anchor ne -fill x
 	
-	$vis.tnb view "Vis Options"
     }
 
     ########################
@@ -1077,7 +1076,7 @@ class PowerAppBase {
     ###########################
     # Blocks a module connection
     method block_connection { modA portA modB portB } {
-	disableConnection "$modA $portA $modB $portB"
+	connectionDisable "$modA $portA $modB $portB"
     }
 
 
@@ -1087,7 +1086,7 @@ class PowerAppBase {
     ###########################
     # Unblocks a module connection
     method unblock_connection { modA portA modB portB } {
-	disableConnection "$modA $portA $modB $portB"
+	connectionEnable "$modA $portA $modB $portB"
     }
 
 
@@ -1200,6 +1199,8 @@ class PowerAppBase {
 	} elseif {$which == "Purple Tint"} {
 	    set color { "Purple Tint" { { 10 0 20 } { 245 235 255 } } }
 	} elseif {$which == "Blue-to-Red"} {
+	    set color { "Blue-to-Red" { { 0 0 255 } { 255 255 255} { 255 0 0 } } }
+	} elseif {$which == "Blue-to-red"} {
 	    set color { "Blue-to-Red" { { 0 0 255 } { 255 255 255} { 255 0 0 } } }
 	} else {
 	    puts stderr "Bad colormap name"
@@ -1363,8 +1364,8 @@ class PowerAppBase {
 	global $color
 	set window .standalone
 	if {[winfo exists $window.color]} {
-	    raise $window.color
-	    return;
+	    SciRaise $window.color
+	    return
 	} else {
 	    toplevel $window.color
 	    makeColorPicker $window.color $color \
@@ -1521,4 +1522,15 @@ class PowerAppBase {
     # should be displayed along with the title when loaded and
     # should be used when Save Session is selected.
     variable saveFile    
+}
+
+# bind show/hide of network editor
+bind all <Control-n> {
+    if {[winfo exists .]} {
+	if {[winfo ismapped .]} {
+	    wm withdraw .
+	} else {
+	    wm deiconify  .
+	}
+    }
 }

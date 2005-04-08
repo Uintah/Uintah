@@ -102,12 +102,6 @@ void NrrdSetProperty::execute() {
 
 
   NrrdIPort *inrrd_port = (NrrdIPort *)get_iport("Input");
-
-  if (!inrrd_port) {
-    error("Unable to initialize iport 'Input'.");
-    return;
-  }
-  
   NrrdDataHandle nHandle;
 
   // The nrrd input is required.
@@ -347,18 +341,10 @@ void NrrdSetProperty::execute() {
   }
 
 
-  // Get a handle to the output Nrrd port.
+  // Send the data downstream
   if( nHandle_.get_rep() )
   {
-    NrrdOPort *onrrd_port =
-      (NrrdOPort *) get_oport("Output");
-
-    if (!onrrd_port) {
-      error("Unable to initialize "+name+"'s oport\n");
-      return;
-    }
-
-    // Send the data downstream
+    NrrdOPort *onrrd_port = (NrrdOPort *) get_oport("Output");
     onrrd_port->send( nHandle_ );
   }
 }

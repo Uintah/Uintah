@@ -88,8 +88,11 @@ private:
   void				delObj(GeomViewerPort* port, GeomID serial);
   void				delAll(GeomViewerPort* port);
   void				flushPort(int portid);
+  void				finishPort(int portid);
   void				flushViews();
   int				process_event();
+
+  virtual void set_context(Scheduler* sched, Network* network);
 
   map<int, map<LightID, int> >	pli_;  // port->light->index
   Mutex				view_window_lock_;
@@ -97,7 +100,12 @@ private:
   int				max_portno_;
   bool				stop_rendering_;
   vector<int>			portno_map_;
-  vector<bool>			syncronized_map_;
+  vector<int>			synchronized_map_;
+  list<unsigned int>            synchronized_serials_;
+  int                           synchronized_debt_;
+
+
+  static void regression_callback(void *ths);
 };
 
 

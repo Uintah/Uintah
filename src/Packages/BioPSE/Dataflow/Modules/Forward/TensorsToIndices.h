@@ -32,6 +32,8 @@
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Geometry/Tensor.h>
+#include <sci_hash_map.h>
+
 
 namespace SCIRun {
 
@@ -44,6 +46,46 @@ public:
   //! support the dynamically compiled algorithm concept
  static CompileInfoHandle get_compile_info(const TypeDescription *field_src_td,
 				           const string &field_dst_name);
+
+#ifdef HAVE_HASH_MAP
+  struct tensorhash
+  {
+    size_t operator()(const Tensor &t) const
+    {
+      unsigned char *s = (unsigned char *)(t.mat_);
+      size_t h = 0;
+      for (unsigned int i = 0; i < sizeof(double)*9; i++)
+      {
+        h = ( h << 5 ) - h + s[i];
+      }
+      return h;
+    }
+  };
+  struct tensorequal
+  {
+    bool operator()(const Tensor &a, const Tensor &b) const
+    {
+      return (a == b);
+    }
+  };
+  typedef hash_map<Tensor, int, tensorhash, tensorequal> tensor_map_type;
+#else
+  // TODO: map is not a replacement for hash_map.  It's not-found
+  // semantics are different.  No equal test.  Just implement our own
+  // hash_map class if it's not there.
+  struct tensorless
+  {
+    bool operator()(const Tensor &a, const Tensor &b) const
+    {
+      for(int i=0;i<3;i++)
+        for(int j=0;j<3;j++)
+          if( a.mat_[i][j] >= b.mat_[i][j])
+            return false;
+      return true;
+    }
+  };
+  typedef map<Tensor, int, tensorless> tensor_map_type;
+#endif
 };
 
 
@@ -55,6 +97,7 @@ public:
   virtual FieldHandle execute(FieldHandle srcH);
 };
 
+
 template <class FSRC, class FDST>
 FieldHandle
 TensorsToIndicesAlgoT<FSRC, FDST>::execute(FieldHandle srcH)
@@ -65,11 +108,24 @@ TensorsToIndicesAlgoT<FSRC, FDST>::execute(FieldHandle srcH)
   typename FSRC::fdata_type::iterator in = src->fdata().begin();
   typename FDST::fdata_type::iterator out = dst->fdata().begin();
   typename FSRC::fdata_type::iterator end = src->fdata().end();
-  int count=0;
-  while (in != end) {
-    conds.push_back(pair<string, Tensor>("x", *in));
-    *out = count;
-    ++in; ++out; ++count;
+
+  tensor_map_type tmap;
+
+  while (in != end)
+  {
+    const typename tensor_map_type::iterator loc = tmap.find(*in);
+    if (loc != tmap.end())
+    {
+      *out = (*loc).second;
+    }
+    else
+    {
+      conds.push_back(pair<string, Tensor>("x", *in));
+      tmap[*in] = conds.size() - 1;
+      *out = conds.size() - 1;
+    }
+
+    ++in; ++out;
   }
   dst->set_property("conductivity_table", conds, false);
   return dst;

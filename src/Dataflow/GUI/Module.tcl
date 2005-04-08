@@ -86,6 +86,9 @@ itcl_class Module {
     protected old_width 0
     protected indicator_width 15
     protected initial_width 0
+    protected done_building_icon 0
+    protected progress_bar_is_mapped 0
+    protected time_is_mapped 0
     # flag set when the module is compiling
     protected compiling_p 0
     # flag set when the module has all incoming ports blocked
@@ -118,13 +121,26 @@ itcl_class Module {
 	set time $t
 	update_state
 	update_time
-	update idletasks
+	
+	# on windows, an update idletasks here causes hangs.  Ignoring
+	# it, however, causes subtle display inconsistencies, so do 
+	# everywhere but on windows
+        set ostype [netedit getenv OS]
+        if { ![string equal $ostype "Windows_NT"] } {
+	    update idletasks
+	}
     }
 
     method set_msg_state {st} {
 	set msg_state $st
 	update_msg_state
-	update idletasks
+	# on windows, an update idletasks here causes hangs.  Ignoring
+	# it, however, causes subtle display inconsistencies, so do 
+	# everywhere but on windows
+        set ostype [netedit getenv OS]
+        if { ![string equal $ostype "Windows_NT"] } {
+	    update idletasks
+	}
     }
 
     method set_progress {p t} {
@@ -147,15 +163,6 @@ itcl_class Module {
 	    set w .ui[modname]
 
 	    SciRaise $w
-
-	    # Mac Hac to keep GUI windows from "growing..."  Hopefully
-	    # a TCL fix will come out for this soon and we can remove
-	    # the following line: (after 1 "wm geometry $w {}") Note:
-	    # this forces the GUIs to resize themselves to their
-	    # "best" size.  However, if the user has resized the GUI
-	    # for some reason, then this will resize it back to the
-	    # "original" size.  Perhaps not the best behavior. :-(
-	    after 1 "wm geometry $w {}"
 
 	    wm title $w [set_title [modname]]
 	}
@@ -196,8 +203,8 @@ itcl_class Module {
 
     #  Make the modules icon on a particular canvas
     method make_icon {modx mody { ignore_placement 0 } } {
-	global $this-done_bld_icon Disabled Subnet Color ToolTipText
-	set $this-done_bld_icon 0
+	global Disabled Subnet Color ToolTipText
+	set done_building_icon 0
 	set Disabled([modname]) 0
 	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
 	set minicanvas $Subnet(Subnet$Subnet([modname])_minicanvas)
@@ -371,7 +378,7 @@ itcl_class Module {
 	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
 	set graph $canvas.module[modname].ff.inset.graph
 	if {$width == 0} { 
-	    place forget $graph
+#	    place forget $graph
 	} else {
 	    $graph configure -width $width
 	    if {$old_width == 0} { place $graph -relheight 1 -anchor nw }
@@ -455,7 +462,7 @@ itcl_class Module {
 	set number $Subnet([modname])
 	set canvas $Subnet(Subnet${number}_canvas)
 	set indicator $canvas.module[modname].ff.msg.indicator
-	place forget $indicator
+#	place forget $indicator
 	$indicator configure -width $indicator_width -background $color
 	place $indicator -relheight 1 -anchor nw 
 
@@ -557,7 +564,6 @@ itcl_class Module {
 
 
     method resize_icon {} {
-	upvar \#0 $this-done_bld_icon done_building_icon
 	if { !$done_building_icon } return
 
 	global Subnet port_spacing modname_font
@@ -585,13 +591,12 @@ itcl_class Module {
 
     method setDone {} {
 	#module already mapped to the canvas
-	upvar \#0 $this-done_bld_icon done
 	upvar \#0 $this-progress_mapped progress_mapped
 	upvar \#0 $this-time_mapped time_mapped
-	if { $done } return
+	if { $done_building_icon } return
 	if { [info exists progress_mapped] && !$progress_mapped } return
 	if { [info exists time_mapped] && !$time_mapped } return
-	set done 1
+	set done_building_icon 1
 	    
 	global Subnet IconWidth modname_font
 	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
@@ -795,7 +800,7 @@ itcl_class Module {
 		    append script "${tab}set $varname "
 		    append script "\"[subDATADIRandDATASET $val]\"\n"
 		} else {
-		    if { [llength $val] == 1 && ![string is integer $val] } {
+		    if { ![string is integer $val] } {
 			set failed [catch "set num [format %.[string length $val]e $val]"]
 			if { !$failed } {
 			    set failed [catch "set num [expr $num]"]
@@ -877,6 +882,12 @@ proc moduleMenu {x y modid} {
     tk_popup $menu_id $x $y    
 }
 
+set SCIRunSelection {}
+proc selection_handler { args } {
+    global SCIRunSelection
+    return $SCIRunSelection
+}
+
 proc regenModuleMenu { modid menu_id } {
     # Wipe the menu clean...
     set num_entries [$menu_id index end]
@@ -887,8 +898,9 @@ proc regenModuleMenu { modid menu_id } {
 	$menu_id delete 0
     }
 
+    selection handle . "selection_handler"
     global Subnet Disabled CurrentlySelectedModules
-    $menu_id add command -label "$modid" -state disabled
+    $menu_id add command -label "$modid" -command "setGlobal SCIRunSelection $modid; selection own ."
     $menu_id add separator
 
     # 'Execute Menu Option
@@ -976,7 +988,7 @@ proc notesWindow { id {done ""} } {
 	-command "okNotesWindow $id \"$done\""
     button $w.b.clear -text "Clear" -command "$w.input delete 1.0 end; set Notes($id) {}"
     button $w.b.cancel -text "Cancel" -command \
-	"set Notes($id) \"$cache\"; destroy $w"
+	"set Notes($id) \{$cache\}; destroy $w"
 
     setIfExists rgb Color($id) white
     button $w.b.reset -fg black -text "Reset Color" -command \
@@ -1032,8 +1044,10 @@ proc disableModule { module state } {
     foreach modid $mods { ;# Iterate through the modules
 	foreach conn $Subnet(${modid}_connections) { ;# all module connections
 	    setIfExists disabled Disabled([makeConnID $conn]) 0
-	    if { $disabled != $state } {
-		disableConnection $conn
+	    if { $state } {
+		connectionDisable $conn
+	    } else {
+		connectionEnable $conn
 	    }
 	}
     }
@@ -1321,7 +1335,7 @@ proc drawNotes { args } {
 	    if { $isModuleNotes } {
 		Tooltip $canvas.module$id $text
 	    } else {
-		canvasTooltip $canvas $id $text
+		canvasTooltip $canvas $id {$text}
 	    }
 	} else {
 	    if { $isModuleNotes } {
@@ -1547,7 +1561,7 @@ proc moduleHelp { modid } {
 }
 
 proc moduleDestroy {modid} {
-    global Subnet CurrentlySelectedModules
+    global Subnet CurrentlySelectedModules Notes Disabled
     networkHasChanged
     if [isaSubnetIcon $modid] {
 	foreach submod $Subnet(Subnet$Subnet(${modid}_num)_Modules) {
@@ -1567,13 +1581,16 @@ proc moduleDestroy {modid} {
     $Subnet(Subnet$Subnet($modid)_canvas) delete $modid $modid-notes $modid-notes-shadow
     destroy $Subnet(Subnet$Subnet($modid)_canvas).module$modid
     $Subnet(Subnet$Subnet($modid)_minicanvas) delete $modid
-    
     # Remove references to module is various state arrays
     listFindAndRemove Subnet(Subnet$Subnet($modid)_Modules) $modid
     listFindAndRemove CurrentlySelectedModules $modid
-    array unset Subnet ${modid}*
+
+    # Must have the '_' on the unset, other wise modid 1* deletes 1_* and 1#_*, etc.
+    array unset Subnet ${modid}_*
+
     array unset Disabled $modid
-    array unset Notes $modid*
+    array unset Notes $modid
+    array unset Notes $modid-*
 
     $modid delete
     if { ![isaSubnetIcon $modid] } {
@@ -1591,11 +1608,16 @@ proc moduleDuplicate { module } {
     global Subnet
     networkHasChanged
  
-    set bbox [$Subnet(Subnet$Subnet($module)_canvas) bbox $module]
-    set x [lindex $bbox 0]
-    set y [expr 20 + [lindex $bbox 3]]
-
+    set canvas $Subnet(Subnet$Subnet($module)_canvas) 
+    set canvassize [$canvas cget -scrollregion]
+    set ulx [expr [lindex [$canvas xview] 0]*[lindex $canvassize 2]]
+    set uly [expr [lindex [$canvas yview] 0]*[lindex $canvassize 3]]
+    set bbox [$canvas bbox $module]
+    set x [expr [lindex $bbox 0]-$ulx]
+    set y [expr 20 + [lindex $bbox 3] - $uly]
+    set Subnet(Loading) $Subnet($module)
     set newmodule [eval addModuleAtPosition [modulePath $module] $x $y]
+    set Subnet(Loading) 0
 
     foreach connection $Subnet(${module}_connections) {
 	if { [string equal [iMod connection] $module] } {
@@ -1609,6 +1631,8 @@ proc moduleDuplicate { module } {
 	upvar \#0 $oldvar oldval $newvar newval
 	catch "set newval \{$oldval\}"
     }
+    setGlobal $newmodule-progress_mapped 0
+    setGlobal $newmodule-time_mapped 0
 }
 
 
@@ -2005,32 +2029,58 @@ proc notesTrace { ArrayName Index mode } {
 proc disabledTrace { ArrayName Index mode } {
     if ![string length $Index] return
     networkHasChanged
-    global Subnet Disabled Notes Color    
-    if { [info exists Subnet($Index)] } {
-	return
-    } else {
-	if { [info exists Disabled($Index)] && $Disabled($Index) } {
-	    set Notes($Index-Color) $Color(ConnDisabled)
-	} else {	    
-	    setIfExists Notes($Index-Color) Color($Index)
-	}
-	set conn [parseConnectionID $Index]
-	if [string equal w $mode] {
-	    if { !$Disabled($Index) } {
-		foreach rconn [findRealConnections $conn] {
-		    eval netedit addconnection $rconn
-		}
-	    } else {
-		foreach conn [findRealConnections $conn] {
-		    netedit deleteconnection [makeConnID $conn] 1
+    global Subnet Disabled Color disableDisabledTrace
+    # If disabled index is a module id, do nothing and return
+    if { [info exists Subnet($Index)] } return
+
+    # disabled is the state we just set the connection $conn to
+    set conn [parseConnectionID $Index]
+    setIfExists disabled Disabled($Index) 0
+
+    set iPorts ""
+    set oPorts ""
+    lappend portsTodo [iPort conn] [oPort conn]
+    while { [llength $portsTodo]} {
+	set port [lindex $portsTodo end]
+	set portsTodo [lrange $portsTodo 0 end-1]
+	if { ![isaSubnet [pMod port]] } {
+	    lappend [pType port]Ports $port
+	} else {
+	    if { [isaSubnetIcon [pMod port]] } {
+		set mod Subnet$Subnet([pMod port]_num)
+	    } elseif { [isaSubnetEditor [pMod port]] } {
+		set mod SubnetIcon$Subnet([pMod port])
+	    }
+	    foreach sconn [portConnections "$mod [pNum port] [invType port]"] {
+		setIfExists pathblocked Disabled([makeConnID $sconn]) 0
+		if { !$pathblocked } {
+		    lappend portsTodo [[pType port]Port sconn]
 		}
 	    }
-
-	    drawConnections [list $conn]
-	    $Subnet(Subnet$Subnet([oMod conn])_canvas) raise $Index
-	    checkForDisabledModules [oMod conn] [iMod conn]
 	}
     }
+	
+    if { $disabled } {
+	setGlobal Notes($Index-Color) $Color(ConnDisabled)
+    } else {	    
+	setGlobal Notes($Index-Color) $Color($Index)
+    }
+
+    foreach iPort $iPorts {
+	foreach oPort $oPorts {
+	    set rconn [makeConn $iPort $oPort]
+	    if { $disabled } {
+		netedit deleteconnection [makeConnID $rconn] 1
+	    } else {
+		eval netedit addconnection $rconn
+	    }
+	}
+    }
+
+    drawConnections [list $conn]
+    $Subnet(Subnet$Subnet([oMod conn])_canvas) raise $Index
+    checkForDisabledModules [oMod conn] [iMod conn]
+
     return 1
 }
 

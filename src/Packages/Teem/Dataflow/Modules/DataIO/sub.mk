@@ -58,7 +58,7 @@ PSELIBS := Core/Datatypes Core/Persistent Core/Containers \
         Core/TkExtensions Core/Algorithms/DataIO \
 	Dataflow/Network Dataflow/Ports \
 
-LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(MAGICK_LIBRARY)
+LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(MAGICK_LIBRARY) $(INSIGHT_LIBRARY)
 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

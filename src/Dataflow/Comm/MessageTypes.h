@@ -43,11 +43,9 @@
 #ifndef SCI_project_MessageTypes_h
 #define SCI_project_MessageTypes_h 1
 
-#include <Dataflow/share/share.h>
-
 namespace SCIRun {
 
-class PSECORESHARE MessageTypes {
+class MessageTypes {
     MessageTypes();
 public:
     void dummy(); // Keeps g++ happy...
@@ -92,8 +90,11 @@ public:
 	ModuleGeneric1,
 	ModuleGeneric2,
 	ModuleGeneric3,
-	ModuleGeneric4
-	
+	ModuleGeneric4,
+
+        SchedulerInternalExecuteDone,
+        GeometrySynchronize,
+        SynchronizeModule
     };
 };
 

@@ -74,15 +74,6 @@ TensorsToIndices::~TensorsToIndices()
 void TensorsToIndices::execute() {
   FieldIPort* ifieldport = (FieldIPort *) get_iport("IndexField");
   FieldOPort* ofieldport = (FieldOPort *) get_oport("TensorField");
-  if (!ifieldport) {
-    error("Unable to initialize iport 'IndexField'.");
-    return;
-  }
-  if (!ofieldport) {
-    error("Unable to initialize iport 'TensorField'.");
-    return;
-  }
-
   FieldHandle ifieldH;
   if (!ifieldport->get(ifieldH))
     return;
@@ -95,7 +86,6 @@ void TensorsToIndices::execute() {
   const string &field_src_name = field_src_td->get_name();
   string::size_type idx = field_src_name.find('<');
   string field_dst_name = field_src_name.substr(0,idx)+"<int>";
-  cerr << "field_dst_name = "<<field_dst_name<<"\n";
 
   CompileInfoHandle ci =
     TensorsToIndicesAlgo::get_compile_info(field_src_td, field_dst_name);

@@ -182,6 +182,35 @@ PROGRAM := $(SRCDIR)/TetgenToTetVol
 SRCS := $(SRCDIR)/TetgenToTetVol.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/UCSDToHexField
-SRCS := $(SRCDIR)/UCSDToHexField.cc
+PROGRAM := $(SRCDIR)/vff2nrrd
+SRCS := $(SRCDIR)/vff2nrrd.cc
 include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/PictToNrrd
+SRCS := $(SRCDIR)/PictToNrrd.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/GeoProbeToNhdr
+SRCS := $(SRCDIR)/GeoProbeToNhdr.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/UCSDToHexVol
+SRCS := $(SRCDIR)/UCSDToHexVol.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/VistaToNrrd
+SRCS := $(SRCDIR)/VistaToNrrd.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+
+####################################
+# added by C.Wolters, Nov.18 2004:
+PROGRAM := $(SRCDIR)/gmvToPts
+SRCS := $(SRCDIR)/gmvToPts.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/geoToPts
+SRCS := $(SRCDIR)/geoToPts.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+####################################
+

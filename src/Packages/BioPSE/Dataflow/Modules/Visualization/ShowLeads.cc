@@ -40,13 +40,12 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Packages/BioPSE/share/share.h>
 
 namespace BioPSE {
 
 using namespace SCIRun;
 
-class BioPSESHARE ShowLeads : public Module {
+class ShowLeads : public Module {
 public:
   ShowLeads(GuiContext *context);
 
@@ -84,10 +83,6 @@ ShowLeads::~ShowLeads(){
 void ShowLeads::execute(){
 
   iport_ = (MatrixIPort *)get_iport("Potentials");
-  if (!iport_) {
-    error("Unable to initialize iport 'Potentials'.");
-    return;
-  }
   MatrixHandle mh;
   if (! iport_->get(mh)) {
     error("Cannot get matrix from input port.");

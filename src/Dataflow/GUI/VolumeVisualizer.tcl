@@ -35,65 +35,30 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	set name VolumeVisualizer
 	set_defaults
     }
-    method set_defaults {} {
-	global $this-use_stencil
-	set $this-use_stencil 0
-	global $this-invert_opacity
-	set $this-invert_opacity 0
-	global $this-multi_level
-	set $this-multi_level 1
-        global $this-blend_res
-        set $this-blend_res 8
-	global $this-sampling_rate_lo
-	set $this-sampling_rate_lo 1.0
-	global $this-sampling_rate_hi
-	set $this-sampling_rate_hi 4.0
-        global $this-adaptive
-        set $this-adaptive 1
-        global $this-cmap_size
-        set $this-cmap_size 7
-        global $this-sw_raster
-        set $this-sw_raster 0
-	global $this-alpha_scale
-	set $this-alpha_scale 0
-	global $this-render_style
-	set $this-render_style 0
-	global $this-interp_mode 
-	set $this-interp_mode 1
-        global $this-shading
-        set $this-shading 0
-        global $this-ambient
-        set $this-ambient 0.5
-        global $this-diffuse
-        set $this-diffuse 0.5
-        global $this-specular
-        set $this-specular 0.0
-        global $this-shine
-        set $this-shine 30.0
-        global $this-light
-        set $this-light 0
-	global $this-shading_tab
-	global $this-sampling_tab
-	global $this-multires_tab
 
-	# For backwards compatability
-	global $this-contrast
-	global $this-contrastfp
-	global $this-draw_mode
-	global $this-num_slices
-	set $this-num_slices -1
+    method set_defaults {} {
+	setGlobal $this-use_stencil 0
+	setGlobal $this-invert_opacity 0
+	setGlobal $this-multi_level 1
+        setGlobal $this-blend_res 8
+	setGlobal $this-sampling_rate_lo 1.0
+	setGlobal $this-sampling_rate_hi 4.0
+        setGlobal $this-adaptive 1
+        setGlobal $this-cmap_size 7
+        setGlobal $this-sw_raster 0
+	setGlobal $this-alpha_scale 0
+	setGlobal $this-render_style 0
+	setGlobal $this-interp_mode 1
+        setGlobal $this-shading 0
+        setGlobal $this-ambient 0.5
+        setGlobal $this-diffuse 0.5
+        setGlobal $this-specular 0.0
+        setGlobal $this-shine 30.0
+        setGlobal $this-light 0
+	setGlobal $this-num_slices -1
+        setGlobal $this-shading-button-state 1
     }
 
-#      method ui {} {
-#  	set w .ui[modname]
-#  	if {[winfo exists $w]} {
-#  	    return
-#  	}
-#  	toplevel $w
-#  	build_ui
-
-#      }
-    
 
     method ui {} { 
         set w .ui[modname] 
@@ -230,8 +195,8 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 # 		-showvalue true -resolution 1 \
 # 		-orient horizontal \
 
-	checkbutton $tab.tf.sw -text "Software Rasterization" -relief flat \
-            -variable $this-sw_raster -onvalue 1 -offvalue 0 \
+	checkbutton $tab.tf.sw -text "Software ColorMap2 Rasterization" \
+            -relief flat -variable $this-sw_raster -onvalue 1 -offvalue 0 \
             -anchor w -command "$n"
 
 	pack $tab.tf.l $tab.tf.stransp $tab.tf.sw \
@@ -256,7 +221,7 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 
 
 	scale $tab.srate_hi -variable $this-sampling_rate_hi \
-            -from 0.5 -to 10.0 -label "Sampling Rate" \
+            -from 0.5 -to 20.0 -label "Sampling Rate" \
             -showvalue true -resolution 0.1 \
             -orient horizontal \
 
@@ -265,7 +230,7 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
             -anchor w -command "$s; $n"
 
 	scale $tab.srate_lo -variable $this-sampling_rate_lo \
-            -from 0.1 -to 5.0 -label "Interactive Sampling Rate" \
+            -from 0.1 -to 10.0 -label "Adaptive Sampling Rate" \
             -showvalue true -resolution 0.1 \
             -orient horizontal \
 
@@ -347,6 +312,7 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
         bind $tab.f1.specular <ButtonRelease> $n
         bind $tab.f1.shine <ButtonRelease> $n
 
+        change_shading_state [set $this-shading-button-state]
     }
 
 
@@ -395,6 +361,25 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	}
     }
 
+    method highlight { } {
+        set w .ui[modname] 
+
+        if {![winfo exists $w]} { 
+            return
+        }
+        
+	set dof [$w.main.options.disp.frame_title childsite]
+        set tab [$dof.tabs childsite "Multires"]
+        
+	for { set i 0 } { $i < [set $this-multi_level] } { incr i } {
+	    if { [set $this-invert_opacity] } {
+		$tab.f.f2.f1.f2.s$i configure -fg "black" -state normal
+	    } else {
+		$tab.f.f2.f1.f2.s$i configure -fg "darkgrey" -state disabled
+	    }
+        }
+	$this-c needexecute
+    }
     method add_multires_tab { dof } {
 	set $this-multires_tab [$dof.tabs add -label "Multires"]
 	set tab [set $this-multires_tab]
@@ -406,32 +391,48 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	checkbutton $tab.f.f1.stencil -text "Use Stencil" \
 	    -variable $this-use_stencil -command "$this-c needexecute"
 	checkbutton $tab.f.f1.opacity -text "Highlight Levels" \
-	    -variable $this-invert_opacity -command "$this-c needexecute"
+	    -variable $this-invert_opacity -command "$this highlight"
 	pack $tab.f.f1.stencil $tab.f.f1.opacity -side left
 	
 	frame $tab.f.f2 -relief flat -borderwidth 2
 	pack $tab.f.f2 -padx 2 -pady 2 -fill x -expand yes
-	label $tab.f.f2.l -text "Show level"
-	pack $tab.f.f2.l -side left
+	frame $tab.f.f2.f1 -relief flat
+	frame $tab.f.f2.f1.f1 -relief flat
+	frame $tab.f.f2.f1.f2 -relief flat
+	label $tab.f.f2.f1.f1.l -text "Show level" -pady 8
+	label $tab.f.f2.f1.f2.l -text "Adjust level"
+	pack $tab.f.f2.f1 -side top -fill x -expand yes
+	pack $tab.f.f2.f1.f1 -side left
+	pack $tab.f.f2.f1.f2 -side left -expand yes -fill x
+	pack $tab.f.f2.f1.f1.l $tab.f.f2.f1.f2.l -side top
 	frame $tab.f.f2.f -relief flat -borderwidth 2
-	pack $tab.f.f2.f -side right
+	pack $tab.f.f2.f -side bottom
 	set selected 0
 	for { set i 0 } { $i < [set $this-multi_level] } { incr i } {
-	    frame $tab.f.f2.f.f$i -relief flat
-	    pack $tab.f.f2.f.f$i -fill x -expand yes -side top
-	    checkbutton $tab.f.f2.f.f$i.b -text $i  \
+#	    frame $tab.f.f2.f.f$i -relief flat
+#	    pack $tab.f.f2.f.f$i -fill x -expand yes -side top
+#	    checkbutton $tab.f.f2.f.f$i.b -text $i  \
+#		-variable $this-l$i -command "$this-c needexecute" 
+#	    scale $tab.f.f2.f.f$i.s -variable $this-s$i \
+#		-from -1.0 -to 1.0 -orient horizontal -resolution 0.01
+	    checkbutton $tab.f.f2.f1.f1.b$i -text $i -pady 9 \
 		-variable $this-l$i -command "$this-c needexecute" 
-	    scale $tab.f.f2.f.f$i.s -variable $this-s$i \
+	    scale $tab.f.f2.f1.f2.s$i -variable $this-s$i \
 		-from -1.0 -to 1.0 -orient horizontal -resolution 0.01
-
-	    pack $tab.f.f2.f.f$i.b $tab.f.f2.f.f$i.s -side left
+	    if { [set $this-invert_opacity] } {
+		$tab.f.f2.f1.f2.s$i configure -fg "black" -state normal
+	    } else {
+		$tab.f.f2.f1.f2.s$i configure -fg "darkgrey" -state disabled
+	    }
+	    pack $tab.f.f2.f1.f1.b$i 
+	    pack $tab.f.f2.f1.f2.s$i -side top -expand yes -fill x
 	    if { [isOn l$i] } {
 		set selected 1
 	    }
-	    bind $tab.f.f2.f.f$i.s <ButtonRelease> "$this-c needexecute" 
+	    bind $tab.f.f2.f1.f2.s$i <ButtonRelease> "$this-c needexecute" 
 	}
-	if { !$selected && [winfo exists $tab.f.f2.f.f0.b] } {  
-	    $tab.f.f2.f.f0.b select 
+	if { !$selected && [winfo exists $tab.f.f2.f1.f1.b0] } {  
+	    $tab.f.f2.f1.f1.b0 select 
 	}
     }
 
@@ -465,4 +466,22 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	return [set $this-$sval]
     }
 
+    method change_shading_state { val } {
+        set $this-shading-button-state $val
+
+        set w .ui[modname] 
+
+        if {![winfo exists $w]} { 
+            return
+        }
+        
+	set dof [$w.main.options.disp.frame_title childsite]
+        set tab [$dof.tabs childsite "Shading"]
+        
+        if { $val } {
+            $tab.shading configure -fg "black"
+        } else {
+            $tab.shading configure -fg "darkgrey"
+        }
+    }
 }

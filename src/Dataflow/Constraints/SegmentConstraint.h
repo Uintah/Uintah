@@ -44,12 +44,11 @@
 #ifndef SCI_project_Segment_Constraint_h
 #define SCI_project_Segment_Constraint_h 1
 
-#include <Dataflow/share/share.h>
 #include <Dataflow/Constraints/BaseConstraint.h>
 
 namespace SCIRun {
 
-class PSECORESHARE SegmentConstraint : public BaseConstraint {
+class SegmentConstraint : public BaseConstraint {
 public:
    SegmentConstraint( const string& name,
 		      const Index numSchemes,

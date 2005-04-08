@@ -38,25 +38,22 @@
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 
-#include <Dataflow/share/share.h>
-
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/PointWidget.h>
 #include <Core/Geom/View.h>
 #include <Core/Volume/SliceRenderer.h>
-#include <Core/Volume/Texture.h>
 #include <Dataflow/Ports/TexturePort.h>
+#include <Core/Geom/ShaderProgramARB.h>
 #include <Dataflow/Ports/Colormap2Port.h>
 
 #include <iostream>
 #include <algorithm>
-#include <Core/Volume/Utils.h>
 #include <Core/Volume/VideoCardInfo.h>
 
 namespace SCIRun {
 
-class PSECORESHARE VolumeSlicer : public Module {
+class VolumeSlicer : public Module {
 public:
   VolumeSlicer(GuiContext*);
   virtual ~VolumeSlicer();
@@ -159,22 +156,10 @@ void VolumeSlicer::execute()
   icmap2_ = (ColorMap2IPort*)get_iport("ColorMap2");
   ogeom_ = (GeometryOPort*)get_oport("Geometry");
   ocmap_ = (ColorMapOPort*)get_oport("ColorMap");
-  if (!intexture_) {
-    error("Unable to initialize iport 'GL Texture'.");
-    return;
-  }
-  if (!icmap1_ && !icmap2_) {
-    error("Unable to initialize iport 'ColorMap'.");
-    return;
-  }
-  if (!ogeom_) {
-    error("Unable to initialize oport 'Geometry'.");
-    return;
-  }
   
-  if (!intexture_->get(tex_)) {
-    return;
-  } else if (!tex_.get_rep()) {
+  if (!(intexture_->get(tex_) && tex_.get_rep()))
+  {
+    warning("Required Texture input not found.");
     return;
   }
   
@@ -185,18 +170,21 @@ void VolumeSlicer::execute()
 
   if (c2)
   {
-#ifndef HAVE_AVR_SUPPORT
-    warning("ColorMap2 usage is not supported by this build.");
-    cmap2 = 0;
-    c2 = false;
-#else
-    if (tex_->nc() == 1)
+    if (!ShaderProgramARB::shaders_supported())
     {
-      warning("ColorMap2 requires gradient magnitude in the texture.");
+      warning("ColorMap2 usage is not supported by this machine.");
       cmap2 = 0;
       c2 = false;
     }
-#endif
+    else
+    {
+      if (tex_->nc() == 1)
+      {
+        warning("ColorMap2 requires gradient magnitude in the texture.");
+        cmap2 = 0;
+        c2 = false;
+      }
+    }
   }
 
   if (!c1 && !c2)
@@ -226,9 +214,9 @@ void VolumeSlicer::execute()
     int nz = tex_->nz();
     Transform t(tex_->transform());
     dmin_=t.project(Point(0,0,0));
-    ddx_= (t.project(Point(1,0,0))-dmin_) * (dv.x()/nx);
-    ddy_= (t.project(Point(0,1,0))-dmin_) * (dv.y()/ny);
-    ddz_= (t.project(Point(0,0,1))-dmin_) * (dv.z()/nz);
+    ddx_ = t.project(Vector(1.0/(nx-1), 0, 0));
+    ddy_ = t.project(Vector(0, 1.0/(ny-1), 0));
+    ddz_ = t.project(Vector(0, 0, 1.0/(nz-1)));
     ddview_ = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
   }
 
@@ -285,9 +273,9 @@ void VolumeSlicer::execute()
       int nz = tex_->nz();
       Transform t(tex_->transform());
       dmin_=t.project(Point(0,0,0));
-      ddx_= (t.project(Point(1,0,0))-dmin_) * (dv.x()/nx);
-      ddy_= (t.project(Point(0,1,0))-dmin_) * (dv.y()/ny);
-      ddz_= (t.project(Point(0,0,1))-dmin_) * (dv.z()/nz);
+      ddx_ = t.project(Vector(1.0/(nx-1), 0, 0));
+      ddy_ = t.project(Vector(0, 1.0/(ny-1), 0));
+      ddz_ = t.project(Vector(0, 0, 1.0/(nz-1)));
       ddview_ = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
       if(!b.inside(control_widget_->GetPosition())) {
 	control_widget_->SetPosition(Interpolate(b.min(), b.max(), 0.5));

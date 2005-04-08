@@ -43,7 +43,6 @@
 #ifndef SCI_project_Connection_h
 #define SCI_project_Connection_h 1
 
-#include <Dataflow/share/share.h>
 #include <string>
 
 namespace SCIRun {
@@ -51,7 +50,7 @@ namespace SCIRun {
   class Module;
   class OPort;
 
-class PSECORESHARE Connection {
+class Connection {
 public:
   Connection(Module* omod, int oportno, Module* imod, int imodno,
 	     const std::string &id);

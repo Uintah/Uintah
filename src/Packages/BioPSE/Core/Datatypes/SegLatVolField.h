@@ -41,7 +41,6 @@
 #ifndef Datatypes_SegLatVolField_h
 #define Datatypes_SegLatVolField_h
 
-#include <Core/Datatypes/Field.h>
 #include <Core/Containers/FData.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/HexTrilinearLgn.h>

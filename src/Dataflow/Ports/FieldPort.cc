@@ -42,10 +42,10 @@
 namespace SCIRun {
 
 extern "C" {
-PSECORESHARE IPort* make_FieldIPort(Module* module, const string& name) {
+IPort* make_FieldIPort(Module* module, const string& name) {
   return scinew SimpleIPort<FieldHandle>(module,name);
 }
-PSECORESHARE OPort* make_FieldOPort(Module* module, const string& name) {
+OPort* make_FieldOPort(Module* module, const string& name) {
   return scinew SimpleOPort<FieldHandle>(module,name);
 }
 }

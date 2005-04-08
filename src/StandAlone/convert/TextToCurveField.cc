@@ -50,7 +50,7 @@
 // ASCII, unless you specify -binOutput.
 
 #include <Core/Datatypes/GenericField.h>
-#include <Core/Basis/Constant.h>
+#include <Core/Basis/NoData.h>
 #include <Core/Basis/CrvLinearLgn.h>
 #include <Core/Datatypes/CurveMesh.h>
 #include <Core/Persistent/Pstreams.h>
@@ -193,10 +193,11 @@ main(int argc, char **argv) {
   }
   cerr << "done adding edges.\n";
 
-  typedef ConstantBasis<double>                DatBasis;
+  typedef NoDataBasis<double>                DatBasis;
   typedef GenericField<CMesh, DatBasis, vector<double> > CField;
      
   CField *cf = scinew CField(cm);
+
   FieldHandle cfH(cf);
   
   if (binOutput) {

@@ -40,22 +40,21 @@
  */
 
 #include <Dataflow/Ports/NrrdPort.h>
-#include <Core/share/share.h>
 #include <Core/Malloc/Allocator.h>
 
 namespace SCIRun {
 
 extern "C" {
-  SCICORESHARE IPort* make_NrrdIPort(Module* module, const string& name) {
+  IPort* make_NrrdIPort(Module* module, const string& name) {
   return scinew SimpleIPort<NrrdDataHandle>(module,name);
 }
-  SCICORESHARE OPort* make_NrrdOPort(Module* module, const string& name) {
+  OPort* make_NrrdOPort(Module* module, const string& name) {
   return scinew SimpleOPort<NrrdDataHandle>(module,name);
 }
 }
 
 template<> string SimpleIPort<NrrdDataHandle>::port_type_("Nrrd");
-template<> string SimpleIPort<NrrdDataHandle>::port_color_("Purple4");
+template<> string SimpleIPort<NrrdDataHandle>::port_color_("cyan2");
 
 } // End namespace SCIRun
 

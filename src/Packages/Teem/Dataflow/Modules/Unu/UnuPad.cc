@@ -209,7 +209,7 @@ UnuPad::execute()
     last_nrrdH_ = nrrd;
 
     // Copy the properies, kinds, and labels.
-    *((PropertyManager *)nrrd) = *((PropertyManager *)(nrrdH.get_rep()));
+    nrrd->copy_properties(nrrdH.get_rep());
 
     for( int i=0; i<nin->dim; i++ ) {
       nout->axis[i].kind  = nin->axis[i].kind;
@@ -219,20 +219,15 @@ UnuPad::execute()
     if( nout->axis[0].size == 3)
       nout->axis[0].kind = nrrdKind3Vector;
     else if( nout->axis[0].size == 6 )
-      nout->axis[0].kind = nrrdKind3DSymTensor;
+      nout->axis[0].kind = nrrdKind3DSymMatrix;
     else
       nout->axis[0].kind = nrrdKindDomain;
   }
 
 
-  if (last_nrrdH_.get_rep()) {
-
+  if (last_nrrdH_.get_rep())
+  {
     NrrdOPort* onrrd = (NrrdOPort *)get_oport("Nrrd");
-    if (!onrrd) {
-      error("Unable to initialize oport 'Nrrd'.");
-      return;
-    }
-
     onrrd->send(last_nrrdH_);
   }
 }

@@ -36,7 +36,6 @@ SRCS +=	$(SRCDIR)/CM2Shader.cc \
 	$(SRCDIR)/CM2Widget.cc \
 	$(SRCDIR)/Colormap2.cc \
 	$(SRCDIR)/Pbuffer.cc \
-	$(SRCDIR)/ShaderProgramARB.cc \
 	$(SRCDIR)/SliceRenderer.cc \
 	$(SRCDIR)/Texture.cc \
 	$(SRCDIR)/TextureBrick.cc \
@@ -58,6 +57,9 @@ PSELIBS := \
 	Core/Util
 #	Dataflow/Network Dataflow/XMLUtil
 
+ifeq ($(IS_WIN), yes)
+  PSELIBS += Core/Math
+endif
 
 LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY)
 #LIBS := $(LINK) $(XML_LIBRARY) $(GL_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)

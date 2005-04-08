@@ -117,7 +117,6 @@ private:
   typedef std::map<std::string, VtkComponentDescription*> componentDB_type;
   componentDB_type components;
 
-  std::string getSidlXMLPath();
   void readComponentDescription(const std::string& file);
 
   std::string sidlDLLPath;

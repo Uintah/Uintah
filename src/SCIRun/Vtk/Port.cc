@@ -39,11 +39,12 @@
  */
 
 #include <SCIRun/Vtk/Port.h>
-
-namespace SCIRun {
-namespace vtk {
+using namespace std;
+using namespace SCIRun;
+using namespace vtk;
 
 Port::Port(){
+  com=0;
 }
       
 Port::~Port(){
@@ -52,6 +53,28 @@ Port::~Port(){
 void
 Port::setName(const std::string &name){
   this->name=name;
+}
+
+void 
+Port::addConnectedPort(Port *port){
+  connPortList.push_back(port);
+}
+
+void 
+Port::delConnectedPort(Port *port){
+  std::vector<Port*>::iterator iter=connPortList.begin();
+  while(iter!=connPortList.end()){
+    if(*iter==port){
+      connPortList.erase(iter);
+      return;
+    }
+    iter++;
+  }
+}
+
+void
+Port::setComponent(Component *com){
+  this->com=com;
 }
 
 std::string 
@@ -64,5 +87,7 @@ Port::isInput(){
   return is_input;
 }
 
-}
+void 
+Port::refresh(int flag){
+  //default refresh does nothing
 }

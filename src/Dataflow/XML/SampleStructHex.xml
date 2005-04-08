@@ -59,7 +59,7 @@
       far across (50% bigger on each side).  </p>
 
       <p> No interpolation is done onto the new field.  It is
-      recommended that the <modref package="SCIRun" name="DirectInterpolate"/> module be used if those
+      recommended that the <modref package="SCIRun" name="DirectMapping"/> module be used if those
       values are needed. </p>
 
       <p> The default appearance of this field is not much different than that

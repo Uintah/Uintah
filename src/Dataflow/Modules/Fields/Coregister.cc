@@ -106,19 +106,6 @@ Coregister::execute()
   PCMesh::handle_type fixedM, mobileM;
   PCMesh::Node::size_type nnodes;
   
-  if (!fixed) {
-    error("Unable to initialize iport 'Fixed PointCloudField'.");
-    return;
-  }
-  if (!mobile) {
-    error("Unable to initialize iport 'Mobile PointCloudField'.");
-    return;
-  }
-  if (!dfield) {
-    error("Unable to initialize iport 'DistanceField From Fixed'.");
-    return;
-  }
-
   if (!fixed->get(fixedH)) return;
   fixedPC = dynamic_cast<PCField *>(fixedH.get_rep());
   if (!fixedPC) return;
@@ -144,10 +131,6 @@ Coregister::execute()
   }
 
   MatrixOPort *omat = (MatrixOPort *)get_oport("Transform");
-  if (!omat) {
-    error("Unable to initialize oport 'Transform'.");
-    return;
-  }
 
   Array1<Point> fixedPts, mobilePts;
   Transform trans;
@@ -172,7 +155,7 @@ Coregister::execute()
   int allowTranslate = allowTranslate_.get();
   string method = method_.get();
   
-  CoregPts* coreg;
+  CoregPts* coreg = 0;
   if (method == "Analytic") {
     coreg = scinew CoregPtsAnalytic(allowScale, allowRotate, allowTranslate);
   } else if (method == "Procrustes") {

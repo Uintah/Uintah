@@ -71,16 +71,17 @@ itcl_class SCIRun_DataIO_FieldReader {
 	set tmp2 [eval "set tmp3 $tmp1"]
 
 	makeOpenFilebox \
-		-parent $w \
-		-filevar $this-filename \
-	        -setcmd "wm withdraw $w" \
-		-command "$this-c needexecute; wm withdraw $w" \
-		-cancel "wm withdraw $w" \
-		-title $title \
-	        -filetypes $tmp2 \
-		-initialdir $initdir \
-		-defaultextension $defext \
-	        -selectedfiletype $this-filetype
+	    -parent $w \
+	    -filevar $this-filename \
+	    -setcmd "wm withdraw $w" \
+	    -command "$this-c needexecute; wm withdraw $w" \
+	    -cancel "wm withdraw $w" \
+	    -title $title \
+	    -filetypes $tmp2 \
+	    -initialdir $initdir \
+	    -defaultextension $defext \
+	    -allowMultipleFiles $this \
+	    -selectedfiletype $this-filetype
 	
 	moveToCursor $w	
     }

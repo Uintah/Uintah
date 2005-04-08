@@ -46,7 +46,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Modules/Fields/ManageFieldData.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Core/Containers/Handle.h>
+#include <Core/Containers/StringUtil.h>
 #include <iostream>
 #include <stdio.h>
 
@@ -85,10 +85,6 @@ ManageFieldData::execute()
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-  if (!ifp) {
-    error("Unable to initialize iport 'Input Field'.");
-    return;
-  }
   if (!(ifp->get(ifieldhandle) && (ifieldhandle.get_rep())))
   {
     error( "No field available in the 'Input Field' port.");
@@ -130,13 +126,7 @@ ManageFieldData::execute()
     else
     {
       MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
-      if (!omp) {
-	error("Unable to initialize oport 'Output Matrix'.");
-      }
-      else
-      {
-	omp->send(algo_field->execute(ifieldhandle, datasize));
-      }
+      omp->send(algo_field->execute(ifieldhandle, datasize));
     }
   }
 
@@ -144,10 +134,6 @@ ManageFieldData::execute()
   FieldHandle result_field;
   MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Input Matrix");
   MatrixHandle imatrixhandle;
-  if (!imatrix_port) {
-    error("Unable to initialize iport 'Input Matrix'.");
-    return;
-  }
   if (!(imatrix_port->get(imatrixhandle) && imatrixhandle.get_rep()))
   {
     remark("No input matrix connected, sending field as is.");
@@ -156,7 +142,11 @@ ManageFieldData::execute()
   else
   {
     int matrix_svt_flag = svt_flag;
-    if (imatrixhandle->nrows() == 9 || imatrixhandle->ncols() == 9)
+    if (imatrixhandle->nrows() == 6 || imatrixhandle->ncols() == 6)
+    {
+      matrix_svt_flag = 3;
+    }
+    else if (imatrixhandle->nrows() == 9 || imatrixhandle->ncols() == 9)
     {
       matrix_svt_flag = 2;
     }
@@ -173,6 +163,17 @@ ManageFieldData::execute()
       error("Input matrix row/column size mismatch.");
       error("Input matrix does not appear to fit in the field.");
       return;
+    }
+    if (matrix_svt_flag == 3 && datasize == 6)
+    {
+      if (imatrixhandle->nrows() == 3 || imatrixhandle->ncols() == 3)
+      {
+	matrix_svt_flag = 1;
+      }
+      else if (imatrixhandle->nrows() == 1 || imatrixhandle->ncols() == 1)
+      {
+	matrix_svt_flag = 0;
+      }
     }
     if (matrix_svt_flag == 2 && datasize == 9)
     {
@@ -192,9 +193,12 @@ ManageFieldData::execute()
 	matrix_svt_flag = 0;
       }
     }
-    if (imatrixhandle->nrows() == 9 && imatrixhandle->ncols() == 9)
+    if ((imatrixhandle->nrows() == 9 || imatrixhandle->nrows() == 6) &&
+	(imatrixhandle->ncols() == 9 || imatrixhandle->ncols() == 6))
     {
-      remark("Input matrix is 9x9.  Using rows or columns as tensors is ambiguous.");
+      remark("Input matrix is " + to_string(imatrixhandle->nrows()) + "x" +
+	     to_string(imatrixhandle->ncols()) +
+	     ".  Using rows or columns as tensors is ambiguous.");
     }
     else if (imatrixhandle->nrows() == 3 && imatrixhandle->ncols() == 3)
     {
@@ -228,10 +232,6 @@ ManageFieldData::execute()
   }
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Field");
-  if (!ofp) {
-    error("Unable to initialize oport 'Output Field'.");
-    return;
-  }
   ofp->send(result_field);
 }
 
@@ -288,8 +288,13 @@ ManageFieldDataAlgoMesh::get_compile_info(const TypeDescription *fsrc,
   string extension2;
   switch (svt_flag)
   {
+  case 3:
+    extension = "Tensor6";
+    extension2 = "Tensor";
+    break;
+
   case 2:
-    extension = "Tensor";
+    extension = "Tensor9";
     extension2 = "Tensor";
     break;
 

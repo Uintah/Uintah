@@ -76,7 +76,7 @@ public:
 template <class FSRC>
 bool
 QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
-			      ProgressReporter *mod)
+                              ProgressReporter *mod)
 {
   FSRC *qsfield = dynamic_cast<FSRC*>(srcH.get_rep());
 
@@ -108,6 +108,7 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
   vector<typename FSRC::mesh_type::Elem::index_type> elemmap;
 
   vector<bool> visited(hesize, false);
+  vector<bool> nodeisdiagonal(hnsize, false);
 
   typename FSRC::mesh_type::Elem::iterator bi, ei;
   qsmesh->begin(bi); qsmesh->end(ei);
@@ -119,6 +120,8 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
   bool flipflop = true;
   qsmesh->synchronize(Mesh::EDGES_E);
 
+  // For each contiguous chunk of the mesh we do a breadth first
+  // traversal and cut all of the quads with alternating diagonals.
   while (bi != ei)
   {
     if (!visited[(unsigned int)*bi])
@@ -126,53 +129,67 @@ QuadToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
       buffers[flipflop].clear();
       buffers[flipflop].push_back(*bi);
 
+      // Pick a starting cut.  Do diagonal between 0 and 2.
+      typename FSRC::mesh_type::Node::array_type qsnodes;
+      qsmesh->get_nodes(qsnodes, *bi);
+      nodeisdiagonal[qsnodes[0]] = true;
+      nodeisdiagonal[qsnodes[2]] = true;
+
       while (buffers[flipflop].size() > 0)
       {
-	for (unsigned int i = 0; i < buffers[flipflop].size(); i++)
-	{
-	  if (visited[(unsigned int)buffers[flipflop][i]]) { continue; }
-	  visited[(unsigned int)buffers[flipflop][i]] = true;
+        for (unsigned int i = 0; i < buffers[flipflop].size(); i++)
+        {
+          if (visited[(unsigned int)buffers[flipflop][i]]) { continue; }
+          visited[(unsigned int)buffers[flipflop][i]] = true;
 
-	  typename FSRC::mesh_type::Node::array_type qsnodes;
-	  qsmesh->get_nodes(qsnodes, buffers[flipflop][i]);
-	  ASSERT(qsnodes.size() == 4);
+          qsmesh->get_nodes(qsnodes, buffers[flipflop][i]);
+          ASSERT(qsnodes.size() == 4);
 
-	  if (flipflop)
-	  {
-	    tsmesh->add_triangle((TSMesh::Node::index_type)(qsnodes[0]),
-				 (TSMesh::Node::index_type)(qsnodes[1]),
-				 (TSMesh::Node::index_type)(qsnodes[2]));
+          // We cut from the same point as the neighboring face by
+          // marking which node in the face was cut.  Then we cut the
+          // opposite direction next (from the same point) and
+          // propogate the cut diagonally to the other side of the
+          // quad for the next neighbor.
+          if (nodeisdiagonal[qsnodes[0]] || nodeisdiagonal[qsnodes[2]])
+          {
+            nodeisdiagonal[qsnodes[0]] = true;
+            nodeisdiagonal[qsnodes[2]] = true;
+            tsmesh->add_triangle((TSMesh::Node::index_type)(qsnodes[0]),
+                                 (TSMesh::Node::index_type)(qsnodes[1]),
+                                 (TSMesh::Node::index_type)(qsnodes[2]));
 
-	    tsmesh->add_triangle((TSMesh::Node::index_type)(qsnodes[0]),
-				 (TSMesh::Node::index_type)(qsnodes[2]),
-				 (TSMesh::Node::index_type)(qsnodes[3]));
-	  }
-	  else
-	  {
-	    tsmesh->add_triangle((TSMesh::Node::index_type)(qsnodes[0]),
-				 (TSMesh::Node::index_type)(qsnodes[1]),
-				 (TSMesh::Node::index_type)(qsnodes[3]));
+            tsmesh->add_triangle((TSMesh::Node::index_type)(qsnodes[0]),
+                                 (TSMesh::Node::index_type)(qsnodes[2]),
+                                 (TSMesh::Node::index_type)(qsnodes[3]));
+          }
+          else
+          {
+            nodeisdiagonal[qsnodes[1]] = true;
+            nodeisdiagonal[qsnodes[3]] = true;
+            tsmesh->add_triangle((TSMesh::Node::index_type)(qsnodes[0]),
+                                 (TSMesh::Node::index_type)(qsnodes[1]),
+                                 (TSMesh::Node::index_type)(qsnodes[3]));
 
-	    tsmesh->add_triangle((TSMesh::Node::index_type)(qsnodes[1]),
-				 (TSMesh::Node::index_type)(qsnodes[2]),
-				 (TSMesh::Node::index_type)(qsnodes[3]));
-	  }
+            tsmesh->add_triangle((TSMesh::Node::index_type)(qsnodes[1]),
+                                 (TSMesh::Node::index_type)(qsnodes[2]),
+                                 (TSMesh::Node::index_type)(qsnodes[3]));
+          }
 
-	  elemmap.push_back(buffers[flipflop][i]);
-	  qsmesh->synchronize(Mesh::EDGE_NEIGHBORS_E);
-	  typename FSRC::mesh_type::Face::array_type neighbors;
-	  qsmesh->get_neighbors(neighbors, buffers[flipflop][i]);
+          elemmap.push_back(buffers[flipflop][i]);
+          qsmesh->synchronize(Mesh::EDGE_NEIGHBORS_E);
+          typename FSRC::mesh_type::Face::array_type neighbors;
+          qsmesh->get_neighbors(neighbors, buffers[flipflop][i]);
 
-	  for (unsigned int i = 0; i < neighbors.size(); i++)
-	  {
-	    if (!visited[(unsigned int)neighbors[i]])
-	    {
-	      buffers[!flipflop].push_back(neighbors[i]);
-	    }
-	  }
-	}
-	buffers[flipflop].clear();
-	flipflop = !flipflop;
+          for (unsigned int j = 0; j < neighbors.size(); j++)
+          {
+            if (!visited[(unsigned int)neighbors[j]])
+            {
+              buffers[!flipflop].push_back(neighbors[j]);
+            }
+          }
+        }
+        buffers[flipflop].clear();
+        flipflop = !flipflop;
       }
     }
     ++bi;
@@ -248,7 +265,7 @@ public:
 template <class FSRC>
 bool
 ImgToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH, 
-			     ProgressReporter *mod)
+                             ProgressReporter *mod)
 {
   FSRC *ifield = dynamic_cast<FSRC*>(srcH.get_rep());
 
@@ -286,22 +303,22 @@ ImgToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
     if (!(((*bi).i_ ^ (*bi).j_)&1))
     {
       tmesh->add_triangle(nindex_type((unsigned int)inodes[0]),
-			  nindex_type((unsigned int)inodes[1]),
-			  nindex_type((unsigned int)inodes[2]));
+                          nindex_type((unsigned int)inodes[1]),
+                          nindex_type((unsigned int)inodes[2]));
 
       tmesh->add_triangle(nindex_type((unsigned int)inodes[0]),
-			  nindex_type((unsigned int)inodes[2]),
-			  nindex_type((unsigned int)inodes[3]));
+                          nindex_type((unsigned int)inodes[2]),
+                          nindex_type((unsigned int)inodes[3]));
     }
     else
     {
       tmesh->add_triangle(nindex_type((unsigned int)inodes[0]),
-			  nindex_type((unsigned int)inodes[1]),
-			  nindex_type((unsigned int)inodes[3]));
+                          nindex_type((unsigned int)inodes[1]),
+                          nindex_type((unsigned int)inodes[3]));
 
       tmesh->add_triangle(nindex_type((unsigned int)inodes[1]),
-			  nindex_type((unsigned int)inodes[2]),
-			  nindex_type((unsigned int)inodes[3]));
+                          nindex_type((unsigned int)inodes[2]),
+                          nindex_type((unsigned int)inodes[3]));
     }
     ++bi;
   }
@@ -335,8 +352,7 @@ ImgToTriAlgoT<FSRC>::execute(FieldHandle srcH, FieldHandle& dstH,
     while (nbi != nei)
     {
       ifield->value(val, *nbi);
-      tfield->set_value(val,
-			(TSMesh::Node::index_type)(unsigned int)(*nbi));
+      tfield->set_value(val, (TSMesh::Node::index_type)(unsigned int)(*nbi));
       ++nbi;
     }
   }

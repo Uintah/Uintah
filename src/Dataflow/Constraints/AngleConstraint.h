@@ -44,12 +44,11 @@
 #ifndef SCI_project_Angle_Constraint_h
 #define SCI_project_Angle_Constraint_h 1
 
-#include <Dataflow/share/share.h>
 #include <Dataflow/Constraints/BaseConstraint.h>
 
 namespace SCIRun {
 
-class PSECORESHARE AngleConstraint : public BaseConstraint {
+class AngleConstraint : public BaseConstraint {
 public:
    AngleConstraint( const string& name,
 		    const Index numSchemes,

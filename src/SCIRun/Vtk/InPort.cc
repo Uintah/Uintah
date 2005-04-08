@@ -40,16 +40,25 @@
 
 
 #include <SCIRun/Vtk/InPort.h>
-
-namespace SCIRun {
-namespace vtk {
+#include <SCIRun/Vtk/OutPort.h>
+#include <SCIRun/Vtk/Component.h>
+#include <iostream>
+using namespace SCIRun;
+using namespace vtk;
 
 InPort::InPort(){
   is_input=true;
 }
 
+void 
+InPort::update(int flag){
+  refresh(flag);
+  if(com!=NULL){
+    com->updateAllOutPorts(flag);
+  }
+}
+
 InPort::~InPort(){
 }
 
-}
-}
+

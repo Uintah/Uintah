@@ -41,8 +41,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/share/share.h>
-
 #include <Dataflow/Ports/NrrdPort.h>
 
 #include <Core/Datatypes/ColumnMatrix.h>
@@ -55,7 +53,7 @@ namespace SCITeem {
 
 using namespace SCIRun;
 
-class PSECORESHARE NrrdToMatrix : public Module {
+class NrrdToMatrix : public Module {
 public:
   NrrdIPort*   ndata_;
   NrrdIPort*   nrows_;
@@ -117,23 +115,6 @@ void
   nrows_ = (NrrdIPort *)get_iport("Rows");
   ncols_ = (NrrdIPort *)get_iport("Columns");
   omat_ = (MatrixOPort *)get_oport("Matrix");
-
-  if (!ndata_) {
-    error("Unable to initialize iport 'Data'.");
-    return;
-  }
-  if (!nrows_) {
-    error("Unable to initialize iport 'Rows'.");
-    return;
-  }
-  if (!ncols_) {
-    error("Unable to initialize iport 'Columns'.");
-    return;
-  }
-  if (!omat_) {
-    error("Unable to initialize oport 'Matrix'.");
-    return;
-  }
 
   NrrdDataHandle dataH;
   NrrdDataHandle rowsH;
@@ -368,7 +349,7 @@ NrrdToMatrix::create_dense_matrix(NrrdDataHandle dataH) {
   DenseMatrix* matrix = scinew DenseMatrix(rows,cols);
   
   PTYPE *val = (PTYPE*)dataH->nrrd->data;
-  double *data = matrix->getData();
+  double *data = matrix->get_data_pointer();
 
   for(int r=0; r<rows; r++) {
     for(int c=0; c<cols; c++) {

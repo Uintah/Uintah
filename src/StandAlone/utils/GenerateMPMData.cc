@@ -121,7 +121,7 @@ write_MPM_fibdir(FieldHandle& field_h, const string &outdir)
 
     double vol = dx * dy * dz; 
     
-    const double part_per_mm = 2.;
+    const double part_per_mm = 4.;
     const int div_per_x = (int)round(part_per_mm * dx);
     const int div_per_y = (int)round(part_per_mm * dy);
     const int div_per_z = (int)round(part_per_mm * dz);
@@ -163,6 +163,7 @@ write_MPM_fibdir(FieldHandle& field_h, const string &outdir)
 	    (*files)[0] = new ofstream(nm.c_str(), ios_base::out);
 	    fcount[0] = 0;
 	  }
+	  double units_sf = .001;
 	  ofstream* str = (*files)[0];
 // 	  (*str) << setprecision (9) 
 // 		 << c.x() << " " << c.y() << " " << c.z() << " " 
@@ -170,8 +171,10 @@ write_MPM_fibdir(FieldHandle& field_h, const string &outdir)
 // 		 << v.x() << " " << v.y() << " " << v.z() << endl;
 
 	  (*str) << setprecision (9) 
-		 << c.x() << " " << c.y() << " " << c.z() << endl; 
-
+		 << c.x() * units_sf << " " << c.y() * units_sf << " " 
+		 << c.z() * units_sf << " " 
+		 << part_vol * units_sf * units_sf * units_sf << " "
+		 << v.x() << " " << v.y() << " " << v.z() << endl;
 	  fcount[0]++;
 	}
       }
@@ -212,7 +215,7 @@ write_MPM(FieldHandle& field_h, const string &outdir)
       fname << right << 1;
       string nm1;
       fname >> nm1;
-      files->push_back(new ofstream(nm1.c_str(), ios_base::out));
+      files->push_back(new ofstream(nm1.c_str(), ios::out));
 
     }    
   }
@@ -256,7 +259,7 @@ write_MPM(FieldHandle& field_h, const string &outdir)
 	fname << right << ++num_files[val];
 	fname >> nm;
 	delete (*files)[val];
-	(*files)[val] = new ofstream(nm.c_str(), ios_base::out);
+	(*files)[val] = new ofstream(nm.c_str(), ios::out);
 	fcount[val] = 0;
       }
 
