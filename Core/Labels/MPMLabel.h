@@ -79,6 +79,7 @@ using std::vector;
       const VarLabel* pFiberDirLabel_preReloc;
       
       const VarLabel* gMassLabel;
+      const VarLabel* gMassAllLabel;
       const VarLabel* gAccelerationLabel;
       const VarLabel* gMomExedAccelerationLabel;
       const VarLabel* gVelocityLabel;
