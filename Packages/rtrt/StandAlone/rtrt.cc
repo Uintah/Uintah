@@ -489,21 +489,16 @@ main(int argc, char* argv[])
     SCIRun::Pio(*str, sh);
     scene = sh.get_rep();
   } else {
-    // First try .rs
-    sprintf(scenefile, "./%s.rs", scenename);
+    // First try .mo
+    sprintf(scenefile, "./%s.mo", scenename);
     void* handle=dlopen(scenefile, RTLD_NOW);
     if(!handle){
-      // Now try .mo
-      sprintf(scenefile, "./%s.mo", scenename);
+      // Try exactly whatever they passed in
       handle=dlopen(scenename, RTLD_NOW);
       if(!handle){
-        // Try exactly whatever they passed in
-        handle=dlopen(scenename, RTLD_NOW);
-        if(!handle){
-          cerr << "Error opening scene: " << scenename << '\n';
-          cerr << dlerror() << '\n';
-          exit(1);
-        }
+        cerr << "Error opening scene: " << scenename << '\n';
+        cerr << dlerror() << '\n';
+        exit(1);
       }
     }
     void* scene_fn=dlsym(handle, "make_scene");
