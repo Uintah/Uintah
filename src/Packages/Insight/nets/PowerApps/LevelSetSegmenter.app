@@ -2571,25 +2571,19 @@ class LevelSetSegmenterApp {
 	    change_indicator_labels "Peforming GradientAnisotropicDiffusion Smoothing..."
 	} elseif {$which == $mods(Smooth-Gradient) && $state == "Completed"} { 
 	    change_indicate_val 2
-	    if {$smoothing == 0} {
-		change_indicator_labels "Done Performing GradientAnisotropicDiffusion Smoothing"
-	    }
+	    change_indicator_labels "Done Performing GradientAnisotropicDiffusion Smoothing"
 	} elseif {$which == $mods(Smooth-Curvature) && $state == "JustStarted"} {
 	    change_indicate_val 1
 	    change_indicator_labels "Peforming CurvatureAnisotropicDiffusion Smoothing..."
 	} elseif {$which == $mods(Smooth-Curvature) && $state == "Completed"} { 
 	    change_indicate_val 2
-	    if {$smoothing == 0} {
-		change_indicator_labels "Done Performing CurvatureAnisotropicDiffusion Smoothing"
-	    }
+	    change_indicator_labels "Done Performing CurvatureAnisotropicDiffusion Smoothing"
 	} elseif {$which == $mods(Smooth-Blur) && $state == "JustStarted"} {
 	    change_indicate_val 1
 	    change_indicator_labels "Peforming Gaussian Blurring..."
 	} elseif {$which == $mods(Smooth-Blur) && $state == "Completed"} { 
 	    change_indicate_val 2
-	    if {$smoothing == 0} {
-		change_indicator_labels "Done Performing Gaussian Blurring"
-	    }
+	    change_indicator_labels "Done Performing Gaussian Blurring"
 	} elseif {$which == $mods(ShowField-Feature) && $state == "JustStarted"} { 
 	    change_indicate_val 1
 	} elseif {$which == $mods(ShowField-Feature) && $state == "Completed"} { 
@@ -2767,17 +2761,15 @@ class LevelSetSegmenterApp {
 	    } elseif {$v == 2} {
 		# Complete
 		set executing_modules [expr $executing_modules - 1]
-		if {$smoothing == 0} {
-		    if {$executing_modules == 0} {
-			# only change indicator if progress isn't running
-			set indicate 2
-			change_indicator
-		    } elseif {$executing_modules < 0} {
-			# something wasn't caught, reset
-			set executing_modules 0
-			set indicate 2
-			change_indicator
-		    }
+		if {$executing_modules == 0} {
+		    # only change indicator if progress isn't running
+		    set indicate 2
+		    change_indicator
+		} elseif {$executing_modules < 0} {
+		    # something wasn't caught, reset
+		    set executing_modules 0
+		    set indicate 2
+		    change_indicator
 		}
 	    }
 	}
