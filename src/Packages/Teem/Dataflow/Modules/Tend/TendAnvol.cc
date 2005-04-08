@@ -171,7 +171,7 @@ TendAnvol::execute()
 
   //Nrrd *ntup = nrrdNew();
   //nrrdAxesInsert(ntup, nout, 0);
-  //ntup->axis[0].label = strdup("Aniso:Scalar");
+  //ntup->axis[0].label = airStrdup("Aniso:Scalar");
   //nrrd->copy_sci_data(*nrrd_handle.get_rep());
   //nrrdNuke(nout);
   //nrrd->nrrd = ntup;

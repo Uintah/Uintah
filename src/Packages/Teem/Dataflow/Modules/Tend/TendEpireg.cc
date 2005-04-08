@@ -209,7 +209,7 @@ TendEpireg::execute()
   NrrdData *output = scinew NrrdData;
   output->nrrd = nout;
   //output->copy_sci_data(*nrrd_handle.get_rep());
-  //output->nrrd->axis[0].label = strdup(nin->axis[0].label);
+  //output->nrrd->axis[0].label = airStrdup(nin->axis[0].label);
   onrrd_->send(NrrdDataHandle(output));
 
   update_state(Completed);

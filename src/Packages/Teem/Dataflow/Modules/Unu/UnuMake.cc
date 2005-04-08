@@ -261,7 +261,7 @@ void UnuMake::read_file_and_create_nrrd() {
     // Set the nrrd's labels, sizes, and spacings that were
     // parsed in the parse_gui_vars function
     for(int i=0; i<dimension_; i++) {
-      nout_->nrrd->axis[i].label = strdup(lb_[i].c_str());
+      nout_->nrrd->axis[i].label = airStrdup(lb_[i].c_str());
       nout_->nrrd->axis[i].size = sz_[i];
       nout_->nrrd->axis[i].spacing = sp_[i];
       nrrdAxisInfoMinMaxSet(nout_->nrrd, i, nrrdCenterUnknown);

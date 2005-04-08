@@ -135,13 +135,13 @@ TendBmat::execute()
   
   //Nrrd *ntup = nrrdNew();
   //nrrdAxesInsert(ntup, nout, 0);
-  //ntup->axis[0].label = strdup("BMat:Scalar");
-  //ntup->axis[1].label = strdup("tensor components");
-  //ntup->axis[2].label = strdup("n");
+  //ntup->axis[0].label = airStrdup("BMat:Scalar");
+  //ntup->axis[1].label = airStrdup("tensor components");
+  //ntup->axis[2].label = airStrdup("n");
   //nrrdNuke(nout);
 
-  nout->axis[0].label = strdup("tensor components");
-  nout->axis[1].label = strdup("n");
+  nout->axis[0].label = airStrdup("tensor components");
+  nout->axis[1].label = airStrdup("n");
 
   if (we_own_the_data) {
     nrrdNix(nin);

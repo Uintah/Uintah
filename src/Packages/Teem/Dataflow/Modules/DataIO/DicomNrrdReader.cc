@@ -687,9 +687,9 @@ int DicomNrrdReader::build_nrrds( vector<Nrrd*> & array )
 		       nrrdCenterNode, nrrdCenterNode );
 
       // nrrd->axis[0].label = "Unknown:Scalar";
-      nrrd->axis[0].label = strdup("x");
-      nrrd->axis[1].label = strdup("y");
-      nrrd->axis[2].label = strdup("z");
+      nrrd->axis[0].label = airStrdup("x");
+      nrrd->axis[1].label = airStrdup("y");
+      nrrd->axis[2].label = airStrdup("z");
       nrrd->axis[0].spacing = image.get_spacing(0);
       nrrd->axis[1].spacing = image.get_spacing(1);
       nrrd->axis[2].spacing = image.get_spacing(2);
@@ -718,8 +718,8 @@ int DicomNrrdReader::build_nrrds( vector<Nrrd*> & array )
 		       nrrdCenterNode, nrrdCenterNode );
 
       //nrrd->axis[0].label = "Unknown:Scalar";
-      nrrd->axis[0].label = strdup("x");
-      nrrd->axis[1].label = strdup("y");
+      nrrd->axis[0].label = airStrdup("x");
+      nrrd->axis[1].label = airStrdup("y");
       nrrd->axis[0].spacing = image.get_spacing(0);
       nrrd->axis[1].spacing = image.get_spacing(1);
 
@@ -799,10 +799,10 @@ NrrdData * DicomNrrdReader::join_nrrds( vector<Nrrd*> arr )
   switch (sciNrrd->nrrd->dim) {
   case 4:
     if (incr) {
-      sciNrrd->nrrd->axis[0].label = strdup( new_label.c_str() );
-      sciNrrd->nrrd->axis[1].label = strdup( "x" );
-      sciNrrd->nrrd->axis[2].label = strdup( "y" );
-      sciNrrd->nrrd->axis[3].label = strdup( "z" );
+      sciNrrd->nrrd->axis[0].label = airStrdup( new_label.c_str() );
+      sciNrrd->nrrd->axis[1].label = airStrdup( "x" );
+      sciNrrd->nrrd->axis[2].label = airStrdup( "y" );
+      sciNrrd->nrrd->axis[3].label = airStrdup( "z" );
       sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[0].spacing;
       sciNrrd->nrrd->axis[2].spacing = arr[0]->axis[1].spacing;
       sciNrrd->nrrd->axis[3].spacing = arr[0]->axis[2].spacing; 
@@ -818,15 +818,15 @@ NrrdData * DicomNrrdReader::join_nrrds( vector<Nrrd*> arr )
     break;
   case 3:
     if (incr) {
-      sciNrrd->nrrd->axis[0].label = strdup( new_label.c_str() );
-      sciNrrd->nrrd->axis[1].label = strdup( "x" );
-      sciNrrd->nrrd->axis[2].label = strdup( "y" );
+      sciNrrd->nrrd->axis[0].label = airStrdup( new_label.c_str() );
+      sciNrrd->nrrd->axis[1].label = airStrdup( "x" );
+      sciNrrd->nrrd->axis[2].label = airStrdup( "y" );
       sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[0].spacing;
       sciNrrd->nrrd->axis[2].spacing = arr[0]->axis[1].spacing;
     } else {
-      sciNrrd->nrrd->axis[0].label = strdup( "x" );
-      sciNrrd->nrrd->axis[1].label = strdup( "y" );
-      sciNrrd->nrrd->axis[2].label = strdup( "z" );
+      sciNrrd->nrrd->axis[0].label = airStrdup( "x" );
+      sciNrrd->nrrd->axis[1].label = airStrdup( "y" );
+      sciNrrd->nrrd->axis[2].label = airStrdup( "z" );
       sciNrrd->nrrd->axis[0].spacing = arr[0]->axis[0].spacing; 
       sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[1].spacing;
       sciNrrd->nrrd->axis[2].spacing = arr[0]->axis[2].spacing;
@@ -840,8 +840,8 @@ NrrdData * DicomNrrdReader::join_nrrds( vector<Nrrd*> arr )
     if (incr) {
       return 0;
     } else {
-      sciNrrd->nrrd->axis[0].label = strdup( "x" );
-      sciNrrd->nrrd->axis[1].label = strdup( "y" );
+      sciNrrd->nrrd->axis[0].label = airStrdup( "x" );
+      sciNrrd->nrrd->axis[1].label = airStrdup( "y" );
       sciNrrd->nrrd->axis[0].spacing = arr[0]->axis[0].spacing; 
       sciNrrd->nrrd->axis[1].spacing = arr[0]->axis[1].spacing;
 
