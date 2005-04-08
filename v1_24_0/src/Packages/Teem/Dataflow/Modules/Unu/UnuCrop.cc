@@ -360,10 +360,7 @@ UnuCrop::execute()
 
     for( int i=0; i<nin->dim; i++ ) {
       nout->axis[i].kind  = nin->axis[i].kind;
-      if (nin->axis[i].label != NULL)
-	nout->axis[i].label = strdup(nin->axis[i].label);
-      else nout->axis[i].label = "";
-	  
+      nout->axis[i].label = airStrdup(nin->axis[i].label);
     }
 
     if( (nout->axis[0].kind == nrrdKind3Vector     && nout->axis[0].size != 3) ||
