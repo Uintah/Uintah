@@ -132,6 +132,8 @@ private:
 
   double get_mass_bin_value(const MassBin& mb, int which);
   double get_annuli_value(const Annuli& ring, int which);
+
+  int parsefile(const char* filename, Array1<Disk> &data);
   
 };
 

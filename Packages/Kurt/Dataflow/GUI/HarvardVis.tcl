@@ -26,7 +26,8 @@ itcl_class Kurt_Visualization_HarvardVis {
     }
     method set_defaults {} {
 	global $this-file_name_
-	set $this-file_name_ /home/sci/bigler/data/harvard/sci30.2em1.1p0.1em5.1e6
+	set $this-file_name_ ""
+#	set $this-file_name_ /home/sci/bigler/data/harvard/sci30.2em1.1p0.1em5.1e6
 #	set $this-file_name_ /home/sci/bigler/data/harvard/sci30.small
 
 	global $this-which_I_var_
@@ -37,6 +38,58 @@ itcl_class Kurt_Visualization_HarvardVis {
 	set $this-which_timestep_ 0
     }
     
+    method make_file_open_box {} {
+	global env
+	global $this-file_name_
+
+	set w [format "%s-fb" .ui[modname]]
+
+	if {[winfo exists $w]} {
+	    set child [lindex [winfo children $w] 0]
+
+	    # $w withdrawn by $child's procedures
+	    raise $child
+	    return;
+	}
+
+	toplevel $w
+	set initdir ""
+	
+	# place to put preferred data directory
+	# it's used if $this-file_name_ is empty
+	
+	if {[info exists env(SCIRUN_DATA)]} {
+	    set initdir $env(SCIRUN_DATA)
+	} elseif {[info exists env(SCI_DATA)]} {
+	    set initdir $env(SCI_DATA)
+	} elseif {[info exists env(PSE_DATA)]} {
+	    set initdir $env(PSE_DATA)
+	}
+	
+	#######################################################
+	# to be modified for particular reader
+
+	# extansion to append if no extension supplied by user
+	set defext ".*"
+	set title "Open Data file"
+	
+	# file types to appers in filter box
+	set types {
+	    {{All Files} {.*}   }
+	}
+	
+	######################################################
+	
+	makeOpenFilebox \
+	    -parent $w \
+	    -filevar $this-file_name_ \
+	    -command "$this-c needexecute;destroy $w" \
+	    -cancel "destroy $w" \
+	    -title $title \
+	    -filetypes $types \
+	    -initialdir $initdir \
+	    -defaultextension $defext
+    }
 
     method add_wiv { frame var text value command } {
 	radiobutton $frame.$var -text $text -relief flat \
@@ -66,6 +119,21 @@ itcl_class Kurt_Visualization_HarvardVis {
 	wm minsize $w 250 300
 	set n "$this-c needexecute "
 
+	# read a data file
+	iwidgets::labeledframe $w.fio \
+		-labeltext "File Reader Info"
+	set fio [$w.fio childsite]
+
+	iwidgets::entryfield $fio.fname -labeltext "File:" \
+	    -textvariable $this-file_name_
+
+	button $fio.sel -text "Browse" \
+	    -command "$this make_file_open_box"
+
+	pack $fio.fname $fio.sel -side top -fill x -expand yes
+	pack $w.fio -fill x -expand yes -side top
+
+	# current time
 	frame $w.time
 	pack $w.time -padx 2 -pady 2 -fill x
 
