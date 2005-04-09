@@ -1,0 +1,18 @@
+
+#include <config/sci.cf>
+
+OBJS = AugEdge.o Mesh2d.o Quadric.o
+SRCS = AugEdge.cc Mesh2d.cc Quadric.cc
+
+LIBNAME = Simplify
+
+LOCALINCLUDES = $(OPENGLINCS)
+SO_LIBS =
+
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lTCL -lClasslib \
+	-lMultitask  -lscitk -ltk -lMalloc -lWidgets -lGeometry \
+	-lm SCI_CCLibs
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
+

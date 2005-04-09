@@ -1,0 +1,70 @@
+
+#include <config/sci.cf>
+
+#ifdef SCI_MACHINE_Linux
+TEMPLATE_OBJS = templates.o
+TEMPLATE_SRCS = templates.cc
+#endif
+
+#if defined(SCI_MACHINE_Solaris)
+XLIBDIR = -L/usr/openwin/lib
+XINCLUDE = -I/usr/openwin/include
+#endif
+
+#if defined(SCI_MACHINE_Linux)
+XLIBDIR = -L/usr/X11R6/lib
+#endif
+
+#ifdef SCI_OPENGL
+OPENGLOBJS = GeomOpenGL.o
+OPENGLSRCS = GeomOpenGL.cc
+
+#ifdef SCI_MESA
+OPENGLINCS = -I$(TOP)/Mesa/include
+OPENGLLIBS = -L$(TOP)/Mesa/lib $(XLIBDIR) -lMesaGLU -lMesaGL -lX11
+#else
+OPENGLINCS =
+OPENGLLIBS = $(XLIBDIR) -lGLU -lGL -lXext -lX11
+#endif
+
+#else
+OPENGLOBJS =
+OPENGLSRCS =
+#endif
+
+X11OBJS = GeomX11.o
+X11SRCS = GeomX11.cc
+
+OBJS = Arrows.o  BBoxCache.o Color.o  Cone.o  Container.o  Cylinder.o  \
+	Disc.o  \
+	Geom.o  GeomRaytracer.o  Grid.o  Group.o TimeGroup.o tGrid.o\
+	HeadLight.o  IndexedGroup.o Light.o  Lighting.o  Line.o  Material.o  \
+	Pick.o  PointLight.o  Polyline.o  Pt.o \
+	RenderMode.o  Scene.o  Sphere.o Switch.o  \
+	Tetra.o  Torus.o  Transform.o  Tri.o  Triangles.o  TriStrip.o  \
+	Tube.o  TimeGrid.o QMesh.o \
+	VertexPrim.o  View.o  Box.o Text.o \
+	TCLGeom.o  TCLView.o  TexSquare.o Billboard.o Sticky.o \
+	TexSlices.o  \
+	$(OPENGLOBJS) $(X11OBJS) $(TEMPLATE_OBJS)
+SRCS = Arrows.cc BBoxCache.cc Color.cc Cone.cc Container.cc Cylinder.cc \
+	Disc.cc \
+	Geom.cc GeomRaytracer.cc Grid.cc Group.cc TimeGroup.cc tGrid.cc\
+	HeadLight.cc IndexedGroup.cc Light.cc Lighting.cc Line.cc Material.cc \
+	Pick.cc PointLight.cc Polyline.cc Pt.cc \
+	RenderMode.cc Scene.cc Sphere.cc Switch.cc \
+	Tetra.cc Torus.cc Transform.cc Tri.cc Triangles.cc TriStrip.cc \
+	Tube.cc TimeGrid.cc QMesh.cc \
+	VertexPrim.cc View.cc Box.cc Text.cc \
+	TCLGeom.cc  TCLView.cc TexSquare.cc Billboard.cc Sticky.cc \
+	TexSlices.cc \
+	$(OPENGLSRCS) $(X11SRCS) $(TEMPLATE_SRCS)
+LOCALINCLUDES = $(OPENGLINCS) $(XINCLUDE)
+SO_LIBS = 
+SO_LDFLAGS = -L$(TOP)/lib -lMath -lscitk -ltk -lTCL -lGeometry -lClasslib \
+	-lMultitask -lMalloc $(OPENGLLIBS) -lm SCI_CCLibs
+
+LIBNAME = Geom
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS), $(SO_LIBS), $(SO_LDFLAGS))

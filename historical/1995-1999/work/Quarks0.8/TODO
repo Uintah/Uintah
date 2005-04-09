@@ -1,0 +1,38 @@
+
+    Quarks Distributed Shared Memory system, Ver 0.8, Apr 15 1995
+    -------------------------------------------------------------
+
+           Copyright (c) 1995 The University of Utah and
+    the Computer Systems Laboratory (CSL).  All rights reserved.
+    ------------------------------------------------------------
+
+
+Things to be done soon. Feedback on any or all of the following
+is welcome.
+
+1. A native Mach port
+
+2. Add more coherency protocols
+
+3. Try tuning applications by running with multiple protocols on a per
+   page basis. Things to worry about is the correct mix of protocols,
+   how to determine the "right" protocol for a page, how to secify
+   that, etc. 
+
+4. Clean up the programming interface. Due to the inadequacy of Quarks
+   fork semantics, porting of Splash programs become a little
+   involved. The programming interface should be improved, by making
+   it more closer to Unix fork semantics. 
+
+5. Try more applications. Benchmarks other than Splash programs are 
+   very much needed. Any suggestions regarding this will be
+   appreciated. 
+
+6. Try out more efficient threads package. Also, try out a more
+   efficient and low latency network protocol.
+
+7. Compare with PVM applications. In order to attract the scientific
+   community, it is essential to compare with PVM and show that Quarks
+   provides simpler programming interface while not degrading the
+   performance by a large factor.
+

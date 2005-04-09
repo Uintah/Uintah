@@ -1,0 +1,52 @@
+EXTERN_ENV
+#include "math.h"
+#include "mdvar.h"
+#include "parameters.h"
+#include "mddata.h"
+#include "split.h"
+#include "global.h"
+
+extern molecule_type *VAR;
+
+extern int procid;
+extern int StartMol[MAXPROCS+1];
+extern int NumProcs;
+
+KINETI(int NMOL, double SUM[], double HMAS, double OMAS)
+        /* this routine computes kinetic energy in each of the three
+            spatial dimensions, and puts the computed values in the
+            SUM array */ 
+{
+    int dir, mol;
+    double S;
+    double *tempptr; 
+
+    unsigned long st1, st2, et;
+    unsigned long looptime=0, locktime=0;
+    int dumb;
+
+    /* loop over the three directions */
+    st1 = Qk_current_time();
+    for (dir = XDIR; dir <= ZDIR; dir++) {
+	S=0.0;
+        /* loop over the molecules */
+        for (mol = StartMol[procid]; mol < StartMol[procid+1]; mol++) {
+            tempptr = VAR[mol].F[VEL][dir]; 
+            S += ( tempptr[H1] * tempptr[H1] +
+                  tempptr[H2] * tempptr[H2] ) * HMAS
+                      + (tempptr[O] * tempptr[O]) * OMAS;
+        }
+	dumb = (int) gl->KinetiSumLock;
+	st2 = Qk_current_time();
+	LOCK(gl->KinetiSumLock)
+	et = Qk_current_time();
+	locktime += et - st2;
+
+	st2 = Qk_current_time();
+	SUM[dir]+=S;
+	UNLOCK(gl->KinetiSumLock)
+    } /* for */
+    looptime += Qk_current_time() - st1;
+    
+} /* end of subroutine KINETI */
+

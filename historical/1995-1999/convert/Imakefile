@@ -1,0 +1,72 @@
+
+convert: convertall
+
+all::
+
+#define all convertall
+#include <config/sci.cf>
+
+SO_LDFLAGS = -L$(TOP)/lib -lSalmon -lDatatypes -lDataflow -lGeom \
+	-lGeometry -lMath -lTCL \
+	-lClasslib -lMultitask -lTester -lMalloc -lm
+
+#define ConvertProgram(name) @@\
+SCIProgramTarget(name, name.o, , $(SO_LDFLAGS)) @@\
+					        @@\
+SCIDependTarget(name.cc)
+
+ConvertProgram(AddCount)
+ConvertProgram(AdjustTris)
+ConvertProgram(BldCubeMesh)
+ConvertProgram(BldEEGMesh)
+ConvertProgram(BldMeshRPI)
+ConvertProgram(BldVisWoman)
+ConvertProgram(CombineTriSurfs)
+ConvertProgram(Coreg)
+ConvertProgram(CubeTest)
+ConvertProgram(DICOMtoSF)
+ConvertProgram(DICOMtoSF2)
+ConvertProgram(ExtractTriSurfCC)
+ConvertProgram(ExtractTriSurfCCAll)
+ConvertProgram(GenVol)
+ConvertProgram(GEtoPPM)
+ConvertProgram(GEtoSF)
+ConvertProgram(GEtoSF8)
+ConvertProgram(GEtoSF16)
+ConvertProgram(GenVolume)
+ConvertProgram(GenSphSegFld)
+ConvertProgram(JessToSF)
+ConvertProgram(Oil)
+ConvertProgram(GPtoTS)
+ConvertProgram(GPtoTS_tmp)
+ConvertProgram(GPtoTSnew)
+ConvertProgram(GPtoTS2)
+ConvertProgram(GPtmsToTS)
+ConvertProgram(JAStoMesh)
+ConvertProgram(JAStoSurf)
+ConvertProgram(LeahyToSurf)
+ConvertProgram(MRAtoVF)
+ConvertProgram(MatrixToMat)
+ConvertProgram(MartinToSurf)
+ConvertProgram(MeshAddBC)
+ConvertProgram(MeshInfo)
+ConvertProgram(MeshQuery)
+ConvertProgram(MeshToJAS)
+ConvertProgram(MeshToMS)
+ConvertProgram(Mesher)
+ConvertProgram(RemoveSurfVals)
+ConvertProgram(ResampleField)
+ConvertProgram(ResampleField2)
+ConvertProgram(ResampleFieldRaw)
+ConvertProgram(RuthSpheres)
+ConvertProgram(SFRGfile)
+ConvertProgram(STreeExtractSurf)
+ConvertProgram(SphereTest)
+ConvertProgram(StripCount)
+ConvertProgram(SurfGetVals)
+ConvertProgram(SurfProjectPts)
+ConvertProgram(SurfToJAS)
+ConvertProgram(TCHtoSF)
+ConvertProgram(TestFLPQueue)
+ConvertProgram(TransformSurf)
+ConvertProgram(ff)

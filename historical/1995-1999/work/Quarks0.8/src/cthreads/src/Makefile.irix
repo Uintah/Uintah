@@ -1,0 +1,42 @@
+##############################################################################
+# File:         Makefile
+# Description:  Makefile for machine dependent files of cthreads package.
+# Author:       Leigh Stoller
+# Created:      16 Nov 90
+# RCS $Header$
+#
+# (c) Copyright 1990, University of Utah, all rights reserved.
+##############################################################################
+
+QTOPDIR = ../../..
+SOURCE  = cthreads.c
+OBJECT  = cthreads.o
+
+CC      = cc 
+TOP   = ..
+CFLAGS  = -g -I$(TOP)/include 
+
+
+default: libcthreads.a
+
+install: libcthreads.a
+	ar ts libcthreads.a
+	mv libcthreads.a $(QTOPDIR)/lib
+
+libcthreads.a: $(OBJECT) mips/*.o
+	(cd mips; make)
+	rm -f libcthreads.a
+	ar cq libcthreads.a $(OBJECT) mips/*.o
+
+depend: Makefile $(SOURCE)
+	makedepend -fMakefile $(CFLAGS) $(SOURCE)
+
+clean:
+	rm -f mips/a.out mips/*.o mips/*.a
+	rm -f *.o *.a a.out
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.
+
+cthreads.o: /usr/include/stdio.h /usr/include/assert.h cthread_internals.h
+cthreads.o: ../include/cthreads.h ../include/context_switch.h
+cthreads.o: ../include/lock.h ../include/stack.h ../include/preempt.h

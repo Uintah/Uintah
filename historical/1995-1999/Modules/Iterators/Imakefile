@@ -1,0 +1,13 @@
+
+#include <config/sci.cf>
+
+OBJS = MeshIterator.o
+SRCS = MeshIterator.cc
+LIBNAME = Iterators
+
+SO_LIBS =
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lTCL \
+	-lClasslib -lMultitask -lMalloc -lm SCI_CCLibs
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME), $(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

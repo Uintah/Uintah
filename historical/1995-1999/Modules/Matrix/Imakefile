@@ -1,0 +1,97 @@
+
+#include <config/sci.cf>
+
+#ifdef SCI_MACHINE_Linux
+TEMPLATE_OBJS = templates.o
+TEMPLATE_SRCS = templates.cc
+#endif
+
+#if defined(SCI_MACHINE_Solaris)
+XLIBDIR = -L/usr/openwin/lib
+XINCLUDE = -I/usr/openwin/include
+#endif
+
+#if defined(SCI_MACHINE_Linux)
+XLIBDIR = -L/usr/X11R6/lib
+#endif
+
+#ifdef SCI_OPENGL
+OPENGLOBJS = VisualizeMatrix.o
+OPENGLSRCS = VisualizeMatrix.cc
+
+#if defined(SCI_MACHINE_Solaris)
+XLIBDIR = -L/usr/openwin/lib
+XINCLUDE = -I/usr/openwin/include
+#endif
+
+#ifdef SCI_MESA
+OPENGLINCS = -I$(TOP)/Mesa/include $(XINCLUDE)
+OPENGLLIBS = -L$(TOP)/Mesa/lib -lMesaGLU -lMesaGL -lXext -lX11
+#else
+OPENGLINCS = -I/usr/openwin/include
+OPENGLLIBS = $(XLIBDIR) -lGLU -lGL -lXext -lX11
+#endif
+#else
+OPENGLOBJS =
+OPENGLSRCS = 
+#endif
+
+OBJS = BldTransform.o  EditMatrix.o  SolveMatrix.o  $(OPENGLOBJS) \
+	cConjGrad.o  cPhase.o  $(TEMPLATE_OBJS)
+SRCS = BldTransform.cc EditMatrix.cc SolveMatrix.cc $(OPENGLSRCS) \
+	cConjGrad.cc cPhase.cc $(TEMPLATE_SRCS)
+
+LIBNAME = Matrix
+
+#ifdef SCI_SPARSELIB
+
+SPARSELIB = sp1_5c
+
+IML_LDFLAGS       = -L$(SPARSELIB)/lib -lsparse -lspblas -lmv -lm -lcomplex
+
+
+IML_INCLUDE = $(SPARSELIB)/iml
+MV_INCLUDE = $(SPARSELIB)/mv/include
+SPARSELIB_INCLUDE = $(SPARSELIB)/include
+
+IML_INCLUDES = -I$(IML_INCLUDE) -I$(MV_INCLUDE) -I$(SPARSELIB_INCLUDE)
+
+LOCALCFLAGS = -DCOMPLEX=complex
+LOCALCCFLAGS = -DCOMPLEX=complex
+
+SCISubdirs($(SPARSELIB))
+
+#endif
+
+LOCALINCLUDES = $(OPENGLINCS) $(IML_INCLUDES)
+SO_LIBS =
+
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lMath \
+	-lTCL -lClasslib -lMultitask $(OPENGLLIBS) -lscitk -ltk \
+	-lMalloc $(IML_LDFLAGS) -lm SCI_CCLibs
+
+#ifdef SCI_SPARSELIB
+MATRIXDIRS = sp1_5c/src sp1_5c/spblas sp1_5c/mv/src
+#endif
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
+
+#ifdef SCI_SPARSELIB
+clean::
+	@	for flag in ${MAKEFLAGS} ''; do \
+	  case "$$flag" in *=*) ;; *[ik]*) set +e;; esac; done; \
+	for i in $(MATRIXDIRS) ;\
+	do \
+		echo "cleaning" "in $(CURRENT_DIR)/$$i..."; \
+		(cd $$i &&  $(MAKE) $(MFLAGS)  clean); \
+	done
+
+all::
+	@	for flag in ${MAKEFLAGS} ''; do \
+	  case "$$flag" in *=*) ;; *[ik]*) set +e;; esac; done; \
+	for i in $(MATRIXDIRS) ;\
+	do \
+		echo "making" all "in $(CURRENT_DIR)/$$i..."; \
+		(cd $$i &&  $(MAKE) $(MFLAGS)  all); \
+	done
+#endif

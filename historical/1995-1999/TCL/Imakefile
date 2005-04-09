@@ -1,0 +1,8 @@
+
+#include <config/sci.cf>
+
+SUBDIRS = tcl tk itcl blt-1.7 tkTable sci
+TCLSUBDIRS = 
+
+SCISubdirs($(SUBDIRS))
+

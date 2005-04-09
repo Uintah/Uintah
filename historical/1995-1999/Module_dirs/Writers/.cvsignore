@@ -1,0 +1,5 @@
+Makefile Makefile.bak
+*?Writer.h
+*?Writer.cc
+*?Writer.tcl
+.~*

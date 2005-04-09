@@ -1,0 +1,47 @@
+
+#include <config/sci.cf>
+
+#ifdef SCI_MACHINE_Linux
+TEMPLATE_OBJS = templates.o
+TEMPLATE_SRCS = templates.cc
+#endif
+
+#if defined(SCI_MACHINE_Linux)
+XLIBDIR = -L/usr/X11R6/lib
+#endif
+
+#ifdef SCI_OPENGL
+OPENGLOBJS = RTrace.o  RayMatrix.o  XYZtoRGB.o
+OPENGLSRCS = RTrace.cc RayMatrix.cc XYZtoRGB.cc
+
+#ifdef SCI_MESA
+OPENGLINCS = -I$(TOP)/Mesa/include -I/usr/openwin/include
+OPENGLLIBS = -L$(TOP)/Mesa/lib -lMesaGLU -lMesaGL -lXext -lX11
+#else
+OPENGLINCS =
+OPENGLLIBS = $(XLIBDIR) -lGLU -lGL -lXext -lX11
+#endif
+#else
+OPENGLOBJS =
+OPENGLSRCS = 
+#endif
+
+OBJS = BldBRDF.o  BldScene.o  DRaytracer.o  Image.o  Pixel.o \
+	RTPrims.o  RadPrims.o  Radiosity.o  Sample2D.o  Scene.o  \
+	Spectrum.o $(OPENGLOBJS) \
+	$(TEMPLATE_OBJS)
+SRCS = BldBRDF.cc BldScene.cc DRaytracer.cc Image.cc Pixel.cc \
+	RTPrims.cc RadPrims.cc Radiosity.cc Sample2D.cc Scene.cc \
+	Spectrum.cc $(OPENGLSRCS) \
+	$(TEMPLATE_SRCS)
+
+LIBNAME = CS684
+
+LOCALINCLUDES = $(OPENGLINCS)
+SO_LIBS = 
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lGeom -lDataflow \
+	-lGeometry -lMath -lTCL -lClasslib -lMultitask $(OPENGLLIBS) \
+	-lMalloc -lWidgets -lm -lscitk -ltk
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

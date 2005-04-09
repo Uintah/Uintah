@@ -1,0 +1,131 @@
+Date:  Sep 24, 1992.
+
+This is the directory for the Stanford Parallel Applications for Shared-Memory
+(SPLASH) programs. For further information contact splash@mojave.stanford.edu.
+
+PLEASE NOTE:  Owing to our limited resources, we will be unable to spend 
+much time answering questions about the applications.  
+
+splash.tar.Z contains the tared and compressed version of all the files.
+Grabbing this file will get you everything you need.  We also keep the files
+individually uncompressed for partial retrieval.
+
+REPORT:
+-------
+
+Please note that the report, found in the report subdirectory, is 42 pages 
+long.  Please check to see that you get them all when you print the 
+postscript file.  The size of the postscript file is 694769 bytes.  If the 
+size is right and it doesn't print all the pages, you may have to modify 
+the header of the postscript file to adapt it to your system.  Some people 
+still have a problem printing the postscript file.  We therefore provide
+the Latex sources and the postscript files for the figures (in the
+report subdirectory) so that you can remake the postscript and print it.   
+Finally, if all else fails the tech report can be requested by sending 
+mail to schulman@sierra.Stanford.EDU.  The tech report number is 
+CSL-TR-92-526, dated June 1992.  The original tech
+report was number CSL-TR-91-469, but this is somewhat dated.  We will issue
+a new tech report when there are major changes to the suite (new applications,
+etc.).  However, the latest version of the report is always on-line.
+
+MACROS:
+-------
+
+In the macros directory, we provide macros and sample makefiles
+for three machines:
+
+Encore Multimax (CMU Mach 2.5: C and Fortran)
+SGI 4D/240 	(IRIX System V Release 3.3: C only) 
+Alliant FX/8	(Alliant Rev. 5.0: C and Fortran)
+
+These macros work for us with the above operating systems.  Unfortunately,
+our limited resources prevent us from supporting them in any way or 
+even fielding questions about them.   If they don't work for you, please
+contact Argonne National Labs for a version that will.  An e-mail address 
+to try might be monitor-users-request@mcs.anl.gov. An excerpt from
+a message, received from Argonne, concerning getting the macros follows:
+
+"The parmacs package is in the public domain.  Approximately 15 people at
+Argonne (or associated with Argonne or students) have worked on the parmacs
+package at one time or another.  The parmacs package is implemented via macros
+using the M4 macropreprocessor (standard on most Unix systems).  Current
+distribution of the software is somewhat ad hoc.  Most C versions can be
+obtained from netlib (send electronic mail to netlib@ornl.gov with the message
+send index from parmacs).  Fortran versions have been emailed directly or sent
+on tape.  The primary documentation for the parmacs package is the book
+``Portable Programs for Parallel Processors'' by Lusk, et al, Holt, Rinehart,
+and Winston 1987."
+
+The makefiles provided in the individual program directories specify
+a null macro set that will turn the parallel programs into sequential 
+ones.  Note that we do not have a null macro set for FORTRAN.
+
+MAILING LIST:
+-------------
+
+Please send a note to splash@mojave if you have copied over the programs,
+so that we can put you on a mailing list for update reports.
+
+CHANGES:
+-------
+
+June 5, 1991.  
+------------
+	1. The NEWPROC and PAUSEDEC macros have been removed.
+	2. The file adv.U in mp3d has been updated to fix a boundary
+           condition.
+        3. The ocean program has been updated with a new initial guess
+           to the equation solver to improve its convergence.  A new 
+	   parameter has been added to the solver routine, and the calls 
+	   to it have correspondingly changed.
+
+June 13, 1991.  
+-------------
+	 1. For mp3d, Global->BC is now initialized to 0 in setup.U.
+	 2. Next version of tech report complete.
+
+July 31, 1991.
+-------------
+	1. Small update made to mp3d section of report. Concerns number
+	   of time-steps run with simulator.
+        2. Water source code updated with comments to describe input
+	   parmeters better.
+
+Aug. 6, 1991.
+------------
+	1. Bug in water fixed.  Some interactions were not being 
+           examined correctly and a barrier was missing.  Some other 
+	   minor cleanup done in water.
+        2. A new version of pthor created.  It primarily improves 
+	   cache mapping behaviour.  See README file in pthor 
+	   directory.
+        3. Reference to paper on data locality and memory system 
+	   performance in Ocean added.
+
+Aug. 28, 1991
+-------------
+	1. Locking bug in mp3d fixed. Caused null pointer dereferencing
+	   on some machines.
+
+May 29, 1992
+------------
+	1. New application (Barnes-Hut) added.
+	2. Report updated accordingly. Section 4.2 on general behavioral
+	   characteristics cleaned up and enhanced somewhat.
+	   Also, indication given of how to scale some of the 
+	   scientific applications to run on larger machines.
+
+July 24, 1992
+-------------
+
+	1. Some bugs in water fixed:
+		a) determining when comp_last should be decremented
+	           to compute interactions correctly in interf.U and
+		   poteng.U fixed.
+		b) a race condition between initializing and accumulating
+		   into gl->VIR removed.  A new variable called
+		   gl->initialized introduced to do this.
+		c) the code will not crash if input variable NFMC is
+		   set to 0 and the input displacement file LWI12 (not
+		   needed in this case) not provided.
+
