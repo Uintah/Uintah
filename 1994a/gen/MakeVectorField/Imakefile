@@ -1,0 +1,23 @@
+
+#include <config/sci.cf>
+
+LOCALINCLUDES = -I. -I../../modules -I../../project
+PROJECT_OBJS = ../../project/Datatype.o  ../../project/VectorField.o \
+	../../project/VectorFieldRG.o
+OBJS = MakeVectorField.o
+SRCS = MakeVectorField.cc
+TARGET = MakeVectorField
+
+SCI_LIBS = \
+	$(PROJECT_OBJS) \
+	SCI_MultitaskLib \
+	SCI_ClassLib \
+	SCI_GeometryLib \
+	SCI_MathLib \
+	../../../wrapper/libMInT/libMInT.a \
+	SCI_MallocLib
+
+SCI_LDFLAGS = SCI_LM -lGL -ptv
+
+SCIDependTarget($(SRCS))
+SCIProgramTarget($(TARGET), $(OBJS), $(SCI_LIBS), $(SCI_LDFLAGS))

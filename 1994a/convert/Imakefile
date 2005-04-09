@@ -1,0 +1,6 @@
+
+#include <config/sci.cf>
+
+SUBDIRS = MakeContourSet MakeSurface dist_test MakeSphere
+
+SCISubdirs($(SUBDIRS))

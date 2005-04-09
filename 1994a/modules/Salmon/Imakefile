@@ -1,0 +1,19 @@
+
+#include <config/sci.cf>
+
+LOCALINCLUDES = -I.. -I../../project -I../../../wrapper -I../../../wrapper/Mt
+MODULELIST = ../libmodules.a
+
+OBJS = Salmon.o Roe.o
+SRCS = Salmon.cc Roe.cc
+
+.cc.o:
+	$(CCC) $(CCFLAGS) -c $<
+
+../modules.o: $(OBJS)
+	cd .. && make modules.o
+
+AllTarget(../modules.o)
+
+SCIDependTarget($(SRCS))
+

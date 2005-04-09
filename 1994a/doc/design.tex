@@ -1,0 +1,210 @@
+% -*-latex-*-
+% Title: design.tex
+% 
+% Authors: Steve Parker and James Purciful
+% 
+% Synopsis: High level design for mapeditor 
+%
+% Last modified: 2-18-94
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentstyle[12pt,epsf]{book}
+%\newcommand{\X}[1]{{#1}\index{{#1}}}
+\topmargin -0.45in
+\textheight 9.0in
+\oddsidemargin -.0in
+\evensidemargin -.0in
+\textwidth 6.5in
+
+% Change the footnotes from numbers to a series of symbols
+%\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\begin{document}
+
+% This is the ps include command:
+% \hbox to \columnwidth{\hfil \epsffile{hw2a.eps} \hfil}
+
+% Uncomment this line to get 1.5 spacing, replce 1.2 by 1.5 to get double
+% spacing .  1.2 get 1 1/2 spacing
+\setlength{\baselineskip}{1.2\baselineskip}
+
+% Add a bit of space between each paragraph to make reading easier.
+\setlength{\parskip}{\smallskipamount}
+
+
+\title {High Level Design Document for\\
+mapeditor}
+
+\author {Steve Parker and James Purciful\thanks{Copyright \copyright 1994,
+Steve Parker and James Purciful.  All rights reserved.}\\ 
+Department of Computer Science\\ 
+University of Utah\\ 
+Salt Lake City, UT\\ 
+email: \{sparker,purciful\}@cs.utah.edu}
+
+\date {Winter Quarter 1994}
+
+
+
+\maketitle
+
+\tableofcontents
+
+
+
+\chapter{Introduction}
+
+
+\section{Overview of mapeditor}
+
+
+\section{Purpose of this Document}
+
+
+\section{Other Documentation}
+
+
+
+
+\chapter{Internal Design Structure}
+
+
+\section{Top Level}
+
+\begin{figure}
+\epsfysize=8cm
+\hbox to \columnwidth{\hfil \epsffile{design.figures/toplevel.eps} \hfil}
+\caption {Top Level Design of mapeditor}
+\end{figure}
+
+\chapter{Graphical User Interface}
+
+\begin{figure}
+\epsfysize=8cm
+\hbox to \columnwidth{\hfil \epsffile{design.figures/icon3.ps} \hfil}
+\caption {Graphical User Interface}
+\end{figure}
+
+\subsection{Responsibilities}
+
+\subsection{Interface}
+
+\subsection{Internal Structure}
+
+
+\section{Map}
+
+\subsection{Responsibilities}
+
+\subsection{Interface}
+
+\subsection{Internal Structure}
+Mutex lock;
+Array1<Module*> modules;
+Array1<Wire*> wires;
+
+\subsection{File Format}
+
+
+\section{mapeditor}
+
+\subsection{Responsibilities}
+
+\subsection{Interface}
+
+\subsection{Internal Structure}
+
+
+\section{Scheduler}
+
+The scheduler is a separate thread of control.  It is in charge of
+deciding which module or modules are to be executing at any given
+time.
+
+\subsection{Responsibilities}
+
+\subsection{Interface}
+
+\subsection{Internal Structure}
+
+\subsection{Scheduling Algorithm}
+
+Initially, the scheduler will activate all modules simultaneously.  As
+we develop experience with the behavior of modules, we can modify the
+scheduler to take into account other factors, such as the number and
+placement of processors, communications protocols, etc.
+
+The scheduler is also able to start modules on a remote machine.  This
+is performed by 
+
+\section{Modules}
+
+Each module is it's own thread of control.
+
+\subsection{Responsibilities}
+
+\subsection{Interface}
+
+\subsection{Internal Structure}
+
+
+\section{Miscellaneous}
+
+
+
+
+\chapter{Inter-module Communication}
+
+
+\section{Introduction}
+
+
+\section{Inter-thread}
+
+
+\section{Shared Memory}
+
+
+\section{Distributed Shared Memory}
+
+
+\section{Sockets}
+
+\subsection{XDR}
+
+
+
+
+\chapter{O/S Interface}
+
+
+\section{Introduction}
+
+
+\section{Solaris}
+
+
+\section{Irix}
+
+
+
+\chapter{Source code organization}
+
+\section{Directories}
+
+\section{Libraries}
+
+\section{Executables}
+
+
+%\newpage
+
+\bibliographystyle{unsrt}
+\bibliography{/home/sci/u/crj/bibtex_files/biglit,/home/sci/u/crj/bibtex_files/crj}
+
+
+\end{document}
+
+
+
+
