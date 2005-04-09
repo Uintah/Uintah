@@ -362,6 +362,7 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,Ghost::AroundNodes,1);
 
   t->computes(lb->gMassLabel);
+  t->computes(lb->gMassAllLabel);
 
   t->computes(lb->gVolumeLabel);
   t->computes(lb->gVelocityOldLabel);
@@ -461,7 +462,7 @@ void ImpMPM::scheduleFindFixedDOF(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::findFixedDOF", this, 
                         &ImpMPM::findFixedDOF);
 
-  t->requires(Task::NewDW, lb->gMassLabel,    Ghost::None, 0);
+  t->requires(Task::NewDW, lb->gMassAllLabel, Ghost::None, 0);
   t->requires(Task::NewDW, lb->gContactLabel, Ghost::None, 0);
 
   sched->addTask(t, patches, matls);
@@ -492,7 +493,7 @@ void ImpMPM::scheduleFormStiffnessMatrix(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::formStiffnessMatrix",
                     this, &ImpMPM::formStiffnessMatrix);
 
-  t->requires(Task::ParentNewDW,lb->gMassLabel, Ghost::None);
+  t->requires(Task::ParentNewDW,lb->gMassAllLabel, Ghost::None);
   t->requires(Task::ParentOldDW,d_sharedState->get_delt_label());
 
   sched->addTask(t, patches, matls);
@@ -528,7 +529,7 @@ void ImpMPM::scheduleFormQ(SchedulerP& sched,const PatchSet* patches,
   t->requires(Task::OldDW,      lb->dispNewLabel,       gnone,0);
   t->requires(Task::ParentNewDW,lb->gVelocityOldLabel,  gnone,0);
   t->requires(Task::ParentNewDW,lb->gAccelerationLabel, gnone,0);
-  t->requires(Task::ParentNewDW,lb->gMassLabel,         gnone,0);
+  t->requires(Task::ParentNewDW,lb->gMassAllLabel,      gnone,0);
   
   sched->addTask(t, patches, matls);
 }
@@ -613,7 +614,7 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
   task->modifies(lb->gInternalForceLabel);
 
   task->requires(Task::NewDW,lb->gVelocityOldLabel,    Ghost::None,0);
-  task->requires(Task::NewDW,lb->gMassLabel,           Ghost::None,0);
+  task->requires(Task::NewDW,lb->gMassAllLabel,        Ghost::None,0);
   task->requires(Task::NewDW,lb->gExternalForceLabel,  Ghost::None,0);
   task->requires(Task::NewDW,lb->gAccelerationLabel,   Ghost::None,0);
   task->requires(Task::NewDW,lb->gContactLabel,        Ghost::None,0);
@@ -712,7 +713,7 @@ void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
   t->requires(Task::OldDW,lb->pXLabel,              Ghost::AroundNodes,1);
   t->requires(Task::OldDW,lb->pMassLabel,           Ghost::AroundNodes,1);
   t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
-  t->requires(Task::NewDW,lb->gMassLabel,           Ghost::None);
+  t->requires(Task::NewDW,lb->gMassAllLabel,        Ghost::None);
   t->requires(Task::NewDW,lb->gVolumeLabel,         Ghost::None);
   t->requires(Task::NewDW,lb->gInternalForceLabel,  Ghost::None);
 
@@ -1028,7 +1029,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     // Create arrays for the grid data
     StaticArray<NCVariable<double> > gmass(numMatls),gvolume(numMatls),
       gTemperature(numMatls),gExternalHeatRate(numMatls),
-      gTemperatureNoBC(numMatls);
+      gTemperatureNoBC(numMatls),gmassall(numMatls);
     StaticArray<NCVariable<Vector> > gvel_old(numMatls),gacc(numMatls);
     StaticArray<NCVariable<Vector> > dispNew(numMatls),gvelocity(numMatls);
     StaticArray<NCVariable<Vector> > gextforce(numMatls),gintforce(numMatls);
@@ -1064,23 +1065,24 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pvolume,        lb->pVolumeLabel,            pset);
       old_dw->get(pvolumeold,     lb->pVolumeOldLabel,         pset);
       old_dw->get(pvelocity,      lb->pVelocityLabel,          pset);
-      old_dw->get(pTemperature,      lb->pTemperatureLabel,          pset);
+      old_dw->get(pTemperature,   lb->pTemperatureLabel,       pset);
       old_dw->get(pacceleration,  lb->pAccelerationLabel,      pset);
       new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
 
       new_dw->allocateAndPut(gmass[m],      lb->gMassLabel,         matl,patch);
+      new_dw->allocateAndPut(gmassall[m],   lb->gMassAllLabel,      matl,patch);
       new_dw->allocateAndPut(gvolume[m],    lb->gVolumeLabel,       matl,patch);
       new_dw->allocateAndPut(gvel_old[m],   lb->gVelocityOldLabel,  matl,patch);
       new_dw->allocateAndPut(gvelocity[m],  lb->gVelocityLabel,     matl,patch);
-      new_dw->allocateAndPut(gTemperature[m],lb->gTemperatureLabel,matl,patch);
-      new_dw->allocateAndPut(gTemperatureNoBC[m],lb->gTemperatureNoBCLabel,matl,patch);
+      new_dw->allocateAndPut(gTemperature[m],lb->gTemperatureLabel, matl,patch);
+      new_dw->allocateAndPut(gTemperatureNoBC[m],lb->gTemperatureNoBCLabel,
+                                                                    matl,patch);
       new_dw->allocateAndPut(dispNew[m],    lb->dispNewLabel,       matl,patch);
       new_dw->allocateAndPut(gacc[m],       lb->gAccelerationLabel, matl,patch);
       new_dw->allocateAndPut(gextforce[m],  lb->gExternalForceLabel,matl,patch);
       new_dw->allocateAndPut(gintforce[m],  lb->gInternalForceLabel,matl,patch);
       new_dw->allocateAndPut(gExternalHeatRate[m],lb->gExternalHeatRateLabel,
-                             matl,patch);
-
+                                                                   matl,patch);
 
       gmass[m].initialize(d_SMALL_NUM_MPM);
       gvolume[m].initialize(0);
@@ -1129,8 +1131,10 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       if(mpm_matl->getIsRigid()){
         for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
           IntVector c = *iter;
-          gvel_old[m][c] /= (gmass[m][c] + 1.e-200);
-          gacc[m][c]     /= (gmass[m][c] + 1.e-200);
+          gvel_old[m][c] /= gmass[m][c];
+          gacc[m][c]     /= gmass[m][c];
+          gTemperature[m][c] /= gmass[m][c];
+          gTemperatureNoBC[m][c] = gTemperature[m][c];
         }
       }
 
@@ -1158,18 +1162,16 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         gTemperature[m][c] /= gmass[m][c];
         gTemperatureNoBC[m][c] = gTemperature[m][c];
 #if 1
-        gmass[m][c]=GMASS[c];
+        gmassall[m][c]=GMASS[c];
         gvolume[m][c]=GVOLUME[c];
         gextforce[m][c]=GEXTFORCE[c];
         gvel_old[m][c]=GVEL_OLD[c]/(GMASS[c] + 1.e-200);
         gacc[m][c]=GACC[c]/(GMASS[c] + 1.e-200);
 #endif
-     
       }
-
-      MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,matl,"Temperature",gTemperature[m],8);
      }
+     MPMBoundCond bc;
+     bc.setBoundaryCondition(patch,matl,"Temperature",gTemperature[m],8);
     }  // End loop over materials
 
     delete interpolator;
@@ -1481,7 +1483,7 @@ void ImpMPM::findFixedDOF(const ProcessorGroup*,
       int matlindex = mpm_matl->getDWIndex();
       constNCVariable<double> mass;
       constNCVariable<int> contact;
-      new_dw->get(mass,   lb->gMassLabel,   matlindex,patch,Ghost::None,0);
+      new_dw->get(mass,   lb->gMassAllLabel,matlindex,patch,Ghost::None,0);
       new_dw->get(contact,lb->gContactLabel,matlindex,patch,Ghost::None,0);
 
       for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
@@ -1562,7 +1564,7 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
       delt_vartype dt;
       DataWarehouse* parent_new_dw = 
         new_dw->getOtherDataWarehouse(Task::ParentNewDW);
-      parent_new_dw->get(gmass, lb->gMassLabel,matlindex,patch,Ghost::None,0);
+      parent_new_dw->get(gmass,lb->gMassAllLabel,matlindex,patch,Ghost::None,0);
       DataWarehouse* parent_old_dw =
         new_dw->getOtherDataWarehouse(Task::ParentOldDW);
       parent_old_dw->get(dt,d_sharedState->get_delt_label(), patch->getLevel());
@@ -1717,7 +1719,7 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
       parent_new_dw->get(extForce, lb->gExternalForceLabel,dwi,patch,gnone,0);
       parent_new_dw->get(velocity, lb->gVelocityOldLabel,  dwi,patch,gnone,0);
       parent_new_dw->get(accel,    lb->gAccelerationLabel, dwi,patch,gnone,0);
-      parent_new_dw->get(mass,     lb->gMassLabel,         dwi,patch,gnone,0);
+      parent_new_dw->get(mass,     lb->gMassAllLabel,      dwi,patch,gnone,0);
 
       double fodts = 4./(dt*dt);
       double fodt = 4./dt;
@@ -2079,7 +2081,6 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     Vector CMX(0.0,0.0,0.0);
     Vector CMV(0.0,0.0,0.0);
     double ke=0;
-    double massLost=0;
     int numMPMMatls=d_sharedState->getNumMPMMatls();
 
     double move_particles=1.;
@@ -2131,14 +2132,13 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocateAndPut(pTemp,      lb->pTemperatureLabel_preReloc, pset);
       new_dw->allocateAndPut(pDisp,      lb->pDispLabel_preReloc,        pset);
 
-      new_dw->get(dispNew,      lb->dispNewLabel,      dwindex, patch, gac, 1);
-      new_dw->get(gacceleration,lb->gAccelerationLabel,dwindex, patch, gac, 1);
-
-      new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,dwindex,patch,gac,
-                  1);
-      new_dw->get(gTemperature,   lb->gTemperatureLabel,  dwindex,patch,gac,1);
-      new_dw->get(gTemperatureNoBC,lb->gTemperatureNoBCLabel,dwindex,patch,gac,
-                  1);
+      new_dw->get(dispNew,         lb->dispNewLabel,      dwindex,patch,gac, 1);
+      new_dw->get(gacceleration,   lb->gAccelerationLabel,dwindex,patch,gac, 1);
+      new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,
+                                                          dwindex,patch,gac, 1);
+      new_dw->get(gTemperature,    lb->gTemperatureLabel, dwindex,patch,gac, 1);
+      new_dw->get(gTemperatureNoBC,lb->gTemperatureNoBCLabel,
+                                                          dwindex,patch,gac, 1);
 
       old_dw->get(psize,               lb->pSizeLabel,                 pset);
       new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,        pset);
@@ -2148,7 +2148,6 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocateTemporary(dTdt_create, patch,Ghost::None,0);
       dTdt_create.initialize(0.);
       dTdt = dTdt_create; // reference created data
-            
 
       old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
 
@@ -2169,7 +2168,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           acc       += gacceleration[ni[k]] * S[k];
           tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]])* S[k];
         }
-        
+
         // Update the particle's position and velocity
         pxnew[idx]        = px[idx] + disp*move_particles;
         pDisp[idx]        = pDispOld[idx] + disp;
@@ -2194,9 +2193,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         ke += .5*pmass[idx]*pvelocitynew[idx].length2();
         CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
         CMV += pvelocitynew[idx]*pmass[idx];
-        massLost += (pmass[idx] - pmassNew[idx]);
       }
-
 
       new_dw->deleteParticles(delete_particles);
       
@@ -2267,7 +2264,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
                                               Ghost::AroundNodes,1,lb->pXLabel);
       old_dw->get(px,          lb->pXLabel,    pset);
       old_dw->get(pmass,       lb->pMassLabel, pset);
-      new_dw->get(gmass[m],    lb->gMassLabel,   dwi, patch,Ghost::None,0);
+      new_dw->get(gmass[m],    lb->gMassAllLabel,dwi, patch,Ghost::None,0);
       new_dw->get(gvolume[m],  lb->gVolumeLabel, dwi, patch,Ghost::None,0);
       new_dw->get(gintforce[m],lb->gInternalForceLabel,
                                                  dwi, patch,Ghost::None,0);
