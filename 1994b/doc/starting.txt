@@ -1,0 +1,51 @@
+
+This documentation describes how to checkout an initial copy
+of the SCI project source tree.
+
+1) Make sure that you are in the group "sci".  Type "groups", and
+   you should be in the list of groups that are shown.
+
+2) Type "which merge".  This should say /usr/sbin/merge (on SGI),
+   and NOT /usr/local/bin/merge or /usr/local/gnu/bin/merge.  If the
+   wrong version of merge is shown, then change your PATH so that
+   /usr/sbin appears before the offending version.
+
+3) Append the following 4 lines to your .cshrc file:
+if ( -f /home/sci/data1/development/scripts/develop.csh ) then
+   setenv SCI_WORK ~/work
+   source /home/sci/data1/development/scripts/develop.csh
+endif
+
+   and then source your .cshrc file
+
+4) Choose a suitable space for your work directory to be located.
+   It is best to have the work directory on a disk which is local
+   to the machine from which you usually compile.  Compiles take
+   2-3 times as long over the network.
+   Your home directory is a bad choice, because the tree can be
+   large and will cramp your quota.  The home directories also reside
+   on heavily loaded file servers and will slow down compilation.
+
+   If you don't already have a subdirectory on the selected disk,
+   make one.  /home/sci/data2/sparker where I put mine.
+
+5) cd to this directory, and type "cvs checkout work"
+   This will copy the master source tree to a subdirectory called
+   work.
+
+6) Change to your home directory, and make a symbolic link to this
+   new work directory.  For example:
+
+   ln -s /home/sci/data2/sparker/work work
+
+   Type "cd ~/work" to make sure that this works.
+
+7) Copy a variant.h file from the development directory that will
+   define the build which you are going to use.  For the SGI, do:
+   cp $SCI_DEVELOP/variant_sgi.h variant.h
+   (do this from the work directory).
+
+8) type "xmkmf" to build the initial Makefile
+
+9) type "make World" and wait for it to build.  (About 45 minutes
+   as of 10/4/94).

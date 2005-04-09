@@ -1,0 +1,51 @@
+
+#include <config/sci.cf>
+
+OBJS = ContourSetWriter.o   MeshWriter.o   ScalarFieldWriter.o   \
+	SurfaceWriter.o   VectorFieldWriter.o
+SRCS = ContourSetWriter.cc  MeshWriter.cc  ScalarFieldWriter.cc  \
+	SurfaceWriter.cc  VectorFieldWriter.cc
+TCLS = ContourSetWriter.tcl MeshWriter.tcl ScalarFieldWriter.tcl \
+	SurfaceWriter.tcl VectorFieldWriter.tcl
+
+LIBNAME = Writers
+
+depend:: $(SRCS)
+
+clean::
+	$(RM) $(SRCS)
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME), $(OBJS))
+AllTarget($(TCLS))
+
+ContourSetWriter.cc: Writer.cc
+	sed 's/TYPE/ContourSet/g' < Writer.cc > ContourSetWriter.cc
+
+ContourSetWriter.tcl: Writer.tcl
+	sed 's/TYPE/ContourSet/g' < Writer.tcl > ContourSetWriter.tcl
+
+MeshWriter.cc: Writer.cc
+	sed 's/TYPE/Mesh/g' < Writer.cc > MeshWriter.cc
+
+MeshWriter.tcl: Writer.tcl
+	sed 's/TYPE/Mesh/g' < Writer.tcl > MeshWriter.tcl
+
+ScalarFieldWriter.cc: Writer.cc
+	sed 's/TYPE/ScalarField/g' < Writer.cc > ScalarFieldWriter.cc
+
+ScalarFieldWriter.tcl: Writer.tcl
+	sed 's/TYPE/ScalarField/g' < Writer.tcl > ScalarFieldWriter.tcl
+
+SurfaceWriter.cc: Writer.cc
+	sed 's/TYPE/Surface/g' < Writer.cc > SurfaceWriter.cc
+
+SurfaceWriter.tcl: Writer.tcl
+	sed 's/TYPE/Surface/g' < Writer.tcl > SurfaceWriter.tcl
+
+VectorFieldWriter.cc: Writer.cc
+	sed 's/TYPE/VectorField/g' < Writer.cc > VectorFieldWriter.cc
+
+VectorFieldWriter.tcl: Writer.tcl
+	sed 's/TYPE/VectorField/g' < Writer.tcl > VectorFieldWriter.tcl
+

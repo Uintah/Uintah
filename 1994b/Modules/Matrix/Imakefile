@@ -1,0 +1,10 @@
+
+#include <config/sci.cf>
+
+OBJS = SolveMatrix.o
+SRCS = SolveMatrix.cc
+
+LIBNAME = Matrix
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS))

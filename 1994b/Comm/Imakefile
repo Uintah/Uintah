@@ -1,0 +1,10 @@
+
+#include <config/sci.cf>
+
+OBJS = MessageBase.o
+SRCS = MessageBase.cc
+
+LIBNAME = Comm
+
+SCIDependTarget($(SRCS))
+SCINormalLibraryTarget($(LIBNAME),$(OBJS))
