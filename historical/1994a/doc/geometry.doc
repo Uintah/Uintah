@@ -1,0 +1,62 @@
+
+
+Abritrary depths of composition or just one?
+
+Primitive Shapes:
+  Point
+  Line
+  PolyLine (closed, not closed)
+  Triangle(s)
+  TriStrip
+  Quad(s)
+  QuadStrip
+  Polygon
+  2D Text
+Composite Shapes:
+  Box
+  Cone
+  Cylinder
+  Sphere
+  nurb
+  spline curve (2d)
+  surface of revolution (spline)
+  snake (swept sphere)
+  disk
+  Torus
+  3D Text
+  2D Mesh - regular grids
+  Triangle Sheet - Vertex/Connectivities
+  ArrowSet
+
+Drawing in overlay/underlay planes?
+
+Transformations??
+  
+
+Object Attributes:
+  Material
+    Color - Ambient, Diffuse, Specular, Emmission
+    reflectivity, transparency.
+    Texture
+  Path
+  Movable? Callback on move?
+
+Scene Attributes:
+  Light Sources
+    Color
+    Point/directional/spot
+  Camera Position
+  Stereo???
+  Clipping planes
+  Fog
+  Camera parameters - depth of field
+  Anti-aliasing
+
+Inputs:
+  Dials, mouse, data glove, ???
+
+Non Graphical objects - timers
+
+Per Stream Data:
+  Keep or throw away geometry???
+
