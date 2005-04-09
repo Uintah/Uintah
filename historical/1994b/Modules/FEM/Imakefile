@@ -1,0 +1,10 @@
+
+#include <config/sci.cf>
+
+OBJS = ApplyBC.o  BuildFEMatrix.o
+SRCS = ApplyBC.cc BuildFEMatrix.cc
+
+LIBNAME = FEM
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS))

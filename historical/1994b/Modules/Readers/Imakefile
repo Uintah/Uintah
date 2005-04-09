@@ -1,0 +1,51 @@
+
+#include <config/sci.cf>
+
+OBJS = ContourSetReader.o   MeshReader.o   ScalarFieldReader.o   \
+	SurfaceReader.o   VectorFieldReader.o
+SRCS = ContourSetReader.cc  MeshReader.cc  ScalarFieldReader.cc  \
+	SurfaceReader.cc  VectorFieldReader.cc
+TCLS = ContourSetReader.tcl MeshReader.tcl ScalarFieldReader.tcl \
+	SurfaceReader.tcl VectorFieldReader.tcl
+
+LIBNAME = Readers
+
+depend:: $(SRCS)
+
+clean::
+	$(RM) $(SRCS)
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME), $(OBJS))
+AllTarget($(TCLS))
+
+ContourSetReader.cc: Reader.cc
+	sed 's/TYPE/ContourSet/g' < Reader.cc > ContourSetReader.cc
+
+ContourSetReader.tcl: Reader.tcl
+	sed 's/TYPE/ContourSet/g' < Reader.tcl > ContourSetReader.tcl
+
+MeshReader.cc: Reader.cc
+	sed 's/TYPE/Mesh/g' < Reader.cc > MeshReader.cc
+
+MeshReader.tcl: Reader.tcl
+	sed 's/TYPE/Mesh/g' < Reader.tcl > MeshReader.tcl
+
+ScalarFieldReader.cc: Reader.cc
+	sed 's/TYPE/ScalarField/g' < Reader.cc > ScalarFieldReader.cc
+
+ScalarFieldReader.tcl: Reader.tcl
+	sed 's/TYPE/ScalarField/g' < Reader.tcl > ScalarFieldReader.tcl
+
+SurfaceReader.cc: Reader.cc
+	sed 's/TYPE/Surface/g' < Reader.cc > SurfaceReader.cc
+
+SurfaceReader.tcl: Reader.tcl
+	sed 's/TYPE/Surface/g' < Reader.tcl > SurfaceReader.tcl
+
+VectorFieldReader.cc: Reader.cc
+	sed 's/TYPE/VectorField/g' < Reader.cc > VectorFieldReader.cc
+
+VectorFieldReader.tcl: Reader.tcl
+	sed 's/TYPE/VectorField/g' < Reader.tcl > VectorFieldReader.tcl
+

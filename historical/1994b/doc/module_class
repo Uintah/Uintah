@@ -1,0 +1,28 @@
+
+Responsiblities
+1) Creating input/output ports
+2) Connection callbacks
+3) Setting default variables   TCL
+4) execute
+   a) Get data   C++
+   b) Compute    C++
+   c) Put data   C++
+5) 3D Widget
+   a) Create
+   b) Interact
+6) Reading/Writing state for save/restore
+7) Make user Interface    TCL
+
+itcl_class ScalarFieldReader {
+	inherit Module
+	method 
+
+	
+	// Data variables
+}
+
+TODO in TCL:
+Config interface????
+Import itcl
+Import new tcl/tk
+Use TrueColor visual if present

@@ -1,0 +1,14 @@
+
+#include <config/sci.cf>
+
+OBJS = Args.o  ArgProcessor.o  BitArray1.o  Debug.o  \
+	Exceptions.o  Persistent.o  Pstreams.o  \
+	String.o  Timer.o  TrivialAllocator.o
+SRCS = Args.cc ArgProcessor.cc BitArray1.cc Debug.cc \
+	Exceptions.cc Persistent.cc Pstreams.cc \
+	String.cc Timer.cc TrivialAllocator.cc
+
+LIBNAME = Classlib
+
+SCIDependTarget($(SRCS))
+SCINormalLibraryTarget($(LIBNAME),$(OBJS))

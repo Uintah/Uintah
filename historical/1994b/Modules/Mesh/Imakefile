@@ -1,0 +1,14 @@
+
+#include <config/sci.cf>
+
+OBJS = Delaunay.o  ExtractMeshSF.o  GenerateMesh.o  \
+	InsertDelaunay.o  MakeScalarField.o  \
+	MeshToGeom.o  MeshView.o  MorphMesher3d.o
+SRCS = Delaunay.cc ExtractMeshSF.cc GenerateMesh.cc \
+	InsertDelaunay.cc MakeScalarField.cc \
+	MeshToGeom.cc MeshView.cc MorphMesher3d.cc
+
+LIBNAME = Mesh
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS))

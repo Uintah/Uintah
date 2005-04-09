@@ -1,0 +1,12 @@
+Makefile
+variant.h
+release
+.~*
+tmpl_cclist
+sr
+patch.*
+SegToCS
+GenScalp
+ConvMesh
+VPtoTriSurf
+SurfToJAS

@@ -1,0 +1,10 @@
+#!/bin/csh -f -x
+setenv name `whoami`
+setenv EDITOR vi
+cvs commit
+set release = `cat etc/release`
+cvs rdiff -c -r $name"_"$release work > patch.$release
+gzip patch.$release
+@ release ++
+cvs tag $name"_"$release
+echo $release > etc/release

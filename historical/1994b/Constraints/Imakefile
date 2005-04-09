@@ -1,0 +1,23 @@
+
+#include <config/sci.cf>
+
+OBJS = BaseConstraint.o \
+	DistanceConstraint.o \
+	HypotenousConstraint.o  \
+	LineConstraint.o \
+	PlaneConstraint.o \
+	PythagorasConstraint.o \
+	SegmentConstraint.o
+SRCS = BaseConstraint.cc \
+	DistanceConstraint.cc \
+	HypotenousConstraint.cc  \
+	LineConstraint.cc \
+	PlaneConstraint.cc \
+	PythagorasConstraint.cc \
+	SegmentConstraint.cc
+
+
+LIBNAME = Constraints
+
+SCIDependTarget($(SRCS))
+SCINormalLibraryTarget($(LIBNAME),$(OBJS))

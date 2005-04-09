@@ -1,0 +1,10 @@
+
+#include <config/sci.cf>
+
+OBJS = LaceContours.o  LaceContoursTemp.o  TransformCS.o
+SRCS = LaceContours.cc LaceContoursTemp.cc TransformCS.cc
+
+LIBNAME = Contours
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS))

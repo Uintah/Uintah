@@ -1,0 +1,19 @@
+
+#include <config/sci.cf>
+
+#ifdef SCI_OPENGL
+OPENGL_OBJS = tkOpenGL.o
+OPENGL_SRCS = tkOpenGL.c
+#else
+OPENGL_OBJS =
+OPENGL_SRCS =
+#endif
+
+OBJS = tkAppInit.o  tkBevel.o  tkMain.o  $(OPENGL_OBJS)
+SRCS = tkAppInit.c  tkBevel.c  tkMain.c  $(OPENGL_SRCS)
+LOCALINCLUDES = -I../tcl7.3 -I../tk3.6
+
+LIBNAME = scitk
+
+SCIDependTarget($(SRCS))
+NormalLibraryTarget($(LIBNAME),$(OBJS))
