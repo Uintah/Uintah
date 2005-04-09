@@ -1,0 +1,62 @@
+
+#include <config/sci.cf>
+
+#if defined(SCI_MACHINE_Solaris)
+XLIBDIR = -L/usr/openwin/lib
+XINCLUDE = -I/usr/openwin/include
+#endif
+
+#if defined(SCI_MACHINE_Linux)
+XLIBDIR = -L/usr/X11R6/lib
+#endif
+
+#ifdef SCI_MESA
+OPENGLINCS = $(XINCLUDE) -I$(TOP)/Mesa/include 
+OPENGLLIBS = $(XLIBDIR) -L$(TOP)/Mesa/lib -lMesaGLU -lMesaGL -lXext -lX11
+#else
+OPENGLINCS = $(XINCLUDE)
+OPENGLLIBS = $(XLIBDIR) -lGLU -lGL -lXext -lX11
+#endif
+
+INVERSE_SRCS = banbks.cc banmul.cc dsvbksb.cc nrutil.cc     \
+	bandec.cc cuthill.cc dsvdcmp.cc linbcg.cc matrix.cc vector.cc \
+	banmprv.cc dpythag.cc tsvd.cc dsvd.cc
+INVERSE_OBJS = banbks.o  banmul.o  dsvbksb.o  nrutil.o      \
+	bandec.o  cuthill.o  dsvdcmp.o  linbcg.o  matrix.o  vector.o  \
+	banmprv.o  dpythag.o  tsvd.o  dsvd.o
+
+OBJS = BallAux.o  BldEEGMesh.o  Coregister.o  InvEEGSolve.o  RescaleSegFld.o  \
+	STreeExtractSurf.o  SegFldOps.o  SegFldToSurfTree.o  \
+	SelectSurfNodes.o Taubin.o  Thermal.o  $(INVERSE_OBJS) $(OPENGLOBJS)
+SRCS = BallAux.cc BldEEGMesh.cc Coregister.cc InvEEGSolve.cc RescaleSegFld.cc \
+	STreeExtractSurf.cc SegFldOps.cc SegFldToSurfTree.cc \
+	SelectSufNodes.cc Taubin.cc Thermal.cc $(INVERSE_SRCS) $(OPENGLSRCS)
+
+LIBNAME = EEG
+
+SPARSELIB = ../Matrix/sp1_5c
+
+IML_LDFLAGS       = -L$(SPARSELIB)/lib -lsparse -lspblas -lmv -lm -lcomplex
+
+
+IML_INCLUDE = $(SPARSELIB)/iml
+MV_INCLUDE = $(SPARSELIB)/mv/include
+SPARSELIB_INCLUDE = $(SPARSELIB)/include
+
+IML_INCLUDES = -I$(IML_INCLUDE) -I$(MV_INCLUDE) -I$(SPARSELIB_INCLUDE)
+
+LEONID_TOP = ./TEMPLATES
+LEONID_INCLUDES = -I$(LEONID_TOP)/INCLUDE
+LEONID_LDFLAGS = -L$(LEONID_TOP)/LIB -lclapack -lcblas -lftn
+
+LOCALCFLAGS = -DCOMPLEX=complex\<double\>
+LOCALCCFLAGS = -DCOMPLEX=complex\<double\>
+
+LOCALINCLUDES = $(OPENGLINCS) $(IML_INCLUDES) $(LEONID_INCLUDES)
+SO_LIBS = 
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lGeom -lDataflow \
+	-lGeometry -lMath -lTCL -lClasslib -lMultitask $(OPENGLLIBS) \
+	-lMalloc $(IML_LDFLAGS) $(LEONID_LDFLAGS) -lWidgets -lm
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

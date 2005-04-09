@@ -1,0 +1,14 @@
+Makefile
+config.h
+config_imake.h
+config.values
+release
+.~*
+tmpl_cclist
+sr
+patch.*
+SegToCS
+GenScalp
+ConvMesh
+VPtoTriSurf
+SurfToJAS

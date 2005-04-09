@@ -1,0 +1,5 @@
+./tspsm
+./tsl  la2d8.hb
+./tpre la1d8.hb 
+./tsp B_50_40.txt x_40.txt y_50.txt B_x.txt Bt_y.txt
+./tsp A_40.txt x_40.txt x_40.txt Ax.txt Atx.txt

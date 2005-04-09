@@ -1,0 +1,2 @@
+#!/bin/csh
+itcl_wish -f sci_config.tcl

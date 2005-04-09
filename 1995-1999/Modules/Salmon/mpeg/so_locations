@@ -1,0 +1,9 @@
+mpeg.so \
+		:st = .text 0x5ff80000, 0x00020000:\
+		:st = .data 0x5ffa0000, 0x00060000:
+libmpeg.so \
+		:st = .text 0x5fef0000, 0x00020000:\
+		:st = .data 0x5ff20000, 0x00060000:
+libmpegg.so \
+		:st = .text 0x5fe70000, 0x00020000:\
+		:st = .data 0x5fe90000, 0x00060000:

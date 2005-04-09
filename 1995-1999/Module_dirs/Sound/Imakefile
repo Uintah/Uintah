@@ -1,0 +1,30 @@
+
+#include <config/sci.cf>
+
+#ifdef SCI_DIR_Modules_Sound
+
+#ifdef SCI_MACHINE_SGI
+SOBJS = SoundInput.o  SoundOutput.o  SoundReader.o
+SSRCS = SoundInput.cc SoundOutput.cc SoundReader.cc
+#else
+SOBJS =
+SSRCS =
+#endif
+
+OBJS = CrossFader.o  SoundFFT.o  SoundFilter.o  SoundMixer.o  \
+	VoiceRemover.o  $(SOBJS)
+SRCS = CrossFader.cc SoundFFT.cc SoundFilter.cc SoundMixer.cc \
+	VoiceRemover.cc $(SSRCS)
+
+LIBNAME = Sound
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS))
+
+#else
+all:
+depend::
+
+           RM_CMD = $(RM) *.CKP *.ln *.BAK *.bak core errs ,* *~ .emacs_* tags TAGS make.log MakeOut
+
+#endif

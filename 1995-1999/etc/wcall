@@ -1,0 +1,2 @@
+#!/bin/csh -f
+find . -name "*.cc" -print -o -name "*.c" -print -o -name "*.h" -print -o -name "*.icc" -print -o -name "*.tcl" -print | fgrep -v -f etc/exclude | xargs wc | awk '{if($4 != "total"){print $0;files++;l+=$1;w+=$2;c+=$3;}} END {printf("%8d%8d%8d total in %d files\n",l,w,c,files);}'

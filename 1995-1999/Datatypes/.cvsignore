@@ -1,0 +1,10 @@
+Makefile Makefile.bak
+.~*
+ii_files
+ScalarFieldRGdouble.h ScalarFieldRGdouble.cc
+ScalarFieldRGchar.h ScalarFieldRGchar.cc
+ScalarFieldRGuchar.h ScalarFieldRGuchar.cc
+ScalarFieldRGint.h ScalarFieldRGint.cc
+ScalarFieldRGfloat.h ScalarFieldRGfloat.cc
+ScalarFieldRGshort.h ScalarFieldRGshort.cc
+ScalarFieldRG.h ScalarFieldRG.cc

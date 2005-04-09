@@ -1,0 +1,17 @@
+#!/bin/csh 
+set dirs = lib project
+
+if($?OPENWINHOME)then
+  setenv IMAKEINCLUDE "-I$OPENWINHOME/lib/config -I.. -I../.."
+else
+  setenv IMAKEINCLUDE "-I.. -I../.."
+endif
+
+foreach t ($dirs)
+ cd $t
+ xmkmf
+ make Makefile
+ make Makefiles
+ make depend
+ cd ..
+end

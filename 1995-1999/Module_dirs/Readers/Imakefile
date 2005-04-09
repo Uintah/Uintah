@@ -1,0 +1,72 @@
+
+#include <config/sci.cf>
+
+#ifdef SCI_DIR_Modules_Readers
+
+OBJS = ContourSetReader.o   MeshReader.o   \
+	MultiMeshReader.o   ScalarFieldReader.o   \
+	SurfaceReader.o   VectorFieldReader.o \
+PointsReader.o
+SRCS = ContourSetReader.cc  MeshReader.cc  \
+	MultiMeshReader.cc  ScalarFieldReader.cc  \
+	SurfaceReader.cc  VectorFieldReader.cc \
+PointsReader.cc
+TCLS = ContourSetReader.tcl MeshReader.tcl \
+	MultiMeshReader.tcl ScalarFieldReader.tcl \
+	SurfaceReader.tcl VectorFieldReader.tcl \
+PointsReader.tcl
+
+LIBNAME = Readers
+
+depend:: $(SRCS)
+
+clean::
+	$(RM) $(SRCS)
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME), $(OBJS))
+AllTarget($(TCLS))
+
+ContourSetReader.cc: Reader.cc
+	sed 's/TYPE/ContourSet/g' < Reader.cc > ContourSetReader.cc
+
+ContourSetReader.tcl: Reader.tcl
+	sed 's/TYPE/ContourSet/g' < Reader.tcl > ContourSetReader.tcl
+
+MeshReader.cc: Reader.cc
+	sed 's/TYPE/Mesh/g' < Reader.cc > MeshReader.cc
+
+MeshReader.tcl: Reader.tcl
+	sed 's/TYPE/Mesh/g' < Reader.tcl > MeshReader.tcl
+
+MultiMeshReader.cc: Reader.cc
+	sed 's/TYPE/MultiMesh/g' < Reader.cc > MultiMeshReader.cc
+
+MultiMeshReader.tcl: Reader.tcl
+	sed 's/TYPE/MultiMesh/g' < Reader.tcl > MultiMeshReader.tcl
+
+ScalarFieldReader.cc: Reader.cc
+	sed 's/TYPE/ScalarField/g' < Reader.cc > ScalarFieldReader.cc
+
+ScalarFieldReader.tcl: Reader.tcl
+	sed 's/TYPE/ScalarField/g' < Reader.tcl > ScalarFieldReader.tcl
+
+SurfaceReader.cc: Reader.cc
+	sed 's/TYPE/Surface/g' < Reader.cc > SurfaceReader.cc
+
+SurfaceReader.tcl: Reader.tcl
+	sed 's/TYPE/Surface/g' < Reader.tcl > SurfaceReader.tcl
+
+VectorFieldReader.cc: Reader.cc
+	sed 's/TYPE/VectorField/g' < Reader.cc > VectorFieldReader.cc
+
+VectorFieldReader.tcl: Reader.tcl
+	sed 's/TYPE/VectorField/g' < Reader.tcl > VectorFieldReader.tcl
+
+#else
+all:
+depend::
+
+           RM_CMD = $(RM) *.CKP *.ln *.BAK *.bak core errs ,* *~ .emacs_* tags TAGS make.log MakeOut
+
+#endif

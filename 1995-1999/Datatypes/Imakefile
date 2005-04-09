@@ -1,0 +1,147 @@
+
+#include <config/sci.cf>
+
+#ifdef SCI_MACHINE_Linux
+TEMPLATE_OBJS = templates.o
+TEMPLATE_SRCS = templates.cc
+#endif
+
+OBJS = BasicSurfaces.o  Boolean.o BooleanPort.o ColorMap.o  ColorMapPort.o  \
+	ColumnMatrix.o  ColumnMatrixPort.o  ContourSet.o  ContourSetPort.o  \
+	Datatype.o  DenseMatrix.o  \
+	GeometryPort.o  Image.o  ImagePort.o Interval.o IntervalPort.o \
+	ManhattanDist.o   Matrix.o  MatrixPort.o  Mesh.o  MeshPort.o  \
+	MultiMesh.o  MultiMeshPort.o  Octree.o  OctreePort.o  \
+	ScalarField.o  \
+	ScalarFieldPort.o  ScalarFieldRG.o  ScalarFieldRGBase.o  \
+	ScalarFieldRGchar.o  ScalarFieldRGshort.o  ScalarFieldRGint.o \
+	ScalarFieldRGfloat.o  ScalarFieldRGuchar.o \
+	ScalarFieldRGdouble.o  ScalarFieldUG.o  ScalarFieldZone.o  \
+	ScalarTriSurface.o   \
+	ScaledBoxWidgetData.o  ScaledBoxWidgetDataPort.o  \
+	SegFld.o  SegFldPort.o  \
+	SigmaSet.o  SigmaSetPort.o  \
+	SoundPort.o  SparseRowMatrix.o  SurfOctree.o  \
+	SurfOctreeTopPort.o  \
+	SurfTree.o  Surface.o  SurfacePort.o  SymSparseRowMatrix.o \
+	TopoSurfTree.o  TriDiagonalMatrix.o  TriSurface.o  \
+	VectorField.o  VectorFieldOcean.o \
+	VectorFieldZone.o LockArray3.o \
+	VectorFieldPort.o  VectorFieldRG.o  VectorFieldUG.o \
+        HexMesh.o HexMeshPort.o  ScalarFieldHUG.o VectorFieldHUG.o \
+	VoidStar.o  VoidStarPort.o cMatrix.o cSMatrix.o cDMatrix.o \
+	cVector.o cVectorPort.o cMatrixPort.o \
+	ParticleSet.o ParticleSetPort.o \
+	ParticleGridReader.o ParticleGridReaderPort.o \
+	ParticleSetExtension.o \
+	ParticleSetExtensionPort.o \
+	MEFluid.o cfdlibParticleSet.o \
+        TensorField.o TensorFieldBase.o TensorFieldPort.o \
+	KludgeMessage.o KludgeMessagePort.o \
+	$(TEMPLATE_OBJS)
+
+GENSRCS = ScalarFieldRGchar.cc  ScalarFieldRGint.cc ScalarFieldRGfloat.cc \
+	ScalarFieldRGdouble.cc  ScalarFieldRG.cc ScalarFieldRGshort.cc \
+	ScalarFieldRGuchar.cc
+
+SRCS = $(GENSRCS) BasicSurfaces.cc  \
+	ColorMap.cc ColorMapPort.cc \
+	ColumnMatrix.cc  ColumnMatrixPort.cc ContourSet.cc ContourSetPort.cc \
+	Datatype.cc DenseMatrix.cc \
+	GeometryPort.cc Image.cc ImagePort.cc Interval.cc IntervalPort.cc  \
+	ManhattanDist.cc Matrix.cc MatrixPort.cc Mesh.cc MeshPort.cc \
+	MultiMesh.cc MultiMeshPort.cc Octree.cc OctreePort.cc \
+	ScalarField.cc \
+	ScalarFieldPort.cc ScalarFieldRG.cc ScalarFieldRGBase.cc \
+	ScalarFieldRGchar.cc ScalarFieldRGint.cc ScalarFieldRGfloat.cc \
+	ScalarFieldRGdouble.cc ScalarFieldUG.cc ScalarFieldZone.cc \
+	ScalarFieldRGuchar.cc ScalarFieldRGshort.cc \
+	ScalarFieldUG.cc \
+	ScalarFieldZone.cc ScalarTriSurface.cc \
+	ScaledBoxWidgetData.cc  ScaledBoxWidgetDataPort.cc \
+	SegFld.cc  SegFldPort.cc \
+	SigmaSet.cc SigmaSetPort.cc \
+	SoundPort.cc SparseRowMatrix.cc SurfOctree.cc \
+	SurfOctreeTopPort.cc \
+	SurfTree.cc Surface.cc SurfacePort.cc SymSparseRowMatrix.cc \
+	TopoSurfTree.cc TriDiagonalMatrix.cc TriSurface.cc \
+	VectorField.cc  VectorFieldOcean.cc \
+	VectorFieldPort.cc VectorFieldRG.cc VectorFieldUG.cc \
+        HexMesh.cc HexMeshPort.cc ScalarFieldHUG.cc VectorFieldHUG.cc \
+	LockArray3.cc \
+	VectorFieldZone.cc \
+	ParticleSetPort.cc ParticleSet.cc \
+	ParticleGridReader.cc ParticleGridReaderPort.cc \
+	ParticleSetExtension.cc \
+	ParticleSetExtensionPort.cc \
+	VoidStar.cc VoidStarPort.cc \
+	MEFluid.cc cfdlibParticleSet.cc \
+        TensorField.cc TensorFieldBase.cc TensorFieldPort.cc \
+	KludgeMessage.cc KludgeMessagePort.cc \
+	$(TEMPLATE_SRCS)
+
+GENH = ScalarFieldRGchar.h  ScalarFieldRGint.h  ScalarFieldRGfloat.h \
+	ScalarFieldRGdouble.h ScalarFieldRG.h ScalarFieldRGshort.h \
+	ScalarFieldRGuchar.h
+
+LIBNAME = Datatypes
+
+SO_LIBS =
+SO_LDFLAGS = -L$(TOP)/lib -lDataflow -lGeom -lGeometry -lComm -lMath \
+	-lTCL -lClasslib -lMultitask -lTester -lMalloc SCI_CCLibs -lm
+
+depend:: $(GENH) $(GENSRCS)
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS), $(SO_LIBS), $(SO_LDFLAGS))
+
+clean::
+	$(RM) $(GENH) $(GENSRCS) 
+
+ScalarFieldRGchar.h: ScalarFieldRGTYPE.h
+	sed 's/TYPE/char/g' < ScalarFieldRGTYPE.h > ScalarFieldRGchar.h
+
+ScalarFieldRGchar.cc: ScalarFieldRGTYPE.cc
+	sed 's/TYPE/char/g' < ScalarFieldRGTYPE.cc > ScalarFieldRGchar.cc
+
+ScalarFieldRGuchar.h: ScalarFieldRGTYPE.h
+	sed 's/TYPE/uchar/g' < ScalarFieldRGTYPE.h | sed 's/<uchar>/<unsigned char>/g' > ScalarFieldRGuchar.h
+
+ScalarFieldRGuchar.cc: ScalarFieldRGTYPE.cc
+	sed 's/TYPE/uchar/g' < ScalarFieldRGTYPE.cc | sed 's/<uchar>/<unsigned char>/g' > ScalarFieldRGuchar.cc
+
+ScalarFieldRGshort.h: ScalarFieldRGTYPE.h
+	sed 's/TYPE/short/g' < ScalarFieldRGTYPE.h > ScalarFieldRGshort.h
+
+ScalarFieldRGshort.cc: ScalarFieldRGTYPE.cc
+	sed 's/TYPE/short/g' < ScalarFieldRGTYPE.cc > ScalarFieldRGshort.cc
+
+ScalarFieldRGint.h: ScalarFieldRGTYPE.h
+	sed 's/TYPE/int/g' < ScalarFieldRGTYPE.h > ScalarFieldRGint.h
+
+ScalarFieldRGint.cc: ScalarFieldRGTYPE.cc
+	sed 's/TYPE/int/g' < ScalarFieldRGTYPE.cc > ScalarFieldRGint.cc
+
+ScalarFieldRGfloat.h: ScalarFieldRGTYPE.h
+	sed 's/TYPE/float/g' < ScalarFieldRGTYPE.h > ScalarFieldRGfloat.h
+
+ScalarFieldRGfloat.cc: ScalarFieldRGTYPE.cc
+	sed 's/TYPE/float/g' < ScalarFieldRGTYPE.cc > ScalarFieldRGfloat.cc
+
+ScalarFieldRGdouble.h: ScalarFieldRGTYPE.h
+	sed 's/TYPE/double/g' < ScalarFieldRGTYPE.h > ScalarFieldRGdouble.h
+
+ScalarFieldRGdouble.cc: ScalarFieldRGTYPE.cc
+	sed 's/TYPE/double/g' < ScalarFieldRGTYPE.cc > ScalarFieldRGdouble.cc
+
+ScalarFieldRG.h: ScalarFieldRGdouble.h
+	sed 's/ScalarFieldRGdouble/ScalarFieldRG/g' < ScalarFieldRGdouble.h > ScalarFieldRG.h
+
+ScalarFieldRG.cc: ScalarFieldRGdouble.cc
+	sed 's/ScalarFieldRGdouble/ScalarFieldRG/g' < ScalarFieldRGdouble.cc > ScalarFieldRG.cc
+
+ManhattanDist.o: ScalarFieldRGint.h ManhattanDist.cc
+
+SurfOctree.o: ScalarFieldRGint.h
+
+Octree.o: ScalarFieldRG.h Octree.cc

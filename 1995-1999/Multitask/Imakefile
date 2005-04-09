@@ -1,0 +1,55 @@
+
+#include <config/sci.cf>
+
+#ifdef SCI_PTHREADS
+#define TASK_IMPLEMENTATION_O  Task_pthreads.o
+#define TASK_IMPLEMENTATION_CC Task_pthreads.cc
+
+THREADLIB = -lpthread
+#else
+
+#ifdef SCI_QUARKS
+#define TASK_IMPLEMENTATION_O  Task_Quarks.o
+#define TASK_IMPLEMENTATION_CC Task_Quarks.cc
+#else
+
+#ifdef SCI_MACHINE_SGI
+#define TASK_IMPLEMENTATION_O  Task_irix.o
+#define TASK_IMPLEMENTATION_CC Task_irix.cc
+LOCKS = lock_mips.o
+
+ASOPT = SCI_BinFlags
+lock_mips.o: lock_mips.s
+	as -o lock_mips.o lock_mips.s $(ASOPT)
+#endif
+
+#ifdef SCI_MACHINE_SOLARIS
+#define TASK_IMPLEMENTATION_O  Task_solaris.o
+#define TASK_IMPLEMENTATION_CC Task_solaris.cc
+#endif
+
+#ifdef SCI_MACHINE_Linux
+#define TASK_IMPLEMENTATION_O Task_linux.o
+#define TASK_IMPLEMENTATION_CC Task_linux.cc
+#endif
+
+#endif
+#endif
+
+#ifndef TASK_IMPLEMENTATION_O
+#error "This machine does not have a Task library port..."
+#endif
+#ifndef TASK_IMPLEMENTATION_CC
+#error "This machine does not have a Task library port..."
+#endif
+
+OBJS = ITC.o  Task.o  TASK_IMPLEMENTATION_O  $(LOCKS)
+SRCS = ITC.cc Task.cc TASK_IMPLEMENTATION_CC
+
+LIBNAME = Multitask
+
+SO_LIBS =
+SO_LDFLAGS = -L$(TOP)/lib $(THREADLIB) -lMalloc SCI_CCLibs
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

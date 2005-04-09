@@ -1,0 +1,31 @@
+
+#include <config/sci.cf>
+
+OBJS = DPGrid.o  DPGridPort.o  DPGenGrid.o  \
+	DPVecPort.o  DPVec.o  DPNonLinearSolver.o  \
+	DPNavierStokes.o  DPProblem.o  DPLinEq.o \
+	DPProblemPort.o  DPLinEqPort.o DPLinearSolver.o
+SRCS = DPGrid.cc DPGridPort.cc DPGenGrid.cc \
+	DPVecPort.cc DPVec.cc DPNonLinearSolver.cc \
+	DPNavierStokes.cc DPProblem.cc DPLinEq.cc \
+	DPProblemPort.cc DPLinEqPort.cc DPLinearSolver.cc
+
+LIBNAME = DP
+
+DPHOME = /home/sci/local/apps/diffpack
+DPINCS = -I$(DPHOME)/dp/include -I$(DPHOME)/la/include \
+	-I$(DPHOME)/bt/include
+DPLTYPE = lib/IRIX64/nopt
+DPLIBS = -L$(DPHOME)/dp/$(DPLTYPE) -L$(DPHOME)/la/$(DPLTYPE) \
+	 -L$(DPHOME)/bt/$(DPLTYPE) \
+	 -lenvir -lprep -ldpK -llineq -larr2 -lbt2_no_x -larr1 -lbt1
+XLIBS =
+
+SO_LIBS =
+SO_LDFLAGS = -Wl,-woff,15 -L$(TOP)/lib $(DPLIBS) -lDatatypes -lDataflow -lGeom -lGeometry \
+	-lTCL -lClasslib -lMultitask -lMalloc $(XLIBS) -lm SCI_CCLibs
+
+LOCALINCLUDES = $(DPINCS)
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))

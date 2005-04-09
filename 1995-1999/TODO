@@ -1,0 +1,289 @@
+
+Waves:
+UI
+Steerable parameters
+Thread scheduling
+Fix normals
+
+Test adaptive demo
+ - fix Salmon
+
+Test heat problem
+
+Test CFDlib stuff
+
+Do diffpack stuff
+
+
+
+Mesher:
+UI - random order, tolerances
+Tune it for 50^3 and 100^3, make sure that it still works on others.
+Profile 20^3 case
+change %200 to %1000 in Delaunay
+inline stuff
+Fix "done" array
+Start walk at last element, not first
+Trivial allocators
+Memory use:
+elems array - should this just be temporary, while building neighbors?
+or is it needed for other crap.
+Find a better way to allocate/store it...
+
+Make config script use versions - quarks, tcl, tk, itcl, mesa
+Fix SurfaceReader
+Save more Geom files to test
+Save all geom - redo Salmon structure first?
+DONE Fix % operator - broken
+
+Picking broken on 32 bit machines?
+cp.sr crashes
+Finish streamline code
+Finish Geom files
+Scheduler sometimes confused when connecting modules
+
+This weekend:
+Annotated list of modules
+Update solver
+
+Shared libraries:
+1) Fix initialization/locking problems
+2) General configuration file
+3) Renderers in config file
+4) Get rid of dependencies in Widgets and Geom
+5) Tune for R8000
+6) Picking broken
+
+BIG problems:
+1) Delaunay
+DONE 2) Scheduler
+3) Startup time
+4) Apply BC
+5) Isosurface widget broken
+6) Streamline widget broken
+
+4) Persistent geometry
+
+DONE 1) Fix allocator - use doubly linked list???
+Tag malloc - put in TK/TCL
+DONE Use scinew everywhere...
+2) Fix memory leak - where to 36k 0-8 byte objects go in cp.sr for
+torso_ug.
+DONE 4) Fix scheduler
+5) Better interactive widgets
+7) James - 
+	Frame widget broken
+	Widget scale with mouse
+convert directory
+Use direct context now for 5.3?
+Output VRML/Inventor
+Import VRML/Inventor
+Persistent GeomObj
+
+1) Fix convert directories
+Fix convert directories
+Streamline...
+3) Add generation numbers to Geom
+4) Figure out what to do about multiple parented Geoms
+5) Use opengl display lists to optimize geoms
+
+Convert directory
+Checkin procedures to update work_lib
+DONE Fix tk border color calculation???
+Major Project -
+   Heteregeneous DSM
+
+Linux:
+    OpenGL
+	Direct library
+	16 bit visual
+	double buffer???
+    X11
+	Transformations
+	DoubleBuffer
+	TrueColor
+	dithering
+	Move Bounding boxes only
+	Handle overlapping polygons
+    Threads
+	Pre-emptive
+	Call sigpause
+
+Fix from SC94:
+    Mesh
+    BuildFEMatrix
+
+Finish and FIX:
+   Unify Readers, Writers and Batteries
+   Icons
+   Window Titles
+   Delete modules
+   Disconnect
+   Salmon:
+      Valid initial states for all Geometry objects - default CTOR
+      Use waiting queue in redraw loop to defer things that are locked
+      implement read_try_lock for CrowdMonitor	
+      Reset bounding boxes when changed
+DONE      Resizable window
+DONE      Widget performance
+      Better tracking
+      Fix +/- button
+      Better in/out buttons
+      New node types:
+         Handle
+         Rendermode
+      Better triangles - vertex types - with normals, colors
+      Fix picking motion
+      Children windows...
+      More lighting
+      Bounding box interactions
+      Axis objects
+      Camera objects
+      Light source objects - Finish
+      Light source editor
+      Fix camera editor popup - use thumbwheels???
+      Orthographic projections
+      Material Editor
+      Fix bargraph on networkeditor icon
+      Renderer properties popup
+      Hookup dials - more control
+      Mode widget
+      Clipping plane editor
+      More Light types
+      Raytracer
+	 Finish intersection routines
+	    Cone
+	    Cylinder
+	    Line
+	    Tube
+	    Polyline
+	    Tetra
+	    VCTri
+	    VCTriStrip
+	 PointLight
+	 Bounding boxes
+      Postscript renderer
+      X11 renderer
+         Verify transformations
+         TrueColor support
+         Fix mouse motions - backwards
+         Move bounding boxes only
+         Handle overlapping polygons
+	 OPTIMIZE!!
+DONE      Pick - default to cartesian axes for principal vectors
+DONE      Fix flushViews
+DONE      Fix salmon deadlock for James
+DONE      Fix update delay for James
+DONE      Shared objects - locks.  Use try lock.
+DONE      RWLocks
+DONE      Use RWLocks
+DONE      Use locks in Widget code
+DONE      Torus
+DONE      Torus Bounding boxes
+DONE      Chase down all bounding box accesses and add if(bb.valid())
+DONE      Cylinder bounding boxes
+DONE      Cone bounding boxes
+DONE      Disc bounding boxes
+DONE      Make Geom keep track of parents
+DONE         Material
+DONE         Pick
+DONE      Before reporting that a renderer is available, make sure \
+DONE               that it is supported (OpenGL) 
+DONE      Background editor
+DONE      Nix Material Stacks
+DONE      Nix objdraw - pass lighting into objdraw
+DONE      Nix lit member
+DONE      Fix picking with new draw functions
+DONE      Finish Headlight for multiple bounces
+DONE      Fix segfault when autoview on no objects
+DONE	 Progressive refinement
+DONE	 Pass Material* instead of MaterialHandle
+DONE	    Disc
+DONE	    Sphere
+DONE	    Tri
+DONE	    TriStrip
+DONE	 Fix transformations
+
+Features/improvements:
+   Make progress, time, etc run off of TCL variables
+   TCL variables for slider min/max, etc
+   Range slider
+   Better Memory allocators
+      strict
+      fast
+   Remote modules
+   Separate defaults from ui Buttons
+   Save/Load Networks
+   Scheduler visualization?
+   Manual scheduling
+   Better locks for Irix
+   Make SurfToGeom use TriStrip's
+   Better threads for IRIX
+   Be able to specify thread sizes when creating tasks
+   Optimize/finish threads on Linux
+   Dynamically loadable modules
+   Stand alone modules
+   Parallelism
+   Let colormaps have an intrinic range instead of a multitude of
+		min/max adjustments
+   2D Graphing application - overlay in Salmon
+
+Applications:
+   General PDE solver w/ multiple variables
+   Defibrillator
+   Dad's physics stuff
+   Heat flow
+   CFD
+   Alpha1 collaboration
+   Brown stuff
+
+Fun:
+   Image painting
+   Sound
+
+Ports:
+   DCC
+   RS/6000 Port
+   Freedom board port
+   Sun Port
+
+Datatypes:
+   Image
+   2D mesh
+   Better meshes - compound and regular meshes
+   Boundary condition types/region types/node types
+
+Software Engineering Issues:
+DONE   Use NCC 
+   Fix conflicts with NCC
+   Make NCC work with multiple executables
+DONE   Configuration interface
+   System libraries
+   Compile @checkin
+   show diffs on checkin
+
+TCL/TK:
+   Better data structure handling
+   Thumbwheel 2D widget
+   Fix backward connections in NetworkEditor
+DONE   Color Editor
+   Right titles on windows
+
+Modules that need work:
+   ApplyBC - implement
+   BuildFEMatrix - optimize, UI, finish
+   CrossFader - UI
+   FrameTest - finish/rename
+   GenSurface - UI/finish
+   GenerateMesh - implement
+   Hedgehog - implement
+   IsoSurface - UI
+   SoundFFT - implemennt
+   SoundFilter - finish
+   SoundInput - UI/finish
+   SoundOutput - UI
+   SoundReader - UI
+   SoundMixer - UI
+   Streamline - finish / hook strem ribbon width to line radius
+   Streamsurf - UI/finish
+   TransformContourSet - UI

@@ -1,0 +1,20 @@
+
+#include <config/sci.cf>
+
+OBJS = AdjustField.o  AmoebaVisualize.o  ApplyBC.o  \
+	BCNodesToSurf.o  BuildFEMatrix.o  ComposeError.o  \
+	DipoleCreate.o  ElectrodeControl.o  ErrorInterval.o  FEMError.o  \
+	MeshRefiner.o  SetBCNode.o  SourceLocalize.o  SourceOptimize.o
+SRCS = AdjustField.cc AmoebaVisualize.cc ApplyBC.cc \
+	BCNodesToSurf.cc  BuildFEMatrix.cc ComposeError.cc \
+	DipoleCreate.cc ElectrodeControl.cc ErrorInterval.cc FEMError.cc \
+	MeshRefiner.cc SetBCNode.cc SourceLocalize.cc SourceOptimize.cc
+
+LIBNAME = FEM
+
+SO_LIBS =
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lGeometry \
+	-lTCL -lClasslib -lMultitask -lMalloc -lm SCI_CCLibs
+
+SCIDependTarget($(SRCS))
+SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
