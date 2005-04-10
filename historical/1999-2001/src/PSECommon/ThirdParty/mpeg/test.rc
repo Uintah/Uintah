@@ -1,0 +1,18 @@
+/* The rate control that is in the C code. */
+open 1
+  rcl BUFFERCONTENTS rcl QDFACT div rcl QOFFS add
+  rcl PTYPE 1 eq
+  rcl PTYPE 2 eq
+  or ifng CLIP:
+  1.5 div
+CLIP: 
+  dup 1 lt ifng CHECKHI:  /* Clip <1 */
+  pop 1
+  goto END:
+CHECKHI:
+  dup 31 gt ifng END: /* Clip >31 */
+  pop 31
+END:
+  sto SQUANT
+  exit
+close

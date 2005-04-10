@@ -1,0 +1,580 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+ <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+ <meta name="Author" content="Erik Jorgensen">
+ <link rel=stylesheet type="text/css" href="http://www.sci.utah.edu/scirun_docs/doc/doc_styles.css">
+ <title>PSE inst and build instructions - Unix version</title>
+</head>
+
+<body>
+<a href="http://www.sci.utah.edu"><img style="margin-left:-2em"
+src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height="66" width="150"></a>
+
+<p class="title">Installation and Build Instructions for the SCIRun PSE</p>
+<p class="subtitle">(Unix version - Updated Novemeber 27, 2000)</p>
+
+<p class="head">Table of contents</p>
+<ol class="toc">
+      <LI><A HREF="#Prerequisites">Prerequisites</A></LI>
+      <LI><A HREF="#Requirements">System Software Requirements</A></LI>
+      <LI><A HREF="#Installing">Installing SCIRun</A></LI>
+      <LI><A HREF="#Building">Building SCIRun</A></LI>
+      <LI><A HREF="#RunningPSE">Running SCIRun</A></LI>
+      <LI><A HREF="#AdditionalDocs">Additional Documentation</A></LI>
+      <LI><A HREF="#GettingHelp">Getting Help</A></LI>
+      <LI><A HREF="#ThirdParty">Third Party Software Information</A></LI>
+</ol>
+
+<p class="head"><a name="Prerequisites">Prerequisites</a></p>
+    <p class="firstpara">
+      Use of this document requires experience with the SGI
+      Irix operating system and/or the Linux operating system.
+      Knowledge of file systems, programming in C/C++, building
+      software from tarball distributions and shell scripting will
+      be useful if not required.  The installation or upgrade of
+      core system components (such as the OS and compilers) may be
+      required.  As such, a system administrator's assistance may
+      be warranted.
+    </p>
+
+<p class="head"><a name="Requirements">System Software Requirements</a></p>
+    <p class="firstpara">
+      At the moment only two platforms are officially supported: SGI
+      and Linux.
+    </p>
+
+    <p class="firstpara">
+      The following table describes the system software
+      requirements for SCIRun.  The version numbers listed
+      in the table are minimums; newer versions may also work but are
+      not officially supported.
+    </p>
+
+    <p class="firstpara">
+      Click on the links in the
+      table to get information about (software column) or to download
+      (version column) the software.  Click on the link in the
+      archived sources column to download all the freely available sources
+      with one click.
+    </p>
+
+    <p class="firstpara">
+      Refer to the <a href="#ThirdParty">Third Party Software
+      Information</a> section for information on installing the
+      required software.
+    </p>
+
+    <TABLE border=1><center>
+      <TR>
+        <TH>Platform</TH>
+	<TH>Software</TH>
+	<TH>Version</TH>
+        <TH>Archived Sources</TH>
+      </TR>
+
+      <TR>
+        <TD rowspan=2>SGI</TD>
+	<TD> 
+	  <A HREF=http://www.sgi.com/developers/technology/irix.html>
+	    Irix
+	  </A>
+	</TD>
+	<TD>6.5</TD>
+        <TD rowspan=2>Not Available</td>
+      </TR>
+      
+      <TR>
+        <TD>
+          <A HREF="http://www.sgi.com/developers/devtools/languages/mipspro.html">
+            MIPSpro compilers
+          </A>
+        </TD>
+        <TD> 7.3.1.1m </TD>
+      </TR>
+
+      <TR>
+        <TD rowspan=2>Linux</TD>
+	<TD>
+	  <A HREF="http://www.kernel.org">
+            Kernel
+	  </A> 
+        </TD>
+        <TD>
+          <A HREF=http://www.kernel.org/pub/linux/kernel/v2.2/linux-2.2.14.tar.gz>
+            2.2.14
+          </A>
+        </TD>
+        <TD rowspan=8>
+          <A HREF=http://www.cs.utah.edu/~moulding/ThirdParty.src.tar.gz>
+            ThirdParty.src.tar.gz
+          </A>
+        </TD>
+      </TR>
+
+      <TR>
+        <TD> 
+          <A HREF="http://www.gnu.org/software/gcc/gcc.html">
+            GCC
+          </A>
+        </TD>
+        <TD> 
+          <A HREF="ftp://gcc.gnu.org/pub/gcc/releases/gcc-2.95.2/gcc-2.95.2.tar.gz">
+            2.95.2
+          </A>
+        </TD>
+      </TR>
+
+      <TR>
+        <TD rowspan=6> SGI and Linux </TD>
+        <TD>
+          <A HREF=http://dev.scriptics.com/software/tcltk/8.3.html>
+            Tcl
+          </A>
+        </TD>
+        <TD>
+          <A HREF=http://dev.scriptics.com/download/tcl/tcl8_3/tcl8.3.2.tar.gz>
+            8.3.2
+          </A>
+        </TD>
+      </TR>
+
+      <TR>
+        <TD>
+          <A HREF=http://dev.scriptics.com/software/tcltk/8.3.html>
+            Tk
+          </A>
+        </TD>
+        <TD>
+          <A HREF=http://dev.scriptics.com/download/tcl/tcl8_3/tk8.3.2.tar.gz>
+            8.3.2
+          </A>
+        </TD>
+      </TR>
+
+      <TR>
+        <TD>
+          <A HREF=http://www.tcltk.com/itcl>
+            [incr Tcl] and [incr Tk]
+          </A>
+        </TD>
+        <TD>
+          <A HREF=http://dev.scriptics.com/ftp/itcl/itcl3.1.0.tar.gz>
+            3.1.0
+          </A>
+        </TD>
+      </TR>
+
+      <TR>
+        <TD>
+          <A HREF="http://www.tcltk.com/blt">
+            BLT
+          </A>
+        </TD>
+        <TD>
+          <A HREF="ftp://tcltk.sourceforge.net/pub/tcltk/blt/BLT2.4u.tar.gz">
+            2.4u
+          </A>
+        </TD>
+      </TR>
+
+      <TR>
+        <TD>
+          <A HREF="http://www.gnu.org/software/make/make.html">
+            GNU make
+          </A>
+        </TD>
+        <TD>
+          <A HREF="ftp://ftp.gnu.org/gnu/make/make-3.79.1.tar.gz">
+            3.79.1
+          </A>
+        </TD>
+      </TR>
+
+      <TR>
+        <TD>
+          <A HREF="http://xml.apache.org/xerces-c/index.html">
+            Xerces-C
+          </A>
+        </TD>
+        <TD>
+          <A HREF=http://xml.apache.org/dist/xerces-c/stable/archives/Xerces-C_1_1_0/Xerces-C-src_1_1_0.tar.gz>
+            1.1.0
+          </A>
+        </TD>
+      </TR>
+    </TABLE>
+
+<p class="head"><a name="Installing">Installing SCIRun</a></p>
+    <p class="firstpara">
+      <b>1) Choose a mechanism for obtaining the SCIRun source tree.</b>
+    </p>
+
+    <p class="firstpara">
+      If you have access to the SCIRun CVS repository (i.e. you are
+      a student or staff member of the SCI Institute), then click <a
+      href="http://www.sci.utah.edu/scirun_docs/doc/ReferenceGuide/cvs_info.html">here</a>.
+    </p>
+
+    <p class="firstpara">
+      Otherwise, you will have to get a tarball distribution file from
+      the SCI Institute under a non-disclosure agreement (NDA).
+      Please contact the institute's assistant director <a
+      href=mailto:gjones@cs.utah.edu>Greg Jones</a> for 
+      information about signing an NDA to acquire the SCIRun PSE
+      software.
+    </p>
+
+    <p class="firstpara">
+      Note: an open source software license is in the
+      works and will be available soon.
+    </p>
+
+    <p class="firstpara">
+      <b>2) Choose an install directory for the root of the SCIRun source
+      tree.</b>
+    </p>
+      
+    <p class="firstpara">
+      Change directories to the chosen directory.  Depending on how
+      SCIRun will be obtained, either a) unzip and
+      untar the SCIRun source tree, or b) checkout the SCIRun source
+      tree from the CVS repository.
+    </p>
+
+    <p class="firstpara">
+      There is no "make install" step in the build process, so
+      where ever SCIRun is untared or checked-out to is where SCIRun will be
+      installed.
+    </p>
+
+    <p class="firstpara">
+      The following are example installation transcripts:
+    </p>
+    <pre class="example">cd /usr/local/contrib
+gunzip PSE.tar.gz
+tar xvf PSE.tar
+    </pre>
+    <pre class="example">cd /usr/local/contrib
+cvs checkout PSE
+    </pre>
+    <p class="firstpara"> 
+      The root of the resulting PSE source tree will be referred to 
+      as <i><b><font color=green>PSE_TOP</font></b></i> from now on.
+      The <i><b><font color=green>PSE_TOP</font></b></i> for the above
+      examples would be "/usr/local/contrib/PSE" .
+    </p>
+
+
+<p class="head"><a name="Building">Building SCIRun</a></p>
+  <p class="firstpara">
+    <b>1) Make sure that the system setup matches the 
+    <A HREF="#Requirements">system requirements</A>.</b>
+  </p>
+
+  <p class="firstpara"
+    Verify that the environment variables (i.e. PATH
+    and LD_LIBRARY_PATH) are set to use the required
+    programs and libraries.
+  </p>
+
+  <p class="firstpara">
+    See <a href="#ThirdParty">Third Party Software Information</a>
+    on installing and building the required third party
+    software.
+  </p>
+
+  <p class="firstpara">
+    <b>2) Run configure.</b>
+  </p>
+  <p>
+    From the <i><b><font color=green>PSE_TOP</font></b></i>/src
+    directory type:
+  </p>
+
+  <pre class="example">configure CONFIGURE_OPTIONS</pre>
+
+  <p class="firstpara">
+    Where CONFIGURE_OPTIONS are one or more of 
+    <a href="makefiles.html#configure">these</a>.<br><br>
+    An example configure command:
+  </p>
+
+  <pre class="example">configure --enable-package="SCIRun Uintah BioPSE" \
+	  --with-tcl=/usr/local/scirun_thirdparty \
+	  --with-xerces=/usr/local/scirun_thirdparty/lib 
+  </pre>
+
+  <p class="firstpara">	
+    The example assumes that the indicated third party software 
+    was installed in /usr/local/scirun_thirdparty.
+  </p>
+
+  <p class="firstpara">   
+    <b>3) Run GNU make.</b>
+  </p>
+
+  <p class="firstpara">
+    From the <i><b><font color=green>PSE_TOP</font></b></i>/src
+    directory type:
+  </p>
+
+  <pre class="example">make</pre>
+
+<p class="head"><a name="RunningPSE">Running SCIRun</a></p>
+    <P class="firstpara">
+      After a successful build, there will be  an executable in
+      the <i><b><font color=green>PSE_TOP</font></b></i>/src directory named:
+    </P>
+
+    <pre class="example">pse
+    </pre>
+
+    <p class="firstpara">
+      Running this will open the SCIRun network editor window and start
+      a console (called the PSE console) in the shell where pse was
+      started from.
+    </p>   
+
+    <p class="firstpara">
+      If the window does not appear, note any errors
+      displayed in the PSE console and see the getting
+      help section below.  Of course, it might just be
+      hiding behind other windows on the desktop!
+    </p>
+
+
+<p class="head"><a name="AdditionalDocs">Additional Documentation</a></p>
+    <p class="firstpara">
+      Additional Documentation about SCIRun can be obtained on
+      the web at:
+    </p>
+
+    <p class="firstpara">
+      <A HREF="http://www.sci.utah.edu/scirun_docs/doc">
+        <TT>http://www.cs.utah.edu/scirun_docs/doc</TT>
+      </A>
+    </p>
+
+
+<p class="head"><a name="GettingHelp">Getting Help</a></p>
+    <p class="firstpara">
+      There is a mailing list available for asking questions about
+      using SCIRun or to get help with resolving a problem.  To subscribe to
+      the mailing list, send email to:
+    </p>
+
+    <p class="firstpara">
+      <TT><A HREF="mailto:majordomo@cs.utah.edu">majordomo@cs.utah.edu</A></TT>
+    </p>
+
+    <p class="firstpara">
+      with the following in the body of the message:
+    </p>
+
+    <pre class="example">subscribe scirun-develop
+    </pre>
+
+    <p class="firstpara">
+      To use the mailing list, simply send your question or problem
+      as an email to the list:
+    </p>
+
+    <P>
+      <A HREF="mailto:scirun-develop@cs.utah.edu"><TT>scirun-develop@cs.utah.edu</TT></A>
+    </P>
+
+    <P>
+      To aid in problem resolution, include a verbatim copy of the error(s) 
+      displayed (if any).  Also include a short description of what you
+      we're doing (running a network, building the tree, etc.) and which
+      version of the PSE you have (PSE 1.0 beta).
+    </P>
+
+<p class="head"><a name="ThirdParty">Third Party Software Information</a></p>
+    <p class="firstpara">
+      The following information may help expedite the process of
+      installing the required third party software.  It is not
+      intended to replace the installation instructions provided with
+      the software, only to supplement them.  Please read the
+      build instructions for each distribution before attempting to
+      build.
+    </p>
+
+    <p class="firstpara">
+      This section does not apply to the installation and upgrade of
+      the OS and compilers, as those topics are quite involved.
+    </p>
+
+<p class="subhead">Installation Location of Third Party Software</p>
+    <p class="firstpara">
+      SCIRun can easily be used with existing instances of the
+      required third party software, regardless of where it is
+      installed.  However, it is recommended that all the
+      required third party software be installed into a centralized
+      location, to prevent conflicts with other software, if it is not yet
+      already installed.
+    </p>
+    
+    <p class="firstpara">
+      For example, install all the third party software into the
+      directory called "/usr/local/contrib/scirun_stuff" such that
+      after installing all the distributions, the directories have the
+      following structure:
+    </p>
+
+    <pre class="example">/usr/local/contrib/scirun_stuff/src/tcl8.3.2
+/usr/local/contrib/scirun_stuff/src/tk8.3.2
+/usr/local/contrib/scirun_stuff/src/itcl3.1.0
+/usr/local/contrib/scirun_stuff/src/blt2.4u
+/usr/local/contrib/scirun_stuff/src/xerces-c1_1
+/usr/local/contrib/scirun_stuff/src/make-3.79.1
+/usr/local/contrib/scirun_stuff/man
+/usr/local/contrib/scirun_stuff/lib
+/usr/local/contrib/scirun_stuff/bin
+/usr/local/contrib/scirun_stuff/include
+    </pre>
+
+    <p class="firstpara">
+      Where all the executable binaries are in the /bin directory, all
+      the shared object binaries are in the /lib directory and all 
+      the header files are in the /include directory.
+    </p>
+        
+    <p class="subhead">Configure Options for Third Party Software</p>
+      
+    <p class="firstpara">
+      The following represent the recommended configure
+      commands for the indicated software distributions.
+    </p>
+
+    <p class="firstpara">
+      NOTE: <i><b><font color=green>INST_DIR</font></b></i> represents
+      the chosen installation directory for the indicated software
+      distribution.  <i><b><font color=green>INST_DIR</font></b></i>
+      would be "/usr/local/contrib/scirun_stuff" for the example given
+      above. 
+    </p>
+
+    <p class="firstpara">
+      <b>Tcl distributions</b>
+    </p>
+
+    <p class="firstpara">
+      For Tcl:
+    </p>
+    <pre class="example">configure --enable-shared \
+          --prefix=<i><b><font
+	  color=green>INST_DIR</font></b></i>
+    </pre>
+
+    <p class="firstpara">
+      For Tk:
+    </p>
+    <pre class="example">configure --enable-shared \
+	  --prefix=<i><b><font color=green>INST_DIR</font></b></i> \
+          --with-tcl=<i><b><font 
+	  color=green>INST_DIR</font></b></i>/src/tcl8.3.2/unix
+    </pre>
+
+    <p class="firstpara">
+      For [incr Tcl] and [incr Tk]:
+    </p>
+    <pre class="example">configure --enable-shared \
+	  --prefix=<i><b><font color=green>INST_DIR</font></b></i> \
+          --with-tcl=<i><b><font color=green>INST_DIR</font></b></i>/lib \
+          --with-tk=<i><b><font color=green>INST_DIR</font></b></i>/lib
+    </pre>
+      
+    <p class="firstpara">
+      For BLT:
+    </p>
+    <pre class="example">configure --enable-shared \
+	  --prefix=<i><b><font color=green>INST_DIR</font></b></i> \
+	  --with-tcl=<i><b><font color=green>INST_DIR</font></b></i>/lib \
+	  --with-tk=<i><b><font color=green>INST_DIR</font></b></i>/lib \
+	  --with-cc=cc
+    </pre>
+
+    <p class="firstpara">
+      <b>GNU make</b>
+    </p>
+
+    <pre class="example">configure --prefix=<i><b><font
+		 color=green>INST_DIR</font></b></i>
+    </pre>
+    
+
+    <p class="firstpara">
+      <b>Xerces-C</b>
+    </p>
+
+    <p class="firstpara">
+      On SGI machines:
+    <p>
+    <pre class="example">runConfigure -pirix -ccc -xCC \
+             -minmem -nfileonly -tnative -rpthread
+    </pre>
+
+    <p class="firstpara">
+      On Linux machines:
+    </p>
+    <pre class="example">runConfigure -plinux -cgcc -xg++ \
+             -minmem -nfileonly -tnative -rpthread
+    </pre>
+
+<p class="subhead">Environment Variables</p>
+    <p class="firstpara">
+      Once the third party software is properly installed, set or edit 
+      environment variables to use those executables and libraries.
+    </p>
+
+    <p class="firstpara">
+      Usually, depending on the startup shell being used, there are two
+      environment variables that may need to be edited: one defining the
+      search path for executables and the other defining the search path
+      for libraries.  Edit (or set) those variables, for the shell being
+      used, to include the third party executables located in the /bin
+      directory(s) and to include the the third party libraries located
+      in the /lib directory(s).
+    </p>
+
+    <p class="firstpara">
+      As before, <i><b><font color=green>INST_DIR</font></b></i> represents
+      the chosen installation directory.
+    </p>
+
+    <p class="firstpara">
+      For csh or tcsh:
+    </p>
+
+    <pre class="example">setenv PATH <i><b><font color=green>INST_DIR</font></b></i>/bin:$PATH</pre>
+    <pre class="example">setenv LD_LIBRARY_PATH <i><b><font color=green>INST_DIR</font></b></i>/lib:$LD_LIBRARY_PATH</pre>
+
+    <p class="firstpara">
+      For bash or ksh:
+    </p>
+
+    <pre class="example">export PATH=<i><b><font color=green>INST_DIR</font></b></i>/bin:$PATH</pre>
+    <pre class="example">export LD_LIBRARY_PATH=<i><b><font color=green>INST_DIR</font></b></i>/lib:$LD_LIBRARY_PATH</pre>
+
+    <p class="firstpara">
+      Note that if the PATH and LD_LIBRARY_PATH variables were not already set,
+      then the trailing :$PATH and/or :$LD_LIBRARY_PATH are not needed and may
+      cause the command to fail.
+    </p>
+
+    <p class="firstpara">
+      Also, for machines using rld (e.g. SGI machines) the environment 
+      variable named above as LD_LIBRARY_PATH may need to changed to
+      LD_LIBRARY32_PATH or LD_LIBRARY64_PATH depending upon machine's
+      default ABI (Application Binary Interface).
+    </p>
+
+
+
+
+
+
+
+

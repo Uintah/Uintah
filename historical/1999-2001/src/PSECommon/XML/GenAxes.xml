@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/ReferenceGuide/component.dtd">
+
+<component name="GenAxes" category="Visualization">
+  <overview>
+    <authors>
+      <author>David Weinstein</author>
+    </authors>
+    <summary>Summary not available yet.</summary>
+    <description>
+      <p>Version Date: Mar. 1995</p><p>Version: 1.0</p>
+    </description>
+  </overview>
+  <io>
+    <outputs>
+      <port>
+        <name>Axes</name>
+        <datatype>PSECore::Geometry</datatype>
+	<description>
+          <p>
+            A bunch of triangles that make a set of axes.
+          </p>
+        </description>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

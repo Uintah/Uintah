@@ -1,0 +1,342 @@
+    <P>
+      The most difficult part of getting the PSE built has
+      historically been the "tcl stuff".  This is due in part
+      because the PSE depends on exact tcl versions and on a
+      "correct" tcl installation, but also because of annoying
+      bugs in the tcl distributions.
+    </P>
+
+    <P>
+      Because of these problems we've included this section
+      to, hopefully painlessly, guide you through the process.
+    </P>   
+
+    <P>
+      Since the BLT package is not required to have an exact
+      version (in fact, the only obtainable version is the
+      latest listed on the blt website - which changes very
+      frequently), we cannot guarentee that the blt distribution
+      will work as described below.  However, we have a lot
+      of experience with these packages and may be able to
+      assist you if anything goes awry.
+    </P>
+
+    <P>
+      The configure and installation steps are very important.
+      Not configuring and installing as indicated will cause
+      the PSE configure and build to fail.
+    </P>   
+
+    <P>
+      Be sure to configure, build and install each package
+      before the next, i.e. first tcl, then tk, then itcl/itk
+      and finally blt.
+    </P>
+
+    <OL>
+      <LI>
+	<P>
+	  Get the tcl distributions (tcl, tk, itcl/itk
+	  and blt).  To assist in locating the distributions, 
+	  we've included the URL's to them in the 
+          <A HREF="#System Requirements">system requirements section</A>.
+          You can also find them in our 
+          <a HREF="#archives">archives</a>.
+
+	</P>
+      </LI>
+
+      <LI>
+	<P>
+	  Unzip and untar all distributions into a
+	  place where you would like to build them.  It doesn't 
+	  necessarily have to be the installation location.
+	  an example location is /usr/local/contrib/tcl/src:
+	</P>
+
+	<P>
+	  <TT>
+	    /usr/local/contrib/tcl/src/tcl8.0.4<BR>
+            /usr/local/contrib/tcl/src/tk8.0.4<BR>
+            /usr/local/contrib/tcl/src/itcl3.0.1<BR>
+            /usr/local/contrib/tcl/src/blt2.4t
+	  </TT>
+	</P>
+	
+	<P>
+	  We'll call this location TCL_SRC from now on.
+	</P>
+
+      </LI>
+
+      <LI>
+	<P>
+	  Configure the distributions for a "correct" installation
+	</P>
+
+	<P>
+	  Configure the tcl, tk, itcl/itk, and blt distributions as follows
+	  (Note: INST_DIR is the location of the /lib and /bin dirs where
+	  you want the final libraries and binaries to be installed, NOT
+	  including /lib or /bin.  More details about INST_DIR are below):
+	</P>     
+
+	<P>
+	  <TT>
+	    cd TCL_SRC/tcl8.0.4/unix<BR>
+            configure --enable-shared --prefix=INST_DIR
+	  </TT>
+	</P>     
+
+	<P>
+          <TT>
+	    cd TCL_SRC/tk8.0.4/unix<BR>
+            configure --enable-shared --prefix=INST_DIR --with-tcl=TCL_SRC/tcl8.0.4/unix
+	  </TT>      
+	</P>
+
+	<P>
+	  <TT>cd TCL_SRC/itcl3.0.1<BR>
+          configure --enable-shared --prefix=INST_DIR \<BR>
+	  --with-tcl=INST_DIR/lib --with-tk=INST_DIR/lib
+	  </TT>
+	</P>
+
+	<P>
+	  <TT>cd TCL_SRC/blt2.4t<BR>
+          configure --enable-shared --prefix=INST_DIR \<BR>
+          --with-tcl=INST_DIR/lib \<BR>
+          --with-tk=INST_DIR/lib \<BR>
+          --with-cc=cc
+	  </TT>
+	</P>
+
+	<P>
+	  Where INST_DIR is the location of the /lib and /bin dirs where
+	  you want the final libraries and binaries to be installed, NOT
+	  including /lib or /bin.  For example, the following:
+	</P>   
+
+	<P>
+          <TT>--prefix=/usr/local/contrib</TT>
+	</P>
+
+	<P>
+	  indicates that the /lib and /bin locations for the example tcl
+	  install will be:
+	</P>   
+
+	<P>
+          <TT>/usr/local/contrib/lib</TT> and
+          <TT>/usr/local/contrib/bin</TT>
+	</P>
+
+	<P>
+	  INST_DIR must be a full, absolute path.  If you build and install
+	  the tcl distributions into your home directory, do not use ~ to
+	  abbreviate the paths.
+	</P>
+      </LI>
+
+      <LI>
+	Edit some files
+
+	<UL>
+	  <LI>
+	    <P>
+	      SGI only!
+	    </P>
+
+	    <P>
+	      Edit each of the following makefiles:
+	    </P>
+
+	    <P>
+	      <TT>
+		TCL_SRC/tcl8.0.4/unix/Makefile<BR>
+		TCL_SRC/tk8.0.4/unix/Makefile<BR>
+		TCL_SRC/itcl3.0.1/itcl/unix/Makefile<BR>
+		TCL_SRC/itcl3.0.1/itk/unix/Makefile<BR>
+		TCL_SRC/blt2.4t/src/shared/Makefile
+	      </TT>
+	    </P>
+
+	    <P>
+              In each makefile find this line:
+	    </P>            
+
+	    <P>
+	      <TT>SHLIB_LD = <font color=red><b>ld -32</b></font> -shared -rdata_shared <font color=red><b>-rpath /usr/local/lib</b></font></TT>
+	    </P>
+
+            <P>
+	      and change it to:
+	    </P>
+
+	    <P>
+	      <TT>
+		SHLIB_LD = <font color=red><b>ld -YOUR_ABI</b></font> -shared -rdata_shared <font color=red><b>-rpath INST_DIR</b></font>
+	      </TT>
+	    </P>
+  
+	    <P>
+	      where YOUR_ABI is your system's default ABI (applications binary
+              interface).  It is one of 32, n32 or 64.  Look in the file
+              /etc/compiler.defaults.  In it there will be a line similar to:
+	    </P>
+
+            <P>
+	      <TT>-DEFAULT:abi=n32:isa=mips4:proc=r10k</TT>
+	    </P>
+	    
+	    <P>
+              This example says the default ABI is n32 ("abi=n32").  If you cannot
+              find this line or the file, and you don't know your system's ABI,
+              assume that it's n32.
+	    </P>
+
+	  </LI>
+	  <LI>
+	    Linux only:
+
+            <P>
+	      Edit the following source file:
+	    </P>
+
+            <P>
+	      <TT>TCL_SRC/tcl8.0.4/generic/tclPosixStr.c</TT>
+	    </P>
+
+            <P>
+	      Search for the following two lines:
+	    </P>
+
+	    <P>
+	      <CODE>
+		case ENOTSUP: return "ENOTSUP";<BR>
+		case ENOTSUP: return "operation not supported";
+	      </CODE>
+	    </P>
+
+            <P>
+	      and comment them out:
+	    </P>
+
+	    <P>
+	      <CODE>
+		/*case ENOTSUP: return "ENOTSUP";*/;<BR>
+		/*case ENOTSUP: return "operation not supported";*/
+	      </CODE>
+	    </P>
+	  </LI>
+	</UL>     
+      </LI>
+
+      <LI>
+	Build and install the distributions.
+ 
+	<P>
+	  These commands will build and install tcl, tk, itcl/itk, and blt:
+	</P>
+
+        <P>
+	  <TT>
+	    cd TCL_SRC/tcl8.0.4/unix<BR>
+            make<BR>
+            make -k install
+	  </TT>
+	</P>
+
+        <P>
+	  <TT>
+            cd TCL_SRC/tk8.0.4/unix<BR>
+            make<BR>
+            make -k install
+	  </TT>
+	</P>
+
+        <P>
+	  <TT>
+            cd TCL_SRC/itcl3.0.1<BR>
+            make<BR>
+            make -k install
+	  </TT>
+	</P>
+
+        <P>
+	  <TT>
+            cd TCL_SRC/blt2.4t<BR>
+            make<BR>
+            make -k install
+	  </TT>
+	</P>
+      </LI>
+
+      <LI>
+	Finally, set your paths.
+
+	<UL>
+	  <LI>
+	    <P>
+	      csh commands:
+	    </P>
+
+	    <P>
+	      <CODE>
+		setenv LD_LIBRARY_PATH INST_DIR/lib:$LD_LIBRARY_PATH<BR>
+		setenv PATH INST_DIR/bin:$PATH
+	      </CODE>
+	    </P>
+	  </LI>
+	  <LI>
+	    <P>
+	      sh commands:
+	    </P>
+	    
+	    <P>
+	      <CODE>
+		export LD_LIBRARY_PATH=INST_DIR/lib:$LD_LIBRARY_PATH<BR>
+		export PATH=INST_DIR/bin:$PATH
+	      </CODE>
+	    </P>
+	  </LI>
+	</UL>
+	<P>
+	  <EM>SGI Note:</EM> In the previous commands,
+	  LD_LIBRARY_PATH may actually be LD_LIBRARYN32_PATH
+	  or LD_LIBRARY64_PATH if your system's default ABI
+	  is n32 or 64.
+	</P>
+
+	<P>
+	  You can verify that your tcl installation is correct by
+	  typing the following:
+	</P>
+
+	<P>
+	  <CODE>
+            which tclsh8.0<BR>
+            which wish8.0<BR>
+            which itclsh3.0<BR>
+            which itkwish3.0<BR>
+            which bltwish24
+	  </CODE>
+	</P>
+
+	<P>
+	  if they all report that the executables being used are in
+	</P>
+
+	<P>
+          <TT>INST_DIR/bin</TT>
+	</P>
+
+	<P>
+	  Then your environment variables seem to be correct, and the
+	  build most likely worked.
+	</P>
+      </LI>
+    </OL>
+
+  </BODY>
+</HTML>

@@ -1,0 +1,307 @@
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="Erik Jorgensen">
+   <link rel=stylesheet type="text/css" href="http://www.sci.utah.edu/scirun_docs/doc/doc_styles.css">
+   <title>Things You Need To Know About How To Build the PSE</title>
+</head>
+<body>
+<a href="http://www.sci.utah.edu"><img style="margin-left:-2em" src="/images/SCI_logo.gif" border="0" height="66" hspace=10 width="150"></a>
+
+<p class="title">Things You Need To Know<br>
+About How To Build the PSE</p>
+
+<p class="head">Table of contents</p>
+
+<ol type="1" class="toc">
+<li> <a href="#a">Configuring your environment</a>
+	<ol type="1" class="subtoc">
+	<li> <a href="#aa">Putting stuff on your PATH</a>
+	<li> <a href="#ab">Getting ssh access to csf</a>
+	<li> <a href="#ac">Setting up CVS</a>
+	<li> <a href="#ad">Getting Rid Of Cruft</a>
+	</ol><br>
+
+<li> <a href="#b">Checking out and Building PSE</a>
+	<ol type="1" class="subtoc">
+	<li> <a href="#ba">Log into a build machine</a>
+	<li> <a href="#bb">Checking out the PSE sources with CVS</a>
+	<li> <a href="#bc">Setting up 'use'</a>
+	<li> <a href="#bd">Use [i]Tcl/Tk</a>
+	<li> <a href="#be">Configure the sources</a>
+	<li> <a href="#bf">Build the sources</a>
+	<li> <a href="#bg">Updating and rebuilding the sources</a>
+	</ol><br>
+
+<li> <a href="#c">Starting the PSE</a>
+	<ol type="1" class="subtoc">
+	<li> <a href="#ca">A note about 'use'</a>
+	</ol>
+</ol>
+
+<p class="head"><a name="a">Configuring your environment</a></p>
+
+  <p class="firstpara">Before you can build PSE, you need to appropriately configure your
+  environment.  Most of this requires making changes to your shell rc files
+  (.cshrc, .customs.cshrc, .kshrc, .bashrc or whatever your shell uses).
+  You need only perform these steps once.</p>
+
+  <p class="subhead"><a name="aa">Putting stuff on your PATH</a></p>
+
+  <p class="firstpara">You should edit your shell's rc files and make sure that the following
+  are on your PATH:</p>
+
+  <pre class="example">
+    /usr/local/bin       (for the 'use' and 'ssh' commands)
+    /usr/local/gnu/bin   (for the 'gmake', 'cvs', and 'patch' commands)
+  </pre>
+
+  <p class="nextpara">If you have other versions of these commands on your PATH before the
+  above versions, you may or may not encounter Strange Behavior.</p>
+
+  <p class="subhead"><a name="ab">Getting ssh access to csf</a></p>
+
+  <p class="firstpara">The PSE sources are kept on the C-SAFE server, csf.cs.utah.edu.  You must be able to ssh to this machine in order to acquire the sources.  Most people already have access to this machine.  At a prompt (in these examples, &quot;$&quot; is the prompt), type:</p>
+
+  <pre class="example">
+    $ ssh csf
+  </pre>
+
+  <p class="nextpara">You may be asked for your password, but should successfully be able to log
+  into csf.  If not, go talk to Someone Who Fixes These Things and get it
+  fixed.</p>
+
+  <p class="nextpara">If you hate typing your password all the time, you may optionally add a
+  line like:</p>
+
+  <pre class="example">
+    pico.cs.utah.edu mcq
+  </pre>
+
+  <p>to your ".shosts" file in your home directory, where you substitute the
+  name of the machine on which you're going to be running the CVS command for
+  "pico.cs.utah.edu" and your username for "mcq".  Doing this tells csf
+  (and all other machines on which your home directory is accessible) to
+  allow the named user to have ssh access from the named machine without typing
+  a password.</p>
+
+  <p class="nextpara">There are more complex and "secure" methods to avoid typing a password than
+  an .shosts file, but they're for Weird Security Nuts.</p>
+
+  <p class="subhead"><a name="ac">Setting up CVS</a></p>
+
+  <p class="firstpara">The PSE source tree is managed by CVS.  CVS uses the "ssh" command to
+  access the source repository on csf.cs.utah.edu. You should look in your shell's rc files and arrange for these variables to have these values.</p>
+
+  <p>In csh syntax:</p>
+
+  <pre class="example">
+    setenv CVS_RSH ssh
+    setenv CVSROOT csf.cs.utah.edu:/csafe_noexport/cvs/cvsroot
+  </pre>
+
+  <p>In sh/ksh/bash syntax:</p>
+
+  <pre class="example">
+    export CVS_RSH=ssh
+    export CVSROOT=csf.cs.utah.edu:/csafe_noexport/cvs/cvsroot
+  </pre>
+
+  <p class="subhead"><a name="ad">Getting Rid Of Cruft</a></p>
+
+  <p class="firstpara">Previous versions of SCIRun may cause some
+  troublesome settings to exist in your environment.  To put this
+  issue to rest, you should make sure that the following are **NOT** set
+  by any of your shell's rc files, nor should you run any form of &quot;setup&quot; scripts unless you Really Know What You're Doing.</p>
+
+  <p class="nextpara">The PSE is intended to run correctly without such environmental
+  contamination.  If things in the PSE don't work right, fix the PSE --
+  demanding that weirdo environment variables be set merely to achieve
+  normal PSE behavior is the Wrong Way To Solve The Problem.  If you
+  have problems that you think you want to set an environment variable to
+  fix, which are things anyone but you will normally want to have set, you
+  should go talk to McQ and he'll work configure magic to eliminate
+  the need for the variable.</p>
+
+  <p class="nextpara">The following should NOT BE SET in your shell rc files.  EVER.  PERIOD.
+  (Unless you're Very Special, in which case you wouldn't be reading this
+  file):</p>
+
+  <pre class="example">
+    TCL_LIBRARY
+    TK_LIBRARY
+    ITCL_LIBRARY
+    ITK_LIBRARY
+    PACKAGE_PATH
+  </pre>
+
+  <p>Also, nothing to do with Tcl, Tk, or iTcl, PSECore, SCICore, or any
+  PSE package should be on any of these paths:</p>
+
+  <pre class="example">
+    PATH
+    LD_LIBRARY_PATH
+    LD_LIBRARYN32_PATH
+    LD_LIBRARY64_PATH
+  </pre>
+
+  <p>Having any of the above defined is Just Asking For Trouble.</p>
+
+<p class="head"><a name="b">Checking out and Building PSE</a></p>
+
+  <p class="subhead"><a name="ba">Log into a build machine</a></p>
+
+  <p class="firstpara">The best build machine is pico.cs.utah.edu (formerly rapture.cs.utah.edu), a 32-processor SGI R10k machine.  If you can't log into pico, epic.cs.utah.edu is a good interim solution.  You'll likely eventually want
+  to get an account on pico.</p>
+
+  <pre class="example">
+     $ ssh pico
+  </pre>
+
+  <p class="subhead"><a name="bb">Checking out the PSE sources with CVS</a></p>
+
+  <p class="firstpara">The PSE sources are managed by the CVS version control system.  Go to whatever directory you want to work in and check out the sources:</p>
+
+  <pre class="example">
+     $ cd myWorkingDirectory
+     $ cvs checkout PSE
+
+     [ lots of files go by]
+  </pre>
+
+  <p class="nextpara">When you're done, if you go into the PSE directory, you should see:</p>
+
+  <pre class="example">
+     $ cd PSE
+     $ ls
+     CVS       prebuilt  src
+  </pre>
+
+  <p class="subhead"><a name="bc">Setting up 'use'</a></p>
+
+  <p class="nextpara">Building the PSE requires that you have a specific version of Tcl/Tk and [incr Tcl] available.  Because you may be building the PSE for several
+  different ABIs on several different platforms, it is not sufficient to
+  "once and for all" configure your environment for the appropriate versions
+  of [i]Tcl/Tk.</p>
+
+  <p class="nextpara">The 'use' command will let you easily switch among available pre-built versions of [i]Tcl/Tk as you work.  If curious, you can read about 'use' on its web page (under construction at this time):</p>
+
+  <pre class="example">
+    http://www.cs.utah.edu/~mcq/doc/use.html
+  </pre>
+
+  <p class="nextpara">You need to add a line that enables 'use' to modify your shell's environment.  You should set this in your shell's rc files.  In csh, this
+  line is:</p>
+
+  <pre class="example">
+    alias use 'eval `/usr/local/bin/use \!*`'
+  </pre>
+
+  <p class="nextpara">In sh/ksh/bash, add the shell function to the appropriate rc file:</p>
+
+  <pre class="example">
+    use()   {
+            eval `/usr/local/bin/use $*`
+            }
+  </pre>
+
+  <p class="nextpara">If you type 'use' at a command prompt and do not see a message which
+  begins "# WARNING", you have correctly configured your shell for the 'use'
+  command.</p>
+
+  <p class="subhead"><a name="bd">Use [i]Tcl/Tk</a></p>
+
+  <p class="firstpara">In order to properly function, the PSE requires that Tcl/Tk 8.0.4 and
+  [incr Tcl] 3.0.1 be available in your environment.  The command:</p>
+
+  <pre class="example">
+     $ use itcltk
+  </pre>
+
+  <p>will achieve this.  When building for the 64-bit ABI on R10k boxes, you'll
+  want to 'use itcltk64' instead, to get the version of [i]Tcl/Tk built for
+  that ABI.</p>
+
+  <p class="subhead"><a name="be">Configure the sources</a></p>
+
+  <p class="firstpara">Before you can build the sources, you must "configure" the source tree,
+  which examines your build platform and customizes the PSE's Makefiles
+  for your machine.</p>
+
+  <p class="nextpara">Go into the PSE/src directory and run the "configure" script:</p>
+
+  <pre class="example">
+    $ cd PSE/src
+    $ ./configure
+  </pre>
+
+  <p class="nextpara">You may optionally want to pass options to configure as described
+  <a href="configure.html">here</a> to enable for example the SCIRun
+  or DaveW packages.  The Uintah package is built by default. The names
+  of packages are strung together, space-delimited: </p>
+  
+  <pre class="example">
+    $ cd PSE/src
+    $ ./configure --enable-package="SCIRun Uintah DaveW"
+  </pre>
+
+  <p class="subhead"><a name="bf">Build the sources</a></p>
+
+  <p class="firstpara">You must build the sources with the 'gmake' command.  Ordinary 'make's
+  won't do.  From the PSE/src directory:</p>
+
+  <pre class="example">
+    $ gmake 
+  </pre>
+
+  <p class="nextpara">If you are doing the build on a multiprocessor machine, you can speed up the compile by using the j flag to direct the compiler to parallelize the build on, say 10 processors:</p> 
+
+  <pre class="example">
+    $ gmake -j 10 
+  </pre>
+
+  <p class="subhead"><a name="bg">Updating and rebuilding the sources</a></p>
+
+  <p class="firstpara">Typically the fastest way to retrieve and build all the changes to
+  the source tree is via an update rather than a complete checkout. </p>
+ 
+  <pre class="example">
+    $ cvs update -d 
+  </pre>
+  
+<p class="head"><a name="c">Starting the PSE</a></p>
+
+  <p class="firstpara">When finished building, you'll have a "pse" binary in PSE/src which you can run to start the PSE.  This binary has hard-coded paths to the locations of its components, including the PSE packages, the [i]Tcl/Tk libraries and files, and others.</p>
+
+  <p>You can run the PSE simply by running 'pse' in the PSE/src directory:</p>
+
+  <pre class="example">
+    $ cd PSE/src
+    $ ./pse
+  </pre>
+
+  <p class="subhead"><a name="ca">A note about 'use'</a></p>
+
+  <p class="firstpara">The first time that the 'use' command is run on a machine, it creates a
+  link from /tmp/opt/... to the actual [i]Tcl/Tk package.  The PSE requires
+  that this link be present in order to run (its hard-coded path to the
+  [i]Tcl/Tk libraries points to this link).</p>
+
+  <p class="nextpara">If you're running the PSE on a machine for the first time since it has been
+  rebooted, this link will not exist and you must execute "use itcltk" to
+  recreate it.</p>
+
+  <p class="nextpara">You normally need not execute "use itcltk" before each run of the PSE.</p>
+
+  <p class="nextpara">If you only ever build with the default (n32) ABI, you might consider
+  adding the line "use itcltk" (and perhaps also "use gmake") to your 
+  shell's rc files, to avoid thinking about such things.  The disadvantage to doing this is that "itcltk" may not be compiled for some cs department architectures, causing 'use' to
+  report an error when logging into those machines.</p>
+
+<center>
+<hr>
+<p><font size=-1><a href="http://www.sci.utah.edu">Scientific Computing and Imaging Institute</a> &#149; <a href="http://www.utah.edu">University of Utah</a> &#149; (801) 585-1867</font></p>
+</center>
+
+</body>
+</html>
