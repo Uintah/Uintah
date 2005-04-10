@@ -1,0 +1,146 @@
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+#         ********   ***                                                */
+#      *******  **  ***       ***      ***                 SparseLib++  */
+#       *****      ***     ******** ********            (c) 1993-1995   */
+#        *****    ***     ******** ********                   R. Pozo   */
+#   **  *******  ***   **   ***      ***                 K. Remington   */
+#    ********   ********                                 A. Lumsdaine   */
+#+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+#
+#          S p a r s e L i b  ++     m a k e f i l e . d e f
+#
+#    Compiler Specific Section:   Edit to reflect your environment
+#-------------------------------------------------------------------------
+#
+#	Macro                 Significance
+#
+#   CCC                   C++ compiler
+#   CCCFLAGS              flags to C++ compiler
+#   CC                    C compiler
+#   CFLAGS                flags to C compiler
+#   LDFLAGS				  libraries 
+#   HASRANLIB             't' if your system has ranlib, 'f' otherwise
+#
+#
+# Some defaults are below for Sun C++, and GNU g++.  Uncomment the 
+# relevant sections.
+#
+#
+
+
+#
+# Support for optional vector-bounds checking:
+#
+# Use -DMV_VECTOR_BOUNDS_CHECK to perform runtime checking of
+#		index bounds. Can be used to create a "debug" and a
+#		a "production" version of MV++ libraries.
+#
+# Support for vectors and matrices of type complex:
+#
+# Use -DCOMPLEX_OSTREAM if your compiler does not provide a predefine
+#			a way to print complex numbers (e.g. cout << u; ) 
+#
+# Define COMPLEX to expand to whatever name your compiler uses for
+#		complex numbers (e.g. g++ 2.7.0 uses templated classes
+#		as per ANSI C++)  Most other compilers use "complex" or
+#		"Complex".
+
+
+
+# IBM xlC  v. 1.1
+#
+#CCC             = xlC
+#CC              = xlc
+#CCCFLAGS        = -+ -O -DCOMPLEX=complex
+#LDFLAGS         = $(SPARSELIB_DIR)/lib/libsparse.a $(SPARSELIB_DIR)/lib/libspblas.a  \
+		  $(SPARSELIB_DIR)/lib/libmv.a -lm -lcomplex
+
+
+
+# Sun C++ 4.0.1 
+#
+#CCC 			= CC
+#CC 				= acc	
+#CCCFLAGS 		= -O +w -DMV_VECTOR_BOUNDS_CHECK -g
+#CCCFLAGS 		=  +w -DMV_VECTOR_BOUNDS_CHECK -g -DCOMPLEX_OSTREAM -DCOMPLEX=complex
+#LDFLAGS			=  $(SPARSELIB_DIR)/lib/libsparse.a $(SPARSELIB_DIR)/lib/libspblas.a  \
+						$(SPARSELIB_DIR)/lib/libmv.a -lm -lcomplex
+
+
+
+# g++ v. 2.6.3
+#
+#CCC 			= g++
+#CC 				= gcc	
+#CCCFLAGS 		=  -Wall -DMV_VECTOR_BOUNDS_CHECK -g -DCOMPLEX=complex
+#LDFLAGS			=   $(SPARSELIB_DIR)/lib/libsparse.a $(SPARSELIB_DIR)/lib/libspblas.a \
+						$(SPARSELIB_DIR)/lib/libmv.a -lm 
+
+# g++ v. 2.7.0
+#
+#CCC 			= g++
+#CC 				= gcc	
+#CCCFLAGS 		=   -DMV_VECTOR_BOUNDS_CHECK -g '-DCOMPLEX=complex<double>' 
+#LDFLAGS			=   $(SPARSELIB_DIR)/lib/libsparse.a $(SPARSELIB_DIR)/lib/libspblas.a \
+						$(SPARSELIB_DIR)/lib/libmv.a -lm 
+
+
+# ranlib available on this system? 't' or 'f'
+HASRANLIB = f
+
+
+
+#------------------------------------------------------------------------------
+
+# My compiler modifications:
+
+
+CCC 			= CC
+CC 				= cc
+CCCFLAGS 		=  -g -n32 -mips3  -DCOMPLEX=complex  -D_NON_TEMPLATE_COMPLEX
+CFLAGS			=  -g -n32 -mips3
+LDFLAGS			=   $(SPARSELIB_DIR)/lib/libsparse.a $(SPARSELIB_DIR)/lib/libspblas.a \
+						$(SPARSELIB_DIR)/lib/libmv.a -lm 
+
+
+
+#-----------------------------------------------------------------------------
+
+
+################################################################
+#                                                              #
+#           Implicit rules: do not modify after here           #
+#                                                              #
+################################################################
+
+
+SPARSELIB_LIB_DIR			= $(SPARSELIB_DIR)/lib
+SPARSELIB_INCLUDE_DIR		= $(SPARSELIB_DIR)/include
+SPARSELIB_MV_DIR			= $(SPARSELIB_DIR)/mv
+SPARSELIB_MV_INCLUDE_DIR	= $(SPARSELIB_MV_DIR)/include
+
+SPARSELIB_A             = $(SPARSELIB_LIB_DIR)/libsparse.a
+SPARSEBLAS_A            = $(SPARSELIB_LIB_DIR)/libspblas.a
+MV_LIB_A				= $(SPARSELIB_DIR)/lib/libmv.a
+
+
+INCLUDES =  -I$(SPARSELIB_INCLUDE_DIR) -I$(SPARSELIB_MV_INCLUDE_DIR)
+
+
+EXENAME     = -o
+OBJ_EXT     = o
+LIB_EXT     = a
+EXE_EXT     =
+
+.SUFFIXES: .c .cc .o
+
+.cc.o:
+	$(CCC) $(CCCFLAGS)  $(INCLUDES) -c $<
+
+.c.o:
+	$(CC) $(CFLAGS) $(INCLUDES) -c $<
+
+.f.o:
+	$(F77)  -c $<
+
+

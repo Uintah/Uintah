@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE Uintah_specification SYSTEM "input.dtd">
+
+<!-- @version: -->
+
+
+<Uintah_specification>
+
+   <Meta>
+	<title>Arches Helium Plume Multi Patch Run</title>
+   </Meta>
+
+   <Time>
+	<maxTime>10.0</maxTime>
+	<initTime>0.0</initTime>
+	<delt_min>0.0001</delt_min>
+	<delt_max>0.01</delt_max>
+	<timestep_multiplier>1.0</timestep_multiplier>
+   </Time>
+
+   <DataArchiver>
+        <filebase>heplumebox.uda</filebase>
+	<outputInterval>0.005</outputInterval>
+	<save label="pressurePS"/>
+        <save label="uVelocitySPBC"/>	
+        <save label="vVelocitySPBC"/>	
+        <save label="wVelocitySPBC"/>	
+        <save label="newCCVelocity"/>
+	<save label="scalarSP"/>
+	<save label="densityCP"/>
+	<save label="viscosityCTS"/>
+	<checkpoint interval="0.01" cycle="2"/>
+   </DataArchiver>
+
+    <PhysicalConstants>
+	<gravity>[-9.8,0,0]</gravity>
+	<ideal_gas_constant>1.0</ideal_gas_constant>
+	<pressure>0.0</pressure>
+    </PhysicalConstants>
+
+    <Grid>
+	<Level>
+	    <Box label="1">
+	        <lower>[0,0,0]</lower>
+	        <upper>[1.,1.,1.]</upper>
+	        <resolution>[100,100,100]</resolution>
+                <extraCells>[1,1,1]</extraCells>
+		<patches>[5,5,5]</patches>
+	    </Box>
+	</Level>
+    </Grid>
+
+
+   <CFD>
+	<!-- ARCHES specification -->
+
+	<ARCHES>
+	    <grow_dt>0.001</grow_dt>
+   	    <nonlinear_solver>picard</nonlinear_solver>
+    	    <turbulence_model>smagorinsky</turbulence_model>
+
+	    <Turbulence>
+		<cf>0.001</cf>
+		<fac_mesh>1.0</fac_mesh>
+		<filterl>0.000001</filterl>
+	    </Turbulence>
+
+	    <Properties>
+		<denUnderrelax>1.0</denUnderrelax>
+	        <ref_point>[10,3,3]</ref_point>
+		<Stream>
+		    <density>0.162059</density>
+		    <temperature>298</temperature>
+		    <enthalpyLoss>0</enthalpyLoss>
+		</Stream>
+		<Stream>
+		    <density>1.184344</density>
+		    <temperature>298</temperature>
+		    <enthalpyLoss>0</enthalpyLoss>
+		</Stream>
+	    </Properties>
+
+	    <BoundaryConditions>
+		<FlowInlet>
+		    <Flow_rate>5.6e-5</Flow_rate>
+		    <MixtureFraction>
+			<Mixfrac>1.0</Mixfrac>
+	            </MixtureFraction>
+		    <TurblengthScale>0.04</TurblengthScale>
+		    <inletType>primary</inletType>
+		    <geom_object>
+		      <box label="inlet">
+			<min>[-4,0.468,0.468]</min>
+			<max>[0,0.532,0.532]</max>
+		      </box>
+		    </geom_object>
+		</FlowInlet>
+		<WallBC>
+		    <geom_object>
+		      <box label="botWall">
+			<min>[-5,-1,-1]</min>
+			<max>[0,2,2]</max>
+		      </box>
+		    </geom_object>
+		</WallBC>
+		<PressureBC>
+		    <flowRate>0</flowRate>
+		    <MixtureFraction>
+			<Mixfrac>0.0</Mixfrac>
+	            </MixtureFraction>
+		    <TurblengthScale>0.04</TurblengthScale>
+		    <RefPressure>0.0</RefPressure>
+		    <geom_object>
+		      <box label="topWall">
+			<min>[1,-1,-1]</min>
+			<max>[3,2,2]</max>
+		      </box>
+		      <box label="posY_xzWall">
+			<min>[0,1,-1]</min>
+			<max>[2,2,2]</max>
+		      </box>
+		      <box label="zeroY_xzWall">
+			<min>[0,-1,-1]</min>
+			<max>[2,0,2]</max>
+		      </box>
+		      <box label="posZ_xyWall">
+			<min>[0,-1,1]</min>
+			<max>[2,2,2]</max>
+		      </box>
+                      <box label="zeroZ_xyWall">	
+			<min>[0,-1,-1]</min>
+			<max>[2,2,0]</max>
+		      </box>
+		    </geom_object>
+		</PressureBC>
+	    </BoundaryConditions>
+
+	    <PhysicalConstants>
+		<gravity>[-9.8,0,0]</gravity>
+		<pressure>0.0</pressure>
+		<viscosity>0.000020</viscosity>
+		<schmidtNo>0.7</schmidtNo>
+	    </PhysicalConstants>
+
+	    <PicardSolver>
+		<max_iter>0</max_iter>	
+		<res_tol>2.0</res_tol>
+
+		<cal_pressure>true</cal_pressure>
+		<PressureSolver>
+		    <ref_point>[10,3,3]</ref_point>
+		    <finite_difference>second</finite_difference>
+		    <linear_solver>petsc</linear_solver>
+		    <LinearSolver>
+			<max_iter>75</max_iter>
+			<res_tol>0.0003</res_tol>
+		        <underrelax>0.97</underrelax>
+		    </LinearSolver>
+		</PressureSolver>
+
+		<cal_momentum>true</cal_momentum>
+		<MomentumSolver>
+		    <finite_difference>second</finite_difference>
+		    <linear_solver>linegs</linear_solver>
+		    <LinearSolver>
+			<max_iter>8</max_iter>
+			<res_tol>0.0003</res_tol>
+			<underrelax>0.9</underrelax>
+		    </LinearSolver>
+		</MomentumSolver>
+
+		<cal_mixturescalar>true</cal_mixturescalar>
+		<MixtureFractionSolver>
+		    <finite_difference>second</finite_difference>
+		    <linear_solver>linegs</linear_solver>
+		    <LinearSolver>
+			<max_iter>6</max_iter>
+			<res_tol>0.0003</res_tol>
+			<underrelax>0.9</underrelax>
+		    </LinearSolver>
+		</MixtureFractionSolver>
+	    </PicardSolver>
+
+        </ARCHES>
+
+    </CFD>
+
+    <MaterialProperties>
+
+	<ARCHES>
+	</ARCHES>
+
+    </MaterialProperties>
+	
+    <!-- Question - how do we want to attach a bc to a region of the grid? -->
+    <PhysicalBC>
+    
+	<ARCHES>
+	</ARCHES>
+
+    </PhysicalBC>
+    
+    <InitialConditions>
+
+	<ARCHES>
+	</ARCHES>
+
+    </InitialConditions>
+
+</Uintah_specification>
