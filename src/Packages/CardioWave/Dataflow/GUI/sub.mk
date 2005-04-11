@@ -27,13 +27,23 @@
 SRCDIR := Packages/CardioWave/Dataflow/GUI
 
 SRCS := \
+	$(SRCDIR)/FieldGetFieldProperty.tcl\
+	$(SRCDIR)/FieldGetMatrixProperty.tcl\
+	$(SRCDIR)/FieldGetNrrdProperty.tcl\
+	$(SRCDIR)/FieldSetFieldProperty.tcl\
+	$(SRCDIR)/FieldSetMatrixProperty.tcl\
+	$(SRCDIR)/FieldSetNrrdProperty.tcl\
+	$(SRCDIR)/CreateParametersBundle.tcl \
+	$(SRCDIR)/CreateString.tcl \
+	$(SRCDIR)/CreateScalar.tcl \
+	$(SRCDIR)/PrintF.tcl \
 	$(SRCDIR)/CreateSimpleMesh.tcl \
 	$(SRCDIR)/HexIntMask.tcl \
 	$(SRCDIR)/ReclassifyInteriorTets.tcl \
 	$(SRCDIR)/RemoveInteriorTets.tcl \
 	$(SRCDIR)/SetupFVMatrix.tcl \
 	$(SRCDIR)/SetupFVM2.tcl \
-  $(SRCDIR)/TimeDataReader.tcl\
+  	$(SRCDIR)/TimeDataReader.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
