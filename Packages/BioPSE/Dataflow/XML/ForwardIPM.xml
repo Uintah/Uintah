@@ -54,8 +54,12 @@
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
-	<name>Dipole</name>
-	<datatype>SCIRun::Field</datatype>
+	<name>Dipole Positions</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+	<name>Dipole Moments</name>
+	<datatype>SCIRun::Matrix</datatype>
       </port>
     </inputs>
 

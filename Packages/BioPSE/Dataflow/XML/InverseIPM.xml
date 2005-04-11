@@ -62,7 +62,11 @@
     <outputs>
       <!-- one of (device port file) -->
       <port>
-	<name>Dipole</name>
+	<name>Dipole Positions</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+	<name>Dipole Moments</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>
