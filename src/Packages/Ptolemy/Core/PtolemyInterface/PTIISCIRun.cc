@@ -229,6 +229,10 @@ Semaphore& Iterate::iterSem()
     return sem_;
 }
 
+
+//Note that if you add this callback at the beginning of a task
+//it is necessary to remove it at the end so it wont modify the static
+//semephore in the future when it is needed again.
 void Iterate::iter_callback(void *data)
 {
 	iterSem().up();
@@ -243,6 +247,8 @@ void Iterate::run()
 	
 	//return only when the viewer is done
 	Viewer* viewer = (Viewer*)JNIUtils::cachedNet->get_module_by_id("SCIRun_Render_Viewer_0");
+	
+	std::cout << "viewer pointer: " << viewer << std::endl;
 	
 	Scheduler* sched = JNIUtils::cachedNet->get_scheduler();
 	sched->add_callback(iter_callback, this);
@@ -285,9 +291,10 @@ void Iterate::run()
 			modGui->set("::" + iterate[j-1] + iterate[j], iterate[j+i+1]);
 			j=j+i+1;
 		}
-
+		
+		//execute all and wait for it to finish
 		gui->eval("updateRunDateAndTime {0}");
-		gui->eval("netedit scheduleall");
+		gui->eval("netedit scheduleall");		
 		iterSem().down();
 		
 		//if you want to save the picture
@@ -303,11 +310,15 @@ void Iterate::run()
 			viewer->mailbox.send(msg1); 
 
 			ViewerMessage *msg2 = scinew ViewerMessage("::SCIRun_Render_Viewer_0-ViewWindow_0");
-			viewer->mailbox.send(msg2); 
+			viewer->mailbox.send(msg2);
+			
+			std::cout << "sending message: " << i << std::endl; 
 		}//else we do not try and save pictures
 		
 	}
-			
+		
+	sched->remove_callback(iter_callback, this);
+		
 	JNIUtils::sem().up();
 }
 
