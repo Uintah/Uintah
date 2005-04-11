@@ -2147,7 +2147,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       psizeNew.copyData(psize);
      
       NCVariable<double> dTdt_create, massBurnFraction_create;  
-      new_dw->allocateTemporary(dTdt_create, patch,Ghost::None,0);
+      new_dw->allocateTemporary(dTdt_create, patch,Ghost::AroundCells,1);
       dTdt_create.initialize(0.);
       dTdt = dTdt_create; // reference created data
 
