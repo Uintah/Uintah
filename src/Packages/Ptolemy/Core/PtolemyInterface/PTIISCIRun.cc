@@ -1,12 +1,10 @@
 // copyright...
+//By Ayla and Oscar
 
 #include <Packages/Ptolemy/Core/PtolemyInterface/PTIISCIRun.h>
 #include <Packages/Ptolemy/Core/PtolemyInterface/JNIUtils.h>
 
 #include <main/sci_version.h>
-
-#include <Dataflow/Comm/MessageTypes.h>		//for mail box stuff
-#include <Dataflow/Comm/MessageBase.h>
 
 #include <Dataflow/Modules/Render/Viewer.h>
 #include <Dataflow/Network/Network.h>
@@ -225,18 +223,30 @@ void AddModule::run()
     JNIUtils::sem().up();
 }
 
+Semaphore& Iterate::iterSem()
+{
+    static Semaphore sem_("iterate ptolemy request semaphore", 0);
+    return sem_;
+}
+
+void Iterate::iter_callback(void *data)
+{
+	iterSem().up();
+}
+
 void Iterate::run()
 {
-	std::string readerName = "SCIRun_DataIO_FieldReader_0";
-	std::string cmapName = "SCIRun_DataIO_ColorMapWriter_0";
-	std::string genName = "SCIRun_Visualization_GenStandardColorMaps_0";
-
-	Module* readptr = JNIUtils::cachedNet->get_module_by_id(readerName);
-	Module* cmap = JNIUtils::cachedNet->get_module_by_id(cmapName);
-	Module* gen = JNIUtils::cachedNet->get_module_by_id(genName);
 	
 	JNIUtils::sem().down();
-    
+	
+	string name;
+	
+	//return only when the viewer is done
+	Viewer* viewer = (Viewer*)JNIUtils::cachedNet->get_module_by_id("SCIRun_Render_Viewer_0");
+	
+	Scheduler* sched = JNIUtils::cachedNet->get_scheduler();
+	sched->add_callback(iter_callback, this);
+	
 	//set the initial parameters
 	Module* modptr;
 	GuiInterface* modGui;
@@ -248,7 +258,7 @@ void Iterate::run()
 		modGui = modptr->getGui();
 		ASSERT(modGui);
 		
-		std::cout << "doOnce " << doOnce[i-1] << " " << doOnce[i] << " " << doOnce[i+1] << std::endl;
+		//std::cout << "doOnce " << doOnce[i-1] << " " << doOnce[i] << " " << doOnce[i+1] << std::endl;
 		
 		modGui->set("::" + doOnce[i-1] + doOnce[i], doOnce[i+1]);
 		i++;
@@ -270,52 +280,34 @@ void Iterate::run()
 			modGui = modptr->getGui();
 			ASSERT(modGui);
 		
-			std::cout << "iterate " << iterate[j-1] << " " << iterate[j] << " " << iterate[j+i+1] << std::endl;
-		
+			//std::cout << "iterate " << iterate[j-1] << " " << iterate[j] << " " << iterate[j+i+1] << std::endl;
 			
 			modGui->set("::" + iterate[j-1] + iterate[j], iterate[j+i+1]);
 			j=j+i+1;
 		}
 
-		//tell the first module that it wants to execute
-		readptr->want_to_execute();
-		gen->want_to_execute();
+		gui->eval("updateRunDateAndTime {0}");
+		gui->eval("netedit scheduleall");
+		iterSem().down();
 		
-		while(cmap->getState() != 3){
-			//spin and wait
-			//TODO there has got to be a better way to wait on the network
-			//this will definitely need to be fixed
-		}
+		//if you want to save the picture
+		//TODO do we care if there is no viewer that is getting the messages?
+		//TODO worry about saving over existing images.  would be cool to prompt
+		// the user if they are going to save over an image that exists already
+		if(picPath != ""){
+			name = picPath + "image" + to_string(i) + ".ppm";
 
-		//std::cout << "State of cmap: " << cmap->getState() << std::endl;
-		
-		//reset the states of the ones we care about
-		cmap->resetState();
-		gen->resetState();
-		modptr->resetState();
-		//std::cout << "State of cmap: " << cmap->getState() << std::endl;
+			//when the viewer is done save the image
+			ViewerMessage *msg1 = scinew ViewerMessage
+			(MessageTypes::ViewWindowDumpImage,"::SCIRun_Render_Viewer_0-ViewWindow_0",name, "ppm","640","480");
+			viewer->mailbox.send(msg1); 
+
+			ViewerMessage *msg2 = scinew ViewerMessage("::SCIRun_Render_Viewer_0-ViewWindow_0");
+			viewer->mailbox.send(msg2); 
+		}//else we do not try and save pictures
 		
 	}
-		
-	//return only when the viewer is done
-//	Module* viewer = JNIUtils::cachedNet->get_module_by_id(viewName);
-	
-	/*  doesnt work because you need pointer to view window not viewer.  
-		dont know how to get that.
-		std::string state = "";	
-	GuiInterface* viewGui = viewer->getGui();
-	while(state == ""){
-		viewGui->get("::" + viewName + "-ViewWindow_0-resx",state);
-	}
-	std::cerr << "state is: " << state << std::endl;
-	
-	*/
-	
-	//when the viewer is done save the image
-//    ViewerMessage *msg = scinew ViewerMessage
-//      (MessageTypes::ViewWindowDumpImage,"::SCIRun_Render_Viewer_0-ViewWindow_0","/scratch/output.ppm", "ppm","640","478");
-//	viewer->mailbox.send(msg); 
-	
+			
 	JNIUtils::sem().up();
 }
 

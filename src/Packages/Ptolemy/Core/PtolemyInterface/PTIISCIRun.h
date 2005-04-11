@@ -47,18 +47,21 @@ private:
 
 class Iterate : public Runnable {
 public:
-    Iterate(stringPtr input1, jint s1, stringPtr input2, jint s2, jint numP)
-	 : doOnce(input1), size1(s1), iterate(input2), size2(s2), numParams(numP) {}
+    Iterate(stringPtr input1, jint s1, stringPtr input2, jint s2, jint numP, string pPath)
+	 : doOnce(input1), size1(s1), iterate(input2), size2(s2), numParams(numP), picPath(pPath) {}
 	virtual ~Iterate();
     void run();
-
+	static Semaphore& iterSem();
+	
 private:
+	static void iter_callback(void *data);
+	
     stringPtr doOnce;
 	jint size1;
 	stringPtr iterate;
 	jint size2;
 	jint numParams;
-	
+	string picPath;
 };
 
 class SignalExecuteReady : public Runnable {
