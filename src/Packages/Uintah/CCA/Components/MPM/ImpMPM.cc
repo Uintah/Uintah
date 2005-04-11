@@ -699,6 +699,7 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->KineticEnergyLabel);
   t->computes(lb->CenterOfMassPositionLabel);
   t->computes(lb->CenterOfMassVelocityLabel);
+  t->computes(lb->ThermalEnergyLabel);
   sched->addTask(t, patches, matls);
 }
 void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
@@ -2081,6 +2082,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     Vector CMX(0.0,0.0,0.0);
     Vector CMV(0.0,0.0,0.0);
     double ke=0;
+    double thermal_energy = 0.0;
     int numMPMMatls=d_sharedState->getNumMPMMatls();
 
     double move_particles=1.;
@@ -2150,6 +2152,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       dTdt = dTdt_create; // reference created data
 
       old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+      double Cp=mpm_matl->getSpecificHeat();
 
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
@@ -2190,6 +2193,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pxnew[idx] = px[idx];
         }
 
+        thermal_energy += pTemp[idx] * pmass[idx] * Cp;
         ke += .5*pmass[idx]*pvelocitynew[idx].length2();
         CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
         CMV += pvelocitynew[idx]*pmass[idx];
@@ -2207,6 +2211,8 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     new_dw->put(sum_vartype(ke),     lb->KineticEnergyLabel);
     new_dw->put(sumvec_vartype(CMX), lb->CenterOfMassPositionLabel);
     new_dw->put(sumvec_vartype(CMV), lb->CenterOfMassVelocityLabel);
+    new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
+
     delete interpolator;
   }
 }
