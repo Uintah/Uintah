@@ -41,11 +41,13 @@ Java_ptolemy_scirun_IterateSCIRun_getScirun(JNIEnv *env, jobject obj, jstring na
 
 JNIEXPORT jint JNICALL 
 Java_ptolemy_scirun_IterateSCIRun_runOnFiles
-  (JNIEnv *env, jobject obj, jobjectArray input1Names, jint size1, jobjectArray input2Names, jint size2, jint numParams)
+  (JNIEnv *env, jobject obj, jobjectArray input1Names, jint size1, jobjectArray input2Names, jint size2, jint numParams, jstring picPath)
 {
 	stringPtr input1;
 	stringPtr input2;
 	jstring tempString;
+	
+	std::string pPath = JNIUtils::GetStringNativeChars(env, picPath);
 	
 	//stuff for a result array that is the strings of the files saved.  This may or may not be necessary?
 	/*
@@ -83,7 +85,7 @@ Java_ptolemy_scirun_IterateSCIRun_runOnFiles
 		//std::cout << "input2: " << input2[i] << std::endl;
 	}
 	
-	Iterate *iter = new Iterate(input1,size1,input2,size2,numParams);
+	Iterate *iter = new Iterate(input1,size1,input2,size2,numParams,pPath);
 	Thread *t = new Thread(iter, "iterate_on_inputs", 0, Thread::NotActivated);
     t->setStackSize(1024*1024);
     t->activate(false);

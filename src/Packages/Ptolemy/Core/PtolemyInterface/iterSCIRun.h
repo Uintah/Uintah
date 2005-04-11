@@ -34,10 +34,10 @@ JNIEXPORT jint JNICALL Java_ptolemy_scirun_IterateSCIRun_getScirun
 /*
  * Class:     ptolemy_scirun_IterateSCIRun
  * Method:    runOnFiles
- * Signature: ([Ljava/lang/String;I[Ljava/lang/String;II)I
+ * Signature: ([Ljava/lang/String;I[Ljava/lang/String;IILjava/lang/String;)I
  */
 JNIEXPORT jint JNICALL Java_ptolemy_scirun_IterateSCIRun_runOnFiles
-  (JNIEnv *, jobject, jobjectArray, jint, jobjectArray, jint, jint);
+  (JNIEnv *, jobject, jobjectArray, jint, jobjectArray, jint, jint, jstring);
 
 #ifdef __cplusplus
 }
