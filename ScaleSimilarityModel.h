@@ -160,10 +160,6 @@ private:
 				    DataWarehouse* old_dw,
 				    DataWarehouse* new_dw,
 			            const TimeIntegratorLabel* timelabels);
-      // GROUP: Action Methods (private)  :
-
-
-      ///////////////////////////////////////////////////////////////////////
 
 private:
       double d_CF; //model constant

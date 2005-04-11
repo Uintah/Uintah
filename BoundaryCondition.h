@@ -25,6 +25,7 @@ GENERAL INFORMATION
    BoundaryCondition.h - declaration of the class
    
    Author: Rajesh Rawat (rawat@crsim.utah.edu)
+   Author of current BC formulation: Stanislav Borodai (borodai@crsim.utah.edu)
    
    Creation Date:   Mar 1, 2000
    
