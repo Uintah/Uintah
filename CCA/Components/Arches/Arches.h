@@ -18,6 +18,9 @@ GENERAL INFORMATION
    Department of Chemical Engineering
    University of Utah
 
+   All major modifications since 01.01.2004 done by:
+   Stanislav Borodai(borodai@crsim.utah.edu)
+
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
   
    Copyright (C) 2000 University of Utah

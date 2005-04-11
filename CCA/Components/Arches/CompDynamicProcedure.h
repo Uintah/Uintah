@@ -14,7 +14,8 @@ CLASS
 GENERAL INFORMATION
    CompDynamicProcedure.h - declaration of the class
    
-   Author: Rajesh Rawat (rawat@crsim.utah.edu)
+   Author: Stanislav Borodai (borodai@crsim.utah.edu), developed based on
+   IncDynamicProcedure
       
    Creation Date:   Mar 1, 2000
    
