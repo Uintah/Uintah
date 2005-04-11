@@ -80,6 +80,7 @@ class Point;
 class Transform;
 class Matrix;
 class NrrdData;
+class Field;
 
 template<> const string find_type_name(float*);
 template<> const string find_type_name(double*);
@@ -103,7 +104,7 @@ template<> const string find_type_name(string*);
 
 template<> const string find_type_name(LockingHandle<Matrix> *);
 template<> const string find_type_name(LockingHandle<NrrdData> *);
-
+template<> const string find_type_name(LockingHandle<Field> *);
 
 //////////
 // Function overloading for templates 
