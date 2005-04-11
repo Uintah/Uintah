@@ -15,12 +15,14 @@
 CLASS
    ArchesConstVariables
    
-   Class ArchesConstVariables creates and stores the VarConstVariabless that are used in Arches
+   Class ArchesConstVariables creates and stores the VarConstVariables
+   that are used in Arches
 
 GENERAL INFORMATION
    ArchesConstVariables.h - declaration of the class
    
-   Author: Rajesh Rawat (rawat@crsim.utah.edu)
+   Author: Stanislav Borodai (borodai@crsim.utah.edu), developed based on
+   ArchesVariables
    
    Creation Date:   July 20, 2000
 

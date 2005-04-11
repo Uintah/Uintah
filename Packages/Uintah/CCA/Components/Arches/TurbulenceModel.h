@@ -15,6 +15,9 @@ GENERAL INFORMATION
    TurbulenceModel.h - declaration of the class
    
    Author: Rajesh Rawat (rawat@crsim.utah.edu)
+
+   All major modifications since 01.01.2004 done by:
+   Stanislav Borodai(borodai@crsim.utah.edu)
       
    Creation Date:   Mar 1, 2000
    
@@ -105,13 +108,6 @@ public:
 
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
-/*      virtual void sched_initializeSmagCoeff(SchedulerP&,
-                                             const PatchSet* patches,
-                                             const MaterialSet* matls,
-                                             const TimeIntegratorLabel* timelabels);
-      
-*/                                                
-      ///////////////////////////////////////////////////////////////////////
       // Interface for Schedule the recomputation of Turbulence Model data
       //    [in] 
       //        data User data needed for solve 
@@ -129,8 +125,7 @@ public:
 						  const PatchSet* patches,
 						  const MaterialSet* matls,
 			    	     const TimeIntegratorLabel* timelabels) = 0;
-//bool d_mixedModel;
-protected:
+ protected:
 
       const ArchesLabel* d_lab;
       const MPMArchesLabel* d_MAlab;
@@ -139,7 +134,6 @@ protected:
       Filter* d_filter;
 #endif
       bool d_reactingFlow, d_calcEnthalpy, d_calcReactingScalar;
-//      bool d_mixedModel;
 private:
 bool d_mixedModel;
 #ifdef PetscFilter
