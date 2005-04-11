@@ -452,10 +452,10 @@ bool Crack::FindIntersectionOfJPathAndCrackPlane(const int& m,
 
    int numCross=0;
    crossPt=Point(-9e32,-9e32,-9e32);
-   for(int i=0; i<(int)ce[m].size(); i++) {  // Loop over crack segments
-     // Find the equation of crack segment: a2x+b2y+c2z+d2=0
+   for(int i=0; i<(int)ce[m].size(); i++) {  // Loop over crack elems
+     // Find the equation of the plane of the crack elem: a2x+b2y+c2z+d2=0
      double a2,b2,c2,d2;   // parameters of a 3D plane
-     Point pt1,pt2,pt3;    // three vertices of the segment
+     Point pt1,pt2,pt3;    // three vertices of the elem
      pt1=cx[m][ce[m][i].x()];
      pt2=cx[m][ce[m][i].y()];
      pt3=cx[m][ce[m][i].z()];
@@ -527,7 +527,7 @@ bool Crack::FindIntersectionOfJPathAndCrackPlane(const int& m,
          bbar=2*p1*q1*A+2*p2*q2*C+q1*D+(p1*q2+p2*q1)*E+q2*F+p1*G+H+p2*I;
          cbar=q1*q1*A+q2*q2*C+q1*q2*E+q1*G+q2*I+J-radius*radius;
          abc=bbar*bbar-4*abar*cbar;
-         if(abc<0.0) continue;  // no solution, skip to the next segment
+         if(abc<0.0) continue;  // no intersection, skip to the next elem
          // the first solution
          y1=0.5*(-bbar+sqrt(abc))/abar;
          x1=p1*y1+q1;
@@ -548,7 +548,7 @@ bool Crack::FindIntersectionOfJPathAndCrackPlane(const int& m,
          bbar=2*p1*q1*B+2*p2*q2*C+q1*D+q2*E+(p1*q2+p2*q1)*F+G+p1*H+p2*I;
          cbar=q1*q1*B+q2*q2*C+q1*q2*F+q1*H+q2*I+J-radius*radius;
          abc=bbar*bbar-4*abar*cbar;
-         if(abc<0.0) continue;  // no solution, skip to the next segment
+         if(abc<0.0) continue;  // no intersection, skip to the next elem
          // the first solution
          x1=0.5*(-bbar+sqrt(abc))/abar;
          y1=p1*x1+q1;
@@ -562,9 +562,9 @@ bool Crack::FindIntersectionOfJPathAndCrackPlane(const int& m,
          break;
      }
 
-     /* Detect if crossPt1 & crossPt2 in the triangular segment.
+     /* Detect if crossPt1 & crossPt2 are in the triangular element.
         Transform and rotate the coordinates of crossPt1 and crossPt2 into
-        crack-segment coordinates (X', Y' and Z')
+        crack-elem coordinates (X', Y' and Z')
      */
      Point p1p,p2p,p3p,crossPt1p,crossPt2p;
      p1p     =Point(0.,0.,0.)+T*(pt1-pt1);
