@@ -638,7 +638,6 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 			      DataWarehouse* old_dw,
 			      DataWarehouse* new_dw)
 {
-//	cout << "nofTimeSteps in computeStableTimeStep= " << nofTimeSteps << "\n";
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -809,7 +808,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 {
   double time = d_lab->d_sharedState->getElapsedTime();
   nofTimeSteps++ ;
-//  cout << "nofTimeSteps in scheduleTimeAdvance= " << nofTimeSteps << "\n";
   if (d_MAlab) {
 #ifndef ExactMPMArchesInitialize
     //    if (nofTimeSteps < 2) {

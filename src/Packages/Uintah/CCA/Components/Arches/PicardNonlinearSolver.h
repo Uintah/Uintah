@@ -13,7 +13,8 @@ CLASS
 GENERAL INFORMATION
    PicardNonlinearSolver.h - declaration of the class
    
-   Author: Rajesh Rawat (rawat@crsim.utah.edu) and Co
+   Author: Rajesh Rawat (rawat@crsim.utah.edu)
+   Author of current implicit formulation: Stanislav Borodai (borodai@crsim.utah.edu)
    
    Creation Date:   Mar 1, 2000
    

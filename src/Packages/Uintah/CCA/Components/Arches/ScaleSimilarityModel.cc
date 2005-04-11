@@ -72,7 +72,6 @@ ScaleSimilarityModel::problemSetup(const ProblemSpecP& params)
   db->require("cf", d_CF);
 }
 
-
 //****************************************************************************
 // Schedule recomputation of the turbulence sub model 
 //****************************************************************************
@@ -84,8 +83,6 @@ ScaleSimilarityModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
 {
 //  SmagorinskyModel::sched_reComputeTurbSubmodel(sched, patches, matls,
 //						timelabels);
-  
-//  cout << "  BEGIN sched_recomputeTurbSubmodel\n";
 
   string taskname =  "ScaleSimilarityModel::ReTurbSubmodel" +
 		     timelabels->integrator_step_name;
@@ -121,7 +118,6 @@ ScaleSimilarityModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
 
       // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-//    printf("adding compute for stress teonsor comp\n");
     tsk->computes(d_lab->d_stressTensorCompLabel, d_lab->d_tensorMatl,
 		  Task::OutOfDomain);
 
@@ -129,7 +125,6 @@ ScaleSimilarityModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
 		  Task::OutOfDomain);
   }
   else {
-//    printf("adding modifies for stress teonsor comp\n");
     tsk->modifies(d_lab->d_stressTensorCompLabel, d_lab->d_tensorMatl,
 		  Task::OutOfDomain);
 
@@ -138,7 +133,6 @@ ScaleSimilarityModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
   }
 
   sched->addTask(tsk, patches, matls);
-//  cout << "  END sched_recomputeTurbSubmodel\n";
 }
 
 //****************************************************************************
@@ -152,10 +146,7 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 					DataWarehouse* new_dw,
 				        const TimeIntegratorLabel* timelabels)
 {
-//  printf("enter reComputeTurbSubmodel\n");
-
   for (int p = 0; p < patches->size(); p++) {
-
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
@@ -190,7 +181,6 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 #ifndef PetscFilter
     // Get the PerPatch CellInformation data
 
-//    printf("aaaaaaaaa\n");
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
@@ -238,7 +228,6 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
       scalarFluxCoeff[ii].initialize(0.0);
     }
 
-//    printf("AAAAAAAAA\n");
     int numGC = 1;
     IntVector idxLo = patch->getGhostCellLowIndex(numGC);
     IntVector idxHi = patch->getGhostCellHighIndex(numGC);
@@ -278,7 +267,6 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     if (xminus) startX++;
     int endX = idxHi.x();
     if (xplus) endX--;
-//    printf("bbbbbbbbb\n");
     for (int colZ = startZ; colZ < endZ; colZ ++) {
       for (int colY = startY; colY < endY; colY ++) {
 	for (int colX = startX; colX < endX; colX ++) {
@@ -314,7 +302,6 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 	}
       }
     }
-//    printf("BBBBBBBBB\n");
     if (xplus) {
       for (int colZ = startZ; colZ < endZ; colZ ++) {
 	for (int colY = startY; colY < endY; colY ++) {
@@ -349,7 +336,6 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 	}
       }
     }
-//    printf("ccccccccc\n");
     if (yplus) {
       for (int colZ = startZ; colZ < endZ; colZ ++) {
 	for (int colX = startX; colX < endX; colX ++) {
@@ -402,7 +388,6 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
       }
     }
 
-//    printf("CCCCCCCCC\n");
     // fill the corner cells
     if (xminus) {
       if (yminus) {
@@ -478,7 +463,6 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 	  denPhiV[currCell] = denPhiV[prevCell];
 	  denPhiW[currCell] = denPhiW[prevCell];
       }
-//    printf("ddddddddd\n");
       if (yminus&&zplus) {
 	IntVector currCell(startX-1, startY-1, endZ);
 	IntVector prevCell(startX, startY, endZ-1);
@@ -681,7 +665,6 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 	denPhiW[currCell] = denPhiW[prevCell];
       }
     }
-//    printf("DDDDDDDDD\n");
     if (yplus&&zplus) {
       for (int colX = startX; colX < endX; colX++) {
 	IntVector currCell(colX, endY, endZ);
@@ -697,7 +680,7 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 	denPhiW[currCell] = denPhiW[prevCell];
       }
     }	
-//    printf("zzzzzzzzz\n");
+
 #endif
     Array3<double> filterdenUU(patch->getLowIndex(), patch->getHighIndex());
     filterdenUU.initialize(0.0);
@@ -709,7 +692,6 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     filterdenVV.initialize(0.0);
     Array3<double> filterdenVW(patch->getLowIndex(), patch->getHighIndex());
     filterdenVW.initialize(0.0);
-//    printf("xxxxxxxxx\n");
     Array3<double> filterdenWW(patch->getLowIndex(), patch->getHighIndex());
     filterdenWW.initialize(0.0);
     Array3<double> filterDen(patch->getLowIndex(), patch->getHighIndex());
@@ -720,7 +702,6 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     filterVVel.initialize(0.0);
     Array3<double> filterWVel(patch->getLowIndex(), patch->getHighIndex());
     filterWVel.initialize(0.0);
-//    printf("XXXXXXXXX\n");
     Array3<double> filterPhi(patch->getLowIndex(), patch->getHighIndex());
     filterPhi.initialize(0.0);
     Array3<double> filterdenPhiU(patch->getLowIndex(), patch->getHighIndex());
@@ -731,25 +712,19 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     filterdenPhiW.initialize(0.0);
     IntVector indexLow = patch->getCellFORTLowIndex();
     IntVector indexHigh = patch->getCellFORTHighIndex();
-//    printf("ZZZZZZZZZ\n");
 #ifdef PetscFilter
-//    printf("qqqqqqqqq %p\n", d_filter);
     d_filter->applyFilter(pc, patch,uVel, filterUVel);
-//    printf("QQQQQQQQQ\n");
 #if 0
     cerr << "In the Scale Similarity print vVel" << endl;
     vVel.print(cerr);
 #endif
 
-//    printf("rrrrrrrrr\n");
     d_filter->applyFilter(pc, patch,vVel, filterVVel);
-//    printf("RRRRRRRRR\n");
 #if 0
     cerr << "In the Scale Similarity model after filter print filterVVel" << endl;
     filterVVel.print(cerr);
 #endif
 
-//    printf("eeeeeeeee\n");
     d_filter->applyFilter(pc, patch,wVel, filterWVel);
     d_filter->applyFilter(pc, patch,denUU, filterdenUU);
     d_filter->applyFilter(pc, patch,denUV, filterdenUV);
@@ -830,7 +805,6 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
       }
     }
 #endif
-//    printf("EEEEEEEEE\n");
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
@@ -887,8 +861,7 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 #endif
 
   }
-//  printf("done with reComputeTurbSubmodel\n");
-} // end reComputeTurbSubmodel()
+}
 
 void 
 ScaleSimilarityModel::sched_computeScalarVariance(SchedulerP& sched, 

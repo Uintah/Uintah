@@ -14,6 +14,7 @@ GENERAL INFORMATION
    ExplicitSolver.h - declaration of the class
    
    Author: Rajesh Rawat (rawat@crsim.utah.edu)
+   Author of RK2/RK3 implementation: Stanislav Borodai (borodai@crsim.utah.edu)
    
    Creation Date:   Mar 1, 2000
    

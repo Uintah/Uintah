@@ -13,6 +13,9 @@ GENERAL INFORMATION
    RBGSSolver.h - declaration of the class
    
    Author: Rajesh Rawat (rawat@crsim.utah.edu)
+
+   All major modifications since 01.01.2004 done by:
+   Stanislav Borodai(borodai@crsim.utah.edu)
    
    Creation Date:   Mar 1, 2000
    
