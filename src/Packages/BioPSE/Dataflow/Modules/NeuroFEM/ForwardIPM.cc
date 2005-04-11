@@ -76,6 +76,7 @@ ForwardIPM::ForwardIPM(GuiContext* ctx)
 }
 
 
+
 static bool
 write_geo_file(ProgressReporter *pr, FieldHandle field, const char *filename)
 {
@@ -92,8 +93,91 @@ write_geo_file(ProgressReporter *pr, FieldHandle field, const char *filename)
     pr->error(string("Unable to open file '") + filename + "' for writing.");
     return false;
   }
+
+  // Write header.
   
   // Write it out.
+  TetVolMesh::Node::iterator nitr, neitr;
+  mesh->begin(nitr);
+  mesh->end(neitr);
+  
+  while (nitr != neitr)
+  {
+    Point p;
+    mesh->get_point(p, *nitr);
+
+    // Write p;
+
+    ++nitr;
+  }
+
+
+  TetVolMesh::Cell::iterator citr, ceitr;
+  mesh->begin(citr);
+  mesh->end(ceitr);
+  
+  while (citr != ceitr)
+  {
+    TetVolMesh::Node::array_type nodes; // 0 based
+    mesh->get_nodes(nodes, *citr);
+
+    // Write nodes
+    fprintf(f, "%d %d %d %d\n",
+            nodes[0]+1, nodes[1]+1, nodes[2]+1, nodes[3]+1);
+
+    ++citr;
+  }
+
+  // Write tail, bottom part.
+
+
+  fclose(f);
+  return true;
+}
+
+
+
+static bool
+write_knw_file(ProgressReporter *pr, FieldHandle field, const char *filename)
+{
+  TetVolField<Tensor> *tfield =
+    dynamic_cast<TetVolField<Tensor> *>(field.get_rep());
+  TetVolMesh *mesh = dynamic_cast<TetVolMesh *>(field->mesh().get_rep());
+  if (mesh == 0)
+  {
+    pr->error("Field does not contain a TetVolMesh.");
+    return false;
+  }
+
+  FILE *f = fopen(filename, "w");
+  if (f == NULL)
+  {
+    pr->error(string("Unable to open file '") + filename + "' for writing.");
+    return false;
+  }
+
+  // Write header.
+  
+  // Write it out.
+  TetVolMesh::Elem::iterator itr, eitr;
+  mesh->begin(itr);
+  mesh->end(eitr);
+  
+  while (itr != eitr)
+  {
+    Tensor t;
+    tfield->value(t, *itr);
+
+    fprintf(f, "    %d   %f    %f    %f\n          %f     %f      %f\n",
+            1+*itr,  // fortran index, +1
+            t.mat_[0][0], t.mat_[1][1], t.mat_[2][2],
+            t.mat_[0][1], t.mat_[0][2], t.mat_[1][2]);
+
+    ++itr;
+  }
+
+  // Write tail, bottom part.
+
 
   fclose(f);
   return true;
@@ -199,8 +283,8 @@ ForwardIPM::execute()
     return;
   }
   
-  FieldIPort *dipole_port = (FieldIPort *)get_iport("Dipole");
-  FieldHandle dipole;
+  MatrixIPort *dipole_port = (MatrixIPort *)get_iport("Dipole Positions");
+  MatrixHandle dipole;
   if (!(dipole_port->get(dipole) && dipole.get_rep()))
   {
     warning("Dipole required to continue.");
@@ -236,9 +320,16 @@ ForwardIPM::execute()
     // Write out condmesh
     if (!write_geo_file(this, condmesh, condmeshfile.c_str()))
     {
-      error("Unable to export CondMesh file.");
+      error("Unable to export CondMesh geo file.");
       throw false;
     }
+    // Write out condmesh
+    if (!write_knw_file(this, condmesh, condtensfile.c_str()))
+    {
+      error("Unable to export CondMesh knw file.");
+      throw false;
+    }
+
 
     // Write out Electrodes
     if (!write_elc_file(this, electrodes, electrodefile.c_str()))
@@ -248,7 +339,7 @@ ForwardIPM::execute()
     }
 
     // Write out Dipole
-    if (!write_dip_file(this, dipole, dipolefile.c_str()))
+    //if (!write_dip_file(this, dipole, dipolefile.c_str()))
     {
       error("Unable to export dipole file.");
       throw false;
