@@ -1965,7 +1965,7 @@ class BioImageApp {
             label $wwf.l -text "Window Width"
             scale $wwf.s \
                 -variable $mods(ViewSlices)-clut_ww \
-                -from 0 -to 9999 -length 120 -width 14 \
+                -from 1 -to 9999 -length 120 -width 14 \
                 -showvalue false -orient horizontal
             Tooltip $wwf.s "Control the window width of\nthe 2D viewers"
             entry $wwf.e -textvariable $mods(ViewSlices)-clut_ww -width 6
