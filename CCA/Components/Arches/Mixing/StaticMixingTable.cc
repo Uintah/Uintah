@@ -83,10 +83,10 @@ StaticMixingTable::computeProps(const InletStream& inStream,
   double mixFracVars = 0.0;
   if (inStream.d_mixVarVariance.size() != 0)
     mixFracVars = inStream.d_mixVarVariance[0];
-  if(mixFrac > 1.0)
-	mixFrac=1.0;
-  else if (mixFrac < small)
-	mixFrac=0.0;
+  //if(mixFrac > 1.0)
+  //	mixFrac=1.0;
+  //else if (mixFrac < small)
+  //	mixFrac=0.0;
   if(mixFracVars < small)
 	mixFracVars=0.0;
   double var_limit=mixFracVars/((mixFrac*(1.0-mixFrac))+small);
@@ -141,12 +141,8 @@ StaticMixingTable::computeProps(const InletStream& inStream,
   outStream.d_temperature=tableLookUp(mixFrac, mixFracVars, current_heat_loss, T_index);  
   outStream.d_density=tableLookUp(mixFrac, mixFracVars, current_heat_loss, Rho_index);  
   outStream.d_cp=tableLookUp(mixFrac, mixFracVars, current_heat_loss, Cp_index);  
-  if (!(Enthalpy_index == -1))
-    outStream.d_enthalpy=tableLookUp(mixFrac, mixFracVars, current_heat_loss, Enthalpy_index);  
-  else if (d_adiab_enth_inputs)
-    outStream.d_enthalpy=interp_adiab_enthalpy;
-  else
-    outStream.d_enthalpy=0.0;
+// the only enthalpy it makes sence to output here is adiabatic enthalpy for debug purposes
+  outStream.d_enthalpy=adia_enthalpy;
   outStream.d_co2=tableLookUp(mixFrac, mixFracVars, current_heat_loss, co2_index);  
   outStream.d_h2o=tableLookUp(mixFrac, mixFracVars, current_heat_loss, h2o_index);  
   /*if((outStream.d_temperature - 293.0) <= -0.01 || (outStream.d_density - 1.20002368329336) >= 0.001){

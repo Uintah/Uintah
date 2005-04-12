@@ -54,12 +54,12 @@ PressureSolver::PressureSolver(const ArchesLabel* label,
 			       const MPMArchesLabel* MAlb,
 			       TurbulenceModel* turb_model,
 			       BoundaryCondition* bndry_cond,
-			       PhysicalConstants* physConst,
+			       PhysicalConstants* phys_const,
 			       const ProcessorGroup* myworld):
                                      d_lab(label), d_MAlab(MAlb),
                                      d_turbModel(turb_model), 
                                      d_boundaryCondition(bndry_cond),
-				     d_physicalConsts(physConst),
+				     d_physicalConsts(phys_const),
 				     d_myworld(myworld)
 {
   d_perproc_patches=0;
@@ -87,7 +87,7 @@ void
 PressureSolver::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("PressureSolver");
-  db->require("ref_point", d_pressRef);
+  d_pressRef = d_physicalConsts->getRefPoint();
   db->getWithDefault("normalize_pressure", d_norm_pres, false);
   string finite_diff;
   db->require("finite_difference", finite_diff);
