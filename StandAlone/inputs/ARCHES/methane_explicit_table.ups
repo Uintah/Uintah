@@ -1,9 +1,5 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
-<!DOCTYPE Uintah_specification SYSTEM "input.dtd">
-
+<?xml version='1.0' encoding='ISO-8859-1' ?>
 <!-- @version: -->
-
-
 <Uintah_specification>
 
    <Meta>
@@ -21,54 +17,48 @@
    <DataArchiver>
         <filebase>methaneplumeexplicit.uda</filebase>
 	<outputInterval>0.1</outputInterval>
-	<save label="uvwout"/>
-	<save label="totalflowIN"/>
-	<save label="totalflowOUT"/>
-	<save label="denAccum"/>
+	<save label = "uvwout"/>
+	<save label = "totalflowIN"/>
+	<save label = "totalflowOUT"/>
+	<save label = "denAccum"/>
 	<save label = "netflowOUTBC"/>
 	<save label = "totalKineticEnergy"/>
-	<save label="pressurePS"/>
-        <save label="newCCUVelocity"/>	
-        <save label="newCCVVelocity"/>	
-        <save label="newCCWVelocity"/>	
-        <save label="newCCVelocity"/>
-	<save label="scalarSP"/>
-	<save label="densityCP"/>
-	<save label="viscosityCTS"/>
-	<save label="tempIN"/>
-        <save label="co2IN"/>
-        <save label="enthalpySP"/>
+	<save label = "pressurePS"/>
+        <save label = "newCCUVelocity"/>	
+        <save label = "newCCVVelocity"/>	
+        <save label = "newCCWVelocity"/>	
+        <save label = "newCCVelocity"/>
+	<save label = "scalarSP"/>
+	<save label = "densityCP"/>
+	<save label = "viscosityCTS"/>
+	<save label = "tempIN"/>
+        <save label = "co2IN"/>
+        <save label = "enthalpySP"/>
         <save label="absorpIN"/>
         <save label="sootFVIN"/>
         <save label = "radiationSRCIN"/>
         <save label = "velocityDivergence"/>
         <save label = "continuityResidual"/>
         <save label = "filterdrhodt"/>
-	<save label="cellType"/>
+	<save label = "cellType"/>
         <save label = "radiationFluxEIN"/>
         <save label = "radiationFluxWIN"/>
         <save label = "radiationFluxNIN"/>
         <save label = "radiationFluxSIN"/>
         <save label = "radiationFluxTIN"/>
         <save label = "radiationFluxBIN"/>
-	<checkpoint interval="0.2" cycle="2"/>
+	<checkpoint cycle = "2" interval = "0.2"/>
         <compression>gzip</compression>
    </DataArchiver>
 
-    <PhysicalConstants>
-	<gravity>[-9.8,0,0]</gravity>
-	<ideal_gas_constant>1.0</ideal_gas_constant>
-	<pressure>0.0</pressure>
-    </PhysicalConstants>
-
     <Grid>
 	<Level>
-	    <Box label="1">
+	    <Box label = "1">
 	        <lower>[0,0,0]</lower>
 	        <upper>[3,3,3]</upper>
 	        <resolution>[10,10,10]</resolution>
                 <extraCells>[1,1,1]</extraCells>
-		<patches>[1,1,1]</patches>
+		<patches>[2,2,2]</patches>
 	    </Box>
 	</Level>
     </Grid>
@@ -82,9 +72,9 @@
 	    <variable_dt>true</variable_dt>
    	    <nonlinear_solver>explicit</nonlinear_solver>
     	    <turbulence_model>dynamicprocedure</turbulence_model>
-            <reacting_flow>true</reacting_flow>
-            <solve_enthalpy>true</solve_enthalpy>	
-	    <solve_reactingscalar>false</solve_reactingscalar>
+            <transport_scalar>true</transport_scalar>
+            <transport_enthalpy>true</transport_enthalpy>	
+	    <transport_reacting_scalar>false</transport_reacting_scalar>
 	    <Turbulence>
 		<cf>0.17</cf>
 		<fac_mesh>1.0</fac_mesh>
@@ -93,9 +83,7 @@
 	    </Turbulence>
 
 	    <Properties>
-		<denUnderrelax>1.0</denUnderrelax>
 		<first_order_drhodt>true</first_order_drhodt>
-	        <ref_point>[-1,-1,-1]</ref_point>
 	        <radiation>true</radiation>
 	        <opl>3.0</opl>
 	        <mixing_model>meanMixingModel</mixing_model>
@@ -191,7 +179,7 @@
 		</FlowInlet>
 		<WallBC>
 		    <geom_object>
-		      <box label="botWall">
+		      <box label = "botWall">
 			<min>[-1,-1,-1]</min>
 			<max>[0,4,4]</max>
 		      </box>
@@ -205,19 +193,19 @@
 		    <TurblengthScale>0.04</TurblengthScale>
 		    <RefPressure>0.0</RefPressure>
 		    <geom_object>
-		      <box label="posY_xzWall">
+		      <box label = "posY_xzWall">
 			<min>[0,3,-1]</min>
 			<max>[3,4,4]</max>
 		      </box>
-		      <box label="zeroY_xzWall">
+		      <box label = "zeroY_xzWall">
 			<min>[0,-1,-1]</min>
 			<max>[3,0,4]</max>
 		      </box>
-		      <box label="posZ_xyWall">
+		      <box label = "posZ_xyWall">
 			<min>[0,-1,3]</min>
 			<max>[3,4,4]</max>
 		      </box>
-                      <box label="zeroZ_xyWall">	
+                      <box label = "zeroZ_xyWall">	
 			<min>[0,-1,-1]</min>
 			<max>[3,4,0]</max>
 		      </box>
@@ -231,7 +219,7 @@
 		    <TurblengthScale>0.04</TurblengthScale>
 		    <RefPressure>0.0</RefPressure>
 		    <geom_object>
-		      <box label="topWall">
+		      <box label = "topWall">
 			<min>[3,-1,-1]</min>
 			<max>[4,4,4]</max>
 		      </box>
@@ -241,9 +229,8 @@
 
 	    <PhysicalConstants>
 		<gravity>[-9.8,0,0]</gravity>
-		<pressure>0.0</pressure>
+	        <ref_point>[-1,-1,-1]</ref_point>
 		<viscosity>0.000020</viscosity>
-		<schmidtNo>0.7</schmidtNo>
 	    </PhysicalConstants>
 
 	    <ExplicitSolver>
@@ -265,7 +252,6 @@
 		</ProbePoints>
 	        <cal_pressure>true</cal_pressure>
 		<PressureSolver>
-		    <ref_point>[3,3,3]</ref_point>
 		    <finite_difference>second</finite_difference>
 		    <linear_solver>petsc</linear_solver>
 		    <LinearSolver>
@@ -321,27 +307,5 @@
         </ARCHES>
 
     </CFD>
-
-    <MaterialProperties>
-
-	<ARCHES>
-	</ARCHES>
-
-    </MaterialProperties>
-	
-    <!-- Question - how do we want to attach a bc to a region of the grid? -->
-    <PhysicalBC>
-    
-	<ARCHES>
-	</ARCHES>
-
-    </PhysicalBC>
-    
-    <InitialConditions>
-
-	<ARCHES>
-	</ARCHES>
-
-    </InitialConditions>
-
 </Uintah_specification>
+
