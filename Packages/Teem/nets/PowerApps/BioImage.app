@@ -1965,7 +1965,7 @@ class BioImageApp {
             label $wwf.l -text "Window Width"
             scale $wwf.s \
                 -variable $mods(ViewSlices)-clut_ww \
-                -from 0 -to 9999 -length 120 -width 14 \
+                -from 1 -to 9999 -length 120 -width 14 \
                 -showvalue false -orient horizontal
             Tooltip $wwf.s "Control the window width of\nthe 2D viewers"
             entry $wwf.e -textvariable $mods(ViewSlices)-clut_ww -width 6
@@ -2233,7 +2233,7 @@ class BioImageApp {
 
 	    label $wwf.l -text "Window Width"
 	    scale $wwf.s -variable vol_width \
-		-from 0 -to 9999 -length 120 -width 15 \
+		-from 1 -to 9999 -length 120 -width 15 \
 		-showvalue false -orient horizontal
 	    Tooltip $wwf.s "Control the window width of\nthe volume rendering"
 	    entry $wwf.e -textvariable vol_width -width 6
@@ -2792,7 +2792,7 @@ class BioImageApp {
 		set f $prefix.$page.cs.winlevel.childsite
 		# configure window width scale
 		if [winfo exists $f.ww.s] {
-		    $f.ww.s configure -from 0 -to $ww -resolution $rez
+		    $f.ww.s configure -from 1 -to $ww -resolution $rez
 		}
 		# configure window level scale
 		if [winfo exists $f.wl.s] {
