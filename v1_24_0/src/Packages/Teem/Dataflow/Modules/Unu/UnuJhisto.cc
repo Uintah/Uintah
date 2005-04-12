@@ -388,6 +388,14 @@ void
     for (int d=0; d<(int)nrrds.size(); d++) {
       clamp[d] = 0;
     }
+
+    // nrrdHistoJoint crashes if min == max
+    for (int d = 0; d < (int)nrrds.size(); d++) {
+      if (range[d]->min == range[d]->max) {
+        warning("range has 0 width, not computing.");
+        return;
+      }
+    }
     
     if (nrrdHistoJoint(nout, (const Nrrd**)&nrrds[0], 
 		       (const NrrdRange**)range,
@@ -398,7 +406,6 @@ void
       free(err);
       return;
     }
-
 
     NrrdData *nrrd = scinew NrrdData;
     nrrd->nrrd = nout;    
