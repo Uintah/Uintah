@@ -1,9 +1,5 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
-<!DOCTYPE Uintah_specification SYSTEM "input.dtd">
-
+<?xml version='1.0' encoding='ISO-8859-1' ?>
 <!-- @version: -->
-
-
 <Uintah_specification>
 
    <Meta>
@@ -23,7 +19,7 @@
 	<outputInterval>0.1</outputInterval>
 	<compression>gzip</compression>
 
-	<save label="mmgasVolFrac"/>
+	<save label = "mmgasVolFrac"/>
 	<save label = "KineticEnergy"/>
 	<save label = "TotalMass"/>
 	<save label = "CenterOfMassPosition"/>
@@ -32,35 +28,35 @@
 	<save label = "p.x"/>
 	<save label = "p.temperature"/>
 
-	<save label="totalflowIN"/>
-	<save label="totalflowOUT"/>
-	<save label="denAccum"/>
-        <save label="newCCUVelocity"/>	
-        <save label="newCCVVelocity"/>	
-        <save label="newCCWVelocity"/>	
-        <save label="newCCVelocity"/>
-	<save label="scalarSP"/>
-	<save label="densityCP"/>
-	<save label="viscosityCTS"/>
-	<save label="cellType"/>
+	<save label = "totalflowIN"/>
+	<save label = "totalflowOUT"/>
+	<save label = "denAccum"/>
+        <save label = "newCCUVelocity"/>	
+        <save label = "newCCVVelocity"/>	
+        <save label = "newCCWVelocity"/>	
+        <save label = "newCCVelocity"/>
+	<save label = "scalarSP"/>
+	<save label = "densityCP"/>
+	<save label = "viscosityCTS"/>
+	<save label = "cellType"/>
 
-	<save label="tempIN"/>
-        <save label="co2IN"/>
+	<save label = "tempIN"/>
+        <save label = "co2IN"/>
 
-	<save label="htfluxConvX"/>
-	<save label="htfluxRadX"/>
-	<save label="htfluxConvY"/>
-	<save label="htfluxRadY"/>
-	<save label="htfluxConvZ"/>
-	<save label="htfluxRadZ"/>
-	<save label="htfluxConvCC"/>
-	<save label="totHtFluxX"/>
-	<save label="totHtFluxY"/>
-	<save label="totHtFluxZ"/>
+	<save label = "htfluxConvX"/>
+	<save label = "htfluxRadX"/>
+	<save label = "htfluxConvY"/>
+	<save label = "htfluxRadY"/>
+	<save label = "htfluxConvZ"/>
+	<save label = "htfluxRadZ"/>
+	<save label = "htfluxConvCC"/>
+	<save label = "totHtFluxX"/>
+	<save label = "totHtFluxY"/>
+	<save label = "totHtFluxZ"/>
 
-	<save label="heaTranSolid_NC"/>
+	<save label = "heaTranSolid_NC"/>
 
-	<checkpoint timestepInterval="10" cycle="2"/>
+	<checkpoint cycle = "2" timestepInterval = "10"/>
 
    </DataArchiver>
 
@@ -76,10 +72,10 @@
 
     <MaterialProperties>
 	<MPM>
-           <material name = "Composite Cylinder" >
-              <burn type = "null" />
+           <material name = "Composite Cylinder">
+              <burn type = "null"/>
               <density>   2489.0   </density>
-	      <constitutive_model type="comp_mooney_rivlin"> 
+	      <constitutive_model type = "comp_mooney_rivlin"> 
                  <he_constant_1>5.0</he_constant_1>
                  <he_constant_2>1.0</he_constant_2>
 	         <he_PR>.49</he_PR>
@@ -113,63 +109,63 @@
 	<BoundaryConditions>
 
 		 <Face side = "x-">
-                        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                        <BCType id = "all" label = "Velocity" var = "Dirichlet">
 				<value> [0.0,0.0,0.0] </value>
                         </BCType>
-                        <BCType id = "all" var = "Dirichlet" label = "Temperature">
+                        <BCType id = "all" label = "Temperature" var = "Dirichlet">
 				<value> 298.0 </value>
                         </BCType>
                 </Face>
 
                 <Face side = "x+">
-                        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                        <BCType id = "all" label = "Velocity" var = "Dirichlet">
 				<value> [0.0,0.0,0.0] </value>
                         </BCType>
-                        <BCType id = "all" var = "Dirichlet" label = "Temperature">
+                        <BCType id = "all" label = "Temperature" var = "Dirichlet">
 				<value> 298.0 </value>
                         </BCType>
                 </Face>
 
                 <Face side = "y-">
-                        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                        <BCType id = "all" label = "Velocity" var = "Dirichlet">
 				<value> [0.0,0.0,0.0] </value>
                         </BCType>
-                        <BCType id = "all" var = "Dirichlet" label = "Temperature">
+                        <BCType id = "all" label = "Temperature" var = "Dirichlet">
 				<value> 298.0 </value>
                         </BCType>
                 </Face>                  
 
 		<Face side = "y+">
-                        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                        <BCType id = "all" label = "Velocity" var = "Dirichlet">
 				<value> [0.0,0.0,0.0] </value>
                         </BCType>
-                        <BCType id = "all" var = "Dirichlet" label = "Temperature">
+                        <BCType id = "all" label = "Temperature" var = "Dirichlet">
 				<value> 298.0 </value>
                         </BCType>
                 </Face>
 
                 <Face side = "z-">
-                        <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
-                        <BCType id = "all" var = "Dirichlet" label = "Temperature">
+                        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+                        <BCType id = "all" label = "Temperature" var = "Dirichlet">
 				<value> 298.0 </value>
                         </BCType>
                 </Face>
 
                 <Face side = "z+">
-                        <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
-                        <BCType id = "all" var = "Dirichlet" label = "Temperature">
+                        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+                        <BCType id = "all" label = "Temperature" var = "Dirichlet">
 				<value> 298.0 </value>
                         </BCType>
                 </Face>                           
 
 	</BoundaryConditions>
 	<Level>
-	    <Box label="1">
+	    <Box label = "1">
 	        <lower>[0,0,0]</lower>
 	        <upper>[3,3,3]</upper>
 	        <resolution>[20,20,20]</resolution>
                 <extraCells>[1,1,1]</extraCells>
-		<patches>[1,1,1]</patches>
+		<patches>[2,2,2]</patches>
 	    </Box>
 	</Level>
     </Grid>
@@ -183,9 +179,9 @@
 	    <variable_dt>true</variable_dt>
    	    <nonlinear_solver>explicit</nonlinear_solver>
     	    <turbulence_model>smagorinsky</turbulence_model>
-            <reacting_flow>true</reacting_flow>
-            <solve_enthalpy>true</solve_enthalpy>	
-	    <solve_reactingscalar>false</solve_reactingscalar>
+            <transport_scalar>true</transport_scalar>
+            <transport_enthalpy>true</transport_enthalpy>	
+	    <transport_reacting_scalar>false</transport_reacting_scalar>
 
 	    <Turbulence>
 		<cf>0.17</cf>
@@ -193,13 +189,12 @@
 		<filterl>0.000001</filterl>
 	        <var_const>0.1</var_const>
 
-	    </Turbulence>
+	    
+	<turbulentPrandtlNumber>0.4</turbulentPrandtlNumber></Turbulence>
 
 	    <Properties>
 
-		<denUnderrelax>1.0</denUnderrelax>
 		<first_order_drhodt>true</first_order_drhodt>
-	        <ref_point>[-1,-1,-1]</ref_point>
 	        <radiation>true</radiation>
 	        <opl>3.0</opl>
                 <discrete_ordinates>true</discrete_ordinates>
@@ -214,7 +209,11 @@
                   <h_air>-125.3610</h_air>
                 </StaticMixingTable>
 
-	    </Properties>
+	    
+	<filter_drhodt>false</filter_drhodt>
+	<inverse_density_average>false</inverse_density_average>
+	<empirical_soot>true</empirical_soot>
+	<SootFactor>0.01</SootFactor></Properties>
 
 	    <BoundaryConditions>
 
@@ -232,11 +231,13 @@
 			<radius> .5 </radius>
 		      </cylinder>
 		    </geom_object>
-		</FlowInlet>
+		
+	<InletVelocity>0</InletVelocity>
+	<CarbonMassFractionInFuel>0</CarbonMassFractionInFuel></FlowInlet>
 
 		<WallBC>
 		    <geom_object>
-		      <box label="botWall">
+		      <box label = "botWall">
 			<min>[-1,-1,-1]</min>
 			<max>[0,4,4]</max>
 		      </box>
@@ -251,19 +252,19 @@
 		    <TurblengthScale>0.04</TurblengthScale>
 		    <RefPressure>0.0</RefPressure>
 		    <geom_object>
-		      <box label="posY_xzWall">
+		      <box label = "posY_xzWall">
 			<min>[0,3,-1]</min>
 			<max>[3,4,4]</max>
 		      </box>
-		      <box label="zeroY_xzWall">
+		      <box label = "zeroY_xzWall">
 			<min>[0,-1,-1]</min>
 			<max>[3,0,4]</max>
 		      </box>
-		      <box label="posZ_xyWall">
+		      <box label = "posZ_xyWall">
 			<min>[0,-1,3]</min>
 			<max>[3,4,4]</max>
 		      </box>
-                      <box label="zeroZ_xyWall">	
+                      <box label = "zeroZ_xyWall">	
 			<min>[0,-1,-1]</min>
 			<max>[3,4,0]</max>
 		      </box>
@@ -278,20 +279,21 @@
 		    <TurblengthScale>0.04</TurblengthScale>
 		    <RefPressure>0.0</RefPressure>
 		    <geom_object>
-		      <box label="topWall">
+		      <box label = "topWall">
 			<min>[3,-1,-1]</min>
 			<max>[4,4,4]</max>
 		      </box>
 		    </geom_object>
 		</outletBC>
 
-	    </BoundaryConditions>
+	    
+	<ramping_inlet_flowrate>true</ramping_inlet_flowrate>
+	<carbon_balance>false</carbon_balance></BoundaryConditions>
 
 	    <PhysicalConstants>
 		<gravity>[-9.8,0,0]</gravity>
-		<pressure>0.0</pressure>
+	        <ref_point>[-1,-1,-1]</ref_point>
 		<viscosity>0.000020</viscosity>
-		<schmidtNo>0.7</schmidtNo>
 	    </PhysicalConstants>
 
 	    <ExplicitSolver>
@@ -317,7 +319,8 @@
 			<max_iter>75</max_iter>
 		        <underrelax>1.0</underrelax>
 		    </LinearSolver>
-		</PressureSolver>
+		
+	<normalize_pressure>false</normalize_pressure></PressureSolver>
 
 		<cal_momentum>true</cal_momentum>
 		<MomentumSolver>
@@ -329,7 +332,9 @@
 			<res_tol>1.0e-9</res_tol>
 			<underrelax>1.0</underrelax>
 		    </LinearSolver>
-		</MomentumSolver>
+		
+	<pressure_correction>false</pressure_correction>
+	<filter_divergence_constraint>false</filter_divergence_constraint></MomentumSolver>
 
 		<cal_mixturescalar>true</cal_mixturescalar>
 		<MixtureFractionSolver>
@@ -340,7 +345,8 @@
 			<res_tol>0.0003</res_tol>
 			<underrelax>1.0</underrelax>
 		    </LinearSolver>
-		</MixtureFractionSolver>
+		
+	<convection_scheme>l2up</convection_scheme></MixtureFractionSolver>
 
 		<cal_enthalpy>true</cal_enthalpy>
 		<EnthalpySolver>
@@ -349,7 +355,11 @@
                     <radiationCalcFreq>3</radiationCalcFreq>
                     <DORadiationModel>
 	            <opl>3.0</opl>
-                    </DORadiationModel>
+                    
+	<ordinates>2</ordinates>
+	<property_model>radcoef</property_model>
+	<spherical_harmonics>false</spherical_harmonics>
+	<linear_solver>petsc</linear_solver></DORadiationModel>
 		    <finite_difference>second</finite_difference>
 		    <linear_solver>linegs</linear_solver>
 		    <LinearSolver>
@@ -357,11 +367,17 @@
 			<res_tol>0.0003</res_tol>
 			<underrelax>1.0</underrelax>
 		    </LinearSolver>
-		</EnthalpySolver>
+		
+	<radCalcForAllRKSteps>true</radCalcForAllRKSteps>
+	<radCalcForAllImplicitSteps>true</radCalcForAllImplicitSteps>
+	<convection_scheme>l2up</convection_scheme></EnthalpySolver>
 
 	    </ExplicitSolver>
 
-        </ARCHES>
+        
+	<set_initial_condition>false</set_initial_condition>
+	<solve_thermalnox>false</solve_thermalnox>
+	<turnonMixedModel>false</turnonMixedModel></ARCHES>
 
     </CFD>
 
@@ -375,7 +391,12 @@
 	<inviscid>false</inviscid>
 	<restart>true</restart>
 
-    </Multimaterial>
+    
+	<StationarySolid>true</StationarySolid>
+	<fixedCellType>true</fixedCellType>
+	<fixedTemp>false</fixedTemp>
+	<TestCutCells>true</TestCutCells>
+	<stairstep>true</stairstep></Multimaterial>
 
     <MaterialProperties>
 
@@ -403,3 +424,4 @@
     </InitialConditions>
 
 </Uintah_specification>
+
