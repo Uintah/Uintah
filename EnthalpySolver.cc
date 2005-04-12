@@ -340,10 +340,8 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
     tsk->modifies(d_lab->d_enthNonLinSrcSBLMLabel);
   }
 
-  if (d_radiationCalc) 
-   if (d_DORadiationCalc)
-     if (timelabels->integrator_last_step)
-       tsk->computes(d_lab->d_totalRadSrcLabel);
+  if (timelabels->integrator_last_step)
+    tsk->computes(d_lab->d_totalRadSrcLabel);
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
    if (d_radiationCalc) 
@@ -764,13 +762,14 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 #if 0
 	d_DORadiation->d_linearSolver->destroyMatrix();
 #endif
-      if (timelabels->integrator_last_step)
-	new_dw->put(sum_vartype(new_total_src), d_lab->d_totalRadSrcLabel);
       }
       else
 	d_source->computeEnthalpyRadThinSrc(pc, patch, cellinfo,
 					    &enthalpyVars, &constEnthalpyVars);
     }
+
+    if (timelabels->integrator_last_step)
+      new_dw->put(sum_vartype(new_total_src), d_lab->d_totalRadSrcLabel);
 
     // Calculate the enthalpy boundary conditions
     // inputs : enthalpySP, scalCoefSBLM

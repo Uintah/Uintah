@@ -92,10 +92,10 @@ public:
       virtual double getTurbulentPrandtlNumber() const = 0;
       virtual bool getDynScalarModel() const = 0;
 
-      inline void setCombustionSpecifics(bool reactingFlow,
+      inline void setCombustionSpecifics(bool calcScalar,
 		                         bool calcEnthalpy,
 					 bool calcReactingScalar) {
-	d_reactingFlow = reactingFlow;
+	d_calcScalar = calcScalar;
 	d_calcEnthalpy = calcEnthalpy;
 	d_calcReactingScalar = calcReactingScalar;
       }
@@ -133,7 +133,7 @@ public:
 #ifdef PetscFilter
       Filter* d_filter;
 #endif
-      bool d_reactingFlow, d_calcEnthalpy, d_calcReactingScalar;
+      bool d_calcScalar, d_calcEnthalpy, d_calcReactingScalar;
 private:
 bool d_mixedModel;
 #ifdef PetscFilter

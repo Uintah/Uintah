@@ -77,7 +77,7 @@ public:
 		     const MPMArchesLabel* MAlb,
 		     TurbulenceModel* turb_model, 
 		     BoundaryCondition* bndry_cond,
-		     PhysicalConstants* physConst,
+		     PhysicalConstants* phys_const,
 		     const ProcessorGroup* myworld);
 
       // GROUP: Destructors:

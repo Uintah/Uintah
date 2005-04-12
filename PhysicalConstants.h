@@ -37,6 +37,7 @@ POSSIBLE REVISIONS
 ***************************************************************************/
 
 #include <Core/Geometry/Vector.h>
+#include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
@@ -67,6 +68,10 @@ public:
       const Vector& getGravity(){ return d_gravity; }
 
       ///////////////////////////////////////////////////////////////////////
+      // Get RefPoint Location
+      const IntVector& getRefPoint(){ return d_ref_point; }
+
+      ///////////////////////////////////////////////////////////////////////
       // Get one component of Gravity Vector
       double getGravity(int index){
 	if (index == 1) return d_gravity.x();
@@ -78,10 +83,6 @@ public:
       // Get molecular viscosity (of air)
       double getMolecularViscosity() { return d_viscosity; }
 
-      ///////////////////////////////////////////////////////////////////////
-      // Get absolute pressure (of 1 atmosphere)
-      double getabsPressure() { return d_absPressure; }
-    
 protected :
 
 private:
@@ -103,8 +104,8 @@ private:
 private:
 
     Vector d_gravity;
+    IntVector d_ref_point;
     double d_viscosity;
-    double d_absPressure;
     
 }; // end class PhysicalConstants
 } // End namespace Uintah
