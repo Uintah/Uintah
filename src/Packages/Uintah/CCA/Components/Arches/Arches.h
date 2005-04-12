@@ -252,7 +252,7 @@ private:
       int d_nofScalars;
       int d_nofScalarStats;
       bool d_variableTimeStep;
-      bool d_reactingFlow;
+      bool d_calcScalar;
       bool d_calcReactingScalar;
       bool d_calcThermalNOx;
       bool d_calcEnthalpy;
