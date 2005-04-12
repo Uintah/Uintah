@@ -120,13 +120,13 @@ Arches::problemSetup(const ProblemSpecP& params,
   // not sure, do we need to reduce and put in datawarehouse
   db->require("grow_dt", d_deltaT);
   db->require("variable_dt", d_variableTimeStep);
-  db->require("reacting_flow", d_reactingFlow);
+  db->require("transport_scalar", d_calcScalar);
   db->getWithDefault("set_initial_condition",d_set_initial_condition,false);
   if (d_set_initial_condition)
     db->require("init_cond_input_file", d_init_inputfile);
-  if (d_reactingFlow) {
-    db->require("solve_reactingscalar", d_calcReactingScalar);
-    db->require("solve_enthalpy", d_calcEnthalpy);
+  if (d_calcScalar) {
+    db->require("transport_reacting_scalar", d_calcReactingScalar);
+    db->require("transport_enthalpy", d_calcEnthalpy);
     db->getWithDefault("solve_thermalnox", d_calcThermalNOx,false);
   }
   db->getWithDefault("turnonMixedModel",d_mixedModel,false);
@@ -143,7 +143,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_physicalConsts->problemSetup(db);
   // read properties
   // d_MAlab = multimaterial arches common labels
-  d_props = scinew Properties(d_lab, d_MAlab, d_reactingFlow, d_calcEnthalpy ,d_calcThermalNOx);
+  d_props = scinew Properties(d_lab, d_MAlab, d_physicalConsts, 
+                              d_calcEnthalpy ,d_calcThermalNOx);
   d_props->problemSetup(db);
   d_nofScalars = d_props->getNumMixVars();
   d_nofScalarStats = d_props->getNumMixStatVars();
@@ -173,7 +174,10 @@ Arches::problemSetup(const ProblemSpecP& params,
     throw InvalidValue("Turbulence Model not supported" + turbModel);
 //  if (d_turbModel)
   d_turbModel->problemSetup(db);
-  d_turbModel->setMixedModel(d_mixedModel);
+  d_dynScalarModel = d_turbModel->getDynScalarModel();
+  if (d_dynScalarModel)
+    d_turbModel->setCombustionSpecifics(d_calcScalar, d_calcEnthalpy,
+		                        d_calcReactingScalar);
 
 #ifdef PetscFilter
     d_filter = scinew Filter(d_lab, d_boundaryCondition, d_myworld);
@@ -181,8 +185,8 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_turbModel->setFilter(d_filter);
 #endif
 
+  d_turbModel->setMixedModel(d_mixedModel);
   if (d_mixedModel) {
-//    cout << "turn on MixedModel in Arches.cc (and creating a scale sim model\n";
     d_scaleSimilarityModel=scinew ScaleSimilarityModel(d_lab, d_MAlab, d_physicalConsts,
                                                        d_boundaryCondition);	
     d_scaleSimilarityModel->problemSetup(db);
@@ -192,11 +196,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_scaleSimilarityModel->setFilter(d_filter);
 #endif
   }
-
-  d_dynScalarModel = d_turbModel->getDynScalarModel();
-  if (d_dynScalarModel)
-    d_turbModel->setCombustionSpecifics(d_reactingFlow, d_calcEnthalpy,
-		                        d_calcReactingScalar);
 
   d_props->setBC(d_boundaryCondition);
 
@@ -303,15 +302,14 @@ Arches::scheduleInitialize(const LevelP& level,
 #endif
 
     if (d_mixedModel) {
-//  	cout << "turn on MixedModel in Arches 2\n";
-        d_scaleSimilarityModel->sched_reComputeTurbSubmodel(sched, patches, matls,
+      d_scaleSimilarityModel->sched_reComputeTurbSubmodel(sched, patches, matls,
                                                             init_timelabel);
     }
-    cout << "turbModel= " << turbModel<<"\n";
+
     if (turbModel == "complocaldynamicprocedure")
-	    sched_initializeSmagCoeff(level, sched);
+      sched_initializeSmagCoeff(level, sched);
     else
-	    d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls, init_timelabel);
+      d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls, init_timelabel);
   }
 
   // Computes velocities at apecified pressure b.c's
@@ -319,7 +317,7 @@ Arches::scheduleInitialize(const LevelP& level,
   // compute : pressureSPBC, [u,v,w]VelocitySPBC
   if (d_boundaryCondition->getPressureBC()) 
     d_boundaryCondition->sched_computePressureBC(sched, patches, matls);
-} // end scheduleInitialize()
+}
 
 // ****************************************************************************
 // schedule the initialization of parameters
@@ -373,7 +371,7 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_densityCPLabel);
     tsk->computes(d_lab->d_viscosityCTSLabel);
     if (d_dynScalarModel) {
-      if (d_reactingFlow)
+      if (d_calcScalar)
         tsk->computes(d_lab->d_scalarDiffusivityLabel);
       if (d_calcEnthalpy)
         tsk->computes(d_lab->d_enthalpyDiffusivityLabel);
@@ -534,7 +532,7 @@ Arches::paramInit(const ProcessorGroup* ,
     new_dw->allocateAndPut(density, d_lab->d_densityCPLabel, matlIndex, patch);
     new_dw->allocateAndPut(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
     if (d_dynScalarModel) {
-      if (d_reactingFlow)
+      if (d_calcScalar)
         new_dw->allocateAndPut(scalarDiffusivity, d_lab->d_scalarDiffusivityLabel, matlIndex, patch);
       if (d_calcEnthalpy)
         new_dw->allocateAndPut(enthalpyDiffusivity, d_lab->d_enthalpyDiffusivityLabel, matlIndex, patch);
@@ -569,7 +567,7 @@ Arches::paramInit(const ProcessorGroup* ,
 	      idxLo, idxHi, pressure, pVal, density, denVal,
 	      viscosity, visVal);
     if (d_dynScalarModel) {
-      if (d_reactingFlow)
+      if (d_calcScalar)
         scalarDiffusivity.initialize(visVal/0.4);
       if (d_calcEnthalpy)
         enthalpyDiffusivity.initialize(visVal/0.4);

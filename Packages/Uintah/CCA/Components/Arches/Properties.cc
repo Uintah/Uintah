@@ -18,6 +18,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
+#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
@@ -47,9 +48,11 @@ using namespace Uintah;
 // Default constructor for Properties
 //****************************************************************************
 Properties::Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb,
-		       bool reactingFlow, bool enthalpySolver, bool thermalNOx):
-  d_lab(label), d_MAlab(MAlb), d_reactingFlow(reactingFlow),
-  d_enthalpySolve(enthalpySolver), d_thermalNOx(thermalNOx)
+                       PhysicalConstants* phys_const,
+		       bool calcEnthalpy, bool thermalNOx):
+                       d_lab(label), d_MAlab(MAlb), 
+                       d_physicalConsts(phys_const), 
+                       d_calcEnthalpy(calcEnthalpy), d_thermalNOx(thermalNOx)
 {
   d_flamelet = false;
   d_steadyflamelet = false;
@@ -79,7 +82,7 @@ Properties::problemSetup(const ProblemSpecP& params)
   db->getWithDefault("filter_drhodt",d_filter_drhodt,false);
   db->getWithDefault("first_order_drhodt",d_first_order_drhodt,false);
   db->getWithDefault("inverse_density_average",d_inverse_density_average,false);
-  db->require("ref_point", d_denRef);
+  d_denRef = d_physicalConsts->getRefPoint();
   db->require("radiation",d_radiationCalc);
   if (d_radiationCalc) {
     db->getWithDefault("discrete_ordinates",d_DORadiationCalc,true);
@@ -89,12 +92,14 @@ Properties::problemSetup(const ProblemSpecP& params)
     if (d_empirical_soot)
       db->getWithDefault("SootFactor",d_sootFactor,0.01);
   }
-  
+  d_reactingFlow = true;
   // read type of mixing model
   string mixModel;
   db->require("mixing_model",mixModel);
-  if (mixModel == "coldFlowMixingModel")
+  if (mixModel == "coldFlowMixingModel") {
     d_mixingModel = scinew ColdflowMixingModel();
+    d_reactingFlow = false;
+  }
   else if (mixModel == "pdfMixingModel"){
     if(!d_thermalNOx)
     	d_mixingModel = scinew PDFMixingModel();
@@ -210,7 +215,7 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
     tsk->requires(Task::NewDW, d_lab->d_thermalnoxSPLabel,
               Ghost::None, Arches::ZEROGHOSTCELLS);
 
-  if (!(d_mixingModel->isAdiabatic()))
+  if (d_calcEnthalpy)
     tsk->modifies(d_lab->d_enthalpySPLabel);
 
   if (d_MAlab && initialize) {
@@ -438,7 +443,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
         matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
 
-    if (!(d_mixingModel->isAdiabatic()))
+    if (d_calcEnthalpy)
       new_dw->getModifiable(enthalpy, d_lab->d_enthalpySPLabel, 
 		            matlIndex, patch);
 
@@ -633,7 +638,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	  // construct an InletStream for input to the computeProps
 	  // of mixingModel
 	  bool local_enthalpy_init;
-	  if (d_enthalpySolve && ((scalar[0])[currCell] == -1.0)) {
+	  if (d_calcEnthalpy && ((scalar[0])[currCell] == -1.0)) {
 	    (scalar[0])[currCell] = 0.0;
 	    local_enthalpy_init = true;
           }
@@ -673,7 +678,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	      inStream.d_axialLoc = 0;
 	  }
 
-	  if (!(d_mixingModel->isAdiabatic()))
+          if (d_calcEnthalpy)
 	      //	      &&(cellType[currCell] != d_bc->getIntrusionID()))
             if (initialize || local_enthalpy_init)
 	      inStream.d_enthalpy = 0.0;
@@ -690,7 +695,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
   TAU_PROFILE_STOP(mixing);
 
 	  double local_den = outStream.getDensity();
-	  //	  cout << "density = " << local_den << endl;
 	  drhodf[currCell] = outStream.getdrhodf();
 
 	  if (d_flamelet) {
@@ -715,7 +719,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	    so3[currCell] = outStream.getSO3();
 	  }
 
-	  if (d_enthalpySolve && (initialize || local_enthalpy_init))
+	  if (d_calcEnthalpy && (initialize || local_enthalpy_init))
 	    enthalpy[currCell] = outStream.getEnthalpy();
 	  if (d_reactingFlow) {
 	    temperature[currCell] = outStream.getTemperature();
@@ -723,6 +727,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	    co2[currCell] = outStream.getCO2();
 	    h2o[currCell] = outStream.getH2O();
 	    enthalpyRXN[currCell] = outStream.getEnthalpy();
+// Uncomment the next line to check enthalpy transport in adiabatic case
+//	    enthalpyRXN[currCell] -= enthalpy[currCell];
 	    if (d_mixingModel->getNumRxnVars())
 	      reactscalarSRC[currCell] = outStream.getRxnSource();
 	    if (d_steadyflamelet)
@@ -1361,7 +1367,7 @@ Properties::sched_averageRKProps(SchedulerP& sched, const PatchSet* patches,
   if (d_mixingModel->getNumRxnVars())
     tsk->requires(Task::OldDW, d_lab->d_reactscalarSPLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
-  if (!(d_mixingModel->isAdiabatic()))
+  if (d_calcEnthalpy)
     tsk->requires(Task::OldDW, d_lab->d_enthalpySPLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
@@ -1375,14 +1381,14 @@ Properties::sched_averageRKProps(SchedulerP& sched, const PatchSet* patches,
   if (d_mixingModel->getNumRxnVars())
     tsk->requires(Task::NewDW, d_lab->d_reactscalarFELabel, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
-  if (!(d_mixingModel->isAdiabatic()))
+  if (d_calcEnthalpy)
     tsk->requires(Task::NewDW, d_lab->d_enthalpyFELabel, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
   tsk->modifies(d_lab->d_scalarSPLabel);
   if (d_mixingModel->getNumRxnVars())
     tsk->modifies(d_lab->d_reactscalarSPLabel);
-  if (!(d_mixingModel->isAdiabatic()))
+  if (d_calcEnthalpy)
     tsk->modifies(d_lab->d_enthalpySPLabel);
   tsk->modifies(d_lab->d_densityGuessLabel);
 
@@ -1432,10 +1438,9 @@ Properties::averageRKProps(const ProcessorGroup*,
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       }
     }
-    if (!(d_mixingModel->isAdiabatic())) {
+    if (d_calcEnthalpy)
       old_dw->get(old_enthalpy, d_lab->d_enthalpySPLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    }
 
     new_dw->get(rho1_density, d_lab->d_densityTempLabel,
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -1456,12 +1461,12 @@ Properties::averageRKProps(const ProcessorGroup*,
       for (int ii = 0; ii < d_mixingModel->getNumRxnVars(); ii++)
 	new_dw->get(fe_reactScalar[ii], d_lab->d_reactscalarFELabel,
 		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    if (!(d_mixingModel->isAdiabatic()))
+    if (d_calcEnthalpy) {
       new_dw->getModifiable(new_enthalpy, d_lab->d_enthalpySPLabel, 
 			    matlIndex, patch);
-    if (!(d_mixingModel->isAdiabatic()))
       new_dw->get(fe_enthalpy, d_lab->d_enthalpyFELabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
 
     new_dw->getModifiable(density_guess, d_lab->d_densityGuessLabel, 
 			  matlIndex, patch);
@@ -1534,7 +1539,7 @@ Properties::averageRKProps(const ProcessorGroup*,
             }
 	  }
 
-	  if (!d_mixingModel->isAdiabatic())
+          if (d_calcEnthalpy)
 	    if (!average_failed)
 	    new_enthalpy[currCell] = (factor_old*old_density[currCell]*
 		old_enthalpy[currCell] + factor_new*new_density[currCell]*

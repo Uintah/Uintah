@@ -53,6 +53,7 @@ POSSIBLE REVISIONS
 namespace Uintah {
 class MixingModel;
 class TimeIntegratorLabel;
+class PhysicalConstants;
 class Properties {
 
 public:
@@ -63,7 +64,8 @@ public:
       //   [in] 
 
       Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb,
-		 bool reactingFlow, bool enthalpySolver, bool thermalNOx);
+                 PhysicalConstants* phys_const,
+		 bool calcEnthalpy, bool thermalNOx);
 
       // GROUP: Destructors :
       ///////////////////////////////////////////////////////////////////////
@@ -233,7 +235,7 @@ private:
       const MPMArchesLabel* d_MAlab;
 
       bool d_reactingFlow;
-      bool d_enthalpySolve;
+      bool d_calcEnthalpy;
       bool d_radiationCalc;
       bool d_DORadiationCalc;
       bool d_thermalNOx;
@@ -247,11 +249,11 @@ private:
       bool d_first_order_drhodt;
       int d_numMixingVars;
       int d_numMixStatVars;
-      double d_denUnderrelax;
       double d_opl;
       IntVector d_denRef;
       MixingModel* d_mixingModel;
       BoundaryCondition* d_bc;
+      PhysicalConstants* d_physicalConsts;
       bool d_empirical_soot;
       double d_sootFactor;
       bool d_3d_periodic;

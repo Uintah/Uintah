@@ -85,12 +85,12 @@ using namespace SCIRun;
 //****************************************************************************
 BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
 				     const MPMArchesLabel* MAlb,
-				     PhysicalConstants* phyConsts,
+				     PhysicalConstants* phys_const,
 				     Properties* props,
 				     bool calcReactScalar,
 				     bool calcEnthalpy):
                                      d_lab(label), d_MAlab(MAlb),
-				     d_physicalConsts(phyConsts), 
+				     d_physicalConsts(phys_const), 
 				     d_props(props),
 				     d_reactingScalarSolve(calcReactScalar),
 				     d_enthalpySolve(calcEnthalpy)

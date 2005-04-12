@@ -78,7 +78,7 @@ public:
       ////////////////////////////////////////////////////////////////////////
       // BoundaryCondition constructor used in  PSE
       BoundaryCondition(const ArchesLabel* label, const MPMArchesLabel* MAlb,
-			PhysicalConstants* phyConsts, Properties* props,
+			PhysicalConstants* phys_const, Properties* props,
 			bool calcReactScalar, bool calcEnthalpy);
 
       // GROUP: Destructors:

@@ -9,8 +9,8 @@ using namespace Uintah;
 //****************************************************************************
 // Default constructor 
 //****************************************************************************
-PhysicalConstants::PhysicalConstants():d_gravity(0,0,0), d_viscosity(0),
-                                       d_absPressure(0)
+PhysicalConstants::PhysicalConstants():d_gravity(0,0,0), d_ref_point(0,0,0),
+                                       d_viscosity(0)
 {
 }
 
@@ -29,7 +29,7 @@ void PhysicalConstants::problemSetup(const ProblemSpecP& params)
   ProblemSpecP db = params->findBlock("PhysicalConstants");
 
   db->require("gravity", d_gravity); //Vector
-  db->require("pressure", d_absPressure);
+  db->require("ref_point", d_ref_point); //IntVector
   db->require("viscosity", d_viscosity);
 
 }
