@@ -433,7 +433,12 @@ WARNING
      void getFaceCells(FaceType face, int offset, IntVector& l,
 		       IntVector& h) const;
 
-     const vector<FaceType>* getBoundaryFaces() const { return &d_BoundaryFaces; }
+     const vector<FaceType>* getBoundaryFaces() const 
+     { return &d_BoundaryFaces; }
+     
+     const vector<FaceType>* getCoarseFineInterfaceFaces() const 
+     { return &d_coarseFineInterfaceFaces; }
+     
      //////////
      // Return the list of corner cells for the given face.
      const vector<IntVector> getCornerCells(const Patch::FaceType face) const { return d_CornerCells[face]; }
@@ -600,6 +605,10 @@ WARNING
      //////////
      // Keep track of faces on the edge of the domain
      vector<FaceType> d_BoundaryFaces;
+
+     //////////
+     // Keep track of faces on the edge of a courseFineInterface
+     vector<FaceType> d_coarseFineInterfaceFaces;
 
      //////////
      // Keep track of cells on the corner of the domain
