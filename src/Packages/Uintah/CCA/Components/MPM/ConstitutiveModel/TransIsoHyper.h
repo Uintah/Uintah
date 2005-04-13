@@ -133,9 +133,6 @@ namespace Uintah {
     virtual void addParticleState(std::vector<const VarLabel*>& from,
 				  std::vector<const VarLabel*>& to);
 
-    const VarLabel* bElBarLabel;
-    const VarLabel* bElBarLabel_preReloc;
-
   };
 } // End namespace Uintah
       
