@@ -62,10 +62,9 @@ TransIsoHyper::TransIsoHyper(ProblemSpecP& ps,  MPMLabel* Mlb,
 
   pStretchLabel = VarLabel::create("p.stretch",
      ParticleVariable<double>::getTypeDescription());
-
   pStretchLabel_preReloc = VarLabel::create("p.stretch+",
      ParticleVariable<double>::getTypeDescription());
-  //_________________________________________________________________fail_labels
+
   pFailureLabel = VarLabel::create("p.fail",
      ParticleVariable<double>::getTypeDescription());
   pFailureLabel_preReloc = VarLabel::create("p.fail+",
@@ -99,7 +98,6 @@ TransIsoHyper::~TransIsoHyper()
 {
   VarLabel::destroy(pStretchLabel);
   VarLabel::destroy(pStretchLabel_preReloc);
-  //_________________________________________________________________fail_labels
   VarLabel::destroy(pFailureLabel);
   VarLabel::destroy(pFailureLabel_preReloc);
 }
@@ -157,12 +155,10 @@ void TransIsoHyper::addParticleState(std::vector<const VarLabel*>& from,
   // Add the local particle state data for this constitutive model.
   from.push_back(lb->pFiberDirLabel);
   from.push_back(pStretchLabel);
-  //______________________________________________________________fail_labels
   from.push_back(pFailureLabel);
 
   to.push_back(lb->pFiberDirLabel_preReloc);
   to.push_back(pStretchLabel_preReloc);
-  //______________________________________________________________fail_labels
   to.push_back(pFailureLabel_preReloc);
 }
 
@@ -263,9 +259,8 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<double> pmass,pvolume;
     ParticleVariable<double> pvolume_deformed;
     ParticleVariable<double> stretch;
-    //_______________________________________________________________________________fail_labels
     ParticleVariable<double> fail;
-
+    constParticleVariable<double> fail_old;
     constParticleVariable<Vector> pvelocity;
     constParticleVariable<Vector> pfiberdir;
     ParticleVariable<Vector> pfiberdir_carry;
@@ -279,27 +274,21 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(pfiberdir,           lb->pFiberDirLabel,           pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-    
-    old_dw->get(psize,             lb->pSizeLabel,              pset);
-    
+    old_dw->get(fail_old,            pFailureLabel,                pset);//fail
+    old_dw->get(psize,               lb->pSizeLabel,               pset);
+
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,  pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
     new_dw->allocateAndPut(pfiberdir_carry,  lb->pFiberDirLabel_preReloc,pset);
     new_dw->allocateAndPut(deformationGradient_new,
                            lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(stretch,          pStretchLabel_preReloc,     pset);
-
     new_dw->get(gvelocity, lb->gVelocityLabel,dwi,patch,gac,NGN);
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
-
-    //______________________________________________________________________fail_labels
-    new_dw->allocateAndPut(fail,    pFailureLabel_preReloc,     pset);
-
-    // Allocate variable to store internal heating rate
+    new_dw->allocateAndPut(fail,             pFailureLabel_preReloc,     pset);//fail
     ParticleVariable<double> pIntHeatRate;
     new_dw->allocateAndPut(pIntHeatRate, lb->pInternalHeatRateLabel_preReloc, 
-                           pset);
-
+                           pset);//internal heating rate
     //_____________________________________________material parameters
     double Bulk  = d_initialData.Bulk;
     double c1 = d_initialData.c1;
@@ -308,8 +297,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     double c4 = d_initialData.c4;
     double c5 = d_initialData.c5;
     double lambda_star = d_initialData.lambda_star;
-    //c6 = y-intercept
-    double c6 = c3*(exp(c4*(lambda_star-1.))-1.)-c5*lambda_star;
+    double c6 = c3*(exp(c4*(lambda_star-1.))-1.)-c5*lambda_star;//c6 = y-intercept
     double rho_orig = matl->getInitialDensity();
     double failure = d_initialData.failure;
     double crit_shear = d_initialData.crit_shear;
@@ -321,11 +309,9 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
 
       // Assign zero internal heating by default - modify if necessary.
       pIntHeatRate[idx] = 0.0;
-
       // Get the node indices that surround the cell
       interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
 
-      
       Vector gvel;
       velGrad.set(0.0);
       for(int k = 0; k < d_8or27; k++) {
@@ -361,21 +347,16 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
       //_______________________right Cauchy Green (C) tilde and invariants
       rightCauchyGreentilde_new = deformationGradient_new[idx].Transpose()
         * deformationGradient_new[idx]*pow(J,-(2./3.));
-
       I1tilde = rightCauchyGreentilde_new.Trace();
       I2tilde = .5*(I1tilde*I1tilde -
                  (rightCauchyGreentilde_new*rightCauchyGreentilde_new).Trace());
       I4tilde = Dot(deformed_fiber_vector,
                     (rightCauchyGreentilde_new*deformed_fiber_vector));
       lambda_tilde = sqrt(I4tilde);
-
-      // For diagnostics only
-      double I4 = I4tilde*pow(J,(2./3.));
+      double I4 = I4tilde*pow(J,(2./3.));// For diagnostics only
       stretch[idx] = sqrt(I4);
-
       deformed_fiber_vector = deformationGradient_new[idx]*deformed_fiber_vector
         *(1./lambda_tilde*pow(J,-(1./3.)));
-
       Matrix3 DY(deformed_fiber_vector,deformed_fiber_vector);
 
       //________________________________left Cauchy Green (B) tilde
@@ -462,28 +443,27 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
           if (e2 < e3) swap(e2,e3);
           };
         double max_shear_strain = (e1-e3)/2.;
-        if (max_shear_strain<= crit_shear)
-          {deviatoric_stress = (leftCauchyGreentilde_new*(c1+c2*I1tilde)
-               - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
-               - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
-          }
-        else
+        if (max_shear_strain > crit_shear || fail_old[idx]== 1.0 || fail_old[idx] == 3.0)
           {deviatoric_stress = Identity*0.;
           fail[idx] = 1.;
           matrix_failed = 1.;
           }
-
-        //________________________________fiber stress term + failure of fibers
-        if (stretch[idx] <= crit_stretch)
-          {fiber_stress = (DY*dWdI4tilde*I4tilde
-                           - Identity*(1./3.)*dWdI4tilde*I4tilde)*2./J;
-          }
         else
+         {deviatoric_stress = (leftCauchyGreentilde_new*(c1+c2*I1tilde)
+               - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
+               - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
+          }
+        //________________________________fiber stress term + failure of fibers
+        if (stretch[idx] <= crit_stretch || fail_old[idx] == 2. || fail_old[idx] == 3.)
           {fiber_stress = Identity*0.;
           fail[idx] = 2.;
           fiber_failed =1.;
           }
-        if ( (matrix_failed + fiber_failed) == 2.)
+        else
+          {fiber_stress = (DY*dWdI4tilde*I4tilde
+                           - Identity*(1./3.)*dWdI4tilde*I4tilde)*2./J;
+          }
+        if ( (matrix_failed + fiber_failed) == 2. || fail_old[idx] == 3.)
           fail[idx] = 3.;
         //________________________________hydrostatic pressure term
         if (fail[idx] == 1.0 ||fail[idx] == 3.0)
@@ -562,23 +542,21 @@ void TransIsoHyper::carryForward(const PatchSubset* patches,
     // Carry forward the data local to this constitutive model 
     constParticleVariable<Vector> pfibdir;
     ParticleVariable<double> pstretch;
-    //___________________________________________________________fail_labels
+    constParticleVariable<Vector> pfail_old;
     ParticleVariable<double> pfail;
 
     ParticleVariable<Vector> pfibdir_new;
     old_dw->get(pfibdir,         lb->pFiberDirLabel,                   pset);
+    old_dw->get(pfail_old,       pFailureLabel,                        pset);
 
     new_dw->allocateAndPut(pfibdir_new,      lb->pFiberDirLabel_preReloc, pset);
     new_dw->allocateAndPut(pstretch,         pStretchLabel_preReloc,      pset);
-    //___________________________________________________________fail_labels
-    new_dw->allocateAndPut(pfail,   pFailureLabel_preReloc, pset);
+    new_dw->allocateAndPut(pfail,            pFailureLabel_preReloc,      pset);
 
     for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++){
       particleIndex idx = *iter;
       pfibdir_new[idx] = pfibdir[idx];
       pstretch[idx] = 1.0;
-
-      //__________________________________________________________fail_labels
       pfail[idx] = 0.0;
     }
     new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(1.e10)), 
@@ -603,10 +581,10 @@ void TransIsoHyper::addComputesAndRequires(Task* task,
   Ghost::GhostType  gnone = Ghost::None;
 
   task->requires(Task::OldDW, lb->pFiberDirLabel, matlset, gnone);
+  task->requires(Task::OldDW, pFailureLabel,      matlset, gnone);
 
   task->computes(lb->pFiberDirLabel_preReloc, matlset);
   task->computes(pStretchLabel_preReloc,      matlset);
-  //________________________________________________fail_labels
   task->computes(pFailureLabel_preReloc,      matlset);
 }
 
