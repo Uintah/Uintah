@@ -50,6 +50,7 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   lb     = Mlb;
   flag   = MFlag;
   n8or27 = flag->d_8or27;
+  outputJ= false; 
 
   if(n8or27==8) {NGP=1; NGN=1;}
   else if(n8or27==MAX_BASIS) {NGP=2; NGN=2;}
@@ -116,6 +117,7 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
      mpm_soln_ps->get("smooth_crack_front", smoothCrackFront);
      mpm_soln_ps->get("J_radius", rJ);
      mpm_soln_ps->get("dadx",rdadx);
+     mpm_soln_ps->get("outputJ",outputJ);
   }
 
   // Read in extent of the global grid

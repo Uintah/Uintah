@@ -170,7 +170,8 @@ class Crack
     
     Output* dataArchiver;          // data archiving information
     string udaDir;                 // Base file directory
-
+    bool outputJ;                  // Output J-integral (false by default) 
+                                  
     string 
     GridBCType[Patch::numFaces];   // BC types of global grid
     Point GLP, GHP;                // Lowest and highest pt of real global grid 

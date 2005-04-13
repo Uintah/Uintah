@@ -747,7 +747,9 @@ void Crack::OutputCrackFrontResults(const int& m)
         if(i==cfSegMinIdx[m][i]) numSubCracks++;
         int node=cfSegNodes[m][i];
         Point cp=cx[m][node];
-        Vector cfPara=cfSegK[m][i];
+	Vector cfPara = Vector(0.,0.,0.);
+	if(outputJ==true) cfPara=cfSegJ[m][i];
+	else              cfPara=cfSegK[m][i];
         outCrkFrt << setw(5) << timestep
                   << setw(15) << time
                   << setw(5)  << (i-1+2*numSubCracks)/2
