@@ -48,11 +48,11 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/PointCloudField.h>
-
+#include <Core/Datatypes/DenseMatrix.h>
 
 #include <sys/stat.h>
 #include <sys/types.h>
-
+#include <fstream>
 
 namespace SCIRun {
 
@@ -80,12 +80,26 @@ ForwardIPM::ForwardIPM(GuiContext* ctx)
 static bool
 write_geo_file(ProgressReporter *pr, FieldHandle field, const char *filename)
 {
+  
   TetVolMesh *mesh = dynamic_cast<TetVolMesh *>(field->mesh().get_rep());
   if (mesh == 0)
   {
     pr->error("Field does not contain a TetVolMesh.");
     return false;
   }
+
+ 
+  TetVolMesh::Node::iterator nitr, neitr;
+  TetVolMesh::Node::size_type nsize; 
+  mesh->begin(nitr);
+  mesh->end(neitr);
+  mesh->size(nsize);
+
+  TetVolMesh::Cell::iterator citr, ceitr;
+  TetVolMesh::Cell::size_type csize; 
+  mesh->begin(citr);
+  mesh->end(ceitr);
+  mesh->size(csize); 
 
   FILE *f = fopen(filename, "w");
   if (f == NULL)
@@ -95,43 +109,63 @@ write_geo_file(ProgressReporter *pr, FieldHandle field, const char *filename)
   }
 
   // Write header.
-  
-  // Write it out.
-  TetVolMesh::Node::iterator nitr, neitr;
-  mesh->begin(nitr);
-  mesh->end(neitr);
-  
+  fprintf(f, "BOI - GEOMETRIEFILE\n");
+  fprintf(f, "===================================================================\n");
+  fprintf(f, "===================================================================\n");
+  fprintf(f, "BOI - STEUERKARTE\n");
+  fprintf(f, "  ANZAHL DER KNOTEN             : %d\n",(unsigned)(nsize));
+  fprintf(f, "  ANZAHL DER ELEMENTE           : %d\n",(unsigned)(csize));
+  fprintf(f, "  GEOMETR. STRUKTUR - DIMENSION :      3\n");
+  fprintf(f, "EOI - STEUERKARTE\n");
+  fprintf(f, "===================================================================\n");
+  fprintf(f, "===================================================================\n");    
+  fprintf(f, "BOI - KOORDINATENKARTE\n");  
+
+  // write it out
+  int odd=1;
   while (nitr != neitr)
   {
     Point p;
     mesh->get_point(p, *nitr);
 
+    if(odd==1) {
+      fprintf(f, "   %11.5e %11.5e %11.5e ", p.x(), p.y(), p.z());
+      odd=0;
+    }
+    else{
+      fprintf(f, "   %11.5e %11.5e %11.5e\n", p.x(), p.y(), p.z());
+      odd=1;
+    }
     // Write p;
 
     ++nitr;
   }
+  // write middle part
+  fprintf(f, "\nEOI - KOORDINATENKARTE\n");
+  fprintf(f, "===================================================================\n");
+  fprintf(f, "===================================================================\n"); 
+  fprintf(f, "BOI - ELEMENTKNOTENKARTE\n");
 
-
-  TetVolMesh::Cell::iterator citr, ceitr;
-  mesh->begin(citr);
-  mesh->end(ceitr);
-  
   while (citr != ceitr)
   {
     TetVolMesh::Node::array_type nodes; // 0 based
     mesh->get_nodes(nodes, *citr);
 
     // Write nodes
-    fprintf(f, "%d %d %d %d\n",
+    fprintf(f,  "  303: %6d%6d%6d%6d\n",
             nodes[0]+1, nodes[1]+1, nodes[2]+1, nodes[3]+1);
 
     ++citr;
   }
 
   // Write tail, bottom part.
-
-
+  fprintf(f, "EOI - ELEMENTKNOTENKARTE\n");
+  fprintf(f, "===================================================================\n");
+  fprintf(f, "===================================================================\n");
+  fprintf(f, "BOI - GEOMETRIEFILE\n");
+  
   fclose(f);
+  
   return true;
 }
 
@@ -157,9 +191,13 @@ write_knw_file(ProgressReporter *pr, FieldHandle field, const char *filename)
   }
 
   // Write header.
-  
+  fprintf(f, "BOI - TENSORVALUEFILE\n");
+  fprintf(f, "========================================================\n");
+  fprintf(f, "========================================================\n");
+  fprintf(f, "BOI - TENSOR\n");  
+
   // Write it out.
-  TetVolMesh::Elem::iterator itr, eitr;
+  TetVolMesh::Cell::iterator itr, eitr;
   mesh->begin(itr);
   mesh->end(eitr);
   
@@ -177,9 +215,13 @@ write_knw_file(ProgressReporter *pr, FieldHandle field, const char *filename)
   }
 
   // Write tail, bottom part.
-
+  fprintf(f, "EOI - TENSOR\n");
+  fprintf(f, "========================================================\n");
+  fprintf(f, "========================================================\n");
+  fprintf(f, "EOI - TENSORVALUEFILE\n");
 
   fclose(f);
+    
   return true;
 }
 
@@ -194,6 +236,13 @@ write_elc_file(ProgressReporter *pr, FieldHandle fld, const char *filename)
     return false;
   }
 
+  PointCloudMesh::Node::iterator niter; 
+  PointCloudMesh::Node::iterator niter_end; 
+  PointCloudMesh::Node::size_type nsize; 
+  mesh->begin(niter);
+  mesh->end(niter_end);
+  mesh->size(nsize);
+  
   FILE *f = fopen(filename, "w");
   if (f == NULL)
   {
@@ -201,31 +250,145 @@ write_elc_file(ProgressReporter *pr, FieldHandle fld, const char *filename)
     return false;
   }
 
+  //write header
+  fprintf(f, "# %d Electrodes\n", (unsigned)(nsize));
+  fprintf(f, "ReferenceLabel	avg\n");
+  fprintf(f, "NumberPositions=\t%d\n",(unsigned)(nsize));
+  fprintf(f, "UnitPosition	mm\n");
+  fprintf(f, "Positions\n");
+
+  //write it out
+  while(niter != niter_end) {
+    Point p;
+    mesh->get_center(p, *niter);
+    fprintf(f, "%lf %lf %lf\n", p.x(), p.y(), p.z());
+    ++niter;
+  }     
+
+  fprintf(f,"NoPolygons\n");
+  fprintf(f,"NoLabels\n");
+  //write tail
+  
   fclose(f);
+  
   return true;
 }
 
 
+static bool
+write_dip_file(ProgressReporter *pr, MatrixHandle mh1, MatrixHandle mh2, const char *filename)
+{
+
+  DenseMatrix *dp_pos = dynamic_cast<DenseMatrix *>(mh1.get_rep());
+  if (!dp_pos) {
+    pr->error("Error -- input field wasn't a DenseMatrix");
+    return false;
+  }
+
+  int nd=dp_pos->nrows();
+  
+  DenseMatrix *dp_vec = dynamic_cast<DenseMatrix *>(mh2.get_rep());
+  if (!dp_vec) {
+    pr->error("Error -- input field wasn't a DenseMatrix");
+    return false;
+  }
+  
+  int nr=dp_vec->nrows();
+  int nc=dp_vec->ncols();
+  cerr << "Number of rows = " << nr << "  number of columns = " << nc << "\n";
+  
+  FILE *f = fopen(filename, "wt");
+  if (!f) {
+    pr->error(string("Error -- couldn't open output file: ") + filename );
+    return false;
+  }
+
+  // write header
+  fprintf(f,"# 1 dipole(s) at %d time steps", nr);
+  fprintf(f,"UnitPosition\tmm");
+  fprintf(f,"UnitMoment\tnAm");
+  fprintf(f,"UnitTime\tms");  
+  fprintf(f,"NumberPositions=\t%d\n",nd);
+  fprintf(f,"NumberTimeSteps=\t%d\n",nr);
+  fprintf(f,"TimeSteps\t0(1)%d\n",(unsigned)nr-1);
+  fprintf(f,"FirstTimeStep\t0\n");
+  fprintf(f,"LastTimeStep\t%d\n",(unsigned)(nr-1));
+
+  // write dipole moment
+  fprintf(f,"MomentsFixed\n");
+  double sum = 0.0;
+  for (int c=0; c<nc; c++){
+    sum += ((*dp_vec)[0][c])*((*dp_vec)[0][c]);
+  }
+  
+  sum = sqrt(sum);
+  fprintf(f,"%f\t%f\t%f\n",(*dp_vec[0][0])/sum,(*dp_vec[0][0])/sum, (*dp_vec[0][0])/sum);
+
+  // write dipole position
+  fprintf(f,"PositionFixed\n");
+  for (int i=0; i<3; i++)
+    fprintf(f,"%10.6f",(*dp_pos)[0][i]);
+  fprintf(f,"\n");
+
+  //  write dipole magnitude
+  fprintf(f,"Magnitudes");
+  for (int r=0; r<nr; r++) {
+    double sum = 0.0;
+    for (int c=0; c<nc; c++){
+      sum += ((*dp_vec)[r][c])*((*dp_vec)[r][c]);
+      //      fprintf(f, "%11.5e\t", (*dp_vec)[r][c]);
+    }
+    fprintf(f,"%e ",sqrt(sum));
+  }
+  fprintf(f,"\n");
+  fprintf(f,"NoLabels");
+  fclose(f);
+
+  return true;
+}
+
 
 static bool
-write_dip_file(ProgressReporter *pr, FieldHandle fld, const char *filename)
+send_result_file(MatrixOPort *result_port, string filename)
 {
-  PointCloudField<Vector> *pcv =
-    dynamic_cast<PointCloudField<Vector> *>(fld.get_rep());
-  if (pcv == 0)
-  {
-    pr->error("Field is not a vector point cloud.");
+  ifstream matstream(filename.c_str(),ios::in);
+  if (matstream.fail()) {
+    cerr << "Error -- Could not open file " << filename << "\n";
     return false;
   }
+  
+  string tmp;
+  int nc,nr;
+  matstream >> tmp >> nc;
+  matstream >> tmp >> nr;
+  cerr << "Number of Electrode = " << nc << "\n" << "Number of Time Step = " << nr << "\n";
 
-  FILE *f = fopen(filename, "w");
-  if (f == NULL)
-  {
-    pr->error(string("Unable to open file '") + filename + "' for writing.");
-    return false;
+  //skip text lines
+  for (int i=0; i<4; ++i){
+    getline(matstream, tmp);
+    // cerr << tmp << "\n";
   }
 
-  fclose(f);
+  DenseMatrix *dm = scinew DenseMatrix(nr,nc);
+
+  // write number of row & column
+  (*dm)[0][0] = nr;
+  (*dm)[0][1] = nc;
+
+  // write potentials on electrodes for each time step 
+  int r,c;
+  for (r=1; r<nr; r++)
+    for (c=0; c<nc; c++) {
+      double d;
+      matstream >> d;
+      (*dm)[r][c]=d;
+      //	cerr << "matrix["<<r<<"]["<<c<<"]="<<d<<"\n";
+    }
+  cerr << "done building matrix.\n";
+
+  //  result->set_raw(false);
+  result_port->send(MatrixHandle(dm));
+
   return true;
 }
 
@@ -245,7 +408,6 @@ ForwardIPM::write_par_file(string filename)
   fclose(f);
   return true;
 }
-
 
 
 void
@@ -283,9 +445,10 @@ ForwardIPM::execute()
     return;
   }
   
-  MatrixIPort *dipole_port = (MatrixIPort *)get_iport("Dipole Positions");
-  MatrixHandle dipole;
-  if (!(dipole_port->get(dipole) && dipole.get_rep()))
+  MatrixIPort *dipole_port1 = (MatrixIPort *)get_iport("Dipole Positions");
+  MatrixHandle dipole1;
+  
+  if (!(dipole_port1->get(dipole1) && dipole1.get_rep()))
   {
     warning("Dipole required to continue.");
     return;
@@ -297,11 +460,26 @@ ForwardIPM::execute()
     return;
   }
 
+  MatrixIPort *dipole_port2 = (MatrixIPort *)get_iport("Dipole Vector");
+  MatrixHandle dipole2;
+  
+  if (!(dipole_port2->get(dipole2) && dipole2.get_rep()))
+  {
+    warning("Dipole required to continue.");
+    return;
+  }
+
+  if (false) // Some dipole error checking.
+  {
+    error("Dipole must contain Vectors at Nodes.");
+    return;
+  }
+  
   // Make our tmp directory
   const string tmpdir = "/tmp/ForwardIPM" + to_string(getpid());
   const string tmplog = tmpdir + "forward.log";
   const string resultfile = tmpdir + "result.msr";
-  const string condmeshfile = tmpdir + "condmesh.geo";
+  const string condmeshfile = tmpdir + "ca_head.geo";
   const string condtensfile = tmpdir + "ca_perm.knw";
   const string electrodefile = tmpdir + "electrode.elc";
   const string dipolefile = tmpdir + "dipole.dip";
@@ -330,7 +508,6 @@ ForwardIPM::execute()
       throw false;
     }
 
-
     // Write out Electrodes
     if (!write_elc_file(this, electrodes, electrodefile.c_str()))
     {
@@ -339,14 +516,14 @@ ForwardIPM::execute()
     }
 
     // Write out Dipole
-    //if (!write_dip_file(this, dipole, dipolefile.c_str()))
+    if (!write_dip_file(this, dipole1, dipole2, dipolefile.c_str()))
     {
       error("Unable to export dipole file.");
       throw false;
     }
 
     // Write out our parameter file.
-    if (!write_par_file(parafile)) { throw false; }
+    //    if (!write_par_file(parafile)) { throw false; }
 
     // Construct our command line.
     const string impfile = "imp";
@@ -362,8 +539,13 @@ ForwardIPM::execute()
     }
 
     // Read in the results and send them along.
-
-
+    MatrixOPort *mat_oport = (MatrixOPort *)get_oport("DenseMatrix");
+    if (!send_result_file(mat_oport,resultfile))
+    {
+	error("Unable to send denseMatrix");
+	throw false;
+    }
+      
     throw true; // cleanup.
   }
   catch (...)
