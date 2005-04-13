@@ -137,6 +137,7 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
 Patch::~Patch()
 {
   d_BoundaryFaces.clear();
+  d_coarseFineInterfaceFaces.clear();
 
   for (FaceType face = startFace; face <= endFace; face = nextFace(face))
     d_CornerCells[face].clear();
@@ -333,17 +334,14 @@ Patch::setBCType(Patch::FaceType face, BCType newbc)
    d_bctypes[face]=newbc;
    d_nodeHighIndex = d_highIndex+
 	       IntVector(getBCType(xplus) == Neighbor?0:1,
-			 getBCType(yplus) == Neighbor?0:1,
-			 getBCType(zplus) == Neighbor?0:1);
+			   getBCType(yplus) == Neighbor?0:1,
+			   getBCType(zplus) == Neighbor?0:1);
 
 
    // If this face has a BCType of Patch::None, make sure
    // that it is in the list of d_BoundaryFaces, otherwise, make
    // sure that it is not in this list.
-
-   // I thought vector<> had the find() function, but I guess not.
-   //   vector<FaceType>::iterator faceIdx = d_BoundaryFaces.find(face);
-
+   
    vector<FaceType>::iterator faceIdx = d_BoundaryFaces.begin();
    vector<FaceType>::iterator faceEnd = d_BoundaryFaces.end();
 
@@ -353,14 +351,36 @@ Patch::setBCType(Patch::FaceType face, BCType newbc)
    }
 
    if (newbc == Patch::None) {
-     if (faceIdx == d_BoundaryFaces.end()) {
-       d_BoundaryFaces.push_back(face);
-     }
+    if(faceIdx == d_BoundaryFaces.end()){
+     d_BoundaryFaces.push_back(face);
+    }
    } else {
      if (faceIdx != d_BoundaryFaces.end()) {
        d_BoundaryFaces.erase(faceIdx);
      }
-   }     
+   }
+   
+   
+   //__________________________________
+   //  set the coarse fine interface faces
+   vector<FaceType>::iterator face_Idx = d_coarseFineInterfaceFaces.begin();
+   vector<FaceType>::iterator face_End = d_coarseFineInterfaceFaces.end();
+
+   while (face_Idx != face_End) {
+     if (*face_Idx == face) break;
+     face_Idx++;
+   }
+
+   if (newbc == Patch::Coarse ) {
+     if(face_Idx == d_coarseFineInterfaceFaces.end()){  
+       d_coarseFineInterfaceFaces.push_back(face);
+     }
+   } else {
+     if (face_Idx != d_coarseFineInterfaceFaces.end()) {
+       d_coarseFineInterfaceFaces.erase(face_Idx);
+     }
+   }  
+        
 }
 
 void 
@@ -759,20 +779,29 @@ Patch::getSFCIterator(const int dir, const int offset) const
 } 
 //__________________________________
 //  Iterate over the GhostCells on a particular face
-// if domain == plusEdgeCells this includes the edge and corner cells.
+// domain:  
+//  plusEdgeCells:          Includes the edge and corner cells.
+//  NC_vars/FC_vars:        Hit all nodes/faces on the border of the extra cells        
+//  alongInteriorFaceCells: Hit interior face cells                                                            
 CellIterator    
 Patch::getFaceCellIterator(const FaceType& face, const string& domain) const
 { 
-  IntVector lowPt  = d_inLowIndex;
-  IntVector highPt = d_inHighIndex;
+  IntVector lowPt  = d_inLowIndex;   // interior low
+  IntVector highPt = d_inHighIndex;  // interior high
   int offset = 0;
-  if(domain == "plusEdgeCells"){
+  
+  // Controls if the iterator hits the extra cells or interior cells.
+  // default is to hit the extra cells. 
+  int shiftInward = 0;
+  int shiftOutward = 1;     
+ 
+  //__________________________________
+  // different options
+  if(domain == "plusEdgeCells"){ 
     lowPt   = d_lowIndex;
     highPt  = d_highIndex;
   }
-  // This will allow you to hit all the nodes/faces on the border of
-  // the extracells
-  if(domain == "NC_vars"|| domain == "FC_vars"){  
+  if(domain == "NC_vars"){  
     lowPt   = d_inLowIndex;
     highPt  = d_highIndex;
     offset  = 1;
@@ -782,30 +811,37 @@ Patch::getFaceCellIterator(const FaceType& face, const string& domain) const
     highPt  = d_highIndex;
     offset  = 1;
   }
+  if(domain == "alongInteriorFaceCells"){
+    lowPt   = d_inLowIndex;
+    highPt  = d_inHighIndex;
+    offset  = 0;
+    shiftInward = 1;
+    shiftOutward = 0;
+  }
 
   if (face == Patch::xplus) {           //  X P L U S
-     lowPt.x(d_inHighIndex.x());
-     highPt.x(d_inHighIndex.x()+1);
+    lowPt.x(d_inHighIndex.x() - shiftInward);
+    highPt.x(d_inHighIndex.x()+ shiftOutward);
   }
   if(face == Patch::xminus){            //  X M I N U S
-    highPt.x(d_inLowIndex.x()  + offset);
-    lowPt.x(d_inLowIndex.x()-1 + offset);
+    lowPt.x(d_inLowIndex.x()  - shiftOutward + offset);
+    highPt.x(d_inLowIndex.x() + shiftInward  + offset);
   }
   if(face == Patch::yplus) {            //  Y P L U S
-    lowPt.y(d_inHighIndex.y());
-    highPt.y(d_inHighIndex.y()+1);
+    lowPt.y(d_inHighIndex.y()  - shiftInward);
+    highPt.y(d_inHighIndex.y() + shiftOutward);
   }
   if(face == Patch::yminus) {           //  Y M I N U S
-    highPt.y(d_inLowIndex.y()  + offset);
-    lowPt.y(d_inLowIndex.y()-1 + offset);
+    lowPt.y(d_inLowIndex.y()   - shiftOutward + offset);
+    highPt.y(d_inLowIndex.y()  + shiftInward  + offset);
   }
   if (face == Patch::zplus) {           //  Z P L U S
-    lowPt.z(d_inHighIndex.z() );
-    highPt.z(d_inHighIndex.z()+1);
+    lowPt.z(d_inHighIndex.z()  - shiftInward);
+    highPt.z(d_inHighIndex.z() + shiftOutward);
   }
   if (face == Patch::zminus) {          //  Z M I N U S
-    highPt.z(d_inLowIndex.z()  + offset);
-    lowPt.z(d_inLowIndex.z()-1 + offset);
+    lowPt.z(d_inLowIndex.z()   - shiftOutward + offset);
+    highPt.z(d_inLowIndex.z()  + shiftInward  + offset);
   } 
   return CellIterator(lowPt, highPt);
 }
