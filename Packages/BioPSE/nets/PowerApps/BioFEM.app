@@ -396,7 +396,6 @@ class BioFEMApp {
 	source $DATADIR/$DATASET/$DATASET.settings
 
 	#Fix up global scale.
-	global global_scale
 	global $mods(ShowDipole)-widgetSizeGui_
 	global $mods(ShowField-Electrodes)-node_scale
 	global $mods(ShowField-StreamLines)-node_scale
