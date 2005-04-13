@@ -369,6 +369,16 @@ SeedPoints::execute()
     }
   }
 
+  // Find magnitude and base ring scale on that
+  const BBox ibox = ifieldhandle->mesh()->get_bounding_box();
+  Vector mag = ibox.max() - ibox.min();
+  double max = 0.0;
+  if (mag.x() > max) max = mag.x();
+  if (mag.y() > max) max = mag.y();
+  if (mag.z() > max) max = mag.z();
+  
+
+
   for (int i=0; i <numSeeds; i++) 
   {
     if (gui_widget_.get() == 0) {
@@ -378,12 +388,11 @@ SeedPoints::execute()
       gui->execute(id.c_str() + string(" set_seed " + to_string((int)i) + " " + to_string((double)location.x()) + " " + to_string((double)location.y()) + " " + to_string((double)location.z())));
 
     } else {
-      widget_ring_[i]->SetScale(gui_probe_scale_.get() * l2norm_ * 0.003);
-      //const Point location = widget_ring_[i]->GetPosition();
       Point location;
       double r;
       Vector normal;
       widget_ring_[i]->GetPosition(center, normal, r);
+      widget_ring_[i]->SetScale(max*0.02);
 
       // place rings at slight distance as seeds are added
       gui->execute(id.c_str() + string(" set_seed " + to_string((int)i) + " " + to_string((double)center.x()) + " " + to_string((double)center.y()) + " " + to_string((double)center.z())));
