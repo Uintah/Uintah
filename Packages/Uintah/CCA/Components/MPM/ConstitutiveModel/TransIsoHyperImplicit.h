@@ -38,10 +38,17 @@ namespace Uintah {
       		double c5;
       		double lambda_star;
       		Vector a0;
+		double failure;
+      		double crit_shear;
+      		double crit_stretch;
           };
     
      const VarLabel* pStretchLabel;  // For diagnostic
      const VarLabel* pStretchLabel_preReloc;  // For diagnostic
+    
+    const VarLabel* pFailureLabel;  // ____________________________fail_labels
+    const VarLabel* pFailureLabel_preReloc;
+
 
       private:
          CMData d_initialData;
