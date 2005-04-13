@@ -145,6 +145,7 @@ itcl_class SCIRun_FieldsCreate_SeedPoints {
 
 	checkbutton $w.ex -text "Auto execute" \
 	    -variable $this-auto_execute
+	pack $w.ex -side top -anchor n
 	
     }
 }
