@@ -68,7 +68,6 @@ PlasticityModelFactory::createCopy(const PlasticityModel* pm)
       return(scinew PTWPlastic(dynamic_cast<const PTWPlastic*>(pm)));
    
    else 
-      throw ProblemSetupException("Cannot create copy of unknown plasticity 
-                                   model");
+      throw ProblemSetupException("Cannot create copy of unknown plasticity model");
 }
 
