@@ -1226,6 +1226,7 @@ proc sourceSettingsFile {} {
 		1 "set data [showChooseDatasetPrompt $initialdir]"
 		2 { 
 		    displayErrorWarningOrInfo "*** SCIRUN_DATA not set.  Reader modules will need to be manually set to valid filenames." warning
+		    uplevel \#0 source "[netedit getenv SCIRUN_SRCDIR]/nets/default.settings"
 		    return
 		}
 		3 "netedit quit"
