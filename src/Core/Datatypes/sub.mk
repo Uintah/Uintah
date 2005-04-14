@@ -38,6 +38,7 @@ SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/ColumnMatrix.cc	    	\
 	$(SRCDIR)/CurveMesh.cc            	\
 	$(SRCDIR)/Datatype.cc		    	\
+	$(SRCDIR)/DenseColMajMatrix.cc	    	\
 	$(SRCDIR)/DenseMatrix.cc	    	\
 	$(SRCDIR)/Field.cc		    	\
 	$(SRCDIR)/FieldInterfaceAux.cc	    	\
