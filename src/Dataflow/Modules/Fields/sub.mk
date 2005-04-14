@@ -61,6 +61,7 @@ SRCS     += \
 	$(SRCDIR)/DirectMapping.cc\
 	$(SRCDIR)/FieldBoundary.cc\
 	$(SRCDIR)/FieldCage.cc\
+	$(SRCDIR)/FieldFrenet.cc\
 	$(SRCDIR)/FieldInfo.cc\
 	$(SRCDIR)/FieldMeasures.cc\
 	$(SRCDIR)/FieldSlicer.cc\
