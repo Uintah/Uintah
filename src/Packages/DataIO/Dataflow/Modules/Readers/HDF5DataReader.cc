@@ -334,7 +334,13 @@ void HDF5DataReader::execute() {
 	} else
 	  resend = true;
       } else {
-	error( "Input index is out of range" );
+
+	ostringstream str;
+	str << "Input index is out of range ";
+	str << "0 <= " << which << " <= " << (int) frame_paths.size();
+
+	error( str.str() );
+
 	return;
       }
     } else {
@@ -464,8 +470,8 @@ void HDF5DataReader::ReadandSendData( string& filename,
 
       if( vec.size() > 1) {
 
-	if( assumesvt_ && vec.size() != 3 && vec.size() != 6) {
-	  warning( "Assuming Vector and Tensor data but can not merge into a Vector or Tensor because there are not 3 or 6 nrrds that are alike." );
+	if( assumesvt_ && vec.size() != 3 && vec.size() != 6 && vec.size() != 9) {
+	  warning( "Assuming Vector and Matrix data but can not merge into a Vector or Matrix because there are not 3, 6, or 9 nrrds that are alike." );
 	  continue;
 	}
 	  
@@ -1353,7 +1359,7 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
   // Stuff the data into the NRRD.
   NrrdData *nout = scinew NrrdData();
 
-  // If the user asks us to assume vector or tensor data, the
+  // If the user asks us to assume vector or matrix data, the
   // assumption is based on the size of the last dimension of the hdf5 data
   // amd will be in the first dimension of the nrrd
   int sz_last_dim = 1;
