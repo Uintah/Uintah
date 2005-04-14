@@ -46,7 +46,13 @@ itcl_class Teem_UnuNtoZ_UnuPad {
         set_defaults
     }
     method set_defaults {} {
+	global $this-pad-style
+	global $this-pad-value
+
 	global $this-dim
+
+	set $this-pad-style Bleed
+	set $this-pad-value 0
 
 	set $this-dim 0
     }
@@ -134,6 +140,23 @@ itcl_class Teem_UnuNtoZ_UnuPad {
 
         toplevel $w
         wm minsize $w 150 80
+
+	frame $w.style
+	radiobutton $w.style.bleed -text "Bleed" \
+	    -variable $this-pad-style -value "Bleed"
+	radiobutton $w.style.wrap -text "Wrap" \
+	    -variable $this-pad-style -value "Wrap"
+	radiobutton $w.style.pad -text "Pad" \
+	    -variable $this-pad-style -value "Pad"
+
+        label $w.style.l -text "Value"
+        entry $w.style.v -textvariable $this-pad-value -width 6
+
+	pack $w.style.bleed $w.style.wrap $w.style.pad $w.style.l $w.style.v \
+	    -side left -anchor nw -padx 3
+
+	pack $w.style -side top
+
         frame $w.f
 	frame $w.fb
         pack $w.f $w.fb -padx 2 -pady 2 -side top -expand yes
