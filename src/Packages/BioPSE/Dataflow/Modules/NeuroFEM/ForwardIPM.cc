@@ -322,7 +322,7 @@ write_dip_file(ProgressReporter *pr, MatrixHandle mh1, MatrixHandle mh2, const c
   }
   
   sum = sqrt(sum);
-  fprintf(f,"%f\t%f\t%f\n",(*dp_vec[0][0])/sum,(*dp_vec[0][0])/sum, (*dp_vec[0][0])/sum);
+  fprintf(f,"%f\t%f\t%f\n",(*dp_vec[0][0])/sum,(*dp_vec[0][1])/sum, (*dp_vec[0][2])/sum);
 
   // write dipole position
   fprintf(f,"PositionFixed\n");
@@ -667,12 +667,12 @@ ForwardIPM::execute()
     }
 
     // Write out our parameter file.
-    //    if (!write_par_file(parafile)) { throw false; }
+    if (!write_par_file(parafile)) { throw false; }
 
     // Construct our command line.
-    const string impfile = "imp";
+    const string ipmfile = "ipm";
     const string command = "(cd " + tmpdir + ";" +
-      impfile + " -i sourcesimulation" +
+      ipmfile + " -i sourcesimulation" +
       " -h " + condmeshfile + " -p " + parafile + " -s " + electrodefile +
       " -d " + dipolefile + " -o " + resultfile + " -fwd FEM -sens EEG)";
 
