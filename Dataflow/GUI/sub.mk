@@ -93,6 +93,7 @@ SRCS := \
         $(SRCDIR)/EditColorMap2D.tcl \
         $(SRCDIR)/ErrorMetric.tcl \
         $(SRCDIR)/FieldCage.tcl\
+        $(SRCDIR)/FieldFrenet.tcl\
         $(SRCDIR)/FieldInfo.tcl\
         $(SRCDIR)/FieldMeasures.tcl \
         $(SRCDIR)/FieldReader.tcl \
