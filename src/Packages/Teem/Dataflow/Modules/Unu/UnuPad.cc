@@ -62,7 +62,13 @@ public:
   virtual void execute();
 private:
   void load_gui();
-  
+
+  GuiString           pad_style_;
+  GuiDouble           pad_value_;
+
+  string              last_pad_style_;
+  double              last_pad_value_;
+
   vector<GuiInt*>     mins_;
   vector<int>         last_mins_;
   vector<GuiInt*>     maxs_;
@@ -80,6 +86,8 @@ DECLARE_MAKER(UnuPad)
 
 UnuPad::UnuPad(GuiContext *ctx) : 
   Module("UnuPad", ctx, Filter, "UnuNtoZ", "Teem"),
+  pad_style_(ctx->subVar("pad-style")),
+  pad_value_(ctx->subVar("pad-value")),
   dim_(ctx->subVar("dim")),
   last_generation_(-1), 
   last_nrrdH_(0)
@@ -170,6 +178,15 @@ UnuPad::execute()
   // See if gui values have changed from last execute,
   // and set up execution values. 
   bool changed = false;
+
+  if( last_pad_style_ != pad_style_.get() ||
+      last_pad_value_ != pad_value_.get() ) {
+    last_pad_style_ = pad_style_.get();
+    last_pad_value_ = pad_value_.get();
+
+    changed = true;
+  }
+
   vector<int> min(dim_.get()), max(dim_.get());
   for (int a = 0; a < dim_.get(); a++) {
     if (last_mins_[a] != mins_[a]->get()) {
@@ -195,8 +212,13 @@ UnuPad::execute()
     int *minp = &(min[0]);
     int *maxp = &(max[0]);
 
-    if (nrrdPad(nout, nin, minp, maxp, nrrdBoundaryBleed)) 
-      {
+    if( (last_pad_style_ == "Bleed" &&
+	 nrrdPad(nout, nin, minp, maxp, nrrdBoundaryBleed)) ||
+	(last_pad_style_ == "Wrap" &&
+	 nrrdPad(nout, nin, minp, maxp, nrrdBoundaryWrap)) ||
+	(last_pad_style_ == "Pad" &&
+	 nrrdPad(nout, nin, minp, maxp, nrrdBoundaryPad, last_pad_value_)) ) {
+
 	char *err = biffGetDone(NRRD);
 	error(string("Trouble resampling: ") + err);
 	msgStream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
