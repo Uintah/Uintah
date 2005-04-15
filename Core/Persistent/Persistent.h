@@ -90,7 +90,7 @@ protected:
   Piostream(Direction, int, const string & =string(""));
   Direction dir;
   int version;
-  int err;
+  bool err;
   int file_endian;
   
   bool have_peekname_;
@@ -100,7 +100,7 @@ protected:
   MapIntPersistent* inpointers;
   
   int current_pointer_id;
-  virtual void emit_pointer(int&, int&) = 0;
+  virtual void emit_pointer(int& have_data, int& pointer_id);
   static bool readHeader(const string& filename, char* hdr,
 			 const char* type, int& version, int& endian);
 public:
@@ -114,7 +114,7 @@ public:
   virtual void begin_cheap_delim();
   virtual void end_cheap_delim();
 
-  virtual void io(bool&) = 0;
+  virtual void io(bool&);
   virtual void io(char&) = 0;
   virtual void io(signed char&) = 0;
   virtual void io(unsigned char&) = 0;
@@ -132,9 +132,9 @@ public:
 
   void io(Persistent*&, const PersistentTypeID&);
 
-  int reading();
-  int writing();
-  int error();
+  bool reading();
+  bool writing();
+  bool error();
 
   virtual bool supports_block_io() { return false; }
   virtual void block_io(void*, size_t, size_t) { ASSERTFAIL("unsupported"); }
