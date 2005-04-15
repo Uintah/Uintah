@@ -68,3 +68,4 @@ endif
 
 to your .cshrc file.  MPI wipes out your environmental variables but it sources your
 .cshrc file so you can put a little hack in there.
+
