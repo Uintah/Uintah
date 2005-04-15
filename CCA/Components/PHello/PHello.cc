@@ -126,4 +126,3 @@ int myGoPort::go(){
   cout<<"PHello "<<name<<endl;
   return 0;
 }
- 
