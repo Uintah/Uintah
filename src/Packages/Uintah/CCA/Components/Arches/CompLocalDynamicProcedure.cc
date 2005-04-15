@@ -2681,7 +2681,9 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 	}
       }
       for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++) {
-          d_filter->applyFilter(pc, patch, cbetaIJ[ii], cbetaHATIJ[ii]);   
+#ifdef PetscFilter
+          d_filter->applyFilter(pc, patch, cbetaIJ[ii], cbetaHATIJ[ii]);
+#endif
       }
     
       for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
