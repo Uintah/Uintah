@@ -93,41 +93,44 @@ protected:
   int err;
   int file_endian;
   
+  bool have_peekname_;
+  string peekname_;
+
   MapPersistentInt* outpointers;
   MapIntPersistent* inpointers;
   
   int current_pointer_id;
-  virtual void emit_pointer(int&, int&)=0;
+  virtual void emit_pointer(int&, int&) = 0;
   static bool readHeader(const string& filename, char* hdr,
 			 const char* type, int& version, int& endian);
 public:
   string file_name;
 
   virtual ~Piostream();
-  virtual string peek_class()=0;
-  virtual int begin_class(const string& name, int current_version)=0;
-  virtual void end_class()=0;
+
+  virtual string peek_class();
+  virtual int begin_class(const string& name, int current_version);
+  virtual void end_class();
+  virtual void begin_cheap_delim();
+  virtual void end_cheap_delim();
+
+  virtual void io(bool&) = 0;
+  virtual void io(char&) = 0;
+  virtual void io(signed char&) = 0;
+  virtual void io(unsigned char&) = 0;
+  virtual void io(short&) = 0;
+  virtual void io(unsigned short&) = 0;
+  virtual void io(int&) = 0;
+  virtual void io(unsigned int&) = 0;
+  virtual void io(long&) = 0;
+  virtual void io(unsigned long&) = 0;
+  virtual void io(long long&) = 0;
+  virtual void io(unsigned long long&) = 0;
+  virtual void io(double&) = 0;
+  virtual void io(float&) = 0;
+  virtual void io(string& str) = 0;
 
   void io(Persistent*&, const PersistentTypeID&);
-
-  virtual void begin_cheap_delim()=0;
-  virtual void end_cheap_delim()=0;
-
-  virtual void io(bool&)=0;
-  virtual void io(char&)=0;
-  virtual void io(signed char&)=0;
-  virtual void io(unsigned char&)=0;
-  virtual void io(short&)=0;
-  virtual void io(unsigned short&)=0;
-  virtual void io(int&)=0;
-  virtual void io(unsigned int&)=0;
-  virtual void io(long&)=0;
-  virtual void io(unsigned long&)=0;
-  virtual void io(long long&)=0;
-  virtual void io(unsigned long long&)=0;
-  virtual void io(double&)=0;
-  virtual void io(float&)=0;
-  virtual void io(string& str)=0;
 
   int reading();
   int writing();
@@ -144,7 +147,7 @@ public:
 class Persistent {
 public:
   virtual ~Persistent();
-  virtual void io(Piostream&)=0;
+  virtual void io(Piostream&) = 0;
 };
 
 //----------------------------------------------------------------------
