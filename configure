@@ -42561,17 +42561,13 @@ echo $ECHO_N "checking for Insight.... $ECHO_C" >&6
   fi
 
   if test -a "$dir/ITKConfig.cmake"; then
-    INC_INSIGHT_H="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/ -I/g' | sed 's/
-//'`"
-    insight_libs_dir="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS \"/;/' | sed 's/\")//' | sed 's/;//g' | sed 's/
-//'`"
+    INC_INSIGHT_H="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/ -I/g' | tr -d '\r'`"
+    insight_libs_dir="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS \"/;/' | sed 's/\")//' | sed 's/;//g' | tr -d '\r'`"
     INSIGHT_LIB_DIR_FLAG="$LDRUN_PREFIX$insight_libs_dir -L$insight_libs_dir"
     INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon  -litkvnl -litkvnl_algo -litknetlib -litksys -lITKDICOMParser -litkzlib"
 
-    INSIGHT_VERSION_MINOR="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_VERSION_MINOR' | sed 's/SET(ITK_VERSION_MINOR \"//' | sed 's/\")//' | sed 's/
-//'`"
-    INSIGHT_VERSION_MAJOR="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_VERSION_MAJOR' | sed 's/SET(ITK_VERSION_MAJOR \"//' | sed 's/\")//' | sed 's/
-//'`"
+    INSIGHT_VERSION_MINOR="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_VERSION_MINOR' | sed 's/SET(ITK_VERSION_MINOR \"//' | sed 's/\")//' | tr -d '\r'`"
+    INSIGHT_VERSION_MAJOR="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_VERSION_MAJOR' | sed 's/SET(ITK_VERSION_MAJOR \"//' | sed 's/\")//' | tr -d '\r'`"
     if test "$INSIGHT_VERSION_MAJOR" = "2"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -lITKNrrdIO -litktiff -litkjpeg8 -litkjpeg12 -litkjpeg16"
     elif test "$INSIGHT_VERSION_MINOR" = "9"; then
