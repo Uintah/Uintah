@@ -66,11 +66,9 @@ using namespace std;
 #include <sys/mman.h>
 #endif
 
-#ifdef __digital__
-typedef longlong_t __int64_t;
-#endif
 
 #define PERSISTENT_VERSION 2
+
 
 namespace SCIRun {
 
@@ -765,59 +763,66 @@ void TextPiostream::emit_pointer(int& have_data, int& pointer_id)
   }
 }
 
-// FastPiostream is a non portable binary output.
-FastPiostream::~FastPiostream()
-{
-  if (fp_) fclose(fp_);
-}
 
+// FastPiostream is a non portable binary output.
 FastPiostream::FastPiostream(const string& filename, Direction dir) : 
   Piostream(dir, -1, filename), 
   fp_(0),
   have_peekname_(0)
 {
-  if(dir==Read){
+  if (dir==Read)
+  {
     fp_ = fopen (filename.c_str(), "rb");
-    if(!fp_){
+    if (!fp_)
+    {
       cerr << "Error opening file: " << filename << " for reading\n";
       err=1;
       return;
     }
     char hdr[12];
     size_t chars_read = fread(hdr, sizeof(char), 12, fp_);
-    if (chars_read != 12) {
+    if (chars_read != 12)
+    {
       cerr << "Error reading header from: " << filename << endl;
       err=1;
       return; 
     }
     readHeader(filename, hdr, "FAS", version, file_endian);
-  } else {
+  }
+  else
+  {
     fp_=fopen(filename.c_str(), "wb");
-    if(!fp_){
+    if (!fp_)
+    {
       cerr << "Error opening file: " << filename << " for writing\n";
       err=1;
       return;
     }
     version=PERSISTENT_VERSION;
-    if (version > 1) {
+    if (version > 1)
+    {
       char hdr[16];
-      if (airMyEndian == airEndianLittle) 
+      if (airMyEndian == airEndianLittle)
 	sprintf(hdr, "SCI\nFAS\n%03d\nLIT\n", version);
       else
 	sprintf(hdr, "SCI\nFAS\n%03d\nBIG\n", version);
       // write the header
       size_t wrote = fwrite(hdr, sizeof(char), 16, fp_);
-      if (wrote != 16) {
+      if (wrote != 16)
+      {
 	cerr << "Error writing header to: " << filename << endl;
 	err=1;
 	return; 
       }
-    } else {
+    }
+    else
+    {
       char hdr[12];
       sprintf(hdr, "SCI\nFAS\n%03d\n", version);
       // write the header
       size_t wrote = fwrite(hdr, sizeof(char), 12, fp_);
-      if (wrote != 12) {
+      if (wrote != 12)
+      {
 	cerr << "Error writing header to: " << filename << endl;
 	err=1;
 	return; 
@@ -826,35 +831,43 @@ FastPiostream::FastPiostream(const string& filename, Direction dir) :
   }
 }
 
+
 FastPiostream::FastPiostream(int fd, Direction dir) : 
   Piostream(dir, -1),
   fp_(0),
   have_peekname_(0)
 {
-  if(dir==Read){
+  if (dir==Read)
+  {
     fp_ = fdopen (fd, "rb");
-    if(!fp_){
+    if (!fp_)
+    {
       cerr << "Error opening socket: " << fd << " for reading\n";
       err=1;
       return;
     }
     char hdr[12];
     size_t chars_read = fread(hdr, sizeof(char), 12, fp_);
-    if (chars_read != 12) {
+    if (chars_read != 12)
+    {
       cerr << "Error reading header from socket: " << fd << endl;
       err=1;
       return; 
     }
     readHeader("socket", hdr, "FAS", version, file_endian);
-  } else {
+  }
+  else
+  {
     fp_=fdopen(fd, "wb");
-    if(!fp_){
+    if(!fp_)
+    {
       cerr << "Error opening socket: " << fd << " for writing\n";
       err=1;
       return;
     }
     version=PERSISTENT_VERSION;
-    if (version > 1) {
+    if (version > 1)
+    {
       char hdr[16];
       if (airMyEndian == airEndianLittle) 
 	sprintf(hdr, "SCI\nFAS\n%03d\nLIT\n", version);
@@ -862,17 +875,21 @@ FastPiostream::FastPiostream(int fd, Direction dir) :
 	sprintf(hdr, "SCI\nFAS\n%03d\nBIG\n", version);
       // write the header
       size_t wrote = fwrite(hdr, sizeof(char), 16, fp_);
-      if (wrote != 16) {
+      if (wrote != 16)
+      {
 	cerr << "Error writing header to: " << fd << endl;
 	err=1;
 	return; 
       }
-    } else {
+    }
+    else
+    {
       char hdr[12];
       sprintf(hdr, "SCI\nFAS\n%03d\n", version);
       // write the header
       size_t wrote = fwrite(hdr, sizeof(char), 12, fp_);
-      if (wrote != 12) {
+      if (wrote != 12)
+      {
 	cerr << "Error writing header to socket: " << fd << endl;
 	err=1;
 	return; 
@@ -881,31 +898,47 @@ FastPiostream::FastPiostream(int fd, Direction dir) :
   }
 }
 
-string FastPiostream::peek_class()
+
+FastPiostream::~FastPiostream()
+{
+  if (fp_) fclose(fp_);
+}
+
+
+string
+FastPiostream::peek_class()
 {
   have_peekname_=1;
   io(peekname_);
   return peekname_;
 }
 
-int FastPiostream::begin_class(const string& classname,
-			       int current_version)
+
+int
+FastPiostream::begin_class(const string& classname, int current_version)
 {
-  if(err)return -1;
+  if (err) return -1;
   int version=current_version;
   string gname;
-  if(dir==Write){
+  if (dir==Write)
+  {
     gname=classname;
     io(gname);
-  } else if(dir==Read && have_peekname_){
+  }
+  else if (dir==Read && have_peekname_)
+  {
     gname=peekname_;
-  } else {
+  }
+  else
+  {
     io(gname);
   }
   have_peekname_=0;
 
-  if(dir==Read){
-    if(classname != gname){
+  if (dir==Read)
+  {
+    if (classname != gname)
+    {
       err=1;
       cerr << "Expecting class: " << classname << ", got class: " 
 	   << gname << endl;
@@ -916,126 +949,174 @@ int FastPiostream::begin_class(const string& classname,
   return version;
 }
 
-void FastPiostream::error(const string &iotype) 
+
+void
+FastPiostream::report_error(const char *iotype)
 {
   err = 1;
-  if (dir == Read) {
+  if (dir == Read)
+  {
     cerr << "FastPiostream error reading ";
-  } else {
+  }
+  else
+  {
     cerr << "FastPiostream error writing ";
   }
   cerr << iotype << endl;
 }
 
-void FastPiostream::end_class()
+
+void
+FastPiostream::end_class()
 {
   // No-op
 }
 
-void FastPiostream::begin_cheap_delim()
+
+void
+FastPiostream::begin_cheap_delim()
 {
   // No-op
 }
 
-void FastPiostream::end_cheap_delim()
+void
+FastPiostream::end_cheap_delim()
 {
   // No-op
 }
+
+
 template <class T>
-void FastPiostream::gen_io(T& data, const string &iotype) 
+inline void FastPiostream::gen_io(T& data, const char *iotype) 
 {
   if (err) return;
   size_t expect = 1;
   size_t did = 0;
-  if (dir == Read) {
+  if (dir == Read)
+  {
     did = fread(&data, sizeof(T), 1, fp_);
-    if (expect != did && !feof(fp_)) { error(iotype); }
-  } else {
+    if (expect != did && !feof(fp_)) { report_error(iotype); }
+  }
+  else
+  {
     did = fwrite(&data, sizeof(T), 1, fp_);
-    if (expect != did) { error(iotype); }
+    if (expect != did) { report_error(iotype); }
   }
 }
-void FastPiostream::io(bool& data)
+
+
+void
+FastPiostream::io(bool& data)
 {
   gen_io(data, "bool");
 }
 
-void FastPiostream::io(char& data)
+
+void
+FastPiostream::io(char& data)
 {
   gen_io(data, "char");
 }
 
-void FastPiostream::io(signed char& data)
+
+void
+FastPiostream::io(signed char& data)
 {
   gen_io(data, "signed char");
 }
 
-void FastPiostream::io(unsigned char& data)
+
+void
+FastPiostream::io(unsigned char& data)
 {
   gen_io(data, "unsigned char");
 }
 
-void FastPiostream::io(short& data)
+
+void
+FastPiostream::io(short& data)
 {
   gen_io(data, "short");
 }
 
-void FastPiostream::io(unsigned short& data)
+
+void
+FastPiostream::io(unsigned short& data)
 {
   gen_io(data, "unsigned short");
 }
 
-void FastPiostream::io(int& data)
+
+void
+FastPiostream::io(int& data)
 {
   gen_io(data, "int");
 }
 
-void FastPiostream::io(unsigned int& data)
+
+void
+FastPiostream::io(unsigned int& data)
 {
   gen_io(data, "unsigned int");
 }
 
-void FastPiostream::io(long& data)
+
+void
+FastPiostream::io(long& data)
 {
   gen_io(data, "long");
 }
 
-void FastPiostream::io(unsigned long& data)
+
+void
+FastPiostream::io(unsigned long& data)
 {
   gen_io(data, "unsigned long");
 }
 
-void FastPiostream::io(long long& data)
+
+void
+FastPiostream::io(long long& data)
 {
   gen_io(data, "long long");
 }
 
-void FastPiostream::io(unsigned long long& data)
+
+void
+FastPiostream::io(unsigned long long& data)
 {
   gen_io(data, "unsigned long long");
 }
 
-void FastPiostream::io(double& data)
+
+void
+FastPiostream::io(double& data)
 {
   gen_io(data, "double");
 }
 
-void FastPiostream::io(float& data)
+
+void
+FastPiostream::io(float& data)
 {
   gen_io(data, "float");
 }
 
-void FastPiostream::io(string& data)
+
+void
+FastPiostream::io(string& data)
 {
-  if(err)return;
+  if (err) return;
   unsigned int chars = 0;
-  if(dir==Write) {
+  if (dir==Write)
+  {
     const char* p=data.c_str();
     chars = static_cast<int>(strlen(p)) + 1;
     fwrite(&chars, sizeof(unsigned int), 1, fp_);
     fwrite(p, sizeof(char), chars, fp_);
   }
-  if(dir==Read){
+  if (dir==Read)
+  {
     fread(&chars, sizeof(unsigned int), 1, fp_);
     char* buf = new char[chars];
     fread(buf, sizeof(char), chars, fp_);
@@ -1044,25 +1125,36 @@ void FastPiostream::io(string& data)
   }
 }
 
-void FastPiostream::block_io(void *data, size_t s, size_t nmemb) 
+
+void
+FastPiostream::block_io(void *data, size_t s, size_t nmemb) 
 {
   size_t did = 0;
-  if (dir == Read) {
+  if (dir == Read)
+  {
     did = fread(data, s, nmemb, fp_); 
-  } else {
+  }
+  else
+  {
     did = fwrite(data, s, nmemb, fp_); 
   }
-  if (did != nmemb) {
-    error("block io");
+  if (did != nmemb)
+  {
+    report_error("block io");
   }
 }
-void FastPiostream::emit_pointer(int& have_data, int& pointer_id)
+
+
+void
+FastPiostream::emit_pointer(int& have_data, int& pointer_id)
 {
   if (err) return;
   io(have_data);
   if (err) return;
   io(pointer_id);
 }
+
+
 
 // BinaryPiostream -- portable
 BinaryPiostream::~BinaryPiostream()
@@ -1110,14 +1202,14 @@ BinaryPiostream::BinaryPiostream(const string& filename, Direction dir, const in
       }
     }
   }
-  else {
+  else
+  {
     fp=fopen(filename.c_str(), "wb");
     if(!fp){
       cerr << "Error opening file: " << filename << " for writing\n";
       err=1;
       return;
     }
-
 
     version=PERSISTENT_VERSION;
     if (version > 1) {

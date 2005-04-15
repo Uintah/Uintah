@@ -201,17 +201,15 @@ public:
 
 private:
   virtual void emit_pointer(int&, int&);
-  void error(const string &);
-  template <class T>
-  void gen_io(T&, const string &);
-
+  void report_error(const char *);
+  template <class T> void gen_io(T&, const char *);
 
   FILE* fp_;
   void* addr_;
   int have_peekname_;
   string peekname_;
-
 };
+
 
 class GzipPiostream : public Piostream {
   gzFile gzfile;
