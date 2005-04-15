@@ -159,8 +159,14 @@ Persistent::~Persistent()
 
 //----------------------------------------------------------------------
 Piostream::Piostream(Direction dir, int version, const string &name)
-: dir(dir), version(version), err(0), outpointers(0), inpointers(0),
-  current_pointer_id(1), file_name(name)
+  : dir(dir),
+    version(version),
+    err(0),
+    have_peekname_(false),
+    outpointers(0),
+    inpointers(0),
+    current_pointer_id(1),
+    file_name(name)
 {
 }
 
@@ -170,17 +176,80 @@ Piostream::~Piostream()
 }
 
 //----------------------------------------------------------------------
+string
+Piostream::peek_class()
+{
+  have_peekname_ = true;
+  io(peekname_);
+  return peekname_;
+}
+
+//----------------------------------------------------------------------
+int
+Piostream::begin_class(const string& classname, int current_version)
+{
+  if (err) return -1;
+  int version = current_version;
+  string gname;
+  if (dir == Write)
+  {
+    gname = classname;
+    io(gname);
+  }
+  else if (dir == Read && have_peekname_)
+  {
+    gname = peekname_;
+  }
+  else
+  {
+    io(gname);
+  }
+  have_peekname_ = false;
+
+  if (dir == Read)
+  {
+    if (classname != gname)
+    {
+      err=1;
+      cerr << "Expecting class: " << classname << ", got class: "
+	   << gname << endl;
+      return 0;
+    }
+  }
+  io(version);
+  return version;
+}
+
+//----------------------------------------------------------------------
+void
+Piostream::end_class()
+{
+}
+
+//----------------------------------------------------------------------
+void
+Piostream::begin_cheap_delim()
+{
+}
+
+//----------------------------------------------------------------------
+void
+Piostream::end_cheap_delim()
+{
+}
+
+//----------------------------------------------------------------------
 int
 Piostream::reading()
 {
-    return dir==Read;
+    return dir == Read;
 }
 
 //----------------------------------------------------------------------
 int
 Piostream::writing()
 {
-    return dir==Write;
+    return dir == Write;
 }
 
 //----------------------------------------------------------------------

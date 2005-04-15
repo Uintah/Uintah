@@ -55,23 +55,15 @@
 namespace SCIRun {
 
 class BinaryPiostream : public Piostream {
-  FILE* fp;
-  void* addr;
-  bool mmapped;
+private:
+  FILE* fp_;
+
   virtual void emit_pointer(int&, int&);
-  int have_peekname;
-  string peekname;
+
 public:
-  BinaryPiostream(const string& filename, Direction dir, const int&v = -1);
+  BinaryPiostream(const string& filename, Direction dir, const int& v = -1);
   BinaryPiostream(int fd, Direction dir, const int& v = -1);
-
   virtual ~BinaryPiostream();
-  virtual string peek_class();
-  virtual int begin_class(const string& name, int);
-  virtual void end_class();
-
-  virtual void begin_cheap_delim();
-  virtual void end_cheap_delim();
 
   virtual void io(bool&);
   virtual void io(char&);
@@ -89,25 +81,18 @@ public:
   virtual void io(float&);
   virtual void io(string& str);
 };
+
 
 class BinarySwapPiostream : public Piostream {
-  FILE* fp;
-  void* addr;
-  bool mmapped;
+private:
+  FILE* fp_;
+
   virtual void emit_pointer(int&, int&);
-  int have_peekname;
-  string peekname;
+
 public:
-  BinarySwapPiostream(const string& filename, Direction dir, const int& v = -1);
+  BinarySwapPiostream(const string& filename, Direction d, const int& v = -1);
   BinarySwapPiostream(int fd, Direction dir, const int& v = -1);
-
   virtual ~BinarySwapPiostream();
-  virtual string peek_class();
-  virtual int begin_class(const string& name, int);
-  virtual void end_class();
-
-  virtual void begin_cheap_delim();
-  virtual void end_cheap_delim();
 
   virtual void io(bool&);
   virtual void io(char&);
@@ -124,26 +109,28 @@ public:
   virtual void io(double&);
   virtual void io(float&);
   virtual void io(string& str);
-
 };
 
+
 class TextPiostream : public Piostream {
+private:
   std::istream* istr;
   std::ostream* ostr;
-  int have_peekname;
-  string peekname;
-  bool ownstreams_p;
+  bool ownstreams_p_;
+
   void expect(char);
   virtual void emit_pointer(int&, int&);
+  void io(int, string& str);
+
 public:
   TextPiostream(const string& filename, Direction dir);
   TextPiostream(std::istream *strm);
   TextPiostream(std::ostream *strm);
   virtual ~TextPiostream();
+
   virtual string peek_class();
   virtual int begin_class(const string& name, int);
   virtual void end_class();
-
   virtual void begin_cheap_delim();
   virtual void end_cheap_delim();
 
@@ -162,23 +149,23 @@ public:
   virtual void io(double&);
   virtual void io(float&);
   virtual void io(string& str);
-  void io(int, string& str);
 };
+
 
 //! The Fast stream is binary, its results can only safely be used
 //! on the architecture where the file is generated.
 class FastPiostream : public Piostream {
+private:
+  FILE* fp_;
+
+  virtual void emit_pointer(int&, int&);
+  void report_error(const char *);
+  template <class T> void gen_io(T&, const char *);
+
 public:
   FastPiostream(const string& filename, Direction dir);
   FastPiostream(int fd, Direction dir);
-
   virtual ~FastPiostream();
-  virtual string peek_class();
-  virtual int begin_class(const string& name, int);
-  virtual void end_class();
-
-  virtual void begin_cheap_delim();
-  virtual void end_cheap_delim();
 
   virtual void io(bool&);
   virtual void io(char&);
@@ -198,34 +185,22 @@ public:
 
   virtual bool supports_block_io() { return true; }
   virtual void block_io(void*, size_t, size_t);
-
-private:
-  virtual void emit_pointer(int&, int&);
-  void report_error(const char *);
-  template <class T> void gen_io(T&, const char *);
-
-  FILE* fp_;
-  void* addr_;
-  int have_peekname_;
-  string peekname_;
 };
 
 
 class GzipPiostream : public Piostream {
-  gzFile gzfile;
-  int have_peekname;
-  string peekname;
+private:
+  gzFile gzfile_;
+
   void expect(char);
   virtual void emit_pointer(int&, int&);
+
+  void io(int, string& str);
+  inline int fileOpen() { return (gzfile_ != 0); }
+
 public:
   GzipPiostream(const string& filename, Direction dir);
   virtual ~GzipPiostream();
-  virtual string peek_class();
-  virtual int begin_class(const string& name, int);
-  virtual void end_class();
-
-  virtual void begin_cheap_delim();
-  virtual void end_cheap_delim();
 
   virtual void io(bool&);
   virtual void io(char&);
@@ -242,25 +217,21 @@ public:
   virtual void io(double&);
   virtual void io(float&);
   virtual void io(string& str);
-  void io(int, string& str);
-  inline int fileOpen() { return (gzfile!=0); }
 };
 
+
 class GunzipPiostream : public Piostream {
-  int unzipfile;	// file descriptor
-  int have_peekname;
-  string peekname;
-  void expect(char);
+private:
+  int unzipfile_;	// file descriptor
+
   virtual void emit_pointer(int&, int&);
+
+  void io(int, string& str);
+  inline int fileOpen() { return (unzipfile_ > 0); }
+
 public:
   GunzipPiostream(const string& filename, Direction dir);
   virtual ~GunzipPiostream();
-  virtual string peek_class();
-  virtual int begin_class(const string& name, int);
-  virtual void end_class();
-
-  virtual void begin_cheap_delim();
-  virtual void end_cheap_delim();
 
   virtual void io(bool&);
   virtual void io(char&);
@@ -277,8 +248,6 @@ public:
   virtual void io(double&);
   virtual void io(float&);
   virtual void io(string& str);
-  void io(int, string& str);
-  inline int fileOpen() { return (unzipfile!=0); }
 };
 
 } // End namespace SCIRun
