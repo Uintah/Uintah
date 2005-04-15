@@ -437,7 +437,7 @@ auto_istream(const string& filename)
   // put back 4 characters for older Pio versions since their
   // header was of size 12
   if (version == 1) {
-    for(int i=0; i<3; i++)
+    for(int i=0; i<4; i++)
       in.unget();
   }
   
