@@ -26,8 +26,6 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-#Testing subversion, ignore
-
 
 # Makefile fragment for this subdirectory
 
