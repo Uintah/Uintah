@@ -1,0 +1,1068 @@
+<?xml version='1.0' encoding='us-ascii' ?>
+
+<!-- *** NOTE ***
+ 
+ Do not remove or modify the comment lines that contain:
+
+    INSERT NEW ??????? HERE 
+ 
+ They are required by the module maker to properly edit this file.
+ if you want to edit this file by hand, see the "Create A New Module"
+ documentation on how to do it correctly.
+
+-->
+
+<!-- description of the DaveW package -->
+
+<package name="DaveW">
+  <guiPath>GUI</guiPath>
+  <scirun-library category="EEG">
+  <soNames>
+    <soName>libDaveW_Modules_EEG.so</soName>
+    <soName>libDaveW.so</soName>
+  </soNames>
+
+  <dataflow-component name="STreeExtractSurf">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>October 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_STreeExtractSurf</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="SelectSurfNodes">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>July 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SelectSurfNodes</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Thermal">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>March 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Thermal</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="SegFldToSurfTree">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>May 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SegFldToSurfTree</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="RescaleSegFld">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>February 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_RescaleSegFld</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="SFRGtoSFUG">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>January 2000</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SFRGtoSFUG</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Coregister">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>July 1996</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Coregister</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="SegFldOps">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>March 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SegFldOps</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Taubin">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>Mar. 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Taubin</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="TopoSurfToGeom">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>June 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TopoSurfToGeom</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="InvEEGSolve">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>August 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_InvEEGSolve</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="BldEEGMesh">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>August 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_BldEEGMesh</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <!-- INSERT NEW EEG COMPONENT HERE -->
+  </scirun-library>
+  <scirun-library category="EGI">
+  <soNames>
+    <soName>libDaveW_Modules_EGI.so</soName>
+    <soName>libDaveW.so</soName>
+  </soNames>
+
+  <dataflow-component name="DipoleInSphere">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>October 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_DipoleInSphere</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Anneal">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>Mar. 1995</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Anneal</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <!-- INSERT NEW EGI COMPONENT HERE -->
+  </scirun-library>
+  <scirun-library category="FDM">
+  <soNames>
+    <soName>libDaveW_Modules_FDM.so</soName>
+    <soName>libDaveW.so</soName>
+  </soNames>
+
+  <dataflow-component name="BuildFDField">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>January 1996</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_BuildFDField</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="BuildFDMatrix">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>January 1996</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_BuildFDMatrix</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <!-- INSERT NEW FDM COMPONENT HERE -->
+  </scirun-library>
+  <scirun-library category="FEM">
+  <soNames>
+    <soName>libDaveW_Modules_FEM.so</soName>
+    <soName>libDaveW.so</soName>
+  </soNames>
+
+  <dataflow-component name="CStoGeom">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_CStoGeom</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="FieldFromBasis">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>September 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_FieldFromBasis</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="DipoleSourceRHS">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>May 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_DipoleSourceRHS</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="RemapVector">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>June 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_RemapVector</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="RecipBasis">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>September 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_RecipBasis</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="VecSplit">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>June 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_VecSplit</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="CStoSFRG">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>August 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_CStoSFRG</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="DipoleMatToGeom">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>May 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_DipoleMatToGeom</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ErrorMetric">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>June 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ErrorMetric</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <!-- INSERT NEW FEM COMPONENT HERE -->
+  </scirun-library>
+  <scirun-library category="ISL">
+  <soNames>
+    <soName>libDaveW_Modules_ISL.so</soName>
+    <soName>libDaveW.so</soName>
+  </soNames>
+
+  <dataflow-component name="LeastSquaresSolve">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>December 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_LeastSquaresSolve</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="SGI_LU">
+    <meta>
+      <authors>
+        <author>Leonid Zhukov</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SGI_LU</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="SGI_Solve">
+    <meta>
+      <authors>
+        <author>Leonid Zhukov</author>
+      </authors>
+      <version-date>November 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SGI_Solve</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Downhill_Simplex">
+    <meta>
+      <authors>
+        <author>Leonid Zhukov</author>
+      </authors>
+      <version-date>May 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Downhill_Simplex</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="OptDip">
+    <meta>
+      <authors>
+        <author>Leonid Zhukov</author>
+      </authors>
+      <version-date>November 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_OptDip</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <!-- INSERT NEW ISL COMPONENT HERE -->
+  </scirun-library>
+  <scirun-library category="MEG">
+  <soNames>
+    <soName>libDaveW_Modules_MEG.so</soName>
+    <soName>libDaveW.so</soName>
+  </soNames>
+
+  <dataflow-component name="MagneticScalarField">
+    <meta>
+      <authors>
+        <author>Robert Van Uitert</author>
+      </authors>
+      <version-date>August 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MagneticScalarField</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="SurfToVectGeom">
+    <meta>
+      <authors>
+        <author>Robert Van Uitert</author>
+      </authors>
+      <version-date>July 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SurfToVectGeom</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="EleValuesToMatLabFile">
+    <meta>
+      <authors>
+        <author>Robert Van Uitert</author>
+      </authors>
+      <version-date>October 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_EleValuesToMatLabFile</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="NegateGradient">
+    <meta>
+      <authors>
+        <author>Robert Van Uitert</author>
+      </authors>
+      <version-date>Sept 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_NegateGradient</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="MagneticFieldAtPoints">
+    <meta>
+      <authors>
+        <author>Robert Van Uitert</author>
+      </authors>
+      <version-date>September 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MagneticFieldAtPoints</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="MakeCurrentDensityField">
+    <meta>
+      <authors>
+        <author>Robert Van Uitert</author>
+      </authors>
+      <version-date>June 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MakeCurrentDensityField</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="FieldCurl">
+    <meta>
+      <authors>
+        <author>Robert Van Uitert</author>
+      </authors>
+      <version-date>February 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_FieldCurl</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <!-- INSERT NEW MEG COMPONENT HERE -->
+  </scirun-library>
+  <scirun-library category="Path">
+  <soNames>
+    <soName>libDaveW_Modules_Path.so</soName>
+    <soName>libDaveW.so</soName>
+  </soNames>
+
+  <dataflow-component name="SiReAll">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>August 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SiReAll</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="SiReInput">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>August 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SiReInput</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="SiReOutput">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>August 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SiReOutput</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="SiReCrunch">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>August 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SiReCrunch</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <!-- INSERT NEW SiRe COMPONENT HERE -->
+  </scirun-library>
+  <scirun-library category="Readers">
+  <soNames>
+    <soName>libDaveW_Modules_Readers.so</soName>
+    <soName>libDaveW.so</soName>
+  </soNames>
+
+  <dataflow-component name="SegFldReader">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SegFldReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="TensorFieldReader">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TensorFieldReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ContourSetReader">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ContourSetReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="SigmaSetReader">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SigmaSetReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <!-- INSERT NEW Readers COMPONENT HERE -->
+  </scirun-library>
+  <scirun-library category="CS684">
+  <soNames>
+    <soName>libDaveW_Modules_CS684.so</soName>
+    <soName>libDaveW.so</soName>
+  </soNames>
+
+  <dataflow-component name="BldBRDF">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>March 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_BldBRDF</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Radiosity">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>March 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Radiosity</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="RayMatrix">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>March 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_RayMatrix</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="RayTest">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>April 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_RayTest</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="RTrace">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>March 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_RTrace</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="BldScene">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>March 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_BldScene</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="XYZtoRGB">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>March 1997</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_XYZtoRGB</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <!-- INSERT NEW CS684 COMPONENT HERE -->
+  </scirun-library>
+  <scirun-library category="Tensor">
+  <soNames>
+    <soName>libDaveW_Modules_Tensor.so</soName>
+    <soName>libDaveW.so</soName>
+  </soNames>
+
+  <dataflow-component name="Bundles">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>February 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Bundles</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="TensorAccessFields">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TensorAccessFields</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="TensorAnisotropy">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TensorAnisotropy</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="Flood">
+    <meta>
+      <authors>
+        <author>David Weinstein</author>
+      </authors>
+      <version-date>February 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_Flood</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <!-- INSERT NEW Tensor COMPONENT HERE -->
+  </scirun-library>
+  <scirun-library category="Writers">
+  <soNames>
+    <soName>libDaveW_Modules_Writers.so</soName>
+    <soName>libDaveW.so</soName>
+  </soNames>
+
+  <dataflow-component name="SegFldWriter">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SegFldWriter</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="TensorFieldWriter">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TensorFieldWriter</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ContourSetWriter">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ContourSetWriter</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="SigmaSetWriter">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_SigmaSetWriter</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <!-- INSERT NEW Writers COMPONENT HERE -->
+  </scirun-library>
+  <!-- INSERT NEW CATEGORY HERE -->
+</package>

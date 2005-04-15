@@ -1,0 +1,12 @@
+
+Last Modified 06/02/00
+
+Watch out for the signs on the gravity terms in the input file, for example -9.81
+
+
+-  PGPLOT warnings:
+     Make certain that the variable "m" is set before your enter
+    into the plotting routines, if your viewing a single material.  If you don't 
+    you'll be viewing material 2 data.  
+    
+    

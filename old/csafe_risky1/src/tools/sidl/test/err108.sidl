@@ -1,0 +1,6 @@
+
+interface y {
+};
+
+class x extends y {
+};

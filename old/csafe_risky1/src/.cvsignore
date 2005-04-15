@@ -1,0 +1,11 @@
+config.status
+config.cache
+Makefile
+sci_config.h
+sci_defs.h
+config.log
+pse
+stamp-h
+y.output
+*.sr
+lib

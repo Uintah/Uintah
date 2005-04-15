@@ -1,0 +1,4 @@
+1
+Trap:Stop at file /usr/people/harman/Csafe/Advection_MD/advect_grad_limiter.c line 211
+Condition:
+Threshold: 1

@@ -1,0 +1,528 @@
+<?xml version='1.0' encoding='us-ascii' ?>
+
+<!-- description of the Uintah package -->
+
+<package name="Uintah">
+  <guiPath>GUI</guiPath>
+  <scirun-library category="Visualization">
+    <soNames>
+      <soName>libUintah_Modules_Visualization.so</soName>
+      <soName>libUintah.so</soName>
+    </soNames>
+
+  <dataflow-component name="GridVisualizer">
+    <meta>
+      <authors>
+        <author>James Bigler</author>
+      </authors>
+      <version-date>Mon Jun  5 14:15:55 MDT 2000</version-date>
+      <version>1.0</version>
+      <description>Visualize a Uintah Grid in wireframe</description>
+      <documentation>This module is used display the patch boundaries and node locations.  Each level has a unique color.  It is hard coded for up to six different colors (or levels), and after the sixth level it reuses the last color.  The node locations have the same color as the patch boundaries, but are darker.  The colors are as follows:
+Level 1: Red
+Level 2: Green
+Level 3: Blue
+Level 4: Yellow
+Level 5: Cyan
+Level 6: Magenta</documentation>
+    </meta>
+    <inputs>Archive</inputs>
+    <outputs>Geometry</outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_GridVisualizer</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="TimestepSelector">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date></version-date>
+      <version>1.0</version>
+      <description>Selects a timestep for uda visualization</description>
+      <documentation></documentation>
+    </meta>
+    <inputs>Archive</inputs>
+    <outputs>Archive with timestep selected</outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TimestepSelector</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ScalarFieldExtractor">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date></version-date>
+      <version>1.0</version>
+      <description> extracts scalarfields from udas </description>
+      <documentation></documentation>
+    </meta>
+    <inputs>Archive</inputs>
+    <outputs>ScalarField</outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ScalarFieldExtractor</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="VectorFieldExtractor">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date></version-date>
+      <version>1.0</version>
+      <description> extracts vectorfields from udas </description>
+      <documentation></documentation>
+    </meta>
+    <inputs>Archive</inputs>
+    <outputs>VectorField</outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_VectorFieldExtractor</creationFunction>
+    </implementation>
+  </dataflow-component>
+   <dataflow-component name="TensorFieldExtractor">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date></version-date>
+      <version>1.0</version>
+      <description> extracts tensorfields from udas </description>
+      <documentation></documentation>
+    </meta>
+    <inputs>Archive</inputs>
+    <outputs>TensorField</outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TensorFieldExtractor</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ParticleFieldExtractor">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date></version-date>
+      <version>1.0</version>
+      <description> extracts Particlefields from udas </description>
+      <documentation></documentation>
+    </meta>
+    <inputs>Archive</inputs>
+    <outputs>ScalarParticles, VectorParticles, TensorParticles</outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ParticleFieldExtractor</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ParticleVis">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date></version-date>
+      <version>1.0</version>
+      <description> changes particle data to geometry </description>
+      <documentation></documentation>
+    </meta>
+    <inputs>Archive</inputs>
+    <outputs>ScalarParticles, VectorParticles, TensorParticles</outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ParticleVis</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="RescaleColorMapForParticles">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs> Colormap, ScalarParticles  </inputs>
+    <outputs> Colormap </outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_RescaleColorMapForParticles</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="NodeHedgehog">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+	<author>James Bigler</author>
+      </authors>
+      <version-date>June 2000</version-date>
+      <version>2.0</version>
+      <description>Visualize vector fields</description>
+      <documentation>No documentation at this time</documentation>
+    </meta>
+    <inputs>Archive, VectorField, ScalarField, Colormap</inputs>
+    <outputs>Geometry</outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_NodeHedgehog</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="EigenEvaluator">
+    <meta>
+      <authors>
+        <author>Wayne Witzel</author>
+      </authors>
+      <version-date>August 2000</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs>TensorField</inputs>
+    <outputs>ScalarField, VectorField</outputs>
+    <parameters>int</parameters>
+    <implementation>
+      <creationFunction>make_EigenEvaluator</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ParticleEigenEvaluator">
+    <meta>
+      <authors>
+        <author>Wayne Witzel</author>
+      </authors>
+      <version-date>October 2000</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs>TensorParticles</inputs>
+    <outputs>ScalarParticles, VectorParticles</outputs>
+    <parameters>int</parameters>
+    <implementation>
+      <creationFunction>make_ParticleEigenEvaluator</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="InPlaneEigenEvaluator">
+    <meta>
+      <authors>
+        <author>Wayne Witzel</author>
+      </authors>
+      <version-date>August 2000</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs>TensorField</inputs>
+    <outputs>ScalarField</outputs>
+    <parameters>int</parameters>
+    <implementation>
+      <creationFunction>make_InPlaneEigenEvaluator</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="TensorElementExtractor">
+    <meta>
+      <authors>
+        <author>Wayne Witzel</author>
+      </authors>
+      <version-date>August 2000</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs>TensorField</inputs>
+    <outputs>ScalarField</outputs>
+    <parameters>int,int</parameters>
+    <implementation>
+      <creationFunction>make_TensorElementExtractor</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+
+  <scirun-library category="MPMViz">
+  <soNames>
+    <soName>libUintah_Modules_MPMViz.so</soName>
+    <soName>libUintah.so</soName>
+  </soNames>
+  <dataflow-component name="VizControl">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>January 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_VizControl</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ParticleDB">
+    <meta>
+      <authors>
+        <author>Steve Parker</author>
+      </authors>
+      <version-date>September 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ParticleDB</creationFunction>
+    </implementation>
+  </dataflow-component>
+
+  <dataflow-component name="RescaleParticleColorMap">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date>December 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_RescaleParticleColorMap</creationFunction>
+    </implementation>
+  </dataflow-component>
+
+  <dataflow-component name="RunSimulation">
+    <meta>
+      <authors>
+        <author>Steve Parker</author>
+      </authors>
+      <version-date>September 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_RunSimulation</creationFunction>
+    </implementation>
+  </dataflow-component>
+
+  <dataflow-component name="TecplotFileSelector">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TecplotFileSelector</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="cfdGridLines">
+    <meta>
+      <authors>
+        <author>Philip Sutton (based on FieldCage.cc by David Weinstein)</author>
+      </authors>
+      <version-date>May 1998</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_cfdGridLines</creationFunction>
+    </implementation>
+  </dataflow-component>
+
+  <dataflow-component name="PartToGeom">
+    <meta>
+      <authors>
+        <author>Steve Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_PartToGeom</creationFunction>
+    </implementation>
+  </dataflow-component>
+
+  <dataflow-component name="GridLines">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>December 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_GridLines</creationFunction>
+    </implementation>
+  </dataflow-component>
+
+  <dataflow-component name="ParticleGridVisControl">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>January 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ParticleGridVisControl</creationFunction>
+    </implementation>
+  </dataflow-component>
+
+  <dataflow-component name="ParticleViz">
+    <meta>
+      <authors>
+        <author>Steve Parker</author>
+      </authors>
+      <version-date>September 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ParticleViz</creationFunction>
+    </implementation>
+  </dataflow-component>
+
+  </scirun-library>
+
+
+  <scirun-library category="Readers">
+  <soNames>
+    <soName>libUintah_Modules_Readers.so</soName>
+    <soName>libUintah.so</soName>
+  </soNames>
+
+  <dataflow-component name="MPReader">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MPReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+
+  <dataflow-component name="ParticleSetReader">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ParticleSetReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+
+  <dataflow-component name="TriangleReader">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date>July 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TriangleReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+
+  <dataflow-component name="ArchiveReader">
+    <meta>
+      <authors>
+        <author>KurtZimmerman</author>
+      </authors>
+      <version-date>June 2000</version-date>
+      <version>1.0</version>
+      <description>Selects Uintah Data Archives</description>
+    </meta>
+    <inputs></inputs>
+    <outputs> Archive </outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ArchiveReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="MPReaderMultiFile">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MPReaderMultiFile</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+
+  <scirun-library category="Writers">
+  <soNames>
+    <soName>libUintah_Modules_Writers.so</soName>
+    <soName>libUintah.so</soName>
+  </soNames>
+
+  <dataflow-component name="MPWriter">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>January 1999</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MPWriter</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
+</package>

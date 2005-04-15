@@ -1,0 +1,77 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.61 [en] (X11; U; IRIX64 6.5 IP28) [Netscape]">
+   <meta name="Author" content="Martin Cole">
+   <meta name="Description" content="adding sgml and xml modes to emacs">
+   <title>PSGML</title>
+</head>
+<body>
+This package is installed under /usr/local/contrib/mcole/psgml
+<p>psgml provides editing modes for sgml and xml.&nbsp; it requires a .dtd
+file to be useful. The following has been tested with the 20.2 version
+of emacs, as well as the 20.4 version of xemacs.
+<p>add to your .emacs file:
+<p>(setq auto-mode-alist
+<br>&nbsp;&nbsp; (append '(("\\.C$"&nbsp; . c++-mode)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+("\\.cc$" . c++-mode)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+("\\.cxx$"&nbsp; . c++-mode)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+("\\.hxx$"&nbsp; . c++-mode)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+("\\.java$"&nbsp; . java-mode)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+("\\.py$"&nbsp; . python-mode)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+("\\.cgi$"&nbsp; . python-mode)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+("\\.m$"&nbsp; . objc-mode)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font color="#000099">
+("\\.xml$"&nbsp; . xml-mode)</font><font color="#FFCC00">&nbsp;&nbsp;</font>
+;&lt;-- this is the addition
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+) auto-mode-alist))
+<p><font color="#000099">(setq load-path (cons "/usr/local/contrib/mcole/psgml"
+load-path))</font>
+<br><font color="#000099">(autoload 'sgml-mode "psgml" "Major mode to edit
+SGML files." t)</font>
+<br><font color="#000099">(autoload 'xml-mode "psgml" "Major mode to edit
+XML files." t)</font>
+<p>If you like sytax highlighting: (you may want to change the colors)
+<p><font color="#000099">(make-face 'sgml-start-tag-face)</font>
+<br><font color="#000099">(make-face 'sgml-end-tag-face)</font>
+<br><font color="#000099">(make-face 'sgml-entity-face)</font>
+<br><font color="#000099">(make-face 'sgml-doctype-face)</font>
+<br><font color="#000099">(make-face 'sgml-comment-face)</font>
+<p><font color="#000099">(set-face-foreground 'sgml-comment-face "#337777")</font>
+<br><font color="#000099">(set-face-foreground 'sgml-start-tag-face "MediumSeaGreen")</font>
+<br><font color="#000099">(set-face-foreground 'sgml-end-tag-face "SeaGreen")</font>
+<br><font color="#000099">(set-face-foreground 'sgml-entity-face "Red")</font>
+<br><font color="#000099">(set-face-foreground 'sgml-doctype-face "White")</font>
+<p><font color="#000099">(setq sgml-set-face t)&nbsp; ; without this, all
+SGML text is in same color</font>
+<br><font color="#000099">(setq sgml-markup-faces</font>
+<br><font color="#000099">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; '((comment&nbsp;&nbsp;
+. sgml-comment-face)</font>
+<br><font color="#000099">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (start-tag
+. sgml-start-tag-face)</font>
+<br><font color="#000099">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (end-tag&nbsp;&nbsp;
+. sgml-end-tag-face)</font>
+<br><font color="#000099">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (doctype&nbsp;&nbsp;
+. sgml-doctype-face)</font>
+<br><font color="#000099">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (entity&nbsp;&nbsp;&nbsp;
+. sgml-entity-face)))</font>
+<br>&nbsp;
+<p><a href="http://www.lysator.liu.se/projects/about_psgml.html">Original
+information and documentation</a> for this mode.
+<p>Once you successfully get emacs into xml-mode, you need to make emacs
+parse the dtd. Make sure that your path to the .dtd file is valid. Emacs
+will have a DTD menu, select parse DTD from the menu, then place your cursor
+at the end of the file, and your syntax highlighting will show up.
+<br>&nbsp;
+<br>&nbsp;
+</body>
+</html>

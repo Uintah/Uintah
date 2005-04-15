@@ -1,0 +1,518 @@
+#
+# If you change this file, you must re-run configure before the changes
+# will be effective
+#
+# $Id$
+#
+# This makefile was inspired by:
+# http://www.canb.auug.org.au/~millerp/rmch/recu-make-cons-harm.html
+# 
+
+#
+# Default target
+#
+default: all
+
+#
+# Blow away a bunch of makes internal rules to improve the performance
+# of make
+#
+.SUFFIXES:
+% :: RCS/%,v
+% :: RCS/%
+% :: %,v
+% :: s.%
+% :: SCCS/s.%
+%.out :: %
+%.c :: %
+%.tex :: %
+
+#
+# If a sidl-generated file uses templates, it's possible that the MIPSPro
+# CC will decide to recompile the .cc file at link time to get the template
+# instantiation. If make has already removed the _sidl.cc file since it's an
+# intermediate file, the compilation will fail. This prevents make from 
+# deleting these files.
+#
+.PRECIOUS: %_sidl.h %_sidl.cc
+
+#
+# Directory variables
+#
+SRCTOP  := @top_srcdir@
+SRCDIR  := @srcdir@
+OBJTOP  := .
+OBJTOP_ABS    := $(shell cd $(OBJTOP) ; pwd)
+SRCTOP_ABS    := $(shell cd $(SRCTOP) ; pwd)
+ifeq ($(OBJTOP),.)
+LIBDIR := lib/
+else
+LIBDIR := $(OBJTOP_ABS)/lib/
+endif
+LIBDIR_ABS    := $(shell mkdir -p $(LIBDIR); cd $(LIBDIR) ; pwd)
+
+VPATH := $(SRCTOP)
+
+#
+# Optional pieces
+#
+
+PACKAGE_DIRS := @PACKAGE_DIRS@
+PACKAGE_PATH := @PACKAGE_PATH@
+BUILD_PARALLEL := @BUILD_PARALLEL@
+ifeq ($(BUILD_PARALLEL),yes)
+COMPONENT_DIRS := tools/sidl Component
+endif
+
+# These cannot be :=
+THREAD_IMPL = $(SRCDIR)/@THREAD_IMPL@
+TIME_IMPL = $(SRCDIR)/@TIME_IMPL@
+LOCK_IMPL = $(SRCDIR)/@LOCK_IMPL@
+
+#
+# Subdirectories
+# 
+SUBDIRS := SCICore PSECore $(COMPONENT_DIRS) main PSECommon \
+	testprograms $(PACKAGE_DIRS)
+
+#
+# Libraries and other flags
+#
+
+TCL_LIB_DIR   := @TCL_LIB_DIR@
+TCL_LIB_FLAG  := @TCL_LIB_FLAG@
+TK_LIB_DIR    := @TK_LIB_DIR@
+TK_LIB_FLAG   := @TK_LIB_FLAG@
+ITCL_LIB_DIR  := @ITCL_LIB_DIR@
+ITCL_LIB_FLAG := @ITCL_LIB_FLAG@
+ITCL_BIN_DIR  := @ITCL_BIN_DIR@
+BLT_LIB_DIR  := @BLT_LIB_DIR@
+BLT_LIB_FLAG := @BLT_LIB_FLAG@
+BLT_TLINK := -L$(BLT_LIB_DIR)
+ITCL_WIDGETS  := @ITCL_WIDGETS@
+
+NEKTAR_LIB_DIR := @NEKTAR_LIB_DIR@
+NEKTAR_LIB_FLAG := @NEKTAR_LIB_FLAG@
+NEKTAR_INCLUDE_DIR := -I@NEKTAR_INCLUDE_DIR@
+LDRUN_PREFIX  := @LDRUN_PREFIX@
+
+X_LIBS := @X_LIBS@
+X_PRE_LIBS := @X_PRE_LIBS@
+X_EXTRA_LIBS := @X_EXTRA_LIBS@
+THREAD_LIBS := @THREAD_LIBS@
+PLATFORM_LDFLAGS := @PLATFORM_LDFLAGS@
+
+GL_LIBS := $(X_LIBS) $(X_PRE_LIBS) -lGLU -lGL -lXext -lX11 $(X_EXTRA_LIBS)
+X11_LIBS := $(X_LIBS) $(X_PRE_LIBS) -lXext -lX11 $(X_EXTRA_LIBS)
+
+PROGRAM_PSE   := @EXENAME@
+
+TRACEBACK_LIB := @TRACEBACK_LIB@
+IMAGE_LIBS := @IMAGE_LIBS@
+
+LEX := @LEX@
+YACC := @YACC@ -d -v
+
+MAKE_PARALLELISM := @MAKE_PARALLELISM@
+NBITS := @NBITS@
+
+LARGESOS := @LARGESOS@
+
+ifeq ($(LARGESOS),yes)
+MALLOCLIB := SCICore
+else
+MALLOCLIB := SCICore/Malloc
+endif
+
+#
+# Convenience variables - compounded from above definitions
+#
+BLT_LIBRARY := $(LDRUN_PREFIX)$(BLT_LIB_DIR) -L$(BLT_LIB_DIR) $(BLT_LIB_FLAG)
+TCL_LIBRARY := $(LDRUN_PREFIX)$(TCL_LIB_DIR) -L$(TCL_LIB_DIR) $(TCL_LIB_FLAG)
+TK_LIBRARY := $(LDRUN_PREFIX)$(TK_LIB_DIR) -L$(TK_LIB_DIR) $(TK_LIB_FLAG)
+ITCL_LIBRARY := $(LDRUN_PREFIX)$(ITCL_LIB_DIR) -L$(ITCL_LIB_DIR) $(ITCL_LIB_FLAG)
+
+NEKTAR_LIBRARY := $(LDRUN_PREFIX)$(NEKTAR_LIB_DIR) -L$(NEKTAR_LIB_DIR) $(NEKTAR_LIB_FLAG)
+
+DL_LIBRARY :=
+
+XML_LIB_DIR := @XML_LIB_DIR@
+XML_LIB_FLAG := @XML_LIB_FLAG@
+XML_LIBRARY := $(LDRUN_PREFIX)$(XML_LIB_DIR) -L$(XML_LIB_DIR) $(XML_LIB_FLAG)
+XML_INCLUDE := -I@XML_INCLUDE_DIR@
+XML_TLINK := -L$(XML_LIB_DIR)
+
+ifeq ($(BUILD_PARALLEL),yes)
+GLOBUS_LIB_DIR := @GLOBUS_LIB@
+GLOBUS_LIBS := $(LDRUN_PREFIX)$(GLOBUS_LIB_DIR) -L$(GLOBUS_LIB_DIR) -lglobus_nexus
+GLOBUS_COMMON := $(LDRUN_PREFIX)$(GLOBUS_LIB_DIR) -L$(GLOBUS_LIB_DIR) -lglobus_common
+GLOBUS_TLINK := -L$(GLOBUS_LIB_DIR)
+endif
+
+TLINK := $(BLT_TLINK) $(GLOBUS_TLINK) $(XML_TLINK)
+
+PETSC_DIR := @PETSC_DIR@
+PETSC_ARCH := @PETSC_ARCH@
+ifneq ($(PETSC_DIR),)
+PETSC_INCLUDES := -I$(PETSC_DIR)/include -I$(PETSC_DIR)/bmake/$(PETSC_ARCH)
+PETSC_SUB := @PETSC_SUB@
+PETSC_LIBDIR := $(PETSC_DIR)/lib/$(PETSC_SUB)/$(PETSC_ARCH)
+PETSC_LIBS := $(LDRUN_PREFIX)$(PETSC_LIBDIR) -L$(PETSC_LIBDIR)
+endif
+
+VAMPIR_DIR := @VAMPIR_DIR@
+ifneq ($(VAMPIR_DIR),)
+VAMPIR_INCLUDE := -I$(VAMPIR_DIR)/include 
+VAMPIR_LIBDIR := $(VAMPIR_DIR)/lib64
+VAMPIR_LIBFLAG := -lVT -lmpi
+VAMPIR_LIBRARY := $(LDRUN_PREFIX)$(VAMPIR_LIBDIR) -L$(VAMPIR_LIBDIR) $(VAMPIR_LIBFLAG)
+endif
+
+INCLUDES += -I$(SRCTOP)/include -I$(SRCTOP) -I$(OBJTOP) -I@TCL_INCLUDE_DIR@ -I@TK_INCLUDE_DIR@ -I@ITCL_INCLUDE_DIR@ -I@BLT_INCLUDE_DIR@ @GLOBUS_INCLUDE@ $(XML_INCLUDE) -I@GL_INCLUDE_DIR@ $(PETSC_INCLUDES) $(VAMPIR_INCLUDE)
+
+SSTREAM_COMPAT := @SSTREAM_COMPAT@
+ifeq ($(SSTREAM_COMPAT),yes)
+INCLUDES := $(INCLUDES) -I$(SRCTOP)/include/compat
+endif
+INCLUDES := $(sort $(INCLUDES))
+
+#
+# Rules for autoconf
+# 
+${SRCTOP}/configure: ${SRCTOP}/configure.in ${SRCDIR}/scripts/aclocal.m4
+	cd ${SRCTOP} && autoconf
+
+sci_config.h: stamp-h
+stamp-h: ${SRCTOP}/sci_config.h.in ${SRCTOP}/sci_defs.h.in \
+		${OBJTOP}/config.status
+	./config.status
+
+config.status: ${SRCTOP}/configure
+	./config.status --recheck
+	./config.status
+
+Makefile: ${SRCTOP}/Makefile.in ${OBJTOP}/config.status
+	@( Here="`pwd`" ; cd ${OBJTOP} ; Top="`pwd`" ; CONFIG_FILES="`echo $${Here} | sed -e "s!^$${Top}/!!" -e "s!^$${Top}!.!"`/Makefile" CONFIG_HEADERS="" ./config.status ) 1>&2
+
+# variables and suffix rules for module transformation
+#------------------------------------------------------------------------------
+
+CC              := @CC@
+CXX             := @CXX@
+AS              := @AS@
+LD              := @LD@
+CFLAGS          := @CFLAGS@ $(CFLAGS) -DMPI_NO_CPPBIND
+SOFLAGS         := @SOFLAGS@ -L$(LIBDIR) $(CFLAGS)
+LDFLAGS         := @LDFLAGS@ -L$(LIBDIR) $(CFLAGS)
+ASFLAGS         := @ASFLAGS@  $(ASFLAGS)
+CC_DEPEND_REGEN = @CC_DEPEND_REGEN@
+NEED_SONAME	:= @NEED_SONAME@
+F77		:= @F77@
+FFLAGS		:= @FFLAGS@ $(FFLAGS)
+F77_DEPEND_REGEN = @F77_DEPEND_REGEN@
+ifeq ($(NEED_SONAME),yes)
+SONAMEFLAG = -Wl,-soname,$(notdir $@)
+else
+SONAMEFLAG = 
+endif
+
+.SUFFIXES: .cc .c .o .d .s .F
+
+.cc.o: $<
+	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+ifeq ($(CC_DEPEND_REGEN),-MD)
+	echo -n "$(dir $@)" > $(basename $@).d
+	cat $(basename $(notdir $@)).d >> $(basename $@).d
+	rm $(basename $(notdir $@)).d 
+endif
+
+.F.o: $<
+	$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< -o $@
+ifeq ($(F77_DEPEND_REGEN),-MD)
+	mv $(basename $(notdir $@)).d $(basename $@).d
+endif
+
+.c.o: $<
+	$(CC) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
+ifeq ($(CC_DEPEND_REGEN),-MD)
+	mv $(basename $(notdir $@)).d $(basename $@).d
+endif
+
+.s.o: $<
+	$(AS) $(ASFLAGS) -o $@ $< -o $@
+
+#
+# Actually include the module makefile fragments
+#
+ALLSUBDIRS := . 
+include $(SRCTOP)/scripts/recurse.mk
+MAKEFILEDIRS := $(wordlist 2,$(words $(ALLSUBDIRS)),$(ALLSUBDIRS))
+MAKEFILEDIRS := $(subst $(SRCTOP),$(OBJTOP_ABS),$(MAKEFILEDIRS))
+SUBMAKEFILES := $(patsubst %,%/Makefile,$(MAKEFILEDIRS))
+CREATETCLINDEX := $(SRCTOP)/scripts/createTclIndex
+
+#
+# etags generation
+#
+TCL_FILES := $(patsubst %,%/*.tcl, $(ALLSUBDIRS))
+C_FILES := $(patsubst %,%/*.c, $(ALLSUBDIRS))
+CPP_FILES := $(patsubst %,%/*.cc, $(ALLSUBDIRS))
+HEADER_FILES := $(patsubst %,%/*.h, $(ALLSUBDIRS))
+
+ETAGS_FILES := $(wildcard $(HEADER_FILES) $(C_FILES) $(CPP_FILES) )
+TCL_ETAGS_FILES := $(wildcard $(TCL_FILES))
+ETAGS := @ETAGS@
+
+all:: $(MAKEFILEDIRS)
+
+all:: $(CREATETCLINDEX)
+
+all:: $(LIBDIR) $(SUBMAKEFILES)
+
+all:: $(ALLGEN) $(ALLTARGETS)
+
+$(MAKEFILEDIRS):
+	@echo creating directory $@
+	@mkdir -p $@
+
+$(CREATETCLINDEX): $(CREATETCLINDEX).in
+	@echo creating scripts/createTclIndex
+	-@sed -e 's,ITCL_BIN_DIR,$(ITCL_BIN_DIR),g' \
+             -e 's,TCL_LIB_DIR,$(TCL_LIB_DIR),g' \
+            $(CREATETCLINDEX).in > $(CREATETCLINDEX)
+	-@chmod a+x $(CREATETCLINDEX)
+
+$(LIBDIR):
+	mkdir -p $(LIBDIR)
+
+$(ALLOBJS): $(ALLGEN)
+
+#
+# This rule must be after the includes, so that it will find $(SIDL_EXE)
+# 
+%_sidl.o: %_sidl.cc %_sidl.h
+
+%_sidl.cc: %.sidl $(SIDL_EXE)
+	$(SIDL_EXE) -o $@ $<
+
+%_sidl.h: %.sidl $(SIDL_EXE)
+	$(SIDL_EXE) -h -o $@ $<
+
+#
+# Make emacs etags file
+#
+sciTAGS:  $(ETAGS_FILES) $(TCL_ETAGS_FILES)
+	$(ETAGS) -o sciTAGS $(ETAGS_FILES)
+	$(ETAGS) -o sciTAGS -a -l none --regex='/itcl_class[ \t]+\([^ \t]+\)/\1/' --regex='/[ \t]+method[ \t]+\([^ \t]+\)/\1/' $(TCL_ETAGS_FILES)
+
+#
+# The sophsticated looking $(...) mess below is just to convert a
+# subdirectory of the form a/b/c into ../../..
+#
+ifeq ($(LARGESOS),yes)
+  HERE = $(LIBDIR)lib$(firstword $(subst /," ",$(subst $(OBJTOP_ABS)/,,$@))).so
+else
+  HERE = $(LIBDIR)lib$(subst /,_,$(patsubst $(OBJTOP_ABS)/%/,%,$(dir $@))).so
+endif
+$(SUBMAKEFILES): scripts/Makefile.tmpl
+	@echo creating $@
+	@sed -e s,@OBJTOP@,$(shell echo $(foreach t,$(subst /," ",$(dir $(subst $(OBJTOP_ABS)/,,$@))),../) | sed -e 's,../ ,../,g' -e 's,/../$$,,'), -e s,@SRCTOP@,$(strip $(SRCTOP)), -e 's,@HERE_TARGET@,$(strip $(HERE)),' $< > $@
+
+clean::
+	$(foreach dir,$(ALLSUBDIRS),$(shell rm -f $(filter $(dir)/%,$(CLEANOBJS))))
+	rm -f $(patsubst %,%/depend.mk, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/core, $(ALLSUBDIRS))
+	$(foreach dir,$(ALLSUBDIRS),$(shell rm -f $(dir)/ii_files/*.ii))
+	-rmdir $(patsubst %,%/ii_files, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/*~, $(ALLSUBDIRS))
+	rm -f $(LIBDIR)so_locations
+	rm -f $(CLEANLIBS)
+	rm -f $(CLEANPROGS)
+	rm -f y.output
+	rm -Rf $(LIBDIR)
+	-rm -f sciTAGS
+
+distclean:: clean
+	rm -f config.status config.log config.cache
+	rm -f $(patsubst %,%/Makefile, $(ALLSUBDIRS))
+	rm -f sci_config.h sci_defs.h stamp-
+
+cleanall:: cleanai cleanAI cleanjs cleanJS cleantz cleanTZ cleanrest
+
+cleanai::
+	rm -f $(patsubst %,%/[a-i]*.o, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[a-i]*.ii, $(ALLSUBDIRS))
+cleanAI::
+	rm -f $(patsubst %,%/[A-I]*.o, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[A-I]*.ii, $(ALLSUBDIRS))
+cleanjs::
+	rm -f $(patsubst %,%/[j-s]*.o, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[j-s]*.ii, $(ALLSUBDIRS))
+cleanJS::
+	rm -f $(patsubst %,%/[J-S]*.o, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[J-S]*.ii, $(ALLSUBDIRS))
+cleantz::
+	rm -f $(patsubst %,%/[t-z]*.o, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[t-z]*.ii, $(ALLSUBDIRS))
+cleanTZ::
+	rm -f $(patsubst %,%/[T-Z]*.o, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[T-Z]*.ii, $(ALLSUBDIRS))
+cleanrest::
+	rm -f $(patsubst %,%/*.o, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/depend.mk, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/core, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/*.ii, $(ALLSUBDIRS))
+	-rmdir $(patsubst %,%/ii_files, $(ALLSUBDIRS))
+	rm -f $(patsubst %,%/*~, $(ALLSUBDIRS))
+	rm -f $(LIBDIR)so_locations
+	rm -f $(CLEANLIBS)
+	rm -f $(CLEANPROGS)
+	rm -f y.output
+	rm -Rf $(LIBDIR)
+
+objs: $(CLEANOBJS)
+
+ifeq (,$(findstring objs,$(MAKECMDGOALS)))
+#
+# This includes all of the dependencies.  We prepend the absolute path
+# to the obj dir to prevent make from wasting time searching for them
+# in other directories
+#
+
+  ifeq ($(CC_DEPEND_REGEN),-MD)
+    -include $(patsubst %.o,$(OBJTOP_ABS)/%.d, $(CLEANOBJS))
+  else
+    -include $(patsubst %,$(OBJTOP_ABS)/%/depend.mk, $(patsubst $(SRCTOP)/%,%,$(ALLSUBDIRS)))
+  endif
+
+else
+
+#
+# If we are making the special target "objs", we skip the dependencies.
+# This is a hack for a "quick" compile.
+#
+
+endif
+
+# Revision 1.43  2000/09/14 20:46:22  yarden
+# fix the make dependency for the depend.mk files if we compile on
+# a binary tree. (fix by sparker)
+#
+# Revision 1.42  2000/09/12 15:48:18  sparker
+# Added PETSc configuration
+#
+# Revision 1.41  2000/09/05 19:09:50  moulding
+#
+#
+# made sed and chmod command for createTclIndex silent.
+#
+# Revision 1.40  2000/09/04 21:19:08  moulding
+# force use of startup script for tcl specified at configure time
+#
+# Revision 1.39  2000/09/04 06:20:52  moulding
+#
+#
+# fixed execute permissions for createTclIndex
+#
+# Revision 1.38  2000/08/15 20:55:57  dav
+# added -f flag to rm of sciTAGS
+#
+# Revision 1.37  2000/08/11 17:35:55  kirby
+#
+# Move NEKTAR_INCLUDE_DIR out of the general include
+#
+# Revision 1.36  2000/08/10 15:22:55  kirby
+#
+# nektar fixes
+#
+# Revision 1.35  2000/08/10 03:33:36  yarden
+# add --with-nektar
+#
+# Revision 1.34  2000/08/01 18:00:53  jehall
+# - Fixed "make clean" for people who don't make sciTAGS
+#
+# Revision 1.33  2000/08/01 15:32:58  mcole
+# put header files first in etags
+#
+# Revision 1.32  2000/07/25 17:53:55  jehall
+# - Prevent make from deleting automatically generated *_sidl.{h,cc} files,
+#   since the MIPSPro CC may need them at link time for template
+#   instantiations.
+#
+# Revision 1.31  2000/07/03 19:09:45  jehall
+# - Fixed "argument list too long" problems in make clean
+#
+# Revision 1.30  2000/06/14 23:12:42  bbanerje
+# Added cleanall for ARCHES specific make clean (for CRSIM machines)
+#
+# Revision 1.29  2000/06/14 22:06:58  jehall
+# - Made 32bit/64bit configure setting available to makefiles
+#
+# Revision 1.28  2000/06/12 18:39:00  sparker
+# Added F77 configuration
+#
+# Revision 1.27  2000/06/10 04:18:22  moulding
+# added a section to search for GL headers
+#
+# Revision 1.26  2000/06/09 17:46:16  kuzimmer
+# Modified so that linux and 64bit compiles won't choke on the new image
+# and compression libraries
+#
+# Revision 1.25  2000/06/08 22:29:52  kuzimmer
+# fixed an error in IMAGE_LIBS
+#
+# Revision 1.24  2000/05/17 21:11:22  sparker
+# Added CFLAGS to SOFLAGS and LDFLAGS - necessary for -ipa and -Ofast
+#
+# Revision 1.23  2000/05/11 20:26:04  mcole
+# add etags generation to build system
+#
+# Revision 1.22  2000/04/12 22:02:10  dav
+# changed rmdir libdir to rm minus Rf libdir so that it actually removes it when libdir still has stuff in it.
+#
+# Revision 1.21  2000/04/12 21:12:39  dav
+# fixed the globus_lib_dir in makefile.in to use @GLOBUS_LIB@ from the config script instead of being hard coded.
+#
+# Revision 1.20  2000/03/31 17:24:57  moulding
+# added ' (tick marks) to the sed script that copies the Makefile.tmpl to SCICore
+# , PSECore, etc.
+#
+# Revision 1.19  2000/03/23 10:54:26  sparker
+# Moved sidl pattern rule to after the recursive include - so that
+#  $(SIDL_EXE) will be defined
+#
+# Revision 1.18  2000/03/23 10:33:09  sparker
+# Configure new exception facility (using libexc on SGI)
+#
+# Revision 1.17  2000/03/22 09:59:15  sparker
+# Assorted make performance improvements
+# Added a "make objs" target that only builds the .o files and bypasses
+#   all of the depend.mk files - works faster
+#
+# Revision 1.16  2000/03/21 06:13:30  sparker
+# Added pattern rule for .sidl files
+# Compile component testprograms
+#
+# Revision 1.15  2000/03/21 04:30:04  sparker
+# Simplified rules for using -soname
+# Added a convenience target for subdirectories: "make here"
+#
+# Revision 1.14  2000/03/20 23:14:13  sparker
+# Quieted make output in rules for building subdir Makefiles (added @)
+#
+# Revision 1.13  2000/03/20 23:07:05  yarden
+#  enable compilation in any subdir (sparker)
+#  fix sstream include
+#
+# Revision 1.12  2000/03/20 21:43:30  yarden
+# Linux port: add NEED_SONAME
+#
+# Revision 1.11  2000/03/20 19:35:41  sparker
+# Added VPATH support
+#
+# Revision 1.10  2000/03/17 09:25:07  sparker
+# New makefile scheme: sub.mk instead of Makefile.in
+# Use XML-based files for module repository
+# Plus many other changes to make these two things work
+#
+# 

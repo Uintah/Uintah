@@ -1,0 +1,198 @@
+#_______________________________________________________________________
+#   Set some specific flags
+# BIT  =        n32, 64
+# MEMORY_LIB    
+#               Malloc_NAN      Steve Parkers malloc libraray that initializes
+#                               all of the entries to NAN and audits it.
+#               efence          Electric fence
+#               malloc_cv       CVD's malloc library
+#_______________________________________________________________________
+BIT             = 64
+IMPLICIT        = no
+EXPLICIT        = yes
+MEMORY_LIB      = Malloc_NAN
+
+#_______________________________________________________________________
+#               COMMON MACROS REQUIRED BY BOTH EXPLICIT AND IMPLICIT versions of ICE
+#_______________________________________________________________________
+ICE_DIR         = /usr/people/harman/Csafe/ICE_SM
+ICE_INCLUDE     = -I. -I$(ICE_DIR)/Header_files
+MYLIB_PATH      = -L $(ICE_DIR)/Libraries/$(BIT)bit
+MYLIB           = $(MYLIB_PATH) -ltecio -lcpgplot -lpgplot -lX11 -L. -l$(MEMORY_LIB) -lm
+
+LIB             = $(MYLIB) -lm 
+
+ABI_FLAGS       = -$(BIT)
+CC              = cc
+
+MAKEFLAGS       = --no-keep-going
+
+SRCS            = overides.c\
+                  $(ICE_DIR)/input.c \
+                  $(ICE_DIR)/Plot_routines/plot_vector.c \
+                  $(ICE_DIR)/Plot_routines/plot_control.c \
+                  $(ICE_DIR)/Plot_routines/plot_face_center.c \
+                  $(ICE_DIR)/Plot_routines/plot_common.c \
+                  $(ICE_DIR)/Plot_routines/plot_contour.c \
+                  $(ICE_DIR)/Plot_routines/plot_2d_line.c \
+                  $(ICE_DIR)/Plot_routines/plot_cursor_pos.c \
+                  $(ICE_DIR)/p_face.c \
+                  $(ICE_DIR)/PressureSolve_PCG/pressure_residual.c\
+                  $(ICE_DIR)/equate_ptr_addrss.c \
+                  $(ICE_DIR)/interpolate_vel_CC_to_FC.c \
+                  $(ICE_DIR)/grid.c \
+                  $(ICE_DIR)/flux_or_primitive.c \
+                  $(ICE_DIR)/Equation_of_state/equation_of_state.c \
+                  $(ICE_DIR)/Equation_of_state/speed_of_sound.c \
+                  $(ICE_DIR)/lagrangian.c \
+                  $(ICE_DIR)/commonFunctions.c \
+                  $(ICE_DIR)/timeadvanced.c \
+                  $(ICE_DIR)/Advection_2D/advect_grad_limiter.c \
+                  $(ICE_DIR)/Advection_2D/advect_centroids.c \
+                  $(ICE_DIR)/Advection_2D/advect_preprocess.c \
+                  $(ICE_DIR)/Advection_2D/advect_q.c \
+                  $(ICE_DIR)/Advection_2D/advect_q_flux.c \
+                  $(ICE_DIR)/Advection_2D/advect_q_vertex.c \
+                  $(ICE_DIR)/Boundary_Cond/boundary_cond_FC.c \
+                  $(ICE_DIR)/Boundary_Cond/boundary_cond.c \
+                  $(ICE_DIR)/Write_output/output_FC.c \
+                  $(ICE_DIR)/Write_output/output_CC.c \
+                  $(ICE_DIR)/Write_output/output_misc.c \
+                  $(ICE_DIR)/Source_Sinks/energy.c \
+                  $(ICE_DIR)/Source_Sinks/momentum.c \
+                  $(ICE_DIR)/Source_Sinks/shear_stress.c\
+                  $(ICE_DIR)/initialize_variables.c \
+                  $(ICE_DIR)/nrutil+.c
+ 
+OBJS          = $(addsuffix .o,$(basename $(SRCS)))
+ 
+#_______________________________________________________________________
+#               EXPLICIT
+#_______________________________________________________________________
+ifeq ($(EXPLICIT),yes)
+CFLAGS        = -g -fullwarn $(ICE_INCLUDE) 
+SRCS          += $(ICE_DIR)/explicit_delPress.c
+all: ice
+	@echo ''
+	@echo '-----------------------'
+	@echo 'EXPLICIT ice'
+	@echo ''; echo ''
+
+ice: $(OBJS)
+	$(F77) -trapuv $(ABI_FLAGS) -o ice $(OBJS) $(MYLIB)
+       
+clean:
+	/bin/rm -f $(OBJS) ice core*
+endif
+
+
+#_______________________________________________________________________
+#               IMPLICIT 
+#_______________________________________________________________________
+ifeq ($(IMPLICIT),yes)
+
+PETSC_DIR       = /usr/local/share/petsc-2.0.24
+ifeq ($(BIT), 64)
+    PETSC_ARCH  = IRIX64
+endif
+ifeq ($(BIT), 32)
+    PETSC_ARCH  = IRIX
+endif
+PETSC_BOPT      = g
+PETSC_INCLUDE   = -I$(PETSC_DIR)/include -I$(PETSC_DIR)/bmake/$(PETSC_ARCH)
+PETSC_LIB       = -L$(PETSC_DIR)/lib/lib$(PETSC_BOPT)/$(PETSC_ARCH) \
+		    -Wl,-rpath,$(PETSC_DIR)/lib/lib$(PETSC_BOPT)/$(PETSC_ARCH) \
+                  -lpetscts -lpetscsnes -lpetscsles \
+                  -lpetscdm -lpetscmat -lpetscvec -lpetsc -lmpiuni\
+		    -lfortran -lmpi $(PETSC_DIR)/lib/lib$(PETSC_BOPT)/$(PETSC_ARCH)/blas.a
+
+PETSC_FLAGS     = -DUSE_PETSC_DEBUG -DUSE_PETSC_LOG -DUSE_PETSC_BOPT_g -DUSE_PETSC_STACK
+
+
+#--
+  
+#--IMPLICIT SOURCES
+SRCS2           =$(ICE_DIR)/PressureSolve_PCG/pressure_PCG.c \
+                 $(ICE_DIR)/PressureSolve_PCG/computeStencilWeights.c \
+                 $(ICE_DIR)/PressureSolve_PCG/computeSource.c \
+                 $(ICE_DIR)/PressureSolve_PCG/pcgmg/stencilShell.c\
+                 $(ICE_DIR)/PressureSolve_PCG/pcgmg/multigridShell.c \
+                 $(ICE_DIR)/PressureSolve_PCG/pcgmg/psol.f \
+                 $(ICE_DIR)/PressureSolve_PCG/pcgmg/pset.f \
+                 $(ICE_DIR)/PressureSolve_PCG/pcgmg/stencilMult.f \
+                 $(ICE_DIR)/PressureSolve_PCG/pcgmg/copy_to_gridfcn.f \
+                 $(ICE_DIR)/PressureSolve_PCG/pcgmg/setval.f \
+                 $(ICE_DIR)/PressureSolve_PCG/pcgmg/relax.f \
+                 $(ICE_DIR)/PressureSolve_PCG/pcgmg/gemv.f \
+                 $(ICE_DIR)/PressureSolve_PCG/pcgmg/inject.f \
+                 $(ICE_DIR)/PressureSolve_PCG/pcgmg/gf_axpy.f \
+                 $(ICE_DIR)/PressureSolve_PCG/pcgmg/setHomogeneousFlowBC.f \
+                 $(ICE_DIR)/PressureSolve_PCG/pcgmg/copy_from_gridfcn.f \
+                 $(ICE_DIR)/PressureSolve_PCG/pcgmg/setLevelPtrs.f \
+                 $(ICE_DIR)/PressureSolve_PCG/pcgmg/setOperator.f \
+                 $(ICE_DIR)/PressureSolve_PCG/pcgmg/setCoarserOperator.f \
+                 $(ICE_DIR)/PressureSolve_PCG/pcgmg/interp.f \
+                 $(ICE_DIR)/PressureSolve_PCG/pcgmg/setLevelShapes.f \
+                 $(ICE_DIR)/PressureSolve_PCG/pcgmg/normalize.f \
+                 $(ICE_DIR)/PressureSolve_PCG/pcgmg/gf_copy.f \
+                 $(ICE_DIR)/PressureSolve_PCG/pcgmg/setShape.f
+       
+OBJS_IMPLICIT   = $(addsuffix .o,$(basename $(SRCS2))) 
+
+CFLAGS          = -g -fullwarn -DIMPLICIT $(ICE_INCLUDE) $(PETSC_INCLUDE)
+all: iceimplicit
+	@echo ''
+	@echo '-----------------------'
+	@echo 'Now making the implicit ice'
+	@echo ''; echo ''
+
+iceimplicit: $(OBJS) $(OBJS_IMPLICIT)
+	$(F77) -trapuv $(ABI_FLAGS) -o iceimplicit $(OBJS) $(OBJS_IMPLICIT) $(MYLIB) $(PETSC_LIB)
+       
+clean:
+	/bin/rm -f $(OBJS) $(OBJS2) iceimplicit core*
+endif
+#_______________________________________________________________________
+#               COMMON MACROS
+#_______________________________________________________________________
+remake:
+	gmake clean
+	gmake 
+tags:
+	/bin/rm -f tags
+	ctags $(ICE_DIR)/main2.c
+	ctags -a $(SRCS)
+       
+lib:
+	ar qcv libICE.a $(OBJS)
+       
+.h.o: $<
+	$(CC) $(ABI_FLAGS) $(CFLAGS) -o $@ -c $<
+       
+.c.o: $<
+	$(CC) $(ABI_FLAGS) $(CFLAGS) -o $@ -c $<
+       
+.f.o: $<
+	$(F77) $(ABI_FLAGS) $(FFLAGS) -o $@ -c $<
+#include Makedepend
+
+#__________________________________
+#  Documentation macros
+#___________________________________ 
+DOC_MACROS = $(ICE_DIR)/Doc_utils
+ICE.doc: $(SRCS)
+	$(DOC_MACROS)/makedoc $(SRCS)> ICE.doc
+       
+ICE.html.public: $(SRCS)
+	$(DOC_MACROS)/makebody  $(SRCS)> ICE_body.html 
+	$(DOC_MACROS)/makemenu  $(SRCS)
+	$(DOC_MACROS)/makeindex $(SRCS)> ICE.html ; ./autoftp
+	
+       
+ICE.html: $(SRCS)
+	$(DOC_MACROS)/makebody  $(SRCS)> ICE_body.html
+	$(DOC_MACROS)/makemenu  $(SRCS)
+	$(DOC_MACROS)/makeindex $(SRCS)> ICE.html
+
+ICE.tex: $(SRC)
+	$(DOC_MACROS)/maketex $(SRC) >ICE.tex ; latex ICE.tex

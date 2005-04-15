@@ -1,0 +1,38 @@
+#!/usr/bin/perl
+#______________________________________________________________________
+#   MAKEINDEX
+#
+#   Warning: Make sure that perl lives in path shown above or is won't work
+#
+#   Todd Harman     12/15/99
+#   This perl script is used to in conjunction with two other perl scripts
+#   to automatically extract documentation out 
+#   of an existing  code provided that it contains certain keywords.
+#
+#   This script dumps some HTML code to a index file.
+#______________________________________________________________________
+#______________________________________________________________________
+#   - HTML header information
+#   - Introductory text
+#_______________________________________________________________________*/
+print <<'EOD';
+<HTML>
+<HEAD><TITLE>UINTAH-ICE CFD FUNCTION DESCRIPTIONS</TITLE></HEAD>
+
+<FRAMESET cols="190,*">
+     <frame src="ICE_menu.html" name="menu">
+     <frame src="ICE_body.html" name="main">
+</FRAMESET>
+
+<NOFRAMES>
+<BODY>
+</BODY>
+</NOFRAMES>
+</HTML>
+
+EOD
+
+
+ 
+
+   

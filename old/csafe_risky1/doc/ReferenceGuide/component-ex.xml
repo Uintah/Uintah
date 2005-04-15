@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+
+<component name="Histo">
+  <overview>
+    <authors>
+      <author>Ted Dustman</author>
+    </authors>
+    <summary>Computes histograms of 1, 2, and 3 variables.</summary>
+    <description>
+      <p>
+	This is the initial design doc for the <term>Histo</term> histogram
+	module.  It is based in part on information in the document <rlink
+									   path="src/SCICore/Datatypes/doc/domainDesign.html"><cite>Fields, Attributes, and Geometries</cite></rlink>.
+      </p>
+
+      <p>
+	<term>Histo</term>computes histograms of 1, 2, and 3 variables. It
+	accepts up to 3 one dimensional scalar attributes as input (each
+	field contains data for 1 variable) and generates a 1, 2, or 3
+	dimensional scalar field as output (combined frequency data and
+	histogram structure).
+      </p>
+    </description>
+    <examplesr>histo.sr</examplesr>
+  </overview>
+  <io>
+    <inputs>
+      <port>
+	<description>
+	  <p>Data for 1st variable - Required!</p>
+	</description>
+	<datatype>SAttribute1D</datatype>
+	<componentname>HistoDataGenerator</componentname>
+      </port>
+      <port>
+	<description>
+	  <p>Data for 2nd variable - Optional</p>
+	</description>
+	<datatype>SAttribute1D</datatype>
+	<componentname>HistoDataGenerator</componentname>
+      </port>
+      <port>
+	<description>
+	  <p>Data for 3rd variable - Optional</p>
+	</description>
+	<datatype>SAttribute1D</datatype>
+	<componentname>HistoDataGenerator</componentname>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+	<description>
+          <p>
+	    The histogram's frequency data are contained in the output
+	    field's attribute data.
+	  </p>
+
+	  <p>
+	    The output field's geometry represents the structure of the
+	    histogram. Each of the geometry's elements represents a bin in
+	    1, 2, or 3 dimensions/variables.
+	  </p>
+
+	  <p>
+	    Each scalar attribute frequency value is associated with 1
+	    element (bin) of the field's geometry.
+	  </p>
+        </description>
+	<datatype>SField</datatype>
+	<componentname>ShowField</componentname>
+	<componentname>ShowHisto</componentname>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      <p>
+	The histogram's bin structure is specified via the user interface.
+      </p>
+
+      <p>
+	For each input attribute (variable), the user may specify min and
+	max values and the bin width or the number of bins between the min
+	and max values.
+      </p>
+    </description>
+    <parameter>
+      <label>Min</label>
+      <description>
+	<p>
+	  Specifies the minimum value of the variable to be included in the
+	  histogram.
+	</p>
+      </description>
+    </parameter>
+    <parameter>
+      <label>Max</label>
+      <description>
+	<p>
+	  Specifies the maximum value of the variable to be included in
+	  the histogram.
+	</p>
+      </description>
+    </parameter>
+    <parameter>
+      <label>Bin Width</label>
+      <description>
+	<p>
+	  Specifies the bin width of the input variable.  Either this value
+	  or the number of bins may be specified but not both.
+	</p>
+      </description>
+    </parameter>
+    <parameter>
+      <label># Bins</label>
+      <description>
+	<p>
+	  Specifies the number of bins in the histograms.  Either this
+	  value or the bin width may be specified but not both.
+	</p>
+      </description>
+    </parameter>
+    <img>histogui.jpg</img>
+  </gui>
+  <testing>
+    <plan>
+      <description>
+	<p>
+	  Several sets of test data consisting of inputs and known outputs
+	  will be prepared.  The inputs will be supplied to the module and
+	  the outputs computed.  The computed outputs will be compared to
+	  known outputs.
+	</p>
+      </description>
+      <steps>
+	<step>No steps yet.</step>
+      </steps>
+    </plan>
+  </testing>
+</component>

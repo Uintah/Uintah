@@ -1,0 +1,251 @@
+This is a formatted input file for the Uintah-ice-cfd code.  Do not 
+change the format of this file or rearrange the location of the variables
+Note:  The tilde character MUST proceed each input.
+/*______________________________________________________________________
+*   PROBLEM TITLE:          
+*   PROBLEM DESCRIPTION:     
+*   see Computational Gasdynamics C.B. Laney, 1998, pg 352
+*
+/*______________________________________________________________________
+*   Problem setup section
+*_______________________________________________________________________*/
+* ouput file basename           ~test1
+* ouput file description        ~Advection_test
+*__________________________________
+*  Geometry section 
+*  Keep the lower limits = 2 so that the
+*   Advection operator works correctly
+*___________________________________
+* Delta X               [m]         ~1.0
+* Delta y               [m]         ~1.0
+* Delta z               [m]         ~1.0
+* xLoLimit                          ~1
+* yLoLimit                          ~1
+* zLoLimit                          ~1
+* xHiLimit                          ~100
+* yHiLimit                          ~1
+* zHiLimit                          ~1
+* Number of materials               ~1
+* CFL                               ~0.9
+*__________________________________
+*  Time variables
+*   t_initial_output = sstarting time for file and debugging output
+*   t_final_outpu    = ending time for file and debugging output 
+*   t_delta_output   = delta time between output
+*                    = 0 output every timestep
+*___________________________________
+* Finish Time (sec)                 ~0.8
+* t_initial_output                  ~0.0
+* t_final_output                    ~0.8
+* t_delta_output                    ~0.75
+* delt_min                          ~0.0
+* delt_max                          ~1.75
+* delt_initial_iteration            ~0.00001
+*__________________________________
+*   Body Force
+*___________________________________
+* gravity xdir                      ~0.0
+* gravity ydir                      ~0.0
+* gravity zdir                      ~0.0
+*//////////////////////////////////////////////////////////////////////
+*                                       MATERIAL 1 SPECIFIC PROPERTIES
+*
+*//////////////////////////////////////////////////////////////////////
+*__________________________________
+*  Initial values for the primitive variables
+*___________________________________
+* u velocity            [m/s]       ~0.0
+* v velocity            [m/s]       ~0.0
+* w velocity            [m/s]       ~0.0
+* Density               [m/s]       ~1.0
+* Temperature           [K]         ~20.0
+* Pressure              [Pa]        ~1.0
+* Scalar 1                          ~0.0
+* Scalar 2                          ~0.0
+* Scalar 3                          ~0.0
+*__________________________________
+* Material properties
+*  Thermodynamic and transport properties
+*___________________________________
+* viscosity                         ~0.0
+* Thermal Conductivity              ~0.0
+* Constant cv           [J/kg-K]    ~716.0
+* speed of sound        [m/s]       ~1.0
+* Ideal Gas Constant    [J/kgK]     ~287.0
+* Gamma ratio of specific heats     ~1.4
+*______________________________________________________________________
+*   Set the boundary condition types
+*   BC_inputs[Wall]
+*        = No Slip              = 1    
+*        = Subsonic inflow      = 2   
+*        = Subsonic outflow     = 3
+*        = Subsonic outflow_V2  = 4
+*        = Reflective           = 5
+*        = All Neuman           = 6
+*        = ALL Periodic         = 7
+*
+*   No Slip:            uvel = vvel = wvel = 0.0; Temperature, Pressure and 
+*                       density gradients = 0.
+*   
+*   Subsonic Inflow:    All components of velocity, temperature and density are set
+*                       Pressure in the ghostcells is free to float.
+*
+*   Subsonic outflow:   All components of velocity are set.  Pressure, temperature
+*                       and density in the ghostcells are free to float.   
+*
+*   Subsonic outflow_V2:Pressure is set and all components of velocity temperature
+*                       and density in the ghostcells are free to float. 
+*
+*   Reflective          Normal component of velocity for that wall = 0.0,
+*                       All other variables float
+*
+*   ALL NEUMAN:         The normal gradients of pressure, temperature, density
+*                       and velocity are 0, and float.
+*
+*   All Periodic        Values for velocity, temperature and pressure are set
+*                       to the values on the opposing wall.
+*
+*   Note not all of the values that are specified below are actually used.
+*_______________________________________________________________________*
+*                               BC_inputs[TOP]   ~1
+*                               [UVEL]          ~0.0
+*                               [VVEL]          ~0.0
+*                               [WVEL]          ~50
+*                               [PRESS]         ~1.0
+*                               [TEMP]          ~1.0
+*                               [DENSITY]       ~1.0
+*                            __________________________
+*                           |                          |
+*                           |                          |
+*                           |                          |
+*  BC_inputs[LEFT]  ~6      |                          |  BC_inputs[RIGHT] ~6
+*  [UVEL]          ~0.0     |                          |  [UVEL]          ~0.0
+*  [VVEL]          ~0.0     |                          |  [VVEL]          ~0.0
+*  [WVEL]          ~0.0     |                          |  [WVEL]          ~0.0
+*  [PRESS]         ~0.0     |                          |  [PRESS]         ~0.0
+*  [TEMP]          ~0.0     |                          |  [TEMP]          ~0.0
+*  [DENSITY]       ~0.0     |                          |  [DENSITY]       ~0.0
+*                           |__________________________|
+*
+*                               BC_inputs[BOTTOM] ~1
+*                               [UVEL]          ~0.0
+*                               [VVEL]          ~0.0
+*                               [WVEL]          ~50
+*                               [PRESS]         ~1.0
+*                               [TEMP]          ~1.0
+*                               [DENSITY]       ~1.0
+* 
+*
+*                            __________________________
+*                           |                          |
+*                           |                          |
+*                           |                          |
+*  BC_inputs[FRONT]  ~0     |                          |  BC_inputs[BACK]~0
+*  [UVEL]          ~1.01    |                          |  [UVEL]          ~1.01
+*  [VVEL]          ~0.01    |                          |  [VVEL]          ~0.01
+*  [WVEL]          ~-9      |                          |  [WVEL]          ~-9
+*  [PRESS]         ~0.1     |                          |  [PRESS]         ~0.1
+*  [TEMP]          ~1.01    |                          |  [TEMP]          ~1.01
+*  [DENSITY]       ~1.0     |                          |  [DENSITY]       ~1.0
+*                           |__________________________|
+*
+*//////////////////////////////////////////////////////////////////////
+*                                           MATERIAL 2 SPECIFIC PROPERTIES
+*
+*//////////////////////////////////////////////////////////////////////
+*__________________________________
+*  Initial values for the primitive variables
+*___________________________________
+* u velocity            [m/s]       ~0.0
+* v velocity            [m/s]       ~0.0
+* w velocity            [m/s]       ~0.0
+* Density               [m/s]       ~1.0
+* Temperature           [K]         ~300.0
+* Pressure              [Pa]        ~100000.0
+* Scalar 1                          ~0.0
+* Scalar 2                          ~0.0
+* Scalar 3                          ~0.0
+*__________________________________
+* Material properties
+*  Thermodynamic and transport properties
+*___________________________________
+* viscosity                         ~0.0
+* Thermal Conductivity              ~0.0
+* Constant cv           [J/kg-K]    ~716.0
+* speed of sound        [m/s]       ~374.17
+* Ideal Gas Constant    [J/kgK]     ~287.0
+* Gamma ratio of specific heats     ~1.4
+*______________________________________________________________________
+*   Set the boundary condition types
+*   BC_inputs[Wall]
+*        = No Slip              = 1    
+*        = Subsonic inflow      = 2   
+*        = Subsonic outflow     = 3
+*        = Subsonic outflow_V2  = 4
+*        = Reflective           = 5
+*        = All Neuman           = 6
+*
+*   No Slip:            uvel = vvel = wvel = 0.0; Temperature, Pressure and 
+*                       density gradients = 0.
+*   
+*   Subsonic Inflow:    All components of velocity, temperature and density are set
+*                       Pressure in the ghostcells is free to float.
+*
+*   Subsonic outflow:   All components of velocity are set.  Pressure, temperature
+*                       and density in the ghostcells are free to float.   
+*
+*   Subsonic outflow_V2:Pressure is set and all components of velocity temperature
+*                       and density in the ghostcells are free to float. 
+*
+*   Reflective          Normal component of velocity for that wall = 0.0,
+*                       All other variables float
+*
+*   ALL NEUMAN:         The normal gradients of pressure, temperature, density
+*                       and velocity are 0, and float.
+*
+*   All Periodic        Values for velocity, temperature and pressure are set
+*                       to the values on the opposing wall.
+*
+*   Note not all of the values that are specified below are actually used.
+*_______________________________________________________________________*
+*                               BC_inputs[TOP]   ~2
+*                               [UVEL]          ~1.0
+*                               [VVEL]          ~1.0
+*                               [WVEL]          ~50
+*                               [PRESS]         ~1.0
+*                               [TEMP]          ~1.0
+*                               [DENSITY]       ~1.0
+*                            __________________________
+*                           |                          |
+*                           |                          |
+*                           |                          |
+*  BC_inputs[LEFT]  ~2      |                          |  BC_inputs[RIGHT] ~2
+*  [UVEL]          ~1.0     |                          |  [UVEL]          ~1.0
+*  [VVEL]          ~1.0     |                          |  [VVEL]          ~1.0
+*  [WVEL]          ~0.0     |                          |  [WVEL]          ~0.0
+*  [PRESS]         ~1.0     |                          |  [PRESS]         ~1.0
+*  [TEMP]          ~1.0     |                          |  [TEMP]          ~1.0
+*  [DENSITY]       ~1.0     |                          |  [DENSITY]       ~1.0
+*                           |__________________________|
+*
+*                               BC_inputs[BOTTOM] ~2
+*                               [UVEL]          ~1.0
+*                               [VVEL]          ~1.0
+*                               [WVEL]          ~50
+*                               [PRESS]         ~1.0
+*                               [TEMP]          ~1.0
+*                               [DENSITY]       ~1.0
+* 
+*
+*                            __________________________
+*                           |                          |
+*                           |                          |
+*                           |                          |
+*  BC_inputs[FRONT]  ~0     |                          |  BC_inputs[BACK]~0
+*  [UVEL]          ~1.01    |                          |  [UVEL]          ~1.01
+*  [VVEL]          ~0.01    |                          |  [VVEL]          ~0.01
+*  [WVEL]          ~-9      |                          |  [WVEL]          ~-9
+*  [PRESS]         ~0.1     |                          |  [PRESS]         ~0.1
+*  [TEMP]          ~1.01    |                          |  [TEMP]          ~1.01
+*  [DENSITY]       ~1.0     |                          |  [DENSITY]       ~1.0
+*                           |__________________________|

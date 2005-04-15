@@ -1,0 +1,58 @@
+0 0
+q_CC[i][j][k][m]
+0 0
+i
+0 0
+j
+0 0
+q_outflux[i][j][k][m][1]
+0 0
+q_outflux[i][j][k][m][2]
+0 0
+q_outflux[i][j][k][m][3]
+0 0
+q_outflux[i][j][k][m][4]
+0 0
+q_influx[i][j][k][m][1]
+0 0
+q_influx[i][j][k][m][2]
+0 0
+q_influx[i][j][k][m][3]
+0 0
+q_influx[i][j][k][m][4]
+0 0
+outflux_volume[i][j][k][1]
+0 0
+outflux_volume[i][j][k][2]
+0 0
+outflux_volume[i][j][k][3]
+0 0
+outflux_volume[i][j][k][4]
+0 0
+influx_volume[i][j][k][1]
+0 0
+influx_volume[i][j][k][2]
+0 0
+influx_volume[i][j][k][3]
+0 0
+influx_volume[i][j][k][4]
+0 0
+influx_counter[i][j][k]
+0 0
+q_CC[8][7][1][1]
+0 0
+r_out_x[i][j][k][m][1]
+0 0
+r_out_x[i][j][k][m][2]
+0 0
+r_out_x[i][j][k][m][3]
+0 0
+r_out_x[i][j][k][m][4]
+0 0
+r_out_y[i][j][k][m][1]
+0 0
+r_out_y[i][j][k][m][2]
+0 0
+r_out_y[i][j][k][m][3]
+0 0
+r_out_y[i][j][k][m][4]

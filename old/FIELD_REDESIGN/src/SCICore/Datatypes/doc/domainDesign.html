@@ -1,0 +1,193 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.7 [en] (X11; U; IRIX64 6.5 IP28) [Netscape]">
+   <title>Design Document for Domains, Attributes, and Geometries</title>
+</head>
+<body text="#000000" bgcolor="#FFFFFF">
+
+<center>
+<h1>
+<font face="Arial,Helvetica"><font size=+2>Fields, Attributes, and Geometries</font></font></h1></center>
+
+<center>
+<h1>
+<font face="Arial,Helvetica"><font size=+0>Eric Kuehne</font></font></h1></center>
+
+<center>
+<h1>
+<font face="Arial,Helvetica"><font size=+0>Scientific Computing and Imaging
+Institute</font></font></h1></center>
+
+<p><br>
+<p><b><font face="Arial,Helvetica"><font size=+2>1&nbsp; Introduction</font></font></b>
+<p><font face="Arial,Helvetica"><font size=+0>This document describes the
+design of the Field class and the various classes associated with fields.&nbsp;
+This design is implemented with the following motivations:</font></font>
+<ul>
+<li>
+<font face="Arial,Helvetica"><font size=+0>Provide the user with unified
+methods for creating, accessing, combining, and modifying datasets in an
+intutive manner.</font></font></li>
+
+<li>
+<font face="Arial,Helvetica"><font size=+0>Separate geometries and the
+values that live on the geometries (attributes) in to distinct entities,
+which will allow geometries to share simplices.</font></font></li>
+
+<li>
+<font face="Arial,Helvetica"><font size=+0>Provide a class system that
+is extensible and robust.</font></font></li>
+
+<li>
+<font face="Arial,Helvetica"><font size=+0>Add features not available in
+the previous fields framework.</font></font></li>
+</ul>
+<font face="Arial,Helvetica"><font size=+0>In general, a field contains
+an attribute (which describes the data in the field)&nbsp; and a geometry
+(which describes the spatial properties of a field).&nbsp; Other fields
+that do not fit this mold, such as derived fields and time varying fields,
+are also described below.&nbsp;&nbsp; The Domain class is a collection
+of attributes and geometries.&nbsp; This class provides methods for managing
+and accessing geometries, attributes, and the fields that they may compose.&nbsp;
+The set of modules that provide an interface to these classes is also described
+below.</font></font>
+<br>&nbsp;
+<br>&nbsp;
+<p><b><font face="Arial,Helvetica"><font size=+2>2&nbsp; Design Overview</font></font></b>
+<p><font face="Arial,Helvetica"><font size=+0>This section gives a structural
+and functional overview of the various classes associated with fields.</font></font>
+<p><b><font face="Arial,Helvetica">2.1 Class Domain</font></b>
+<p><font face="Arial,Helvetica"><font size=+0>The Domain class holds a
+list of attributes and geometries.&nbsp; It provides methods to access
+and manage the attributes and geometries.&nbsp; The modules that allow
+the user to extract and register geometries and attributes associated with
+a domain are described below (see section 3).</font></font><b><font face="Arial,Helvetica"></font></b>
+<p><b><font face="Arial,Helvetica">2.2 Class Attrib</font></b>
+<p><font face="Arial,Helvetica"><font size=+0>The Attrib class holds sets
+of data, as well as various properties of that data.&nbsp;&nbsp; Each Attrib
+class provides its own method of data access.&nbsp; For example, FlatSAttrib
+allows the data to be accessed as a flat array (using the [int] operator).&nbsp;
+IndexedSAttrib allows the data to be accessed with 1, 2, or 3 integer indexes,
+depending on the dimensionality of the attribute.&nbsp; Therefore, the
+dimension of the field that an indexed attribute lives in must be specified
+when the attribute is created, which is not true of flat attributes.&nbsp;
+For more information on how data values are accessed in attributes and
+fields, see section 2.4.</font></font>
+<br><img SRC="Attrib.gif" height=245 width=779>
+<p><b><font face="Arial,Helvetica"><font size=+0>2.3 Class Geom</font></font></b>
+<br>&nbsp;
+<br><font face="Arial,Helvetica"><font size=+0>The Geom class acts as an
+abstract base class for one, two, and three dimensional geometries, both
+unstructured and structured.&nbsp;&nbsp; The unstructured geometries are
+represented by the derived classes ContourGeom, SurfaceGeom, and MeshGeom.&nbsp;
+These classes point to a NodesGeom class which holds the list of nodes
+in the geometry.&nbsp;&nbsp; Class NodesSharedGeom provides an indexed
+map which will allow access to shared nodes in the same way that regular
+nodes are accessed.&nbsp; The LatticeGeom class represents geometries that
+have orthagonal axes, such as RegularMeshGeom which is a geometry with
+regularly spaced nodes in each dimension.&nbsp;&nbsp;&nbsp;&nbsp;</font></font><img SRC="Geom.gif" height=346 width=779>
+<br>&nbsp;
+<p><b><font face="Arial,Helvetica"><font size=+0>2.4 Class Field</font></font></b>
+<p><font face="Arial,Helvetica"><font size=+0>Fields describe entities
+living in one, two, or three dimensions, including the space they live
+on as well as the values that exist over that space.&nbsp; General fields
+contain one geometry and one attribute.&nbsp; Derived fields represent
+fields whose values are derivations of other field's values.&nbsp; For
+example, a DerivedVField may be derived from a GeneralSField and represent
+the scalar field's gradient values.</font></font>
+<p><img SRC="Field.gif" height=241 width=779>
+<br>&nbsp;
+<p><b><font face="Arial,Helvetica"><font size=+0>2.5 Class TimeField</font></font></b>
+<br>&nbsp;
+<br>&nbsp;
+<p><img SRC="TimeField.gif" height=254 width=402>
+<br>&nbsp;
+<p><b><font face="Arial,Helvetica"><font size=+0>2.6 Interfaces</font></font></b>
+<p><font face="Arial,Helvetica"><font size=+0>The above classes use inherited
+interfaces to provide methods to the programmer.&nbsp; The interfaces used
+by fields are defined in PSECore/Datatypes/FieldInterface.h.&nbsp; Each
+field that uses one of the interfaces in this file, say SInterpolate, inherits
+from SInterpolate and implements a pure virtual function in SInterpolate,
+called sinterpolate (by convention, the pure virtual function in the interface
+has the same name as the class except in lowercase).&nbsp; The query_interface(string)&nbsp;function
+allows access to the sinterpolate function.&nbsp; For example, if a module
+wishes to call sinterpolate, then the following code could be used</font></font><font face="Arial,Helvetica"><font size=+0></font></font>
+<p><tt><font size=+0>// Get the field from the input port</font></tt>
+<br><tt><font size=+0>if(iport->get(myfield)){</font></tt>
+<br><tt><font size=+0>&nbsp;&nbsp;&nbsp; // Check to see if this field
+supports a scalar interpolate function</font></tt>
+<br><tt><font size=+0>&nbsp;&nbsp;&nbsp; SInterpolate&lt;double> *interp
+= myfield->query_interface("sinterpolate");</font></tt>
+<br><tt><font size=+0>&nbsp;&nbsp;&nbsp; if(interp){</font></tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; double retval;</tt>
+<br><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; interp->sinterpolate(Point(1,2,3),
+retval);</tt>
+<br><tt>&nbsp;&nbsp;&nbsp; }</tt>
+<br><tt>}<br>
+</tt><font face="Arial,Helvetica"><font size=+0></font></font>
+<p><b><font face="Arial,Helvetica"><font size=+0>2.6 Dependencies</font></font></b>
+<p><font face="Arial,Helvetica"><font size=+0>The implementation of the
+above classes makes use of various components of STL, including maps, vectors,
+and lists.</font></font>
+<p><b><font face="Arial,Helvetica"><font size=+2>3&nbsp; Components</font></font></b>
+<p><b><font face="Arial,Helvetica"><font size=+0>Data Management Modules:</font></font></b>
+<ul>
+<li>
+<font face="Arial,Helvetica"><font size=+0><b>Domain Manager</b>: This
+module is used to keep track of all of the attributes and geometries registered
+with the domain.&nbsp; When this module is initialized, it creates a new
+Domain object.&nbsp; The user is able to read files and register the corresponding
+geometry and attribute with the domain.&nbsp; In addition, the user is
+able to read and write the entire state of the domain to a file.&nbsp;
+This module has out-ports which pass out the domain's handle.&nbsp; It
+also has ports which allow the user to register geometries and attributes
+with the domain.</font></font></li>
+
+<li>
+<font face="Arial,Helvetica"><font size=+0><b>Extractors:&nbsp; </b>This
+set of modules provided for extraction of&nbsp; fields from the geometries
+and attributes registered with the domain.&nbsp; For example, the user
+could employ an Extractor module to specify a mesh geometry and a scalar
+attribute, from which the module creates a ScalarMeshUG that is sent to
+the out port.</font></font></li>
+
+<li>
+<font face="Arial,Helvetica"><font size=+0><b>Registers:&nbsp; </b>These
+modules take in a field and registers its geometry and attribute components
+with the domain.&nbsp;&nbsp; The user specifies whether the&nbsp; geometry
+is a new geometry, a geometry that shares nodes with others in the domain,
+or a geometry that allready exists in the domain.</font></font></li>
+</ul>
+<font face="Arial,Helvetica"><font size=+0><b>Data Manipulation Modules:
+</b>These
+modules provide various operations to manipulate fields, attributes, and
+geometries.&nbsp; Each module includes in-ports for fields, geometries,
+and/or attributes as appropriate.&nbsp; If a module performs operations
+only on the geometry of a set (such as clipping) the user has the option
+to either pass in a set, or to pass in a geometry indpendent of any attribute.&nbsp;
+The majority of these modules exist in SCIRun and are simply modified to
+accomodate domains.</font></font>
+<ul>
+<li>
+<font face="Arial,Helvetica"><font size=+0><b>Geometric manipulation: </b>These
+modules include operations such as clipping, merging geometries, performing
+local and global transformations, and padding.</font></font></li>
+
+<li>
+<font face="Arial,Helvetica"><font size=+0><b>Field creation/disection:
+</b>Operations
+such as slicing fields and stacking slices to create a field.</font></font></li>
+
+<li>
+<font face="Arial,Helvetica"><font size=+0><b>Attribute manipulation: </b>These
+modules include operations such as interpolation, filtering, mirroring
+and interleaving.</font></font></li>
+</ul>
+
+<h2>
+<b><u><font face="Arial,Helvetica">Implementation</font></u></b></h2>
+Links to cacoon generated documentation will go here.
+</body>
+</html>

@@ -1,0 +1,152 @@
+This is a formatted input file for the Uintah-ice-cfd code.  Do not 
+change the format of this file or rearrange the location of the variables
+Note:  The tilde character MUST proceed each input.
+/*______________________________________________________________________
+*   PROBLEM TITLE:          Advection Test 
+*   PROBLEM DESCRIPTION:    x and y components of velocity are = 1.0 
+*   and we're advecting a square cube around
+*
+/*______________________________________________________________________
+*   Problem setup section
+*_______________________________________________________________________*/
+* ouput file basename           ~run1
+* ouput file description        ~run number 1
+*__________________________________
+*  Geometry section 
+*  Keep the lower limits = 2 so that the
+*   Advection operator works correctly
+*___________________________________
+* Delta X                       ~1.0
+* Delta y                       ~1.0
+* Delta z                       ~1.0
+* xLoLimit (2 for advection)    ~1
+* yLoLimit (2 for advection)    ~1
+* zLoLimit (2 for advection)    ~1
+* xHiLimit                      ~6
+* yHiLimit                      ~6
+* zHiLimit                      ~1
+* Number of materials           ~1
+*__________________________________
+*  Initial values for the primitive variables
+*___________________________________
+* u velocity                    ~1.0
+* v velocity                    ~0.0
+* w velocity                    ~0.0
+* Density                       ~1.0
+* Temperature                   ~1.0
+* Pressure                      ~0.1
+* Scalar 1                      ~0.0
+* Scalar 2                      ~0.0
+* Scalar 3                      ~0.0
+*__________________________________
+* Material properties
+*  Thermodynamic and transport properties
+*___________________________________
+* viscosity                     ~1.0
+* Thermal Conductivity          ~1.0
+* Constant specific heat cv     ~1.0
+* speed of sound                ~1.0
+* Ideal Gas Constant            ~1.0       
+*__________________________________
+*  Time variables
+*   t_initial_output = sstarting time for file and debugging output
+*   t_final_outpu    = ending time for file and debugging output 
+*   t_delta_output   = delta time between output
+*                    = 0 output every timestep
+*___________________________________
+* Finish Time (sec)             ~2.0
+* t_initial_output              ~0.0
+* t_final_output                ~2.0
+* t_delta_output                ~0.0
+* delt_min                      ~0.0
+* delt_max                      ~1.0   
+*__________________________________
+*   Body Force
+*___________________________________
+* gravity xdir                  ~0.0
+* gravity ydir                  ~0.0
+* gravity zdir                  ~0.0
+*______________________________________________________________________
+*   CURRENTLY ONLY THE VELOCITY AND PRESSURE BC ARE IMPLEMENTED
+*   Set the boundary condition types
+*   BC_types[Wall][Variable]
+*        = NO_BC        = -9     No boundary condition specified
+*        = DIRICHLET    = 0     Value is set to BC_Value
+*        = NEUMANN      = 1     Normal Gradient is set to BC_Value
+*        = WALL         = 2     WALL          WHAT IS SET
+*                               -------------------------------
+*                               Right Wall uvel_FC[xHiLimit,j,k,RIGHT,m]   = 0
+*                                          vvel_FC(xHiLimit+1,j,k,TOP,m]   = -vvel_FC(xHiLimit,j,k,TOP,m]
+*                                          vvel_FC(xHiLimit+1,j,k,BOTTOM,m]= -vvel_FC(xHiLimit,j,k,BOTTOM,m]
+*
+*                               Left Wall  uvel_FC[xLoLimit,j,k,RIGHT,m]   = 0
+*                                          vvel_FC(xLoLimit-1,j,k,TOP,m]   = -vvel_FC(xLoLimit,j,k,TOP,m]
+*                                          vvel_FC(xLoLimit-1,j,k,BOTTOM,m]= -vvel_FC(xLoLimit,j,k,BOTTOM,m]
+*
+*                               BOTTOM Wallvvel_FC[yLoLimit,j,k,BOTTOM,m]  = 0
+*                                          uvel_FC(i,yLoLimit-1,k,LEFT,m]  = -uvel_FC(i,yLoLimit,k,LEFT,m]
+*                                          uvel_FC(i,yLoLimit-1,k,RIGHT,m] = -uvel_FC(i,yLoLimit,k,RIGHT,m]
+*
+*                               TOP Wall   vvel_FC[yHiLimit,j,k,TOP,m]     = 0
+*                                          uvel_FC(i,yHiLimit+1,k,LEFT,m]  = -uvel_FC(i,yHiLimit,k,LEFT,m]
+*                                          uvel_FC(i,yHiLimit+1,k,RIGHT,m] = -uvel_FC(i,yHiLimit,k,RIGHT,m]
+*_______________________________________________________________________*
+* BC_types[TOP][VEL_BC]         ~0
+* BC_types[BOTTOM][VEL_BC]      ~0
+* BC_types[RIGHT][VEL_BC]       ~0
+* BC_types[LEFT][VEL_BC]        ~0
+* BC_types[FRONT][VEL_BC]       ~-9
+* BC_types[BACK][VEL_BC]        ~-9
+*
+* BC_types[TOP][PRESS_BC]       ~0
+* BC_types[BOTTOM][PRESS_BC]    ~0
+* BC_types[RIGHT][PRESS_BC]     ~0
+* BC_types[LEFT][PRESS_BC]      ~0
+* BC_types[FRONT][PRESS_BC]     ~-9
+* BC_types[BACK][PRESS_BC]      ~-9
+*
+* BC_types[TOP][TEMP_BC]        ~0
+* BC_types[BOTTOM][TEMP_BC]     ~0
+* BC_types[RIGHT][TEMP_BC]      ~0
+* BC_types[LEFT][TEMP_BC]       ~0
+* BC_types[FRONT][TEMP_BC]      ~-9
+* BC_types[BACK][TEMP_BC]       ~-9
+*______________________________________________________________________
+*   CURRENTLY ONLY THE VELOCITY AND PRESSURE BC'S ARE IMPLEMENTED
+*   For each boundary condition type set the corresponding value.
+*   THIS SECION DOESN'T APPLY TO WALL TYPE BOUNDARY CONDITIONS
+*_______________________________________________________________________*
+* BC_Values[TOP][UVEL]          ~1.0
+* BC_Values[BOTTOM][UVEL]       ~1.0
+* BC_Values[RIGHT][UVEL]        ~1.0
+* BC_Values[LEFT][UVEL]         ~1.5
+* BC_Values[FRONT][UVEL]        ~-9
+* BC_Values[BACK][UVEL]         ~-9
+*
+* BC_Values[TOP][VVEL]          ~0.0
+* BC_Values[BOTTOM][VVEL]       ~0.0
+* BC_Values[RIGHT][VVEL]        ~0.0
+* BC_Values[LEFT][VVEL]         ~0.0
+* BC_Values[FRONT][VVEL]        ~-9 
+* BC_Values[BACK][VVEL]         ~-9 
+*
+* BC_Values[TOP][WVEL]          ~-9
+* BC_Values[BOTTOM][WVEL]       ~-9
+* BC_Values[RIGHT][WVEL]        ~-9
+* BC_Values[LEFT][WVEL]         ~-9
+* BC_Values[FRONT][WVEL]        ~-9
+* BC_Values[BACK][WVEL]         ~-9
+*
+* BC_Values[TOP][PRESS]         ~0.1
+* BC_Values[BOTTOM][PRESS]      ~0.1
+* BC_Values[RIGHT][PRESS]       ~0.1
+* BC_Values[LEFT][PRESS]        ~0.1
+* BC_Values[FRONT][PRESS]       ~-9
+* BC_Values[BACK][PRESS]        ~-9
+*
+* BC_Values[TOP][TEMP]          ~1.0
+* BC_Values[BOTTOM][TEMP]       ~1.0
+* BC_Values[RIGHT][TEMP]        ~1.0
+* BC_Values[LEFT][TEMP]         ~1.0
+* BC_Values[FRONT][TEMP]        ~-9
+* BC_Values[BACK][TEMP]         ~-9
