@@ -1,9 +1,0 @@
-#!/bin/csh -f -x
-setenv EDITOR vi
-cvs commit
-set release = `cat release`
-cvs rdiff -u -r steve_$release develop > patch.$release
-gzip patch.$release
-@ release ++
-cvs tag steve_$release
-echo $release > release

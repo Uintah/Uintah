@@ -1,6 +1,0 @@
-
-#include <config/sci.cf>
-
-SUBDIRS = modules tcl project convert gen
-
-SCISubdirs($(SUBDIRS))

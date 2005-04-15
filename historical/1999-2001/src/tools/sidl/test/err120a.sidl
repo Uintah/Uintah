@@ -1,7 +1,0 @@
-
-package x {
-};
-
-class y {
-      void y() throws x;
-};
