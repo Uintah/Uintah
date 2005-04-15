@@ -7,4 +7,3 @@ SRCDIR   := Packages/Uintah/Core/IO
 SRCS     +=
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
