@@ -58,14 +58,11 @@ class BinaryPiostream : public Piostream {
 private:
   FILE* fp_;
 
-  virtual void emit_pointer(int&, int&);
-
 public:
   BinaryPiostream(const string& filename, Direction dir, const int& v = -1);
   BinaryPiostream(int fd, Direction dir, const int& v = -1);
   virtual ~BinaryPiostream();
 
-  virtual void io(bool&);
   virtual void io(char&);
   virtual void io(signed char&);
   virtual void io(unsigned char&);
@@ -87,14 +84,11 @@ class BinarySwapPiostream : public Piostream {
 private:
   FILE* fp_;
 
-  virtual void emit_pointer(int&, int&);
-
 public:
   BinarySwapPiostream(const string& filename, Direction d, const int& v = -1);
   BinarySwapPiostream(int fd, Direction dir, const int& v = -1);
   virtual ~BinarySwapPiostream();
 
-  virtual void io(bool&);
   virtual void io(char&);
   virtual void io(signed char&);
   virtual void io(unsigned char&);
@@ -158,7 +152,6 @@ class FastPiostream : public Piostream {
 private:
   FILE* fp_;
 
-  virtual void emit_pointer(int&, int&);
   void report_error(const char *);
   template <class T> void gen_io(T&, const char *);
 
@@ -192,17 +185,13 @@ class GzipPiostream : public Piostream {
 private:
   gzFile gzfile_;
 
-  void expect(char);
-  virtual void emit_pointer(int&, int&);
-
-  void io(int, string& str);
   inline int fileOpen() { return (gzfile_ != 0); }
+  template <class T> void gen_io(T&, const char *);
 
 public:
   GzipPiostream(const string& filename, Direction dir);
   virtual ~GzipPiostream();
 
-  virtual void io(bool&);
   virtual void io(char&);
   virtual void io(signed char&);
   virtual void io(unsigned char&);
@@ -224,16 +213,13 @@ class GunzipPiostream : public Piostream {
 private:
   int unzipfile_;	// file descriptor
 
-  virtual void emit_pointer(int&, int&);
-
-  void io(int, string& str);
   inline int fileOpen() { return (unzipfile_ > 0); }
+  template <class T> void gen_io(T&, const char *);
 
 public:
   GunzipPiostream(const string& filename, Direction dir);
   virtual ~GunzipPiostream();
 
-  virtual void io(bool&);
   virtual void io(char&);
   virtual void io(signed char&);
   virtual void io(unsigned char&);

@@ -161,7 +161,7 @@ Persistent::~Persistent()
 Piostream::Piostream(Direction dir, int version, const string &name)
   : dir(dir),
     version(version),
-    err(0),
+    err(false),
     have_peekname_(false),
     outpointers(0),
     inpointers(0),
@@ -173,6 +173,14 @@ Piostream::Piostream(Direction dir, int version, const string &name)
 //----------------------------------------------------------------------
 Piostream::~Piostream()
 {
+}
+
+//----------------------------------------------------------------------
+void
+Piostream::emit_pointer(int& have_data, int& pointer_id)
+{
+  io(have_data);
+  io(pointer_id);
 }
 
 //----------------------------------------------------------------------
@@ -210,7 +218,7 @@ Piostream::begin_class(const string& classname, int current_version)
   {
     if (classname != gname)
     {
-      err=1;
+      err = true;
       cerr << "Expecting class: " << classname << ", got class: "
 	   << gname << endl;
       return 0;
@@ -239,21 +247,34 @@ Piostream::end_cheap_delim()
 }
 
 //----------------------------------------------------------------------
-int
+void
+Piostream::io(bool& data)
+{
+  if (err) return;
+  unsigned char tmp = data;
+  io(tmp);
+  if (dir == Read)
+  {
+    data = tmp;
+  }
+}
+
+//----------------------------------------------------------------------
+bool
 Piostream::reading()
 {
     return dir == Read;
 }
 
 //----------------------------------------------------------------------
-int
+bool
 Piostream::writing()
 {
     return dir == Write;
 }
 
 //----------------------------------------------------------------------
-int
+bool
 Piostream::error()
 {
     return err;
@@ -303,9 +324,7 @@ find_derived( const string& classname, const string& basename )
 void
 Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 {
-  if (err) {
-    return;
-  }
+  if (err) return;
   if (dir == Read) {
     int have_data;
     int pointer_id;
@@ -314,7 +333,7 @@ Piostream::io(Persistent*& data, const PersistentTypeID& pid)
     if (have_data) {
       // See what type comes next in the stream.  If it is a type
       // derived from pid->type, then read it in, otherwise it is an
-      // error...
+      // error.
       string in_name(peek_class());
       string want_name(pid.type);
       
@@ -336,7 +355,7 @@ Piostream::io(Persistent*& data, const PersistentTypeID& pid)
       if (!maker) {
 	cerr << "Maker not found? (class=" << in_name << ")\n";
 	cerr << "want_name: " << want_name << "\n";
-	err=1;
+	err = true;
 	return;
       }
       
@@ -360,7 +379,7 @@ Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 	if (inpointers) initer = inpointers->find(pointer_id);
 	if (!inpointers || initer == inpointers->end()) {
 	  cerr << "Error - pointer not in file, but should be!\n";
-	  err=1;
+	  err = true;
 	  return;
 	}
 	data = (*initer).second;
