@@ -227,4 +227,3 @@ void VorticityConfinement::scheduleTestConservation(SchedulerP&,
 {
   // Not implemented yet
 }
-                                                    
