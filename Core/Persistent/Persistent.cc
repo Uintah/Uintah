@@ -158,21 +158,30 @@ Persistent::~Persistent()
 //
 
 //----------------------------------------------------------------------
-Piostream::Piostream(Direction dir, int version, const string &name)
+Piostream::Piostream(Direction dir, int version, const string &name,
+                     ProgressReporter *pr)
   : dir(dir),
     version(version),
     err(false),
-    have_peekname_(false),
     outpointers(0),
     inpointers(0),
     current_pointer_id(1),
+    have_peekname_(false),
+    reporter_(pr),
+    own_reporter_(false),
     file_name(name)
 {
+  if (reporter_ == NULL)
+  {
+    reporter_ = scinew ProgressReporter();
+    own_reporter_ = true;
+  }
 }
 
 //----------------------------------------------------------------------
 Piostream::~Piostream()
 {
+  if (own_reporter_) { delete reporter_; }
 }
 
 //----------------------------------------------------------------------
@@ -219,8 +228,8 @@ Piostream::begin_class(const string& classname, int current_version)
     if (classname != gname)
     {
       err = true;
-      cerr << "Expecting class: " << classname << ", got class: "
-	   << gname << endl;
+      reporter_->error(string("Expecting class: ") + classname +
+                       ", got class: " + gname + ".");
       return 0;
     }
   }
@@ -348,13 +357,13 @@ Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 	  maker=found_pid->maker;
 	} else {
 #if DEBUG
-	  cerr << "Did not find a pt_id.\n";
+	  reporter_->error("Did not find a pt_id.");
 #endif
 	}
       }
       if (!maker) {
-	cerr << "Maker not found? (class=" << in_name << ")\n";
-	cerr << "want_name: " << want_name << "\n";
+	reporter_->error("Maker not found? (class=" + in_name + ").");
+	reporter_->error("want_name: " + want_name + ".");
 	err = true;
 	return;
       }
@@ -426,13 +435,13 @@ Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 }
 
 //----------------------------------------------------------------------
-
 Piostream*
-auto_istream(const string& filename)
+auto_istream(const string& filename, ProgressReporter *pr)
 {
   std::ifstream in(filename.c_str());
   if (!in) {
-    cerr << "file not found: " << filename << endl;
+    if (pr) pr->error("File not found: " + filename);
+    else cerr << "File not found: " << filename << endl;
     return 0;
   }
 
@@ -441,29 +450,34 @@ auto_istream(const string& filename)
   char hdr[16]; 
   in.read(hdr, 16);
   if (!in) {
-    cerr << "Error reading header of file: " << filename << "\n";
+    if (pr) pr->error("Error reading header of file: " + filename);
+    else cerr << "Error reading header of file: " << filename << endl;
     return 0;
   }
 
   // determine endianness of file
   int file_endian, version;
 
-  if (!Piostream::readHeader(filename, hdr, 0, version, file_endian)) {
-    cerr << "Error parsing header of file: " << filename << "\n";
+  if (!Piostream::readHeader(pr, filename, hdr, 0, version, file_endian))
+  {
+    if (pr) pr->error("Error parsing header of file: " + filename);
+    else cerr << "Error parsing header of file: " << filename << endl;
     return 0;
   }
 
   // put back 4 characters for older Pio versions since their
   // header was of size 12
-  if (version == 1) {
-    for(int i=0; i<4; i++)
+  if (version == 1)
+  {
+    for (int i=0; i<4; i++)
       in.unget();
   }
   
   char m1=hdr[4];
   char m2=hdr[5];
   char m3=hdr[6];
-  if(m1 == 'B' && m2 == 'I' && m3 == 'N'){
+  if (m1 == 'B' && m2 == 'I' && m3 == 'N')
+  {
     // old versions of Pio used XDR which always wrote big endian so if
     // the version = 1, readHeader would return BIG, otherwise it will
     // read it from the header
@@ -472,22 +486,23 @@ auto_istream(const string& filename)
       machine_endian = Piostream::Little;
 
     if (file_endian == machine_endian) 
-      return scinew BinaryPiostream(filename, Piostream::Read, version);
+      return scinew BinaryPiostream(filename, Piostream::Read, version, pr);
     else 
-      return scinew BinarySwapPiostream(filename, Piostream::Read, version);
+      return scinew BinarySwapPiostream(filename, Piostream::Read, version,pr);
   } else if(m1 == 'A' && m2 == 'S' && m3 == 'C'){
-    return scinew TextPiostream(filename, Piostream::Read);
+    return scinew TextPiostream(filename, Piostream::Read, pr);
   } else if(m1 == 'G' && m2 == 'Z' && m3 == 'P'){
-    return scinew GunzipPiostream(filename, Piostream::Read);
+    return scinew GunzipPiostream(filename, Piostream::Read, pr);
   } else {
-    cerr << filename << " is an unknown type!\n";
+    if (pr) pr->error(filename + " is an unknown type!");
+    else cerr << filename << " is an unknown type!" << endl;
     return 0;
   }
 }
 
 //----------------------------------------------------------------------
 Piostream*
-auto_ostream(const string& filename, const string& type)
+auto_ostream(const string& filename, const string& type, ProgressReporter *pr)
 {
   // Based on the type string do the following
   //     Binary:  Return a BinaryPiostream 
@@ -500,17 +515,17 @@ auto_ostream(const string& filename, const string& type)
   //       out the endianness of the machine we are on
   Piostream* stream;
   if (type == "Binary") {
-    stream = scinew BinaryPiostream(filename, Piostream::Write);
+    stream = scinew BinaryPiostream(filename, Piostream::Write, -1, pr);
   } else if (type == "Text") {
-    stream = scinew TextPiostream(filename, Piostream::Write);
+    stream = scinew TextPiostream(filename, Piostream::Write, pr);
   } else if (type == "Gzip") {
-    stream = scinew GzipPiostream(filename, Piostream::Write);
+    stream = scinew GzipPiostream(filename, Piostream::Write, pr);
   } else if (type == "Gunzip") {
-    stream = scinew GunzipPiostream(filename, Piostream::Write);
+    stream = scinew GunzipPiostream(filename, Piostream::Write, pr);
   } else if (type == "Fast") {
-    stream = scinew FastPiostream(filename, Piostream::Write);
+    stream = scinew FastPiostream(filename, Piostream::Write, pr);
   } else {
-    stream = scinew BinaryPiostream(filename, Piostream::Write);
+    stream = scinew BinaryPiostream(filename, Piostream::Write, -1, pr);
   }
   return stream;
 }
@@ -518,7 +533,8 @@ auto_ostream(const string& filename, const string& type)
 
 //----------------------------------------------------------------------
 bool
-Piostream::readHeader( const string & filename, char * hdr,
+Piostream::readHeader( ProgressReporter *pr,
+                       const string & filename, char * hdr,
 		       const char   * filetype, int  & version,
 		       int & endian)
 {
@@ -527,9 +543,18 @@ Piostream::readHeader( const string & filename, char * hdr,
   char m3=hdr[2];
   char m4=hdr[3];
 
-  if(m1 != 'S' || m2 != 'C' || m3 != 'I' || m4 != '\n') {
-    cerr << filename << " is not a valid SCI file! (magic="
-	 << m1 << m2 << m3 << m4 << ")\n";
+  if (m1 != 'S' || m2 != 'C' || m3 != 'I' || m4 != '\n')
+  {
+    if (pr)
+    {
+      pr->error( filename + " is not a valid SCI file! (magic=" +
+                 m1 + m2 + m3 + m4 + ").");
+    }
+    else
+    {
+      cerr << filename << " is not a valid SCI file! (magic=" <<
+        m1 << m2 << m3 << m4 << ")." << endl;
+    }
     return false;
   }
   char v[5];
@@ -540,13 +565,27 @@ Piostream::readHeader( const string & filename, char * hdr,
   v[4]=0;
   istringstream in(v);
   in >> version;
-  if(!in){
-    cerr << "Error reading file: " << filename << " (while reading version)" << endl;
+  if (!in)
+  {
+    if (pr)
+    {
+      pr->error("Error reading file: " + filename +
+                " (while reading version).");
+    }
+    else
+    {
+      cerr << "Error reading file: " << filename <<
+        " (while reading version)." << endl;
+    }
     return false;
   }
-  if(filetype){
-    if(hdr[4] != filetype[0] || hdr[5] != filetype[1] || hdr[6] != filetype[2]){
-      cerr << "Wrong filetype: " << filename << endl;
+  if (filetype)
+  {
+    if (hdr[4] != filetype[0] || hdr[5] != filetype[1] ||
+        hdr[6] != filetype[2])
+    {
+      if (pr) pr->error("Wrong filetype: " + filename);
+      else cerr << "Wrong filetype: " << filename << endl;
       return false;
     }
   }
@@ -563,7 +602,16 @@ Piostream::readHeader( const string & filename, char * hdr,
 	       hdr[14] == 'T' && hdr[15] == '\n') {
       endian = Little;
     } else {
-      cerr << "Unknown endianness: " << hdr[12] << hdr[13] << hdr[14] << endl;
+      if (pr)
+      {
+        pr->error(string("Unknown endianness: ") +
+                  hdr[12] + hdr[13] + hdr[14]);
+      }
+      else
+      {
+        cerr << "Unknown endianness: " <<
+          hdr[12] << hdr[13] << hdr[14] << endl;
+      }
       return false;
     }
   } else {

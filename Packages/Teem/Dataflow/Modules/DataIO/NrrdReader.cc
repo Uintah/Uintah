@@ -216,7 +216,7 @@ NrrdReader::read_nrrd()
     // check that the last 3 chars are .nd for us to pio
     if (fn.substr(len - ext.size(), ext.size()) == ext)
     {
-      Piostream *stream = auto_istream(fn);
+      Piostream *stream = auto_istream(fn, this);
       if (!stream)
       {
 	error("Error reading file '" + fn + "'.");

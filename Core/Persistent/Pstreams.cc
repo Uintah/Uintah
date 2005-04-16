@@ -72,8 +72,8 @@ namespace SCIRun {
 
 // BinaryPiostream -- portable
 BinaryPiostream::BinaryPiostream(const string& filename, Direction dir,
-                                 const int& v)
-  : Piostream(dir, -1, filename),
+                                 const int& v, ProgressReporter *pr)
+  : Piostream(dir, -1, filename, pr),
     fp_(0)
 {
   if (v == -1) // no version given so use PERSISTENT_VERSION
@@ -86,7 +86,7 @@ BinaryPiostream::BinaryPiostream(const string& filename, Direction dir,
     fp_ = fopen (filename.c_str(), "rb");
     if (!fp_)
     {
-      cerr << "Error opening file: " << filename << " for reading\n";
+      reporter_->error("Error opening file: " + filename + " for reading.");
       err = true;
       return;
     }
@@ -99,7 +99,7 @@ BinaryPiostream::BinaryPiostream(const string& filename, Direction dir,
       // read header
       if (!fread(hdr, 1, 12, fp_))
       {
-	cerr << "header fread failed\n";
+	reporter_->error("Header fread failed.");
 	err = true;
 	return;
       }
@@ -113,7 +113,7 @@ BinaryPiostream::BinaryPiostream(const string& filename, Direction dir,
       // read header
       if (!fread(hdr, 1, 16, fp_))
       {
-	cerr << "header fread failed\n";
+	reporter_->error("Header fread failed.");
 	err = true;
 	return;
       }
@@ -121,10 +121,10 @@ BinaryPiostream::BinaryPiostream(const string& filename, Direction dir,
   }
   else
   {
-    fp_=fopen(filename.c_str(), "wb");
+    fp_ = fopen(filename.c_str(), "wb");
     if (!fp_)
     {
-      cerr << "Error opening file: " << filename << " for writing\n";
+      reporter_->error("Error opening file: " + filename + " for writing.");
       err = true;
       return;
     }
@@ -140,7 +140,7 @@ BinaryPiostream::BinaryPiostream(const string& filename, Direction dir,
 
       if (!fwrite(hdr,1,16,fp_))
       {
-	cerr << "header fwrite failed\n";
+	reporter_->error("Header fwrite failed.");
 	err = true;
 	return;
       }
@@ -151,7 +151,7 @@ BinaryPiostream::BinaryPiostream(const string& filename, Direction dir,
       sprintf(hdr, "SCI\nBIN\n%03d\n", version);
       if (!fwrite(hdr,1,12,fp_))
       {
-	cerr << "header fwrite failed\n";
+	reporter_->error("Header fwrite failed.");
 	err = true;
 	return;
       }
@@ -160,8 +160,9 @@ BinaryPiostream::BinaryPiostream(const string& filename, Direction dir,
 }
 
 
-BinaryPiostream::BinaryPiostream(int fd, Direction dir, const int& v)
-  : Piostream(dir, -1),
+BinaryPiostream::BinaryPiostream(int fd, Direction dir, const int& v,
+                                 ProgressReporter *pr)
+  : Piostream(dir, -1, "", pr),
     fp_(0)
 {
   if (v == -1) // no version given so use PERSISTENT_VERSION
@@ -174,7 +175,8 @@ BinaryPiostream::BinaryPiostream(int fd, Direction dir, const int& v)
     fp_ = fdopen (fd, "rb");
     if (!fp_)
     {
-      cerr << "Error opening socket: " << fd << " for reading\n";
+      reporter_->error("Error opening socket: " + to_string(fd) +
+                       " for reading.");
       err = true;
       return;
     }
@@ -187,7 +189,7 @@ BinaryPiostream::BinaryPiostream(int fd, Direction dir, const int& v)
       // read header
       if (!fread(hdr, 1, 12, fp_))
       {
-	cerr << "header fread failed\n";
+	reporter_->error("Header fread failed.");
 	err = true;
 	return;
       }
@@ -201,7 +203,7 @@ BinaryPiostream::BinaryPiostream(int fd, Direction dir, const int& v)
       // read header
       if (!fread(hdr, 1, 16, fp_))
       {
-	cerr << "header fread failed\n";
+	reporter_->error("Header fread failed.");
 	err = true;
 	return;
       }
@@ -212,7 +214,8 @@ BinaryPiostream::BinaryPiostream(int fd, Direction dir, const int& v)
     fp_ = fdopen(fd, "wb");
     if (!fp_)
     {
-      cerr << "Error opening socket: " << fd << " for writing\n";
+      reporter_->error("Error opening socket: " + to_string(fd) +
+                       " for writing.");
       err = true;
       return;
     }
@@ -228,7 +231,7 @@ BinaryPiostream::BinaryPiostream(int fd, Direction dir, const int& v)
 
       if (!fwrite(hdr,1,16,fp_))
       {
-	cerr << "header fwrite failed\n";
+	reporter_->error("Header fwrite failed.");
 	err = true;
 	return;
       }
@@ -239,7 +242,7 @@ BinaryPiostream::BinaryPiostream(int fd, Direction dir, const int& v)
       sprintf(hdr, "SCI\nBIN\n%03d\n", version);
       if (!fwrite(hdr,1,12,fp_))
       {
-	cerr << "header fwrite failed\n";
+	reporter_->error("Header fwrite failed.");
 	err = true;
 	return;
       }
@@ -264,7 +267,8 @@ BinaryPiostream::gen_io(T& data, const char *iotype)
     if (!fread(&data, sizeof(short), 1, fp_))
     {
       err = true;
-      cerr << "BinaryPiostream error reading " << iotype << "." << endl;
+      reporter_->error(string("BinaryPiostream error reading ") +
+                       iotype + ".");
     }
   }
   else
@@ -272,7 +276,8 @@ BinaryPiostream::gen_io(T& data, const char *iotype)
     if (!fwrite(&data, sizeof(short), 1, fp_))
     {
       err = true;
-      cerr << "BinaryPiostream error writing " << iotype << "." << endl;
+      reporter_->error(string("BinaryPiostream error writing ") +
+                       iotype + ".");
     }
   }
 }
@@ -461,8 +466,8 @@ BinaryPiostream::io(string& data)
 // BinarySwapPiostream -- portable
 // Piostream used when endianness of machine and file don't match
 BinarySwapPiostream::BinarySwapPiostream(const string& filename, Direction dir,
-                                         const int& v)
-  : Piostream(dir, -1, filename),
+                                         const int& v, ProgressReporter *pr)
+  : Piostream(dir, -1, filename, pr),
     fp_(0)
 {
   if (v == -1) // no version given so use PERSISTENT_VERSION
@@ -474,7 +479,7 @@ BinarySwapPiostream::BinarySwapPiostream(const string& filename, Direction dir,
     fp_ = fopen (filename.c_str(), "rb");
     if (!fp_)
     {
-      cerr << "Error opening file: " << filename << " for reading\n";
+      reporter_->error("Error opening file: " + filename + " for reading.");
       err = true;
       return;
     }
@@ -486,7 +491,7 @@ BinarySwapPiostream::BinarySwapPiostream(const string& filename, Direction dir,
       // read header
       if (!fread(hdr, 1, 12, fp_))
       {
-	cerr << "header fread failed\n";
+	reporter_->error("Header fread failed.");
 	err = true;
 	return;
       }
@@ -500,7 +505,7 @@ BinarySwapPiostream::BinarySwapPiostream(const string& filename, Direction dir,
       // read header
       if (!fread(hdr, 1, 16, fp_))
       {
-	cerr << "header fread failed\n";
+	reporter_->error("Header fread failed.");
 	err = true;
 	return;
       }
@@ -511,7 +516,7 @@ BinarySwapPiostream::BinarySwapPiostream(const string& filename, Direction dir,
     fp_=fopen(filename.c_str(), "wb");
     if (!fp_)
     {
-      cerr << "Error opening file: " << filename << " for writing\n";
+      reporter_->error("Error opening file: " + filename + " for writing.");
       err = true;
       return;
     }
@@ -527,7 +532,7 @@ BinarySwapPiostream::BinarySwapPiostream(const string& filename, Direction dir,
 
       if (!fwrite(hdr,1,16,fp_))
       {
-	cerr << "header fwrite failed\n";
+	reporter_->error("Header fwrite failed.");
 	err = true;
 	return;
       }
@@ -538,7 +543,7 @@ BinarySwapPiostream::BinarySwapPiostream(const string& filename, Direction dir,
       sprintf(hdr, "SCI\nBIN\n%03d\n", version);
       if (!fwrite(hdr,1,12,fp_))
       {
-	cerr << "header fwrite failed\n";
+	reporter_->error("Header fwrite failed.");
 	err = true;
 	return;
       }
@@ -547,8 +552,9 @@ BinarySwapPiostream::BinarySwapPiostream(const string& filename, Direction dir,
 }
 
 
-BinarySwapPiostream::BinarySwapPiostream(int fd, Direction dir, const int& v)
-  : Piostream(dir, -1),
+BinarySwapPiostream::BinarySwapPiostream(int fd, Direction dir, const int& v,
+                                         ProgressReporter *pr)
+  : Piostream(dir, -1, "", pr),
     fp_(0)
 {
   if (v == -1) // no version given so use PERSISTENT_VERSION
@@ -560,7 +566,8 @@ BinarySwapPiostream::BinarySwapPiostream(int fd, Direction dir, const int& v)
     fp_ = fdopen (fd, "rb");
     if (!fp_)
     {
-      cerr << "Error opening socket: " << fd << " for reading\n";
+      reporter_->error("Error opening socket: " + to_string(fd) +
+                       " for reading.");
       err = true;
       return;
     }
@@ -573,7 +580,7 @@ BinarySwapPiostream::BinarySwapPiostream(int fd, Direction dir, const int& v)
       // read header
       if (!fread(hdr, 1, 12, fp_))
       {
-	cerr << "header fread failed\n";
+	reporter_->error("Header fread failed.");
 	err = true;
 	return;
       }
@@ -587,7 +594,7 @@ BinarySwapPiostream::BinarySwapPiostream(int fd, Direction dir, const int& v)
       // read header
       if (!fread(hdr, 1, 16, fp_))
       {
-	cerr << "header fread failed\n";
+	reporter_->error("Header fread failed.");
 	err = true;
 	return;
       }
@@ -598,7 +605,7 @@ BinarySwapPiostream::BinarySwapPiostream(int fd, Direction dir, const int& v)
     fp_=fdopen(fd, "wb");
     if (!fp_)
     {
-      cerr << "Error opening socket: " << fd << " for writing\n";
+      reporter_->error("Error opening socket: " + to_string(fd) + " for writing.");
       err = true;
       return;
     }
@@ -613,7 +620,7 @@ BinarySwapPiostream::BinarySwapPiostream(int fd, Direction dir, const int& v)
 	sprintf(hdr, "SCI\nBIN\n%03d\nLIT\n", version);
       if (!fwrite(hdr,1,16,fp_))
       {
-	cerr << "header fwrite failed\n";
+	reporter_->error("Header fwrite failed.");
 	err = true;
 	return;
       }
@@ -624,7 +631,7 @@ BinarySwapPiostream::BinarySwapPiostream(int fd, Direction dir, const int& v)
       sprintf(hdr, "SCI\nBIN\n%03d\n", version);
       if (!fwrite(hdr,1,12,fp_))
       {
-	cerr << "header fwrite failed\n";
+	reporter_->error("Header fwrite failed.");
 	err = true;
 	return;
       }
@@ -650,7 +657,8 @@ BinarySwapPiostream::gen_io(T& data, const char *iotype)
     if (!fread(tmp, sizeof(data), 1, fp_))
     {
       err = true;
-      cerr << "BinaryPiostream error reading " << iotype << "." << endl;
+      reporter_->error(string("BinaryPiostream error reading ") +
+                       iotype + ".");
       return;
     }
     unsigned char *cdata = reinterpret_cast<unsigned char *>(&data);
@@ -670,7 +678,8 @@ BinarySwapPiostream::gen_io(T& data, const char *iotype)
     if (!fwrite(tmp, sizeof(data), 1, fp_))
     {
       err = true;
-      cerr << "BinaryPiostream error writing " << iotype << "." << endl;
+      reporter_->error(string("BinaryPiostream error writing ") +
+                       iotype + ".");
     }
   }
 }
@@ -883,8 +892,9 @@ BinarySwapPiostream::io(string& data)
 }
 
 
-TextPiostream::TextPiostream(const string& filename, Direction dir)
-  : Piostream(dir, -1, filename),
+TextPiostream::TextPiostream(const string& filename, Direction dir,
+                             ProgressReporter *pr)
+  : Piostream(dir, -1, filename, pr),
     ownstreams_p_(true)
 {
   if (dir==Read)
@@ -893,7 +903,7 @@ TextPiostream::TextPiostream(const string& filename, Direction dir)
     istr=new ifstream(filename.c_str());
     if (!istr)
     {
-      cerr << "Error opening file: " << filename << " for reading\n";
+      reporter_->error("Error opening file: " + filename + " for reading.");
       err = true;
       return;
     }
@@ -901,7 +911,7 @@ TextPiostream::TextPiostream(const string& filename, Direction dir)
     istr->read(hdr, 8);
     if (!*istr)
     {
-      cerr << "Error reading header of file: " << filename << "\n";
+      reporter_->error("Error reading header of file: " + filename);
       err = true;
       return;
     }
@@ -913,9 +923,9 @@ TextPiostream::TextPiostream(const string& filename, Direction dir)
 	break;
       c++;
     }
-    if (!readHeader(filename, hdr, "ASC", version, file_endian))
+    if (!readHeader(reporter_, filename, hdr, "ASC", version, file_endian))
     {
-      cerr << "Error parsing header of file: " << filename << "\n";
+      reporter_->error("Error parsing header of file: " + filename);
       err = true;
       return;
     }
@@ -927,7 +937,7 @@ TextPiostream::TextPiostream(const string& filename, Direction dir)
     ostream& out=*ostr;
     if (!out)
     {
-      cerr << "Error opening file: " << filename << " for writing\n";
+      reporter_->error("Error opening file: " + filename + " for writing.");
       err = true;
       return;
     }
@@ -937,8 +947,8 @@ TextPiostream::TextPiostream(const string& filename, Direction dir)
 }
 
 
-TextPiostream::TextPiostream(istream *strm)
-  : Piostream(Read, -1),
+TextPiostream::TextPiostream(istream *strm, ProgressReporter *pr)
+  : Piostream(Read, -1, "", pr),
     istr(strm),
     ostr(0),
     ownstreams_p_(false)
@@ -947,7 +957,7 @@ TextPiostream::TextPiostream(istream *strm)
   istr->read(hdr, 8);
   if (!*istr)
   {
-    cerr << "Error reading header of istream.\n";
+    reporter_->error("Error reading header of istream.");
     err = true;
     return;
   }
@@ -959,17 +969,17 @@ TextPiostream::TextPiostream(istream *strm)
       break;
     c++;
   }
-  if (!readHeader("istream", hdr, "ASC", version, file_endian))
+  if (!readHeader(reporter_, "istream", hdr, "ASC", version, file_endian))
   {
-    cerr << "Error parsing header of istream.\n";
+    reporter_->error("Error parsing header of istream.");
     err = true;
     return;
   }
 }
 
 
-TextPiostream::TextPiostream(ostream *strm)
-  : Piostream(Write, -1),
+TextPiostream::TextPiostream(ostream *strm, ProgressReporter *pr)
+  : Piostream(Write, -1, "", pr),
     istr(0),
     ostr(strm),
     ownstreams_p_(false)
@@ -1013,11 +1023,11 @@ TextPiostream::io(int do_quotes, string& str)
 	in.get(c);
 	if (!in)
         {
-	  cerr << "String input failed\n";
+	  reporter_->error("String input failed.");
 	  char buf[100];
 	  in.clear();
 	  in.getline(buf, 100);
-	  cerr << "Rest of line is: " << buf << endl;
+	  reporter_->error(string("Rest of line is: ") + buf);
 	  err = true;
 	  break;
 	}
@@ -1027,11 +1037,11 @@ TextPiostream::io(int do_quotes, string& str)
 	  *p++=c;
 	if (n++ > 998)
         {
-	  cerr << "String too long\n";
+	  reporter_->error("String too long.");
 	  char buf[100];
 	  in.clear();
 	  in.getline(buf, 100);
-	  cerr << "Rest of line is: " << buf << endl;
+	  reporter_->error(string("Rest of line is: ") + buf);
 	  err = true;
 	  break;
 	}
@@ -1087,7 +1097,8 @@ TextPiostream::begin_class(const string& classname, int current_version)
     if (classname != gname)
     {
       err = true;
-      cerr << "Expecting class: " << classname << ", got class: " << gname << endl;
+      reporter_->error("Expecting class: " + classname +
+                       ", got class: " + gname + ".");
       return 0;
     }
   }
@@ -1156,11 +1167,11 @@ TextPiostream::io(bool& data)
     in >> data;
     if (!in)
     {
-      cerr << "Error reading char\n";
+      reporter_->error("Error reading bool.");
       char buf[100];
       in.clear();
       in.getline(buf, 100);
-      cerr << "Rest of line is: " << buf << endl;
+      reporter_->error(string("Rest of line is: ") + buf);
       err = true;
       return;
     }
@@ -1184,11 +1195,11 @@ TextPiostream::io(char& data)
     in >> data;
     if (!in)
     {
-      cerr << "Error reading char\n";
+      reporter_->error("Error reading char.");
       char buf[100];
       in.clear();
       in.getline(buf, 100);
-      cerr << "Rest of line is: " << buf << endl;
+      reporter_->error(string("Rest of line is: ") + buf);
       err = true;
       return;
     }
@@ -1212,11 +1223,11 @@ TextPiostream::io(signed char& data)
     in >> data;
     if (!in)
     {
-      cerr << "Error reading signed char\n";
+      reporter_->error("Error reading signed char.");
       char buf[100];
       in.clear();
       in.getline(buf, 100);
-      cerr << "Rest of line is: " << buf << endl;
+      reporter_->error(string("Rest of line is: ") + buf);
       err = true;
       return;
     }
@@ -1240,11 +1251,11 @@ TextPiostream::io(unsigned char& data)
     in >> data;
     if (!in)
     {
-      cerr << "Error reading unsigned char\n";
+      reporter_->error("Error reading unsigned char.");
       char buf[100];
       in.clear();
       in.getline(buf, 100);
-      cerr << "Rest of line is: " << buf << endl;
+      reporter_->error(string("Rest of line is: ") + buf);
       err = true;
       return;
     }
@@ -1268,11 +1279,11 @@ TextPiostream::io(short& data)
     in >> data;
     if (!in)
     {
-      cerr << "Error reading short\n";
+      reporter_->error("Error reading short.");
       char buf[100];
       in.clear();
       in.getline(buf, 100);
-      cerr << "Rest of line is: " << buf << endl;
+      reporter_->error(string("Rest of line is: ") + buf);
       err = true;
       return;
     }
@@ -1296,11 +1307,11 @@ TextPiostream::io(unsigned short& data)
     in >> data;
     if (!in)
     {
-      cerr << "Error reading unsigned short\n";
+      reporter_->error("Error reading unsigned short.");
       char buf[100];
       in.clear();
       in.getline(buf, 100);
-      cerr << "Rest of line is: " << buf << endl;
+      reporter_->error(string("Rest of line is: ") + buf);
       err = true;
       return;
     }
@@ -1324,11 +1335,11 @@ TextPiostream::io(int& data)
     in >> data;
     if (!in)
     {
-      cerr << "Error reading int\n";
+      reporter_->error("Error reading int.");
       char buf[100];
       in.clear();
       in.getline(buf, 100);
-      cerr << "Rest of line is: " << buf << endl;
+      reporter_->error(string("Rest of line is: ") + buf);
       err = true;
       return;
     }
@@ -1352,11 +1363,11 @@ TextPiostream::io(unsigned int& data)
     in >> data;
     if (!in)
     {
-      cerr << "Error reading unsigned int\n";
+      reporter_->error("Error reading unsigned int.");
       char buf[100];
       in.clear();
       in.getline(buf, 100);
-      cerr << "Rest of line is: " << buf << endl;
+      reporter_->error(string("Rest of line is: ") + buf);
       err = true;
       return;
     }
@@ -1380,11 +1391,11 @@ TextPiostream::io(long& data)
     in >> data;
     if (!in)
     {
-      cerr << "Error reading long\n";
+      reporter_->error("Error reading long.");
       char buf[100];
       in.clear();
       in.getline(buf, 100);
-      cerr << "Rest of line is: " << buf << endl;
+      reporter_->error(string("Rest of line is: ") + buf);
       err = true;
       return;
     }
@@ -1408,11 +1419,11 @@ TextPiostream::io(unsigned long& data)
     in >> data;
     if (!in)
     {
-      cerr << "Error reading unsigned long\n";
+      reporter_->error("Error reading unsigned long.");
       char buf[100];
       in.clear();
       in.getline(buf, 100);
-      cerr << "Rest of line is: " << buf << endl;
+      reporter_->error(string("Rest of line is: ") + buf);
       err = true;
       return;
     }
@@ -1436,11 +1447,11 @@ TextPiostream::io(long long& data)
     in >> data;
     if (!in)
     {
-      cerr << "Error reading long long\n";
+      reporter_->error("Error reading long long.");
       char buf[100];
       in.clear();
       in.getline(buf, 100);
-      cerr << "Rest of line is: " << buf << endl;
+      reporter_->error(string("Rest of line is: ") + buf);
       err = true;
       return;
     }
@@ -1464,11 +1475,12 @@ TextPiostream::io(unsigned long long& data)
     in >> data;
     if (!in)
     {
-      cerr << "Error reading unsigned long long\n";
+      reporter_->error("Error reading unsigned long long.");
+
       char buf[100];
       in.clear();
       in.getline(buf, 100);
-      cerr << "Rest of line is: " << buf << endl;
+      reporter_->error(string("Rest of line is: ") + buf);
       err = true;
       return;
     }
@@ -1522,10 +1534,10 @@ TextPiostream::io(double& data)
         else
         {
           char buf[100];
-          cerr << "Error reading double\n";
+          reporter_->error("Error reading double.");
           in.clear();
           in.getline(buf, 100);
-          cerr << "Rest of line is: " << ibuf << buf << endl;
+          reporter_->error(string("Rest of line is: ") + ibuf + buf);
           err = true;
           return;
         }
@@ -1580,10 +1592,10 @@ TextPiostream::io(float& data)
         else
         {
           char buf[100];
-          cerr << "Error reading float\n";
+          reporter_->error("Error reading float.");
           in.clear();
           in.getline(buf, 100);
-          cerr << "Rest of line is: " << ibuf << buf << endl;
+          reporter_->error(string("Rest of line is: ") + ibuf + buf);
           err = true;
           return;
         }
@@ -1616,11 +1628,11 @@ TextPiostream::io(string& data)
       in.get(c);
       if (!in)
       {
-	cerr << "String input failed\n";
+	reporter_->error("String input failed.");
 	char buf[100];
 	in.clear();
 	in.getline(buf, 100);
-	cerr << "Rest of line is: " << buf << endl;
+        reporter_->error(string("Rest of line is: ") + buf);
 	err = true;
 	return;
       }
@@ -1630,11 +1642,11 @@ TextPiostream::io(string& data)
 	*p++=c;
       if (n++ > 998)
       {
-	cerr << "String too long\n";
+	reporter_->error("String too long.");
 	char buf[100];
 	in.clear();
 	in.getline(buf, 100);
-	cerr << "Rest of line is: " << buf << endl;
+        reporter_->error(string("Rest of line is: ") + buf);
 	err = true;
 	break;
       }
@@ -1658,14 +1670,14 @@ TextPiostream::expect(char expected)
   istream& in=*istr;
   if (!in)
   {
-    cerr << "read in expect failed (before read)\n";
+    reporter_->error("Read in expect failed (before read).");
     char buf[100];
     in.clear();
     in.getline(buf, 100);
-    cerr << "Rest of line is: " << buf << endl;
+    reporter_->error(string("Rest of line is: ") + buf);
     in.clear();
     in.getline(buf, 100);
-    cerr << "Next line is: " << buf << endl;
+    reporter_->error(string("Next line is: ") + buf);
     err = true;
     return;
   }
@@ -1673,26 +1685,27 @@ TextPiostream::expect(char expected)
   in.get(c);
   if (!in)
   {
-    cerr << "read in expect failed (after read)\n";
+    reporter_->error("Read in expect failed (after read).");
     char buf[100];
     in.clear();
     in.getline(buf, 100);
-    cerr << "Rest of line is: " << buf << endl;
+    reporter_->error(string("Rest of line is: ") + buf);
     in.clear();
     in.getline(buf, 100);
-    cerr << "Next line is: " << buf << endl;
+    reporter_->error(string("Next line is: ") + buf);
     err = true;
     return;
   }
   if (c != expected)
   {
     err = true;
-    cerr << "Persistent Object Stream: Expected '" << expected << "', got '" << c << "'." << endl;
+    reporter_->error(string("Persistent Object Stream: Expected '") +
+                     expected + "', got '" + c + "'.");
     char buf[100];
     in.clear();
     in.getline(buf, 100);
-    cerr << "Rest of line is: " << buf << endl;
-    cerr << "Object is not intact" << endl;
+    reporter_->error(string("Rest of line is: ") + buf);
+    reporter_->error("Object is not intact.");
     return;
   }
 }
@@ -1712,13 +1725,13 @@ TextPiostream::emit_pointer(int& have_data, int& pointer_id)
       have_data=1;
     else
     {
-      cerr << "Error reading pointer...\n";
+      reporter_->error("Error reading pointer...");
       err = true;
     }
     in >> pointer_id;
     if (!in)
     {
-      cerr << "Error reading pointer id\n";
+      reporter_->error("Error reading pointer id.");
       err = true;
       return;
     }
@@ -1737,16 +1750,17 @@ TextPiostream::emit_pointer(int& have_data, int& pointer_id)
 
 
 // FastPiostream is a non portable binary output.
-FastPiostream::FastPiostream(const string& filename, Direction dir) :
-  Piostream(dir, -1, filename),
-  fp_(0)
+FastPiostream::FastPiostream(const string& filename, Direction dir,
+                             ProgressReporter *pr)
+  : Piostream(dir, -1, filename, pr),
+    fp_(0)
 {
   if (dir==Read)
   {
     fp_ = fopen (filename.c_str(), "rb");
     if (!fp_)
     {
-      cerr << "Error opening file: " << filename << " for reading\n";
+      reporter_->error("Error opening file: " + filename + " for reading.");
       err = true;
       return;
     }
@@ -1754,18 +1768,18 @@ FastPiostream::FastPiostream(const string& filename, Direction dir) :
     size_t chars_read = fread(hdr, sizeof(char), 12, fp_);
     if (chars_read != 12)
     {
-      cerr << "Error reading header from: " << filename << endl;
+      reporter_->error("Error reading header from: " + filename);
       err = true;
       return;
     }
-    readHeader(filename, hdr, "FAS", version, file_endian);
+    readHeader(reporter_, filename, hdr, "FAS", version, file_endian);
   }
   else
   {
     fp_=fopen(filename.c_str(), "wb");
     if (!fp_)
     {
-      cerr << "Error opening file: " << filename << " for writing\n";
+      reporter_->error("Error opening file: " + filename + " for writing.");
       err = true;
       return;
     }
@@ -1781,7 +1795,7 @@ FastPiostream::FastPiostream(const string& filename, Direction dir) :
       size_t wrote = fwrite(hdr, sizeof(char), 16, fp_);
       if (wrote != 16)
       {
-	cerr << "Error writing header to: " << filename << endl;
+	reporter_->error("Error writing header to: " + filename);
 	err = true;
 	return;
       }
@@ -1794,7 +1808,7 @@ FastPiostream::FastPiostream(const string& filename, Direction dir) :
       size_t wrote = fwrite(hdr, sizeof(char), 12, fp_);
       if (wrote != 12)
       {
-	cerr << "Error writing header to: " << filename << endl;
+	reporter_->error("Error writing header to: " + filename);
 	err = true;
 	return;
       }
@@ -1803,16 +1817,17 @@ FastPiostream::FastPiostream(const string& filename, Direction dir) :
 }
 
 
-FastPiostream::FastPiostream(int fd, Direction dir) :
-  Piostream(dir, -1),
-  fp_(0)
+FastPiostream::FastPiostream(int fd, Direction dir, ProgressReporter *pr)
+  : Piostream(dir, -1, "", pr),
+    fp_(0)
 {
   if (dir==Read)
   {
     fp_ = fdopen (fd, "rb");
     if (!fp_)
     {
-      cerr << "Error opening socket: " << fd << " for reading\n";
+      reporter_->error("Error opening socket: " + to_string(fd) +
+                       " for reading.");
       err = true;
       return;
     }
@@ -1820,18 +1835,20 @@ FastPiostream::FastPiostream(int fd, Direction dir) :
     size_t chars_read = fread(hdr, sizeof(char), 12, fp_);
     if (chars_read != 12)
     {
-      cerr << "Error reading header from socket: " << fd << endl;
+      reporter_->error("Error reading header from socket: " + 
+                       to_string(fd) + ".");
       err = true;
       return;
     }
-    readHeader("socket", hdr, "FAS", version, file_endian);
+    readHeader(reporter_, "socket", hdr, "FAS", version, file_endian);
   }
   else
   {
     fp_=fdopen(fd, "wb");
     if (!fp_)
     {
-      cerr << "Error opening socket: " << fd << " for writing\n";
+      reporter_->error("Error opening socket: " + to_string(fd) +
+                       " for writing.");
       err = true;
       return;
     }
@@ -1847,7 +1864,7 @@ FastPiostream::FastPiostream(int fd, Direction dir) :
       size_t wrote = fwrite(hdr, sizeof(char), 16, fp_);
       if (wrote != 16)
       {
-	cerr << "Error writing header to: " << fd << endl;
+	reporter_->error("Error writing header to: " + to_string(fd) + ".");
 	err = true;
 	return;
       }
@@ -1860,7 +1877,8 @@ FastPiostream::FastPiostream(int fd, Direction dir) :
       size_t wrote = fwrite(hdr, sizeof(char), 12, fp_);
       if (wrote != 12)
       {
-	cerr << "Error writing header to socket: " << fd << endl;
+	reporter_->error("Error writing header to socket: " +
+                         to_string(fd) + ".");
 	err = true;
 	return;
       }
@@ -1888,7 +1906,7 @@ FastPiostream::gen_io(T& data, const char *iotype)
     if (expect != did && !feof(fp_))
     {
       err = true;
-      cerr << "FastPiostream error reading " << iotype << "." << endl;
+      reporter_->error(string("FastPiostream error reading ") + iotype + ".");
     }
   }
   else
@@ -1897,7 +1915,7 @@ FastPiostream::gen_io(T& data, const char *iotype)
     if (expect != did)
     {
       err = true;
-      cerr << "FastPiostream error writing " << iotype << "." << endl;
+      reporter_->error(string("FastPiostream error writing ") + iotype + ".");
     }
   }
 }
@@ -2033,7 +2051,7 @@ FastPiostream::block_io(void *data, size_t s, size_t nmemb)
     if (did != nmemb)
     {
       err = true;
-      cerr << "FastPiostream error reading block io." << endl;
+      reporter_->error("FastPiostream error reading block io.");
     }
   }
   else
@@ -2042,19 +2060,20 @@ FastPiostream::block_io(void *data, size_t s, size_t nmemb)
     if (did != nmemb)
     {
       err = true;
-      cerr << "FastPiostream error writing block io." << endl;
+      reporter_->error("FastPiostream error writing block io.");
     }      
   }
 }
 
 
 
-GzipPiostream::GzipPiostream(const string& filename, Direction dir)
-  : Piostream(dir, -1)
+GzipPiostream::GzipPiostream(const string& filename, Direction dir,
+                             ProgressReporter *pr)
+  : Piostream(dir, -1, "", pr)
 {
   if (dir==Read)
   {
-    cerr << "GzipPiostream cannot read\n";
+    reporter_->error("GzipPiostream cannot read.");
     gzfile_ = 0;
     err = true;
   }
@@ -2096,7 +2115,7 @@ GzipPiostream::gen_io(T& data, const char *iotype)
     if (gzread(gzfile_, &data, sizeof(data)) == -1)
     {
       err = true;
-      cerr << "gzread of " << iotype << " failed.\n";
+      reporter_->error(string("gzread of ") + iotype + " failed.");
     }
   }
   else
@@ -2104,7 +2123,7 @@ GzipPiostream::gen_io(T& data, const char *iotype)
     if (!gzwrite(gzfile_, &data, sizeof(data)))
     {
       err = true;
-      cerr << "gzwrite of " << iotype << " failed.\n";
+      reporter_->error(string("gzwrite of ") + iotype + " failed.");
     }
   }
 }
@@ -2219,21 +2238,22 @@ GzipPiostream::io(string& data)
     if (!gzwrite(gzfile_, (void *)(data.c_str()), data.size()+1))
     {
       err = true;
-      cerr << "gzwrite failed\n";
+      reporter_->error("gzwrite failed.");
     }
   }
 }
 
 
 
-GunzipPiostream::GunzipPiostream(const string& filename, Direction dir)
-  : Piostream(dir, -1),
+GunzipPiostream::GunzipPiostream(const string& filename, Direction dir,
+                                 ProgressReporter *pr)
+  : Piostream(dir, -1, "", pr),
     unzipfile_(-1)
 {
   unzipfile_ = open(filename.c_str(), O_RDWR, 0666);
   if (unzipfile_ == -1)
   {
-    cerr << "Error opening file: " << filename << " for reading\n";
+    reporter_->error("Error opening file: " + filename + " for reading.");
     err = true;
     return;
   }
@@ -2256,7 +2276,7 @@ GunzipPiostream::gen_io(T& data, const char *iotype)
     if (read(unzipfile_, &data, sizeof(data)) == -1)
     {
       err = true;
-      cerr << "unzipread of " << iotype << " failed.\n";
+      reporter_->error(string("unzipread of ") + iotype + " failed.");
     }
   }
   else
@@ -2264,7 +2284,7 @@ GunzipPiostream::gen_io(T& data, const char *iotype)
     if (!write(unzipfile_, &data, sizeof(data)))
     {
       err = true;
-      cerr << "unzipwrite of " << iotype << " failed.\n";
+      reporter_->error(string("unzipwrite of ") + iotype + " failed.");
     }
   }
 }
@@ -2379,7 +2399,7 @@ GunzipPiostream::io(string& data)
     if (!write(unzipfile_, data.c_str(), data.size()+1))
     {
       err = true;
-      cerr << "unzipwrite failed\n";
+      reporter_->error("unzipwrite failed.");
     }
   }
 }
