@@ -49,6 +49,7 @@
 #include <sgi_stl_warnings_on.h>
 
 #include <Core/Util/Assert.h>
+#include <Core/Util/ProgressReporter.h>
 namespace SCIRun {
 
 using std::string;
@@ -87,21 +88,27 @@ public:
   };
   
 protected:
-  Piostream(Direction, int, const string & =string(""));
+  Piostream(Direction, int, const string &, ProgressReporter *pr);
+
   Direction dir;
   int version;
   bool err;
   int file_endian;
   
-  bool have_peekname_;
-  string peekname_;
-
   MapPersistentInt* outpointers;
   MapIntPersistent* inpointers;
   
   int current_pointer_id;
+
+  bool have_peekname_;
+  string peekname_;
+
+  ProgressReporter *reporter_;
+  bool own_reporter_;
+
   virtual void emit_pointer(int& have_data, int& pointer_id);
-  static bool readHeader(const string& filename, char* hdr,
+  static bool readHeader(ProgressReporter *pr,
+                         const string& filename, char* hdr,
 			 const char* type, int& version, int& endian);
 public:
   string file_name;
@@ -139,8 +146,10 @@ public:
   virtual bool supports_block_io() { return false; }
   virtual void block_io(void*, size_t, size_t) { ASSERTFAIL("unsupported"); }
 
-  friend Piostream* auto_istream(const string& filename);
-  friend Piostream* auto_ostream(const string& filename, const string& type);
+  friend Piostream* auto_istream(const string& filename,
+                                 ProgressReporter *pr = 0);
+  friend Piostream* auto_ostream(const string& filename, const string& type,
+                                 ProgressReporter *pr = 0);
 };
 
 //----------------------------------------------------------------------

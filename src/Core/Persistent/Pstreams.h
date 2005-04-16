@@ -61,8 +61,10 @@ private:
   template <class T> void gen_io(T&, const char *);
 
 public:
-  BinaryPiostream(const string& filename, Direction dir, const int& v = -1);
-  BinaryPiostream(int fd, Direction dir, const int& v = -1);
+  BinaryPiostream(const string& filename, Direction dir,
+                  const int& v = -1, ProgressReporter *pr = 0);
+  BinaryPiostream(int fd, Direction dir, const int& v = -1,
+                  ProgressReporter *pr = 0);
   virtual ~BinaryPiostream();
 
   virtual void io(char&);
@@ -89,8 +91,10 @@ private:
   template <class T> void gen_io(T&, const char *);
 
 public:
-  BinarySwapPiostream(const string& filename, Direction d, const int& v = -1);
-  BinarySwapPiostream(int fd, Direction dir, const int& v = -1);
+  BinarySwapPiostream(const string& filename, Direction d,
+                      const int& v = -1, ProgressReporter *pr = 0);
+  BinarySwapPiostream(int fd, Direction dir, const int& v = -1,
+                      ProgressReporter *pr = 0);
   virtual ~BinarySwapPiostream();
 
   virtual void io(char&);
@@ -121,9 +125,10 @@ private:
   void io(int, string& str);
 
 public:
-  TextPiostream(const string& filename, Direction dir);
-  TextPiostream(std::istream *strm);
-  TextPiostream(std::ostream *strm);
+  TextPiostream(const string& filename, Direction dir,
+                ProgressReporter *pr = 0);
+  TextPiostream(std::istream *strm, ProgressReporter *pr = 0);
+  TextPiostream(std::ostream *strm, ProgressReporter *pr = 0);
   virtual ~TextPiostream();
 
   virtual string peek_class();
@@ -160,8 +165,10 @@ private:
   template <class T> void gen_io(T&, const char *);
 
 public:
-  FastPiostream(const string& filename, Direction dir);
-  FastPiostream(int fd, Direction dir);
+  FastPiostream(const string& filename, Direction dir,
+                ProgressReporter *pr = 0);
+  FastPiostream(int fd, Direction dir,
+                ProgressReporter *pr = 0);
   virtual ~FastPiostream();
 
   virtual void io(bool&);
@@ -193,7 +200,8 @@ private:
   template <class T> void gen_io(T&, const char *);
 
 public:
-  GzipPiostream(const string& filename, Direction dir);
+  GzipPiostream(const string& filename, Direction dir,
+                ProgressReporter *pr = 0);
   virtual ~GzipPiostream();
 
   virtual void io(char&);
@@ -221,7 +229,8 @@ private:
   template <class T> void gen_io(T&, const char *);
 
 public:
-  GunzipPiostream(const string& filename, Direction dir);
+  GunzipPiostream(const string& filename, Direction dir,
+                  ProgressReporter *pr = 0);
   virtual ~GunzipPiostream();
 
   virtual void io(char&);

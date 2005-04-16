@@ -160,11 +160,11 @@ GenericWriter<HType>::execute()
     string ft(filetype_.get());
     if (ft == "Binary")
     {
-      stream = auto_ostream(fn,"Binary");
+      stream = auto_ostream(fn, "Binary", this);
     }
     else
     {
-      stream = auto_ostream(fn,"Text");
+      stream = auto_ostream(fn, "Text", this);
     }
 
     if (stream->error())

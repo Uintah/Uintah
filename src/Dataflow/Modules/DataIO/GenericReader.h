@@ -152,7 +152,7 @@ GenericReader<HType>::execute()
     }
     else
     {
-      Piostream *stream = auto_istream(fn);
+      Piostream *stream = auto_istream(fn, this);
       if (!stream)
       {
 	error("Error reading file '" + fn + "'.");
