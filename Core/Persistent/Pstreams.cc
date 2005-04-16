@@ -254,225 +254,118 @@ BinaryPiostream::~BinaryPiostream()
 }
 
 
-void
-BinaryPiostream::io(char& data)
+template <class T>
+inline void
+BinaryPiostream::gen_io(T& data, const char *iotype)
 {
   if (err) return;
   if (dir==Read)
   {
-    if (!fread(&data, sizeof(char), 1, fp_)) err = true;
+    if (!fread(&data, sizeof(short), 1, fp_))
+    {
+      err = true;
+      cerr << "BinaryPiostream error reading " << iotype << "." << endl;
+    }
   }
   else
   {
-    if (!fwrite(&data, sizeof(char), 1, fp_)) err = true;
+    if (!fwrite(&data, sizeof(short), 1, fp_))
+    {
+      err = true;
+      cerr << "BinaryPiostream error writing " << iotype << "." << endl;
+    }
   }
+}
+
+
+void
+BinaryPiostream::io(char& data)
+{
+  gen_io(data, "char");
 }
 
 
 void
 BinaryPiostream::io(signed char& data)
 {
-  if (err) return;
-  if (dir==Read)
-  {
-    if (!fread(&data, sizeof(signed char), 1, fp_)) err = true;
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(signed char), 1, fp_)) err = true;
-  }
+  gen_io(data, "signed char");
 }
 
 
 void
 BinaryPiostream::io(unsigned char& data)
 {
-  if (err) return;
-  if (dir==Read)
-  {
-    if (!fread(&data, sizeof(unsigned char), 1, fp_)) err = true;
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(unsigned char), 1, fp_)) err = true;
-  }
+  gen_io(data, "unsigned char");
 }
 
 
 void
 BinaryPiostream::io(short& data)
 {
-  if (err) return;
-  if (dir==Read)
-  {
-    if (!fread(&data, sizeof(short), 1, fp_)) err = true;
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(short), 1, fp_)) err = true;
-  }
+  gen_io(data, "short");
 }
 
 
 void
 BinaryPiostream::io(unsigned short& data)
 {
-  if (err) return;
-  if (dir==Read)
-  {
-    if (!fread(&data, sizeof(unsigned short), 1, fp_)) err = true;
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(unsigned short), 1, fp_)) err = true;
-  }
+  gen_io(data, "unsigned short");
 }
 
 
 void
 BinaryPiostream::io(int& data)
 {
-  if (err) return;
-  if (dir==Read)
-  {
-    if (!fread(&data, sizeof(int), 1, fp_)) err = true;
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(int), 1, fp_)) err = true;
-  }
+  gen_io(data, "int");
 }
 
 
 void
 BinaryPiostream::io(unsigned int& data)
 {
-  if (err) return;
-  if (dir==Read)
-  {
-    if (!fread(&data, sizeof(unsigned int), 1, fp_)) err = true;
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(unsigned int), 1, fp_)) err = true;
-  }
+  gen_io(data, "unsigned int");
 }
 
 
 void
 BinaryPiostream::io(long& data)
 {
-  if (err) return;
-  if (dir==Read)
-  {
-    if (!fread(&data, sizeof(long), 1, fp_)) err = true;
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(long), 1, fp_)) err = true;
-  }
+  gen_io(data, "long");
 }
 
 
 void
 BinaryPiostream::io(unsigned long& data)
 {
-  if (err) return;
-  if (dir==Read)
-  {
-    if (!fread(&data, sizeof(unsigned long), 1, fp_)) err = true;
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(unsigned long), 1, fp_))  err = true;
-  }
+  gen_io(data, "unsigned long");
 }
 
 
 void
 BinaryPiostream::io(long long& data)
 {
-  // Not all architectures support type long long. For now, we
-  // assume users are writing/reading on the same architecture
-  // so that the size of the long long is consistent.  If this
-  // is not the case, print out an error message regarding the
-  // support of this type.
-  if (err) return;
-  if (dir==Read)
-  {
-    if (!fread(&data, sizeof(long long), 1, fp_))
-    {
-      cerr << "Error reading type long long type which is not fully supported.\n";
-      err = true;
-    }
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(long long), 1, fp_))
-    {
-      cerr << "Error writing type long long type which is not fully supported.\n";
-      err = true;
-    }
-  }
+  gen_io(data, "long long");
 }
 
 
 void
 BinaryPiostream::io(unsigned long long& data)
 {
-  // Not all architectures support type unsigned long long. For now, we
-  // assume users are writing/reading on the same architecture
-  // so that the size of the long long is consistent.  If this
-  // is not the case, print out an error message regarding the
-  // support of this type.
-  if (err) return;
-  if (dir==Read)
-  {
-    if (!fread(&data, sizeof(unsigned long long), 1, fp_))
-    {
-      cerr << "Error reading type unsigned long long type which is not fully supported.\n";
-      err = true;
-    }
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(unsigned long long), 1, fp_))
-    {
-      cerr << "Error writing type unsigned long long type which is not fully supported.\n";
-      err = true;
-    }
-  }
+  gen_io(data, "unsigned long long");
 }
 
 
 void
 BinaryPiostream::io(double& data)
 {
-  if (err) return;
-
-  if (dir==Read)
-  {
-    if (!fread(&data, sizeof(double), 1, fp_)) err = true;
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(double), 1, fp_)) err = true;
-  }
+  gen_io(data, "double");
 }
 
 
 void
 BinaryPiostream::io(float& data)
 {
-  if (err) return;
-  if (dir==Read)
-  {
-    if (!fread(&data, sizeof(float), 1, fp_)) err = true;
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(float), 1, fp_)) err = true;
-  }
+  gen_io(data, "float");
 }
 
 
@@ -628,9 +521,9 @@ BinarySwapPiostream::BinarySwapPiostream(const string& filename, Direction dir,
     {
       char hdr[16];
       if (airMyEndian == airEndianLittle)
-	sprintf(hdr, "SCI\nBIN\n%03d\nLIT\n", version);
-      else
 	sprintf(hdr, "SCI\nBIN\n%03d\nBIG\n", version);
+      else
+	sprintf(hdr, "SCI\nBIN\n%03d\nLIT\n", version);
 
       if (!fwrite(hdr,1,16,fp_))
       {
@@ -715,9 +608,9 @@ BinarySwapPiostream::BinarySwapPiostream(int fd, Direction dir, const int& v)
     {
       char hdr[16];
       if (airMyEndian == airEndianLittle)
-	sprintf(hdr, "SCI\nBIN\n%03d\nLIT\n", version);
-      else
 	sprintf(hdr, "SCI\nBIN\n%03d\nBIG\n", version);
+      else
+	sprintf(hdr, "SCI\nBIN\n%03d\nLIT\n", version);
       if (!fwrite(hdr,1,16,fp_))
       {
 	cerr << "header fwrite failed\n";
@@ -746,6 +639,43 @@ BinarySwapPiostream::~BinarySwapPiostream()
 }
 
 
+template <class T>
+inline void
+BinarySwapPiostream::gen_io(T& data, const char *iotype)
+{
+  if (err) return;
+  if (dir==Read)
+  {
+    unsigned char tmp[sizeof(data)];
+    if (!fread(tmp, sizeof(data), 1, fp_))
+    {
+      err = true;
+      cerr << "BinaryPiostream error reading " << iotype << "." << endl;
+      return;
+    }
+    unsigned char *cdata = reinterpret_cast<unsigned char *>(&data);
+    for (unsigned int i = 0; i < sizeof(data); i++)
+    {
+      cdata[i] = tmp[sizeof(data)-i-1];
+    }
+  }
+  else
+  {
+    unsigned char tmp[sizeof(data)];
+    unsigned char *cdata = reinterpret_cast<unsigned char *>(&data);
+    for (unsigned int i = 0; i < sizeof(data); i++)
+    {
+      tmp[i] = cdata[sizeof(data)-i-1];
+    }
+    if (!fwrite(tmp, sizeof(data), 1, fp_))
+    {
+      err = true;
+      cerr << "BinaryPiostream error writing " << iotype << "." << endl;
+    }
+  }
+}
+
+
 void
 BinarySwapPiostream::io(char& data)
 {
@@ -753,11 +683,7 @@ BinarySwapPiostream::io(char& data)
   if (dir==Read)
   {
     // no need to swap a single byte
-    if (!fread(&data, sizeof(char), 1, fp_))
-    {
-      err = true;
-      return;
-    }
+    if (!fread(&data, sizeof(char), 1, fp_)) err = true;
   }
   else
   {
@@ -801,310 +727,70 @@ BinarySwapPiostream::io(unsigned char& data)
 void
 BinarySwapPiostream::io(short& data)
 {
-  if (err) return;
-  if (dir==Read)
-  {
-    if (!fread(&data, sizeof(short), 1, fp_))
-    {
-      err = true;
-      return;
-    }
-    // cast data to chars and using temp swap bytes
-    short temp = data;
-    // let ptr_data point to data
-    char* ptr_data = reinterpret_cast<char *>(&data);
-    // let ptr_temp point to temp
-    char* ptr_temp = reinterpret_cast<char *>(&temp);
-    int numOfByte = sizeof(short);
-    for (int i=0; i<numOfByte; i++)
-      ptr_data[i] = ptr_temp[numOfByte-1-i];
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(short), 1, fp_)) err = true;
-  }
+  gen_io(data, "short");
 }
 
 
 void
 BinarySwapPiostream::io(unsigned short& data)
 {
-  if (err) return;
-  if (dir==Read)
-  {
-    if (!fread(&data, sizeof(unsigned short), 1, fp_))
-    {
-      err = true;
-      return;
-    }
-
-    // cast data to chars and using temp swap bytes
-    unsigned short temp = data;
-    // let ptr_data point to data
-    char* ptr_data = reinterpret_cast<char *>(&data);
-    // let ptr_temp point to temp
-    char* ptr_temp = reinterpret_cast<char *>(&temp);
-    int numOfByte = sizeof(unsigned short);
-    for (int i=0; i<numOfByte; i++)
-      ptr_data[i] = ptr_temp[numOfByte-1-i];
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(unsigned short), 1, fp_)) err = true;
-  }
+  gen_io(data, "unsigned short");
 }
 
 
 void
 BinarySwapPiostream::io(int& data)
 {
-  if (err) return;
-  if (dir==Read)
-  {
-    if (!fread(&data, sizeof(int), 1, fp_))
-    {
-      err = true;
-      return;
-    }
-
-    // cast data to chars and using temp swap bytes
-    int temp = data;
-    // let ptr_data point to data
-    char* ptr_data = reinterpret_cast<char *>(&data);
-    // let ptr_temp point to temp
-    char* ptr_temp = reinterpret_cast<char *>(&temp);
-    int numOfByte = sizeof(int);
-    for (int i=0; i<numOfByte; i++)
-      ptr_data[i] = ptr_temp[numOfByte-1-i];
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(int), 1, fp_)) err = true;
-  }
+  gen_io(data, "int");
 }
 
 
 void
 BinarySwapPiostream::io(unsigned int& data)
 {
-  if (err) return;
-  if (dir==Read)
-  {
-    if (!fread(&data, sizeof(unsigned int), 1, fp_))
-    {
-      err = true;
-      return;
-    }
-
-    // cast data to chars and using temp swap bytes
-    unsigned int temp = data;
-    // let ptr_data point to data
-    char* ptr_data = reinterpret_cast<char *>(&data);
-    // let ptr_temp point to temp
-    char* ptr_temp = reinterpret_cast<char *>(&temp);
-    int numOfByte = sizeof(unsigned int);
-    for (int i=0; i<numOfByte; i++)
-      ptr_data[i] = ptr_temp[numOfByte-1-i];
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(unsigned int), 1, fp_)) err = true;
-  }
+  gen_io(data, "unsigned int");
 }
 
 
 void
 BinarySwapPiostream::io(long& data)
 {
-  if (err) return;
-  if (dir==Read)
-  {
-    if (!fread(&data, sizeof(long), 1, fp_))
-    {
-      err = true;
-      return;
-    }
-
-    // cast data to chars and using temp swap bytes
-    long temp = data;
-    // let ptr_data point to data
-    char* ptr_data = reinterpret_cast<char *>(&data);
-    // let ptr_temp point to temp
-    char* ptr_temp = reinterpret_cast<char *>(&temp);
-    int numOfByte = sizeof(long);
-    for (int i=0; i<numOfByte; i++)
-      ptr_data[i] = ptr_temp[numOfByte-1-i];
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(long), 1, fp_)) err = true;
-  }
+  gen_io(data, "long");
 }
 
 
 void
 BinarySwapPiostream::io(unsigned long& data)
 {
-  if (err) return;
-  if (dir==Read)
-  {
-    if (!fread(&data, sizeof(unsigned long), 1, fp_))
-    {
-      err = true;
-      return;
-    }
-
-    // cast data to chars and using temp swap bytes
-    unsigned long temp = data;
-    // let ptr_data point to data
-    char* ptr_data = reinterpret_cast<char *>(&data);
-    // let ptr_temp point to temp
-    char* ptr_temp = reinterpret_cast<char *>(&temp);
-    int numOfByte = sizeof(unsigned long);
-    for (int i=0; i<numOfByte; i++)
-      ptr_data[i] = ptr_temp[numOfByte-1-i];
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(unsigned long), 1, fp_)) err = true;
-  }
+  gen_io(data, "unsigned long");
 }
 
 
 void
 BinarySwapPiostream::io(long long& data)
 {
-  // Not all architectures support type long long. For now, we
-  // assume users are writing/reading on the same architecture
-  // so that the size of the long long is consistent.  If this
-  // is not the case, print out an error message regarding the
-  // support of this type.
-  if (err) return;
-  if (dir==Read)
-  {
-    if (!fread(&data, sizeof(long long), 1, fp_))
-    {
-      cerr << "Error reading type long long type which is not fully supported.\n";
-      err = true;
-      return;
-    }
-
-    // cast data to chars and using temp swap bytes
-    long long temp = data;
-    // let ptr_data point to data
-    char* ptr_data = reinterpret_cast<char *>(&data);
-    // let ptr_temp point to temp
-    char* ptr_temp = reinterpret_cast<char *>(&temp);
-    int numOfByte = sizeof(long long);
-    for (int i=0; i<numOfByte; i++)
-      ptr_data[i] = ptr_temp[numOfByte-1-i];
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(long long), 1, fp_))
-    {
-      cerr << "Error writing type long long type which is not fully supported.\n";
-      err = true;
-    }
-  }
+  gen_io(data, "long long");
 }
 
 
 void
 BinarySwapPiostream::io(unsigned long long& data)
 {
-  // Not all architectures support type unsigned long long. For now, we
-  // assume users are writing/reading on the same architecture
-  // so that the size of the long long is consistent.  If this
-  // is not the case, print out an error message regarding the
-  // support of this type.
-  if (err) return;
-  if (dir==Read)
-  {
-    if (!fread(&data, sizeof(unsigned long long), 1, fp_))
-    {
-      cerr << "Error reading type unsigned long long type which is not fully supported.\n";
-      err = true;
-      return;
-    }
-
-    // cast data to chars and using temp swap bytes
-    unsigned long long temp = data;
-    // let ptr_data point to data
-    char* ptr_data = reinterpret_cast<char *>(&data);
-    // let ptr_temp point to temp
-    char* ptr_temp = reinterpret_cast<char *>(&temp);
-    int numOfByte = sizeof(unsigned long long);
-    for (int i=0; i<numOfByte; i++)
-      ptr_data[i] = ptr_temp[numOfByte-1-i];
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(unsigned long long), 1, fp_))
-    {
-      cerr << "Error writing type unsigned long long type which is not fully supported.\n";
-      err = true;
-    }
-  }
+  gen_io(data, "unsigned long long");
 }
 
 
 void
 BinarySwapPiostream::io(double& data)
 {
-  if (err) return;
-
-  if (dir==Read)
-  {
-    if (!fread(&data, sizeof(double), 1, fp_))
-    {
-      err = true;
-      return;
-    }
-
-    // cast data to chars and using temp swap bytes
-    double temp = data;
-    // let ptr_data point to data
-    char* ptr_data = reinterpret_cast<char *>(&data);
-    // let ptr_temp point to temp
-    char* ptr_temp = reinterpret_cast<char *>(&temp);
-    int numOfByte = sizeof(double);
-    for (int i=0; i<numOfByte; i++)
-      ptr_data[i] = ptr_temp[numOfByte-1-i];
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(double), 1, fp_)) err = true;
-  }
+  gen_io(data, "double");
 }
 
 
 void
 BinarySwapPiostream::io(float& data)
 {
-  if (err) return;
-  if (dir==Read)
-  {
-    if (!fread(&data, sizeof(float), 1, fp_))
-    {
-      err = true;
-      return;
-    }
-
-    // cast data to chars and using temp swap bytes
-    float temp = data;
-    // let ptr_data point to data
-    char* ptr_data = reinterpret_cast<char *>(&data);
-    // let ptr_temp point to temp
-    char* ptr_temp = reinterpret_cast<char *>(&temp);
-    int numOfByte = sizeof(float);
-    for (int i=0; i<numOfByte; i++)
-      ptr_data[i] = ptr_temp[numOfByte-1-i];
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(float), 1, fp_)) err = true;
-  }
+  gen_io(data, "float");
 }
 
 
