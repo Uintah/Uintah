@@ -58,6 +58,8 @@ class BinaryPiostream : public Piostream {
 private:
   FILE* fp_;
 
+  template <class T> void gen_io(T&, const char *);
+
 public:
   BinaryPiostream(const string& filename, Direction dir, const int& v = -1);
   BinaryPiostream(int fd, Direction dir, const int& v = -1);
@@ -83,6 +85,8 @@ public:
 class BinarySwapPiostream : public Piostream {
 private:
   FILE* fp_;
+
+  template <class T> void gen_io(T&, const char *);
 
 public:
   BinarySwapPiostream(const string& filename, Direction d, const int& v = -1);
