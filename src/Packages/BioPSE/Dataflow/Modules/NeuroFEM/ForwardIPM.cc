@@ -48,6 +48,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/PointCloudField.h>
+#include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/DenseMatrix.h>
 
 #include <sys/stat.h>
@@ -184,6 +185,7 @@ write_knw_file(ProgressReporter *pr, FieldHandle field, const char *filename)
   }
 
   FILE *f = fopen(filename, "w");
+  //FILE *f =fopen("/home/sci/slew/ncrr/dataset/tensor.con","w");
   if (f == NULL)
   {
     pr->error(string("Unable to open file '") + filename + "' for writing.");
@@ -206,7 +208,7 @@ write_knw_file(ProgressReporter *pr, FieldHandle field, const char *filename)
     Tensor t;
     tfield->value(t, *itr);
 
-    fprintf(f, "    %d   %f    %f    %f\n          %f     %f      %f\n",
+    fprintf(f, "%10d  %11f  %11f  %11f\n           %11f  %11f  %11f\n",
             1+*itr,  // fortran index, +1
             t.mat_[0][0], t.mat_[1][1], t.mat_[2][2],
             t.mat_[0][1], t.mat_[0][2], t.mat_[1][2]);
@@ -221,7 +223,7 @@ write_knw_file(ProgressReporter *pr, FieldHandle field, const char *filename)
   fprintf(f, "EOI - TENSORVALUEFILE\n");
 
   fclose(f);
-    
+
   return true;
 }
 
@@ -229,8 +231,9 @@ write_knw_file(ProgressReporter *pr, FieldHandle field, const char *filename)
 static bool
 write_elc_file(ProgressReporter *pr, FieldHandle fld, const char *filename)
 {
-  PointCloudMesh *mesh = dynamic_cast<PointCloudMesh *>(fld->mesh().get_rep());
-  if (mesh == 0)
+   PointCloudMesh *mesh = dynamic_cast<PointCloudMesh *>(fld->mesh().get_rep());
+
+    if (mesh == 0)
   {
     pr->error("Field does not contain a PointCloudMesh.");
     return false;
@@ -265,10 +268,9 @@ write_elc_file(ProgressReporter *pr, FieldHandle fld, const char *filename)
     ++niter;
   }     
 
-  fprintf(f,"NoPolygons\n");
-  fprintf(f,"NoLabels\n");
-  //write tail
-  
+  fprintf(f,"Labels\n");
+  fprintf(f,"FPz \n");
+
   fclose(f);
   
   return true;
@@ -356,7 +358,7 @@ send_result_file(MatrixOPort *result_port, string filename)
     cerr << "Error -- Could not open file " << filename << "\n";
     return false;
   }
-  
+
   string tmp;
   int nc,nr;
   matstream >> tmp >> nc;
@@ -620,7 +622,7 @@ ForwardIPM::execute()
   }
   
   // Make our tmp directory
-  const string tmpdir = "/tmp/ForwardIPM" + to_string(getpid());
+  const string tmpdir = "/tmp/ForwardIPM" + to_string(getpid()) +"/";
   const string tmplog = tmpdir + "forward.log";
   const string resultfile = tmpdir + "result.msr";
   const string condmeshfile = tmpdir + "ca_head.geo";
@@ -674,8 +676,9 @@ ForwardIPM::execute()
     const string command = "(cd " + tmpdir + ";" +
       ipmfile + " -i sourcesimulation" +
       " -h " + condmeshfile + " -p " + parafile + " -s " + electrodefile +
-      " -d " + dipolefile + " -o " + resultfile + " -fwd FEM -sens EEG)";
+      " -dip " + dipolefile + " -o " + resultfile + " -fwd FEM -sens EEG)";
 
+    
     // Execute the command.  Last arg just a tmp file for logging.
     if (!Exec_execute_command(this, command, tmplog))
     {
@@ -690,7 +693,7 @@ ForwardIPM::execute()
 	error("Unable to send denseMatrix");
 	throw false;
     }
-      
+
     throw true; // cleanup.
   }
   catch (...)
