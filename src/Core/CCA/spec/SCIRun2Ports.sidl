@@ -26,6 +26,9 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+distribution array DMatrix <double,2>;
+
+
 /** Port to Framework properties. */
 interface FrameworkProperties extends sci.cca.Port
 {
@@ -110,43 +113,47 @@ interface ZListPort extends sci.cca.Port
 {
     array<double> getList();
 }
-/* $Source$ */
+/* $Source: /usr/sci/projects/cvsrepository/SCIRun/src/Core/CCA/spec/SCIRun2Ports.sidl,v $ */
 
 
 
 //abstract interface 
-interface Field2DPort extends sci.cca.Port
+interface LinSolverPort extends sci.cca.Port
 {
     //provides a interface to 
-    array<double> getField();
+    collective	
+    int jacobi(in DMatrix A, in array<double> b, out array<double> x);
 }
 
 //abstract interface 
-interface PDEDescriptionPort extends sci.cca.Port
+interface PDEdescriptionPort extends sci.cca.Port
 {
     //provides a interface to 
-    array<double> getNodes();
-    array<int> getBoundaries();
-    array<int> getDirichletNodes();
-    array<double> getDirichletValues();
+    int getPDEdescription(out array<double> nodes, out array<int> boundaries, 
+			  out array<int> dirichletNodes, out array<double> dirichletValues);
 }
 
 //abstract interface 
 interface MeshPort extends sci.cca.Port
 {
     //provides a interface to 
-    array<int> getTriangles();
-    array<double> getNodes();
+    int triangulate(in array<double> nodes, in array<int> boundaries, out array<int> triangles);
 }
 
-
 //abstract interface 
-interface PDEMatrixPort extends sci.cca.Port
+interface ViewPort extends sci.cca.Port
 {
     //provides a interface to 
-    void getMatrix(out DMatrix);
-    array<double> getVector();
-    int getSize();
+    int view2dPDE(in array<double> nodes, in array<int> triangles, in array<double> solution);
+}
+
+//abstract interface 
+interface FEMmatrixPort extends sci.cca.Port
+{
+    //provides a interface to 
+    int makeFEMmatrices(in array<int> mesh, in array<double> nodes, 
+	                in array<int> dirichletNodes, in array<double> dirichletValues,
+			out array<double,2> Ag, out array<double> fg, out int size);
 }
 
 // BEGIN proposed sparker
