@@ -28,7 +28,7 @@
 
 
 /*
- *  Viwer.h
+ *  LinSolver.h
  *
  *  Written by:
  *   Keming Zhang 
@@ -38,58 +38,30 @@
  *
  */
 
-#ifndef SCIRun_LinSolver_h
-#define SCIRun_LinSolver_h
+#ifndef CCA_Components_LinSolver_h
+#define CCA_Components_LinSolver_h
 
 
 #include <Core/CCA/spec/cca_sidl.h>
 
-//namespace SCIRun {
+namespace SCIRun {
+
+  class myLinSolverPort : public virtual sci::cca::ports::LinSolverPort {
+  public:
+    virtual int jacobi(const SSIDL::array2<double> &A, 
+		       const SSIDL::array1<double> &b,
+		       SSIDL::array1<double> &x);
+  };
   
-
-#define myGoPort LinSolverGoPort
-
-class LinSolver;
-
-class myField2DPort : public virtual sci::cca::ports::Field2DPort {
-public:
-   virtual ~myField2DPort(){}
-   void setParent(LinSolver *com){this->com=com;}
-   SSIDL::array1<double>  getField();
- private:
-   LinSolver *com;
-};
-
-class myGoPort : public virtual sci::cca::ports::GoPort {
-public:
-  virtual ~myGoPort(){}
-  virtual int go();
-  void setParent(LinSolver *com){this->com=com;}
-  LinSolver *com;
-};
-
-
-class LinSolver: public sci::cca::Component{
-                
+  class LinSolver: public sci::cca::Component{
   public:
     LinSolver();
-    virtual ~LinSolver();
-    sci::cca::Services::pointer getServices(){return services;}
     virtual void setServices(const sci::cca::Services::pointer& svc);
-    bool jacobi(const SSIDL::array2<double> &A, 
-		const SSIDL::array1<double> &b);
-    SSIDL::array1<double> solution;
- private:
-
+  private:
     LinSolver(const LinSolver&);
     LinSolver& operator=(const LinSolver&);
-    myGoPort goPort;
-    myField2DPort fieldPort;
     sci::cca::Services::pointer services;
   };
-//}
-
-
-
+}
 
 #endif
