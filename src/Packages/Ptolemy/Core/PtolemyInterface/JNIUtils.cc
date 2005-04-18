@@ -19,14 +19,12 @@ std::string JNIUtils::modName;
 JNIEXPORT jint JNICALL
 JNI_OnLoad(JavaVM *jvm, void *reserved)
 {
-std::cerr << "JNI_OnLoad" << std::endl;
-     JNIEnv *env;
+     std::cerr << "JNI_OnLoad" << std::endl;
      JNIUtils::cachedJVM = jvm;  // cache the JavaVM pointer
      //printf("jvm=%#x\n", (unsigned int) JNIUtils::cachedJVM);
  
+     JNIEnv *env;
      if (jvm->GetEnv((void **)&env, JNI_VERSION_1_4) != JNI_OK) {
-        // check for 1.2?  We probably shouldn't bother with anything
-        // older than that.
          return JNI_ERR; // JNI version not supported
      }
 #if 0
@@ -64,19 +62,22 @@ std::cerr << "JNI_OnLoad" << std::endl;
      return JNI_VERSION_1_4;
 }
 
-#if 0
-// JNIEXPORT void JNICALL
-// JNI_OnUnload(JavaVM *jvm, void *reserved)
-// {
-// std::cerr << "JNI_OnUnload" << std::endl;
-//      JNIEnv *env;
-//      if (jvm->GetEnv((void **)&env, JNI_VERSION_1_4 != JNI_OK)) {
-//          return;
-//      }
-//      env->DeleteWeakGlobalRef(Class_C);
-//      return;
-// }
-#endif
+JNIEXPORT void JNICALL
+JNI_OnUnload(JavaVM *jvm, void *reserved)
+{
+     JNIUtils::cachedJVM = 0;
+
+     //JNIEnv *env;
+     //if (jvm->GetEnv((void **)&env, JNI_VERSION_1_4) != JNI_OK) {
+     //    return JNI_ERR; // JNI version not supported
+     //}
+     //env->DeleteWeakGlobalRef(Class_C);
+
+     // detach also called in Module cleanup callback
+     jvm->DetachCurrentThread();
+
+     return;
+}
 
 bool
 JNIUtils::getSCIRunMesh(JNIEnv *env, jobject meshObj)
@@ -202,7 +203,6 @@ JNIUtils::ThrowByName(JNIEnv *env, const char *name, const char *msg)
     env->DeleteLocalRef(cls);
 }
 
-//char* JNIUtils::GetStringNativeChars(JNIEnv *env, jstring jstr)
 std::string
 JNIUtils::GetStringNativeChars(JNIEnv *env, jstring jstr)
 {
@@ -248,6 +248,7 @@ JNIUtils::GetStringNativeChars(JNIEnv *env, jstring jstr)
     std::string result(buffer);
 
     env->DeleteLocalRef(bytes);
+    env->DeleteLocalRef(cls);
     delete[] buffer;
 
     return result;

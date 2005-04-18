@@ -3,6 +3,7 @@
 
 #include <Packages/Ptolemy/Core/PtolemyInterface/PTIISCIRun.h>
 #include <Packages/Ptolemy/Core/PtolemyInterface/JNIUtils.h>
+#include <Packages/Ptolemy/Core/PtolemyInterface/PTIIData.h>
 
 #include <main/sci_version.h>
 
@@ -161,9 +162,9 @@ void StartSCIRun::run()
 	JNIUtils::modName = readerName;
 	
 	//string command = "loadnet {/scratch/SCIRun/test.net}";
-	if (netName != "") {
+	if (! netName.empty()) {
 		gui->eval("loadnet {" + netName + "}");
-		if(dataPath != "" && readerName != ""){
+		if(! dataPath.empty() && ! readerName.empty()){
 			
 			mod = net->get_module_by_id(readerName); //example: SCIRun_DataIO_FieldReader_0
 			
@@ -182,19 +183,18 @@ void StartSCIRun::run()
 			
 			modGui->set("::" + readerName + "-filename", dataPath);
 		}
-		else if(readerName != ""){
+		else if (! readerName.empty()) {
 		
 			//for running a module that doesnt neccesarily have a file to load
 			mod=net->get_module_by_id(readerName); //example: SCIRun_DataIO_FieldReader_0
 		}
-		
 	}
     // Now activate the TCL event loop
     tcl_task->release_mainloop();
 
 	
 	//should just have a general run network here.
-	if(runNet == 1 && readerName != ""){
+	if(runNet == 1 && ! readerName.empty()){
 		mod->want_to_execute();  //tell the first module that it wants to execute
 	}
 	
@@ -328,9 +328,14 @@ Iterate::~Iterate(){
 	delete [] iterate;
 }
 
-
 void SignalExecuteReady::run()
 {
     //converterMod->sendJNIData(np, nc, pDim, cDim, *p, *c);
     JNIUtils::dataSem().up();
+}
+
+void QuitSCIRun::run()
+{
+    // what else for shutdown?
+    Thread::exitAll(0);
 }
