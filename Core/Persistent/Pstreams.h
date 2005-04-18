@@ -55,9 +55,12 @@
 namespace SCIRun {
 
 class BinaryPiostream : public Piostream {
-private:
+protected:
   FILE* fp_;
 
+  virtual const char *endianness();
+
+private:
   template <class T> void gen_io(T&, const char *);
 
 public:
@@ -84,10 +87,11 @@ public:
 };
 
 
-class BinarySwapPiostream : public Piostream {
-private:
-  FILE* fp_;
+class BinarySwapPiostream : public BinaryPiostream {
+protected:
+  virtual const char *endianness();
 
+private:
   template <class T> void gen_io(T&, const char *);
 
 public:
@@ -97,9 +101,6 @@ public:
                       ProgressReporter *pr = 0);
   virtual ~BinarySwapPiostream();
 
-  virtual void io(char&);
-  virtual void io(signed char&);
-  virtual void io(unsigned char&);
   virtual void io(short&);
   virtual void io(unsigned short&);
   virtual void io(int&);
@@ -110,7 +111,6 @@ public:
   virtual void io(unsigned long long&);
   virtual void io(double&);
   virtual void io(float&);
-  virtual void io(string& str);
 };
 
 
