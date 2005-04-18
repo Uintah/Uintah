@@ -45,6 +45,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Algorithms/Visualization/RenderField.h>
 
+#include <Dataflow/Modules/Fields/FieldInfo.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
@@ -66,6 +67,8 @@ class ShowField : public Module
   int                      vector_generation_;
   int                      color_map_generation_;
   string                   last_field_name_;
+
+  bool                     error_;
 
   //! output port
   GeometryOPort           *ogeom_;
@@ -205,6 +208,7 @@ ShowField::ShowField(GuiContext* ctx) :
   mesh_generation_(-1),
   vector_generation_(-1),
   color_map_generation_(-1),
+  error_(0),
   ogeom_(0),
   node_id_(0),
   edge_id_(0),
@@ -526,7 +530,7 @@ clean_fieldname(string fname)
     if (fname[i] == ':')
     {
       if (counter) {
-        // do nothing 
+	// do nothing
       } else {
 	result += fname[i];
 	counter = 1;
@@ -548,30 +552,63 @@ ShowField::execute()
 {
   // tell module downstream to delete everything we have sent it before.
   // This is typically viewer, it owns the scene graph memory we create here.
-  FieldIPort *field_iport = (FieldIPort *)get_iport("Field");
   ColorMapIPort *color_iport = (ColorMapIPort *)get_iport("ColorMap");
   ogeom_ = (GeometryOPort *)get_oport("Scene Graph");
 
+  FieldIPort *field_iport = (FieldIPort *)get_iport("Field");
   FieldHandle fld_handle;
+
   if (!(field_iport->get(fld_handle) && fld_handle.get_rep()))
   {
-    warning("No Data in port 1 field.");
+    error("Input field is empty.");
     return;
   }
 
   FieldIPort *vfield_iport = (FieldIPort *)get_iport("Orientation Field");
   FieldHandle vfld_handle;
+
   if (vfield_iport->get(vfld_handle) && vfld_handle.get_rep())
   {
-    if (vfld_handle->mesh().get_rep() != fld_handle->mesh().get_rep())
-    {
-      error("Color and Orientation fields must share the same mesh.");
+    if (vfld_handle->basis_order() != fld_handle->basis_order()) {
+      error("The Color and Orientation Fields must share the same data location.");
+      error_ = true;
       return;
     }
-    if (vfld_handle->basis_order() != fld_handle->basis_order())
-    {
-      warning("Color and Orientation fields must have data at the same location.");
-      return;
+
+    if (vfld_handle->mesh().get_rep() != fld_handle->mesh().get_rep()) {
+      // If not the same mesh make sure they are the same type.
+      if( fld_handle->get_type_description(0)->get_name() !=
+	  vfld_handle->get_type_description(0)->get_name() ||
+	  fld_handle->get_type_description(1)->get_name() !=
+	  vfld_handle->get_type_description(1)->get_name() ) {
+	error("The input fields must have the same mesh type.");
+	error_ = true;
+	return;
+      }
+
+      // Do this last, sometimes takes a while.
+      const TypeDescription *meshtd0 = fld_handle->mesh()->get_type_description();
+
+      CompileInfoHandle ci = FieldInfoAlgoCount::get_compile_info(meshtd0);
+      Handle<FieldInfoAlgoCount> algo;
+      if (!module_dynamic_compile(ci, algo)) return;
+
+      //string num_nodes, num_elems;
+      //int num_nodes, num_elems;
+      const string num_nodes0 = algo->execute_node(fld_handle->mesh());
+      const string num_elems0 = algo->execute_elem(fld_handle->mesh());
+
+      const string num_nodes1 = algo->execute_node(vfld_handle->mesh());
+      const string num_elems1 = algo->execute_elem(vfld_handle->mesh());
+
+      if( num_nodes0 != num_nodes1 || num_elems0 != num_elems1 ) {
+	error("The input meshes must have the same number of nodes and elements.");
+	error_ = true;
+	return;
+      } else {
+	warning("The input fields do not have the same mesh,");
+	warning("but appear to be the same otherwise.");
+      }
     }
   }
   else if (fld_handle->query_scalar_interface(this).get_rep() ||
@@ -583,6 +620,7 @@ ShowField::execute()
   else
   {
     vfld_handle = 0;
+    warning( "No Scalar, Vector, no Tensor data found." );
   }
 
   // What has changed from last time?  A false return value means that we
@@ -640,14 +678,15 @@ ShowField::execute()
   // check to see if we have something to do.
   if ((!nodes_dirty_) && (!edges_dirty_) &&
       (!faces_dirty_) && (!data_dirty_) &&
-      (!text_dirty_) && (!color_map_changed))
+      (!text_dirty_) && (!color_map_changed) &&
+      (!error_))
   {
     return;
   }
 
   if (color_map_.get_rep() == 0)
   {
-    remark("No colormap, using default color.");
+    warning("No colormap, using default color.");
   }
 
   node_display_type_.reset();
@@ -684,13 +723,13 @@ ShowField::execute()
   bool edges_on = edges_on_.get();
   if (edges_on && dim < 1)
   {
-    remark("Field type contains no edges, not drawing them.");
+    warning("Field type contains no edges, not drawing them.");
     edges_on = false;
   }
   bool faces_on = faces_on_.get();
   if (faces_on && dim < 2)
   {
-    remark("Field type contains no faces, not drawing them.");
+    warning("Field type contains no faces, not drawing them.");
     faces_on = false;
   }
 
