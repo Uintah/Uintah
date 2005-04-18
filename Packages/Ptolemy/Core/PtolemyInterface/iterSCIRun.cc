@@ -1,7 +1,32 @@
-// copyright etc.
+/*
+  For more information, please see: http://software.sci.utah.edu
 
+  The MIT License
 
-#include <Packages/Ptolemy/Core/PtolemyInterface/iterSCIRun.h>
+  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  University of Utah.
+
+  License for the specific language governing rights and limitations under
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
+*/
+
+#include <Packages/Ptolemy/Core/PtolemyInterface/org_sdm_spa_actors_scirun_IterateSCIRun.h>
 #include <Packages/Ptolemy/Core/PtolemyInterface/PTIISCIRun.h>
 #include <Packages/Ptolemy/Core/PtolemyInterface/JNIUtils.h>
 
@@ -20,28 +45,8 @@ using namespace SCIRun;
 
 typedef string* stringPtr;
 
-JNIEXPORT jint JNICALL
-Java_ptolemy_scirun_IterateSCIRun_getScirun(JNIEnv *env, jobject obj, jstring name, jstring file, jstring reader, jint run)
-{
-		
-
-	std::string nPath = JNIUtils::GetStringNativeChars(env, name);
-	std::string dPath = JNIUtils::GetStringNativeChars(env, file);
-	std::string modName = JNIUtils::GetStringNativeChars(env, reader);
-	
-	StartSCIRun *start = new StartSCIRun(nPath,dPath,modName,run);;
-	
-    Thread *t = new Thread(start, "start scirun", 0, Thread::NotActivated);
-    t->setStackSize(1024*2048);
-    t->activate(false);
-    t->join();
-	
-	return 1;
-}
-
 JNIEXPORT jint JNICALL 
-Java_ptolemy_scirun_IterateSCIRun_runOnFiles
-  (JNIEnv *env, jobject obj, jobjectArray input1Names, jint size1, jobjectArray input2Names, jint size2, jint numParams, jstring picPath)
+Java_org_sdm_spa_actors_scirun_IterateSCIRun_runOnFiles(JNIEnv *env, jobject obj, jobjectArray input1Names, jint size1, jobjectArray input2Names, jint size2, jint numParams, jstring picPath)
 {
 	stringPtr input1;
 	stringPtr input2;

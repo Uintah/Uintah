@@ -44,9 +44,10 @@ SRCDIR   := Packages/Ptolemy/Core/PtolemyInterface
 SRCS     += \
             $(SRCDIR)/iterSCIRun.cc \
 	    $(SRCDIR)/JNIUtils.cc \
+            $(SRCDIR)/org_sdm_spa_actors_scirun_SCIRunJNIActor.cc \
+            $(SRCDIR)/org_sdm_spa_actors_scirun_SCIRunUtils.cc \
             $(SRCDIR)/PTIISCIRun.cc \
-	    $(SRCDIR)/pt_S_scirun.cc \
-            $(SRCDIR)/ptolemy_scirun_SCIRunJNIActor.cc \
+            $(SRCDIR)/PTIIData.cc
 #[INSERT NEW CODE FILE HERE]
 
 ifeq ($(LARGESOS),yes)
@@ -55,8 +56,10 @@ else
     PSELIBS := Dataflow/Network Core/Containers Core/GuiInterface \
                Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
                Core/Malloc Core/Services Dataflow/XMLUtil Core/SystemCall \
-			   Packages/Ptolemy/Dataflow/Modules/Converters \
-			   Dataflow/Modules/Render
+               Packages/Ptolemy/Dataflow/Modules/Converters \
+               Dataflow/Modules/Render \
+               Packages/Ptolemy/Core/Datatypes
+
   ifeq ($(OS_NAME),Darwin)
       PSELIBS += Core/Datatypes Core/ImportExport
   endif

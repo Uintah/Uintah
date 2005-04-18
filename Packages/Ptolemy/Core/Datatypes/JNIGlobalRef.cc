@@ -14,6 +14,7 @@ JNIGlobalRef::JNIGlobalRef(JavaVM **jvm, JNIEnv *env, jobject localRef) : lock("
     ASSERT(env);
     gref = env->NewGlobalRef(localRef);
     ASSERT(gref);
+    fprintf(stderr, "JNIGlobalRef::JNIGlobalRef(): jobject ptr=%#x, this=%#x\n", (unsigned int) gref, (unsigned int) this);
 }
 
 JNIGlobalRef::~JNIGlobalRef()
@@ -21,10 +22,11 @@ JNIGlobalRef::~JNIGlobalRef()
     //JNIEnv *env = JNIUtils::AttachCurrentThread();
     JNIEnv *env;
     if (cachedJVM->AttachCurrentThread((void**) &env, NULL) != JNI_OK) {
-        // report error
         std::cerr << "~JNIGlobalRef: could not attach thread" << std::endl;
+    } else {
+        fprintf(stderr, "JNIGlobalRef::~JNIGlobalRef(): jobject ptr=%#x, \n", (unsigned int) gref, (unsigned int) this);
+        env->DeleteGlobalRef(gref);
     }
-    env->DeleteGlobalRef(gref);
 }
 
 

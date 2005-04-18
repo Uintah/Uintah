@@ -73,5 +73,12 @@ public:
 private:
 };
 
+class QuitSCIRun : public Runnable {
+public:
+    QuitSCIRun() {}
+    virtual ~QuitSCIRun() {}
+    void run();
+};
+
 
 #endif
