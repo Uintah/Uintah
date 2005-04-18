@@ -334,60 +334,74 @@ void
 Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 {
   if (err) return;
-  if (dir == Read) {
+  if (dir == Read)
+  {
     int have_data;
     int pointer_id;
-    data=0;			// In case anything goes wrong...
+    data = 0;
     emit_pointer(have_data, pointer_id);
-    if (have_data) {
+
+    if (have_data)
+    {
       // See what type comes next in the stream.  If it is a type
       // derived from pid->type, then read it in, otherwise it is an
       // error.
-      string in_name(peek_class());
-      string want_name(pid.type);
+      const string in_name(peek_class());
+      const string want_name(pid.type);
       
       Persistent* (*maker)() = 0;
-      if (in_name == want_name) {
-	maker=pid.maker;
+      if (in_name == want_name)
+      {
+	maker = pid.maker;
       }
-      else {
+      else
+      {
 	PersistentTypeID* found_pid = find_derived(in_name, want_name);
 	
-	if (found_pid) {
-	  maker=found_pid->maker;
-	} else {
+	if (found_pid)
+        {
+	  maker = found_pid->maker;
+	}
+        else
+        {
 #if DEBUG
 	  reporter_->error("Did not find a pt_id.");
 #endif
 	}
       }
-      if (!maker) {
+      if (!maker)
+      {
 	reporter_->error("Maker not found? (class=" + in_name + ").");
 	reporter_->error("want_name: " + want_name + ".");
 	err = true;
 	return;
       }
       
-				// Make it..
-      data=(*maker)();
-				// Read it in...
+      // Make it.
+      data = (*maker)();
+      // Read it in.
       data->io(*this);
-      
-				// Insert this pointer in the database
-      if (!inpointers) {
+
+      // Insert this pointer in the database.
+      if (!inpointers)
+      {
 	inpointers = scinew MapIntPersistent;
       }
       (*inpointers)[pointer_id] = data;
-    } else {
-				// Look it up...
-      if (pointer_id==0) {
-	data=0;
+    }
+    else
+    {
+      // Look it up.
+      if (pointer_id == 0)
+      {
+	data = 0;
       }
       else {
 	MapIntPersistent::iterator initer;
 	if (inpointers) initer = inpointers->find(pointer_id);
-	if (!inpointers || initer == inpointers->end()) {
-	  cerr << "Error - pointer not in file, but should be!\n";
+	if (!inpointers || initer == inpointers->end())
+        {
+	  reporter_->error("Pointer not in file, but should be!.");
 	  err = true;
 	  return;
 	}
@@ -395,67 +409,78 @@ Piostream::io(Persistent*& data, const PersistentTypeID& pid)
       }
     }
   }
-  else {			// dir == Write
+  else // dir == Write
+  {		
     int have_data;
     int pointer_id;
     
     MapPersistentInt::iterator outiter;
-    if (outpointers) {
+    if (outpointers)
+    {
       outiter = outpointers->find(data);
       pointer_id = (*outiter).second;
     }
     
-    if (data==0) {
-      have_data=0;
-      pointer_id=0;
+    if (data == 0)
+    {
+      have_data = 0;
+      pointer_id = 0;
     }
-    else if (outpointers && outiter != outpointers->end()){
-				// Already emitted, pointer id fetched
-				// from hashtable
-      have_data=0;
+    else if (outpointers && outiter != outpointers->end())
+    {
+      // Already emitted, pointer id fetched from hashtable.
+      have_data = 0;
     }
-    else {
-				// Emit it..
-      have_data=1;
-      pointer_id=current_pointer_id++;
-      if (!outpointers) {
-				// scinew?
-	outpointers = new MapPersistentInt;
+    else
+    {
+      // Emit it.
+      have_data = 1;
+      pointer_id = current_pointer_id++;
+      if (!outpointers)
+      {
+	outpointers = scinew MapPersistentInt;
       }
       (*outpointers)[data] = pointer_id;
     }
     
     emit_pointer(have_data, pointer_id);
     
-    if(have_data) {
+    if (have_data)
+    {
       data->io(*this);
     }
-    
   }
 }
+
 
 //----------------------------------------------------------------------
 Piostream*
 auto_istream(const string& filename, ProgressReporter *pr)
 {
   std::ifstream in(filename.c_str());
-  if (!in) {
+  if (!in)
+  {
     if (pr) pr->error("File not found: " + filename);
     else cerr << "File not found: " << filename << endl;
     return 0;
   }
 
-  // create a header of size 16 to account for new endianness
-  // flag in binary headers when the version > 1
+  // Create a header of size 16 to account for new endianness
+  // flag in binary headers when the version > 1.
   char hdr[16]; 
   in.read(hdr, 16);
-  if (!in) {
+
+  if (!in)
+  {
     if (pr) pr->error("Error reading header of file: " + filename);
     else cerr << "Error reading header of file: " << filename << endl;
     return 0;
   }
 
-  // determine endianness of file
+  // Close the file.
+  in.close();
+
+  // Determine endianness of file.
   int file_endian, version;
 
   if (!Piostream::readHeader(pr, filename, hdr, 0, version, file_endian))
@@ -465,22 +490,14 @@ auto_istream(const string& filename, ProgressReporter *pr)
     return 0;
   }
 
-  // put back 4 characters for older Pio versions since their
-  // header was of size 12
-  if (version == 1)
-  {
-    for (int i=0; i<4; i++)
-      in.unget();
-  }
-  
-  char m1=hdr[4];
-  char m2=hdr[5];
-  char m3=hdr[6];
+  const char m1 = hdr[4];
+  const char m2 = hdr[5];
+  const char m3 = hdr[6];
   if (m1 == 'B' && m2 == 'I' && m3 == 'N')
   {
-    // old versions of Pio used XDR which always wrote big endian so if
+    // Old versions of Pio used XDR which always wrote big endian so if
     // the version = 1, readHeader would return BIG, otherwise it will
-    // read it from the header
+    // read it from the header.
     int machine_endian = Piostream::Big;
     if (airMyEndian == airEndianLittle) 
       machine_endian = Piostream::Little;
@@ -489,16 +506,23 @@ auto_istream(const string& filename, ProgressReporter *pr)
       return scinew BinaryPiostream(filename, Piostream::Read, version, pr);
     else 
       return scinew BinarySwapPiostream(filename, Piostream::Read, version,pr);
-  } else if(m1 == 'A' && m2 == 'S' && m3 == 'C'){
+  }
+  else if (m1 == 'A' && m2 == 'S' && m3 == 'C')
+  {
     return scinew TextPiostream(filename, Piostream::Read, pr);
-  } else if(m1 == 'G' && m2 == 'Z' && m3 == 'P'){
+  }
+  else if (m1 == 'G' && m2 == 'Z' && m3 == 'P')
+  {
     return scinew GunzipPiostream(filename, Piostream::Read, pr);
-  } else {
+  }
+  else
+  {
     if (pr) pr->error(filename + " is an unknown type!");
     else cerr << filename << " is an unknown type!" << endl;
     return 0;
   }
 }
+
 
 //----------------------------------------------------------------------
 Piostream*
@@ -514,17 +538,28 @@ auto_ostream(const string& filename, const string& type, ProgressReporter *pr)
   // NOTE: Binary will never return BinarySwap so we always write
   //       out the endianness of the machine we are on
   Piostream* stream;
-  if (type == "Binary") {
+  if (type == "Binary")
+  {
     stream = scinew BinaryPiostream(filename, Piostream::Write, -1, pr);
-  } else if (type == "Text") {
+  }
+  else if (type == "Text")
+  {
     stream = scinew TextPiostream(filename, Piostream::Write, pr);
-  } else if (type == "Gzip") {
+  }
+  else if (type == "Gzip")
+  {
     stream = scinew GzipPiostream(filename, Piostream::Write, pr);
-  } else if (type == "Gunzip") {
+  }
+  else if (type == "Gunzip")
+  {
     stream = scinew GunzipPiostream(filename, Piostream::Write, pr);
-  } else if (type == "Fast") {
+  }
+  else if (type == "Fast")
+  {
     stream = scinew FastPiostream(filename, Piostream::Write, pr);
-  } else {
+  }
+  else
+  {
     stream = scinew BinaryPiostream(filename, Piostream::Write, -1, pr);
   }
   return stream;

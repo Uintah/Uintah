@@ -91,29 +91,25 @@ BinaryPiostream::BinaryPiostream(const string& filename, Direction dir,
       return;
     }
 
-    // old versions had headers of size 12
+    // Old versions had headers of size 12.
     if (version == 1)
     {
       char hdr[12];
-
-      // read header
       if (!fread(hdr, 1, 12, fp_))
       {
-	reporter_->error("Header fread failed.");
+	reporter_->error("Header read failed.");
 	err = true;
 	return;
       }
     }
     else
     {
-      // versions > 1 have size of 16 to
-      // account for endianness in header (LIT | BIG)
+      // Versions > 1 have size of 16 to account for endianness in
+      // header (LIT | BIG).
       char hdr[16];
-
-      // read header
       if (!fread(hdr, 1, 16, fp_))
       {
-	reporter_->error("Header fread failed.");
+	reporter_->error("Header read failed.");
 	err = true;
 	return;
       }
@@ -124,23 +120,23 @@ BinaryPiostream::BinaryPiostream(const string& filename, Direction dir,
     fp_ = fopen(filename.c_str(), "wb");
     if (!fp_)
     {
-      reporter_->error("Error opening file: " + filename + " for writing.");
+      reporter_->error("Error opening file '" + filename + "' for writing.");
       err = true;
       return;
     }
 
-    version=PERSISTENT_VERSION;
+    version = PERSISTENT_VERSION;
     if (version > 1)
     {
       char hdr[16];
       if (airMyEndian == airEndianLittle)
-	sprintf(hdr, "SCI\nBIN\n%03d\nLIT\n", version);
+	sprintf(hdr, "SCI\nBIN\n%03d\n%s", version, endianness());
       else
-	sprintf(hdr, "SCI\nBIN\n%03d\nBIG\n", version);
+	sprintf(hdr, "SCI\nBIN\n%03d\n%s", version, endianness());
 
-      if (!fwrite(hdr,1,16,fp_))
+      if (!fwrite(hdr, 1, 16, fp_))
       {
-	reporter_->error("Header fwrite failed.");
+	reporter_->error("Header write failed.");
 	err = true;
 	return;
       }
@@ -149,9 +145,9 @@ BinaryPiostream::BinaryPiostream(const string& filename, Direction dir,
     {
       char hdr[12];
       sprintf(hdr, "SCI\nBIN\n%03d\n", version);
-      if (!fwrite(hdr,1,12,fp_))
+      if (!fwrite(hdr, 1, 12, fp_))
       {
-	reporter_->error("Header fwrite failed.");
+	reporter_->error("Header write failed.");
 	err = true;
 	return;
       }
@@ -165,23 +161,23 @@ BinaryPiostream::BinaryPiostream(int fd, Direction dir, const int& v,
   : Piostream(dir, -1, "", pr),
     fp_(0)
 {
-  if (v == -1) // no version given so use PERSISTENT_VERSION
+  if (v == -1) // No version given so use PERSISTENT_VERSION.
     version = PERSISTENT_VERSION;
   else
     version = v;
 
-  if (dir==Read)
+  if (dir == Read)
   {
     fp_ = fdopen (fd, "rb");
     if (!fp_)
     {
-      reporter_->error("Error opening socket: " + to_string(fd) +
+      reporter_->error("Error opening socket " + to_string(fd) +
                        " for reading.");
       err = true;
       return;
     }
 
-    // old versions had headers of size 12
+    // Old versions had headers of size 12.
     if (version == 1)
     {
       char hdr[12];
@@ -189,21 +185,19 @@ BinaryPiostream::BinaryPiostream(int fd, Direction dir, const int& v,
       // read header
       if (!fread(hdr, 1, 12, fp_))
       {
-	reporter_->error("Header fread failed.");
+	reporter_->error("Header read failed.");
 	err = true;
 	return;
       }
     }
     else
     {
-      // versions > 1 have size of 16 to
-      // account for endianness in header (LIT | BIG)
+      // Versions > 1 have size of 16 to account for endianness in
+      // header (LIT | BIG).
       char hdr[16];
-
-      // read header
       if (!fread(hdr, 1, 16, fp_))
       {
-	reporter_->error("Header fread failed.");
+	reporter_->error("Header read failed.");
 	err = true;
 	return;
       }
@@ -214,7 +208,7 @@ BinaryPiostream::BinaryPiostream(int fd, Direction dir, const int& v,
     fp_ = fdopen(fd, "wb");
     if (!fp_)
     {
-      reporter_->error("Error opening socket: " + to_string(fd) +
+      reporter_->error("Error opening socket " + to_string(fd) +
                        " for writing.");
       err = true;
       return;
@@ -225,13 +219,13 @@ BinaryPiostream::BinaryPiostream(int fd, Direction dir, const int& v,
     {
       char hdr[16];
       if (airMyEndian == airEndianLittle)
-	sprintf(hdr, "SCI\nBIN\n%03d\nLIT\n", version);
+	sprintf(hdr, "SCI\nBIN\n%03d\n%s", version, endianness());
       else
-	sprintf(hdr, "SCI\nBIN\n%03d\nBIG\n", version);
+	sprintf(hdr, "SCI\nBIN\n%03d\n%s", version, endianness());
 
-      if (!fwrite(hdr,1,16,fp_))
+      if (!fwrite(hdr, 1, 16, fp_))
       {
-	reporter_->error("Header fwrite failed.");
+	reporter_->error("Header write failed.");
 	err = true;
 	return;
       }
@@ -240,9 +234,9 @@ BinaryPiostream::BinaryPiostream(int fd, Direction dir, const int& v,
     {
       char hdr[12];
       sprintf(hdr, "SCI\nBIN\n%03d\n", version);
-      if (!fwrite(hdr,1,12,fp_))
+      if (!fwrite(hdr, 1, 12, fp_))
       {
-	reporter_->error("Header fwrite failed.");
+	reporter_->error("Header write failed.");
 	err = true;
 	return;
       }
@@ -257,6 +251,16 @@ BinaryPiostream::~BinaryPiostream()
 }
 
 
+const char *
+BinaryPiostream::endianness()
+{
+  if (airMyEndian == airEndianLittle)
+    return "LIT\n";
+  else
+    return "BIG\n";
+}
+
+
 template <class T>
 inline void
 BinaryPiostream::gen_io(T& data, const char *iotype)
@@ -264,7 +268,7 @@ BinaryPiostream::gen_io(T& data, const char *iotype)
   if (err) return;
   if (dir==Read)
   {
-    if (!fread(&data, sizeof(short), 1, fp_))
+    if (!fread(&data, sizeof(data), 1, fp_))
     {
       err = true;
       reporter_->error(string("BinaryPiostream error reading ") +
@@ -273,7 +277,7 @@ BinaryPiostream::gen_io(T& data, const char *iotype)
   }
   else
   {
-    if (!fwrite(&data, sizeof(short), 1, fp_))
+    if (!fwrite(&data, sizeof(data), 1, fp_))
     {
       err = true;
       reporter_->error(string("BinaryPiostream error writing ") +
@@ -379,16 +383,16 @@ BinaryPiostream::io(string& data)
 {
   if (err) return;
   unsigned int chars = 0;
-  if (dir==Write)
+  if (dir == Write)
   {
-    const char* p=data.c_str();
+    const char* p = data.c_str();
     chars = static_cast<int>(strlen(p)) + 1;
     io(chars);
     if (!fwrite(p, sizeof(char), chars, fp_)) err = true;
   }
-  if (dir==Read)
+  if (dir == Read)
   {
-    // read in size
+    // Read in size.
     io(chars);
 
     if (version == 1)
@@ -396,25 +400,25 @@ BinaryPiostream::io(string& data)
       // Some of the property manager's objects write out
       // strings of size 0 followed a character, followed
       // by an unsigned short which is the size of the following
-      // string
+      // string.
       if (chars == 0)
       {
 	char c;
 
-	// skip character
+	// Skip character.
 	fread(&c, sizeof(char), 1, fp_);
 
 	unsigned short s;
 	io(s);
 
-	// create buffer which is multiple of 4
-	int extra = 4-(s%4);
+	// Create buffer which is multiple of 4.
+	int extra = 4 - (s%4);
 	if (extra == 4)
 	  extra = 0;
-	unsigned int buf_size = s+extra;
+	unsigned int buf_size = s + extra;
 	char* buf = new char[buf_size];
 	
-	// read in data plus padding
+	// Read in data plus padding.
 	if (!fread(buf, sizeof(char), buf_size, fp_))
         {
 	  err = true;
@@ -422,32 +426,33 @@ BinaryPiostream::io(string& data)
 	  return;
 	}
 	
-	// only use actual size of string
+	// Only use actual size of string.
 	data = "";
-	for(unsigned int i=0; i<s; i++)
+	for (unsigned int i=0; i<s; i++)
 	  data += buf[i];
 	delete [] buf;
       }
       else
       {
-	// used to create a buffer which is multiple of 4
-	int extra = 4-(chars%4);
+	// Create buffer which is multiple of 4.
+	int extra = 4 - (chars%4);
 	if (extra == 4)
 	  extra = 0;
-	int buf_size = chars+extra;
+	unsigned int buf_size = chars + extra;
 	char* buf = new char[buf_size];
 	
-	// read in data plus padding
+	// Read in data plus padding.
 	if (!fread(buf, sizeof(char), buf_size, fp_))
         {
 	  err = true;
+	  delete [] buf;
+	  return;
 	}
 	
-	// only use actual size of string
+	// Only use actual size of string.
 	data = "";
-	for(unsigned int i=0; i<chars; i++)
+	for (unsigned int i=0; i<chars; i++)
 	  data += buf[i];
-	
 	delete [] buf;
       }
     }
@@ -455,11 +460,12 @@ BinaryPiostream::io(string& data)
     {
       char* buf = new char[chars];
       fread(buf, sizeof(char), chars, fp_);
-      data=string(buf);
+      data = string(buf);
       delete[] buf;
     }
   }
 }
+
 
 
 ////
@@ -467,184 +473,31 @@ BinaryPiostream::io(string& data)
 // Piostream used when endianness of machine and file don't match
 BinarySwapPiostream::BinarySwapPiostream(const string& filename, Direction dir,
                                          const int& v, ProgressReporter *pr)
-  : Piostream(dir, -1, filename, pr),
-    fp_(0)
+  : BinaryPiostream(filename, dir, v, pr)
 {
-  if (v == -1) // no version given so use PERSISTENT_VERSION
-    version = PERSISTENT_VERSION;
-  else
-    version = v;
-  if (dir==Read)
-  {
-    fp_ = fopen (filename.c_str(), "rb");
-    if (!fp_)
-    {
-      reporter_->error("Error opening file: " + filename + " for reading.");
-      err = true;
-      return;
-    }
-
-    if (version == 1)
-    {
-      char hdr[12];
-
-      // read header
-      if (!fread(hdr, 1, 12, fp_))
-      {
-	reporter_->error("Header fread failed.");
-	err = true;
-	return;
-      }
-    }
-    else
-    {
-      // versions > 1 have size of 16 to
-      // account for endianness in header (LIT | BIG)
-      char hdr[16];
-
-      // read header
-      if (!fread(hdr, 1, 16, fp_))
-      {
-	reporter_->error("Header fread failed.");
-	err = true;
-	return;
-      }
-    }
-  }
-  else
-  {
-    fp_=fopen(filename.c_str(), "wb");
-    if (!fp_)
-    {
-      reporter_->error("Error opening file: " + filename + " for writing.");
-      err = true;
-      return;
-    }
-
-    version=PERSISTENT_VERSION;
-    if (version > 1)
-    {
-      char hdr[16];
-      if (airMyEndian == airEndianLittle)
-	sprintf(hdr, "SCI\nBIN\n%03d\nBIG\n", version);
-      else
-	sprintf(hdr, "SCI\nBIN\n%03d\nLIT\n", version);
-
-      if (!fwrite(hdr,1,16,fp_))
-      {
-	reporter_->error("Header fwrite failed.");
-	err = true;
-	return;
-      }
-    }
-    else
-    {
-      char hdr[12];
-      sprintf(hdr, "SCI\nBIN\n%03d\n", version);
-      if (!fwrite(hdr,1,12,fp_))
-      {
-	reporter_->error("Header fwrite failed.");
-	err = true;
-	return;
-      }
-    }
-  }
 }
 
 
 BinarySwapPiostream::BinarySwapPiostream(int fd, Direction dir, const int& v,
                                          ProgressReporter *pr)
-  : Piostream(dir, -1, "", pr),
-    fp_(0)
+  : BinaryPiostream(fd, dir, v, pr)
 {
-  if (v == -1) // no version given so use PERSISTENT_VERSION
-    version = PERSISTENT_VERSION;
-  else
-    version = v;
-  if (dir==Read)
-  {
-    fp_ = fdopen (fd, "rb");
-    if (!fp_)
-    {
-      reporter_->error("Error opening socket: " + to_string(fd) +
-                       " for reading.");
-      err = true;
-      return;
-    }
-
-    // old versions had headers of size 12
-    if (version == 1)
-    {
-      char hdr[12];
-
-      // read header
-      if (!fread(hdr, 1, 12, fp_))
-      {
-	reporter_->error("Header fread failed.");
-	err = true;
-	return;
-      }
-    }
-    else
-    {
-      // versions > 1 have size of 16 to
-      // account for endianness in header (LIT | BIG)
-      char hdr[16];
-
-      // read header
-      if (!fread(hdr, 1, 16, fp_))
-      {
-	reporter_->error("Header fread failed.");
-	err = true;
-	return;
-      }
-    }
-  }
-  else
-  {
-    fp_=fdopen(fd, "wb");
-    if (!fp_)
-    {
-      reporter_->error("Error opening socket: " + to_string(fd) + " for writing.");
-      err = true;
-      return;
-    }
-
-    version=PERSISTENT_VERSION;
-    if (version > 1)
-    {
-      char hdr[16];
-      if (airMyEndian == airEndianLittle)
-	sprintf(hdr, "SCI\nBIN\n%03d\nBIG\n", version);
-      else
-	sprintf(hdr, "SCI\nBIN\n%03d\nLIT\n", version);
-      if (!fwrite(hdr,1,16,fp_))
-      {
-	reporter_->error("Header fwrite failed.");
-	err = true;
-	return;
-      }
-    }
-    else
-    {
-      char hdr[12];
-      sprintf(hdr, "SCI\nBIN\n%03d\n", version);
-      if (!fwrite(hdr,1,12,fp_))
-      {
-	reporter_->error("Header fwrite failed.");
-	err = true;
-	return;
-      }
-    }
-  }
 }
 
 
 BinarySwapPiostream::~BinarySwapPiostream()
 {
-  if (fp_) fclose(fp_);
 }
 
+
+const char *
+BinarySwapPiostream::endianness()
+{
+  if (airMyEndian == airEndianLittle)
+    return "BIG\n";
+  else
+    return "LIT\n";
+}
 
 template <class T>
 inline void
@@ -681,54 +534,6 @@ BinarySwapPiostream::gen_io(T& data, const char *iotype)
       reporter_->error(string("BinaryPiostream error writing ") +
                        iotype + ".");
     }
-  }
-}
-
-
-void
-BinarySwapPiostream::io(char& data)
-{
-  if (err) return;
-  if (dir==Read)
-  {
-    // no need to swap a single byte
-    if (!fread(&data, sizeof(char), 1, fp_)) err = true;
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(char), 1, fp_)) err = true;
-  }
-}
-
-
-void
-BinarySwapPiostream::io(signed char& data)
-{
-  if (err) return;
-  if (dir==Read)
-  {
-    // no need to swap a single byte
-    if (!fread(&data, sizeof(signed char), 1, fp_)) err = true;
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(signed char), 1, fp_)) err = true;
-  }
-}
-
-
-void
-BinarySwapPiostream::io(unsigned char& data)
-{
-  if (err) return;
-  if (dir==Read)
-  {
-    // no need to swap a single byte
-    if (!fread(&data, sizeof(unsigned char), 1, fp_)) err = true;
-  }
-  else
-  {
-    if (!fwrite(&data, sizeof(unsigned char), 1, fp_)) err = true;
   }
 }
 
@@ -802,94 +607,6 @@ BinarySwapPiostream::io(float& data)
   gen_io(data, "float");
 }
 
-
-void
-BinarySwapPiostream::io(string& data)
-{
-  if (err) return;
-  unsigned int chars = 0;
-  if (dir==Write)
-  {
-    const char* p=data.c_str();
-    chars = static_cast<int>(strlen(p)) + 1;
-    io(chars);
-    if (!fwrite(p, sizeof(char), chars, fp_)) err = true;
-  }
-  if (dir==Read)
-  {
-    // read in size
-    io(chars);
-
-    if (version == 1)
-    {
-      // Some of the property manager's objects write out
-      // strings of size 0 followed a character, followed
-      // by an unsigned short which is the size of the following
-      // string
-      if (chars == 0)
-      {
-	char c;
-
-	// skip character
-	fread(&c, sizeof(char), 1, fp_);
-
-	unsigned short s;
-	io(s);
-
-	// create buffer which is multiple of 4
-	int extra = 4-(s%4);
-	if (extra == 4)
-	  extra = 0;
-	unsigned int buf_size = s+extra;
-	char* buf = new char[buf_size];
-	
-	// read in data plus padding
-	if (!fread(buf, sizeof(char), buf_size, fp_))
-        {
-	  err = true;
-	  delete [] buf;
-	  return;
-	}
-	
-	// only use actual size of string
-	data = "";
-	for(unsigned int i=0; i<s; i++)
-	  data += buf[i];
-	delete [] buf;
-      }
-      else
-      {
-	// create buffer which is multiple of 4
-	int extra = 4-(chars%4);
-	if (extra == 4)
-	  extra = 0;
-	unsigned int buf_size = chars+extra;
-	char* buf = new char[buf_size];
-	
-	// read in data plus padding
-	if (!fread(buf, sizeof(char), buf_size, fp_))
-        {
-	  err = true;
-	  delete [] buf;
-	  return;
-	}
-	
-	// only use actual size of string
-	data = "";
-	for(unsigned int i=0; i<chars; i++)
-	  data += buf[i];
-	delete [] buf;
-      }
-    }
-    else
-    {
-      char* buf = new char[chars];
-      fread(buf, sizeof(char), chars, fp_);
-      data=string(buf);
-      delete[] buf;
-    }
-  }
-}
 
 
 TextPiostream::TextPiostream(const string& filename, Direction dir,
@@ -1902,7 +1619,7 @@ FastPiostream::gen_io(T& data, const char *iotype)
   size_t did = 0;
   if (dir == Read)
   {
-    did = fread(&data, sizeof(T), 1, fp_);
+    did = fread(&data, sizeof(data), 1, fp_);
     if (expect != did && !feof(fp_))
     {
       err = true;
@@ -1911,7 +1628,7 @@ FastPiostream::gen_io(T& data, const char *iotype)
   }
   else
   {
-    did = fwrite(&data, sizeof(T), 1, fp_);
+    did = fwrite(&data, sizeof(data), 1, fp_);
     if (expect != did)
     {
       err = true;
