@@ -75,8 +75,9 @@ private:
   GuiString  gui_iso_quantity_clusive_;
   GuiDouble  gui_iso_quantity_min_;
   GuiDouble  gui_iso_quantity_max_;
+  GuiString  gui_iso_quantity_list_;
   GuiString  gui_iso_value_list_;
-  GuiString  gui_iso_value_matrix_;
+  GuiString  gui_iso_matrix_list_;
   GuiInt     gui_extract_from_new_field_;
   GuiInt     gui_use_algorithm_;
   GuiInt     gui_build_field_;
