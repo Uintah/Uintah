@@ -174,7 +174,7 @@ public:
 protected:
   int      nrows_;
   int      ncols_;
-  bool     separate_raw_;
+  int      separate_raw_;
   string   raw_filename_;
 };
 
