@@ -121,6 +121,21 @@ namespace Uintah {
     const VarLabel* vel_CC_mag_gradLabel;
     const VarLabel* vol_frac_CC_gradLabel;
     const VarLabel* press_CC_gradLabel;
+    const VarLabel* mass_X_FC_fluxLabel;
+    const VarLabel* mass_Y_FC_fluxLabel;
+    const VarLabel* mass_Z_FC_fluxLabel;
+    
+    const VarLabel* mom_X_FC_fluxLabel;
+    const VarLabel* mom_Y_FC_fluxLabel;
+    const VarLabel* mom_Z_FC_fluxLabel;
+    
+    const VarLabel* sp_vol_X_FC_fluxLabel;
+    const VarLabel* sp_vol_Y_FC_fluxLabel;
+    const VarLabel* sp_vol_Z_FC_fluxLabel;
+    
+    const VarLabel* int_eng_X_FC_fluxLabel;
+    const VarLabel* int_eng_Y_FC_fluxLabel;
+    const VarLabel* int_eng_Z_FC_fluxLabel;
       
     };
 } // end namespace Uintah
