@@ -8,6 +8,7 @@
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/DensityBoundCond.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
+#include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
@@ -30,8 +31,15 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
   //_____________________________________________________________
   // This struct contains misc. variables that are need by the 
   // the different custom boundary conditions
-  struct customBC_var_basket{
-    
+  struct customBC_var_basket {
+
+    customBC_var_basket() {
+      Lodi_var_basket = 0;
+      lv = 0;
+      ng = 0;
+      sv = 0;
+    };
+    ~customBC_var_basket() {};
     // LODI boundary condtions
     bool usingLodi;
     Lodi_variable_basket* Lodi_var_basket;
@@ -51,8 +59,9 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
     
     Output* dataArchiver; 
     SimulationStateP sharedState;
-    
+
   };
+
 
 
   void is_BC_specified(const ProblemSpecP& prob_spec, string variable);
