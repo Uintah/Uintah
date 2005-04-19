@@ -1102,11 +1102,11 @@ main(int argc, char** argv)
     vartypes2.resize(vars.size());
     int count = 0;
     //__________________________________
-    //  eliminate the variable to be ignored
+    //  eliminate the variable to be ignored    
     for (unsigned int i = 0; i < vars.size(); i++) {
       if (vars[i] != ignoreVar){ 
-        vartypes1[count] = make_pair(vars[count], types[count]);
-        vartypes2[count] = make_pair(vars2[count], types2[count]); 
+        vartypes1[count] = make_pair(vars[i], types[i]);
+        vartypes2[count] = make_pair(vars2[i], types2[i]); 
         count ++;
       }     
     }
