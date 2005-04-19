@@ -660,7 +660,7 @@ void preprocess_CustomBCs(const string& where,
   //__________________________________
   //    NG_nozzle
   if(C_BC_basket->usingNG_nozzle){        // NG nozzle 
-    C_BC_basket->ng = new NG_BC_vars;
+    C_BC_basket->ng = scinew NG_BC_vars;
     C_BC_basket->ng->dataArchiver = C_BC_basket->dataArchiver;
     
     getVars_for_NGNozzle(old_dw, new_dw, lb, patch,where,
@@ -670,7 +670,7 @@ void preprocess_CustomBCs(const string& where,
   //__________________________________
   //   LODI
   if(C_BC_basket->usingLodi){  
-    C_BC_basket->lv = new Lodi_vars();
+    C_BC_basket->lv = scinew Lodi_vars();
     
     preprocess_Lodi_BCs( old_dw, new_dw, lb, patch, where,
                        indx,  
@@ -682,7 +682,7 @@ void preprocess_CustomBCs(const string& where,
   //__________________________________
   //  micro slip boundary conditions
   if(C_BC_basket->usingMicroSlipBCs){  
-    C_BC_basket->sv = new Slip_vars();
+    C_BC_basket->sv = scinew Slip_vars();
     
     preprocess_MicroSlip_BCs( old_dw, new_dw, lb, patch, where,
                               indx,  
