@@ -285,8 +285,8 @@ proc make_description_pane {p d} {
     create_text_entry $uiinfo "GUI Information:" $d uiinfo \
         [join [concat {"This information will be stored in the GUI section of the module help."} \
                     {"It should include information about the various GUI elements for this module."}\
-                    {"If you do not have this information at this time, you can manually add it"}\
-                    {"later to the module's XML file."}] \n]
+                    {"If you do not have this information at this time, add a general description"}\
+                    {"and then later manually add the details to the module's XML file."}] \n]
     text_entry_set_state $uiinfo disable
 
     set descript $p.descript
