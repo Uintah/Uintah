@@ -1213,7 +1213,6 @@ case $host in
     fi
 
     if test "$enable_64bit" = "yes"; then
-       FFLAGS="-fPIC $FFLAGS"
        CFLAGS="-fPIC $CFLAGS"
        FFLAGS="-fPIC $FFLAGS"
        CXXFLAGS="-fPIC $CXXFLAGS"
@@ -1675,27 +1674,27 @@ AC_SUBST(M_LIB_DIR_FLAG)
 if test "$IS_WIN" = "yes"; then
   echo "skipping X test"
 else
-_sci_optional=required
-if test "$with_X11_lib"; then
-  _x_lib_dir="$with_X11_lib"
-  _x_inc_dir="$with_X11_lib/../include"
-  _sci_optional=specific
-else 
-  _x_lib_dir="/usr/X11R6"
-  BASE_LIB_PATH(_x_lib_dir,$_x_lib_dir)
-  _x_inc_dir="/usr/X11R6/include"
-fi
+  _sci_optional=required
+  if test "$with_X11_lib"; then
+    _x_lib_dir="$with_X11_lib"
+    _x_inc_dir="$with_X11_lib/../include"
+    _sci_optional=specific
+  else 
+    _x_lib_dir="/usr/X11R6"
+    BASE_LIB_PATH(_x_lib_dir,$_x_lib_dir)
+    _x_inc_dir="/usr/X11R6/include"
+  fi
 
 
-SCI_TRY_LINK(X,X libraries and headers,X11/Xlib.h,
-             $_x_inc_dir,X11 Xext Xaw Xi Xt Xmu,$_x_lib_dir,,,$_sci_optional)
+  SCI_TRY_LINK(X,X libraries and headers,X11/Xlib.h,
+               $_x_inc_dir,X11 Xext Xaw Xi Xt Xmu,$_x_lib_dir,,,$_sci_optional)
 
-if test "$X_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
-  AC_MSG_WARN("$X_LIB_DIR_FLAG")
-  AC_MSG_WARN("flag for X has been changed to")
-  X_LIB_DIR_FLAG="-L$LIB_DIR_X"
-  AC_MSG_WARN("$X_LIB_DIR_FLAG")
-fi
+  if test "$X_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
+    AC_MSG_WARN("$X_LIB_DIR_FLAG")
+    AC_MSG_WARN("flag for X has been changed to")
+    X_LIB_DIR_FLAG="-L$LIB_DIR_X"
+    AC_MSG_WARN("$X_LIB_DIR_FLAG")
+  fi
 
 fi # end "$IS_WIN" = "yes"
 
@@ -2075,6 +2074,14 @@ fi
 
 if test -f "$_sci_lib/tclConfig.sh"; then 
   . $_sci_lib/tclConfig.sh; 
+  if test ! -d $TCL_SRC_DIR; then
+     # Catch the case of the SCIRun 3P being copied to a new location.
+     AC_MSG_WARN(The TCL src dir specified in the $sci_lib/tclConfig.sh file)
+     AC_MSG_WARN(is not valid.  This usually means that this SCIRun Thirdparty)
+     AC_MSG_WARN(was copied to and not built in its current location.)
+     AC_MSG_ERROR(This is not valid.  Please rebuild the 3P or contact
+     AC_MSG_ERROR(scirun-develop@sci.utah.edu for more help.)
+  fi
   _sci_tcl_inc="$_sci_inc $TCL_SRC_DIR/generic"
 fi
 
@@ -3845,7 +3852,7 @@ if test "$with_teem"; then
     AC_MSG_WARN(Teem is already required - you do not need to specify --with-teem.)
   else
     # If --with-teem has a parameter, then use it
-    _sci_lib="$with_teem"
+    _sci_lib="$with_teem/lib"
     _sci_inc="$with_teem/include"
     BASE_LIB_PATH(_sci_lib,$_sci_lib)
     _sci_optional=specific
