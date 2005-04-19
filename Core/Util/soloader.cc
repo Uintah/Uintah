@@ -70,6 +70,40 @@ void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
 #endif
 }
 
+LIBRARY_HANDLE
+findLib(string lib)
+{
+  LIBRARY_HANDLE handle=0;
+  const char *env = SCIRun::sci_getenv("PACKAGE_LIB_PATH");
+  string tempPaths(env?env:"");
+  // try to find the library in the specified path
+  while (tempPaths!="") {
+    string dir;
+#ifdef _WIN32
+    // make sure we don't throw away the drive letter
+    const unsigned int firstColon = tempPaths.find(':',2);
+#else
+    const unsigned int firstColon = tempPaths.find(':');
+#endif
+    if(firstColon < tempPaths.size()) {
+      dir=tempPaths.substr(0,firstColon);
+      tempPaths=tempPaths.substr(firstColon+1);
+    } else {
+      dir=tempPaths;
+      tempPaths="";
+    }
+
+    handle = GetLibraryHandle((dir+"/"+lib).c_str());
+    if (handle)
+      return handle;
+  }
+
+  // if not yet found, try to find it in the rpath 
+  // or the LD_LIBRARY_PATH (last resort)
+  handle = GetLibraryHandle(lib.c_str());
+  return handle;
+}
+
 void* GetHandleSymbolAddress(LIBRARY_HANDLE handle, const char* symbolname)
 {
 #ifdef _WIN32

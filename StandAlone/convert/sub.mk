@@ -35,7 +35,7 @@ ifeq ($(LARGESOS),yes)
 PSELIBS := Core
 else
 PSELIBS := Core/Datatypes Core/Util Core/Containers Core/Persistent Core/Util \
-           Core/Exceptions Core/Thread Core/Geometry Core/Math Core/Geom \
+           Core/Exceptions Core/Init Core/Thread Core/Geometry Core/Math Core/Geom \
 	   Core/ImportExport
 endif
 LIBS := $(XML_LIBRARY) $(M_LIBRARY)

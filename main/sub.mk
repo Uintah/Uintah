@@ -31,7 +31,7 @@
 # Makefile fragment for this subdirectory
 
 SRCDIR   := main
-SRCS     := $(SRCDIR)/main.cc $(SRCDIR)/init.cc
+SRCS     := $(SRCDIR)/main.cc
 
 
 ifeq ($(LARGESOS),yes)
@@ -39,7 +39,7 @@ ifeq ($(LARGESOS),yes)
 else
   PSELIBS := Dataflow/Network Core/Containers Core/TCLThread Core/GuiInterface \
 	Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
-	Core/ICom Core/Services Dataflow/XMLUtil Core/SystemCall Core/Geom
+	Core/ICom Core/Services Dataflow/XMLUtil Core/SystemCall Core/Geom Core/Init
   ifeq ($(OS_NAME),Darwin)
     PSELIBS += Core/Datatypes Core/ImportExport Core/Persistent
   endif
@@ -120,7 +120,7 @@ ifeq ($(LARGESOS),yes)
 else
   PSELIBS := Dataflow/Network Core/Containers Core/GuiInterface \
 	Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
-	Core/ICom Core/Services Dataflow/XMLUtil Core/SystemCall
+	Core/ICom Core/Services Dataflow/XMLUtil Core/SystemCall Core/Init
   ifeq ($(OS_NAME),Darwin)
     PSELIBS += Core/Datatypes Core/ImportExport
   endif

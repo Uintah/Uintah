@@ -47,6 +47,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/GuiInterface/TCLInterface.h>
+#include <Core/Init/init.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/sci_system.h>
 #include <Core/Comm/StringSocket.h>
@@ -59,13 +60,6 @@
 
 #include <sys/stat.h>
 #include <fcntl.h>
-
-#if defined(__APPLE__)
-#  include <Core/Datatypes/MacForceLoad.h>
-   namespace SCIRun {
-      extern void macImportExportForceLoad();
-   }
-#endif
 
 #include <sgi_stl_warnings_off.h>
 #include <string>
@@ -158,11 +152,7 @@ main(int argc, char *argv[], char **environment) {
   systemcallmanager_ = scinew SystemCallManager();
   systemcallmanager_->create();
 
-#if defined(__APPLE__)  
-  macImportExportForceLoad(); // Attempting to force load (and thus
-                              // instantiation of static constructors) 
-  macForceLoad();             // of Core/Datatypes and Core/ImportExport.
-#endif
+  SCIRunInit();
 
   // Services start up... 
 

@@ -51,10 +51,7 @@
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 #include <StandAlone/convert/FileUtils.h>
-
-#if defined(__APPLE__)
-#  include <Core/Datatypes/MacForceLoad.h>
-#endif
+#include <Core/Init/init.h>
 
 #include <iostream>
 #include <fstream>
@@ -125,10 +122,7 @@ main(int argc, char **argv) {
     printUsageInfo(argv[0]);
     return 2;
   }
-#if defined(__APPLE__)  
-  macForceLoad(); // Attempting to force load (and thus instantiation of
-	          // static constructors) Core/Datatypes;
-#endif
+  SCIRunInit();
   setDefaults();
 
   char *ptsName = argv[1];
