@@ -62,7 +62,7 @@ ICELabel::ICELabel()
   int_eng_L_CCLabel = 
     VarLabel::create("int_eng_L_CC", CCVariable<double>::getTypeDescription());
   sp_vol_L_CCLabel = 
-    VarLabel::create("sp_vol_L_CC",CCVariable<double>::getTypeDescription());
+    VarLabel::create("sp_vol_L_CC",  CCVariable<double>::getTypeDescription());
   mass_L_CCLabel = 
     VarLabel::create("mass_L_CC",    CCVariable<double>::getTypeDescription());
   mom_L_ME_CCLabel = 
@@ -153,9 +153,9 @@ ICELabel::ICELabel()
   //__________________________________  
   // Misc labels
   machLabel     =
-    VarLabel::create("mach",     CCVariable<double>::getTypeDescription() ); 
+    VarLabel::create("mach",       CCVariable<double>::getTypeDescription() ); 
   scratchLabel     =
-    VarLabel::create("scratch",  CCVariable<double>::getTypeDescription() );
+    VarLabel::create("scratch",    CCVariable<double>::getTypeDescription() );
   scratchVecLabel     =
     VarLabel::create("scratchVec", CCVariable<Vector>::getTypeDescription() );
   scratch_FCXLabel   =
@@ -180,19 +180,18 @@ ICELabel::ICELabel()
   max_RHSLabel = 
     VarLabel::create( "max_RHS",       max_vartype::getTypeDescription() );
 
-
   maxMach_xminusLabel = 
     VarLabel::create( "maxMach_xminus",   max_vartype::getTypeDescription() );
   maxMach_xplusLabel = 
-    VarLabel::create( "maxMach_xplus",   max_vartype::getTypeDescription() );
-  maxMach_yminusLabel = 
+    VarLabel::create( "maxMach_xplus",    max_vartype::getTypeDescription() );
+  maxMach_yminusLabel =  
     VarLabel::create( "maxMach_yminus",   max_vartype::getTypeDescription() );
   maxMach_yplusLabel = 
-    VarLabel::create( "maxMach_yplus",   max_vartype::getTypeDescription() );
+    VarLabel::create( "maxMach_yplus",    max_vartype::getTypeDescription() );
   maxMach_zminusLabel = 
     VarLabel::create( "maxMach_zminus",   max_vartype::getTypeDescription() );  
   maxMach_zplusLabel = 
-    VarLabel::create( "maxMach_zplus",   max_vartype::getTypeDescription() ); 
+    VarLabel::create( "maxMach_zplus",    max_vartype::getTypeDescription() ); 
 
   CenterOfMassVelocityLabel = 
     VarLabel::create( "CenterOfMassVelocity",
@@ -226,7 +225,34 @@ ICELabel::ICELabel()
     VarLabel::create("vol_frac_CC_grad",CCVariable<Vector>::getTypeDescription());
   press_CC_gradLabel = 
     VarLabel::create("press_CC_grad",   CCVariable<Vector>::getTypeDescription());
-
+    
+  mass_X_FC_fluxLabel = 
+    VarLabel::create("mass_X_FC_flux",  SFCXVariable<double>::getTypeDescription());
+  mass_Y_FC_fluxLabel = 
+    VarLabel::create("mass_Y_FC_flux",  SFCYVariable<double>::getTypeDescription());
+  mass_Z_FC_fluxLabel = 
+    VarLabel::create("mass_Z_FC_flux",  SFCZVariable<double>::getTypeDescription());
+    
+  mom_X_FC_fluxLabel = 
+    VarLabel::create("mom_X_FC_flux",   SFCXVariable<Vector>::getTypeDescription()); 
+  mom_Y_FC_fluxLabel = 
+    VarLabel::create("mom_Y_FC_flux",   SFCYVariable<Vector>::getTypeDescription()); 
+  mom_Z_FC_fluxLabel = 
+    VarLabel::create("mom_Z_FC_flux",   SFCZVariable<Vector>::getTypeDescription()); 
+    
+  sp_vol_X_FC_fluxLabel = 
+    VarLabel::create("sp_vol_X_FC_flux", SFCXVariable<double>::getTypeDescription()); 
+  sp_vol_Y_FC_fluxLabel = 
+    VarLabel::create("sp_vol_Y_FC_flux", SFCYVariable<double>::getTypeDescription()); 
+  sp_vol_Z_FC_fluxLabel = 
+    VarLabel::create("sp_vol_Z_FC_flux", SFCZVariable<double>::getTypeDescription()); 
+    
+  int_eng_X_FC_fluxLabel = 
+    VarLabel::create("int_eng_X_FC_flux",SFCXVariable<double>::getTypeDescription()); 
+  int_eng_Y_FC_fluxLabel = 
+    VarLabel::create("int_eng_Y_FC_flux",SFCYVariable<double>::getTypeDescription()); 
+  int_eng_Z_FC_fluxLabel = 
+    VarLabel::create("int_eng_Z_FC_flux",SFCZVariable<double>::getTypeDescription()); 
 }
 
 ICELabel::~ICELabel()
@@ -339,4 +365,19 @@ ICELabel::~ICELabel()
     VarLabel::destroy(vel_CC_mag_gradLabel);
     VarLabel::destroy(vol_frac_CC_gradLabel);
     VarLabel::destroy(press_CC_gradLabel);
+    VarLabel::destroy(mass_X_FC_fluxLabel);
+    VarLabel::destroy(mass_Y_FC_fluxLabel);
+    VarLabel::destroy(mass_Z_FC_fluxLabel);
+    
+    VarLabel::destroy(mom_X_FC_fluxLabel);
+    VarLabel::destroy(mom_Y_FC_fluxLabel);
+    VarLabel::destroy(mom_Z_FC_fluxLabel);
+    
+    VarLabel::destroy(sp_vol_X_FC_fluxLabel);
+    VarLabel::destroy(sp_vol_Y_FC_fluxLabel);
+    VarLabel::destroy(sp_vol_Z_FC_fluxLabel);
+    
+    VarLabel::destroy(int_eng_X_FC_fluxLabel);
+    VarLabel::destroy(int_eng_Y_FC_fluxLabel);
+    VarLabel::destroy(int_eng_Z_FC_fluxLabel);
 }
