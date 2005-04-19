@@ -128,7 +128,7 @@ void printData(DataArchive* archive, string& variable_name,
 
   // set defaults for output stream
   out.setf(ios::scientific,ios::floatfield);
-  out.precision(8);
+  out.precision(16);
   
   //__________________________________
   // loop over timesteps
