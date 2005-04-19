@@ -40,13 +40,14 @@
  */
 
 #include <main/sci_version.h>
-#include <main/init.h>
+
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Scheduler.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/TCLThread/TCLThread.h>
 #include <Core/GuiInterface/TCLInterface.h>
+#include <Core/Init/init.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/sci_system.h>
 #include <Core/Comm/StringSocket.h>

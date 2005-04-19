@@ -44,10 +44,9 @@
 #include <Core/Datatypes/HexVolField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
+#include <Core/Init/init.h>
 #include <StandAlone/convert/FileUtils.h>
-#if defined(__APPLE__)
-#  include <Core/Datatypes/MacForceLoad.h>
-#endif
+
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
@@ -226,10 +225,8 @@ parse_ho_data(ifstream &nodal_in, vector<Vector> &data_vals, HexVolMesh *hvm)
 
 int
 main(int argc, char **argv) {
-#if defined(__APPLE__)  
-  macForceLoad(); // Attempting to force load (and thus instantiation of
-	          // static constructors) Core/Datatypes;
-#endif
+
+  SCIRunInit();
 
   HexVolMesh *hvm = new HexVolMesh();
   

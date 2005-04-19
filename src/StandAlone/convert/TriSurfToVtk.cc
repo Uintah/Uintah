@@ -41,10 +41,7 @@
 
 #include <Core/Datatypes/TriSurfField.h>
 #include <Core/Persistent/Pstreams.h>
-
-#if defined(__APPLE__)
-#  include <Core/Datatypes/MacForceLoad.h>
-#endif
+#include <Core/Init/init.h>
 
 #include <iostream>
 #include <fstream>
@@ -63,10 +60,7 @@ main(int argc, char **argv) {
     return 0;
   }
 
-#if defined(__APPLE__)  
-  macForceLoad(); // Attempting to force load (and thus instantiation of
-	          // static constructors) Core/Datatypes;
-#endif
+  SCIRunInit();
 
   FieldHandle handle;
   Piostream* stream=auto_istream(argv[1]);

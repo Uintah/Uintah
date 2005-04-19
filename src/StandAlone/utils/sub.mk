@@ -34,8 +34,10 @@ SRCDIR := StandAlone/utils
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core
 else
-PSELIBS := Core/Datatypes Core/Util Core/Containers Core/Persistent \
-           Core/Exceptions Core/Thread Core/Geometry Core/Math Core/Geom
+PSELIBS := \
+	Core/Datatypes Core/Util Core/Containers Core/Persistent \
+	Core/Exceptions Core/Thread Core/Geometry Core/Math Core/Geom \
+	Core/Init
 endif
 LIBS := $(LAPACK_LIBRARY) $(XML_LIBRARY) $(M_LIBRARY)
 
