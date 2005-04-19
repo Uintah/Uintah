@@ -4840,23 +4840,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -5014,23 +5014,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -5047,23 +5047,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -5082,23 +5082,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -7389,23 +7389,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -8704,23 +8704,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -8787,23 +8787,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -9522,23 +9522,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -10056,23 +10056,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -10167,23 +10167,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -10208,23 +10208,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -10596,23 +10596,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -11040,23 +11040,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -11225,23 +11225,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -11752,23 +11752,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -12230,23 +12230,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -12482,23 +12482,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -12719,23 +12719,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -12921,23 +12921,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -13358,23 +13358,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -13843,23 +13843,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -14289,23 +14289,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -14742,23 +14742,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -15191,23 +15191,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -15633,23 +15633,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -16073,23 +16073,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -16517,23 +16517,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -16973,23 +16973,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -17641,7 +17641,29 @@ if test -z \"$debugging\"; then
   { echo \"$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING" >&5
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  \" >&5
+echo \"$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  \" >&2;}
+fi
+
+{ { echo \"$as_me:$LINENO: error: Test for required TCL failed.
+    To see the failed compile information" >&5
 echo "$as_me: error: This is not valid.  Please rebuild the 3P or contact
      { { echo \"$as_me:$LINENO: error: scirun-develop@sci.utah.edu for more help.\" >&5
 echo \"$as_me: error: scirun-develop@sci.utah.edu for more help.\" >&2;}
@@ -18047,18 +18069,30 @@ if test -z \"$debugging\"; then
   { echo \"$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING" >&2;}
-   { (exit TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it); exit TRY THIS:
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  \" >&5
+echo \"$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it; }; }
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  \" >&2;}
+fi
+
+{ { echo \"$as_me:$LINENO: error: Test for required TCL failed.
+    To see the failed compile information" >&2;}
+   { (exit look in config.log); exit look in config.log; }; }
       # Needed on blue pacific for stricmp
       _xer_lib="xerces-c cfgdce"
       ;;
@@ -18464,23 +18498,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -18941,23 +18975,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -19443,23 +19477,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -19921,23 +19955,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -20437,23 +20471,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -20949,23 +20983,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -21444,23 +21478,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -21981,23 +22015,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -22543,23 +22577,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -23022,23 +23056,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -23608,23 +23642,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -24174,23 +24208,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -24639,23 +24673,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -25079,23 +25113,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -25520,23 +25554,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -25958,23 +25992,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -26398,23 +26432,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -26879,23 +26913,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -27357,23 +27391,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -27798,23 +27832,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -28237,23 +28271,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -28778,23 +28812,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -29301,23 +29335,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -29780,23 +29814,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -30247,23 +30281,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -30686,23 +30720,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -31167,23 +31201,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -31650,23 +31684,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -32093,23 +32127,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -32531,23 +32565,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -32971,23 +33005,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -33457,23 +33491,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -33899,23 +33933,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -34340,23 +34374,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -34789,23 +34823,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -35229,23 +35263,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -35779,23 +35813,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -36271,23 +36305,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -36760,23 +36794,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -37249,23 +37283,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -37381,23 +37415,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -37453,23 +37487,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -37928,23 +37962,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -38407,23 +38441,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -38961,23 +38995,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -39444,23 +39478,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -39951,23 +39985,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -40433,23 +40467,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -40746,23 +40780,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -40805,23 +40839,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -41248,23 +41282,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -41762,23 +41796,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -42382,23 +42416,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -43052,23 +43086,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -43568,23 +43602,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -44107,23 +44141,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -44646,23 +44680,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -45169,23 +45203,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -45631,23 +45665,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -46209,23 +46243,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -46763,23 +46797,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -47281,23 +47315,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -47739,23 +47773,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -48196,23 +48230,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -48664,23 +48698,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -49185,23 +49219,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -49966,23 +50000,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -50526,23 +50560,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -51036,23 +51070,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -51571,23 +51605,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
@@ -52084,23 +52118,23 @@ if test -z "$debugging"; then
   { echo "$as_me:$LINENO: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&5
 echo "$as_me: WARNING:
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   " >&2;}
 fi
