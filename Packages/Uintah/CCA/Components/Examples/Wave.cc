@@ -7,6 +7,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/SimpleMaterial.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
@@ -181,7 +182,8 @@ void Wave::initialize(const ProcessorGroup*,
         for(CellIterator iter(phi.getLowIndex(), phi.getHighIndex()); !iter.done(); iter++){
           Point pos = patch->nodePosition(*iter);
           double dist = (pos.asVector().length2());
-          phi[*iter] = exp(-dist/(r0*r0))/(r0*r0*r0);
+          // phi[*iter] = exp(-dist/(r0*r0))/(r0*r0*r0);
+          phi[*iter] = getLevel(patches)->getCellPosition(*iter).x()*getLevel(patches)->getCellPosition(*iter).y()*getLevel(patches)->getCellPosition(*iter).z();
         }
       } else {
         throw ProblemSetupException("Unknown initial condition for Wave");
@@ -266,6 +268,8 @@ void Wave::timeAdvanceEuler(const ProcessorGroup*,
         // Integrate
         newPhi[c] = oldPhi[c] + oldPi[c] * delt;
         newPi[c] = oldPi[c] + curlPhi * delt;
+
+        //cout << "Index: " << c << " Phi " << newPhi[c] << " Pi " << newPi[c] << endl;
 
         sumPhi += newPhi[c];
         if(newPhi[c] > maxphi)

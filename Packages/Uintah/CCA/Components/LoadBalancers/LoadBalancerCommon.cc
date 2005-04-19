@@ -24,6 +24,7 @@ using namespace Uintah;
 extern Mutex cerrLock;
 DebugStream lbDebug( "LoadBalancer", false );
 DebugStream neiDebug("Neighborhood", false );
+DebugStream clusterDebug("Clustering", false);
 
 LoadBalancerCommon::LoadBalancerCommon(const ProcessorGroup* myworld)
    : UintahParallelComponent(myworld)
@@ -211,6 +212,11 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid)
   int maxGhost = 2;
   d_neighbors.clear();
 
+  int low_patch = 99999999999;
+
+  if (d_myworld->myrank() == 0 && clusterDebug.active())
+    clusterDebug << *(grid.get_rep()) << endl;
+
   // go through all patches on all levels, and if the patchwise
   // processor assignment equals the current processor, then store the 
   // patch's neighbors in the load balancer array
@@ -252,15 +258,42 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid)
         // use only for the coarse-fine relationship
         IntVector lowIndex = low-lowGhost, highIndex = high+highGhost;
 
-        //        cout << d_myworld->myrank() 
-        //             << "  CreateNeighborhood " << lowIndex << " " << highIndex << endl;
-#if 0
-        if (l > 0 || l < grid->numLevels()-1)
-          patch->computeVariableExtents(Patch::CellBased, IntVector(0,0,0),
-                                        Ghost::AroundCells, maxGhost, n,
-                                        lowIndex, highIndex);
+        // add amr stuff - so the patch will know about coarsening and refining
+        if (l > 0) {
+          const LevelP& coarseLevel = level->getCoarserLevel();
+          coarseLevel->selectPatches(level->mapCellToCoarser(lowIndex), 
+                                     level->mapCellToCoarser(highIndex), n);
+        }
+        if (l < grid->numLevels()-1) {
+          const LevelP& fineLevel = level->getFinerLevel();
+          fineLevel->selectPatches(level->mapCellToFiner(lowIndex), 
+                                     level->mapCellToFiner(highIndex), n);
+        }
+	for(int i=0;i<(int)n.size();i++){
+	  const Patch* neighbor = n[i]->getRealPatch();
+	  if(d_neighbors.find(neighbor) == d_neighbors.end())
+	    d_neighbors.insert(neighbor);
+	}
+      }
 
-#endif                                           
+      if (d_myworld->myrank() == 0 && clusterDebug.active()) {
+        if (patch->getID() < low_patch) low_patch = patch->getID();
+
+        Patch::selectType n;
+        IntVector lowGhost, highGhost;
+        
+        // don't use computeVariableExtents here - in certain cases it may not 
+        // create a complete neighborhood.  
+        Patch::getGhostOffsets(Patch::CellBased, Ghost::AroundCells,
+                               maxGhost, lowGhost, highGhost);
+        
+        IntVector low(patch->getLowIndex(Patch::CellBased, IntVector(0,0,0)));
+        IntVector high(patch->getHighIndex(Patch::CellBased, IntVector(0,0,0)));
+        level->selectPatches(low-lowGhost, high+highGhost, n);
+        
+        // use only for the coarse-fine relationship
+        IntVector lowIndex = low-lowGhost, highIndex = high+highGhost;
+        
         // add amr stuff - so the patch will know about coarsening and refining
         if (l > 0) {
           const LevelP& coarseLevel = level->getCoarserLevel();
@@ -271,18 +304,31 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid)
         if (l < grid->numLevels()-1) {
           const LevelP& fineLevel = level->getFinerLevel();
           fineLevel->selectPatches(level->mapCellToFiner(lowIndex), 
-                                     level->mapCellToFiner(highIndex), n);
+                                   level->mapCellToFiner(highIndex), n);
           //          cout << d_myworld->myrank() << "  F: " << level->mapCellToFiner(lowIndex) << " " << level->mapCellToFiner(highIndex) << endl;
         }
-	for(int i=0;i<(int)n.size();i++){
-	  const Patch* neighbor = n[i]->getRealPatch();
-	  if(d_neighbors.find(neighbor) == d_neighbors.end())
-	    d_neighbors.insert(neighbor);
-	}
+        
+        clusterDebug << patch->getID() - low_patch << " ";
+        for (int i = 0; i < n.size(); i++)
+          clusterDebug << n[i]->getID() - low_patch << " ";
+        clusterDebug << endl;
       }
     }
   }
-  
+
+
+  if (d_myworld->myrank() == 0 && clusterDebug.active()) {
+
+    for(int l=0;l<grid->numLevels();l++){
+      LevelP level = grid->getLevel(l);
+      
+      for(Level::const_patchIterator iter = level->patchesBegin();
+          iter != level->patchesEnd(); iter++){
+        const Patch* patch = *iter;
+        clusterDebug << " Patch " << patch->getID() - low_patch << ": proc " <<getPatchwiseProcessorAssignment(patch) << endl;
+      }
+    }
+  }
   if (neiDebug.active())
     for (std::set<const Patch*>::iterator iter = d_neighbors.begin(); iter != d_neighbors.end(); iter++)
       cout << d_myworld->myrank() << "  Neighborhood: " << (*iter)->getID() << " Proc " << getPatchwiseProcessorAssignment(*iter) << endl;
