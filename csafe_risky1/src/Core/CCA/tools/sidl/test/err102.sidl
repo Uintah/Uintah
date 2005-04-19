@@ -1,3 +1,0 @@
-
-interface x extends y {
-};
