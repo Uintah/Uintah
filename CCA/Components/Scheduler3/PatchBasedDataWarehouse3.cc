@@ -1254,6 +1254,11 @@ PatchBasedDataWarehouse3::getRegionGridVar(GridVariable& var,
     IntVector l(Max(patch->getLowIndex(Patch::NodeBased, label->getBoundaryLayer()), low));
     IntVector h(Min(patch->getHighIndex(Patch::NodeBased, label->getBoundaryLayer()), high));
     
+    if (patch->isVirtual()) {
+      // if patch is virtual, it is probable a boundary layer/extra cell that has been requested (from AMR)
+      // let Bryan know if this doesn't work.  We need to adjust the source but not the dest by the virtual offset
+      tmpVar->offset(patch->getVirtualOffset());
+    }
     var.copyPatch(tmpVar, l, h);
     delete tmpVar;
     IntVector diff(h-l);

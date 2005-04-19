@@ -42,6 +42,7 @@ WARNING
     virtual ~GridVariable() {};
       
     virtual bool rewindow(const IntVector& low, const IntVector& high) = 0;
+    virtual void offset(const IntVector& offset) = 0;
 
     virtual GridVariable* cloneType() const = 0;
     virtual void allocate(const IntVector& lowIndex, const IntVector& highIndex) = 0;

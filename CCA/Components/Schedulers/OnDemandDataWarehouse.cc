@@ -22,6 +22,8 @@
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
@@ -1327,6 +1329,12 @@ OnDemandDataWarehouse::getRegion(constNCVariableBase& constVar,
     d_ncDB.get(label, matlIndex, patch, *tmpVar);
     IntVector l(Max(patch->getLowIndex(Patch::NodeBased, label->getBoundaryLayer()), low));
     IntVector h(Min(patch->getHighIndex(Patch::NodeBased, label->getBoundaryLayer()), high));
+
+    if (patch->isVirtual()) {
+      // if patch is virtual, it is probable a boundary layer/extra cell that has been requested (from AMR)
+      // let Bryan know if this doesn't work.  We need to adjust the source but not the dest by the virtual offset
+      tmpVar->offset(patch->getVirtualOffset());
+    }
     
     var->copyPatch(tmpVar, l, h);
     delete tmpVar;
@@ -1363,6 +1371,11 @@ OnDemandDataWarehouse::getRegion(constCCVariableBase& constVar,
     d_ccDB.get(label, matlIndex, patch, *tmpVar);
     IntVector l(Max(patch->getLowIndex(Patch::CellBased, label->getBoundaryLayer()), low));
     IntVector h(Min(patch->getHighIndex(Patch::CellBased, label->getBoundaryLayer()), high));
+    if (patch->isVirtual()) {
+      // if patch is virtual, it is probable a boundary layer/extra cell that has been requested (from AMR)
+      // let Bryan know if this doesn't work.  We need to adjust the source but not the dest by the virtual offset
+      tmpVar->offset(patch->getVirtualOffset());
+    }
     var->copyPatch(tmpVar, l, h);
     delete tmpVar;
     IntVector diff(h-l);
@@ -1398,6 +1411,11 @@ OnDemandDataWarehouse::getRegion(constSFCXVariableBase& constVar,
     d_sfcxDB.get(label, matlIndex, patch, *tmpVar);
     IntVector l(Max(patch->getLowIndex(Patch::XFaceBased, label->getBoundaryLayer()), low));
     IntVector h(Min(patch->getHighIndex(Patch::XFaceBased, label->getBoundaryLayer()), high));
+    if (patch->isVirtual()) {
+      // if patch is virtual, it is probable a boundary layer/extra cell that has been requested (from AMR)
+      // let Bryan know if this doesn't work.  We need to adjust the source but not the dest by the virtual offset
+      tmpVar->offset(patch->getVirtualOffset());
+    }
     var->copyPatch(tmpVar, l, h);
     delete tmpVar;
     IntVector diff(h-l);
@@ -1433,6 +1451,11 @@ OnDemandDataWarehouse::getRegion(constSFCYVariableBase& constVar,
     d_sfcyDB.get(label, matlIndex, patch, *tmpVar);
     IntVector l(Max(patch->getLowIndex(Patch::YFaceBased, label->getBoundaryLayer()), low));
     IntVector h(Min(patch->getHighIndex(Patch::YFaceBased, label->getBoundaryLayer()), high));
+    if (patch->isVirtual()) {
+      // if patch is virtual, it is probable a boundary layer/extra cell that has been requested (from AMR)
+      // let Bryan know if this doesn't work.  We need to adjust the source but not the dest by the virtual offset
+      tmpVar->offset(patch->getVirtualOffset());
+    }
     var->copyPatch(tmpVar, l, h);
     delete tmpVar;
     IntVector diff(h-l);
@@ -1468,6 +1491,11 @@ OnDemandDataWarehouse::getRegion(constSFCZVariableBase& constVar,
     d_sfczDB.get(label, matlIndex, patch, *tmpVar);
     IntVector l(Max(patch->getLowIndex(Patch::YFaceBased, label->getBoundaryLayer()), low));
     IntVector h(Min(patch->getHighIndex(Patch::YFaceBased, label->getBoundaryLayer()), high));
+    if (patch->isVirtual()) {
+      // if patch is virtual, it is probable a boundary layer/extra cell that has been requested (from AMR)
+      // let Bryan know if this doesn't work.  We need to adjust the source but not the dest by the virtual offset
+      tmpVar->offset(patch->getVirtualOffset());
+    }
     var->copyPatch(tmpVar, l, h);
     delete tmpVar;
     IntVector diff(h-l);
