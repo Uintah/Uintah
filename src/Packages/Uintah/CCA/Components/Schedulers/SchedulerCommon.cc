@@ -500,7 +500,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& stat
   DataWarehouse* newDataWarehouse = this->getLastDW();
   oldDataWarehouse->setScrubbing(DataWarehouse::ScrubNone);
   newDataWarehouse->setScrubbing(DataWarehouse::ScrubNone);
-  
+  const Grid* oldGrid = oldDataWarehouse->getGrid();
   vector<Task*> dataTasks;
   SchedulerP sched(dynamic_cast<Scheduler*>(this));
 
@@ -510,39 +510,43 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& stat
     if (i > 0) {
 
       PatchSet* refineSet = scinew PatchSet;
-      LevelP oldLevel = oldDataWarehouse->getGrid()->getLevel(newLevel->getIndex());
-      
-      // go through the patches, and find if there are patches that weren't entirely 
-      // covered by patches on the old grid, and interpolate them.  
-      // then after, copy the data, and if necessary, overwrite interpolated data
-      
-      for (Level::patchIterator iter = newLevel->patchesBegin(); iter != newLevel->patchesEnd(); iter++) {
-        Patch* newPatch = *iter;
+      if (i >= oldGrid->numLevels())
+        refineSet = const_cast<PatchSet*>(newLevel->eachPatch());
+      else {
+        refineSet = scinew PatchSet;
+        LevelP oldLevel = oldDataWarehouse->getGrid()->getLevel(newLevel->getIndex());
         
-        // get the low/high for what we'll need to get
-        IntVector lowIndex, highIndex;
-        newPatch->computeVariableExtents(Patch::CellBased, IntVector(0,0,0), Ghost::None, 0, lowIndex, highIndex);
+        // go through the patches, and find if there are patches that weren't entirely 
+        // covered by patches on the old grid, and interpolate them.  
+        // then after, copy the data, and if necessary, overwrite interpolated data
         
-        // find if area on the new patch was not covered by the old patches
-        IntVector dist = highIndex-lowIndex;
-        int totalCells = dist.x()*dist.y()*dist.z();
-        int sum = 0;
-        Patch::selectType oldPatches;
-        oldLevel->selectPatches(lowIndex, highIndex, oldPatches);
-
-        for (int old = 0; old < oldPatches.size(); old++) {
-          const Patch* oldPatch = oldPatches[old];
-          IntVector low = Max(oldPatch->getLowIndex(), newPatch->getLowIndex());
-          IntVector high = Min(oldPatch->getHighIndex(), newPatch->getHighIndex());
-          IntVector dist = high-low;
-          sum += dist.x()*dist.y()*dist.z();
-        }  // for oldPatches
-        if (sum != totalCells) {
-          refineSet->add(newPatch);
-        }
-        
-      } // for patchIterator
-
+        for (Level::patchIterator iter = newLevel->patchesBegin(); iter != newLevel->patchesEnd(); iter++) {
+          Patch* newPatch = *iter;
+          
+          // get the low/high for what we'll need to get
+          IntVector lowIndex, highIndex;
+          newPatch->computeVariableExtents(Patch::CellBased, IntVector(0,0,0), Ghost::None, 0, lowIndex, highIndex);
+          
+          // find if area on the new patch was not covered by the old patches
+          IntVector dist = highIndex-lowIndex;
+          int totalCells = dist.x()*dist.y()*dist.z();
+          int sum = 0;
+          Patch::selectType oldPatches;
+          oldLevel->selectPatches(lowIndex, highIndex, oldPatches);
+          
+          for (int old = 0; old < oldPatches.size(); old++) {
+            const Patch* oldPatch = oldPatches[old];
+            IntVector low = Max(oldPatch->getLowIndex(), newPatch->getLowIndex());
+            IntVector high = Min(oldPatch->getHighIndex(), newPatch->getHighIndex());
+            IntVector dist = high-low;
+            sum += dist.x()*dist.y()*dist.z();
+          }  // for oldPatches
+          if (sum != totalCells) {
+            refineSet->add(newPatch);
+          }
+          
+        } // for patchIterator
+      }
       if (refineSet->size() > 0)
         sim->scheduleRefine(refineSet, sched);
     }
@@ -668,7 +672,16 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
                 NCVariableBase* newVariable = newDataWarehouse->d_ncDB.get(label, matl, newPatch );
                 // make sure it exists in the right region (it might be ghost data)
                 newVariable->rewindow(newLowIndex, newHighIndex);
-                newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
+                if (oldPatch->isVirtual()) {
+                  // it can happen where the old patch was virtual and this is not
+                  NCVariableBase* tmpVar = dynamic_cast<NCVariableBase*>(newVariable->cloneType());
+                  oldDataWarehouse->d_ncDB.get(label, matl, oldPatch, *tmpVar);
+                  tmpVar->offset(oldPatch->getVirtualOffset());
+                  newVariable->copyPatch( tmpVar, copyLowIndex, copyHighIndex );
+                  delete tmpVar;
+                }
+                else
+                  newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
               }
             }
             break;
@@ -688,7 +701,17 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
                 CCVariableBase* newVariable = newDataWarehouse->d_ccDB.get(label, matl, newPatch );
                 // make sure it exists in the right region (it might be ghost data)
                 newVariable->rewindow(newLowIndex, newHighIndex);
-                newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
+                if (oldPatch->isVirtual()) {
+                  cout << "  COPYING Virtual patch\n";
+                  // it can happen where the old patch was virtual and this is not
+                  CCVariableBase* tmpVar = dynamic_cast<CCVariableBase*>(newVariable->cloneType());
+                  oldDataWarehouse->d_ccDB.get(label, matl, oldPatch, *tmpVar);
+                  tmpVar->offset(oldPatch->getVirtualOffset());
+                  newVariable->copyPatch( tmpVar, copyLowIndex, copyHighIndex );
+                  delete tmpVar;
+                }
+                else
+                  newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
               }
             }
             break;
@@ -705,10 +728,19 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
                 newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
                 newDataWarehouse->d_sfcxDB.put(label, matl, newPatch, newVariable, false);
               } else {
-                SFCXVariableBase* newVariable = newDataWarehouse->d_sfcxDB.get(label, matl, newPatch );
+                GridVariable* newVariable = newDataWarehouse->d_sfcxDB.get(label, matl, newPatch );
                 // make sure it exists in the right region (it might be ghost data)
                 newVariable->rewindow(newLowIndex, newHighIndex);
-                newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
+                if (oldPatch->isVirtual()) {
+                  // it can happen where the old patch was virtual and this is not
+                  SFCXVariableBase* tmpVar = dynamic_cast<SFCXVariableBase*>(newVariable->cloneType());
+                  oldDataWarehouse->d_sfcxDB.get(label, matl, oldPatch, *tmpVar);
+                  tmpVar->offset(oldPatch->getVirtualOffset());
+                  newVariable->copyPatch( tmpVar, copyLowIndex, copyHighIndex );
+                  delete tmpVar;
+                }
+                else
+                  newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
               }
             }
             break;
@@ -728,7 +760,16 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
                 SFCYVariableBase* newVariable = newDataWarehouse->d_sfcyDB.get(label, matl, newPatch );
                 // make sure it exists in the right region (it might be ghost data)
                 newVariable->rewindow(newLowIndex, newHighIndex);
-                newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
+                if (oldPatch->isVirtual()) {
+                  // it can happen where the old patch was virtual and this is not
+                  SFCYVariableBase* tmpVar = dynamic_cast<SFCYVariableBase*>(newVariable->cloneType());
+                  oldDataWarehouse->d_sfcyDB.get(label, matl, oldPatch, *tmpVar);
+                  tmpVar->offset(oldPatch->getVirtualOffset());
+                  newVariable->copyPatch( tmpVar, copyLowIndex, copyHighIndex );
+                  delete tmpVar;
+                }
+                else
+                  newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
               }
             }
             break;
@@ -745,10 +786,19 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
                 newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
                 newDataWarehouse->d_sfczDB.put(label, matl, newPatch, newVariable, false);
               } else {
-                GridVariable* newVariable = newDataWarehouse->d_sfczDB.get(label, matl, newPatch );
+                SFCZVariableBase* newVariable = newDataWarehouse->d_sfczDB.get(label, matl, newPatch );
                 // make sure it exists in the right region (it might be ghost data)
                 newVariable->rewindow(newLowIndex, newHighIndex);
-                newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
+                if (oldPatch->isVirtual()) {
+                  // it can happen where the old patch was virtual and this is not
+                  SFCZVariableBase* tmpVar = dynamic_cast<SFCZVariableBase*>(newVariable->cloneType());
+                  oldDataWarehouse->d_sfczDB.get(label, matl, oldPatch, *tmpVar);
+                  tmpVar->offset(oldPatch->getVirtualOffset());
+                  newVariable->copyPatch( tmpVar, copyLowIndex, copyHighIndex );
+                  delete tmpVar;
+                }
+                else
+                  newVariable->copyPatch( v, copyLowIndex, copyHighIndex );
               }
             }
             break;
