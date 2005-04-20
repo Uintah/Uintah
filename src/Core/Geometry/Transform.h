@@ -87,6 +87,7 @@ public:
   //! Persistent I/O.
 #ifndef SCI_NOPERSISTENT
   static PersistentTypeID type_id;
+  virtual void io(Piostream &stream);
   friend void Pio_old(Piostream&, Transform&);
   friend void Pio(Piostream&, Transform*&);
 #endif
