@@ -850,7 +850,10 @@ void matlabarray::createstringarray(std::string str)
 long matlabarray::getnnz()
 {
     if (m_ == 0) throw internal_error();
-    return(static_cast<long>(m_->prows_.size()));
+    if (m_->dims_.size() < 2) { return(0); }
+    long n = m_->dims_[1];
+    if (m_->pcols_.size() < n) { return(0); }
+    return(m_->pcols_.getandcastvalue<long>(n));
 }
 
 

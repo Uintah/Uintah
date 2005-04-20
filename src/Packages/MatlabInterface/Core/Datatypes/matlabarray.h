@@ -348,7 +348,7 @@ public:
   void createsparsearray(std::vector<long> &dims,mitype type); 
   void createdensearray(long m, long n,mitype type);  
   void createsparsearray(long m, long n,mitype type); 
-  
+    
   void createcellarray(std::vector<long> &dims); 
   void createstructarray();
   void createstructarray(std::vector<std::string> &fieldnames); 
