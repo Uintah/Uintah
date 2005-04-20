@@ -109,8 +109,17 @@ cd SCIRun/<replaceable>build-dir</replaceable>
 	<literallayout class="monospaced">
 ../src/configure \
 <!--%= withThirdParty %--> \
---enable-package="BioPSE MatlabInterface"
+--enable-package="BioPSE MatlabInterface"<phrase os="osx"> \
+--with-png=/sw</phrase>
 	</literallayout>
+	<phrase os="osx">Option <option>--with-png</option> is needed
+	if PNG support is desired and PNG libraries are not in
+	<filename>/usr/lib</filename>.  Option
+	<option>--with-png</option> above tells SCIRun to find PNG
+	libraries in <filename>/sw</filename>'s
+	<filename>lib</filename> directory.</phrase>
+      </para>
+      <para>
 	Use option <option>--with-unipetsc</option> to add support for
 	<acronym>PETSc</acronym>.
 	<phrase os="linux;irix">Options <option>--with-lapack</option> and
@@ -125,7 +134,8 @@ cd SCIRun/<replaceable>build-dir</replaceable>
 --enable-package="BioPSE MatlabInterface" \
 --with-unipetsc=/usr/local/petsc<phrase os="linux;irix"> \
 --with-blas=/usr/local/lib \
---with-lapack=/usr/local/lib</phrase>
+--with-lapack=/usr/local/lib</phrase><phrase os="osx"> \
+--with-png=/sw</phrase>
 	</literallayout>
 	<phrase os="linux;osx">Use option
 	<option>--with-insight</option> to add support for Insight.
@@ -135,7 +145,8 @@ cd SCIRun/<replaceable>build-dir</replaceable>
 ../src/configure \
 <!--%= withThirdParty %--> \
 --enable-package="BioPSE Teem Insight" \
---with-insight=/usr/local/lib/InsightToolkit
+--with-insight=/usr/local/lib/InsightToolkit<phrase os="osx"> \
+--with-png=/sw</phrase>
 	</literallayout>
 	Use option <option>--with-hdf5</option> to add HDF5 support.
 	Use option <option>--with-mdplus</option> to add MDSplus
@@ -145,8 +156,21 @@ cd SCIRun/<replaceable>build-dir</replaceable>
 <!--%= withThirdParty %--> \
 --enable-package="Fusion Teem DataIO" \
 --with-hdf5=/usr/local/hdf5 \
---with-mdsplus=/usr/local/mdsplus
+--with-mdsplus=/usr/local/mdsplus<phrase os="osx"> \
+--with-png=/sw</phrase>
 	</literallayout>
+      </para>
+
+      <para>
+	Support for TrueType (scalable anti-aliased) fonts in PowerApp
+	BioImage and module ViewSlices is enabled with option
+	<option>--with-freetype=<replaceable>path-to-freetype-lib-directory</replaceable></option>.
+	<replaceable>Path-to-freetype-lib-directory</replaceable> is
+	the path to a directory containing freetype2 libraries, for
+	example <filename os="osx">/sw/lib</filename><filename
+	os="linux;irix">/usr/local/lib</filename>.  Option
+	<option>--with-freetype</option> is not needed when freetype2
+	libraries exist in <filename>/usr/lib</filename>.
       </para>
 
       <para>
@@ -189,7 +213,8 @@ make -j <replaceable>N</replaceable>
 
   <tip>
     <para>It is possible to build SCIRun for multiple machine
-    architectures within the same source code directory.  See <xref
+    architectures and multiple sets of configure options within the
+    same source code directory.  See <xref
     linkend="app.multi_builds"/> for details.</para>
   </tip>
 
