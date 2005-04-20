@@ -26,26 +26,36 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-# This program determines if the doxygen generated documents are out
-# of date with respect to Doxyconfig.r and .c, .cc, and .h files in the
-# src side of the tree. Returns 0 if out of date and 1 if not.
+module SrcTopLevel
 
-require 'find'
-require "../../Utilities/Publish/utils.rb"
+  Packages = [ "BioPSE", "MatlabInterface", "Insight", "Teem", "DataIO", "Fusion" ]
 
-begin
-  timestamp = File.mtime("html")
-  exit(0) if File.mtime("Doxyconfig.r") > timestamp
-  sourceMatch = /\.(c|cc|h)$/
-  srcRoot = "../../../src"
-  dirs = SrcTopLevel.dirs(srcRoot)
-  dirs.each do |d|
-    Find.find(srcRoot + "/" + d) do |f|
-      exit(0) if (f =~ sourceMatch) and (File.mtime(f) > timestamp)
+  # Return list of top level src files.
+  def SrcTopLevel.files(srcRoot)
+    files = []
+    Dir.foreach(srcRoot) do |m|
+      files << m if File.stat(srcRoot + "/" + m).file? and not m =~ /^\./
     end
+    files
   end
-rescue
-  exit(0)
+
+  # Return list of top level directories.
+  def SrcTopLevel.dirs(srcRoot)
+    dirs = []
+    Dir.foreach(srcRoot) do |m|
+      dirs << m if File::stat(srcRoot + "/" + m).directory? and not m =~ /^(Packages|CVS)$|^\./
+    end
+    Packages.each do |p|
+      dirs << "Packages/" + p
+    end
+    dirs
+  end
+
+  # Convenience function that returns all of the above.
+  def SrcTopLevel.filesAndDirs(srcRoot)
+    fd = files(srcRoot)
+    fd = fd + dirs(srcRoot)
+    fd
+  end
 end
 
-exit(1)

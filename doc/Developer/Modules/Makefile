@@ -188,34 +188,7 @@ eps:=eps
 # Docs for a package have been made when ${packagetargets} are fulfilled.
 packagetargets := ${addsuffix _modules.tex,${packages}}
 
-# The SRGROUP variable is used to select a group of documentation
-# packages.
-ifndef SRGROUP
-SRGROUP := biopse
-endif
-ifeq (${strip ${SRGROUP}},)
-SRGROUP := biopse
-endif
-
-# Set list of packages appropriately.
-ifeq (${SRGROUP},scirun)
-packages := SCIRun
-endif
-
-ifeq (${SRGROUP},biopse)
 packages := SCIRun BioPSE Teem MatlabInterface Insight Fusion DataIO
-endif
-
-ifeq (${SRGROUP},uintah)
-packages := SCIRun Uintah
-endif
-
-ifndef SRGROUP
-packages :=
-endif
-ifeq (${strip ${SRGROUP}},)
-packages :=
-endif
 
 # ########## Primary targets
 

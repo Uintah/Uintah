@@ -1,4 +1,5 @@
 <% require("../../Utilities/Publish/srdoc.rb") %>
+<% require("../../Utilities/Publish/utils.rb") %>
 <% doc = Doc.create(Doc::Text) %>
 
 #
@@ -265,7 +266,14 @@ WARN_FORMAT           = "$file:$line: $text"
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces. 
 
-INPUT                 = ../../../src
+<%
+  dirs = ""
+  srcTop = "../../../src"
+  SrcTopLevel.dirs(srcTop).each do |d|
+    dirs = dirs + " " + srcTop + "/" + d 
+  end
+%>
+INPUT                 = <%= dirs %>
 
 # If the value of the INPUT tag contains directories, you can use the 
 # FILE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 
