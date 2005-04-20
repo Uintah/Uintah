@@ -552,7 +552,7 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
 {
   // for thermal stress analysis
   scheduleComputeParticleTempFromGrid(sched, patches, matls); 
-	
+
   int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("MPM::computeStressTensor",
                         this, &SerialMPM::computeStressTensor);
@@ -1715,7 +1715,8 @@ void SerialMPM::computeContactArea(const ProcessorGroup*,
       
       new_dw->get(gvolume, lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
      
-      for(list<Patch::FaceType>::const_iterator fit(d_bndy_traction_faces.begin()); 
+      for(list<Patch::FaceType>::const_iterator
+          fit(d_bndy_traction_faces.begin()); 
           fit!=d_bndy_traction_faces.end();fit++) {       
         Patch::FaceType face = *fit;
         int iface = (int)(face);
@@ -1728,24 +1729,23 @@ void SerialMPM::computeContactArea(const ProcessorGroup*,
         // boundary, and also on the correct side, 
 
         // loop over face nodes to find boundary areas
-	// Because this calculation uses gvolume, particle volumes interpolated to
-	// the nodes, it will give 1/2 the expected value because the particle values
-	// are distributed to all nodes, not just those on this face.  It would require
-	// particles on the other side of the face to "fill" the nodal volumes and give
-	// the correct area when divided by the face normal cell dimension (celldepth).
-	// To correct for this, nodearea incorporates a factor of two.
+// Because this calculation uses gvolume, particle volumes interpolated to
+// the nodes, it will give 1/2 the expected value because the particle values
+// are distributed to all nodes, not just those on this face.  It would require
+// particles on the other side of the face to "fill" the nodal volumes and give
+// the correct area when divided by the face normal cell dimension (celldepth).
+// To correct for this, nodearea incorporates a factor of two.
 
         IntVector projlow, projhigh;
         patch->getFaceNodes(face, 0, projlow, projhigh);
-	const double celldepth  = dx[iface/2];
+        const double celldepth  = dx[iface/2];
         
         for (int i = projlow.x(); i<projhigh.x(); i++) {
           for (int j = projlow.y(); j<projhigh.y(); j++) {
             for (int k = projlow.z(); k<projhigh.z(); k++) {
               IntVector ijk(i,j,k);
-
-	      double nodearea         = 2.0*gvolume[ijk]/celldepth; // node area
-	      bndyCArea[iface] += nodearea;
+              double nodearea         = 2.0*gvolume[ijk]/celldepth; // node area
+              bndyCArea[iface] += nodearea;
 
             }
           }
@@ -1757,10 +1757,12 @@ void SerialMPM::computeContactArea(const ProcessorGroup*,
   // be careful only to put the fields that we have built
   // that way if the user asks to output a field that has not been built
   // it will fail early rather than just giving zeros.
-  for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
+  for(std::list<Patch::FaceType>::const_iterator 
+      ftit(d_bndy_traction_faces.begin());
       ftit!=d_bndy_traction_faces.end();ftit++) {
     int iface = (int)(*ftit);
-    new_dw->put(sum_vartype(bndyCArea[iface]),lb->BndyContactCellAreaLabel[iface]);
+    new_dw->put(sum_vartype(bndyCArea[iface]),
+                lb->BndyContactCellAreaLabel[iface]);
   }
 }
 
