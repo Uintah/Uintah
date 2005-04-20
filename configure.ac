@@ -2079,7 +2079,7 @@ if test -f "$_sci_lib/tclConfig.sh"; then
      AC_MSG_WARN(The TCL src dir specified in the $sci_lib/tclConfig.sh file)
      AC_MSG_WARN(is not valid.  This usually means that this SCIRun Thirdparty)
      AC_MSG_WARN(was copied to and not built in its current location.)
-     AC_MSG_ERROR(This is not valid.  Please rebuild the 3P or contact
+     AC_MSG_ERROR(This is not allowed.  Please rebuild the 3P or contact)
      AC_MSG_ERROR(scirun-develop@sci.utah.edu for more help.)
   fi
   _sci_tcl_inc="$_sci_inc $TCL_SRC_DIR/generic"
