@@ -29,10 +29,15 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/CardioWave/Core/Algorithms
 
 SRCS     += \
+        $(SRCDIR)/ExtraMath.cc\
 	$(SRCDIR)/Vulcan.c\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS :=
+PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
+        Core/Persistent Core/Containers Core/Util \
+        Core/Exceptions Core/Thread Core/GuiInterface \
+        Core/Geom Core/Datatypes Core/Geometry \
+        Core/GeomInterface
 LIBS :=
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

@@ -13,14 +13,16 @@ include	$(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR	:= Packages/CardioWave/Dataflow/Modules/Math
 
 SRCS	+= \
-
+        $(SRCDIR)/ReduceBandWidth.cc \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
-        Core/GeomInterface Core/TkExtensions Core/Bundle
+        Core/GeomInterface Core/TkExtensions Core/Bundle \
+        Packages/CardioWave/Core/Datatypes \
+        Packages/CardioWave/Core/Algorithms
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
