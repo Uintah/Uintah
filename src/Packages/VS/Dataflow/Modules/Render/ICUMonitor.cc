@@ -55,6 +55,7 @@
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Ports/TimePort.h>
 
 #include <Core/Geom/FreeType.h>
 
@@ -234,13 +235,14 @@ private:
   double                                last_global_time_;
   double                                elapsed_since_global_change_;
   double                                time_sf_;
-  LabelTex 				*name_label;
+  LabelTex 			       *name_label;
   string 				name_text;
-  //int 					injury_offset_;
-  LabelTex				*time_label;
+  //int 				injury_offset_;
+  LabelTex			       *time_label;
   string 				time_text;
-  LabelTex 				*date_label;
+  LabelTex 			       *date_label;
   string 				date_text;
+  TimeViewerHandle                      time_viewer_h_;
 
 
   bool                  make_current();
@@ -262,18 +264,20 @@ private:
 
 class RTDraw : public Runnable {
 public:
-  RTDraw(ICUMonitor* module) : 
+  RTDraw(ICUMonitor* module, TimeViewerHandle tvh) : 
     module_(module), 
     throttle_(), 
+    tvh_(tvh),
     dead_(0) 
   {};
   virtual ~RTDraw();
   virtual void run();
   void set_dead(bool p) { dead_ = p; }
 private:
-  ICUMonitor *	module_;
-  TimeThrottle	throttle_;
-  bool		dead_;
+  ICUMonitor            *module_;
+  TimeThrottle	         throttle_;
+  TimeViewerHandle       tvh_;
+  bool		         dead_;
 };
 
 RTDraw::~RTDraw()
@@ -284,16 +288,13 @@ void
 RTDraw::run()
 {
   throttle_.start();
-  const double inc = 1./33.;
+  const double inc = 1./20.; // the rate at which we refresh the monitor.
   double t = throttle_.time();
-  double tlast = t;
   while (!dead_) {
     t = throttle_.time();
     throttle_.wait_for_time(t + inc);
-    double elapsed = t - tlast;
-    module_->inc_time(elapsed);
+    module_->inc_time(tvh_->view_elapsed_since_start());
     module_->redraw_all();
-    tlast = t;
   }
 }
 
@@ -464,6 +465,8 @@ ICUMonitor::~ICUMonitor()
     runner_thread_ = 0;
   }
 }
+
+// absolute elapsed time.
 void 
 ICUMonitor::inc_time(double elapsed)
 {
@@ -474,9 +477,9 @@ ICUMonitor::inc_time(double elapsed)
   float samp_rate = gui_sample_rate_.get();  // samples per second.
   if (! data_.get_rep() || ! gui_play_mode_.get()) return;
   int samples = (int)round(samp_rate * elapsed);
-  cur_idx_ += samples;
-  if (cur_idx_ > data_->nrrd->axis[1].size) {
-    cur_idx_ = 0;
+  cur_idx_ = samples;
+  if (cur_idx_ > data_->nrrd->axis[1].size - 1) {
+    cur_idx_ = data_->nrrd->axis[1].size - 1;
   }
 
   gui_time_.set((float)cur_idx_ / (float)data_->nrrd->axis[1].size);
@@ -1499,6 +1502,20 @@ ICUMonitor::setNameAndDateAndTime()
 void
 ICUMonitor::execute()
 {
+  TimeIPort *time_port = (TimeIPort*)get_iport("Time");
+
+  if (!time_port) 
+  {
+    error("Unable to initialize iport Time.");
+    return;
+  }
+
+  time_port->get(time_viewer_h_);
+  if (time_viewer_h_.get_rep() == 0) {
+    error("No data in the Time port. It is required.");
+    return;
+  }
+
   NrrdIPort *nrrd1_port = (NrrdIPort*)get_iport("Nrrd1");
 
   if (!nrrd1_port) 
@@ -1542,7 +1559,7 @@ ICUMonitor::execute()
   } 
   
   if (!runner_) {
-    runner_ = scinew RTDraw(this);
+    runner_ = scinew RTDraw(this, time_viewer_h_);
     runner_thread_ = scinew Thread(runner_, string(id+" RTDraw OpenGL").c_str());
   }
 }

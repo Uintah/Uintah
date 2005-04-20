@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
-<?xml-stylesheet href="component.xsl" type="text/xsl"?>
-<?cocoon-process type="xslt"?>
+<!DOCTYPE component SYSTEM "component.dtd">
 
 <!--
    For more information, please see: http://software.sci.utah.edu
@@ -31,67 +29,32 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-
-
-<component name="ICUMonitor" category="Render">
+<component name="TimeControls" category="Time">
   <overview>
     <authors>
-      <author>Martin Cole</author>
+	Martin Cole
     </authors>
     <summary>
-	Flexible 2D plotting displayed real time.
+	Global time controls.  
     </summary>
     <description>
-	<p> Given a 2d Nrrd as input, interpret axis 0 to have columns 
-	    of continuous samples, and axis 1 has the n samples. </p>
-	<p> The user specifies via the gui each plot to display </p>
+	Allows downstream modules the ability to synchronize itself 
+	with a global notion of time.
     </description>
   </overview>
+  <implementation>
+  </implementation>
   <io>
-    <inputs lastportdynamic="no">
-      <!-- one of (device port file) -->
+    <outputs>
       <port>
-	<name>Time</name>
-	<datatype>SCIRun::Time</datatype>
+        <name>time</name>
+        <datatype>SCIRun::Time</datatype>
       </port>
-      <port>
-	<name>Nrrd1</name>
-	<description>
-	  <p>
-          </p>
-	</description>
-	<datatype>SCIRun::Nrrd</datatype>
-	<componentname>Nrrd1</componentname>
-      </port>
-      <port>
-	<name>Nrrd2</name>
-	<description>
-	  <p>
-          </p>
-	</description>
-	<datatype>SCIRun::Nrrd</datatype>
-	<componentname>Nrrd2</componentname>
-      </port>
-    </inputs>
+    </outputs>
   </io>
   <gui>
-    <description>
-      <p>
-      </p>
-    </description>
-    <img></img>
   </gui>
   <testing>
-    <plan>
-      <description>
-	<p>
-        </p>
-      </description>
-      <step>
-	<p>select Spheres</p>
-      </step>
-    </plan>
   </testing>
-  <nets>
-  </nets>
 </component>
+

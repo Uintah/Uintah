@@ -157,6 +157,7 @@ SRCS := \
         $(SRCDIR)/SynchronizeGeometry.tcl \
         $(SRCDIR)/SciTclStream.tcl \
         $(SRCDIR)/TextureBuilder.tcl \
+        $(SRCDIR)/TimeControls.tcl \
         $(SRCDIR)/Tooltips.tcl \
         $(SRCDIR)/TransformData.tcl \
         $(SRCDIR)/TransformData2.tcl \
