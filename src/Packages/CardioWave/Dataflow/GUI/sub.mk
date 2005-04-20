@@ -44,6 +44,7 @@ SRCS := \
 	$(SRCDIR)/SetupFVMatrix.tcl \
 	$(SRCDIR)/SetupFVM2.tcl \
   	$(SRCDIR)/TimeDataReader.tcl\
+  	$(SRCDIR)/ReduceBandWidth.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
