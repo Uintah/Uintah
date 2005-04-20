@@ -43,6 +43,7 @@ SRCS     += $(SRCDIR)/BundlePort.cc		  \
             $(SRCDIR)/NrrdPort.cc	          \
             $(SRCDIR)/PathPort.cc                 \
             $(SRCDIR)/TexturePort.cc              \
+            $(SRCDIR)/TimePort.cc                 \
             $(SRCDIR)/templates.cc		  \
 
 
