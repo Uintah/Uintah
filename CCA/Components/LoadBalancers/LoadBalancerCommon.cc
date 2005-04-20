@@ -14,7 +14,7 @@
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Thread/Mutex.h>
-
+#include <climits>
 #include <sstream>
 
 using namespace Uintah;
@@ -212,7 +212,7 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid)
   int maxGhost = 2;
   d_neighbors.clear();
 
-  int low_patch = 99999999999;
+  int low_patch = INT_MAX;
 
   if (d_myworld->myrank() == 0 && clusterDebug.active())
     clusterDebug << *(grid.get_rep()) << endl;
