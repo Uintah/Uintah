@@ -38,6 +38,7 @@ itcl_class MatlabInterface_DataIO_Matlab {
 
     method set_defaults {} {
 
+        global $this-configfile
         global $this-numport-matrix
         global $this-numport-field
         global $this-numport-nrrd
@@ -88,6 +89,8 @@ itcl_class MatlabInterface_DataIO_Matlab {
         global $this-matlab-add-output
         global $this-matlab-update-status
 
+        set $this-configfile ""
+  
         # Set up the number of ports for each SCIRun type
         
         set $this-numport-matrix 5
@@ -402,7 +405,8 @@ itcl_class MatlabInterface_DataIO_Matlab {
         frame $childframe.f3
         frame $childframe.f4
         frame $childframe.f5
-        pack $childframe.f5 -side bottom -anchor w
+        frame $childframe.f6
+        pack $childframe.f5 $childframe.f6 -side bottom -anchor w
         pack $childframe.f1 $childframe.f2 $childframe.f3 -side left -fill x -expand yes
         pack $childframe.f4 -side top -anchor e
         
@@ -418,6 +422,9 @@ itcl_class MatlabInterface_DataIO_Matlab {
 
         label $childframe.f5.info -text "Note: leave the addressbar empty for a matlab engine on local machine"
         pack $childframe.f5.info -anchor w -side left
+
+        button $childframe.f6.localconfig -text "Edit Local Config of Matlab Engine" -command "$this editconfig"
+        pack $childframe.f6.localconfig -anchor w -side left
 
         pack $childframe.f1.addresslabel -side left -padx 3p -pady 2p -padx 4p
         pack $childframe.f1.address -side left -fill x -expand yes -padx 3p -pady 2p
@@ -542,6 +549,46 @@ itcl_class MatlabInterface_DataIO_Matlab {
             set menu [set $this-matlab-code-menu]
             $menu.f1.cmd clear
         }
+    }
+
+    method editconfig {} {
+    
+        global $this-configfile
+        
+        $this-c configfile
+
+        # Create a unique name for the file selection window
+        set w [format "%s-editconfig" .ui[modname]]
+
+        # if the file selector is open, bring it to the front
+        # in case it is iconified, deiconify
+        if { [winfo exists $w] } {
+            SciRaise $w
+            return
+        }
+	
+        toplevel $w -class TkFDialog        
+      
+        iwidgets::labeledframe $w.config -labeltext "CONFIGURATION FILE"
+        set childframe [$w.config childsite]
+
+        pack $w.config -fill both -expand true
+
+        iwidgets::scrolledtext $childframe.file -labeltext "matlab engine configuration file" \
+        -visibleitems 70x20 -vscrollmode dynamic -hscrollmode dynamic -wrap none
+
+        pack $childframe.file -fill both -expand true
+        set a $childframe
+        set b [set $this-configfile]
+        $childframe.file import [set $this-configfile]
+        frame $childframe.f1
+        pack $childframe.f1 -side bottom -anchor e
+  
+        button $childframe.f1.load -text "load" -command "$a.file clear; $a.file import $b"
+        button $childframe.f1.save -text "save" -command "$a.file export $b"
+
+        pack $childframe.f1.load $childframe.f1.save -anchor e -side left
+                          
     }
 
 

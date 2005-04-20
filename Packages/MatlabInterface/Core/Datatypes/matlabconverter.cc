@@ -591,7 +591,6 @@ void matlabconverter::sciMatrixTOmlMatrix(MatrixHandle &scimat,matlabarray &mlma
       dims[1] = tmatrix->nrows();
       dims[0] = tmatrix->ncols();
       mlmat.createsparsearray(dims,dataformat);
-                
       mlmat.setnumericarray(tmatrix->get_val(),tmatrix->get_nnz());
       mlmat.setrowsarray(tmatrix->get_col(),tmatrix->get_nnz());
       mlmat.setcolsarray(tmatrix->get_row(),tmatrix->nrows()+1);
