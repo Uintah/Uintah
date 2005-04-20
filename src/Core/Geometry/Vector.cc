@@ -44,7 +44,9 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Util/Assert.h>
+#ifndef SCI_NOPERSISTENT
 #include <Core/Persistent/Persistent.h>
+#endif
 #include <Core/Math/Expon.h>
 #include <Core/Math/MiscMath.h>
 #include <sgi_stl_warnings_off.h>
@@ -132,6 +134,7 @@ int Vector::operator!=(const Vector& v) const
     return v._x != _x || v._y != _y || v._z != _z;
 }
 
+#ifndef SCI_NOPERSISTENT
 void
 Pio(Piostream& stream, Vector& p)
 {
@@ -142,6 +145,7 @@ Pio(Piostream& stream, Vector& p)
     Pio(stream, p._z);
     stream.end_cheap_delim();
 }
+#endif
 
 void Vector::rotz90(const int c)
 {
@@ -174,6 +178,7 @@ void Vector::rotz90(const int c)
     }
 }
 
+#ifndef SCI_NOTYPEDESCRIPTION
 const string& 
 Vector::get_h_file_path() {
   static const string path(TypeDescription::cc_to_h(__FILE__));
@@ -188,6 +193,7 @@ const TypeDescription* get_type_description(Vector*)
   }
   return td;
 }
+#endif
 
 } // End namespace SCIRun
 

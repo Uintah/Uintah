@@ -44,7 +44,9 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Util/Assert.h>
 #include <Core/Math/MinMax.h>
+#ifndef SCI_NOPERSISTENT
 #include <Core/Persistent/Persistent.h>
+#endif
 #include <stdlib.h>
 
 using namespace SCIRun;
@@ -201,6 +203,7 @@ bool BBox::intersect(const Point& origin, const Vector& dir,
   }
 }
 
+#ifndef SCI_NOPERSISTENT
 namespace SCIRun {
 
   void Pio(Piostream & stream, BBox & box)
@@ -220,4 +223,4 @@ namespace SCIRun {
     stream.end_cheap_delim();
   }
 } // End namespace SCIRun
-
+#endif
