@@ -65,6 +65,10 @@ PROGRAM := $(SRCDIR)/RemoveFaces
 SRCS := $(SRCDIR)/RemoveFaces.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/FieldBin1Test
+SRCS := $(SRCDIR)/FieldBin1Test.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/FieldTextToBin
 SRCS := $(SRCDIR)/FieldTextToBin.cc
 include $(SCIRUN_SCRIPTS)/program.mk

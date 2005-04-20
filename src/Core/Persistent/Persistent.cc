@@ -161,7 +161,7 @@ Persistent::~Persistent()
 Piostream::Piostream(Direction dir, int version, const string &name,
                      ProgressReporter *pr)
   : dir(dir),
-    version(version),
+    version_(version),
     err(false),
     outpointers(0),
     inpointers(0),
@@ -266,27 +266,6 @@ Piostream::io(bool& data)
   {
     data = tmp;
   }
-}
-
-//----------------------------------------------------------------------
-bool
-Piostream::reading()
-{
-    return dir == Read;
-}
-
-//----------------------------------------------------------------------
-bool
-Piostream::writing()
-{
-    return dir == Write;
-}
-
-//----------------------------------------------------------------------
-bool
-Piostream::error()
-{
-    return err;
 }
 
 //----------------------------------------------------------------------

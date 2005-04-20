@@ -73,13 +73,13 @@ namespace SCIRun {
 // BinaryPiostream -- portable
 BinaryPiostream::BinaryPiostream(const string& filename, Direction dir,
                                  const int& v, ProgressReporter *pr)
-  : Piostream(dir, -1, filename, pr),
+  : Piostream(dir, v, filename, pr),
     fp_(0)
 {
   if (v == -1) // no version given so use PERSISTENT_VERSION
-    version = PERSISTENT_VERSION;
+    version_ = PERSISTENT_VERSION;
   else
-    version = v;
+    version_ = v;
 
   if (dir==Read)
   {
@@ -92,7 +92,7 @@ BinaryPiostream::BinaryPiostream(const string& filename, Direction dir,
     }
 
     // Old versions had headers of size 12.
-    if (version == 1)
+    if (version() == 1)
     {
       char hdr[12];
       if (!fread(hdr, 1, 12, fp_))
@@ -125,14 +125,10 @@ BinaryPiostream::BinaryPiostream(const string& filename, Direction dir,
       return;
     }
 
-    version = PERSISTENT_VERSION;
-    if (version > 1)
+    if (version() > 1)
     {
       char hdr[16];
-      if (airMyEndian == airEndianLittle)
-	sprintf(hdr, "SCI\nBIN\n%03d\n%s", version, endianness());
-      else
-	sprintf(hdr, "SCI\nBIN\n%03d\n%s", version, endianness());
+      sprintf(hdr, "SCI\nBIN\n%03d\n%s", version_, endianness());
 
       if (!fwrite(hdr, 1, 16, fp_))
       {
@@ -144,7 +140,7 @@ BinaryPiostream::BinaryPiostream(const string& filename, Direction dir,
     else
     {
       char hdr[12];
-      sprintf(hdr, "SCI\nBIN\n%03d\n", version);
+      sprintf(hdr, "SCI\nBIN\n%03d\n", version_);
       if (!fwrite(hdr, 1, 12, fp_))
       {
 	reporter_->error("Header write failed.");
@@ -158,13 +154,13 @@ BinaryPiostream::BinaryPiostream(const string& filename, Direction dir,
 
 BinaryPiostream::BinaryPiostream(int fd, Direction dir, const int& v,
                                  ProgressReporter *pr)
-  : Piostream(dir, -1, "", pr),
+  : Piostream(dir, v, "", pr),
     fp_(0)
 {
   if (v == -1) // No version given so use PERSISTENT_VERSION.
-    version = PERSISTENT_VERSION;
+    version_ = PERSISTENT_VERSION;
   else
-    version = v;
+    version_ = v;
 
   if (dir == Read)
   {
@@ -178,7 +174,7 @@ BinaryPiostream::BinaryPiostream(int fd, Direction dir, const int& v,
     }
 
     // Old versions had headers of size 12.
-    if (version == 1)
+    if (version() == 1)
     {
       char hdr[12];
 
@@ -214,14 +210,10 @@ BinaryPiostream::BinaryPiostream(int fd, Direction dir, const int& v,
       return;
     }
 
-    version = PERSISTENT_VERSION;
-    if (version > 1)
+    if (version() > 1)
     {
       char hdr[16];
-      if (airMyEndian == airEndianLittle)
-	sprintf(hdr, "SCI\nBIN\n%03d\n%s", version, endianness());
-      else
-	sprintf(hdr, "SCI\nBIN\n%03d\n%s", version, endianness());
+      sprintf(hdr, "SCI\nBIN\n%03d\n%s", version_, endianness());
 
       if (!fwrite(hdr, 1, 16, fp_))
       {
@@ -233,7 +225,7 @@ BinaryPiostream::BinaryPiostream(int fd, Direction dir, const int& v,
     else
     {
       char hdr[12];
-      sprintf(hdr, "SCI\nBIN\n%03d\n", version);
+      sprintf(hdr, "SCI\nBIN\n%03d\n", version_);
       if (!fwrite(hdr, 1, 12, fp_))
       {
 	reporter_->error("Header write failed.");
@@ -290,112 +282,211 @@ BinaryPiostream::gen_io(T& data, const char *iotype)
 void
 BinaryPiostream::io(char& data)
 {
-  gen_io(data, "char");
+  if (version() == 1)
+  {
+    // xdr_char
+    int tmp;
+    tmp = data;
+    io(tmp);
+    data = tmp;
+  }
+  else
+  {
+    gen_io(data, "char");
+  }
 }
 
 
 void
 BinaryPiostream::io(signed char& data)
 {
-  gen_io(data, "signed char");
+  if (version() == 1)
+  {
+    // Wrote as short, still xdr int eventually.
+    short tmp = data;
+    io(tmp);
+    data = tmp;
+  }
+  else
+  {
+    gen_io(data, "signed char");
+  }
 }
 
 
 void
 BinaryPiostream::io(unsigned char& data)
 {
-  gen_io(data, "unsigned char");
+  if (version() == 1)
+  {
+    // xdr_u_char
+    unsigned int tmp;
+    tmp = data;
+    io(tmp);
+    data = tmp;
+  }
+  else
+  {
+    gen_io(data, "unsigned char");
+  }
 }
 
 
 void
 BinaryPiostream::io(short& data)
 {
-  gen_io(data, "short");
+  if (version() == 1)
+  {
+    // xdr_short
+    int tmp;
+    tmp = data;
+    io(tmp);
+    data = tmp;
+  }
+  else
+  {
+    gen_io(data, "short");
+  }
 }
 
 
 void
 BinaryPiostream::io(unsigned short& data)
 {
-  gen_io(data, "unsigned short");
+  if (version() == 1)
+  {
+    // xdr_u_short
+    unsigned int tmp;
+    tmp = data;
+    io(tmp);
+    data = tmp;
+  }
+  else
+  {
+    gen_io(data, "unsigned short");
+  }
 }
 
 
 void
 BinaryPiostream::io(int& data)
 {
-  gen_io(data, "int");
+  gen_io(data, "int"); // xdr_int
 }
 
 
 void
 BinaryPiostream::io(unsigned int& data)
 {
-  gen_io(data, "unsigned int");
+  gen_io(data, "unsigned int"); // xdr_u_int
 }
 
 
 void
 BinaryPiostream::io(long& data)
 {
-  gen_io(data, "long");
+  if (version() == 1)
+  {
+    // xdr_long
+    // Note that xdr treats longs as 4 byte numbers.
+    int tmp;
+    tmp = data;
+    io(tmp);
+    data = tmp;
+  }
+  else
+  {
+    gen_io(data, "long");
+  }
 }
 
 
 void
 BinaryPiostream::io(unsigned long& data)
 {
-  gen_io(data, "unsigned long");
+  if (version() == 1)
+  {
+    // xdr_u_long
+    // Note that xdr treats longs as 4 byte numbers.
+    unsigned int tmp;
+    tmp = data;
+    io(tmp);
+    data = tmp;
+  }
+  else
+  {
+    gen_io(data, "unsigned long");
+  }
 }
 
 
 void
 BinaryPiostream::io(long long& data)
 {
-  gen_io(data, "long long");
+  gen_io(data, "long long"); // xdr_longlong_t
 }
 
 
 void
 BinaryPiostream::io(unsigned long long& data)
 {
-  gen_io(data, "unsigned long long");
+  gen_io(data, "unsigned long long"); //xdr_u_longlong_t
 }
 
 
 void
 BinaryPiostream::io(double& data)
 {
-  gen_io(data, "double");
+  gen_io(data, "double"); // xdr_double
 }
 
 
 void
 BinaryPiostream::io(float& data)
 {
-  gen_io(data, "float");
+  gen_io(data, "float"); // xdr_float
 }
 
 
 void
 BinaryPiostream::io(string& data)
 {
+  // xdr_wrapstring
   if (err) return;
   unsigned int chars = 0;
   if (dir == Write)
   {
-    const char* p = data.c_str();
-    chars = static_cast<int>(strlen(p)) + 1;
-    io(chars);
-    if (!fwrite(p, sizeof(char), chars, fp_)) err = true;
+    if (version() == 1)
+    {
+      // An xdr string is 4 byte int for string size, followed by the
+      // characters without the null termination, then padded back out
+      // to the 4 byte boundary with zeros.
+      chars = data.size();
+      io(chars);
+      if (!fwrite(data.c_str(), sizeof(char), chars, fp_)) err = true;
+
+      // Pad data out to 4 bytes.
+      int extra = chars % 4;
+      if (extra)
+      {
+        static const char pad[4] = {0, 0, 0, 0};
+        if (!fwrite(pad, sizeof(char), 4 - extra, fp_)) err = true;
+      }
+    }
+    else
+    {
+      const char* p = data.c_str();
+      chars = static_cast<int>(strlen(p)) + 1;
+      io(chars);
+      if (!fwrite(p, sizeof(char), chars, fp_)) err = true;
+    }
   }
   if (dir == Read)
   {
     // Read in size.
     io(chars);
 
-    if (version == 1)
+    if (version() == 1)
     {
       // Some of the property manager's objects write out
       // strings of size 0 followed a character, followed
@@ -494,9 +585,9 @@ const char *
 BinarySwapPiostream::endianness()
 {
   if (airMyEndian == airEndianLittle)
-    return "BIG\n";
-  else
     return "LIT\n";
+  else
+    return "BIG\n";
 }
 
 template <class T>
@@ -522,6 +613,7 @@ BinarySwapPiostream::gen_io(T& data, const char *iotype)
   }
   else
   {
+#if 1
     unsigned char tmp[sizeof(data)];
     unsigned char *cdata = reinterpret_cast<unsigned char *>(&data);
     for (unsigned int i = 0; i < sizeof(data); i++)
@@ -534,21 +626,52 @@ BinarySwapPiostream::gen_io(T& data, const char *iotype)
       reporter_->error(string("BinaryPiostream error writing ") +
                        iotype + ".");
     }
+#else
+    if (!fwrite(&data, sizeof(data), 1, fp_))
+    {
+      err = true;
+      reporter_->error(string("BinaryPiostream error writing ") +
+                       iotype + ".");
+    }
+#endif
   }
 }
+
 
 
 void
 BinarySwapPiostream::io(short& data)
 {
-  gen_io(data, "short");
+  if (version() == 1)
+  {
+    // xdr_short
+    int tmp;
+    tmp = data;
+    io(tmp);
+    data = tmp;
+  }
+  else
+  {
+    gen_io(data, "short");
+  }
 }
 
 
 void
 BinarySwapPiostream::io(unsigned short& data)
 {
-  gen_io(data, "unsigned short");
+  if (version() == 1)
+  {
+    // xdr_u_short
+    unsigned int tmp;
+    tmp = data;
+    io(tmp);
+    data = tmp;
+  }
+  else
+  {
+    gen_io(data, "unsigned short");
+  }
 }
 
 
@@ -569,14 +692,38 @@ BinarySwapPiostream::io(unsigned int& data)
 void
 BinarySwapPiostream::io(long& data)
 {
-  gen_io(data, "long");
+  if (version() == 1)
+  {
+    // xdr_long
+    // Note that xdr treats longs as 4 byte numbers.
+    int tmp;
+    tmp = data;
+    io(tmp);
+    data = tmp;
+  }
+  else
+  {
+    gen_io(data, "long");
+  }
 }
 
 
 void
 BinarySwapPiostream::io(unsigned long& data)
 {
-  gen_io(data, "unsigned long");
+  if (version() == 1)
+  {
+    // xdr_u_long
+    // Note that xdr treats longs as 4 byte numbers.
+    unsigned int tmp;
+    tmp = data;
+    io(tmp);
+    data = tmp;
+  }
+  else
+  {
+    gen_io(data, "unsigned long");
+  }
 }
 
 
@@ -640,7 +787,7 @@ TextPiostream::TextPiostream(const string& filename, Direction dir,
 	break;
       c++;
     }
-    if (!readHeader(reporter_, filename, hdr, "ASC", version, file_endian))
+    if (!readHeader(reporter_, filename, hdr, "ASC", version_, file_endian))
     {
       reporter_->error("Error parsing header of file: " + filename);
       err = true;
@@ -659,7 +806,7 @@ TextPiostream::TextPiostream(const string& filename, Direction dir,
       return;
     }
     out << "SCI\nASC\n" << PERSISTENT_VERSION << "\n";
-    version=PERSISTENT_VERSION;
+    version_ = PERSISTENT_VERSION;
   }
 }
 
@@ -686,7 +833,7 @@ TextPiostream::TextPiostream(istream *strm, ProgressReporter *pr)
       break;
     c++;
   }
-  if (!readHeader(reporter_, "istream", hdr, "ASC", version, file_endian))
+  if (!readHeader(reporter_, "istream", hdr, "ASC", version_, file_endian))
   {
     reporter_->error("Error parsing header of istream.");
     err = true;
@@ -703,7 +850,7 @@ TextPiostream::TextPiostream(ostream *strm, ProgressReporter *pr)
 {
   ostream& out=*ostr;
   out << "SCI\nASC\n" << PERSISTENT_VERSION << "\n";
-  version=PERSISTENT_VERSION;
+  version_ = PERSISTENT_VERSION;
 }
 
 
@@ -789,7 +936,7 @@ int
 TextPiostream::begin_class(const string& classname, int current_version)
 {
   if (err) return -1;
-  int version=current_version;
+  int version = current_version;
   string gname;
   if (dir==Write)
   {
@@ -1489,25 +1636,25 @@ FastPiostream::FastPiostream(const string& filename, Direction dir,
       err = true;
       return;
     }
-    readHeader(reporter_, filename, hdr, "FAS", version, file_endian);
+    readHeader(reporter_, filename, hdr, "FAS", version_, file_endian);
   }
   else
   {
-    fp_=fopen(filename.c_str(), "wb");
+    fp_ = fopen(filename.c_str(), "wb");
     if (!fp_)
     {
       reporter_->error("Error opening file: " + filename + " for writing.");
       err = true;
       return;
     }
-    version=PERSISTENT_VERSION;
-    if (version > 1)
+    version_ = PERSISTENT_VERSION;
+    if (version() > 1)
     {
       char hdr[16];
       if (airMyEndian == airEndianLittle)
-	sprintf(hdr, "SCI\nFAS\n%03d\nLIT\n", version);
+	sprintf(hdr, "SCI\nFAS\n%03d\nLIT\n", version_);
       else
-	sprintf(hdr, "SCI\nFAS\n%03d\nBIG\n", version);
+	sprintf(hdr, "SCI\nFAS\n%03d\nBIG\n", version_);
       // write the header
       size_t wrote = fwrite(hdr, sizeof(char), 16, fp_);
       if (wrote != 16)
@@ -1520,7 +1667,7 @@ FastPiostream::FastPiostream(const string& filename, Direction dir,
     else
     {
       char hdr[12];
-      sprintf(hdr, "SCI\nFAS\n%03d\n", version);
+      sprintf(hdr, "SCI\nFAS\n%03d\n", version_);
       // write the header
       size_t wrote = fwrite(hdr, sizeof(char), 12, fp_);
       if (wrote != 12)
@@ -1557,7 +1704,7 @@ FastPiostream::FastPiostream(int fd, Direction dir, ProgressReporter *pr)
       err = true;
       return;
     }
-    readHeader(reporter_, "socket", hdr, "FAS", version, file_endian);
+    readHeader(reporter_, "socket", hdr, "FAS", version_, file_endian);
   }
   else
   {
@@ -1569,14 +1716,14 @@ FastPiostream::FastPiostream(int fd, Direction dir, ProgressReporter *pr)
       err = true;
       return;
     }
-    version=PERSISTENT_VERSION;
-    if (version > 1)
+    version_ = PERSISTENT_VERSION;
+    if (version() > 1)
     {
       char hdr[16];
       if (airMyEndian == airEndianLittle)
-	sprintf(hdr, "SCI\nFAS\n%03d\nLIT\n", version);
+	sprintf(hdr, "SCI\nFAS\n%03d\nLIT\n", version_);
       else
-	sprintf(hdr, "SCI\nFAS\n%03d\nBIG\n", version);
+	sprintf(hdr, "SCI\nFAS\n%03d\nBIG\n", version_);
       // write the header
       size_t wrote = fwrite(hdr, sizeof(char), 16, fp_);
       if (wrote != 16)
@@ -1589,7 +1736,7 @@ FastPiostream::FastPiostream(int fd, Direction dir, ProgressReporter *pr)
     else
     {
       char hdr[12];
-      sprintf(hdr, "SCI\nFAS\n%03d\n", version);
+      sprintf(hdr, "SCI\nFAS\n%03d\n", version_);
       // write the header
       size_t wrote = fwrite(hdr, sizeof(char), 12, fp_);
       if (wrote != 12)
@@ -1811,7 +1958,7 @@ GzipPiostream::GzipPiostream(const string& filename, Direction dir,
       sprintf(str, "SCI\nGZP\n001\n");
     }
     gzwrite(gzfile_, str, static_cast<unsigned int>(strlen(str)));
-    version=1;
+    version = 1;
   }
 }
 

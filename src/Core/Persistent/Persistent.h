@@ -91,7 +91,7 @@ protected:
   Piostream(Direction, int, const string &, ProgressReporter *pr);
 
   Direction dir;
-  int version;
+  int version_;
   bool err;
   int file_endian;
   
@@ -139,9 +139,10 @@ public:
 
   void io(Persistent*&, const PersistentTypeID&);
 
-  bool reading();
-  bool writing();
-  bool error();
+  bool reading() const { return dir == Read; }
+  bool writing() const { return dir == Write; }
+  bool error() const { return err; }
+  int version() const { return version_; }
 
   virtual bool supports_block_io() { return false; }
   virtual void block_io(void*, size_t, size_t) { ASSERTFAIL("unsupported"); }
