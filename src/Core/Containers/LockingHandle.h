@@ -43,16 +43,20 @@
 #ifndef SCI_Containers_LockingHandle_h
 #define SCI_Containers_LockingHandle_h 1
 
+#ifndef SCI_NOPERSISTENT
 #include <sci_defs/template_defs.h>
 #include <Core/Persistent/Persistent.h>
+#endif
 
 namespace SCIRun {
 
 
 template<class T>
 class LockingHandle;
+#ifndef SCI_NOPERSISTENT
 template<class T>
 void Pio(Piostream& stream, LockingHandle<T>& data);
+#endif
 
 template<class T>
 class LockingHandle {
@@ -78,11 +82,13 @@ public:
   inline T* get_rep() const { return rep; }
 
 
+#ifndef SCI_NOPERSISTENT
 #if defined(_AIX)
   template <typename Type> 
   friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream& stream,LockingHandle<Type>& data);
 #else
   friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream& stream,LockingHandle<T>& data);
+#endif
 #endif
 };
 
@@ -204,6 +210,7 @@ void LockingHandle<T>::detach()
     rep->ref_cnt++;
 }
 
+#ifndef SCI_NOPERSISTENT
 template<class T>
 void Pio(Piostream& stream, LockingHandle<T>& data)
 {
@@ -217,6 +224,7 @@ void Pio(Piostream& stream, LockingHandle<T>& data)
     }
     stream.end_cheap_delim();
 }
+#endif
 
 } // End namespace SCIRun
 
