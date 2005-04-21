@@ -130,6 +130,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     db->getWithDefault("solve_thermalnox", d_calcThermalNOx,false);
   }
   db->getWithDefault("turnonMixedModel",d_mixedModel,false);
+  db->getWithDefault("recompileTaskgraph",d_recompile,false);
 
   // physical constant
   // physical constants
@@ -821,14 +822,13 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   }
   else {
     d_nlSolver->nonlinearSolve(level, sched);
-    d_recompile = false;
   }
 }
 
 // ****************************************************************************
 // Function to return boolean for recompiling taskgraph
 // ****************************************************************************
-bool Arches::need_recompile(double time, double dt, 
+bool Arches::needRecompile(double time, double dt, 
 			    const GridP& grid) {
  return d_recompile;
 }

@@ -332,6 +332,9 @@ private:
     bool d_3d_periodic;
     bool d_calScalar;
     bool d_dynScalarModel;
+    int d_turbModelCalcFreq;
+    bool d_turbModelRKsteps;
+    int d_turbCounter;
 
 }; // End class ExplicitSolver
 } // End namespace Uintah
