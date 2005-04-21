@@ -35,7 +35,15 @@ SRCDIR   := Core/Init
 
 SRCS     += $(SRCDIR)/init.cc
 
-PSELIBS := Core/Containers Core/Datatypes Core/Exceptions Core/ImportExport Core/Persistent Core/Thread Core/Util 
+PSELIBS := \
+	Core/Containers \
+	Core/Datatypes  \
+	Core/Exceptions \
+	Core/Geometry   \
+	Core/ImportExport \
+	Core/Persistent \
+	Core/Thread     \
+	Core/Util 
 LIBS :=
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
