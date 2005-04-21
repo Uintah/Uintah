@@ -83,17 +83,30 @@ using std::string;
   {
     std::cout << "Forcing load of Core/Datatypes (for Macintosh)\n";
 
-    // It appears that we need more than one type to force the
-    // instantiation of all of Core/Datatypes.  Until we find a better
-    // solution (or upgrade to the next OS version (jaguar) which I
-    // think will fix this) I suggest that we just add the types to this
-    // file as we find them "missing"...  -Dd
-    PointCloudField<double> pcfd;
-    TriSurfField<double> tsfd;
-    StructQuadSurfField<double> sqsfd;
-    TriSurfMesh tsmd;
-    StructHexVolField<double> shvfd;
-  }
+  PointCloudField<double> pcfd;
+  PersistentTypeID temp = pcfd.type_id;
+
+  GenericField< PointCloudMesh,vector<double> > gfpvd;
+  temp = gfpvd.type_id;
+
+  PointCloudField<Vector> pcfv;
+  temp = pcfv.type_id;
+
+  GenericField< PointCloudMesh,vector<Vector> > gfpvv;
+  temp = gfpvv.type_id;
+
+  TriSurfField<double> tsfd;
+  temp = tsfd.type_id;
+
+  StructQuadSurfField<double> sqsfd;
+  temp = sqsfd.type_id;
+
+  TriSurfMesh tsmd;
+  temp = tsmd.type_id;
+
+  StructHexVolField<double> shvfd;
+  temp = shvfd.type_id;
+}
 #endif
 
 // SCIRunInit is called from from main() (and from stantalone converters).
