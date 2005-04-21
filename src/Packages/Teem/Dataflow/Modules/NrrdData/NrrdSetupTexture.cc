@@ -100,7 +100,10 @@ static inline
 unsigned char
 VtoUC(double v, double dmin, double dmaxplus)
 {
-  return (unsigned char)((v - dmin) * dmaxplus);
+  v = (v - dmin) * dmaxplus;
+  if (v > 255.0) return 255;
+  if (v < 0.0) return 0;
+  return (unsigned char)(v);
 }
 
 
@@ -109,7 +112,7 @@ void
 compute_data(T *nindata, unsigned char *nvoutdata, float *gmoutdata,
              const int ni, const int nj, const int nk, Transform &transform,
              double dmin, double dmax, bool valuesonly, bool justvalues)
-{    
+{
   // Compute the data.
   int i, j, k;
   //const unsigned int nk = nin->axis[0].size;
