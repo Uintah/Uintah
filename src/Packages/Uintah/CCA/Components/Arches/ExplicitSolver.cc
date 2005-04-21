@@ -199,6 +199,8 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
   else {
     throw ProblemSetupException("Integrator type is not defined "+d_timeIntegratorType);
   }
+  db->getWithDefault("turbModelCalcFreq",d_turbModelCalcFreq,1);
+  db->getWithDefault("turbModelCalcForAllRKSteps",d_turbModelRKsteps,true);
 
 #ifdef PetscFilter
     d_props->setFilter(d_turbModel->getFilter());
@@ -384,7 +386,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                             d_timeIntegratorLabels[curr_level]);
     }
     
-    d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
+    d_turbCounter = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+    if ((d_turbCounter%d_turbModelCalcFreq == 0)&&
+        ((curr_level==0)||((!(curr_level==0))&&d_turbModelRKsteps)))
+      d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
 					    d_timeIntegratorLabels[curr_level]);
     
 
