@@ -524,6 +524,7 @@ itcl_class Module {
 	# TODO: unregister only for streams with the supplied output
 	button $w.fbuttons.clear -text "Clear" -command "$this clearStreamOutput"
 	button $w.fbuttons.ok    -text "Close" -command "wm withdraw $w"
+        bind $w <Escape> "wm withdraw $w"
 	
 	Tooltip $w.fbuttons.ok "Close this window.  The log is not effected."
 	TooltipMultiline $w.fbuttons.clear \
