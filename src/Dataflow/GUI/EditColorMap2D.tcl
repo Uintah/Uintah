@@ -233,6 +233,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 	    -filetypes $types \
 	    -initialdir ~/ \
 	    -defaultextension .cmap2
+        moveToCursor $wl
 	SciRaise $wl
     }
 
