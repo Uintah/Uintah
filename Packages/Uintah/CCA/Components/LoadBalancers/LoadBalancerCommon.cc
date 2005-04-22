@@ -14,7 +14,7 @@
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Thread/Mutex.h>
-#include <climits>
+#include <sci_values.h>
 #include <sstream>
 
 using namespace Uintah;
