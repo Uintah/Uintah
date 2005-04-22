@@ -57,6 +57,7 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "  -tlow,--timesteplow [int] (only outputs timestep from int) [defaults to 0]\n";
     cerr << "  -thigh,--timestephigh [int] (only outputs timesteps up to int) [defaults to last timestep]\n";
     cerr << "  -i,--index <x> <y> <z> (cell coordinates) [defaults to 0,0,0]\n";
+    cerr << "  -l,--level [int] (level index to query range from) [defaults to 0]\n";
     cerr << "  -o,--out <outputfilename> [defaults to stdout]\n";
     cerr << "  -vv,--verbose (prints status of output)\n";
     cerr << "  -q,--quite (only print data values)\n";
@@ -70,7 +71,7 @@ void usage(const std::string& badarg, const std::string& progname)
 
 template<class T>
 void printData(DataArchive* archive, string& variable_name,
-	       int material, IntVector& var_id,
+	       int material, IntVector& var_id, int levelIndex,
                unsigned long time_step_lower, unsigned long time_step_upper,
 	       ostream& out) 
 
@@ -113,7 +114,7 @@ void printData(DataArchive* archive, string& variable_name,
   // variable name, and material
   vector<T> values;
   try {
-    archive->query(values, variable_name, material, var_id, times[time_step_lower], times[time_step_upper]);
+    archive->query(values, variable_name, material, var_id, times[time_step_lower], times[time_step_upper], levelIndex);
   } catch (const VariableNotFoundInGrid& exception) {
     cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
     exit(1);
@@ -139,6 +140,8 @@ int main(int argc, char** argv)
   string output_file_name("-");
   IntVector var_id(0,0,0);
   string variable_name;
+  int levelIndex = 0;
+
   // Now the material index is kind of a hard thing.  There is no way
   // to reliably determine a default material.  Materials are defined
   // on the patch for each varialbe, so this subset of materials could
@@ -173,6 +176,8 @@ int main(int argc, char** argv)
       int y = atoi(argv[++i]);
       int z = atoi(argv[++i]);
       var_id = IntVector(x,y,z);
+    } else if (s == "-l" || s == "--level") {
+      levelIndex = atoi(argv[++i]);
     } else if( (s == "-h") || (s == "--help") ) {
       usage( "", argv[0] );
     } else if (s == "-uda") {
@@ -250,19 +255,19 @@ int main(int argc, char** argv)
     }
   switch (subtype->getType()) {
   case Uintah::TypeDescription::double_type:
-    printData<double>(archive, variable_name, material, var_id,
+    printData<double>(archive, variable_name, material, var_id, levelIndex,
 		      time_step_lower, time_step_upper, *output_stream);
     break;
   case Uintah::TypeDescription::float_type:
-    printData<float>(archive, variable_name, material, var_id,
+    printData<float>(archive, variable_name, material, var_id, levelIndex,
 		      time_step_lower, time_step_upper, *output_stream);
     break;
   case Uintah::TypeDescription::int_type:
-    printData<int>(archive, variable_name, material, var_id,
+    printData<int>(archive, variable_name, material, var_id, levelIndex,
 		   time_step_lower, time_step_upper, *output_stream);
     break;
   case Uintah::TypeDescription::Vector:
-    printData<Vector>(archive, variable_name, material, var_id,
+    printData<Vector>(archive, variable_name, material, var_id, levelIndex,
 		   time_step_lower, time_step_upper, *output_stream);
     break;
   case Uintah::TypeDescription::Matrix3:
