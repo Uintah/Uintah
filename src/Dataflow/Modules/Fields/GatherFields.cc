@@ -58,6 +58,10 @@ public:
 private:
   GuiInt gui_force_pointcloud_;
 
+  // Turn on across-execution accumulation of fields.
+  GuiInt gui_accumulating_;
+  GuiInt gui_clear_;
+
   int force_pointcloud_;
 
   FieldHandle fHandle_;
@@ -69,6 +73,8 @@ DECLARE_MAKER(GatherFields)
 GatherFields::GatherFields(GuiContext* ctx)
   : Module("GatherFields", ctx, Filter, "FieldsCreate", "SCIRun"),
     gui_force_pointcloud_(ctx->subVar("force-pointcloud")),
+    gui_accumulating_(ctx->subVar("accumulating")),
+    gui_clear_(ctx->subVar("clear", false)),
     force_pointcloud_(0),
     error_(0)
 {
@@ -90,6 +96,31 @@ GatherFields::execute()
   port_range_type range = get_iports("Field");
   if (range.first == range.second)
     return;
+
+  if (gui_clear_.get())
+  {
+    gui_clear_.set(0);
+    remark("Clearing accumulated fields.");
+    fHandle_ = 0;
+
+    // Send something.
+    FieldOPort *ofield_port = (FieldOPort *) get_oport("Output Field");
+#if 1
+    // Sending 0 does not clear caches.
+    FieldHandle empty =
+      scinew PointCloudField<double>(scinew PointCloudMesh(), 0);
+    ofield_port->send(empty);
+#else
+    ofield_port->send( fHandle_ );
+#endif
+    return;
+  }
+
+  if (gui_accumulating_.get() && fHandle_.get_rep()) // appending fields
+  {
+    fHandles.push_back(fHandle_);
+    nFields++;
+  }
 
   // Gather up all of the field handles.
   if (range.first != range.second)
