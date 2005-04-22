@@ -144,8 +144,9 @@ public:
   bool error() const { return err; }
   int version() const { return version_; }
 
-  virtual bool supports_block_io() { return false; }
-  virtual void block_io(void*, size_t, size_t) { ASSERTFAIL("unsupported"); }
+  virtual bool supports_block_io() { return false; } // deprecated, redundant.
+  // Returns true if bkock_io was supported (even on error).
+  virtual bool block_io(void*, size_t, size_t) { return false; }
 
   friend Piostream* auto_istream(const string& filename,
                                  ProgressReporter *pr = 0);

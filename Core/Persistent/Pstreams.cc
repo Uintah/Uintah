@@ -558,6 +558,32 @@ BinaryPiostream::io(string& data)
 }
 
 
+bool
+BinaryPiostream::block_io(void *data, size_t s, size_t nmemb)
+{
+  if (err || version() == 1) { return false; }
+  if (dir == Read)
+  {
+    const size_t did = fread(data, s, nmemb, fp_);
+    if (did != nmemb)
+    {
+      err = true;
+      reporter_->error("BinaryPiostream error reading block io.");
+    }
+  }
+  else
+  {
+    const size_t did = fwrite(data, s, nmemb, fp_);
+    if (did != nmemb)
+    {
+      err = true;
+      reporter_->error("BinaryPiostream error writing block io.");
+    }      
+  }
+  return true;
+}
+
+
 
 ////
 // BinarySwapPiostream -- portable
@@ -613,7 +639,7 @@ BinarySwapPiostream::gen_io(T& data, const char *iotype)
   }
   else
   {
-#if 1
+#if 0
     unsigned char tmp[sizeof(data)];
     unsigned char *cdata = reinterpret_cast<unsigned char *>(&data);
     for (unsigned int i = 0; i < sizeof(data); i++)
@@ -1906,7 +1932,7 @@ FastPiostream::io(string& data)
 }
 
 
-void
+bool
 FastPiostream::block_io(void *data, size_t s, size_t nmemb)
 {
   if (dir == Read)
@@ -1927,6 +1953,7 @@ FastPiostream::block_io(void *data, size_t s, size_t nmemb)
       reporter_->error("FastPiostream error writing block io.");
     }      
   }
+  return true;
 }
 
 
@@ -2105,6 +2132,31 @@ GzipPiostream::io(string& data)
       reporter_->error("gzwrite failed.");
     }
   }
+}
+
+
+bool
+GzipPiostream::block_io(void *data, size_t s, size_t nmemb)
+{
+  if (dir == Read)
+  {
+    const size_t did = gzread(gzfile_, data, s * nmemb);
+    if (did != nmemb)
+    {
+      err = true;
+      reporter_->error("GzipPiostream error reading block io.");
+    }
+  }
+  else
+  {
+    const size_t did = gzwrite(gzfile_, data, s * nmemb);
+    if (did != nmemb)
+    {
+      err = true;
+      reporter_->error("GzipPiostream error writing block io.");
+    }      
+  }
+  return true;
 }
 
 
