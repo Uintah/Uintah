@@ -44,6 +44,7 @@
 #include <SCIRun/PortInstance.h>
 #include <SCIRun/ComponentInstance.h>
 #include <SCIRun/CCA/ComponentID.h>
+#include <SCIRun/CCA/CCAException.h>
 
 #include <qapplication.h>
 #include <qpushbutton.h>
@@ -175,20 +176,20 @@ Module::Module(NetworkCanvasView *parent,
         if (hasUIPort) {
             uiButton = new QPushButton("UI", this, "ui");
             uiButton->setGeometry(QRect(top, h - top - 20, 20, 20));
+            connect(uiButton, SIGNAL(clicked()), this, SLOT(ui()));
+
+            std::string instanceName = cid->getInstanceName();
+            uiPortName = instanceName + " uiPort";
             try {
-                connect(uiButton, SIGNAL(clicked()), this, SLOT(ui()));
+                services->registerUsesPort(uiPortName, "sci.cca.ports.UIPort",
+                    sci::cca::TypeMap::pointer(0));
+                bs->connect(services->getComponentID(), uiPortName,
+                    cid, isSciPort ? "sci.ui" : "ui");
             }
-            catch (const Exception& e) {
+            catch (CCAException e) {
                 viewWindow->p2BuilderWindow->displayMsg(e.message());
                 viewWindow->p2BuilderWindow->displayMsg("\n");
             }
-
-            std::string instanceName = cid->getInstanceName();
-            std::string uiPortName = instanceName + " uiPort";
-            services->registerUsesPort(uiPortName, "sci.cca.ports.UIPort",
-                sci::cca::TypeMap::pointer(0));
-                bs->connect(services->getComponentID(), uiPortName,
-                    cid, isSciPort ? "sci.ui" : "ui");
         } else {
             uiButton = 0;
         }
@@ -196,10 +197,10 @@ Module::Module(NetworkCanvasView *parent,
         if (hasGoPort) {
             menu->insertItem("Go", this, SLOT(go()) );
             std::string instanceName = cid->getInstanceName();
-            std::string goPortName = instanceName + " goPort";
-            services->registerUsesPort(goPortName, "sci.cca.ports.GoPort",
-                sci::cca::TypeMap::pointer(0));
+            goPortName = instanceName + " goPort";
             try {
+                services->registerUsesPort(goPortName, "sci.cca.ports.GoPort",
+                    sci::cca::TypeMap::pointer(0));
                 bs->connect(services->getComponentID(), goPortName,
                     cid,  isSciPort ? "sci.go" : "go");
             }
@@ -212,11 +213,11 @@ Module::Module(NetworkCanvasView *parent,
         if (hasComponentIcon) {
           // progress bar etc.
             std::string instanceName = cid->getInstanceName();
-            std::string iconName = instanceName + " icon";
-            services->registerUsesPort(iconName,
-                "sci.cca.ports.ComponentIcon",
-                sci::cca::TypeMap::pointer(0));
+            iconName = instanceName + " icon";
             try {
+                services->registerUsesPort(iconName,
+                    "sci.cca.ports.ComponentIcon",
+                        sci::cca::TypeMap::pointer(0));
                 bs->connect(services->getComponentID(), iconName, cid, "icon");
             }
             catch (const Exception& e) {
@@ -259,8 +260,8 @@ Module::Module(NetworkCanvasView *parent,
     //QWhatsThis::add(this, "Module\nUses Ports:\nProvides Ports:");
 
     for (unsigned int i = 0; i < up.size(); i++) {
-        std::string model = "";
-        std::string type = "";
+        std::string model;
+        std::string type;
         ComponentInstance *ci = fwk->lookupComponent(cid->getInstanceName());
         if (ci) {
             PortInstance* pi = ci->getPortInstance(up[i]);
@@ -270,6 +271,24 @@ Module::Module(NetworkCanvasView *parent,
             }
         }
         ports.push_back(port(i, model, type, up[i], PortIcon::USES));
+    }
+}
+Module::~Module()
+{
+    try {
+        if (hasUIPort) {
+            services->unregisterUsesPort(uiPortName);
+        }
+        if (hasGoPort) {
+            services->unregisterUsesPort(goPortName);
+        }
+        if (hasComponentIcon) {
+            services->unregisterUsesPort(iconName);
+        }
+    }
+    catch (CCAException e) {
+        viewWindow->p2BuilderWindow->displayMsg(e.message());
+        viewWindow->p2BuilderWindow->displayMsg("\n");
     }
 }
 
@@ -389,7 +408,7 @@ void Module::go()
         std::cerr << "goPort is not connected, cannot bring up Go!\n";
     } else {
         // exception handling?
-        int t = startTimer(0);
+        //int t = startTimer(0);
         int status = goPort->go();
         killTimers();
         if (status == 0) {
@@ -418,7 +437,7 @@ void Module::destroy()
 void Module::ui()
 {
     std::string instanceName = cid->getInstanceName();
-    std::string uiPortName = instanceName + " uiPort";
+    //std::string uiPortName = instanceName + " uiPort";
 
     sci::cca::Port::pointer p = services->getPort(uiPortName);
     sci::cca::ports::UIPort::pointer uiPort =
