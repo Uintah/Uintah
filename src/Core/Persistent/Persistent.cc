@@ -494,12 +494,10 @@ auto_istream(const string& filename, ProgressReporter *pr)
   {
     return scinew GunzipPiostream(filename, Piostream::Read, pr);
   }
-  else
-  {
-    if (pr) pr->error(filename + " is an unknown type!");
-    else cerr << filename << " is an unknown type!" << endl;
-    return 0;
-  }
+
+  if (pr) pr->error(filename + " is an unknown type!");
+  else cerr << filename << " is an unknown type!" << endl;
+  return 0;
 }
 
 
