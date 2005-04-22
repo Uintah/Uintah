@@ -119,8 +119,7 @@ void CCAComponentInstance::releasePort(const std::string& name)
 
     std::map<std::string, CCAPortInstance*>::iterator iter = ports.find(name);
     if (iter == ports.end()) {
-        std::cerr << "Released an unknown port: " << name << std::endl;
-        throw CCAException("Released an unknown port: "+name);
+        throw CCAException("Released an unknown port: " + name);
     }
 
     CCAPortInstance* pr = iter->second;
@@ -149,13 +148,9 @@ void CCAComponentInstance::registerUsesPort(const std::string& portName,
     std::map<std::string, CCAPortInstance*>::iterator iter = ports.find(portName);
     if (iter != ports.end()) {
         if (iter->second->porttype == CCAPortInstance::Provides) {
-            throw CCAException("name conflict between uses and provides ports");
+            throw CCAException("name conflict between uses and provides ports for " + portName + " " + portType + " " + instanceName);
         } else {
-            std::cerr << "CCAComponentInstance::registerUsesPort called twice, instance="
-                      << instanceName
-                      << ", portName = " << portName << ", portType = " << portType
-                      << std::endl;
-            throw CCAException("registerUsesPort called twice");
+            throw CCAException("registerUsesPort called twice for " + portName + " " + portType + " " + instanceName);
         }
     }
     ports.insert(make_pair(portName, new CCAPortInstance(portName, portType, properties, CCAPortInstance::Uses)));
@@ -167,13 +162,12 @@ std::cerr << "CCAComponentInstance::unregisterUsesPort: " << portName << std::en
     std::map<std::string, CCAPortInstance*>::iterator iter = ports.find(portName);
     if (iter != ports.end()) {
         if (iter->second->porttype == CCAPortInstance::Provides) {
-            throw CCAException("name conflict between uses and provides ports");
+            throw CCAException("name conflict between uses and provides ports for " + portName);
         } else {
             ports.erase(portName);
         }
     } else {
-        std::cerr << "port name not found, unregisterUsesPort not done\n";
-        throw CCAException("port name not found");
+        throw CCAException("port name not found for " + portName);
     }
 }
 
@@ -185,9 +179,9 @@ void CCAComponentInstance::addProvidesPort(const sci::cca::Port::pointer& port,
   std::map<std::string, CCAPortInstance*>::iterator iter = ports.find(portName);
   if (iter != ports.end()) {
     if (iter->second->porttype == CCAPortInstance::Uses) {
-      throw CCAException("name conflict between uses and provides ports"); }
+      throw CCAException("name conflict between uses and provides ports for " + portName); }
     else {
-      throw CCAException("addProvidesPort called twice"); 
+      throw CCAException("addProvidesPort called twice for " + portName); 
     }
   }
   if (!properties.isNull() &&  properties->getInt("size",1)>1){
