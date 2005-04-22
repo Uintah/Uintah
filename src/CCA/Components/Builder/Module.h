@@ -66,6 +66,7 @@ public:
            SSIDL::array1<std::string> &pp,
            const sci::cca::Services::pointer &services,
            const sci::cca::ComponentID::pointer &cid);
+    virtual ~Module();
     QPoint posInCanvas();
     PortIcon* clickedPort(QPoint localpos);
     QPoint usesPortPoint(int num);
@@ -109,6 +110,10 @@ private:
     std::string mName;
     std::string dName;
     std::string mDesc;
+    std::string uiPortName;
+    std::string goPortName;
+    std::string iconName;
+
     sci::cca::Services::pointer services;
     sci::cca::ComponentID::pointer cid;
 
