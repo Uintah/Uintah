@@ -247,7 +247,8 @@ make install
 	../src/configure \
 	<phrase os="linux">--with-thirdparty=/usr/local/Thirdparty/1.8.0/Linux/gcc-3.2-32bit \</phrase><phrase os="osx">--with-thirdparty=/usr/local/Thirdparty_osx \</phrase>
 	--enable-package="BioPSE Teem Insight" \
-	--with-insight=/usr/local/lib/InsightToolkit \
+	--with-insight=/usr/local/lib/InsightToolkit \<phrase os="osx">
+	--with-png=/sw</phrase>
 	.
 	.
 	.

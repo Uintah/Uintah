@@ -231,6 +231,10 @@ class SCMCommand
 end
 
 class CVSCommand < SCMCommand
+  def initialize()
+    super
+    ENV["CVS_RSH"] = "ssh"
+  end
   def updateDirCmd()
     "cvs update -P -d"
   end
@@ -360,7 +364,7 @@ class Configuration < ConfHash
     @iv[Deliver] = proc {
       self[Deliver] = false if missing?(Deliver) or self[PwdOnly] == true
       errorIfNotBoolean(Deliver)
-      @iv[Dests].call
+      @iv[Dests].call if selfP(Deliver) == true
     }
     @iv[Tarball] = proc {
       self[Tarball] = false if missing?(Tarball) or self[PwdOnly] == true
@@ -464,21 +468,24 @@ class Configuration < ConfHash
 
     @iv[SendMailOnError].call
 
-    if self[Deliver] == true || self[Update] == REMOTE_UPDATE
+    remoteDelivery = false
+    if self[Deliver] == true
       self[Dests].each do |d|
 	if d.remote
-	  ENV["CVS_RSH"] = "ssh"
-	  begin
-	    File.open(self[SSHAgentFile], "r") do |f|
-	      s = f.read
-	      ENV['SSH_AUTH_SOCK']=/SSH_AUTH_SOCK=(.*?);/.match(s)[1]
-	      ENV['SSH_AGENT_PID']=/SSH_AGENT_PID=(\d+);/.match(s)[1]
-	    end
-	  rescue
-	    confError("Can't get ssh agent info from #{self[SSHAgentFile]}")
-	  end
-	  break;
+	  remoteDelivery = true
+	  break
 	end
+      end
+    end
+    if remoteDelivery || self[Update] == REMOTE_UPDATE
+      begin
+	File.open(self[SSHAgentFile], "r") do |f|
+	  s = f.read
+	  ENV['SSH_AUTH_SOCK']=/SSH_AUTH_SOCK=(.*?);/.match(s)[1]
+	  ENV['SSH_AGENT_PID']=/SSH_AGENT_PID=(\d+);/.match(s)[1]
+	end
+      rescue
+	confError("Can't get ssh agent info from #{self[SSHAgentFile]}")
       end
     end
   end
