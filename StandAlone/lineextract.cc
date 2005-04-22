@@ -61,6 +61,7 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "  -timestep,--timestep [int] (only outputs from timestep int) [defaults to 0]\n";
     cerr << "  -istart,--indexs <x> <y> <z> (cell index) [defaults to 0,0,0]\n";
     cerr << "  -iend,--indexe <x> <y> <z> (cell index) [defaults to 0,0,0]\n";
+    cerr << "  -l,--level [int] (level index to query range from) [defaults to 0]\n";
     cerr << "  -o,--out <outputfilename> [defaults to stdout]\n"; 
     cerr << "  -vv,--verbose (prints status of output)\n";
     cerr << "  -q,--quiet (only print data values)\n";
@@ -78,7 +79,7 @@ void usage(const std::string& badarg, const std::string& progname)
 //
 template<class T>
 void printData(DataArchive* archive, string& variable_name,
-	       int material, const bool use_cellIndex_file,
+	       int material, const bool use_cellIndex_file, int levelIndex,
                IntVector& var_start, IntVector& var_end, vector<IntVector> cells,
                unsigned long time_start, unsigned long time_end, ostream& out) 
 
@@ -146,7 +147,7 @@ void printData(DataArchive* archive, string& variable_name,
         vector<T> values;
         try {
           archive->query(values, variable_name, material, *ci, 
-                          times[time_step], times[time_step]);
+                          times[time_step], times[time_step], levelIndex);
         } catch (const VariableNotFoundInGrid& exception) {
           cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
           exit(1);
@@ -164,7 +165,7 @@ void printData(DataArchive* archive, string& variable_name,
         vector<T> values;
         try {
           archive->query(values, variable_name, material, c, 
-                          times[time_step], times[time_step]);
+                          times[time_step], times[time_step], levelIndex);
         } catch (const VariableNotFoundInGrid& exception) {
           cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
           exit(1);
@@ -226,6 +227,7 @@ int main(int argc, char** argv)
   string output_file_name("-");
   IntVector var_start(0,0,0);
   IntVector var_end(0,0,0);
+  int levelIndex = 0;
   vector<IntVector> cells;
   string variable_name;
 
@@ -262,6 +264,8 @@ int main(int argc, char** argv)
       int y = atoi(argv[++i]);
       int z = atoi(argv[++i]);
       var_end = IntVector(x,y,z);
+    } else if (s == "-l" || s == "--level") {
+      levelIndex = atoi(argv[++i]);
     } else if( (s == "-h") || (s == "--help") ) {
       usage( "", argv[0] );
     } else if (s == "-uda") {
@@ -351,22 +355,22 @@ int main(int argc, char** argv)
     switch (subtype->getType()) {
     case Uintah::TypeDescription::double_type:
       printData<double>(archive, variable_name, material, use_cellIndex_file,
-                        var_start, var_end, cells,
+                        levelIndex, var_start, var_end, cells,
 		        time_start, time_end, *output_stream);
       break;
     case Uintah::TypeDescription::float_type:
       printData<float>(archive, variable_name, material, use_cellIndex_file,
-                        var_start, var_end, cells,
+                        levelIndex, var_start, var_end, cells,
 		        time_start, time_end, *output_stream);
       break;
     case Uintah::TypeDescription::int_type:
       printData<int>(archive, variable_name, material, use_cellIndex_file,
-                     var_start, var_end, cells,
+                     levelIndex, var_start, var_end, cells,
 		     time_start, time_end, *output_stream);
       break;
     case Uintah::TypeDescription::Vector:
       printData<Vector>(archive, variable_name, material, use_cellIndex_file,
-                        var_start, var_end, cells,
+                        levelIndex, var_start, var_end, cells,
 		        time_start, time_end, *output_stream);    
       break;
     case Uintah::TypeDescription::Matrix3:
