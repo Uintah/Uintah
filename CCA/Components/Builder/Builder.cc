@@ -42,6 +42,7 @@
 #include <CCA/Components/Builder/QtUtils.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <Core/Util/Environment.h>
+#include <SCIRun/CCA/CCAException.h>
 
 #include <qapplication.h>
 #include <qsplashscreen.h>
@@ -99,7 +100,15 @@ Builder::Builder()
 
 Builder::~Builder()
 {
-  std::cerr << "~Builder()" << std::endl;
+    std::cerr << "~Builder()" << std::endl;
+    // cleanup ports
+    try {
+        builderPort.services->removeProvidesPort("builderPort");
+        builderPort.services->unregisterUsesPort("builder");
+    }
+    catch (CCAException e) {
+        std::cerr << e.type() << ", " << e.message() << std::endl;
+    }
 }
 
 void Builder::setServices(const sci::cca::Services::pointer& services)
