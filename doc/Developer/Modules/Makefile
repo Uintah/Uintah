@@ -127,7 +127,7 @@ endef
 
 # Convert $< to eps scaling them down if they are too large.
 define imagetoeps
--convert -geometry '490x634>' $< EPS:$@
+-convert -density 72 -geometry '360x432>' $< EPS:$@
 endef
 
 # ########## Variables
