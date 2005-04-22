@@ -47,7 +47,9 @@
 
 
 namespace SCIRun{
+
 class BuilderWindow;
+class Builder;
 
 /**
  * \class myBuilderPort
@@ -68,6 +70,7 @@ public:
     const std::string &frameworkURL);
 
 protected:
+  friend class Builder;
   sci::cca::Services::pointer services;
   BuilderWindow* builder;
 };
