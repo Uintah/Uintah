@@ -110,7 +110,26 @@ void TransIsoHyper::initializeCMData(const Patch* patch,
   // Initialize the variables shared by all constitutive models
   // This method is defined in the ConstitutiveModel base class.
   initSharedDataForExplicit(patch, matl, new_dw);
+  // Put stuff in here to initialize each particle's
+  // constitutive model parameters and deformationMeasure
+  Matrix3 Identity, zero(0.);
+  Identity.Identity();
 
+  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
+  //ParticleVariable<Matrix3> deformationGradient, pstress;
+  ParticleVariable<double> stretch,fail;//fail_label
+  //new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,pset);
+  //new_dw->allocateAndPut(pstress,            lb->pStressLabel,            pset);
+  new_dw->allocateAndPut(fail,               pFailureLabel,               pset);
+  new_dw->allocateAndPut(stretch,            pStretchLabel,               pset);
+
+  ParticleSubset::iterator iter = pset->begin();
+  for(;iter != pset->end(); iter++){
+    //deformationGradient[*iter] = Identity;
+    //pstress[*iter] = zero;
+    fail[*iter] = 1.0 ;
+    stretch[*iter] = 1.0;
+  }
   computeStableTimestep(patch, matl, new_dw);
 }
 
@@ -127,6 +146,11 @@ void TransIsoHyper::allocateCMDataAddRequires(Task* task,
   // for the particle convert operation
   // This method is defined in the ConstitutiveModel base class.
   addSharedRForConvertExplicit(task, matlset, patches);
+  // Add requires local to this model
+  task->requires(Task::NewDW,pFailureLabel_preReloc,
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,pStretchLabel_preReloc,
+                 matlset, Ghost::None);
 }
 
 
@@ -135,15 +159,40 @@ void TransIsoHyper::allocateCMDataAdd(DataWarehouse* new_dw,
        map<const VarLabel*, ParticleVariableBase*>* newState,
                                       ParticleSubset* delset,
                                       DataWarehouse* )
-  // _________________________________________STILL EXPERIMENTAL
 {
-  // Copy the data common to all constitutive models from the particle to be 
-  // deleted to the particle to be added. 
+  // Copy the data common to all constitutive models from the particle to be
+  // deleted to the particle to be added.
   // This method is defined in the ConstitutiveModel base class.
   copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
-  
-  // Copy the data local to this constitutive model from the particles to 
+
+  // Copy the data local to this constitutive model from the particles to
   // be deleted to the particles to be added
+  //ParticleVariable<Matrix3> deformationGradient, pstress;
+  //constParticleVariable<Matrix3> o_defGrad, o_stress;
+  ParticleVariable<double> stretch,fail;
+  constParticleVariable<double> o_stretch,o_fail;
+
+  //new_dw->allocateTemporary(deformationGradient,addset);
+  //new_dw->allocateTemporary(pstress,            addset);
+  new_dw->allocateTemporary(stretch,            addset);
+  new_dw->allocateTemporary(fail,               addset);
+
+  //new_dw->get(o_defGrad,lb->pDeformationMeasureLabel_preReloc,   delset);
+  //new_dw->get(o_stress, lb->pStressLabel_preReloc,               delset);
+  new_dw->get(o_stretch,pStretchLabel_preReloc,                  delset);
+  new_dw->get(o_fail,   pFailureLabel_preReloc,                  delset);
+
+  ParticleSubset::iterator o,n = addset->begin();
+  for (o=delset->begin(); o != delset->end(); o++, n++) {
+    //deformationGradient[*n] = o_defGrad[*o];
+    //pstress[*n] = o_stress[*o];
+    stretch[*n] = o_stretch[*o];
+    fail[*n] = o_fail[*o];
+  }
+  //(*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
+  //(*newState)[lb->pStressLabel]=pstress.clone();
+  (*newState)[pStretchLabel]=stretch.clone();
+  (*newState)[pFailureLabel]=fail.clone();
 }
 
 void TransIsoHyper::addParticleState(std::vector<const VarLabel*>& from,
@@ -565,6 +614,17 @@ void TransIsoHyper::carryForward(const PatchSubset* patches,
   }
 }
 
+void TransIsoHyper::addInitialComputesAndRequires(Task* task,
+                                                    const MPMMaterial* matl,
+                                                    const PatchSet*) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->computes(pFailureLabel,              matlset);
+  task->computes(pStretchLabel,              matlset);
+  task->computes(lb->pStressLabel_preReloc,  matlset);
+  task->computes(lb->pVolumeDeformedLabel,   matlset);
+}
+
 void TransIsoHyper::addComputesAndRequires(Task* task,
                                            const MPMMaterial* matl,
                                            const PatchSet* patches) const
@@ -580,8 +640,8 @@ void TransIsoHyper::addComputesAndRequires(Task* task,
   // Other constitutive model and input dependent computes and requires
   Ghost::GhostType  gnone = Ghost::None;
 
-  task->requires(Task::OldDW, lb->pFiberDirLabel, matlset, gnone);
-  task->requires(Task::OldDW, pFailureLabel,      matlset, gnone);
+  task->requires(Task::OldDW, lb->pFiberDirLabel, matlset,gnone);
+  task->requires(Task::OldDW, pFailureLabel,      matlset,gnone);
 
   task->computes(lb->pFiberDirLabel_preReloc, matlset);
   task->computes(pStretchLabel_preReloc,      matlset);
