@@ -301,7 +301,7 @@ public:
   // patch cell over time.
   template<class T>
   void query(vector<T>& values, const string& name, int matlIndex,
-	     IntVector loc, double startTime, double endTime);
+	     IntVector loc, double startTime, double endTime, int level=-1);
 
   //////////
   // Pass back the timestep number specified in the "restart" tag of the
@@ -485,7 +485,8 @@ private:
   template<class T>
   void DataArchive::query(vector<T>& values, const string& name,
 			  int matlIndex, IntVector loc,
-			  double startTime, double endTime)
+			  double startTime, double endTime,
+                          int levelIndex /*=-1*/)
   {
     double call_start = SCIRun::Time::currentSeconds();
     
@@ -515,7 +516,7 @@ private:
     int ts = 0;
     while ((ts < (int)d_tstimes.size()) && (startTime > d_tstimes[ts]))
       ts++;
-    
+                        
     for ( ; (ts < (int)d_tstimes.size()) && (d_tstimes[ts] <= endTime); ts++) {
       double t = d_tstimes[ts];
       
@@ -525,8 +526,20 @@ private:
       // to speed this up.
       Patch* patch = NULL;
       GridP grid = queryGrid(t);
-      for (int level_nr = 0;
-	   (level_nr < grid->numLevels()) && (patch == NULL); level_nr++) {
+
+      // which levels to query between.
+      int startLevel, endLevel;
+      if (levelIndex == -1) {
+        startLevel = 0;
+        endLevel = grid->numLevels();
+      }
+      else {
+        startLevel = levelIndex;
+        endLevel = levelIndex+1;
+      }
+
+      for (int level_nr = startLevel;
+           (level_nr < endLevel) && (patch == NULL); level_nr++) {
 	const LevelP level = grid->getLevel(level_nr);
 	
 	switch (type->getType()) {
