@@ -71,6 +71,7 @@ SRCS := \
 	$(SRCDIR)/ChooseImage.tcl\
 	$(SRCDIR)/ExtractImageFilter.tcl\
 	$(SRCDIR)/PasteImageFilter.tcl\
+	$(SRCDIR)/SliceReader.tcl\
 	$(SRCDIR)/ThresholdSegmentationLevelSetImageFilter.tcl\
 #[INSERT NEW TCL FILE HERE]
 

@@ -33,9 +33,16 @@ itcl_class SCIRun_FieldsCreate_GatherFields {
         set name GatherFields
         set_defaults
     }
+
     method set_defaults {} {
         global $this-force-pointcloud
 	set $this-force-pointcloud 0
+
+        # Accumulate across executes.  No gui for this yet (PowerApp thing).
+        global $this-accumulating
+        global $this-clear
+	set $this-accumulating 0
+	set $this-clear 0
     }
 
     method ui {} {

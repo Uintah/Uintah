@@ -40,6 +40,7 @@ ifeq ($(HAVE_INSIGHT),yes)
           $(SRCDIR)/DicomImage.cc        \
           $(SRCDIR)/AnalyzeReader.cc     \
           $(SRCDIR)/AnalyzeImage.cc      \
+          $(SRCDIR)/AnalyzeSliceImageIO.cc      \
 
   LIBS := $(INSIGHT_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY)
 endif
