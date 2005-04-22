@@ -226,10 +226,6 @@ public:
   typedef ImageMeshCell Cell;
   typedef Face Elem;
 
-  // Backwards compatability with interp fields
-  typedef ImageMeshINodeIndex INodeIndex;
-  typedef ImageMeshIFaceIndex IFaceIndex;
-
   ImageMesh()
     : min_i_(0), min_j_(0),
       ni_(1), nj_(1) {}
