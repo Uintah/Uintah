@@ -91,22 +91,22 @@ BuilderService::connect(const sci::cca::ComponentID::pointer& c1,
     }
     ComponentInstance* comp1 = framework->lookupComponent(cid1->name);
     if (!comp1) {
-        throw CCAException("Unknown ComponentInstance");
+        throw CCAException("Unknown ComponentInstance " + cid1->name);
     }
     ComponentInstance* comp2 = framework->lookupComponent(cid2->name);
     if (!comp2) {
-        throw CCAException("Unknown ComponentInstance");
+        throw CCAException("Unknown ComponentInstance " + cid2->name);
     }
     PortInstance* pr1 = comp1->getPortInstance(port1);
     if (!pr1) {
-        throw CCAException("Unknown port");
+        throw CCAException("Unknown port " + port1);
     }
     PortInstance* pr2 = comp2->getPortInstance(port2);
     if (!pr2) {
-        throw CCAException("Unknown port");
+        throw CCAException("Unknown port " + port2);
     }
     if (!pr1->connect(pr2)) {
-        throw CCAException("Cannot connect");
+        throw CCAException("Cannot connect " + port1 + " with " + port2);
     }
     sci::cca::ConnectionID::pointer conn(new ConnectionID(c1, port1, c2, port2));
     framework->connIDs.push_back(conn);
