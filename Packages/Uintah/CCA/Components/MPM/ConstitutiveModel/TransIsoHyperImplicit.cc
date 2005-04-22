@@ -11,7 +11,11 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Packages/Uintah/Core/Math/TangentModulusTensor.h> //added this for stiffness
+#include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
+#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
@@ -117,37 +121,42 @@ void TransIsoHyperImplicit::initializeCMData(const Patch* patch,
 
    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
    ParticleVariable<Matrix3> deformationGradient, pstress;
-   ParticleVariable<double> pstretch,pfail;//fail_label
+   ParticleVariable<double> stretch,fail;//fail_label
    ParticleVariable<double> pIntHeatRate;
 
    new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,pset);
-   new_dw->allocateAndPut(pstress,lb->pStressLabel,pset);
-   new_dw->allocateAndPut(pIntHeatRate,lb->pInternalHeatRateLabel,      pset);
-   new_dw->allocateAndPut(pstretch,           pStretchLabel,   pset);
-   new_dw->allocateAndPut(pfail,              pFailureLabel,   pset);
+   new_dw->allocateAndPut(pstress,            lb->pStressLabel,            pset);
+   new_dw->allocateAndPut(pIntHeatRate,       lb->pInternalHeatRateLabel,  pset);
+   new_dw->allocateAndPut(stretch,            pStretchLabel,               pset);
+   new_dw->allocateAndPut(fail,               pFailureLabel,               pset);
 
    for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++) {
           deformationGradient[*iter] = Identity;
           pstress[*iter] = zero;
-	  pstretch[*iter] = 1.0;
-	  pfail[*iter] = 0.0;
 	  pIntHeatRate[*iter] = 0.0;
+	  stretch[*iter] = 1.0;
+	  fail[*iter] = 0.0;
    }
 
 }
-
 void TransIsoHyperImplicit::allocateCMDataAddRequires(Task* task,
                                                     const MPMMaterial* matl,
                                                     const PatchSet* ,
                                                     MPMLabel* lb) const
 {
-
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, 
+  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc,
                  matlset, Ghost::None);
-  task->requires(Task::NewDW,lb->pStressLabel_preReloc, 
+  task->requires(Task::NewDW,lb->pStressLabel_preReloc,
                  matlset, Ghost::None);
+  task->requires(Task::NewDW,pFailureLabel_preReloc,
+                 matlset, Ghost::None);
+  task->requires(Task::NewDW,pStretchLabel_preReloc,
+                 matlset, Ghost::None);
+
+  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc,
+                 matlset,Ghost::None);
 }
 
 
@@ -160,44 +169,48 @@ void TransIsoHyperImplicit::allocateCMDataAdd(DataWarehouse* new_dw,
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
   Matrix3 zero(0.);
-  
+
   ParticleVariable<Matrix3> deformationGradient, pstress;
-  ParticleVariable<double> pIntHeatRate;
   constParticleVariable<Matrix3> o_defGrad, o_stress;
+  ParticleVariable<double> pIntHeatRate;
   constParticleVariable<double> o_pIntHeatRate;
+  ParticleVariable<double> stretch,fail;
+  constParticleVariable<double> o_stretch,o_fail;
 
   new_dw->allocateTemporary(deformationGradient,addset);
-  new_dw->allocateTemporary(pstress,addset);
+  new_dw->allocateTemporary(pstress,            addset);
   new_dw->allocateTemporary(pIntHeatRate,       addset);
+  new_dw->allocateTemporary(stretch,            addset);
+  new_dw->allocateTemporary(fail,               addset);
 
-  new_dw->get(o_defGrad,lb->pDeformationMeasureLabel_preReloc,delset);
-  new_dw->get(o_stress,lb->pStressLabel_preReloc,delset);
-  new_dw->get(o_pIntHeatRate,lb->pInternalHeatRateLabel_preReloc,delset);
+  new_dw->get(o_defGrad,     lb->pDeformationMeasureLabel_preReloc,   delset);
+  new_dw->get(o_stress,      lb->pStressLabel_preReloc,               delset);
+  new_dw->get(o_pIntHeatRate,lb->pInternalHeatRateLabel_preReloc,     delset);
+  new_dw->get(o_stretch,     pStretchLabel_preReloc,                  delset);
+  new_dw->get(o_fail,        pFailureLabel_preReloc,                  delset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
     deformationGradient[*n] = o_defGrad[*o];
     pstress[*n] = o_stress[*o];
     pIntHeatRate[*n] = o_pIntHeatRate[*o];
+    stretch[*n] = o_stretch[*o];
+    fail[*n] = o_fail[*o];
   }
-  
   (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
   (*newState)[lb->pStressLabel]=pstress.clone();
   (*newState)[lb->pInternalHeatRateLabel]=pIntHeatRate.clone();
-
+  (*newState)[pStretchLabel]=stretch.clone();
+  (*newState)[pFailureLabel]=fail.clone();
 }
 
 void TransIsoHyperImplicit::addParticleState(std::vector<const VarLabel*>& from,
                                    std::vector<const VarLabel*>& to)
 {
-   from.push_back(lb->pDeformationMeasureLabel);
-   from.push_back(lb->pStressLabel);
    from.push_back(lb->pFiberDirLabel);
    from.push_back(pStretchLabel);
    from.push_back(pFailureLabel);//fail_labels
 
-   to.push_back(lb->pDeformationMeasureLabel_preReloc);
-   to.push_back(lb->pStressLabel_preReloc);
    to.push_back(lb->pFiberDirLabel_preReloc);
    to.push_back(pStretchLabel_preReloc);
    to.push_back(pFailureLabel_preReloc);//fail_labels
@@ -229,7 +242,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 //___________________________________COMPUTES THE STRESS ON ALL THE PARTICLES IN A GIVEN PATCH FOR A GIVEN MATERIAL
 //___________________________________CALLED ONCE PER TIME STEP
 //___________________________________CONTAINS A COPY OF computeStableTimestep
-{
+{cout << "two";
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
 //    cerr <<"Doing computeStressTensor on " << patch->getID()
@@ -294,13 +307,9 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 
     new_dw->allocateAndPut(pstress,         lb->pStressLabel_preReloc, pset);
     new_dw->allocateAndPut(pvolume_deformed,lb->pVolumeDeformedLabel,  pset);
-    new_dw->allocateAndPut(deformationGradient_new,
-                           lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->allocateTemporary(deformationGradient_new,pset);
     new_dw->allocateAndPut(stretch,         pStretchLabel_preReloc,     pset);
     new_dw->allocateAndPut(fail,            pFailureLabel_preReloc,     pset);
-
-    old_dw->get(delT, lb->delTLabel, getLevel(patches));
-
 
    //_____________________________________________material parameters
     double Bulk  = d_initialData.Bulk;
@@ -387,6 +396,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
           Bnl[1][3*k+2] = 0.;
           Bnl[2][3*k+2] = d_S[k][2]*oodx[2];
         }
+	cout << "one";
         // Find the stressTensor using the displacement gradient
         deformationGradientInc = dispGrad + Identity;
         // Update the deformation gradient tensor to its time n+1 value.
@@ -1172,7 +1182,6 @@ void TransIsoHyperImplicit::addComputesAndRequires(Task* task,
   task->computes(lb->pVolumeDeformedLabel,   matlset);
   task->computes(lb->pFiberDirLabel_preReloc,matlset);
   task->computes(pStretchLabel_preReloc,     matlset);
-//  task->computes(pFailureLabel_preReloc,   matlset);//fail_labels
 }
 
 void TransIsoHyperImplicit::addComputesAndRequires(Task* task,
@@ -1189,6 +1198,7 @@ void TransIsoHyperImplicit::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, lb->pFiberDirLabel,          matlset, Ghost::None);
   task->requires(Task::OldDW, pFailureLabel,               matlset, Ghost::None);
   //
+  task->computes(lb->pInternalHeatRateLabel_preReloc,   matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(lb->pVolumeDeformedLabel,              matlset);
   task->computes(lb->pStressLabel_preReloc,             matlset);
@@ -1198,7 +1208,7 @@ void TransIsoHyperImplicit::addComputesAndRequires(Task* task,
 }
 
 // The "CM" versions use the pressure-volume relationship of the CNH model
-double TransIsoHyperImplicit::computeRhoMicroCM(double pressure, 
+double TransIsoHyperImplicit::computeRhoMicroCM(double pressure,
                                       const double p_ref,
                                       const MPMMaterial* matl)
 {
@@ -1207,7 +1217,7 @@ double TransIsoHyperImplicit::computeRhoMicroCM(double pressure,
   
   double p_gauge = pressure - p_ref;
   double rho_cur;
- 
+
   if(d_useModifiedEOS && p_gauge < 0.0) {
     double A = p_ref;           // MODIFIED EOS
     double n = p_ref/bulk;
