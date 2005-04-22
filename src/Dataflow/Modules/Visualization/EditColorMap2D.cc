@@ -543,7 +543,7 @@ EditColorMap2D::load_file() {
   // Return if the suffix is wrong
   if (fn.substr(len - suffix.size(), suffix.size()) != suffix) return;
 
-  BinaryPiostream *stream = new BinaryPiostream(fn, Piostream::Read);
+  Piostream *stream = auto_istream(fn, this);
   if (!stream) {
     error("Error reading file '" + fn + "'.");
     return;
