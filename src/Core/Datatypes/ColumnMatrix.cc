@@ -282,18 +282,24 @@ void ColumnMatrix::io(Piostream& stream)
 {
     int version=stream.begin_class("ColumnMatrix", COLUMNMATRIX_VERSION);
     
-    if (version > 1) {
+    if (version > 1)
+    {
       // New version inherits from Matrix
       Matrix::io(stream);
     }
 
     stream.io(nrows_);
-    if(stream.reading()){
-      data=scinew double[nrows_];
+
+    if (stream.reading())
+    {
+      data = scinew double[nrows_];
     }
-    int i;
-    for(i=0; i<nrows_; i++)
-      stream.io(data[i]);
+
+    if (!stream.block_io(data, sizeof(double), nrows_))
+    {
+      for (int i=0; i<nrows_; i++)
+        stream.io(data[i]);
+    }
     stream.end_class();
 }
 
