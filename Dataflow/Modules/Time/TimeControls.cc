@@ -34,6 +34,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Math/MiscMath.h>
 
 namespace SCIRun {
 using namespace std;
@@ -184,7 +185,7 @@ TimeControls::set_started(double t)
 {
   time_.set_started(t);
   ostringstream str;
-  str << id << " do_update " << (int)round(time_.view_started());
+  str << id << " do_update " << Round(time_.view_started());
   gui->execute(str.str());
 }
 
@@ -199,7 +200,7 @@ TimeControls::set_time(double t)
 {
   time_.set_now(t);
   ostringstream str;
-  str << id << " do_update " << (int)round(time_.view_elapsed_since_start());
+  str << id << " do_update " << Round(time_.view_elapsed_since_start());
   gui->execute(str.str());
   gui->execute("update idletasks");
 }
