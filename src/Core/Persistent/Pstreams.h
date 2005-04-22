@@ -84,6 +84,9 @@ public:
   virtual void io(double&);
   virtual void io(float&);
   virtual void io(string& str);
+
+  virtual bool supports_block_io() { return (version() > 1); }
+  virtual bool block_io(void*, size_t, size_t);
 };
 
 
@@ -111,6 +114,9 @@ public:
   virtual void io(unsigned long long&);
   virtual void io(double&);
   virtual void io(float&);
+
+  virtual bool supports_block_io() { return false; }
+  virtual bool block_io(void*, size_t, size_t) { return false; }
 };
 
 
@@ -188,7 +194,7 @@ public:
   virtual void io(string& str);
 
   virtual bool supports_block_io() { return true; }
-  virtual void block_io(void*, size_t, size_t);
+  virtual bool block_io(void*, size_t, size_t);
 };
 
 
@@ -218,6 +224,9 @@ public:
   virtual void io(double&);
   virtual void io(float&);
   virtual void io(string& str);
+
+  virtual bool supports_block_io() { return true; }
+  virtual bool block_io(void*, size_t, size_t);
 };
 
 

@@ -37,6 +37,7 @@
  * 
  */
 
+#include <Core/Persistent/Persistent.h>
 #include <Core/Persistent/PersistentSTL.h>
 
 namespace SCIRun {
@@ -63,5 +64,130 @@ template <> void Pio(Piostream& stream, vector<bool>& data)
 
   stream.end_class();  
 }
+
+
+template <>
+void Pio(Piostream& stream, vector<int>& data)
+{ 
+  if (stream.reading() && stream.peek_class() == "Array1")
+  {
+    stream.begin_class("Array1", STLVECTOR_VERSION);
+  }
+  else
+  {
+    stream.begin_class("STLVector", STLVECTOR_VERSION);
+  }
+  
+  int size=(int)data.size();
+  stream.io(size);
+  
+  if(stream.reading()){
+    data.resize(size);
+  }
+
+  if (!stream.block_io(&data.front(), sizeof(int), data.size()))
+  {
+    for (int i = 0; i < size; i++)
+    {
+      Pio(stream, data[i]);
+    }
+  }
+
+  stream.end_class();  
+}
+
+
+template <>
+void Pio(Piostream& stream, vector<unsigned int>& data)
+{ 
+  if (stream.reading() && stream.peek_class() == "Array1")
+  {
+    stream.begin_class("Array1", STLVECTOR_VERSION);
+  }
+  else
+  {
+    stream.begin_class("STLVector", STLVECTOR_VERSION);
+  }
+  
+  int size=(int)data.size();
+  stream.io(size);
+  
+  if(stream.reading()){
+    data.resize(size);
+  }
+
+  if (!stream.block_io(&data.front(), sizeof(unsigned int), data.size()))
+  {
+    for (int i = 0; i < size; i++)
+    {
+      Pio(stream, data[i]);
+    }
+  }
+
+  stream.end_class();  
+}
+
+
+template <> 
+void Pio(Piostream& stream, vector<float>& data)
+{ 
+  if (stream.reading() && stream.peek_class() == "Array1")
+  {
+    stream.begin_class("Array1", STLVECTOR_VERSION);
+  }
+  else
+  {
+    stream.begin_class("STLVector", STLVECTOR_VERSION);
+  }
+  
+  int size=(int)data.size();
+  stream.io(size);
+  
+  if(stream.reading()){
+    data.resize(size);
+  }
+
+  if (!stream.block_io(&data.front(), sizeof(float), data.size()))
+  {
+    for (int i = 0; i < size; i++)
+    {
+      Pio(stream, data[i]);
+    }
+  }
+
+  stream.end_class();  
+}
+
+
+template <> 
+void Pio(Piostream& stream, vector<double>& data)
+{ 
+  if (stream.reading() && stream.peek_class() == "Array1")
+  {
+    stream.begin_class("Array1", STLVECTOR_VERSION);
+  }
+  else
+  {
+    stream.begin_class("STLVector", STLVECTOR_VERSION);
+  }
+  
+  int size=(int)data.size();
+  stream.io(size);
+  
+  if(stream.reading()){
+    data.resize(size);
+  }
+
+  if (!stream.block_io(&data.front(), sizeof(double), data.size()))
+  {
+    for (int i = 0; i < size; i++)
+    {
+      Pio(stream, data[i]);
+    }
+  }
+
+  stream.end_class();  
+}
+
 
 } // End namespace SCIRun
