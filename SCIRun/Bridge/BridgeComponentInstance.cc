@@ -106,7 +106,7 @@ sci::cca::Port::pointer BridgeComponentInstance::getCCAPort(const std::string& n
   CCAPortInstance* pr = dynamic_cast<CCAPortInstance*>(iter->second);
   if(pr == NULL)
     return sci::cca::Port::pointer(0);
-  if(pr->porttype != CCAPortInstance::Uses)
+  if(pr->porttype == CCAPortInstance::Provides)
     throw CCAException("Cannot call getPort on a Provides port");
   pr->incrementUseCount();
   if(pr->connections.size() != 1)
@@ -197,7 +197,6 @@ void BridgeComponentInstance::releasePort(const std::string& name, const modelT 
     
     iter = ports.find(name);
     if(iter == ports.end()){
-      cerr << "Released an unknown port: " << name << '\n';
       throw CCAException("Released an unknown port: "+name);
     }
     cpr = dynamic_cast<CCAPortInstance*>(iter->second);
@@ -261,8 +260,7 @@ void BridgeComponentInstance::registerUsesPort(const std::string& portName,
       if(cpr->porttype == CCAPortInstance::Provides)
 	throw CCAException("name conflict between uses and provides ports");
       else {
-	cerr << "registerUsesPort called twice, instance=" << instanceName << ", portName = " << portName << ", portType = " << portType << '\n';
-	throw CCAException("registerUsesPort called twice");
+        throw CCAException("registerUsesPort called twice for " + portName + " " + portType + " " + instanceName);
       } 
     }
     ports.insert(make_pair(portName, new CCAPortInstance(portName, portType, sci::cca::TypeMap::pointer(0), CCAPortInstance::Uses)));
@@ -278,7 +276,7 @@ void BridgeComponentInstance::registerUsesPort(const std::string& portName,
 	throw InternalError("name conflict between uses and provides ports");
       else {
 	cerr << "registerUsesPort called twice, instance=" << instanceName << ", portName = " << portName << ", portType = " << portType << '\n';
-	throw InternalError("registerUsesPort called twice");
+	throw InternalError("registerUsesPort called twice for " + portName);
       }     
     }
     ports.insert(make_pair(portName, new BabelPortInstance(portName, portType, 0, BabelPortInstance::Uses)));
@@ -329,8 +327,7 @@ void BridgeComponentInstance::unregisterUsesPort(const std::string& portName, co
       }
     }
     else{
-      cerr<<"port name not found, unregisterUsesPort not done\n";
-      throw CCAException("port name not found");
+      throw CCAException("port name " + portName +" not found, cannot unregister uses port");
     }
     break;
 
@@ -347,8 +344,7 @@ void BridgeComponentInstance::unregisterUsesPort(const std::string& portName, co
       }
     }
     else{
-      cerr<<"port name not found, unregisterUsesPort not done\n";
-      throw CCAException("port name not found");
+      throw CCAException("port name " + portName +" not found, cannot unregister uses port");
     }
     break;
 
@@ -388,7 +384,7 @@ void BridgeComponentInstance::addProvidesPort(void* port,
       if(cpr->porttype == CCAPortInstance::Uses)
 	throw CCAException("name conflict between uses and provides ports");
       else
-	throw CCAException("addProvidesPort called twice");
+	throw CCAException("addProvidesPort called twice for " + portName);
     }
 
     ccaport = reinterpret_cast<sci::cca::Port::pointer*>(port);
@@ -406,7 +402,7 @@ void BridgeComponentInstance::addProvidesPort(void* port,
       if(bpr->porttype == BabelPortInstance::Uses)
 	throw InternalError("name conflict between uses and provides ports");
       else
-	throw InternalError("addProvidesPort called twice");
+	throw InternalError("addProvidesPort called twice for " + portName);
     }
     babelport = reinterpret_cast<gov::cca::Port*>(port);
     if(!babelport)
