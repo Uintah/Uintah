@@ -680,9 +680,12 @@ DenseMatrix::io(Piostream& stream)
 
   if (!split)
   {
-    for (size_t i = 0; i < (size_t)(nrows_ * ncols_); i++)
+    if (!stream.block_io(dataptr_, sizeof(double), (size_t)(nrows_ * ncols_)))
     {
-      stream.io(dataptr_[i]);
+      for (size_t i = 0; i < (size_t)(nrows_ * ncols_); i++)
+      {
+        stream.io(dataptr_[i]);
+      }
     }
   }
   stream.end_cheap_delim();

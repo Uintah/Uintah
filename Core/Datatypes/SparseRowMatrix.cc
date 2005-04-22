@@ -567,24 +567,33 @@ SparseRowMatrix::io(Piostream& stream)
   stream.io(nnz);
   if (stream.reading())
   {
-    a=new double[nnz];
-    columns=new int[nnz];
-    rows=new int[nrows_+1];
+    a = scinew double[nnz];
+    columns = scinew int[nnz];
+    rows = scinew int[nrows_+1];
   }
   int i;
   stream.begin_cheap_delim();
-  for (i=0;i<=nrows_;i++)
-    stream.io(rows[i]);
+  if (!stream.block_io(rows, sizeof(int), nrows_+1))
+  {
+    for (i=0;i<=nrows_;i++)
+      stream.io(rows[i]);
+  }
   stream.end_cheap_delim();
 
   stream.begin_cheap_delim();
-  for (i=0;i<nnz;i++)
-    stream.io(columns[i]);
+  if (!stream.block_io(columns, sizeof(int), nnz))
+  {
+    for (i=0;i<nnz;i++)
+      stream.io(columns[i]);
+  }
   stream.end_cheap_delim();
 
   stream.begin_cheap_delim();
-  for (i=0;i<nnz;i++)
-    stream.io(a[i]);
+  if (!stream.block_io(a, sizeof(double), nnz))
+  {
+    for (i=0;i<nnz;i++)
+      stream.io(a[i]);
+  }
   stream.end_cheap_delim();
 
   stream.end_class();
