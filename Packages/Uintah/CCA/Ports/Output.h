@@ -87,7 +87,7 @@ class SimulationState;
 
     //////////
     // Call this after the timestep has been executed.
-    virtual void executedTimestep(double delt) = 0;
+    virtual void executedTimestep(double delt, const GridP&) = 0;
      
       //////////
       // Insert Documentation Here:
