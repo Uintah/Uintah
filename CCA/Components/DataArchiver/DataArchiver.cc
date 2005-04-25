@@ -949,12 +949,9 @@ void DataArchiver::outputTimestep(Dir& baseDir,
 				  double /*time*/, double delt,
 				  const GridP& grid,
 				  string* pTimestepDir /* passed back */,
-				  bool hasGlobals /* = false */)
+				  bool /* hasGlobals  = false */)
 {
   dbg << "begin outputTimestep()\n";
-
-  // to check for output nth proc
-  LoadBalancer* lb = dynamic_cast<LoadBalancer*>(getPort("load balancer")); 
 
   int numLevels = grid->numLevels();
   // time should be currentTime+delt
@@ -970,15 +967,182 @@ void DataArchiver::outputTimestep(Dir& baseDir,
     try {
       tdir = baseDir.createSubdir(tname.str());
  
-      // make a timestep.xml file for this timestep
+    } catch(ErrnoException& e) {
+      if(e.getErrno() != EEXIST)
+	throw;
+      tdir = baseDir.getSubdir(tname.str());
+    }
+    
+    // Create the directory for this level, if necessary
+    for(int l=0;l<numLevels;l++){
+      ostringstream lname;
+      lname << "l" << l;
+      Dir ldir;
+      try {
+	ldir = tdir.createSubdir(lname.str());
+      } catch(ErrnoException& e) {
+	if(e.getErrno() != EEXIST)
+	  throw;
+	ldir = tdir.getSubdir(lname.str());
+      }
+    }
+  }
+}
+
+void DataArchiver::reEvaluateOutputTimestep(double /*orig_delt*/, double new_delt)
+{
+  // call this on a timestep restart.  If lowering the delt goes beneath the 
+  // threshold, mark it as not an output timestep
+
+  // this is set in finalizeTimestep to time+delt
+  d_tempElapsedTime = d_sharedState->getElapsedTime() + new_delt;
+
+  if (d_wasOutputTimestep && d_outputInterval != 0.0 ) {
+    if (d_tempElapsedTime < d_nextOutputTime)
+      d_wasOutputTimestep = false;
+  }
+  if (d_wasCheckpointTimestep && d_checkpointInterval != 0.0) {
+    if (d_tempElapsedTime < d_nextCheckpointTime) {
+      d_wasCheckpointTimestep = false;    
+      d_checkpointTimestepDirs.pop_back();
+    }
+  }
+}
+
+      
+void
+DataArchiver::executedTimestep(double delt, const GridP& grid)
+{
+  // double time = d_sharedState->getElapsedTime();
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  // if this was an output/checkpoint timestep,
+  // determine when the next one will be.
+
+  // don't do this in beginOutputTimestep because the timestep might restart
+  // and we need to have the output happen exactly when we need it.
+  if (d_wasOutputTimestep) {
+    if (d_outputInterval != 0.0) {
+      // output timestep
+      while (d_tempElapsedTime >= d_nextOutputTime)
+	d_nextOutputTime+=d_outputInterval;
+    }
+    else if (d_outputTimestepInterval != 0) {
+      while (timestep >= d_nextOutputTimestep) {
+	d_nextOutputTimestep+=d_outputTimestepInterval;
+      }
+    }
+  }
+
+  // to check for output nth proc
+  LoadBalancer* lb = dynamic_cast<LoadBalancer*>(getPort("load balancer")); 
+
+  if (d_wasCheckpointTimestep) {
+    if (d_checkpointInterval != 0.0) {
+      while (d_tempElapsedTime >= d_nextCheckpointTime)
+	d_nextCheckpointTime += d_checkpointInterval;
+    }
+    else if (d_checkpointTimestepInterval != 0) {
+      while (timestep >= d_nextCheckpointTimestep)
+	d_nextCheckpointTimestep += d_checkpointTimestepInterval;
+    }
+    if (d_checkpointWalltimeInterval != 0) {
+      while (Time::currentSeconds() >= d_nextCheckpointWalltime)
+	d_nextCheckpointWalltime += d_checkpointWalltimeInterval;
+    }
+  }
+
+
+  // start dumping files to disk
+  vector<Dir*> baseDirs;
+  if (d_wasOutputTimestep)
+    baseDirs.push_back(&d_dir);
+  if (d_wasCheckpointTimestep)
+    baseDirs.push_back(&d_checkpointsDir);
+
+  ostringstream tname;
+  tname << "t" << setw(5) << setfill('0') << timestep;
+
+  for (int i = 0; i < static_cast<int>(baseDirs.size()); i++) {
+    
+    // Reference this timestep in index.xml
+    if(d_writeMeta){
+      string iname = baseDirs[i]->getName()+"/index.xml";
+
+#ifdef PVFS_FIX
+      // RNJ - If we already have the XML Index Doc
+      //       loaded, don't load it again.
+
+      ProblemSpecP indexDoc;
+      bool hasGlobals = false;
+
+      if ( baseDirs[i] == &d_dir ) {
+	indexDoc = d_XMLIndexDoc;
+	d_XMLIndexDoc = NULL;
+      }
+      else if ( baseDirs[i] == &d_checkpointsDir ) {
+	indexDoc = d_CheckpointXMLIndexDoc;
+	d_CheckpointXMLIndexDoc = NULL;
+        hasGlobals = d_checkpointReductionLabels.size() > 0;
+      }
+      else {
+	throw "DataArchiver::executedTimestep(): Unknown directory!";
+      }
+#else
+      ProblemSpecP indexDoc = loadDocument(iname);
+#endif
+
+      // if this timestep isn't already in index.xml, add it in
+      if (indexDoc == 0)
+        continue; // output timestep but no variables scheduled to be saved.
+      ASSERT(indexDoc != 0);
+      ProblemSpecP ts = indexDoc->findBlock("timesteps");
+      if(ts == 0){
+	ts = indexDoc->appendChild("timesteps");
+      }
+      bool found=false;
+      for(ProblemSpecP n = ts->getFirstChild(); n != 0; n=n->getNextSibling()){
+	if(n->getNodeName() == "timestep") {
+	  int readtimestep;
+	  if(!n->get(readtimestep))
+	    throw InternalError("Error parsing timestep number");
+	  if(readtimestep == timestep){
+	    found=true;
+	    break;
+	  }
+	}
+      }
+      if(!found){
+        // add timestep info
+	string timestepindex = tname.str()+"/timestep.xml";      
+	
+	ProblemSpecP newElem = ts->appendChild("timestep",0,1);
+	ostringstream value;
+	value << timestep;
+	newElem->appendText(value.str().c_str());
+
+	newElem->setAttribute("href", timestepindex.c_str());
+	ts->appendText("\n");
+      }
+      
+      ofstream indexOut(iname.c_str());
+      if (!indexOut) {
+	throw InternalError("DataArchiver::executedTimestep(): The file \"" + \
+			    iname + "\" could not be opened for writing!");
+      }
+      indexOut << indexDoc << endl;
+      indexDoc->releaseDocument();
+
+      // make a timestep.xml file for this timestep 
+      // we need to do it here in case there is a timestesp restart
       ProblemSpecP rootElem = ProblemSpec::createDocument("Uintah_timestep");
 
       ProblemSpecP timeElem = rootElem->appendChild("Time");
       timeElem->appendElement("timestepNumber", timestep);
       timeElem->appendElement("currentTime", d_tempElapsedTime);
       timeElem->appendElement("delt", delt);
-
+      
       ProblemSpecP gridElem = rootElem->appendChild("Grid");
+      int numLevels = grid->numLevels();
       gridElem->appendElement("numLevels", numLevels);
       for(int l = 0;l<numLevels;l++){
 	LevelP level = grid->getLevel(l);
@@ -991,6 +1155,7 @@ void DataArchiver::outputTimestep(Dir& baseDir,
 	levelElem->appendElement("cellspacing", level->dCell(),0,2);
 	levelElem->appendElement("anchor", level->getAnchor(),0,2);
 	levelElem->appendElement("id", level->getID(),0,2);
+
 
 	Level::const_patchIterator iter;
 
@@ -1046,7 +1211,7 @@ void DataArchiver::outputTimestep(Dir& baseDir,
 	dataElem->appendText("\n");
       }
 	 
-      string name = tdir.getName()+"/timestep.xml";
+      string name = baseDirs[i]->getName()+"/"+tname.str()+"/timestep.xml";
       ofstream out(name.c_str());
       if (!out) {
 	throw InternalError("DataArchiver::outputTimestep(): The file \"" + \
@@ -1054,165 +1219,7 @@ void DataArchiver::outputTimestep(Dir& baseDir,
       }
       out << rootElem << endl;
       rootElem->releaseDocument();
-    } catch(ErrnoException& e) {
-      if(e.getErrno() != EEXIST)
-	throw;
-      tdir = baseDir.getSubdir(tname.str());
-    }
-    
-    // Create the directory for this level, if necessary
-    for(int l=0;l<numLevels;l++){
-      ostringstream lname;
-      lname << "l" << l;
-      Dir ldir;
-      try {
-	ldir = tdir.createSubdir(lname.str());
-      } catch(ErrnoException& e) {
-	if(e.getErrno() != EEXIST)
-	  throw;
-	ldir = tdir.getSubdir(lname.str());
-      }
-    }
-  }
-}
 
-void DataArchiver::reEvaluateOutputTimestep(double /*orig_delt*/, double new_delt)
-{
-  // call this on a timestep restart.  If lowering the delt goes beneath the 
-  // threshold, mark it as not an output timestep
-
-  // this is set in finalizeTimestep to time+delt
-  d_tempElapsedTime = d_sharedState->getElapsedTime() + new_delt;
-
-  if (d_wasOutputTimestep && d_outputInterval != 0.0 ) {
-    if (d_tempElapsedTime < d_nextOutputTime)
-      d_wasOutputTimestep = false;
-  }
-  if (d_wasCheckpointTimestep && d_checkpointInterval != 0.0) {
-    if (d_tempElapsedTime < d_nextCheckpointTime) {
-      d_wasCheckpointTimestep = false;    
-      d_checkpointTimestepDirs.pop_back();
-    }
-  }
-}
-
-      
-void
-DataArchiver::executedTimestep(double /*delt*/)
-{
-  // double time = d_sharedState->getElapsedTime();
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-  // if this was an output/checkpoint timestep,
-  // determine when the next one will be.
-
-  // don't do this in beginOutputTimestep because the timestep might restart
-  // and we need to have the output happen exactly when we need it.
-  if (d_wasOutputTimestep) {
-    if (d_outputInterval != 0.0) {
-      // output timestep
-      while (d_tempElapsedTime >= d_nextOutputTime)
-	d_nextOutputTime+=d_outputInterval;
-    }
-    else if (d_outputTimestepInterval != 0) {
-      while (timestep >= d_nextOutputTimestep) {
-	d_nextOutputTimestep+=d_outputTimestepInterval;
-      }
-    }
-  }
-
-  if (d_wasCheckpointTimestep) {
-    if (d_checkpointInterval != 0.0) {
-      while (d_tempElapsedTime >= d_nextCheckpointTime)
-	d_nextCheckpointTime += d_checkpointInterval;
-    }
-    else if (d_checkpointTimestepInterval != 0) {
-      while (timestep >= d_nextCheckpointTimestep)
-	d_nextCheckpointTimestep += d_checkpointTimestepInterval;
-    }
-    if (d_checkpointWalltimeInterval != 0) {
-      while (Time::currentSeconds() >= d_nextCheckpointWalltime)
-	d_nextCheckpointWalltime += d_checkpointWalltimeInterval;
-    }
-  }
-
-
-  // start dumping files to disk
-  vector<Dir*> baseDirs;
-  if (d_wasOutputTimestep)
-    baseDirs.push_back(&d_dir);
-  if (d_wasCheckpointTimestep)
-    baseDirs.push_back(&d_checkpointsDir);
-
-  ostringstream tname;
-  tname << "t" << setw(5) << setfill('0') << timestep;
-
-  for (int i = 0; i < static_cast<int>(baseDirs.size()); i++) {
-    
-    // Reference this timestep in index.xml
-    if(d_writeMeta){
-      string iname = baseDirs[i]->getName()+"/index.xml";
-
-#ifdef PVFS_FIX
-      // RNJ - If we already have the XML Index Doc
-      //       loaded, don't load it again.
-
-      ProblemSpecP indexDoc;
-
-      if ( baseDirs[i] == &d_dir ) {
-	indexDoc = d_XMLIndexDoc;
-	d_XMLIndexDoc = NULL;
-      }
-      else if ( baseDirs[i] == &d_checkpointsDir ) {
-	indexDoc = d_CheckpointXMLIndexDoc;
-	d_CheckpointXMLIndexDoc = NULL;
-      }
-      else {
-	throw "DataArchiver::executedTimestep(): Unknown directory!";
-      }
-#else
-      ProblemSpecP indexDoc = loadDocument(iname);
-#endif
-
-      // if this timestep isn't already in index.xml, add it in
-      if (indexDoc == 0)
-        continue; // output timestep but no variables scheduled to be saved.
-      ASSERT(indexDoc != 0);
-      ProblemSpecP ts = indexDoc->findBlock("timesteps");
-      if(ts == 0){
-	ts = indexDoc->appendChild("timesteps");
-      }
-      bool found=false;
-      for(ProblemSpecP n = ts->getFirstChild(); n != 0; n=n->getNextSibling()){
-	if(n->getNodeName() == "timestep") {
-	  int readtimestep;
-	  if(!n->get(readtimestep))
-	    throw InternalError("Error parsing timestep number");
-	  if(readtimestep == timestep){
-	    found=true;
-	    break;
-	  }
-	}
-      }
-      if(!found){
-        // add timestep info
-	string timestepindex = tname.str()+"/timestep.xml";      
-	
-	ProblemSpecP newElem = ts->appendChild("timestep",0,1);
-	ostringstream value;
-	value << timestep;
-	newElem->appendText(value.str().c_str());
-
-	newElem->setAttribute("href", timestepindex.c_str());
-	ts->appendText("\n");
-      }
-      
-      ofstream indexOut(iname.c_str());
-      if (!indexOut) {
-	throw InternalError("DataArchiver::executedTimestep(): The file \"" + \
-			    iname + "\" could not be opened for writing!");
-      }
-      indexOut << indexDoc << endl;
-      indexDoc->releaseDocument();
     }
   }
 
