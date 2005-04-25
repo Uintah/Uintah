@@ -51,6 +51,8 @@
 
 #include <Core/Algorithms/DataIO/AnalyzeSliceImageIO.h>
 
+#include "itkCastImageFilter.h"
+
 //namespace SCITeem {
 namespace Insight {
 
@@ -68,6 +70,7 @@ private:
   GuiInt          size_1_;
   GuiInt          size_2_;
   GuiInt          slice_;
+  GuiInt          cast_output_;
 
   GuiFilename     filename_;
 
@@ -97,6 +100,7 @@ SliceReader::SliceReader(SCIRun::GuiContext* ctx) :
   size_1_(ctx->subVar("size_1")),
   size_2_(ctx->subVar("size_2")),
   slice_(ctx->subVar("slice")),
+  cast_output_(ctx->subVar("cast_output")),
   filename_(ctx->subVar("filename")),
   read_handle_(0),
   fp_(0),
@@ -354,7 +358,26 @@ SliceReader::create_slice(ITKDatatype* nd)
     return false;
   }
 
-  nd->data_ = img;
+  // cast if indicated
+  if (cast_output_.get() == 1) {
+    typedef typename itk::Image<float, 2> CastType;
+    typedef typename itk::CastImageFilter< ImageType, CastType> CastImageFilterType;
+    typename CastImageFilterType::Pointer caster = CastImageFilterType::New();
+
+    caster->SetInput(img);
+
+    // execute the caster
+    try {
+      caster->Update();
+    } catch ( itk::ExceptionObject & err ) {
+      error("ExceptionObject caught!");
+      error(err.GetDescription());
+    }
+    nd->data_ = caster->GetOutput();
+  } else {
+    nd->data_ = img;
+  }
+
   read_handle_ = nd;
 
   return true;

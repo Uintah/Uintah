@@ -47,6 +47,7 @@ itcl_class Insight_DataIO_SliceReader {
 	global $this-size_1
 	global $this-size_2
 	global $this-slice
+	global $this-cast_output
 
 	set $this-filename ""
 	set $this-p_type "Unknown"
@@ -54,6 +55,7 @@ itcl_class Insight_DataIO_SliceReader {
 	set $this-size_1 0
 	set $this-size_2 0
 	set $this-slice 0
+	set $this-cast_output 0
     }
 
     method ui {} {
@@ -104,8 +106,10 @@ itcl_class Insight_DataIO_SliceReader {
 	pack $w.slice.l $w.slice.s $w.slice.e $w.slice.b1 \
 	    $w.slice.b2 -side left -padx 2
 	
+	checkbutton $w.cast -text "Cast output to float" \
+	    -variable $this-cast_output
 
-	pack $w.file $w.samples $w.slice -side top \
+	pack $w.file $w.samples $w.slice $w.cast -side top \
 	    -anchor nw -pady 3
 
 	makeSciButtonPanel $w $w $this
