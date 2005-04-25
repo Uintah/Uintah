@@ -370,8 +370,9 @@ InverseIPM::execute()
     mode_t umsk = umask(00);
     if (mkdir(tmpdir.c_str(), 0700) == -1)
     {
-      error("Unable to open a temporary working directory.");
-      throw false;
+      //error("Unable to open a temporary working directory.");
+      //throw false;
+      warnign("Unable to open a temporary working directory.");
     }
     umask(umsk);
 
@@ -415,11 +416,13 @@ InverseIPM::execute()
 
     
     // Execute the command.  Last arg just a tmp file for logging.
+    msgStream_flush();
     if (!Exec_execute_command(this, command, tmplog))
     {
       error("The ipm program failed to run for some unknown reason.");
       throw false;
     }
+    msgStream_flush();
 
     // Read in the results and send them along.
     MatrixOPort *dip1_oport = (MatrixOPort *)get_oport("Dipole Positions");

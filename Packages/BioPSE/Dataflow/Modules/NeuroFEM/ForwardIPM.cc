@@ -610,7 +610,8 @@ ForwardIPM::execute()
   }
 
   // Make our tmp directory
-  const string tmpdir = "/tmp/ForwardIPM" + to_string(getpid()) +"/";
+  //const string tmpdir = "/tmp/ForwardIPM" + to_string(getpid()) +"/";
+  const string tmpdir = "/tmp/ForwardIPM/";
   const string tmplog = tmpdir + "forward.log";
   const string resultfile = tmpdir + "result.msr";
   const string condmeshfile = tmpdir + "ca_head.geo";
@@ -624,8 +625,9 @@ ForwardIPM::execute()
     mode_t umsk = umask(00);
     if (mkdir(tmpdir.c_str(), 0700) == -1)
     {
-      error("Unable to open a temporary working directory.");
-      throw false;
+      //error("Unable to open a temporary working directory.");
+      //throw false;
+      warning("Unable to open a temporary working directory.");
     }
     umask(umsk);
 
@@ -668,11 +670,13 @@ ForwardIPM::execute()
 
     
     // Execute the command.  Last arg just a tmp file for logging.
+    msgStream_flush();
     if (!Exec_execute_command(this, command, tmplog))
     {
       error("The ipm program failed to run for some unknown reason.");
       throw false;
     }
+    msgStream_flush();
 
     // Read in the results and send them along.
     MatrixOPort *mat_oport = (MatrixOPort *)get_oport("DenseMatrix");
