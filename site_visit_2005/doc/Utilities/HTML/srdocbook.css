@@ -1,0 +1,242 @@
+/*
+
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+*/
+
+
+/*
+This stylesheet is used by html documents generated from docbook
+sources by Norm Walsh's xsl stylesheets.
+*/
+
+@import url(common.css);
+
+body {
+  font-size: 85%;
+}
+
+img.top-banner {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+div.book div.titlepage h1.title {
+  font-size: 225%;
+  color: rgb(73, 91, 105);
+  font-style: normal;                                  
+}
+
+div.part div.titlepage h1.title {
+  font-size: 225%;
+  color: rgb(73, 91, 105);
+  border-top: 10px solid black;
+  border-bottom: 2px solid black;
+  text-align: left;
+  font-style: normal;                                  
+}
+
+div.article div.titlepage h2.title { 
+  font-size: 225%;
+  color: rgb(73, 91, 105);
+  font-style: normal;
+  margin-bottom: 0;
+}
+
+h3.subtitle {
+  margin-top: 0;            
+  font-size: 180%;
+  text-align: center;              
+}
+
+div.chapter div.titlepage h2.title {
+  color: rgb(73, 91, 105);
+  text-align: left;
+  font-size: 190%;
+  border: none;                                     
+  font-style: normal;                                  
+}
+
+div.section div.titlepage h2.title {
+  color: rgb(73, 91, 105);
+  text-align: left;
+  font-size: 160%;
+  border: none;                                     
+  font-style: normal;                                  
+}
+
+div.section div.titlepage h3.title {
+  color: rgb(73, 91, 105);
+  text-align: left;
+  font-size: 130%;
+  border: none;                                     
+  font-style: normal;                                  
+}
+
+div.section div.titlepage h4.title {
+  color: rgb(73, 91, 105);
+  text-align: left;
+  font-size: 120%;
+  border: none;                                     
+  font-style: oblique;                                  
+}
+
+div.section div.titlepage h5.title {
+  color: rgb(73, 91, 105);
+  text-align: left;
+  font-size: 110%;
+  border: none;                                     
+  font-style: oblique;                                  
+}
+
+div.section div.titlepage h6.title {
+  color: rgb(73, 91, 105);
+  text-align: left;
+  font-size: 110%;
+  border: none;                                     
+  font-style: oblique;                                  
+}
+
+.subtitle {
+  color: rgb(73, 91, 105);
+  text-align: left
+}
+
+div.figure p.title {
+  color: black;
+  font-style: normal;
+  width: 50%;
+  margin-left: auto;                     
+  margin-right: auto;                     
+}
+
+/* Table titles */
+div.table p.title { 
+  color: rgb(73, 91, 105);
+  text-align: left;
+}
+
+/* Note titles */
+div.note h3.title { 
+  border: 0px none;
+  font-size: 100%;
+}
+
+/* Tip titles */
+div.tip h3.title { 
+  border: 0px none;
+  font-size: 100%;
+}
+
+.screen {
+  background-color: #F0F0F0;
+  padding: 5px;
+  border: thin groove rgb(73, 91, 105);
+  font-family: "courier new", courier, monospace;
+}
+
+.literallayout {
+  background-color: #F0F0F0;
+  padding: 5px;
+  border: thin groove rgb(73, 91, 105);
+  font-family: "courier new", courier, monospace;
+}
+
+.programlisting {
+  background-color: #F0F0F0;
+  padding: 5px;
+  border: thin groove rgb(73, 91, 105);
+  font-family: "courier new", courier, monospace;
+}
+
+/* I wish there were some way to discriminate amongst all the different 
+   uses of <tt>. */
+tt {
+  font-family: "courier new", courier, monospace;
+}
+
+.navheader, .navfooter {
+}
+
+.guiicon, .guibutton, .guilabel, .interface {
+  font-weight: bold
+}
+
+.navheader td, .navfooter td {
+  background:  white;
+  font-size: 85%;
+}
+
+.navheader th {
+  color: black;
+  background: white;
+}
+
+/* General table stuff. */ 
+table {
+  font-size: 100%;
+}
+
+/* Table headers */ 
+th {
+  color: white;
+  background-color: rgb(73, 91, 105);
+}
+
+/* tweak tables */
+.calstable tr th {
+  background-color: black;
+  color: white
+}
+
+table.simplelist{
+  border: 0;
+  frame: void
+}
+
+.faq_q_leadin {
+  color: rgb(73, 91, 105);
+  font-style: oblique;
+  font-weight: bold;
+}
+
+.faq_a_leadin {
+  color: rgb(73, 91, 105);
+  font-weight: bold;
+}
+
+p.faqrev {
+  color: rgb(73, 91, 105);
+  font-size: small;
+  font-style: italic;
+}
+
+.question {
+  font-weight: bold;
+}
+
+

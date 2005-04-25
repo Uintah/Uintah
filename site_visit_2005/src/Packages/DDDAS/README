@@ -1,0 +1,98 @@
+*******************************************************************************
+ 
+SCIRun Package: DDDAS
+Telemetry Data Streaming
+
+Fri Feb 27 14:46:32 MST 2004
+
+Jenny Simpson <simpson@sci.utah.edu>
+
+*******************************************************************************
+
+DESCRIPTION
+-----------
+
+See the 'DESCRIPTION' field in the header of source code file 
+DDDAS/Dataflow/Modules/DataIO/StreamReader.cc .
+
+
+USAGE
+-----
+
+- Start SCIRun
+
+> cd [build directory]
+> ./scirun
+
+- Load the StreamReader network
+  - File -> Load
+  - Browse to src/Packages/DDDAS/nets/SampleStreamReader.net
+  - This should bring up the net.
+  - Pull up the UI for the StreamReader module.
+  - Fill in the desired values for hostname, port number, and mp3 file to read.
+    The 'Save As' field allows you to specify a file where the stream output 
+    should be written to as ascii.  You can look at this file to see what data 
+    was read.    
+  - Click 'Execute'
+  - At this point you should see data printed out in the terminal you're
+    running in.  If the connection to the stream failed, an error message is 
+    printed out.  Otherwise, information about data read from the stream is 
+    printed.  
+  - To stop the module, click 'Stop'.  To restart it, click 'Execute'.  Do not 
+    click 'Execute' when the module is already executing. 
+
+
+ORGANIZATION
+------------
+
+Currently, all of the code for reading and processing the test sensor 
+data streams is
+located in the file DDDAS/Dataflow/Modules/DataIO/StreamReader.cc .  The GUI
+code is located in DDDAS/Dataflow/GUI/StreamReader.tcl.  This is 
+the code for a SCIRun module called StreamReader.  StreamReader is capable of 
+reading data from test sensor streams 1 and 2, but the code for sensor stream 1
+has been removed and exists only in older cvs versions.  It may or may not be 
+worthwhile to move this code into separate modules for each type of data that 
+is read and processed from a stream. 
+
+Within StreamReader.cc there are generalized functions for connecting to a 
+stream and there are generalized reading and processing functions that look 
+for recognized headers in stream data and pass the data to the appropriate 
+specific reading and processing functions for each different stream format.  
+
+There are two threads in the code, one for reading data from the stream and one
+for processing the data.  The threading can be turned on or off using the 
+#define THREAD_ENABLED near the top of StreamReader.cc.
+
+Some helper code, including socket code, is contained in DDDAS/Core.
+
+
+KNOWN PROBLEMS
+--------------
+
+The two threads occasionally livelock.  Specifically, the reader thread locks 
+out the processing thread.  I've put in a sleep statement in the reader thread 
+to temporarily prevent livelock until I get around to fixing this. 
+
+
+NOTES
+-----
+
+Other related files including a development log and a verification script can 
+be found in the cvs checkout of dddas under dddas/SCIRun/docs and dddas/SCIRun/verification, respectively.
+
+
+RUNNING ENVIRONMENT
+-------------------
+
+I've developed all the SCIRun DDDAS package code with this platform/hardware:
+
+Redhat 9.0 Linux 
+Intel Pentium 4 2.2 GHz processor
+Nvidia Quadro4 video card
+1 GB RAM
+
+
+
+
+

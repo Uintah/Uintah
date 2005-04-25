@@ -1,0 +1,39 @@
+<html>
+<title>VIEWGRID module</title>
+<body>
+
+<h1>VIEWGRID</h1>
+
+<b>Description:</b><p>
+
+Displays the grid points for rectilinear and curvilinear grids.
+<p>
+
+Grid points can be represented by points or spheres.  Points are faster
+but have poor visibility on small grids.  Spheres are much slower,
+especially for large grids.<p>
+
+The module takes a colormap as input, which it uses to color points
+based on their x-coordinate.  When using this module in conjunction
+with, for example, an isosurface module, this coloring helps the
+user discriminate between axes.<p>
+
+For rectilinear grids, only the number of grid points in each direction
+is required as further input.  Curvilinear grids are more complex.
+First, a geometry file is required, since the locations of the points
+must be specified explicitly (this is the same file used by the
+<a href="bonocl.html">BONOCL</a> and <a href="tboncl.html">TBONCL</a>
+modules).  Other inputs include the number of zones in the geometry
+and the number of points in each dimension for each zone.  Each zone's
+visibility can be toggled on or off with checkboxes in the GUI.  The
+module can currently display 0 - 4 zones.<p>
+
+
+
+<hr>
+Packages/Philip Sutton (psutton@cs.utah.edu)<br>
+Last modified: 31 January 2000
+
+
+</body>
+</html>

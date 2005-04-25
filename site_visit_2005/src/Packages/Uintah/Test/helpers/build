@@ -1,0 +1,137 @@
+mode=$1 # dbg or opt
+CONFIGURE_ARGS=$2 # configure command line arguments
+
+echo "" >> $HTMLLOG
+echo "Compiling" >> $HTMLLOG
+echo "==================================" >> $HTMLLOG
+echo "" >> $HTMLLOG
+echo "Starting configure on `date`" >> $HTMLLOG
+echo "  with command" >> $HTMLLOG
+grep configure configure_command >> $HTMLLOG
+echo "" >> $HTMLLOG
+
+
+./configure_command > "$BUILDROOT"/${mode}/configure.log 2>&1
+retval=$?
+
+chgrp csafe *
+chmod g+rwX * 
+
+
+if [ $retval != "0" ]; then
+	echo "Configure failed:" >> $HTMLLOG
+	cat "${BUILDROOT}"/"${mode}"/configure.log >> $HTMLLOG
+
+	echo "*** Configure failed with code $retval"
+	echo ""
+#	echo "Showing configure log:"
+#	cat "${BUILDROOT}/${mode}/configure.log"
+
+	cd "${BUILD_DIR}"
+	if [ ! -d "configure-${mode}.lock" ]; then
+	    # failed ${mode} configure, set a lock
+	    ln -s "$BUILDROOT" "configure-${mode}.lock"
+	fi
+	exit 1
+fi
+
+echo "Configure successful"
+
+if [ -d "${BUILD_DIR}/configure-${mode}.lock" ]; then
+	# configured successfully - remove old configure lock 
+	rm "${BUILD_DIR}/configure-${mode}.lock"
+fi
+
+echo "Starting build on `date`:" >> $HTMLLOG
+
+cd "${BUILDROOT}/${mode}/build"
+    
+rm -f "../make.log" "../make_results.log"
+
+gmake -k -j$MAKE_PARALLELISM >> ../make.log 2>&1
+retval=$?
+if [ $retval != "0" ]; then
+    # try it again -- it may not go all the way the first time
+    echo "Failed first compile, try again"
+    gmake -k -j$MAKE_PARALLELISM >> ../make.log 2>&1
+    retval=$?
+fi
+if [ $retval != "0" ]; then
+    # try it again -- it may not go all the way the first time
+    echo "Failed second compile, try again (storing make errors)"
+    gmake -k -j$MAKE_PARALLELISM > ../remake_with_arches.log 2>&1
+    retval=$?
+fi
+if [ $retval != "0" ]; then
+    # failed 3 times
+    if  [ -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; then
+	# sus compiled alone
+	mv ../remake_with_arches.log ../remake_failed_scirun.log
+	echo "*** Make failed, but sus was compiled successfully"
+	echo "A log of build errors can be found in"
+	echo "${BUILDROOT}/${mode}/remake_failed_scirun.log"
+	echo "A full log of trying to compile everything twice can be found in"
+	echo "${BUILDROOT}/${mode}/make.log"
+	echo ""
+    else
+	# No sus compiled -- try compiling without arches
+	# Run Todd's perl script to use fake arches instead of arches.
+	echo "Failed third compile, try without arches."
+
+	cp "${BUILDROOT}/src/Packages/Uintah/StandAlone/sub.mk" "${BUILDROOT}/src/Packages/Uintah/StandAlone/sub.mk.orig"
+	cp "${BUILDROOT}/src/Packages/Uintah/CCA/Components/sub.mk" "${BUILDROOT}/src/Packages/Uintah/CCA/Components/sub.mk.orig"
+
+	useFakeArches.pl "$BUILDROOT" > ../remake_without_arches.log 2>&1
+	cd "${BUILDROOT}/${mode}/build"
+	gmake -k -j$MAKE_PARALLELISM >> ../remake_without_arches.log 2>&1
+	retval=$?
+
+	# Restore sub.mk's -- I keep forgetting when arches is taken out
+	# and wondering why arches can't run after the problems been fixed.
+	cp "${BUILDROOT}/src/Packages/Uintah/StandAlone/sub.mk.orig" "${BUILDROOT}/src/Packages/Uintah/StandAlone/sub.mk"
+	cp "${BUILDROOT}/src/Packages/Uintah/CCA/Components/sub.mk.orig" "${BUILDROOT}/src/Packages/Uintah/CCA/Components/sub.mk"
+
+	failed_sus=0
+	if [ $retval = "0" ]; then
+	    echo "*** Make failed with ARCHES, but passed without it."
+	    echo ""
+	    echo "Showing make errors with ARCHES:" > ../make_results.log
+	    WithArches="no"
+	elif  [ -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; then
+	    echo "*** Make failed, but sus was compiled successfully without ARCHES"
+	    echo ""
+	    echo "Showing make errors with ARCHES:" > ../make_results.log
+	    WithArches="no"
+	else
+	    echo "*** Make failed with code $retval"
+	    echo ""
+	    echo "Showing make errors:"  > ../make_results.log
+	    failed_sus=1
+	fi
+	# show the compile errors (just the stuff it can't compile)
+	cat ../remake_with_arches.log >> ../make_results.log
+	
+        echo ""
+
+	# Add compilation problems to webpage
+	cat ../make_results.log >> "$HTMLLOG"
+
+	# failed make, set a lock for this build
+	if [ ! -d "${BUILD_DIR}/make-${mode}.lock" ]; then
+	    ln -s "$BUILDROOT" "${BUILD_DIR}/make-${mode}.lock"
+	fi
+
+	if [ $failed_sus != "0" ]; then
+	    exit 1
+	fi
+    fi
+fi
+
+if [ -d "${BUILD_DIR}/make-${mode}.lock" ]; then
+    # built successfully - remove old make lock 
+    rm "${BUILD_DIR}/make-${mode}.lock"
+fi
+
+echo "Sus compiled successfully"
+echo "Sus compiled successfully" >> $HTMLLOG
+exit 0

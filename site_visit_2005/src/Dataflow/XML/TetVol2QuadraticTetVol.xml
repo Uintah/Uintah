@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+<?xml-stylesheet href="../../../doc/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="TetVol2QuadraticTetVol" category="FieldsGeometry">
+  <overview>
+    <authors>
+      <author>Martin Cole</author>
+    </authors>
+    <summary>Given an input Field that is a TetVolField, create a
+QuadraticTetVol Field from the input.</summary>
+    <description>
+      <p>Given an input Field that is a TetVolField, create a
+QuadraticTetVol Field from the input. The underlying data type will be
+preserved, i.e. if the input field was a TetVolField with double
+values, then the output will have double values as well.  The output
+field will come complete with values, you will not have to interpolate
+them back onto the field.</p>
+      <p>Note that the difference between field types is that interpolation within a tet is linear where the QuadraticTetVol has quadratic interpolation within a tet.</p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>InputTetField</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>OutputQuadraticTet</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

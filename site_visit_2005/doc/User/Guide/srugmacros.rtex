@@ -1,0 +1,64 @@
+%< require("../../Utilities/Publish/srdoc.rb") %>
+%< doc = Doc.create(Doc::TeX) %>
+
+%
+%  For more information, please see: http://software.sci.utah.edu
+% 
+%  The MIT License
+% 
+%  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+%  University of Utah.
+% 
+%  License for the specific language governing rights and limitations under
+%  Permission is hereby granted, free of charge, to any person obtaining a
+%  copy of this software and associated documentation files (the "Software"),
+%  to deal in the Software without restriction, including without limitation
+%  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+%  and/or sell copies of the Software, and to permit persons to whom the
+%  Software is furnished to do so, subject to the following conditions:
+% 
+%  The above copyright notice and this permission notice shall be included
+%  in all copies or substantial portions of the Software.
+% 
+%  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+%  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+%  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+%  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+%  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+%  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+%  DEALINGS IN THE SOFTWARE.
+%
+
+% Markup and style for SCIRun Users guide.
+%
+
+\newcommand{\version}{%<= doc.edition %>}
+
+\setlength{\textheight}{8.2in}
+\setlength{\textwidth}{6.0in}
+\setlength{\topmargin}{-.50in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\evensidemargin}{0in}
+\sloppy
+
+\pagestyle{headings}
+\setlength{\headsep}{30pt}
+\setlength{\footskip}{45pt}
+\setlength{\headheight}{15pt}
+
+% Setting to control figure placement.
+% These determine the rules used to place floating objects like figures 
+% They are only guides, but read the manual to see the effect of each.
+\renewcommand{\topfraction}{.8}
+\renewcommand{\bottomfraction}{.8}
+\renewcommand{\textfraction}{.1}
+
+% Paragraph spacing
+% This sets the spacing between paragraphs
+\setlength{\parskip}{\smallskipamount} 
+
+% Users Guide specific markup
+\newcommand{\viewer}{\emph{Viewer}}
+\newcommand{\installguideurl}{\htmlurl{\scisoftware{}/doc/Installation/Guide/index.html}}
+\newcommand{\modulemakerguideurl}{}
+\newcommand{\treetop}{../../..}

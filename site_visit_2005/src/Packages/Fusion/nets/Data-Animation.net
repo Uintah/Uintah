@@ -1,0 +1,412 @@
+# SCIRun Network v1.23.0
+
+
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+addSubnetToDatabase {
+   set name {ScaledMapDataToMeshCoor}
+   set bbox {4 29 492 371}
+   set creationDate {Tue Aug 31 2004}
+   set creationTime {11:51:36}
+   set runDate {}
+   set runTime {}
+   set notes {}
+
+   # Create a SCIRun->FieldsData->TransformData Module
+   set m1 [addModuleAtPosition "SCIRun" "FieldsData" "TransformData" 4 42]
+
+   # Create a SCIRun->FieldsGeometry->MapDataToMeshCoord Module
+   set m2 [addModuleAtPosition "SCIRun" "FieldsGeometry" "MapDataToMeshCoord" 4 122]
+
+   # Create a SCIRun->FieldsData->ManageFieldData Module
+   set m3 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 327 29]
+
+   # Create a SCIRun->FieldsData->ManageFieldData Module
+   set m4 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 4 314]
+
+   # Create the Connections between Modules
+   set c1 [addConnection $m4 0 Subnet 0]
+   set c2 [addConnection $m1 0 $m2 0]
+   set c3 [addConnection $m2 0 $m4 0]
+   set c4 [addConnection Subnet 0 $m3 0]
+   set c5 [addConnection Subnet 0 $m1 0]
+   set c6 [addConnection $m3 1 $m4 1]
+
+   # Set GUI variables for the SCIRun->FieldsData->TransformData Module
+   set $m1-function {result = v;
+
+
+
+
+}
+
+   # Set GUI variables for the SCIRun->FieldsGeometry->MapDataToMeshCoord Module
+   set $m2-coord {3}
+}
+
+
+set name {Main}
+set bbox {10 9 1269 740}
+set creationDate {Tue Aug 31 2004}
+set creationTime {11:51:33}
+set runDate {}
+set runTime {}
+set notes {}
+
+# Create a Teem->DataIO->NrrdToField Module
+set m1 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 10 281]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 346 284]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 344 416]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 10 531]
+
+# Create a SCIRun->Render->Viewer Module
+set m5 [addModuleAtPosition "SCIRun" "Render" "Viewer" 10 626]
+
+# Create a DataIO->Readers->HDF5DataReader Module
+set m6 [addModuleAtPosition "DataIO" "Readers" "HDF5DataReader" 10 9]
+
+# Create a DataIO->Readers->HDF5DataReader Module
+set m7 [addModuleAtPosition "DataIO" "Readers" "HDF5DataReader" 206 96]
+
+# Create a DataIO->Readers->HDF5DataReader Module
+set m8 [addModuleAtPosition "DataIO" "Readers" "HDF5DataReader" 720 19]
+
+# Create a DataIO->Readers->HDF5DataReader Module
+set m9 [addModuleAtPosition "DataIO" "Readers" "HDF5DataReader" 901 18]
+
+# Create a Teem->DataIO->NrrdToField Module
+set m10 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 720 351]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m11 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 720 601]
+
+# Create a SCIRun->Render->Viewer Module
+set m12 [addModuleAtPosition "SCIRun" "Render" "Viewer" 720 696]
+
+# Create a Teem->NrrdData->NrrdSelectTime Module
+set m13 [addModuleAtPosition "Teem" "NrrdData" "NrrdSelectTime" 720 108]
+
+# Create a Teem->NrrdData->NrrdSelectTime Module
+set m14 [addModuleAtPosition "Teem" "NrrdData" "NrrdSelectTime" 901 185]
+
+# Create an instance of a ScaledMapDataToMeshCoor Sub-Network
+set m15 [instanceSubnet "ScaledMapDataToMeshCoor" 10 416]
+
+# Create a Teem->UnuNtoZ->UnuPad Module
+set m16 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuPad" 10 96]
+
+# Create a Teem->UnuNtoZ->UnuPad Module
+set m17 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuPad" 720 190]
+
+# Create an instance of a ScaledMapDataToMeshCoor Sub-Network
+set m18 [instanceSubnet "ScaledMapDataToMeshCoor" 720 477]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m19 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1074 482]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m20 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1074 337]
+
+# Create the Connections between Modules
+set c1 [addConnection $m6 0 $m16 0]
+set c2 [addConnection $m8 0 $m13 0]
+set c3 [addConnection $m9 0 $m14 0]
+set c4 [addConnection $m2 0 $m3 0]
+set c5 [addConnection $m20 0 $m19 0]
+set c6 [addConnection $m4 0 $m5 0]
+set c7 [addConnection $m11 0 $m12 0]
+set c8 [addConnection $m15 0 $m4 0]
+set c9 [addConnection $m18 0 $m11 0]
+set c10 [addConnection $m1 0 $m15 0]
+set c11 [addConnection $m10 0 $m18 0]
+set c12 [addConnection $m13 0 $m17 0]
+set c13 [addConnection $m16 0 $m1 0]
+set c14 [addConnection $m17 0 $m10 0]
+set c15 [addConnection $m3 0 $m4 1]
+set c16 [addConnection $m19 0 $m11 1]
+set c17 [addConnection $m1 0 $m3 1]
+set c18 [addConnection $m10 0 $m19 1]
+set c19 [addConnection $m13 1 $m14 1]
+set c20 [addConnection $m7 0 $m1 2]
+set c21 [addConnection $m14 0 $m10 2]
+
+# Set GUI variables for the Teem->DataIO->NrrdToField Module
+set $m1-datasets {{Points : -time_coordinates_98-coordinates-values:Scalar} {Connections : (none)} {Data : -time_node_data_18-node_data_0-values:Scalar} {Original Field : (none)} }
+
+# Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
+set $m2-minRes {12}
+
+# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+set $m3-isFixed {1}
+set $m3-min {-0.000167516881597}
+set $m3-max {0.362713633586}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m4-nodes-on {0}
+set $m4-edges-on {0}
+set $m4-normalize-vectors {}
+set $m4-has_scalar_data {1}
+set $m4-active_tab {Faces}
+set $m4-scalars_scale {0.3}
+set $m4-show_progress {}
+
+$m5 addViewer
+set $m5-ViewWindow_0-geometry 654x626+915+325
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m5-ViewWindow_0-view-eyep-x {-11.894618793}
+set $m5-ViewWindow_0-view-eyep-y {14.9213984844}
+set $m5-ViewWindow_0-view-eyep-z {-0.24466513134}
+set $m5-ViewWindow_0-view-lookat-x {0.0152359568298}
+set $m5-ViewWindow_0-view-lookat-y {0.0194472667396}
+set $m5-ViewWindow_0-view-lookat-z {-0.00079465250264}
+set $m5-ViewWindow_0-view-up-x {0.436828189261}
+set $m5-ViewWindow_0-view-up-y {0.335460283507}
+set $m5-ViewWindow_0-view-up-z {-0.834654138705}
+set $m5-ViewWindow_0-view-fov {20.0}
+set $m5-ViewWindow_0-view-eyep_offset-x {}
+set $m5-ViewWindow_0-view-eyep_offset-y {}
+set $m5-ViewWindow_0-view-eyep_offset-z {}
+set $m5-ViewWindow_0-sr {1}
+set $m5-ViewWindow_0-do_stereo {0}
+set $m5-ViewWindow_0-ortho-view {0}
+set $m5-ViewWindow_0-trackViewWindow0 {1}
+set $m5-ViewWindow_0-raxes {1}
+set $m5-ViewWindow_0-ambient-scale {1.0}
+set $m5-ViewWindow_0-diffuse-scale {1.0}
+set $m5-ViewWindow_0-specular-scale {0.4}
+set $m5-ViewWindow_0-emission-scale {1.0}
+set $m5-ViewWindow_0-shininess-scale {1.0}
+set $m5-ViewWindow_0-polygon-offset-factor {1.0}
+set $m5-ViewWindow_0-polygon-offset-units {0.0}
+set $m5-ViewWindow_0-point-size {1.0}
+set $m5-ViewWindow_0-line-width {1.0}
+set $m5-ViewWindow_0-sbase {0.4}
+set $m5-ViewWindow_0-bgcolor-r {0}
+set $m5-ViewWindow_0-bgcolor-g {0}
+set $m5-ViewWindow_0-bgcolor-b {0}
+set $m5-ViewWindow_0-currentvisual {0}
+set $m5-ViewWindow_0-caxes {0}
+set $m5-ViewWindow_0-pos {x1_z1}
+set $m5-ViewWindow_0-clip-num {}
+set $m5-ViewWindow_0-clip-visible {}
+set $m5-ViewWindow_0-clip-selected {}
+set $m5-ViewWindow_0-clip-visible-1 {}
+set $m5-ViewWindow_0-clip-normal-x-1 {}
+set $m5-ViewWindow_0-clip-normal-y-1 {}
+set $m5-ViewWindow_0-clip-normal-z-1 {}
+set $m5-ViewWindow_0-clip-normal-d-1 {}
+set $m5-ViewWindow_0-clip-visible-2 {}
+set $m5-ViewWindow_0-clip-normal-x-2 {}
+set $m5-ViewWindow_0-clip-normal-y-2 {}
+set $m5-ViewWindow_0-clip-normal-z-2 {}
+set $m5-ViewWindow_0-clip-normal-d-2 {}
+set $m5-ViewWindow_0-clip-visible-3 {}
+set $m5-ViewWindow_0-clip-normal-x-3 {}
+set $m5-ViewWindow_0-clip-normal-y-3 {}
+set $m5-ViewWindow_0-clip-normal-z-3 {}
+set $m5-ViewWindow_0-clip-normal-d-3 {}
+set $m5-ViewWindow_0-clip-visible-4 {}
+set $m5-ViewWindow_0-clip-normal-x-4 {}
+set $m5-ViewWindow_0-clip-normal-y-4 {}
+set $m5-ViewWindow_0-clip-normal-z-4 {}
+set $m5-ViewWindow_0-clip-normal-d-4 {}
+set $m5-ViewWindow_0-clip-visible-5 {}
+set $m5-ViewWindow_0-clip-normal-x-5 {}
+set $m5-ViewWindow_0-clip-normal-y-5 {}
+set $m5-ViewWindow_0-clip-normal-z-5 {}
+set $m5-ViewWindow_0-clip-normal-d-5 {}
+set $m5-ViewWindow_0-clip-visible-6 {}
+set $m5-ViewWindow_0-clip-normal-x-6 {}
+set $m5-ViewWindow_0-clip-normal-y-6 {}
+set $m5-ViewWindow_0-clip-normal-z-6 {}
+set $m5-ViewWindow_0-clip-normal-d-6 {}
+set $m5-ViewWindow_0-global-light0 {1}
+set $m5-ViewWindow_0-global-light1 {0}
+set $m5-ViewWindow_0-global-light2 {0}
+set $m5-ViewWindow_0-global-light3 {0}
+set $m5-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m5-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m5-ViewWindow_0-global-light {1}
+set $m5-ViewWindow_0-global-fog {0}
+set $m5-ViewWindow_0-global-debug {0}
+set $m5-ViewWindow_0-global-clip {1}
+set $m5-ViewWindow_0-global-cull {0}
+set $m5-ViewWindow_0-global-dl {0}
+set $m5-ViewWindow_0-global-type {Gouraud}
+set "$m5-ViewWindow_0-Faces (1)" {1}
+
+# Set GUI variables for the DataIO->Readers->HDF5DataReader Module
+set $m6-selectable_max {89.0}
+set $m6-range_max {89}
+set $m6-current {88}
+set $m6-execmode {stop}
+set $m6-inc-amount {8}
+set $m6-filename "$DATADIR/$DATASET/ahg.h5"
+set $m6-datasets {{/ {time_coordinates[10]} coordinates values} {/ {time_coordinates[11]} coordinates values} {/ {time_coordinates[12]} coordinates values} {/ {time_coordinates[13]} coordinates values} {/ {time_coordinates[14]} coordinates values} {/ {time_coordinates[15]} coordinates values} {/ {time_coordinates[16]} coordinates values} {/ {time_coordinates[17]} coordinates values} {/ {time_coordinates[18]} coordinates values} {/ {time_coordinates[19]} coordinates values} {/ {time_coordinates[20]} coordinates values} {/ {time_coordinates[21]} coordinates values} {/ {time_coordinates[22]} coordinates values} {/ {time_coordinates[23]} coordinates values} {/ {time_coordinates[24]} coordinates values} {/ {time_coordinates[25]} coordinates values} {/ {time_coordinates[26]} coordinates values} {/ {time_coordinates[27]} coordinates values} {/ {time_coordinates[28]} coordinates values} {/ {time_coordinates[29]} coordinates values} {/ {time_coordinates[30]} coordinates values} {/ {time_coordinates[31]} coordinates values} {/ {time_coordinates[32]} coordinates values} {/ {time_coordinates[33]} coordinates values} {/ {time_coordinates[34]} coordinates values} {/ {time_coordinates[35]} coordinates values} {/ {time_coordinates[36]} coordinates values} {/ {time_coordinates[37]} coordinates values} {/ {time_coordinates[38]} coordinates values} {/ {time_coordinates[39]} coordinates values} {/ {time_coordinates[40]} coordinates values} {/ {time_coordinates[41]} coordinates values} {/ {time_coordinates[42]} coordinates values} {/ {time_coordinates[43]} coordinates values} {/ {time_coordinates[44]} coordinates values} {/ {time_coordinates[45]} coordinates values} {/ {time_coordinates[46]} coordinates values} {/ {time_coordinates[47]} coordinates values} {/ {time_coordinates[48]} coordinates values} {/ {time_coordinates[49]} coordinates values} {/ {time_coordinates[50]} coordinates values} {/ {time_coordinates[51]} coordinates values} {/ {time_coordinates[52]} coordinates values} {/ {time_coordinates[53]} coordinates values} {/ {time_coordinates[54]} coordinates values} {/ {time_coordinates[55]} coordinates values} {/ {time_coordinates[56]} coordinates values} {/ {time_coordinates[57]} coordinates values} {/ {time_coordinates[58]} coordinates values} {/ {time_coordinates[59]} coordinates values} {/ {time_coordinates[60]} coordinates values} {/ {time_coordinates[61]} coordinates values} {/ {time_coordinates[62]} coordinates values} {/ {time_coordinates[63]} coordinates values} {/ {time_coordinates[64]} coordinates values} {/ {time_coordinates[65]} coordinates values} {/ {time_coordinates[66]} coordinates values} {/ {time_coordinates[67]} coordinates values} {/ {time_coordinates[68]} coordinates values} {/ {time_coordinates[69]} coordinates values} {/ {time_coordinates[70]} coordinates values} {/ {time_coordinates[71]} coordinates values} {/ {time_coordinates[72]} coordinates values} {/ {time_coordinates[73]} coordinates values} {/ {time_coordinates[74]} coordinates values} {/ {time_coordinates[75]} coordinates values} {/ {time_coordinates[76]} coordinates values} {/ {time_coordinates[77]} coordinates values} {/ {time_coordinates[78]} coordinates values} {/ {time_coordinates[79]} coordinates values} {/ {time_coordinates[80]} coordinates values} {/ {time_coordinates[81]} coordinates values} {/ {time_coordinates[82]} coordinates values} {/ {time_coordinates[83]} coordinates values} {/ {time_coordinates[84]} coordinates values} {/ {time_coordinates[85]} coordinates values} {/ {time_coordinates[86]} coordinates values} {/ {time_coordinates[87]} coordinates values} {/ {time_coordinates[88]} coordinates values} {/ {time_coordinates[89]} coordinates values} {/ {time_coordinates[90]} coordinates values} {/ {time_coordinates[91]} coordinates values} {/ {time_coordinates[92]} coordinates values} {/ {time_coordinates[93]} coordinates values} {/ {time_coordinates[94]} coordinates values} {/ {time_coordinates[95]} coordinates values} {/ {time_coordinates[96]} coordinates values} {/ {time_coordinates[97]} coordinates values} {/ {time_coordinates[98]} coordinates values} {/ {time_coordinates[99]} coordinates values}}
+set $m6-dumpname {/tmp/ahg.h5.dump}
+set $m6-ports {   0}
+set $m6-ndims {3}
+set $m6-animate {1}
+set $m6-0-dim {321}
+set $m6-0-count {321}
+set $m6-1-dim {121}
+set $m6-1-count {121}
+set $m6-2-count {2}
+
+# Set GUI variables for the DataIO->Readers->HDF5DataReader Module
+set $m7-selectable_max {89.0}
+set $m7-range_max {89}
+set $m7-playmode {inc_w_exec}
+set $m7-current {88}
+set $m7-execmode {current}
+set $m7-inc-amount {8}
+set $m7-filename "$DATADIR/$DATASET/ahg.h5"
+set $m7-datasets {{/ {time_node_data[10]} {node_data[0]} values} {/ {time_node_data[11]} {node_data[0]} values} {/ {time_node_data[12]} {node_data[0]} values} {/ {time_node_data[13]} {node_data[0]} values} {/ {time_node_data[14]} {node_data[0]} values} {/ {time_node_data[15]} {node_data[0]} values} {/ {time_node_data[16]} {node_data[0]} values} {/ {time_node_data[17]} {node_data[0]} values} {/ {time_node_data[18]} {node_data[0]} values} {/ {time_node_data[19]} {node_data[0]} values} {/ {time_node_data[20]} {node_data[0]} values} {/ {time_node_data[21]} {node_data[0]} values} {/ {time_node_data[22]} {node_data[0]} values} {/ {time_node_data[23]} {node_data[0]} values} {/ {time_node_data[24]} {node_data[0]} values} {/ {time_node_data[25]} {node_data[0]} values} {/ {time_node_data[26]} {node_data[0]} values} {/ {time_node_data[27]} {node_data[0]} values} {/ {time_node_data[28]} {node_data[0]} values} {/ {time_node_data[29]} {node_data[0]} values} {/ {time_node_data[30]} {node_data[0]} values} {/ {time_node_data[31]} {node_data[0]} values} {/ {time_node_data[32]} {node_data[0]} values} {/ {time_node_data[33]} {node_data[0]} values} {/ {time_node_data[34]} {node_data[0]} values} {/ {time_node_data[35]} {node_data[0]} values} {/ {time_node_data[36]} {node_data[0]} values} {/ {time_node_data[37]} {node_data[0]} values} {/ {time_node_data[38]} {node_data[0]} values} {/ {time_node_data[39]} {node_data[0]} values} {/ {time_node_data[40]} {node_data[0]} values} {/ {time_node_data[41]} {node_data[0]} values} {/ {time_node_data[42]} {node_data[0]} values} {/ {time_node_data[43]} {node_data[0]} values} {/ {time_node_data[44]} {node_data[0]} values} {/ {time_node_data[45]} {node_data[0]} values} {/ {time_node_data[46]} {node_data[0]} values} {/ {time_node_data[47]} {node_data[0]} values} {/ {time_node_data[48]} {node_data[0]} values} {/ {time_node_data[49]} {node_data[0]} values} {/ {time_node_data[50]} {node_data[0]} values} {/ {time_node_data[51]} {node_data[0]} values} {/ {time_node_data[52]} {node_data[0]} values} {/ {time_node_data[53]} {node_data[0]} values} {/ {time_node_data[54]} {node_data[0]} values} {/ {time_node_data[55]} {node_data[0]} values} {/ {time_node_data[56]} {node_data[0]} values} {/ {time_node_data[57]} {node_data[0]} values} {/ {time_node_data[58]} {node_data[0]} values} {/ {time_node_data[59]} {node_data[0]} values} {/ {time_node_data[60]} {node_data[0]} values} {/ {time_node_data[61]} {node_data[0]} values} {/ {time_node_data[62]} {node_data[0]} values} {/ {time_node_data[63]} {node_data[0]} values} {/ {time_node_data[64]} {node_data[0]} values} {/ {time_node_data[65]} {node_data[0]} values} {/ {time_node_data[66]} {node_data[0]} values} {/ {time_node_data[67]} {node_data[0]} values} {/ {time_node_data[68]} {node_data[0]} values} {/ {time_node_data[69]} {node_data[0]} values} {/ {time_node_data[70]} {node_data[0]} values} {/ {time_node_data[71]} {node_data[0]} values} {/ {time_node_data[72]} {node_data[0]} values} {/ {time_node_data[73]} {node_data[0]} values} {/ {time_node_data[74]} {node_data[0]} values} {/ {time_node_data[75]} {node_data[0]} values} {/ {time_node_data[76]} {node_data[0]} values} {/ {time_node_data[77]} {node_data[0]} values} {/ {time_node_data[78]} {node_data[0]} values} {/ {time_node_data[79]} {node_data[0]} values} {/ {time_node_data[80]} {node_data[0]} values} {/ {time_node_data[81]} {node_data[0]} values} {/ {time_node_data[82]} {node_data[0]} values} {/ {time_node_data[83]} {node_data[0]} values} {/ {time_node_data[84]} {node_data[0]} values} {/ {time_node_data[85]} {node_data[0]} values} {/ {time_node_data[86]} {node_data[0]} values} {/ {time_node_data[87]} {node_data[0]} values} {/ {time_node_data[88]} {node_data[0]} values} {/ {time_node_data[89]} {node_data[0]} values} {/ {time_node_data[90]} {node_data[0]} values} {/ {time_node_data[91]} {node_data[0]} values} {/ {time_node_data[92]} {node_data[0]} values} {/ {time_node_data[93]} {node_data[0]} values} {/ {time_node_data[94]} {node_data[0]} values} {/ {time_node_data[95]} {node_data[0]} values} {/ {time_node_data[96]} {node_data[0]} values} {/ {time_node_data[97]} {node_data[0]} values} {/ {time_node_data[98]} {node_data[0]} values} {/ {time_node_data[99]} {node_data[0]} values}}
+set $m7-dumpname {/tmp/ahg.h5.dump}
+set $m7-ndims {2}
+set $m7-animate {1}
+set $m7-0-dim {321}
+set $m7-0-count {321}
+set $m7-1-dim {121}
+set $m7-1-count {121}
+set $m7-2-count {2}
+
+# Set GUI variables for the DataIO->Readers->HDF5DataReader Module
+set $m8-filename "$DATADIR/$DATASET/ahg.h5"
+set $m8-datasets {{/ {time_coordinates[10]} coordinates values} {/ {time_coordinates[11]} coordinates values} {/ {time_coordinates[12]} coordinates values} {/ {time_coordinates[13]} coordinates values} {/ {time_coordinates[14]} coordinates values} {/ {time_coordinates[15]} coordinates values} {/ {time_coordinates[16]} coordinates values} {/ {time_coordinates[17]} coordinates values} {/ {time_coordinates[18]} coordinates values} {/ {time_coordinates[19]} coordinates values} {/ {time_coordinates[20]} coordinates values} {/ {time_coordinates[21]} coordinates values} {/ {time_coordinates[22]} coordinates values} {/ {time_coordinates[23]} coordinates values} {/ {time_coordinates[24]} coordinates values} {/ {time_coordinates[25]} coordinates values} {/ {time_coordinates[26]} coordinates values} {/ {time_coordinates[27]} coordinates values} {/ {time_coordinates[28]} coordinates values} {/ {time_coordinates[29]} coordinates values} {/ {time_coordinates[30]} coordinates values} {/ {time_coordinates[31]} coordinates values} {/ {time_coordinates[32]} coordinates values} {/ {time_coordinates[33]} coordinates values} {/ {time_coordinates[34]} coordinates values} {/ {time_coordinates[35]} coordinates values} {/ {time_coordinates[36]} coordinates values} {/ {time_coordinates[37]} coordinates values} {/ {time_coordinates[38]} coordinates values} {/ {time_coordinates[39]} coordinates values} {/ {time_coordinates[40]} coordinates values} {/ {time_coordinates[41]} coordinates values} {/ {time_coordinates[42]} coordinates values} {/ {time_coordinates[43]} coordinates values} {/ {time_coordinates[44]} coordinates values} {/ {time_coordinates[45]} coordinates values} {/ {time_coordinates[46]} coordinates values} {/ {time_coordinates[47]} coordinates values} {/ {time_coordinates[48]} coordinates values} {/ {time_coordinates[49]} coordinates values} {/ {time_coordinates[50]} coordinates values} {/ {time_coordinates[51]} coordinates values} {/ {time_coordinates[52]} coordinates values} {/ {time_coordinates[53]} coordinates values} {/ {time_coordinates[54]} coordinates values} {/ {time_coordinates[55]} coordinates values} {/ {time_coordinates[56]} coordinates values} {/ {time_coordinates[57]} coordinates values} {/ {time_coordinates[58]} coordinates values} {/ {time_coordinates[59]} coordinates values} {/ {time_coordinates[60]} coordinates values} {/ {time_coordinates[61]} coordinates values} {/ {time_coordinates[62]} coordinates values} {/ {time_coordinates[63]} coordinates values} {/ {time_coordinates[64]} coordinates values} {/ {time_coordinates[65]} coordinates values} {/ {time_coordinates[66]} coordinates values} {/ {time_coordinates[67]} coordinates values} {/ {time_coordinates[68]} coordinates values} {/ {time_coordinates[69]} coordinates values} {/ {time_coordinates[70]} coordinates values} {/ {time_coordinates[71]} coordinates values} {/ {time_coordinates[72]} coordinates values} {/ {time_coordinates[73]} coordinates values} {/ {time_coordinates[74]} coordinates values} {/ {time_coordinates[75]} coordinates values} {/ {time_coordinates[76]} coordinates values} {/ {time_coordinates[77]} coordinates values} {/ {time_coordinates[78]} coordinates values} {/ {time_coordinates[79]} coordinates values} {/ {time_coordinates[80]} coordinates values} {/ {time_coordinates[81]} coordinates values} {/ {time_coordinates[82]} coordinates values} {/ {time_coordinates[83]} coordinates values} {/ {time_coordinates[84]} coordinates values} {/ {time_coordinates[85]} coordinates values} {/ {time_coordinates[86]} coordinates values} {/ {time_coordinates[87]} coordinates values} {/ {time_coordinates[88]} coordinates values} {/ {time_coordinates[89]} coordinates values} {/ {time_coordinates[90]} coordinates values} {/ {time_coordinates[91]} coordinates values} {/ {time_coordinates[92]} coordinates values} {/ {time_coordinates[93]} coordinates values} {/ {time_coordinates[94]} coordinates values} {/ {time_coordinates[95]} coordinates values} {/ {time_coordinates[96]} coordinates values} {/ {time_coordinates[97]} coordinates values} {/ {time_coordinates[98]} coordinates values} {/ {time_coordinates[99]} coordinates values}}
+set $m8-dumpname {/tmp/ahg.h5.dump}
+set $m8-ports {   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0}
+set $m8-ndims {3}
+set $m8-mergeData {2}
+set $m8-assumeSVT {0}
+set $m8-0-dim {321}
+set $m8-0-count {321}
+set $m8-1-dim {121}
+set $m8-1-count {121}
+set $m8-2-count {2}
+
+# Set GUI variables for the DataIO->Readers->HDF5DataReader Module
+set $m9-filename "$DATADIR/$DATASET/ahg.h5"
+set $m9-datasets {{/ {time_node_data[10]} {node_data[0]} values} {/ {time_node_data[11]} {node_data[0]} values} {/ {time_node_data[12]} {node_data[0]} values} {/ {time_node_data[13]} {node_data[0]} values} {/ {time_node_data[14]} {node_data[0]} values} {/ {time_node_data[15]} {node_data[0]} values} {/ {time_node_data[16]} {node_data[0]} values} {/ {time_node_data[17]} {node_data[0]} values} {/ {time_node_data[18]} {node_data[0]} values} {/ {time_node_data[19]} {node_data[0]} values} {/ {time_node_data[20]} {node_data[0]} values} {/ {time_node_data[21]} {node_data[0]} values} {/ {time_node_data[22]} {node_data[0]} values} {/ {time_node_data[23]} {node_data[0]} values} {/ {time_node_data[24]} {node_data[0]} values} {/ {time_node_data[25]} {node_data[0]} values} {/ {time_node_data[26]} {node_data[0]} values} {/ {time_node_data[27]} {node_data[0]} values} {/ {time_node_data[28]} {node_data[0]} values} {/ {time_node_data[29]} {node_data[0]} values} {/ {time_node_data[30]} {node_data[0]} values} {/ {time_node_data[31]} {node_data[0]} values} {/ {time_node_data[32]} {node_data[0]} values} {/ {time_node_data[33]} {node_data[0]} values} {/ {time_node_data[34]} {node_data[0]} values} {/ {time_node_data[35]} {node_data[0]} values} {/ {time_node_data[36]} {node_data[0]} values} {/ {time_node_data[37]} {node_data[0]} values} {/ {time_node_data[38]} {node_data[0]} values} {/ {time_node_data[39]} {node_data[0]} values} {/ {time_node_data[40]} {node_data[0]} values} {/ {time_node_data[41]} {node_data[0]} values} {/ {time_node_data[42]} {node_data[0]} values} {/ {time_node_data[43]} {node_data[0]} values} {/ {time_node_data[44]} {node_data[0]} values} {/ {time_node_data[45]} {node_data[0]} values} {/ {time_node_data[46]} {node_data[0]} values} {/ {time_node_data[47]} {node_data[0]} values} {/ {time_node_data[48]} {node_data[0]} values} {/ {time_node_data[49]} {node_data[0]} values} {/ {time_node_data[50]} {node_data[0]} values} {/ {time_node_data[51]} {node_data[0]} values} {/ {time_node_data[52]} {node_data[0]} values} {/ {time_node_data[53]} {node_data[0]} values} {/ {time_node_data[54]} {node_data[0]} values} {/ {time_node_data[55]} {node_data[0]} values} {/ {time_node_data[56]} {node_data[0]} values} {/ {time_node_data[57]} {node_data[0]} values} {/ {time_node_data[58]} {node_data[0]} values} {/ {time_node_data[59]} {node_data[0]} values} {/ {time_node_data[60]} {node_data[0]} values} {/ {time_node_data[61]} {node_data[0]} values} {/ {time_node_data[62]} {node_data[0]} values} {/ {time_node_data[63]} {node_data[0]} values} {/ {time_node_data[64]} {node_data[0]} values} {/ {time_node_data[65]} {node_data[0]} values} {/ {time_node_data[66]} {node_data[0]} values} {/ {time_node_data[67]} {node_data[0]} values} {/ {time_node_data[68]} {node_data[0]} values} {/ {time_node_data[69]} {node_data[0]} values} {/ {time_node_data[70]} {node_data[0]} values} {/ {time_node_data[71]} {node_data[0]} values} {/ {time_node_data[72]} {node_data[0]} values} {/ {time_node_data[73]} {node_data[0]} values} {/ {time_node_data[74]} {node_data[0]} values} {/ {time_node_data[75]} {node_data[0]} values} {/ {time_node_data[76]} {node_data[0]} values} {/ {time_node_data[77]} {node_data[0]} values} {/ {time_node_data[78]} {node_data[0]} values} {/ {time_node_data[79]} {node_data[0]} values} {/ {time_node_data[80]} {node_data[0]} values} {/ {time_node_data[81]} {node_data[0]} values} {/ {time_node_data[82]} {node_data[0]} values} {/ {time_node_data[83]} {node_data[0]} values} {/ {time_node_data[84]} {node_data[0]} values} {/ {time_node_data[85]} {node_data[0]} values} {/ {time_node_data[86]} {node_data[0]} values} {/ {time_node_data[87]} {node_data[0]} values} {/ {time_node_data[88]} {node_data[0]} values} {/ {time_node_data[89]} {node_data[0]} values} {/ {time_node_data[90]} {node_data[0]} values} {/ {time_node_data[91]} {node_data[0]} values} {/ {time_node_data[92]} {node_data[0]} values} {/ {time_node_data[93]} {node_data[0]} values} {/ {time_node_data[94]} {node_data[0]} values} {/ {time_node_data[95]} {node_data[0]} values} {/ {time_node_data[96]} {node_data[0]} values} {/ {time_node_data[97]} {node_data[0]} values} {/ {time_node_data[98]} {node_data[0]} values} {/ {time_node_data[99]} {node_data[0]} values}}
+set $m9-dumpname {/tmp/ahg.h5.dump}
+set $m9-ports {   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0   0}
+set $m9-ndims {2}
+set $m9-mergeData {2}
+set $m9-assumeSVT {0}
+set $m9-0-dim {321}
+set $m9-0-count {321}
+set $m9-1-dim {121}
+set $m9-1-count {121}
+set $m9-2-count {2}
+
+# Set GUI variables for the Teem->DataIO->NrrdToField Module
+set $m10-datasets {{Points : -time_coordinates_XX-coordinates-values:Scalar} {Connections : (none)} {Data : -time_node_data_XX-node_data_X-values:Scalar} {Original Field : (none)} }
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m11-nodes-on {0}
+set $m11-edges-on {0}
+set $m11-normalize-vectors {}
+set $m11-has_scalar_data {1}
+set $m11-scalars_scale {0.3}
+set $m11-show_progress {}
+
+$m12 addViewer
+set $m12-ViewWindow_0-geometry 654x638+2409+305
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m12-ViewWindow_0-view-eyep-x {9.12897027875}
+set $m12-ViewWindow_0-view-eyep-y {1.76445524222}
+set $m12-ViewWindow_0-view-eyep-z {-7.31408516444}
+set $m12-ViewWindow_0-view-lookat-x {0.0}
+set $m12-ViewWindow_0-view-lookat-y {-0.256473585963}
+set $m12-ViewWindow_0-view-lookat-z {0.256473585963}
+set $m12-ViewWindow_0-view-up-x {-0.342090913549}
+set $m12-ViewWindow_0-view-up-y {0.924960307846}
+set $m12-ViewWindow_0-view-up-z {-0.165596605574}
+set $m12-ViewWindow_0-view-fov {20.0}
+set $m12-ViewWindow_0-sr {1}
+set $m12-ViewWindow_0-do_stereo {0}
+set $m12-ViewWindow_0-ortho-view {0}
+set $m12-ViewWindow_0-trackViewWindow0 {1}
+set $m12-ViewWindow_0-raxes {1}
+set $m12-ViewWindow_0-ambient-scale {1.0}
+set $m12-ViewWindow_0-diffuse-scale {1.0}
+set $m12-ViewWindow_0-specular-scale {0.4}
+set $m12-ViewWindow_0-emission-scale {1.0}
+set $m12-ViewWindow_0-shininess-scale {1.0}
+set $m12-ViewWindow_0-polygon-offset-factor {1.0}
+set $m12-ViewWindow_0-polygon-offset-units {0.0}
+set $m12-ViewWindow_0-point-size {1.0}
+set $m12-ViewWindow_0-line-width {1.0}
+set $m12-ViewWindow_0-sbase {0.4}
+set $m12-ViewWindow_0-bgcolor-r {0.0}
+set $m12-ViewWindow_0-bgcolor-g {0.0}
+set $m12-ViewWindow_0-bgcolor-b {0.0}
+set $m12-ViewWindow_0-currentvisual {0}
+set $m12-ViewWindow_0-caxes {0}
+set $m12-ViewWindow_0-global-light0 {1}
+set $m12-ViewWindow_0-global-light1 {0}
+set $m12-ViewWindow_0-global-light2 {0}
+set $m12-ViewWindow_0-global-light3 {0}
+set $m12-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m12-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m12-ViewWindow_0-global-light {1}
+set $m12-ViewWindow_0-global-fog {0}
+set $m12-ViewWindow_0-global-debug {0}
+set $m12-ViewWindow_0-global-clip {1}
+set $m12-ViewWindow_0-global-cull {0}
+set $m12-ViewWindow_0-global-dl {0}
+set $m12-ViewWindow_0-global-type {Gouraud}
+set "$m12-ViewWindow_0-Faces (1)" {1}
+
+# Set GUI variables for the Teem->NrrdData->NrrdSelectTime Module
+set $m13-selectable_min {0.0}
+set $m13-selectable_max {89.0}
+set $m13-range_max {89}
+set $m13-current {88}
+set $m13-execmode {stop}
+set $m13-inc-amount {8}
+
+# Set GUI variables for the Teem->NrrdData->NrrdSelectTime Module
+set $m14-selectable_min {0.0}
+set $m14-selectable_max {89.0}
+set $m14-playmode {inc_w_exec}
+set $m14-current {88}
+
+# Set GUI variables for the Teem->UnuNtoZ->UnuPad Module
+set $m16-dim {3}
+set $m16-minAxis0 {0}
+set $m16-maxAxis0 {1}
+set $m16-minAxis1 {0}
+set $m16-maxAxis1 {0}
+set $m16-minAxis2 {0}
+set $m16-maxAxis2 {0}
+
+# Set GUI variables for the Teem->UnuNtoZ->UnuPad Module
+set $m17-dim {3}
+set $m17-minAxis0 {0}
+set $m17-maxAxis0 {1}
+set $m17-minAxis1 {0}
+set $m17-maxAxis1 {0}
+set $m17-minAxis2 {0}
+set $m17-maxAxis2 {0}
+
+# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+set $m19-isFixed {1}
+set $m19-min {-0.000167516881597}
+set $m19-max {0.362713633586}
+
+# Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
+set $m20-width {390}
+set $m20-height {40}
+set $m20-minRes {12}
+
+
+::netedit scheduleok

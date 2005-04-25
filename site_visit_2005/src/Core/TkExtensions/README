@@ -1,0 +1,2 @@
+Files tk3d.c, tclTimer.c and tclUnixNotfy.c come from the Tcl/Tk 8.0.4
+dist'n and have been modified in some way.

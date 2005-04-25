@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="RefineTetVol" category="FieldsCreate">
+  <overview>
+    <authors>
+      <author>Martin Cole</author>
+    </authors>
+    <summary>RefineTetVol subdivides or simplifies a TetVolField</summary>
+    <description>
+      <p>
+Subdivide the input TetVolField, or simplify it.  Gui control allows
+refinement of a single cell at a time, or refinement to a target
+subdivision level for the entire field. A secont input field can be
+input to control locally where and how much to refine the input field.
+Note: simplification is not yet implemented.
+      </p>
+      <p>
+The output field is a cell centered refined version of the input
+field. The data indicates the current subdivision level for that tet.
+Use <modref package="SCIRun" name="ChangeFieldBasis"/> and <modref package="SCIRun" name="DirectMapping"/> to get data values for
+calculation.
+      </p>
+      <p>
+If a second input field is provided (port name: Refinement Control),
+it must share a mesh with the first input field. It must be cell
+centered int data. The int at each cell indicates to what level the
+mesh should be refined at that position.  A positive int (i) indicates
+subdivision to level i. (a 5 at cell n would indicate subdivision of
+cell n until it is at least level 5).  A negative int (i) indicates
+simplification to level i. A 0 at any cell indicates no change at all.
+      </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+	<name>Input TetVol</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+	<name>Refinement Control</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+	<name>Refined TetVol</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

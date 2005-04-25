@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+For more information, please see: http://software.sci.utah.edu
+
+The MIT License
+
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
+
+License for the specific language governing rights and limitations under
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+-->
+
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<!--%
+standard_loc = Doc::Platform == Doc::OSX ? "/sw/lib" : "/usr/lib"
+%-->
+
+<!--% teem_crap = %Q{
+<listitem>
+  <para><emphasis>Optional:</emphasis> Enable
+  <acronym>PNG</acronym> support in the Teem third party
+  library.  To enable <acronym>PNG</acronym> support in the Teem third party
+  library set the <envar>TEEM_ZLIB</envar> and
+  <envar>TEEM_PNG</envar> environment variables:</para>
+  <para>
+    For sh-type shells:
+    <literallayout class="monospaced">
+TEEM_ZLIB=1
+TEEM_PNG=1
+export TEEM_ZLIB TEEM_PNG	
+    </literallayout>
+    for csh-type shells:
+    <literallayout class="monospaced">
+setenv TEEM_ZLIB
+setenv TEEM_PNG
+    </literallayout>
+    If these variables are not set, <acronym>PNG</acronym>
+    support will be omitted.
+  </para>
+  <para>If <acronym>PNG</acronym> support is enabled and
+  <acronym>PNG</acronym> libraries (and corresponding header
+  files) are not installed in a standard location (#{standard_loc}) then
+  environment variables <envar>TEEM_PNG_IPATH</envar> and
+  <envar>TEEM_PNG_LPATH</envar> must be set.  For example, if
+  PNG libraries and headers are installed in
+  <filename>/usr/local</filename> then
+  <envar>TEEM_PNG_IPATH</envar> and
+  <envar>TEEM_PNG_LPATH</envar> are set as follows:</para>
+  <para>
+    For sh-type shells:
+    <literallayout class="monospaced">
+TEEM_PNG_LPATH=-I/usr/local/lib
+TEEM_PNG_IPATH=-I/usr/local/include
+export TEEM_PNG_LPATH TEEM_PNG_IPATH
+    </literallayout>
+    for csh-type shells:
+    <literallayout class="monospaced">
+setenv TEEM_PNG_LPATH -I/usr/local/lib
+setenv TEEM_PNG_IPATH -I/usr/local/include
+    </literallayout>
+  </para>
+  <para>If <acronym>ZLIB</acronym> libraries (and
+  corresponding header files) are not installed in a
+  standard location (#{standard_loc}) then environment variables
+  <envar>TEEM_ZLIB_IPATH</envar> and
+  <envar>TEEM_ZLIB_LPATH</envar> must be set.  For example, if
+  ZLIB libraries and headers are installed in
+  <filename>/usr/local</filename> then
+  <envar>TEEM_ZLIB_IPATH</envar> and
+  <envar>TEEM_ZLIB_LPATH</envar> are set as follows:</para>
+  <para>
+    For sh-type shells:
+    <literallayout class="monospaced">
+TEEM_ZLIB_LPATH=-I/usr/local/lib
+TEEM_ZLIB_IPATH=-I/usr/local/include
+export TEEM_ZLIB_LPATH TEEM_ZLIB_IPATH
+    </literallayout>
+    for csh-type shells:
+    <literallayout class="monospaced">
+setenv TEEM_ZLIB_LPATH -I/usr/local/lib
+setenv TEEM_ZLIB_IPATH -I/usr/local/include
+    </literallayout>
+  </para>
+</listitem>
+} %-->
+
+<section id="sec.third_party_inst">
+  <title id="title.third_party_inst">Building Internal Third Party Software</title>
+
+  <para>Internal third party software is distributed with SCIRun and
+  is required for SCIRun to run properly.  It must be built before
+  building SCIRun.  This section provides instruction for building
+  internal third party software.</para>
+
+  <note os="linux;irix">
+    <para><ulink url="http://www.python.org">Python</ulink> (version
+    1.5.2 or later) and <ulink
+    url="http://www.gnu.org/directory/make.html">GNU make</ulink>
+    (version 3.79 or later) must be present to proceed with source
+    installation.</para>
+  </note>
+
+  <para>Follow these steps to build internal third-party distribution:</para>
+
+  <orderedlist os="linux;irix">
+
+    <listitem>
+      <para>
+	<command>cd</command> to the third-party software directory:
+	<literallayout class="monospaced">
+cd Thirdparty_install.<replaceable>x.x.x</replaceable>
+	</literallayout>
+      </para>
+    </listitem>
+
+    <!--%= teem_crap %-->
+
+    <listitem>
+      <para>
+	Run the third party installation script.
+      </para>
+
+      <para>
+	The simplest 
+	script invocation requires a single argument:
+	<literallayout class="monospaced">
+python install <replaceable>dir</replaceable>
+	</literallayout>
+	where <replaceable>dir</replaceable> is the location you wish to install the third-party installation.
+      </para>
+
+      <para>
+	The installation script takes additional optional arguments:
+	<literallayout class="monospaced">
+python install <replaceable>dir</replaceable> <replaceable>bits</replaceable> <replaceable>jobs</replaceable>
+	</literallayout>
+	<replaceable>dir</replaceable> is the third-party installation
+	directory.  <replaceable>bits</replaceable> is either 32 or 64 and
+	specifies one of 32 bit or 64 bit
+	binaries. <replaceable>jobs</replaceable> is the number of processors
+	availabe for <command>make</command>'s use when building the software.
+	For example:
+	<literallayout class="monospaced">
+python install /usr/local/SCIRun/Thirdparty 64 2
+	</literallayout>
+	or
+	<literallayout class="monospaced">
+python install /usr/local/SCIRun/Thirdparty 32 1
+	</literallayout>
+	When finished, the installation script displays the
+	complete path of the third-party software installation
+	directory. Make note of this value, it is used in the
+	configure step of the SCIRun build process described in
+	<xref linkend="sec.build-sr"/>.
+      </para>
+    </listitem>
+
+  </orderedlist>
+
+  <para os="linux;irix">
+    The complete path name of the third-party installation directory
+    reflects the parameters given to the install script.  This allows the
+    user to maintain multiple third-party installations for different
+    operating systems and machine architectures.  For example, on a
+    &pf; machine, the installation command:
+    <literallayout class="monospaced">
+<phrase os="linux">python install /usr/local/SCIRun/Thirdparty</phrase>
+<phrase os="irix">python install /usr/local/SCIRun/Thirdparty 64</phrase>
+    </literallayout>
+    creates the installation under:
+    <literallayout class="monospaced">
+<phrase os="linux">/usr/local/SCIRun/Thirdparty/1.8/Linux/gcc-3.2-32bit</phrase>
+<phrase os="irix">/usr/local/SCIRun/Thirdparty/1.8/IRIX64/MIPSpro-7.3.1.3m-32bit</phrase>
+    </literallayout>
+  </para>
+
+  <para os="linux;irix">
+    All, or part, of the third-party software may be reinstalled by repeating
+    the install command line.  The script  asks for a
+    <userinput>y</userinput> or <userinput>n</userinput> response to each
+    tarball in the distribution.  Answer <userinput>y</userinput> to reinstall.
+  </para>
+
+  <para os="osx">Follow these steps to install the third-party
+  distribution:</para>
+
+  <orderedlist os="osx">
+    <listitem>
+      <para>Create a directory for third-party binaries and libraries,
+      for example:
+      <literallayout class="monospaced">
+mkdir /usr/local/SCIRun/Thirdparty_osx
+      </literallayout></para>
+    </listitem>
+
+    <listitem>
+      <para>
+	<command>cd</command> to the third-party sources directory:
+	<literallayout class="monospaced">
+cd Thirdparty_install_osx.<replaceable>x.x.x</replaceable>
+	</literallayout>
+      </para>
+    </listitem>
+
+    <!--%= teem_crap %-->
+
+    <listitem>
+      <para>
+	Run the third party installation script:
+	<literallayout class="monospaced">
+./install.sh <replaceable>dir</replaceable>
+	</literallayout>
+	where <replaceable>dir</replaceable> is the third-party installation
+	directory.  <replaceable>Dir</replaceable> must be an absolute
+	path.  For example:
+	<literallayout class="monospaced">
+./install.sh /usr/local/SCIRun/Thirdparty_osx
+	</literallayout>
+	The path to the third-party installation directory is used
+	in the configure step of the SCIRun build process.  The configure
+	step is described in <xref linkend="sec.build-sr"/>.
+      </para>
+    </listitem>
+  </orderedlist>
+
+  <para>Proceed to <xref linkend="sec.opt_inst"/>.</para>
+
+</section>
+

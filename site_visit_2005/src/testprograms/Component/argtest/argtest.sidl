@@ -1,0 +1,86 @@
+/*
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+*/
+
+
+
+package argtest {
+    interface ref {
+      int test();
+    };
+    enum TestEnum {
+      Foo, Bar,
+    };
+    interface Server {
+	int return_int();
+	void in_int(in int a);
+	void out_int(out int a);
+	void inout_int(inout int a);
+
+	TestEnum return_enum();
+	void in_enum(in TestEnum a);
+	void out_enum(out TestEnum a);
+	void inout_enum(inout TestEnum a);
+
+	string return_string();
+	void in_string(in string a);
+	void out_string(out string a);
+	void inout_string(inout string a);
+
+	ref return_ref();
+	void in_ref(in ref a);
+	void out_ref(out ref a);
+	void inout_ref(inout ref a);
+
+	array<int> return_array();
+	void in_array(in array<int, 1> a);
+	void out_array(out array<int> a);
+	void inout_array(inout array<int> a);
+
+	array<bool> return_arraybool();
+	void in_arraybool(in array<bool, 1> a);
+	void out_arraybool(out array<bool> a);
+	void inout_arraybool(inout array<bool> a);
+
+	array<string> return_arraystring();
+	void in_arraystring(in array<string, 1> a);
+	void out_arraystring(out array<string> a);
+	void inout_arraystring(inout array<string> a);
+
+	array<array<int> > return_arrayarray();
+	void in_arrayarray(in array<array<int, 1> > a);
+	void out_arrayarray(out array<array<int> > a);
+	void inout_arrayarray(inout array<array<int> > a);
+
+	array<ref> return_arrayref();
+	void in_arrayref(in array<ref, 1> a);
+	void out_arrayref(out array<ref> a);
+	void inout_arrayref(inout array<ref> a);
+
+	bool getSuccess();
+    };
+};

@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Titanium -->
+<Uintah_Include>
+  <shear_modulus_model type="scg_shear">
+    <mu_0> 43.4e9 </mu_0> 
+    <A> 11.5e-12 </A>
+    <B> 0.62e-3 </B>
+  </shear_modulus_model>
+</Uintah_Include>

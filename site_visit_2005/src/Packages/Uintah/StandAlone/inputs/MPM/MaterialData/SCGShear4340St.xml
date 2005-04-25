@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- 4340 Steel -->
+<Uintah_Include>
+  <shear_modulus_model type="scg_shear">
+    <mu_0> 81.8e9 </mu_0> 
+    <A> 20.6e-12 </A>
+    <B> 0.16e-3 </B>
+  </shear_modulus_model>
+</Uintah_Include>

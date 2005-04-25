@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<!DOCTYPE filter-itk SYSTEM "itk_filter.dtd">
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<filter-itk name="itk::watershed::SegmentTreeGenerator">
+  <description>
+This filter is a process object class that implements a step in the N-d watershed segmentation algorithm. It produces an ordered list (SegmentTree) of binary merges between segments at increasing saliency levels. This filter is used in conjunction with WatershedSegmenter and WatershedRelabeler to process an initial segmentation into a final relabeled volume. See itk::WatershedImageFilter for an overview of watershed segmentation.
+  </description>
+  <templated>
+    <template>ScalarType</template>
+    <defaults>
+      <default>float</default>
+    </defaults>
+  </templated>
+
+  <inputs>
+    <input name="Segment_Table">
+      <type>itk::watershed::SegmentTable&lt;ScalarType&gt;</type>
+      <call>SetInputSegmentTable</call>
+    </input>  
+    <input optional="yes" name="Equivalencey_Table">
+      <type>itk::EquivalencyTable</type>
+      <call>SetInputEquivalencyTable</call>
+    </input>  
+  </inputs>
+  <outputs>
+    <output name="Merge_Tree">
+      <type>itk::watershed::SegmentTree&lt;ScalarType&gt;</type>
+      <call>GetOutputSegmentTree</call>
+    </output>
+  </outputs>
+
+  <parameters>
+    <param>
+      <name>flood_level</name>
+      <type>double</type>
+      <call>SetFloodLevel</call>
+      <default>0.1</default>
+    </param>
+   <param>
+      <name>merge</name>
+      <type>bool</type>
+      <call>SetMerge</call>
+      <default>0</default>
+    </param>
+  </parameters>
+
+  <includes>
+    <file>itkWatershedSegmentTreeGenerator.h</file>
+  </includes>
+</filter-itk>
+

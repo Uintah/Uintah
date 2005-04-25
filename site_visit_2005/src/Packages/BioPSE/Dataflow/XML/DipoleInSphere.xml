@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="DipoleInSphere" category="Forward">
+  <overview>
+    
+    <authors>
+      <author>David Weinstein</author>
+      <author>Alexei Samsonov</author>
+    </authors>
+
+    <summary>Due to the specified dipoles, the DipoleInSphere module fills the sphere field with potentials values.</summary>
+
+    <description>
+      <p>Version Date: March 2001</p>
+      <p>Version: 1.1</p>
+      <p>The current version of the module provides analytical
+	calculation of potentials on the surface of the supplied sphere. We assume that the
+	sphere has uniform conductivity equal to 1. The
+	center of the sphere is the center of the bounding box, and the
+	radius is half of the maximum dimension of the box.</p>
+    </description>
+  </overview>
+  
+  <io>
+    <inputs lastportdynamic="no">
+      <!-- one of (device port file) -->
+      <port>
+	<name>Sphere</name>
+	<description>
+	  <p>The port takes a handle to the field data object that
+	  contans TriSurfMesh as geometry.</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+	<name>Dipole Sources</name>
+	<description>
+	  <p>The port takes a handle to the matrix that is n-by-6 in size,
+	  containing parameters of n dipoles (the first three column are dipole
+	  positions, the other three are dipole moments). We also assume that the dipoles
+	  lie inside the sphere. Otherwise, the moudle log window produces a warning message.</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+
+    <outputs>
+      <!-- one of (device port file) -->
+      <port>
+	<name>SphereWithPots</name>
+	<description>
+	  <p> Send the handle to the field object to downstream
+	  module. This is the initial field object and is populated with
+	  potential values at the sphere nodes.</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+	<name>SphereWithMagneticField</name>
+	<description>
+	  <p> Send the handle to the field object to downstream
+	  module. This is the initial field object and is populated with
+	  magnetic vectors at the sphere nodes.</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+
+  </io>
+
+</component>

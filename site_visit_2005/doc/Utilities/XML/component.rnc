@@ -1,0 +1,280 @@
+#
+#  For more information, please see: http://software.sci.utah.edu
+# 
+#  The MIT License
+# 
+#  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+#  University of Utah.
+# 
+#  License for the specific language governing rights and limitations under
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+# 
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+# 
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+#
+
+# ********** Parameter Entities **********
+
+namespace a = "http://relaxng.org/ns/compatibility/annotations/1.0"
+
+filename = text
+# links
+
+# Links may contain phrases but not vice-versa
+links = rlink | slink | ulink | modref | xref | email | cite
+# "Phrases"
+phrase =
+  firstterm | keyword | userinput | abbr | latex | path | emph | quote
+phrase.content = text
+# Inlines
+inline = phrase | links
+Inline = (text | inline)*
+link.content = (text | phrase)*
+# Block level
+\list = orderedlist | unorderedlist | desclist
+admonition = note | tip | warning
+block = p | latex | figure | pre
+# "Flow" level
+BasicFlow = (block | \list)*
+DescFlow = (section | developer | block | \list | admonition)*
+DevFlow = (block | \list | admonition)*
+AdmonFlow = (block | \list)*
+# ********** Elements **********
+
+# A couple of reusable elements
+datatype = element datatype { datatype.attlist, text }
+datatype.attlist &= empty
+componentname = element componentname { componentname.attlist, text }
+componentname.attlist &= empty
+devicename = element devicename { devicename.attlist, text }
+devicename.attlist &= empty
+title = element title { title.attlist, Inline }
+title.attlist &= empty
+# Top level
+component =
+  element component {
+    component.attlist,
+    overview,
+    implementation?,
+    io,
+    gui?,
+    nets?,
+    testing?
+  }
+component.attlist &=
+  attribute name { text },
+  attribute category { text }
+# Overview of component's purpose
+overview =
+  element overview {
+    overview.attlist, authors, summary, description, examplesr?
+  }
+overview.attlist &= empty
+# Brief (1 or 2 sentence) summary.
+summary = element summary { summary.attlist, Inline }
+summary.attlist &= empty
+# Author(s)
+authors = element authors { authors.attlist, author+ }
+authors.attlist &= empty
+# 1 author
+author = element author { author.attlist, Inline }
+author.attlist &= empty
+# Name of sr file which demonstrates use of this component
+
+# This element is obsolete!
+examplesr = element examplesr { examplesr.attlist, filename }
+examplesr.attlist &= empty
+# Net descriptions
+nets = element nets { nets.attlist, net+ }
+nets.attlist &= empty
+net = element net { net.attlist, title, DescFlow }
+net.attlist &= attribute id { xsd:ID }?
+# All the extra code files needed to build this component
+implementation =
+  element implementation {
+    implementation.attlist, (ccfile | cfile | ffile)+
+  }
+implementation.attlist &= empty
+# The name of a single .cc file
+ccfile = element ccfile { ccfile.attlist, text }
+ccfile.attlist &= empty
+# The name of a single .c file
+cfile = element cfile { cfile.attlist, text }
+cfile.attlist &= empty
+# The name of a single .f file
+ffile = element ffile { ffile.attlist, text }
+ffile.attlist &= empty
+# Component's inputs and outputs
+io = element io { io.attlist, inputs, outputs }
+io.attlist &= empty
+# Component's inputs.  Inputs may come from a file, port, or device.
+inputs = element inputs { inputs.attlist, (file | port | device)+ }
+inputs.attlist &=
+  [ a:defaultValue = "no" ] attribute lastportdynamic { "yes" | "no" }?
+# Component's outputs.  Outputs may be sent to a file, port, or device.
+outputs = element outputs { outputs.attlist, (file | port | device)+ }
+outputs.attlist &= empty
+# Describe content of file (i.e. temperature data) and the datatype
+# contained in the file.
+file = element file { file.attlist, description, datatype }
+file.attlist &= empty
+# Describe data on port (i.e. temperature data) and the datatype being
+# transmitted.
+port =
+  element port {
+    port.attlist, name, description, datatype, componentname*
+  }
+port.attlist &= empty
+# The user-defined name for this port
+name = element name { name.attlist, text }
+name.attlist &= empty
+# Describe data on device
+device = element device { device.attlist, devicename, description }
+device.attlist &= empty
+# GUI description (words and pictures)
+
+# Note: '(img, caption?)*' part of content model is obsolete. Use
+
+# figure and figref elements within a description element instead.
+gui =
+  element gui {
+    gui.attlist,
+    (description, parameter+, (img, caption?)*)+
+  }
+gui.attlist &= empty
+# Description of 1 gui parameter.
+parameter =
+  element parameter {
+    parameter.attlist, widget, datatype, label, description
+  }
+parameter.attlist &= empty
+#  Name of gui widget (e.g. slider, text entry, checkbox)
+widget = element widget { widget.attlist, text }
+widget.attlist &= empty
+# Gui item label
+label = element label { label.attlist, text }
+label.attlist &= empty
+# Name of an image file
+img = element img { img.attlist, filename }
+img.attlist &= empty
+# Image caption
+caption = element caption { caption.attlist, Inline }
+caption.attlist &= empty
+# Specify testing plan(s)
+testing = element testing { testing.attlist, plan+ }
+testing.attlist &= empty
+# Specify 1 testing plan.
+plan = element plan { plan.attlist, description, step+ }
+plan.attlist &= empty
+# Specify 1 testing step
+step = element step { step.attlist, DescFlow }
+step.attlist &= empty
+# Mini-documentation environment
+description = element description { description.attlist, DescFlow }
+description.attlist &= attribute id { xsd:ID }?
+# Description, net, and section subdivision
+section = element section { section.attlist, title?, DescFlow }
+section.attlist &= attribute id { xsd:ID }?
+# Description information targeted at developers
+developer = element developer { developer.attlist, DevFlow }
+developer.attlist &= empty
+# Calls attention to some piece of information.
+note = element note { note.attlist, AdmonFlow }
+note.attlist &= empty
+# A friendly word of advice.
+tip = element tip { tip.attlist, AdmonFlow }
+tip.attlist &= empty
+# A warning of some sort.
+warning = element warning { warning.attlist, AdmonFlow }
+warning.attlist &= empty
+# Paragraph.
+p = element p { p.attlist, Inline }
+p.attlist &= empty
+# Inline elements
+firstterm = element firstterm { firstterm.attlist, phrase.content }
+firstterm.attlist &= empty
+# Introduce a new term
+keyword = element keyword { keyword.attlist, phrase.content }
+keyword.attlist &= empty
+# Introduce a keyword
+userinput = element userinput { userinput.attlist, phrase.content }
+userinput.attlist &= empty
+# Something entered by the user
+cite = element cite { cite.attlist, phrase.content }
+# Citation
+cite.attlist &= attribute url { text }?
+abbr = element abbr { abbr.attlist, phrase.content }
+abbr.attlist &= empty
+# An abbreviation
+path = element path { path.attlist, phrase.content }
+path.attlist &= empty
+# Path to file or directory
+emph = element emph { emph.attlist, phrase.content }
+emph.attlist &= empty
+# Emphasized text
+quote = element quote { quote.attlist, phrase.content }
+quote.attlist &= empty
+# Quoted text
+email = element email { email.attlist, phrase.content }
+# Email address with link text
+email.attlist &= attribute addr { text }
+xref = element xref { xref.attlist, phrase.content }
+# General reference
+xref.attlist &= attribute target { xsd:IDREF }
+modref = element modref { modref.attlist, phrase.content }
+# Module reference
+modref.attlist &=
+  attribute package { xsd:NMTOKEN },
+  attribute name { text }
+rlink = element rlink { rlink.attlist, link.content }
+# Link from root of CVS tree
+rlink.attlist &= attribute path { text }
+slink = element slink { slink.attlist, link.content }
+# Link into SCI web site
+slink.attlist &= attribute path { text }
+ulink = element ulink { ulink.attlist, link.content }
+# URL link
+ulink.attlist &= attribute url { text }
+# Ordered list, unordered list, and description list.
+orderedlist = element orderedlist { orderedlist.attlist, listitem+ }
+orderedlist.attlist &= empty
+unorderedlist =
+  element unorderedlist { unorderedlist.attlist, listitem+ }
+unorderedlist.attlist &= empty
+listitem = element listitem { listitem.attlist, BasicFlow }
+listitem.attlist &= empty
+desclist = element desclist { desclist.attlist, desclistitem+ }
+desclist.attlist &= empty
+desclistitem =
+  element desclistitem {
+    desclistitem.attlist, desclistterm, desclistdef
+  }
+desclistitem.attlist &= empty
+desclistterm = element desclistterm { desclistterm.attlist, text }
+desclistterm.attlist &= empty
+desclistdef = element desclistdef { desclistdef.attlist, BasicFlow }
+desclistdef.attlist &= empty
+# Latex element.  Acts as both an inline phrase type element and a
+# block element
+latex = element latex { latex.attlist, text }
+latex.attlist &= empty
+# Figure element
+figure = element figure { figure.attlist, img, caption }
+figure.attlist &= attribute id { xsd:ID }?
+# Pre element
+pre = element pre { pre.attlist, text }
+pre.attlist &= empty
+start = component

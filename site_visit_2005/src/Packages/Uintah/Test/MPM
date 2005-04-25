@@ -1,0 +1,23 @@
+#!/usr/local/bin/python
+
+from sys import argv,exit
+from helpers.runSusTests import runSusTests
+
+UNUSED = [  ("test_cyl_pene_hypo_jc_ero", "test_cyl_pene_hypo_jc_ero.ups", "", 1, "ALL"), \
+	    ("testConvert1MAdd", "testConvert1MAdd.ups", "", 1, "ALL"), \
+            ]
+
+TESTS = [   ("disks2mat4patch4proc", "disks2mat4patch.ups", "", 4, "ALL"), \
+	    ("heatcond2mat", "heatcond2mat.ups", "", 1, "ALL"), \
+    	    ("inclined_plane_sphere", "inclined_plane_sphere.ups", "", 1, "ALL"), \
+	    ("foam_crush", "foam_crush.ups", "", 4, "Linux"), \
+	    ("const_test_hypo", "const_test_hypo.ups", "", 1, "Linux"), \
+	    ("const_test_cmr", "const_test_cmr.ups", "", 1, "ALL"), \
+	    ("const_test_nhp", "const_test_nhp.ups", "", 1, "ALL"), \
+	    ("const_test_vs", "const_test_vs.ups", "", 1, "Linux"), \
+	    ("test_corrug_plate", "test_corrug_plate.ups", "", 1, "ALL"), \
+	    ("test_cyl_pene_no_ero", "test_cyl_pene_no_ero.ups", "", 1, "ALL"), \
+	    ("test_gurson_beckerdrucker_mts", "test_gurson_beckerdrucker_mts.ups", "", 1, "ALL"), \
+    	]
+
+exit(runSusTests(argv, TESTS, "mpm"))

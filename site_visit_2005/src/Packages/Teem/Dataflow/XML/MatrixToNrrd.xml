@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<component name="MatrixToNrrd" category="Converters">
+  <overview>
+    <author>Darby Van Uitert
+    </author>
+    <summary>Convert a SCIRun Matrix to a single Nrrd in the case of a Dense or Column Matrix or convert a Sparse Row Matrix to three Nrrds (Data, Rows, and Columns).
+    </summary>
+    <description>
+    <p>Convert a SCIRun Matrix to a single Nrrd in the case of a Dense or Column Matrix or convert a Sparse Row Matrix to three Nrrds (Data, Rows, and Columns).</p>
+    <p>If the input Matrix is a Column Matrix, the module will produe a 1D Nrrd of doubles containing the data.</p>
+    <p>If the input Matrix is a Dense matrix, the module will produce a 2D Nrrd of Doubles.</p>
+    <p>If the input Matrix is a Sparse Row Matrix, the module will produce three Nrrds.  The first output port contains the Data as a 1D Nrrd representing the non-zero entries in the Sparse Row Matrix.  The second output will contain the Rows Nrrd which is the row accumulation buffer containing R+1 entries where R is the number of rows and Rows[N+1]-Rows[N] is the number of non-zero entries in row N. The last output will be the Columns Nrrd containing the column number for each non-zero data entry.</p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Matrix</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Data</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Rows</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Columns</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

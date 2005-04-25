@@ -1,0 +1,262 @@
+# SCI Network v1.22
+
+#
+#  For more information, please see: http://software.sci.utah.edu
+# 
+#  The MIT License
+# 
+#  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+#  University of Utah.
+# 
+#  License for the specific language governing rights and limitations under
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+# 
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+# 
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+#
+
+set results [sourceSettingsFile]
+
+if { $results == "failed" } {
+    ::netedit scheduleok
+    return
+} else {
+    set DATADIR [lindex $results 0]
+    set DATASET [lindex $results 1]
+}
+
+source $DATADIR/$DATASET/$DATASET.settings
+
+global userName
+set userName ""
+
+global runDate
+set runDate ""
+
+global runTime
+set runTime ""
+
+global notes
+set notes ""
+
+global Subnet
+set Subnet(Subnet$Subnet(Loading)_Name) {Main}
+set bbox {59 10 559 552}
+
+# Create a SCIRun->Visualization->ShowField Module
+set m1 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 352 380]
+
+# Create a SCIRun->Render->Viewer Module
+set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 239 508]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 59 428]
+
+# Create a SCIRun->FieldsGeometry->ChangeFieldBounds Module
+set m4 [addModuleAtPosition "SCIRun" "FieldsGeometry" "ChangeFieldBounds" 69 191]
+
+# Create a SCIRun->FieldsData->TransformData Module
+set m5 [addModuleAtPosition "SCIRun" "FieldsData" "TransformData" 71 96]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 394 199]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 354 64]
+
+# Create a SCIRun->FieldsCreate->SamplePlane Module
+set m8 [addModuleAtPosition "SCIRun" "FieldsCreate" "SamplePlane" 88 10]
+
+# Create a SCIRun->FieldsData->MoveNodeToElem Module
+set m9 [addModuleAtPosition "SCIRun" "FieldsData" "MoveNodeToElem" 221 273]
+
+# Create the Connections between Modules
+set c1 [addConnection $m8 0 $m5 0]
+set c2 [addConnection $m9 0 $m1 0]
+set c3 [addConnection $m5 0 $m4 0]
+set c4 [addConnection $m4 0 $m9 0]
+set c5 [addConnection $m4 0 $m3 0]
+set c6 [addConnection $m7 0 $m6 0]
+set c7 [addConnection $m3 0 $m2 0]
+set c8 [addConnection $m5 0 $m6 1]
+set c9 [addConnection $m6 0 $m1 1]
+set c10 [addConnection $m6 0 $m3 1]
+set c11 [addConnection $m1 0 $m2 1]
+set c12 [addConnection $m4 1 $m2 2]
+
+# Setup GUI for the SCIRun->Visualization->ShowField Module
+setGlobal $m1-nodes-on {0}
+setGlobal $m1-edges-transparency {1}
+setGlobal $m1-faces-on {0}
+setGlobal $m1-normalize-vectors {}
+setGlobal $m1-scalars-on {1}
+setGlobal $m1-has_scalar_data {1}
+setGlobal $m1-def-color-r {0.50}
+setGlobal $m1-def-color-g {0.50}
+setGlobal $m1-def-color-b {0.50}
+setGlobal $m1-def-color-a {0.80}
+setGlobal $m1-scalar_display_type {Spheres}
+setGlobal $m1-active_tab {Scalars}
+setGlobal $m1-node_scale {0.0300}
+setGlobal $m1-edge_scale {0.0150}
+setGlobal $m1-scalars_scale {0.100}
+setGlobal $m1-show_progress {}
+
+# Setup GUI for the SCIRun->Render->Viewer Module
+$m2 ui
+setGlobal $m2-ViewWindow_0-pos {}
+setGlobal $m2-ViewWindow_0-caxes {0}
+setGlobal $m2-ViewWindow_0-raxes {1}
+setGlobal $m2-ViewWindow_0-iaxes {}
+setGlobal $m2-ViewWindow_0-have_collab_vis {0}
+setGlobal $m2-ViewWindow_0-view-eyep-x {-9.345154815277187}
+setGlobal $m2-ViewWindow_0-view-eyep-y {-5.801946565693198}
+setGlobal $m2-ViewWindow_0-view-eyep-z {4.269133111925909}
+setGlobal $m2-ViewWindow_0-view-lookat-x {0}
+setGlobal $m2-ViewWindow_0-view-lookat-y {0}
+setGlobal $m2-ViewWindow_0-view-lookat-z {0}
+setGlobal $m2-ViewWindow_0-view-up-x {-0.515098833355198}
+setGlobal $m2-ViewWindow_0-view-up-y {0.8563625571617092}
+setGlobal $m2-ViewWindow_0-view-up-z {0.03628171119962051}
+setGlobal $m2-ViewWindow_0-view-fov {20}
+setGlobal $m2-ViewWindow_0-view-eyep_offset-x {}
+setGlobal $m2-ViewWindow_0-view-eyep_offset-y {}
+setGlobal $m2-ViewWindow_0-view-eyep_offset-z {}
+setGlobal $m2-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+setGlobal $m2-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+setGlobal $m2-ViewWindow_0-bgcolor-r {0}
+setGlobal $m2-ViewWindow_0-bgcolor-g {0}
+setGlobal $m2-ViewWindow_0-bgcolor-b {0}
+setGlobal $m2-ViewWindow_0-shading {}
+setGlobal $m2-ViewWindow_0-do_stereo {0}
+setGlobal $m2-ViewWindow_0-ambient-scale {1.0}
+setGlobal $m2-ViewWindow_0-diffuse-scale {1.0}
+setGlobal $m2-ViewWindow_0-specular-scale {0.4}
+setGlobal $m2-ViewWindow_0-emission-scale {1.0}
+setGlobal $m2-ViewWindow_0-shininess-scale {1.0}
+setGlobal $m2-ViewWindow_0-polygon-offset-factor {1.0}
+setGlobal $m2-ViewWindow_0-polygon-offset-units {0.0}
+setGlobal $m2-ViewWindow_0-point-size {1.0}
+setGlobal $m2-ViewWindow_0-line-width {1.0}
+setGlobal $m2-ViewWindow_0-sbase {0.40}
+setGlobal $m2-ViewWindow_0-sr {1}
+setGlobal $m2-ViewWindow_0-do_bawgl {0}
+setGlobal $m2-ViewWindow_0-drawimg {}
+setGlobal $m2-ViewWindow_0-saveprefix {}
+setGlobal $m2-ViewWindow_0-resx {}
+setGlobal $m2-ViewWindow_0-resy {}
+setGlobal $m2-ViewWindow_0-aspect {}
+setGlobal $m2-ViewWindow_0-aspect_ratio {}
+setGlobal $m2-ViewWindow_0-global-light {1}
+setGlobal $m2-ViewWindow_0-global-fog {0}
+setGlobal $m2-ViewWindow_0-global-debug {0}
+setGlobal $m2-ViewWindow_0-global-clip {1}
+setGlobal $m2-ViewWindow_0-global-cull {0}
+setGlobal $m2-ViewWindow_0-global-dl {0}
+setGlobal $m2-ViewWindow_0-global-type {Gouraud}
+setGlobal $m2-ViewWindow_0-ortho-view {0}
+setGlobal $m2-ViewWindow_0-clip-num {}
+setGlobal $m2-ViewWindow_0-clip-visible {}
+setGlobal $m2-ViewWindow_0-clip-selected {}
+setGlobal $m2-ViewWindow_0-clip-visible-1 {}
+setGlobal $m2-ViewWindow_0-clip-normal-x-1 {}
+setGlobal $m2-ViewWindow_0-clip-normal-y-1 {}
+setGlobal $m2-ViewWindow_0-clip-normal-z-1 {}
+setGlobal $m2-ViewWindow_0-clip-normal-d-1 {}
+setGlobal $m2-ViewWindow_0-clip-visible-2 {}
+setGlobal $m2-ViewWindow_0-clip-normal-x-2 {}
+setGlobal $m2-ViewWindow_0-clip-normal-y-2 {}
+setGlobal $m2-ViewWindow_0-clip-normal-z-2 {}
+setGlobal $m2-ViewWindow_0-clip-normal-d-2 {}
+setGlobal $m2-ViewWindow_0-clip-visible-3 {}
+setGlobal $m2-ViewWindow_0-clip-normal-x-3 {}
+setGlobal $m2-ViewWindow_0-clip-normal-y-3 {}
+setGlobal $m2-ViewWindow_0-clip-normal-z-3 {}
+setGlobal $m2-ViewWindow_0-clip-normal-d-3 {}
+setGlobal $m2-ViewWindow_0-clip-visible-4 {}
+setGlobal $m2-ViewWindow_0-clip-normal-x-4 {}
+setGlobal $m2-ViewWindow_0-clip-normal-y-4 {}
+setGlobal $m2-ViewWindow_0-clip-normal-z-4 {}
+setGlobal $m2-ViewWindow_0-clip-normal-d-4 {}
+setGlobal $m2-ViewWindow_0-clip-visible-5 {}
+setGlobal $m2-ViewWindow_0-clip-normal-x-5 {}
+setGlobal $m2-ViewWindow_0-clip-normal-y-5 {}
+setGlobal $m2-ViewWindow_0-clip-normal-z-5 {}
+setGlobal $m2-ViewWindow_0-clip-normal-d-5 {}
+setGlobal $m2-ViewWindow_0-clip-visible-6 {}
+setGlobal $m2-ViewWindow_0-clip-normal-x-6 {}
+setGlobal $m2-ViewWindow_0-clip-normal-y-6 {}
+setGlobal $m2-ViewWindow_0-clip-normal-z-6 {}
+setGlobal $m2-ViewWindow_0-clip-normal-d-6 {}
+setGlobal $m2-ViewWindow_0-unused {1}
+setGlobal $m2-ViewWindow_0-unused {1}
+setGlobal $m2-ViewWindow_0-unused {1}
+setGlobal $m2-ViewWindow_0-unused {1}
+
+# Setup GUI for the SCIRun->Visualization->ShowField Module
+setGlobal $m3-nodes-on {0}
+setGlobal $m3-faces-on {0}
+setGlobal $m3-normalize-vectors {}
+setGlobal $m3-has_scalar_data {1}
+setGlobal $m3-def-color-r {0.50}
+setGlobal $m3-def-color-g {0.50}
+setGlobal $m3-def-color-b {0.50}
+setGlobal $m3-def-color-a {0.80}
+setGlobal $m3-edge_display_type {Cylinders}
+setGlobal $m3-scalar_display_type {Spheres}
+setGlobal $m3-active_tab {Scalars}
+setGlobal $m3-node_scale {0.0300}
+setGlobal $m3-edge_scale {0.0150}
+setGlobal $m3-scalars_scale {0.0750}
+setGlobal $m3-show_progress {}
+
+# Setup GUI for the SCIRun->FieldsGeometry->ChangeFieldBounds Module
+setGlobal $m4-outputcenterx {-0.1291460866469344}
+setGlobal $m4-outputcentery {0.08695140270256574}
+setGlobal $m4-outputcenterz {0.007563190187260621}
+setGlobal $m4-outputsizex {1.843095654575197}
+setGlobal $m4-outputsizey {2.094420427774587}
+setGlobal $m4-outputsizez {1.667883389037707}
+setGlobal $m4-box-scale {0.05196152422706631}
+setGlobal $m4-box-center-x {-0.1291460866469344}
+setGlobal $m4-box-center-y {0.08695140270256574}
+setGlobal $m4-box-center-z {0.007563190187260621}
+setGlobal $m4-box-right-x {0.7924017406406643}
+setGlobal $m4-box-right-y {0.4009991528104136}
+setGlobal $m4-box-right-z {-0.2320203936711756}
+setGlobal $m4-box-down-x {-0.4748275357122738}
+setGlobal $m4-box-down-y {1.134161616589859}
+setGlobal $m4-box-down-z {0.05060463349233944}
+setGlobal $m4-box-in-x {0.07623831424214049}
+setGlobal $m4-box-in-y {0.1204723927434015}
+setGlobal $m4-box-in-z {0.8415048847061141}
+
+# Setup GUI for the SCIRun->FieldsData->TransformData Module
+setGlobal $m5-function {result = x + y + z;
+}
+
+# Setup GUI for the SCIRun->Visualization->RescaleColorMap Module
+setGlobal $m6-max {2}
+
+# Setup GUI for the SCIRun->Visualization->GenStandardColorMaps Module
+
+# Setup GUI for the SCIRun->FieldsCreate->SamplePlane Module
+setGlobal $m8-sizex {5}
+setGlobal $m8-sizey {5}
+
+# Setup GUI for the SCIRun->FieldsData->MoveNodeToElem Module
+
+::netedit scheduleok

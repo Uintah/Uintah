@@ -1,0 +1,305 @@
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <script type="text/javascript" src="../Utilities/HTML/tools.js"></script>
+    <script type="text/javascript">var doc = new ReleaseNotesDocument();</script>
+    <title>Version 1.22 Release Notes</title>
+  </head>
+
+  <body>
+    <script type="text/javascript">doc.preContent();</script>
+
+    <h1 class="page-title">
+      Release Notes - SCIRun Version 1.22 - July 14, 2004
+    </h1>
+
+    <a id="begin-toc">Content:H1,H2</a>
+
+
+   <h1>
+      Data Sets
+    </h1>
+    <ul>
+      <li>New &quot;Matlab&quot; directory containing geometry.mat and timeseries.mat used in the MatlabInterface sample nets to demonstrate capabilities of new MatlabInterface modules. </li>
+    </ul>
+
+    <h1>
+      New Modules
+    </h1>
+
+    <h2>
+      SCIRun Modules (Category in parentheses)
+    </h2> 
+
+    <ul>
+      <li>NodeGradient (FieldsData) module for computing gradients of node centered
+LatVolFields.</li>
+      <li>ApplyInterpMatrix (FieldsGeometry) module interpolates the Source field onto the geometry of the Destination field using the Interpolant matrix to do the projection.
+</li>
+      <li>ToStructured (FieldsGeometry) module for converting from regular lattices to structured grids.</li>
+    </ul>
+
+    <h2>
+      Teem Modules (Category in parentheses)
+    </h2>
+
+    <ul>
+      <li>All Unu and Tend modules have been wrapped.</li>
+      <li>Add ImageMagick based ImageImporter and ImageExporter (DataIO) modules.</li>
+      <li>MatrixToNrrd (DataIO) - converts a SCIRun Matrix to nrrds.</li>
+      <li>NrrdToMatrix (DataIO) - converts 1D and Nrrds to a SCIRun Matrix.</li>
+      <li>MRITissueClassifier (Segmentation) module to support Tolga Tasdizen's research.</li>
+    </ul>
+
+    <h2>
+      MatlabInterface Modules (Category in parentheses)
+    </h2>
+
+    <ul>
+      <li>MatlabMatricesReader (DataIO) - reads a matrix from a MATLAB file.</li>
+      <li>MatlabNrrdsReader (DataIO) - reads a matrix from a MATLAB .mat file and exports it as a Nrrd.</li>
+      <li>MatlabFieldsReader (DataIO) - reads a SCIRun field from a MATLAB file. The module requires that the data in the MATLAB file is formatted according to the guidelines described in the documentation. </li>
+      <li>MatlabMatricesWriter (DataIO) - saves a SCIRun matrix in a MATLAB .mat file.</li>
+      <li>MatlabNrrdsWriter (DataIO) - saves a SCIRun NRRD object into a MATLAB .mat file.</li>
+    </ul>
+    
+
+    <h1>
+      Module Enhancements
+    </h1>
+
+    <h2>
+      SCIRun Modules (Category in parentheses)
+    </h2>
+
+    <ul>
+      <li>Added '?' button to open module help.</li>
+      <li>Changed readers and writers to have a Set, Execute, Cancel an Find
+button. Set will change the module's filename, and exit the UI without
+executing the module.  Execute will set the filename, execute the module,
+and close the UI.</li>
+      <li>All "Choose" modules have a "Use first valid" checkbox which causes the
+module to iterate over its connected inputs and use the first valid data.</li>
+      <li>Regular Meshes now display formatted printing of Cell, Node, and Face indices in ShowField, Probe, and FieldInfo modules.</li>
+      <li>SampleField (FieldsCreate) module now has ring on 3D gage widget to set number of samples interactively.</li>
+      <li>Added VCR buttons to MatrixSelectVector (Math) UI</li>
+      <li>Ability to link a viewer's ViewWindows so that interaction in one window, will be duplicated in other ViewWindows.</li>
+      <li>Added Viewer's ViewWindow->View... entries to get view from other active ViewWindows.</li>
+      <li>Added Viewer's ViewWindow->View...->'Track Viewer Window 0' option to forward mouse events from view window 0.</li>
+      <li>Fix saving of Viewer Window variables.</li>
+      <li>Save the current visual in the Viewer module.</li>
+      <li>Fix ViewWindow inertia mode lockup on Fedora Core 2.</li>
+      <li>Viewer lights saved properly.</li>
+      <li>MPEG movie recording can save to a path other than the working directory.</li>
+      <li>Fix ViewWindow crash bug when autoviewing on single point.</li>
+      <li>Change ManageFieldData to preserve field data type if possible.</li>
+      <li>Change ClipField to ignore widget if there is a clip mesh.</li>
+      <li>Add interpolant matrix output support to the ClipByFunction, FieldBoundary, IsoClip, Isosurface, FieldBoundary, and ChangeFieldDataAt modules.</li>
+      <li>Replace TetVolMesh::Node::array_type with a statically allocated stack
+vector for performance enhancement.</li>
+      <li>Support for edge emphasis of superquadratic tensors in ShowField.</li>
+      <li>Use fabs for vector->rgb conversion in ShowField.</li>
+      <li>Support eigenvector generation for tensor visualization within ShowField.</li>
+      <li>Performance enhancements for StreamLines module.</li>
+      <li>More efficient IsoClip find_ functions.</li>
+      <li>Add normals option to the FieldMeasures module.</li>
+      <li>ClipField saves widget positions now.</li>
+      <li>Fix Unstructure (FieldsGeometry) to preserve node ordering in scanline orientation.</li>
+      <li>Fix uninitialized sigma crash in ScalarFieldStats.</li>
+      <li>Fix Isosurface-quadtypeface.net crash bug associated with ImageMesh::get_neighbors().</li>
+      <li>Fix const DenseMatrix compilation error.</li>
+      <li>Fix TransformData3 compilation failure if third field type was different
+than others.</li>
+      <li>Use safe_normalize when computing TriSurfMesh normals, fixes degenerate
+triangle crash.</li>
+      <li>Wrap instanced dynamic compilation classes differently to fix include
+crash in ClipByFunction, LinAlgUnary, LinAlgBinary.</li>
+    </ul>
+
+    <h2>BioPSE Modules</h2>
+    <ul>
+      <li>Major speedup to ModifyConductivites (Modeling) by moving create_entires outside inner loop.</li>
+      <li>Fix SetupFEMatrix crashing if data not at elements, report error
+instead.</li>
+      <li>Added splash screen image for BioFEM.</li>
+    </ul>
+
+    <h2>Teem Modules (Category in parentheses)</h2>
+    <ul>
+      <li>Using Teem 1.7</li>
+      <li>Teem Unu Modules Categorized - The Unu modules were distributed into the subcategories UnuAtoM and UnuNtoZ to make finding specific modules easier.</li>
+      <li>Kind axis information added to nrrds.</li>
+      <li>Fix NrrdToField to take in 3 nrrds (Points, Connectivity, Data) and be
+able to create, structured, unstructured, or regular fields.</li>
+      <li>FieldToNrrd can produce 3 nrrds (Points, Connectivity, Data).</li>
+      <li>DicomToNrrd changed to DicomNrrdReader.</li>
+      <li>AnalyzeToNrrd changed to AnalyzeNrrdReader.</li>
+      <li>Added VCR buttons to NrrdSelectTime (NrrdData) UI.</li>
+      <li>BioTensor now has the ability to save out computed tensors.</li>
+      <li>Optimizations in BioTensor in order to use less memory.</li>
+      <li>Use GuiFilename for filenames instead of GuiString in NrrdReader and
+NrrdWriter.</li>
+    </ul>
+
+    <h2>Insight Modules (Category in parentheses)</h2>
+    <ul>
+       <li>FieldToImage, ImageToField, NrrdToImage, and ImageToNrrd now work on
+Vector images.</li>
+    </ul>
+
+    <h1>
+      Deprecated Modules
+    </h1>
+
+    <h2>
+      SCIRun Modules (Category in parentheses)
+    </h2> 
+    <ul>
+      <li>Deprecate BioPSE/Forward/SphereModel module, use SCIRun/FieldsCreate/ClipByFunction instead.</li>
+      <li>Deprecate TransformVectorData and TransformScalarData, use TransformData instead.</li>
+    </ul>
+
+    <h2>Fusion Modules (Category in parentheses)</h2>
+    <ul>
+      <li>NrrdFieldConverter module retired.  Now use Teem's NrrdToField module
+which has the same functionality. SCIRun will automatically instantiate Teem's NrrdToField module when networks ask for a Fusion NrrdFieldConverter module.</li>
+    </ul>
+
+
+
+
+    <h1>Infrastructure Enhancements</h1>
+    <ul>
+      <li>Replace TetVolMesh::Node::array_type with a statically allocated stack
+vector for performance enhancement.</li>
+
+      <li>Multiple Notes windows can now be opened at the same time allowing for cut/paste operations.</li>
+      <li>New progress bar shows accurate status of loading .net file or PowerApp initialization.</li>
+     <li>Module help is now viewed in full HTML format.  User is prompted to choose HTML browser.</li>
+      <li>The license has changed to the MIT License.</li>
+      <li>Added exterior product to ColumnMatrix.</li>
+      <li>TetVolMesh::refine_elements and refine_elements_levels added for tet refinement.</li>
+      <li>Use const reference for GenericField::value() functions.</li>
+      <li>Fix GeomCones polycount.</li>
+      <li>More efficient GeomCones using GL_QUAD_STRIPS.</li>
+      <li>Remove unused GUI elements from 3D Widget options.</li>
+      <li>Fix broken io for all Struct*Mesh types.</li>
+      <li>Fix thread lock problem for RHE and probably RH9.0.</li>
+      <li>Change port disconnect behavior such that disconnecting a running module
+doesn't deadlock.</li>
+      <li>Deprecate Core/Math/function parsing in favor of dynamically compiled
+C++ code.  This was used by the ClipByFunction, LinAlgBinary and LinAlgUnary modules.</li>
+      <li>Change Connection Blocking to internally Delete connections while keeping GUI representation up.</li>
+      <li>Add Module::presave() callback to give modules a chance to copy all state to GuiVars before their state is written to TCL script.</li>
+      <li>Change Mesh::get_weights() functions to use static array for weights.</li>
+      <li>Implement LatVolMesh::get_cells for nodes.</li>
+      <li>Change Mesh::locate to use const references where possible.</li>
+      <li>Add node_reserve and elem_reserve functions to meshes.</li>
+      <li>Add debugging asserts to set_value and value calls for fields.</li>
+      <li>Use unsigned int as under_type for all meshes.</li>
+      <li>Add module runtimes to regression output.</li>
+      <li>Use lessthan function for map&lt;> when hash_map not defined.</li>
+      <li>Use a better string hash function, use X31 hash.</li>
+      <li>Lock PropertyManager more aggressively, add copy_properties function.</li>
+      <li>Fix typo that was causing dynamic compilation directory to always default to
+~/SCIRun/on-the-fly-libs//</li>
+      <li>Add MakeReal function that converts double numbers that are: +infinity to max double, -infinity to min double, and NaN to 0.  Used only for sending values to the TCL interpreter.</li>
+      <li>Change widget_moved(int) method to widget_moved(int,BaseWidget*) signature to allow callback to determine which widget was moved</li>
+      <li>Send return value back to TCL when calling [netedit sci_system].</li>
+      <li>Removed redundant GuiContext::getSub/setSub methods.  Use subVar to create sub-contexts instead.</li>
+      <li>Add 'bool GuiSingle::valid()' method to return true if variable exists in TCL scope and is of correct type.</li>
+      <li>Evaluate floating point numbers using TCL's 'expr' command to pare down redundant 0's after decimal place.</li>
+      <li>Added TCL function initGlobal that will assign a value to a global variable if and only if that variable does not already exist.</li>
+      <li>Add TCLInterface::complete_command that returns true if str is a complete TCL script with matching braces.</li>
+      <li>Added TCL proc envBool to query the boolean status of an environment variable.</li>
+      <li>Use Core/Util/Environment.h to provide universal environment that works on SGIs, Mac G5's, and Linux.</li>
+      <li>In TCL, Use [netedit getenv VARNAME], and [netedit setenv VARNAME VALUE] to interface with environment variables.</li>
+      <li>Move some code from SCIRun/src/Dataflow/GUI/Module.tcl out into SCIRun/src/Dataflow/GUI/Port.tcl and SCIRun/src/Dataflow/GUI/Connection.tcl.</li>
+      <li>Added procedure genSubnetScript - the core of the network writing algorithm.</li>
+      <li>Always send floating point numbers to TCL with a decimal in them so TCL wont cast them to an integer.</li>
+      <li>Handle bad values (like inf) better when writing floating point values to networks.</li>
+    </ul>
+
+    <h1>Environment Variables</h1>
+    <ul>
+      <li>Added environment variable SCIRUN_NET_SUBSTITUTE_DATADIR. If true, .nets will automatically substitute SCIRUN_DATA and SCIRUN_DATASET.</li>
+      <li>Added environment variable SCIRUN_FAST_QUIT.  If true, will not ask user to save before exiting scirun.</li>
+      <li>Added environment variable SCIRUN_REGRESSION_TESTING_TIMEOUT. Set to number of seconds before regression test kills SCIRun.</li>
+      <li>Added environment variable SCIRUN_HIDE_PROGRESS.  If true, all progress bars are hidden. Renamed environment variable SCI_NOSPLASH to SCIRUN_NOSPLASH to be consistent with naming scheme.</li>
+      <li>Renamed environment variable SCI_CONFIRM_OVERWRITE to SCIRUN_CONFIRM_OVERWRITE to be consistent with naming scheme.</li>
+      <li>Move NEED_ATI_CARD_FIX define to SCIRUN_DRAWARRAYS_DISABLE environment variable.</li>
+      <li>Don't ask multiple times about SCIRUN_DATA and SCIRUN_DATASET when loading subnets or a network with multiple sourceSettingsFile calls.</li>
+      <li>Add SCIRUN_NOCLEANUPCOMPILE environment variable for debugging dynamically compiled code.</li>
+      <li>Removed environment variables PSE_DATA and SCI_DATA.</li>
+    </ul>
+
+    <h1>Network Editor Enhancements</h1>
+    <ul>
+      <li>Saving .net files re-written to be much faster for large networks.</li>
+      <li>When writing networks, save out really large numbers in Scientific Notation.</li>
+      <li>Added 'Duplicate' option to module menu.  Also copies over all associated GUI settings for total duplication of module state.</li>
+      <li>Added 'Insert Module' option to connection menu.  Inserts module directly into the connections path.</li>
+      <li>Added 'Replace' option to module menu.  Replaces the module with another one, keeping its connections intact.</li>
+      <li>Networks now save out all open ViewWindows and their size and position.</li>
+      <li>Allow user re-sizing of panes in main network editor window.</li>
+      <li>Added feature of moving by grabbing a connection.</li>
+      <li>Added 'SR' button to Subnet Icons to access the Sub-Network Editor.</li>
+      <li>Sub-Networks have been revamped to embed their information in the main .net file.</li>
+      <li>Sub-Networks retain the old functionality with the 'On Disk' option to have the subnet files be saved separately from the .net file.</li>
+      <li>Subnets have been revamped to embed their information in the main .net file.</li>
+      <li>Subnets retain to 'On Disk' option to have the subnet files be saved separately or as templates.</li>
+      <li>All .nets residing in SCIRun/src/Subnets and ~/SCIRun/Subnets/*.net are automatically loaded as templates.</li>
+      <li>Added <tt>Control-Q</tt>tt> keyboard shortcut to quit.</li>
+      <li>Fix deletion of dynamic ports.</li>
+      <li>Show error when .net files attempt to create connections between ports of different types.</li>
+      <li>Added black and white icons to SCIRun Network Editor and module GUIs.</li>
+      <li>Connection tracing draws faster.</li>
+      <li>Expand Network Information to store creation time and date per Sub-Network.</li>
+      <li>Resize module icons when their name has changed.</li>
+      <li>Move subnet editor ports right a few pixels.</li>
+      <li>Fix bug writing out notes colors.</li>
+      <li>Fix TCL error when choosing cancel on setting notes text color.</li>
+      <li>Fix reseting notes text color.</li>
+      <li>Fix crash when deleting modules with connections to themselves.</li>
+      <li>Fix 'Expand Subnet' option for Sub-Network Icons.</li>
+      <li>Fix error when removing ports with multiple viewers.</li>
+      <li>Register all GUI variables with TCL for saving nets with TCL proc initVarStates.</li>
+      <li>Mini network editor view now always displays correctly.</li>
+      <li>Don't save invalid connections.</li>
+      <li>Rewrite isaDefaultValue to vastly speedup writing of large network files.</li>
+      <li>Arrow keys to scroll Sub-Network Editor.  Must right-click in canvas to focus first.</li>
+    </ul>
+
+    <script type="text/javascript">new Toc().build();</script>
+    <script type="text/javascript">doc.postContent();</script>
+  </body>
+
+</html>

@@ -1,0 +1,36 @@
+	HOW TO CREATE A COMPLEX GEOMETRY AND INCORPORATE IT IN UINTAH
+
+	1- Log on to a CADE machine
+
+	2- Open ProE:  proe2001
+
+	3- Create the geometry or modify an existing geometry
+
+	4- Once the geometry has been created, you will want to save it as a
+	part and also as an igs.  To do this go to File->Save a Copy.  In Type,
+	select prt and type in the name of your choice.  Then repeat, but in
+	Type, select igs.
+
+	5- Open Gambit:  gambit
+
+	6- Go to File->Import->IGES and select the file, click Accept
+
+	7- You can translate the geometry or move it, if needed 
+
+	8- To mesh, click on the second button under Operation.  It is a yellow
+	block.  Then click on the 3rd button under Mesh.  In the Faces bar,
+	click on the arrow and select all of the faces.  Change the elements to
+	Tri and change the Spacing.  I have been using 0.01.  Then click Apply.
+
+	9- Go to File->Export->Mesh.  Type the name of your choice, but leave
+	the extension .neu and click Accept.
+
+	10- Copy the .neu file to your SCIrun directory.
+
+	11- Run gambitFileReader.  It will ask you the name of the .neu file and
+	then the name of the output. I usually use the same name.
+
+	12- Copy the geometry pts and tri file the the same location as your
+	input file.
+	
+	13- Add the geometry to your input file.
