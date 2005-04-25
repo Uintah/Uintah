@@ -66,9 +66,10 @@ template <> void Pio(Piostream& stream, vector<bool>& data)
 }
 
 
-template <>
-void Pio(Piostream& stream, vector<int>& data)
-{ 
+
+template <class T>
+static inline void block_pio(Piostream &stream, vector<T> &data)
+{
   if (stream.reading() && stream.peek_class() == "Array1")
   {
     stream.begin_class("Array1", STLVECTOR_VERSION);
@@ -78,14 +79,14 @@ void Pio(Piostream& stream, vector<int>& data)
     stream.begin_class("STLVector", STLVECTOR_VERSION);
   }
   
-  int size=(int)data.size();
+  int size = (int)data.size();
   stream.io(size);
   
   if(stream.reading()){
     data.resize(size);
   }
 
-  if (!stream.block_io(&data.front(), sizeof(int), data.size()))
+  if (!stream.block_io(&data.front(), sizeof(T), data.size()))
   {
     for (int i = 0; i < size; i++)
     {
@@ -96,97 +97,53 @@ void Pio(Piostream& stream, vector<int>& data)
   stream.end_class();  
 }
 
+
+template <>
+void Pio(Piostream& stream, vector<char>& data)
+{
+  block_pio(stream, data);
+}
+
+template <>
+void Pio(Piostream& stream, vector<unsigned char>& data)
+{
+  block_pio(stream, data);
+}
+
+template <>
+void Pio(Piostream& stream, vector<short>& data)
+{
+  block_pio(stream, data);
+}
+
+template <>
+void Pio(Piostream& stream, vector<unsigned short>& data)
+{
+  block_pio(stream, data);
+}
+
+template <>
+void Pio(Piostream& stream, vector<int>& data)
+{
+  block_pio(stream, data);
+}
 
 template <>
 void Pio(Piostream& stream, vector<unsigned int>& data)
-{ 
-  if (stream.reading() && stream.peek_class() == "Array1")
-  {
-    stream.begin_class("Array1", STLVECTOR_VERSION);
-  }
-  else
-  {
-    stream.begin_class("STLVector", STLVECTOR_VERSION);
-  }
-  
-  int size=(int)data.size();
-  stream.io(size);
-  
-  if(stream.reading()){
-    data.resize(size);
-  }
-
-  if (!stream.block_io(&data.front(), sizeof(unsigned int), data.size()))
-  {
-    for (int i = 0; i < size; i++)
-    {
-      Pio(stream, data[i]);
-    }
-  }
-
-  stream.end_class();  
+{
+  block_pio(stream, data);
 }
 
-
-template <> 
+template <>
 void Pio(Piostream& stream, vector<float>& data)
-{ 
-  if (stream.reading() && stream.peek_class() == "Array1")
-  {
-    stream.begin_class("Array1", STLVECTOR_VERSION);
-  }
-  else
-  {
-    stream.begin_class("STLVector", STLVECTOR_VERSION);
-  }
-  
-  int size=(int)data.size();
-  stream.io(size);
-  
-  if(stream.reading()){
-    data.resize(size);
-  }
-
-  if (!stream.block_io(&data.front(), sizeof(float), data.size()))
-  {
-    for (int i = 0; i < size; i++)
-    {
-      Pio(stream, data[i]);
-    }
-  }
-
-  stream.end_class();  
+{
+  block_pio(stream, data);
 }
 
-
-template <> 
+template <>
 void Pio(Piostream& stream, vector<double>& data)
-{ 
-  if (stream.reading() && stream.peek_class() == "Array1")
-  {
-    stream.begin_class("Array1", STLVECTOR_VERSION);
-  }
-  else
-  {
-    stream.begin_class("STLVector", STLVECTOR_VERSION);
-  }
-  
-  int size=(int)data.size();
-  stream.io(size);
-  
-  if(stream.reading()){
-    data.resize(size);
-  }
-
-  if (!stream.block_io(&data.front(), sizeof(double), data.size()))
-  {
-    for (int i = 0; i < size; i++)
-    {
-      Pio(stream, data[i]);
-    }
-  }
-
-  stream.end_class();  
+{
+  block_pio(stream, data);
 }
 
 
