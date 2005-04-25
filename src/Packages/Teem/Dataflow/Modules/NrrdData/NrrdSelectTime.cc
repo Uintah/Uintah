@@ -322,9 +322,11 @@ NrrdSelectTime::tcl_command(GuiArgs& args, void* userdata)
   if (args.count() < 2) {
     args.error("NrrdSelectTime needs a minor command");
     return;
+  }
 
-  } else Module::tcl_command(args, userdata);
+  if (args[1] == "restart") {
+  }
+  else Module::tcl_command(args, userdata);
 }
-
 
 } // End namespace SCITeem
