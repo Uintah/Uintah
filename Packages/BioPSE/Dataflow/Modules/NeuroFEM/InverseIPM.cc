@@ -372,7 +372,7 @@ InverseIPM::execute()
     {
       //error("Unable to open a temporary working directory.");
       //throw false;
-      warnign("Unable to open a temporary working directory.");
+      warning("Unable to open a temporary working directory.");
     }
     umask(umsk);
 
