@@ -114,7 +114,9 @@ itcl_class Insight_DataIO_SliceReader {
 
     method configure_slice_slider {max} {
 	set w .ui[modname]
-	$w.slice.s configure -from 0 -to $max
+	if {[winfo exists $w]} {
+	    $w.slice.s configure -from 0 -to $max
+	}
     }
 
     method read_next_slice {} {
@@ -124,11 +126,11 @@ itcl_class Insight_DataIO_SliceReader {
     }
 
     method choose_file {} {
-	set w .ui[modname].fb
+	set w .ui[modname]fb
 
 	if {[winfo exists $w]} {
 	    SciRaise $w
-	    return
+	    return $w
 	}
 
 	toplevel $w -class TkFDialog
@@ -165,5 +167,7 @@ itcl_class Insight_DataIO_SliceReader {
 
 	moveToCursor $w
 	wm deiconify $w
+
+	return $w
     }
 }
