@@ -270,6 +270,18 @@ set Notes($m54) {High-Res Volume}
 set Notes($m54-Position) {n}
 set Notes($m54-Color) {white}
 
+# Create a SCIRun->FieldsOther->FieldInfo Module
+set m55 [addModuleAtPosition "SCIRun" "FieldsOther" "FieldInfo" 1587 558]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m56 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1099 1059]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m57 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 978 1337]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m58 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 960 1396]
+
 # Create the Connections between Modules
 set c1 [addConnection $m13 0 $m32 0]
 set c2 [addConnection $m13 0 $m31 0]
@@ -340,6 +352,14 @@ set c66 [addConnection $m28 0 $m52 3]
 set c67 [addConnection $m46 0 $m14 3]
 set c68 [addConnection $m25 0 $m14 4]
 set c69 [addConnection $m19 0 $m14 5]
+set c70 [addConnection $m27 0 $m55 0]
+set c71 [addConnection $m41 0 $m13 1]
+set c72 [addConnection $m41 0 $m29 1]
+set c73 [addConnection $m56 0 $m57 0]
+set c74 [addConnection $m42 0 $m57 1]
+set c75 [addConnection $m42 0 $m58 0]
+set c76 [addConnection $m57 0 $m58 1]
+set c77 [addConnection $m58 0 $m14 6]
 
 # Set GUI variables
 
@@ -499,7 +519,7 @@ set $m28-green {0.0}
 set $m28-auto_execute {0}
 
 # Set GUI variables for the Teem->NrrdData->ChooseNrrd Module
-set $m30-port-index {1}
+set $m30-port-index {0}
 
 # Set GUI variables for the Teem->UnuAtoM->Unu2op Module
 set $m31-operator {min}
@@ -586,6 +606,14 @@ setGlobal $m54-filename \
     "/home/darbyb/work/data/SCIRunData/1.22.0/king_filt.hdr"
 setGlobal $m54-cast_output {1}
 
+set $m56-mapName {BP Seismic}
+set $m56-reverse {1}
+set $m56-resolution {2}
+set $m56-realres {2}
+
+set $m58-nodes-on {0}
+set $m58-edges-on {0}
+set $m58-use-transparency {1}
 
 ####################################################
 # Determine if load file was passed in, 
@@ -676,12 +704,21 @@ set mods(NrrdInfo-Slice) $m1
 set mods(AnalyzeNrrdReader) $m36 
 set mods(SliceReader) $m54
 
+# Writers
+set mods(ImageFileWriter-Binary) $m47
+
 # Smoothers
 set mods(Smooth-Gradient) $m37
 set mods(Smooth-Curvature) $m38
 set mods(Smooth-Gaussian) $m39
 set mods(ChooseImage-Smooth) $m41
 set mods(ChooseImage-ShowSlice) $m40
+
+# Speed
+set mods(Isosurface-Grow) $m43
+set mods(Isosurface-Shrink) $m44
+set mods(ShowField-Speed) $m58
+set mods(ImageToField-Speed) $m42
 
 # Segmentation Window
 set mods(ShowField-Slice) $m15
@@ -691,6 +728,18 @@ set mods(LevelSet) $m3
 set mods(BinaryThreshold-Seed) $m6
 set mods(ImageToField-PosSeeds) $m7
 set mods(ImageToField-NegSeeds) $m27
+set mods(SeedPoints-PosSeeds) $m5
+set mods(SeedPoints-NegSeeds) $m28
+set mods(FieldInfo-Smoothed) $m55
+set mods(ImageToField-Seg) $m18
+
+# Seeds
+set mods(BuildSeedVolume-PosSeeds) $m13
+set mods(BuildSeedVolume-NegSeeds) $m29
+set mods(ImageToNrrd-CurSeed) $m35
+
+# Isocontours
+set mods(ImageToField-Iso) $m48
 
 
 global axis
@@ -833,11 +882,23 @@ class LevelSetSegmenterApp {
  	disableModule $mods(Smooth-Curvature) 1
  	disableModule $mods(Smooth-Gaussian) 1
 
-	# Disable segmentation modules
-	disableModule $mods(LevelSet) 1
-	disableModule $mods(BinaryThreshold-Seed) 1
-	disableModule $mods(ImageToField-PosSeeds) 1
-	disableModule $mods(ImageToField-NegSeeds) 1
+	# Disable Seeds
+	disableModule $mods(BuildSeedVolume-PosSeeds) 1
+	disableModule $mods(BuildSeedVolume-NegSeeds) 1
+	disableModule $mods(ImageToNrrd-CurSeed) 1
+
+	# Disable output segmentation
+	disableModule $mods(ImageToField-Seg) 1
+
+	# Disable 3D Isocontours until commit
+	disableModule $mods(ImageToField-Iso) 1
+
+	# Disable writer
+	disableModule $mods(ImageFileWriter-Binary) 1
+
+	# Disable speed from Isos
+	disableModule $mods(Isosurface-Grow) 1
+	disableModule $mods(Isosurface-Shrink) 1
     }
 
     
@@ -1776,6 +1837,81 @@ class LevelSetSegmenterApp {
 	
 	set speed [$process.speed childsite]
 
+	global $mods(LevelSet)-lower_threshold
+	global $mods(LevelSet)-upper_threshold
+	global $mods(LevelSet)-curvature_scaling
+	global $mods(LevelSet)-propagation_scaling
+	global $mods(LevelSet)-edge_weight
+	global $mods(LevelSet)-max_iterations
+	global $mods(LevelSet)-max_rms_change
+	global $mods(LevelSet)-reverse_expansion_direction
+	global $mods(LevelSet)-smoothing_iterations
+	global $mods(LevelSet)-smoothing_time_step
+	global $mods(LevelSet)-smoothing_conductance
+	
+	trace variable $mods(LevelSet)-lower_threshold w \
+	    "$this update_seed_binary_threshold"
+	trace variable $mods(LevelSet)-upper_threshold w \
+	    "$this update_seed_binary_threshold"
+	
+	# thresholds
+	frame $speed.lthresh
+	pack $speed.lthresh -side top -anchor nw -expand yes -fill x
+	label $speed.lthresh.l -text "Lower Threshold:"
+	scale $speed.lthresh.s -variable $mods(LevelSet)-lower_threshold \
+	    -from 0 -to 255 -width 15 \
+	    -showvalue false -length 150 \
+	    -orient horizontal
+	entry $speed.lthresh.e -textvariable $mods(LevelSet)-lower_threshold \
+	    -width 6
+	pack $speed.lthresh.l $speed.lthresh.s $speed.lthresh.e \
+	    -side left -pady 2
+	
+	frame $speed.uthresh
+	pack $speed.uthresh -side top -anchor nw -expand yes -fill x
+	label $speed.uthresh.l -text "Upper Threshold:"
+	scale $speed.uthresh.s -variable $mods(LevelSet)-upper_threshold \
+	    -from 0 -to 255 -width 15 \
+	    -showvalue false -length 150 \
+	    -orient horizontal
+	entry $speed.uthresh.e -textvariable $mods(LevelSet)-upper_threshold \
+	    -width 6
+	button $speed.uthresh.b -text "Go" -width 3 \
+	    -background $execute_color \
+	    -activebackground $execute_active_color \
+	    -command "$this update_speed_image"
+	
+	pack $speed.uthresh.l $speed.uthresh.s $speed.uthresh.e \
+	    -side left -pady 2
+	pack $speed.uthresh.b \
+	    -side right -pady 2 -padx 3
+	
+	# Equation Term Weights
+	iwidgets::labeledframe $speed.terms \
+	    -labeltext "Equation Term Weights" \
+	    -labelpos nw
+	pack $speed.terms -side top -anchor n -padx 3
+	
+	set terms [$speed.terms childsite]
+	frame $terms.scaling1
+	pack $terms.scaling1 -side top -anchor nw \
+	    -padx 3 -pady 1
+	make_entry $terms.scaling1.curv "Curvature:" \
+	    $mods(LevelSet)-curvature_scaling
+	make_entry $terms.scaling1.prop "Propagation:" \
+	    $mods(LevelSet)-propagation_scaling
+	make_entry $terms.scaling1.edge "Edge Weight:" \
+	    $mods(LevelSet)-edge_weight
+	
+	pack $terms.scaling1.curv $terms.scaling1.prop \
+	    $terms.scaling1.edge -side left -anchor ne \
+	    -padx 3 -pady 1
+	
+	checkbutton $terms.exp -text "Reverse Expansion Direction" \
+	    -variable $mods(LevelSet)-reverse_expansion_direction
+	
+	pack $terms.exp -side top -anchor n \
+	    -padx 3 -pady 1
     }
 
     method create_seeds_frame {process case} {
@@ -1802,6 +1938,8 @@ class LevelSetSegmenterApp {
 	set seg [$process.seg childsite]
 
     }
+
+
     
     
     
@@ -1904,7 +2042,13 @@ class LevelSetSegmenterApp {
 
 	# pack vis stuff into top right
 	label $topr.l -text "Widgets to toggle\nstuff in segmentation\nwindow will go here"
-	pack $topr.l -side top
+
+	global mods(ShowField-Speed)-faces-on
+	checkbutton $topr.speed -text "Show Speed Image" \
+	    -variable $mods(ShowField-Speed)-faces-on \
+	    -command "$this toggle_show_speed"
+	
+	pack $topr.l $topr.speed -side top
  	pack $topr -side top -anchor n \
  	    -expand 1 -fill both -padx 4 -pady 0
 
@@ -2240,6 +2384,42 @@ class LevelSetSegmenterApp {
 		      $state == "Completed"} { 
  	    change_indicate_val 2
 	    change_indicator_labels "Done Smoothing"
+	} elseif {$which == $mods(FieldInfo-Smoothed) && \
+		      $state == "Completed"} { 
+	    global $which-datamin $which-datamax
+	    upvar \#0 $which-datamin min
+	    upvar \#0 $which-datamax max
+
+	    # reconfigure threshold sliders
+	    $attachedPFr.f.p.childsite.speed.childsite.lthresh.s configure \
+		-from $min -to $max
+	    $attachedPFr.f.p.childsite.speed.childsite.lthresh.s configure \
+		-from $min -to $max
+	    $attachedPFr.f.p.childsite.speed.childsite.uthresh.s configure \
+		-from $min -to $max
+	    $attachedPFr.f.p.childsite.speed.childsite.uthresh.s configure \
+		-from $min -to $max
+
+	    # if reconfiguring the slider causes the upper and lower
+	    # threshold to be the same, fix the lower threshold
+	    global $mods(LevelSet)-lower_threshold 
+	    global $mods(LevelSet)-lower_threshold
+	    upvar \#0 $mods(LevelSet)-lower_threshold lower
+	    upvar \#0 $mods(LevelSet)-upper_threshold upper
+	    
+	    if {$lower == $upper} {
+		set lower \
+		    [expr int([expr $min + [expr [expr $max - $min]/2]])]
+	    }
+
+	} elseif {$which == $mods(ShowField-Speed) && \
+		      $state == "JustStarted"} { 
+	    change_indicate_val 1
+	    change_indicator_labels "Updating Speed Image..."
+	} elseif {$which == $mods(ShowField-Speed) && \
+		      $state == "Completed"} { 
+	    change_indicate_val 2
+	    change_indicator_labels "Done Updating Speed Image"
 	}
 	
 # # 	if {$which == $mods(PasteImageFilter-Smooth) \
@@ -3216,17 +3396,16 @@ class LevelSetSegmenterApp {
 # 	}
 #     }
 
-#     method update_speed_image {} {
-# 	global mods
+    method update_speed_image {} {
+ 	global mods
 	
-# 	# set number of iterations 0
-# 	global $mods(LevelSet)-max_iterations
-# 	set $mods(LevelSet)-max_iterations 0
-
-# 	# execute ThresholdLevelSet filter
-# 	set updating_speed 1
-# 	$mods(LevelSet)-c needexecute
-#     }
+ 	# set number of iterations 0
+ 	global $mods(LevelSet)-max_iterations
+ 	set $mods(LevelSet)-max_iterations 0
+	
+ 	# execute ThresholdLevelSet filter
+ 	$mods(LevelSet)-c needexecute
+    }
 
 #     method configure_threshold_sliders {r_min r_max} {
 # 	# configure threshold range sliders
@@ -4189,7 +4368,41 @@ class LevelSetSegmenterApp {
 	    $this enable_proper_smooth_module
 	}
     }
+
+    method update_seed_binary_threshold {var1 var2 var3} {
+	global mods
+	global $mods(LevelSet)-lower_threshold
+	global $mods(LevelSet)-upper_threshold
+
+	# update thresholds of BinaryThresholdImageFilter that
+	# feeds in when user selects thresholding seeding method
+	global $mods(BinaryThreshold-Seed)-lower_threshold
+	global $mods(BinaryThreshold-Seed)-upper_threshold
+	set $mods(BinaryThreshold-Seed)-lower_threshold \
+	    [set $mods(LevelSet)-lower_threshold]
+	set $mods(BinaryThreshold-Seed)-upper_threshold \
+	    [set $mods(LevelSet)-upper_threshold]
+    }
     
+
+    method toggle_show_speed {} {
+	global mods
+	global $mods(ShowField-Speed)-faces-on
+	
+	if {[set $mods(ShowField-Speed)-faces-on] == 0} {
+	    disableModule $mods(ImageToField-Speed) 1
+	    $mods(ShowField-Speed)-c toggle_display_faces
+	} else {
+	    disableModule $mods(ImageToField-Speed) 0
+	    
+	    # Re-disable these for now
+	    disableModule $mods(Isosurface-Grow) 1
+	    disableModule $mods(Isosurface-Shrink) 1
+
+#	    $mods(ImageToField-Speed)-c needexecute
+	    $mods(ShowField-Speed)-c toggle_display_faces
+	}
+    }
     
     method make_entry {w text v {wi -1}} {
 	frame $w
@@ -4238,7 +4451,7 @@ class LevelSetSegmenterApp {
 
     variable has_segmented
     variable segmentation_initialized
-    variable updating_speed
+#    variable updating_speed
     variable pasting_binary
     variable pasting_float
     
