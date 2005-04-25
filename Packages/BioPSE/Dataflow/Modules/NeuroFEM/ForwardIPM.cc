@@ -690,6 +690,7 @@ ForwardIPM::execute()
   }
   catch (...)
   {
+#if 0
     // Clean up our temporary files.
     unlink(condmeshfile.c_str());
     unlink(condtensfile.c_str());
@@ -699,6 +700,7 @@ ForwardIPM::execute()
     unlink(resultfile.c_str());
     unlink(tmplog.c_str());
     rmdir(tmpdir.c_str());
+#endif
   }
 }
 
