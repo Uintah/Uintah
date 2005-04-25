@@ -1212,6 +1212,13 @@ case $host in
       CXXFLAGS=" -Wall"
     fi
 
+# fPIC option for ppc architecture
+    if test `uname -m` = "ppc"; then
+       CFLAGS="-fPIC $CFLAGS"
+       FFLAGS="-fPIC $FFLAGS"
+       CXXFLAGS="-fPIC $CXXFLAGS"
+    fi
+
     if test "$enable_64bit" = "yes"; then
        CFLAGS="-fPIC $CFLAGS"
        FFLAGS="-fPIC $FFLAGS"
