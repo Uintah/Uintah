@@ -112,7 +112,8 @@ void FileTransfer::close_service()
     for (;it != tempdirlist_.end(); it++)
     {
         tfm_.delete_tempdir((*it));
-        tempdirlist_.erase(it);
+        // We don't need it as the object gets destroyed afterwards anyway
+        // tempdirlist_.erase(it);
     }
 }
 
