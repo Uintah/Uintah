@@ -355,7 +355,7 @@ VariablePlotter::extract_data( string display_mode, string varname,
 	vector< double > values;
 	int matl = atoi(mat_list[i].c_str());
 	try {
-	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
+	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1], currentNode.level);
 	} catch (const VariableNotFoundInGrid& exception) {
 	  cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
 	  return;
@@ -381,7 +381,7 @@ VariablePlotter::extract_data( string display_mode, string varname,
 	vector< float > values;
 	int matl = atoi(mat_list[i].c_str());
 	try {
-	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
+	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1], currentNode.level);
 	} catch (const VariableNotFoundInGrid& exception) {
 	  cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
 	  return;
@@ -407,7 +407,7 @@ VariablePlotter::extract_data( string display_mode, string varname,
 	vector< int > values;
 	int matl = atoi(mat_list[i].c_str());
 	try {
-	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
+	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1], currentNode.level);
 	} catch (const VariableNotFoundInGrid& exception) {
 	  cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
 	  return;
@@ -435,7 +435,7 @@ VariablePlotter::extract_data( string display_mode, string varname,
 	vector< Vector > values;
 	int matl = atoi(mat_list[i].c_str());
 	try {
-	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
+	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1], currentNode.level);
 	} catch (const VariableNotFoundInGrid& exception) {
 	  cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
 	  return;
@@ -464,7 +464,7 @@ VariablePlotter::extract_data( string display_mode, string varname,
 	vector< Matrix3 > values;
 	int matl = atoi(mat_list[i].c_str());
 	try {
-	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
+	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1], currentNode.level);
 	} catch (const VariableNotFoundInGrid& exception) {
 	  cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
 	  return;
