@@ -584,6 +584,7 @@ set $m53-location {Top Center}
 # Set GUI variables for the Insight->DataIO->SliceReader Module
 setGlobal $m54-filename \
     "/home/darbyb/work/data/SCIRunData/1.22.0/king_filt.hdr"
+setGlobal $m54-cast_output {1}
 
 
 ####################################################
@@ -680,94 +681,23 @@ set mods(Smooth-Gradient) $m37
 set mods(Smooth-Curvature) $m38
 set mods(Smooth-Gaussian) $m39
 set mods(ChooseImage-Smooth) $m41
+set mods(ChooseImage-ShowSlice) $m40
 
 # Segmentation Window
 set mods(ShowField-Slice) $m15
 
-# # readers
-# set mods(NrrdReader) $m1
-# set mods(DicomReader) $m2
-# set mods(AnalyzeReader) $m3
-# set mods(ChooseNrrd-Reader) $m4
-# set mods(NrrdInfo-Reader) $m9
-# set mods(UnuMinMax-Reader) $m10
-# set mods(ScalarFieldStats) $m8
-# set mods(NrrdToImage-Reader) $m11
-
-# # Smoothing
-# set mods(Smooth-Gradient) $m12
-# set mods(Smooth-Curvature) $m13
-# set mods(Smooth-Blur) $m14
-# set mods(ChooseImage-Smooth) $m17
-# set mods(ChooseImage-ToSmooth) $m92
-# set mods(PasteImageFilter-Smooth) $m87
-# set mods(Extract-Smooth) $m88
-# set mods(UnuAxdelete-Smooth) $m90
-# set mods(ChooseImage-SmoothInput) $m86
-# set mods(ChooseImage-Hack) $m93
-# set mods(UnuMinMax-Thresholds) $m98
-
-
-# # Segmenting
-# set mods(LevelSet) $m15
-# set mods(ExtractSlice) $m16
-# set mods(BinaryThreshold-Slice) $m18
-# set mods(ImageToField-Seg) $m41
-# set mods(GenStandard-Seg) $m43
-# set mods(ChooseImage-SegInput) $m94
-# set mods(ChooseImage-Hack2) $m95
-# set mods(ChooseImage-Hack3) $m96
-
-# # Seeds
-# set mods(BinaryThreshold-Seeds) $m20 
-# set mods(SampleField-Seeds) $m19
-# set mods(SampleField-SeedsNeg) $m79
-# set mods(BuildSeedVolume) $m36
-#     # NrrdToField
-# set mods(ImageToField-Seeds) $m75 
-#     # NrrdToField
-# set mods(ImageToField-SeedsNeg) $m78
-# set mods(BuildSeedVolume-Neg) $m80
-# set mods(Unu2op-Max) $m82
-# set mods(Unu2op-Min) $m84
-# set mods(ChooseNrrd-Combine) $m81
-# set mods(ChooseNrrd-Seeds) $m83
-# set mods(GenTitle-Seg) $m48
-
-# # 2D vis
-# set mods(ChooseNrrd-2D) $m65
-
-
-# # Prev/Next slice
-# set mods(ImageToNrrd-Prev) $m25
-# set mods(UnuAxdelete-Prev) $m72
-# set mods(Extract-Prev) $m22 
-
-# # Feature Image
-# set mods(ImageToField-Feature) $m69 
-# set mods(UnuAxdelete-Feature) $m70
-# set mods(NrrdToImage-Feature) $m71
-# set mods(ShowField-Feature) $m38
-
-# set mods(ShowField-Seg) $m42
-# set mods(ShowField-Speed) $m46
-# set mods(ShowField-Seed) $m76
-
-# set mods(GenTitle-Speed) $m49
-# set mods(ImageToNrrd-ViewSlices) $m31
-
-
-# # Binary/Float Segmented Volume
-# set mods(PasteImageFilter-Binary) $m29
-# set mods(PasteImageFilter-Float) $m50
-
-# # binary readers/writers
-# set mods(ImageFileWriter-Binary) $m23
-# set mods(ImageFileWriter-Float) $m74
+# LevelSet Segmentation
+set mods(LevelSet) $m3
+set mods(BinaryThreshold-Seed) $m6
+set mods(ImageToField-PosSeeds) $m7
+set mods(ImageToField-NegSeeds) $m27
 
 
 global axis
 set axis 2
+
+global to_smooth
+set to_smooth 0
 
 # global current_slice
 # set current_slice 0
@@ -841,8 +771,9 @@ class LevelSetSegmenterApp {
 # 	set range_max 0
 # 	set slice_frame ""
 
-# 	set filter_menu1 ""
-# 	set filter_menu2 ""
+ 	set filter_menu1 ""
+ 	set filter_menu2 ""
+	set filter_type "GradientAnisotropicDiffusion"
 # #	set filter_enabled 0
 
 # 	set next_load ""
@@ -897,40 +828,16 @@ class LevelSetSegmenterApp {
     method initialize_blocks {} { 
 	global mods
 
- 	# Disable smoothers
+ 	# Disable smoothers until needed
  	disableModule $mods(Smooth-Gradient) 1
  	disableModule $mods(Smooth-Curvature) 1
  	disableModule $mods(Smooth-Gaussian) 1
- 	disableModule $mods(ChooseImage-Smooth) 1
 
-	# disable non-default readers
-# 	disableModule $mods(DicomReader) 1
-# 	disableModule $mods(AnalyzeReader) 1
-
-
-	
-# 	# Disable prev/next segmentation as seeds
-# 	disableModule $mods(ImageToNrrd-Prev) 1
-# 	disableModule $mods(Extract-Prev) 1
-
-# 	# Level Set
-# 	disableModule $mods(LevelSet) 1
-
-# 	# Feature image into Level Set
-# 	disableModule $mods(ImageToField-Feature) 1
-
-# 	disableModule $mods(NrrdToImage-Feature) 1
-
-# 	disableModule $mods(BinaryThreshold-Slice) 1
-
-# 	disableModule $mods(ImageFileWriter-Binary) 1
-
-# 	disableModule $mods(PasteImageFilter-Binary)  1
-
-# 	# Seed Points
-# 	disableModule $mods(ImageToField-Seeds) 1
-
-# 	disableModule $mods(ImageToNrrd-ViewSlices) 1
+	# Disable segmentation modules
+	disableModule $mods(LevelSet) 1
+	disableModule $mods(BinaryThreshold-Seed) 1
+	disableModule $mods(ImageToField-PosSeeds) 1
+	disableModule $mods(ImageToField-NegSeeds) 1
     }
 
     
@@ -1028,620 +935,593 @@ class LevelSetSegmenterApp {
 	    
  	    set process [$m.p childsite]
 
-	    $this create_volumes_frame $process
+	    $this create_volumes_frame $process $case
 
-#             iwidgets::tabnotebook $process.tnb \
-#                 -width [expr $process_width - 50] \
-#                 -height [expr $process_height - 140] \
-#                 -tabpos n -equaltabs 0
-# 	    pack $process.tnb -side top -anchor n 
+	    $this create_smoothing_frame $process $case
 
-# 	    set proc_tab$case $process.tnb
+	    $this create_speed_frame $process $case
 
-# 	    ############# Load ###########
-#             set step_tab [$process.tnb add -label "Load" -command "$this change_processing_tab Load"]
+	    $this create_seeds_frame $process $case
 
-# 	    iwidgets::labeledframe $step_tab.load \
-# 		-labeltext "Data File Format and Orientation" \
-# 		-labelpos nw
-# 	    pack $step_tab.load -side top -anchor nw -pady 3 \
-# 		-expand yes -fill x
+	    $this create_segmentation_frame $process $case
 
-# 	    set load [$step_tab.load childsite]
+# #             iwidgets::tabnotebook $process.tnb \
+# #                 -width [expr $process_width - 50] \
+# #                 -height [expr $process_height - 140] \
+# #                 -tabpos n -equaltabs 0
+# # 	    pack $process.tnb -side top -anchor n 
 
-# 	    # Build data tabs
-# 	    iwidgets::tabnotebook $load.tnb \
-# 		-width [expr $process_width - 110] -height 75 \
-# 		-tabpos n -equaltabs false
-# 	    pack $load.tnb -side top -anchor n \
-# 		-padx 0 -pady 3
+# # 	    set proc_tab$case $process.tnb
 
-# 	    set data_tab$case $load.tnb
+# # 	    ############# Load ###########
+# #             set step_tab [$process.tnb add -label "Load" -command "$this change_processing_tab Load"]
+
+# # 	    iwidgets::labeledframe $step_tab.load \
+# # 		-labeltext "Data File Format and Orientation" \
+# # 		-labelpos nw
+# # 	    pack $step_tab.load -side top -anchor nw -pady 3 \
+# # 		-expand yes -fill x
+
+# # 	    set load [$step_tab.load childsite]
+
+# # 	    # Build data tabs
+# # 	    iwidgets::tabnotebook $load.tnb \
+# # 		-width [expr $process_width - 110] -height 75 \
+# # 		-tabpos n -equaltabs false
+# # 	    pack $load.tnb -side top -anchor n \
+# # 		-padx 0 -pady 3
+
+# # 	    set data_tab$case $load.tnb
 	
-# 	    # Nrrd
-# 	    set page [$load.tnb add -label "Generic" \
-# 			  -command "$this set_curr_data_tab Generic; $this configure_readers Generic"]       
+# # 	    # Nrrd
+# # 	    set page [$load.tnb add -label "Generic" \
+# # 			  -command "$this set_curr_data_tab Generic; $this configure_readers Generic"]       
 	    
-# 	    global $mods(NrrdReader)-filename
-# 	    frame $page.file
-# 	    pack $page.file -side top -anchor nw -padx 3 -pady 0 -fill x
+# # 	    global $mods(NrrdReader)-filename
+# # 	    frame $page.file
+# # 	    pack $page.file -side top -anchor nw -padx 3 -pady 0 -fill x
 	    
-# 	    label $page.file.l -text ".vol/.vff/.nrrd file:" 
-# 	    entry $page.file.e -textvariable $mods(NrrdReader)-filename \
-# 		-width [expr $process_width - 120]
-# 	    pack $page.file.l $page.file.e -side left -padx 3 -pady 0 -anchor nw \
-# 		-fill x 
+# # 	    label $page.file.l -text ".vol/.vff/.nrrd file:" 
+# # 	    entry $page.file.e -textvariable $mods(NrrdReader)-filename \
+# # 		-width [expr $process_width - 120]
+# # 	    pack $page.file.l $page.file.e -side left -padx 3 -pady 0 -anchor nw \
+# # 		-fill x 
 	    
-# 	    bind $page.file.e <Return> "$this load_data"
+# # 	    bind $page.file.e <Return> "$this load_data"
 	    
-# 	    button $page.load -text "Browse" \
-# 		-command "$this open_nrrd_reader_ui" \
-# 		-width 12
-# 	    pack $page.load -side top -anchor n -padx 3 -pady 1
+# # 	    button $page.load -text "Browse" \
+# # 		-command "$this open_nrrd_reader_ui" \
+# # 		-width 12
+# # 	    pack $page.load -side top -anchor n -padx 3 -pady 1
 	    
 	    
-# 	    ### Dicom
-# 	    set page [$load.tnb add -label "Dicom" \
-# 			  -command "$this set_curr_data_tab Dicom; $this configure_readers Dicom"]
+# # 	    ### Dicom
+# # 	    set page [$load.tnb add -label "Dicom" \
+# # 			  -command "$this set_curr_data_tab Dicom; $this configure_readers Dicom"]
 	    
-# 	    button $page.load -text "Dicom Loader" \
-# 		-command "$this dicom_ui"
+# # 	    button $page.load -text "Dicom Loader" \
+# # 		-command "$this dicom_ui"
 	    
-# 	    pack $page.load -side top -anchor n \
-# 		-padx 3 -pady 10 -ipadx 2 -ipady 2
+# # 	    pack $page.load -side top -anchor n \
+# # 		-padx 3 -pady 10 -ipadx 2 -ipady 2
 	    
-# 	    ### Analyze
-# 	    set page [$load.tnb add -label "Analyze" \
-# 			  -command "$this set_curr_data_tab Analyze; $this configure_readers Analyze"]
+# # 	    ### Analyze
+# # 	    set page [$load.tnb add -label "Analyze" \
+# # 			  -command "$this set_curr_data_tab Analyze; $this configure_readers Analyze"]
 	    
-# 	    button $page.load -text "Analyze Loader" \
-# 		-command "$this analyze_ui"
+# # 	    button $page.load -text "Analyze Loader" \
+# # 		-command "$this analyze_ui"
 	    
-# 	    pack $page.load -side top -anchor n \
-# 		-padx 3 -pady 10 -ipadx 2 -ipady 2
+# # 	    pack $page.load -side top -anchor n \
+# # 		-padx 3 -pady 10 -ipadx 2 -ipady 2
 
-# 	    global load_file_type
-# 	    $load.tnb view $load_file_type
+# # 	    global load_file_type
+# # 	    $load.tnb view $load_file_type
 
-# 	    # Viewing slices axis
-# 	    frame $load.axis
-# 	    pack $load.axis -side top -anchor nw -expand yes -fill x -pady 2
+# # 	    # Viewing slices axis
+# # 	    frame $load.axis
+# # 	    pack $load.axis -side top -anchor nw -expand yes -fill x -pady 2
 
-# 	    set a $load.axis
-# 	    label $a.label -text "View Slices Along:"
+# # 	    set a $load.axis
+# # 	    label $a.label -text "View Slices Along:"
 	    
-# 	    global axis
-# 	    radiobutton $a.x -text "X Axis" \
-# 		-variable axis -value 0 \
-# 		-command "$this change_axis"
+# # 	    global axis
+# # 	    radiobutton $a.x -text "X Axis" \
+# # 		-variable axis -value 0 \
+# # 		-command "$this change_axis"
 
-# 	    radiobutton $a.y -text "Y Axis" \
-# 		-variable axis -value 1 \
-# 		-command "$this change_axis"
+# # 	    radiobutton $a.y -text "Y Axis" \
+# # 		-variable axis -value 1 \
+# # 		-command "$this change_axis"
 
-# 	    radiobutton $a.z -text "Z Axis" \
-# 		-variable axis -value 2 \
-# 		-command "$this change_axis"
+# # 	    radiobutton $a.z -text "Z Axis" \
+# # 		-variable axis -value 2 \
+# # 		-command "$this change_axis"
 
-# 	    pack $a.label $a.x $a.y $a.z -side left -expand yes -fill x
+# # 	    pack $a.label $a.x $a.y $a.z -side left -expand yes -fill x
 
-# 	    button $load.load -text "Load" \
-# 		-command "$this load_data" \
-# 		-background $execute_color \
-# 		-activebackground $execute_active_color \
-# 		-width 10
-# 	    pack $load.load -side top -anchor n -padx 3 -pady 4 \
-# 		-ipadx 2
+# # 	    button $load.load -text "Load" \
+# # 		-command "$this load_data" \
+# # 		-background $execute_color \
+# # 		-activebackground $execute_active_color \
+# # 		-width 10
+# # 	    pack $load.load -side top -anchor n -padx 3 -pady 4 \
+# # 		-ipadx 2
 
 
 
-# 	    # Histogram
+# # 	    # Histogram
 
-# 	    iwidgets::labeledframe $step_tab.stats \
-# 		-labeltext "Volume Statistics" \
-# 		-labelpos nw
-# 	    pack $step_tab.stats -side top -anchor nw -expand yes -fill x
-# 	    set stats [$step_tab.stats childsite]
+# # 	    iwidgets::labeledframe $step_tab.stats \
+# # 		-labeltext "Volume Statistics" \
+# # 		-labelpos nw
+# # 	    pack $step_tab.stats -side top -anchor nw -expand yes -fill x
+# # 	    set stats [$step_tab.stats childsite]
 
-# 	    label $stats.samples -text "Samples: $orig_size0, $orig_size1, $orig_size2"
-# 	    label $stats.range -text "Data Range: $range_min - $range_max"
+# # 	    label $stats.samples -text "Samples: $orig_size0, $orig_size1, $orig_size2"
+# # 	    label $stats.range -text "Data Range: $range_min - $range_max"
 
-# 	    pack $stats.samples $stats.range -side top -anchor nw \
-# 		-expand no
+# # 	    pack $stats.samples $stats.range -side top -anchor nw \
+# # 		-expand no
 
-# 	    iwidgets::labeledframe $stats.histo \
-# 		-labelpos nw -labeltext "Histogram"
-# 	    pack $stats.histo -side top -fill x -anchor n -expand 1
+# # 	    iwidgets::labeledframe $stats.histo \
+# # 		-labelpos nw -labeltext "Histogram"
+# # 	    pack $stats.histo -side top -fill x -anchor n -expand 1
 	    
-# 	    set histo [$stats.histo childsite]
+# # 	    set histo [$stats.histo childsite]
 	    
-# 	    global $mods(ScalarFieldStats)-min
-# 	    global $mods(ScalarFieldStats)-max
-# 	    global $mods(ScalarFieldStats)-nbuckets
+# # 	    global $mods(ScalarFieldStats)-min
+# # 	    global $mods(ScalarFieldStats)-max
+# # 	    global $mods(ScalarFieldStats)-nbuckets
 	    
-# 	    blt::barchart $histo.graph -title "" \
-# 		-height 220 \
-# 		-width [expr $process_width - 50] -plotbackground gray80
-# 	    pack $histo.graph
+# # 	    blt::barchart $histo.graph -title "" \
+# # 		-height 220 \
+# # 		-width [expr $process_width - 50] -plotbackground gray80
+# # 	    pack $histo.graph
 
-# 	    pack $stats.histo -side top -anchor nw \
-# 		-fill x -expand yes
+# # 	    pack $stats.histo -side top -anchor nw \
+# # 		-fill x -expand yes
 	    
-# 	    # Next button
-# 	    button $step_tab.next -text "Next" \
-#                 -command "$this change_processing_tab Smooth" -width 8 \
-#                 -state disabled
-# 	    pack $step_tab.next -side top -anchor ne \
-# 		-padx 3 -pady 3
+# # 	    # Next button
+# # 	    button $step_tab.next -text "Next" \
+# #                 -command "$this change_processing_tab Smooth" -width 8 \
+# #                 -state disabled
+# # 	    pack $step_tab.next -side top -anchor ne \
+# # 		-padx 3 -pady 3
 
-# 	    set next_load "f.p.childsite.tnb.canvas.notebook.cs.page1.cs.next"
+# # 	    set next_load "f.p.childsite.tnb.canvas.notebook.cs.page1.cs.next"
 
 
-# 	    ############# Smooth ###########
-#             set step_tab [$process.tnb add -label "Smooth" -command "$this change_processing_tab Smooth"]
+# # 	    ############# Smooth ###########
+# #             set step_tab [$process.tnb add -label "Smooth" -command "$this change_processing_tab Smooth"]
 
-# 	    iwidgets::labeledframe $step_tab.roi \
-# 		-labeltext "Region of Interest" \
-# 		-labelpos nw
-# 	    pack $step_tab.roi -side top -anchor nw -expand no -fill x -pady 3
+# # 	    iwidgets::labeledframe $step_tab.roi \
+# # 		-labeltext "Region of Interest" \
+# # 		-labelpos nw
+# # 	    pack $step_tab.roi -side top -anchor nw -expand no -fill x -pady 3
 	    
-# 	    set roi [$step_tab.roi childsite]
-# 	    global $mods(UnuCrop)-digits_only
+# # 	    set roi [$step_tab.roi childsite]
+# # 	    global $mods(UnuCrop)-digits_only
 
-# 	    global show_roi
-# 	    checkbutton $roi.t -text "Show Crop Widget" \
-# 		-variable show_roi \
-# 		-command "$this toggle_show_roi"
-# 	    pack $roi.t -side top -anchor nw
+# # 	    global show_roi
+# # 	    checkbutton $roi.t -text "Show Crop Widget" \
+# # 		-variable show_roi \
+# # 		-command "$this toggle_show_roi"
+# # 	    pack $roi.t -side top -anchor nw
 
-# 	    foreach l {{0 X} {1 Y} {2 Z}} {
-# 		set i [lindex $l 0]
-# 		set label [lindex $l 1]
-# 		global $mods(UnuCrop)-minAxis$i
-# 		global $mods(UnuCrop)-maxAxis$i
+# # 	    foreach l {{0 X} {1 Y} {2 Z}} {
+# # 		set i [lindex $l 0]
+# # 		set label [lindex $l 1]
+# # 		global $mods(UnuCrop)-minAxis$i
+# # 		global $mods(UnuCrop)-maxAxis$i
 
-# 		set $mods(UnuCrop)-minAxis$i 0
-# 		if {[set $mods(UnuCrop)-digits_only] == 1} {
-# 		    set $mods(UnuCrop)-maxAxis$i 0
-# 		} else {
-# 		    set $mods(UnuCrop)-maxAxis$i M
-# 		}
+# # 		set $mods(UnuCrop)-minAxis$i 0
+# # 		if {[set $mods(UnuCrop)-digits_only] == 1} {
+# # 		    set $mods(UnuCrop)-maxAxis$i 0
+# # 		} else {
+# # 		    set $mods(UnuCrop)-maxAxis$i M
+# # 		}
 
-# 		frame $roi.$i
-# 		pack $roi.$i -side top -anchor nw -expand yes -fill x \
-# 		    -padx 2 -pady 2
+# # 		frame $roi.$i
+# # 		pack $roi.$i -side top -anchor nw -expand yes -fill x \
+# # 		    -padx 2 -pady 2
 
-# 		label $roi.$i.minl -text "Min Axis $label:"
-# 		entry $roi.$i.minv -textvariable $mods(UnuCrop)-minAxis$i \
-# 		    -width 6
-# 		label $roi.$i.maxl -text "Max Axis $label:"
-# 		entry $roi.$i.maxv -textvariable $mods(UnuCrop)-maxAxis$i \
-# 		    -width 6
-# 		grid configure $roi.$i.minl -row $i -column 0 -sticky "w"
-# 		grid configure $roi.$i.minv -row $i -column 1 -sticky "e"
-# 		grid configure $roi.$i.maxl -row $i -column 2 -sticky "w"
-# 		grid configure $roi.$i.maxv -row $i -column 3 -sticky "e"
+# # 		label $roi.$i.minl -text "Min Axis $label:"
+# # 		entry $roi.$i.minv -textvariable $mods(UnuCrop)-minAxis$i \
+# # 		    -width 6
+# # 		label $roi.$i.maxl -text "Max Axis $label:"
+# # 		entry $roi.$i.maxv -textvariable $mods(UnuCrop)-maxAxis$i \
+# # 		    -width 6
+# # 		grid configure $roi.$i.minl -row $i -column 0 -sticky "w"
+# # 		grid configure $roi.$i.minv -row $i -column 1 -sticky "e"
+# # 		grid configure $roi.$i.maxl -row $i -column 2 -sticky "w"
+# # 		grid configure $roi.$i.maxv -row $i -column 3 -sticky "e"
 
-# 		bind $roi.$i.minv <ButtonPress-1> "$this start_crop"
-# 		bind $roi.$i.maxv <ButtonPress-1> "$this start_crop"
-# 		bind $roi.$i.minv <Return> "$this update_crop_widget min $i"
-# 		bind $roi.$i.maxv <Return> "$this update_crop_widget max $i"
+# # 		bind $roi.$i.minv <ButtonPress-1> "$this start_crop"
+# # 		bind $roi.$i.maxv <ButtonPress-1> "$this start_crop"
+# # 		bind $roi.$i.minv <Return> "$this update_crop_widget min $i"
+# # 		bind $roi.$i.maxv <Return> "$this update_crop_widget max $i"
 
-# 		global $mods(ViewSlices)-crop_minAxis$i $mods(ViewSlices)-crop_maxAxis$i
-# 		trace variable $mods(ViewSlices)-crop_minAxis$i w "$this update_crop_values"
-# 		trace variable $mods(ViewSlices)-crop_maxAxis$i w "$this update_crop_values"
-# 	    }
+# # 		global $mods(ViewSlices)-crop_minAxis$i $mods(ViewSlices)-crop_maxAxis$i
+# # 		trace variable $mods(ViewSlices)-crop_minAxis$i w "$this update_crop_values"
+# # 		trace variable $mods(ViewSlices)-crop_maxAxis$i w "$this update_crop_values"
+# # 	    }
 
-# 	    button $roi.button -text "Crop" \
-# 		-background $execute_color \
-# 		-activebackground $execute_active_color \
-# 		-command "$this select_region_of_interest" \
-# 		-width 10
-# 	    pack $roi.button -side top -anchor n -padx 3 -pady 4 -ipadx 2
+# # 	    button $roi.button -text "Crop" \
+# # 		-background $execute_color \
+# # 		-activebackground $execute_active_color \
+# # 		-command "$this select_region_of_interest" \
+# # 		-width 10
+# # 	    pack $roi.button -side top -anchor n -padx 3 -pady 4 -ipadx 2
 
-# 	    # Smoothing Filters
-# 	    iwidgets::labeledframe $step_tab.smooth \
-# 		-labeltext "Smoothing" \
-# 		-labelpos nw
-# 	    pack $step_tab.smooth -side top -anchor nw -expand yes -fill x -pady 3
+# # 	    # Smoothing Filters
+# # 	    iwidgets::labeledframe $step_tab.smooth \
+# # 		-labeltext "Smoothing" \
+# # 		-labelpos nw
+# # 	    pack $step_tab.smooth -side top -anchor nw -expand yes -fill x -pady 3
 	    
-# 	    set smooth [$step_tab.smooth childsite]
+# # 	    set smooth [$step_tab.smooth childsite]
 
-# 	    global smooth_region
-# 	    radiobutton $smooth.roi -text "Smooth Region of Interest" \
-# 		-variable smooth_region \
-# 		-value roi \
-# 		-command "$this change_smooth_region"
+# # 	    global smooth_region
+# # 	    radiobutton $smooth.roi -text "Smooth Region of Interest" \
+# # 		-variable smooth_region \
+# # 		-value roi \
+# # 		-command "$this change_smooth_region"
 
-# 	    radiobutton $smooth.vol -text "Smooth Entire Volume" \
-# 		-variable smooth_region \
-# 		-value vol \
-# 		-command "$this change_smooth_region"
-# 	    pack $smooth.roi $smooth.vol -side top -anchor nw
+# # 	    radiobutton $smooth.vol -text "Smooth Entire Volume" \
+# # 		-variable smooth_region \
+# # 		-value vol \
+# # 		-command "$this change_smooth_region"
+# # 	    pack $smooth.roi $smooth.vol -side top -anchor nw
 
-# 	    iwidgets::optionmenu $smooth.filter -labeltext "Filter:" \
-# 		-labelpos w -command "$this change_filter $smooth.filter"
-# 	    pack $smooth.filter -side top -anchor nw 
+# # 	    iwidgets::optionmenu $smooth.filter -labeltext "Filter:" \
+# # 		-labelpos w -command "$this change_filter $smooth.filter"
+# # 	    pack $smooth.filter -side top -anchor nw 
 
-# 	    set filter_menu$case $smooth.filter
+# # 	    set filter_menu$case $smooth.filter
 
-# 	    $smooth.filter insert end "GradientAnisotropicDiffusion" \
-# 		"CurvatureAnisotropicDiffusion" \
-# 		"Gaussian" "None"
-# 	    $smooth.filter select "None"
+# # 	    $smooth.filter insert end "GradientAnisotropicDiffusion" \
+# # 		"CurvatureAnisotropicDiffusion" \
+# # 		"Gaussian" "None"
+# # 	    $smooth.filter select "None"
 
-# 	    # pack ui for GradientAnisotropic first
-# 	    # Gradient
-# 	    frame $smooth.gradient
-# 	    pack $smooth.gradient -side top -anchor n -pady 4 
+	 
 
-# 	    global $mods(Smooth-Gradient)-time_step
-# 	    global $mods(Smooth-Gradient)-iterations
-# 	    global $mods(Smooth-Gradient)-conductance_parameter
-# 	    make_entry $smooth.gradient.time "Time Step" $mods(Smooth-Gradient)-time_step 8
-# 	    make_entry $smooth.gradient.iter "Iterations" $mods(Smooth-Gradient)-iterations 4 
-# 	    make_entry $smooth.gradient.cond "Conductance" $mods(Smooth-Gradient)-conductance_parameter 4
-	    
-# 	    pack $smooth.gradient.time $smooth.gradient.iter $smooth.gradient.cond -side left
+# # 	    # Smooth button
+# # 	    frame $smooth.buttons
+# # 	    pack $smooth.buttons -side bottom -anchor n -padx 3 \
+# # 		-pady 4
 
-# 	    # Curvature
-# 	    frame $smooth.curvature
-# 	    global $mods(Smooth-Curvature)-time_step
-# 	    global $mods(Smooth-Curvature)-iterations
-# 	    global $mods(Smooth-Curvature)-conductance_parameter
-# 	    make_entry $smooth.curvature.time "Time Step" $mods(Smooth-Curvature)-time_step 8
-# 	    make_entry $smooth.curvature.iter "Iterations" $mods(Smooth-Curvature)-iterations 4 
-# 	    make_entry $smooth.curvature.cond "Conductance" $mods(Smooth-Curvature)-conductance_parameter 4
-	    
-# 	    pack $smooth.curvature.time $smooth.curvature.iter $smooth.curvature.cond -side left
+# # 	    button $smooth.buttons.reset -text "Reset" \
+# # 		-background $execute_color \
+# # 		-activebackground $execute_active_color \
+# # 		-command "$this smooth_data Reset" -width 10
 
-# 	    # Blur
-# 	    frame $smooth.blur
-# 	    global $mods(Smooth-Blur)-variance
-# 	    global $mods(Smooth-Blur)-maximum_error
-# 	    global $mods(Smooth-Blur)-maximum_kernel_width
-# 	    make_entry $smooth.blur.var "Variance" $mods(Smooth-Blur)-variance 
-# 	    make_entry $smooth.blur.err "Max Error" $mods(Smooth-Blur)-maximum_error 
-# 	    make_entry $smooth.blur.kern "Kernel Width" $mods(Smooth-Blur)-maximum_kernel_width 
-	    
-# 	    pack $smooth.blur.var $smooth.blur.err $smooth.blur.kern \
-# 		-side left	 
+# # 	    button $smooth.buttons.go -text "Go" \
+# # 		-background $execute_color \
+# # 		-activebackground $execute_active_color \
+# # 		-command "$this smooth_data Go" -width 10
 
-# 	    # Smooth button
-# 	    frame $smooth.buttons
-# 	    pack $smooth.buttons -side bottom -anchor n -padx 3 \
-# 		-pady 4
+# # 	    pack $smooth.buttons.reset $smooth.buttons.go  \
+# # 		-side left -anchor nw -padx 3 \
+# # 		-pady 4 -ipadx 2   
 
-# 	    button $smooth.buttons.reset -text "Reset" \
-# 		-background $execute_color \
-# 		-activebackground $execute_active_color \
-# 		-command "$this smooth_data Reset" -width 10
+# # 	    # ViewSlices toggle
+# # 	    frame $smooth.toggle
+# # 	    pack $smooth.toggle -side bottom -anchor n -pady 3
 
-# 	    button $smooth.buttons.go -text "Go" \
-# 		-background $execute_color \
-# 		-activebackground $execute_active_color \
-# 		-command "$this smooth_data Go" -width 10
+# # 	    global $mods(ChooseNrrd-2D)-port-index
+# # 	    radiobutton $smooth.toggle.orig -text "Show Original" \
+# # 		-variable $mods(ChooseNrrd-2D)-port-index -value 0 \
+# # 		-command "$this update_ViewSlices_input"
 
-# 	    pack $smooth.buttons.reset $smooth.buttons.go  \
-# 		-side left -anchor nw -padx 3 \
-# 		-pady 4 -ipadx 2   
+# # 	    radiobutton $smooth.toggle.smooth -text "Show Smoothed" \
+# # 		-variable $mods(ChooseNrrd-2D)-port-index -value 1 \
+# # 		-command "$this update_ViewSlices_input"
 
-# 	    # ViewSlices toggle
-# 	    frame $smooth.toggle
-# 	    pack $smooth.toggle -side bottom -anchor n -pady 3
-
-# 	    global $mods(ChooseNrrd-2D)-port-index
-# 	    radiobutton $smooth.toggle.orig -text "Show Original" \
-# 		-variable $mods(ChooseNrrd-2D)-port-index -value 0 \
-# 		-command "$this update_ViewSlices_input"
-
-# 	    radiobutton $smooth.toggle.smooth -text "Show Smoothed" \
-# 		-variable $mods(ChooseNrrd-2D)-port-index -value 1 \
-# 		-command "$this update_ViewSlices_input"
-
-# 	    pack $smooth.toggle.orig $smooth.toggle.smooth -side left \
-# 		-padx 4
+# # 	    pack $smooth.toggle.orig $smooth.toggle.smooth -side left \
+# # 		-padx 4
 
 
 
-# 	    # Next button
-# 	    button $step_tab.next -text "Next" \
-#                 -command "$this change_processing_tab Segment" -width 8 \
-# 		-activebackground $next_color \
-# 		-background $next_color 
-# 	    pack $step_tab.next -side top -anchor ne \
-# 		-padx 3 -pady 3
+# # 	    # Next button
+# # 	    button $step_tab.next -text "Next" \
+# #                 -command "$this change_processing_tab Segment" -width 8 \
+# # 		-activebackground $next_color \
+# # 		-background $next_color 
+# # 	    pack $step_tab.next -side top -anchor ne \
+# # 		-padx 3 -pady 3
 
-# 	    set next_smooth "f.p.childsite.tnb.canvas.notebook.cs.page2.cs.next"
+# # 	    set next_smooth "f.p.childsite.tnb.canvas.notebook.cs.page2.cs.next"
 	    
 
-# 	    ############# Segment ###########
-#             set step_tab [$process.tnb add -label "Segment" -command "$this change_processing_tab Segment"]
+# # 	    ############# Segment ###########
+# #             set step_tab [$process.tnb add -label "Segment" -command "$this change_processing_tab Segment"]
 	    
-# 	    # Current Slice
-# 	    frame $step_tab.slice
-# 	    pack $step_tab.slice
+# # 	    # Current Slice
+# # 	    frame $step_tab.slice
+# # 	    pack $step_tab.slice
 
-# 	    global no_seg_icon
-# 	    button $step_tab.slice.status -relief flat -image $no_seg_icon
-# 	    pack $step_tab.slice.status -side left
+# # 	    global no_seg_icon
+# # 	    button $step_tab.slice.status -relief flat -image $no_seg_icon
+# # 	    pack $step_tab.slice.status -side left
 	    
-# 	    global slice
-# 	    iwidgets::spinint $step_tab.slice.sp -labeltext "Segmenting Slice:" -width 6 \
-# 		-range {0 100} -step 1 -textvariable slice
-# 	    button $step_tab.slice.up -text "Change Slice" \
-# 		-command "$this current_slice_changed"
+# # 	    global slice
+# # 	    iwidgets::spinint $step_tab.slice.sp -labeltext "Segmenting Slice:" -width 6 \
+# # 		-range {0 100} -step 1 -textvariable slice
+# # 	    button $step_tab.slice.up -text "Change Slice" \
+# # 		-command "$this current_slice_changed"
 
-# 	    pack $step_tab.slice.sp $step_tab.slice.up -side left
+# # 	    pack $step_tab.slice.sp $step_tab.slice.up -side left
 
-# 	    # Level Set Parameters
-# 	    iwidgets::labeledframe $step_tab.params \
-# 		-labeltext "Tune Speed Image" \
-# 		-labelpos nw
-# 	    pack $step_tab.params -side top -anchor nw -expand no -fill x \
-# 		-pady 3
+# # 	    # Level Set Parameters
+# # 	    iwidgets::labeledframe $step_tab.params \
+# # 		-labeltext "Tune Speed Image" \
+# # 		-labelpos nw
+# # 	    pack $step_tab.params -side top -anchor nw -expand no -fill x \
+# # 		-pady 3
 
-# 	    set params [$step_tab.params childsite]
+# # 	    set params [$step_tab.params childsite]
 
-# 	    global $mods(LevelSet)-lower_threshold
-# 	    global $mods(LevelSet)-upper_threshold
-# 	    global $mods(LevelSet)-curvature_scaling
-# 	    global $mods(LevelSet)-propagation_scaling
-# 	    global $mods(LevelSet)-edge_weight
-# 	    global $mods(LevelSet)-max_iterations
-# 	    global $mods(LevelSet)-max_rms_change
-# 	    global $mods(LevelSet)-reverse_expansion_direction
-# 	    global $mods(LevelSet)-smoothing_iterations
-# 	    global $mods(LevelSet)-smoothing_time_step
-# 	    global $mods(LevelSet)-smoothing_conductance
+# # 	    global $mods(LevelSet)-lower_threshold
+# # 	    global $mods(LevelSet)-upper_threshold
+# # 	    global $mods(LevelSet)-curvature_scaling
+# # 	    global $mods(LevelSet)-propagation_scaling
+# # 	    global $mods(LevelSet)-edge_weight
+# # 	    global $mods(LevelSet)-max_iterations
+# # 	    global $mods(LevelSet)-max_rms_change
+# # 	    global $mods(LevelSet)-reverse_expansion_direction
+# # 	    global $mods(LevelSet)-smoothing_iterations
+# # 	    global $mods(LevelSet)-smoothing_time_step
+# # 	    global $mods(LevelSet)-smoothing_conductance
 
-# 	    trace variable $mods(LevelSet)-lower_threshold w "$this update_seed_binary_threshold"
-# 	    trace variable $mods(LevelSet)-upper_threshold w "$this update_seed_binary_threshold"
+# # 	    trace variable $mods(LevelSet)-lower_threshold w "$this update_seed_binary_threshold"
+# # 	    trace variable $mods(LevelSet)-upper_threshold w "$this update_seed_binary_threshold"
 
-# 	    # thresholds
-# 	    frame $params.lthresh
-# 	    pack $params.lthresh -side top -anchor nw -expand yes -fill x
-# 	    label $params.lthresh.l -text "Lower Threshold"
-# 	    scale $params.lthresh.s -variable $mods(LevelSet)-lower_threshold \
-# 		-from 0 -to 255 -width 15 \
-# 		-showvalue false -length 150 \
-# 		-orient horizontal
-# 	    entry $params.lthresh.e -textvariable $mods(LevelSet)-lower_threshold \
-# 		-width 6
-# 	    pack $params.lthresh.l $params.lthresh.s $params.lthresh.e -side left -pady 2
+# # 	    # thresholds
+# # 	    frame $params.lthresh
+# # 	    pack $params.lthresh -side top -anchor nw -expand yes -fill x
+# # 	    label $params.lthresh.l -text "Lower Threshold"
+# # 	    scale $params.lthresh.s -variable $mods(LevelSet)-lower_threshold \
+# # 		-from 0 -to 255 -width 15 \
+# # 		-showvalue false -length 150 \
+# # 		-orient horizontal
+# # 	    entry $params.lthresh.e -textvariable $mods(LevelSet)-lower_threshold \
+# # 		-width 6
+# # 	    pack $params.lthresh.l $params.lthresh.s $params.lthresh.e -side left -pady 2
 
-# 	    frame $params.uthresh
-# 	    pack $params.uthresh -side top -anchor nw -expand yes -fill x
-# 	    label $params.uthresh.l -text "Upper Threshold"
-# 	    scale $params.uthresh.s -variable $mods(LevelSet)-upper_threshold \
-# 		-from 0 -to 255 -width 15 \
-# 		-showvalue false -length 150 \
-# 		-orient horizontal
-# 	    entry $params.uthresh.e -textvariable $mods(LevelSet)-upper_threshold \
-# 		-width 6
-# 	    pack $params.uthresh.l $params.uthresh.s $params.uthresh.e -side left -pady 2
+# # 	    frame $params.uthresh
+# # 	    pack $params.uthresh -side top -anchor nw -expand yes -fill x
+# # 	    label $params.uthresh.l -text "Upper Threshold"
+# # 	    scale $params.uthresh.s -variable $mods(LevelSet)-upper_threshold \
+# # 		-from 0 -to 255 -width 15 \
+# # 		-showvalue false -length 150 \
+# # 		-orient horizontal
+# # 	    entry $params.uthresh.e -textvariable $mods(LevelSet)-upper_threshold \
+# # 		-width 6
+# # 	    pack $params.uthresh.l $params.uthresh.s $params.uthresh.e -side left -pady 2
 
-# 	    # Equation Term Weights
-# 	    iwidgets::labeledframe $params.terms \
-# 		-labeltext "Equation Term Weights" \
-# 		-labelpos nw
-# 	    pack $params.terms -side top -anchor n -padx 3
+# # 	    # Equation Term Weights
+# # 	    iwidgets::labeledframe $params.terms \
+# # 		-labeltext "Equation Term Weights" \
+# # 		-labelpos nw
+# # 	    pack $params.terms -side top -anchor n -padx 3
 	    
-# 	    set terms [$params.terms childsite]
-# 	    frame $terms.scaling1
-# 	    pack $terms.scaling1 -side top -anchor nw \
-# 		-padx 3 -pady 1
-# 	    make_entry $terms.scaling1.curv "Curvature" $mods(LevelSet)-curvature_scaling
-# 	    make_entry $terms.scaling1.prop "Propagation" $mods(LevelSet)-propagation_scaling
+# # 	    set terms [$params.terms childsite]
+# # 	    frame $terms.scaling1
+# # 	    pack $terms.scaling1 -side top -anchor nw \
+# # 		-padx 3 -pady 1
+# # 	    make_entry $terms.scaling1.curv "Curvature" $mods(LevelSet)-curvature_scaling
+# # 	    make_entry $terms.scaling1.prop "Propagation" $mods(LevelSet)-propagation_scaling
 
-# 	    pack $terms.scaling1.curv $terms.scaling1.prop \
-# 		-side left -anchor ne \
-# 		-padx 3 -pady 1
+# # 	    pack $terms.scaling1.curv $terms.scaling1.prop \
+# # 		-side left -anchor ne \
+# # 		-padx 3 -pady 1
 
-# 	    make_entry $terms.edge "Edge Weight (Laplacian)" $mods(LevelSet)-edge_weight
-# 	    checkbutton $terms.exp -text "Reverse Expansion Direction" \
-# 		-variable $mods(LevelSet)-reverse_expansion_direction
+# # 	    make_entry $terms.edge "Edge Weight (Laplacian)" $mods(LevelSet)-edge_weight
+# # 	    checkbutton $terms.exp -text "Reverse Expansion Direction" \
+# # 		-variable $mods(LevelSet)-reverse_expansion_direction
 
-# 	    pack $terms.edge $terms.exp -side top -anchor nw \
-# 		-padx 3 -pady 1
-
-
-# 	    button $params.button -text "Update Speed Image" \
-# 		-background $execute_color \
-# 		-activebackground $execute_active_color \
-# 		-command "$this update_speed_image" \
-# 		-width 20
-# 	    pack $params.button -side top -anchor n -padx 3 -pady 3 -ipadx 2
+# # 	    pack $terms.edge $terms.exp -side top -anchor nw \
+# # 		-padx 3 -pady 1
 
 
-# 	    # Seeding parameters
-# 	    iwidgets::labeledframe $step_tab.seeds \
-# 		-labeltext "Initial Segmentation" \
-# 		-labelpos nw
-# 	    pack $step_tab.seeds -side top -anchor nw -expand no -fill x \
-# 		-pady 3
-
-# 	    set seeds [$step_tab.seeds childsite]
-	    
-
-# 	    global seed_method
-# 	    global $mods(SampleField-Seeds)-num_seeds
-# 	    global $mods(SampleField-SeedsNeg)-num_seeds
-# 	    trace variable $mods(SampleField-Seeds)-num_seeds w "$this seeds_changed"
-# 	    trace variable $mods(SampleField-SeedsNeg)-num_seeds w "$this seeds_changed"
-
-# 	    frame $seeds.options
-# 	    frame $seeds.options.a
-# 	    frame $seeds.options.b
-# 	    pack $seeds.options -side top -anchor n
-
-# 	    pack $seeds.options.a $seeds.options.b -side left -anchor nw
-
-# 	    # Previous
-# 	    radiobutton $seeds.options.a.prev \
-# 		-text "Use Previous Segmentation" \
-# 		-variable seed_method -value "prev" \
-# 		-command "$this change_seed_method"
-
-# 	    # Current
-# 	    radiobutton $seeds.options.a.curr \
-# 		-text "Use Current Segmentation" \
-# 		-variable seed_method -value "curr" \
-# 		-command "$this change_seed_method"
-
-# 	    # Current
-# 	    radiobutton $seeds.options.a.next \
-# 		-text "Use Next Segmentation" \
-# 		-variable seed_method -value "next" \
-# 		-command "$this change_seed_method"
-
-# 	    # Thresholds
-# 	    radiobutton $seeds.options.b.thresh \
-# 		-text "Use Thresholds" \
-# 		-variable seed_method -value "thresh" \
-# 		-command "$this change_seed_method"
-
-# 	    # Seeds
-# 	    radiobutton $seeds.options.b.point -text "Use Seed Points Only" \
-# 		-variable seed_method -value "points" \
-# 		-command "$this change_seed_method"
-
-# 	    pack $seeds.options.a.prev $seeds.options.a.curr \
-# 		$seeds.options.a.next -side top -anchor nw
-
-# 	    pack $seeds.options.b.thresh $seeds.options.b.point \
-# 		-side top -anchor nw
+# # 	    button $params.button -text "Update Speed Image" \
+# # 		-background $execute_color \
+# # 		-activebackground $execute_active_color \
+# # 		-command "$this update_speed_image" \
+# # 		-width 20
+# # 	    pack $params.button -side top -anchor n -padx 3 -pady 3 -ipadx 2
 
 
-# 	    frame $seeds.points -relief groove -borderwidth 2
+# # 	    # Seeding parameters
+# # 	    iwidgets::labeledframe $step_tab.seeds \
+# # 		-labeltext "Initial Segmentation" \
+# # 		-labelpos nw
+# # 	    pack $step_tab.seeds -side top -anchor nw -expand no -fill x \
+# # 		-pady 3
 
-# 	    frame $seeds.points.pos
-# 	    set f $seeds.points.pos
-# 	    label $f.l -text "Positive Seed Points: " \
-# 		-foreground "#990000"
-# 	    button $f.decr -text "-" -command "$this change_number_of_seeds + -"
-# 	    entry $f.e -textvariable $mods(SampleField-Seeds)-num_seeds \
-# 		-width 4 -foreground "#990000"
-# 	    button $f.incr -text "+" -command "$this change_number_of_seeds + +"
-# 	    bind $f.e <Return> "$this change_number_of_seeds + ="
-
-# 	    pack $f.l $f.decr $f.e $f.incr -side left -anchor nw -expand yes -fill x
-
-# 	    frame $seeds.points.neg
-# 	    set f $seeds.points.neg
-# 	    label $f.l -text "Negative Seed Points: " \
-# 		-foreground "blue"
-# 	    button $f.decr -text "-" -command "$this change_number_of_seeds - -"
-# 	    entry $f.e -textvariable $mods(SampleField-SeedsNeg)-num_seeds \
-# 		-width 4 -foreground "blue"
-# 	    button $f.incr -text "+" -command "$this change_number_of_seeds - +"
-# 	    bind $f.e <Return> "$this change_number_of_seeds - ="
-
-# 	    pack $f.l $f.decr $f.e $f.incr -side left -anchor nw -expand yes -fill x
-
-# 	    global show_seeds
-# 	    checkbutton $seeds.points.toggle -text "Show Seeds" \
-# 		-variable show_seeds -command "$this seeds_changed 1 2 3"
-
-# 	    pack $seeds.points.pos $seeds.points.neg \
-# 		-side top -anchor ne
-# 	    pack $seeds.points.toggle -side top -anchor n
-
-# 	    button $seeds.generate -text "Update Initial Segmentation" \
-# 		-background $execute_color \
-# 		-activebackground $execute_active_color \
-# 		-command "$this create_seeds"
-
-
-# 	    pack $seeds.points $seeds.generate -side top -anchor n -pady 3 -ipadx 2
-
-# 	    # Segment frame
-
-# 	    iwidgets::labeledframe $step_tab.segment \
-# 		-labeltext "Segment" \
-# 		-labelpos nw
-# 	    pack $step_tab.segment -side top -anchor nw \
-# 		-expand no -fill x
-# 	    set segment [$step_tab.segment childsite]
-
-# 	    global max_iter
-# 	    global $mods(LevelSet)-max_rms_change
-
-# 	    frame $segment.params
-# 	    make_entry $segment.params.iter "Maximum Iterations:" max_iter 5
-# 	    make_entry $segment.params.rms "Maximum RMS:" $mods(LevelSet)-max_rms_change 5
-# 	    pack $segment.params.iter $segment.params.rms \
-# 		-side left -anchor nw
-# 	    frame $segment.buttons
-# 	    button $segment.buttons.reset -text "Reset" \
-# 		-background $execute_color \
-# 		-activebackground $execute_active_color \
-# 		-command "$this start_segmentation Reset"
-# 	    button $segment.buttons.go -text "Go" \
-# 		-background $execute_color \
-# 		-activebackground $execute_active_color \
-# 		-command "$this start_segmentation Go"
-# 	    button $segment.buttons.stop -text "Stop" \
-# 		-background "#990000" \
-# 		-activebackground "#CC0000" \
-# 		-command "$this stop_segmentation"
-# 	    button $segment.buttons.commit -text "Commit" \
-# 		-activebackground $next_color \
-# 		-background $next_color \
-# 		-command "$this commit_segmentation"
-# 	    pack $segment.buttons.reset $segment.buttons.go \
-# 		$segment.buttons.stop $segment.buttons.commit \
-# 		-side left -anchor n -padx 4 -pady 3 -expand yes \
-# 		-ipadx 2
-
-# 	    pack $segment.params -side top -anchor nw 
-# 	    pack $segment.buttons -side top -anchor n -expand yes -fill x
+# # 	    set seeds [$step_tab.seeds childsite]
 	    
 
-# 	    button $step_tab.volren -text "Update Volume Rendering" \
-# 		-state disabled \
-# 		-command "$this update_volume_rendering"
-# 	    pack $step_tab.volren -side top -anchor n -pady 3
+# # 	    global seed_method
+# # 	    global $mods(SampleField-Seeds)-num_seeds
+# # 	    global $mods(SampleField-SeedsNeg)-num_seeds
+# # 	    trace variable $mods(SampleField-Seeds)-num_seeds w "$this seeds_changed"
+# # 	    trace variable $mods(SampleField-SeedsNeg)-num_seeds w "$this seeds_changed"
 
-# # 	    # Radiobuttons for what is volume rendered
-#  	    frame $step_tab.whichvol 
-#  	    pack $step_tab.whichvol -side top -anchor n -pady 3
-#  	    global vol_foreground
-#  	    radiobutton $step_tab.whichvol.a -text "Show Segmentation" \
-#  		-variable vol_foreground -value 1 \
-#  		-command "$this toggle_volume_render_object"
-#  	    radiobutton $step_tab.whichvol.b -text "Show Background" \
-#  		-variable vol_foreground -value 0 \
-#  		-command "$this toggle_volume_render_object"
-#  	    pack $step_tab.whichvol.a $step_tab.whichvol.b -side left \
-#  		-anchor nw -pady 3
+# # 	    frame $seeds.options
+# # 	    frame $seeds.options.a
+# # 	    frame $seeds.options.b
+# # 	    pack $seeds.options -side top -anchor n
 
-# 	    frame $step_tab.savebin 
-# 	    frame $step_tab.savefl
-# 	    pack $step_tab.savebin $step_tab.savefl -side top -anchor n \
-# 		-pady 2
+# # 	    pack $seeds.options.a $seeds.options.b -side left -anchor nw
+
+# # 	    # Previous
+# # 	    radiobutton $seeds.options.a.prev \
+# # 		-text "Use Previous Segmentation" \
+# # 		-variable seed_method -value "prev" \
+# # 		-command "$this change_seed_method"
+
+# # 	    # Current
+# # 	    radiobutton $seeds.options.a.curr \
+# # 		-text "Use Current Segmentation" \
+# # 		-variable seed_method -value "curr" \
+# # 		-command "$this change_seed_method"
+
+# # 	    # Current
+# # 	    radiobutton $seeds.options.a.next \
+# # 		-text "Use Next Segmentation" \
+# # 		-variable seed_method -value "next" \
+# # 		-command "$this change_seed_method"
+
+# # 	    # Thresholds
+# # 	    radiobutton $seeds.options.b.thresh \
+# # 		-text "Use Thresholds" \
+# # 		-variable seed_method -value "thresh" \
+# # 		-command "$this change_seed_method"
+
+# # 	    # Seeds
+# # 	    radiobutton $seeds.options.b.point -text "Use Seed Points Only" \
+# # 		-variable seed_method -value "points" \
+# # 		-command "$this change_seed_method"
+
+# # 	    pack $seeds.options.a.prev $seeds.options.a.curr \
+# # 		$seeds.options.a.next -side top -anchor nw
+
+# # 	    pack $seeds.options.b.thresh $seeds.options.b.point \
+# # 		-side top -anchor nw
+
+
+# # 	    frame $seeds.points -relief groove -borderwidth 2
+
+# # 	    frame $seeds.points.pos
+# # 	    set f $seeds.points.pos
+# # 	    label $f.l -text "Positive Seed Points: " \
+# # 		-foreground "#990000"
+# # 	    button $f.decr -text "-" -command "$this change_number_of_seeds + -"
+# # 	    entry $f.e -textvariable $mods(SampleField-Seeds)-num_seeds \
+# # 		-width 4 -foreground "#990000"
+# # 	    button $f.incr -text "+" -command "$this change_number_of_seeds + +"
+# # 	    bind $f.e <Return> "$this change_number_of_seeds + ="
+
+# # 	    pack $f.l $f.decr $f.e $f.incr -side left -anchor nw -expand yes -fill x
+
+# # 	    frame $seeds.points.neg
+# # 	    set f $seeds.points.neg
+# # 	    label $f.l -text "Negative Seed Points: " \
+# # 		-foreground "blue"
+# # 	    button $f.decr -text "-" -command "$this change_number_of_seeds - -"
+# # 	    entry $f.e -textvariable $mods(SampleField-SeedsNeg)-num_seeds \
+# # 		-width 4 -foreground "blue"
+# # 	    button $f.incr -text "+" -command "$this change_number_of_seeds - +"
+# # 	    bind $f.e <Return> "$this change_number_of_seeds - ="
+
+# # 	    pack $f.l $f.decr $f.e $f.incr -side left -anchor nw -expand yes -fill x
+
+# # 	    global show_seeds
+# # 	    checkbutton $seeds.points.toggle -text "Show Seeds" \
+# # 		-variable show_seeds -command "$this seeds_changed 1 2 3"
+
+# # 	    pack $seeds.points.pos $seeds.points.neg \
+# # 		-side top -anchor ne
+# # 	    pack $seeds.points.toggle -side top -anchor n
+
+# # 	    button $seeds.generate -text "Update Initial Segmentation" \
+# # 		-background $execute_color \
+# # 		-activebackground $execute_active_color \
+# # 		-command "$this create_seeds"
+
+
+# # 	    pack $seeds.points $seeds.generate -side top -anchor n -pady 3 -ipadx 2
+
+# # 	    # Segment frame
+
+# # 	    iwidgets::labeledframe $step_tab.segment \
+# # 		-labeltext "Segment" \
+# # 		-labelpos nw
+# # 	    pack $step_tab.segment -side top -anchor nw \
+# # 		-expand no -fill x
+# # 	    set segment [$step_tab.segment childsite]
+
+# # 	    global max_iter
+# # 	    global $mods(LevelSet)-max_rms_change
+
+# # 	    frame $segment.params
+# # 	    make_entry $segment.params.iter "Maximum Iterations:" max_iter 5
+# # 	    make_entry $segment.params.rms "Maximum RMS:" $mods(LevelSet)-max_rms_change 5
+# # 	    pack $segment.params.iter $segment.params.rms \
+# # 		-side left -anchor nw
+# # 	    frame $segment.buttons
+# # 	    button $segment.buttons.reset -text "Reset" \
+# # 		-background $execute_color \
+# # 		-activebackground $execute_active_color \
+# # 		-command "$this start_segmentation Reset"
+# # 	    button $segment.buttons.go -text "Go" \
+# # 		-background $execute_color \
+# # 		-activebackground $execute_active_color \
+# # 		-command "$this start_segmentation Go"
+# # 	    button $segment.buttons.stop -text "Stop" \
+# # 		-background "#990000" \
+# # 		-activebackground "#CC0000" \
+# # 		-command "$this stop_segmentation"
+# # 	    button $segment.buttons.commit -text "Commit" \
+# # 		-activebackground $next_color \
+# # 		-background $next_color \
+# # 		-command "$this commit_segmentation"
+# # 	    pack $segment.buttons.reset $segment.buttons.go \
+# # 		$segment.buttons.stop $segment.buttons.commit \
+# # 		-side left -anchor n -padx 4 -pady 3 -expand yes \
+# # 		-ipadx 2
+
+# # 	    pack $segment.params -side top -anchor nw 
+# # 	    pack $segment.buttons -side top -anchor n -expand yes -fill x
 	    
-# 	    global $mods(ImageFileWriter-Binary)-filename
-# 	    button $step_tab.savebin.btn -text "Save Binary" \
-# 		-command "$this save_binary" -state disabled
-# 	    label $step_tab.savebin.l -text "File:"
-# 	    entry $step_tab.savebin.e \
-# 		-textvariable $mods(ImageFileWriter-Binary)-filename
-# 	    button $step_tab.savebin.browse -text "Browse" \
-# 		-command "$this open_save_binary_ui"
-# 	    pack $step_tab.savebin.btn $step_tab.savebin.l \
-# 		$step_tab.savebin.e $step_tab.savebin.browse -side left
 
-# 	    global $mods(ImageFileWriter-Float)-filename
-# 	    button $step_tab.savefl.btn -text " Save Float " \
-# 		-command "$this save_float" -state disabled
-# 	    label $step_tab.savefl.l -text "File:"
-# 	    entry $step_tab.savefl.e \
-# 		-textvariable $mods(ImageFileWriter-Float)-filename
-# 	    button $step_tab.savefl.browse -text "Browse" \
-# 		-command "$this open_save_float_ui"
-# 	    pack $step_tab.savefl.btn $step_tab.savefl.l \
-# 		$step_tab.savefl.e $step_tab.savefl.browse -side left
+# # 	    button $step_tab.volren -text "Update Volume Rendering" \
+# # 		-state disabled \
+# # 		-command "$this update_volume_rendering"
+# # 	    pack $step_tab.volren -side top -anchor n -pady 3
+
+# # # 	    # Radiobuttons for what is volume rendered
+# #  	    frame $step_tab.whichvol 
+# #  	    pack $step_tab.whichvol -side top -anchor n -pady 3
+# #  	    global vol_foreground
+# #  	    radiobutton $step_tab.whichvol.a -text "Show Segmentation" \
+# #  		-variable vol_foreground -value 1 \
+# #  		-command "$this toggle_volume_render_object"
+# #  	    radiobutton $step_tab.whichvol.b -text "Show Background" \
+# #  		-variable vol_foreground -value 0 \
+# #  		-command "$this toggle_volume_render_object"
+# #  	    pack $step_tab.whichvol.a $step_tab.whichvol.b -side left \
+# #  		-anchor nw -pady 3
+
+# # 	    frame $step_tab.savebin 
+# # 	    frame $step_tab.savefl
+# # 	    pack $step_tab.savebin $step_tab.savefl -side top -anchor n \
+# # 		-pady 2
+	    
+# # 	    global $mods(ImageFileWriter-Binary)-filename
+# # 	    button $step_tab.savebin.btn -text "Save Binary" \
+# # 		-command "$this save_binary" -state disabled
+# # 	    label $step_tab.savebin.l -text "File:"
+# # 	    entry $step_tab.savebin.e \
+# # 		-textvariable $mods(ImageFileWriter-Binary)-filename
+# # 	    button $step_tab.savebin.browse -text "Browse" \
+# # 		-command "$this open_save_binary_ui"
+# # 	    pack $step_tab.savebin.btn $step_tab.savebin.l \
+# # 		$step_tab.savebin.e $step_tab.savebin.browse -side left
+
+# # 	    global $mods(ImageFileWriter-Float)-filename
+# # 	    button $step_tab.savefl.btn -text " Save Float " \
+# # 		-command "$this save_float" -state disabled
+# # 	    label $step_tab.savefl.l -text "File:"
+# # 	    entry $step_tab.savefl.e \
+# # 		-textvariable $mods(ImageFileWriter-Float)-filename
+# # 	    button $step_tab.savefl.browse -text "Browse" \
+# # 		-command "$this open_save_float_ui"
+# # 	    pack $step_tab.savefl.btn $step_tab.savefl.l \
+# # 		$step_tab.savefl.e $step_tab.savefl.browse -side left
 	    
 	    
             ### Indicator
@@ -1695,12 +1575,12 @@ class LevelSetSegmenterApp {
         wm protocol .standalone WM_DELETE_WINDOW { NiceQuit }  
     }
 
-    method create_volumes_frame {process} {
+    method create_volumes_frame {process case} {
 	global mods
 
 	### Volumes
 	iwidgets::labeledframe $process.volumes \
-	    -labelpos nw -labeltext "Volumes"
+	    -labelpos nw -labeltext "1. Load Volumes"
 	pack $process.volumes -side top -anchor nw -expand yes -fill x
 	
 	set data [$process.volumes childsite]
@@ -1774,6 +1654,156 @@ class LevelSetSegmenterApp {
 	    -side top -anchor nw -expand yes -fill x -padx 3
     }
 
+    method create_smoothing_frame {process case} {
+	global mods
+	
+	### Smoothing
+	iwidgets::labeledframe $process.smoothing \
+	    -labelpos nw -labeltext "2. Setup Smoothing"
+	pack $process.smoothing -side top -anchor nw -expand yes -fill x
+	
+	set smooth [$process.smoothing childsite]
+	
+	frame $smooth.a
+	
+	global to_smooth
+	checkbutton $smooth.a.toggle -text "Smooth Slice" \
+	    -variable to_smooth \
+	    -command "$this to_smooth_changed"
+	
+	iwidgets::optionmenu $smooth.a.filter -labeltext "Filter:" \
+	    -labelpos w -command "$this change_filter $smooth.a.filter"
+	
+	pack $smooth.a.toggle -side left -anchor w -padx 3
+	pack $smooth.a.filter -side right -anchor e -padx 3
+	
+	set filter_menu$case $smooth.a.filter
+	
+	$smooth.a.filter insert end "GradientAnisotropicDiffusion" \
+	    "CurvatureAnisotropicDiffusion" \
+	    "Gaussian" 
+	$smooth.a.filter select "GradientAnisotropicDiffusion"
+	
+	pack $smooth.a -side top -anchor nw -expand yes -fill x
+
+	# pack ui for GradientAnisotropic first
+	# Gradient
+	frame $smooth.gradient
+	pack $smooth.gradient -side top -anchor n -pady 4 \
+	    -expand yes -fill x
+	
+	global $mods(Smooth-Gradient)-time_step
+	global $mods(Smooth-Gradient)-iterations
+	global $mods(Smooth-Gradient)-conductance_parameter
+	make_entry $smooth.gradient.time "Time Step" \
+	    $mods(Smooth-Gradient)-time_step 8
+	make_entry $smooth.gradient.iter "Iterations" \
+	    $mods(Smooth-Gradient)-iterations 4 
+	make_entry $smooth.gradient.cond "Conductance" \
+	    $mods(Smooth-Gradient)-conductance_parameter 4
+	button $smooth.gradient.b -text "Go" -width 3 \
+	    -background $execute_color \
+	    -activebackground $execute_active_color \
+	    -command "$this smooth_slice"
+	
+	pack $smooth.gradient.time $smooth.gradient.iter \
+	    $smooth.gradient.cond -side left
+	pack $smooth.gradient.b -side right -padx 3
+	
+	# Curvature
+	frame $smooth.curvature
+	global $mods(Smooth-Curvature)-time_step
+	global $mods(Smooth-Curvature)-iterations
+	global $mods(Smooth-Curvature)-conductance_parameter
+	make_entry $smooth.curvature.time "Time Step" \
+	    $mods(Smooth-Curvature)-time_step 8
+	make_entry $smooth.curvature.iter "Iterations" \
+	    $mods(Smooth-Curvature)-iterations 4 
+	make_entry $smooth.curvature.cond "Conductance" \
+	    $mods(Smooth-Curvature)-conductance_parameter 4
+	button $smooth.curvature.b -text "Go" -width 3 \
+	    -background $execute_color \
+	    -activebackground $execute_active_color \
+	    -command "$this smooth_slice"
+	    
+	pack $smooth.curvature.time $smooth.curvature.iter \
+	    $smooth.curvature.cond -side left
+	pack $smooth.curvature.b -side right -padx 3
+
+	# Gaussian
+	frame $smooth.gaussian
+	global $mods(Smooth-Gaussian)-variance
+	global $mods(Smooth-Gaussian)-maximum_error
+	global $mods(Smooth-Gaussian)-maximum_kernel_width
+	make_entry $smooth.gaussian.var "Variance" \
+	    $mods(Smooth-Gaussian)-variance 
+	make_entry $smooth.gaussian.err "Max Error" \
+	    $mods(Smooth-Gaussian)-maximum_error 
+	make_entry $smooth.gaussian.kern "Kernel Width" \
+	    $mods(Smooth-Gaussian)-maximum_kernel_width 
+	button $smooth.gaussian.b -text "Go" -width 3 \
+	    -background $execute_color \
+	    -activebackground $execute_active_color \
+	    -command "$this smooth_slice"
+	
+	pack $smooth.gaussian.var $smooth.gaussian.err $smooth.gaussian.kern \
+	    -side left
+	pack $smooth.gaussian.b -side right -padx 3
+
+	frame $smooth.show 
+	pack $smooth.show -side bottom -anchor s
+
+	global $mods(ChooseImage-ShowSlice)-port-index
+	radiobutton $smooth.show.orig -text "Show Original" \
+	    -variable $mods(ChooseImage-ShowSlice)-port-index -value 0 \
+	    -command "$mods(ChooseImage-ShowSlice)-c needexecute"
+	
+	radiobutton $smooth.show.smooth -text "Show Smoothed" \
+	    -variable $mods(ChooseImage-ShowSlice)-port-index -value 1 \
+	    -command "$mods(ChooseImage-ShowSlice)-c needexecute"
+	
+	pack $smooth.show.orig $smooth.show.smooth -side left \
+	    -padx 4
+    }
+
+    method create_speed_frame {process case} {
+	global mods
+	
+	### Tuning Speed Image
+	iwidgets::labeledframe $process.speed \
+	    -labelpos nw -labeltext "3. Tuning Speed Image"
+	pack $process.speed -side top -anchor nw -expand yes -fill x
+	
+	set speed [$process.speed childsite]
+
+    }
+
+    method create_seeds_frame {process case} {
+	global mods
+	
+	### Creating Seeds
+	iwidgets::labeledframe $process.seeds \
+	    -labelpos nw -labeltext "4. Creating Seeds"
+	pack $process.seeds -side top -anchor nw -expand yes -fill x
+	
+	set seeds [$process.seeds childsite]
+
+    }
+    
+
+    method create_segmentation_frame {process case} {
+	global mods
+	
+	### Segmenting
+	iwidgets::labeledframe $process.seg \
+	    -labelpos nw -labeltext "5. Segmenting"
+	pack $process.seg -side top -anchor nw -expand yes -fill x
+	
+	set seg [$process.seg childsite]
+
+    }
+    
+    
     
 
     ##########################
@@ -1822,7 +1852,7 @@ class LevelSetSegmenterApp {
 	set top [$w.topbot childsite top]
 	set bot [$w.topbot childsite bottom]
 
-	$w.topbot fraction 50 50
+	$w.topbot fraction 60 40
 
 	# top
 	iwidgets::panedwindow $top.lmr -orient vertical -thickness 0 \
@@ -1836,6 +1866,8 @@ class LevelSetSegmenterApp {
 	set topr [$top.lmr childsite right]
 
 	pack $top.lmr -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
+
+	$top.lmr fraction 70 30
 
 	# bottom
 	iwidgets::panedwindow $bot.lmr -orient vertical -thickness 0 \
@@ -1870,6 +1902,9 @@ class LevelSetSegmenterApp {
  	pack $topl -side top -anchor n \
  	    -expand 1 -fill both -padx 4 -pady 0
 
+	# pack vis stuff into top right
+	label $topr.l -text "Widgets to toggle\nstuff in segmentation\nwindow will go here"
+	pack $topr.l -side top
  	pack $topr -side top -anchor n \
  	    -expand 1 -fill both -padx 4 -pady 0
 
@@ -1890,12 +1925,12 @@ class LevelSetSegmenterApp {
 	bind .standalone.viewers.topbot.pane0.childsite.lmr.pane0.childsite <Button2-Motion> \
 	    "$this do_nothing"
 
-# 	bind .standalone.viewers.topbot.pane0.childsite.lmr.pane1.childsite \
-# 	    <ButtonPress-2> "$this do_nothing"
-# 	bind .standalone.viewers.topbot.pane0.childsite.lmr.pane1.childsite \
-# 	    <ButtonRelease-2> "$this do_nothing"
-# 	bind .standalone.viewers.topbot.pane0.childsite.lmr.pane1.childsite \
-# 	    <Button2-Motion> "$this do_nothing"
+# # 	bind .standalone.viewers.topbot.pane0.childsite.lmr.pane1.childsite \
+# # 	    <ButtonPress-2> "$this do_nothing"
+# # 	bind .standalone.viewers.topbot.pane0.childsite.lmr.pane1.childsite \
+# # 	    <ButtonRelease-2> "$this do_nothing"
+# # 	bind .standalone.viewers.topbot.pane0.childsite.lmr.pane1.childsite \
+# # 	    <Button2-Motion> "$this do_nothing"
     }
 
     method create_2d_frame { window axis } {
@@ -1966,21 +2001,21 @@ class LevelSetSegmenterApp {
 	    -cursor based_arrow_up
     }
 
-#     method change_processing_tab {which} {
-# 	if {$initialized} {
-# 	    if {$which == "Segment" && !$loading} {
-# 		if {$has_smoothed == 0} {
-# 		    # $this smooth_data
-# 		}
-# 		# get speed image
-# 		$this initialize_segmentation
-# 	    }
+# #     method change_processing_tab {which} {
+# # 	if {$initialized} {
+# # 	    if {$which == "Segment" && !$loading} {
+# # 		if {$has_smoothed == 0} {
+# # 		    # $this smooth_data
+# # 		}
+# # 		# get speed image
+# # 		$this initialize_segmentation
+# # 	    }
 	    
-# 	    $proc_tab1 view $which
-# 	    $proc_tab2 view $which
-# 	    set curr_proc_tab $which
-# 	}
-#     }
+# # 	    $proc_tab1 view $which
+# # 	    $proc_tab2 view $which
+# # 	    set curr_proc_tab $which
+# # 	}
+# #     }
 
 
     method save_session {} {
@@ -2181,369 +2216,392 @@ class LevelSetSegmenterApp {
   	    }
 
  	    after 100 "$mods(Viewer)-ViewWindow_0-c autoview; $mods(Viewer)-ViewWindow_0-c Views"
- 	} 
-
+ 	} elseif {$which == $mods(Smooth-Gradient) && \
+		      $state == "JustStarted"} { 
+ 	    change_indicate_val 1
+	    change_indicator_labels "Smoothing..."
+	} elseif {$which == $mods(Smooth-Gradient) && \
+		      $state == "Completed"} { 
+ 	    change_indicate_val 2
+	    change_indicator_labels "Done Smoothing"
+	} elseif {$which == $mods(Smooth-Curvature) && \
+		      $state == "JustStarted"} { 
+ 	    change_indicate_val 1
+	    change_indicator_labels "Smoothing..."
+	} elseif {$which == $mods(Smooth-Curvature) && \
+		      $state == "Completed"} { 
+ 	    change_indicate_val 2
+	    change_indicator_labels "Done Smoothing"
+	} elseif {$which == $mods(Smooth-Gaussian) && \
+		      $state == "JustStarted"} { 
+ 	    change_indicate_val 1
+	    change_indicator_labels "Smoothing..."
+	} elseif {$which == $mods(Smooth-Gaussian) && \
+		      $state == "Completed"} { 
+ 	    change_indicate_val 2
+	    change_indicator_labels "Done Smoothing"
+	}
 	
-# 	if {$which == $mods(PasteImageFilter-Smooth) \
-# 		&& $state == "Completed"} {
+# # 	if {$which == $mods(PasteImageFilter-Smooth) \
+# # 		&& $state == "Completed"} {
 
-# 	    global axis
+# # 	    global axis
 
-# 	    # determine if this was the last run
-# 	    set last 0
-# 	    if {$axis == 0} {
-# 		set last [expr $size0 - 1]
-# 	    } elseif {$axis == 1} {
-# 		set last [expr $size1 - 1]
-# 	    } else {
-# 		set last [expr $size2 - 1]
-# 	    }
+# # 	    # determine if this was the last run
+# # 	    set last 0
+# # 	    if {$axis == 0} {
+# # 		set last [expr $size0 - 1]
+# # 	    } elseif {$axis == 1} {
+# # 		set last [expr $size1 - 1]
+# # 	    } else {
+# # 		set last [expr $size2 - 1]
+# # 	    }
 	    
-# 	    global $mods(PasteImageFilter-Smooth)-index
-# 	    if {[set $mods(PasteImageFilter-Smooth)-index] == $last} {
-# 		# set 2D viewer to use smoothed data as input
-# 		global $mods(ChooseNrrd-2D)-port-index
-# 		set $mods(ChooseNrrd-2D)-port-index 1
+# # 	    global $mods(PasteImageFilter-Smooth)-index
+# # 	    if {[set $mods(PasteImageFilter-Smooth)-index] == $last} {
+# # 		# set 2D viewer to use smoothed data as input
+# # 		global $mods(ChooseNrrd-2D)-port-index
+# # 		set $mods(ChooseNrrd-2D)-port-index 1
 		
-# 		set which [$filter_menu1 get]
-# 		set has_smoothed 1
-# 		set region_changed 0
-# 		set smoothing 0
+# # 		set which [$filter_menu1 get]
+# # 		set has_smoothed 1
+# # 		set region_changed 0
+# # 		set smoothing 0
 
-#  		# enable modules downstream of smoothing and execute
-#  		# them
-# ###  		disableModule $mods(ImageToNrrd-ViewSlices) 0
-# 		after 500 "$mods(ImageToNrrd-ViewSlices)-c needexecute"
-# 	    } else {
-# 		# increment Extract values and Paste index
-# 		if {$axis == 0} {
-# 		    global $mods(Extract-Smooth)-minDim0
-# 		    global $mods(Extract-Smooth)-maxDim0
+# #  		# enable modules downstream of smoothing and execute
+# #  		# them
+# # ###  		disableModule $mods(ImageToNrrd-ViewSlices) 0
+# # 		after 500 "$mods(ImageToNrrd-ViewSlices)-c needexecute"
+# # 	    } else {
+# # 		# increment Extract values and Paste index
+# # 		if {$axis == 0} {
+# # 		    global $mods(Extract-Smooth)-minDim0
+# # 		    global $mods(Extract-Smooth)-maxDim0
 
-# 		    set prev [expr [set $mods(Extract-Smooth)-minDim0] + 1]
-# 		    set $mods(Extract-Smooth)-minDim0 $prev
-# 		    set $mods(Extract-Smooth)-maxDim0 [expr $prev + 1]
-# 		} elseif {$axis == 1} {
-# 		    global $mods(Extract-Smooth)-minDim1
-# 		    global $mods(Extract-Smooth)-maxDim1
+# # 		    set prev [expr [set $mods(Extract-Smooth)-minDim0] + 1]
+# # 		    set $mods(Extract-Smooth)-minDim0 $prev
+# # 		    set $mods(Extract-Smooth)-maxDim0 [expr $prev + 1]
+# # 		} elseif {$axis == 1} {
+# # 		    global $mods(Extract-Smooth)-minDim1
+# # 		    global $mods(Extract-Smooth)-maxDim1
 
-# 		    set prev [expr [set $mods(Extract-Smooth)-minDim1] + 1]
-# 		    set $mods(Extract-Smooth)-minDim1 $prev
-# 		    set $mods(Extract-Smooth)-maxDim1 [expr $prev + 1]
-# 		} else {
-# 		    global $mods(Extract-Smooth)-minDim2
-# 		    global $mods(Extract-Smooth)-maxDim2
+# # 		    set prev [expr [set $mods(Extract-Smooth)-minDim1] + 1]
+# # 		    set $mods(Extract-Smooth)-minDim1 $prev
+# # 		    set $mods(Extract-Smooth)-maxDim1 [expr $prev + 1]
+# # 		} else {
+# # 		    global $mods(Extract-Smooth)-minDim2
+# # 		    global $mods(Extract-Smooth)-maxDim2
 
-# 		    set prev [expr [set $mods(Extract-Smooth)-minDim2] + 1]
-# 		    set $mods(Extract-Smooth)-minDim2 $prev
-# 		    set $mods(Extract-Smooth)-maxDim2 [expr $prev + 1]
-# 		}
+# # 		    set prev [expr [set $mods(Extract-Smooth)-minDim2] + 1]
+# # 		    set $mods(Extract-Smooth)-minDim2 $prev
+# # 		    set $mods(Extract-Smooth)-maxDim2 [expr $prev + 1]
+# # 		}
 		
-# 		global $mods(PasteImageFilter-Smooth)-index
-# 		set $mods(PasteImageFilter-Smooth)-index \
-# 		    [expr [set $mods(PasteImageFilter-Smooth)-index] + 1]
+# # 		global $mods(PasteImageFilter-Smooth)-index
+# # 		set $mods(PasteImageFilter-Smooth)-index \
+# # 		    [expr [set $mods(PasteImageFilter-Smooth)-index] + 1]
 
-# 		# Execute Extract Again
-# 		after 500 "$mods(Extract-Smooth)-c needexecute"
-# 	    }
-# 	} elseif {$which == $mods(ChooseImage-Hack) && \
-# 		      $state == "Completed"} {	    
-# 	    if {$smoothing_type == "Reset"} {
-# 		disableModule $mods(ChooseImage-SmoothInput) 1
-# 	    } else {
-# 		# Data has gotten to Choose module so disable it
-# 		# and then enable Extract and execute it
-# 		disableModule $mods(ChooseImage-SmoothInput) 1
-# 		disableModule $mods(Extract-Smooth) 0
+# # 		# Execute Extract Again
+# # 		after 500 "$mods(Extract-Smooth)-c needexecute"
+# # 	    }
+# # 	} elseif {$which == $mods(ChooseImage-Hack) && \
+# # 		      $state == "Completed"} {	    
+# # 	    if {$smoothing_type == "Reset"} {
+# # 		disableModule $mods(ChooseImage-SmoothInput) 1
+# # 	    } else {
+# # 		# Data has gotten to Choose module so disable it
+# # 		# and then enable Extract and execute it
+# # 		disableModule $mods(ChooseImage-SmoothInput) 1
+# # 		disableModule $mods(Extract-Smooth) 0
 		
-# 		$mods(Extract-Smooth)-c needexecute
-# 	    }
-# 	} elseif {$which == $mods(ChooseImage-Hack2) && \
-# 		      $state == "Completed"} {	    
-# 	    if {$segmenting_type == "Reset"} {
-# 		disableModule $mods(ChooseImage-SegInput) 1
-# 	    } else {
-# 		# Data has gotten to Choose module so disable it
-# 		# and then enable next Choose and execute it
-# 		disableModule $mods(ChooseImage-SegInput) 1
-# 		disableModule $mods(ChooseImage-Hack3) 0
+# # 		$mods(Extract-Smooth)-c needexecute
+# # 	    }
+# # 	} elseif {$which == $mods(ChooseImage-Hack2) && \
+# # 		      $state == "Completed"} {	    
+# # 	    if {$segmenting_type == "Reset"} {
+# # 		disableModule $mods(ChooseImage-SegInput) 1
+# # 	    } else {
+# # 		# Data has gotten to Choose module so disable it
+# # 		# and then enable next Choose and execute it
+# # 		disableModule $mods(ChooseImage-SegInput) 1
+# # 		disableModule $mods(ChooseImage-Hack3) 0
 		
-# 		$mods(ChooseImage-Hack3)-c needexecute
-# 	    }
-# 	} elseif {$which == $mods(ChooseNrrd-Reader) && $state == "JustStarted"} {
-# 	    change_indicate_val 1
-# 	    change_indicator_labels "Loading Volume..."
-# 	} elseif {$which == $mods(ChooseNrrd-Reader) && $state == "Completed"} {
-# 	    change_indicate_val 2
-# 	} elseif {$which == $mods(ScalarFieldStats) && $state == "JustStarted"} {
-# 	    change_indicate_val 1
-# 	    change_indicator_labels "Building Histogram..."
-# 	} elseif {$which == $mods(ScalarFieldStats) && $state == "Completed"} {
-# 	    change_indicate_val 2
-# 	    set has_loaded 1
-# 	    change_indicator_labels "Done Loading Volume"
-# 	} elseif {$which == $mods(NrrdInfo-Reader) && $state == "Completed"} {
-# 	    global $which-dimension
+# # 		$mods(ChooseImage-Hack3)-c needexecute
+# # 	    }
+# # 	} elseif {$which == $mods(ChooseNrrd-Reader) && $state == "JustStarted"} {
+# # 	    change_indicate_val 1
+# # 	    change_indicator_labels "Loading Volume..."
+# # 	} elseif {$which == $mods(ChooseNrrd-Reader) && $state == "Completed"} {
+# # 	    change_indicate_val 2
+# # 	} elseif {$which == $mods(ScalarFieldStats) && $state == "JustStarted"} {
+# # 	    change_indicate_val 1
+# # 	    change_indicator_labels "Building Histogram..."
+# # 	} elseif {$which == $mods(ScalarFieldStats) && $state == "Completed"} {
+# # 	    change_indicate_val 2
+# # 	    set has_loaded 1
+# # 	    change_indicator_labels "Done Loading Volume"
+# # 	} elseif {$which == $mods(NrrdInfo-Reader) && $state == "Completed"} {
+# # 	    global $which-dimension
 
-# 	    if {[set $which-dimension] != 3} {
-# 		tk_messageBox -message "Data must be 3 dimensional scalar data." -type ok -icon info -parent .standalone
-# 		return
-# 	    }
+# # 	    if {[set $which-dimension] != 3} {
+# # 		tk_messageBox -message "Data must be 3 dimensional scalar data." -type ok -icon info -parent .standalone
+# # 		return
+# # 	    }
 
-# 	    global $which-size0 $which-size1 $which-size2
-# 	    set size0 [set $which-size0]
-# 	    set size1 [set $which-size1]
-# 	    set size2 [set $which-size2]
+# # 	    global $which-size0 $which-size1 $which-size2
+# # 	    set size0 [set $which-size0]
+# # 	    set size1 [set $which-size1]
+# # 	    set size2 [set $which-size2]
 
-# 	    set orig_size0 $size0
-# 	    set orig_size1 $size1
-# 	    set orig_size2 $size2
+# # 	    set orig_size0 $size0
+# # 	    set orig_size1 $size1
+# # 	    set orig_size2 $size2
 
-# 	    # Fix initial crop values
-# 	    if {!$loading} {
-# 		foreach i {0 1 2} {
-# 		    global $mods(UnuCrop)-minAxis$i $mods(UnuCrop)-maxAxis$i
-# 		    global $mods(ViewSlices)-crop_minAxis$i 
-# 		    global $mods(ViewSlices)-crop_maxAxis$i
-# 		    set $mods(UnuCrop)-minAxis$i 0
-# 		    set $mods(ViewSlices)-crop_minAxis$i 0
-# 		    set $mods(UnuCrop)-maxAxis$i [expr [set size$i]-1]
-# 		    set $mods(ViewSlices)-crop_maxAxis$i [expr [set size$i]-1]
-# 		}
-# 	    }
+# # 	    # Fix initial crop values
+# # 	    if {!$loading} {
+# # 		foreach i {0 1 2} {
+# # 		    global $mods(UnuCrop)-minAxis$i $mods(UnuCrop)-maxAxis$i
+# # 		    global $mods(ViewSlices)-crop_minAxis$i 
+# # 		    global $mods(ViewSlices)-crop_maxAxis$i
+# # 		    set $mods(UnuCrop)-minAxis$i 0
+# # 		    set $mods(ViewSlices)-crop_minAxis$i 0
+# # 		    set $mods(UnuCrop)-maxAxis$i [expr [set size$i]-1]
+# # 		    set $mods(ViewSlices)-crop_maxAxis$i [expr [set size$i]-1]
+# # 		}
+# # 	    }
 
-# 	    configure_slice_sliders
+# # 	    configure_slice_sliders
 
-# 	    # update samples
-# 	    set path f.p.childsite.tnb.canvas.notebook.cs.page1.cs.stats.childsite
-# 	    $attachedPFr.$path.samples configure -text "Samples: $orig_size0, $orig_size1, $orig_size2"
-# 	    $detachedPFr.$path.samples configure -text "Samples: $orig_size0, $orig_size1, $orig_size2"
-# 	} elseif {$which == $mods(NrrdInfo-Size) && $state == "Completed"} {
-# 	    global $which-dimension
+# # 	    # update samples
+# # 	    set path f.p.childsite.tnb.canvas.notebook.cs.page1.cs.stats.childsite
+# # 	    $attachedPFr.$path.samples configure -text "Samples: $orig_size0, $orig_size1, $orig_size2"
+# # 	    $detachedPFr.$path.samples configure -text "Samples: $orig_size0, $orig_size1, $orig_size2"
+# # 	} elseif {$which == $mods(NrrdInfo-Size) && $state == "Completed"} {
+# # 	    global $which-dimension
 
-# 	    global $which-size0 $which-size1 $which-size2
-# 	    set size0 [set $which-size0]
-# 	    set size1 [set $which-size1]
-# 	    set size2 [set $which-size2]
+# # 	    global $which-size0 $which-size1 $which-size2
+# # 	    set size0 [set $which-size0]
+# # 	    set size1 [set $which-size1]
+# # 	    set size2 [set $which-size2]
 
-# 	    configure_slice_sliders
+# # 	    configure_slice_sliders
 
-# 	    # Set Smoothing Paste and Extract values
-# 	    global axis
-# 	    global $mods(PasteImageFilter-Smooth)-size0
-# 	    global $mods(PasteImageFilter-Smooth)-size1
-# 	    global $mods(PasteImageFilter-Smooth)-size2
-# 	    global $mods(PasteImageFilter-Smooth)-index
-# 	    global $mods(PasteImageFilter-Smooth)-axis
-# 	    global $mods(PasteImageFilter-Smooth)-fill_value
-# #  	    set $mods(PasteImageFilter-Smooth)-size0 [expr $size0 - 1]
-# #  	    set $mods(PasteImageFilter-Smooth)-size1 [expr $size1 - 1]
-# #  	    set $mods(PasteImageFilter-Smooth)-size2 [expr $size2 - 1]
-#  	    set $mods(PasteImageFilter-Smooth)-size0 $size0
-#  	    set $mods(PasteImageFilter-Smooth)-size1 $size1
-#  	    set $mods(PasteImageFilter-Smooth)-size2 $size2
-# 	    set $mods(PasteImageFilter-Smooth)-index 0
-# 	    set $mods(PasteImageFilter-Smooth)-axis $axis
-# 	    set $mods(PasteImageFilter-Smooth)-fill_value 0
+# # 	    # Set Smoothing Paste and Extract values
+# # 	    global axis
+# # 	    global $mods(PasteImageFilter-Smooth)-size0
+# # 	    global $mods(PasteImageFilter-Smooth)-size1
+# # 	    global $mods(PasteImageFilter-Smooth)-size2
+# # 	    global $mods(PasteImageFilter-Smooth)-index
+# # 	    global $mods(PasteImageFilter-Smooth)-axis
+# # 	    global $mods(PasteImageFilter-Smooth)-fill_value
+# # #  	    set $mods(PasteImageFilter-Smooth)-size0 [expr $size0 - 1]
+# # #  	    set $mods(PasteImageFilter-Smooth)-size1 [expr $size1 - 1]
+# # #  	    set $mods(PasteImageFilter-Smooth)-size2 [expr $size2 - 1]
+# #  	    set $mods(PasteImageFilter-Smooth)-size0 $size0
+# #  	    set $mods(PasteImageFilter-Smooth)-size1 $size1
+# #  	    set $mods(PasteImageFilter-Smooth)-size2 $size2
+# # 	    set $mods(PasteImageFilter-Smooth)-index 0
+# # 	    set $mods(PasteImageFilter-Smooth)-axis $axis
+# # 	    set $mods(PasteImageFilter-Smooth)-fill_value 0
 
-# 	    global $mods(Extract-Smooth)-minDim0
-# 	    global $mods(Extract-Smooth)-minDim1
-# 	    global $mods(Extract-Smooth)-minDim2
-# 	    global $mods(Extract-Smooth)-maxDim0
-# 	    global $mods(Extract-Smooth)-maxDim1
-# 	    global $mods(Extract-Smooth)-maxDim2
+# # 	    global $mods(Extract-Smooth)-minDim0
+# # 	    global $mods(Extract-Smooth)-minDim1
+# # 	    global $mods(Extract-Smooth)-minDim2
+# # 	    global $mods(Extract-Smooth)-maxDim0
+# # 	    global $mods(Extract-Smooth)-maxDim1
+# # 	    global $mods(Extract-Smooth)-maxDim2
 	    
-# 	    set $mods(Extract-Smooth)-minDim0 0
-# 	    set $mods(Extract-Smooth)-minDim1 0
-# 	    set $mods(Extract-Smooth)-minDim2 0
-# # 	    set $mods(Extract-Smooth)-maxDim0 [expr $size0 - 1]
-# # 	    set $mods(Extract-Smooth)-maxDim1 [expr $size1 - 1]
-# # 	    set $mods(Extract-Smooth)-maxDim2 [expr $size2 - 1]
-# 	    set $mods(Extract-Smooth)-maxDim0 $size0
-# 	    set $mods(Extract-Smooth)-maxDim1 $size1
-# 	    set $mods(Extract-Smooth)-maxDim2 $size2
+# # 	    set $mods(Extract-Smooth)-minDim0 0
+# # 	    set $mods(Extract-Smooth)-minDim1 0
+# # 	    set $mods(Extract-Smooth)-minDim2 0
+# # # 	    set $mods(Extract-Smooth)-maxDim0 [expr $size0 - 1]
+# # # 	    set $mods(Extract-Smooth)-maxDim1 [expr $size1 - 1]
+# # # 	    set $mods(Extract-Smooth)-maxDim2 [expr $size2 - 1]
+# # 	    set $mods(Extract-Smooth)-maxDim0 $size0
+# # 	    set $mods(Extract-Smooth)-maxDim1 $size1
+# # 	    set $mods(Extract-Smooth)-maxDim2 $size2
 
-# 	    # Initialize segs array
-# 	    set extent 0
-# 	    set scale 0
-# 	    if {$axis == 0} {
-# 		set extent $size0
-# 		set scale $size2
-# 		set $mods(Extract-Smooth)-minDim0 0
-# 		set $mods(Extract-Smooth)-maxDim0 1
-# 	    } elseif {$axis == 1} {
-# 		set extent $size1
-# 		set scale $size1
-# 		set $mods(Extract-Smooth)-minDim1 0
-# 		set $mods(Extract-Smooth)-maxDim1 1
-# 	    } else {
-# 		set extent $size2
-# 		set scale $size0
-# 		set $mods(Extract-Smooth)-minDim2 0
-# 		set $mods(Extract-Smooth)-maxDim2 1
-# 	    }
+# # 	    # Initialize segs array
+# # 	    set extent 0
+# # 	    set scale 0
+# # 	    if {$axis == 0} {
+# # 		set extent $size0
+# # 		set scale $size2
+# # 		set $mods(Extract-Smooth)-minDim0 0
+# # 		set $mods(Extract-Smooth)-maxDim0 1
+# # 	    } elseif {$axis == 1} {
+# # 		set extent $size1
+# # 		set scale $size1
+# # 		set $mods(Extract-Smooth)-minDim1 0
+# # 		set $mods(Extract-Smooth)-maxDim1 1
+# # 	    } else {
+# # 		set extent $size2
+# # 		set scale $size0
+# # 		set $mods(Extract-Smooth)-minDim2 0
+# # 		set $mods(Extract-Smooth)-maxDim2 1
+# # 	    }
 
-# 	    for {set i 0} {$i < $extent} {incr i} {
-# 		set segs($i) 0
-# 	    }
+# # 	    for {set i 0} {$i < $extent} {incr i} {
+# # 		set segs($i) 0
+# # 	    }
 
-# 	    # Re-configure slice indicator
-# 	    $this change_slice_icon 0
-# 	} elseif {$which == $mods(UnuMinMax-Reader) && $state == "Completed"} {
-# 	    global $which-min0 $which-max0
-# 	    set range_min [set $which-min0]
-# 	    set range_max [set $which-max0]
+# # 	    # Re-configure slice indicator
+# # 	    $this change_slice_icon 0
+# # 	} elseif {$which == $mods(UnuMinMax-Reader) && $state == "Completed"} {
+# # 	    global $which-min0 $which-max0
+# # 	    set range_min [set $which-min0]
+# # 	    set range_max [set $which-max0]
 
-# 	    $this configure_threshold_sliders $range_min $range_max
+# # 	    $this configure_threshold_sliders $range_min $range_max
 
-# 	    # update range
-# 	    set path f.p.childsite.tnb.canvas.notebook.cs.page1.cs.stats.childsite
-# 	    $attachedPFr.$path.range configure -text "Data Range: $range_min - $range_max"
-# 	    $detachedPFr.$path.range configure -text "Data Range: $range_min - $range_max"
-# 	} elseif {$which == $mods(UnuMinMax-Size) && $state == "Completed"} {
-# 	    global $which-min0 $which-max0
-# 	    set range_min [set $which-min0]
-# 	    set range_max [set $which-max0]
+# # 	    # update range
+# # 	    set path f.p.childsite.tnb.canvas.notebook.cs.page1.cs.stats.childsite
+# # 	    $attachedPFr.$path.range configure -text "Data Range: $range_min - $range_max"
+# # 	    $detachedPFr.$path.range configure -text "Data Range: $range_min - $range_max"
+# # 	} elseif {$which == $mods(UnuMinMax-Size) && $state == "Completed"} {
+# # 	    global $which-min0 $which-max0
+# # 	    set range_min [set $which-min0]
+# # 	    set range_max [set $which-max0]
 
-# 	    $this configure_threshold_sliders $range_min $range_max
-# 	} elseif {$which == $mods(UnuMinMax-Smoothed) && $state == "Completed"} {
-# 	    global $which-min0 $which-max0
-# 	    set range_min [set $which-min0]
-# 	    set range_max [set $which-max0]
+# # 	    $this configure_threshold_sliders $range_min $range_max
+# # 	} elseif {$which == $mods(UnuMinMax-Smoothed) && $state == "Completed"} {
+# # 	    global $which-min0 $which-max0
+# # 	    set range_min [set $which-min0]
+# # 	    set range_max [set $which-max0]
 
-# #	    $this configure_threshold_sliders
-# 	} elseif {$which == $mods(UnuMinMax-Thresholds) \
-# 		      && $state == "Completed"} {
-# 	    global $which-min0 $which-max0
-# 	    $this configure_threshold_sliders [set $which-min0] [set $which-max0]
-# 	} elseif {$which == $mods(Smooth-Gradient) && $state == "JustStarted"} {
-# 	    change_indicate_val 1
-# 	    change_indicator_labels "Peforming GradientAnisotropicDiffusion Smoothing..."
-# 	} elseif {$which == $mods(Smooth-Gradient) && $state == "Completed"} { 
-# 	    change_indicate_val 2
-# 	    change_indicator_labels "Done Performing GradientAnisotropicDiffusion Smoothing"
-# 	} elseif {$which == $mods(Smooth-Curvature) && $state == "JustStarted"} {
-# 	    change_indicate_val 1
-# 	    change_indicator_labels "Peforming CurvatureAnisotropicDiffusion Smoothing..."
-# 	} elseif {$which == $mods(Smooth-Curvature) && $state == "Completed"} { 
-# 	    change_indicate_val 2
-# 	    change_indicator_labels "Done Performing CurvatureAnisotropicDiffusion Smoothing"
-# 	} elseif {$which == $mods(Smooth-Blur) && $state == "JustStarted"} {
-# 	    change_indicate_val 1
-# 	    change_indicator_labels "Peforming Gaussian Blurring..."
-# 	} elseif {$which == $mods(Smooth-Blur) && $state == "Completed"} { 
-# 	    change_indicate_val 2
-# 	    change_indicator_labels "Done Performing Gaussian Blurring"
-# 	} elseif {$which == $mods(ShowField-Seg) && $state == "JustStarted"} { 
-# 	    change_indicate_val 1
-# 	} elseif {$which == $mods(ShowField-Seg) && $state == "Completed"} {
-# 	    change_indicate_val 2
-# 	    # Turn off Current Segmentation in ViewWindow 1
-# 	    after 100 \
-# 		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_1-Transparent Faces (6)\}\" 0; $mods(Viewer)-ViewWindow_1-c redraw"
-#  	} elseif {$which == $mods(ShowField-Speed) && $state == "JustStarted"} { 
-# 	    change_indicate_val 1
-# 	} elseif {$which == $mods(ShowField-Speed) && $state == "Completed"} {
-# 	    change_indicate_val 2
-# 	    # Turn off Speed Image in ViewWindow 0
-# 	    after 100 \
-# 		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (5)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
-# 	} elseif {$which == $mods(LevelSet) && $state == "JustStarted"} { 
-# 	    if {$updating_speed == 1} {
-# 		change_indicator_labels "Updating Speed Image..."
-# 	    } elseif {$segmenting == 1} {
-# 		change_indicator_labels "Performing LevelSet Segmentation..."
-# 	    } else {
-# 		change_indicator_labels "Generating Seeds..."
-# 	    }
-# 	    change_indicate_val 1
-# 	} elseif {$which == $mods(LevelSet) && $state == "Completed"} { 
-# 	    if {$updating_speed == 1} {
-# 		change_indicator_labels "Done Updating Speed Image"
-# 	    } elseif {$segmenting == 1} {
-# 		change_indicator_labels "Done Performing LevelSet Segmentation"
-# 		set has_segmented 1
-# 	    } 
-# 	    change_indicate_val 2
-# 	    set updating_speed 0
-# 	    set segmenting 0
+# # #	    $this configure_threshold_sliders
+# # 	} elseif {$which == $mods(UnuMinMax-Thresholds) \
+# # 		      && $state == "Completed"} {
+# # 	    global $which-min0 $which-max0
+# # 	    $this configure_threshold_sliders [set $which-min0] [set $which-max0]
+# # 	} elseif {$which == $mods(Smooth-Gradient) && $state == "JustStarted"} {
+# # 	    change_indicate_val 1
+# # 	    change_indicator_labels "Peforming GradientAnisotropicDiffusion Smoothing..."
+# # 	} elseif {$which == $mods(Smooth-Gradient) && $state == "Completed"} { 
+# # 	    change_indicate_val 2
+# # 	    change_indicator_labels "Done Performing GradientAnisotropicDiffusion Smoothing"
+# # 	} elseif {$which == $mods(Smooth-Curvature) && $state == "JustStarted"} {
+# # 	    change_indicate_val 1
+# # 	    change_indicator_labels "Peforming CurvatureAnisotropicDiffusion Smoothing..."
+# # 	} elseif {$which == $mods(Smooth-Curvature) && $state == "Completed"} { 
+# # 	    change_indicate_val 2
+# # 	    change_indicator_labels "Done Performing CurvatureAnisotropicDiffusion Smoothing"
+# # 	} elseif {$which == $mods(Smooth-Blur) && $state == "JustStarted"} {
+# # 	    change_indicate_val 1
+# # 	    change_indicator_labels "Peforming Gaussian Blurring..."
+# # 	} elseif {$which == $mods(Smooth-Blur) && $state == "Completed"} { 
+# # 	    change_indicate_val 2
+# # 	    change_indicator_labels "Done Performing Gaussian Blurring"
+# # 	} elseif {$which == $mods(ShowField-Seg) && $state == "JustStarted"} { 
+# # 	    change_indicate_val 1
+# # 	} elseif {$which == $mods(ShowField-Seg) && $state == "Completed"} {
+# # 	    change_indicate_val 2
+# # 	    # Turn off Current Segmentation in ViewWindow 1
+# # 	    after 100 \
+# # 		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_1-Transparent Faces (6)\}\" 0; $mods(Viewer)-ViewWindow_1-c redraw"
+# #  	} elseif {$which == $mods(ShowField-Speed) && $state == "JustStarted"} { 
+# # 	    change_indicate_val 1
+# # 	} elseif {$which == $mods(ShowField-Speed) && $state == "Completed"} {
+# # 	    change_indicate_val 2
+# # 	    # Turn off Speed Image in ViewWindow 0
+# # 	    after 100 \
+# # 		"uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (5)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
+# # 	} elseif {$which == $mods(LevelSet) && $state == "JustStarted"} { 
+# # 	    if {$updating_speed == 1} {
+# # 		change_indicator_labels "Updating Speed Image..."
+# # 	    } elseif {$segmenting == 1} {
+# # 		change_indicator_labels "Performing LevelSet Segmentation..."
+# # 	    } else {
+# # 		change_indicator_labels "Generating Seeds..."
+# # 	    }
+# # 	    change_indicate_val 1
+# # 	} elseif {$which == $mods(LevelSet) && $state == "Completed"} { 
+# # 	    if {$updating_speed == 1} {
+# # 		change_indicator_labels "Done Updating Speed Image"
+# # 	    } elseif {$segmenting == 1} {
+# # 		change_indicator_labels "Done Performing LevelSet Segmentation"
+# # 		set has_segmented 1
+# # 	    } 
+# # 	    change_indicate_val 2
+# # 	    set updating_speed 0
+# # 	    set segmenting 0
 
-# 	    after 500 "set $mods(LevelSet)-max_iterations 0"
-# 	} elseif {$which == $mods(PasteImageFilter-Binary) && $state == "Completed"} { 
-# 	    if {$pasting_binary == 1} {
-# #		disableModule $mods(Image2DTo3D-Binary) 1
-# 		disableModule $mods(PasteImageFilter-Binary) 1
+# # 	    after 500 "set $mods(LevelSet)-max_iterations 0"
+# # 	} elseif {$which == $mods(PasteImageFilter-Binary) && $state == "Completed"} { 
+# # 	    if {$pasting_binary == 1} {
+# # #		disableModule $mods(Image2DTo3D-Binary) 1
+# # 		disableModule $mods(PasteImageFilter-Binary) 1
 
-# 		global slice
-# 		set segs($slice) 2
-# 		change_slice_icon 2
-# 	    }
-# 	    set pasting_binary 0
-# 	} elseif {$which == $mods(PasteImageFilter-Float) && $state == "Completed"} { 
-# 	    if {$pasting_float == 1} {
-# #		disableModule $mods(Image2DTo3D-Float) 1
-# 		disableModule $mods(PasteImageFilter-Float) 1
-# 	    }
-# 	    set pasting_float 0
-# 	} elseif {$which == $mods(VolumeVisualizer) && $state == "JustStarted"} { 
-# 	    change_indicate_val 1
-# 	} elseif {$which == $mods(VolumeVisualizer) && $state == "Completed"} { 
-# 	    if {$volren_has_autoviewed == 0} {
-# 		set volren_has_autoviewed 1
-# 		after 500 "$mods(Viewer-Vol)-ViewWindow_0-c autoview; $mods(Viewer-Vol)-ViewWindow_0-c redraw"		
-# 	    }
-# 	    change_indicate_val 2
-# 	    change_indicator_labels "Done Updating Volume Rendering"
-# 	} elseif {$which == $mods(ImageFileWriter-Binary) && $state == "JustStarted"} { 
-# 	    change_indicate_val 1
-# 	    change_indicator_labels "Writing out binary segmentation..."
-# 	} elseif {$which == $mods(ImageFileWriter-Binary) && $state == "Completed"} { 
-# 	    change_indicate_val 2
-# 	    change_indicator_labels "Done writing out binary segmentation"
+# # 		global slice
+# # 		set segs($slice) 2
+# # 		change_slice_icon 2
+# # 	    }
+# # 	    set pasting_binary 0
+# # 	} elseif {$which == $mods(PasteImageFilter-Float) && $state == "Completed"} { 
+# # 	    if {$pasting_float == 1} {
+# # #		disableModule $mods(Image2DTo3D-Float) 1
+# # 		disableModule $mods(PasteImageFilter-Float) 1
+# # 	    }
+# # 	    set pasting_float 0
+# # 	} elseif {$which == $mods(VolumeVisualizer) && $state == "JustStarted"} { 
+# # 	    change_indicate_val 1
+# # 	} elseif {$which == $mods(VolumeVisualizer) && $state == "Completed"} { 
+# # 	    if {$volren_has_autoviewed == 0} {
+# # 		set volren_has_autoviewed 1
+# # 		after 500 "$mods(Viewer-Vol)-ViewWindow_0-c autoview; $mods(Viewer-Vol)-ViewWindow_0-c redraw"		
+# # 	    }
+# # 	    change_indicate_val 2
+# # 	    change_indicator_labels "Done Updating Volume Rendering"
+# # 	} elseif {$which == $mods(ImageFileWriter-Binary) && $state == "JustStarted"} { 
+# # 	    change_indicate_val 1
+# # 	    change_indicator_labels "Writing out binary segmentation..."
+# # 	} elseif {$which == $mods(ImageFileWriter-Binary) && $state == "Completed"} { 
+# # 	    change_indicate_val 2
+# # 	    change_indicator_labels "Done writing out binary segmentation"
 
-# 	    # disable writer
-# 	    disableModule $mods(ImageFileWriter-Binary) 1
-# 	} elseif {$which == $mods(ImageFileWriter-Float) && $state == "JustStarted"} { 
-# 	    change_indicate_val 1
-# 	    change_indicator_labels "Writing out float segmentation..."
-# 	} elseif {$which == $mods(ImageFileWriter-Float) && $state == "Completed"} { 
-# 	    change_indicate_val 2
-# 	    change_indicator_labels "Done writing out float segmentation"
+# # 	    # disable writer
+# # 	    disableModule $mods(ImageFileWriter-Binary) 1
+# # 	} elseif {$which == $mods(ImageFileWriter-Float) && $state == "JustStarted"} { 
+# # 	    change_indicate_val 1
+# # 	    change_indicator_labels "Writing out float segmentation..."
+# # 	} elseif {$which == $mods(ImageFileWriter-Float) && $state == "Completed"} { 
+# # 	    change_indicate_val 2
+# # 	    change_indicator_labels "Done writing out float segmentation"
 
-# 	    # disable writer
-# 	    disableModule $mods(ImageFileWriter-Float) 1
-# 	} elseif {$which == $mods(UnuMinmax-Vol) && $state == "Completed"} { 
-# 	    global $mods(UnuJhisto-Vol)-mins $mods(UnuJhisto-Vol)-maxs
-# 	    global $mods(RescaleColorMap-Vol)-min $mods(RescaleColorMap-Vol)-max
-# 	    global $mods(NrrdSetupTexture-Vol)-minf $mods(NrrdSetupTexture-Vol)-maxf
-# 	    global $mods(UnuMinmax-Vol)-min0 $mods(UnuMinmax-Vol)-max0
+# # 	    # disable writer
+# # 	    disableModule $mods(ImageFileWriter-Float) 1
+# # 	} elseif {$which == $mods(UnuMinmax-Vol) && $state == "Completed"} { 
+# # 	    global $mods(UnuJhisto-Vol)-mins $mods(UnuJhisto-Vol)-maxs
+# # 	    global $mods(RescaleColorMap-Vol)-min $mods(RescaleColorMap-Vol)-max
+# # 	    global $mods(NrrdSetupTexture-Vol)-minf $mods(NrrdSetupTexture-Vol)-maxf
+# # 	    global $mods(UnuMinmax-Vol)-min0 $mods(UnuMinmax-Vol)-max0
 
-# 	    # Change UnuJhisto, RescaleColorMap, and NrrdSetupTexture values
-# 	    set min [set $mods(UnuMinmax-Vol)-min0]
-# 	    set max [set $mods(UnuMinmax-Vol)-max0]
+# # 	    # Change UnuJhisto, RescaleColorMap, and NrrdSetupTexture values
+# # 	    set min [set $mods(UnuMinmax-Vol)-min0]
+# # 	    set max [set $mods(UnuMinmax-Vol)-max0]
 
-# 	    set ww [expr abs($max-$min)]
-# 	    set wl [expr ($min+$max)/2.0]
+# # 	    set ww [expr abs($max-$min)]
+# # 	    set wl [expr ($min+$max)/2.0]
 
-# 	    set minv [expr $wl-$ww/2.0]
-# 	    set maxv [expr $wl+$ww/2.0]
+# # 	    set minv [expr $wl-$ww/2.0]
+# # 	    set maxv [expr $wl+$ww/2.0]
 
-# 	    set $mods(UnuJhisto-Vol)-mins "$minv nan"
-# 	    set $mods(UnuJhisto-Vol)-maxs "$maxv nan"
-# 	    set $mods(RescaleColorMap-Vol)-min $minv
-# 	    set $mods(RescaleColorMap-Vol)-max $maxv
-# 	    set $mods(NrrdSetupTexture-Vol)-minf $minv
-# 	    set $mods(NrrdSetupTexture-Vol)-maxf $maxv
+# # 	    set $mods(UnuJhisto-Vol)-mins "$minv nan"
+# # 	    set $mods(UnuJhisto-Vol)-maxs "$maxv nan"
+# # 	    set $mods(RescaleColorMap-Vol)-min $minv
+# # 	    set $mods(RescaleColorMap-Vol)-max $maxv
+# # 	    set $mods(NrrdSetupTexture-Vol)-minf $minv
+# # 	    set $mods(NrrdSetupTexture-Vol)-maxf $maxv
 
 
-# 	    # now enable volume rendering and execute them - also
-# 	    # re-disale ImageToNrrd module
-# 	    disableModule $mods(NrrdSetupTexture-Vol) 0
+# # 	    # now enable volume rendering and execute them - also
+# # 	    # re-disale ImageToNrrd module
+# # 	    disableModule $mods(NrrdSetupTexture-Vol) 0
 	    
-# 	    $mods(NrrdSetupTexture-Vol)-c needexecute
+# # 	    $mods(NrrdSetupTexture-Vol)-c needexecute
 
-# 	    after 500 "disableModule $mods(ImageToNrrd-Vol) 1"
-# 	}
+# # 	    after 500 "disableModule $mods(ImageToNrrd-Vol) 1"
+# # 	}
     }
 
     
@@ -2608,97 +2666,97 @@ class LevelSetSegmenterApp {
 	$indicatorL1 configure -text $msg
     }
 
-#     ##############################
-#     ### configure_readers
-#     ##############################
-#     # Keeps the readers in sync.  Every time a different
-#     # data tab is selected (Nrrd, Dicom, Analyze) the other
-#     # readers must be disabled to avoid errors.
-#     method configure_readers { which } {
-#         global mods
-#         global $mods(ChooseNrrd-Reader)-port-index
+# #     ##############################
+# #     ### configure_readers
+# #     ##############################
+# #     # Keeps the readers in sync.  Every time a different
+# #     # data tab is selected (Nrrd, Dicom, Analyze) the other
+# #     # readers must be disabled to avoid errors.
+# #     method configure_readers { which } {
+# #         global mods
+# #         global $mods(ChooseNrrd-Reader)-port-index
 
-# 	if {$which == "Generic"} {
-# 	    set $mods(ChooseNrrd-Reader)-port-index 0
-# 	    disableModule $mods(NrrdReader) 0
-# 	    disableModule $mods(DicomReader) 1
-# 	    disableModule $mods(AnalyzeReader) 1
+# # 	if {$which == "Generic"} {
+# # 	    set $mods(ChooseNrrd-Reader)-port-index 0
+# # 	    disableModule $mods(NrrdReader) 0
+# # 	    disableModule $mods(DicomReader) 1
+# # 	    disableModule $mods(AnalyzeReader) 1
 
-# 	    if {$initialized != 0} {
-# 		$data_tab1 view "Generic"
-# 		$data_tab2 view "Generic"
-# 		set curr_data_tab "Generic"
-# 	    }
-#         } elseif {$which == "Dicom"} {
-# 	    set $mods(ChooseNrrd-Reader)-port-index 1
+# # 	    if {$initialized != 0} {
+# # 		$data_tab1 view "Generic"
+# # 		$data_tab2 view "Generic"
+# # 		set curr_data_tab "Generic"
+# # 	    }
+# #         } elseif {$which == "Dicom"} {
+# # 	    set $mods(ChooseNrrd-Reader)-port-index 1
 
-# 	    disableModule $mods(NrrdReader) 1
-# 	    disableModule $mods(DicomReader) 0
-# 	    disableModule $mods(AnalyzeReader) 1
+# # 	    disableModule $mods(NrrdReader) 1
+# # 	    disableModule $mods(DicomReader) 0
+# # 	    disableModule $mods(AnalyzeReader) 1
 
-#             if {$initialized != 0} {
-# 		$data_tab1 view "Dicom"
-# 		$data_tab2 view "Dicom"
-# 		set curr_data_tab "Dicom"
-# 	    }
-#         } elseif {$which == "Analyze"} {
-# 	    # Analyze
-# 	    set $mods(ChooseNrrd-Reader)-port-index 2
-# 	    disableModule $mods(NrrdReader) 1
-# 	    disableModule $mods(DicomReader) 1
-# 	    disableModule $mods(AnalyzeReader) 0
+# #             if {$initialized != 0} {
+# # 		$data_tab1 view "Dicom"
+# # 		$data_tab2 view "Dicom"
+# # 		set curr_data_tab "Dicom"
+# # 	    }
+# #         } elseif {$which == "Analyze"} {
+# # 	    # Analyze
+# # 	    set $mods(ChooseNrrd-Reader)-port-index 2
+# # 	    disableModule $mods(NrrdReader) 1
+# # 	    disableModule $mods(DicomReader) 1
+# # 	    disableModule $mods(AnalyzeReader) 0
 
-# 	    if {$initialized != 0} {
-# 		$data_tab1 view "Analyze"
-# 		$data_tab2 view "Analyze"
-# 		set curr_data_tab "Analyze"
-# 	    }
-#         } elseif {$which == "all"} {
-# 	    if {[set $mods(ChooseNrrd-Reader)-port-index] == 0} {
-# 		# nrrd
-# 		disableModule $mods(NrrdReader) 0
-# 		disableModule $mods(DicomReader) 1
-# 		disableModule $mods(AnalyzeReader) 1
-# 	    } elseif {[set $mods(ChooseNrrd-Reader)-port-index] == 1} {
-# 		# dicom
-# 		disableModule $mods(NrrdReader) 1
-# 		disableModule $mods(DicomReader) 0
-# 		disableModule $mods(AnalyzeReader) 1
-# 	    } else {
-# 		# analyze
-# 		disableModule $mods(NrrdReader) 1
-# 		disableModule $mods(DicomReader) 1
-# 		disableModule $mods(AnalyzeReader) 0
-# 	    }
-# 	}
-#     }
+# # 	    if {$initialized != 0} {
+# # 		$data_tab1 view "Analyze"
+# # 		$data_tab2 view "Analyze"
+# # 		set curr_data_tab "Analyze"
+# # 	    }
+# #         } elseif {$which == "all"} {
+# # 	    if {[set $mods(ChooseNrrd-Reader)-port-index] == 0} {
+# # 		# nrrd
+# # 		disableModule $mods(NrrdReader) 0
+# # 		disableModule $mods(DicomReader) 1
+# # 		disableModule $mods(AnalyzeReader) 1
+# # 	    } elseif {[set $mods(ChooseNrrd-Reader)-port-index] == 1} {
+# # 		# dicom
+# # 		disableModule $mods(NrrdReader) 1
+# # 		disableModule $mods(DicomReader) 0
+# # 		disableModule $mods(AnalyzeReader) 1
+# # 	    } else {
+# # 		# analyze
+# # 		disableModule $mods(NrrdReader) 1
+# # 		disableModule $mods(DicomReader) 1
+# # 		disableModule $mods(AnalyzeReader) 0
+# # 	    }
+# # 	}
+# #     }
 
-#     method set_curr_data_tab {which} {
-# 	if {$initialized} {
-# 	    set curr_data_tab $which
-# 	}
-#     }
+# #     method set_curr_data_tab {which} {
+# # 	if {$initialized} {
+# # 	    set curr_data_tab $which
+# # 	}
+# #     }
 
-#     method open_nrrd_reader_ui {} {
-# 	global mods
-# 	$mods(NrrdReader) initialize_ui
+# #     method open_nrrd_reader_ui {} {
+# # 	global mods
+# # 	$mods(NrrdReader) initialize_ui
 
-# 	.ui$mods(NrrdReader).f7.execute configure -state disabled
+# # 	.ui$mods(NrrdReader).f7.execute configure -state disabled
 
-# 	# rebind execute command to just withdraw
-# 	upvar \#0 .ui$mods(NrrdReader) data	
-# 	set data(-command) "wm withdraw .ui$mods(NrrdReader)"
-#     }
+# # 	# rebind execute command to just withdraw
+# # 	upvar \#0 .ui$mods(NrrdReader) data	
+# # 	set data(-command) "wm withdraw .ui$mods(NrrdReader)"
+# #     }
 
-#     method dicom_ui { } {
-# 	global mods
-# 	$mods(DicomReader) initialize_ui
+# #     method dicom_ui { } {
+# # 	global mods
+# # 	$mods(DicomReader) initialize_ui
 
-# 	if {[winfo exists .ui$mods(DicomReader)]} {
-# 	    # disable execute button 
-# 	    .ui$mods(DicomReader).buttonPanel.btnBox.execute configure -state disabled
-# 	}
-#     }
+# # 	if {[winfo exists .ui$mods(DicomReader)]} {
+# # 	    # disable execute button 
+# # 	    .ui$mods(DicomReader).buttonPanel.btnBox.execute configure -state disabled
+# # 	}
+# #     }
 
      method analyze_ui { } {
  	global mods
@@ -2718,233 +2776,233 @@ class LevelSetSegmenterApp {
  	}
      }
 
-#     method load_data {} {
-# 	global mods
-# 	# execute the appropriate reader
+# #     method load_data {} {
+# # 	global mods
+# # 	# execute the appropriate reader
 
-#         global $mods(ChooseNrrd-Reader)-port-index
-#         set port [set $mods(ChooseNrrd-Reader)-port-index]
-#         set mod ""
-#         if {$port == 0} {
-# 	    # Nrrd
-#             set mod $mods(NrrdReader)
-# 	} elseif {$port == 1} {
-# 	    # Dicom
-#             set mod $mods(DicomReader)
-# 	} else {
-# 	    # Analyze
-#             set mod $mods(AnalyzeReader)
-# 	} 
-
-# 	# enable next button
-# 	$attachedPFr.$next_load configure -state normal -activebackground $next_color \
-# 	    -background $next_color 
-# 	$detachedPFr.$next_load configure -state normal -activebackground $next_color \
-# 	    -background $next_color 
-
-# 	set has_loaded 0
-# 	set 2D_fixed 0
-	
-# 	$mod-c needexecute
-#     }
-
-#     ############################
-#     ### update_histo_graph_callback
-#     ############################
-#     # Called when the ScalarFieldStats updates the graph
-#     # so we can update ours
-#     method update_histo_graph_callback {varname varele varop} {
-# 	global mods
-
-#         global $mods(ScalarFieldStats)-min $mods(ScalarFieldStats)-max
-
-# 	global $mods(ScalarFieldStats)-args
-#         global $mods(ScalarFieldStats)-nmin
-#         global $mods(ScalarFieldStats)-nmax
-
-# 	set nmin [set $mods(ScalarFieldStats)-nmin]
-# 	set nmax [set $mods(ScalarFieldStats)-nmax]
-# 	set args [set $mods(ScalarFieldStats)-args]
-
-# 	if {$args == "?"} {
-# 	    return
-# 	}
-        
-#         # for some reason the other graph will only work if I set temp 
-#         # instead of using the $i value 
-#  	set graph $attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page1.cs.stats.childsite.histo.childsite.graph
-
-#          if { ($nmax - $nmin) > 1000 || ($nmax - $nmin) < 1e-3 } {
-#              $graph axis configure y -logscale yes
-#          } else {
-#              $graph axis configure y -logscale no
-#          }
-
-#          set min [set $mods(ScalarFieldStats)-min]
-#          set max [set $mods(ScalarFieldStats)-max]
-#          set xvector {}
-#          set yvector {}
-#          set yvector [concat $yvector $args]
-#          set frac [expr double(1.0/[llength $yvector])]
-
-#          $graph configure -barwidth $frac
-#          $graph axis configure x -min $min -max $max \
-# 	    -subdivisions 4 -loose 1 \
-# 	    -stepsize 0
-
-#          for {set i 0} { $i < [llength $yvector] } {incr i} {
-#              set val [expr $min + $i*$frac*($max-$min)]
-#              lappend xvector $val
-#          }
-        
-#           if { [$graph element exists data] == 1 } {
-#               $graph element delete data
-#           }
-
-# 	$graph element create data -label {} -xdata $xvector -ydata $yvector
-# 	$graph element configure data -fg blue
-
-# 	# 	## other window
-#  	set graph $detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page1.cs.stats.childsite.histo.childsite.graph
-
-#          if { ($nmax - $nmin) > 1000 || ($nmax - $nmin) < 1e-3 } {
-#              $graph axis configure y -logscale yes
-#          } else {
-#              $graph axis configure y -logscale no
-#          }
-
-#          set min [set $mods(ScalarFieldStats)-min]
-#          set max [set $mods(ScalarFieldStats)-max]
-#          set xvector {}
-#          set yvector {}
-#          set yvector [concat $yvector $args]
-#          set frac [expr double(1.0/[llength $yvector])]
-
-#          $graph configure -barwidth $frac
-#          $graph axis configure x -min $min -max $max \
-# 	    -subdivisions 4 -loose 1 \
-# 	    -stepsize 0
-
-#          for {set i 0} { $i < [llength $yvector] } {incr i} {
-#              set val [expr $min + $i*$frac*($max-$min)]
-#              lappend xvector $val
-#          }
-        
-#           if { [$graph element exists data] == 1 } {
-#               $graph element delete data
-#           }
-
-# 	$graph element create data -label {} -xdata $xvector -ydata $yvector
-# 	$graph element configure data -fg blue
-#     }
-    
-#     method select_region_of_interest {} {
-# 	global mods
-
-# 	# change ChooseNrrd port
-# 	global $mods(ChooseNrrd-Crop)-port-index
-# 	set $mods(ChooseNrrd-Crop)-port-index 1
-
-# 	# This causes region radiobutton to change
-# 	global smooth_region
-# 	set smooth_region "roi"
-# 	$this change_smooth_region
-
-# 	# turn off crop widget
-# 	global show_roi
-# 	set show_roi 0
-# 	$this toggle_show_roi
-
-# 	# set ViewSlices pad values
-# 	global $mods(ViewSlices)-crop_minPadAxis0
-# 	global $mods(ViewSlices)-crop_maxPadAxis0
-# 	global $mods(ViewSlices)-crop_minPadAxis1
-# 	global $mods(ViewSlices)-crop_maxPadAxis1
-# 	global $mods(ViewSlices)-crop_minPadAxis2
-# 	global $mods(ViewSlices)-crop_maxPadAxis2
-	
-# 	global $mods(UnuCrop)-minAxis0 $mods(UnuCrop)-maxAxis0
-# 	global $mods(UnuCrop)-minAxis1 $mods(UnuCrop)-maxAxis1
-# 	global $mods(UnuCrop)-minAxis2 $mods(UnuCrop)-maxAxis2
-
-	
-# 	set $mods(ViewSlices)-crop_minPadAxis0 [set $mods(UnuCrop)-minAxis0]
-# 	set $mods(ViewSlices)-crop_maxPadAxis0 \
-# 	    [expr $orig_size0 - [set $mods(UnuCrop)-maxAxis0] - 1]
-# 	set $mods(ViewSlices)-crop_minPadAxis1 [set $mods(UnuCrop)-minAxis1]
-# 	set $mods(ViewSlices)-crop_maxPadAxis1 \
-# 	    [expr $orig_size1 - [set $mods(UnuCrop)-maxAxis1] - 1]
-# 	set $mods(ViewSlices)-crop_minPadAxis2 [set $mods(UnuCrop)-minAxis2]
-# 	set $mods(ViewSlices)-crop_maxPadAxis2 \
-# 	    [expr $orig_size2 - [set $mods(UnuCrop)-maxAxis2] - 1]
-
-# 	# execute UnuCrop
-# 	$mods(UnuCrop)-c needexecute
-#     }
-
-#     method change_axis {} {
-# 	global axis mods
-
-# 	# update ViewSlices orientation
-# 	global $mods(ViewSlices)-slice-viewport0-axis
-	
-# 	set $mods(ViewSlices)-slice-viewport0-axis $axis
-
-# 	# update Viewer orientation
-# # 	global $mods(Viewer)-ViewWindow_0-pos
-# # 	global $mods(Viewer)-ViewWindow_1-pos
-# # 	set $mods(Viewer)-ViewWindow_0-pos "z1_y1"
-# # 	set $mods(Viewer)-ViewWindow_1-pos "z1_y1"
-# # 	if {$axis == 0} {
-# # 	    set $mods(Viewer)-ViewWindow_0-pos "x0_y0"
-# # 	    set $mods(Viewer)-ViewWindow_1-pos "x0_y0"
-# # 	} elseif {$axis == 1} {
-# # 	    set $mods(Viewer)-ViewWindow_0-pos "y0_x0"
-# # 	    set $mods(Viewer)-ViewWindow_1-pos "y0_x0"
+# #         global $mods(ChooseNrrd-Reader)-port-index
+# #         set port [set $mods(ChooseNrrd-Reader)-port-index]
+# #         set mod ""
+# #         if {$port == 0} {
+# # 	    # Nrrd
+# #             set mod $mods(NrrdReader)
+# # 	} elseif {$port == 1} {
+# # 	    # Dicom
+# #             set mod $mods(DicomReader)
 # # 	} else {
-# # 	    set $mods(Viewer)-ViewWindow_0-pos "z1_y1"
-# # 	    set $mods(Viewer)-ViewWindow_1-pos "z1_y1"
+# # 	    # Analyze
+# #             set mod $mods(AnalyzeReader)
+# # 	} 
+
+# # 	# enable next button
+# # 	$attachedPFr.$next_load configure -state normal -activebackground $next_color \
+# # 	    -background $next_color 
+# # 	$detachedPFr.$next_load configure -state normal -activebackground $next_color \
+# # 	    -background $next_color 
+
+# # 	set has_loaded 0
+# # 	set 2D_fixed 0
+	
+# # 	$mod-c needexecute
+# #     }
+
+# #     ############################
+# #     ### update_histo_graph_callback
+# #     ############################
+# #     # Called when the ScalarFieldStats updates the graph
+# #     # so we can update ours
+# #     method update_histo_graph_callback {varname varele varop} {
+# # 	global mods
+
+# #         global $mods(ScalarFieldStats)-min $mods(ScalarFieldStats)-max
+
+# # 	global $mods(ScalarFieldStats)-args
+# #         global $mods(ScalarFieldStats)-nmin
+# #         global $mods(ScalarFieldStats)-nmax
+
+# # 	set nmin [set $mods(ScalarFieldStats)-nmin]
+# # 	set nmax [set $mods(ScalarFieldStats)-nmax]
+# # 	set args [set $mods(ScalarFieldStats)-args]
+
+# # 	if {$args == "?"} {
+# # 	    return
 # # 	}
+        
+# #         # for some reason the other graph will only work if I set temp 
+# #         # instead of using the $i value 
+# #  	set graph $attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page1.cs.stats.childsite.histo.childsite.graph
+
+# #          if { ($nmax - $nmin) > 1000 || ($nmax - $nmin) < 1e-3 } {
+# #              $graph axis configure y -logscale yes
+# #          } else {
+# #              $graph axis configure y -logscale no
+# #          }
+
+# #          set min [set $mods(ScalarFieldStats)-min]
+# #          set max [set $mods(ScalarFieldStats)-max]
+# #          set xvector {}
+# #          set yvector {}
+# #          set yvector [concat $yvector $args]
+# #          set frac [expr double(1.0/[llength $yvector])]
+
+# #          $graph configure -barwidth $frac
+# #          $graph axis configure x -min $min -max $max \
+# # 	    -subdivisions 4 -loose 1 \
+# # 	    -stepsize 0
+
+# #          for {set i 0} { $i < [llength $yvector] } {incr i} {
+# #              set val [expr $min + $i*$frac*($max-$min)]
+# #              lappend xvector $val
+# #          }
+        
+# #           if { [$graph element exists data] == 1 } {
+# #               $graph element delete data
+# #           }
+
+# # 	$graph element create data -label {} -xdata $xvector -ydata $yvector
+# # 	$graph element configure data -fg blue
+
+# # 	# 	## other window
+# #  	set graph $detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page1.cs.stats.childsite.histo.childsite.graph
+
+# #          if { ($nmax - $nmin) > 1000 || ($nmax - $nmin) < 1e-3 } {
+# #              $graph axis configure y -logscale yes
+# #          } else {
+# #              $graph axis configure y -logscale no
+# #          }
+
+# #          set min [set $mods(ScalarFieldStats)-min]
+# #          set max [set $mods(ScalarFieldStats)-max]
+# #          set xvector {}
+# #          set yvector {}
+# #          set yvector [concat $yvector $args]
+# #          set frac [expr double(1.0/[llength $yvector])]
+
+# #          $graph configure -barwidth $frac
+# #          $graph axis configure x -min $min -max $max \
+# # 	    -subdivisions 4 -loose 1 \
+# # 	    -stepsize 0
+
+# #          for {set i 0} { $i < [llength $yvector] } {incr i} {
+# #              set val [expr $min + $i*$frac*($max-$min)]
+# #              lappend xvector $val
+# #          }
+        
+# #           if { [$graph element exists data] == 1 } {
+# #               $graph element delete data
+# #           }
+
+# # 	$graph element create data -label {} -xdata $xvector -ydata $yvector
+# # 	$graph element configure data -fg blue
+# #     }
+    
+# #     method select_region_of_interest {} {
+# # 	global mods
+
+# # 	# change ChooseNrrd port
+# # 	global $mods(ChooseNrrd-Crop)-port-index
+# # 	set $mods(ChooseNrrd-Crop)-port-index 1
+
+# # 	# This causes region radiobutton to change
+# # 	global smooth_region
+# # 	set smooth_region "roi"
+# # 	$this change_smooth_region
+
+# # 	# turn off crop widget
+# # 	global show_roi
+# # 	set show_roi 0
+# # 	$this toggle_show_roi
+
+# # 	# set ViewSlices pad values
+# # 	global $mods(ViewSlices)-crop_minPadAxis0
+# # 	global $mods(ViewSlices)-crop_maxPadAxis0
+# # 	global $mods(ViewSlices)-crop_minPadAxis1
+# # 	global $mods(ViewSlices)-crop_maxPadAxis1
+# # 	global $mods(ViewSlices)-crop_minPadAxis2
+# # 	global $mods(ViewSlices)-crop_maxPadAxis2
+	
+# # 	global $mods(UnuCrop)-minAxis0 $mods(UnuCrop)-maxAxis0
+# # 	global $mods(UnuCrop)-minAxis1 $mods(UnuCrop)-maxAxis1
+# # 	global $mods(UnuCrop)-minAxis2 $mods(UnuCrop)-maxAxis2
+
+	
+# # 	set $mods(ViewSlices)-crop_minPadAxis0 [set $mods(UnuCrop)-minAxis0]
+# # 	set $mods(ViewSlices)-crop_maxPadAxis0 \
+# # 	    [expr $orig_size0 - [set $mods(UnuCrop)-maxAxis0] - 1]
+# # 	set $mods(ViewSlices)-crop_minPadAxis1 [set $mods(UnuCrop)-minAxis1]
+# # 	set $mods(ViewSlices)-crop_maxPadAxis1 \
+# # 	    [expr $orig_size1 - [set $mods(UnuCrop)-maxAxis1] - 1]
+# # 	set $mods(ViewSlices)-crop_minPadAxis2 [set $mods(UnuCrop)-minAxis2]
+# # 	set $mods(ViewSlices)-crop_maxPadAxis2 \
+# # 	    [expr $orig_size2 - [set $mods(UnuCrop)-maxAxis2] - 1]
+
+# # 	# execute UnuCrop
+# # 	$mods(UnuCrop)-c needexecute
+# #     }
+
+# #     method change_axis {} {
+# # 	global axis mods
+
+# # 	# update ViewSlices orientation
+# # 	global $mods(ViewSlices)-slice-viewport0-axis
+	
+# # 	set $mods(ViewSlices)-slice-viewport0-axis $axis
+
+# # 	# update Viewer orientation
+# # # 	global $mods(Viewer)-ViewWindow_0-pos
+# # # 	global $mods(Viewer)-ViewWindow_1-pos
+# # # 	set $mods(Viewer)-ViewWindow_0-pos "z1_y1"
+# # # 	set $mods(Viewer)-ViewWindow_1-pos "z1_y1"
+# # # 	if {$axis == 0} {
+# # # 	    set $mods(Viewer)-ViewWindow_0-pos "x0_y0"
+# # # 	    set $mods(Viewer)-ViewWindow_1-pos "x0_y0"
+# # # 	} elseif {$axis == 1} {
+# # # 	    set $mods(Viewer)-ViewWindow_0-pos "y0_x0"
+# # # 	    set $mods(Viewer)-ViewWindow_1-pos "y0_x0"
+# # # 	} else {
+# # # 	    set $mods(Viewer)-ViewWindow_0-pos "z1_y1"
+# # # 	    set $mods(Viewer)-ViewWindow_1-pos "z1_y1"
+# # # 	}
 	
 
-# 	# re-configure slice slider
-# 	$this configure_slice_sliders
+# # 	# re-configure slice slider
+# # 	$this configure_slice_sliders
 
-# 	# Change UnuAxdelete axis
-# 	global $mods(UnuAxdelete-Feature)-axis
-# 	global $mods(UnuAxdelete-Prev)-axis
-# 	global $mods(UnuAxdelete-Smooth)-axis
-# 	set $mods(UnuAxdelete-Feature)-axis $axis
-# 	set $mods(UnuAxdelete-Prev)-axis $axis
-# 	set $mods(UnuAxdelete-Smooth)-axis $axis
+# # 	# Change UnuAxdelete axis
+# # 	global $mods(UnuAxdelete-Feature)-axis
+# # 	global $mods(UnuAxdelete-Prev)-axis
+# # 	global $mods(UnuAxdelete-Smooth)-axis
+# # 	set $mods(UnuAxdelete-Feature)-axis $axis
+# # 	set $mods(UnuAxdelete-Prev)-axis $axis
+# # 	set $mods(UnuAxdelete-Smooth)-axis $axis
 
-# 	# ExtractImageFilter
-# 	if {$axis == 0} {
-# 	    set $mods(ExtractSlice)-minDim0 0
-# 	    set $mods(ExtractSlice)-maxDim0 1
-# 	} elseif {$axis == 1} {
-# 	    set $mods(ExtractSlice)-minDim1 0
-# 	    set $mods(ExtractSlice)-maxDim1 1
-# 	} else {
-# 	    set $mods(ExtractSlice)-minDim2 0
-# 	    set $mods(ExtractSlice)-maxDim2 1
-# 	}
+# # 	# ExtractImageFilter
+# # 	if {$axis == 0} {
+# # 	    set $mods(ExtractSlice)-minDim0 0
+# # 	    set $mods(ExtractSlice)-maxDim0 1
+# # 	} elseif {$axis == 1} {
+# # 	    set $mods(ExtractSlice)-minDim1 0
+# # 	    set $mods(ExtractSlice)-maxDim1 1
+# # 	} else {
+# # 	    set $mods(ExtractSlice)-minDim2 0
+# # 	    set $mods(ExtractSlice)-maxDim2 1
+# # 	}
 
-# 	# PasteImageFilters
-# 	global $mods(PasteImageFilter-Binary)-axis
-# 	global $mods(PasteImageFilter-Float)-axis
-# 	global $mods(PasteImageFilter-Smooth)-axis
-# 	set $mods(PasteImageFilter-Binary)-axis $axis
-# 	set $mods(PasteImageFilter-Float)-axis $axis
-# 	set $mods(PasteImageFilter-Smooth)-axis $axis
+# # 	# PasteImageFilters
+# # 	global $mods(PasteImageFilter-Binary)-axis
+# # 	global $mods(PasteImageFilter-Float)-axis
+# # 	global $mods(PasteImageFilter-Smooth)-axis
+# # 	set $mods(PasteImageFilter-Binary)-axis $axis
+# # 	set $mods(PasteImageFilter-Float)-axis $axis
+# # 	set $mods(PasteImageFilter-Smooth)-axis $axis
 
-# 	# execute needed modules
-# 	$mods(ViewSlices)-c rebind $slice_frame
+# # 	# execute needed modules
+# # 	$mods(ViewSlices)-c rebind $slice_frame
 
-# 	after 100 "$mods(Viewer)-ViewWindow_0-c autoview; $mods(Viewer)-ViewWindow_1-c autoview; $mods(Viewer)-ViewWindow_0-c Views; $mods(Viewer)-ViewWindow_1-c Views"
-#     }
+# # 	after 100 "$mods(Viewer)-ViewWindow_0-c autoview; $mods(Viewer)-ViewWindow_1-c autoview; $mods(Viewer)-ViewWindow_0-c Views; $mods(Viewer)-ViewWindow_1-c Views"
+# #     }
 
-     method configure_slice_sliders {} {
+     method configure_slice_sliders { } {
  	global axis
 
  	set max 0
@@ -2974,93 +3032,97 @@ class LevelSetSegmenterApp {
 # 	set region_changed 1
 #     }
 
-#     method change_filter {w} {
-# 	global mods
-# 	set which [$w get]
-
-# 	# change attached/detached menu
-# 	$filter_menu1 select $which
-# 	$filter_menu2 select $which
+    method change_filter {w} {
+ 	global mods
+ 	set which [$w get]
 	
-# 	# enable/disable appropriate modules
-# 	# change ChooseImage port
-# 	# pack/forget appropriate ui
+ 	# change attached/detached menu
+ 	$filter_menu1 select $which
+ 	$filter_menu2 select $which
+	
+	set filter_type $which
 
-# 	global $mods(ChooseImage-Smooth)-port-index
-# 	global $mods(ChooseImage-ToSmooth)-port-index
-# 	set $mods(ChooseImage-ToSmooth)-port-index 1
-# 	if {$which == "GradientAnisotropicDiffusion"} {
-# 	    set smoothing_method "GradientAnisotropicDiffusion"
-# 	    disableModule $mods(Smooth-Gradient) 0
-# 	    disableModule $mods(Smooth-Curvature) 1
-# 	    disableModule $mods(Smooth-Blur) 1
+	# hide/show proper ui
+	pack forget $attachedPFr.f.p.childsite.smoothing.childsite.gradient
+	pack forget $detachedPFr.f.p.childdsite.smoothing.childsite.gradient
 
-# 	    set $mods(ChooseImage-Smooth)-port-index 0
+	pack forget $attachedPFr.f.p.childsite.smoothing.childsite.curvature
+	pack forget $detachedPFr.f.p.childsite.smoothing.childsite.curvature
+	
+	pack forget $attachedPFr.f.p.childsite.smoothing.childsite.gaussian
+	pack forget $detachedPFr.f.p.childsite.smoothing.childsite.gaussian
 
-# 	    pack forget $attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.curvature
-# 	    pack forget $detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.curvature
+	if {$which == "GradientAnisotropicDiffusion"} {
+	    pack $attachedPFr.f.p.childsite.smoothing.childsite.gradient \
+		-side top -anchor n -pady 4 -expand yes -fill x
+	    
+	    pack $detachedPFr.f.p.childsite.smoothing.childsite.gradient \
+		-side top -anchor n -pady 4 -expand yes -fill x
+	} elseif {$which == "CurvatureAnisotropicDiffusion"} {
+	    pack $attachedPFr.f.p.childsite.smoothing.childsite.curvature \
+		-side top -anchor n -pady 4 -expand yes -fill x
+	    
+	    pack $detachedPFr.f.p.childsite.smoothing.childsite.curvature \
+		-side top -anchor n -pady 4 -expand yes -fill x
+	} else {
+	    pack $attachedPFr.f.p.childsite.smoothing.childsite.gaussian \
+		-side top -anchor n -pady 4 -expand yes -fill x
 
-# 	    pack forget $attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.blur
-# 	    pack forget $detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.blur
+	    pack $detachedPFr.f.p.childsite.smoothing.childsite.gaussian \
+		-side top -anchor n -pady 4 -expand yes -fill x
+	}
 
-# 	    pack $attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.gradient -side top -anchor n -pady 4
+	# enable/disable proper modules
+	global to_smooth
+	if {$to_smooth} {
+	    $this enable_proper_smooth_module
+	}
+    }
+    
+    method enable_proper_smooth_module {} {
+	global mods to_smooth
+	
+	# Set proper index for ChooseImage-Smooth
+	global $mods(ChooseImage-Smooth)-port-index
 
-# 	    pack $detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.gradient -side top -anchor n -pady 4
-# 	} elseif {$which == "CurvatureAnisotropicDiffusion"} {
-# 	    set smoothing_method "CurvatureAnisotropicDiffusion"
-# 	    disableModule $mods(Smooth-Gradient) 1
-# 	    disableModule $mods(Smooth-Curvature) 0
-# 	    disableModule $mods(Smooth-Blur) 1
+	disableModule $mods(Smooth-Gradient) 1
+	disableModule $mods(Smooth-Curvature) 1
+	disableModule $mods(Smooth-Gaussian) 1
+	if {$filter_type == "GradientAnisotropicDiffusion"} {
+	    disableModule $mods(Smooth-Gradient) 0
+	    set $mods(ChooseImage-Smooth)-port-index 1
+	} elseif {$filter_type == "CurvatureAnisotropicDiffusion"} {
+	    disableModule $mods(Smooth-Curvature) 0
+	    set $mods(ChooseImage-Smooth)-port-index 2
+	} elseif {$filter_type == "Gaussian"} {
+	    disableModule $mods(Smooth-Gaussian) 0
+	    set $mods(ChooseImage-Smooth)-port-index 3
+	} else {
+	    set $mods(ChooseImage-Smooth)-port-index 0
+	}
+	
+    }
 
-# 	    set $mods(ChooseImage-Smooth)-port-index 1
-
-# 	    pack forget $attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.gradient
-# 	    pack forget $detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.gradient
-
-# 	    pack forget $attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.blur
-# 	    pack forget $detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.blur
-
-# 	    pack $attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.curvature -side top -anchor n -pady 4
-
-# 	    pack $detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.curvature -side top -anchor n -pady 4
-# 	} elseif {$which == "Gaussian"} {
-# 	    set smoothing_method "Gaussian"
-# 	    disableModule $mods(Smooth-Gradient) 1
-# 	    disableModule $mods(Smooth-Curvature) 1
-# 	    disableModule $mods(Smooth-Blur) 0
-
-# 	    set $mods(ChooseImage-Smooth)-port-index 2
-
-# 	    pack forget $attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.gradient
-# 	    pack forget $detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.gradient
-
-# 	    pack forget $attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.curvature
-# 	    pack forget $detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.curvature
-
-# 	    pack $attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.blur -side top -anchor n -pady 4
-
-# 	    pack $detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page2.cs.smooth.childsite.blur -side top -anchor n -pady 4
-# 	} else {
-# 	    set smoothing_method "None"
-# 	    # no smoothing
-# 	    disableModule $mods(Smooth-Gradient) 1
-# 	    disableModule $mods(Smooth-Curvature) 1
-# 	    disableModule $mods(Smooth-Blur) 1
-
-# 	    # Doesn't matter
-# 	    set $mods(ChooseImage-Smooth)-port-index 0
-
-# 	    # Change ToSmooth
-# 	    set $mods(ChooseImage-ToSmooth)-port-index 0
-
-# 	}
-
-# #	set filter_enabled 1
-#     }
-
+    method smooth_slice { } {
+	global mods
+	
+	# execute appropriate smooth modules and show smoothed
+	global $mods(ChooseImage-ShowSlice)-port-index
+	if {$filter_type == "GradientAnisotropicDiffusion"} {
+	    set $mods(ChooseImage-ShowSlice)-port-index 1
+	    $mods(Smooth-Gradient)-c needexecute
+	} elseif {$filter_type == "CurvatureAnisotropicDiffusion"} {
+	    set $mods(ChooseImage-ShowSlice)-port-index 1
+	    $mods(Smooth-Curvature)-c needexecute
+	} elseif {$filter_type == "Gaussian"} {
+	    set $mods(ChooseImage-ShowSlice)-port-index 1
+	    $mods(Smooth-Gaussian)-c needexecute
+	}
+    }
+    
 #     method smooth_data {type} {
 # 	global mods
-
+    
 # 	global $mods(ChooseImage-SmoothInput)-port-index
 # 	if {$type == "Go" && $has_smoothed == 1} {
 # 	    set $mods(ChooseImage-SmoothInput)-port-index 1
@@ -4090,7 +4152,7 @@ class LevelSetSegmenterApp {
 	# slider
 	global mods axis
 	set max 0
-
+	
 	if {$axis == 0} {
 	    global $mods(SliceReader)-size_0
 	    upvar \#0 $mods(SliceReader)-size_0 size
@@ -4104,12 +4166,30 @@ class LevelSetSegmenterApp {
 	    upvar \#0 $mods(SliceReader)-size_2 size
 	    set max $size
 	}
-
+	
 	$attachedPFr.f.p.childsite.volumes.childsite.slice.s configure \
 	    -to [expr $max - 1]
 	$detachedPFr.f.p.childsite.volumes.childsite.slice.s configure \
 	    -to [expr $max - 1]
     }
+    
+    method to_smooth_changed {} {
+	global mods to_smooth
+	
+	# If smoothing, enable appropriate modules, else disable them
+	global $mods(ChooseImage-Smooth)-port-index
+	
+	disableModule $mods(ChooseImage-Smooth) 0
+	if {$to_smooth == 0} {
+	    set $mods(ChooseImage-Smooth)-port-index 0
+	    disableModule $mods(Smooth-Gradient) 1
+	    disableModule $mods(Smooth-Curvature) 1
+	    disableModule $mods(Smooth-Gaussian) 1
+	} else {
+	    $this enable_proper_smooth_module
+	}
+    }
+    
     
     method make_entry {w text v {wi -1}} {
 	frame $w
@@ -4148,6 +4228,7 @@ class LevelSetSegmenterApp {
 
     variable filter_menu1
     variable filter_menu2
+    variable filter_type
 
     variable next_load
     variable next_smooth

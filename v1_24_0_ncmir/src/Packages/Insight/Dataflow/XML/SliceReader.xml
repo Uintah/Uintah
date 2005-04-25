@@ -43,7 +43,8 @@
     the last axis.  This module currently only works for the case of
     an Analyze header file (.hdr) and Analyze image file (.img). The
     basename of these files must be the same and the image file cannot
-    be compressed.</p>
+    be compressed. If Cast Output is checked, the output image will
+    be cast to a float image.</p>
 
     </description>
   </overview>
