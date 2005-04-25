@@ -101,7 +101,7 @@ using std::pair;
 
       //! Find the next times to output and dumps open files to disk.
       //! Call after timestep has completed.
-      virtual void executedTimestep(double delt);
+      virtual void executedTimestep(double delt, const GridP&);
      
       //! Returns as a string the name of the top of the output directory.
       virtual const string getOutputLocation() const;

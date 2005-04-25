@@ -243,7 +243,7 @@ void AMRSimulationController::run()
      executeTimestep(t, delt, currentGrid, totalFine);
 
      if(d_output)
-       d_output->executedTimestep(delt);
+       d_output->executedTimestep(delt, currentGrid);
 
      t += delt;
      TAU_DB_DUMP();
@@ -347,7 +347,7 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
   d_scheduler->execute();
 
   if(d_output)
-    d_output->executedTimestep(0);
+    d_output->executedTimestep(0, grid);
 
   
 }
