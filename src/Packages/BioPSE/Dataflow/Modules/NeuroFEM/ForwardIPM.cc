@@ -78,7 +78,7 @@ ForwardIPM::ForwardIPM(GuiContext* ctx)
 
 
 
-static bool
+bool
 write_geo_file(ProgressReporter *pr, FieldHandle field, const char *filename)
 {
   
@@ -172,7 +172,7 @@ write_geo_file(ProgressReporter *pr, FieldHandle field, const char *filename)
 
 
 
-static bool
+bool
 write_knw_file(ProgressReporter *pr, FieldHandle field, const char *filename)
 {
   TetVolField<Tensor> *tfield =
@@ -228,7 +228,7 @@ write_knw_file(ProgressReporter *pr, FieldHandle field, const char *filename)
 }
 
 
-static bool
+bool
 write_elc_file(ProgressReporter *pr, FieldHandle fld, const char *filename)
 {
    PointCloudMesh *mesh = dynamic_cast<PointCloudMesh *>(fld->mesh().get_rep());
@@ -600,12 +600,6 @@ ForwardIPM::execute()
     return;
   }
 
-  if (false) // Some dipole error checking.
-  {
-    error("Dipole must contain Vectors at Nodes.");
-    return;
-  }
-
   MatrixIPort *dipole_port2 = (MatrixIPort *)get_iport("Dipole Moments");
   MatrixHandle dipole2;
   
@@ -615,12 +609,6 @@ ForwardIPM::execute()
     return;
   }
 
-  if (false) // Some dipole error checking.
-  {
-    error("Dipole must contain Vectors at Nodes.");
-    return;
-  }
-  
   // Make our tmp directory
   const string tmpdir = "/tmp/ForwardIPM" + to_string(getpid()) +"/";
   const string tmplog = tmpdir + "forward.log";
