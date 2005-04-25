@@ -33,8 +33,10 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
   if(!time_ps->get("max_delt_increase", max_delt_increase))
     max_delt_increase=1.e99;
 
-  max_iterations = MAXINT;
-  maxTimestep = MAXINT;
+  // use MAXINT -1, for some reason SGI optimizer doesn't like MAXINT
+  // in the SimulationController while loop
+  max_iterations = MAXINT-1;
+  maxTimestep = MAXINT-1;
   time_ps->get( "max_iterations", max_iterations );
   time_ps->get( "maxTimestep", maxTimestep );
   time_ps->get( "override_restart_delt", override_restart_delt);
@@ -47,13 +49,13 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
     {
       cerr << "Negative number of time steps is not allowed.\n";
       cerr << "resetting to MAXINT time steps\n";
-      max_iterations = MAXINT;
+      max_iterations = MAXINT-1;
     }
   if( maxTimestep < 1 )
     {
       cerr << "Negative maxTimesteps is not allowed.\n";
       cerr << "resetting to MAXINT time steps\n";
-      maxTimestep = MAXINT;
+      maxTimestep = MAXINT-1;
     }
 }
 
