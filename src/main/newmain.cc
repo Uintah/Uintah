@@ -102,7 +102,7 @@ parse_args( int argc, char *argv[])
 int
 main(int argc, char *argv[]) {
   bool framework = true;
-  MPI_Init(&argc,&argv);
+  //  MPI_Init(&argc,&argv);
   
   parse_args( argc, argv);
   
