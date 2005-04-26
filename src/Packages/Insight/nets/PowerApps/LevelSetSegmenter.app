@@ -4403,12 +4403,14 @@ class LevelSetSegmenterApp {
 	    [file join $commit_dir $base_filename[expr $slice - 1].hdr]
 
 	# enable/disable using previous slice option
+	set prev_avail 0
 	if {$slice > 0 && \
 		$commits([expr $slice - 1]) == 1} {
 	    $attachedPFr.f.p.childsite.seeds.childsite.method enable \
 		"Previous Segmentation and Seed Points"
 	    $detachedPFr.f.p.childsite.seeds.childsite.method enable \
 		"Previous Segmentation and Seed Points"
+	    set prev_avail 1
 	} else {
 	    $attachedPFr.f.p.childsite.seeds.childsite.method disable \
 		"Previous Segmentation and Seed Points"
@@ -4417,6 +4419,15 @@ class LevelSetSegmenterApp {
 	}
 
 	$mods(SliceReader)-c needexecute
+
+	# if previous slice option available and being used,
+	# and there is a previous slice commited, execute
+	# ImageReaderFloat2D
+	if {$prev_avail == 1 && \
+		$seed_type == "Previous Segmentation and Seed Points" && \
+		$slice > 0 && $commits([expr $slice - 1]) == 1} {
+	    $mods(ImageReaderFloat2D)-c needexecute
+	}
     }
 
     method next_highres {} {
@@ -4688,7 +4699,7 @@ bind all <Control-v> {
 # Previous seed isn't implemented yet (need to only offer this
 #  option if a previous slice has been committed or saved.
 
-# Isocontors
+# Isocontours
 
 # Clean up vis toggle window (hide/showable?)
 
@@ -4696,4 +4707,3 @@ bind all <Control-v> {
 
 # Arg passing and filenames
 
-# Should ImageReaderFloat2D be executed when next slice is read?
