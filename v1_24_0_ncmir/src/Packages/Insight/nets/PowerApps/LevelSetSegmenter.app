@@ -1853,7 +1853,7 @@ class LevelSetSegmenterApp {
 	
 	### Tuning Speed Image
 	iwidgets::labeledframe $process.speed \
-	    -labelpos nw -labeltext "3. Tuning Speed Image"
+	    -labelpos nw -labeltext "3. Tune Speed Image"
 	pack $process.speed -side top -anchor nw -expand yes -fill x
 	
 	set speed [$process.speed childsite]
@@ -1940,7 +1940,7 @@ class LevelSetSegmenterApp {
 	
 	### Creating Seeds
 	iwidgets::labeledframe $process.seeds \
-	    -labelpos nw -labeltext "4. Creating Seeds"
+	    -labelpos nw -labeltext "4. Create Seeds"
 	pack $process.seeds -side top -anchor nw -expand yes -fill x
 	
 	set seeds [$process.seeds childsite]
@@ -2012,7 +2012,7 @@ class LevelSetSegmenterApp {
 	
 	### Segmenting
 	iwidgets::labeledframe $process.seg \
-	    -labelpos nw -labeltext "5. Segmenting"
+	    -labelpos nw -labeltext "5. Segment"
 	pack $process.seg -side top -anchor nw -expand yes -fill x
 	
 	set seg [$process.seg childsite]
@@ -3764,9 +3764,6 @@ class LevelSetSegmenterApp {
  	set show_seeds 1
  	$this seeds_changed 1 2 3
 
- 	# Disable Level Set
- 	disableModule $mods(LevelSet) 1
-
  	if {$seed_type == "Seed Points Only"} {
  	    $mods(SeedPoints-PosSeeds) send
  	    $mods(SeedPoints-NegSeeds) send
@@ -4490,3 +4487,5 @@ bind all <Control-v> {
 # If positive seed points are set to 0, the entire seed is on,
 #  regardless of the number of negative points (only for Seed
 #  Points Only case).
+
+# Previous seed isn't implemented yet.
