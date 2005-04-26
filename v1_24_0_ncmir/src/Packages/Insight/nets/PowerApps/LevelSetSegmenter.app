@@ -285,6 +285,9 @@ set m58 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 960 1396]
 # Create a Insight->Converters->ImageToNrrd Module
 set m59 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 809 579]
 
+# Create a Insight->DataIO->ImageReaderFloat2D Module
+set m60 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat2D" 616 491]
+
 # Create the Connections between Modules
 set c1 [addConnection $m13 0 $m32 0]
 set c2 [addConnection $m13 0 $m31 0]
@@ -351,7 +354,7 @@ set c62 [addConnection $m21 0 $m30 1]
 set c63 [addConnection $m11 0 $m12 2]
 set c64 [addConnection $m5 0 $m14 2]
 set c65 [addConnection $m39 0 $m41 3]
-set c66 [addConnection $m4 0 $m59 0]
+set c66 [addConnection $m60 0 $m59 0]
 set c67 [addConnection $m28 0 $m14 3]
 set c68 [addConnection $m25 0 $m14 4]
 set c69 [addConnection $m19 0 $m14 5]
@@ -712,6 +715,7 @@ set mods(NrrdInfo-Slice) $m1
 # Readers
 set mods(AnalyzeNrrdReader) $m36 
 set mods(SliceReader) $m54
+set mods(ImageReaderFloat2D) $m60
 
 # Writers
 set mods(ImageFileWriter-Binary) $m47
@@ -1954,6 +1958,9 @@ class LevelSetSegmenterApp {
 	    "Previous Segmentation and Seed Points" "Seed Points Only"
 	$seeds.method select $seed_type
 
+	# Initially disable previous option
+	$seeds.method disable "Previous Segmentation and Seed Points"
+
 	frame $seeds.points 
 	pack $seeds.points -side top -anchor nw -pady 2 \
 	    -expand yes -fill x
@@ -2651,11 +2658,9 @@ class LevelSetSegmenterApp {
 	} elseif {$which == $mods(ShowField-Speed) && \
 		      $state == "JustStarted"} { 
 	    change_indicate_val 1
-	    change_indicator_labels "Updating Speed Image..."
 	} elseif {$which == $mods(ShowField-Speed) && \
 		      $state == "Completed"} { 
 	    change_indicate_val 2
-	    change_indicator_labels "Done Updating Speed Image"
 	} elseif {$which == $mods(LevelSet) && \
 		      $state == "JustStarted"} { 
 	    if {$segmenting == 1} {
@@ -3550,13 +3555,18 @@ class LevelSetSegmenterApp {
 	global $mods(ChooseNrrd-Seeds)-port-index
 	global $mods(ChooseNrrd-Combine)-port-index
 
+	disableModule $mods(ImageReaderFloat2D) 1
+	disableModule $mods(ImageToNrrd-Prev) 1
+
 	# change Choose module and turn on/off seeds
 	if {$seed_type == "Seed Points Only"} {
-	    set $mods(ChooseNrrd-Seeds)-port-index 0
+	    set $mods(ChooseNrrd-Seeds)-port-index 1
 	    set $mods(ChooseNrrd-Combine)-port-index 0
 	} elseif {$seed_type == "Previous Segmentation and Seed Points"} {
 	    set $mods(ChooseNrrd-Seeds)-port-index 0
 	    set $mods(ChooseNrrd-Combine)-port-index 1
+	    disableModule $mods(ImageReaderFloat2D) 0
+	    disableModule $mods(ImageToNrrd-Prev) 0
 	} elseif {$seed_type == "Thresholds and Seed Points"} {
 	    set $mods(ChooseNrrd-Combine)-port-index 1
 	    set $mods(ChooseNrrd-Seeds)-port-index 1
@@ -3959,6 +3969,8 @@ class LevelSetSegmenterApp {
  	} elseif {$seed_type == "Previous Segmentation and Seed Points"} {
  	    $mods(SeedPoints-PosSeeds) send
  	    $mods(SeedPoints-NegSeeds) send
+	    $this check_previous_filename
+	    $mods(ImageReaderFloat2D)-c needexecute
  	} elseif {$seed_type == "Thresholds and Seed Points"} {
  	    $mods(SeedPoints-PosSeeds) send
  	    $mods(SeedPoints-NegSeeds) send
@@ -4381,6 +4393,29 @@ class LevelSetSegmenterApp {
 
     method go_highres {} {
 	global mods
+
+	# Prepare previous reader filename
+	global commit_dir base_filename
+	global $mods(SliceReader)-slice
+	upvar \#0 $mods(SliceReader)-slice slice
+	global $mods(ImageReaderFloat2D)-filename
+	set $mods(ImageReaderFloat2D)-filename \
+	    [file join $commit_dir $base_filename[expr $slice - 1].hdr]
+
+	# enable/disable using previous slice option
+	if {$slice > 0 && \
+		$commits([expr $slice - 1]) == 1} {
+	    $attachedPFr.f.p.childsite.seeds.childsite.method enable \
+		"Previous Segmentation and Seed Points"
+	    $detachedPFr.f.p.childsite.seeds.childsite.method enable \
+		"Previous Segmentation and Seed Points"
+	} else {
+	    $attachedPFr.f.p.childsite.seeds.childsite.method disable \
+		"Previous Segmentation and Seed Points"
+	    $detachedPFr.f.p.childsite.seeds.childsite.method disable \
+		"Previous Segmentation and Seed Points"
+	}
+
 	$mods(SliceReader)-c needexecute
     }
 
@@ -4389,7 +4424,8 @@ class LevelSetSegmenterApp {
 	global $mods(SliceReader)-slice
 	upvar \#0 $mods(SliceReader)-slice slice
 	set slice [expr $slice + 1]
-	$mods(SliceReader)-c needexecute
+
+	$this go_highres
     }
 
     method SliceReader_changed {var1 var2 var3} {
@@ -4516,6 +4552,17 @@ class LevelSetSegmenterApp {
 #	    $mods(ImageToField-Seg)-c needexecute
 	    $mods(ShowField-Seg)-c toggle_display_faces
 	}
+    }
+
+    method check_previous_filename {} {
+  	global mods commit_dir base_filename
+
+	# Set up writer filename
+	global $mods(ImageFileWriter-Binary)-filename
+	global $mods(SliceReader)-slice
+	upvar \#0 $mods(SliceReader)-slice s
+	set $mods(ImageFileWriter-Binary)-filename \
+	    [file join $commit_dir $base_filename$s.hdr]
     }
     
     method make_entry {w text v {wi -1}} {
@@ -4646,3 +4693,7 @@ bind all <Control-v> {
 # Clean up vis toggle window (hide/showable?)
 
 # Format Commit Status window
+
+# Arg passing and filenames
+
+# Should ImageReaderFloat2D be executed when next slice is read?
