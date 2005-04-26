@@ -1,11 +1,9 @@
 #include <Packages/Uintah/CCA/Components/ICE/Advection/FirstOrderAdvector.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Core/Geometry/IntVector.h>
-
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+
+#include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Endian.h>
 #include <iostream>
@@ -101,7 +99,7 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
     //__________________________________
     //  Bullet proofing
     double total_fluxout = 0.0;
-    for(int face = TOP; face <= BACK; face++ )  {
+    for(int face = LEFT; face <= FRONT; face++ )  {
       total_fluxout  += ofs.d_fflux[face];
     }
     if(total_fluxout > vol){
@@ -121,7 +119,7 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
     for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
       IntVector c = *iter; 
       double total_fluxout = 0.0;
-      for(int face = TOP; face <= BACK; face++ )  {
+      for(int face = LEFT; face <= FRONT; face++ )  {
         total_fluxout  += d_OFS[c].d_fflux[face];
         d_OFS[c].d_fflux[face] = 0.0;
       }
@@ -147,30 +145,31 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
 _____________________________________________________________________*/
 //     M A S S
 void FirstOrderAdvector::advectMass(const CCVariable<double>& q_CC,
-                                    const Patch* patch,
                                     CCVariable<double>& q_advected,
-			               DataWarehouse* /*new_dw*/)
+                                    advectVarBasket* varBasket)
 {
         
-  advectSlabs<double>(q_CC,patch,q_advected, 
+  advectSlabs<double>(q_CC,varBasket->patch,q_advected, 
                       d_notUsedX, d_notUsedY, d_notUsedZ, 
-                      ignoreFaceFluxesD());
+                      ignore_q_FC_calc_D());
+                      
+  // fluxes on faces at the coarse fine interfaces                    
+  q_FC_fluxes<double>(q_CC, "mass", varBasket);                
 }
 
 //__________________________________
 //     D O U B L E
-void FirstOrderAdvector::advectQ(const bool /*useCompatibleFluxes*/,
-                                 const bool /*is_Q_massSpecific*/,
-                                 const CCVariable<double>& q_CC,
+void FirstOrderAdvector::advectQ(const CCVariable<double>& q_CC,
                                  const CCVariable<double>& /*mass*/,
-                                 const Patch* patch,
                                  CCVariable<double>& q_advected,
-                                 DataWarehouse* /*new_dw*/)
-{
-        
-  advectSlabs<double>(q_CC,patch,q_advected, 
+                                 advectVarBasket* varBasket)
+{                                 
+  advectSlabs<double>(q_CC,varBasket->patch,q_advected, 
                       d_notUsedX, d_notUsedY, d_notUsedZ, 
-                      ignoreFaceFluxesD());
+                      ignore_q_FC_calc_D());
+                      
+  // fluxes on faces at the coarse fine interfaces                    
+  q_FC_fluxes<double>(q_CC, varBasket->desc, varBasket);
 }
 
 //__________________________________
@@ -185,24 +184,24 @@ void FirstOrderAdvector::advectQ(const CCVariable<double>& q_CC,
 				     DataWarehouse* /*new_dw*/)
 {
   advectSlabs<double>(q_CC,patch,q_advected,  
-                      q_XFC, q_YFC, q_ZFC, saveFaceFluxes());
-		      
-  compute_q_FC_PlusFaces( q_CC, patch, q_XFC, q_YFC, q_ZFC); 
+                      q_XFC, q_YFC, q_ZFC, save_q_FC());
+                      
+  // fluxes on faces at the coarse fine interfaces		      
+  q_FC_PlusFaces( q_CC, patch, q_XFC, q_YFC, q_ZFC); 
 }
 //__________________________________
 //     V E C T O R
-void FirstOrderAdvector::advectQ(const bool /*useCompatibleFluxes*/,
-                                 const bool /*is_Q_massSpecific*/,
-                                 const CCVariable<Vector>& q_CC,
+void FirstOrderAdvector::advectQ(const CCVariable<Vector>& q_CC,
                                  const CCVariable<double>& /*mass*/,
-                                 const Patch* patch,
                                  CCVariable<Vector>& q_advected,
-                                 DataWarehouse* /*new_dw*/)
+                                 advectVarBasket* varBasket)
 {
-  advectSlabs<Vector>(q_CC,patch,q_advected, 
+  advectSlabs<Vector>(q_CC,varBasket->patch,q_advected, 
                       d_notUsedX, d_notUsedY, d_notUsedZ, 
-                      ignoreFaceFluxesV());
-		      
+                      ignore_q_FC_calc_V());
+                      
+  // fluxes on faces at the coarse fine interfaces
+  q_FC_fluxes<Vector>(q_CC, varBasket->desc, varBasket);
 } 
 
 /*_____________________________________________________________________
@@ -216,9 +215,8 @@ template <class T, typename F>
                                        SFCYVariable<double>& q_YFC,
                                        SFCZVariable<double>& q_ZFC,
                                        F save_q_FC) // function is passed in
-{                                
-                                  //  W A R N I N G
-  Vector dx = patch->dCell();    // assumes equal cell spacing             
+{                  
+  Vector dx = patch->dCell();            
   double invvol = 1.0/(dx.x() * dx.y() * dx.z());                     
 
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
@@ -228,7 +226,7 @@ template <class T, typename F>
     double faceVol[6];
     
     T sum_q_face_flux(0.0);   
-    for(int f = TOP; f <= BACK; f++ )  {    
+    for(int f = LEFT; f <= FRONT; f++ )  {    
       //__________________________________
       //   S L A B S
       IntVector ac = c + S_ac[f];     // slab adjacent cell
@@ -249,41 +247,41 @@ template <class T, typename F>
   }
 }
 /*_____________________________________________________________________
- Function~ compute_q_FC
- This takes care of the q_FC values  on the x+, y+, z+ patch faces
+ Function~ q_FC_operator
+ Compute q at the face center.
 _____________________________________________________________________*/
 template<class T>
-void FirstOrderAdvector::compute_q_FC(CellIterator iter, 
-                		      IntVector adj_offset,
-                		      const int face,
-                		      const CCVariable<double>& q_CC,
-                		      T& q_FC)
+void FirstOrderAdvector::q_FC_operator(CellIterator iter, 
+                		          IntVector adj_offset,
+                		          const int face,
+                		          const CCVariable<double>& q_CC,
+                		          T& q_FC)
 {
   for(;!iter.done(); iter++){
     IntVector R = *iter;      
     IntVector L = R + adj_offset; 
-     
+
      // face:           LEFT,   BOTTOM,   BACK  
      // IF_slab[face]:  RIGHT,  TOP,      FRONT
     double outfluxVol = d_OFS[R].d_fflux[face];
     double influxVol  = d_OFS[L].d_fflux[IF_slab[face]];
-    
-    double q_faceFlux = q_CC[L] * influxVol - q_CC[R] * outfluxVol;
-    double faceVol    = outfluxVol + influxVol;
-    
-    double tmp_FC     = fabs(q_faceFlux)/(faceVol + 1.0e-100);
 
-    // if q_FC = 0.0 then set it equal to q_CC[c]
-    q_FC[R] = equalZero(q_faceFlux, q_CC[R], tmp_FC);
+    double q_faceFlux = q_CC[L] * influxVol - q_CC[R] * outfluxVol;
+    double faceVol = outfluxVol + influxVol;
+
+    double q_tmp_FC = fabs(q_faceFlux)/(faceVol + 1.0e-100);
+
+    // if q_tmp_FC = 0.0 then set it equal to q_CC[c]
+    q_FC[R] = equalZero(q_faceFlux, q_CC[R], q_tmp_FC);
   }
 }
 
 /*_____________________________________________________________________
- Function~  compute_q_FC_PlusFaces
+ Function~  q_FC_PlusFaces
  Compute q_FC values on the faces between the extra cells
  and the interior domain only on the x+, y+, z+ patch faces 
 _____________________________________________________________________*/
-void FirstOrderAdvector::compute_q_FC_PlusFaces(
+void FirstOrderAdvector::q_FC_PlusFaces(
       	      	      	      	       const CCVariable<double>& q_CC,
                                    const Patch* patch,
                                    SFCXVariable<double>& q_XFC,
@@ -303,16 +301,145 @@ void FirstOrderAdvector::compute_q_FC_PlusFaces(
   // only work on patches that are at the edge of the computational domain
   
   if (patchOnBoundary.x() == 1 ){
-    compute_q_FC<SFCXVariable<double> >(Xiter, adj_offset[0], LEFT,  
-                                        q_CC,q_XFC);
+    q_FC_operator<SFCXVariable<double> >(Xiter, adj_offset[0], LEFT,  
+                                         q_CC,q_XFC);
   } 
   if (patchOnBoundary.y() == 1 ){
-    compute_q_FC<SFCYVariable<double> >(Yiter, adj_offset[1], BOTTOM,
-                                        q_CC,q_YFC); 
+    q_FC_operator<SFCYVariable<double> >(Yiter, adj_offset[1], BOTTOM,
+                                         q_CC,q_YFC); 
   }
   if (patchOnBoundary.z() == 1 ){  
-    compute_q_FC<SFCZVariable<double> >(Ziter, adj_offset[2], BACK,  
-                                        q_CC,q_ZFC);  
+    q_FC_operator<SFCZVariable<double> >(Ziter, adj_offset[2], BACK,  
+                                         q_CC,q_ZFC);  
   }
 }
+/*_____________________________________________________________________
+ Function~ q_FC_flux_operator
+ Compute the flux of q across a face.  The flux is need by the AMR 
+ refluxing operation
+_____________________________________________________________________*/
+template<class T, class V>
+void FirstOrderAdvector::q_FC_flux_operator(CellIterator iter, 
+                		          IntVector adj_offset,
+                		          const int face,
+                		          const CCVariable<V>& q_CC,
+                		          T& q_FC_flux)
+{
+  int out_indx = OF_slab[face];
+  int in_indx  = IF_slab[face];
 
+  for(;!iter.done(); iter++){
+    IntVector c = *iter;      
+    IntVector ac = c + adj_offset; 
+
+     // face:           LEFT,   BOTTOM,   BACK  
+     // IF_slab[face]:  RIGHT,  TOP,      FRONT
+    double outfluxVol = d_OFS[c].d_fflux[out_indx];
+    double influxVol  = d_OFS[ac].d_fflux[in_indx];
+
+    q_FC_flux[c] = q_CC[ac] * influxVol - q_CC[c] * outfluxVol;
+  }  
+}
+/*_____________________________________________________________________
+ Function~  q_FC_fluxes
+ Computes the sum(flux of q at the face center) over all subcycle timesteps
+ on the fine level.  We only need to hit the cell that are on a coarse-fine 
+ interface, ignoring the extraCells.
+_____________________________________________________________________*/
+template<class T>
+void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
+                                      const string& desc,
+                                      advectVarBasket* vb)
+{
+  if(vb->doAMR){
+    // pull variables from the basket
+    const int indx = vb->indx;
+    const Patch* patch = vb->patch;
+    DataWarehouse* new_dw = vb->new_dw;
+    DataWarehouse* old_dw = vb->old_dw;
+    const double AMR_subCycleProgressVar = vb->AMR_subCycleProgressVar;
+
+    // form the label names
+    string x_name = desc + "_X_FC_flux";
+    string y_name = desc + "_Y_FC_flux";
+    string z_name = desc + "_Z_FC_flux";
+
+    // get the varLabels
+    VarLabel* xlabel = VarLabel::find(x_name);
+    VarLabel* ylabel = VarLabel::find(y_name);
+    VarLabel* zlabel = VarLabel::find(z_name);  
+    if (xlabel == NULL || ylabel == NULL || zlabel == NULL){
+      throw InternalError( "Advector: q_FC_fluxes: variable label not found: " 
+                            + x_name + " or " + y_name + " or " + z_name);
+    }
+    Ghost::GhostType  gn  = Ghost::None;
+    SFCXVariable<T> q_X_FC_flux;
+    SFCYVariable<T> q_Y_FC_flux;
+    SFCZVariable<T> q_Z_FC_flux;
+
+    new_dw->allocateAndPut(q_X_FC_flux, xlabel,indx, patch);
+    new_dw->allocateAndPut(q_Y_FC_flux, ylabel,indx, patch);
+    new_dw->allocateAndPut(q_Z_FC_flux, zlabel,indx, patch); 
+
+    if(AMR_subCycleProgressVar == 0){
+      q_X_FC_flux.initialize(T(0.0));
+      q_Y_FC_flux.initialize(T(0.0));
+      q_Z_FC_flux.initialize(T(0.0));
+    }else{
+      constSFCXVariable<T> q_X_FC_flux_old;
+      constSFCYVariable<T> q_Y_FC_flux_old;
+      constSFCZVariable<T> q_Z_FC_flux_old;
+      old_dw->get(q_X_FC_flux_old, xlabel, indx, patch, gn,0);
+      old_dw->get(q_Y_FC_flux_old, ylabel, indx, patch, gn,0);
+      old_dw->get(q_Z_FC_flux_old, zlabel, indx, patch, gn,0);
+      q_X_FC_flux.copyData(q_X_FC_flux_old);
+      q_Y_FC_flux.copyData(q_Y_FC_flux_old);
+      q_Z_FC_flux.copyData(q_Z_FC_flux_old);
+    }
+
+    //__________________________________
+    // Iterate over coarsefine interface faces
+    vector<Patch::FaceType>::const_iterator iter;  
+    for (iter  = patch->getCoarseFineInterfaceFaces()->begin(); 
+         iter != patch->getCoarseFineInterfaceFaces()->end(); ++iter){
+      Patch::FaceType patchFace = *iter;
+
+      cout << "Patch " << patch->getID()<< " Level " << patch->getLevel()->getID()<<" patchFace " << patchFace;
+      //__________________________________
+      // 
+      CellIterator iter=patch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
+      IntVector adj_offset = patch->faceDirection(patchFace); // adj cell offset
+      int cellFace = patchFaceToCellFace(patchFace);
+  /*`==========TESTING==========*/
+        IntVector begin = iter.begin();
+        IntVector end = iter.end();
+        IntVector half = (end - begin)/IntVector(2,2,2) + begin; 
+  /*===========TESTING==========`*/
+
+                            // X+ X-
+      if(patchFace == Patch::xminus || patchFace == Patch::xplus){ 
+
+        q_FC_flux_operator<SFCXVariable<T>, T>(iter, adj_offset,cellFace,
+                                               q_CC,q_X_FC_flux); 
+
+        cout << half << " /t difference: q " << q_X_FC_flux[half] <<  endl;  
+      }
+                            // Y+ Y-
+      if(patchFace == Patch::yminus || patchFace == Patch::yplus){
+
+        q_FC_flux_operator<SFCYVariable<T>, T>(iter, adj_offset,cellFace,
+                                               q_CC,q_Y_FC_flux); 
+
+        cout << half << " /t difference: q " << q_Y_FC_flux[half]  << endl;  
+      }
+                            // Z+ Z-
+      if(patchFace == Patch::zminus || patchFace == Patch::zplus){
+
+        q_FC_flux_operator<SFCZVariable<T>, T>(iter, adj_offset,cellFace,
+                                               q_CC,q_Z_FC_flux);
+
+        cout << half << " /t difference: q " << q_Z_FC_flux[half] << endl;
+      }
+    }  // coarseFineInterface faces
+  } // doAMR   
+}

@@ -786,7 +786,7 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
 _____________________________________________________________________*/
 void
 ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, 
-                          int /*step*/, int /*nsteps*/ )
+                          int step, int nsteps )
 {
   cout_doing << "ICE::scheduleTimeAdvance\t\t\tL-" <<level->getIndex()<< endl;
   const PatchSet* patches = level->eachPatch();
@@ -797,6 +797,8 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   MaterialSubset* one_matl = d_press_matl;
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
+
+  double AMR_subCycleProgressVar = double(step)/double(nsteps);
   
   if(d_turbulence){
     // The turblence model is also called directly from
@@ -892,7 +894,8 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   scheduleComputeLagrangian_Transported_Vars(sched, patches,
                                                           all_matls);
                                    
-  scheduleAdvectAndAdvanceInTime(         sched, patches, ice_matls_sub,
+  scheduleAdvectAndAdvanceInTime(         sched, patches, AMR_subCycleProgressVar,
+                                                          ice_matls_sub,
                                                           mpm_matls_sub,
                                                           d_press_matl,
                                                           all_matls);
@@ -1552,6 +1555,7 @@ void ICE::scheduleMaxMach_on_Lodi_BC_Faces(SchedulerP& sched,
 _____________________________________________________________________*/
 void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
                                     const PatchSet* patch_set,
+                                    const double AMR_subCycleProgressVar,
                                     const MaterialSubset* ice_matlsub,
                                     const MaterialSubset* /*mpm_matls*/,
                                     const MaterialSubset* /*press_matl*/,
@@ -1562,7 +1566,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   
   cout_doing << "ICE::scheduleAdvectAndAdvanceInTime" << endl;
   Task* task = scinew Task("ICE::advectAndAdvanceInTime",
-                     this, &ICE::advectAndAdvanceInTime);
+                     this, &ICE::advectAndAdvanceInTime, AMR_subCycleProgressVar);
 //  task->requires(Task::OldDW, lb->delTLabel);     for AMR
   task->requires(Task::NewDW, lb->uvel_FCMELabel,      gac,2);
   task->requires(Task::NewDW, lb->vvel_FCMELabel,      gac,2);
@@ -1582,6 +1586,45 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   task->computes(lb->temp_CCLabel);
   task->computes(lb->vel_CCLabel);
   task->computes(lb->machLabel);  
+
+/*`==========TESTING==========*/
+#if 0
+  task->computes(lb->mass_X_FC_fluxLabel);
+  task->computes(lb->mass_Y_FC_fluxLabel);
+  task->computes(lb->mass_Z_FC_fluxLabel);
+
+  task->computes(lb->mom_X_FC_fluxLabel);
+  task->computes(lb->mom_Y_FC_fluxLabel);
+  task->computes(lb->mom_Z_FC_fluxLabel);
+  
+  task->computes(lb->sp_vol_X_FC_fluxLabel);
+  task->computes(lb->sp_vol_Y_FC_fluxLabel);
+  task->computes(lb->sp_vol_Z_FC_fluxLabel);
+  
+  task->computes(lb->int_eng_X_FC_fluxLabel);
+  task->computes(lb->int_eng_Y_FC_fluxLabel);
+  task->computes(lb->int_eng_Z_FC_fluxLabel);  
+  
+  if(AMR_subCycleProgressVar> 0){
+    task->requires(Task::OldDW, lb->mass_X_FC_fluxLabel, gn, 0);
+    task->requires(Task::OldDW, lb->mass_Y_FC_fluxLabel, gn, 0);
+    task->requires(Task::OldDW, lb->mass_Z_FC_fluxLabel, gn, 0);
+    
+    task->requires(Task::OldDW, lb->mom_X_FC_fluxLabel, gn, 0);
+    task->requires(Task::OldDW, lb->mom_Y_FC_fluxLabel, gn, 0);
+    task->requires(Task::OldDW, lb->mom_Z_FC_fluxLabel, gn, 0);
+    
+    task->requires(Task::OldDW, lb->sp_vol_X_FC_fluxLabel, gn, 0);
+    task->requires(Task::OldDW, lb->sp_vol_Y_FC_fluxLabel, gn, 0);
+    task->requires(Task::OldDW, lb->sp_vol_Z_FC_fluxLabel, gn, 0);
+    
+    task->requires(Task::OldDW, lb->int_eng_X_FC_fluxLabel, gn, 0);
+    task->requires(Task::OldDW, lb->int_eng_Y_FC_fluxLabel, gn, 0);
+    task->requires(Task::OldDW, lb->int_eng_Z_FC_fluxLabel, gn, 0);
+  }
+  // needto do something for the scalar-f variables.
+#endif
+/*===========TESTING==========`*/  
   
   //__________________________________
   // Model Variables.
@@ -2194,7 +2237,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     }
 
     press_new.copyData(press);
-
+    
     //__________________________________
     // Compute rho_micro, volfrac
     for (int m = 0; m < numMatls; m++) {
@@ -3453,7 +3496,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
 
         //__________________________________
         //    X - M O M E N T U M 
-        pressure_source = (pressX_FC[right]-pressX_FC[left]) * vol_frac[c];
+        pressure_source = (pressX_FC[right]-pressX_FC[left]) * vol_frac[c]; 
         
         press_force[c][0] = -pressure_source * areaX; 
                
@@ -3467,7 +3510,8 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
 
         //__________________________________
         //    Y - M O M E N T U M
-        pressure_source = (pressY_FC[top]-pressY_FC[bottom])* vol_frac[c];
+        pressure_source = (pressY_FC[top]-pressY_FC[bottom])* vol_frac[c]; 
+
          
         press_force[c][1] = -pressure_source * areaY;
         
@@ -3479,9 +3523,10 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
                            viscous_source +
                            mass * gravity.y() * include_term) * delT ); 
    
-      //__________________________________
-      //    Z - M O M E N T U M
-        pressure_source = (pressZ_FC[front]-pressZ_FC[back]) * vol_frac[c];
+        //__________________________________
+        //    Z - M O M E N T U M
+        pressure_source = (pressZ_FC[front]-pressZ_FC[back]) * vol_frac[c]; 
+
         
         press_force[c][2] = -pressure_source * areaZ;
         
@@ -4570,7 +4615,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
                                  const PatchSubset* patches,
                                  const MaterialSubset* /*matls*/,
                                  DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw)
+                                 DataWarehouse* new_dw,
+                                 const double AMR_subCycleProgressVar)
 {
   const Level* level = getLevel(patches);
 
@@ -4641,6 +4687,18 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       mass_advected.initialize(0.0);
       vel_CC.initialize(Vector(0.0,0.0,0.0));
       qV_advected.initialize(Vector(0.0,0.0,0.0)); 
+      
+      //__________________________________
+      // common variables that get passed into the advection operators
+      advectVarBasket* varBasket = scinew advectVarBasket();
+      varBasket->new_dw = new_dw;
+      varBasket->old_dw = old_dw;
+      varBasket->indx = indx;
+      varBasket->patch = patch;
+      varBasket->lb  = lb;
+      varBasket->doAMR = false;
+      varBasket->useCompatibleFluxes = d_useCompatibleFluxes;
+      varBasket->AMR_subCycleProgressVar = AMR_subCycleProgressVar;
 
       //__________________________________
       //   Advection preprocessing
@@ -4650,7 +4708,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
 
       //__________________________________
       // Advect mass and backout rho_CC
-      advector->advectMass(mass_L, patch,mass_advected, new_dw);
+      advector->advectMass(mass_L, mass_advected,  varBasket);
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
@@ -4660,9 +4718,10 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
 
       //__________________________________
       // Advect  momentum and backout vel_CC
-      bool is_Q_massSpecific   = true;
-      advector->advectQ(d_useCompatibleFluxes, is_Q_massSpecific,
-                        mom_L_ME,mass_L, patch,qV_advected, new_dw);
+      varBasket->is_Q_massSpecific   = true;
+      varBasket->desc = "mom";
+      
+      advector->advectQ(mom_L_ME,mass_L,qV_advected, varBasket);
 
       update_q_CC<constCCVariable<Vector>, Vector>
                  ("velocity",vel_CC, mom_L_ME, qV_advected, mass_new,cv, patch);
@@ -4679,9 +4738,10 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       //__________________________________
       // Advection of specific volume
       // Note sp_vol_L[m] is actually sp_vol[m] * mass
-      is_Q_massSpecific   = true;
-      advector->advectQ(d_useCompatibleFluxes, is_Q_massSpecific,
-                        sp_vol_L,mass_L, patch,q_advected, new_dw); 
+      varBasket->is_Q_massSpecific = true;
+      varBasket->desc = "sp_vol";
+      
+      advector->advectQ(sp_vol_L,mass_L, q_advected, varBasket); 
 
       update_q_CC<constCCVariable<double>, double>
              ("sp_vol",sp_vol_CC, sp_vol_L, q_advected, mass_new, cv,patch);
@@ -4702,10 +4762,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
             new_dw->allocateAndPut(q_CC, tvar->var,     indx, patch);
             new_dw->get(q_L_CC,   tvar->var_Lagrangian, indx, patch, gac, 2); 
             
-            bool useCompatibleFluxes = true;
-            is_Q_massSpecific   = true;
-            advector->advectQ(useCompatibleFluxes, is_Q_massSpecific,
-                              q_L_CC,mass_L, patch,q_advected, new_dw);  
+            varBasket->is_Q_massSpecific = true;
+            advector->advectQ(q_L_CC,mass_L,q_advected, varBasket);  
    
             update_q_CC<constCCVariable<double>, double>
                  ("q_L_CC",q_CC, q_L_CC, q_advected, mass_new, cv, patch);
@@ -4745,9 +4803,9 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
 
       //__________________________________
       // Advect internal energy and backout Temp_CC
-      is_Q_massSpecific   = true;
-      advector->advectQ(d_useCompatibleFluxes, is_Q_massSpecific,
-                        int_eng_L_ME, mass_L, patch,q_advected, new_dw);
+      varBasket->is_Q_massSpecific = true;
+      varBasket->desc = "int_eng";
+      advector->advectQ(int_eng_L_ME, mass_L, q_advected, varBasket);
       
       update_q_CC<constCCVariable<double>, double>
             ("energy",temp, int_eng_L_ME, q_advected, mass_new, cv_new, patch);
@@ -4806,6 +4864,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
              << neg_cell << " negative sp_vol_CC\n ";        
        throw InvalidValue(warn.str());
       } 
+      delete varBasket;
     }  // ice_matls loop
     delete advector;
   }  // patch loop
