@@ -216,8 +216,8 @@ Object::_deleteReference()
     //TODO: 
     //    try to cast the pointer to possible objects such as Typemap, UIPort, goPort etc to find out which one caused the refcnt problem. Review the PHello program and addProvidesPort and related programs first. It may save some time. 
     int mpi_size, mpi_rank;
-    MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
 #ifdef TRACED_OBJ
+    MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
     if(dynamic_cast<TRACED_OBJ *>(this)){
       ::std::cout << "############# "<<TRACED_OBJ_NAME<<"("<<mpi_rank<<") deleted \n";
     }
