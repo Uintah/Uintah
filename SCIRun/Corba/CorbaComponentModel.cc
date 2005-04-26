@@ -28,7 +28,7 @@
 
 
 /*
- *  VtkComponentModel.cc: 
+ *  CorbaComponentModel.cc: 
  *
  *  Written by:
  *   Keming Zhang
@@ -38,9 +38,9 @@
  *
  */
 
-#include <SCIRun/Vtk/VtkComponentModel.h>
-#include <SCIRun/Vtk/VtkComponentDescription.h>
-#include <SCIRun/Vtk/VtkComponentInstance.h>
+#include <SCIRun/Corba/CorbaComponentModel.h>
+#include <SCIRun/Corba/CorbaComponentDescription.h>
+#include <SCIRun/Corba/CorbaComponentInstance.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/SCIRunErrorHandler.h>
 #include <Core/Containers/StringUtil.h>
@@ -49,6 +49,7 @@
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Util/soloader.h>
 #include <Core/Util/Environment.h>
+#include <Core/Util/sci_system.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <string>
 
@@ -67,8 +68,9 @@
 #endif
 
 #include <iostream>
-#include <SCIRun/Vtk/Port.h>
-#include <SCIRun/Vtk/Component.h>
+#include <SCIRun/Corba/Port.h>
+#include <SCIRun/Corba/Component.h>
+#include <SCIRun/Corba/Services.h>
 
 extern "C" {
 #include <string.h>
@@ -77,12 +79,12 @@ extern "C" {
 namespace SCIRun {
 
 
-const std::string VtkComponentModel::DEFAULT_PATH =
-std::string("/CCA/Components/VTK/xml");
+const std::string CorbaComponentModel::DEFAULT_PATH =
+    std::string("/CCA/Components/CORBA/xml");
 
 
-VtkComponentModel::VtkComponentModel(SCIRunFramework* framework)
-  : ComponentModel("vtk"), framework(framework)
+CorbaComponentModel::CorbaComponentModel(SCIRunFramework* framework)
+  : ComponentModel("corba"), framework(framework)
 {
   // move to framework properties
   // Record the path containing DLLs for components.
@@ -99,12 +101,12 @@ VtkComponentModel::VtkComponentModel(SCIRunFramework* framework)
   buildComponentList();
 }
 
-VtkComponentModel::~VtkComponentModel()
+CorbaComponentModel::~CorbaComponentModel()
 {
   destroyComponentList();
 }
 
-void VtkComponentModel::destroyComponentList()
+void CorbaComponentModel::destroyComponentList()
 {
   for(componentDB_type::iterator iter=components.begin();
       iter != components.end(); iter++)
@@ -114,7 +116,7 @@ void VtkComponentModel::destroyComponentList()
   components.clear();
 }
 
-void VtkComponentModel::buildComponentList()
+void CorbaComponentModel::buildComponentList()
 {
   // Initialize the XML4C system
   try {
@@ -145,20 +147,20 @@ void VtkComponentModel::buildComponentList()
 
     for (SSIDL::array1<std::string>::iterator it = sArray.begin(); it != sArray.end(); it++) {
         Dir d(*it);
-        std::cerr << "VTK Component Model: Looking at directory: " << *it << std::endl;
+        std::cerr << "CORBA Component Model: Looking at directory: " << *it << std::endl;
         std::vector<std::string> files;
         d.getFilenamesBySuffix(".xml", files);
 
         for(std::vector<std::string>::iterator iter = files.begin();
             iter != files.end(); iter++) {
           std::string& file = *iter;
-          std::cerr << "VTK Component Model: Looking at file" << file << std::endl;
+          std::cerr << "CORBA Component Model: Looking at file" << file << std::endl;
           readComponentDescription(*it+"/"+file);
         }
   }
 }
 
-void VtkComponentModel::readComponentDescription(const std::string& file)
+void CorbaComponentModel::readComponentDescription(const std::string& file)
 {
   // Instantiate the DOM parser.
   SCIRunErrorHandler handler;
@@ -187,7 +189,7 @@ void VtkComponentModel::readComponentDescription(const std::string& file)
   // Get all the top-level document node
   DOMDocument* document = parser.getDocument();
 
-  // Check that this document is actually describing VTK components
+  // Check that this document is actually describing CORBA components
   DOMElement *metacomponentmodel = static_cast<DOMElement *>(
     document->getElementsByTagName(to_xml_ch_ptr("metacomponentmodel"))->item(0));
 
@@ -221,80 +223,75 @@ void VtkComponentModel::readComponentDescription(const std::string& file)
       //std::cout << "Component name = ->" << component_name << "<-" << std::endl;
 
       // Register this component
-      VtkComponentDescription* cd = new VtkComponentDescription(this, component_name);
-      cd->setLibrary(library_name.c_str()); // record the DLL name
+      CorbaComponentDescription* cd = new CorbaComponentDescription(this, component_name);
+      cd->setExecPath(library_name.c_str()); // record the executable's full path
       this->components[cd->type] = cd;
      }
   }
 }
 
-bool VtkComponentModel::haveComponent(const std::string& type)
+bool CorbaComponentModel::haveComponent(const std::string& type)
 {
   return components.find(type) != components.end();
 }
 
-ComponentInstance* VtkComponentModel::createInstance(const std::string& name,
+ComponentInstance* CorbaComponentModel::createInstance(const std::string& name,
                              const std::string& type)
 {
-  vtk::Component *component;
+  corba::Component *component;
 
   componentDB_type::iterator iter = components.find(type);
   if (iter == components.end()) { // could not find this component
     return 0;
   }
 
-  // Get the list of DLL paths to search for the appropriate component library
-  std::vector<std::string> possible_paths = splitPathString(this->getSidlDLLPath());
-  LIBRARY_HANDLE handle;
+  std::string exec_name = iter->second->getExecPath();
 
-  for (std::vector<std::string>::iterator it = possible_paths.begin();
-       it != possible_paths.end(); it++) {
-    std::string so_name = *it + "/" + iter->second->getLibrary();
-    handle = GetLibraryHandle(so_name.c_str());
-    if (handle)  {  break;   }
+  component = new corba::Component();
+  corba::Services *svc=new corba::Services(component);
+  component->setServices(svc);
+
+  sci::cca::CorbaServices::pointer services(svc);
+  services->addReference();
+  std::string svc_url=services->getURL().getString();
+
+  /*    
+  pid_t child_id=fork();
+  if(child_id==0){
+    //this is child process
+    execl(exec_name.c_str(), exec_name.c_str(), svc_url.c_str(), NULL);
+    exit(0);
+  }else{
+    std::cout<<"**** main process is still running ****"<<std::endl;
+    //this is parent process
+    //do nothing
   }
-   
-  if ( !handle ) {
-    std::cerr << "Could not find component DLL: " << iter->second->getLibrary()
-              << " for type " << type << std::endl;
-    std::cerr << SOError() << std::endl;
-    return 0;
-  }
+  */
+  string cmdline=exec_name+" "+svc_url.c_str()+"&";
+  sci_system(cmdline.c_str());
+
+  services->check();
+
+  //TODO: do we really need a "component" here?
   
-  std::string makername = "make_"+type;
-  for(int i = 0; i < static_cast<int>(makername.size()); i++) {
-    if (makername[i] == '.') { makername[i]='_'; }
-  }
-  
-  //  std::cerr << "looking for symbol:" << makername << std::endl;
-  void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
-  if(!maker_v) {
-    //    std::cerr <<"Cannot load component symbol " << type << std::endl;
-    std::cerr << SOError() << std::endl;
-    return 0;
-  }
-  vtk::Component* (*maker)() = (vtk::Component* (*)())(maker_v);
-  //  std::cerr << "about to create Vtk component" << std::endl;
-  component = (*maker)();
-  
-  VtkComponentInstance* ci = new VtkComponentInstance(framework, name, type,
-                              component);
+  CorbaComponentInstance* ci = new CorbaComponentInstance(framework, name, type,
+							  component);
   return ci;
 }
 
-bool VtkComponentModel::destroyInstance(ComponentInstance *ci)
+bool CorbaComponentModel::destroyInstance(ComponentInstance *ci)
 {
   //TODO: pre-deletion clearance.
   delete ci;  
   return true;
 }
 
-std::string VtkComponentModel::getName() const
+std::string CorbaComponentModel::getName() const
 {
-  return "Vtk";
+  return "Corba";
 }
 
-void VtkComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list,
+void CorbaComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list,
                           bool /*listInternal*/)
 {
   for(componentDB_type::iterator iter=components.begin();
@@ -302,6 +299,5 @@ void VtkComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>
     list.push_back(iter->second);
   }
 }
-
 
 } // end namespace SCIRun

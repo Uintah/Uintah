@@ -58,6 +58,7 @@ class InternalComponentModel;
 class CCAComponentModel;
 class BabelComponentModel;
 class VtkComponentModel;
+class CorbaComponentModel;
 
 /**
  * \class SCIRunFramework
@@ -271,6 +272,8 @@ protected:
   /** A poitner to the Vtk component model.  This pointer is also stored in the
       \em models list. (Can this ivar be removed?) */
   VtkComponentModel* vtk;
+
+  CorbaComponentModel* corba;
   
   //Semaphore d_slave_sema;
 };

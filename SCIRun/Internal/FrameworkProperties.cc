@@ -45,6 +45,7 @@
 #include <SCIRun/CCA/CCAComponentModel.h>
 #include <SCIRun/Babel/BabelComponentModel.h>
 #include <SCIRun/Vtk/VtkComponentModel.h>
+#include <SCIRun/Corba/CorbaComponentModel.h>
 #include <Core/OS/Dir.h>
 #include <Core/Util/Environment.h>
 
@@ -115,6 +116,7 @@ void FrameworkProperties::getSidlPaths()
         sArray.push_back(srcDir + CCAComponentModel::DEFAULT_PATH);
         sArray.push_back(srcDir + BabelComponentModel::DEFAULT_PATH);
         sArray.push_back(srcDir + VtkComponentModel::DEFAULT_PATH);
+        sArray.push_back(srcDir + CorbaComponentModel::DEFAULT_PATH);
         frameworkProperties->putStringArray("sidl_xml_path", sArray);
     }
     // SIDL_DLL_PATH env. variable is read and parsed in VtkComponentModel

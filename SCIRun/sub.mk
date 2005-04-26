@@ -51,7 +51,7 @@ SRCS += $(SRCS) $(SRCDIR)/SCIRunLoader.cc
 endif
 
 
-SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Dataflow $(SRCDIR)/Internal $(SRCDIR)/Vtk
+SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Dataflow $(SRCDIR)/Internal $(SRCDIR)/Vtk $(SRCDIR)/Corba
 ifeq ($(HAVE_BABEL),yes)
  ifeq ($(HAVE_RUBY),yes)
  SUBDIRS += $(SRCDIR)/Bridge
@@ -73,7 +73,8 @@ else
 PSELIBS := Core/OS Core/Containers Core/Util Dataflow/XMLUtil \
 	Dataflow/Network Core/GuiInterface Core/CCA/spec \
 	Core/CCA/PIDL Core/CCA/SSIDL \
-	Core/Exceptions Core/TkExtensions Core/Thread Core/CCA/Comm
+	Core/Exceptions Core/Thread Core/CCA/Comm  
+#Core/TkExtensions 
  ifeq ($(HAVE_RUBY),yes)
    PSELIBS := $(PSELIBS) Core/CCA/tools/strauss
  endif	
