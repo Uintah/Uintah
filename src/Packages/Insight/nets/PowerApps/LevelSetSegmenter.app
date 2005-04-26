@@ -785,6 +785,12 @@ set max_iter 100
 global show_seeds
 set show_seeds 1
 
+global commit_dir
+set commit_dir "/tmp"
+
+global base_filename
+set base_filename "out"
+
 #######################################################
 # Build up a simplistic standalone application.
 #######################################################
@@ -859,6 +865,12 @@ class LevelSetSegmenterApp {
 
 # 	set updating_speed 0
  	set segmenting 0
+
+	set committing 0
+
+	set status_canvas1 ""
+	set status_canvas2 ""
+	set status_width 0
 	
 # 	set pasting_binary 0
 # 	set pasting_float 0
@@ -1027,6 +1039,8 @@ class LevelSetSegmenterApp {
 	    $this create_seeds_frame $process $case
 
 	    $this create_segmentation_frame $process $case
+
+	    $this create_commit_frame $process $case
 
 # #             iwidgets::tabnotebook $process.tnb \
 # #                 -width [expr $process_width - 50] \
@@ -2031,33 +2045,84 @@ class LevelSetSegmenterApp {
 	make_entry $segment.params.rms "Maximum RMS:" \
 	    $mods(LevelSet)-max_rms_change 5
 	pack $segment.params.iter $segment.params.rms \
-	    -side left -anchor nw
+	    -side left -anchor w
 
-	frame $segment.buttons
-	button $segment.buttons.commit -text "Commit" \
-	    -activebackground $next_color \
-	    -background $next_color \
-	    -command "$this commit_segmentation"
-	button $segment.buttons.stop -text "Stop" \
-	    -background "#990000" \
-	    -activebackground "#CC0000" \
+	button $segment.params.stop -text "Stop" \
 	    -command "$this stop_segmentation"
-	button $segment.buttons.go -text "Go" \
+	button $segment.params.go -text "Go" \
 	    -background $execute_color -width 3 \
 	    -activebackground $execute_active_color \
 	    -command "$this start_segmentation"
-	pack $segment.buttons.commit \
-	    $segment.buttons.stop  \
-	    -side left -anchor w -padx 4 -pady 3 -expand yes \
-	    -ipadx 2
-	pack $segment.buttons.go -side right -anchor e -padx 3
+	pack $segment.params.go  $segment.params.stop \
+	    -side right -anchor w -padx 3 
 	
-	pack $segment.params -side top -anchor n -pady 2
-	pack $segment.buttons -side top -anchor n -expand yes -fill x
+	pack $segment.params -side top -anchor n -pady 2 \
+	    -expand yes -fill both
     }
 
 
-    
+    method create_commit_frame {process case} {
+	global mods
+	
+	### Segmenting
+	iwidgets::labeledframe $process.commit \
+	    -labelpos nw -labeltext "6. Commit"
+	pack $process.commit -side top -anchor nw -expand yes -fill x
+	
+	set commit [$process.commit childsite]
+
+	frame $commit.params
+	pack $commit.params -side top -anchor n -expand yes -fill x
+
+ 	global commit_dir
+ 	label $commit.params.cl -text "Commit Dir:"
+ 	entry $commit.params.ce -width 12 \
+ 	    -textvariable commit_dir 
+ 	button $commit.params.cb -text "Browse" \
+ 	    -command "$this change_commit_dir"
+	global base_filename
+	label $commit.params.bl -text "Base Filename:"
+	entry $commit.params.be -width 8 \
+	    -textvariable base_filename
+
+ 	pack $commit.params.cl $commit.params.ce \
+ 	    $commit.params.cb  $commit.params.bl \
+	    $commit.params.be \
+ 	    -side left -anchor w -padx 0 -pady 3 -expand yes
+
+ 	button $commit.params.b -text "Go" \
+	    -width 3 \
+ 	    -activebackground $execute_active_color \
+ 	    -background $execute_color \
+ 	    -command "$this commit_segmentation"
+ 	pack $commit.params.b  \
+ 	    -side right -anchor e -padx 3
+
+	# Status canvas
+	frame $commit.status
+	canvas $commit.status.canvas -bg "white" \
+	    -width [expr $process_width - 75] \
+	    -height 10
+	pack $commit.status.canvas -side top -anchor n \
+	    -pady 3
+	
+	set status_canvas$case $commit.status.canvas
+
+	pack $commit.status -side top -anchor n
+    }
+
+    method change_commit_dir {} {
+	global commit_dir
+	
+	set dir [tk_chooseDirectory -mustexist 1 \
+		     -parent . -title "Select Commit Directory"]
+	if {$dir != ""} {
+	    set commit_dir $dir
+	} else {
+	    tk_messageBox -message "Directory not specified" \
+		-type ok -icon info -parent .standalone
+	}
+    }
     
     
 
@@ -2568,7 +2633,31 @@ class LevelSetSegmenterApp {
 	    set segmenting 0
 
 	    after 500 "set $mods(LevelSet)-max_iterations 0"
-	} 
+	} elseif {$which == $mods(ImageFileWriter-Binary) && \
+		      $state == "Completed"} { 
+	    if {$committing == 1} {
+		set committing 0
+		disableModule $mods(ImageFileWriter-Binary) 1
+
+		# indicate commit on status canvas
+		global $mods(SliceReader)-slice
+		upvar \#0 $mods(SliceReader)-slice s
+		
+		set oldx [expr $s * $status_width]
+		set newx [expr $oldx + $status_width]
+		set r 0
+		set g 139
+		set b 69
+		set c [format "#%02x%02x%02x" $r $g $b]
+
+		$status_canvas1 create rectangle \
+		    $oldx 0 $newx 10 \
+		    -fill $c -outline $c -tags completed
+		$status_canvas2 create rectangle \
+		    $oldx 0 $newx 10 \
+		    -fill $c -outline $c -tags completed
+	    }
+	}
 	
 # # 	if {$which == $mods(PasteImageFilter-Smooth) \
 # # 		&& $state == "Completed"} {
@@ -3873,62 +3962,21 @@ class LevelSetSegmenterApp {
      }
 
     method commit_segmentation {} {
-	puts "FIX ME: implement commit_segmentation"
-	return
+  	global mods commit_dir base_filename
 
-#  	global slice mods axis
-	
-#  	# Add current segmentation into paste image filters 
-#  	if {$axis == 0} {
-#  	    global $mods(PasteImageFilter-Binary)-index
-#  	    global $mods(PasteImageFilter-Float)-index
-#  	    set $mods(PasteImageFilter-Binary)-index $slice
-#  	    set $mods(PasteImageFilter-Float)-index $slice	    
-#  	} elseif {$axis == 1} {
-#  	    global $mods(PasteImageFilter-Binary)-index
-#  	    global $mods(PasteImageFilter-Float)-index
-#  	    set $mods(PasteImageFilter-Binary)-index $slice
-#  	    set $mods(PasteImageFilter-Float)-index $slice
-#  	} else {
-#  	    global $mods(PasteImageFilter-Binary)-index
-#  	    global $mods(PasteImageFilter-Float)-index
-#  	    set $mods(PasteImageFilter-Binary)-index $slice
-#  	    set $mods(PasteImageFilter-Float)-index $slice
-#  	}
+	# Set up writer filename
+	global $mods(ImageFileWriter-Binary)-filename
+	global $mods(SliceReader)-slice
+	upvar \#0 $mods(SliceReader)-slice s
+	set $mods(ImageFileWriter-Binary)-filename \
+	    [file join $commit_dir $base_filename$s.hdr]
 
-#  	# enable pasting modules
-#  	disableModule $mods(PasteImageFilter-Binary) 0
-#  	disableModule $mods(PasteImageFilter-Float) 0
+  	# enable writing module
+	disableModule $mods(ImageFileWriter-Binary) 0
 
-#  	# re-disable volume rendering module and Extract
-#  	disableModule $mods(ImageToNrrd-Vol) 1
-#  	disableModule $mods(Extract-Prev) 1
-
-#  	disableModule $mods(ImageFileWriter-Binary) 1
-#  	disableModule $mods(ImageFileWriter-Float) 1
-
-#  	# execute
-#  	$mods(PasteImageFilter-Binary)-c needexecute
-#  	$mods(PasteImageFilter-Float)-c needexecute
-
-#  	set pasting_binary 1
-#  	set pasting_float 1
-
-#  	# enable volume rendering button
-#  	$attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page3.cs.volren \
-#  	    configure -background $execute_color \
-#  	    -activebackground $execute_active_color -state normal
-#  	$detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page3.cs.volren \
-#  	    configure -background $execute_color \
-#  	    -activebackground $execute_active_color -state normal
-
-#  	set has_committed 1
-#  	# enable saving buttons
-#  	$attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page3.cs.savefl.btn configure -state normal
-#  	$detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page3.cs.savefl.btn configure -state normal
-
-#  	$attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page3.cs.savebin.btn configure -state normal
-#  	$detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page3.cs.savebin.btn configure -state normal
+  	# execute
+	set committing 1
+	$mods(ImageFileWriter-Binary)-c needexecute
      }
 
 #     method current_slice_changed {} {
@@ -4305,7 +4353,7 @@ class LevelSetSegmenterApp {
 
     method SliceReader_changed {var1 var2 var3} {
 	# Slice Reader read in new file so adjust the slice
-	# slider
+	# slider and status canvas width
 	global mods axis
 	set max 0
 	
@@ -4327,6 +4375,8 @@ class LevelSetSegmenterApp {
 	    -to [expr $max - 1]
 	$detachedPFr.f.p.childsite.volumes.childsite.slice.s configure \
 	    -to [expr $max - 1]
+
+	set status_width [expr [expr $process_width - 75]/$max]
     }
     
     method to_smooth_changed {} {
@@ -4485,6 +4535,11 @@ class LevelSetSegmenterApp {
 
     variable pos_seeds_used
     variable neg_seeds_used
+
+    variable committing
+    variable status_canvas1
+    variable status_canvas2
+    variable status_width
 }
 
 LevelSetSegmenterApp app
