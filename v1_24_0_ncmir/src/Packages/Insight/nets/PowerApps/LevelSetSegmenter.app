@@ -282,6 +282,9 @@ set m57 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 978 1337
 # Create a SCIRun->Visualization->ShowField Module
 set m58 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 960 1396]
 
+# Create a Insight->Converters->ImageToNrrd Module
+set m59 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 809 579]
+
 # Create the Connections between Modules
 set c1 [addConnection $m13 0 $m32 0]
 set c2 [addConnection $m13 0 $m31 0]
@@ -293,7 +296,7 @@ set c7 [addConnection $m27 0 $m28 0]
 set c8 [addConnection $m42 0 $m43 0]
 set c9 [addConnection $m42 0 $m44 0]
 set c10 [addConnection $m48 0 $m49 0]
-set c11 [addConnection $m21 0 $m30 0]
+set c11 [addConnection $m59 0 $m30 0]
 set c12 [addConnection $m34 0 $m35 0]
 set c13 [addConnection $m34 0 $m3 0]
 set c14 [addConnection $m40 0 $m17 0]
@@ -344,12 +347,12 @@ set c58 [addConnection $m30 0 $m31 1]
 set c59 [addConnection $m31 0 $m32 1]
 set c60 [addConnection $m35 0 $m24 2]
 set c61 [addConnection $m38 0 $m41 2]
-set c62 [addConnection $m5 0 $m52 2]
+set c62 [addConnection $m21 0 $m30 1]
 set c63 [addConnection $m11 0 $m12 2]
-set c64 [addConnection $m45 0 $m14 2]
+set c64 [addConnection $m5 0 $m14 2]
 set c65 [addConnection $m39 0 $m41 3]
-set c66 [addConnection $m28 0 $m52 3]
-set c67 [addConnection $m46 0 $m14 3]
+set c66 [addConnection $m4 0 $m59 0]
+set c67 [addConnection $m28 0 $m14 3]
 set c68 [addConnection $m25 0 $m14 4]
 set c69 [addConnection $m19 0 $m14 5]
 set c70 [addConnection $m27 0 $m55 0]
@@ -388,10 +391,11 @@ set $m5-widget {1}
 set $m5-green {0.0}
 set $m5-blue {0.0}
 set $m5-auto_execute {0}
+set $m5-send {1}
 
 # Set GUI variables for the Insight->Filters->BinaryThresholdImageFilter Module
-set $m6-inside_value {0}
-set $m6-outside_value {1}
+set $m6-inside_value {1}
+set $m6-outside_value {0}
 
 # Set GUI variables for the Insight->Converters->ImageToField Module
 set $m7-copy {1}
@@ -472,6 +476,7 @@ set $m18-copy {1}
 # Set GUI variables for the SCIRun->Visualization->ShowField Module
 set $m19-nodes-on {0}
 set $m19-edges-on {0}
+set $m19-faces-on {0}
 set $m19-use-transparency {1}
 set $m19-faces-usetexture {1}
 
@@ -494,6 +499,7 @@ set $m22-location {Top Center}
 # Set GUI variables for the SCIRun->Visualization->ShowField Module
 set $m25-nodes-on {0}
 set $m25-edges-on {0}
+set $m25-faces-on {0}
 set $m25-use-transparency {1}
 set $m25-faces-usetexture {1}
 
@@ -517,9 +523,10 @@ set $m28-widget {1}
 set $m28-red {0.0}
 set $m28-green {0.0}
 set $m28-auto_execute {0}
+set $m28-send {1}
 
 # Set GUI variables for the Teem->NrrdData->ChooseNrrd Module
-set $m30-port-index {0}
+set $m30-port-index {1}
 
 # Set GUI variables for the Teem->UnuAtoM->Unu2op Module
 set $m31-operator {min}
@@ -603,7 +610,7 @@ set $m53-location {Top Center}
 
 # Set GUI variables for the Insight->DataIO->SliceReader Module
 setGlobal $m54-filename \
-    "/home/darbyb/work/data/SCIRunData/1.22.0/king_filt.hdr"
+    "/home/darbyb/work/data/SCIRunData/1.22.0/Test.hdr"
 setGlobal $m54-cast_output {1}
 
 set $m56-mapName {BP Seismic}
@@ -613,6 +620,7 @@ set $m56-realres {2}
 
 set $m58-nodes-on {0}
 set $m58-edges-on {0}
+set $m58-faces-on {0}
 set $m58-use-transparency {1}
 
 ####################################################
@@ -732,11 +740,16 @@ set mods(SeedPoints-PosSeeds) $m5
 set mods(SeedPoints-NegSeeds) $m28
 set mods(FieldInfo-Smoothed) $m55
 set mods(ImageToField-Seg) $m18
+set mods(ShowField-Seg) $m19
 
 # Seeds
 set mods(BuildSeedVolume-PosSeeds) $m13
 set mods(BuildSeedVolume-NegSeeds) $m29
 set mods(ImageToNrrd-CurSeed) $m35
+set mods(ShowField-Seed) $m25
+set mods(ChooseNrrd-Seeds) $m30
+set mods(ChooseNrrd-Combine) $m32
+set mods(ImageToNrrd-Prev) $m59
 
 # Isocontours
 set mods(ImageToField-Iso) $m48
@@ -768,8 +781,8 @@ set to_smooth 0
 # set old_seg_icon [image create photo -file ${image_dir}/old-seg.ppm]
 # set updated_seg_icon [image create photo -file ${image_dir}/updated-seg.ppm]
 
-# global show_seeds
-# set show_seeds 1
+global show_seeds
+set show_seeds 1
 
 #######################################################
 # Build up a simplistic standalone application.
@@ -823,6 +836,10 @@ class LevelSetSegmenterApp {
  	set filter_menu1 ""
  	set filter_menu2 ""
 	set filter_type "GradientAnisotropicDiffusion"
+
+ 	set seed_menu1 ""
+ 	set seed_menu2 ""
+	set seed_type "Thresholds and Seed Points"
 # #	set filter_enabled 0
 
 # 	set next_load ""
@@ -830,6 +847,9 @@ class LevelSetSegmenterApp {
 
  	set execute_color "#008b45"
  	set execute_active_color "#31a065"
+
+	set pos_seeds_used 0
+	set neg_seeds_used 0
 
 # 	set has_smoothed 0
 
@@ -883,9 +903,10 @@ class LevelSetSegmenterApp {
  	disableModule $mods(Smooth-Gaussian) 1
 
 	# Disable Seeds
-	disableModule $mods(BuildSeedVolume-PosSeeds) 1
-	disableModule $mods(BuildSeedVolume-NegSeeds) 1
-	disableModule $mods(ImageToNrrd-CurSeed) 1
+#	disableModule $mods(BuildSeedVolume-PosSeeds) 1
+#	disableModule $mods(BuildSeedVolume-NegSeeds) 1
+#	disableModule $mods(ImageToNrrd-CurSeed) 1
+	disableModule $mods(ImageToNrrd-Prev) 1
 
 	# Disable output segmentation
 	disableModule $mods(ImageToField-Seg) 1
@@ -1924,6 +1945,65 @@ class LevelSetSegmenterApp {
 	
 	set seeds [$process.seeds childsite]
 
+	iwidgets::optionmenu $seeds.method -labeltext "Seed Method:" \
+	    -labelpos w -command "$this change_seed_method $seeds.method"
+	pack $seeds.method -side top -anchor nw 
+	
+	set seed_menu$case $seeds.method
+	
+	$seeds.method insert end "Thresholds and Seed Points" \
+	    "Previous Segmentation and Seed Points" "Seed Points Only"
+	$seeds.method select $seed_type
+
+	frame $seeds.points 
+	pack $seeds.points -side top -anchor nw -pady 2 \
+	    -expand yes -fill x
+
+	# positive
+	global $mods(SeedPoints-PosSeeds)-num_seeds
+	trace variable $mods(SeedPoints-PosSeeds)-num_seeds w \
+	    "$this seeds_changed"
+
+	frame $seeds.points.pos -relief groove -borderwidth 2
+	set f $seeds.points.pos
+	label $f.l -text "Positive Seeds: " \
+	    -foreground "#990000"
+	button $f.decr -text "-" -command "$this change_number_of_seeds + -"
+	entry $f.e -textvariable $mods(SeedPoints-PosSeeds)-num_seeds \
+	    -width 4 -foreground "#990000"
+	button $f.incr -text "+" -command "$this change_number_of_seeds + +"
+	bind $f.e <Return> "$this change_number_of_seeds + ="
+	
+	pack $f.l $f.decr $f.e $f.incr -side left -anchor nw \
+	    -expand yes -fill x
+	
+	# negative
+	global $mods(SeedPoints-NegSeeds)-num_seeds
+	trace variable $mods(SeedPoints-NegSeeds)-num_seeds w \
+	    "$this seeds_changed"
+
+	frame $seeds.points.neg -relief groove -borderwidth 2
+	set f $seeds.points.neg
+	label $f.l -text "Negative Seeds: " \
+	    -foreground "blue"
+	button $f.decr -text "-" -command "$this change_number_of_seeds - -"
+	entry $f.e -textvariable $mods(SeedPoints-NegSeeds)-num_seeds \
+	    -width 4 -foreground "blue"
+	button $f.incr -text "+" -command "$this change_number_of_seeds - +"
+	bind $f.e <Return> "$this change_number_of_seeds - ="
+	
+	pack $f.l $f.decr $f.e $f.incr -side left -anchor nw \
+	    -expand yes -fill x
+
+	pack $seeds.points.pos $seeds.points.neg \
+	    -side left -anchor w -padx 3 
+
+	button $seeds.points.b -text "Go" -width 3 \
+	    -background $execute_color \
+	    -activebackground $execute_active_color \
+	    -command "$this create_seeds"
+
+	pack $seeds.points.b -side right -anchor e -padx 3
     }
     
 
@@ -2047,8 +2127,23 @@ class LevelSetSegmenterApp {
 	checkbutton $topr.speed -text "Show Speed Image" \
 	    -variable $mods(ShowField-Speed)-faces-on \
 	    -command "$this toggle_show_speed"
+
+	global show_seeds
+	checkbutton $topr.seeds -text "Show Seed Point Widgets" \
+	    -variable show_seeds -command "$this seeds_changed 1 2 3"
+
+ 	global $mods(ShowField-Seed)-faces-on
+ 	checkbutton $topr.seed -text "Show Current Seed" \
+ 	    -variable $mods(ShowField-Seed)-faces-on \
+	    -command "$this toggle_show_seed"
+
+ 	global $mods(ShowField-Seg)-faces-on
+ 	checkbutton $topr.seg -text "Show Segmentation" \
+ 	    -variable $mods(ShowField-Seg)-faces-on \
+	    -command "$this toggle_show_segmentation"
 	
-	pack $topr.l $topr.speed -side top
+	pack $topr.l $topr.speed $topr.seeds $topr.seed \
+	    $topr.seg -side top
  	pack $topr -side top -anchor n \
  	    -expand 1 -fill both -padx 4 -pady 0
 
@@ -3224,7 +3319,7 @@ class LevelSetSegmenterApp {
 
 	# hide/show proper ui
 	pack forget $attachedPFr.f.p.childsite.smoothing.childsite.gradient
-	pack forget $detachedPFr.f.p.childdsite.smoothing.childsite.gradient
+	pack forget $detachedPFr.f.p.childsite.smoothing.childsite.gradient
 
 	pack forget $attachedPFr.f.p.childsite.smoothing.childsite.curvature
 	pack forget $detachedPFr.f.p.childsite.smoothing.childsite.curvature
@@ -3258,6 +3353,35 @@ class LevelSetSegmenterApp {
 	    $this enable_proper_smooth_module
 	}
     }
+
+    method change_seed_method {w} {
+ 	global mods
+ 	set which [$w get]
+	
+ 	# change attached/detached menu
+ 	$seed_menu1 select $which
+ 	$seed_menu2 select $which
+	
+	set seed_type $which
+
+	global $mods(ChooseNrrd-Seeds)-port-index
+	global $mods(ChooseNrrd-Combine)-port-index
+
+	# change Choose module and turn on/off seeds
+	if {$seed_type == "Seed Points Only"} {
+	    set $mods(ChooseNrrd-Seeds)-port-index 0
+	    set $mods(ChooseNrrd-Combine)-port-index 0
+	} elseif {$seed_type == "Previous Segmentation and Seed Points"} {
+	    set $mods(ChooseNrrd-Seeds)-port-index 0
+	    set $mods(ChooseNrrd-Combine)-port-index 1
+	} elseif {$seed_type == "Thresholds and Seed Points"} {
+	    set $mods(ChooseNrrd-Combine)-port-index 1
+	    set $mods(ChooseNrrd-Seeds)-port-index 1
+	} else {
+	    puts "ERROR: unsupported seed method"
+	    return
+	}	
+    }
     
     method enable_proper_smooth_module {} {
 	global mods to_smooth
@@ -3280,7 +3404,14 @@ class LevelSetSegmenterApp {
 	} else {
 	    set $mods(ChooseImage-Smooth)-port-index 0
 	}
-	
+
+	# Fix BuildSeedVolume modules
+# 	if {$pos_seeds_used == 0} {
+# 	    disableModule $mods(BuildSeedVolume-PosSeeds) 1
+# 	}
+# 	if {$neg_seeds_used == 0} {
+# 	    disableModule $mods(BuildSeedVolume-NegSeeds) 1
+# 	}	
     }
 
     method smooth_slice { } {
@@ -3585,210 +3716,72 @@ class LevelSetSegmenterApp {
 # 	}
 #     }
 
-#     method change_number_of_seeds {type dir} {
-# 	global mods
+     method change_number_of_seeds {type dir} {
+ 	global mods
 
-# 	if {$type == "+"} {
-# 	    # Positive Seeds
-# 	    global $mods(SampleField-Seeds)-num_seeds
-# 	    if {$dir == "+"} {
-# 		set $mods(SampleField-Seeds)-num_seeds [expr [set $mods(SampleField-Seeds)-num_seeds] + 1]
-# 	    } elseif {$dir == "-"} {
-# 		set $mods(SampleField-Seeds)-num_seeds [expr [set $mods(SampleField-Seeds)-num_seeds] - 1]
-# 	    } 
-# 	    if {[set $mods(SampleField-Seeds)-num_seeds] < 0} {
-# 		set $mods(SampleField-Seeds)-num_seeds 0
-# 	    }
-# 	    $mods(SampleField-Seeds) send
-# 	} else {
-# 	    # Negative Seeds
-# 	    global $mods(SampleField-SeedsNeg)-num_seeds
-# 	    if {$dir == "+"} {
-# 		set $mods(SampleField-SeedsNeg)-num_seeds [expr [set $mods(SampleField-SeedsNeg)-num_seeds] + 1]
-# 	    } elseif {$dir == "-"} {
-# 		set $mods(SampleField-SeedsNeg)-num_seeds [expr [set $mods(SampleField-SeedsNeg)-num_seeds] - 1]
-# 	    } 
-# 	    if {[set $mods(SampleField-SeedsNeg)-num_seeds] < 0} {
-# 		set $mods(SampleField-SeedsNeg)-num_seeds 0
-# 	    }
-# 	    $mods(SampleField-SeedsNeg) send
-# 	}
-#     }
+ 	if {$type == "+"} {
+ 	    # Positive Seeds
+ 	    global $mods(SeedPoints-PosSeeds)-num_seeds
+ 	    if {$dir == "+"} {
+ 		set $mods(SeedPoints-PosSeeds)-num_seeds \
+		    [expr [set $mods(SeedPoints-PosSeeds)-num_seeds] + 1]
+ 	    } elseif {$dir == "-"} {
+ 		set $mods(SeedPoints-PosSeeds)-num_seeds \
+		    [expr [set $mods(SeedPoints-PosSeeds)-num_seeds] - 1]
+ 	    } 
+ 	    if {[set $mods(SeedPoints-PosSeeds)-num_seeds] < 0} {
+ 		set $mods(SeedPoints-PosSeeds)-num_seeds 0
+ 	    }
+ 	    $mods(SeedPoints-PosSeeds) send
+ 	} else {
+ 	    # Negative Seeds
+ 	    global $mods(SeedPoints-NegSeeds)-num_seeds
+  	    if {$dir == "+"} {
+ 		set $mods(SeedPoints-NegSeeds)-num_seeds \
+		    [expr [set $mods(SeedPoints-NegSeeds)-num_seeds] + 1]
+ 	    } elseif {$dir == "-"} {
+ 		set $mods(SeedPoints-NegSeeds)-num_seeds \
+		    [expr [set $mods(SeedPoints-NegSeeds)-num_seeds] - 1]
+ 	    } 
+ 	    if {[set $mods(SeedPoints-NegSeeds)-num_seeds] < 0} {
+ 		set $mods(SeedPoints-NegSeeds)-num_seeds 0
+ 	    }
+ 	    $mods(SeedPoints-NegSeeds) send
+ 	}
+     }
+    
+    method create_seeds {} {
+	global seed_method mods
 
-#     method create_seeds {} {
-# 	global seed_method mods
-# 	# Create initial segmentation and display it
-# 	# by executing the appropriate set of modules
-# 	disableModule $mods(Extract-Prev) 1
-# 	disableModule $mods(ImageToNrrd-Prev) 1
-# 	disableModule $mods(UnuAxdelete-Prev) 1
-# 	disableModule $mods(BinaryThreshold-Seeds) 1
+	# Create initial segmentation and display it
+	# by executing the appropriate set of modules
 
-# 	disableModule $mods(ImageToField-Seeds) 0
-# 	disableModule $mods(ImageToField-SeedsNeg) 0
+ 	# Turn on seed in top viewer and segmentation off
+	puts "FIX ME: turn segmentation off and seed on"
 
-# 	disableModule $mods(PasteImageFilter-Binary) 1
-# 	disableModule $mods(PasteImageFilter-Float) 1
+ 	# Turn seed point widgets back on
+ 	global show_seeds
+ 	set show_seeds 1
+ 	$this seeds_changed 1 2 3
 
-# 	# Turn on seed in top viewer and segmentation off
-# 	after 100 \
-# 	    "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (4)\}\" 0; uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (6)\}\" 1; $mods(Viewer)-ViewWindow_0-c redraw"
+ 	# Disable Level Set
+ 	disableModule $mods(LevelSet) 1
 
-# 	# Turn seed point widgets back on
-# 	global show_seeds
-# 	set show_seeds 1
-# 	$this seeds_changed 1 2 3
-
-# 	# Enable Choose module and disable Level Set
-# 	disableModule $mods(ChooseImage-SegInput) 0
-# 	disableModule $mods(LevelSet) 1
-
-# 	if {$seed_method == "points"} {
-# 	    $mods(SampleField-Seeds) send
-# 	    $mods(SampleField-SeedsNeg) send
-# 	} elseif {$seed_method == "prev"} {
-# 	    global $mods(Extract-Prev)-minDim0
-# 	    global $mods(Extract-Prev)-minDim1
-# 	    global $mods(Extract-Prev)-minDim2
-# 	    global $mods(Extract-Prev)-maxDim0
-# 	    global $mods(Extract-Prev)-maxDim1
-# 	    global $mods(Extract-Prev)-maxDim2
-	    
-# 	    set $mods(Extract-Prev)-minDim0 0
-# 	    set $mods(Extract-Prev)-minDim1 0
-# 	    set $mods(Extract-Prev)-minDim2 0
-# 	    set $mods(Extract-Prev)-maxDim0 $size0
-# 	    set $mods(Extract-Prev)-maxDim1 $size1
-# 	    set $mods(Extract-Prev)-maxDim2 $size2
-# 	    global axis
-# 	    global slice
-# 	    if {$slice == 0} {
-# 		# Use last slice
-# 		if {$axis == 0} {
-# 		    set $mods(Extract-Prev)-minDim0 [expr $size0-1]
-# 		    set $mods(Extract-Prev)-maxDim0 $size0
-# 		} elseif {$axis == 1} {
-# 		    set $mods(Extract-Prev)-minDim1 [expr $size1-1]
-# 		    set $mods(Extract-Prev)-maxDim1 $size1
-# 		} else {
-# 		    set $mods(Extract-Prev)-minDim2 [expr $size2-1]
-# 		    set $mods(Extract-Prev)-maxDim2 $size2
-# 		}
-# 	    } else {
-# 		set prev [expr $slice - 1]
-# 		if {$axis == 0} {
-# 		    set $mods(Extract-Prev)-minDim0 $prev
-# 		    set $mods(Extract-Prev)-maxDim0 $slice
-# 		} elseif {$axis == 1} {
-# 		    set $mods(Extract-Prev)-minDim1 $prev
-# 		    set $mods(Extract-Prev)-maxDim1 $slice
-# 		} else {
-# 		    set $mods(Extract-Prev)-minDim2 $prev
-# 		    set $mods(Extract-Prev)-maxDim2 $slice
-# 		}
-# 	    }
-
-# 	    disableModule $mods(Extract-Prev) 0
-# 	    disableModule $mods(ImageToNrrd-Prev) 0
-# 	    disableModule $mods(UnuAxdelete-Prev) 0
-# 	    $mods(SampleField-Seeds) send
-# 	    $mods(SampleField-SeedsNeg) send
-# 	    $mods(Extract-Prev)-c needexecute
-# 	}  elseif {$seed_method == "next"} {
-# 	    global $mods(Extract-Prev)-minDim0
-# 	    global $mods(Extract-Prev)-minDim1
-# 	    global $mods(Extract-Prev)-minDim2
-# 	    global $mods(Extract-Prev)-maxDim0
-# 	    global $mods(Extract-Prev)-maxDim1
-# 	    global $mods(Extract-Prev)-maxDim2
-	    
-# 	    set $mods(Extract-Prev)-minDim0 0
-# 	    set $mods(Extract-Prev)-minDim1 0
-# 	    set $mods(Extract-Prev)-minDim2 0
-# 	    set $mods(Extract-Prev)-maxDim0 $size0
-# 	    set $mods(Extract-Prev)-maxDim1 $size1
-# 	    set $mods(Extract-Prev)-maxDim2 $size2
-# 	    global axis
-# 	    global slice
-# 	    set next [expr $slice + 1]
-# 	    set next_1 [expr $next + 1]
-# 	    if {$axis == 0} {
-# 		# Determine if it is the last slice, if so use first
-# 		if {$slice == [expr $size0 - 1]} {
-# 		    set $mods(Extract-Prev)-minDim0 0
-# 		    set $mods(Extract-Prev)-maxDim0 1
-# 		} else {
-# 		    set $mods(Extract-Prev)-minDim0 $next
-# 		    set $mods(Extract-Prev)-maxDim0 $next_1
-# 		}
-# 	    } elseif {$axis == 1} {
-# 		if {$slice == [expr $size1 - 1]} {
-# 		    set $mods(Extract-Prev)-minDim1 0
-# 		    set $mods(Extract-Prev)-maxDim1 1
-# 		} else {
-# 		    set $mods(Extract-Prev)-minDim1 $next
-# 		    set $mods(Extract-Prev)-maxDim1 $next_1
-# 		}
-# 	    } else {
-# 		if {$slice == [expr $size2 - 1]} {
-# 		    set $mods(Extract-Prev)-minDim2 0
-# 		    set $mods(Extract-Prev)-maxDim2 1
-# 		} else {
-# 		    set $mods(Extract-Prev)-minDim2 $next
-# 		    set $mods(Extract-Prev)-maxDim2 $next_1
-# 		}
-# 	    }
-
-# 	    disableModule $mods(Extract-Prev) 0
-# 	    disableModule $mods(ImageToNrrd-Prev) 0
-# 	    disableModule $mods(UnuAxdelete-Prev) 0
-# 	    $mods(SampleField-Seeds) send
-# 	    $mods(SampleField-SeedsNeg) send
-# 	    $mods(Extract-Prev)-c needexecute
-# 	}  elseif {$seed_method == "curr"} {
-# 	    global $mods(Extract-Prev)-minDim0
-# 	    global $mods(Extract-Prev)-minDim1
-# 	    global $mods(Extract-Prev)-minDim2
-# 	    global $mods(Extract-Prev)-maxDim0
-# 	    global $mods(Extract-Prev)-maxDim1
-# 	    global $mods(Extract-Prev)-maxDim2
-	    
-# 	    set $mods(Extract-Prev)-minDim0 0
-# 	    set $mods(Extract-Prev)-minDim1 0
-# 	    set $mods(Extract-Prev)-minDim2 0
-# 	    set $mods(Extract-Prev)-maxDim0 $size0
-# 	    set $mods(Extract-Prev)-maxDim1 $size1
-# 	    set $mods(Extract-Prev)-maxDim2 $size2
-# 	    global axis
-# 	    global slice
-# 	    set next [expr $slice + 1]
-# 	    if {$axis == 0} {
-# 		set $mods(Extract-Prev)-minDim0 $slice
-# 		set $mods(Extract-Prev)-maxDim0 $next
-# 	    } elseif {$axis == 1} {
-# 		set $mods(Extract-Prev)-minDim1 $slice
-# 		set $mods(Extract-Prev)-maxDim1 $next
-# 	    } else {
-# 		set $mods(Extract-Prev)-minDim2 $slice
-# 		set $mods(Extract-Prev)-maxDim2 $next
-# 	    }
-
-# 	    disableModule $mods(Extract-Prev) 0
-# 	    disableModule $mods(ImageToNrrd-Prev) 0
-# 	    disableModule $mods(UnuAxdelete-Prev) 0
-# 	    $mods(SampleField-Seeds) send
-# 	    $mods(SampleField-SeedsNeg) send
-# 	    $mods(Extract-Prev)-c needexecute
-# 	} elseif {$seed_method == "thresh"} {
-# 	    disableModule $mods(BinaryThreshold-Seeds) 0
-# 	    $mods(SampleField-Seeds) send
-# 	    $mods(SampleField-SeedsNeg) send
-# 	    $mods(BinaryThreshold-Seeds)-c needexecute
-# 	} else {
-# 	    puts "ERROR: cannot create seeds"
-# 	    return
-# 	}
-#     }
+ 	if {$seed_type == "Seed Points Only"} {
+ 	    $mods(SeedPoints-PosSeeds) send
+ 	    $mods(SeedPoints-NegSeeds) send
+ 	} elseif {$seed_type == "Previous Segmentation and Seed Points"} {
+ 	    $mods(SeedPoints-PosSeeds) send
+ 	    $mods(SeedPoints-NegSeeds) send
+ 	} elseif {$seed_type == "Thresholds and Seed Points"} {
+ 	    $mods(SeedPoints-PosSeeds) send
+ 	    $mods(SeedPoints-NegSeeds) send
+ 	    $mods(BinaryThreshold-Seed)-c needexecute
+ 	} else {
+ 	    puts "ERROR: cannot create seeds"
+ 	    return
+ 	}
+     }
 
 #     method start_segmentation {type} {
 # 	global max_iter mods
@@ -4118,115 +4111,66 @@ class LevelSetSegmenterApp {
 # 	set data(-command) "wm withdraw .ui$m"
 #     }
 
-#     method seeds_changed {a b c} {
-# 	global mods show_seeds
-# 	global $mods(SampleField-Seeds)-num_seeds
+     method seeds_changed {a b c} {
+	 global mods show_seeds
+	 
+	 set val 0
+	 if {$show_seeds == 1} {
+	     set val 1
+	 }
 
-# 	global $mods(SampleField-Seeds)-num_seeds
-
-# 	set val 0
-# 	if {$show_seeds == 1} {
-# 	    set val 1
-# 	}
-
-# 	# Turn ViewWindow_0 seeds on/off depending on val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint0 (7)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint1 (7)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint2 (7)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint3 (7)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint4 (7)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint5 (7)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint6 (7)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint7 (7)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint8 (7)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint9 (7)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint10 (7)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint11 (7)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint12 (7)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint13 (7)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint14 (7)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint15 (7)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint16 (7)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint17 (7)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint18 (7)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint19 (7)} $val
-
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint0 (8)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint1 (8)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint2 (8)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint3 (8)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint4 (8)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint5 (8)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint6 (8)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint7 (8)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint8 (8)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint9 (8)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint10 (8)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint11 (8)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint12 (8)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint13 (8)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint14 (8)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint15 (8)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint16 (8)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint17 (8)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint18 (8)} $val
-# 	setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint19 (8)} $val
+	 # Turn ViewWindow_0 seeds on/off depending on val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint0 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint1 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint2 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint3 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint4 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint5 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint6 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint7 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint8 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint9 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint10 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint11 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint12 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint13 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint14 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint15 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint16 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint17 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint18 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint19 (3)} $val
+	 
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint0 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint1 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint2 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint3 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint4 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint5 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint6 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint7 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint8 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint9 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint10 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint11 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint12 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint13 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint14 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint15 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint16 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint17 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint18 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint19 (4)} $val
+	 
+	 $mods(Viewer)-ViewWindow_0-c redraw
+	 
+	 #	for {set i 0} {$i < [set $mods(SeedPoints-PosSeeds)-num_seeds]} {incr i} {
+	 #	    setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint (5)} $val
+	 #	    upvar \#0 {$mods(Viewer)-ViewWindow_1-SeedPoint$i (5)} point
+	 #	    puts [set point]
+	 #	}
 	
-
-# 	# Assume no more than 20 seeds - HACK
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint0 (7)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint1 (7)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint2 (7)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint3 (7)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint4 (7)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint5 (7)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint6 (7)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint7 (7)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint8 (7)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint9 (7)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint10 (7)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint11 (7)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint12 (7)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint13 (7)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint14 (7)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint15 (7)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint16 (7)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint17 (7)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint18 (7)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint19 (7)} 0
-
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint0 (8)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint1 (8)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint2 (8)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint3 (8)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint4 (8)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint5 (8)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint6 (8)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint7 (8)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint8 (8)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint9 (8)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint10 (8)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint11 (8)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint12 (8)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint13 (8)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint14 (8)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint15 (8)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint16 (8)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint17 (8)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint18 (8)} 0
-# 	setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint19 (8)} 0
-
-# 	$mods(Viewer)-ViewWindow_0-c redraw
-# 	$mods(Viewer)-ViewWindow_1-c redraw
-
-
-# #	for {set i 0} {$i < [set $mods(SampleField-Seeds)-num_seeds]} {incr i} {
-# #	    setGlobal {$mods(Viewer)-ViewWindow_1-SeedPoint (5)} $val
-# #	    upvar \#0 {$mods(Viewer)-ViewWindow_1-SeedPoint$i (5)} point
-# #	    puts [set point]
-# #	}
-	
-#     }
+     }
 
 #     method change_slice_icon {state} {
 # 	set icon ""
@@ -4403,6 +4347,36 @@ class LevelSetSegmenterApp {
 	    $mods(ShowField-Speed)-c toggle_display_faces
 	}
     }
+
+    method toggle_show_seed {} {
+	global mods
+	global $mods(ShowField-Seed)-faces-on
+	
+	if {[set $mods(ShowField-Seed)-faces-on] == 0} {
+	    disableModule $mods(ImageToNrrd-CurSeed) 1
+	    $mods(ShowField-Seed)-c toggle_display_faces
+	} else {
+	    disableModule $mods(ImageToNrrd-CurSeed) 0
+	    
+#	    $mods(ImageToField-Seed)-c needexecute
+	    $mods(ShowField-Seed)-c toggle_display_faces
+	}
+    }
+
+    method toggle_show_segmentation {} {
+	global mods
+	global $mods(ShowField-Seg)-faces-on
+	
+	if {[set $mods(ShowField-Seg)-faces-on] == 0} {
+	    disableModule $mods(ImageToField-Seg) 1
+	    $mods(ShowField-Seg)-c toggle_display_faces
+	} else {
+	    disableModule $mods(ImageToField-Seg) 0
+	    
+#	    $mods(ImageToField-Seg)-c needexecute
+	    $mods(ShowField-Seg)-c toggle_display_faces
+	}
+    }
     
     method make_entry {w text v {wi -1}} {
 	frame $w
@@ -4443,6 +4417,10 @@ class LevelSetSegmenterApp {
     variable filter_menu2
     variable filter_type
 
+    variable seed_menu1
+    variable seed_menu2
+    variable seed_type
+
     variable next_load
     variable next_smooth
 
@@ -4471,6 +4449,9 @@ class LevelSetSegmenterApp {
     variable segmenting 
 
     variable has_committed
+
+    variable pos_seeds_used
+    variable neg_seeds_used
 }
 
 LevelSetSegmenterApp app
@@ -4499,3 +4480,13 @@ bind all <Control-v> {
     global mods
     $mods(Viewer-Vol)-ViewWindow_0-c autoview
 }
+
+# Known Bugs
+# Reverse Expansion doesn't seem to do anything to speed image.
+
+# Status indicator doesn't keep spinning at first
+#  when the speed image and stuff is still being updated.
+
+# If positive seed points are set to 0, the entire seed is on,
+#  regardless of the number of negative points (only for Seed
+#  Points Only case).
