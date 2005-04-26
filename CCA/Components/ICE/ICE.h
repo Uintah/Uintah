@@ -160,6 +160,7 @@ namespace Uintah {
                                                                                          
       void scheduleAdvectAndAdvanceInTime(SchedulerP&, 
                                           const PatchSet*,
+                                          const double AMR_subCycleProgressVar,
                                           const MaterialSubset*,
                                           const MaterialSubset*,
                                           const MaterialSubset*,
@@ -398,7 +399,8 @@ namespace Uintah {
                                   const PatchSubset* patches,
                                   const MaterialSubset* matls,
                                   DataWarehouse*,
-                                  DataWarehouse*);
+                                  DataWarehouse*,
+                                  const double AMR_subCycleProgressVar);
                                   
 //__________________________________
 //   RF TASKS    

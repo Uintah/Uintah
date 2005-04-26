@@ -7,6 +7,8 @@
 #include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Labels/ICELabel.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Geometry/Vector.h>
 
 namespace Uintah {
@@ -14,6 +16,19 @@ namespace Uintah {
   class DataWarehouse;
   class Patch;
 
+  struct advectVarBasket{
+      bool useCompatibleFluxes;
+      bool is_Q_massSpecific;
+      DataWarehouse* new_dw;
+      DataWarehouse* old_dw;
+      ICELabel* lb;
+      double AMR_subCycleProgressVar;
+      int indx;
+      string desc;
+      const Patch* patch;
+      bool doAMR;
+  };
+  
   class Advector {
 
   public:
@@ -40,26 +55,19 @@ namespace Uintah {
                           SFCZVariable<double>& q_ZFC,
 			     DataWarehouse* /*new_dw*/)=0;
 
-    virtual void advectQ(const bool useCompatibleFluxes,
-                         const bool is_Q_massSpecific,
-                         const CCVariable<double>& q_CC,
+    virtual void advectQ(const CCVariable<double>& q_CC,
                          const CCVariable<double>& mass,
-                         const Patch* patch,
                          CCVariable<double>& q_advected,
-                         DataWarehouse* new_dw)=0;
+                         advectVarBasket* vb)=0;
     
-    virtual void advectQ(const bool useCompatibleFluxes,
-                         const bool is_Q_massSpecific,
-                         const CCVariable<Vector>& q_CC,
+    virtual void advectQ(const CCVariable<Vector>& q_CC,
                          const CCVariable<double>& mass,
-                         const Patch* patch,
                          CCVariable<Vector>& q_advected,
-                         DataWarehouse* new_dw)=0; 
+                         advectVarBasket* vb)=0; 
                          
     virtual void advectMass(const CCVariable<double>& mass,
-                           const Patch* patch,
                            CCVariable<double>& q_advected,
-			      DataWarehouse* new_dw)=0;
+                           advectVarBasket* vb)=0;
 
                         
     int OF_slab[6];          // outflux slab
@@ -93,6 +101,8 @@ namespace Uintah {
     {
       return d1 == 0.0 ? d2:d3;
     }
+    
+
  /*______________________________________________________________________
  *   C O M M O N L Y   U S E D 
  *______________________________________________________________________*/ 
@@ -103,12 +113,16 @@ namespace Uintah {
   enum CORNER {TOP_R_BK = 0, TOP_R_FR, TOP_L_BK, TOP_L_FR, BOT_R_BK, 
              BOT_R_FR, BOT_L_BK, BOT_L_FR}; 
 
+  //__________________________________
+  // converts patch face into cell Face
+  int patchFaceToCellFace(Patch::FaceType face);
+
    // These inlined functions are passed into advect() and calculate the face
    // value of q_CC.  Note only one version of advectQ needs to compute q_FC thus
    // we have the ignoreFaceFluxes functions.  This really cuts down on Code
    // bloat by eliminating the need for a specialized version of advect 
   
-  class ignoreFaceFluxesD {
+  class ignore_q_FC_calc_D {     // does nothing
     public:
     inline void operator()( const IntVector&,
 			    SFCXVariable<double>&, 
@@ -121,7 +135,7 @@ namespace Uintah {
     }
   };
 
-  class ignoreFaceFluxesV {
+  class ignore_q_FC_calc_V {    // does nothing
     public:
     inline void operator()( const IntVector&,
 			    SFCXVariable<double>&, 
@@ -135,7 +149,8 @@ namespace Uintah {
   };
     
   //__________________________________
-  class saveFaceFluxes {
+  // compute Q at the face center
+  class save_q_FC {
     public:
     inline void operator()( const IntVector& c, 
 			    SFCXVariable<double>& q_XFC,           
