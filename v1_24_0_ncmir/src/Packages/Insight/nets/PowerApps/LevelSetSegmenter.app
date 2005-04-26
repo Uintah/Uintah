@@ -2067,7 +2067,7 @@ class LevelSetSegmenterApp {
 	### Segmenting
 	iwidgets::labeledframe $process.commit \
 	    -labelpos nw -labeltext "6. Commit"
-	pack $process.commit -side top -anchor nw -expand yes -fill x
+	pack $process.commit -side top -anchor nw -expand yes -fill both
 	
 	set commit [$process.commit childsite]
 
@@ -2099,16 +2099,55 @@ class LevelSetSegmenterApp {
  	    -side right -anchor e -padx 3
 
 	# Status canvas
-	frame $commit.status
+	frame $commit.status 
+	label $commit.status.l -text "Committed Slices"
+
 	canvas $commit.status.canvas -bg "white" \
 	    -width [expr $process_width - 75] \
 	    -height 10
-	pack $commit.status.canvas -side top -anchor n \
-	    -pady 3
+	pack $commit.status.l $commit.status.canvas -side top -anchor n \
+	    -pady 3 -padx 3
+
+	bind $commit.status.canvas <ButtonPress-1> "$this show_commit_status"
 	
 	set status_canvas$case $commit.status.canvas
 
 	pack $commit.status -side top -anchor n
+    }
+
+    method show_commit_status {} {
+	set w .standalone.commitstatus
+	
+	if {![winfo exists $w]} {
+	    toplevel $w 
+	    wm title $w "Commit Status"
+
+	    global axis
+	    set s 0
+	    if {$axis == 0} {
+		set s $size0
+	    } elseif {$axis == 1} {
+		set s $size1
+	    } else {
+		set s $size2
+	    }
+
+	    label $w.l -text "Slice Commit Status"
+	    pack $w.l -side top -anchor n
+	    
+	    for {set i 0} {$i < $s} {incr i} {
+		frame $w.s$i
+		label $w.s$i.l -text "Slice $i: $commits($i)"
+		pack $w.s$i.l -side left
+		pack $w.s$i -side top -anchor nw
+	    }
+	    
+	    button $w.b -text "Close" \
+		-command "destroy $w"
+	    pack $w.b -side top -anchor n -pady 3
+	} else {
+	    SciRaise $w
+	}
     }
 
     method change_commit_dir {} {
@@ -2652,10 +2691,12 @@ class LevelSetSegmenterApp {
 
 		$status_canvas1 create rectangle \
 		    $oldx 0 $newx 10 \
-		    -fill $c -outline $c -tags completed
+		    -fill $c -outline "black" -tags completed
 		$status_canvas2 create rectangle \
 		    $oldx 0 $newx 10 \
-		    -fill $c -outline $c -tags completed
+		    -fill $c -outline "black" -tags completed
+
+		set commits($s) 1
 	    }
 	}
 	
@@ -4361,14 +4402,17 @@ class LevelSetSegmenterApp {
 	    global $mods(SliceReader)-size_0
 	    upvar \#0 $mods(SliceReader)-size_0 size
 	    set max $size
+	    set size0 $size
 	} elseif {$axis == 1} {
 	    global $mods(SliceReader)-size_1
 	    upvar \#0 $mods(SliceReader)-size_1 size
 	    set max $size
+	    set size1 $size
 	} else {
 	    global $mods(SliceReader)-size_2
 	    upvar \#0 $mods(SliceReader)-size_2 size
 	    set max $size
+	    set size2 $size
 	}
 	
 	$attachedPFr.f.p.childsite.volumes.childsite.slice.s configure \
@@ -4377,6 +4421,19 @@ class LevelSetSegmenterApp {
 	    -to [expr $max - 1]
 
 	set status_width [expr [expr $process_width - 75]/$max]
+
+	# Clear canvas
+	$status_canvas1 create rectangle \
+	    0 0 [expr $process_width - 75] 10 \
+	    -fill "white" -outline "black" -tags completed
+	$status_canvas2 create rectangle \
+	    0 0 [expr $process_width - 75] 10 \
+	    -fill "white" -outline "black" -tags completed
+
+	# Set commits array
+	for {set i 0} {$i < $max} {incr i} {
+	    set commits($i) 0
+	}
     }
     
     method to_smooth_changed {} {
@@ -4540,6 +4597,7 @@ class LevelSetSegmenterApp {
     variable status_canvas1
     variable status_canvas2
     variable status_width
+    variable commits
 }
 
 LevelSetSegmenterApp app
@@ -4569,7 +4627,8 @@ bind all <Control-v> {
     $mods(Viewer-Vol)-ViewWindow_0-c autoview
 }
 
-# Known Bugs
+# Bugs/ToDo
+###########
 # Reverse Expansion doesn't seem to do anything to speed image.
 
 # Status indicator doesn't keep spinning at first
@@ -4579,4 +4638,11 @@ bind all <Control-v> {
 #  regardless of the number of negative points (only for Seed
 #  Points Only case).
 
-# Previous seed isn't implemented yet.
+# Previous seed isn't implemented yet (need to only offer this
+#  option if a previous slice has been committed or saved.
+
+# Isocontors
+
+# Clean up vis toggle window (hide/showable?)
+
+# Format Commit Status window
