@@ -188,7 +188,6 @@ Module::Module(NetworkCanvasView *parent,
             }
             catch (CCAException e) {
                 viewWindow->p2BuilderWindow->displayMsg(e.message());
-                viewWindow->p2BuilderWindow->displayMsg("\n");
             }
         } else {
             uiButton = 0;
@@ -206,7 +205,6 @@ Module::Module(NetworkCanvasView *parent,
             }
             catch (const Exception& e) {
                 viewWindow->p2BuilderWindow->displayMsg(e.message());
-                viewWindow->p2BuilderWindow->displayMsg("\n");
             }
         }
 
@@ -222,14 +220,13 @@ Module::Module(NetworkCanvasView *parent,
             }
             catch (const Exception& e) {
                 viewWindow->p2BuilderWindow->displayMsg(e.message());
-                viewWindow->p2BuilderWindow->displayMsg("\n");
             }
 
             sci::cca::Port::pointer p = services->getPort(iconName);
             sci::cca::ports::ComponentIcon::pointer icon =
                 pidl_cast<sci::cca::ports::ComponentIcon::pointer>(p);
             if (icon.isNull()) {
-                std::cerr << "icon is not connected\n";
+                std::cerr << "icon is not connected";
             } else {
                 int totalSteps = icon->getProgressBar();
                 if (totalSteps != 0) {
@@ -288,7 +285,6 @@ Module::~Module()
     }
     catch (CCAException e) {
         viewWindow->p2BuilderWindow->displayMsg(e.message());
-        viewWindow->p2BuilderWindow->displayMsg("\n");
     }
 }
 
@@ -383,29 +379,29 @@ PortIcon* Module::port(int portnum, const std::string& model,
     }
 }
 
-void Module::timerEvent(QTimerEvent *e)
-{
-std::cerr << "Module::timerEvent" << std::endl;
-    progress->setProgress(steps++);
-    viewWindow->canvas()->update();
+//void Module::timerEvent(QTimerEvent *e)
+//{
+//std::cerr << "Module::timerEvent" << std::endl;
+//    progress->setProgress(steps++);
+//    viewWindow->canvas()->update();
     //viewWindow->p2BuilderWindow->application()->processEvents();
-    if (steps > progress->totalSteps()) {
-        killTimer(e->timerId());
-    }
-}
+//    if (steps > progress->totalSteps()) {
+//        killTimer(e->timerId());
+//    }
+//}
 
 void Module::go()
 {
     progress->reset();
 
-    std::string instanceName = cid->getInstanceName();
-    std::string goPortName = instanceName + " goPort";
+    //std::string instanceName = cid->getInstanceName();
+    //std::string goPortName = instanceName + " goPort";
     sci::cca::Port::pointer p = services->getPort(goPortName);
     sci::cca::ports::GoPort::pointer goPort =
         pidl_cast<sci::cca::ports::GoPort::pointer>(p);
 
     if (goPort.isNull()) {
-        std::cerr << "goPort is not connected, cannot bring up Go!\n";
+        viewWindow->p2BuilderWindow->displayMsg("goPort is not connected, cannot bring up Go!");
     } else {
         // exception handling?
         //int t = startTimer(0);
@@ -426,7 +422,7 @@ void Module::go()
 
 void Module::stop()
 {
-    viewWindow->p2BuilderWindow->displayMsg("stop() not implemented\n");
+    viewWindow->p2BuilderWindow->displayMsg("stop() not implemented");
 }
 
 void Module::destroy()
@@ -436,14 +432,14 @@ void Module::destroy()
 
 void Module::ui()
 {
-    std::string instanceName = cid->getInstanceName();
+    //std::string instanceName = cid->getInstanceName();
     //std::string uiPortName = instanceName + " uiPort";
 
     sci::cca::Port::pointer p = services->getPort(uiPortName);
     sci::cca::ports::UIPort::pointer uiPort =
         pidl_cast<sci::cca::ports::UIPort::pointer>(p);
     if (uiPort.isNull()) {
-        viewWindow->p2BuilderWindow->displayMsg("uiPort is not connected, cannot bring up UI!\n");
+        viewWindow->p2BuilderWindow->displayMsg("uiPort is not connected, cannot bring up UI!");
     } else {
         int status = uiPort->ui();
 	   std::cerr << "UI status=" << status << std::endl;

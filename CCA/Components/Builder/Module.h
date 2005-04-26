@@ -96,7 +96,7 @@ signals:
 protected:
     virtual void paintEvent(QPaintEvent *);
     virtual void mousePressEvent(QMouseEvent *);
-    virtual void timerEvent(QTimerEvent *);
+    //virtual void timerEvent(QTimerEvent *);
 
     QRect nameRect;
     std::string instanceName;
