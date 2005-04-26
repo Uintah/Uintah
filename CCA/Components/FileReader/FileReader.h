@@ -38,34 +38,20 @@
  *
  */
 
-#ifndef SCIRun_Framework_FileReader_h
-#define SCIRun_Framework_FileReader_h
+#ifndef CCA_Components_FileReader_h
+#define CCA_Components_FileReader_h
 
 #include <Core/CCA/spec/cca_sidl.h>
 
-#define myUIPort FileReaderUIPort
+namespace SCIRun {
 
-//namespace SCIRun {
-  
-
-class FileReader;
-class myUIPort : public virtual sci::cca::ports::UIPort {
+class myPDEdescriptionPort : public virtual sci::cca::ports::PDEdescriptionPort {
 public:
-   virtual ~myUIPort(){}
-   virtual int ui();
-   void setParent(FileReader *com){this->com=com;}
-   FileReader *com;
-};
-
-class myPDEDescriptionPort : public virtual sci::cca::ports::PDEDescriptionPort {
-public:
-   virtual ~myPDEDescriptionPort(){}
-   virtual SSIDL::array1<double> getNodes();
-   virtual SSIDL::array1<int> getBoundaries();
-   virtual SSIDL::array1<int> getDirichletNodes();
-   virtual SSIDL::array1<double> getDirichletValues();
-   void setParent(FileReader *com){this->com=com;}
-   FileReader *com;
+   virtual ~myPDEdescriptionPort(){}
+   virtual int getPDEdescription(SSIDL::array1<double> &nodes, 
+				 SSIDL::array1<int> &boundaries,
+				 SSIDL::array1<int> &dirichletNodes,
+				 SSIDL::array1<double> &dirichletValues);
 };
 
 
@@ -74,24 +60,13 @@ class FileReader : public sci::cca::Component{
   public:
     FileReader();
     virtual ~FileReader();
-
     virtual void setServices(const sci::cca::Services::pointer& svc);
-    
-    SSIDL::array1<double> nodes;
-    SSIDL::array1<int> boundaries;
-    SSIDL::array1<int> dirichletNodes;
-    SSIDL::array1<double> dirichletValues;
   private:
-
     FileReader(const FileReader&);
     FileReader& operator=(const FileReader&);
-    myUIPort uiPort;
-    myPDEDescriptionPort pdePort;
+    myPDEdescriptionPort pdePort;
     sci::cca::Services::pointer services;
   };
-//}
-
-
-
+}
 
 #endif

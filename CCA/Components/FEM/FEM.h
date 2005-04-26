@@ -38,42 +38,19 @@
  *
  */
 
-#ifndef SCIRun_Framework_FEM_h
-#define SCIRun_Framework_FEM_h
+#ifndef CCA_Components_FEM_h
+#define CCA_Components_FEM_h
 
 #include <Core/CCA/spec/cca_sidl.h>
 
-#define myUIPort FEMUIPort
-#define myGoPort FEMGoPort
-
-//namespace SCIRun {
+namespace SCIRun {
  
-class FEM; 
-class myUIPort : public virtual sci::cca::ports::UIPort {
-public:
-  virtual ~myUIPort(){}
-  virtual int ui();
-  void setParent(FEM *com){this->com=com;}
-  FEM *com;
-};
-
-class myGoPort : public virtual sci::cca::ports::GoPort {
-public:
-  virtual ~myGoPort(){}
-  virtual int go();
-  void setParent(FEM *com){this->com=com;}
-  FEM *com;
-};
-
-
-class myPDEMatrixPort: public virtual sci::cca::ports::PDEMatrixPort{
+class myFEMmatrixPort: public virtual sci::cca::ports::FEMmatrixPort{
  public:
-  virtual ~myPDEMatrixPort(){}
-  virtual void getMatrix(SSIDL::array2<double>&);
-  virtual SSIDL::array1<double> getVector();
-  int getSize();
-  void setParent(FEM *com){this->com=com;}
-  FEM *com;  
+  virtual ~myFEMmatrixPort(){}
+  virtual int makeFEMmatrices(const SSIDL::array1<int> &tmesh, const SSIDL::array1<double> &nodes, 
+			      const SSIDL::array1<int> &dirichletNodes, const SSIDL::array1<double> &dirichletValues,
+			      SSIDL::array2<double> &Ag, SSIDL::array1<double> &fg, int &size);
 };
 
 
@@ -82,9 +59,19 @@ class FEM : public sci::cca::Component{
   public:
     FEM();
     virtual ~FEM();
-
     virtual void setServices(const sci::cca::Services::pointer& svc);
-    virtual sci::cca::Services::pointer getServices(){return services;}
+  private:
+    FEM(const FEM&);
+    FEM& operator=(const FEM&);
+    sci::cca::Services::pointer services;
+  };
+
+
+ class FEMgenerator{
+                
+  public:
+    FEMgenerator(const SSIDL::array1<int> &dirichletNodes, const SSIDL::array1<double> &dirichletValues);
+
     void diffTriangle(double b[3], double c[3], double &area,
 			   const double x[3], const double y[3]);
     void localMatrices(double A[3][3], double f[3], 
@@ -94,25 +81,14 @@ class FEM : public sci::cca::Component{
     double source(int index);
     double boundary(int index);
     bool isConst(int index);
-
     SSIDL::array2<double> Ag;
-     //Matrix::pointer Ag;
     SSIDL::array1<double> fg;
+ private:
+    //TODO: need use pointers instead for better performance
     SSIDL::array1<int> dirichletNodes;
     SSIDL::array1<double> dirichletValues;
-    myPDEMatrixPort *matrixPort;
-    myGoPort *goPort;
-
-  private:
-
-    FEM(const FEM&);
-    FEM& operator=(const FEM&);
-    sci::cca::Services::pointer services;
   };
-//}
-
-
-
+}
 
 #endif
 

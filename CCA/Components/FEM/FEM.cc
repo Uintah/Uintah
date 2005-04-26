@@ -57,45 +57,27 @@ extern "C" sci::cca::Component::pointer make_SCIRun_FEM()
 }
 
 
-FEM::FEM()
-{
-  //uiPort.setParent(this);
+FEM::FEM(){
 }
 
-FEM::~FEM()
-{
+FEM::~FEM(){
 }
 
-void FEM::setServices(const sci::cca::Services::pointer& svc)
-{
+void FEM::setServices(const sci::cca::Services::pointer& svc){
   services=svc;
-  //register provides ports here ...  
-
-  sci::cca::TypeMap::pointer props = svc->createTypeMap();
-  //myUIPort::pointer uip(&uiPort);
-  goPort=new myGoPort;
-  myGoPort::pointer gop(goPort);
-  goPort->setParent(this);
-
-  matrixPort=new myPDEMatrixPort;
-  myPDEMatrixPort::pointer matrixp(matrixPort);
-  matrixPort->setParent(this);  
-  //svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", props);
-  svc->addProvidesPort(gop,"go","sci.cca.ports.GoPort", props);
-  svc->addProvidesPort(matrixp,"matrix","sci.cca.ports.PDEMatrixPort", props);
-  svc->registerUsesPort("mesh","sci.cca.ports.MeshPort", props);
-  svc->registerUsesPort("pde","sci.cca.ports.PDEDescriptionPort", props);
-
-  // Remember that if the PortInfo is created but not used in a call to the svc object
-  // then it must be freed.
-  // Actually - the ref counting will take care of that automatically - Steve
+  myFEMmatrixPort::pointer matrixPort(new myFEMmatrixPort);
+  svc->addProvidesPort(matrixPort,"fem_matrix","sci.cca.ports.FEMmatrixPort",  sci::cca::TypeMap::pointer(NULL));
 }
-
+  
+FEMgenerator::FEMgenerator(const SSIDL::array1<int> &dirichletNodes, const SSIDL::array1<double> &dirichletValues){
+  this->dirichletNodes=dirichletNodes;
+  this->dirichletValues=dirichletValues;
+}
 
 //Computes the 1st order differentiation arrays for linear triangles.
 // x, y 3 x 1 arries
-void FEM::diffTriangle(double b[3], double c[3], double &area,
-		       const double x[3], const double y[3])
+void FEMgenerator::diffTriangle(double b[3], double c[3], double &area,
+				const double x[3], const double y[3])
 {
   double A2=(x[1]*y[2]-x[2]*y[1])-(x[0]*y[2]-x[2]*y[0])+(x[0]*y[1]-x[1]*y[0]);
   area=A2/2;
@@ -107,12 +89,7 @@ void FEM::diffTriangle(double b[3], double c[3], double &area,
   }
 }
 
-//define double source(int index) here
-
-
-
-//
-void FEM::localMatrices(double A[3][3], double f[3], 
+void FEMgenerator::localMatrices(double A[3][3], double f[3], 
 			const double x[3], const double y[3])
 {
   double b[3], c[3], area;
@@ -131,19 +108,11 @@ void FEM::localMatrices(double A[3][3], double f[3],
         A[i][j]=area*(b[i]*b[j]+c[i]*c[j]);
     }
   }
-  //cerr<<"A="<<endl;
-  //for(int i=0; i<3; i++){
-  //  for(int j=0; j<3; j++){
-  //    cerr<<A[i][j]<<", ";
-  //  }
-  //}
 }
 
-
-
 //create the global matrices from the local matrices
-void FEM::globalMatrices(const SSIDL::array1<double> &nodes1d,
-			 const SSIDL::array1<int> &tmesh1d)
+void FEMgenerator::globalMatrices(const SSIDL::array1<double> &nodes1d,
+				  const SSIDL::array1<int> &tmesh1d)
 {
  int N=nodes1d.size()/2; 
 
@@ -200,12 +169,12 @@ void FEM::globalMatrices(const SSIDL::array1<double> &nodes1d,
  this->fg=fg;
 }
 
-double FEM::source(int index)
+double FEMgenerator::source(int index)
 {
   return 0;
 }
 
-double FEM::boundary(int index)
+double FEMgenerator::boundary(int index)
 {
   for(unsigned int i=0; i<dirichletNodes.size(); i++){
     if(index==dirichletNodes[i]) return dirichletValues[i];
@@ -213,7 +182,7 @@ double FEM::boundary(int index)
   return 0;
 }
 
-bool FEM::isConst(int index)
+bool FEMgenerator::isConst(int index)
 {
   for(unsigned int i=0; i<dirichletNodes.size(); i++){
     if(index==dirichletNodes[i]) return true;
@@ -221,55 +190,19 @@ bool FEM::isConst(int index)
   return false;
 }
 
+int
+myFEMmatrixPort::makeFEMmatrices(const SSIDL::array1<int> &tmesh, const SSIDL::array1<double> &nodes, 
+				 const SSIDL::array1<int> &dirichletNodes, const SSIDL::array1<double> &dirichletValues,
+				 SSIDL::array2<double> &Ag, SSIDL::array1<double> &fg, int &size){
 
-int myUIPort::ui() 
-{
-  QMessageBox::warning(0, "FEM", "ui() is not in use.");
-  return 0;
-}
-
-
-int myGoPort::go() 
-{
-  sci::cca::Port::pointer pp=com->getServices()->getPort("mesh");	
-  if(pp.isNull()){
-    QMessageBox::warning(0, "FEM", "Port mesh is not available!");
-    return 1;
-  }  
-  sci::cca::ports::MeshPort::pointer meshPort=
-    pidl_cast<sci::cca::ports::MeshPort::pointer>(pp);
-  
-
-  sci::cca::Port::pointer pp2=com->getServices()->getPort("pde");	
-  if(pp2.isNull()){
-    QMessageBox::warning(0, "FEM", "Port pde is not available!");
-    return 1;
-  }  
-  
-
-  sci::cca::ports::PDEDescriptionPort::pointer pdePort=
-    pidl_cast<sci::cca::ports::PDEDescriptionPort::pointer>(pp2);
-
-
-  SSIDL::array1<int> tmesh1d=meshPort->getTriangles();
-  
-  SSIDL::array1<double> nodes1d=pdePort->getNodes();
-
-  com->dirichletNodes=pdePort->getDirichletNodes();
-
-  com->dirichletValues=pdePort->getDirichletValues();
-
-  com->getServices()->releasePort("pde");
-  com->getServices()->releasePort("mesh");
-
-  if(nodes1d.size()==0  || tmesh1d.size()==0){
-    QMessageBox::warning(0,"FEM","Bad mesh or nodes!");
+  FEMgenerator fem(dirichletNodes, dirichletValues);
+  if(nodes.size()==0  || tmesh.size()==0){
+    cerr<<"FEMgenerator: Bad mesh or nodes!";
     return 1;
   }
   else{
-    com->globalMatrices(nodes1d,tmesh1d);
-
-
+    fem.globalMatrices(nodes,tmesh);
+    /*
     int mpi_rank=0; 
     int mpi_size=1;
     //cerr<<"#### Ag.sizes="<<com->Ag.size1()<<":"<<com->Ag.size2()<<endl;
@@ -281,7 +214,7 @@ int myGoPort::go()
     delete dr[0]; 
     delete dr[1];
     com->matrixPort->setCalleeDistribution("DMatrix",arrr); 
-
+    */
     /*
     cerr<<"MATRIX Ag \n======================="<<endl;
     for(int i=0;i<size;i++){
@@ -292,24 +225,11 @@ int myGoPort::go()
     }
     cerr<<"====================================="<<endl;
     */
-    return 0;
   }
-}
- 
-
-void myPDEMatrixPort::getMatrix(SSIDL::array2<double> &dmatrix)
-{
-  dmatrix=com->Ag;
-}
-
-int myPDEMatrixPort::getSize()
-{
-  return com->Ag.size1();
-}
-
-SSIDL::array1<double> myPDEMatrixPort::getVector()
-{
-  return com->fg;
+  Ag=fem.Ag;
+  fg=fem.fg;
+  size=fem.Ag.size1();
+  return 0;
 }
 
 

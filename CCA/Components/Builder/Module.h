@@ -62,8 +62,6 @@ class Module : public QFrame
 public:
     Module(NetworkCanvasView *parent,
            const std::string& name,
-           SSIDL::array1<std::string> &up,
-           SSIDL::array1<std::string> &pp,
            const sci::cca::Services::pointer &services,
            const sci::cca::ComponentID::pointer &cid);
     virtual ~Module();
@@ -73,6 +71,8 @@ public:
     QPoint providesPortPoint(int num);
     PortIcon* getPort(const std::string &name, PortIcon::PortType type);
     NetworkCanvasView* parent() const;
+    void makePorts();
+    void updatePorts();
 
     std::string moduleName() const;
     std::string displayName() const;

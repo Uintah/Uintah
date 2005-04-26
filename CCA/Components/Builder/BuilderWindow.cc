@@ -699,14 +699,10 @@ void BuilderWindow::load()
         }
         sci::cca::ComponentID::pointer cid =
             builder->createInstance(tmp_moduleName, tmp_moduleName, sci::cca::TypeMap::pointer(0));
-        SSIDL::array1<std::string> usesPorts =
-            builder->getUsedPortNames(cid);
-        SSIDL::array1<std::string> providesPorts =
-            builder->getProvidedPortNames(cid);
         services->releasePort("cca.BuilderService");
 
         if (tmp_moduleName != "SCIRun.Builder") {
-            networkCanvasView->addModule(tmp_moduleName, tmp_moduleName_x, tmp_moduleName_y, usesPorts, providesPorts, cid, false); //fixed position
+            networkCanvasView->addModule(tmp_moduleName, tmp_moduleName_x, tmp_moduleName_y,cid, false); //fixed position
         }
         grab_latest_Modules = networkCanvasView->getModules();
         ptr_table.push_back( grab_latest_Modules[grab_latest_Modules.size()-1] );
@@ -847,8 +843,6 @@ Module* BuilderWindow::instantiateBridgeComponent(
         unsetCursor();
         return NULL;
     }
-    SSIDL::array1<std::string> usesPorts = builder->getUsedPortNames(cid);
-    SSIDL::array1<std::string> providesPorts = builder->getProvidedPortNames(cid);
 
     services->releasePort("cca.BuilderService");
     statusBar()->clear();
@@ -858,7 +852,7 @@ Module* BuilderWindow::instantiateBridgeComponent(
         int x = 20;
         int y = 20;
         // reposition module
-        return (networkCanvasView->addModule(className, x, y, usesPorts, providesPorts, cid, true));
+        return (networkCanvasView->addModule(className, x, y, cid, true));
     }
     return NULL;
 }
@@ -897,17 +891,13 @@ void BuilderWindow::componentActivity(const sci::cca::ports::ComponentEvent::poi
                 displayMsg("Error: Cannot find builder service.");
                 return;
             }
-            SSIDL::array1<std::string> usesPorts =
-                builder->getUsedPortNames(e->getComponentID());
-            SSIDL::array1<std::string> providesPorts =
-                builder->getProvidedPortNames(e->getComponentID());
             // add Module to window
             int x = 20;
             int y = 20;
             // reposition module
             networkCanvasView->addModule(
                 e->getComponentID()->getInstanceName(),
-                x, y, usesPorts, providesPorts, e->getComponentID(), true);
+                x, y, e->getComponentID(), true);
             services->releasePort("cca.BuilderService");
         }
     } else if (e->getEventType() == sci::cca::ports::ComponentDestroyed) {

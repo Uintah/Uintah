@@ -38,66 +38,30 @@
  *
  */
 
-#ifndef SCIRun_Framework_Tri_h
-#define SCIRun_Framework_Tri_h
+#ifndef CCA_Components_Tri_h
+#define CCA_Components_Tri_h
 
 #include <Core/CCA/spec/cca_sidl.h>
-#include "Delaunay.h"
 
-//namespace SCIRun {
-
-#define myUIPort TriUIPort
-#define myGoPort TriGoPort
-
-class Tri;
+namespace SCIRun {
   
-class myUIPort : public virtual sci::cca::ports::UIPort {
-public:
-   virtual ~myUIPort(){}
-   virtual int ui();
-   void setParent(Tri *com){this->com=com;}
-   Tri *com;
-};
-
-class myGoPort : public virtual sci::cca::ports::GoPort {
-public:
-   virtual ~myGoPort(){}
-   virtual int go();
-   void setParent(Tri *com){this->com=com;}
-   Tri *com;
-};
-
-class myMeshPort: public virtual sci::cca::ports::MeshPort{
- public:
-  virtual ~myMeshPort(){}
-  virtual SSIDL::array1<int> getTriangles();
-  virtual SSIDL::array1<double> getNodes();
-  void setParent(Tri *com){this->com=com;}
-  Tri *com;  
-};
-
-class Tri : public sci::cca::Component{
-                
+  class myMeshPort: public virtual sci::cca::ports::MeshPort{
+  public:
+    virtual ~myMeshPort(){}
+    virtual int triangulate(const SSIDL::array1<double> &nodes, const SSIDL::array1<int> &boundaries, SSIDL::array1<int> &triangles);
+  };
+  
+  class Tri : public sci::cca::Component{
   public:
     Tri();
     virtual ~Tri();
-
     virtual void setServices(const sci::cca::Services::pointer& svc);
-    Delaunay *mesh;
-    sci::cca::Services::pointer getServices(){return services;}
   private:
-
-    Tri(const Tri&);
-    Tri& operator=(const Tri&);
-    myUIPort uiPort;
-    myGoPort goPort;
-    myMeshPort meshPort;
-    sci::cca::Services::pointer services;
+  Tri& operator=(const Tri&);
+  sci::cca::Services::pointer services;
   };
-//}
-
-
-
+  
+}
 
 #endif
 

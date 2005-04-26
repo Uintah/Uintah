@@ -328,12 +328,10 @@ void NetworkCanvasView::addChild(Module* mod2add, int x , int y, bool reposition
 
 
 Module* NetworkCanvasView::addModule(const std::string& name, int x, int y,
-                  SSIDL::array1<std::string> &up,
-                  SSIDL::array1<std::string> &pp ,
                   const sci::cca::ComponentID::pointer &cid,
                    bool reposition)
 {
-    Module *module = new Module(this, name, up, pp, services, cid);
+    Module *module = new Module(this, name, services, cid);
     addChild(module, x, y, reposition);
 
   connect(module, SIGNAL(destroyModule(Module *)), this, SLOT(removeModule(Module *)));
