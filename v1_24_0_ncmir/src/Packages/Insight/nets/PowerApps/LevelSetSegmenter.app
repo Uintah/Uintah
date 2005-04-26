@@ -288,6 +288,9 @@ set m59 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 809 579]
 # Create a Insight->DataIO->ImageReaderFloat2D Module
 set m60 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat2D" 616 491]
 
+# Create a SCIRun->FieldsGeometry->TransformMesh Module
+set m61 [addModuleAtPosition "SCIRun" "FieldsGeometry" "TransformMesh" 826 1308]
+
 # Create the Connections between Modules
 set c1 [addConnection $m13 0 $m32 0]
 set c2 [addConnection $m13 0 $m31 0]
@@ -327,7 +330,7 @@ set c35 [addConnection $m22 0 $m14 0]
 set c36 [addConnection $m53 0 $m52 0]
 set c37 [addConnection $m43 0 $m45 0]
 set c38 [addConnection $m44 0 $m46 0]
-set c39 [addConnection $m49 0 $m50 0]
+set c39 [addConnection $m49 0 $m61 0]
 set c40 [addConnection $m24 0 $m25 0]
 set c41 [addConnection $m36 0 $m12 0]
 set c42 [addConnection $m36 0 $m1 0]
@@ -366,6 +369,7 @@ set c74 [addConnection $m42 0 $m57 1]
 set c75 [addConnection $m42 0 $m58 0]
 set c76 [addConnection $m57 0 $m58 1]
 set c77 [addConnection $m58 0 $m14 6]
+set c78 [addConnection $m61 0 $m50 0]
 
 # Set GUI variables
 
@@ -597,6 +601,9 @@ set $m49-isoval {1.0}
 set $m49-isoval-typed {1.0}
 set $m49-build_geom {0}
 
+# Set GUI variables for the SCIRun->FieldsCreate->GatherFields Module
+setGlobal $m50-accumulating {1}
+
 # Set GUI variables for the SCIRun->Visualization->ShowField Module
 set $m51-nodes-on {0}
 set $m51-faces-on {0}
@@ -626,6 +633,8 @@ set $m58-nodes-on {0}
 set $m58-edges-on {0}
 set $m58-faces-on {0}
 set $m58-use-transparency {1}
+
+setGlobal $m61-function "result = p + Vector(0.0, 0.0, 0.0);"
 
 ####################################################
 # Determine if load file was passed in, 
@@ -758,6 +767,9 @@ set mods(ImageToNrrd-Prev) $m59
 
 # Isocontours
 set mods(ImageToField-Iso) $m48
+set mods(GatherFields) $m50
+set mods(ShowField-Iso) $m51
+set mods(TransformMesh) $m61
 
 
 global axis
@@ -875,6 +887,8 @@ class LevelSetSegmenterApp {
 	set status_canvas1 ""
 	set status_canvas2 ""
 	set status_width 0
+
+	set has_autoviewed 0
 	
 # 	set pasting_binary 0
 # 	set pasting_float 0
@@ -2703,6 +2717,16 @@ class LevelSetSegmenterApp {
 
 		set commits($s) 1
 	    }
+	} elseif {$which == $mods(GatherFields) && \
+		      $state == "Completed"} {
+	    # disable 3d stuff
+	    disableModule $mods(ImageToField-Iso) 1
+	} elseif {$which == $mods(ShowField-Iso) && \
+		      $state == "Completed"} {
+	    if {$has_autoviewed == 0} {
+		set has_autoviewed 1
+		after 100 "$mods(Viewer-Vol)-ViewWindow_0-c autoview; global $mods(Viewer-Vol)-ViewWindow_0-pos; set $mods(Viewer-Vol)-ViewWindow_0-pos \"z1_y1\"; $mods(Viewer-Vol)-ViewWindow_0-c Views;"
+	    }
 	}
 	
 # # 	if {$which == $mods(PasteImageFilter-Smooth) \
@@ -4024,12 +4048,14 @@ class LevelSetSegmenterApp {
 	set $mods(ImageFileWriter-Binary)-filename \
 	    [file join $commit_dir $base_filename$s.hdr]
 
-  	# enable writing module
+  	# enable writing module and 3D vis
 	disableModule $mods(ImageFileWriter-Binary) 0
+	disableModule $mods(ImageToField-Iso) 0
 
   	# execute
 	set committing 1
 	$mods(ImageFileWriter-Binary)-c needexecute
+	$mods(ImageToField-Iso)-c needexecute
      }
 
 #     method current_slice_changed {} {
@@ -4402,6 +4428,12 @@ class LevelSetSegmenterApp {
 	set $mods(ImageReaderFloat2D)-filename \
 	    [file join $commit_dir $base_filename[expr $slice - 1].hdr]
 
+	# Prepare TransformMesh function
+	global $mods(TransformMesh)-function
+	set $mods(TransformMesh)-function \
+	    "result = p + Vector(0.0, 0.0, $slice);"
+	puts [set $mods(TransformMesh)-function]
+
 	# enable/disable using previous slice option
 	set prev_avail 0
 	if {$slice > 0 && \
@@ -4656,6 +4688,8 @@ class LevelSetSegmenterApp {
     variable status_canvas2
     variable status_width
     variable commits
+
+    variable has_autoviewed
 }
 
 LevelSetSegmenterApp app
@@ -4695,11 +4729,6 @@ bind all <Control-v> {
 # If positive seed points are set to 0, the entire seed is on,
 #  regardless of the number of negative points (only for Seed
 #  Points Only case).
-
-# Previous seed isn't implemented yet (need to only offer this
-#  option if a previous slice has been committed or saved.
-
-# Isocontours
 
 # Clean up vis toggle window (hide/showable?)
 
