@@ -41,7 +41,7 @@ P.initTime          = 0.0;                          % Initial simulation time [s
 P.delt_init         = 1e-6;                         % First timestep [sec]
 P.maxTimeSteps      = 100;                          % Maximum number of timesteps [dimensionless]
 P.CFL               = 0.45;                         % Courant number (~velocity*delT/delX) [dimensionless]
-P.advectionOrder    = 2;                            % 1=1st-order advection operator; 2=possibly-limited-2nd-order
+P.advectionOrder    = 1;                            % 1=1st-order advection operator; 2=possibly-limited-2nd-order
 
 % Material properties (ideal gas)
 P.cv                = 717.5;                        % Specific_heat
@@ -49,7 +49,7 @@ P.gamma             = 1.4;                          % gamma coefficient in the E
 
 %================ ICE Interal Parameters, Debugging Flags ================
 % Debug flags
-P.compareUintah     = 1;                            % Compares vs. Uintah ICE and plots results
+P.compareUintah     = 0;                            % Compares vs. Uintah ICE and plots results
 P.debugSteps        = 0;                            % Debug printout of steps (tasks) within timestep
 P.debugAdvectRho    = 0;                            % Debug printouts in advectRho()
 P.debugAdvectQ      = 0;                            % Debug printouts in advectQ()
@@ -200,6 +200,7 @@ if (P.plotInitialData)
     grid on;
 
     %M(tstep) = getframe(gcf);
+    print -depsc iceInitialData.eps
 end
 
 %______________________________________________________________________
@@ -431,7 +432,7 @@ for tstep = 1:P.maxTimeSteps
         loadUintah;                                                 % Load Uintah results
     end
     plotResults;                                                    % Plot results (and also against Uintah, if compareUintah flag is on)
-        
+
     %================ Various breaks ================
 
     delT    = delt_CFL;                                             % Compute delT - "agressively" small
@@ -441,6 +442,10 @@ for tstep = 1:P.maxTimeSteps
         break;
     end
 end
+figure(1);
+print -depsc iceResult1.eps
+figure(2);
+print -depsc iceResult2.eps
 
 % Show a movie of the results
 %hFig = figure(2);
