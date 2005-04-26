@@ -28,7 +28,7 @@
 
 
 /*
- *  Hello.cc:
+ *  FileRaader.cc:
  *
  *  Written by:
  *   Keming Zhang
@@ -59,40 +59,34 @@ extern "C" sci::cca::Component::pointer make_SCIRun_FileReader()
 
 FileReader::FileReader()
 {
-  uiPort.setParent(this);
-  pdePort.setParent(this);
 }
 
 FileReader::~FileReader()
 {
-  cerr << "called ~FileReader()\n";
 }
 
 void FileReader::setServices(const sci::cca::Services::pointer& svc)
 {
   services=svc;
-  //register provides ports here ...  
-
   sci::cca::TypeMap::pointer props = svc->createTypeMap();
-  myUIPort::pointer uip(&uiPort);
-  myPDEDescriptionPort::pointer pdep(&pdePort);
-  svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", props);
-  svc->addProvidesPort(pdep,"pde","sci.cca.ports.PDEDescriptionPort", props);
-  // Remember that if the PortInfo is created but not used in a call to the svc object
-  // then it must be freed.
-  // Actually - the ref counting will take care of that automatically - Steve
+  myPDEdescriptionPort::pointer pdep(&pdePort);
+  svc->addProvidesPort(pdep,"pde","sci.cca.ports.PDEdescriptionPort", props);
 }
 
-int myUIPort::ui() 
+int
+myPDEdescriptionPort::getPDEdescription(::SSIDL::array1<double> &nodes, 
+					::SSIDL::array1<int> &boundaries,
+					::SSIDL::array1<int> &dirichletNodes,
+					::SSIDL::array1<double> &dirichletValues)
 {
   QString fn = QFileDialog::getOpenFileName(
 	    "./","PDE Description Files(*.pde)");
   if(fn.isNull()) return 1;
   ifstream is(fn);
-  com->nodes.clear();
-  com->boundaries.clear();
-  com->dirichletNodes.clear();
-  com->dirichletValues.clear();
+  nodes.clear();
+  boundaries.clear();
+  dirichletNodes.clear();
+  dirichletValues.clear();
   while(true){
     std::string name;
     is>>name;
@@ -102,8 +96,8 @@ int myUIPort::ui()
       for(int i=0; i<cnt; i++){
 	double x, y;
 	is>>x>>y;
-	com->nodes.push_back(x);
-	com->nodes.push_back(y);
+	nodes.push_back(x);
+	nodes.push_back(y);
       }
     }
     else if(name=="boundary"){
@@ -112,7 +106,7 @@ int myUIPort::ui()
       for(int i=0; i<cnt; i++){
 	int index;
 	is>>index;
-	com->boundaries.push_back(index);
+	boundaries.push_back(index);
       }
     }
     else if(name=="dirichlet"){
@@ -121,44 +115,24 @@ int myUIPort::ui()
       for(int i=0; i<cnt; i++){
 	int index;
 	is>>index;
-	com->dirichletNodes.push_back(index);
+	dirichletNodes.push_back(index);
       }
       for(int i=0; i<cnt; i++){
 	double value;
 	is>>value;
-	com->dirichletValues.push_back(value);
+	dirichletValues.push_back(value);
       }
     }
     else if(name=="end") break;  
+
   }
 
-  cerr<<com->nodes.size()<<endl;
-  cerr<<com->boundaries.size()<<endl;
-  cerr<<com->dirichletNodes.size()<<endl;
-  cerr<<com->dirichletValues.size()<<endl;
+  //  cerr<<nodes.size()<<endl;
+  //  cerr<<boundaries.size()<<endl;
+  //  cerr<<dirichletNodes.size()<<endl;
+  //  cerr<<dirichletValues.size()<<endl;
 
   return 0;
-}
-
-
-SSIDL::array1<double> myPDEDescriptionPort::getNodes() 
-{
-  return com->nodes;
-}
-
-SSIDL::array1<int> myPDEDescriptionPort::getBoundaries() 
-{
-  return com->boundaries;
-}
- 
-SSIDL::array1<int> myPDEDescriptionPort::getDirichletNodes()
-{
-  return com->dirichletNodes;
-}
-
-SSIDL::array1<double> myPDEDescriptionPort::getDirichletValues()
-{
-  return com->dirichletValues;
 }
 
 

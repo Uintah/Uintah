@@ -1,4 +1,6 @@
-/*
+<?xml version="1.0" ?>
+<!DOCTYPE metacomponentmodel SYSTEM "metacomponentmodel.dtd">
+<!--
    For more information, please see: http://software.sci.utah.edu
 
    The MIT License
@@ -24,49 +26,20 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
    DEALINGS IN THE SOFTWARE.
-*/
+-->
 
 
-/*
- *  Viewer.h
- *
- *  Written by:
- *   Keming Zhang 
- *   Department of Computer Science
- *   University of Utah
- *   May 2002
- *
- */
-
-#ifndef CCA_Components_Viewer_h
-#define CCA_Components_Viewer_h
-
-#include <Core/CCA/spec/cca_sidl.h>
-
-namespace SCIRun {
-
-class Viewer;
-
-class myViewPort : public virtual sci::cca::ports::ViewPort{
-public:
-   virtual ~myViewPort(){}
-   virtual int view2dPDE(const SSIDL::array1<double> &nodes, 
-			 const SSIDL::array1<int> &triangles, 
-			 const SSIDL::array1<double> &solution); 
-};
-
-
-class Viewer : public sci::cca::Component{
-                
-  public:
-    Viewer();
-    virtual ~Viewer();
-    virtual void setServices(const sci::cca::Services::pointer& svc);
-  private:
-    Viewer(const Viewer&);
-    Viewer& operator=(const Viewer&);
-    sci::cca::Services::pointer services;
-  };
-}
-
-#endif
+<metacomponentmodel name = "corba">
+  <library name="/work/ACE_wrappers/TAO/tests/H/server">
+    <component name="Corba.Hello_Server" />
+  </library>
+  <library name="/work/ACE_wrappers/TAO/tests/H/client">
+    <component name="Corba.Hello_Client" />
+  </library>
+  <library name="/work/ACE_wrappers/TAO/tests/FileReader/server">
+    <component name="Corba.FileReader_Server" />
+  </library>
+  <library name="/work/ACE_wrappers/TAO/tests/FileReader/client">
+    <component name="Corba.FileReader_Client" />
+  </library>
+</metacomponentmodel>

@@ -68,8 +68,6 @@ public:
 
   Module* addModule(const std::string& name,
                     int x, int y,
-                    SSIDL::array1<std::string> &up,
-                    SSIDL::array1<std::string> &pp,
                     const sci::cca::ComponentID::pointer &cid,
                     bool reposition);
   std::vector<Module*> getModules();

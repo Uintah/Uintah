@@ -40,13 +40,7 @@
 
 #include <CCA/Components/Tri/Tri.h>
 #include <iostream>
-#include <CCA/Components/Builder/QtUtils.h>
-
-#include <qapplication.h>
-#include <qpushbutton.h>
-#include <qmessagebox.h>
-#include "MeshWindow.h"
-
+#include "Delaunay.h"
 
 using namespace std;
 using namespace SCIRun;
@@ -57,99 +51,30 @@ extern "C" sci::cca::Component::pointer make_SCIRun_Tri()
 }
 
 
-Tri::Tri()
-{
-  uiPort.setParent(this);
-  goPort.setParent(this);
-  meshPort.setParent(this);
-  mesh=0;
+Tri::Tri(){
 }
 
-Tri::~Tri()
-{
-  cerr << "called ~Tri()\n";
-  if(mesh!=0) delete mesh;
+Tri::~Tri(){
 }
 
-void Tri::setServices(const sci::cca::Services::pointer& svc)
-{
+void Tri::setServices(const sci::cca::Services::pointer& svc){
   services=svc;
-  //register provides ports here ...  
-
-  sci::cca::TypeMap::pointer props = svc->createTypeMap();
-  myUIPort::pointer uip(&uiPort);
-  myGoPort::pointer gop(&goPort);
-  myMeshPort::pointer meshp(&meshPort);
-  svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", props);
-  svc->addProvidesPort(gop,"go","sci.cca.ports.GoPort", props);
-  svc->addProvidesPort(meshp,"mesh","sci.cca.ports.MeshPort", props);
-  svc->registerUsesPort("pde","sci.cca.ports.PDEDescriptionPort", props);
-  // Remember that if the PortInfo is created but not used in a call to the svc object
-  // then it must be freed.
-  // Actually - the ref counting will take care of that automatically - Steve
+  myMeshPort::pointer meshp(new myMeshPort);
+  svc->addProvidesPort(meshp,"mesh","sci.cca.ports.MeshPort", sci::cca::TypeMap::pointer(NULL));
 }
 
-int myUIPort::ui() 
-{
-  if(com->mesh==0) return 1;
-  (new MeshWindow(0, com->mesh ))->show();
-  return 0;
-}
+int 
+myMeshPort::triangulate(const SSIDL::array1<double> &nodes, const SSIDL::array1<int> &boundaries, SSIDL::array1<int> &triangles){
+  Delaunay* mesh=new Delaunay(nodes, boundaries);
+  mesh->triangulation();
 
-
-int myGoPort::go() 
-{
-  sci::cca::Port::pointer pp=com->getServices()->getPort("pde");	
-  if(pp.isNull()){
-    QMessageBox::warning(0, "Tri", "Port pde is not available!");
-    return 1;
-  }  
-  sci::cca::ports::PDEDescriptionPort::pointer pdePort=
-    pidl_cast<sci::cca::ports::PDEDescriptionPort::pointer>(pp);
-  SSIDL::array1<double> nodes1d=pdePort->getNodes();
-  SSIDL::array1<int> boundaries1d=pdePort->getBoundaries();
-
-  com->getServices()->releasePort("pde");
-
-  if(com->mesh!=0) delete com->mesh;
-
-  com->mesh=new Delaunay(nodes1d, boundaries1d);
-
-  com->mesh->triangulation();
-
-  return 0;
-}
-
-SSIDL::array1<int> myMeshPort::getTriangles()
-{
-  SSIDL::array1<int> vindex;
-  if(com->mesh!=0){
-    std::vector<Triangle> tri=com->mesh->getTriangles();
-
-    for(unsigned int i=0; i<tri.size();i++){
-      vindex.push_back(tri[i].index[0]-4);
-      vindex.push_back(tri[i].index[1]-4);
-      vindex.push_back(tri[i].index[2]-4);
-    }
-  }
-  return vindex;
-}
-
-SSIDL::array1<double> myMeshPort::getNodes()
-{
-  sci::cca::Port::pointer pp=com->getServices()->getPort("pde");	
-  if(pp.isNull()){
-    QMessageBox::warning(0, "Tri", "Port pde is not available!");
-    return 1;
-  }  
-  sci::cca::ports::PDEDescriptionPort::pointer pdePort=
-    pidl_cast<sci::cca::ports::PDEDescriptionPort::pointer>(pp);
-  SSIDL::array1<double> nodes1d=pdePort->getNodes();
-
-  com->getServices()->releasePort("pde");	
+  std::vector<Triangle> tri=mesh->getTriangles();
   
-  return nodes1d;
+  for(unsigned int i=0; i<tri.size();i++){
+    triangles.push_back(tri[i].index[0]-4);
+    triangles.push_back(tri[i].index[1]-4);
+    triangles.push_back(tri[i].index[2]-4);
+  }
+  delete mesh;
+  return 0;
 }
- 
-
-

@@ -66,54 +66,23 @@ extern "C" sci::cca::Component::pointer make_SCIRun_Viewer()
   return sci::cca::Component::pointer(new Viewer());
 }
 
-Viewer::Viewer()
-{
-  uiPort.setParent(this);
+Viewer::Viewer(){
 }
 
-Viewer::~Viewer()
-{
-  cerr << "called ~Viewer()\n";
+Viewer::~Viewer(){
 }
 
 void Viewer::setServices(const sci::cca::Services::pointer& svc)
 {
   services=svc;
-  //register provides ports here ...  
-
-  sci::cca::TypeMap::pointer props = svc->createTypeMap();
-  myUIPort::pointer uip(&uiPort);
-  svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", props);
-  svc->registerUsesPort("field", "sci.cca.ports.Field2DPort",props);
-  svc->registerUsesPort("mesh", "sci.cca.ports.MeshPort",props);
-  // Remember that if the PortInfo is created but not used in a call to the svc object
-  // then it must be freed.
-  // Actually - the ref counting will take care of that automatically - Steve
+  myViewPort::pointer uip(new myViewPort);
+  svc->addProvidesPort(uip,"viewer","sci.cca.ports.ViewPort",   sci::cca::TypeMap::pointer(NULL));
 }
 
-int myUIPort::ui() 
-{
-  sci::cca::Port::pointer pp=com->getServices()->getPort("mesh");	
-  if(pp.isNull()){
-    QMessageBox::warning(0, "Viewer", "Port mesh is not available!");
-    return 1;
-  }  
-  sci::cca::ports::MeshPort::pointer pdePort=
-    pidl_cast<sci::cca::ports::MeshPort::pointer>(pp);
-  SSIDL::array1<double> nodes=pdePort->getNodes();	
-  SSIDL::array1<int> triangles=pdePort->getTriangles();	
-  com->getServices()->releasePort("mesh");	
-
-  sci::cca::Port::pointer pp2=com->getServices()->getPort("field");	
-  if(pp2.isNull()){
-    QMessageBox::warning(0, "Viewer", "field is not available!");
-    return 1;
-  }  
-  sci::cca::ports::Field2DPort::pointer fport=
-    pidl_cast<sci::cca::ports::Field2DPort::pointer>(pp2);
-  SSIDL::array1<double> solution=fport->getField();	
-  com->getServices()->releasePort("field");	
-
+int 
+myViewPort::view2dPDE(const SSIDL::array1<double> &nodes, 
+		      const SSIDL::array1<int> &triangles, 
+		      const SSIDL::array1<double> &solution){
 
   if(nodes.size()/2 !=solution.size()){
     QMessageBox::warning(0,"Viewer","Mesh and Field do not match!");

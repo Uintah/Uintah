@@ -51,7 +51,7 @@ PortIcon::PortIcon(Module *module, const std::string& model,
     : mod(module), pModel(model), tName(type), pType(pType), pName(name),
       num(num), pRect(r), services(services)
 {
-//std::cerr << "PortIcon::PortIcon " << name << " model=" << model << std::endl;
+  //    std::cerr << "PortIcon::PortIcon " << name << " model=" << model << std::endl;
     portColorMap();
     if (pType == USES) {
         iColor = Qt::green;
@@ -75,6 +75,7 @@ PortIcon::PortIcon(Module *module, const std::string& model,
     }
     pColor.setNamedColor(color.c_str());
 
+    //TODO: need to this automatically
     pMenu = new QPopupMenu((QWidget *) module);
     std::map<std::string, MenuTree*> *menus =
         module->parent()->p2BuilderWindow->packageMenus();
@@ -87,8 +88,8 @@ PortIcon::PortIcon(Module *module, const std::string& model,
         s = "Vtk";
     } else if ("Dataflow" == model || "dataflow" == model) {
         s = "Dataflow";
-    }
-    (*menus)[s]->populateMenu(pMenu);
+    } 
+    if(!s.empty()) (*menus)[s]->populateMenu(pMenu);
 }
 
 PortIcon::~PortIcon()
