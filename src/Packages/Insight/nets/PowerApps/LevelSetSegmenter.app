@@ -380,6 +380,8 @@ setGlobal $m3-smoothing_iterations 0
 setGlobal $m3-smoothing_conductance {0.5}
 setGlobal $m3-smoothing_time_step {0.1}
 setGlobal $m3-maximum_iterations {0}
+setGlobal $m3-update_OutputImage {1}
+setGlobal $m3-update_iters_OutputImage {2}
 
 # Set GUI variables for the Insight->Filters->BinaryThresholdImageFilter Module
 set $m4-upper_threshold {100.0}
@@ -394,8 +396,8 @@ set $m5-auto_execute {0}
 set $m5-send {1}
 
 # Set GUI variables for the Insight->Filters->BinaryThresholdImageFilter Module
-set $m6-inside_value {1}
-set $m6-outside_value {0}
+set $m6-inside_value {0}
+set $m6-outside_value {1}
 
 # Set GUI variables for the Insight->Converters->ImageToField Module
 set $m7-copy {1}
@@ -610,11 +612,10 @@ set $m53-location {Top Center}
 
 # Set GUI variables for the Insight->DataIO->SliceReader Module
 setGlobal $m54-filename \
-    "/home/darbyb/work/data/SCIRunData/1.22.0/Test.hdr"
+    "/home/darbyb/work/data/SCIRunData/1.22.0/Small.hdr"
 setGlobal $m54-cast_output {1}
 
 set $m56-mapName {BP Seismic}
-set $m56-reverse {1}
 set $m56-resolution {2}
 set $m56-realres {2}
 
@@ -767,8 +768,8 @@ set to_smooth 0
 # global seed_method
 # set seed_method "thresh"
 
-# global max_iter
-# set max_iter 100
+global max_iter
+set max_iter 100
 
 # global slice
 # set slice 0
@@ -857,7 +858,7 @@ class LevelSetSegmenterApp {
 # 	set segmentation_initialized 0
 
 # 	set updating_speed 0
-# 	set segmenting 0
+ 	set segmenting 0
 	
 # 	set pasting_binary 0
 # 	set pasting_float 0
@@ -909,7 +910,7 @@ class LevelSetSegmenterApp {
 	disableModule $mods(ImageToNrrd-Prev) 1
 
 	# Disable output segmentation
-	disableModule $mods(ImageToField-Seg) 1
+#	disableModule $mods(ImageToField-Seg) 1
 
 	# Disable 3D Isocontours until commit
 	disableModule $mods(ImageToField-Iso) 1
@@ -1881,7 +1882,7 @@ class LevelSetSegmenterApp {
 	label $speed.lthresh.l -text "Lower Threshold:"
 	scale $speed.lthresh.s -variable $mods(LevelSet)-lower_threshold \
 	    -from 0 -to 255 -width 15 \
-	    -showvalue false -length 150 \
+	    -showvalue false -length 200 \
 	    -orient horizontal
 	entry $speed.lthresh.e -textvariable $mods(LevelSet)-lower_threshold \
 	    -width 6
@@ -1893,45 +1894,29 @@ class LevelSetSegmenterApp {
 	label $speed.uthresh.l -text "Upper Threshold:"
 	scale $speed.uthresh.s -variable $mods(LevelSet)-upper_threshold \
 	    -from 0 -to 255 -width 15 \
-	    -showvalue false -length 150 \
+	    -showvalue false -length 200 \
 	    -orient horizontal
 	entry $speed.uthresh.e -textvariable $mods(LevelSet)-upper_threshold \
 	    -width 6
-	button $speed.uthresh.b -text "Go" -width 3 \
+	
+	pack $speed.uthresh.l $speed.uthresh.s $speed.uthresh.e \
+	    -side left -pady 2
+
+	frame $speed.extra
+	pack $speed.extra -side top -anchor n -expand yes -fill x
+
+	checkbutton $speed.extra.exp -text "Reverse Expansion Direction" \
+	    -variable $mods(LevelSet)-reverse_expansion_direction
+
+	button $speed.extra.b -text "Go" -width 3 \
 	    -background $execute_color \
 	    -activebackground $execute_active_color \
 	    -command "$this update_speed_image"
 	
-	pack $speed.uthresh.l $speed.uthresh.s $speed.uthresh.e \
-	    -side left -pady 2
-	pack $speed.uthresh.b \
-	    -side right -pady 2 -padx 3
-	
-	# Equation Term Weights
-	iwidgets::labeledframe $speed.terms \
-	    -labeltext "Equation Term Weights" \
-	    -labelpos nw
-	pack $speed.terms -side top -anchor n -padx 3
-	
-	set terms [$speed.terms childsite]
-	frame $terms.scaling1
-	pack $terms.scaling1 -side top -anchor nw \
+	pack $speed.extra.exp -side left -anchor w \
 	    -padx 3 -pady 1
-	make_entry $terms.scaling1.curv "Curvature:" \
-	    $mods(LevelSet)-curvature_scaling
-	make_entry $terms.scaling1.prop "Propagation:" \
-	    $mods(LevelSet)-propagation_scaling
-	make_entry $terms.scaling1.edge "Edge Weight:" \
-	    $mods(LevelSet)-edge_weight
-	
-	pack $terms.scaling1.curv $terms.scaling1.prop \
-	    $terms.scaling1.edge -side left -anchor ne \
-	    -padx 3 -pady 1
-	
-	checkbutton $terms.exp -text "Reverse Expansion Direction" \
-	    -variable $mods(LevelSet)-reverse_expansion_direction
-	
-	pack $terms.exp -side top -anchor n \
+
+	pack $speed.extra.b -side right -anchor e \
 	    -padx 3 -pady 1
     }
 
@@ -2015,8 +2000,60 @@ class LevelSetSegmenterApp {
 	    -labelpos nw -labeltext "5. Segment"
 	pack $process.seg -side top -anchor nw -expand yes -fill x
 	
-	set seg [$process.seg childsite]
+	set segment [$process.seg childsite]
 
+	global max_iter
+	global $mods(LevelSet)-max_rms_change
+
+	# Equation Term Weights
+	iwidgets::labeledframe $segment.terms \
+	    -labeltext "Equation Term Weights" \
+	    -labelpos nw
+	pack $segment.terms -side top -anchor n -padx 3
+	
+	set terms [$segment.terms childsite]
+	frame $terms.scaling1
+	pack $terms.scaling1 -side top -anchor nw \
+	    -padx 3 -pady 1
+	make_entry $terms.scaling1.curv "Curvature:" \
+	    $mods(LevelSet)-curvature_scaling
+	make_entry $terms.scaling1.prop "Propagation:" \
+	    $mods(LevelSet)-propagation_scaling
+	make_entry $terms.scaling1.edge "Edge Weight:" \
+	    $mods(LevelSet)-edge_weight
+	
+	pack $terms.scaling1.curv $terms.scaling1.prop \
+	    $terms.scaling1.edge -side left -anchor ne \
+	    -padx 3 -pady 1
+	
+	frame $segment.params
+	make_entry $segment.params.iter "Maximum Iterations:" max_iter 5
+	make_entry $segment.params.rms "Maximum RMS:" \
+	    $mods(LevelSet)-max_rms_change 5
+	pack $segment.params.iter $segment.params.rms \
+	    -side left -anchor nw
+
+	frame $segment.buttons
+	button $segment.buttons.commit -text "Commit" \
+	    -activebackground $next_color \
+	    -background $next_color \
+	    -command "$this commit_segmentation"
+	button $segment.buttons.stop -text "Stop" \
+	    -background "#990000" \
+	    -activebackground "#CC0000" \
+	    -command "$this stop_segmentation"
+	button $segment.buttons.go -text "Go" \
+	    -background $execute_color -width 3 \
+	    -activebackground $execute_active_color \
+	    -command "$this start_segmentation"
+	pack $segment.buttons.commit \
+	    $segment.buttons.stop  \
+	    -side left -anchor w -padx 4 -pady 3 -expand yes \
+	    -ipadx 2
+	pack $segment.buttons.go -side right -anchor e -padx 3
+	
+	pack $segment.params -side top -anchor n -pady 2
+	pack $segment.buttons -side top -anchor n -expand yes -fill x
     }
 
 
@@ -2515,7 +2552,23 @@ class LevelSetSegmenterApp {
 		      $state == "Completed"} { 
 	    change_indicate_val 2
 	    change_indicator_labels "Done Updating Speed Image"
-	}
+	} elseif {$which == $mods(LevelSet) && \
+		      $state == "JustStarted"} { 
+	    if {$segmenting == 1} {
+		change_indicator_labels "Segmenting..."
+	    } 
+	    change_indicate_val 1
+	} elseif {$which == $mods(LevelSet) && \
+		      $state == "Completed"} { 
+	    if {$segmenting == 1} {
+		change_indicator_labels "Done Segmenting"
+#		set has_segmented 1
+	    } 
+	    change_indicate_val 2
+	    set segmenting 0
+
+	    after 500 "set $mods(LevelSet)-max_iterations 0"
+	} 
 	
 # # 	if {$which == $mods(PasteImageFilter-Smooth) \
 # # 		&& $state == "Completed"} {
@@ -3757,7 +3810,13 @@ class LevelSetSegmenterApp {
 	# by executing the appropriate set of modules
 
  	# Turn on seed in top viewer and segmentation off
-	puts "FIX ME: turn segmentation off and seed on"
+	global $mods(ShowField-Seg)-faces-on
+	set $mods(ShowField-Seg)-faces-on 0
+	$mods(ShowField-Seg)-c toggle_display_faces
+
+	global $mods(ShowField-Seed)-faces-on
+	set $mods(ShowField-Seed)-faces-on 1
+	$mods(ShowField-Seed)-c toggle_display_faces
 
  	# Turn seed point widgets back on
  	global show_seeds
@@ -3780,120 +3839,97 @@ class LevelSetSegmenterApp {
  	}
      }
 
-#     method start_segmentation {type} {
-# 	global max_iter mods
-
-
-# 	global $mods(ChooseImage-SegInput)-port-index
-# 	if {$type == "Go" && $has_segmented == 1} {
-# 	    set $mods(ChooseImage-SegInput)-port-index 1
-# 	    set type "Go"
-# 	    set segmenting_type "Go"
-# 	} else {
-# 	    set $mods(ChooseImage-SegInput)-port-index 0
-# 	    set type "Reset"
-# 	    set segmenting_type "Reset"
-# 	}
-
-# 	# enable LevelSet
-# 	disableModule $mods(LevelSet) 0
-
-# 	global $mods(LevelSet)-max_iterations
-# 	# set level set max iterations to be what 
-# 	# global max_iter is and then after execute
-# 	# set it back to 0 so user can update speed image
-# 	set $mods(LevelSet)-max_iterations $max_iter
-
-# 	# Turn seed off and segmentation on
-# 	after 100 \
-# 	    "uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (4)\}\" 1; uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (5)\}\" 0; uplevel \#0 set \"\{$mods(Viewer)-ViewWindow_0-Transparent Faces (6)\}\" 0; $mods(Viewer)-ViewWindow_0-c redraw"
-
-# 	# Turn seeds off
-# 	global show_seeds
-# 	set show_seeds 0
-# 	$this seeds_changed 1 2 3 
+    method start_segmentation {} {
+ 	global max_iter mods
 	
-# 	set segmenting 1
-# 	if {$type == "Reset"} {
-# 	    disableModule $mods(ChooseImage-Hack3) 0
-# 	    disableModule $mods(ChooseImage-SegInput) 0
-
-# 	    # execute Level Set
-# #	    $mods(LevelSet)-c needexecute
-# 	    $mods(ChooseImage-SegInput)-c needexecute	   
-# 	} else {
-# 	    disableModule $mods(ChooseImage-SegInput) 0
-# 	    disableModule $mods(ChooseImage-Hack3) 1
-	    
-# 	    after 500 "$mods(ChooseImage-SegInput)-c needexecute"
-# 	}
-
-# 	global slice
-# 	if {$segs($slice) == 2} {
-# 	    $this change_slice_icon 1
-# 	}
-#     }
-
-#     method stop_segmentation {} {
-# 	global mods
-# 	$mods(LevelSet) stop_segmentation
-#     }
-
-#     method commit_segmentation {} {
-# 	global slice mods axis
+ 	global $mods(LevelSet)-max_iterations
+ 	# set level set max iterations to be what 
+ 	# global max_iter is and then after execute
+ 	# set it back to 0 so user can update speed image
+ 	set $mods(LevelSet)-max_iterations $max_iter
 	
-# 	# Add current segmentation into paste image filters 
-# 	if {$axis == 0} {
-# 	    global $mods(PasteImageFilter-Binary)-index
-# 	    global $mods(PasteImageFilter-Float)-index
-# 	    set $mods(PasteImageFilter-Binary)-index $slice
-# 	    set $mods(PasteImageFilter-Float)-index $slice	    
-# 	} elseif {$axis == 1} {
-# 	    global $mods(PasteImageFilter-Binary)-index
-# 	    global $mods(PasteImageFilter-Float)-index
-# 	    set $mods(PasteImageFilter-Binary)-index $slice
-# 	    set $mods(PasteImageFilter-Float)-index $slice
-# 	} else {
-# 	    global $mods(PasteImageFilter-Binary)-index
-# 	    global $mods(PasteImageFilter-Float)-index
-# 	    set $mods(PasteImageFilter-Binary)-index $slice
-# 	    set $mods(PasteImageFilter-Float)-index $slice
-# 	}
+	global $mods(ShowField-Seed)-faces-on
+	set $mods(ShowField-Seed)-faces-on 0
+	$mods(ShowField-Seed)-c toggle_display_faces
 
-# 	# enable pasting modules
-# 	disableModule $mods(PasteImageFilter-Binary) 0
-# 	disableModule $mods(PasteImageFilter-Float) 0
+	global $mods(ShowField-Seg)-faces-on
+	set $mods(ShowField-Seg)-faces-on 1
+	$mods(ShowField-Seg)-c toggle_display_faces
 
-# 	# re-disable volume rendering module and Extract
-# 	disableModule $mods(ImageToNrrd-Vol) 1
-# 	disableModule $mods(Extract-Prev) 1
+ 	# Turn seeds off
+ 	global show_seeds
+ 	set show_seeds 0
+ 	$this seeds_changed 1 2 3 
+	
+ 	set segmenting 1
 
-# 	disableModule $mods(ImageFileWriter-Binary) 1
-# 	disableModule $mods(ImageFileWriter-Float) 1
+	# execute Level Set
+	$mods(LevelSet)-c needexecute
+     }
 
-# 	# execute
-# 	$mods(PasteImageFilter-Binary)-c needexecute
-# 	$mods(PasteImageFilter-Float)-c needexecute
+     method stop_segmentation {} {
+ 	global mods
+ 	$mods(LevelSet) stop_segmentation
+     }
 
-# 	set pasting_binary 1
-# 	set pasting_float 1
+    method commit_segmentation {} {
+	puts "FIX ME: implement commit_segmentation"
+	return
 
-# 	# enable volume rendering button
-# 	$attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page3.cs.volren \
-# 	    configure -background $execute_color \
-# 	    -activebackground $execute_active_color -state normal
-# 	$detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page3.cs.volren \
-# 	    configure -background $execute_color \
-# 	    -activebackground $execute_active_color -state normal
+#  	global slice mods axis
+	
+#  	# Add current segmentation into paste image filters 
+#  	if {$axis == 0} {
+#  	    global $mods(PasteImageFilter-Binary)-index
+#  	    global $mods(PasteImageFilter-Float)-index
+#  	    set $mods(PasteImageFilter-Binary)-index $slice
+#  	    set $mods(PasteImageFilter-Float)-index $slice	    
+#  	} elseif {$axis == 1} {
+#  	    global $mods(PasteImageFilter-Binary)-index
+#  	    global $mods(PasteImageFilter-Float)-index
+#  	    set $mods(PasteImageFilter-Binary)-index $slice
+#  	    set $mods(PasteImageFilter-Float)-index $slice
+#  	} else {
+#  	    global $mods(PasteImageFilter-Binary)-index
+#  	    global $mods(PasteImageFilter-Float)-index
+#  	    set $mods(PasteImageFilter-Binary)-index $slice
+#  	    set $mods(PasteImageFilter-Float)-index $slice
+#  	}
 
-# 	set has_committed 1
-# 	# enable saving buttons
-# 	$attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page3.cs.savefl.btn configure -state normal
-# 	$detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page3.cs.savefl.btn configure -state normal
+#  	# enable pasting modules
+#  	disableModule $mods(PasteImageFilter-Binary) 0
+#  	disableModule $mods(PasteImageFilter-Float) 0
 
-# 	$attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page3.cs.savebin.btn configure -state normal
-# 	$detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page3.cs.savebin.btn configure -state normal
-#     }
+#  	# re-disable volume rendering module and Extract
+#  	disableModule $mods(ImageToNrrd-Vol) 1
+#  	disableModule $mods(Extract-Prev) 1
+
+#  	disableModule $mods(ImageFileWriter-Binary) 1
+#  	disableModule $mods(ImageFileWriter-Float) 1
+
+#  	# execute
+#  	$mods(PasteImageFilter-Binary)-c needexecute
+#  	$mods(PasteImageFilter-Float)-c needexecute
+
+#  	set pasting_binary 1
+#  	set pasting_float 1
+
+#  	# enable volume rendering button
+#  	$attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page3.cs.volren \
+#  	    configure -background $execute_color \
+#  	    -activebackground $execute_active_color -state normal
+#  	$detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page3.cs.volren \
+#  	    configure -background $execute_color \
+#  	    -activebackground $execute_active_color -state normal
+
+#  	set has_committed 1
+#  	# enable saving buttons
+#  	$attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page3.cs.savefl.btn configure -state normal
+#  	$detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page3.cs.savefl.btn configure -state normal
+
+#  	$attachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page3.cs.savebin.btn configure -state normal
+#  	$detachedPFr.f.p.childsite.tnb.canvas.notebook.cs.page3.cs.savebin.btn configure -state normal
+     }
 
 #     method current_slice_changed {} {
 # 	global slice mods axis
@@ -4365,10 +4401,10 @@ class LevelSetSegmenterApp {
 	global $mods(ShowField-Seg)-faces-on
 	
 	if {[set $mods(ShowField-Seg)-faces-on] == 0} {
-	    disableModule $mods(ImageToField-Seg) 1
+#	    disableModule $mods(ImageToField-Seg) 1
 	    $mods(ShowField-Seg)-c toggle_display_faces
 	} else {
-	    disableModule $mods(ImageToField-Seg) 0
+#	    disableModule $mods(ImageToField-Seg) 0
 	    
 #	    $mods(ImageToField-Seg)-c needexecute
 	    $mods(ShowField-Seg)-c toggle_display_faces
@@ -4424,7 +4460,7 @@ class LevelSetSegmenterApp {
     variable execute_active_color
     variable has_smoothed
 
-    variable has_segmented
+#    variable has_segmented
     variable segmentation_initialized
 #    variable updating_speed
     variable pasting_binary
