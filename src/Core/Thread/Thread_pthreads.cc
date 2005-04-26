@@ -82,6 +82,9 @@ extern "C" {
 
 //#define __ia64__
 #ifdef __ia64__
+#  ifndef __int64
+#    define __int64 long
+#  endif
 #  include <ia64intrin.h>
 #endif
 
@@ -1324,7 +1327,7 @@ struct Barrier_private {
 
   //  long long amo_val;
   char pad0[128];
-  unsigned __int64 amo_val;
+  __int64 amo_val;
   char pad1[128];
   volatile int flag;
   char pad2[128];
@@ -1368,7 +1371,7 @@ Barrier::wait(int n)
   Thread_private* p = Thread::self()->priv_;
   int oldstate = Thread::push_bstack(p, Thread::BLOCK_BARRIER, name_);
   int gen = priv_->flag;
-  unsigned __int64 val = __fetchadd8_acq(&(priv_->amo_val),1);
+  __int64 val = __sync_fetch_and_add_di(&(priv_->amo_val),1);
   if (val == n-1){
     priv_->amo_val = 0;
     priv_->flag++;
@@ -1389,7 +1392,7 @@ struct AtomicCounter_private {
   // These variables used only for non fectchop implementation
   //  long long amo_val;
   char pad0[128];
-  unsigned __int64 amo_val;
+  __int64 amo_val;
   char pad1[128];
 };
 } // namespace SCIRun
@@ -1446,7 +1449,7 @@ AtomicCounter::operator int() const
 int
 AtomicCounter::operator++()
 {
-  unsigned __int64 val = __fetchadd8_acq(&(priv_->amo_val),1);
+  __int64 val = __sync_fetch_and_add_di(&(priv_->amo_val),1);
   return (int)val;
 }
 
@@ -1454,7 +1457,7 @@ AtomicCounter::operator++()
 int
 AtomicCounter::operator++(int)
 {
-  unsigned __int64 val = __fetchadd8_acq(&(priv_->amo_val),1);
+  __int64 val = __sync_fetch_and_add_di(&(priv_->amo_val),1);
   return (int)val-1;
 }
 
@@ -1462,7 +1465,7 @@ AtomicCounter::operator++(int)
 int
 AtomicCounter::operator--()
 {
-  unsigned __int64 val = __fetchadd8_acq(&(priv_->amo_val),-1);
+  __int64 val = __sync_fetch_and_add_di(&(priv_->amo_val),-1);
   return (int)val;
 }
 
@@ -1470,7 +1473,7 @@ AtomicCounter::operator--()
 int
 AtomicCounter::operator--(int)
 {
-  unsigned __int64 val = __fetchadd8_acq(&(priv_->amo_val),-1);
+  __int64 val = __sync_fetch_and_add_di(&(priv_->amo_val),-1);
   return (int)val+1;
 }
 
