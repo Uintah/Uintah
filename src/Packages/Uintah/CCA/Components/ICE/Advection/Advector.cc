@@ -203,6 +203,30 @@ namespace Uintah {
   }
   
   //__________________________________
+  // converts patch face into cell Face
+  int patchFaceToCellFace(Patch::FaceType face){
+    if (face == Patch::xminus){
+      return LEFT;
+    }
+    if (face == Patch::xplus){
+      return RIGHT;
+    }
+    if (face == Patch::yminus){
+      return BOTTOM;
+    }
+    if (face == Patch::yplus){
+      return TOP;
+    }
+    if (face == Patch::zminus){
+      return BACK;
+    }
+    if (face == Patch::zplus){
+      return FRONT;
+    }
+    return -99999;
+  };
+  
+  //__________________________________
   static MPI_Datatype makeMPI_fflux()
   {
     ASSERTEQ(sizeof(fflux), sizeof(double)*6);

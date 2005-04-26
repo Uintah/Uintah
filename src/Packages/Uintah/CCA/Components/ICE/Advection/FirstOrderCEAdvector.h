@@ -3,10 +3,6 @@
 
 #include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
 #include <Packages/Uintah/CCA/Components/ICE/Advection/FirstOrderAdvector.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 
 namespace Uintah {
@@ -22,7 +18,7 @@ namespace Uintah {
     virtual ~FirstOrderCEAdvector();
 
     virtual FirstOrderCEAdvector* clone(DataWarehouse* new_dw,
-                                     const Patch* patch);
+                                        const Patch* patch);
 
 
     virtual void inFluxOutFluxVolume(const SFCXVariable<double>& uvel_CC,
@@ -40,29 +36,21 @@ namespace Uintah {
                           SFCXVariable<double>& q_XFC,
                           SFCYVariable<double>& q_YFC,
                           SFCZVariable<double>& q_ZFC,
-			     DataWarehouse* /*new_dw*/);
+                          DataWarehouse* /*new_dw*/);
 
-    virtual void advectQ(const bool useCompatibleFluxes,
-                         const bool is_Q_massSpecific,
-                         const CCVariable<double>& q_CC,
+    virtual void advectQ(const CCVariable<double>& q_CC,
                          const CCVariable<double>& mass,
-                         const Patch* patch,
                          CCVariable<double>& q_advected,
-                         DataWarehouse* new_dw);
-    
-    virtual void advectQ(const bool useCompatibleFluxes,
-                         const bool is_Q_massSpecific,
-                         const CCVariable<Vector>& q_CC,
+                         advectVarBasket* vb);
+ 
+    virtual void advectQ(const CCVariable<Vector>& q_CC,
                          const CCVariable<double>& mass,
-                         const Patch* patch,
                          CCVariable<Vector>& q_advected,
-                         DataWarehouse* new_dw); 
+                         advectVarBasket* vb); 
                          
     virtual void advectMass(const CCVariable<double>& mass,
-                            const Patch* patch,
                             CCVariable<double>& q_advected,
-			       DataWarehouse* new_dw);
-
+                            advectVarBasket* vb);
 
   private:
     template <class T, typename F> 
@@ -73,19 +61,31 @@ namespace Uintah {
                     SFCYVariable<double>& q_YFC,                   
                     SFCZVariable<double>& q_ZFC,                   
                     F save_q_FC);
-                    
+
+    template<class T, class V>
+      void  q_FC_flux_operator(CellIterator iter, 
+                               IntVector adj_offset,
+                               const int face,
+                               const CCVariable<V>& q_CC,
+                               T& q_faceFlux);
+                        
+    void q_FC_PlusFaces(const CCVariable<double>& q_CC,
+                        const Patch* patch,
+                        SFCXVariable<double>& q_XFC,
+                        SFCYVariable<double>& q_YFC,
+                        SFCZVariable<double>& q_ZFC);
+                                            
     template<class T>
-      void compute_q_FC(CellIterator iter, 
-                	   IntVector adj_offset,
-                	   const int face,
-                	   const CCVariable<double>& q_CC,
-                	   T& q_FC);
-			
-      void compute_q_FC_PlusFaces(const CCVariable<double>& q_CC,
-                        	      const Patch* patch,
-                        	      SFCXVariable<double>& q_XFC,
-                        	      SFCYVariable<double>& q_YFC,
-                        	      SFCZVariable<double>& q_ZFC);                             
+      void q_FC_operator(CellIterator iter, 
+                         IntVector adj_offset,
+                         const int face,
+                         const CCVariable<double >& q_CC,
+                         T& q_FC);
+                      
+    template<class T>
+      void  q_FC_fluxes(const CCVariable<T>& q_CC, 
+                        const string& desc,
+                        advectVarBasket* vb);                       
 
   private:
     CCVariable<fflux> d_OFS;

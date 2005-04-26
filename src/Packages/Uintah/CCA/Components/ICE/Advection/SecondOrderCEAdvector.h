@@ -3,10 +3,6 @@
 
 #include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
 #include <Packages/Uintah/CCA/Components/ICE/Advection/SecondOrderBase.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Core/Containers/StaticArray.h>
 
@@ -38,28 +34,21 @@ namespace Uintah {
                           SFCXVariable<double>& q_XFC,
                           SFCYVariable<double>& q_YFC,
                           SFCZVariable<double>& q_ZFC,
-			     DataWarehouse* /*new_dw*/);
+                             DataWarehouse* /*new_dw*/);
 
-    virtual void advectQ(const bool useCompatibleFluxes,
-                         const bool is_Q_massSpecific,
-                         const CCVariable<double>& q_CC,
+    virtual void advectQ(const CCVariable<double>& q_CC,
                          const CCVariable<double>& mass,
-                         const Patch* patch,
                          CCVariable<double>& q_advected,
-                         DataWarehouse* new_dw);
-    
-    virtual void advectQ(const bool useCompatibleFluxes,
-                         const bool is_Q_massSpecific,
-                         const CCVariable<Vector>& q_CC,
+                         advectVarBasket* vb);
+ 
+    virtual void advectQ(const CCVariable<Vector>& q_CC,
                          const CCVariable<double>& mass,
-                         const Patch* patch,
                          CCVariable<Vector>& q_advected,
-                         DataWarehouse* new_dw); 
+                         advectVarBasket* vb); 
                          
     virtual void advectMass(const CCVariable<double>& mass,
-                            const Patch* patch,
-                            CCVariable<double>& q_advected,
-			       DataWarehouse* new_dw);
+                           CCVariable<double>& q_advected,
+                           advectVarBasket* vb);
 
   private:
     CCVariable<fflux> d_OFS, r_out_x, r_out_y, r_out_z;
@@ -94,7 +83,7 @@ namespace Uintah {
                   F save_q_FC);   // passed in function
     
     template<class T>
-    void compute_q_FC(CellIterator iter, 
+    void q_FC_operator(CellIterator iter, 
                       IntVector adj_offset,
                       const int face,
                       const CCVariable<double>& q_CC,
@@ -103,14 +92,32 @@ namespace Uintah {
                       SCIRun::StaticArray<CCVariable<double> >& q_OAFC,
                       T& q_FC);
     
-    void compute_q_FC_PlusFaces(const CCVariable<double>& q_CC,
-                                CCVariable<facedata<double> >& q_OAFS,
-                                SCIRun::StaticArray<CCVariable<double> >& q_OAFE,
-                                SCIRun::StaticArray<CCVariable<double> >& q_OAFC,
-                                const Patch* patch,
-                                SFCXVariable<double>& q_XFC,
-                                SFCYVariable<double>& q_YFC,
-                                SFCZVariable<double>& q_ZFC);
+    void q_FC_PlusFaces(const CCVariable<double>& q_CC,
+                        CCVariable<facedata<double> >& q_OAFS,
+                        SCIRun::StaticArray<CCVariable<double> >& q_OAFE,
+                        SCIRun::StaticArray<CCVariable<double> >& q_OAFC,
+                        const Patch* patch,
+                        SFCXVariable<double>& q_XFC,
+                        SFCYVariable<double>& q_YFC,
+                        SFCZVariable<double>& q_ZFC);
+                                
+    template<class T, class V>
+      void q_FC_flux_operator(CellIterator iter, 
+                              IntVector adj_offset,
+                              const int face,
+                              const CCVariable<facedata<V> >& q_OAFS,
+                              SCIRun::StaticArray<CCVariable<V> >& q_OAFE,
+                              SCIRun::StaticArray<CCVariable<V> >& q_OAFC,
+                              const CCVariable<V>& q_CC,
+                              T& q_faceFlux);                          
+                                  
+      template<class T>
+        void q_FC_fluxes(const CCVariable<T>& q_CC,
+                         const CCVariable<facedata<T> >& q_OAFS,
+                         SCIRun::StaticArray<CCVariable<T> >& q_OAFE,
+                         SCIRun::StaticArray<CCVariable<T> >& q_OAFC,
+                         const string& desc,
+                         advectVarBasket* vb);
   };
 }
 
