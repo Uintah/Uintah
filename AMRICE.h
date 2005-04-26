@@ -70,6 +70,12 @@ namespace Uintah {
                                    DataWarehouse* new_dw,
                                    double factor);
 
+    void refine(const ProcessorGroup*,
+                const PatchSubset* patches,
+                const MaterialSubset* matls,
+                DataWarehouse*,
+                DataWarehouse* new_dw);
+
     template<class T>
     void CoarseToFineOperator(CCVariable<T>& q_CC,
                               const VarLabel* varLabel,
@@ -79,12 +85,6 @@ namespace Uintah {
                               const Patch* finePatch,
                               const Level* fineLevel,
                               const Level* coarseLevel);
-                              
-    void refine(const ProcessorGroup*,
-                const PatchSubset* patches,
-                const MaterialSubset* matls,
-                DataWarehouse*,
-                DataWarehouse* new_dw);
                          
     template<class T>
     void fineToCoarseOperator(CCVariable<T>& q_CC,
@@ -100,6 +100,24 @@ namespace Uintah {
                  const PatchSubset* patches,
                  const MaterialSubset* matls,
                  DataWarehouse*, DataWarehouse* new_dw);
+ 
+    void scheduleReflux(const LevelP& coarseLevel,
+                        SchedulerP& sched);
+
+    template<class T>
+    void refluxOperator(CCVariable<T>& q_CC_coarse,
+                        const string& fineVarLabel,
+                        const int indx,
+                        const Patch* finePatch,
+                        const Level* fineLevel,
+                        DataWarehouse* new_dw);
+
+                
+    void reflux(const ProcessorGroup*,
+                const PatchSubset* coarsePatches,
+                const MaterialSubset* matls,
+                DataWarehouse*,
+                DataWarehouse* new_dw);               
                  
     void errorEstimate(const ProcessorGroup*,
 			  const PatchSubset* patches,
