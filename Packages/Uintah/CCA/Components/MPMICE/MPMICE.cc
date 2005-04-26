@@ -249,7 +249,8 @@ void MPMICE::scheduleComputeStableTimestep(const LevelP& level,
 //______________________________________________________________________
 //
 void
-MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
+MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, 
+                            int step , int nsteps )
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
@@ -260,7 +261,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
 
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
- 
+  double AMR_subCycleVar = double(step)/double(nsteps);
  //__________________________________
  // Scheduling
   d_ice->scheduleComputeThermoTransportProperties(sched, level,  ice_matls);
@@ -402,7 +403,8 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
   vector<PatchSubset*> maxMach_PSS(Patch::numFaces);
   d_ice->scheduleMaxMach_on_Lodi_BC_Faces(sched, level,ice_matls,maxMach_PSS);
                                    
-  d_ice->scheduleAdvectAndAdvanceInTime(         sched, patches, ice_matls_sub,
+  d_ice->scheduleAdvectAndAdvanceInTime(         sched, patches, AMR_subCycleVar,
+                                                                 ice_matls_sub,
                                                                  mpm_matls_sub,
                                                                  press_matl,
                                                                  ice_matls);
