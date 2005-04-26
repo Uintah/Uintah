@@ -72,7 +72,7 @@ NetworkCanvasView::NetworkCanvasView(BuilderWindow* p2BuilderWindow,
             services->getPort("cca.ConnectionEventService")
         );
     if (ces.isNull()) {
-        p2BuilderWindow->displayMsg("Error: Cannot find connection event service.\n");
+        p2BuilderWindow->displayMsg("Error: Cannot find connection event service.");
     } else {
         sci::cca::ports::ConnectionEventListener::pointer listener(this);
         ces->addConnectionEventListener(sci::cca::ports::ALL, listener);
@@ -258,7 +258,7 @@ void NetworkCanvasView::contentsMouseMoveEvent(QMouseEvent* e)
                 services->getPort("cca.ComponentEventService")
             );
         if (ces.isNull()) {
-            p2BuilderWindow->displayMsg("Error: Cannot find component event service.\n");
+            p2BuilderWindow->displayMsg("Error: Cannot find component event service.");
         } else {
             ces->moveComponent(moving->componentID(), newX, newY);
             services->releasePort("cca.ComponentEventService");
@@ -360,7 +360,7 @@ void NetworkCanvasView::removeModule(Module *module)
             services->getPort("cca.BuilderService")
         );
     if (bs.isNull()) {
-        p2BuilderWindow->displayMsg("Error: cannot find builder service.\n");
+        p2BuilderWindow->displayMsg("Error: cannot find builder service.");
         return;
     }
     try {
@@ -371,7 +371,6 @@ void NetworkCanvasView::removeModule(Module *module)
     }
     catch (const Exception& e) {
         p2BuilderWindow->displayMsg(e.message());
-        p2BuilderWindow->displayMsg("\n");
     }
     services->releasePort("cca.BuilderService");
 
@@ -387,7 +386,7 @@ void NetworkCanvasView::addConnection(Module *m1, const std::string &portname1, 
                 services->getPort("cca.BuilderService")
             );
         if (bs.isNull()){
-            p2BuilderWindow->displayMsg("Error: cannot find builder service.\n");
+            p2BuilderWindow->displayMsg("Error: cannot find builder service.");
             return;
         }
             sci::cca::ConnectionID::pointer connID =
@@ -412,7 +411,6 @@ void NetworkCanvasView::addConnection(Module *m1, const std::string &portname1, 
     }
     catch (CCAException e) {
         p2BuilderWindow->displayMsg(e.message());
-        p2BuilderWindow->displayMsg("\n");
     }
 }
 
@@ -424,7 +422,7 @@ void NetworkCanvasView::addBridgeConnection(Module *m1, const std::string &portn
                 services->getPort("cca.BuilderService")
             );
         if (bs.isNull()) {
-            p2BuilderWindow->displayMsg("Error: Cannot find builder service.\n");
+            p2BuilderWindow->displayMsg("Error: Cannot find builder service.");
             return;
         }
 
@@ -432,7 +430,7 @@ void NetworkCanvasView::addBridgeConnection(Module *m1, const std::string &portn
         std::string instanceT =
             bs->generateBridge(m1->componentID(), portname1, m2->componentID(), portname2);
         if (instanceT == "") {
-            std::cerr << "Error: could not properly generate bridge... aborting connection...\n";
+            std::cerr << "Error: could not properly generate bridge... aborting connection..." << std::endl;
             return;
         } 
         std::string classT = "bridge:Bridge." + instanceT;
@@ -488,7 +486,6 @@ void NetworkCanvasView::addBridgeConnection(Module *m1, const std::string &portn
     }
     catch (CCAException e) {
         p2BuilderWindow->displayMsg(e.message());
-        p2BuilderWindow->displayMsg("\n");
     }
 }
 
@@ -504,7 +501,7 @@ void NetworkCanvasView::removeConnection(QCanvasItem *c)
                     services->getPort("cca.BuilderService")
                 );
             if (bs.isNull()) {
-                p2BuilderWindow->displayMsg("Error: Cannot find builder service.\n");
+                p2BuilderWindow->displayMsg("Error: Cannot find builder service.");
                 return;
             }
             bs->disconnect((*iter)->getConnectionID(), 0);
@@ -530,7 +527,7 @@ void NetworkCanvasView::removeAllConnections(Module *module)
                     services->getPort("cca.BuilderService")
                 );
             if (bs.isNull()) {
-                p2BuilderWindow->displayMsg("Error: Cannot find builder service.\n");
+                p2BuilderWindow->displayMsg("Error: Cannot find builder service.");
                 return;
             }
             bs->disconnect(connections[i]->getConnectionID(), 0);
@@ -557,7 +554,7 @@ NetworkCanvasView::showPossibleConnections(Module *m,
             services->getPort("cca.BuilderService")
         );
     if (bs.isNull()) {
-        p2BuilderWindow->displayMsg("Error: cannot find builder service.\n");
+        p2BuilderWindow->displayMsg("Error: cannot find builder service.");
         return;
     }
 

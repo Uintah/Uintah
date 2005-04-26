@@ -213,22 +213,21 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services,
     QWhatsThis::add(msgTextEdit, "Read-only text edit widget.");
     QToolTip::add(msgTextEdit, "View SCIRun2 messages.");
     // version number?
-    displayMsg("SCIRun2\n");
-    displayMsg("Framework URL: ");
+    displayMsg("SCIRun2");
     sci::cca::ports::FrameworkProperties::pointer fwkProperties =
     pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
         services->getPort("cca.FrameworkProperties")
     );
     if (fwkProperties.isNull()) {
-        QString msg("url not available");
+        QString msg("Framework URL: url not available");
         displayMsg(msg);
     } else {
         sci::cca::TypeMap::pointer tm = fwkProperties->getProperties();
         std::string url = tm->getString("url", "");
-        displayMsg(url);
+        displayMsg("Framework URL: " + url);
         services->releasePort("cca.FrameworkProperties");
     }
-    displayMsg("\n----------------------\n");
+    displayMsg("----------------------");
 
     networkCanvas = new QCanvas(2000, 2000);
     networkCanvas->setAdvancePeriod(30);
@@ -253,7 +252,7 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services,
             services->getPort("cca.ComponentEventService")
         );
     if (ces.isNull()) {
-        displayMsg("Error: Cannot find component event service.\n");
+        displayMsg("Error: Cannot find component event service.");
     } else {
         sci::cca::ports::ComponentEventListener::pointer listener(this);
         ces->addComponentEventListener(sci::cca::ports::AllComponentEvents,
@@ -458,7 +457,7 @@ void BuilderWindow::buildRemotePackageMenus(
     const std::string &frameworkURL)
 {
     if (reg.isNull()) {
-        displayMsg("Cannot get component registry, not building component menus.\n");
+        displayMsg("Cannot get component registry, not building component menus.");
         return;
     }
 
@@ -514,7 +513,7 @@ void BuilderWindow::buildPackageMenus()
             services->getPort("cca.ComponentRepository")
         );
     if (reg.isNull()) {
-        displayMsg("Error: cannot find component registry, not building component menus.\n");
+        displayMsg("Error: cannot find component registry, not building component menus.");
         unsetCursor();
         statusBar()->clear();
         return;
@@ -695,7 +694,7 @@ void BuilderWindow::load()
                 services->getPort("cca.BuilderService")
             );
         if (builder.isNull()) {
-            displayMsg("Error: Cannot find builder service\n");
+            displayMsg("Error: Cannot find builder service.");
             return;
         }
         sci::cca::ComponentID::pointer cid =
@@ -728,7 +727,7 @@ void BuilderWindow::load()
 
 void BuilderWindow::insert()
 {
-    displayMsg("BuilderWindow::insert not finished.\n");
+    displayMsg("BuilderWindow::insert not finished.");
 }
 
 void BuilderWindow::clear()
@@ -749,7 +748,7 @@ void BuilderWindow::clear()
 
 void BuilderWindow::addInfo()
 {
-    displayMsg("BuilderWindow::addInfo not finished.\n");
+    displayMsg("BuilderWindow::addInfo not finished.");
 }
 
 void BuilderWindow::exit()
@@ -810,7 +809,7 @@ void BuilderWindow::instantiateComponent(
                 sci::cca::TypeMap::pointer(tm));
 
     if (cid.isNull()) {
-        std::cerr << "instantiateFailed..." << std::endl;
+        displayMsg("Error: could not instantiate component of type " + cd->getComponentClassName());
         statusBar()->message("Instantiate failed.", 2000);
     } else {
         statusBar()->clear();
@@ -832,7 +831,7 @@ Module* BuilderWindow::instantiateBridgeComponent(
     );
 
     if (builder.isNull()) {
-        displayMsg("Error: Cannot find builder service");
+        displayMsg("Error: Cannot find builder service.");
         unsetCursor();
         return NULL;
     }
@@ -895,7 +894,7 @@ void BuilderWindow::componentActivity(const sci::cca::ports::ComponentEvent::poi
                     services->getPort("cca.BuilderService")
                 );
             if (builder.isNull()) {
-                displayMsg("Error: Cannot find builder service");
+                displayMsg("Error: Cannot find builder service.");
                 return;
             }
             SSIDL::array1<std::string> usesPorts =
@@ -925,12 +924,12 @@ void BuilderWindow::componentActivity(const sci::cca::ports::ComponentEvent::poi
 
 void BuilderWindow::displayMsg(const char *msg)
 {
-    msgTextEdit->insert( tr(msg) );
+    msgTextEdit->insert( tr(msg) + '\n');
 }
 
 void BuilderWindow::displayMsg(const QString &text)
 {
-    msgTextEdit->insert(text);
+    msgTextEdit->insert(text + '\n');
 }
 
 void BuilderWindow::updateMiniView()
@@ -990,7 +989,7 @@ void BuilderWindow::addLoader()
         services->getPort("cca.BuilderService")
     );
     if (builder.isNull()) {
-        displayMsg("Error: Cannot find builder service\n");
+        displayMsg("Error: Cannot find builder service.");
         return;
     }
 
@@ -999,7 +998,7 @@ void BuilderWindow::addLoader()
 
     ClusterDialog *dialog;
     if (fwkProperties.isNull()) {
-        displayMsg("Error: Cannot find framework properties\n");
+        displayMsg("Error: Cannot find framework properties.");
         dialog = new ClusterDialog("qwerty", "qwerty.sci.utah.edu",
                     "", this, "Add Parallel Component Loader", TRUE);
     } else {
@@ -1061,7 +1060,7 @@ void BuilderWindow::rmLoader()
         services->getPort("cca.BuilderService")
     );
     if (builder.isNull()) {
-        displayMsg("Error: Cannot find builder service\n");
+        displayMsg("Error: Cannot find builder service.");
         return;
     }
     builder->removeLoader("buzz");
@@ -1081,11 +1080,11 @@ void BuilderWindow::addSidlXmlPath()
         return;
     }
     if (pd->selectedDirectory().isEmpty()) {
-        displayMsg("Error: the directory path is blank.\n");
+        displayMsg("Error: the directory path is blank.");
         return;
     }
     if (pd->selectedComponentModel().isEmpty()) {
-        displayMsg("Error: the component model is blank.\n");
+        displayMsg("Error: the component model is blank.");
         return;
     }
 
@@ -1096,7 +1095,7 @@ void BuilderWindow::addSidlXmlPath()
     );
 
     if (fwkProperties.isNull()) {
-        displayMsg("Error: cannot find framework properties, not adding new components.\n");
+        displayMsg("Error: cannot find framework properties, not adding new components.");
         return;
     }
     sci::cca::TypeMap::pointer tm = fwkProperties->getProperties();
