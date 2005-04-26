@@ -383,7 +383,7 @@ itcl_class BaseViewWindow {
 	global ModuleSavedVars
 	set vid [$viewer modname]
 	foreach state {type light fog debug clip cull dl} {
-	    listFindAndRemove ModuleSavedVars($vid) "$this-$objid-$state"
+	    listFindAndRemove ModuleSavedVars($vid) "ViewWindow[number]-$objid-$state"
 	}
     }
 }
