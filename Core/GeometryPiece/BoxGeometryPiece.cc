@@ -91,7 +91,7 @@ BoxGeometryPiece::thicknessDirection() const
   double dy = (d_box.upper()).y() - (d_box.lower()).y();
   double dz = (d_box.upper()).z() - (d_box.lower()).z();
   double min = DMIN(DMIN(dx,dy),dz);
-  if (dx == min) return 1;
-  else if (dy == min) return 2;
-  return 3;
+  if (dx == min) return 0;
+  else if (dy == min) return 1;
+  return 2;
 }
