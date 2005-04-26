@@ -98,26 +98,65 @@ NrrdSelectTime::~NrrdSelectTime()
 
 
 void
-NrrdSelectTime::send_selection(NrrdDataHandle nrrd_handle, 
+NrrdSelectTime::send_selection(NrrdDataHandle in, 
 			       int which, unsigned int time_axis, bool cache)
 {
   NrrdOPort *onrrd = (NrrdOPort *)get_oport("Time Slice");
   MatrixOPort *osel = (MatrixOPort *)get_oport("Selected Index");
   NrrdDataHandle onrrd_handle(0);
 
-  // do the slice
-  NrrdData *out = scinew NrrdData();
-  out->nrrd = nrrdNew();
-  if (nrrdSlice(out->nrrd, nrrd_handle->nrrd, time_axis, which)) {
-    char *err = biffGetDone(NRRD);
-    error(string("Trouble slicing: ") + err);
-    free(err);
-    return;
+  if ((int)time_axis == in->nrrd->dim - 1)
+  {
+    NrrdData *out = scinew NrrdData(in.get_rep());
+    out->nrrd = nrrdNew();
+
+    // Copy all of the nrrd header from in to out.
+    if (nrrdBasicInfoCopy(out->nrrd, in->nrrd,
+			  NRRD_BASIC_INFO_DATA_BIT
+			  | NRRD_BASIC_INFO_CONTENT_BIT
+			  | NRRD_BASIC_INFO_COMMENTS_BIT))
+    {
+      error(biffGetDone(NRRD));
+      return;
+    }
+    out->nrrd->dim--;
+
+    if (nrrdAxisInfoCopy(out->nrrd, in->nrrd, NULL, NRRD_AXIS_INFO_NONE))
+    {
+      error(biffGetDone(NRRD));
+      return;
+    }
+    if (nrrdContentSet(out->nrrd, "slice", in->nrrd, "%d,%d",
+		       time_axis, which))
+    {
+      error(biffGetDone(NRRD));
+      return;
+    }
+
+    size_t offset = which * nrrdTypeSize[in->nrrd->type];
+    for (int i = 0; i < in->nrrd->dim - 1; i++)
+    {
+      offset *= in->nrrd->axis[i].size;
+    }
+    out->nrrd->data = ((unsigned char *)(in->nrrd->data)) + offset;
+    onrrd_handle = out;
   }
-  onrrd_handle = out;
+  else
+  {
+    // do the slice
+    NrrdData *out = scinew NrrdData();
+    out->nrrd = nrrdNew();
+    if (nrrdSlice(out->nrrd, in->nrrd, time_axis, which)) {
+      char *err = biffGetDone(NRRD);
+      error(string("Trouble slicing: ") + err);
+      free(err);
+      return;
+    }
+    onrrd_handle = out;
+  }
 
   // Copy the properties.
-  onrrd_handle->copy_properties(nrrd_handle.get_rep());
+  onrrd_handle->copy_properties(in.get_rep());
 
   onrrd->set_cache( cache );
   onrrd->send(onrrd_handle);
