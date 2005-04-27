@@ -9,11 +9,7 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \
-	Packages/Uintah/Core/Datatypes \
-	Packages/Uintah/Core/DataArchive \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/Core/Math \
-	Packages/Uintah/Core/Grid \
+	Packages/Uintah/Core		\
 	Packages/Uintah/CCA/Ports \
 	Dataflow/Network \
 	Dataflow/Ports \

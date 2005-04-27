@@ -1,6 +1,5 @@
 # Makefile fragment for this subdirectory
 
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR := Packages/Uintah/Core/Datatypes
 
@@ -23,18 +22,10 @@ PSELIBS := \
 	Core/Datatypes   \
 	Core/Containers  \
 	Core/Thread      \
-	Core/Util        \
-	Packages/Uintah/Core/Grid        \
-	Packages/Uintah/Core/Util        \
-	Packages/Uintah/Core/Math        \
-	Packages/Uintah/Core/Disclosure  \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/CCA/Ports        \
-        Packages/Uintah/Core/Exceptions  
+	Core/Util        
 
 
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) 
 
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 

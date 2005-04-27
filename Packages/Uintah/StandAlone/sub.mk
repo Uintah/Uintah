@@ -21,7 +21,8 @@ ifeq ($(CC),newmpxlc)
         Core/Containers   \
 	Core/Persistent   \
 	Core/OS		  \
-        Packages/Uintah/Core/GeometryPiece \
+	Core/Geom	\
+        Packages/Uintah/Core	\
         Packages/Uintah/CCA/Components/Arches/Mixing \
         Packages/Uintah/CCA/Components/Arches/fortran \
         Packages/Uintah/CCA/Components/Arches/Radiation \
@@ -38,16 +39,10 @@ else
         Core/Exceptions   \
         Core/Thread       \
         Core/Geometry     \
+        Core/Geom		\
         Core/Util         \
         Core/Math         \
-        Packages/Uintah/Core/DataArchive   \
-        Packages/Uintah/Core/Grid \
-        Packages/Uintah/Core/Parallel \
-        Packages/Uintah/Core/Labels \
-        Packages/Uintah/Core/Util \
-        Packages/Uintah/Core/Math \
-        Packages/Uintah/Core/Disclosure \
-        Packages/Uintah/Core/Exceptions \
+        Packages/Uintah/Core	\
         Packages/Uintah/CCA/Ports \
 	Packages/Uintah/CCA/Components/Models \
         Packages/Uintah/CCA/Components/MPM \
@@ -55,7 +50,6 @@ else
         Packages/Uintah/CCA/Components/DataArchiver \
         Packages/Uintah/CCA/Components/LoadBalancers \
         Packages/Uintah/CCA/Components/Regridder \
-        Packages/Uintah/Core/ProblemSpec \
         Packages/Uintah/CCA/Components/SimulationController \
         Packages/Uintah/CCA/Components/Schedulers \
         Packages/Uintah/CCA/Components/Scheduler3 \
@@ -102,21 +96,14 @@ ifeq ($(LARGESOS),yes)
   PSELIBS := Datflow Packages/Uintah
 else
   PSELIBS := \
-        Packages/Uintah/Core/Exceptions    \
-        Packages/Uintah/Core/Grid          \
-        Packages/Uintah/Core/Util          \
-        Packages/Uintah/Core/Math          \
-        Packages/Uintah/Core/Parallel      \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/ProblemSpec   \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/DataArchive   \
+        Packages/Uintah/Core	\
 	Packages/Uintah/CCA/Ports          \
         Packages/Uintah/CCA/Components/ProblemSpecification \
         Dataflow/XMLUtil \
         Core/Exceptions  \
         Core/Persistent  \
         Core/Geometry    \
+        Core/Geom		\
         Core/Thread      \
         Core/Util        \
         Core/OS          \
@@ -137,21 +124,14 @@ ifeq ($(LARGESOS),yes)
   PSELIBS := Datflow Packages/Uintah
 else
   PSELIBS := \
-        Packages/Uintah/Core/Exceptions    \
-        Packages/Uintah/Core/Grid          \
-        Packages/Uintah/Core/Util          \
-        Packages/Uintah/Core/Math          \
-        Packages/Uintah/Core/Parallel      \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/ProblemSpec   \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/DataArchive   \
+        Packages/Uintah/Core		\
 	Packages/Uintah/CCA/Ports          \
         Packages/Uintah/CCA/Components/ProblemSpecification \
         Dataflow/XMLUtil \
         Core/Exceptions  \
         Core/Persistent  \
         Core/Geometry    \
+        Core/Geom		\
         Core/Thread      \
         Core/Util        \
         Core/OS          \
@@ -196,21 +176,14 @@ ifeq ($(LARGESOS),yes)
   PSELIBS := Datflow Packages/Uintah
 else
   PSELIBS := \
-        Packages/Uintah/Core/Exceptions    \
-        Packages/Uintah/Core/Grid          \
-        Packages/Uintah/Core/Util          \
-        Packages/Uintah/Core/Math          \
-        Packages/Uintah/Core/Parallel      \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/ProblemSpec   \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/DataArchive   \
+        Packages/Uintah/Core		\
 	Packages/Uintah/CCA/Ports          \
         Packages/Uintah/CCA/Components/ProblemSpecification \
         Dataflow/XMLUtil \
         Core/Exceptions  \
         Core/Persistent  \
         Core/Geometry    \
+        Core/Geom		\
         Core/Thread      \
         Core/Util        \
         Core/OS          \
@@ -237,21 +210,14 @@ ifeq ($(LARGESOS),yes)
   PSELIBS := Datflow Packages/Uintah
 else
   PSELIBS := \
-        Packages/Uintah/Core/Exceptions    \
-        Packages/Uintah/Core/Grid          \
-        Packages/Uintah/Core/Util          \
-        Packages/Uintah/Core/Math          \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/ProblemSpec   \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/DataArchive   \
-	Packages/Uintah/Core/Parallel   \
+        Packages/Uintah/Core		\
 	Packages/Uintah/CCA/Ports          \
 	Packages/Uintah/CCA/Components/ProblemSpecification \
 	Dataflow/XMLUtil  \
 	Core/Persistent   \
 	Core/Datatypes    \
         Core/Geometry    \
+        Core/Geom		\
         Core/Thread      \
         Core/Util        \
 	Core/Math        \
@@ -279,19 +245,13 @@ ifeq ($(LARGESOS),yes)
 else
   PSELIBS := \
         Dataflow/XMLUtil  \
-        Packages/Uintah/Core/Exceptions    \
-        Packages/Uintah/Core/Grid          \
-        Packages/Uintah/Core/Util          \
-        Packages/Uintah/Core/Parallel \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/Math          \
-        Packages/Uintah/Core/ProblemSpec   \
-        Packages/Uintah/Core/DataArchive   \
+        Packages/Uintah/Core		\
 	Packages/Uintah/CCA/Ports          \
         Packages/Uintah/CCA/Components/ProblemSpecification \
         Core/Exceptions  \
 	Core/Persistent   \
         Core/Geometry    \
+        Core/Geom		\
         Core/Thread      \
         Core/Util        \
         Core/OS          \
@@ -312,16 +272,11 @@ ifeq ($(LARGESOS),yes)
   PSELIBS := Datflow Packages/Uintah
 else
   PSELIBS := \
-	Packages/Uintah/Core/Grid \
-	Packages/Uintah/Core/Util \
-	Packages/Uintah/Core/GeometryPiece \
-	Packages/Uintah/Core/Parallel \
-	Packages/Uintah/Core/Exceptions \
-	Packages/Uintah/Core/Math \
-	Packages/Uintah/Core/ProblemSpec \
+	Packages/Uintah/Core	\
 	Packages/Uintah/CCA/Ports \
 	Packages/Uintah/CCA/Components/ProblemSpecification \
 	Core/Exceptions \
+        Core/Geom	\
         Core/Geometry
 endif
 
@@ -338,18 +293,13 @@ ifeq ($(LARGESOS),yes)
 PSELIBS := Datflow Packages/Uintah
 else
 PSELIBS := \
-        Packages/Uintah/Core/Exceptions \
-        Packages/Uintah/Core/Grid \
-	Packages/Uintah/Core/Util \
-        Packages/Uintah/Core/Parallel \
-        Packages/Uintah/Core/Disclosure \
-        Packages/Uintah/Core/DataArchive \
+        Packages/Uintah/Core		\
 	Packages/Uintah/CCA/Ports \
         Packages/Uintah/CCA/Components/DataArchiver \
-        Packages/Uintah/Core/ProblemSpec \
         Packages/Uintah/CCA/Components/ProblemSpecification \
         Core/Exceptions  \
         Core/Geometry    \
+        Core/Geom		\
         Core/Thread      \
         Core/Util        \
         Core/OS          \
@@ -394,15 +344,11 @@ ifeq ($(LARGESOS),yes)
   PSELIBS := Datflow Packages/Uintah
 else
   PSELIBS := \
-      Packages/Uintah/Core/Grid \
-      Packages/Uintah/Core/Util \
-      Packages/Uintah/Core/Parallel \
-      Packages/Uintah/Core/Exceptions \
-      Packages/Uintah/Core/Math \
-      Packages/Uintah/Core/ProblemSpec \
+      Packages/Uintah/Core	\
       Packages/Uintah/CCA/Ports \
       Packages/Uintah/CCA/Components/ProblemSpecification \
       Core/Exceptions \
+      Core/Geom		\
       Core/Geometry
 endif
 

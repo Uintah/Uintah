@@ -8,11 +8,11 @@ SRCS := $(SRCDIR)/graphview.cc	$(SRCDIR)/GV_TaskGraph.cc 	\
 	$(SRCDIR)/DaVinci.cc
 
 PSELIBS := \
-	Packages/Uintah/Core/DataArchive \
+	Packages/Uintah/Core	\
 	Packages/Uintah/CCA/Components/ProblemSpecification \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/Core/Exceptions \
 	Core/Exceptions  \
+	Core/Datatypes \
+	Core/Geom	\
 	Core/Util  
 
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY)
