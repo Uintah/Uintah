@@ -230,7 +230,21 @@ VolumeVisualizer::execute()
       !gui_shine_.changed() && !gui_light_.changed() &&
       !gui_blend_res_.changed() && !gui_multi_level_.changed() &&
       !gui_use_stencil_.changed() && !gui_invert_opacity_.changed() &&
-      !gui_num_slices_.changed()) return;
+      !gui_num_slices_.changed())
+  {
+    if (tex.get_rep())
+    {
+      for (unsigned int i = 0; i < tex->bricks().size(); i++)
+      {
+	if (tex->bricks()[i]->dirty())
+	{
+	  ogeom->flushViews();
+	  break;
+	}
+      }
+    }
+    return;
+  }
 
   string s;
   gui->eval(id + " hasUI", s);
