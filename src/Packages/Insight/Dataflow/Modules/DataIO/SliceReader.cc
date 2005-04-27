@@ -117,6 +117,8 @@ SliceReader::~SliceReader()
 void
 SliceReader::execute()
 {
+  slice_.reset();
+
   update_state(NeedData);
 
   // Read filename
@@ -155,6 +157,7 @@ SliceReader::execute()
 
   if (fn != old_filename_ ||
       new_filemodification != old_filemodification_) {
+
     // new file
     old_filename_ = fn;
     old_filemodification_ = new_filemodification;
@@ -180,6 +183,7 @@ SliceReader::execute()
     size_0_.set(io_->GetNumberOfPixels(0));
     size_1_.set(io_->GetNumberOfPixels(1));
     size_2_.set(io_->GetNumberOfPixels(2));
+
     if (slice_.get() >= size_2_.get()) 
       slice_.set(0);
 
@@ -188,8 +192,6 @@ SliceReader::execute()
 
   //NrrdData *nd = scinew NrrdData();
   ITKDatatype *nd = scinew ITKDatatype;
-  
-  slice_.reset();
 
   // pixel type
   itk::ImageIOBase::IOComponentType p_type = io_->GetComponentType();
@@ -297,12 +299,12 @@ SliceReader::execute()
     return;
     break;
   }
-  
+
   // Send the data downstream.
   //NrrdDataOPort *outport = (NrrdDataOPort *)get_oport("OutputSlice");
   ITKDatatypeOPort *outport = (ITKDatatypeOPort *)get_oport("OutputSlice");
   outport->send(read_handle_);
-  
+
   update_state(Completed);
 }
 
@@ -311,6 +313,7 @@ template<class data>
 bool
 SliceReader::create_slice(ITKDatatype* nd)
 {
+
   io_->CloseImageFile(fp_);
   fp_ = io_->OpenImageFile(io_->GetImageFile(old_filename_));
   
@@ -345,7 +348,6 @@ SliceReader::create_slice(ITKDatatype* nd)
   data* d = img->GetPixelContainer()->GetImportPointer();
 
   // read the current slice
-  slice_.reset();
   int slice = slice_.get();
 
   if (slice >= size_2_.get()) {
@@ -382,7 +384,6 @@ SliceReader::create_slice(ITKDatatype* nd)
   }
 
   read_handle_ = nd;
-
   return true;
 }
 
