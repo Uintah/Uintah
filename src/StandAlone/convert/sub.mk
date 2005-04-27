@@ -49,6 +49,11 @@ PROGRAM := $(SRCDIR)/HexVolFieldToText
 SRCS := $(SRCDIR)/HexVolFieldToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/HexVolToVtk
+SRCS := $(SRCDIR)/HexVolToVtk.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+
 PROGRAM := $(SRCDIR)/PointCloudFieldToText
 SRCS := $(SRCDIR)/PointCloudFieldToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
