@@ -77,11 +77,11 @@ FileTransfer::FileTransfer(ServiceContext &ctx) :
     {
         std::istringstream iss(ctx.parameters["buffersize"]);
         iss >> buffersize_; 
-        if (buffersize_ < 1000) buffersize_ = 1000000;
+        if (buffersize_ < 1000) buffersize_ = 1000;
     }
     else
     {
-        buffersize_ = 1000000;
+        buffersize_ = 30000;
     }
 }
 
@@ -309,7 +309,7 @@ void FileTransfer::handle_service(IComPacketHandle &packet)
                 return;            
             }
             
-            if (bytesread < buffersize_)
+            if (bytesread <= buffersize_)
             {
                 packet->setdatasize(bytesread);
                 packet->settag(TAG_FEND);
