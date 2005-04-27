@@ -10,11 +10,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Endian.h>
 
-namespace SCIRun {
-  void swapbytes( Uintah::Matrix3& m);
-
-} //end namespace SCIRun
-
 #include <sgi_stl_warnings_off.h>
 #include <iosfwd>
 #include <iostream>
