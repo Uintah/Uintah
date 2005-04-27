@@ -23,12 +23,7 @@ endif
 
 PSELIBS := \
 	Packages/Uintah/CCA/Components/Arches/Radiation/fortran \
-	Packages/Uintah/Core/ProblemSpec   \
-	Packages/Uintah/Core/Grid        \
-	Packages/Uintah/Core/Util        \
-	Packages/Uintah/Core/Disclosure  \
-	Packages/Uintah/Core/Exceptions    \
-	Packages/Uintah/Core/Math          \
+	Packages/Uintah/Core		\
 	Core/Exceptions \
 	Core/Util \
 	Core/Thread     \
