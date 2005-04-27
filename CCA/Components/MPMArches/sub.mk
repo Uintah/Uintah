@@ -13,14 +13,7 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
 	Packages/Uintah/CCA/Ports          \
-	Packages/Uintah/Core/Grid          \
-	Packages/Uintah/Core/Util          \
-	Packages/Uintah/Core/Labels        \
-	Packages/Uintah/Core/Disclosure    \
-	Packages/Uintah/Core/Parallel      \
-	Packages/Uintah/Core/ProblemSpec   \
-	Packages/Uintah/Core/Exceptions    \
-	Packages/Uintah/Core/Math          \
+	Packages/Uintah/Core		\
 	Packages/Uintah/CCA/Components/MPM \
 	Packages/Uintah/CCA/Components/Arches \
 	Packages/Uintah/CCA/Components/Arches/fortran \

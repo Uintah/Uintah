@@ -10,7 +10,7 @@ SRCS     += \
 	$(SRCDIR)/MembraneParticleCreator.cc	\
 	$(SRCDIR)/ShellParticleCreator.cc 
 
-PSELIBS := Packages/Uintah/Core/Grid \
+PSELIBS := Packages/Uintah/Core		\
 	Packages/Uintah/CCA/Components/ICE \
 	Packages/Uintah/CCA/Components/HETransformation \
 	Core/Datatypes \

@@ -49,17 +49,11 @@ endif
 # include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/Core/GeometryPiece \
-	Packages/Uintah/Core/Grid        \
-	Packages/Uintah/Core/Util        \
-	Packages/Uintah/Core/Disclosure  \
-	Packages/Uintah/Core/Exceptions  \
+	Packages/Uintah/Core		\
 	Packages/Uintah/CCA/Components/Arches/fortran \
 	Packages/Uintah/CCA/Components/Arches/Mixing \
         Packages/Uintah/CCA/Components/Arches/Radiation \
 	Packages/Uintah/CCA/Ports \
-	Packages/Uintah/Core/Parallel \
         Core/Util \
         Core/Thread \
 	Core/Exceptions \

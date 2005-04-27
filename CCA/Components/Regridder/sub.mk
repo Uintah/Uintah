@@ -10,12 +10,7 @@ SRCS     += $(SRCDIR)/RegridderCommon.cc \
 
 PSELIBS := \
 	Packages/Uintah/CCA/Ports        \
-	Packages/Uintah/Core/Disclosure  \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/Core/Parallel    \
-	Packages/Uintah/Core/Grid        \
-	Packages/Uintah/Core/Util        \
-	Packages/Uintah/Core/Exceptions  \
+	Packages/Uintah/Core		\
 	Core/Geometry			 \
 	Core/Exceptions			 \
 	Core/Thread			 \

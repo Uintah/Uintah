@@ -41,11 +41,7 @@ SRCS     += \
 	$(SRCDIR)/ConstantMeltTemp.cc \
 	$(SRCDIR)/SCGMeltTemp.cc
 
-PSELIBS := Packages/Uintah/Core/Grid \
-	Packages/Uintah/Core/Disclosure \
-	Packages/Uintah/Core/Exceptions \
-	Packages/Uintah/Core/Math \
-	Packages/Uintah/Core/ProblemSpec \
+PSELIBS := Packages/Uintah/Core		\
 	Packages/Uintah/CCA/Ports \
 	Packages/Uintah/CCA/Components/ICE \
 	Core/Datatypes \

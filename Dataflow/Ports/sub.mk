@@ -22,8 +22,7 @@ PSELIBS := \
         Core/Persistent \
 	Core/Datatypes \
 	Core/GeomInterface \
-	Packages/Uintah/Core/Grid \
-	Packages/Uintah/Core/Datatypes 
+	Packages/Uintah/Core
 
 LIBS := $(XML_LIBRARY)
 

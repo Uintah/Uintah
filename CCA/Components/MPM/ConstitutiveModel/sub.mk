@@ -33,11 +33,7 @@ SUBDIRS := $(SRCDIR)/PlasticityModels
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
-PSELIBS := Packages/Uintah/Core/Grid \
-	Packages/Uintah/Core/Disclosure \
-	Packages/Uintah/Core/Exceptions \
-	Packages/Uintah/Core/Math \
-	Packages/Uintah/Core/ProblemSpec \
+PSELIBS := Packages/Uintah/Core		\
 	Packages/Uintah/CCA/Ports \
 	Packages/Uintah/CCA/Components/ICE \
 	Core/Datatypes \
