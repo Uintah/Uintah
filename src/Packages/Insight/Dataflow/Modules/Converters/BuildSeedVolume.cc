@@ -185,6 +185,7 @@ BuildSeedVolume::execute()
   // for each node, set pixel to inside_value for all pixels 
   // within the node's given radius
   double rad;
+  double x_rad, y_rad;
   while (ibi != iei)
   {
     Point p;
@@ -193,11 +194,17 @@ BuildSeedVolume::execute()
     int x = (int)p.x();
     int y = (int)p.y();
     f->value(rad, *ibi);
-    
+
+    // convert to image space
+    x = x / spacing_x;
+    y = y / spacing_y;
+    x_rad = rad / spacing_x;
+    y_rad = rad / spacing_y;
+
     // fill in that pixel
-    int radsq = rad*rad;
-    for(int r=y-rad; r <=(y+rad); r++) {
-      for(int c=x-rad; c <= (x+rad); c++) {
+    int radsq = x_rad * y_rad;
+    for(int r=y-y_rad; r <=(y+y_rad); r++) {
+      for(int c=x-x_rad; c <= (x+x_rad); c++) {
 	// check if point is within volume and
 	// should be part of the circle
 	// if so fill it in
