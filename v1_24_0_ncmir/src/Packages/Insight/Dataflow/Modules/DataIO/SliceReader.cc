@@ -180,7 +180,7 @@ SliceReader::execute()
     size_0_.set(io_->GetNumberOfPixels(0));
     size_1_.set(io_->GetNumberOfPixels(1));
     size_2_.set(io_->GetNumberOfPixels(2));
-    if (slice_.get() >= size_2_.get())
+    if (slice_.get() >= size_2_.get()) 
       slice_.set(0);
 
     gui->execute(id + " configure_slice_slider " + to_string(size_2_.get()-1));
@@ -189,6 +189,8 @@ SliceReader::execute()
   //NrrdData *nd = scinew NrrdData();
   ITKDatatype *nd = scinew ITKDatatype;
   
+  slice_.reset();
+
   // pixel type
   itk::ImageIOBase::IOComponentType p_type = io_->GetComponentType();
   switch(p_type) {
@@ -344,7 +346,8 @@ SliceReader::create_slice(ITKDatatype* nd)
 
   // read the current slice
   slice_.reset();
-  int slice = slice_.get();  
+  int slice = slice_.get();
+
   if (slice >= size_2_.get()) {
     error("Error: Attempting to read slice beyond bounds of data.");
     return false;

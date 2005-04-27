@@ -622,8 +622,9 @@ set $m53-location {Top Center}
 
 # Set GUI variables for the Insight->DataIO->SliceReader Module
 setGlobal $m54-filename \
-    "/home/darbyb/work/data/SCIRunData/1.22.0/Small.hdr"
+    "/home/darbyb/work/data/SCIRunData/1.22.0/smallcere.hdr"
 setGlobal $m54-cast_output {1}
+setGlobal $m54-slice {0}
 
 set $m56-mapName {BP Seismic}
 set $m56-resolution {2}
@@ -2283,29 +2284,33 @@ class LevelSetSegmenterApp {
  	    -expand 1 -fill both -padx 4 -pady 0
 
 	# pack vis stuff into top right
-	label $topr.l -text "Widgets to toggle\nstuff in segmentation\nwindow will go here"
+	iwidgets::labeledframe $topr.vis \
+	    -labelpos n -labeltext "Segmentation\nWindow Controls"
+	pack $topr.vis -side top -anchor n 
+
+	set vis [$topr.vis childsite]
 
 	global mods(ShowField-Speed)-faces-on
-	checkbutton $topr.speed -text "Show Speed Image" \
+	checkbutton $vis.speed -text "Show Speed Image" \
 	    -variable $mods(ShowField-Speed)-faces-on \
 	    -command "$this toggle_show_speed"
 
 	global show_seeds
-	checkbutton $topr.seeds -text "Show Seed Point Widgets" \
+	checkbutton $vis.seeds -text "Show Seed Point Widgets" \
 	    -variable show_seeds -command "$this seeds_changed 1 2 3"
 
  	global $mods(ShowField-Seed)-faces-on
- 	checkbutton $topr.seed -text "Show Current Seed" \
+ 	checkbutton $vis.seed -text "Show Current Seed" \
  	    -variable $mods(ShowField-Seed)-faces-on \
 	    -command "$this toggle_show_seed"
 
  	global $mods(ShowField-Seg)-faces-on
- 	checkbutton $topr.seg -text "Show Segmentation" \
+ 	checkbutton $vis.seg -text "Show Segmentation" \
  	    -variable $mods(ShowField-Seg)-faces-on \
 	    -command "$this toggle_show_segmentation"
 	
-	pack $topr.l $topr.speed $topr.seeds $topr.seed \
-	    $topr.seg -side top
+	pack $vis.speed $vis.seeds $vis.seed \
+	    $vis.seg -side top -anchor w
  	pack $topr -side top -anchor n \
  	    -expand 1 -fill both -padx 4 -pady 0
 
@@ -4432,11 +4437,10 @@ class LevelSetSegmenterApp {
 	global $mods(TransformMesh)-function
 	set $mods(TransformMesh)-function \
 	    "result = p + Vector(0.0, 0.0, $slice);"
-	puts [set $mods(TransformMesh)-function]
 
 	# enable/disable using previous slice option
 	set prev_avail 0
-	if {$slice > 0 && \
+	if {$slice > 0 && [info exists commits([expr $slice - 1])] && \
 		$commits([expr $slice - 1]) == 1} {
 	    $attachedPFr.f.p.childsite.seeds.childsite.method enable \
 		"Previous Segmentation and Seed Points"
@@ -4720,7 +4724,7 @@ bind all <Control-v> {
 }
 
 # Bugs/ToDo
-###########
+##############
 # Reverse Expansion doesn't seem to do anything to speed image.
 
 # Status indicator doesn't keep spinning at first
@@ -4736,3 +4740,4 @@ bind all <Control-v> {
 
 # Arg passing and filenames
 
+# Start by loading slice other than 0, and it forces user to read in 0 first
