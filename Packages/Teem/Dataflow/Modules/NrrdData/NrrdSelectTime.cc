@@ -230,9 +230,11 @@ NrrdSelectTime::execute()
 
   // Must have a time axis.
   int time_axis = -1;
-
-  for (unsigned int i = 0; i < (unsigned int)nrrd_handle->nrrd->dim; i++) {
-    if (string(nrrd_handle->nrrd->axis[i].label) == string("Time")) {
+  for (unsigned int i = 0; i < (unsigned int)nrrd_handle->nrrd->dim; i++)
+  {
+    if (nrrd_handle->nrrd->axis[i].label &&
+	string(nrrd_handle->nrrd->axis[i].label) == string("Time"))
+    {
       time_axis = i;
       break;
     }
