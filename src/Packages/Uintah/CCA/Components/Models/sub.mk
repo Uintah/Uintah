@@ -16,14 +16,7 @@ PSELIBS := \
 	Core/Thread \
 	Core/Util \
         Packages/Uintah/CCA/Ports \
-	Packages/Uintah/Core/Disclosure \
-	Packages/Uintah/Core/Exceptions \
-        Packages/Uintah/Core/Grid \
-        Packages/Uintah/Core/Util \
-        Packages/Uintah/Core/GeometryPiece \
-        Packages/Uintah/Core/Labels \
-	Packages/Uintah/Core/Parallel \
-        Packages/Uintah/Core/ProblemSpec \
+	Packages/Uintah/Core		\
 	Packages/Uintah/CCA/Components/ICE \
 	Packages/Uintah/CCA/Components/MPMICE
 LIBS	:= 

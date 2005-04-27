@@ -24,9 +24,6 @@ PSELIBS := \
 	Core/Util \
 	Core/Exceptions \
 	Core/Geometry \
-	Packages/Uintah/Core/Grid \
-	Packages/Uintah/Core/Util \
-	Packages/Uintah/Core/Exceptions \
-	Packages/Uintah/Core/ProblemSpec
+	Packages/Uintah/Core	
 
 LIBS := 
