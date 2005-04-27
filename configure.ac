@@ -2754,17 +2754,22 @@ if test "$HAVE_BLAS" != "yes"; then
 	     DEF_CBLAS="#define HAVE_CBLAS 1"
 	     AC_SUBST(DEF_CBLAS)
           else
-             SCI_TRY_LINK(BLAS,blas library,,,blas,$_sci_lib,$F_LIB_FLAG,,optional)
+             #scs library should be used on the SGI altix
+             SCI_TRY_LINK(BLAS,blas and scs libraries-2,cblas.h,
+                $_sci_inc,blas scs_mp,$_sci_lib,$F_LIB_FLAG,,optional)
              if test "$HAVE_BLAS" = "no"; then
-	        SCI_TRY_LINK(BLAS,optional fblas library,,,
-			     fblas,$_sci_lib,$F_LIB_FLAG,,optional)
-             else
-                # Verify it was in the right spot
-                if test "$_sci_specific" = "yes"; then
-                  SCI_TRY_LINK(BLAS,blas library,,,blas,$_sci_lib,$F_LIB_FLAG,,specific)
+                SCI_TRY_LINK(BLAS,blas library,,,blas,$_sci_lib,$F_LIB_FLAG,,optional)
+                if test "$HAVE_BLAS" = "no"; then
+	           SCI_TRY_LINK(BLAS,optional fblas library,,,
+		   	     fblas,$_sci_lib,$F_LIB_FLAG,,optional)
+                else
+                   # Verify it was in the right spot
+                   if test "$_sci_specific" = "yes"; then
+                     SCI_TRY_LINK(BLAS,blas library,,,blas,$_sci_lib,$F_LIB_FLAG,,specific)
+                   fi
                 fi
              fi
-	  fi
+          fi
        fi
        ;;
   esac
