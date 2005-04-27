@@ -68,6 +68,7 @@ SCENES := $(SRCDIR)/0.$(RSE) \
 	$(SRCDIR)/sketch.$(RSE) \
 	$(SRCDIR)/pt_particle.$(RSE) \
 	$(SRCDIR)/tstdemo.$(RSE) \
+	$(SRCDIR)/living-room2.$(RSE) \
 
 #	$(SRCDIR)/vthorax.$(RSE) \
 #	$(SRCDIR)/multihvb.$(RSE) \
@@ -82,7 +83,6 @@ SCENES := $(SRCDIR)/0.$(RSE) \
 # 	$(SRCDIR)/cbox.$(RSE) \
 #	$(SRCDIR)/graphics-museum-works.$(RSE) \
 # 	$(SRCDIR)/buddha.$(RSE) \
-#	$(SRCDIR)/living-room.$(RSE) \
 #	$(SRCDIR)/seaworld-tubes2.$(RSE) \
 #	$(SRCDIR)/seaworld-tubes3.$(RSE) \
 #	$(SRCDIR)/sphere-room2.$(RSE) \
