@@ -47,7 +47,7 @@ void ICE::scheduleSetupMatrix(  SchedulerP& sched,
   cout_doing << "ICE::scheduleSetupMatrix" << endl;
   t = scinew Task("ICE::setupMatrix", this, 
                   &ICE::setupMatrix, firstIteration);
-  t->requires( Task::ParentOldDW, lb->delTLabel); 
+//  t->requires( Task::ParentOldDW, lb->delTLabel);  for AMR
   t->requires( whichDW,   lb->sp_volX_FCLabel,    gac,1);        
   t->requires( whichDW,   lb->sp_volY_FCLabel,    gac,1);        
   t->requires( whichDW,   lb->sp_volZ_FCLabel,    gac,1);        
@@ -88,7 +88,7 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
   }
  
   const MaterialSubset* press_matl = one_matl; 
-  t->requires( pOldDW, lb->delTLabel);
+//  t->requires( pOldDW, lb->delTLabel);     AMR
   
   if(d_models.size() > 0){  
     t->requires(pNewDW, lb->modelMass_srcLabel,           gn,0);
@@ -164,7 +164,7 @@ void ICE::scheduleImplicitVel_FC(SchedulerP& sched,
            
   Ghost::GhostType  gac = Ghost::AroundCells;
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.               
-  t->requires(Task::ParentOldDW,lb->delTLabel);
+//  t->requires(Task::ParentOldDW,lb->delTLabel);  AMR
 
   t->requires(Task::ParentNewDW,lb->sp_vol_CCLabel,    /*all_matls*/ gac,1);
   t->requires(Task::ParentNewDW,lb->rho_CCLabel,       /*all_matls*/ gac,1);
@@ -183,7 +183,7 @@ void ICE::scheduleImplicitVel_FC(SchedulerP& sched,
   Task* task = scinew Task("ICE::addExchangeContributionToFCVel",
                      this, &ICE::addExchangeContributionToFCVel, recursion);
 
-  task->requires(Task::ParentOldDW, lb->delTLabel);  
+//  task->requires(Task::ParentOldDW, lb->delTLabel);   AMR
   task->requires(Task::ParentNewDW, lb->sp_vol_CCLabel,    gac,1);
   task->requires(Task::ParentNewDW, lb->vol_frac_CCLabel,  gac,1);
   task->requires(Task::NewDW,       lb->uvel_FCLabel,      gac,2);
@@ -263,7 +263,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   // NewDW = ParentNewDW
   //__________________________________
   // common Variables
-  t->requires( Task::OldDW, lb->delTLabel);    
+//  t->requires( Task::OldDW, lb->delTLabel);    AMR
   t->requires( Task::NewDW, lb->vol_frac_CCLabel,   gac,2); 
   t->requires( Task::NewDW, lb->sp_vol_CCLabel,     gac,1);
   t->requires( Task::NewDW, lb->press_equil_CCLabel, press_matl, oims,gac,1);
@@ -330,6 +330,8 @@ void ICE::setupMatrix(const ProcessorGroup*,
                       DataWarehouse* new_dw,
                       const bool firstIteration)
 {
+  const Level* level = getLevel(patches);
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing<<"Doing setupMatrix on patch "
@@ -346,7 +348,7 @@ void ICE::setupMatrix(const ProcessorGroup*,
 	  new_dw->getOtherDataWarehouse(Task::ParentOldDW); 
             
     delt_vartype delT;
-    parent_old_dw->get(delT, d_sharedState->get_delt_label());
+    parent_old_dw->get(delT, d_sharedState->get_delt_label(),level);
     Vector dx     = patch->dCell();
     int numMatls  = d_sharedState->getNumMatls();
     CCVariable<Stencil7> A; 
@@ -462,6 +464,8 @@ void ICE::setupRHS(const ProcessorGroup*,
                    DataWarehouse* new_dw,
                    const bool insideOuterIterLoop)
 {
+  const Level* level = getLevel(patches);
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing<<"Doing setupRHS on patch "
@@ -480,7 +484,8 @@ void ICE::setupRHS(const ProcessorGroup*,
            
     int numMatls  = d_sharedState->getNumMatls();
     delt_vartype delT;
-    pOldDW->get(delT, d_sharedState->get_delt_label());
+    pOldDW->get(delT, d_sharedState->get_delt_label(), level);
+    
     Vector dx     = patch->dCell();
     double vol    = dx.x()*dx.y()*dx.z();
     double invvol = 1./vol;
