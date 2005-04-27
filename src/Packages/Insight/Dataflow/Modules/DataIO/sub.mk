@@ -60,7 +60,7 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/Insight/Core/Datatypes Dataflow/Network \
-	Packages/Insight/Dataflow/Ports \
+	Packages/Insight/Dataflow/Ports Core/Algorithms/DataIO \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
