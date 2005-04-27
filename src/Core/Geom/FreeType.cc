@@ -314,6 +314,10 @@ void
 FreeTypeText::render(int width, int height, unsigned char *buffer)
 {
 #ifdef HAVE_FREETYPE
+#ifdef __ia64__
+  //freetype gives a SIGBUS on the SGI Prism
+  return;
+#endif
   //  BBox bbox;
   //get_bounds(bbox);
 
