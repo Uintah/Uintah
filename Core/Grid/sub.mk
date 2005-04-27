@@ -30,7 +30,6 @@ PSELIBS := \
 	Core/Thread \
 	Core/Util \
 	Core/Containers \
-	Packages/Uintah/Core/Math \
 	Packages/Uintah/Core/Parallel \
 	Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/Core/Exceptions \
