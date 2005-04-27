@@ -32,7 +32,7 @@ setProgressText "Loading LevelSetSegmenter Modules..."
 
 #######################################################################
 # Check environment variables.  Ask user for input if not set:
-init_DATADIR_and_DATASET
+#init_DATADIR_and_DATASET
 ############# NET ##############
 
 ::netedit dontschedule
@@ -4741,3 +4741,5 @@ bind all <Control-v> {
 # Arg passing and filenames
 
 # Start by loading slice other than 0, and it forces user to read in 0 first
+
+# splash screen corrupt
