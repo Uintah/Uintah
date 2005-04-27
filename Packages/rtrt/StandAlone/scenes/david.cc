@@ -56,10 +56,10 @@ Scene* make_scene(int argc, char* argv[])
 //  Vector Up(-0.168284, 0.979459, -0.111091);
 //  double fov=60;
 
-  Point Eye(-21.8836, -27.799, 2.6983);
-  Point Lookat(-14.0788, -19.9292, 3.48102);
+  Point Eye(-17.1721, -34.6021, 3.4593);
+  Point Lookat(-14, -20, 3.40703);
   Vector Up(0, 0, 1);
-  double fov=30;
+  double fov=22.5;
 
   Camera cam(Eye,Lookat,Up,fov);
 
@@ -68,11 +68,10 @@ Scene* make_scene(int argc, char* argv[])
   //Material *flat_white = new LambertianMaterial(Color(0,0,1));
 
   //GridTris* david = new GridTris(flat_white, 100, 0);
-  char newfile[1000];
-  strncpy(newfile, file, strlen(file)-4);
-  string newfileS = string(newfile)+"-grid";
-  GridTris* david = new GridTris(matl0, cells, depth,
-                                 newfileS);
+  string gridfile(file);
+  gridfile = string(gridfile, 0, gridfile.size()-4) + "-grid";
+  cerr << "gridfile = ("<<gridfile<<")\n";
+  GridTris* david = new GridTris(matl0, cells, depth, gridfile);
   Point dav_ped_top(-14,-20,1);
 
   cerr << "reading ply\n";
@@ -120,7 +119,7 @@ Scene* make_scene(int argc, char* argv[])
   Color cdown(0.03, 0.05, 0.35);
   
   Plane groundplane ( Point(1000, 0, 0), Vector(0, 2, 1) );
-  Scene *scene = new Scene(david,cam,bgcolor,cdown, cup,groundplane,ambient_scale);
+  Scene *scene = new Scene(david,cam,bgcolor,cdown, cup,groundplane,ambient_scale, Arc_Ambient);
   scene->set_background_ptr( new LinearBackground(
 						  Color(1.0, 1.0, 1.0),
 						  Color(0.1,0.1,0.1),
@@ -128,11 +127,11 @@ Scene* make_scene(int argc, char* argv[])
   
   scene->select_shadow_mode(Hard_Shadows);
 
-  Light *david_light = new Light(Point(3,-10,10), Color(1,1,1), 0);
+  Light *david_light = new Light(Point(-10,-50,20), Color(1,1,0.9), 1);
   david_light->name_ = "david_light";
   scene->add_light(david_light);
 
-  Light *david_light_back = new Light(Point(3,10,10), Color(1,1,1), 0);
+  Light *david_light_back = new Light(Point(3,10,10), Color(1,1,1), 1);
   david_light_back->name_ = "david_light_back";
   scene->add_light(david_light_back);
 
