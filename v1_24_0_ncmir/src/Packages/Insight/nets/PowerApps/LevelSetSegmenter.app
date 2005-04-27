@@ -32,7 +32,7 @@ setProgressText "Loading LevelSetSegmenter Modules..."
 
 #######################################################################
 # Check environment variables.  Ask user for input if not set:
-#init_DATADIR_and_DATASET
+init_DATADIR_and_DATASET
 ############# NET ##############
 
 ::netedit dontschedule
@@ -624,7 +624,7 @@ set $m53-location {Top Center}
 setGlobal $m54-filename \
     "/home/darbyb/work/data/SCIRunData/1.22.0/smallcere.hdr"
 setGlobal $m54-cast_output {1}
-setGlobal $m54-slice {0}
+#setGlobal $m54-slice {0}
 
 set $m56-mapName {BP Seismic}
 set $m56-resolution {2}
@@ -1733,12 +1733,12 @@ class LevelSetSegmenterApp {
 	frame $data.slice
 	global $mods(SliceReader)-slice
 	label $data.slice.l -text " Slice:"
-	scale $data.slice.s -variable $mods(SliceReader)-slice \
-	    -from 0 -to 255 -width 15 \
-	    -showvalue false -length 200 \
-	    -orient horizontal
-	entry $data.slice.e -textvariable $mods(SliceReader)-slice \
-	    -width 4
+ 	scale $data.slice.sl -variable $mods(SliceReader)-slice \
+ 	    -from 0 -to 255 -width 15 \
+ 	    -showvalue false -length 200 \
+ 	    -orient horizontal
+ 	entry $data.slice.e -textvariable $mods(SliceReader)-slice \
+ 	    -width 4
 	button $data.slice.next -text "Next" -width 4 \
 	    -background $execute_color \
 	    -activebackground $execute_active_color \
@@ -1747,10 +1747,10 @@ class LevelSetSegmenterApp {
 	    -background $execute_color \
 	    -activebackground $execute_active_color \
 	    -command "$this go_highres"
-	bind $data.slice.e <Return> "$this go_highres"
+#	bind $data.slice.e <Return> "$this go_highres"
 	
-	pack $data.slice.l $data.slice.s $data.slice.e \
-	    -side left 
+ 	pack $data.slice.l $data.slice.sl $data.slice.e \
+ 	    -side left 
 	
 	pack $data.slice.go $data.slice.next \
 	    -side right -padx 1
@@ -2704,8 +2704,9 @@ class LevelSetSegmenterApp {
 
 		# indicate commit on status canvas
 		global $mods(SliceReader)-slice
-		upvar \#0 $mods(SliceReader)-slice s
-		
+#		upvar \#0 $mods(SliceReader)-slice s
+		set s [set $mods(SliceReader)-slice]
+
 		set oldx [expr $s * $status_width]
 		set newx [expr $oldx + $status_width]
 		set r 0
@@ -4049,7 +4050,8 @@ class LevelSetSegmenterApp {
 	# Set up writer filename
 	global $mods(ImageFileWriter-Binary)-filename
 	global $mods(SliceReader)-slice
-	upvar \#0 $mods(SliceReader)-slice s
+#	upvar \#0 $mods(SliceReader)-slice s
+	set s [set $mods(SliceReader)-slice]
 	set $mods(ImageFileWriter-Binary)-filename \
 	    [file join $commit_dir $base_filename$s.hdr]
 
@@ -4428,7 +4430,9 @@ class LevelSetSegmenterApp {
 	# Prepare previous reader filename
 	global commit_dir base_filename
 	global $mods(SliceReader)-slice
-	upvar \#0 $mods(SliceReader)-slice slice
+#	upvar \#0 $mods(SliceReader)-slice slice
+	
+	set slice [set $mods(SliceReader)-slice]
 	global $mods(ImageReaderFloat2D)-filename
 	set $mods(ImageReaderFloat2D)-filename \
 	    [file join $commit_dir $base_filename[expr $slice - 1].hdr]
@@ -4469,8 +4473,9 @@ class LevelSetSegmenterApp {
     method next_highres {} {
 	global mods
 	global $mods(SliceReader)-slice
-	upvar \#0 $mods(SliceReader)-slice slice
-	set slice [expr $slice + 1]
+#	upvar \#0 $mods(SliceReader)-slice slice
+#	set slice [expr $slice + 1]
+	set $mods(SliceReader)-slice [expr [set $mods(SliceReader)-slice] + 1]
 
 	$this go_highres
     }
@@ -4497,13 +4502,15 @@ class LevelSetSegmenterApp {
 	    set max $size
 	    set size2 $size
 	}
-	
-	$attachedPFr.f.p.childsite.volumes.childsite.slice.s configure \
-	    -to [expr $max - 1]
-	$detachedPFr.f.p.childsite.volumes.childsite.slice.s configure \
-	    -to [expr $max - 1]
 
-	set status_width [expr [expr $process_width - 75]/$max]
+	if {$max > 0} {
+	    $attachedPFr.f.p.childsite.volumes.childsite.slice.sl configure \
+		-to [expr $max - 1]
+	    $detachedPFr.f.p.childsite.volumes.childsite.slice.sl configure \
+		-to [expr $max - 1]
+	    
+	    set status_width [expr [expr $process_width - 75]/$max]
+	}
 
 	# Clear canvas
 	$status_canvas1 create rectangle \
@@ -4740,6 +4747,4 @@ bind all <Control-v> {
 
 # Arg passing and filenames
 
-# Start by loading slice other than 0, and it forces user to read in 0 first
 
-# splash screen corrupt
