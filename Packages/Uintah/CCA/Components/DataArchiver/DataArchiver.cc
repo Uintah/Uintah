@@ -1727,6 +1727,8 @@ void DataArchiver::output(const ProcessorGroup*,
 	pdElem->appendElement("index", matlIndex);
 	pdElem->appendElement("patch", patchID);
   	pdElem->setAttribute("type",TranslateVariableType( var->typeDescription()->getName().c_str(), isThisCheckpoint ) );
+        if (var->getBoundaryLayer() != IntVector(0,0,0))
+          pdElem->appendElement("boundaryLayer", var->getBoundaryLayer());
 	
 #ifdef __sgi
 	off64_t ls = lseek64(fd, cur, SEEK_SET);
@@ -2077,6 +2079,7 @@ void DataArchiver::initCheckpoints(SchedulerP& sched)
       ConsecutiveRangeSet& unionedVarMatls =
 	label_matl_map[dep->var->getName()];
       unionedVarMatls = unionedVarMatls.unioned(matls);      
+      cout << " checkpoint for " << dep->var->getName() << ": matls " << unionedVarMatls << endl;
    }
          
    d_checkpointLabels.reserve(label_matl_map.size());
