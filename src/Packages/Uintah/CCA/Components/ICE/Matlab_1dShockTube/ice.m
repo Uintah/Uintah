@@ -118,8 +118,10 @@ eng_L           = zeros(1,totCells);            % Energy (= mass * internal ener
 %================ Face Centered (FC) ================
 
 totFaces        = P.nCells + 1;                 % Array size for FC vars
+x_FC            = zeros(1,totFaces);            % Face centers locations (x-component)
 xvel_FC         = zeros(1,totFaces);            % Velocity u (x-component)
 press_FC        = zeros(1,totFaces);            % Pressure p
+speedSound_FC   = zeros(1,totFaces);            % c^*
 
 %================ Node Centered (NC) ================
 
@@ -148,6 +150,7 @@ end
 % Initial data at t=0 in the interior domain.
 
 x_CC    = ([1:totCells]-1-0.5).*delX;           % Cell centers coordinates (note the "1-based" matlab index array)
+x_FC    = [1:totFaces].*delX;                   % Face centers coordinates
 for r = 1:numRegions                            % Init each region, assuming they are a non-overlapping all-covering partition of the domain
     R       = Region{r};
     first   = max(firstCell,...
@@ -262,6 +265,15 @@ for tstep = 1:P.maxTimeSteps
     for j = firstCell-1:lastCell                                    % Loop over all faces
         left        = j;
         right       = j+1;
+        speedSound_FC(j) = sqrt(0.5*(speedSound_CC(left)^2 + speedSound_CC(right)^2));
+    end
+    
+    delUStar = delT;                                                % Production ICE / VNR q=0 (1950)
+    %delUStar = 0.5*delT;                                           % Lax-Wendroff    
+    
+    for j = firstCell-1:lastCell                                    % Loop over all faces
+        left        = j;
+        right       = j+1;
         term1       = (...
             rho_CC(left )*xvel_CC(left ) + ...
             rho_CC(right)*xvel_CC(right) ...
@@ -271,8 +283,9 @@ for tstep = 1:P.maxTimeSteps
             / (spvol_CC(left) + spvol_CC(right) + d_SMALL_NUM);
 
         term2b      = (press_eq_CC(right) - press_eq_CC(left))/delX;
-
-        xvel_FC(j)  = term1 - delT*term2a*term2b;
+        
+        delUStar    = 0.5*delX/speedSound_FC(j);                   % Godunov sonic approxmation
+        xvel_FC(j)  = term1 - delUStar*term2a*term2b;               % Computed [limited] u^*
     end
 
     % Set boundary conditions on u @ face centers
@@ -299,13 +312,22 @@ for tstep = 1:P.maxTimeSteps
 
     term1 = ((speedSound_CC.^2) ./ spvol_CC );
 
-    % Advance pressure in time
-    delPDilatate = +  term1 .* q_advected;
-    %              ^----------------DOUBLE CHECK THIS SIGN!!!
+    % This is not exactly delP from Bucky's paper, is it?
+    delPStar = delT;                                                % Production ICE / VNR q=0 (1950)
+    %delPStar = 0.5*delT;                                            % Lax-Wendroff        
+    %delPStar    = 0.5*delX./speedSound_CC;                          % Godunov sonic approximation (1961)
+    %delPStar = 2.0*delT;
+    
+%     delPStar = zeros(1,totCells);
+%     for j = firstCell:lastCell-1
+%         delPStarLeft    = 0.5*delX./speedSound_FC(j);                          % Godunov sonic approximation (1961)
+%         delPStarRight    = 0.5*delX./speedSound_FC(j+1);                          % Godunov sonic approximation (1961)
+%         delPStar(j) = 0.5*(delPStarLeft + delPStarRight);
+%     end
 
-    press_CC = press_eq_CC + delPDilatate;
-    % Set boundary conditions on the new pressure
-    press_CC =  setBoundaryConditions(press_CC,'press_CC');
+    delPDilatate = (delPStar / delT) .* term1 .* q_advected;         % Compute [limited] DelP
+    press_CC = press_eq_CC + delPDilatate;                          % Advance pressure in time    
+    press_CC =  setBoundaryConditions(press_CC,'press_CC');         % Set boundary conditions on the new pressure
 
 
     %_____________________________________________________
