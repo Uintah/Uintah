@@ -12,7 +12,6 @@
 #include <Core/Util/Endian.h>
 
 namespace SCIRun {
-  void swapbytes( Uintah::Matrix3& m);
 
 #if defined(_AIX)
   // Looks like AIX doesn't have swapbytes(bool) but others do!... sigh...
