@@ -291,6 +291,12 @@ set m60 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat2D" 616 491]
 # Create a SCIRun->FieldsGeometry->ChangeFieldBounds Module
 set m61 [addModuleAtPosition "SCIRun" "FieldsGeometry" "ChangeFieldBounds" 826 1308]
 
+# Create a SCIRun->Math->BuildTransform Module
+set m62 [addModuleAtPosition "SCIRun" "Math" "BuildTransform" 745 1067]
+
+# Create a SCIRun->FieldsGeometry->TransformField Module
+set m63 [addModuleAtPosition "SCIRun" "FieldsGeometry" "TransformField" 727 1130]
+
 # Create the Connections between Modules
 set c1 [addConnection $m13 0 $m32 0]
 set c2 [addConnection $m13 0 $m31 0]
@@ -320,7 +326,7 @@ set c25 [addConnection $m6 0 $m21 0]
 set c26 [addConnection $m3 0 $m48 0]
 set c27 [addConnection $m3 0 $m4 0]
 set c28 [addConnection $m3 1 $m42 0]
-set c29 [addConnection $m50 0 $m51 0]
+set c29 [addConnection $m62 0 $m63 1]
 set c30 [addConnection $m5 1 $m13 0]
 set c31 [addConnection $m28 1 $m29 0]
 set c32 [addConnection $m16 0 $m8 0]
@@ -370,6 +376,8 @@ set c75 [addConnection $m42 0 $m58 0]
 set c76 [addConnection $m57 0 $m58 1]
 set c77 [addConnection $m58 0 $m14 6]
 set c78 [addConnection $m61 0 $m50 0]
+set c79 [addConnection $m50 0 $m63 0]
+set c80 [addConnection $m63 0 $m51 0]
 
 # Set GUI variables
 
@@ -640,6 +648,17 @@ setGlobal $m61-outputcenterx {0.0}
 setGlobal $m61-outputcentery {0.0}
 setGlobal $m61-outputcenterz {0.0}
 
+set $m62-rotate_z {1.0}
+set $m62-translate_x {0.0}
+set $m62-translate_y {0.0}
+set $m62-translate_z {0.0}
+set $m62-scale_z {0.0}
+set $m62-shear_plane_c {1.0}
+set $m62-shear_plane_d {1.0}
+set $m62-which_transform {scale}
+set $m62-widget_scale {1.0}
+
+
 ####################################################
 # Determine if load file was passed in, 
 # and if it is an analyze file, otherwise it
@@ -774,6 +793,7 @@ set mods(ImageToField-Iso) $m48
 set mods(GatherFields) $m50
 set mods(ShowField-Iso) $m51
 set mods(ChangeFieldBounds) $m61
+set mods(BuildTransform) $m62
 
 
 global axis
@@ -914,7 +934,7 @@ class LevelSetSegmenterApp {
 
 # 	set segmenting_type "Reset"
 
-# 	set has_committed 0
+ 	set has_committed 0
 
 
 	### Define Tooltips
@@ -2342,8 +2362,14 @@ class LevelSetSegmenterApp {
 	global spacing
 	label $vis2.f.l -text "Isocontour Spacing:"
 	entry $vis2.f.e -textvariable spacing -width 3
-	pack $vis2.f.l $vis2.f.e -side left -anchor w
-
+	pack $vis2.f.l $vis2.f.e -side left -anchor w -padx 3
+	scale $vis2.s -label "" \
+	    -variable spacing \
+	    -from 0 -to 10 -width 15 -length 200 \
+	    -showvalue true -resolution 0.5  \
+	    -orient vertical -showvalue false \
+	    -command "$this update_spacing"
+	pack $vis2.s -side top -anchor n 
 
  	pack $topr -side top -anchor n \
  	    -expand 1 -fill both -padx 4 -pady 0
@@ -2384,7 +2410,7 @@ class LevelSetSegmenterApp {
 	pack $window.modes.slider \
 	    -side top -pady 0 -anchor n -expand yes -fill x
 	
-	# Initialize with slice scale visible
+	# Initialize with slice scale visibe
 	frame $window.modes.slider.slice
 	pack $window.modes.slider.slice -side top -anchor n -expand 1 -fill x
 
@@ -4089,24 +4115,6 @@ class LevelSetSegmenterApp {
 	set $mods(ImageFileWriter-Binary)-filename \
 	    [file join $commit_dir $base_filename$s.hdr]
 
-	# Setup ChangeFieldBounds
-	global axis spacing
-	if {$axis == 0} {
-	    global $mods(ChangeFieldBounds)-outputcenterx
-	    global $mods(SliceReader)-spacing_0
-	    set $mods(ChangeFieldBounds)-outputcenterx \
-		[expr $s * $spacing]
-	} elseif {$axis == 1} {
-	    global $mods(ChangeFieldBounds)-outputcentery
-	    global $mods(SliceReader)-spacing_1
-	    set $mods(ChangeFieldBounds)-outputcentery \
-		[expr $s * $spacing]
-	} else {
-	    global $mods(ChangeFieldBounds)-outputcenterz
-	    global $mods(SliceReader)-spacing_2
-	    set $mods(ChangeFieldBounds)-outputcenterz \
-		[expr $s * $spacing]
-	}
 
   	# enable writing module and 3D vis
 	disableModule $mods(ImageFileWriter-Binary) 0
@@ -4116,6 +4124,8 @@ class LevelSetSegmenterApp {
 	set committing 1
 	$mods(ImageFileWriter-Binary)-c needexecute
 	$mods(ImageToField-Iso)-c needexecute
+
+	set has_committed 1
      }
 
 #     method current_slice_changed {} {
@@ -4491,22 +4501,16 @@ class LevelSetSegmenterApp {
 	    [file join $commit_dir $base_filename[expr $slice - 1].hdr]
 
 	# Prepare ChangeFieldBounds center
-	global axis spacing
+	global axis
 	if {$axis == 0} {
 	    global $mods(ChangeFieldBounds)-outputcenterx
-	    global $mods(SliceReader)-spacing_0
-	    set $mods(ChangeFieldBounds)-outputcenterx \
-		[expr $slice * $spacing]
+	    set $mods(ChangeFieldBounds)-outputcenterx $slice
 	} elseif {$axis == 1} {
 	    global $mods(ChangeFieldBounds)-outputcentery
-	    global $mods(SliceReader)-spacing_1
-	    set $mods(ChangeFieldBounds)-outputcentery \
-		[expr $slice * $spacing]
+	    set $mods(ChangeFieldBounds)-outputcentery $slice
 	} else {
 	    global $mods(ChangeFieldBounds)-outputcenterz
-	    global $mods(SliceReader)-spacing_2
-	    set $mods(ChangeFieldBounds)-outputcenterz \
-		[expr $slice * $spacing]
+	    set $mods(ChangeFieldBounds)-outputcenterz $slice
 	}
 
 
@@ -4700,6 +4704,16 @@ class LevelSetSegmenterApp {
 	upvar \#0 $mods(SliceReader)-slice s
 	set $mods(ImageFileWriter-Binary)-filename \
 	    [file join $commit_dir $base_filename$s.hdr]
+    }
+
+    method update_spacing {var} {
+	global mods spacing
+	global $mods(BuildTransform)-scale_z
+	
+	set $mods(BuildTransform)-scale_z [expr log10($spacing)]
+	if {$initialized == 1 && $has_committed == 1} {
+	    $mods(BuildTransform)-c needexecute
+	}
     }
     
     method make_entry {w text v {wi -1}} {
