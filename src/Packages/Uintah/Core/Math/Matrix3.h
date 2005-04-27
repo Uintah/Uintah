@@ -675,6 +675,7 @@ namespace Uintah {
 } // End namespace Uintah
 
 std::ostream & operator << (std::ostream &out_file, const Uintah::Matrix3 &m3);
+
 // Added for compatibility with core types
 #include <Core/Datatypes/TypeName.h>
 #include <sgi_stl_warnings_off.h>
@@ -691,6 +692,7 @@ namespace SCIRun {
   const TypeDescription* get_type_description(Matrix3*);
   void Pio( Piostream&, Uintah::Matrix3& );
 } // namespace SCIRun
+
 
 #endif  // __MATRIX3_H__
 

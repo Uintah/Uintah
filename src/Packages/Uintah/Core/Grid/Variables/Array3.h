@@ -2,8 +2,8 @@
 #define UINTAH_HOMEBREW_ARRAY3_H
 
 #include <Packages/Uintah/Core/Grid/Variables/Array3Window.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Grid/Variables/Stencil7.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
 
 #include <Core/Util/Endian.h>
 #include <Core/Geometry/IntVector.h>
