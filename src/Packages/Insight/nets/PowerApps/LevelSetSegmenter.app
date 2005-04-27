@@ -811,6 +811,9 @@ set commit_dir "/tmp"
 global base_filename
 set base_filename "out"
 
+global spacing
+set spacing 1.0
+
 #######################################################
 # Build up a simplistic standalone application.
 #######################################################
@@ -1765,11 +1768,22 @@ class LevelSetSegmenterApp {
 	global $mods(SliceReader)-size_2
 	
 	trace variable $mods(SliceReader)-size_0 w \
-	    "$this SliceReader_changed"
+	    "$this SliceReader_size_changed"
 	trace variable $mods(SliceReader)-size_1 w \
-	    "$this SliceReader_changed"
+	    "$this SliceReader_size_changed"
 	trace variable $mods(SliceReader)-size_2 w \
-	    "$this SliceReader_changed"
+	    "$this SliceReader_size_changed"
+
+	global $mods(SliceReader)-spacing_0
+	global $mods(SliceReader)-spacing_1
+	global $mods(SliceReader)-spacing_2
+	trace variable $mods(SliceReader)-spacing_0 w \
+	    "$this SliceReader_spacing_changed"
+	trace variable $mods(SliceReader)-spacing_1 w \
+	    "$this SliceReader_spacing_changed"
+	trace variable $mods(SliceReader)-spacing_2 w \
+	    "$this SliceReader_spacing_changed"
+	
 	
 	pack $data.lowres $data.highres $data.slice \
 	    -side top -anchor nw -expand yes -fill x -padx 3
@@ -2316,6 +2330,21 @@ class LevelSetSegmenterApp {
 	
 	pack $vis.speed $vis.seeds $vis.seed \
 	    $vis.seg -side top -anchor w
+
+	iwidgets::labeledframe $topr.vis2 \
+	    -labelpos n -labeltext "Isocontours\nWindow Controls"
+	pack $topr.vis2 -side top -anchor n 
+
+	set vis2 [$topr.vis2 childsite]
+	frame $vis2.f
+	pack $vis2.f -side top -anchor nw -expand yes -fill x
+
+	global spacing
+	label $vis2.f.l -text "Isocontour Spacing:"
+	entry $vis2.f.e -textvariable spacing -width 3
+	pack $vis2.f.l $vis2.f.e -side left -anchor w
+
+
  	pack $topr -side top -anchor n \
  	    -expand 1 -fill both -padx 4 -pady 0
 
@@ -4060,6 +4089,25 @@ class LevelSetSegmenterApp {
 	set $mods(ImageFileWriter-Binary)-filename \
 	    [file join $commit_dir $base_filename$s.hdr]
 
+	# Setup ChangeFieldBounds
+	global axis spacing
+	if {$axis == 0} {
+	    global $mods(ChangeFieldBounds)-outputcenterx
+	    global $mods(SliceReader)-spacing_0
+	    set $mods(ChangeFieldBounds)-outputcenterx \
+		[expr $s * $spacing]
+	} elseif {$axis == 1} {
+	    global $mods(ChangeFieldBounds)-outputcentery
+	    global $mods(SliceReader)-spacing_1
+	    set $mods(ChangeFieldBounds)-outputcentery \
+		[expr $s * $spacing]
+	} else {
+	    global $mods(ChangeFieldBounds)-outputcenterz
+	    global $mods(SliceReader)-spacing_2
+	    set $mods(ChangeFieldBounds)-outputcenterz \
+		[expr $s * $spacing]
+	}
+
   	# enable writing module and 3D vis
 	disableModule $mods(ImageFileWriter-Binary) 0
 	disableModule $mods(ImageToField-Iso) 0
@@ -4443,22 +4491,22 @@ class LevelSetSegmenterApp {
 	    [file join $commit_dir $base_filename[expr $slice - 1].hdr]
 
 	# Prepare ChangeFieldBounds center
-	global axis
+	global axis spacing
 	if {$axis == 0} {
 	    global $mods(ChangeFieldBounds)-outputcenterx
 	    global $mods(SliceReader)-spacing_0
 	    set $mods(ChangeFieldBounds)-outputcenterx \
-		[expr $slice * [set $mods(SliceReader)-spacing_0]]
+		[expr $slice * $spacing]
 	} elseif {$axis == 1} {
 	    global $mods(ChangeFieldBounds)-outputcentery
 	    global $mods(SliceReader)-spacing_1
 	    set $mods(ChangeFieldBounds)-outputcentery \
-		[expr $slice * [set $mods(SliceReader)-spacing_1]]
+		[expr $slice * $spacing]
 	} else {
 	    global $mods(ChangeFieldBounds)-outputcenterz
 	    global $mods(SliceReader)-spacing_2
 	    set $mods(ChangeFieldBounds)-outputcenterz \
-		[expr $slice * [set $mods(SliceReader)-spacing_2]]
+		[expr $slice * $spacing]
 	}
 
 
@@ -4500,10 +4548,25 @@ class LevelSetSegmenterApp {
 	$this go_highres
     }
 
-    method SliceReader_changed {var1 var2 var3} {
+    method SliceReader_spacing_changed {var1 var2 var3} {
+	global mods axis spacing
+
+	if {$axis == 0} {
+	    global $mods(SliceReader)-spacing_0
+	    set spacing [set $mods(SliceReader)-spacing_0]
+	} elseif {$axis == 1} {
+	    global $mods(SliceReader)-spacing_1
+	    set spacing [set $mods(SliceReader)-spacing_1]
+	} else {
+	    global $mods(SliceReader)-spacing_2
+	    set spacing [set $mods(SliceReader)-spacing_2]
+	}	
+    }
+
+    method SliceReader_size_changed {var1 var2 var3} {
 	# Slice Reader read in new file so adjust the slice
 	# slider and status canvas width
-	global mods axis
+	global mods axis spacing
 	set max 0
 	
 	if {$axis == 0} {
@@ -4769,7 +4832,6 @@ bind all <Control-v> {
 
 # Slider to adjust z spacing of isocontours (default to what it should be)
 
-# Fix Go buttons to be lighter green
 
 
 
