@@ -69,6 +69,9 @@ private:
   GuiInt          size_0_;
   GuiInt          size_1_;
   GuiInt          size_2_;
+  GuiDouble       spacing_0_;
+  GuiDouble       spacing_1_;
+  GuiDouble       spacing_2_;
   GuiInt          slice_;
   GuiInt          cast_output_;
 
@@ -99,6 +102,9 @@ SliceReader::SliceReader(SCIRun::GuiContext* ctx) :
   size_0_(ctx->subVar("size_0")),
   size_1_(ctx->subVar("size_1")),
   size_2_(ctx->subVar("size_2")),
+  spacing_0_(ctx->subVar("spacing_0")),
+  spacing_1_(ctx->subVar("spacing_1")),
+  spacing_2_(ctx->subVar("spacing_2")),
   slice_(ctx->subVar("slice")),
   cast_output_(ctx->subVar("cast_output")),
   filename_(ctx->subVar("filename")),
@@ -183,6 +189,10 @@ SliceReader::execute()
     size_0_.set(io_->GetNumberOfPixels(0));
     size_1_.set(io_->GetNumberOfPixels(1));
     size_2_.set(io_->GetNumberOfPixels(2));
+
+    spacing_0_.set(io_->GetSpacing(0));
+    spacing_1_.set(io_->GetSpacing(1));
+    spacing_2_.set(io_->GetSpacing(2));
 
     if (slice_.get() >= size_2_.get()) 
       slice_.set(0);
