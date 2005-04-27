@@ -268,7 +268,7 @@ itcl_class Module {
 	    -padx 2 -pady 2
 	frame $p.msg.indicator -relief raised -width 0 -height 0 \
 	    -borderwidth 2 -background blue
-	bind $p.msg.indicator <Button> "$this displayLog"
+	bind $p.msg.indicator <Button-1> "$this displayLog"
 	Tooltip $p.msg.indicator $ToolTipText(ModuleMessageBtn)
 
 	update_msg_state
@@ -302,6 +302,8 @@ itcl_class Module {
 
 	bindtags $p [linsert [bindtags $p] 1 $modframe]
 	bindtags $p.title [linsert [bindtags $p.title] 1 $modframe]
+	bindtags $p.msg [linsert [bindtags $p.msg] 1 $modframe]
+	bindtags $p.msg.indicator [linsert [bindtags $p.msg.indicator] 1 $modframe]
 	if {$make_time} {
 	    bindtags $p.time [linsert [bindtags $p.time] 1 $modframe]
 	}
