@@ -336,9 +336,8 @@ private:
   string queryEndianness();  
   int queryNBits();  
 
-  // find the variable - the boundary layer is necessary for restarts
   void query( Variable& var, ProblemSpecP vnode, XMLURL url,
-	      int matlIndex, const Patch* patch, const IntVector* boundary = 0);
+	      int matlIndex, const Patch* patch);
 
   void queryVariables( const ProblemSpecP vars, vector<string>& names,
 		       vector<const TypeDescription*>& types);

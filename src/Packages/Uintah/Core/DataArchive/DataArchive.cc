@@ -433,7 +433,7 @@ DataArchive::query( Variable& var, const std::string& name,
 
 void
 DataArchive::query( Variable& var, ProblemSpecP vnode, XMLURL url,
-                    int matlIndex, const Patch* patch, const IntVector* boundary /* = 0 */)
+                    int matlIndex, const Patch* patch)
 {
   d_lock.lock();
   map<string,string> attributes;
@@ -443,6 +443,7 @@ DataArchive::query( Variable& var, ProblemSpecP vnode, XMLURL url,
   if(type == "")
     throw InternalError("Variable doesn't have a type");
   const TypeDescription* td = var.virtualGetTypeDescription();
+
   ASSERT(td->getName() == type);
   
   if (td->getType() == TypeDescription::ParticleVariable) {
@@ -465,11 +466,13 @@ DataArchive::query( Variable& var, ProblemSpecP vnode, XMLURL url,
 //      (dynamic_cast<ParticleVariableBase*>(&var))->allocate(psubset);
   }
   else if (td->getType() != TypeDescription::ReductionVariable) {
-    if (!boundary)
-      var.allocate(patch, IntVector(0,0,0));
-    else
-      var.allocate(patch, *boundary);
+    IntVector boundary;
+    // optional entry for Boundary Layers - if var was saved with bl, we need it here
+    vnode->get("boundaryLayer", boundary);
+    var.allocate(patch, boundary);
   }
+
+  
 
   long start;
   if(!vnode->get("start", start))
@@ -714,8 +717,7 @@ DataArchive::initVariable(const Patch* patch,
   Variable* var = label->typeDescription()->createInstance();
   ProblemSpecP vnode = dataRef.first;
   XMLURL url = dataRef.second;
-  IntVector bl = label->getBoundaryLayer();
-  query(*var, vnode, url, matl, patch, &bl);
+  query(*var, vnode, url, matl, patch);
 
   ParticleVariableBase* particles;
   if ((particles = dynamic_cast<ParticleVariableBase*>(var))) {
