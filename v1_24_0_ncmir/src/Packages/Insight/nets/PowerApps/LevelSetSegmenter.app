@@ -555,8 +555,8 @@ set $m32-port-index {1}
 set $m33-operator {max}
 
 # Set GUI variables for the Teem->DataIO->AnalyzeNrrdReader Module
-setGlobal $m36-num-files {1}
-setGlobal $m36-filenames0 "/home/darbyb/work/data/SCIRunData/1.22.0/Test.hdr"
+#setGlobal $m36-num-files {1}
+#setGlobal $m36-filenames0 "/home/darbyb/work/data/SCIRunData/1.22.0/Test.hdr"
 
 # GradientAnisotropicDiffusion_0
 setGlobal $m37-time_step 0.0625
@@ -629,8 +629,8 @@ set $m53-format {Isocontours}
 set $m53-location {Top Center}
 
 # Set GUI variables for the Insight->DataIO->SliceReader Module
-setGlobal $m54-filename \
-    "/home/darbyb/work/data/SCIRunData/1.22.0/smallcere.hdr"
+#setGlobal $m54-filename \
+#    "/home/darbyb/work/data/SCIRunData/1.22.0/smallcere.hdr"
 setGlobal $m54-cast_output {1}
 #setGlobal $m54-slice {0}
 
@@ -4530,6 +4530,8 @@ class LevelSetSegmenterApp {
 		"Previous Segmentation and Seed Points"
 	}
 
+	
+
 	$mods(SliceReader)-c needexecute
 
 	# if previous slice option available and being used,
@@ -4846,7 +4848,7 @@ bind all <Control-v> {
 
 # Slider to adjust z spacing of isocontours (default to what it should be)
 
+# Fix double slicking on analyze file in SliceReader - shouldn't cause execute
 
-
-
+# Turn show segmentation off when reading new slice
 
