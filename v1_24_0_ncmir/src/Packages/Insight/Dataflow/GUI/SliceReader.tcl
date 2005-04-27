@@ -46,6 +46,9 @@ itcl_class Insight_DataIO_SliceReader {
 	global $this-size_0
 	global $this-size_1
 	global $this-size_2
+	global $this-spacing_0
+	global $this-spacing_1
+	global $this-spacing_2
 	global $this-slice
 	global $this-cast_output
 
@@ -54,6 +57,9 @@ itcl_class Insight_DataIO_SliceReader {
 	set $this-size_0 0
 	set $this-size_1 0
 	set $this-size_2 0
+	set $this-spacing_0 1.0
+	set $this-spacing_1 1.0
+	set $this-spacing_2 1.0
 	set $this-slice 0
 	set $this-cast_output 0
     }

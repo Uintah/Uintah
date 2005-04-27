@@ -288,8 +288,8 @@ set m59 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 809 579]
 # Create a Insight->DataIO->ImageReaderFloat2D Module
 set m60 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat2D" 616 491]
 
-# Create a SCIRun->FieldsGeometry->TransformMesh Module
-set m61 [addModuleAtPosition "SCIRun" "FieldsGeometry" "TransformMesh" 826 1308]
+# Create a SCIRun->FieldsGeometry->ChangeFieldBounds Module
+set m61 [addModuleAtPosition "SCIRun" "FieldsGeometry" "ChangeFieldBounds" 826 1308]
 
 # Create the Connections between Modules
 set c1 [addConnection $m13 0 $m32 0]
@@ -635,7 +635,10 @@ set $m58-edges-on {0}
 set $m58-faces-on {0}
 set $m58-use-transparency {1}
 
-setGlobal $m61-function "result = p + Vector(0.0, 0.0, 0.0);"
+setGlobal $m61-useoutputcenter {1}
+setGlobal $m61-outputcenterx {0.0}
+setGlobal $m61-outputcentery {0.0}
+setGlobal $m61-outputcenterz {0.0}
 
 ####################################################
 # Determine if load file was passed in, 
@@ -770,7 +773,7 @@ set mods(ImageToNrrd-Prev) $m59
 set mods(ImageToField-Iso) $m48
 set mods(GatherFields) $m50
 set mods(ShowField-Iso) $m51
-set mods(TransformMesh) $m61
+set mods(ChangeFieldBounds) $m61
 
 
 global axis
@@ -869,8 +872,10 @@ class LevelSetSegmenterApp {
 # 	set next_load ""
 # 	set next_smooth ""
 
- 	set execute_color "#008b45"
- 	set execute_active_color "#31a065"
+# 	set execute_color "#008b45"
+# 	set execute_active_color "#31a065"
+ 	set execute_color "#63c070"
+	set execute_active_color $execute_color
 
 	set pos_seeds_used 0
 	set neg_seeds_used 0
@@ -4437,10 +4442,25 @@ class LevelSetSegmenterApp {
 	set $mods(ImageReaderFloat2D)-filename \
 	    [file join $commit_dir $base_filename[expr $slice - 1].hdr]
 
-	# Prepare TransformMesh function
-	global $mods(TransformMesh)-function
-	set $mods(TransformMesh)-function \
-	    "result = p + Vector(0.0, 0.0, $slice);"
+	# Prepare ChangeFieldBounds center
+	global axis
+	if {$axis == 0} {
+	    global $mods(ChangeFieldBounds)-outputcenterx
+	    global $mods(SliceReader)-spacing_0
+	    set $mods(ChangeFieldBounds)-outputcenterx \
+		[expr $slice * [set $mods(SliceReader)-spacing_0]]
+	} elseif {$axis == 1} {
+	    global $mods(ChangeFieldBounds)-outputcentery
+	    global $mods(SliceReader)-spacing_1
+	    set $mods(ChangeFieldBounds)-outputcentery \
+		[expr $slice * [set $mods(SliceReader)-spacing_1]]
+	} else {
+	    global $mods(ChangeFieldBounds)-outputcenterz
+	    global $mods(SliceReader)-spacing_2
+	    set $mods(ChangeFieldBounds)-outputcenterz \
+		[expr $slice * [set $mods(SliceReader)-spacing_2]]
+	}
+
 
 	# enable/disable using previous slice option
 	set prev_avail 0
@@ -4743,8 +4763,14 @@ bind all <Control-v> {
 
 # Clean up vis toggle window (hide/showable?)
 
-# Format Commit Status window
+# Format Commit Status window (columns and scrollbars)
 
 # Arg passing and filenames
+
+# Slider to adjust z spacing of isocontours (default to what it should be)
+
+# Fix Go buttons to be lighter green
+
+
 
 
