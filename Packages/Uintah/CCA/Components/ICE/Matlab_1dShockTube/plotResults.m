@@ -101,6 +101,16 @@ else
         xlim([P.boxLower(1) P.boxUpper(1)]);
         legend('speedSound',2);
         grid on;
+
+        subplot(2,2,3), plot(x_FC,xvel_FC);
+        xlim([P.boxLower(1) P.boxUpper(1)]);
+        legend('u^*',2);
+        grid on;
+
+        subplot(2,2,4), plot(x_FC,press_FC);
+        xlim([P.boxLower(1) P.boxUpper(1)]);
+        legend('p^*',2);
+        grid on;
     end
 end
 
