@@ -12,7 +12,9 @@ SRCS     += \
 	$(SRCDIR)/CubeRoot.cc	\
 	$(SRCDIR)/Sparse.cc	\
 	$(SRCDIR)/Short27.cc \
-	$(SRCDIR)/TangentModulusTensor.cc 
+	$(SRCDIR)/TangentModulusTensor.cc \
+	$(SRCDIR)/LinearInterpolator.cc \
+	$(SRCDIR)/Node27Interpolator.cc 
 
 ifeq ($(IS_WIN),yes)
   SRCS += $(SRCDIR)/Rand48.cc
@@ -24,7 +26,8 @@ PSELIBS := \
 	Core/Util                       \
 	Core/Geometry                   \
 	Core/Thread			\
-	Packages/Uintah/Core/Disclosure 
+	Packages/Uintah/Core/Disclosure \
+	Packages/Uintah/Core/Grid
 
 
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) 

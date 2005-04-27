@@ -19,8 +19,6 @@ SRCS     += $(SRCDIR)/SerialMPM.cc \
 	$(SRCDIR)/SimpleSolver.cc \
 	$(SRCDIR)/MPMBoundCond.cc \
 	$(SRCDIR)/MPMFlags.cc \
-	$(SRCDIR)/LinearInterpolator.cc \
-	$(SRCDIR)/Node27Interpolator.cc \
 #	$(SRCDIR)/ParticleInterpolatorFactory.cc \
 #	$(SRCDIR)/MPMAlgorithm.cc \
 #	$(SRCDIR)/MPMDriver.cc \
