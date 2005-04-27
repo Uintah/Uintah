@@ -42,10 +42,4 @@ SUBDIRS := \
         $(SRCDIR)/Converters \
 #[INSERT NEW CATEGORY DIR HERE]
 
-SOFLAGS := \
-           -shared -L$(LIBDIR) $(CFLAGS) \
-           -L$(JAVA_LIB)/client \
-           -ljvm \
-           -Wl,-rpath -Wl,$(JAVA_LIB)/client
-
 include $(SCIRUN_SCRIPTS)/recurse.mk
