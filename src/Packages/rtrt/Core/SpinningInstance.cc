@@ -165,10 +165,16 @@ void SpinningInstance::animate(double time, bool& changed) {
   
   o->animate(ctime, changed);
 
-  *currentTransform=*location_trans;
-  //the pretranslate to the origin is done in the constructor
-  currentTransform->pre_rotate(ctime*rate, axis);
-  currentTransform->pre_translate(cen-Point(0,0,0));
+  // You need to make the transformations against a temporary and then
+  // assign that to currentTransform.  If you assign location_trans to
+  // currentTransform and then apply the transformations you can get
+  // weird results with frameless rendering where animate can happen
+  // in the middle of rendering pixels.
+  Transform trans_temp(*location_trans);
+  trans_temp.pre_rotate(ctime*rate, axis);
+  trans_temp.pre_translate(cen-Point(0,0,0));
+  *currentTransform = trans_temp;
+
   changed = true;  
 }
 
