@@ -317,36 +317,28 @@ NrrdTextureBrick::~NrrdTextureBrick()
 int
 NrrdTextureBrick::sx()
 {
-  int tmp = -1;
   if (data_[0]->nrrd->dim == 3)
   {
-    tmp = data_[0]->nrrd->axis[0].size;
+    return data_[0]->nrrd->axis[0].size;
   }
   else
   {
-    tmp = data_[0]->nrrd->axis[1].size;
+    return data_[0]->nrrd->axis[1].size;
   }
-
-  if (tmp == nx()) { return -1; }
-  return tmp;
 }
 
 
 int
 NrrdTextureBrick::sy()
 {
-  int tmp = -1;
   if (data_[0]->nrrd->dim == 3)
   {
-    tmp = data_[0]->nrrd->axis[1].size;
+    return data_[0]->nrrd->axis[1].size;
   }
   else
   {
-    tmp = data_[0]->nrrd->axis[2].size;
+    return data_[0]->nrrd->axis[2].size;
   }
-
-  if (tmp == ny()) { return -1; }
-  return tmp;
 }
 
 
