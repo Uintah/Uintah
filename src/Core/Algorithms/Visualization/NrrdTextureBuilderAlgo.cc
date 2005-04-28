@@ -250,7 +250,7 @@ nrrd_build_bricks(vector<TextureBrickHandle>& bricks,
   // Currently set at 4x2x1 blocks.
   while (bsize[0] * bsize[1] * bsize[2] * nb[0] > brick_mem)
   {
-    if (bsize[1] / bsize[2] >= 2 || bsize[2] < 4)
+    if (bsize[1] / bsize[2] >= 4 || bsize[2] < 4)
     {
       if (bsize[0] / bsize[1] >= 2 || bsize[1] < 4)
       {
