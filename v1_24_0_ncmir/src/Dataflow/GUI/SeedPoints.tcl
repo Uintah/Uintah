@@ -78,9 +78,9 @@ itcl_class SCIRun_FieldsCreate_SeedPoints {
 		global $this-seedY$i
 		global $this-seedZ$i
 
-		set $this-seedX$i "1e-17"
-		set $this-seedY$i "1e-17"
-		set $this-seedZ$i "1e-17"
+		set $this-seedX$i "0"
+		set $this-seedY$i "0"
+		set $this-seedZ$i "0"
 	    }
 	}
     }
