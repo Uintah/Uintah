@@ -404,15 +404,12 @@ private:
                        // distance guage is based on normal length
   //  int shadow_mode;
 
+  // This is computed as nlights()+nPerMatlLights() <= 2^lightbits.
   int lightbits;
 
   // Lights that are on.
   Array1<Light*> lights;
   Array1<Light*> per_matl_lights;
-
-  // Lights that have been turned off.
-  Array1<Light*> nonActiveLights_;
-  Array1<Light*> nonActivePerMatlLights_;
 
   RTRT *rtrt_engine;
   Array1<DpyBase*> displays;

@@ -225,14 +225,17 @@ void Worker::fill_frameless_work(Array1<int>& xpos, Array1<int>& ypos,
 }
 
 
-//
-// Usually I don't like to have a code fragment in a separate file, 
-// but in this case, I find it too confusing to search through the
-// Worker.cc file to find things.  I can never tell if I am in the
-// frameless side, or the framed side.  So I am putting the frameless
-// loop here.
-//
-
+static void resizeColors(Array1<Color>& C1, Array1<Color>& C2,
+                         Array1<Color>& C3, Array1<Color>& C4,
+                         Array1<Color>& C5, Array1<Color>& C6,
+                         int newsize) {
+  C1.resize(newsize); C1.initialize(Color(0,0,0));
+  C2.resize(newsize); C2.initialize(Color(0,0,0));
+  C3.resize(newsize); C3.initialize(Color(0,0,0));
+  C4.resize(newsize); C4.initialize(Color(0,0,0));
+  C5.resize(newsize); C5.initialize(Color(0,0,0));
+  C6.resize(newsize); C6.initialize(Color(0,0,0));
+}
 
 void Worker::renderFrameless() {
   Camera rcamera;
@@ -283,12 +286,7 @@ void Worker::renderFrameless() {
       
   Array1< int > jitterMask; // jitter pattern used by this one...
       
-  lastC.resize(xpos.size());
-  lastCa.resize(xpos.size());
-  lastCb.resize(xpos.size());
-  lastCc.resize(xpos.size());
-  lastCd.resize(xpos.size());
-  lastCs.resize(xpos.size());
+  resizeColors(lastC, lastCa, lastCb, lastCc, lastCd, lastCs, xpos.size());
   jitterMask.resize(xpos.size());
 
   // ok, now build the masks and offsets...
@@ -368,12 +366,7 @@ void Worker::renderFrameless() {
       camerareload = (int)(nwork*scene->get_rtrt_engine()->updatePercent);
       cameracounter = (int)(camerareload - drand48()*camerareload); // random
       
-      lastC.resize(xpos.size());
-      lastCa.resize(xpos.size());
-      lastCb.resize(xpos.size());
-      lastCc.resize(xpos.size());
-      lastCd.resize(xpos.size());
-      lastCs.resize(xpos.size());
+      resizeColors(lastC, lastCa, lastCb, lastCc, lastCd, lastCs, xpos.size());
       jitterMask.resize(xpos.size());
       for(int ii=0;ii<jitterMask.size();ii++)
         jitterMask[ii] = (int)(drand48()*100.0);
@@ -409,7 +402,6 @@ void Worker::renderFrameless() {
         if (!synch_frameless && --cameracounter <= 0) {
           cameracounter = camerareload;
           scene->get_rtrt_engine()->cameralock.lock();
-          //Camera* rcamera=scene->get_camera(rendering_scene);
           rcamera = *scene->get_camera(rendering_scene); // copy
           alpha = Galpha; // set this for blending...
           //synch_frameless = dpy->synching_frameless();
@@ -549,7 +541,7 @@ void Worker::renderFrameless() {
               double etime=SCIRun::Time::currentSeconds();
               double t=etime-stime;	
               stime=etime;
-              set->set(x,y, CMAP(t));
+              image->set(x,y, CMAP(t));
             } else {
               image->set(x,y, wc);
             }

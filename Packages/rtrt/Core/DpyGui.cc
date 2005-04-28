@@ -254,6 +254,10 @@ void DpyGui::key_pressed(unsigned long key) {
       rtrt_dpy->guiCam_->print();
     }
     break;
+  case XK_f:
+    if (shift_pressed)
+      rtrt_dpy->synch_frameless = 1 - rtrt_dpy->synch_frameless;
+    break;
   case XK_j:
     rtrt_engine->do_jitter = !rtrt_engine->do_jitter;
     break;

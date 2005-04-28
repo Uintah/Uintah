@@ -49,6 +49,8 @@ public:
   void updateIntensity( double toIntensity );
   inline const Color& getOrigColor() const { return origColor_; }
 
+  // For shadow caching to work this needs to be zero based and not
+  // one based.  They also need to be consecutive.
   void setIndex(int index) { this->index=index; }
   int getIndex() const { return index; }
 
