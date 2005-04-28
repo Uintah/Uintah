@@ -248,16 +248,22 @@ void Scene::add_perm_per_matl_light( Light* light )
 
 void Scene::preprocess(double bvscale, int& pp_offset, int& scratchsize)
 {
+  char me[] = "Scene::preprocess";
   int i=0;
   for(;i<lights.size();i++)
     lights[i]->setIndex(i);
   for(;i<lights.size()+per_matl_lights.size(); i++)
     per_matl_lights[i-lights.size()]->setIndex(i);
   lightbits = 0;
-  i=lights.size()+per_matl_lights.size();
+  // i is used for indexing, so it needs to be zero based and not one
+  // based (subtract one).
+  i=lights.size()+per_matl_lights.size()-1;
+  cerr << me << ": number of lights = "<<i+1<<"\n";
+  //  cerr << "before: i = "<<i<<"\tlightbits = "<<lightbits<<"\n";
   while(i){
     lightbits++;
     i>>=1;
+    //    cerr << "after : i = "<<i<<"\tlightbits = "<<lightbits<<"\n";
   }
   double maxradius=0;
 
@@ -447,8 +453,6 @@ Scene::io(SCIRun::Piostream &stream) {
   SCIRun::Pio(stream, lightbits);
   SCIRun::Pio(stream, lights);
   SCIRun::Pio(stream, per_matl_lights);
-  SCIRun::Pio(stream, nonActiveLights_);
-  SCIRun::Pio(stream, nonActivePerMatlLights_);
   //  SCIRun::Pio(stream, rtrt_engine);
   //  SCIRun::Pio(stream, displays);
   SCIRun::Pio(stream, ambientColor_);
