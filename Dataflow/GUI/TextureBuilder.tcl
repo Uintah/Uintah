@@ -111,6 +111,8 @@ itcl_class SCIRun_Visualization_TextureBuilder {
 	pack $bf.b0 $bf.b1 $bf.b2 $bf.b3 $bf.b4 $bf.b5 $bf.b6 $bf.b7 -side left -expand yes\
                 -fill x
 
+	$this state
+
 	global $this-is_fixedmin
         frame $w.f1 -relief flat
         pack $w.f1 -side top -expand yes -fill x
