@@ -123,8 +123,8 @@ public:
   virtual GLenum tex_type();
   virtual void *tex_data(int c);
 
-  virtual int sx() { return data_[0]->nrrd->axis[1].size; }
-  virtual int sy() { return data_[0]->nrrd->axis[2].size; }
+  virtual int sx();
+  virtual int sy();
 
   void set_nrrds(const NrrdDataHandle &n0, const NrrdDataHandle &n1)
   { data_[0] = n0; data_[1] = n1; }

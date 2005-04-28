@@ -314,6 +314,42 @@ NrrdTextureBrick::~NrrdTextureBrick()
 }
 
 
+int
+NrrdTextureBrick::sx()
+{
+  int tmp = -1;
+  if (data_[0]->nrrd->dim == 3)
+  {
+    tmp = data_[0]->nrrd->axis[0].size;
+  }
+  else
+  {
+    tmp = data_[0]->nrrd->axis[1].size;
+  }
+
+  if (tmp == nx()) { return -1; }
+  return tmp;
+}
+
+
+int
+NrrdTextureBrick::sy()
+{
+  int tmp = -1;
+  if (data_[0]->nrrd->dim == 3)
+  {
+    tmp = data_[0]->nrrd->axis[1].size;
+  }
+  else
+  {
+    tmp = data_[0]->nrrd->axis[2].size;
+  }
+
+  if (tmp == ny()) { return -1; }
+  return tmp;
+}
+
+
 GLenum
 NrrdTextureBrick::tex_type()
 {
@@ -324,13 +360,15 @@ NrrdTextureBrick::tex_type()
   return GL_UNSIGNED_BYTE;
 }
 
+
 void *
 NrrdTextureBrick::tex_data(int c)
 {
   ASSERT(c == 0 || c == 1);
   unsigned char *ptr = (unsigned char *)(data_[c]->nrrd->data);
 
-  size_t offset = (oz() * sx() * sy() + oy() * sx() + ox()) * nb(c);
+  const size_t offset = (oz() * sx() * sy() + oy() * sx() + ox()) * nb(c);
+
   return ptr + offset;
 }
 
