@@ -466,7 +466,7 @@ DataArchive::query( Variable& var, ProblemSpecP vnode, XMLURL url,
 //      (dynamic_cast<ParticleVariableBase*>(&var))->allocate(psubset);
   }
   else if (td->getType() != TypeDescription::ReductionVariable) {
-    IntVector boundary;
+    IntVector boundary(0,0,0);
     // optional entry for Boundary Layers - if var was saved with bl, we need it here
     vnode->get("boundaryLayer", boundary);
     var.allocate(patch, boundary);
