@@ -356,7 +356,8 @@ SeedPoints::execute()
 	      gui->execute(id.c_str() + string(" make_seed " + to_string((int)i)));
 	    }
 
-	  gui->execute(id.c_str() + string(" set_seed " + to_string((int)i) + " " + to_string((double)center.x()) + " " + to_string((double)center.y()) + " " + to_string((double)center.z())));
+	  //	  gui->execute(id.c_str() + string(" set_seed " + to_string((int)i) + " " + to_string((double)center.x()) + " " + to_string((double)center.y()) + " " + to_string((double)center.z())));
+	  gui->execute(id.c_str() + string(" set_seed " + to_string((int)i) + " " + to_string(0.1) + " " + to_string(0.1) + " " + to_string(0.1)));
 	  
 	  double r = gui_probe_scale_.get();
 	  Vector normal(0.0, 0.0, 1.0);
@@ -395,7 +396,8 @@ SeedPoints::execute()
       widget_ring_[i]->SetScale(max*0.02);
 
       // place rings at slight distance as seeds are added
-      gui->execute(id.c_str() + string(" set_seed " + to_string((int)i) + " " + to_string((double)center.x()) + " " + to_string((double)center.y()) + " " + to_string((double)center.z())));
+      //      gui->execute(id.c_str() + string(" set_seed " + to_string((int)i) + " " + to_string((double)center.x()) + " " + to_string((double)center.y()) + " " + to_string((double)center.z())));
+      gui->execute(id.c_str() + string(" set_seed " + to_string((int)i) + " " + to_string(0.1) + " " + to_string(0.1) + " " + to_string(0.1)));
       
     }
   }
