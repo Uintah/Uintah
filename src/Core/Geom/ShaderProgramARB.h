@@ -59,6 +59,7 @@ public:
   static bool shaders_supported();
   static int max_texture_size_1();
   static int max_texture_size_4();
+  static bool texture_non_power_of_two();
 
 protected:
   unsigned int mType;
@@ -67,6 +68,7 @@ protected:
 
   static bool mInit;
   static bool mSupported;
+  static bool mNon2Textures;
   static int max_texture_size_1_;
   static int max_texture_size_4_;
 };

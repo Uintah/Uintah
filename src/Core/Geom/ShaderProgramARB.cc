@@ -102,6 +102,7 @@ namespace SCIRun {
 
 bool ShaderProgramARB::mInit = false;
 bool ShaderProgramARB::mSupported = false;
+bool ShaderProgramARB::mNon2Textures = false;
 int ShaderProgramARB::max_texture_size_1_ = 64;
 int ShaderProgramARB::max_texture_size_4_ = 64;
 static Mutex ShaderProgramARB_mInitMutex("ShaderProgramARB Init Lock");  
@@ -179,6 +180,11 @@ ShaderProgramARB::init_shaders_supported()
         max_texture_size_4_ = i;
 #endif
 
+	// Check for non-power-of-two texture support.
+	mNon2Textures =
+	  gluCheckExtension((const GLubyte*)"GL_ARB_texture_non_power_of_two",
+			    glGetString(GL_EXTENSIONS));
+
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
 	mSupported =
 	  gluCheckExtension((const GLubyte*)"GL_ARB_vertex_program", 
@@ -228,6 +234,12 @@ int
 ShaderProgramARB::max_texture_size_4()
 {
   return max_texture_size_4_;
+}
+
+bool
+ShaderProgramARB::texture_non_power_of_two()
+{
+  return mNon2Textures;
 }
 
 bool
