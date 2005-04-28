@@ -116,7 +116,7 @@ set m21 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 826 507]
 set m22 [addModuleAtPosition "SCIRun" "Visualization" "GenTitle" 180 1576]
 
 # Create a Insight->Converters->FloatToUChar Module
-set m23 [addModuleAtPosition "Insight" "Converters" "FloatToUChar" 23 1242]
+#set m23 [addModuleAtPosition "Insight" "Converters" "FloatToUChar" 23 1242]
 
 # Create a Teem->Converters->NrrdToField Module
 set m24 [addModuleAtPosition "Teem" "Converters" "NrrdToField" 1352 1073]
@@ -300,7 +300,8 @@ set m63 [addModuleAtPosition "SCIRun" "FieldsGeometry" "TransformField" 727 1130
 # Create the Connections between Modules
 set c1 [addConnection $m13 0 $m32 0]
 set c2 [addConnection $m13 0 $m31 0]
-set c3 [addConnection $m23 0 $m47 0]
+#set c3 [addConnection $m23 0 $m47 0]
+set c3 [addConnection $m4 0 $m47 0]
 set c4 [addConnection $m7 0 $m5 0]
 set c5 [addConnection $m17 0 $m15 0]
 set c6 [addConnection $m18 0 $m19 0]
@@ -320,7 +321,7 @@ set c19 [addConnection $m54 0 $m41 0]
 set c20 [addConnection $m54 0 $m38 0]
 set c21 [addConnection $m54 0 $m39 0]
 set c22 [addConnection $m54 0 $m37 0]
-set c23 [addConnection $m4 0 $m23 0]
+#set c23 [addConnection $m4 0 $m23 0]
 set c24 [addConnection $m4 0 $m18 0]
 set c25 [addConnection $m6 0 $m21 0]
 set c26 [addConnection $m3 0 $m48 0]
