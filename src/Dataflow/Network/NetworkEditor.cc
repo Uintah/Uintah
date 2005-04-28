@@ -62,7 +62,6 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/GuiInterface/GuiCallback.h>
 #include <Core/GuiInterface/GuiInterface.h>
-#include <Core/GuiInterface/SciTCLstrbuff.h>
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Thread/Thread.h>
