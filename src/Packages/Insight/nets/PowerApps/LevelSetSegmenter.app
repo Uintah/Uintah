@@ -4572,10 +4572,10 @@ class LevelSetSegmenterApp {
 	set $mods(ShowField-Seg)-faces-on 0
 
 	# Turn on current seed if has_loaded
-	if {$has_loaded == 1} {
-	    global $mods(ShowField-Seed)-faces-on
-	    set $mods(ShowField-Seed)-faces-on 1
-	}
+# 	if {$has_loaded == 1} {
+# 	    global $mods(ShowField-Seed)-faces-on
+# 	    set $mods(ShowField-Seed)-faces-on 1
+# 	}
 
 	# Prepare previous reader filename
 	global commit_dir base_filename
