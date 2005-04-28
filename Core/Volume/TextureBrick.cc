@@ -48,6 +48,14 @@ TextureBrick::TextureBrick (int nx, int ny, int nz, int nc, int* nb,
     mx_(mx), my_(my), mz_(mz), bbox_(bbox), tbox_(tbox), dirty_(true),
     ref_cnt(0), lock("LockingHandle lock")
 {
+#if 0
+  cout << "Building brick: " << ox << " " << oy << " " << oz << ", "
+       << mx << " " << my << " " << mz << ", "
+       << tbox.min() << " " << tbox.max() << ", "
+       << bbox.min() << " " << bbox.max()
+       << "\n";
+#endif
+
   for (int c=0; c<nc_; c++)
   {
     nb_[c] = nb[c];
@@ -320,7 +328,10 @@ void *
 NrrdTextureBrick::tex_data(int c)
 {
   ASSERT(c == 0 || c == 1);
-  return data_[c]->nrrd->data;
+  unsigned char *ptr = (unsigned char *)(data_[c]->nrrd->data);
+
+  size_t offset = (oz() * sx() * sy() + oy() * sx() + ox()) * nb(c);
+  return ptr + offset;
 }
 
 
