@@ -2180,7 +2180,10 @@ class LevelSetSegmenterApp {
     method show_commit_status {} {
 	set w .standalone.commitstatus
 	
-	if {![winfo exists $w]} {
+	if {$has_loaded == 0} {
+	    tk_messageBox -message "Please load a high-res dataset first." \
+		-type ok -icon info -parent .standalone
+	} elseif {![winfo exists $w]} {
 	    toplevel $w 
 	    wm title $w "Commit Status"
 
@@ -2194,21 +2197,61 @@ class LevelSetSegmenterApp {
 		set s $size2
 	    }
 
-	    label $w.l -text "Slice Commit Status"
-	    pack $w.l -side top -anchor n
-	    
-	    for {set i 0} {$i < $s} {incr i} {
-		frame $w.s$i
-		label $w.s$i.l -text "Slice $i: $commits($i)"
-		pack $w.s$i.l -side left
-		pack $w.s$i -side top -anchor nw
+	    # format in columns, 10 slices per column
+	    set cols [expr int([expr $s/10])] 
+	    if {[expr $s%10] > 0} {
+		set cols [expr $cols + 1]
 	    }
+
+	    wm minsize $w [expr $cols * 67] 300
+
+	    iwidgets::scrolledframe $w.sf \
+		-width  [expr $cols * 20] \
+		-height 50 -labeltext "Commit Status (Per Slice)"
+	    pack $w.sf -side top -anchor n -expand yes -fill both
+
+	    set sf [$w.sf childsite]
+
+	    label $sf.info -text "Highlighted slices commited"
+	    pack $sf.info -side top -anchor n -pady 3
+	    
+	    set which_col {-1}
+ 	    for {set i 0} {$i < $s} {incr i} {
+		if {[expr $i%10] == 0} {
+		    set which_col [expr $which_col + 1]
+		    frame $sf.c$which_col -relief groove -borderwidth 2
+		    pack $sf.c$which_col -side left -anchor nw -padx 3
+		}
+ 		frame $sf.c$which_col.s$i
+ 		label $sf.c$which_col.s$i.l -text "Slice $i: $commits($i)"
+		if {$commits($i) == 1} {
+		    $sf.c$which_col.s$i.l configure -foreground "#cc0000"
+		}
+ 		pack $sf.c$which_col.s$i.l -side left
+ 		pack $sf.c$which_col.s$i -side top -anchor nw
+ 	    }
 	    
 	    button $w.b -text "Close" \
 		-command "destroy $w"
-	    pack $w.b -side top -anchor n -pady 3
+	    pack $w.b -side top -anchor n -pady 3 -ipadx 2
 	} else {
 	    SciRaise $w
+	}
+    }
+
+    method update_commit_status_window {s} {
+	set sf .standalone.commitstatus.sf.lwchildsite.clipper.canvas.sfchildsite
+	if {[winfo exists $sf]} {
+	    # update the new slice s
+
+	    # determine which column its in
+	    set col [expr int([expr $s/10])]
+
+	    # change the label text and color
+	    if {[winfo exists  $sf.c$col.s$s.l]} {
+		$sf.c$col.s$s.l configure -text "Slice $s: $commits($s)" \
+		    -foreground "#cc0000"
+	    }
 	}
     }
 
@@ -2713,15 +2756,17 @@ class LevelSetSegmenterApp {
 	    upvar \#0 $which-datamin min
 	    upvar \#0 $which-datamax max
 
-	    # reconfigure threshold sliders
-	    $attachedPFr.f.p.childsite.speed.childsite.lthresh.s configure \
-		-from $min -to $max
-	    $attachedPFr.f.p.childsite.speed.childsite.lthresh.s configure \
-		-from $min -to $max
-	    $attachedPFr.f.p.childsite.speed.childsite.uthresh.s configure \
-		-from $min -to $max
-	    $attachedPFr.f.p.childsite.speed.childsite.uthresh.s configure \
-		-from $min -to $max
+	    if {$min != "---" && $max != "---"} {
+		# reconfigure threshold sliders
+		$attachedPFr.f.p.childsite.speed.childsite.lthresh.s \
+		    configure  -from $min -to $max
+		$attachedPFr.f.p.childsite.speed.childsite.lthresh.s \
+		    configure -from $min -to $max
+		$attachedPFr.f.p.childsite.speed.childsite.uthresh.s \
+		    configure -from $min -to $max
+		$attachedPFr.f.p.childsite.speed.childsite.uthresh.s \
+		    configure -from $min -to $max
+	    }
 
 	    # if reconfiguring the slider causes the upper and lower
 	    # threshold to be the same, fix the lower threshold
@@ -2783,6 +2828,7 @@ class LevelSetSegmenterApp {
 		    -fill $c -outline "black" -tags completed
 
 		set commits($s) 1
+		$this update_commit_status_window $s
 	    }
 	} elseif {$which == $mods(GatherFields) && \
 		      $state == "Completed"} {
@@ -3327,6 +3373,9 @@ class LevelSetSegmenterApp {
  	if {[winfo exists $win]} {
  	    # disable execute button 
  	    $win.f7.execute configure -state disabled
+
+	    upvar \#0 $win data
+	    set data(-command) "wm withdraw  $win"
  	}
      }
 
@@ -3817,6 +3866,10 @@ class LevelSetSegmenterApp {
  	# set number of iterations 0
  	global $mods(LevelSet)-max_iterations
  	set $mods(LevelSet)-max_iterations 0
+
+	# Turn on speed image
+	global $mods(ShowField-Speed)-faces-on
+	set $mods(ShowField-Speed)-faces-on 1
 	
  	# execute ThresholdLevelSet filter
  	$mods(LevelSet)-c needexecute
@@ -4040,10 +4093,13 @@ class LevelSetSegmenterApp {
 	# Create initial segmentation and display it
 	# by executing the appropriate set of modules
 
- 	# Turn on seed in top viewer and segmentation off
+ 	# Turn on seed in top viewer and segmentation and speed off
 	global $mods(ShowField-Seg)-faces-on
 	set $mods(ShowField-Seg)-faces-on 0
 	$mods(ShowField-Seg)-c toggle_display_faces
+
+	global $mods(ShowField-Speed)-faces-on
+	set $mods(ShowField-Speed)-faces-on 0
 
 	global $mods(ShowField-Seed)-faces-on
 	set $mods(ShowField-Seed)-faces-on 1
@@ -4485,11 +4541,41 @@ class LevelSetSegmenterApp {
 
     method go_lowres {} {
 	global mods
-	$mods(AnalyzeNrrdReader)-c needexecute
+	global $mods(AnalyzeNrrdReader)-num-files
+	global $mods(AnalyzeNrrdReader)-filenames0
+
+	# check for a valid file
+	if {[set $mods(AnalyzeNrrdReader)-num-files] > 0 && \
+		[file exists [set $mods(AnalyzeNrrdReader)-filenames0]]} {
+	    $mods(AnalyzeNrrdReader)-c needexecute
+	} else {
+	    tk_messageBox -type ok -icon info -parent .standalone \
+		-message "Invalid filename specified.\nPlease select a valid filename\nand click the Go button." 
+	    return    
+	}
     }
 
     method go_highres {} {
 	global mods
+
+	
+	# check for a valid file
+	global $mods(SliceReader)-filename
+	if {![file exists [set $mods(SliceReader)-filename]]} {
+	    tk_messageBox -type ok -icon info -parent .standalone \
+		-message "Invalid filename specified.\nPlease select a valid filename\nand click the Go button." 
+	    return    
+	}
+
+	# Turn off segmentation
+	global $mods(ShowField-Seg)-faces-on
+	set $mods(ShowField-Seg)-faces-on 0
+
+	# Turn on current seed if has_loaded
+	if {$has_loaded == 1} {
+	    global $mods(ShowField-Seed)-faces-on
+	    set $mods(ShowField-Seed)-faces-on 1
+	}
 
 	# Prepare previous reader filename
 	global commit_dir base_filename
@@ -4543,6 +4629,8 @@ class LevelSetSegmenterApp {
 		$slice > 0 && $commits([expr $slice - 1]) == 1} {
 	    $mods(ImageReaderFloat2D)-c needexecute
 	}
+
+	set has_loaded 1
     }
 
     method next_highres {} {
@@ -4843,13 +4931,6 @@ bind all <Control-v> {
 
 # Clean up vis toggle window (hide/showable?)
 
-# Format Commit Status window (columns and scrollbars)
-
 # Arg passing and filenames
 
-# Slider to adjust z spacing of isocontours (default to what it should be)
-
-# Fix double slicking on analyze file in SliceReader - shouldn't cause execute
-
-# Turn show segmentation off when reading new slice
 
