@@ -155,7 +155,6 @@ SRCS := \
         $(SRCDIR)/Submatrix.tcl \
         $(SRCDIR)/Subnet.tcl \
         $(SRCDIR)/SynchronizeGeometry.tcl \
-        $(SRCDIR)/SciTclStream.tcl \
         $(SRCDIR)/TextureBuilder.tcl \
         $(SRCDIR)/TimeControls.tcl \
         $(SRCDIR)/Tooltips.tcl \

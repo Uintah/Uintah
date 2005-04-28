@@ -52,16 +52,17 @@ itcl_class Module {
         set $this-gui-x -1
         set $this-gui-y -1
 
-	set msgLogStream "[SciTclStream msgLogStream#auto]"
+	
 	# these live in parallel temporarily
 	global $this-notes Notes
 	if ![info exists $this-notes] { set $this-notes "" }
 	trace variable $this-notes w "syncNotes [modname]"
 	
-	# messages should be accumulating
-	if {[info exists $this-msgStream]} {
-	    $msgLogStream registerVar $this-msgStream
-	}
+	
+	global $this-log_string 
+	set $this-log_string ""
+
+	trace variable $this-log_string w "$this synch_log_msg"
     }
     
     destructor {
@@ -69,7 +70,7 @@ itcl_class Module {
 	if [winfo exists $w] {
 	    destroy $w
 	}
-	$msgLogStream destructor
+
 	eval unset [info vars $this-*]
 	destroy $this
     }
@@ -77,7 +78,19 @@ itcl_class Module {
     method set_defaults {} { 
     }
 
-    public msgLogStream
+    method synch_log_msg {args} {
+ 	set ww .mLogWnd[modname]
+	
+	if {[winfo exists $ww.log.txt]} {
+	    upvar \#0 $this-log_string msg
+
+	    $ww.log.txt config -state normal
+	    $ww.log.txt delete 1.0 end
+	    $ww.log.txt insert end $msg
+	    $ww.log.txt config -state disabled
+	}
+    }
+
     public name
     protected min_text_width 0
     protected make_progress_graph 1
@@ -520,6 +533,14 @@ itcl_class Module {
 	    -height 2 -width 10
 	scrollbar $w.log.sb -relief sunken -command "$w.log.txt yview"
 	pack $w.log.txt -side left -padx 5 -pady 2 -expand 1 -fill both
+
+
+	upvar \#0 $this-log_string msg
+	$w.log.txt config -state normal
+	$w.log.txt delete 1.0 end
+	$w.log.txt insert end $msg
+	$w.log.txt config -state disabled
+
 	pack $w.log.sb -side left -padx 0 -pady 2 -fill y
 
 	frame $w.fbuttons 
@@ -545,12 +566,29 @@ itcl_class Module {
 	# Move window to cursor after it has been created.
 	moveToCursor $w "leave_up"
 
-	$msgLogStream registerOutput $w.log.txt
     }
 
     method clearStreamOutput { } {
 	# Clear the text widget 
-	$msgLogStream clearTextWidget
+	set w .mLogWnd[modname]
+
+	if {! [winfo exists $w]} {
+	    return
+	}
+
+	# Find out if the text widget is currently disabled.  If so,
+	# we must enable it to clear text.
+	set currentState [lindex [$w.log.txt config -state] 4]
+	if { $currentState == "disabled" } { 
+	    $w.log.txt config -state normal
+	}
+
+	$w.log.txt delete 0.0 end
+
+	# If it was disabled, then but it back to disabled
+	if { $currentState == "disabled" } { 
+	    $w.log.txt config -state disabled
+	}
 
 	# Clear the module indicator color if
         # not in an error state
@@ -560,8 +598,6 @@ itcl_class Module {
     }
     
     method destroyStreamOutput {w} {
-	# TODO: unregister only for streams with the supplied output
-	$msgLogStream unregisterOutput
 	destroy $w
     }
 
@@ -1978,7 +2014,6 @@ proc isaSubnetEditor { modid } {
 
 trace variable Notes wu notesTrace
 trace variable Disabled wu disabledTrace
-
 
 proc syncNotes { Modname VarName Index mode } {
     global Notes $VarName
