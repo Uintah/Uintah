@@ -45,17 +45,18 @@
 
 #include <Dataflow/Network/Port.h>
 #include <Core/Util/Assert.h>
-#include <Core/GuiInterface/SciTCLstrbuff.h>
 #include <Core/GeomInterface/Pickable.h>
 #include <Core/Thread/Mailbox.h>
 #include <Core/Thread/FutureValue.h>
 #include <Core/GuiInterface/GuiCallback.h>
 #include <Core/GuiInterface/GuiInterface.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/DynamicCompilation.h>
 #include <Core/Util/Timer.h>
 #include <Core/Util/ProgressReporter.h>
+#include <sstream>
 #include <iosfwd>
 #include <string>
 #include <map>
@@ -187,7 +188,7 @@ public:
   virtual void remark(const std::string&);
   virtual void postMessage(const std::string&);
   virtual std::ostream &msgStream() { return msgStream_; }
-  virtual void msgStream_flush() { msgStream_.flush(); }
+  virtual void msgStream_flush() { log_string_.set(msgStream_.str()); }
 
   // Compilation progress.  Should probably have different name.
   virtual void report_progress( ProgressState );
@@ -290,7 +291,8 @@ protected:
   CPUTimer timer;
 public:
   virtual void presave() {};
-  SciTCLstrbuff msgStream_;
+  ostringstream msgStream_;
+  GuiString log_string_;
 protected:
   void get_position(int& x, int& y);
   void setStackSize(unsigned long stackSize);

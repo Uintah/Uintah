@@ -145,7 +145,7 @@ Module::Module(const string& name, GuiContext* ctx,
     have_own_dispatch(0),
     id(ctx->getfullname()), 
     abort_flag(0),
-    msgStream_(ctx->subVar("msgStream")),
+    log_string_(ctx->subVar("log_string", false)),
     need_execute(0),
     sched_class(sched_class),
     state(NeedData),
@@ -774,7 +774,7 @@ void Module::error(const string& str)
     cout << id << ":ERROR: " << str << "\n";
   }
   msgStream_ << "ERROR: " << str << '\n';
-  msgStream_.flush();
+  log_string_.set(msgStream_.str());
   update_msg_state(Error); 
 }
 
@@ -785,7 +785,7 @@ void Module::warning(const string& str)
     cout << id << ":WARNING: " << str << "\n";
   }
   msgStream_ << "WARNING: " << str << '\n';
-  msgStream_.flush();
+  log_string_.set(msgStream_.str());
   update_msg_state(Warning); 
 }
 
@@ -796,7 +796,7 @@ void Module::remark(const string& str)
     cout << id << ":REMARK: " << str << "\n";
   }
   msgStream_ << "REMARK: " << str << '\n';
-  msgStream_.flush();
+  log_string_.set(msgStream_.str());
   update_msg_state(Remark); 
 }
 

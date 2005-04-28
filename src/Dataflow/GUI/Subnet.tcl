@@ -821,7 +821,8 @@ proc isaDefaultValue { module varname classname } {
     # If the default class has not already been instantced
     if { ![info exists DefaultClassInstances($classname)] } {
 	if { ![llength [info commands $classname]] } { 
-	    error "TCL Class not found while writing guiVar $var"	
+	    error "TCL Class not found while writing guiVar $module $varname $classname"
+	
 	    return 0 
 	}
 	eval $classname DEFAULT-$classname
