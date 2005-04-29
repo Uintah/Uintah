@@ -1,5 +1,6 @@
 # Makefile fragment for this subdirectory
 
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Uintah/Core/Util
 
@@ -11,4 +12,5 @@ PSELIBS := \
 	Core/Thread \
 	Core/Exceptions
 
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

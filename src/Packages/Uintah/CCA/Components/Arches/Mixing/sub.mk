@@ -28,7 +28,10 @@ SRCS     += $(SRCDIR)/MixingModel.cc $(SRCDIR)/ColdflowMixingModel.cc  \
 SUBDIRS := $(SRCDIR)/fortran
 include $(SCIRUN_SCRIPTS)/recurse.mk
 PSELIBS := \
-	Packages/Uintah/Core	\
+	Packages/Uintah/Core/ProblemSpec   \
+	Packages/Uintah/Core/Util   \
+	Packages/Uintah/Core/Exceptions    \
+	Packages/Uintah/Core/Math          \
 	Packages/Uintah/CCA/Components/Models          \
 	Core/Exceptions \
 	Core/Thread     \

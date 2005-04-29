@@ -14,8 +14,15 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \
-	Packages/Uintah/Core		\
+	Packages/Uintah/Core/Datatypes     \
+	Packages/Uintah/Core/DataArchive     \
 	Packages/Uintah/CCA/Ports          \
+	Packages/Uintah/Core/Grid          \
+	Packages/Uintah/Core/Util          \
+	Packages/Uintah/Core/Math          \
+	Packages/Uintah/Core/Disclosure    \
+	Packages/Uintah/Core/ProblemSpec   \
+	Packages/Uintah/Core/Exceptions    \
 	Dataflow/Network  \
 	Dataflow/Ports    \
 	Core/Containers   \

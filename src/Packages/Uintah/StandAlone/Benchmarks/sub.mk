@@ -22,15 +22,18 @@ ifeq ($(LARGESOS),yes)
   PSELIBS := Datflow Packages/Uintah
 else
   PSELIBS := \
-        Packages/Uintah/Core		\
-        Packages/Uintah/CCA/Components/ProblemSpecification \
+        Packages/Uintah/Core/Exceptions    \
+        Packages/Uintah/Core/Grid          \
+        Packages/Uintah/Core/Util          \
+        Packages/Uintah/Core/Math          \
+        Packages/Uintah/Core/ProblemSpec   \
+        Packages/Uintah/Core/Parallel      \
+        Packages/Uintah/Core/Disclosure    \
         Core/Exceptions  \
         Core/Geometry    \
-        Core/Geom	\
         Core/Persistent  \
         Core/Util        \
         Core/Thread      \
-	Core/Datatypes	\
         Core/Containers
 endif
 
