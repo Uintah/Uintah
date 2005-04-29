@@ -2,7 +2,6 @@
 #define SCI_project_CCTensorField_h 1
 
 #include <Packages/Uintah/Core/Datatypes/TensorField.h>
-#include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
