@@ -8,9 +8,7 @@ using namespace SCIRun;
 
 namespace Uintah { // <- This is necessary for IBM SP AIX xlC Compiler
 
-#if defined(__sgi) || defined(_AIX)
 template<>
-#endif
 void
 SoleVariable<double>::getMPIInfo(int& count, MPI_Datatype& datatype)
 {
@@ -18,9 +16,7 @@ SoleVariable<double>::getMPIInfo(int& count, MPI_Datatype& datatype)
    count = 1;
 }
 
-#if defined(__sgi) || defined(_AIX)
 template<>
-#endif
 void
 SoleVariable<double>::getMPIData(vector<char>& data, int& index)
 {
@@ -30,9 +26,7 @@ SoleVariable<double>::getMPIData(vector<char>& data, int& index)
   index += sizeof(double);
 }
 
-#if defined(__sgi) || defined(_AIX)
 template<>
-#endif
 void
 SoleVariable<double>::putMPIData(vector<char>& data, int& index)
 {
