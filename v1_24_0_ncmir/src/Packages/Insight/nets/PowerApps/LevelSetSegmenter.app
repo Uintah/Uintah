@@ -312,6 +312,12 @@ set m66 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuSave" 920 950]
 # Create a Teem->UnuNtoZ->UnuSave Module
 set m67 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuSave" 1422 778]
 
+# Create a Insight->Converters->ImageToNrrd Module
+set m68 [addModuleAtPosition "Insight" "Converters" "ImageToNrrd" 842 246]
+
+# Create a Teem->UnuNtoZ->UnuSave Module
+set m69 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuSave" 842 315]
+
 
 
 
@@ -404,6 +410,8 @@ set c100 [addConnection $m21 0 $m64 0]
 set c101 [addConnection $m31 0 $m65 0]
 set c102 [addConnection $m33 0 $m66 0]
 set c102 [addConnection $m29 0 $m67 0]
+set c102 [addConnection $m41 0 $m68 0]
+set c102 [addConnection $m68 0 $m69 0]
 
 setGlobal $m64-format {text}
 setGlobal $m64-encoding {ascii}
@@ -420,6 +428,10 @@ setGlobal $m66-filename {/tmp/2op-2.txt}
 setGlobal $m67-format {text}
 setGlobal $m67-encoding {ascii}
 setGlobal $m67-filename {/tmp/neg-seeds.txt}
+
+setGlobal $m69-format {text}
+setGlobal $m69-encoding {ascii}
+setGlobal $m69-filename {/tmp/smooth.txt}
 
 
 # Set GUI variables
