@@ -1,5 +1,6 @@
 # Makefile fragment for this subdirectory
 
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Uintah/Core/GeometryPiece
 
@@ -31,5 +32,10 @@ SRCS     += \
 PSELIBS := \
 	Core/Exceptions \
 	Core/Geometry \
-	Core/Util 
+	Core/Util \
+	Packages/Uintah/Core/Util \
+	Packages/Uintah/Core/Grid \
+	Packages/Uintah/Core/ProblemSpec \
+	Packages/Uintah/Core/Exceptions \
 
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

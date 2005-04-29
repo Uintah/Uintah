@@ -10,7 +10,8 @@ SRCS     += $(SRCDIR)/NullBurn.cc $(SRCDIR)/SimpleBurn.cc \
 	$(SRCDIR)/PressureBurn.cc \
 
 
-PSELIBS	:= Packages/Uintah/Core	\
+PSELIBS	:= Packages/Uintah/Core/ProblemSpec \
+	Packages/Uintah/Core/Exceptions \
 	Core/Exceptions
 
 LIBS := $(XML_LIBRARY) $(M_LIBRARY)
