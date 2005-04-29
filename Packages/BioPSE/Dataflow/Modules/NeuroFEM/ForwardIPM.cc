@@ -351,45 +351,50 @@ write_dip_file(ProgressReporter *pr, MatrixHandle mh1, MatrixHandle mh2, const c
 
 
 static bool
-send_result_file(MatrixOPort *result_port, string filename)
+send_result_file(ProgressReporter *pr,
+		 MatrixOPort *result_port,
+		 string filename)
 {
   ifstream matstream(filename.c_str(),ios::in);
-  if (matstream.fail()) {
-    cerr << "Error -- Could not open file " << filename << "\n";
+  if (matstream.fail())
+  {
+    pr->error("Could not open results file " + filename + ".");
     return false;
   }
 
   string tmp;
-  int nc,nr;
+  int nc, nr;
   matstream >> tmp >> nc;
   matstream >> tmp >> nr;
-  cerr << "Number of Electrode = " << nc << "\n" << "Number of Time Step = " << nr << "\n";
+  pr->remark("Number of Electrodes = " + to_string(nc) + ".");
+  pr->remark("Number of Time Steps = " + to_string(nr) + ".");
 
-  //skip text lines
-  for (int i=0; i<4; ++i){
+  // Skip text lines.
+  for (int i=0; i<4; ++i)
+  {
     getline(matstream, tmp);
-    // cerr << tmp << "\n";
   }
 
-  DenseMatrix *dm = scinew DenseMatrix(nr,nc);
+  MatrixHandle dm = scinew DenseMatrix(nr, nc);
 
-  // write number of row & column
-  (*dm)[0][0] = nr;
-  (*dm)[0][1] = nc;
+  // Write number of row & column.
+  //dm->put(0, 0, nr);
+  //dm->put(0, 1, nc);
 
-  // write potentials on electrodes for each time step 
-  int r,c;
-  for (r=1; r<nr; r++)
-    for (c=0; c<nc; c++) {
+  // Write potentials on electrodes for each time step.
+  int r, c;
+  for (r=0; r < nr; r++)
+  {
+    for (c=0; c < nc; c++)
+    {
       double d;
       matstream >> d;
-      (*dm)[r][c]=d;
-      //	cerr << "matrix["<<r<<"]["<<c<<"]="<<d<<"\n";
+      dm->put(r, c, d);
     }
-  cerr << "done building matrix.\n";
-
-  //  result->set_raw(false);
-  result_port->send(MatrixHandle(dm));
+  }
+  pr->remark("Done building output matrix.");
+  
+  result_port->send(dm);
 
   return true;
 }
@@ -680,10 +685,10 @@ ForwardIPM::execute()
 
     // Read in the results and send them along.
     MatrixOPort *mat_oport = (MatrixOPort *)get_oport("DenseMatrix");
-    if (!send_result_file(mat_oport,resultfile))
+    if (!send_result_file(this, mat_oport, resultfile))
     {
-	error("Unable to send denseMatrix");
-	throw false;
+      error("Unable to send output matrix.");
+      throw false;
     }
 
     throw true; // cleanup.
