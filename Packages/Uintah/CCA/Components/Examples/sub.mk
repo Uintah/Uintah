@@ -26,7 +26,14 @@ PSELIBS := \
 	Core/Util \
 	Core/Exceptions                   \
 	Packages/Uintah/CCA/Ports         \
-	Packages/Uintah/Core		
+	Packages/Uintah/Core/Grid         \
+	Packages/Uintah/Core/Util         \
+	Packages/Uintah/Core/ProblemSpec  \
+	Packages/Uintah/Core/GeometryPiece  \
+	Packages/Uintah/Core/Exceptions   \
+	Packages/Uintah/Core/Disclosure   \
+	Packages/Uintah/Core/Math         \
+	Packages/Uintah/Core/Parallel
 
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 

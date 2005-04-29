@@ -5,11 +5,7 @@ SRCDIR := Packages/Uintah/testprograms/TestFastMatrix
 SRCS := $(SRCDIR)/testfastmatrix.cc
 
 PSELIBS := \
-	Packages/Uintah/Core \
-	Packages/Uintah/CCA/Components/ProblemSpecification \
-	Core/Math	\
-	Core/Geom
-
+	Packages/Uintah/Core/Math
 PROGRAM := $(SRCDIR)/testfastmatrix
 
 LIBS := $(M_LIBRARY) $(MPI_LIBRARY)
@@ -19,11 +15,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 SRCS := $(SRCDIR)/perffastmatrix.cc
 
 PSELIBS := \
-	Packages/Uintah/Core \
-	Packages/Uintah/CCA/Components/ProblemSpecification \
-	Core/Thread	\
-	Core/Math
-
+	Packages/Uintah/Core/Math Core/Thread
 PROGRAM := $(SRCDIR)/perffastmatrix
 
 LIBS := $(M_LIBRARY) $(MPI_LIBRARY)

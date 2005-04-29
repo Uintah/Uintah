@@ -16,8 +16,13 @@ SRCS += \
 PSELIBS := \
 	Packages/Uintah/CCA/Components/ProblemSpecification \
 	Packages/Uintah/CCA/Components/Schedulers  \
-	Packages/Uintah/Core		\
+	Packages/Uintah/Core/Grid        \
+	Packages/Uintah/Core/Disclosure  \
+	Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/CCA/Ports        \
+	Packages/Uintah/Core/Parallel    \
+	Packages/Uintah/Core/Util        \
+	Packages/Uintah/Core/Exceptions  \
 	Core/Geometry                    \
 	Core/Containers                  \
 	Core/Thread                      \

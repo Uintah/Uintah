@@ -36,8 +36,15 @@ PSELIBS := \
         Core/GeomInterface             \
 	Core/Geometry                  \
 	Core/Util                      \
-	Packages/Uintah/Core		\
+	Packages/Uintah/Core/Grid          \
+	Packages/Uintah/Core/Math          \
+	Packages/Uintah/Core/Util          \
+	Packages/Uintah/Core/Disclosure    \
 	Packages/Uintah/CCA/Ports          \
+	Packages/Uintah/Core/ProblemSpec   \
+	Packages/Uintah/Core/Exceptions    \
+	Packages/Uintah/Core/Datatypes     \
+	Packages/Uintah/Core/DataArchive     \
 	Packages/Uintah/Dataflow/Modules/Selectors
 
 
