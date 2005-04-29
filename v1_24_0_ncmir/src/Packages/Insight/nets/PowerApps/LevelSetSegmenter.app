@@ -297,6 +297,25 @@ set m62 [addModuleAtPosition "SCIRun" "Math" "BuildTransform" 745 1067]
 # Create a SCIRun->FieldsGeometry->TransformField Module
 set m63 [addModuleAtPosition "SCIRun" "FieldsGeometry" "TransformField" 727 1130]
 
+
+
+
+# Create a Teem->UnuNtoZ->UnuSave Module
+set m64 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuSave" 717 721]
+
+# Create a Teem->UnuNtoZ->UnuSave Module
+set m65 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuSave" 921 851]
+
+# Create a Teem->UnuNtoZ->UnuSave Module
+set m66 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuSave" 920 950]
+
+# Create a Teem->UnuNtoZ->UnuSave Module
+set m67 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuSave" 1422 778]
+
+
+
+
+
 # Create the Connections between Modules
 set c1 [addConnection $m13 0 $m32 0]
 set c2 [addConnection $m13 0 $m31 0]
@@ -379,6 +398,29 @@ set c77 [addConnection $m58 0 $m14 6]
 set c78 [addConnection $m61 0 $m50 0]
 set c79 [addConnection $m50 0 $m63 0]
 set c80 [addConnection $m63 0 $m51 0]
+
+
+set c100 [addConnection $m21 0 $m64 0]
+set c101 [addConnection $m31 0 $m65 0]
+set c102 [addConnection $m33 0 $m66 0]
+set c102 [addConnection $m29 0 $m67 0]
+
+setGlobal $m64-format {text}
+setGlobal $m64-encoding {ascii}
+setGlobal $m64-filename {/tmp/thresh.txt}
+
+setGlobal $m65-format {text}
+setGlobal $m65-encoding {ascii}
+setGlobal $m65-filename {/tmp/2op-1.txt}
+
+setGlobal $m66-format {text}
+setGlobal $m66-encoding {ascii}
+setGlobal $m66-filename {/tmp/2op-2.txt}
+
+setGlobal $m67-format {text}
+setGlobal $m67-encoding {ascii}
+setGlobal $m67-filename {/tmp/neg-seeds.txt}
+
 
 # Set GUI variables
 
