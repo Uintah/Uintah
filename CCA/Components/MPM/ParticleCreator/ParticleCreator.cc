@@ -422,7 +422,10 @@ ParticleCreator::initializeParticle(const Patch* patch,
   pmass[i] = matl->getInitialDensity()*pvolume[i];
   pdisp[i] = Vector(0.,0.,0.);
   // for thermal stress
-  ptempPrevious[i] = d_ref_temp; 
+  //ptempPrevious[i] = d_ref_temp; // This is incorrect T_n ~= T_ref
+                                   // T_n is the temperature at time t_n
+  // Assume that the correct d_ref_temp is specified in the input file
+  ptempPrevious[i] = (d_ref_temp > 0.0) ? d_ref_temp : ptemperature[i];
 
   Vector pExtForce(0,0,0);
   ParticleCreator::applyForceBC(dxpp, p, pmass[i], pExtForce);
