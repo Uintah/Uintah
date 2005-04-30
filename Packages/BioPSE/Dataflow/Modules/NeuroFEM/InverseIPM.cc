@@ -47,6 +47,7 @@
 #include <Core/ImportExport/ExecConverter.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/HexVolField.h>
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/DenseMatrix.h>
@@ -391,9 +392,10 @@ InverseIPM::execute()
     return;
   }
 
-  if (condmesh->mesh()->get_type_description()->get_name() != "TetVolMesh")
+  if (condmesh->mesh()->get_type_description()->get_name() != "TetVolMesh" &&
+      condmesh->mesh()->get_type_description()->get_name() != "HexVolMesh")
   {
-    error("CondMesh must contain a TetVolMesh.");
+    error("CondMesh must contain a TetVolMesh or HexVolMesh.");
     return;
   }
   if (condmesh->query_tensor_interface(this) == 0)

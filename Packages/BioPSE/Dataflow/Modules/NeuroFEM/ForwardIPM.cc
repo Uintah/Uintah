@@ -47,6 +47,7 @@
 #include <Core/ImportExport/ExecConverter.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/HexVolField.h>
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/DenseMatrix.h>
@@ -78,17 +79,15 @@ ForwardIPM::ForwardIPM(GuiContext* ctx)
 
 
 
-bool
-write_geo_file(ProgressReporter *pr, FieldHandle field, const char *filename)
+static bool
+write_geo_tet(ProgressReporter *pr, FieldHandle field, const char *filename)
 {
-  
   TetVolMesh *mesh = dynamic_cast<TetVolMesh *>(field->mesh().get_rep());
   if (mesh == 0)
   {
     pr->error("Field does not contain a TetVolMesh.");
     return false;
   }
-
  
   TetVolMesh::Node::iterator nitr, neitr;
   TetVolMesh::Node::size_type nsize; 
@@ -171,9 +170,24 @@ write_geo_file(ProgressReporter *pr, FieldHandle field, const char *filename)
 }
 
 
+static bool
+write_geo_hex(ProgressReporter *pr, FieldHandle field, const char *filename)
+{
+  HexVolMesh *mesh = dynamic_cast<HexVolMesh *>(field->mesh().get_rep());
+  if (mesh == 0)
+  {
+    pr->error("Field does not contain a HexVolMesh.");
+    return false;
+  }
 
-bool
-write_knw_file(ProgressReporter *pr, FieldHandle field, const char *filename)
+  // TODO: WRITE HEX MESH
+
+  return true;
+}
+
+
+static bool
+write_knw_tet(ProgressReporter *pr, FieldHandle field, const char *filename)
 {
   TetVolField<Tensor> *tfield =
     dynamic_cast<TetVolField<Tensor> *>(field.get_rep());
@@ -185,7 +199,6 @@ write_knw_file(ProgressReporter *pr, FieldHandle field, const char *filename)
   }
 
   FILE *f = fopen(filename, "w");
-  //FILE *f =fopen("/home/sci/slew/ncrr/dataset/tensor.con","w");
   if (f == NULL)
   {
     pr->error(string("Unable to open file '") + filename + "' for writing.");
@@ -225,6 +238,111 @@ write_knw_file(ProgressReporter *pr, FieldHandle field, const char *filename)
   fclose(f);
 
   return true;
+}
+
+
+static bool
+write_knw_hex(ProgressReporter *pr, FieldHandle field, const char *filename)
+{
+  HexVolField<Tensor> *tfield =
+    dynamic_cast<HexVolField<Tensor> *>(field.get_rep());
+  HexVolMesh *mesh = dynamic_cast<HexVolMesh *>(field->mesh().get_rep());
+  if (mesh == 0)
+  {
+    pr->error("Field does not contain a HexVolMesh.");
+    return false;
+  }
+
+  FILE *f = fopen(filename, "w");
+  if (f == NULL)
+  {
+    pr->error(string("Unable to open file '") + filename + "' for writing.");
+    return false;
+  }
+
+  // Write header.
+  fprintf(f, "BOI - TENSORVALUEFILE\n");
+  fprintf(f, "========================================================\n");
+  fprintf(f, "========================================================\n");
+  fprintf(f, "BOI - TENSOR\n");  
+
+  // Write it out.
+  HexVolMesh::Cell::iterator itr, eitr;
+  mesh->begin(itr);
+  mesh->end(eitr);
+  
+  while (itr != eitr)
+  {
+    Tensor t;
+    tfield->value(t, *itr);
+
+    fprintf(f, "%10d  %11f  %11f  %11f\n           %11f  %11f  %11f\n",
+            1+*itr,  // fortran index, +1
+            t.mat_[0][0], t.mat_[1][1], t.mat_[2][2],
+            t.mat_[0][1], t.mat_[0][2], t.mat_[1][2]);
+
+    ++itr;
+  }
+
+  // Write tail, bottom part.
+  fprintf(f, "EOI - TENSOR\n");
+  fprintf(f, "========================================================\n");
+  fprintf(f, "========================================================\n");
+  fprintf(f, "EOI - TENSORVALUEFILE\n");
+
+  fclose(f);
+
+  return true;
+}
+
+
+bool
+write_geo_file(ProgressReporter *pr, FieldHandle field, const char *filename)
+{
+  TetVolMesh *tmesh = dynamic_cast<TetVolMesh *>(field->mesh().get_rep());
+  HexVolMesh *hmesh = dynamic_cast<HexVolMesh *>(field->mesh().get_rep());
+
+  if (tmesh != 0)
+  {
+    return write_geo_tet(pr, field, filename);
+  }
+  else if (hmesh != 0)
+  {
+    return write_geo_hex(pr, field, filename);
+  }
+  else
+  {
+    pr->error("In write_geo_file, expected a TetVolMesh or HexVolMesh.");
+    return false;
+  }
+}
+
+
+bool
+write_knw_file(ProgressReporter *pr, FieldHandle field, const char *filename)
+{
+  TetVolMesh *tmesh = dynamic_cast<TetVolMesh *>(field->mesh().get_rep());
+  HexVolMesh *hmesh = dynamic_cast<HexVolMesh *>(field->mesh().get_rep());
+
+  if (tmesh != 0)
+  {
+    return write_knw_tet(pr, field, filename);
+  }
+  else if (hmesh != 0)
+  {
+    return write_knw_hex(pr, field, filename);
+  }
+  else
+  {
+    pr->error("In write_knw_file, expected a TetVolMesh or HexVolMesh.");
+    return false;
+  }
+}
+
+
+bool
+write_knw_file(ProgressReporter *pr, FieldHandle field, const char *filename)
+{
 }
 
 
@@ -657,9 +775,10 @@ ForwardIPM::execute()
     return;
   }
 
-  if (condmesh->mesh()->get_type_description()->get_name() != "TetVolMesh")
+  if (condmesh->mesh()->get_type_description()->get_name() != "TetVolMesh" &&
+      condmesh->mesh()->get_type_description()->get_name() != "HexVolMesh")
   {
-    error("CondMesh must contain a TetVolMesh.");
+    error("CondMesh must contain a TetVolMesh or HexVolMesh.");
     return;
   }
   if (condmesh->query_tensor_interface(this) == 0)
