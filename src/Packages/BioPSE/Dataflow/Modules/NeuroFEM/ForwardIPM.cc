@@ -152,9 +152,9 @@ write_geo_file(ProgressReporter *pr, FieldHandle field, const char *filename)
     TetVolMesh::Node::array_type nodes; // 0 based
     mesh->get_nodes(nodes, *citr);
 
-    // Write nodes
+    // Write nodes - Please notice the indexing order differs.
     fprintf(f,  "  303: %6d%6d%6d%6d\n",
-            nodes[0]+1, nodes[1]+1, nodes[2]+1, nodes[3]+1);
+            nodes[1]+1, nodes[0]+1, nodes[2]+1, nodes[3]+1);
 
     ++citr;
   }
@@ -163,7 +163,7 @@ write_geo_file(ProgressReporter *pr, FieldHandle field, const char *filename)
   fprintf(f, "EOI - ELEMENTKNOTENKARTE\n");
   fprintf(f, "===================================================================\n");
   fprintf(f, "===================================================================\n");
-  fprintf(f, "BOI - GEOMETRIEFILE\n");
+  fprintf(f, "EOI - GEOMETRIEFILE\n");
   
   fclose(f);
   
@@ -294,11 +294,14 @@ write_dip_file(ProgressReporter *pr, MatrixHandle mh1, MatrixHandle mh2, const c
     pr->error("Error -- input field wasn't a DenseMatrix");
     return false;
   }
-  
+
   int nr=dp_vec->nrows();
   int nc=dp_vec->ncols();
-  cerr << "Number of rows = " << nr << "  number of columns = " << nc << "\n";
-  
+
+  pr->remark("Number of rows = " + to_string(nr) + ".");
+  pr->remark("Number of columns = " + to_string(nc) + ".");	     
+
+
   FILE *f = fopen(filename, "wt");
   if (!f) {
     pr->error(string("Error -- couldn't open output file: ") + filename );
@@ -306,10 +309,10 @@ write_dip_file(ProgressReporter *pr, MatrixHandle mh1, MatrixHandle mh2, const c
   }
 
   // write header
-  fprintf(f,"# 1 dipole(s) at %d time steps", nr);
-  fprintf(f,"UnitPosition\tmm");
-  fprintf(f,"UnitMoment\tnAm");
-  fprintf(f,"UnitTime\tms");  
+  fprintf(f,"# 1 dipole(s) at %d time steps\n", nr);
+  fprintf(f,"UnitPosition\tmm\n");
+  fprintf(f,"UnitMoment\tnAm\n");
+  fprintf(f,"UnitTime\tms\n");  
   fprintf(f,"NumberPositions=\t%d\n",nd);
   fprintf(f,"NumberTimeSteps=\t%d\n",nr);
   fprintf(f,"TimeSteps\t0(1)%d\n",(unsigned)nr-1);
@@ -322,28 +325,33 @@ write_dip_file(ProgressReporter *pr, MatrixHandle mh1, MatrixHandle mh2, const c
   for (int c=0; c<nc; c++){
     sum += ((*dp_vec)[0][c])*((*dp_vec)[0][c]);
   }
-  
-  sum = sqrt(sum);
-  fprintf(f,"%f\t%f\t%f\n",(*dp_vec[0][0])/sum,(*dp_vec[0][1])/sum, (*dp_vec[0][2])/sum);
+
+  if(sum <= 0.0){
+    cerr << "Dipole vectors are all zeros" << "\n";
+    return false;
+  }
+ 
+  sum = sqrt(sum)/sqrt(2.0);;
+  fprintf(f,"%f\t%f\t%f\n",((*dp_vec)[0][0])/sum,((*dp_vec)[0][1])/sum, ((*dp_vec)[0][2])/sum);
 
   // write dipole position
-  fprintf(f,"PositionFixed\n");
+  fprintf(f,"PositionsFixed\n");
   for (int i=0; i<3; i++)
-    fprintf(f,"%10.6f",(*dp_pos)[0][i]);
+    fprintf(f,"%7.3f ",(*dp_pos)[0][i]);
   fprintf(f,"\n");
 
   //  write dipole magnitude
-  fprintf(f,"Magnitudes");
+  fprintf(f,"Magnitudes\n");
   for (int r=0; r<nr; r++) {
     double sum = 0.0;
     for (int c=0; c<nc; c++){
       sum += ((*dp_vec)[r][c])*((*dp_vec)[r][c]);
-      //      fprintf(f, "%11.5e\t", (*dp_vec)[r][c]);
-    }
-    fprintf(f,"%e ",sqrt(sum));
+     }
+    fprintf(f,"%e ",sqrt(sum)/sqrt(2.0));
   }
+   
   fprintf(f,"\n");
-  fprintf(f,"NoLabels");
+  fprintf(f,"NoLabels\n");
   fclose(f);
 
   return true;
@@ -351,17 +359,20 @@ write_dip_file(ProgressReporter *pr, MatrixHandle mh1, MatrixHandle mh2, const c
 
 
 static bool
-send_result_file(ProgressReporter *pr,
-		 MatrixOPort *result_port,
+send_result_file(ProgressReporter *pr, MatrixOPort *result_port,
 		 string filename)
 {
-  ifstream matstream(filename.c_str(),ios::in);
+    cerr << "PASS 0\n";
+  string extfilename = filename + ".msr"; 
+  ifstream matstream(extfilename.c_str(),ios::in);
   if (matstream.fail())
   {
     pr->error("Could not open results file " + filename + ".");
     return false;
   }
 
+  cerr << "PASS 1\n";
+  
   string tmp;
   int nc, nr;
   matstream >> tmp >> nc;
@@ -369,12 +380,20 @@ send_result_file(ProgressReporter *pr,
   pr->remark("Number of Electrodes = " + to_string(nc) + ".");
   pr->remark("Number of Time Steps = " + to_string(nr) + ".");
 
+  cerr << "Number of Electrodes = "<< nc << "\n";
+  cerr << "Number of time Steps = "<< nr << "\n";
+
+    cerr << "PASS 2\n";
+    
   // Skip text lines.
   for (int i=0; i<4; ++i)
   {
     getline(matstream, tmp);
+    cerr << tmp << "\n";
   }
 
+  cerr << "PASS 3\n";
+    
   MatrixHandle dm = scinew DenseMatrix(nr, nc);
 
   // Write number of row & column.
@@ -395,6 +414,7 @@ send_result_file(ProgressReporter *pr,
   pr->remark("Done building output matrix.");
   
   result_port->send(dm);
+  
 
   return true;
 }
@@ -448,7 +468,7 @@ ForwardIPM::write_par_file(string filename)
   fprintf(f, "# SOLVER (1:Jakobi-CG, 2:IC(0)-CG, 3:AMG-CG, 4:PILUTS(ILDLT)-CG) \n");
   fprintf(f, "solvermethod= 3\n");
   fprintf(f, "# use or use not lead field basis approach\n");
-  fprintf(f, "associativity= 1\n");
+  fprintf(f, "associativity= 0\n");
   fprintf(f, "# NeuroFEM Solver\n");
   fprintf(f, "# parameter file for Pebbles solver \n");
   fprintf(f, "pebbles= pebbles.inp\n");
@@ -561,6 +581,71 @@ ForwardIPM::write_par_file(string filename)
 }
 
 
+bool
+write_pebbles_file(string filename)
+{
+  FILE *f = fopen(filename.c_str(), "wt");
+  if (f == NULL)
+  {
+    cerr << "Unable to open file"<< filename <<" for writing."<<"\n";
+    return false;
+  }
+
+  fprintf(f,"EPS_PCCG\n");
+  fprintf(f,"1e-8\n");
+  fprintf(f,"EPS_ITER\n");
+  fprintf(f,"1e-8\n");
+  fprintf(f,"EPS_INT\n");
+  fprintf(f,"1e-6\n");
+  fprintf(f,"EPS_MAT\n");
+  fprintf(f,"1e-2\n");
+  fprintf(f,"ALPHA\n");
+  fprintf(f,"0.01\n");
+  fprintf(f,"BETA\n");
+  fprintf(f,"0.0\n");
+  fprintf(f,"SOLVER:_AMG=1,_Jacobi=2,_ILU=3\n");
+  fprintf(f,"1\n");
+  fprintf(f,"SOLUTION_STRATEGY:_ITER=1,_PCCG=2,_BiCGStab=3\n");
+  fprintf(f,"2\n");
+  fprintf(f,"PRECOND_STEP\n");
+  fprintf(f,"1\n");
+  fprintf(f,"COARSE_SYSTEM\n");
+  fprintf(f,"1000\n");
+  fprintf(f,"COARSE_SOLVER:_LR=1,_LL=2,_DIAG=3,_NAG=4\n");
+  fprintf(f,"2\n");
+  fprintf(f,"MAX_NUMBER_ITER\n");
+  fprintf(f,"200\n");
+  fprintf(f,"MAX_NUMBER_SIZE\n");
+  fprintf(f,"2000000\n");
+  fprintf(f,"MAX_NEIGHBOUR\n");
+  fprintf(f,"100\n");
+  fprintf(f,"COARSENING:_strong=1,_easy=2,_vmb=3\n");
+  fprintf(f,"1\n");
+  fprintf(f,"INTERPOLATION:_sophisticated=1,_easy=2,_foolproof=3\n");
+  fprintf(f,"3\n");
+  fprintf(f,"NORM:_energy=1,_L2=2,_Max=3\n");
+  fprintf(f,"1\n");
+  fprintf(f,"CYCLE:_V=1,_W=2,_VV=3\n");
+  fprintf(f,"1\n");
+  fprintf(f,"SMOOTHING_TYPE\n");
+  fprintf(f,"1\n");
+  fprintf(f,"SMOOTHING_STEP\n");
+  fprintf(f,"1\n");
+  fprintf(f,"ELEMENT_PRECOND\n");
+  fprintf(f,"0\n");
+  fprintf(f,"ELEMENT_KAPPA\n");
+  fprintf(f,"10\n");
+  fprintf(f,"MATRIX_DIFF\n");
+  fprintf(f,"1e-1\n");
+  fprintf(f,"SHOW_DISPLAY:_nothing=0,_medium=1,_full=2\n");
+  fprintf(f,"1\n");
+  fprintf(f,"CONV_FACTOR\n");
+  fprintf(f,"0\n");
+
+  fclose(f);
+  return true;
+}
+
 void
 ForwardIPM::execute()
 {
@@ -615,10 +700,15 @@ ForwardIPM::execute()
   }
 
   // Make our tmp directory
+  //<<<<<<< .mine
+  //const string tmpdir = "/tmp/ForwardIPM" + to_string(getpid()) +"/";
+  //const string tmpdir = "/tmp/ForwardIPM/";
+  //=======
   //const string tmpdir = "/tmp/ForwardIPM" + to_string(getpid()) +"/";
   const string tmpdir = "/tmp/ForwardIPM/";
+  //>>>>>>> .r30030
   const string tmplog = tmpdir + "forward.log";
-  const string resultfile = tmpdir + "result.msr";
+  const string resultfile = tmpdir + "fwd_result";
   const string condmeshfile = tmpdir + "ca_head.geo";
   const string condtensfile = tmpdir + "ca_perm.knw";
   const string electrodefile = tmpdir + "electrode.elc";
@@ -662,9 +752,12 @@ ForwardIPM::execute()
       error("Unable to export dipole file.");
       throw false;
     }
-
+    
     // Write out our parameter file.
     if (!write_par_file(parafile)) { throw false; }
+
+    // write out pebble.inp
+    if(!write_pebbles_file(tmpdir+"pebbles.inp")) {throw false; }
 
     // Construct our command line.
     const string ipmfile = "ipm";
@@ -681,16 +774,22 @@ ForwardIPM::execute()
       error("The ipm program failed to run for some unknown reason.");
       throw false;
     }
+    cerr << "--- PASS 0 ---\n";
     msgStream_flush();
-
+    cerr << "--- PASS 0-1 ---\n";
     // Read in the results and send them along.
-    MatrixOPort *mat_oport = (MatrixOPort *)get_oport("DenseMatrix");
-    if (!send_result_file(this, mat_oport, resultfile))
+    MatrixOPort *pot_oport = (MatrixOPort *)get_oport("Forward Potential");
+
+    cerr << "--- PASS 1 ---\n";
+
+    if (!send_result_file(this,pot_oport, resultfile))
     {
       error("Unable to send output matrix.");
       throw false;
     }
 
+    cerr << "--- PASS 2 ---\n";
+    
     throw true; // cleanup.
   }
   catch (...)
