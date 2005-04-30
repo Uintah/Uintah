@@ -389,8 +389,11 @@ TextureRenderer::load_brick(TextureBrickHandle brick, bool use_cmap2)
       if (ShaderProgramARB::shaders_supported())
       {
 	unsigned int format = (nb == 1 ? GL_LUMINANCE : GL_RGBA);
-	glPixelStorei(GL_UNPACK_ROW_LENGTH, brick->sx());
-	glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, brick->sy());
+	if (ShaderProgramARB::texture_non_power_of_two())
+	{
+	  glPixelStorei(GL_UNPACK_ROW_LENGTH, brick->sx());
+	  glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, brick->sy());
+	}
 	if (reuse)
 	{
 	  glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, nx, ny, nz, format,
@@ -401,8 +404,11 @@ TextureRenderer::load_brick(TextureBrickHandle brick, bool use_cmap2)
 	  glTexImage3D(GL_TEXTURE_3D, 0, format, nx, ny, nz, 0, format,
 		       brick->tex_type(), brick->tex_data(c));
 	}
-	glPixelStorei(GL_UNPACK_ROW_LENGTH, -1);
-	glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, -1);
+	if (ShaderProgramARB::texture_non_power_of_two())
+	{
+	  glPixelStorei(GL_UNPACK_ROW_LENGTH, -1);
+	  glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, -1);
+	}
       }
       else
 #endif
