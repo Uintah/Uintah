@@ -77,23 +77,61 @@ InverseIPM::InverseIPM(GuiContext* ctx)
 }
 
 
-
 bool
 write_geo_file(ProgressReporter *pr, FieldHandle field, const char *filename);
 
 bool
 write_knw_file(ProgressReporter *pr, FieldHandle field, const char *filename);
 
-
 bool
 write_elc_file(ProgressReporter *pr, FieldHandle fld, const char *filename);
 
+bool
+write_pebbles_file(string filename);
 
+  
 bool
 write_potential_file(ProgressReporter *pr, MatrixHandle mat,
                      const char *filename)
 {
-  // TODO:  Write out the potentials file.
+  DenseMatrix *dm = dynamic_cast<DenseMatrix *>(mat.get_rep());
+  if (!dm) {
+    pr->error("Error -- input field wasn't a DenseMatrix");
+    return false;
+  }
+
+  int nr=dm->nrows(); // time
+  int nc=dm->ncols(); // number of electrode
+  
+  cerr << "Number of rows = " << nr << "  number of columns = " << nc << "\n";
+  
+  FILE *f = fopen(filename, "wt");
+  //FILE *f =fopen("/home/sci/slew/ncrr/ref_from_scirun.msr","wt");
+  if (!f) {
+    pr->error(string("Error -- couldn't open output file: ") + filename );
+    return false;
+  }
+
+  // write header
+  fprintf(f,"NumberPositions=	%d\n",(unsigned)(nc));
+  fprintf(f,"NumberTimeSteps=	%d\n",(unsigned)(nr));
+  fprintf(f,"UnitTime	ms\n");
+  fprintf(f,"UnitMeas	µV\n");
+  fprintf(f,"ValuesTransposed\n");
+
+  // write potential data in time
+  for (int r=0; r<nr; r++) {
+    fprintf(f,"%d: ",r+1);
+    for (int c=0; c<nc; c++){
+      fprintf(f, "%11.5e\t", (*dm)[r][c]);
+    }
+    fprintf(f, "\n");
+  }
+  fprintf(f,"Labels\n");
+  fprintf(f,"FPz\n");
+  
+  fclose(f);
+
   return true;
 }
 
@@ -102,55 +140,87 @@ static bool
 send_result_file(MatrixOPort *positions_port, MatrixOPort *moments_port,
                  string filename)
 {
-  // TODO:  FIXME, read in results.
-#if 0
-  ifstream matstream(filename.c_str(),ios::in);
+  string extfilename = filename + ".dip";
+  ifstream matstream(extfilename.c_str(),ios::in);
   if (matstream.fail()) {
     cerr << "Error -- Could not open file " << filename << "\n";
     return false;
   }
 
   string tmp;
-  int nc,nr;
-  matstream >> tmp >> nc;
-  matstream >> tmp >> nr;
-  cerr << "Number of Electrode = " << nc << "\n" << "Number of Time Step = " << nr << "\n";
 
-  //skip text lines
+  // skipping text lines - 
   for (int i=0; i<4; ++i){
-    getline(matstream, tmp);
-    // cerr << tmp << "\n";
+    getline(matstream,tmp);
+    cerr << tmp <<"\n";
   }
 
-  DenseMatrix *dm = scinew DenseMatrix(nr,nc);
+  int pos, step; 
+  matstream >> tmp >> pos;
+  cerr << "Number of Dipole Position = " << pos << "\n";
+  matstream >> tmp>> step;
+  cerr << "Number of Time Step = " << step << "\n";
 
-  // write number of row & column
-  (*dm)[0][0] = nr;
-  (*dm)[0][1] = nc;
+  // skipping text lines
+  for (int i=0; i<4; ++i){
+    getline(matstream, tmp);
+    cerr << tmp << "\n";
+  }
 
-  // write potentials on electrodes for each time step 
-  int r,c;
-  for (r=1; r<nr; r++)
-    for (c=0; c<nc; c++) {
-      double d;
-      matstream >> d;
-      (*dm)[r][c]=d;
-      //	cerr << "matrix["<<r<<"]["<<c<<"]="<<d<<"\n";
-    }
-  cerr << "done building matrix.\n";
+  // Get dipole position
+  double px, py, pz;
+  matstream >> tmp >> px >> py >> pz;
+  cerr << px << " " << py << " " << pz << "\n";
 
-  //  result->set_raw(false);
-  result_port->send(MatrixHandle(dm));
+  // write dipole position to DenseMatrix
+  DenseMatrix *dm_pos = scinew DenseMatrix(pos,3);
 
-#endif
+  (*dm_pos)[0][0] = px;
+  (*dm_pos)[0][1] = py;
+  (*dm_pos)[0][2] = pz;
+
+  MatrixHandle pos_handle(dm_pos);
+  positions_port->send(pos_handle);
+
+  // Get dipople momnent
+  getline(matstream, tmp);
+  getline(matstream, tmp);
+  double mx,my,mz;
+
+  matstream >> tmp >> mx >> my >> mz;
+  cerr << mx << " " << my << " " << mz << "\n";
+
+  // write dipole vector to DenseMatrix
+  DenseMatrix *dm_vec = scinew DenseMatrix(pos,3);
+
+  getline(matstream, tmp);
+  getline(matstream, tmp); // Magnitude
+		
+  // Get dipole magnitude & write dipole vector
+  for (int r=0; r<step+1; r++){
+    matstream >> tmp;
+    double mag;
+    matstream >> mag;
+    (*dm_vec)[r][0] = mag*mx;
+    (*dm_vec)[r][1] = mag*my;
+    (*dm_vec)[r][2] = mag*mz; 
+    cerr << mx*mag << " " << my*mag << " " << mz*mag << " " << "\n";
+  }
+
+  MatrixHandle vec_handle(dm_vec);
+  moments_port->send(vec_handle);
+	
+  matstream.close();
+ 
   return true;
+  
 }
 
 
 bool
 InverseIPM::write_par_file(string filename)
 {
-#if 0
+
   FILE *f = fopen(filename.c_str(), "w");
   if (f == NULL)
   {
@@ -305,7 +375,7 @@ InverseIPM::write_par_file(string filename)
   fprintf(f, "ResultOut= 4\n");
   
   fclose(f);
-#endif
+
   return true;
 }
 
@@ -358,11 +428,11 @@ InverseIPM::execute()
   //const string tmpdir = "/tmp/InverseIPM" + to_string(getpid()) +"/";
   const string tmpdir = "/tmp/InverseIPM/";
   const string tmplog = tmpdir + "inverse.log";
-  const string resultfile = tmpdir + "result.msr";
+  const string resultfile = tmpdir + "inv_result";
   const string condmeshfile = tmpdir + "ca_head.geo";
   const string condtensfile = tmpdir + "ca_perm.knw";
   const string electrodefile = tmpdir + "electrode.elc";
-  const string potentialsfile = tmpdir + "potentials.something"; // TODO: fix
+  const string potentialsfile = tmpdir + "ref_potential.msr"; // TODO: fix
   const string parafile = tmpdir + "inverse.par";
 
   try {
@@ -406,13 +476,16 @@ InverseIPM::execute()
     // Write out our parameter file.
     if (!write_par_file(parafile)) { throw false; }
 
-    // TODO: Fix this, not sourcesimulation
+    // write out pebble.inp
+    if(!write_pebbles_file(tmpdir+"pebbles.inp")) {throw false; }
+    
     // Construct our command line.
     const string ipmfile = "ipm";
     const string command = "(cd " + tmpdir + ";" +
-      ipmfile + " -i sourcesimulation" +
+      ipmfile + " -i movingdipolefit" +
       " -h " + condmeshfile + " -p " + parafile + " -s " + electrodefile +
-      " -dip " + potentialsfile + " -o " + resultfile + " -fwd FEM -sens EEG)";
+      " -r " + potentialsfile + " -o " + resultfile + " -fwd FEM -sens EEG" +
+      "-ndip 1 -opt Simplex -inv TruncatedSVD -guess Standard)";
 
     
     // Execute the command.  Last arg just a tmp file for logging.
@@ -447,7 +520,7 @@ InverseIPM::execute()
     unlink(resultfile.c_str());
     unlink(tmplog.c_str());
     rmdir(tmpdir.c_str());
-#endif
+#endif    
   }
 }
 
