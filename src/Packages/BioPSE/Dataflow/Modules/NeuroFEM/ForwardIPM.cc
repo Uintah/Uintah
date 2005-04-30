@@ -340,11 +340,6 @@ write_knw_file(ProgressReporter *pr, FieldHandle field, const char *filename)
 }
 
 
-bool
-write_knw_file(ProgressReporter *pr, FieldHandle field, const char *filename)
-{
-}
-
 
 bool
 write_elc_file(ProgressReporter *pr, FieldHandle fld, const char *filename)
