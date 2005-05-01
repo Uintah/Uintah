@@ -188,7 +188,7 @@ public:
   virtual void remark(const std::string&);
   virtual void postMessage(const std::string&);
   virtual std::ostream &msgStream() { return msgStream_; }
-  virtual void msgStream_flush() { log_string_.set(msgStream_.str()); }
+  virtual void msgStream_flush();
 
   // Compilation progress.  Should probably have different name.
   virtual void report_progress( ProgressState );
@@ -249,8 +249,8 @@ public:
   void want_to_execute();
 
 protected:
-
   virtual void tcl_command(GuiArgs&, void*);
+  virtual void presave() {}
 
   GuiInterface* gui;
   GuiContext* ctx;
@@ -289,11 +289,8 @@ protected:
   void update_state(State);
   void update_msg_state(MsgState);  
   CPUTimer timer;
-public:
-  virtual void presave() {};
+
   ostringstream msgStream_;
-  GuiString log_string_;
-protected:
   void get_position(int& x, int& y);
   void setStackSize(unsigned long stackSize);
   void reset_vars();
@@ -302,6 +299,7 @@ protected:
   friend class Scheduler;
   bool need_execute;
   SchedClass sched_class;
+
 private:
   void remove_iport(int);
   void add_iport(IPort*);
@@ -321,6 +319,9 @@ private:
   Network* network;
 
   bool        show_stats_;
+
+  GuiString log_string_;
+
   Module(const Module&);
   Module& operator=(const Module&);
 };

@@ -145,7 +145,6 @@ Module::Module(const string& name, GuiContext* ctx,
     have_own_dispatch(0),
     id(ctx->getfullname()), 
     abort_flag(0),
-    log_string_(ctx->subVar("log_string", false)),
     need_execute(0),
     sched_class(sched_class),
     state(NeedData),
@@ -154,7 +153,8 @@ Module::Module(const string& name, GuiContext* ctx,
     helper(0),
     helper_thread(0),
     network(0), 
-    show_stats_(true)
+    show_stats_(true),
+    log_string_(ctx->subVar("log_string", false))
 {
   stacksize=0;
 
@@ -329,7 +329,6 @@ void Module::report_progress( ProgressState state )
     remark("Dynamically compiling some code.");
     break;
   case ProgressReporter::CompilationDone:
-    msgStream_flush();
     gui->execute(id+" set_compiling_p 0");
     remark("Dynamic compilation completed.");
     break;
@@ -773,8 +772,10 @@ void Module::error(const string& str)
   {
     cout << id << ":ERROR: " << str << "\n";
   }
+  msgStream_flush();
   msgStream_ << "ERROR: " << str << '\n';
-  log_string_.set(msgStream_.str());
+  gui->execute(id + " append_log_msg {" + msgStream_.str() + "} red");
+  msgStream_.str("");
   update_msg_state(Error); 
 }
 
@@ -784,8 +785,10 @@ void Module::warning(const string& str)
   {
     cout << id << ":WARNING: " << str << "\n";
   }
+  msgStream_flush();
   msgStream_ << "WARNING: " << str << '\n';
-  log_string_.set(msgStream_.str());
+  gui->execute(id + " append_log_msg {" + msgStream_.str() + "} yellow");
+  msgStream_.str("");
   update_msg_state(Warning); 
 }
 
@@ -795,10 +798,20 @@ void Module::remark(const string& str)
   {
     cout << id << ":REMARK: " << str << "\n";
   }
+  msgStream_flush();
   msgStream_ << "REMARK: " << str << '\n';
-  log_string_.set(msgStream_.str());
+  gui->execute(id + " append_log_msg {" + msgStream_.str() + "} blue");
+  msgStream_.str("");
   update_msg_state(Remark); 
 }
+
+
+void Module::msgStream_flush()
+{
+  gui->execute(id + " append_log_msg {" + msgStream_.str() + "} black");
+  msgStream_.str("");
+}
+
 
 void Module::postMessage(const string& str)
 {

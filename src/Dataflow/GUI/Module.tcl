@@ -59,10 +59,8 @@ itcl_class Module {
 	trace variable $this-notes w "syncNotes [modname]"
 	
 	
-	global $this-log_string 
-	set $this-log_string ""
-
-	trace variable $this-log_string w "$this synch_log_msg"
+	global $this-backlog
+	set $this-backlog {}
     }
     
     destructor {
@@ -78,15 +76,16 @@ itcl_class Module {
     method set_defaults {} { 
     }
 
-    method synch_log_msg {args} {
- 	set ww .mLogWnd[modname]
-	
-	if {[winfo exists $ww.log.txt]} {
-	    upvar \#0 $this-log_string msg
+    method append_log_msg {msg tag} {
+        set $this-backlog [lappend $this-backlog [list "$msg" $tag]]
+        append_log_aux $msg $tag
+    }
 
+    method append_log_aux {msg tag} {
+ 	set ww .mLogWnd[modname]
+	if {[winfo exists $ww.log.txt]} {
 	    $ww.log.txt config -state normal
-	    $ww.log.txt delete 1.0 end
-	    $ww.log.txt insert end $msg
+	    $ww.log.txt insert end "$msg" $tag
 	    $ww.log.txt config -state disabled
 	}
     }
@@ -517,7 +516,7 @@ itcl_class Module {
 	    return
 	}
 	
-	# create the window (immediately withdraw it to avoid flicker)
+	# Create the window (immediately withdraw it to avoid flicker).
 	toplevel $w; wm withdraw $w
 	update
 
@@ -534,12 +533,17 @@ itcl_class Module {
 	scrollbar $w.log.sb -relief sunken -command "$w.log.txt yview"
 	pack $w.log.txt -side left -padx 5 -pady 2 -expand 1 -fill both
 
-
-	upvar \#0 $this-log_string msg
+        # Set up our color tags.
 	$w.log.txt config -state normal
-	$w.log.txt delete 1.0 end
-	$w.log.txt insert end $msg
+	$w.log.txt tag configure red -foreground red
+	$w.log.txt tag configure blue -foreground blue
+	$w.log.txt tag configure yellow -foreground yellow
+	$w.log.txt tag configure black -foreground "grey20"
 	$w.log.txt config -state disabled
+
+        foreach thingy [set $this-backlog] {
+            append_log_aux [lindex $thingy 0] [lindex $thingy 1]
+        }
 
 	pack $w.log.sb -side left -padx 0 -pady 2 -fill y
 
@@ -576,20 +580,11 @@ itcl_class Module {
 	    return
 	}
 
-	# Find out if the text widget is currently disabled.  If so,
-	# we must enable it to clear text.
-	set currentState [lindex [$w.log.txt config -state] 4]
-	if { $currentState == "disabled" } { 
-	    $w.log.txt config -state normal
-	}
-
+        $w.log.txt config -state normal
 	$w.log.txt delete 0.0 end
+        $w.log.txt config -state disabled
 
-	# If it was disabled, then but it back to disabled
-	if { $currentState == "disabled" } { 
-	    $w.log.txt config -state disabled
-	}
-
+        set $this-backlog {}
 	# Clear the module indicator color if
         # not in an error state
 	if {$msg_state != "Error"} {
