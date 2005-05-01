@@ -38,6 +38,7 @@
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/ConditionVariable.h>
+#include <Core/Util/ProgressReporter.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <map>
@@ -105,16 +106,16 @@ public:
   bool get(const CompileInfo &info, DynamicAlgoHandle&);
   bool maybe_get(const CompileInfo &info, DynamicAlgoHandle&);
   bool fetch(const CompileInfo &info, DynamicAlgoHandle&);
-  bool compile_and_store(const CompileInfo &info, bool maybe_compile = false,
-			 ostream &serr = std::cerr);
+  bool compile_and_store(const CompileInfo &info, bool maybe_compile,
+			 ProgressReporter *pr);
   void cleanup_failed_compile(CompileInfoHandle info);
 
   //! All modules should use this function to get the loader.
   static DynamicLoader& scirun_loader();
 
 private:
-  bool create_cc(const CompileInfo &info, bool empty, ostream &serr);
-  bool compile_so(const CompileInfo &info, ostream &serr);
+  bool create_cc(const CompileInfo &info, bool empty, ProgressReporter *pr);
+  bool compile_so(const CompileInfo &info, ProgressReporter *pr);
   void store( const string &, maker_fun);
   bool entry_exists(const string &entry);
   bool entry_is_null(const string &entry);
