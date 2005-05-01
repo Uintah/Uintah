@@ -181,6 +181,81 @@ write_geo_hex(ProgressReporter *pr, FieldHandle field, const char *filename)
   }
 
   // TODO: WRITE HEX MESH
+  HexVolMesh::Node::iterator nitr, neitr;
+  HexVolMesh::Node::size_type nsize; 
+  mesh->begin(nitr);
+  mesh->end(neitr);
+  mesh->size(nsize);
+
+  HexVolMesh::Cell::iterator citr, ceitr;
+  HexVolMesh::Cell::size_type csize; 
+  mesh->begin(citr);
+  mesh->end(ceitr);
+  mesh->size(csize); 
+
+  FILE *f = fopen(filename, "w");
+  if (f == NULL)
+  {
+    pr->error(string("Unable to open file '") + filename + "' for writing.");
+    return false;
+  }
+
+  // Write header.
+  fprintf(f, "BOI - GEOMETRIEFILE\n");
+  fprintf(f, "===================================================================\n");
+  fprintf(f, "===================================================================\n");
+  fprintf(f, "BOI - STEUERKARTE\n");
+  fprintf(f, "  ANZAHL DER KNOTEN             : %d\n",(unsigned)(nsize));
+  fprintf(f, "  ANZAHL DER ELEMENTE           : %d\n",(unsigned)(csize));
+  fprintf(f, "  GEOMETR. STRUKTUR - DIMENSION :      3\n");
+  fprintf(f, "EOI - STEUERKARTE\n");
+  fprintf(f, "===================================================================\n");
+  fprintf(f, "===================================================================\n");    
+  fprintf(f, "BOI - KOORDINATENKARTE\n");  
+
+  // write it out
+  int odd=1;
+  while (nitr != neitr)
+  {
+    Point p;
+    mesh->get_point(p, *nitr);
+
+    if(odd==1) {
+      fprintf(f, "   %11.5e %11.5e %11.5e ", p.x(), p.y(), p.z());
+      odd=0;
+    }
+    else{
+      fprintf(f, "   %11.5e %11.5e %11.5e\n", p.x(), p.y(), p.z());
+      odd=1;
+    }
+    // Write p;
+
+    ++nitr;
+  }
+  // write middle part
+  fprintf(f, "\nEOI - KOORDINATENKARTE\n");
+  fprintf(f, "===================================================================\n");
+  fprintf(f, "===================================================================\n"); 
+  fprintf(f, "BOI - ELEMENTKNOTENKARTE\n");
+
+  while (citr != ceitr)
+  {
+    HexVolMesh::Node::array_type nodes; // 0 based
+    mesh->get_nodes(nodes, *citr);
+
+    fprintf(f,  "  323: %6d%6d%6d%6d%6d%6d%6d%6d\n",
+            nodes[0]+1, nodes[1]+1, nodes[2]+1, nodes[3]+1, nodes[4]+1, nodes[5]+1, nodes[6]+1, nodes[7]+1 );
+
+    ++citr;
+  }
+
+  // Write tail, bottom part.
+  fprintf(f, "EOI - ELEMENTKNOTENKARTE\n");
+  fprintf(f, "===================================================================\n");
+  fprintf(f, "===================================================================\n");
+  fprintf(f, "EOI - GEOMETRIEFILE\n");
+  
+  fclose(f);
 
   return true;
 }
@@ -377,12 +452,12 @@ write_elc_file(ProgressReporter *pr, FieldHandle fld, const char *filename)
   while(niter != niter_end) {
     Point p;
     mesh->get_center(p, *niter);
-    fprintf(f, "%lf %lf %lf\n", p.x(), p.y(), p.z());
+    fprintf(f, "%f %f %f\n", p.x(), p.y(), p.z());
     ++niter;
   }     
 
   fprintf(f,"Labels\n");
-  fprintf(f,"FPz \n");
+  fprintf(f,"FPz	Cz	Oz	Pz	Fz	T10	T7	C3	T8	C4	F3	F4	Fp1	Fp2	F7	F8	O1	O2	P3	P4	P7	P8	FT7	FT8	FC3	FC4	CP5	CP6	AFz	AF3	AF4	AF7	AF8	F5	F6	F9	F10	FC5	FC6	FT9	FT10	C5	C6	CPz	CP3	TP7	TP9	CP4	TP8	TP10	P5	P9	P6	P10	POz	PO3	PO7	PO4	PO8	FCz	F1	F2	FC1	FC2	C1	C2	CP1	CP2	P1	P2	T9	\n");
 
   fclose(f);
   
@@ -475,7 +550,6 @@ static bool
 send_result_file(ProgressReporter *pr, MatrixOPort *result_port,
 		 string filename)
 {
-    cerr << "PASS 0\n";
   string extfilename = filename + ".msr"; 
   ifstream matstream(extfilename.c_str(),ios::in);
   if (matstream.fail())
@@ -484,8 +558,6 @@ send_result_file(ProgressReporter *pr, MatrixOPort *result_port,
     return false;
   }
 
-  cerr << "PASS 1\n";
-  
   string tmp;
   int nc, nr;
   matstream >> tmp >> nc;
@@ -493,20 +565,12 @@ send_result_file(ProgressReporter *pr, MatrixOPort *result_port,
   pr->remark("Number of Electrodes = " + to_string(nc) + ".");
   pr->remark("Number of Time Steps = " + to_string(nr) + ".");
 
-  cerr << "Number of Electrodes = "<< nc << "\n";
-  cerr << "Number of time Steps = "<< nr << "\n";
-
-    cerr << "PASS 2\n";
-    
   // Skip text lines.
   for (int i=0; i<4; ++i)
   {
     getline(matstream, tmp);
-    cerr << tmp << "\n";
-  }
+   }
 
-  cerr << "PASS 3\n";
-    
   MatrixHandle dm = scinew DenseMatrix(nr, nc);
 
   // Write number of row & column.
@@ -517,9 +581,10 @@ send_result_file(ProgressReporter *pr, MatrixOPort *result_port,
   int r, c;
   for (r=0; r < nr; r++)
   {
+    matstream >> tmp;
     for (c=0; c < nc; c++)
     {
-      double d;
+      long d;
       matstream >> d;
       dm->put(r, c, d);
     }
@@ -888,13 +953,10 @@ ForwardIPM::execute()
       error("The ipm program failed to run for some unknown reason.");
       throw false;
     }
-    cerr << "--- PASS 0 ---\n";
     msgStream_flush();
-    cerr << "--- PASS 0-1 ---\n";
+
     // Read in the results and send them along.
     MatrixOPort *pot_oport = (MatrixOPort *)get_oport("Forward Potential");
-
-    cerr << "--- PASS 1 ---\n";
 
     if (!send_result_file(this,pot_oport, resultfile))
     {
@@ -902,8 +964,6 @@ ForwardIPM::execute()
       throw false;
     }
 
-    cerr << "--- PASS 2 ---\n";
-    
     throw true; // cleanup.
   }
   catch (...)
