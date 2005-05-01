@@ -808,8 +808,11 @@ void Module::remark(const string& str)
 
 void Module::msgStream_flush()
 {
-  gui->execute(id + " append_log_msg {" + msgStream_.str() + "} black");
-  msgStream_.str("");
+  if (msgStream_.str() != "")
+  {
+    gui->execute(id + " append_log_msg {" + msgStream_.str() + "} black");
+    msgStream_.str("");
+  }
 }
 
 
