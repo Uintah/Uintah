@@ -129,7 +129,7 @@ write_potential_file(ProgressReporter *pr, MatrixHandle mat,
     fprintf(f, "\n");
   }
   fprintf(f,"Labels\n");
-  fprintf(f,"FPz\n");
+  fprintf(f,"FPz	Cz	Oz	Pz	Fz	T10	T7	C3	T8	C4	F3	F4	Fp1	Fp2	F7	F8	O1	O2	P3	P4	P7	P8	FT7	FT8	FC3	FC4	CP5	CP6	AFz	AF3	AF4	AF7	AF8	F5	F6	F9	F10	FC5	FC6	FT9	FT10	C5	C6	CPz	CP3	TP7	TP9	CP4	TP8	TP10	P5	P9	P6	P10	POz	PO3	PO7	PO4	PO8	FCz	F1	F2	FC1	FC2	C1	C2	CP1	CP2	P1	P2	T9	 \n");
   
   fclose(f);
 
@@ -153,7 +153,6 @@ send_result_file(MatrixOPort *positions_port, MatrixOPort *moments_port,
   // skipping text lines - 
   for (int i=0; i<4; ++i){
     getline(matstream,tmp);
-    cerr << tmp <<"\n";
   }
 
   int pos, step; 
@@ -165,13 +164,11 @@ send_result_file(MatrixOPort *positions_port, MatrixOPort *moments_port,
   // skipping text lines
   for (int i=0; i<4; ++i){
     getline(matstream, tmp);
-    cerr << tmp << "\n";
   }
 
   // Get dipole position
   double px, py, pz;
   matstream >> tmp >> px >> py >> pz;
-  cerr << px << " " << py << " " << pz << "\n";
 
   // write dipole position to DenseMatrix
   DenseMatrix *dm_pos = scinew DenseMatrix(pos,3);
@@ -189,7 +186,6 @@ send_result_file(MatrixOPort *positions_port, MatrixOPort *moments_port,
   double mx,my,mz;
 
   matstream >> tmp >> mx >> my >> mz;
-  cerr << mx << " " << my << " " << mz << "\n";
 
   // write dipole vector to DenseMatrix
   DenseMatrix *dm_vec = scinew DenseMatrix(pos,3);
@@ -205,7 +201,6 @@ send_result_file(MatrixOPort *positions_port, MatrixOPort *moments_port,
     (*dm_vec)[r][0] = mag*mx;
     (*dm_vec)[r][1] = mag*my;
     (*dm_vec)[r][2] = mag*mz; 
-    cerr << mx*mag << " " << my*mag << " " << mz*mag << " " << "\n";
   }
 
   MatrixHandle vec_handle(dm_vec);
