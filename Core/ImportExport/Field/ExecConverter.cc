@@ -140,6 +140,7 @@ Exec_execute_command(ProgressReporter *pr,
   while (pipe && fgets(buffer, 256, pipe) != NULL)
   {
     pr->msgStream() << buffer;
+    pr->msgStream_flush();
   }
 
 #ifdef __sgi
