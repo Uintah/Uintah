@@ -117,6 +117,16 @@ namespace SCIRun {
   {
     return x*x;
   }
+
+  inline double Exp(double x)
+  {
+    return exp(x);
+  }
+
+  inline float Exp(float x)
+  {
+    return expf(x);
+  }
 }
 
 #endif
