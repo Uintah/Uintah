@@ -1191,6 +1191,10 @@ case $host in
          # from fspec.pl.in).
          FORTRAN_UNDERSCORE=linux
          ;;
+      *gfortran*)
+         FFLAGS="$FFLAGS $extra_cflags"   
+         FORTRAN_UNDERSCORE=linux
+         ;;        
       *)
          FFLAGS="$FFLAGS $extra_cflags"
          ;;
@@ -1253,6 +1257,10 @@ case $host in
          # from fspec.pl.in).
 	 FORTRAN_UNDERSCORE=linux
          ;;
+      *gfortran*)
+         FFLAGS="$FFLAGS $extra_cflags" 
+         FORTRAN_UNDERSCORE=linux 
+         ;;       
       *)
          FFLAGS="$FFLAGS $extra_cflags"
          ;;
@@ -2604,6 +2612,8 @@ case $host in
     # Linux Library Check
     if test "$F77" = "pgf77"; then
       SCI_TRY_LINK(F,fortran libraries,,,pgftnrtl,$_sci_lib,,,$_sci_optional)
+    elif test "$F77" = "gfortran-4.0"; then
+      SCI_TRY_LINK(F,fortran libraries,,,gfortran,$_sci_lib,,,$_sci_optional)
     else
       SCI_TRY_LINK(F,fortran libraries,,,g2c,$_sci_lib,,,$_sci_optional)
     fi
