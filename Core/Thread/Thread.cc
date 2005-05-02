@@ -264,8 +264,8 @@ Thread::parallel(ParallelBase& helper, int nthreads,
 void
 Thread::niceAbort(void* Context /* = 0 */)
 {
-  static const int MAXSTACK = 100;
 #ifdef HAVE_EXC
+  static const int MAXSTACK = 100;
   // Use -lexc to print out a stack trace
   static const int MAXNAMELEN = 1000;
   __uint64_t addrs[MAXSTACK];
@@ -282,6 +282,7 @@ Thread::niceAbort(void* Context /* = 0 */)
       fprintf(stderr, "0x%p: %s\n", (void*)addrs[i], names[i]);
   }
 #elif defined(__GNUC__) && defined(__linux)
+  static const int MAXSTACK = 100;
   static void *addresses[MAXSTACK];
   int n = backtrace( addresses, MAXSTACK );
   if (n == 0){
