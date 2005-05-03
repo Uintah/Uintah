@@ -519,14 +519,19 @@ VH_Anatomy_readBoundingBox_File(char *infilename)
         return listRoot;
       }
       strncpy(newStr, inLine, charCnt);
+      // NULL-terminate newStr
+      newStr[charCnt] = '\0';
       listPtr->set_anatomyname(newStr);
       // debugging...
-      // fprintf(stderr, "anatomyname[%d] = '%s'\n",
-      //                 inLine_cnt, listPtr->anatomyname);
+      fprintf(stderr, "anatomyname[%d] = '%s'\n",
+                      inLine_cnt, listPtr->get_anatomyname());
       fprintf(stderr, ".");
 
       // linePtr is pointing to ','
-      linePtr++;
+// Bug correction on April 10, 2005 by R C Ward
+// Comment out the next line to properly read the bounding box coordinates.
+//      linePtr++;
+// End of correction on April 10, 2005 by R C Ward
       int minX, maxX, minY, maxY, minZ, maxZ, minSlice, maxSlice;
       if(sscanf(linePtr, "%d,%d,%d,%d,%d,%d,%d,%d",
                      &minX, &maxX, &minY, &maxY, &minZ, &maxZ,
@@ -536,6 +541,11 @@ VH_Anatomy_readBoundingBox_File(char *infilename)
         fprintf(stderr,
            "VH_AnatomyBoundingBox::readFile(%s): format error line %d\n",
            infilename, inLine_cnt);
+      }
+      if(!strcmp(newStr,"Myocaridal zone 12"))
+      {
+         cerr << "BB: " <<  minX <<","<< maxX <<",";
+         cerr << minY <<","<<  maxY <<","<<  minZ <<","<<  maxZ <<","<< endl;  
       }
       listPtr->set_minX(minX); listPtr->set_maxX(maxX);
       listPtr->set_minY(minY); listPtr->set_maxY(maxY);
@@ -564,12 +574,15 @@ VH_AnatomyBoundingBox::readFile(FILE *infileptr)
 
 /******************************************************************************
  * Find the boundingBox of a named anatomical entity
- ******************************************************************************/VH_AnatomyBoundingBox *
+ ******************************************************************************/
+VH_AnatomyBoundingBox *
 VH_Anatomy_findBoundingBox(VH_AnatomyBoundingBox *list, char *targetname)
 {
   VH_AnatomyBoundingBox *listPtr = list;
+  cerr << "INSIDE  findBoundingBox targetname: " << targetname << endl;
   while(listPtr->next() != list)
   {
+   cerr << "Anatomy in BB: "<< listPtr->get_anatomyname() << endl;
     if(!strcmp(listPtr->get_anatomyname(), targetname)) break;
     // (else)
     if((listPtr = listPtr->next()) == list) break;
@@ -658,7 +671,7 @@ void VH_injury::print()
   cout << " probability: " << probability;
   if(isGeometry)
   {
-    cout << " spatialObject: " << geom_type << endl;
+    cout << " dimEntity: " << geom_type << endl;
     cout << " Axis start point: (";
     cout << axisX0 << ", " << axisY0 << ", " << axisZ0 << ")";
     cout << " Axis end point: (";
