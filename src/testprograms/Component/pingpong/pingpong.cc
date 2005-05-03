@@ -14,7 +14,7 @@
    and/or sell copies of the Software, and to permit persons to whom the
    Software is furnished to do so, subject to the following conditions:
 
-   The above copyright notice and this permission notice shall be included
+   The above copyright notice and this permission noice shall be included
    in all copies or substantial portions of the Software.
 
    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
@@ -63,7 +63,7 @@ void usage(char* progname)
     cerr << "  -client URL  - client process\n";
     cerr << "  -reps n  - repeat n times\n";
     cerr << "\n";
-    exit(1);
+    exit(0);
 }
 
 int main(int argc, char* argv[])
@@ -74,79 +74,85 @@ int main(int argc, char* argv[])
     using PingPong_ns::PingPong;
 
     try {
-      PIDL::initialize();
+        bool client=false;
+        bool server=false;
+        string client_url;
+        int reps=10;
 
-	bool client=false;
-	bool server=false;
-	string client_url;
-	int reps=10;
+        for (int i = 1; i < argc; i++) {
+            string arg(argv[i]);
+            if (arg == "-server") {
+                if (client) {
+                    usage(argv[0]);
+                }
+                server=true;
+            } else if (arg == "-client") {
+                if (server) {
+                    usage(argv[0]);
+                }
+                if (++i >= argc) {
+                    usage(argv[0]);
+                }
+                client_url=argv[i];
+                client=true;
+            } else if (arg == "-reps") {
+                if (++i >= argc) {
+                    usage(argv[0]);
+                }
+                reps=atoi(argv[i]);
+            } else {
+                usage(argv[0]);
+            }
+        }
+        if (!client && !server) {
+            usage(argv[0]);
+        }
 
-	for(int i=1;i<argc;i++){
-	    string arg(argv[i]);
-	    if(arg == "-server"){
-		if(client)
-		    usage(argv[0]);
-		server=true;
-	    } else if(arg == "-client"){
-		if(server)
-		    usage(argv[0]);
-		if(++i>=argc)
-		    usage(argv[0]);
-		client_url=argv[i];
-		client=true;
-	    } else if(arg == "-reps"){
-		if(++i>=argc)
-		    usage(argv[0]);
-		reps=atoi(argv[i]);
-	    } else {
-		usage(argv[0]);
-	    }
-	}
-	if(!client && !server)
-	    usage(argv[0]);
+        PIDL::initialize();
 
-	if(server) {
-	    PingPong::pointer pp(new PingPong_impl);
-	    pp->addReference();
-	    cerr << "Waiting for pingpong connections...\n";
-	    cerr << pp->getURL().getString() << '\n';
-	} else {
-	  //cerr << "calling objcetFrom\n";
-	  Object::pointer obj=PIDL::objectFrom(client_url);
-	  //cerr << "objectFrom completed\n";
-	  //cerr << "calling pidl_cast\n";
-	  PingPong::pointer pp=  pidl_cast<PingPong::pointer>(obj);
-	  //cerr << "pidl_case completed\n";
-	  if(pp.isNull()){
-	    cerr << "pp_isnull\n";
-	    abort();
-	  }
-	  double stime=Time::currentSeconds();
-	  	  for(int i=0;i<reps;i++){
-	    int j=pp->pingpong(i);
-	    if(i != j)
-	      cerr << "BAD data: " << i << " vs. " << j << '\n';
-	  }
+        if (server) {
+            PingPong::pointer pp(new PingPong_impl);
+            pp->addReference();
+            cerr << "Waiting for pingpong connections...\n";
+            cerr << pp->getURL().getString() << '\n';
+        } else {
+            //cerr << "calling objectFrom\n";
+            Object::pointer obj=PIDL::objectFrom(client_url);
+            //cerr << "objectFrom completed\n";
+            //cerr << "calling pidl_cast\n";
+            PingPong::pointer pp=  pidl_cast<PingPong::pointer>(obj);
+            //cerr << "pidl_case completed\n";
+            if (pp.isNull()) {
+                cerr << "pp_isnull\n";
+                abort();
+            }
+            double stime=Time::currentSeconds();
+            for (int i = 0; i < reps; i++) {
+                int j = pp->pingpong(i);
+                if (i != j) {
+                    cerr << "BAD data: " << i << " vs. " << j << '\n';
+                }
+            }
 
-	  double dt=Time::currentSeconds()-stime;
-	  cerr << reps << " reps in " << dt << " seconds\n";
-	  double us=dt/reps*1000*1000;
-	  cerr << us << " us/rep\n";
-	 
- 	}
+            double dt=Time::currentSeconds()-stime;
+            cerr << reps << " reps in " << dt << " seconds\n";
+            double us = dt / reps * 1000 * 1000;
+            cerr << us << " us/rep\n";
+        }
+        PIDL::serveObjects();
+        cout << "serveObjects done!\n";
+        PIDL::finalize();
     } catch(const MalformedURL& e) {
-	cerr << "pingpong.cc: Caught MalformedURL exception:\n";
-	cerr << e.message() << '\n';
+        cerr << "pingpong.cc: Caught MalformedURL exception:\n";
+        cerr << e.message() << '\n';
     } catch(const Exception& e) {
-	cerr << "pingpong.cc: Caught exception:\n";
-	cerr << e.message() << '\n';
-	abort();
+        cerr << "pingpong.cc: Caught exception:\n";
+        cerr << e.message() << '\n';
+        abort();
     } catch(...) {
-	cerr << "Caught unexpected exception!\n";
-	abort();
+        cerr << "Caught unexpected exception!\n";
+        abort();
     }
-    PIDL::serveObjects();
-    PIDL::finalize();
     return 0;
 }
 

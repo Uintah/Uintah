@@ -32,17 +32,21 @@
 SRCDIR := testprograms/Component/pingpong
 
 ifeq ($(LARGESOS),yes)
-PSELIBS := Core
+ PSELIBS := Core
 else
-PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/Thread \
-	Core/Exceptions Core/CCA/Comm
+ PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/Thread \
+            Core/Exceptions Core/CCA/Comm
 endif
 
 ifeq ($(HAVE_GLOBUS),yes)
-PSELIBS+=Core/globus_threads
-LIBS := $(GLOBUS_LIBRARY)
+ PSELIBS += Core/globus_threads 
+ LIBS := $(GLOBUS_LIBRARY)
 else
-LIBS :=
+ LIBS :=
+endif
+
+ifeq ($(HAVE_MPI),yes)
+ LIBS += $(MPI_LIBRARY) 
 endif
 
 

@@ -33,17 +33,22 @@ SRCDIR := testprograms/Component/argtest
 
 
 ifeq ($(LARGESOS),yes)
-PSELIBS := Core
+ PSELIBS := Core
 else
-PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/Thread \
-	Core/Exceptions Core/CCA/Comm
+ PSELIBS := SCIRun Core/CCA/SSIDL Core/CCA/PIDL Core/Thread \
+             Core/Exceptions Core/CCA/Comm
 endif
 
 ifeq ($(HAVE_GLOBUS),yes)
-PSELIBS+=Core/globus_threads
+ PSELIBS += Core/globus_threads 
+ LIBS := $(GLOBUS_LIBRARY)
+else
+ LIBS :=
 endif
 
-LIBS := 
+ifeq ($(HAVE_MPI),yes)
+ LIBS += $(MPI_LIBRARY) 
+endif
 
 
 PROGRAM := $(SRCDIR)/argtest
