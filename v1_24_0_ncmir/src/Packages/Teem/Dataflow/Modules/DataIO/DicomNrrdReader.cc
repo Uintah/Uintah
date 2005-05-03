@@ -437,7 +437,7 @@ void DicomNrrdReader::tcl_command(GuiArgs& args, void* userdata)
 
     for( int i = 0; i < num_suids; i++ )
     {
-      all_suids = string( "{" + all_suids + "}" + " " + suids[i] );  
+      all_suids = string( all_suids + "{" + suids[i] + "}" + " ");  
     }
 
     if( num_suids == 0 )
