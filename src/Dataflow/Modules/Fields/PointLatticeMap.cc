@@ -212,7 +212,7 @@ PointLatticeMap::execute()
     point_neighbors_t::iterator nb = neighbors.begin(), ne = neighbors.end();
     while (nb != ne) {
       cols[i] = nb->first;
-      data[i] = nb->second/total;
+      data[i] = 1.0 - nb->second/total;
       ++i;
       ++nb;
     }
@@ -230,7 +230,7 @@ PointLatticeMap::execute()
 //       pb++;
 //     }
 //   }
-  matrix->dense()->print();
+//  matrix->dense()->print();
 
   oport_->send(matrix);
 
