@@ -128,6 +128,7 @@ SRCS := \
         $(SRCDIR)/PathWidget.tcl \
         $(SRCDIR)/PathWriter.tcl \
         $(SRCDIR)/PlanarTransformField.tcl \
+        $(SRCDIR)/PointLatticeMap.tcl \
         $(SRCDIR)/PointWidget.tcl \
         $(SRCDIR)/Port.tcl \
         $(SRCDIR)/Probe.tcl \
