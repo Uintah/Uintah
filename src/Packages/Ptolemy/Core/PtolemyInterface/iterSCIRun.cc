@@ -45,7 +45,7 @@ using namespace SCIRun;
 
 typedef string* stringPtr;
 
-JNIEXPORT jint JNICALL 
+JNIEXPORT jstring JNICALL 
 Java_org_sdm_spa_actors_scirun_IterateSCIRun_runOnFiles(JNIEnv *env, jobject obj, jobjectArray input1Names, jint size1, jobjectArray input2Names, jint size2, jint numParams, jstring picPath)
 {
 	stringPtr input1;
@@ -53,26 +53,6 @@ Java_org_sdm_spa_actors_scirun_IterateSCIRun_runOnFiles(JNIEnv *env, jobject obj
 	jstring tempString;
 	
 	std::string pPath = JNIUtils::GetStringNativeChars(env, picPath);
-	
-	//stuff for a result array that is the strings of the files saved.  This may or may not be necessary?
-	/*
-	
-	jobjectArray result;
-	jclass strArrCls = env->FindClass("Ljava/lang/String;");
-	if(strArrCls == NULL){
-		return NULL;  //return fail value
-	}
-	result = env->NewObjectArray(size, strArrCls, NULL);
-	if (result == NULL){
-		return NULL;  //probably out of memory so fail
-	}
-	
-	if(i==size-1)
-		env->SetObjectArrayElement(result,0,tempString);
-	else
-		env->SetObjectArrayElement(result,i+1,tempString);
-	
-	*/
 	
 	//for each thing in the input work on it
 	input1 = new string[size1];
@@ -96,12 +76,8 @@ Java_org_sdm_spa_actors_scirun_IterateSCIRun_runOnFiles(JNIEnv *env, jobject obj
     t->activate(false);
     t->join();
 	
+	std::cout << "return will be: " << Iterate::returnValue << std::endl;
 	
-	//if the commands succeed.  
-	//TODO need a call back type thing here but i am not sure how this will work yet
-	if(true)
-		return 1;
-	else
-		return 0;
+	return env->NewStringUTF(Iterate::returnValue.c_str());
 
 }
