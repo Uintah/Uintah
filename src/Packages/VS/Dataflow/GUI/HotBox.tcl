@@ -72,6 +72,7 @@ itcl_class VS_DataFlow_HotBox {
     global $this-gui_childlist_name
     global $this-FME_on
     global $this-Files_on
+    global $this-Ontology_on
     global $this-enableDraw
     global $this-currentselection
     global $this-currentTime
@@ -179,6 +180,7 @@ itcl_class VS_DataFlow_HotBox {
     set $this-gui_childlist_name $this-gui_child_list
     set $this-FME_on "no"
     set $this-Files_on "no"
+    set $this-Ontology_on "no"
     set $this-enableDraw "no"
     set $this-currentselection ""
     set $this-currentTime "1"
@@ -192,11 +194,11 @@ itcl_class VS_DataFlow_HotBox {
     set $this-oqafmadatasource ""
     set $this-geometrypath ""
     set $this-querytype "2"
-    set $this-gui_probeLocx "0"
-    set $this-gui_probeLocy "0"
-    set $this-gui_probeLocz "0"
+    set $this-gui_probeLocx "0."
+    set $this-gui_probeLocy "0."
+    set $this-gui_probeLocz "0."
     set $this-gui_probe_scale "1.0"
-    set $this-selnameloc "unknown,0.0,0.0,0.0"
+    set $this-selnameloc "unknown, 0., 0., 0." 
 
   }
   # end method set_defaults
@@ -308,6 +310,18 @@ itcl_class VS_DataFlow_HotBox {
   }
   # end method toggle_Files_on
 
+  method toggle_Ontology_on {} {     
+    if {[set $this-Ontology_on] == "yes"} { 
+      # toggle Ontology control off
+      set $this-Ontology_on "no"
+    } else {set $this-Ontology_on "yes"}
+    set w .ui[modname]
+    destroy $w
+    ui
+  }
+  # end method toggle_Ontology_on
+
+
   method toggle_enableDraw {} {
     if {[set $this-enableDraw] == "yes"} {
       # toggle HotBox output Geometry off
@@ -329,7 +343,7 @@ itcl_class VS_DataFlow_HotBox {
 
     if {[set $this-FME_on] == "yes"} {
       # focus on the selection in the FME
-      exec VSgetFME.p $selection
+      exec /usr/local/SCIRun/src/Packages/VS/Standalone/scripts/VSgetFME.p $selection
     }
     set $this-currentselection $selection
     # tell the HotBox module that the
@@ -566,7 +580,9 @@ itcl_class VS_DataFlow_HotBox {
     ######################################
     frame $w.probeUI
     frame $w.probeUI.loc
-    tk_optionMenu $w.probeUI.loc.hotlist $this-selnameloc "Pericardium,94.5,60.1,52.3" "Myocardial zone 7,96.9,60.0,71.4" "Myocardial zone 12,113.9,69.5,83.7" "Myocardial zone 12,80.3,70.3,105.0" "Upper lobe of left lung,87.8,68.3,106.6"
+#    tk_optionMenu $w.probeUI.loc.hotlist $this-selnameloc "Pericardium,94.5,60.1,52.3" "Myocardial zone 7,96.9,60.0,71.4" "Myocardial zone 12,113.9,69.5,83.7" "Myocardial zone 12,80.3,70.3,105.0" "Upper lobe of left lung,87.8,68.3,106.6"
+tk_optionMenu $w.probeUI.loc.hotlist $this-selnameloc "Human" "Pericardium,448.98, 231.04, 1447.96"  "Myocardial zone 1,412.79, 222.0, 1426.14"  "Myocardial zone 6,422.93, 212.41, 1434.0" "Myocardial zone 7,427.36, 242.22, 1434.51" "Myocardial zone 12,434.3, 229.4, 1444.6" "Porcine" "Left ventricle,68.64, 35.58, 35.47"  "Right ventricle, 52.68, 32.84, 38.40" 
+#tk_optionMenu $w.probeUI.loc.hotlist $this-selnameloc "Left ventricle,68.64, 35.58, 35.47"  "Right ventricle, 52.68, 32.84, 38.40"  
     trace var $this-selnameloc w "$this set_probeSelection"
     label $w.probeUI.loc.locLabel -text "Cursor Location" -just left
     entry $w.probeUI.loc.locx -width 10 -textvariable $this-gui_probeLocx
@@ -575,8 +591,8 @@ itcl_class VS_DataFlow_HotBox {
     bind $w.probeUI.loc.locx <KeyPress-Return> "$this setProbeLoc"
     bind $w.probeUI.loc.locy <KeyPress-Return> "$this setProbeLoc"
     bind $w.probeUI.loc.locz <KeyPress-Return> "$this setProbeLoc"
-    bind $w.probeUI.loc.locz <KeyPress-Return> "$this setProbeLoc"
-    pack $w.probeUI.loc.locLabel $w.probeUI.loc.locx $w.probeUI.loc.locy $w.probeUI.loc.locz $w.probeUI.loc.hotlist \
+#    bind $w.probeUI.loc.locz <KeyPress-Return> "$this setProbeLoc"
+    pack $w.probeUI.loc.locLabel $w.probeUI.loc.locx $w.probeUI.loc.locy $w.probeUI.loc.locz $w.probeUI.loc.hotlist\
                 -side left -anchor n -expand yes -fill x
 
     frame $w.probeUI.slideTime
@@ -595,6 +611,8 @@ itcl_class VS_DataFlow_HotBox {
     bind $w.probeUI.slideTime.timeVal <KeyPress-Return> "$this-c needexecute"
     pack $w.probeUI.slideTime.slide $w.probeUI.slideTime.timeLabel $w.probeUI.slideTime.timeVal -side left -expand yes -fill x
     pack $w.probeUI.slideTime $w.probeUI.loc -side bottom -expand yes -fill x
+
+    checkbutton $w.togOntologyUI -text "Ontology" -command "$this toggle_Ontology_on"
 
     ######################################
     # FMA Hierarchy UI
@@ -637,6 +655,8 @@ itcl_class VS_DataFlow_HotBox {
     grid columnconfigure $w.hier.multi 2 -weight 1
     # pack $w.hier -fill both -expand 1
 
+# There was an error here in the code I downloaded on March 3 so I
+    # restored the original code form previous version of HotBox.tcl - RCW
     ### *** magic occurs here *** ###
     ### C++ HotBox Module takes control asynchronously
     ### and performs the following on selection change
@@ -682,9 +702,11 @@ itcl_class VS_DataFlow_HotBox {
     ######################################
     # Close the HotBox UI Window
     ######################################
-    button $w.controls.close -text "Close" -command "destroy $w"
+#    button $w.controls.close -text "Close" -command "destroy $w" 
 
-    pack $w.controls.adjOQAFMA $w.controls.adjFILES $w.controls.togFME $w.controls.enableDraw $w.controls.close -side left -expand yes -fill x
+    button $w.close -text "Close" -command "destroy $w"
+#    pack $w.controls.adjOQAFMA $w.controls.adjFILES $w.controls.togFME $w.controls.enableDraw $w.controls.close -side left -expand yes -fill x
+    pack $w.controls.adjOQAFMA $w.controls.adjFILES $w.controls.togFME $w.controls.enableDraw -side left -expand yes -fill x
 
     frame $w.controls2
     label $w.controls2.querytypelabel -text "Query Type: "
@@ -693,11 +715,28 @@ itcl_class VS_DataFlow_HotBox {
     radiobutton $w.controls2.partcontainsbutton -value 4 -text "Part Contains" -variable $this-querytype -command "$this set_querytype 4"
     pack $w.controls2.querytypelabel $w.controls2.containsbutton $w.controls2.partsbutton $w.controls2.partcontainsbutton -side left -expand yes -fill x
 
-    if { [set $this-Files_on] == "yes" } {
-    pack $w.togFilesUI $w.files $w.f $w.probeUI $w.hier $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
+    if { [set $this-Ontology_on] == "yes" } {
+      if { [set $this-Files_on] == "yes" } {
+        pack $w.togFilesUI $w.files $w.f $w.probeUI $w.togOntologyUI $w.hier $w.controls2 $w.controls $w.close -side top -expand yes -fill both -padx 5 -pady 5
+      } else {
+    pack $w.togFilesUI $w.f $w.probeUI $w.togOntologyUI $w.hier $w.controls2 $w.controls $w.close -side top -expand yes -fill both -padx 5 -pady 5
+      }
     } else {
-    pack $w.togFilesUI $w.f $w.probeUI $w.hier $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
+      if { [set $this-Files_on] == "yes" } {
+        pack $w.togFilesUI $w.files $w.f $w.probeUI $w.togOntologyUI $w.close -side top -expand yes -fill both -padx 5 -pady 5
+    } else {
+        pack $w.togFilesUI $w.f $w.probeUI $w.togOntologyUI $w.close -side top -expand yes -fill both -padx 5 -pady 5
+      } 
     }
+
+# Replaced code - RCW April 11, 2005
+#     if { [set $this-Files_on] == "yes" } {   
+#       pack $w.togFilesUI $w.files $w.f $w.probeUI $w.togOntologyUI $w.hier $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
+#    } else {
+#       pack $w.togFilesUI $w.f $w.probeUI $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
+#    }
+
+
 # pack $w.title -side top
   }
 # end method ui

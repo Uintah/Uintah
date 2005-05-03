@@ -522,6 +522,7 @@ HotBox::execute()
                       gui_probeLocy_.get(),
                       gui_probeLocz_.get()
                      );
+    cerr << "Probe location: " << probeLoc_<<endl;
     probeWidget_->SetPosition(probeLoc_);
   } // end else if(selectionSource == "UIsetProbeLoc")
 
@@ -658,7 +659,18 @@ HotBox::execute()
     cerr << "boxTran = " << boxTran_ << ", boxScale = " << boxScale_ << endl;
 
     // get the bounding box information for the selected entity
+//    cerr << "TEST BEFORE: selectname: " << selectName << endl;
     selectBox = VH_Anatomy_findBoundingBox( boundBoxList_, selectName);
+//    cerr << "TEST AFTER: selectname: " << selectName << endl;
+    cerr << "Anatomy: " << selectBox->get_anatomyname() << endl;
+    cerr << "Bounding Box(minX, maxX): " << selectBox->get_minX() <<"," << selectBox->get_maxX() <<endl;
+    cerr << "Bounding Box(minY, maxY): " << selectBox->get_minY() <<"," << selectBox->get_maxY() <<endl;
+    cerr << "Bounding Box(minZ, maxZ): " << selectBox->get_minZ() <<"," << selectBox->get_maxZ() <<endl;
+
+  }
+  else
+  {
+    selectBox = (VH_AnatomyBoundingBox *)NULL;
   }
 
   // we now have the anatomy name corresponding to the label value at the voxel
@@ -905,9 +917,13 @@ HotBox::execute()
     	       (double)selectBox->get_minY(),
     	       (double)selectBox->get_minZ());
     probeLoc_ = bmin + Vector(bmax - bmin) * 0.5;
+    cerr << "ProbeLoc: " << probeLoc_ <<endl;
+
     // scale the bounding box of the segmented region
     // to match the bounding box of the labelmap volume
     probeLoc_ = inputTransform_.project(probeLoc_);
+    cerr << "Transformed ProbeLoc: " << probeLoc_ <<endl;
+
     probeWidget_->SetPosition(probeLoc_);
 
     // update probe location in the Tcl GUI
@@ -1572,10 +1588,11 @@ HotBox::executeOQAFMA()
   //     <primaryInjuryList>
   //         <injuryEntity injuryName="Ablated LV myocardium" injuryID="1.1" >
   //             <ablateRegion>
-  //             <fmaEntity FMAname="Wall of left ventricle" FMAID="9556"/>
-  //             <probability="...">
-  //             <geometry>
-  //                 <spatialObject ID="cylinder">
+  //             <pathEntity PATID="TBD" PATname="Percent">
+  //               <fmaEntity FMAname="Wall of left ventricle" FMAID="9556"/>
+  //               <probability="...">
+  //               <geometry>
+  //                 <dimEntity DIMID="cylinder" DIMname="cylinder">
   //                     <pathEntity PATname="Location-3D" PATID="TBD">
   //                         <label>Axis end point</label>
   //                         <value>400., 250., 1460.</value>
@@ -1591,8 +1608,9 @@ HotBox::executeOQAFMA()
   //                         <value>200.0</value>
   //                         <unit>mm</unit>^M
   //                     </patEntity>
-  //                 </spatialObject>
-  //             </geometry>
+  //                 </dimEntity>
+  //               </geometry>
+  /             </pathEntity>
   //         </ablateRegion>
   //         </injuryEntity>
   //     </primaryInjuryList>
@@ -1611,7 +1629,7 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, int curTime,
      !strcmp(to_char_ptr(woundNode.getNodeName()), "ablateRegion") ||
      !strcmp(to_char_ptr(woundNode.getNodeName()), "stunRegion") ||
      !strcmp(to_char_ptr(woundNode.getNodeName()), "fmaEntity") ||
-     !strcmp(to_char_ptr(woundNode.getNodeName()), "spatialObject")
+     !strcmp(to_char_ptr(woundNode.getNodeName()), "dimEntity")
     )
   {
     cout << "Node[" << nodeIndex << "] type: " << woundNode.getNodeType();
@@ -1738,7 +1756,7 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, int curTime,
       if(!strcmp(to_char_ptr(woundNode.getNodeName()), "timeStamp") ||
          !strcmp(to_char_ptr(woundNode.getNodeName()), "probability") ||
          !strcmp(to_char_ptr(woundNode.getNodeName()), "fmaEntity") ||
-         !strcmp(to_char_ptr(woundNode.getNodeName()), "spatialObject")
+         !strcmp(to_char_ptr(woundNode.getNodeName()), "dimEntity")
         )
       {
         cout << " attr name: " << to_char_ptr(elem->getNodeName());
@@ -1764,8 +1782,8 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, int curTime,
         (*injuryPtr)->anatomyname = string(to_char_ptr(elem->getNodeValue()));
         (*injuryPtr)->nameSet = true;
       }
-      else if(!strcmp(to_char_ptr(woundNode.getNodeName()), "spatialObject") &&
-              !strcmp(to_char_ptr(elem->getNodeName()), "ID"))
+      else if(!strcmp(to_char_ptr(woundNode.getNodeName()), "dimEntity") &&
+              !strcmp(to_char_ptr(elem->getNodeName()), "DIMname"))
       {
         (*injuryPtr)->geom_type = string(to_char_ptr(elem->getNodeValue()));
         (*injuryPtr)->isGeometry = true;
@@ -2084,22 +2102,22 @@ HotBox::executeHighlight()
   string selectGeomFilename = geometryPath;
   selectGeomFilename += "/";
   selectGeomFilename += filePrefix;
-  selectGeomFilename += ".ts.fld";
+  selectGeomFilename += ".fld";
 
   cerr << "executeHighlight: selection " << selectGeomFilename << endl;
 
-  if (stat(selectGeomFilename.c_str(), &buf)) {
-    remark("File '" + selectGeomFilename + "' not found.");
-    selectGeomFilename = geometryPath;
-    selectGeomFilename += "/";
-    selectGeomFilename += filePrefix;
-    selectGeomFilename += ".fld";
+//  if (stat(selectGeomFilename.c_str(), &buf)) {
+//    remark("File '" + selectGeomFilename + "' not found.");
+//    selectGeomFilename = geometryPath;
+//    selectGeomFilename += "/";
+//    selectGeomFilename += filePrefix;
+//    selectGeomFilename += ".fld";
 
     if (stat(selectGeomFilename.c_str(), &buf)) {
       error("File '" + selectGeomFilename + "' not found.");
       return;
     }
-  }
+//  }
 
   Piostream *selectstream = auto_istream(selectGeomFilename);
   if (!selectstream)
