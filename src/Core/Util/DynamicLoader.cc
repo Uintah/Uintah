@@ -435,7 +435,7 @@ DynamicLoader::compile_so(const CompileInfo &info, ProgressReporter *pr)
   pipe = popen(command.c_str(), "r");
   if (pipe == NULL)
   {
-    pr->error("DynamicLoader::compile_so() syscal error unable to make.");
+    pr->remark("DynamicLoader::compile_so() syscal error unable to make.");
     result = false;
   }
 #else
@@ -508,8 +508,8 @@ DynamicLoader::compile_so(const CompileInfo &info, ProgressReporter *pr)
 #endif // def _WIN32
   if(status != 0)
   {
-    pr->error("DynamicLoader::compile_so() syscal error " + to_string(status) +
-              ": command was '" + command + "'.");
+    pr->remark("DynamicLoader::compile_so() syscal error " +
+	       to_string(status) + ": command was '" + command + "'.");
     result = false;
   }
   pipe = fopen(string(otf_dir() + "/" + info.filename_ + "log").c_str(), "r");
