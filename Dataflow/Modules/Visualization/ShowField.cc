@@ -686,7 +686,7 @@ ShowField::execute()
 
   if (color_map_.get_rep() == 0)
   {
-    warning("No colormap, using default color.");
+    remark("No colormap, using default color.");
   }
 
   node_display_type_.reset();
