@@ -36,6 +36,16 @@ interface FrameworkProperties extends sci.cca.Port
     void setProperties(in TypeMap properties);
 }
 
+interface FrameworkProxyService extends sci.cca.Port
+{
+    int addLoader(in string loaderName, in string login, in string domain, in string path);
+    int removeLoader(in string name);
+
+    //void registerFramework(in string frameworkURL); 	
+    //void registerServices(in sci.cca.Services svc);
+}
+
+
 //Temp test (Bridge)
 interface IDPort extends sci.cca.Port
 {
@@ -73,9 +83,17 @@ interface ComponentIcon extends sci.cca.Port {
     // only "RECT" is supported, which draws a standard raised QFrame
     collective string getIconShape();
 
-    // set steps = 0 for Qt default (100)
+    // set steps = 0 to omit progress bar from icon
     // progress bar - return # steps
     collective int getProgressBar();
+}
+
+
+// report component progress
+interface Progress extends sci.cca.Port {
+    // collective???
+    collective void updateProgress(in int progress);
+    collective void updateProgress(in int progress, in int totalSteps);
 }
 
 /**

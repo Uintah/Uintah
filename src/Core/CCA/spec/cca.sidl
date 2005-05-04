@@ -1009,13 +1009,6 @@ package cca {
 				 in cca.ComponentID provider, 
 			  	 in string providingPortName);
 
-
-	   int addLoader(in string loaderName, in string login, in string domain, in string path);
-	   int removeLoader(in string name);
-
-	   //void registerFramework(in string frameworkURL); 	
-	   //void registerServices(in sci.cca.Services svc);
-
 	    //>>>>>>>>>>>>>>>>>>>>>		
 	} // end interface BuilderService
 	
