@@ -43,6 +43,7 @@
 #include <SCIRun/Corba/CorbaComponentInstance.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/SCIRunErrorHandler.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/OS/Dir.h>
 #include <Dataflow/XMLUtil/StrX.h>
@@ -52,6 +53,10 @@
 #include <Core/Util/sci_system.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <string>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <errno.h>
 
 #ifdef __sgi
 #define IRIX
@@ -109,10 +114,9 @@ CorbaComponentModel::~CorbaComponentModel()
 void CorbaComponentModel::destroyComponentList()
 {
   for(componentDB_type::iterator iter=components.begin();
-      iter != components.end(); iter++)
-    {
+      iter != components.end(); iter++) {
     delete iter->second;
-    }
+  }
   components.clear();
 }
 
@@ -238,14 +242,25 @@ bool CorbaComponentModel::haveComponent(const std::string& type)
 ComponentInstance* CorbaComponentModel::createInstance(const std::string& name,
                              const std::string& type)
 {
-  corba::Component *component;
+    corba::Component *component;
 
-  componentDB_type::iterator iter = components.find(type);
-  if (iter == components.end()) { // could not find this component
-    return 0;
-  }
+    componentDB_type::iterator iter = components.find(type);
+    if (iter == components.end()) { // could not find this component
+        return 0;
+    }
 
-  std::string exec_name = iter->second->getExecPath();
+    std::string exec_name = iter->second->getExecPath();
+
+    // If the component library does not exist
+    // do not create the component instance.
+    struct stat buf;
+    if (LSTAT(exec_name.c_str(), &buf) < 0) {
+        if (errno == ENOENT) {
+            throw InternalError("File " + exec_name + " does not exist.");
+        } else {
+            throw InternalError("LSTAT on " + exec_name + " failed.");
+        }
+    }
 
   component = new corba::Component();
   corba::Services *svc=new corba::Services(component);
@@ -268,14 +283,16 @@ ComponentInstance* CorbaComponentModel::createInstance(const std::string& name,
   }
   */
   string cmdline=exec_name+" "+svc_url.c_str()+"&";
-  sci_system(cmdline.c_str());
+  const int status = sci_system(cmdline.c_str());
+  if (status != 0) { // failed
+    throw InternalError("Corba service " + cmdline + " is not available.");
+  }
 
   services->check();
 
   //TODO: do we really need a "component" here?
-  
   CorbaComponentInstance* ci = new CorbaComponentInstance(framework, name, type,
-							  component);
+                              component);
   return ci;
 }
 

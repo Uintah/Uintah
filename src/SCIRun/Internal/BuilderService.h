@@ -132,11 +132,11 @@ class BuilderService : public sci::cca::ports::BuilderService,
   virtual SSIDL::array1<std::string>
   getProvidedPortNames(const sci::cca::ComponentID::pointer &cid);
 
-  /** */
+  /** Returns a list of \em uses ports for the component instance \em cid */
   virtual SSIDL::array1<std::string>
   getUsedPortNames(const sci::cca::ComponentID::pointer &cid);
 
-  /** */
+  /** Returns a map of port properties exposed by the framework. */
   virtual sci::cca::TypeMap::pointer
   getPortProperties(const sci::cca::ComponentID::pointer &cid,
                     const std::string& portname);
@@ -210,17 +210,6 @@ class BuilderService : public sci::cca::ports::BuilderService,
   /** */
   int removeComponentClasses(const std::string &loaderName);
 
-  /** */
-  int
-  addLoader(const std::string &loaderName, const std::string &user,
-            const std::string &domain, const std::string &loaderPath);
-
-  /** */
-  int removeLoader(const std::string &name);
-
-  //virtual void registerFramework(const std::string &frameworkURL); 
-  //virtual void registerServices(const sci::cca::Services::pointer &svc);
-
   private:
     BuilderService(SCIRunFramework* fwk, const std::string& name);
     /** Returns the URL of this BuilderService component's framework. */
@@ -228,7 +217,6 @@ class BuilderService : public sci::cca::ports::BuilderService,
     /** ? */
     void emitConnectionEvent(ConnectionEvent* event);
 
-    std::vector<sci::cca::Services::pointer> servicesList;  
     AutoBridge autobr;
   };
 }

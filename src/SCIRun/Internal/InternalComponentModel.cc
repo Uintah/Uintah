@@ -45,6 +45,7 @@
 #include <SCIRun/Internal/ConnectionEventService.h>
 #include <SCIRun/Internal/ComponentRegistry.h>
 #include <SCIRun/Internal/FrameworkProperties.h>
+#include <SCIRun/Internal/FrameworkProxyService.h>
 #include <SCIRun/Dataflow/DataflowScheduler.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <iostream>
@@ -66,6 +67,8 @@ InternalComponentModel::InternalComponentModel(SCIRunFramework* framework)
 	&DataflowScheduler::create, true));
     addService(new InternalComponentDescription(this, "cca.FrameworkProperties",
 	&FrameworkProperties::create, true));
+    addService(new InternalComponentDescription(this, "cca.FrameworkProxyService",
+	&FrameworkProxyService::create, true));
 }
 
 InternalComponentModel::~InternalComponentModel()
