@@ -21,14 +21,12 @@ extern "C" {
 #define org_sdm_spa_actors_scirun_IterateSCIRun_DEEP 16L
 #undef org_sdm_spa_actors_scirun_IterateSCIRun_ATTRIBUTES
 #define org_sdm_spa_actors_scirun_IterateSCIRun_ATTRIBUTES 32L
-/* Inaccessible static: _DEFAULT_WORKSPACE */
-/* Inaccessible static: class_00024ptolemy_00024data_00024type_00024Typeable */
 /*
  * Class:     org_sdm_spa_actors_scirun_IterateSCIRun
  * Method:    runOnFiles
- * Signature: ([Ljava/lang/String;I[Ljava/lang/String;IILjava/lang/String;)I
+ * Signature: ([Ljava/lang/String;I[Ljava/lang/String;IILjava/lang/String;)Ljava/lang/String;
  */
-JNIEXPORT jint JNICALL Java_org_sdm_spa_actors_scirun_IterateSCIRun_runOnFiles
+JNIEXPORT jstring JNICALL Java_org_sdm_spa_actors_scirun_IterateSCIRun_runOnFiles
   (JNIEnv *, jobject, jobjectArray, jint, jobjectArray, jint, jint, jstring);
 
 #ifdef __cplusplus
