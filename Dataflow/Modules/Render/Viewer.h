@@ -105,7 +105,7 @@ private:
   int                           synchronized_debt_;
 
 
-  static void regression_callback(void *ths);
+  static bool regression_callback(void *ths);
 };
 
 

@@ -72,8 +72,13 @@ struct SerialSet
   {}
 };
 
-typedef void (*SchedulerCallback)(void *);
 
+
+// Return whether or not we should fall through to next callback or
+// not.  For instance if you reschedule you should probably return
+// false because you wouldn't want the lower priority callbacks to run
+// until after you were finished.
+typedef bool (*SchedulerCallback)(void *);
 
 class Scheduler : public Runnable
 {
@@ -82,7 +87,21 @@ class Scheduler : public Runnable
   bool schedule;
   unsigned int serial_id;
   std::list<SerialSet> serial_set;
-  std::vector<std::pair<SchedulerCallback, void *> > callbacks_;
+
+  struct SCData
+  {
+    int priority;
+    SchedulerCallback callback;
+    void *data;
+
+    // Self test for equality.  Used to remove callbacks from queue.
+    bool operator()(const SCData &a)
+    {
+      return callback == a.callback && data == a.data;
+    }
+  };
+
+  std::vector<SCData> callbacks_;
 
   virtual void run();
   void main_loop();
@@ -108,7 +127,10 @@ public:
   void report_execution_finished(const MessageBase *msg);
   void report_execution_finished(unsigned int serial);
 
-  void add_callback(SchedulerCallback cv, void *data);
+  // The callbacks will be called in order from highest priority to
+  // lowest priority.  If a callback returns false then the callbacks
+  // with lower priority will not be called.
+  void add_callback(SchedulerCallback cv, void *data, int priority = 0);
   void remove_callback(SchedulerCallback cv, void *data);
 };
 

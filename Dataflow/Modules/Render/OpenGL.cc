@@ -48,7 +48,6 @@
 #include <Dataflow/Modules/Render/OpenGL.h>
 #include <Dataflow/Modules/Render/PBuffer.h> // #defines HAVE_PBUFFER
 #include <Core/Containers/StringUtil.h>
-#include <Core/Util/Environment.h>
 #include <Core/GuiInterface/TCLTask.h>
 #include <sci_values.h>
 
@@ -634,21 +633,6 @@ OpenGL::render_and_save_image(int x, int y,
 
   delete[] tmp_row;
 
-  if (sci_getenv("SCI_REGRESSION_TESTING"))
-  {
-    static int regressioncounter = 1;
-    regressioncounter--;
-    if (regressioncounter <= 0)
-    {
-      std::cout.flush();
-      std::cerr.flush();
-      Thread::exitAll(0);
-    }
-    else
-    {
-      gui_->execute("updateRunDateAndTime 0; netedit scheduleall");
-    }
-  }
 } // end render_and_save_image()
 
 
