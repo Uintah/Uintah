@@ -58,6 +58,7 @@ SRCS     += \
 	$(SRCDIR)/ConvertTet.cc\
 	$(SRCDIR)/Coregister.cc\
 	$(SRCDIR)/CreateMesh.cc\
+	$(SRCDIR)/CubitInterface.cc\
 	$(SRCDIR)/DirectMapping.cc\
 	$(SRCDIR)/FieldBoundary.cc\
 	$(SRCDIR)/FieldCage.cc\
