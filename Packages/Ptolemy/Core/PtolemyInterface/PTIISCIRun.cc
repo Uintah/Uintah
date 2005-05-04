@@ -3,7 +3,7 @@
 
 #include <Packages/Ptolemy/Core/PtolemyInterface/PTIISCIRun.h>
 #include <Packages/Ptolemy/Core/PtolemyInterface/JNIUtils.h>
-#include <Packages/Ptolemy/Core/PtolemyInterface/PTIIData.h>
+//#include <Packages/Ptolemy/Core/PtolemyInterface/PTIIData.h>
 
 #include <main/sci_version.h>
 
@@ -212,6 +212,8 @@ void StartSCIRun::run()
 //  wait.down();
 //#endif
 #endif
+
+
 }
 
 
@@ -238,6 +240,8 @@ void Iterate::iter_callback(void *data)
 	iterSem().up();
 }
 
+std::string Iterate::returnValue = "OK";
+
 void Iterate::run()
 {
 	
@@ -245,10 +249,16 @@ void Iterate::run()
 	
 	string name;
 	
-	//return only when the viewer is done
-	Viewer* viewer = (Viewer*)JNIUtils::cachedNet->get_module_by_id("SCIRun_Render_Viewer_0");
-	
-	std::cout << "viewer pointer: " << viewer << std::endl;
+	//get a pointer to the viewer if we need it and check to see if its valid
+	Viewer* viewer;
+	if(picPath != ""){
+		viewer = (Viewer*)JNIUtils::cachedNet->get_module_by_id("SCIRun_Render_Viewer_0");
+		if(viewer == 0){
+			returnValue = "no viewer present";
+			JNIUtils::sem().up();
+			return;
+		}
+	}
 	
 	Scheduler* sched = JNIUtils::cachedNet->get_scheduler();
 	sched->add_callback(iter_callback, this);
@@ -259,7 +269,12 @@ void Iterate::run()
 
 	for(jint i = 0; i < size1; i++){
 		modptr = JNIUtils::cachedNet->get_module_by_id(doOnce[i]);
-		ASSERT(modptr);
+		if(modptr == 0){
+			returnValue = doOnce[i] + " not present in the network";
+			sched->remove_callback(iter_callback, this);
+			JNIUtils::sem().up();
+			return;
+		}
 		i++;
 		modGui = modptr->getGui();
 		ASSERT(modGui);
@@ -281,7 +296,12 @@ void Iterate::run()
 			//allocated array of module pointers for each thing
 			//depends on how efficient getmodbyid really is
 			modptr = JNIUtils::cachedNet->get_module_by_id(iterate[j]);
-			ASSERT(modptr);
+			if(modptr == 0){
+				returnValue = iterate[j] + " not present in the network";
+				sched->remove_callback(iter_callback, this);
+				JNIUtils::sem().up();
+				return;
+			}
 			j++;
 			modGui = modptr->getGui();
 			ASSERT(modGui);
@@ -316,9 +336,8 @@ void Iterate::run()
 		}//else we do not try and save pictures
 		
 	}
-		
-	sched->remove_callback(iter_callback, this);
-		
+	Iterate::returnValue = "OK";
+	sched->remove_callback(iter_callback, this);	
 	JNIUtils::sem().up();
 }
 
