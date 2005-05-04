@@ -87,6 +87,7 @@ SRCS := \
         $(SRCDIR)/CreateMesh.tcl \
         $(SRCDIR)/CriticalPointWidget.tcl \
         $(SRCDIR)/CrosshairWidget.tcl \
+        $(SRCDIR)/CubitInterface.tcl \
         $(SRCDIR)/DirectMapping.tcl \
         $(SRCDIR)/EditColorMap.tcl \
         $(SRCDIR)/EditPath.tcl \
