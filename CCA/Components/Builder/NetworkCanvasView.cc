@@ -49,6 +49,7 @@
 #include <qevent.h>
 #include <qfont.h>
 #include <qstring.h>
+#include <qpopupmenu.h>
 
 #include <iostream>
 

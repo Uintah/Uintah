@@ -49,16 +49,34 @@
 #include <qpopmenu.h>
 #include <qprogressbar.h>
 
+using namespace SCIRun;
+
 class NetworkCanvasView;
 class PortIcon;
 
 class QPoint;
 class QPushButton;
+class Module;
+
+class ModuleProgress : public sci::cca::ports::Progress
+{
+public:
+    virtual ~ModuleProgress() {}
+    virtual void updateProgress(int p);
+    virtual void updateProgress(int p, int totalSteps);
+    void setModule(Module *m) { mod = m; }
+
+protected:
+    sci::cca::Services::pointer services;
+
+private:
+    Module *mod;
+};
+
 
 class Module : public QFrame
 {
     Q_OBJECT
-
 public:
     Module(NetworkCanvasView *parent,
            const std::string& name,
@@ -71,8 +89,6 @@ public:
     QPoint providesPortPoint(int num);
     PortIcon* getPort(const std::string &name, PortIcon::PortType type);
     NetworkCanvasView* parent() const;
-    void makePorts();
-    void updatePorts();
 
     std::string moduleName() const;
     std::string displayName() const;
@@ -96,26 +112,30 @@ signals:
 protected:
     virtual void paintEvent(QPaintEvent *);
     virtual void mousePressEvent(QMouseEvent *);
-    //virtual void timerEvent(QTimerEvent *);
 
     QRect nameRect;
     std::string instanceName;
-//     SSIDL::array1<std::string> up, pp;
 
 private:
-  PortIcon* port(int portnum, const std::string& model,
+    friend class ModuleProgress;
+    PortIcon* port(int portnum, const std::string& model,
                  const std::string& type, const std::string& portname,
                  PortIcon::PortType porttype);
+
+    void makePorts();
+    void updatePorts();
 
     std::string mName;
     std::string dName;
     std::string mDesc;
-    std::string uiPortName;
-    std::string goPortName;
     std::string iconName;
+    std::string goPortName;
+    std::string uiPortName;
+    std::string progPortName;
 
     sci::cca::Services::pointer services;
     sci::cca::ComponentID::pointer cid;
+    ModuleProgress::pointer modProgress;
 
     QPushButton *uiButton;
     //QPushButton *statusButton;
@@ -127,7 +147,6 @@ private:
     int pd; //distance between two ports
     int pw; //port width
     int ph; //port height
-    int steps;
     bool hasGoPort;
     bool hasUIPort;
     bool hasComponentIcon;

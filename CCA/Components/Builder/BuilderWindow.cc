@@ -46,6 +46,7 @@
 #include <CCA/Components/Builder/PathDialog.h>
 #include <CCA/Components/Builder/QtUtils.h>
 #include <SCIRun/TypeMap.h>
+#include <SCIRun/CCA/CCAException.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Containers/StringUtil.h>
 
@@ -503,7 +504,7 @@ void BuilderWindow::buildRemotePackageMenus(
 
 void BuilderWindow::buildPackageMenus()
 {
-    statusBar()->message("Building component menus...");
+    statusBar()->message("Building component menus...", 4000);
     setCursor(Qt::WaitCursor);
     componentMenu->clear();
     menus.clear();
@@ -697,27 +698,40 @@ void BuilderWindow::load()
             displayMsg("Error: Cannot find builder service.");
             return;
         }
-        sci::cca::ComponentID::pointer cid =
-            builder->createInstance(tmp_moduleName, tmp_moduleName, sci::cca::TypeMap::pointer(0));
-        services->releasePort("cca.BuilderService");
 
-        if (tmp_moduleName != "SCIRun.Builder") {
-            networkCanvasView->addModule(tmp_moduleName, tmp_moduleName_x, tmp_moduleName_y,cid, false); //fixed position
+        sci::cca::ComponentID::pointer cid;
+        try {
+            cid = builder->createInstance(tmp_moduleName,
+                tmp_moduleName, sci::cca::TypeMap::pointer(0));
+
+            if (tmp_moduleName != "SCIRun.Builder") {
+                networkCanvasView->addModule(tmp_moduleName, tmp_moduleName_x, tmp_moduleName_y, cid, false); //fixed position
+            }
+            grab_latest_Modules = networkCanvasView->getModules();
+            ptr_table.push_back( grab_latest_Modules[grab_latest_Modules.size()-1] );
+
+            for (int i = 0; i < load_Connections_size; i++) {
+                int iu, ip;
+                std::string up, pp;
+                is >> iu >> up >> ip >> pp;
+                networkCanvasView->addConnection(ptr_table[iu], up, ptr_table[ip], pp);
+            }
+            statusBar()->message("Loading done.", 4000);
         }
-        grab_latest_Modules = networkCanvasView->getModules();
-        ptr_table.push_back( grab_latest_Modules[grab_latest_Modules.size()-1] );
+        catch(CCAException e) {
+            displayMsg(e.message());
+        }
+        catch(const Exception& e) {
+            displayMsg(e.message());
+        }
+        catch(...) {
+            displayMsg("Caught unexpected exception while loading network.");
+        }
     }
-
-    for (int i = 0; i < load_Connections_size; i++) {
-        int iu, ip;
-        std::string up, pp;
-        is >> iu >> up >> ip >> pp;
-        networkCanvasView->addConnection(ptr_table[iu], up, ptr_table[ip], pp);
-    }
+    services->releasePort("cca.BuilderService");
     is.close();
 
     unsetCursor();
-    statusBar()->message("Loading done.");
     return;
 }
 
@@ -783,7 +797,7 @@ void BuilderWindow::about()
 void BuilderWindow::instantiateComponent(
     const sci::cca::ComponentClassDescription::pointer& cd)
 {
-    statusBar()->message("Instantating component...");
+    statusBar()->message("Instantating component...", 2000);
     setCursor(Qt::WaitCursor);
 
     sci::cca::ports::BuilderService::pointer builder =
@@ -799,16 +813,29 @@ void BuilderWindow::instantiateComponent(
     TypeMap *tm = new TypeMap;
     tm->putString("LOADER NAME", cd->getLoaderName());
     tm->putString("cca.className", cd->getComponentModelName()); // component type
-    sci::cca::ComponentID::pointer cid =
-        builder->createInstance(cd->getComponentClassName(),
-                cd->getComponentClassName(),
-                sci::cca::TypeMap::pointer(tm));
 
-    if (cid.isNull()) {
-        displayMsg("Error: could not instantiate component of type " + cd->getComponentClassName());
-        statusBar()->message("Instantiate failed.", 2000);
-    } else {
-        statusBar()->clear();
+    sci::cca::ComponentID::pointer cid;
+    try {
+        cid = builder->createInstance(cd->getComponentClassName(),
+            cd->getComponentClassName(), sci::cca::TypeMap::pointer(tm));
+
+        if (cid.isNull()) {
+            displayMsg("Error: could not instantiate component of type " +
+                cd->getComponentClassName());
+            statusBar()->message("Instantiate failed.", 2000);
+        } else {
+            statusBar()->clear();
+        }
+    }
+    catch(CCAException e) {
+        displayMsg(e.message());
+    }
+    catch(const Exception& e) {
+        displayMsg(e.message());
+    }
+    catch(...) {
+        displayMsg("Caught unexpected exception while instantiating " +
+            cd->getComponentClassName());
     }
     unsetCursor();
 }
@@ -818,7 +845,7 @@ Module* BuilderWindow::instantiateBridgeComponent(
     const std::string& type,
     const std::string& loaderName)
 {
-    statusBar()->message("Instantating component " + className);
+    statusBar()->message("Instantating component " + className, 2000);
     setCursor(Qt::WaitCursor);
 
     sci::cca::ports::BuilderService::pointer builder =
@@ -834,19 +861,31 @@ Module* BuilderWindow::instantiateBridgeComponent(
 
     TypeMap *tm = new TypeMap;
     tm->putString("LOADER NAME", loaderName);
-    sci::cca::ComponentID::pointer cid =
-        builder->createInstance(className, type, sci::cca::TypeMap::pointer(tm));
 
-    if (cid.isNull()) {
-        std::cerr << "instantiateFailed..." << std::endl;
-        statusBar()->message("Instantiate failed.");
+    sci::cca::ComponentID::pointer cid;
+    try {
+        cid = builder->createInstance(className,
+            type, sci::cca::TypeMap::pointer(tm));
+
+        if (cid.isNull()) {
+            statusBar()->message("Instantiate failed.");
+            unsetCursor();
+            return NULL;
+        }
+    }
+    catch(CCAException e) {
+        displayMsg(e.message());
         unsetCursor();
-        return NULL;
+        statusBar()->clear();
+    }
+    catch(const Exception& e) {
+        displayMsg(e.message());
+    }
+    catch(...) {
+        displayMsg("Caught unexpected exception while creating bridge.");
     }
 
     services->releasePort("cca.BuilderService");
-    statusBar()->clear();
-    unsetCursor();
 
     if (className != "SCIRun.Builder") {
         int x = 20;
@@ -854,6 +893,7 @@ Module* BuilderWindow::instantiateBridgeComponent(
         // reposition module
         return (networkCanvasView->addModule(className, x, y, cid, true));
     }
+    unsetCursor();
     return NULL;
 }
 
@@ -973,13 +1013,12 @@ void BuilderWindow::updateMiniView()
 
 void BuilderWindow::addLoader()
 {
-
-    sci::cca::ports::BuilderService::pointer builder =
-    pidl_cast<sci::cca::ports::BuilderService::pointer>(
-        services->getPort("cca.BuilderService")
+    sci::cca::ports::FrameworkProxyService::pointer proxy =
+    pidl_cast<sci::cca::ports::FrameworkProxyService::pointer>(
+        services->getPort("cca.FrameworkProxyService")
     );
-    if (builder.isNull()) {
-        displayMsg("Error: Cannot find builder service.");
+    if (proxy.isNull()) {
+        displayMsg("Error: Cannot find framework proxy service.");
         return;
     }
 
@@ -1006,8 +1045,8 @@ void BuilderWindow::addLoader()
         std::string loaderPath="mpirun -np 3 ploader";
         //string password="****"; //not used;
 
-        builder->addLoader(loaderName, login, domainName, loaderPath); // spawns xterm
-        services->releasePort("cca.BuilderService");
+        proxy->addLoader(loaderName, login, domainName, loaderPath); // spawns xterm
+        services->releasePort("cca.FrameworkProxyService");
     } else { // QDialog::Rejected
         return;
     }
@@ -1045,20 +1084,21 @@ void BuilderWindow::addLoader()
 
 void BuilderWindow::rmLoader()
 {
-    sci::cca::ports::BuilderService::pointer builder =
-    pidl_cast<sci::cca::ports::BuilderService::pointer>(
-        services->getPort("cca.BuilderService")
+    sci::cca::ports::FrameworkProxyService::pointer proxy =
+    pidl_cast<sci::cca::ports::FrameworkProxyService::pointer>(
+        services->getPort("cca.FrameworkProxyService")
     );
-    if (builder.isNull()) {
-        displayMsg("Error: Cannot find builder service.");
+    if (proxy.isNull()) {
+        displayMsg("Error: Cannot find framework proxy service.");
         return;
     }
-    builder->removeLoader("buzz");
-    services->releasePort("cca.BuilderService");
+    proxy->removeLoader("buzz");
+    services->releasePort("cca.FrameworkProxyService");
 }
 
 void BuilderWindow::refresh()
 {
+    // TODO: replace manual GUI refresh with an event
     buildPackageMenus();
 }
 
@@ -1105,12 +1145,11 @@ void BuilderWindow::addSidlXmlPath()
         std::cerr << "Error: cannot find component repository" << std::endl;
         return;
     }
-    statusBar()->message("Updating component classes.");
+    statusBar()->message("Updating component classes.", 2000);
     setCursor(Qt::WaitCursor);
 
     reg->addComponentClass(pd->selectedComponentModel());
 
-    statusBar()->clear();
     unsetCursor();
     services->releasePort("cca.ComponentRepository");
 
