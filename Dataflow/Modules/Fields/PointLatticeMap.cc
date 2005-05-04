@@ -70,10 +70,10 @@ private:
   FieldIPort *		iport1_;
   FieldIPort *		iport2_;
   MatrixOPort *		oport_;
-  UIint			ui_num_neighbors_;
+  UIdouble		epsilon_;
   int			pcf_generation_;
   int			lvf_generation_;
-  int			num_neighbors_;
+  double		epsilon_cache_;
 public:
   PointLatticeMap(GuiContext* ctx);
   virtual ~PointLatticeMap();
@@ -86,10 +86,9 @@ DECLARE_MAKER(PointLatticeMap)
 
 PointLatticeMap::PointLatticeMap(GuiContext* ctx)
   : Module("PointLatticeMap", ctx, Filter, "FieldsData", "SCIRun"),
-    ui_num_neighbors_(ctx->subVar("num_neighbors")),
+    epsilon_(ctx->subVar("epsilon")),
     pcf_generation_(-1),
-    lvf_generation_(-1),
-    num_neighbors_(0)
+    lvf_generation_(-1)
 {
 }
 
@@ -106,7 +105,7 @@ PointLatticeMap::execute()
   iport2_ = (FieldIPort *)get_iport("LatVolField");
   oport_ = (MatrixOPort *)get_oport("MappingMatrix");
 
-
+  // Get the PointCloudField from the first port
   FieldHandle pcf;
   iport1_->get(pcf);
   if (!pcf.get_rep()) {
@@ -114,6 +113,7 @@ PointLatticeMap::execute()
     return;
   }
 
+  // Get the LatVolField from the first port
   FieldHandle lvf;
   iport2_->get(lvf);
   if (!lvf.get_rep()) {
@@ -121,120 +121,135 @@ PointLatticeMap::execute()
     return;
   }
 
-    
+  // Make sure the first input field is of type PointCloudField
   if (pcf->get_type_description()->get_name().find("PointCloudField")) {
     error("Field connected to port 1 must be PointCloudField.");
     return;
   }
 
+  // Make sure the second input field is of type LatVolField
   if (lvf->get_type_description()->get_name().find("LatVolField")) {
     error("Field connected to port 2 must be LatVolField.");
     return;
   }
-
+  
+  // Return if nothing in gui or fields has changed
   if (pcf->generation == pcf_generation_ &&
       lvf->generation == lvf_generation_ &&
-      ui_num_neighbors_() == num_neighbors_) return;
+      epsilon_() == epsilon_cache_) return;
 
   pcf_generation_ = pcf->generation;
   lvf_generation_ = lvf->generation;
+  epsilon_ = Clamp(epsilon_(), 0.0, 1.0);
+  epsilon_cache_ = epsilon_;
 
+  // Get the meshes from the fields
   PointCloudMeshHandle pcm = (PointCloudMesh *)(pcf->mesh().get_rep());
   LatVolMeshHandle lvm = (LatVolMesh *)(lvf->mesh().get_rep());
 
-  vector<unsigned int> lvm_dim, pcm_dim;
-  lvm->get_dim(lvm_dim);
-  pcm->get_dim(pcm_dim);
-
-  typedef map<double, unsigned int> point_distances_t;
-  vector<point_distances_t> mapping;
-  
+  // LatVolMesh Node Count
   LatVolMesh::Node::size_type lvmns;
   lvm->size(lvmns);
-  mapping.resize(lvmns);
+
+  // PointClouldMesh Node Count
+  PointCloudMesh::Node::size_type pcmns;
+  pcm->size(pcmns);
   
+  // LatVolMesh Node Iterators
   LatVolMesh::Node::iterator lvmn, lvmne;
   lvm->begin(lvmn);
   lvm->end(lvmne);
 
+  // PointCloudMesh Node Iterators
   PointCloudMesh::Node::iterator pcmn, pcmne;
   pcm->end(pcmne);
 
-  PointCloudMesh::Node::size_type pcmns;
-  pcm->size(pcmns);
+  // Map point to distance, sorts by point index
+  typedef map<unsigned int, double> point2dist_t;
 
-  Point pcp, lvp;
-  double d;
+  double epsilon = lvm->get_bounding_box().diagonal().length() * epsilon_;
 
-  num_neighbors_ = Clamp(ui_num_neighbors_(), 1, pcmns);
+  // To automatically handle memory allocation to hold data for the
+  // sparse matrix, we use STL vectors here
+  vector<int> rows(lvmns+1);
+  vector<int> cols;
+  vector<double> data;
+  unsigned int i = 0, row = 0;
 
+  // Iterate through each point of the LatVolMesh
   while (lvmn != lvmne) {
-    point_distances_t &point_mapping = mapping[unsigned(*lvmn)];
+    // Get the location of this node of the LatVolMesh
+    Point lvp;
+    lvm->get_point(lvp, *lvmn);
+    // Map from PointCloudMesh node index to distance
+    point2dist_t point2dist;
+    // Total holds the total distance calculation to all points for normalization
+    double total = 0.0;
+    // Foreach node of LatVolMesh, iterate through each node of PointCloudMesh
     pcm->begin(pcmn);
     while (pcmn != pcmne) {
-      lvm->get_point(lvp, *lvmn);
+      // Get the location of this node of the PointCloudMesh
+      Point pcp;
       pcm->get_point(pcp, *pcmn);
-      d = (pcp-lvp).length2();
-      if (int(point_mapping.size())  < num_neighbors_) {
-	point_mapping.insert(make_pair(d, (*pcmn).index_));
-      } else if ((*point_mapping.rbegin()).first > d) {
-	point_distances_t::iterator last = point_mapping.end();
-	last--;
-	point_mapping.erase(last);
-	point_mapping.insert(make_pair(d, (*pcmn).index_));
-      }
+      // Do the distance function calculation: 1/d - epsilon
+      double d = 1.0/(pcp-lvp).length() - epsilon;
+      // If the function is positive, the PointCloudMesh node contributes
+      // to this node of the LatVolMesh
+      if (d > 0.0) {
+	// Insert it and increase the normalization total
+	point2dist.insert(make_pair((*pcmn).index_, d));
+	total += d;
+      } 
+      // Next PointCloudMeshNode please
       ++pcmn;
     }
-    ++lvmn;
-  }
-  
-  
-  int *rows = scinew int[mapping.size()+1];
-  int *cols = scinew int[mapping.size()*num_neighbors_];
-  double *data = scinew double[mapping.size()*num_neighbors_];
-  unsigned int rowcount, r, i = 0;
-  double total;
-  
-  typedef map<unsigned int, double> point_neighbors_t;
-  for (r = 0; r < mapping.size(); r++) {
-    rows[r] = i;
-    point_distances_t::iterator pb = mapping[r].begin(), pe = mapping[r].end();
-    point_neighbors_t neighbors;
-    total = 0.0;
-    rowcount = 0;
-    while (pb != pe) {
-      neighbors[pb->second] = pb->first;
-      total += pb->first;
-      ++pb;
-    }
+    
+    // Hack to avoid divide by zero
     if (total == 0.0) 
       total = 1.0;
-    point_neighbors_t::iterator nb = neighbors.begin(), ne = neighbors.end();
-    while (nb != ne) {
-      cols[i] = nb->first;
-      data[i] = 1.0 - nb->second/total;
-      ++i;
-      ++nb;
+
+    // Now fill up the current row of the sparse matrix
+    rows[row++] = cols.size();
+    // Iterate through all point that contributed in PointCloudNode index order
+    point2dist_t::iterator pb = point2dist.begin(), pe = point2dist.end();
+    while (pb != pe) {
+      // Normalize, and dont add if contribution is nil
+      double d = pb->second/total;
+      if (d > 0.0000001) { // TODO: Better epsilon checking
+	// Add the data to the sparse row matrix
+	cols.push_back(pb->first);
+	data.push_back(d);
+      }
+      // Next PointCloudMeshNode/Distance pair please
+      ++pb;
     }
-  }  rows[r] = i;
-  SparseRowMatrix *matrix = 
-    scinew SparseRowMatrix(mapping.size(), pcmns, rows, cols, i, data);
+    // Next LatVolMeshNode please
+    ++lvmn;
+  }
+  rows[row] = cols.size();
 
-//  matrix->validate();
-//   DenseMatrix *matrix = scinew DenseMatrix(mapping.size(), idx);
-//   matrix->zero();
-//   for (unsigned int n = 0; n < mapping.size(); n++) {
-//     point_distances_t::iterator pb = mapping[n].begin(), pe = mapping[n].end();
-//     while (pb != pe) {
-//       matrix->put(n, (*pb).second, (*pb).first);
-//       pb++;
-//     }
-//   }
-//  matrix->dense()->print();
+  // Convert the STL vectors into C arrays for SparseRowMatrix Constructor
+  int *rowsarr = scinew int[rows.size()];
+  for (i = 0; i < rows.size(); ++i) rowsarr[i] = rows[i];
 
+  int *colsarr = scinew int[cols.size()];
+  for (i = 0; i < cols.size(); ++i) colsarr[i] = cols[i];
+
+  double *dataarr = scinew double[data.size()];
+  for (i = 0; i < data.size(); ++i) dataarr[i] = data[i];
+
+  // Create the SparseRowMatrix to send off
+  SparseRowMatrix *matrix = scinew 
+    SparseRowMatrix(lvmns, pcmns, rowsarr, colsarr, data.size(), dataarr);
+
+  // DEBUG Validate/Print
+  //  matrix->validate();
+  //  matrix->dense()->print();
+
+  // Send the mapping matrix downstream
   oport_->send(matrix);
 
-
+  //Done!
 }
 
 
