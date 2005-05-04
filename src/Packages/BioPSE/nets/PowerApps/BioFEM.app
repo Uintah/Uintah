@@ -358,8 +358,11 @@ class BioFEMApp {
 	trace variable $mods(Isosurface)-isoval-max w "$this set_minmax_callback"
 
 	### pack 3 frames
-	pack $win.viewer $attachedVFr -side left \
+	pack $win.viewer -side left \
 	    -anchor n -fill both -expand 1
+
+	pack $attachedVFr -side left \
+	    -anchor n -fill both -expand 0
 
 	set total_width [expr $viewer_width + $vis_width]
 
@@ -690,7 +693,7 @@ class BioFEMApp {
 	} else {
 	    wm withdraw $detachedVFr
 	    pack $attachedVFr -anchor n -side left -after $win.viewer \
-	       -fill both -expand 1
+	       -fill both -expand 0
 	    set new_width [expr $c_width + $vis_width]
             append geom $new_width x $c_height
 	    wm geometry $win $geom
