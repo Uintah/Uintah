@@ -49,7 +49,10 @@ TextureBrick::TextureBrick (int nx, int ny, int nz, int nc, int* nb,
     ref_cnt(0), lock("LockingHandle lock")
 {
 #if 0
-  cout << "Building brick: " << ox << " " << oy << " " << oz << ", "
+  cout << "Building brick: " 
+       << nx << " " << ny << " " << nz << ", "
+       << nc << " " << nb[0] << " " << nb[1] << ", "
+       << ox << " " << oy << " " << oz << ", "
        << mx << " " << my << " " << mz << ", "
        << tbox.min() << " " << tbox.max() << ", "
        << bbox.min() << " " << bbox.max()
