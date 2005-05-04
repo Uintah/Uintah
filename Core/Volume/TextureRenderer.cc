@@ -393,6 +393,7 @@ TextureRenderer::load_brick(TextureBrickHandle brick, bool use_cmap2)
 	{
 	  glPixelStorei(GL_UNPACK_ROW_LENGTH, brick->sx());
 	  glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, brick->sy());
+	  glPixelStorei(GL_UNPACK_ALIGNMENT, (nb == 1)?1:4);
 	}
 	if (reuse)
 	{
@@ -408,6 +409,7 @@ TextureRenderer::load_brick(TextureBrickHandle brick, bool use_cmap2)
 	{
 	  glPixelStorei(GL_UNPACK_ROW_LENGTH, -1);
 	  glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, -1);
+	  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	}
       }
       else
