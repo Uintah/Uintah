@@ -31,7 +31,7 @@ itcl_class SCIRun_FieldsData_PointLatticeMap {
     inherit Module
     constructor {config} {
         set name PointLatticeMap
-	initGlobal $this-num_neighbors 3
+	initGlobal $this-epsilon 0.0
     }
 
 
@@ -42,13 +42,12 @@ itcl_class SCIRun_FieldsData_PointLatticeMap {
         }
         toplevel $w
 
-	frame $w.c
-	pack $w.c -side top -e y -f both -padx 5 -pady 5
-	
-	label $w.c.l -text "Number of points to map: "
-	entry $w.c.e -textvariable $this-num_neighbors
-	bind $w.c.e <Return> "$this-c needexecute"
-	pack $w.c.l $w.c.e -side left
+	frame $w.d
+	pack $w.d -side top -e y -f both -padx 5 -pady 5	
+	label $w.d.l -text "Epsilon: "
+	entry $w.d.e -textvariable $this-epsilon
+	bind $w.d.e <Return> "$this-c needexecute"
+	pack $w.d.l $w.d.e -side left
 
 	makeSciButtonPanel $w $w $this
 
