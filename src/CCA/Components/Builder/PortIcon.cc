@@ -75,10 +75,8 @@ PortIcon::PortIcon(Module *module, const std::string& model,
     }
     pColor.setNamedColor(color.c_str());
 
-    //TODO: need to this automatically
+    //TODO: find a better way to detect the component model
     pMenu = new QPopupMenu((QWidget *) module);
-    std::map<std::string, MenuTree*> *menus =
-        module->parent()->p2BuilderWindow->packageMenus();
     std::string s;
     if ("cca" == model || "CCA" == model) {
         s = "CCA";
@@ -88,8 +86,15 @@ PortIcon::PortIcon(Module *module, const std::string& model,
         s = "Vtk";
     } else if ("Dataflow" == model || "dataflow" == model) {
         s = "Dataflow";
-    } 
-    if(!s.empty()) (*menus)[s]->populateMenu(pMenu);
+    }
+
+    if (! s.empty() ) {
+        std::map<std::string, MenuTree*> *menus =
+            module->parent()->p2BuilderWindow->packageMenus();
+        (*menus)[s]->populateMenu(pMenu);
+    } else {
+        pMenu->hide();
+    }
 }
 
 PortIcon::~PortIcon()
@@ -116,6 +121,7 @@ QPoint PortIcon::portPoint()
     }
 }
 
+// better way to figure out how to map color to port type?
 void PortIcon::portColorMap()
 {
     colorMap = sci::cca::TypeMap::pointer(new TypeMap);
@@ -131,12 +137,14 @@ void PortIcon::portColorMap()
                         std::string("cadetblue1"));
     colorMap->putString(std::string("ZListPort"),
                         std::string("goldenrod4"));
+    colorMap->putString(std::string("LinSolverPort"),
+                        std::string("darkorange"));
+    colorMap->putString(std::string("PDEdescriptionPort"),
+                        std::string("tomato"));
     colorMap->putString(std::string("MeshPort"),
                         std::string("magenta"));
-    colorMap->putString(std::string("Field2DPort"),
-                        std::string("darkorange"));
-    colorMap->putString(std::string("PDEMatrixPort"),
-                        std::string("gray65"));
-    colorMap->putString(std::string("PDEDescriptionPort"),
+    colorMap->putString(std::string("ViewPort"),
                         std::string("darkseagreen"));
+    colorMap->putString(std::string("FEMmatrixPort"),
+                        std::string("gray65"));
 }
