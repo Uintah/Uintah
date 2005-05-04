@@ -223,6 +223,8 @@ Unu2op::get_op(const string &op) {
     return nrrdBinaryOpNotEqual;
   else if (op == "comp")
     return nrrdBinaryOpCompare;
+  else if (op == "exists")
+    return nrrdBinaryOpExists;
   else {
     error("Unknown operation. Using eq");
     return nrrdBinaryOpEqual;
