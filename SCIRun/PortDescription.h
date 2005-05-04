@@ -43,6 +43,11 @@ public:
     virtual std::string getName() const = 0;
 
     /** */
+    // see ComponentDescription...
+    // does this make sense for a port???
+    virtual std::string getModel() const = 0;
+
+    /** */
     virtual std::string getType() const = 0;
 
     /** */

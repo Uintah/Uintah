@@ -39,6 +39,8 @@
  */
 
 #include <SCIRun/CCA/CCAPortInstance.h>
+#include <SCIRun/Internal/PropertyKeys.h>
+#include <SCIRun/TypeMap.h>
 #include <iostream>
 
 namespace SCIRun {
@@ -50,6 +52,27 @@ CCAPortInstance::CCAPortInstance(const std::string& name,
   : name(name), type(type), properties(properties), porttype(porttype),
     useCount(0)
 {
+// std::cerr << "CCAPortInstance::CCAPortInstance: 4 args, " << name << ", " << type << std::endl;
+//     if (properties.isNull()) {
+//         this->properties = sci::cca::TypeMap::pointer(new TypeMap);
+//         properties->putInt(PORT_MAX_CONNECTIONS, 1);
+//         properties->putInt(PORT_MIN_CONNECTIONS, 0);
+//         properties->putBool(PORT_ABLE_TO_PROXY, false);
+//     } else {
+//         //check for default properties -- see cca.sidl
+//         if (properties->getInt(PORT_MAX_CONNECTIONS, -1) < 0) {
+//             properties->putInt(PORT_MAX_CONNECTIONS, 1);
+//         }
+
+//         if (properties->getInt(PORT_MIN_CONNECTIONS, -1) < 0) {
+//             properties->putInt(PORT_MIN_CONNECTIONS, 0);
+//         }
+
+//         if (properties->getBool(PORT_ABLE_TO_PROXY, false) == false) {
+//             // set false again???
+//             properties->putBool(PORT_ABLE_TO_PROXY, false);
+//         }
+//     }
 }
 
 CCAPortInstance::CCAPortInstance(const std::string& name,
@@ -60,6 +83,9 @@ CCAPortInstance::CCAPortInstance(const std::string& name,
   : name(name), type(type), properties(properties), port(port),
     porttype(porttype), useCount(0)
 {
+  std::cerr << "CCAPortInstance::CCAPortInstance: 5 args, " << name << ", " << type;
+  if (Uses == porttype) { std::cerr << ", USES" << std::endl; }
+  else { std::cerr << ", PROVIDES" << std::endl; }
 }
 
 CCAPortInstance::~CCAPortInstance()
@@ -68,112 +94,124 @@ CCAPortInstance::~CCAPortInstance()
 
 bool CCAPortInstance::connect(PortInstance* to)
 {
-  if(!canConnectTo(to))
-    {
+// test code
+// CCAPortInstance* p4 = dynamic_cast<CCAPortInstance*>(to);
+// if (p4) {
+// std::cerr << "CCAPortInstance::connect: " << name << " to " << p4->getName() << std::endl;
+// }
+// test code
+  if (!canConnectTo(to)) {
     return false;
-    }
+  }
   //CCAPortInstance* p2 = dynamic_cast<CCAPortInstance*>(to);
   PortInstance* p2 = to;
-  if(!p2)
-    {
+  if (!p2) {
     return false;
-    }
-  if(portType() == From && p2->portType() == To)
-    {
+  }
+
+  if (portType() == From && p2->portType() == To) {
     connections.push_back(p2);
-    } 
-  else p2->connect(this);
+  } else {
+      p2->connect(this);
+  }
   return true;
 }
 
 PortInstance::PortType CCAPortInstance::portType()
 {
-  if(porttype == Uses)
-    { return From; }
-  else
-    { return To; }
+    if (porttype == Uses) {
+        return From;
+    } else {
+        return To;
+    }
 }
 
 
 std::string CCAPortInstance::getType()
 {
-  return type;
+    return type;
 }
 
 std::string CCAPortInstance::getModel()
 {
-  return "cca"; 
+    return "cca";
 }
 
 
 std::string CCAPortInstance::getUniqueName()
 {
-  // CCA names are already guaranteed to be unique
-  return name;
+    // CCA names are already guaranteed to be unique
+    return name;
 }
 
 bool CCAPortInstance::disconnect(PortInstance* to)
 {
   CCAPortInstance* p2 = dynamic_cast<CCAPortInstance*>(to);
-  if(!p2)
-    {
+  if (!p2) {
     return false;
-    }
+  }
 
-  if(porttype !=Uses)
-    {
+  if (porttype != Uses) {
     std::cerr<<"disconnect can be called only by user"<<std::endl; 
     return false;
-    } 
+  } 
   std::vector<PortInstance*>::iterator iter;
-  for(iter=connections.begin(); iter<connections.end();iter++)
-    {
-    if(p2==(*iter))
-      {
+  for (iter=connections.begin(); iter<connections.end();iter++) {
+    if (p2==(*iter)) {
       connections.erase(iter);
       return true;
-      }
     }
+  }
   return false;
 }
 
+// CCA spec:
+// n PROVIDES (To) : 1 USES (From)
+// connections: vector of PortInstances...
+// connect should fail for invalid components,
+//   nonexistent ports
+//   other???
 bool CCAPortInstance::canConnectTo(PortInstance* to)
 {
   //CCAPortInstance* p2 = dynamic_cast<CCAPortInstance*>(to);
   PortInstance* p2 = to;
-  if( p2 && getType()==p2->getType() && portType()!=p2->portType() )
-    {
-    if(available() && p2->available()) return true;
-    }
+  if (p2 && getType() == p2->getType() && portType() != p2->portType()) {
+      if (available() && p2->available()) { return true; }
+  }
+std::cerr << "CCAPortInstance::canConnectTo: can't connect" << std::endl;
   return false;
 }
 
 bool CCAPortInstance::available()
 {
-  return portType()==To || connections.size()==0;
+    return portType() == To || connections.size() == 0;
 }
 
+// return a PortInstance on the other side of the connection
+// -- the USES (From) port
+// called by: CCAComponentInstance::getPortNonblocking, framework::Services_impl::getPortNonblocking
 PortInstance* CCAPortInstance::getPeer()
 {
-  return connections[0];
+    return connections[0];
 }
 
 std::string CCAPortInstance::getName()
 {
-  return name;
+    return name;
 }
 
 void CCAPortInstance::incrementUseCount()
 {
-  useCount++;
+    useCount++;
 }
 
 bool CCAPortInstance::decrementUseCount()
 {
-  if(useCount<=0)
-    { return false; }
-  useCount--;
-  return true;
+    if (useCount <= 0) {
+        return false;
+    }
+    useCount--;
+    return true;
 }
 
 } // end namespace SCIRun

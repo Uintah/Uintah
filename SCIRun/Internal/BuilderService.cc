@@ -379,30 +379,6 @@ BuilderService::generateBridge(const sci::cca::ComponentID::pointer& c1,
   return (autobr.genBridge(pr1->getModel(),cid1->name,pr2->getModel(),cid2->name));
 }
 
-int BuilderService::addLoader(const std::string &loaderName,
-                              const std::string &user,
-                              const std::string &domain,
-                              const std::string &loaderPath)
-{
-    std::string sp = " ";
-    std::cerr << "BuiderService::addLoader() not implemented" << std::endl;
-    std::string cmd = "xterm -e ssh ";
-    // cmd+=user+"@"+domain+" "+loaderPath+" "+loaderName+" "+getFrameworkURL() +"&";
-
-    cmd = "xterm -e " + loaderPath + sp + loaderName + sp +
-            getFrameworkURL() + "&";
-    std::cout << cmd << std::endl;
-    system(cmd.c_str());
-    return 0;
-}
-
-int BuilderService::removeLoader(const std::string &loaderName)
-{
-    std::cerr << "BuiderService::removeLoader() not implemented" << std::endl;
-    return 0;
-}
-
-
 int BuilderService::addComponentClasses(const std::string &loaderName)
 {
     std::cerr<<"BuiderService::addComponentClasses not implemented" << std::endl;
@@ -433,73 +409,6 @@ void BuilderService::emitConnectionEvent(ConnectionEvent* event)
   }
 
 }
-
-#if 0
-/*
-void BuilderService::registerFramework(const std::string &frameworkURL)
-{
-  Object::pointer obj=PIDL::objectFrom(frameworkURL);
-  sci::cca::AbstractFramework::pointer remoteFramework=
-    pidl_cast<sci::cca::AbstractFramework::pointer>(obj);
-  sci::cca::Services::pointer bs = remoteFramework->getServices("external builder", 
-                                "builder main", 
-                                sci::cca::TypeMap::pointer(0));
-  std::cerr << "got bs\n";
-  sci::cca::ports::ComponentRepository::pointer reg =
-    pidl_cast<sci::cca::ports::ComponentRepository::pointer>
-    (bs->getPort("cca.ComponentRepository"));
-  if (reg.isNull()) {
-    std::cerr << "Cannot get component registry, not building component menus\n";
-    return;
-  }
-  
-  //traverse Builder Components here...
-
-  for(unsigned int i=0; i<servicesList.size();i++) {
-    sci::cca::ports::BuilderService::pointer builder 
-      = pidl_cast<sci::cca::ports::BuilderService::pointer>
-      (servicesList[i]->getPort("cca.BuilderService"));
-
-    if (builder.isNull()) {
-      std::cerr << "Fatal Error: Cannot find builder service\n";
-      return;
-    } 
-    
-    sci::cca::ComponentID::pointer cid=servicesList[i]->getComponentID();
-    std::cerr<<"try to connect..."<<std::endl;
-    sci::cca::ConnectionID::pointer connID=builder->connect(cid, "builderPort",
-                                cid, "builder");
-    std::cerr<<"connection done"<<std::endl;
-  
-
-    sci::cca::Port::pointer p = servicesList[i]->getPort("builder");
-    sci::cca::ports::BuilderPort::pointer bp = 
-      pidl_cast<sci::cca::ports::BuilderPort::pointer>(p);
-    if (bp.isNull()) {
-      std::cerr << "BuilderPort is not connected!\n";
-    } 
-    else{
-      bp->buildRemotePackageMenus(reg, frameworkURL);
-    }
-    builder->disconnect(connID,0);
-    servicesList[i]->releasePort("cca.BuilderService"); 
-    servicesList[i]->releasePort("builder");
-  }
-  
-}
-
-void BuilderService::registerServices(const sci::cca::Services::pointer &svc)
-{
-  servicesList.push_back(svc);
-}
-
-
-sci::cca::AbstractFramework::pointer BuilderService::getFramework()
-{
-  return sci::cca::AbstractFramework::pointer(framework);
-}
-*/
-#endif
 
 } // end namespace SCIRun
 
