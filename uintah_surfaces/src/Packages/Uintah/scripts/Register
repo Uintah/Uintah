@@ -1,0 +1,224 @@
+#!/usr/local/bin/perl
+
+sub usage();
+sub description();
+sub catchZap( $ );
+
+$argc = $#ARGV + 1;
+
+$argu = $ARGV[0];
+
+$argu1 = $ARGV[1];
+
+$SIG{INT} = \&catchZap;  # Tells perl to catch sigInt (control-c) 
+                         # and call catchZap().
+
+if( $argc == 0 ){
+    usage();
+    exit();
+}
+
+if( $ARGV[0] eq "-help" ){
+    usage();
+    description();
+    exit();
+}
+
+if($argu1 ne "-uda"){
+
+    $dirName = $ARGV[0];
+
+    if( ! -e $dirName . "\/input.xml" ){
+	print( $dirName . "\/input.xml does not exist.  Aborting.\n" );
+	exit();
+    }
+
+    use LWP::Simple;
+    use URI::URL;
+        
+    my $url1 = url('http://panda.cs.utah.edu/blazer/MakeDir');
+    $url1->query_form(SysName => $dirName);
+    $content = get($url1);
+        
+#use Net::Telnet;
+#$t = Net::Telnet->new(Timeout => 20, Prompt => '/:/', Host =>"panda.cs.utah.edu");
+#$t->login(Name =>'blazer', Password =>'blazer2001');
+#$t->cmd('B');
+#@result = $t->cmd('cd tmp');
+#$dir1 = "mkdir " . $dirName;
+#$t->cmd($dir1);
+#$t->close;
+        
+    open(OUTF,">Register.txt") or &dienice("Can't open Register.txt"); 
+    print(OUTF $dirName, "\n");
+    print("Please Input Creator name: ", "\n");;
+    $System = <STDIN>;
+    print OUTF $System;
+    #print("Please Input your Simulation name: ", "\n");
+    #$SimName = <STDIN>;
+    #print OUTF $SimName;
+    print("Enter one line of comments:\n");
+    $Comment = <STDIN>;
+    print OUTF $Comment;
+    print("Enter one line of description:\n");
+    $Descript = <STDIN>;
+#chop($Descript);
+    print OUTF $Descript;
+        
+    close(OUTF);
+        
+    $filename1 = $dirName."\/";
+    @file = split(/\./, $filename1);
+    $filename2 = $file[0].".ups";
+    $filename = $filename1 . $filename2 ;
+        
+    system("tar", "-cvf", "NewFile.tar", $dirName);
+        
+    system("zip", "NewFile.tar.zip", "NewFile.tar");
+        
+    use Net::FTP;
+    $ftp = Net::FTP->new("panda.cs.utah.edu")             or die "Can't connect: $@\n";
+    $ftp->login('blazer','blazer2001')       or die "Couldn't login\n";       
+    $dir2 =  "d:\\apusers\\uintah\\tmp\\" . $dirName ;
+    $ftp->cwd($dir2)                  or die "Couldn't change directory\n"; 
+    $ftp->type("I");
+    $ftp->put('Register.txt');
+    $ftp->put('NewFile.tar.zip');
+    $ftp->put($dirName . "\/input.xml");
+
+#$ftp->put($filename);
+    print("Attach a thumbnail image for this run ? (Y\/N) ");
+    $Answer1 = <STDIN> ;
+    chop $Answer1;
+    while(($Answer1 ne "Y") && ($Answer1 ne "y") && ($Answer1 ne "N")&& ($Answer1 ne "n")){
+	print("Please answer(Y\/N) ");
+	$Answer1 = <STDIN> ;
+	chop $Answer1;
+    }
+    if(!($Answer1 ne "Y") || !($Answer1 ne "y")){
+	print("Please enter image file name:\n");
+	$InputImage = <STDIN>;
+	chop($InputImage);
+	if( -e $InputImage ){
+	    $ftp->put($InputImage);
+	} else {
+	    print( "$InputImage does not exist.  Not attaching.\n" );
+	    $InputImage = "";
+	}
+    }
+    
+    $Answer = "Y";
+    while(!($Answer ne "Y") || !($Answer ne "y")){  
+	print("Do you wish to register additional files with this uda?(Y\/N)");
+	$Answer = <STDIN> ;
+	chop $Answer;
+	while(($Answer ne "Y") && ($Answer ne "y") && ($Answer ne "N")&& ($Answer ne "n")){
+	    print("Please answer(Y\/N) ");
+	    $Answer = <STDIN> ;
+	    chop $Answer;
+	}
+	if(!($Answer ne "Y") || !($Answer ne "y")){
+	    print("Please input your filename:\n");
+	    $InputName = <STDIN>;
+	    chop($InputName);
+
+	    if( -e $InputName ){
+		$ftp->put($InputName);
+		@NewFile = ();
+		push(@NewFile, $InputName);
+#push(@NewFile, '|');
+	    } else {
+		print( "$InputName does not exist.  Not registering it.\n" );
+	    }
+	}
+    }
+    $ftp->quit();
+        
+    # Clean up
+    system("rm -f NewFile.tar");
+    system("rm -f Register.txt");
+    system("rm -f NewFile.tar.zip");
+        
+    use LWP::Simple;
+    use URI::URL;
+        
+    my $url = url('http://panda.cs.utah.edu/blazer/NewBlazer');
+    $files1 = join("|",@NewFile);
+#print $files1;
+    $url->query_form(SysName => $dirName, Image => $InputImage,   Files => $files1);
+    $content = get($url);
+    print($content, "\n");
+        
+#use Net::Telnet;
+#$t1 = Net::Telnet->new(Timeout => 20, Prompt => '/:/', Host =>"panda.cs.utah.edu");
+#$t1->login(Name =>'blazer', Password =>'blazer2001');
+#$t1->cmd('B');
+#$command1 = "java NewBlazer " . $dirName;
+#$result = $t1->cmd($command1) or dienice("Can't execute java");
+#$t1->waitfor(String =>'Packages/Uintah', Timeout => 30);
+#$t1->print($command1);
+#$t1->close;
+    
+} else {
+    use LWP::Simple;
+    use URI::URL;
+        
+    $files = $argu;
+    $dirName = $ARGV[2];
+
+    use Net::FTP;
+    $ftp = Net::FTP->new("panda.cs.utah.edu") or die "Can't connect: $@\n";
+    $ftp->login('blazer','blazer2001')        or die "Couldn't login\n";       
+    $dir2 =  "d:\\apusers\\uintah\\tmp\\" . $dirName ;
+    $ftp->cwd($dir2) or die "Couldn't change directory to $dirName\n"; 
+    $ftp->type("I");
+    $ftp->put($files);
+
+    my $url1 = url('http://panda.cs.utah.edu/blazer/ImageBlazer');
+    $url1->query_form(SysName => $dirName, Files => $files);
+    $content = get($url1);
+    print($content , "\n");
+}
+
+sub usage() {
+    print("Blazer Data Registration Script:\n" .
+	  "Usage:\n" .
+	  "      Register <.uda directory name>\n" .
+	  "        Example: Register PSE/src/uda/tmp.uda.001\n" .
+	  "      Register <thumbnail> -uda <Registered .uda directory>\n" .
+	  "        Example: Register fire.jpg -uda PSE/src/uda/tmp.uda.001\n" .
+	  "      Register -help\n" );
+}
+
+sub description() {
+    print("Description:\n" .
+	  "      This script will transfer your input information,\n" .
+	  "      your .ups file(renames inputs.xml), your .sr/.ui\n" .
+	  "      files and tar your whole .uda directory into blazer\n" .
+	  "      server machine.\n" .
+	  "Link your new thumbnail file to your Registered uda file:\n" .
+	  "      Register <thumbnail image> -uda <Registered uda filename>\n" .
+	  "About Unregister:\n" .
+	  "      If you made a mistake during register, you can use\n" .
+	  "      \"Unregister <whole uda direcotry name>\" to\n" .
+	  "      unregister it.\n" .
+	  "After you register:\n" .
+	  "      You can go to \"http:\/\/panda.cs.utah.edu\/~Packages/Uintah/\"\n" .
+	  "      to check your input from blazer database.\n" .
+	  "About Delete old files: \n" .
+	  "      When you want to delete the old files, go to the password\n" .
+	  "      protected admin page to delete your file. \n" .
+	  "The URL for Blazer Server machine: \n" .
+	  "      Blazer's URL is \"http:\/\/panda.cs.utah.edu\/~Packages/Uintah/\" \n" .
+	  "Any comments or question: \n" .
+	  "      please send email to xichen\@cs\.utah\.edu \n" );
+}
+
+sub catchZap( $ ) {
+    $zaps++;
+    if( $zaps == 2 ) { 
+        # Do I need to clean up before exiting?
+	exit(); 
+    }
+    print( "Caught Cnt-C.  Press Cnt-C one more time to really quit.\n" );
+}

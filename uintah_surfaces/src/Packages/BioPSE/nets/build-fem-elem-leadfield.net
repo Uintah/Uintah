@@ -1,0 +1,181 @@
+#
+#  For more information, please see: http://software.sci.utah.edu
+# 
+#  The MIT License
+# 
+#  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+#  University of Utah.
+# 
+#  License for the specific language governing rights and limitations under
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+# 
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+# 
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+#
+
+
+# SCI Network 1.0
+
+#######################################################################
+# Check environment variables.  Ask user for input if not set:
+set results [sourceSettingsFile]
+set DATADIR [lindex $results 0]
+set DATASET [lindex $results 1]
+#######################################################################
+
+source $DATADIR/$DATASET/$DATASET.settings
+
+::netedit dontschedule
+
+global userName
+set userName "dmw"
+
+global runDate
+set runDate "Thu Mar  1 2001"
+
+global runTime
+set runTime " 21:53:29"
+
+global notes
+set notes "This net builds an element-centered finite element lead-field for an input finite element
+mesh and set of electrodes.
+
+"
+
+# Create the Modules
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 404 14]
+set m1 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 209 319]
+set m2 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 629 105]
+set m3 [addModuleAtPosition "BioPSE" "LeadField" "BuildElemLeadField" 440 319]
+set m4 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 422 403]
+set m5 [addModuleAtPosition "SCIRun" "DataIO" "MatrixWriter" 600 403]
+set m6 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 404 473]
+set m7 [addModuleAtPosition "SCIRun" "FieldsData" "BuildMappingMatrix" 458 192]
+set m8 [addModuleAtPosition "SCIRun" "FieldsData" "Gradient" 404 543]
+set m9 [addModuleAtPosition "SCIRun" "FieldsData" "ManageFieldData" 404 612]
+set m10 [addModuleAtPosition "SCIRun" "FieldsData" "ChangeFieldDataAt" 458 106]
+
+# Set the Module Notes Dispaly Options
+set Notes($m0-Position) {def}
+set Notes($m1-Position) {n}
+set Notes($m2-Position) {def}
+set Notes($m3-Position) {def}
+set Notes($m4-Position) {w}
+set Notes($m5-Position) {def}
+set Notes($m6-Position) {def}
+set Notes($m7-Position) {def}
+
+addConnection $m1 0 $m4 0
+addConnection $m3 0 $m4 1
+addConnection $m3 1 $m5 0
+addConnection $m2 0 $m7 1
+addConnection $m4 0 $m6 1
+addConnection $m6 0 $m8 0
+addConnection $m8 0 $m9 0
+addConnection $m0 0 $m1 0
+addConnection $m0 0 $m10 0
+addConnection $m10 0 $m7 0
+addConnection $m0 0 $m6 0
+addConnection $m0 0 $m3 0
+addConnection $m7 0 $m3 1
+addConnection $m9 1 $m3 2
+
+set $m0-notes {TetVolField input is the finite element mesh --  
+data values at the elements are conductivity  
+tensors.                                                         }
+set $m0-show_status {1}
+set $m0-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
+
+set $m1-notes {Using the zero'th node as a
+ground reference,we build  
+the finite element stiffness
+matrix for the incoming
+TetVolField.  The 
+TetVolField has a 
+conductivity tensor at each
+element.}
+set $m1-show_status {1}
+set $m1-UseCondTCL {1}
+set $m1-UseBasisTCL {0}
+set $m1-nprocs {auto}
+
+set $m2-notes {The nodes of this field specify
+the electrode positions.}
+set $m2-show_status {1}
+set $m2-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
+
+set $m3-notes {Build the element-centered leadfield matrix for the input finite element mesh (port 1) and electrode interpolant Field (port 2).
+We set the last electrode to ground, and iteratively pair it with each of the other electrodes.  For each pairing, we build a
+right-hand-side column matrix that specifies the source-sink pair to have unit current.  That right-hand-side is passed
+to a solve matrix module, the system is solved, the gradient is computed, and the ouput is passed back to us and stored as
+one column in our lead-field matrix.}
+set $m3-show_status {1}
+
+set $m4-notes {Solve the: A x phi = flux linear system.  A is the stiffness matrix, with
+node 0 pinned to ground, the flux vector is all zeroes except for the
+TetVol source and sink node positions, which have a 1 and a -1
+respectively (unit current passed between them).  Solving for phi
+gives us the voltages everywhere at the nodes in the TetVolMesh.}
+set $m4-show_status {1}
+set $m4-target_error {0.000001}
+set $m4-flops {           344578}
+set $m4-floprate {          24.1205}
+set $m4-memrefs {      6.15275e+06}
+set $m4-memrate {          430.693}
+set $m4-orig_error {                1}
+set $m4-current_error {9.82593e-05}
+set $m4-method {Conjugate Gradient & Precond. (SCI)}
+set $m4-precond {jacobi}
+set $m4-iteration {102}
+set $m4-maxiter {2000}
+set $m4-use_previous_soln {0}
+set $m4-emit_partial {0}
+set $m4-emit_iter {50}
+set $m4-status {}
+set $m4-np {16}
+
+set $m5-notes {Store the lead-field.  The size is nr=(# of electrodes - 1) x nc=(# of elements x 3).
+Each row is stored [ex1 ey1 ez1 ex2 ey2 ez2 ex3 ey3 ez3 ... exn eyn ezn] where
+[exi eyi ezi] is the electric field vector in element i.}
+set $m5-show_status {1}
+set $m5-filename $DATADIR/$DATASET/generated/$DATASET-leadfield.mat
+set $m5-filetype {ASCII}
+set $m5-split {1}
+
+set $m6-notes {Having solved for the voltages at the nodes of the TetVolMesh, we
+combine those scalar values with the TetVolMesh to produce a
+TetVolField of scalar double potentials at the nodes.}
+set $m7-notes {Build the interpolant weights for the electrodes.  For each node in the electrode field (second input
+field port), we record the single nearest node from the finite element mesh and assign it a weight of 1.}
+set $m6-show_status {1}
+
+set $m7-notes {Build the interpolant weights for the electrodes.  For each node in the electrode field (second input
+field port), we record the single nearest node from the finite element mesh and assign it a weight of 1.}
+set $m7-show_status {1}
+set $m7-interpolation_basis {linear}
+set $m7-map_source_to_single_dest {0}
+set $m7-exhaustive_search {1}
+set $m7-exhaustive_search_max_dist {-1}
+set $m7-np {1}
+set $m8-notes {}
+set $m8-show_status {1}
+set $m9-notes {}
+set $m9-show_status {1}
+set $m10-notes {}
+set $m10-show_status {1}
+set $m10-outputdataat {Nodes}
+
+::netedit scheduleok
