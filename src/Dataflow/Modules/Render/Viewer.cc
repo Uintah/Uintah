@@ -894,12 +894,12 @@ Viewer::set_context(Scheduler* sched, Network* network)
   Module::set_context(sched, network);
   if (sci_getenv("SCI_REGRESSION_TESTING"))
   {
-    sched->add_callback(regression_callback, this);
+    sched->add_callback(regression_callback, this, -1);
   }
 }
 
 
-void
+bool
 Viewer::regression_callback(void *ths)
 {
   Viewer *viewer = (Viewer *)ths;
@@ -911,6 +911,7 @@ Viewer::regression_callback(void *ths)
     viewer->view_window_[i]->renderer_->saveImage(name, "ppm", 640, 480);
     viewer->view_window_[i]->redraw(); // flushes saveImage.
   }
+  return true;
 }
 
 
