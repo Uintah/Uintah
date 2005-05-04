@@ -53,6 +53,8 @@ public:
     void run();
 	static Semaphore& iterSem();
 	
+	static std::string returnValue;  //will hold info about result of this runnable.
+	
 private:
 	static void iter_callback(void *data);
 	
