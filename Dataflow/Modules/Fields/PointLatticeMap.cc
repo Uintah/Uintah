@@ -41,28 +41,18 @@
  *  Copyright (C) 2005 SCI Group
  */
 
-#include <Core/GuiInterface/UIvar.h>
-#include <Core/Util/DynamicCompilation.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Core/Thread/CrowdMonitor.h>
-#include <Dataflow/Widgets/BoxWidget.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/FieldInterface.h>
-#include <Core/Datatypes/Clipper.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/LatVolField.h>
-
-#include <Core/Containers/StringUtil.h>
-#include <iostream>
-#include <stack>
+#include <Core/Geometry/BBox.h>
+#include <Core/GuiInterface/UIvar.h>
+#include <vector>
+#include <map>
 
 namespace SCIRun {
-
-using std::stack;
 
 class PointLatticeMap : public Module
 {
