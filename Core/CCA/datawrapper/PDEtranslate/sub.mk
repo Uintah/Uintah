@@ -30,30 +30,10 @@
 # Makefile fragment for this subdirectory
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+SRCDIR := Core/CCA/datawrapper/PDEtranslate
 
-SRCDIR := Core/CCA/datawrapper
+SRCS := $(SRCDIR)/ViewerWindow.cc
 
-SRCS := $(SRCDIR)/Matrix_sidl.cc $(SRCDIR)/MatrixWrap.cc $(SRCDIR)/ColumnMatrixWrap.cc \
-	$(SRCDIR)/DenseMatrixWrap.cc $(SRCDIR)/SparseRowMatrixWrap.cc
-
-# Hack until I get the guts to put this in Makefile.in
-$(SRCDIR)/Matrix_sidl.o: $(SRCDIR)/Matrix_sidl.cc $(SRCDIR)/Matrix_sidl.h
-
-$(SRCDIR)/Matrix_sidl.cc: $(SRCDIR)/Matrix.sidl $(SIDL_EXE)
-	$(SIDL_EXE) -I $(SRCTOP)/Core/CCA/spec/cca.sidl -o $@ $<
-
-$(SRCDIR)/Matrix_sidl.h: $(SRCDIR)/Matrix.sidl $(SIDL_EXE)
-	$(SIDL_EXE) -I $(SRCTOP)/Core/CCA/spec/cca.sidl -h -o $@ $<
-
-GENHDRS := $(SRCDIR)/Matrix_sidl.h $(SRCDIR)/MatrixWrap.h $(SRCDIR)/ColumnMatrixWrap.h \
-	$(SRCDIR)/DenseMatrixWrap.h $(SRCDIR)/SparseRowMatrixWrap.h 
-PSELIBS := Core/CCA/PIDL Core/Thread 
-
-$(SRCDIR)/Matrix_sidl.o: Core/CCA/spec/cca_sidl.h
+PSELIBS := Core/CCA/spec
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
-SUBDIRS := $(SRCDIR)/PDEtranslate
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
-
