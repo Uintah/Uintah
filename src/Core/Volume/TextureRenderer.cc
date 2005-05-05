@@ -407,8 +407,8 @@ TextureRenderer::load_brick(TextureBrickHandle brick, bool use_cmap2)
 	}
 	if (ShaderProgramARB::texture_non_power_of_two())
 	{
-	  glPixelStorei(GL_UNPACK_ROW_LENGTH, -1);
-	  glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, -1);
+	  glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+	  glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
 	  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	}
       }
