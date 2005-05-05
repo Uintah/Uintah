@@ -1146,7 +1146,17 @@ case $host in
   *-darwin*)
     ac_objext=o
     LDRUN_PREFIX="-L"
-    CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -Wno-long-double "
+
+#####
+# GCC_TEST
+#####
+     SCI_CHECK_VERSION($CC,--version,4.0.0,GCC_VERSION=4.0,)
+
+    if test "$GCC_VERSION" = "4.0"; then
+       CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -Wno-long-double "
+    else
+       CFLAGS="$CFLAGS $extra_cflags -fno_common -dynaic -Wno-long-double -fcoalesce-templates"
+    fi   
     CXXFLAGS="$CXXFLAGS $CFLAGS"
 
     if test $NEED_OSX_HACK = yes; then
@@ -1232,6 +1242,7 @@ case $host in
     if test "$CC" != "pgcc"; then
       SCI_CHECK_VERSION($CC,--version,2.95.3,,
         echo configure: error: wrong $CC version.; exit)
+
       if test $sci_required_fortran = "yes"; then
         SCI_CHECK_VERSION($F77,--version,0.5.25,,
           echo configure: error: wrong $F77 version.; exit)
@@ -2625,10 +2636,11 @@ case $host in
     # OSX Library Check
     if test "$F77" = "xlf"; then
       SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,xlf90,$_sci_lib,,,$_sci_optional)
-    elif test "$with_fortran" = "no"; then
-      SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,g2c,$_sci_lib,,,$_sci_optional)
     else
-      SCI_TRY_LINK(F,fotran libraries,,$_sci_inc,gfortran,$_sci_lib,,,$_sci_optional)
+      SCI_TRY_LINK(F,fotran libraries,,$_sci_inc,gfortran,$_sci_lib,,,optional)
+      if test "$HAVE_F" = "no"; then
+            SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,g2c,$_sci_lib,,,$_sci_optional)
+      fi
     fi
     ;;
   *-pc-mingw*)
