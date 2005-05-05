@@ -56,15 +56,7 @@ PSELIBS := Core/Datatypes Core/Persistent \
 JAVA_LIB := $(JAVA_PATH)/jre/lib/i386
 JAVA_INC := $(JAVA_PATH)/include
 
-SOFLAGS := \
-           -shared -L$(LIBDIR) $(CFLAGS) \
-#           -L$(JAVA_LIB) \
-           -L$(JAVA_LIB)/client \
-           -ljava \
-           -ljvm \
-           -lawt \
-           -Wl,-rpath -Wl,$(JAVA_LIB) \
-           -Wl,-rpath -Wl,$(JAVA_LIB)/client
+LIBS := -L$(JAVA_LIB) -L$(JAVA_LIB)/client -ljava -ljvm -lawt -Wl,-rpath -Wl,$(JAVA_LIB) -Wl,-rpath -Wl,$(JAVA_LIB)/client
 
 INCLUDES += \
             -I$(JAVA_INC) \
