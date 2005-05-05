@@ -35,6 +35,7 @@ SRCDIR   := CCA/Components/VTK/Rendering
 
 SRCS     += $(SRCDIR)/Actor.cc \
 	    $(SRCDIR)/PolyDataMapper.cc \
+	    $(SRCDIR)/ImageDataMapper.cc \
 	    $(SRCDIR)/Renderer.cc
 
 PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm\
