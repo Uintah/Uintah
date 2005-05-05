@@ -103,7 +103,10 @@ private:
 class VH_AnatomyBoundingBox {
 private:
 	char *anatomyname_;
-	int minX_, maxX_, minY_, maxY_, minZ_, maxZ_, minSlice_, maxSlice_;
+// Modification on April 28, 2005 by R. C. Ward
+// Bounding box coorindates are now floating point
+        float minX_, maxX_, minY_, maxY_, minZ_, maxZ_, minSlice_, maxSlice_;
+//	int minX_, maxX_, minY_, maxY_, minZ_, maxZ_, minSlice_, maxSlice_;
 	VH_AnatomyBoundingBox *blink, *flink;
 public:
         VH_AnatomyBoundingBox() { flink = blink = this; };
@@ -115,22 +118,41 @@ public:
         void readFile(FILE *infileptr);
 	char *get_anatomyname() { return(anatomyname_); };
 	void set_anatomyname(char *newName) { anatomyname_ = newName; };
-	int get_minX() { return minX_; };
-        void set_minX(int new_minX) { minX_ = new_minX; };
-        int get_maxX() { return maxX_; };
-        void set_maxX(int new_maxX) { maxX_ = new_maxX; };
-        int get_minY() { return minY_; };
-        void set_minY(int new_minY) { minY_ = new_minY; };
-        int get_maxY() { return maxY_; };
-        void set_maxY(int new_maxY) { maxY_ = new_maxY; };
-        int get_minZ() { return minZ_; };
-        void set_minZ(int new_minZ) { minZ_ = new_minZ; };
-        int get_maxZ() { return maxZ_; };
-        void set_maxZ(int new_maxZ) { maxZ_ = new_maxZ; };
-        int get_minSlice() { return minSlice_; };
-        void set_minSlice(int newMinSlice) { minSlice_ = newMinSlice; };
-        int get_maxSlice() { return maxSlice_; };
-        void set_maxSlice(int newMaxSlice) { maxSlice_ = newMaxSlice; };
+// Modification April 28, 2005 by R. C. Ward
+// Bounding Box min, max are now doubles
+        void set_minX(float new_minX) { minX_ = new_minX; };
+        void set_maxX(float new_maxX) { maxX_ = new_maxX; };
+        void set_minY(float new_minY) { minY_ = new_minY; };
+        void set_maxY(float new_maxY) { maxY_ = new_maxY; };
+        void set_minZ(float new_minZ) { minZ_ = new_minZ; };
+        void set_maxZ(float new_maxZ) { maxZ_ = new_maxZ; };
+        void set_minSlice(float newMinSlice) { minSlice_ = newMinSlice; };
+        void set_maxSlice(float newMaxSlice) { maxSlice_ = newMaxSlice; };
+//        void set_minX(int new_minX) { minX_ = new_minX; };
+//        void set_maxX(int new_maxX) { maxX_ = new_maxX; };
+//        void set_minY(int new_minY) { minY_ = new_minY; };
+//        void set_maxY(int new_maxY) { maxY_ = new_maxY; };
+//        void set_minZ(int new_minZ) { minZ_ = new_minZ; };
+//        void set_maxZ(int new_maxZ) { maxZ_ = new_maxZ; };
+//        void set_minSlice(int newMinSlice) { minSlice_ = newMinSlice; };
+//        void set_maxSlice(int newMaxSlice) { maxSlice_ = newMaxSlice; };
+        float get_minX() { return minX_; };
+        float get_maxX() { return maxX_; };
+        float get_minY() { return minY_; };
+        float get_maxY() { return maxY_; };
+        float get_minZ() { return minZ_; };
+        float get_maxZ() { return maxZ_; };
+        float get_minSlice() { return minSlice_; };
+        float get_maxSlice() { return maxSlice_; };
+//        int get_minX() { return minX_; };
+//        int get_maxX() { return maxX_; };
+//        int get_minY() { return minY_; };
+//        int get_maxY() { return maxY_; };
+//        int get_minZ() { return minZ_; };
+//        int get_maxZ() { return maxZ_; };
+//        int get_minSlice() { return minSlice_; };
+//        int get_maxSlice() { return maxSlice_; };
+
 };
 
 void
@@ -170,6 +192,7 @@ VH_Anatomy_findMaxBoundingBox(VH_AnatomyBoundingBox *list);
 #define SET_AXIS_END_POINT   1
 #define SET_DIAMETER         2
 #define SET_INSIDE_DIAMETER  3
+#define SET_LENGTH           4 
 
 class VH_injury
 {
@@ -186,7 +209,7 @@ class VH_injury
   string geom_type; // line, sphere, cylinder, hollow cylinder
   float axisX0, axisY0, axisZ0; // center axis endpoint 0
   float axisX1, axisY1, axisZ1; // center axis endpoint 1
-  float inside_rad0, inside_rad1, rad0, rad1;
+  float inside_rad0, inside_rad1, rad0, rad1, len;
   float probability;
 
   VH_injury() { context = UNSET; rad0set = rad1set = false;
