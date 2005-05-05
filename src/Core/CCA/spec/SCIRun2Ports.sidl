@@ -91,7 +91,6 @@ interface ComponentIcon extends sci.cca.Port {
 
 // report component progress
 interface Progress extends sci.cca.Port {
-    // collective???
     collective void updateProgress(in int progress);
     collective void updateProgress(in int progress, in int totalSteps);
 }

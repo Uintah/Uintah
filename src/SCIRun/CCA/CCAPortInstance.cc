@@ -39,7 +39,6 @@
  */
 
 #include <SCIRun/CCA/CCAPortInstance.h>
-#include <SCIRun/Internal/PropertyKeys.h>
 #include <SCIRun/TypeMap.h>
 #include <iostream>
 
@@ -52,27 +51,6 @@ CCAPortInstance::CCAPortInstance(const std::string& name,
   : name(name), type(type), properties(properties), porttype(porttype),
     useCount(0)
 {
-// std::cerr << "CCAPortInstance::CCAPortInstance: 4 args, " << name << ", " << type << std::endl;
-//     if (properties.isNull()) {
-//         this->properties = sci::cca::TypeMap::pointer(new TypeMap);
-//         properties->putInt(PORT_MAX_CONNECTIONS, 1);
-//         properties->putInt(PORT_MIN_CONNECTIONS, 0);
-//         properties->putBool(PORT_ABLE_TO_PROXY, false);
-//     } else {
-//         //check for default properties -- see cca.sidl
-//         if (properties->getInt(PORT_MAX_CONNECTIONS, -1) < 0) {
-//             properties->putInt(PORT_MAX_CONNECTIONS, 1);
-//         }
-
-//         if (properties->getInt(PORT_MIN_CONNECTIONS, -1) < 0) {
-//             properties->putInt(PORT_MIN_CONNECTIONS, 0);
-//         }
-
-//         if (properties->getBool(PORT_ABLE_TO_PROXY, false) == false) {
-//             // set false again???
-//             properties->putBool(PORT_ABLE_TO_PROXY, false);
-//         }
-//     }
 }
 
 CCAPortInstance::CCAPortInstance(const std::string& name,
@@ -83,9 +61,6 @@ CCAPortInstance::CCAPortInstance(const std::string& name,
   : name(name), type(type), properties(properties), port(port),
     porttype(porttype), useCount(0)
 {
-  std::cerr << "CCAPortInstance::CCAPortInstance: 5 args, " << name << ", " << type;
-  if (Uses == porttype) { std::cerr << ", USES" << std::endl; }
-  else { std::cerr << ", PROVIDES" << std::endl; }
 }
 
 CCAPortInstance::~CCAPortInstance()
@@ -94,12 +69,6 @@ CCAPortInstance::~CCAPortInstance()
 
 bool CCAPortInstance::connect(PortInstance* to)
 {
-// test code
-// CCAPortInstance* p4 = dynamic_cast<CCAPortInstance*>(to);
-// if (p4) {
-// std::cerr << "CCAPortInstance::connect: " << name << " to " << p4->getName() << std::endl;
-// }
-// test code
   if (!canConnectTo(to)) {
     return false;
   }
@@ -178,7 +147,7 @@ bool CCAPortInstance::canConnectTo(PortInstance* to)
   if (p2 && getType() == p2->getType() && portType() != p2->portType()) {
       if (available() && p2->available()) { return true; }
   }
-std::cerr << "CCAPortInstance::canConnectTo: can't connect" << std::endl;
+  std::cerr << "CCAPortInstance::canConnectTo: can't connect" << std::endl;
   return false;
 }
 
