@@ -355,8 +355,8 @@ VH_AdjacencyMapping::readFile(char *infilename)
     { // expect lines of the form: index0,index1,...indexn
       int num_adj = countCommas(inLine);
       numrel[num_names] = num_adj;
-      // cerr << "line[" << num_names << "], " << strlen(inLine) << " chars, ";
-      // cerr << num_adj << " relations" << endl;
+   cerr << "line[" << num_names << "], " << strlen(inLine) << " chars, ";
+   cerr << num_adj << " relations" << endl;
       rellist[num_names] = new int[num_adj];
       indexStr = strtok(inLine, ",");
       // first index is the MasterAnatomy name index
@@ -367,6 +367,7 @@ VH_AdjacencyMapping::readFile(char *infilename)
         cerr << endl;
       }
       int *intPtr = rellist[num_names];
+      bzero(intPtr,num_adj*sizeof(int));
       while((indexStr = strtok(NULL, ",")) != NULL)
       {
         *intPtr++ = atoi(indexStr);
@@ -384,7 +385,7 @@ VH_AdjacencyMapping::readFile(char *infilename)
   } // end while(read_line(inLine, &buffsize, infile) != 0)
   delete [] inLine;
   fclose(infile);
-  cerr << "done" << endl;
+  cerr << "done with reading adjacency mapping file" << endl;
 } // end VH_AdjacencyMapping::readFile(char *infilename)
 
 void
@@ -395,8 +396,9 @@ VH_AdjacencyMapping::readFile(FILE *infileptr)
 int *
 VH_AdjacencyMapping::adjacent_to(int index)
 {
-  if(index < num_names)
+  if(index < num_names) {
      return rellist[index];
+  }
   else
   {
      cerr << "VH_AdjacencyMapping::adjacent_to(): index " << index;
@@ -519,21 +521,28 @@ VH_Anatomy_readBoundingBox_File(char *infilename)
         return listRoot;
       }
       strncpy(newStr, inLine, charCnt);
-      // NULL-terminate newStr
+// Bug correction made April 18, 2005 by R. C. Ward
+// Null-terminate newStr
       newStr[charCnt] = '\0';
+// End correction on April 18, 2005 by R. C. Ward
       listPtr->set_anatomyname(newStr);
       // debugging...
-      fprintf(stderr, "anatomyname[%d] = '%s'\n",
-                      inLine_cnt, listPtr->get_anatomyname());
-      fprintf(stderr, ".");
+      cerr << "Debug: anatomyname: " << newStr << endl;
 
       // linePtr is pointing to ','
 // Bug correction on April 10, 2005 by R C Ward
 // Comment out the next line to properly read the bounding box coordinates.
 //      linePtr++;
 // End of correction on April 10, 2005 by R C Ward
-      int minX, maxX, minY, maxY, minZ, maxZ, minSlice, maxSlice;
-      if(sscanf(linePtr, "%d,%d,%d,%d,%d,%d,%d,%d",
+//      int minX, maxX, minY, maxY, minZ, maxZ, minSlice, maxSlice;
+//      if(sscanf(linePtr, "%d,%d,%d,%d,%d,%d,%d,%d",
+//                     &minX, &maxX, &minY, &maxY, &minZ, &maxZ,
+//                     &minSlice, &maxSlice
+//               ) < 8)
+// Modificaiton made April 28, 2005 by R. C. Ward
+// Bounding Box coorindates are now floating point
+      float minX, maxX, minY, maxY, minZ, maxZ, minSlice, maxSlice;
+      if(sscanf(linePtr, "%f,%f,%f,%f,%f,%f,%f,%f",
                      &minX, &maxX, &minY, &maxY, &minZ, &maxZ,
                      &minSlice, &maxSlice
                ) < 8)
@@ -542,11 +551,9 @@ VH_Anatomy_readBoundingBox_File(char *infilename)
            "VH_AnatomyBoundingBox::readFile(%s): format error line %d\n",
            infilename, inLine_cnt);
       }
-      if(!strcmp(newStr,"Myocaridal zone 12"))
-      {
-         cerr << "BB: " <<  minX <<","<< maxX <<",";
-         cerr << minY <<","<<  maxY <<","<<  minZ <<","<<  maxZ <<","<< endl;  
-      }
+//      if(newStr=="Myocaridal zone 12") {
+         cerr << "BB: " <<  minX <<","<< maxX <<","<< minY <<","<<  maxY <<","<<  minZ <<","<<  maxZ <<","<< endl;  
+//      }
       listPtr->set_minX(minX); listPtr->set_maxX(maxX);
       listPtr->set_minY(minY); listPtr->set_maxY(maxY);
       listPtr->set_minZ(minZ); listPtr->set_maxZ(maxZ);
@@ -582,7 +589,7 @@ VH_Anatomy_findBoundingBox(VH_AnatomyBoundingBox *list, char *targetname)
   cerr << "INSIDE  findBoundingBox targetname: " << targetname << endl;
   while(listPtr->next() != list)
   {
-   cerr << "Anatomy in BB: "<< listPtr->get_anatomyname() << endl;
+//   cerr << "Anatomy in BB: "<< listPtr->get_anatomyname() << endl;
     if(!strcmp(listPtr->get_anatomyname(), targetname)) break;
     // (else)
     if((listPtr = listPtr->next()) == list) break;

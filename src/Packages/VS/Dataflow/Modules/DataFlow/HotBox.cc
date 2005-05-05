@@ -526,12 +526,9 @@ HotBox::execute()
     probeWidget_->SetPosition(probeLoc_);
   } // end else if(selectionSource == "UIsetProbeLoc")
 
-  // run the probe's functions
-  executeProbe();
-
   // get parameters from HotBox Tcl GUI
-  const int dataSource(datasource_.get());
   const string currentSelection(currentselection_.get());
+  const int dataSource(datasource_.get());
   const string anatomyDataSrc(anatomydatasource_.get());
   const string adjacencyDataSrc(adjacencydatasource_.get());
   const string boundingBoxDataSrc(boundingboxdatasource_.get());
@@ -567,23 +564,24 @@ HotBox::execute()
     cout << anatomytable_->get_max_labelindex() << endl;
   }
 
-  // if the selection source is from the HotBox UI -- ignore the probe
   char selectName[256];
-
-  if(selectionSource == "fromHotBoxUI")
+  if(selectionSource == "fromProbe")
   {
-    strcpy(selectName, currentSelection.c_str());
-    // clear selection source
-    selectionsource_.set("fromProbe");
-  }
-  else
-  { // selection was from probe navigation
+    // run the probe's functions
+    executeProbe();
+
     if(anatomytable_->get_anatomyname(labelIndexVal_) != 0)
       strcpy(selectName, anatomytable_->get_anatomyname(labelIndexVal_));
     else
       strcpy(selectName, "unknown");
     // set currentselection in HotBox UI
     currentselection_.set(selectName);
+  }
+  else
+  // if the selection source is from the HotBox UI -- ignore the probe
+  { // get selection from HotBox Tcl GUI
+    strcpy(selectName, currentSelection.c_str());
+    labelIndexVal_ = anatomytable_->get_labelindex(selectName);
   }
 
   if(strlen(selectName) != 0)
@@ -953,18 +951,59 @@ void
 HotBox::execAdjacency()
 {
   // get the adjacency info for the selected entity
+    gui_label1_.set("-----");
+    gui_label2_.set("-----");
+    gui_label3_.set("-----");
+    gui_label4_.set("-----");
+    gui_label5_.set("-----");
+    gui_label6_.set("-----");
+    gui_label7_.set("-----");
+    gui_label8_.set("-----");
+    gui_label9_.set("-----");
+
   int *adjPtr;
   if((adjPtr = adjacencytable_->adjacent_to(labelIndexVal_)) == NULL)
   {
     error("HotBox::execAdjacency(): NULL pointer");
     return;
   }
-
+  cerr << "max_labelindex: " <<  anatomytable_->get_max_labelindex() << endl;
+  cerr << "num_names: " <<  anatomytable_->get_num_names() << endl;
+  cerr << "labelIndexVal_: "<< labelIndexVal_ << endl;
+  for (int i = 0;i < anatomytable_->get_num_names() ; i++)
+  {
+    cerr << "Adjacencies: " <<  adjPtr[i] << endl;
+  }
   // fill in text labels in the HotBox
   char *adjacentName;
+
+  if(adjacencytable_->get_num_rel(labelIndexVal_) >= 0)
+  { // Note: TCL UI is 1-indexed, row-major
+    if(adjPtr[0] <= anatomytable_->get_max_labelindex())
+        adjacentName = anatomytable_->get_anatomyname(adjPtr[0]);
+    else
+    {
+      cerr << "HotBox::execute(): adjacent index[" << adjPtr[0];
+      cerr << "] out of range" << endl;
+      // set result to "unknown"
+      adjacentName = anatomytable_->get_anatomyname(0);
+    }
+    cerr << "HotBox::execute(): adjacent[" << adjPtr[0] << "]: ";
+    cerr << adjacentName << endl;
+    gui_label1_.set(adjacentName);
+
+//    if(is_injured(adjacentName, injured_tissue_))
+//    { gui_is_injured1_.set(1); }
+//    else
+//    { gui_is_injured1_.set(0); }
+    // OpenGL UI is indexed 0-7, column-major
+    VS_HotBoxUI_->set_text(0, string(adjacentName, 0, 18));
+  } // end if(adjacencytable_->get_num_rel(labelIndexVal_) >= 0)
+
+
   if(adjacencytable_->get_num_rel(labelIndexVal_) >= 1)
   { // Note: TCL UI is 1-indexed, row-major
-    if(adjPtr[1] < anatomytable_->get_max_labelindex())
+    if(adjPtr[1] <= anatomytable_->get_max_labelindex())
         adjacentName = anatomytable_->get_anatomyname(adjPtr[1]);
     else
     {
@@ -975,17 +1014,19 @@ HotBox::execAdjacency()
     }
     cerr << "HotBox::execute(): adjacent[" << adjPtr[1] << "]: ";
     cerr << adjacentName << endl;
-    gui_label1_.set(adjacentName);
-    if(is_injured(adjacentName, injured_tissue_))
-    { gui_is_injured1_.set(1); }
-    else
-    { gui_is_injured1_.set(0); }
+    gui_label2_.set(adjacentName);
+
+//    if(is_injured(adjacentName, injured_tissue_))
+//    { gui_is_injured1_.set(1); }
+//    else
+//    { gui_is_injured1_.set(0); }
     // OpenGL UI is indexed 0-7, column-major
     VS_HotBoxUI_->set_text(0, string(adjacentName, 0, 18));
   } // end if(adjacencytable_->get_num_rel(labelIndexVal_) >= 1)
+
   if(adjacencytable_->get_num_rel(labelIndexVal_) >= 2)
   { // Note: TCL UI is 1-indexed, row-major
-    if(adjPtr[2] < anatomytable_->get_max_labelindex())
+    if(adjPtr[2] <= anatomytable_->get_max_labelindex())
         adjacentName = anatomytable_->get_anatomyname(adjPtr[2]);
     else
     {
@@ -996,17 +1037,20 @@ HotBox::execAdjacency()
     }
     cerr << "HotBox::execute(): adjacent[" << adjPtr[2] << "]: ";
     cerr << adjacentName << endl;
-    gui_label2_.set(adjacentName);
-    if(is_injured(adjacentName, injured_tissue_))
-    { gui_is_injured2_.set(1); }
-    else
-    { gui_is_injured2_.set(0); }
+    gui_label3_.set(adjacentName);
+
+//    if(is_injured(adjacentName, injured_tissue_))
+//    { gui_is_injured2_.set(1); }
+//    else
+//    { gui_is_injured2_.set(0); }
     // OpenGL UI is indexed 0-7, column-major
     VS_HotBoxUI_->set_text(3, string(adjacentName, 0, 18));
   } // end if(adjacencytable_->get_num_rel(labelIndexVal_) >= 2)
+
+
   if(adjacencytable_->get_num_rel(labelIndexVal_) >= 3)
   {  // Note: TCL UI is 1-indexed, row-major
-    if(adjPtr[3] < anatomytable_->get_max_labelindex())
+    if(adjPtr[3] <= anatomytable_->get_max_labelindex())
         adjacentName = anatomytable_->get_anatomyname(adjPtr[3]);
     else
     {
@@ -1017,17 +1061,23 @@ HotBox::execAdjacency()
     }
     cerr << "HotBox::execute(): adjacent[" << adjPtr[3] << "]: ";
     cerr << adjacentName << endl;
-    gui_label3_.set(adjacentName);
-    if(is_injured(adjacentName, injured_tissue_))
-    { gui_is_injured3_.set(1); }
-    else
-    { gui_is_injured3_.set(0); }
+    gui_label4_.set(adjacentName);
+
+//    if(is_injured(adjacentName, injured_tissue_))
+//    { gui_is_injured3_.set(1); }
+//    else
+//    { gui_is_injured3_.set(0); }
     // OpenGL UI is indexed 0-7, column-major
     VS_HotBoxUI_->set_text(5, string(adjacentName, 0, 18));
   } // end if(adjacencytable_->get_num_rel(labelIndexVal_) >= 3)
+
+
+  string selectName = currentselection_.get();
+  gui_label5_.set(selectName);
+ 
   if(adjacencytable_->get_num_rel(labelIndexVal_) >= 4)
   { // Note: TCL UI is 1-indexed, row-major
-    if(adjPtr[4] < anatomytable_->get_max_labelindex())
+    if(adjPtr[4] <= anatomytable_->get_max_labelindex())
         adjacentName = anatomytable_->get_anatomyname(adjPtr[4]);
     else
     {
@@ -1038,21 +1088,43 @@ HotBox::execAdjacency()
     }
     cerr << "HotBox::execute(): adjacent[" << adjPtr[4] << "]: ";
     cerr << adjacentName << endl;
-    gui_label4_.set(adjacentName);
-    if(is_injured(adjacentName, injured_tissue_))
-    { gui_is_injured4_.set(1); }
-    else
-    { gui_is_injured4_.set(0); }
-    // OpenGL UI is indexed 0-7, column-major
-    VS_HotBoxUI_->set_text(1, string(adjacentName, 0, 18));
+    gui_label6_.set(adjacentName);
+                                                                                              
+//    if(is_injured(adjacentName, injured_tissue_))
+//    { gui_is_injured7_.set(1); }
+//    else
+//    { gui_is_injured7_.set(0); }
+    // OpenGL UI is 0-indexed, column-major
+    VS_HotBoxUI_->set_text(2, string(adjacentName, 0, 18));
   } // end if(adjacencytable_->get_num_rel(labelIndexVal_) >= 4)
 
-  string selectName = currentselection_.get();
-  gui_label5_.set(selectName);
-  
-  if(adjacencytable_->get_num_rel(labelIndexVal_) >= 6)
+ 
+  if(adjacencytable_->get_num_rel(labelIndexVal_) >= 5)
   { // Note: TCL UI is 1-indexed, row-major
-    if(adjPtr[6] < anatomytable_->get_max_labelindex())
+    if(adjPtr[5] <= anatomytable_->get_max_labelindex())
+        adjacentName = anatomytable_->get_anatomyname(adjPtr[5]);
+    else
+    {
+      cerr << "HotBox::execute(): adjacent index[" << adjPtr[5];
+      cerr << "] out of range" << endl;
+      // set result to "unknown"
+      adjacentName = anatomytable_->get_anatomyname(0);
+    }
+    cerr << "HotBox::execute(): adjacent[" << adjPtr[5] << "]: ";
+    cerr << adjacentName << endl;
+    gui_label7_.set(adjacentName);
+
+//    if(is_injured(adjacentName, injured_tissue_))
+//    { gui_is_injured7_.set(1); }
+//    else
+//    { gui_is_injured7_.set(0); }
+    // OpenGL UI is 0-indexed, column-major
+    VS_HotBoxUI_->set_text(2, string(adjacentName, 0, 18));
+  } // end if(adjacencytable_->get_num_rel(labelIndexVal_) >= 5)
+
+  if(adjacencytable_->get_num_rel(labelIndexVal_) >= 6)
+  { // Note: TCL UI is 1-indexed, row-major 
+    if(adjPtr[6] <= anatomytable_->get_max_labelindex())
         adjacentName = anatomytable_->get_anatomyname(adjPtr[6]);
     else
     {
@@ -1063,17 +1135,19 @@ HotBox::execAdjacency()
     }
     cerr << "HotBox::execute(): adjacent[" << adjPtr[6] << "]: ";
     cerr << adjacentName << endl;
-    gui_label6_.set(adjacentName);
-    if(is_injured(adjacentName, injured_tissue_))
-    { gui_is_injured6_.set(1); }
-    else
-    { gui_is_injured6_.set(0); }
+    gui_label8_.set(adjacentName);
+
+//    if(is_injured(adjacentName, injured_tissue_))
+//    { gui_is_injured8_.set(1); }
+//    else
+//    { gui_is_injured8_.set(0); }
     // OpenGL UI is indexed 0-7, column-major
-    VS_HotBoxUI_->set_text(6, string(adjacentName, 0, 18));
+    VS_HotBoxUI_->set_text(4, string(adjacentName, 0, 18));
   } // end if(adjacencytable_->get_num_rel(labelIndexVal_) >= 6)
+
   if(adjacencytable_->get_num_rel(labelIndexVal_) >= 7)
   { // Note: TCL UI is 1-indexed, row-major
-    if(adjPtr[7] < anatomytable_->get_max_labelindex())
+    if(adjPtr[7] <= anatomytable_->get_max_labelindex())
         adjacentName = anatomytable_->get_anatomyname(adjPtr[7]);
     else
     {
@@ -1084,56 +1158,17 @@ HotBox::execAdjacency()
     }
     cerr << "HotBox::execute(): adjacent[" << adjPtr[7] << "]: ";
     cerr << adjacentName << endl;
-    gui_label7_.set(adjacentName);
-    if(is_injured(adjacentName, injured_tissue_))
-    { gui_is_injured7_.set(1); }
-    else
-    { gui_is_injured7_.set(0); }
-    // OpenGL UI is 0-indexed, column-major
-    VS_HotBoxUI_->set_text(2, string(adjacentName, 0, 18));
-  } // end if(adjacencytable_->get_num_rel(labelIndexVal_) >= 7)
-  if(adjacencytable_->get_num_rel(labelIndexVal_) >= 8)
-  { // Note: TCL UI is 1-indexed, row-major 
-    if(adjPtr[8] < anatomytable_->get_max_labelindex())
-        adjacentName = anatomytable_->get_anatomyname(adjPtr[8]);
-    else
-    {
-      cerr << "HotBox::execute(): adjacent index[" << adjPtr[8];
-      cerr << "] out of range" << endl;
-      // set result to "unknown"
-      adjacentName = anatomytable_->get_anatomyname(0);
-    }
-    cerr << "HotBox::execute(): adjacent[" << adjPtr[8] << "]: ";
-    cerr << adjacentName << endl;
-    gui_label8_.set(adjacentName);
-    if(is_injured(adjacentName, injured_tissue_))
-    { gui_is_injured8_.set(1); }
-    else
-    { gui_is_injured8_.set(0); }
-    // OpenGL UI is indexed 0-7, column-major
-    VS_HotBoxUI_->set_text(4, string(adjacentName, 0, 18));
-  } // end if(adjacencytable_->get_num_rel(labelIndexVal_) >= 8)
-  if(adjacencytable_->get_num_rel(labelIndexVal_) >= 9)
-  { // Note: TCL UI is 1-indexed, row-major
-    if(adjPtr[9] < anatomytable_->get_max_labelindex())
-        adjacentName = anatomytable_->get_anatomyname(adjPtr[9]);
-    else
-    {
-      cerr << "HotBox::execute(): adjacent index[" << adjPtr[9];
-      cerr << "] out of range" << endl;
-      // set result to "unknown"
-      adjacentName = anatomytable_->get_anatomyname(0);
-    }
-    cerr << "HotBox::execute(): adjacent[" << adjPtr[9] << "]: ";
-    cerr << adjacentName << endl;
     gui_label9_.set(adjacentName);
-    if(is_injured(adjacentName, injured_tissue_))
-    { gui_is_injured9_.set(1); }
-    else
-    { gui_is_injured9_.set(0); }
+
+//    if(is_injured(adjacentName, injured_tissue_))
+//    { gui_is_injured9_.set(1); }
+//    else
+//    { gui_is_injured9_.set(0); }
     // OpenGL UI is indexed 0-7, column-major
     VS_HotBoxUI_->set_text(7, string(adjacentName, 0, 18));
-  } // end if(adjacencytable_->get_num_rel(labelIndexVal_) >= 9)
+  } // end if(adjacencytable_->get_num_rel(labelIndexVal_) >= 7)
+
+
 } // end HotBox::execAdjacency()
 
 /*****************************************************************************
