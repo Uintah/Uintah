@@ -99,7 +99,7 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
     //__________________________________
     //  Bullet proofing
     double total_fluxout = 0.0;
-    for(int face = LEFT; face <= FRONT; face++ )  {
+    for(int face = TOP; face <= BACK; face++ )  {
       total_fluxout  += ofs.d_fflux[face];
     }
     if(total_fluxout > vol){
@@ -119,7 +119,7 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
     for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
       IntVector c = *iter; 
       double total_fluxout = 0.0;
-      for(int face = LEFT; face <= FRONT; face++ )  {
+      for(int face = TOP; face <= BACK; face++ )  {
         total_fluxout  += d_OFS[c].d_fflux[face];
         d_OFS[c].d_fflux[face] = 0.0;
       }
@@ -226,7 +226,7 @@ template <class T, typename F>
     double faceVol[6];
     
     T sum_q_face_flux(0.0);   
-    for(int f = LEFT; f <= FRONT; f++ )  {    
+    for(int f = TOP; f <= BACK; f++ )  {    
       //__________________________________
       //   S L A B S
       IntVector ac = c + S_ac[f];     // slab adjacent cell
@@ -252,10 +252,10 @@ template <class T, typename F>
 _____________________________________________________________________*/
 template<class T>
 void FirstOrderAdvector::q_FC_operator(CellIterator iter, 
-                		          IntVector adj_offset,
-                		          const int face,
-                		          const CCVariable<double>& q_CC,
-                		          T& q_FC)
+                		       IntVector adj_offset,
+                		       const int face,
+                		       const CCVariable<double>& q_CC,
+                		       T& q_FC)
 {
   for(;!iter.done(); iter++){
     IntVector R = *iter;      
@@ -281,12 +281,11 @@ void FirstOrderAdvector::q_FC_operator(CellIterator iter,
  Compute q_FC values on the faces between the extra cells
  and the interior domain only on the x+, y+, z+ patch faces 
 _____________________________________________________________________*/
-void FirstOrderAdvector::q_FC_PlusFaces(
-      	      	      	      	       const CCVariable<double>& q_CC,
-                                   const Patch* patch,
-                                   SFCXVariable<double>& q_XFC,
-                                   SFCYVariable<double>& q_YFC,
-                                   SFCZVariable<double>& q_ZFC)
+void FirstOrderAdvector::q_FC_PlusFaces(const CCVariable<double>& q_CC,
+                                        const Patch* patch,
+                                        SFCXVariable<double>& q_XFC,
+                                        SFCYVariable<double>& q_YFC,
+                                        SFCZVariable<double>& q_ZFC)
 {                                                  
   vector<IntVector> adj_offset(3);
   adj_offset[0] = IntVector(-1, 0, 0);    // X faces
