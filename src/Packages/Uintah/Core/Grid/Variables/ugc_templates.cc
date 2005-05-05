@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/ReductionVariable.h>
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
@@ -59,6 +60,8 @@ template class SFCZVariable<double>;
 template class SFCZVariable<float>;
 template class SFCZVariable<int>;
 template class SFCZVariable<long64>;
+
+template class ReductionVariable<double, Reductions::Min<double> >;
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1468
