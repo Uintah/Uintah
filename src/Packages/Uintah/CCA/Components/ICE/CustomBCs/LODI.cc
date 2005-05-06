@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/ICE/LODI.h>
+#include <Packages/Uintah/CCA/Components/ICE/CustomBCs/LODI.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
