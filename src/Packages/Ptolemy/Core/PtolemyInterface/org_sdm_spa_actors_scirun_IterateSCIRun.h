@@ -24,10 +24,10 @@ extern "C" {
 /*
  * Class:     org_sdm_spa_actors_scirun_IterateSCIRun
  * Method:    runOnFiles
- * Signature: ([Ljava/lang/String;I[Ljava/lang/String;IILjava/lang/String;)Ljava/lang/String;
+ * Signature: ([Ljava/lang/String;I[Ljava/lang/String;IILjava/lang/String;Ljava/lang/String;)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_org_sdm_spa_actors_scirun_IterateSCIRun_runOnFiles
-  (JNIEnv *, jobject, jobjectArray, jint, jobjectArray, jint, jint, jstring);
+  (JNIEnv *, jobject, jobjectArray, jint, jobjectArray, jint, jint, jstring, jstring);
 
 #ifdef __cplusplus
 }

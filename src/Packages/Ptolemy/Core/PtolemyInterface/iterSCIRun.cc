@@ -46,14 +46,14 @@ using namespace SCIRun;
 typedef string* stringPtr;
 
 JNIEXPORT jstring JNICALL 
-Java_org_sdm_spa_actors_scirun_IterateSCIRun_runOnFiles(JNIEnv *env, jobject obj, jobjectArray input1Names, jint size1, jobjectArray input2Names, jint size2, jint numParams, jstring picPath)
+Java_org_sdm_spa_actors_scirun_IterateSCIRun_runOnFiles(JNIEnv *env, jobject obj, jobjectArray input1Names, jint size1, jobjectArray input2Names, jint size2, jint numParams, jstring picPath, jstring format)
 {
 	stringPtr input1;
 	stringPtr input2;
 	jstring tempString;
 	
 	std::string pPath = JNIUtils::GetStringNativeChars(env, picPath);
-	
+	std::string picFormat = JNIUtils::GetStringNativeChars(env, format);
 	//for each thing in the input work on it
 	input1 = new string[size1];
 	for(jint i = 0; i < size1; i++){
@@ -70,14 +70,12 @@ Java_org_sdm_spa_actors_scirun_IterateSCIRun_runOnFiles(JNIEnv *env, jobject obj
 		//std::cout << "input2: " << input2[i] << std::endl;
 	}
 	
-	Iterate *iter = new Iterate(input1,size1,input2,size2,numParams,pPath);
+	Iterate *iter = new Iterate(input1,size1,input2,size2,numParams,pPath,picFormat);
 	Thread *t = new Thread(iter, "iterate_on_inputs", 0, Thread::NotActivated);
     t->setStackSize(1024*1024);
     t->activate(false);
     t->join();
-	
-	std::cout << "return will be: " << Iterate::returnValue << std::endl;
-	
+
 	return env->NewStringUTF(Iterate::returnValue.c_str());
 
 }
