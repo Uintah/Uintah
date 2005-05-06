@@ -64,8 +64,9 @@ SRCS := \
         $(SRCDIR)/EITAnalyticSolution.tcl\
         $(SRCDIR)/SetEITGround.tcl\
         $(SRCDIR)/TrigCurrentPattern.tcl\
+	$(SRCDIR)/ForwardIPM.tcl\
+	$(SRCDIR)/InverseIPM.tcl\
 #[INSERT NEW TCL FILE HERE]
-
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
 
 
