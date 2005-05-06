@@ -5,7 +5,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/Stencil7.h>
 #include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
 #include <Packages/Uintah/CCA/Components/ICE/customInitialize.h>
-#include <Packages/Uintah/CCA/Components/ICE/LODI2.h>
+#include <Packages/Uintah/CCA/Components/ICE/CustomBCs/LODI2.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/Turbulence.h>
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>

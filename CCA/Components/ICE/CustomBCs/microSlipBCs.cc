@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/ICE/microSlipBCs.h>
+#include <Packages/Uintah/CCA/Components/ICE/CustomBCs/microSlipBCs.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
