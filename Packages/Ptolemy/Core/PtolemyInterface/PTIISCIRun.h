@@ -47,8 +47,8 @@ private:
 
 class Iterate : public Runnable {
 public:
-    Iterate(stringPtr input1, jint s1, stringPtr input2, jint s2, jint numP, string pPath)
-	 : doOnce(input1), size1(s1), iterate(input2), size2(s2), numParams(numP), picPath(pPath) {}
+    Iterate(stringPtr input1, jint s1, stringPtr input2, jint s2, jint numP, string pPath, string format)
+	 : doOnce(input1), size1(s1), iterate(input2), size2(s2), numParams(numP), picPath(pPath), picFormat(format) {}
 	virtual ~Iterate();
     void run();
 	static Semaphore& iterSem();
@@ -56,7 +56,7 @@ public:
 	static std::string returnValue;  //will hold info about result of this runnable.
 	
 private:
-	static void iter_callback(void *data);
+	static bool iter_callback(void *data);
 	
     stringPtr doOnce;
 	jint size1;
@@ -64,6 +64,7 @@ private:
 	jint size2;
 	jint numParams;
 	string picPath;
+	string picFormat;
 };
 
 class SignalExecuteReady : public Runnable {
