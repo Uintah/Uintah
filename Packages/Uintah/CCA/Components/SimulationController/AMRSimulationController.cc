@@ -260,7 +260,7 @@ void AMRSimulationController::subCycle(GridP& grid, int startDW, int dwStride, i
   LevelP fineLevel = grid->getLevel(numLevel);
   LevelP coarseLevel = grid->getLevel(numLevel-1);
 
-  int numSteps = 2; // Make this configurable - Steve
+  int numSteps = fineLevel->timeRefinementRatio(); // Make this configurable - Steve
   int newDWStride = dwStride/numSteps;
 
   ASSERT((newDWStride > 0 && numLevel+1 < grid->numLevels()) || (newDWStride == 0 || numLevel+1 == grid->numLevels()));
