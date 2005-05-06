@@ -60,20 +60,29 @@ namespace SCIRun {
 
 class ForwardIPM : public Module {
 public:
+
+  GuiInt associativityTCL_;
+  GuiDouble eps_matTCL_;
+  
   ForwardIPM(GuiContext* ctx);
 
   virtual void execute();
 
+  virtual void tcl_command(GuiArgs&, void*);
+
 private:
 
   bool write_par_file(string filename);
+  bool  write_pebbles_file(string filename);
 };
 
 
 DECLARE_MAKER(ForwardIPM)
 
 ForwardIPM::ForwardIPM(GuiContext* ctx)
-  : Module("ForwardIPM", ctx, Filter, "NeuroFEM", "BioPSE")
+  : Module("ForwardIPM", ctx, Filter, "NeuroFEM", "BioPSE"),
+    associativityTCL_(ctx->subVar("associativityTCL")),
+    eps_matTCL_(ctx->subVar("eps_matTCL"))
 {
 }
 
@@ -452,13 +461,28 @@ write_elc_file(ProgressReporter *pr, FieldHandle fld, const char *filename)
   while(niter != niter_end) {
     Point p;
     mesh->get_center(p, *niter);
-    fprintf(f, "%f %f %f\n", p.x(), p.y(), p.z());
+    fprintf(f, "%9.3f %9.3f %9.3f\n", p.x(), p.y(), p.z());
     ++niter;
   }     
 
   fprintf(f,"Labels\n");
-  fprintf(f,"FPz	Cz	Oz	Pz	Fz	T10	T7	C3	T8	C4	F3	F4	Fp1	Fp2	F7	F8	O1	O2	P3	P4	P7	P8	FT7	FT8	FC3	FC4	CP5	CP6	AFz	AF3	AF4	AF7	AF8	F5	F6	F9	F10	FC5	FC6	FT9	FT10	C5	C6	CPz	CP3	TP7	TP9	CP4	TP8	TP10	P5	P9	P6	P10	POz	PO3	PO7	PO4	PO8	FCz	F1	F2	FC1	FC2	C1	C2	CP1	CP2	P1	P2	T9	\n");
-
+  /*
+  for (unsigned int c=0; c<nsize; c++){
+    fprintf(f,"E%d ",c+1);
+  }
+  */
+  // for testing model
+  /*  fprintf(f,"FPz	Cz	Oz	Pz	Fz	T10	T7	C3	T8	C4	F3	F4	Fp1	Fp2	F7	F8	O1	O2	P3	P4	P7	P8	FT7	FT8	FC3	FC4	CP5	CP6	AFz	AF3	AF4	AF7	AF8	F5	F6	F9	F10	FC5	FC6	FT9	FT10	C5	C6	CPz	CP3	TP7	TP9	CP4	TP8	TP10	P5	P9	P6	P10	POz	PO3	PO7	PO4	PO8	FCz	F1	F2	FC1	FC2	C1	C2	CP1	CP2	P1	P2	T9	\n");
+   */
+  
+  // Only for epilepsy model
+ fprintf(f, "CZ	A1	A2	A3	A4	A5	A6	A7	A8	A9	A10	A11	A12\n");
+  fprintf(f, "A13	A14	A15	A16	A17	A18	A19	A20	A21	A22	A23	A24	B1\n");
+  fprintf(f, "B2	B3	B4	B5	B6	B7	B8	B9	B10	B11	B12	B13	B14\n");
+  fprintf(f, "B15	B16	B17	B18	B19	B20	B21	B22	B23	B24	B25	B26	B27\n");
+  fprintf(f, "B28	B29	B30	B31	B32	B35	B36	B37	B38	B39	B40	B41	B42\n");
+  fprintf(f, " B43	B44	B45	B46	B47	B48	STR1	STR2	STR3	STR4	STR5	STR6	STR7	STR8\n");
+ 
   fclose(f);
   
   return true;
@@ -612,10 +636,10 @@ ForwardIPM::write_par_file(string filename)
   fprintf(f, "\n");
   fprintf(f, "[ReferenceData]\n");
   fprintf(f, "#Number of channels\n");
-  fprintf(f, "numchan= 71\n");
-  fprintf(f, "numsamples=  1\n");
+  fprintf(f, "numchan= 1\n");
+  fprintf(f, "numsamples= 1\n");
   fprintf(f, "startsample= 0\n");
-  fprintf(f, "stopsample=  0\n");
+  fprintf(f, "stopsample=  1\n");
   fprintf(f, "\n");
   fprintf(f, "[RegularizationTikhonov]\n");
   fprintf(f, "# estimated signal to noise ratio\n");
@@ -646,7 +670,7 @@ ForwardIPM::write_par_file(string filename)
   fprintf(f, "# SOLVER (1:Jakobi-CG, 2:IC(0)-CG, 3:AMG-CG, 4:PILUTS(ILDLT)-CG) \n");
   fprintf(f, "solvermethod= 3\n");
   fprintf(f, "# use or use not lead field basis approach\n");
-  fprintf(f, "associativity= 0\n");
+  fprintf(f, "associativity= %d\n", (unsigned int) associativityTCL_.get());
   fprintf(f, "# NeuroFEM Solver\n");
   fprintf(f, "# parameter file for Pebbles solver \n");
   fprintf(f, "pebbles= pebbles.inp\n");
@@ -760,7 +784,7 @@ ForwardIPM::write_par_file(string filename)
 
 
 bool
-write_pebbles_file(string filename)
+ForwardIPM::write_pebbles_file(string filename)
 {
   FILE *f = fopen(filename.c_str(), "wt");
   if (f == NULL)
@@ -776,7 +800,7 @@ write_pebbles_file(string filename)
   fprintf(f,"EPS_INT\n");
   fprintf(f,"1e-6\n");
   fprintf(f,"EPS_MAT\n");
-  fprintf(f,"1e-2\n");
+  fprintf(f,"%.1e\n", (double) eps_matTCL_.get());
   fprintf(f,"ALPHA\n");
   fprintf(f,"0.01\n");
   fprintf(f,"BETA\n");
@@ -982,5 +1006,11 @@ ForwardIPM::execute()
   }
 }
 
+
+void
+ForwardIPM::tcl_command(GuiArgs& args, void* userdata)
+{
+  Module::tcl_command(args, userdata);
+}
 
 } // End namespace SCIRun
