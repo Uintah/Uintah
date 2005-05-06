@@ -60,20 +60,49 @@ namespace SCIRun {
 
 class InverseIPM : public Module {
 public:
+  GuiInt numchanTCL_;
+  GuiInt numsamplesTCL_;
+  GuiInt startsampleTCL_;
+  GuiInt stopsampleTCL_;
+  GuiInt associativityTCL_;
+  GuiDouble posxTCL_;
+  GuiDouble posyTCL_;
+  GuiDouble poszTCL_;
+  GuiDouble dirxTCL_;
+  GuiDouble diryTCL_;
+  GuiDouble dirzTCL_;
+  GuiDouble eps_matTCL_;
+
+  
   InverseIPM(GuiContext* ctx);
 
   virtual void execute();
 
+  virtual void tcl_command(GuiArgs&, void*);
+
 private:
 
   bool write_par_file(string filename);
+  bool write_pebbles_file(string filename);
 };
 
 
 DECLARE_MAKER(InverseIPM)
 
 InverseIPM::InverseIPM(GuiContext* ctx)
-  : Module("InverseIPM", ctx, Filter, "NeuroFEM", "BioPSE")
+  : Module("InverseIPM", ctx, Filter, "NeuroFEM", "BioPSE"),
+    numchanTCL_(ctx->subVar("numchanTCL")),
+    numsamplesTCL_(ctx->subVar("numsamplesTCL")),
+    startsampleTCL_(ctx->subVar("startsampleTCL")),
+    stopsampleTCL_(ctx->subVar("stopsampleTCL")),
+    associativityTCL_(ctx->subVar("associativityTCL")),
+    posxTCL_(ctx->subVar("posxTCL")),
+    posyTCL_(ctx->subVar("posyTCL")),
+    poszTCL_(ctx->subVar("poszTCL")),
+    dirxTCL_(ctx->subVar("dirxTCL")),
+    diryTCL_(ctx->subVar("diryTCL")),
+    dirzTCL_(ctx->subVar("dirzTCL")),
+    eps_matTCL_(ctx->subVar("eps_matTCL"))
 {
 }
 
@@ -128,8 +157,25 @@ write_potential_file(ProgressReporter *pr, MatrixHandle mat,
     }
     fprintf(f, "\n");
   }
+
   fprintf(f,"Labels\n");
-  fprintf(f,"FPz	Cz	Oz	Pz	Fz	T10	T7	C3	T8	C4	F3	F4	Fp1	Fp2	F7	F8	O1	O2	P3	P4	P7	P8	FT7	FT8	FC3	FC4	CP5	CP6	AFz	AF3	AF4	AF7	AF8	F5	F6	F9	F10	FC5	FC6	FT9	FT10	C5	C6	CPz	CP3	TP7	TP9	CP4	TP8	TP10	P5	P9	P6	P10	POz	PO3	PO7	PO4	PO8	FCz	F1	F2	FC1	FC2	C1	C2	CP1	CP2	P1	P2	T9	 \n");
+  /*
+  for (int c=0; c<nc; c++){
+    fprintf(f,"E%d ",c+1);
+  }
+  */
+  // for testing model
+  /*  fprintf(f,"FPz	Cz	Oz	Pz	Fz	T10	T7	C3	T8	C4	F3	F4	Fp1	Fp2	F7	F8	O1	O2	P3	P4	P7	P8	FT7	FT8	FC3	FC4	CP5	CP6	AFz	AF3	AF4	AF7	AF8	F5	F6	F9	F10	FC5	FC6	FT9	FT10	C5	C6	CPz	CP3	TP7	TP9	CP4	TP8	TP10	P5	P9	P6	P10	POz	PO3	PO7	PO4	PO8	FCz	F1	F2	FC1	FC2	C1	C2	CP1	CP2	P1	P2	T9	 \n");
+   */
+
+  // Only for epilepsy model
+  fprintf(f, "CZ	A1	A2	A3	A4	A5	A6	A7	A8	A9	A10	A11	A12\n");
+  fprintf(f, "A13	A14	A15	A16	A17	A18	A19	A20	A21	A22	A23	A24	B1\n");
+  fprintf(f, "B2	B3	B4	B5	B6	B7	B8	B9	B10	B11	B12	B13	B14\n");
+  fprintf(f, "B15	B16	B17	B18	B19	B20	B21	B22	B23	B24	B25	B26	B27\n");
+  fprintf(f, "B28	B29	B30	B31	B32	B35	B36	B37	B38	B39	B40	B41	B42\n");
+  fprintf(f, " B43	B44	B45	B46	B47	B48	STR1	STR2	STR3	STR4	STR5	STR6	STR7	STR8\n");
+  
   
   fclose(f);
 
@@ -198,9 +244,15 @@ send_result_file(MatrixOPort *positions_port, MatrixOPort *moments_port,
     matstream >> tmp;
     double mag;
     matstream >> mag;
-    (*dm_vec)[r][0] = mag*mx;
+    // just for moment only
+    (*dm_vec)[r][0] = mx;
+    (*dm_vec)[r][1] = my;
+    (*dm_vec)[r][2] = mz;
+
+    // for vector moment with magnitude
+    /*    (*dm_vec)[r][0] = mag*mx;
     (*dm_vec)[r][1] = mag*my;
-    (*dm_vec)[r][2] = mag*mz; 
+    (*dm_vec)[r][2] = mag*mz; */
   }
 
   MatrixHandle vec_handle(dm_vec);
@@ -211,7 +263,6 @@ send_result_file(MatrixOPort *positions_port, MatrixOPort *moments_port,
   return true;
   
 }
-
 
 bool
 InverseIPM::write_par_file(string filename)
@@ -228,10 +279,10 @@ InverseIPM::write_par_file(string filename)
   fprintf(f, "\n");
   fprintf(f, "[ReferenceData]\n");
   fprintf(f, "#Number of channels\n");
-  fprintf(f, "numchan= 71\n");
-  fprintf(f, "numsamples=  1\n");
-  fprintf(f, "startsample= 0\n");
-  fprintf(f, "stopsample=  0\n");
+  fprintf(f, "numchan= %d\n", (unsigned int) numchanTCL_.get());
+  fprintf(f, "numsamples= %d\n", (unsigned int) numsamplesTCL_.get());
+  fprintf(f, "startsample= %d\n", (unsigned int) startsampleTCL_.get());
+  fprintf(f, "stopsample=  %d\n", (unsigned int) stopsampleTCL_.get());
   fprintf(f, "\n");
   fprintf(f, "[RegularizationTikhonov]\n");
   fprintf(f, "# estimated signal to noise ratio\n");
@@ -262,7 +313,7 @@ InverseIPM::write_par_file(string filename)
   fprintf(f, "# SOLVER (1:Jakobi-CG, 2:IC(0)-CG, 3:AMG-CG, 4:PILUTS(ILDLT)-CG) \n");
   fprintf(f, "solvermethod= 3\n");
   fprintf(f, "# use or use not lead field basis approach\n");
-  fprintf(f, "associativity= 1\n");
+  fprintf(f, "associativity= %d\n", (unsigned int) associativityTCL_.get());
   fprintf(f, "# NeuroFEM Solver\n");
   fprintf(f, "# parameter file for Pebbles solver \n");
   fprintf(f, "pebbles= pebbles.inp\n");
@@ -305,10 +356,10 @@ InverseIPM::write_par_file(string filename)
   fprintf(f, "nummaterials= 7\n");
   fprintf(f, "# Conductivities of fem head model\n");
   fprintf(f, "\n");
-  fprintf(f, "#define EXTRA           3       // tissue codes (see D1.2b)\n");
-  fprintf(f, "#define SKULL           1\n");
-  fprintf(f, "#define CSF             8\n");
-  fprintf(f, "#define GREY_MATTER     7\n");
+  fprintf(f, "#define EXTRA           1       // tissue codes (see D1.2b)\n");
+  fprintf(f, "#define SKULL           2\n");
+  fprintf(f, "#define CSF             3\n");
+  fprintf(f, "#define GREY_MATTER     4\n");
   fprintf(f, "#define WHITE_MATTER    6\n");
   fprintf(f, "\n");
   fprintf(f, "#skin_cond       0.33;\n");
@@ -319,42 +370,32 @@ InverseIPM::write_par_file(string filename)
   fprintf(f, "\n");
   fprintf(f, "# The first value corresponds to the electrode which will be added to the mesh \n");
   fprintf(f, "conductivities= \n");
-  fprintf(f, "1.0 0.33 0.0042 0.33 0.33 0.33 0.033\n");
+  fprintf(f, "1.0 0.33 0.0042 1.79 0.33 1.0 0.33 \n");
   fprintf(f, "# Labels in the head model corresponding to the different tissues\n");
   fprintf(f, "# The first value corresponds to the electrode which will be added to the mesh \n");
   fprintf(f, "labels=\n");
-  fprintf(f, "1000 3 1 8 7 6 9\n");
+  fprintf(f, "1000 1 2 3 4 5 4\n");
   fprintf(f, "\n");
   fprintf(f, "# Tissue labels in the head model for which the tensor valued coductivity \n");
   fprintf(f, "# should be used if available\n");
   fprintf(f, "tensorlabels=\n");
   fprintf(f, "#0 0 1 0 0 1 0\n");
-  fprintf(f, "0 0 1 0 0 1 0\n");
+  fprintf(f, "0 0 0 0 0 0 0\n");
   fprintf(f, "\n");
   fprintf(f, "# -1- for sorted conductivities\n");
   fprintf(f, "sortedconductivities= 0\n");
+  fprintf(f,  "# -1- for anisotropic conductivities\n");
+  fprintf(f, "anisotropicconductivities= 0\n");
   fprintf(f, "\n");
   fprintf(f, "[InitialGuess]\n");
   fprintf(f, "numinitialguesspos= 1\n");
-  fprintf(f, "posx=\n");
-  fprintf(f, "#0.044175999 \n");
-  fprintf(f, "0.097\n");
-  fprintf(f, "posy=\n");
-  fprintf(f, "#0.077307999\n");
-  fprintf(f, "0.154\n");
-  fprintf(f, "posz=\n");
-  fprintf(f, "#0.135539993\n");
-  fprintf(f, "0.128\n");
+  fprintf(f, "posx=\n%5.3f\n", (double) posxTCL_.get());
+  fprintf(f, "posy=\n%5.3f\n", (double) posyTCL_.get());
+  fprintf(f, "posz=\n%5.3f\n", (double) poszTCL_.get());
   fprintf(f, "numinitialguessdir= 1\n");
-  fprintf(f, "dirx=\n");
-  fprintf(f, "#0.0\n");
-  fprintf(f, "1.0  \n");
-  fprintf(f, "diry=\n");
-  fprintf(f, "#1.0\n");
-  fprintf(f, "0.0\n");
-  fprintf(f, "dirz=\n");
-  fprintf(f, "#1.0\n");
-  fprintf(f, "0.0 \n");
+  fprintf(f, "dirx=\n%5.3f\n", (double) dirxTCL_.get());
+  fprintf(f, "diry=\n%5.3f\n", (double) diryTCL_.get());
+  fprintf(f, "dirz=\n%5.3f\n", (double) dirzTCL_.get());
   fprintf(f, "\n");
   fprintf(f, "[FileFormats]   \n");
   fprintf(f, "#ReferenceData file: 1= Vista, 2= ASA, 3= ASCII\n");
@@ -372,6 +413,71 @@ InverseIPM::write_par_file(string filename)
   
   fclose(f);
 
+  return true;
+}
+
+bool
+InverseIPM::write_pebbles_file(string filename)
+{
+  FILE *f = fopen(filename.c_str(), "wt");
+  if (f == NULL)
+  {
+    cerr << "Unable to open file"<< filename <<" for writing."<<"\n";
+    return false;
+  }
+
+  fprintf(f,"EPS_PCCG\n");
+  fprintf(f,"1e-8\n");
+  fprintf(f,"EPS_ITER\n");
+  fprintf(f,"1e-8\n");
+  fprintf(f,"EPS_INT\n");
+  fprintf(f,"1e-6\n");
+  fprintf(f,"EPS_MAT\n");
+  fprintf(f,"%.1e\n", (double) eps_matTCL_.get());
+  fprintf(f,"ALPHA\n");
+  fprintf(f,"0.01\n");
+  fprintf(f,"BETA\n");
+  fprintf(f,"0.0\n");
+  fprintf(f,"SOLVER:_AMG=1,_Jacobi=2,_ILU=3\n");
+  fprintf(f,"1\n");
+  fprintf(f,"SOLUTION_STRATEGY:_ITER=1,_PCCG=2,_BiCGStab=3\n");
+  fprintf(f,"2\n");
+  fprintf(f,"PRECOND_STEP\n");
+  fprintf(f,"1\n");
+  fprintf(f,"COARSE_SYSTEM\n");
+  fprintf(f,"1000\n");
+  fprintf(f,"COARSE_SOLVER:_LR=1,_LL=2,_DIAG=3,_NAG=4\n");
+  fprintf(f,"2\n");
+  fprintf(f,"MAX_NUMBER_ITER\n");
+  fprintf(f,"200\n");
+  fprintf(f,"MAX_NUMBER_SIZE\n");
+  fprintf(f,"2000000\n");
+  fprintf(f,"MAX_NEIGHBOUR\n");
+  fprintf(f,"100\n");
+  fprintf(f,"COARSENING:_strong=1,_easy=2,_vmb=3\n");
+  fprintf(f,"1\n");
+  fprintf(f,"INTERPOLATION:_sophisticated=1,_easy=2,_foolproof=3\n");
+  fprintf(f,"3\n");
+  fprintf(f,"NORM:_energy=1,_L2=2,_Max=3\n");
+  fprintf(f,"1\n");
+  fprintf(f,"CYCLE:_V=1,_W=2,_VV=3\n");
+  fprintf(f,"1\n");
+  fprintf(f,"SMOOTHING_TYPE\n");
+  fprintf(f,"1\n");
+  fprintf(f,"SMOOTHING_STEP\n");
+  fprintf(f,"1\n");
+  fprintf(f,"ELEMENT_PRECOND\n");
+  fprintf(f,"0\n");
+  fprintf(f,"ELEMENT_KAPPA\n");
+  fprintf(f,"10\n");
+  fprintf(f,"MATRIX_DIFF\n");
+  fprintf(f,"1e-1\n");
+  fprintf(f,"SHOW_DISPLAY:_nothing=0,_medium=1,_full=2\n");
+  fprintf(f,"1\n");
+  fprintf(f,"CONV_FACTOR\n");
+  fprintf(f,"0\n");
+
+  fclose(f);
   return true;
 }
 
@@ -521,5 +627,11 @@ InverseIPM::execute()
   }
 }
 
+
+void
+InverseIPM::tcl_command(GuiArgs& args, void* userdata)
+{
+  Module::tcl_command(args, userdata);
+}
 
 } // End namespace SCIRun
