@@ -143,13 +143,11 @@
 		Nrrd input port 3
 		</description>	
       </port>
-<!--
       <port>
         <name>filename</name>
         <datatype>SCIRun::Nrrd</datatype>
-        <description>filename store as a char array in a nrrd</description>
-      </port>
--->        
+        <description>filename stored as a char array in a nrrd</description>
+      </port>      
 	</inputs>
     <outputs>
     </outputs>

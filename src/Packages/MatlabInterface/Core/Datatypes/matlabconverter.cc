@@ -278,6 +278,59 @@ void matlabconverter::sciPropertyTOmlProperty(PropertyManager *handle,matlabarra
   ma.setfield(0,"property",proparray);
 }
 
+long matlabconverter::sciColorMapCompatible(matlabarray &ma, string &infotext, ProgressReporter *pr)
+{
+  infotext = "";
+  if (ma.isempty()) return(0);
+  if (ma.getnumelements() == 0) return(0);
+
+  matlabarray::mlclass mclass;
+  mclass = ma.getclass();
+        
+  switch (mclass) {
+  case matlabarray::mlDENSE:
+  {
+      // check whether the data is of a proper format
+        
+      vector<long> dims;        
+      dims = ma.getdims();
+      if (dims.size() > 2)
+      {   
+        postmsg(pr,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun ColorMap (dimensions > 2)"));
+        return(0); // no multidimensional arrays supported yet in the SCIRun Matrix classes
+      }
+      if (ma.getnumelements() == 0)
+      {   
+        postmsg(pr,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun ColorMap (0x0 matrix)"));
+        return(0); // no multidimensional arrays supported yet in the SCIRun Matrix classes
+      }      
+            
+      if ((dims[0]!=3)&&(dims[0]!=4)&&(dims[1]!=3)&&(dims[1]!=4))
+      {   
+        postmsg(pr,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun ColorMap (improper dimensions)"));
+        return(0); // no multidimensional arrays supported yet in the SCIRun Matrix classes
+      }      
+      std::ostringstream oss;
+      oss << dims[0];
+      infotext = ma.getname() + "  COLORMAP [" + oss.str() + " COLORS]";      
+      return(2);                        
+    }           
+  default:
+    break;
+  }
+  postmsg(pr,string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun ColorMap (matrix is not a dense array)"));
+  return (0);
+}
+                
+
+
+
+
+
+
+
+
+
 // The next function checks whether
 // the program knows how to convert 
 // the matlabarray into a scirun matrix
@@ -396,6 +449,42 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, string &infotext, Pro
   return (0);
 }
                 
+
+
+void matlabconverter::mlArrayTOsciColorMap(matlabarray &ma,ColorMapHandle &handle, ProgressReporter *pr)
+{
+  int m,n;
+  m = static_cast<int>(ma.getm());
+  
+  if ((m!=4)&&(m!=3)) ma.transpose();
+  m = static_cast<int>(ma.getm());
+  n = static_cast<int>(ma.getn());  
+
+  std::vector<double> data;
+  ma.getnumericarray(data);
+
+  int q = 0;
+  float v = 0.0;
+  float step = 1.0;
+  float alpha = 1.0;
+  if(n>1) step = 1.0/static_cast<double>(n-1);
+  
+  std::vector<SCIRun::Color> rgb(n);
+  std::vector<float> rgbT(n);
+  std::vector<float> alph(n);
+  
+  for (int p=0;p<n;p++)
+  {
+    SCIRun::Color color(data[q++],data[q++],data[q++]);
+    rgb[p] = color;
+    if (m == 4) alpha = static_cast<float>(data[q++]);
+    rgbT[p] = v;
+    alph[p] = alpha;
+    v += step;
+  }
+  
+  handle = scinew SCIRun::ColorMap(rgb,rgbT,alph,rgbT,static_cast<unsigned int>(n));
+}
 
 
 
