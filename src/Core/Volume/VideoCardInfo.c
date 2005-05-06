@@ -438,6 +438,17 @@ int video_card_memory_size()
 }
 
 #elif __APPLE__
+#define __CARBONSOUND__    
+//                            <- I had to add the #define __CARBONSOUND__ 
+//                               line above because on my 10.3.9 Mac this 
+//                               directory is empty:
+//                               /System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/CarbonSound.framework/Versions/Current/Headers
+//                               I believe an Apple update from early 
+//                               May 2005 deleted those files for some
+//                               reason (and my guess is that this has
+//                               broken lots of other software as well).
+//                               Anyhow, with the #define hack above
+//                               everything compiles and runs again.  -DMW
 
 #include <AGL/agl.h>
 
