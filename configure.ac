@@ -1155,7 +1155,7 @@ case $host in
     if test "$GCC_VERSION" = "4.0"; then
        CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -Wno-long-double "
     else
-       CFLAGS="$CFLAGS $extra_cflags -fno_common -dynaic -Wno-long-double -fcoalesce-templates"
+       CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -Wno-long-double -fcoalesce-templates"
     fi   
     CXXFLAGS="$CXXFLAGS $CFLAGS"
 
