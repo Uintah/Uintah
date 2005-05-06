@@ -91,6 +91,7 @@
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Tensor.h>
+#include <Core/Geom/ColorMap.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/DynamicCompilation.h>
@@ -231,6 +232,11 @@
    void mlArrayTOsciBundle(matlabarray &mlmat, SCIRun::BundleHandle &scibundle, SCIRun::ProgressReporter* pr);
    void sciBundleTOmlArray(SCIRun::BundleHandle &scibundle, matlabarray &mlmat,SCIRun::ProgressReporter* pr);
 #endif
+
+    // Reading of Matlabn colormaps
+   long sciColorMapCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::ProgressReporter* pr);
+   void mlArrayTOsciColorMap(matlabarray &mlmat,SCIRun::ColorMapHandle &scinrrd, SCIRun::ProgressReporter* pr);
+
 
    // The reference status of the reader/compatible prs has been changed.
    // So I can change the contents without affecting the matrices at the input

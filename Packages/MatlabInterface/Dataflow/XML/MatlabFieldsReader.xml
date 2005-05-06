@@ -312,13 +312,11 @@
   </implementation>
   <io>
     <inputs lastportdynamic="no">
-<!--
       <port>
         <name>filename</name>
         <datatype>SCIRun::Nrrd</datatype>
         <description>filename store as a char array in a nrrd</description>
-      </port>
--->            
+      </port>          
     </inputs>
     <outputs>
       <port>

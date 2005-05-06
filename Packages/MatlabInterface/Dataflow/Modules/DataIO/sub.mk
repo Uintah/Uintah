@@ -44,6 +44,7 @@ SRCDIR   := Packages/MatlabInterface/Dataflow/Modules/DataIO
 SRCS     += \
 	$(SRCDIR)/Matlab.cc\
 	$(SRCDIR)/MatlabBundle.cc\
+	$(SRCDIR)/MatlabColorMapsReader.cc\
 	$(SRCDIR)/MatlabDataReader.cc\
 	$(SRCDIR)/MatlabDataWriter.cc\
 	$(SRCDIR)/MatlabFieldsReader.cc \

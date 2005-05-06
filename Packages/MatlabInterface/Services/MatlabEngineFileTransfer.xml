@@ -29,5 +29,6 @@
 
 <service name="matlabenginefiletransfer" class="FileTransfer" packageclass="SCIRun" version="1.0">
 <rcfile>matlabengine.rc</rcfile>
+<buffersize>30000</buffersize>
 </service>
 
