@@ -180,6 +180,7 @@ WARNING
      inline int timeRefinementRatio() const {
        return d_timeRefinementRatio;
      }
+     void setTimeRefinementRatio(int trr);
      inline int getIndex() const {
        return d_index;
      }
