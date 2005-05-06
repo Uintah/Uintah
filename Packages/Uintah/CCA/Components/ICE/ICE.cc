@@ -5,6 +5,7 @@
 #define _CPP_CMATH
 #endif
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
+#include <Packages/Uintah/CCA/Components/ICE/CustomBCs/C_BC_driver.h>
 #include <Packages/Uintah/CCA/Components/ICE/ConservationTest.h>
 #include <Packages/Uintah/CCA/Components/ICE/Diffusion.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
