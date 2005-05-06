@@ -3,8 +3,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Uintah/CCA/Components/ICE
 
-SRCS       += \
-       $(SRCDIR)/ICE.cc \
+SRCS       += $(SRCDIR)/ICE.cc \
        $(SRCDIR)/AMRICE.cc \
        $(SRCDIR)/ICERF.cc \
        $(SRCDIR)/ICEDebug.cc \
@@ -12,17 +11,14 @@ SRCS       += \
        $(SRCDIR)/Diffusion.cc \
        $(SRCDIR)/BoundaryCond.cc \
        $(SRCDIR)/GeometryObject2.cc \
-       $(SRCDIR)/LODI2.cc \
        $(SRCDIR)/Turbulence.cc \
        $(SRCDIR)/SmagorinskyModel.cc \
        $(SRCDIR)/DynamicModel.cc \
        $(SRCDIR)/TurbulenceFactory.cc \
        $(SRCDIR)/impICE.cc \
-       $(SRCDIR)/NG_NozzleBCs.cc \
-       $(SRCDIR)/microSlipBCs.cc \
        $(SRCDIR)/customInitialize.cc   
        
-SUBDIRS := $(SRCDIR)/EOS $(SRCDIR)/Advection
+SUBDIRS := $(SRCDIR)/EOS $(SRCDIR)/Advection $(SRCDIR)/CustomBCs
 
 include $(SCIRUN_SCRIPTS)/recurse.mk          
 
