@@ -235,20 +235,20 @@ Semaphore& Iterate::iterSem()
 //Note that if you add this callback at the beginning of a task
 //it is necessary to remove it at the end so it wont modify the static
 //semephore in the future when it is needed again.
-void Iterate::iter_callback(void *data)
+bool Iterate::iter_callback(void *data)
 {
 	iterSem().up();
+	return false;
 }
 
 std::string Iterate::returnValue = "OK";
 
 void Iterate::run()
-{
-	
+{	
 	JNIUtils::sem().down();
 	
 	string name;
-	
+
 	//get a pointer to the viewer if we need it and check to see if its valid
 	Viewer* viewer;
 	if(picPath != ""){
@@ -322,17 +322,15 @@ void Iterate::run()
 		//TODO worry about saving over existing images.  would be cool to prompt
 		// the user if they are going to save over an image that exists already
 		if(picPath != ""){
-			name = picPath + "image" + to_string(i) + ".ppm";
+			name = picPath + "image" + to_string(i) + "" + picFormat;
 
 			//when the viewer is done save the image
 			ViewerMessage *msg1 = scinew ViewerMessage
-			(MessageTypes::ViewWindowDumpImage,"::SCIRun_Render_Viewer_0-ViewWindow_0",name, "ppm","640","480");
+			(MessageTypes::ViewWindowDumpImage,"::SCIRun_Render_Viewer_0-ViewWindow_0",name, picFormat,"640","473");
 			viewer->mailbox.send(msg1); 
 
 			ViewerMessage *msg2 = scinew ViewerMessage("::SCIRun_Render_Viewer_0-ViewWindow_0");
 			viewer->mailbox.send(msg2);
-			
-			std::cout << "sending message: " << i << std::endl; 
 		}//else we do not try and save pictures
 		
 	}
