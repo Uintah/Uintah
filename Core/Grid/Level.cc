@@ -91,6 +91,13 @@ Level::~Level()
 
 }
 
+void Level::setTimeRefinementRatio(int trr)
+{
+  if (d_finalized)
+    throw InvalidGrid("Level must not be finalized to set the time refinement ratio");
+  d_timeRefinementRatio = trr;
+}
+
 void Level::setPatchDistributionHint(const IntVector& hint)
 {
    if(d_patchDistribution.x() == -1)

@@ -425,6 +425,7 @@ Grid* HierarchicalRegridder::CreateGrid(Grid* oldGrid, const ProblemSpecP& ups)
     }
 
     LevelP newLevel = newGrid->addLevel(anchor, spacing);
+    newLevel->setTimeRefinementRatio(d_timeRefinementRatio[levelIdx-1];
     newLevel->setExtraCells(extraCells);
 
     rdbg << "HierarchicalRegridder::regrid(): Setting extra cells to be: " << extraCells << endl;
@@ -605,6 +606,7 @@ void HierarchicalRegridder::GatherSubPatches(const GridP& oldGrid, SchedulerP& s
 
     }
     // loop over each patch's subpatches (these will be the patches on level+1)
+    IntVector periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
     for (unsigned j = 0; j < allSubpatches.size(); j++) {
       rdbg << "   Doing subpatches index " << j << endl;
       for (CellIterator iter(allSubpatches[j].get_rep()->low_, allSubpatches[j].get_rep()->high_); 
@@ -622,10 +624,18 @@ void HierarchicalRegridder::GatherSubPatches(const GridP& oldGrid, SchedulerP& s
             for (CellIterator inner(IntVector(-1,-1,-1)*range, range+IntVector(1,1,1)); !inner.done(); inner++) {
               // "dilate" each subpatch, adding it to the patches on the coarser level
               IntVector dilate_idx = (idx + *inner) / d_latticeRefinementRatio[i];
-              if ((dilate_idx.x() < 0 || dilate_idx.x() >= d_patchNum[i].x()) ||
-                  (dilate_idx.y() < 0 || dilate_idx.y() >= d_patchNum[i].y()) ||
-                  (dilate_idx.z() < 0 || dilate_idx.z() >= d_patchNum[i].z()))
+              // we need to wrap around for periodic boundaries
+              if (((dilate_idx.x() < 0 || dilate_idx.x() >= d_patchNum[i].x()) && !periodic.x()) ||
+                  ((dilate_idx.y() < 0 || dilate_idx.y() >= d_patchNum[i].y()) && !periodic.y()) ||
+                  ((dilate_idx.z() < 0 || dilate_idx.z() >= d_patchNum[i].z()) && !periodic.z()))
                 continue;
+                
+              // if it was periodic, get it in the proper range
+              for (int d = 0; d < 3; d++) {
+                while (dilate_idx[d] < 0) dilate_idx[d] += d_patchNum[i][d];
+                while (dilate_idx[d] >= d_patchNum[i][d]) dilate_idx[d] -= d_patchNum[i][d];
+              }
+
               rdbg << "  Adding dilated subpatch " << dilate_idx << endl;
               d_patches[i].insert(dilate_idx);
             }
@@ -673,6 +683,8 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid, const ProblemSpecP& ups)
     }
 
     LevelP newLevel = newGrid->addLevel(anchor, spacing);
+    if (levelIdx > 0)
+      newLevel->setTimeRefinementRatio(d_timeRefinementRatio[levelIdx-1]);
 
     newLevel->setExtraCells(extraCells);
 
