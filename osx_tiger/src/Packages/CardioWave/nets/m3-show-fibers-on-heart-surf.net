@@ -1,0 +1,362 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 19 22]
+set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 189 688]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 19 246]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 450 246]
+set m4 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 450 15]
+set m5 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 225 18]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 19 180]
+set m7 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 450 182]
+set m8 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 225 229]
+set m9 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 789 12]
+set m10 [addModuleAtPosition "SCIRun" "Fields" "SamplePlane" 713 109]
+set m11 [addModuleAtPosition "SCIRun" "Fields" "ClipField" 771 421]
+set m12 [addModuleAtPosition "SCIRun" "Fields" "Unstructure" 713 181]
+set m13 [addModuleAtPosition "SCIRun" "Fields" "TransformField" 713 262]
+set m14 [addModuleAtPosition "SCIRun" "Math" "BuildTransform" 856 182]
+set m15 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 789 500]
+set m16 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 966 285]
+set m17 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 966 489]
+set m18 [addModuleAtPosition "SCIRun" "Fields" "HexToTet" 789 351]
+set m19 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 568 503]
+set m20 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 568 588]
+set m21 [addModuleAtPosition "SCIRun" "Fields" "HexToTet" 964 111]
+
+addConnection $m2 0 $m1 0
+addConnection $m3 0 $m1 1
+addConnection $m7 0 $m3 0
+addConnection $m6 0 $m2 0
+addConnection $m0 0 $m6 0
+addConnection $m4 0 $m7 0
+addConnection $m5 0 $m8 0
+addConnection $m8 0 $m1 2
+addConnection $m5 0 $m6 1
+addConnection $m5 0 $m7 1
+addConnection $m9 0 $m10 0
+addConnection $m10 0 $m12 0
+addConnection $m12 0 $m13 0
+addConnection $m13 0 $m11 0
+addConnection $m14 0 $m13 1
+addConnection $m11 1 $m15 0
+addConnection $m15 0 $m1 3
+addConnection $m16 0 $m17 0
+addConnection $m17 0 $m1 4
+addConnection $m9 0 $m18 0
+addConnection $m18 0 $m11 1
+addConnection $m11 1 $m19 1
+addConnection $m0 0 $m19 0
+addConnection $m19 0 $m20 0
+addConnection $m20 0 $m1 5
+addConnection $m9 0 $m21 0
+addConnection $m21 0 $m16 0
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-filename {/usr/sci/data/Medical/mouse/activation/sr/64/mouse-heart-64-e1.lvv.fld}
+set $m1-notes {}
+set $m1-show_status {1}
+$m1 ui
+set $m1-ViewWindow_0-pos {}
+set $m1-ViewWindow_0-caxes {0}
+set $m1-ViewWindow_0-iaxes {-2147483647}
+set $m1-ViewWindow_0-view-eyep-x {         0.415942}
+set $m1-ViewWindow_0-view-eyep-y {           2.6161}
+set $m1-ViewWindow_0-view-eyep-z {         0.115534}
+set $m1-ViewWindow_0-view-lookat-x {         0.494972}
+set $m1-ViewWindow_0-view-lookat-y {         0.449111}
+set $m1-ViewWindow_0-view-lookat-z {         0.411358}
+set $m1-ViewWindow_0-view-up-x {        0.0142341}
+set $m1-ViewWindow_0-view-up-y {        -0.134736}
+set $m1-ViewWindow_0-view-up-z {        -0.990779}
+set $m1-ViewWindow_0-view-fov {          22.6208}
+set $m1-ViewWindow_0-view-eyep_offset-x {-1.79769e+308}
+set $m1-ViewWindow_0-view-eyep_offset-y {-1.79769e+308}
+set $m1-ViewWindow_0-view-eyep_offset-z {-1.79769e+308}
+set $m1-ViewWindow_0-bgcolor-r {0}
+set $m1-ViewWindow_0-bgcolor-g {0}
+set $m1-ViewWindow_0-bgcolor-b {0}
+set $m1-ViewWindow_0-shading {}
+set $m1-ViewWindow_0-do_stereo {0}
+set $m1-ViewWindow_0-ambient-scale {1.0}
+set $m1-ViewWindow_0-diffuse-scale {1.0}
+set $m1-ViewWindow_0-specular-scale {0.4}
+set $m1-ViewWindow_0-emission-scale {1.0}
+set $m1-ViewWindow_0-shininess-scale {1.0}
+set $m1-ViewWindow_0-sbase {1.00}
+set $m1-ViewWindow_0-sr {1}
+set $m1-ViewWindow_0-do_bawgl {0}
+set $m1-ViewWindow_0-drawimg {-2147483647}
+set $m1-ViewWindow_0-saveprefix {}
+set $m1-ViewWindow_0-resx {991}
+set $m1-ViewWindow_0-resy {853}
+set $m1-ViewWindow_0-aspect {1}
+set $m1-ViewWindow_0-aspect_ratio {}
+set $m2-notes {}
+set $m2-show_status {1}
+set $m2-nodes-on {0}
+set $m2-nodes-as-disks {1}
+set $m2-edges-on {0}
+set $m2-faces-on {0}
+set $m2-use-normals {0}
+set $m2-use-transparency {0}
+set $m2-vectors-on {1}
+set $m2-normalize-vectors {-2147483647}
+set $m2-has_vec_data {1}
+set $m2-bidirectional {1}
+set $m2-arrow-heads-on {0}
+set $m2-text-on {0}
+set $m2-text-use-default-color {1}
+set $m2-text-color-r {1.0}
+set $m2-text-color-g {1.0}
+set $m2-text-color-b {1.0}
+set $m2-def-color-r {0.91}
+set $m2-def-color-g {0.30}
+set $m2-def-color-b {0.30}
+set $m2-def-color-a {0.50}
+set $m2-node_display_type {Spheres}
+set $m2-edge_display_type {Lines}
+set $m2-active_tab {Vectors}
+set $m2-node_scale {0.005}
+set $m2-edge_scale {1.0}
+set $m2-vectors_scale {0.05}
+set $m2-show_progress {-2147483647}
+set $m2-interactive_mode {Interactive}
+set $m2-node-resolution {6}
+set $m2-edge-resolution {6}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m3-nodes-on {0}
+set $m3-nodes-as-disks {1}
+set $m3-edges-on {0}
+set $m3-faces-on {0}
+set $m3-use-normals {0}
+set $m3-use-transparency {0}
+set $m3-vectors-on {1}
+set $m3-normalize-vectors {0}
+set $m3-has_vec_data {1}
+set $m3-bidirectional {1}
+set $m3-arrow-heads-on {0}
+set $m3-text-on {0}
+set $m3-text-use-default-color {1}
+set $m3-text-color-r {1.0}
+set $m3-text-color-g {1.0}
+set $m3-text-color-b {1.0}
+set $m3-def-color-r {0.30}
+set $m3-def-color-g {0.90}
+set $m3-def-color-b {0.30}
+set $m3-def-color-a {0.50}
+set $m3-node_display_type {Spheres}
+set $m3-edge_display_type {Lines}
+set $m3-active_tab {Vectors}
+set $m3-node_scale {0.03}
+set $m3-edge_scale {0.03}
+set $m3-vectors_scale {0.05}
+set $m3-show_progress {-2147483647}
+set $m3-interactive_mode {Interactive}
+set $m3-node-resolution {6}
+set $m3-edge-resolution {6}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m4-filename {/usr/sci/data/Medical/mouse/activation/sr/64/mouse-heart-64-e2.lvv.fld}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m5-filename {/usr/sci/data/Medical/mouse/activation/sr/torso/mouse-heart-surf.ts.fld}
+set $m6-notes {}
+set $m6-show_status {1}
+set $m6-use_interp {1}
+set $m6-use_closest {1}
+set $m6-closeness_distance {1.0e15}
+set $m7-notes {}
+set $m7-show_status {1}
+set $m7-use_interp {1}
+set $m7-use_closest {1}
+set $m7-closeness_distance {1.0e15}
+set $m8-notes {}
+set $m8-show_status {1}
+set $m8-nodes-on {0}
+set $m8-nodes-as-disks {0}
+set $m8-edges-on {0}
+set $m8-faces-on {1}
+set $m8-use-normals {1}
+set $m8-use-transparency {0}
+set $m8-vectors-on {0}
+set $m8-normalize-vectors {}
+set $m8-has_vec_data {0}
+set $m8-bidirectional {0}
+set $m8-arrow-heads-on {1}
+set $m8-text-on {0}
+set $m8-text-use-default-color {1}
+set $m8-text-color-r {1.0}
+set $m8-text-color-g {1.0}
+set $m8-text-color-b {1.0}
+set $m8-def-color-r {0.30}
+set $m8-def-color-g {0.30}
+set $m8-def-color-b {0.30}
+set $m8-def-color-a {0.50}
+set $m8-node_display_type {Spheres}
+set $m8-edge_display_type {Lines}
+set $m8-active_tab {Faces}
+set $m8-node_scale {0.03}
+set $m8-edge_scale {0.015}
+set $m8-vectors_scale {0.30}
+set $m8-show_progress {}
+set $m8-interactive_mode {Interactive}
+set $m8-node-resolution {6}
+set $m8-edge-resolution {6}
+set $m9-notes {}
+set $m9-show_status {1}
+set $m9-filename {/usr/sci/data/Medical/mouse/activation/sr/64/mouse-heart-64-clipped-mono-reordered.hvt.fld}
+set $m10-notes {}
+set $m10-show_status {1}
+set $m10-sizex {32}
+set $m10-sizey {32}
+set $m10-axis {1}
+set $m10-padpercent {0}
+set $m10-data-at {Nodes}
+set $m11-notes {}
+set $m11-show_status {1}
+set $m11-clip-location {nodeone}
+set $m11-clipmode {replace}
+set $m11-autoexecute {0}
+set $m11-autoinvert {0}
+set $m11-execmode {}
+set $m12-notes {}
+set $m12-show_status {1}
+set $m13-notes {}
+set $m13-show_status {1}
+set $m14-notes {}
+set $m14-show_status {1}
+set $m14-rotate_x {0}
+set $m14-rotate_y {0}
+set $m14-rotate_z {1.00}
+set $m14-rotate_theta {0}
+set $m14-translate_x {0.0}
+set $m14-translate_y {0.196}
+set $m14-translate_z {0.0}
+set $m14-scale_uniform {0}
+set $m14-scale_x {0}
+set $m14-scale_y {0}
+set $m14-scale_z {0}
+set $m14-shear_plane_a {0}
+set $m14-shear_plane_b {0}
+set $m14-shear_plane_c {1.00}
+set $m14-shear_plane_d {0.0}
+set $m14-widget_resizable {1}
+set $m14-permute_x {1}
+set $m14-permute_y {2}
+set $m14-permute_z {3}
+set $m14-pre_transform {1}
+set $m14-which_transform {translate}
+set $m14-widget_scale {1.00}
+set $m15-notes {}
+set $m15-show_status {1}
+set $m15-nodes-on {0}
+set $m15-nodes-as-disks {0}
+set $m15-edges-on {0}
+set $m15-faces-on {1}
+set $m15-use-normals {0}
+set $m15-use-transparency {0}
+set $m15-vectors-on {0}
+set $m15-normalize-vectors {}
+set $m15-has_vec_data {0}
+set $m15-bidirectional {0}
+set $m15-arrow-heads-on {1}
+set $m15-text-on {0}
+set $m15-text-use-default-color {1}
+set $m15-text-color-r {1.0}
+set $m15-text-color-g {1.0}
+set $m15-text-color-b {1.0}
+set $m15-def-color-r {0.17}
+set $m15-def-color-g {0.17}
+set $m15-def-color-b {0.17}
+set $m15-def-color-a {0.50}
+set $m15-node_display_type {Spheres}
+set $m15-edge_display_type {Lines}
+set $m15-active_tab {Faces}
+set $m15-node_scale {0.03}
+set $m15-edge_scale {0.015}
+set $m15-vectors_scale {0.30}
+set $m15-show_progress {}
+set $m15-interactive_mode {Interactive}
+set $m15-node-resolution {6}
+set $m15-edge-resolution {6}
+set $m16-notes {}
+set $m16-show_status {1}
+set $m17-notes {}
+set $m17-show_status {1}
+set $m17-nodes-on {0}
+set $m17-nodes-as-disks {0}
+set $m17-edges-on {0}
+set $m17-faces-on {1}
+set $m17-use-normals {0}
+set $m17-use-transparency {0}
+set $m17-vectors-on {0}
+set $m17-normalize-vectors {}
+set $m17-has_vec_data {0}
+set $m17-bidirectional {0}
+set $m17-arrow-heads-on {1}
+set $m17-text-on {0}
+set $m17-text-use-default-color {1}
+set $m17-text-color-r {1.0}
+set $m17-text-color-g {1.0}
+set $m17-text-color-b {1.0}
+set $m17-def-color-r {0.5}
+set $m17-def-color-g {0.5}
+set $m17-def-color-b {0.5}
+set $m17-def-color-a {0.5}
+set $m17-node_display_type {Spheres}
+set $m17-edge_display_type {Lines}
+set $m17-active_tab {Faces}
+set $m17-node_scale {0.03}
+set $m17-edge_scale {0.015}
+set $m17-vectors_scale {0.30}
+set $m17-show_progress {}
+set $m17-interactive_mode {Interactive}
+set $m17-node-resolution {6}
+set $m17-edge-resolution {6}
+set $m18-notes {}
+set $m18-show_status {1}
+set $m19-notes {}
+set $m19-show_status {1}
+set $m19-use_interp {1}
+set $m19-use_closest {1}
+set $m19-closeness_distance {1.0e15}
+set $m20-notes {}
+set $m20-show_status {1}
+set $m20-nodes-on {0}
+set $m20-nodes-as-disks {1}
+set $m20-edges-on {0}
+set $m20-faces-on {0}
+set $m20-use-normals {0}
+set $m20-use-transparency {0}
+set $m20-vectors-on {1}
+set $m20-normalize-vectors {0}
+set $m20-has_vec_data {1}
+set $m20-bidirectional {1}
+set $m20-arrow-heads-on {0}
+set $m20-text-on {0}
+set $m20-text-use-default-color {1}
+set $m20-text-color-r {1.0}
+set $m20-text-color-g {1.0}
+set $m20-text-color-b {1.0}
+set $m20-def-color-r {0.87}
+set $m20-def-color-g {0.24}
+set $m20-def-color-b {0.24}
+set $m20-def-color-a {0.50}
+set $m20-node_display_type {Spheres}
+set $m20-edge_display_type {Lines}
+set $m20-active_tab {Vectors}
+set $m20-node_scale {0.03}
+set $m20-edge_scale {0.015}
+set $m20-vectors_scale {0.05}
+set $m20-show_progress {}
+set $m20-interactive_mode {Interactive}
+set $m20-node-resolution {6}
+set $m20-edge-resolution {6}
+set $m21-notes {}
+set $m21-show_status {1}
+
+::netedit scheduleok

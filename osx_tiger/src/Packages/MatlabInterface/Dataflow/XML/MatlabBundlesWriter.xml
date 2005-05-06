@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="../../../../Dataflow/XML/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you mays not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<component name="MatlabBundlesWriter" category="DataIO">
+  <overview>
+    <authors>
+	<author>Jeroen Stinstra</author>
+    </authors>
+	<summary> 
+	The MatlabBundlesWriter Module saves a SCIRun NRRD object into a MATLAB .mat file.
+	</summary>
+    <description>
+	<section>
+	<title>Module Description</title>
+	<p>
+	The MatlabBundlesWriter module exports SCIRun Bundle objects into a MATLAB compatible .mat file. Currently this
+	module supports the fileformat of MATLAB version 5 and higher. The module has multiple input ports that can
+	be used to store multiple MATLAB arrays in one file.
+	</p>
+	
+	<p> Setting up the GUI: </p>
+	
+	<orderedlist>
+		<listitem>
+		Select a filename for the MATLAB file that needs to be created. You can use the BROWSE button to select an
+		existing file.
+		</listitem>
+		<listitem>
+		Setup the format of each matrix and change the names of the matrices to the ones you want to use in MATLAB.
+		</listitem>
+		<listitem>
+		Execute the module and the file will be written.
+		</listitem>
+	</orderedlist>
+	</section>
+	
+	<section>
+	<title>See Also </title>
+	<p>
+	<modref package="MatlabInterface" name="Matlab" />,	
+	<modref package="MatlabInterface" name="MatlabBundelsReader" />,	
+	<modref package="MatlabInterface" name="MatlabBundlesWriter" />,	
+	<modref package="MatlabInterface" name="MatlabDataReader" />,	
+	<modref package="MatlabInterface" name="MatlabDataWriter" />,	
+	<modref package="MatlabInterface" name="MatlabFieldsReader" />,
+	<modref package="MatlabInterface" name="MatlabFieldsWriter" />,
+	<modref package="MatlabInterface" name="MatlabMatricesReader" />,
+	<modref package="MatlabInterface" name="MatlabMatricesReader" />,
+	<modref package="MatlabInterface" name="MatlabNrrdsWriter" />,
+	<modref package="MatlabInterface" name="MatlabNrrdsReader" />	
+	
+	</p>
+	</section>	
+	
+	
+	</description>   
+  
+  
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Bundle1</name>
+		<datatype>SCIRun::Bundle</datatype>
+		<description>
+		Bundle input port 1
+		</description>	
+      </port>
+	  <port>
+        <name>Bundle2</name>
+		<datatype>SCIRun::Bundle</datatype>
+		<description>
+		Bundle input port 2
+		</description>	
+      </port>
+	  <port>
+        <name>Bundle3</name>
+		<datatype>SCIRun::Bundle</datatype>
+		<description>
+		Bundle input port 3
+		</description>	
+      </port>
+	  <port>
+        <name>Bundle4</name>
+		<datatype>SCIRun::Bundle</datatype>
+		<description>
+		Bundle input port 4
+		</description>			
+      </port>
+	  <port>
+        <name>Bundle5</name>
+		<datatype>SCIRun::Bundle</datatype>
+		<description>
+		Bundle input port 5
+		</description>	
+      </port>
+	  <port>
+        <name>Bundle6</name>
+		<datatype>SCIRun::Bundle</datatype>
+		<description>
+		Bundle input port 6
+		</description>	
+      </port>
+<!--
+      <port>
+        <name>filename</name>
+        <datatype>SCIRun::Nrrd</datatype>
+        <description>filename store as a char array in a nrrd</description>
+      </port>
+-->        
+	</inputs>
+    <outputs>
+    </outputs>
+  </io>
+ 
+  <gui>
+   <parameter>
+    <widget> Entry </widget>
+	<label> .mat file </label>
+	<description> The name of the MATLAB file </description>
+	</parameter>
+
+    <parameter>
+    <widget> Button </widget>
+	<label> Browse </label>
+	<description> Open a filesectionbox and choose a MATLAB file </description>
+	</parameter>
+	
+	<parameter>
+    <widget> Entry </widget>
+	<label> Port N </label>
+	<description> 
+	Enter the name of the MATLAB matrix here. When the matrix is loaded
+	into MATLAB it will have this name.
+	</description>
+	</parameter>
+	
+  </gui>
+
+  <testing>
+  </testing>
+</component>

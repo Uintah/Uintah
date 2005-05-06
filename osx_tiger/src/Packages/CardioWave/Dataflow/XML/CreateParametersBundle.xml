@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="CreateParametersBundle" category="Tools">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+    </inputs>
+    <outputs>
+      <port>
+        <name>Parameters</name>
+        <datatype>SCIRun::Bundle</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

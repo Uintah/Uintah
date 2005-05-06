@@ -1,0 +1,35 @@
+/*!
+
+\mainpage CCA Software at SCI
+
+\htmlonly
+<center>
+<table border="0" width="500">
+ <tr>
+ <td align="center"> <img src="images/SCI_logo_sm.gif">
+ <td align="center"> <img src="images/cca-logo-trans-180.gif"> </td>
+ </tr>
+</table>
+</center>
+\endhtmlonly
+
+\section intro The SCIRun2 Framework and Experimental Components
+
+Here is the introduction and overview about what CCA stuff goes on at SCI
+
+\section howto How to Use this Documentation
+
+Here is a little blurb describing what can be found in this documentation
+and how to navigate the pages.
+
+\section getting Started Getting Started
+\li \ref building 
+\li \ref running
+\li \ref gui 
+\li \ref nightly
+
+\section contact Contact Information
+
+
+*/
+

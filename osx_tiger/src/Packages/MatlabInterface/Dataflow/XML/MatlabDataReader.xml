@@ -1,0 +1,486 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="../../../../Dataflow/XML/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+<component name="MatlabDataReader" category="DataIO">
+  <overview>
+    <authors>
+	<author> Jeroen Stinstra </author>
+    </authors>
+	
+	
+	<summary> 
+	The MatlabDataReader module reads SCIRun fields, SCIRun Matrices, and SCIRun Nrrds from a MATLAB file. The module requires that the data
+	in the MATLAB file is formatted according to the guidelines described below.   
+	</summary>
+    
+	<description>
+	
+	<section>
+	<title>Module description</title>
+	
+	<p>
+	This module takes a specially prepared MATLAB file and converts it into a SCIRun Field, Matrix, or Nrrd object. Currently only files from matlab version 5
+	and higher are supported by this module. The GUI of the module lets the user choose one MATLAB file and subsequently displays all the matrices
+	inside the file. Currently the implementation only shows those MATLAB matrices for which a suitable converter exists, the other ones are not
+	shown. Hence, if your MATLAB matrix does not show up in the selection window the module does not know how to translate the that data set 
+	into a SCIRun Field object. 
+	Since, a MATLAB file can contain multiple MATLAB matrices, the module is equipped with nine output ports. Three for SCIRun Fields, three for SCIRun matrices,
+	and three for SCIRun Nrrds. By selecting the port the module will show which conversion options are available. This module is a combination of the MatlabFieldsReader,
+	the MatlabNrrdsReader and the MatlabMatricesReader and is intended as a way of using one matlab file to specify fields and the accompaning data. Especially since
+	time data cannot yet be stored in a field this module allows the time data to exist as a separate datastream from the same file. This will limit the amount of files
+	that need to be reloaded when all the data is contained in one matlab file.	Depending on how the user configures the 
+	module, each output port can represent one of the MATLAB matrices in the file. Hence, multiple geometries/fields/matrices/nrrds can be stored in the same MATLAB
+	file. 
+	</p>
+	
+	<p> Follow the next two steps in order to setup the GUI properly: </p>
+	
+	<orderedlist>
+		<listitem>
+		Choose the MATLAB file that contains the geometry/field/matrices/nrrds data. You can either use the BROWSE button to select a file or enter the filename in the 
+		filename entry on top of the GUI and press the OPEN button to list the contents of the file in the listbox in the center of the GUI.
+		</listitem>
+		<listitem>
+		Next the MATLAB matrices in the file need to be connected to an output port. In order to do this click on one of the FIELD/MATRIX/NRRD buttons and then
+		select the MATLAB matrix you want to load on that outport. A FIELD port exports the data as a field, a MATRIX port as a scirun matrix and a NRRD port as a
+		scirun nrrd object. Note that for convenience the first suitable matrix in the file is automatically for the FIELD 1 port. Matrices and nrrds need to be selected
+		before they appear on an output port.
+		</listitem>
+	</orderedlist>
+	
+	</section>
+	
+<section>
+	<title> Preparing MATLAB files for SCIRun Fields </title>
+	
+	<p>
+	One crucial step for the conversion from MATLAB to SCIRun is a proper preparation of the data files. Since a SCIRun field object is a complex
+	entity, a simple numeric dense matrix is difficult to translate. Hence, it is required that you build a STRUCTURED MATRIX in matlab with some
+	of the fields listed below. Based on the fields that are supplied the data is converted in one of the many types of geometries available in SCIRun.
+	The module will try to match the data you supplied with the closest Field object it finds. 
+	</p>
+
+	<p>
+	The following sections describe the fields of the structure matrix can be defined and are recognized by the module.
+	</p>
+		
+	<section> 
+	<title>Unstructured Meshes </title>
+	
+	<desclist>
+		<desclistitem>
+			<desclistterm> FIELDNAME .node </desclistterm>
+			<desclistdef> 
+			This field is required for unstructured meshes and defines the position of the nodes within the mesh. 
+			This matrix should be a dense 3 by M matrix, where M is the number of nodes.
+			</desclistdef>
+		</desclistitem>
+		<desclistitem>
+			<desclistterm> FIELDNAME .edge </desclistterm>
+			<desclistdef> 
+			This field is required for curve meshes and defines the line elements in the mesh. This matrix should be
+			a dense 2 by N matrix, where N is the number of line segments. The numbers in this mesh refer to the node
+			positions in the NODE matrix. By default it is assumed that the numbering of nodes starts at one. However if
+			one of the indices in this EDGE matrix is zero, a zero base is assumed. 
+			</desclistdef>
+		</desclistitem>
+		<desclistitem>
+			<desclistterm> FIELDNAME .face </desclistterm>
+			<desclistdef> 
+			This field is required for surfaces meshes and defines the surface elements in the mesh. This matrix should be
+			a dense 3 by N matrix for triangulated meshes and a 4 by N matrix for quadsurf meshes. Here N is the number of 
+			surface elements. The numbers in this mesh refer to the node
+			positions in the NODE matrix. By default it is assumed that the numbering of nodes starts at one. However if
+			one of the indices in this FACE matrix is zero, a zero base is assumed.
+			</desclistdef>
+		</desclistitem>		
+		<desclistitem>
+			<desclistterm> FIELDNAME .cell </desclistterm>
+			<desclistdef> 
+			This field is required for volume meshes and defines the volume elements in the mesh. This matrix should be
+			a dense 4 by N matrix for tetrahedral meshes, or a 6 by N matrix for prism shaped volume elements, or a 8 by N matrix
+			for hexahedral elements. Here N is the number of volume elements. The numbers in this mesh refer to the node
+			positions in the NODE matrix. By default it is assumed that the numbering of nodes starts at one. However if
+			one of the indices in this CELL matrix is zero, a zero base is assumed.
+			</desclistdef>
+		</desclistitem>		
+	</desclist>
+	</section>
+
+	
+	<section>
+	<title>Structured Meshes</title> 
+	  
+	<desclist>
+		<desclistitem>
+			<desclistterm> FIELDNAMES x , y , AND z</desclistterm>
+			<desclistdef> 
+			The fields X, Y, and Z form the description of a structured mesh. These fields are 1D, 2D, or 3D matrices defining
+			the structured line, surface, or volume data. The connectivity of these meshes is defined by the position of the 
+			matrix, neighboring elements are connected. In this definition matrix X defines the x cartesian co-ordinate of each node,
+			matrix Y the y cartesian co-ordinate and matrix Z the z cartesian co-ordinate. This kind of definition is compatible
+			with MATLAB functions such as ndmesh() and sphere(). 
+			</desclistdef> 
+		</desclistitem>
+	</desclist>
+	</section>  
+	
+	<section>
+	<title>Structured regular Meshes</title>
+	
+	<p>
+	As structured matlab arrays:
+	</p>
+	<p>
+	<desclist>
+		<desclistitem>
+			<desclistterm> FIELDNAME .dims </desclistterm>
+			<desclistdef>
+			This field describes the dimensions of the regular grid and is required for making a regular structured mesh. This field
+			is a vector with 1, 2, or 3 elements describing the dimensions in each direction. Hence depending on this field the 
+			module creates a line, a surface, or a volume. This field is required for structured regular meshes.
+			</desclistdef>
+		</desclistitem>
+		<desclistitem>
+		<desclistterm> FIELDNAME .transform </desclistterm>
+			<desclistdef>
+			This field describes a 4x4 matrix which defines an affine transformation, which is applied to the mesh. This matrix describes
+			rotation, translation and scaling of each node in the regular mesh. This field is optional and does not need to be supplied.
+			In case on transform matrix is defined a regular grid with spacing of 1 in each direction will be generated.
+			[NEED TO ADD MORE DETAILS]
+			</desclistdef>
+		</desclistitem>
+	</desclist>	
+	</p>
+	
+	<p>
+	As regular dense matrices:
+	</p>
+	<p>
+	ImageFields and LatVolFields can be entered as well as dense matrices. A 2D matrix will be translated into an ImageField, and a 3D matrix will
+	be translated into a LatVolField. When entering data as regular matrices, the data is assumed to be on the nodes and to be a scalar double field.
+	</p>
+	<p>
+	Note: The displaying dimensions between matlab and SCIRun are flipped, in matlab the first dimension is along the vertical axis, whereas in
+	SCIRun it is along the horizontal axis. Depending on the application the data may need to be transposed, in order to make to obtain the proper vertical
+	alignment.
+	</p>
+	</section>		
+	
+	
+	<section>
+	<title>Field Data</title>
+	
+	<desclist>
+		<desclistitem>
+			<desclistterm> FIELDNAME .field </desclistterm>
+			<desclistdef>
+			A matrix specifying scalar/vector/tensor data for each node/element in the mesh. Each subsequent element in this vector is added to the
+			next node/element in the field. Use the field FIELDLOCATION to specify where the data should be located. The module detects
+			the type of data. The tensor and respectively the vector dimension is assumed to be the first one.
+			</desclistdef>
+		<desclistitem>
+		</desclistitem>
+			<desclistterm> FIELDNAME .fieldtype </desclistterm>
+			<desclistdef>
+			A string specifying the type of data stored in field. Currently three value are accepted: 'scalar', 'vector', and 'tensor'. If this type
+			information is omitted it defaults to 'scalar'
+			</desclistdef>
+		</desclistitem>
+		<desclistitem>
+			<desclistterm> FIELDNAME .fieldat </desclistterm>
+			<desclistdef>
+			The location of the data. This field is a string describing where the data should be located.
+			The default field location is assumed to be the nodes, meaning each node has a scalar, vector, or tensor value. 
+			In case the data is at the nodes, this field does not to be specified.
+			This field is a string with the following options: "node", "edge", "face", or "cell".
+			</desclistdef>
+		</desclistitem>
+	</desclist>
+	</section>
+	<note>
+	The way of specifying a field was different in version 1.22 of SCIRun. The modules still support input through the fields 'vectorfield', 'tensorfield',
+	and 'scalarfield'. However to be compatible with future additions this has been changed to a combination of 'field' and 'fieldtype'. The new fieldwriters
+	will use this convention instead of the old one.
+	</note>	
+	<note>
+	The module will try to reconstruct data, for instance if a matrix is transposed, it will detect this and read the data properly.
+	Most of the fields mentioned are optional and are not necessary. Only choose those fields from the list that are needed to 
+	describe your data. Currently not every field type supported by SCIRun is implemented in this module. Hopefully future versions
+	will support more data types and have even less restrictive converters.
+	</note>
+	</section>
+	
+	<section>
+	<title> Example 1: preparing MATLAB file </title>
+	
+	<p> The following lines of MATLAB code demonstrate how to structure a matrix for the use in SCIRun: </p>
+	
+	<p>Assuming that the nodes are specified in nodematrix and the connectivity of these nodes is specified in facematrix </p>
+	
+	<p> >> geom.node = nodematrix </p>
+	<p> >> geom.face = facematrix </p>
+	<p> >> save mymesh.mat geom </p>
+	
+	<p> Opening the file with the MatlabFieldsReader module will show that there is one data matrix called "geom" whose contents
+	is a TRISURFMESH with no data on any of the node points </p>
+	
+	<note>
+	In case MATLAB is not available to structure the data, use the <modref package="MatlabInterface" name="MatlabNrrdsReader"/> module to read a MATLAB matrix data directly and
+	use the <modref package="Teem" name="NrrdToField"/> module to construct a Field out of the Nrrd object. 
+	</note>
+	</section>
+	  
+	<section>
+	<title> Example 2: Creating a structured mesh </title>
+	 
+	<p> The following lines of MATLAB code demonstrate the creation of a matlab file with the matlab logo on a structured mesh: </p>
+	
+	<p> >> [X,Y,DATA] = peaks(100); </p>
+	<p> >> field.x = X; </p>
+	<p> >> field.y = Y; </p>
+	<p> >> field.z = DATA; </p>
+	<p> >> field.scalarfield = DATA; </p>
+	<p> >> save myfield field </p>
+	
+	<p> This will create a surface mesh in the shape of the peaks logo and uses the z value as its data values. Be sure to specify
+	all the three cartensian coordinates, omitting one will result in the module not to recognise the mesh and it will not display
+	the object in its selection box.</p>
+	
+	</section>  
+	
+	<section>
+	<title> Exampe 3: Creating an unstructured mesh </title>
+	
+	<p> The following lines of MATLAB code demonstrate the creation of a matlab fiel with an unstructured tesselated surface: </p>
+	
+	<p> >> [X,Y,Z] = ndmesh(1:10,1:10,0); </p>
+	<p> >> field.node = [X(:)'; Y(:)'; Z(:)']; </p>
+	<p> >> field.face = delauney(X,Y); </p>
+	<p> >> field.scalarfield = X(:).^2; </p>
+	<p> >> save myfield2 field </p> 
+	
+	
+	</section>  
+		  
+	<section>
+	<title>See Also </title>
+	<p>
+	<modref package="MatlabInterface" name="Matlab" />,	
+	<modref package="MatlabInterface" name="MatlabBundelsReader" />,	
+	<modref package="MatlabInterface" name="MatlabBundlesWriter" />,	
+	<modref package="MatlabInterface" name="MatlabDataReader" />,	
+	<modref package="MatlabInterface" name="MatlabDataWriter" />,	
+	<modref package="MatlabInterface" name="MatlabFieldsReader" />,
+	<modref package="MatlabInterface" name="MatlabFieldsWriter" />,
+	<modref package="MatlabInterface" name="MatlabMatricesReader" />,
+	<modref package="MatlabInterface" name="MatlabMatricesReader" />,
+	<modref package="MatlabInterface" name="MatlabNrrdsWriter" />,
+	<modref package="MatlabInterface" name="MatlabNrrdsReader" />	
+	</p>
+	</section>  
+	  
+  </description>   
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+<!--
+      <port>
+        <name>filename</name>
+        <datatype>SCIRun::Nrrd</datatype>
+        <description>filename store as a char array in a nrrd</description>
+      </port>
+-->        
+    </inputs>
+    <outputs>
+      <port>
+        <name>Field1</name>
+		<datatype>SCIRun::Field</datatype>
+		<description>
+		<p> SCIRun Field imported from the MATLAB file using port 1. </p>
+		</description>
+      </port>
+	  <port>
+        <name>Field2</name>
+		<datatype>SCIRun::Field</datatype>
+		<description>
+		<p> SCIRun Field imported from the MATLAB file using port 2. </p>
+		</description>		
+      </port>
+	  <port>
+        <name>Field3</name>
+		<datatype>SCIRun::Field</datatype>
+		<description>
+		<p> SCIRun Field imported from the MATLAB file using port 3. </p>
+		</description>		
+      </port>
+
+      <port>
+        <name>Matrix1</name>
+		<datatype>SCIRun::Matrix</datatype>
+		<description>
+		<p> SCIRun Matrix imported from the MATLAB file using port 4. </p>
+		</description>
+      </port>
+	  <port>
+        <name>Matrix2</name>
+		<datatype>SCIRun::Matrix</datatype>
+		<description>
+		<p> SCIRun Matrix imported from the MATLAB file using port 5. </p>
+		</description>		
+      </port>
+	  <port>
+        <name>Matrix3</name>
+		<datatype>SCIRun::Matrix</datatype>
+		<description>
+		<p> SCIRun Matrix imported from the MATLAB file using port 3. </p>
+		</description>		
+      </port>
+
+      <port>
+        <name>Nrrd1</name>
+		<datatype>SCIRun::Nrrd</datatype>
+		<description>
+		<p> SCIRun Nrrd imported from the MATLAB file using port 7. </p>
+		</description>
+      </port>
+	  <port>
+        <name>Nrrd2</name>
+		<datatype>SCIRun::Nrrd</datatype>
+		<description>
+		<p> SCIRun Nrrd imported from the MATLAB file using port 8. </p>
+		</description>		
+      </port>
+	  <port>
+        <name>Nrrd3</name>
+		<datatype>SCIRun::Nrrd</datatype>
+		<description>
+		<p> SCIRun Nrrd imported from the MATLAB file using port 9. </p>
+		</description>		
+      </port>
+    </outputs>
+  </io>
+  
+  
+  <gui>
+    <parameter>
+    <widget> Entry </widget>
+	<label> .mat file </label>
+	<description> The name of the MATLAB file </description>
+	</parameter>
+
+    <parameter>
+    <widget> Button </widget>
+	<label> Open </label>
+	<description> Opens the file specified in the MATLAB file entrybox </description>
+	</parameter>
+
+    <parameter>
+    <widget> Button </widget>
+	<label> Browse </label>
+	<description> Open a filesectionbox and choose a MATLAB file </description>
+	</parameter>
+
+    <parameter>
+    <widget> Listbox </widget>
+	<label> matlab matrix selector </label>
+	<description> Displays the matrices that are stored in the MATLAB file and an information 
+	              string describing the data in the matrix</description>
+	</parameter>
+
+    <parameter>
+    <widget> Button </widget>
+	<label> FIELD N </label>
+	<description> Button for selecting which output port is used to export the data. The button highlighted
+	white is currently selected one. Selecting a matrix from the list below will put that matrix
+	on the port whose label is highlighted in white. </description>
+	</parameter>
+
+    <parameter>
+    <widget> Button </widget>
+	<label> MATRIX N </label>
+	<description> Button for selecting which output port is used to export the data. The button highlighted
+	white is currently selected one. Selecting a matrix from the list below will put that matrix
+	on the port whose label is highlighted in white. </description>
+	</parameter>
+
+    <parameter>
+    <widget> Button </widget>
+	<label> NRRD N </label>
+	<description> Button for selecting which output port is used to export the data. The button highlighted
+	white is currently selected one. Selecting a matrix from the list below will put that matrix
+	on the port whose label is highlighted in white. </description>
+	</parameter>
+	
+  </gui>
+  
+  <nets>
+  <net>
+  <title>Loading Cardiac data using the MatlabInterface</title>
+  
+   <p> This network demonstrates how to use the MatlabInterface modules when the data is stored in matlab and
+   how it can be used in SCIRun. This example makes use of two example MATLAB files stored in SCIRunData/Matlab.
+   The first file called "geometry.mat" describes the geometry of the epicardium and contains a structured 
+   matrix with a field called .node containing the position of all the nodes and a field called .face containing
+   the connectivity of the geometry. The data itself is contained in a second MATLAB file called "timeseries.mat"
+   this file contains a plain dense matrix with a timeseries for each node. Each row in this matrix represents a
+   time signal of a different electrode. In figure <xref target="network"/> the basic network is shown for displaying
+   the data on top of the geometry using SCIRun.
+   </p>
+  
+  <figure id="network">
+  <img>Example_Network.tiff</img>
+  <caption>Network for displaying epicardial potentials</caption>
+  </figure>
+  
+  <p> The settings of both the MATLAB file readers are shown in figures <xref target="GUI1"/> and <xref target="GUI2"/>. 
+  Set the ChangeFieldDataAt to "Nodes" in its GUI and execute the network. By changing the selected column vector
+  in the MatrixSelectVector GUI different time instances of a heatbeat can be depicted in the epicardial surface.</p>
+  
+  <figure id="GUI1">
+  <img>MatlabFieldsReaderGUI.tiff</img>
+  <caption>MatlabFieldsReader GUI showing the selection of the "geometry.mat" file</caption>
+  </figure>
+
+  <figure id="GUI2">
+  <img>MatlabMatricesReaderGUI.tiff</img>
+  <caption>MatlabMatricesReader GUI showing the selection of the "timeseries.mat" file</caption>
+  </figure>
+  
+  </net>
+  </nets>
+  <testing>
+  </testing>
+</component>
