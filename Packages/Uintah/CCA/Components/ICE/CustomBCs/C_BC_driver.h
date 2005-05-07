@@ -1,6 +1,7 @@
 #ifndef Packages_Uintah_CCA_Components_Ice_CustomBCs_C_BC_driver_h
 #define Packages_Uintah_CCA_Components_Ice_CustomBCs_C_BC_driver_h
 
+#include <Packages/Uintah/CCA/Components/ICE/CustomBCs/MMS_BCs.h>
 #include <Packages/Uintah/CCA/Components/ICE/CustomBCs/microSlipBCs.h>
 #include <Packages/Uintah/CCA/Components/ICE/CustomBCs/NG_NozzleBCs.h>
 #include <Packages/Uintah/CCA/Components/ICE/CustomBCs/LODI2.h>
@@ -37,6 +38,12 @@ namespace Uintah {
     bool setMicroSlipBcs;
     Slip_vars* sv;
     Slip_variable_basket* Slip_var_basket;
+    
+    // method of manufactured Solution BCs
+    bool using_MMS_BCs;
+    bool set_MMS_BCs;
+    mms_vars* mms_v;
+    mms_variable_basket* mms_var_basket;
     
     Output* dataArchiver; 
     SimulationStateP sharedState;

@@ -1,6 +1,6 @@
 #ifndef Packages_Uintah_CCA_Components_Ice_BoundaryCond_h
 #define Packages_Uintah_CCA_Components_Ice_BoundaryCond_h
-
+#include <Packages/Uintah/CCA/Components/ICE/CustomBCs/MMS_BCs.h>
 #include <Packages/Uintah/CCA/Components/ICE/CustomBCs/C_BC_driver.h>
 #include <Packages/Uintah/CCA/Components/ICE/CustomBCs/microSlipBCs.h>
 #include <Packages/Uintah/CCA/Components/ICE/CustomBCs/NG_NozzleBCs.h>
@@ -420,6 +420,12 @@ void setBC(T& vel_FC,
           setNGC_Nozzle_BC<T, double>(patch, face, vel_FC, "Vel_FC","FC", bound, 
                                    bc_kind,mat_id, child, sharedState, 
                                    custom_BC_basket->ng); 
+        }
+        if(bc_kind == "MMS_1"){
+          IveSetBC= set_MMS_BCs_FC<T>(patch, face, vel_FC, bound, bc_kind,
+                                      cell_dx, P_dir, whichVel, sharedState,
+                                      custom_BC_basket->mms_var_basket,
+                                      custom_BC_basket->mms_v);
         }        
         
         //__________________________________
