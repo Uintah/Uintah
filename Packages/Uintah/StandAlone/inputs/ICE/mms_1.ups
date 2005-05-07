@@ -28,14 +28,14 @@
     <Grid>
     <BoundaryConditions>
       <Face side = "x-">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann"> 
+        <BCType id = "0"   label = "Pressure"     var = "MMS_1"> 
                             <value> 0. </value> 
         </BCType> 
-        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+        <BCType id = "0"   label = "Velocity"     var = "MMS_1">
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "0" 
-                           label = "Temperature"  var = "Neumann"> 
+                           label = "Temperature"  var = "MMS_1"> 
                             <value> 0.0 </value>
         </BCType>
         <BCType id = "0"   label = "Density"      var = "Neumann">
@@ -46,13 +46,13 @@
         </BCType>
       </Face>
       <Face side = "x+">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+        <BCType id = "0"   label = "Pressure"     var = "MMS_1">
                               <value> 0. </value>                
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+        <BCType id = "0"   label = "Velocity"     var = "MMS_1">
                               <value> [0.,0.,0.] </value>
         </BCType>
-        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+        <BCType id = "0"   label = "Temperature"  var = "MMS_1">
                               <value> 0.0 </value>
         </BCType>
         <BCType id = "0"   label = "Density"      var = "Neumann">
@@ -63,13 +63,13 @@
         </BCType>
       </Face>
       <Face side = "y-">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+        <BCType id = "0"   label = "Pressure"     var = "MMS_1">
                               <value> 0. </value>
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+        <BCType id = "0"   label = "Velocity"     var = "MMS_1">
                               <value> [0.,0.,0.] </value>
         </BCType>
-        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+        <BCType id = "0"   label = "Temperature"  var = "MMS_1">
                               <value> 0.0 </value>
         </BCType>
         <BCType id = "0"   label = "Density"      var = "Neumann">
@@ -80,13 +80,13 @@
         </BCType>
       </Face>                  
       <Face side = "y+">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+        <BCType id = "0"   label = "Pressure"     var = "MMS_1">
                               <value> 0. </value>
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+        <BCType id = "0"   label = "Velocity"     var = "MMS_1">
                               <value> [0.,0.,0.] </value>
         </BCType>
-        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+        <BCType id = "0"   label = "Temperature"  var = "MMS_1">
                               <value> 0.0 </value>
         </BCType>
         <BCType id = "0"   label = "Density"      var = "Neumann">
@@ -137,7 +137,7 @@
               <upper>        [0.5,  0.5, 0.05]    </upper>
               <extraCells>   [1,1,1]              </extraCells>
               <patches>      [1,1,1]              </patches>
-              <resolution>   [100,100,1]          </resolution>
+              <resolution>   [50,50,1]          </resolution>
            </Box>
        </Level>
     </Grid>    
@@ -150,31 +150,33 @@
       <save label="press_equil_CC"/>
       <save label="delP_Dilatate"/>
       <save label="press_CC"/>
-      <save label="mom_L_ME_CC"/>
+      <save label="uvel_FCME"/>
+      <save label="vvel_FCME"/>
+      <save label="wvel_FCME"/>
+      <save label="vol_fracX_FC"/>
+      <save label="vol_fracY_FC"/>
+      <save label="vol_fracZ_FC"/>      
       <save label="rho_CC"/>
       <save label="vel_CC"/> 
+      <save label="temp_CC"/>
+      <save label = "rhs"/>
       <save label="scalar-f"/>
       <save label="sum_scalar_f"/>
+      <save label="TotalIntEng"/>
+      <save label="TotalMass"/>
+      <save label="CenterOfMassVelocity"/>
    </DataArchiver>
 
   <Debug>
-      <dbg_timeStart>       0.00        </dbg_timeStart>
-      <dbg_timeStop>        0.01        </dbg_timeStop>
-      <dbg_outputInterval>  1e-9        </dbg_outputInterval>
-      <dbg_BeginIndex>      [-1,-1,-1]  </dbg_BeginIndex>
-      <dbg_EndIndex>        [3,3,3]     </dbg_EndIndex>
-      <dbg_Matls>           [0]         </dbg_Matls>
-      <dbg_Level>           0           </dbg_Level>
-  <!--
-      <debug label = "switchDebug_EQ_RF_press"/>
-      <debug label = "switchDebug_press"/>
-      <debug label = "switchDebug_vel_FC"/>            
-      <debug label = "switchDebug_explicit_press"/>   
-      <debug label = "switchDebug_PressFC"/>         
-      <debug label = "switchDebugLagrangianValues"/>   
-      <debug label = "switchDebugSource_Sink"/>     
-      <debug label = "switchDebug_advance_advect"/>
-    -->
+      <dbg_timeStart>       1.00   </dbg_timeStart>
+      <dbg_timeStop>        0.01   </dbg_timeStop>
+      <dbg_outputInterval>  1e-9   </dbg_outputInterval>
+      <dbg_BeginIndex>      [-1,25,0] </dbg_BeginIndex>
+      <dbg_EndIndex>        [3,27,1] </dbg_EndIndex>
+      <dbg_Matls>           [0]      </dbg_Matls>
+      <dbg_SigFigs>         8        </dbg_SigFigs>
+      <debug label = "switchDebug_vel_FC"/>
+      <debug label = "switchDebug_Exchange_FC"/>
     </Debug>
     
     <!--____________________________________________________________________-->
@@ -184,14 +186,14 @@
          <cfl>0.2</cfl>
       <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
-        <advection type = "SecondOrder" />
+        <advection type = "FirstOrder"/>
         <solution technique = "EqForm" />
         <customInitialization>
           <manufacturedSolution>
             <A>   100    </A>
           </manufacturedSolution> 
         </customInitialization>
-               
+             
         <TimeStepControl>
           <Scheme_for_delT_calc> conservative   </Scheme_for_delT_calc>
           <knob_for_speedSound>  0.001            </knob_for_speedSound>
