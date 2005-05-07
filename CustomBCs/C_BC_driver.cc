@@ -23,6 +23,9 @@ void computesRequires_CustomBCs(Task* t,
   }
   if(C_BC_basket->usingMicroSlipBCs){     // MicroSlip          
     addRequires_MicroSlip( t, where,  lb, ice_matls, C_BC_basket->Slip_var_basket);
+  }
+  if(C_BC_basket->using_MMS_BCs){     // method of manufactured solutions         
+    addRequires_MMS( t, where,  lb, ice_matls);
   }         
 }
 //______________________________________________________________________
@@ -37,6 +40,9 @@ void preprocess_CustomBCs(const string& where,
                           const int indx,
                           customBC_var_basket* C_BC_basket)
 {
+  delt_vartype delT;
+  const Level* level = patch->getLevel();
+  old_dw->get(delT, C_BC_basket->sharedState->get_delt_label(),level);
   //__________________________________
   //    NG_nozzle
   if(C_BC_basket->usingNG_nozzle){        // NG nozzle 
@@ -70,6 +76,16 @@ void preprocess_CustomBCs(const string& where,
                               C_BC_basket->setMicroSlipBcs,
                               C_BC_basket->sv, 
                               C_BC_basket->Slip_var_basket);        
+  }
+  //__________________________________
+  //  method of manufactured solutions boundary conditions
+  if(C_BC_basket->using_MMS_BCs){  
+    C_BC_basket->mms_v = scinew mms_vars();
+    C_BC_basket->mms_v->delT = (double)delT;
+    C_BC_basket->mms_var_basket->delT= (double)delT;
+    preprocess_MMS_BCs( new_dw,old_dw, lb,indx,patch, where,
+                        C_BC_basket->set_MMS_BCs, 
+                        C_BC_basket->mms_v);        
   }         
 }
 
@@ -86,6 +102,9 @@ void delete_CustomBCs(customBC_var_basket* C_BC_basket)
   }
   if(C_BC_basket->sv){
     delete C_BC_basket->sv;
+  }
+  if(C_BC_basket->mms_v){
+    delete C_BC_basket->mms_v;
   }
 }
 
