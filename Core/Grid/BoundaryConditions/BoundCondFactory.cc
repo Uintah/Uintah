@@ -1,4 +1,3 @@
-#include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/NoneBoundCond.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/SymmetryBoundCond.h>
@@ -20,7 +19,7 @@ using namespace std;
 using namespace Uintah;
 
 void BoundCondFactory::create(ProblemSpecP& child,
-			      BoundCondBase* &bc, int& mat_id)
+                              BoundCondBase* &bc, int& mat_id)
 
 {
   map<string,string> bc_attr;
@@ -61,43 +60,46 @@ void BoundCondFactory::create(ProblemSpecP& child,
   }
   
   else if (bc_attr["label"] == "Velocity" && 
-	   (bc_attr["var"]   == "Neumann"  ||
-	    bc_attr["var"]   == "LODI" ||
-	    bc_attr["var"]   == "Custom" ||
-           bc_attr["var"]   == "creep" ||
-           bc_attr["var"]   == "slip" ||
-	    bc_attr["var"]   == "Dirichlet") ) {
+           (bc_attr["var"]   == "Neumann"  ||
+            bc_attr["var"]   == "LODI" ||
+            bc_attr["var"]   == "Custom" ||
+            bc_attr["var"]   == "creep" ||
+            bc_attr["var"]   == "slip" ||
+            bc_attr["var"]   == "MMS_1" ||
+            bc_attr["var"]   == "Dirichlet") ) {
     bc = scinew VelocityBoundCond(child,bc_attr["var"]);
   }
   
   else if (bc_attr["label"] == "Temperature" &&
-	   (bc_attr["var"]   == "Neumann"  ||
-	    bc_attr["var"]   == "LODI" ||
-	    bc_attr["var"]   == "Custom" ||
-           bc_attr["var"]   == "slip" ||
-	    bc_attr["var"]   == "Dirichlet") ) {
+           (bc_attr["var"]   == "Neumann"  ||
+            bc_attr["var"]   == "LODI" ||
+            bc_attr["var"]   == "Custom" ||
+            bc_attr["var"]   == "slip" ||
+            bc_attr["var"]   == "MMS_1" ||
+            bc_attr["var"]   == "Dirichlet") ) {
     bc = scinew TemperatureBoundCond(child,bc_attr["var"]);
   }
   
   else if (bc_attr["label"] == "Pressure" &&
-	   (bc_attr["var"]   == "Neumann"  ||
-	    bc_attr["var"]   == "LODI" ||
-	    bc_attr["var"]   == "Custom" ||
-	    bc_attr["var"]   == "Dirichlet") ) {
+           (bc_attr["var"]   == "Neumann"  ||
+            bc_attr["var"]   == "LODI" ||
+            bc_attr["var"]   == "Custom" ||
+            bc_attr["var"]   == "MMS_1" ||
+            bc_attr["var"]   == "Dirichlet") ) {
     bc = scinew PressureBoundCond(child,bc_attr["var"]);
   }
   
   else if (bc_attr["label"] == "Density" &&
-	   (bc_attr["var"]   == "Neumann"  ||
-	    bc_attr["var"]   == "Dirichlet_perturbed"  ||
-	    bc_attr["var"]   == "LODI" ||
-	    bc_attr["var"]   == "Custom" ||
-	    bc_attr["var"]   == "Dirichlet") ) {
+           (bc_attr["var"]   == "Neumann"  ||
+            bc_attr["var"]   == "Dirichlet_perturbed"  ||
+            bc_attr["var"]   == "LODI" ||
+            bc_attr["var"]   == "Custom" ||
+            bc_attr["var"]   == "Dirichlet") ) {
     bc = scinew DensityBoundCond(child,bc_attr["var"]);
   } 
   else if (ModelsBC &&
-	   (bc_attr["var"]   == "Neumann"  ||
-	    bc_attr["var"]   == "Dirichlet") ) {  
+           (bc_attr["var"]   == "Neumann"  ||
+            bc_attr["var"]   == "Dirichlet") ) {  
     bc = scinew MassFractionBoundCond(child,bc_attr["var"],bc_attr["label"]);
   }
   else {
