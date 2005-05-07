@@ -217,13 +217,15 @@ itcl_class Uintah_Visualization_GridVisualizer {
         pack $w.grid.r.sphere.default_r -side top -anchor e -pady 2 -ipadx 3
 
 	set r [expscale $w.grid.r.sphere.radius -label "Radius:" \
-		-orient horizontal -variable $this-radius -command $n ]
+		-orient horizontal -variable $this-radius ]
 	pack $w.grid.r.sphere.radius -side top -fill x
 
 	scale $w.grid.r.sphere.polygons -label "Polygons:" -orient horizontal \
 	    -variable $this-polygons -command $n \
 	    -from 8 -to 400 -tickinterval 392
 	pack $w.grid.r.sphere.polygons -side top -fill x
+
+        bind $r.scale <ButtonRelease> "$n"
 
 #	makeFrames $w
 
