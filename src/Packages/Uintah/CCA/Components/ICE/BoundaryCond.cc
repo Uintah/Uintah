@@ -73,7 +73,8 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
            bc_kind == "symmetric"){
           one_or_zero = 1.0;      // subtract from A.p
         }
-        if(bc_kind == "Dirichlet" || bc_kind == "Custom"){
+        if(bc_kind == "Dirichlet" || bc_kind == "Custom" || 
+           bc_kind == "MMS_1"){
           one_or_zero = 0.0;      // leave A.p Alone
         }                                 
         //__________________________________
@@ -308,7 +309,15 @@ void setBC(CCVariable<double>& press_CC,
           setNGC_Nozzle_BC<CCVariable<double>,double>
           (patch, face, press_CC, "Pressure", "CC",
            bound, bc_kind,mat_id, child, sharedState,custom_BC_basket->ng);
-        }                          
+        }
+        //__________________________________
+        //  method of manufactured solutions
+        if (bc_kind == "MMS_1" && custom_BC_basket->set_MMS_BCs) {
+          set_MMS_press_BC(patch, face, press_CC, bound,  bc_kind,
+                           sharedState, 
+                           custom_BC_basket->mms_var_basket,
+                           custom_BC_basket->mms_v);
+        }                    
                                             
         //__________________________________________________________
         // Tack on hydrostatic pressure after Dirichlet or Neumann BC
@@ -443,6 +452,13 @@ void setBC(CCVariable<double>& var_CC,
                               desc, bound, bc_kind, bc_value,
                               custom_BC_basket->sv);
         }
+
+        if ( desc == "Temperature" && custom_BC_basket->set_MMS_BCs) {
+          set_MMS_Temperature_BC(patch, face, var_CC, 
+                              desc, bound, bc_kind, 
+                              custom_BC_basket->mms_var_basket,
+                              custom_BC_basket->mms_v);
+        }
         //__________________________________
         // Temperature and Gravity and ICE Matls
         // -Ignore this during intialization phase,
@@ -535,7 +551,7 @@ void setBC(CCVariable<Vector>& var_CC,
 						bc_kind, bc_value, cell_dx,
 						mat_id,child);
         //__________________________________
-        //  hardwiring for NGC nozzle simulation
+        //  Custom Boundary Conditions
         if ( custom_BC_basket->setLodiBcs) {
           setNGCVelocity_BC(patch,face,var_CC,desc,
                             bound, bc_kind,  mat_id, child, sharedState,
@@ -546,6 +562,13 @@ void setBC(CCVariable<Vector>& var_CC,
           set_MicroSlipVelocity_BC(patch,face,var_CC,desc,
                             bound, bc_kind, bc_value,
                             custom_BC_basket->sv);
+        }
+        
+        if ( custom_BC_basket->set_MMS_BCs) {
+          set_MMS_Velocity_BC(patch, face, var_CC, desc,
+                            bound, bc_kind, sharedState,
+                            custom_BC_basket->mms_var_basket,
+                            custom_BC_basket->mms_v);
         }
          
         //__________________________________
@@ -640,6 +663,7 @@ void setBC(CCVariable<double>& var,
   basket->setLodiBcs      = false;
   basket->setNGBcs        = false;
   basket->setMicroSlipBcs = false;
+  basket->set_MMS_BCs     = false;
   
   setBC(var, type, placeHolder, placeHolder, patch, sharedState, 
         mat_id, new_dw,basket);
@@ -662,6 +686,7 @@ void setBC(CCVariable<double>& press_CC,
   basket->setLodiBcs      = false;
   basket->setNGBcs        = false;
   basket->setMicroSlipBcs = false;
+  basket->set_MMS_BCs     = false;
   
   setBC(press_CC, rho_micro, sp_vol, surroundingMatl_indx,
         whichVar, kind, p, sharedState, mat_id, new_dw, basket); 
@@ -680,6 +705,7 @@ void setBC(CCVariable<Vector>& variable,
   basket->setLodiBcs      = false;
   basket->setNGBcs        = false;
   basket->setMicroSlipBcs = false;
+  basket->set_MMS_BCs     = false;
    
   setBC( variable, type, p, sharedState, mat_id, new_dw,basket);
   
