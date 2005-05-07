@@ -111,6 +111,7 @@ ICE::ICE(const ProcessorGroup* myworld)
   d_customBC_var_basket  = scinew customBC_var_basket();
   d_customBC_var_basket->Lodi_var_basket =  scinew Lodi_variable_basket();
   d_customBC_var_basket->Slip_var_basket =  scinew Slip_variable_basket();
+  d_customBC_var_basket->mms_var_basket =  scinew mms_variable_basket();
 }
 
 ICE::~ICE()
@@ -119,6 +120,7 @@ ICE::~ICE()
   delete d_customInitialize_basket;
   delete d_customBC_var_basket->Lodi_var_basket;
   delete d_customBC_var_basket->Slip_var_basket;
+  delete d_customBC_var_basket->mms_var_basket;
   delete d_customBC_var_basket;
   delete d_conservationTest;
   delete lb;
@@ -188,9 +190,12 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   //__________________________________
   //  Custom BC setup
   d_customBC_var_basket->usingLodi = 
-        read_LODI_BC_inputs(prob_spec, d_customBC_var_basket->Lodi_var_basket);
+        read_LODI_BC_inputs(prob_spec,      d_customBC_var_basket->Lodi_var_basket);
   d_customBC_var_basket->usingMicroSlipBCs =
         read_MicroSlip_BC_inputs(prob_spec, d_customBC_var_basket->Slip_var_basket);
+  d_customBC_var_basket->using_MMS_BCs =
+        read_MMS_BC_inputs(prob_spec,       d_customBC_var_basket->mms_var_basket);    
+        
   d_customBC_var_basket->usingNG_nozzle = using_NG_hack(prob_spec);
   d_customBC_var_basket->dataArchiver   = dataArchiver;
   d_customBC_var_basket->sharedState    = sharedState;
@@ -2315,7 +2320,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
                                           cv[m][c],Temp[m][c],rho_micro[m][c]);
 
           double div = 1./rho_micro[m][c];
-          
+      
           // - updated volume fractions
           vol_frac[m][c]   = rho_CC[m][c]*div;
         }
