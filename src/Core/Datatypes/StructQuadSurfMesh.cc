@@ -317,7 +317,8 @@ StructQuadSurfMesh::get_weights(const Point &p,
     {
       const Vector v0 = p0 - p1;
       const Vector v1 = p - p1;
-      w[0] = Dot(v0, v1) / Dot(v0, v0);
+      const double l2 = Dot(v0, v0);
+      w[0] = (l2 < 1.0e-6) ? 0.5 : Dot(v0, v1) / l2;
       w[1] = 1.0 - w[0];
       w[2] = 0.0;
       w[3] = 0.0;
@@ -328,10 +329,11 @@ StructQuadSurfMesh::get_weights(const Point &p,
     {
       const Vector v0 = p1 - p2;
       const Vector v1 = p - p2;
-      w[0] = 0.0;
-      w[1] = Dot(v0, v1) / Dot(v0, v0);
+      const double l2 = Dot(v0, v0);
+      w[1] = (l2 < 1.0e-6) ? 0.5 : Dot(v0, v1) / l2;
       w[2] = 1.0 - w[1];
       w[3] = 0.0;
+      w[0] = 0.0;
       return 4;
     }
     const double a2 = tri_area(p, p2, p3);
@@ -339,10 +341,11 @@ StructQuadSurfMesh::get_weights(const Point &p,
     {
       const Vector v0 = p2 - p3;
       const Vector v1 = p - p3;
+      const double l2 = Dot(v0, v0);
+      w[2] = (l2 < 1.0e-6) ? 0.5 : Dot(v0, v1) / l2;
+      w[3] = 1.0 - w[2];
       w[0] = 0.0;
       w[1] = 0.0;
-      w[2] = Dot(v0, v1) / Dot(v0, v0);
-      w[3] = 1.0 - w[2];
       return 4;
     }
     const double a3 = tri_area(p, p3, p0);
@@ -350,10 +353,11 @@ StructQuadSurfMesh::get_weights(const Point &p,
     {
       const Vector v0 = p3 - p0;
       const Vector v1 = p - p0;
+      const double l2 = Dot(v0, v0);
+      w[3] = (l2 < 1.0e-6) ? 0.5 : Dot(v0, v1) / l2;
+      w[0] = 1.0 - w[3];
       w[1] = 0.0;
       w[2] = 0.0;
-      w[3] = Dot(v0, v1) / Dot(v0, v0);
-      w[0] = 1.0 - w[3];
       return 4;
     }
 
