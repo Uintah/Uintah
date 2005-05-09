@@ -95,6 +95,9 @@ using std::string;
   GenericField< PointCloudMesh,vector<Vector> > gfpvv;
   temp = gfpvv.type_id;
 
+  GenericField< TriSurfMesh,vector<double> > gftvd;
+  temp = gftvd.type_id;
+
   TriSurfField<double> tsfd;
   temp = tsfd.type_id;
 
