@@ -98,8 +98,8 @@ namespace Uintah {
                       mms_variable_basket* mms_var_basket,
                       mms_vars* mms_v)
 {
-  cout_doing<< "Doing set_MMS_BCs_FC: \t\t" << whichVel
-            << " face " << face << endl;
+  //cout<< "Doing set_MMS_BCs_FC: \t\t" << whichVel
+  //          << " face " << face << endl;
   
   bool IveSetBC = false;
  
