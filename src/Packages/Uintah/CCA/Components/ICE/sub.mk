@@ -28,6 +28,7 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
        Packages/Uintah/CCA/Ports                       \
+       Packages/Uintah/CCA/Components/MPM 	       \
        Packages/Uintah/Core/Grid                       \
        Packages/Uintah/Core/Util                       \
        Packages/Uintah/Core/Math                       \
