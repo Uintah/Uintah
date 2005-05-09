@@ -1054,7 +1054,13 @@ HexVolMesh::get_face_weights(double *w, const Node::array_type &nodes,
   {
     const Vector v0 = p0 - p1;
     const Vector v1 = p - p1;
-    w[i0] = Dot(v0, v1) / Dot(v0, v0);
+    double l2 = Dot(v0, v0);
+    if (l2 < 1.0e-6) {
+      w[i0] = 0.5;
+      w[i1] = 0.5;
+      return;
+    }
+    w[i0] = Dot(v0, v1) / l2;
     w[i1] = 1.0 - w[i0];
     return;
   }
@@ -1063,7 +1069,13 @@ HexVolMesh::get_face_weights(double *w, const Node::array_type &nodes,
   {
     const Vector v0 = p1 - p2;
     const Vector v1 = p - p2;
-    w[i1] = Dot(v0, v1) / Dot(v0, v0);
+    double l2 = Dot(v0, v0);
+    if (l2 < 1.0e-6) {
+      w[i1] = 0.5; 
+      w[i2] = 0.5;
+      return;
+    }
+    w[i1] = Dot(v0, v1) / l2;
     w[i2] = 1.0 - w[i1];
     return;
   }
@@ -1072,7 +1084,13 @@ HexVolMesh::get_face_weights(double *w, const Node::array_type &nodes,
   {
     const Vector v0 = p2 - p3;
     const Vector v1 = p - p3;
-    w[i2] = Dot(v0, v1) / Dot(v0, v0);
+    double l2 = Dot(v0, v0);
+    if (l2 < 1.0e-6) {
+      w[i2] = 0.5; 
+      w[i3] = 0.5;
+      return;
+    }
+    w[i2] = Dot(v0, v1) / l2;
     w[i3] = 1.0 - w[i2];
     return;
   }
@@ -1081,7 +1099,13 @@ HexVolMesh::get_face_weights(double *w, const Node::array_type &nodes,
   {
     const Vector v0 = p3 - p0;
     const Vector v1 = p - p0;
-    w[i3] = Dot(v0, v1) / Dot(v0, v0);
+    double l2 = Dot(v0, v0);
+    if (l2 < 1.0e-6) {
+      w[i3] = 0.5; 
+      w[i0] = 0.5;
+      return;
+    }
+    w[i3] = Dot(v0, v1) / l2;
     w[i0] = 1.0 - w[i3];
     return;
   }
