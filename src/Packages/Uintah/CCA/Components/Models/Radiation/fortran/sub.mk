@@ -1,0 +1,48 @@
+# Makefile fragment for this subdirectory
+
+SRCDIR   := Packages/Uintah/CCA/Components/Models/Radiation/fortran
+
+SRCS += \
+        $(SRCDIR)/cellg.F \
+        $(SRCDIR)/eco.F \
+        $(SRCDIR)/eco2.F \
+        $(SRCDIR)/eh2o.F \
+        $(SRCDIR)/efuel.F \
+        $(SRCDIR)/eico2.F \
+        $(SRCDIR)/eih2o.F \
+        $(SRCDIR)/find.F \
+        $(SRCDIR)/fixradval.F \
+        $(SRCDIR)/radarray.F \
+        $(SRCDIR)/radcoef.F \
+        $(SRCDIR)/radcal.F \
+        $(SRCDIR)/radwsgg.F \
+        $(SRCDIR)/rdombc.F \
+        $(SRCDIR)/rdombmcalc.F \
+        $(SRCDIR)/rdomflux.F \
+        $(SRCDIR)/rdomsolve.F \
+        $(SRCDIR)/rdomsrc.F \
+        $(SRCDIR)/rdomvolq.F \
+        $(SRCDIR)/rordr.F \
+        $(SRCDIR)/rordrss.F \
+        $(SRCDIR)/rordrtn.F \
+        $(SRCDIR)/rshsolve.F \
+        $(SRCDIR)/rshresults.F \
+        $(SRCDIR)/soot.F
+
+$(SRCDIR)/cellg.o: $(SRCDIR)/cellg_fort.h
+$(SRCDIR)/radarray.o: $(SRCDIR)/radarray_fort.h
+$(SRCDIR)/radcal.o: $(SRCDIR)/radcal_fort.h
+$(SRCDIR)/radcoef.o: $(SRCDIR)/radcoef_fort.h
+$(SRCDIR)/radwsgg.o: $(SRCDIR)/radwsgg_fort.h
+$(SRCDIR)/rordr.o: $(SRCDIR)/rordr_fort.h
+$(SRCDIR)/rordrss.o: $(SRCDIR)/rordrss_fort.h
+$(SRCDIR)/rordrtn.o: $(SRCDIR)/rordrtn_fort.h
+$(SRCDIR)/rdombc.o: $(SRCDIR)/rdombc_fort.h
+$(SRCDIR)/rdombmcalc.o: $(SRCDIR)/rdombmcalc_fort.h
+$(SRCDIR)/rdomsolve.o: $(SRCDIR)/rdomsolve_fort.h
+$(SRCDIR)/rdomsrc.o: $(SRCDIR)/rdomsrc_fort.h
+$(SRCDIR)/rdomflux.o: $(SRCDIR)/rdomflux_fort.h
+$(SRCDIR)/rdomvolq.o: $(SRCDIR)/rdomvolq_fort.h
+$(SRCDIR)/rshsolve.o: $(SRCDIR)/rshsolve_fort.h
+$(SRCDIR)/rshresults.o: $(SRCDIR)/rshresults_fort.h
+
