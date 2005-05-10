@@ -41,7 +41,7 @@ namespace Uintah {
     
     class ICE : public UintahParallelComponent, public SimulationInterface {
     public:
-      ICE(const ProcessorGroup* myworld);
+      ICE(const ProcessorGroup* myworld, const bool doAMR);
       virtual ~ICE();
 
       virtual bool restartableTimesteps();
@@ -644,6 +644,7 @@ namespace Uintah {
       vector<IntVector>d_dbgIndices;
      
       // flags
+      bool d_doAMR;
       int  d_surroundingMatl_indx;
       bool d_RateForm;
       bool d_EqForm;
