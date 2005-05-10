@@ -18,7 +18,7 @@
 
 using namespace Uintah;
 using namespace std;
-static DebugStream cout_doing("AMRICE_DOING_COUT", false);
+static DebugStream cout_doing("ICE_DOING_COUT", false);
 static DebugStream cout_dbg("AMRICE_DBG", false);
 
 AMRICE::AMRICE(const ProcessorGroup* myworld)
@@ -992,9 +992,6 @@ void AMRICE::coarsen(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){  
     const Patch* coarsePatch = patches->get(p);
     cout_doing << " patch " << coarsePatch->getID()<< endl;
-    
-    Level::selectType finePatches;
-    coarsePatch->getFineLevelPatches(finePatches);
 
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
@@ -1153,6 +1150,13 @@ void AMRICE::scheduleReflux(const LevelP& coarseLevel,
                0,Task::FineLevel, 0, Task::NormalDomain, gn, 0);
   task->requires(Task::NewDW, lb->mom_Z_FC_fluxLabel,
                0,Task::FineLevel, 0, Task::NormalDomain, gn, 0);
+                                      // INT_ENG
+  task->requires(Task::NewDW, lb->int_eng_X_FC_fluxLabel,
+               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0);
+  task->requires(Task::NewDW, lb->int_eng_Y_FC_fluxLabel,
+               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0);
+  task->requires(Task::NewDW, lb->int_eng_Z_FC_fluxLabel,
+               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0);
                                       // SPECIFIC VOLUME
   task->requires(Task::NewDW, lb->sp_vol_X_FC_fluxLabel,
                0,Task::FineLevel, 0, Task::NormalDomain, gn, 0);
@@ -1161,8 +1165,8 @@ void AMRICE::scheduleReflux(const LevelP& coarseLevel,
   task->requires(Task::NewDW, lb->sp_vol_Z_FC_fluxLabel,
                0,Task::FineLevel, 0, Task::NormalDomain, gn, 0);             
 #if 0
-
   // I NEED TO DO SOMETHING HERE
+  // Steve: help
   //__________________________________
   // Model Variables.
   if(d_modelSetup && d_modelSetup->tvars.size() > 0){
@@ -1178,12 +1182,11 @@ void AMRICE::scheduleReflux(const LevelP& coarseLevel,
   }
 #endif
 
-#if 0  
+
   task->modifies(lb->rho_CCLabel);
   task->modifies(lb->sp_vol_CCLabel);
   task->modifies(lb->temp_CCLabel);
   task->modifies(lb->vel_CCLabel);
-#endif
 
   sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allMaterials()); 
 }
@@ -1208,49 +1211,61 @@ void AMRICE::reflux(const ProcessorGroup*,
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);     
       CCVariable<double> rho_CC, temp, sp_vol_CC;
+      constCCVariable<double> cv;
       CCVariable<Vector> vel_CC;
+
+      Ghost::GhostType  gn  = Ghost::None;
       new_dw->getModifiable(rho_CC,   lb->rho_CCLabel,    indx, coarsePatch);
       new_dw->getModifiable(sp_vol_CC,lb->sp_vol_CCLabel, indx, coarsePatch);
       new_dw->getModifiable(temp,     lb->temp_CCLabel,   indx, coarsePatch);
       new_dw->getModifiable(vel_CC,   lb->vel_CCLabel,    indx, coarsePatch);
-
+      new_dw->get(cv,                 lb->specific_heatLabel,indx,coarsePatch, gn,0);
+      
       Level::selectType finePatches;
       coarsePatch->getFineLevelPatches(finePatches);
-      
 
       for(int i=0; i < finePatches.size();i++){  
         const Patch* finePatch = finePatches[i];        
-        cout_doing << "coarsePatch " << coarsePatch->getID() <<" finepatch " << finePatch->getID()<< endl;
-#if 0
-        // reflux
-        refluxOperator<double>(rho_CC,    "mass",   indx, finePatch, fineLevel,new_dw);
-        refluxOperator<double>(sp_vol_CC, "sp_vol", indx, finePatch, fineLevel,new_dw);
-        refluxOperator<Vector>(vel_CC,    "mom",    indx, finePatch, fineLevel,new_dw);
+        cout_doing << " coarsePatch " << coarsePatch->getID() <<" finepatch " << finePatch->getID()<< endl;
 
-        refluxOperator<double>(temp, "int_eng",  indx, finePatch, new_dw);
         //__________________________________
-        //    Model Variables                     
+        // reflux
+        refluxOperator<double>(rho_CC,   rho_CC,  cv, "mass",    indx, 
+                               coarsePatch, finePatch, fineLevel,new_dw);
+#if 1                               
+        refluxOperator<double>(sp_vol_CC, rho_CC, cv, "sp_vol",  indx, 
+                               coarsePatch, finePatch, fineLevel,new_dw);
+                               
+        refluxOperator<Vector>(vel_CC,    rho_CC, cv, "mom",     indx, 
+                               coarsePatch, finePatch, fineLevel,new_dw);
+
+        refluxOperator<double>(temp,      rho_CC, cv, "int_eng", indx, 
+                               coarsePatch, finePatch, fineLevel,new_dw);
+        //__________________________________
+        //    Model Variables
+        #if 0                 
         if(d_modelSetup && d_modelSetup->tvars.size() > 0){
           vector<TransportedVariable*>::iterator t_iter;
           for( t_iter  = d_modelSetup->tvars.begin();
               t_iter != d_modelSetup->tvars.end(); t_iter++){
             TransportedVariable* tvar = *t_iter;
-
+             
             if(tvar->matls->contains(indx)){
               CCVariable<double> q_CC;
               new_dw->getModifiable(q_CC, tvar->var, indx, coarsePatch);
-              refluxOperator<double>(q_CC, tvar->var, indx, new_dw, 
-                         invRefineRatio, coarsePatch, coarseLevel, fineLevel);
-            #if 0  
+              refluxOperator<double>(q_CC, tvar->var, indx, 
+                                     coarsePatch, finePatch, fineLevel,new_dw);
+            
               string name = tvar->var->getName();
               printData(indx, coarsePatch, 1, "coarsen_models", name, q_CC);
-            #endif                 
+                             
             }
           }
         }
-  #endif
-   
-      }  // finePatch loop   
+       #endif
+#endif
+      }  // finePatch loop 
+  
  #if 0
       //__________________________________
       //  Print Data 
@@ -1273,8 +1288,11 @@ void AMRICE::reflux(const ProcessorGroup*,
 _____________________________________________________________________*/
 template<class T>
 void AMRICE::refluxOperator( CCVariable<T>& q_CC_coarse,
+                             CCVariable<double>& rho_CC_coarse,
+                             constCCVariable<double>& cv,
                              const string& fineVarLabel,
                              const int indx,
+                             const Patch* coarsePatch,
                              const Patch* finePatch,
                              const Level* fineLevel,
                              DataWarehouse* new_dw)
@@ -1294,14 +1312,45 @@ void AMRICE::refluxOperator( CCVariable<T>& q_CC_coarse,
                           + x_name + " or " + y_name + " or " + z_name);
   }
 
-  constSFCXVariable<T> q_X_FC_flux;
-  constSFCYVariable<T> q_Y_FC_flux;
-  constSFCZVariable<T> q_Z_FC_flux;
+  constSFCXVariable<T> Q_X_fine_flux, Q_X_coarse_flux;
+  constSFCYVariable<T> Q_Y_fine_flux, Q_Y_coarse_flux;
+  constSFCZVariable<T> Q_Z_fine_flux, Q_Z_coarse_flux;
   
   Ghost::GhostType  gn = Ghost::None;   
-  new_dw->get(q_X_FC_flux, xlabel,indx, finePatch, gn,0);
-  new_dw->get(q_Y_FC_flux, ylabel,indx, finePatch, gn,0);
-  new_dw->get(q_Z_FC_flux, zlabel,indx, finePatch, gn,0); 
+  new_dw->get(Q_X_fine_flux,    xlabel,indx, finePatch,   gn,0);
+  new_dw->get(Q_Y_fine_flux,    ylabel,indx, finePatch,   gn,0);
+  new_dw->get(Q_Z_fine_flux,    zlabel,indx, finePatch,   gn,0);
+  new_dw->get(Q_X_coarse_flux,  xlabel,indx, coarsePatch, gn,0);
+  new_dw->get(Q_Y_coarse_flux,  ylabel,indx, coarsePatch, gn,0);
+  new_dw->get(Q_Z_coarse_flux,  zlabel,indx, coarsePatch, gn,0); 
+  
+  Vector dx = coarsePatch->dCell();
+  double coarseCellVol = dx.x()*dx.y()*dx.z();
+  
+  //__________________________________
+  //  switches that modify the denomiator 
+  //  depending on which quantity is being refluxed.
+  
+  double switch1 = 0.0;     // denomiator = cellVol
+  double switch2 = 1.0;     //            = mass
+  double switch3 = 0.0;     //            = mass * cv
+  if(fineVarLabel == "mass"){
+    switch1 = 1.0;
+    switch2 = 0.0;
+    switch3 = 0.0;         
+  }
+  if(fineVarLabel == "int_eng"){
+    switch1 = 0.0;
+    switch2 = 0.0;
+    switch3 = 1.0;
+  }
+  
+/*`==========TESTING==========*/
+  cout << " fineVarLabel " << fineVarLabel
+       << " switch1 " << switch1 
+       << " switch2 " << switch2
+       << " switch3 " << switch3 << endl; 
+/*===========TESTING==========`*/
   
   //__________________________________
   // Iterate over coarsefine interface faces
@@ -1310,42 +1359,111 @@ void AMRICE::refluxOperator( CCVariable<T>& q_CC_coarse,
        iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
     Patch::FaceType patchFace = *iter;
  
-    cout << "Patch " << finePatch->getID()<< " patchFace " << patchFace 
-         << " iterator " << finePatch->getFaceCellIterator(patchFace, "alongInteriorFaceCells") << endl;
-         
+    CellIterator iter=finePatch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
+
+  /*`==========TESTING==========*/
+      cout << "Patch " << finePatch->getID()<< " patchFace " << patchFace 
+         << " iterator " << iter << endl;
+        IntVector begin = iter.begin();
+        IntVector end = iter.end();
+        IntVector half = (end - begin)/IntVector(2,2,2) + begin; 
+  /*===========TESTING==========`*/
+  
     IntVector offset = finePatch->faceDirection(patchFace);
     //__________________________________
     // Add fine patch flux to the coarse cells
-    // x+, y+ & z+  fine patch faces offset the fine cell index by 1
-    // x-, y- & z-  fine patch faces offset the coarse cell index by -1
+    // c_CC:    coarse level cell center index
+    // c_FC:    coarse level face center index
+    // f_CC:    fine level cell center index
+    // f_FC:    fine level face center index
+    
+    // x+, y+ & z+  f_FC are offset from f_CC by 1
+    // x-, y- & z-  fine patch faces offset the coarse cell center index by -1
     IntVector f_offset = Max(IntVector(0,0,0), offset);  // set -1 values to 0
     IntVector c_offset = Min(IntVector(0,0,0), offset);  // set +1 values to 0
     
     if(patchFace == Patch::xminus || patchFace == Patch::xplus){
-      for(CellIterator iter=finePatch->getFaceCellIterator(patchFace, "alongInteriorFaceCells"); 
-                      !iter.done();iter++) {
-        const IntVector& f_cell = *iter + f_offset;
-        IntVector c_cell = (fineLevel->mapCellToCoarser(f_cell)) + c_offset;
-        //cout << "refluxOperator: XFaces hitting coarseCell " << c_cell << " fine Cell " << f_cell << " " << q_X_FC_flux[f_cell]<<  endl;
-        q_CC_coarse[c_cell] += q_X_FC_flux[f_cell];
+      for(; !iter.done();iter++) {
+        const IntVector& f_CC = *iter;
+        const IntVector& f_FC = f_CC + f_offset;
+        
+        IntVector c_CC = (fineLevel->mapCellToCoarser(f_FC)) + c_offset;
+        IntVector c_FC = c_CC - c_offset;
+        
+        double mass_CC_coarse = rho_CC_coarse[c_CC] * coarseCellVol;
+        double denominator = switch1 * coarseCellVol     
+                           + switch2 * mass_CC_coarse
+                           + switch3 * mass_CC_coarse * cv[c_CC];
+        
+        T correction = -Q_X_coarse_flux[c_FC] + Q_X_fine_flux[f_FC];
+        
+        q_CC_coarse[c_CC] +=  correction/denominator;
+        
+/*`==========TESTING==========*/
+        if (c_CC.y() == 5 && c_CC.z() == 5 ) {
+          cout << "refluxOperator: XFaces:" 
+               << " c_CC " << c_CC  << " c_FC " << c_FC << " q_X_FC " << Q_X_coarse_flux[c_FC]
+               << " f_FC " << f_FC << " " << Q_X_fine_flux[f_FC]
+               << " correction " << correction
+               << " q_CC_coarse " << q_CC_coarse[c_CC]<< endl;
+        } 
+/*===========TESTING==========`*/
       }
     }
     if(patchFace == Patch::yminus || patchFace == Patch::yplus){
-      for(CellIterator iter=finePatch->getFaceCellIterator(patchFace, "alongInteriorFaceCells"); 
-                      !iter.done();iter++) {
-        const IntVector& f_cell = *iter + f_offset;
-        IntVector c_cell = (fineLevel->mapCellToCoarser(f_cell)) + c_offset;
-     //   cout << "refluxOperator: YFaces hitting coarseCell " << c_cell << " fine Cell " << f_cell << " " << q_Y_FC_flux[f_cell] <<endl;
-        q_CC_coarse[c_cell] += q_Y_FC_flux[f_cell];
+      for(; !iter.done();iter++) {
+        const IntVector& f_CC = *iter;
+        const IntVector& f_FC = f_CC + f_offset;
+        
+        IntVector c_CC = (fineLevel->mapCellToCoarser(f_FC)) + c_offset;
+        IntVector c_FC = c_CC - c_offset;
+        double mass_CC_coarse = rho_CC_coarse[c_CC] * coarseCellVol;
+        
+        double denominator = switch1 * coarseCellVol     
+                           + switch2 * mass_CC_coarse
+                           + switch3 * mass_CC_coarse * cv[c_CC];
+                                   
+        T correction = -Q_Y_coarse_flux[c_FC] + Q_Y_fine_flux[f_FC];
+        
+        q_CC_coarse[c_CC] += correction/denominator;
+        
+/*`==========TESTING==========*/
+        if (c_CC.x() == 5 && c_CC.z() == 5 ) {
+          cout << "refluxOperator: YFaces:" 
+               << " c_CC " << c_CC  << " c_FC " << c_FC << " q_Y_FC " << Q_Y_coarse_flux[c_FC]
+               << " f_FC " << f_FC << " " << Q_Y_fine_flux[f_FC]
+               << " correction " << correction 
+               << " q_CC_coarse " << q_CC_coarse[c_CC]<< endl;
+        } 
+/*===========TESTING==========`*/
       }
     }
     if(patchFace == Patch::zminus || patchFace == Patch::zplus){
-      for(CellIterator iter=finePatch->getFaceCellIterator(patchFace, "alongInteriorFaceCells"); 
-                       !iter.done();iter++) {
-        const IntVector& f_cell = *iter + f_offset;
-        IntVector c_cell = (fineLevel->mapCellToCoarser(f_cell)) + c_offset;
-     //   cout << "refluxOperator: ZFaces hitting coarseCell " << c_cell << " fine Cell " << f_cell << " " << q_Z_FC_flux[f_cell] << endl;
-        q_CC_coarse[c_cell] += q_Z_FC_flux[f_cell];
+      for(; !iter.done();iter++) {
+        const IntVector& f_CC = *iter;
+        const IntVector& f_FC = f_CC + f_offset;
+        
+        IntVector c_CC = (fineLevel->mapCellToCoarser(f_FC)) + c_offset;
+        IntVector c_FC = c_CC - c_offset;
+        double mass_CC_coarse = rho_CC_coarse[c_CC] * coarseCellVol;
+        
+        double denominator = switch1 * coarseCellVol     
+                           + switch2 * mass_CC_coarse
+                           + switch3 * mass_CC_coarse * cv[c_CC];
+                               
+        T correction = -Q_Z_coarse_flux[c_FC] + Q_Z_fine_flux[f_FC];
+        
+        q_CC_coarse[c_CC] +=  correction/denominator;
+        
+/*`==========TESTING==========*/
+        if (c_CC.x() == 5 && c_CC.y() == 5 ) {
+          cout << "refluxOperator: ZFaces:" 
+               << " c_CC " << c_CC  << " c_FC " << c_FC << " q_Z_FC " << Q_Z_coarse_flux[c_FC]
+               << " f_FC " << f_FC << " " << Q_Z_fine_flux[f_FC]
+               << " correction " << correction 
+               << " q_CC_coarse " << q_CC_coarse[c_CC]<< endl;
+        } 
+/*===========TESTING==========`*/
       }
     }
   }  // coarseFineInterface faces   

@@ -1556,46 +1556,15 @@ void ICE::scheduleMaxMach_on_Lodi_BC_Faces(SchedulerP& sched,
     sched->addTask(task, level->eachPatch(), matls);
   }
 }
-
 /* _____________________________________________________________________
- Function~  ICE::scheduleAdvectAndAdvanceInTime--
+ Function~  ICE::computesRequires_AMR_Refluxing--
 _____________________________________________________________________*/
-void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
-                                    const PatchSet* patch_set,
+void ICE::computesRequires_AMR_Refluxing(Task* task, 
                                     const double AMR_subCycleProgressVar,
-                                    const MaterialSubset* ice_matlsub,
-                                    const MaterialSubset* /*mpm_matls*/,
-                                    const MaterialSubset* /*press_matl*/,
                                     const MaterialSet* ice_matls)
 {
-  Ghost::GhostType  gac  = Ghost::AroundCells; 
+  cout_doing << "     computesRequires_AMR_Refluxing" << endl;
   Ghost::GhostType  gn   = Ghost::None;
-  
-  cout_doing << "ICE::scheduleAdvectAndAdvanceInTime" << endl;
-  Task* task = scinew Task("ICE::advectAndAdvanceInTime",
-                     this, &ICE::advectAndAdvanceInTime, AMR_subCycleProgressVar);
-//  task->requires(Task::OldDW, lb->delTLabel);     for AMR
-  task->requires(Task::NewDW, lb->uvel_FCMELabel,      gac,2);
-  task->requires(Task::NewDW, lb->vvel_FCMELabel,      gac,2);
-  task->requires(Task::NewDW, lb->wvel_FCMELabel,      gac,2);
-  task->requires(Task::NewDW, lb->mom_L_ME_CCLabel,    gac,2);
-  task->requires(Task::NewDW, lb->mass_L_CCLabel,      gac,2);
-  task->requires(Task::NewDW, lb->eng_L_ME_CCLabel,    gac,2);
-  task->requires(Task::NewDW, lb->sp_vol_L_CCLabel,    gac,2);
-  task->requires(Task::NewDW, lb->specific_heatLabel,  gac,2);  
-  task->requires(Task::NewDW, lb->speedSound_CCLabel,  gn, 0);
-  
-  computesRequires_CustomBCs(task, "Advection", lb, ice_matlsub, 
-                             d_customBC_var_basket);
-  
-  task->modifies(lb->rho_CCLabel);
-  task->modifies(lb->sp_vol_CCLabel);
-  task->computes(lb->temp_CCLabel);
-  task->computes(lb->vel_CCLabel);
-  task->computes(lb->machLabel);  
-
-/*`==========TESTING==========*/
-#if 0
   task->computes(lb->mass_X_FC_fluxLabel);
   task->computes(lb->mass_Y_FC_fluxLabel);
   task->computes(lb->mass_Z_FC_fluxLabel);
@@ -1629,9 +1598,51 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
     task->requires(Task::OldDW, lb->int_eng_Y_FC_fluxLabel, gn, 0);
     task->requires(Task::OldDW, lb->int_eng_Z_FC_fluxLabel, gn, 0);
   }
-  // needto do something for the scalar-f variables.
-#endif
-/*===========TESTING==========`*/  
+/*`==========TESTING==========*/
+  // needto do something for the scalar-f variables. 
+/*===========TESTING==========`*/
+}
+
+/* _____________________________________________________________________
+ Function~  ICE::scheduleAdvectAndAdvanceInTime--
+_____________________________________________________________________*/
+void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
+                                    const PatchSet* patch_set,
+                                    const double AMR_subCycleProgressVar,
+                                    const MaterialSubset* ice_matlsub,
+                                    const MaterialSubset* /*mpm_matls*/,
+                                    const MaterialSubset* /*press_matl*/,
+                                    const MaterialSet* ice_matls)
+{
+  Ghost::GhostType  gac  = Ghost::AroundCells; 
+  Ghost::GhostType  gn   = Ghost::None;
+  
+  cout_doing << "ICE::scheduleAdvectAndAdvanceInTime" << endl;
+  Task* task = scinew Task("ICE::advectAndAdvanceInTime",
+                     this, &ICE::advectAndAdvanceInTime, AMR_subCycleProgressVar);
+//  task->requires(Task::OldDW, lb->delTLabel);     for AMR
+  task->requires(Task::NewDW, lb->uvel_FCMELabel,      gac,2);
+  task->requires(Task::NewDW, lb->vvel_FCMELabel,      gac,2);
+  task->requires(Task::NewDW, lb->wvel_FCMELabel,      gac,2);
+  task->requires(Task::NewDW, lb->mom_L_ME_CCLabel,    gac,2);
+  task->requires(Task::NewDW, lb->mass_L_CCLabel,      gac,2);
+  task->requires(Task::NewDW, lb->eng_L_ME_CCLabel,    gac,2);
+  task->requires(Task::NewDW, lb->sp_vol_L_CCLabel,    gac,2);
+  task->requires(Task::NewDW, lb->specific_heatLabel,  gac,2);  
+  task->requires(Task::NewDW, lb->speedSound_CCLabel,  gn, 0);
+  
+  computesRequires_CustomBCs(task, "Advection", lb, ice_matlsub, 
+                             d_customBC_var_basket);
+                             
+  if(d_doAMR){                           
+    computesRequires_AMR_Refluxing(task, AMR_subCycleProgressVar, ice_matls);
+  }
+  
+  task->modifies(lb->rho_CCLabel);
+  task->modifies(lb->sp_vol_CCLabel);
+  task->computes(lb->temp_CCLabel);
+  task->computes(lb->vel_CCLabel);
+  task->computes(lb->machLabel);    
   
   //__________________________________
   // Model Variables.
@@ -4702,8 +4713,9 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       varBasket->old_dw = old_dw;
       varBasket->indx = indx;
       varBasket->patch = patch;
+      varBasket->level = level;
       varBasket->lb  = lb;
-      varBasket->doAMR = false;
+      varBasket->doAMR = d_doAMR;
       varBasket->useCompatibleFluxes = d_useCompatibleFluxes;
       varBasket->AMR_subCycleProgressVar = AMR_subCycleProgressVar;
 

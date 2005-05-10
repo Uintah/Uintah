@@ -7,6 +7,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Labels/ICELabel.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Geometry/Vector.h>
@@ -26,6 +27,7 @@ namespace Uintah {
       int indx;
       string desc;
       const Patch* patch;
+      const Level* level;
       bool doAMR;
   };
   
