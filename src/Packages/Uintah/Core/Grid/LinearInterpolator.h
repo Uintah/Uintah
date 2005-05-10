@@ -2,7 +2,7 @@
 #define LINEAR_INTERPOLATOR_H
 
 #include <Core/Math/MiscMath.h>
-#include <Packages/Uintah/Core/Math/ParticleInterpolator.h>
+#include <Packages/Uintah/Core/Grid/ParticleInterpolator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <vector>

@@ -19,7 +19,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
-#include <Packages/Uintah/Core/Math/LinearInterpolator.h>
+#include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
 
 #include <Core/Util/DebugStream.h>
 

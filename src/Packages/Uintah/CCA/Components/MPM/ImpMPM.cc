@@ -13,7 +13,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/NormalForceBC.h>
-#include <Packages/Uintah/Core/Math/LinearInterpolator.h>
+#include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
 #include <Packages/Uintah/CCA/Components/MPM/HeatConduction/HeatConduction.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>

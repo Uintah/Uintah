@@ -1,7 +1,7 @@
 #ifndef NODE27_INTERPOLATOR_H
 #define NODE27_INTERPOLATOR_H
 
-#include <Packages/Uintah/Core/Math/ParticleInterpolator.h>
+#include <Packages/Uintah/Core/Grid/ParticleInterpolator.h>
 
 namespace Uintah {
 
