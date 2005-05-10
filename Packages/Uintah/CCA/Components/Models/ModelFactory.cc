@@ -16,6 +16,7 @@
 #include <Packages/Uintah/CCA/Components/Models/HEChem/IandG.h>
 #include <Packages/Uintah/CCA/Components/Models/HEChem/JWLpp.h>
 #include <Packages/Uintah/CCA/Components/Models/HEChem/LightTime.h>
+#include <Packages/Uintah/CCA/Components/Models/Radiation/RadiationDriver.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 
@@ -69,6 +70,8 @@ void ModelFactory::makeModels(const ProblemSpecP& params, GridP&,
       models.push_back(scinew PassiveScalar(d_myworld, model));
     else if(type == "VorticityConfinement")
       models.push_back(scinew VorticityConfinement(d_myworld, model));
+    else if(type == "Radiation")
+      models.push_back(scinew RadiationDriver(d_myworld, model));
     else
       throw ProblemSetupException("Unknown model: "+type);
   }
