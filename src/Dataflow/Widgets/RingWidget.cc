@@ -336,8 +336,8 @@ RingWidget::redraw()
   ((DistanceConstraint*)constraints[ConstDC])->SetMinimum(1.6*widget_scale_);
   ((DistanceConstraint*)constraints[ConstRD])->SetMinimum(sqrt(2*1.6*1.6)*widget_scale_);
 
-  Right.normalize();
-  Down.normalize();
+  Right.safe_normalize();
+  Down.safe_normalize();
   Vector Norm(Cross(Right, Down));
   for (Index geom = 0; geom < NumPcks; geom++)
   {

@@ -322,8 +322,8 @@ ViewWidget::redraw()
   Vector spvec2(GetUpAxis());
   if ((spvec1.length2() > 0.0) && (spvec2.length2() > 0.0))
   {
-    spvec1.normalize();
-    spvec2.normalize();
+    spvec1.safe_normalize();
+    spvec2.safe_normalize();
     Vector v = Cross(spvec1, spvec2);
     for (Index geom = 0; geom < NumPcks; geom++)
     {

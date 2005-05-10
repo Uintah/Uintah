@@ -491,9 +491,9 @@ BoxWidget::redraw()
 						    1.1*widget_scale_);
   }
 
-  Right.normalize();
-  Down.normalize();
-  In.normalize();
+  Right.safe_normalize();
+  Down.safe_normalize();
+  In.safe_normalize();
   for (Index geom = 0; geom < NumPcks; geom++)
   {
     if ((geom == PickResizeU) || (geom == PickResizeD) || (geom == PickSliderD))
@@ -594,12 +594,12 @@ BoxWidget::geom_moved( GeomPickHandle, int axis, double dist,
     if (!is_aligned_)
     {
       Vector rot_start_ray_norm = rot_start_ray_;
-      rot_start_ray_norm.normalize();
+      rot_start_ray_norm.safe_normalize();
       Vector rot_current_ray_norm = rot_start_ray_ + pick_offset;
-      rot_current_ray_norm.normalize();
+      rot_current_ray_norm.safe_normalize();
       Vector rot_axis(Cross(rot_start_ray_norm, rot_current_ray_norm));
       if (rot_axis.length2()<1.e-16) { rot_axis=Vector(1,0,0); }
-      else { rot_axis.normalize(); }
+      else { rot_axis.safe_normalize(); }
       const Point &c = variables[CenterVar]->point();
       Transform trans;
       trans.post_translate(c.vector());

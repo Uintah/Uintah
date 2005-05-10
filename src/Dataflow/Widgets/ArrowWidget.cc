@@ -196,7 +196,7 @@ ArrowWidget::geom_pick(GeomPickHandle p,
   pick_scale_ = widget_scale_;
   pick_dir_ = pick_headvar_ - pick_pointvar_;
   pick_length_ = pick_dir_.length();
-  pick_dir_.normalize();
+  pick_dir_.safe_normalize();
 }
 
 
