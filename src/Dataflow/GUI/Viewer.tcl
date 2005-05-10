@@ -858,11 +858,10 @@ itcl_class ViewWindow {
 	    set ysize [set $this-y-resize]
 	    set size "$xsize\x$ysize"
 	    set xsize [expr $xsize + 14]
-	    set ysize [expr $ysize + 134]
+	    set ysize [expr $ysize + 133]
 	    set geomsize "$xsize\x$ysize"
 	    wm geometry $w "=$geomsize"
-	    pack configure $w.wframe -expand no -fill none
-# 	    $w.wframe.draw configure -geometry $size
+	    pack configure $w.wframe -expand yes -fill both
 	    $wmovie.resize_f.x configure -foreground black
 	    $wmovie.resize_f.e1 configure -state normal -foreground black
 	    $wmovie.resize_f.e2 configure -state normal -foreground black
