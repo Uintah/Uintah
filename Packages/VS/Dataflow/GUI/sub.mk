@@ -17,6 +17,7 @@ SRCS := \
 	$(SRCDIR)/ExecutiveState.tcl \
 	$(SRCDIR)/HotBox.tcl         \
 	$(SRCDIR)/ICUMonitor.tcl     \
+	$(SRCDIR)/PVSpaceInterp.tcl     \
 
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
