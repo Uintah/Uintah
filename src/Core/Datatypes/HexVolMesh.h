@@ -298,6 +298,9 @@ public:
   double pyramid_volume(const Node::array_type &, const Point &) const;
   double polygon_area(const Node::array_type &, const Vector) const;
 
+  //! must detach, if altering points!
+  vector<Point>& get_points() { return points_; }
+
 private:
 
   void compute_edges();
