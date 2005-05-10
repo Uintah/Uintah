@@ -43,27 +43,6 @@ using namespace std;
 static DebugStream cout_norm("MPMICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("MPMICE_DOING_COUT", false);
 
-
-MPMICE::MPMICE(const ProcessorGroup* myworld, const bool doAMR)
-  : UintahParallelComponent(myworld)
-{
-  Mlb  = scinew MPMLabel();
-  Ilb  = scinew ICELabel();
-  MIlb = scinew MPMICELabel();
-  d_mpm      = scinew SerialMPM(myworld);
-  d_ice      = scinew ICE(myworld, doAMR);
-  d_SMALL_NUM = d_ice->d_SMALL_NUM; 
-  d_TINY_RHO  = d_ice->d_TINY_RHO;
-  d_rigidMPM = false;
-  dataArchiver = 0;
-  d_doAMR = doAMR;
-  
-  // Turn off all the debuging switches
-  switchDebug_InterpolateNCToCC_0 = false;
-  switchDebug_InterpolateCCToNC   = false;
-  switchDebug_InterpolatePAndGradP= false;
-}
-
 MPMICE::MPMICE(const ProcessorGroup* myworld, 
                MPMType mpmtype, const bool doAMR)
   : UintahParallelComponent(myworld)

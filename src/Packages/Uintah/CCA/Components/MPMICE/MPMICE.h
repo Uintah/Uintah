@@ -59,7 +59,7 @@ enum MPMType {STAND_MPMICE = 0, RIGID_MPMICE, SHELL_MPMICE, FRACTURE_MPMICE};
 class MPMICE : public SimulationInterface, public UintahParallelComponent {
 
 public:
-  MPMICE(const ProcessorGroup* myworld, const bool doAMR);
+//  MPMICE(const ProcessorGroup* myworld, const bool doAMR);
   MPMICE(const ProcessorGroup* myworld, MPMType type, const bool doAMR);
   virtual ~MPMICE();
   

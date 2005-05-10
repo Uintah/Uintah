@@ -498,7 +498,7 @@ main( int argc, char** argv )
 	SimulationInterface* sim = 0;
 	UintahParallelComponent* comp = 0;
 	if(do_mpm && do_ice){
-	  MPMICE* mpmice = scinew MPMICE(world,do_AMR);
+	  MPMICE* mpmice = scinew MPMICE(world,STAND_MPMICE,do_AMR);
 	  sim = mpmice;
 	  comp = mpmice;
 	} else if(do_mpm && do_arches){
