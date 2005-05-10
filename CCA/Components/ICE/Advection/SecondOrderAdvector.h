@@ -97,7 +97,6 @@ namespace Uintah {
                               IntVector adj_offset,
                               const int face,
                               const CCVariable<facedata<V> >& q_OAFS,
-                              const CCVariable<V>& q_CC,
                               T& q_FC_flux);
                                   
       template<class T>

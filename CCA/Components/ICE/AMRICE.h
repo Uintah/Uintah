@@ -106,8 +106,11 @@ namespace Uintah {
 
     template<class T>
     void refluxOperator(CCVariable<T>& q_CC_coarse,
+                        CCVariable<double>& rho_CC_coarse,
+                        constCCVariable<double>& cv,
                         const string& fineVarLabel,
                         const int indx,
+                        const Patch* coarsePatch,
                         const Patch* finePatch,
                         const Level* fineLevel,
                         DataWarehouse* new_dw);

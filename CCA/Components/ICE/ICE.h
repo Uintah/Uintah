@@ -157,7 +157,11 @@ namespace Uintah {
                                             const LevelP&,
                                             const MaterialSet*,
                                             vector<PatchSubset*> &);
-                                                                                         
+      
+      void computesRequires_AMR_Refluxing(Task* t, 
+                                          const double AMR_subCycleProgressVar,
+                                          const MaterialSet* ice_matls);                                                                                         
+      
       void scheduleAdvectAndAdvanceInTime(SchedulerP&, 
                                           const PatchSet*,
                                           const double AMR_subCycleProgressVar,

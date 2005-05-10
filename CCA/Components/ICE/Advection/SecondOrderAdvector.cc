@@ -616,11 +616,10 @@ void SecondOrderAdvector::q_FC_PlusFaces(
 _____________________________________________________________________*/
 template<class T, class V>
 void SecondOrderAdvector::q_FC_flux_operator(CellIterator iter, 
-                                                 IntVector adj_offset,
-                                                 const int face,
-                                                 const CCVariable<facedata<V> >& q_OAFS,
-                                             const CCVariable<V>& q_CC,
-                                                 T& q_FC_flux)
+                                             IntVector adj_offset,
+                                             const int face,
+                                             const CCVariable<facedata<V> >& q_OAFS,
+                                             T& q_FC_flux)
 { 
   int out_indx = OF_slab[face];
   int in_indx  = IF_slab[face];
@@ -634,8 +633,8 @@ void SecondOrderAdvector::q_FC_flux_operator(CellIterator iter,
     double outfluxVol = d_OFS[c].d_fflux[out_indx];
     double influxVol  = d_OFS[ac].d_fflux[in_indx];
                        
-    q_FC_flux[c] = q_OAFS[ac].d_data[in_indx] * influxVol 
-                 - q_OAFS[c].d_data[out_indx] * outfluxVol;
+    q_FC_flux[c] += q_OAFS[ac].d_data[in_indx] * influxVol 
+                  - q_OAFS[c].d_data[out_indx] * outfluxVol;
   }
 }
 /*_____________________________________________________________________
@@ -695,50 +694,54 @@ void SecondOrderAdvector::q_FC_fluxes(const CCVariable<T>& q_CC,
       q_Y_FC_flux.copyData(q_Y_FC_flux_old);
       q_Z_FC_flux.copyData(q_Z_FC_flux_old);
     }
+    vector<IntVector> adj_offset(3);
+    adj_offset[0] = IntVector(-1, 0, 0);    // X faces
+    adj_offset[1] = IntVector(0, -1, 0);    // Y faces
+    adj_offset[2] = IntVector(0,  0, -1);   // Z faces
+    
+    int offset=0;  // 0=Compute all faces in computational domain
+                   // 1=Skip the faces at the border between interior and gc
+                       
+    CellIterator XFC_iter = patch->getSFCXIterator(offset);
+    CellIterator YFC_iter = patch->getSFCYIterator(offset);
+    CellIterator ZFC_iter = patch->getSFCZIterator(offset);
+    cout << " XFC_iter" << XFC_iter << " YFC_iter " << YFC_iter << " ZFC_iter " << ZFC_iter << endl;
+    
+    q_FC_flux_operator<SFCXVariable<T>, T>(XFC_iter, adj_offset[0],LEFT,
+                                           q_OAFS,q_X_FC_flux); 
 
-    //__________________________________
-    // Iterate over coarsefine interface faces
-    vector<Patch::FaceType>::const_iterator iter;  
-    for (iter  = patch->getCoarseFineInterfaceFaces()->begin(); 
-         iter != patch->getCoarseFineInterfaceFaces()->end(); ++iter){
-      Patch::FaceType patchFace = *iter;
+    q_FC_flux_operator<SFCYVariable<T>, T>(YFC_iter, adj_offset[1],BOTTOM,
+                                           q_OAFS,q_Y_FC_flux); 
+
+    q_FC_flux_operator<SFCZVariable<T>, T>(ZFC_iter, adj_offset[2],BACK,
+                                           q_OAFS,q_Z_FC_flux);
+                                           
+ /*`==========TESTING==========*/                                           
+    vector<Patch::FaceType>::const_iterator itr;  
+    for (itr  = patch->getCoarseFineInterfaceFaces()->begin(); 
+         itr != patch->getCoarseFineInterfaceFaces()->end(); ++itr){
+      Patch::FaceType patchFace = *itr;
 
       cout << "Patch " << patch->getID()<< " Level " << patch->getLevel()->getID()<<" patchFace " << patchFace;
-      //__________________________________
-      // 
-      CellIterator iter=patch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
-      IntVector adj_offset = patch->faceDirection(patchFace); // adj cell offset
-      int cellFace = patchFaceToCellFace(patchFace);
-  /*`==========TESTING==========*/
-        IntVector begin = iter.begin();
-        IntVector end = iter.end();
-        IntVector half = (end - begin)/IntVector(2,2,2) + begin; 
-  /*===========TESTING==========`*/
-
-                            // X+ X-
-      if(patchFace == Patch::xminus || patchFace == Patch::xplus){ 
-
-        q_FC_flux_operator<SFCXVariable<T>, T>(iter, adj_offset,cellFace,
-                                               q_OAFS, q_CC,q_X_FC_flux); 
-
-        cout << half << " /t difference: q " << q_X_FC_flux[half] <<  endl;  
-      }
-                            // Y+ Y-
+      
+      IntVector shift = patch->faceDirection(patchFace);
+      shift = Max(IntVector(0,0,0), shift);  // set -1 values to 0
+      
+      CellIterator iter =patch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
+      IntVector begin = iter.begin() + shift;
+      IntVector end   = iter.end() + shift;
+ 
+      IntVector half  = (end - begin)/IntVector(2,2,2) + begin;
+      if(patchFace == Patch::xminus || patchFace == Patch::xplus){
+        cout << half << " \t difference: q " << q_X_FC_flux[half] <<  endl; 
+      } 
       if(patchFace == Patch::yminus || patchFace == Patch::yplus){
-
-        q_FC_flux_operator<SFCYVariable<T>, T>(iter, adj_offset,cellFace,
-                                               q_OAFS, q_CC,q_Y_FC_flux); 
-
-        cout << half << " /t difference: q " << q_Y_FC_flux[half]  << endl;  
+        cout << half << " \t difference: q " << q_Y_FC_flux[half] <<  endl;
       }
-                            // Z+ Z-
       if(patchFace == Patch::zminus || patchFace == Patch::zplus){
-
-        q_FC_flux_operator<SFCZVariable<T>, T>(iter, adj_offset,cellFace,
-                                               q_OAFS, q_CC,q_Z_FC_flux);
-
-        cout << half << " /t difference: q " << q_Z_FC_flux[half] << endl;
-      }
-    }  // coarseFineInterface faces
+        cout << half << " \t difference: q " << q_Z_FC_flux[half] <<  endl;
+      } 
+    } 
+  /*===========TESTING==========`*/ 
   }   
 }
