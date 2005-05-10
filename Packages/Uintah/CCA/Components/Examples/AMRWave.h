@@ -85,6 +85,9 @@ WARNING
     AMRWave& operator=(const AMRWave&);
 	 
     double refine_threshold;
+    bool do_refineFaces;
+    bool do_refine;
+    bool do_coarsen;
   };
 }
 
