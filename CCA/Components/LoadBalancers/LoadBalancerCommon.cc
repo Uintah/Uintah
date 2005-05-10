@@ -212,8 +212,6 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid)
   int maxGhost = 2;
   d_neighbors.clear();
 
-  int low_patch = INT_MAX;
-
   if (d_myworld->myrank() == 0 && clusterDebug.active())
     clusterDebug << *(grid.get_rep()) << endl;
 
@@ -277,8 +275,6 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid)
       }
 
       if (d_myworld->myrank() == 0 && clusterDebug.active()) {
-        if (patch->getID() < low_patch) low_patch = patch->getID();
-
         Patch::selectType n;
         IntVector lowGhost, highGhost;
         
@@ -294,6 +290,16 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid)
         // use only for the coarse-fine relationship
         IntVector lowIndex = low-lowGhost, highIndex = high+highGhost;
         
+
+        clusterDebug << "  INTRA-LEVEL communication for level " << l << endl;
+        clusterDebug << patch->getID() << " ";
+        for (int i = 0; i < n.size(); i++)
+          if (n[i]->getID() >= 0)
+            clusterDebug << n[i]->getID() << " ";
+        clusterDebug << endl;
+
+        clusterDebug << " TOTAL communication for level " << l << endl;
+
         // add amr stuff - so the patch will know about coarsening and refining
         if (l > 0) {
           const LevelP& coarseLevel = level->getCoarserLevel();
@@ -308,9 +314,10 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid)
           //          cout << d_myworld->myrank() << "  F: " << level->mapCellToFiner(lowIndex) << " " << level->mapCellToFiner(highIndex) << endl;
         }
         
-        clusterDebug << patch->getID() - low_patch << " ";
+        clusterDebug << patch->getID() << " ";
         for (int i = 0; i < n.size(); i++)
-          clusterDebug << n[i]->getID() - low_patch << " ";
+          if (n[i]->getID() >= 0)
+            clusterDebug << n[i]->getID() << " ";
         clusterDebug << endl;
       }
     }
@@ -325,7 +332,7 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid)
       for(Level::const_patchIterator iter = level->patchesBegin();
           iter != level->patchesEnd(); iter++){
         const Patch* patch = *iter;
-        clusterDebug << " Patch " << patch->getID() - low_patch << ": proc " <<getPatchwiseProcessorAssignment(patch) << endl;
+        //clusterDebug << " Patch " << patch->getID() - low_patch << ": proc " <<getPatchwiseProcessorAssignment(patch) << endl;
       }
     }
   }

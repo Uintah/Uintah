@@ -11,9 +11,8 @@
 
 // TODO:
 // Implement flux registers
-// refine patches
-// Refine faces for boundaries
-// periodic boundaries broken...
+// Linear interpolation might not be enough
+// Possible bad interpolation
 
 using namespace Uintah;
 
@@ -35,6 +34,17 @@ void AMRWave::problemSetup(const ProblemSpecP& params, GridP& grid,
   Wave::problemSetup(params, grid, sharedState);
   ProblemSpecP wave = params->findBlock("Wave");
   wave->require("refine_threshold", refine_threshold);
+
+  do_refineFaces = false;
+  do_refine = false;
+  do_coarsen = false;
+
+  if (wave->findBlock("do_refineFaces"))
+    do_refineFaces = true;
+  if (wave->findBlock("do_refine"))
+    do_refine = true;
+  if ( wave->findBlock("do_coarsen"))
+    do_coarsen = true;
 }
 
 void AMRWave::scheduleRefineInterface(const LevelP& fineLevel,
@@ -45,6 +55,8 @@ void AMRWave::scheduleRefineInterface(const LevelP& fineLevel,
 
 void AMRWave::scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched)
 {
+  if (!do_coarsen)
+    return;
   Task* task = scinew Task("coarsen", this, &AMRWave::coarsen);
   task->requires(Task::NewDW, phi_label, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
   task->modifies(phi_label);
@@ -55,6 +67,8 @@ void AMRWave::scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched)
 
 void AMRWave::scheduleRefine (const PatchSet* patches, SchedulerP& sched)
 {
+  if (!do_refine)
+    return;
   Task* task = scinew Task("refine", this, &AMRWave::refine);
   task->requires(Task::NewDW, phi_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundCells, 1);
   task->requires(Task::NewDW, pi_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundCells, 1);
@@ -181,42 +195,23 @@ void AMRWave::refineCell(CCVariable<double>& finevar, constCCVariable<double>& c
   double w6 = dist.y() * (1. - dist.x()) * dist.z();
   double w7 = dist.x() * dist.y() * dist.z();
 
-  double sum = 0;
-
   amrwave << "  CVs: " << coarsevar[coarseStart] << " " << coarsevar[coarseStart + IntVector(i,0,0)] << " "
           << coarsevar[coarseStart + IntVector(0,j,0)] << " " << coarsevar[coarseStart + IntVector(i,j,0)] << " " 
           << coarsevar[coarseStart + IntVector(0,0,k)] << " " << coarsevar[coarseStart + IntVector(i,0,k)] << " "
-          << coarsevar[coarseStart + IntVector(0,j,k)] << " " << coarsevar[coarseStart + IntVector(i,j,k)];
+          << coarsevar[coarseStart + IntVector(0,j,k)] << " " << coarsevar[coarseStart + IntVector(i,j,k)] << endl;
 
   // add up the weighted values
-  IntVector coarseIndex = coarseStart;
-  //amrwave << "coarse index= " << coarseIndex << " " << coarsevar[coarseIndex] << " weight " << w0 << " weighted= " << w0*coarsevar[coarseIndex] << endl;
-  sum += w0*coarsevar[coarseIndex];
-  coarseIndex = coarseStart + IntVector(i,0,0);
-  //amrwave << "coarse index= " << coarseIndex << " " << coarsevar[coarseIndex] << " weight " << w1 << " weighted= " << w1*coarsevar[coarseIndex] << endl;
-  sum += w1*coarsevar[coarseIndex];
-  coarseIndex = coarseStart + IntVector(0,j,0);
-  //amrwave << "coarse index= " << coarseIndex << " " << coarsevar[coarseIndex]<< " weight " << w2 << " weighted= " << w2*coarsevar[coarseIndex] << endl;
-  sum += w2*coarsevar[coarseIndex];
-  coarseIndex = coarseStart + IntVector(i,j,0);
-  //amrwave << "coarse index= " << coarseIndex << " " << coarsevar[coarseIndex]<< " weight " << w3 << " weighted= " << w3*coarsevar[coarseIndex] << endl;
-  sum += w3*coarsevar[coarseIndex];
-  coarseIndex = coarseStart + IntVector(0,0,k);
-  //amrwave << "coarse index= " << coarseIndex << " " << coarsevar[coarseIndex]<< " weight " << w4 << " weighted= " << w4*coarsevar[coarseIndex] << endl;
-  sum += w4*coarsevar[coarseIndex];
-  coarseIndex = coarseStart + IntVector(i,0,k);
-  //amrwave << "coarse index= " << coarseIndex << " " << coarsevar[coarseIndex]<< " weight " << w5 << " weighted= " << w5*coarsevar[coarseIndex] << endl;
-  sum += w5*coarsevar[coarseIndex];
-  coarseIndex = coarseStart + IntVector(0,j,k);
-  //amrwave << "coarse index= " << coarseIndex << " " << coarsevar[coarseIndex]<< " weight " << w6 << " weighted= " << w6*coarsevar[coarseIndex] << endl;
-  sum += w6*coarsevar[coarseIndex];
-  coarseIndex = coarseStart + IntVector(i,j,k);
-  //amrwave << "coarse index= " << coarseIndex << " " << coarsevar[coarseIndex]<< " weight " << w7 << " weighted= " << w7*coarsevar[coarseIndex] << endl;
-  sum += w7*coarsevar[coarseIndex];
+  finevar[fineIndex] = 
+    w0*coarsevar[coarseStart] +
+    w1*coarsevar[coarseStart + IntVector(i,0,0)] +
+    w2*coarsevar[coarseStart + IntVector(0,j,0)] +
+    w3*coarsevar[coarseStart + IntVector(i,j,0)] +
+    w4*coarsevar[coarseStart + IntVector(0,0,k)] +
+    w5*coarsevar[coarseStart + IntVector(i,0,k)] +
+    w6*coarsevar[coarseStart + IntVector(0,j,k)] +
+    w7*coarsevar[coarseStart + IntVector(i,j,k)];
 
-  // average value
-  finevar[fineIndex] = sum;
-  amrwave << ": " << finevar[fineIndex] << endl;
+  //amrwave << ": " << finevar[fineIndex] << endl;
 
 }
 
@@ -227,14 +222,19 @@ void AMRWave::coarsenCell(CCVariable<double>& coarsevar, constCCVariable<double>
 
   // starting coarse point - will interp 8 cells starting here.  On the +x, +y, +z faces, subtract 1
   IntVector fineStart(coarseLevel->mapCellToFiner(coarseIndex));
-
-  // find all the fine cells, average the values; no need to weight 
   IntVector crr = fineLevel->getRefinementRatio();
+
+  // amrwave << "coarsenCell on level " << coarseLevel->getIndex() << " coarse Index " << coarseIndex << " " << coarseLevel->getCellPosition(coarseIndex) << " fine range = " 
+  //        << fineStart << " " << fineStart+crr << endl << "  FVs: ";
+
+  // find all the fine cells, average the values; no need to weight, as they are equidistant
   for(CellIterator inside(IntVector(0,0,0), crr); !inside.done(); inside++){
+    // amrwave << finevar[fineStart + *inside] << ' ';
     tmp +=finevar[fineStart + *inside];
   }
 
   coarsevar[coarseIndex]=tmp/(crr.x()*crr.y()*crr.z());
+  // amrwave << ": " << coarsevar[coarseIndex] << endl;
 }
 
 void AMRWave::refine(const ProcessorGroup*,
@@ -247,7 +247,7 @@ void AMRWave::refine(const ProcessorGroup*,
 
   for (int p = 0; p < patches->size(); p++) {  
     const Patch* finePatch = patches->get(p);
-    amrwave << "    DOING AMRWave::Refine on patch " << finePatch->getID() << endl;
+    // amrwave << "    DOING AMRWave::Refine on patch " << finePatch->getID() << ": " << finePatch->getLowIndex() << " " << finePatch->getHighIndex() <<  endl;
 
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
@@ -267,9 +267,9 @@ void AMRWave::refine(const ProcessorGroup*,
       IntVector coarsePiLow  = fineLevel->mapCellToCoarser(pi.getLowIndex()) - IntVector(1,1,1);
       IntVector coarsePiHigh = fineLevel->mapCellToCoarser(pi.getHighIndex()+fineLevel->getRefinementRatio() - IntVector(1,1,1)) + IntVector(1,1,1);
 
-      amrwave << "   Calling getRegion for Phi: " << coarsePhiLow << " " << coarsePhiHigh << endl;
+      // amrwave << "   Calling getRegion for Phi: " << coarsePhiLow << " " << coarsePhiHigh << endl;
       new_dw->getRegion(coarse_phi, phi_label, matl, coarseLevel, coarsePhiLow, coarsePhiHigh);
-      amrwave << "   Calling getRegion for Pi: " << coarsePiLow << " " << coarsePiHigh << endl;
+      // amrwave << "   Calling getRegion for Pi: " << coarsePiLow << " " << coarsePiHigh << endl;
       new_dw->getRegion(coarse_pi, pi_label, matl, coarseLevel, coarsePiLow, coarsePiHigh);
 
       // simple linear interpolation (maybe)
@@ -301,7 +301,7 @@ void AMRWave::coarsen(const ProcessorGroup*,
 
   for (int p = 0; p < patches->size(); p++) {  
     const Patch* coarsePatch = patches->get(p);
-    //cout << "    DOING AMRWave::coarsen on patch " << coarsePatch->getID() << endl ;
+    //amrwave << "    DOING AMRWave::coarsen on patch " << coarsePatch->getID() << ": " << coarsePatch->getLowIndex() << " " << coarsePatch->getHighIndex() << endl ;
 
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
@@ -340,6 +340,8 @@ void AMRWave::coarsen(const ProcessorGroup*,
 void AMRWave::addRefineDependencies(Task* task, const VarLabel* var,
                                     int step, int nsteps)
 {
+  if (!do_refineFaces)
+    return;
   ASSERTRANGE(step, 0, nsteps+1);
   Ghost::GhostType gc = Ghost::AroundCells;
 
@@ -360,17 +362,22 @@ void AMRWave::refineFaces(const Patch* finePatch,
                  DataWarehouse* coarse_old_dw,
 		 DataWarehouse* coarse_new_dw)
 {
+  if (!do_refineFaces)
+    return;
   for (int f = 0; f < 6; f++) {
     Patch::FaceType face = (Patch::FaceType) f;
     if (finePatch->getBCType(face) == Patch::Coarse) {
+
       IntVector low, high;
       IntVector fineLow, fineHigh;
       finePatch->getFace(face, IntVector(2,2,2), IntVector(2,2,2), low, high);
       finePatch->getFace(face, IntVector(0,0,0), IntVector(1,1,1), fineLow, fineHigh);
 
-      // grab one more cell..x
+      // grab one more cell...
       IntVector coarseLow = fineLevel->mapCellToCoarser(low) - IntVector(1,1,1);
       IntVector coarseHigh = fineLevel->mapCellToCoarser(high) + IntVector(1,1,1);
+
+      amrwave << "    DOING AMRWave::RefineFaces on patch " << finePatch->getID() << ": " << finePatch->getLowIndex() << " " << finePatch->getHighIndex() << " face: " << fineLow << " " << fineHigh << endl;
 
       constCCVariable<double> coarse_old_var;
       constCCVariable<double> coarse_new_var;
@@ -397,7 +404,7 @@ void AMRWave::refineFaces(const Patch* finePatch,
           x1 = finevar[*iter];
         }
         finevar[*iter] = x0*w0 + x1*w1;
-        //cout << " Step " << step << " of " << nsteps << " X0 " << x0 << " X1 " << x1 << " final " << finevar[*iter] << endl;
+        amrwave << "Index " << *iter << " Step " << step << " of " << nsteps << " X0 " << x0 << " X1 " << x1 << " final " << finevar[*iter] << endl;
       }
     } // if (finePatch->getBCType(face) == Patch::Coarse) {
   } // for (Patch::FaceType face = 0; face < Patch::numFaces; face++) {
