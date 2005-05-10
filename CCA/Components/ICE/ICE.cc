@@ -63,7 +63,7 @@ static DebugStream cout_norm("ICE_NORMAL_COUT", false);
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 
 
-ICE::ICE(const ProcessorGroup* myworld) 
+ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) 
   : UintahParallelComponent(myworld)
 {
   lb   = scinew ICELabel();
@@ -88,6 +88,7 @@ ICE::ICE(const ProcessorGroup* myworld)
   switchDebugSource_Sink               = false; 
   switchDebug_advance_advect           = false; 
 
+  d_doAMR               = doAMR;
   d_RateForm            = false;
   d_EqForm              = false; 
   d_add_heat            = false;
