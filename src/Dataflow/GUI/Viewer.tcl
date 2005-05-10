@@ -849,9 +849,9 @@ itcl_class ViewWindow {
 	    pack configure $w.wframe -expand yes -fill both
 
 	    set color "#505050"
-            $wmovie.x configure -foreground $color
-            $wmovie.e1 configure -state disabled -foreground $color
-            $wmovie.e2 configure -state disabled -foreground $color
+            $wmovie.resize_f.x configure -foreground $color
+            $wmovie.resize_f.e1 configure -state disabled -foreground $color
+            $wmovie.resize_f.e2 configure -state disabled -foreground $color
 	} else {
 	    if { $IsAttached == 1 } { $this switch_frames }
 	    set xsize [set $this-x-resize]
@@ -862,7 +862,7 @@ itcl_class ViewWindow {
 	    set geomsize "$xsize\x$ysize"
 	    wm geometry $w "=$geomsize"
 	    pack configure $w.wframe -expand no -fill none
-	    $w.wframe.draw configure -geometry $size
+# 	    $w.wframe.draw configure -geometry $size
 	    $wmovie.resize_f.x configure -foreground black
 	    $wmovie.resize_f.e1 configure -state normal -foreground black
 	    $wmovie.resize_f.e2 configure -state normal -foreground black
