@@ -59,8 +59,8 @@ enum MPMType {STAND_MPMICE = 0, RIGID_MPMICE, SHELL_MPMICE, FRACTURE_MPMICE};
 class MPMICE : public SimulationInterface, public UintahParallelComponent {
 
 public:
-  MPMICE(const ProcessorGroup* myworld);
-  MPMICE(const ProcessorGroup* myworld, MPMType type);
+  MPMICE(const ProcessorGroup* myworld, const bool doAMR);
+  MPMICE(const ProcessorGroup* myworld, MPMType type, const bool doAMR);
   virtual ~MPMICE();
   
   virtual bool restartableTimesteps();
@@ -286,13 +286,14 @@ protected:
   MPMLabel* Mlb;
   ICELabel* Ilb;
   MPMICELabel* MIlb;
-  bool             d_burns;
+
   bool             d_rigidMPM;
   SerialMPM*       d_mpm;
   ICE*             d_ice;
   int              d_8or27;
   int              NGN;
   bool             d_recompile;
+  bool             d_doAMR;
 
   vector<MPMPhysicalBC*> d_physicalBCs;
   double d_SMALL_NUM;

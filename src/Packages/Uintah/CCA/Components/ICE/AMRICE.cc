@@ -22,7 +22,7 @@ static DebugStream cout_doing("AMRICE_DOING_COUT", false);
 static DebugStream cout_dbg("AMRICE_DBG", false);
 
 AMRICE::AMRICE(const ProcessorGroup* myworld)
-  : ICE(myworld)
+  : ICE(myworld, true)
 {
 }
 

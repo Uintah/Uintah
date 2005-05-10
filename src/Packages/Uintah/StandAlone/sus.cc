@@ -498,7 +498,7 @@ main( int argc, char** argv )
 	SimulationInterface* sim = 0;
 	UintahParallelComponent* comp = 0;
 	if(do_mpm && do_ice){
-	  MPMICE* mpmice = scinew MPMICE(world);
+	  MPMICE* mpmice = scinew MPMICE(world,do_AMR);
 	  sim = mpmice;
 	  comp = mpmice;
 	} else if(do_mpm && do_arches){
@@ -522,15 +522,15 @@ main( int argc, char** argv )
 	  sim = smpm;
 	  comp = smpm;
 	} else if(do_smpmice){
-	  MPMICE* mpmice = scinew MPMICE(world, SHELL_MPMICE);
+	  MPMICE* mpmice = scinew MPMICE(world, SHELL_MPMICE, do_AMR);
 	  sim = mpmice;
 	  comp = mpmice;
 	} else if(do_rmpmice){
-	  MPMICE* mpmice = scinew MPMICE(world, RIGID_MPMICE);
+	  MPMICE* mpmice = scinew MPMICE(world, RIGID_MPMICE, do_AMR);
 	  sim = mpmice;
 	  comp = mpmice;
 	} else if(do_fmpmice){
-	  MPMICE* mpmice = scinew MPMICE(world, FRACTURE_MPMICE);
+	  MPMICE* mpmice = scinew MPMICE(world, FRACTURE_MPMICE, do_AMR);
 	  sim = mpmice;
 	  comp = mpmice;
 	} else if(do_impmpm){
@@ -546,7 +546,7 @@ main( int argc, char** argv )
           if(do_AMR){
 	    ice = scinew AMRICE(world);
 	  }else{
-	    ice = scinew ICE(world);
+	    ice = scinew ICE(world, do_AMR);
          }
 	  sim = ice;
 	  comp = ice;
