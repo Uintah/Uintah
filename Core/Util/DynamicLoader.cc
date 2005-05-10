@@ -378,8 +378,16 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
 
     if (so == 0)
     { // does not compile
-      pr->error("DYNAMIC COMPILATION ERROR: " + full_so +
-                " does not compile!!");
+      const string errmsg = "DYNAMIC COMPILATION ERROR: " + full_so +
+        " does not compile!!";
+      if (maybe_compile_p)
+      {
+        pr->remark(errmsg);
+      }
+      else
+      {
+        pr->error(errmsg);
+      }
       pr->msgStream() << SOError() << endl;
       // Remove the null ref for this lib from the map.
       map_lock_.lock();
