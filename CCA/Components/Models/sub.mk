@@ -1,12 +1,13 @@
 # Makefile fragment for this subdirectory
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
-
 SRCDIR   := Packages/Uintah/CCA/Components/Models
+
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCS	+= \
        $(SRCDIR)/ModelFactory.cc
 
 SUBDIRS := $(SRCDIR)/test \
+	   $(SRCDIR)/Radiation \
            $(SRCDIR)/HEChem
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
@@ -26,6 +27,15 @@ PSELIBS := \
         Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/CCA/Components/ICE \
 	Packages/Uintah/CCA/Components/MPMICE
-LIBS	:= 
+
+LIBS	:= $(XML_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(M_LIBRARY)
+
+ifneq ($(HAVE_PETSC),)
+  LIBS := $(LIBS) $(PETSC_LIBRARY) 
+endif
+
+ifneq ($(HAVE_HYPRE),)
+  LIBS := $(LIBS) $(HYPRE_LIBRARY) 
+endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
