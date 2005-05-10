@@ -271,7 +271,7 @@ LightWidget::redraw()
 
   if (direct.length2() > 1e-6)
   {
-    direct.normalize();
+    direct.safe_normalize();
     Vector v1, v2;
     direct.find_orthogonal(v1, v2);
     for (Index geom = 0; geom < NumPcks; geom++)
