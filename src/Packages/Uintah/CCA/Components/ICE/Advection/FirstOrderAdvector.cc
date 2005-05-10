@@ -281,11 +281,12 @@ void FirstOrderAdvector::q_FC_operator(CellIterator iter,
  Compute q_FC values on the faces between the extra cells
  and the interior domain only on the x+, y+, z+ patch faces 
 _____________________________________________________________________*/
-void FirstOrderAdvector::q_FC_PlusFaces(const CCVariable<double>& q_CC,
-                                        const Patch* patch,
-                                        SFCXVariable<double>& q_XFC,
-                                        SFCYVariable<double>& q_YFC,
-                                        SFCZVariable<double>& q_ZFC)
+void FirstOrderAdvector::q_FC_PlusFaces(
+      	      	      	      	       const CCVariable<double>& q_CC,
+                                   const Patch* patch,
+                                   SFCXVariable<double>& q_XFC,
+                                   SFCYVariable<double>& q_YFC,
+                                   SFCZVariable<double>& q_ZFC)
 {                                                  
   vector<IntVector> adj_offset(3);
   adj_offset[0] = IntVector(-1, 0, 0);    // X faces
@@ -324,26 +325,45 @@ void FirstOrderAdvector::q_FC_flux_operator(CellIterator iter,
                 		          const CCVariable<V>& q_CC,
                 		          T& q_FC_flux)
 {
-  int out_indx = OF_slab[face];
-  int in_indx  = IF_slab[face];
+  int out_indx = OF_slab[face]; //LEFT,   BOTTOM,   BACK 
+  int in_indx  = IF_slab[face]; //RIGHT,  TOP,      FRONT
 
   for(;!iter.done(); iter++){
     IntVector c = *iter;      
     IntVector ac = c + adj_offset; 
 
-     // face:           LEFT,   BOTTOM,   BACK  
-     // IF_slab[face]:  RIGHT,  TOP,      FRONT
     double outfluxVol = d_OFS[c].d_fflux[out_indx];
     double influxVol  = d_OFS[ac].d_fflux[in_indx];
 
-    q_FC_flux[c] = q_CC[ac] * influxVol - q_CC[c] * outfluxVol;
+    q_FC_flux[c] += q_CC[ac] * influxVol - q_CC[c] * outfluxVol;
+    
+/*`==========TESTING==========*/
+#if 1
+      cout.setf(ios::scientific,ios::floatfield);
+      cout.precision(8);
+    if(c == IntVector(2,5,5) || c == IntVector(8,5,5) 
+    || c == IntVector(4,10,10) || c == IntVector(16,10,10)){
+      cout << c << "    ac " << ac 
+           << "     q_FC "<< q_FC_flux[c] 
+           << " \t influxVol " << influxVol
+           << " \t outfluxVol " << outfluxVol
+           << " \t q_CC[ac] " << q_CC[ac]
+           << " \t q_CC[c] " << q_CC[c] << endl;    
+    } 
+#endif
+/*===========TESTING==========`*/
   }  
 }
 /*_____________________________________________________________________
  Function~  q_FC_fluxes
  Computes the sum(flux of q at the face center) over all subcycle timesteps
- on the fine level.  We only need to hit the cell that are on a coarse-fine 
- interface, ignoring the extraCells.
+ on the fine level.  We only *need* to hit the cell that are on a coarse-fine 
+ interface, ignoring the extraCells.  However, this routine computes 
+ the fluxes over the entire computational domain, which could be slow.
+ Version r29970 has the fluxes computed on the fine level at the coarse
+ fine interfaces.  You need to add the same computation on the coarse 
+ level. Note that on the coarse level you don't know where the coarse fine
+ interfaces are and need to look up one level to find the interfaces.
 _____________________________________________________________________*/
 template<class T>
 void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
@@ -357,6 +377,7 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
     DataWarehouse* new_dw = vb->new_dw;
     DataWarehouse* old_dw = vb->old_dw;
     const double AMR_subCycleProgressVar = vb->AMR_subCycleProgressVar;
+    const Level* level = vb->level;
 
     // form the label names
     string x_name = desc + "_X_FC_flux";
@@ -395,50 +416,55 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
       q_Y_FC_flux.copyData(q_Y_FC_flux_old);
       q_Z_FC_flux.copyData(q_Z_FC_flux_old);
     }
+    vector<IntVector> adj_offset(3);
+    adj_offset[0] = IntVector(-1, 0, 0);    // X faces
+    adj_offset[1] = IntVector(0, -1, 0);    // Y faces
+    adj_offset[2] = IntVector(0,  0, -1);   // Z faces
+    
+    int offset=0;  // 0=Compute all faces in computational domain
+                   // 1=Skip the faces at the border between interior and gc
+                       
+    CellIterator XFC_iter = patch->getSFCXIterator(offset);
+    CellIterator YFC_iter = patch->getSFCYIterator(offset);
+    CellIterator ZFC_iter = patch->getSFCZIterator(offset);
+    cout << " XFC_iter" << XFC_iter << " YFC_iter " << YFC_iter << " ZFC_iter " << ZFC_iter << endl;
+    
+    q_FC_flux_operator<SFCXVariable<T>, T>(XFC_iter, adj_offset[0],LEFT,
+                                           q_CC,q_X_FC_flux); 
 
-    //__________________________________
-    // Iterate over coarsefine interface faces
-    vector<Patch::FaceType>::const_iterator iter;  
-    for (iter  = patch->getCoarseFineInterfaceFaces()->begin(); 
-         iter != patch->getCoarseFineInterfaceFaces()->end(); ++iter){
-      Patch::FaceType patchFace = *iter;
+    q_FC_flux_operator<SFCYVariable<T>, T>(YFC_iter, adj_offset[1],BOTTOM,
+                                           q_CC,q_Y_FC_flux); 
+
+    q_FC_flux_operator<SFCZVariable<T>, T>(ZFC_iter, adj_offset[2],BACK,
+                                           q_CC,q_Z_FC_flux);
+                                           
+ /*`==========TESTING==========*/                                           
+    vector<Patch::FaceType>::const_iterator itr;  
+    for (itr  = patch->getCoarseFineInterfaceFaces()->begin(); 
+         itr != patch->getCoarseFineInterfaceFaces()->end(); ++itr){
+      Patch::FaceType patchFace = *itr;
 
       cout << "Patch " << patch->getID()<< " Level " << patch->getLevel()->getID()<<" patchFace " << patchFace;
-      //__________________________________
-      // 
-      CellIterator iter=patch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
-      IntVector adj_offset = patch->faceDirection(patchFace); // adj cell offset
-      int cellFace = patchFaceToCellFace(patchFace);
-  /*`==========TESTING==========*/
-        IntVector begin = iter.begin();
-        IntVector end = iter.end();
-        IntVector half = (end - begin)/IntVector(2,2,2) + begin; 
-  /*===========TESTING==========`*/
-
-                            // X+ X-
-      if(patchFace == Patch::xminus || patchFace == Patch::xplus){ 
-
-        q_FC_flux_operator<SFCXVariable<T>, T>(iter, adj_offset,cellFace,
-                                               q_CC,q_X_FC_flux); 
-
-        cout << half << " /t difference: q " << q_X_FC_flux[half] <<  endl;  
-      }
-                            // Y+ Y-
+      
+      IntVector shift = patch->faceDirection(patchFace);
+      shift = Max(IntVector(0,0,0), shift);  // set -1 values to 0
+      
+      CellIterator iter =patch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
+      IntVector begin = iter.begin() + shift;
+      IntVector end   = iter.end() + shift;
+ 
+      IntVector half  = (end - begin)/IntVector(2,2,2) + begin;
+      if(patchFace == Patch::xminus || patchFace == Patch::xplus){
+        cout << half << " \t difference: q " << q_X_FC_flux[half] <<  endl; 
+      } 
       if(patchFace == Patch::yminus || patchFace == Patch::yplus){
-
-        q_FC_flux_operator<SFCYVariable<T>, T>(iter, adj_offset,cellFace,
-                                               q_CC,q_Y_FC_flux); 
-
-        cout << half << " /t difference: q " << q_Y_FC_flux[half]  << endl;  
+        cout << half << " \t difference: q " << q_Y_FC_flux[half] <<  endl;
       }
-                            // Z+ Z-
       if(patchFace == Patch::zminus || patchFace == Patch::zplus){
-
-        q_FC_flux_operator<SFCZVariable<T>, T>(iter, adj_offset,cellFace,
-                                               q_CC,q_Z_FC_flux);
-
-        cout << half << " /t difference: q " << q_Z_FC_flux[half] << endl;
-      }
-    }  // coarseFineInterface faces
+        cout << half << " \t difference: q " << q_Z_FC_flux[half] <<  endl;
+      } 
+    } 
+  /*===========TESTING==========`*/                                       
+                                           
   } // doAMR   
 }
