@@ -108,7 +108,7 @@ SRCS     += \
 PSELIBS := Dataflow/Network Dataflow/Ports Dataflow/XMLUtil Dataflow/Widgets \
 	Core/Datatypes Core/Persistent Core/Exceptions \
 	Core/Thread Core/Containers Core/GuiInterface Core/Geom \
-	Core/Datatypes Core/Geometry Core/TkExtensions \
+	Core/Datatypes Core/Geometry Core/TkExtensions Core/ImportExport \
 	Core/Math Core/Util Core/Algorithms/Geometry Core/GeomInterface
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(LEX_LIBRARY) $(M_LIBRARY) $(XML_LIBRARY) $(THREAD_LIBRARY)
 
