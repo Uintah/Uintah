@@ -427,7 +427,7 @@ public:
 
 using namespace Uintah;
 
-MPMICE::MPMICE(const ProcessorGroup* myworld) :
+MPMICE::MPMICE(const ProcessorGroup* myworld, false) :
   UintahParallelComponent(myworld)
 {
 }
