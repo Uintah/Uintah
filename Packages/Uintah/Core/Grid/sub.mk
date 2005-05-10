@@ -22,7 +22,9 @@ SRCS     += \
 	$(SRCDIR)/SimulationTime.cc \
 	$(SRCDIR)/Task.cc \
 	$(SRCDIR)/UnknownVariable.cc \
-	$(SRCDIR)/SimpleMaterial.cc
+	$(SRCDIR)/SimpleMaterial.cc  \
+	$(SRCDIR)/LinearInterpolator.cc \
+	$(SRCDIR)/Node27Interpolator.cc 
 
 PSELIBS := \
 	Core/Geometry \

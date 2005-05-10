@@ -1,4 +1,4 @@
-#include <Packages/Uintah/Core/Math/Node27Interpolator.h>
+#include <Packages/Uintah/Core/Grid/Node27Interpolator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Core/Malloc/Allocator.h>
