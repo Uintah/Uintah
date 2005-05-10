@@ -1,6 +1,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
-#include <Packages/Uintah/Core/Math/LinearInterpolator.h>
-#include <Packages/Uintah/Core/Math/Node27Interpolator.h>
+#include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
+#include <Packages/Uintah/Core/Grid/Node27Interpolator.h>
 #include <Core/Util/DebugStream.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>

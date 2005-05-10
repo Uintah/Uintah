@@ -12,9 +12,8 @@ SRCS     += \
 	$(SRCDIR)/CubeRoot.cc	\
 	$(SRCDIR)/Sparse.cc	\
 	$(SRCDIR)/Short27.cc \
-	$(SRCDIR)/TangentModulusTensor.cc \
-	$(SRCDIR)/LinearInterpolator.cc \
-	$(SRCDIR)/Node27Interpolator.cc 
+	$(SRCDIR)/TangentModulusTensor.cc 
+
 
 ifeq ($(IS_WIN),yes)
   SRCS += $(SRCDIR)/Rand48.cc

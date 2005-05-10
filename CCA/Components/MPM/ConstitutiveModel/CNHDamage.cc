@@ -1,6 +1,6 @@
 #include "CNHDamage.h"
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/Core/Math/LinearInterpolator.h>
+#include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>

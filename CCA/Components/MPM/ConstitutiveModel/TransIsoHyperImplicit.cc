@@ -1,6 +1,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/TransIsoHyperImplicit.h>
-#include <Packages/Uintah/Core/Math/LinearInterpolator.h>
+#include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
