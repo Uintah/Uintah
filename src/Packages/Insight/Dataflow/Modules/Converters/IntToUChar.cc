@@ -189,6 +189,8 @@ void IntToUChar::execute(){
     return;
   }
 
+  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
+
   // get input
   itk::Object* data_InputImage = inhandle_InputImage_.get_rep()->data_.GetPointer();
   

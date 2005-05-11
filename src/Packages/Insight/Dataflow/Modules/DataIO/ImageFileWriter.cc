@@ -124,6 +124,7 @@ void ImageFileWriter::execute(){
     return;
   }
 
+  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
 
   // get input
   itk::Object* data = inhandle_.get_rep()->data_.GetPointer();

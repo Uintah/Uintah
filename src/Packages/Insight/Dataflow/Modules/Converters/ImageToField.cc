@@ -675,6 +675,8 @@ void ImageToField::execute(){
   
   if(!inhandle1_.get_rep())
     return;
+
+  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
   
   // get input
   itk::Object *n = inhandle1_.get_rep()->data_.GetPointer();

@@ -307,6 +307,8 @@ void ImageToNrrd::execute() {
     return;
   }
 
+  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
+
   // get input
   itk::Object *n = inhandle1_.get_rep()->data_.GetPointer();
   // can we operate on it?

@@ -89,6 +89,8 @@ void ColorImageReaderUChar2D::execute(){
     return;
   }
 
+  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
+
   typedef itk::ImageFileReader<itk::Image<itk::RGBPixel<unsigned char>, 2> > FileReaderType;
   
   // create a new reader
