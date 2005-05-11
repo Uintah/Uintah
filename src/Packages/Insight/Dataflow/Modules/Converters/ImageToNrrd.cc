@@ -97,8 +97,8 @@ ImageToNrrd::~ImageToNrrd(){
 
 template<class InputImageType, unsigned  nrrdtype>
 void ImageToNrrd::create_nrrd(ITKDatatypeHandle &img) {
-  // check if Teem exists
 
+  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
 
   InputImageType *im = dynamic_cast< InputImageType * >( img.get_rep()->data_.GetPointer() );
   typedef typename itk::ImageRegionIterator<InputImageType> IteratorType;
@@ -174,7 +174,8 @@ void ImageToNrrd::create_nrrd(ITKDatatypeHandle &img) {
 
 template<class InputImageType, unsigned  nrrdtype>
 void ImageToNrrd::create_nrrd2(ITKDatatypeHandle &img) {
-  // check if Teem exists
+  
+  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
 
   InputImageType *im = dynamic_cast< InputImageType * >( img.get_rep()->data_.GetPointer() );
   typedef typename itk::ImageRegionIterator<InputImageType> IteratorType;
@@ -306,8 +307,6 @@ void ImageToNrrd::execute() {
     error("No Data in InputImage port.");
     return;
   }
-
-  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
 
   // get input
   itk::Object *n = inhandle1_.get_rep()->data_.GetPointer();
