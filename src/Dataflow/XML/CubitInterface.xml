@@ -58,7 +58,7 @@
     <outputs>
       <port>
 	<name>Field</name>
-	<datatype>SCIRun::Matrix</datatype>
+	<datatype>SCIRun::Field</datatype>
       </port>
     </outputs>
   </io>

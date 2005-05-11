@@ -42,6 +42,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/TetVolField.h>
@@ -53,6 +54,10 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
 
 namespace SCIRun {
 
@@ -65,9 +70,12 @@ private:
   int			field1_generation_;
   int			pcf_generation_;
   GuiString		cubitdir_;
+  GuiString		ncdump_;
+  string		base_;
   
-
+  void			cleanup(string error="");
   bool			write_facet_file(string, TriSurfMeshHandle &);
+  bool			read_netcdf_file(string, TetVolMeshHandle &);
   bool			write_journal_file(string, string, string);
 public:
   CubitInterface(GuiContext* ctx);
@@ -83,7 +91,8 @@ CubitInterface::CubitInterface(GuiContext* ctx)
   : Module("CubitInterface", ctx, Filter, "FieldsCreate", "SCIRun"),
     field1_generation_(-1),
     pcf_generation_(-1),
-    cubitdir_(ctx->subVar("cubitdir"))
+    cubitdir_(ctx->subVar("cubitdir")),
+    ncdump_(ctx->subVar("ncdump"))
 {
 }
 
@@ -91,6 +100,19 @@ CubitInterface::CubitInterface(GuiContext* ctx)
 CubitInterface::~CubitInterface()
 {
 }
+
+
+void
+CubitInterface::cleanup(string error) {
+  unlink((base_+"exodus").c_str());
+  unlink((base_+"facet").c_str());
+  unlink((base_+"journal").c_str());
+  unlink((base_+"netcdf").c_str());
+  unlink((base_+"log").c_str());
+  if (!error.empty())
+    throw error;
+}
+
 
 bool
 CubitInterface::write_facet_file(string filename, TriSurfMeshHandle &tsm)
@@ -121,7 +143,19 @@ CubitInterface::write_facet_file(string filename, TriSurfMeshHandle &tsm)
     ++tsmn;
   }
 
+  TriSurfMesh::Edge::array_type tsmea;
+  TriSurfMesh::Face::index_type neigh;
+  
+  tsm->synchronize(Mesh::EDGES_E | Mesh:: EDGE_NEIGHBORS_E);
+		   
   while (tsmf != tsmfe) {
+    tsm->get_edges(tsmea, *tsmf);
+    for (int e = 0; e < tsmea.size(); ++e) {
+      if (!tsm->get_neighbor(neigh, *tsmf, tsmea[e])) {
+	cleanup("Edge#"+to_string(tsmea[e].index_)+" is a boundary face.\n"+
+		"The surface is not closed and cannot be meshed.");
+      }
+    }
     tsm->get_nodes(face_nodes, *tsmf);
     fprintf (f, "%d %d %d %d\n", (*tsmf).index_, 
 	     face_nodes[0].index_, face_nodes[1].index_, face_nodes[2].index_);
@@ -151,12 +185,152 @@ CubitInterface::write_journal_file(string filename, string facetfilename,
   fprintf(f, "mesh volume 1\n");
   fprintf(f, "set large exodus file off\n");
   fprintf(f, "export mesh \'%s\' dimension 3\n", outputfilename.c_str());
+  fprintf(f, "exit\n");
   fclose(f);
   remark("Wrote: "+filename);
   return true;
 }
 
+struct FillNodeFtor {
+  Point operator()(Point &p) {
+    return p;
+  }
+};
 
+struct FillCellFtor {
+  FillCellFtor(vector<int> &array) : array_(array) {}
+  vector <int> array_;
+  int ret_val[4];
+  int *operator()(int n) {
+    for (int i = 0; i < 4; ++i)
+      ret_val[i] = array_[n*4+i];
+    return ret_val;
+  }
+};
+
+struct SimpleIter {
+  SimpleIter(int init = 0) : i(init) {}
+  SimpleIter & operator++() { ++i; return *this; };
+  bool operator!=(const SimpleIter &right) { return i != right.i; };
+  int operator-(const SimpleIter &right) { return i - right.i; };
+  int operator*() { return i; };
+  int i;
+};
+
+
+bool
+CubitInterface::read_netcdf_file(string filename, TetVolMeshHandle &mesh)
+{
+  ifstream infile;
+  infile.open(filename.c_str());
+  infile.sync();
+  infile.seekg(0,ios_base::beg);
+  int nnodes = -1;
+  int nelems = -1;
+  string instring;
+
+  remark("Reading NetCDF file: "+filename);
+  while (!infile.eof()) {
+    // Eat up spurious blank lines.
+    while (infile.peek() == ' ' ||
+	   infile.peek() == '\t' ||
+	   infile.peek() == '\n')
+    {
+      if (infile.bad()) return false;
+      infile.get();
+      if (infile.bad()) return false;
+    }
+
+    // Eat lines that start with #, they are comments.
+    if (infile.peek() == '#')
+    {
+      if (infile.bad()) return false;
+      infile.ignore(1024,'\n');
+      if (infile.bad()) return false;
+      continue;
+    }
+
+    if (infile.bad()) return false;
+
+    infile >> instring;
+    if (infile.bad()) return false;
+    if (instring == "num_nodes") {
+      infile >> instring >> nnodes;
+      if (infile.bad()) return false;
+    } else if (instring == "num_elem") {
+      infile >> instring >> nelems;
+      if (infile.bad()) return false;
+    }
+    
+    infile.ignore(1024,'\n');
+    if (nnodes != -1 && nelems != -1) break;
+  }
+
+  if (nnodes == -1 || nelems == -1) return false;
+
+  instring = "";
+  while (infile.good() && instring != "data:") {
+    infile >> instring;
+    if (infile.bad()) return false;
+    infile.ignore(1024,'\n');
+    if (infile.bad()) return false;
+  }
+
+  int e, i;
+  double d;
+  vector <int> elems;
+  vector <Point> nodes;
+  elems.resize(nelems*4);
+  nodes.resize(nnodes);
+  remark("Number of nodes in mesh: "+to_string(nnodes));
+  remark("Number of elements in mesh: "+to_string(nelems));
+  while (!infile.eof()) {
+    infile >> instring;
+    if (infile.bad()) return false;
+    infile.ignore(1024,'\n');    
+    if (infile.bad()) return false;
+    if (instring == "connect1") {
+      remark("Trying to read point connections.");
+      for (i = 0; i < nelems*4; ++i) {
+	infile >> instring;
+	if (infile.bad()) return false;
+	if (i == nelems*4-1) instring = instring+",";
+	if (!string_to_int(instring.substr(0, instring.size()-1),e)) {
+	  error ("Failed to convert"+instring);
+	} else {
+	  elems[i] = e-1;
+	}
+      }
+      remark("Successfully read connecitons.");
+    }
+
+    if (instring == "coord") {
+      remark("Trying to read point coordinates.");
+      for (e = 0; e < 3; ++e) {
+	for (i = 0; i < nnodes; ++i) {
+	  infile >> instring;
+	  if (infile.bad()) return false;
+	  if (e == 2 && i == nnodes-1) instring = instring+",";
+	  if (!string_to_double(instring.substr(0,instring.size()-1),d)) {
+	    error ("Failed to convert "+instring);
+	  } else {
+	    nodes[i](e) = d;
+	  }
+	}
+      }
+      remark("Successfully read coordinates.");
+    }
+  }
+  
+  TetVolMesh *tvm = scinew TetVolMesh();
+  SimpleIter beg(0), end(nelems);
+  tvm->fill_points(nodes.begin(), nodes.end(), FillNodeFtor());
+  tvm->fill_cells(beg, end, FillCellFtor(elems));
+
+  mesh = tvm;
+
+  return true;
+}
 
 
 void
@@ -199,32 +373,53 @@ CubitInterface::execute()
   pcf_generation_ = pcf->generation;
   field1_generation_ = field1->generation;
 #endif
+  
+  string tmp(sci_getenv("SCIRUN_TMP_DIR")+string("/"));
+  //  string rand(to_string(int(drand48()*1000.00)));
+  base_ = tmp+id+"."+string(sci_getenv("USER"))+".";//+rand+".";
 
-  string tmp(sci_getenv("SCIRUN_TMP_DIR"));
-  string facetfile = tmp+"/cubit.facet";
-  string journalfile = tmp+"/cubit.journal";
-  string outputfile = tmp+"/cubit.exo";
-  string logfile = tmp+"/cubit.log";
+  string facetfile = base_+"facet";
+  string journalfile = base_+"journal";
+  string exodusfile = base_+"exodus";
+  string netcdffile = base_+"netcdf";
+  string logfile = base_+"log";
 
   TriSurfMeshHandle tsm = (TriSurfMesh *)(field1->mesh().get_rep());
-  if (!write_facet_file(facetfile, tsm)) return;
-  if (!write_journal_file(journalfile, facetfile, outputfile)) return;
-  
-  string cubitdir = cubitdir_.get();//"/scratch/claro";
-  string command = "export LD_LIBRARY_PATH="+cubitdir+"/libs:"+cubitdir+"/bin;"+
-    cubitdir+"/bin/clarox "+journalfile;
+  if (!write_facet_file(facetfile, tsm)) {
+    cleanup("Cannot write facet file: "+facetfile);
+  }
 
-  msgStream_flush();
+  if (!write_journal_file(journalfile, facetfile, exodusfile)) {
+    cleanup("Cannot write journal file: "+journalfile);
+  }
+  
+  string command = 
+    "export LD_LIBRARY_PATH="+cubitdir_.get()+"/libs:"+cubitdir_.get()+"/bin;"+
+    cubitdir_.get()+"/bin/clarox "+journalfile+";";
+  
   if (!Exec_execute_command(this, command, logfile))
   {
-    error("The program failed to run for some unknown reason.");
-    throw false;
+    cleanup("The Cubit program failed to run for some unknown reason.");
   }
-  msgStream_flush();
 
+  command = 
+    ncdump_.get()+" -v connect1,coord "+exodusfile+" > "+netcdffile+
+    "; echo Done converting "+exodusfile;
 
+  if (!Exec_execute_command(this, command, netcdffile))
+  {
+    cleanup("The ncdump program failed to run for some unknown reason.");
+  }
 
-  oport_->send(field1);
+  TetVolMeshHandle mesh;
+  if (!read_netcdf_file(netcdffile, mesh)) {
+    cleanup("Error read NetCDF file: "+netcdffile);
+  }
+
+  cleanup();
+
+  TetVolField<double> *f = scinew TetVolField<double>(mesh, 0);
+  oport_->send(f);
 }
 
 
