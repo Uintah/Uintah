@@ -377,7 +377,7 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
     DataWarehouse* new_dw = vb->new_dw;
     DataWarehouse* old_dw = vb->old_dw;
     const double AMR_subCycleProgressVar = vb->AMR_subCycleProgressVar;
-    const Level* level = vb->level;
+    //const Level* level = vb->level;
 
     // form the label names
     string x_name = desc + "_X_FC_flux";
@@ -447,7 +447,7 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
       cout << "Patch " << patch->getID()<< " Level " << patch->getLevel()->getID()<<" patchFace " << patchFace;
       
       IntVector shift = patch->faceDirection(patchFace);
-      shift = Max(IntVector(0,0,0), shift);  // set -1 values to 0
+      shift = SCIRun::Max(IntVector(0,0,0), shift);  // set -1 values to 0
       
       CellIterator iter =patch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
       IntVector begin = iter.begin() + shift;

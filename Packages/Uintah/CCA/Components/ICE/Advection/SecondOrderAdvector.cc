@@ -644,7 +644,7 @@ void SecondOrderAdvector::q_FC_flux_operator(CellIterator iter,
  interface, ignoring the extraCells.
 _____________________________________________________________________*/
 template<class T>
-void SecondOrderAdvector::q_FC_fluxes(const CCVariable<T>& q_CC,
+void SecondOrderAdvector::q_FC_fluxes(const CCVariable<T>& /*q_CC*/,
                                       const CCVariable<facedata<T> >& q_OAFS,
                                       const string& desc,
                                       advectVarBasket* vb)
@@ -725,7 +725,7 @@ void SecondOrderAdvector::q_FC_fluxes(const CCVariable<T>& q_CC,
       cout << "Patch " << patch->getID()<< " Level " << patch->getLevel()->getID()<<" patchFace " << patchFace;
       
       IntVector shift = patch->faceDirection(patchFace);
-      shift = Max(IntVector(0,0,0), shift);  // set -1 values to 0
+      shift = SCIRun::Max(IntVector(0,0,0), shift);  // set -1 values to 0
       
       CellIterator iter =patch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
       IntVector begin = iter.begin() + shift;
