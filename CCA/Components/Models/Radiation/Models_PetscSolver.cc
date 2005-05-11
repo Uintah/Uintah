@@ -486,6 +486,7 @@ Models_PetscSolver::radLinearSolve()
   if(ierr)
     throw PetscError(ierr, "MatAssemblyEnd");
   ierr = VecAssemblyBegin(d_b);
+  // the above line is where PETSc chokes on me --Kumar
   if(ierr)
     throw PetscError(ierr, "VecAssemblyBegin");
   ierr = VecAssemblyEnd(d_b);
