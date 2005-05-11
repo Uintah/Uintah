@@ -23,6 +23,10 @@
 #include <sgi_stl_warnings_on.h>
 #include <stdio.h>
 
+#ifdef _WIN32
+#include <process.h>
+#endif
+
 using std::cerr;
 
 using namespace Uintah;
@@ -613,7 +617,7 @@ ThreadPool::~ThreadPool()
   cout << "in destructor: Waiting for all threads to finish\n";
   while( d_numWaiting + d_numBusy > 0 )
     {
-      usleep( 1000 );
+      Time::waitFor(.001);
     }
 
   cout << "Telling all threads to quit\n";
