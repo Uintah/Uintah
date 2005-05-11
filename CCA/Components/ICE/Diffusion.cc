@@ -142,7 +142,6 @@ void q_flux_allFaces(DataWarehouse* new_dw,
   // of the cells at the patch boundary. 
   // We compute q_X[right]-q_X[left] on each patch
   IntVector low,hi; 
-  IntVector patchNeighborHigh = patch->neighborsHigh();
   IntVector offset = IntVector(1,1,1) - patch->neighborsHigh();
        
   low = patch->getSFCXIterator().begin();    // X Face iterator

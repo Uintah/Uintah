@@ -93,11 +93,11 @@ namespace Uintah {
                       const vector<IntVector> bound,
                       string& bc_kind,
                       const Vector& dx,
-                      const IntVector& P_dir,
+                      const IntVector& /*P_dir*/,
                       const string& whichVel,
                       SimulationStateP& sharedState,
                       mms_variable_basket* mms_var_basket,
-                      mms_vars* mms_v)
+                      mms_vars* /*mms_v*/)
 {
   //cout<< "Doing set_MMS_BCs_FC: \t\t" << whichVel
   //          << " face " << face << endl;

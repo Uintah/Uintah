@@ -80,7 +80,7 @@ bool read_MMS_BC_inputs(const ProblemSpecP& prob_spec,
 void addRequires_MMS(Task* t, 
                      const string& where,
                      ICELabel* lb,
-                     const MaterialSubset* ice_matls)
+                     const MaterialSubset* /*ice_matls*/)
 {
   cout_doing<< "Doing addRequires_MMS: \t\t" <<t->getName()
             << " " << where << endl;
@@ -104,7 +104,7 @@ void addRequires_MMS(Task* t,
             MMS boundary condiitions are applied.
 ______________________________________________________________________ */
 void  preprocess_MMS_BCs(DataWarehouse* new_dw,
-                         DataWarehouse* old_dw,
+                         DataWarehouse* /*old_dw*/,
                          ICELabel* lb,
                          const int /*indx*/,
                          const Patch* patch,
@@ -188,7 +188,7 @@ void set_MMS_Velocity_BC(const Patch* patch,
  Purpose~  Set temperature boundary conditions using method of 
            manufactured solutions
 ___________________________________________________________________*/
-void set_MMS_Temperature_BC(const Patch* patch,
+void set_MMS_Temperature_BC(const Patch* /*patch*/,
                             const Patch::FaceType face,
                             CCVariable<double>& temp_CC,
                             const string& var_desc,
