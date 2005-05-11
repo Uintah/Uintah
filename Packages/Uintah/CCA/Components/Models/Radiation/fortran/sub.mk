@@ -3,46 +3,46 @@
 SRCDIR   := Packages/Uintah/CCA/Components/Models/Radiation/fortran
 
 SRCS += \
-        $(SRCDIR)/cellg.F \
-        $(SRCDIR)/eco.F \
-        $(SRCDIR)/eco2.F \
-        $(SRCDIR)/eh2o.F \
-        $(SRCDIR)/efuel.F \
-        $(SRCDIR)/eico2.F \
-        $(SRCDIR)/eih2o.F \
-        $(SRCDIR)/find.F \
-        $(SRCDIR)/fixradval.F \
-        $(SRCDIR)/radarray.F \
-        $(SRCDIR)/radcoef.F \
-        $(SRCDIR)/radcal.F \
-        $(SRCDIR)/radwsgg.F \
-        $(SRCDIR)/rdombc.F \
-        $(SRCDIR)/rdombmcalc.F \
-        $(SRCDIR)/rdomflux.F \
-        $(SRCDIR)/rdomsolve.F \
-        $(SRCDIR)/rdomsrc.F \
-        $(SRCDIR)/rdomvolq.F \
-        $(SRCDIR)/rordr.F \
-        $(SRCDIR)/rordrss.F \
-        $(SRCDIR)/rordrtn.F \
-        $(SRCDIR)/rshsolve.F \
-        $(SRCDIR)/rshresults.F \
-        $(SRCDIR)/soot.F
+        $(SRCDIR)/m_cellg.F \
+        $(SRCDIR)/m_eco.F \
+        $(SRCDIR)/m_eco2.F \
+        $(SRCDIR)/m_eh2o.F \
+        $(SRCDIR)/m_efuel.F \
+        $(SRCDIR)/m_eico2.F \
+        $(SRCDIR)/m_eih2o.F \
+        $(SRCDIR)/m_find.F \
+        $(SRCDIR)/m_fixradval.F \
+        $(SRCDIR)/m_radarray.F \
+        $(SRCDIR)/m_radcoef.F \
+        $(SRCDIR)/m_radcal.F \
+        $(SRCDIR)/m_radwsgg.F \
+        $(SRCDIR)/m_rdombc.F \
+        $(SRCDIR)/m_rdombmcalc.F \
+        $(SRCDIR)/m_rdomflux.F \
+        $(SRCDIR)/m_rdomsolve.F \
+        $(SRCDIR)/m_rdomsrc.F \
+        $(SRCDIR)/m_rdomvolq.F \
+        $(SRCDIR)/m_rordr.F \
+        $(SRCDIR)/m_rordrss.F \
+        $(SRCDIR)/m_rordrtn.F \
+        $(SRCDIR)/m_rshsolve.F \
+        $(SRCDIR)/m_rshresults.F \
+        $(SRCDIR)/m_soot.F
 
-$(SRCDIR)/cellg.o: $(SRCDIR)/cellg_fort.h
-$(SRCDIR)/radarray.o: $(SRCDIR)/radarray_fort.h
-$(SRCDIR)/radcal.o: $(SRCDIR)/radcal_fort.h
-$(SRCDIR)/radcoef.o: $(SRCDIR)/radcoef_fort.h
-$(SRCDIR)/radwsgg.o: $(SRCDIR)/radwsgg_fort.h
-$(SRCDIR)/rordr.o: $(SRCDIR)/rordr_fort.h
-$(SRCDIR)/rordrss.o: $(SRCDIR)/rordrss_fort.h
-$(SRCDIR)/rordrtn.o: $(SRCDIR)/rordrtn_fort.h
-$(SRCDIR)/rdombc.o: $(SRCDIR)/rdombc_fort.h
-$(SRCDIR)/rdombmcalc.o: $(SRCDIR)/rdombmcalc_fort.h
-$(SRCDIR)/rdomsolve.o: $(SRCDIR)/rdomsolve_fort.h
-$(SRCDIR)/rdomsrc.o: $(SRCDIR)/rdomsrc_fort.h
-$(SRCDIR)/rdomflux.o: $(SRCDIR)/rdomflux_fort.h
-$(SRCDIR)/rdomvolq.o: $(SRCDIR)/rdomvolq_fort.h
-$(SRCDIR)/rshsolve.o: $(SRCDIR)/rshsolve_fort.h
-$(SRCDIR)/rshresults.o: $(SRCDIR)/rshresults_fort.h
+$(SRCDIR)/m_cellg.o: $(SRCDIR)/m_cellg_fort.h
+$(SRCDIR)/m_radarray.o: $(SRCDIR)/m_radarray_fort.h
+$(SRCDIR)/m_radcal.o: $(SRCDIR)/m_radcal_fort.h
+$(SRCDIR)/m_radcoef.o: $(SRCDIR)/m_radcoef_fort.h
+$(SRCDIR)/m_radwsgg.o: $(SRCDIR)/m_radwsgg_fort.h
+$(SRCDIR)/m_rordr.o: $(SRCDIR)/m_rordr_fort.h
+$(SRCDIR)/m_rordrss.o: $(SRCDIR)/m_rordrss_fort.h
+$(SRCDIR)/m_rordrtn.o: $(SRCDIR)/m_rordrtn_fort.h
+$(SRCDIR)/m_rdombc.o: $(SRCDIR)/m_rdombc_fort.h
+$(SRCDIR)/m_rdombmcalc.o: $(SRCDIR)/m_rdombmcalc_fort.h
+$(SRCDIR)/m_rdomsolve.o: $(SRCDIR)/m_rdomsolve_fort.h
+$(SRCDIR)/m_rdomsrc.o: $(SRCDIR)/m_rdomsrc_fort.h
+$(SRCDIR)/m_rdomflux.o: $(SRCDIR)/m_rdomflux_fort.h
+$(SRCDIR)/m_rdomvolq.o: $(SRCDIR)/m_rdomvolq_fort.h
+$(SRCDIR)/m_rshsolve.o: $(SRCDIR)/m_rshsolve_fort.h
+$(SRCDIR)/m_rshresults.o: $(SRCDIR)/m_rshresults_fort.h
 
