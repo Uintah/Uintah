@@ -43,6 +43,7 @@
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Mutex.h>
+#include <Core/Containers/StringUtil.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
@@ -233,7 +234,18 @@ Piostream::begin_class(const string& classname, int current_version)
       return 0;
     }
   }
+
   io(version);
+
+  if (dir == Read && version > current_version)
+  {
+    err = true;
+    reporter_->error("File too new.  " + classname + " has version " +
+                     to_string(version) +
+                     ", but this scirun build is at version " +
+                     to_string(current_version) + ".");
+  }
+
   return version;
 }
 
