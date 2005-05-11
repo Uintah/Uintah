@@ -13,6 +13,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Packages/Ptolemy/Dataflow/Modules/Converters/PTIIDataToNrrd.h>
 #include <Packages/Ptolemy/Core/PtolemyInterface/PTIISCIRun.h>
+#include <Packages/Ptolemy/Core/Datatypes/JNIGlobalRef.h>
 
 using namespace SCIRun;
 using namespace Ptolemy;
@@ -33,10 +34,12 @@ public:
     static Network* cachedNet;
     static std::string modName;
 
+    static JNIGlobalRef* dataObjRef;
+
     static const int DEFAULT = 1;
 
-    static bool getSCIRunMesh(JNIEnv *env, jobject meshObj);
     static void setSCIRunStarted(JNIEnv *env, jobject obj);
+    static bool getMesh(NrrdDataHandle points_handle_, NrrdDataHandle connections_handle_);
 
     // from
     // The Java Native Interface Programmer's Guide and Specification
@@ -64,6 +67,10 @@ private:
     JNIUtils(JNIUtils const&);
     JNIUtils& operator=(JNIUtils const&);
     ~JNIUtils();
+
+    const static int UNSTRUCTURED_REGULAR_NRRD_DIM = 2;
+    const static int DEFAULT_NUM_POINTS = 100;
+    const static int DEFAULT_POINTS_DIM = 3;
 
 };
 

@@ -45,17 +45,20 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Core/Persistent Core/Containers \
-	Core/Util Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/Geometry Core/GeomInterface \
-        Core/TkExtensions Core/Algorithms/DataIO \
-	Dataflow/Network Dataflow/Ports Core/Volume
+           Core/Util Core/Exceptions Core/Thread Core/GuiInterface \
+           Core/Geom Core/Geometry Core/GeomInterface \
+           Core/TkExtensions Core/Algorithms/DataIO \
+           Dataflow/Network Dataflow/Ports Core/Volume \
+           Dataflow/Modules/Render \
+           Packages/Ptolemy/Core/PtolemyInterface \
+           Packages/Ptolemy/Core/Datatypes
 
-#LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(MAGICK_LIBRARY)
-LIBS := $(LIBS) $(TK_LIBRARY) $(TEEM_LIBRARY) 
+LIBS := $(TK_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(MAGICK_LIBRARY)
+#LIBS := $(LIBS) $(TK_LIBRARY) $(TEEM_LIBRARY) 
 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
-ifeq ($(LARGESOS),no)
-TEEM_MODULES := $(TEEM_MODULES) $(LIBNAME)
-endif
+#ifeq ($(LARGESOS),no)
+#TEEM_MODULES := $(TEEM_MODULES) $(LIBNAME)
+#endif

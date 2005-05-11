@@ -22,9 +22,9 @@ typedef string* stringPtr;
 class StartSCIRun : public Runnable {
 public:
     StartSCIRun(const std::string &netPath, const std::string &data,
-                const std::string &module, jint run)
-        : netName(netPath), dataPath(data), readerName(module), runNet(run) {}
-    StartSCIRun() : netName(""), dataPath(""), readerName(""), runNet(0) {}
+                const std::string &module /*, jint run */)
+      : netName(netPath), dataPath(data), readerName(module) /*, runNet(run) */ {}
+    StartSCIRun() : netName(""), dataPath(""), readerName("") /*, runNet(0) */ {}
     virtual ~StartSCIRun() { std::cerr << "~StartSCIRun" << std::endl; }
     void run();
 
@@ -32,17 +32,14 @@ private:
   std::string netName;
   std::string dataPath;
   std::string readerName;
-  jint runNet;
+//   jint runNet;
 };
 
-class AddModule : public Runnable {
+class ExecuteModule : public Runnable {
 public:
-    AddModule(std::string command) : command(command) {}
-    virtual ~AddModule() {}
+    ExecuteModule() {}
+    virtual ~ExecuteModule() {}
     void run();
-
-private:
-    std::string command;
 };
 
 class Iterate : public Runnable {
@@ -67,14 +64,14 @@ private:
 	string picFormat;
 };
 
-class SignalExecuteReady : public Runnable {
-public:
-    SignalExecuteReady() {}
-    virtual ~SignalExecuteReady() {}
-    void run();
+// class SignalExecuteReady : public Runnable {
+// public:
+//     SignalExecuteReady() {}
+//     virtual ~SignalExecuteReady() {}
+//     void run();
 
-private:
-};
+// private:
+// };
 
 class QuitSCIRun : public Runnable {
 public:

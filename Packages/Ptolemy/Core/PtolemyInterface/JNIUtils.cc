@@ -4,6 +4,7 @@
 #include <Core/Util/Assert.h>
 #include <Dataflow/Network/Network.h>
 #include <Core/Thread/Thread.h>
+#include <Core/Datatypes/NrrdData.h>
 
 #include <iostream>
 
@@ -12,6 +13,8 @@
 // otherwise the Java native library loader will complain.
 JavaVM* JNIUtils::cachedJVM = 0;
 Network* JNIUtils::cachedNet = 0;
+JNIGlobalRef* JNIUtils::dataObjRef = 0;
+
 std::string JNIUtils::modName;
 // static jweak Class_C = 0;
 
@@ -65,7 +68,7 @@ JNI_OnLoad(JavaVM *jvm, void *reserved)
 JNIEXPORT void JNICALL
 JNI_OnUnload(JavaVM *jvm, void *reserved)
 {
-     JNIUtils::cachedJVM = 0;
+    JNIUtils::cachedJVM = 0;
 
      //JNIEnv *env;
      //if (jvm->GetEnv((void **)&env, JNI_VERSION_1_4) != JNI_OK) {
@@ -79,13 +82,25 @@ JNI_OnUnload(JavaVM *jvm, void *reserved)
      return;
 }
 
+
+// TODO: move to PTIIMeshData class
 bool
-JNIUtils::getSCIRunMesh(JNIEnv *env, jobject meshObj)
+JNIUtils::getMesh(NrrdDataHandle points_handle_, NrrdDataHandle connections_handle_)
 {
-    std::cerr << "JNIUtils::getSCIRunMesh" << std::endl;
+    JNIEnv *env;
     jfieldID fidPts, fidConn;
     jobjectArray pts, conn;
 
+    NrrdData *ptsNrrd;
+    NrrdData *connNrrd;
+    int ptsNrrdDim;
+    int connNrrdDim;
+
+    if (cachedJVM->AttachCurrentThread((void**) &env, NULL) != JNI_OK) {
+        std::cerr << "JNIUtils::getMesh: could not attach thread" << std::endl;
+        return false;
+    }
+    jobject meshObj = JNIUtils::dataObjRef->globalRef();
     jclass cls = env->GetObjectClass(meshObj);
 
     jfieldID fidPtsNum = env->GetFieldID(cls, "connecNum", "I");
@@ -107,18 +122,34 @@ JNIUtils::getSCIRunMesh(JNIEnv *env, jobject meshObj)
     ASSERT(fidType);
     jint type = env->GetIntField(meshObj, fidType);
 
-	Module* mod = cachedNet->get_module_by_id(JNIUtils::modName);
-    ASSERT(mod);
-//     if (mod == 0) {
-//         // hardcode for now - should parse from module name!
-//         // WARNING: not supported yet!
-//         mod = cachedNet->add_module("Ptolemy", "Converters", "PTIIDataToNrrd");
-//     }
-    PTIIDataToNrrd* converterMod = dynamic_cast<PTIIDataToNrrd*>(mod);
-    ASSERT(converterMod);
-
     if (type == JNIUtils::TYPE_DOUBLE) {
-        converterMod->sendJNIData(ptsNum, connNum, ptsDim, connDim);
+        double *pData;
+        double *cData;
+
+        ptsNrrd = points_handle_.get_rep();
+        connNrrd = connections_handle_.get_rep();
+
+        ptsNrrdDim = UNSTRUCTURED_REGULAR_NRRD_DIM;
+        int ptsNrrdDims[NRRD_DIM_MAX];
+        ptsNrrdDims[0] = ptsDim; // should be 3D points
+        ptsNrrdDims[1] = ptsNum;
+        nrrdAlloc_nva(ptsNrrd->nrrd, nrrdTypeDouble, ptsNrrdDim, ptsNrrdDims);
+
+        const char *ptslabelptr[NRRD_DIM_MAX];
+        ptslabelptr[0] = "dim";
+        ptslabelptr[1] = "points";
+        nrrdAxisInfoSet_nva(ptsNrrd->nrrd, nrrdAxisInfoLabel, ptslabelptr);
+
+        connNrrdDim = UNSTRUCTURED_REGULAR_NRRD_DIM;
+        int connNrrdDims[NRRD_DIM_MAX];
+        connNrrdDims[0] = connDim; // initial test case: tetrahedron
+        connNrrdDims[1] = connNum;
+        nrrdAlloc_nva(connNrrd->nrrd, nrrdTypeDouble, connNrrdDim, connNrrdDims);
+
+        const char *connlabelptr[NRRD_DIM_MAX];
+        connlabelptr[0] = "dim";
+        connlabelptr[1] = "connections";
+        nrrdAxisInfoSet_nva(connNrrd->nrrd, nrrdAxisInfoLabel, connlabelptr);
 
         fidPts = env->GetFieldID(cls, "pts", "[[D");
         ASSERT(fidPts);
@@ -128,19 +159,28 @@ JNIUtils::getSCIRunMesh(JNIEnv *env, jobject meshObj)
         ASSERT(localPts);
         pts = (jobjectArray) env->NewGlobalRef((jobject) localPts);
         ASSERT(pts);
+
+        pData = (double *) ptsNrrd->nrrd->data;
+        ASSERT(pData);
+
+        cData = (double *) connNrrd->nrrd->data;
+        ASSERT(cData);
+
         for (int i = 0; i < ptsNum; i++) {
             jdoubleArray dArr = (jdoubleArray) env->GetObjectArrayElement(pts, i);
             ASSERT(dArr);
             // jdouble is double
             double *d = (double *) env->GetPrimitiveArrayCritical(dArr, NULL);
             for (int j = 0; j < ptsDim; j++) {
-                converterMod->points(i, j) = d[j];
+                //converterMod->points(i, j) = d[j];
+                pData[j] = d[j];
             }
+            pData += ptsDim;
 
             // JNI_ABORT - free the buffer without copying back the possible changes
             // in the carray buffer
             // see http://java.sun.com/docs/books/jni/html/functions.html#70415
-            // for more details on JNI interface
+            // for more details on the JNI interface
             env->ReleasePrimitiveArrayCritical(dArr, d, JNI_ABORT);
         }
 
@@ -157,18 +197,15 @@ JNIUtils::getSCIRunMesh(JNIEnv *env, jobject meshObj)
             ASSERT(dArr);
             double *d = (double *) env->GetPrimitiveArrayCritical(dArr, NULL);
             for (int j = 0; j < connDim; j++) {
-                converterMod->connections(i, j) = d[j];
+                //converterMod->connections(i, j) = d[j];
+                cData[j] = d[j];
             }
+            cData += connDim;
             env->ReleasePrimitiveArrayCritical(dArr, d, JNI_ABORT);
         }
-
-        SignalExecuteReady *dataThread = new SignalExecuteReady();
-        Thread *t = new Thread(dataThread, "send Ptolemy data", 0, Thread::NotActivated);
-        t->setStackSize(1024*1024);
-        t->activate(false);
-        t->join();
-
-
+        if (connDim == 4) { // for now, assume all 4 pt connections are TetVolumes
+            connections_handle_->set_property(std::string("Elem Type"), std::string("Tet"), false); // not transient
+        }
         env->DeleteGlobalRef(pts);
         env->DeleteGlobalRef(conn);
     } else {
@@ -176,6 +213,7 @@ JNIUtils::getSCIRunMesh(JNIEnv *env, jobject meshObj)
         std::cerr << "Unsupported data type" << std::endl;
         return false;
     }
+
     return true;
 }
 
@@ -278,7 +316,7 @@ JNIEnv* JNIUtils::GetEnv()
 
 JNIEnv* JNIUtils::AttachCurrentThread()
 {
-printf("JNIUtils::AttachCurrentThread jvm=%#x\n", (unsigned int) JNIUtils::cachedJVM);
+//printf("JNIUtils::AttachCurrentThread jvm=%#x\n", (unsigned int) JNIUtils::cachedJVM);
     JNIEnv *env;
     if (JNIUtils::cachedJVM->AttachCurrentThread((void**) &env, NULL) != JNI_OK) {
         // report error
