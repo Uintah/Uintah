@@ -53,7 +53,7 @@ WARNING
 
 namespace Uintah {
   class ProcessorGroup;
-  class RadiationModel;
+  class Models_RadiationModel;
 
 class RadiationDriver : public ModelInterface {
 
@@ -159,7 +159,7 @@ class RadiationDriver : public ModelInterface {
 
  private:
 
-  RadiationModel* d_DORadiation;
+  Models_RadiationModel* d_DORadiation;
   int d_radCounter; //to decide how often radiation calc is done
   int d_radCalcFreq;
   const PatchSet* d_perproc_patches;

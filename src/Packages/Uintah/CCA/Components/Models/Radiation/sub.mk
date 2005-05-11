@@ -9,37 +9,37 @@ SUBDIRS := $(SRCDIR)/fortran
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 SRCS += \
-       $(SRCDIR)/CellInformation.cc \
-       $(SRCDIR)/DORadiationModel.cc \
+       $(SRCDIR)/Models_CellInformation.cc \
+       $(SRCDIR)/Models_DORadiationModel.cc \
        $(SRCDIR)/RadiationConstVariables.cc \
        $(SRCDIR)/RadiationDriver.cc \
-       $(SRCDIR)/RadiationModel.cc \
-       $(SRCDIR)/RadiationSolver.cc \
+       $(SRCDIR)/Models_RadiationModel.cc \
+       $(SRCDIR)/Models_RadiationSolver.cc \
        $(SRCDIR)/RadiationVariables.cc
 
 ifeq ($(HAVE_PETSC),yes)
-  SRCS += $(SRCDIR)/RadLinearSolver.cc
+  SRCS += $(SRCDIR)/Models_PetscSolver.cc
 else
-  SRCS += $(SRCDIR)/FakeRadLinearSolver.cc
+  SRCS += $(SRCDIR)/Models_FakePetscSolver.cc
 endif
 
 ifeq ($(HAVE_HYPRE),yes)
-  SRCS += $(SRCDIR)/RadHypreSolver.cc
+  SRCS += $(SRCDIR)/Models_HypreSolver.cc
 endif
 
-$(SRCDIR)/CellInformation.o: $(SRCDIR)/fortran/cellg_fort.h
-$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rordr_fort.h
-$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rordrss_fort.h
-$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rordrtn_fort.h
-$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/radarray_fort.h
-$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/radcal_fort.h
-$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/radcoef_fort.h
-$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/radwsgg_fort.h
-$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rdombc_fort.h
-$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rdomsolve_fort.h
-$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rdomsrc_fort.h
-$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rdomflux_fort.h
-$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rdombmcalc_fort.h
-$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rdomvolq_fort.h
-$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rshsolve_fort.h
-$(SRCDIR)/DORadiationModel.o: $(SRCDIR)/fortran/rshresults_fort.h
+$(SRCDIR)/Models_CellInformation.o: $(SRCDIR)/fortran/m_cellg_fort.h
+$(SRCDIR)/Models_DORadiationModel.o: $(SRCDIR)/fortran/m_rordr_fort.h
+$(SRCDIR)/Models_DORadiationModel.o: $(SRCDIR)/fortran/m_rordrss_fort.h
+$(SRCDIR)/Models_DORadiationModel.o: $(SRCDIR)/fortran/m_rordrtn_fort.h
+$(SRCDIR)/Models_DORadiationModel.o: $(SRCDIR)/fortran/m_radarray_fort.h
+$(SRCDIR)/Models_DORadiationModel.o: $(SRCDIR)/fortran/m_radcal_fort.h
+$(SRCDIR)/Models_DORadiationModel.o: $(SRCDIR)/fortran/m_radcoef_fort.h
+$(SRCDIR)/Models_DORadiationModel.o: $(SRCDIR)/fortran/m_radwsgg_fort.h
+$(SRCDIR)/Models_DORadiationModel.o: $(SRCDIR)/fortran/m_rdombc_fort.h
+$(SRCDIR)/Models_DORadiationModel.o: $(SRCDIR)/fortran/m_rdomsolve_fort.h
+$(SRCDIR)/Models_DORadiationModel.o: $(SRCDIR)/fortran/m_rdomsrc_fort.h
+$(SRCDIR)/Models_DORadiationModel.o: $(SRCDIR)/fortran/m_rdomflux_fort.h
+$(SRCDIR)/Models_DORadiationModel.o: $(SRCDIR)/fortran/m_rdombmcalc_fort.h
+$(SRCDIR)/Models_DORadiationModel.o: $(SRCDIR)/fortran/m_rdomvolq_fort.h
+$(SRCDIR)/Models_DORadiationModel.o: $(SRCDIR)/fortran/m_rshsolve_fort.h
+$(SRCDIR)/Models_DORadiationModel.o: $(SRCDIR)/fortran/m_rshresults_fort.h
