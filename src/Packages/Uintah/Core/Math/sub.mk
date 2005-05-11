@@ -25,8 +25,7 @@ PSELIBS := \
 	Core/Util                       \
 	Core/Geometry                   \
 	Core/Thread			\
-	Packages/Uintah/Core/Disclosure \
-	Packages/Uintah/Core/Grid
+	Packages/Uintah/Core/Disclosure 
 
 
 LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) 
