@@ -500,6 +500,14 @@ OpenGL::render_and_save_image(int x, int y,
   if (ftype == "ppm" || ftype == "raw")
   {
     image_file = scinew ofstream(fname.c_str());
+    if( !image_file ){
+    ostringstream str;
+    str << "ERROR opening file: " << fname.c_str();
+    view_window_->setMessage( str.str() );
+    cerr<<str.str()<<"\n";
+    return;
+  }
+
     channel_bytes = 1;
     num_channels = 3;
     do_magick = false;
@@ -1350,6 +1358,14 @@ void
 OpenGL::dump_image(const string& name, const string& /* type */)
 {
   ofstream dumpfile(name.c_str());
+  if( !dumpfile ){
+    ostringstream str;
+    str << "ERROR opening file: " << name.c_str();
+    view_window_->setMessage( str.str() );
+    cerr<<str.str()<<"\n";
+    return;
+  }
+
   GLint vp[4];
   glGetIntegerv(GL_VIEWPORT,vp);
   int pix_size = 3;  // for RGB
