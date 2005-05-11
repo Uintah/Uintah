@@ -36,6 +36,7 @@ PSELIBS := \
 	Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/Core/Exceptions \
 	Packages/Uintah/Core/Util \
+	Packages/Uintah/Core/Math \
 	Packages/Uintah/Core/Disclosure
 
 LIBS       := $(MPI_LIBRARY) $(Z_LIBRARY)
