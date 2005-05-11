@@ -504,8 +504,9 @@ void ICE::addMaterial(const ProblemSpecP& prob_spec, GridP& grid,
  Purpose~   read in the exchange coefficients after a material has been
             dynamically added
  _____________________________________________________________________*/
-void ICE::updateExchangeCoefficients(const ProblemSpecP& prob_spec, GridP& grid,
-                                     SimulationStateP&   sharedState)
+void ICE::updateExchangeCoefficients(const ProblemSpecP& prob_spec, 
+                                     GridP& /*grid*/,
+                                     SimulationStateP&   /*sharedState*/)
 {
   cout << "Updating Ex Coefficients" << endl;
   ProblemSpecP mat_ps  =  prob_spec->findBlock("AddMaterialProperties");
