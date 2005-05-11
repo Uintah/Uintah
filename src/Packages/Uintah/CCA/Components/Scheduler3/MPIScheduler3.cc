@@ -36,7 +36,6 @@ using namespace SCIRun;
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
 extern Mutex cerrLock;
-extern DebugStream mixedDebug;
 
 static DebugStream dbg("MPIScheduler", false);
 static DebugStream timeout("MPIScheduler.timings", false);
@@ -164,8 +163,8 @@ extern int create_tau_mapping( const string & taskname,
 void
 MPIScheduler3::wait_till_all_done()
 {
-  if( mixedDebug.active() ) {
-    cerrLock.lock();mixedDebug << "MPIScheduler3::wait_till_all_done()\n";
+  if( dbg.active() ) {
+    cerrLock.lock();dbg << "MPIScheduler3::wait_till_all_done()\n";
     cerrLock.unlock();
   }
   return;

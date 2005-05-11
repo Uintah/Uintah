@@ -21,7 +21,6 @@ using namespace std;
 // multiple threads at the same time) 
 // From: sus.cc
 extern SCIRun::Mutex cerrLock;
-extern DebugStream mixedDebug;
 extern DebugStream brydbg;
 static DebugStream dbg("TaskGraph", false);
 static DebugStream scrubout("Scrubbing", false);
@@ -76,27 +75,6 @@ DetailedTasks3::add(DetailedTask3* task)
   tasks_.push_back(task);
 }
 
-#if 0
-vector<DetailedReq*>&
-DetailedTasks3::getInitialRequires()
-{
-#if 0
-  for(DetailedReq* req = task->getRequires();
-      req != 0; req = req->next){
-    if(req->req->dw == Task::OldDW)
-      initreqs_.push_back(req);
-  }
-#else
-  if( mixedDebug.active() ) {
-    cerrLock.lock();
-    NOT_FINISHED("DetailedTasks3::add");
-    cerrLock.unlock();
-  }
-#endif
-  cerr << initreqs_.size() << " initreqs_\n";
-  return initreqs_;
-}
-#endif
 
 void
 DetailedTasks3::computeLocalTasks(int me)
@@ -115,9 +93,9 @@ DetailedTasks3::computeLocalTasks(int me)
       if (task->areInternalDependenciesSatisfied()) {
 	initiallyReadyTasks_.push(task);
 
-	if( mixedDebug.active() ) {
+	if( dbg.active() ) {
 	  cerrLock.lock();
-	  mixedDebug << "Initially Ready Task: " 
+	  dbg << "Initially Ready Task: " 
 		     << task->getTask()->getName() << "\n";
 	  cerrLock.unlock();
 	}
@@ -484,10 +462,10 @@ DetailedTask3::done(vector<PatchBasedDataWarehouse3P>& dws)
   scrub(dws);
   
   /*
-  if( mixedDebug.active() ) {
+  if( dbg.active() ) {
     cerrLock.lock();
-    mixedDebug << "This: " << this << " is done with task: " << task << "\n";
-    mixedDebug << "Name is: " << task->getName()
+    dbg << "This: " << this << " is done with task: " << task << "\n";
+    dbg << "Name is: " << task->getName()
       	       << " which has (" << internalDependents.size() 
       	       << ") tasks waiting on it:\n";
     cerrLock.unlock();
@@ -498,9 +476,9 @@ DetailedTask3::done(vector<PatchBasedDataWarehouse3P>& dws)
   for (iter = internalDependents.begin(); iter != internalDependents.end(); 
        iter++) {
     InternalDependency* dep = (*iter).second;
-    if( mixedDebug.active() ) {
+    if( dbg.active() ) {
       cerrLock.lock();
-      mixedDebug << cnt << ": " << *(dep->dependentTask->task) << "\n";
+      dbg << cnt << ": " << *(dep->dependentTask->task) << "\n";
       cerrLock.unlock();
     }
     dep->dependentTask->dependencySatisfied(dep);
@@ -564,9 +542,9 @@ operator<<(ostream& out, const DetailedDep& dep)
 void
 DetailedTasks3::internalDependenciesSatisfied(DetailedTask3* task)
 {
-  if( mixedDebug.active() ) {
+  if( dbg.active() ) {
     cerrLock.lock();
-    mixedDebug << "Begin internalDependenciesSatisfied\n";
+    dbg << "Begin internalDependenciesSatisfied\n";
     cerrLock.unlock();
   }
 #if !defined( _AIX )
@@ -575,9 +553,9 @@ DetailedTasks3::internalDependenciesSatisfied(DetailedTask3* task)
 
   readyTasks_.push(task);
 
-  if( mixedDebug.active() ) {
+  if( dbg.active() ) {
     cerrLock.lock();
-    mixedDebug << *task << " satisfied.  Now " 
+    dbg << *task << " satisfied.  Now " 
 	       << readyTasks_.size() << " ready.\n";
     cerrLock.unlock();
   }
@@ -682,13 +660,13 @@ void DependencyBatch::received(const ProcessorGroup * pg)
 {
   received_ = true;
   
-  if( mixedDebug.active() ) {
+  if( dbg.active() ) {
     cerrLock.lock();
-    mixedDebug << "Received batch message " << messageTag 
+    dbg << "Received batch message " << messageTag 
 	       << " from task " << *fromTask << "\n";
     
     for (DetailedDep* dep = head; dep != 0; dep = dep->next)
-      mixedDebug << "\tSatisfying " << *dep << "\n";
+      dbg << "\tSatisfying " << *dep << "\n";
     cerrLock.unlock();
   }
 
