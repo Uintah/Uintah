@@ -33,8 +33,8 @@ SRCDIR := Packages/Ptolemy/Core
 
 SUBDIRS := \
         $(SRCDIR)/Datatypes \
-        $(SRCDIR)/PtolemyInterface \
-        $(SRCDIR)/jni
+        $(SRCDIR)/PtolemyInterface
+#$(SRCDIR)/jni
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
