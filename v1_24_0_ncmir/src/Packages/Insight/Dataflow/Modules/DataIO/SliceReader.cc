@@ -123,6 +123,9 @@ SliceReader::~SliceReader()
 void
 SliceReader::execute()
 {
+
+  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
+
   slice_.reset();
 
   update_state(NeedData);

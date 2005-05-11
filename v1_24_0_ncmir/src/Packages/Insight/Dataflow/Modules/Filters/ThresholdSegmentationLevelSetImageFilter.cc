@@ -320,6 +320,8 @@ ThresholdSegmentationLevelSetImageFilter::execute()
     return;
   }
 
+  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
+
   iterationCounter_OutputImage = 0;	
   gui_update_OutputImage_.reset();
   gui_update_iters_OutputImage_.reset();

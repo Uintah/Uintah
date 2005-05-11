@@ -113,6 +113,8 @@ void PasteImageFilter::execute(){
     return;
   }
 
+  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
+
   typedef itk::Image<unsigned char,2> SliceImageTypeUChar;
   typedef itk::Image<unsigned char,3> VolumeImageTypeUChar;
 

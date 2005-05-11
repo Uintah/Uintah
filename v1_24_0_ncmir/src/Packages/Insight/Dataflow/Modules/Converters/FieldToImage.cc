@@ -456,6 +456,8 @@ void FieldToImage::execute(){
     return;
   }
 
+  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
+
   // Determine which type of field we are convertion from.
   // Our only options are ImageField, ITKImageField,
   // LatVolField and ITKLatVolField

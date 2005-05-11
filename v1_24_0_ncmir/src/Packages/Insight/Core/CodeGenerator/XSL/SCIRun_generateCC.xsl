@@ -795,7 +795,9 @@ bool
   }
 </xsl:text>
 </xsl:for-each>
-
+<xsl:text>
+  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
+</xsl:text>
 <xsl:for-each select="/filter/filter-sci/outputs/output">
 <xsl:variable name="send"><xsl:value-of select="@send_intermediate"/></xsl:variable>
 <xsl:if test="$send='yes'">
