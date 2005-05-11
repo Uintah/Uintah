@@ -54,7 +54,6 @@ using namespace Uintah;
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
 extern Mutex cerrLock;
-extern DebugStream mixedDebug;
 
 static DebugStream dbg( "PatchBasedDataWarehouse3", false );
 static DebugStream warn( "PatchBasedDataWarehouse3_warn", true );
@@ -316,7 +315,7 @@ PatchBasedDataWarehouse3::sendMPI(SendState& ss, SendState& rs, DependencyBatch*
 
       if(!sendset){
 
-        mixedDebug << "sendset is NULL\n";
+        dbg << "sendset is NULL\n";
 
         ParticleSubset* pset = var->getParticleSubset();
         ssLock.lock();  // Dd: ??
@@ -624,8 +623,8 @@ PatchBasedDataWarehouse3::reduceMPI(const VarLabel* label,
 
   vector<char> recvbuf(packsize);
 
-  if( mixedDebug.active() ) {
-    cerrLock.lock(); mixedDebug << "calling MPI_Allreduce\n";
+  if( dbg.active() ) {
+    cerrLock.lock(); dbg << "calling MPI_Allreduce\n";
     cerrLock.unlock();
   }
 
@@ -633,8 +632,8 @@ PatchBasedDataWarehouse3::reduceMPI(const VarLabel* label,
   int error = MPI_Allreduce(&sendbuf[0], &recvbuf[0], count, datatype, op,
 			    d_myworld->getComm());
 
-  if( mixedDebug.active() ) {
-    cerrLock.lock(); mixedDebug << "done with MPI_Allreduce\n";
+  if( dbg.active() ) {
+    cerrLock.lock(); dbg << "done with MPI_Allreduce\n";
     cerrLock.unlock();
   }
 
