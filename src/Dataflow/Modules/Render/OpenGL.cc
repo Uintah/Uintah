@@ -49,6 +49,7 @@
 #include <Dataflow/Modules/Render/PBuffer.h> // #defines HAVE_PBUFFER
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/TCLTask.h>
+#include <Core/Util/Environment.h>
 #include <sci_values.h>
 
 #ifdef HAVE_MAGICK
@@ -1933,8 +1934,15 @@ OpenGL::StartMpeg(const string& fname)
   // Get the default options.
   MPEGe_default_options( &mpeg_options_ );
   // Change a couple of the options.
-  strcpy(mpeg_options_.frame_pattern, "II");  // was ("IIIIIIIIIIIIIII");
+  char *pattern = scinew char[4];
+  pattern = "II\0";
+  mpeg_options_.frame_pattern = pattern;
   mpeg_options_.search_range[1]=0;
+  mpeg_options_.gop_size=1;
+  mpeg_options_.IQscale=1;
+  mpeg_options_.PQscale=1;
+  mpeg_options_.BQscale=1;
+  mpeg_options_.pixel_search=MPEGe_options::FULL;
   if( !MPEGe_open(mpeg_file_, &mpeg_options_ ) )
   {
     cerr << "MPEGe library initialisation failure!:" <<
