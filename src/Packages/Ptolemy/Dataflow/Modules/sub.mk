@@ -38,8 +38,8 @@
 SRCDIR := Packages/Ptolemy/Dataflow/Modules
 
 SUBDIRS := \
-        $(SRCDIR)/Vergil \
-        $(SRCDIR)/Converters \
+        $(SRCDIR)/Converters
+#$(SRCDIR)/Vergil
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

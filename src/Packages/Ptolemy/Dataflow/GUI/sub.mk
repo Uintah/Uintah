@@ -40,7 +40,7 @@ PATH_TO_SCIRUN := $(shell cd $(SRCTOP) ; pwd)
 PATH_TO_PACKAGE := $(PATH_TO_SCIRUN)/Packages/Ptolemy
 
 SRCS := \
-	$(SRCDIR)/VergilApplication.tcl \
+#	$(SRCDIR)/VergilApplication.tcl \
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
