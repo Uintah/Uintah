@@ -423,6 +423,8 @@ main( int argc, char** argv )
 
 #ifndef _WIN32
     SimulationController::start_addr = (char*)sbrk(0);
+    mode_t mask_gor = 0022;
+    umask(mask_gor);
 #endif
     Thread::disallow_sgi_OpenGL_page0_sillyness();
 
