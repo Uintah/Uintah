@@ -109,7 +109,7 @@ class RadiationDriver : public ModelInterface {
 				 const PatchSet* patches,
 				 const MaterialSet* matls);
 
-  void scheduleIntensitySolve(const LevelP& level,
+  virtual void scheduleIntensitySolve(const LevelP& level,
 			      SchedulerP& sched,
 			      const PatchSet* patches,
 			      const MaterialSet* matls,

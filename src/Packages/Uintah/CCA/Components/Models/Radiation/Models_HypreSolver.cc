@@ -510,17 +510,17 @@ Models_HypreSolver::radLinearSolve()
 			   (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSolve,
 			   (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSetup,
 			   (HYPRE_Solver) precond);
-      //      cerr << "SMG Precond time = " << Time::currentSeconds()-start_time << endl;
+      //      cerr << "Jacobi Precond time = " << Time::currentSeconds()-start_time << endl;
     }
-    //double dummy_start = Time::currentSeconds();
+    //    double dummy_start = Time::currentSeconds();
     HYPRE_GMRESSetup
       ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, (HYPRE_Vector)d_x );
-    //cerr << "PCG Setup time = " << Time::currentSeconds()-dummy_start << endl;
-    //dummy_start = Time::currentSeconds();
+    //    cerr << "PCG Setup time = " << Time::currentSeconds()-dummy_start << endl;
+    //    dummy_start = Time::currentSeconds();
 
     HYPRE_GMRESSolve
       ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, (HYPRE_Vector)d_x);
-    //cerr << "PCG Solve time = " << Time::currentSeconds()-dummy_start << endl;
+    //    cerr << "PCG Solve time = " << Time::currentSeconds()-dummy_start << endl;
     
     HYPRE_GMRESGetNumIterations( (HYPRE_Solver)solver, &num_iterations );
     HYPRE_GMRESGetFinalRelativeResidualNorm( (HYPRE_Solver)solver, &final_res_norm );
