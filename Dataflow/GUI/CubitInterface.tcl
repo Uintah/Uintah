@@ -32,7 +32,32 @@ itcl_class SCIRun_FieldsCreate_CubitInterface {
     constructor {config} {
         set name CubitInterface
 	initGlobal $this-cubitdir .
+	initGlobal $this-ncdump ncdump
     }
+
+    method choose_ncdump {} {
+        set w .ui[modname]-choose
+        if {[winfo exists $w]} { 
+	    SciRaise $w
+	    return 
+        }
+
+        # file types to appers in filter box
+        set types { 
+	    { {All Files} {*} }
+	}
+        makeOpenFilebox \
+	    -parent [toplevel $w -class TkFDialog] \
+	    -filevar $this-ncdump \
+	    -command "wm withdraw $w" \
+	    -cancel "wm withdraw $w" \
+	    -title "Choose NetCDF ncdump executable" \
+	    -filetypes $types \
+	    -initialdir /usr/local/bin 
+        moveToCursor $w
+	SciRaise $w
+    }
+
 
 
     method ui {} {
@@ -46,8 +71,16 @@ itcl_class SCIRun_FieldsCreate_CubitInterface {
 	pack $w.d -side top -e y -f both -padx 5 -pady 5	
 	label $w.d.l -text "Directoy containing claro: "
 	entry $w.d.e -textvariable $this-cubitdir
-	bind $w.d.e <Return> "$this-c needexecute"
 	pack $w.d.l $w.d.e -side left
+
+	frame $w.e
+	pack $w.e -side top -e y -f both -padx 5 -pady 5	
+	label $w.e.l -text "Path to ncdump: "
+	entry $w.e.e -textvariable $this-ncdump
+	button $w.e.b -text Browse... -command "$this choose_ncdump"
+	pack $w.e.l $w.e.e $w.e.b -side left
+
+
 
 	makeSciButtonPanel $w $w $this
 
