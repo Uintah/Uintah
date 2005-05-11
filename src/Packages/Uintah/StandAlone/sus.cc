@@ -96,6 +96,7 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <sys/stat.h>
 
 using namespace SCIRun;
 using namespace Uintah;
