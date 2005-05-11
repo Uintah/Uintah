@@ -121,6 +121,9 @@ ImageToField::~ImageToField(){
   
 template<class InputImageType>
 FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &img) {
+
+  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
+
   InputImageType *n = dynamic_cast< InputImageType * >( img.get_rep()->data_.GetPointer() );
   
   typedef ITKImageField<typename InputImageType::PixelType> ITKImageFieldType;
@@ -190,6 +193,8 @@ FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &img) {
   
 template<class InputImageType>
 FieldHandle ImageToField::create_latvol_field(ITKDatatypeHandle &img) {
+
+  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
   
   typedef ITKLatVolField<typename InputImageType::PixelType> ITKLatVolFieldType;
   typedef LatVolField<typename InputImageType::PixelType> LatVolFieldType;
@@ -271,6 +276,9 @@ FieldHandle ImageToField::create_latvol_field(ITKDatatypeHandle &img) {
 
 template<class Type, unsigned int length>
 FieldHandle ImageToField::create_image_vector_field1(ITKDatatypeHandle &img){
+
+  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
+
   typedef ITKImageField< Vector > ITKImageFieldType;
   typedef ImageField< Vector > ImageFieldType;
   typedef itk::Image<itk::Vector<Type, length>,2> InputImageType;
@@ -344,6 +352,9 @@ FieldHandle ImageToField::create_image_vector_field1(ITKDatatypeHandle &img){
 
 template<class Type, unsigned int length>
 FieldHandle ImageToField::create_latvol_vector_field1(ITKDatatypeHandle &img){
+
+  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
+
   typedef ITKLatVolField< Vector > ITKLatVolFieldType;
   typedef LatVolField< Vector > LatVolFieldType;
   typedef itk::Image<itk::Vector<Type, length>,3> InputImageType;
@@ -430,6 +441,8 @@ FieldHandle ImageToField::create_latvol_vector_field1(ITKDatatypeHandle &img){
 template<class Type>
 FieldHandle ImageToField::create_image_vector_field2(ITKDatatypeHandle &img){
 
+  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
+
   typedef ITKImageField< Vector > ITKImageFieldType;
   typedef ImageField< Vector > ImageFieldType;
   typedef itk::Image<itk::RGBPixel<Type>,2> InputImageType;
@@ -500,6 +513,9 @@ FieldHandle ImageToField::create_image_vector_field2(ITKDatatypeHandle &img){
 
 template<class Type>
 FieldHandle ImageToField::create_latvol_vector_field2(ITKDatatypeHandle &img){
+
+  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
+
   typedef ITKLatVolField< Vector > ITKLatVolFieldType;
   typedef LatVolField< Vector > LatVolFieldType;
   typedef itk::Image<itk::RGBPixel<Type>,3> InputImageType;
@@ -675,8 +691,6 @@ void ImageToField::execute(){
   
   if(!inhandle1_.get_rep())
     return;
-
-  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
   
   // get input
   itk::Object *n = inhandle1_.get_rep()->data_.GetPointer();

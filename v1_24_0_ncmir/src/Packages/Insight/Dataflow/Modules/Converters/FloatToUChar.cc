@@ -95,6 +95,8 @@ bool FloatToUChar::run( itk::Object *obj_InputImage)
     return false;
   }
 
+  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
+
   typedef typename itk::CastImageFilter< InputImageType, OutputImageType > CasterType;
 
   // create a new one
@@ -133,6 +135,8 @@ bool FloatToUChar::run2( itk::Object *obj_InputImage)
   if( !data_InputImage ) {
     return false;
   }
+
+  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
 
   typedef typename itk::VectorCastImageFilter< InputImageType, OutputImageType > CasterType;
 
@@ -185,8 +189,6 @@ void FloatToUChar::execute(){
     error("Unable to initialize oport");
     return;
   }
-
-  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
 
   // get input
   itk::Object* data_InputImage = inhandle_InputImage_.get_rep()->data_.GetPointer();

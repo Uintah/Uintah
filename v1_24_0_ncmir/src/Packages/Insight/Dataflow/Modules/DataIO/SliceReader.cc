@@ -124,8 +124,6 @@ void
 SliceReader::execute()
 {
 
-  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
-
   slice_.reset();
 
   update_state(NeedData);
@@ -326,6 +324,8 @@ template<class data>
 bool
 SliceReader::create_slice(ITKDatatype* nd)
 {
+
+  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
 
   io_->CloseImageFile(fp_);
   fp_ = io_->OpenImageFile(io_->GetImageFile(old_filename_));
