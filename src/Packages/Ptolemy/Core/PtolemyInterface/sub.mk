@@ -43,20 +43,19 @@ SRCDIR   := Packages/Ptolemy/Core/PtolemyInterface
 
 SRCS     += \
             $(SRCDIR)/iterSCIRun.cc \
-	    $(SRCDIR)/JNIUtils.cc \
+            $(SRCDIR)/JNIUtils.cc \
             $(SRCDIR)/org_sdm_spa_actors_scirun_SCIRunJNIActor.cc \
             $(SRCDIR)/org_sdm_spa_actors_scirun_SCIRunUtils.cc \
-            $(SRCDIR)/PTIISCIRun.cc \
-            $(SRCDIR)/PTIIData.cc
+            $(SRCDIR)/PTIISCIRun.cc
+#$(SRCDIR)/PTIIData.cc
 #[INSERT NEW CODE FILE HERE]
 
 ifeq ($(LARGESOS),yes)
     PSELIBS := Dataflow Core
 else
-    PSELIBS := Dataflow/Network Core/Containers Core/GuiInterface \
+    PSELIBS := Core/Datatypes Dataflow/Network Core/Containers Core/GuiInterface \
                Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
                Core/Malloc Core/Services Dataflow/XMLUtil Core/SystemCall \
-               Packages/Ptolemy/Dataflow/Modules/Converters \
                Dataflow/Modules/Render \
                Packages/Ptolemy/Core/Datatypes
 
@@ -80,7 +79,7 @@ INCLUDES += \
             -I$(JAVA_INC)/linux
 
 SOFLAGS := \
-            -shared -L$(LIBDIR) $(CFLAGS)
+            -shared -L$(LIBDIR)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -24,7 +24,7 @@ JNIGlobalRef::~JNIGlobalRef()
     if (cachedJVM->AttachCurrentThread((void**) &env, NULL) != JNI_OK) {
         std::cerr << "~JNIGlobalRef: could not attach thread" << std::endl;
     } else {
-        fprintf(stderr, "JNIGlobalRef::~JNIGlobalRef(): jobject ptr=%#x, \n", (unsigned int) gref, (unsigned int) this);
+        fprintf(stderr, "JNIGlobalRef::~JNIGlobalRef(): jobject ptr=%#x, this=%#x\n", (unsigned int) gref, (unsigned int) this);
         env->DeleteGlobalRef(gref);
     }
 }

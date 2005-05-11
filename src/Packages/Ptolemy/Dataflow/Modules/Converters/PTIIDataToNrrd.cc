@@ -2,6 +2,8 @@
 
 #include <Packages/Ptolemy/Dataflow/Modules/Converters/PTIIDataToNrrd.h>
 #include <Packages/Ptolemy/Core/PtolemyInterface/JNIUtils.h>
+//#include <Packages/Ptolemy/Core/PtolemyInterface/PTIIData.h>
+#include <Core/Thread/CleanupManager.h>
 
 #include <sci_defs/ptolemy_defs.h>
 
@@ -12,119 +14,84 @@
 
 namespace Ptolemy {
 
+#ifdef __linux
+static void detach_callback(void *vwptr)
+{
+std::cerr << "detach_callback" << std::endl;
+    if (JNIUtils::cachedJVM) {
+        JNIUtils::cachedJVM->DetachCurrentThread();
+    }
+    if (JNIUtils::dataObjRef) {
+        delete JNIUtils::dataObjRef;
+    }
+}
+#endif
+
 DECLARE_MAKER(PTIIDataToNrrd)
 PTIIDataToNrrd::PTIIDataToNrrd(GuiContext *ctx)
-  : Module("PTIIDataToNrrd", ctx, Source, "Converters", "Ptolemy"), points(DEFAULT_NUM_POINTS, DEFAULT_POINTS_DIM), connections(DEFAULT_NUM_POINTS, DEFAULT_POINTS_DIM), points_handle_(0), connections_handle_(0), nPts(0), nConn(0), ptsDim(0), connDim(0), nrrdType(nrrdTypeUnknown), nrrdDim(UNSTRUCTURED_REGULAR_NRRD_DIM)
+  : Module("PTIIDataToNrrd", ctx, Source, "Converters", "Ptolemy"), points_handle_(0), connections_handle_(0)
 {
     std::cerr << "PTIIDataToNrrd::PTIIDataToNrrd" << std::endl;
+#ifdef __linux
+    CleanupManager::add_callback(detach_callback, 0);
+#endif
 }
 
 PTIIDataToNrrd::~PTIIDataToNrrd()
 {
     std::cerr << "PTIIDataToNrrd::~PTIIDataToNrrd" << std::endl;
-}
-
-// supporting only doubles for now
-bool PTIIDataToNrrd::sendJNIData(int np, int nc, int pDim, int cDim)
-{
-    std::cerr << "PTIIDataToNrrd::sendJNIData()" << std::endl;
-    // should check data ranges!
-    nPts = np;
-    nConn = nc;
-    ptsDim = pDim;
-    connDim = cDim;
-
-    points.resize(nPts, pDim);
-    connections.resize(nConn, cDim);
-    
-    nrrdType = nrrdTypeDouble;
-
-    return true;
+#ifdef __linux    
+    CleanupManager::invoke_remove_callback(detach_callback, 0);
+#endif
 }
 
 void PTIIDataToNrrd::execute()
 {
-    JNIUtils::dataSem().down();
     std::cerr << "PTIIDataToNrrd::execute()" << std::endl;
+    update_state(NeedData);
 
-    outportConns = (NrrdOPort *)get_oport("Connections");
-    if (!outportConns) {
-        error("Unable to initialize oport 'Connections'.");
-        return;
-    }
     outportPoints = (NrrdOPort *)get_oport("Points");
     if (!outportPoints) {
         error("Unable to initialize oport 'Points'.");
         return;
     }
+    outportConns = (NrrdOPort *)get_oport("Connections");
+    if (!outportConns) {
+        error("Unable to initialize oport 'Connections'.");
+        return;
+    }
 
-//     update_state(NeedData);
-    NrrdData *ptsNrrd = scinew NrrdData;
+    NrrdData *ptsNrrd;
+    NrrdData *connNrrd;
+
+    ptsNrrd = scinew NrrdData;
     ASSERT(ptsNrrd);
     points_handle_ = ptsNrrd;
 
-    NrrdData *connNrrd = scinew NrrdData;
+    connNrrd = scinew NrrdData;
     ASSERT(connNrrd);
     connections_handle_ = connNrrd;
 
-//     update_state(Executing);
+    if (JNIUtils::getMesh(points_handle_, connections_handle_)) {
+        std::cerr << "Got object!" << std::endl;
+        JNIUtils::sem().up();
 
-    std::cerr << "PTIIDataToNrrd::execute: points" << std::endl;
-    int ptsNrrdDim = UNSTRUCTURED_REGULAR_NRRD_DIM;
-    int ptsNrrdDims[NRRD_DIM_MAX];
-    ptsNrrdDims[0] = ptsDim; // should be 3D points
-    ptsNrrdDims[1] = nPts;
-    nrrdAlloc_nva(ptsNrrd->nrrd, nrrdTypeDouble, ptsNrrdDim, ptsNrrdDims);
-    //nrrdWrap_nva(ptsNrrd->nrrd, points.get_dataptr(), nrrdType, ptsNrrdDim, ptsNrrdDims);
-
-    const char *ptslabelptr[NRRD_DIM_MAX];
-    ptslabelptr[0] = "dim";
-    ptslabelptr[1] = "points";
-    nrrdAxisInfoSet_nva(ptsNrrd->nrrd, nrrdAxisInfoLabel, ptslabelptr);
-
-    double *pData = (double *) ptsNrrd->nrrd->data;
-    for (int i = 0; i < nPts; i++) {
-        for (int j = 0; j < ptsDim; j++) {
-            pData[j] = points(i, j);
+        // Send the data downstream.
+        if (points_handle_ != 0) {
+            outportPoints->send(points_handle_);
+        } else {
+          error("No points available");
         }
-        pData += ptsDim;
-    }
-
-    std::cerr << "PTIIDataToNrrd::execute: connections" << std::endl;
-    int connNrrdDim = UNSTRUCTURED_REGULAR_NRRD_DIM;
-    int connNrrdDims[NRRD_DIM_MAX];
-    connNrrdDims[0] = connDim; // initial test case: tetrahedron
-    connNrrdDims[1] = nConn;
-    nrrdAlloc_nva(connNrrd->nrrd, nrrdTypeDouble, connNrrdDim, connNrrdDims);
-    //nrrdWrap_nva(connNrrd->nrrd, connections.get_dataptr(), nrrdType, connNrrdDim, connNrrdDims);
-
-    const char *connlabelptr[NRRD_DIM_MAX];
-    connlabelptr[0] = "dim";
-    connlabelptr[1] = "connections";
-    nrrdAxisInfoSet_nva(connNrrd->nrrd, nrrdAxisInfoLabel, connlabelptr);
-
-    double *cData = (double *) connNrrd->nrrd->data;
-    for (int i = 0; i < nConn; i++) {
-        for (int j = 0; j < connDim; j++) {
-            cData[j] = connections(i, j);
+        if (connections_handle_ != 0) {
+            outportConns->send(connections_handle_);
+        } else {
+          error("No connections available");
         }
-        cData += connDim;
+        update_state(Completed);
+    } else {
+        std::cerr << "Error: could not get object!" << std::endl;
     }
-
-    // Send the data downstream.
-    if (points_handle_ != 0) {
-        outportPoints->send(points_handle_);
-    }
-    if (connections_handle_ != 0) {
-        outportConns->send(connections_handle_);
-        if (connDim == 4) { // for now, assume all 4 pt connections are TetVolumes
-            connections_handle_->set_property(std::string("Elem Type"), std::string("Tet"), false); // not transient
-        }
-    }
-    JNIUtils::dataSem().up();
-//     update_state(Completed);
 }
-
 
 // void PTIIDataToNrrd::tcl_command(GuiArgs& args, void* userdata)
 // {

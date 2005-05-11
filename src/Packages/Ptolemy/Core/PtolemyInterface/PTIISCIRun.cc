@@ -157,17 +157,12 @@ void StartSCIRun::run()
 		
 	Module* mod;
 	
-	///////////////////////
-	//***********Maybe a bad place for this
-	JNIUtils::modName = readerName;
-	
 	//string command = "loadnet {/scratch/SCIRun/test.net}";
 	if (! netName.empty()) {
 		gui->eval("loadnet {" + netName + "}");
 		if(! dataPath.empty() && ! readerName.empty()){
 			
 			mod = net->get_module_by_id(readerName); //example: SCIRun_DataIO_FieldReader_0
-			
 			GuiInterface* modGui = mod->getGui();
 			
 			//for testing
@@ -182,8 +177,7 @@ void StartSCIRun::run()
 			std::cerr << "file name was: " << state << std::endl;
 			
 			modGui->set("::" + readerName + "-filename", dataPath);
-		}
-		else if (! readerName.empty()) {
+		} else if (! readerName.empty()) {
 		
 			//for running a module that doesnt neccesarily have a file to load
 			mod=net->get_module_by_id(readerName); //example: SCIRun_DataIO_FieldReader_0
@@ -193,11 +187,14 @@ void StartSCIRun::run()
     tcl_task->release_mainloop();
 
 	
-	//should just have a general run network here.
-	if(runNet == 1 && ! readerName.empty()){
-		mod->want_to_execute();  //tell the first module that it wants to execute
-	}
-	
+    // SCIRunJNIActor interface: moved to ExecuteModule runnable
+    // IterateSCIRun interface: doesn't look like actor needs this code
+#if 0
+// 	if(runNet == 1 && ! readerName.empty()){
+// 		mod->want_to_execute();  //tell the first module that it wants to execute
+// 	}
+#endif
+
     JNIUtils::sem().up();
 
 #if 0
@@ -217,12 +214,18 @@ void StartSCIRun::run()
 }
 
 
-void AddModule::run()
+void ExecuteModule::run()
 {
+    std::cerr << "ExecuteModule::run" << std::endl;
     JNIUtils::sem().down();
-    std::cerr << "AddModule::run: " << command << std::endl;
-	
-    JNIUtils::sem().up();
+
+    Module *mod =
+        JNIUtils::cachedNet->get_module_by_id(JNIUtils::modName);
+    if (mod == 0) {
+        std::cerr << "Could not get module " << JNIUtils::modName << std::endl;
+    } else {
+        mod->want_to_execute();
+    }
 }
 
 Semaphore& Iterate::iterSem()
@@ -321,10 +324,15 @@ void Iterate::run()
 		//TODO do we care if there is no viewer that is getting the messages?
 		//TODO worry about saving over existing images.  would be cool to prompt
 		// the user if they are going to save over an image that exists already
-		if(picPath != ""){
+		if (! picPath.empty()) {
 			name = picPath + "image" + to_string(i) + "" + picFormat;
 
 			//when the viewer is done save the image
+
+
+            // Fails when supplied image size (x or y) > actual image size - 
+            // is there a way to get resx and resy from
+            // Viewer Tcl code (see Dataflow/GUI/Viewer.tcl)?
 			ViewerMessage *msg1 = scinew ViewerMessage
 			(MessageTypes::ViewWindowDumpImage,"::SCIRun_Render_Viewer_0-ViewWindow_0",name, picFormat,"640","473");
 			viewer->mailbox.send(msg1); 
@@ -343,12 +351,6 @@ Iterate::~Iterate(){
 	//free dynamically allocated memory
 	delete [] doOnce;
 	delete [] iterate;
-}
-
-void SignalExecuteReady::run()
-{
-    //converterMod->sendJNIData(np, nc, pDim, cDim, *p, *c);
-    JNIUtils::dataSem().up();
 }
 
 void QuitSCIRun::run()

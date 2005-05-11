@@ -39,8 +39,14 @@ Java_org_sdm_spa_actors_scirun_SCIRunUtils_getScirun(JNIEnv *env, jclass cls, js
 	std::string nPath = JNIUtils::GetStringNativeChars(env, name);
 	std::string dPath = JNIUtils::GetStringNativeChars(env, file);
 	JNIUtils::modName = JNIUtils::GetStringNativeChars(env, module);
+    if (JNIUtils::modName.empty()) {
+        //throw exception here
+        std::cerr << "Error: no module name provided." << std::endl;
+        return 1;
+    }
+    //JNIUtils::runNetwork = runNet;
 
-	StartSCIRun *start = new StartSCIRun(nPath, dPath, JNIUtils::modName, runNet);
+	StartSCIRun *start = new StartSCIRun(nPath, dPath, JNIUtils::modName /*, runNet */);
 
     Thread *t = new Thread(start, "start scirun", 0, Thread::NotActivated);
     t->setStackSize(1024*2048);

@@ -72,7 +72,7 @@ Java_org_sdm_spa_actors_scirun_IterateSCIRun_runOnFiles(JNIEnv *env, jobject obj
 	
 	Iterate *iter = new Iterate(input1,size1,input2,size2,numParams,pPath,picFormat);
 	Thread *t = new Thread(iter, "iterate_on_inputs", 0, Thread::NotActivated);
-    t->setStackSize(1024*1024);
+    t->setStackSize(1024*4096);
     t->activate(false);
     t->join();
 

@@ -3,7 +3,7 @@
 #include <Packages/Ptolemy/Core/PtolemyInterface/org_sdm_spa_actors_scirun_SCIRunJNIActor.h>
 #include <Packages/Ptolemy/Core/PtolemyInterface/JNIUtils.h>
 #include <Packages/Ptolemy/Core/PtolemyInterface/PTIISCIRun.h>
-#include <Packages/Ptolemy/Core/PtolemyInterface/PTIIData.h>
+//#include <Packages/Ptolemy/Core/PtolemyInterface/PTIIData.h>
 #include <Packages/Ptolemy/Core/Datatypes/JNIGlobalRef.h>
 
 // #include <Core/Thread/Thread.h>
@@ -37,26 +37,21 @@ Java_org_sdm_spa_actors_scirun_SCIRunJNIActor_sendSCIRunData(JNIEnv *env, jobjec
     ASSERT(fidData);
     jobject localData = env->GetObjectField(scirunData, fidData); 
     ASSERT(localData);
-    JNIGlobalRef ref(&JNIUtils::cachedJVM, env, localData);
+    JNIUtils::dataObjRef = new JNIGlobalRef(&JNIUtils::cachedJVM, env, localData);
     env->DeleteLocalRef(localData);
-    //ASSERT(data);
 
-    bool ret = false;
-    switch((int) type) {
-        case JNIUtils::TYPE_MESH:
-            //ptIIData = new PTIIMeshData(env, localData);
-            //ptIIData->getData(env);
-            ret = JNIUtils::getSCIRunMesh(env, ref.globalRef());
-            break;
-        default:
-          std::cerr << "Unknown type" << std::endl;
-    }
+	ExecuteModule *execMod = new ExecuteModule();
+
+    Thread *t = new Thread(execMod, "execute converter module", 0, Thread::NotActivated);
+    t->setStackSize(1024*2048);
+    t->activate(false);
+    t->join();
 
     env->DeleteLocalRef(cls);
 
-    if (! ret) {
-        return 0;
-    }
+    //if (! ret) {
+    //    return 0;
+    //}
 
     return 1;
 }
