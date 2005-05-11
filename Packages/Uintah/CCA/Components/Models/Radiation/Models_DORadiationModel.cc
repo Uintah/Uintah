@@ -190,10 +190,6 @@ Models_DORadiationModel::computeRadiationProps(const ProcessorGroup*,
   IntVector domLo = patch->getCellLowIndex();
   IntVector domHi = patch->getCellHighIndex();
 
-  //  CCVariable<double> shgamma;
-  //  vars->shgamma.allocate(domLo,domHi);
-  //  vars->shgamma.initialize(0.0);
-  
   for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
     for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
       for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
@@ -448,10 +444,11 @@ Models_DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 				  ae, 
 				  an, 
 				  at);
-				
-	//      timeRadMatrix += Time::currentSeconds() - timeSetMat;
 
+	//      timeRadMatrix += Time::currentSeconds() - timeSetMat;
+	
 	bool converged =  d_linearSolver->radLinearSolve();
+
 	if (converged) {
 	  d_linearSolver->copyRadSoln(patch, vars);
 	}
@@ -587,6 +584,7 @@ Models_DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 		    bands);
 
       //      double timeSetMat = Time::currentSeconds();
+
       d_linearSolver->setMatrix(pg ,
 				patch, 
 				vars, 
