@@ -258,7 +258,15 @@ Models_HypreSolver::setMatrix(const ProcessorGroup* pc,
    *-----------------------------------------------------------*/
 
   HYPRE_StructMatrixCreate(MPI_COMM_WORLD, d_grid, d_stencil, &d_A);
-  HYPRE_StructMatrixSetSymmetric(d_A, 1);
+
+  //  HYPRE_StructMatrixSetSymmetric(d_A, 1); 
+  //  above for spherical harmonics
+  // This parameter has to be set to 1 if SH is used and 0 if 
+  // DO is used, because the matrix is nonsymmetric for DO
+  // and symmetric for spherical harmonics
+  HYPRE_StructMatrixSetSymmetric(d_A, 0);
+  // above for discrete ordinates
+
   HYPRE_StructMatrixSetNumGhost(d_A, d_A_num_ghost);
   HYPRE_StructMatrixInitialize(d_A); 
 
@@ -368,10 +376,14 @@ Models_HypreSolver::setMatrix(const ProcessorGroup* pc,
   
   hypre_TFree(d_value);
 
+  // I have to comment the stuff below for the radiation model
+  // in Models to work in parallel: I don't know why --Kumar
+  /*
   int me = d_myworld->myrank();
   if(me == 0) {
     cerr << "Time in HYPRE Assemble: " << Time::currentSeconds()-start_time << " seconds\n";
   }
+  */
 }
 
 bool
@@ -411,7 +423,6 @@ Models_HypreSolver::radLinearSolve()
   n_post = 1;
   skip = 1;
   HYPRE_StructSolver solver, precond;
-
   
   int me = d_myworld->myrank();
   double start_time = Time::currentSeconds();
@@ -620,11 +631,15 @@ Models_HypreSolver::radLinearSolve()
 
   }
 
+  // I have to comment the stuff below for the radiation model
+  // in Models to work in parallel: I don't know why --Kumar
+  /*
   if(me == 0) {
     cerr << "hypre: final_res_norm: " << final_res_norm << ", iterations: " << num_iterations << ", solver time: " << Time::currentSeconds()-start_time << " seconds\n";
     cerr << "Init Norm: " << init_norm << " Error reduced by: " <<  final_res_norm/(init_norm+1.0e-20) << endl;
     cerr << "Sum of RHS vector: " << sum_b << endl;
   }
+  */
   if (((final_res_norm/(init_norm+1.0e-20) < 1.0) && (final_res_norm < 2.0))||
      ((final_res_norm<d_residual)&&(init_norm<d_residual)))
     return true;

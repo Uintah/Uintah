@@ -487,10 +487,17 @@ Models_DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 		   volq, 
 		   vars->src);
     }
+
+    // I have to comment the stuff below for the radiation model
+    // in Models to work in parallel: I don't know why --Kumar
+    // (only the d_myworld->myrank() segment, not the rdombmcalc)
+    /*
     int me = d_myworld->myrank();
     if(me == 0) {
       cerr << "Total Radiation Solve Time: " << Time::currentSeconds()-solve_start << " seconds\n";
     }
+    */
+
     /*
       fort_m_rdombmcalc(idxLo, idxHi, cellType, ffield, cellinfo->xx, cellinfo->zz, cellinfo->sew, cellinfo->sns, cellinfo->stb, volume, areaew, arean, areatb, srcbm, qfluxbbm, vars->src, vars->qfluxe, vars->qfluxw, vars->qfluxn, vars->qfluxs, vars->qfluxt, vars->qfluxb, lprobone, lprobtwo, lprobthree, srcpone, volq, srcsum);
       
