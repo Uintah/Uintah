@@ -27,12 +27,12 @@
 */
 
 
-//    File   : FieldInfo.h
+//    File   : FieldCount.h
 //    Author : McKay Davis
 //    Date   : July 2002
 
-#if !defined(FieldInfo_h)
-#define FieldInfo_h
+#if !defined(FieldCount_h)
+#define FieldCount_h
 
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
@@ -41,7 +41,7 @@
 
 namespace SCIRun {
 
-class FieldInfoAlgoCount : public DynamicAlgoBase
+class FieldCountAlgorithm : public DynamicAlgoBase
 {
 public:
   virtual void execute(MeshHandle src, int &num_nodes, int &num_elems) = 0;
@@ -54,7 +54,7 @@ public:
 
 
 template <class MESH>
-class FieldInfoAlgoCountT : public FieldInfoAlgoCount
+class FieldCountAlgorithmT : public FieldCountAlgorithm
 {
 public:
   //! virtual interface. 
@@ -66,7 +66,7 @@ public:
 
 template <class MESH>
 void 
-FieldInfoAlgoCountT<MESH>::execute(MeshHandle mesh_h, 
+FieldCountAlgorithmT<MESH>::execute(MeshHandle mesh_h, 
 				   int &num_nodes, 
 				   int &num_elems)
 {
@@ -82,7 +82,7 @@ FieldInfoAlgoCountT<MESH>::execute(MeshHandle mesh_h,
 
 template <class MESH>
 string
-FieldInfoAlgoCountT<MESH>::execute_node(MeshHandle mesh_h)
+FieldCountAlgorithmT<MESH>::execute_node(MeshHandle mesh_h)
 {
   MESH *mesh = dynamic_cast<MESH *>(mesh_h.get_rep());
 
@@ -97,7 +97,7 @@ FieldInfoAlgoCountT<MESH>::execute_node(MeshHandle mesh_h)
 
 template <class MESH>
 string
-FieldInfoAlgoCountT<MESH>::execute_elem(MeshHandle mesh_h)
+FieldCountAlgorithmT<MESH>::execute_elem(MeshHandle mesh_h)
 {
   MESH *mesh = dynamic_cast<MESH *>(mesh_h.get_rep());
 
