@@ -16,7 +16,7 @@ SRCS     += \
 	$(SRCDIR)/PlasticityModelFactory.cc \
 	$(SRCDIR)/IsoHardeningPlastic.cc \
 	$(SRCDIR)/JohnsonCookPlastic.cc \
-	$(SRCDIR)/ZerilliArmstrongPlastic.cc\
+	$(SRCDIR)/ZAPlastic.cc\
 	$(SRCDIR)/MTSPlastic.cc \
 	$(SRCDIR)/SCGPlastic.cc \
 	$(SRCDIR)/PTWPlastic.cc \

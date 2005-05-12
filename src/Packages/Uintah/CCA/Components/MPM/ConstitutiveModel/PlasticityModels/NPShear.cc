@@ -50,11 +50,20 @@ NPShear::computeShearModulus(const PlasticityState* state)
   ASSERT(eta > 0.0);
   eta = pow(eta, 1.0/3.0);
 
-  double t1 = d_mu0*(1.0 + d_slope_mu_p_over_mu0*state->pressure/eta);
+  // Pressure is +ve in this calculation
+  double P = -state->pressure;
+  double t1 = d_mu0*(1.0 + d_slope_mu_p_over_mu0*P/eta);
   double t2 = 1.0 - That;
   double k_amu = 1.38e4/1.6605402;
   double t3 = state->density*k_amu*state->temperature/(d_C*d_m);
   double mu = 1.0/J*(t1*t2 + t3);
+  if (mu < 1.0e-8) {
+    cout << "mu = " << mu << " T = " << state->temperature
+         << " Tm = " << state->meltingTemp << " T/Tm = " << That
+         << " J = " << J << " rho/rho_0 = " << eta 
+         << " p = " << P << " t1 = " << t1 
+         << " t2 = " << t2 << " t3 = " << t3 << endl;
+  }
   return mu;
 }
 

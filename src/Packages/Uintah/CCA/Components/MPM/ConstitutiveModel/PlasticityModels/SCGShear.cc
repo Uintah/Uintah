@@ -39,8 +39,10 @@ SCGShear::computeShearModulus(const PlasticityState* state)
   double eta = state->density/state->initialDensity;
   ASSERT(eta > 0.0);
   eta = pow(eta, 1.0/3.0);
-  double mu = d_mu0*(1.0 + d_A*state->pressure/eta -
-              d_B*(state->temperature - 300.0));
+
+  // Pressure is +ve in this calcualtion
+  double P = -state->pressure;
+  double mu = d_mu0*(1.0 + d_A*P/eta - d_B*(state->temperature - 300.0));
   return mu;
 }
 

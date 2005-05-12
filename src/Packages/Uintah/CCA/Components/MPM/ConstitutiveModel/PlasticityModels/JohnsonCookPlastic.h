@@ -71,7 +71,6 @@ namespace Uintah {
     virtual ~JohnsonCookPlastic();
          
     // Computes and requires for internal evolution variables
-    // Only one internal variable for Johnson-Cook :: plastic strain
     virtual void addInitialComputesAndRequires(Task* task,
                                                const MPMMaterial* matl,
                                                const PatchSet* patches) const;
@@ -120,6 +119,15 @@ namespace Uintah {
                                      const MPMMaterial* matl,
                                      const particleIndex idx);
 
+    //////////
+    /*! \brief Calculate the plastic strain rate [epdot(tau,ep,T)] */
+    //////////
+    virtual double computeEpdot(const PlasticityState* state,
+                                const double& delT,
+                                const double& tolerance,
+                                const MPMMaterial* matl,
+                                const particleIndex idx);
+ 
     ///////////////////////////////////////////////////////////////////////////
     /*! Compute the elastic-plastic tangent modulus 
     **WARNING** Assumes vonMises yield condition and the
@@ -172,6 +180,27 @@ namespace Uintah {
 
     ///////////////////////////////////////////////////////////////////////////
     /*!
+      \brief Evaluate derivative of flow stress with respect to strain rate.
+
+      The Johnson-Cook yield stress is given by :
+      \f[
+      \sigma_Y(\dot\epsilon_p) := E\left[1+C\ln\left(\frac{\dot\epsilon_p}
+      {\dot\epsilon_{p0}}\right)\right]
+      \f]
+
+      The derivative is given by
+      \f[
+      \frac{d\sigma_Y}{d\dot\epsilon_p} := \frac{EC}{\dot\epsilon_p}
+      \f]
+
+      \return Derivative \f$ d\sigma_Y / d\dot\epsilon_p \f$.
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    double evalDerivativeWRTStrainRate(const PlasticityState* state,
+                                       const particleIndex idx);
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
       \brief Compute the shear modulus. 
     */
     ///////////////////////////////////////////////////////////////////////////
@@ -209,26 +238,6 @@ namespace Uintah {
     double evalDerivativeWRTTemperature(const PlasticityState* state,
                                         const particleIndex idx);
 
-    ///////////////////////////////////////////////////////////////////////////
-    /*!
-      \brief Evaluate derivative of flow stress with respect to strain rate.
-
-      The Johnson-Cook yield stress is given by :
-      \f[
-      \sigma_Y(\dot\epsilon_p) := E\left[1+C\ln\left(\frac{\dot\epsilon_p}
-      {\dot\epsilon_{p0}}\right)\right]
-      \f]
-
-      The derivative is given by
-      \f[
-      \frac{d\sigma_Y}{d\dot\epsilon_p} := \frac{EC}{\dot\epsilon_p}
-      \f]
-
-      \return Derivative \f$ d\sigma_Y / d\dot\epsilon_p \f$.
-    */
-    ///////////////////////////////////////////////////////////////////////////
-    double evalDerivativeWRTStrainRate(const PlasticityState* state,
-                                       const particleIndex idx);
 
   };
 

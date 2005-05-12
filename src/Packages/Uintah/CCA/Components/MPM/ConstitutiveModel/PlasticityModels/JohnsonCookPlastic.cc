@@ -131,9 +131,43 @@ JohnsonCookPlastic::computeFlowStress(const PlasticityState* state,
   double m = d_CM.m;
   double Tstar = (T > Tm) ? 1.0 : ((T-Tr)/(Tm-Tr)); 
   double tempPart = (Tstar < 0.0) ? 1.0 : (1.0-pow(Tstar,m));
-  return (strainPart*strainRatePart*tempPart);
+  double sigy = strainPart*strainRatePart*tempPart;
+  if (isnan(sigy)) {
+    cout << "**ERROR** JohnsonCook: sig_y == nan " << endl; 
+  }
+  return sigy;
 }
 
+double 
+JohnsonCookPlastic::computeEpdot(const PlasticityState* state,
+                                 const double& delT,
+                                 const double& tolerance,
+                                 const MPMMaterial* matl,
+                                 const particleIndex idx)
+{
+  // All quantities should be at the beginning of the 
+  // time step
+  double tau = state->yieldStress;
+  double ep = state->plasticStrain;
+  double T = state->temperature;
+  double Tr = matl->getRoomTemperature();
+  double Tm = state->meltingTemp;
+
+  double strainPart = d_CM.A + d_CM.B*pow(ep,d_CM.n);
+  d_CM.TRoom = Tr;  d_CM.TMelt = Tm;
+  double m = d_CM.m;
+  double Tstar = (T > Tm) ? 1.0 : ((T-Tr)/(Tm-Tr)); 
+  double tempPart = (Tstar < 0.0) ? 1.0 : (1.0-pow(Tstar,m));
+
+  double fac1 = tau/(strainPart*tempPart);
+  double fac2 = (1.0/d_CM.C)*(fac1-1.0);
+  double epdot = exp(fac2)*d_CM.epdot_0;
+  if (isnan(epdot)) {
+    cout << "**ERROR** JohnsonCook: epdot == nan " << endl; 
+  }
+  return epdot;
+}
+ 
 /*! In this case, \f$\dot{\epsilon_p}\f$ is the time derivative of 
     \f$\epsilon_p\f$.  Hence, the evolution law of the internal variables
     \f$ \dot{q_\alpha} = \gamma h_\alpha \f$ requires 
@@ -210,9 +244,8 @@ JohnsonCookPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
   double Tm = state->meltingTemp;
 
   // Calculate strain rate part
-  double strainRatePart = 1.0;
-  if (epdot < 1.0) strainRatePart = pow((1.0 + epdot),d_CM.C);
-  else strainRatePart = 1.0 + d_CM.C*log(epdot);
+  double strainRatePart = (epdot < 1.0) ? 
+	  (pow((1.0 + epdot),d_CM.C)) : (1.0 + d_CM.C*log(epdot));
 
   // Calculate temperature part
   double m = d_CM.m;
@@ -221,7 +254,10 @@ JohnsonCookPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
 
   double D = strainRatePart*tempPart;
 
-  double deriv = d_CM.B*d_CM.n*D*pow(ep,d_CM.n-1)/ep;
+  double deriv =  (ep > 0.0) ?  (d_CM.B*d_CM.n*D*pow(ep,d_CM.n-1)) : 0.0;
+  if (isnan(deriv)) {
+    cout << "**ERROR** JohnsonCook: dsig/dep == nan " << endl; 
+  }
   return deriv;
 }
 
@@ -267,6 +303,9 @@ JohnsonCookPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
 
   double F = strainPart*strainRatePart;
   double deriv = - m*F*pow(Tstar,m)/(T-d_CM.TRoom);
+  if (isnan(deriv)) {
+    cout << "**ERROR** JohnsonCook: dsig/dT == nan " << endl; 
+  }
   return deriv;
 }
 
@@ -290,7 +329,14 @@ JohnsonCookPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
 
   double E = strainPart*tempPart;
 
-  double deriv = E*d_CM.C/epdot;
+  double deriv = 0.0;
+  if (epdot < 1.0) 
+    deriv = E*d_CM.C*pow((1.0 + epdot),(d_CM.C-1.0));
+  else
+    deriv = E*d_CM.C/epdot;
+  if (isnan(deriv)) {
+    cout << "**ERROR** JohnsonCook: dsig/depdot == nan " << endl; 
+  }
   return deriv;
 
 }

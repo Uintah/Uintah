@@ -17,6 +17,7 @@ namespace Uintah {
   class PlasticityState {
 
   public:
+    double yieldStress;
     double plasticStrainRate;
     double plasticStrain;
     double pressure;
@@ -33,10 +34,12 @@ namespace Uintah {
     PlasticityState();
 
     PlasticityState(const PlasticityState& state);
+    PlasticityState(const PlasticityState* state);
 
     ~PlasticityState();
 
     PlasticityState& operator=(const PlasticityState& state);
+    PlasticityState* operator=(const PlasticityState* state);
     
   };
 

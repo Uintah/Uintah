@@ -2,7 +2,7 @@
 #define __MTS_PLASTICITY_MODEL_H__
 
 
-#include "PlasticityModel.h"	
+#include "PlasticityModel.h"    
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
@@ -131,7 +131,7 @@ namespace Uintah {
       double edot_es0;
       double g_0es; //A
       double sigma_es0;
-    };	 
+    };   
 
     constParticleVariable<double> pMTS;
     ParticleVariable<double> pMTS_new;
@@ -142,7 +142,7 @@ namespace Uintah {
   private:
 
     CMData d_CM;
-	 
+         
     // Prevent copying of this class
     // copy constructor
     //MTSPlastic(const MTSPlastic &cm);
@@ -152,46 +152,46 @@ namespace Uintah {
     // constructors
     MTSPlastic(ProblemSpecP& ps);
     MTSPlastic(const MTSPlastic* cm);
-	 
+         
     // destructor 
     virtual ~MTSPlastic();
-	 
+         
     // Computes and requires for internal evolution variables
     // Only one internal variable for MTS model :: mechanical threshold stress
     virtual void addInitialComputesAndRequires(Task* task,
-					       const MPMMaterial* matl,
-					       const PatchSet* patches) const;
+                                               const MPMMaterial* matl,
+                                               const PatchSet* patches) const;
 
     virtual void addComputesAndRequires(Task* task,
-					const MPMMaterial* matl,
-					const PatchSet* patches) const;
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches) const;
 
 
     virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
-					   const PatchSet* patch, 
-					   MPMLabel* lb) const;
+                                           const PatchSet* patch, 
+                                           MPMLabel* lb) const;
 
     virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-				   ParticleSubset* addset,
-				   map<const VarLabel*, 
+                                   ParticleSubset* addset,
+                                   map<const VarLabel*, 
                                      ParticleVariableBase*>* newState,
-				   ParticleSubset* delset,
-				   DataWarehouse* old_dw);
+                                   ParticleSubset* delset,
+                                   DataWarehouse* old_dw);
 
     virtual void addParticleState(std::vector<const VarLabel*>& from,
-				  std::vector<const VarLabel*>& to);
+                                  std::vector<const VarLabel*>& to);
 
     virtual void initializeInternalVars(ParticleSubset* pset,
-					DataWarehouse* new_dw);
+                                        DataWarehouse* new_dw);
 
     virtual void getInternalVars(ParticleSubset* pset,
-				 DataWarehouse* old_dw);
+                                 DataWarehouse* old_dw);
 
     virtual void allocateAndPutInternalVars(ParticleSubset* pset,
-					    DataWarehouse* new_dw); 
+                                            DataWarehouse* new_dw); 
 
     virtual void allocateAndPutRigid(ParticleSubset* pset,
-				     DataWarehouse* new_dw); 
+                                     DataWarehouse* new_dw); 
 
     virtual void updateElastic(const particleIndex idx);
 
@@ -201,10 +201,28 @@ namespace Uintah {
     /*! \brief Compute the flow stress */
     ///////////////////////////////////////////////////////////////////////////
     virtual double computeFlowStress(const PlasticityState* state,
-				     const double& delT,
-				     const double& tolerance,
-				     const MPMMaterial* matl,
-				     const particleIndex idx);
+                                     const double& delT,
+                                     const double& tolerance,
+                                     const MPMMaterial* matl,
+                                     const particleIndex idx);
+
+    //////////
+    /*! \brief Calculate the plastic strain rate [epdot(tau,ep,T)] */
+    //////////
+    virtual double computeEpdot(const PlasticityState* state,
+                                const double& delT,
+                                const double& tolerance,
+                                const MPMMaterial* matl,
+                                const particleIndex idx);
+ 
+    void evalFAndFPrime(const double& tau,
+                        const double& epdot,
+                        const double& T,
+                        const double& mu,
+                        const double& sigma_e,
+                        const double& delT,
+                        double& f,
+                        double& fPrime);
 
     ///////////////////////////////////////////////////////////////////////////
     /*! 
@@ -214,12 +232,12 @@ namespace Uintah {
     */
     ///////////////////////////////////////////////////////////////////////////
     virtual void computeTangentModulus(const Matrix3& stress,
-				       const PlasticityState* state,
-				       const double& delT,
+                                       const PlasticityState* state,
+                                       const double& delT,
                                        const MPMMaterial* matl,
                                        const particleIndex idx,
-				       TangentModulusTensor& Ce,
-				       TangentModulusTensor& Cep);
+                                       TangentModulusTensor& Ce,
+                                       TangentModulusTensor& Cep);
 
     ///////////////////////////////////////////////////////////////////////////
     /*!
@@ -255,60 +273,6 @@ namespace Uintah {
     ///////////////////////////////////////////////////////////////////////////
     double evalDerivativeWRTPlasticStrain(const PlasticityState* state,
                                           const particleIndex idx);
-
-    ///////////////////////////////////////////////////////////////////////////
-    /*!
-      \brief Compute the shear modulus. 
-    */
-    ///////////////////////////////////////////////////////////////////////////
-    double computeShearModulus(const PlasticityState* state);
-
-    ///////////////////////////////////////////////////////////////////////////
-    /*!
-      \brief Compute the melting temperature
-    */
-    ///////////////////////////////////////////////////////////////////////////
-    double computeMeltingTemp(const PlasticityState* state);
-
-  protected:
-
-    ///////////////////////////////////////////////////////////////////////////
-    /*!
-      \brief Evaluate derivative of flow stress with respect to temperature.
-
-      The MTS yield stress is given by :
-      \f[
-      \sigma_Y(T) := \sigma_a +
-      \left(1-\frac{D}{\mu_0 (\exp(T_0/T)-1)}\right) 
-      \left[\left[1-(E_i T)^{Q_i}\right]^{P_i} \sigma_i+
-      \left[1-(E_e T)^{Q_e}\right]^{P_e} \sigma_e\right]
-      \f]
-
-      The derivative is given by
-      \f[
-      \frac{d\sigma_Y}{dT} := 
-      - \frac{ D T_0 \exp(T_0/T) 
-      \left[
-      \left[1 - (E_i T)^{Q_i}\right]^{P_i} \sigma_i + 
-      \left[1 - (E_e T)^{Q_e}\right]^{P_e} \sigma_e
-      \right] }
-      { (\exp(T_0/T) - 1)^2 T^2 \mu_0 }  
-      + \left(1 - \frac{D}{\mu_0 (\exp(T_0/T) - 1)}\right) 
-      \left[ 
-      - \frac{\left[1 - (E_i T)^{Q_i}\right]^{P_i} 
-      P_i (E_i T)^{Q_i} Q_i \sigma_i}
-      {T \left[1 - (E_i T)^{Q_i}\right]}  
-      - \frac{\left[1 - (E_e T)^{Q_e}\right]^{P_e} 
-      P_e (E_e T)^{Q_e} Q_e \sigma_e}
-      {T \left[1 - (E_e T)^{Q_e}\right]}  
-      \right]
-      \f]
-
-      \return Derivative \f$ d\sigma_Y / dT \f$.
-    */
-    ///////////////////////////////////////////////////////////////////////////
-    double evalDerivativeWRTTemperature(const PlasticityState* state,
-					const particleIndex idx);
 
     ///////////////////////////////////////////////////////////////////////////
     /*!
@@ -368,7 +332,61 @@ namespace Uintah {
     */
     ///////////////////////////////////////////////////////////////////////////
     double evalDerivativeWRTStrainRate(const PlasticityState* state,
-				       const particleIndex idx);
+                                       const particleIndex idx);
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Compute the shear modulus. 
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    double computeShearModulus(const PlasticityState* state);
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Compute the melting temperature
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    double computeMeltingTemp(const PlasticityState* state);
+
+  protected:
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Evaluate derivative of flow stress with respect to temperature.
+
+      The MTS yield stress is given by :
+      \f[
+      \sigma_Y(T) := \sigma_a +
+      \left(1-\frac{D}{\mu_0 (\exp(T_0/T)-1)}\right) 
+      \left[\left[1-(E_i T)^{Q_i}\right]^{P_i} \sigma_i+
+      \left[1-(E_e T)^{Q_e}\right]^{P_e} \sigma_e\right]
+      \f]
+
+      The derivative is given by
+      \f[
+      \frac{d\sigma_Y}{dT} := 
+      - \frac{ D T_0 \exp(T_0/T) 
+      \left[
+      \left[1 - (E_i T)^{Q_i}\right]^{P_i} \sigma_i + 
+      \left[1 - (E_e T)^{Q_e}\right]^{P_e} \sigma_e
+      \right] }
+      { (\exp(T_0/T) - 1)^2 T^2 \mu_0 }  
+      + \left(1 - \frac{D}{\mu_0 (\exp(T_0/T) - 1)}\right) 
+      \left[ 
+      - \frac{\left[1 - (E_i T)^{Q_i}\right]^{P_i} 
+      P_i (E_i T)^{Q_i} Q_i \sigma_i}
+      {T \left[1 - (E_i T)^{Q_i}\right]}  
+      - \frac{\left[1 - (E_e T)^{Q_e}\right]^{P_e} 
+      P_e (E_e T)^{Q_e} Q_e \sigma_e}
+      {T \left[1 - (E_e T)^{Q_e}\right]}  
+      \right]
+      \f]
+
+      \return Derivative \f$ d\sigma_Y / dT \f$.
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    double evalDerivativeWRTTemperature(const PlasticityState* state,
+                                        const particleIndex idx);
 
     ///////////////////////////////////////////////////////////////////////////
     /*!
@@ -388,7 +406,7 @@ namespace Uintah {
     */
     ///////////////////////////////////////////////////////////////////////////
     double evalDerivativeWRTSigmaE(const PlasticityState* state,
-				   const particleIndex idx);
+                                   const particleIndex idx);
 
   };
 

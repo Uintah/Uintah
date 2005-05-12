@@ -1,7 +1,7 @@
 #include "PlasticityModelFactory.h"                                             
 #include "IsoHardeningPlastic.h"
 #include "JohnsonCookPlastic.h"
-#include "ZerilliArmstrongPlastic.h"
+#include "ZAPlastic.h"
 #include "MTSPlastic.h"
 #include "SCGPlastic.h"
 #include "PTWPlastic.h"
@@ -32,7 +32,7 @@ PlasticityModel* PlasticityModelFactory::create(ProblemSpecP& ps)
    else if (mat_type == "johnson_cook")
       return(scinew JohnsonCookPlastic(child));
    else if (mat_type == "zerilli_armstrong")
-      return(scinew ZerilliArmstrongPlastic(child));
+      return(scinew ZAPlastic(child));
    else if (mat_type == "mts_model")
       return(scinew MTSPlastic(child));
    else if (mat_type == "steinberg_cochran_guinan")
@@ -48,15 +48,14 @@ PlasticityModelFactory::createCopy(const PlasticityModel* pm)
 {
    if (dynamic_cast<const IsoHardeningPlastic*>(pm))
       return(scinew IsoHardeningPlastic(dynamic_cast<const 
-					IsoHardeningPlastic*>(pm)));
+                                        IsoHardeningPlastic*>(pm)));
 
    else if (dynamic_cast<const JohnsonCookPlastic*>(pm))
       return(scinew JohnsonCookPlastic(dynamic_cast<const 
-				       JohnsonCookPlastic*>(pm)));
+                                       JohnsonCookPlastic*>(pm)));
 
-   else if (dynamic_cast<const ZerilliArmstrongPlastic*>(pm))
-      return(scinew ZerilliArmstrongPlastic(dynamic_cast<const 
-					    ZerilliArmstrongPlastic*>(pm)));
+   else if (dynamic_cast<const ZAPlastic*>(pm))
+      return(scinew ZAPlastic(dynamic_cast<const ZAPlastic*>(pm)));
 
    else if (dynamic_cast<const MTSPlastic*>(pm))
       return(scinew MTSPlastic(dynamic_cast<const MTSPlastic*>(pm)));
