@@ -3255,7 +3255,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
       DEF_PETSC_UNI="#define PETSC_UNI 1"
     else
     # Give it a shot on the old petsc-uni version
-      SCI_TRY_LINK(PETSC-UNI,
+      SCI_TRY_LINK(PETSC_UNI,
                    petsc libraries and headers (old),
                    petsc.h,
                    $_sci_inc /usr/include/petsc,
