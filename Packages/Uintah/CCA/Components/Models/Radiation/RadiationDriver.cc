@@ -399,6 +399,7 @@ RadiationDriver::computeProps(const ProcessorGroup* pc,
     d_radCounter = d_sharedState->getCurrentTopLevelTimeStep();
 
     //    if (d_radCounter%d_radCalcFreq == 0) {
+
       new_dw->get(constRadVars.temperature, temp_CCLabel, matlIndex, patch,
 		  Ghost::None, zeroGhostCells);
       new_dw->get(constRadVars.co2, co2_CCLabel, matlIndex, patch,
@@ -422,6 +423,7 @@ RadiationDriver::computeProps(const ProcessorGroup* pc,
       // 
       //      new_dw->get(constRadVars.sootVF, sootVF_CCLabel, matlIndex, patch,
       //		  Ghost::None, zeroGhostCells);
+
       old_dw->get(constRadVars.mixfrac, mixfrac_CCLabel, matlIndex, patch,
 		  Ghost::None, zeroGhostCells);
       new_dw->get(constRadVars.density, density_CCLabel, matlIndex, patch,
