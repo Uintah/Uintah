@@ -54,6 +54,7 @@ namespace Uintah {
     struct CMData {
       double Bulk;    /*< Bulk modulus */
       double Shear;   /*< Shear Modulus */
+      double alpha;   /*< Coeff. of thermal expansion */
       double Chi;     /*< Taylor-Quinney coefficient */
     };   
 
@@ -86,6 +87,7 @@ namespace Uintah {
     const VarLabel* pRotationLabel;  // For Hypoelastic-plasticity
     const VarLabel* pStrainRateLabel;  
     const VarLabel* pPlasticStrainLabel;  
+    const VarLabel* pPlasticStrainRateLabel;  
     const VarLabel* pDamageLabel;  
     const VarLabel* pPorosityLabel;  
     const VarLabel* pLocalizedLabel;  
@@ -93,6 +95,7 @@ namespace Uintah {
     const VarLabel* pRotationLabel_preReloc;  // For Hypoelastic-plasticity
     const VarLabel* pStrainRateLabel_preReloc;  
     const VarLabel* pPlasticStrainLabel_preReloc;  
+    const VarLabel* pPlasticStrainRateLabel_preReloc;  
     const VarLabel* pDamageLabel_preReloc;  
     const VarLabel* pPorosityLabel_preReloc;  
     const VarLabel* pLocalizedLabel_preReloc;  
@@ -371,6 +374,30 @@ namespace Uintah {
 
     double computeSpecificHeat(double T);
 
+    ////////////////////////////////////////////////////////////////////////
+    /*! \brief Compute the quantity 
+               \f$d(\gamma)/dt * \Delta T = \Delta \gamma \f$ 
+               using Newton iterative root finder
+        where \f$ d_p = \dot\gamma d(sigma_y)/d(sigma) \f$ */
+    ////////////////////////////////////////////////////////////////////////
+    double computeDeltaGamma(const double& delT,
+                             const double& tolerance,
+                             const double& normTrialS,
+                             const MPMMaterial* matl,
+                             const particleIndex idx,
+                             PlasticityState* state);
+
+    ////////////////////////////////////////////////////////////////////////
+    /*! \brief Compute Stilde, epdot, ep, and delGamma using 
+               Simo's approach */
+    ////////////////////////////////////////////////////////////////////////
+    void computeStilde(const Matrix3& trialS,
+                       const double& delT,
+                       const MPMMaterial* matl,
+                       const particleIndex idx,
+                       Matrix3& Stilde,
+                       PlasticityState* state,
+                       double& delGamma);
   };
 
 } // End namespace Uintah
