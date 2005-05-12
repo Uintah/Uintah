@@ -1,5 +1,5 @@
-#ifndef __SCG_PLASTICITY_MODEL_H__
-#define __SCG_PLASTICITY_MODEL_H__
+#ifndef __ZERILLI_ARMSTRONG_MODEL_H__
+#define __ZERILLI_ARMSTRONG_MODEL_H__
 
 
 #include "PlasticityModel.h"    
@@ -7,95 +7,85 @@
 
 namespace Uintah {
 
-  ////////////////////////////////////////////////////////////////////////////
-  /*! 
-    \class SCGPlastic
-    \brief Steinberg-Cochran-Guinan-Lund plasticity model 
-    \author Biswajit Banerjee, \n
-    C-SAFE and Department of Mechanical Engineering, \n
-    University of Utah \n
-    Copyright (C) 2002-2003 University of Utah
+////////////////////////////////////////////////////////////////////////////////
+  /*!
+    \class ZAPlastic
+    \brief Zerilli-Armstrong Strain rate dependent plasticity model
+    \author Anup Bhawalkar, 
+    Department of Mechanical Engineering, 
+    University of Utah
+    Copyright (C) 2005 University of Utah
+   
+    Zerilli-Armstrong Plasticity Model \n
+    (Zerilli, F.J. and Armstrong, R.W., 1987, J. Appl. Phys. 61(5), p.1816)\n
+    (Zerilli, F.J., 2004, Metall. Materials Trans. A, v. 35A, p.2547)
 
-    Reference : \n
-    Steinberg, D.J., Cochran, S.G., and Guinan, M.W., (1980),
-    Journal of Applied Physics, 51(3), 1498-1504.
-    Steinberg and Lund, 1989, J. App. Phys. 65(4), p.1528.
+    Flow rule: (the general form) \n
 
-    The shear modulus (\f$ \mu \f$) is a function of hydrostatic pressure 
-    (\f$ p \f$) and temperature (\f$ T \f$), but independent of 
-    plastic strain rate (\f$ \epsilon_p \f$), and is given by
     \f[
-       \mu = \mu_0\left[1 + A\frac{p}{\eta^{1/3}} - B(T - 300)\right]
-    \f]
-    where,\n
-    \f$ \mu_0 \f$ is the shear modulus at the reference state
-    (\f$ T \f$ = 300 K, \f$ p \f$ = 0, \f$ \epsilon_p \f$ = 0), \n
-    \f$ \eta = \rho/\rho_0\f$ is the compression, and \n
-    \f[ 
-       A = \frac{1}{\mu_0} \frac{d\mu}{dp} ~~;~~
-       B = \frac{1}{\mu_0} \frac{d\mu}{dT}
-    \f]
-
-    The flow stress (\f$ \sigma \f$) is given by
-    \f[
-    \sigma = \sigma_0 \left[1 + \beta(\epsilon_p + \epsilon_{p0})\right]^n
-        \left(\frac{\mu}{\mu_0}\right)
+      \sigma = \sigma_a + B exp(-\beta T) + B_0 \epsilon_p^{1/2} exp(-\alpha T)
     \f]
     where, \n
-    \f$\sigma_0\f$ is the uniaxial yield strength in the reference state, \n
-    \f$\beta,~n\f$ are work hardening parameters, and \n 
-    \f$\epsilon_{p0}\f$ is the initial equivalent plastic strain. \n
+    \f$ \sigma_a = \sigma_g + k_H l^{1/2} + K \epsilon_p^n \f$, \n
+    \f$ \alpha = \alpha_0 - \alpha_1 \ln(\dot\epsilon_p) \f$, \n
+    \f$ \beta = \beta - \beta_1 \ln(\dot\epsilon_p) \f$, \n
 
-    The value of the flow stress is limited by the condition
-    \f[
-      \sigma_0\left[1 + \beta(\epsilon_p + \epsilon_{p0})\right]^n \le Y_{max}
-    \f]
-    where, 
-    \f$ Y_{max} \f$ is the maximum value of uniaxial yield at the reference
-    temperature and pressure. \n
+    For FCC metals, \n
+    \f$ B = 0, \beta_0 = 0, \beta_1 = 0, K = 0 \f$  and \n
+    \f$ B_0 = c_2, \alpha_0 = c_3, \alpha_1 = c_4, 
+        \sigma_g = \Delta\sigma_G^', k_H = k\f$. \n
 
-    The melt temperature (\f$T_m\f$) varies with pressure and is given by
+    For BCC metals, \n
+    \f$ B_0 = 0, \alpha_0 = 0, \alpha_1 = 0 \f$  and \n
+    \f$ B = c_1, \beta_0 = c_3, \beta_1 = c_4, K = c_5, 
+        \sigma_g = \Delta\sigma_G^', k_H = k\f$. \n
+
+    For HCP metals and alloys (such as HY 100 steel) \n
+    all the constants are non-zero.
+
+    For comparison, the original form of the flow rule (1987) \n
+
+    For FCC metals,\n
     \f[
-        T_m = T_{m0} \exp\left[2a\left(1-\frac{1}{\eta}\right)\right]
-              \eta^{2(\Gamma_0-a-1/3)}
+     $\sigma = {\Delta} {\sigma}_{G}' + c_2 {\epsilon^{1/2}}e^{(-{c_3} T + 
+               c_4 T \ln{\dot{\epsilon}})} + kl^{-1/2}$
     \f]
-    where, \n
-    \f$ T_{m0} \f$ is the melt temperature at \f$ \rho = \rho_0 \f$, \n
-    \f$ a \f$ is the coefficient of the first order volume correction to
-     Gruneisen's gamma, and \n
-    \f$ \Gamma_0 \f$ is the value of Gruneisen's gamma in the reference state.
+
+    For BCC metals,\n
+    \f[
+    $\sigma = {\Delta} {\sigma}_{G}' + c_1 e^{(-{c_3} T + c_4 T 
+              \ln{\dot{\epsilon}})} + c_5 {\epsilon}^n + kl^{-1/2}$
+    \f]
+
+    where \f$\sigma\f$  = equivalent stress \n
+    \f$ \epsilon\f$  = plastic strain \n
+    \f$ \dot{\epsilon}\f$ = plastic strain rate \n 
+    \f$ c_1, c_2, c_3, c_4, c_5, n \f$ are material constants \n
+    k is microstructural stress intensity \n
+    l is average grain diameter \n
+    T is the absolute temperature \n
+   
   */
-  ////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
 
-  class SCGPlastic : public PlasticityModel {
+  class ZAPlastic : public PlasticityModel {
 
   public:
 
     // Create datatype for storing model parameters
     struct CMData {
-      double mu_0; 
-      double A;
+      double c_0;  // c_0 = sigma_g + k_H*l^(-1/2)
+      double sigma_g;
+      double k_H;
+      double sqrt_l;
       double B;
-      double sigma_0;
-      double beta;
+      double beta_0;
+      double beta_1;
+      double B_0;
+      double alpha_0;
+      double alpha_1;
+      double K;
       double n;
-      double epsilon_p0;
-      double Y_max; 
-      double T_m0; 
-      double a;
-      double Gamma_0;
-      double C1;
-      double C2;
-      double dislocationDensity;
-      double lengthOfDislocationSegment;
-      double distanceBetweenPeierlsValleys;
-      double lengthOfBurgerVector;
-      double debyeFrequency;
-      double widthOfKinkLoop;
-      double dragCoefficient;
-      double kinkPairEnergy;
-      double boltzmannConstant;
-      double pierlsStress;
     };   
 
   private:
@@ -104,19 +94,18 @@ namespace Uintah {
          
     // Prevent copying of this class
     // copy constructor
-    //SCGPlastic(const SCGPlastic &cm);
-    SCGPlastic& operator=(const SCGPlastic &cm);
+    ZAPlastic& operator=(const ZAPlastic &cm);
 
   public:
+
     // constructors
-    SCGPlastic(ProblemSpecP& ps);
-    SCGPlastic(const SCGPlastic* cm);
+    ZAPlastic(ProblemSpecP& ps);
+    ZAPlastic(const ZAPlastic* cm);
          
     // destructor 
-    virtual ~SCGPlastic();
+    virtual ~ZAPlastic();
          
     // Computes and requires for internal evolution variables
-    // Only one internal variable for SCG model :: mechanical threshold stress
     virtual void addInitialComputesAndRequires(Task* task,
                                                const MPMMaterial* matl,
                                                const PatchSet* patches) const;
@@ -133,7 +122,7 @@ namespace Uintah {
     virtual void allocateCMDataAdd(DataWarehouse* new_dw,
                                    ParticleSubset* addset,
                                    map<const VarLabel*, 
-                                       ParticleVariableBase*>* newState,
+                                     ParticleVariableBase*>* newState,
                                    ParticleSubset* delset,
                                    DataWarehouse* old_dw);
 
@@ -157,17 +146,13 @@ namespace Uintah {
     virtual void updatePlastic(const particleIndex idx, const double& delGamma);
 
     ///////////////////////////////////////////////////////////////////////////
-    /*! \brief Compute the flow stress */
+    /*! \brief  compute the flow stress */
     ///////////////////////////////////////////////////////////////////////////
     virtual double computeFlowStress(const PlasticityState* state,
                                      const double& delT,
                                      const double& tolerance,
                                      const MPMMaterial* matl,
                                      const particleIndex idx);
-
-    double computeThermallyActivatedYieldStress(const double& epdot,
-                                                const double& T,
-                                                const double& tolerance);
 
     //////////
     /*! \brief Calculate the plastic strain rate [epdot(tau,ep,T)] */
@@ -179,11 +164,9 @@ namespace Uintah {
                                 const particleIndex idx);
  
     ///////////////////////////////////////////////////////////////////////////
-    /*! 
-      \brief Compute the elastic-plastic tangent modulus. 
-
-      \warning Assumes vonMises yield condition and the associated flow rule .
-    */
+    /*! Compute the elastic-plastic tangent modulus 
+    **WARNING** Assumes vonMises yield condition and the
+    associated flow rule */
     ///////////////////////////////////////////////////////////////////////////
     virtual void computeTangentModulus(const Matrix3& stress,
                                        const PlasticityState* state,
@@ -199,9 +182,9 @@ namespace Uintah {
       internal variables.
 
       \return Three derivatives in Vector deriv 
-      (deriv[0] = \f$d\sigma_Y/dp\f$,
+      (deriv[0] = \f$d\sigma_Y/d\dot\epsilon\f$,
       deriv[1] = \f$d\sigma_Y/dT\f$, 
-      deriv[2] = \f$d\sigma_Y/d\epsilon_p\f$)
+      deriv[2] = \f$d\sigma_Y/d\epsilon\f$)
     */
     ///////////////////////////////////////////////////////////////////////////
     void evalDerivativeWRTScalarVars(const PlasticityState* state,
@@ -214,53 +197,31 @@ namespace Uintah {
 
       The derivative is given by
       \f[
-         \frac{\partial \sigma}{\partial \epsilon_p} = 
-         \left(\frac{\sigma_0\mu~n~\beta}{\mu_0}\right)
-         \left[1+\beta~(\epsilon_p - \epsilon_{p0})\right]^{n-1}
+       \frac{\partial\sigma}{\partial\epsilon_p} = 
+
+        n K \epsilon_p^{n-1} + \frac{1}{2} B_0 exp(-alpha T) \epsilon_p^(-1/2)
       \f]
 
-      \return Derivative \f$ d\sigma_Y / d\epsilon_p\f$.
+      \return Derivative \f$ d\sigma / d\epsilon\f$.
 
-      \warning Not sure what should be done at Y = Ymax.
+      \warning Expect error when \f$ \epsilon_p = 0 \f$. 
     */
     ///////////////////////////////////////////////////////////////////////////
     double evalDerivativeWRTPlasticStrain(const PlasticityState* state,
                                           const particleIndex idx);
 
     ///////////////////////////////////////////////////////////////////////////
-    /*! 
-      \brief Evaluate derivative of flow stress with respect to 
-             the plastic strain rate
-
-      The yield function is given by
-      \f[
-      Y = [Y_t(epdot,T) + Y_a(ep)]*\mu(p,T)/\mu_0
-      \f]
-      The derivative wrt epdot is
-      \f[
-      dY/depdot = dY_t/depdot*\mu/\mu_0
-      \f]
-
-      The equation for Y_t in terms of epdot can be expressed as
-      \f[
-      A(1 - B3 Y_t)^2 - ln(B1 Y_t - B2) + ln(Y_t) = 0
-      \f]
-      where \f$ A = 2*U_k/(\kappa T) \f$, \f$ B1 = C1/epdot \f$ \n
-      \f$ B2 = C1 C2 \f$, and \f$ B3 = 1/Y_p \f$.\n
-
-      The solution of this equation is 
-      \f[
-      Y_t(epdot,T) = exp(RootOf(Z + A - 2 A B3 exp(Z) (1 - B3 exp(Z))
-      - ln(B1 exp(Z) - B2) = 0))
-      \f]
-      The root is determined using a Newton iterative technique.
+    /*!
+      \brief Evaluate derivative of flow stress with respect to strain rate.
 
       The derivative is given by
       \f[
-      dY_t/depdot = -B1 X1^2/[X4(2 X2 - 1) - 2 X3(C1(1-B3 X1) + B3 X4)]
+       \frac{\partial\sigma}{\partial\dot\epsilon_p} = 
+         B \beta_1 T exp(-\beta T)/\dot\epsilon_p +
+         B_0 \sqrt{\epsilon_p} \alpha_1 T exp(-\alpha T)/\dot\epsilon_p 
       \f]
-      where \f$ X1 = exp(Z) \f$, \f$ X2 = A B3 X1 \f$, \f$ X3 = X2 X1 \f$, \n
-      \f$ X4 = B2 epdot \f$.
+
+      \return Derivative \f$ d\sigma / d\dot\epsilon \f$.
     */
     ///////////////////////////////////////////////////////////////////////////
     double evalDerivativeWRTStrainRate(const PlasticityState* state,
@@ -288,35 +249,20 @@ namespace Uintah {
 
       The derivative is given by
       \f[
-         \frac{\partial \sigma}{\partial T} = 
-         -B\sigma_0\left[1+\beta~(\epsilon_p - \epsilon_{p0})\right]^n
+       \frac{\partial\sigma}{\partial T} = 
+          -B_0 \alpha sqrt{\epsilon_p} exp(-\alpha T) -
+          -B \beta exp(-\beta T)
       \f]
 
-      \return Derivative \f$ d\sigma_Y / dT \f$.
+      \return Derivative \f$ d\sigma / dT \f$.
+ 
     */
     ///////////////////////////////////////////////////////////////////////////
     double evalDerivativeWRTTemperature(const PlasticityState* state,
                                         const particleIndex idx);
 
-    ///////////////////////////////////////////////////////////////////////////
-    /*!
-      \brief Evaluate derivative of flow stress with respect to pressure.
-
-      The derivative is given by
-      \f[
-         \frac{\partial \sigma}{\partial p} = 
-         \frac{A}{\eta^{1/3}}
-         \sigma_0\left[1+\beta~(\epsilon_p - \epsilon_{p0})\right]^n
-      \f]
-
-      \return Derivative \f$ d\sigma_Y / dp \f$.
-    */
-    ///////////////////////////////////////////////////////////////////////////
-    double evalDerivativeWRTPressure(const PlasticityState* state,
-                                     const particleIndex idx);
-
   };
 
 } // End namespace Uintah
 
-#endif  // __SCG_PLASTICITY_MODEL_H__ 
+#endif  // __ZERILLI_ARMSTRONG_MODEL_H__

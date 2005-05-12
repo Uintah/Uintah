@@ -35,45 +35,45 @@ namespace Uintah {
   private:
 
   public:
-	 
+         
     PlasticityModel();
     virtual ~PlasticityModel();
-	 
+         
     // Computes and requires for internal evolution variables
     virtual void addInitialComputesAndRequires(Task* task,
-					       const MPMMaterial* matl,
-					       const PatchSet* patches) 
+                                               const MPMMaterial* matl,
+                                               const PatchSet* patches) 
                                                const = 0;
 
     virtual void addComputesAndRequires(Task* task,
-					const MPMMaterial* matl,
-					const PatchSet* patches) const = 0;
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches) const = 0;
 
     virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
-					   const PatchSet* patch, 
-					   MPMLabel* lb) const = 0;
+                                           const PatchSet* patch, 
+                                           MPMLabel* lb) const = 0;
 
     virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-				   ParticleSubset* addset,
-				   map<const VarLabel*, 
+                                   ParticleSubset* addset,
+                                   map<const VarLabel*, 
                                      ParticleVariableBase*>* newState,
-				   ParticleSubset* delset,
-				   DataWarehouse* old_dw) = 0;
+                                   ParticleSubset* delset,
+                                   DataWarehouse* old_dw) = 0;
 
     virtual void addParticleState(std::vector<const VarLabel*>& from,
-				  std::vector<const VarLabel*>& to) = 0;
+                                  std::vector<const VarLabel*>& to) = 0;
 
     virtual void initializeInternalVars(ParticleSubset* pset,
-					DataWarehouse* new_dw) = 0;
+                                        DataWarehouse* new_dw) = 0;
 
     virtual void getInternalVars(ParticleSubset* pset,
-				 DataWarehouse* old_dw) = 0;
+                                 DataWarehouse* old_dw) = 0;
 
     virtual void allocateAndPutInternalVars(ParticleSubset* pset,
-					    DataWarehouse* new_dw) = 0; 
+                                            DataWarehouse* new_dw) = 0; 
 
     virtual void allocateAndPutRigid(ParticleSubset* pset,
-				     DataWarehouse* new_dw) = 0; 
+                                     DataWarehouse* new_dw) = 0; 
 
     virtual void updateElastic(const particleIndex idx) = 0;
 
@@ -84,10 +84,19 @@ namespace Uintah {
     /*! \brief Calculate the flow stress */
     //////////
     virtual double computeFlowStress(const PlasticityState* state,
-				     const double& delT,
-				     const double& tolerance,
-				     const MPMMaterial* matl,
-				     const particleIndex idx) = 0;
+                                     const double& delT,
+                                     const double& tolerance,
+                                     const MPMMaterial* matl,
+                                     const particleIndex idx) = 0;
+ 
+    //////////
+    /*! \brief Calculate the plastic strain rate [epdot(tau,ep,T)] */
+    //////////
+    virtual double computeEpdot(const PlasticityState* state,
+                                const double& delT,
+                                const double& tolerance,
+                                const MPMMaterial* matl,
+                                const particleIndex idx) = 0;
  
     /*! Compute the elastic-plastic tangent modulus 
       This is given by
@@ -105,11 +114,11 @@ namespace Uintah {
     */
     virtual void computeTangentModulus(const Matrix3& stress,
                                        const PlasticityState* state,
-				       const double& delT,
+                                       const double& delT,
                                        const MPMMaterial* matl,
                                        const particleIndex idx,
-				       TangentModulusTensor& Ce,
-				       TangentModulusTensor& Cep) = 0;
+                                       TangentModulusTensor& Ce,
+                                       TangentModulusTensor& Cep) = 0;
 
     ///////////////////////////////////////////////////////////////////////////
     /*!
@@ -131,11 +140,22 @@ namespace Uintah {
       \brief Evaluate derivative of flow stress with respect to plastic
         strain.
 
-      \return \f$d\sigma_Y/d\epsilon\f$
+      \return \f$d\sigma_Y/d\epsilon_p\f$
     */
     ///////////////////////////////////////////////////////////////////////////
     virtual double evalDerivativeWRTPlasticStrain(const PlasticityState* state, 
                                                   const particleIndex idx) = 0;
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
+      \brief Evaluate derivative of flow stress with respect to plastic
+        strain rate.
+
+      \return \f$d\sigma_Y/d\dot{\epsilon_p}\f$
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    virtual double evalDerivativeWRTStrainRate(const PlasticityState* state,
+                                               const particleIndex idx) = 0;
 
     ///////////////////////////////////////////////////////////////////////////
     /*!

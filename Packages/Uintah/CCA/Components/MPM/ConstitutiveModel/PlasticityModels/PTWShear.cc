@@ -42,7 +42,8 @@ PTWShear::computeShearModulus(const PlasticityState* state)
   ASSERT(eta > 0.0);
   eta = pow(eta, 1.0/3.0);
   double That = state->temperature/state->meltingTemp;
-  double mu0P = d_mu0*(1.0 + d_slope_mu_p_over_mu0*state->pressure/eta);
+  double P = -state->pressure;
+  double mu0P = d_mu0*(1.0 + d_slope_mu_p_over_mu0*P/eta);
   double mu = mu0P*(1.0 - d_alphap*That);
   return mu;
 }

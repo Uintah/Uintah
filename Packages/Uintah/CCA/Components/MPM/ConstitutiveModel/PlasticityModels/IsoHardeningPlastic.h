@@ -2,7 +2,7 @@
 #define __ISOHARDENING_PLASTICITY_MODEL_H__
 
 
-#include "PlasticityModel.h"	
+#include "PlasticityModel.h"    
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
@@ -42,7 +42,7 @@ namespace Uintah {
     struct CMData {
       double K;
       double sigma_0;
-    };	 
+    };   
 
     constParticleVariable<double> pAlpha;
     ParticleVariable<double> pAlpha_new;
@@ -63,72 +63,81 @@ namespace Uintah {
     // constructors
     IsoHardeningPlastic(ProblemSpecP& ps);
     IsoHardeningPlastic(const IsoHardeningPlastic* cm);
-	 
+         
     // destructor 
     virtual ~IsoHardeningPlastic();
-	 
+         
     // Computes and requires for internal evolution variables
     // Only one internal variable for Isotropic-Hardening :: plastic strain
     virtual void addInitialComputesAndRequires(Task* task,
-					       const MPMMaterial* matl,
-					       const PatchSet* patches) const;
+                                               const MPMMaterial* matl,
+                                               const PatchSet* patches) const;
 
     virtual void addComputesAndRequires(Task* task,
-					const MPMMaterial* matl,
-					const PatchSet* patches) const;
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches) const;
 
     virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
-					   const PatchSet* patch, 
-					   MPMLabel* lb) const;
+                                           const PatchSet* patch, 
+                                           MPMLabel* lb) const;
 
     virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-				   ParticleSubset* addset,
-				   map<const VarLabel*, 
+                                   ParticleSubset* addset,
+                                   map<const VarLabel*, 
                                      ParticleVariableBase*>* newState,
-				   ParticleSubset* delset,
-				   DataWarehouse* old_dw);
+                                   ParticleSubset* delset,
+                                   DataWarehouse* old_dw);
 
 
     virtual void addParticleState(std::vector<const VarLabel*>& from,
-				  std::vector<const VarLabel*>& to);
+                                  std::vector<const VarLabel*>& to);
 
     virtual void initializeInternalVars(ParticleSubset* pset,
-					DataWarehouse* new_dw);
+                                        DataWarehouse* new_dw);
 
     virtual void getInternalVars(ParticleSubset* pset,
-				 DataWarehouse* old_dw);
+                                 DataWarehouse* old_dw);
 
     virtual void allocateAndPutInternalVars(ParticleSubset* pset,
-					    DataWarehouse* new_dw); 
+                                            DataWarehouse* new_dw); 
 
     virtual void allocateAndPutRigid(ParticleSubset* pset,
-				     DataWarehouse* new_dw); 
+                                     DataWarehouse* new_dw); 
 
     virtual void updateElastic(const particleIndex idx);
 
     virtual void updatePlastic(const particleIndex idx, const double& delGamma);
 
     ///////////////////////////////////////////////////////////////////////////
-    /*! compute the flow stress*/
+    /*! compute the flow stress */
     ///////////////////////////////////////////////////////////////////////////
     virtual double computeFlowStress(const PlasticityState* state,
-				     const double& delT,
-				     const double& tolerance,
-				     const MPMMaterial* matl,
-				     const particleIndex idx);
+                                     const double& delT,
+                                     const double& tolerance,
+                                     const MPMMaterial* matl,
+                                     const particleIndex idx);
 
+    //////////
+    /*! \brief Calculate the plastic strain rate [epdot(tau,ep,T)] */
+    //////////
+    virtual double computeEpdot(const PlasticityState* state,
+                                const double& delT,
+                                const double& tolerance,
+                                const MPMMaterial* matl,
+                                const particleIndex idx);
+ 
     ///////////////////////////////////////////////////////////////////////////
     /*! Compute the elastic-plastic tangent modulus 
     **WARNING** Assumes vonMises yield condition and the
     associated flow rule */
     ///////////////////////////////////////////////////////////////////////////
     virtual void computeTangentModulus(const Matrix3& stress,
-				       const PlasticityState* state,
-				       const double& delT,
+                                       const PlasticityState* state,
+                                       const double& delT,
                                        const MPMMaterial* matl,
                                        const particleIndex idx,
-				       TangentModulusTensor& Ce,
-				       TangentModulusTensor& Cep);
+                                       TangentModulusTensor& Ce,
+                                       TangentModulusTensor& Cep);
 
     ///////////////////////////////////////////////////////////////////////////
     /*!
@@ -171,6 +180,26 @@ namespace Uintah {
 
     ///////////////////////////////////////////////////////////////////////////
     /*!
+      \brief Evaluate derivative of flow stress with respect to strain rate.
+
+      The Isotropic-Hardening yield stress is given by :
+      \f[
+      \sigma_Y(\dot\epsilon_p) := C
+      \f]
+
+      The derivative is given by
+      \f[
+      \frac{d\sigma_Y}{d\dot\epsilon_p} := 0
+      \f]
+
+      \return Derivative \f$ d\sigma_Y / d\dot\epsilon_p \f$.
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    double evalDerivativeWRTStrainRate(const PlasticityState* state,
+                                       const particleIndex idx);
+
+    ///////////////////////////////////////////////////////////////////////////
+    /*!
       \brief Compute the shear modulus. 
     */
     ///////////////////////////////////////////////////////////////////////////
@@ -203,27 +232,7 @@ namespace Uintah {
     */
     ///////////////////////////////////////////////////////////////////////////
     double evalDerivativeWRTTemperature(const PlasticityState* state,
-					const particleIndex idx);
-
-    ///////////////////////////////////////////////////////////////////////////
-    /*!
-      \brief Evaluate derivative of flow stress with respect to strain rate.
-
-      The Isotropic-Hardening yield stress is given by :
-      \f[
-      \sigma_Y(\dot\epsilon_p) := C
-      \f]
-
-      The derivative is given by
-      \f[
-      \frac{d\sigma_Y}{d\dot\epsilon_p} := 0
-      \f]
-
-      \return Derivative \f$ d\sigma_Y / d\dot\epsilon_p \f$.
-    */
-    ///////////////////////////////////////////////////////////////////////////
-    double evalDerivativeWRTStrainRate(const PlasticityState* state,
-				       const particleIndex idx);
+                                        const particleIndex idx);
 
     ///////////////////////////////////////////////////////////////////////////
     /*!
@@ -244,7 +253,7 @@ namespace Uintah {
     */
     ///////////////////////////////////////////////////////////////////////////
     double evalDerivativeWRTAlpha(const PlasticityState* state,
-				  const particleIndex idx);
+                                  const particleIndex idx);
 
   };
 
