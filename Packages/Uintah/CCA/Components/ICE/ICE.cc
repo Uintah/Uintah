@@ -407,7 +407,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   //  Load Model info.
   ModelMaker* modelMaker = dynamic_cast<ModelMaker*>(getPort("modelmaker"));
   if(modelMaker){
-    modelMaker->makeModels(prob_spec, grid, sharedState, d_models);
+    modelMaker->makeModels(prob_spec, grid, sharedState, d_doAMR, d_models);
     releasePort("ModelMaker");
     d_modelSetup = scinew ICEModelSetup();
       
