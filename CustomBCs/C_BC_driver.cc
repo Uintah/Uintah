@@ -94,17 +94,25 @@ void preprocess_CustomBCs(const string& where,
 //______________________________________________________________________
 void delete_CustomBCs(customBC_var_basket* C_BC_basket)
 {
-  if(C_BC_basket->ng){
-    delete C_BC_basket->ng;
+  if(C_BC_basket->usingNG_nozzle){
+    if(C_BC_basket->ng) {
+      delete C_BC_basket->ng;
+    }
   }
-  if(C_BC_basket->lv){
-    delete C_BC_basket->lv;
+  if(C_BC_basket->usingLodi){  
+    if(C_BC_basket->lv) {
+      delete C_BC_basket->lv;
+    }
   }
-  if(C_BC_basket->sv){
-    delete C_BC_basket->sv;
+  if(C_BC_basket->usingMicroSlipBCs){  
+    if(C_BC_basket->sv) {
+      delete C_BC_basket->sv;
+    }
   }
-  if(C_BC_basket->mms_v){
-    delete C_BC_basket->mms_v;
+  if(C_BC_basket->using_MMS_BCs){
+    if(C_BC_basket->mms_v) {
+      delete C_BC_basket->mms_v;
+    } 
   }
 }
 
