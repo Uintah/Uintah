@@ -1906,12 +1906,12 @@ DataArchiver::makeVersionedDir()
   // Create the uda directory setgid csafe so that others in the csafe
   // group can read. Also depends on umask, which is set in sus.cc
 #ifndef _WIN32
-  int maxgroups = 20;
+  const int maxgroups = 20;
   gid_t grouplist[maxgroups];
   int num_groups = getgroups(maxgroups,grouplist);
 
   // list of csafe gids on the various machines
-  int num_csafe_gids = 3;
+  const int num_csafe_gids = 3;
   gid_t csafe_groups[num_csafe_gids];
   csafe_groups[0] = 1079;  //sci csafe gid
   csafe_groups[1] = 7545;  //alc uintah gid
