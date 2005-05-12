@@ -52,6 +52,7 @@ namespace Uintah {
     struct CMData {
       double Bulk;    /*< Bulk modulus */
       double Shear;   /*< Shear Modulus */
+      double alpha;   /*< Coeff. of thermal expansion */
     };   
 
     // Create datatype for storing porosity parameters

@@ -47,6 +47,8 @@ HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps, MPMLabel* Mlb,
 
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
+  d_initialData.alpha = 1.0e-5; // default is per K
+  ps->get("coeff_thermal_expansion", d_initialData.alpha);
 
   ps->get("useModifiedEOS",d_useModifiedEOS);
   d_removeParticles = true;
@@ -174,6 +176,7 @@ HypoElasticPlastic::HypoElasticPlastic(const HypoElasticPlastic* cm)
   NGN = cm->NGN;
   d_initialData.Bulk = cm->d_initialData.Bulk;
   d_initialData.Shear = cm->d_initialData.Shear;
+  d_initialData.alpha = cm->d_initialData.alpha;
   d_useModifiedEOS = cm->d_useModifiedEOS;
   d_removeParticles = cm->d_removeParticles;
   d_setStressToZero = cm->d_setStressToZero;
@@ -555,6 +558,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
   double bulk  = d_initialData.Bulk;
   double shear = d_initialData.Shear;
+  double alpha = d_initialData.alpha;
   double rho_0 = matl->getInitialDensity();
   double Tm = matl->getMeltTemperature();
   double sqrtTwo = sqrt(2.0);
@@ -620,6 +624,10 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       new_dw->get(pgCode, lb->pgCodeLabel, pset);
       new_dw->get(GVelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
     }
+
+    constParticleVariable<double> pTempPrev, pTempCur;
+    old_dw->get(pTempPrev, lb->pTempPreviousLabel, pset); 
+    new_dw->get(pTempCur,  lb->pTempCurrentLabel,  pset); 
 
     // GET LOCAL DATA 
 
@@ -789,14 +797,21 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         continue;
       }
 
-      // Rotate the total rate of deformation tensor,
-      // the plastic rate of deformation tensor, and the Cauchy stress
-      // back to the material configuration and calculate their
-      // deviatoric parts
+      // Rotate the total rate of deformation tensor back to the 
+      // material configuration
       tensorD = (tensorR.Transpose())*(tensorD*tensorR);
+
+      // Subtract the thermal expansion to get D_e + D_p
+      double dT_dt = (pTempCur[idx] - pTempPrev[idx])/delT;
+      tensorD -= one*(alpha*dT_dt);
+      
+      // Calculate the deviatoric part of the non-thermal part
+      // of the rate of deformation tensor
       tensorEta = tensorD - one*(tensorD.Trace()/3.0);
       pStrainRate_new[idx] = sqrt(tensorD.NormSquared()/1.5);
 
+      // Rotate the Cauchy stress back to the 
+      // material configuration and calculate the deviatoric part
       tensorSig = pStress[idx];
       tensorSig = (tensorR.Transpose())*(tensorSig*tensorR);
       double pressure = tensorSig.Trace()/3.0;
@@ -1376,6 +1391,9 @@ HypoElasticPlastic::addComputesAndRequires(Task* task,
 
   // Other constitutive model and input dependent computes and requires
   Ghost::GhostType  gnone = Ghost::None;
+
+  task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
+  task->requires(Task::NewDW, lb->pTempCurrentLabel,  matlset, gnone); 
 
   task->requires(Task::OldDW, pLeftStretchLabel,     matlset, gnone);
   task->requires(Task::OldDW, pRotationLabel,        matlset, gnone);
