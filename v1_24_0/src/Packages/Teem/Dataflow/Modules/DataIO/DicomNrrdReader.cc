@@ -433,7 +433,7 @@ void DicomNrrdReader::tcl_command(GuiArgs& args, void* userdata)
     // form one string, and pass the string to the tcl side.
     std::vector<std::string> suids = reader.get_series_uids();
     int num_suids = suids.size();
-    string all_suids = "";
+    string all_suids = "{} ";
 
     for( int i = 0; i < num_suids; i++ )
     {
