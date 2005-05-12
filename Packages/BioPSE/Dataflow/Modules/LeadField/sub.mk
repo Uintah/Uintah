@@ -48,6 +48,7 @@ PSELIBS := \
         Dataflow/Modules/Fields \
         Dataflow/Network \
         Dataflow/Ports \
+        Core/Algorithms/Fields \
         Core/Datatypes \
         Core/Persistent \
         Core/Containers \

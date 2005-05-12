@@ -43,9 +43,9 @@
 #include <Core/Geom/Material.h>
 #include <Core/Geom/GeomSwitch.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Algorithms/Fields/FieldCount.h>
 #include <Core/Algorithms/Visualization/RenderField.h>
 
-#include <Dataflow/Modules/Fields/FieldInfo.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
@@ -589,8 +589,8 @@ ShowField::execute()
       // Do this last, sometimes takes a while.
       const TypeDescription *meshtd0 = fld_handle->mesh()->get_type_description();
 
-      CompileInfoHandle ci = FieldInfoAlgoCount::get_compile_info(meshtd0);
-      Handle<FieldInfoAlgoCount> algo;
+      CompileInfoHandle ci = FieldCountAlgorithm::get_compile_info(meshtd0);
+      Handle<FieldCountAlgorithm> algo;
       if (!module_dynamic_compile(ci, algo)) return;
 
       //string num_nodes, num_elems;
