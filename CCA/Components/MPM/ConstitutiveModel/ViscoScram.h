@@ -92,6 +92,7 @@ namespace Uintah {
     bool d_useModifiedEOS;
     bool d_random;
     bool d_doTimeTemperature;
+    bool d_useObjectiveRate;
     double d_bulk;
 
     CMData d_initialData;
