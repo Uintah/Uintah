@@ -32,9 +32,11 @@ ModelFactory::~ModelFactory()
 {
 }
 
-void ModelFactory::makeModels(const ProblemSpecP& params, GridP&,
-			      SimulationStateP&,
-			      vector<ModelInterface*>& models)
+void ModelFactory::makeModels(const ProblemSpecP& params, 
+                              GridP&,
+                              SimulationStateP&,
+                              const bool doAMR,
+                              vector<ModelInterface*>& models)
 {
   ProblemSpecP m = params->findBlock("Models");
   if(!m)
@@ -67,7 +69,7 @@ void ModelFactory::makeModels(const ProblemSpecP& params, GridP&,
     else if(type == "flameSheet_rxn")
       models.push_back(scinew flameSheet_rxn(d_myworld, model));
     else if(type == "PassiveScalar")
-      models.push_back(scinew PassiveScalar(d_myworld, model));
+      models.push_back(scinew PassiveScalar(d_myworld, model, doAMR));
     else if(type == "VorticityConfinement")
       models.push_back(scinew VorticityConfinement(d_myworld, model));
     else if(type == "Radiation")

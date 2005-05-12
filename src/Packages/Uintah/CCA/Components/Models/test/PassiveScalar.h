@@ -41,7 +41,9 @@ WARNING
   class GeometryPiece;
   class PassiveScalar :public ModelInterface {
   public:
-    PassiveScalar(const ProcessorGroup* myworld, ProblemSpecP& params);
+    PassiveScalar(const ProcessorGroup* myworld, 
+                   ProblemSpecP& params,
+                  const bool doAMR);
     virtual ~PassiveScalar();
     
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
@@ -154,11 +156,11 @@ WARNING
     
     PassiveScalarLabel* Slb;
     Scalar* d_scalar;
-    
     SimulationStateP d_sharedState;
     
     //__________________________________
     // global constants
+    bool d_doAMR;
     vector<Vector> d_probePts;
     vector<string> d_probePtsNames;
     bool d_usingProbePts;

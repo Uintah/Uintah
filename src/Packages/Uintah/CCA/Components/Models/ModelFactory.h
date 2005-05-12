@@ -41,9 +41,11 @@ WARNING
     ModelFactory(const ProcessorGroup* myworld);
     virtual ~ModelFactory();
 
-    virtual void makeModels(const ProblemSpecP& params, GridP& grid,
-			    SimulationStateP& sharedState,
-			    std::vector<ModelInterface*>&);
+    virtual void makeModels(const ProblemSpecP& params, 
+                            GridP& grid,
+			       SimulationStateP& sharedState,
+                            const bool doAMR,
+			       std::vector<ModelInterface*>&);
 
   private:
     ModelFactory(const ModelFactory&);
