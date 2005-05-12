@@ -43,9 +43,11 @@ static DebugStream cout_doing("MODELS_DOING_COUT", false);
 static DebugStream cout_dbg("PASSIVE_SCALAR_DBG_COUT", false);
 //______________________________________________________________________              
 PassiveScalar::PassiveScalar(const ProcessorGroup* myworld, 
-                     ProblemSpecP& params)
+                            ProblemSpecP& params,
+                            const bool doAMR)
   : ModelInterface(myworld), params(params)
 {
+  d_doAMR = doAMR;
   d_matl_set = 0;
   lb  = scinew ICELabel();
   Slb = scinew PassiveScalarLabel();

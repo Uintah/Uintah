@@ -49,9 +49,11 @@ WARNING
       
      //////////
      // Insert Documentation Here:
-     virtual void makeModels(const ProblemSpecP& params, GridP& grid,
-			     SimulationStateP& sharedState,
-			     std::vector<ModelInterface*>& models) = 0;
+     virtual void makeModels(const ProblemSpecP& params, 
+                             GridP& grid,
+                             SimulationStateP& sharedState,
+                             const bool doAMR,
+                             std::vector<ModelInterface*>& models) = 0;
    private:
      ModelMaker(const ModelMaker&);
      ModelMaker& operator=(const ModelMaker&);
