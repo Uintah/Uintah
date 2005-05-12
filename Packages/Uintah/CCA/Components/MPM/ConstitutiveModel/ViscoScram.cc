@@ -40,7 +40,7 @@ ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb,  MPMFlags* Mflag)
 {
   cout << "ViscoSCRAM:Label = " << Mlb << endl;
   ps->require("PR",d_initialData.PR);
-  d_initialData.CoefThermExp = 1.0e-5;
+  d_initialData.CoefThermExp = 12.5e-5;  // strains per K
   ps->get("CoeffThermalExpansion", d_initialData.CoefThermExp);
   ps->require("CrackParameterA",d_initialData.CrackParameterA);
   ps->require("CrackPowerValue",d_initialData.CrackPowerValue);
@@ -68,6 +68,8 @@ ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb,  MPMFlags* Mflag)
   ps->get("use_time_temperature_equation", d_doTimeTemperature);
   d_useModifiedEOS = false;
   ps->get("useModifiedEOS",d_useModifiedEOS);
+  d_useObjectiveRate = false;
+  ps->get("useObjectiveRate",d_useObjectiveRate);
 
   // Time-temperature data for relaxtion time calculation
   d_tt.T0_WLF = 298.0;
@@ -125,6 +127,7 @@ ViscoScram::ViscoScram(const ViscoScram* cm)
   d_random = cm->d_random;
   d_useModifiedEOS = cm->d_useModifiedEOS ;
   d_doTimeTemperature = cm->d_doTimeTemperature;
+  d_useObjectiveRate = cm->d_useObjectiveRate;
 
   d_initialData.PR = cm->d_initialData.PR;
   d_initialData.CoefThermExp = cm->d_initialData.CoefThermExp; 
@@ -327,6 +330,9 @@ ViscoScram::addComputesAndRequires(Task* task,
   // Other constitutive model and input dependent computes and requires
   Ghost::GhostType  gnone = Ghost::None;
 
+  task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
+  task->requires(Task::NewDW, lb->pTempCurrentLabel,  matlset, gnone); 
+
   task->requires(Task::OldDW, pCrackRadiusLabel, matlset, gnone);
   task->requires(Task::OldDW, pStatedataLabel,   matlset, gnone);
   task->requires(Task::OldDW, pRandLabel,        matlset, gnone);
@@ -361,7 +367,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
   double Cp0   = matl->getSpecificHeat();
   double cf    = d_initialData.CrackFriction;
   double nu    = d_initialData.PR;
-  //double alpha = d_initialData.CoefThermExp;
+  double alpha = d_initialData.CoefThermExp;
   double cdot0 = d_initialData.CrackGrowthRate;
   double K_I   = d_initialData.StressIntensityF;
   double mm    = d_initialData.CrackPowerValue;
@@ -389,6 +395,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
   constParticleVariable<Vector>    pVelocity, pSize;
   constParticleVariable<Matrix3>   pDefGrad, pStress;
   constNCVariable<Vector>          gVelocity, Gvelocity;
+  constParticleVariable<double>    pTempPrev, pTempCur;
 
   ParticleVariable<double>    pVol_new, pIntHeatRate_new;
   ParticleVariable<Matrix3>   pDefGrad_new, pStress_new, pStrainRate_new;
@@ -437,6 +444,9 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       new_dw->get(Gvelocity,         lb->GVelocityLabel, dwi, patch, gac, NGN);
     }
     new_dw->get(gVelocity,           lb->gVelocityLabel, dwi, patch, gac, NGN);
+
+    old_dw->get(pTempPrev,           lb->pTempPreviousLabel,       pset); 
+    new_dw->get(pTempCur,            lb->pTempCurrentLabel,        pset); 
 
     // Allocate arrays for the updated particle data for the current patch
     new_dw->allocateAndPut(pVol_new,         
@@ -543,8 +553,35 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       // Update the volume
       pVol_new[idx] = Jinc*pVol[idx];
 
-      // Calculate rate of deformation D, and deviatoric rate DPrime
-      Matrix3 D = (pVelGrad + pVelGrad.Transpose())*.5;
+      // Calculate rate of deformation D 
+      Matrix3 D = (pVelGrad + pVelGrad.Transpose())*0.5;
+
+      // Get stress at time t_n
+      Matrix3 sig_old = pStress[idx];
+
+      // For objective rates (rotation neutralized)
+      Matrix3 RR(0.0), UU(0.0), RT(0.0);
+      if (d_useObjectiveRate) {
+
+        // Compute polar decomposition of F
+        pDefGrad_new[idx].polarDecomposition(UU, RR, 1.0e-12, true);
+        RT = RR.Transpose();
+
+        // If we want objective rates, rotate stress and rate of
+        // deformation to material coordinates using R where F = RU
+        sig_old = RT*(sig_old*RR);
+        for (int ii = 0; ii < 5; ++ii) {
+          pStatedata[idx].DevStress[ii] = 
+            RT*(pStatedata[idx].DevStress[ii]*RR); 
+        }
+        D = RT*(D*RR);
+      }
+     
+      // Subtract the thermal expansion to get D_e + D_p
+      double dT_dt = (pTempCur[idx] - pTempPrev[idx])/delT;
+      D -= Identity*(alpha*dT_dt);
+
+      // Compute deviatoric rate DPrime
       Matrix3 DPrime = D - Identity*onethird*D.Trace();
 
       // Get effective strain rate and Effective deviatoric strain rate
@@ -568,7 +605,6 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
                           pStatedata[idx].DevStress[4];
 
       // old total stress norm
-      Matrix3 sig_old = pStress[idx];
       double EffStress = sqrtopf*sig_old.Norm();
 
       //if (dbg.active()) {
@@ -787,7 +823,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       //         << DevStress(2,0) << " " << DevStress(0,1) << "]" << endl;
       //  dbgSig << "  sig = [" 
       //         << sig(0,0) << " " << sig(1,1) << " " << sig(2,2) << " " 
-      //         << sig(1,2) << " " << sig(2,0) << " " << sig(0,1) << "]" << endl;
+      //         << sig(1,2) <<" "<< sig(2,0) << " " << sig(0,1) << "]" << endl;
       //}
 
       // Update crack radius
@@ -853,6 +889,16 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       // Compute the strain energy for all the particles
       sig_old = (pStress_new[idx] + sig_old)*.5;
       se += (D.Contract(sig_old))*pVol_new[idx]*delT;
+
+      if (d_useObjectiveRate) {
+
+        // Rotate everything back to lab coordinates
+        pStress_new[idx] = RR*(pStress_new[idx]*RT);
+        for (int ii = 0; ii < 5; ++ii) {
+          pStatedata[idx].DevStress[ii] = 
+            RR*(pStatedata[idx].DevStress[ii]*RT); 
+        }
+      }
 
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];
