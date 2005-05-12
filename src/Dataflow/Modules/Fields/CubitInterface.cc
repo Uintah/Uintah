@@ -150,7 +150,7 @@ CubitInterface::write_facet_file(string filename, TriSurfMeshHandle &tsm)
 		   
   while (tsmf != tsmfe) {
     tsm->get_edges(tsmea, *tsmf);
-    for (int e = 0; e < tsmea.size(); ++e) {
+    for (unsigned int e = 0; e < tsmea.size(); ++e) {
       if (!tsm->get_neighbor(neigh, *tsmf, tsmea[e])) {
 	cleanup("Edge#"+to_string(tsmea[e].index_)+" is a boundary face.\n"+
 		"The surface is not closed and cannot be meshed.");
