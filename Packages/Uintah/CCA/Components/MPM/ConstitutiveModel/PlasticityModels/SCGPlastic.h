@@ -95,7 +95,7 @@ namespace Uintah {
       double dragCoefficient;
       double kinkPairEnergy;
       double boltzmannConstant;
-      double pierlsStress;
+      double peierlsStress;
     };   
 
   private:
