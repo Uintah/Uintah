@@ -53,7 +53,6 @@
 using namespace SCIRun;
 using namespace std;
 
-#ifndef SCI_NOPERSISTENT
 Persistent* transform_maker() {
   return new Transform();
 }
@@ -61,7 +60,6 @@ Persistent* transform_maker() {
 // initialize the static member type_id
 PersistentTypeID Transform::type_id("Transform", "Persistent", 
                                     transform_maker);
-#endif
 
 Transform::Transform()
 {
@@ -876,7 +874,6 @@ Transform::operator=(const Transform& copy)
   return *this;
 }
 
-#ifndef SCI_NOPERSISTENT
 const int TRANSFORM_VERSION = 1;
 
 void 
@@ -918,9 +915,7 @@ SCIRun::Pio(Piostream& stream, Transform*& obj)
     obj=(Transform*)pobj;
   }
 }
-#endif
 
-#ifndef SCI_NOTYPEDESCRIPTION
 const string& 
 Transform::get_h_file_path() {
   static const string path(TypeDescription::cc_to_h(__FILE__));
@@ -937,7 +932,6 @@ SCIRun::get_type_description(Transform*)
   }
   return td;
 }
-#endif
 
 Point
 SCIRun::operator*(Transform &t, const Point &d)

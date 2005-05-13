@@ -30,9 +30,7 @@
 #ifndef Geometry_Transform_h
 #define Geometry_Transform_h 1
 
-#ifndef SCI_NOPERSISTENT
 #include <Core/Persistent/Persistent.h>
-#endif
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
@@ -47,15 +45,10 @@ class Plane;
 class Transform;
 class TypeDescription;
 
-#ifndef SCI_NOPERSISTENT
 void Pio_old(Piostream&, Transform&);
 void Pio(Piostream&, Transform*&);
-#endif
 
-class Transform 
-#ifndef SCI_NOPERSISTENT
-  : public Persistent
-#endif
+class Transform  : public Persistent
 {
   double mat[4][4];
   mutable double imat[4][4];
@@ -85,12 +78,10 @@ public:
 
 
   //! Persistent I/O.
-#ifndef SCI_NOPERSISTENT
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
   friend void Pio_old(Piostream&, Transform&);
   friend void Pio(Piostream&, Transform*&);
-#endif
 
   void load_basis(const Point&,const Vector&, const Vector&, const Vector&);
   void load_frame(const Point&,const Vector&, const Vector&, const Vector&);
