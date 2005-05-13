@@ -65,9 +65,9 @@ void MPMPetscSolver::initialize()
 void 
 MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
 					   const PatchSet* perproc_patches,
-					   const PatchSubset* patches)
+					   const PatchSubset* patches,
+                                           const int DOFsPerNode)
 {
-
   int numProcessors = d_myworld->size();
   d_numNodes.resize(numProcessors, 0);
   d_startIndex.resize(numProcessors);
@@ -78,18 +78,17 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
     int mytotal = 0;
     const PatchSubset* patchsub = perproc_patches->getSubset(p);
     for (int ps = 0; ps<patchsub->size(); ps++) {
-    const Patch* patch = patchsub->get(ps);
-    IntVector plowIndex = patch->getNodeLowIndex();
-    IntVector phighIndex = patch->getNodeHighIndex();
+      const Patch* patch = patchsub->get(ps);
+      IntVector plowIndex = patch->getNodeLowIndex();
+      IntVector phighIndex = patch->getNodeHighIndex();
 
-    long nn = (phighIndex[0]-plowIndex[0])*
-	(phighIndex[1]-plowIndex[1])*
-	(phighIndex[2]-plowIndex[2])*3;
+      long nn = (phighIndex[0]-plowIndex[0])*
+                (phighIndex[1]-plowIndex[1])*
+                (phighIndex[2]-plowIndex[2])*DOFsPerNode;
 
-    d_petscGlobalStart[patch]=d_totalNodes;
-    d_totalNodes+=nn;
-    mytotal+=nn;
-    
+      d_petscGlobalStart[patch]=d_totalNodes;
+      d_totalNodes+=nn;
+      mytotal+=nn;
     }
     d_numNodes[p] = mytotal;
   }
@@ -111,29 +110,29 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
       IntVector low = Max(lowIndex, plow);
       IntVector high= Min(highIndex, phigh);
       if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
-	  || ( high.z() < low.z() ) )
-	throw InternalError("Patch doesn't overlap?");
+                                 || ( high.z() < low.z() ) )
+         throw InternalError("Patch doesn't overlap?");
       
       int petscglobalIndex = d_petscGlobalStart[neighbor];
       IntVector dnodes = phigh-plow;
       IntVector start = low-plow;
-      petscglobalIndex += start.z()*dnodes.x()*dnodes.y()*3
-	+start.y()*dnodes.x()*2 + start.x();
+      petscglobalIndex += start.z()*dnodes.x()*dnodes.y()*DOFsPerNode
+                        + start.y()*dnodes.x()*(DOFsPerNode-1) + start.x();
       for (int colZ = low.z(); colZ < high.z(); colZ ++) {
 	int idx_slab = petscglobalIndex;
-	petscglobalIndex += dnodes.x()*dnodes.y()*3;
+	petscglobalIndex += dnodes.x()*dnodes.y()*DOFsPerNode;
 	
 	for (int colY = low.y(); colY < high.y(); colY ++) {
 	  int idx = idx_slab;
-	  idx_slab += dnodes.x()*3;
+	  idx_slab += dnodes.x()*DOFsPerNode;
 	  for (int colX = low.x(); colX < high.x(); colX ++) {
 	    l2g[IntVector(colX, colY, colZ)] = idx;
-	    idx += 3;
+	    idx += DOFsPerNode;
 	  }
 	}
       }
       IntVector d = high-low;
-      totalNodes+=d.x()*d.y()*d.z()*3;
+      totalNodes+=d.x()*d.y()*d.z()*DOFsPerNode;
     }
     d_petscLocalToGlobal[patch].copyPointer(l2g);
   }
@@ -220,16 +219,6 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 		    globalcolumns, PETSC_DEFAULT, diag, 
 		    PETSC_DEFAULT,PETSC_NULL, &d_A);
     MatSetOption(d_A,MAT_KEEP_ZEROED_ROWS);
-#endif
-#if 0
-    MatCreateMPIBAIJ(PETSC_COMM_WORLD, 3, numlrows, numlcolumns, globalrows,
-		    globalcolumns, PETSC_DEFAULT, diag, 
-		    PETSC_DEFAULT,PETSC_NULL, &d_A);
-    MatSetOption(d_A,MAT_KEEP_ZEROED_ROWS);
-#endif
-#if 0
-    MatCreateMPIDense(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
-		      globalcolumns, PETSC_NULL, &d_A);
 #endif
    /* 
      Create vectors.  Note that we form 1 vector from scratch and

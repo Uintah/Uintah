@@ -27,8 +27,9 @@ namespace Uintah {
     virtual void initialize() = 0;
 
     virtual void createLocalToGlobalMapping(const ProcessorGroup* pg,
-					    const PatchSet* perproc_patches,
-					    const PatchSubset* patches) = 0;
+                                            const PatchSet* perproc_patches,
+                                            const PatchSubset* patches,
+                                            const int DOFsPerNode) = 0;
 
     virtual void solve() = 0;
 
