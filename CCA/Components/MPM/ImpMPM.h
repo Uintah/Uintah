@@ -33,7 +33,7 @@ using namespace SCIRun;
  class Task; 
  class MPMPetscSolver;
  class SimpleSolver;
- class HeatConduction;
+ class ImplicitHeatConduction;
  class ThermalContact;
 
 /**************************************
@@ -167,31 +167,13 @@ private:
                                        DataWarehouse* new_dw,
                                        const bool recursion);
 
-  void destroyHCMatrix(                const ProcessorGroup*,
-                                       const PatchSubset* patches,
-                                       const MaterialSubset* matls,
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw);
-
   void createMatrix(                   const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw);
 
-  void createHCMatrix(                 const ProcessorGroup*,
-                                       const PatchSubset* patches,
-                                       const MaterialSubset* matls,
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw);
-
   void applyBoundaryConditions(        const ProcessorGroup*,
-                                       const PatchSubset* patches,
-                                       const MaterialSubset* matls,
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw);
-
-  void applyHCBoundaryConditions(      const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
@@ -204,12 +186,6 @@ private:
                                        DataWarehouse* new_dw);
 
   void findFixedDOF(                   const ProcessorGroup*, 
-                                       const PatchSubset* patches,
-                                       const MaterialSubset* matls, 
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw);
-
-  void findFixedHCDOF(                 const ProcessorGroup*, 
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls, 
                                        DataWarehouse* old_dw,
@@ -235,13 +211,6 @@ private:
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw);
-
-  void formHCStiffnessMatrix(          const ProcessorGroup*,
-                                       const PatchSubset* patches,
-                                       const MaterialSubset* matls,
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw);
-
   //////////
   // Insert Documentation Here:
   void computeInternalForce(           const ProcessorGroup*,
@@ -258,12 +227,6 @@ private:
                                        LevelP level, Scheduler* sched);
 
   void formQ(                          const ProcessorGroup*,
-                                       const PatchSubset* patches,
-                                       const MaterialSubset* matls,
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw);
-
-  void formHCQ(                        const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
@@ -438,7 +401,7 @@ private:
   MPMLabel* lb;
   MPMFlags* flags;
 
-  HeatConduction* heatConductionModel;
+  ImplicitHeatConduction* heatConductionModel;
   ThermalContact* thermalContactModel;
 
   double           d_nextOutputTime;
@@ -463,14 +426,11 @@ private:
 
 #ifdef HAVE_PETSC
   MPMPetscSolver* d_solver;
-  vector<MPMPetscSolver*> d_HC_solver;
 #else
   SimpleSolver* d_solver;
-  vector<SimpleSolver*> d_HC_solver;
 #endif
 
   bool d_dynamic;
-  bool d_HC_dynamic;
   bool d_rigid_body;
   bool d_single_velocity;
   bool d_useLoadCurves;
