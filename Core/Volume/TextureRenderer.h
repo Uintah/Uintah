@@ -76,6 +76,8 @@ public:
   void set_slice_alpha(double alpha);
   void set_sw_raster(bool b);
   bool use_pbuffer() { return use_pbuffer_; }
+  void set_blend_num_bits(int b);
+  bool use_blend_buffer();
   void set_stencil(bool use){ use_stencil_ = use; }
   void invert_opacity(bool invert){ invert_opacity_ = invert; }
   inline void set_interp(bool i) { interp_ = i; }
