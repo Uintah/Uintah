@@ -35,6 +35,11 @@
 #include <iostream>
 #include <string>
 #include <sgi_stl_warnings_on.h>
+
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
+
 using namespace std;
 
 void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
@@ -63,9 +68,25 @@ void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
     return 0;
   }
   
+  
 #ifdef _WIN32
   return (void*) GetProcAddress(LibraryHandle,symbolname);
-#else
+
+#elif defined __APPLE__
+  //*** Workaround for a bug in 10.4's dyld library ***//
+  // Add a leading underscore to the symbolname for call to mach lib functions
+  // If you don't check against the underscored symbol name NSIsSymbolNameDefined
+  // will never return true.
+  char* underscoredSymbol = 0;
+  asprintf(&underscoredSymbol,"_%s",symbolname);
+  cout << "Looking for symbol " << underscoredSymbol << "\n";
+  if( NSIsSymbolNameDefined(underscoredSymbol) ) {
+    return dlsym(LibraryHandle,symbolname);
+  } else {
+    return 0;
+  }
+
+#else 
   return dlsym(LibraryHandle,symbolname);
 #endif
 }
@@ -108,8 +129,16 @@ void* GetHandleSymbolAddress(LIBRARY_HANDLE handle, const char* symbolname)
 {
 #ifdef _WIN32
   return (void*) GetProcAddress(handle,symbolname);
+#elif defined __APPLE__
+  char* underscoredSymbol = 0;
+  asprintf(&underscoredSymbol,"_%s",symbolname);
+  if( NSIsSymbolNameDefined(underscoredSymbol) ) {
+    return dlsym(handle,symbolname);
+  } else {
+    return 0;
+  }
 #else
- return dlsym(handle,symbolname);
+  return dlsym(handle,symbolname);
 #endif
 }
 
@@ -129,7 +158,6 @@ LIBRARY_HANDLE GetLibraryHandle(const char* libname)
 
   LIBRARY_HANDLE lh;
   lh = dlopen(name.c_str(), RTLD_LAZY|RTLD_GLOBAL);
-
   if( lh == 0 ) { 
     // dlopen of absolute path failed...  Perhaps they have a DYLD_LIBRARY_PATH var set...
     // If so, if we try again without the path, then maybe it will succeed...
