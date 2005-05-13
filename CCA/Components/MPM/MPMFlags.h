@@ -59,6 +59,7 @@ namespace Uintah {
     double      d_addFrictionWork;     // 1 == add , 0 == do not add
 
     int         d_extraSolverFlushes;  // Have PETSc do more flushes to save memory
+    bool        d_doImplicitHeatConduction;
 
     ParticleInterpolator* d_interpolator;
 
