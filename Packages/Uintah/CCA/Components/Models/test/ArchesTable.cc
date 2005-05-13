@@ -689,7 +689,7 @@ void ArchesTable::interpolate(int index, CCVariable<double>& result,
           if(axis->uniform){
             double index = (value-axis->weights[0])/axis->dx;
             int idx = (int)index;
-            if(index < 0 || index >= axis->weights.size()){
+            if(index < 0 || index >= axis->weights.size()-1){
               if(value == axis->weights[axis->weights.size()-1]){
                 idx--;
               } else if(index < 0 || index > -1.e-10){
