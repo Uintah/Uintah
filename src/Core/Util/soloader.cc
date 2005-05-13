@@ -35,6 +35,11 @@
 #include <iostream>
 #include <string>
 #include <sgi_stl_warnings_on.h>
+
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
+
 using namespace std;
 
 void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
@@ -65,6 +70,19 @@ void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
   
 #ifdef _WIN32
   return (void*) GetProcAddress(LibraryHandle,symbolname);
+#elif defined __APPLE__
+  //*** Workaround for a bug in 10.4's dyld library ***//
+  // Add a leading underscore to the symbolname for call to mach lib functions
+  // If you don't check against the underscored symbol name NSIsSymbolNameDefined
+  // will never return true.
+  char* underscoredSymbol = 0;
+  asprintf(&underscoredSymbol,"_%s",symbolname);
+  cout << "Looking for symbol " << underscoredSymbol << "\n";
+  if( NSIsSymbolNameDefined(underscoredSymbol) ) {
+    return dlsym(LibraryHandle,symbolname);
+  } else {
+    return 0;
+  }
 #else
   return dlsym(LibraryHandle,symbolname);
 #endif
