@@ -11,6 +11,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Exceptions/ConvergenceFailure.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h> 
+#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Exceptions/InternalError.h>
@@ -644,7 +645,7 @@ void ICE::updatePressure(const ProcessorGroup*,
     old_dw->get(pressure,             lb->press_CCLabel,    0,patch,gn,0);
     new_dw->get(imp_delP,             lb->imp_delPLabel,    0,patch,gn,0);
     new_dw->allocateAndPut(press_CC,  lb->press_CCLabel,    0,patch);  
-    press_CC.initialize(getNan());
+    press_CC.initialize(-9e100);
     
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
@@ -657,7 +658,7 @@ void ICE::updatePressure(const ProcessorGroup*,
       IntVector c = *iter;
       press_CC[c] = pressure[c] + imp_delP[c];
     }  
-    //____ B U L L E T   P R O O F I N G----
+    //____ C L A M P ________________
     // This was done to help robustify the equilibration
     // pressure calculation in MPMICE.  Also, in rate form, negative
     // mean pressures are allowed.
@@ -678,6 +679,15 @@ void ICE::updatePressure(const ProcessorGroup*,
            d_customBC_var_basket);
            
     delete_CustomBCs(d_customBC_var_basket);      
+
+    //____ B U L L E T   P R O O F I N G----
+    IntVector neg_cell;
+    if(!areAllValuesPositive(press_CC, neg_cell)) {
+      ostringstream warn;
+      warn <<"ERROR ICE::updatePressure cell "
+           << neg_cell << " negative pressure\n ";        
+      throw InvalidValue(warn.str());
+     }
         
     //---- P R I N T   D A T A ------  
     if (switchDebug_updatePressure) {
