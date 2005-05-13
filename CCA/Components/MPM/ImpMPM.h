@@ -167,13 +167,31 @@ private:
                                        DataWarehouse* new_dw,
                                        const bool recursion);
 
+  void destroyHCMatrix(                const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
+
   void createMatrix(                   const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw);
 
+  void createHCMatrix(                 const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
+
   void applyBoundaryConditions(        const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
+
+  void applyHCBoundaryConditions(      const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
@@ -186,6 +204,12 @@ private:
                                        DataWarehouse* new_dw);
 
   void findFixedDOF(                   const ProcessorGroup*, 
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls, 
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
+
+  void findFixedHCDOF(                 const ProcessorGroup*, 
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls, 
                                        DataWarehouse* old_dw,
@@ -212,6 +236,12 @@ private:
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw);
 
+  void formHCStiffnessMatrix(          const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
+
   //////////
   // Insert Documentation Here:
   void computeInternalForce(           const ProcessorGroup*,
@@ -233,7 +263,19 @@ private:
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw);
 
+  void formHCQ(                        const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
+
   void solveForDuCG(                   const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
+
+  void solveForTemp(                   const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
@@ -244,6 +286,12 @@ private:
 				const MaterialSubset* matls,
 				DataWarehouse* old_dw,
 				DataWarehouse* new_dw);
+
+  void getTemperatureIncrement(const ProcessorGroup*,
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw);
 
 
   void updateGridKinematics(           const ProcessorGroup*,
@@ -289,10 +337,16 @@ private:
   void scheduleFormStiffnessMatrix( SchedulerP&, const PatchSet*,
                                     const MaterialSet*);
 
+  void scheduleFormHCStiffnessMatrix( SchedulerP&, const PatchSet*,
+                                      const MaterialSet*);
+
   void scheduleComputeInternalForce(SchedulerP&, const PatchSet*,
 				    const MaterialSet*);
 
   void scheduleFormQ(               SchedulerP&, const PatchSet*,
+                                    const MaterialSet*);
+
+  void scheduleFormHCQ(             SchedulerP&, const PatchSet*,
                                     const MaterialSet*);
 
   void scheduleUpdateGridKinematics(SchedulerP&, const PatchSet*, 
@@ -313,16 +367,28 @@ private:
   void scheduleDestroyMatrix(      SchedulerP&, const PatchSet*,
                                    const MaterialSet*, const bool recursion);
 
+  void scheduleDestroyHCMatrix(    SchedulerP&, const PatchSet*,
+                                   const MaterialSet*);
+
   void scheduleCreateMatrix(       SchedulerP&, const PatchSet*,
                                    const MaterialSet*);
 
+  void scheduleCreateHCMatrix(     SchedulerP&, const PatchSet*,
+                                   const MaterialSet*);
+
   void scheduleApplyBoundaryConditions(        SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
+
+  void scheduleApplyHCBoundaryConditions(      SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
 
   void scheduleComputeContact(                 SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
 
   void scheduleFindFixedDOF(                   SchedulerP&, const PatchSet*, 
+                                               const MaterialSet*);
+
+  void scheduleFindFixedHCDOF(                 SchedulerP&, const PatchSet*, 
                                                const MaterialSet*);
 
   void scheduleComputeStressTensor(            SchedulerP&, const PatchSet*,
@@ -340,7 +406,13 @@ private:
   void scheduleSolveForDuCG(                   SchedulerP&,const PatchSet*,
                                                const MaterialSet*);
 
+  void scheduleSolveForTemp(                   SchedulerP&,const PatchSet*,
+                                               const MaterialSet*);
+
   void scheduleGetDisplacementIncrement(       SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
+
+  void scheduleGetTemperatureIncrement(        SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
 
   void scheduleComputeAcceleration(            SchedulerP&, const PatchSet*,
@@ -391,11 +463,14 @@ private:
 
 #ifdef HAVE_PETSC
   MPMPetscSolver* d_solver;
+  vector<MPMPetscSolver*> d_HC_solver;
 #else
   SimpleSolver* d_solver;
+  vector<SimpleSolver*> d_HC_solver;
 #endif
 
   bool d_dynamic;
+  bool d_HC_dynamic;
   bool d_rigid_body;
   bool d_single_velocity;
   bool d_useLoadCurves;
