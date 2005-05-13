@@ -54,9 +54,9 @@ SCGPlastic::SCGPlastic(ProblemSpecP& ps)
   }
   ps->require("energy_to_form_kink_pair",d_CM.kinkPairEnergy);
   ps->require("Boltzmann_constant",d_CM.boltzmannConstant);
-  ps->require("Pierls_stress",d_CM.pierlsStress);
+  ps->require("Peierls_stress",d_CM.peierlsStress);
 }
-	 
+         
 SCGPlastic::SCGPlastic(const SCGPlastic* cm)
 {
   d_CM.mu_0 = cm->d_CM.mu_0;
@@ -81,48 +81,48 @@ SCGPlastic::SCGPlastic(const SCGPlastic* cm)
   d_CM.dragCoefficient = cm->d_CM.dragCoefficient;
   d_CM.kinkPairEnergy = cm->d_CM.kinkPairEnergy;
   d_CM.boltzmannConstant = cm->d_CM.boltzmannConstant;
-  d_CM.pierlsStress = cm->d_CM.pierlsStress;
+  d_CM.peierlsStress = cm->d_CM.peierlsStress;
 }
-	 
+         
 SCGPlastic::~SCGPlastic()
 {
 }
-	 
+         
 void 
 SCGPlastic::addInitialComputesAndRequires(Task* ,
-					  const MPMMaterial* ,
-					  const PatchSet*) const
+                                          const MPMMaterial* ,
+                                          const PatchSet*) const
 {
 }
 
 void 
 SCGPlastic::addComputesAndRequires(Task* ,
-				   const MPMMaterial* ,
-				   const PatchSet*) const
+                                   const MPMMaterial* ,
+                                   const PatchSet*) const
 {
 }
 
 void 
 SCGPlastic::addParticleState(std::vector<const VarLabel*>& ,
-			     std::vector<const VarLabel*>& )
+                             std::vector<const VarLabel*>& )
 {
 }
 
 void 
 SCGPlastic::allocateCMDataAddRequires(Task* ,
-				      const MPMMaterial* ,
-				      const PatchSet* ,
-				      MPMLabel* ) const
+                                      const MPMMaterial* ,
+                                      const PatchSet* ,
+                                      MPMLabel* ) const
 {
 }
 
 void 
 SCGPlastic::allocateCMDataAdd(DataWarehouse* ,
-			      ParticleSubset* ,
-			      map<const VarLabel*, 
+                              ParticleSubset* ,
+                              map<const VarLabel*, 
                                  ParticleVariableBase*>* ,
-			      ParticleSubset* ,
-			      DataWarehouse* )
+                              ParticleSubset* ,
+                              DataWarehouse* )
 {
 }
 
@@ -130,19 +130,19 @@ SCGPlastic::allocateCMDataAdd(DataWarehouse* ,
 
 void 
 SCGPlastic::initializeInternalVars(ParticleSubset* ,
-				   DataWarehouse* )
+                                   DataWarehouse* )
 {
 }
 
 void 
 SCGPlastic::getInternalVars(ParticleSubset* ,
-			    DataWarehouse* ) 
+                            DataWarehouse* ) 
 {
 }
 
 void 
 SCGPlastic::allocateAndPutInternalVars(ParticleSubset* ,
-				       DataWarehouse* ) 
+                                       DataWarehouse* ) 
 {
 }
 
@@ -205,16 +205,16 @@ SCGPlastic::computeThermallyActivatedYieldStress(const double& epdot,
   double C2 = d_CM.C2;
   double U_k = d_CM.kinkPairEnergy;
   double kappa = d_CM.boltzmannConstant;
-  double sigma_P = d_CM.pierlsStress;
-  double U_k_kappa = U_k/kappa;
+  double sigma_P = d_CM.peierlsStress;
+  double U_k_kappaT = 2.0*U_k/(kappa*T);
+  double Z4 = C2*C1;
 
   // Find the maximum plastic strain rate and minumum plastic
   // strains at which this part of the calculation is valid
   double tau = sigma_P;
   double Z0 = 1.0-tau/sigma_P;
-  double Z1 = U_k_kappa*Z0/T;
-  double Z2 = exp(2.0*Z0*Z1);
-  double Z4 = C2*C1;
+  double Z1 = U_k_kappaT*Z0;
+  double Z2 = exp(Z0*Z1);
   double Z5 = Z2*tau;
   double Z6 = Z4 + Z5;
   double epdot_max =  C1*tau/Z6;
@@ -222,9 +222,8 @@ SCGPlastic::computeThermallyActivatedYieldStress(const double& epdot,
 
   tau = 0.0;
   Z0 = 1.0-tau/sigma_P;
-  Z1 = U_k_kappa*Z0/T;
-  Z2 = exp(2.0*Z0*Z1);
-  Z4 = C2*C1;
+  Z1 = U_k_kappaT*Z0;
+  Z2 = exp(Z0*Z1);
   Z5 = Z2*tau;
   Z6 = Z4 + Z5;
   double epdot_min = C1*tau/Z6;
@@ -239,29 +238,78 @@ SCGPlastic::computeThermallyActivatedYieldStress(const double& epdot,
   do {
     ++count;
     Z0 = 1.0-tau/sigma_P;
-    Z1 = U_k_kappa*Z0/T;
-    Z2 = exp(2.0*Z0*Z1);
-    Z4 = C2*C1;
+    Z1 = U_k_kappaT*Z0;
+    Z2 = exp(Z0*Z1);
     Z5 = Z2*tau;
     Z6 = Z4 + Z5;
     f = epdot - C1*tau/Z6;
-    fPrime = -C1*(4.0*Z5*Z1*tau + sigma_P*Z4)/(sigma_P*Z6*Z6);
+    fPrime = -C1*(2.0*Z5*Z1*tau + sigma_P*Z4)/(sigma_P*Z6*Z6);
 
     tauOld = tau;
     tau -= f/fPrime;
 
-    /*
-    if (count > 10 || isnan(f) || isnan(tau)) {
-      cout << "iter = " << count << " f = " << fabs(f) << " fPrime = " << fPrime << " tau = " << tau
-	      << " tolerance = " << tolerance
-	      << "tau-tauOld = " << fabs(tau-tauOld)
-	      << endl;
+    if (isnan(tau)) {
+      //cout << "iter = " << count << " epdot = " << epdot 
+      //     << " T = " << T << endl;
+      //cout << "iter = " << count << " Z0 = " << Z0 << " Z1 = " << Z1
+      //   << " Z2 = " << Z2 << " Z4 = " << Z4 << " Z5 = " << Z5
+      //   << " Z6 = " << Z6 << " C1 = " << C1 << " C2 = " << C2 << endl;
+      //cout << "iter = " << count 
+      //     << " f = " << fabs(f) << " fPrime = " << fPrime 
+      //   << " tau = " << tau << " tolerance = " << tolerance
+      //   << " tau-tauOld = " << fabs(tau-tauOld) << endl;
+      break;
     }
-    */
     if (fabs(tau-tauOld) < tolerance*tau) break;
 
   } while (fabs(f) > tolerance);
   
+  /* The equation is not appropriate for Newton iterations.
+     Do bisection instead. */
+  if (isnan(tau)) {
+    double tau_hi = sigma_P;
+    double tau_lo = tolerance; 
+    tau = 0.5*(tau_hi + tau_lo);
+    while ((tau_hi - tau_lo) > tolerance) {
+
+      // Compute f(tau_lo)
+      Z0 = 1.0-tau_lo/sigma_P;
+      Z1 = U_k_kappaT*Z0;
+      Z2 = exp(Z0*Z1);
+      Z5 = Z2*tau_lo;
+      Z6 = Z4 + Z5;
+      double f_lo = epdot - C1*tau_lo/Z6;
+
+      // Compute f(tau)
+      Z0 = 1.0-tau/sigma_P;
+      Z1 = U_k_kappaT*Z0;
+      Z2 = exp(Z0*Z1);
+      Z5 = Z2*tau;
+      Z6 = Z4 + Z5;
+      f = epdot - C1*tau/Z6;
+
+      // Check closeness
+      if (f_lo*f > 0.0) 
+        tau_lo = tau;
+      else
+        tau_hi = tau;
+
+      // Compute new value of tau
+      tau = 0.5*(tau_hi + tau_lo);
+    }
+  }
+
+  if (isnan(tau)) {
+    cout << "iter = " << count << " epdot = " << epdot 
+         << " T = " << T << endl;
+    cout << "iter = " << count << " Z0 = " << Z0 << " Z1 = " << Z1
+       << " Z2 = " << Z2 << " Z4 = " << Z4 << " Z5 = " << Z5
+       << " Z6 = " << Z6 << " C1 = " << C1 << " C2 = " << C2 << endl;
+    cout << "iter = " << count 
+         << " f = " << fabs(f) << " fPrime = " << fPrime 
+       << " tau = " << tau << " tolerance = " << tolerance
+       << " tau-tauOld = " << fabs(tau-tauOld) << endl;
+  }
   tau = (tau > sigma_P) ? sigma_P : tau;
   tau = (tau < 0.0) ? 0.0 : tau;
 
@@ -287,7 +335,7 @@ SCGPlastic::computeEpdot(const PlasticityState* state,
   double C2 = d_CM.C2;
   double U_k = d_CM.kinkPairEnergy;
   double kappa = d_CM.boltzmannConstant;
-  double sigma_P = d_CM.pierlsStress;
+  double sigma_P = d_CM.peierlsStress;
 
   // Compute the sigma_A and sigma_T
   double f_ep = 1.0 + d_CM.beta*(ep + d_CM.epsilon_p0);
@@ -316,12 +364,12 @@ SCGPlastic::computeEpdot(const PlasticityState* state,
 */
 void 
 SCGPlastic::computeTangentModulus(const Matrix3& stress,
-				  const PlasticityState* state,
-				  const double& ,
-				  const MPMMaterial* ,
-				  const particleIndex idx,
-				  TangentModulusTensor& Ce,
-				  TangentModulusTensor& Cep)
+                                  const PlasticityState* state,
+                                  const double& ,
+                                  const MPMMaterial* ,
+                                  const particleIndex idx,
+                                  TangentModulusTensor& Ce,
+                                  TangentModulusTensor& Cep)
 {
   // Get f_q = dsigma/dep (h = 1, therefore f_q.h = f_q)
   double f_q = evalDerivativeWRTPlasticStrain(state, idx);
@@ -344,7 +392,7 @@ SCGPlastic::computeTangentModulus(const Matrix3& stress,
       Cr(ii,jj) = 0.0;
       rC(ii,jj) = 0.0;
       for (int kk = 0; kk < 3; ++kk) {
-	for (int ll = 0; ll < 3; ++ll) {
+        for (int ll = 0; ll < 3; ++ll) {
           Cr(ii,jj) += Ce(ii,jj,kk,ll)*rr(kk,ll);
           rC(ii,jj) += rr(kk,ll)*Ce(kk,ll,ii,jj);
         }
@@ -355,10 +403,10 @@ SCGPlastic::computeTangentModulus(const Matrix3& stress,
   for (int ii = 0; ii < 3; ++ii) {
     for (int jj = 0; jj < 3; ++jj) {
       for (int kk = 0; kk < 3; ++kk) {
-	for (int ll = 0; ll < 3; ++ll) {
+        for (int ll = 0; ll < 3; ++ll) {
           Cep(ii,jj,kk,ll) = Ce(ii,jj,kk,ll) - 
-	    Cr(ii,jj)*rC(kk,ll)/(-f_q + rCr);
-	}  
+            Cr(ii,jj)*rC(kk,ll)/(-f_q + rCr);
+        }  
       }  
     }  
   }  
@@ -376,7 +424,7 @@ SCGPlastic::evalDerivativeWRTScalarVars(const PlasticityState* state,
 
 double
 SCGPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
-					   const particleIndex )
+                                           const particleIndex )
 {
   // Get the state data
   double ep = state->plasticStrain;
@@ -429,7 +477,7 @@ SCGPlastic::computeMeltingTemp(const PlasticityState* state)
     of the model has not been included and should be for correctness.*/
 double
 SCGPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
-					 const particleIndex )
+                                         const particleIndex )
 {
   // Get the state data
   double ep = state->plasticStrain;
@@ -444,7 +492,7 @@ SCGPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
 
 double
 SCGPlastic::evalDerivativeWRTPressure(const PlasticityState* state,
-				      const particleIndex )
+                                      const particleIndex )
 {
   // Get the state data
   double ep = state->plasticStrain;
@@ -490,27 +538,36 @@ SCGPlastic::evalDerivativeWRTPressure(const PlasticityState* state,
 */
 double
 SCGPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
-				        const particleIndex idx)
+                                        const particleIndex idx)
 {
-  // ** WARNING ** After a lot of trial I have found that derivatives
-  // wrt strain rate do not exists at many points.  So I'm going to 
-  // return zero for now until I find a better way of doing things.
-  // BB 5/2/05
-  return 0.0;
-
-  /*
   // Get the current state data
   double epdot = state->plasticStrain;
   double T = state->temperature;
   double mu = state->shearModulus;
   double mu_0 = d_CM.mu_0;
 
+  // Compute the value of tau at two strain rates
+  double tau_1 = computeThermallyActivatedYieldStress(epdot, T, 1.0e-6);
+  double tau_2 = computeThermallyActivatedYieldStress(1.01*epdot, T, 1.0e-6);
+
+  // Compute the slope delta(tau)/delta(epdot)
+  double dYt_depdot = (tau_2 - tau_1)/0.01;
+  double dY_depdot = dYt_depdot*mu/mu_0;
+  return dY_depdot;
+
+  /*
+  // ** WARNING ** After a lot of trial I have found that derivatives
+  // wrt strain rate do not exist at many points.  So I'm going to 
+  // return zero for now until I find a better way of doing things.
+  // BB 5/2/05
+  return 0.0;
+
   // Get the Hoge and Mukherjee model constants
   double C1 = d_CM.C1;
   double C2 = d_CM.C2;
   double U_k = d_CM.kinkPairEnergy;
   double kappa = d_CM.boltzmannConstant;
-  double sigma_P = d_CM.pierlsStress;
+  double sigma_P = d_CM.peierlsStress;
   double U_k_kappa = U_k/kappa;
 
   // Find the maximum plastic strain rate and minumum plastic
