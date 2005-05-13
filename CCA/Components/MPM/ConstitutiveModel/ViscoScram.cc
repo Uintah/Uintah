@@ -40,7 +40,8 @@ ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb,  MPMFlags* Mflag)
 {
   cout << "ViscoSCRAM:Label = " << Mlb << endl;
   ps->require("PR",d_initialData.PR);
-  d_initialData.CoefThermExp = 12.5e-5;  // strains per K
+  //d_initialData.CoefThermExp = 12.5e-5;  // strains per K
+  d_initialData.CoefThermExp = 0.0;  // keep from breaking RT
   ps->get("CoeffThermalExpansion", d_initialData.CoefThermExp);
   ps->require("CrackParameterA",d_initialData.CrackParameterA);
   ps->require("CrackPowerValue",d_initialData.CrackPowerValue);
