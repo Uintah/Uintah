@@ -894,15 +894,15 @@ Viewer::set_context(Scheduler* sched, Network* network)
   Module::set_context(sched, network);
   if (sci_getenv("SCI_REGRESSION_TESTING"))
   {
-    sched->add_callback(regression_callback, this, -1);
+    sched->add_callback(save_image_callback, this, -1);
   }
 }
 
 
 bool
-Viewer::regression_callback(void *ths)
+Viewer::save_image_callback(void *voidstuff)
 {
-  Viewer *viewer = (Viewer *)ths;
+  Viewer *viewer = (Viewer *)voidstuff;
   for (unsigned int i = 0; i < viewer->view_window_.size(); i++)
   {
     const string name = string("snapshot") + to_string(i) + ".ppm";

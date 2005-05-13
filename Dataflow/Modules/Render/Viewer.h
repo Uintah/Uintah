@@ -105,7 +105,7 @@ private:
   int                           synchronized_debt_;
 
 
-  static bool regression_callback(void *ths);
+  static bool save_image_callback(void *stuff);
 };
 
 
