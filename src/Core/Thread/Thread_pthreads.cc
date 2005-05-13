@@ -1445,36 +1445,37 @@ AtomicCounter::operator int() const
   return priv_->amo_val;
 }
 
-
+// Preincrement
 int
 AtomicCounter::operator++()
 {
   __int64 val = __sync_fetch_and_add_di(&(priv_->amo_val),1);
-  return (int)val;
+  return (int)val+1;
 }
 
 
+// Postincrement
 int
 AtomicCounter::operator++(int)
 {
   __int64 val = __sync_fetch_and_add_di(&(priv_->amo_val),1);
-  return (int)val-1;
+  return (int)val;
 }
 
-
+// Predecrement
 int
 AtomicCounter::operator--()
 {
   __int64 val = __sync_fetch_and_add_di(&(priv_->amo_val),-1);
-  return (int)val;
+  return (int)val-1;
 }
 
-
+// Postdecrement
 int
 AtomicCounter::operator--(int)
 {
   __int64 val = __sync_fetch_and_add_di(&(priv_->amo_val),-1);
-  return (int)val+1;
+  return (int)val;
 }
 
 
