@@ -40,6 +40,7 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	setGlobal $this-use_stencil 0
 	setGlobal $this-invert_opacity 0
 	setGlobal $this-multi_level 1
+        setGlobal $this-blend_res 8
 	setGlobal $this-sampling_rate_lo 1.0
 	setGlobal $this-sampling_rate_hi 4.0
         setGlobal $this-adaptive 1
@@ -152,6 +153,13 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 
         frame $tab.f.fres
         pack $tab.f.fres -padx 2 -pady 2 -fill x
+        label $tab.f.fres.res -text "Resolution (bits)"
+	radiobutton $tab.f.fres.b0 -text 8 -variable $this-blend_res -value 8 \
+	    -command $n
+	radiobutton $tab.f.fres.b1 -text 16 -variable $this-blend_res -value 16 \
+	    -command $n
+	radiobutton $tab.f.fres.b2 -text 32 -variable $this-blend_res -value 32 \
+	    -command $n
 	pack $tab.f.fres.res $tab.f.fres.b0 $tab.f.fres.b1 $tab.f.fres.b2 \
             -side left -fill x -padx 4 -pady 4
 

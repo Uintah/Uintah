@@ -215,6 +215,20 @@ TextureRenderer::set_sw_raster(bool b)
 }
 
 
+void
+TextureRenderer::set_blend_num_bits(int b)
+{
+  mutex_.lock();
+  blend_num_bits_ = b;
+  mutex_.unlock();
+}
+
+bool
+TextureRenderer::use_blend_buffer()
+{
+  return use_blend_buffer_;
+}
+
 #define TEXTURERENDERER_VERSION 1
 
 void 
