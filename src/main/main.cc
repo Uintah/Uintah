@@ -312,7 +312,13 @@ main(int argc, char *argv[], char **environment) {
 
   // Always switch on this option
   // It is needed for running external applications
+  
+  // readline() is broken on OS 10.4, have to disable this to run.
+  #if defined __APPLE__
+  bool use_eai = false;
+  #else 
   bool use_eai = true;
+  #endif
   // if (sci_getenv("SCIRUN_EXTERNAL_APPLICATION_INTERFACE")) use_eai = true;
 
   // The environment has been setup
