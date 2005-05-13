@@ -130,7 +130,7 @@ foreach $datfile (@ARGV[4 .. @ARGV-1]) {
             }
         }
         if ($has_significant_abs_error != 0) {
-            print "\n\tgreatest absolute error: %" . $greatest_abs_error * 100;
+            print "\n\tgreatest absolute error: " . $greatest_abs_error;
             print "\n\tat times: " . $greatest_abs_error_time1 . " / ";
             print $greatest_abs_error_time2 . "\n";
             print "\tvalues: " . $greatest_abs_error_value1 . " / ";
