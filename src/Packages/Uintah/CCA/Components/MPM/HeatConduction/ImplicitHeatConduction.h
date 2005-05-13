@@ -105,9 +105,16 @@ namespace Uintah {
                                          DataWarehouse* old_dw,
                                          DataWarehouse* new_dw);
 
+    void fillgTemperatureRate(           const ProcessorGroup*,
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* matls,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw);
+
   private:
     MPMLabel* lb;
     MPMFlags* d_flag;
+    bool do_IHC;
     const PatchSet* d_perproc_patches;
 #ifdef HAVE_PETSC
     vector<MPMPetscSolver*> d_HC_solver;

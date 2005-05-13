@@ -17,7 +17,6 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Util/DebugStream.h>
-#include <vector>
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -34,6 +33,7 @@ ImplicitHeatConduction::ImplicitHeatConduction(SimulationStateP& sS,
   lb = labels;
   d_flag = flags;
   d_sharedState = sS;
+  do_IHC=d_flag->d_doImplicitHeatConduction;
 
   if(d_flag->d_8or27==8){
     NGP=1;
@@ -46,16 +46,23 @@ ImplicitHeatConduction::ImplicitHeatConduction(SimulationStateP& sS,
 
 ImplicitHeatConduction::~ImplicitHeatConduction()
 {
+ if(do_IHC){
   int numMatls = d_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
     delete d_HC_solver[m];
   }
+
+  if(d_perproc_patches && d_perproc_patches->removeReference()) {
+    delete d_perproc_patches;
+    cout << "Freeing patches!!\n";
+  }
+ }
 }
 
 void ImplicitHeatConduction::scheduleInitialize(const LevelP& level,
                                                 SchedulerP& sched)
 {
-
+ if(do_IHC){
   Task* t = scinew Task("ImplicitHeatConduction::actuallyInitialize",
                         this, &ImplicitHeatConduction::actuallyInitializeHC);
 
@@ -64,6 +71,7 @@ void ImplicitHeatConduction::scheduleInitialize(const LevelP& level,
   d_perproc_patches->addReference();
                                                                                 
   sched->addTask(t, d_perproc_patches, d_sharedState->allMPMMaterials());
+ }
 }
 
 void ImplicitHeatConduction::actuallyInitializeHC(const ProcessorGroup*,
@@ -92,51 +100,60 @@ void ImplicitHeatConduction::scheduleDestroyHCMatrix(SchedulerP& sched,
                                                      const PatchSet* patches,
                                                      const MaterialSet* matls)
 {
- Task* t = scinew Task("ImpMPM::destroyHCMatrix",this,
-                       &ImplicitHeatConduction::destroyHCMatrix);                                                                                
- sched->addTask(t, patches, matls);
+ if(do_IHC){
+   Task* t = scinew Task("ImpMPM::destroyHCMatrix",this,
+                         &ImplicitHeatConduction::destroyHCMatrix);                                                                                
+   sched->addTask(t, patches, matls);
+ }
 }
 
 void ImplicitHeatConduction::scheduleCreateHCMatrix(SchedulerP& sched,
                                                     const PatchSet* patches,
                                                     const MaterialSet* matls)
 {
+ if(do_IHC){
   Task* t = scinew Task("ImpMPM::createHCMatrix",this,
                         &ImplicitHeatConduction::createHCMatrix);
                                                                                 
   t->requires(Task::OldDW, lb->pXLabel,Ghost::AroundNodes,1);
                                                                                 
   sched->addTask(t, patches, matls);
+ }
 }
 
 void ImplicitHeatConduction::scheduleApplyHCBoundaryConditions(SchedulerP& schd,
                                                const PatchSet* patches,
                                                const MaterialSet* matls)
 {
+ if(do_IHC){
   Task* t = scinew Task("ImpMPM::applyHCBoundaryCondition", this,
                         &ImplicitHeatConduction::applyHCBoundaryConditions);
                                                                                 
   t->modifies(lb->gTemperatureLabel);
                                                                                 
   schd->addTask(t, patches, matls);
+ }
 }
 
 void ImplicitHeatConduction::scheduleFindFixedHCDOF(SchedulerP& sched,
                                                     const PatchSet* patches,
                                                     const MaterialSet* matls)
 {
+ if(do_IHC){
   Task* t = scinew Task("ImpMPM::findFixedHCDOF", this,
                         &ImplicitHeatConduction::findFixedHCDOF);
                                                                                 
   t->requires(Task::NewDW, lb->gMassAllLabel, Ghost::None, 0);
                                                                                 
   sched->addTask(t, patches, matls);
+ }
 }
 
 void ImplicitHeatConduction::scheduleFormHCStiffnessMatrix(SchedulerP& sched,
                                                      const PatchSet* patches,
                                                      const MaterialSet* matls)
 {
+ if(do_IHC){
   Task* t = scinew Task("ImpMPM::formHCStiffnessMatrix",this,
                         &ImplicitHeatConduction::formHCStiffnessMatrix);
                                                                                 
@@ -144,12 +161,14 @@ void ImplicitHeatConduction::scheduleFormHCStiffnessMatrix(SchedulerP& sched,
   t->requires(Task::OldDW,d_sharedState->get_delt_label());
                                                                                 
   sched->addTask(t, patches, matls);
+ }
 }
 
 void ImplicitHeatConduction::scheduleFormHCQ(SchedulerP& sched,
                                              const PatchSet* patches,
                                              const MaterialSet* matls)
 {
+ if(do_IHC){
   Task* t = scinew Task("ImpMPM::formHCQ", this,
                         &ImplicitHeatConduction::formHCQ);
                                                                                 
@@ -160,22 +179,26 @@ void ImplicitHeatConduction::scheduleFormHCQ(SchedulerP& sched,
   t->requires(Task::NewDW,lb->gMassAllLabel,      gnone,0);
                                                                                 
   sched->addTask(t, patches, matls);
+ }
 }
 
 void ImplicitHeatConduction::scheduleSolveForTemp(SchedulerP& sched,
                                                   const PatchSet* patches,
                                                   const MaterialSet* matls)
 {
+ if(do_IHC){
   Task* t = scinew Task("ImpMPM::solveForTemp", this,
                         &ImplicitHeatConduction::solveForTemp);
                                                                                 
   sched->addTask(t, patches, matls);
+ }
 }
 
 void ImplicitHeatConduction::scheduleGetTemperatureIncrement(SchedulerP& sched,
                                                        const PatchSet* patches,
                                                        const MaterialSet* matls)
 {
+ if(do_IHC){
   Task* t = scinew Task("ImpMPM::getTemperatureIncrement", this,
                         &ImplicitHeatConduction::getTemperatureIncrement);
                                                                                 
@@ -186,6 +209,15 @@ void ImplicitHeatConduction::scheduleGetTemperatureIncrement(SchedulerP& sched,
   t->computes(lb->gTemperatureRateLabel);
                                                                                 
   sched->addTask(t, patches, matls);
+ }
+ else{
+  Task* t = scinew Task("ImpMPM::fillgTemperatureRate", this,
+                        &ImplicitHeatConduction::fillgTemperatureRate);
+
+  t->computes(lb->gTemperatureRateLabel);
+
+  sched->addTask(t, patches, matls);
+ }
 }
 
 void ImplicitHeatConduction::destroyHCMatrix(const ProcessorGroup*,
@@ -608,6 +640,31 @@ void ImplicitHeatConduction::getTemperatureIncrement(const ProcessorGroup*,
 //        tempRate[n] = (TempImp[n]-tempNoBC[n])/dt;
 //      }
                                                                                 
+    }
+  }
+}
+
+void ImplicitHeatConduction::fillgTemperatureRate(const ProcessorGroup*,
+                                                  const PatchSubset* patches,
+                                                  const MaterialSubset* ,
+                                                  DataWarehouse* old_dw,
+                                                  DataWarehouse* new_dw)
+{
+  for(int p = 0; p<patches->size();p++) {
+    const Patch* patch = patches->get(p);
+    if (cout_doing.active()) {
+      cout_doing <<"Doing fillgTemperatureRate on patch " << patch->getID()
+                 <<"\t\t\t\t IMPM"<< "\n" << "\n";
+    }
+    int numMatls = d_sharedState->getNumMPMMatls();
+                                                                                
+    for(int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+                                                                                
+      NCVariable<double> tempRate;
+      new_dw->allocateAndPut(tempRate,lb->gTemperatureRateLabel,dwi,patch);
+      tempRate.initialize(0.0);
     }
   }
 }
