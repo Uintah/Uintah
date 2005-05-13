@@ -65,6 +65,18 @@ void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
   
 #ifdef _WIN32
   return GetProcAddress(LibraryHandle,symbolname);
+#elif defined __APPLE__
+  //*** Workaround for a bug in 10.4's dyld library ***//
+  // Add a leading underscore to the symbolname for call to mach lib functions
+  // If you don't check against the underscored symbol name NSIsSymbolNameDefined
+  // will never return true.
+  char* underscoredSymbol = 0;
+  asprintf(&underscoredSymbol,"_%s",symbolname);
+  if( NSIsSymbolNameDefined(underscoredSymbol) ) {
+    return dlsym(LibraryHandle,symbolname);
+  } else {
+    return 0;
+  }
 #else
   return dlsym(LibraryHandle,symbolname);
 #endif
@@ -74,6 +86,18 @@ void* GetHandleSymbolAddress(LIBRARY_HANDLE handle, const char* symbolname)
 {
 #ifdef _WIN32
   return GetProcAddress(handle,symbolname);
+#elif defined __APPLE__
+  //*** Workaround for a bug in 10.4's dyld library ***//
+  // Add a leading underscore to the symbolname for call to mach lib functions
+  // If you don't check against the underscored symbol name NSIsSymbolNameDefined
+  // will never return true.
+  char* underscoredSymbol = 0;
+  asprintf(&underscoredSymbol,"_%s",symbolname);
+  if( NSIsSymbolNameDefined(underscoredSymbol) ) {
+    return dlsym(handle,symbolname);
+  } else {
+    return 0;
+  }
 #else
  return dlsym(handle,symbolname);
 #endif
