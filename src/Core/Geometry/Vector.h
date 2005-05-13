@@ -157,9 +157,7 @@ public:
   void find_orthogonal(Vector&, Vector&) const;
   bool check_find_orthogonal(Vector&, Vector&) const;
 
-#ifndef SCI_NOPERSISTENT
   friend void Pio( Piostream&, Vector& );
-#endif
 
   inline const Point &point() const;
   inline Point &asPoint() const;

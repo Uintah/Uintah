@@ -44,9 +44,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Util/Assert.h>
-#ifndef SCI_NOPERSISTENT
 #include <Core/Persistent/Persistent.h>
-#endif
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
 #include <sgi_stl_warnings_off.h>
@@ -168,7 +166,6 @@ Point::InInterval( Point a, double epsilon )
     return 0;
 }
 
-#ifndef SCI_NOPERSISTENT
 void Pio(Piostream& stream, Point& p)
 {
 
@@ -178,9 +175,7 @@ void Pio(Piostream& stream, Point& p)
     Pio(stream, p._z);
     stream.end_cheap_delim();
 }
-#endif
 
-#ifndef SCI_NOTYPEDESCRIPTION
 const string& 
 Point::get_h_file_path() {
   static const string path(TypeDescription::cc_to_h(__FILE__));
@@ -196,10 +191,5 @@ const TypeDescription* get_type_description(Point*)
   }
   return td;
 }
-#endif
 
 } // End namespace SCIRun
-
-
-
-
