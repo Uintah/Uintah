@@ -96,7 +96,6 @@ private:
   GuiDouble gui_specular_;
   GuiDouble gui_shine_;
   GuiInt gui_light_;
-  GuiInt gui_blend_res_;
   GuiInt gui_multi_level_;
   GuiInt gui_use_stencil_;
   GuiInt gui_invert_opacity_;
@@ -131,7 +130,6 @@ VolumeVisualizer::VolumeVisualizer(GuiContext* ctx)
     gui_specular_(ctx->subVar("specular")),
     gui_shine_(ctx->subVar("shine")),
     gui_light_(ctx->subVar("light")),
-    gui_blend_res_(ctx->subVar("blend_res")),
     gui_multi_level_(ctx->subVar("multi_level")),
     gui_use_stencil_(ctx->subVar("use_stencil")),
     gui_invert_opacity_(ctx->subVar("invert_opacity")),
@@ -228,9 +226,8 @@ VolumeVisualizer::execute()
       !gui_shading_.changed() && !gui_ambient_.changed() &&
       !gui_diffuse_.changed() && !gui_specular_.changed() &&
       !gui_shine_.changed() && !gui_light_.changed() &&
-      !gui_blend_res_.changed() && !gui_multi_level_.changed() &&
-      !gui_use_stencil_.changed() && !gui_invert_opacity_.changed() &&
-      !gui_num_slices_.changed())
+      !gui_multi_level_.changed() && !gui_use_stencil_.changed() &&
+      !gui_invert_opacity_.changed() && !gui_num_slices_.changed())
   {
     if (tex.get_rep())
     {
@@ -343,11 +340,6 @@ VolumeVisualizer::execute()
     gui_sw_raster_.set(1);
   } else {
     volren_->set_sw_raster(gui_sw_raster_.get());
-  }
-  if(!volren_->use_blend_buffer()) {
-    gui_blend_res_.set(8);
-  } else {
-    volren_->set_blend_num_bits(gui_blend_res_.get());
   }
 
   volren_->set_shading(gui_shading_.get());
