@@ -41,6 +41,7 @@ MPMFlags::MPMFlags()
   d_addFrictionWork = 1.0;  // do frictional heating by default
 
   d_extraSolverFlushes = 0;  // Have PETSc do more flushes to save memory
+  d_doImplicitHeatConduction = false;
 }
 
 MPMFlags::~MPMFlags()
@@ -77,6 +78,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   ps->get("create_new_particles", d_createNewParticles);
   ps->get("manual_new_material", d_addNewMaterial);
   ps->get("CanAddMPMMaterial", d_canAddMPMMaterial);
+  ps->get("DoImplicitHeatConduction", d_doImplicitHeatConduction);
   bool do_contact_friction = true;
   ps->get("do_contact_friction_heating", do_contact_friction);
   if (!do_contact_friction) d_addFrictionWork = 0.0;
