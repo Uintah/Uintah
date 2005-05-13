@@ -39,8 +39,9 @@ namespace Uintah {
     void initialize();
 
     void createLocalToGlobalMapping(const ProcessorGroup* pg,
-					    const PatchSet* perproc_patches,
-					    const PatchSubset* patches);
+                                    const PatchSet* perproc_patches,
+                                    const PatchSubset* patches,
+                                    const int DOFsPerNode);
 
     void solve();
 
@@ -77,6 +78,7 @@ namespace Uintah {
     map<const Patch*, Array3<int> > d_petscLocalToGlobal;
     vector<int> d_numNodes,d_startIndex;
     int d_totalNodes;
+    int d_DOFsPerNode;
 
     // Petsc matrix and vectors
 #ifdef HAVE_PETSC
