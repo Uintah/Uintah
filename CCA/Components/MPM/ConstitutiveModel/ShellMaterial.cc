@@ -170,7 +170,7 @@ ShellMaterial::~ShellMaterial()
 //
 void 
 ShellMaterial::addParticleState(std::vector<const VarLabel*>& from,
-				std::vector<const VarLabel*>& to)
+                                std::vector<const VarLabel*>& to)
 {
   // Add the local particle state data for this constitutive model.
   from.push_back(lb->pThickTopLabel);
@@ -237,8 +237,8 @@ ShellMaterial::addInitialComputesAndRequires(Task* task,
 //
 void 
 ShellMaterial::initializeCMData(const Patch* patch,
-				const MPMMaterial* matl,
-				DataWarehouse* new_dw)
+                                const MPMMaterial* matl,
+                                DataWarehouse* new_dw)
 {
   // Initialize the variables shared by all constitutive models
   // This method is defined in the ConstitutiveModel base class.
@@ -277,9 +277,9 @@ ShellMaterial::initializeCMData(const Patch* patch,
 }
 
 void ShellMaterial::allocateCMDataAddRequires(Task* task,
-					      const MPMMaterial* matl,
-					      const PatchSet* patches,
-					      MPMLabel* lb) const
+                                              const MPMMaterial* matl,
+                                              const PatchSet* patches,
+                                              MPMLabel* ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
@@ -302,10 +302,10 @@ void ShellMaterial::allocateCMDataAddRequires(Task* task,
 
 void 
 ShellMaterial::allocateCMDataAdd(DataWarehouse* new_dw,
-				 ParticleSubset* addset,
+                                 ParticleSubset* addset,
   map<const VarLabel*, ParticleVariableBase*>* newState,
-				 ParticleSubset* delset,
-				 DataWarehouse* )
+                                 ParticleSubset* delset,
+                                 DataWarehouse* )
 {
   // Copy the data common to all constitutive models from the particle to be 
   // deleted to the particle to be added. 
@@ -366,8 +366,8 @@ ShellMaterial::allocateCMDataAdd(DataWarehouse* new_dw,
 //
 void 
 ShellMaterial::computeStableTimestep(const Patch* patch,
-				     const MPMMaterial* matl,
-				     DataWarehouse* new_dw)
+                                     const MPMMaterial* matl,
+                                     DataWarehouse* new_dw)
 {
   int dwi = matl->getDWIndex();
   ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
@@ -390,8 +390,8 @@ ShellMaterial::computeStableTimestep(const Patch* patch,
     // Compute wave speed at each particle, store the maximum
     c_dil = sqrt((bulk + 4.0*mu/3.0)*pvolume[idx]/pmass[idx]);
     WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-		     Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-		     Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+                     Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                     Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
   }
   Vector dx = patch->dCell();
   WaveSpeed = dx/WaveSpeed;
@@ -406,8 +406,8 @@ ShellMaterial::computeStableTimestep(const Patch* patch,
 //
 void 
 ShellMaterial::addComputesRequiresParticleRotToGrid(Task* task,
-						    const MPMMaterial* matl,
-						    const PatchSet* )
+                                                    const MPMMaterial* matl,
+                                                    const PatchSet* )
 {
   Ghost::GhostType  gan = Ghost::AroundNodes;
   const MaterialSubset* matlset = matl->thisMaterial();
@@ -425,9 +425,9 @@ ShellMaterial::addComputesRequiresParticleRotToGrid(Task* task,
 //
 void 
 ShellMaterial::interpolateParticleRotToGrid(const PatchSubset* patches,
-					    const MPMMaterial* matl,
-					    DataWarehouse* old_dw,
-					    DataWarehouse* new_dw)
+                                            const MPMMaterial* matl,
+                                            DataWarehouse* old_dw,
+                                            DataWarehouse* new_dw)
 {
   // Constants
   Ghost::GhostType  gan = Ghost::AroundNodes;
@@ -453,7 +453,7 @@ ShellMaterial::interpolateParticleRotToGrid(const PatchSubset* patches,
     S.reserve(interpolator->size());
 
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch, gan, NGN, 
-						     lb->pXLabel);
+                                                     lb->pXLabel);
 
     // Get the required data
     old_dw->get(pMass,          lb->pMassLabel,          pset);
@@ -471,7 +471,7 @@ ShellMaterial::interpolateParticleRotToGrid(const PatchSubset* patches,
 
     Vector pMom(0.0,0.0,0.0);
     for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); 
-	 iter++){
+         iter++){
       particleIndex idx = *iter;
 
       // Get the node indices that surround the cell
@@ -482,8 +482,8 @@ ShellMaterial::interpolateParticleRotToGrid(const PatchSubset* patches,
 
       // Add each particles contribution to the grid rotation rate
       for(int k = 0; k < flag->d_8or27; k++) {
-	if(patch->containsNode(ni[k])) 
-	  gRotRate[ni[k]] += pMom * S[k];
+        if(patch->containsNode(ni[k])) 
+          gRotRate[ni[k]] += pMom * S[k];
       }
     } // End of particle loop
 
@@ -501,8 +501,8 @@ ShellMaterial::interpolateParticleRotToGrid(const PatchSubset* patches,
 //
 void 
 ShellMaterial::addComputesAndRequires(Task* task,
-				      const MPMMaterial* matl,
-				      const PatchSet* patches) const
+                                      const MPMMaterial* matl,
+                                      const PatchSet* patches) const
 {
   // Add the computes and requires that are common to all explicit 
   // constitutive models.  The method is defined in the ConstitutiveModel
@@ -551,9 +551,9 @@ ShellMaterial::addComputesAndRequires(Task* task,
 //
 void 
 ShellMaterial::computeStressTensor(const PatchSubset* patches,
-				   const MPMMaterial* matl,
-				   DataWarehouse* old_dw,
-				   DataWarehouse* new_dw)
+                                   const MPMMaterial* matl,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw)
 {
   // Initialize contants
   //  double onethird = (1.0/3.0);
@@ -672,15 +672,15 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
       // normal rotation rate
       Matrix3 velGrad(0.0), rotGrad(0.0);
       for(int k = 0; k < flag->d_8or27; k++) {
-	Vector gvel = gVelocity[ni[k]];
-	Vector grot = gRotRate[ni[k]];
-	for (int j = 0; j<3; j++){
-	  double d_SXoodx = d_S[k][j] * oodx[j];
-	  for (int i = 0; i<3; i++) {
+        Vector gvel = gVelocity[ni[k]];
+        Vector grot = gRotRate[ni[k]];
+        for (int j = 0; j<3; j++){
+          double d_SXoodx = d_S[k][j] * oodx[j];
+          for (int i = 0; i<3; i++) {
             velGrad(i,j) += gvel[i] * d_SXoodx;
             rotGrad(i,j) += grot[i] * d_SXoodx;
           }
-	}
+        }
       }
       // Project the velocity gradient and rotation gradient on
       // to surface of the shell
@@ -834,8 +834,8 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
       Vector pVel = pVelocity[idx];
       double c_dil = sqrt((bulk + 4.*shear/3.)*pVolume_new[idx]/pMass[idx]);
       WaveSpeed=Vector(Max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
-  		       Max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
-		       Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
+                       Max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
+                       Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
     }
 
     WaveSpeed = dx/WaveSpeed;
@@ -853,8 +853,8 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
 //
 void 
 ShellMaterial::addComputesRequiresRotInternalMoment(Task* task,
-						    const MPMMaterial* matl,
-						    const PatchSet* )
+                                                    const MPMMaterial* matl,
+                                                    const PatchSet* )
 {
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   const MaterialSubset* matlset = matl->thisMaterial();
@@ -870,9 +870,9 @@ ShellMaterial::addComputesRequiresRotInternalMoment(Task* task,
 //
 void 
 ShellMaterial::computeRotInternalMoment(const PatchSubset* patches,
-					const MPMMaterial* matl,
-					DataWarehouse* old_dw,
-					DataWarehouse* new_dw)
+                                        const MPMMaterial* matl,
+                                        DataWarehouse* old_dw,
+                                        DataWarehouse* new_dw)
 {
   // Initialize constants
   Matrix3 One; One.Identity();
@@ -885,7 +885,7 @@ ShellMaterial::computeRotInternalMoment(const PatchSubset* patches,
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch, gan, NGN,
-						     lb->pXLabel);
+                                                     lb->pXLabel);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni;
@@ -908,27 +908,27 @@ ShellMaterial::computeRotInternalMoment(const PatchSubset* patches,
     // Allocate stuff to be written to datawarehouse
     NCVariable<Vector> gRotMoment;
     new_dw->allocateAndPut(gRotMoment, lb->gNormalRotMomentLabel,  
-			   dwi, patch);
+                           dwi, patch);
     gRotMoment.initialize(Vector(0,0,0));
 
     // Loop thru particles
 
     for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); 
-	 iter++){
+         iter++){
       particleIndex idx = *iter;
   
       // Get the node indices that surround the cell and the derivatives
       // of the interpolation functions
       interpolator->findCellAndWeightsAndShapeDerivatives(pX[idx],ni,S,d_S,
-							  pSize[idx]);
+                                                          pSize[idx]);
 
       // Loop thru nodes
       for (int k = 0; k < flag->d_8or27; k++){
-	if(patch->containsNode(ni[k])){
-	  Vector gradS(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
-		       d_S[k].z()*oodx[2]);
-	  gRotMoment[ni[k]] -= (gradS*pAvMoment[idx]);
-	}
+        if(patch->containsNode(ni[k])){
+          Vector gradS(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
+                       d_S[k].z()*oodx[2]);
+          gRotMoment[ni[k]] -= (gradS*pAvMoment[idx]);
+        }
       }
     }
     delete interpolator;
@@ -941,8 +941,8 @@ ShellMaterial::computeRotInternalMoment(const PatchSubset* patches,
 //
 void 
 ShellMaterial::addComputesRequiresRotAcceleration(Task* task,
-					          const MPMMaterial* matl,
-					          const PatchSet* ) 
+                                                  const MPMMaterial* matl,
+                                                  const PatchSet* ) 
 {
   Ghost::GhostType  gac   = Ghost::AroundCells;
   //  Ghost::GhostType  gnone = Ghost::None;
@@ -964,9 +964,9 @@ ShellMaterial::addComputesRequiresRotAcceleration(Task* task,
 //
 void 
 ShellMaterial::computeRotAcceleration(const PatchSubset* patches,
-				      const MPMMaterial* matl,
-				      DataWarehouse* old_dw,
-				      DataWarehouse* new_dw)
+                                      const MPMMaterial* matl,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw)
 {
   // Constants
   Matrix3 One; One.Identity();
@@ -1008,14 +1008,14 @@ ShellMaterial::computeRotAcceleration(const PatchSubset* patches,
     // Loop thru particles
 
     for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); 
-	 iter++){
+         iter++){
       particleIndex idx = *iter;
   
       // Get the node indices that surround the cell and the derivatives
       // of the interpolation functions
       
       interpolator->findCellAndWeightsAndShapeDerivatives(pX[idx],ni,S,d_S,
-							  pSize[idx]);
+                                                          pSize[idx]);
       // Calculate the in-surface identity tensor
       Matrix3 nn(pNormal[idx], pNormal[idx]);
       Matrix3 Is = One - nn;
@@ -1023,7 +1023,7 @@ ShellMaterial::computeRotAcceleration(const PatchSubset* patches,
       // Loop thru nodes
       pRotAcc[idx] = Vector(0.0,0.0,0.0);
       for (int k = 0; k < flag->d_8or27; k++) {
-	//if(patch->containsNode(ni[k])){
+        //if(patch->containsNode(ni[k])){
           pRotAcc[idx] += gRotMoment[ni[k]]*S[k];
         //}
       }
@@ -1041,8 +1041,8 @@ ShellMaterial::computeRotAcceleration(const PatchSubset* patches,
 //
 void 
 ShellMaterial::addComputesRequiresRotRateUpdate(Task* task,
-						const MPMMaterial* matl,
-						const PatchSet* ) 
+                                                const MPMMaterial* matl,
+                                                const PatchSet* ) 
 {
   Ghost::GhostType gnone = Ghost::None;
   const MaterialSubset* matlset = matl->thisMaterial();
@@ -1067,9 +1067,9 @@ ShellMaterial::addComputesRequiresRotRateUpdate(Task* task,
 //
 void 
 ShellMaterial::particleNormalRotRateUpdate(const PatchSubset* patches,
-					   const MPMMaterial* matl,
-					   DataWarehouse* old_dw,
-					   DataWarehouse* new_dw)
+                                           const MPMMaterial* matl,
+                                           DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw)
 {
   // Constants
   Matrix3 One; One.Identity();
@@ -1153,8 +1153,8 @@ ShellMaterial::particleNormalRotRateUpdate(const PatchSubset* patches,
 // The "CM" versions use the pressure-volume relationship of the CNH model
 double 
 ShellMaterial::computeRhoMicroCM(double pressure, 
-				 const double p_ref,
-				 const MPMMaterial* matl)
+                                 const double p_ref,
+                                 const MPMMaterial* matl)
 {
   double rho_orig = matl->getInitialDensity();
   double bulk = d_initialData.Bulk;
@@ -1169,9 +1169,9 @@ ShellMaterial::computeRhoMicroCM(double pressure,
 
 void 
 ShellMaterial::computePressEOSCM(double rho_cur,double& pressure, 
-				 double p_ref,
-				 double& dp_drho, double& tmp,
-				 const MPMMaterial* matl)
+                                 double p_ref,
+                                 double& dp_drho, double& tmp,
+                                 const MPMMaterial* matl)
 {
   double bulk = d_initialData.Bulk;
   double rho_orig = matl->getInitialDensity();

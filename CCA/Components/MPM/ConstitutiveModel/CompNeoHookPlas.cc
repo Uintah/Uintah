@@ -27,7 +27,7 @@ using namespace Uintah;
 using namespace SCIRun;
 
 CompNeoHookPlas::CompNeoHookPlas(ProblemSpecP& ps, MPMLabel* Mlb, 
-				 MPMFlags* Mflag)
+                                 MPMFlags* Mflag)
   : ConstitutiveModel(Mlb,Mflag)
 {
   
@@ -127,7 +127,7 @@ void CompNeoHookPlas::initializeCMData(const Patch* patch,
 void CompNeoHookPlas::allocateCMDataAddRequires(Task* task,
                                                 const MPMMaterial* matl,
                                                 const PatchSet* patches,
-                                                MPMLabel* lb) const
+                                                MPMLabel* ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 

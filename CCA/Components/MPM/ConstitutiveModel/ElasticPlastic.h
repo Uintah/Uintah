@@ -238,10 +238,10 @@ namespace Uintah {
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Put documentation here. */
     ////////////////////////////////////////////////////////////////////////
-    virtual void addComputesAndRequires(Task* task,
-                                        const MPMMaterial* matl,
-                                        const PatchSet* patches,
-                                        const bool recursion) const
+    virtual void addComputesAndRequires(Task* ,
+                                        const MPMMaterial* ,
+                                        const PatchSet* ,
+                                        const bool ) const
     {
     }
 

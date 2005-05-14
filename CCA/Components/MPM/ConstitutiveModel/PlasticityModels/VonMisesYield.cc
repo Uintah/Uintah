@@ -8,15 +8,15 @@ using namespace SCIRun;
 VonMisesYield::VonMisesYield(ProblemSpecP&)
 {
 }
-	 
+         
 VonMisesYield::VonMisesYield(const VonMisesYield*)
 {
 }
-	 
+         
 VonMisesYield::~VonMisesYield()
 {
 }
-	 
+         
 double 
 VonMisesYield::evalYieldCondition(const double sigEqv,
                                   const double sigFlow,
@@ -30,9 +30,9 @@ VonMisesYield::evalYieldCondition(const double sigEqv,
 
 void 
 VonMisesYield::evalDerivOfYieldFunction(const Matrix3& sig,
-					const double ,
-					const double ,
-					Matrix3& derivative)
+                                        const double ,
+                                        const double ,
+                                        Matrix3& derivative)
 {
   Matrix3 I; I.Identity();
   double trSig = sig.Trace();
@@ -42,9 +42,9 @@ VonMisesYield::evalDerivOfYieldFunction(const Matrix3& sig,
 
 void 
 VonMisesYield::evalDevDerivOfYieldFunction(const Matrix3& sig,
-					   const double ,
-					   const double ,
-					   Matrix3& derivative)
+                                           const double ,
+                                           const double ,
+                                           Matrix3& derivative)
 {
   Matrix3 I; I.Identity();
   double trSig = sig.Trace();
@@ -54,12 +54,12 @@ VonMisesYield::evalDevDerivOfYieldFunction(const Matrix3& sig,
 
 void 
 VonMisesYield::computeElasPlasTangentModulus(const TangentModulusTensor& Ce,
-					     const Matrix3& sigma, 
-					     double sigY,
-					     double dsigYdep,
-					     double porosity,
-					     double voidNuclFac,
-					     TangentModulusTensor& Cep)
+                                             const Matrix3& sigma, 
+                                             double sigY,
+                                             double dsigYdep,
+                                             double porosity,
+                                             double ,
+                                             TangentModulusTensor& Cep)
 {
   // Calculate the derivative of the yield function wrt sigma
   Matrix3 f_sigma;
@@ -76,7 +76,7 @@ VonMisesYield::computeElasPlasTangentModulus(const TangentModulusTensor& Ce,
   computeTangentModulus(Ce, f_sigma, f_q1, h_q1, Cep);
 }
 
-inline double
+double
 VonMisesYield::computePlasticStrainFactor(double sigma_f_sigma,
                                           double sigma_Y)
 {
@@ -85,10 +85,10 @@ VonMisesYield::computePlasticStrainFactor(double sigma_f_sigma,
 
 void 
 VonMisesYield::computeTangentModulus(const TangentModulusTensor& Ce,
-				     const Matrix3& f_sigma, 
-				     double f_q1,
-				     double h_q1,
-				     TangentModulusTensor& Cep)
+                                     const Matrix3& f_sigma, 
+                                     double f_q1,
+                                     double h_q1,
+                                     TangentModulusTensor& Cep)
 {
   double fqhq = f_q1*h_q1;
   Matrix3 Cr(0.0), rC(0.0);
@@ -98,7 +98,7 @@ VonMisesYield::computeTangentModulus(const TangentModulusTensor& Ce,
       Cr(ii,jj) = 0.0;
       rC(ii,jj) = 0.0;
       for (int kk = 0; kk < 3; ++kk) {
-	for (int ll = 0; ll < 3; ++ll) {
+        for (int ll = 0; ll < 3; ++ll) {
           Cr(ii,jj) += Ce(ii,jj,kk,ll)*f_sigma(kk,ll);
           rC(ii,jj) += f_sigma(kk,ll)*Ce(kk,ll,ii,jj);
         }
@@ -109,10 +109,10 @@ VonMisesYield::computeTangentModulus(const TangentModulusTensor& Ce,
   for (int ii = 0; ii < 3; ++ii) {
     for (int jj = 0; jj < 3; ++jj) {
       for (int kk = 0; kk < 3; ++kk) {
-	for (int ll = 0; ll < 3; ++ll) {
+        for (int ll = 0; ll < 3; ++ll) {
           Cep(ii,jj,kk,ll) = Ce(ii,jj,kk,ll) - 
-	    Cr(ii,jj)*rC(kk,ll)/(-fqhq + rCr);
-	}  
+            Cr(ii,jj)*rC(kk,ll)/(-fqhq + rCr);
+        }  
       }  
     }  
   }  

@@ -395,8 +395,8 @@ ConstitutiveModel::ConvertJToK(const MPMMaterial*,
 
 // Detect if crack propagtes and the propagation direction (for FRACTURE)
 short
-ConstitutiveModel::CrackPropagates(const double& Vc, const double& KI, 
-                                   const double& KII, double& theta)
+ConstitutiveModel::CrackPropagates(const double& , const double& , 
+                                   const double& , double& theta)
 {
   enum {NO=0, YES};
   theta=0.0;

@@ -1663,7 +1663,7 @@ double HypoElasticPlastic::getCompressibility()
 void
 HypoElasticPlastic::scheduleCheckNeedAddMPMMaterial(Task* task,
                                                     const MPMMaterial* matl,
-                                                    const PatchSet* patch) const
+                                                    const PatchSet* ) const
 {
   Ghost::GhostType  gnone = Ghost::None;
   const MaterialSubset* matlset = matl->thisMaterial();

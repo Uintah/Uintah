@@ -48,10 +48,10 @@ PTWPlastic::~PTWPlastic()
          
 double 
 PTWPlastic::computeFlowStress(const PlasticityState* state,
-                              const double& delT,
+                              const double& ,
                               const double& ,
                               const MPMMaterial* ,
-                              const particleIndex idx)
+                              const particleIndex )
 {
   // Retrieve plastic strain and strain rate
   double epdot = state->plasticStrainRate;
@@ -142,7 +142,7 @@ PTWPlastic::computeEpdot(const PlasticityState* state,
                          const double& delT,
                          const double& tolerance,
                          const MPMMaterial* ,
-                         const particleIndex idx)
+                         const particleIndex )
 {
   // Get the needed data
   double tau = state->yieldStress;
@@ -175,7 +175,7 @@ PTWPlastic::evalFAndFPrime(const double& tau,
                            const double& rho,
                            const double& That,
                            const double& mu,
-                           const double& delT,
+                           const double& ,
                            double& f,
                            double& fPrime)
 {
@@ -304,7 +304,7 @@ PTWPlastic::evalDerivativeWRTScalarVars(const PlasticityState* state,
 
 double
 PTWPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
-                                           const particleIndex idx)
+                                           const particleIndex )
 {
   // Retrieve plastic strain and strain rate
   double epdot = state->plasticStrainRate;
@@ -525,7 +525,7 @@ PTWPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
   // Also calculate the slope in the overdriven shock regime
   if (epdot > 1.0e8) {
     double dtau_dpsi_OD = d_CM.beta*d_CM.s0*
-	    pow(edot/d_CM.gamma, d_CM.beta)/epdot;
+            pow(edot/d_CM.gamma, d_CM.beta)/epdot;
     dtauhatdpsi = max(dtauhatdpsi, dtau_dpsi_OD);
   }
 
@@ -537,74 +537,74 @@ PTWPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
 //  Methods needed by Uintah Computational Framework
 //------------------------------------------------------------------------------
 void 
-PTWPlastic::addInitialComputesAndRequires(Task* task,
-                                          const MPMMaterial* matl,
+PTWPlastic::addInitialComputesAndRequires(Task* ,
+                                          const MPMMaterial* ,
                                           const PatchSet*) const
 {
 }
 
 void 
-PTWPlastic::addComputesAndRequires(Task* task,
-                                   const MPMMaterial* matl,
+PTWPlastic::addComputesAndRequires(Task* ,
+                                   const MPMMaterial* ,
                                    const PatchSet*) const
 {
 }
 
 void 
-PTWPlastic::addParticleState(std::vector<const VarLabel*>& from,
-                             std::vector<const VarLabel*>& to)
+PTWPlastic::addParticleState(std::vector<const VarLabel*>& ,
+                             std::vector<const VarLabel*>& )
 {
 }
 
 void 
-PTWPlastic::allocateCMDataAddRequires(Task* task,
-                                      const MPMMaterial* matl,
-                                      const PatchSet* patch,
-                                      MPMLabel* lb) const
+PTWPlastic::allocateCMDataAddRequires(Task* ,
+                                      const MPMMaterial* ,
+                                      const PatchSet* ,
+                                      MPMLabel* ) const
 {
 }
 
 void 
-PTWPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
-                              ParticleSubset* addset,
+PTWPlastic::allocateCMDataAdd(DataWarehouse* ,
+                              ParticleSubset* ,
                               map<const VarLabel*, 
-                                ParticleVariableBase*>* newState,
-                              ParticleSubset* delset,
-                              DataWarehouse* old_dw)
+                                ParticleVariableBase*>* ,
+                              ParticleSubset* ,
+                              DataWarehouse* )
 {
 }
 
 void 
-PTWPlastic::initializeInternalVars(ParticleSubset* pset,
-                                   DataWarehouse* new_dw)
+PTWPlastic::initializeInternalVars(ParticleSubset* ,
+                                   DataWarehouse* )
 {
 }
 
 void 
-PTWPlastic::getInternalVars(ParticleSubset* pset,
-                            DataWarehouse* old_dw) 
+PTWPlastic::getInternalVars(ParticleSubset* ,
+                            DataWarehouse* ) 
 {
 }
 
 void 
-PTWPlastic::allocateAndPutInternalVars(ParticleSubset* pset,
-                                       DataWarehouse* new_dw) 
+PTWPlastic::allocateAndPutInternalVars(ParticleSubset* ,
+                                       DataWarehouse* ) 
 {
 }
 
 void
-PTWPlastic::allocateAndPutRigid(ParticleSubset* pset,
-                                DataWarehouse* new_dw)
+PTWPlastic::allocateAndPutRigid(ParticleSubset* ,
+                                DataWarehouse* )
 {
 }
 
 void
-PTWPlastic::updateElastic(const particleIndex idx)
+PTWPlastic::updateElastic(const particleIndex )
 {
 }
 
 void
-PTWPlastic::updatePlastic(const particleIndex idx, const double& )
+PTWPlastic::updatePlastic(const particleIndex , const double& )
 {
 }
 

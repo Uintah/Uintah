@@ -984,7 +984,7 @@ void
 ViscoScram::allocateCMDataAddRequires(Task* task,
                                       const MPMMaterial* matl,
                                       const PatchSet* patches,
-                                      MPMLabel* lb) const
+                                      MPMLabel* ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 

@@ -92,9 +92,9 @@ void Membrane::initializeCMData(const Patch* patch,
 
 
 void Membrane::allocateCMDataAddRequires(Task* task,
-					 const MPMMaterial* matl,
-					 const PatchSet* patches,
-					 MPMLabel* lb) const
+                                         const MPMMaterial* matl,
+                                         const PatchSet* patches,
+                                         MPMLabel* ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
@@ -110,10 +110,10 @@ void Membrane::allocateCMDataAddRequires(Task* task,
 
 
 void Membrane::allocateCMDataAdd(DataWarehouse* new_dw,
-				 ParticleSubset* addset,
+                                 ParticleSubset* addset,
   map<const VarLabel*, ParticleVariableBase*>* newState,
-				 ParticleSubset* delset,
-				 DataWarehouse* )
+                                 ParticleSubset* delset,
+                                 DataWarehouse* )
 {
   // Copy the data common to all constitutive models from the particle to be 
   // deleted to the particle to be added. 
@@ -138,7 +138,7 @@ void Membrane::allocateCMDataAdd(DataWarehouse* new_dw,
 
 
 void Membrane::addParticleState(std::vector<const VarLabel*>& from,
-				   std::vector<const VarLabel*>& to)
+                                   std::vector<const VarLabel*>& to)
 {
   // Add the local particle state data for this constitutive model.
   from.push_back(defGradInPlaneLabel);
@@ -173,8 +173,8 @@ void Membrane::computeStableTimestep(const Patch* patch,
      // Compute wave speed at each particle, store the maximum
      c_dil = sqrt((bulk + 4.*mu/3.)*pvolume[idx]/pmass[idx]);
      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-		      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-		      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+                      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
   }
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
@@ -183,9 +183,9 @@ void Membrane::computeStableTimestep(const Patch* patch,
 }
 
 void Membrane::computeStressTensor(const PatchSubset* patches,
-				      const MPMMaterial* matl,
-				      DataWarehouse* old_dw,
-				      DataWarehouse* new_dw)
+                                      const MPMMaterial* matl,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw)
 {
   for(int pp=0;pp<patches->size();pp++){
 
@@ -272,7 +272,7 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     double rho_orig = matl->getInitialDensity();
 
     for(ParticleSubset::iterator iter = pset->begin();
-	iter != pset->end(); iter++){
+        iter != pset->end(); iter++){
        particleIndex idx = *iter;
 
       // Assign zero internal heating by default - modify if necessary.
@@ -284,17 +284,17 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
       Vector gvel;
       velGrad.set(0.0);
       for(int k = 0; k < flag->d_8or27; k++) {
-	if (flag->d_fracture) {
-	  if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]]; 
-	  if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
-	} else 
-	  gvel = gvelocity[ni[k]];
-	for (int j = 0; j<3; j++){
-	  double d_SXoodx = d_S[k][j] * oodx[j];
-	  for (int i = 0; i<3; i++) {
-	    velGrad(i,j) += gvel[i] * d_SXoodx;
-	  }
-	}
+        if (flag->d_fracture) {
+          if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]]; 
+          if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
+        } else 
+          gvel = gvelocity[ni[k]];
+        for (int j = 0; j<3; j++){
+          double d_SXoodx = d_S[k][j] * oodx[j];
+          for (int i = 0; i<3; i++) {
+            velGrad(i,j) += gvel[i] * d_SXoodx;
+          }
+        }
       }
 
       T1[idx] = ptang1[idx];
@@ -307,14 +307,14 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
 
       // Update the deformation gradient tensor to its time n+1 value.
       deformationGradient_new[idx] = deformationGradientInc *
-				     deformationGradient[idx];
+                                     deformationGradient[idx];
 
       // get the volumetric part of the deformation
       Jvol    = deformationGradient_new[idx].Determinant();
 
 //    Compute the rotation using Simo page 244
       Matrix3 C = deformationGradient_new[idx].Transpose()*
-		  deformationGradient_new[idx];
+                  deformationGradient_new[idx];
 
       double I1 = C.Trace();
       Matrix3 Csq = C*C;
@@ -333,29 +333,29 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
 
       if(fabs(b) <= TOL3){
         c = Max(c,0.);
-	x[1] = -pow(c,1./3.);
-	x[2] = x[1];
-	x[3] = x[1];
+        x[1] = -pow(c,1./3.);
+        x[2] = x[1];
+        x[3] = x[1];
       }
       else {
-//	cout << "c = " << c << endl;
-	double m = 2.*sqrt(-b/3.);
-//	cout << "m = " << m << endl;
-	double n = (3.*c)/(m*b);
-//	cout << "n = " << n << endl;
-	if (fabs(n) > 1.0){
+//      cout << "c = " << c << endl;
+        double m = 2.*sqrt(-b/3.);
+//      cout << "m = " << m << endl;
+        double n = (3.*c)/(m*b);
+//      cout << "n = " << n << endl;
+        if (fabs(n) > 1.0){
           n = (n/fabs(n));
         }
-	double t = atan(sqrt(1-n*n)/n)/3.0;
-//	cout << "t = " << t << endl;
-	for(int i=1;i<=3;i++){
-	  x[i] = m * cos(t + 2.*(((double) i) - 1.)*PI/3.);
-//	  cout << "x[i] = " << x[i] << endl;
-	}
+        double t = atan(sqrt(1-n*n)/n)/3.0;
+//      cout << "t = " << t << endl;
+        for(int i=1;i<=3;i++){
+          x[i] = m * cos(t + 2.*(((double) i) - 1.)*PI/3.);
+//        cout << "x[i] = " << x[i] << endl;
+        }
       }
       double lam[4];
       for(int i=1;i<=3;i++){
-	lam[i] = sqrt(x[i] + I1/3.0);
+        lam[i] = sqrt(x[i] + I1/3.0);
       }
 
       double i1 = lam[1] + lam[2] + lam[3];
@@ -453,8 +453,8 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
         sig33 = (shear/(3.*pow(jv,2./3.)))*
                 (2.*f33*f33 - FinF) + (.5*bulk)*(jv - 1./jv);
 
-	f33p = 1.01*f33;
-	f33m = 0.99*f33;
+        f33p = 1.01*f33;
+        f33m = 0.99*f33;
         jvp = f33p*detF2;
         jvm = f33m*detF2;
 
@@ -474,7 +474,7 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
       defGradIP[idx](2,2) = f33;
 
       bElBar_new = defGradIP[idx]
-		 * defGradIP[idx].Transpose()*pow(jv,-(2./3.));
+                 * defGradIP[idx].Transpose()*pow(jv,-(2./3.));
 
       IEl = onethird*bElBar_new.Trace();
 
@@ -504,8 +504,8 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
       Vector pvelocity_idx = pvelocity[idx];
       c_dil = sqrt((bulk + 4.*shear/3.)*pvolume_deformed[idx]/pmass[idx]);
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
-  		       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
-		       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
+                       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+                       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
     }
 
     WaveSpeed = dx/WaveSpeed;
@@ -527,8 +527,8 @@ void Membrane::addInitialComputesAndRequires(Task* task,
 }
 
 void Membrane::addComputesAndRequires(Task* task,
-					 const MPMMaterial* matl,
-					 const PatchSet* patches) const
+                                         const MPMMaterial* matl,
+                                         const PatchSet* patches) const
 {
   // Add the computes and requires that are common to all explicit 
   // constitutive models.  The method is defined in the ConstitutiveModel
@@ -552,9 +552,9 @@ void Membrane::addComputesAndRequires(Task* task,
 
 void 
 Membrane::addComputesAndRequires(Task* ,
-				 const MPMMaterial* ,
-				 const PatchSet* ,
-				 const bool ) const
+                                 const MPMMaterial* ,
+                                 const PatchSet* ,
+                                 const bool ) const
 {
 }
 
@@ -576,9 +576,9 @@ double Membrane::computeRhoMicroCM(double pressure,
 }
 
 void Membrane::computePressEOSCM(double rho_cur,double& pressure, 
-				 double p_ref,
-				 double& dp_drho, double& tmp,
-				 const MPMMaterial* matl)
+                                 double p_ref,
+                                 double& dp_drho, double& tmp,
+                                 const MPMMaterial* matl)
 {
   //double p_ref=101325.0;
   double bulk = d_initialData.Bulk;
@@ -617,7 +617,7 @@ const TypeDescription* fun_getTypeDescription(Membrane::StateData*)
    static TypeDescription* td = 0;
    if(!td){
       td = scinew TypeDescription(TypeDescription::Other,
-			       "Membrane::StateData", true, &makeMPI_CMData);
+                               "Membrane::StateData", true, &makeMPI_CMData);
    }
    return td;
 }
