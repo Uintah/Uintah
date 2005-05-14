@@ -85,7 +85,9 @@ namespace SCIRun {
 
 int CAPTURE_Z_DATA_HACK = 0;
 
-static OpenGL* current_drawer=0;
+// This looks non-thread-safe.  Why do we need current_drawer?
+static OpenGL* current_drawer = 0;
+
 static const int pick_buffer_size = 512;
 static const double pick_window = 10.0;
 
@@ -185,14 +187,17 @@ OpenGL::~OpenGL()
   if (pbuffer_)
   {
     // TODO: Does pbuffer class need TkOpenGLContext style locking?
+    gui_->lock();
     pbuffer_->destroy();
+    gui_->unlock();
     delete pbuffer_;
     pbuffer_ = 0;
   }
 }
 
 
-class OpenGLHelper : public Runnable {
+class OpenGLHelper : public Runnable
+{
   OpenGL* opengl;
 public:
   OpenGLHelper(OpenGL* opengl);
@@ -221,20 +226,21 @@ OpenGLHelper::run()
 
 
 void
-OpenGL::redraw(double _tbeg, double _tend, int _nframes, double _framerate)
+OpenGL::redraw(double tbeg, double tend, int nframes, double framerate)
 {
   if (dead_) return;
-  animate_time_begin_=_tbeg;
-  animate_time_end_=_tend;
-  animate_num_frames_=_nframes;
-  animate_framerate_=_framerate;
+  animate_time_begin_ = tbeg;
+  animate_time_end_ = tend;
+  animate_num_frames_ = nframes;
+  animate_framerate_ = framerate;
   send_mailbox_.send(DO_REDRAW);
-  int rc=recv_mailbox_.receive();
+  const int rc = recv_mailbox_.receive();
   if (rc != REDRAW_DONE)
   {
     cerr << "Wanted redraw_done, but got: " << rc << "\n";
   }
 }
+
 
 void
 OpenGL::start_helper()
@@ -247,10 +253,10 @@ OpenGL::start_helper()
 #endif
   if (!helper_)
   {
-    helper_=new OpenGLHelper(this);
-    helper_thread_ = new Thread(helper_,
-                                string("OpenGL: "+myname_).c_str(),
-				0, Thread::NotActivated);
+    helper_ = scinew OpenGLHelper(this);
+    helper_thread_ = scinew Thread(helper_,
+				   string("OpenGL: "+myname_).c_str(),
+				   0, Thread::NotActivated);
     helper_thread_->setStackSize(1024*1024);
     helper_thread_->activate(false);
   }
@@ -278,43 +284,44 @@ OpenGL::redraw_loop()
   int resx = -1;
   int resy = -1;
   string fname, ftype;
-  // Tell the ViewWindow that we are started...
   TimeThrottle throttle;
   throttle.start();
-  double newtime=0;
+  double newtime = 0;
   for (;;)
   {
-    int nreply=0;
+    int nreply = 0;
     if (view_window_->inertia_mode_)
     {
-      current_time_=throttle.time();
+      current_time_ = throttle.time();
       if (animate_framerate_==0)
-	animate_framerate_=30;
-      double frametime=1./animate_framerate_;
-      double delta=current_time_-newtime;
-      if (delta > 1.5*frametime)
       {
-	animate_framerate_=1./delta;
-	frametime=delta;
-	newtime=current_time_;
+	animate_framerate_ = 30;
       }
-      if (delta > .85*frametime)
+      double frametime = 1.0 / animate_framerate_;
+      const double delta = current_time_ - newtime;
+      if (delta > 1.5 * frametime)
       {
-	animate_framerate_*=.9;
-	frametime=1./animate_framerate_;
-	newtime=current_time_;
+	animate_framerate_=1.0 / delta;
+	frametime = delta;
+	newtime = current_time_;
       }
-      else if (delta < .5*frametime)
+      if (delta > 0.85 * frametime)
       {
-	animate_framerate_*=1.1;
-	if (animate_framerate_>30)
+	animate_framerate_ *= 0.9;
+	frametime = 1.0 / animate_framerate_;
+	newtime = current_time_;
+      }
+      else if (delta < 0.5 * frametime)
+      {
+	animate_framerate_ *= 1.1;
+	if (animate_framerate_ > 30)
 	{
-	  animate_framerate_=30;
+	  animate_framerate_ = 30;
 	}
-	frametime=1./animate_framerate_;
-	newtime=current_time_;
+	frametime = 1.0 / animate_framerate_;
+	newtime = current_time_;
       }
-      newtime+=frametime;
+      newtime += frametime;
       throttle.wait_for_time(newtime);
       while (send_mailbox_.tryReceive(r))
       {
@@ -329,12 +336,12 @@ OpenGL::redraw_loop()
 			ret_pick_pick_, ret_pick_index_);
 	  recv_mailbox_.send(PICK_DONE);
 	}
-	else if (r== DO_GETDATA)
+	else if (r == DO_GETDATA)
 	{
 	  GetReq req(get_mailbox_.receive());
 	  real_getData(req.datamask, req.result);
 	}
-	else if (r== DO_IMAGE)
+	else if (r == DO_IMAGE)
 	{
 	  ImgReq req(img_mailbox_.receive());
 	  do_hi_res_ = true;
@@ -363,8 +370,8 @@ OpenGL::redraw_loop()
       prv.post_trans(tmp_trans);
       HMatrix vmat;
       prv.get(&vmat[0][0]);
-      Point y_a(vmat[0][1],vmat[1][1],vmat[2][1]);
-      Point z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
+      Point y_a(vmat[0][1], vmat[1][1], vmat[2][1]);
+      Point z_a(vmat[0][2], vmat[1][2], vmat[2][2]);
       tmpview.up(y_a.vector());
       if (view_window_->inertia_mode_ == 1)
       {
@@ -384,7 +391,7 @@ OpenGL::redraw_loop()
     {
       for (;;)
       {
-	int r=send_mailbox_.receive();
+	const int r = send_mailbox_.receive();
 	if (r == 86)
 	{
 	  throttle.stop();
@@ -396,12 +403,12 @@ OpenGL::redraw_loop()
 			ret_pick_pick_, ret_pick_index_);
 	  recv_mailbox_.send(PICK_DONE);
 	}
-	else if (r== DO_GETDATA)
+	else if (r == DO_GETDATA)
 	{
 	  GetReq req(get_mailbox_.receive());
 	  real_getData(req.datamask, req.result);
 	}
-	else if (r== DO_IMAGE)
+	else if (r == DO_IMAGE)
 	{
 	  ImgReq req(img_mailbox_.receive());
 	  do_hi_res_ = true;
@@ -416,7 +423,7 @@ OpenGL::redraw_loop()
 	  break;
 	}
       }
-      newtime=throttle.time();
+      newtime = throttle.time();
       throttle.stop();
       throttle.clear();
       throttle.start();
@@ -424,17 +431,19 @@ OpenGL::redraw_loop()
 
     if (do_hi_res_)
     {
-      render_and_save_image(resx,resy,fname,ftype);
-      do_hi_res_=false;
+      render_and_save_image(resx, resy, fname, ftype);
+      do_hi_res_ = false;
     }
 #ifdef __APPLE__
-    while (apple_wait_a_second_) {
+    while (apple_wait_a_second_)
+    {
       apple_wait_a_second_=false;
       sleep(1);
     }
 #endif
     redraw_frame();
-    for (int i=0;i<nreply;i++) {
+    for (int i=0; i<nreply; i++)
+    {
       recv_mailbox_.send(REDRAW_DONE);
     }
     view_window_->gui_total_frames_.set(view_window_->gui_total_frames_.get()+1);
@@ -459,13 +468,14 @@ OpenGL::render_and_save_image(int x, int y,
   cerr << "Saving Image: " << fname << " with width=" << x
        << " and height=" << y <<"...\n";
 
-
 #ifndef HAVE_PBUFFER
   // Don't need to raise if using pbuffer.
   // FIXME: this next line was apparently meant to raise the Viewer to the
   //        top... but it doesn't actually seem to work
   if (tk_gl_context_)
+  {
     Tk_RestackWindow(tk_gl_context_->tkwin_, Above, NULL);
+  }
 #endif
 
   gui_->lock();
@@ -475,14 +485,14 @@ OpenGL::render_and_save_image(int x, int y,
   {
     old_tk_gl_context_ = tk_gl_context_;
     tk_gl_context_->make_current();
-    current_drawer=this;
+    current_drawer = this;
   }
 
   deriveFrustum();
 
   // Get Viewport dimensions
   GLint vp[4];
-  glGetIntegerv(GL_VIEWPORT,vp);
+  glGetIntegerv(GL_VIEWPORT, vp);
   gui_->unlock();
 
   hi_res_.resx = x;
@@ -541,10 +551,10 @@ OpenGL::render_and_save_image(int x, int y,
 #endif
   }
 
-  const int pix_size = channel_bytes*num_channels;
+  const int pix_size = channel_bytes * num_channels;
 
   // Write out a screen height X image width chunk of pixels at a time
-  unsigned char* pixels=
+  unsigned char* pixels =
     scinew unsigned char[hi_res_.resx*vp[3]*pix_size];
 
   // Start writing image_file
@@ -559,7 +569,7 @@ OpenGL::render_and_save_image(int x, int y,
     {
 #ifdef HAVE_MAGICK
       pixels = (unsigned char *)C_Magick::SetImagePixels
-	(image,0,vp[3]*(nrows - 1 - hi_res_.row),hi_res_.resx,read_height);
+	(image, 0, vp[3]*(nrows - 1 - hi_res_.row), hi_res_.resx,read_height);
 #endif
     }
 
@@ -656,7 +666,9 @@ OpenGL::redraw_frame()
   if (dead_) return;
   if (!tk_gl_context_) return;
   gui_->lock();
-  if (dead_) { // ViewWindow was deleted from gui_
+  if (dead_)
+  {
+    // ViewWindow was deleted from gui_
     gui_->unlock();
     return;
   }
@@ -665,7 +677,8 @@ OpenGL::redraw_frame()
   {
     current_drawer=this;
     tk_gl_context_->make_current();
-    if (tk_gl_context_ != old_tk_gl_context_) {
+    if (tk_gl_context_ != old_tk_gl_context_)
+    {
       old_tk_gl_context_ = tk_gl_context_;
 #if defined(HAVE_GLEW)
       sci_glew_init();
@@ -696,7 +709,6 @@ OpenGL::redraw_frame()
   timer.clear();
   timer.start();
 
-  // Set up a pbuffer associated with tk_gl_context_
   // Get a lock on the geometry database...
   // Do this now to prevent a hold and wait condition with TCLTask
   viewer_->geomlock_.readLock();
@@ -704,6 +716,7 @@ OpenGL::redraw_frame()
   gui_->lock();
 
 #if defined(HAVE_PBUFFER)
+  // Set up a pbuffer associated with tk_gl_context_ for image or movie making.
   if (doing_movie_p_ || doing_image_p_)
   {
     if (pbuffer_ &&
@@ -798,11 +811,12 @@ OpenGL::redraw_frame()
     CHECK_OPENGL_ERROR("after setting up the graphics state: ");
 
     // Do the redraw loop for each time value.
-    double dt=(animate_time_end_-animate_time_begin_)/animate_num_frames_;
-    double frametime=animate_framerate_==0?0:1./animate_framerate_;
+    const double dt = (animate_time_end_ - animate_time_begin_)
+      / animate_num_frames_;
+    const double frametime = animate_framerate_==0?0:1.0/animate_framerate_;
     TimeThrottle throttle;
     throttle.start();
-    Vector eyesep(0,0,0);
+    Vector eyesep(0.0, 0.0, 0.0);
     if (do_stereo)
     {
       const double eye_sep_dist = view_window_->gui_sbase_.get() *
@@ -814,15 +828,15 @@ OpenGL::redraw_frame()
       eyesep = u * eye_sep_dist * zmid;
     }
 
-    for (int t=0;t<animate_num_frames_;t++)
+    for (int t=0; t<animate_num_frames_; t++)
     {
       int n = 1;
-      if ( do_stereo ) n=2;
-      for (int i=0;i<n;i++)
+      if ( do_stereo ) n = 2;
+      for (int i=0; i<n; i++)
       {
 	if ( do_stereo )
 	{
-	  glDrawBuffer(i==0?GL_BACK_LEFT:GL_BACK_RIGHT);
+	  glDrawBuffer( (i == 0) ? GL_BACK_LEFT : GL_BACK_RIGHT);
 	}
 	else
 	{
@@ -839,7 +853,7 @@ OpenGL::redraw_frame()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glViewport(0, 0, xres_, yres_);
 
-	double modeltime=t*dt+animate_time_begin_;
+	const double modeltime = t * dt + animate_time_begin_;
 	view_window_->set_current_time(modeltime);
 	
 	{ // render normal
@@ -864,15 +878,23 @@ OpenGL::redraw_frame()
 	  glLoadIdentity();
 	  Point eyep(view.eyep());
 	  Point lookat(view.lookat());
-	  if (do_stereo){
-	    if (i==0){
-	      eyep-=eyesep;
+	  if (do_stereo)
+	  {
+	    if (i==0)
+	    {
+	      eyep -= eyesep;
 	      if (!view_window_->gui_sr_.get())
+	      {
 		lookat-=eyesep;
-	    } else {
-	      eyep+=eyesep;
+	      }
+	    }
+	    else
+	    {
+	      eyep += eyesep;
 	      if (!view_window_->gui_sr_.get())
-		lookat+=eyesep;
+	      {
+		lookat += eyesep;
+	      }
 	    }
 	  }
 	  Vector up(view.up());
@@ -880,23 +902,29 @@ OpenGL::redraw_frame()
 		    lookat.x(), lookat.y(), lookat.z(),
 		    up.x(), up.y(), up.z());
 	  if (do_hi_res_)
+	  {
 	    setFrustumToWindowPortion();
+	  }
 	}
 	
 	// Set up Lighting
 	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-	const Lighting& l = viewer_->lighting_;
+	const Lighting& lighting = viewer_->lighting_;
 	int idx=0;
 	int ii;
-	for (ii=0;ii<l.lights.size();ii++)
+	for (ii=0; ii<lighting.lights.size(); ii++)
 	{
-	  LightHandle light=l.lights[ii];
+	  LightHandle light = lighting.lights[ii];
 	  light->opengl_setup(view, drawinfo_, idx);
 	}
-	for (ii=0;ii<idx && ii<max_gl_lights_;ii++)
-	  glEnable((GLenum)(GL_LIGHT0+ii));
+	for (ii=0; ii<idx && ii<max_gl_lights_; ii++)
+	{
+	  glEnable((GLenum)(GL_LIGHT0 + ii));
+	}
 	for (;ii<max_gl_lights_;ii++)
-	  glDisable((GLenum)(GL_LIGHT0+ii));
+	{
+	  glDisable((GLenum)(GL_LIGHT0 + ii));
+	}
 
 	// Now set up the fog stuff.
 	double fognear, fogfar;
@@ -924,7 +952,7 @@ OpenGL::redraw_frame()
 	  bgArray[1] = fogcolor.g();
 	  bgArray[2] = fogcolor.b();
 	}	
-	bgArray[3]=1.0;
+	bgArray[3] = 1.0;
 	glFogfv(GL_FOG_COLOR, bgArray);
 
 	// now make the ViewWindow setup its clipping planes...
@@ -941,26 +969,28 @@ OpenGL::redraw_frame()
 	glLineWidth(drawinfo_->line_width_);
 	glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
 	if (drawinfo_->polygon_offset_factor_ ||
-	    drawinfo_->polygon_offset_units_) {
+	    drawinfo_->polygon_offset_units_)
+	{
 	  glPolygonOffset(drawinfo_->polygon_offset_factor_,
 			  drawinfo_->polygon_offset_units_);
 	  glEnable(GL_POLYGON_OFFSET_FILL);
-	} else {
+	}
+	else
+	{
 	  glDisable(GL_POLYGON_OFFSET_FILL);
 	}
 
-	// Draw it all...
-	current_time_=modeltime;
+	// Draw it all.
+	current_time_ = modeltime;
 	view_window_->do_for_visible(this, &OpenGL::redraw_obj);
 
 	if (view_window_->gui_raxes_.get())
 	{
 	  render_rotation_axis(view, do_stereo, i, eyesep);
 	}
-
       }
 	
-      // save z-buffer data
+      // Save z-buffer data.
       if (CAPTURE_Z_DATA_HACK)
       {
 	CAPTURE_Z_DATA_HACK = 0;
@@ -970,7 +1000,7 @@ OpenGL::redraw_frame()
 	
       // Wait for the right time before swapping buffers
       //gui->unlock();
-      double realtime=t*frametime;
+      const double realtime = t * frametime;
       if (animate_num_frames_>1)
       {
 	throttle.wait_for_time(realtime);
@@ -979,7 +1009,7 @@ OpenGL::redraw_frame()
       gui_->execute("update idletasks");
       view_window_->gui_total_frames_.set(view_window_->gui_total_frames_.get()+1);
 
-      // Show the pretty picture
+      // Show the pretty picture.
       if (!(pbuffer_ && (doing_movie_p_ || doing_image_p_)))
       {
 	tk_gl_context_->swap();
@@ -987,15 +1017,14 @@ OpenGL::redraw_frame()
     }
     throttle.stop();
     double fps;
-    if (throttle.time()>0)
-      fps=animate_num_frames_/throttle.time();
+    if (throttle.time() > 0)
+    {
+      fps = animate_num_frames_ / throttle.time();
+    }
     else
-      fps=animate_num_frames_;
-    //int fps_whole=(int)fps;
-    //int fps_hund=(int)((fps-fps_whole)*100);
-    //ostringstream str;
-    // str << view_window_->id << " setFrameRate "<<fps_whole<<"."<< fps_hund;
-    //gui_->execute(str.str());
+    {
+      fps = animate_num_frames_;
+    }
     view_window_->set_current_time(animate_time_end_);
   }
   else
@@ -1004,6 +1033,7 @@ OpenGL::redraw_frame()
     view_window_->set_current_time(animate_time_end_);
 	
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     if (!(pbuffer_ && (doing_movie_p_ || doing_image_p_)))
     {
       tk_gl_context_->swap();
@@ -1012,8 +1042,8 @@ OpenGL::redraw_frame()
 
   viewer_->geomlock_.readUnlock();
 
-  // Look for errors
-  CHECK_OPENGL_ERROR("OpenGL::redraw after drawing objects: ")
+  // Look for errors.
+  CHECK_OPENGL_ERROR("OpenGL::redraw after drawing objects: ");
 
   // Report statistics
   timer.stop();
@@ -1025,50 +1055,59 @@ OpenGL::redraw_frame()
   // greater than .33 seconds.  If not we increment this counter and
   // don't display the statistics.  When the accumulated time becomes
   // greater than .33 seconds, we update our statistics.
-  if (fps_timer_.time()>.33) {
-    double fps;
-    fps=animate_num_frames_*frame_count_/fps_timer_.time();
-//     cerr << "fps = " << fps <<",\tframe_count_ = "<<frame_count_
-// 	 <<",\tfps_timer_.time = "<<fps_timer_.time()
-// 	 <<",\tanimate_num_frames_ = "<<animate_num_frames_<<"\n";
+  if (fps_timer_.time()>.33)
+  {
+    double fps = animate_num_frames_*frame_count_/fps_timer_.time();
     cerr.flush();
     frame_count_ = 1;
-    fps+=0.05;			// Round to nearest tenth
-    int fps_whole=(int)fps;
-    int fps_tenths=(int)((fps-fps_whole)*10);
+    // TODO: This looks incorrect, round and then convert to int?
+    fps += 0.05;		// Round to nearest tenth
+    const int fps_whole = (int)fps;
+    const int fps_tenths = (int)((fps-fps_whole)*10);
     fps_timer_.clear();
     fps_timer_.start();		// Start it running for next time
     double pps;
-    if (timer.time()>0)
-      pps=drawinfo_->polycount/timer.time();
+    if (timer.time() > 0)
+    {
+      pps = drawinfo_->polycount/timer.time();
+    }
     else
-      pps=drawinfo_->polycount;
+    {
+      pps = drawinfo_->polycount;
+    }
     str << view_window_->id_ << " updatePerf \"";
     str << drawinfo_->polycount << " polygons in " << timer.time()
       	<< " seconds\" \"" << pps
     	<< " polygons/second\"" << " \"" << fps_whole << "."
     	<< fps_tenths << " frames/sec\"" << '\0';
-  } else if (fps_timer_.time() > 0) {
+  }
+  else if (fps_timer_.time() > 0)
+  {
     frame_count_++;
     fps_timer_.start();
-  } else {
+  }
+  else
+  {
     fps_timer_.start();
   }
+
   /*****************************************/
   /* movie-movie makin' movie-movie makin' */
   /*****************************************/
-  if (doing_movie_p_) {	
-    //      cerr << "Saving a movie!\n";
-    if (make_MPEG_p_ ) {
-
-      if (!encoding_mpeg_) {
+  if (doing_movie_p_)
+  {
+    if (make_MPEG_p_ )
+    {
+      if (!encoding_mpeg_)
+      {
 	string fname = movie_name_;
 
 	// only add extension if not allready there
 	if (!(fname.find(".mpg") != std::string::npos ||
-	     fname.find(".MPG") != std::string::npos ||
-	     fname.find(".mpeg") != std::string::npos ||
-	     fname.find(".MPEG") != std::string::npos)) {
+	      fname.find(".MPG") != std::string::npos ||
+	      fname.find(".mpeg") != std::string::npos ||
+	      fname.find(".MPEG") != std::string::npos))
+	{
 	  fname = fname + string(".mpg");
 	}
 	
@@ -1080,12 +1119,15 @@ OpenGL::redraw_frame()
         //fname = fname.erase(0, pos+1);
         //}
 
-	if ( fname.find("%") != std::string::npos ) {
+	if ( fname.find("%") != std::string::npos )
+	{
 	  string message = "Bad Format - Remove the Frame Format.";
 	  view_window_->setMessage( message );
 	  view_window_->setMovie( 0 );
 
-	} else {
+	}
+	else
+	{
 	  string message = "Dumping mpeg " + fname;
 	  view_window_->setMessage( message );
 
@@ -1096,9 +1138,12 @@ OpenGL::redraw_frame()
 	}
       }
 
-      if (encoding_mpeg_) {
+      if (encoding_mpeg_)
+      {
 
-	string message = "Adding Mpeg Frame " + to_string( current_movie_frame_ );
+	const string message =
+	  "Adding Mpeg Frame " + to_string( current_movie_frame_ );
+
 	view_window_->setMessage( message );
 
 	view_window_->setMovieFrame(current_movie_frame_);
@@ -1108,8 +1153,12 @@ OpenGL::redraw_frame()
 	view_window_->setMovieFrame(current_movie_frame_);
       }
 
-    } else { // dump each frame
-      if (encoding_mpeg_) { // Finish up mpeg that was in progress.
+    }
+    else
+    { // Dump each frame.
+      if (encoding_mpeg_)
+      {
+	// Finish up mpeg that was in progress.
 	encoding_mpeg_ = false;
 	EndMpeg();
       }
@@ -1118,12 +1167,14 @@ OpenGL::redraw_frame()
 
       if ( pos == std::string::npos ||
 	  movie_name_[pos+2] != 'd' ||
-	  movie_name_.find("%") != movie_name_.find_last_of("%") ) {
-	  string message = "Bad Format - Illegal Frame Format.";
-	  view_window_->setMessage( message );
-	  view_window_->setMovie( 0 );
-      } else {
-
+	  movie_name_.find("%") != movie_name_.find_last_of("%") )
+      {
+	string message = "Bad Format - Illegal Frame Format.";
+	view_window_->setMessage( message );
+	view_window_->setMovie( 0 );
+      }
+      else
+      {
 	char fname[256];
 	sprintf(fname, movie_name_.c_str(), current_movie_frame_);
 	string fullpath = string(fname) + string(".ppm");
@@ -1136,16 +1187,19 @@ OpenGL::redraw_frame()
 	view_window_->setMovieFrame(current_movie_frame_);
       }
     }
-  } else {
-    if (encoding_mpeg_) { // Finish up mpeg that was in progress.
+  }
+  else
+  {
+    if (encoding_mpeg_)
+    { // Finish up mpeg that was in progress.
       encoding_mpeg_ = false;
       EndMpeg();
     }
   }
+
   gui_->execute(str.str());
   gui_->unlock();
 }
-
 
 
 void
@@ -1153,26 +1207,25 @@ OpenGL::get_pick(int x, int y,
 		 GeomHandle& pick_obj, GeomPickHandle& pick_pick,
 		 int& pick_index)
 {
-  send_pick_x_=x;
-  send_pick_y_=y;
+  send_pick_x_ = x;
+  send_pick_y_ = y;
   send_mailbox_.send(DO_PICK);
   for (;;)
   {
-    int r=recv_mailbox_.receive();
+    const int r = recv_mailbox_.receive();
     if (r != PICK_DONE)
     {
       cerr << "WANTED A PICK!!! (got back " << r << "\n";
     }
     else
     {
-      pick_obj=ret_pick_obj_;
-      pick_pick=ret_pick_pick_;
-      pick_index=ret_pick_index_;
+      pick_obj = ret_pick_obj_;
+      pick_pick = ret_pick_pick_;
+      pick_index = ret_pick_index_;
       break;
     }
   }
 }
-
 
 
 void
@@ -1180,15 +1233,15 @@ OpenGL::real_get_pick(int x, int y,
 		      GeomHandle& pick_obj, GeomPickHandle& pick_pick,
 		      int& pick_index)
 {
-  pick_obj=0;
-  pick_pick=0;
+  pick_obj = 0;
+  pick_pick = 0;
   pick_index = 0x12345678;
   // Make ourselves current
 
   // Make sure our GL context is current
   if ((current_drawer != this) || (tk_gl_context_ != old_tk_gl_context_))
   {
-    current_drawer=this;
+    current_drawer = this;
     old_tk_gl_context_ = tk_gl_context_;
     gui_->lock();
     tk_gl_context_->make_current();
@@ -1199,12 +1252,12 @@ OpenGL::real_get_pick(int x, int y,
   View view(view_window_->gui_view_.get());
   viewer_->geomlock_.readLock();
 
-  // Compute znear_ and zfar...
+  // Compute znear and zfar.
   double znear;
   double zfar;
   if (compute_depth(view, znear, zfar))
   {
-    // Setup picking...
+    // Setup picking.
     gui_->lock();
 
     GLuint pick_buffer[pick_buffer_size];
@@ -1224,9 +1277,9 @@ OpenGL::real_get_pick(int x, int y,
 #endif
 
     // Picking
-    double aspect=double(xres_)/double(yres_);
+    const double aspect = double(xres_)/double(yres_);
     // XXX - UNICam change-- should be '1.0/aspect' not 'aspect' below
-    double fovy=RtoD(2*Atan(1.0/aspect*Tan(DtoR(view.fov()/2.))));
+    const double fovy = RtoD(2*Atan(1.0/aspect*Tan(DtoR(view.fov()/2.))));
     glViewport(0, 0, xres_, yres_);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -1259,7 +1312,7 @@ OpenGL::real_get_pick(int x, int y,
     drawinfo_->pickmode=1;
     //drawinfo_->pickable=0;
 
-    // Draw it all...
+    // Draw it all.
     view_window_->do_for_visible(this,
 				 (ViewWindowVisPMF)&OpenGL::pick_draw_obj);
 
@@ -1273,7 +1326,7 @@ OpenGL::real_get_pick(int x, int y,
 #endif
 
     glFlush();
-    int hits=glRenderMode(GL_RENDER);
+    const int hits = glRenderMode(GL_RENDER);
 
     CHECK_OPENGL_ERROR("OpenGL::real_get_pick");
 
@@ -1285,91 +1338,84 @@ OpenGL::real_get_pick(int x, int y,
     unsigned long hit_pick=0;
     GLuint hit_pick_index = 0x12345678;  // need for object indexing
 #else
-    GLuint hit_obj=0;
+    GLuint hit_obj = 0;
     //GLuint hit_obj_index = 0x12345678;  // need for object indexing
-    GLuint hit_pick=0;
+    GLuint hit_pick = 0;
     //GLuint hit_pick_index = 0x12345678;  // need for object indexing
 #endif
-//    cerr << "hits=" << hits << "\n";
     if (hits >= 1)
     {
-      int idx=0;
-      min_z=0;
-      int have_one=0;
+      int idx = 0;
+      min_z = 0;
+      bool have_one = false;
       for (int h=0; h<hits; h++)
       {
-	int nnames=pick_buffer[idx++];
+	int nnames = pick_buffer[idx++];
 	GLuint z=pick_buffer[idx++];
-//	cerr << "h=" << h << ", nnames=" << nnames << ", z=" << z << "\n";
 	if (nnames > 1 && (!have_one || z < min_z))
 	{
-	  min_z=z;
-	  have_one=1;
+	  min_z = z;
+	  have_one = true;
 	  idx++; // Skip Max Z
 #ifdef SCI_64BITS
-	  idx+=nnames-5; // Skip to the last one...
-	  unsigned int ho1=pick_buffer[idx++];
-	  unsigned int ho2=pick_buffer[idx++];
-	  hit_pick=((long)ho1<<32)|ho2;
+	  idx += nnames - 5; // Skip to the last one.
+	  const unsigned int ho1 = pick_buffer[idx++];
+	  const unsigned int ho2 = pick_buffer[idx++];
+	  hit_pick = ((long)ho1<<32) | ho2;
 	  //hit_obj_index = pick_buffer[idx++];
-	  unsigned int hp1=pick_buffer[idx++];
-	  unsigned int hp2=pick_buffer[idx++];
-	  hit_obj=((long)hp1<<32)|hp2;
+	  const unsigned int hp1 = pick_buffer[idx++];
+	  const unsigned int hp2 = pick_buffer[idx++];
+	  hit_obj = ((long)hp1<<32)|hp2;
 	  //hit_pick_index = pick_buffer[idx++];
 	  idx++;
 #else
 	  // hit_obj=pick_buffer[idx++];
 	  // hit_obj_index=pick_buffer[idx++];
 	  //for (int i=idx; i<idx+nnames; ++i) cerr << pick_buffer[i] << "\n";
-	  idx+=nnames-3; // Skip to the last one...
-	  hit_pick=pick_buffer[idx++];
-	  hit_obj=pick_buffer[idx++];
+	  idx += nnames - 3; // Skip to the last one.
+	  hit_pick = pick_buffer[idx++];
+	  hit_obj = pick_buffer[idx++];
 	  idx++;
 	  //hit_pick_index=pick_buffer[idx++];
 #endif
-//	  cerr << "new min... (obj=" << hit_obj
-//	       << ", pick="          << hit_pick << std::endl;
-//             << ", index = "       << hit_pick_index << ")\n";
 	}
 	else
 	{
-	  idx+=nnames+1;
+	  idx += nnames + 1;
 	}
       }
 
-      pick_obj=(GeomObj*)hit_obj;
-      pick_pick=(GeomPick*)hit_pick;
+      pick_obj = (GeomObj*)hit_obj;
+      pick_pick = (GeomPick*)hit_pick;
       pick_obj->getId(pick_index); //(int)hit_pick_index;
-      //cerr << "pick_pick=" << pick_pick << ", pick_index="<<pick_index<<"\n";
-
-      // x,y,min_z is our point... we can unproject it to get model-space pt
     }
   }
   viewer_->geomlock_.readUnlock();
 }
 
 
-// dump a ppm image
+// Dump a ppm image.
 void
 OpenGL::dump_image(const string& name, const string& /* type */)
 {
   ofstream dumpfile(name.c_str());
-  if ( !dumpfile ){
+  if ( !dumpfile )
+  {
     ostringstream str;
     str << "ERROR opening file: " << name.c_str();
     view_window_->setMessage( str.str() );
-    cerr<<str.str()<<"\n";
+    cerr << str.str() << "\n";
     return;
   }
 
   GLint vp[4];
-  glGetIntegerv(GL_VIEWPORT,vp);
-  int pix_size = 3;  // for RGB
-  int n=pix_size*vp[2]*vp[3];
-  unsigned char* pxl=scinew unsigned char[n];
-  glPixelStorei(GL_PACK_ALIGNMENT,1);
+  glGetIntegerv(GL_VIEWPORT, vp);
+  const int pix_size = 3;  // for RGB
+  const int n = pix_size * vp[2] * vp[3];
+  unsigned char* pxl = scinew unsigned char[n];
+  glPixelStorei(GL_PACK_ALIGNMENT, 1);
   glReadBuffer(GL_FRONT);
-  glReadPixels(0,0,vp[2],vp[3],GL_RGB,GL_UNSIGNED_BYTE,pxl);
+  glReadPixels(0, 0, vp[2], vp[3], GL_RGB, GL_UNSIGNED_BYTE, pxl);
 
   // TODO: This looks bogus. Copying pbuffer image to screen only works
   // if we aren't flushed anyway and the image size was the same as
@@ -1389,7 +1435,7 @@ OpenGL::dump_image(const string& name, const string& /* type */)
     glDrawBuffer(GL_BACK);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glClear(GL_COLOR_BUFFER_BIT);
-    glDrawPixels(vp[2],vp[3], GL_RGB, GL_UNSIGNED_BYTE,pxl);
+    glDrawPixels(vp[2], vp[3], GL_RGB, GL_UNSIGNED_BYTE, pxl);
     glEnable(GL_DEPTH_TEST);
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
@@ -1425,14 +1471,14 @@ OpenGL::dump_image(const string& name, const string& /* type */)
 void
 OpenGL::put_scanline(int y, int width, Color* scanline, int repeat)
 {
-  float* pixels=scinew float[width*3];
-  float* p=pixels;
+  float* pixels = scinew float[width*3];
+  float* p = pixels;
   int i;
-  for (i=0;i<width;i++)
+  for (i=0; i<width; i++)
   {
-    *p++=scanline[i].r();
-    *p++=scanline[i].g();
-    *p++=scanline[i].b();
+    *p++ = scanline[i].r();
+    *p++ = scanline[i].g();
+    *p++ = scanline[i].b();
   }
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -1440,13 +1486,13 @@ OpenGL::put_scanline(int y, int width, Color* scanline, int repeat)
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glLoadIdentity();
-  glTranslated(-1, -1, 0);
-  glScaled(2./xres_, 2./yres_, 1.0);
+  glTranslated(-1.0, -1.0, 0.0);
+  glScaled(2.0 / xres_, 2.0 / yres_, 1.0);
   glDepthFunc(GL_ALWAYS);
   glDrawBuffer(GL_FRONT);
-  for (i=0;i<repeat;i++)
+  for (i=0; i<repeat; i++)
   {
-    glRasterPos2i(0, y+i);
+    glRasterPos2i(0, y + i);
     glDrawPixels(width, 1, GL_RGB, GL_FLOAT, pixels);
   }
   glDepthFunc(GL_LEQUAL);
@@ -1464,9 +1510,9 @@ void
 OpenGL::pick_draw_obj(Viewer* viewer, ViewWindow*, GeomHandle obj)
 {
 #ifdef SCI_64BITS
-  unsigned long o=(unsigned long)(obj.get_rep());
-  unsigned int o1=(o>>32)&0xffffffff;
-  unsigned int o2=o&0xffffffff;
+  unsigned long o = (unsigned long)(obj.get_rep());
+  unsigned int o1 = (o>>32)&0xffffffff;
+  unsigned int o2 = o&0xffffffff;
   glPopName();
   glPopName();
   glPopName();
@@ -1504,8 +1550,9 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
     return;
   }
 
-  GuiString type(ctx_->subVar(tclID+"-type",false));
-  if (type.valid()) {
+  GuiString type(ctx_->subVar(tclID+"-type", false));
+  if (type.valid())
+  {
     if (type.get() == "Default")
     {
       // 'Default' should be unreachable now, subsumed by useglobal variable.
@@ -1537,22 +1584,26 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
   }
 
   // Now see if they want a bounding box.
-  GuiInt debug(ctx_->subVar(tclID+"-debug",false));
+  GuiInt debug(ctx_->subVar(tclID+"-debug", false));
   if (debug.valid())
     drawinfo->debug = debug.get();
 
 
-  GuiString movieName(ctx_->subVar(tclID+"-movieName",false));
+  GuiString movieName(ctx_->subVar(tclID+"-movieName", false));
   if (movieName.valid())
     renderer_->movie_name_ = movieName.get();
 
-  GuiInt movie(ctx_->subVar(tclID+"-movie",false));
-  if (movie.valid()) {
-    if (!movie.get()) {
+  GuiInt movie(ctx_->subVar(tclID+"-movie", false));
+  if (movie.valid())
+  {
+    if (!movie.get())
+    {
       renderer_->doing_movie_p_ = 0;
       renderer_->make_MPEG_p_ = 0;
-    } else if (!renderer_->doing_movie_p_) {
-      GuiInt movieFrame(ctx_->subVar(tclID+"-movieFrame",false));
+    }
+    else if (!renderer_->doing_movie_p_)
+    {
+      GuiInt movieFrame(ctx_->subVar(tclID+"-movieFrame", false));
       if (movieFrame.valid())
 	renderer_->current_movie_frame_ = movieFrame.get();
 
@@ -1564,26 +1615,36 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
     }
   }
 
-  GuiInt clip(ctx_->subVar(tclID+"-clip",false));
+  GuiInt clip(ctx_->subVar(tclID+"-clip", false));
   if (clip.valid())
+  {
     drawinfo->check_clip = clip.get();
+  }
   drawinfo->init_clip(); // set clipping
 
-  GuiInt cull(ctx_->subVar(tclID+"-cull",false));
+  GuiInt cull(ctx_->subVar(tclID+"-cull", false));
   if (cull.valid())
+  {
     drawinfo->cull = cull.get();
+  }
 
-  GuiInt dl(ctx_->subVar(tclID+"-dl",false));
+  GuiInt dl(ctx_->subVar(tclID+"-dl", false));
   if (dl.valid())
+  {
     drawinfo->dl = dl.get();
+  }
 
-  GuiInt fog(ctx_->subVar(tclID+"-fog",false));
+  GuiInt fog(ctx_->subVar(tclID+"-fog", false));
   if (fog.valid())
-    drawinfo->fog=fog.get();
+  {
+    drawinfo->fog = fog.get();
+  }
 
-  GuiInt lighting(ctx_->subVar(tclID+"-light",false));
+  GuiInt lighting(ctx_->subVar(tclID+"-light", false));
   if (lighting.valid())
-      drawinfo->lighting=lighting.get();
+  {
+    drawinfo->lighting=lighting.get();
+  }
 
   drawinfo->currently_lit=drawinfo->lighting;
   drawinfo->init_lighting(drawinfo->lighting);
@@ -1594,7 +1655,8 @@ void
 ViewWindow::setMovie( int state )
 {
   GuiInt movie(ctx_->subVar(tclID_+"-movie",false));
-  if (movie.valid()) {
+  if (movie.valid())
+  {
     movie.set( state );
     movie.reset();
     renderer_->doing_movie_p_ = state;
@@ -1602,11 +1664,13 @@ ViewWindow::setMovie( int state )
   }
 }
 
+
 void
 ViewWindow::setMovieFrame( int movieframe )
 {
   GuiInt movieFrame(ctx_->subVar(tclID_+"-movieFrame",false));
-  if (movieFrame.valid()) {
+  if (movieFrame.valid())
+  {
     movieFrame.set( movieframe );
     movieFrame.reset();
   }
@@ -1617,7 +1681,8 @@ void
 ViewWindow::setMessage( string message )
 {
   GuiString movieMessage(ctx_->subVar(tclID_+"-message",false));
-  if (movieMessage.valid()) {
+  if (movieMessage.valid())
+  {
     movieMessage.set( message );
     movieMessage.reset();
   }
@@ -1628,7 +1693,9 @@ void
 ViewWindow::setDI(DrawInfoOpenGL* drawinfo,string name)
 {
   map<string,int>::iterator tag_iter = obj_tag_.find(name);
-  if (tag_iter != obj_tag_.end()) { // if found
+  if (tag_iter != obj_tag_.end())
+  {
+    // if found
     setState(drawinfo,to_string((*tag_iter).second));
   }
 }
@@ -1655,7 +1722,8 @@ ViewWindow::setClip(DrawInfoOpenGL* drawinfo)
 		
 	if (!clip_visible.valid()) continue;
 
-	if (!clip_visible.get()) {
+	if (!clip_visible.get())
+	{
 	  glDisable((GLenum)(GL_CLIP_PLANE0+i));
 	}
 	else
@@ -1700,11 +1768,13 @@ ViewWindow::setClip(DrawInfoOpenGL* drawinfo)
   }
 }
 
+
 void
 ViewWindow::setMouse(DrawInfoOpenGL* drawinfo)
 {
   drawinfo->mouse_action = mouse_action_;
 }
+
 
 void
 GeomViewerItem::draw(DrawInfoOpenGL* di, Material *m, double time)
@@ -1850,12 +1920,14 @@ OpenGL::saveImage(const string& fname,
   img_mailbox_.send(ImgReq(fname,type,x,y));
 }
 
+
 void
 OpenGL::getData(int datamask, FutureValue<GeometryData*>* result)
 {
   send_mailbox_.send(DO_GETDATA);
   get_mailbox_.send(GetReq(datamask, result));
 }
+
 
 void
 OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
@@ -1877,34 +1949,29 @@ OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
   {
     ColorImage* img = res->colorbuffer = new ColorImage(xres_, yres_);
     float* data=new float[xres_*yres_*3];
-//    cerr << "xres_=" << xres_ << ", yres_=" << yres_ << "\n";
     WallClockTimer timer;
     timer.start();
 
     glReadPixels(0, 0, xres_, yres_, GL_RGB, GL_FLOAT, data);
     timer.stop();
-//    cerr << "done in " << timer.time() << " seconds\n";
-    float* p=data;
-    for (int y=0;y<yres_;y++)
+    float* p = data;
+    for (int y=0; y<yres_; y++)
     {
-      for (int x=0;x<xres_;x++)
+      for (int x=0; x<xres_; x++)
       {
 	img->put_pixel(x, y, Color(p[0], p[1], p[2]));
-	p+=3;
+	p += 3;
       }
     }
     delete[] data;
   }
   if (datamask&GEOM_DEPTHBUFFER)
   {
-    //    DepthImage* img=res->depthbuffer=new DepthImage(xres_, yres_);
     unsigned int* data=new unsigned int[xres_*yres_*3];
-//    cerr << "reading depth...\n";
     WallClockTimer timer;
     timer.start();
     glReadPixels(0, 0,xres_,yres_, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, data);
     timer.stop();
-//    cerr << "done in " << timer.time() << " seconds\n";
   }
 
   if (datamask&(GEOM_COLORBUFFER|GEOM_DEPTHBUFFER/*CollabVis*/|GEOM_MATRICES))
@@ -1914,6 +1981,7 @@ OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
   }
   result->send(res);
 }
+
 
 void
 OpenGL::StartMpeg(const string& fname)
@@ -1947,6 +2015,7 @@ OpenGL::StartMpeg(const string& fname)
 #endif // HAVE_MPEG
 }
 
+
 void
 OpenGL::AddMpegFrame()
 {
@@ -1958,7 +2027,7 @@ OpenGL::AddMpegFrame()
   ImVfbPtr ptr;
 
   GLint vp[4];
-  glGetIntegerv(GL_VIEWPORT,vp);
+  glGetIntegerv(GL_VIEWPORT, vp);
 
   width = vp[2];
   height = vp[3];
@@ -1975,10 +2044,10 @@ OpenGL::AddMpegFrame()
   }
 
   // Get to the first pixel in the image.
-  ptr=ImVfbQPtr( image,0,0 );
-  glPixelStorei(GL_PACK_ALIGNMENT,1);
+  ptr = ImVfbQPtr( image, 0, 0 );
+  glPixelStorei(GL_PACK_ALIGNMENT, 1);
   glReadBuffer(GL_FRONT);
-  glReadPixels(0,0,width,height,GL_RGB,GL_UNSIGNED_BYTE,ptr);
+  glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, ptr);
 
   // TODO: This looks bogus. Copying pbuffer image to screen only works
   // if we aren't flushed anyway and the image size was the same as
@@ -2006,15 +2075,15 @@ OpenGL::AddMpegFrame()
     tk_gl_context_->swap();
   }
 
-  int r=3*width;
+  const int r = 3 * width;
   unsigned char* row = scinew unsigned char[r];
   unsigned char* p0, *p1;
 
   int k, j;
   for (k = height -1, j = 0; j < height/2; k--, j++)
   {
-    p0 = ptr + r*j;
-    p1 = ptr + r*k;
+    p0 = ptr + r * j;
+    p1 = ptr + r * k;
     memcpy( row, p0, r);
     memcpy( p0, p1, r);
     memcpy( p1, row, r);
@@ -2041,7 +2110,9 @@ OpenGL::EndMpeg()
     ostringstream str;
     str << "ERROR closing MPEG file: " << mpeg_options_.error;
     view_window_->setMessage( str.str() );
-  } else {
+  }
+  else
+  {
     string message = "Ending Mpeg.";
     view_window_->setMessage( message );
   }
@@ -2081,8 +2152,8 @@ OpenGL::pick_scene( int x, int y, Point *p )
 bool
 OpenGL::compute_depth(const View& view, double& znear, double& zfar)
 {
-  znear=MAXDOUBLE;
-  zfar=-MAXDOUBLE;
+  znear = MAXDOUBLE;
+  zfar =- MAXDOUBLE;
   BBox bb;
   view_window_->get_bounds(bb);
   if (bb.valid())
@@ -2094,32 +2165,34 @@ OpenGL::compute_depth(const View& view, double& znear, double& zfar)
     Vector dir(view.lookat()-eyep);
     const double dirlen2 = dir.length2();
     if (dirlen2 < 1.0e-6 || dirlen2 != dirlen2)
+    {
       return false;
-    dir.normalize();
+    }
+    dir.safe_normalize();
     const double d = -Dot(eyep, dir);
     for (int i=0;i<8;i++)
     {
-      Point p((i&1)?max.x():min.x(),
-	      (i&2)?max.y():min.y(),
-	      (i&4)?max.z():min.z());
-      double dist=Dot(p, dir)+d;
-      znear=Min(znear, dist);
-      zfar=Max(zfar, dist);
+      const Point p((i&1)?max.x():min.x(),
+		    (i&2)?max.y():min.y(),
+		    (i&4)?max.z():min.z());
+      const double dist = Dot(p, dir) + d;
+      znear = Min(znear, dist);
+      zfar = Max(zfar, dist);
     }
     znear *= 0.99;
     zfar  *= 1.01;
 
-    if (znear <= 0)
+    if (znear <= 0.0)
     {
-      if (zfar <= 0)
+      if (zfar <= 0.0)
       {
 	// Everything is behind us - it doesn't matter what we do.
-	znear=1.0;
-	zfar=2.0;
+	znear = 1.0;
+	zfar = 2.0;
       }
       else
       {
-	znear=zfar*.001;
+	znear = zfar * 0.001;
       }
     }
     return true;
@@ -2153,14 +2226,16 @@ OpenGL::compute_fog_depth(const View &view, double &znear, double &zfar,
     Vector dir(view.lookat()-eyep);
     const double dirlen2 = dir.length2();
     if (dirlen2 < 1.0e-6 || dirlen2 != dirlen2)
+    {
       return false;
-    dir.normalize();
+    }
+    dir.safe_normalize();
     const double d = -Dot(eyep, dir);
 
     // Compute distance to center of bbox.
-    double dist = Dot(bb.center(), dir);
+    const double dist = Dot(bb.center(), dir);
     // Compute bbox view radius.
-    double radius = bb.diagonal().length() * dir.length2() * 0.5;
+    const double radius = bb.diagonal().length() * dir.length2() * 0.5;
 
     znear = d + dist - radius;
     zfar = d + dist + radius;
@@ -2232,7 +2307,7 @@ OpenGL::render_rotation_axis(const View &view,
   glLoadIdentity();
 
   Vector oldeye(view.eyep().asVector() - view.lookat().asVector());
-  oldeye.normalize();
+  oldeye.safe_normalize();
   Point eyep((oldeye * eyedist).asPoint());
   Point lookat(0.0, 0.0, 0.0);
   if (do_stereo)
