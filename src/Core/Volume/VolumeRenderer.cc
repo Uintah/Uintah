@@ -101,7 +101,7 @@ VolumeRenderer::~VolumeRenderer()
 GeomObj*
 VolumeRenderer::clone()
 {
-  return scinew VolumeRenderer(*this);
+  return new VolumeRenderer(*this);
 }
 
 void
@@ -227,19 +227,25 @@ VolumeRenderer::draw_volume()
   psize[0] = NextPowerOf2(vp[2]);
   psize[1] = NextPowerOf2(vp[3]);
     
-  if(blend_num_bits_ != 8) {
+  if(blend_num_bits_ != 8)
+  {
     if(!blend_buffer_ || blend_num_bits_ != blend_buffer_->num_color_bits()
        || psize[0] != blend_buffer_->width()
-       || psize[1] != blend_buffer_->height()) {
-      blend_buffer_ = new Pbuffer(psize[0], psize[1], GL_FLOAT, blend_num_bits_, true,
-                                  GL_FALSE, GL_DONT_CARE, 24);
-      if(blend_buffer_->create()) {
+       || psize[1] != blend_buffer_->height())
+    {
+      blend_buffer_ = new Pbuffer(psize[0], psize[1],
+				  GL_FLOAT, blend_num_bits_, true,
+				  GL_FALSE, GL_DONT_CARE, 24);
+      if (!blend_buffer_->create())
+      {
         blend_buffer_->destroy();
         delete blend_buffer_;
         blend_buffer_ = 0;
         blend_num_bits_ = 8;
         use_blend_buffer_ = false;
-      } else {
+      }
+      else
+      {
         blend_buffer_->set_use_default_shader(false);
         blend_buffer_->set_use_texture_matrix(false);
       }
@@ -564,19 +570,25 @@ VolumeRenderer::multi_level_draw()
   psize[0] = NextPowerOf2(vp[2]);
   psize[1] = NextPowerOf2(vp[3]);
   
-  if(blend_num_bits_ != 8) {
+  if(blend_num_bits_ != 8)
+  {
     if(!blend_buffer_ || blend_num_bits_ != blend_buffer_->num_color_bits()
        || psize[0] != blend_buffer_->width()
-       || psize[1] != blend_buffer_->height()) {
-      blend_buffer_ = new Pbuffer(psize[0], psize[1], GL_FLOAT, blend_num_bits_, true,
+       || psize[1] != blend_buffer_->height())
+    {
+      blend_buffer_ = new Pbuffer(psize[0], psize[1],
+				  GL_FLOAT, blend_num_bits_, true,
 				  GL_FALSE, GL_DONT_CARE, 24);
-      if(blend_buffer_->create()) {
+      if (!blend_buffer_->create())
+      {
 	blend_buffer_->destroy();
 	delete blend_buffer_;
 	blend_buffer_ = 0;
 	blend_num_bits_ = 8;
 	use_blend_buffer_ = false;
-      } else {
+      }
+      else
+      {
 	blend_buffer_->set_use_default_shader(false);
 	blend_buffer_->set_use_texture_matrix(false);
       }

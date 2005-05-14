@@ -643,14 +643,16 @@ TextureRenderer::build_colormap2()
   if (!ShaderProgramARB::shaders_supported())
     return;
 
-  if(cmap2_dirty_ || alpha_dirty_) {
-
-    if(!sw_raster_ && use_pbuffer_ && !raster_buffer_) {
+  if (cmap2_dirty_ || alpha_dirty_)
+  {
+    if(!sw_raster_ && use_pbuffer_ && !raster_buffer_)
+    {
       raster_buffer_ = new Pbuffer(256, 64, GL_FLOAT, 32, true, GL_FALSE);
       cmap2_buffer_ = new Pbuffer(256, 64, GL_INT, 8, true, GL_FALSE);
       shader_factory_ = new CM2ShaderFactory();
-      if(raster_buffer_->create() || cmap2_buffer_->create()
-         || cmap2_shader_nv_->create() || cmap2_shader_ati_->create()) {
+      if (!raster_buffer_->create() || !cmap2_buffer_->create()
+	  || cmap2_shader_nv_->create() || cmap2_shader_ati_->create())
+      {
         raster_buffer_->destroy();
         cmap2_buffer_->destroy();
         cmap2_shader_nv_->destroy();
@@ -662,7 +664,9 @@ TextureRenderer::build_colormap2()
         cmap2_buffer_ = 0;
         shader_factory_ = 0;
         use_pbuffer_ = false;
-      } else {
+      }
+      else
+      {
         raster_buffer_->set_use_default_shader(false);
         cmap2_buffer_->set_use_default_shader(false);
       }
