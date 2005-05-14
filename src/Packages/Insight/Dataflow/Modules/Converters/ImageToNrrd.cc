@@ -97,8 +97,8 @@ ImageToNrrd::~ImageToNrrd(){
 
 template<class InputImageType, unsigned  nrrdtype>
 void ImageToNrrd::create_nrrd(ITKDatatypeHandle &img) {
+  // check if Teem exists
 
-  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
 
   InputImageType *im = dynamic_cast< InputImageType * >( img.get_rep()->data_.GetPointer() );
   typedef typename itk::ImageRegionIterator<InputImageType> IteratorType;
@@ -174,8 +174,7 @@ void ImageToNrrd::create_nrrd(ITKDatatypeHandle &img) {
 
 template<class InputImageType, unsigned  nrrdtype>
 void ImageToNrrd::create_nrrd2(ITKDatatypeHandle &img) {
-  
-  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
+  // check if Teem exists
 
   InputImageType *im = dynamic_cast< InputImageType * >( img.get_rep()->data_.GetPointer() );
   typedef typename itk::ImageRegionIterator<InputImageType> IteratorType;

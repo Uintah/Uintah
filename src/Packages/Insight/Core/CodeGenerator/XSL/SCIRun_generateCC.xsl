@@ -382,11 +382,6 @@ bool
   <xsl:if test="$has_defined_objects != ''">
   execute_ = true;
   </xsl:if>
-
-<xsl:text>
-  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
-</xsl:text>
-
   typedef typename <xsl:value-of select="$itk-name"/>&lt; <xsl:for-each select="/filter/filter-itk/templated/template"><xsl:value-of select="."/>
   <xsl:if test="position() &lt; last()">   
   <xsl:text>, </xsl:text>

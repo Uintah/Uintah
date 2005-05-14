@@ -87,8 +87,6 @@ void ImageReaderUShort3D::execute(){
     return;
   }
 
-  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
-
   typedef itk::ImageFileReader<itk::Image<unsigned short, 3> > FileReaderType;
   
   // create a new reader

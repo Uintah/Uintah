@@ -3937,7 +3937,8 @@ class LevelSetSegmenterApp {
 	set $mods(ShowField-Speed)-faces-on 1
 	
  	# execute ThresholdLevelSet filter
- 	$mods(LevelSet)-c needexecute
+# 	$mods(LevelSet)-c needexecute
+	$mods(ChooseImage-Smooth)-c needexecute
     }
 
 #     method configure_threshold_sliders {r_min r_max} {
@@ -4175,23 +4176,33 @@ class LevelSetSegmenterApp {
  	set show_seeds 1
  	$this seeds_changed 1 2 3
 
- 	if {$seed_type == "Seed Points Only"} {
- 	    $mods(SeedPoints-PosSeeds) send
- 	    $mods(SeedPoints-NegSeeds) send
- 	} elseif {$seed_type == "Previous Segmentation and Seed Points"} {
- 	    $mods(SeedPoints-PosSeeds) send
- 	    $mods(SeedPoints-NegSeeds) send
+        global $mods(SeedPoints-PosSeeds)-send
+        global $mods(SeedPoints-NegSeeds)-send
+        set $mods(SeedPoints-PosSeeds)-send 1
+        set $mods(SeedPoints-NegSeeds)-send 1
+# 	if {$seed_type == "Seed Points Only"} {
+# 	    $mods(SeedPoints-PosSeeds) send
+# 	    $mods(SeedPoints-NegSeeds) send
+# 	} elseif {$seed_type == "Previous Segmentation and Seed Points"} {
+#  	    $mods(SeedPoints-PosSeeds) send
+#  	    $mods(SeedPoints-NegSeeds) send
+# 	    $this check_previous_filename
+# 	    $mods(ImageReaderFloat2D)-c needexecute
+#  	} elseif {$seed_type == "Thresholds and Seed Points"} {
+#  	    $mods(SeedPoints-PosSeeds) send
+#  	    $mods(SeedPoints-NegSeeds) send
+#  	    $mods(BinaryThreshold-Seed)-c needexecute
+#  	} else {
+#  	    puts "ERROR: cannot create seeds"
+#  	    return
+#  	}
+ 	
+	if {$seed_type == "Previous Segmentation and Seed Points"} {
 	    $this check_previous_filename
 	    $mods(ImageReaderFloat2D)-c needexecute
- 	} elseif {$seed_type == "Thresholds and Seed Points"} {
- 	    $mods(SeedPoints-PosSeeds) send
- 	    $mods(SeedPoints-NegSeeds) send
- 	    $mods(BinaryThreshold-Seed)-c needexecute
- 	} else {
- 	    puts "ERROR: cannot create seeds"
- 	    return
- 	}
-     }
+	}
+	$mods(ChooseImage-Smooth)-c needexecute
+    }
 
     method start_segmentation {} {
  	global max_iter mods

@@ -96,7 +96,6 @@ bool Image2DToImage3D::run( itk::Object *obj_InputImage)
     return false;
   }
 
-  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
 
   typedef typename itk::CastImageFilter< InputImageType, OutputImageType > CasterType;
 
@@ -138,7 +137,6 @@ bool Image2DToImage3D::run2( itk::Object *obj_InputImage)
     return false;
   }
 
-  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
 
   typedef typename itk::VectorCastImageFilter< InputImageType, OutputImageType > CasterType;
 

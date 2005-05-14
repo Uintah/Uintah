@@ -133,8 +133,6 @@ BuildSeedVolume::execute()
     error("BuildSeedVolume only supports PointsClouds of doubles.");
     return;
   }
-
-  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
   
   FieldType *f = dynamic_cast<FieldType*>(ifieldH_.get_rep());
 

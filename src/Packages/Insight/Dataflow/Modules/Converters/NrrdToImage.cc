@@ -110,7 +110,6 @@ void NrrdToImage::execute(){
   if(!inrrd_->get(inrrd_handle_))
     return;
 
-
   Nrrd *n = inrrd_handle_->nrrd;
   int dim = n->dim;
 
@@ -216,8 +215,6 @@ void NrrdToImage::determine_nrrd_type() {
 template<class type, unsigned int dim>
 void NrrdToImage::create_image() {
 
-  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
-
   Nrrd* n = inrrd_handle_->nrrd;
   typedef typename itk::Image<type,dim> ImageType;
   typedef typename itk::ImageRegionIterator< ImageType > IteratorType;
@@ -281,8 +278,6 @@ void NrrdToImage::create_image() {
 
 template<class type, unsigned int dim>
 void NrrdToImage::create_image2() {
-
-  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
 
   Nrrd* n = inrrd_handle_->nrrd;
   typedef typename itk::Image<itk::Vector<type>,dim> ImageType;

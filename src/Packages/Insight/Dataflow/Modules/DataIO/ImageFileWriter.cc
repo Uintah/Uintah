@@ -75,9 +75,6 @@ public:
 template<class T1>
 bool ImageFileWriter::run( itk::Object *obj )
 {
-
-  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
-
   T1 *data1 = dynamic_cast<T1 * >(obj);
 
   if ( !data1 ) {
@@ -126,6 +123,7 @@ void ImageFileWriter::execute(){
   if(!inhandle_.get_rep()) {
     return;
   }
+
 
   // get input
   itk::Object* data = inhandle_.get_rep()->data_.GetPointer();

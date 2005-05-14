@@ -95,7 +95,6 @@ bool RGBPixelToVector::run( itk::Object *obj_InputImage)
     return false;
   }
 
-  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
 
   typedef typename itk::VectorCastImageFilter< InputImageType, OutputImageType > CasterType;
 
@@ -148,7 +147,6 @@ void RGBPixelToVector::execute(){
     error("Unable to initialize oport");
     return;
   }
-
 
   // get input
   itk::Object* data_InputImage = inhandle_InputImage_.get_rep()->data_.GetPointer();
