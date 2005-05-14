@@ -81,8 +81,8 @@ inline int Clamp(int i, int min, int max)
 
 // Generate a step between min and max.
 // return:   min - if d<=min
-//	     max - if d>=max
-//	     hermite curve if d>min && d<max
+//           max - if d>=max
+//           hermite curve if d>min && d<max
 inline double SmoothStep(double d, double min, double max)
 {
   double ret;
@@ -134,12 +134,12 @@ inline int RoundDown(double d)
 inline int RoundUp(double d)
 {
     if(d>=0){
-	if((d-(int)d) == 0)
-	    return (int)d;
-	else 
-	    return (int)(d+1);
+        if((d-(int)d) == 0)
+            return (int)d;
+        else
+            return (int)(d+1);
     } else {
-	return (int)d;
+        return (int)d;
     }
 }
 
@@ -147,7 +147,6 @@ inline int Round(double d)
 {
   return (int)(d+0.5);
 }
-
 
 inline int Floor(double d)
 {
@@ -160,6 +159,14 @@ inline int Floor(double d)
   } else {
     return (int)d;
   }
+}
+
+// this version is twice as fast for negative numbers
+// the more robust version above, but will only work
+// for fabs(d) <= offset, use with care
+inline int Floor(double d, int offset)
+{
+   return (int)(d + offset) - offset;
 }
 
 inline int Ceil(double d)
