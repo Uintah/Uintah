@@ -68,7 +68,6 @@ PBuffer::PBuffer( int doubleBuffer /* = GL_FALSE */ ):
   width_(0), height_(0), colorBits_(8),
   doubleBuffer_(doubleBuffer),
   depthBits_(8),
-  valid_(false),
 #ifndef _WIN32
   cx_(0),
 #endif
@@ -172,7 +171,6 @@ PBuffer::create(Display* dpy, int screen, /*GLXContext sharedcontext,*/
       return false;
     }
 // else cerr<<"Pbuffer successfully created\n";
-    valid_ = true;
   } else {
     //cerr<<"GLXVersion = "<<major<<"."<<minor<<"\n";
     cx_ = 0;
@@ -198,7 +196,6 @@ PBuffer::destroy()
     glXDestroyPbuffer( dpy_, pbuffer_);
     pbuffer_ = 0;
   }
-  valid_ = false;
 #endif
 }
 
@@ -206,9 +203,7 @@ void
 PBuffer::makeCurrent()
 {
 #ifndef _WIN32
-  if( valid_ ) {
-    glXMakeCurrent( dpy_, pbuffer_, cx_ );
-  }
+  glXMakeCurrent( dpy_, pbuffer_, cx_ );
 #endif
 }
 
@@ -237,7 +232,6 @@ PBuffer::create(Display* /*dpy*/, int /*screen*/, //GLXContext /*shared*/,
 void
 PBuffer::destroy()
 {
-  valid_ = false;
 }
 
 void

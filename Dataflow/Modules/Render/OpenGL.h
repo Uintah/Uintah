@@ -206,7 +206,6 @@ private:
   WallClockTimer	fps_timer_;
   Frustum		frustum_;
   HiRes			hi_res_;
-  bool			have_pbuffer_;
   bool			dead_;
   bool			do_hi_res_;
   bool			encoding_mpeg_;
