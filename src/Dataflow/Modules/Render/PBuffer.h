@@ -70,7 +70,6 @@ public:
 #endif
   void destroy();
   void makeCurrent();
-  inline bool is_valid(){ return valid_; }
   bool is_current();
 
   inline int width() { return width_; }
@@ -81,7 +80,6 @@ private:
   int colorBits_;
   int doubleBuffer_;
   int depthBits_;
-  bool valid_;
 
 #ifndef _WIN32
   GLXContext cx_;
