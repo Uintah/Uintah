@@ -11,17 +11,17 @@ HancockMacKenzieDamage::HancockMacKenzieDamage(ProblemSpecP& ps)
   ps->get("D0",d_initialData.D0);
   ps->require("Dc",d_initialData.Dc);
 } 
-	 
+         
 HancockMacKenzieDamage::HancockMacKenzieDamage(const HancockMacKenzieDamage* cm)
 {
   d_initialData.D0  = cm->d_initialData.D0;
   d_initialData.Dc  = cm->d_initialData.Dc;
 } 
-	 
+         
 HancockMacKenzieDamage::~HancockMacKenzieDamage()
 {
 }
-	 
+         
 inline double 
 HancockMacKenzieDamage::initialize()
 {
@@ -37,12 +37,12 @@ HancockMacKenzieDamage::hasFailed(double damage)
     
 double 
 HancockMacKenzieDamage::computeScalarDamage(const double& plasticStrainRate,
-					    const Matrix3& stress,
-					    const double& temperature,
-					    const double& delT,
-					    const MPMMaterial* matl,
-					    const double& tolerance,
-					    const double& D_old)
+                                            const Matrix3& stress,
+                                            const double& ,
+                                            const double& delT,
+                                            const MPMMaterial* ,
+                                            const double& ,
+                                            const double& D_old)
 {
   // Calculate plastic strain increment
   double epsInc = plasticStrainRate*delT;

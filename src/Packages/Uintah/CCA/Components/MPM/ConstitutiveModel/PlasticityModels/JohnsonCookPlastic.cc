@@ -110,10 +110,10 @@ JohnsonCookPlastic::updatePlastic(const particleIndex , const double& )
 
 double 
 JohnsonCookPlastic::computeFlowStress(const PlasticityState* state,
-                                      const double& delT,
-                                      const double& tolerance,
+                                      const double& ,
+                                      const double& ,
                                       const MPMMaterial* matl,
-                                      const particleIndex idx)
+                                      const particleIndex )
 {
   double epdot = state->plasticStrainRate/d_CM.epdot_0;
   double ep = state->plasticStrain;
@@ -140,10 +140,10 @@ JohnsonCookPlastic::computeFlowStress(const PlasticityState* state,
 
 double 
 JohnsonCookPlastic::computeEpdot(const PlasticityState* state,
-                                 const double& delT,
-                                 const double& tolerance,
+                                 const double& ,
+                                 const double& ,
                                  const MPMMaterial* matl,
-                                 const particleIndex idx)
+                                 const particleIndex )
 {
   // All quantities should be at the beginning of the 
   // time step
@@ -176,7 +176,7 @@ void
 JohnsonCookPlastic::computeTangentModulus(const Matrix3& stress,
                                           const PlasticityState* state,
                                           const double& ,
-                                          const MPMMaterial* matl,
+                                          const MPMMaterial* ,
                                           const particleIndex idx,
                                           TangentModulusTensor& Ce,
                                           TangentModulusTensor& Cep)
@@ -235,7 +235,7 @@ JohnsonCookPlastic::evalDerivativeWRTScalarVars(const PlasticityState* state,
 
 double
 JohnsonCookPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
-                                                   const particleIndex idx)
+                                                   const particleIndex )
 {
   // Get the state data
   double ep = state->plasticStrain;
@@ -245,7 +245,7 @@ JohnsonCookPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
 
   // Calculate strain rate part
   double strainRatePart = (epdot < 1.0) ? 
-	  (pow((1.0 + epdot),d_CM.C)) : (1.0 + d_CM.C*log(epdot));
+          (pow((1.0 + epdot),d_CM.C)) : (1.0 + d_CM.C*log(epdot));
 
   // Calculate temperature part
   double m = d_CM.m;
@@ -281,7 +281,7 @@ JohnsonCookPlastic::computeMeltingTemp(const PlasticityState* state)
 
 double
 JohnsonCookPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
-                                                 const particleIndex idx)
+                                                 const particleIndex )
 {
   // Get the state data
   double ep = state->plasticStrain;
@@ -311,7 +311,7 @@ JohnsonCookPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
 
 double
 JohnsonCookPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
-                                                const particleIndex idx)
+                                                const particleIndex )
 {
   // Get the state data
   double ep = state->plasticStrain;

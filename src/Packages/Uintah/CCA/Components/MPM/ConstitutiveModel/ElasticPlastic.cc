@@ -837,7 +837,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       // Material has melted if flowStress <= 0.0
       bool melted = false;
-      bool elastic = false;
+      //bool elastic = false;
       bool plastic = false;
       if (temperature > Tm_cur || flowStress <= 0.0) {
 
@@ -864,7 +864,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
         //     << " s_flow = " << flowStress << endl;
         if (Phi <= 0.0) {
 
-          elastic = true;
+          //elastic = true;
 
           // Set the elastic stress to the trial stress
           tensorS = trialS;
@@ -959,7 +959,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
                 ASSERT(denom != 0.0);
                 Stilde = trialS/denom;
 
-		/*
+                /*
                 if (idx == 1) {
                   double delLambda = sqrtqq*delGamma/sqrtqs;
                   cout << "idx = " << idx << " delGamma = " << delLambda 
@@ -967,7 +967,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
                      << " epdot = " << state->plasticStrainRate 
                      << " ep = " << state->plasticStrain << endl;
                 }
-		*/
+                */
 
                 // We have found Stilde. Turn off Newton Iterations.
                 doNewtonIterations = false;
@@ -1537,15 +1537,15 @@ double ElasticPlastic::getCompressibility()
 
 void
 ElasticPlastic::scheduleCheckNeedAddMPMMaterial(Task* task,
-                                                const MPMMaterial* matl,
-                                                const PatchSet* patch) const
+                                                const MPMMaterial* ,
+                                                const PatchSet* ) const
 {
   task->computes(lb->NeedAddMPMMaterialLabel);
 }
 
 void ElasticPlastic::checkNeedAddMPMMaterial(const PatchSubset* patches,
                                              const MPMMaterial* matl,
-                                             DataWarehouse* old_dw,
+                                             DataWarehouse* ,
                                              DataWarehouse* new_dw)
 {
   if (cout_EP.active()) {

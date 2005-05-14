@@ -94,9 +94,9 @@ void MWViscoElastic::initializeCMData(const Patch* patch,
 
 
 void MWViscoElastic::allocateCMDataAddRequires(Task* task,
-					       const MPMMaterial* matl,
-					       const PatchSet* patches,
-					       MPMLabel* lb) const
+                                               const MPMMaterial* matl,
+                                               const PatchSet* patches,
+                                               MPMLabel* lb) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
@@ -115,10 +115,10 @@ void MWViscoElastic::allocateCMDataAddRequires(Task* task,
 
 
 void MWViscoElastic::allocateCMDataAdd(DataWarehouse* new_dw,
-				       ParticleSubset* addset,
-	map<const VarLabel*, ParticleVariableBase*>* newState,
-				       ParticleSubset* delset,
-				       DataWarehouse* )
+                                       ParticleSubset* addset,
+        map<const VarLabel*, ParticleVariableBase*>* newState,
+                                       ParticleSubset* delset,
+                                       DataWarehouse* )
 {
   // Copy the data common to all constitutive models from the particle to be 
   // deleted to the particle to be added. 
@@ -162,8 +162,8 @@ void MWViscoElastic::allocateCMDataAdd(DataWarehouse* new_dw,
 
 }
 
-void MWViscoElastic::addParticleState(std::vector<const VarLabel*>& from,
-				   std::vector<const VarLabel*>& to)
+void MWViscoElastic::addParticleState(std::vector<const VarLabel*>& ,
+                                   std::vector<const VarLabel*>& )
 {
   // Add the local particle state data for this constitutive model.
 }
@@ -200,8 +200,8 @@ void MWViscoElastic::computeStableTimestep(const Patch* patch,
      // Compute wave speed at each particle, store the maximum
      c_dil = sqrt((bulk + 4.*shear/3.)*pvolume[idx]/pmass[idx]);
      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-		      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-		      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+                      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
     }
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
@@ -303,7 +303,7 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
     double shear = e_shear +ve_shear;
     
     for(ParticleSubset::iterator iter = pset->begin();
-					iter != pset->end(); iter++){
+                                        iter != pset->end(); iter++){
       particleIndex idx = *iter;
 
       // Assign zero internal heating by default - modify if necessary.
@@ -314,16 +314,16 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
        Vector gvel;
        velGrad.set(0.0);
        for(int k = 0; k < flag->d_8or27; k++) {
-	 if (flag->d_fracture) {
-	   if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]]; 
-	   if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
-	 } else
-	   gvel = gvelocity[ni[k]];
-	 for (int j = 0; j<3; j++){
-	    for (int i = 0; i<3; i++) {
-	      velGrad(i,j)+=gvel[i] * d_S[k][j] * oodx[j];
-	    }
-	 }
+         if (flag->d_fracture) {
+           if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]]; 
+           if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
+         } else
+           gvel = gvelocity[ni[k]];
+         for (int j = 0; j<3; j++){
+            for (int i = 0; i<3; i++) {
+              velGrad(i,j)+=gvel[i] * d_S[k][j] * oodx[j];
+            }
+         }
       }
 
       // Calculate rate of deformation D, and deviatoric rate DPrime
@@ -369,22 +369,22 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
      double p = pstress_e_v_new[idx] + pstress_ve_v_new[idx];
      
      double ee = (pstress_ve_d_new[idx].NormSquared()/4/ve_shear +
-		    pstress_e_d_new[idx].NormSquared()/4/e_shear +
-		    p*p/2/(ve_bulk + e_bulk))* pvolume_deformed[idx];
-		    
+                    pstress_e_d_new[idx].NormSquared()/4/e_shear +
+                    p*p/2/(ve_bulk + e_bulk))* pvolume_deformed[idx];
+                    
            ve = ve +(pstress_ve_d_new[idx].NormSquared()/d_viscosity)
-		     * pvolume_deformed[idx]*delT;
+                     * pvolume_deformed[idx]*delT;
    
       double e = ee + ve; 
 
-      se += e;		   
+      se += e;             
 
       // Compute wave speed at each particle, store the maximum
       Vector pvelocity_idx = pvelocity[idx];
       c_dil = sqrt((bulk + 4.*shear/3.)*pvolume_deformed[idx]/pmass[idx]);
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
-		       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
-		       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
+                       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+                       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
     }
 
     WaveSpeed = dx/WaveSpeed;
@@ -399,8 +399,8 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
 
 
 void MWViscoElastic::addComputesAndRequires(Task* task,
-					 const MPMMaterial* matl,
-					 const PatchSet* patches ) const
+                                         const MPMMaterial* matl,
+                                         const PatchSet* patches ) const
 {
   // Add the computes and requires that are common to all explicit 
   // constitutive models.  The method is defined in the ConstitutiveModel
@@ -411,9 +411,9 @@ void MWViscoElastic::addComputesAndRequires(Task* task,
 
 void 
 MWViscoElastic::addComputesAndRequires(Task* ,
-				       const MPMMaterial* ,
-				       const PatchSet* ,
-				       const bool ) const
+                                       const MPMMaterial* ,
+                                       const PatchSet* ,
+                                       const bool ) const
 {
 }
 
@@ -440,9 +440,9 @@ double MWViscoElastic::computeRhoMicroCM(double pressure,
 }
 
 void MWViscoElastic::computePressEOSCM(const double rho_cur, double& pressure,
-				       const double p_ref,
-				       double& dp_drho,      double& tmp,
-				       const MPMMaterial* matl)
+                                       const double p_ref,
+                                       double& dp_drho,      double& tmp,
+                                       const MPMMaterial* matl)
 {
 
   double e_shear = d_initialData.E_Shear;
@@ -491,8 +491,8 @@ const TypeDescription* fun_getTypeDescription(MWViscoElastic::StateData*)
    static TypeDescription* td = 0;
    if(!td){
       td = scinew
-	TypeDescription(TypeDescription::Other,
-			"MWViscoElastic::StateData", true, &makeMPI_CMData);
+        TypeDescription(TypeDescription::Other,
+                        "MWViscoElastic::StateData", true, &makeMPI_CMData);
    }
    return td;
 }

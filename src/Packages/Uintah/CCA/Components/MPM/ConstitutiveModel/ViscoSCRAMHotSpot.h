@@ -166,11 +166,35 @@ namespace Uintah {
                                         const MPMMaterial* matl,
                                         const PatchSet* patches) const;
 
+    /*! Set up data required by and computed in computeStressTensor 
+        for implicit methods */
+    virtual void addComputesAndRequires(Task* ,
+                                        const MPMMaterial* ,
+                                        const PatchSet* ,
+                                        const bool ) const
+    {
+    }
+
     // compute stress at each particle in the patch
     virtual void computeStressTensor(const PatchSubset* patches,
                                      const MPMMaterial* matl,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
+
+    /*! compute stress at each particle in the patch for implicit 
+        methods */
+    virtual void computeStressTensor(const PatchSubset* ,
+                                     const MPMMaterial* ,
+                                     DataWarehouse* ,
+                                     DataWarehouse* ,
+#ifdef HAVE_PETSC
+                                     MPMPetscSolver* ,
+#else
+                                     SimpleSolver* ,
+#endif
+                                     const bool )
+    {
+    }
 
     /*! carry forward CM data (computed in computeStressTensor) for RigidMPM */
     virtual void carryForward(const PatchSubset* patches,

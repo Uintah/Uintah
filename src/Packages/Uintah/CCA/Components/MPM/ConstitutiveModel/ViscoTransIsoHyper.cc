@@ -84,14 +84,14 @@ ViscoTransIsoHyper::ViscoTransIsoHyper(ProblemSpecP& ps,  MPMLabel* Mlb,
      ParticleVariable<double>::getTypeDescription());//fail_label
 
   pViscoStressLabel = VarLabel::create("p.pviscostress",
-  	ParticleVariable<Matrix3>::getTypeDescription());
+        ParticleVariable<Matrix3>::getTypeDescription());
   pViscoStressLabel_preReloc = VarLabel::create("p.pviscostress+",
-  	ParticleVariable<Matrix3>::getTypeDescription());//visco label
+        ParticleVariable<Matrix3>::getTypeDescription());//visco label
 
   pPrevStressLabel = VarLabel::create("p.prevstress",
-  	ParticleVariable<Matrix3>::getTypeDescription());
+        ParticleVariable<Matrix3>::getTypeDescription());
   pPrevStressLabel_preReloc = VarLabel::create("p.prevstress+",
-  	ParticleVariable<Matrix3>::getTypeDescription());
+        ParticleVariable<Matrix3>::getTypeDescription());
 
   pHistory1Label = VarLabel::create("p.history1",
         ParticleVariable<Matrix3>::getTypeDescription());
@@ -238,7 +238,7 @@ void ViscoTransIsoHyper::initializeCMData(const Patch* patch,
 void ViscoTransIsoHyper::allocateCMDataAddRequires(Task* task,
                                               const MPMMaterial* matl ,
                                               const PatchSet* patches,
-                                              MPMLabel* lb) const
+                                              MPMLabel* ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
@@ -709,8 +709,8 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
        history6[idx]= Identity*0.;
 
       pviscostress[idx] = history1[idx]*y1+history2[idx]*y2+history3[idx]*y3
-      			+ history4[idx]*y4+history5[idx]*y5+history6[idx]*y6
-      			+ prevstress[idx];
+                        + history4[idx]*y4+history5[idx]*y5+history6[idx]*y6
+                        + prevstress[idx];
       prevstress[idx] = pstress[idx];// updated 
 
       //________________________________end stress

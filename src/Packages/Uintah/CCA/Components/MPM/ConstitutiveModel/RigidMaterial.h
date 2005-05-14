@@ -94,20 +94,20 @@ namespace Uintah {
                               DataWarehouse* new_dw);
 
     /*! Add requires to task graph for particle conversion */
-    virtual void allocateCMDataAddRequires(Task* task, 
-                                           const MPMMaterial* matl,
-                                           const PatchSet* patch, 
-                                           MPMLabel* lb) const
+    virtual void allocateCMDataAddRequires(Task* , 
+                                           const MPMMaterial* ,
+                                           const PatchSet* , 
+                                           MPMLabel* ) const
     {
     }
 
     /*! Add requires to task graph for particle conversion */
-    virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-                                   ParticleSubset* subset,
+    virtual void allocateCMDataAdd(DataWarehouse* ,
+                                   ParticleSubset* ,
                                    map<const VarLabel*, 
-                                      ParticleVariableBase*>* newState,
-                                   ParticleSubset* delset,
-                                   DataWarehouse* old_dw)
+                                      ParticleVariableBase*>* ,
+                                   ParticleSubset* ,
+                                   DataWarehouse* )
     {
     }
 

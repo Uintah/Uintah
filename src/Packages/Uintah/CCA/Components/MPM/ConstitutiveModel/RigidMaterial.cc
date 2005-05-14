@@ -149,7 +149,7 @@ RigidMaterial::addComputesAndRequires(Task* task,
 void 
 RigidMaterial::computeStressTensor(const PatchSubset* patches,
                                    const MPMMaterial* matl,
-                                   DataWarehouse* old_dw,
+                                   DataWarehouse* ,
                                    DataWarehouse* new_dw,
 #ifdef HAVE_PETSC
                                    MPMPetscSolver* ,
@@ -169,8 +169,8 @@ RigidMaterial::computeStressTensor(const PatchSubset* patches,
 }
 
 void 
-RigidMaterial::addParticleState(std::vector<const VarLabel*>& from,
-                                std::vector<const VarLabel*>& to)
+RigidMaterial::addParticleState(std::vector<const VarLabel*>& ,
+                                std::vector<const VarLabel*>& )
 {
 }
 

@@ -29,7 +29,7 @@ using namespace Uintah;
 using namespace SCIRun;
 
 CompNeoHook::CompNeoHook(ProblemSpecP& ps,  MPMLabel* Mlb, 
-			 MPMFlags* Mflag)
+                         MPMFlags* Mflag)
   : ConstitutiveModel(Mlb,Mflag)
 {
 
@@ -69,7 +69,7 @@ void CompNeoHook::initializeCMData(const Patch* patch,
 void CompNeoHook::allocateCMDataAddRequires(Task* task,
                                             const MPMMaterial* matl,
                                             const PatchSet* patches,
-                                            MPMLabel* lb) const
+                                            MPMLabel* ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
@@ -95,8 +95,8 @@ void CompNeoHook::allocateCMDataAdd(DataWarehouse* new_dw,
   // be deleted to the particles to be added
 }
 
-void CompNeoHook::addParticleState(std::vector<const VarLabel*>& from,
-                                   std::vector<const VarLabel*>& to)
+void CompNeoHook::addParticleState(std::vector<const VarLabel*>& ,
+                                   std::vector<const VarLabel*>& )
 {
   // Add the local particle state data for this constitutive model.
 }
