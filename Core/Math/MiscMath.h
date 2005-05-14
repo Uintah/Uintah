@@ -162,8 +162,10 @@ inline int Floor(double d)
 }
 
 // this version is twice as fast for negative numbers
-// the more robust version above, but will only work
-// for fabs(d) <= offset, use with care
+// (on an available Pentium 4 machine, only about 25%
+// faster on Powerbook G4)
+// than the more robust version above, but will only
+//work for fabs(d) <= offset, use with caution
 inline int Floor(double d, int offset)
 {
    return (int)(d + offset) - offset;
@@ -181,6 +183,15 @@ inline int Ceil(double d)
     else
       return i+1;
   }
+}
+
+// using the same trick as above, this
+// version of Ceil is a bit faster for
+// the architectures it has been tested
+// on (Pentium4, Powerbook G4)
+inline int Ceil(double d, int offset)
+{
+   return (int)(d - offset) + offset;
 }
 
 inline int Tile(int tile, int tf)
