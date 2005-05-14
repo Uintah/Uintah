@@ -68,8 +68,8 @@ IsoHardeningPlastic::addParticleState(std::vector<const VarLabel*>& from,
 void 
 IsoHardeningPlastic::allocateCMDataAddRequires(Task* task,
                                                const MPMMaterial* matl,
-                                               const PatchSet* patch,
-                                               MPMLabel* lb) const
+                                               const PatchSet* ,
+                                               MPMLabel* ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::NewDW, pAlphaLabel_preReloc, matlset, Ghost::None);
@@ -80,7 +80,7 @@ void IsoHardeningPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
                                             ParticleSubset* addset,
                                             map<const VarLabel*, ParticleVariableBase*>* newState,
                                             ParticleSubset* delset,
-                                            DataWarehouse* old_dw)
+                                            DataWarehouse* )
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure

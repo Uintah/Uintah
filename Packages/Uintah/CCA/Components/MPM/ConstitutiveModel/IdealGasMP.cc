@@ -64,7 +64,7 @@ void IdealGasMP::initializeCMData(const Patch* patch,
 void IdealGasMP::allocateCMDataAddRequires(Task* task,
                                            const MPMMaterial* matl ,
                                            const PatchSet* patches,
-                                           MPMLabel* lb) const
+                                           MPMLabel* ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
@@ -90,8 +90,8 @@ void IdealGasMP::allocateCMDataAdd(DataWarehouse* new_dw,
 }
 
 
-void IdealGasMP::addParticleState(std::vector<const VarLabel*>& from,
-                                   std::vector<const VarLabel*>& to)
+void IdealGasMP::addParticleState(std::vector<const VarLabel*>& ,
+                                   std::vector<const VarLabel*>& )
 {
   // Add the local particle state data for this constitutive model.
 }
@@ -226,16 +226,16 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
       Vector gvel;
       velGrad.set(0.0);
       for(int k = 0; k < flag->d_8or27; k++) {
-	if (flag->d_fracture) {
-	  if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
-	  if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
-	} else
-	  gvel = gvelocity[ni[k]];
-	for (int j = 0; j<3; j++){
-	  for (int i = 0; i<3; i++) {
-	    velGrad(i,j) += gvel[i] * d_S[k][j] * oodx[j];
-	  }
-	}
+        if (flag->d_fracture) {
+          if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
+          if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
+        } else
+          gvel = gvelocity[ni[k]];
+        for (int j = 0; j<3; j++){
+          for (int i = 0; i<3; i++) {
+            velGrad(i,j) += gvel[i] * d_S[k][j] * oodx[j];
+          }
+        }
       }
       
       // Compute the deformation gradient increment using the time_step

@@ -164,8 +164,8 @@ SCGPlastic::updatePlastic(const particleIndex , const double& )
 
 double 
 SCGPlastic::computeFlowStress(const PlasticityState* state,
-                              const double& delT,
-                              const double& tolerance,
+                              const double& ,
+                              const double& ,
                               const MPMMaterial* ,
                               const particleIndex )
 {
@@ -318,10 +318,10 @@ SCGPlastic::computeThermallyActivatedYieldStress(const double& epdot,
 
 double 
 SCGPlastic::computeEpdot(const PlasticityState* state,
-                         const double& delT,
-                         const double& tolerance,
+                         const double& ,
+                         const double& ,
                          const MPMMaterial* ,
-                         const particleIndex idx)
+                         const particleIndex )
 {
   // Get the needed data
   double tau = state->yieldStress;
@@ -538,7 +538,7 @@ SCGPlastic::evalDerivativeWRTPressure(const PlasticityState* state,
 */
 double
 SCGPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
-                                        const particleIndex idx)
+                                        const particleIndex )
 {
   // Get the current state data
   double epdot = state->plasticStrain;

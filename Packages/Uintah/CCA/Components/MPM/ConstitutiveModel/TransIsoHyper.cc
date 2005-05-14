@@ -137,7 +137,7 @@ void TransIsoHyper::initializeCMData(const Patch* patch,
 void TransIsoHyper::allocateCMDataAddRequires(Task* task,
                                               const MPMMaterial* matl ,
                                               const PatchSet* patches,
-                                              MPMLabel* lb) const
+                                              MPMLabel* ) const
   // _________________________________________STILL EXPERIMENTAL
 {
   const MaterialSubset* matlset = matl->thisMaterial();

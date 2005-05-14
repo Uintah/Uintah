@@ -122,9 +122,9 @@ ZAPlastic::updatePlastic(const particleIndex ,
 
 double 
 ZAPlastic::computeFlowStress(const PlasticityState* state,
-                             const double& delT,
-                             const double& tolerance,
-                             const MPMMaterial* matl,
+                             const double& ,
+                             const double& ,
+                             const MPMMaterial* ,
                              const particleIndex idx)
 {
   double epdot = state->plasticStrainRate;
@@ -144,10 +144,10 @@ ZAPlastic::computeFlowStress(const PlasticityState* state,
                    d_CM.B_0*sqrt(ep)*exp(-alpha*T);
   if (isnan(sigma_y)) {
     cout << "ZA_Flow_Stress:: idx = " << idx << " epdot = " << epdot
-  	 << " ep = " << ep << " T = " << T << endl;
+         << " ep = " << ep << " T = " << T << endl;
     cout << " idx = " << idx << " sigma_a = " << sigma_a
-  	  << " alpha = " << alpha << " beta = " << beta
-  	  << " sigma_y = " << sigma_y << endl;
+          << " alpha = " << alpha << " beta = " << beta
+          << " sigma_y = " << sigma_y << endl;
   }
 
   return sigma_y;
@@ -200,7 +200,7 @@ void
 ZAPlastic::computeTangentModulus(const Matrix3& stress,
                                  const PlasticityState* state,
                                  const double& ,
-                                 const MPMMaterial* matl,
+                                 const MPMMaterial* ,
                                  const particleIndex idx,
                                  TangentModulusTensor& Ce,
                                  TangentModulusTensor& Cep)
@@ -259,7 +259,7 @@ ZAPlastic::evalDerivativeWRTScalarVars(const PlasticityState* state,
 
 double
 ZAPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
-                                          const particleIndex idx)
+                                          const particleIndex )
 {
   // Get the state data
   double ep = state->plasticStrain;
@@ -301,7 +301,7 @@ ZAPlastic::computeMeltingTemp(const PlasticityState* state)
 
 double
 ZAPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
-                                        const particleIndex idx)
+                                        const particleIndex )
 {
   // Get the state data
   double ep = state->plasticStrain;
@@ -326,7 +326,7 @@ ZAPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
 
 double
 ZAPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
-                                       const particleIndex idx)
+                                       const particleIndex )
 {
   // Get the state data
   double ep = state->plasticStrain;

@@ -135,7 +135,7 @@ CNHDamage::setErosionAlgorithm(const CNHDamage* cm)
 void 
 CNHDamage::addInitialComputesAndRequires(Task* task,
                                          const MPMMaterial* matl,
-                                         const PatchSet* patches) const
+                                         const PatchSet* ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   task->computes(bElBarLabel,         matlset);

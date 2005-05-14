@@ -113,8 +113,8 @@ MTSPlastic::addParticleState(std::vector<const VarLabel*>& from,
 void 
 MTSPlastic::allocateCMDataAddRequires(Task* task,
                                       const MPMMaterial* matl,
-                                      const PatchSet* patch,
-                                      MPMLabel* lb) const
+                                      const PatchSet* ,
+                                      MPMLabel* ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::NewDW, pMTSLabel_preReloc, matlset, Ghost::None);
@@ -127,7 +127,7 @@ MTSPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
                               map<const VarLabel*, 
                                 ParticleVariableBase*>* newState,
                               ParticleSubset* delset,
-                              DataWarehouse* old_dw)
+                              DataWarehouse* )
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
@@ -262,7 +262,7 @@ MTSPlastic::computeFlowStress(const PlasticityState* state,
 double 
 MTSPlastic::computeEpdot(const PlasticityState* state,
                          const double& delT,
-                         const double& tolerance,
+                         const double& ,
                          const MPMMaterial* ,
                          const particleIndex idx)
 {
@@ -290,7 +290,7 @@ MTSPlastic::evalFAndFPrime(const double& tau,
                            const double& T,
                            const double& mu,
                            const double& sigma_e,
-                           const double& delT,
+                           const double& ,
                            double& f,
                            double& fPrime)
 {
