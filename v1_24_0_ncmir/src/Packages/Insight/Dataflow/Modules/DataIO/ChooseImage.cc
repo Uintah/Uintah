@@ -81,8 +81,6 @@ void ChooseImage::execute(){
     return;
   }
 
-  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
-
   update_state(NeedData);
 
   port_range_type range = get_iports("InputImage");

@@ -94,7 +94,6 @@ bool UShortToFloat::run( itk::Object *obj_InputImage)
     return false;
   }
 
-  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
 
   typedef typename itk::CastImageFilter< InputImageType, OutputImageType > CasterType;
 
@@ -135,7 +134,6 @@ bool UShortToFloat::run2( itk::Object *obj_InputImage)
     return false;
   }
 
-  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
 
   typedef typename itk::VectorCastImageFilter< InputImageType, OutputImageType > CasterType;
 

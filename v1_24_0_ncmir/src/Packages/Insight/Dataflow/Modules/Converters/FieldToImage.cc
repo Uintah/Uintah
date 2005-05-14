@@ -122,8 +122,6 @@ bool FieldToImage::run( const FieldHandle &fh)
     return false;
   }
 
-  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
-
   if(current_type == LATVOLFIELD) {
     typedef LatVolField< data > LatVolFieldType;
     typedef typename itk::Image<typename LatVolFieldType::value_type, 3> ImageType;
@@ -256,8 +254,6 @@ bool FieldToImage::run_vector( const FieldHandle &fh)
   else {
     return false;
   }
-
-  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
 
   if(current_type == LATVOLFIELD) {
     typedef LatVolField< Vector > LatVolFieldType;

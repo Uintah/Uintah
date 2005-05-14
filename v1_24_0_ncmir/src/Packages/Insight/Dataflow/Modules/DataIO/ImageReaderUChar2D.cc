@@ -89,8 +89,6 @@ void
     return;
   }
 
-  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
-
   typedef itk::ImageFileReader<itk::Image<unsigned char, 2> > FileReaderType;
   
   // create a new reader

@@ -141,8 +141,6 @@ void ExtractImageFilter::execute(){
     error("Empty input Image.");
     return;
   }
-
-  itk::MultiThreader::SetGlobalMaximumNumberOfThreads(1);
   
   itk::Object *n = imgH.get_rep()->data_.GetPointer();
   
