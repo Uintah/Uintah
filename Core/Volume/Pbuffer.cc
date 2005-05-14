@@ -211,13 +211,13 @@ Pbuffer::create ()
   if (sci_getenv_p("SCIRUN_DISABLE_PBUFFERS"))
   {
     mSupported = false;
-    return true;
+    return false;
   }
 
 #if defined(__ECC) || defined(_WIN32)
   // For now no Pbuffer support on the Altix or windows system
   mSupported = false;
-  return true;
+  return false;
 #else
   if(!mInit) {
     /* query GLX version */
@@ -277,14 +277,14 @@ Pbuffer::create ()
     if (mImpl->mDisplay == 0)
     {
       cerr << "[Pbuffer::create] Failed to obtain current display" << endl;
-      return true;
+      return false;
     }
     // get current context
     GLXContext ctx = glXGetCurrentContext();
     if (ctx == 0)
     {
       cerr << "[Pbuffer::create] Failed to obtain current context" << endl;
-      return true;
+      return false;
     }
     // find suitable visual for the pbuffer
     int attrib[64];
@@ -386,7 +386,7 @@ Pbuffer::create ()
       {
         cerr << "[Pbuffer::create] Failed to query fbconfig id from context"
              << endl;
-        return true;
+        return false;
       }
       // choose fb config with given id
       attrib[0] = GLX_FBCONFIG_ID;
@@ -399,7 +399,7 @@ Pbuffer::create ()
     if (fbc == 0 || n_fbc == 0)
     {
       cerr << "[Pbuffer::create] Failed to obtain fb config" << endl;
-      return true;
+      return false;
     }
     glXGetFBConfigAttrib(mImpl->mDisplay, *fbc, GLX_FBCONFIG_ID, &mVisualId);
     glXGetFBConfigAttrib(mImpl->mDisplay, *fbc, GLX_RED_SIZE, &mNumColorBits);
@@ -427,7 +427,7 @@ Pbuffer::create ()
     if (mImpl->mPbuffer == 0)
     {
       cerr << "[Pbuffer::create] Failed to create pbuffer" << endl;
-      return true;
+      return false;
     }
     // create context
     if (mSeparate)
@@ -437,7 +437,7 @@ Pbuffer::create ()
       if (mImpl->mContext == 0)
       {
         cerr << "[Pbuffer::create] Failed to create context" << endl;
-        return true;
+        return false;
       }
     }
     else
@@ -480,12 +480,12 @@ Pbuffer::create ()
       }
       if(!mShader) {
         mShader = new FragmentProgramARB(program);
-        if(mShader->create()) return true;
+        if(mShader->create()) return false;
       }
     }
-    return false;
+    return true;
   }
-  return true;
+  return false;
 #endif
 }
 
