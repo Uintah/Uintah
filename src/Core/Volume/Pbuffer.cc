@@ -1058,6 +1058,16 @@ Pbuffer::makeCurrent ()
 #endif
 }
 
+bool
+Pbuffer::is_current ()
+{
+#ifndef _WIN32
+  return (mImpl->mContext == glXGetCurrentContext());
+#else // WIN32
+  return (mImpl->mRc == wglGetCurrentContext());
+#endif
+}
+
 void
 Pbuffer::swapBuffers ()
 {
