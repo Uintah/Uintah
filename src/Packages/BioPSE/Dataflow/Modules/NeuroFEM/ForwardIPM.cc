@@ -921,7 +921,11 @@ ForwardIPM::execute()
   try {
     // Make our tmp directory.
     mode_t umsk = umask(00);
+#ifndef _WIN32
     if (mkdir(tmpdir.c_str(), 0700) == -1)
+#else
+    if (mkdir(tmpdir.c_str()) == -1)
+#endif
     {
       //error("Unable to open a temporary working directory.");
       //throw false;
