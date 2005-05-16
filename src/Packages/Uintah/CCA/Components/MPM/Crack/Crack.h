@@ -204,10 +204,17 @@ class Crack
     // Crack geometry
     // Quadrilateral segments of cracks
     vector<vector<vector<Point> > > rectangles;
-    // Resolutions of quad cracks along p1-p2 and p2-p3 
+    // Resolutions of quadrilater cracks along p1-p2 and p2-p3 
     vector<vector<int> >  rectN12,rectN23;       
     // Sides at crack front
     vector<vector<vector<short> > > rectCrackSidesAtFront;
+
+    // Curved quadrilateral segments of cracks
+    vector<vector<vector<Point> > > crectangles;
+    vector<vector<int> > crectNStraightEdges;
+    vector<vector<vector<Point> > > crectPtsEdge2;
+    vector<vector<vector<Point> > > crectPtsEdge4;
+    vector<vector<vector<short> > > crectCrackSidesAtFront;
     
     // Trianglular segements of cracks 
     vector<vector<vector<Point> > > triangles;
@@ -325,6 +332,7 @@ class Crack
 
     // Read in crack geometries
     void ReadRectangularCracks(const int&,const ProblemSpecP&);
+    void ReadCurvedRectangularCracks(const int&,const ProblemSpecP&);    
     void ReadTriangularCracks(const int&,const ProblemSpecP&); 
     void ReadArcCracks(const int&,const ProblemSpecP&); 
     void ReadEllipticCracks(const int&,const ProblemSpecP&); 
@@ -333,6 +341,7 @@ class Crack
 
     // Discretize crack plane
     void DiscretizeRectangularCracks(const int&,int&);
+    void DiscretizeCurvedRectangularCracks(const int&,int&);
     void DiscretizeTriangularCracks(const int&,int&);
     void DiscretizeArcCracks(const int&,int&);
     void DiscretizeEllipticCracks(const int&,int&);
