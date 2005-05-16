@@ -296,7 +296,6 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
 //       if (stereo_)
 // 	dwFlags |= PFD_STEREO;
 
-  fprintf(stderr,"C TkOpenGLContext:%d\n",iii++);
       PIXELFORMATDESCRIPTOR npfd = { 
 	sizeof(PIXELFORMATDESCRIPTOR),  
 	1,                     // version number 
@@ -716,7 +715,6 @@ TkOpenGLContext::listvisuals()
    int nvis = 1;
   for(i=0;i<nvis;i++)
   {
-    fprintf(stderr,"In loop\n");
     int score=0;
     int value;
     value = ((pfd.dwFlags & PFD_SUPPORT_OPENGL) == PFD_SUPPORT_OPENGL);
