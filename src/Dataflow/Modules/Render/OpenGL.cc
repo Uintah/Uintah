@@ -46,7 +46,7 @@
 #include <sci_glx.h>
 #include <sci_defs/bits_defs.h>
 #include <Dataflow/Modules/Render/OpenGL.h>
-#include <Core/Geom/PBuffer.h>
+#include <Core/Geom/Pbuffer.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/Util/Environment.h>

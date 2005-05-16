@@ -33,7 +33,7 @@
 #include <Core/Volume/VolumeRenderer.h>
 #include <Core/Volume/VolShader.h>
 #include <Core/Geom/ShaderProgramARB.h>
-#include <Core/Geom/PBuffer.h>
+#include <Core/Geom/Pbuffer.h>
 #include <Core/Volume/TextureBrick.h>
 #include <Core/Util/DebugStream.h>
 
