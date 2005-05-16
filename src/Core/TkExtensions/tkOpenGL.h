@@ -40,10 +40,10 @@
 #include <tk.h>
 
 #ifdef _WIN32
-#  include <windows.h>
-#  include <tkWinInt.h>
-#  include <tkWinPort.h>
-#  include <X11\XUtil.h>
+#include <windows.h>
+#include <tkWinInt.h>
+#include <tkWinPort.h>
+#include <X11\XUtil.h>
 #endif
 
 #ifdef __sgi
@@ -85,11 +85,14 @@ typedef struct {
     Display *display;		/* X's token for the window's display. */
     Window x11_win;
     int screen_number;
+    XVisualInfo* vi;
 #ifndef _WIN32
     GLXWindow glx_win;
     GLXContext cx;
-    XVisualInfo* vi;
     GLXFBConfig *fb_configs;
+#else
+  HDC hDC;
+  HGLRC cx;
 #endif
 } OpenGLClientData;
 
