@@ -480,7 +480,9 @@ EditColorMap::DrawGraphs( int flush)
   glTexImage1D(GL_TEXTURE_1D, 0, 4, 256, 0, GL_RGBA, GL_FLOAT,
 	       cmap->get_rgba());
 
-#ifndef _WIN32
+#ifndef GL_CLAMP_TO_EDGE
+  glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+#else
   glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 #endif
   if (cmap->resolution() == 256)
