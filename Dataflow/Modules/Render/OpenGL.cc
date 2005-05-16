@@ -47,6 +47,7 @@
 #include <sci_defs/bits_defs.h>
 #include <Dataflow/Modules/Render/OpenGL.h>
 #include <Dataflow/Modules/Render/PBuffer.h> // #defines HAVE_PBUFFER
+#include <Core/Geom/PBuffer.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/Util/Environment.h>
@@ -746,11 +747,8 @@ OpenGL::redraw_frame()
 
     if (!pbuffer_)
     {
-      pbuffer_ = scinew PBuffer();
-      if (!pbuffer_->create(tk_gl_context_->display_,
-			    tk_gl_context_->screen_number_,
-			    tk_gl_context_->context_,
-			    xres_, yres_, 8, 8))
+      pbuffer_ = scinew Pbuffer(xres_, yres_);
+      if (!pbuffer_->create())
       {
 	pbuffer_->destroy();
 	delete pbuffer_;
