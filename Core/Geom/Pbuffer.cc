@@ -465,10 +465,10 @@ WGLisExtensionSupported(const char *extension)
 #endif
 
 
+
 bool
 Pbuffer::create ()
 {
-
   if (sci_getenv_p("SCIRUN_DISABLE_PBUFFERS"))
   {
     mSupported = false;
@@ -1255,7 +1255,7 @@ Pbuffer::set_use_texture_matrix(bool b)
 
 
 Pbuffer::Pbuffer (int width, int height, int format, int numColorBits,
-                  /* int numChannels, */ bool isRenderTex, int isDoubleBuffer,
+                  bool isRenderTex, int isDoubleBuffer,
                   int numAuxBuffers, int numDepthBits, int numStencilBits,
                   int numAccumBits)
   : width_(width),
