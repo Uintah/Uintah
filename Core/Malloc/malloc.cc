@@ -55,8 +55,12 @@
 #error "Need bcopy define for this architecture"
 #endif
 
-#ifdef __GNUG__
+#ifndef _WIN32
+#ifdef __GNUG__ 
 #define THROWCLAUSE throw()
+#else
+#define THROWCLAUSE
+#endif
 #else
 #define THROWCLAUSE
 #endif
