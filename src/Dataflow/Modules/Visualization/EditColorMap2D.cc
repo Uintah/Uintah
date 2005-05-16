@@ -1085,7 +1085,10 @@ EditColorMap2D::build_colormap_texture()
     if (rebuild_texture) {
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-#ifndef _WIN32
+#ifndef GL_CLAMP_TO_EDGE
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+#else
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 #endif
@@ -1159,7 +1162,10 @@ EditColorMap2D::build_histogram_texture()
   glBindTexture(GL_TEXTURE_2D, histogram_texture_id_);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-#ifndef _WIN32
+#ifndef GL_CLAMP_TO_EDGE 
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+#else
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 #endif
@@ -1279,6 +1285,9 @@ EditColorMap2D::redraw(bool force_cmap_dirty, bool save_ppm)
 #ifndef _WIN32
     glReadPixels(0, 0,width_, height_,
 		 GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, FrameBuffer);
+#else
+    glReadPixels(0, 0,width_, height_,
+		 GL_RGBA, GL_UNSIGNED_INT, FrameBuffer);
 #endif
     string fn = filename_.get()+".ppm";
     remark("Writing PPM to file: "+fn);
