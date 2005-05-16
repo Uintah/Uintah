@@ -25,6 +25,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
 #include <Core/Containers/StaticArray.h>
+#include <Core/Geometry/Vector.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <string>
@@ -58,7 +59,7 @@ namespace Uintah {
       
       virtual void updateExchangeCoefficients(const ProblemSpecP& params, 
                                               GridP& grid,
-                                             SimulationStateP&);
+                                              SimulationStateP&);
       
       virtual void scheduleInitialize(const LevelP& level, 
                                       SchedulerP&);
@@ -72,7 +73,7 @@ namespace Uintah {
                                                 SchedulerP&);
       
       virtual void scheduleTimeAdvance( const LevelP& level, 
-					SchedulerP&, int step, int nsteps );
+                                        SchedulerP&, int step, int nsteps );
                                              
       void scheduleComputePressure(SchedulerP&, 
                                    const PatchSet*,
@@ -237,8 +238,8 @@ namespace Uintah {
                                        const LevelP& level,
                                        const MaterialSet* matls);
       void scheduleUpdateVolumeFraction(SchedulerP& sched,
-				            const LevelP& level,
-				            const MaterialSet* matls);
+                                            const LevelP& level,
+                                            const MaterialSet* matls);
                                         
       void scheduleComputeLagrangian_Transported_Vars(SchedulerP& sched,
                                                       const PatchSet* patches,
@@ -270,16 +271,16 @@ namespace Uintah {
                                      DataWarehouse* new_dw);
                                           
       void actuallyComputeStableTimestep(const ProcessorGroup*, 
+                                         const PatchSubset* patch,  
+                                         const MaterialSubset* matls,
+                                         DataWarehouse*, 
+                                         DataWarehouse*);
+
+      void computeEquilibrationPressure(const ProcessorGroup*, 
                                         const PatchSubset* patch,  
                                         const MaterialSubset* matls,
                                         DataWarehouse*, 
                                         DataWarehouse*);
-
-      void computeEquilibrationPressure(const ProcessorGroup*, 
-                                          const PatchSubset* patch,  
-                                          const MaterialSubset* matls,
-                                          DataWarehouse*, 
-                                          DataWarehouse*);
       
       void computeVel_FC(const ProcessorGroup*, 
                          const PatchSubset*,                   
@@ -409,10 +410,10 @@ namespace Uintah {
 //__________________________________
 //   RF TASKS    
       void actuallyComputeStableTimestepRF(const ProcessorGroup*, 
-                                        const PatchSubset* patch,  
-                                        const MaterialSubset* matls,
-                                        DataWarehouse*, 
-                                        DataWarehouse*);
+                                           const PatchSubset* patch,  
+                                           const MaterialSubset* matls,
+                                           DataWarehouse*, 
+                                           DataWarehouse*);
                                                                  
       void computeRateFormPressure(const ProcessorGroup*,
                                    const PatchSubset* patch,
@@ -496,11 +497,11 @@ namespace Uintah {
                          DataWarehouse* new_dw);
                                                      
       void implicitPressureSolve(const ProcessorGroup*,
-		                   const PatchSubset* patches,
-		                   const MaterialSubset*,     
-		                   DataWarehouse* old_dw,     
+                                 const PatchSubset* patches,
+                                 const MaterialSubset*,     
+                                 DataWarehouse* old_dw,     
                                  DataWarehouse* new_dw,     
-		                   LevelP level,     
+                                 LevelP level,     
                                  Scheduler* sched,
                                  const MaterialSubset*,
                                  const MaterialSubset*);
@@ -540,7 +541,7 @@ namespace Uintah {
                             const MaterialSubset* matls,
                             DataWarehouse*,
                             DataWarehouse*);
-                                    
+                              
       void printData_problemSetup(const ProblemSpecP& prob_spec);
 
       void printData( int indx,
@@ -603,10 +604,9 @@ namespace Uintah {
       void getExchangeCoefficients( FastMatrix& K,
                                     FastMatrix& H ); 
 
-
       bool areAllValuesPositive( CCVariable<double> & src, 
                                  IntVector& neg_cell );
-                                 
+                                                                       
       IntVector upwindCell_X(const IntVector& c, 
                              const double& var,              
                              double is_logical_R_face );    
@@ -673,32 +673,32 @@ namespace Uintah {
     
 
     virtual void refineBoundaries(const Patch* patch,
-				  CCVariable<double>& val,
-				  DataWarehouse* new_dw,
-				  const VarLabel* label,
-				  int matl, double factor);
+                                  CCVariable<double>& val,
+                                  DataWarehouse* new_dw,
+                                  const VarLabel* label,
+                                  int matl, double factor);
     virtual void refineBoundaries(const Patch* patch,
-				  CCVariable<Vector>& val,
-				  DataWarehouse* new_dw,
-				  const VarLabel* label,
-				  int matl, double factor);
+                                  CCVariable<Vector>& val,
+                                  DataWarehouse* new_dw,
+                                  const VarLabel* label,
+                                  int matl, double factor);
     virtual void refineBoundaries(const Patch* patch,
-				  SFCXVariable<double>& val,
-				  DataWarehouse* new_dw,
-				  const VarLabel* label,
-				  int matl, double factor);
+                                  SFCXVariable<double>& val,
+                                  DataWarehouse* new_dw,
+                                  const VarLabel* label,
+                                  int matl, double factor);
     virtual void refineBoundaries(const Patch* patch,
-				  SFCYVariable<double>& val,
-				  DataWarehouse* new_dw,
-				  const VarLabel* label,
-				  int matl, double factor);
+                                  SFCYVariable<double>& val,
+                                  DataWarehouse* new_dw,
+                                  const VarLabel* label,
+                                  int matl, double factor);
     virtual void refineBoundaries(const Patch* patch,
-				  SFCZVariable<double>& val,
-				  DataWarehouse* new_dw,
-				  const VarLabel* label,
-				  int matl, double factor);
+                                  SFCZVariable<double>& val,
+                                  DataWarehouse* new_dw,
+                                  const VarLabel* label,
+                                  int matl, double factor);
     virtual void addRefineDependencies(Task* task, const VarLabel* var,
-				       int step, int nsteps);
+                                       int step, int nsteps);
 
     MaterialSubset* d_press_matl;
 
@@ -764,6 +764,7 @@ namespace Uintah {
       MPMICELabel* MIlb;
       SimulationStateP d_sharedState;
       Output* dataArchiver;
+      double d_EVIL_NUM;
       double d_SMALL_NUM; 
       double d_TINY_RHO;
       double d_initialDt;
@@ -847,7 +848,41 @@ namespace Uintah {
        std::vector<TransportedVariable*> tvars;
       };
       ICEModelSetup* d_modelSetup;
+      
+      //______________________________________________________________________
+      //      FUNCTIONS
+      inline bool isEqual(const Vector& a, const Vector& b){
+        return ( a.x() == b.x() && a.y() == b.y() && a.z() == b.z());
+      };
+      
+      inline bool isEqual(const double a, const double b){
+        return a == b;
+      };
+      /*_____________________________________________________________________
+       Purpose~  Returns if any CCVariable == value.  Useful for detecting
+       uninitialized variables
+       _____________________________________________________________________  */
+      template<class T>
+        bool isEqual(T value,
+                     CCVariable<T>& q_CC, 
+                     IntVector& cell )
+      {
+        IntVector l = q_CC.getLowIndex();
+        IntVector h = q_CC.getHighIndex();
+        CellIterator iterLim = CellIterator(l,h);
+        
+        for(CellIterator iter=iterLim; !iter.done();iter++) {
+          IntVector c = *iter;
+          if (isEqual(q_CC[c],value)){
+            cell = c;
+            return true;   
+          } 
+        }
+        cell = IntVector(0,0,0);
+        return false;
+      }
     };
+
 } // End namespace Uintah
 
 #endif

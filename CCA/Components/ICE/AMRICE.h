@@ -55,6 +55,7 @@ namespace Uintah {
                                const VarLabel* var,
                                int step, 
                                int nsteps);
+
   private:
 
     void initialize(const ProcessorGroup*,
@@ -62,6 +63,18 @@ namespace Uintah {
                     const MaterialSubset* matls,
                     DataWarehouse* old_dw, 
                     DataWarehouse* new_dw);
+                    
+    template<class T>
+    void refine_CF_interfaceOperator(const Patch* patch, 
+                                     const Level* fineLevel,
+                                     const Level* coarseLevel,
+                                     CCVariable<T>& Q, 
+                                     const VarLabel* label,
+                                     double subCycleProgress_var, 
+                                     int matl, 
+                                     DataWarehouse* fine_new_dw,
+                                     DataWarehouse* coarse_old_dw,
+                                     DataWarehouse* coarse_new_dw);
                     
     void refineCoarseFineInterface(const ProcessorGroup*,
                                    const PatchSubset* patches,
@@ -123,10 +136,10 @@ namespace Uintah {
                 DataWarehouse* new_dw);               
                  
     void errorEstimate(const ProcessorGroup*,
-			  const PatchSubset* patches,
-			  const MaterialSubset* matls,
-			  DataWarehouse*,
-			  DataWarehouse* new_dw,
+                       const PatchSubset* patches,
+                       const MaterialSubset* matls,
+                       DataWarehouse*,
+                       DataWarehouse* new_dw,
                        bool initial);
                        
     void compute_q_CC_gradient( constCCVariable<double>& q_CC,
