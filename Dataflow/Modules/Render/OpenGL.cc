@@ -99,17 +99,32 @@ OpenGL::query(GuiInterface* gui)
 #ifndef _WIN32
   int have_opengl=glXQueryExtension
     (Tk_Display(Tk_MainWindow(the_interp)), NULL, NULL);
-#else
-  int have_opengl = 0;
-#endif
   gui->unlock();
   if (!have_opengl)
     cerr << "glXQueryExtension() returned NULL.\n"
       "** XFree86 NOTE **  Do you have the line 'Load \"glx\"'"
       " in the Modules section of your XF86Config file?\n";
+#else
+  int have_opengl = 0;
+
+  HWND hwnd = Tk_GetHWND(Tk_WindowId(Tk_MainWindow(the_interp)));
+  HDC dc = GetDC(hwnd);
+  // get the current pixel format index 
+  int iPixelFormat = GetPixelFormat(dc); 
+  PIXELFORMATDESCRIPTOR  pfd;
+
+  // obtain a detailed description of that pixel format 
+  DescribePixelFormat(dc, iPixelFormat, 
+		      sizeof(PIXELFORMATDESCRIPTOR), &pfd); 
+  have_opengl = ((pfd.dwFlags & PFD_SUPPORT_OPENGL) == PFD_SUPPORT_OPENGL);
+ 
+  gui->unlock();
+  if (!have_opengl)
+    cerr << "DescribePixelFormat found no OpenGL  support for TKWin DC\n";
+
+#endif
   return have_opengl;
 }
-
 
 OpenGL::OpenGL(GuiInterface* gui, Viewer *viewer, ViewWindow *vw) :
   xres_(0),
@@ -156,6 +171,7 @@ OpenGL::OpenGL(GuiInterface* gui, Viewer *viewer, ViewWindow *vw) :
   img_mailbox_("OpenGL renderer image data mailbox", 5),
   pbuffer_(0)
 {
+
   fps_timer_.start();
 }
 
@@ -214,6 +230,7 @@ OpenGLHelper::OpenGLHelper(OpenGL* opengl) :
 
 OpenGLHelper::~OpenGLHelper()
 {
+
 }
 
 
@@ -1779,6 +1796,7 @@ ViewWindow::setMouse(DrawInfoOpenGL* drawinfo)
 void
 GeomViewerItem::draw(DrawInfoOpenGL* di, Material *m, double time)
 {
+
   // Here we need to query the ViewWindow with our name and give it our
   // di so it can change things if they need to be.
   di->viewwindow->setDI(di, name_);
