@@ -93,7 +93,7 @@ using std::vector;
 
 class OpenGLHelper;
 class GuiArgs;
-class PBuffer;
+class Pbuffer;
 
 struct GetReq {
   int datamask;
@@ -243,7 +243,7 @@ private:
   MPEGe_options		mpeg_options_;
 #endif // HAVE_MPEG
 
-  PBuffer		*pbuffer_;
+  Pbuffer		*pbuffer_;
 };
 
 } // End namespace SCIRun
