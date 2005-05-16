@@ -398,72 +398,70 @@ namespace SCIRun {
 struct PbufferImpl
 {
 #ifndef _WIN32
-  PbufferImpl ()
-   : mDisplay(0), mPbuffer(0), mContext(0) {}
-  Display* mDisplay;
-  GLXPbuffer mPbuffer; 
-  GLXContext mContext;
+  PbufferImpl () : display_(0), pbuffer_(0), context_(0) {}
+  Display* display_;
+  GLXPbuffer pbuffer_; 
+  GLXContext context_;
 
-  Display* mSaveDisplay;
-  GLXDrawable mSaveDrawable;
-  GLXContext mSaveContext;
+  Display* saved_display_;
+  GLXDrawable saved_drawable_;
+  GLXContext saved_context_;
 #else // _WIN32
-  PbufferImpl() : mPbuffer(0), mDc(0), mRc(0) {}
-  HPBUFFERARB mPbuffer; 
-  HDC   mDc;
-  HGLRC mRc;
-  HDC   mSaveDc;
-  HGLRC mSaveRc;
+  PbufferImpl() : pbuffer_(0), dc_(0), rc_(0) {}
+  HPBUFFERARB pbuffer_; 
+  HDC   dc_;
+  HGLRC rc_;
+  HDC   saved_dc_;
+  HGLRC saved_rc_;
 #endif
 };
 
 
 #ifdef _WIN32
 
-  bool WGLisExtensionSupported(const char *extension)
+bool WGLisExtensionSupported(const char *extension)
+{
+  const size_t extlen = strlen(extension);
+  const char *supported = NULL;
+
+  // Try To Use wglGetExtensionStringARB On Current DC, If Possible
+  if (!wglGetExtensionsStringARB)
+    wglGetExtensionsStringARB = 
+      (PFNWGLGETEXTENSIONSSTRINGARBPROC)wglGetProcAddress("wglGetExtensionsStringARB");
+    
+  if (wglGetExtensionsStringARB)
+    supported = wglGetExtensionsStringARB(wglGetCurrentDC());
+    
+  // If That Failed, Try Standard Opengl Extensions String
+  if (supported == NULL)
+    supported = (char*)glGetString(GL_EXTENSIONS);
+    
+  // If That Failed Too, Must Be No Extensions Supported
+  if (supported == NULL)
+    return false;
+    
+  // Begin Examination At Start Of String, Increment By 1 On False Match
+  for (const char* p = supported; ; p++)
   {
-    const size_t extlen = strlen(extension);
-    const char *supported = NULL;
-
-    // Try To Use wglGetExtensionStringARB On Current DC, If Possible
-    if (!wglGetExtensionsStringARB)
-      wglGetExtensionsStringARB = 
-	(PFNWGLGETEXTENSIONSSTRINGARBPROC)wglGetProcAddress("wglGetExtensionsStringARB");
-    
-    if (wglGetExtensionsStringARB)
-      supported = wglGetExtensionsStringARB(wglGetCurrentDC());
-    
-    // If That Failed, Try Standard Opengl Extensions String
-    if (supported == NULL)
-      supported = (char*)glGetString(GL_EXTENSIONS);
-    
-    // If That Failed Too, Must Be No Extensions Supported
-    if (supported == NULL)
-      return false;
-    
-    // Begin Examination At Start Of String, Increment By 1 On False Match
-    for (const char* p = supported; ; p++)
-      {
-	// Advance p Up To The Next Possible Match
-	p = strstr(p, extension);
+    // Advance p Up To The Next Possible Match
+    p = strstr(p, extension);
 	
-	if (p == NULL)
-	  return false;						// No Match
+    if (p == NULL)
+      return false;						// No Match
 	
-	// Make Sure That Match Is At The Start Of The String Or That
-	// The Previous Char Is A Space, Or Else We Could Accidentally
-	// Match "wglFunkywglExtension" With "wglExtension"
+    // Make Sure That Match Is At The Start Of The String Or That
+    // The Previous Char Is A Space, Or Else We Could Accidentally
+    // Match "wglFunkywglExtension" With "wglExtension"
 	
-	// Also, Make Sure That The Following Character Is Space Or NULL
-	// Or Else "wglExtensionTwo" Might Match "wglExtension"
-	if ((p==supported || p[-1]==' ') && (p[extlen]=='\0' || p[extlen]==' '))
-	  return true;						// Match
-      }
+    // Also, Make Sure That The Following Character Is Space Or NULL
+    // Or Else "wglExtensionTwo" Might Match "wglExtension"
+    if ((p==supported || p[-1]==' ') && (p[extlen]=='\0' || p[extlen]==' '))
+      return true;						// Match
   }
-  
-
+}
 
 #endif
+
 
 
 bool
@@ -513,48 +511,54 @@ Pbuffer::create ()
       mSupported &&
       WGLisExtensionSupported("WGL_ARB_render_texture");
 
-    if (mSupported) {
+    if (mSupported)
+    {
       wglBindTexImageARB = (PFNWGLBINDTEXIMAGEARBPROC)wglGetProcAddress("wglBindTexImageARB");
       wglReleaseTexImageARB = (PFNWGLRELEASETEXIMAGEARBPROC)wglGetProcAddress("wglReleaseTexImageARB");
     }
 
-    // check for version
-
+    // Check for version.
     if(minor < 3 || (mFormat == GL_FLOAT && 
-		     !(mATI_pixel_format_float || mNV_float_buffer))) {
+		     !(mATI_pixel_format_float || mNV_float_buffer)))
+    {
       mSupported = false;
-    } else {
+    }
+    else
+    {
       mSupported = true;
     }
-
     mInit = true;
-
   }
 
-    if (mSupported) {
-      mImpl->mDc =  wglGetCurrentDC();
-      if (mImpl->mDc == 0)
-	{
-	  cerr << "[Pbuffer::create] Failed to obtain current device context" << endl;
-	  return true;
-	}
-      // get current context
+    if (mSupported)
+    {
+      mImpl->dc_ =  wglGetCurrentDC();
+      if (mImpl->dc_ == 0)
+      {
+	cerr << "[Pbuffer::create] Failed to obtain current device context" << endl;
+	return true;
+      }
+
+      // Get current context.
       HGLRC rc = wglGetCurrentContext();
       if (rc == 0)
-	{
-	  cerr << "[Pbuffer::create] Failed to obtain current GL context" << endl;
-	  return true;
-	}
+      {
+	cerr << "[Pbuffer::create] Failed to obtain current GL context" << endl;
+	return true;
+      }
       int attrib[64];
       int i;
       i = 0;
-      // accelerated OpenGL support
+
+      // Accelerated OpenGL support.
       attrib[i++] = WGL_SUPPORT_OPENGL_ARB;
       attrib[i++] = GL_TRUE;
-      // pbuffer capable
+
+      // Pbuffer capable.
       attrib[i++] = WGL_DRAW_TO_PBUFFER_ARB;
       attrib[i++] = GL_TRUE;
-      // format
+
+      // Format
       if (mFormat == GL_FLOAT)
 	{
 	  if (mATI_pixel_format_float)
@@ -640,7 +644,7 @@ Pbuffer::create ()
       attrib[i] = 0;
       unsigned int c = 0;
       int pf;
-      if (wglChoosePixelFormatARB(mImpl->mDc, attrib, 0, 1, &pf, &c) == 0 || c == 0)
+      if (wglChoosePixelFormatARB(mImpl->dc_, attrib, 0, 1, &pf, &c) == 0 || c == 0)
 	{
 	  cerr << "[Pbuffer::Pbuffer] Failed to find suitable pixel format\n";
 	  return true;
@@ -674,35 +678,35 @@ Pbuffer::create ()
       attrib[i++] = GL_FALSE;
       attrib[i++] = 0;
       // create pbuffer
-      mImpl->mPbuffer = wglCreatePbufferARB(mImpl->mDc, pf, mWidth, mHeight, attrib);
-      if (mImpl->mPbuffer == 0)
+      mImpl->pbuffer_ = wglCreatePbufferARB(mImpl->dc_, pf, mWidth, mHeight, attrib);
+      if (mImpl->pbuffer_ == 0)
 	{
 	  cerr << "[Pbuffer::Pbuffer] Failed to create pbuffer\n";
 	  return true;
 	}
       // create device context
-      mImpl->mDc = wglGetPbufferDCARB(mImpl->mPbuffer);
-      if (mImpl->mDc == 0)
+      mImpl->dc_ = wglGetPbufferDCARB(mImpl->pbuffer_);
+      if (mImpl->dc_ == 0)
 	{
 	  cerr << "[Pbuffer::Pbuffer] Failed to create device context\n";
 	  return true;
 	}
       // create rendering context
-      mImpl->mRc = wglCreateContext(mImpl->mDc);
-      if (mImpl->mRc == 0)
+      mImpl->rc_ = wglCreateContext(mImpl->dc_);
+      if (mImpl->rc_ == 0)
 	{
 	  cerr << "[Pbuffer::Pbuffer] Failed to create rendering context\n";
 	  return true;
 	}
-      if (wglShareLists(rc, mImpl->mRc) == 0)
+      if (wglShareLists(rc, mImpl->rc_) == 0)
 	{
 	  cerr << "[Pbuffer::create] Failed to set context sharing\n";
 	  return true;
 	}
       
       // get actual size
-      wglQueryPbufferARB(mImpl->mPbuffer, WGL_PBUFFER_WIDTH_ARB, &mWidth);
-      wglQueryPbufferARB(mImpl->mPbuffer, WGL_PBUFFER_HEIGHT_ARB, &mHeight);
+      wglQueryPbufferARB(mImpl->pbuffer_, WGL_PBUFFER_WIDTH_ARB, &mWidth);
+      wglQueryPbufferARB(mImpl->pbuffer_, WGL_PBUFFER_HEIGHT_ARB, &mHeight);
       if (mRenderTex) {
 	// create pbuffer texture object
 	glGenTextures(1, &mTex);
@@ -800,8 +804,8 @@ Pbuffer::create ()
   
   if(mSupported) {
     // get current display
-    mImpl->mDisplay = glXGetCurrentDisplay();
-    if (mImpl->mDisplay == 0)
+    mImpl->display_ = glXGetCurrentDisplay();
+    if (mImpl->display_ == 0)
     {
       cerr << "[Pbuffer::create] Failed to obtain current display" << endl;
       return false;
@@ -909,7 +913,7 @@ Pbuffer::create ()
     {
       // get fb config id for current context
       int id = 0;
-      if (glXQueryContext(mImpl->mDisplay, ctx, GLX_FBCONFIG_ID, &id) != Success)
+      if (glXQueryContext(mImpl->display_, ctx, GLX_FBCONFIG_ID, &id) != Success)
       {
         cerr << "[Pbuffer::create] Failed to query fbconfig id from context"
              << endl;
@@ -921,15 +925,15 @@ Pbuffer::create ()
       attrib[2] = None;
     }
     // choose fb config
-    fbc = glXChooseFBConfig(mImpl->mDisplay, DefaultScreen(mImpl->mDisplay),
+    fbc = glXChooseFBConfig(mImpl->display_, DefaultScreen(mImpl->display_),
                             attrib, &n_fbc);
     if (fbc == 0 || n_fbc == 0)
     {
       cerr << "[Pbuffer::create] Failed to obtain fb config" << endl;
       return false;
     }
-    glXGetFBConfigAttrib(mImpl->mDisplay, *fbc, GLX_FBCONFIG_ID, &mVisualId);
-    glXGetFBConfigAttrib(mImpl->mDisplay, *fbc, GLX_RED_SIZE, &mNumColorBits);
+    glXGetFBConfigAttrib(mImpl->display_, *fbc, GLX_FBCONFIG_ID, &mVisualId);
+    glXGetFBConfigAttrib(mImpl->display_, *fbc, GLX_RED_SIZE, &mNumColorBits);
     // create pbuffer
     i = 0;
     attrib[i++] = GLX_PBUFFER_WIDTH;
@@ -950,8 +954,8 @@ Pbuffer::create ()
       attrib[i++] = GL_FALSE;
     }
     attrib[i] = None;
-    mImpl->mPbuffer = glXCreatePbuffer(mImpl->mDisplay, *fbc, attrib);
-    if (mImpl->mPbuffer == 0)
+    mImpl->pbuffer_ = glXCreatePbuffer(mImpl->display_, *fbc, attrib);
+    if (mImpl->pbuffer_ == 0)
     {
       cerr << "[Pbuffer::create] Failed to create pbuffer" << endl;
       return false;
@@ -959,9 +963,9 @@ Pbuffer::create ()
     // create context
     if (mSeparate)
     {
-      mImpl->mContext = glXCreateNewContext(mImpl->mDisplay, *fbc, GLX_RGBA_TYPE,
+      mImpl->context_ = glXCreateNewContext(mImpl->display_, *fbc, GLX_RGBA_TYPE,
                                             ctx, True);
-      if (mImpl->mContext == 0)
+      if (mImpl->context_ == 0)
       {
         cerr << "[Pbuffer::create] Failed to create context" << endl;
         return false;
@@ -969,12 +973,12 @@ Pbuffer::create ()
     }
     else
     {
-      mImpl->mContext = ctx;
+      mImpl->context_ = ctx;
     }
     // query attributes
-    glXQueryDrawable(mImpl->mDisplay, mImpl->mPbuffer, GLX_WIDTH,
+    glXQueryDrawable(mImpl->display_, mImpl->pbuffer_, GLX_WIDTH,
                      (unsigned int*)&mWidth);
-    glXQueryDrawable(mImpl->mDisplay, mImpl->mPbuffer, GLX_HEIGHT,
+    glXQueryDrawable(mImpl->display_, mImpl->pbuffer_, GLX_HEIGHT,
                      (unsigned int*)&mHeight);
     // ...
     if (mRenderTex) {
@@ -1020,41 +1024,43 @@ void
 Pbuffer::destroy ()
 {
 #ifndef _WIN32
-  if (mSeparate && mImpl->mContext != 0)
+  if (mSeparate && mImpl->context_ != 0)
   {
-    //glXMakeCurrent(mImpl->mDisplay, mImpl->mPbuffer, 0);
-    glXDestroyContext(mImpl->mDisplay, mImpl->mContext);
+    //glXMakeCurrent(mImpl->display_, mImpl->pbuffer_, 0);
+    glXDestroyContext(mImpl->display_, mImpl->context_);
   }
-  if (mImpl->mPbuffer != 0)
-    glXDestroyPbuffer(mImpl->mDisplay, mImpl->mPbuffer);
+  if (mImpl->pbuffer_ != 0)
+  {
+    glXDestroyPbuffer(mImpl->display_, mImpl->pbuffer_);
+  }
   if(mShader)
+  {
     mShader->destroy();
+  }
 #else // WIN32
-  if (/*mSeparate && */mImpl->mRc != 0)
+  if (/*mSeparate && */mImpl->rc_ != 0)
   {
-    wglDeleteContext(mImpl->mRc);
+    wglDeleteContext(mImpl->rc_);
   }
-  if (mImpl->mPbuffer != 0)
-    wglDestroyPbufferARB(mImpl->mPbuffer);
+  if (mImpl->pbuffer_ != 0)
+  {
+    wglDestroyPbufferARB(mImpl->pbuffer_);
+  }
   if(mShader)
+  {
     mShader->destroy();
+  }
 #endif
 }
+
 
 void
 Pbuffer::makeCurrent ()
 {
 #ifndef _WIN32
-  // set read/write context to pbuffer
-  //if (mImpl->mPbuffer != glXGetCurrentDrawable()
-  //    || mImpl->mContext != glXGetCurrentContext())
-  {
-    //glXMakeContextCurrent(mImpl->mDisplay, mImpl->mPbuffer,
-    //			  mImpl->mPbuffer, mImpl->mContext);
-    glXMakeCurrent(mImpl->mDisplay, mImpl->mPbuffer, mImpl->mContext);
-  }
+  glXMakeCurrent(mImpl->display_, mImpl->pbuffer_, mImpl->context_);
 #else
-    wglMakeCurrent(mImpl->mDc, mImpl->mRc);
+  wglMakeCurrent(mImpl->dc_, mImpl->rc_);
 #endif
 }
 
@@ -1062,16 +1068,18 @@ bool
 Pbuffer::is_current ()
 {
 #ifndef _WIN32
-  return (mImpl->mContext == glXGetCurrentContext());
+  return (mImpl->context_ == glXGetCurrentContext());
 #else // WIN32
-  return (mImpl->mRc == wglGetCurrentContext());
+  return (mImpl->rc_ == wglGetCurrentContext());
 #endif
 }
+
 
 void
 Pbuffer::swapBuffers ()
 {
-  if(mRenderTex && !mATI_render_texture) {
+  if (mRenderTex && !mATI_render_texture)
+  {
     GLint buffer;
     glGetIntegerv(GL_DRAW_BUFFER, &buffer);
     glReadBuffer(buffer);
@@ -1080,14 +1088,19 @@ Pbuffer::swapBuffers ()
     glBindTexture(mTexTarget, 0);
   }
   if (mDoubleBuffer)
+  {
 #ifndef _WIN32 
-   glXSwapBuffers(mImpl->mDisplay, mImpl->mPbuffer);
+   glXSwapBuffers(mImpl->display_, mImpl->pbuffer_);
 #else
-  wglSwapLayerBuffers(mImpl->mDc, WGL_SWAP_MAIN_PLANE);
+   wglSwapLayerBuffers(mImpl->dc_, WGL_SWAP_MAIN_PLANE);
 #endif
+  }
   else
+  {
     glFinish();
+  }
 }
+
 
 void
 Pbuffer::bind (unsigned int buffer)
@@ -1096,20 +1109,25 @@ Pbuffer::bind (unsigned int buffer)
   {
     glEnable(mTexTarget);
     glBindTexture(mTexTarget, mTex);
-    if(mATI_render_texture) {
+    if(mATI_render_texture)
+    {
 #ifndef _WIN32
-      glXBindTexImageATI(mImpl->mDisplay, mImpl->mPbuffer, 
+      glXBindTexImageATI(mImpl->display_, mImpl->pbuffer_, 
 			 buffer == GL_FRONT ? 
                          GLX_FRONT_LEFT_ATI : GLX_BACK_LEFT_ATI);
 #else
-     wglBindTexImageARB(mImpl->mPbuffer, buffer == GL_FRONT ? WGL_FRONT_LEFT_ARB : WGL_BACK_LEFT_ARB);
+      wglBindTexImageARB(mImpl->pbuffer_,
+			 buffer == GL_FRONT ? WGL_FRONT_LEFT_ARB : WGL_BACK_LEFT_ARB);
 #endif
     }
-    if(mFormat == GL_FLOAT && mNV_float_buffer) {
-      if(mUseDefaultShader) {
+    if (mFormat == GL_FLOAT && mNV_float_buffer)
+    {
+      if (mUseDefaultShader)
+      {
         mShader->bind();
       }
-      if(mUseTextureMatrix) {
+      if (mUseTextureMatrix)
+      {
         glMatrixMode(GL_TEXTURE);
         glPushMatrix();
         glLoadIdentity();
@@ -1118,65 +1136,74 @@ Pbuffer::bind (unsigned int buffer)
       }
     }
   }
-
 }
+
 
 void
 Pbuffer::release (unsigned int buffer)
 {
   if(mRenderTex)
   {
-    if(mATI_render_texture) {
+    if(mATI_render_texture)
+    {
 #ifndef _WIN32
 
-      glXReleaseTexImageATI(mImpl->mDisplay, mImpl->mPbuffer, buffer == GL_FRONT ?
-                            GLX_FRONT_LEFT_ATI : GLX_BACK_LEFT_ATI);
+      glXReleaseTexImageATI(mImpl->display_, mImpl->pbuffer_,
+			    buffer == GL_FRONT ? GLX_FRONT_LEFT_ATI : GLX_BACK_LEFT_ATI);
 #else
-    wglReleaseTexImageARB(mImpl->mPbuffer, buffer == GL_FRONT ? WGL_FRONT_LEFT_ARB : WGL_BACK_LEFT_ARB);
+      wglReleaseTexImageARB(mImpl->pbuffer_,
+			    buffer == GL_FRONT ? WGL_FRONT_LEFT_ARB : WGL_BACK_LEFT_ARB);
 
 #endif
     }
     glBindTexture(mTexTarget, 0);
     glDisable(mTexTarget);
-    if(mFormat == GL_FLOAT && mNV_float_buffer) {
-      if(mUseTextureMatrix) {
+    if (mFormat == GL_FLOAT && mNV_float_buffer)
+    {
+      if (mUseTextureMatrix)
+      {
         glMatrixMode(GL_TEXTURE);
         glPopMatrix();
         glMatrixMode(GL_MODELVIEW);
       }
-      if(mUseDefaultShader) {
+      if (mUseDefaultShader)
+      {
         mShader->release();
       }
     }
   }
 }
 
+
 void
 Pbuffer::activate ()
 {
 #ifndef _WIN32
   // save context state
-  mImpl->mSaveDisplay = glXGetCurrentDisplay();
-  mImpl->mSaveDrawable = glXGetCurrentDrawable();
-  mImpl->mSaveContext = glXGetCurrentContext();
+  mImpl->saved_display_ = glXGetCurrentDisplay();
+  mImpl->saved_drawable_ = glXGetCurrentDrawable();
+  mImpl->saved_context_ = glXGetCurrentContext();
   // set read/write context to pbuffer
-  glXMakeCurrent(mImpl->mDisplay, mImpl->mPbuffer, mImpl->mContext);
+  glXMakeCurrent(mImpl->display_, mImpl->pbuffer_, mImpl->context_);
 #else
-  mImpl->mSaveDc = wglGetCurrentDC();
-  mImpl->mSaveRc = wglGetCurrentContext();
-  wglMakeCurrent(mImpl->mDc,mImpl->mRc);
+  mImpl->saved_dc_ = wglGetCurrentDC();
+  mImpl->saved_rc_ = wglGetCurrentContext();
+  wglMakeCurrent(mImpl->dc_, mImpl->rc_);
 #endif
 }
+
 
 void
 Pbuffer::deactivate ()
 {
 #ifndef _WIN32
-  glXMakeCurrent(mImpl->mSaveDisplay, mImpl->mSaveDrawable, mImpl->mSaveContext);
+  glXMakeCurrent(mImpl->saved_display_, mImpl->saved_drawable_,
+		 mImpl->saved_context_);
 #else
-  wglMakeCurrent(mImpl->mSaveDc,mImpl->mSaveRc);
+  wglMakeCurrent(mImpl->saved_dc_, mImpl->saved_rc_);
 #endif
 }
+
 
 bool
 Pbuffer::need_shader()
@@ -1184,17 +1211,20 @@ Pbuffer::need_shader()
   return mFormat == GL_FLOAT && mNV_float_buffer;
 }
 
+
 void
 Pbuffer::set_use_default_shader(bool b)
 {
   mUseDefaultShader = b;
 }
 
+
 void
 Pbuffer::set_use_texture_matrix(bool b)
 {
   mUseTextureMatrix = b;
 }
+
 
 Pbuffer::Pbuffer (int width, int height, int format, int numColorBits,
 		  /* int numChannels, */ bool isRenderTex, int isDoubleBuffer,
@@ -1211,16 +1241,19 @@ Pbuffer::Pbuffer (int width, int height, int format, int numColorBits,
     mNumDepthBits(numDepthBits),
     mNumStencilBits(numStencilBits),
     mNumAccumBits(numAccumBits),
-    mSeparate(true), mTex(0),
+    mSeparate(true),
+    mTex(0),
     mTexTarget(GL_TEXTURE_2D),
     mUseDefaultShader(true),
     mImpl(new PbufferImpl)
 {
 }
 
+
 Pbuffer::~Pbuffer ()
 {
   delete mImpl;
 }
+
 
 } // end namespace SCIRun
