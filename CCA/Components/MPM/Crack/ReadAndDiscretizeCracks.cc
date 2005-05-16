@@ -150,20 +150,36 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   ProblemSpecP mpm_ps = ps->findBlock("MaterialProperties")->findBlock("MPM");
   for(ProblemSpecP mat_ps=mpm_ps->findBlock("material"); mat_ps!=0;
                    mat_ps=mat_ps->findNextBlock("material") ) numMPMMatls++;
+  // physical properties of cracks
   crackType.resize(numMPMMatls);
   cmu.resize(numMPMMatls);
   separateVol.resize(numMPMMatls);
   contactVol.resize(numMPMMatls);
+  
+  // quadrilateral crack segments
   rectangles.resize(numMPMMatls);
   rectN12.resize(numMPMMatls);
   rectN23.resize(numMPMMatls);
   rectCrackSidesAtFront.resize(numMPMMatls);
+
+  // curved quadrilateral crack segments
+  crectangles.resize(numMPMMatls);
+  crectNStraightEdges.resize(numMPMMatls);
+  crectPtsEdge2.resize(numMPMMatls);
+  crectPtsEdge4.resize(numMPMMatls);
+  crectCrackSidesAtFront.resize(numMPMMatls);
+  
+  // triangular crack segments
   triangles.resize(numMPMMatls);
   triNCells.resize(numMPMMatls);
   triCrackSidesAtFront.resize(numMPMMatls);
+
+  // arc crack segments
   arcs.resize(numMPMMatls);
   arcNCells.resize(numMPMMatls);
   arcCrkFrtSegID.resize(numMPMMatls);
+
+  // elliptic or partial alliptic crack segments
   ellipses.resize(numMPMMatls);
   ellipseNCells.resize(numMPMMatls);
   ellipseCrkFrtSegID.resize(numMPMMatls);
@@ -171,6 +187,7 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   pellipseNCells.resize(numMPMMatls);
   pellipseCrkFrtSegID.resize(numMPMMatls);
   pellipseExtent.resize(numMPMMatls);
+   
   cmin.resize(numMPMMatls);
   cmax.resize(numMPMMatls);
 
@@ -201,11 +218,17 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
        }
 
        // Initialize the arries related to crack geometries
-       // for reactangular cracks
+       // for quadrilateral cracks
        rectangles[m].clear();
        rectN12[m].clear();
        rectN23[m].clear();
        rectCrackSidesAtFront[m].clear();
+       // for curved quadrilateral cracks 
+       crectangles[m].clear();
+       crectNStraightEdges[m].clear();
+       crectPtsEdge2[m].clear();
+       crectPtsEdge4[m].clear();
+       crectCrackSidesAtFront[m].clear();
        // for triangular cracks
        triangles[m].clear();
        triNCells[m].clear();
@@ -224,9 +247,10 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
        pellipseNCells[m].clear();
        pellipseCrkFrtSegID[m].clear();
 
-       // Read in geometrical parameters of cracks
+       // Read in parameters of cracks
        ProblemSpecP geom_ps=crk_ps->findBlock("crack_segments");
        ReadRectangularCracks(m,geom_ps);
+       ReadCurvedRectangularCracks(m,geom_ps); 
        ReadTriangularCracks(m,geom_ps);
        ReadArcCracks(m,geom_ps);
        ReadEllipticCracks(m,geom_ps);
@@ -267,26 +291,23 @@ void Crack::ReadRectangularCracks(const int& m,const ProblemSpecP& geom_ps)
     quad_ps->get("resolution_p2_p3",n23);
     rectN23[m].push_back(n23);
     // Crack front
-    short Side;
-    string cfsides;
+    short atFront=NO;
+    string cfsides("");
     quad_ps->get("crack_front_sides",cfsides);
     if(cfsides.length()==4) {
       for(string::const_iterator iter=cfsides.begin();
                         iter!=cfsides.end(); iter++) {
-        if(*iter=='Y' || *iter=='y')      Side=1;
-        else if(*iter=='N' || *iter=='n') Side=0;
+        if(*iter=='Y' || *iter=='y')      atFront=YES;
+        else if(*iter=='N' || *iter=='n') atFront=NO;
         else {
           cout << " Wrong specification for crack_front_sides." << endl;
           exit(1);
         }
-        thisRectCrackSidesAtFront.push_back(Side);
+        thisRectCrackSidesAtFront.push_back(atFront);
       }
     }
     else if(cfsides.length()==0) {
-      thisRectCrackSidesAtFront.push_back(0);
-      thisRectCrackSidesAtFront.push_back(0);
-      thisRectCrackSidesAtFront.push_back(0);
-      thisRectCrackSidesAtFront.push_back(0);
+      for(int i=0; i<4; i++) thisRectCrackSidesAtFront.push_back(NO);
     }
     else {
       cout << " The length of string crack_front_sides for "
@@ -296,6 +317,76 @@ void Crack::ReadRectangularCracks(const int& m,const ProblemSpecP& geom_ps)
     rectCrackSidesAtFront[m].push_back(thisRectCrackSidesAtFront);
     thisRectCrackSidesAtFront.clear();
   } // End of loop over quadrilaterals
+}
+
+// Read in parameters of curved quadrilateral segments of crack
+void Crack::ReadCurvedRectangularCracks(const int& m,const ProblemSpecP& geom_ps)
+{
+  for(ProblemSpecP cquad_ps=geom_ps->findBlock("curved_quad");
+	         cquad_ps!=0; cquad_ps=cquad_ps->findNextBlock("curved_quad")) {
+    Point p;
+    // Four vertices of the curved quadrilateral
+    vector<Point> vertices;    
+    cquad_ps->require("p1",p);  vertices.push_back(p);
+    cquad_ps->require("p2",p);  vertices.push_back(p);
+    cquad_ps->require("p3",p);  vertices.push_back(p);
+    cquad_ps->require("p4",p);  vertices.push_back(p);
+    crectangles[m].push_back(vertices);
+    vertices.clear();
+
+    // Resolution on two opposite straight edges
+    int n=1;
+    cquad_ps->get("resolution_straight_edges",n);
+    crectNStraightEdges[m].push_back(n);
+    
+    // Characteristic points on two opposite cuvered edges
+    vector<Point> ptsEdge2,ptsEdge4;                   
+    ProblemSpecP edge2_ps=cquad_ps->findBlock("points_curved_edge2"); 
+    for(ProblemSpecP pt_ps=edge2_ps->findBlock("point"); pt_ps!=0; 
+		     pt_ps=pt_ps->findNextBlock("point")) {  
+      pt_ps->get("val",p); 
+      ptsEdge2.push_back(p);
+    }
+    crectPtsEdge2[m].push_back(ptsEdge2);
+    ptsEdge2.clear();
+
+    ProblemSpecP edge4_ps=cquad_ps->findBlock("points_curved_edge4");
+    for(ProblemSpecP pt_ps=edge4_ps->findBlock("point"); pt_ps!=0;
+		     pt_ps=pt_ps->findNextBlock("point")) {
+      pt_ps->get("val",p); 
+      ptsEdge4.push_back(p);
+    }
+    crectPtsEdge4[m].push_back(ptsEdge4);
+    ptsEdge4.clear();    
+    
+    // Crack front
+    vector<short> crackSidesAtFront;
+    short atFront=NO;
+    string cfsides("");
+    cquad_ps->get("crack_front_sides",cfsides);
+    if(cfsides.length()==4) {
+      for(string::const_iterator iter=cfsides.begin();
+                                 iter!=cfsides.end(); iter++) {
+        if(*iter=='Y' || *iter=='y')      atFront=YES;
+        else if(*iter=='N' || *iter=='n') atFront=NO;
+        else {
+          cout << " Wrong specification for crack_front_sides." << endl;
+          exit(1);
+        }
+        crackSidesAtFront.push_back(atFront);
+      }
+    }
+    else if(cfsides.length()==0) {
+      for(int i=0; i<4; i++) crackSidesAtFront.push_back(NO);
+    }
+    else {
+      cout << " The length of string crack_front_sides for "
+           << "curved quadrilaterals should be 4." << endl;
+      exit(1);
+    }
+    crectCrackSidesAtFront[m].push_back(crackSidesAtFront);
+    crackSidesAtFront.clear();
+  } // End of loop over cquadrilaterals
 }
 
 void Crack::ReadTriangularCracks(const int& m,const ProblemSpecP& geom_ps)
@@ -320,25 +411,23 @@ void Crack::ReadTriangularCracks(const int& m,const ProblemSpecP& geom_ps)
     triNCells[m].push_back(n);
 
     // Crack front
-    short Side;
-    string cfsides;
+    short atFront=NO;
+    string cfsides("");
     tri_ps->get("crack_front_sides",cfsides);
     if(cfsides.length()==3) {
       for(string::const_iterator iter=cfsides.begin();
                         iter!=cfsides.end(); iter++) {
-        if( *iter=='Y' || *iter=='n')     Side=1;
-        else if(*iter=='N' || *iter=='n') Side=0;
+        if( *iter=='Y' || *iter=='n')     atFront=YES;
+        else if(*iter=='N' || *iter=='n') atFront=NO;
         else {
           cout << " Wrong specification for crack_front_sides." << endl;
           exit(1);
         }
-        thisTriCrackSidesAtFront.push_back(Side);
+        thisTriCrackSidesAtFront.push_back(atFront);
       }
     }
     else if(cfsides.length()==0) {
-      thisTriCrackSidesAtFront.push_back(0);
-      thisTriCrackSidesAtFront.push_back(0);
-      thisTriCrackSidesAtFront.push_back(0);
+      for(int i=0; i<3; i++) thisTriCrackSidesAtFront.push_back(NO);
     }
     else {
       cout << " The length of string crack_front_sides for"
@@ -449,7 +538,6 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
   int pid;
   MPI_Comm_rank(mpi_crack_comm, &pid);
   if(pid==0) { //output from the first rank
-    cout << "\n--Initial crack plane--" << endl;
     for(int m=0; m<numMatls; m++) {
       if(crackType[m]=="NO_CRACK")
         cout << "\nMaterial " << m << ": no crack exists" << endl;
@@ -470,9 +558,9 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
         }
 
         cout <<"  Crack geometry:" << endl;
-        // Triangular cracks
+        // quadrilateral cracks
         for(int i=0;i<(int)rectangles[m].size();i++) {
-          cout << "    Rectangle " << i << ": meshed by [" << rectN12[m][i]
+          cout << "    Quadrilateral " << i << ": meshed by [" << rectN12[m][i]
                << ", " << rectN23[m][i] << ", " << rectN12[m][i]
                << ", " << rectN23[m][i] << "]" << endl;
           for(int j=0;j<4;j++)
@@ -480,11 +568,38 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
           for(int j=0;j<4;j++) {
             if(rectCrackSidesAtFront[m][i][j]) {
               int j2=(j+2<5 ? j+2 : 1);
-              cout << "    side " << j+1 << " (p" << j+1 << "-" << "p" << j2
+              cout << "    Edge " << j+1 << " (p" << j+1 << "-" << "p" << j2
                    << ") is a crack front." << endl;
             }
           }
         }
+
+        // curved quadrilateral cracks
+	for(int i=0;i<(int)crectangles[m].size();i++) {
+	  cout << "    Curved quadrilateral " << i << ":" << endl;
+	  cout << "    Four vertices:" << endl; 
+	  // four vertices
+	  for(int j=0;j<4;j++) 
+	    cout << "      p" << j+1 << ": " << crectangles[m][i][j] << endl;
+	  // resolution on straight edges 1 & 3
+	  cout << "    Resolution on straight edges (edges p1-p2 and p3-p4):" << crectNStraightEdges[m][i] << endl; 
+	  // points on curved egde 2
+	  cout << "    Points on curved edge 2 (p2-p3): " << endl;
+	  for(int j=0; j< (int)crectPtsEdge2[m][i].size(); j++)
+            cout << "      p" << j+1 << ": " << crectPtsEdge2[m][i][j] << endl;
+	  // points on curved edge 3
+          cout << "    Points on curved edge 4 (p1-p4): " << endl;
+          for(int j=0; j< (int)crectPtsEdge4[m][i].size(); j++)
+	    cout << "      p" << j+1 << ": " << crectPtsEdge4[m][i][j] << endl; 
+          // crack-front sides
+	  for(int j=0;j<4;j++) {
+	    if(crectCrackSidesAtFront[m][i][j]) {
+	      int j2=(j+2<5 ? j+2 : 1);
+	      cout << "    Edge " << j+1 << " (p" << j+1 << "-" << "p" << j2
+	           << ") is a crack front." << endl;
+	    }
+	  }
+	}	
 
         // Triangular cracks
         for(int i=0;i<(int)triangles[m].size();i++) {
@@ -624,6 +739,7 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
         // Discretize crack plane
         int nstart0=0;  
         DiscretizeRectangularCracks(m,nstart0);
+	DiscretizeCurvedRectangularCracks(m,nstart0);
         DiscretizeTriangularCracks(m,nstart0);
         DiscretizeArcCracks(m,nstart0);
         DiscretizeEllipticCracks(m,nstart0);
@@ -692,7 +808,7 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
         } // End of if(..) 
          
         // Output crack mesh information
-#if 0
+#if 1
         OutputInitialCrackMesh(m);
 #endif
       }
@@ -804,10 +920,127 @@ void Crack::DiscretizeRectangularCracks(const int& m,int& nstart0)
           }
         } // End of loop over i
       }
-    } // End of loop over j
+    } // End of loop over l
   } // End of loop over quads
 }
 
+void Crack::DiscretizeCurvedRectangularCracks(const int& m,int& nstart0)
+{
+  int k,i,j,ni,nj,n1,n2,n3;
+  int nstart1,nstart2,nstart3;
+  Point p1,p2,p3,p4,pt;
+
+  for(k=0; k<(int)crectangles[m].size(); k++) { // Loop over quads
+    // Four vertices for the quad
+    p1=crectangles[m][k][0];
+    p2=crectangles[m][k][1];
+    p3=crectangles[m][k][2];
+    p4=crectangles[m][k][3];
+			
+    // Resolutions on the curved edges (ni), and the straight edges (nj)
+    ni=crectNStraightEdges[m][k];
+    nj=crectPtsEdge2[m][k].size()+1;
+    
+    // Nodes on curved edges 2 (p2-p3) & 4 (p0-p4) - "j" direction
+    Point* p_s2=new Point[2*nj+1];
+    Point* p_s4=new Point[2*nj+1];
+    p_s2[0]=p2;   p_s2[2*nj]=p3;
+    p_s4[0]=p1;   p_s4[2*nj]=p4;
+    for(int l=2; l<2*nj; l+=2) {
+      p_s2[l]=crectPtsEdge2[m][k][l/2-1];
+      p_s4[l]=crectPtsEdge4[m][k][l/2-1];
+    } 	
+    for(int l=1; l<2*nj; l+=2) {
+      p_s2[l]=p_s2[l-1]+(p_s2[l+1]-p_s2[l-1])/2.;
+      p_s4[l]=p_s4[l-1]+(p_s4[l+1]-p_s4[l-1])/2.; 
+    }	
+    
+    // Generate crack points
+    for(j=0; j<=nj; j++) {
+      for(i=0; i<=ni; i++) { // nodes on lines
+        pt=p_s4[2*j]+(p_s2[2*j]-p_s4[2*j])*(float)i/ni;
+        cx[m].push_back(pt);
+      }     
+      if(j!=nj) {
+        for(i=0; i<ni; i++) { // nodes at centers 
+          int jj=2*j+1;
+          pt=p_s4[jj]+(p_s2[jj]-p_s4[jj])*(float)(2*i+1)/(2*ni);
+          cx[m].push_back(pt);
+        }
+      }  // End of if i!=ni
+    } // End of loop over i
+    delete [] p_s2;
+    delete [] p_s4;
+
+    // Generate crack elements
+    for(j=0; j<nj; j++) {
+      nstart1=nstart0+(2*ni+1)*j;
+      nstart2=nstart1+(ni+1);
+      nstart3=nstart2+ni;
+      for(i=0; i<ni; i++) {
+        /* There are four elements in each sub-rectangle */
+        // For the 1st element (n1,n2,n3 three nodes of the element)
+        n1=nstart2+i;
+        n2=nstart1+i;
+        n3=nstart1+(i+1);
+        ce[m].push_back(IntVector(n1,n2,n3));
+        // For the 2nd element
+        n1=nstart2+i;
+        n2=nstart3+i;
+        n3=nstart1+i;
+        ce[m].push_back(IntVector(n1,n2,n3));
+        // For the 3rd element
+        n1=nstart2+i;
+        n2=nstart1+(i+1);
+        n3=nstart3+(i+1);
+        ce[m].push_back(IntVector(n1,n2,n3));
+        // For the 4th element
+        n1=nstart2+i;
+        n2=nstart3+(i+1);
+        n3=nstart3+i;
+        ce[m].push_back(IntVector(n1,n2,n3));
+      }  // End of loop over j
+    }  // End of loop over i
+    nstart0+=((2*ni+1)*nj+ni+1);
+
+    // Collect crack-front elements
+    int seg0=0; 
+    for(j=0; j<4; j++) {
+      if(!crectCrackSidesAtFront[m][k][j]) {
+        seg0=j+1;
+        break;
+      }
+    }
+    for(int l=0; l<4; l++) { // Loop over sides of the quad
+      j=seg0+l;   
+      if(j>3) j-=4;
+      if(crectCrackSidesAtFront[m][k][j]) { // j is the side number of the front  
+	// pt1-pt2 is crack-front      
+        int j1 = (j!=3 ? j+1 : 0);
+        Point pt1=crectangles[m][k][j];
+        Point pt2=crectangles[m][k][j1];
+        for(i=0; i<(int)ce[m].size(); i++) {
+          int ii=i;
+          if(j>1) ii= (int) ce[m].size()-(i+1);
+          n1=ce[m][ii].x();
+          n2=ce[m][ii].y();
+          n3=ce[m][ii].z();
+          for(int s=0; s<3; s++) { // Loop over sides of the elem
+            int sn=n1,en=n2; 
+            if(s==1) {sn=n2; en=n3;}
+            if(s==2) {sn=n3; en=n1;}
+            if(TwoLinesDuplicate(pt1,pt2,cx[m][sn],cx[m][en])) {
+              cfSegNodes[m].push_back(sn);
+              cfSegNodes[m].push_back(en);
+            }
+          }
+        } // End of loop over i
+      }
+    } // End of loop over l		  
+
+  } // End of loop over k
+}  
+    
 void Crack::DiscretizeTriangularCracks(const int&m, int& nstart0)
 {
   int neq=1;
