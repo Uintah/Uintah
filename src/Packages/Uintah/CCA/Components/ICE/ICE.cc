@@ -67,25 +67,6 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR)
 {
   lb   = scinew ICELabel();
   MIlb = scinew MPMICELabel();
-  // Turn off all the debuging switches
-  switchDebugInitialize           = false;
-  switchDebug_EQ_RF_press         = false;
-  switchDebug_vel_FC              = false;
-  switchDebug_Temp_FC             = false;
-  switchDebug_PressDiffRF         = false;
-  switchDebug_Exchange_FC         = false;
-  switchDebug_explicit_press      = false;
-  switchDebug_setupMatrix         = false;
-  switchDebug_setupRHS            = false;
-  switchDebug_updatePressure      = false;
-  switchDebug_computeDelP         = false;
-  switchDebug_PressFC             = false;
-  switchDebugLagrangianValues     = false;
-  switchDebugLagrangianSpecificVol= false;
-  switchDebugLagrangianTransportedVars = false;
-  switchDebugMomentumExchange_CC       = false; 
-  switchDebugSource_Sink               = false; 
-  switchDebug_advance_advect           = false; 
 
   d_doAMR               = doAMR;
   d_RateForm            = false;
