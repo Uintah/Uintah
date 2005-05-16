@@ -50,6 +50,8 @@ public:
   bool create();
   void destroy();
   void makeCurrent(); // no save state
+  bool is_current();
+
   void swapBuffers(); // flush if single
   void bind(unsigned int buffer = GL_FRONT); // bind as 2D texture
   void release(unsigned int buffer = GL_FRONT); 
