@@ -33,7 +33,6 @@
 #include <Packages/Uintah/Core/Exceptions/MaxIteration.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
-#include <Core/Geometry/Vector.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Util/DebugStream.h>
 
@@ -98,7 +97,8 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR)
   d_delT_scheme       = "aggressive";
   d_surroundingMatl_indx = -9;
   d_dbgVar1   = 0;     //inputs for debugging                               
-  d_dbgVar2   = 0;                                                          
+  d_dbgVar2   = 0;
+  d_EVIL_NUM  = -9.99e30;                                                    
   d_SMALL_NUM = 1.0e-100;                                                   
   d_TINY_RHO  = 1.0e-12;// also defined ICEMaterial.cc and MPMMaterial.cc   
   d_modelInfo = 0;
@@ -141,6 +141,7 @@ ICE::~ICE()
        TransportedVariable* tvar = *t_iter;
     VarLabel::destroy(tvar->var_Lagrangian);
   }
+
   // delete models
   for(vector<ModelInterface*>::iterator iter = d_models.begin();
       iter != d_models.end(); iter++) {
@@ -4781,6 +4782,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
             constCCVariable<double> q_L_CC;
             new_dw->allocateAndPut(q_CC, tvar->var,     indx, patch);
             new_dw->get(q_L_CC,   tvar->var_Lagrangian, indx, patch, gac, 2); 
+            q_CC.initialize(d_EVIL_NUM);
             
             varBasket->is_Q_massSpecific = true;
             advector->advectQ(q_L_CC,mass_L,q_advected, varBasket);  
@@ -5218,7 +5220,7 @@ bool ICE::areAllValuesPositive( CCVariable<double> & src, IntVector& neg_cell )
   for(CellIterator iter=iterLim; !iter.done();iter++) {
     IntVector c = *iter;
     sumNan += isnan(src[c]);       // check for nans
-    sum_src += src[c]/fabs(src[c]);
+    sum_src += src[c]/(fabs(src[c]) + d_SMALL_NUM);
     numCells++;
   }
 
