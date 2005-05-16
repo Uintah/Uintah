@@ -641,6 +641,11 @@ namespace Uintah {
       bool switchDebugMomentumExchange_CC;
       bool switchDebugSource_Sink;
       bool switchDebug_advance_advect;
+      bool switchDebug_AMR_refine;
+      bool switchDebug_AMR_refineInterface;
+      bool switchDebug_AMR_coarsen;
+      bool switchDebug_AMR_reflux;
+      
       
       // debugging variables
       int d_dbgVar1;

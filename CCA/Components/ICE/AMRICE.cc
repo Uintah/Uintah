@@ -144,16 +144,17 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
 
         //__________________________________
         //  Print Data 
-#if 0
-        ostringstream desc;     
-        desc << "TOP_refineInterface_Mat_" << indx << "_patch_"<< patch->getID()
-             << " step " << subCycleProgress;
-        printData(indx, patch,   1, desc.str(), "press_CC",    press_CC);
-        printData(indx, patch,   1, desc.str(), "rho_CC",      rho_CC);
-        printData(indx, patch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC);
-        printData(indx, patch,   1, desc.str(), "Temp_CC",     temp_CC);
-        printVector(indx, patch, 1, desc.str(), "vel_CC", 0,   vel_CC);
-#endif
+        if(switchDebug_AMR_refineInterface){
+          ostringstream desc;     
+          desc << "TOP_refineInterface_Mat_" << indx << "_patch_"
+               << patch->getID()<< " step " << subCycleProgress;
+          printData(indx, patch,   1, desc.str(), "press_CC",    press_CC);
+          printData(indx, patch,   1, desc.str(), "rho_CC",      rho_CC);
+          printData(indx, patch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC);
+          printData(indx, patch,   1, desc.str(), "Temp_CC",     temp_CC);
+          printVector(indx, patch, 1, desc.str(), "vel_CC", 0,   vel_CC);
+        }
+
         refineCoarseFineBoundaries(patch, press_CC.castOffConst(), new_dw, 
                                    lb->press_CCLabel,  indx,subCycleProgress);
 
@@ -181,25 +182,27 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
               old_dw->get(q_CC, tvar->var, indx, patch, gac, 1);
               refineCoarseFineBoundaries(patch, q_CC.castOffConst(),new_dw,
                                          tvar->var,    indx,subCycleProgress);
-             #if 0  
+             if(switchDebug_AMR_refineInterface){ 
                string name = tvar->var->getName();
                printData(indx, patch, 1, "refineInterface_models", name, q_CC);
-             #endif                 
+             }
             }
           }
         }                                     
                             
-#if 0
+
         //__________________________________
-        //  Print Data     
-        desc << "BOT_refineInterface_Mat_" << indx << "_patch_"<< patch->getID()
-             << " step " << subCycleProgress;
-        printData(indx, patch,   1, desc.str(), "press_CC",    press_CC);
-        printData(indx, patch,   1, desc.str(), "rho_CC",      rho_CC);
-        printData(indx, patch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC);
-        printData(indx, patch,   1, desc.str(), "Temp_CC",     temp_CC);
-        printVector(indx, patch, 1, desc.str(), "vel_CC", 0,   vel_CC);
-#endif
+        //  Print Data 
+        if(switchDebug_AMR_refineInterface){
+          ostringstream desc;    
+          desc << "BOT_refineInterface_Mat_" << indx << "_patch_"
+               << patch->getID()<< " step " << subCycleProgress;
+          printData(indx, patch,   1, desc.str(), "press_CC",  press_CC);
+          printData(indx, patch,   1, desc.str(), "rho_CC",    rho_CC);
+          printData(indx, patch,   1, desc.str(), "sp_vol_CC", sp_vol_CC);
+          printData(indx, patch,   1, desc.str(), "Temp_CC",   temp_CC);
+          printVector(indx, patch, 1, desc.str(), "vel_CC", 0, vel_CC);
+        }
       }
     }
     cout_dbg.setActive(dbg_onOff);  // reset on/off switch for cout_dbg
@@ -875,24 +878,27 @@ void AMRICE::refine(const ProcessorGroup*,
             
             CoarseToFineOperator<double>(q_CC, tvar->var, indx, new_dw, 
                        invRefineRatio, finePatch, fineLevel, coarseLevel);
-          #if 0 
-            string name = tvar->var->getName();
-            printData(indx, finePatch, 1, "refine_models", name, q_CC);
-          #endif                 
-          }
+                       
+            if(switchDebug_AMR_refine){
+              ostringstream desc; 
+              string name = tvar->var->getName();
+              printData(indx, finePatch, 1, "refine_models", name, q_CC);
+            }                 
+          } 
         }
       }    
- #if 0
+      
       //__________________________________
-      //  Print Data 
+      //  Print Data
+      if(switchDebug_AMR_refine){ 
       ostringstream desc;     
-      desc << "refine_Mat_" << indx << "_patch_"<< finePatch->getID();
-      printData(indx, finePatch,   1, desc.str(), "press_CC",    press_CC);
-      printData(indx, finePatch,   1, desc.str(), "rho_CC",      rho_CC);
-      printData(indx, finePatch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC);
-      printData(indx, finePatch,   1, desc.str(), "Temp_CC",     temp);
-      printVector(indx, finePatch, 1, desc.str(), "vel_CC", 0,   vel_CC);
-#endif
+        desc << "BOT_Refine_Mat_" << indx << "_patch_"<< finePatch->getID();
+        printData(indx, finePatch,   1, desc.str(), "press_CC",  press_CC);
+        printData(indx, finePatch,   1, desc.str(), "rho_CC",    rho_CC);
+        printData(indx, finePatch,   1, desc.str(), "sp_vol_CC", sp_vol_CC);
+        printData(indx, finePatch,   1, desc.str(), "Temp_CC",   temp);
+        printVector(indx, finePatch, 1, desc.str(), "vel_CC", 0, vel_CC);
+      }
     }
   }  // course patch loop 
 }
@@ -1049,24 +1055,26 @@ void AMRICE::coarsen(const ProcessorGroup*,
             new_dw->getModifiable(q_CC, tvar->var, indx, coarsePatch);
             fineToCoarseOperator<double>(q_CC, tvar->var, indx, new_dw, 
                        invRefineRatio, coarsePatch, coarseLevel, fineLevel);
-          #if 0  
-            string name = tvar->var->getName();
-            printData(indx, coarsePatch, 1, "coarsen_models", name, q_CC);
-          #endif                 
+            
+            if(switchDebug_AMR_refine){  
+              string name = tvar->var->getName();
+              printData(indx, coarsePatch, 1, "coarsen_models", name, q_CC);
+            }                 
           }
         }
       }    
- #if 0
+
       //__________________________________
       //  Print Data 
-      ostringstream desc;     
-      desc << "coarsen_Mat_" << indx << "_patch_"<< coarsePatch->getID();
-      printData(indx, coarsePatch,   1, desc.str(), "press_CC",    press_CC);
-      printData(indx, coarsePatch,   1, desc.str(), "rho_CC",      rho_CC);
-      printData(indx, coarsePatch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC);
-      printData(indx, coarsePatch,   1, desc.str(), "Temp_CC",     temp);
-      printVector(indx, coarsePatch, 1, desc.str(), "vel_CC", 0,   vel_CC);
-#endif
+      if(switchDebug_AMR_refine){
+        ostringstream desc;     
+        desc << "coarsen_Mat_" << indx << "_patch_"<< coarsePatch->getID();
+        printData(indx, coarsePatch,   1, desc.str(), "press_CC",    press_CC);
+        printData(indx, coarsePatch,   1, desc.str(), "rho_CC",      rho_CC);
+        printData(indx, coarsePatch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC);
+        printData(indx, coarsePatch,   1, desc.str(), "Temp_CC",     temp);
+        printVector(indx, coarsePatch, 1, desc.str(), "vel_CC", 0,   vel_CC);
+      }
     }
   }  // course patch loop 
   cout_dbg.setActive(dbg_onOff);  // reset on/off switch for cout_dbg
@@ -1273,8 +1281,10 @@ void AMRICE::reflux(const ProcessorGroup*,
               refluxOperator<double>(q_CC, tvar->var, indx, 
                                      coarsePatch, finePatch, fineLevel,new_dw);
             
-              string name = tvar->var->getName();
-              printData(indx, coarsePatch, 1, "coarsen_models", name, q_CC);
+              if(switchDebug_AMR_refine){
+                string name = tvar->var->getName();
+                printData(indx, coarsePatch, 1, "coarsen_models", name, q_CC);
+              }
                              
             }
           }
@@ -1283,16 +1293,16 @@ void AMRICE::reflux(const ProcessorGroup*,
 #endif
       }  // finePatch loop 
   
- #if 0
       //__________________________________
-      //  Print Data 
-      ostringstream desc;     
-      desc << "reflux_Mat_" << indx << "_patch_"<< coarsePatch->getID();
-      printData(indx, coarsePatch,   1, desc.str(), "rho_CC",      rho_CC);
-      printData(indx, coarsePatch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC);
-      printData(indx, coarsePatch,   1, desc.str(), "Temp_CC",     temp);
-      printVector(indx, coarsePatch, 1, desc.str(), "vel_CC", 0,   vel_CC);
-#endif
+      //  Print Data
+      if(switchDebug_AMR_reflux){ 
+        ostringstream desc;     
+        desc << "Reflux_Mat_" << indx << "_patch_"<< coarsePatch->getID();
+        printData(indx, coarsePatch,   1, desc.str(), "rho_CC",   rho_CC);
+        printData(indx, coarsePatch,   1, desc.str(), "sp_vol_CC",sp_vol_CC);
+        printData(indx, coarsePatch,   1, desc.str(), "Temp_CC",  temp);
+        printVector(indx, coarsePatch, 1, desc.str(), "vel_CC", 0,vel_CC);
+      }
     }  // matl loop
   }  // course patch loop 
   cout_dbg.setActive(dbg_onOff);  // reset on/off switch for cout_dbg
