@@ -133,7 +133,7 @@ DirectMappingAlgoT<FSRC, LSRC, FOUT,
     }
     ++itr;
   }
-  return mindist;
+  return sqrt(mindist);
 }
 
 template <class FSRC, class LSRC, class FOUT, class LDST>
@@ -157,7 +157,7 @@ DirectMappingAlgoT<FSRC, LSRC, FOUT, LDST>::find_closest_dst_loc(typename LDST::
     }
     ++itr;
   }
-  return mindist;
+  return sqrt(mindist);
 }
 
 template <class FSRC, class LSRC, class FOUT, class LDST>
@@ -214,6 +214,7 @@ DirectMappingAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute(int proc,
     dynamic_cast<typename FOUT::mesh_type *>(dst_meshH.get_rep());
   FOUT *out_field = dynamic_cast<FOUT *>(out_fieldH.get_rep());
 
+  BBox src_search_bbox, dst_search_bbox;
   if (proc == 0) {
     if (basis_order > 0) {
       src_mesh->synchronize(Mesh::NODES_E);
@@ -223,6 +224,14 @@ DirectMappingAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute(int proc,
       src_mesh->synchronize(Mesh::FACES_E);
     } else if (basis_order == 0 && src_mesh->dimensionality() == 1) {
       src_mesh->synchronize(Mesh::EDGES_E);
+    }
+    src_search_bbox=src_mesh->get_bounding_box();
+    dst_search_bbox=dst_mesh->get_bounding_box();
+    if (exhaustive_search && dist>0) {
+      src_search_bbox.extend(src_search_bbox.min()-Vector(dist, dist, dist));
+      src_search_bbox.extend(src_search_bbox.max()+Vector(dist, dist, dist));
+      dst_search_bbox.extend(dst_search_bbox.min()-Vector(dist, dist, dist));
+      dst_search_bbox.extend(dst_search_bbox.max()+Vector(dist, dist, dist));
     }
   }
 
@@ -234,7 +243,7 @@ DirectMappingAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute(int proc,
     //   location.  This is different from our other interpolation
     //   methods in that here, many destination locations are likely to
     //   have no source location mapped to them at all.
-    // Note: it is possible that multiple source will be mapped to the
+    // Note: it is possible that multiple sources will be mapped to the
     //   same destination, which is fine -- but we will flag it as a
     //   remark, just to let the user know.  
     // Also: if a source is outside of the destination volume,
@@ -293,20 +302,22 @@ DirectMappingAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute(int proc,
 	d->maplock.unlock();
       }
       if (exhaustive_search && failed) {
-	typename LDST::index_type index;
-	double dd=find_closest_dst_loc(index, dst_mesh, p);
-	if (dist<=0 || dd<dist) {
-	  unsigned int uint_idx = (unsigned int) index;
-	  d->maplock.lock();
-	  typename hash_type::iterator dst_iter = d->dstmap.find(uint_idx);
-	  if (dst_iter != d->dstmap.end()) {
-	    dst_iter->second.second.push_back(*itr);
-	  } else {
-	    vector<typename LSRC::index_type> v;
-	    v.push_back(*itr);
-	    d->dstmap[uint_idx] = dst_src_pair(index, v);
+	if (dist<=0 || dst_search_bbox.inside(p)) {
+	  typename LDST::index_type index;
+	  double dd=find_closest_dst_loc(index, dst_mesh, p);
+	  if (dist<=0 || dd<dist) {
+	    unsigned int uint_idx = (unsigned int) index;
+	    d->maplock.lock();
+	    typename hash_type::iterator dst_iter = d->dstmap.find(uint_idx);
+	    if (dst_iter != d->dstmap.end()) {
+	      dst_iter->second.second.push_back(*itr);
+	    } else {
+	      vector<typename LSRC::index_type> v;
+	      v.push_back(*itr);
+	      d->dstmap[uint_idx] = dst_src_pair(index, v);
+	    }
+	    d->maplock.unlock();
 	  }
-	  d->maplock.unlock();
 	}
       }
       ++itr;
@@ -375,12 +386,14 @@ DirectMappingAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute(int proc,
 	}
       }
       if (exhaustive_search && failed) {
-	typename LSRC::index_type index;
-	double d=find_closest_src_loc(index, src_mesh, p);
-	if (dist<=0 || d<dist)
-	{
-	  failed = false;
-	  val = (typename FOUT::value_type)(src_field->value(index));
+	if (dist<=0 || src_search_bbox.inside(p)) {
+	  typename LSRC::index_type index;
+	  double d=find_closest_src_loc(index, src_mesh, p);
+	  if (dist<=0 || d<dist)
+	    {
+	      failed = false;
+	      val = (typename FOUT::value_type)(src_field->value(index));
+	    }
 	}
       }
       if (failed) val = typename FOUT::value_type(0);

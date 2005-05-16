@@ -1101,6 +1101,7 @@ PrismVolMesh::locate(Cell::index_type &cell, const Point &p)
       if (inside(Cell::index_type(*iter), p))
       {
 	cell = Cell::index_type(*iter);
+	locate_cache_ = cell;
 	return true;
       }
       ++iter;

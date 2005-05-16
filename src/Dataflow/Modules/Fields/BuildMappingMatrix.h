@@ -134,7 +134,7 @@ BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, LDST>::find_closest_src_loc(typename L
     }
     ++itr;
   }
-  return mindist;
+  return sqrt(mindist);
 }
 
 
@@ -301,7 +301,14 @@ BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, LDST>::parallel_execute(int proc,
 
   MSRC *src_mesh = dynamic_cast<MSRC *>(d->src_meshH.get_rep());
   MDST *dst_mesh = dynamic_cast<MDST *>(d->dst_meshH.get_rep());
-
+  BBox src_search_bbox=src_mesh->get_bounding_box();
+  BBox dst_search_bbox=dst_mesh->get_bounding_box();
+  if (exhaustive_search && dist>0) {
+    src_search_bbox.extend(src_search_bbox.min()-Vector(dist, dist, dist));
+    src_search_bbox.extend(src_search_bbox.max()+Vector(dist, dist, dist));
+    dst_search_bbox.extend(dst_search_bbox.min()-Vector(dist, dist, dist));
+    dst_search_bbox.extend(dst_search_bbox.max()+Vector(dist, dist, dist));
+  }
 
   unsigned int count = 0;
   if ((interp_basis == 0) && source_to_single_dest)
@@ -358,14 +365,16 @@ BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, LDST>::parallel_execute(int proc,
       }
       if (exhaustive_search && failed)
       {
-	typename LDST::index_type index;
-	const double dd = find_closest_dst_loc(index, dst_mesh, p);
-	if (dist <= 0 || dd < dist * dist)
-	{
-	  unsigned int uint_idx = (unsigned int) index;
-	  d->maplock.lock();
-	  d->dstmap[uint_idx].push_back((unsigned int)*itr);
-	  d->maplock.unlock();
+	if (dist <= 0 || dst_search_bbox.inside(p)) {
+	  typename LDST::index_type index;
+	  const double dd = find_closest_dst_loc(index, dst_mesh, p);
+	  if (dist <= 0 || dd < dist * dist)
+	    {
+	      unsigned int uint_idx = (unsigned int) index;
+	      d->maplock.lock();
+	      d->dstmap[uint_idx].push_back((unsigned int)*itr);
+	      d->maplock.unlock();
+	    }
 	}
       }
       ++itr;
@@ -436,13 +445,15 @@ BuildMappingMatrixAlgoT<MSRC, LSRC, MDST, LDST>::parallel_execute(int proc,
       }
       else if (exhaustive_search)
       {
-	typename LSRC::index_type index;
-	const double dd = find_closest_src_loc(index, src_mesh, p);
-	if (dist <= 0 || dd < dist * dist)
-	{
-	  rowdata[rcount+1] = lastrdata + 1;
-	  coldatav.push_back((unsigned int)index);
-	  datav.push_back(1.0);
+	if (dist <= 0 || dst_search_bbox.inside(p)) {
+	  typename LSRC::index_type index;
+	  const double dd = find_closest_src_loc(index, src_mesh, p);
+	  if (dist <= 0 || dd < dist * dist)
+	    {
+	      rowdata[rcount+1] = lastrdata + 1;
+	      coldatav.push_back((unsigned int)index);
+	      datav.push_back(1.0);
+	    }
 	}
       }
       ++itr;
