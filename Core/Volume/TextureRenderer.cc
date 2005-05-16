@@ -47,9 +47,31 @@ using std::string;
 namespace SCIRun {
 
 #ifdef _WIN32
-#define GL_TEXTURE_3D 2
-#define GL_CLAMP_TO_EDGE 2
-#define GL_TEXTURE_WRAP_R 2
+#include <windows.h>
+#define GL_TEXTURE0 0x84C0
+#define GL_TEXTURE1 0x84C1
+#define GL_TEXTURE2 0x84C2
+#define GL_TEXTURE3 0x84C3
+
+#define GL_TEXTURE0_ARB 0x84C0
+#define GL_TEXTURE1_ARB 0x84C1
+#define GL_TEXTURE2_ARB 0x84C2
+
+#define GL_TEXTURE_3D 0x806F
+#define GL_CLAMP_TO_EDGE 0x812F
+#define GL_TEXTURE_WRAP_R 0x8072
+#define GL_ARB_fragment_program 1
+#define GL_UNPACK_IMAGE_HEIGHT 0x806E
+
+  typedef void (GLAPIENTRY * PFNGLACTIVETEXTUREPROC) (GLenum texture);
+  typedef void (GLAPIENTRY * PFNGLTEXIMAGE3DPROC) (GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
+  typedef void (GLAPIENTRY * PFNGLTEXSUBIMAGE3DPROC) (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid *pixels);
+  typedef void (GLAPIENTRY * PFNGLMULTITEXCOORD3FPROC) (GLenum target, GLfloat s, GLfloat t, GLfloat r);
+
+  static PFNGLACTIVETEXTUREPROC glActiveTexture = 0;
+  static PFNGLTEXIMAGE3DPROC glTexImage3D = 0;
+  static PFNGLTEXSUBIMAGE3DPROC glTexSubImage3D = 0;
+  static PFNGLMULTITEXCOORD3FPROC glMultiTexCoord3f = 0;
 #endif
 
 static const string Cmap2ShaderStringNV =
@@ -113,7 +135,17 @@ TextureRenderer::TextureRenderer(TextureHandle tex,
   use_blend_buffer_(true),
   free_tex_mem_(tex_mem),
   use_stencil_(false)
-{}
+{
+  
+#ifdef _WIN32
+  glTexSubImage3D = (PFNGLTEXSUBIMAGE3DPROC)wglGetProcAddress("glTexSubImage3D");
+  glActiveTexture = (PFNGLACTIVETEXTUREPROC)wglGetProcAddress("glActiveTexture");
+  glTexImage3D = (PFNGLTEXIMAGE3DPROC)wglGetProcAddress("glTexImage3D");
+  glMultiTexCoord3f = (PFNGLMULTITEXCOORD3FPROC)wglGetProcAddress("glMultiTexCoord3f");
+#endif
+
+
+}
 
 TextureRenderer::TextureRenderer(const TextureRenderer& copy) :
   GeomObj(copy),
@@ -146,7 +178,14 @@ TextureRenderer::TextureRenderer(const TextureRenderer& copy) :
   use_blend_buffer_(copy.use_blend_buffer_),
   free_tex_mem_(copy.free_tex_mem_),
   use_stencil_(copy.use_stencil_)
-{}
+{
+#ifdef _WIN32
+  glTexSubImage3D = (PFNGLTEXSUBIMAGE3DPROC)wglGetProcAddress("glTexSubImage3D");
+  glActiveTexture = (PFNGLACTIVETEXTUREPROC)wglGetProcAddress("glActiveTexture");
+  glTexImage3D = (PFNGLTEXIMAGE3DPROC)wglGetProcAddress("glTexImage3D");
+  glMultiTexCoord3f = (PFNGLMULTITEXCOORD3FPROC)wglGetProcAddress("glMultiTexCoord3f");
+#endif
+}
 
 TextureRenderer::~TextureRenderer()
 {
@@ -270,6 +309,9 @@ TextureRenderer::load_brick(TextureBrickHandle brick, bool use_cmap2)
   int idx[2];
   for(int c=0; c<nc; c++) {
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#ifdef _WIN32
+    if (glActiveTexture)
+#endif
     glActiveTexture(GL_TEXTURE0+c);
 #endif
     int nb = brick->nb(c);
@@ -395,13 +437,16 @@ TextureRenderer::load_brick(TextureBrickHandle brick, bool use_cmap2)
 	  glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, brick->sy());
 	  glPixelStorei(GL_UNPACK_ALIGNMENT, (nb == 1)?1:4);
 	}
-	if (reuse)
+	if (reuse && glTexSubImage3D)
 	{
 	  glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, nx, ny, nz, format,
 			  brick->tex_type(), brick->tex_data(c));
 	}
 	else
 	{
+#ifdef _WIN32
+	  if (glTexImage3D)
+#endif
 	  glTexImage3D(GL_TEXTURE_3D, 0, format, nx, ny, nz, 0, format,
 		       brick->tex_type(), brick->tex_data(c));
 	}
@@ -414,10 +459,10 @@ TextureRenderer::load_brick(TextureBrickHandle brick, bool use_cmap2)
       }
       else
 #endif
-#if !defined(__sgi) && !defined(_WIN32)
+#if !defined(__sgi)
 #if defined(GL_EXT_shared_texture_palette) && !defined(__APPLE__)
       {
-	if (reuse)
+	if (reuse && glTexSubImage3D)
 	{
 	  glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, nx, ny, nz,
 			  GL_COLOR_INDEX,
@@ -425,14 +470,17 @@ TextureRenderer::load_brick(TextureBrickHandle brick, bool use_cmap2)
 	}
 	else
 	{
+#ifdef _WIN32
+	  if (glTexImage3D)
+#endif
 	  glTexImage3D(GL_TEXTURE_3D, 0, GL_COLOR_INDEX8_EXT,
 		       nx, ny, nz, 0, GL_COLOR_INDEX,
 		       brick->tex_type(), brick->tex_data(c));
 	}
       }
-#elif defined(GL_VERSION_1_2) // Workaround for old bad nvidia headers.
+#elif defined(_WIN32) || defined(GL_VERSION_1_2) // Workaround for old bad nvidia headers.
       {
-	if (reuse)
+	if (reuse && glTexSubImage3D)
 	{
 	  glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, nx, ny, nz,
 			  GL_LUMINANCE,
@@ -440,6 +488,9 @@ TextureRenderer::load_brick(TextureBrickHandle brick, bool use_cmap2)
 	}
 	else
 	{
+#ifdef _WIN32
+	  if (glTexImage3D)
+#endif
 	  glTexImage3D(GL_TEXTURE_3D, 0, GL_LUMINANCE,
 		       nx, ny, nz, 0, GL_LUMINANCE,
 		       brick->tex_type(), brick->tex_data(c));
@@ -451,6 +502,9 @@ TextureRenderer::load_brick(TextureBrickHandle brick, bool use_cmap2)
   }
   brick->set_dirty(false);
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
+#ifdef _WIN32
+  if (glActiveTexture)
+#endif
   glActiveTexture(GL_TEXTURE0);
 #endif
   CHECK_OPENGL_ERROR("VolumeRenderer::load_texture end");
@@ -467,7 +521,10 @@ TextureRenderer::draw_polygons(vector<float>& vertex, vector<float>& texcoord,
     glGetFloatv(GL_MODELVIEW_MATRIX, mvmat);
   }
   if(buffer) {
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#ifdef _WIN32
+    if (glActiveTexture)
+#endif
     glActiveTexture(GL_TEXTURE3);
 #endif
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -492,11 +549,19 @@ TextureRenderer::draw_polygons(vector<float>& vertex, vector<float>& texcoord,
         float* t = &texcoord[(k+j)*3];
         float* v = &vertex[(k+j)*3];
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#ifdef _WIN32
+	if (glMultiTexCoord3f) {
+#endif // _WIN32
         glMultiTexCoord3f(GL_TEXTURE0, t[0], t[1], t[2]);
         if(fog) {
           float vz = mvmat[2]*v[0] + mvmat[6]*v[1] + mvmat[10]*v[2] + mvmat[14];
           glMultiTexCoord3f(GL_TEXTURE1, -vz, 0.0, 0.0);
         }
+#ifdef _WIN32
+	} else {
+	  glTexCoord3f(t[0], t[1], t[2]);
+	}
+#endif // _WIN32
 #else
 	glTexCoord3f(t[0], t[1], t[2]);
 #endif
@@ -512,6 +577,9 @@ TextureRenderer::draw_polygons(vector<float>& vertex, vector<float>& texcoord,
   }
   if(buffer) {
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
+#  ifdef _WIN32
+    if (glActiveTexture)
+#  endif // _WIN32
     glActiveTexture(GL_TEXTURE0);
 #endif
   }
@@ -693,7 +761,10 @@ TextureRenderer::build_colormap2()
         glDisable(GL_LIGHTING);
         glDisable(GL_CULL_FACE);
         glDisable(GL_BLEND);
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#  ifdef _WIN32
+	if (glActiveTexture)
+#  endif
         glActiveTexture(GL_TEXTURE0);
 #endif
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -730,6 +801,9 @@ TextureRenderer::build_colormap2()
       shader->setLocalParam(0, bp, imode_ ? 1.0/irate_ : 1.0/sampling_rate_,
                             0.0, 0.0);
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
+#ifdef _WIN32
+      if (glActiveTexture)
+#endif // _WIN32
       glActiveTexture(GL_TEXTURE0);
 #endif
       glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -858,7 +932,7 @@ TextureRenderer::bind_colormap1(unsigned int cmap_tex)
                GL_FLOAT,
                &(cmap1_array_(0, 0)));
 #elif defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
-  if (ShaderProgramARB::shaders_supported())
+  if (ShaderProgramARB::shaders_supported() && glActiveTexture)
   {
     glActiveTexture(GL_TEXTURE2_ARB);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -901,7 +975,7 @@ void
 TextureRenderer::bind_colormap2()
 {
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
-  if (ShaderProgramARB::shaders_supported())
+  if (ShaderProgramARB::shaders_supported() && glActiveTexture)
   {
     // bind texture to unit 2
     glActiveTexture(GL_TEXTURE2_ARB);
@@ -928,7 +1002,7 @@ TextureRenderer::release_colormap1()
 #if defined(GL_TEXTURE_COLOR_TABLE_SGI) && defined(__sgi)
   glDisable(GL_TEXTURE_COLOR_TABLE_SGI);
 #elif defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
-  if (ShaderProgramARB::shaders_supported())
+  if (ShaderProgramARB::shaders_supported() && glActiveTexture)
   {
     // bind texture to unit 2
     glActiveTexture(GL_TEXTURE2_ARB);
@@ -962,7 +1036,7 @@ void
 TextureRenderer::release_colormap2()
 {
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
-  if (ShaderProgramARB::shaders_supported())
+  if (ShaderProgramARB::shaders_supported() && glActiveTexture)
   {
     glActiveTexture(GL_TEXTURE2_ARB);
     if (!sw_raster_ && use_pbuffer_)
