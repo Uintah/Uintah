@@ -306,6 +306,7 @@ StructHexVolMesh::locate(Cell::index_type &cell, const Point &p)
 
   if (mindist > -1.0e-12)
   {
+    locate_cache_ = cell;
     return true;
   }
   else
