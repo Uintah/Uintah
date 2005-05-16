@@ -11559,10 +11559,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "glu32 opengl32 $GLU_OTHERS"; then
+if test -n "glu32 opengl32 gdi32 $GLU_OTHERS"; then
 
    found_framework=no
-   for lib in "" glu32 opengl32 $GLU_OTHERS; do
+   for lib in "" glu32 opengl32 gdi32 $GLU_OTHERS; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -11885,7 +11885,7 @@ echo "$as_me: error: Specifically requested GL include file '$_sci_inc/$i' was n
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" glu32 opengl32 $GLU_OTHERS; do
+  for i in "" glu32 opengl32 gdi32 $GLU_OTHERS; do
     if test -z "$i"; then
        continue
     fi
