@@ -178,7 +178,14 @@ PBuffer::PBuffer( int doubleBuffer /* = GL_FALSE */ ) :
   colorBits_(8),
   doubleBuffer_(doubleBuffer),
   depthBits_(8)
-{}
+{
+}
+
+
+PBuffer::~PBuffer()
+{
+}
+
 
 #ifdef HAVE_PBUFFER
 
