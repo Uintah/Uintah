@@ -1963,7 +1963,10 @@ ViewSlices::bind_slice(NrrdSlice &slice, float *tex, bool filter)
 
   if (!bound || slice.tex_dirty_) {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  
-#ifndef _WIN32
+#ifndef GL_CLAMP_TO_EDGE
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+#else
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 #endif
