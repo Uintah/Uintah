@@ -1877,7 +1877,7 @@ AC_LANG(C++)
 
 if test "$IS_WIN" = "yes"; then
   SCI_TRY_LINK(GL,OpenGL libraries and headers,windows.h GL/gl.h GL/glu.h,
-               $_sci_inc,glu32 opengl32 $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
+               $_sci_inc,glu32 opengl32 gdi32 $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
 else
   SCI_TRY_LINK(GL,OpenGL libraries and headers,GL/gl.h GL/glu.h GL/glx.h,
 	       $_sci_inc,GLU GL $GLU_OTHERS,$_sci_lib,,,$_sci_optional)

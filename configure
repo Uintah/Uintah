@@ -11476,7 +11476,7 @@ if test "$IS_WIN" = "yes"; then
 ## arg 2 : OpenGL libraries and headers
 ## arg 3 : windows.h GL/gl.h GL/glu.h
 ## arg 4 : $_sci_inc
-## arg 5 : glu32 opengl32 $GLU_OTHERS
+## arg 5 : glu32 opengl32 gdi32 $GLU_OTHERS
 ## arg 6 : $_sci_lib
 ## arg 7 :
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
