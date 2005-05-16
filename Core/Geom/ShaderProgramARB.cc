@@ -128,8 +128,6 @@ static PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsStringARB = 0;
 
 bool WGLisExtensionSupported(const char *extension)
 {
-  fprintf(stderr,"In WGLisExtension...\n");
-
   const size_t extlen = strlen(extension);
   const char *supported = NULL;
   
@@ -149,7 +147,6 @@ bool WGLisExtensionSupported(const char *extension)
 	p = strstr(p, extension);
 	
 	if (p == NULL) {
-	  fprintf(stderr,"wglExt: No match in wgl Extensions\n");
 	  break;
 	}
 	
@@ -161,7 +158,6 @@ bool WGLisExtensionSupported(const char *extension)
 	// Or Else "wglExtensionTwo" Might Match "wglExtension"
 	if ((p==supported || p[-1]==' ') && (p[extlen]=='\0' || p[extlen]==' '))
 	  {
-	    fprintf(stderr,"WGLExt: Returning with match!\n");
 	    return true;  // Match
 	  }
       }
@@ -175,15 +171,12 @@ bool WGLisExtensionSupported(const char *extension)
     return false;
   
   // Begin Examination At Start Of String, Increment By 1 On False Match
-    fprintf(stderr,"In WGLisExtension for %s --- before loop\n",extension);
-
   for (const char* p = supported; ; p++)
     {
       // Advance p Up To The Next Possible Match
       p = strstr(p, extension);
       
       if (p == NULL) {
-	fprintf(stderr,"wglExt: No match in gl Extensions\n");
 	return false;						// No Match
       }
       
@@ -194,7 +187,6 @@ bool WGLisExtensionSupported(const char *extension)
       // Also, Make Sure That The Following Character Is Space Or NULL
       // Or Else "wglExtensionTwo" Might Match "wglExtension"
       if ((p==supported || p[-1]==' ') && (p[extlen]=='\0' || p[extlen]==' ')) {
-	fprintf(stderr,"WGLExt: Returning with match!\n");
 	return true;						// Match
       }
     }
@@ -232,7 +224,6 @@ ShaderProgramARB::valid()
 void
 ShaderProgramARB::init_shaders_supported()
 {
-  int iii=0;
   if(!mInit)
   {
     ShaderProgramARB_mInitMutex.lock();
