@@ -32,7 +32,7 @@
 
 #include <Core/Volume/CM2Widget.h>
 #include <Core/Geom/ShaderProgramARB.h>
-#include <Core/Volume/Pbuffer.h>
+#include <Core/Geom/PBuffer.h>
 #include <Core/Volume/Utils.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>

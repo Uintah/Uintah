@@ -88,6 +88,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/OpenGLContext.cc	    		\
 	$(SRCDIR)/OpenGLViewport.cc	    		\
 	$(SRCDIR)/Path.cc		    		\
+	$(SRCDIR)/PBuffer.cc		    		\
 	$(SRCDIR)/PointLight.cc		    		\
 	$(SRCDIR)/SpotLight.cc		    		\
 	$(SRCDIR)/ShaderProgramARB.cc                   \

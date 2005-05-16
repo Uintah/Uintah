@@ -35,7 +35,6 @@ SRCDIR   := Core/Volume
 SRCS +=	$(SRCDIR)/CM2Shader.cc \
 	$(SRCDIR)/CM2Widget.cc \
 	$(SRCDIR)/Colormap2.cc \
-	$(SRCDIR)/Pbuffer.cc \
 	$(SRCDIR)/SliceRenderer.cc \
 	$(SRCDIR)/Texture.cc \
 	$(SRCDIR)/TextureBrick.cc \
