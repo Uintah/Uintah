@@ -27,11 +27,15 @@
 */
 
 
+// NOTE: This MatlabIO file is used in different projects as well. Please, do not
+// make it depend on other scirun code. This way it is easier to maintain matlabIO 
+// code among different projects. Thank you.
+
 
 /*
  * FILE: matfiledefs.h
  * AUTH: Jeroen G Stinstra
- * DATE: 21 FEB 2004
+ * DATE: 16 MAY 2005
  */
  
 #ifndef JGS_MATLABIO_MATFILEDEFS_H
@@ -52,9 +56,9 @@
 #ifdef _WIN32
 	typedef signed __int64 int64;
 	typedef unsigned __int64 uint64;
-
 #include <stdint.h>
-        typedef uint32_t u_int32_t;
+  typedef uint32_t u_int32_t;
+  
 #else
 	typedef signed long long int64;
 	typedef unsigned long long uint64;

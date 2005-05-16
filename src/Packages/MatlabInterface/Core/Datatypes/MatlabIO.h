@@ -27,10 +27,14 @@
 */
 
 
+// NOTE: This MatlabIO file is used in different projects as well. Please, do not
+// make it depend on other scirun code. This way it is easier to maintain matlabIO 
+// code among different projects. Thank you.
+
 /*
  * FILE: MatlabIO.h
  * AUTH: Jeroen G Stinstra
- * DATE: 28 APR 2004
+ * DATE: 16 MAY 2005
  */
 
 // This will include as well all the other include files

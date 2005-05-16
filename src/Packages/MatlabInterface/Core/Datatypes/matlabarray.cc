@@ -27,10 +27,14 @@
 */
 
 
+// NOTE: This MatlabIO file is used in different projects as well. Please, do not
+// make it depend on other scirun code. This way it is easier to maintain matlabIO 
+// code among different projects. Thank you.
+
 /*
  * FILE: matlabarray.h
  * AUTH: Jeroen G Stinstra
- * DATE: 21 FEB 2004
+ * DATE: 16 MAY 2005
  */
 
 #include "matlabarray.h"
@@ -814,14 +818,14 @@ void matlabarray::createclassarray(std::vector<long> &dims,std::vector<std::stri
     clear(); // make sure there is no data
 	
     m_ = new mxarray;
-	m_->ref_ = 1;
+  	m_->ref_ = 1;
     m_->class_ = mlOBJECT;
     m_->type_ = miMATRIX;  // need to add some type checking here
     m_->flags_ = 0;
     setdims(dims);
     m_->classname_ = classname;
     m_->fieldnames_ = fieldnames;
-	m_->subarray_.clear();	
+	  m_->subarray_.clear();	
     m_->subarray_.resize(getnumelements()*getnumfields());
 }    
 
