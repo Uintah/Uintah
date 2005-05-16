@@ -29,8 +29,8 @@
 //    Author : Milan Ikits
 //    Date   : Sun Jun 27 17:49:31 2004
 
-#ifndef SCI_Geom_PBuffer_h
-#define SCI_Geom_PBuffer_h 1
+#ifndef SCI_Geom_Pbuffer_h
+#define SCI_Geom_Pbuffer_h 1
 
 // TODO:  Maybe get rid of this?  Used in Dataflow/Modules/Render/OpenGL.cc
 #if (defined(__linux) && !defined(__ECC)) || defined(__APPLE__) || defined(_WIN32)
@@ -95,4 +95,4 @@ protected:
 
 } // end namespace SCIRun
 
-#endif // SCI_Geom_PBuffer_h
+#endif // SCI_Geom_Pbuffer_h
