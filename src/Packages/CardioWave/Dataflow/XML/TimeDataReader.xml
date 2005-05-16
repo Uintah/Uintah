@@ -119,6 +119,10 @@
         <name>Selected Index</name>
         <datatype>SCIRun::Matrix</datatype>
       </port>
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
     </outputs>
   </io>
   <gui>

@@ -40,6 +40,14 @@
 #include <stdint.h>
         typedef uint32_t u_int32_t;
 #else
+  
+  #define __USE_LARGEFILE64
+  #include <fcntl.h>
+
+  #ifndef O_LARGEFILE
+  #define O_LARGEFILE 0
+  #endif
+
 	typedef signed long long int64;
 	typedef unsigned long long uint64;
 #endif
@@ -454,7 +462,7 @@ void TimeDataFile::getcolmatrix(SCIRun::MatrixHandle& mh,int colstart,int colend
     
     int numcols = colend-colstart + 1;
     
-    SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(nrows,numcols);
+    SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(numcols,nrows);
     
     if (mat == 0)
     {
@@ -481,7 +489,7 @@ void TimeDataFile::getcolmatrix(SCIRun::MatrixHandle& mh,int colstart,int colend
     fclose(datafile);
     
   #else
-      datafile_uni = ::open(datafilename.c_str(),O_RDONLY,0);
+      datafile_uni = ::open(datafilename.c_str(),O_RDONLY|O_LARGEFILE,0);
       if (datafile_uni < 0) 
       {
         throw TimeDataFileException("Could not find/open datafile");
@@ -522,7 +530,8 @@ void TimeDataFile::getcolmatrix(SCIRun::MatrixHandle& mh,int colstart,int colend
     
     int numcols = colend-colstart + 1;
     
-    SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(nrows,numcols);
+    SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(numcols,nrows);
+
     
     if (mat == 0)
     {
@@ -544,6 +553,7 @@ void TimeDataFile::getcolmatrix(SCIRun::MatrixHandle& mh,int colstart,int colend
     {
       ::close(datafile_uni);
       delete mat;
+      throw TimeDataFileException("Improper data file, check number of columns and rows in header file");
     }
    
     ::close(datafile_uni);
@@ -663,7 +673,7 @@ void TimeDataFile::getcolnrrd(NrrdDataHandle& mh,int colstart,int colend)
     }
     fclose(datafile); 
   #else
-    datafile_uni = ::open(datafilename.c_str(),O_RDONLY,0);
+    datafile_uni = ::open(datafilename.c_str(),O_RDONLY|O_LARGEFILE,0);
     if (datafile_uni < 0) 
     {
       throw TimeDataFileException("Could not find/open datafile");
@@ -862,7 +872,7 @@ void TimeDataFile::getrownrrd(SCIRun::NrrdDataHandle& mh,int rowstart,int rowend
     fclose(datafile);
   #else
  
-    datafile_uni = ::open(datafilename.c_str(),O_RDONLY,0);
+    datafile_uni = ::open(datafilename.c_str(),O_RDONLY|O_LARGEFILE,0);
     if (datafile_uni < 0) 
     {
       throw TimeDataFileException("Could not find/open datafile");
@@ -1013,7 +1023,7 @@ void TimeDataFile::getrowmatrix(SCIRun::MatrixHandle& mh,int rowstart,int rowend
     
     int numrows =rowend-rowstart + 1;
     
-    SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(numrows,ncols);
+    SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(ncols,numrows);
     
     if (mat == 0)
     {
@@ -1047,7 +1057,7 @@ void TimeDataFile::getrowmatrix(SCIRun::MatrixHandle& mh,int rowstart,int rowend
     }
     fclose(datafile);
   #else
-    datafile_uni = ::open(datafilename.c_str(),O_RDONLY,0);
+    datafile_uni = ::open(datafilename.c_str(),O_RDONLY|O_LARGEFILE,0);
     if (datafile_uni < 0) 
     {
       throw TimeDataFileException("Could not find/open datafile");
@@ -1088,7 +1098,7 @@ void TimeDataFile::getrowmatrix(SCIRun::MatrixHandle& mh,int rowstart,int rowend
     
     int numrows =rowend-rowstart + 1;
     
-    SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(numrows,ncols);
+    SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(ncols,numrows);
     
     if (mat == 0)
     {

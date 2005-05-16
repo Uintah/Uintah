@@ -96,7 +96,7 @@ FieldSetFieldProperty::execute()
   FieldHandle fhandle;
   FieldIPort *ifport;
         
-  if(!(iport = static_cast<FieldIPort *>(get_iport("field"))))
+  if(!(iport = static_cast<FieldIPort *>(getIPort("field"))))
     {
       error("Could not find field input port");
       return;
@@ -113,7 +113,7 @@ FieldSetFieldProperty::execute()
   }
   
   // Scan field input port 1
-  if (!(ifport = static_cast<FieldIPort *>(get_iport("field1"))))
+  if (!(ifport = static_cast<FieldIPort *>(getIPort("field1"))))
     {
       error("Could not find field 1 input port");
       return;
@@ -136,7 +136,7 @@ FieldSetFieldProperty::execute()
     }
 
   // Scan field input port 2     
-  if (!(ifport = static_cast<FieldIPort *>(get_iport("field2"))))
+  if (!(ifport = static_cast<FieldIPort *>(getIPort("field2"))))
     {
       error("Could not find field 2 input port");
       return;
@@ -160,7 +160,7 @@ FieldSetFieldProperty::execute()
     }
 
   // Scan field input port 3     
-  if (!(ifport = static_cast<FieldIPort *>(get_iport("field3"))))
+  if (!(ifport = static_cast<FieldIPort *>(getIPort("field3"))))
     {
       error("Could not find field 3 input port");
       return;
