@@ -45,6 +45,9 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 #include <sstream>
+#ifdef _WIN32
+#include <Windows.h>
+#endif
 
 namespace SCIRun {
 
@@ -440,10 +443,14 @@ MatrixSelectVector::execute()
 	const int delay = delay_.get();
       
 	if( delay > 0) {
+#ifndef _WIN32
 	  const unsigned int secs = delay / 1000;
 	  const unsigned int msecs = delay % 1000;
 	  if (secs)  { sleep(secs); }
 	  if (msecs) { usleep(msecs * 1000); }
+#else 
+	  Sleep(delay);
+#endif
 	}
     
 	int next = increment(which, lower, upper);    
