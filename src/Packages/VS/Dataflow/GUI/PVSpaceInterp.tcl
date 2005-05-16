@@ -34,7 +34,7 @@ catch {rename VS_Fields_PVSpaceInterp ""}
 itcl_class VS_Fields_PVSpaceInterp {
     inherit Module
     constructor {config} {
-        set name UnuHeq
+        set name PVSpaceInterp
         set_defaults
     }
     method set_defaults {} {
