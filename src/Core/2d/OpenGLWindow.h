@@ -56,6 +56,10 @@
 #include <Core/Datatypes/Color.h>
 
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 namespace SCIRun {
 
 class OpenGLWindow : public TclObj {
@@ -67,6 +71,9 @@ private:
   Window win;
   Display* dpy;
   GLXContext cx;
+#else
+  HDC hdc;
+  HGLRC hglrc;
 #endif
   GLuint base;  
 
