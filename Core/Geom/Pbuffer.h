@@ -47,7 +47,6 @@ class Pbuffer
 public:
   Pbuffer(int width, int height, int format = GL_INT /* GL_INT or GL_FLOAT */,
           int numColorBits = 8 /* 8, 16, 32 */,
-          /* int numChannels / 1, 2, 3, 4 /, */
           bool isRenderTex = true, int isDoubleBuffer = GL_TRUE,
           int numAuxBuffers = GL_DONT_CARE, int numDepthBits = GL_DONT_CARE,
           int numStencilBits = GL_DONT_CARE, int numAccumBits = GL_DONT_CARE);
