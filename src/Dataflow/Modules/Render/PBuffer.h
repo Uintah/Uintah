@@ -61,7 +61,7 @@ class PBuffer
 {
 public:
   PBuffer( int doubleBuffer = GL_FALSE );
-  ~PBuffer() {}
+  ~PBuffer();
 
   // Returns false if the creation fails.
 #ifndef _WIN32
