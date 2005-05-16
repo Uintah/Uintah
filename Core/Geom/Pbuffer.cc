@@ -29,7 +29,7 @@
 //    Author : Milan Ikits
 //    Date   : Sun Jun 27 17:49:45 2004
 
-#include <Core/Geom/PBuffer.h>
+#include <Core/Geom/Pbuffer.h>
 #include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Util/Environment.h>
 
