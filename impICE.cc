@@ -645,7 +645,7 @@ void ICE::updatePressure(const ProcessorGroup*,
     old_dw->get(pressure,             lb->press_CCLabel,    0,patch,gn,0);
     new_dw->get(imp_delP,             lb->imp_delPLabel,    0,patch,gn,0);
     new_dw->allocateAndPut(press_CC,  lb->press_CCLabel,    0,patch);  
-    press_CC.initialize(-9e100);
+    press_CC.initialize(d_EVIL_NUM);
     
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
