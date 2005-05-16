@@ -26,6 +26,9 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+// NOTE: This MatlabIO file is used in different projects as well. Please, do not
+// make it depend on other scirun code. This way it is easier to maintain matlabIO 
+// code among different projects. Thank you.
 
 /*
  * FILE: matfile.h

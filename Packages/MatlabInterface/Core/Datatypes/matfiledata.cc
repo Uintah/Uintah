@@ -26,11 +26,14 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+// NOTE: This MatlabIO file is used in different projects as well. Please, do not
+// make it depend on other scirun code. This way it is easier to maintain matlabIO 
+// code among different projects. Thank you.
 
 /*
  * FILE: matfile.cc
  * AUTH: Jeroen G Stinstra
- * DATE: 21 FEB 2004
+ * DATE: 16 MAY 2005
  */
  
 /*
@@ -73,7 +76,7 @@ matfiledata::matfiledata(matfiledata::mitype type)
 {
     m_ = new mxdata;
     m_->dataptr_ = 0; 
-	m_->owndata_ = false;
+  	m_->owndata_ = false;
     m_->bytesize_ = 0;
     m_->type_ = type;
     m_->ref_ = 1; 
