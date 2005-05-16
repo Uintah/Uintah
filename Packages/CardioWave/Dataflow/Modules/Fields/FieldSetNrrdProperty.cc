@@ -96,7 +96,7 @@ FieldSetNrrdProperty::execute()
   NrrdDataHandle fhandle;
   NrrdIPort *ifport;
         
-  if(!(iport = static_cast<FieldIPort *>(get_iport("field"))))
+  if(!(iport = static_cast<FieldIPort *>(getIPort("field"))))
     {
       error("Could not find field input port");
       return;
@@ -113,7 +113,7 @@ FieldSetNrrdProperty::execute()
   }
   
   // Scan nrrd input port 1
-  if (!(ifport = static_cast<NrrdIPort *>(get_iport("nrrd1"))))
+  if (!(ifport = static_cast<NrrdIPort *>(getIPort("nrrd1"))))
     {
       error("Could not find nrrd 1 input port");
       return;
@@ -136,7 +136,7 @@ FieldSetNrrdProperty::execute()
     }
 
   // Scan nrrd input port 2     
-  if (!(ifport = static_cast<NrrdIPort *>(get_iport("nrrd2"))))
+  if (!(ifport = static_cast<NrrdIPort *>(getIPort("nrrd2"))))
     {
       error("Could not find nrrd 2 input port");
       return;
@@ -160,7 +160,7 @@ FieldSetNrrdProperty::execute()
     }
 
   // Scan nrrd input port 3     
-  if (!(ifport = static_cast<NrrdIPort *>(get_iport("nrrd3"))))
+  if (!(ifport = static_cast<NrrdIPort *>(getIPort("nrrd3"))))
     {
       error("Could not find nrrd 3 input port");
       return;

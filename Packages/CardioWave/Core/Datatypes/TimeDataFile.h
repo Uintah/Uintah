@@ -94,6 +94,12 @@ class TimeDataFile {
     void getrowmatrix(MatrixHandle& mh,int rowstart,int rowend);
     void getcolnrrd(NrrdDataHandle& nh,int colstart,int colend);
     void getrownrrd(NrrdDataHandle& nh,int rowstart,int rowend);
+
+//    void getcolmatrix(MatrixHandle& mh,std::vector<int> indices);
+//    void getrowmatrix(MatrixHandle& mh,std::vector<int> indices);
+//    void getcolnrrd(NrrdDataHandle& nh,std::vector<int> indices);
+//    void getrownrrd(NrrdDataHandle& nh,std::vector<int> indices);
+
     
   private:  
     std::string remspaces(std::string str);

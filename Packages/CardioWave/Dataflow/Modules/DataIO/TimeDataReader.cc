@@ -225,7 +225,30 @@ void TimeDataReader::execute()
 {
   update_state(NeedData);
   
-  std::string filename = guifilename_.get();
+  std::string filename;
+  
+  NrrdIPort *filenameport;
+  if ((filenameport = static_cast<NrrdIPort *>(getIPort("Filename"))))
+  {
+    NrrdDataHandle nrrdH;
+    if (filenameport->get(nrrdH))
+    {
+        NrrdString fname(nrrdH);
+        std::string filename = fname.getstring();
+        guifilename_.set(filename);
+        ctx->reset();
+    }
+  }  
+  filename = guifilename_.get();
+
+  NrrdOPort *filenameoport;
+  if ((filenameoport = static_cast<NrrdOPort *>(getOPort("Filename"))))
+  {
+      NrrdString ns(filename);
+      NrrdDataHandle nrrdH = ns.gethandle(); 
+      filenameoport->send(nrrdH);
+  }
+  
   try
   {
     datafile_.open(filename);

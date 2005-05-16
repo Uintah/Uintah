@@ -27,7 +27,7 @@
 */
 
 /*
- *  MissingMath.cc:
+ *  ExtraMath.cc:
  *
  *  Written by:
  *  Jeroen Stinstra

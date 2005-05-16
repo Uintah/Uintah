@@ -17,6 +17,7 @@ SRCS	+= \
 	$(SRCDIR)/CreateString.cc\
 	$(SRCDIR)/CreateScalar.cc\
 	$(SRCDIR)/CreateParametersBundle.cc\
+  $(SRCDIR)/FileSelector.cc\
 #	$(SRCDIR)/ScalarRange.cc\
 #	$(SRCDIR)/SetBundleName.cc\
 #	$(SRCDIR)/SetColorMapName.cc\

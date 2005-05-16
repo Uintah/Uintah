@@ -96,7 +96,7 @@ FieldSetMatrixProperty::execute()
   MatrixHandle fhandle;
   MatrixIPort *ifport;
         
-  if(!(iport = static_cast<FieldIPort *>(get_iport("field"))))
+  if(!(iport = static_cast<FieldIPort *>(getIPort("field"))))
     {
       error("Could not find field input port");
       return;
@@ -113,7 +113,7 @@ FieldSetMatrixProperty::execute()
   }
   
   // Scan matrix input port 1
-  if (!(ifport = static_cast<MatrixIPort *>(get_iport("matrix1"))))
+  if (!(ifport = static_cast<MatrixIPort *>(getIPort("matrix1"))))
     {
       error("Could not find matrix 1 input port");
       return;
@@ -136,7 +136,7 @@ FieldSetMatrixProperty::execute()
     }
 
   // Scan matrix input port 2     
-  if (!(ifport = static_cast<MatrixIPort *>(get_iport("matrix2"))))
+  if (!(ifport = static_cast<MatrixIPort *>(getIPort("matrix2"))))
     {
       error("Could not find matrix 2 input port");
       return;
@@ -160,7 +160,7 @@ FieldSetMatrixProperty::execute()
     }
 
   // Scan matrix input port 3     
-  if (!(ifport = static_cast<MatrixIPort *>(get_iport("matrix3"))))
+  if (!(ifport = static_cast<MatrixIPort *>(getIPort("matrix3"))))
     {
       error("Could not find matrix 3 input port");
       return;

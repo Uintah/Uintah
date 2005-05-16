@@ -91,7 +91,7 @@ FieldGetMatrixProperty::execute()
   MatrixOPort *ofport;
   MatrixHandle fhandle;
         
-  if(!(iport = static_cast<FieldIPort *>(get_iport("field"))))
+  if(!(iport = static_cast<FieldIPort *>(getIPort("field"))))
     {
       error("Could not find field input port");
       return;
@@ -127,7 +127,7 @@ FieldGetMatrixProperty::execute()
       return; 
     }
  
-  NrrdIPort *niport = static_cast<NrrdIPort *>(get_iport("name1"));
+  NrrdIPort *niport = static_cast<NrrdIPort *>(getIPort("name1"));
   if (niport)
     {
       NrrdDataHandle matrixH;
@@ -154,7 +154,7 @@ FieldGetMatrixProperty::execute()
       return; 
     }
  
-   niport = static_cast<NrrdIPort *>(get_iport("name2"));
+   niport = static_cast<NrrdIPort *>(getIPort("name2"));
   if (niport)
     {
       NrrdDataHandle matrixH;
@@ -181,7 +181,7 @@ FieldGetMatrixProperty::execute()
       return; 
     }
  
-  niport = static_cast<NrrdIPort *>(get_iport("name3"));
+  niport = static_cast<NrrdIPort *>(getIPort("name3"));
   if (niport)
     {
       NrrdDataHandle matrixH;

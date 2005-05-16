@@ -33,6 +33,7 @@ SRCS := \
 	$(SRCDIR)/FieldSetFieldProperty.tcl\
 	$(SRCDIR)/FieldSetMatrixProperty.tcl\
 	$(SRCDIR)/FieldSetNrrdProperty.tcl\
+	$(SRCDIR)/FileSelector.tcl\
 	$(SRCDIR)/CreateParametersBundle.tcl \
 	$(SRCDIR)/CreateString.tcl \
 	$(SRCDIR)/CreateScalar.tcl \
@@ -43,8 +44,8 @@ SRCS := \
 	$(SRCDIR)/RemoveInteriorTets.tcl \
 	$(SRCDIR)/SetupFVMatrix.tcl \
 	$(SRCDIR)/SetupFVM2.tcl \
-  	$(SRCDIR)/TimeDataReader.tcl\
-  	$(SRCDIR)/ReduceBandWidth.tcl\
+  $(SRCDIR)/TimeDataReader.tcl\
+  $(SRCDIR)/ReduceBandWidth.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
