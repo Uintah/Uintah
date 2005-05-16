@@ -41,9 +41,15 @@
 #include <sci_glu.h>
 #include <sci_glx.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 using std::cerr;
 using std::endl;
 using std::string;
+
+#ifndef _WIN32
 
 #ifndef GLX_ATI_pixel_format_float
 
@@ -91,10 +97,8 @@ using std::string;
 #define GLX_BIND_TO_TEXTURE_LUMINANCE_ATI 0x9821
 #define GLX_BIND_TO_TEXTURE_INTENSITY_ATI 0x9822
 
-#ifndef _WIN32
 typedef void ( * PFNGLXBINDTEXIMAGEATIPROC) (Display *dpy, GLXPbuffer pbuf, int buffer);
 typedef void ( * PFNGLXRELEASETEXIMAGEATIPROC) (Display *dpy, GLXPbuffer pbuf, int buffer);
-#endif
 
 #endif /* GLX_ATI_render_texture */
 
@@ -103,6 +107,191 @@ typedef void ( * PFNGLXRELEASETEXIMAGEATIPROC) (Display *dpy, GLXPbuffer pbuf, i
 #define GLX_FLOAT_COMPONENTS_NV 0x20B0
 
 #endif /* GLX_NV_float_buffer */
+
+#else // WIN32
+
+#ifndef WGL_ARB_pbuffer
+#define WGL_ARB_pbuffer 1
+
+#define WGL_DRAW_TO_PBUFFER_ARB 0x202D
+#define WGL_MAX_PBUFFER_PIXELS_ARB 0x202E
+#define WGL_MAX_PBUFFER_WIDTH_ARB 0x202F
+#define WGL_MAX_PBUFFER_HEIGHT_ARB 0x2030
+#define WGL_PBUFFER_LARGEST_ARB 0x2033
+#define WGL_PBUFFER_WIDTH_ARB 0x2034
+#define WGL_PBUFFER_HEIGHT_ARB 0x2035
+#define WGL_PBUFFER_LOST_ARB 0x2036
+
+DECLARE_HANDLE(HPBUFFERARB);
+
+typedef HPBUFFERARB (WINAPI * PFNWGLCREATEPBUFFERARBPROC) (HDC hDC, int iPixelFormat, int iWidth, int iHeight, const int* piAttribList);
+typedef BOOL (WINAPI * PFNWGLDESTROYPBUFFERARBPROC) (HPBUFFERARB hPbuffer);
+typedef HDC (WINAPI * PFNWGLGETPBUFFERDCARBPROC) (HPBUFFERARB hPbuffer);
+typedef BOOL (WINAPI * PFNWGLQUERYPBUFFERARBPROC) (HPBUFFERARB hPbuffer, int iAttribute, int* piValue);
+typedef int (WINAPI * PFNWGLRELEASEPBUFFERDCARBPROC) (HPBUFFERARB hPbuffer, HDC hDC);
+
+#endif /* WGL_ARB_pbuffer */
+
+/* -------------------------- WGL_ARB_pixel_format ------------------------- */
+
+#ifndef WGL_ARB_pixel_format
+#define WGL_ARB_pixel_format 1
+
+#define WGL_NUMBER_PIXEL_FORMATS_ARB 0x2000
+#define WGL_DRAW_TO_WINDOW_ARB 0x2001
+#define WGL_DRAW_TO_BITMAP_ARB 0x2002
+#define WGL_ACCELERATION_ARB 0x2003
+#define WGL_NEED_PALETTE_ARB 0x2004
+#define WGL_NEED_SYSTEM_PALETTE_ARB 0x2005
+#define WGL_SWAP_LAYER_BUFFERS_ARB 0x2006
+#define WGL_SWAP_METHOD_ARB 0x2007
+#define WGL_NUMBER_OVERLAYS_ARB 0x2008
+#define WGL_NUMBER_UNDERLAYS_ARB 0x2009
+#define WGL_TRANSPARENT_ARB 0x200A
+#define WGL_SHARE_DEPTH_ARB 0x200C
+#define WGL_SHARE_STENCIL_ARB 0x200D
+#define WGL_SHARE_ACCUM_ARB 0x200E
+#define WGL_SUPPORT_GDI_ARB 0x200F
+#define WGL_SUPPORT_OPENGL_ARB 0x2010
+#define WGL_DOUBLE_BUFFER_ARB 0x2011
+#define WGL_STEREO_ARB 0x2012
+#define WGL_PIXEL_TYPE_ARB 0x2013
+#define WGL_COLOR_BITS_ARB 0x2014
+#define WGL_RED_BITS_ARB 0x2015
+#define WGL_RED_SHIFT_ARB 0x2016
+#define WGL_GREEN_BITS_ARB 0x2017
+#define WGL_GREEN_SHIFT_ARB 0x2018
+#define WGL_BLUE_BITS_ARB 0x2019
+#define WGL_BLUE_SHIFT_ARB 0x201A
+#define WGL_ALPHA_BITS_ARB 0x201B
+#define WGL_ALPHA_SHIFT_ARB 0x201C
+#define WGL_ACCUM_BITS_ARB 0x201D
+#define WGL_ACCUM_RED_BITS_ARB 0x201E
+#define WGL_ACCUM_GREEN_BITS_ARB 0x201F
+#define WGL_ACCUM_BLUE_BITS_ARB 0x2020
+#define WGL_ACCUM_ALPHA_BITS_ARB 0x2021
+#define WGL_DEPTH_BITS_ARB 0x2022
+#define WGL_STENCIL_BITS_ARB 0x2023
+#define WGL_AUX_BUFFERS_ARB 0x2024
+#define WGL_NO_ACCELERATION_ARB 0x2025
+#define WGL_GENERIC_ACCELERATION_ARB 0x2026
+#define WGL_FULL_ACCELERATION_ARB 0x2027
+#define WGL_SWAP_EXCHANGE_ARB 0x2028
+#define WGL_SWAP_COPY_ARB 0x2029
+#define WGL_SWAP_UNDEFINED_ARB 0x202A
+#define WGL_TYPE_RGBA_ARB 0x202B
+#define WGL_TYPE_COLORINDEX_ARB 0x202C
+#define WGL_TRANSPARENT_RED_VALUE_ARB 0x2037
+#define WGL_TRANSPARENT_GREEN_VALUE_ARB 0x2038
+#define WGL_TRANSPARENT_BLUE_VALUE_ARB 0x2039
+#define WGL_TRANSPARENT_ALPHA_VALUE_ARB 0x203A
+#define WGL_TRANSPARENT_INDEX_VALUE_ARB 0x203B
+
+typedef BOOL (WINAPI * PFNWGLCHOOSEPIXELFORMATARBPROC) (HDC hdc, const int* piAttribIList, const FLOAT *pfAttribFList, UINT nMaxFormats, int *piFormats, UINT *nNumFormats);
+typedef BOOL (WINAPI * PFNWGLGETPIXELFORMATATTRIBFVARBPROC) (HDC hdc, int iPixelFormat, int iLayerPlane, UINT nAttributes, const int* piAttributes, FLOAT *pfValues);
+typedef BOOL (WINAPI * PFNWGLGETPIXELFORMATATTRIBIVARBPROC) (HDC hdc, int iPixelFormat, int iLayerPlane, UINT nAttributes, const int* piAttributes, int *piValues);
+
+#endif /* WGL_ARB_pixel_format */
+
+/* ------------------------- WGL_ARB_render_texture ------------------------ */
+
+#ifndef WGL_ARB_render_texture
+#define WGL_ARB_render_texture 1
+
+#define WGL_BIND_TO_TEXTURE_RGB_ARB 0x2070
+#define WGL_BIND_TO_TEXTURE_RGBA_ARB 0x2071
+#define WGL_TEXTURE_FORMAT_ARB 0x2072
+#define WGL_TEXTURE_TARGET_ARB 0x2073
+#define WGL_MIPMAP_TEXTURE_ARB 0x2074
+#define WGL_TEXTURE_RGB_ARB 0x2075
+#define WGL_TEXTURE_RGBA_ARB 0x2076
+#define WGL_NO_TEXTURE_ARB 0x2077
+#define WGL_TEXTURE_CUBE_MAP_ARB 0x2078
+#define WGL_TEXTURE_1D_ARB 0x2079
+#define WGL_TEXTURE_2D_ARB 0x207A
+#define WGL_MIPMAP_LEVEL_ARB 0x207B
+#define WGL_CUBE_MAP_FACE_ARB 0x207C
+#define WGL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB 0x207D
+#define WGL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB 0x207E
+#define WGL_TEXTURE_CUBE_MAP_POSITIVE_Y_ARB 0x207F
+#define WGL_TEXTURE_CUBE_MAP_NEGATIVE_Y_ARB 0x2080
+#define WGL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB 0x2081
+#define WGL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB 0x2082
+#define WGL_FRONT_LEFT_ARB 0x2083
+#define WGL_FRONT_RIGHT_ARB 0x2084
+#define WGL_BACK_LEFT_ARB 0x2085
+#define WGL_BACK_RIGHT_ARB 0x2086
+#define WGL_AUX0_ARB 0x2087
+#define WGL_AUX1_ARB 0x2088
+#define WGL_AUX2_ARB 0x2089
+#define WGL_AUX3_ARB 0x208A
+#define WGL_AUX4_ARB 0x208B
+#define WGL_AUX5_ARB 0x208C
+#define WGL_AUX6_ARB 0x208D
+#define WGL_AUX7_ARB 0x208E
+#define WGL_AUX8_ARB 0x208F
+#define WGL_AUX9_ARB 0x2090
+
+typedef BOOL (WINAPI * PFNWGLBINDTEXIMAGEARBPROC) (HPBUFFERARB hPbuffer, int iBuffer);
+typedef BOOL (WINAPI * PFNWGLRELEASETEXIMAGEARBPROC) (HPBUFFERARB hPbuffer, int iBuffer);
+typedef BOOL (WINAPI * PFNWGLSETPBUFFERATTRIBARBPROC) (HPBUFFERARB hPbuffer, const int* piAttribList);
+
+
+#endif /* WGL_ARB_render_texture */
+
+/* ----------------------- WGL_ARB_extensions_string ----------------------- */
+
+#ifndef WGL_ARB_extensions_string
+#define WGL_ARB_extensions_string 1
+
+typedef const char* (WINAPI * PFNWGLGETEXTENSIONSSTRINGARBPROC) (HDC hdc);
+
+
+#endif /* WGL_ARB_extensions_string */
+
+/* -------------------- WGL_NV_render_texture_rectangle -------------------- */
+
+#ifndef WGL_NV_render_texture_rectangle
+#define WGL_NV_render_texture_rectangle 1
+
+#define WGL_BIND_TO_TEXTURE_RECTANGLE_RGB_NV 0x20A0
+#define WGL_BIND_TO_TEXTURE_RECTANGLE_RGBA_NV 0x20A1
+#define WGL_TEXTURE_RECTANGLE_NV 0x20A2
+
+
+#endif /* WGL_NV_render_texture_rectangle */
+
+/* ----------------------- WGL_ATI_pixel_format_float ---------------------- */
+
+#ifndef WGL_ATI_pixel_format_float
+#define WGL_ATI_pixel_format_float 1
+
+#define WGL_TYPE_RGBA_FLOAT_ATI 0x21A0
+#define GL_RGBA_FLOAT_MODE_ATI 0x8820
+#define GL_COLOR_CLEAR_UNCLAMPED_VALUE_ATI 0x8835
+
+
+#endif /* WGL_ATI_pixel_format_float */
+/* -------------------------- WGL_NV_float_buffer -------------------------- */
+
+#ifndef WGL_NV_float_buffer
+#define WGL_NV_float_buffer 1
+
+#define WGL_FLOAT_COMPONENTS_NV 0x20B0
+#define WGL_BIND_TO_TEXTURE_RECTANGLE_FLOAT_R_NV 0x20B1
+#define WGL_BIND_TO_TEXTURE_RECTANGLE_FLOAT_RG_NV 0x20B2
+#define WGL_BIND_TO_TEXTURE_RECTANGLE_FLOAT_RGB_NV 0x20B3
+#define WGL_BIND_TO_TEXTURE_RECTANGLE_FLOAT_RGBA_NV 0x20B4
+#define WGL_TEXTURE_FLOAT_R_NV 0x20B5
+#define WGL_TEXTURE_FLOAT_RG_NV 0x20B6
+#define WGL_TEXTURE_FLOAT_RGB_NV 0x20B7
+#define WGL_TEXTURE_FLOAT_RGBA_NV 0x20B8
+
+#define WGLEW_NV_float_buffer WGLEW_GET_VAR(__WGLEW_NV_float_buffer)
+
+#endif /* WGL_NV_float_buffer */
+
+#endif //  WIN32
 
 #ifndef GL_NV_float_buffer
 
@@ -133,11 +322,14 @@ typedef void ( * PFNGLXRELEASETEXIMAGEATIPROC) (Display *dpy, GLXPbuffer pbuf, i
 
 #endif /* GL_NV_texture_rectangle */
 
+#ifndef _WIN32
 #if !defined(GLX_ARB_get_proc_address) || !defined(GLX_GLXEXT_PROTOTYPES)
 
 extern "C" void ( * glXGetProcAddressARB (const GLubyte *procName)) (void);
 
 #endif /* GLX_ARB_get_proc_address */
+#endif
+
 
 #ifdef __APPLE__
 
@@ -162,6 +354,10 @@ static void *NSGLGetProcAddress (const GLubyte *name)
 
 #define getProcAddress(x) (NSGLGetProcAddress((const GLubyte*)x))
 
+#elif defined(_WIN32)
+
+#define getProcAddress(x) (wglGetProcAddress((LPCSTR)x))
+
 #else
 
 #define getProcAddress(x) ((*glXGetProcAddressARB)((const GLubyte*)x))
@@ -171,6 +367,15 @@ static void *NSGLGetProcAddress (const GLubyte *name)
 #ifndef _WIN32
 static PFNGLXBINDTEXIMAGEATIPROC glXBindTexImageATI = 0;
 static PFNGLXRELEASETEXIMAGEATIPROC glXReleaseTexImageATI = 0;
+#else
+static PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsStringARB = 0;
+static PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB = 0;
+static PFNWGLBINDTEXIMAGEARBPROC wglBindTexImageARB = 0;
+static PFNWGLRELEASETEXIMAGEARBPROC wglReleaseTexImageARB = 0;
+static PFNWGLCREATEPBUFFERARBPROC wglCreatePbufferARB = 0;
+static PFNWGLGETPBUFFERDCARBPROC wglGetPbufferDCARB = 0;
+static PFNWGLDESTROYPBUFFERARBPROC wglDestroyPbufferARB = 0;
+static PFNWGLQUERYPBUFFERARBPROC wglQueryPbufferARB = 0;
 #endif
 
 static bool mInit = false;
@@ -202,23 +407,345 @@ struct PbufferImpl
   Display* mSaveDisplay;
   GLXDrawable mSaveDrawable;
   GLXContext mSaveContext;
+#else // _WIN32
+  PbufferImpl() : mPbuffer(0), mDc(0), mRc(0) {}
+  HPBUFFERARB mPbuffer; 
+  HDC   mDc;
+  HGLRC mRc;
+  HDC   mSaveDc;
+  HGLRC mSaveRc;
 #endif
 };
+
+
+#ifdef _WIN32
+
+  bool WGLisExtensionSupported(const char *extension)
+  {
+    const size_t extlen = strlen(extension);
+    const char *supported = NULL;
+
+    // Try To Use wglGetExtensionStringARB On Current DC, If Possible
+    if (!wglGetExtensionsStringARB)
+      wglGetExtensionsStringARB = 
+	(PFNWGLGETEXTENSIONSSTRINGARBPROC)wglGetProcAddress("wglGetExtensionsStringARB");
+    
+    if (wglGetExtensionsStringARB)
+      supported = wglGetExtensionsStringARB(wglGetCurrentDC());
+    
+    // If That Failed, Try Standard Opengl Extensions String
+    if (supported == NULL)
+      supported = (char*)glGetString(GL_EXTENSIONS);
+    
+    // If That Failed Too, Must Be No Extensions Supported
+    if (supported == NULL)
+      return false;
+    
+    // Begin Examination At Start Of String, Increment By 1 On False Match
+    for (const char* p = supported; ; p++)
+      {
+	// Advance p Up To The Next Possible Match
+	p = strstr(p, extension);
+	
+	if (p == NULL)
+	  return false;						// No Match
+	
+	// Make Sure That Match Is At The Start Of The String Or That
+	// The Previous Char Is A Space, Or Else We Could Accidentally
+	// Match "wglFunkywglExtension" With "wglExtension"
+	
+	// Also, Make Sure That The Following Character Is Space Or NULL
+	// Or Else "wglExtensionTwo" Might Match "wglExtension"
+	if ((p==supported || p[-1]==' ') && (p[extlen]=='\0' || p[extlen]==' '))
+	  return true;						// Match
+      }
+  }
+  
+
+
+#endif
+
 
 bool
 Pbuffer::create ()
 {
+
   if (sci_getenv_p("SCIRUN_DISABLE_PBUFFERS"))
   {
     mSupported = false;
     return false;
   }
 
-#if defined(__ECC) || defined(_WIN32)
-  // For now no Pbuffer support on the Altix or windows system
+#if defined(__ECC)
+  // For now no Pbuffer support on the Altix system
   mSupported = false;
   return false;
+#elif defined (_WIN32)
+  if(!mInit) {
+    /* query GL version */
+
+    int major, minor;
+    const char* version = (char *)glGetString(GL_VERSION);
+
+    sscanf(version, "%d.%d", &major, &minor);
+
+    // get the procedure address for checking for the wgl extensions.
+    mATI_render_texture =
+      WGLisExtensionSupported("WGL_ARB_render_texture");
+
+    mATI_pixel_format_float = 
+      WGLisExtensionSupported("WGL_ATI_pixel_format_float");
+    
+    mNV_float_buffer = 
+      WGLisExtensionSupported("WGL_NV_float_buffer") &&
+      WGLisExtensionSupported("GL_NV_float_buffer") &&
+      WGLisExtensionSupported("GL_ARB_fragment_program");
+
+    mNV_texture_rectangle = 
+      WGLisExtensionSupported("GL_NV_texture_rectangle");
+    
+    mSupported = WGLisExtensionSupported("WGL_ARB_pixel_format");
+
+    if (mSupported)
+      wglChoosePixelFormatARB = (PFNWGLCHOOSEPIXELFORMATARBPROC)wglGetProcAddress("wglChoosePixelFormatARB");
+
+    mSupported = 
+      mSupported &&
+      WGLisExtensionSupported("WGL_ARB_render_texture");
+
+    if (mSupported) {
+      wglBindTexImageARB = (PFNWGLBINDTEXIMAGEARBPROC)wglGetProcAddress("wglBindTexImageARB");
+      wglReleaseTexImageARB = (PFNWGLRELEASETEXIMAGEARBPROC)wglGetProcAddress("wglReleaseTexImageARB");
+    }
+
+    // check for version
+
+    if(minor < 3 || (mFormat == GL_FLOAT && 
+		     !(mATI_pixel_format_float || mNV_float_buffer))) {
+      mSupported = false;
+    } else {
+      mSupported = true;
+    }
+
+    mInit = true;
+
+  }
+
+    if (mSupported) {
+      mImpl->mDc =  wglGetCurrentDC();
+      if (mImpl->mDc == 0)
+	{
+	  cerr << "[Pbuffer::create] Failed to obtain current device context" << endl;
+	  return true;
+	}
+      // get current context
+      HGLRC rc = wglGetCurrentContext();
+      if (rc == 0)
+	{
+	  cerr << "[Pbuffer::create] Failed to obtain current GL context" << endl;
+	  return true;
+	}
+      int attrib[64];
+      int i;
+      i = 0;
+      // accelerated OpenGL support
+      attrib[i++] = WGL_SUPPORT_OPENGL_ARB;
+      attrib[i++] = GL_TRUE;
+      // pbuffer capable
+      attrib[i++] = WGL_DRAW_TO_PBUFFER_ARB;
+      attrib[i++] = GL_TRUE;
+      // format
+      if (mFormat == GL_FLOAT)
+	{
+	  if (mATI_pixel_format_float)
+	    {
+	      attrib[i++] = WGL_PIXEL_TYPE_ARB;
+	      attrib[i++] = WGL_TYPE_RGBA_FLOAT_ATI;
+	    }
+	  else if (mNV_float_buffer)
+	    {
+	      attrib[i++] = WGL_PIXEL_TYPE_ARB;
+	      attrib[i++] = WGL_TYPE_RGBA_ARB;
+	      attrib[i++] = WGL_FLOAT_COMPONENTS_NV;
+	      attrib[i++] = GL_TRUE;
+	    }
+	}
+      else // GL_INT
+	{
+	  attrib[i++] = WGL_PIXEL_TYPE_ARB;
+	  attrib[i++] = WGL_TYPE_RGBA_ARB;
+	}
+      // color buffer spec
+      if (mNumColorBits != GL_DONT_CARE)
+	{
+	  attrib[i++] = WGL_RED_BITS_ARB;
+	  attrib[i++] = mNumColorBits;
+	  attrib[i++] = WGL_GREEN_BITS_ARB;
+	  attrib[i++] = mNumColorBits;
+	  attrib[i++] = WGL_BLUE_BITS_ARB;
+	  attrib[i++] = mNumColorBits;
+	  attrib[i++] = WGL_ALPHA_BITS_ARB;
+	  attrib[i++] = mNumColorBits;
+	}
+      // double buffer spec
+      if (mDoubleBuffer != GL_DONT_CARE)
+	{
+	  attrib[i++] = WGL_DOUBLE_BUFFER_ARB;
+	  attrib[i++] = mDoubleBuffer ? GL_TRUE : GL_FALSE;;
+	}
+      // aux buffer spec
+      if (mNumAuxBuffers != GL_DONT_CARE)
+	{
+	  attrib[i++] = WGL_AUX_BUFFERS_ARB;
+	  attrib[i++] = mNumAuxBuffers;
+	}
+      // depth buffer spec
+      if (mNumDepthBits != GL_DONT_CARE)
+	{
+	  attrib[i++] = WGL_DEPTH_BITS_ARB;
+	  attrib[i++] = mNumDepthBits;
+	}
+      // stencil buffer spec
+      if (mNumStencilBits != GL_DONT_CARE)
+	{
+	  attrib[i++] = WGL_STENCIL_BITS_ARB;
+	  attrib[i++] = mNumStencilBits;
+	}
+      // accum buffer spec
+      if (mNumAccumBits != GL_DONT_CARE)
+	{
+	  attrib[i++] = WGL_ACCUM_RED_BITS_ARB;
+	  attrib[i++] = mNumAccumBits;
+	  attrib[i++] = WGL_ACCUM_GREEN_BITS_ARB;
+	  attrib[i++] = mNumAccumBits;
+	  attrib[i++] = WGL_ACCUM_BLUE_BITS_ARB;
+	  attrib[i++] = mNumAccumBits;
+	  attrib[i++] = WGL_ACCUM_ALPHA_BITS_ARB;
+	  attrib[i++] = mNumAccumBits;
+	}
+      // render to texture
+      if (mRenderTex)
+	{
+	  if (mFormat == GL_FLOAT &&  mNV_float_buffer)
+	    {
+	      attrib[i++] = WGL_BIND_TO_TEXTURE_RECTANGLE_FLOAT_RGBA_NV;
+	      attrib[i++] = GL_TRUE;
+	    }
+	  else
+	    {
+	      attrib[i++] = WGL_BIND_TO_TEXTURE_RGBA_ARB;
+	      attrib[i++] = GL_TRUE;
+	    }
+	}
+      attrib[i] = 0;
+      unsigned int c = 0;
+      int pf;
+      if (wglChoosePixelFormatARB(mImpl->mDc, attrib, 0, 1, &pf, &c) == 0 || c == 0)
+	{
+	  cerr << "[Pbuffer::Pbuffer] Failed to find suitable pixel format\n";
+	  return true;
+	}
+ 
+      // allocate the buffer
+      i = 0;
+      if (mRenderTex)
+	{
+	  // format and target
+	  if (mFormat == GL_FLOAT && mNV_float_buffer)
+	    {
+	      attrib[i++] = WGL_TEXTURE_FORMAT_ARB;
+	      attrib[i++] = WGL_TEXTURE_FLOAT_RGBA_NV;
+	      attrib[i++] = WGL_TEXTURE_TARGET_ARB;
+	      attrib[i++] = WGL_TEXTURE_RECTANGLE_NV;
+	    }
+	  else
+	    {
+	      attrib[i++] = WGL_TEXTURE_FORMAT_ARB;
+	      attrib[i++] = WGL_TEXTURE_RGBA_ARB;
+	      attrib[i++] = WGL_TEXTURE_TARGET_ARB;
+	      attrib[i++] = WGL_TEXTURE_2D_ARB;
+	    }
+	  // no mipmap
+	  attrib[i++] = WGL_MIPMAP_TEXTURE_ARB;
+	  attrib[i++] = GL_FALSE;
+	}
+      // fail if can't allocate
+      attrib[i++] = WGL_PBUFFER_LARGEST_ARB;
+      attrib[i++] = GL_FALSE;
+      attrib[i++] = 0;
+      // create pbuffer
+      mImpl->mPbuffer = wglCreatePbufferARB(mImpl->mDc, pf, mWidth, mHeight, attrib);
+      if (mImpl->mPbuffer == 0)
+	{
+	  cerr << "[Pbuffer::Pbuffer] Failed to create pbuffer\n";
+	  return true;
+	}
+      // create device context
+      mImpl->mDc = wglGetPbufferDCARB(mImpl->mPbuffer);
+      if (mImpl->mDc == 0)
+	{
+	  cerr << "[Pbuffer::Pbuffer] Failed to create device context\n";
+	  return true;
+	}
+      // create rendering context
+      mImpl->mRc = wglCreateContext(mImpl->mDc);
+      if (mImpl->mRc == 0)
+	{
+	  cerr << "[Pbuffer::Pbuffer] Failed to create rendering context\n";
+	  return true;
+	}
+      if (wglShareLists(rc, mImpl->mRc) == 0)
+	{
+	  cerr << "[Pbuffer::create] Failed to set context sharing\n";
+	  return true;
+	}
+      
+      // get actual size
+      wglQueryPbufferARB(mImpl->mPbuffer, WGL_PBUFFER_WIDTH_ARB, &mWidth);
+      wglQueryPbufferARB(mImpl->mPbuffer, WGL_PBUFFER_HEIGHT_ARB, &mHeight);
+      if (mRenderTex) {
+	// create pbuffer texture object
+	glGenTextures(1, &mTex);
+	if(mFormat == GL_FLOAT) {
+	  if(mNV_float_buffer) {
+	    mTexTarget = GL_TEXTURE_RECTANGLE_NV;
+	    if(mNumColorBits == 16)
+	      mTexFormat = GL_FLOAT_RGBA16_NV;
+	    else
+	      mTexFormat = GL_FLOAT_RGBA32_NV;
+	  } else {
+	    mTexTarget = GL_TEXTURE_2D;
+	  }
+	} else {
+	  mTexTarget = GL_TEXTURE_2D;
+	  mTexFormat = GL_RGBA;
+	}
+	glBindTexture(mTexTarget, mTex);
+#ifdef GL_CLAMP_TO_EDGE
+	glTexParameteri(mTexTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(mTexTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 #else
+	glTexParameteri(mTexTarget, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(mTexTarget, GL_TEXTURE_WRAP_T, GL_CLAMP);
+#endif
+	glTexParameteri(mTexTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(mTexTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	if(!mATI_render_texture) {
+	  unsigned char* data = new unsigned char[mWidth*mHeight*4];
+	  glTexImage2D(mTexTarget, 0, mTexFormat, mWidth, mHeight, 0,
+		       GL_RGBA, GL_UNSIGNED_BYTE, data);
+	  delete [] data;
+	}
+	if(!mShader) {
+	  mShader = new FragmentProgramARB(program);
+	  if(mShader->create()) return true;
+	}
+      }
+      return false;
+    }
+    return true;
+
+#else // GLX
   if(!mInit) {
     /* query GLX version */
     int major, minor;
@@ -502,6 +1029,15 @@ Pbuffer::destroy ()
     glXDestroyPbuffer(mImpl->mDisplay, mImpl->mPbuffer);
   if(mShader)
     mShader->destroy();
+#else // WIN32
+  if (/*mSeparate && */mImpl->mRc != 0)
+  {
+    wglDeleteContext(mImpl->mRc);
+  }
+  if (mImpl->mPbuffer != 0)
+    wglDestroyPbufferARB(mImpl->mPbuffer);
+  if(mShader)
+    mShader->destroy();
 #endif
 }
 
@@ -517,13 +1053,14 @@ Pbuffer::makeCurrent ()
     //			  mImpl->mPbuffer, mImpl->mContext);
     glXMakeCurrent(mImpl->mDisplay, mImpl->mPbuffer, mImpl->mContext);
   }
+#else
+    wglMakeCurrent(mImpl->mDc, mImpl->mRc);
 #endif
 }
 
 void
 Pbuffer::swapBuffers ()
 {
-#ifndef _WIN32
   if(mRenderTex && !mATI_render_texture) {
     GLint buffer;
     glGetIntegerv(GL_DRAW_BUFFER, &buffer);
@@ -533,23 +1070,30 @@ Pbuffer::swapBuffers ()
     glBindTexture(mTexTarget, 0);
   }
   if (mDoubleBuffer)
-    glXSwapBuffers(mImpl->mDisplay, mImpl->mPbuffer);
+#ifndef _WIN32 
+   glXSwapBuffers(mImpl->mDisplay, mImpl->mPbuffer);
+#else
+  wglSwapLayerBuffers(mImpl->mDc, WGL_SWAP_MAIN_PLANE);
+#endif
   else
     glFinish();
-#endif
 }
 
 void
 Pbuffer::bind (unsigned int buffer)
 {
-#ifndef _WIN32
   if(mRenderTex)
   {
     glEnable(mTexTarget);
     glBindTexture(mTexTarget, mTex);
     if(mATI_render_texture) {
-      glXBindTexImageATI(mImpl->mDisplay, mImpl->mPbuffer, buffer == GL_FRONT ? 
+#ifndef _WIN32
+      glXBindTexImageATI(mImpl->mDisplay, mImpl->mPbuffer, 
+			 buffer == GL_FRONT ? 
                          GLX_FRONT_LEFT_ATI : GLX_BACK_LEFT_ATI);
+#else
+     wglBindTexImageARB(mImpl->mPbuffer, buffer == GL_FRONT ? WGL_FRONT_LEFT_ARB : WGL_BACK_LEFT_ARB);
+#endif
     }
     if(mFormat == GL_FLOAT && mNV_float_buffer) {
       if(mUseDefaultShader) {
@@ -564,18 +1108,23 @@ Pbuffer::bind (unsigned int buffer)
       }
     }
   }
-#endif
+
 }
 
 void
 Pbuffer::release (unsigned int buffer)
 {
-#ifndef _WIN32
   if(mRenderTex)
   {
     if(mATI_render_texture) {
+#ifndef _WIN32
+
       glXReleaseTexImageATI(mImpl->mDisplay, mImpl->mPbuffer, buffer == GL_FRONT ?
                             GLX_FRONT_LEFT_ATI : GLX_BACK_LEFT_ATI);
+#else
+    wglReleaseTexImageARB(mImpl->mPbuffer, buffer == GL_FRONT ? WGL_FRONT_LEFT_ARB : WGL_BACK_LEFT_ARB);
+
+#endif
     }
     glBindTexture(mTexTarget, 0);
     glDisable(mTexTarget);
@@ -590,7 +1139,6 @@ Pbuffer::release (unsigned int buffer)
       }
     }
   }
-#endif
 }
 
 void
@@ -603,6 +1151,10 @@ Pbuffer::activate ()
   mImpl->mSaveContext = glXGetCurrentContext();
   // set read/write context to pbuffer
   glXMakeCurrent(mImpl->mDisplay, mImpl->mPbuffer, mImpl->mContext);
+#else
+  mImpl->mSaveDc = wglGetCurrentDC();
+  mImpl->mSaveRc = wglGetCurrentContext();
+  wglMakeCurrent(mImpl->mDc,mImpl->mRc);
 #endif
 }
 
@@ -611,6 +1163,8 @@ Pbuffer::deactivate ()
 {
 #ifndef _WIN32
   glXMakeCurrent(mImpl->mSaveDisplay, mImpl->mSaveDrawable, mImpl->mSaveContext);
+#else
+  wglMakeCurrent(mImpl->mSaveDc,mImpl->mSaveRc);
 #endif
 }
 
@@ -651,7 +1205,8 @@ Pbuffer::Pbuffer (int width, int height, int format, int numColorBits,
     mTexTarget(GL_TEXTURE_2D),
     mUseDefaultShader(true),
     mImpl(new PbufferImpl)
-{}
+{
+}
 
 Pbuffer::~Pbuffer ()
 {
