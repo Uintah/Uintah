@@ -40,15 +40,14 @@ Also see
 <a href = "nightly.sh.txt">this script</a>.
 
 \code
-PATH/TO/SCIRun/src/configure  --enable-scirun2 
-                                --enable-debug 
-                                --enable-package="" 
-                                --with-thirdparty=$THIRDPARTY 
-                                --with-babel=$BABELDIR 
-                                --with-mpi=$MPIDIR 
-                                --with-ruby=$RUBYDIR 
-                                --with-vtk=$VTKDIR 
-                                --with-qt=$QTDIR
+PATH/TO/SCIRun/src/configure  --enable-scirun2
+                              --enable-debug
+                              --with-thirdparty=$THIRDPARTY
+                              --with-babel=$BABELDIR
+                              --with-mpi=$MPIDIR
+                              --with-ruby=$RUBYDIR
+                              --with-vtk=$VTKDIR
+                              --with-qt=$QTDIR
 \endcode
 
 You may want to start with a strong cup of coffee.
@@ -61,39 +60,39 @@ their dependencies.
  
 <table border=1>
     <tr>
-	<td>Code module</td>
-	<td>Required dependencies</td>
-	<td>Optional dependencies</td>
-	<td>Configure option</td>
+    <td>Code module</td>
+    <td>Required dependencies</td>
+    <td>Optional dependencies</td>
+    <td>Configure option</td>
     </tr>
     <tr>
-	<td>SCIRun2 framework</td>
-	<td>SCIRun, SCIRunThirdparty, MPI, Ruby, Babel</td>
-	<td>Qt</td>
-	<td>--with-scirun2 --with-thirdparty=/path/to/thirdparty --with-mpi=/path/to/mpi --with-ruby=/path/to/ruby --with-babel=/path/to/babel</td>
+    <td>SCIRun2 framework</td>
+    <td>SCIRun, SCIRunThirdparty, MPI, Ruby, Babel</td>
+    <td>Qt</td>
+    <td>--with-scirun2 --with-thirdparty=/path/to/thirdparty --with-mpi=/path/to/mpi --with-ruby=/path/to/ruby --with-babel=/path/to/babel</td>
     </tr>
     <tr>
-	<td>SCIRun dataflow components</td><td>SCIRun</td>
-	<td></td>
-	<td>none</td>
+    <td>SCIRun dataflow components</td><td>SCIRun</td>
+    <td></td>
+    <td>none</td>
     </tr>
     <tr>
-	<td>Bridge components</td>
-	<td>Ruby, VTK</td>
-	<td></td>
-	<td>--with-ruby=/path/to/ruby --with-vtk=/path/to/vtk</td>
+    <td>Bridge components</td>
+    <td>Ruby, VTK</td>
+    <td></td>
+    <td>--with-ruby=/path/to/ruby --with-vtk=/path/to/vtk</td>
     </tr>
     <tr>
-	<td>VTK components</td>
-	<td>VTK</td>
-	<td></td>
-	<td>with-vtk=/path/to/vtk</td>
+    <td>VTK components</td>
+    <td>VTK</td>
+    <td></td>
+    <td>with-vtk=/path/to/vtk</td>
     </tr>
     <tr>
-	<td>Babel components</td>
-	<td>Babel</td>
-	<td></td>
-	<td>with-babel=/path/to/babel</td>
+    <td>Babel components</td>
+    <td>Babel</td>
+    <td></td>
+    <td>with-babel=/path/to/babel</td>
     </tr>
 </table>
 
@@ -103,9 +102,10 @@ Any necessary SCIRun classes build automatically.
 
 \subsection building5_2 SCIRunThirdparty
 This package consists of all the bundled third-party libraries for SCIRun.
-It is freely available
-<a href="http://software.sci.utah.edu/scirun-biopse_1_20.html">here</a>.
-Look for the tarball called "Thirdparty_install.1.22.0.tar.gz".
+It is freely available (<b>registration required</b>)
+<a href="http://software.sci.utah.edu/scirun.html">here</a>.
+Select the SCIRun Linux/SGI source download and look for the tarball
+called \em Thirdparty_install.1.24.1.tar.gz.
 
 Estimated time to build: 1 hour
 
@@ -200,9 +200,10 @@ SCIRun2 VTK components have been tested with VTK 4.2.
 Estimated time to build: 2-3 hours
 
 \subsection building5_7 MPI
-The SCIRun2 software has only been tested with the Lam-MPI implementation.
-The Lam-MPI software can be freely downloaded from
+The SCIRun2 software has only been tested with the LAM/MPI implementation.
+The LAM/MPI software can be freely downloaded from
 <a href="http://www.lam-mpi.org">www.lam-mpi.org</a>.
+SCIRun2 supports LAM/MPI version 7.0.6.
 SCIRun2 will \em not build correctly with MPICH.
 
 Estimated time to build: 2-3 hours
