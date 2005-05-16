@@ -47,8 +47,16 @@ using std::string;
 
 namespace SCIRun {
 
+#ifndef GL_TEXTURE_3D
+#define GL_TEXTURE_3D 0x806F
+#endif
+
 #ifdef _WIN32
-#define GL_TEXTURE_3D 2
+#include <windows.h>
+#define GL_ARB_fragment_program 1
+typedef void (GLAPIENTRY * PFNGLACTIVETEXTUREPROC) (GLenum texture);
+static PFNGLACTIVETEXTUREPROC glActiveTexture = 0;
+#define GL_TEXTURE0_ARB 0x84C0
 #endif
 
 SliceRenderer::SliceRenderer(TextureHandle tex,
@@ -70,6 +78,9 @@ SliceRenderer::SliceRenderer(TextureHandle tex,
 {
   lighting_ = 1;
   mode_ = MODE_SLICE;
+#ifdef _WIN32
+  glActiveTexture = (PFNGLACTIVETEXTUREPROC)wglGetProcAddress("glActiveTexture");
+#endif
 }
 
 SliceRenderer::SliceRenderer(const SliceRenderer& copy)
@@ -163,6 +174,9 @@ SliceRenderer::draw_slice()
   //--------------------------------------------------------------------------
   // enable data texture unit 0
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#ifdef _WIN32
+  if (glActiveTexture)
+#endif
   glActiveTexture(GL_TEXTURE0_ARB);
 #endif
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -315,6 +329,9 @@ SliceRenderer::draw_slice()
     release_colormap1();
   }
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#ifdef _WIN32
+  if (glActiveTexture)
+#endif
   glActiveTexture(GL_TEXTURE0_ARB);
 #endif
   glDisable(GL_TEXTURE_3D);
@@ -364,6 +381,9 @@ SliceRenderer::multi_level_draw()
   //--------------------------------------------------------------------------
   // enable data texture unit 0
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#ifdef _WIN32
+  if (glActiveTexture)
+#endif
   glActiveTexture(GL_TEXTURE0_ARB);
 #endif  
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -735,6 +755,9 @@ SliceRenderer::multi_level_draw()
     release_colormap1();
   }
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#ifdef _WIN32
+  if (glActiveTexture)
+#endif
   glActiveTexture(GL_TEXTURE0_ARB);
 #endif
   glDisable(GL_TEXTURE_3D);
