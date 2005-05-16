@@ -8,6 +8,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <vector>
+#include <math.h>
 
 namespace Uintah {
 
@@ -131,7 +132,7 @@ namespace Uintah {
     inline bool compare(double num1, double num2) {
       double EPSILON=1.e-16;
                                                                                 
-      return (abs(num1-num2) <= EPSILON);
+      return (fabs(num1-num2) <= EPSILON);
     };
 
   };
