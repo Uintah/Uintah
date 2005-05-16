@@ -1,11 +1,11 @@
-//  
+//
 //  For more information, please see: http://software.sci.utah.edu
-//  
+//
 //  The MIT License
-//  
+//
 //  Copyright (c) 2004 Scientific Computing and Imaging Institute,
 //  University of Utah.
-//  
+//
 //  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
@@ -13,10 +13,10 @@
 //  the rights to use, copy, modify, merge, publish, distribute, sublicense,
 //  and/or sell copies of the Software, and to permit persons to whom the
 //  Software is furnished to do so, subject to the following conditions:
-//  
+//
 //  The above copyright notice and this permission notice shall be included
 //  in all copies or substantial portions of the Software.
-//  
+//
 //  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 //  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 //  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -24,7 +24,7 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
-//  
+//
 //    File   : Pbuffer.cc
 //    Author : Milan Ikits
 //    Date   : Sun Jun 27 17:49:45 2004
@@ -32,6 +32,7 @@
 #include <Core/Geom/Pbuffer.h>
 #include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Util/Environment.h>
+#include <Core/Malloc/Allocator.h>
 
 #include <iostream>
 #include <string>
@@ -400,7 +401,7 @@ struct PbufferImpl
 #ifndef _WIN32
   PbufferImpl () : display_(0), pbuffer_(0), context_(0) {}
   Display* display_;
-  GLXPbuffer pbuffer_; 
+  GLXPbuffer pbuffer_;
   GLXContext context_;
 
   Display* saved_display_;
@@ -408,7 +409,7 @@ struct PbufferImpl
   GLXContext saved_context_;
 #else // _WIN32
   PbufferImpl() : pbuffer_(0), dc_(0), rc_(0) {}
-  HPBUFFERARB pbuffer_; 
+  HPBUFFERARB pbuffer_;
   HDC   dc_;
   HGLRC rc_;
   HDC   saved_dc_;
@@ -426,42 +427,41 @@ bool WGLisExtensionSupported(const char *extension)
 
   // Try To Use wglGetExtensionStringARB On Current DC, If Possible
   if (!wglGetExtensionsStringARB)
-    wglGetExtensionsStringARB = 
+    wglGetExtensionsStringARB =
       (PFNWGLGETEXTENSIONSSTRINGARBPROC)wglGetProcAddress("wglGetExtensionsStringARB");
-    
+
   if (wglGetExtensionsStringARB)
     supported = wglGetExtensionsStringARB(wglGetCurrentDC());
-    
+
   // If That Failed, Try Standard Opengl Extensions String
   if (supported == NULL)
     supported = (char*)glGetString(GL_EXTENSIONS);
-    
+
   // If That Failed Too, Must Be No Extensions Supported
   if (supported == NULL)
     return false;
-    
+
   // Begin Examination At Start Of String, Increment By 1 On False Match
   for (const char* p = supported; ; p++)
   {
     // Advance p Up To The Next Possible Match
     p = strstr(p, extension);
-	
+
     if (p == NULL)
-      return false;						// No Match
-	
+      return false;                                             // No Match
+
     // Make Sure That Match Is At The Start Of The String Or That
     // The Previous Char Is A Space, Or Else We Could Accidentally
     // Match "wglFunkywglExtension" With "wglExtension"
-	
+
     // Also, Make Sure That The Following Character Is Space Or NULL
     // Or Else "wglExtensionTwo" Might Match "wglExtension"
     if ((p==supported || p[-1]==' ') && (p[extlen]=='\0' || p[extlen]==' '))
-      return true;						// Match
+      return true;                                              // Match
   }
 }
 
 #endif
-
 
 
 bool
@@ -479,7 +479,8 @@ Pbuffer::create ()
   mSupported = false;
   return false;
 #elif defined (_WIN32)
-  if(!mInit) {
+  if (!mInit)
+  {
     /* query GL version */
 
     int major, minor;
@@ -491,23 +492,23 @@ Pbuffer::create ()
     mATI_render_texture =
       WGLisExtensionSupported("WGL_ARB_render_texture");
 
-    mATI_pixel_format_float = 
+    mATI_pixel_format_float =
       WGLisExtensionSupported("WGL_ATI_pixel_format_float");
-    
-    mNV_float_buffer = 
+
+    mNV_float_buffer =
       WGLisExtensionSupported("WGL_NV_float_buffer") &&
       WGLisExtensionSupported("GL_NV_float_buffer") &&
       WGLisExtensionSupported("GL_ARB_fragment_program");
 
-    mNV_texture_rectangle = 
+    mNV_texture_rectangle =
       WGLisExtensionSupported("GL_NV_texture_rectangle");
-    
+
     mSupported = WGLisExtensionSupported("WGL_ARB_pixel_format");
 
     if (mSupported)
       wglChoosePixelFormatARB = (PFNWGLCHOOSEPIXELFORMATARBPROC)wglGetProcAddress("wglChoosePixelFormatARB");
 
-    mSupported = 
+    mSupported =
       mSupported &&
       WGLisExtensionSupported("WGL_ARB_render_texture");
 
@@ -518,8 +519,8 @@ Pbuffer::create ()
     }
 
     // Check for version.
-    if(minor < 3 || (mFormat == GL_FLOAT && 
-		     !(mATI_pixel_format_float || mNV_float_buffer)))
+    if (minor < 3 || (mFormat == GL_FLOAT &&
+                     !(mATI_pixel_format_float || mNV_float_buffer)))
     {
       mSupported = false;
     }
@@ -530,270 +531,285 @@ Pbuffer::create ()
     mInit = true;
   }
 
-    if (mSupported)
+  if (mSupported)
+  {
+    impl_->dc_ =  wglGetCurrentDC();
+    if (impl_->dc_ == 0)
     {
-      mImpl->dc_ =  wglGetCurrentDC();
-      if (mImpl->dc_ == 0)
-      {
-	cerr << "[Pbuffer::create] Failed to obtain current device context" << endl;
-	return true;
-      }
-
-      // Get current context.
-      HGLRC rc = wglGetCurrentContext();
-      if (rc == 0)
-      {
-	cerr << "[Pbuffer::create] Failed to obtain current GL context" << endl;
-	return true;
-      }
-      int attrib[64];
-      int i;
-      i = 0;
-
-      // Accelerated OpenGL support.
-      attrib[i++] = WGL_SUPPORT_OPENGL_ARB;
-      attrib[i++] = GL_TRUE;
-
-      // Pbuffer capable.
-      attrib[i++] = WGL_DRAW_TO_PBUFFER_ARB;
-      attrib[i++] = GL_TRUE;
-
-      // Format
-      if (mFormat == GL_FLOAT)
-	{
-	  if (mATI_pixel_format_float)
-	    {
-	      attrib[i++] = WGL_PIXEL_TYPE_ARB;
-	      attrib[i++] = WGL_TYPE_RGBA_FLOAT_ATI;
-	    }
-	  else if (mNV_float_buffer)
-	    {
-	      attrib[i++] = WGL_PIXEL_TYPE_ARB;
-	      attrib[i++] = WGL_TYPE_RGBA_ARB;
-	      attrib[i++] = WGL_FLOAT_COMPONENTS_NV;
-	      attrib[i++] = GL_TRUE;
-	    }
-	}
-      else // GL_INT
-	{
-	  attrib[i++] = WGL_PIXEL_TYPE_ARB;
-	  attrib[i++] = WGL_TYPE_RGBA_ARB;
-	}
-      // color buffer spec
-      if (mNumColorBits != GL_DONT_CARE)
-	{
-	  attrib[i++] = WGL_RED_BITS_ARB;
-	  attrib[i++] = mNumColorBits;
-	  attrib[i++] = WGL_GREEN_BITS_ARB;
-	  attrib[i++] = mNumColorBits;
-	  attrib[i++] = WGL_BLUE_BITS_ARB;
-	  attrib[i++] = mNumColorBits;
-	  attrib[i++] = WGL_ALPHA_BITS_ARB;
-	  attrib[i++] = mNumColorBits;
-	}
-      // double buffer spec
-      if (mDoubleBuffer != GL_DONT_CARE)
-	{
-	  attrib[i++] = WGL_DOUBLE_BUFFER_ARB;
-	  attrib[i++] = mDoubleBuffer ? GL_TRUE : GL_FALSE;;
-	}
-      // aux buffer spec
-      if (mNumAuxBuffers != GL_DONT_CARE)
-	{
-	  attrib[i++] = WGL_AUX_BUFFERS_ARB;
-	  attrib[i++] = mNumAuxBuffers;
-	}
-      // depth buffer spec
-      if (mNumDepthBits != GL_DONT_CARE)
-	{
-	  attrib[i++] = WGL_DEPTH_BITS_ARB;
-	  attrib[i++] = mNumDepthBits;
-	}
-      // stencil buffer spec
-      if (mNumStencilBits != GL_DONT_CARE)
-	{
-	  attrib[i++] = WGL_STENCIL_BITS_ARB;
-	  attrib[i++] = mNumStencilBits;
-	}
-      // accum buffer spec
-      if (mNumAccumBits != GL_DONT_CARE)
-	{
-	  attrib[i++] = WGL_ACCUM_RED_BITS_ARB;
-	  attrib[i++] = mNumAccumBits;
-	  attrib[i++] = WGL_ACCUM_GREEN_BITS_ARB;
-	  attrib[i++] = mNumAccumBits;
-	  attrib[i++] = WGL_ACCUM_BLUE_BITS_ARB;
-	  attrib[i++] = mNumAccumBits;
-	  attrib[i++] = WGL_ACCUM_ALPHA_BITS_ARB;
-	  attrib[i++] = mNumAccumBits;
-	}
-      // render to texture
-      if (mRenderTex)
-	{
-	  if (mFormat == GL_FLOAT &&  mNV_float_buffer)
-	    {
-	      attrib[i++] = WGL_BIND_TO_TEXTURE_RECTANGLE_FLOAT_RGBA_NV;
-	      attrib[i++] = GL_TRUE;
-	    }
-	  else
-	    {
-	      attrib[i++] = WGL_BIND_TO_TEXTURE_RGBA_ARB;
-	      attrib[i++] = GL_TRUE;
-	    }
-	}
-      attrib[i] = 0;
-      unsigned int c = 0;
-      int pf;
-      if (wglChoosePixelFormatARB(mImpl->dc_, attrib, 0, 1, &pf, &c) == 0 || c == 0)
-	{
-	  cerr << "[Pbuffer::Pbuffer] Failed to find suitable pixel format\n";
-	  return true;
-	}
- 
-      // allocate the buffer
-      i = 0;
-      if (mRenderTex)
-	{
-	  // format and target
-	  if (mFormat == GL_FLOAT && mNV_float_buffer)
-	    {
-	      attrib[i++] = WGL_TEXTURE_FORMAT_ARB;
-	      attrib[i++] = WGL_TEXTURE_FLOAT_RGBA_NV;
-	      attrib[i++] = WGL_TEXTURE_TARGET_ARB;
-	      attrib[i++] = WGL_TEXTURE_RECTANGLE_NV;
-	    }
-	  else
-	    {
-	      attrib[i++] = WGL_TEXTURE_FORMAT_ARB;
-	      attrib[i++] = WGL_TEXTURE_RGBA_ARB;
-	      attrib[i++] = WGL_TEXTURE_TARGET_ARB;
-	      attrib[i++] = WGL_TEXTURE_2D_ARB;
-	    }
-	  // no mipmap
-	  attrib[i++] = WGL_MIPMAP_TEXTURE_ARB;
-	  attrib[i++] = GL_FALSE;
-	}
-      // fail if can't allocate
-      attrib[i++] = WGL_PBUFFER_LARGEST_ARB;
-      attrib[i++] = GL_FALSE;
-      attrib[i++] = 0;
-      // create pbuffer
-      mImpl->pbuffer_ = wglCreatePbufferARB(mImpl->dc_, pf, mWidth, mHeight, attrib);
-      if (mImpl->pbuffer_ == 0)
-	{
-	  cerr << "[Pbuffer::Pbuffer] Failed to create pbuffer\n";
-	  return true;
-	}
-      // create device context
-      mImpl->dc_ = wglGetPbufferDCARB(mImpl->pbuffer_);
-      if (mImpl->dc_ == 0)
-	{
-	  cerr << "[Pbuffer::Pbuffer] Failed to create device context\n";
-	  return true;
-	}
-      // create rendering context
-      mImpl->rc_ = wglCreateContext(mImpl->dc_);
-      if (mImpl->rc_ == 0)
-	{
-	  cerr << "[Pbuffer::Pbuffer] Failed to create rendering context\n";
-	  return true;
-	}
-      if (wglShareLists(rc, mImpl->rc_) == 0)
-	{
-	  cerr << "[Pbuffer::create] Failed to set context sharing\n";
-	  return true;
-	}
-      
-      // get actual size
-      wglQueryPbufferARB(mImpl->pbuffer_, WGL_PBUFFER_WIDTH_ARB, &mWidth);
-      wglQueryPbufferARB(mImpl->pbuffer_, WGL_PBUFFER_HEIGHT_ARB, &mHeight);
-      if (mRenderTex) {
-	// create pbuffer texture object
-	glGenTextures(1, &mTex);
-	if(mFormat == GL_FLOAT) {
-	  if(mNV_float_buffer) {
-	    mTexTarget = GL_TEXTURE_RECTANGLE_NV;
-	    if(mNumColorBits == 16)
-	      mTexFormat = GL_FLOAT_RGBA16_NV;
-	    else
-	      mTexFormat = GL_FLOAT_RGBA32_NV;
-	  } else {
-	    mTexTarget = GL_TEXTURE_2D;
-	  }
-	} else {
-	  mTexTarget = GL_TEXTURE_2D;
-	  mTexFormat = GL_RGBA;
-	}
-	glBindTexture(mTexTarget, mTex);
-#ifdef GL_CLAMP_TO_EDGE
-	glTexParameteri(mTexTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(mTexTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-#else
-	glTexParameteri(mTexTarget, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexParameteri(mTexTarget, GL_TEXTURE_WRAP_T, GL_CLAMP);
-#endif
-	glTexParameteri(mTexTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(mTexTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	if(!mATI_render_texture) {
-	  unsigned char* data = new unsigned char[mWidth*mHeight*4];
-	  glTexImage2D(mTexTarget, 0, mTexFormat, mWidth, mHeight, 0,
-		       GL_RGBA, GL_UNSIGNED_BYTE, data);
-	  delete [] data;
-	}
-	if(!mShader) {
-	  mShader = new FragmentProgramARB(program);
-	  if(mShader->create()) return true;
-	}
-      }
-      return false;
+      cerr << "[Pbuffer::create] Failed to obtain current device context" << endl;
+      return true;
     }
-    return true;
+
+    // Get current context.
+    HGLRC rc = wglGetCurrentContext();
+    if (rc == 0)
+    {
+      cerr << "[Pbuffer::create] Failed to obtain current GL context" << endl;
+      return true;
+    }
+    int attrib[64];
+    int i;
+    i = 0;
+
+    // Accelerated OpenGL support.
+    attrib[i++] = WGL_SUPPORT_OPENGL_ARB;
+    attrib[i++] = GL_TRUE;
+
+    // Pbuffer capable.
+    attrib[i++] = WGL_DRAW_TO_PBUFFER_ARB;
+    attrib[i++] = GL_TRUE;
+
+    // Format
+    if (mFormat == GL_FLOAT)
+    {
+      if (mATI_pixel_format_float)
+      {
+        attrib[i++] = WGL_PIXEL_TYPE_ARB;
+        attrib[i++] = WGL_TYPE_RGBA_FLOAT_ATI;
+      }
+      else if (mNV_float_buffer)
+      {
+        attrib[i++] = WGL_PIXEL_TYPE_ARB;
+        attrib[i++] = WGL_TYPE_RGBA_ARB;
+        attrib[i++] = WGL_FLOAT_COMPONENTS_NV;
+        attrib[i++] = GL_TRUE;
+      }
+    }
+    else // GL_INT
+    {
+      attrib[i++] = WGL_PIXEL_TYPE_ARB;
+      attrib[i++] = WGL_TYPE_RGBA_ARB;
+    }
+    // color buffer spec
+    if (mNumColorBits != GL_DONT_CARE)
+    {
+      attrib[i++] = WGL_RED_BITS_ARB;
+      attrib[i++] = mNumColorBits;
+      attrib[i++] = WGL_GREEN_BITS_ARB;
+      attrib[i++] = mNumColorBits;
+      attrib[i++] = WGL_BLUE_BITS_ARB;
+      attrib[i++] = mNumColorBits;
+      attrib[i++] = WGL_ALPHA_BITS_ARB;
+      attrib[i++] = mNumColorBits;
+    }
+    // double buffer spec
+    if (mDoubleBuffer != GL_DONT_CARE)
+    {
+      attrib[i++] = WGL_DOUBLE_BUFFER_ARB;
+      attrib[i++] = mDoubleBuffer ? GL_TRUE : GL_FALSE;;
+    }
+    // aux buffer spec
+    if (mNumAuxBuffers != GL_DONT_CARE)
+    {
+      attrib[i++] = WGL_AUX_BUFFERS_ARB;
+      attrib[i++] = mNumAuxBuffers;
+    }
+    // depth buffer spec
+    if (mNumDepthBits != GL_DONT_CARE)
+    {
+      attrib[i++] = WGL_DEPTH_BITS_ARB;
+      attrib[i++] = mNumDepthBits;
+    }
+    // stencil buffer spec
+    if (mNumStencilBits != GL_DONT_CARE)
+    {
+      attrib[i++] = WGL_STENCIL_BITS_ARB;
+      attrib[i++] = mNumStencilBits;
+    }
+    // accum buffer spec
+    if (mNumAccumBits != GL_DONT_CARE)
+    {
+      attrib[i++] = WGL_ACCUM_RED_BITS_ARB;
+      attrib[i++] = mNumAccumBits;
+      attrib[i++] = WGL_ACCUM_GREEN_BITS_ARB;
+      attrib[i++] = mNumAccumBits;
+      attrib[i++] = WGL_ACCUM_BLUE_BITS_ARB;
+      attrib[i++] = mNumAccumBits;
+      attrib[i++] = WGL_ACCUM_ALPHA_BITS_ARB;
+      attrib[i++] = mNumAccumBits;
+    }
+    // render to texture
+    if (mRenderTex)
+    {
+      if (mFormat == GL_FLOAT &&  mNV_float_buffer)
+      {
+        attrib[i++] = WGL_BIND_TO_TEXTURE_RECTANGLE_FLOAT_RGBA_NV;
+        attrib[i++] = GL_TRUE;
+      }
+      else
+      {
+        attrib[i++] = WGL_BIND_TO_TEXTURE_RGBA_ARB;
+        attrib[i++] = GL_TRUE;
+      }
+    }
+    attrib[i] = 0;
+    unsigned int c = 0;
+    int pf;
+    if (wglChoosePixelFormatARB(impl_->dc_, attrib, 0, 1, &pf, &c) == 0 || c == 0)
+    {
+      cerr << "[Pbuffer::Pbuffer] Failed to find suitable pixel format\n";
+      return true;
+    }
+
+    // allocate the buffer
+    i = 0;
+    if (mRenderTex)
+    {
+      // format and target
+      if (mFormat == GL_FLOAT && mNV_float_buffer)
+      {
+        attrib[i++] = WGL_TEXTURE_FORMAT_ARB;
+        attrib[i++] = WGL_TEXTURE_FLOAT_RGBA_NV;
+        attrib[i++] = WGL_TEXTURE_TARGET_ARB;
+        attrib[i++] = WGL_TEXTURE_RECTANGLE_NV;
+      }
+      else
+      {
+        attrib[i++] = WGL_TEXTURE_FORMAT_ARB;
+        attrib[i++] = WGL_TEXTURE_RGBA_ARB;
+        attrib[i++] = WGL_TEXTURE_TARGET_ARB;
+        attrib[i++] = WGL_TEXTURE_2D_ARB;
+      }
+      // no mipmap
+      attrib[i++] = WGL_MIPMAP_TEXTURE_ARB;
+      attrib[i++] = GL_FALSE;
+    }
+    // fail if can't allocate
+    attrib[i++] = WGL_PBUFFER_LARGEST_ARB;
+    attrib[i++] = GL_FALSE;
+    attrib[i++] = 0;
+    // create pbuffer
+    impl_->pbuffer_ = wglCreatePbufferARB(impl_->dc_, pf, width_, height_, attrib);
+    if (impl_->pbuffer_ == 0)
+    {
+      cerr << "[Pbuffer::Pbuffer] Failed to create pbuffer\n";
+      return true;
+    }
+    // create device context
+    impl_->dc_ = wglGetPbufferDCARB(impl_->pbuffer_);
+    if (impl_->dc_ == 0)
+    {
+      cerr << "[Pbuffer::Pbuffer] Failed to create device context\n";
+      return true;
+    }
+    // create rendering context
+    impl_->rc_ = wglCreateContext(impl_->dc_);
+    if (impl_->rc_ == 0)
+    {
+      cerr << "[Pbuffer::Pbuffer] Failed to create rendering context\n";
+      return true;
+    }
+    if (wglShareLists(rc, impl_->rc_) == 0)
+    {
+      cerr << "[Pbuffer::create] Failed to set context sharing\n";
+      return true;
+    }
+
+    // get actual size
+    wglQueryPbufferARB(impl_->pbuffer_, WGL_PBUFFER_WIDTH_ARB, &width_);
+    wglQueryPbufferARB(impl_->pbuffer_, WGL_PBUFFER_HEIGHT_ARB, &height_);
+    if (mRenderTex)
+    {
+      // create pbuffer texture object
+      glGenTextures(1, &mTex);
+      if (mFormat == GL_FLOAT)
+      {
+        if (mNV_float_buffer)
+        {
+          mTexTarget = GL_TEXTURE_RECTANGLE_NV;
+          if (mNumColorBits == 16)
+            mTexFormat = GL_FLOAT_RGBA16_NV;
+          else
+            mTexFormat = GL_FLOAT_RGBA32_NV;
+        }
+        else
+        {
+          mTexTarget = GL_TEXTURE_2D;
+        }
+      }
+      else
+      {
+        mTexTarget = GL_TEXTURE_2D;
+        mTexFormat = GL_RGBA;
+      }
+      glBindTexture(mTexTarget, mTex);
+#ifdef GL_CLAMP_TO_EDGE
+      glTexParameteri(mTexTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(mTexTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+#else
+      glTexParameteri(mTexTarget, GL_TEXTURE_WRAP_S, GL_CLAMP);
+      glTexParameteri(mTexTarget, GL_TEXTURE_WRAP_T, GL_CLAMP);
+#endif
+      glTexParameteri(mTexTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(mTexTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      if (!mATI_render_texture)
+      {
+        unsigned char* data = scinew unsigned char[width_*height_*4];
+        glTexImage2D(mTexTarget, 0, mTexFormat, width_, height_, 0,
+                     GL_RGBA, GL_UNSIGNED_BYTE, data);
+        delete [] data;
+      }
+      if (!mShader)
+      {
+        mShader = scinew FragmentProgramARB(program);
+        if (mShader->create()) return true;
+      }
+    }
+    return false;
+  }
+  return true;
 
 #else // GLX
-  if(!mInit) {
+  if (!mInit)
+  {
     /* query GLX version */
     int major, minor;
     const char* version = glXGetClientString(glXGetCurrentDisplay(), GLX_VERSION);
     sscanf(version, "%d.%d", &major, &minor);
 
-    mATI_render_texture = 
+    mATI_render_texture =
       gluCheckExtension((GLubyte*)"GLX_ATI_render_texture",
-			(GLubyte*)glXGetClientString(glXGetCurrentDisplay(), 
-						     GLX_EXTENSIONS));
+                        (GLubyte*)glXGetClientString(glXGetCurrentDisplay(),
+                                                     GLX_EXTENSIONS));
 
-    mATI_pixel_format_float = 
-      gluCheckExtension((GLubyte*)"GLX_ATI_pixel_format_float", 
-			(GLubyte*)glXGetClientString(glXGetCurrentDisplay(), 
-						     GLX_EXTENSIONS));
+    mATI_pixel_format_float =
+      gluCheckExtension((GLubyte*)"GLX_ATI_pixel_format_float",
+                        (GLubyte*)glXGetClientString(glXGetCurrentDisplay(),
+                                                     GLX_EXTENSIONS));
 
-    mNV_float_buffer = 
-      gluCheckExtension((GLubyte*)"GLX_NV_float_buffer", 
-			(GLubyte*)glXGetClientString(glXGetCurrentDisplay(), 
-						     GLX_EXTENSIONS))
-      && gluCheckExtension((GLubyte*)"GL_NV_float_buffer", 
-			   (GLubyte*)glGetString(GL_EXTENSIONS))
-      && gluCheckExtension((GLubyte*)"GL_ARB_fragment_program", 
-			   (GLubyte*)glGetString(GL_EXTENSIONS));
+    mNV_float_buffer =
+      gluCheckExtension((GLubyte*)"GLX_NV_float_buffer",
+                        (GLubyte*)glXGetClientString(glXGetCurrentDisplay(),
+                                                     GLX_EXTENSIONS))
+      && gluCheckExtension((GLubyte*)"GL_NV_float_buffer",
+                           (GLubyte*)glGetString(GL_EXTENSIONS))
+      && gluCheckExtension((GLubyte*)"GL_ARB_fragment_program",
+                           (GLubyte*)glGetString(GL_EXTENSIONS));
 
-    mNV_texture_rectangle = 
-      gluCheckExtension((GLubyte*)"GL_NV_texture_rectangle", 
-			(GLubyte*)glGetString(GL_EXTENSIONS));
+    mNV_texture_rectangle =
+      gluCheckExtension((GLubyte*)"GL_NV_texture_rectangle",
+                        (GLubyte*)glGetString(GL_EXTENSIONS));
 
-    if(minor < 3 || (mFormat == GL_FLOAT && 
-		     !(mATI_pixel_format_float || mNV_float_buffer))) {
+    if (minor < 3 || (format_ == GL_FLOAT &&
+                      !(mATI_pixel_format_float || mNV_float_buffer)))
+    {
       mSupported = false;
-    } else {
+    }
+    else
+    {
       mSupported = true;
     }
     //       || (mRenderTex && !mATI_render_texture)
 
-    if(mSupported && mATI_render_texture) {
+    if (mSupported && mATI_render_texture)
+    {
       bool fail = false;
       fail = fail || (glXBindTexImageATI = (PFNGLXBINDTEXIMAGEATIPROC)
-		      getProcAddress("glXBindTexImageATI")) == 0;
+                      getProcAddress("glXBindTexImageATI")) == 0;
       fail = fail || (glXReleaseTexImageATI = (PFNGLXRELEASETEXIMAGEATIPROC)
-		      getProcAddress("glXReleaseTexImageATI")) == 0;
-      if(fail) {
+                      getProcAddress("glXReleaseTexImageATI")) == 0;
+      if (fail)
+      {
         mSupported = false;
         cerr << "GL_ATI_render_texture is not supported." << endl;
       }
@@ -801,11 +817,12 @@ Pbuffer::create ()
 
     mInit = true;
   }
-  
-  if(mSupported) {
+
+  if (mSupported)
+  {
     // get current display
-    mImpl->display_ = glXGetCurrentDisplay();
-    if (mImpl->display_ == 0)
+    impl_->display_ = glXGetCurrentDisplay();
+    if (impl_->display_ == 0)
     {
       cerr << "[Pbuffer::create] Failed to obtain current display" << endl;
       return false;
@@ -822,15 +839,15 @@ Pbuffer::create ()
     GLXFBConfig* fbc;
     int n_fbc;
     int i;
-    if (mSeparate)
+    if (separate_)
     {
       i = 0;
       // pbuffer capable
       attrib[i++] = GLX_DRAWABLE_TYPE;
-      attrib[i++] = mNumColorBits > 8 ? GLX_PBUFFER_BIT :
+      attrib[i++] = num_color_bits_ > 8 ? GLX_PBUFFER_BIT :
         GLX_PBUFFER_BIT | GLX_WINDOW_BIT;
       // format
-      if (mFormat == GL_FLOAT)
+      if (format_ == GL_FLOAT)
       {
         if (mATI_pixel_format_float)
         {
@@ -851,55 +868,55 @@ Pbuffer::create ()
         attrib[i++] = GLX_RGBA_BIT;
       }
       // color buffer spec
-      if (mNumColorBits != GL_DONT_CARE)
+      if (num_color_bits_ != GL_DONT_CARE)
       {
         attrib[i++] = GLX_RED_SIZE;
-        attrib[i++] = mNumColorBits;
+        attrib[i++] = num_color_bits_;
         attrib[i++] = GLX_GREEN_SIZE;
-        attrib[i++] = mNumColorBits;
+        attrib[i++] = num_color_bits_;
         attrib[i++] = GLX_BLUE_SIZE;
-        attrib[i++] = mNumColorBits;
+        attrib[i++] = num_color_bits_;
         attrib[i++] = GLX_ALPHA_SIZE;
-        attrib[i++] = mNumColorBits;
+        attrib[i++] = num_color_bits_;
       }
       // double buffer spec
-      if (mDoubleBuffer != GL_DONT_CARE)
+      if (double_buffer_ != GL_DONT_CARE)
       {
         attrib[i++] = GLX_DOUBLEBUFFER;
-        attrib[i++] = mDoubleBuffer ? GL_TRUE : GL_FALSE;
+        attrib[i++] = double_buffer_ ? GL_TRUE : GL_FALSE;
       }
       // aux buffer spec
-      if (mNumAuxBuffers != GL_DONT_CARE)
+      if (num_aux_buffers_ != GL_DONT_CARE)
       {
         attrib[i++] = GLX_AUX_BUFFERS;
-        attrib[i++] = mNumAuxBuffers;
+        attrib[i++] = num_aux_buffers_;
       }
       // depth buffer spec
-      if (mNumDepthBits != GL_DONT_CARE)
+      if (num_depth_bits_ != GL_DONT_CARE)
       {
         attrib[i++] = GLX_DEPTH_SIZE;
-        attrib[i++] = mNumDepthBits;
+        attrib[i++] = num_depth_bits_;
       }
       // stencil buffer spec
-      if (mNumStencilBits != GL_DONT_CARE)
+      if (num_stencil_bits_ != GL_DONT_CARE)
       {
         attrib[i++] = GLX_STENCIL_SIZE;
-        attrib[i++] = mNumStencilBits;
+        attrib[i++] = num_stencil_bits_;
       }
       // accum buffer spec
-      if (mNumAccumBits != GL_DONT_CARE)
+      if (num_accum_bits_ != GL_DONT_CARE)
       {
         attrib[i++] = GLX_ACCUM_RED_SIZE;
-        attrib[i++] = mNumAccumBits;
+        attrib[i++] = num_accum_bits_;
         attrib[i++] = GLX_ACCUM_GREEN_SIZE;
-        attrib[i++] = mNumAccumBits;
+        attrib[i++] = num_accum_bits_;
         attrib[i++] = GLX_ACCUM_BLUE_SIZE;
-        attrib[i++] = mNumAccumBits;
+        attrib[i++] = num_accum_bits_;
         attrib[i++] = GLX_ACCUM_ALPHA_SIZE;
-        attrib[i++] = mNumAccumBits;
+        attrib[i++] = num_accum_bits_;
       }
       // render to texture
-      if (mRenderTex)
+      if (render_tex_)
       {
         if (mATI_render_texture)
         {
@@ -913,7 +930,7 @@ Pbuffer::create ()
     {
       // get fb config id for current context
       int id = 0;
-      if (glXQueryContext(mImpl->display_, ctx, GLX_FBCONFIG_ID, &id) != Success)
+      if (glXQueryContext(impl_->display_, ctx, GLX_FBCONFIG_ID, &id) != Success)
       {
         cerr << "[Pbuffer::create] Failed to query fbconfig id from context"
              << endl;
@@ -925,26 +942,26 @@ Pbuffer::create ()
       attrib[2] = None;
     }
     // choose fb config
-    fbc = glXChooseFBConfig(mImpl->display_, DefaultScreen(mImpl->display_),
+    fbc = glXChooseFBConfig(impl_->display_, DefaultScreen(impl_->display_),
                             attrib, &n_fbc);
     if (fbc == 0 || n_fbc == 0)
     {
       cerr << "[Pbuffer::create] Failed to obtain fb config" << endl;
       return false;
     }
-    glXGetFBConfigAttrib(mImpl->display_, *fbc, GLX_FBCONFIG_ID, &mVisualId);
-    glXGetFBConfigAttrib(mImpl->display_, *fbc, GLX_RED_SIZE, &mNumColorBits);
+    glXGetFBConfigAttrib(impl_->display_, *fbc, GLX_FBCONFIG_ID, &visual_id_);
+    glXGetFBConfigAttrib(impl_->display_, *fbc, GLX_RED_SIZE, &num_color_bits_);
     // create pbuffer
     i = 0;
     attrib[i++] = GLX_PBUFFER_WIDTH;
-    attrib[i++] = mWidth;
+    attrib[i++] = width_;
     attrib[i++] = GLX_PBUFFER_HEIGHT;
-    attrib[i++] = mHeight;
+    attrib[i++] = height_;
     attrib[i++] = GLX_LARGEST_PBUFFER; // we need exact size or fail
     attrib[i++] = GL_FALSE;
     attrib[i++] = GLX_PRESERVED_CONTENTS; // we don't want to lose the buffer
     attrib[i++] = GL_TRUE;
-    if (mRenderTex && mATI_render_texture)
+    if (render_tex_ && mATI_render_texture)
     {
       attrib[i++] = GLX_TEXTURE_FORMAT_ATI;
       attrib[i++] = GLX_TEXTURE_RGBA_ATI;
@@ -954,18 +971,18 @@ Pbuffer::create ()
       attrib[i++] = GL_FALSE;
     }
     attrib[i] = None;
-    mImpl->pbuffer_ = glXCreatePbuffer(mImpl->display_, *fbc, attrib);
-    if (mImpl->pbuffer_ == 0)
+    impl_->pbuffer_ = glXCreatePbuffer(impl_->display_, *fbc, attrib);
+    if (impl_->pbuffer_ == 0)
     {
       cerr << "[Pbuffer::create] Failed to create pbuffer" << endl;
       return false;
     }
     // create context
-    if (mSeparate)
+    if (separate_)
     {
-      mImpl->context_ = glXCreateNewContext(mImpl->display_, *fbc, GLX_RGBA_TYPE,
+      impl_->context_ = glXCreateNewContext(impl_->display_, *fbc, GLX_RGBA_TYPE,
                                             ctx, True);
-      if (mImpl->context_ == 0)
+      if (impl_->context_ == 0)
       {
         cerr << "[Pbuffer::create] Failed to create context" << endl;
         return false;
@@ -973,45 +990,54 @@ Pbuffer::create ()
     }
     else
     {
-      mImpl->context_ = ctx;
+      impl_->context_ = ctx;
     }
     // query attributes
-    glXQueryDrawable(mImpl->display_, mImpl->pbuffer_, GLX_WIDTH,
-                     (unsigned int*)&mWidth);
-    glXQueryDrawable(mImpl->display_, mImpl->pbuffer_, GLX_HEIGHT,
-                     (unsigned int*)&mHeight);
+    glXQueryDrawable(impl_->display_, impl_->pbuffer_, GLX_WIDTH,
+                     (unsigned int*)&width_);
+    glXQueryDrawable(impl_->display_, impl_->pbuffer_, GLX_HEIGHT,
+                     (unsigned int*)&height_);
     // ...
-    if (mRenderTex) {
+    if (render_tex_)
+    {
       // create pbuffer texture object
-      glGenTextures(1, &mTex);
-      if(mFormat == GL_FLOAT) {
-        if(mNV_float_buffer) {
-          mTexTarget = GL_TEXTURE_RECTANGLE_NV;
-          if(mNumColorBits == 16)
-            mTexFormat = GL_FLOAT_RGBA16_NV;
+      glGenTextures(1, &tex_);
+      if (format_ == GL_FLOAT)
+      {
+        if (mNV_float_buffer)
+        {
+          tex_target_ = GL_TEXTURE_RECTANGLE_NV;
+          if (num_color_bits_ == 16)
+            tex_format_ = GL_FLOAT_RGBA16_NV;
           else
-            mTexFormat = GL_FLOAT_RGBA32_NV;
-        } else {
-          mTexTarget = GL_TEXTURE_2D;
+            tex_format_ = GL_FLOAT_RGBA32_NV;
         }
-      } else {
-        mTexTarget = GL_TEXTURE_2D;
-        mTexFormat = GL_RGBA;
+        else
+        {
+          tex_target_ = GL_TEXTURE_2D;
+        }
       }
-      glBindTexture(mTexTarget, mTex);
-      glTexParameteri(mTexTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      glTexParameteri(mTexTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-      glTexParameteri(mTexTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      glTexParameteri(mTexTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-      if(!mATI_render_texture) {
-        unsigned char* data = new unsigned char[mWidth*mHeight*4];
-        glTexImage2D(mTexTarget, 0, mTexFormat, mWidth, mHeight, 0,
+      else
+      {
+        tex_target_ = GL_TEXTURE_2D;
+        tex_format_ = GL_RGBA;
+      }
+      glBindTexture(tex_target_, tex_);
+      glTexParameteri(tex_target_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(tex_target_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      glTexParameteri(tex_target_, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(tex_target_, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      if (!mATI_render_texture)
+      {
+        unsigned char* data = scinew unsigned char[width_ * height_ * 4];
+        glTexImage2D(tex_target_, 0, tex_format_, width_, height_, 0,
                      GL_RGBA, GL_UNSIGNED_BYTE, data);
         delete [] data;
       }
-      if(!mShader) {
-        mShader = new FragmentProgramARB(program);
-        if(mShader->create()) return false;
+      if (!mShader)
+      {
+        mShader = scinew FragmentProgramARB(program);
+        if (mShader->create()) return false;
       }
     }
     return true;
@@ -1020,33 +1046,34 @@ Pbuffer::create ()
 #endif
 }
 
+
 void
 Pbuffer::destroy ()
 {
 #ifndef _WIN32
-  if (mSeparate && mImpl->context_ != 0)
+  if (separate_ && impl_->context_ != 0)
   {
-    //glXMakeCurrent(mImpl->display_, mImpl->pbuffer_, 0);
-    glXDestroyContext(mImpl->display_, mImpl->context_);
+    //glXMakeCurrent(impl_->display_, impl_->pbuffer_, 0);
+    glXDestroyContext(impl_->display_, impl_->context_);
   }
-  if (mImpl->pbuffer_ != 0)
+  if (impl_->pbuffer_ != 0)
   {
-    glXDestroyPbuffer(mImpl->display_, mImpl->pbuffer_);
+    glXDestroyPbuffer(impl_->display_, impl_->pbuffer_);
   }
-  if(mShader)
+  if (mShader)
   {
     mShader->destroy();
   }
 #else // WIN32
-  if (/*mSeparate && */mImpl->rc_ != 0)
+  if (/*separate_ && */impl_->rc_ != 0)
   {
-    wglDeleteContext(mImpl->rc_);
+    wglDeleteContext(impl_->rc_);
   }
-  if (mImpl->pbuffer_ != 0)
+  if (impl_->pbuffer_ != 0)
   {
-    wglDestroyPbufferARB(mImpl->pbuffer_);
+    wglDestroyPbufferARB(impl_->pbuffer_);
   }
-  if(mShader)
+  if (mShader)
   {
     mShader->destroy();
   }
@@ -1058,9 +1085,9 @@ void
 Pbuffer::makeCurrent ()
 {
 #ifndef _WIN32
-  glXMakeCurrent(mImpl->display_, mImpl->pbuffer_, mImpl->context_);
+  glXMakeCurrent(impl_->display_, impl_->pbuffer_, impl_->context_);
 #else
-  wglMakeCurrent(mImpl->dc_, mImpl->rc_);
+  wglMakeCurrent(impl_->dc_, impl_->rc_);
 #endif
 }
 
@@ -1068,9 +1095,9 @@ bool
 Pbuffer::is_current ()
 {
 #ifndef _WIN32
-  return (mImpl->context_ == glXGetCurrentContext());
+  return (impl_->context_ == glXGetCurrentContext());
 #else // WIN32
-  return (mImpl->rc_ == wglGetCurrentContext());
+  return (impl_->rc_ == wglGetCurrentContext());
 #endif
 }
 
@@ -1078,21 +1105,21 @@ Pbuffer::is_current ()
 void
 Pbuffer::swapBuffers ()
 {
-  if (mRenderTex && !mATI_render_texture)
+  if (render_tex_ && !mATI_render_texture)
   {
     GLint buffer;
     glGetIntegerv(GL_DRAW_BUFFER, &buffer);
     glReadBuffer(buffer);
-    glBindTexture(mTexTarget, mTex);
-    glCopyTexSubImage2D(mTexTarget, 0, 0, 0, 0, 0, mWidth, mHeight);
-    glBindTexture(mTexTarget, 0);
+    glBindTexture(tex_target_, tex_);
+    glCopyTexSubImage2D(tex_target_, 0, 0, 0, 0, 0, width_, height_);
+    glBindTexture(tex_target_, 0);
   }
-  if (mDoubleBuffer)
+  if (double_buffer_)
   {
-#ifndef _WIN32 
-   glXSwapBuffers(mImpl->display_, mImpl->pbuffer_);
+#ifndef _WIN32
+    glXSwapBuffers(impl_->display_, impl_->pbuffer_);
 #else
-   wglSwapLayerBuffers(mImpl->dc_, WGL_SWAP_MAIN_PLANE);
+    wglSwapLayerBuffers(impl_->dc_, WGL_SWAP_MAIN_PLANE);
 #endif
   }
   else
@@ -1105,33 +1132,33 @@ Pbuffer::swapBuffers ()
 void
 Pbuffer::bind (unsigned int buffer)
 {
-  if(mRenderTex)
+  if (render_tex_)
   {
-    glEnable(mTexTarget);
-    glBindTexture(mTexTarget, mTex);
-    if(mATI_render_texture)
+    glEnable(tex_target_);
+    glBindTexture(tex_target_, tex_);
+    if (mATI_render_texture)
     {
 #ifndef _WIN32
-      glXBindTexImageATI(mImpl->display_, mImpl->pbuffer_, 
-			 buffer == GL_FRONT ? 
+      glXBindTexImageATI(impl_->display_, impl_->pbuffer_,
+                         buffer == GL_FRONT ?
                          GLX_FRONT_LEFT_ATI : GLX_BACK_LEFT_ATI);
 #else
-      wglBindTexImageARB(mImpl->pbuffer_,
-			 buffer == GL_FRONT ? WGL_FRONT_LEFT_ARB : WGL_BACK_LEFT_ARB);
+      wglBindTexImageARB(impl_->pbuffer_,
+                         buffer == GL_FRONT ? WGL_FRONT_LEFT_ARB : WGL_BACK_LEFT_ARB);
 #endif
     }
-    if (mFormat == GL_FLOAT && mNV_float_buffer)
+    if (format_ == GL_FLOAT && mNV_float_buffer)
     {
-      if (mUseDefaultShader)
+      if (use_default_shader_)
       {
         mShader->bind();
       }
-      if (mUseTextureMatrix)
+      if (use_texture_matrix_)
       {
         glMatrixMode(GL_TEXTURE);
         glPushMatrix();
         glLoadIdentity();
-        glScalef(mWidth, mHeight, 1.0);
+        glScalef(width_, height_, 1.0);
         glMatrixMode(GL_MODELVIEW);
       }
     }
@@ -1142,31 +1169,31 @@ Pbuffer::bind (unsigned int buffer)
 void
 Pbuffer::release (unsigned int buffer)
 {
-  if(mRenderTex)
+  if (render_tex_)
   {
-    if(mATI_render_texture)
+    if (mATI_render_texture)
     {
 #ifndef _WIN32
 
-      glXReleaseTexImageATI(mImpl->display_, mImpl->pbuffer_,
-			    buffer == GL_FRONT ? GLX_FRONT_LEFT_ATI : GLX_BACK_LEFT_ATI);
+      glXReleaseTexImageATI(impl_->display_, impl_->pbuffer_,
+                            buffer == GL_FRONT ? GLX_FRONT_LEFT_ATI : GLX_BACK_LEFT_ATI);
 #else
-      wglReleaseTexImageARB(mImpl->pbuffer_,
-			    buffer == GL_FRONT ? WGL_FRONT_LEFT_ARB : WGL_BACK_LEFT_ARB);
+      wglReleaseTexImageARB(impl_->pbuffer_,
+                            buffer == GL_FRONT ? WGL_FRONT_LEFT_ARB : WGL_BACK_LEFT_ARB);
 
 #endif
     }
-    glBindTexture(mTexTarget, 0);
-    glDisable(mTexTarget);
-    if (mFormat == GL_FLOAT && mNV_float_buffer)
+    glBindTexture(tex_target_, 0);
+    glDisable(tex_target_);
+    if (format_ == GL_FLOAT && mNV_float_buffer)
     {
-      if (mUseTextureMatrix)
+      if (use_texture_matrix_)
       {
         glMatrixMode(GL_TEXTURE);
         glPopMatrix();
         glMatrixMode(GL_MODELVIEW);
       }
-      if (mUseDefaultShader)
+      if (use_default_shader_)
       {
         mShader->release();
       }
@@ -1180,15 +1207,15 @@ Pbuffer::activate ()
 {
 #ifndef _WIN32
   // save context state
-  mImpl->saved_display_ = glXGetCurrentDisplay();
-  mImpl->saved_drawable_ = glXGetCurrentDrawable();
-  mImpl->saved_context_ = glXGetCurrentContext();
+  impl_->saved_display_ = glXGetCurrentDisplay();
+  impl_->saved_drawable_ = glXGetCurrentDrawable();
+  impl_->saved_context_ = glXGetCurrentContext();
   // set read/write context to pbuffer
-  glXMakeCurrent(mImpl->display_, mImpl->pbuffer_, mImpl->context_);
+  glXMakeCurrent(impl_->display_, impl_->pbuffer_, impl_->context_);
 #else
-  mImpl->saved_dc_ = wglGetCurrentDC();
-  mImpl->saved_rc_ = wglGetCurrentContext();
-  wglMakeCurrent(mImpl->dc_, mImpl->rc_);
+  impl_->saved_dc_ = wglGetCurrentDC();
+  impl_->saved_rc_ = wglGetCurrentContext();
+  wglMakeCurrent(impl_->dc_, impl_->rc_);
 #endif
 }
 
@@ -1197,10 +1224,10 @@ void
 Pbuffer::deactivate ()
 {
 #ifndef _WIN32
-  glXMakeCurrent(mImpl->saved_display_, mImpl->saved_drawable_,
-		 mImpl->saved_context_);
+  glXMakeCurrent(impl_->saved_display_, impl_->saved_drawable_,
+                 impl_->saved_context_);
 #else
-  wglMakeCurrent(mImpl->saved_dc_, mImpl->saved_rc_);
+  wglMakeCurrent(impl_->saved_dc_, impl_->saved_rc_);
 #endif
 }
 
@@ -1208,51 +1235,51 @@ Pbuffer::deactivate ()
 bool
 Pbuffer::need_shader()
 {
-  return mFormat == GL_FLOAT && mNV_float_buffer;
+  return format_ == GL_FLOAT && mNV_float_buffer;
 }
 
 
 void
 Pbuffer::set_use_default_shader(bool b)
 {
-  mUseDefaultShader = b;
+  use_default_shader_ = b;
 }
 
 
 void
 Pbuffer::set_use_texture_matrix(bool b)
 {
-  mUseTextureMatrix = b;
+  use_texture_matrix_ = b;
 }
 
 
 Pbuffer::Pbuffer (int width, int height, int format, int numColorBits,
-		  /* int numChannels, */ bool isRenderTex, int isDoubleBuffer,
-		  int numAuxBuffers, int numDepthBits, int numStencilBits,
-		  int numAccumBits)
-  : mWidth(width),
-    mHeight(height),
-    mFormat(format),
-    mNumColorBits(numColorBits),
-    /* mNumChannels(numChannels), */
-    mRenderTex(isRenderTex),
-    mDoubleBuffer(isDoubleBuffer),
-    mNumAuxBuffers(numAuxBuffers),
-    mNumDepthBits(numDepthBits),
-    mNumStencilBits(numStencilBits),
-    mNumAccumBits(numAccumBits),
-    mSeparate(true),
-    mTex(0),
-    mTexTarget(GL_TEXTURE_2D),
-    mUseDefaultShader(true),
-    mImpl(new PbufferImpl)
+                  /* int numChannels, */ bool isRenderTex, int isDoubleBuffer,
+                  int numAuxBuffers, int numDepthBits, int numStencilBits,
+                  int numAccumBits)
+  : width_(width),
+    height_(height),
+    format_(format),
+    num_color_bits_(numColorBits),
+    render_tex_(isRenderTex),
+    double_buffer_(isDoubleBuffer),
+    num_aux_buffers_(numAuxBuffers),
+    num_depth_bits_(numDepthBits),
+    num_stencil_bits_(numStencilBits),
+    num_accum_bits_(numAccumBits),
+    separate_(true),
+    tex_(0),
+    tex_target_(GL_TEXTURE_2D),
+    tex_format_(0),
+    use_default_shader_(true),
+    impl_(scinew PbufferImpl)
 {
 }
 
 
 Pbuffer::~Pbuffer ()
 {
-  delete mImpl;
+  delete impl_;
 }
 
 

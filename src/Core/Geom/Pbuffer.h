@@ -65,32 +65,32 @@ public:
   void activate();
   void deactivate();
   
-  inline int width() const { return mWidth; }
-  inline int height() const { return mHeight; }
-  inline int visual() const { return mVisualId; }
-  inline unsigned int target() const { return mTexTarget; }
+  inline int width() const { return width_; }
+  inline int height() const { return height_; }
+  inline int visual() const { return visual_id_; }
+  inline unsigned int target() const { return tex_target_; }
 
   bool need_shader();
   void set_use_default_shader(bool b);
   void set_use_texture_matrix(bool b);
 
-  inline int num_color_bits() const { return mNumColorBits; }
+  inline int num_color_bits() const { return num_color_bits_; }
   
 protected:
-  int mWidth, mHeight;
-  int mFormat, mNumColorBits; /* , mChannels; */
-  bool mRenderTex;
-  int mDoubleBuffer, mNumAuxBuffers;
-  int mNumDepthBits, mNumStencilBits, mNumAccumBits;
-  bool mSeparate; // has separate context
-  int mVisualId; // associated visual
-  unsigned int mTex; // associated texture id
-  unsigned int mTexTarget; // associated texture target
-  unsigned int mTexFormat; // associated texture format
-  bool mUseDefaultShader;
-  bool mUseTextureMatrix;
+  int width_, height_;
+  int format_, num_color_bits_; /* , mChannels; */
+  bool render_tex_;
+  int double_buffer_, num_aux_buffers_;
+  int num_depth_bits_, num_stencil_bits_, num_accum_bits_;
+  bool separate_; // has separate context
+  int visual_id_; // associated visual
+  unsigned int tex_; // associated texture id
+  unsigned int tex_target_; // associated texture target
+  unsigned int tex_format_; // associated texture format
+  bool use_default_shader_;
+  bool use_texture_matrix_;
   // GL_TEXTURE_2D or GL_TEXTURE_RECTANGLE_NV
-  struct PbufferImpl* mImpl; // implementation specific details
+  struct PbufferImpl* impl_; // implementation specific details
 };
 
 } // end namespace SCIRun
