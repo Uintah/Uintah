@@ -85,9 +85,6 @@ namespace SCIRun {
 
 int CAPTURE_Z_DATA_HACK = 0;
 
-// This looks non-thread-safe.  Why do we need current_drawer?
-static OpenGL* current_drawer = 0;
-
 static const int pick_buffer_size = 512;
 static const double pick_window = 10.0;
 
@@ -498,11 +495,10 @@ OpenGL::render_and_save_image(int x, int y,
   gui_->lock();
 
   // Make sure our GL context is current
-  if (current_drawer != this || tk_gl_context_ != old_tk_gl_context_)
+  if (tk_gl_context_ != old_tk_gl_context_)
   {
     old_tk_gl_context_ = tk_gl_context_;
     tk_gl_context_->make_current();
-    current_drawer = this;
   }
 
   deriveFrustum();
@@ -533,13 +529,14 @@ OpenGL::render_and_save_image(int x, int y,
   if (ftype == "ppm" || ftype == "raw")
   {
     image_file = scinew ofstream(fname.c_str());
-    if ( !image_file ){
+    if ( !image_file )
+    {
     ostringstream str;
     str << "ERROR opening file: " << fname.c_str();
     view_window_->setMessage( str.str() );
     cerr<<str.str()<<"\n";
     return;
-  }
+    }
 
     channel_bytes = 1;
     num_channels = 3;
@@ -641,8 +638,11 @@ OpenGL::render_and_save_image(int x, int y,
 #ifdef HAVE_MAGICK
       C_Magick::SyncImagePixels(image);
 #endif
-    } else
+    }
+    else
+    {
       image_file->write((char *)pixels, hi_res_.resx*read_height*pix_size);
+    }
   }
   gui_->lock();
 
@@ -690,9 +690,8 @@ OpenGL::redraw_frame()
     return;
   }
   // Make sure our GL context is current
-  if ((current_drawer != this) || (tk_gl_context_ != old_tk_gl_context_))
+  if ((tk_gl_context_ != old_tk_gl_context_))
   {
-    current_drawer=this;
     tk_gl_context_->make_current();
     if (tk_gl_context_ != old_tk_gl_context_)
     {
@@ -1253,9 +1252,8 @@ OpenGL::real_get_pick(int x, int y,
   // Make ourselves current
 
   // Make sure our GL context is current
-  if ((current_drawer != this) || (tk_gl_context_ != old_tk_gl_context_))
+  if ((tk_gl_context_ != old_tk_gl_context_))
   {
-    current_drawer = this;
     old_tk_gl_context_ = tk_gl_context_;
     gui_->lock();
     tk_gl_context_->make_current();
