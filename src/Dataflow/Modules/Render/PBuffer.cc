@@ -143,7 +143,7 @@ static PFNWGLGETPBUFFERDCARBPROC wglGetPbufferDCARB = 0;
 static PFNWGLDESTROYPBUFFERARBPROC wglDestroyPbufferARB = 0;
 
 
-#endif _WIN32
+#endif // _WIN32
 
 #include <Core/Util/Assert.h>
 
@@ -157,28 +157,27 @@ using std::cerr;
 
 namespace SCIRun {
 
-PBuffer::PBuffer( int doubleBuffer /* = GL_FALSE */ ):
-  width_(0), height_(0), colorBits_(8),
-  doubleBuffer_(doubleBuffer),
-  depthBits_(8),
+PBuffer::PBuffer( int doubleBuffer /* = GL_FALSE */ ) :
 #ifndef _WIN32
-  dpy_(0),
   cx_(0),
-#else
+#ifdef HAVE_PBUFFER
+  fbc_(0),
+  pbuffer_(0),
+#endif  
+  dpy_(0),
+  screen_(0),
+#else // _WIN32
   dc_(0),
   rc_(0),
-#endif
 #ifdef HAVE_PBUFFER
-#ifndef _WIN32
-  fbc_(0),
-#endif
   pbuffer_(0),
 #endif
-
-  width_(0), height_(0), colorBits_(8),
+#endif
+  width_(0),
+  height_(0),
+  colorBits_(8),
   doubleBuffer_(doubleBuffer),
-  depthBits_(8),
-  valid_(false)
+  depthBits_(8)
 {}
 
 #ifdef HAVE_PBUFFER
@@ -188,7 +187,6 @@ bool
 PBuffer::create(Display* dpy, int screen, GLXContext sharedcontext,
 		int width, int height, int colorBits, int depthBits)
 {
-  fprintf(stderr,"Modules::Pbuffer::create called\n");
   dpy_ = dpy;
   screen_ = screen;
 
@@ -220,8 +218,8 @@ PBuffer::create(Display* dpy, int screen, GLXContext sharedcontext,
   sscanf(version, "%d.%d", &major, &minor);
 #endif
 
-  if( major >= 1 || (major == 1 &&  minor >1)) { // we can have a pbuffer
-    //    cerr<<"We can have a pbuffer!\n";
+  if ( major >= 1 || (major == 1 &&  minor >1))
+  { // we can have a pbuffer
     int attrib[32];
     int i = 0;
 
@@ -238,13 +236,14 @@ PBuffer::create(Display* dpy, int screen, GLXContext sharedcontext,
 
     int nelements;
     fbc_ = glXChooseFBConfig( dpy, screen, attrib, &nelements );
-    if( fbc_ == 0 ){
-      //cerr<<"Can not configure for Pbuffer\n";
+    if ( fbc_ == 0 )
+    {
       return false;
     }
 
     int match = 0, a[8];
-    for(int i = 0; i < nelements; i++) {
+    for (int i = 0; i < nelements; i++)
+    {
       glXGetFBConfigAttrib(dpy, fbc_[i],
 			   GLX_RED_SIZE, &a[0]);
       glXGetFBConfigAttrib(dpy, fbc_[i],
@@ -261,15 +260,12 @@ PBuffer::create(Display* dpy, int screen, GLXContext sharedcontext,
 			   GLX_ACCUM_GREEN_SIZE, &a[6]);
       glXGetFBConfigAttrib(dpy, fbc_[i],
 			   GLX_ACCUM_BLUE_SIZE, &a[7]);
-      // printf("r = %d, b = %d, g = %d, a = %d, z = %d, ar = %d, ag = %d, ab = %d\n",
-      //	     a[0],a[1],a[2],a[3],a[4], a[5], a[6], a[7]);
 
       if((a[0] >= 8) && (a[1] >= 8) &&
 	 (a[2] >= 8) && (a[3] >= 8) && 
 	 (a[4] >= 8) && (a[5] == 0) && (a[6] == 0) && (a[7] == 0) )
       {
 	match = i;
-// 	printf("fbConfigList[%d] matches the selected attribList\n", i);
 	break;
       }
     }
@@ -279,18 +275,18 @@ PBuffer::create(Display* dpy, int screen, GLXContext sharedcontext,
     attrib[i++] = GLX_PBUFFER_HEIGHT; attrib[i++] = height_;
     attrib[i] = None;
     pbuffer_ = glXCreatePbuffer( dpy, fbc_[match], attrib );
-    if( pbuffer_ == 0 ) {
-      //cerr<<"Cannot create Pbuffer\n";
+    if( pbuffer_ == 0 )
+    {
       return false;
     }
     cx_ = glXCreateNewContext( dpy, *fbc_, GLX_RGBA_TYPE, sharedcontext, True);
-    if( !cx_ ){
-      //cerr<<"Cannot create Pbuffer context\n";
+    if( !cx_ )
+    {
       return false;
     }
-// else cerr<<"Pbuffer successfully created\n";
-  } else {
-    //cerr<<"GLXVersion = "<<major<<"."<<minor<<"\n";
+  }
+  else
+  {
     cx_ = 0;
     return false;
   }
@@ -325,8 +321,8 @@ PBuffer::create(Display* dpy, int screen, GLXContext sharedcontext,
     attrib[i++] = GL_FALSE;
     attrib[i] = 0;
     pbuffer_ = wglCreatePbufferARB( dc, pf, width_, height_, attrib );
-    if( pbuffer_ == 0 ) {
-      //cerr<<"Cannot create Pbuffer\n";
+    if ( pbuffer_ == 0 )
+    {
       return false;
     }
 
@@ -338,19 +334,18 @@ PBuffer::create(Display* dpy, int screen, GLXContext sharedcontext,
 
     rc_ = wglCreateContext( dc );
 
-    if( !rc_ ){
-      //cerr<<"Cannot create Pbuffer context\n";
+    if( !rc_ )
+    {
       return false;
     }
 
     if (wglShareLists(rc_, sharedRc) == 0)
-      {
-	return false;
-      }
-// else cerr<<"Pbuffer successfully created\n";
-    valid_ = true;
-  } else {
-    //cerr<<"GLXVersion = "<<major<<"."<<minor<<"\n";
+    {
+      return false;
+    }
+  }
+  else
+  {
     rc_ = 0;
     return false;
   }
@@ -364,7 +359,6 @@ PBuffer::create(Display* dpy, int screen, GLXContext sharedcontext,
 void
 PBuffer::destroy()
 {
-  fprintf(stderr,"Modules::Pbuffer::destroy called\n");
 #ifndef _WIN32
   if( cx_ ) {
     glXDestroyContext( dpy_, cx_ );
@@ -385,28 +379,21 @@ PBuffer::destroy()
     pbuffer_ = 0;
   }
 #endif
-  valid_ = false;
 }
 
 void
 PBuffer::makeCurrent()
 {
-  fprintf(stderr,"Modules::Pbuffer::makeCurrent called\n");
-
-  if( valid_ ) {
 #ifndef _WIN32
-    glXMakeCurrent( dpy_, pbuffer_, cx_ );
+  glXMakeCurrent( dpy_, pbuffer_, cx_ );
 #else // WIN32
-    wglMakeCurrent( dc_, rc_ );
+  wglMakeCurrent( dc_, rc_ );
 #endif
-  }
 }
 
 bool
 PBuffer::is_current()
 {
-  fprintf(stderr,"Modules::Pbuffer::is_current called\n");
-
 #ifndef _WIN32
   return (cx_ == glXGetCurrentContext());
 #else // WIN32
@@ -425,8 +412,6 @@ PBuffer::create(HDC, HGLRC,
 		int /*width*/, int /*height*/,
 		int /*colorBits*/, int /*depthBits*/)
 {
-  fprintf(stderr,"Modules::Pbuffer::create called\n");
-
   return false;
 }
 
@@ -438,8 +423,6 @@ PBuffer::destroy()
 void
 PBuffer::makeCurrent()
 {
-  fprintf(stderr,"Modules::Pbuffer::makeCurrent called\n");
-
   // This better not be called, because create returned false.
   ASSERTFAIL("PBuffer::makeCurrent: HAVE_PBUFFER is not defined");
 }
@@ -447,8 +430,6 @@ PBuffer::makeCurrent()
 bool
 PBuffer::is_current()
 {
-  fprintf(stderr,"Modules::Pbuffer::is_current called\n");
-
   return false;
 }
 
