@@ -44,12 +44,16 @@
 #include <sci_defs/bits_defs.h>
 
 #ifdef _WIN32
-#define WINGDIAPI __declspec(dllimport)
-#define APIENTRY __stdcall
-#define CALLBACK APIENTRY
-#include <stddef.h>
-#include <stdlib.h>
-#define GL_INTENSITY_EXT GL_INTENSITY
+// // #define WINGDIAPI __declspec(dllimport)
+// // #define APIENTRY __stdcall
+// // #define CALLBACK APIENTRY
+// #include <stddef.h>
+// #include <stdlib.h>
+// #define GL_INTENSITY_EXT GL_INTENSITY
+//#include <windows.h>
+
+#define GL_ARB_fragment_program
+
 #endif
 
 
@@ -130,6 +134,20 @@ using std::endl;
 #ifndef _WIN32
 #include <X11/X.h>
 #include <X11/Xlib.h>
+#else
+#include <windows.h>
+#define GL_TEXTURE_3D 0x806F
+#define GL_TEXTURE0 0x84C0
+#define GL_TEXTURE1 0x84C1
+#define GL_TEXTURE2 0x84C2
+typedef void (GLAPIENTRY * PFNGLACTIVETEXTUREPROC) (GLenum texture);
+typedef void (GLAPIENTRY * PFNGLMULTITEXCOORD2FVPROC) (GLenum target, const GLfloat *v);
+typedef void (GLAPIENTRY * PFNGLMULTITEXCOORD3FPROC) (GLenum target, GLfloat s, GLfloat t, GLfloat r);
+
+static PFNGLACTIVETEXTUREPROC glActiveTexture = 0;
+static PFNGLMULTITEXCOORD2FVPROC glMultiTexCoord2fv = 0;
+static PFNGLMULTITEXCOORD3FPROC glMultiTexCoord3f = 0;
+
 #endif
 
 #include <stdio.h>
@@ -1035,8 +1053,10 @@ GeomColorMap::draw(DrawInfoOpenGL* di, Material *m, double time)
     glTexImage1D(GL_TEXTURE_1D, 0, 4, 256, 0, GL_RGBA, GL_FLOAT,
 		 cmap_->rawRGBA_);
 
-#ifndef _WIN32
+#ifdef GL_CLAMP_TO_EDGE
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+#else
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 #endif
     if (cmap_->resolution_ == 256)
     {
@@ -5922,6 +5942,8 @@ void GeomIndexedGroup::draw(DrawInfoOpenGL* di, Material* m, double time)
 bool
 DrawInfoOpenGL::init_font(int a)
 {
+
+
 #ifndef _WIN32
   if (a > GEOM_FONT_COUNT || a < 0) { return false; }
 
@@ -5963,8 +5985,42 @@ DrawInfoOpenGL::init_font(int a)
   {
     return true;
   }
-#endif
   return false;
+
+#else // WIN32
+  if (a > GEOM_FONT_COUNT || a < 0) { return false; }
+
+  if ( fontstatus[a] == 0 )
+  {
+    HDC hDC = wglGetCurrentDC();
+    if (!hDC)
+    return false;
+
+    DWORD first, count;
+
+    // for now, just use the system font
+    SelectObject(hDC,GetStockObject(SYSTEM_FONT));
+
+    // rasterize the standard character set.
+    first = 0;
+    count = 256;
+    fontbase[a] =  glGenLists(count);
+
+    if (fontbase[a] == 0) {
+      cerr << "DrawInfoOpenGL::init_font: Out of display lists.\n";
+      fontstatus[a] = 2;
+      return false;
+    }
+    wglUseFontBitmaps( hDC, first, count, fontbase[a]+first );
+    fontstatus[a] = 1;
+  }
+  if (fontstatus[a] == 1)
+    {
+      return true;
+    }
+  return false;
+  
+#endif
 }
 
 
@@ -6038,6 +6094,7 @@ void GeomTexts::draw(DrawInfoOpenGL* di, Material* matl, double)
 //----------------------------------------------------------------------
 void GeomTextsCulled::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
+
   if(!pre_draw(di,matl,0)) return;
 
   if (!di->init_font(fontindex_))
@@ -6294,6 +6351,15 @@ void TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 void GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double) 
 {
+#ifdef _WIN32
+  if (glActiveTexture == NULL) {
+    glActiveTexture = (PFNGLACTIVETEXTUREPROC)wglGetProcAddress("glActiveTexture");
+    glMultiTexCoord2fv = (PFNGLMULTITEXCOORD2FVPROC)wglGetProcAddress("glMultiTexCoord2fv");
+    glMultiTexCoord3f = (PFNGLMULTITEXCOORD3FPROC)wglGetProcAddress("glMultiTexCoord3f");
+  }
+#endif
+
+
   if(!pre_draw(di, matl, 1)) return;
   GLboolean use_fog = glIsEnabled(GL_FOG);
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
@@ -6304,13 +6370,21 @@ void GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double)
     fog_shader_->create();
   }
 
+#ifndef _WIN32
   if(use_fog) {
+#else
+  if(use_fog && glActiveTexture) {
+#endif
     // enable texture unit 2 for fog
     glActiveTexture(GL_TEXTURE2);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glEnable(GL_TEXTURE_3D);
   }
 
+  
+#ifdef _WIN32
+  if (glActiveTexture)
+#endif
   glActiveTexture(GL_TEXTURE1);
 
 #endif
@@ -6369,7 +6443,7 @@ void GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double)
 #endif
       glEnable(GL_BLEND);
 // Workaround for old bad nvidia headers.
-#if !defined(_WIN32) && defined(GL_FUNC_ADD) 
+#if defined(GL_FUNC_ADD) 
       glBlendEquation(GL_FUNC_ADD);
 #else
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -6389,14 +6463,22 @@ void GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double)
 
     for (int i = 0; i < 4; i++) {
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
-      glMultiTexCoord2fv(GL_TEXTURE1,tex_coords_+i*2);
-      if(use_fog) {
-	float *pos = pos_coords_+i*3;
-	float vz = mvmat[2]* pos[0]
-	  + mvmat[6]*pos[1] 
-	  + mvmat[10]*pos[2] + mvmat[14];
-	glMultiTexCoord3f(GL_TEXTURE2, -vz, 0.0, 0.0);
+#  ifdef _WIN32
+      if (glMultiTexCoord2fv && glMultiTexCoord3f) {
+#  endif
+	glMultiTexCoord2fv(GL_TEXTURE1,tex_coords_+i*2);
+	if(use_fog) {
+	  float *pos = pos_coords_+i*3;
+	  float vz = mvmat[2]* pos[0]
+	    + mvmat[6]*pos[1] 
+	    + mvmat[10]*pos[2] + mvmat[14];
+	  glMultiTexCoord3f(GL_TEXTURE2, -vz, 0.0, 0.0);
+	}
+#  ifdef _WIN32
+      } else {
+	glTexCoord2fv(tex_coords_+i*2);
       }
+#  endif // _WIN32
 #else
       glTexCoord2fv(tex_coords_+i*2);
 #endif
@@ -6415,6 +6497,9 @@ void GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double)
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
     if( use_fog ) {
       fog_shader_->release();
+#ifdef _WIN32
+      if (glActiveTexture)
+#endif
       glActiveTexture(GL_TEXTURE2);
       glDisable(GL_TEXTURE_3D);
     } else {
@@ -6427,6 +6512,9 @@ void GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double)
   }
 
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
+#ifdef _WIN32
+  if (glActiveTexture)
+#endif
     glActiveTexture(GL_TEXTURE0);
 #endif
   di->polycount++;
