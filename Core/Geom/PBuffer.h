@@ -29,8 +29,8 @@
 //    Author : Milan Ikits
 //    Date   : Sun Jun 27 17:49:31 2004
 
-#ifndef Pbuffer_h
-#define Pbuffer_h
+#ifndef SCI_Geom_PBuffer_h
+#define SCI_Geom_PBuffer_h 1
 
 #include <sci_gl.h>
 
@@ -89,4 +89,4 @@ protected:
 
 } // end namespace SCIRun
 
-#endif // Pbuffer_h
+#endif // SCI_Geom_PBuffer_h
