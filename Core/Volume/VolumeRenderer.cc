@@ -49,10 +49,21 @@ using std::string;
 namespace SCIRun {
 
 #ifdef _WIN32
-#define GL_FUNC_ADD 2
-#define GL_MAX 2
-#define GL_TEXTURE_3D 2
-#define glBlendEquation(x)
+#include <windows.h>
+#define GL_FUNC_ADD 0x8006
+#define GL_MAX 0x8008
+#define GL_TEXTURE_3D 0x806F
+
+#define GL_TEXTURE0_ARB 0x84C0
+#define GL_TEXTURE0 0x84C0
+
+#define GL_ARB_fragment_program
+
+typedef void (GLAPIENTRY * PFNGLBLENDEQUATIONPROC) (GLenum mode);
+typedef void (GLAPIENTRY * PFNGLACTIVETEXTUREPROC) (GLenum texture);
+static PFNGLBLENDEQUATIONPROC glBlendEquation = 0;
+static PFNGLACTIVETEXTUREPROC glActiveTexture = 0;
+
 #endif
 
 //static SCIRun::DebugStream dbg("VolumeRenderer", false);
@@ -80,6 +91,12 @@ VolumeRenderer::VolumeRenderer(TextureHandle tex,
   for(;it2 != level_alpha_.end(); ++it2){
     (*it2) = 0;
   }
+
+#ifdef _WIN32
+  glBlendEquation = (PFNGLBLENDEQUATIONPROC)wglGetProcAddress("glBlendEquation");
+  glActiveTexture = (PFNGLACTIVETEXTUREPROC)wglGetProcAddress("glActiveTexture");
+#endif
+
 }
 
 VolumeRenderer::VolumeRenderer(const VolumeRenderer& copy):
@@ -93,7 +110,13 @@ VolumeRenderer::VolumeRenderer(const VolumeRenderer& copy):
   adaptive_(copy.adaptive_),
   draw_level_(copy.draw_level_),
   level_alpha_(copy.level_alpha_)
-{}
+{
+#ifdef _WIN32
+  glBlendEquation = (PFNGLBLENDEQUATIONPROC)wglGetProcAddress("glBlendEquation");
+  glActiveTexture = (PFNGLACTIVETEXTUREPROC)wglGetProcAddress("glActiveTexture");
+#endif
+
+}
 
 VolumeRenderer::~VolumeRenderer()
 {}
@@ -256,16 +279,17 @@ VolumeRenderer::draw_volume()
     glEnable(GL_BLEND);
     switch(mode_) {
     case MODE_OVER:
-#ifdef GL_FUNC_ADD // Workaround for old bad nvidia headers.
-      glBlendEquation(GL_FUNC_ADD);
-#endif
-      glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+      if (glBlendEquation)
+	glBlendEquation(GL_FUNC_ADD);
+      else
+	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
       break;
     case MODE_MIP:
-#ifdef GL_MAX // Workaround for old bad nvidia headers.
-      glBlendEquation(GL_MAX);
-#endif
-      glBlendFunc(GL_ONE, GL_ONE);
+      if (glBlendEquation)
+	glBlendEquation(GL_MAX);
+      else
+	glBlendFunc(GL_ONE, GL_ONE);
       break;
     default:
       break;
@@ -341,7 +365,11 @@ VolumeRenderer::draw_volume()
   //--------------------------------------------------------------------------
   // enable data texture unit 0
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#ifdef _WIN32
+  if (glActiveTexture)
+#endif
   glActiveTexture(GL_TEXTURE0_ARB);
+  
 #endif
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   glEnable(GL_TEXTURE_3D);
@@ -429,6 +457,9 @@ VolumeRenderer::draw_volume()
     release_colormap1();
   }
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#ifdef _WIN32
+  if (glActiveTexture)
+#endif
   glActiveTexture(GL_TEXTURE0_ARB);
 #endif
   glDisable(GL_TEXTURE_3D);
@@ -460,6 +491,9 @@ VolumeRenderer::draw_volume()
     glDisable(GL_CULL_FACE);
     
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#ifdef _WIN32
+  if (glActiveTexture)
+#endif
     glActiveTexture(GL_TEXTURE0);
 #endif
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -676,6 +710,9 @@ VolumeRenderer::multi_level_draw()
   //--------------------------------------------------------------------------
   // enable data texture unit 0
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#ifdef _WIN32
+  if (glActiveTexture)
+#endif
   glActiveTexture(GL_TEXTURE0_ARB);
 #endif
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -868,6 +905,9 @@ VolumeRenderer::multi_level_draw()
     release_colormap1();
   }
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#ifdef _WIN32
+  if (glActiveTexture)
+#endif
   glActiveTexture(GL_TEXTURE0_ARB);
 #endif
   glDisable(GL_TEXTURE_3D);
@@ -899,6 +939,9 @@ VolumeRenderer::multi_level_draw()
     glDisable(GL_CULL_FACE);
     
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#ifdef _WIN32
+  if (glActiveTexture)
+#endif
     glActiveTexture(GL_TEXTURE0);
 #endif
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
