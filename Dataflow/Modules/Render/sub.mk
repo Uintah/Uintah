@@ -47,7 +47,6 @@ SRCS     += \
 	$(SRCDIR)/Camera.cc\
 	$(SRCDIR)/EditPath.cc\
 	$(SRCDIR)/OpenGL.cc\
-	$(SRCDIR)/PBuffer.cc \
 	$(SRCDIR)/SharedMemory.cc\
 	$(SRCDIR)/SynchronizeGeometry.cc\
 	$(SRCDIR)/Tex.cc\
