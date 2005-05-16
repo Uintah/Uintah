@@ -41,6 +41,32 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
   d_dbgSym_relative_tol = 1e-6;
   d_dbgSym_absolute_tol = 1e-9;
   d_dbgSym_cutoff_value = 1e-12;
+  
+  // Turn off all the debuging switches
+  switchDebugInitialize           = false;
+  switchDebug_EQ_RF_press         = false;
+  switchDebug_vel_FC              = false;
+  switchDebug_Temp_FC             = false;
+  switchDebug_PressDiffRF         = false;
+  switchDebug_Exchange_FC         = false;
+  switchDebug_explicit_press      = false;
+  switchDebug_setupMatrix         = false;
+  switchDebug_setupRHS            = false;
+  switchDebug_updatePressure      = false;
+  switchDebug_computeDelP         = false;
+  switchDebug_PressFC             = false;
+  switchDebugLagrangianValues     = false;
+  switchDebugLagrangianSpecificVol= false;
+  switchDebugLagrangianTransportedVars = false;
+  switchDebugMomentumExchange_CC       = false; 
+  switchDebugSource_Sink               = false; 
+  switchDebug_advance_advect           = false;
+  
+  switchDebug_AMR_refine          = false;
+  switchDebug_AMR_refineInterface = false;
+  switchDebug_AMR_coarsen         = false;
+  switchDebug_AMR_reflux          = false;
+  
   //__________________________________
   // Find the switches
   ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
@@ -109,6 +135,14 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
        switchDebugSource_Sink           = true;
       else if (debug_attr["label"] == "switchDebug_advance_advect")
        switchDebug_advance_advect       = true;
+      else if (debug_attr["label"] == "switchDebug_AMR_refine")
+       switchDebug_AMR_refine           = true;
+      else if (debug_attr["label"] == "switchDebug_AMR_refineInterface")
+       switchDebug_AMR_refineInterface  = true;
+      else if (debug_attr["label"] == "switchDebug_AMR_coarsen")
+       switchDebug_AMR_coarsen          = true;
+       else if (debug_attr["label"] == "switchDebug_AMR_reflux")
+       switchDebug_AMR_reflux           = true;
     }
   }
  
