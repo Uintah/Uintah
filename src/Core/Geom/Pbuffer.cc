@@ -420,7 +420,8 @@ struct PbufferImpl
 
 #ifdef _WIN32
 
-bool WGLisExtensionSupported(const char *extension)
+bool
+WGLisExtensionSupported(const char *extension)
 {
   const size_t extlen = strlen(extension);
   const char *supported = NULL;
