@@ -43,11 +43,16 @@
 #ifndef SCIRUN_PBUFFER_H
 #define SCIRUN_PBUFFER_H
 
-#if (defined(__linux) && !defined(__ECC)) || defined(__APPLE__)
+#if (defined(__linux) && !defined(__ECC)) || defined(__APPLE__) || defined(_WIN32)
 #define HAVE_PBUFFER
 #endif
 
 /* minimalistic pbuffer */
+
+#ifdef _WIN32
+#include <windows.h>
+DECLARE_HANDLE(HPBUFFERARB);
+#endif
 
 
 namespace SCIRun {
@@ -64,7 +69,7 @@ public:
 	       int width, int height, 
 	       int colorBits, int depthBits /* 8, 16 */);
 #else
-  bool create( Display* dpy, int screen, /*GLXContext sharedcontext,*/
+  bool create( HDC dc, HGLRC sharedRc,
 	       int width, int height, 
 	       int colorBits, int depthBits /* 8, 16 */);
 #endif
@@ -83,13 +88,20 @@ private:
 
 #ifndef _WIN32
   GLXContext cx_;
-#endif
 #ifdef HAVE_PBUFFER
   GLXFBConfig* fbc_;
   GLXPbuffer pbuffer_;  //win_
 #endif
   Display* dpy_;
   int screen_;
+
+#else // WIN32
+  HDC dc_;
+  HGLRC rc_;
+#ifdef HAVE_PBUFFER
+  HPBUFFERARB pbuffer_;
+#endif
+#endif
 };
 
 } // end namespace SCIRun
