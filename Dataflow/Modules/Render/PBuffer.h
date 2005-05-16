@@ -81,11 +81,6 @@ public:
   inline int height() { return height_; }
 
 private:
-  int width_, height_;
-  int colorBits_;
-  int doubleBuffer_;
-  int depthBits_;
-
 #ifndef _WIN32
   GLXContext cx_;
 #ifdef HAVE_PBUFFER
@@ -102,6 +97,11 @@ private:
   HPBUFFERARB pbuffer_;
 #endif
 #endif
+
+  int width_, height_;
+  int colorBits_;
+  int doubleBuffer_;
+  int depthBits_;
 };
 
 } // end namespace SCIRun
