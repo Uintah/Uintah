@@ -34,6 +34,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/Pstreams.h>
+
 #include <Dataflow/Modules/Fields/Probe.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ColorMapPort.h>
@@ -41,6 +42,7 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/TimePort.h>
 #include <Dataflow/Widgets/PointWidget.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Dataflow/XMLUtil/StrX.h>
@@ -197,7 +199,9 @@ private:
   // the injured tissue list
   XercesDOMParser injListParser_;
   DOMDocument *injListDoc_;
-  vector <VH_injury> injured_tissue_;
+  // a list of injured tissues for each timeStep
+  vector <vector <VH_injury> *> injured_tissue_list_;
+  vector <VH_injury> *injured_tissue_;
 
   // the probe widget
   PointWidget *probeWidget_;
@@ -208,6 +212,7 @@ private:
   GuiDouble gui_probe_scale_;
 
   FieldHandle InputFieldHandle_;
+  TimeViewerHandle time_viewer_handle_;
   NrrdDataHandle InputNrrdHandle_;
   int probeWidgetid_;
   Point probeLoc_;
@@ -220,7 +225,8 @@ private:
   void executeProbe();
   void execAdjacency();
   void execSelColorMap();
-  void traverseDOMtree(DOMNode &, int, int, VH_injury **);
+  void traverseDOMtree(DOMNode &, int, int, int *, int *, VH_injury **);
+  void parseInjuryList();
   void execInjuryList();
   void makeInjGeometry();
   void executeOQAFMA();
@@ -242,6 +248,8 @@ protected:
   string    geomFilename_;
   string    activeBoundBoxSrc_;
   string    activeInjList_;
+  string    lastSelection_;
+  string    currentSelection_;
 
 public:
   HotBox(GuiContext*);
@@ -358,6 +366,28 @@ void
 HotBox::execute()
 {
 
+  // get input Time port
+  TimeIPort *
+  inputTimePort = (TimeIPort *)get_iport("Time");
+  if (!inputTimePort) {
+    error("Unable to initialize input Time port.");
+  }
+
+  // get a handle to the time viewer from the input Time port
+  if(inputTimePort != NULL &&
+     !inputTimePort->get(time_viewer_handle_) &&
+     !time_viewer_handle_.get_rep())
+  {
+    remark("No data on input Time port.");
+  }
+  else
+  { // get/sync with current global time -- injury list resolution = 1 sec.
+    currentTime_ = floor(time_viewer_handle_->view_started() + 
+                    time_viewer_handle_->view_elapsed_since_start());
+    if(currentTime_ != lastTime_)
+        gui_curTime_.set( currentTime_ );
+  }
+
   // get input field port
   FieldIPort *inputFieldPort = (FieldIPort *)get_iport("Input Label Volume");
   if (!inputFieldPort) {
@@ -395,61 +425,6 @@ HotBox::execute()
     // we have tensor data in the input field
     remark("Tensor Data on Input");
   }
-
-  // get input Time matrix port
-  MatrixIPort *
-  inputTimeMatrixPort = (MatrixIPort *)get_iport("Input TimeStep");
-  if (!inputTimeMatrixPort) {
-    error("Unable to initialize input TimeStep matrix port.");
-  }
-
-  // get handle to matrix from the input Time port
-  MatrixHandle inputTimeMatrixHandle;
-  if(inputTimeMatrixPort != NULL &&
-    (!inputTimeMatrixPort->get(inputTimeMatrixHandle) ||
-     !inputTimeMatrixHandle.get_rep()))
-  {
-    remark("No data on input Time matrix port.");
-  }
-  else
-  {
-    // get the matrix data
-    Matrix *timeMatrixPtr = inputTimeMatrixHandle.get_rep();
-    if(timeMatrixPtr)
-    {
-      double minlabel;
-      if(!inputTimeMatrixHandle->get_property("row_min", minlabel))
-        minlabel = 0.0;
-      double nrows = inputTimeMatrixHandle->nrows();
-      double maxlabel;
-      if (!inputTimeMatrixHandle->get_property("row_max", maxlabel))
-        maxlabel = inputTimeMatrixHandle->nrows() - 1.0;
-
-      cerr << "row_min " << minlabel << " row_max " << maxlabel;
-      cerr << " nrows " << nrows << endl;
-
-      if(!inputTimeMatrixHandle->get_property("col_min", minlabel))
-      minlabel = 0.0;
-      double ncols =  inputTimeMatrixHandle->ncols();
-      if (!inputTimeMatrixHandle->get_property("col_max", maxlabel))
-      maxlabel = inputTimeMatrixHandle->ncols() - 1.0;
-
-      cerr << "col_min " << minlabel << " col_max " << maxlabel;
-      cerr << " ncols " << ncols << endl;
-
-      ColumnMatrix *cm;
-      cm = scinew ColumnMatrix(inputTimeMatrixHandle->nrows());
-      // cm->zero();
-      double *data = cm->get_data();
-
-      data[0] = inputTimeMatrixHandle->get(0, 0);
-
-      // expect one value in the input timeStep
-      currentTime_ = (int)data[0];
-      cerr << " time matrix value " << data[0] << endl;
-      gui_curTime_.set(currentTime_);
-    }
-  } // end else (data on input matrix port)
 
   // get input Transform matrix port
   MatrixIPort *
@@ -527,7 +502,7 @@ HotBox::execute()
   } // end else if(selectionSource == "UIsetProbeLoc")
 
   // get parameters from HotBox Tcl GUI
-  const string currentSelection(currentselection_.get());
+  currentSelection_ = (string)currentselection_.get();
   const int dataSource(datasource_.get());
   const string anatomyDataSrc(anatomydatasource_.get());
   const string adjacencyDataSrc(adjacencydatasource_.get());
@@ -580,7 +555,7 @@ HotBox::execute()
   else
   // if the selection source is from the HotBox UI -- ignore the probe
   { // get selection from HotBox Tcl GUI
-    strcpy(selectName, currentSelection.c_str());
+    strcpy(selectName, currentSelection_.c_str());
     labelIndexVal_ = anatomytable_->get_labelindex(selectName);
   }
 
@@ -673,7 +648,9 @@ HotBox::execute()
 
   // we now have the anatomy name corresponding to the label value at the voxel
   if(!injListDoc_ || activeInjList_ != injuryListDataSrc)
-  { // Read the Injury List -- First time the HotBox Evaluates
+  {
+    // injury list data source or time has changed
+    // Read the Injury List -- First time the HotBox Evaluates
     try {
       XMLPlatformUtils::Initialize();
     } catch (const XMLException& toCatch) {
@@ -696,23 +673,33 @@ HotBox::execute()
 
     // get the DOM document tree structure from the file
     injListDoc_ = injListParser_.getDocument();
+
+    // re-populate injury list with data from new data source
+    if(injured_tissue_list_.size() > 0)
+    {
+      for(int timeInc = 0; timeInc < injured_tissue_list_.size(); timeInc++)
+      {
+        injured_tissue_ = (vector <VH_injury> *)injured_tissue_list_[timeInc];
+        if(injured_tissue_->size() > 0)
+           injured_tissue_->clear();
+      }
+    }
+    // parse the DOM document --
+    // add an injury list per time step to the injured_tissue_ list
+    parseInjuryList();
+
+    activeInjList_ = injuryListDataSrc;
   } // end if(!injListDoc_)
 
-  currentTime_ = gui_curTime_.get();
+  execInjuryList();
+
   // extract the injured tissues from the DOM Document whenever time changes
-  if(currentTime_ != lastTime_ ||
-     activeInjList_ != injuryListDataSrc)
+  if(currentTime_ != lastTime_)
   {
-    // injury list data source or time has changed
-    // re-populate injury list with data from new timestep
-    if(injured_tissue_.size() > 0)
-      injured_tissue_.clear();
-    execInjuryList();
     lastTime_ = currentTime_;
-    activeInjList_ = injuryListDataSrc;
   }
 
-  if(dataSource == VS_DATASOURCE_OQAFMA)
+  if(currentSelection_ != lastSelection_ && dataSource == VS_DATASOURCE_OQAFMA)
   { // get the ontological hierarchy information
     fprintf(stderr, "dataSource = OQAFMA\n");
 
@@ -775,12 +762,18 @@ HotBox::execute()
     }
   } // end else (HIP data path has been selected)
 
-  // execute reading the HIP time-varying physiological parameters
-  // for the selected anatomical structure
-  executePhysio();
+  if(currentSelection_ != lastSelection_)
+  { // execute reading the HIP time-varying physiological parameters
+    // for the selected anatomical structure
+    executePhysio();
 
-  // get the surface geometry corresponding to the current selection
-  executeHighlight();
+    // get the surface geometry corresponding to the current selection
+    executeHighlight();
+
+    // get the adjacency info for the current selection
+    // and populate the adjacency UI
+    execAdjacency();
+  }
 
   // draw HotBox Widget
   GeomGroup *HB_geomGroup = scinew GeomGroup();
@@ -794,10 +787,6 @@ HotBox::execute()
 
   VS_HotBoxUI_->setOutput(lines, texts);
   VS_HotBoxUI_->setOutMtl(text_material);
-
-  // get the adjacency info for the current selection
-  // and populate the adjacency UI
-  execAdjacency();
 
   if(enableDraw == "yes")
   { // draw HotBox UI in the Viewer
@@ -878,8 +867,10 @@ HotBox::execute()
   if(inj1GeomFieldhandle_.get_rep() != 0)
     inj1highlightOutport->send(inj1GeomFieldhandle_);
 
-  if(injured_tissue_.size() > 0)
+  if(currentTime_ < injured_tissue_list_.size() &&
+     injured_tissue_list_[currentTime_]->size() > 0)
   {
+    injured_tissue_ = (vector <VH_injury> *)injured_tissue_list_[currentTime_];
     // build geometry from wound icon descriptions
     makeInjGeometry();
   }
@@ -940,6 +931,10 @@ HotBox::execute()
   if(selectionSource != "fromProbe")
   { // clear selection source
     selectionsource_.set("fromProbe");
+  }
+  if(currentSelection_ != lastSelection_)
+  {
+    lastSelection_ = currentSelection_;
   }
 
 } // end HotBox::execute()
@@ -1182,6 +1177,9 @@ HotBox::executeOQAFMA()
   char partsName[256], capitalName[256], selectName[256];
   int num_struQLret;
 
+  // skip execution if current selection has not changed
+  if(currentSelection_ == lastSelection_) return;
+
   ns1__processStruQLResponse resultStruQL;
   ServiceInterfaceSoapBinding ws;
 
@@ -1191,10 +1189,6 @@ HotBox::executeOQAFMA()
   { // OQAFMA Web services URL has changed
     ws.endpoint = strdup(oqafmaDataSrc.c_str());
   }
-
-  // get the current selection
-  const string currentSelection(currentselection_.get());
-  strcpy(selectName, currentSelection.c_str());
 
   /////////////////////////////////////////////////////////////////////////////
   // get the hierarchical children of the selection from the FMA
@@ -1615,7 +1609,7 @@ HotBox::executeOQAFMA()
 } // end HotBox::executeOQAFMA()
 
 /*****************************************************************************
- * method HotBox::execInjuryList()
+ * method HotBox::parseInjuryList()
   // walk the DOM document collecting information on injured tissues
   // <event>
   // <wound woundName="Left ventricular penetration" woundID="1.0">
@@ -1654,6 +1648,7 @@ HotBox::executeOQAFMA()
  *****************************************************************************/
 void
 HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, int curTime,
+                        int *minTimeStep, int *maxTimeStep,
                         VH_injury **injuryPtr)
 {
   // debugging...
@@ -1805,6 +1800,11 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, int curTime,
         // only collect wound for the current timeStep
         if((*injuryPtr)->timeStamp == curTime)
           (*injuryPtr)->timeSet = true;
+        // record min-max time range
+        if((*injuryPtr)->timeStamp >= *maxTimeStep)
+          *maxTimeStep = (*injuryPtr)->timeStamp;
+        if((*injuryPtr)->timeStamp <= *minTimeStep)
+          *minTimeStep = (*injuryPtr)->timeStamp;
       }
       else if(!strcmp(to_char_ptr(woundNode.getNodeName()), "probability") &&
          !strcmp(to_char_ptr(elem->getNodeName()), "prop"))
@@ -1832,7 +1832,7 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, int curTime,
 
     cerr << "Adding: " << endl;
     (*injuryPtr)->print();
-    injured_tissue_.push_back(**injuryPtr);
+    injured_tissue_->push_back(**injuryPtr);
     int woundTime = (*injuryPtr)->timeStamp;
     // create the next injury record
     *injuryPtr = new VH_injury();
@@ -1851,21 +1851,33 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, int curTime,
     {
       DOMNode &woundChild = *(woundChildList->item(i));
       // recurse down the tree
-      traverseDOMtree(woundChild, i, curTime, injuryPtr);
+      traverseDOMtree(woundChild, i, curTime, minTimeStep, maxTimeStep,
+                      injuryPtr);
     } // end for(int i = 0; i < num_woundChildList; i++)
   } // end if(woundNode.hasChildNodes())
 } // end HotBox::traverseDOMtree()
 
 void
-HotBox::execInjuryList()
+HotBox::parseInjuryList()
 {
-  // get current time
-  const int curTime(gui_curTime_.get());
+  int min_timeStep = INT_MAX;
+  int max_timeStep = INT_MIN;
+
+  // create the first injury record
+  VH_injury *injuryPtr = new VH_injury();
+
+  // create the injury list for the first time step
+  injured_tissue_ = new vector <VH_injury>;
+
+  // parse the DOM document
+  DOMNodeList *
+  woundList = injListDoc_->getElementsByTagName(to_xml_ch_ptr("wound"));
+  int num_woundList = woundList->getLength();
   const string injuryListDataSrc(injurylistdatasource_.get());
 
-  DOMNodeList *
-  woundList = injListDoc_->getElementsByTagName(to_xml_ch_ptr("event"));
-  int num_woundList = woundList->getLength();
+  // we have to assume one wound entity per timeStep
+  // however, tiemStamps do not always start at 0
+  // and may not be integers
 
   if (num_woundList == 0)
   {
@@ -1882,16 +1894,68 @@ HotBox::execInjuryList()
         std::cerr << "Error: NULL DOM node" << std::endl;
         continue;
       }
-      // create the first injury record
-      VH_injury *injuryPtr = new VH_injury();
-      DOMNode &woundNode = *(woundList->item(i));
-      traverseDOMtree(woundNode, i, curTime, &injuryPtr);
-    } // end for (i = 0;i < num_injList; i++)
+      DOMNode &
+      woundNode = *(woundList->item(i));
+      // traverse the DOM document tree
+      traverseDOMtree(woundNode, i, 0, &min_timeStep, &max_timeStep,
+                      &injuryPtr);
+    } // end for (i = 0;i < num_woundList; i++)
   } // end else (num_injList != 0)
 
+  if(min_timeStep == 0)
+  { // tiem steps are aligned with wound entities
+    // add the injury list we have gathered for timestep 0
+    injured_tissue_list_.push_back(injured_tissue_);
+    // allocate the injury list for wound/timestep 1
+    injured_tissue_ = new vector <VH_injury>;
+  }
+
+  // for each time step
+  for(int curTime = min_timeStep, i = 0; i < num_woundList; i++, curTime++)
+  {
+    if (!(woundList->item(i)))
+    {
+      std::cerr << "Error: NULL DOM node" << std::endl;
+      continue;
+    }
+    DOMNode &
+    woundNode = *(woundList->item(i));
+    // traverse the DOM document tree
+    traverseDOMtree(woundNode, i, curTime, &min_timeStep, &max_timeStep, &injuryPtr);
+
+    // report number of injuries read
+    cerr << "HotBox::parseInjuryList(): time step[" << curTime << "] ";
+	    cerr << injured_tissue_->size() << " injuries found" << endl;
+
+    // add the injury list for this timestep
+    injured_tissue_list_.push_back(injured_tissue_);
+    // allocate the next injury list
+    injured_tissue_ = new vector <VH_injury>;
+  } // end for(curTime = min_timeStep, i = 0; i < num_woundList; i++, curTime++)
+
+} // end parseInjuryList()
+
+void
+HotBox::execInjuryList()
+{
+  // only execute if time has changed
+  if(currentTime_ == lastTime_) return;
+
+  char message[256];
+
+  // get the injury list for the current time
+  if(currentTime_ < injured_tissue_list_.size())
+      injured_tissue_ =
+          (vector <VH_injury> *)injured_tissue_list_[currentTime_];
+  else // time step out of range
+  {
+     sprintf(message, "%d", currentTime_);
+      error(string("execInjuryList: time step ")+string(message)+
+            string(" out of range"));
+  }
   // report number of injuries read
-  cerr << "HotBox::execInjuryList(): ";
-  cerr << injured_tissue_.size() << " injuries found" << endl;
+  cerr << "HotBox::execInjuryList(): timeStep[" << currentTime_ << "] ";
+  cerr << injured_tissue_->size() << " injuries found" << endl;
 
 } // end execInjuryList()
 
@@ -1908,11 +1972,11 @@ HotBox::makeInjGeometry()
   QuadSurfField<double> *qsf;
 
   cerr << "HotBox::makeInjGeometry(): ";
-  cerr << injured_tissue_.size() << " injuries ";
+  cerr << injured_tissue_->size() << " injuries ";
   // traverse the injured tissue list
-  for(unsigned int i = 0; i < injured_tissue_.size(); i++)
+  for(unsigned int i = 0; i < injured_tissue_->size(); i++)
   {
-    VH_injury injPtr = (VH_injury)injured_tissue_[i];
+    VH_injury injPtr = (VH_injury)(*injured_tissue_)[i];
 
     if(injPtr.geom_type == "line")
     {
@@ -2028,7 +2092,7 @@ HotBox::makeInjGeometry()
         mvindx += 2; cvindx += 2;
       } // end for(int j = 1; j <= CYLREZ; j++)
     } // end else if(injPtr.geom_type == "cylinder" ... )
-  } // end for(int i = 0; i < injured_tissue_.size(); i++)
+  } // end for(int i = 0; i < injured_tissue_->size(); i++)
   if(numLines > 0)
   {
     cerr << numLines << " lines " << injIconData.size() << " data vals ";
@@ -2060,12 +2124,13 @@ HotBox::makeInjGeometry()
 void
 HotBox::executePhysio()
 {
-  // get the current selection
-  const string currentSelection(currentselection_.get());
+  // skip execution if the current selection has not changed
+  if(currentSelection_ == lastSelection_) return;
+
   // get the name of the Nrrd file containing the parameters for this selection
   char *nrrdFileName = 
                  hipVarFileList_->get_HIPvarFile((char *)
-                                                currentSelection.c_str());
+                                                currentSelection_.c_str());
 
   if(!nrrdFileName)
   { // there are no physiological parameters corresponding to the selection
@@ -2124,6 +2189,9 @@ HotBox::executeHighlight()
 {
   struct stat buf;
 
+  // skip execution if the currentSelection has not changed
+  if(currentSelection_ == lastSelection_) return;
+
   const string geometryPath(geometrypath_.get());
   if( geometryPath == "" )
   {
@@ -2131,9 +2199,8 @@ HotBox::executeHighlight()
     return;
   }
   // set the file name from the path and current selection
-  const string currentSelection(currentselection_.get());
   char filePrefix[256];
-  space_to_underbar(filePrefix, (char *)currentSelection.c_str());
+  space_to_underbar(filePrefix, (char *)currentSelection_.c_str());
   string selectGeomFilename = geometryPath;
   selectGeomFilename += "/";
   selectGeomFilename += filePrefix;
@@ -2173,9 +2240,9 @@ HotBox::executeHighlight()
 
   // set injury colors
   // for the first two elements of the injury list
-  if(injured_tissue_.size() > 0)
+  if(injured_tissue_->size() > 0)
   {
-    VH_injury injPtr = (VH_injury)injured_tissue_[0];
+    VH_injury injPtr = (VH_injury)(*injured_tissue_)[0];
     space_to_underbar(filePrefix, (char *)injPtr.anatomyname.c_str());
     string inj0GeomFilename = geometryPath;
     inj0GeomFilename += "/";
@@ -2237,10 +2304,10 @@ HotBox::executeHighlight()
       inj0GeomFieldhandle_ = tsf;
     }
     delete inj0stream;
-  } // end if(injured_tissue_.size() > 0)
-  if(injured_tissue_.size() > 1)
+  } // end if(injured_tissue_->size() > 0)
+  if(injured_tissue_->size() > 1)
   {
-    VH_injury injPtr = (VH_injury)injured_tissue_[1];
+    VH_injury injPtr = (VH_injury)(*injured_tissue_)[1];
     space_to_underbar(filePrefix, (char *)injPtr.anatomyname.c_str());
     string inj1GeomFilename = geometryPath;
     inj1GeomFilename += "/";
@@ -2302,7 +2369,7 @@ HotBox::executeHighlight()
       inj1GeomFieldhandle_ = tsf;
     }
     delete inj1stream;
-  } // end if(injured_tissue_.size() > 1)
+  } // end if(injured_tissue_->size() > 1)
 } // end executeHighlight()
 
 void

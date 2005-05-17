@@ -59,10 +59,10 @@
       </port>
       <port>
         <description>
-          <p>Input port -- Time as a matrix</p>
+          <p>Input port -- Global Time</p>
         </description>
-        <name>Input TimeStep</name>
-        <datatype>SCIRun::Matrix</datatype>
+        <name>Time</name>
+        <datatype>SCIRun::Time</datatype>
       </port>
       <port>
         <description>
