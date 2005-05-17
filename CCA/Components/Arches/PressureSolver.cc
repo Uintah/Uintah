@@ -405,20 +405,16 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
 
   sched->addTask(tsk, d_perproc_patches, matls);
 
-  const Patch* d_pressRefPatch = level->selectPatchForCellIndex(d_pressRef);
-  if(!d_pressRefPatch){
+  const Patch* d_pressRefPatch = 0;
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
 
-    for(Level::const_patchIterator iter=level->patchesBegin();
-	iter != level->patchesEnd(); iter++){
-
-      const Patch* patch=*iter;
-      if(patch->containsCell(d_pressRef))
-	d_pressRefPatch = patch;
-    }
-
-    if(!d_pressRefPatch)
-      throw InternalError("Patch containing pressure reference point was not found");
+    const Patch* patch=*iter;
+    if(patch->containsCell(d_pressRef))
+    d_pressRefPatch = patch;
   }
+  if(!d_pressRefPatch)
+    throw InternalError("Patch containing pressure (and density) reference point was not found");
 
   d_pressRefProc = lb->getPatchwiseProcessorAssignment(d_pressRefPatch);
 }
