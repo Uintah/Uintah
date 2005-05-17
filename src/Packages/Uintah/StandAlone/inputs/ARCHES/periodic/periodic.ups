@@ -21,11 +21,6 @@
    <DataArchiver>
         <filebase>periodic_box.uda</filebase>
 	<outputInterval>0.1</outputInterval>
-	<save label = "uvwout"/>
-	<save label = "totalflowIN"/>
-	<save label = "totalflowOUT"/>
-	<save label = "denAccum"/>
-	<save label = "netflowOUTBC"/>
 	<save label = "totalKineticEnergy"/>
 	<save label = "pressurePS"/>
         <save label = "newCCUVelocity"/>	
@@ -37,11 +32,8 @@
 	<save label = "viscosityCTS"/>
 	<save label = "tempIN"/>
         <save label = "co2IN"/>
-        <save label = "velocityDivergence"/>
-        <save label = "velDivResidual"/>
         <save label = "continuityResidual"/>
         <save label = "filterdrhodt"/>
-        <save label = "drhodfCP"/>
 	<save label = "cellType"/>
 	<checkpoint cycle = "2" interval = "0.2"/>
    </DataArchiver>
@@ -75,9 +67,9 @@
             <init_cond_input_file>iso_ini_32.dat</init_cond_input_file>
    	    <nonlinear_solver>explicit</nonlinear_solver>
     	    <turbulence_model>dynamicprocedure</turbulence_model>
-            <reacting_flow>true</reacting_flow>
-            <solve_enthalpy>false</solve_enthalpy>	
-	    <solve_reactingscalar>false</solve_reactingscalar>
+            <transport_scalar>true</transport_scalar>
+            <transport_enthalpy>false</transport_enthalpy>	
+	    <transport_reacting_scalar>false</transport_reacting_scalar>
 	    <Turbulence>
 		<cf>0.17</cf>
 		<fac_mesh>1.0</fac_mesh>
@@ -91,7 +83,6 @@
 
 	    <Properties>
 		<denUnderrelax>1.00</denUnderrelax>
-	        <ref_point>[-1,-1,-1]</ref_point>
 	        <radiation>false</radiation>
 	        <filter_drhodt>false</filter_drhodt>
 	        <mixing_model>meanMixingModel</mixing_model>
@@ -174,19 +165,17 @@
 
 	    <PhysicalConstants>
 		<gravity>[0,0,0]</gravity>
+	        <ref_point>[0,0,0]</ref_point>
 		<pressure>0.0</pressure>
 		<viscosity>0.000020</viscosity>
 		<schmidtNo>0.7</schmidtNo>
 	    </PhysicalConstants>
 
 	    <ExplicitSolver>
-		<timeIntegratorType>RK3SSP</timeIntegratorType>	
+		<timeIntegratorType>RK2SSP</timeIntegratorType>	
 		<max_iter>0</max_iter>	
 		<res_tol>2.0</res_tol>
 		<probe_data>false</probe_data>
-      	        <ProbePoints>
-	           <probe_point>[60,60,60]</probe_point>
-		</ProbePoints>
 	        <cal_pressure>true</cal_pressure>
 		<PressureSolver>
 		    <ref_point>[3,3,3]</ref_point>
@@ -218,7 +207,6 @@
 		<cal_mixturescalar>true</cal_mixturescalar>
 		<MixtureFractionSolver>
 		    <finite_difference>second</finite_difference>
-		    <convection_scheme>l2up</convection_scheme>
 		    <linear_solver>linegs</linear_solver>
 		    <LinearSolver>
 			<max_iter>6</max_iter>
