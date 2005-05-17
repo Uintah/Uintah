@@ -31,19 +31,18 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-
-
 <component name="PVSpaceInterp" category="Fields">
   <overview>
     <authors>
       <author>Martin Cole</author>
     </authors>
     <summary>
-	Interpolation between FE Meshes by HIP data input.
+      Interpolation between FE Meshes by HIP data input.
     </summary>
     <description>
-	<p> Interpolation between UCSD FE models and UW HIP model over time.
-            Producing real time display of precomputed FE models.</p>
+      <p> Interpolation between UCSD FE models and UW HIP model over
+          time. Producing real time display of precomputed FE models.
+      </p>
     </description>
   </overview>
   <io>
@@ -51,50 +50,67 @@
       <!-- one of (device port file) -->
       <port>
 	<name>Time</name>
+	<description>
+	  <p>Global time synchronization.</p>
+	</description>
 	<datatype>SCIRun::Time</datatype>
       </port>
       <port>
 	<name>HIP Data</name>
+	<description>
+	  <p>HIP input data.</p>
+	</description>
 	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
 	<name>Interpolation Space</name>
+	<description>
+	  <p>set of interpolation fields in nrrd format</p>
+	</description>
 	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
 	<name>Connectivity</name>
+	<description>
+	  <p>
+             Field with the same connectivity of meshes in interpolation space.
+          </p>
+	</description>
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
 	<name>PPV Space</name>
+	<description>
+	  <p>meshes that describe the ppv space.</p>
+	</description>
 	<datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
     <outputs>
-      <!-- one of (device port file) -->
       <port>
 	<name>Current</name>
+	<description>
+	  <p>The interpolated Field that belongs to the current time.</p>
+	</description>
 	<datatype>SCIRun::Field</datatype>
       </port>
+      <!-- one of (device port file) -->
     </outputs>
   </io>
   <gui>
     <description>
-      <p>
-      </p>
     </description>
-    <img></img>
-  </gui>
-  <testing>
-    <plan>
+    <parameter>
+      <widget></widget>
+      <datatype></datatype>
+      <label></label>
       <description>
-	<p>
-        </p>
       </description>
-      <step>
-      </step>
-    </plan>
-  </testing>
+    </parameter>
+  </gui>
   <nets>
+    <net>
+      <title></title>
+    </net>
   </nets>
 </component>
