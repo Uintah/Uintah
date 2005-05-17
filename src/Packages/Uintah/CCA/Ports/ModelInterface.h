@@ -56,6 +56,8 @@ WARNING
                                         
     virtual void registerAMR_RefluxVariable(const MaterialSubset* matls,
 					         const VarLabel* var) = 0;
+
+    virtual ~ModelSetup() {};
   };
   class ModelInfo {
   public:
