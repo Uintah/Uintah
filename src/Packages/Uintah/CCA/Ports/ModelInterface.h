@@ -53,6 +53,9 @@ WARNING
     virtual void registerTransportedVariable(const MaterialSubset* matls,
 					     const VarLabel* var,
 					     const VarLabel* src) = 0;
+                                        
+    virtual void registerAMR_RefluxVariable(const MaterialSubset* matls,
+					         const VarLabel* var) = 0;
   };
   class ModelInfo {
   public:
