@@ -795,9 +795,9 @@ long RunLengthEncoder<T, Sequencer>::readPriv(istream& in, bool swapBytes,
    
   ssize_t header_size;
   ssize_t start_data_pos;
-  ssize_t end_data_pos;
+  ssize_t end_data_pos = 0;
   unsigned long start_index;
-  unsigned long end_index;
+  unsigned long end_index=0;
   
   readSizeType(in, needConversion, swapBytes, nByteMode, start_data_pos);
   readSizeType(in, needConversion, swapBytes, nByteMode, start_index);
