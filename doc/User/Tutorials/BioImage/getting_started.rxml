@@ -118,7 +118,7 @@ DEALINGS IN THE SOFTWARE.
     interface window shown in <xref linkend="fig.gui-launch"/>.</para>
 
     <figure id="fig.gui-launch">
-      <title>BioImage User Interface</title>
+      <title><ulink url="Figures/gui-launch_hires.jpg">BioImage User Interface</ulink></title>
       <mediaobject>
 	<textobject>
 	  <phrase>BioImage interface window just after

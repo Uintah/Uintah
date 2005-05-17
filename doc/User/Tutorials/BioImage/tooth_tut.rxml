@@ -79,7 +79,7 @@ DEALINGS IN THE SOFTWARE.
     </para>
 
     <figure id="fig.viewing-pane">
-      <title>Visualization Pane After Clicking Update</title>
+      <title><ulink url="Figures/viewing-pane_hires.jpg">Visualization Pane After Clicking Update</ulink></title>
       <mediaobject>
 	<textobject>
 	  <phrase>Vizualization Pane</phrase>
@@ -205,7 +205,7 @@ DEALINGS IN THE SOFTWARE.
     </para>
 
     <figure id="fig.crop_module_added">
-      <title>Adding a crop filter</title>
+      <title><ulink url="Figures/crop_module_added_hires.jpg">Adding a crop filter</ulink></title>
       <mediaobject>
 	<textobject>
 	  <phrase>Adding a crop filter.</phrase>
@@ -305,7 +305,7 @@ DEALINGS IN THE SOFTWARE.
       </figure>
 
       <figure id="fig.68saggitalBoth">
-	<title>Slice plane slider moved to 68th saggital slice</title>
+	<title><ulink url="Figures/68saggitalBoth_hires.jpg">Slice plane slider moved to 68th saggital slice</ulink></title>
 	<mediaobject>
 	  <textobject>
 	    <phrase>Slice plane slider moved to 68th saggital slice.</phrase>
@@ -662,7 +662,7 @@ DEALINGS IN THE SOFTWARE.
 	viewer. You should now see the blue color applied to the volume as shown in <xref linkend="fig.pb_painted_enamel"/>.
       </para>
       <figure id="fig.pb_painted_enamel">
-	<title>Paint applied to enamel</title>
+	<title><ulink url="Figures/pb_painted_enamel_hires.jpg">Paint applied to enamel</ulink></title>
 	<mediaobject>
 	  <textobject>
 	    <phrase>Paing applied to enamel</phrase>
