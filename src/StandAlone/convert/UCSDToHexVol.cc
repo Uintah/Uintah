@@ -112,6 +112,33 @@ parse_lin_strain_data25(ifstream &nodal_in, vector<double> &data_vals,
 }
 
 int
+parse_lin_strain_data4(ifstream &nodal_in, vector<double> &data_vals, 
+		      HexVolMesh *hvm) 
+{
+  int npts = 0;
+  while (! nodal_in.eof()) {
+    ++npts;
+
+    double x[3];
+    for (int j=0; j<3; j++) 
+      nodal_in >> x[j];
+
+    if (nodal_in.eof()) break;
+    // 2nd order tensor
+    double eff = 0.0;
+    
+    int node_index;
+    nodal_in >> node_index;
+    //make a scalar field out of this.
+
+    data_vals.push_back(eff);
+    hvm->add_point(Point(x[0],x[1],x[2]));
+  }
+  cerr << "done adding " << npts - 1 << " points." << endl;
+  return npts;
+}
+
+int
 parse_lin_strain_data5(ifstream &nodal_in, vector<double> &data_vals, 
 		      HexVolMesh *hvm) 
 {
@@ -323,6 +350,8 @@ main(int argc, char **argv) {
     npts = parse_lin_strain_data(nodal_in, data_vals_scalar, hvm);
   } else if (cols == 5) {
     npts = parse_lin_strain_data5(nodal_in, data_vals_scalar, hvm);
+  } else if (cols == 4) {
+    npts = parse_lin_strain_data4(nodal_in, data_vals_scalar, hvm);
   } else {
     cerr << "Dont know what to do with " << cols 
 	 << " columns of data" << endl;
