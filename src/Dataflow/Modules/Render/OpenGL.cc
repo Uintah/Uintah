@@ -745,7 +745,7 @@ OpenGL::redraw_frame()
 
     if (!pbuffer_)
     {
-      pbuffer_ = scinew Pbuffer(xres_, yres_);
+      pbuffer_ = scinew Pbuffer(xres_, yres_, GL_INT, 8, false, GL_FALSE);
       if (!pbuffer_->create())
       {
 	pbuffer_->destroy();
