@@ -140,7 +140,7 @@ parse_lin_strain_data4(ifstream &nodal_in, vector<double> &data_vals,
 
 int
 parse_lin_strain_data5(ifstream &nodal_in, vector<double> &data_vals, 
-		      HexVolMesh *hvm) 
+		      HexVolMesh *hvm, bool data = true) 
 {
   int npts = 0;
   while (! nodal_in.eof()) {
@@ -153,8 +153,13 @@ parse_lin_strain_data5(ifstream &nodal_in, vector<double> &data_vals,
     if (nodal_in.eof()) break;
     // 2nd order tensor
     double eff;
-    nodal_in >> eff;
-    
+    string lab;
+    if (data) {
+      nodal_in >> eff;
+    } else {
+      nodal_in >> lab;
+      eff = 0.0;
+    }
     int node_index;
     nodal_in >> node_index;
     //make a scalar field out of this.
@@ -304,9 +309,8 @@ main(int argc, char **argv) {
   ifstream aux_nodal_in(aux_file);
 
   bool header = true;
-
+  vector<string> labels(cols);
   if (header) {
-    vector<string> labels(cols);
     cout << "Parsing labels:" << endl;
     for (int i = 0; i < cols; ++i) {
       string str;
@@ -349,7 +353,11 @@ main(int argc, char **argv) {
   } else if (cols == 13) {
     npts = parse_lin_strain_data(nodal_in, data_vals_scalar, hvm);
   } else if (cols == 5) {
-    npts = parse_lin_strain_data5(nodal_in, data_vals_scalar, hvm);
+    if (labels[3] == string("Label")) {
+      npts = parse_lin_strain_data5(nodal_in, data_vals_scalar, hvm, false);
+    } else {
+      npts = parse_lin_strain_data5(nodal_in, data_vals_scalar, hvm);
+    }
   } else if (cols == 4) {
     npts = parse_lin_strain_data4(nodal_in, data_vals_scalar, hvm);
   } else {
