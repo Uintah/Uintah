@@ -112,7 +112,7 @@ OpenGL::query(GuiInterface* gui)
 
   // obtain a detailed description of that pixel format 
   DescribePixelFormat(dc, iPixelFormat, 
-		      sizeof(PIXELFORMATDESCRIPTOR), &pfd); 
+                      sizeof(PIXELFORMATDESCRIPTOR), &pfd); 
   have_opengl = ((pfd.dwFlags & PFD_SUPPORT_OPENGL) == PFD_SUPPORT_OPENGL);
  
   gui->unlock();
@@ -269,8 +269,8 @@ OpenGL::start_helper()
   {
     helper_ = scinew OpenGLHelper(this);
     helper_thread_ = scinew Thread(helper_,
-				   string("OpenGL: "+myname_).c_str(),
-				   0, Thread::NotActivated);
+                                   string("OpenGL: "+myname_).c_str(),
+                                   0, Thread::NotActivated);
     helper_thread_->setStackSize(1024*1024);
     helper_thread_->activate(false);
   }
@@ -309,69 +309,69 @@ OpenGL::redraw_loop()
       current_time_ = throttle.time();
       if (animate_framerate_==0)
       {
-	animate_framerate_ = 30;
+        animate_framerate_ = 30;
       }
       double frametime = 1.0 / animate_framerate_;
       const double delta = current_time_ - newtime;
       if (delta > 1.5 * frametime)
       {
-	animate_framerate_=1.0 / delta;
-	frametime = delta;
-	newtime = current_time_;
+        animate_framerate_=1.0 / delta;
+        frametime = delta;
+        newtime = current_time_;
       }
       if (delta > 0.85 * frametime)
       {
-	animate_framerate_ *= 0.9;
-	frametime = 1.0 / animate_framerate_;
-	newtime = current_time_;
+        animate_framerate_ *= 0.9;
+        frametime = 1.0 / animate_framerate_;
+        newtime = current_time_;
       }
       else if (delta < 0.5 * frametime)
       {
-	animate_framerate_ *= 1.1;
-	if (animate_framerate_ > 30)
-	{
-	  animate_framerate_ = 30;
-	}
-	frametime = 1.0 / animate_framerate_;
-	newtime = current_time_;
+        animate_framerate_ *= 1.1;
+        if (animate_framerate_ > 30)
+        {
+          animate_framerate_ = 30;
+        }
+        frametime = 1.0 / animate_framerate_;
+        newtime = current_time_;
       }
       newtime += frametime;
       throttle.wait_for_time(newtime);
       while (send_mailbox_.tryReceive(r))
       {
-	if (r == 86)
-	{
-	  throttle.stop();
-	  return;
-	}
-	else if (r == DO_PICK)
-	{
-	  real_get_pick(send_pick_x_, send_pick_y_, ret_pick_obj_,
-			ret_pick_pick_, ret_pick_index_);
-	  recv_mailbox_.send(PICK_DONE);
-	}
-	else if (r == DO_GETDATA)
-	{
-	  GetReq req(get_mailbox_.receive());
-	  real_getData(req.datamask, req.result);
-	}
-	else if (r == DO_IMAGE)
-	{
-	  ImgReq req(img_mailbox_.receive());
-	  do_hi_res_ = true;
-	  fname = req.name;
-	  ftype = req.type;
-	  resx = req.resx;
-	  resy = req.resy;
-	}
-	else
-	{
-	  // Gobble them up...
-	  nreply++;
-	}
+        if (r == 86)
+        {
+          throttle.stop();
+          return;
+        }
+        else if (r == DO_PICK)
+        {
+          real_get_pick(send_pick_x_, send_pick_y_, ret_pick_obj_,
+                        ret_pick_pick_, ret_pick_index_);
+          recv_mailbox_.send(PICK_DONE);
+        }
+        else if (r == DO_GETDATA)
+        {
+          GetReq req(get_mailbox_.receive());
+          real_getData(req.datamask, req.result);
+        }
+        else if (r == DO_IMAGE)
+        {
+          ImgReq req(img_mailbox_.receive());
+          do_hi_res_ = true;
+          fname = req.name;
+          ftype = req.type;
+          resx = req.resx;
+          resy = req.resy;
+        }
+        else
+        {
+          // Gobble them up...
+          nreply++;
+        }
       }
       // you want to just rotate around the current rotation
-      // axis - the current quaternion is viewwindow->ball_->qNow	
+      // axis - the current quaternion is viewwindow->ball_->qNow       
       // the first 3 components of this
 
       view_window_->ball_->SetAngle(newtime*view_window_->angular_v_);
@@ -389,15 +389,15 @@ OpenGL::redraw_loop()
       tmpview.up(y_a.vector());
       if (view_window_->inertia_mode_ == 1)
       {
-	tmpview.eyep((z_a*(view_window_->eye_dist_))+
-		     tmpview.lookat().vector());
-	view_window_->gui_view_.set(tmpview);
+        tmpview.eyep((z_a*(view_window_->eye_dist_))+
+                     tmpview.lookat().vector());
+        view_window_->gui_view_.set(tmpview);
       }
       else if (view_window_->inertia_mode_ == 2)
       {
-	tmpview.lookat(tmpview.eyep()-
-		       (z_a*(view_window_->eye_dist_)).vector());
-	view_window_->gui_view_.set(tmpview);
+        tmpview.lookat(tmpview.eyep()-
+                       (z_a*(view_window_->eye_dist_)).vector());
+        view_window_->gui_view_.set(tmpview);
       }
 
     }
@@ -405,37 +405,37 @@ OpenGL::redraw_loop()
     {
       for (;;)
       {
-	const int r = send_mailbox_.receive();
-	if (r == 86)
-	{
-	  throttle.stop();
-	  return;
-	}
-	else if (r == DO_PICK)
-	{
-	  real_get_pick(send_pick_x_, send_pick_y_, ret_pick_obj_,
-			ret_pick_pick_, ret_pick_index_);
-	  recv_mailbox_.send(PICK_DONE);
-	}
-	else if (r == DO_GETDATA)
-	{
-	  GetReq req(get_mailbox_.receive());
-	  real_getData(req.datamask, req.result);
-	}
-	else if (r == DO_IMAGE)
-	{
-	  ImgReq req(img_mailbox_.receive());
-	  do_hi_res_ = true;
-	  fname = req.name;
-	  ftype = req.type;
-	  resx = req.resx;
-	  resy = req.resy;
-	}
-	else
-	{
-	  nreply++;
-	  break;
-	}
+        const int r = send_mailbox_.receive();
+        if (r == 86)
+        {
+          throttle.stop();
+          return;
+        }
+        else if (r == DO_PICK)
+        {
+          real_get_pick(send_pick_x_, send_pick_y_, ret_pick_obj_,
+                        ret_pick_pick_, ret_pick_index_);
+          recv_mailbox_.send(PICK_DONE);
+        }
+        else if (r == DO_GETDATA)
+        {
+          GetReq req(get_mailbox_.receive());
+          real_getData(req.datamask, req.result);
+        }
+        else if (r == DO_IMAGE)
+        {
+          ImgReq req(img_mailbox_.receive());
+          do_hi_res_ = true;
+          fname = req.name;
+          ftype = req.type;
+          resx = req.resx;
+          resy = req.resy;
+        }
+        else
+        {
+          nreply++;
+          break;
+        }
       }
       newtime = throttle.time();
       throttle.stop();
@@ -468,13 +468,13 @@ OpenGL::redraw_loop()
 
 void
 OpenGL::render_and_save_image(int x, int y,
-			      const string& fname, const string &ftype)
+                              const string& fname, const string &ftype)
 {
 #ifndef HAVE_MAGICK
   if (ftype != "ppm" && ftype != "raw")
   {
     cerr << "Error - ImageMagick is not enabled, "
-	 << "can only save .ppm or .raw files.\n";
+         << "can only save .ppm or .raw files.\n";
     return;
   }
 #endif
@@ -583,7 +583,7 @@ OpenGL::render_and_save_image(int x, int y,
     {
 #ifdef HAVE_MAGICK
       pixels = (unsigned char *)C_Magick::SetImagePixels
-	(image, 0, vp[3]*(nrows - 1 - hi_res_.row), hi_res_.resx,read_height);
+        (image, 0, vp[3]*(nrows - 1 - hi_res_.row), hi_res_.resx,read_height);
 #endif
     }
 
@@ -600,7 +600,7 @@ OpenGL::render_and_save_image(int x, int y,
       redraw_frame();
       doing_image_p_ = false;
       gui_->lock();
-	
+        
       // Tell OpenGL where to put the data in our pixel buffer
       glPixelStorei(GL_PACK_ALIGNMENT,1);
       glPixelStorei(GL_PACK_SKIP_PIXELS, hi_res_.col * vp[2]);
@@ -614,16 +614,16 @@ OpenGL::render_and_save_image(int x, int y,
       glReadBuffer(GL_FRONT);
       glReadPixels(0,0,read_width, read_height,
 #ifndef _WIN32
-		   (num_channels == 3) ? GL_RGB : GL_BGRA,
+                   (num_channels == 3) ? GL_RGB : GL_BGRA,
 #else
-		   (num_channels == 3) ? GL_RGB : GL_RGBA,
+                   (num_channels == 3) ? GL_RGB : GL_RGBA,
 #endif
-		   (channel_bytes == 1) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
-		   pixels);
+                   (channel_bytes == 1) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
+                   pixels);
       gui_->unlock();
     }
     // OpenGL renders upside-down to image_file writing
-    unsigned char *top_row, *bot_row;	
+    unsigned char *top_row, *bot_row;   
     int top, bot;
     for (top = read_height-1, bot = 0; bot < read_height/2; top--, bot++)
     {
@@ -656,9 +656,9 @@ OpenGL::render_and_save_image(int x, int y,
     if (!C_Magick::WriteImage(image_info,image))
     {
       cerr << "\nCannont Write " << fname << " because: "
-	   << image->exception.reason << std::endl;
+           << image->exception.reason << std::endl;
     }
-	
+        
     C_Magick::DestroyImageInfo(image_info);
     C_Magick::DestroyImage(image);
     C_Magick::DestroyMagick();
@@ -706,9 +706,9 @@ OpenGL::redraw_frame()
 #ifdef __sgi
       if (strstr((char*)glGetString(GL_EXTENSIONS), "GL_SGIS_multisample"))
       {
-	cerr << "Enabling multisampling...\n";
-	glEnable(GL_MULTISAMPLE_SGIS);
-	glSamplePatternSGIS(GL_1PASS_SGIS);
+        cerr << "Enabling multisampling...\n";
+        glEnable(GL_MULTISAMPLE_SGIS);
+        glSamplePatternSGIS(GL_1PASS_SGIS);
       }
 #endif
     }
@@ -736,7 +736,7 @@ OpenGL::redraw_frame()
   if (doing_movie_p_ || doing_image_p_)
   {
     if (pbuffer_ &&
-	(xres_ != pbuffer_->width() || yres_ != pbuffer_->height()))
+        (xres_ != pbuffer_->width() || yres_ != pbuffer_->height()))
     {
       pbuffer_->destroy();
       delete pbuffer_;
@@ -748,9 +748,9 @@ OpenGL::redraw_frame()
       pbuffer_ = scinew Pbuffer(xres_, yres_, GL_INT, 8, false, GL_FALSE);
       if (!pbuffer_->create())
       {
-	pbuffer_->destroy();
-	delete pbuffer_;
-	pbuffer_ = 0;
+        pbuffer_->destroy();
+        delete pbuffer_;
+        pbuffer_ = 0;
       }
     }
   }
@@ -833,7 +833,7 @@ OpenGL::redraw_frame()
     if (do_stereo)
     {
       const double eye_sep_dist = view_window_->gui_sbase_.get() *
-	(view_window_->gui_sr_.get() ? 0.048 : 0.0125);
+        (view_window_->gui_sr_.get() ? 0.048 : 0.0125);
       Vector u, v;
       view.get_viewplane(aspect, 1.0, u, v);
       u.safe_normalize();
@@ -847,176 +847,176 @@ OpenGL::redraw_frame()
       if ( do_stereo ) n = 2;
       for (int i=0; i<n; i++)
       {
-	if ( do_stereo )
-	{
-	  glDrawBuffer( (i == 0) ? GL_BACK_LEFT : GL_BACK_RIGHT);
-	}
-	else
-	{
-	  if (pbuffer_ && (doing_movie_p_ || doing_image_p_))
-	  {
-	    //ASSERT(pbuffer_->is_current());
-	    glDrawBuffer(GL_FRONT);
-	  }
-	  else
-	  {
-	    glDrawBuffer(GL_BACK);
-	  }
-	}
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glViewport(0, 0, xres_, yres_);
+        if ( do_stereo )
+        {
+          glDrawBuffer( (i == 0) ? GL_BACK_LEFT : GL_BACK_RIGHT);
+        }
+        else
+        {
+          if (pbuffer_ && (doing_movie_p_ || doing_image_p_))
+          {
+            //ASSERT(pbuffer_->is_current());
+            glDrawBuffer(GL_FRONT);
+          }
+          else
+          {
+            glDrawBuffer(GL_BACK);
+          }
+        }
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glViewport(0, 0, xres_, yres_);
 
-	const double modeltime = t * dt + animate_time_begin_;
-	view_window_->set_current_time(modeltime);
-	
-	{ // render normal
-	  // Setup view.
-	  glMatrixMode(GL_PROJECTION);
+        const double modeltime = t * dt + animate_time_begin_;
+        view_window_->set_current_time(modeltime);
+        
+        { // render normal
+          // Setup view.
+          glMatrixMode(GL_PROJECTION);
 
-	  glLoadIdentity();
+          glLoadIdentity();
 
-	  if (view_window_->gui_ortho_view_.get())
-	  {
-	    const double len = (view.lookat() - view.eyep()).length();
-	    const double yval = tan(fovy * M_PI / 360.0) * len;
-	    const double xval = yval * aspect;
-	    glOrtho(-xval, xval, -yval, yval, znear_, zfar_);
-	  }
-	  else
-	  {
-	    gluPerspective(fovy, aspect, znear_, zfar_);
-	  }
-	  glMatrixMode(GL_MODELVIEW);
+          if (view_window_->gui_ortho_view_.get())
+          {
+            const double len = (view.lookat() - view.eyep()).length();
+            const double yval = tan(fovy * M_PI / 360.0) * len;
+            const double xval = yval * aspect;
+            glOrtho(-xval, xval, -yval, yval, znear_, zfar_);
+          }
+          else
+          {
+            gluPerspective(fovy, aspect, znear_, zfar_);
+          }
+          glMatrixMode(GL_MODELVIEW);
 
-	  glLoadIdentity();
-	  Point eyep(view.eyep());
-	  Point lookat(view.lookat());
-	  if (do_stereo)
-	  {
-	    if (i==0)
-	    {
-	      eyep -= eyesep;
-	      if (!view_window_->gui_sr_.get())
-	      {
-		lookat-=eyesep;
-	      }
-	    }
-	    else
-	    {
-	      eyep += eyesep;
-	      if (!view_window_->gui_sr_.get())
-	      {
-		lookat += eyesep;
-	      }
-	    }
-	  }
-	  Vector up(view.up());
-	  gluLookAt(eyep.x(), eyep.y(), eyep.z(),
-		    lookat.x(), lookat.y(), lookat.z(),
-		    up.x(), up.y(), up.z());
-	  if (do_hi_res_)
-	  {
-	    setFrustumToWindowPortion();
-	  }
-	}
-	
-	// Set up Lighting
-	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-	const Lighting& lighting = viewer_->lighting_;
-	int idx=0;
-	int ii;
-	for (ii=0; ii<lighting.lights.size(); ii++)
-	{
-	  LightHandle light = lighting.lights[ii];
-	  light->opengl_setup(view, drawinfo_, idx);
-	}
-	for (ii=0; ii<idx && ii<max_gl_lights_; ii++)
-	{
-	  glEnable((GLenum)(GL_LIGHT0 + ii));
-	}
-	for (;ii<max_gl_lights_;ii++)
-	{
-	  glDisable((GLenum)(GL_LIGHT0 + ii));
-	}
+          glLoadIdentity();
+          Point eyep(view.eyep());
+          Point lookat(view.lookat());
+          if (do_stereo)
+          {
+            if (i==0)
+            {
+              eyep -= eyesep;
+              if (!view_window_->gui_sr_.get())
+              {
+                lookat-=eyesep;
+              }
+            }
+            else
+            {
+              eyep += eyesep;
+              if (!view_window_->gui_sr_.get())
+              {
+                lookat += eyesep;
+              }
+            }
+          }
+          Vector up(view.up());
+          gluLookAt(eyep.x(), eyep.y(), eyep.z(),
+                    lookat.x(), lookat.y(), lookat.z(),
+                    up.x(), up.y(), up.z());
+          if (do_hi_res_)
+          {
+            setFrustumToWindowPortion();
+          }
+        }
+        
+        // Set up Lighting
+        glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+        const Lighting& lighting = viewer_->lighting_;
+        int idx=0;
+        int ii;
+        for (ii=0; ii<lighting.lights.size(); ii++)
+        {
+          LightHandle light = lighting.lights[ii];
+          light->opengl_setup(view, drawinfo_, idx);
+        }
+        for (ii=0; ii<idx && ii<max_gl_lights_; ii++)
+        {
+          glEnable((GLenum)(GL_LIGHT0 + ii));
+        }
+        for (;ii<max_gl_lights_;ii++)
+        {
+          glDisable((GLenum)(GL_LIGHT0 + ii));
+        }
 
-	// Now set up the fog stuff.
-	double fognear, fogfar;
-	compute_fog_depth(view, fognear, fogfar,
-			  view_window_->gui_fog_visibleonly_.get());
-	glFogi(GL_FOG_MODE, GL_LINEAR);
-	const float fnear =
-	  fognear + (fogfar - fognear) * view_window_->gui_fog_start_.get();
-	glFogf(GL_FOG_START, fnear);
-	const double ffar =
-	  fognear + (fogfar - fognear) /
-	  Max(view_window_->gui_fog_end_.get(), 0.001);
-	glFogf(GL_FOG_END, ffar);
-	GLfloat bgArray[4];
-	if (view_window_->gui_fogusebg_.get())
-	{
-	  bgArray[0] = bg.r();
-	  bgArray[1] = bg.g();
-	  bgArray[2] = bg.b();
-	}
-	else
-	{
-	  Color fogcolor(view_window_->gui_fogcolor_.get());
-	  bgArray[0] = fogcolor.r();
-	  bgArray[1] = fogcolor.g();
-	  bgArray[2] = fogcolor.b();
-	}	
-	bgArray[3] = 1.0;
-	glFogfv(GL_FOG_COLOR, bgArray);
+        // Now set up the fog stuff.
+        double fognear, fogfar;
+        compute_fog_depth(view, fognear, fogfar,
+                          view_window_->gui_fog_visibleonly_.get());
+        glFogi(GL_FOG_MODE, GL_LINEAR);
+        const float fnear =
+          fognear + (fogfar - fognear) * view_window_->gui_fog_start_.get();
+        glFogf(GL_FOG_START, fnear);
+        const double ffar =
+          fognear + (fogfar - fognear) /
+          Max(view_window_->gui_fog_end_.get(), 0.001);
+        glFogf(GL_FOG_END, ffar);
+        GLfloat bgArray[4];
+        if (view_window_->gui_fogusebg_.get())
+        {
+          bgArray[0] = bg.r();
+          bgArray[1] = bg.g();
+          bgArray[2] = bg.b();
+        }
+        else
+        {
+          Color fogcolor(view_window_->gui_fogcolor_.get());
+          bgArray[0] = fogcolor.r();
+          bgArray[1] = fogcolor.g();
+          bgArray[2] = fogcolor.b();
+        }       
+        bgArray[3] = 1.0;
+        glFogfv(GL_FOG_COLOR, bgArray);
 
-	// now make the ViewWindow setup its clipping planes...
-	view_window_->setClip(drawinfo_);
+        // now make the ViewWindow setup its clipping planes...
+        view_window_->setClip(drawinfo_);
         view_window_->setMouse(drawinfo_);
 
-	// UNICAM addition
-	glGetDoublev (GL_MODELVIEW_MATRIX, modelview_matrix_);
-	glGetDoublev (GL_PROJECTION_MATRIX, projection_matrix_);
-	glGetIntegerv(GL_VIEWPORT, viewport_matrix_);
+        // UNICAM addition
+        glGetDoublev (GL_MODELVIEW_MATRIX, modelview_matrix_);
+        glGetDoublev (GL_PROJECTION_MATRIX, projection_matrix_);
+        glGetIntegerv(GL_VIEWPORT, viewport_matrix_);
 
-	// set up point size, line size, and polygon offset
-	glPointSize(drawinfo_->point_size_);
-	glLineWidth(drawinfo_->line_width_);
-	glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
-	if (drawinfo_->polygon_offset_factor_ ||
-	    drawinfo_->polygon_offset_units_)
-	{
-	  glPolygonOffset(drawinfo_->polygon_offset_factor_,
-			  drawinfo_->polygon_offset_units_);
-	  glEnable(GL_POLYGON_OFFSET_FILL);
-	}
-	else
-	{
-	  glDisable(GL_POLYGON_OFFSET_FILL);
-	}
+        // set up point size, line size, and polygon offset
+        glPointSize(drawinfo_->point_size_);
+        glLineWidth(drawinfo_->line_width_);
+        glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
+        if (drawinfo_->polygon_offset_factor_ ||
+            drawinfo_->polygon_offset_units_)
+        {
+          glPolygonOffset(drawinfo_->polygon_offset_factor_,
+                          drawinfo_->polygon_offset_units_);
+          glEnable(GL_POLYGON_OFFSET_FILL);
+        }
+        else
+        {
+          glDisable(GL_POLYGON_OFFSET_FILL);
+        }
 
-	// Draw it all.
-	current_time_ = modeltime;
-	view_window_->do_for_visible(this, &OpenGL::redraw_obj);
+        // Draw it all.
+        current_time_ = modeltime;
+        view_window_->do_for_visible(this, &OpenGL::redraw_obj);
 
-	if (view_window_->gui_raxes_.get())
-	{
-	  render_rotation_axis(view, do_stereo, i, eyesep);
-	}
+        if (view_window_->gui_raxes_.get())
+        {
+          render_rotation_axis(view, do_stereo, i, eyesep);
+        }
       }
-	
+        
       // Save z-buffer data.
       if (CAPTURE_Z_DATA_HACK)
       {
-	CAPTURE_Z_DATA_HACK = 0;
-	glReadPixels(0, 0, xres_, yres_, GL_DEPTH_COMPONENT, GL_FLOAT,
-		     depth_buffer_ );
+        CAPTURE_Z_DATA_HACK = 0;
+        glReadPixels(0, 0, xres_, yres_, GL_DEPTH_COMPONENT, GL_FLOAT,
+                     depth_buffer_ );
       }
-	
+        
       // Wait for the right time before swapping buffers
       //gui->unlock();
       const double realtime = t * frametime;
       if (animate_num_frames_>1)
       {
-	throttle.wait_for_time(realtime);
+        throttle.wait_for_time(realtime);
       }
       //gui->lock();
       gui_->execute("update idletasks");
@@ -1025,7 +1025,7 @@ OpenGL::redraw_frame()
       // Show the pretty picture.
       if (!(pbuffer_ && (doing_movie_p_ || doing_image_p_)))
       {
-	tk_gl_context_->swap();
+        tk_gl_context_->swap();
       }
     }
     throttle.stop();
@@ -1044,7 +1044,7 @@ OpenGL::redraw_frame()
   {
     // Just show the cleared screen
     view_window_->set_current_time(animate_time_end_);
-	
+        
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (!(pbuffer_ && (doing_movie_p_ || doing_image_p_)))
@@ -1074,11 +1074,11 @@ OpenGL::redraw_frame()
     cerr.flush();
     frame_count_ = 1;
     // TODO: This looks incorrect, round and then convert to int?
-    fps += 0.05;		// Round to nearest tenth
+    fps += 0.05;                // Round to nearest tenth
     const int fps_whole = (int)fps;
     const int fps_tenths = (int)((fps-fps_whole)*10);
     fps_timer_.clear();
-    fps_timer_.start();		// Start it running for next time
+    fps_timer_.start();         // Start it running for next time
     double pps;
     if (timer.time() > 0)
     {
@@ -1090,9 +1090,9 @@ OpenGL::redraw_frame()
     }
     str << view_window_->id_ << " updatePerf \"";
     str << drawinfo_->polycount << " polygons in " << timer.time()
-      	<< " seconds\" \"" << pps
-    	<< " polygons/second\"" << " \"" << fps_whole << "."
-    	<< fps_tenths << " frames/sec\"" << '\0';
+        << " seconds\" \"" << pps
+        << " polygons/second\"" << " \"" << fps_whole << "."
+        << fps_tenths << " frames/sec\"" << '\0';
   }
   else if (fps_timer_.time() > 0)
   {
@@ -1113,57 +1113,57 @@ OpenGL::redraw_frame()
     {
       if (!encoding_mpeg_)
       {
-	string fname = movie_name_;
+        string fname = movie_name_;
 
-	// only add extension if not allready there
-	if (!(fname.find(".mpg") != std::string::npos ||
-	      fname.find(".MPG") != std::string::npos ||
-	      fname.find(".mpeg") != std::string::npos ||
-	      fname.find(".MPEG") != std::string::npos))
-	{
-	  fname = fname + string(".mpg");
-	}
-	
-	// Dump the mpeg in the local dir ... ignoring any path since mpeg
-	// can not handle it.
-	//std::string::size_type pos = fname.find_last_of("/");
-	//if ( pos != std::string::npos ) {
+        // only add extension if not allready there
+        if (!(fname.find(".mpg") != std::string::npos ||
+              fname.find(".MPG") != std::string::npos ||
+              fname.find(".mpeg") != std::string::npos ||
+              fname.find(".MPEG") != std::string::npos))
+        {
+          fname = fname + string(".mpg");
+        }
+        
+        // Dump the mpeg in the local dir ... ignoring any path since mpeg
+        // can not handle it.
+        //std::string::size_type pos = fname.find_last_of("/");
+        //if ( pos != std::string::npos ) {
         //cerr << "Removing the mpeg path." << std::endl;
         //fname = fname.erase(0, pos+1);
         //}
 
-	if ( fname.find("%") != std::string::npos )
-	{
-	  string message = "Bad Format - Remove the Frame Format.";
-	  view_window_->setMessage( message );
-	  view_window_->setMovie( 0 );
+        if ( fname.find("%") != std::string::npos )
+        {
+          string message = "Bad Format - Remove the Frame Format.";
+          view_window_->setMessage( message );
+          view_window_->setMovie( 0 );
 
-	}
-	else
-	{
-	  string message = "Dumping mpeg " + fname;
-	  view_window_->setMessage( message );
+        }
+        else
+        {
+          string message = "Dumping mpeg " + fname;
+          view_window_->setMessage( message );
 
-	  StartMpeg( fname );
+          StartMpeg( fname );
 
-	  current_movie_frame_ = 0;
-	  encoding_mpeg_ = true;
-	}
+          current_movie_frame_ = 0;
+          encoding_mpeg_ = true;
+        }
       }
 
       if (encoding_mpeg_)
       {
 
-	const string message =
-	  "Adding Mpeg Frame " + to_string( current_movie_frame_ );
+        const string message =
+          "Adding Mpeg Frame " + to_string( current_movie_frame_ );
 
-	view_window_->setMessage( message );
+        view_window_->setMessage( message );
 
-	view_window_->setMovieFrame(current_movie_frame_);
-	AddMpegFrame();
+        view_window_->setMovieFrame(current_movie_frame_);
+        AddMpegFrame();
 
-	current_movie_frame_++;
-	view_window_->setMovieFrame(current_movie_frame_);
+        current_movie_frame_++;
+        view_window_->setMovieFrame(current_movie_frame_);
       }
 
     }
@@ -1171,33 +1171,33 @@ OpenGL::redraw_frame()
     { // Dump each frame.
       if (encoding_mpeg_)
       {
-	// Finish up mpeg that was in progress.
-	encoding_mpeg_ = false;
-	EndMpeg();
+        // Finish up mpeg that was in progress.
+        encoding_mpeg_ = false;
+        EndMpeg();
       }
 
       std::string::size_type pos = movie_name_.find_last_of("%0");
 
       if ( pos == std::string::npos ||
-	  movie_name_[pos+2] != 'd' ||
-	  movie_name_.find("%") != movie_name_.find_last_of("%") )
+          movie_name_[pos+2] != 'd' ||
+          movie_name_.find("%") != movie_name_.find_last_of("%") )
       {
-	string message = "Bad Format - Illegal Frame Format.";
-	view_window_->setMessage( message );
-	view_window_->setMovie( 0 );
+        string message = "Bad Format - Illegal Frame Format.";
+        view_window_->setMessage( message );
+        view_window_->setMovie( 0 );
       }
       else
       {
-	char fname[256];
-	sprintf(fname, movie_name_.c_str(), current_movie_frame_);
-	string fullpath = string(fname) + string(".ppm");
-	
-	string message = "Dumping " + fullpath;
-	view_window_->setMessage( message );
-	dump_image(fullpath);
+        char fname[256];
+        sprintf(fname, movie_name_.c_str(), current_movie_frame_);
+        string fullpath = string(fname) + string(".ppm");
+        
+        string message = "Dumping " + fullpath;
+        view_window_->setMessage( message );
+        dump_image(fullpath);
 
-	current_movie_frame_++;
-	view_window_->setMovieFrame(current_movie_frame_);
+        current_movie_frame_++;
+        view_window_->setMovieFrame(current_movie_frame_);
       }
     }
   }
@@ -1217,8 +1217,8 @@ OpenGL::redraw_frame()
 
 void
 OpenGL::get_pick(int x, int y,
-		 GeomHandle& pick_obj, GeomPickHandle& pick_pick,
-		 int& pick_index)
+                 GeomHandle& pick_obj, GeomPickHandle& pick_pick,
+                 int& pick_index)
 {
   send_pick_x_ = x;
   send_pick_y_ = y;
@@ -1243,8 +1243,8 @@ OpenGL::get_pick(int x, int y,
 
 void
 OpenGL::real_get_pick(int x, int y,
-		      GeomHandle& pick_obj, GeomPickHandle& pick_pick,
-		      int& pick_index)
+                      GeomHandle& pick_obj, GeomPickHandle& pick_pick,
+                      int& pick_index)
 {
   pick_obj = 0;
   pick_pick = 0;
@@ -1316,8 +1316,8 @@ OpenGL::real_get_pick(int x, int y,
     Point lookat(view.lookat());
     Vector up(view.up());
     gluLookAt(eyep.x(), eyep.y(), eyep.z(),
-	      lookat.x(), lookat.y(), lookat.z(),
-	      up.x(), up.y(), up.z());
+              lookat.x(), lookat.y(), lookat.z(),
+              up.x(), up.y(), up.z());
 
     drawinfo_->lighting=0;
     drawinfo_->set_drawtype(DrawInfoOpenGL::Flat);
@@ -1326,7 +1326,7 @@ OpenGL::real_get_pick(int x, int y,
 
     // Draw it all.
     view_window_->do_for_visible(this,
-				 (ViewWindowVisPMF)&OpenGL::pick_draw_obj);
+                                 (ViewWindowVisPMF)&OpenGL::pick_draw_obj);
 
 #ifdef SCI_64BITS
     glPopName();
@@ -1362,39 +1362,39 @@ OpenGL::real_get_pick(int x, int y,
       bool have_one = false;
       for (int h=0; h<hits; h++)
       {
-	int nnames = pick_buffer[idx++];
-	GLuint z=pick_buffer[idx++];
-	if (nnames > 1 && (!have_one || z < min_z))
-	{
-	  min_z = z;
-	  have_one = true;
-	  idx++; // Skip Max Z
+        int nnames = pick_buffer[idx++];
+        GLuint z=pick_buffer[idx++];
+        if (nnames > 1 && (!have_one || z < min_z))
+        {
+          min_z = z;
+          have_one = true;
+          idx++; // Skip Max Z
 #ifdef SCI_64BITS
-	  idx += nnames - 5; // Skip to the last one.
-	  const unsigned int ho1 = pick_buffer[idx++];
-	  const unsigned int ho2 = pick_buffer[idx++];
-	  hit_pick = ((long)ho1<<32) | ho2;
-	  //hit_obj_index = pick_buffer[idx++];
-	  const unsigned int hp1 = pick_buffer[idx++];
-	  const unsigned int hp2 = pick_buffer[idx++];
-	  hit_obj = ((long)hp1<<32)|hp2;
-	  //hit_pick_index = pick_buffer[idx++];
-	  idx++;
+          idx += nnames - 5; // Skip to the last one.
+          const unsigned int ho1 = pick_buffer[idx++];
+          const unsigned int ho2 = pick_buffer[idx++];
+          hit_pick = ((long)ho1<<32) | ho2;
+          //hit_obj_index = pick_buffer[idx++];
+          const unsigned int hp1 = pick_buffer[idx++];
+          const unsigned int hp2 = pick_buffer[idx++];
+          hit_obj = ((long)hp1<<32)|hp2;
+          //hit_pick_index = pick_buffer[idx++];
+          idx++;
 #else
-	  // hit_obj=pick_buffer[idx++];
-	  // hit_obj_index=pick_buffer[idx++];
-	  //for (int i=idx; i<idx+nnames; ++i) cerr << pick_buffer[i] << "\n";
-	  idx += nnames - 3; // Skip to the last one.
-	  hit_pick = pick_buffer[idx++];
-	  hit_obj = pick_buffer[idx++];
-	  idx++;
-	  //hit_pick_index=pick_buffer[idx++];
+          // hit_obj=pick_buffer[idx++];
+          // hit_obj_index=pick_buffer[idx++];
+          //for (int i=idx; i<idx+nnames; ++i) cerr << pick_buffer[i] << "\n";
+          idx += nnames - 3; // Skip to the last one.
+          hit_pick = pick_buffer[idx++];
+          hit_obj = pick_buffer[idx++];
+          idx++;
+          //hit_pick_index=pick_buffer[idx++];
 #endif
-	}
-	else
-	{
-	  idx += nnames + 1;
-	}
+        }
+        else
+        {
+          idx += nnames + 1;
+        }
       }
 
       pick_obj = (GeomObj*)hit_obj;
@@ -1461,7 +1461,7 @@ OpenGL::dump_image(const string& name, const string& /* type */)
   dumpfile << 255 << std::endl;
 
   // OpenGL renders upside-down to ppm_file writing
-  unsigned char *top_row, *bot_row;	
+  unsigned char *top_row, *bot_row;     
   unsigned char *tmp_row = scinew unsigned char[ vp[2] * pix_size];
   int top, bot;
   for ( top = vp[3] - 1, bot = 0; bot < vp[3]/2; top --, bot++){
@@ -1617,13 +1617,13 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
     {
       GuiInt movieFrame(ctx_->subVar(tclID+"-movieFrame", false));
       if (movieFrame.valid())
-	renderer_->current_movie_frame_ = movieFrame.get();
+        renderer_->current_movie_frame_ = movieFrame.get();
 
       renderer_->doing_movie_p_ = 1;
       if (movie.get() == 1)
-	renderer_->make_MPEG_p_ = 0;
+        renderer_->make_MPEG_p_ = 0;
       else if (movie.get() == 2)
-	renderer_->make_MPEG_p_ = 1;
+        renderer_->make_MPEG_p_ = 1;
     }
   }
 
@@ -1729,52 +1729,52 @@ ViewWindow::setClip(DrawInfoOpenGL* drawinfo)
     {
       while(i--)
       {
-	const string istr = to_string(i+1);
-	GuiInt clip_visible(ctx_->subVar("clip-visible-"+ istr,false));
-		
-	if (!clip_visible.valid()) continue;
+        const string istr = to_string(i+1);
+        GuiInt clip_visible(ctx_->subVar("clip-visible-"+ istr,false));
+                
+        if (!clip_visible.valid()) continue;
 
-	if (!clip_visible.get())
-	{
-	  glDisable((GLenum)(GL_CLIP_PLANE0+i));
-	}
-	else
-	{
-	  double plane[4];
-	  GuiDouble x(ctx_->subVar("clip-normal-x-"+ istr,false));
-	  GuiDouble y(ctx_->subVar("clip-normal-y-"+ istr,false));
-	  GuiDouble z(ctx_->subVar("clip-normal-z-"+ istr,false));
-	  GuiDouble d(ctx_->subVar("clip-normal-d-"+ istr,false));
+        if (!clip_visible.get())
+        {
+          glDisable((GLenum)(GL_CLIP_PLANE0+i));
+        }
+        else
+        {
+          double plane[4];
+          GuiDouble x(ctx_->subVar("clip-normal-x-"+ istr,false));
+          GuiDouble y(ctx_->subVar("clip-normal-y-"+ istr,false));
+          GuiDouble z(ctx_->subVar("clip-normal-z-"+ istr,false));
+          GuiDouble d(ctx_->subVar("clip-normal-d-"+ istr,false));
 
-	  if (!x.valid() || !y.valid() || ! z.valid() || !d.valid())
-	  {
-	    cerr << "Error: clipping plane " << i << " has invalid values.\n";
-	    continue;
-	  }
-	
-	  plane[0] = x.get();
-	  plane[1] = y.get();
-	  plane[2] = z.get();
-	  plane[3] = d.get();
-	
-	  double mag = sqrt(plane[0]*plane[0] +
-			    plane[1]*plane[1] +
-			    plane[2]*plane[2]);
-	  plane[0] /= mag;
-	  plane[1] /= mag;
-	  plane[2] /= mag;
-	  plane[3] = -plane[3]; // so moves in planes direction...
+          if (!x.valid() || !y.valid() || ! z.valid() || !d.valid())
+          {
+            cerr << "Error: clipping plane " << i << " has invalid values.\n";
+            continue;
+          }
+        
+          plane[0] = x.get();
+          plane[1] = y.get();
+          plane[2] = z.get();
+          plane[3] = d.get();
+        
+          double mag = sqrt(plane[0]*plane[0] +
+                            plane[1]*plane[1] +
+                            plane[2]*plane[2]);
+          plane[0] /= mag;
+          plane[1] /= mag;
+          plane[2] /= mag;
+          plane[3] = -plane[3]; // so moves in planes direction...
 
-	  glClipPlane((GLenum)(GL_CLIP_PLANE0+i),plane);	
-	
-	  if (drawinfo->check_clip)
-	    glEnable((GLenum)(GL_CLIP_PLANE0+i));
-	  else
-	    glDisable((GLenum)(GL_CLIP_PLANE0+i));
-	
-	  drawinfo->clip_planes |= cur_flag;
-	}
-	cur_flag >>= 1; // shift the bit we are looking at...
+          glClipPlane((GLenum)(GL_CLIP_PLANE0+i),plane);        
+        
+          if (drawinfo->check_clip)
+            glEnable((GLenum)(GL_CLIP_PLANE0+i));
+          else
+            glDisable((GLenum)(GL_CLIP_PLANE0+i));
+        
+          drawinfo->clip_planes |= cur_flag;
+        }
+        cur_flag >>= 1; // shift the bit we are looking at...
       }
     }
   }
@@ -1813,7 +1813,7 @@ GeomViewerItem::draw(DrawInfoOpenGL* di, Material *m, double time)
     glEnable(GL_CULL_FACE);
     glDepthMask(GL_FALSE);
 
-    glDisable(GL_LIGHTING);	
+    glDisable(GL_LIGHTING);     
 
     glBegin(GL_QUADS);
 
@@ -1907,18 +1907,18 @@ OpenGL::setFrustumToWindowPortion()
   if (view_window_->gui_ortho_view_.get())
   {
     glOrtho(frustum_.left + frustum_.width / hi_res_.ncols * hi_res_.col,
-	    frustum_.left + frustum_.width / hi_res_.ncols * (hi_res_.col+1),
-	    frustum_.bottom + frustum_.height / hi_res_.nrows * hi_res_.row,
-	    frustum_.bottom + frustum_.height / hi_res_.nrows *(hi_res_.row+1),
-	    znear_, zfar_);
+            frustum_.left + frustum_.width / hi_res_.ncols * (hi_res_.col+1),
+            frustum_.bottom + frustum_.height / hi_res_.nrows * hi_res_.row,
+            frustum_.bottom + frustum_.height / hi_res_.nrows *(hi_res_.row+1),
+            znear_, zfar_);
   }
   else
   {
     glFrustum(frustum_.left + frustum_.width / hi_res_.ncols * hi_res_.col,
-	      frustum_.left + frustum_.width / hi_res_.ncols * (hi_res_.col+1),
-	      frustum_.bottom + frustum_.height / hi_res_.nrows* hi_res_.row,
-	      frustum_.bottom + frustum_.height /hi_res_.nrows*(hi_res_.row+1),
-	      frustum_.znear, frustum_.zfar);
+              frustum_.left + frustum_.width / hi_res_.ncols * (hi_res_.col+1),
+              frustum_.bottom + frustum_.height / hi_res_.nrows* hi_res_.row,
+              frustum_.bottom + frustum_.height /hi_res_.nrows*(hi_res_.row+1),
+              frustum_.znear, frustum_.zfar);
   }
 }
 
@@ -1926,8 +1926,8 @@ OpenGL::setFrustumToWindowPortion()
 
 void
 OpenGL::saveImage(const string& fname,
-		  const string& type,
-		  int x, int y)
+                  const string& type,
+                  int x, int y)
 {
   send_mailbox_.send(DO_IMAGE);
   img_mailbox_.send(ImgReq(fname,type,x,y));
@@ -1972,8 +1972,8 @@ OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
     {
       for (int x=0; x<xres_; x++)
       {
-	img->put_pixel(x, y, Color(p[0], p[1], p[2]));
-	p += 3;
+        img->put_pixel(x, y, Color(p[0], p[1], p[2]));
+        p += 3;
       }
     }
     delete[] data;
@@ -2150,8 +2150,8 @@ OpenGL::pick_scene( int x, int y, Point *p )
     // Unproject the window point (x, y, z).
     GLdouble world_x, world_y, world_z;
     gluUnProject(x, y, z,
-		 modelview_matrix_, projection_matrix_, viewport_matrix_,
-		 &world_x, &world_y, &world_z);
+                 modelview_matrix_, projection_matrix_, viewport_matrix_,
+                 &world_x, &world_y, &world_z);
 
     *p = Point(world_x, world_y, world_z);
   }
@@ -2186,8 +2186,8 @@ OpenGL::compute_depth(const View& view, double& znear, double& zfar)
     for (int i=0;i<8;i++)
     {
       const Point p((i&1)?max.x():min.x(),
-		    (i&2)?max.y():min.y(),
-		    (i&4)?max.z():min.z());
+                    (i&2)?max.y():min.y(),
+                    (i&4)?max.z():min.z());
       const double dist = Dot(p, dir) + d;
       znear = Min(znear, dist);
       zfar = Max(zfar, dist);
@@ -2199,13 +2199,13 @@ OpenGL::compute_depth(const View& view, double& znear, double& zfar)
     {
       if (zfar <= 0.0)
       {
-	// Everything is behind us - it doesn't matter what we do.
-	znear = 1.0;
-	zfar = 2.0;
+        // Everything is behind us - it doesn't matter what we do.
+        znear = 1.0;
+        zfar = 2.0;
       }
       else
       {
-	znear = zfar * 0.001;
+        znear = zfar * 0.001;
       }
     }
     return true;
@@ -2219,7 +2219,7 @@ OpenGL::compute_depth(const View& view, double& znear, double& zfar)
 
 bool
 OpenGL::compute_fog_depth(const View &view, double &znear, double &zfar,
-			  bool visible_only)
+                          bool visible_only)
 {
   znear = MAXDOUBLE;
   zfar = -MAXDOUBLE;
@@ -2291,7 +2291,7 @@ ImgReq::ImgReq(const string& n, const string& t, int x, int y)
 
 void
 OpenGL::render_rotation_axis(const View &view,
-			     bool do_stereo, int i, const Vector &eyesep)
+                             bool do_stereo, int i, const Vector &eyesep)
 {
   static GeomHandle axis_obj = 0;
   if (axis_obj.get_rep() == 0) axis_obj = view_window_->createGenAxes();
@@ -2330,7 +2330,7 @@ OpenGL::render_rotation_axis(const View &view,
       eyep -= eyesep;
       if (!view_window_->gui_sr_.get())
       {
-	lookat -= eyesep;
+        lookat -= eyesep;
       }
     }
     else
@@ -2338,15 +2338,15 @@ OpenGL::render_rotation_axis(const View &view,
       eyep += eyesep;
       if (!view_window_->gui_sr_.get())
       {
-	lookat += eyesep;
+        lookat += eyesep;
       }
     }
   }
 
   Vector up(view.up());
   gluLookAt(eyep.x(), eyep.y(), eyep.z(),
-	    lookat.x(), lookat.y(), lookat.z(),
-	    up.x(), up.y(), up.z());
+            lookat.x(), lookat.y(), lookat.z(),
+            up.x(), up.y(), up.z());
   if (do_hi_res_)
   {
     // Draw in upper right hand corner of total image, not viewport image.
