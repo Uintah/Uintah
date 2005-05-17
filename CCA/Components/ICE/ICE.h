@@ -24,6 +24,7 @@
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
+#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Geometry/Vector.h>
 #include <sgi_stl_warnings_off.h>
