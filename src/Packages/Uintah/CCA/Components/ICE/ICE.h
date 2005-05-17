@@ -841,6 +841,13 @@ namespace Uintah {
        const VarLabel* src;
        const VarLabel* var_Lagrangian;
       };
+      struct AMR_refluxVariable {
+       const MaterialSubset* matls;
+       const VarLabel* var_CC;
+       const VarLabel* var_X_FC_flux;
+       const VarLabel* var_Y_FC_flux;
+       const VarLabel* var_Z_FC_flux;
+      };
       
       class ICEModelSetup : public ModelSetup {
       public:
@@ -850,7 +857,11 @@ namespace Uintah {
                                            const VarLabel* var,
                                            const VarLabel* src);
                                            
+       virtual void registerAMR_RefluxVariable(const MaterialSubset* matls,
+						     const VarLabel* var);  
+                                                                                        
        std::vector<TransportedVariable*> tvars;
+       std::vector<AMR_refluxVariable*> d_reflux_vars;
       };
       ICEModelSetup* d_modelSetup;
       
