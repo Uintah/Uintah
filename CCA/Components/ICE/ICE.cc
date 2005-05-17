@@ -114,6 +114,9 @@ ICE::~ICE()
   if (d_press_matl->removeReference()){
     delete d_press_matl;
   }
+  
+  //__________________________________
+  // MODELS
   cout_doing << "Doing: destorying Model Machinery " << endl;
   // delete transported Lagrangian variables
   vector<TransportedVariable*>::iterator t_iter;
@@ -122,7 +125,17 @@ ICE::~ICE()
        TransportedVariable* tvar = *t_iter;
     VarLabel::destroy(tvar->var_Lagrangian);
   }
-
+  
+  // delete refluxing variables
+  vector<AMR_refluxVariable*>::iterator iter;
+  for( iter  = d_modelSetup->d_reflux_vars.begin();
+       iter != d_modelSetup->d_reflux_vars.end(); iter++){
+       AMR_refluxVariable* rvar = *iter;
+    VarLabel::destroy(rvar->var_X_FC_flux);
+    VarLabel::destroy(rvar->var_Y_FC_flux);
+    VarLabel::destroy(rvar->var_Z_FC_flux);
+  } 
+  
   // delete models
   for(vector<ModelInterface*>::iterator iter = d_models.begin();
       iter != d_models.end(); iter++) {
@@ -1564,6 +1577,7 @@ void ICE::computesRequires_AMR_Refluxing(Task* task,
   task->computes(lb->int_eng_Y_FC_fluxLabel);
   task->computes(lb->int_eng_Z_FC_fluxLabel);  
   
+  
   if(AMR_subCycleProgressVar> 0){
     task->requires(Task::OldDW, lb->mass_X_FC_fluxLabel, gn, 0);
     task->requires(Task::OldDW, lb->mass_Y_FC_fluxLabel, gn, 0);
@@ -1581,9 +1595,25 @@ void ICE::computesRequires_AMR_Refluxing(Task* task,
     task->requires(Task::OldDW, lb->int_eng_Y_FC_fluxLabel, gn, 0);
     task->requires(Task::OldDW, lb->int_eng_Z_FC_fluxLabel, gn, 0);
   }
-/*`==========TESTING==========*/
-  // needto do something for the scalar-f variables. 
-/*===========TESTING==========`*/
+  
+  
+  //__________________________________
+  // MODELS
+  vector<AMR_refluxVariable*>::iterator iter;
+  for( iter  = d_modelSetup->d_reflux_vars.begin();
+       iter != d_modelSetup->d_reflux_vars.end(); iter++){
+       AMR_refluxVariable* rvar = *iter;
+       
+    task->computes(rvar->var_X_FC_flux); 
+    task->computes(rvar->var_Y_FC_flux);
+    task->computes(rvar->var_Z_FC_flux);
+    
+    if(AMR_subCycleProgressVar> 0){
+      task->requires(Task::OldDW, rvar->var_X_FC_flux, gn, 0);
+      task->requires(Task::OldDW, rvar->var_Y_FC_flux, gn, 0);
+      task->requires(Task::OldDW, rvar->var_Z_FC_flux, gn, 0);
+    }
+  } 
 }
 
 /* _____________________________________________________________________
@@ -4758,21 +4788,23 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
         for( t_iter  = d_modelSetup->tvars.begin();
              t_iter != d_modelSetup->tvars.end(); t_iter++){
           TransportedVariable* tvar = *t_iter;
+          
           if(tvar->matls->contains(indx)){
+            string Labelname = tvar->var->getName();
             CCVariable<double> q_CC;
             constCCVariable<double> q_L_CC;
             new_dw->allocateAndPut(q_CC, tvar->var,     indx, patch);
             new_dw->get(q_L_CC,   tvar->var_Lagrangian, indx, patch, gac, 2); 
             q_CC.initialize(d_EVIL_NUM);
             
+            varBasket->desc = Labelname;
             varBasket->is_Q_massSpecific = true;
             advector->advectQ(q_L_CC,mass_L,q_advected, varBasket);  
    
             update_q_CC<constCCVariable<double>, double>
                  ("q_L_CC",q_CC, q_L_CC, q_advected, mass_new, cv, patch);
                   
-            //  Set Boundary Conditions 
-            string Labelname = tvar->var->getName();
+            //  Set Boundary Conditions
             setBC(q_CC, Labelname,  patch, d_sharedState, indx, new_dw);  
             
             //---- P R I N T   D A T A ------   
@@ -5238,6 +5270,25 @@ void ICE::ICEModelSetup::registerTransportedVariable(const MaterialSubset* matls
   t->src = src;
   t->var_Lagrangian = VarLabel::create(var->getName()+"_L", var->typeDescription());
   tvars.push_back(t);
+}
+
+//__________________________________
+//  Register scalar flux variables needed
+//  by the AMR refluxing task.  We're actually
+//  creating the varLabels and putting them is a vector
+void ICE::ICEModelSetup::registerAMR_RefluxVariable(const MaterialSubset* matls,
+						          const VarLabel* var)
+{
+  AMR_refluxVariable* t = scinew AMR_refluxVariable;
+  t->matls = matls;
+  t->var_CC = var;
+  t->var_X_FC_flux = VarLabel::create(var->getName()+"_X_FC_flux", 
+                                SFCXVariable<double>::getTypeDescription());
+  t->var_Y_FC_flux = VarLabel::create(var->getName()+"_Y_FC_flux", 
+                                SFCYVariable<double>::getTypeDescription());
+  t->var_Z_FC_flux = VarLabel::create(var->getName()+"_Z_FC_flux", 
+                                SFCZVariable<double>::getTypeDescription());
+  d_reflux_vars.push_back(t);
 }
 
 //_____________________________________________________________________

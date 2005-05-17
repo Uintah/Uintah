@@ -13,8 +13,6 @@
 #include <Packages/Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-//#include <Packages/Uintah/Core/Grid/Level.h>
-//#include <Packages/Uintah/Core/Grid/Material.h>
 #include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
@@ -23,9 +21,6 @@
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-//#include <Packages/Uintah/Core/Grid/SimulationState.h>
-//#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-//#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 
 #include <Core/Containers/StaticArray.h>
 #include <Core/Math/MiscMath.h>
@@ -113,6 +108,13 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
                                  VarLabel::create("scalar-f_src",   td_CCdouble);
   d_scalar->scalar_gradLabel = 
                                  VarLabel::create("scalar-f_grad",  td_CCVector);                                 
+  
+  //__________________________________
+  //  register the AMRrefluxing variables                               
+  if(d_doAMR){
+    setup->registerAMR_RefluxVariable(d_matl_set->getSubset(0),
+                                      d_scalar->scalar_CCLabel);
+  }                               
                                  
                                  
   Slb->lastProbeDumpTimeLabel =  VarLabel::create("lastProbeDumpTime", 
