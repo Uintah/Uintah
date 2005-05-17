@@ -35,9 +35,13 @@ ifeq ($(LARGESOS),yes)
 PSELIBS := Core
 else
 PSELIBS := Core/Datatypes Core/Util Core/Containers Core/Persistent \
-           Core/Exceptions Core/Thread Core/Geometry Core/Math Core/Geom
+           Core/Exceptions Core/Thread Core/Geometry Core/Math Core/Geom Core/Init
 endif
 LIBS := $(LAPACK_LIBRARY) $(XML_LIBRARY) $(M_LIBRARY)
+
+PROGRAM := $(SRCDIR)/CalcLVVol
+SRCS := $(SRCDIR)/CalcLVVol.cc
+include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/Markers
 SRCS := $(SRCDIR)/Markers.cc

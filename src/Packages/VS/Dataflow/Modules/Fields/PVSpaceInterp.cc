@@ -67,6 +67,8 @@ private:
   Point find_closest_hip(unsigned phase_idx, unsigned idx);
   void send_interp_field(const Point &p, unsigned phase_idx, unsigned hip_idx);
   void interp_field(const double *weights, const unsigned *interp_idxs);
+  void check_lv_vol(const Point &);
+
 
   InterpController *		        runner_;
   Thread *		                runner_thread_;
@@ -196,6 +198,84 @@ PVSpaceInterp::produce()
   send_interp_field(p, phase_idx, hip_idx);
 }
 
+static double
+tet_vol6(const Point &p1, const Point &p2, const Point &p3, const Point &p4)
+{
+  return fabs( Dot(Cross(p2-p1,p3-p1),p4-p1) );
+}
+
+void 
+PVSpaceInterp::check_lv_vol(const Point &hip_pnt) 
+{
+  int base_perim[] = {143, 339, 158, 331, 160, 333, 162, 335, 164, 337, 155, 
+		      322, 152, 328, 149, 325, 146, 319};
+  int bp_len = 18;
+  
+  LockingHandle<HexVolMesh> mesh = 
+    ((HexVolField<double>*)out_fld_.get_rep())->get_typed_mesh();
+
+  Vector tot(0.0, 0.0, 0.0);
+  for (int i = 0; i < bp_len; ++i) {
+    Point p;
+    mesh->get_center(p, (HexVolMesh::Node::index_type)base_perim[i]);
+    //    cerr << "point: " << p << std::endl;
+    tot += Vector(p);
+    //cerr << "at: " << i << " " << tot << std::endl;
+  }
+
+  tot *= 1. / (double)bp_len;
+  cerr << "center: " << tot << std::endl;
+  //tot has the commont point for all tets...
+
+  mesh->synchronize(Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E);
+
+  int lv_elems[] = {1, 3, 5, 7, 17, 19, 21, 23, 33, 35, 37, 39, 49, 51, 53, 55, 65, 67, 69, 71, 81, 83, 85, 87, 97, 99, 101, 103, 113, 115, 117, 119, 129, 131, 133, 135, 145, 147, 149, 151, 161, 163, 165, 167, 177, 179, 181, 183, 193, 195, 197, 199, 209, 211, 213, 215, 225, 227, 229, 231, 241, 243, 245, 247, 417, 419, 421, 423, 425, 427, 429, 431, 433, 435, 437, 439, 441, 443, 445, 447, 449, 451, 453, 455, 457, 459, 461, 463, 465, 467, 469, 471, 473, 475, 477, 479, 481, 483, 485, 487, 489, 491, 493, 495, 497, 499, 501, 503, 505, 507, 509, 511, 513, 515, 517, 519, 521, 523, 525, 527, 529, 531, 533, 535, 537, 539, 541, 543, 545, 547, 549, 551, 553, 555, 557, 559, 561, 563, 565, 567, 569, 571, 573, 575, 577, 579, 581, 583, 593, 595, 597, 599, 609, 611, 613, 615, 625, 627, 629, 631, 641, 643, 645, 647, 649, 651, 653, 655, 657, 659, 661, 663, 665, 667, 669, 671, 673, 675, 677, 679};
+  
+  int sz_lv_elems = 180;
+  double tot_vol = 0.0L;
+  for (int i = 0; i < sz_lv_elems; ++i) {
+    HexVolMesh::Face::array_type faces;
+    HexVolMesh::Cell::index_type ci =
+      (HexVolMesh::Cell::index_type)(lv_elems[i] - 1);
+    mesh->get_faces(faces, ci);
+
+    // Check each face for neighbors.
+    HexVolMesh::Face::array_type::iterator fiter = faces.begin();
+
+    while (fiter != faces.end())
+    {
+      HexVolMesh::Cell::index_type nci;
+      HexVolMesh::Face::index_type fi = *fiter;
+      ++fiter;
+
+      if (! mesh->get_neighbor(nci , ci, fi))
+      {
+	// Faces with no neighbors are on the boundary, build 2 tets.
+	HexVolMesh::Node::array_type nodes;
+	mesh->get_nodes(nodes, fi);
+	// the 4 points
+
+	Point p0;
+	Point p1;
+	Point p2;
+	Point p3;
+	mesh->get_center(p0, nodes[0]);
+	mesh->get_center(p1, nodes[1]);
+	mesh->get_center(p2, nodes[2]);
+	mesh->get_center(p3, nodes[3]);
+	double vol1 = tet_vol6(p0, p1, p2, Point(tot)) / 6.;
+	double vol2 = tet_vol6(p0, p2, p3, Point(tot)) / 6.;
+	//cerr << "v1: " << vol1 <<  " v2: " << vol2 << std::endl;
+	tot_vol += (vol1 + vol2);
+	break;
+      }
+    }
+  }
+  cerr << "hip volume: " << hip_pnt.x() << std::endl;
+  cerr << "total volume: " << tot_vol / 1000. << std::endl;
+  cerr << "lv / hip_lv: " << (tot_vol / 1000.) / hip_pnt.x() << std::endl;
+}
+
 void 
 PVSpaceInterp::send_interp_field(const Point &p, unsigned phase_idx, 
 				 unsigned hip_idx) 
@@ -229,6 +309,7 @@ PVSpaceInterp::send_interp_field(const Point &p, unsigned phase_idx,
   interp_idxs[7] = phase_idx * 44 + nodes[7];
 
   interp_field(weights, interp_idxs);
+  check_lv_vol(p);
   want_to_execute();
 }
 
@@ -236,10 +317,6 @@ void
 PVSpaceInterp::interp_field(const double *weights, 
 			    const unsigned *interp_idxs) 
 {
-
-  
-
-
   const int sz = interp_space_->nrrd->axis[1].size;
   float *dat = (float*)interp_space_->nrrd->data;
   float dst[sz][4];
