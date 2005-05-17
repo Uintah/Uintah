@@ -8,6 +8,8 @@
 #include <Core/Util/Endian.h>
 #include <iostream>
 
+#undef SPEW
+
 using namespace Uintah;
 using std::cerr;
 using std::endl;
@@ -338,7 +340,7 @@ void FirstOrderAdvector::q_FC_flux_operator(CellIterator iter,
     q_FC_flux[c] += q_CC[ac] * influxVol - q_CC[c] * outfluxVol;
     
 /*`==========TESTING==========*/
-#if 1
+#ifdef SPEW
       cout.setf(ios::scientific,ios::floatfield);
       cout.precision(8);
     if(c == IntVector(2,5,5) || c == IntVector(8,5,5) 
@@ -383,7 +385,6 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
     string x_name = desc + "_X_FC_flux";
     string y_name = desc + "_Y_FC_flux";
     string z_name = desc + "_Z_FC_flux";
-
     // get the varLabels
     VarLabel* xlabel = VarLabel::find(x_name);
     VarLabel* ylabel = VarLabel::find(y_name);
@@ -409,9 +410,11 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
       constSFCXVariable<T> q_X_FC_flux_old;
       constSFCYVariable<T> q_Y_FC_flux_old;
       constSFCZVariable<T> q_Z_FC_flux_old;
+
       old_dw->get(q_X_FC_flux_old, xlabel, indx, patch, gn,0);
       old_dw->get(q_Y_FC_flux_old, ylabel, indx, patch, gn,0);
       old_dw->get(q_Z_FC_flux_old, zlabel, indx, patch, gn,0);
+
       q_X_FC_flux.copyData(q_X_FC_flux_old);
       q_Y_FC_flux.copyData(q_Y_FC_flux_old);
       q_Z_FC_flux.copyData(q_Z_FC_flux_old);
@@ -427,7 +430,7 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
     CellIterator XFC_iter = patch->getSFCXIterator(offset);
     CellIterator YFC_iter = patch->getSFCYIterator(offset);
     CellIterator ZFC_iter = patch->getSFCZIterator(offset);
-    cout << " XFC_iter" << XFC_iter << " YFC_iter " << YFC_iter << " ZFC_iter " << ZFC_iter << endl;
+    //cout << " XFC_iter" << XFC_iter << " YFC_iter " << YFC_iter << " ZFC_iter " << ZFC_iter << endl;
     
     q_FC_flux_operator<SFCXVariable<T>, T>(XFC_iter, adj_offset[0],LEFT,
                                            q_CC,q_X_FC_flux); 
@@ -438,7 +441,8 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
     q_FC_flux_operator<SFCZVariable<T>, T>(ZFC_iter, adj_offset[2],BACK,
                                            q_CC,q_Z_FC_flux);
                                            
- /*`==========TESTING==========*/                                           
+ /*`==========TESTING==========*/    
+#ifdef SPEW                                        
     vector<Patch::FaceType>::const_iterator itr;  
     for (itr  = patch->getCoarseFineInterfaceFaces()->begin(); 
          itr != patch->getCoarseFineInterfaceFaces()->end(); ++itr){
@@ -464,6 +468,7 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
         cout << half << " \t difference: q " << q_Z_FC_flux[half] <<  endl;
       } 
     } 
+#endif
   /*===========TESTING==========`*/                                       
                                            
   } // doAMR   

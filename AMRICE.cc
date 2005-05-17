@@ -17,6 +17,9 @@
 #include <Core/Util/DebugStream.h>
 #include <iomanip>
 
+#define SPEW
+#undef SPEW
+
 using namespace Uintah;
 using namespace std;
 static DebugStream cout_doing("ICE_DOING_COUT", false);
@@ -1189,24 +1192,21 @@ void AMRICE::scheduleReflux(const LevelP& coarseLevel,
                0,Task::FineLevel, 0, Task::NormalDomain, gn, 0);
   task->requires(Task::NewDW, lb->sp_vol_Z_FC_fluxLabel,
                0,Task::FineLevel, 0, Task::NormalDomain, gn, 0);             
-#if 0
-  // I NEED TO DO SOMETHING HERE
-  // Steve: help
+
+
   //__________________________________
   // Model Variables.
-  if(d_modelSetup && d_modelSetup->tvars.size() > 0){
-    vector<TransportedVariable*>::iterator iter;
-
-    for(iter = d_modelSetup->tvars.begin();
-       iter != d_modelSetup->tvars.end(); iter++){
-      TransportedVariable* tvar = *iter;
-      task->requires(Task::NewDW, tvar->var,
+  if(d_modelSetup && d_modelSetup->d_reflux_vars.size() > 0){
+    vector<AMR_refluxVariable*>::iterator iter;
+    for( iter  = d_modelSetup->d_reflux_vars.begin();
+         iter != d_modelSetup->d_reflux_vars.end(); iter++){
+      AMR_refluxVariable* rvar = *iter;
+      
+      task->requires(Task::NewDW, rvar->var_CC,
                   0, Task::FineLevel, 0, Task::NormalDomain, gn, 0);
-      task->modifies(tvar->var);
+      task->modifies(rvar->var_CC);
     }
   }
-#endif
-
 
   task->modifies(lb->rho_CCLabel);
   task->modifies(lb->sp_vol_CCLabel);
@@ -1248,7 +1248,7 @@ void AMRICE::reflux(const ProcessorGroup*,
       
       Level::selectType finePatches;
       coarsePatch->getFineLevelPatches(finePatches);
-
+      
       for(int i=0; i < finePatches.size();i++){  
         const Patch* finePatch = finePatches[i];        
         cout_doing << " coarsePatch " << coarsePatch->getID() <<" finepatch " << finePatch->getID()<< endl;
@@ -1257,7 +1257,7 @@ void AMRICE::reflux(const ProcessorGroup*,
         // reflux
         refluxOperator<double>(rho_CC,   rho_CC,  cv, "mass",    indx, 
                                coarsePatch, finePatch, fineLevel,new_dw);
-#if 1                               
+                               
         refluxOperator<double>(sp_vol_CC, rho_CC, cv, "sp_vol",  indx, 
                                coarsePatch, finePatch, fineLevel,new_dw);
                                
@@ -1268,29 +1268,27 @@ void AMRICE::reflux(const ProcessorGroup*,
                                coarsePatch, finePatch, fineLevel,new_dw);
         //__________________________________
         //    Model Variables
-        #if 0                 
-        if(d_modelSetup && d_modelSetup->tvars.size() > 0){
-          vector<TransportedVariable*>::iterator t_iter;
-          for( t_iter  = d_modelSetup->tvars.begin();
-              t_iter != d_modelSetup->tvars.end(); t_iter++){
-            TransportedVariable* tvar = *t_iter;
+        if(d_modelSetup && d_modelSetup->d_reflux_vars.size() > 0){
+          vector<AMR_refluxVariable*>::iterator iter;
+          for( iter  = d_modelSetup->d_reflux_vars.begin();
+               iter != d_modelSetup->d_reflux_vars.end(); iter++){
+            AMR_refluxVariable* r_var = *iter;
              
-            if(tvar->matls->contains(indx)){
+            if(r_var->matls->contains(indx)){
               CCVariable<double> q_CC;
-              new_dw->getModifiable(q_CC, tvar->var, indx, coarsePatch);
-              refluxOperator<double>(q_CC, tvar->var, indx, 
+              string var_name = r_var->var_CC->getName();
+              new_dw->getModifiable(q_CC,  r_var->var_CC, indx, coarsePatch);
+              
+              refluxOperator<double>(q_CC, rho_CC, cv, var_name, indx, 
                                      coarsePatch, finePatch, fineLevel,new_dw);
             
               if(switchDebug_AMR_refine){
-                string name = tvar->var->getName();
+                string name = r_var->var_CC->getName();
                 printData(indx, coarsePatch, 1, "coarsen_models", name, q_CC);
               }
-                             
             }
           }
         }
-       #endif
-#endif
       }  // finePatch loop 
   
       //__________________________________
@@ -1374,7 +1372,7 @@ void AMRICE::refluxOperator( CCVariable<T>& q_CC_coarse,
   
 /*`==========TESTING==========*/
   cout << " fineVarLabel " << fineVarLabel
-       << " switch1 " << switch1 
+       << " \t switch1 " << switch1 
        << " switch2 " << switch2
        << " switch3 " << switch3 << endl; 
 /*===========TESTING==========`*/
@@ -1389,11 +1387,13 @@ void AMRICE::refluxOperator( CCVariable<T>& q_CC_coarse,
     CellIterator iter=finePatch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
 
   /*`==========TESTING==========*/
+#ifdef SPEW
       cout << "Patch " << finePatch->getID()<< " patchFace " << patchFace 
          << " iterator " << iter << endl;
         IntVector begin = iter.begin();
         IntVector end = iter.end();
-        IntVector half = (end - begin)/IntVector(2,2,2) + begin; 
+        IntVector half = (end - begin)/IntVector(2,2,2) + begin;
+#endif
   /*===========TESTING==========`*/
   
     IntVector offset = finePatch->faceDirection(patchFace);
@@ -1427,13 +1427,15 @@ void AMRICE::refluxOperator( CCVariable<T>& q_CC_coarse,
         q_CC_coarse[c_CC] +=  correction/denominator;
         
 /*`==========TESTING==========*/
+#if SPEW
         if (c_CC.y() == 5 && c_CC.z() == 5 ) {
           cout << "refluxOperator: XFaces:" 
                << " c_CC " << c_CC  << " c_FC " << c_FC << " q_X_FC " << Q_X_coarse_flux[c_FC]
                << " f_FC " << f_FC << " " << Q_X_fine_flux[f_FC]
                << " correction " << correction
                << " q_CC_coarse " << q_CC_coarse[c_CC]<< endl;
-        } 
+        }
+#endif 
 /*===========TESTING==========`*/
       }
     }
@@ -1455,6 +1457,7 @@ void AMRICE::refluxOperator( CCVariable<T>& q_CC_coarse,
         q_CC_coarse[c_CC] += correction/denominator;
         
 /*`==========TESTING==========*/
+#if SPEW
         if (c_CC.x() == 5 && c_CC.z() == 5 ) {
           cout << "refluxOperator: YFaces:" 
                << " c_CC " << c_CC  << " c_FC " << c_FC << " q_Y_FC " << Q_Y_coarse_flux[c_FC]
@@ -1462,6 +1465,7 @@ void AMRICE::refluxOperator( CCVariable<T>& q_CC_coarse,
                << " correction " << correction 
                << " q_CC_coarse " << q_CC_coarse[c_CC]<< endl;
         } 
+#endif
 /*===========TESTING==========`*/
       }
     }
@@ -1483,13 +1487,15 @@ void AMRICE::refluxOperator( CCVariable<T>& q_CC_coarse,
         q_CC_coarse[c_CC] +=  correction/denominator;
         
 /*`==========TESTING==========*/
+#if SPEW
         if (c_CC.x() == 5 && c_CC.y() == 5 ) {
           cout << "refluxOperator: ZFaces:" 
                << " c_CC " << c_CC  << " c_FC " << c_FC << " q_Z_FC " << Q_Z_coarse_flux[c_FC]
                << " f_FC " << f_FC << " " << Q_Z_fine_flux[f_FC]
                << " correction " << correction 
                << " q_CC_coarse " << q_CC_coarse[c_CC]<< endl;
-        } 
+        }
+#endif 
 /*===========TESTING==========`*/
       }
     }
