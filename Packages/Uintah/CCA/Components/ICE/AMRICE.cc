@@ -923,9 +923,9 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
   finePatch->getCoarseLevelPatches(coarsePatches); 
   IntVector refineRatio = coarseLevel->getRefinementRatio();
                        
-  IntVector fl = finePatch->getInteriorCellLowIndex();
-  IntVector fh = finePatch->getInteriorCellHighIndex();
-  cout_dbg << " coarseToFineOperator: finePatch " << fl << " " << fh << endl;
+  IntVector fl = finePatch->getCellLowIndex();
+  IntVector fh = finePatch->getCellHighIndex();
+  cout_dbg <<" coarseToFineOperator: finePatch "<< fl<<" "<< fh<<endl;
                                 
   for(int i=0;i<coarsePatches.size();i++){
     const Patch* coarsePatch = coarsePatches[i];
