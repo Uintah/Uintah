@@ -38,6 +38,7 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
+#include <Core/Geometry/BBox.h>
 #include <sci_hash_map.h>
 #include <float.h> // for DBL_MAX
 
