@@ -520,7 +520,7 @@ Pbuffer::create ()
     }
 
     // Check for version.
-    if (minor < 3 || (mFormat == GL_FLOAT &&
+    if (minor < 3 || (format_ == GL_FLOAT &&
                      !(mATI_pixel_format_float || mNV_float_buffer)))
     {
       mSupported = false;
@@ -561,7 +561,7 @@ Pbuffer::create ()
     attrib[i++] = GL_TRUE;
 
     // Format
-    if (mFormat == GL_FLOAT)
+    if (format_ == GL_FLOAT)
     {
       if (mATI_pixel_format_float)
       {
@@ -582,57 +582,57 @@ Pbuffer::create ()
       attrib[i++] = WGL_TYPE_RGBA_ARB;
     }
     // color buffer spec
-    if (mNumColorBits != GL_DONT_CARE)
+    if (num_color_bits_ != GL_DONT_CARE)
     {
       attrib[i++] = WGL_RED_BITS_ARB;
-      attrib[i++] = mNumColorBits;
+      attrib[i++] = num_color_bits_;
       attrib[i++] = WGL_GREEN_BITS_ARB;
-      attrib[i++] = mNumColorBits;
+      attrib[i++] = num_color_bits_;
       attrib[i++] = WGL_BLUE_BITS_ARB;
-      attrib[i++] = mNumColorBits;
+      attrib[i++] = num_color_bits_;
       attrib[i++] = WGL_ALPHA_BITS_ARB;
-      attrib[i++] = mNumColorBits;
+      attrib[i++] = num_color_bits_;
     }
     // double buffer spec
-    if (mDoubleBuffer != GL_DONT_CARE)
+    if (double_buffer_ != GL_DONT_CARE)
     {
       attrib[i++] = WGL_DOUBLE_BUFFER_ARB;
-      attrib[i++] = mDoubleBuffer ? GL_TRUE : GL_FALSE;;
+      attrib[i++] = double_buffer_ ? GL_TRUE : GL_FALSE;;
     }
     // aux buffer spec
-    if (mNumAuxBuffers != GL_DONT_CARE)
+    if (num_aux_buffers_ != GL_DONT_CARE)
     {
       attrib[i++] = WGL_AUX_BUFFERS_ARB;
-      attrib[i++] = mNumAuxBuffers;
+      attrib[i++] = num_aux_buffers_;
     }
     // depth buffer spec
-    if (mNumDepthBits != GL_DONT_CARE)
+    if (num_depth_bits_ != GL_DONT_CARE)
     {
       attrib[i++] = WGL_DEPTH_BITS_ARB;
-      attrib[i++] = mNumDepthBits;
+      attrib[i++] = num_depth_bits_;
     }
     // stencil buffer spec
-    if (mNumStencilBits != GL_DONT_CARE)
+    if (num_stencil_bits_ != GL_DONT_CARE)
     {
       attrib[i++] = WGL_STENCIL_BITS_ARB;
-      attrib[i++] = mNumStencilBits;
+      attrib[i++] = num_stencil_bits_;
     }
     // accum buffer spec
-    if (mNumAccumBits != GL_DONT_CARE)
+    if (num_accum_bits_ != GL_DONT_CARE)
     {
       attrib[i++] = WGL_ACCUM_RED_BITS_ARB;
-      attrib[i++] = mNumAccumBits;
+      attrib[i++] = num_accum_bits_;
       attrib[i++] = WGL_ACCUM_GREEN_BITS_ARB;
-      attrib[i++] = mNumAccumBits;
+      attrib[i++] = num_accum_bits_;
       attrib[i++] = WGL_ACCUM_BLUE_BITS_ARB;
-      attrib[i++] = mNumAccumBits;
+      attrib[i++] = num_accum_bits_;
       attrib[i++] = WGL_ACCUM_ALPHA_BITS_ARB;
-      attrib[i++] = mNumAccumBits;
+      attrib[i++] = num_accum_bits_;
     }
     // render to texture
-    if (mRenderTex)
+    if (render_tex_)
     {
-      if (mFormat == GL_FLOAT &&  mNV_float_buffer)
+      if (format_ == GL_FLOAT &&  mNV_float_buffer)
       {
         attrib[i++] = WGL_BIND_TO_TEXTURE_RECTANGLE_FLOAT_RGBA_NV;
         attrib[i++] = GL_TRUE;
@@ -654,10 +654,10 @@ Pbuffer::create ()
 
     // allocate the buffer
     i = 0;
-    if (mRenderTex)
+    if (render_tex_)
     {
       // format and target
-      if (mFormat == GL_FLOAT && mNV_float_buffer)
+      if (format_ == GL_FLOAT && mNV_float_buffer)
       {
         attrib[i++] = WGL_TEXTURE_FORMAT_ARB;
         attrib[i++] = WGL_TEXTURE_FLOAT_RGBA_NV;
@@ -709,44 +709,44 @@ Pbuffer::create ()
     // get actual size
     wglQueryPbufferARB(impl_->pbuffer_, WGL_PBUFFER_WIDTH_ARB, &width_);
     wglQueryPbufferARB(impl_->pbuffer_, WGL_PBUFFER_HEIGHT_ARB, &height_);
-    if (mRenderTex)
+    if (render_tex_)
     {
       // create pbuffer texture object
-      glGenTextures(1, &mTex);
-      if (mFormat == GL_FLOAT)
+      glGenTextures(1, &tex_);
+      if (format_ == GL_FLOAT)
       {
         if (mNV_float_buffer)
         {
-          mTexTarget = GL_TEXTURE_RECTANGLE_NV;
-          if (mNumColorBits == 16)
-            mTexFormat = GL_FLOAT_RGBA16_NV;
+          tex_target_ = GL_TEXTURE_RECTANGLE_NV;
+          if (num_color_bits_ == 16)
+            tex_format_ = GL_FLOAT_RGBA16_NV;
           else
-            mTexFormat = GL_FLOAT_RGBA32_NV;
+            tex_format_ = GL_FLOAT_RGBA32_NV;
         }
         else
         {
-          mTexTarget = GL_TEXTURE_2D;
+          tex_target_ = GL_TEXTURE_2D;
         }
       }
       else
       {
-        mTexTarget = GL_TEXTURE_2D;
-        mTexFormat = GL_RGBA;
+        tex_target_ = GL_TEXTURE_2D;
+        tex_format_ = GL_RGBA;
       }
-      glBindTexture(mTexTarget, mTex);
+      glBindTexture(tex_target_, tex_);
 #ifdef GL_CLAMP_TO_EDGE
-      glTexParameteri(mTexTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      glTexParameteri(mTexTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      glTexParameteri(tex_target_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(tex_target_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 #else
-      glTexParameteri(mTexTarget, GL_TEXTURE_WRAP_S, GL_CLAMP);
-      glTexParameteri(mTexTarget, GL_TEXTURE_WRAP_T, GL_CLAMP);
+      glTexParameteri(tex_target_, GL_TEXTURE_WRAP_S, GL_CLAMP);
+      glTexParameteri(tex_target_, GL_TEXTURE_WRAP_T, GL_CLAMP);
 #endif
-      glTexParameteri(mTexTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      glTexParameteri(mTexTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      glTexParameteri(tex_target_, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(tex_target_, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
       if (!mATI_render_texture)
       {
         unsigned char* data = scinew unsigned char[width_*height_*4];
-        glTexImage2D(mTexTarget, 0, mTexFormat, width_, height_, 0,
+        glTexImage2D(tex_target_, 0, tex_format_, width_, height_, 0,
                      GL_RGBA, GL_UNSIGNED_BYTE, data);
         delete [] data;
       }
@@ -800,7 +800,7 @@ Pbuffer::create ()
     {
       mSupported = true;
     }
-    //       || (mRenderTex && !mATI_render_texture)
+    //       || (render_tex_ && !mATI_render_texture)
 
     if (mSupported && mATI_render_texture)
     {
@@ -1101,7 +1101,6 @@ Pbuffer::is_current ()
   return (impl_->rc_ == wglGetCurrentContext());
 #endif
 }
-
 
 void
 Pbuffer::swapBuffers ()
