@@ -84,6 +84,8 @@ private:
 
   GuiDouble gui_sampling_rate_hi_;
   GuiDouble gui_sampling_rate_lo_;
+  GuiDouble gui_gradient_min_;
+  GuiDouble gui_gradient_max_;;
   GuiInt gui_adaptive_;
   GuiInt gui_cmap_size_;
   GuiInt gui_sw_raster_;
@@ -119,6 +121,8 @@ VolumeVisualizer::VolumeVisualizer(GuiContext* ctx)
     control_id(-1),
     gui_sampling_rate_hi_(ctx->subVar("sampling_rate_hi")),
     gui_sampling_rate_lo_(ctx->subVar("sampling_rate_lo")),
+    gui_gradient_min_(ctx->subVar("gradient_min")),
+    gui_gradient_max_(ctx->subVar("gradient_max")),
     gui_adaptive_(ctx->subVar("adaptive")),
     gui_cmap_size_(ctx->subVar("cmap_size")),
     gui_sw_raster_(ctx->subVar("sw_raster")),
@@ -314,6 +318,8 @@ VolumeVisualizer::execute()
     gui_num_slices_.set(-1);
   }
   
+  volren_->set_gradient_range(gui_gradient_min_.get(), 
+			      gui_gradient_max_.get());
   volren_->set_sampling_rate(gui_sampling_rate_hi_.get());
   volren_->set_interactive_rate(gui_sampling_rate_lo_.get());
   volren_->set_adaptive(gui_adaptive_.get());

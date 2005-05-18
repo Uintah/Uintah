@@ -72,6 +72,8 @@ VolumeRenderer::VolumeRenderer(TextureHandle tex,
                                ColorMapHandle cmap1, ColorMap2Handle cmap2,
                                int tex_mem):
   TextureRenderer(tex, cmap1, cmap2, tex_mem),
+  grange_(1.0),
+  goffset_(0.0),
   shading_(false),
   ambient_(0.5),
   diffuse_(0.5),
@@ -184,6 +186,7 @@ VolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
   di_ = 0;
   mutex_.unlock();
 }
+
 
 void
 VolumeRenderer::draw_volume()
@@ -403,7 +406,7 @@ VolumeRenderer::draw_volume()
     }
     shader->bind();
   }
-  
+
   if(use_shading) {
     // set shader parameters
     Vector l(light_pos[0], light_pos[1], light_pos[2]);
@@ -417,6 +420,7 @@ VolumeRenderer::draw_volume()
     l.safe_normalize();
     shader->setLocalParam(0, l.x(), l.y(), l.z(), 1.0);
     shader->setLocalParam(1, ambient_, diffuse_, specular_, shine_);
+    shader->setLocalParam(2, grange_, goffset_, 0.0, 0.0);
   }
   
   //--------------------------------------------------------------------------
@@ -740,7 +744,8 @@ VolumeRenderer::multi_level_draw()
       }
     }
   }
-  shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0, use_shading, false,
+  shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0,
+				       use_shading, false,
 				       use_fog, blend_mode);
   if(shader) {
     if(!shader->valid()) {
