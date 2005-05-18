@@ -38,12 +38,15 @@
  *   Copyright (C) 2004 SCI Institute
  */
 
+#include <sci_defs/babel_defs.h>
 
 #include <SCIRun/Internal/FrameworkProperties.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/PortInstance.h>
 #include <SCIRun/CCA/CCAComponentModel.h>
-#include <SCIRun/Babel/BabelComponentModel.h>
+#if HAVE_BABEL
+ #include <SCIRun/Babel/BabelComponentModel.h>
+#endif
 #include <SCIRun/Vtk/VtkComponentModel.h>
 #include <SCIRun/Corba/CorbaComponentModel.h>
 #include <Core/OS/Dir.h>
@@ -114,7 +117,9 @@ void FrameworkProperties::getSidlPaths()
     } else {
         std::string srcDir(sci_getenv("SCIRUN_SRCDIR"));
         sArray.push_back(srcDir + CCAComponentModel::DEFAULT_PATH);
+#if HAVE_BABEL
         sArray.push_back(srcDir + BabelComponentModel::DEFAULT_PATH);
+#endif
         sArray.push_back(srcDir + VtkComponentModel::DEFAULT_PATH);
         sArray.push_back(srcDir + CorbaComponentModel::DEFAULT_PATH);
         frameworkProperties->putStringArray("sidl_xml_path", sArray);
