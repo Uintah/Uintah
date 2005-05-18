@@ -360,7 +360,9 @@ ostream& operator<<(ostream& out, const Grid& grid)
   out << "Grid has " << grid.numLevels() << " level(s)" << endl;
   for ( int levelIndex = 0; levelIndex < grid.numLevels(); levelIndex++ ) {
     LevelP level = grid.getLevel( levelIndex );
-    out << "  Level " << level->getID() << " has " << level->numPatches() << " patch(es)" << endl;
+    out << "  Level " << level->getID() 
+        << ", indx: "<< level->getIndex()
+        << " has " << level->numPatches() << " patch(es)" << endl;
     for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
       const Patch* patch = *patchIter;
       out << *patch << endl;
