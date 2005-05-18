@@ -69,17 +69,14 @@
 #define JGS_MATLABIO_MATLABFILE_H 1
 
 
-#include <Packages/MatlabInterface/Core/Datatypes/matfilebase.h>
-#include <Packages/MatlabInterface/Core/Datatypes/matfile.h>
-#include <Packages/MatlabInterface/Core/Datatypes/matfiledata.h>
-#include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>
+#include "matfilebase.h"
+#include "matfile.h"
+#include "matfiledata.h"
+#include "matlabarray.h"
 
-#include <sgi_stl_warnings_off.h> 
 #include <vector>
 #include <string>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
-
  
 namespace MatlabIO {
 

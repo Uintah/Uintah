@@ -31,6 +31,7 @@
 #include <Core/Services/SimpleService.h>
 #include <Core/SystemCall/SystemCall.h>
 #include <Packages/MatlabInterface/Services/MatlabEngine.h>
+#include <Core/Util/Environment.h>
 #include <sys/time.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
@@ -327,9 +328,7 @@ bool MatlabEngine::init_service(IComPacketHandle &packet)
         session = p;
 
     }
-
-	
-    setsession(session);
+  setsession(session);
     
   putmsg("MatlabEngine: getting matlab process handle");
         
@@ -412,7 +411,7 @@ bool MatlabEngine::init_service(IComPacketHandle &packet)
   if (!(matlab_handle_->start_test_))
     {
       // We print it backwards in case there is a loop back, this way
-      // it test matlab engine properly
+      // it tests matlab engine properly
       std::string testcode = "fprintf(1,fliplr('n\\n\\TSET-DESSAP-ENIGNEBALTAMn\\'))\n";
       matlab_handle_->put_stdin_int(testcode);
       matlab_handle_->start_test_ = true;
@@ -565,7 +564,7 @@ void MatlabEngine::handle_service(IComPacketHandle &packet)
 
 std::string     MatlabEngine::addcode(std::string &mfile)
 {
-  // This function wraps an error detection mechanism arounf the m-code the
+  // This function wraps an error detection mechanism around the m-code the
   // user supplied
 
   size_t lastslash = mfile.size()+1;
@@ -586,9 +585,20 @@ std::string     MatlabEngine::addcode(std::string &mfile)
       command = mfile;
     }
 
+  const char *srcdir = sci_getenv("SCIRUN_SRCDIR");
+  std::string matlablibrarypath = srcdir + string("/Packages/MatlabInterface/MatlabLibrary");
+
   std::string newcode;
   newcode += "\nfprintf(1,'\\nSCIRUN-MATLABINTERFACE-MATLABENGINE-START\\n');\n";
+
   newcode += "try\n";
+  newcode += "addpath('" + matlablibrarypath + "')\n";
+  newcode += "scirunMountLibrary\n";
+  newcode += "\ncatch\n";
+  newcode += "disp('Failed to mount SCIRun/Matlab function library')\n";
+  newcode += "end\n";
+  newcode += "try\n";
+  
   if(path != "") newcode += "addpath('" + path + "')\n";
   newcode += command;
   newcode += "\ncatch\n";
