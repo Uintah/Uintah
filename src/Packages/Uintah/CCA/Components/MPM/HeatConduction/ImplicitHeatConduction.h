@@ -34,6 +34,9 @@ namespace Uintah {
     void scheduleFormHCQ(               SchedulerP&, const PatchSet*,
                                         const MaterialSet*);
 
+    void scheduleAdjustHCQAndHCKForBCs( SchedulerP&, const PatchSet*,
+                                        const MaterialSet*);
+
     void scheduleDestroyHCMatrix(       SchedulerP&, const PatchSet*,
                                         const MaterialSet*);
 
@@ -94,6 +97,12 @@ namespace Uintah {
                                          DataWarehouse* old_dw,
                                          DataWarehouse* new_dw);
 
+    void adjustHCQAndHCKForBCs(          const ProcessorGroup*,
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* matls,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw);
+
     void solveForTemp(                   const ProcessorGroup*,
                                          const PatchSubset* patches,
                                          const MaterialSubset* matls,
@@ -116,6 +125,7 @@ namespace Uintah {
     MPMLabel* lb;
     MPMFlags* d_flag;
     bool do_IHC;
+    bool d_HC_transient;
     const PatchSet* d_perproc_patches;
 #ifdef HAVE_PETSC
     vector<MPMPetscSolver*> d_HC_solver;

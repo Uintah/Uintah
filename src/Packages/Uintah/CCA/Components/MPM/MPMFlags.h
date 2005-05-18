@@ -60,6 +60,7 @@ namespace Uintah {
 
     int         d_extraSolverFlushes;  // Have PETSc do more flushes to save memory
     bool        d_doImplicitHeatConduction;
+    bool        d_doTransientImplicitHeatConduction;
 
     ParticleInterpolator* d_interpolator;
 

@@ -25,6 +25,7 @@ MPMPetscSolver::MPMPetscSolver()
   d_B = 0;
   d_diagonal = 0;
   d_x = 0;
+  d_t = 0;
 #endif
 }
 
@@ -136,7 +137,7 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
     }
     d_petscLocalToGlobal[patch].copyPointer(l2g);
   }
-
+  d_DOFsPerNode=DOFsPerNode;
 }
 
 void MPMPetscSolver::solve()
@@ -145,8 +146,10 @@ void MPMPetscSolver::solve()
   PC          precond;           
   KSP         solver;
 #if 0
-  PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_ASCII_MATLAB);
+  if(d_DOFsPerNode<3){
+  PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_ASCII_DENSE);
   MatView(d_A,PETSC_VIEWER_STDOUT_WORLD);
+  }
 #endif
   KSPCreate(PETSC_COMM_WORLD,&solver);
   KSPSetOperators(solver,d_A,d_A,DIFFERENT_NONZERO_PATTERN);
@@ -227,6 +230,7 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
     VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&d_B);
     VecDuplicate(d_B,&d_diagonal);
     VecDuplicate(d_B,&d_x);
+    VecDuplicate(d_B,&d_t);
   //}
 #endif
 
@@ -243,6 +247,7 @@ void MPMPetscSolver::destroyMatrix(bool recursion)
     VecSet(&zero,d_B);
     VecSet(&zero,d_diagonal);
     VecSet(&zero,d_x);
+    VecSet(&zero,d_t);
   } else {
     PetscTruth exists;
     PetscObjectExists((PetscObject)d_A,&exists);
@@ -251,6 +256,7 @@ void MPMPetscSolver::destroyMatrix(bool recursion)
       VecDestroy(d_B);
       VecDestroy(d_diagonal);
       VecDestroy(d_x);
+      VecDestroy(d_t);
     }
   }
 #endif
@@ -274,11 +280,34 @@ void MPMPetscSolver::fillVector(int i,double v)
 #endif
 }
 
+void MPMPetscSolver::fillTemporaryVector(int i,double v)
+{
+#ifdef HAVE_PETSC
+  PetscScalar value = v;
+  VecSetValues(d_t,1,&i,&value,INSERT_VALUES);
+#endif
+}
+
 void MPMPetscSolver::assembleVector()
 {
 #ifdef HAVE_PETSC
   VecAssemblyBegin(d_B);
   VecAssemblyEnd(d_B);
+#endif
+}
+
+void MPMPetscSolver::assembleTemporaryVector()
+{
+#ifdef HAVE_PETSC
+  VecAssemblyBegin(d_t);
+  VecAssemblyEnd(d_t);
+#endif
+}
+
+void MPMPetscSolver::applyBCSToRHS()
+{
+#ifdef HAVE_PETSC
+  MatMultAdd(d_A,d_t,d_B,d_B);
 #endif
 }
 
@@ -345,8 +374,6 @@ void MPMPetscSolver::removeFixedDOF(int num_nodes)
   MatAssemblyEnd(d_A,MAT_FINAL_ASSEMBLY);
 #endif
 }
-
-
 
 void MPMPetscSolver::finalizeMatrix()
 {
