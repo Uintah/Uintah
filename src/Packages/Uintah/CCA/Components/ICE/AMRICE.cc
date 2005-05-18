@@ -672,10 +672,12 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
   // All values must be initialized at this point
   if(subCycleProgress_var < 1.e-10){  
     IntVector badCell;
-    if( isEqual<varType>(varType(d_EVIL_NUM),Q, badCell) ){
+    if( isEqual<varType>(varType(d_EVIL_NUM),patch,Q, badCell) ){
       ostringstream warn;
       warn <<"ERROR AMRICE::(somewhere in the refine code) "
-           << "detected an uninitialized variable "<< badCell << "\n ";        
+           << "detected an uninitialized variable "<< badCell 
+           << " Patch " << patch->getID() << " Level idx "
+           <<fineLevel->getIndex()<<"\n ";        
       throw InvalidValue(warn.str());
     }
   }
@@ -712,11 +714,11 @@ void AMRICE::addRefineDependencies(Task* task,
  Function~  AMRICE::refineCoarseFineBoundaries--    D O U B L E  
 _____________________________________________________________________*/
 void AMRICE::refineCoarseFineBoundaries(const Patch* patch,
-                           CCVariable<double>& val,
-                           DataWarehouse* fine_new_dw,
-                           const VarLabel* label,
-                           int matl,
-                           double subCycleProgress_var)
+                                        CCVariable<double>& val,
+                                        DataWarehouse* fine_new_dw,
+                                        const VarLabel* label,
+                                        int matl,
+                                        double subCycleProgress_var)
 {
   const Level* level = patch->getLevel();
   const Level* coarseLevel = level->getCoarserLevel().get_rep();
@@ -737,11 +739,11 @@ void AMRICE::refineCoarseFineBoundaries(const Patch* patch,
  Function~  AMRICE::refineCoarseFineBoundaries--    V E C T O R 
 _____________________________________________________________________*/
 void AMRICE::refineCoarseFineBoundaries(const Patch* patch,
-                           CCVariable<Vector>& val,
-                           DataWarehouse* fine_new_dw,
-                           const VarLabel* label,
-                           int matl,
-                           double subCycleProgress_var)
+                                        CCVariable<Vector>& val,
+                                        DataWarehouse* fine_new_dw,
+                                        const VarLabel* label,
+                                        int matl,
+                                        double subCycleProgress_var)
 {
   const Level* level = patch->getLevel();
   const Level* coarseLevel = level->getCoarserLevel().get_rep();

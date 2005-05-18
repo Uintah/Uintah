@@ -881,14 +881,12 @@ namespace Uintah {
        _____________________________________________________________________  */
       template<class T>
         bool isEqual(T value,
+                     const Patch* patch,
                      CCVariable<T>& q_CC, 
                      IntVector& cell )
-      {
-        IntVector l = q_CC.getLowIndex();
-        IntVector h = q_CC.getHighIndex();
-        CellIterator iterLim = CellIterator(l,h);
-        
-        for(CellIterator iter=iterLim; !iter.done();iter++) {
+      {   
+        for (CellIterator iter = patch->getExtraCellIterator(); 
+                         !iter.done(); iter++) {
           IntVector c = *iter;
           if (isEqual(q_CC[c],value)){
             cell = c;
