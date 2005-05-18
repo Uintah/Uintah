@@ -9,7 +9,7 @@ experimental component models.
 \section building1 SCIRun2 is not SCIRun
 
 SCIRun2 is not
-<a href="http://software.sci.utah.edu/scirun-biopse_1_20.html">SCIRun</a>.
+<a href="http://software.sci.utah.edu/scirun.html">SCIRun</a>.
 SCIRun2, however, does currently have dependencies on many of the original
 SCIRun components and classes.
 Because of these dependencies (and for other historical reasons) building
