@@ -312,6 +312,9 @@ private:
   void scheduleFormHCQ(             SchedulerP&, const PatchSet*,
                                     const MaterialSet*);
 
+  void scheduleAdjustHCQAndHCKForBCs(SchedulerP&, const PatchSet*,
+                                     const MaterialSet*);
+
   void scheduleUpdateGridKinematics(SchedulerP&, const PatchSet*, 
 				    const MaterialSet*);
 

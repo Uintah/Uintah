@@ -17,6 +17,7 @@
 #ifdef HAVE_PETSC
 extern "C" {
 #include "petscksp.h"
+#include "petscmat.h"
 }
 #endif
 
@@ -56,6 +57,8 @@ namespace Uintah {
 
     void fillVector(int, double);
 
+    void fillTemporaryVector(int, double);
+
     void copyL2G(Array3<int>& l2g, const Patch* patch);
 
     void removeFixedDOF(int num_nodes);
@@ -69,6 +72,10 @@ namespace Uintah {
     int getRHS(vector<double>& QPetsc);
 
     void assembleVector();
+
+    void assembleTemporaryVector();
+
+    void applyBCSToRHS();
 
     set<int> d_DOF;
   private:
@@ -86,6 +93,7 @@ namespace Uintah {
     Vec d_B;
     Vec d_diagonal;
     Vec d_x;
+    Vec d_t;
 #endif
     inline bool compare(double num1, double num2)
       {

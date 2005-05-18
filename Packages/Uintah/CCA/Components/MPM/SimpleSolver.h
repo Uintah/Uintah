@@ -42,6 +42,8 @@ namespace Uintah {
     void fillMatrix(int,int[],int,int j[],double v[]);
     
     void fillVector(int, double);
+
+    void fillTemporaryVector(int, double);
     
     void copyL2G(Array3<int>& l2g, const Patch* patch);
 
@@ -57,6 +59,10 @@ namespace Uintah {
 
     void assembleVector();
 
+    void assembleTemporaryVector();
+
+    void applyBCSToRHS();
+
     set<int> d_DOF;
   private:
 
@@ -71,6 +77,7 @@ namespace Uintah {
     SparseMatrix<double,int> KK;
     valarray<double> Q;
     valarray<double> d_x;
+    valarray<double> d_t;
 
     inline bool compare(double num1, double num2)
       {
