@@ -360,6 +360,7 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
 
   Tk_MakeWindowExist(tkwin_);
 
+#ifdef _WIN32
    {
      fprintf(stderr,"Before TkWinGet...\n");
      HWND hWND = Tk_GetHWND(Tk_WindowId(tkwin_));
@@ -380,6 +381,7 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
     fprintf(stderr, "spf == 0\n");
   PrintErr("TkOpenGLContext::TKCopenGLContext: SetPixelFormat");
 
+#endif
 
   x11_win_ = Tk_WindowId(tkwin_);
   if (!x11_win_) throw scinew InternalError("Cannot get Tk X11 window ID");
