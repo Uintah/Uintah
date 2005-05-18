@@ -43,6 +43,8 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
         setGlobal $this-blend_res 8
 	setGlobal $this-sampling_rate_lo 1.0
 	setGlobal $this-sampling_rate_hi 4.0
+	setGlobal $this-gradient_min 0.0
+	setGlobal $this-gradient_max 1.0
         setGlobal $this-adaptive 1
         setGlobal $this-cmap_size 7
         setGlobal $this-sw_raster 0
@@ -91,7 +93,7 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 
 	#frame for tabs
 	frame $w.main.options
-	pack $w.main.options -padx 2 -pady 2 -side top -fill x -expand 1
+	pack $w.main.options -padx 2 -pady 2 -side top -fill both -expand 1
 	#frame for display
 	frame $w.main.options.disp -borderwidth 2
 	pack $w.main.options.disp -padx 2 -pady 2 -side left \
@@ -102,9 +104,9 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	    -labelpos nw -labeltext "Display Options"
 	set dof [$w.main.options.disp.frame_title childsite]
 
-	iwidgets::tabnotebook $dof.tabs -height 320  -width 300 \
+	iwidgets::tabnotebook $dof.tabs -height 420  -width 300 \
 	    -raiseselect true
-	pack $dof.tabs -side top -fill x -expand yes
+	pack $dof.tabs -side top -fill both -expand yes
 
 	add_default_tab $dof
 	add_sampling_tab $dof
@@ -112,7 +114,7 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	$dof.tabs view 0
 	$dof.tabs configure -tabpos "n"
 	
-	pack $w.main.options.disp.frame_title -side top -expand yes -fill x
+	pack $w.main.options.disp.frame_title -side top -expand yes -fill both
 	
 	if { [set $this-multi_level] > 1 } {
 	    add_multires_tab $dof
@@ -234,8 +236,10 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
             -showvalue true -resolution 0.1 \
             -orient horizontal \
 
+
 	pack $tab.l $tab.srate_hi $tab.adaptive \
-            $tab.srate_lo -side top -fill x -padx 4 -pady 2
+            $tab.srate_lo \
+	    -side top -fill x -padx 4 -pady 2
 	
 	bind $tab.srate_hi <ButtonRelease> $n
 	bind $tab.srate_lo <ButtonRelease> $n
@@ -283,34 +287,50 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	frame $tab.f1 -relief groove -borderwidth 2
 	pack $tab.f1 -padx 2 -pady 2 -fill x
 	label $tab.f1.material -text "Material"
-	global $this-ambient
+
 	scale $tab.f1.ambient -variable $this-ambient \
 	    -from 0.0 -to 1.0 -label "Ambient" \
 	    -showvalue true -resolution 0.001 \
 	    -orient horizontal
-	global $this-diffuse
+
 	scale $tab.f1.diffuse -variable $this-diffuse \
 	    -from 0.0 -to 1.0 -label "Diffuse" \
 	    -showvalue true -resolution 0.001 \
 	    -orient horizontal
-	global $this-specular
+
 	scale $tab.f1.specular -variable $this-specular \
 	    -from 0.0 -to 1.0 -label "Specular" \
 	    -showvalue true -resolution 0.001 \
 	    -orient horizontal
-	global $this-shine
+
 	scale $tab.f1.shine -variable $this-shine \
 	    -from 1.0 -to 128.0 -label "Shine" \
 	    -showvalue true -resolution 1.0 \
 	    -orient horizontal
+
+	scale $tab.f1.gradient_min -variable $this-gradient_min \
+            -from 0.0 -to 1.0 -label "Gradient Min" \
+            -showvalue true -resolution 0.01 \
+            -orient horizontal
+
+	scale $tab.f1.gradient_max -variable $this-gradient_max \
+            -from 0.0 -to 1.0 -label "Gradient Max" \
+            -showvalue true -resolution 0.01 \
+            -orient horizontal
+
 	pack $tab.f1.material $tab.f1.ambient $tab.f1.diffuse \
+	    $tab.f1.gradient_min \
+	    $tab.f1.gradient_max \
 	    $tab.f1.specular $tab.f1.shine \
 	    -side top -fill x -padx 4
+
 
         bind $tab.f1.ambient <ButtonRelease> $n
         bind $tab.f1.diffuse <ButtonRelease> $n
         bind $tab.f1.specular <ButtonRelease> $n
         bind $tab.f1.shine <ButtonRelease> $n
+        bind $tab.f1.gradient_min <ButtonRelease> $n
+        bind $tab.f1.gradient_max <ButtonRelease> $n
 
         change_shading_state [set $this-shading-button-state]
     }

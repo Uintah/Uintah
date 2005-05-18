@@ -56,6 +56,9 @@ public:
   void set_interactive_rate(double irate);
   void set_interactive_mode(bool mode);
   void set_adaptive(bool b);
+  inline void set_gradient_range(double min, double max) { 
+    grange_ = 1/(max-min); goffset_ = -min/(max-min); 
+  }
   inline void set_shading(bool shading) { shading_ = shading; }
   inline void set_material(double ambient, double diffuse, double specular, double shine)
   { ambient_ = ambient; diffuse_ = diffuse; specular_ = specular; shine_ = shine; }
@@ -75,6 +78,7 @@ public:
   void set_draw_level( int i, bool b){ draw_level_[i] = b; }
   void set_level_alpha(int i, double v) { level_alpha_[i] = v; }
 protected:
+  double grange_, goffset_;
   bool shading_;
   double ambient_, diffuse_, specular_, shine_;
   int light_;
