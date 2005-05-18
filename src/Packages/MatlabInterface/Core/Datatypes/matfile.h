@@ -85,11 +85,9 @@
 #include <stdio.h>
 #include <zlib.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <stack>
 #include <iostream> 
-#include <sgi_stl_warnings_on.h>
 
 
 #include "matfilebase.h"

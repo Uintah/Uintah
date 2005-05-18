@@ -86,15 +86,13 @@
 #ifndef JGS_MATLABIO_MATLABARRAY_H
 #define JGS_MATLABIO_MATLABARRAY_H 1
 
-#include <Packages/MatlabInterface/Core/Datatypes/matfilebase.h>
-#include <Packages/MatlabInterface/Core/Datatypes/matfile.h>
+#include "matfilebase.h"
+#include "matfile.h"
 
-#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
 #include <iostream>
 #include <sstream>
-#include <sgi_stl_warnings_on.h>
 
 #include <stdlib.h>
  
