@@ -167,6 +167,27 @@ void SimpleSolver::assembleVector()
 
 }
 
+void SimpleSolver::fillTemporaryVector(int i,double v)
+{
+  d_t[i] = v;
+}
+                                                                                
+void SimpleSolver::assembleTemporaryVector()
+{
+                                                                                
+}
+
+void SimpleSolver::applyBCSToRHS()
+{
+  for(int ii=0;ii<d_totalNodes;ii++){
+     double rowvecprod=0.;
+     for(int jj=0;jj<d_totalNodes;jj++){
+        rowvecprod+=KK[ii][jj]*d_t[jj];
+     }
+     Q[ii]=Q[ii]+rowvecprod;
+  }
+}
+
 void SimpleSolver::copyL2G(Array3<int>& mapping,const Patch* patch)
 {
   mapping.copy(d_petscLocalToGlobal[patch]);

@@ -321,6 +321,7 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
   scheduleFindFixedHCDOF(                 sched, d_perproc_patches,matls);
   scheduleFormHCStiffnessMatrix(          sched, d_perproc_patches,matls);
   scheduleFormHCQ(                        sched, d_perproc_patches,matls);
+  scheduleAdjustHCQAndHCKForBCs(          sched, d_perproc_patches,matls);
   scheduleSolveForTemp(                   sched, d_perproc_patches,matls);
   scheduleGetTemperatureIncrement(        sched, d_perproc_patches,matls);
 
@@ -578,6 +579,13 @@ void ImpMPM::scheduleFormHCQ(SchedulerP& sched,const PatchSet* patches,
                              const MaterialSet* matls)
 {
   heatConductionModel->scheduleFormHCQ(sched,patches,matls);
+}
+
+void ImpMPM::scheduleAdjustHCQAndHCKForBCs(SchedulerP& sched,
+                                           const PatchSet* patches,
+                                           const MaterialSet* matls)
+{
+  heatConductionModel->scheduleAdjustHCQAndHCKForBCs(sched,patches,matls);
 }
 
 void ImpMPM::scheduleSolveForDuCG(SchedulerP& sched,
