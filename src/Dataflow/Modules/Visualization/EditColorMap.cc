@@ -430,8 +430,9 @@ EditColorMap::DrawGraphs( int flush)
   }
 
   ctxs_[0]->swap();
-
   CHECK_OPENGL_ERROR("");
+  ctxs_[0]->release();
+  gui->unlock();
 
   // Update the colormap.
   cmap = scinew ColorMap(rgbs_, rgbT_, alphas_, alphaT_, resolution_.get());
@@ -526,7 +527,6 @@ EditColorMap::DrawGraphs( int flush)
   ctxs_[1]->swap();
   CHECK_OPENGL_ERROR("");
   ctxs_[1]->release();
-
   gui->unlock();
 
   if ( flush )
@@ -587,6 +587,7 @@ EditColorMap::tcl_command( GuiArgs& args, void* userdata)
     int win = 0;
     string_to_int(args[2], win);
     makeCurrent(win);
+    gui->unlock();
   }else if (args[1] == "unpickle") {
      tcl_unpickle();
   }else if (args[1] == "toggle-hsv") {
@@ -1055,19 +1056,9 @@ EditColorMap::makeCurrent(int win)
       height = 64;
     }
 	
-#if 0
-    if (!Tk_NameToWindow(the_interp, ccast_unsafe(myname),
-			 Tk_MainWindow(the_interp))) {
-      warning("Unable to locate window!");      
-      gui->unlock(); // unlock mutex
-      return 0;
-    }
-#endif
-
     ctxs_[win] = scinew TkOpenGLContext(myname, 0, 512, height);
     winX[win] = 512;//ctxs_[win]->width();
-    winY[win] = height;//ctxs_[win]->height();
-    
+    winY[win] = height;//ctxs_[win]->height();    
   }	
 
   if(!ctxs_[win])
