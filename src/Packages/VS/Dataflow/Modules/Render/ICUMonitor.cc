@@ -268,16 +268,20 @@ public:
     module_(module), 
     throttle_(), 
     tvh_(tvh),
-    dead_(0) 
+    dead_(0),
+    lock_("RTDraw mutex")
   {};
   virtual ~RTDraw();
   virtual void run();
   void set_dead(bool p) { dead_ = p; }
+  void lock() { lock_.lock(); }
+  void unlock() { lock_.unlock(); }
 private:
   ICUMonitor            *module_;
   TimeThrottle	         throttle_;
   TimeViewerHandle       tvh_;
   bool		         dead_;
+  Mutex                  lock_;
 };
 
 RTDraw::~RTDraw()
@@ -288,13 +292,15 @@ void
 RTDraw::run()
 {
   throttle_.start();
-  const double inc = 1./20.; // the rate at which we refresh the monitor.
+  const double inc = 1./30.; // the rate at which we refresh the monitor.
   double t = throttle_.time();
   while (!dead_) {
+    lock();
     t = throttle_.time();
     throttle_.wait_for_time(t + inc);
     module_->inc_time(tvh_->view_elapsed_since_start());
     module_->redraw_all();
+    unlock();
   }
 }
 
@@ -1523,7 +1529,7 @@ ICUMonitor::execute()
     error("Unable to initialize iport Nrrd1.");
     return;
   }
-
+  if (runner_) runner_->lock();
   nrrd1_port->get(data_);
 
   if (!data_.get_rep())
@@ -1551,6 +1557,8 @@ ICUMonitor::execute()
   }
 
   nrrd2_port->get(data2_);
+
+  if (runner_) runner_->unlock();
 
   if (data2_.get_rep() && data2_->nrrd->axis[1].size != 
       data_->nrrd->axis[1].size)
