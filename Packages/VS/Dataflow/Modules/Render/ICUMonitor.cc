@@ -288,14 +288,27 @@ RTDraw::~RTDraw()
 {
 }
 
+#define SHOW_FRAME_RATE 0
 void
 RTDraw::run()
 {
   throttle_.start();
-  const double inc = 1./20.; // the rate at which we refresh the monitor.
+  const double inc = 1./35; // the rate at which we refresh the monitor.
   double t = throttle_.time();
+#if SHOW_FRAME_RATE
+  double tlast = t;
+  int f = 0;
+#endif
   while (!dead_) {
-     t = throttle_.time();
+    t = throttle_.time();
+#if SHOW_FRAME_RATE
+    f++;
+    if (t - tlast > 1.0) {
+      cerr << f << std::endl;
+      f = 0;
+      tlast = t;
+    }
+#endif
     throttle_.wait_for_time(t + inc);
     lock(); 
     module_->inc_time(tvh_->view_elapsed_since_start());
