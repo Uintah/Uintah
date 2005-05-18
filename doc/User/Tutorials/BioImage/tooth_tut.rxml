@@ -509,7 +509,7 @@ DEALINGS IN THE SOFTWARE.
 -->
 
     <figure id="fig.3dVolRen">
-      <title>Volume Rendering</title>
+      <title><ulink url="3dVolRen_hires.jpg">Volume Rendering</ulink></title>
       <mediaobject>
 	<textobject>
 	  <phrase>Volume Rendering in Volume Pane</phrase>
