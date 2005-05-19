@@ -44,7 +44,7 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	setGlobal $this-sampling_rate_lo 1.0
 	setGlobal $this-sampling_rate_hi 4.0
 	setGlobal $this-gradient_min 0.0
-	setGlobal $this-gradient_max 1.0
+	setGlobal $this-gradient_max 0.0
         setGlobal $this-adaptive 1
         setGlobal $this-cmap_size 7
         setGlobal $this-sw_raster 0
@@ -104,7 +104,7 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	    -labelpos nw -labeltext "Display Options"
 	set dof [$w.main.options.disp.frame_title childsite]
 
-	iwidgets::tabnotebook $dof.tabs -height 420  -width 300 \
+	iwidgets::tabnotebook $dof.tabs -height 430  -width 300 \
 	    -raiseselect true
 	pack $dof.tabs -side top -fill both -expand yes
 
@@ -319,9 +319,8 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
             -orient horizontal
 
 	pack $tab.f1.material $tab.f1.ambient $tab.f1.diffuse \
-	    $tab.f1.gradient_min \
-	    $tab.f1.gradient_max \
 	    $tab.f1.specular $tab.f1.shine \
+	    $tab.f1.gradient_min $tab.f1.gradient_max \
 	    -side top -fill x -padx 4
 
 
