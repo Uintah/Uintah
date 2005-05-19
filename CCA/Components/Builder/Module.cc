@@ -63,7 +63,7 @@ Module::Module(NetworkCanvasView *parent,
                const sci::cca::Services::pointer &services,
                const sci::cca::ComponentID::pointer &cid)
   : QFrame(parent, mName.c_str()), mName(mName), services(services),
-    cid(cid), steps(0)
+    cid(cid)
 {
   pd = PORT_DIST;
   pw = PORT_W;
