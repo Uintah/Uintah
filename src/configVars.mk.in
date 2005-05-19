@@ -365,7 +365,7 @@ LDFLAGS         := @LDFLAGS@ -L$(LIBDIR) $(CXXFLAGS)
 ASFLAGS         := @ASFLAGS@  $(ASFLAGS)
 F77		:= @F77@
 FFLAGS		:= @FFLAGS@ $(FFLAGS)
-F_LIBRARY	:= @F_LIB_FLAG@
+F_LIBRARY	:= @F_LIB_DIR_FLAG@ @F_LIB_FLAG@
 REPOSITORY_FLAGS := @REPOSITORY_FLAGS@
 
 ################################################################

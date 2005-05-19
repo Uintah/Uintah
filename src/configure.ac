@@ -2594,6 +2594,7 @@ AC_SUBST(INC_UNP_H)
 # Always check for fortran, since we now always try to enable blas
 
 F_LIB_FLAG=""
+F_LIB_DIR_FLAG=""
 
 _sci_lib=
 _sci_inc=
@@ -2653,6 +2654,7 @@ case $host in
 esac
 
 AC_SUBST(F_LIB_FLAG)
+AC_SUBST(F_LIB_DIR_FLAG)
 
 ##  --  search for Camal (Sandia meshing library) ------------------------
 
@@ -2675,7 +2677,14 @@ if test "$_sci_optional" != "optional" && test "$HAVE_F" != "yes"; then
    AC_MSG_ERROR(Fortran library not found but is required for CAMAL!)
 fi
 
-SCI_TRY_LINK(CAMAL,CAMAL library,,$_sci_inc,CMLTet202,$_sci_lib,$F_LIB_FLAG,,$_sci_optional)
+if test "$IS_OSX" = "yes"; then
+  SCI_TRY_LINK(CAMAL,CAMAL library,,$_sci_inc,CMLTet210 CMLUtl210,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,$_sci_optional)
+  if test "$HAVE_CAMAL" = "yes"; then
+    CAMAL_LIB_DIR_FLAG="$CAMAL_LIB_DIR_FLAG -Wl,-read_only_relocs,warning -single_module"
+  fi
+else
+  SCI_TRY_LINK(CAMAL,CAMAL library,,$_sci_inc,CMLTet202,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,$_sci_optional)
+fi
 
 if test "$HAVE_CAMAL" = "yes"; then
   DEF_CAMAL="#define HAVE_CAMAL 1"
@@ -3255,7 +3264,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
       DEF_PETSC_UNI="#define PETSC_UNI 1"
     else
     # Give it a shot on the old petsc-uni version
-      SCI_TRY_LINK(PETSC_UNI,
+      SCI_TRY_LINK(PETSC-UNI,
                    petsc libraries and headers (old),
                    petsc.h,
                    $_sci_inc /usr/include/petsc,
