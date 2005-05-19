@@ -740,13 +740,13 @@ IntVector Level::mapCellToCoarser(const IntVector& idx) const
   // you must add an offset to get the right
   // coarse cell. -Todd
   IntVector offset(0,0,0);
-  if (idx.x()< 0){
+  if (idx.x()< 0 && d_refinementRatio.x() > 1){
     offset.x((int)fmod((double)idx.x(),(double)d_refinementRatio.x()));
   }
-  if (idx.y()< 0){
+  if (idx.y()< 0 && d_refinementRatio.y() > 1){
     offset.y((int)fmod((double)idx.y(),(double)d_refinementRatio.y()));
   }  
-  if (idx.z()< 0){
+  if (idx.z()< 0 && d_refinementRatio.z() > 1){
     offset.z((int)fmod((double)idx.z(),(double)d_refinementRatio.z()));
   }
   return ratio + offset;
@@ -754,16 +754,17 @@ IntVector Level::mapCellToCoarser(const IntVector& idx) const
 
 IntVector Level::mapCellToFiner(const IntVector& idx) const
 {
-  IntVector fineCell = idx*grid->getLevel(d_index+1)->d_refinementRatio;
+  IntVector r_ratio = grid->getLevel(d_index+1)->d_refinementRatio;
+  IntVector fineCell = idx*r_ratio;
  
   IntVector offset(0,0,0);
-  if (idx.x()< 0){
+  if (idx.x()< 0 && r_ratio.x() > 1){
     offset.x(1);
   }
-  if (idx.y()< 0){      // If the coarse cell index is negative
-    offset.y(1);        // you must add an offset to get the right
-  }                     // fine cell. -Todd
-  if (idx.z()< 0){
+  if (idx.y()< 0 && r_ratio.y() > 1){   // If the coarse cell index is negative
+    offset.y(1);                        // you must add an offset to get the right
+  }                                     // fine cell. -Todd
+  if (idx.z()< 0 && r_ratio.z() > 1){
     offset.z(1);
   }    
   return fineCell + offset;
