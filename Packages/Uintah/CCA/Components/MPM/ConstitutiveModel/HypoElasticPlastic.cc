@@ -274,6 +274,12 @@ HypoElasticPlastic::~HypoElasticPlastic()
   delete d_eos;
 }
 
+HypoElasticPlastic* HypoElasticPlastic::clone()
+{
+  return scinew HypoElasticPlastic(*this);
+}
+
+
 void 
 HypoElasticPlastic::addParticleState(std::vector<const VarLabel*>& from,
                                      std::vector<const VarLabel*>& to)

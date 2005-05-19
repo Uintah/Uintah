@@ -206,6 +206,12 @@ ElasticPlastic::~ElasticPlastic()
   delete d_melt;
 }
 
+ElasticPlastic* ElasticPlastic::clone()
+{
+  return scinew ElasticPlastic(*this);
+}
+
+
 void
 ElasticPlastic::initializeLocalMPMLabels()
 {

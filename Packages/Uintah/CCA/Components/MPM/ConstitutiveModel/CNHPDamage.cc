@@ -28,9 +28,8 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-CNHPDamage::CNHPDamage(ProblemSpecP& ps, 
-                       MPMLabel* Mlb, 
-                       MPMFlags* Mflag):CNHDamage(ps, Mlb, Mflag)
+CNHPDamage::CNHPDamage(ProblemSpecP& ps, MPMLabel* Mlb, MPMFlags* Mflag)
+  :CNHDamage(ps, Mlb, Mflag)
 {
   initializeLocalMPMLabels();
   getPlasticityData(ps);
@@ -47,6 +46,12 @@ CNHPDamage::~CNHPDamage()
   // Destructor 
   VarLabel::destroy(pPlasticStrainLabel);
   VarLabel::destroy(pPlasticStrainLabel_preReloc);
+}
+
+
+CNHPDamage* CNHPDamage::clone()
+{
+  return scinew CNHPDamage(*this);
 }
 
 void 

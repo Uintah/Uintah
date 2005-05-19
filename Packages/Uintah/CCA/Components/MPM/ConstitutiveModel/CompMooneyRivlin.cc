@@ -56,7 +56,12 @@ CompMooneyRivlin::CompMooneyRivlin(const CompMooneyRivlin* cm)
 
 CompMooneyRivlin::~CompMooneyRivlin()
 {
-  // Destructor
+}
+
+
+CompMooneyRivlin* CompMooneyRivlin::clone()
+{
+  return scinew CompMooneyRivlin(*this);
 }
 
 void 

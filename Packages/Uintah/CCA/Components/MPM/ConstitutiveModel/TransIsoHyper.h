@@ -62,6 +62,10 @@ namespace Uintah {
        
     // destructor
     virtual ~TransIsoHyper();
+
+    // clone
+    TransIsoHyper* clone();
+
     // compute stable timestep for this patch
     virtual void computeStableTimestep(const Patch* patch,
 				       const MPMMaterial* matl,
@@ -73,18 +77,6 @@ namespace Uintah {
 				     DataWarehouse* old_dw,
 				     DataWarehouse* new_dw);
 
-    virtual void computeStressTensor(const PatchSubset* ,
-				     const MPMMaterial* ,
-				     DataWarehouse* ,
-				     DataWarehouse* ,
-#ifdef HAVE_PETSC
-                                     MPMPetscSolver* ,
-#else
-                                     SimpleSolver* ,
-#endif
-				     const bool )
-    {
-    }
 
     // carry forward CM data for RigidMPM
     virtual void carryForward(const PatchSubset* patches,

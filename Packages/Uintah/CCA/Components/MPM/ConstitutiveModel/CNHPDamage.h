@@ -46,6 +46,9 @@ namespace Uintah {
          
     // destructor 
     virtual ~CNHPDamage();
+
+    // clone
+    CNHPDamage* clone();
          
     virtual void addInitialComputesAndRequires(Task* task,
                                                const MPMMaterial* matl,

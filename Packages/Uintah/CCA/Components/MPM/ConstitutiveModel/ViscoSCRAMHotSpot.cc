@@ -143,6 +143,11 @@ ViscoSCRAMHotSpot::~ViscoSCRAMHotSpot()
   VarLabel::destroy(pChemHeatRateLabel_preReloc);
 }
 
+ViscoSCRAMHotSpot* ViscoSCRAMHotSpot::clone()
+{
+  return scinew ViscoSCRAMHotSpot(*this);
+}
+
 void 
 ViscoSCRAMHotSpot::addInitialComputesAndRequires(Task* task,
                                                  const MPMMaterial* matl,

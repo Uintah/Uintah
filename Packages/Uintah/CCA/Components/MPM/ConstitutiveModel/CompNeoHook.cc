@@ -55,6 +55,12 @@ CompNeoHook::~CompNeoHook()
 {
 }
 
+
+CompNeoHook* CompNeoHook::clone()
+{
+  return scinew CompNeoHook(*this);
+}
+
 void CompNeoHook::initializeCMData(const Patch* patch,
                                         const MPMMaterial* matl,
                                         DataWarehouse* new_dw)

@@ -50,6 +50,11 @@ IdealGasMP::~IdealGasMP()
 {
 }
 
+IdealGasMP* IdealGasMP::clone()
+{
+  return scinew IdealGasMP(*this);
+}
+
 void IdealGasMP::initializeCMData(const Patch* patch,
                                         const MPMMaterial* matl,
                                         DataWarehouse* new_dw)

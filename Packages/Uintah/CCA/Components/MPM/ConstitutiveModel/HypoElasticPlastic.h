@@ -132,6 +132,9 @@ namespace Uintah {
     /*! \brief destructor  */
     ////////////////////////////////////////////////////////////////////////
     virtual ~HypoElasticPlastic();
+
+    // clone
+    HypoElasticPlastic* clone();
          
     ////////////////////////////////////////////////////////////////////////
     /*! \brief compute stable timestep for this patch */
@@ -156,18 +159,6 @@ namespace Uintah {
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
 
-    virtual void computeStressTensor(const PatchSubset* ,
-                                     const MPMMaterial* ,
-                                     DataWarehouse* ,
-                                     DataWarehouse* ,
-#ifdef HAVE_PETSC
-                                     MPMPetscSolver* ,
-#else
-                                     SimpleSolver* ,
-#endif
-                                     const bool )
-    {
-    }
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief carry forward CM data for RigidMPM */

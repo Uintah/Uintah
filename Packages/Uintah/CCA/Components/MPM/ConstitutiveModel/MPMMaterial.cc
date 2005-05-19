@@ -153,7 +153,7 @@ void
 MPMMaterial::copyWithoutGeom(const MPMMaterial* mat, MPMFlags* flags)
 {
   lb = mat->lb;
-  d_cm = ConstitutiveModelFactory::createCopy(mat->d_cm);
+  d_cm = mat->d_cm->clone();
   d_density = mat->d_density;
   d_thermalConductivity = mat->d_thermalConductivity;
   d_specificHeat = mat->d_specificHeat;

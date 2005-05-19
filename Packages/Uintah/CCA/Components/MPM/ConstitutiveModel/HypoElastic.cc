@@ -98,8 +98,12 @@ HypoElastic::HypoElastic(const HypoElastic* cm)
 
 HypoElastic::~HypoElastic()
 {
-  // Destructor
+}
 
+
+HypoElastic* HypoElastic::clone()
+{
+  return scinew HypoElastic(*this);
 }
 
 void HypoElastic::initializeCMData(const Patch* patch,

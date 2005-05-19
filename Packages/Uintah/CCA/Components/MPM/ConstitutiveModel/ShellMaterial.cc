@@ -164,6 +164,11 @@ ShellMaterial::~ShellMaterial()
   VarLabel::destroy(pNormalRotAccLabel);
 }
 
+ShellMaterial* ShellMaterial::clone()
+{
+  return scinew ShellMaterial(*this);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 // Make sure all labels are correctly relocated

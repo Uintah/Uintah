@@ -38,7 +38,7 @@ using namespace SCIRun;
 //_____________________implicit MPM
 
 TransIsoHyperImplicit::TransIsoHyperImplicit(ProblemSpecP& ps,  MPMLabel* Mlb,
-                                                                MPMFlags* Mflag)
+                                             MPMFlags* Mflag) : ImplicitCM(Mlb)
 //______________________CONSTRUCTOR (READS INPUT, INITIALIZES SOME MODULI)
 {
   lb = Mlb;
@@ -106,6 +106,12 @@ TransIsoHyperImplicit::~TransIsoHyperImplicit()
   VarLabel::destroy(pStretchLabel_preReloc);
   VarLabel::destroy(pFailureLabel);
   VarLabel::destroy(pFailureLabel_preReloc);
+}
+
+
+TransIsoHyperImplicit* TransIsoHyperImplicit::clone()
+{
+  return scinew TransIsoHyperImplicit(*this);
 }
 
 void TransIsoHyperImplicit::initializeCMData(const Patch* patch,

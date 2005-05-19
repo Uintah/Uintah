@@ -3,6 +3,7 @@
 
 
 #include "CompNeoHook.h"        
+#include "ImplicitCM.h"
 
 namespace Uintah {
 
@@ -17,7 +18,7 @@ namespace Uintah {
   */
   /////////////////////////////////////////////////////////////////////////////
 
-  class CNHDamage : public CompNeoHook {
+  class CNHDamage : public CompNeoHook, public ImplicitCM {
 
   public:
 
@@ -57,6 +58,8 @@ namespace Uintah {
        
     // destructor
     virtual ~CNHDamage();
+
+    CNHDamage* clone();
 
     virtual void addInitialComputesAndRequires(Task* task,
                                                const MPMMaterial* matl,

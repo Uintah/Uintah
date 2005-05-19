@@ -65,6 +65,12 @@ Membrane::~Membrane()
   VarLabel::destroy(defGradInPlaneLabel_preReloc);
 }
 
+
+Membrane* Membrane::clone()
+{
+  return scinew Membrane(*this);
+}
+
 void Membrane::initializeCMData(const Patch* patch,
                                         const MPMMaterial* matl,
                                         DataWarehouse* new_dw)
