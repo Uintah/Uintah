@@ -59,6 +59,7 @@ class CCAComponentModel;
 class BabelComponentModel;
 class VtkComponentModel;
 class CorbaComponentModel;
+class ComponentEventService;
 
 /**
  * \class SCIRunFramework
@@ -238,6 +239,7 @@ public:
 protected:
   friend class Services;
   friend class BuilderService;
+  friend class ComponentEventService;
 
   /** ? */
   void emitComponentEvent(ComponentEvent* event);

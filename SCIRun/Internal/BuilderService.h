@@ -211,6 +211,7 @@ class BuilderService : public sci::cca::ports::BuilderService,
   int removeComponentClasses(const std::string &loaderName);
 
   private:
+    friend class ConnectionEventService;
     BuilderService(SCIRunFramework* fwk, const std::string& name);
     /** Returns the URL of this BuilderService component's framework. */
     std::string getFrameworkURL();
