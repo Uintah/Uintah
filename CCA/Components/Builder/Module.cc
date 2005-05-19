@@ -604,8 +604,8 @@ menu->insertSeparator();
             catch (CCAException e) {
                 viewWindow->p2BuilderWindow->displayMsg(e.message());
             }  
-
-            for (unsigned int i = 0; i < up.size(); i++) {
+        }
+        for (unsigned int i = 0; i < up.size(); i++) {
                 std::string model;
                 std::string type;
                 ComponentInstance *ci = fwk->lookupComponent(instanceName);
@@ -617,9 +617,9 @@ menu->insertSeparator();
                     }
                 }
                 ports.push_back(port(i, model, type, up[i], PortIcon::USES));
-            }
-            services->releasePort("cca.BuilderService");
         }
+        services->releasePort("cca.BuilderService");
+        
     }
 }
 
