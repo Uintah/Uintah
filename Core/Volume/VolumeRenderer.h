@@ -56,9 +56,7 @@ public:
   void set_interactive_rate(double irate);
   void set_interactive_mode(bool mode);
   void set_adaptive(bool b);
-  inline void set_gradient_range(double min, double max) { 
-    grange_ = 1/(max-min); goffset_ = -min/(max-min); 
-  }
+  void set_gradient_range(double min, double max);
   inline void set_shading(bool shading) { shading_ = shading; }
   inline void set_material(double ambient, double diffuse, double specular, double shine)
   { ambient_ = ambient; diffuse_ = diffuse; specular_ = specular; shine_ = shine; }

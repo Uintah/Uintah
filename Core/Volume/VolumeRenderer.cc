@@ -1100,4 +1100,19 @@ VolumeRenderer::num_slices_to_rate(int num_slices)
 }
 
 
+void
+VolumeRenderer::set_gradient_range(double min, double max)
+{ 
+  double range = max-min;
+  if (fabs(range) < 0.001) { 
+    grange_ = 1.0; 
+    goffset_ = 1.0;
+  } else {
+    grange_ = 1/(max-min);
+    goffset_ = -min/(max-min);
+  }
+}
+
+
+
 } // namespace SCIRun
