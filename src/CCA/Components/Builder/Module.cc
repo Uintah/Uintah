@@ -102,6 +102,17 @@ Module::makePorts(){
     up = bs->getUsedPortNames(cid);
     pp = bs->getProvidedPortNames(cid);
 
+    //KOSTA add to make modules bigger if they have a lot of ports
+    int max_ports = (up.size() > pp.size()) ?up.size() :pp.size();
+    if(max_ports > 3) {
+      h = max_ports * (h / 3);
+    }
+    if(mName.substr(0,mName.find('.')) == "Vtk")
+      setPaletteBackgroundColor(QColor(255,0,0));
+    else if(mName.substr(0,mName.find('.')) == "Corba")
+      setPaletteBackgroundColor(QColor(0,255,0));
+    //Eof KOSTA
+
 
     std::string loaderName = "";
     int nNodes = 1;
