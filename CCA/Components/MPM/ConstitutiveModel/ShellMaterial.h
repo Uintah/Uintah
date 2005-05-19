@@ -74,6 +74,9 @@ namespace Uintah {
     // destructor
     virtual ~ShellMaterial();
 
+    // clone
+    ShellMaterial* clone();
+
     virtual void addInitialComputesAndRequires(Task* task,
                                                const MPMMaterial* matl,
                                                const PatchSet* patches) const;
@@ -131,18 +134,6 @@ namespace Uintah {
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
 
-    virtual void computeStressTensor(const PatchSubset* ,
-				     const MPMMaterial* ,
-				     DataWarehouse* ,
-				     DataWarehouse* ,
-#ifdef HAVE_PETSC
-                                     MPMPetscSolver* ,
-#else
-                                     SimpleSolver* ,
-#endif
-				     const bool )
-    {
-    }
 
     ///////////////////////////////////////////////////////////////////////////
     //

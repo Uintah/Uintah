@@ -11,6 +11,7 @@
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ImplicitCM.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/NormalForceBC.h>
 #include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
@@ -1593,8 +1594,11 @@ void ImpMPM::computeStressTensor(const ProcessorGroup*,
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++) {
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-    cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw,
-                            d_solver, recursion);
+    ImplicitCM* cmi = dynamic_cast<ImplicitCM*>(cm);
+    if (cmi)
+      cmi->computeStressTensor(patches, mpm_matl, old_dw, new_dw,
+                               d_solver, recursion);
+
   }
   
 }

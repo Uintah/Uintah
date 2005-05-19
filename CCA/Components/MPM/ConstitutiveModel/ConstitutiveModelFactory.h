@@ -20,7 +20,6 @@ namespace Uintah {
     static ConstitutiveModel* create(ProblemSpecP& ps, MPMLabel* lb,
                                      MPMFlags* flags);
 
-    static ConstitutiveModel* createCopy(const ConstitutiveModel* cm);
   };
 } // End namespace Uintah
       

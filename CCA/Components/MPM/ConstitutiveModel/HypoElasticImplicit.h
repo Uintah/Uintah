@@ -14,6 +14,7 @@
 
 #include <math.h>
 #include "ConstitutiveModel.h"	
+#include "ImplicitCM.h"
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -22,7 +23,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/Solver.h>
 
 namespace Uintah {
-      class HypoElasticImplicit : public ConstitutiveModel {
+      class HypoElasticImplicit : public ConstitutiveModel, public ImplicitCM {
       private:
          // Create datatype for storing model parameters
 	  bool d_useModifiedEOS; 
@@ -47,6 +48,10 @@ namespace Uintah {
        
          // destructor
          virtual ~HypoElasticImplicit();
+
+         // clone
+         HypoElasticImplicit* clone();
+
          // compute stable timestep for this patch
          virtual void computeStableTimestep(const Patch* patch,
                                             const MPMMaterial* matl,

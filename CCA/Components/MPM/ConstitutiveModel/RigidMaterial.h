@@ -2,6 +2,7 @@
 #define __RIGID_CONSTITUTIVE_MODEL_H__
 
 #include "ConstitutiveModel.h"  
+#include "ImplicitCM.h"  
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
@@ -28,7 +29,7 @@ namespace Uintah {
   */
   /////////////////////////////////////////////////////////////////////////////
 
-  class RigidMaterial : public ConstitutiveModel {
+  class RigidMaterial : public ConstitutiveModel, public ImplicitCM {
 
   public:
     struct CMData {
@@ -51,6 +52,8 @@ namespace Uintah {
        
     // destructor
     virtual ~RigidMaterial();
+
+    RigidMaterial* clone();
 
     /*! initialize  each particle's constitutive model data */
     virtual void initializeCMData(const Patch* patch,

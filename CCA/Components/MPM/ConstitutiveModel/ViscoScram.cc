@@ -209,6 +209,12 @@ ViscoScram::~ViscoScram()
   VarLabel::destroy(pStrainRateLabel_preReloc);
 }
 
+
+ViscoScram* ViscoScram::clone()
+{
+  return scinew ViscoScram(*this);
+}
+
 void 
 ViscoScram::addInitialComputesAndRequires(Task* task,
                                           const MPMMaterial* matl,

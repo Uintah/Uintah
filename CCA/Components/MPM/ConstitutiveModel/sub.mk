@@ -9,6 +9,7 @@ SRCS     += \
 	$(SRCDIR)/CompMooneyRivlin.cc        	\
 	$(SRCDIR)/ConstitutiveModelFactory.cc 	\
 	$(SRCDIR)/ConstitutiveModel.cc        	\
+	$(SRCDIR)/ImplicitCM.cc 	       	\
 	$(SRCDIR)/MPMMaterial.cc              	\
 	$(SRCDIR)/CompNeoHook.cc              	\
 	$(SRCDIR)/CNHDamage.cc              	\

@@ -95,6 +95,12 @@ CompNeoHookPlas::~CompNeoHookPlas()
   
 }
 
+
+CompNeoHookPlas* CompNeoHookPlas::clone()
+{
+  return scinew CompNeoHookPlas(*this);
+}
+
 void CompNeoHookPlas::initializeCMData(const Patch* patch,
                                         const MPMMaterial* matl,
                                         DataWarehouse* new_dw)

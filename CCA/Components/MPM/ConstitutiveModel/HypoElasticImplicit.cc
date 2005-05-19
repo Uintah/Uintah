@@ -30,7 +30,7 @@ using namespace SCIRun;
 
 HypoElasticImplicit::HypoElasticImplicit(ProblemSpecP& ps,  MPMLabel* Mlb, 
 					 MPMFlags* Mflag)
-  : ConstitutiveModel(Mlb,Mflag)
+  : ConstitutiveModel(Mlb,Mflag), ImplicitCM(Mlb)
 {
 
   ps->require("G",d_initialData.G);
@@ -46,6 +46,12 @@ HypoElasticImplicit::HypoElasticImplicit(const HypoElasticImplicit* cm)
 
 HypoElasticImplicit::~HypoElasticImplicit()
 {
+}
+
+
+HypoElasticImplicit* HypoElasticImplicit::clone()
+{
+  return scinew HypoElasticImplicit(*this);
 }
 
 void HypoElasticImplicit::initializeCMData(const Patch* patch,

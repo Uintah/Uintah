@@ -102,6 +102,12 @@ TransIsoHyper::~TransIsoHyper()
   VarLabel::destroy(pFailureLabel_preReloc);
 }
 
+
+TransIsoHyper* TransIsoHyper::clone()
+{
+  return scinew TransIsoHyper(*this);
+}
+
 void TransIsoHyper::initializeCMData(const Patch* patch,
                                      const MPMMaterial* matl,
                                      DataWarehouse* new_dw)

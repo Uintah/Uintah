@@ -30,7 +30,7 @@ using namespace SCIRun;
 
 CompNeoHookImplicit::CompNeoHookImplicit(ProblemSpecP& ps,  MPMLabel* Mlb, 
 					 MPMFlags* Mflag)
-  : ConstitutiveModel(Mlb,Mflag)
+  : ConstitutiveModel(Mlb,Mflag), ImplicitCM(Mlb)
 {
   d_useModifiedEOS = false;
   ps->require("bulk_modulus", d_initialData.Bulk);
@@ -49,6 +49,12 @@ CompNeoHookImplicit::CompNeoHookImplicit(const CompNeoHookImplicit* cm)
 
 CompNeoHookImplicit::~CompNeoHookImplicit()
 {
+}
+
+
+CompNeoHookImplicit* CompNeoHookImplicit::clone()
+{
+  return scinew CompNeoHookImplicit(*this);
 }
 
 void CompNeoHookImplicit::initializeCMData(const Patch* patch,

@@ -55,7 +55,11 @@ MWViscoElastic::MWViscoElastic(const MWViscoElastic* cm)
 
 MWViscoElastic::~MWViscoElastic()
 {
-  // Destructor
+}
+
+MWViscoElastic* MWViscoElastic::clone()
+{
+  return scinew MWViscoElastic(*this);
 }
 
 void MWViscoElastic::initializeCMData(const Patch* patch,
