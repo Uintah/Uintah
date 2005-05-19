@@ -328,8 +328,6 @@ Module::~Module()
 void Module::paintEvent(QPaintEvent *e)
 {
 
-
-  updatePorts();
   QFrame::paintEvent(e);
   QPainter p( this );
   p.setPen(black);
