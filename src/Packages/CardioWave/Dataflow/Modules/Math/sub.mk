@@ -14,8 +14,8 @@ SRCDIR	:= Packages/CardioWave/Dataflow/Modules/Math
 
 SRCS	+= \
         $(SRCDIR)/ReduceBandWidth.cc \
-	$(SRCDIR)/AddFEMDomain.cc\
-	$(SRCDIR)/AddGapJunctionModel.cc\
+#	$(SRCDIR)/AddFEMDomain.cc\
+#	$(SRCDIR)/AddGapJunctionModel.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
