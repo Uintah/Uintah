@@ -439,11 +439,11 @@ void Module::go()
     if (status == 0) {
       if (progress->progress() < progress->totalSteps()) {
 	progress->setProgress(progress->totalSteps());
-	steps = 0;
+	//steps = 0;
       }
     } else {
       //progress->setProgress(0);
-      steps = 0;
+      //  steps = 0;
     }
     services->releasePort(goPortName);
   }
