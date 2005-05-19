@@ -189,6 +189,11 @@ ViscoTransIsoHyper::~ViscoTransIsoHyper()
 
 }
 
+ViscoTransIsoHyper* ViscoTransIsoHyper::clone()
+{
+  return scinew ViscoTransIsoHyper(*this);
+}
+
 void ViscoTransIsoHyper::initializeCMData(const Patch* patch,
                                      const MPMMaterial* matl,
                                      DataWarehouse* new_dw)

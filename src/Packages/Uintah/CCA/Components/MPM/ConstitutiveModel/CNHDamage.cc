@@ -28,9 +28,8 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-CNHDamage::CNHDamage(ProblemSpecP& ps,  
-                     MPMLabel* Mlb, 
-                     MPMFlags* Mflag):CompNeoHook(ps, Mlb, Mflag)
+CNHDamage::CNHDamage(ProblemSpecP& ps, MPMLabel* Mlb, MPMFlags* Mflag)
+  : CompNeoHook(ps, Mlb, Mflag), ImplicitCM(Mlb)
 {
   // Initialize local VarLabels
   initializeLocalMPMLabels();
@@ -65,6 +64,11 @@ CNHDamage::~CNHDamage()
   VarLabel::destroy(pFailureStrainLabel_preReloc);
   VarLabel::destroy(pFailedLabel_preReloc);
   VarLabel::destroy(pDeformRateLabel_preReloc);
+}
+
+CNHDamage* CNHDamage::clone()
+{
+  return scinew CNHDamage(*this);
 }
 
 void 

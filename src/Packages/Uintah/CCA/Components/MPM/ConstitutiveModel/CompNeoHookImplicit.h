@@ -14,17 +14,16 @@
 
 #include <math.h>
 #include "ConstitutiveModel.h"  
+#include "ImplicitCM.h"  
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
-#include <Packages/Uintah/CCA/Components/MPM/SimpleSolver.h>
 
 
 namespace Uintah {
-  class CompNeoHookImplicit : public ConstitutiveModel {
+  class CompNeoHookImplicit : public ConstitutiveModel, public ImplicitCM {
   private:
     // Create datatype for storing model parameters
     bool d_useModifiedEOS; 
@@ -49,6 +48,10 @@ namespace Uintah {
        
     // destructor
     virtual ~CompNeoHookImplicit();
+
+    // clone
+    CompNeoHookImplicit* clone();
+
     // compute stable timestep for this patch
     virtual void computeStableTimestep(const Patch* patch,
                                        const MPMMaterial* matl,

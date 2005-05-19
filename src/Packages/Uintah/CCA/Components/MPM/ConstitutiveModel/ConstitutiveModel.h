@@ -9,8 +9,6 @@
 #include <Packages/Uintah/Core/Math/Short27.h>
 #include <Core/Containers/StaticArray.h>
 #include <Packages/Uintah/Core/Grid/Variables/Array3.h>
-#include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
-#include <Packages/Uintah/CCA/Components/MPM/SimpleSolver.h>
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
@@ -59,17 +57,6 @@ namespace Uintah {
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
 
-    virtual void computeStressTensor(const PatchSubset* patches,
-                                     const MPMMaterial* matl,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw,
-#ifdef HAVE_PETSC
-                                     MPMPetscSolver* solver,
-#else
-                                     SimpleSolver* solver,
-#endif
-                                     const bool recursion);
-         
     ///////////////////////////////////////////////////////////////////////
     /*! Initial computes and requires for the constitutive model */
     ///////////////////////////////////////////////////////////////////////
@@ -182,6 +169,10 @@ namespace Uintah {
       {
         d_world = myworld;
       }
+
+    // Make a clone of the constitutive model
+
+    virtual ConstitutiveModel* clone() = 0;
 
   protected:
 
@@ -345,7 +336,6 @@ namespace Uintah {
 
     void BtDB(const double B[6][24], const double D[6][6], 
               double Km[24][24]) const;
-    void BnltDBnl(double Bnl[3][24], double sig[3][3], double Kg[24][24]) const;
 
   protected:
 
@@ -357,13 +347,6 @@ namespace Uintah {
                                    const MPMMaterial* matl,
                                    DataWarehouse* new_dw);
 
-    ///////////////////////////////////////////////////////////////////////
-    /*! Initialize the common quantities that all the implicit constituive
-     *  models compute : called by initializeCMData */
-    ///////////////////////////////////////////////////////////////////////
-    void initSharedDataForImplicit(const Patch* patch,
-                                   const MPMMaterial* matl,
-                                   DataWarehouse* new_dw);
 
     /////////////////////////////////////////////////////////////////
     /*! Computes and Requires common to all constitutive models that
@@ -372,23 +355,6 @@ namespace Uintah {
     void addSharedCRForExplicit(Task* task,
                                 const MaterialSubset* matlset,
                                 const PatchSet* patches) const;
-
-    /////////////////////////////////////////////////////////////////
-    /*! Computes and Requires common to all constitutive models that
-     *  do implicit time stepping : called by addComputesAndRequires */
-    /////////////////////////////////////////////////////////////////
-    void addSharedCRForImplicit(Task* task,
-                                const MaterialSubset* matlset,
-                                const PatchSet* patches) const;
-
-    /////////////////////////////////////////////////////////////////
-    /*! Computes and Requires common to all constitutive models that
-     *  do implicit time stepping : called by addComputesAndRequires */
-    /////////////////////////////////////////////////////////////////
-    void addSharedCRForImplicit(Task* task,
-                                const MaterialSubset* matlset,
-                                const PatchSet* patches,
-                                const bool recurse) const;
 
     /////////////////////////////////////////////////////////////////
     /*! Particle conversion related requires common to all constitutive 

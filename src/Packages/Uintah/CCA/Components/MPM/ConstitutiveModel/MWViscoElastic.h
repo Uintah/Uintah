@@ -50,6 +50,10 @@ namespace Uintah {
        
     // destructor
     virtual ~MWViscoElastic();
+
+    // clone
+    MWViscoElastic* clone();
+
     // compute stable timestep for this patch
     virtual void computeStableTimestep(const Patch* patch,
 				       const MPMMaterial* matl,
@@ -61,18 +65,6 @@ namespace Uintah {
 				     DataWarehouse* old_dw,
 				     DataWarehouse* new_dw);
 
-    virtual void computeStressTensor(const PatchSubset* ,
-				     const MPMMaterial* ,
-				     DataWarehouse* ,
-				     DataWarehouse* ,
-#ifdef HAVE_PETSC
-                                     MPMPetscSolver* ,
-#else
-                                     SimpleSolver* ,
-#endif
-				     const bool )
-    {
-    }
 
     // initialize  each particle's constitutive model data
     virtual void initializeCMData(const Patch* patch,

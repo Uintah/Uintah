@@ -27,7 +27,7 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-RigidMaterial::RigidMaterial(ProblemSpecP& ps, MPMLabel* Mlb, MPMFlags* Mflag)
+RigidMaterial::RigidMaterial(ProblemSpecP& ps, MPMLabel* Mlb, MPMFlags* Mflag) : ImplicitCM(Mlb)
 {
   lb = Mlb;
   flag = Mflag;
@@ -40,6 +40,7 @@ RigidMaterial::RigidMaterial(ProblemSpecP& ps, MPMLabel* Mlb, MPMFlags* Mflag)
 
 RigidMaterial::RigidMaterial(const RigidMaterial* cm)
 {
+  d_lb = cm->lb;
   lb = cm->lb;
   flag = cm->flag;
   NGN = cm->NGN;
@@ -50,6 +51,12 @@ RigidMaterial::RigidMaterial(const RigidMaterial* cm)
 RigidMaterial::~RigidMaterial()
 {
 }
+
+RigidMaterial* RigidMaterial::clone()
+{
+  return scinew RigidMaterial(*this);
+}
+
 
 void 
 RigidMaterial::initializeCMData(const Patch* patch,

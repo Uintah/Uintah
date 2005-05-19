@@ -151,6 +151,8 @@ namespace Uintah {
     // destructor
     virtual ~ViscoSCRAMHotSpot();
 
+    ViscoSCRAMHotSpot* clone();
+
     /*! Computes and requires for initialization of history variables */
     virtual void addInitialComputesAndRequires(Task* task,
                                                const MPMMaterial* matl,
@@ -181,20 +183,6 @@ namespace Uintah {
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
 
-    /*! compute stress at each particle in the patch for implicit 
-        methods */
-    virtual void computeStressTensor(const PatchSubset* ,
-                                     const MPMMaterial* ,
-                                     DataWarehouse* ,
-                                     DataWarehouse* ,
-#ifdef HAVE_PETSC
-                                     MPMPetscSolver* ,
-#else
-                                     SimpleSolver* ,
-#endif
-                                     const bool )
-    {
-    }
 
     /*! carry forward CM data (computed in computeStressTensor) for RigidMPM */
     virtual void carryForward(const PatchSubset* patches,
