@@ -111,6 +111,7 @@ private:
       int iflag, iriter;
       int lambda;
       double wavemin, wavemax, dom, omega, srcsum;
+      bool test_problems;
       int ffield;
       int wall;
       int symtry;

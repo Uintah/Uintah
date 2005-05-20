@@ -4,18 +4,23 @@
 
       double precision x,z,relerr,relerr2,big,big2,relerrsq,relerrsq2,
      &rmserrnm,rmserrnm2,small,PI,fluxsume,fluxsumw,fluxsumtb,
-     &egerror
+     &egerror,areaew,areans,areatb,err,err2,errsq,errsq2,rms_errnm_abs,
+     $     rms_errnm2_abs
 
       DATA PI/3.141593D0/, small/1.0d-10/
 
-      j=7
-      k=7
+      j=10
+      k=10
+c     above values should be the center of the domain;
+c     we are doing a summation along the i-axis
       ii=0
       kk=0
       big=0.0d0
       big2=0.0d0
       relerrsq=0.0d0
       relerrsq2=0.0d0
+      errsq = 0.0d0
+      errsq2 = 0.0d0
       m=0
 
 c     For energy balance
@@ -34,43 +39,62 @@ c      IF (LPROBTWO.OR.LPROBTHREE)GO TO 30
             if (zz(kk).ge.0.5)
      &      z=zz(kk)-0.5
 
-      DO 10 i=idxlo(1),idxhi(1)
+            DO 10 i=idxlo(1),idxhi(1)
 
-            x=0.5-xx(i)
-            if (xx(i).ge.0.5)
-     &      x=xx(i)-0.5
+               x=0.5-xx(i)
+               if (xx(i).ge.0.5)
+     &              x=xx(i)-0.5
 
-            srcbm(i) = 55.531*(x**6)-99.436*(x**5)+
-     &      74.739*(x**4)-32.32*(x**3)+6.4698*(x**2)-
-     &      5.4255*x+3.0755
+               srcbm(i) = 55.531*(x**6)-99.436*(x**5)+
+     &              74.739*(x**4)-32.32*(x**3)+6.4698*(x**2)-
+     &              5.4255*x+3.0755
 
-            qfluxbbm(i) = -20.612*(x**6)+26.792*(x**5)-
-     &      13.499*(x**4)+3.6857*(x**3)-0.9482*(x**2)+
-     &      0.0104*x+0.188
+               qfluxbbm(i) = -20.612*(x**6)+26.792*(x**5)-
+     &              13.499*(x**4)+3.6857*(x**3)-0.9482*(x**2)+
+     &              0.0104*x+0.188
 
-      if(srcbm(i).ge.big)
-     &big=srcbm(i)
+               if(srcbm(i).ge.big)
+     &              big=srcbm(i)
 
-      if(qfluxbbm(i).ge.big2)
-     &big2=qfluxbbm(i)
+               if(qfluxbbm(i).ge.big2)
+     &              big2=qfluxbbm(i)
 
-10    continue
+ 10         continue
 
-      DO 20 i=idxlo(1),idxhi(1)
+            DO 20 i=idxlo(1),idxhi(1)
 
-      relerr = (abs(src(i,j,k))-srcbm(i))*100/big
-      relerr2 = (abs(qfluxb(i,j,kk))-qfluxbbm(i))*100/big2 
-      relerrsq=relerrsq+(relerr**2)
-      relerrsq2=relerrsq2+(relerr2**2)
+               if ((j.ge.idxlo(2) .and. j.le.idxhi(2)) .and.
+     $              (k.ge.idxlo(3) .and. k.le.idxhi(3))) then
+                  relerr = (abs(src(i,j,k))-srcbm(i))*100/big
+            relerr2 = (abs(qfluxb(i,j,kk))-qfluxbbm(i))*100/big2 
+            relerrsq=relerrsq+(relerr**2)
+            relerrsq2=relerrsq2+(relerr2**2)
 
-      m=m+1
+            err = abs(src(i,j,k))-srcbm(i)
+
+            if (abs(src(i,j,k)) .gt. 10*srcbm(i)) then
+               print*, 'found large source at ',i,j,k,'value = ',
+     $              src(i,j,k),srcbm(i)
+            end if
+            err2 = abs(qfluxb(i,j,kk))-qfluxbbm(i)
+            errsq = errsq + err**2
+            errsq2 = errsq2 + err2**2
+
+            m=m+1
+         endif
 
 20    continue
 
-      rmserrnm = sqrt(relerrsq/m)
-      rmserrnm2 = sqrt(relerrsq2/m)
+      if (m.gt.0) then
+         rmserrnm = sqrt(relerrsq/m)
+         rmserrnm2 = sqrt(relerrsq2/m)
+      
+         rms_errnm_abs = sqrt(errsq/m)
+         rms_errnm2_abs = sqrt(errsq2/m)
 
-      write(6,*)rmserrnm,rmserrnm2
+         print*,'outputting rdombmcalc stuff',rmserrnm,rmserrnm2
+         print*,'absolute norms = ',rms_errnm_abs,rms_errnm2_abs
+      endif
 
       END IF
 
@@ -161,17 +185,3 @@ c       write(6,*)x,qfluxbbm(i),volq(i,j,k)
       
       RETURN
       end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
