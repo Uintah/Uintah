@@ -2547,8 +2547,8 @@ ViewSlices::execute()
       }
       volumes_[n] = scinew NrrdVolume(ctx->subVar("nrrd"+to_string(n), false));
       volumes_[n]->nrrd_ = nrrdH;
-      if (n == 0) 
-	extract_mip_slices(volumes_[n]);	
+      //      if (n == 0) 
+      //	extract_mip_slices(volumes_[n]);	
     }
   }
 
