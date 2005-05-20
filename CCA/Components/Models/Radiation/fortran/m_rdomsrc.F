@@ -1,9 +1,7 @@
 #include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rdomsrc_fort.h>
 
       integer i,j,k
-
       double precision PI
-
 
       pi = dacos(-1.0D0)
 c     calculate incident flux at cell centers and radiative source

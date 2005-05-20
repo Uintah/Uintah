@@ -19,6 +19,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <math.h>
 
@@ -71,12 +72,17 @@ Models_DORadiationModel::problemSetup(const ProblemSpecP& params)
   ProblemSpecP db = params->findBlock("DORadiationModel");
 
   string prop_model;
+  test_problems = false;
+  int nproblem = 1;
 
   if (db) {
     db->getWithDefault("ordinates",d_sn,2);
     db->require("opl",d_opl);
     db->getWithDefault("property_model",prop_model,"radcoef");
     db->getWithDefault("spherical_harmonics",d_SHRadiationCalc,false);
+    db->getWithDefault("test_problem",test_problems,false);
+    if (test_problems) 
+      db->getWithDefault("test_problem_number",nproblem,1);
   }
   else {
     d_sn=6;
@@ -86,6 +92,15 @@ Models_DORadiationModel::problemSetup(const ProblemSpecP& params)
   lprobone = false;
   lprobtwo = false;
   lprobthree = false;
+
+  if (test_problems) {
+    if (nproblem == 1)
+      lprobone = true;
+    else if (nproblem == 2)
+      lprobtwo = true;
+    else if (nproblem == 3)
+      lprobthree = true;
+  }
 
   if (prop_model == "radcoef"){ 
     lradcal = false;
@@ -265,10 +280,10 @@ Models_DORadiationModel::boundaryCondition(const ProcessorGroup*,
 //***************************************************************************
 void 
 Models_DORadiationModel::intensitysolve(const ProcessorGroup* pg,
-				 const Patch* patch,
-				 Models_CellInformation* cellinfo,
-				 RadiationVariables* vars,
-				 RadiationConstVariables* constvars)
+					const Patch* patch,
+					Models_CellInformation* cellinfo,
+					RadiationVariables* vars,
+					RadiationConstVariables* constvars)
 {
 
   double solve_start = Time::currentSeconds();
@@ -314,12 +329,15 @@ Models_DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   CCVariable<double> volq;
   volq.allocate(domLo,domHi);
   vars->cenint.allocate(domLo,domHi);
+
   CCVariable<int> cellType;
   cellType.allocate(domLo,domHi);
+  // I am retaining cellType here because we may need to have
+  // cellType with MPMICE later, for the first-order radiation
+  // effects    
+  int ffield = -1;
+  cellType.initialize(ffield);
 
-  arean.resize(domLo.x(),domHi.x());
-  areatb.resize(domLo.x(),domHi.x());
-  
   srcbm.resize(domLo.x(),domHi.x());
   srcbm.initialize(0.0);
   srcpone.resize(domLo.x(),domHi.x());
@@ -329,8 +347,6 @@ Models_DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 
   volume.initialize(0.0);
   volq.initialize(0.0);    
-  arean.initialize(0.0);
-  areatb.initialize(0.0);
   //  double timeRadMatrix = 0;
   //  double timeRadCoeffs = 0;
   vars->cenint.initialize(0.0);
@@ -341,12 +357,6 @@ Models_DORadiationModel::intensitysolve(const ProcessorGroup* pg,
     for (int bands =1; bands <=lambda; bands++) {
 
       volq.initialize(0.0);
-      int ffield = -1;
-      cellType.initialize(ffield);
-      // I am retaining cellType here because we may need to have
-      // cellType with MPMICE later, for the first-order radiation
-      // effects    
-
       if(lwsgg == true){    
 	fort_m_radwsgg(idxLo, idxHi, 
 		     vars->ABSKG, 
@@ -397,39 +407,40 @@ Models_DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 	at.initialize(0.0);
 	bool plusX, plusY, plusZ;
 
+	// rdomsolve sets coefficients and sources for DO linear equation
+
 	fort_m_rdomsolve(idxLo, idxHi, 
-		       cellType, 
-		       ffield, 
-		       cellinfo->sew,
-		       cellinfo->sns, 
-		       cellinfo->stb, 
-		       vars->ESRCG, direcn, 
-		       oxi, 
-		       omu,
-		       oeta, 
-		       wt, 
-		       vars->temperature, 
-		       vars->ABSKG, 
-		       vars->cenint, 
-		       volume,
-		       su, 
-		       aw, as, ab, 
-		       ap, 
-		       ae, an, at,
-		       volq, 
-		       vars->src, 
-		       plusX, plusY, plusZ, 
-		       fraction, 
-		       fractiontwo, 
-		       bands, 
-		       vars->qfluxe, 
-		       vars->qfluxw,
-		       vars->qfluxn, 
-		       vars->qfluxs,
-		       vars->qfluxt, 
-		       vars->qfluxb, 
-		       d_opl);
-	
+			 cellinfo->sew,
+			 cellinfo->sns, 
+			 cellinfo->stb, 
+			 vars->ESRCG, direcn, 
+			 oxi, 
+			 omu,
+			 oeta, 
+			 wt, 
+			 vars->ABSKG, 
+			 volume,
+			 su,
+			 aw, as, ab, 
+			 ap, 
+			 ae, an, at,
+			 plusX, plusY, plusZ, 
+			 fraction, 
+			 bands, 
+			 d_opl);
+
+	/*
+	if (patch->containsCell(IntVector(5,15,15))) {
+	  cout << "ap at 5,15,15 = " << ap[IntVector(5,15,15)] << endl;
+	  cout << "ae at 5,15,15 = " << ae[IntVector(5,15,15)] << endl;
+	  cout << "aw at 5,15,15 = " << aw[IntVector(5,15,15)] << endl;
+	  cout << "an at 5,15,15 = " << an[IntVector(5,15,15)] << endl;
+	  cout << "as at 5,15,15 = " << as[IntVector(5,15,15)] << endl;
+	  cout << "at at 5,15,15 = " << at[IntVector(5,15,15)] << endl;
+	  cout << "ab at 5,15,15 = " << ab[IntVector(5,15,15)] << endl;
+	  cout << "su at 5,15,15 = " << su[IntVector(5,15,15)] << endl;
+	}
+	*/
 	//      double timeSetMat = Time::currentSeconds();
 
 	d_linearSolver->setMatrix(pg, 
@@ -486,23 +497,37 @@ Models_DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 		   vars->ESRCG,
 		   volq, 
 		   vars->src);
+
     }
 
-    // I have to comment the stuff below for the radiation model
-    // in Models to work in parallel: I don't know why --Kumar
-    // (only the d_myworld->myrank() segment, not the rdombmcalc)
-    /*
     int me = d_myworld->myrank();
     if(me == 0) {
       cerr << "Total Radiation Solve Time: " << Time::currentSeconds()-solve_start << " seconds\n";
     }
-    */
 
-    /*
-      fort_m_rdombmcalc(idxLo, idxHi, cellType, ffield, cellinfo->xx, cellinfo->zz, cellinfo->sew, cellinfo->sns, cellinfo->stb, volume, areaew, arean, areatb, srcbm, qfluxbbm, vars->src, vars->qfluxe, vars->qfluxw, vars->qfluxn, vars->qfluxs, vars->qfluxt, vars->qfluxb, lprobone, lprobtwo, lprobthree, srcpone, volq, srcsum);
-      
+    if (test_problems) {
+      fort_m_rdombmcalc(idxLo, idxHi, 
+			cellinfo->xx, 
+			cellinfo->zz, 
+			cellinfo->sew, 
+			cellinfo->sns, 
+			cellinfo->stb, 
+			volume,
+			srcbm, 
+			qfluxbbm, 
+			vars->src, 
+			vars->qfluxe, 
+			vars->qfluxw, 
+			vars->qfluxn, 
+			vars->qfluxs, 
+			vars->qfluxt, 
+			vars->qfluxb, 
+			lprobone, lprobtwo, lprobthree, 
+			srcpone, 
+			volq, 
+			srcsum);
       cerr << "Total radiative source =" << srcsum << " watts\n";
-    */
+    } 
   }//end discrete ordinates
 
 
