@@ -80,7 +80,7 @@ ConsecutiveRangeSet::ConsecutiveRangeSet(int low, int high)
 }
 
 // initialize a range set with a string formatted like: "1, 2-8, 10, 15-30"
-ConsecutiveRangeSet::ConsecutiveRangeSet(std::string setstr)
+ConsecutiveRangeSet::ConsecutiveRangeSet(const std::string& setstr)
   throw(ConsecutiveRangeSetException)
   : size_(0) // set to zero just to start
 {
