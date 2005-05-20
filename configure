@@ -5719,6 +5719,24 @@ echo "${ECHO_T}no ($_SCI_REPORT_)" >&6
     else
 	SOFLAGS="-dynamiclib"
     fi
+    case $F77 in
+      *g77*)
+         # extra_fflags has array checking if in debug mode.
+         FFLAGS="$FFLAGS $extra_cflags $extra_fflags"
+
+         # put '_' at end and two '_'s if there is a '_' in name.
+         # This flag is used by the genfspec.pl script in Uintah (generated
+         # from fspec.pl.in).
+         FORTRAN_UNDERSCORE=linux
+         ;;
+      *gfortran*)
+         FFLAGS="$FFLAGS $extra_cflags"
+         FORTRAN_UNDERSCORE=linux
+         ;;
+      *)
+         FFLAGS="$FFLAGS $extra_cflags"
+         ;;
+    esac
 
 
     ;;
