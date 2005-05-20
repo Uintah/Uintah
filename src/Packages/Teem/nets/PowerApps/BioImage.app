@@ -482,7 +482,8 @@ class BioImageApp {
 	    set maxtime [expr $nrrd_size-1]
 	    setGlobal $mods(NrrdSelectTime_2)-selectable_min 0
 	    setGlobal $mods(NrrdSelectTime_2)-selectable_max $maxtime
-	    setGlobal $mods(NrrdSelectTime_2)-range_max $maxtime    
+	    setGlobal $mods(NrrdSelectTime_2)-range_max $maxtime
+
 	    foreach page $mods(NrrdSelectTime_2_pages) {
 		$mods(NrrdSelectTime_2) update_range $page
 	    }
@@ -1111,8 +1112,8 @@ class BioImageApp {
 	set m32 [addModuleAtPosition "Teem" "NrrdData" "NrrdSelectTime" 141 2155]
 	set m33 [addModuleAtPosition "Teem" "NrrdData" "NrrdSelectTime" 123 2074]
 	set m34 [addModuleAtPosition "Teem" "NrrdData" "NrrdSelectTime" 0 1895]
-	set m35 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 174 1797]
-	set m36 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxinsert" 174 1717]
+	set m35 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 10 1222]
+	set m36 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxinsert" 28 1142]
 
 	# Create the Connections between Modules
 	set c1 [addConnection $m4 0 $m5 0]
@@ -1130,10 +1131,10 @@ class BioImageApp {
 	set c13 [addConnection $m12 0 $m14 0]
 	set c14 [addConnection $m12 0 $m13 0]
 	set c16 [addConnection $m14 0 $m15 0]
-	set c17 [addConnection $m35 0 $m17 0]
-	set c15 [addConnection $m14 0 $m16 0]
-	set c18 [addConnection $m35 0 $m34 0]
-	set c19 [addConnection $m35 0 $m18 0]
+	set c17 [addConnection $m16 0 $m17 0]
+	set c15 [addConnection $m35 0 $m16 0]
+	set c18 [addConnection $m16 0 $m34 0]
+	set c19 [addConnection $m16 0 $m18 0]
 	set c20 [addConnection $m33 0 $m26 0]
 	set c21 [addConnection $m34 0 $m28 0]
 	set c22 [addConnection $m18 0 $m33 0]
@@ -1146,7 +1147,7 @@ class BioImageApp {
 	set c28 [addConnection $m20 0 $m32 0]
 	set c30 [addConnection $m30 0 $m31 1]
 	set c31 [addConnection $m2 0 $m6 1]
-	set c32 [addConnection $m35 0 $m19 1]
+	set c32 [addConnection $m16 0 $m19 1]
 	set c33 [addConnection $m32 0 $m26 1]
 	set c34 [addConnection $m33 1 $m32 1]
 	set c35 [addConnection $m34 1 $m33 1]
@@ -1165,13 +1166,13 @@ class BioImageApp {
 	set c48 [addConnection $m33 0 $m28 5]
 	set c49 [addConnection $m31 0 $mods(Viewer) 0]
 	set c50 [addConnection $m28 0 $mods(Viewer) 1]
-	set c51 [addConnection $m16 0 $m35 0]
-	set c52 [addConnection $m16 0 $m36 0]
+	set c51 [addConnection $m14 0 $m35 0]
+	set c52 [addConnection $m14 0 $m36 0]
 	set c53 [addConnection $m36 0 $m35 1]
 
 	global ConnectionRoutes
 	set ConnectionRoutes($c2) {274 2605 274 2614 579 2614 579 2378 386 2378 386 2385}
-	set ConnectionRoutes($c15) {22 963 22 1277 271 1277 271 31 468 31 468 1535 186 1535 186 1797}
+#	set ConnectionRoutes($c15) {22 963 22 1377 271 1277 271 31 468 31 468 1535 186 1535 186 1797}
 	set ConnectionRoutes($c17) {186 1854 186 1872.0 471 1872.0 471 1897}
 	set ConnectionRoutes($c18) {186 1854 186 1869.0 12 1869.0 12 1895}
 	set ConnectionRoutes($c21) {12 1952 12 2533.0 256 2533.0 256 2548}
@@ -1291,6 +1292,7 @@ class BioImageApp {
 	setGlobal $m30-min 0
 	setGlobal $m30-max 0
 
+	setGlobal $m34-playmode loop
 	setGlobal $m36-axis M
 
 	# disable other load modules
@@ -1331,7 +1333,7 @@ class BioImageApp {
 			  $m21 $m22 $m15 $m28 $m27 $m17 $m7 $m9 $m11 \
 			  $m13 $m10 $m12 $m14 $m8 $m30]
 
-	set filters(0) [list load $mod_list [list $m6] [list $m14 0] \
+	set filters(0) [list load $mod_list [list $m6] [list $m35 0] \
 			    start end 0 0 1 "Data - Unknown"]
 
 	toggle_show_vol_ren
