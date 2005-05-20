@@ -17,16 +17,17 @@ SRCS     += \
 	$(SRCDIR)/CompNeoHookImplicit.cc 	\
 	$(SRCDIR)/TransIsoHyper.cc              \
 	$(SRCDIR)/TransIsoHyperImplicit.cc 	\
-	$(SRCDIR)/ViscoTransIsoHyper.cc              \
+	$(SRCDIR)/ViscoTransIsoHyper.cc         \
 	$(SRCDIR)/CompNeoHookPlas.cc          	\
 	$(SRCDIR)/ViscoScram.cc               	\
-	$(SRCDIR)/ViscoSCRAMHotSpot.cc               	\
+	$(SRCDIR)/ViscoSCRAMHotSpot.cc        	\
 	$(SRCDIR)/HypoElastic.cc              	\
 	$(SRCDIR)/HypoElasticImplicit.cc      	\
+	$(SRCDIR)/ViscoScramImplicit.cc      	\
 	$(SRCDIR)/MWViscoElastic.cc           	\
 	$(SRCDIR)/IdealGasMP.cc               	\
 	$(SRCDIR)/Membrane.cc 			\
-	$(SRCDIR)/ShellMaterial.cc 			\
+	$(SRCDIR)/ShellMaterial.cc 		\
 	$(SRCDIR)/HypoElasticPlastic.cc \
 	$(SRCDIR)/ElasticPlastic.cc 
 
