@@ -60,15 +60,7 @@ itcl_class Teem_NrrdData_NrrdSelectTime {
 	$this-c needexecute
     }
 
-
-    method ui {} {
-        set w .ui[modname]
-        if {[winfo exists $w]} {
-            return
-        }
-
-        toplevel $w
-
+    method build_ui { w } {
 	frame $w.loc -borderwidth 2
 	frame $w.playmode -relief groove -borderwidth 2
 	frame $w.execmode -relief groove -borderwidth 2
@@ -128,7 +120,7 @@ itcl_class Teem_NrrdData_NrrdSelectTime {
 	    -command "$this maybeRestart"
 
 	bind $w.cur <ButtonRelease> "set $this-execmode init; $this-c needexecute"
-	update_range
+	update_range $w
 
 	# Restore range to pre-loaded value
 	set $this-range_min $rmin
@@ -152,19 +144,30 @@ itcl_class Teem_NrrdData_NrrdSelectTime {
 	global $this-delay
 	set delay [set $this-delay]
 	iwidgets::spinint $playmode.delay -labeltext {Step Delay (ms)} \
-	    -range {0 86400000} -justify right -width 5 -step 10 \
+	    -range {0 600000} -justify right -width 5 -step 10 -wrap no \
 	    -textvariable $this-delay -repeatdelay 300 -repeatinterval 10
 	
 	$playmode.delay delete 0 end
 	$playmode.delay insert 0 $delay
 	trace variable $this-delay w "$this maybeRestart;\#"
 
-
 	pack $w.playmode.label -side top -expand yes -fill both
 	pack $w.playmode.once $w.playmode.loop \
 	    $w.playmode.bounce1 $w.playmode.bounce2 $w.playmode.inc_w_exec\
 	    $w.playmode.delay -side top -anchor w
 
+    }
+
+
+    method ui {} {
+        set w .ui[modname]
+        if {[winfo exists $w]} {
+            return
+        }
+
+        toplevel $w
+
+	build_ui $w
 
 	# Create the button to show/hide extened options
 	button $w.expanded
@@ -210,23 +213,24 @@ itcl_class Teem_NrrdData_NrrdSelectTime {
 	}
     }
 
-    method update_range {} {
-        set w .ui[modname]
-        if {[winfo exists $w]} {
-	    upvar \#0 $this-selectable_min min $this-selectable_max max 
+    method update_range { { w "" } } {
+	if { $w == "" } {
+	    set w .ui[modname]
+	}
 
-            $w.min configure -label "Start:" \
-		-from $min -to $max
+        if {![winfo exists $w]} return
 
-            $w.cur config -label "Current:" \
-		-from $min -to $max
-
-            $w.max config -label "End:" \
-		-from $min -to $max
-
-            $w.inc config -label "Increment:" \
-		-from 1 -to [expr $max-$min]
-
-        }
+	upvar \#0 $this-selectable_min min $this-selectable_max max 
+	$w.min configure -label "Start:" \
+	    -from $min -to $max
+	
+	$w.cur config -label "Current:" \
+	    -from $min -to $max
+	
+	$w.max config -label "End:" \
+	    -from $min -to $max
+	
+	$w.inc config -label "Increment:" \
+	    -from 1 -to [expr $max-$min]
     }
 }

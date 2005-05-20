@@ -1973,3 +1973,6 @@ proc compareVersions { ver1 ver2 } {
     return 0
 }
 
+proc txt { args } {
+    return [join $args \n]
+}
