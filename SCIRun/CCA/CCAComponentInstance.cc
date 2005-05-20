@@ -53,7 +53,8 @@ CCAComponentInstance::CCAComponentInstance(SCIRunFramework* framework,
                                            const std::string& typeName,
                             const sci::cca::TypeMap::pointer& com_properties,
                      const sci::cca::Component::pointer& component)
-  : ComponentInstance(framework, instanceName, typeName), component(component)
+  : ComponentInstance(framework, instanceName, typeName),
+        component(component), size(0), rank(0)
 {
   if (com_properties.isNull()) {
     std::cerr << "### Null properties for cca comp" << std::endl;
@@ -184,10 +185,10 @@ void CCAComponentInstance::addProvidesPort(const sci::cca::Port::pointer& port,
       throw CCAException("addProvidesPort called twice for " + portName); 
     }
   }
-  if (!properties.isNull() &&  properties->getInt("size",1)>1){
+  if (!properties.isNull() && properties->getInt("size", 1) > 1) {
     //if port is collective.
-    int size=properties->getInt("size",1);
-    int rank=properties->getInt("rank",0);
+    size = properties->getInt("size", 1);
+    rank = properties->getInt("rank", 0);
     
     mutex->lock();
     
@@ -227,27 +228,41 @@ void CCAComponentInstance::addProvidesPort(const sci::cca::Port::pointer& port,
     }
     mutex->unlock();
     return;
-  }
-  else {
+  } else {
     ports.insert(make_pair(portName,
                          new CCAPortInstance(portName, portType, properties,
                                              port, CCAPortInstance::Provides)));
   }
 }
 
+// should throw CCAException of type 'PortNotDefined'
 void CCAComponentInstance::removeProvidesPort(const std::string& name)
 {
-  std::cerr << "removeProvidesPort not done, name=" << name << std::endl;
+    if (size < 1) {
+        std::cerr << "CCAComponentInstance::removeProvidesPort: name="
+                  << name << std::endl;
+        std::map<std::string, CCAPortInstance*>::iterator iter =
+            ports.find(name);
+        if (iter == ports.end()) { // port can't be found
+            throw CCAException("Port " + name + " is not defined.");
+        }
+
+        // check if port is in use???
+        delete iter->second;
+        ports.erase(iter);
+    } else { // don't handle parallel ports for now
+        std::cerr << "CCAComponentInstance::removeProvidesPort is not implemented: name="
+                  << name << std::endl;
+    }
 }
 
 sci::cca::TypeMap::pointer
 CCAComponentInstance::getPortProperties(const std::string& portName)
 { 
-  if (portName=="")
-    {
+  if (portName=="") {
     //return component property.
     return com_properties;
-    }
+  }
   std::cerr << "getPortProperties not done, name=" << portName << std::endl;
   return sci::cca::TypeMap::pointer(0);
 }

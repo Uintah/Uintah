@@ -159,6 +159,8 @@ private:
   
   sci::cca::Component::pointer component;
   Mutex *mutex;
+  int size;
+  int rank;
   
   CCAComponentInstance(const CCAComponentInstance&);
   CCAComponentInstance& operator=(const CCAComponentInstance&);
