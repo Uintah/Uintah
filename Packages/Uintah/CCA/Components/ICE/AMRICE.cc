@@ -43,18 +43,27 @@ void AMRICE::problemSetup(const ProblemSpecP& params, GridP& grid,
   ICE::problemSetup(params, grid, sharedState);
   ProblemSpecP cfd_ps = params->findBlock("CFD");
   ProblemSpecP ice_ps = cfd_ps->findBlock("ICE");
-  ProblemSpecP amr_ps = ice_ps->findBlock("AMR_Refinement_Criteria_Thresholds");
+  ProblemSpecP amr_ps = ice_ps->findBlock("AMR");
   if(!amr_ps){
     string warn;
-    warn ="\n INPUT FILE ERROR:\n <AMR_Refinement_Criteria_Thresholds> "
+    warn ="\n INPUT FILE ERROR:\n <AMR>  block not found inside of <ICE> block \n";
+    throw ProblemSetupException(warn);
+    
+  }
+  ProblemSpecP refine_ps = amr_ps->findBlock("Refinement_Criteria_Thresholds");
+  if(!refine_ps ){
+    string warn;
+    warn ="\n INPUT FILE ERROR:\n <Refinement_Criteria_Thresholds> "
          " block not found inside of <ICE> block \n";
     throw ProblemSetupException(warn);
   }
-  amr_ps->getWithDefault("Density",     d_rho_threshold,     1e100);
-  amr_ps->getWithDefault("Temperature", d_temp_threshold,    1e100);
-  amr_ps->getWithDefault("Pressure",    d_press_threshold,   1e100);
-  amr_ps->getWithDefault("VolumeFrac",  d_vol_frac_threshold,1e100);
-  amr_ps->getWithDefault("Velocity",    d_vel_threshold,     1e100);
+  
+  amr_ps->getWithDefault(  "regridderTest", d_regridderTest,    false);
+  refine_ps->getWithDefault("Density",     d_rho_threshold,     1e100);
+  refine_ps->getWithDefault("Temperature", d_temp_threshold,    1e100);
+  refine_ps->getWithDefault("Pressure",    d_press_threshold,   1e100);
+  refine_ps->getWithDefault("VolumeFrac",  d_vol_frac_threshold,1e100);
+  refine_ps->getWithDefault("Velocity",    d_vel_threshold,     1e100);
 }
 //___________________________________________________________________              
 void AMRICE::scheduleInitialize(const LevelP& level,
@@ -674,10 +683,10 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
     IntVector badCell;
     if( isEqual<varType>(varType(d_EVIL_NUM),patch,Q, badCell) ){
       ostringstream warn;
-      warn <<"ERROR AMRICE::(somewhere in the refine code) "
+      warn <<"ERROR AMRICE::refine_CF_interfaceOperator "
            << "detected an uninitialized variable "<< badCell 
            << " Patch " << patch->getID() << " Level idx "
-           <<fineLevel->getIndex()<<"\n ";        
+           <<fineLevel->getIndex()<<"\n ";
       throw InvalidValue(warn.str());
     }
   }
@@ -767,27 +776,27 @@ _____________________________________________________________________*/
 void AMRICE::scheduleRefine(const PatchSet* patches,
                                SchedulerP& sched)
 {
-  Ghost::GhostType  gn = Ghost::None; 
   cout_dbg << "AMRICE::scheduleRefine\t\t\t\tP-" << *patches << '\n';
   Task* task = scinew Task("refine",this, &AMRICE::refine);
 
   MaterialSubset* subset = scinew MaterialSubset;
   subset->add(0);
-
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  
   task->requires(Task::NewDW, lb->press_CCLabel,
-               0, Task::CoarseLevel, subset, Task::OutOfDomain, gn, 0);
+               0, Task::CoarseLevel, subset, Task::OutOfDomain, gac,1);
                  
   task->requires(Task::NewDW, lb->rho_CCLabel,
-               0, Task::CoarseLevel, 0, Task::NormalDomain, gn, 0);
+               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
                
   task->requires(Task::NewDW, lb->sp_vol_CCLabel,
-               0, Task::CoarseLevel, 0, Task::NormalDomain, gn, 0);
+               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
   
   task->requires(Task::NewDW, lb->temp_CCLabel,
-               0, Task::CoarseLevel, 0, Task::NormalDomain, gn, 0);
+               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
   
   task->requires(Task::NewDW, lb->vel_CCLabel,
-               0, Task::CoarseLevel, 0, Task::NormalDomain, gn, 0);
+               0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
 
   //__________________________________
   // Model Variables.
@@ -798,7 +807,7 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
        iter != d_modelSetup->tvars.end(); iter++){
       TransportedVariable* tvar = *iter;
       task->requires(Task::NewDW, tvar->var,
-                  0, Task::CoarseLevel, 0, Task::NormalDomain, gn, 0);
+                  0, Task::CoarseLevel, 0, Task::NormalDomain, gac,1);
       task->computes(tvar->var);
     }
   }
@@ -927,21 +936,54 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
                        
   IntVector fl = finePatch->getCellLowIndex();
   IntVector fh = finePatch->getCellHighIndex();
-  cout_dbg <<" coarseToFineOperator: finePatch "<< fl<<" "<< fh<<endl;
-                                
+  cout_dbg <<" coarseToFineOperator: finePatch " <<finePatch->getID() << " " 
+           << fl<<" "<< fh<<endl;
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  
   for(int i=0;i<coarsePatches.size();i++){
     const Patch* coarsePatch = coarsePatches[i];
     constCCVariable<T> coarse_q_CC;
-    new_dw->get(coarse_q_CC, varLabel, indx, coarsePatch,Ghost::None, 0);
+    new_dw->get(coarse_q_CC, varLabel, indx, coarsePatch,gac, 1);
+    
+    // Only interpolate over the intersection of the fine and coarse patches
+    // coarse cell 
+    IntVector cl = coarsePatch->getLowIndex();
+    IntVector ch = coarsePatch->getHighIndex();
+    
+#if 0
+    cout << " coarsePatch " << coarsePatch->getID()<<endl;
+    cout << " before: fl " << fl << " fh " << fh
+         << " cl " << cl << " ch " << ch << endl;
+#endif
+         
+    cl = coarseLevel->mapCellToFiner(cl);
+    ch = coarseLevel->mapCellToFiner(ch);
+    
+    
+    fl = Max(fl, cl);
+    fh = Min(fh, ch);
     
     // compute the mid point of the patch, needed by linear interpolation
     Point  f_loPos = fineLevel->getCellPosition(fl);   
     Point  f_hiPos = fineLevel->getCellPosition(fh);
     Vector patchMidPoint= f_loPos.asVector() + (f_hiPos.asVector() - f_loPos.asVector())/2.0;
 /*`==========TESTING==========*/
-    linearInterpolation<T>(coarse_q_CC, coarseLevel, fineLevel,
-                           refineRatio, fl,fh, patchMidPoint,q_CC); 
-/*===========TESTING==========`*/  
+      linearInterpolation<T>(coarse_q_CC, coarseLevel, fineLevel,
+                            refineRatio, fl,fh, patchMidPoint,q_CC);
+/*===========TESTING==========`*/
+  }
+  
+  //____ B U L L E T   P R O O F I N G_______ 
+  // All values must be initialized at this point
+  // even in the extra cells 
+  IntVector badCell;
+  if( isEqual<T>(T(d_EVIL_NUM),finePatch,q_CC, badCell) ){
+    ostringstream warn;
+    warn <<"ERROR AMRICE::Refine Task:CoarseToFineOperator "
+         << "detected an uninitialized variable "<< varLabel->getName()
+         << " " << badCell << " Patch " << finePatch->getID() 
+         << " Level idx "<<fineLevel->getIndex()<<"\n ";
+    throw InvalidValue(warn.str());
   }
 }
 
@@ -1373,10 +1415,12 @@ void AMRICE::refluxOperator( CCVariable<T>& q_CC_coarse,
   }
   
 /*`==========TESTING==========*/
+#if 0
   cout << " fineVarLabel " << fineVarLabel
        << " \t switch1 " << switch1 
        << " switch2 " << switch2
-       << " switch3 " << switch3 << endl; 
+       << " switch3 " << switch3 << endl;
+ #endif 
 /*===========TESTING==========`*/
   
   //__________________________________
@@ -1386,8 +1430,16 @@ void AMRICE::refluxOperator( CCVariable<T>& q_CC_coarse,
        iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
     Patch::FaceType patchFace = *iter;
  
-    CellIterator iter=finePatch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
-
+    CellIterator f_iter=finePatch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
+    
+    // find the intersection of the fine patch face iterator and underlying coarse patch
+    IntVector f_lo = f_iter.begin();
+    IntVector f_hi = f_iter.end();
+    IntVector c_lo = coarsePatch->getLowIndex();
+    IntVector c_hi = coarsePatch->getHighIndex();
+    IntVector l = Max(f_lo, c_lo);
+    IntVector h = Min(f_hi, c_hi);
+    CellIterator iter = CellIterator(l,h);
   /*`==========TESTING==========*/
 #ifdef SPEW
       cout << "Patch " << finePatch->getID()<< " patchFace " << patchFace 
@@ -1713,5 +1765,51 @@ AMRICE::errorEstimate(const ProcessorGroup*,
       set_refineFlags( vel_CC_mag_grad, d_vel_threshold,refineFlag, 
                             refinePatchFlag, patch);
     }  // matls
+    
+    //______________________________________________________________________
+    //    Hardcoding to move the error flags around every nTimeSteps
+    if(d_regridderTest){
+      double nTimeSteps = 5;  // how ofter to move the error flags
+      const Level* level = getLevel(patches);
+      int dw = d_sharedState->getCurrentTopLevelTimeStep();
+      double timeToMove = fmod((double)dw, nTimeSteps);
+      static int counter = 0;
+
+      if (level->getIndex() == 0 ){
+        //__________________________________
+        // counter to move the error flag around
+        if(timeToMove == 0){
+          counter += 1;
+          if (counter == 8) {
+            counter = 0;
+          }
+        }
+        //__________________________________
+        //  find the 8 corner cells of level 0
+        vector<IntVector> corners;
+        IntVector lo = patch->getInteriorCellLowIndex();
+        IntVector hi = patch->getInteriorCellHighIndex();
+
+        for(int k = 0; k< 2; k++){
+          for(int j = 0; j< 2; j++){
+            for(int i = 0; i< 2; i++){
+              int x = (i) * lo.x() + (1-i)*hi.x();
+              int y = (j) * lo.y() + (1-j)*hi.y();
+              int z = (k) * lo.z() + (1-k)*hi.z();
+              corners.push_back(IntVector(x,y,z));     
+            }
+          }
+        }
+        if(timeToMove == 0){
+          cout << "RegridderTest:  moving the error flag to "<< corners[counter]<<endl; 
+        }
+        //__________________________________
+        //  Set the refinement flag      
+        PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
+        refineFlag[corners[counter]] = true;
+        refinePatch->set();
+      }
+    }  // regridderTest
+    
   }  // patches
 }
