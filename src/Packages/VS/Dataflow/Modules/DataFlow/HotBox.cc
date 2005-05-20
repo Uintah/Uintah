@@ -758,13 +758,6 @@ HotBox::execute()
   // extract the injured tissues from the DOM Document whenever time changes
   execInjuryList();
 
-  // all the time-dependent functions have been done -- update lastTime_
-  if(lastTime_ < currentTime_ - timeEps_ ||
-     currentTime_ + timeEps_ < lastTime_)
-  {
-    lastTime_ = currentTime_;
-  }
-
   if(currentSelection_ != lastSelection_ && dataSource == VS_DATASOURCE_OQAFMA)
   { // get the ontological hierarchy information
     fprintf(stderr, "dataSource = OQAFMA\n");
@@ -828,7 +821,9 @@ HotBox::execute()
     }
   } // end else (HIP data path has been selected)
 
-  if(currentSelection_ != lastSelection_)
+  if(currentSelection_ != lastSelection_ ||
+     lastTime_ < currentTime_ - timeEps_ ||
+     currentTime_ + timeEps_ < lastTime_)
   { // execute reading the HIP time-varying physiological parameters
     // for the selected anatomical structure
     executePhysio();
@@ -839,6 +834,13 @@ HotBox::execute()
     // get the adjacency info for the current selection
     // and populate the adjacency UI
     execAdjacency();
+  }
+
+  // all the time-dependent functions have been done -- update lastTime_
+  if(lastTime_ < currentTime_ - timeEps_ ||
+     currentTime_ + timeEps_ < lastTime_)
+  {
+    lastTime_ = currentTime_;
   }
 
   // draw HotBox Widget
@@ -2271,8 +2273,9 @@ HotBox::makeInjGeometry()
 void
 HotBox::executePhysio()
 {
-  // skip execution if the current selection has not changed
-  if(currentSelection_ == lastSelection_) return;
+  // skip execution if the current selection and time have not changed
+  if(currentSelection_ == lastSelection_)
+     return;
 
   // get the name of the Nrrd file containing the parameters for this selection
   char *nrrdFileName = 
@@ -2337,7 +2340,10 @@ HotBox::executeHighlight()
   struct stat buf;
 
   // skip execution if the currentSelection has not changed
-  if(currentSelection_ == lastSelection_) return;
+  if(currentSelection_ == lastSelection_ &&
+         lastTime_ >= currentTime_ - timeEps_ &&
+         currentTime_ + timeEps_ >= lastTime_)
+     return;
 
   const string geometryPath(geometrypath_.get());
   if( geometryPath == "" )
