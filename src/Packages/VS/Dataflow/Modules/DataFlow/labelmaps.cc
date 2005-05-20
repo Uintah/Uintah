@@ -415,7 +415,7 @@ VH_AdjacencyMapping::get_num_rel(int index)
      return numrel[index];
   else
   {
-     cerr << "VH_AdjacencyMapping:::get_num_rel(): index " << index;
+     cerr << "VH_AdjacencyMapping::get_num_rel(): index " << index;
      cerr << " out of range " << num_names << endl;
   }
   // return the number of relations for "unknown"

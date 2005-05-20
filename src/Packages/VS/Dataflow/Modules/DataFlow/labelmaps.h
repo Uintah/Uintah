@@ -198,7 +198,8 @@ class VH_injury
 {
   public:
   string anatomyname;
-  int timeStamp;
+  double timeStamp;
+  string timeUnit;
   // flags to test our tree traversal context
   int context;
   bool isPrimaryInjury, isSecondaryInjury, isGeometry;
