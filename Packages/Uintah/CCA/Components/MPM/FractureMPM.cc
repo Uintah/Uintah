@@ -54,7 +54,7 @@ using namespace SCIRun;
 using namespace std;
 
 static DebugStream cout_doing("MPM", false);
-static DebugStream cout_dbg("FractureMPM", true);
+static DebugStream cout_dbg("FractureMPM", false);
 static DebugStream cout_convert("MPMConv", false);
 static DebugStream cout_heat("MPMHeat", false);
 static DebugStream amr_doing("AMRMPM", false);
