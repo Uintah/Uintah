@@ -621,8 +621,6 @@ set $m32-port-index {1}
 set $m33-operator {max}
 
 # Set GUI variables for the Teem->DataIO->AnalyzeNrrdReader Module
-#setGlobal $m36-num-files {1}
-#setGlobal $m36-filenames0 "/home/darbyb/work/data/SCIRunData/1.22.0/Test.hdr"
 ####################################################
 # Determine if load file was passed in
 if {[netedit getenv LEVELSETSEGMENTER_LOWRES_FILE] != ""} {
@@ -649,11 +647,6 @@ if {[netedit getenv LEVELSETSEGMENTER_LOWRES_FILE] != ""} {
 	 }
      }
 }
-
-
-
-
-
 
 # GradientAnisotropicDiffusion_0
 setGlobal $m37-time_step 0.0625
@@ -4281,6 +4274,10 @@ class LevelSetSegmenterApp {
 	set $mods(ShowField-Seg)-faces-on 1
 	$mods(ShowField-Seg)-c toggle_display_faces
 
+ 	# Turn speed off
+	global $mods(ShowField-Speed)-faces-on
+	set $mods(ShowField-Speed)-faces-on 0
+
  	# Turn seeds off
  	global show_seeds
  	set show_seeds 0
@@ -4563,6 +4560,28 @@ class LevelSetSegmenterApp {
 	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint17 (3)} $val
 	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint18 (3)} $val
 	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint19 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint20 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint21 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint22 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint23 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint24 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint25 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint26 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint27 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint28 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint29 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint30 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint31 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint32 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint33 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint34 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint35 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint36 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint37 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint38 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint39 (3)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint40 (3)} $val
+
 	 
 	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint0 (4)} $val
 	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint1 (4)} $val
@@ -4584,6 +4603,27 @@ class LevelSetSegmenterApp {
 	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint17 (4)} $val
 	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint18 (4)} $val
 	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint19 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint20 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint21 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint22 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint23 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint24 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint25 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint26 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint27 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint28 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint29 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint30 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint31 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint32 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint33 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint34 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint35 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint36 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint37 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint38 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint39 (4)} $val
+	 setGlobal {$mods(Viewer)-ViewWindow_0-SeedPoint40 (4)} $val
 	 
 	 $mods(Viewer)-ViewWindow_0-c redraw
 	 
