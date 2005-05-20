@@ -91,7 +91,7 @@ UnuAxinsert::execute()
     warning(axis_.get()+" is not a valid axis number.");
     warning("Using axis number: "+to_string(axis));
   }
-  axis = Clamp(0, nin->dim);
+  axis = Clamp(axis, 0, nin->dim);
   axis_.set(to_string(axis));
   
   if (nrrdAxesInsert(nout, nin, axis)) {
