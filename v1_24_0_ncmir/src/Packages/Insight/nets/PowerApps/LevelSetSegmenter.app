@@ -623,6 +623,37 @@ set $m33-operator {max}
 # Set GUI variables for the Teem->DataIO->AnalyzeNrrdReader Module
 #setGlobal $m36-num-files {1}
 #setGlobal $m36-filenames0 "/home/darbyb/work/data/SCIRunData/1.22.0/Test.hdr"
+####################################################
+# Determine if load file was passed in
+if {[netedit getenv LEVELSETSEGMENTER_LOWRES_FILE] != ""} {
+    set file [netedit getenv LEVELSETSEGMENTER_LOWRES_FILE]
+
+    # Check if the file is an analyze file and that it exists
+    set index [string last "." $file]
+     if {$index > 0} {
+	 set ext [string range $file $index end]
+	 
+	 if {[string equal $ext ".hdr"] == 1} {
+
+	     if {[file exists $file]} {
+		 # Analyze file
+		 setGlobal $m36-num-files {1}
+		 setGlobal $m36-filenames0 $file
+	     } else {
+	     tk_messageBox -message "Low-Res file $file does not exist." \
+		 -type ok -icon info -parent .
+	     }
+	 } else {
+	     tk_messageBox -message "Low-Res file $file must be of type .hdr." \
+		 -type ok -icon info -parent .
+	 }
+     }
+}
+
+
+
+
+
 
 # GradientAnisotropicDiffusion_0
 setGlobal $m37-time_step 0.0625
@@ -695,10 +726,34 @@ set $m53-format {Isocontours}
 set $m53-location {Top Center}
 
 # Set GUI variables for the Insight->DataIO->SliceReader Module
-#setGlobal $m54-filename \
-#    "/home/darbyb/work/data/SCIRunData/1.22.0/smallcere.hdr"
 setGlobal $m54-cast_output {1}
-#setGlobal $m54-slice {0}
+####################################################
+# Determine if load file was passed in
+if {[netedit getenv LEVELSETSEGMENTER_LOAD_FILE] != ""} {
+    set file [netedit getenv LEVELSETSEGMENTER_LOAD_FILE]
+
+    # Check if the file is an analyze file and that it exists
+
+    set index [string last "." $file]
+     if {$index > 0} {
+	 set ext [string range $file $index end]
+	 
+	 if {[string equal $ext ".hdr"] == 1 || \
+		 [string equal $ext ".img"] == 1} {
+
+	     if {[file exists $file]} {
+		 # Analyze file
+		 set $m54-filename $file
+	     } else {
+	     tk_messageBox -message "High-Res file $file does not exist." \
+		 -type ok -icon info -parent .
+	     }
+	 } else {
+	     tk_messageBox -message "High-Res file $file must be of type .hdr or .img" \
+		 -type ok -icon info -parent .
+	 }
+     }
+}
 
 set $m56-mapName {BP Seismic}
 set $m56-resolution {2}
@@ -725,39 +780,7 @@ set $m62-which_transform {scale}
 set $m62-widget_scale {1.0}
 
 
-####################################################
-# Determine if load file was passed in, 
-# and if it is an analyze file, otherwise it
-# defaults to use the nrrd reader (generic tab)
-# global load_file
-# set load_file ""
-# global load_file_type
-# set load_file_type "Generic"
-# if {[netedit getenv LEVELSETSEGMENTER_LOAD_FILE] == ""} {
-#     set load_file  "/usr/sci/data/Medical/ucsd/king_filt/king_filt-full.nhdr"
-#     set load_file_type "Generic"
-# } else {
-#     # Determine which reader to use by looking at file extension
-#     set index [string last "." [netedit getenv LEVELSETSEGMENTER_LOAD_FILE]]
-#     if {$index > 0} {
-# 	set ext [string range [netedit getenv LEVELSETSEGMENTER_LOAD_FILE] $index end]
 
-# 	if {[string equal $ext ".hdr"] == 1} {
-# 	    # Analyze file
-# 	    set load_file [netedit getenv LEVELSETSEGMENTER_LOAD_FILE]
-# 	    set load_file_type "Analyze"
-# 	} else {
-# 	    # Some other file, hopefully something the generic
-# 	    # tab (NrrdReader) can handle -- DICOM can't be read
-# 	    # in via command line
-# 	    set load_file [netedit getenv LEVELSETSEGMENTER_LOAD_FILE]
-# 	    set load_file_type "Generic"
-# 	}
-#     } else {
-# 	set load_file  "/usr/sci/data/Medical/ucsd/king_filt/king_filt-full.nhdr"
-# 	set load_file_type "Generic"
-#     }
-# }
 
 # # NrrdReader_0
 # if {[string equal $load_file_type "Generic"] == 1} {
@@ -895,8 +918,37 @@ set show_seeds 1
 global commit_dir
 set commit_dir "/tmp"
 
+####################################################
+# Determine if a commit dir was passed in, if not, default to /tmp
+if {[netedit getenv LEVELSETSEGMENTER_COMMIT_DIR] != ""} {
+    set dir [netedit getenv LEVELSETSEGMENTER_COMMIT_DIR]
+
+    # Check if the directory exist
+    if {[file isdirectory $dir]} {
+	global commit_dir 
+	set commit_dir $dir
+    } else {
+	set result [tk_messageBox -message "Directory $dir does not exist.\nClick Ok to attempt to create directory." -type okcancel -icon info -parent .]
+	
+	if {$result == "ok"} {
+	    file mkdir $dir
+	    if {[file isdirectory $dir]} {
+		global commit_dir
+		set commit_dir $dir
+	    }
+	}
+    }
+}
+
 global base_filename
 set base_filename "out"
+####################################################
+# Determine if a commit root was passed in, if not, default to out
+if {[netedit getenv LEVELSETSEGMENTER_COMMIT_ROOT] != ""} {
+    global base_filename
+    set base_filename [netedit getenv LEVELSETSEGMENTER_COMMIT_ROOT]
+}
+
 
 global spacing
 set spacing 1.0
