@@ -1858,7 +1858,7 @@ ViewSlices::apply_colormap(NrrdSlice &slice, float *data)
 
 double
 ViewSlices::get_value(const Nrrd *nrrd, int x, int y, int z) {
-  ASSERT(nrrd->dim == 3);
+  ASSERT(nrrd->dim >= 3);
   const int position = nrrd->axis[0].size*(z*nrrd->axis[1].size+y)+x;
   switch (nrrd->type) {
   case nrrdTypeChar: {
@@ -2493,8 +2493,10 @@ ViewSlices::execute()
 
   double min_value = airNaN();
   double max_value = airNaN();
-
+  bool do_autoview = false;
   for (a = 0; a < 3; a++) {
+    if (max_slice_[a] == -1)
+      do_autoview = true;
     max_slice_[a] = -1;
     scale_[a] = airNaN();
   }
@@ -2570,8 +2572,9 @@ ViewSlices::execute()
     for (int n = 0; n < 3; ++n)
       if (mip_slices_[n])
 	rebind_slice(*mip_slices_[n]);
-    for_each(&ViewSlices::autoview);
   }
+  if (do_autoview)
+    for_each(&ViewSlices::autoview);
   redraw_all();
   TCLTask::unlock();
 
@@ -2900,7 +2903,7 @@ ViewSlices::tcl_command(GuiArgs& args, void* userdata) {
     for_each(*layouts_[args[2]], &ViewSlices::redraw_window);
   } else if(args[1] == "resize") {
     ASSERT(layouts_.find(args[2]) != layouts_.end());
-    for_each(*layouts_[args[2]], &ViewSlices::autoview);
+    //    for_each(*layouts_[args[2]], &ViewSlices::autoview);
   } else if(args[1] == "redrawall") {
     redraw_all();
   } else if(args[1] == "rebind") {
