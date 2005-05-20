@@ -23,6 +23,7 @@ SUBDIRS := $(SRCDIR)/EOS $(SRCDIR)/Advection $(SRCDIR)/CustomBCs
 include $(SCIRUN_SCRIPTS)/recurse.mk          
 
 PSELIBS := \
+       Packages/Uintah/CCA/Components/MPM              \
        Packages/Uintah/CCA/Ports                       \
        Packages/Uintah/Core/Grid                       \
        Packages/Uintah/Core/Util                       \
