@@ -219,13 +219,15 @@
         <advection type = "FirstOrder" />
         <solution technique = "EqForm" />
         <!--if gradient is > knob then refine -->
-        <AMR_Refinement_Criteria_Thresholds>
-          <Density>     1e100    </Density>
-          <Temperature> 1e100    </Temperature>
-          <Pressure>    1e100    </Pressure>
-          <VolumeFrac>  1e100    </VolumeFrac>
-          <Velocity>    1e100    </Velocity>
-        </AMR_Refinement_Criteria_Thresholds>
+        <AMR>
+          <Refinement_Criteria_Thresholds>
+            <Density>     1e100    </Density>
+            <Temperature> 1e100    </Temperature>
+            <Pressure>    1e100    </Pressure>
+            <VolumeFrac>  1e100    </VolumeFrac>
+            <Velocity>    1e100    </Velocity>
+          </Refinement_Criteria_Thresholds>
+        </AMR>
       </ICE>        
     </CFD>
 
