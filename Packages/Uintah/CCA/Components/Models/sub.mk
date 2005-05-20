@@ -16,6 +16,7 @@ PSELIBS := \
 	Core/Geometry \
 	Core/Thread \
 	Core/Util \
+	Packages/Uintah/CCA/Components/MPM \
         Packages/Uintah/CCA/Ports \
 	Packages/Uintah/Core/Disclosure \
 	Packages/Uintah/Core/Exceptions \
