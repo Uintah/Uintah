@@ -66,24 +66,18 @@ PSELIBS := Core/OS Core/Containers Core/Util Dataflow/XMLUtil \
 	Core/CCA/PIDL Core/CCA/SSIDL \
 	Core/Exceptions Core/TkExtensions Core/Thread \
 	Core/globus_threads Core/CCA/Comm
- ifeq ($(HAVE_RUBY,yes)
-   PSELIBS := $(PSELIBS) Core/CCA/tools/strauss
- endif
 else
 PSELIBS := Core/OS Core/Containers Core/Util Dataflow/XMLUtil \
 	Dataflow/Network Core/GuiInterface Core/CCA/spec \
 	Core/CCA/PIDL Core/CCA/SSIDL \
 	Core/Exceptions Core/Thread Core/CCA/Comm  
-#Core/TkExtensions 
- ifeq ($(HAVE_RUBY),yes)
-   PSELIBS := $(PSELIBS) Core/CCA/tools/strauss
- endif	
 endif
 
 LIBS := $(XML_LIBRARY)  
 
 ifeq ($(HAVE_RUBY),yes)
- INCLUDES := $(RUBY_INCLUDE) $(INCLUDES)
+ PSELIBS := $(PSELIBS) Core/CCA/tools/strauss
+ INCLUDES := $(RUBY_INCLUDE) $(INCLUDES) 
  LIBS := $(RUBY_LIBRARY) $(LIBS)
 endif
 

@@ -54,6 +54,8 @@
 #include <iostream>
 #include <string>
 
+using namespace std;
+
 namespace SCIRun {
 
 BuilderService::BuilderService(SCIRunFramework* framework,
@@ -318,6 +320,9 @@ SSIDL::array1<std::string> BuilderService::getBridgablePortList(
      const std::string& port1,
      const sci::cca::ComponentID::pointer& c2)
 {
+  SSIDL::array1<std::string> availablePorts;
+
+#if HAVE_RUBY
   ComponentID* cid1 = dynamic_cast<ComponentID*>(c1.getPointer());
   ComponentID* cid2 = dynamic_cast<ComponentID*>(c2.getPointer());
   if (!cid1 || !cid2)
@@ -333,7 +338,6 @@ SSIDL::array1<std::string> BuilderService::getBridgablePortList(
   if (!pr1)
     throw CCAException("Unknown port");
 
-  SSIDL::array1<std::string> availablePorts;
   if (cid1 == cid2) { // same component
     return availablePorts;
   }
@@ -343,13 +347,9 @@ SSIDL::array1<std::string> BuilderService::getBridgablePortList(
     if ((pr1->getModel() != pr2->getModel())&&(autobr.canBridge(pr1,pr2)))
       availablePorts.push_back(pr2->getUniqueName());
   }
+#endif
 
   return availablePorts;
-}
-
-std::string 
-BuilderService::getFrameworkURL() {
-  return framework->getURL().getString();
 }
 
 std::string 
@@ -358,6 +358,7 @@ BuilderService::generateBridge(const sci::cca::ComponentID::pointer& c1,
                                const sci::cca::ComponentID::pointer& c2,
                                const std::string& port2)
 {
+#if HAVE_RUBY
   ComponentID* cid1 = dynamic_cast<ComponentID*>(c1.getPointer());
   ComponentID* cid2 = dynamic_cast<ComponentID*>(c2.getPointer());
   if (!cid1 || !cid2) {
@@ -377,7 +378,14 @@ BuilderService::generateBridge(const sci::cca::ComponentID::pointer& c1,
     throw CCAException("Unknown port");
   }
   return (autobr.genBridge(pr1->getModel(),cid1->name,pr2->getModel(),cid2->name));
+#endif
 }
+
+std::string
+BuilderService::getFrameworkURL() {
+  return framework->getURL().getString();
+}
+
 
 int BuilderService::addComponentClasses(const std::string &loaderName)
 {

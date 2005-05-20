@@ -41,10 +41,15 @@
 #ifndef SCIRun_BuilderService_h
 #define SCIRun_BuilderService_h
 
+#include <sci_defs/ruby_defs.h>
+
 #include <Core/CCA/spec/cca_sidl.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
 #include <SCIRun/Internal/InternalComponentInstance.h>
+
+#ifdef HAVE_RUBY
 #include <SCIRun/Bridge/AutoBridge.h>
+#endif
 
 namespace SCIRun {
 
@@ -195,11 +200,10 @@ class BuilderService : public sci::cca::ports::BuilderService,
   /** */
   virtual std::string
   generateBridge(const sci::cca::ComponentID::pointer &c1,
-                 const string &port1,
+                 const std::string &port1,
                  const sci::cca::ComponentID::pointer &c2,
-                 const string &port2);
+                 const std::string &port2);
   // END Bridge methods
-
   
   /** */
   sci::cca::Port::pointer getService(const std::string &);
@@ -218,7 +222,9 @@ class BuilderService : public sci::cca::ports::BuilderService,
     /** ? */
     void emitConnectionEvent(ConnectionEvent* event);
 
+#ifdef HAVE_RUBY
     AutoBridge autobr;
+#endif
   };
 }
 

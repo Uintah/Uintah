@@ -38,14 +38,18 @@
  *
  */
 #include <sci_defs/babel_defs.h>
+#include <sci_defs/ruby_defs.h>
+
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/TypeMap.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
 #include <SCIRun/Internal/ComponentEvent.h>
 #include <SCIRun/Internal/ComponentEventService.h>
 #include <SCIRun/CCA/CCAComponentModel.h>
-#if HAVE_BABEL
+#if HAVE_BABEL 
+#if HAVE_RUBY
 #include <SCIRun/Bridge/BridgeComponentModel.h>
+#endif
 #include <SCIRun/Babel/BabelComponentModel.h>
 #endif
 
@@ -74,8 +78,10 @@ SCIRunFramework::SCIRunFramework()
   models.push_back(internalServices = new InternalComponentModel(this));
   models.push_back(dflow = new SCIRunComponentModel(this));
   models.push_back(cca = new CCAComponentModel(this));
-#if HAVE_BABEL
+#if HAVE_BABEL 
+#if HAVE_RUBY
   models.push_back(new BridgeComponentModel(this));
+#endif
   models.push_back(babel = new BabelComponentModel(this));
 #endif
   models.push_back(vtk = new VtkComponentModel(this));
