@@ -10,6 +10,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoTransIsoHyper.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookPlas.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScram.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScramImplicit.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoSCRAMHotSpot.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticImplicit.h>
@@ -51,7 +52,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     string txt="MPM: time integrator [explicit or implicit] hasn't been set.";
     throw ProblemSetupException(txt);
   }   
-   
+
   if (mat_type == "rigid")
     return(scinew RigidMaterial(child,lb,flags));
 
@@ -88,8 +89,13 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (mat_type == "comp_neo_hook_plastic")
     return(scinew CompNeoHookPlas(child,lb,flags));
    
-  else if (mat_type ==  "visco_scram")
-    return(scinew ViscoScram(child,lb,flags));
+  else if (mat_type ==  "visco_scram"){
+    if (flags->d_integrator_type == "explicit" || 
+        flags->d_integrator_type == "fracture")
+      return(scinew ViscoScram(child,lb,flags));
+    else if (flags->d_integrator_type == "implicit")
+      return(scinew ViscoScramImplicit(child,lb,flags));
+  }
    
   else if (mat_type ==  "viscoSCRAM_hs")
     return(scinew ViscoSCRAMHotSpot(child,lb,flags));
