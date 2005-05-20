@@ -60,7 +60,7 @@ set c14 [addConnection $m2 0 $m3 4]
 set c15 [addConnection $m11 0 $m3 5]
 
 # Set GUI variables for the SCIRun->DataIO->FieldReader Module
-set $m1-filename "/home/dickson/Digital_Human_Work/VS_atlas/SCIRun-converted/vs-data-cells.lvs.fld"
+set $m1-filename "$DATADIR/$DATASET/vs-data-cells.lvs.fld"
 set $m1-filetype {SCIRun Field File (*.fld)}
 
 # Set GUI variables for the VS->DataFlow->HotBox Module

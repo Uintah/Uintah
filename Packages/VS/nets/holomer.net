@@ -436,11 +436,11 @@ set $m19-gui_siblist_name {::VS_DataFlow_HotBox_0-gui_sibling_list}
 set $m19-gui_childlist_name {::VS_DataFlow_HotBox_0-gui_child_list}
 set $m19-datasource {1}
 set $m19-selectionsource {fromProbe}
-set $m19-anatomydatasource {/fwdrive/mjc/SRData/1.24.0/vs-data/FMAAtlas/MasterAnatomyFMA.csv}
-set $m19-adjacencydatasource {/fwdrive/mjc/SRData/1.24.0/vs-data/FMAAtlas/AdjacencyMappingFMA.csv}
-set $m19-boundingboxdatasource {/fwdrive/mjc/SRData/1.24.0/vs-data/FMAAtlas/AnatomyBoundingBoxesFMA.csv}
+set $m19-anatomydatasource $DATADIR/$DATASET/FMAAtlas/MasterAnatomyFMA.csv
+set $m19-adjacencydatasource $DATADIR/$DATASET/FMAAtlas/AdjacencyMappingFMA.csv
+set $m19-boundingboxdatasource $DATADIR/$DATASET/FMAAtlas/AnatomyBoundingBoxesFMA.csv
 set $m19-oqafmadatasource {http://fme.biostr.washington.edu:8082/OQAFMA_Service/services/ServiceInterface}
-set $m19-geometrypath {/fwdrive/mjc/SRData/1.24.0/vs-data/Decimated}
+set $m19-geometrypath $DATADIR/$DATASET/Decimated
 set $m19-hipvarpath {}
 set $m19-currentselection {unknown}
 set $m19-gui_probeLocx {0.0}

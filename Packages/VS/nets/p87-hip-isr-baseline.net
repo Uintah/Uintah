@@ -27,7 +27,7 @@ set c2 [addConnection $m1 0 $m2 1]
 set c3 [addConnection $m3 0 $m2 2]
 
 # Set GUI variables for the Teem->DataIO->NrrdReader Module
-set $m1-filename "/scratch/mjc/SRData/1.24.1/vs-data/P87-HIP/respcycles/P87baseline1RC.nrrd"
+set $m1-filename "$DATADIR/$DATASET/P87-HIP/respcycles/P87baseline1RC.nrrd"
 set $m1-filetype {Nrrd Files (*.nhdr,*.nrrd,*.nd,*.vff,*.pic,*.pict,*.vol,*.v)}
 
 # Set GUI variables for the VS->Render->ICUMonitor Module
@@ -188,7 +188,7 @@ set $m2-plot_color-7-b {0.0}
 $m2 initialize_ui
 
 # Set GUI variables for the Teem->DataIO->NrrdReader Module
-set $m3-filename "/scratch/mjc/SRData/1.24.1/vs-data/P87-HIP/respcycles/P87_ISR_baseline1RC.nrrd"
+set $m3-filename "$DATADIR/$DATASET/P87-HIP/respcycles/P87_ISR_baseline1RC.nrrd"
 set $m3-filetype {Nrrd Files (*.nhdr,*.nrrd,*.nd,*.vff,*.pic,*.pict,*.vol,*.v)}
 
 # Set GUI variables for the SCIRun->Time->TimeControls Module

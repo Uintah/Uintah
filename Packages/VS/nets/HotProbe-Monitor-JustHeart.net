@@ -126,13 +126,13 @@ set $m2-gui_child(2) {‡(­û§B§B§B§B§B§B§B¨B}
 set $m2-gui_childlist_name {::VS_DataFlow_HotBox_0-gui_child_list}
 set $m2-querytype {3}
 set $m2-selectionsource {fromProbe}
-set $m2-anatomydatasource {/usr/local/SCIRunData/vs-data/FMAAtlas/MasterAnatomyFMA.csv}
-set $m2-adjacencydatasource {/usr/local/SCIRunData/vs-data/FMAAtlas/AdjacencyMappingFMA.csv}
-set $m2-boundingboxdatasource {/usr/local/SCIRunData/vs-data/FMAAtlas/AnatomyBoundingBoxesFMA.csv}
-set $m2-injurylistdatasource {/usr/local/SCIRunData/vs-data/Zone12InjuryList.xml}
+set $m2-anatomydatasource $DATADIR/$DATASET/FMAAtlas/MasterAnatomyFMA.csv
+set $m2-adjacencydatasource $DATADIR/$DATASET/FMAAtlas/AdjacencyMappingFMA.csv
+set $m2-boundingboxdatasource $DATADIR/$DATASET/FMAAtlas/AnatomyBoundingBoxesFMA.csv
+set $m2-injurylistdatasource $DATADIR/$DATASET/Zone12InjuryList.xml
 set $m2-oqafmadatasource {http://fme.biostr.washington.edu:8082/OQAFMA_Service/services/ServiceInterface}
-set $m2-geometrypath {/usr/local/SCIRunData/vs-data/FMAAtlas/Models/decimField}
-set $m2-hipvarpath {/usr/local/SCIRunData/vs-data/VSKB}
+set $m2-geometrypath $DATADIR/$DATASET/FMAAtlas/Models/decimField
+set $m2-hipvarpath $DATADIR/$DATASET/VSKB
 set $m2-currentselection {Myocardial zone 7}
 set $m2-gui_probeLocx {96.9}
 set $m2-gui_probeLocy {60.0}

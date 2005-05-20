@@ -48,6 +48,7 @@
 #include <Dataflow/XMLUtil/StrX.h>
 
 #include <sys/stat.h>
+#include <math.h>
 #include <string.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -88,6 +89,8 @@ using namespace SCIRun;
 
 #define CYLREZ 20
 #define MIN3(x, y, z) MIN(x, MIN(y, z))
+
+class TimeSync;
 
 class HotBox : public Module {
 private:
@@ -182,8 +185,12 @@ private:
   GuiString currentselection_;
 
   // current time
-  GuiInt gui_curTime_;
-  int currentTime_, lastTime_;
+  GuiString gui_curTime_;
+  double currentTime_, lastTime_, timeEps_;
+
+  // a thread to update time from input port
+  TimeSync *timeSyncer_;
+  Thread *timeSyncer_thread_;
 
   // fixed anatomical label map files
   VH_MasterAnatomy *anatomytable_;
@@ -225,7 +232,8 @@ private:
   void executeProbe();
   void execAdjacency();
   void execSelColorMap();
-  void traverseDOMtree(DOMNode &, int, int, int *, int *, VH_injury **);
+  void traverseDOMtree(DOMNode &, int, double *, VH_injury **);
+  int get_timeStep(double);
   void parseInjuryList();
   void execInjuryList();
   void makeInjGeometry();
@@ -261,7 +269,46 @@ public:
 
   virtual void tcl_command(GuiArgs&, void*);
 
+  void sync_time(double t);
+
+}; // end class HotBox
+
+class TimeSync : public Runnable {
+public:
+  TimeSync(HotBox *module, TimeViewerHandle tvh) :
+    module_(module),
+    throttle_(),
+    tvh_(tvh),
+    dead_(0)
+  {};
+  TimeSync();
+  ~TimeSync();
+  virtual void run();
+  void set_dead(bool p) { dead_ = p; }
+private:
+  HotBox *module_;
+  TimeThrottle           throttle_;
+  TimeViewerHandle       tvh_;
+  bool                   dead_;
 };
+
+TimeSync::~TimeSync()
+{
+}
+
+void
+TimeSync::run()
+{
+  throttle_.start();
+  const double inc = 1./5.; // the rate at which we refresh the time stamp
+  double t = throttle_.time();
+  while (!dead_)
+  {
+    t = throttle_.time();
+    throttle_.wait_for_time(t + inc);
+    module_->sync_time(tvh_->view_elapsed_since_start());
+  }
+} // end TimeSync::run()
 
 /*****************************************************************************
  * Default Constructor
@@ -334,6 +381,12 @@ HotBox::HotBox(GuiContext* ctx)
   hipvarpath_(ctx->subVar("hipvarpath")),
   currentselection_(ctx->subVar("currentselection")),
   gui_curTime_(ctx->subVar("currentTime")),
+  currentTime_(0),
+  lastTime_(currentTime_),
+  timeEps_(0.25),
+  timeSyncer_(0),
+  timeSyncer_thread_(0),
+  injListDoc_(0),
   probeWidget_lock_("PointWidget lock"),
   gui_probeLocx_(ctx->subVar("gui_probeLocx")),
   gui_probeLocy_(ctx->subVar("gui_probeLocy")),
@@ -351,16 +404,21 @@ HotBox::HotBox(GuiContext* ctx)
   // create the probe widget
   probeWidget_ = scinew PointWidget(this, &probeWidget_lock_, 1.0);
   probeWidget_->Connect((GeometryOPort*)get_oport("Probe Widget"));
+} // end HotBox::HotBox()
 
-  injListDoc_ = (DOMDocument *)0;
-}
-
-HotBox::~HotBox(){
+HotBox::~HotBox()
+{
   delete anatomytable_;
   delete adjacencytable_;
   delete probeWidget_;
   delete hipVarFileList_;
-}
+  if(timeSyncer_thread_)
+  {
+    timeSyncer_->set_dead(true);
+    timeSyncer_thread_->join();
+    timeSyncer_thread_ = 0;
+  }
+} // end HotBox::~HotBox()
 
 void
 HotBox::execute()
@@ -369,23 +427,29 @@ HotBox::execute()
   // get input Time port
   TimeIPort *
   inputTimePort = (TimeIPort *)get_iport("Time");
-  if (!inputTimePort) {
+  if (!inputTimePort)
+  {
     error("Unable to initialize input Time port.");
+  }
+  else
+  {
+    inputTimePort->get(time_viewer_handle_);
   }
 
   // get a handle to the time viewer from the input Time port
   if(inputTimePort != NULL &&
-     !inputTimePort->get(time_viewer_handle_) &&
      !time_viewer_handle_.get_rep())
   {
     remark("No data on input Time port.");
   }
   else
   { // get/sync with current global time -- injury list resolution = 1 sec.
-    currentTime_ = floor(time_viewer_handle_->view_started() + 
-                    time_viewer_handle_->view_elapsed_since_start());
-    if(currentTime_ != lastTime_)
-        gui_curTime_.set( currentTime_ );
+    if(!timeSyncer_)
+    {
+      timeSyncer_ = scinew TimeSync(this, time_viewer_handle_);
+      timeSyncer_thread_ = scinew Thread(timeSyncer_,
+                       string(id+" time syncer").c_str());
+    }
   }
 
   // get input field port
@@ -691,10 +755,12 @@ HotBox::execute()
     activeInjList_ = injuryListDataSrc;
   } // end if(!injListDoc_)
 
+  // extract the injured tissues from the DOM Document whenever time changes
   execInjuryList();
 
-  // extract the injured tissues from the DOM Document whenever time changes
-  if(currentTime_ != lastTime_)
+  // all the time-dependent functions have been done -- update lastTime_
+  if(lastTime_ < currentTime_ - timeEps_ ||
+     currentTime_ + timeEps_ < lastTime_)
   {
     lastTime_ = currentTime_;
   }
@@ -867,10 +933,12 @@ HotBox::execute()
   if(inj1GeomFieldhandle_.get_rep() != 0)
     inj1highlightOutport->send(inj1GeomFieldhandle_);
 
-  if(currentTime_ < injured_tissue_list_.size() &&
-     injured_tissue_list_[currentTime_]->size() > 0)
+  int currentTime_step = get_timeStep(currentTime_);
+  if(currentTime_step < injured_tissue_list_.size() &&
+     injured_tissue_list_[currentTime_step]->size() > 0)
   {
-    injured_tissue_ = (vector <VH_injury> *)injured_tissue_list_[currentTime_];
+    injured_tissue_ = (vector <VH_injury> *)
+                      injured_tissue_list_[currentTime_step];
     // build geometry from wound icon descriptions
     makeInjGeometry();
   }
@@ -938,6 +1006,29 @@ HotBox::execute()
   }
 
 } // end HotBox::execute()
+
+char *to_HMS(char *t_str, double t)
+{
+    int secs = (int)t;
+    int min = secs/60;
+    int hr = min/60;
+    sprintf(t_str, "%02d:%02d:%02d", hr, min%60, secs%60);
+    return(t_str);
+}
+
+void
+HotBox::sync_time(double t)
+{ // time from the input to the HotBox is in seconds
+    char time_str[256];
+    currentTime_ = floor(t);
+    
+    if(lastTime_ < currentTime_ - timeEps_ ||
+            currentTime_ + timeEps_ < lastTime_)
+    { // time has moved forward one second
+        gui_curTime_.set( to_HMS(time_str, currentTime_) );
+        want_to_execute();
+    }
+} // end HotBox::sync_time()
 
 /*****************************************************************************
  * method HotBox::execAdjacency()
@@ -1609,11 +1700,11 @@ HotBox::executeOQAFMA()
 } // end HotBox::executeOQAFMA()
 
 /*****************************************************************************
- * method HotBox::parseInjuryList()
+ * method HotBox::parseInjuryList()/traverseDOMtree()
   // walk the DOM document collecting information on injured tissues
   // <event>
   // <wound woundName="Left ventricular penetration" woundID="1.0">
-  //     <timeStamp time="1"/>
+  //     <timeStamp time="1.0" unit="s"/>
   //     <primaryInjuryList>
   //         <injuryEntity injuryName="Ablated LV myocardium" injuryID="1.1" >
   //             <ablateRegion>
@@ -1647,8 +1738,7 @@ HotBox::executeOQAFMA()
   // </event>
  *****************************************************************************/
 void
-HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, int curTime,
-                        int *minTimeStep, int *maxTimeStep,
+HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, double *curTime,
                         VH_injury **injuryPtr)
 {
   // debugging...
@@ -1796,15 +1886,14 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, int curTime,
       if(!strcmp(to_char_ptr(woundNode.getNodeName()), "timeStamp") &&
          !strcmp(to_char_ptr(elem->getNodeName()), "time"))
       {
-        (*injuryPtr)->timeStamp = atoi(to_char_ptr(elem->getNodeValue()));
-        // only collect wound for the current timeStep
-        if((*injuryPtr)->timeStamp == curTime)
-          (*injuryPtr)->timeSet = true;
-        // record min-max time range
-        if((*injuryPtr)->timeStamp >= *maxTimeStep)
-          *maxTimeStep = (*injuryPtr)->timeStamp;
-        if((*injuryPtr)->timeStamp <= *minTimeStep)
-          *minTimeStep = (*injuryPtr)->timeStamp;
+        (*injuryPtr)->timeStamp = atof(to_char_ptr(elem->getNodeValue()));
+        // collect the wound for the current timeStep
+        (*injuryPtr)->timeSet = true;
+      }
+      else if(!strcmp(to_char_ptr(woundNode.getNodeName()), "timeStamp") &&
+         !strcmp(to_char_ptr(elem->getNodeName()), "unit"))
+      {
+        (*injuryPtr)->timeUnit = to_char_ptr(elem->getNodeValue());
       }
       else if(!strcmp(to_char_ptr(woundNode.getNodeName()), "probability") &&
          !strcmp(to_char_ptr(elem->getNodeName()), "prop"))
@@ -1833,7 +1922,12 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, int curTime,
     cerr << "Adding: " << endl;
     (*injuryPtr)->print();
     injured_tissue_->push_back(**injuryPtr);
-    int woundTime = (*injuryPtr)->timeStamp;
+    double woundTime = (*injuryPtr)->timeStamp;
+    // global clock is in seconds -- convert wound timeStamp to match
+    if((*injuryPtr)->timeUnit == "min")
+        *curTime = woundTime * 60;
+    else // units default to seconds
+        *curTime = woundTime;
     // create the next injury record
     *injuryPtr = new VH_injury();
 
@@ -1851,8 +1945,7 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, int curTime,
     {
       DOMNode &woundChild = *(woundChildList->item(i));
       // recurse down the tree
-      traverseDOMtree(woundChild, i, curTime, minTimeStep, maxTimeStep,
-                      injuryPtr);
+      traverseDOMtree(woundChild, i, curTime, injuryPtr);
     } // end for(int i = 0; i < num_woundChildList; i++)
   } // end if(woundNode.hasChildNodes())
 } // end HotBox::traverseDOMtree()
@@ -1860,8 +1953,11 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, int curTime,
 void
 HotBox::parseInjuryList()
 {
-  int min_timeStep = INT_MAX;
-  int max_timeStep = INT_MIN;
+  double last_timeStep;
+  double cur_timeStep;
+  double min_timeStep = HUGE;
+  double max_timeStep = -HUGE;
+  double timeIncr = 0.0;
 
   // create the first injury record
   VH_injury *injuryPtr = new VH_injury();
@@ -1876,10 +1972,10 @@ HotBox::parseInjuryList()
   const string injuryListDataSrc(injurylistdatasource_.get());
 
   // we have to assume one wound entity per timeStep
-  // however, tiemStamps do not always start at 0
+  // however, timeStamps do not always start at 0
   // and may not be integers
 
-  if (num_woundList == 0)
+  if (num_woundList <= 0)
   {
     cout << "HotBox.cc: no wounded entities in Injury List" << endl;
   }
@@ -1887,7 +1983,9 @@ HotBox::parseInjuryList()
   {
     cout << "HotBox.cc: xml file: " << injuryListDataSrc << ": "
          << num_woundList << " wounded region entities" << endl;
-    for (int i = 0;i < num_woundList; i++)
+
+    // for each time step
+    for(int i = 0; i < num_woundList; i++)
     {
       if (!(woundList->item(i)))
       {
@@ -1897,64 +1995,113 @@ HotBox::parseInjuryList()
       DOMNode &
       woundNode = *(woundList->item(i));
       // traverse the DOM document tree
-      traverseDOMtree(woundNode, i, 0, &min_timeStep, &max_timeStep,
-                      &injuryPtr);
-    } // end for (i = 0;i < num_woundList; i++)
-  } // end else (num_injList != 0)
+      traverseDOMtree(woundNode, i, &cur_timeStep, &injuryPtr);
 
-  if(min_timeStep == 0)
-  { // tiem steps are aligned with wound entities
-    // add the injury list we have gathered for timestep 0
-    injured_tissue_list_.push_back(injured_tissue_);
-    // allocate the injury list for wound/timestep 1
-    injured_tissue_ = new vector <VH_injury>;
-  }
+      // compute min, max timeStep, avg timeIncr
+      if(cur_timeStep >= max_timeStep)
+        max_timeStep = cur_timeStep;
+      if(cur_timeStep <= min_timeStep)
+        min_timeStep = cur_timeStep;
+      if(i == 0) last_timeStep = cur_timeStep;
+      double deltaT = cur_timeStep - last_timeStep;
+      timeIncr += deltaT;
+      last_timeStep = cur_timeStep;
 
-  // for each time step
-  for(int curTime = min_timeStep, i = 0; i < num_woundList; i++, curTime++)
-  {
-    if (!(woundList->item(i)))
-    {
-      std::cerr << "Error: NULL DOM node" << std::endl;
-      continue;
-    }
-    DOMNode &
-    woundNode = *(woundList->item(i));
-    // traverse the DOM document tree
-    traverseDOMtree(woundNode, i, curTime, &min_timeStep, &max_timeStep, &injuryPtr);
+      // report number of injuries read
+      cerr << "HotBox::parseInjuryList(): time step[" << cur_timeStep << "] ";
+      cerr << injured_tissue_->size() << " injuries found" << endl;
 
-    // report number of injuries read
-    cerr << "HotBox::parseInjuryList(): time step[" << curTime << "] ";
-	    cerr << injured_tissue_->size() << " injuries found" << endl;
+      // add the injury list for this timestep
+      injured_tissue_list_.push_back(injured_tissue_);
+      // allocate the next injury list
+      injured_tissue_ = new vector <VH_injury>;
+    } // end for(int i = 0; i < num_woundList; i++)
+  } // end else (num_woundList > 0)
 
-    // add the injury list for this timestep
-    injured_tissue_list_.push_back(injured_tissue_);
-    // allocate the next injury list
-    injured_tissue_ = new vector <VH_injury>;
-  } // end for(curTime = min_timeStep, i = 0; i < num_woundList; i++, curTime++)
-
+  // compute average time increment, epsilon
+  timeIncr = timeIncr / (double)num_woundList;
+  timeEps_ = timeIncr/4.0;
 } // end parseInjuryList()
+
+/*****************************************************************************
+ method: get_timeStep()
+
+ Description: Return the integer index of the injury list containing the
+              timeStamp matching the input target.
+ *****************************************************************************/
+ 
+int
+HotBox::get_timeStep(double targ_timeStamp)
+{
+  int retIndex = -1;
+  // units default to seconds
+  double wound_timeStamp = targ_timeStamp;
+
+  // debugging...
+  // cerr << "HotBox::get_timeStep(" << targ_timeStamp << ")" << endl;
+  // cerr << "	" << injured_tissue_list_.size() << " timeSteps" << endl;
+  for(int i = 0; i < injured_tissue_list_.size(); i++)
+  {
+    injured_tissue_ =
+          (vector <VH_injury> *)injured_tissue_list_[i];
+    // debugging...
+    // cerr << " injured_tissue_list_[" << i << "] size: ";
+    // cerr << injured_tissue_->size();
+    if(injured_tissue_ && injured_tissue_->size() > 0)
+    {
+      VH_injury woundPtr = (*injured_tissue_)[0];
+      // debugging...
+      // cerr << " timeStamp " << woundPtr.timeStamp;
+      // target timeStamp is in seconds -- convert wound timeStamp to match
+      if(woundPtr.timeUnit == "min")
+         wound_timeStamp = woundPtr.timeStamp * 60;
+      else // default to seconds
+         wound_timeStamp = woundPtr.timeStamp;
+
+      if(targ_timeStamp > wound_timeStamp - timeEps_ &&
+         targ_timeStamp < wound_timeStamp + timeEps_)
+      {
+        retIndex = i;
+	break;
+      } // end if(targ_timeStamp == wound_timeStamp)
+      else
+      {
+        // debugging...
+        // cerr << " target = " << targ_timeStamp << " <= " << wound_timeStamp;
+        // cerr << " - " << timeEps_ << " || " << targ_timeStamp << " >= ";
+        // cerr << wound_timeStamp << " + " << timeEps_ << endl;
+      }
+    } // end if(injured_tissue_ && injured_tissue_->size > 0)
+  } // end for(int i = 0; i < injured_tissue_list_.size(); i++)
+  return retIndex;
+} // end HotBox::get_timeStep()
 
 void
 HotBox::execInjuryList()
 {
   // only execute if time has changed
-  if(currentTime_ == lastTime_) return;
+  if(lastTime_ >= currentTime_ - timeEps_ &&
+         currentTime_ + timeEps_ >= lastTime_)
+     return;
 
   char message[256];
 
+  int currentTime_step = get_timeStep(currentTime_);
+
   // get the injury list for the current time
-  if(currentTime_ < injured_tissue_list_.size())
+  if(currentTime_step >= 0 && currentTime_step < injured_tissue_list_.size())
+  {
       injured_tissue_ =
-          (vector <VH_injury> *)injured_tissue_list_[currentTime_];
+          (vector <VH_injury> *)injured_tissue_list_[currentTime_step];
+  }
   else // time step out of range
   {
-     sprintf(message, "%d", currentTime_);
+     sprintf(message, "%f", currentTime_);
       error(string("execInjuryList: time step ")+string(message)+
             string(" out of range"));
   }
   // report number of injuries read
-  cerr << "HotBox::execInjuryList(): timeStep[" << currentTime_ << "] ";
+  cerr << "HotBox::execInjuryList(): timeStep[" << currentTime_step << "] ";
   cerr << injured_tissue_->size() << " injuries found" << endl;
 
 } // end execInjuryList()
