@@ -8,7 +8,7 @@ c       Ported to models infrastructure by
 c       Seshadri Kumar, April 11, 2005
 c       Commented out pcell .eq. ffield stuff, because that is always
 c       true with Gautham's test problems, which is all that logical 
-c       teste is ever used for.
+c       test is ever used for.
 
       double precision PI,PI1,PATM,OPF,EMG,PCO2,PH2O,PCO2F,PH2OF,
      &PSUMF,PAVE,PML,PRES,PWPC,TGI,CCO2,CH2O,DELE,EMGI,EMGF,FV,ECO2,

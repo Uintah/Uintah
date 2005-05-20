@@ -29,7 +29,7 @@ using namespace std;
 //****************************************************************************
 RadiationDriver::RadiationDriver(const ProcessorGroup* myworld,
 				 ProblemSpecP& params):
-  ModelInterface (myworld), params(params)
+  ModelInterface (myworld), params(params), d_myworld(myworld)
 {
   d_perproc_patches = 0;
   d_DORadiation = 0;
@@ -107,7 +107,7 @@ RadiationDriver::problemSetup(GridP& grid,
 
   ProblemSpecP db = params->findBlock("RadiationModel");
   db->getWithDefault("radiationCalcFreq",d_radCalcFreq,5);
-  d_DORadiation = scinew Models_DORadiationModel(myworld);
+  d_DORadiation = scinew Models_DORadiationModel(d_myworld);
   d_DORadiation->problemSetup(db);
 }
 
@@ -431,13 +431,17 @@ RadiationDriver::computeProps(const ProcessorGroup* pc,
       new_dw->allocateAndPut(radVars.sootVF, sootVFCopy_CCLabel, 
 			     matlIndex, patch);
       //      radVars.sootVF.copyData(constRadVars.sootVF);
+      radVars.sootVF.initialize(0.0);
 
       new_dw->allocateAndPut(radVars.ABSKG, abskg_CCLabel, 
 			     matlIndex, patch);
+      radVars.ABSKG.initialize(0.0);
       new_dw->allocateAndPut(radVars.ESRCG, esrcg_CCLabel, 
 			     matlIndex, patch);
+      radVars.ESRCG.initialize(0.0);
       new_dw->allocateAndPut(radVars.shgamma, shgamma_CCLabel, 
 			     matlIndex, patch);
+      radVars.shgamma.initialize(0.0);
 
       d_DORadiation->computeRadiationProps(pc, patch, cellinfo,
 					   &radVars, &constRadVars);
@@ -508,12 +512,15 @@ RadiationDriver::scheduleIntensitySolve(const LevelP& level,
   Task* t=scinew Task("RadiationDriver::intensitySolve",
 		      this, &RadiationDriver::intensitySolve, mi);
   int zeroGhostCells = 0;
+  int numGhostCells = 1;
 
   t->requires(Task::NewDW, co2_CCLabel, Ghost::None, zeroGhostCells);
   t->requires(Task::NewDW, h2o_CCLabel, Ghost::None, zeroGhostCells);
   t->requires(Task::NewDW, sootVFCopy_CCLabel, Ghost::None, zeroGhostCells);
 
-  t->modifies(tempCopy_CCLabel);
+  t->requires(Task::NewDW, tempCopy_CCLabel, Ghost::AroundCells, numGhostCells);
+  //  t->modifies(tempCopy_CCLabel);
+
   t->modifies(abskg_CCLabel);
   t->modifies(esrcg_CCLabel);
   t->modifies(shgamma_CCLabel);
@@ -549,6 +556,7 @@ RadiationDriver::intensitySolve(const ProcessorGroup* pc,
     int iceIndex = 0;
     int matlIndex = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
     int zeroGhostCells = 0;
+    int numGhostCells = 1;
 
     RadiationVariables radVars;
     RadiationConstVariables constRadVars;
@@ -580,7 +588,10 @@ RadiationDriver::intensitySolve(const ProcessorGroup* pc,
       new_dw->get(constRadVars.sootVF, sootVFCopy_CCLabel, matlIndex, patch,
 		  Ghost::None, zeroGhostCells);
 
-      new_dw->getModifiable(radVars.temperature, tempCopy_CCLabel, matlIndex, patch);
+      //            new_dw->getModifiable(radVars.temperature, tempCopy_CCLabel, matlIndex, patch);
+      new_dw->getCopy(radVars.temperature, tempCopy_CCLabel, matlIndex, patch,
+      		      Ghost::AroundCells, numGhostCells);
+
       new_dw->getModifiable(radVars.ABSKG, abskg_CCLabel, matlIndex, patch);
       new_dw->getModifiable(radVars.ESRCG, esrcg_CCLabel, matlIndex, patch);
       new_dw->getModifiable(radVars.shgamma, shgamma_CCLabel, matlIndex, patch);
@@ -591,8 +602,16 @@ RadiationDriver::intensitySolve(const ProcessorGroup* pc,
       new_dw->getModifiable(radVars.qfluxs, qfluxS_CCLabel, matlIndex, patch);
       new_dw->getModifiable(radVars.qfluxt, qfluxT_CCLabel, matlIndex, patch);
       new_dw->getModifiable(radVars.qfluxb, qfluxB_CCLabel, matlIndex, patch);
-
       new_dw->getModifiable(radVars.src, radiationSrc_CCLabel, matlIndex, patch);
+
+      radVars.qfluxe.initialize(0.0);
+      radVars.qfluxw.initialize(0.0);
+      radVars.qfluxn.initialize(0.0);
+      radVars.qfluxs.initialize(0.0);
+      radVars.qfluxt.initialize(0.0);
+      radVars.qfluxb.initialize(0.0);
+      radVars.src.initialize(0.0);
+
       new_dw->getModifiable(energySource, mi->energy_source_CCLabel, matlIndex, patch);
 
       d_DORadiation->intensitysolve(pc, patch, cellinfo, &radVars, &constRadVars);
@@ -602,7 +621,7 @@ RadiationDriver::intensitySolve(const ProcessorGroup* pc,
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
       //      energySource[c] += radVars.src[c];
-      energySource[c] += zeroSource[c];
+      //      energySource[c] += zeroSource[c];
     }
   }
 }

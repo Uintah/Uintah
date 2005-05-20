@@ -166,7 +166,7 @@ class RadiationDriver : public ModelInterface {
 
   ProblemSpecP params;
 
-  const ProcessorGroup* myworld;
+  const ProcessorGroup* d_myworld;
   SimulationStateP d_sharedState;
 
   void initialize(const ProcessorGroup*,
