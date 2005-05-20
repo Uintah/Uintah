@@ -231,9 +231,9 @@ Models_DORadiationModel::computeRadiationProps(const ProcessorGroup*,
 	       constvars->co2, 
 	       constvars->h2o,
 	       d_opl, 
-	       vars->sootVF, 
-	       vars->ABSKG, 
-	       vars->ESRCG, 
+               vars->sootVF, // Soot volume fraction
+               vars->ABSKG,  // Absorption coefficent
+               vars->ESRCG,  // 
 	       vars->shgamma,
 	       cellinfo->xx, 
 	       cellinfo->yy, 
