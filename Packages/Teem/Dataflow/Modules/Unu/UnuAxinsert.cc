@@ -35,7 +35,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Ports/NrrdPort.h>
 #include <Core/Containers/StringUtil.h>
-
+#include <Core/Math/MiscMath.h>
 namespace SCITeem {
 
 using namespace SCIRun;
