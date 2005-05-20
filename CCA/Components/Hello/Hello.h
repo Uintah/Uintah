@@ -67,7 +67,7 @@ private:
 
 class myComponentIcon : public virtual sci::cca::ports::ComponentIcon {
 public:
-  myComponentIcon();
+  myComponentIcon() {}
   virtual ~myComponentIcon() {}
 
   virtual std::string getDisplayName();
@@ -76,9 +76,7 @@ public:
   virtual int getProgressBar();
   void setParent(Hello *com) { this->com = com; }
   Hello *com;
-
-private:
-  int steps;
+  static const int STEPS = 50;
 };
 
 class Hello : public sci::cca::Component {

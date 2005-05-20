@@ -48,6 +48,8 @@
 #include <qmessagebox.h>
 #include <qstring.h>
 
+#include <unistd.h>
+
 using namespace SCIRun;
 
 extern "C" sci::cca::Component::pointer make_SCIRun_Hello()
@@ -64,6 +66,7 @@ Hello::Hello()
 Hello::~Hello()
 {
     services->unregisterUsesPort("stringport");
+    services->unregisterUsesPort("progress");
 }
 
 void Hello::setServices(const sci::cca::Services::pointer& svc)
@@ -101,6 +104,9 @@ void Hello::setServices(const sci::cca::Services::pointer& svc)
     props->putString("cca.portName", "stringport");
     props->putString("cca.portType", "sci.cca.ports.StringPort");
     svc->registerUsesPort("stringport","sci.cca.ports.StringPort", props);
+
+    sci::cca::TypeMap::pointer props2 = svc->createTypeMap();
+    svc->registerUsesPort("progress","sci.cca.ports.Progress", props2);
 }
 
 int myUIPort::ui()
@@ -129,6 +135,13 @@ int myGoPort::go()
         return 1;
     }  
 
+    sci::cca::Port::pointer progPort = services->getPort("progress");	
+    if (progPort.isNull()) {
+        std::cerr << "progress is not available!\n";
+        return 1;
+    }  
+    sci::cca::ports::Progress::pointer pPtr = pidl_cast<sci::cca::ports::Progress::pointer>(progPort);
+
     sci::cca::ports::StringPort::pointer sp =
         pidl_cast<sci::cca::ports::StringPort::pointer>(pp);
     std::string name = sp->getString();
@@ -140,14 +153,12 @@ int myGoPort::go()
     if (! name.empty()) {
       com->text = name.c_str();
     }
+
+    pPtr->updateProgress(myComponentIcon::STEPS);
     services->releasePort("stringport");
+    services->releasePort("progress");
 
     return 0;
-}
-
-myComponentIcon::myComponentIcon()
-{
-    this->steps = 50;
 }
 
 std::string myComponentIcon::getDisplayName()
@@ -162,7 +173,7 @@ std::string myComponentIcon::getDescription()
 
 int myComponentIcon::getProgressBar()
 {
-    return steps;
+    return STEPS;
 }
  
 std::string myComponentIcon::getIconShape()
