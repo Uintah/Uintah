@@ -41,11 +41,15 @@ then
    fi
 
    if test "$2" != ""; then
-     export LEVELSETSEGMENTER_SAVE_BINARY_FILE="$2"
+     export LEVELSETSEGMENTER_COMMIT_DIR="$2"
    fi
 
    if test "$3" != ""; then
-     export LEVELSETSEGMENTER_SAVE_FLOAT_FILE="$3"
+     export LEVELSETSEGMENTER_COMMIT_ROOT="$3"
+   fi
+
+   if test "$4" != ""; then
+     export LEVELSETSEGMENTER_LOWRES_FILE="$4"
    fi
 
    
