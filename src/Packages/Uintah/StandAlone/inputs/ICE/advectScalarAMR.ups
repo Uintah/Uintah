@@ -144,7 +144,7 @@
        <Level>
            <Box label="2">
               <lower>        [.2,.2,.2]    </lower>
-              <upper>        [.7,.7,.7]    </upper>
+              <upper>        [.8,.8,.8]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
               <patches>      [1,1,1]    </patches>
            </Box>
@@ -184,13 +184,16 @@
    </DataArchiver>
 
   <Debug>
-      <dbg_timeStart>       0.00        </dbg_timeStart>
+      <dbg_timeStart>       1.00        </dbg_timeStart>
       <dbg_timeStop>        0.01        </dbg_timeStop>
       <dbg_outputInterval>  1e-9        </dbg_outputInterval>
       <dbg_BeginIndex>      [-1,30,-1]  </dbg_BeginIndex>
       <dbg_EndIndex>        [3,32,3]    </dbg_EndIndex>
       <dbg_Matls>           [0]         </dbg_Matls>
       <dbg_Level>           1        </dbg_Level>
+      <debug label = "switchDebug_AMR_refine"/>
+      <debug label = "switchDebug_AMR_refineInterface"/>
+      
   <!--
       <debug label = "switchDebug_EQ_RF_press"/>
       <debug label = "switchDebug_EQ_RF_press"/>
@@ -213,14 +216,16 @@
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
         <advection type = "FirstOrder" />
         <solution technique = "EqForm" />
-        <!--if gradient is > knob then refine -->
-        <AMR_Refinement_Criteria_Thresholds>
-          <Density>     1e100    </Density>
-          <Temperature> 1e100    </Temperature>
-          <Pressure>    1e100    </Pressure>
-          <VolumeFrac>  1e100    </VolumeFrac>
-          <Velocity>    1e100    </Velocity>
-        </AMR_Refinement_Criteria_Thresholds>
+        <AMR>
+          <!--if gradient is > knob then refine -->
+          <Refinement_Criteria_Thresholds>
+            <Density>     1e100    </Density>
+            <Temperature> 1e100    </Temperature>
+            <Pressure>    1e100    </Pressure>
+            <VolumeFrac>  1e100    </VolumeFrac>
+            <Velocity>    1e100    </Velocity>
+          </Refinement_Criteria_Thresholds>
+        </AMR>
       </ICE>        
     </CFD>
 
