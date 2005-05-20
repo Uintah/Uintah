@@ -830,6 +830,7 @@ set mods(Isosurface-Grow) $m43
 set mods(Isosurface-Shrink) $m44
 set mods(ShowField-Speed) $m58
 set mods(ImageToField-Speed) $m42
+set mods(GenStandardColorMaps-Speed) $m56
 
 # Segmentation Window
 set mods(ShowField-Slice) $m15
@@ -1001,6 +1002,8 @@ class LevelSetSegmenterApp {
 # 	set segmenting_type "Reset"
 
  	set has_committed 0
+
+	set reverse_changed 0
 
 
 	### Define Tooltips
@@ -2044,7 +2047,8 @@ class LevelSetSegmenterApp {
 	pack $speed.extra -side top -anchor n -expand yes -fill x
 
 	checkbutton $speed.extra.exp -text "Reverse Expansion Direction" \
-	    -variable $mods(LevelSet)-reverse_expansion_direction
+	    -variable $mods(LevelSet)-reverse_expansion_direction \
+	    -command "$this reverse_expansion_direction_changed"
 
 	button $speed.extra.b -text "Go" -width 3 \
 	    -background $execute_color \
@@ -3936,6 +3940,10 @@ class LevelSetSegmenterApp {
 	global $mods(ShowField-Speed)-faces-on
 	set $mods(ShowField-Speed)-faces-on 1
 	
+	if {$reverse_changed == 1} {
+	    $mods(GenStandardColorMaps-Speed)-c needexecute
+	}
+	
  	# execute ThresholdLevelSet filter
 # 	$mods(LevelSet)-c needexecute
 	$mods(ChooseImage-Smooth)-c needexecute
@@ -4816,20 +4824,12 @@ class LevelSetSegmenterApp {
     method toggle_show_speed {} {
 	global mods
 	global $mods(ShowField-Speed)-faces-on
-	
-	if {[set $mods(ShowField-Speed)-faces-on] == 0} {
-	    disableModule $mods(ImageToField-Speed) 1
-	    $mods(ShowField-Speed)-c toggle_display_faces
-	} else {
-	    disableModule $mods(ImageToField-Speed) 0
-	    
-	    # Re-disable these for now
-	    disableModule $mods(Isosurface-Grow) 1
-	    disableModule $mods(Isosurface-Shrink) 1
 
-#	    $mods(ImageToField-Speed)-c needexecute
-	    $mods(ShowField-Speed)-c toggle_display_faces
+	if {$reverse_changed == 1} {
+	    $mods(GenStandardColorMaps-Speed)-c needexecute
 	}
+	
+	$mods(ShowField-Speed)-c toggle_display_faces
     }
 
     method toggle_show_seed {} {
@@ -4837,10 +4837,10 @@ class LevelSetSegmenterApp {
 	global $mods(ShowField-Seed)-faces-on
 	
 	if {[set $mods(ShowField-Seed)-faces-on] == 0} {
-	    disableModule $mods(ImageToNrrd-CurSeed) 1
+#	    disableModule $mods(ImageToNrrd-CurSeed) 1
 	    $mods(ShowField-Seed)-c toggle_display_faces
 	} else {
-	    disableModule $mods(ImageToNrrd-CurSeed) 0
+#	    disableModule $mods(ImageToNrrd-CurSeed) 0
 	    
 #	    $mods(ImageToField-Seed)-c needexecute
 	    $mods(ShowField-Seed)-c toggle_display_faces
@@ -4871,6 +4871,34 @@ class LevelSetSegmenterApp {
 	upvar \#0 $mods(SliceReader)-slice s
 	set $mods(ImageFileWriter-Binary)-filename \
 	    [file join $commit_dir $base_filename$s.hdr]
+    }
+
+    method reverse_expansion_direction_changed {} {
+	global mods
+	
+	global $mods(LevelSet)-reverse_expansion_direction
+	global $mods(GenStandardColorMaps-Speed)-reverse
+
+	upvar \#0 $mods(LevelSet)-reverse_expansion_direction rev_dir
+	upvar \#0 $mods(GenStandardColorMaps-Speed)-reverse reverse
+
+	if {$rev_dir == 0} {
+	    set reverse 0
+	} else {
+	    set reverse 1
+	}
+
+	# Only execute GenStandarColorMaps if speed image
+	# is turned on, otherwise, it will need to be executed
+	# when the speed image is either turned on via the checkbox
+	# or by selecting the Go button in the speed image frame
+	global $mods(ShowField-Speed)-faces-on
+	
+	if {[set $mods(ShowField-Speed)-faces-on] == 1} {
+	    $mods(GenStandardColorMaps-Speed)-c needexecute
+	} else {
+	    set reverse_changed 1
+	}
     }
 
     method update_spacing {var} {
@@ -4965,6 +4993,8 @@ class LevelSetSegmenterApp {
     variable commits
 
     variable has_autoviewed
+
+    variable reverse_changed
 }
 
 LevelSetSegmenterApp app
