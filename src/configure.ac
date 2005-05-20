@@ -1097,7 +1097,7 @@ case $host in
   *-darwin*)
     ac_objext=o
     LDRUN_PREFIX="-L"
-    CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -fcoalesce-templates -Wno-long-double "
+    CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -Wno-long-double "
     CXXFLAGS="$CXXFLAGS $CFLAGS"
 
     if test $NEED_OSX_HACK = yes; then
@@ -2438,10 +2438,14 @@ case $host in
     ;;
   *-darwin*)
     # OSX Library Check
-    SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,g2c,$_sci_lib,,,$_sci_optional)
-    ;;
-  *)
-    SCI_TRY_LINK(F,fortran libraries,,,F77,$_sci_lib,,,$_sci_optional)
+        if test "$F77" = "xlf"; then
+      SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,xlf90,$_sci_lib,,,$_sci_optional)
+    else
+      SCI_TRY_LINK(F,fotran libraries,,$_sci_inc,gfortran,$_sci_lib,,,optional)
+      if test "$HAVE_F" = "no"; then
+            SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,g2c,$_sci_lib,,,$_sci_optional)
+      fi
+    fi
     ;;
 esac
 
