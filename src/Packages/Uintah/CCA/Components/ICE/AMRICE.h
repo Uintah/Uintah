@@ -164,7 +164,9 @@ namespace Uintah {
     double d_temp_threshold;    
     double d_press_threshold;   
     double d_vol_frac_threshold;
-    double d_vel_threshold;     
+    double d_vel_threshold;
+    
+    bool d_regridderTest;     
   };
 }
 
