@@ -282,17 +282,15 @@ VolumeRenderer::draw_volume()
     glEnable(GL_BLEND);
     switch(mode_) {
     case MODE_OVER:
-#ifdef GL_FUNC_ADD // Workaround for old bad nvidia headers.
-      if (glBlendEquation)
+      if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS))) 
 	glBlendEquation(GL_FUNC_ADD);
-#endif
+
       glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
       break;
     case MODE_MIP:
-#ifdef GL_MAX // Workaround for old bad nvidia headers.
-      if (glBlendEquation)
+      if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS)))       
 	glBlendEquation(GL_MAX);
-#endif
+
       glBlendFunc(GL_ONE, GL_ONE);
       break;
     default:
@@ -638,17 +636,15 @@ VolumeRenderer::multi_level_draw()
     glEnable(GL_BLEND);
     switch(mode_) {
     case MODE_OVER:
-#ifdef GL_FUNC_ADD // Workaround for old bad nvidia headers.
-      if (glBlendEquation)
+      if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS)))       
 	glBlendEquation(GL_FUNC_ADD);
-#endif
+
       glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
       break;
     case MODE_MIP:
-#ifdef GL_MAX // Workaround for old bad nvidia headers.
-      if (glBlendEquation)
+      if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS)))       
 	glBlendEquation(GL_MAX);
-#endif
+
       glBlendFunc(GL_ONE, GL_ONE);
       break;
     default:
