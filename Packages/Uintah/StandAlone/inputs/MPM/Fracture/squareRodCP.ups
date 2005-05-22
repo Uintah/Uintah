@@ -74,7 +74,7 @@
 		<velocity_field>0</velocity_field>
 
                 <crack>
-                   <type>frictional</type>
+                   <type>friction</type>
                    <mu>0.</mu>
                    <crack_segments>
                       <partial_ellipse>
