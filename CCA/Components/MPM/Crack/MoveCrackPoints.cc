@@ -2,7 +2,7 @@
     Crack.cc
     PART SIX: MOVE CRACK POINTS 
 
-    Created by Yajun Guo in 2002-2004.
+    Created by Yajun Guo in 2002-2005.
 ********************************************************************************/
 
 #include "Crack.h"
@@ -60,15 +60,17 @@ void Crack::CrackPointSubset(const ProcessorGroup*,
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m=0; m<numMPMMatls; m++) {
       cnset[m][pid].clear();
+      
       // Collect crack nodes in each patch
       for(int i=0; i<(int)cx[m].size(); i++) {
         if(patch->containsPoint(cx[m][i])) {
           cnset[m][pid].push_back(i);
         }
-      } // End of loop over nodes
+      } 
+      
       MPI_Barrier(mpi_crack_comm);
 
-      // Broadcast cnset to all ranks
+      // Broadcast cnset to all the ranks
       for(int i=0; i<patch_size; i++) {
         int num; // number of crack nodes in patch i
         if(i==pid) num=cnset[m][i].size();
@@ -76,8 +78,9 @@ void Crack::CrackPointSubset(const ProcessorGroup*,
         if(pid!=i) cnset[m][i].resize(num);
         MPI_Bcast(&cnset[m][i][0],num,MPI_INT,i,mpi_crack_comm);
       }
+      
     } // End of loop over matls
-  }  // End of loop over pathces
+  }  
 }
 
 void Crack::addComputesAndRequiresMoveCracks(Task* t,
@@ -121,25 +124,21 @@ void Crack::MoveCracks(const ProcessorGroup*,
 
     Vector dx = patch->dCell();
     double dx_min=Min(dx.x(),dx.y(),dx.z());
-    //double vc=dx.x()*dx.y()*dx.z();
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(),getLevel(patches) );
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
-    for(int m = 0; m < numMPMMatls; m++){ // loop over matls
+    for(int m = 0; m < numMPMMatls; m++){ 
       if((int)ce[m].size()==0) // for materials with no cracks
         continue;
 
-      /* Task 1: Move crack points (cx)
-      */
-      //Get the necessary information
+      
+      // Task 1: Move crack nodes (cx)
+     
+      // Get the necessary information
       MPMMaterial* mpm_matl=d_sharedState->getMPMMaterial(m);
       int dwi=mpm_matl->getDWIndex();
-
-      // Mass of a grad cell 
-      //double rho_init=mpm_matl->getInitialDensity();
-      //double mc=rho_init*vc;
 
       ParticleSubset* pset=old_dw->getParticleSubset(dwi,patch);
       constParticleVariable<Vector> psize;
@@ -157,11 +156,11 @@ void Crack::MoveCracks(const ProcessorGroup*,
       new_dw->get(Gnum,          lb->GNumPatlsLabel,    dwi,patch,gac,NGC);
       new_dw->get(Gvelocity_star,lb->GVelocityStarLabel,dwi,patch,gac,NGC);
 
-      for(int i=0; i<patch_size; i++) { // Loop over all patches
+      for(int i=0; i<patch_size; i++) { 
         int numNodes=cnset[m][i].size();
         if(numNodes>0) {
           Point* cptmp=new Point[numNodes];
-          if(pid==i) { // Processor i updates the position of nodes in patch i
+          if(pid==i) { // Rank i updates the nodes in patch i
             for(int j=0; j<numNodes; j++) {
               int idx=cnset[m][i][j];
               Point pt=cx[m][idx];
@@ -170,18 +169,16 @@ void Crack::MoveCracks(const ProcessorGroup*,
               Vector vg,vG;
               Vector vcm = Vector(0.0,0.0,0.0);
 
-              // Get element nodes and shape functions
 	      interpolator->findCellAndWeights(pt, ni, S, psize[idx]);
 
               // Calculate center-of-velocity (vcm)
               // Sum of shape functions from nodes with particle(s) around them
-              // This part is necessary for pt located outside the body
+              // This part is necessary for crack nodes outside the material
               double sumS=0.0;
               for(int k =0; k < n8or27; k++) {
                 Point pi=patch->nodePosition(ni[k]);
                 if(PhysicalGlobalGridContainsPoint(dx_min,pi) &&  //ni[k] in real grid
                      (gnum[ni[k]]+Gnum[ni[k]]!=0)) {
-                  //if(gmass[ni[k]]+Gmass[ni[k]]>mc/20.)
 	   	  sumS += S[k];
                 }
               }
@@ -194,9 +191,7 @@ void Crack::MoveCracks(const ProcessorGroup*,
                     mG = Gmass[ni[k]];
                     vg = gvelocity_star[ni[k]];
                     vG = Gvelocity_star[ni[k]];
-                    //if(mg+mG>mc/100.) {
-                      vcm += (mg*vg+mG*vG)/(mg+mG)*S[k]/sumS;
-                    //}
+                    vcm += (mg*vg+mG*vG)/(mg+mG)*S[k]/sumS;
                   }
                 }
               }
@@ -223,10 +218,10 @@ void Crack::MoveCracks(const ProcessorGroup*,
         } // End of if(numNodes>0)
       } // End of loop over patch_size
 
-      // Detect if crack points outside the global grid
+      // Detect if crack nodes are outside the global grid
       for(int i=0; i<(int)cx[m].size();i++) {
         if(!PhysicalGlobalGridContainsPoint(dx_min,cx[m][i])) {
-          cout << "cx[" << m << "," << i << "]=" << cx[m][i]
+          cout << "Error: cx[" << m << "," << i << "]=" << cx[m][i]
                << " outside the global grid."
                << " Program terminated." << endl;
           exit(1);
@@ -234,18 +229,58 @@ void Crack::MoveCracks(const ProcessorGroup*,
       }
 
       MPI_Barrier(mpi_crack_comm);
+      
 
-      /* Task 2: Update crack extent
-      */
+      // Task 2: Update crack extent
+     
       cmin[m]=Point(9.e16,9.e16,9.e16);
       cmax[m]=Point(-9.e16,-9.e16,-9.e16);
       for(int i=0; i<(int)cx[m].size(); i++) {
         cmin[m]=Min(cmin[m],cx[m][i]);
         cmax[m]=Max(cmax[m],cx[m][i]);
-      } // End of loop over crack points
+      } 
 
     } // End of loop over matls
     delete interpolator;
+  }
+}
+
+// Find if a point is inside the real global grid
+short Crack::PhysicalGlobalGridContainsPoint(const double& dx,const Point& pt)
+{
+  // Return true if pt is inside the real global grid or
+  // around it (within 1% of cell-size)
+
+  double px=pt.x(),  py=pt.y(),  pz=pt.z();
+  double lx=GLP.x(), ly=GLP.y(), lz=GLP.z();
+  double hx=GHP.x(), hy=GHP.y(), hz=GHP.z();
+
+  return ((px>lx || fabs(px-lx)/dx<0.01) && (px<hx || fabs(px-hx)/dx<0.01) &&
+          (py>ly || fabs(py-ly)/dx<0.01) && (py<hy || fabs(py-hy)/dx<0.01) &&
+          (pz>lz || fabs(pz-lz)/dx<0.01) && (pz<hz || fabs(pz-hz)/dx<0.01));
+}
+
+// Apply symmetric boundary condition to crack points
+void Crack::ApplySymmetricBCsToCrackPoints(const Vector& cs,
+                        const Point& old_pt,Point& new_pt)
+{
+  // cs -- cell size
+  for(Patch::FaceType face = Patch::startFace;
+       face<=Patch::endFace; face=Patch::nextFace(face)) {
+    if(GridBCType[face]=="symmetry") {
+      if( face==Patch::xminus && fabs(old_pt.x()-GLP.x())/cs.x()<1.e-2 )
+        new_pt(0)=GLP.x(); // On symmetric face x-
+      if( face==Patch::xplus  && fabs(old_pt.x()-GHP.x())/cs.x()<1.e-2 )
+        new_pt(0)=GHP.x(); // On symmetric face x+
+      if( face==Patch::yminus && fabs(old_pt.y()-GLP.y())/cs.y()<1.e-2 )
+        new_pt(1)=GLP.y(); // On symmetric face y-
+      if( face==Patch::yplus  && fabs(old_pt.y()-GHP.y())/cs.y()<1.e-2 )
+        new_pt(1)=GHP.y(); // On symmetric face y+
+      if( face==Patch::zminus && fabs(old_pt.z()-GLP.z())/cs.z()<1.e-2 )
+        new_pt(2)=GLP.z(); // On symmetric face z-
+      if( face==Patch::zplus  && fabs(old_pt.z()-GHP.z())/cs.z()<1.e-2 )
+        new_pt(2)=GHP.z(); // On symmetric face z+
+    }
   }
 }
 
