@@ -71,6 +71,7 @@ Arches::Arches(const ProcessorGroup* myworld) :
   d_MAlab = 0; // will be set by setMPMArchesLabel
   d_props = 0;
   d_turbModel = 0;
+  d_initTurb = 0;
   d_scaleSimilarityModel = 0;
   d_boundaryCondition = 0;
   d_nlSolver = 0;
@@ -93,6 +94,7 @@ Arches::~Arches()
   delete d_lab;
   delete d_props;
   delete d_turbModel;
+  delete d_initTurb;
   delete d_scaleSimilarityModel;
   delete d_boundaryCondition;
   delete d_nlSolver;
@@ -169,8 +171,10 @@ Arches::problemSetup(const ProblemSpecP& params,
   else if (turbModel == "compdynamicprocedure")
     d_turbModel = scinew CompDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
 					  d_boundaryCondition);
-  else if (turbModel == "complocaldynamicprocedure")
+  else if (turbModel == "complocaldynamicprocedure") {
+    d_initTurb = scinew CompLocalDynamicProcedure(d_lab, d_MAlab, d_physicalConsts, d_boundaryCondition); 
     d_turbModel = scinew CompLocalDynamicProcedure(d_lab, d_MAlab, d_physicalConsts, d_boundaryCondition);
+  }
   else 
     throw InvalidValue("Turbulence Model not supported" + turbModel);
 //  if (d_turbModel)
@@ -308,7 +312,7 @@ Arches::scheduleInitialize(const LevelP& level,
     }
 
     if (turbModel == "complocaldynamicprocedure")
-      sched_initializeSmagCoeff(level, sched);
+      d_initTurb->sched_initializeSmagCoeff(sched, patches, matls, init_timelabel);
     else
       d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls, init_timelabel);
   }
@@ -913,41 +917,6 @@ Arches::readCCInitialCondition(const ProcessorGroup* ,
   }
 }
 
-// ****************************************************************************
-// schedule of initializing SmagCoeff 
-// ****************************************************************************
-void 
-Arches::sched_initializeSmagCoeff(const LevelP& level,
-				     SchedulerP& sched)
-{
-    // primitive variable initialization
-    Task* tsk = scinew Task( "Arches::initializeSmagCoeff",
-			    this, &Arches::initializeSmagCoeff);
-
-    tsk->computes(d_lab->d_CsLabel);
-    sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
-
-}
-
-// ****************************************************************************
-// Actual read
-// ****************************************************************************
-void
-Arches::initializeSmagCoeff(const ProcessorGroup* ,
-		  	       const PatchSubset* patches,
-			       const MaterialSubset*,
-	 		       DataWarehouse* ,
-			       DataWarehouse* new_dw)
-{
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    CCVariable<double> Cs; //smag coeff 
-    new_dw->allocateAndPut(Cs, d_lab->d_CsLabel, matlIndex, patch);  
-    Cs.initialize(0.0);
-  }
-}
 
 // ****************************************************************************
 // schedule interpolation of initial condition for velocity to staggered

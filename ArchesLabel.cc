@@ -454,6 +454,8 @@ ArchesLabel::ArchesLabel()
 					     CCVariable<double>::getTypeDescription() );
   d_betaIJCompLabel = VarLabel::create("betaIJComp",
 					     CCVariable<double>::getTypeDescription() );
+  d_cbetaIJCompLabel = VarLabel::create("cbetaIJComp",
+					     CCVariable<double>::getTypeDescription() );
   d_LIJCompLabel = VarLabel::create("LIJComp",
 					     CCVariable<double>::getTypeDescription() );
 
@@ -466,7 +468,7 @@ ArchesLabel::ArchesLabel()
 					     CCVariable<double>::getTypeDescription() );
   d_strainMagnitudeMMLabel = VarLabel::create("strainMagnitudeMMLabel",
 					     CCVariable<double>::getTypeDescription() );
-  d_lalphaLabel = VarLabel::create("lalphaLabel",
+  d_LalphaLabel = VarLabel::create("lalphaLabel",
 					     CCVariable<double>::getTypeDescription() );
   d_cbetaHATalphaLabel = VarLabel::create("cbetaHATalphaLabel",
 					     CCVariable<double>::getTypeDescription() );
@@ -474,6 +476,8 @@ ArchesLabel::ArchesLabel()
 					     CCVariable<double>::getTypeDescription() );
 
   d_CsLabel = VarLabel::create("CsLabel",
+			       CCVariable<double>::getTypeDescription() );
+  d_deltaCsLabel = VarLabel::create("deltaCsLabel",
 			       CCVariable<double>::getTypeDescription() );
   // required for odt model label
 //   d_odtDataLabel = VarLabel::create("odtDataLabel",CCVariable<odtData>::getTypeDescription());
@@ -692,10 +696,11 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_strainMagnitudeLabel);
   VarLabel::destroy(d_strainMagnitudeMLLabel);
   VarLabel::destroy(d_strainMagnitudeMMLabel);
-  VarLabel::destroy(d_lalphaLabel);
+  VarLabel::destroy(d_LalphaLabel);
   VarLabel::destroy(d_cbetaHATalphaLabel);
   VarLabel::destroy(d_alphaalphaLabel);
   VarLabel::destroy(d_CsLabel);
+  VarLabel::destroy(d_deltaCsLabel);
   VarLabel::destroy(d_sumUUULabel);
   VarLabel::destroy(d_sumDllLabel);
   VarLabel::destroy(d_sumSijSijLabel);
@@ -849,6 +854,7 @@ ArchesLabel::~ArchesLabel()
   
   VarLabel::destroy(d_strainTensorCompLabel);
   VarLabel::destroy(d_betaIJCompLabel);
+  VarLabel::destroy(d_cbetaIJCompLabel);
   VarLabel::destroy(d_LIJCompLabel);
   VarLabel::destroy(d_scalarFluxCompLabel);
   VarLabel::destroy(d_velocityDivergenceLabel);
