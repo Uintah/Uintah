@@ -134,10 +134,10 @@
                 </geom_object>
 
                 <crack>
-                   <type>frictional</type>
+                   <type>friction</type>
                    <mu>0.</mu>
                    <crack_segments>
-                      <quadrilateral>
+                      <quad>
                         <p1> [0.0, -12.5e-3,  0.6e-3] </p1>
                         <p2> [0.0, -12.5e-3, -0.6e-3] </p2>
                         <p3> [0.0,  12.5e-3, -0.6e-3] </p3>
@@ -145,7 +145,7 @@
                         <resolution_p1_p2> 2 </resolution_p1_p2>
                         <resolution_p2_p3> 8 </resolution_p2_p3>
                         <crack_front_sides>YNYN</crack_front_sides>
-                      </quadrilateral>
+                      </quad>
                    </crack_segments>
                 </crack>
 	    </material>
