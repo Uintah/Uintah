@@ -2,7 +2,7 @@
     Crack.cc
     PART THREE: CRACK SURFACE CONTACT
 
-    Created by Yajun Guo in 2002-2004.
+    Created by Yajun Guo in 2002-2005.
 ********************************************************************************/
 
 #include "Crack.h"
@@ -81,14 +81,14 @@ void Crack::AdjustCrackContactInterpolated(const ProcessorGroup*,
     Vector dx = patch->dCell();
     double vcell = dx.x()*dx.y()*dx.z();
 
-    // Nodal data above crack
+    // Nodal solutions above crack
     StaticArray<constNCVariable<int> >    gNumPatls(numMatls);
     StaticArray<constNCVariable<double> > gmass(numMatls);
     StaticArray<constNCVariable<double> > gvolume(numMatls);
     StaticArray<constNCVariable<Vector> > gdisplacement(numMatls);
     StaticArray<NCVariable<Vector> >      gvelocity(numMatls);
 
-    // Nodal data below crack
+    // Nodal solutions below crack
     StaticArray<constNCVariable<int> >    GNumPatls(numMatls);
     StaticArray<constNCVariable<double> > Gmass(numMatls);
     StaticArray<constNCVariable<double> > Gvolume(numMatls);
@@ -140,14 +140,14 @@ void Crack::AdjustCrackContactInterpolated(const ProcessorGroup*,
         short Contact=NO;
 
         if(separateVol[m]<0. || contactVol[m] <0.) { 
-          //use displacement criterion
+          // Use displacement criterion
           Vector u1=gdisplacement[m][c];
           Vector u2=Gdisplacement[m][c];
           if(Dot((u2-u1),norm) >0. ) {
             Contact=YES;
           }
         }
-        else { // use volume criterion
+        else { // Use volume criterion
           // Evaluate the nodal saturated volume (vol0) for general cases
           int numCellsWithPatls=0;
           IntVector cellIndex[8];
@@ -193,7 +193,7 @@ void Crack::AdjustCrackContactInterpolated(const ProcessorGroup*,
           frictionWork[m][c] += 0.;
         }
         else { // There is contact, apply contact law
-          if(crackType[m]=="null") { // Nothing to do with it
+          if(crackType[m]=="null") { // Do nothing 
             gvelocity[m][c]=gvelocity[m][c];
             Gvelocity[m][c]=Gvelocity[m][c];
             frictionWork[m][c] += 0.;
@@ -205,7 +205,7 @@ void Crack::AdjustCrackContactInterpolated(const ProcessorGroup*,
             frictionWork[m][c] += 0.;
           }
 
-          else if(crackType[m]=="frictional") { // Apply frictional law
+          else if(crackType[m]=="friction") { // Apply friction law
             // For velocity field above crack
             Vector deltva(0.,0.,0.);
             dva=va-vc;
@@ -217,14 +217,14 @@ void Crack::AdjustCrackContactInterpolated(const ProcessorGroup*,
                ta=Vector(0.,0.,0.);
             dvat=Dot(dva,ta);
             ratioa=dvat/dvan;
-            if( fabs(ratioa)>cmu[m] ) {  // slide
+            if( fabs(ratioa)>cmu[m] ) { // slide
                if(ratioa>0.) mua=cmu[m];
                if(ratioa<0.) mua=-cmu[m];
                deltva=-(na+ta*mua)*dvan;
                gvelocity[m][c]=va+deltva;
                frictionWork[m][c]+=ma*cmu[m]*dvan*dvan*(fabs(ratioa)-cmu[m]);
             }
-            else {  // stick
+            else { // stick
                gvelocity[m][c]=vc;
                frictionWork[m][c] += 0.;
             }
@@ -247,20 +247,12 @@ void Crack::AdjustCrackContactInterpolated(const ProcessorGroup*,
                Gvelocity[m][c]=vb+deltvb;
                frictionWork[m][c]+=mb*cmu[m]*dvbn*dvbn*(fabs(ratiob)-cmu[m]);
             }
-            else {// stick
+            else { // stick
                Gvelocity[m][c]=vc;
                frictionWork[m][c] += 0.;
             }
           }
-
-          else { // Wrong contact type
-            cout << "Unknown crack contact type in subroutine "
-                 << "Crack::AdjustCrackContactInterpolated: "
-                 << crackType[m] << endl;
-            exit(1);
-          }
         } // End of if there is !contact
-
       } //End of loop over nodes
     } //End of loop over materials
   }  //End of loop over patches
@@ -310,14 +302,14 @@ void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
     Vector dx = patch->dCell();
     double vcell = dx.x()*dx.y()*dx.z();
 
-    // Nodal data above crack
+    // Nodal solutions above crack
     StaticArray<constNCVariable<double> > gmass(numMatls);
     StaticArray<constNCVariable<double> > gvolume(numMatls);
     StaticArray<constNCVariable<int> >    gNumPatls(numMatls);
     StaticArray<constNCVariable<Vector> > gdisplacement(numMatls);
     StaticArray<NCVariable<Vector> >      gvelocity_star(numMatls);
     StaticArray<NCVariable<Vector> >      gacceleration(numMatls);
-    // Nodal data below crack
+    // Nodal solutions below crack
     StaticArray<constNCVariable<double> > Gmass(numMatls);
     StaticArray<constNCVariable<double> > Gvolume(numMatls);
     StaticArray<constNCVariable<int> >    GNumPatls(numMatls);
@@ -452,7 +444,7 @@ void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
             frictionWork[m][c]+=0.0;
           }
 
-          else if(crackType[m]=="frictional") { // Apply friction law
+          else if(crackType[m]=="friction") { // Apply friction law
             // for velocity field above crack
             Vector deltva(0.,0.,0.);
             dva=va-vc;
@@ -464,7 +456,7 @@ void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
                ta=Vector(0.,0.,0.);
             dvat=Dot(dva,ta);
             ratioa=dvat/dvan;
-            if( fabs(ratioa)>cmu[m] ) {  // slide
+            if( fabs(ratioa)>cmu[m] ) { // slide
                if(ratioa>0.) mua= cmu[m];
                if(ratioa<0.) mua=-cmu[m];
                deltva=-(na+ta*mua)*dvan;
@@ -472,7 +464,7 @@ void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
                gacceleration[m][c]=aa+deltva/delT;
                frictionWork[m][c]+=ma*cmu[m]*dvan*dvan*(fabs(ratioa)-cmu[m]);
             }
-            else {   // stick
+            else { // stick
                gvelocity_star[m][c]=vc;
                gacceleration[m][c]=aa+(vb-va)*mb/(ma+mb)/delT;
                frictionWork[m][c]+=0.0;
@@ -502,13 +494,6 @@ void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
                Gacceleration[m][c]=ab+(va-vb)*ma/(ma+mb)/delT;
                frictionWork[m][c]+=0.0;
             }
-          }
-
-          else {
-            cout<< "Unknown crack contact type in "
-                << "Crack::AdjustCrackContactIntegrated: "
-                << crackType[m] << endl;
-            exit(1);
           }
         } // End of if there is !contact
       } //End of loop over nodes
