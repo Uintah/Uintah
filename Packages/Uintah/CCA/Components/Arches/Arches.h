@@ -79,6 +79,7 @@ namespace Uintah {
   class Properties;
   class TurbulenceModel;
   class ScaleSimilarityModel;
+  class CompLocalDynamicProcedure;
   class BoundaryCondition;
   class MPMArchesLabel;
   class ArchesLabel;
@@ -149,8 +150,6 @@ int nofTimeSteps;
 
       virtual void sched_readCCInitialCondition(const LevelP& level,
 				   		SchedulerP&);
-      virtual void sched_initializeSmagCoeff(const LevelP& level,
-                                                SchedulerP&);
       virtual void sched_interpInitialConditionToStaggeredGrid(const LevelP& level,
 				   		SchedulerP&);
       virtual void sched_getCCVelocities(const LevelP& level,
@@ -229,11 +228,6 @@ private:
 		     		  const MaterialSubset*,
 		    		  DataWarehouse* ,
 		     		  DataWarehouse* new_dw);
-      void initializeSmagCoeff(const ProcessorGroup* ,
-		      const PatchSubset* patches,
-		      const MaterialSubset*,
-		      DataWarehouse* ,
-		      DataWarehouse* new_dw);
 
       void interpInitialConditionToStaggeredGrid(const ProcessorGroup*,
 		     				 const PatchSubset* patches,
@@ -259,6 +253,7 @@ private:
       bool d_mixedModel;
       string turbModel;
       ScaleSimilarityModel* d_scaleSimilarityModel;
+      CompLocalDynamicProcedure* d_initTurb;
       PhysicalConstants* d_physicalConsts;
       NonlinearSolver* d_nlSolver;
       // properties...solves density, temperature and species concentrations
