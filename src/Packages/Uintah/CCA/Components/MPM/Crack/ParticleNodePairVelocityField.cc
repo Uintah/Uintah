@@ -2,7 +2,7 @@
     Crack.cc
     PART TWO: PARTICLE-NODE PAIR VELOCITY FIELDS 
 
-    Created by Yajun Guo in 2002-2004.
+    Created by Yajun Guo in 2002-2005.
 ********************************************************************************/
 
 #include "Crack.h"
@@ -89,13 +89,13 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
 
       IntVector ni[MAX_BASIS];
 
-      if((int)ce[m].size()==0) { // For materials with no cracks
+      if((int)ce[m].size()==0) { // For materials without crack
         // set pgCode[idx][k]=1
         for(ParticleSubset::iterator iter=pset->begin();
                                      iter!=pset->end();iter++) {
           for(int k=0; k<n8or27; k++) pgCode[*iter][k]=1;
         }
-        // Get number of particles around nodes
+        // Get number of particles around a node
         for(ParticleSubset::iterator itr=psetWGCs->begin();
                            itr!=psetWGCs->end();itr++) {
           if(n8or27==8)
@@ -106,18 +106,19 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
             if(patch->containsNode(ni[k]))
               gNumPatls[ni[k]]++;
           }
-        } //End of loop over partls
-      }
+        } 
+      } // End of if(...)
       else { // For materials with crack(s)
-        /* Step 1: Detect if nodes are in crack zone
-        */
+	      
+        // Step 1: Detect if nodes are in crack zone
+       
         Ghost::GhostType  gac = Ghost::AroundCells;
         IntVector g_cmin, g_cmax, cell_idx;
         NCVariable<short> singlevfld;
         new_dw->allocateTemporary(singlevfld,patch,gac,2*NGN);
         singlevfld.initialize(0);
 
-        // Get crack extent on grid (g_cmin->g_cmax)
+        // Determine crack extent on grid (g_cmin->g_cmax)
         patch->findCell(cmin[m],cell_idx);
         Point ptmp=patch->nodePosition(cell_idx+IntVector(1,1,1));
         IntVector offset=CellOffset(cmin[m],ptmp,dx);
@@ -136,9 +137,9 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
             singlevfld[c]=YES; // in non-crack zone
         }
 
-        /* Step 2: Detect if particle is above, below or in the same side,
-                   and count the particles around nodes.
-        */
+        // Step 2: Detect if a particle is above, below or in the same side,
+        //         and count the particles around nodes.
+       
         NCVariable<int> num0,num1,num2;
         new_dw->allocateTemporary(num0, patch, gac, 2*NGN);
         new_dw->allocateTemporary(num1, patch, gac, 2*NGN);
@@ -147,7 +148,7 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
         num1.initialize(0);
         num2.initialize(0);
 
-        // Determine particle-node-crack crossing code 
+        // Determine how particle-node segment crosses crack plane 
         for(ParticleSubset::iterator iter=pset->begin();
                               iter!=pset->end();iter++) {
           particleIndex idx=*iter;
@@ -169,8 +170,8 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
               // Get node position even if ni[k] beyond this patch
               Point gx=patch->nodePosition(ni[k]);
 
-              for(int i=0; i<(int)ce[m].size(); i++) { // Loop over crack elems
-                //Three vertices of each element
+              for(int i=0; i<(int)ce[m].size(); i++) {
+                //Three vertices of the element
                 Point n3,n4,n5;
                 n3=cx[m][ce[m][i].x()];
                 n4=cx[m][ce[m][i].y()];
@@ -180,7 +181,7 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
                 short pgc=ParticleNodeCrackPLaneRelation(px[idx],gx,n3,n4,n5);
                 if(pgc==SAMESIDE) continue;
 
-                // Three signed volumes to see if p-g crosses crack
+                // Three signed volumes to see if p-g segment crosses crack
                 double v3,v4,v5;
                 v3=Volume(gx,n3,n4,px[idx]);
                 v4=Volume(gx,n3,n5,px[idx]);
@@ -223,11 +224,11 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
                 GCrackNorm[ni[k]]+=norm;
               }
             } // End of if(singlevfld)
-          } // End of loop over k
+          } 
         } // End of loop over particles
 
-        /* Step 3: count particles around nodes in GhostCells
-        */
+        // Step 3: count particles around nodes in GhostCells
+       
         for(ParticleSubset::iterator itr=psetWGCs->begin();
                               itr!=psetWGCs->end();itr++) {
           particleIndex idx=*itr;
@@ -254,7 +255,7 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
               else {
                 short  cross=SAMESIDE;
                 Vector norm=Vector(0.,0.,0.);
-                for(int i=0; i<(int)ce[m].size(); i++) { // Loop over crack elems
+                for(int i=0; i<(int)ce[m].size(); i++) { 
                   // Three vertices of each element
                   Point n3,n4,n5;
                   n3=cx[m][ce[m][i].x()];
@@ -265,7 +266,7 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
                   short pgc=ParticleNodeCrackPLaneRelation(pxWGCs[idx],gx,n3,n4,n5);
                   if(pgc==SAMESIDE) continue;
 
-                  // Three signed volumes to see if p-g crosses crack
+                  // Three signed volumes to see if p-g segment crosses crack
                   double v3,v4,v5;
                   v3=Volume(gx,n3,n4,pxWGCs[idx]);
                   v4=Volume(gx,n3,n5,pxWGCs[idx]);
@@ -311,9 +312,8 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
           } // End of if(!handled)
         } // End of loop over particles
 
-        /* Step 4: Convert particle-node-crack crossing codes into 
-	           velocity field codes (0 to 1 or 2)
-        */
+        // Step 4: Determine particle-node-pair velocity field
+       
         for(ParticleSubset::iterator iter=pset->begin();
                               iter!=pset->end();iter++) {
            particleIndex idx=*iter;
@@ -329,7 +329,7 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
                else if(num1[ni[k]]!=0)
                  pgCode[idx][k]=2;
                else {
-                 cout << "More than two velocity fields found in "
+                 cout << "Error: more than two velocity fields found in "
                       << "Crack::ParticleVeloccityField for node: "
                       << ni[k] << endl;
                  exit(1);
@@ -382,7 +382,7 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
              cout << setw(10) << "Node: " << k
                   << ",\tvfld: " << pgCode[idx][k] << " ***" << endl;
           else {
-             cout << "Unknown particle velocity code in "
+             cout << "Error: unknown particle velocity code in "
                   << "Crack::ParticleVelocityField" << endl;
              exit(1);
           }
@@ -401,5 +401,99 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
 
     } // End of loop numMatls
   } // End of loop patches
+}
+
+IntVector Crack::CellOffset(const Point& p1, const Point& p2, Vector dx)
+{
+  int nx,ny,nz;
+  if(fabs(p1.x()-p2.x())/dx.x()<1e-6) // p1.x()=p2.x()
+    nx=NGN-1;
+  else
+    nx=NGN;
+  if(fabs(p1.y()-p2.y())/dx.y()<1e-6) // p1.y()=p2.y()
+    ny=NGN-1;
+  else
+    ny=NGN;
+  if(fabs(p1.z()-p2.z())/dx.z()<1e-6) // p1.z()=p2.z()
+    nz=NGN-1;
+  else
+    nz=NGN;
+
+  return IntVector(nx,ny,nz);
+}
+
+// Detect the relation between two points and a plane
+short Crack::ParticleNodeCrackPLaneRelation(const Point& p,
+                            const Point& g, const Point& n1,
+                           const Point& n2, const Point& n3)
+{
+  // p, g     -- two points (usually particle and node)
+  // n1,n2,n3 -- three points on the plane
+
+  short cross;
+  // cross=0 if p and g are on the same side of the plane,
+  // cross=1 if p-g crosses the plane and p is above the plane,
+  // cross=2 if p-g crosses the plane and p is below the plane.
+
+  double x1,y1,z1,x2,y2,z2,x3,y3,z3,xp,yp,zp,xg,yg,zg;
+  double x21,y21,z21,x31,y31,z31,a,b,c,d,dp,dg;
+
+  x1=n1.x(); y1=n1.y(); z1=n1.z();
+  x2=n2.x(); y2=n2.y(); z2=n2.z();
+  x3=n3.x(); y3=n3.y(); z3=n3.z();
+  xp=p.x();  yp=p.y();  zp=p.z();
+  xg=g.x();  yg=g.y();  zg=g.z();
+
+  x21=x2-x1; y21=y2-y1; z21=z2-z1;
+  x31=x3-x1; y31=y3-y1; z31=z3-z1;
+
+  a=y21*z31-z21*y31;
+  b=z21*x31-x21*z31;
+  c=x21*y31-y21*x31;
+  d=-a*x1-b*y1-c*z1;
+
+  dp=a*xp+b*yp+c*zp+d;
+  dg=a*xg+b*yg+c*zg+d;
+
+  if(fabs(dg)<1.e-16) { // node on crack plane
+    if(dp>0.)
+      cross=1;  // p above carck
+    else
+      cross=2;  // p below crack
+  }
+  else { // node not on crack plane
+    if(dp*dg>0.)
+      cross=0;  // p, g on same side
+    else if(dp>0.)
+      cross=1;  // p above, g below
+    else
+      cross=2;  // p below, g above
+  }
+
+  return cross;
+}
+
+// Compute signed volume of a tetrahedron
+double Crack::Volume(const Point& p1, const Point& p2,
+                     const Point& p3, const Point& p)
+{
+   // p1,p2,p3 -- three corners on bottom. p -- vertex
+
+   double vol;
+   double x1,y1,z1,x2,y2,z2,x3,y3,z3,x,y,z;
+
+   x1=p1.x(); y1=p1.y(); z1=p1.z();
+   x2=p2.x(); y2=p2.y(); z2=p2.z();
+   x3=p3.x(); y3=p3.y(); z3=p3.z();
+   x = p.x(); y = p.y(); z = p.z();
+
+   vol=-(x1-x2)*(y3*z-y*z3)-(x3-x)*(y1*z2-y2*z1)
+       +(y1-y2)*(x3*z-x*z3)+(y3-y)*(x1*z2-x2*z1)
+       -(z1-z2)*(x3*y-x*y3)-(z3-z)*(x1*y2-x2*y1);
+
+   if(fabs(vol)<1.e-16)
+     return (0.);
+   else
+     return(vol);
 }
 
