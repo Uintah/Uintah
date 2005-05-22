@@ -213,6 +213,7 @@ namespace Uintah {
       const VarLabel* d_stressCCZdivLabel;
       const VarLabel* d_strainTensorCompLabel;
       const VarLabel* d_betaIJCompLabel;
+      const VarLabel* d_cbetaIJCompLabel;
       const VarLabel* d_LIJCompLabel;
 
       const VarLabel* d_scalarFluxCompLabel;
@@ -221,10 +222,11 @@ namespace Uintah {
       const VarLabel* d_strainMagnitudeLabel;
       const VarLabel* d_strainMagnitudeMLLabel;
       const VarLabel* d_strainMagnitudeMMLabel;
-      const VarLabel* d_lalphaLabel;
+      const VarLabel* d_LalphaLabel;
       const VarLabel* d_cbetaHATalphaLabel;
       const VarLabel* d_alphaalphaLabel;
       const VarLabel* d_CsLabel;
+      const VarLabel* d_deltaCsLabel;
       const VarLabel* d_sumUUULabel;
       const VarLabel* d_sumDllLabel;
       const VarLabel* d_sumSijSijLabel;
