@@ -2,7 +2,7 @@
     Crack.cc
     PART SEVEN: UPDATE CRACK FRONT AND CALCULATE CRACK-FRONT NORMALS
 
-    Created by Yajun Guo in 2002-2004.
+    Created by Yajun Guo in 2002-2005.
 ********************************************************************************/
 
 #include "Crack.h"
@@ -29,6 +29,7 @@
 #include <iostream>
 #include <fstream>
 #include <sgi_stl_warnings_on.h>
+#include <sys/stat.h>
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -60,7 +61,7 @@ void Crack::CrackFrontNodeSubset(const ProcessorGroup*,
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m=0; m<numMPMMatls; m++) {
       if(d_calFractParameters!="false"||d_doCrackPropagation!="false") {
-        // cfnset - subset of crack-front nodes for each patch and each mat
+        // cfnset - subset of crack-front nodes in each patch
         cfnset[m][pid].clear();
         for(int j=0; j<(int)cfSegNodes[m].size(); j++) {
           int node=cfSegNodes[m][j];
@@ -69,7 +70,7 @@ void Crack::CrackFrontNodeSubset(const ProcessorGroup*,
         }
         MPI_Barrier(mpi_crack_comm);
 
-        // Broadcast cfnset to all ranks
+        // Broadcast cfnset to all the ranks
         for(int i=0; i<patch_size; i++) {
           int num; // number of crack-front nodes in patch i
           if(i==pid) num=cfnset[m][i].size();
@@ -79,8 +80,7 @@ void Crack::CrackFrontNodeSubset(const ProcessorGroup*,
         }
         MPI_Barrier(mpi_crack_comm);
 
-        // cfsset - subset of crack-front segment center
-	//  for each patch and each mat
+        // cfsset - subset of crack-front segment center in each patch
         cfsset[m][pid].clear();
         int ncfSegs=(int)cfSegNodes[m].size()/2;
         for(int j=0; j<ncfSegs; j++) {
@@ -90,10 +90,11 @@ void Crack::CrackFrontNodeSubset(const ProcessorGroup*,
           if(patch->containsPoint(cent)) {
             cfsset[m][pid].push_back(j); 
           } 
-        } // End of loop over j
+        }
+
         MPI_Barrier(mpi_crack_comm);
         
-        // Broadcast cfsset to all ranks
+        // Broadcast cfsset to all the ranks
         for(int i=0; i<patch_size; i++) {
           int num; // number of crack-front segments in patch i
           if(i==pid) num=cfsset[m][i].size();
@@ -101,9 +102,9 @@ void Crack::CrackFrontNodeSubset(const ProcessorGroup*,
           cfsset[m][i].resize(num);
           MPI_Bcast(&cfsset[m][i][0],num,MPI_INT,i,mpi_crack_comm);
         }
-      } // End if(...)
+      } 
     } // End of loop over matls
-  } // End of loop over patches
+  } 
 }
 
 void Crack::addComputesAndRequiresRecollectCrackFrontSegments(Task* t,
@@ -160,8 +161,9 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
 
       if(d_doCrackPropagation!="false") {
 
-        /* Task 1: Detect if crack-front nodes are inside of materials
-        */
+	      
+        // Task 1: Detect if crack-front nodes are inside the material
+        
         vector<short> cfSegNodesInMat;
         cfSegNodesInMat.resize(cfSegNodes[m].size());
         for(int i=0; i<(int)cfSegNodes[m].size();i++) {
@@ -172,14 +174,13 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
           int num=cfnset[m][i].size();
           short* inMat=new short[num];
 
-          if(pid==i) { // Processor i does it
+          if(pid==i) { // Rank i does it
             for(int j=0; j<num; j++) {
               int idx=cfnset[m][i][j];
               int node=cfSegNodes[m][idx];
               Point pt=cx[m][node];
               inMat[j]=YES;
 
-              // Get the node indices that surround the cell
 	      interpolator->findCellAndWeights(pt, ni, S, psize[j]);
 
               for(int k = 0; k < n8or27; k++) {
@@ -189,8 +190,8 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
                   break;
                 }
               }
-            } // End of loop over j
-          } // End of if(pid==i)
+            } 
+          } 
 
           MPI_Bcast(&inMat[0],num,MPI_SHORT,i,mpi_crack_comm);
 
@@ -203,9 +204,10 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
 
         MPI_Barrier(mpi_crack_comm);
 
-        /* Task 2: Detect if the centers of crack-front segments
-	           are inside of materials
-        */
+	
+        // Task 2: Detect if the centers of crack-front segments
+	//         are inside the material
+       
         vector<short> cfSegCenterInMat;
         cfSegCenterInMat.resize(cfSegNodes[m].size()/2);
         for(int i=0; i<(int)cfSegNodes[m].size()/2;i++) {
@@ -216,7 +218,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
           int num=cfsset[m][i].size();
           short* inMat=new short[num];
 
-          if(pid==i) { // Processor i does it
+          if(pid==i) { // Rank i does it
             for(int j=0; j<num; j++) {
               int idx=cfsset[m][i][j];
               int node1=cfSegNodes[m][2*idx];
@@ -224,7 +226,6 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
               Point cent=cx[m][node1]+(cx[m][node2]-cx[m][node1])/2.;
               inMat[j]=YES;
 
-              // Get the node indices that surround the cell
 	      interpolator->findCellAndWeights(cent, ni, S, psize[j]);
 
               for(int k = 0; k < n8or27; k++) {
@@ -234,8 +235,8 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
                   break;
                 }
               }
-            } // End of loop over j
-          } // End of if(pid==i)
+            } 
+          } 
 
           MPI_Bcast(&inMat[0],num,MPI_SHORT,i,mpi_crack_comm);
 
@@ -248,10 +249,11 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
 
         MPI_Barrier(mpi_crack_comm);
 
-        /* Task 3: Recollect crack-front segments, discarding the 
-	           dead ones. A segment is regarded dead if both
-		   ends of it are outside of the material 
-        */
+	
+        // Task 3: Recollect crack-front segments, discarding the 
+	//         dead ones. A segment is regarded dead if both
+	//	   ends of it are outside the material 
+       
         // Store crack-front parameters in temporary arraies
         int old_size=(int)cfSegNodes[m].size();
         int*  copyData = new int[old_size];
@@ -260,20 +262,19 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
         cfSegNodes[m].clear();
 
         // Collect the active crack-front segments
-        for(int i=0; i<old_size/2; i++) { // Loop over crack-front segs
+        for(int i=0; i<old_size/2; i++) { 
           int nd1=copyData[2*i];
           int nd2=copyData[2*i+1];
 
           short thisSegActive=NO;
 	  if(cfSegNodesInMat[2*i] || cfSegNodesInMat[2*i+1] || cfSegCenterInMat[i])
-		  thisSegActive=YES;
+	    thisSegActive=YES;
 	  
-          if(thisSegActive) { // Collect parameters of the node
+          if(thisSegActive) { 
             cfSegNodes[m].push_back(nd1);
             cfSegNodes[m].push_back(nd2);
           }
-
-        } // End of loop over crack-front segs
+        } 
         delete [] copyData;
 
 	if(cfSegNodes[m].size()>0) { // New crack front is still in material
@@ -306,21 +307,19 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
             delete [] copyData;
           }
        
-          /* Task 4: Get previous index, and minimum & maximum indexes 
-             for crack-front nodes
-          */
+	  
+          // Task 4: Get previous index, and minimum & maximum indexes 
+          //         for crack-front nodes
+         
           FindCrackFrontNodeIndexes(m);
     
-          /* Task 5: Calculate outer normals, tangential normals and binormals
-	             of crack plane at crack-front nodes  
-          */         
-          if(smoothCrackFront) { // Smooth crack front with cubic-spline
+         
+	  // Task 5: Calculate outer normals, tangential normals and binormals
+	  //         of crack plane at crack-front nodes  
+                  
+          if(smoothCrackFront) { 
             short smoothSuccessfully=SmoothCrackFrontAndCalculateNormals(m);
-            if(!smoothSuccessfully) {
-            //  if(pid==0)
-            //    cout << " ! Crack-front normals are obtained "
-            //         << "by raw crack-front points." << endl;
-            }
+            if(!smoothSuccessfully) CalculateCrackFrontNormals(m);
           }
           else { // Calculate crack-front normals directly
             CalculateCrackFrontNormals(m);
@@ -329,14 +328,14 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
 	
 	else { // Crack has penetrated the material
           // If all crack-front segments dead, the material is broken.
-          if(ce[m].size()>0) { // The material has crack(s)		
+          if(ce[m].size()>0) { // for the material with crack(s) initially		
 	    if(pid==0) cout << "!!! Material " << m << " is broken." << endl;
 	  }  
 	}
 	
       } // End of if(d_doCrackPropagation!="false")
 
-      // Save crack elems, crack points and crack-front nodes
+      // Save crack elements, crack nodes and crack-front nodes
       // for crack geometry visualization
       if(saveCrackGeometry) {
         int curTimeStep=d_sharedState->getCurrentTopLevelTimeStep();
@@ -345,6 +344,87 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
 
     } // End of loop over matls
     delete interpolator;
-  } // End of loop over patches
+  } 
+}
+
+// Output cracks for visualization
+void Crack::OutputCrackGeometry(const int& m, const int& timestep)
+{
+  if(ce[m].size()>0) { // for the materials with cracks
+    bool timeToDump = dataArchiver->wasOutputTimestep();
+    if(timeToDump) {
+      // Create output files in format:
+      // ce.matXXX.timestepYYYYY (crack elems)
+      // cx.matXXX.timestepYYYYY (crack points)
+      // cf.matXXX.timestepYYYYY (crack front nodes)
+      // Those files are stored in .uda.XXX/tXXXXX/crackData/
+
+      char timestepbuf[10],matbuf[10];
+      sprintf(timestepbuf,"%d",timestep);
+      sprintf(matbuf,"%d",m);
+
+      // Create output directories
+      char crackDir[200]="";
+      strcat(crackDir,udaDir.c_str());
+      strcat(crackDir,"/t");
+      if(timestep<10) strcat(crackDir,"0000");
+      else if(timestep<100) strcat(crackDir,"000");
+      else if(timestep<1000) strcat(crackDir,"00");
+      else if(timestep<10000) strcat(crackDir,"0");
+      strcat(crackDir,timestepbuf);
+      strcat(crackDir,"/crackData");
+
+      MKDIR(crackDir,0777);
+
+      // Specify output file names
+      char ceFileName[200]="";
+      strcat(ceFileName,crackDir);
+      strcat(ceFileName,"/ce.mat");
+      if(m<10) strcat(ceFileName,"00");
+      else if(m<100) strcat(ceFileName,"0");
+      strcat(ceFileName,matbuf);
+
+      char cxFileName[200]="";
+      strcat(cxFileName,crackDir);
+      strcat(cxFileName,"/cx.mat");
+      if(m<10) strcat(cxFileName,"00");
+      else if(m<100) strcat(cxFileName,"0");
+      strcat(cxFileName,matbuf);
+
+      char cfFileName[200]="";
+      strcat(cfFileName,crackDir);
+      strcat(cfFileName,"/cf.mat");
+      if(m<10) strcat(cfFileName,"00");
+      else if(m<100) strcat(cfFileName,"0");
+      strcat(cfFileName,matbuf);
+
+      ofstream outputCE(ceFileName, ios::out);
+      ofstream outputCX(cxFileName, ios::out);
+      ofstream outputCF(cfFileName, ios::out);
+
+      if(!outputCE || !outputCX || !outputCF) {
+        cout << "Error: failure to open files for storing crack geometry" << endl;
+        exit(1);
+      }
+
+      // Output crack elems
+      for(int i=0; i<(int)ce[m].size(); i++) {
+        outputCE << ce[m][i].x() << " " << ce[m][i].y() << " "
+                 << ce[m][i].z() << endl;
+      }
+
+      // Output crack nodes
+      for(int i=0; i<(int)cx[m].size(); i++) {
+        outputCX << cx[m][i].x() << " " << cx[m][i].y() << " "
+                 << cx[m][i].z() << endl;
+      }
+
+      // Output crack-front nodes
+      for(int i=0; i<(int)cfSegNodes[m].size()/2; i++) {
+        outputCF << cfSegNodes[m][2*i] << " "
+                 << cfSegNodes[m][2*i+1] << endl;
+      }
+    }
+  } // End if(ce[m].size()>0)
 }
 
