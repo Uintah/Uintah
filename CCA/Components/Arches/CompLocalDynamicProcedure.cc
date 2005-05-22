@@ -351,11 +351,9 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     tsk->requires(Task::NewDW, d_lab->d_filterRhoLabel, 
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-//    int nofTimeSteps=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
-//    if(nofTimeSteps>1) {
-//    tsk->requires(Task::NewDW, d_lab->d_CsLabel, 
-//		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-//    }
+    tsk->requires(Task::OldDW, d_lab->d_CsLabel, 
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    
     tsk->requires(Task::NewDW, d_lab->d_strainTensorCompLabel,
 		  d_lab->d_symTensorMatl, Task::OutOfDomain,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -407,8 +405,9 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     tsk->computes(d_lab->d_strainMagnitudeLabel);
     tsk->computes(d_lab->d_strainMagnitudeMLLabel);
     tsk->computes(d_lab->d_strainMagnitudeMMLabel);
-    tsk->computes(d_lab->d_betaIJCompLabel,
-		  d_lab->d_symTensorMatl, Task::OutOfDomain);
+    tsk->computes(d_lab->d_LalphaLabel);
+    tsk->computes(d_lab->d_alphaalphaLabel);
+    tsk->computes(d_lab->d_cbetaHATalphaLabel);
     tsk->computes(d_lab->d_LIJCompLabel,
 		  d_lab->d_symTensorMatl, Task::OutOfDomain);
     if (d_dynScalarModel) {
@@ -430,8 +429,9 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     tsk->modifies(d_lab->d_strainMagnitudeLabel);
     tsk->modifies(d_lab->d_strainMagnitudeMLLabel);
     tsk->modifies(d_lab->d_strainMagnitudeMMLabel);
-    tsk->modifies(d_lab->d_betaIJCompLabel,
-		  d_lab->d_symTensorMatl, Task::OutOfDomain);
+    tsk->modifies(d_lab->d_LalphaLabel);
+    tsk->modifies(d_lab->d_alphaalphaLabel);
+    tsk->modifies(d_lab->d_cbetaHATalphaLabel);
     tsk->modifies(d_lab->d_LIJCompLabel,
 		  d_lab->d_symTensorMatl, Task::OutOfDomain);
     if (d_dynScalarModel) {
@@ -475,18 +475,19 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeMMLabel,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_filterStrainTensorCompLabel,
-		  d_lab->d_symTensorMatl, Task::OutOfDomain,
+    tsk->requires(Task::NewDW, d_lab->d_LalphaLabel,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_betaIJCompLabel,
+    tsk->requires(Task::NewDW, d_lab->d_alphaalphaLabel,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_cbetaHATalphaLabel,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_filterStrainTensorCompLabel,
 		  d_lab->d_symTensorMatl, Task::OutOfDomain,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     tsk->requires(Task::NewDW, d_lab->d_LIJCompLabel,
 		  d_lab->d_symTensorMatl, Task::OutOfDomain,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::OldDW, d_lab->d_CsLabel,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
@@ -1524,7 +1525,7 @@ void
 CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 					const PatchSubset* patches,
 					const MaterialSubset*,
-					DataWarehouse*,
+					DataWarehouse* old_dw,
 					DataWarehouse* new_dw,
 				        const TimeIntegratorLabel* timelabels)
 {
@@ -1547,7 +1548,7 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     constCCVariable<double> filterRhoF;
     constCCVariable<double> filterRhoE;
     constCCVariable<double> filterRhoRF;
-    constCCVariable<double> CsStar;
+    constCCVariable<double> CsOld;
 
     // Get the velocity and density
     new_dw->get(ccUVel, d_lab->d_newCCUVelocityLabel, matlIndex, patch, 
@@ -1560,6 +1561,8 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(filterRho, d_lab->d_filterRhoLabel, matlIndex, patch, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    old_dw->get(CsOld, d_lab->d_CsLabel, matlIndex, patch,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
       new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch, 
@@ -1636,14 +1639,18 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     }  
     }
 
-    StencilMatrix<Array3<double> > betaIJ;  //6 point tensor
-    StencilMatrix<Array3<double> > betaHATIJ; //6 point tensor
+    StencilMatrix<Array3<double> > betaIJ, cbetaIJ;  //6 point tensor
+    StencilMatrix<Array3<double> > betaHATIJ, cbetaHATIJ; //6 point tensor
     //  0-> 11, 1->22, 2->33, 3 ->12, 4->13, 5->23
     for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++) {
       betaIJ[ii].resize(idxLo, idxHi);
       betaIJ[ii].initialize(0.0);
+      cbetaIJ[ii].resize(idxLo, idxHi);
+      cbetaIJ[ii].initialize(0.0);
       betaHATIJ[ii].resize(idxLo, idxHi);
+      cbetaHATIJ[ii].resize(idxLo, idxHi);
       betaHATIJ[ii].initialize(0.0);
+      cbetaHATIJ[ii].initialize(0.0);
     }  // allocate stress tensor coeffs
     StencilMatrix<Array3<double> > scalarBeta;  //vector
     StencilMatrix<Array3<double> > scalarBetaHat; //vector
@@ -1677,28 +1684,25 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     CCVariable<double> IsImag;
     CCVariable<double> MLI;
     CCVariable<double> MMI;
+    CCVariable<double> alphaalpha;
+    CCVariable<double> Lalpha;
+    CCVariable<double> cbetaHATalpha;
     CCVariable<double> scalarNum;
     CCVariable<double> scalarDenom;
     CCVariable<double> enthalpyNum;
     CCVariable<double> enthalpyDenom;
     CCVariable<double> reactScalarNum;
     CCVariable<double> reactScalarDenom;
-    StencilMatrix<CCVariable<double> > betaij;    //6 point tensor
     StencilMatrix<CCVariable<double> > lij;    //6 point tensor
     for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++) {
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      new_dw->allocateAndPut(betaij[ii], 
-			     d_lab->d_betaIJCompLabel, ii, patch);
       new_dw->allocateAndPut(lij[ii], 
 			     d_lab->d_LIJCompLabel, ii, patch);
     }
     else {
-      new_dw->getModifiable(betaij[ii], 
-			     d_lab->d_betaIJCompLabel, ii, patch);
       new_dw->getModifiable(lij[ii], 
 			     d_lab->d_LIJCompLabel, ii, patch);
     }
-      betaij[ii].initialize(0.0);
       lij[ii].initialize(0.0);
     }
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -1708,6 +1712,12 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 			   d_lab->d_strainMagnitudeMLLabel, matlIndex, patch);
     new_dw->allocateAndPut(MMI, 
 			   d_lab->d_strainMagnitudeMMLabel, matlIndex, patch);
+    new_dw->allocateAndPut(alphaalpha, 
+			   d_lab->d_alphaalphaLabel, matlIndex, patch);
+    new_dw->allocateAndPut(Lalpha, 
+			   d_lab->d_LalphaLabel, matlIndex, patch);
+    new_dw->allocateAndPut(cbetaHATalpha, 
+			   d_lab->d_cbetaHATalphaLabel, matlIndex, patch);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
         new_dw->allocateAndPut(scalarNum, 
@@ -1736,6 +1746,12 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 			   d_lab->d_strainMagnitudeMLLabel, matlIndex, patch);
     new_dw->getModifiable(MMI, 
 			   d_lab->d_strainMagnitudeMMLabel, matlIndex, patch);
+    new_dw->getModifiable(alphaalpha, 
+			   d_lab->d_alphaalphaLabel, matlIndex, patch);
+    new_dw->getModifiable(Lalpha, 
+			   d_lab->d_LalphaLabel, matlIndex, patch);
+    new_dw->getModifiable(cbetaHATalpha, 
+			   d_lab->d_cbetaHATalphaLabel, matlIndex, patch);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
         new_dw->getModifiable(scalarNum, 
@@ -1760,6 +1776,9 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     IsImag.initialize(0.0);
     MLI.initialize(0.0);
     MMI.initialize(0.0);
+    alphaalpha.initialize(0.0);
+    Lalpha.initialize(0.0);
+    cbetaHATalpha.initialize(0.0);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
         scalarNum.initialize(0.0);
@@ -1893,16 +1912,17 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 	  double isi_cur = sqrt(2.0*(sij0*sij0 + sij1*sij1 + sij2*sij2 +
 				     2.0*(sij3*sij3 + sij4*sij4 + sij5*sij5)));
 // trace has been neglected
-	  double trace = (sij0 + sij1 + sij2)/3.0;
-//	  double trace = 0.0;
+//	  double trace = (sij0 + sij1 + sij2)/3.0;
+	  double trace = 0.0;
 	  double uvel_cur = ccUVel[currCell];
 	  double vvel_cur = ccVVel[currCell];
 	  double wvel_cur = ccWVel[currCell];
 	  double den_cur = den[currCell];
+	  double delta = cellinfo->sew[colX]*
+			 cellinfo->sns[colY]*cellinfo->stb[colZ];
+	  double filter = pow(delta, 1.0/3.0);
 
 	  IsI[currCell] = isi_cur; 
-
-	  //    calculate the grid filtered stress tensor, beta
 
 	  (betaIJ[0])[currCell] = den_cur*isi_cur*(sij0-trace);
 	  (betaIJ[1])[currCell] = den_cur*isi_cur*(sij1-trace);
@@ -1910,13 +1930,12 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 	  (betaIJ[3])[currCell] = den_cur*isi_cur*sij3;
 	  (betaIJ[4])[currCell] = den_cur*isi_cur*sij4;
 	  (betaIJ[5])[currCell] = den_cur*isi_cur*sij5;
-	  (betaij[0])[currCell] = (betaIJ[0])[currCell];
-	  (betaij[1])[currCell] = (betaIJ[1])[currCell];
-	  (betaij[2])[currCell] = (betaIJ[2])[currCell];
-	  (betaij[3])[currCell] = (betaIJ[3])[currCell];
-	  (betaij[4])[currCell] = (betaIJ[4])[currCell];
-	  (betaij[5])[currCell] = (betaIJ[5])[currCell];
-	  // required to compute Leonard term
+	  (cbetaIJ[0])[currCell] = CsOld[currCell]*(betaIJ[0])[currCell]*filter*filter;
+	  (cbetaIJ[1])[currCell] = CsOld[currCell]*(betaIJ[1])[currCell]*filter*filter;
+	  (cbetaIJ[2])[currCell] = CsOld[currCell]*(betaIJ[2])[currCell]*filter*filter;
+	  (cbetaIJ[3])[currCell] = CsOld[currCell]*(betaIJ[3])[currCell]*filter*filter;
+	  (cbetaIJ[4])[currCell] = CsOld[currCell]*(betaIJ[4])[currCell]*filter*filter;
+	  (cbetaIJ[5])[currCell] = CsOld[currCell]*(betaIJ[5])[currCell]*filter*filter;
 	  rhoUU[currCell] = den_cur*uvel_cur*uvel_cur;
 	  rhoUV[currCell] = den_cur*uvel_cur*vvel_cur;
 	  rhoUW[currCell] = den_cur*uvel_cur*wvel_cur;
@@ -2033,6 +2052,7 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     d_filter->applyFilter(pc, patch, rhoWW, filterRhoWW);
     for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++) {
       d_filter->applyFilter(pc, patch, betaIJ[ii], betaHATIJ[ii]);
+      d_filter->applyFilter(pc, patch, cbetaIJ[ii], cbetaHATIJ[ii]);
     }
 
     if (d_dynScalarModel) {
@@ -2133,8 +2153,8 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 				       shatij4*shatij4 + shatij5*shatij5)));
 	  double filterDencur = filterRho[currCell];
 //        ignoring the trace
-	  double trace = (shatij0 + shatij1 + shatij2)/3.0;
-//	  double trace = 0.0;
+//	  double trace = (shatij0 + shatij1 + shatij2)/3.0;
+	  double trace = 0.0;
 
 	  IsImag[currCell] = IsI[currCell]; 
 
@@ -2178,8 +2198,8 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 
 // Explicitly making LIJ traceless here
 // Actually, trace has been ignored	  
-	  double LIJtrace = (LIJ0cur + LIJ1cur + LIJ2cur)/3.0;
-//	  double LIJtrace = 0.0;
+//   double LIJtrace = (LIJ0cur + LIJ1cur + LIJ2cur)/3.0;
+	  double LIJtrace = 0.0;
 	  LIJ0cur = LIJ0cur - LIJtrace;
 	  LIJ1cur = LIJ1cur - LIJtrace;
 	  LIJ2cur = LIJ2cur - LIJtrace;
@@ -2203,7 +2223,26 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
                          2.0*(MIJ3cur*MIJ3cur +
 			      MIJ4cur*MIJ4cur +
 			      MIJ5cur*MIJ5cur );
+	  double alphaIJ0, alphaIJ1, alphaIJ2, alphaIJ3, alphaIJ4, alphaIJ5;
+		alphaIJ0 = filterDencur*IshatIcur*(shatij0-trace)*filter*filter*2.0*2.0;
+		alphaIJ1 = filterDencur*IshatIcur*(shatij1-trace)*filter*filter*2.0*2.0;
+		alphaIJ2 = filterDencur*IshatIcur*(shatij2-trace)*filter*filter*2.0*2.0;
+		alphaIJ3 = filterDencur*IshatIcur*shatij3*filter*filter*2.0*2.0;
+		alphaIJ4 = filterDencur*IshatIcur*shatij4*filter*filter*2.0*2.0;
+		alphaIJ5 = filterDencur*IshatIcur*shatij5*filter*filter*2.0*2.0;
 
+		alphaalpha[currCell] = alphaIJ0*alphaIJ0 + alphaIJ1*alphaIJ1 + 
+			   alphaIJ2*alphaIJ2 + 2.0*(alphaIJ3*alphaIJ3 + 
+			   alphaIJ4*alphaIJ4 + alphaIJ5*alphaIJ5);	
+		Lalpha[currCell] = alphaIJ0*LIJ0cur + alphaIJ1*LIJ1cur +
+			alphaIJ2*LIJ2cur + 2.0*(alphaIJ3*LIJ3cur +
+			alphaIJ4*LIJ4cur + alphaIJ5*LIJ5cur);
+		cbetaHATalpha[currCell] = (cbetaHATIJ[0])[currCell]*alphaIJ0 +
+			(cbetaHATIJ[1])[currCell]*alphaIJ1 +
+			(cbetaHATIJ[2])[currCell]*alphaIJ2 +
+			2*((cbetaHATIJ[3])[currCell]*alphaIJ3 +
+			(cbetaHATIJ[4])[currCell]*alphaIJ4 +
+			(cbetaHATIJ[5])[currCell]*alphaIJ5); 
 	  double filterRhoFcur, scalarLX, scalarLY, scalarLZ;
 	  double scalarMX, scalarMY, scalarMZ;
 	  double filterRhoEcur, enthalpyLX, enthalpyLY, enthalpyLZ;
@@ -2314,8 +2353,7 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 				     const TimeIntegratorLabel* timelabels)
 {
   int nofTimeSteps=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
-  int initialTimeStep=10;
-//  double time = d_lab->d_sharedState->getElapsedTime();
+  int initialTimeStep=2;
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -2324,6 +2362,7 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     constCCVariable<double> IsI;
     constCCVariable<double> MLI;
     constCCVariable<double> MMI;
+    constCCVariable<double> alphaalpha, Lalpha, cbetaHATalpha;
     constCCVariable<double> scalarNum;
     constCCVariable<double> scalarDenom;
     constCCVariable<double> enthalpyNum;
@@ -2338,7 +2377,6 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     constCCVariable<double> filterRho;
     constCCVariable<double> voidFraction;
     constCCVariable<int> cellType;
-    constCCVariable<double> CsOld;
     CCVariable<double> viscosity;
     CCVariable<double> scalardiff;
     CCVariable<double> enthalpydiff;
@@ -2371,12 +2409,6 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
          }
        }      
     }
-    
-//    if(nofTimeSteps<=1)
-//        Cs.initialize(0.0);
-    if(nofTimeSteps>=initialTimeStep)
-      old_dw->get(CsOld, d_lab->d_CsLabel, matlIndex, patch,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);    
     
     if (d_dynScalarModel) {
       if (d_calcScalar) {
@@ -2415,6 +2447,12 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(MMI, d_lab->d_strainMagnitudeMMLabel, matlIndex, patch, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+      new_dw->get(alphaalpha, d_lab->d_alphaalphaLabel, matlIndex, patch, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+      new_dw->get(Lalpha, d_lab->d_LalphaLabel, matlIndex, patch, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+      new_dw->get(cbetaHATalpha, d_lab->d_cbetaHATalphaLabel, matlIndex, patch, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
         new_dw->get(scalarNum,d_lab->d_scalarNumeratorLabel,
@@ -2448,7 +2486,7 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     if (d_MAlab)
-      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
+        new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
@@ -2526,11 +2564,9 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
       }
     }      
 #endif
-    CCVariable<double> tempCs, Cs2;
+    CCVariable<double> tempCs;
     tempCs.allocate(patch->getLowIndex(), patch->getHighIndex());
     tempCs.initialize(0.0);
-    Cs2.allocate(patch->getLowIndex(), patch->getHighIndex());
-    Cs2.initialize(0.0);
     
     CCVariable<double> tempShF;
     CCVariable<double> tempShE;
@@ -2557,12 +2593,13 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 	  IntVector currCell(colX, colY, colZ);
 
 	  double value;
-//	  if(nofTimeSteps<initialTimeStep) {
+	  if(nofTimeSteps<=initialTimeStep) {
 		if ((MMHatI[currCell] < 1.0e-10)||(MLHatI[currCell] < 1.0e-7))
 		  value = 0.0;
 		else
 		  value = MLHatI[currCell]/MMHatI[currCell];
 		tempCs[currCell] = value;
+	  }
 	  double scalar_value;
 	  double enthalpy_value;
 	  double reactScalar_value;
@@ -2597,7 +2634,7 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 	}
       }
     }
-//    if (nofTimeSteps<initialTimeStep) {
+    if (nofTimeSteps<=initialTimeStep) {
       if ((d_filter_cs_squared)&&(!(d_3d_periodic))) {
       // filtering for periodic case is not implemented 
       // if it needs to be then tempCs will require 1 layer of boundary cells to be computed
@@ -2619,14 +2656,7 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
       else
         Cs.copy(tempCs, tempCs.getLowIndex(),
 		      tempCs.getHighIndex());
-      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-		IntVector currCell(colX, colY, colZ);
-		Cs2[currCell]=Cs[currCell];
-	  }
-	}
-      }
+  }
     
     if (d_dynScalarModel) {
       if (d_calcScalar) {
@@ -2642,98 +2672,13 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 		            tempShRF.getHighIndex());
       }
     }
-    
 //-----------------------------------------------------------------------------------    
-    if (nofTimeSteps>=initialTimeStep) {
-    StencilMatrix<Array3<double> > cbetaIJ, cbetaHATIJ; //6 point tensor
-    //  0-> 11, 1->22, 2->33, 3 ->12, 4->13, 5->23
-    for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++) {
-      cbetaIJ[ii].resize(idxLo, idxHi);
-      cbetaIJ[ii].initialize(0.0);
-      cbetaHATIJ[ii].resize(idxLo, idxHi);
-      cbetaHATIJ[ii].initialize(0.0);
-    }  // allocate stress tensor coeffs
-      StencilMatrix<constCCVariable<double> > betaIJ, LIJ; //6 point tensor
-      StencilMatrix<constCCVariable<double> > SHATIJ; //6 point tensor
-      for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++) {
-	  new_dw->get(betaIJ[ii], d_lab->d_betaIJCompLabel, ii, patch,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-          new_dw->get(LIJ[ii], d_lab->d_LIJCompLabel, ii, patch,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-          new_dw->get(SHATIJ[ii], d_lab->d_filterStrainTensorCompLabel,
-		  ii, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-      }
+    if (nofTimeSteps>initialTimeStep) {
       for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
         for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
           for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ);
-	  double delta = cellinfo->sew[colX]*
-			 cellinfo->sns[colY]*cellinfo->stb[colZ];
-	  double filter = pow(delta, 1.0/3.0);
-
-		(cbetaIJ[0])[currCell] =CsOld[currCell]*(betaIJ[0])[currCell]*filter*filter;
-		(cbetaIJ[1])[currCell] =CsOld[currCell]*(betaIJ[1])[currCell]*filter*filter;
-		(cbetaIJ[2])[currCell] =CsOld[currCell]*(betaIJ[2])[currCell]*filter*filter;
-		(cbetaIJ[3])[currCell] =CsOld[currCell]*(betaIJ[3])[currCell]*filter*filter;
-		(cbetaIJ[4])[currCell] =CsOld[currCell]*(betaIJ[4])[currCell]*filter*filter;
-		(cbetaIJ[5])[currCell] =CsOld[currCell]*(betaIJ[5])[currCell]*filter*filter;
-	  }
-	}
-      }
-      for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++) {
-#ifdef PetscFilter
-          d_filter->applyFilter(pc, patch, cbetaIJ[ii], cbetaHATIJ[ii]);
-#endif
-      }
-    
-      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ);
-	  double delta = cellinfo->sew[colX]*
-			 cellinfo->sns[colY]*cellinfo->stb[colZ];
-	  double filter = pow(delta, 1.0/3.0);
-
-	  // test filter width is assumed to be twice that of the basic filter
-	  // needs following modifications:
-	  // a) make the test filter work for anisotropic grid
-          // b) generalize the filter operation
-	  double shatij0 = (SHATIJ[0])[currCell];
-	  double shatij1 = (SHATIJ[1])[currCell];
-	  double shatij2 = (SHATIJ[2])[currCell];
-	  double shatij3 = (SHATIJ[3])[currCell];
-	  double shatij4 = (SHATIJ[4])[currCell];
-	  double shatij5 = (SHATIJ[5])[currCell];
-	  double IshatIcur = sqrt(2.0*(shatij0*shatij0 + shatij1*shatij1 +
-				       shatij2*shatij2 + 2.0*(shatij3*shatij3 + 
-				       shatij4*shatij4 + shatij5*shatij5)));
-	  double filterDencur = filterRho[currCell];
-//        ignoring the trace
-	  double trace = (shatij0 + shatij1 + shatij2)/3.0;
-//	  double trace = 0.0;
-
-	  double alphaIJ0, alphaIJ1, alphaIJ2, alphaIJ3, alphaIJ4, alphaIJ5;
-	  double alphaalpha, Lalpha, cbetaHATalpha;
-		alphaIJ0 = filterDencur*IshatIcur*(shatij0-trace)*filter*filter*2.0*2.0;
-		alphaIJ1 = filterDencur*IshatIcur*(shatij1-trace)*filter*filter*2.0*2.0;
-		alphaIJ2 = filterDencur*IshatIcur*(shatij2-trace)*filter*filter*2.0*2.0;
-		alphaIJ3 = filterDencur*IshatIcur*shatij3*filter*filter*2.0*2.0;
-		alphaIJ4 = filterDencur*IshatIcur*shatij4*filter*filter*2.0*2.0;
-		alphaIJ5 = filterDencur*IshatIcur*shatij5*filter*filter*2.0*2.0;
-
-		alphaalpha=alphaIJ0*alphaIJ0 + alphaIJ1*alphaIJ1 + 
-			   alphaIJ2*alphaIJ2 + 2.0*(alphaIJ3*alphaIJ3 + 
-			   alphaIJ4*alphaIJ4 + alphaIJ5*alphaIJ5);	
-		Lalpha=alphaIJ0*(LIJ[0])[currCell] + alphaIJ1*(LIJ[1])[currCell] +
-			alphaIJ2*(LIJ[2])[currCell] + 2.0*(alphaIJ3*(LIJ[3])[currCell] +
-			alphaIJ4*(LIJ[4])[currCell] + alphaIJ5*(LIJ[5])[currCell]);
-		cbetaHATalpha=(cbetaHATIJ[0])[currCell]*alphaIJ0 +
-			(cbetaHATIJ[1])[currCell]*alphaIJ1 +
-			(cbetaHATIJ[2])[currCell]*alphaIJ2 +
-			2*((cbetaHATIJ[3])[currCell]*alphaIJ3 +
-			(cbetaHATIJ[4])[currCell]*alphaIJ4 +
-			(cbetaHATIJ[5])[currCell]*alphaIJ5); 
-		tempCs[currCell]=-0.5*(Lalpha-2.0*cbetaHATalpha)/alphaalpha;
+	      IntVector currCell(colX, colY, colZ);
+		tempCs[currCell]=-0.5*(Lalpha[currCell]-2.0*cbetaHATalpha[currCell])/alphaalpha[currCell];
 	  }
 	}
       }
@@ -2752,10 +2697,6 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 	  
 //------------------------------------------------------------------------------------
     double factor = 1.0;
-#if 0
-    if (time < 2.0)
-      factor = (time+0.000001)*0.5;
-#endif
 
 // Laminar Pr number is taken to be 0.7, shouldn't make much difference
     double laminarPrNo = 0.7;
@@ -2834,8 +2775,10 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 		           cellinfo->sns[colY]*cellinfo->stb[colZ];
 	    double filter = pow(delta, 1.0/3.0);
 
-	    Cs[currCell] = Min(0.5*(Cs[currCell]+Cs2[currCell]),10.0);
-//	    Cs[currCell] = factor * sqrt(Cs[currCell]);
+	    if (Cs[currCell]>0.0) 
+		    Cs[currCell] = Min((Cs[currCell]),0.1);
+	    else
+		    Cs[currCell]=Max((Cs[currCell]),-0.1);
 	    viscosity[currCell] =  Cs[currCell] *
 		                   filter * filter *
 	                           IsI[currCell] * den[currCell] + viscos;
@@ -2882,6 +2825,7 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 	  }
 	}
       }
+    
     }
 
     // boundary conditions...make a separate function apply Boundary
