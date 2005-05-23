@@ -44,18 +44,31 @@
 #include <Core/Util/NotFinished.h>
 
 //using SSIDL::Class;
+//using SSIDL::Object;
 using SSIDL::BaseInterface;
-using SSIDL::Object;
+using SSIDL::BaseClass;
+using SSIDL::ClassInfo;
 
-void BaseInterface::addReference()
+// void BaseInterface::addReference()
+// {
+//   SCIRun::Object::addReference();
+// }
+
+void BaseInterface::addRef()
 {
-  SCIRun::Object::addReference();
+    SCIRun::Object::addReference();
 }
 
-void BaseInterface::deleteReference()
+// void BaseInterface::deleteReference()
+// {
+//   SCIRun::Object::deleteReference();
+// }
+
+void BaseInterface::deleteRef()
 {
-  SCIRun::Object::deleteReference();
+    SCIRun::Object::deleteReference();
 }
+
 /*
 Class::pointer BaseInterface::getClass()
 {
@@ -65,8 +78,26 @@ Class::pointer BaseInterface::getClass()
 */
 bool BaseInterface::isSame(const BaseInterface::pointer& /*object*/)
 {
-  NOT_FINISHED("bool .SSIDL.BaseInterface.isSame(in .SSIDL.BaseInterface object)");
-  return false;
+    NOT_FINISHED("bool .SSIDL.BaseInterface.isSame(in .SSIDL.BaseInterface object)");
+    return false;
+}
+
+bool BaseInterface::isType(const std::string& /*name*/)
+{
+    NOT_FINISHED("bool .SSIDL.BaseInterface.isType(in .SSIDL.string name)");
+    return false;
+}
+
+BaseInterface::pointer BaseInterface::queryInt(const std::string& /*name*/)
+{
+    NOT_FINISHED(".SSIDL.BaseInterface .SSIDL.BaseInterface.queryInt(in .SSIDL.string name)");
+    return BaseInterface::pointer(0);
+}
+
+SSIDL::ClassInfo BaseInterface::getClassInfo()
+{
+    NOT_FINISHED("ClassInfo .SSIDL.getClassInfo()");
+    return ClassInfo::pointer(0);
 }
 
 /*
@@ -82,9 +113,11 @@ bool BaseInterface::supportsInterface(const Class::pointer& type)
   return false;
 }
 */
-BaseInterface::pointer BaseInterface::queryInterface(const std::string& /*type*/)
-{
-  NOT_FINISHED(".SSIDL.BaseInterface .SSIDL.BaseInterface.queryInterface(in .SSIDL.Class type)");
-  return BaseInterface::pointer(0);
-}
+// *** replaced by BaseInterface::queryInt
+//
+// BaseInterface::pointer BaseInterface::queryInterface(const std::string& /*type*/)
+// {
+//   NOT_FINISHED(".SSIDL.BaseInterface .SSIDL.BaseInterface.queryInterface(in .SSIDL.Class type)");
+//   return BaseInterface::pointer(0);
+// }
 
