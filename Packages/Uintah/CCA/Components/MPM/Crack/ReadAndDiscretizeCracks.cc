@@ -735,8 +735,9 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
           }
         } 
          
-#if 0
+#if 1
         OutputInitialCrackMesh(m);
+	exit(1);
 #endif
       }
     } // End of loop over matls
@@ -1386,7 +1387,7 @@ void Crack::ReorderCrackFrontNodes(const int& m)
       tmp.push_back(k2);
       // the rest elements of the sub crack front 
       FindSegsFromNode(m,k2,segs);
-      while(segs[L]>=0) { // Node k2 is connected by another element 
+      while(segs[L]>=0) { // Node k2 is connected by segs[L] 
 	k1=cfSegNodes[m][2*segs[L]];
 	k2=cfSegNodes[m][2*segs[L]+1];
         tmp.push_back(k1);
@@ -1394,6 +1395,23 @@ void Crack::ReorderCrackFrontNodes(const int& m)
 	FindSegsFromNode(m,k2,segs);
       }	
     } // End of if(segs[R]<0)
+  } 
+
+  if((int)tmp.size()==0) { // for enclosed cracks
+    // start from the first element       
+    k1=cfSegNodes[m][0];
+    k2=cfSegNodes[m][1];
+    tmp.push_back(k1);
+    tmp.push_back(k2);
+    // the rest elements of the sub crack front 
+    FindSegsFromNode(m,k2,segs);
+    while(segs[L]>=0 && (int)tmp.size()<num-1) { 
+      k1=cfSegNodes[m][2*segs[L]];
+      k2=cfSegNodes[m][2*segs[L]+1];
+      tmp.push_back(k1);
+      tmp.push_back(k2);
+      FindSegsFromNode(m,k2,segs);
+    }
   } 
 
   // Save the reordered crack-front nodes
@@ -2169,7 +2187,8 @@ void Crack::OutputInitialCrackMesh(const int& m)
            << cfSegNodes[m][i] << cx[m][cfSegNodes[m][i]]
            << ", V1: " << cfSegV1[m][i]
            << ", V2: " << cfSegV2[m][i]
-           << ", V3: " << cfSegV3[m][i] << endl << endl;
+           << ", V3: " << cfSegV3[m][i] << endl;
+      if(i%2!=0) cout << endl;
     }
 
     cout << "  Average length of crack-front segments, css[m]="
