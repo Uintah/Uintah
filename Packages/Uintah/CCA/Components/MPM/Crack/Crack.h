@@ -119,7 +119,7 @@ class Crack
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw);
 
-    // Public methods in MoveCrackPoints.cc
+    // Public methods in MoveCracks.cc
     void addComputesAndRequiresCrackPointSubset(Task* task,
                                 const PatchSet* patches,
                                 const MaterialSet* matls) const;
@@ -295,7 +295,7 @@ class Crack
     void   TrimLineSegmentWithBox(const Point&,Point&,const Point&,const Point&);
     void   PruneCrackFrontAfterPropagation(const int& m,const double& ca);
     
-           // Private methods in MoveCrackPoints.cc
+           // Private methods in MoveCracks.cc
     short  PhysicalGlobalGridContainsPoint(const double&,const Point&);
     void   ApplySymmetricBCsToCrackPoints(const Vector&,const Point&,Point&); 
 
