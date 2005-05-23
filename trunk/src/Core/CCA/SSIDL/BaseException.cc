@@ -44,12 +44,12 @@
 #include <Core/Util/NotFinished.h>
 
 using SSIDL::BaseException;
-using std::string;
+//using std::string;
 
-string
-BaseException::getMessage()
+std::string
+BaseException::getNote()
 {
-  NOT_FINISHED("string BaseException::getMessage()");
+  NOT_FINISHED("string BaseException::getNote()");
   return "";
 }
 
@@ -57,9 +57,9 @@ BaseException::getMessage()
  * Set the message associated with the exception.
  */
 void
-BaseException::setMessage(const string &message)
+BaseException::setNote(const std::string& /*message*/)
 {
-  NOT_FINISHED("string BaseException::setMessage()");
+  NOT_FINISHED("string BaseException::setNote()");
   return;
 }
 
@@ -67,7 +67,7 @@ BaseException::setMessage(const string &message)
  * Returns formatted string containing the concatenation of all 
  * tracelines.
  */
-string
+std::string
 BaseException::getTrace()
 {
   NOT_FINISHED("string BaseException::getTrace()");
@@ -78,9 +78,14 @@ BaseException::getTrace()
  * Adds a stringified entry/line to the stack trace.
  */
 void
-BaseException::addToStackTrace(const string &/*traceline*/)
+// how to represent [Line] in C++: [Line] is extension for
+// method overloading
+//
+// f_addLine???
+//BaseException::addLine(const string &/*traceline*/) ???
+BaseException::add(const std::string& /*traceline*/)
 {
-  NOT_FINISHED("string BaseException::addToStackTrace()");
+  NOT_FINISHED("string BaseException::add(const std::string& traceline)");
   return;
 }
 
@@ -89,13 +94,10 @@ BaseException::addToStackTrace(const string &/*traceline*/)
  * file name, line number, and method name.
  */
 void
-BaseException::addToTrace( const string &/*filename*/,
+BaseException::add(const std::string& /*filename*/,
 			   int /*lineno*/, 
-			   const string &/*methodname*/)
+               const std::string& /*methodname*/)
 {
-  NOT_FINISHED("string BaseException::addToTrace()");
+  NOT_FINISHED("string BaseException::add(const std::string& filename, int lineno, const std::string& methodname)");
   return;
 }
-
-
-
