@@ -735,9 +735,8 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
           }
         } 
          
-#if 1
+#if 0
         OutputInitialCrackMesh(m);
-	exit(1);
 #endif
       }
     } // End of loop over matls
