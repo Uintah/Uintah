@@ -493,9 +493,10 @@ itcl_class SCIRun_Visualization_Isosurface {
     }
 
     method updateSliderEntry {var_slider var_typed someUknownVar} {
-	set $var_typed [set $var_slider]
-
 	global $this-continuous
+        global $var_slider
+        global $var_typed
+	set $var_typed [set $var_slider]
 
 	if { [set $this-continuous] == 1.0 } {
 	    eval "$this-c needexecute"
