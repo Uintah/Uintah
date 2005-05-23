@@ -1,7 +1,9 @@
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScramImplicit.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
 #include <Core/Malloc/Allocator.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
@@ -12,8 +14,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Core/Math/MinMax.h>
@@ -864,7 +865,7 @@ makeMPI_CMData()
    return mpitype;
 }
                                                                                 
-#if 0
+#if 1
 const Uintah::TypeDescription*
 fun_getTypeDescription(ViscoScramImplicit::StateData*)
 {
@@ -879,9 +880,9 @@ fun_getTypeDescription(ViscoScramImplicit::StateData*)
   
 } // End namespace Uintah
 
-#if 0
+#if 1
 namespace SCIRun {
-void swapbytes( Uintah::ViscoScramImplicit::StateData& d)
+void swapbytes( Uintah::ViscoScramImplicitStateData& d)
 {
   for (int i = 0; i < 5; i++) swapbytes(d.DevStress[i]);
 }
