@@ -13,28 +13,29 @@
 #define __VISCOSCRAM_IMPLICIT_CONSTITUTIVE_MODEL_H__
 
 
-#include <math.h>
-#include "ConstitutiveModel.h"        
-#include "ImplicitCM.h"
-#include "ViscoScram.h"
+
 #include <Packages/Uintah/Core/Math/Matrix3.h>
-#if 0
+
 namespace Uintah {
-  struct ViscoScramStateData {
+  struct ViscoScramImplicitStateData {
     Matrix3 DevStress[5];
   };
 }
 #include <Core/Util/Endian.h>
 namespace SCIRun {
-  void swapbytes( Uintah::ViscoScramStateData& d);
+  void swapbytes( Uintah::ViscoScramImplicitStateData& d);
 } // namespace SCIRun
-#endif
 
+
+#include "ConstitutiveModel.h"        
+#include "ImplicitCM.h"
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Packages/Uintah/CCA/Components/MPM/Solver.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/CCA/Components/MPM/Solver.h>
+
+
 
 namespace Uintah {
       class ViscoScramImplicit : public ConstitutiveModel, public ImplicitCM {
@@ -63,7 +64,7 @@ namespace Uintah {
            double C2_WLF;
          };
 
-         typedef ViscoScramStateData StateData;
+         typedef ViscoScramImplicitStateData StateData;
 
          const VarLabel* pVolChangeHeatRateLabel;
          const VarLabel* pViscousHeatRateLabel;
