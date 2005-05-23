@@ -1026,7 +1026,8 @@ class BioFEMApp {
 		-resolution 0.0001 \
 		-variable $mods(Isosurface)-isoval \
 		-showvalue false \
-		-orient horizontal
+		-orient horizontal \
+                -command "$mods(Isosurface) updateSliderEntry $mods(Isosurface)-isoval $mods(Isosurface)-isoval-typed"
 
 	    bind $f.isoval.s <ButtonRelease> \
 		"$mods(Isosurface)-c needexecute"
@@ -1039,11 +1040,20 @@ class BioFEMApp {
 	    pack $f.isoval.l $f.isoval.s $f.isoval.val \
 		-side left -anchor nw -padx 3
 
-	    checkbutton $f.normals -text "Render Smooth Faces" \
+            frame $f.buttons
+            pack $f.buttons -side top -anchor w
+
+	    checkbutton $f.buttons.normals -text "Smooth Faces" \
 		    -variable $mods(ShowField-Isosurface)-use-normals \
 		    -command "$mods(ShowField-Isosurface)-c rerender_faces"
 
-	    pack $f.normals -side top -anchor w -padx 20
+	    pack $f.buttons.normals -side left -anchor n -padx 20
+
+	    checkbutton $f.buttons.update -text "Continuous Updates" \
+		    -variable $mods(Isosurface)-update_type \
+                    -offvalue "on release" -onvalue "Auto"
+
+	    pack $f.buttons.update -side left -anchor n -padx 20
 	}
     }	 
 
