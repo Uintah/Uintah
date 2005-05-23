@@ -441,6 +441,7 @@ itcl_class SCIRun_Visualization_Isosurface {
     }
 
     method updateSliderEntry {var_slider var_typed someUknownVar} {
+        global $var_typed $var_slider
 	set $var_typed [set $var_slider]
 
 	global $this-continuous
