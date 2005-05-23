@@ -1,0 +1,12 @@
+void radwsgg(IntVector idxlo, IntVector idxhi,
+	    CCVariable<double> abskg, CCVariable<double> esrcg,
+            CCVariable<double> shgamma,
+	    int bands,
+            constCCVariable<int> pcell, int ffield,
+            constCCVariable<double> co2,
+            constCCVariable<double> h2o,
+            constCCVariable<double> sfv,
+            CCVariable<double> tg,  
+	    int lambda,
+	    OffsetArray1<double> fraction,
+	    OffsetArray1<double> fractiontwo);

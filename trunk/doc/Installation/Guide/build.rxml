@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+For more information, please see: http://software.sci.utah.edu
+
+The MIT License
+
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
+
+License for the specific language governing rights and limitations under
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+-->
+
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<!--%
+withThirdParty = ""
+extraOptions = ""
+case Doc::Platform
+  when Doc::Linux
+    withThirdParty = "-\-with-thirdparty=/usr/local/SCIRun/Thirdparty/1.8.0/Linux/gcc-3.2-32bit"
+  when Doc::Irix
+    withThirdParty = "-\-with-thirdparty=/usr/local/SCIRun/Thirdparty/1.8.0/Irix/CC-32bit"
+  when Doc::OSX
+    withThirdParty = "-\-with-thirdparty=/usr/local/SCIRun/Thirdparty_osx"
+end
+%-->
+
+<section id="sec.build-sr">
+  <title id="title.build-sr">Building SCIRun</title>
+
+<!--
+  <note>
+    <title>Note for Itanium Architecture</title>
+    <para>When building SCIRun for the Itanium architecture, the GNU compiler
+    collection (gcc) must be used and the values of the environment
+    variables <envar>CFLAGS</envar> and <envar>CXXFFLAGS</envar> must be
+    set as follows:</para>
+    <para>
+      for csh-type shells
+      <programlisting>
+	setenv CFLAGS fPIC
+	setenv CXXFLAGS fPIC
+      </programlisting>
+      for sh-type shells
+      <programlisting>
+	CFLAGS=fPIC
+	CXXFLAGS=fPIC
+	export CFLAGS CXXFLAGS
+      </programlisting>
+    </para>
+  </note>
+-->
+
+  <orderedlist>
+
+    <listitem>
+
+      <para>
+	Run SCIRun's configure script.    Do this from a sub-directory of
+	directory <filename>SCIRun</filename> (but <emphasis>not</emphasis>
+	<filename>SCIRun/src</filename>) as follows:
+	<literallayout class="monospaced">
+mkdir SCIRun/<replaceable>build-dir</replaceable>
+cd SCIRun/<replaceable>build-dir</replaceable>
+
+../src/configure --with-thirdparty=<replaceable>third-party-dir</replaceable> \
+--enable-package="<replaceable>package-name1 package-name2 &#x2026;</replaceable>"
+	</literallayout>
+	in which case SCIRun is built in the directory
+	<filename>SCIRun/<replaceable>build-dir</replaceable></filename>.
+      </para>
+      <para>
+	<replaceable>Build-dir</replaceable> is often
+	<filename>bin</filename> or a name that reflects the machine
+	architecture.
+      </para>
+      <para os="irix;linux">
+	Above, replace <replaceable>third-party-dir</replaceable> by
+	the path provided by the third-party installation script.
+      </para>
+      <para os="osx">
+	Above, replace <replaceable>third-party-dir</replaceable> by  the path
+	given to the third-party installation script.
+      </para>
+      <para>
+	Replace "<replaceable>package-name1 package-name2
+	 &#x2026;</replaceable>" by a list of package names,
+	e.g. "BioPSE MatlabInterface".  An example configure command
+	is:
+	<literallayout class="monospaced">
+../src/configure \
+<!--%= withThirdParty %--> \
+--enable-package="BioPSE MatlabInterface"<phrase os="osx"> \
+--with-png=/sw</phrase>
+	</literallayout>
+	<phrase os="osx">Option <option>--with-png</option> is needed
+	if PNG support is desired and PNG libraries are not in
+	<filename>/usr/lib</filename>.  Option
+	<option>--with-png</option> above tells SCIRun to find PNG
+	libraries in <filename>/sw</filename>'s
+	<filename>lib</filename> directory.</phrase>
+      </para>
+      <para>
+	Use option <option>--with-unipetsc</option> to add support for
+	<acronym>PETSc</acronym>.
+	<phrase os="linux;irix">Options <option>--with-lapack</option> and
+	<option>--with-blas</option> must be used if the
+	<acronym>BLAS</acronym> and <acronym>LAPACK</acronym> libraries are
+	not in <filename>/usr/lib</filename> (<xref
+	linkend="sec.petsc_sr_config"/> describes these options).</phrase>
+	For example:
+	<literallayout class="monospaced">
+../src/configure \
+<!--%= withThirdParty %--> \
+--enable-package="BioPSE MatlabInterface" \
+--with-unipetsc=/usr/local/petsc<phrase os="linux;irix"> \
+--with-blas=/usr/local/lib \
+--with-lapack=/usr/local/lib</phrase><phrase os="osx"> \
+--with-png=/sw</phrase>
+	</literallayout>
+	<phrase os="linux;osx">Use option
+	<option>--with-insight</option> to add support for Insight.
+	Packages Teem and Insight must also be enabled when using
+	<option>--with-insight</option>.  For example:</phrase>
+	<literallayout os="linux;osx" class="monospaced">
+../src/configure \
+<!--%= withThirdParty %--> \
+--enable-package="BioPSE Teem Insight" \
+--with-insight=/usr/local/lib/InsightToolkit<phrase os="osx"> \
+--with-png=/sw</phrase>
+	</literallayout>
+	Use option <option>--with-hdf5</option> to add HDF5 support.
+	Use option <option>--with-mdplus</option> to add MDSplus
+	support.  Also enable packages Teem and DataIO.  For example:
+	<literallayout class="monospaced">
+../src/configure \
+<!--%= withThirdParty %--> \
+--enable-package="Fusion Teem DataIO" \
+--with-hdf5=/usr/local/hdf5 \
+--with-mdsplus=/usr/local/mdsplus<phrase os="osx"> \
+--with-png=/sw</phrase>
+	</literallayout>
+      </para>
+
+      <para>
+	TrueType fonts are used by the BioImage application and the
+	ViewSlices module.  TrueType fonts are used to display slice
+	information in the slice panes.  If TrueType fonts are not
+	used then no slice information will be displayed.  See <xref
+	linkend="fig.freetype"/>. TrueType
+	fonts will be used if freetype2 libraries are installed in
+	<filename>/usr/lib</filename> or if configure option
+	<option>--with-freetype<replaceable>path-to-freetype-lib-directory</replaceable></option>
+	is used to specify the location of freetype2 libraries.
+	<replaceable>Path-to-freetype-lib-directory</replaceable> is
+	the path to a directory containing freetype2 libraries, for
+	example <filename os="osx">/sw/lib</filename><filename
+	os="linux;irix">/usr/local/lib</filename>.
+      </para>
+
+      <figure id="fig.freetype">
+      <title>Slice Panes With (top) and Without (bottom) Freetype Fonts</title>
+      <mediaobject>
+	<textobject>
+	  <phrase>Slice panes with and without freetype fonts.</phrase>
+	</textobject>
+	<imageobject role="fo">
+	  <imagedata fileref="../Figures/freetype.print.gif" align="center" format="GIF"/>
+	</imageobject>
+	<imageobject role="html">
+	  <imagedata fileref="../Figures/freetype.gif" align="center" format="GIF"/>
+	</imageobject>
+      </mediaobject>
+    </figure>
+
+
+      <para>
+	Not all of <command>configure</command>'s options have been
+	mentioned. Running <command>configure --help</command> lists them all.
+      </para>
+
+    </listitem>
+
+    <listitem>
+      <para>
+	Run GNU make from <replaceable>build-dir</replaceable>.
+	<literallayout class="monospaced">
+cd <replaceable>build-dir</replaceable>
+make
+	</literallayout>
+	Be sure that <command>make</command> invokes GNU make.  GNU make is
+	sometimes named <command>gmake</command> or
+	<command>gnumake</command>.
+      </para>
+
+      <para>
+	For a multiprocessor system GNU make's <option>-j</option> option can
+	be used to reduce the build time:
+	<literallayout class="monospaced">
+make -j <replaceable>N</replaceable>
+	</literallayout>
+	where <replaceable>N</replaceable> is the number of processors
+	available for use by make.  Using this option on a multiprocessor
+	machine can significantly reduce the time to build SCIRun.
+      </para>
+    </listitem>
+  </orderedlist>
+
+  <para>
+    After a successful build, <replaceable>build-dir</replaceable>
+    will contain the <filename>scirun</filename> and PowerApp
+    executables.
+  </para>
+
+  <tip>
+    <para>It is possible to build SCIRun for multiple machine
+    architectures and multiple sets of configure options within the
+    same source code directory.  See <xref
+    linkend="app.multi_builds"/> for details.</para>
+  </tip>
+
+  <para>Read <xref linkend="sec.prepare"/> before <link
+  linkend="sec.starting">starting</link> SCIRun.</para>
+
+</section>

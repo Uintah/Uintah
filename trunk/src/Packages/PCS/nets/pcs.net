@@ -1,0 +1,149 @@
+# SCIRun Network v1.24.0
+
+
+set name {Main}
+set bbox {10 14 539 653}
+set creationDate {Mon Nov 15 2004}
+set creationTime {19:57:37}
+set runDate {}
+set runTime {}
+set notes {}
+
+# Create a Teem->Converters->NrrdToField Module
+set m1 [addModuleAtPosition "Teem" "Converters" "NrrdToField" 10 136]
+
+# Create a SCIRun->Visualization->Isosurface Module
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 10 234]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 10 427]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 223 135]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 220 242]
+
+# Create a SCIRun->Render->Viewer Module
+set m6 [addModuleAtPosition "SCIRun" "Render" "Viewer" 10 609]
+
+# Create a PCS->Visualization->Silhouettes Module
+set m7 [addModuleAtPosition "PCS" "Visualization" "Silhouettes" 374 395]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m8 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 189 502]
+
+# Create a Teem->DataIO->NrrdReader Module
+set m9 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 10 14]
+
+# Create a Teem->DataIO->NrrdReader Module
+set m10 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 195 15]
+
+# Create the Connections between Modules
+set c1 [addConnection $m7 0 $m8 0]
+set c2 [addConnection $m4 0 $m5 0]
+set c3 [addConnection $m2 0 $m7 0]
+set c4 [addConnection $m2 0 $m3 0]
+set c5 [addConnection $m3 0 $m6 0]
+set c6 [addConnection $m1 0 $m2 0]
+set c7 [addConnection $m9 0 $m1 0]
+set c8 [addConnection $m5 0 $m7 1]
+set c9 [addConnection $m5 0 $m3 1]
+set c10 [addConnection $m5 0 $m8 1]
+set c11 [addConnection $m8 0 $m6 1]
+set c12 [addConnection $m1 0 $m5 1]
+set c13 [addConnection $m7 1 $m6 2]
+set c14 [addConnection $m10 0 $m1 2]
+
+# Set GUI variables for the Teem->Converters->NrrdToField Module
+set $m1-datasets {{Points : Unknown} {Connections : (none)} {Data : Unknown} {Original Field : (none)} }
+
+# Set GUI variables for the SCIRun->Visualization->Isosurface Module
+set $m2-isoval-min {221.848}
+set $m2-isoval-max {280374}
+set $m2-isoval {151780}
+set $m2-build_geom {0}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m3-nodes-on {0}
+set $m3-edges-on {0}
+set $m3-use-normals {1}
+set $m3-use-transparency {1}
+set $m3-has_scalar_data {1}
+set $m3-active_tab {Faces}
+set $m3-scalars_scale {0.3}
+
+# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+set $m5-min {221.847900391}
+set $m5-max {280373.875}
+
+$m6 addViewer
+set $m6-ViewWindow_0-geometry 654x567+630+44
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m6-ViewWindow_0-view-eyep-x {11.6649421729}
+set $m6-ViewWindow_0-view-eyep-y {11.0773244423}
+set $m6-ViewWindow_0-view-eyep-z {0.85609893476}
+set $m6-ViewWindow_0-view-lookat-x {0.0}
+set $m6-ViewWindow_0-view-lookat-y {-0.0714583992958}
+set $m6-ViewWindow_0-view-lookat-z {0.00377868115902}
+set $m6-ViewWindow_0-view-up-x {-0.209010665338}
+set $m6-ViewWindow_0-view-up-y {0.144749730431}
+set $m6-ViewWindow_0-view-up-z {0.967141177551}
+set $m6-ViewWindow_0-view-fov {20.0}
+set $m6-ViewWindow_0-sr {1}
+set $m6-ViewWindow_0-do_stereo {0}
+set $m6-ViewWindow_0-ortho-view {0}
+set $m6-ViewWindow_0-trackViewWindow0 {1}
+set $m6-ViewWindow_0-raxes {1}
+set $m6-ViewWindow_0-ambient-scale {1.0}
+set $m6-ViewWindow_0-diffuse-scale {1.0}
+set $m6-ViewWindow_0-specular-scale {0.4}
+set $m6-ViewWindow_0-emission-scale {1.0}
+set $m6-ViewWindow_0-shininess-scale {1.0}
+set $m6-ViewWindow_0-polygon-offset-factor {1.0}
+set $m6-ViewWindow_0-polygon-offset-units {0.0}
+set $m6-ViewWindow_0-point-size {1.0}
+set $m6-ViewWindow_0-line-width {1.0}
+set $m6-ViewWindow_0-sbase {0.4}
+set $m6-ViewWindow_0-bgcolor-r {0.0}
+set $m6-ViewWindow_0-bgcolor-g {0.0}
+set $m6-ViewWindow_0-bgcolor-b {0.0}
+set $m6-ViewWindow_0-fogusebg {1}
+set $m6-ViewWindow_0-fogcolor-r {0.0}
+set $m6-ViewWindow_0-fogcolor-g {0.0}
+set $m6-ViewWindow_0-fogcolor-b {1.0}
+set $m6-ViewWindow_0-fog-start {0.0}
+set $m6-ViewWindow_0-fog-end {0.714265}
+set $m6-ViewWindow_0-fog-visibleonly {1}
+set $m6-ViewWindow_0-currentvisual {0}
+set $m6-ViewWindow_0-caxes {0}
+set $m6-ViewWindow_0-global-light0 {1}
+set $m6-ViewWindow_0-global-light1 {0}
+set $m6-ViewWindow_0-global-light2 {0}
+set $m6-ViewWindow_0-global-light3 {0}
+set $m6-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m6-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m6-ViewWindow_0-global-light {1}
+set $m6-ViewWindow_0-global-fog {0}
+set $m6-ViewWindow_0-global-debug {0}
+set $m6-ViewWindow_0-global-clip {1}
+set $m6-ViewWindow_0-global-cull {0}
+set $m6-ViewWindow_0-global-dl {0}
+set $m6-ViewWindow_0-global-type {Gouraud}
+set "$m6-ViewWindow_0-Transparent Faces (1)" {1}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m8-nodes-on {0}
+set $m8-faces-on {0}
+set $m8-has_scalar_data {1}
+set $m8-active_tab {Faces}
+
+# Set GUI variables for the Teem->DataIO->NrrdReader Module
+set $m9-filename "/Volumes/Projects/SCIRun/osx/MeshPoints.nd.nrrd"
+
+# Set GUI variables for the Teem->DataIO->NrrdReader Module
+set $m10-filename "/Volumes/Projects/SCIRun/osx/FieldData.nd.nrrd"
+
+
+::netedit scheduleok
