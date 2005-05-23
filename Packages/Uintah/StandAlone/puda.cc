@@ -353,10 +353,25 @@ int main(int argc, char** argv)
       ASSERTEQ(index.size(), times.size());
       cout << "There are " << index.size() << " timesteps:\n";
       for(int i=0;i<(int)index.size();i++){
-	cout << index[i] << ": " << times[i] << endl;
-	GridP grid = da->queryGrid(times[i]);
-	grid->performConsistencyCheck();
-	grid->printStatistics();
+        cout << "__________________________________"<<endl;
+	 cout << "Timestep " << index[i] << ": " << times[i] << endl;
+	 GridP grid = da->queryGrid(times[i]);
+	 grid->performConsistencyCheck();
+	 grid->printStatistics();
+
+        for(int l=0;l<grid->numLevels();l++){
+	    LevelP level = grid->getLevel(l);
+           cout << "Level: index " << level->getIndex() << ", id " << level->getID() << endl;
+
+          for(Level::const_patchIterator iter = level->patchesBegin();
+	         iter != level->patchesEnd(); iter++){
+	     const Patch* patch = *iter;
+	     cout << *patch << endl;
+            cout << "\t   BC types: x- " << patch->getBCType(Patch::xminus) << ", x+ "<<patch->getBCType(Patch::xplus)
+                 << ", y- "<< patch->getBCType(Patch::yminus) << ", y+ "<< patch->getBCType(Patch::yplus)
+                 << ", z- "<< patch->getBCType(Patch::zminus) << ", z+ "<< patch->getBCType(Patch::zplus)<< endl;
+          }
+        }
       }
     }
     if(do_listvars){
@@ -390,7 +405,8 @@ int main(int argc, char** argv)
       printParticleVariable(da, particleVariable, time_step_lower, 
                             time_step_upper);
     }
-
+    //______________________________________________________________________
+    //            DO_TECPLOT
     if(do_tecplot){ // if begin: 1
       string ccVariable;
       bool ccVarFound = false;
@@ -1668,7 +1684,8 @@ int main(int argc, char** argv)
 	  }   // for levels
       }
     }
-    
+    //______________________________________________________________________
+    //    DO_ASCI
     if (do_asci){
       vector<string> vars;
       vector<const Uintah::TypeDescription*> types;
@@ -2011,7 +2028,8 @@ int main(int argc, char** argv)
 	cout << " completed." << endl;
       } // end of loop over time
     } //end of do_asci		
-		
+    //______________________________________________________________________
+    //	       DO CELL STRESSES	
     if (do_cell_stresses){
       vector<string> vars;
       vector<const Uintah::TypeDescription*> types;
@@ -2147,7 +2165,9 @@ int main(int argc, char** argv)
 	  t++;   
       }
     }
-
+    
+    //______________________________________________________________________
+    //              DO RTDATA
     if (do_rtdata) {
       // Create a directory if it's not already there.
       // The exception occurs when the directory is already there
