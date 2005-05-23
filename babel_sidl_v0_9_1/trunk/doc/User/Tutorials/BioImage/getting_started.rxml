@@ -1,0 +1,181 @@
+<!--
+    For more information, please see: http://software.sci.utah.edu
+
+The MIT License
+
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
+
+License for the specific language governing rights and limitations under
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+-->
+
+<!--% require("../../../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<chapter id="getting_started">
+  <title>Getting Started</title>
+
+  <section>
+    <title>Introduction</title>
+
+    <para>
+      BioImage is a SCIRun PowerApp for visualizing regular, three
+      dimensional scalar volumes such as CT and MRI data.  In addition to
+      2D and 3D visualization tools, BioImage provides a number of
+      <firstterm>dynamic filters</firstterm>, such as re-sampling and
+      cropping.  Dynamic filters are used to emphasize the features of a
+      dataset most important to the user.  Dynamic filters can be
+      applied at any time and in any order and can be easily
+      undone.
+    </para>
+    
+    <para>
+      BioImage offers 2D visualization of three standard planes:
+      axial, sagittal, and coronal.  The 2D views allow the user to
+      quickly investigate a volume slice by slice or via a maximum
+      intensity projection. The 2D views provide  zooming and
+      translation capabilities.  Width and level parameters can be used
+      isolate a range of values for display.
+    </para>
+
+    <para>
+      BioImage provides a powerful volume rendering tool that allows
+      the user to interactively visualize an area of interest by
+      assigning a color to a range of values in the volume.
+    </para>
+    
+    <para>
+      In this tutorial the user will:
+      <itemizedlist>
+	<listitem><para>Launch BioImage</para></listitem>
+	<listitem><para>Load a tooth volume dataset</para></listitem>
+	<listitem><para>Apply resampling and cropping filters to the
+	tooth volume</para></listitem>
+	<listitem><para>Visualize tooth planes</para></listitem>
+	<listitem><para>Visualize the tooth's volume</para></listitem>
+      </itemizedlist>
+    </para>
+
+    <para>This tutorial provides a simple example of a BioImage
+    session. See <xref linkend="part.reference"/> for information on all
+    of BioImage's capabilities.</para>
+
+  </section>
+
+  <section>
+    <title>Preparations</title>
+    
+    <para>
+      Before starting the tutorial, SCIRun's sample dataset directory
+      must be present.  SCIRun's sample dataset can be downloaded from
+      SCIRun's <ulink
+      url="http://software.sci.utah.edu/archive_entry.html">software
+      web site</ulink>.  The environment variable
+      <envar>SCIRUN_DATA</envar> must be set to point to SCIRun's
+      sample dataset directory.  This tutorial assumes the SCIRun
+      sample data directory is
+      <filename>/usr/local/SCIRunData/1.24.0</filename>.
+      For a csh-like shell:
+      <literallayout class="monospaced">
+  setenv SCIRUN_DATA /usr/local/SCIRunData/1.24.0	    
+      </literallayout>
+      For an sh-like shell:
+      <literallayout class="monospaced">
+  export SCIRUN_DATA=/usr/local/SCIRunData/1.24.0
+      </literallayout>
+    </para>
+
+  </section>
+
+  <section>
+    <title>Starting BioImage</title>
+
+    <para>To start BioImage, change the current working directory to
+    the directory containing the BioImage executable and type
+    <userinput>./BioImage</userinput>, for example:
+    <literallayout class="monospaced">
+      cd /usr/local/SCIRun/bin
+      ./BioImage
+    </literallayout>
+    BioImage takes a few moments to start up, then launches the user
+    interface window shown in <xref linkend="fig.gui-launch"/>.</para>
+
+    <figure id="fig.gui-launch">
+      <title><ulink url="Figures/gui-launch_hires.jpg">BioImage User Interface</ulink></title>
+      <mediaobject>
+	<textobject>
+	  <phrase>BioImage interface window just after
+	  launching.</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/gui-launch.eps" align="center" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/gui-launch.jpg" align="center" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+    </figure>
+
+  </section>
+
+  <section>
+    <title>The User Interface</title>
+    <para>
+      The BioImage window consists of three panes, from left to right:
+      <variablelist>
+	<varlistentry>
+	  <term>Processing Pane</term>
+	  <listitem>
+	    <para>
+	      The Processing Pane is used to load, orient, and filter
+	      data.  See item 1 in <xref linkend="fig.gui-launch"/>.
+	    </para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>Visualization Pane</term>
+	  <listitem>
+	    <para>
+	      The Visualization pane <xref
+	      linkend="fig.gui-launch"/>, item 2 in <xref
+	      linkend="fig.gui-launch"/>, contains four sub-panes. The
+	      top pane displays three dimensional
+	      visualizations. The bottom three panes (left to right)
+	      display sagittal, coronal, and axial slice planes.
+	    </para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term>Visualization Settings Pane</term>
+	  <listitem>
+	    <para>
+	      The Visualization Settings Pane is used to modify
+	      settings controlling two and three dimensional
+	      visualizations.    See item 3 in <xref linkend="fig.viewing-pane"/>.
+	    </para>
+	  </listitem>
+	</varlistentry>
+      </variablelist>
+      Panes can be detached from each other by clicking on the
+      vertical dashed lines separating the panes.
+    </para>
+  </section>
+
+</chapter>

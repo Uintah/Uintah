@@ -1,0 +1,131 @@
+/*!
+\page gui SCIRun2 GUI Builder
+
+\section gui1 Using the graphical builder
+
+The graphical builder interface can be used to instantiate and manipulate
+components from classes belonging to component models supported by
+SCIRun2's implementation of the Common Component Architecture (CCA)
+framework.
+See the
+<a href="http://www.cca-forum.org/docs/specification.html">
+core CCA technical specification
+</a>
+for more information about components in a CCA framework.
+
+The builder window is divided into three sections: a large
+\ref gui2_2 "network" view pane where components are manuipulated, a
+miniaturized view pane where the contents of the network pane are
+summarized and a text browser pane where messages to the user are logged.
+
+\image html hello_world.jpg
+<!-- \image latex hello_world.eps -->
+
+\section gui2 Components
+
+CCA components are extensions of the
+<a href="http://www.cca-forum.org/~bernhold/cca-spec-dox/index.html">
+Scientific Interface Definition Language (SIDL)
+</a>
+Component interface as defined in the CCA specification.
+<!-- component author guide??? -->
+
+Component models are available to the builder when their xml descriptions
+are read by the framework at startup or are \ref gui3 "added at runtime".
+Menus corresponding to the available component models are found on the
+menu bar and as context menus in the network view pane.
+
+\image html components.jpg
+<!-- \image latex components.eps -->
+
+SCIRun dataflow components may be instantiated and used in SCIRun2.
+SCIRun2 also supports components written using the
+<a href="http://www.llnl.gov/CASC/components/babel.html">Babel</a>
+SIDL implementation, and provides an interface to 
+<a href="http://public.kitware.com/VTK/">Vtk</a>
+libraries.
+
+\subsection gui2_1 Component Icon representation
+
+A component in the graphical builder are represented in the GUI with an icon.
+A component icon shows the ports that can connect with other components as
+rectangles on the edges of the icon as shown below.
+The port colors correspond to their SIDL interface types.
+If the interface is unknown, the default color (yellow) is used. 
+The red sidebar indicates a \b PROVIDES port and the green sidebar
+indicates a \b USES port.
+A port is how a CCA component communicates with other components and the framework.
+A PROVIDES port is an interface to the component's functionality.
+A USES port is used to call methods on another component through a PROVIDES port.
+
+The icon can have a \b UI button if the component uses a GUI to interact
+with it's users.
+The component icon provides a context menu, which optionally contains the
+\b Go meu item, which causes the component to execute.
+
+\section gui2_2 Component networks
+
+Networks are created by making connections between components with
+compatible port interfaces.
+Connections between components in a CCA framework are made from a USES port
+to a PROVIDES port.
+Connections are represented by colored lines derived from the color of the
+connected ports.
+
+To connect two components (assuming right-handed mouse configuration) use
+the left mouse button to click on the USES port of a component.
+A line or lines will be drawn between the selected port and any compatible
+ports on component icons in the network view pane.
+Move the mouse pointer over the desired connection, which will be
+highlighted in white, and click the left mouse button again.
+
+A connection is removed by placing the mouse pointer over a connection
+line and (assuming right-handed mouse configuration) clicking the right
+mouse button.
+
+Component networks can be saved to <b>*.net</b> files.
+Component networks can also be loaded into the builder from these files. 
+Component networks can be cleared from the <b>Clear</b> file menu item.
+
+\subsection gui2_3 Meta-components
+<em>(in progress)</em>
+
+The builder allows connections to be made between components belonging to
+different componet models (CCA, babel, SCIRun dataflow, Vtk) with
+compatible port types.
+Connections between components belonging to different component models
+(bridges) are drawn on the network view as dashed lines.
+
+\section gui3 Add components and component classes
+
+Using the file menu item <b>Add SIDL XML Path</b>, load new component
+classes into the builder.
+
+\image html path.jpg
+<!-- \image latex path.eps -->
+
+Using the dialog as shown below, select a directory containing component
+xml descriptions or enter the fully qualified directory path in the text
+input box and close the dialog with the \b OK button.
+The builder can only load component models supported by the framework.
+
+\image html path-2.jpg
+<!-- \image latex path-2.eps -->
+
+\section gui4 Proxy Frameworks
+<em>(in progress)</em>
+
+Proxy frameworks that can instantiate parallel components locally or on a
+remote resource can be created from the <b>Proxy Framework</b> menu item.
+
+\image html loader.jpg
+<!-- \image latex loader.eps -->
+
+Use the dialog box as shown below to enter the information needed to start
+the proxy framework using \b mpirun.
+The number of parallel components to be run is currently set to 3.
+
+\image html loader-2.jpg
+<!-- \image latex loader-2.eps -->
+
+*/

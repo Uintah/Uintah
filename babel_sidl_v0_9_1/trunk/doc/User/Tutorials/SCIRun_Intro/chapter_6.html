@@ -1,0 +1,180 @@
+<html>
+<head>
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+<meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+<meta name="generator" content="Adobe GoLive 4">
+<title>Putting Simulation and Visualization Together</title>
+</head>
+
+<body bgcolor="#a9a9a9">
+
+<A name="chapter-6">
+
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="306" bgcolor="#cccccc">
+<tr>
+<td><img height="92" width="600" src="images/sub-banner.jpg" border="0"
+    usemap="#sub-banner8662a0c4"><map name="sub-banner8662a0c4"><area
+    coords="581,65,598,84" shape="rect" title nohref><area
+    href="chapter_7.html" coords="557,64,575,83" shape="rect"
+    title="Feedback"><area href="chapter_6.html" coords="532,64,550,82"
+    shape="rect" title="Putting Simulation and Visualization
+    Together"><area href="chapter_5.html" coords="508,64,527,83"
+    shape="rect" title="Bioelectric Field Simulation"><area
+    href="chapter_4.html" coords="483,64,502,83" shape="rect"
+    title="Multi-Vis"><area href="chapter_3.html" coords="460,64,478,83"
+    shape="rect" title="Derived Fields"><area href="chapter_2.html"
+    coords="436,64,454,83" shape="rect" title="Looking at the Data"><area
+    href="chapter_1.html" coords="412,64,430,81" shape="rect"
+    title="Geometry Visualization"><area href="Intro.html"
+    coords="354,64,406,84" shape="rect" title="Introduction"><area
+    href="../../index.html"
+    coords="205,63,343,83" shape="rect" title="Documentation"><area
+    href="http://software.sci.utah.edu/" coords="103,63,195,82"
+    shape="rect" title="Software"><area href="index.html"
+    coords="1,65,92,81" shape="rect" title="Tutorial Home"></map></td> 
+</tr> 
+
+<tr>
+<td>
+<center>
+<table border="0" cellpadding="0" cellspacing="5" width="600">
+<tr>
+<td>
+
+<center>
+<font face="Arial,Helvetica,Geneva,Swiss,SunSans-Regular" color="maroon">
+<H1>Chapter 6: Putting Simulation and Visualization Together</H1></font>
+</center>
+
+<H2>Chapter Sections</H2>
+
+<UL>
+  <LI> <A href="#section-0">Chapter Overview</A>
+  <LI> <A href="#section-1">ManageFieldData</A>
+  <LI> <A href="#section-2">Combining Simulation and Visualization</A>
+  <LI> <A href="#summary">Summary</A>
+</UL>    
+
+<H2><A name="section-0">Chapter Overview</A></H2>
+
+Chapters 1-4 demonstrated the construction of a set of visualization
+networks to explore scalar and vector fields. Chapter 5 implemented 
+a network to solve a bioelectric finite element problem. Output of the network was a solution vector, <img
+height="16" width="13" src="images/phi.gif">, containing the potential
+at each node in the finite element mesh.
+<p>
+Chapter 6 uses the finite element simulation network from <a href="chapter_5.html">Chapter 5</a>,
+and the visualization network from <a href="chapter_4.html">Chapter 4</a>.  The final piece is a
+module that connects the solution vector of scalar values to the nodes
+of the tetrahedral finite element mesh.  The ManageFieldData module
+(SCIRun-&gt;FieldsData) accomplishes this task.  It is described in the following sections.
+
+<H2><A name="section-1">ManageFieldData</A></H2>
+
+The ManageFieldData (SCIRun-&gt;FieldsData) module performs two simultaneous operations.
+First, the module splits the input Field into a mesh and data
+values. The data values pass through the output matrix
+port.  Second, the module combines the mesh with the matrix
+input, creating a new Field output.
+<p>
+There are a few rules that increase the module's 
+versatility and complexity:
+<p>
+<ul>
+   <li>If the module has no input matrix, the output Field is 
+            the same as the input Field.</p>
+   <li>If the input Field's data are scalar, the output matrix
+            is a column matrix.</p>
+   <li>If the input Field's data contains N vectors, the output
+	    matrix dimension is Nx3.</p>
+   <li>If the Field contains N tensors, the output matrix  
+            dimension is Nx9 where the tensor is flattened out in
+            left-to-right, top-to-bottom, order.</p>
+   <li>The number of rows in the input matrix should equal the number
+            of data values in the input Field.</p>
+   <li> The output Field's type is the same as the input Field's
+         type.  For instance, if the input Field is a vector Field, the
+         output Field is also a vector Field. The input matrix
+         must be Nx3 where N is equal to the number of
+         data values in the input Field.</p>
+</ul>
+
+<H2><A name="section-2">Combines Simulation and Visualization</A></H2>
+
+Use the File-&gt;Insert option to combine the finite element simulation
+net from <a href="chapter_5.html#figure-5.2"">chapter 5</a>, <b>Figure
+5.2</b>, with the visualization net from <a
+href="chapter_4.html#figure-4.2">Chapter 4, <b>Figure 4.2</b></a>. Add a 
+ManageFieldData module between them. The net should look similar to
+<b>Figure 6.1</b>. Notice that in <B>figure 6.1</B>, the modules have
+a more horizontal layout thne in <B>Figure 4.2</B>.)  Note that all
+modules that were connected to the left FieldReader module in the chapter 4
+net, are now connected to the ManageFieldData module. Notice also that the 
+RescaleColorMap module is getting input from the DirectInterpolate module.
+ 
+<center>
+<p><img src="images/figures/6_1.gif"><br>
+<b>Figure 6.1, Chapter 6 network</b></p>
+</center>
+<p>
+After executing the network, the image in the ViewWindow should look
+similar to <b>Figure 6.2</b>.  Press the <I>Autoview</I>
+button to center the dataset in the view window.
+<P>
+<center>
+<p><img src="images/figures/6_2.gif"><br>
+<b>Figure 6.2 shows net with ManageFieldData module</b></p>
+</center>
+
+<H2><A name="summary">Summary</A></H2>
+
+Chapter 6 demonstrated how to combine two existing networks,
+reusing the finite element simulation network from Chapter 5, and the
+visualization network from Chapter 4. The ManageFieldData module was
+used to connect the solution vector of scalar values to the nodes of
+the tetrahedral finite element mesh.
+<p>
+Chapter 7 illustrates how to add a feedback module, and interactively
+visualize the results.
+<p>	
+<A href="#chapter-6">Return to Top</A>
+
+</td>
+</tr>
+</table>
+</center>
+</td>
+</tr>
+<tr>
+<td><img height="35" width="600" src="images/sub-banner-bottom.jpg" border="0" usemap="#sub-banner-bottom8ac83191"><map name="sub-banner-bottom8ac83191"><area href="chapter_7.html" coords="565,2,589,20" shape="rect"><area href="chapter_5.html" coords="535,2,561,22" shape="rect"><area href="http://www.sci.utah.edu" coords="6,6,69,32" shape="rect" title="SCI Institute"></map></td>
+</tr>
+</table>
+</body>
+</html>

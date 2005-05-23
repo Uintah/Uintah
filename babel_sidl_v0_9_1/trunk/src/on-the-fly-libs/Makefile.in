@@ -1,0 +1,113 @@
+#
+#  For more information, please see: http://software.sci.utah.edu
+# 
+#  The MIT License
+# 
+#  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+#  University of Utah.
+# 
+#  License for the specific language governing rights and limitations under
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+# 
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+# 
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+#
+
+# Makefile for field manipulation code that is compiled and loaded on the fly
+
+# Default target
+default: all
+
+# OBJTOP and OBJTOP_ABS are necessary for configVars.mk to load
+# without complaining... even though what they enable (Creation of
+# LIBDIR) is overridden later on in this file.
+OBJTOP      := ..
+OBJTOP_ABS  := $(shell cd $(OBJTOP) ; pwd)
+
+SCIRUN_SRCTOP   := @scirun_src_dir@
+SCIRUN_OBJTOP   := @scirun_obj_dir@
+
+ifneq ($(SCIRUN_OBJDIR),)
+  SCIRUN_OBJTOP := $(SCIRUN_OBJDIR)
+endif
+
+ifneq ($(SCIRUN_SRCDIR),)
+  SCIRUN_SRCTOP := $(SCIRUN_SRCDIR)
+endif
+
+include $(SCIRUN_OBJTOP)/configVars.mk
+
+LIBDIR	        := $(SCIRUN_OBJTOP)/lib
+# get libraries in ./lib
+LIBS_FULLNAMES  := $(wildcard $(LIBDIR)/*.$(SO_OR_A_FILE))
+# remove extension
+LIBS_NAMES      := $(patsubst %.$(SO_OR_A_FILE),%, $(LIBS_FULLNAMES))
+# replace front section with -l
+LIBS          := $(patsubst $(SCIRUN_OBJTOP)/lib/lib%,-l%, $(LIBS_NAMES))
+# babel libs necessary for bridge compilation
+BABEL_LIBS    := $(filter -lCCA_Components_BabelTest%,$(LIBS))
+
+INCLUDES = -I$(SCIRUN_SRCTOP)/include -I$(SCIRUN_SRCTOP) -I$(SCIRUN_OBJTOP) -I$(SCIRUN_OBJTOP)/include -I$(SCIRUN_SRCTOP)/Packages @INC_SCI_THIRDPARTY_H@ @INC_TCL_H@ @INC_TK_H@ @INC_ITCL_H@ @INC_BLT_H@ @INC_GLOBUS_H@ @INC_XERCESC_H@ @INC_PETSC_H@ $(BABEL_INCLUDE) $(TAU_INCLUDE) $(MPI_INCLUDE) $(GL_INCLUDE) $(INSIGHT_INCLUDE) $(TEEM_INCLUDE)
+
+ifeq ($(SSTREAM_COMPAT),yes)
+INCLUDES := $(INCLUDES) -I$(SCIRUN_SRCTOP)/include/compat
+endif
+INCLUDES := $(sort $(INCLUDES))
+
+# This comes from the configVars.mk file (Dd)  (Can remove this line if no one objects...)
+#SOFLAGS         := @SOFLAGS@  $(CFLAGS)
+
+SRCS = $(wildcard *.cc)
+OTF_LIBS := $(patsubst %.cc,%.$(SO_OR_A_FILE), $(SRCS))
+
+
+ifeq ($(NEED_SONAME),yes)
+SONAMEFLAG = -Wl,-soname,$(notdir $@)
+else
+SONAMEFLAG = 
+endif
+
+# Avoid error message when no .d files by specifying nonexistant filename.
+ifneq ($(MAKECMDGOALS),)
+-include dummyfile $(MAKECMDGOALS:.$(SO_OR_A_FILE)=.d)
+else
+-include dummyfile $(SRCS:.cc=.d)
+endif
+.SECONDARY:
+
+.PHONY: all
+all: $(OTF_LIBS)
+
+%.d: %.cc
+	set -e; $(CXX) -M $(CFLAGS) $(INCLUDES) $< \
+          | sed 's/\($*\)\.o[ :]*/\1.o $@ : /g' > $@; \
+          [ -s $@ ] || rm -f $@
+
+%.o : %.cc %.d
+	rm -f $@ $(*).so $(*).dylib $(*).dll
+	$(CXX) -c $(CFLAGS) $(INCLUDES) $< -o $@ 
+
+%.so : %.o 
+	$(CXX) $(CFLAGS) $(LIBRARY) $(SOFLAGS) $< -o $@ -L$(LIBDIR) $(SCI_THIRDPARTY_LIBRARY) $(BABEL_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY)
+
+%.dylib : %.o 
+	$(CXX) $(CFLAGS) $(LIBRARY) $(SOFLAGS) $< -o $@ -L$(LIBDIR) $(LIBS) $(SCI_THIRDPARTY_LIBRARY) $(BABEL_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY)
+
+%.dll : %.o
+	$(CXX) $(CFLAGS) $(LIBRARY) $(SOFLAGS) $< -o $@ -L$(LIBDIR) $(LIBS) $(SCI_THIRDPARTY_LIBRARY) $(BABEL_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY)
+
+clean::
+	@rm -rf *.o *.d *.cc *.h *.dll *.dylib *.so *.log *~ ii_files

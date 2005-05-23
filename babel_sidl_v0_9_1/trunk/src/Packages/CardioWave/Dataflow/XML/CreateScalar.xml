@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="CreateScalar" category="Tools">
+  <summary>
+  This module lets the user create a scalar in the form of a nrrd. The scalar can be used to change
+  all kinds of model settings.
+  </summary>  
+  <description>
+  This module lets the user create a scalar in the form of a nrrd. The scalar can be used to change
+  all kinds of model settings. This module allows the user to specify different types of scalars depending
+  on the need of the program.
+  </description>
+  <overview>
+    <authors>
+    Jeroen Stinstra
+    </authors>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+    </inputs>
+    <outputs>
+      <port>
+        <name>nrrdvalue</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

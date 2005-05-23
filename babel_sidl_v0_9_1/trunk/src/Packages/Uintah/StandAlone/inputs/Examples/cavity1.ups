@@ -1,0 +1,122 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+	<title>SimpleCFD test</title>
+   </Meta>
+
+   <Time>
+	<maxTime>1</maxTime>
+	<initTime>0.0</initTime>
+	<delt_min>0.00001</delt_min>
+	<delt_max>.05</delt_max>
+	<max_initial_delt>.001</max_initial_delt>
+	<initial_delt_range>.01</initial_delt_range>
+	<timestep_multiplier>.8</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+        <filebase>cfd.uda</filebase>
+	<outputInterval>.002</outputInterval>
+	<save label = "density"/>
+	<save label = "ccvelocity"/>
+	<save label = "pressure"/>
+	<save label = "ccvorticity"/>
+	<save label = "ccvorticitymag"/>
+	<save label = "vcforce"/>
+	<save label = "N"/>
+	<checkpoint cycle = "2" interval = ".2"/>
+   </DataArchiver>
+
+    <SimpleCFD>
+        <delt_multiplier>1</delt_multiplier>
+	<diffusion>.1</diffusion>
+	<viscosity>.1</viscosity>
+	<dissipation>0</dissipation>
+	<pressure_pin>[0.5,0.5,0.5]</pressure_pin>
+	<advection_tolerance>1.e-4</advection_tolerance>
+	<maxadvect>1</maxadvect>
+	<keep_pressure>true</keep_pressure>
+	<buoyancy>0</buoyancy>
+	<thermal_conduction>0</thermal_conduction>
+	<vorticity_confinement>cellbased</vorticity_confinement>
+	<vorticity_confinement_scale>2</vorticity_confinement_scale>
+	<Solver>
+	   <Parameters>
+	      <tolerance>1.e-4</tolerance>
+	      <norm>LInfinity</norm>
+	      <criteria>Absolute</criteria>
+	   </Parameters>
+	   <Parameters variable="pressure">
+	      <tolerance>1.e-6</tolerance>
+	   </Parameters>
+	</Solver>
+        <Regions>
+        </Regions>
+	<InitialConditions>
+		<Condition var="density">
+		    <value>0</value>
+		</Condition>
+		<Condition var="xvelocity">
+		    <value>0</value>
+		</Condition>
+		<Condition var="yvelocity">
+		    <value>0</value>
+		</Condition>
+		<Condition var="zvelocity">
+		    <value>0</value>
+		</Condition>
+	</InitialConditions>
+	<BoundaryConditions>
+		<Condition var="xvelocity">
+		    <region name="allfaces"/>
+		    <value>0</value>
+		    <type>FixedValue</type>
+		    <applyAt>AllFaces</applyAt>
+		</Condition>
+		<Condition var="yvelocity">
+		    <region name="allfaces"/>
+		    <value>0</value>
+		    <type>FixedValue</type>
+		    <applyAt>AllFaces</applyAt>
+		</Condition>
+		<Condition var="zvelocity">
+		    <region name="allfaces"/>
+		    <value>0</value>
+		    <type>FixedValue</type>
+		    <applyAt>AllFaces</applyAt>
+		</Condition>
+		<Condition var="xvelocity">
+		    <region name="z+"/>
+		    <value>100</value>
+		    <type>FixedValue</type>
+		    <applyAt>ZFace</applyAt>
+		</Condition>
+		<Condition var="density">
+		    <region name="allfaces"/>
+                    <value>0</value>
+                    <type>FixedFlux</type>
+		    <applyAt>AllFaces</applyAt>
+		</Condition>
+		<Condition var="density">
+		    <region name="x+"/>
+                    <value>1</value>
+                    <type>FixedValue</type>
+		    <applyAt>XFace</applyAt>
+		</Condition>
+	</BoundaryConditions>
+    </SimpleCFD>
+
+    <Grid>
+	<Level>
+	    <Box label = "1">
+		<lower>[0,0,0]</lower>
+		<upper>[1.0,1.0,1.0]</upper>
+	        <resolution>[81,11,81]</resolution>
+		<patches>[1,1,1]</patches>
+	    </Box>
+	</Level>
+    </Grid>
+
+</Uintah_specification>

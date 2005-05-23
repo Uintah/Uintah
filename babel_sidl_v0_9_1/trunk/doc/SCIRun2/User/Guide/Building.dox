@@ -1,0 +1,224 @@
+/*!
+\page building Instructions for Configuring and Building the SCIRun2 Framework and Components
+\section Overview
+
+This document describes the process of configuring and building the SCIRun2
+research code, including the SCIRun2 framework, GUI, and various
+experimental component models.
+
+\section building1 SCIRun2 is not SCIRun
+
+SCIRun2 is not
+<a href="http://software.sci.utah.edu/scirun.html">SCIRun</a>.
+SCIRun2, however, does currently have dependencies on many of the original
+SCIRun components and classes.
+Because of these dependencies (and for other historical reasons) building
+SCIRun2 also requires building SCIRun.
+Eventually, the original SCIRun dataflow classes will be isolated from
+SCIRun2 and built only as an optional component.
+
+\section building2 For the impatient
+<a href = "nightly.sh.txt">This script</a>
+may tell you all you need to know.
+
+\section building3 Supported platform(s)
+SCIRun2 code has never been built on anything other than Redhat
+Linux.
+In theory, it should be possible to configure SCIRun2 on any
+Unix-like platform.
+
+\section building4 Configuring SCIRun2
+As described above, SCIRun2 software must be built along with SCIRun.
+To build the SCIRun2 framework, add the --enable-scirun2 option to the
+SCIRun configure line.
+Dependencies for SCIRun2 components are configured by adding necessary
+--with-foo options.
+
+The following command line, for example, configures SCIRun2 with the
+works.
+Also see
+<a href = "nightly.sh.txt">this script</a>.
+
+\code
+PATH/TO/SCIRun/src/configure  --enable-scirun2
+                              --enable-debug
+                              --with-thirdparty=$THIRDPARTY
+                              --with-babel=$BABELDIR
+                              --with-mpi=$MPIDIR
+                              --with-ruby=$RUBYDIR
+                              --with-vtk=$VTKDIR
+                              --with-qt=$QTDIR
+\endcode
+
+You may want to start with a strong cup of coffee.
+
+\section building5 Dependencies
+SCIRun2 code has dependencies on multiple third-party software packages.
+The table below lists the various code modules available with SCIRun2 and
+their dependencies.
+    
+ 
+<table border=1>
+    <tr>
+    <td>Code module</td>
+    <td>Required dependencies</td>
+    <td>Optional dependencies</td>
+    <td>Configure option</td>
+    </tr>
+    <tr>
+    <td>SCIRun2 framework</td>
+    <td>SCIRun, SCIRunThirdparty, MPI, Ruby, Babel</td>
+    <td>Qt</td>
+    <td>--with-scirun2 --with-thirdparty=/path/to/thirdparty --with-mpi=/path/to/mpi --with-ruby=/path/to/ruby --with-babel=/path/to/babel</td>
+    </tr>
+    <tr>
+    <td>SCIRun dataflow components</td><td>SCIRun</td>
+    <td></td>
+    <td>none</td>
+    </tr>
+    <tr>
+    <td>Bridge components</td>
+    <td>Ruby, VTK</td>
+    <td></td>
+    <td>--with-ruby=/path/to/ruby --with-vtk=/path/to/vtk</td>
+    </tr>
+    <tr>
+    <td>VTK components</td>
+    <td>VTK</td>
+    <td></td>
+    <td>with-vtk=/path/to/vtk</td>
+    </tr>
+    <tr>
+    <td>Babel components</td>
+    <td>Babel</td>
+    <td></td>
+    <td>with-babel=/path/to/babel</td>
+    </tr>
+</table>
+
+\subsection building5_1 SCIRun    
+SCIRun2 software is distributed with SCIRun.
+Any necessary SCIRun classes build automatically.
+
+\subsection building5_2 SCIRunThirdparty
+This package consists of all the bundled third-party libraries for SCIRun.
+It is freely available (<b>registration required</b>)
+<a href="http://software.sci.utah.edu/scirun.html">here</a>.
+Select the SCIRun Linux/SGI source download and look for the tarball
+called \em Thirdparty_install.1.24.1.tar.gz.
+
+Estimated time to build: 1 hour
+
+Before building SCIRun2, set the following environment variables:
+\code 
+SCIRUN_THIRDPARTY=/path/to/scirun/thirdparty/installation
+PATH=$SCIRUN_THIRDPARTY/bin:$PATH</code>
+LD_LIBRARY_PATH=$SCIRUN_THIRDPARTY/lib:$LD_LIBARARY_PATH
+\endcode
+
+\subsection building5_3 Qt
+Qt is necessary if you want to build the graphical user interface to the
+SCIRun2 framework (recommended).
+A free version of Qt for noncommercial use can be downloaded from
+<a href="http://www.trolltech.com">www.trolltech.com</a>.
+The distributions "qt-x11-free-3.3.x" have been tested.
+<em>Be sure to configure and build Qt with multithreading enabled
+(<b>Qt configure option -thread</b>).</em>
+
+Estimated time to build: 3-5 hours
+
+Before building SCIRun2, set the following environment variables:
+\code
+QTDIR=/path/to/qt/installation
+PATH=$QTDIR/bin:$PATH
+LD_LIBRARY_PATH=$QTDIR/lib:$LD_LIBRARY_PATH
+\endcode
+
+\subsection building5_4 Ruby
+Ruby is an interpreter for the Ruby scripting language.
+Ruby can be freely downloaded from
+<a href="http://www.ruby-lang.org/en/">www.ruby-lang.org</a>.
+
+Estimated time to build: 1 hour
+
+Before building SCIRun2, set the following environment variables:
+\code
+RUBYDIR=/path/to/ruby/installation
+PATH=$RUBYDIR/bin:$PATH
+\endcode
+
+\subsection building5_5 Babel
+The Babel compiler can be freely obtained from
+<a href="http://www.llnl.gov/CASC/components/babel.html">
+www.llnl.gov/CASC/components/babel.html</a>.
+SCIRun2 currently supports Babel version 0.9.0 and 0.9.2.
+
+Estimated time to build: < 1 hour
+
+Before building SCIRun2, set the following environment
+variables:
+\code
+JAVA_HOME=/path/to/java/install
+BABEL_HOME=/path/to/babel/install
+PATH=$JAVA_HOME/bin:$BABEL_HOME/bin:$PATH
+\endcode
+        
+\subsubsection building5_5_1 Babel 0.9.0
+
+\em IMPORTANT! The standard distribution of Babel version 0.9.0 requires
+<a href="http://rpmfind.net/linux/rpm2html/search.php?query=libxml2">
+libxml2 2.6.2</a>.
+If you have at least libxml2 2.4.0, however, then you can apply
+<a href="http://www.sci.utah.edu/~ayla/cca/babel_090_libxml2_patch.txt">
+this patch</a>
+to your Babel source tree instead of upgrading libxml.
+The patch should be applied to the Babel <b>SOURCE</b> tree before building
+Babel.
+If you have already built Babel, then you will need to remove the current
+Babel installation, untar a clean source tree, apply the patch, then
+rebuild and install Babel.
+
+\code
+% cd babel-0.9.0
+% patch -p1 < babel_090_libxml2_patch.txt
+\endcode
+
+See
+<a href="https://www.cca-forum.org/bugs/babel/issue26.">this page</a>
+for further details.
+
+\subsubsection building5_5_2 Babel 0.9.2
+
+The standard distribution of Babel version 0.9.2 requires at least
+libxml2 2.4.0.
+
+\subsection building5_6 VTK 
+The Visualization Toolkit can be freely downloaded from
+<a href="http://www.vtk.org">www.vtk.org</a>.
+SCIRun2 VTK components have been tested with VTK 4.2.
+
+Estimated time to build: 2-3 hours
+
+\subsection building5_7 MPI
+The SCIRun2 software has only been tested with the LAM/MPI implementation.
+The LAM/MPI software can be freely downloaded from
+<a href="http://www.lam-mpi.org">www.lam-mpi.org</a>.
+SCIRun2 supports LAM/MPI version 7.0.6.
+SCIRun2 will \em not build correctly with MPICH.
+
+Estimated time to build: 2-3 hours
+
+\section building6 Nightly build
+
+SCIRun2 software is built from the current CVS repository each night.
+You can see the results of the nightly build \ref nightly "here".
+
+\section building8 Running SCIRun2
+Now that you have successfully build the software, see
+\ref running "this page"
+to learn how to run the software.
+
+\section building9 Reporting bugs
+
+*/
+

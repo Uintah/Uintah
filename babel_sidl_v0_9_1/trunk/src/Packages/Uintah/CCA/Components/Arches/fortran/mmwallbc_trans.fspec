@@ -1,0 +1,11 @@
+void mmwallbc_trans(IntVector idxLo, IntVector idxHi, CCVariable<double> ae,
+     CCVariable<double> aw, CCVariable<double> an,
+     CCVariable<double> as, CCVariable<double> at,
+     CCVariable<double> ab, CCVariable<double> su,
+     CCVariable<double> sp, 
+     constCCVariable<double> old_enthalpy,
+     constCCVariable<double> old_den, 
+     constCCVariable<int> pcell, int mmwallid, 
+     OffsetArray1<double> sew,
+     OffsetArray1<double> sns, OffsetArray1<double> stb,
+     double dtime);
