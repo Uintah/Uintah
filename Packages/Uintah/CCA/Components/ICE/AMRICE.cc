@@ -717,6 +717,7 @@ void AMRICE::addRefineDependencies(Task* task,
     task->requires(Task::CoarseNewDW, var,
                  0, Task::CoarseLevel, 0, Task::NormalDomain, gac, 1);
   }
+  task->requires(Task::OldDW, var, Ghost::None, 0);
   cout_dbg <<""<<endl;
 }
 /*___________________________________________________________________
