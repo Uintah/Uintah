@@ -1103,7 +1103,7 @@ bool Matlab::generate_matlab_code()
 		
 			ostringstream oss;
 			oss << "output_nrrd" << p << ".mat";
-			output_nrrd_matfile_[p] = temp_directory_ + oss.str();
+			output_nrrd_matfile_[p] = oss.str();
 			std::string cmd;
 			cmd = "if exist('" + output_nrrd_name_list_[p] + "','var'), save " + file_transfer_->remote_file(output_nrrd_matfile_[p]) + " " + output_nrrd_name_list_[p] + "; end\n";
 			m_file << cmd;
