@@ -50,7 +50,7 @@
 #if defined(__sun) || defined(_WIN32)
 #include <string.h>
 #define bzero(p,sz)  memset(p,0, sz);
-#elif defined(__linux) || defined(__sgi) || defined(__digital__) || defined(_AIX) || defined(__APPLE__)
+#elif defined(__linux) || defined(__sgi) || defined(__digital__) || defined(_AIX) || defined(__APPLE__) || defined(__CYGWIN__)
 #else
 #error "Need bcopy define for this architecture"
 #endif
