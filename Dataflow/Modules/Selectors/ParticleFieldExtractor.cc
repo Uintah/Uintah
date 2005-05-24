@@ -135,7 +135,7 @@ bool ParticleFieldExtractor::setVars(DataArchive& archive, int timestep,
   for( int i = 0; i < (int)names.size(); i++ ){
     ConsecutiveRangeSet matls =
       archive.queryMaterials(names[i], r, times[timestep]);
-    nm = ( matls.size() > nm ? matls.size() : nm );
+    nm = ( (int)matls.size() > nm ? (int)matls.size() : nm );
   }
   if( !archive_dirty && nm == num_materials ){
     return true;
