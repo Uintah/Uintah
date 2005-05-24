@@ -507,7 +507,6 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gExternalHeatRateLabel);
   t->computes(lb->gNumNearParticlesLabel);
   t->computes(lb->TotalMassLabel);
-  t->computes(lb->TotalVolumeDeformedLabel);
   
   sched->addTask(t, patches, matls);
 }
@@ -700,6 +699,7 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
   }
 
   t->computes(lb->gInternalForceLabel);
+  t->computes(lb->TotalVolumeDeformedLabel);
   
   for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
       ftit!=d_bndy_traction_faces.end();ftit++) {
@@ -1283,7 +1283,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 
 void SerialMPM::actuallyInitializeAddedMaterial(const ProcessorGroup*,
                                                 const PatchSubset* patches,
-                                                const MaterialSubset* matls,
+                                                const MaterialSubset* /*matls*/,
                                                 DataWarehouse*,
                                                 DataWarehouse* new_dw)
 {
@@ -1691,7 +1691,7 @@ void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
 void SerialMPM::computeContactArea(const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset* ,
-                                   DataWarehouse* old_dw,
+                                   DataWarehouse* /*old_dw*/,
                                    DataWarehouse* new_dw)
 {
   // six indices for each of the faces
@@ -1838,7 +1838,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       old_dw->get(pmass,   lb->pMassLabel,                   pset);
       new_dw->get(pvol,    lb->pVolumeDeformedLabel,         pset);
       new_dw->get(pstress, lb->pStressLabel_preReloc,        pset);
-      old_dw->get(psize, lb->pSizeLabel,                   pset);
+      old_dw->get(psize,   lb->pSizeLabel,                   pset);
       new_dw->get(gvolume,   lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
       new_dw->get(pErosion,lb->pErosionLabel_preReloc,       pset);
 
