@@ -623,7 +623,7 @@ void SystemCall::put_stdin(std::vector<std::string> &vec, bool raw)
 	
 	try
 	{
-		for (int p = 0; p < vec.size(); p++)	
+		for (int p = 0; p < (int)vec.size(); p++)	
 		{
 			if (raw == false)
 			{
@@ -782,7 +782,7 @@ void SystemCall::insert_stdout_line(std::string &line)
 	if (stdoutbuffersize_ != 0)
 	{
 		stdoutbuffer_.push_back(line);
-		if ((stdoutbuffersize_ > 0)&&(stdoutbuffersize_ < stdoutbuffer_.size())) stdoutbuffer_.pop_front();
+		if ((stdoutbuffersize_ > 0)&&(stdoutbuffersize_ < (int)stdoutbuffer_.size())) stdoutbuffer_.pop_front();
 	}
 	
 	std::list<SystemCallHandlerHandle>::iterator it = stdouthandler_.begin();
@@ -801,7 +801,7 @@ void SystemCall::insert_stderr_line(std::string &line)
 	if (stderrbuffersize_ != 0)
 	{
 		stderrbuffer_.push_back(line);
-		if ((stderrbuffersize_ > 0)&&(stderrbuffersize_ < stderrbuffer_.size())) stderrbuffer_.pop_front();
+		if ((stderrbuffersize_ > 0)&&(stderrbuffersize_ < (int)stderrbuffer_.size())) stderrbuffer_.pop_front();
 	}
 
 	if (isfile_) file_ << "STD_ERROR_OUTPUT: " <<line;
