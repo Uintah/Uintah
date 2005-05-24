@@ -35,6 +35,12 @@
 #include <iostream>
 #include <string>
 #include <sgi_stl_warnings_on.h>
+
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
+
+
 using namespace std;
 
 void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
