@@ -192,6 +192,12 @@ include $(SCIRUN_SCRIPTS)/program.mk
 SRCS := $(SRCDIR)/partextract.cc
 PROGRAM := Packages/Uintah/StandAlone/partextract
 
+##############################################
+# parvarRange
+
+SRCS := $(SRCDIR)/partvarRange.cc
+PROGRAM := Packages/Uintah/StandAlone/partvarRange
+
 ifeq ($(LARGESOS),yes)
   PSELIBS := Datflow Packages/Uintah
 else
@@ -376,6 +382,7 @@ uintah: sus \
         compare_uda \
         restart_merger \
         partextract \
+        partvarRange \
         extractV \
         extractF \
         gambitFileReader \
@@ -433,6 +440,8 @@ compare_uda: prereqs Packages/Uintah/StandAlone/compare_uda
 restart_merger: prereqs Packages/Uintah/StandAlone/restart_merger
 
 partextract: prereqs Packages/Uintah/StandAlone/partextract
+
+partvarRange: prereqs Packages/Uintah/StandAlone/partvarRange
 
 extractV: prereqs Packages/Uintah/StandAlone/extractV
 
