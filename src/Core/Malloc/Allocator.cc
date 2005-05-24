@@ -58,7 +58,7 @@ const int ALIGN=16;
 #if defined(__sun) || defined(_WIN32)
 #  include <string.h>
 #  define bcopy(src,dest,n) memcpy(dest,src,n)
-#elif defined(__linux) || defined(__digital__) || defined(__sgi) || defined(_AIX) || defined(__APPLE__)
+#elif defined(__linux) || defined(__digital__) || defined(__sgi) || defined(_AIX) || defined(__APPLE__) || defined(__CYGWIN__)
 #  include <string.h>
 #else
 #  error "Need bcopy idfdef for this architecture"
