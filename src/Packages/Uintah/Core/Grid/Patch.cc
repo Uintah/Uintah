@@ -1310,6 +1310,16 @@ void Patch::getOtherLevelPatches(int levelOffset,
     otherLevel->getCellIndex(d_level->getCellPosition(getLowIndex()));
   IntVector high =
     otherLevel->getCellIndex(d_level->getCellPosition(getHighIndex()));
+
+  // we don't grab enough in the high direction in this case...
+  if (levelOffset < 0) {
+    // if for some reason the levelOffset is -2 or less...
+    IntVector crr = otherLevel->getRelativeLevel(1)->getRefinementRatio();
+    IntVector offset((high.x() % crr.x()) == 0 ? 0 : 1,
+                     (high.x() % crr.x()) == 0 ? 0 : 1,
+                     (high.x() % crr.x()) == 0 ? 0 : 1);
+    high += offset;
+  }
   otherLevel->selectPatches(low, high, selected_patches); 
 }
 
