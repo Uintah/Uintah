@@ -56,6 +56,7 @@
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Ports/TimePort.h>
 
 #include <Core/Geom/FreeType.h>
 
@@ -230,6 +231,7 @@ private:
   tuple					*y_trend_h_point;
   tuple					*y_trend_m_point;
   tuple					*y_trend_l_point;
+  TimeViewerHandle	time_viewer_h_;
 
   bool                  make_current();
   void                  init_plots();
@@ -253,9 +255,11 @@ private:
 
 class RTDraw2 : public Runnable {
 public:
-  RTDraw2(ExecutiveState* module) : 
+  //RTDraw2(ExecutiveState* module) : 
+  RTDraw2(ExecutiveState* module, TimeViewerHandle tvh) : 
     module_(module), 
     throttle_(), 
+	 tvh_(tvh),
     dead_(0) 
   {};
   virtual ~RTDraw2();
@@ -264,6 +268,7 @@ public:
 private:
   ExecutiveState *	module_;
   TimeThrottle	throttle_;
+  TimeViewerHandle	tvh_;
   bool		dead_;
 };
 
@@ -275,16 +280,18 @@ void
 RTDraw2::run()
 {
   throttle_.start();
-  const double inc = 1./75.;
+  //const double inc = 1./75.;
+  const double inc = 1./20.;
   double t = throttle_.time();
-  double tlast = t;
+  //double tlast = t;
   while (!dead_) {
     t = throttle_.time();
     throttle_.wait_for_time(t + inc);
-    double elapsed = t - tlast;
-    module_->inc_time(elapsed);
+    //double elapsed = t - tlast;
+    //module_->inc_time(elapsed);
+    module_->inc_time(tvh_->view_elapsed_since_start());
     module_->redraw_all();
-    tlast = t;
+    //tlast = t;
   }
 }
 
@@ -530,16 +537,18 @@ ExecutiveState::inc_time(double elapsed)
   gui_sample_rate_.reset();
   gui_play_mode_.reset();
   gui_time_markers_mode_.reset();
-  gui_sweep_speed_.reset();
+  //gui_sweep_speed_.reset();
 
   float samp_rate = gui_sample_rate_.get();  // samples per second.
-  const float sweep_speed = gui_sweep_speed_.get(); 
+  //const float sweep_speed = gui_sweep_speed_.get(); 
   if (! data_.get_rep() || ! gui_play_mode_.get()) return;
-  int samples = (int)round(samp_rate * elapsed * sweep_speed);
-  cur_idx_ += samples;
+  //int samples = (int)round(samp_rate * elapsed * sweep_speed);
+  int samples = (int)round(samp_rate * elapsed);
+  //cur_idx_ += samples;
+  cur_idx_ = samples;
   if (cur_idx_ >= data_->nrrd->axis[1].size) {
     cur_idx_ = data_->nrrd->axis[1].size - 1;
-    gui_play_mode_.set(0);
+    //gui_play_mode_.set(0);
     //cur_idx_ = 0;
   }
 
@@ -1591,6 +1600,21 @@ do_round(float d)
 void
 ExecutiveState::execute()
 {
+  TimeIPort *time_port = (TimeIPort*)get_iport("Time");
+  
+  if (!time_port)
+  {
+    error("Unable to initialize iport Time.");
+	 return;
+  }
+  
+  time_port->get(time_viewer_h_);
+  if (time_viewer_h_.get_rep() == 0)
+  {
+    error("No data in the Time port.  It is required.");
+	 return;
+  }
+
   NrrdIPort *nrrd1_port = (NrrdIPort*)get_iport("Nrrd1");
 
   if (!nrrd1_port) 
@@ -1634,7 +1658,8 @@ ExecutiveState::execute()
   } 
   
   if (!runner_) {
-    runner_ = scinew RTDraw2(this);
+    //runner_ = scinew RTDraw2(this);
+    runner_ = scinew RTDraw2(this, time_viewer_h_);
     runner_thread_ = scinew Thread(runner_, string(id+" RTDraw2 OpenGL").c_str());
   }
 }

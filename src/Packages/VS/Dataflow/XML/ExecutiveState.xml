@@ -49,6 +49,10 @@
   <io>
     <inputs lastportdynamic="no">
       <!-- one of (device port file) -->
+		<port>
+	<name>Time</name>
+	<datatype>SCIRun::Time</datatype>
+	   </port>
       <port>
 	<name>Nrrd1</name>
 	<description>
