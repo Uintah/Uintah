@@ -71,8 +71,8 @@ public:
   inline int oy() { return oy_; }
   inline int oz() { return oz_; }
 
-  virtual int sx() { return -1; }
-  virtual int sy() { return -1; }
+  virtual int sx() { return 0; }
+  virtual int sy() { return 0; }
 
   virtual GLenum tex_type() = 0;
   virtual void* tex_data(int c) = 0;
