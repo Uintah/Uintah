@@ -50,6 +50,10 @@
 #include <SCIRun/SCIRunFramework.h>
 #include <iostream>
 
+#ifndef DEBUG
+ #define DEBUG 0
+#endif
+
 namespace SCIRun {
 
 InternalComponentModel::InternalComponentModel(SCIRunFramework* framework)
@@ -155,21 +159,27 @@ InternalComponentModel::releaseFrameworkService(const std::string& type,
 
 bool InternalComponentModel::haveComponent(const std::string& /*name*/)
 {
+#if DEBUG
   std::cerr << "Error: InternalComponentModel does not implement haveComponent"
 	    << std::endl;
+#endif
     return false;
 }
 
 void InternalComponentModel::destroyComponentList()
 {
+#if DEBUG
   std::cerr << "Error: InternalComponentModel does not implement destroyComponentList"
             << std::endl;
+#endif
 }
 
 void InternalComponentModel::buildComponentList()
 {
+#if DEBUG
   std::cerr << "Error: InternalComponentModel does not implement buildComponentList"
             << std::endl;
+#endif
 }
 
 ComponentInstance* InternalComponentModel::createInstance(const std::string&,
@@ -180,7 +190,9 @@ ComponentInstance* InternalComponentModel::createInstance(const std::string&,
 
 bool InternalComponentModel::destroyInstance(ComponentInstance *ic)
 {
+#if DEBUG
     std::cerr << "Warning: I don't know how to destroy a internal component instance!" << std::endl;
+#endif
     return true;
 }
 
