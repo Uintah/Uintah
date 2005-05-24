@@ -1789,7 +1789,7 @@ AMRICE::errorEstimate(const ProcessorGroup*,
         //  find the 8 corner cells of level 0
         vector<IntVector> corners;
         IntVector lo = patch->getInteriorCellLowIndex();
-        IntVector hi = patch->getInteriorCellHighIndex();
+        IntVector hi = patch->getInteriorCellHighIndex() - IntVector(1,1,1);
 
         for(int k = 0; k< 2; k++){
           for(int j = 0; j< 2; j++){
