@@ -123,14 +123,17 @@ public:
 	return 0;
       }
       inline std::string getMixTableType() const{
+        return 0;
       }
       //***warning** compute totalvars from number of species and dependent vars
       inline int getTotalVars() const {
 	return 0;
       }
       inline ReactionModel* getRxnModel() const {
+        return 0;
       }      
       inline Integrator* getIntegrator() const {
+        return 0;
       }
 
 protected :
