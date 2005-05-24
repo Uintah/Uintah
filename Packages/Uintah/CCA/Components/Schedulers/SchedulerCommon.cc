@@ -9,6 +9,7 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
@@ -536,6 +537,16 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& stat
           
           for (int old = 0; old < oldPatches.size(); old++) {
             const Patch* oldPatch = oldPatches[old];
+            IntVector oldLow = oldPatch->getLowIndex();
+            IntVector oldHigh = oldPatch->getHighIndex();
+
+            if (newLevel->getIndex() > 0) {
+              // compensate for the extra cells, we DON'T want to copy them over on non-coarse levels
+              // we'll interpolate those up
+              oldLow += (oldPatch->getInteriorCellLowIndex() - oldPatch->getCellLowIndex());
+              oldHigh -= (oldPatch->getCellHighIndex() - oldPatch->getInteriorCellHighIndex());
+            }
+
             IntVector low = Max(oldPatch->getLowIndex(), newPatch->getLowIndex());
             IntVector high = Min(oldPatch->getHighIndex(), newPatch->getHighIndex());
             IntVector dist = high-low;
@@ -627,7 +638,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
       // get the low/high for what we'll need to get
       Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), true);
       IntVector newLowIndex, newHighIndex;
-      newPatch->computeVariableExtents(basis, label->getBoundaryLayer(), Ghost::None, 0, newLowIndex, newHighIndex);
+      newPatch->computeVariableExtents(basis, IntVector(0,0,0), Ghost::None, 0, newLowIndex, newHighIndex);
 
       for (int m = 0; m < var_matls->size(); m++) {
         int matl = var_matls->get(m);
@@ -647,6 +658,13 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
           //IntVector oldHighIndex = oldPatch->getHighIndex(basis, label->getBoundaryLayer());
           IntVector oldLowIndex = oldPatch->getLowIndex(basis, IntVector(0,0,0));
           IntVector oldHighIndex = oldPatch->getHighIndex(basis, IntVector(0,0,0));
+
+          if (newLevel->getIndex() > 0) {
+            // compensate for the extra cells, we DON'T want to copy them over on non-coarse levels
+            // we'll interpolate those up
+            oldLowIndex += (oldPatch->getInteriorCellLowIndex() - oldPatch->getCellLowIndex());
+            oldHighIndex -= (oldPatch->getCellHighIndex() - oldPatch->getInteriorCellHighIndex());
+          }
 
           IntVector copyLowIndex = Max(newLowIndex, oldLowIndex);
           IntVector copyHighIndex = Min(newHighIndex, oldHighIndex);
@@ -691,7 +709,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
                                           "in copyDataTo NCVariable"));
               CCVariableBase* v = oldDataWarehouse->d_ccDB.get(label, matl, oldPatch);
-              
+        
               if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
                 CCVariableBase* newVariable = dynamic_cast<CCVariableBase*>(v->cloneType());
                 newVariable->rewindow( newLowIndex, newHighIndex );
