@@ -579,12 +579,12 @@ Thread::exitAll(int code)
  */
 static
 void
-handle_abort_signals(int sig,
 #if defined(__sgi)
-		     int,
-		     struct sigcontext* ctx)
+handle_abort_signals(int sig, int, struct sigcontext* ctx)
+#elif defined (__CYGWIN__)
+handle_abort_signals(int sig)
 #else
-  struct sigcontext ctx)
+handle_abort_signals(int sig, struct sigcontext ctx)
 #endif
 {
 struct sigaction action;
@@ -664,7 +664,12 @@ Thread::print_threads()
  */
 static
 void
+#ifdef __CYGWIN__
+// Cygwin's version doesn't take a sigcontext
+handle_quit(int sig)
+#else
 handle_quit(int sig, struct sigcontext /*ctx*/)
+#endif
 {
   // Try to acquire a lock.  If we can't, then assume that somebody
   // else already caught the signal...
