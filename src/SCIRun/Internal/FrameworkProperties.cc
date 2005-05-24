@@ -39,15 +39,21 @@
  */
 
 #include <sci_defs/babel_defs.h>
+#include <sci_defs/vtk_defs.h>
 
 #include <SCIRun/Internal/FrameworkProperties.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/PortInstance.h>
 #include <SCIRun/CCA/CCAComponentModel.h>
+
 #if HAVE_BABEL
  #include <SCIRun/Babel/BabelComponentModel.h>
 #endif
-#include <SCIRun/Vtk/VtkComponentModel.h>
+
+#if HAVE_VTK
+ #include <SCIRun/Vtk/VtkComponentModel.h>
+#endif
+
 #include <SCIRun/Corba/CorbaComponentModel.h>
 #include <Core/OS/Dir.h>
 #include <Core/Util/Environment.h>
@@ -120,7 +126,9 @@ void FrameworkProperties::getSidlPaths()
 #if HAVE_BABEL
         sArray.push_back(srcDir + BabelComponentModel::DEFAULT_PATH);
 #endif
+#if HAVE_VTK
         sArray.push_back(srcDir + VtkComponentModel::DEFAULT_PATH);
+#endif
         sArray.push_back(srcDir + CorbaComponentModel::DEFAULT_PATH);
         frameworkProperties->putStringArray("sidl_xml_path", sArray);
     }
