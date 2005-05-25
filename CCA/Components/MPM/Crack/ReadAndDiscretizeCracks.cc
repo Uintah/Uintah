@@ -303,7 +303,6 @@ void Crack::ReadCurvedQuadCracks(const int& m,const ProblemSpecP& geom_ps)
       ptsSide2.push_back(p);
     }
     cquadPtsSide2[m].push_back(ptsSide2);
-    ptsSide2.clear();
 
     ProblemSpecP side4_ps=cquad_ps->findBlock("points_curved_side4");
     for(ProblemSpecP pt_ps=side4_ps->findBlock("point"); pt_ps!=0;
@@ -312,6 +311,12 @@ void Crack::ReadCurvedQuadCracks(const int& m,const ProblemSpecP& geom_ps)
       ptsSide4.push_back(p);
     }
     cquadPtsSide4[m].push_back(ptsSide4);
+    
+    if(ptsSide4.size()!=ptsSide2.size()) {
+      cout << "Error: The points on curved side 2 and side 4 "
+	   << "should appear in pairs." << endl;  
+    }
+    ptsSide2.clear();
     ptsSide4.clear();    
     
     // Crack front
