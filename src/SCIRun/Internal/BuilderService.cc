@@ -54,6 +54,9 @@
 #include <iostream>
 #include <string>
 
+//REMOVE
+#include <SCIRun/Tao/TaoComponentInstance.h>
+
 using namespace std;
 
 namespace SCIRun {
@@ -192,6 +195,7 @@ BuilderService::getUsedPortNames(const sci::cca::ComponentID::pointer &cid)
 {
   SSIDL::array1<std::string> result;
   ComponentInstance *ci=framework->lookupComponent(cid->getInstanceName());
+  ci->getPorts();
   for(PortInstanceIterator* iter = ci->getPorts(); !iter->done(); iter->next()) {
     PortInstance* port = iter->get();
     if (port->portType() == PortInstance::From)

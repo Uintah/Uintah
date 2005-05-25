@@ -59,6 +59,7 @@ class CCAComponentModel;
 class BabelComponentModel;
 class VtkComponentModel;
 class CorbaComponentModel;
+class TaoComponentModel;
 class ComponentEventService;
 
 /**
@@ -276,6 +277,8 @@ protected:
   VtkComponentModel* vtk;
 
   CorbaComponentModel* corba;
+
+  TaoComponentModel* tao;
   
   //Semaphore d_slave_sema;
 };
