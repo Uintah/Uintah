@@ -1318,6 +1318,20 @@ GeomContainer::draw(DrawInfoOpenGL* di, Material* matl, double time)
   }
 }
 
+
+void
+ColorMapTex::draw(DrawInfoOpenGL *di, Material *matl, double time)
+{
+  if (child_.get_rep())
+  {
+    const bool lit = di->lighting;
+    di->lighting = false;
+    child_->draw(di, matl, time);
+    di->lighting = lit;
+  }
+}
+
+
 void GeomCylinder::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(height < 1.e-6 || rad < 1.e-6)return;
