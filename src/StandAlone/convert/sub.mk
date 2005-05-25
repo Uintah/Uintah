@@ -151,6 +151,10 @@ PROGRAM := $(SRCDIR)/VTKtoTriSurfField
 SRCS := $(SRCDIR)/VTKtoTriSurfField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/VTKtoHexVolField
+SRCS := $(SRCDIR)/VTKtoHexVolField.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/TextToColumnMatrix
 SRCS := $(SRCDIR)/TextToColumnMatrix.cc
 include $(SCIRUN_SCRIPTS)/program.mk
