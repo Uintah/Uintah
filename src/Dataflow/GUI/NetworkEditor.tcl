@@ -1607,13 +1607,15 @@ proc promptUserToCopySCIRunrc {} {
     set copyResult 0
     set dontAskAgain 0
 
-    set version [netedit getenv SCIRUN_RCFILE_VERSION]
-    if { $version == "" } {
-        set version "bak"
+    set oldVersion [netedit getenv SCIRUN_RCFILE_VERSION]
+    if { $oldVersion == "" } {
+        set oldVersion "bak"
     }
 
-    wm title $w "Copy v$version .scirunrc file?"
-    label $w.message -text "A newer version of the .scirunrc file is avaliable with this release.\n\nThis file contains SCIRun environment variables that are\nneccesary for some new features like fonts.\n\nPlease note: If you have made changes to your ~/.scirunrc file\nthey will be undone by this action.  Your existing file will be copied\nto ~/.scirunrc.$version\n\nWould you like SCIRun to copy over the new .scirunrc?" -justify left
+    set newVersion "[netedit getenv SCIRUN_VERSION].[netedit getenv SCIRUN_RCFILE_SUBVERSION]"
+
+    wm title $w "Update .scirunrc file to version $newVersion?"
+    label $w.message -text "A newer version ($newVersion) of the .scirunrc file is avaliable with this\nrelease.  (You currently have version $oldVersion.)\n\nThis file contains SCIRun environment variables that are\nneccesary for some new features like fonts.\n\nPlease note: If you have made changes to your ~/.scirunrc file\nthey will be undone by this action.  Your existing file will be copied\nto ~/.scirunrc.$oldVersion\n\nWould you like SCIRun to create the new .scirunrc?" -justify left
     frame $w.but
     button $w.but.ok -text Copy -command "set copyResult 1"
     button $w.but.no -text "Don't Copy" -command "set copyResult 0"
