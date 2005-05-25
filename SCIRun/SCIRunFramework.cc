@@ -55,6 +55,8 @@
 
 #include <SCIRun/Vtk/VtkComponentModel.h>
 #include <SCIRun/Corba/CorbaComponentModel.h>
+#include <SCIRun/Tao/TaoComponentModel.h>
+
 #include <SCIRun/ComponentInstance.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/CCA/PIDL/PIDL.h>
@@ -86,6 +88,7 @@ SCIRunFramework::SCIRunFramework()
 #endif
   models.push_back(vtk = new VtkComponentModel(this));
   models.push_back(corba = new CorbaComponentModel(this));
+  models.push_back(tao = new TaoComponentModel(this));
 }
 
 SCIRunFramework::~SCIRunFramework()

@@ -51,7 +51,7 @@ SRCS += $(SRCS) $(SRCDIR)/SCIRunLoader.cc
 endif
 
 
-SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Dataflow $(SRCDIR)/Internal $(SRCDIR)/Vtk $(SRCDIR)/Corba
+SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Dataflow $(SRCDIR)/Internal $(SRCDIR)/Vtk $(SRCDIR)/Corba $(SRCDIR)/Tao
 ifeq ($(HAVE_BABEL),yes)
  ifeq ($(HAVE_RUBY),yes)
  SUBDIRS += $(SRCDIR)/Bridge
