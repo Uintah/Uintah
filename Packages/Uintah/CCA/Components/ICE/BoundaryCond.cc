@@ -281,7 +281,6 @@ void setBC(CCVariable<double>& press_CC,
    
     IntVector dir= patch->faceAxes(face);
     Vector cell_dx = patch->dCell();
-    double dx = cell_dx[dir[0]];
     int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
 
     for (int child = 0;  child < numChildren; child++) {
@@ -325,23 +324,53 @@ void setBC(CCVariable<double>& press_CC,
         // hydrostatic pressure adjustment is  handled by a completely
         // separate task, therefore don't do this on the first DW
         // 
-        //  Change gravity sign according to the face direction
-        int p_dir = patch->faceAxes(face)[0];     // principal  face direction
-        
-        if (gravity[p_dir] != 0 && topLevelTimestep > 0) {
-          Vector faceDir = patch->faceDirection(face).asVector();
-          double grav = gravity[p_dir] * (double)faceDir[p_dir]; 
-          IntVector oneCell = patch->faceDirection(face);
-          vector<IntVector>::const_iterator iter;
+	// Assuming gravity is aligned with the grid axis.
+	// Hydrostatic pressure adjustment (HPA): 
+	//   gravity*rho_micro*distance_from_ref_point.
+	// R is BC location, L is adjacent to BC location
+	// Dirichlet BC: P_R= P_Dirichlet_R + HPA_R
+	// Neumann BC: P_R = P_neumann_R + HPA_R - HPA_L,
+	// where HPA_R - HPA_L is zero if BC normal is orthogonal to gravity
 
-          for (iter=bound.begin();iter != bound.end(); iter++) { 
-            IntVector L = *iter - oneCell;
-            IntVector R = *iter;
-            double rho_R = rho_micro[surroundingMatl_indx][R];
-            double rho_L = rho_micro[surroundingMatl_indx][L];
-            double rho_micro_brack = 2.*(rho_L * rho_R)/(rho_L + rho_R);
-            press_CC[R] += grav * dx * rho_micro_brack; 
-          }
+        // find the upper and lower point of the domain.
+        const Level* level = patch->getLevel();
+        GridP grid = level->getGrid();
+        BBox b;
+        grid->getSpatialRange(b);
+        Vector gridMin = b.min().asVector();
+        Vector dx_L0 = grid->getLevel(0)->dCell();
+  
+        // Pressure reference point is assumed to be 
+        //at CELL-CENTER of cell 0,0,0 
+        Vector press_ref_pt = gridMin + 1.5*dx_L0;
+
+        int p_dir = patch->faceAxes(face)[0];     // normal  face direction
+        
+	// Only apply this correction in case of Neumann or Dirichlet BC
+	bool Neumann_BC = (bc_kind=="Neumann" || bc_kind=="zeroNeumann");
+        if (gravity.length() > 0 && topLevelTimestep > 0 &&
+            (bc_kind=="Dirichlet" || Neumann_BC)) {
+          if (gravity[p_dir] != 0 || bc_kind=="Dirichlet") {
+            IntVector oneCell = patch->faceDirection(face);
+            vector<IntVector>::const_iterator iter;
+
+            for (iter=bound.begin();iter != bound.end(); iter++) { 
+              IntVector R = *iter;
+              Point here_R = level->getCellPosition(R);
+	      Vector dist_from_p_ref_R = (here_R.asVector() - press_ref_pt);
+              double rho_R = rho_micro[surroundingMatl_indx][R];
+	      double correction_R = Dot(gravity,dist_from_p_ref_R);
+	      press_CC[R] += correction_R*rho_R;
+	      if (Neumann_BC) {
+                IntVector L = *iter - oneCell;
+                Point here_L = level->getCellPosition(L);
+                Vector dist_from_p_ref_L = (here_L.asVector() - press_ref_pt);
+                double rho_L = rho_micro[surroundingMatl_indx][L];
+	        double correction_L = Dot(gravity,dist_from_p_ref_L);
+	        press_CC[R] -= correction_L*rho_L;
+              }
+            }
+	  }
           IveSetBC = true;
         }  // with gravity 
       
