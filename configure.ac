@@ -1432,7 +1432,7 @@ else
 ## test for bison. yacc is not sufficient as it has no -o option.
 ## Only need for SCIRun2 currently.
 AC_CHECK_PROG(YACC, bison, bison, nobison, $PATH /usr/bin)
-if test "$enable_scirun2" = "yes" && test "$YACC" = "nobison"; then
+if test "$enable_scirun2" = "yes" -a "$YACC" = "nobison"; then
   echo "configure: error: bison is required, and was not found in your PATH."
   echo "                  Please add it to your PATH, or set the environment"
   echo "                  variable YACC to the appropriate bison executable,"
@@ -1444,7 +1444,7 @@ AC_PROG_LEX
 LEX_LIB_FLAG="$LEXLIB"
 AC_SUBST(LEX_LIB_FLAG)
 
-if test "$LEX" != "flex" -a "$LEX" != "lex"; then
+if test "$enable_scirun2" = "yes" -a "$LEX" != "flex" -a "$LEX" != "lex"; then
   echo "configure: error: flex or lex is required, and was not found in your PATH."
   echo "                  Please add it to your PATH, or set the environment"
   echo "                  variable LEX to the appropriate lex executable,"
