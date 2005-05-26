@@ -204,6 +204,8 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
 
    heatConductionModel = scinew ImplicitHeatConduction(sharedState,lb,flags);
 
+   heatConductionModel->problemSetup();
+
    thermalContactModel =
      ThermalContactFactory::create(prob_spec, sharedState, lb,flags);
 
@@ -237,8 +239,6 @@ void ImpMPM::scheduleInitialize(const LevelP& level,
   LoadBalancer* loadbal = sched->getLoadBalancer();
   d_perproc_patches = loadbal->createPerProcessorPatchSet(level);
   d_perproc_patches->addReference();
-
-  heatConductionModel->scheduleInitialize(level,sched);
 
   sched->addTask(t, d_perproc_patches, d_sharedState->allMPMMaterials());
 

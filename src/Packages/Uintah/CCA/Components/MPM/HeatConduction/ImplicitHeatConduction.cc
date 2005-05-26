@@ -33,6 +33,7 @@ ImplicitHeatConduction::ImplicitHeatConduction(SimulationStateP& sS,
   lb = labels;
   d_flag = flags;
   d_sharedState = sS;
+  d_perproc_patches=0;
   do_IHC=d_flag->d_doImplicitHeatConduction;
   d_HC_transient=d_flag->d_doTransientImplicitHeatConduction;
 
@@ -60,28 +61,10 @@ ImplicitHeatConduction::~ImplicitHeatConduction()
  }
 }
 
-void ImplicitHeatConduction::scheduleInitialize(const LevelP& level,
-                                                SchedulerP& sched)
+void ImplicitHeatConduction::problemSetup()
 {
- if(do_IHC){
-  Task* t = scinew Task("ImplicitHeatConduction::actuallyInitialize",
-                        this, &ImplicitHeatConduction::actuallyInitializeHC);
+   int numMatls = d_sharedState->getNumMPMMatls();
 
-  LoadBalancer* loadbal = sched->getLoadBalancer();
-  d_perproc_patches = loadbal->createPerProcessorPatchSet(level);
-  d_perproc_patches->addReference();
-                                                                                
-  sched->addTask(t, d_perproc_patches, d_sharedState->allMPMMaterials());
- }
-}
-
-void ImplicitHeatConduction::actuallyInitializeHC(const ProcessorGroup*,
-                                                  const PatchSubset* patches,
-                                                  const MaterialSubset* matls,
-                                                  DataWarehouse*,
-                                                  DataWarehouse*)
-{
-   int numMatls = matls->size();
 #ifdef HAVE_PETSC
    d_HC_solver = vector<MPMPetscSolver*>(numMatls);
    for(int m=0;m<numMatls;m++){
@@ -117,7 +100,12 @@ void ImplicitHeatConduction::scheduleCreateHCMatrix(SchedulerP& sched,
                         &ImplicitHeatConduction::createHCMatrix);
                                                                                 
   t->requires(Task::OldDW, lb->pXLabel,Ghost::AroundNodes,1);
-                                                                                
+
+  if (!d_perproc_patches) {
+    d_perproc_patches=patches;
+    d_perproc_patches->addReference();
+  }
+
   sched->addTask(t, patches, matls);
  }
 }
@@ -245,7 +233,7 @@ void ImplicitHeatConduction::destroyHCMatrix(const ProcessorGroup*,
 {
   if (cout_doing.active())
     cout_doing <<"Doing destroyHCMatrix " <<"\t\t\t\t\t IMPM" << "\n" << "\n";
-                                                                                
+
   for (int m = 0; m < d_sharedState->getNumMPMMatls(); m++ ) {
     d_HC_solver[m]->destroyMatrix(false);
   }
