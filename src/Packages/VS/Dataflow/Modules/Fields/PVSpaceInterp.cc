@@ -36,6 +36,7 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
 #include <Dataflow/Ports/NrrdPort.h>
+#include <Dataflow/Ports/BundlePort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/TimePort.h>
 #include <Dataflow/Network/Module.h>
@@ -63,12 +64,13 @@ private:
   virtual void set_context(Scheduler* sched, Network* network);
   static bool consumed_callback(void *ths);
   void set_consumed(bool c) { consumed_ = c; }
-  Point get_hip_params(unsigned &phase_mesh, unsigned &hip_idx);
+  Point get_hip_params(unsigned &phase_mesh, float &e_phase, float &HR);
   Point find_closest_hip(unsigned phase_idx, unsigned idx);
-  void send_interp_field(const Point &p, unsigned phase_idx, unsigned hip_idx);
+  void send_interp_field(const Point &p, unsigned phase_idx, 
+			 float e_phase, float HR);
   void interp_field(const double *weights, const unsigned *interp_idxs);
   void check_lv_vol(const Point &);
-
+  void apply_potentials(float e_phase, float HR);
 
   InterpController *		        runner_;
   Thread *		                runner_thread_;
@@ -76,22 +78,31 @@ private:
   NrrdDataHandle                        hip_data_;
   NrrdDataHandle                        interp_space_;
   FieldHandle                           con_fld_;
+  BundleHandle                          crv_bdl_;
   vector<FieldHandle>                   ppv_flds_;
+  vector<MatrixHandle>                  crv_mats_;
   FieldHandle                           out_fld_;
+  FieldHandle                           out_fld_pot_;
   TimeViewerHandle                      time_viewer_h_;
   bool                                  consumed_;
 
   TimeIPort                            *time_port_;
   NrrdIPort                            *hip_port_;
   NrrdIPort                            *ispace_port_;
+  BundleIPort                          *bdl_port_;
+  BundleIPort                          *ppv_port_;
   FieldIPort                           *fld_port_;
   FieldOPort                           *out_port_;
+  FieldOPort                           *out_port_pot_;
 
   GuiDouble                             sample_rate_;
   GuiInt                                phase_idx_;
   GuiInt                                vol_idx_;
   GuiInt                                lvp_idx_;
   GuiInt                                rvp_idx_;
+
+  int                                   ppv_generation_;
+  int                                   crv_generation_;
 };
 
 
@@ -101,16 +112,20 @@ public:
     module_(module), 
     throttle_(), 
     tvh_(tvh),
-    dead_(0) 
+    dead_(0),
+    lock_("InterpController mutex")
   {};
   virtual ~InterpController();
   virtual void run();
   void set_dead(bool p) { dead_ = p; }
+  void lock() { lock_.lock(); }
+  void unlock() { lock_.unlock(); }
 private:
   PVSpaceInterp            *module_;
   TimeThrottle	            throttle_;
   TimeViewerHandle          tvh_;
   bool		            dead_;
+  Mutex                     lock_;
 };
 
 InterpController::~InterpController()
@@ -128,7 +143,9 @@ InterpController::run()
     throttle_.wait_for_time(t + inc);
     // Make sure downstream modules are ready to consume.
     if (! module_->check_consumed()) continue;
+    lock();
     module_->produce();
+    unlock();
   }
 }
 
@@ -141,19 +158,26 @@ PVSpaceInterp::PVSpaceInterp(GuiContext* ctx) :
   hip_data_(0),
   interp_space_(0),
   con_fld_(0),
+  crv_bdl_(0),
   out_fld_(0),
+  out_fld_pot_(0),
   time_viewer_h_(0),
   consumed_(true),
   time_port_(0),
   hip_port_(0),
   ispace_port_(0),
+  bdl_port_(0),
+  ppv_port_(0),
   fld_port_(0),
   out_port_(0),
+  out_port_pot_(0),
   sample_rate_(ctx->subVar("sample_rate")),
   phase_idx_(ctx->subVar("phase_index")),
   vol_idx_(ctx->subVar("vol_index")),
   lvp_idx_(ctx->subVar("lvp_index")),
-  rvp_idx_(ctx->subVar("rvp_index"))
+  rvp_idx_(ctx->subVar("rvp_index")),
+  ppv_generation_(-1),
+  crv_generation_(-1)
 {
 }
 
@@ -193,9 +217,10 @@ PVSpaceInterp::produce()
 {
   consumed_ = false;
   unsigned phase_idx = 0;
-  unsigned hip_idx = 0;
-  Point p = get_hip_params(phase_idx, hip_idx);
-  send_interp_field(p, phase_idx, hip_idx);
+  float e_phase = 0.0;
+  float HR = 0.0;
+  Point p = get_hip_params(phase_idx, e_phase, HR);
+  send_interp_field(p, phase_idx, e_phase, HR);
 }
 
 static double
@@ -277,8 +302,46 @@ PVSpaceInterp::check_lv_vol(const Point &hip_pnt)
 }
 
 void 
+PVSpaceInterp::apply_potentials(float e_phase, float HR) 
+{
+  const double hr2Hz = 1. / 60.;
+  double cur_freq = HR * hr2Hz;
+  double freq[] = {3.0, 2.0, 1.0, 0.666, 0.5}; // Hz
+  const int len_freq = 5;
+  double dist = fabs(cur_freq - freq[0]);
+  int closest = 0;
+  for (int i = 1; i < len_freq; ++i) {
+    double d = fabs(cur_freq - freq[i]);
+    if (d < dist) {
+      closest = i;
+      dist = d;
+    }
+  }
+
+  LockingHandle<HexVolMesh> mesh = 
+    ((HexVolField<double>*)out_fld_.get_rep())->get_typed_mesh();
+  out_fld_pot_ = scinew HexVolField<double>(mesh, 1);
+  vector<double> &data = ((HexVolField<double>*)out_fld_pot_.get_rep())->fdata();
+  MatrixHandle crv = crv_mats_[closest];
+  if (crv.get_rep() == 0) {
+    return;
+  }
+  if (crv->nrows() != 1044) {
+    cerr << "ERROR: wrong number of rows in crv matrix." << std::endl;
+  }
+
+  int phase_idx = Round(e_phase * crv->ncols());
+  vector<double>::iterator iter = data.begin();
+  int row = 0;
+  while (iter != data.end()) {
+    *iter = crv->get(row, phase_idx);
+    ++iter; ++row;
+  }
+}
+
+void 
 PVSpaceInterp::send_interp_field(const Point &p, unsigned phase_idx, 
-				 unsigned hip_idx) 
+				 float e_phase, float HR) 
 {
 
   FieldHandle fld = ppv_flds_[phase_idx];
@@ -309,7 +372,8 @@ PVSpaceInterp::send_interp_field(const Point &p, unsigned phase_idx,
   interp_idxs[7] = phase_idx * 44 + nodes[7];
 
   interp_field(weights, interp_idxs);
-  check_lv_vol(p);
+  apply_potentials(e_phase, HR);
+  //check_lv_vol(p);
   want_to_execute();
 }
 
@@ -379,7 +443,7 @@ find_phase_index(float phase)
 }
 
 Point
-PVSpaceInterp::get_hip_params(unsigned &phase_mesh, unsigned &)
+PVSpaceInterp::get_hip_params(unsigned &phase_mesh, float &e_phase, float &HR)
 {
   // expected columns where data lives in HIP data.
   phase_idx_.reset();
@@ -405,6 +469,10 @@ PVSpaceInterp::get_hip_params(unsigned &phase_mesh, unsigned &)
   float *dat = (float *)hip_data_->nrrd->data;
   int row = idx * hip_data_->nrrd->axis[0].size;
   float cur_phase = dat[row + phase_idx];
+
+  //FIX_ME get phase from hip will have its own index. fix HR
+  e_phase = cur_phase;
+  HR = 98.0;
 
   phase_mesh = find_phase_index(cur_phase);
 
@@ -471,6 +539,7 @@ PVSpaceInterp::get_hip_params(unsigned &phase_mesh, unsigned &)
 void
 PVSpaceInterp::execute()
 {
+  if (runner_) runner_->lock();
   if (! time_port_) {
     time_port_ = (TimeIPort*)get_iport("Time");
     if (!time_port_)  {
@@ -523,43 +592,92 @@ PVSpaceInterp::execute()
     return;
   } 
 
-  if (ppv_flds_.size() == 0) {
-    port_range_type range = get_iports("PPV Space");
-    if (range.first == range.second) {
-      error ("Need PPVspace fields.");
-      return;
-    }
-
-    port_map_type::iterator pi = range.first;
-    while (pi != range.second)
-    {
-      FieldIPort *ifield = (FieldIPort *)get_iport(pi->second);
-      ++pi;
-      FieldHandle fHandle;
-      if (ifield->get(fHandle) && fHandle.get_rep())
-      {
-	ppv_flds_.push_back(fHandle);
-      }
-    }
-    if (ppv_flds_.size() != 14) {
-      error ("Need 14 PPVspace fields.");
+  if (! bdl_port_) {
+    bdl_port_ = (BundleIPort*)get_iport("Potential Curves");
+    if (! fld_port_) {
+      error("Unable to initialize iport 'Potentil Curves'.");
       return;
     }
   }
+  BundleHandle crv_bdl;
+  bdl_port_->get(crv_bdl);
+  if (! crv_bdl.get_rep()) {
+    error ("Unable to get input curve Bundle.");
+    return;
+  } 
+  if (crv_generation_ != crv_bdl->generation) {
+    // new input
+    crv_generation_ = crv_bdl->generation;
+    int size = crv_bdl->numMatrices();
+    if (size != 5) {
+      error ("Need 5 curve matricies.");
+      return;
+    } 
 
+    for (int i = 0; i < size; ++i) {
+      ostringstream name;
+      name << "crv " << i;
+      MatrixHandle crv = crv_bdl->getMatrix(name.str());
+      if (crv.get_rep() == 0) {
+	error("Empty input curve. " + name.str());
+	return;
+      }
+      crv_mats_.push_back(crv_bdl->getMatrix(name.str()));
+    }
+  }
+
+  if (! ppv_port_) {
+    ppv_port_ = (BundleIPort*)get_iport("PPV Space");
+    if (! fld_port_) {
+      error("Unable to initialize iport 'PPV Space'.");
+      return;
+    }
+  }
+  BundleHandle ppv_bdl;
+  ppv_port_->get(ppv_bdl);
+  if (! ppv_bdl.get_rep()) {
+    error ("Unable to get input PPV Bundle.");
+    return;
+  } 
+
+  if (ppv_generation_ != ppv_bdl->generation) {
+    // new input
+    ppv_generation_ = ppv_bdl->generation;
+    int size = ppv_bdl->numFields();
+    if (size != 14) {
+      error ("Need 14 PPVspace fields.");
+      return;
+    } 
+
+    for (int i = 0; i < size; ++i) {
+      ostringstream name;
+      name << "ppv " << i;
+      ppv_flds_.push_back(ppv_bdl->getField(name.str()));
+    }
+  }
+  if (runner_) runner_->unlock();
   if (!runner_) {
     runner_ = scinew InterpController(this, time_viewer_h_);
     runner_thread_ = scinew Thread(runner_, string(id+" InterpController").c_str());
   }
 
   if (! out_port_) {
-    out_port_ = (FieldOPort*)get_oport("Current");
+    out_port_ = (FieldOPort*)get_oport("Current Mechanical");
     if (! out_port_) {
-      error("Unable to initialize oport 'Current'.");
+      error("Unable to initialize oport 'Current Mechanical'.");
       return;
     }
   }
   out_port_->send(out_fld_);
+
+  if (! out_port_pot_) {
+    out_port_pot_ = (FieldOPort*)get_oport("Current Electrical");
+    if (! out_port_pot_) {
+      error("Unable to initialize oport 'Current Electrical'.");
+      return;
+    }
+  }
+  out_port_pot_->send(out_fld_pot_);
 }
 
 void
