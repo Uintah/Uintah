@@ -7628,6 +7628,7 @@ if test "$IS_WIN" = "yes"; then
 else
 
 ## test for bison. yacc is not sufficient as it has no -o option.
+## Only need for SCIRun2 currently.
 # Extract the first word of "bison", so it can be a program name with args.
 set dummy bison; ac_word=$2
 echo "$as_me:$LINENO: checking for $ac_word" >&5
@@ -7664,7 +7665,7 @@ else
 echo "${ECHO_T}no" >&6
 fi
 
-if test "$YACC" = "nobison"; then
+if test "$enable_scirun2" = "yes" && test "$YACC" = "nobison"; then
   echo "configure: error: bison is required, and was not found in your PATH."
   echo "                  Please add it to your PATH, or set the environment"
   echo "                  variable YACC to the appropriate bison executable,"
@@ -25241,7 +25242,6 @@ fi
 # Default values:
 _sci_optional=optional
 _sci_lib="$sci_thirdparty_lib"
-_sci_inc="$sci_thirdparty_include"
 
 if test "$with_magick" = "yes"; then
   # If --with-magick is specified without a parameter, then it makes it required
@@ -25287,13 +25287,28 @@ else
   fi
   eval _sci_lib='"$_new_lib_path"'
 
-    _sci_inc="$with_magick/include"
     _sci_optional=specific
   fi
 fi
 
 echo "$as_me:$LINENO: checking for $_sci_optional ImageMagick" >&5
 echo $ECHO_N "checking for $_sci_optional ImageMagick... $ECHO_C" >&6
+
+if test ! -e $_sci_lib/../bin/Magick-config; then
+   { echo "$as_me:$LINENO: WARNING: Magick-config on in SCIRun Thirdparty installation.  Going to" >&5
+echo "$as_me: WARNING: Magick-config on in SCIRun Thirdparty installation.  Going to" >&2;}
+   { echo "$as_me:$LINENO: WARNING: try to find it based on the location of the 'convert' program." >&5
+echo "$as_me: WARNING: try to find it based on the location of the 'convert' program." >&2;}
+   # ImageMagick not in SCIRun Thirdparty... Therefore it probably is
+   # just in /usr/lib...
+   MAGICK_DIR=`which convert`
+   if test -z "$MAGICK_DIR"; then
+      _sci_lib=$MAGICK_DIR/../lib
+   else
+      { echo "$as_me:$LINENO: WARNING: 'convert' program not found..." >&5
+echo "$as_me: WARNING: 'convert' program not found..." >&2;}
+   fi
+fi
 
 found_magic_config="no"
 

@@ -1430,8 +1430,9 @@ if test "$IS_WIN" = "yes"; then
 else
 
 ## test for bison. yacc is not sufficient as it has no -o option.
+## Only need for SCIRun2 currently.
 AC_CHECK_PROG(YACC, bison, bison, nobison, $PATH /usr/bin)
-if test "$YACC" = "nobison"; then
+if test "$enable_scirun2" = "yes" && test "$YACC" = "nobison"; then
   echo "configure: error: bison is required, and was not found in your PATH."
   echo "                  Please add it to your PATH, or set the environment"
   echo "                  variable YACC to the appropriate bison executable,"
@@ -2510,7 +2511,6 @@ AC_SUBST(DEF_MPEG)
 # Default values:
 _sci_optional=optional
 _sci_lib="$sci_thirdparty_lib"
-_sci_inc="$sci_thirdparty_include"
 
 if test "$with_magick" = "yes"; then
   # If --with-magick is specified without a parameter, then it makes it required
@@ -2520,12 +2520,24 @@ else
     # If --with-magick has a parameter, then use it
     _sci_lib="$with_magick/lib"
     BASE_LIB_PATH(_sci_lib,$_sci_lib)
-    _sci_inc="$with_magick/include"
     _sci_optional=specific
   fi 
 fi
 
 AC_MSG_CHECKING(for $_sci_optional ImageMagick)
+
+if test ! -e $_sci_lib/../bin/Magick-config; then
+   AC_MSG_WARN(Magick-config on in SCIRun Thirdparty installation.  Going to)
+   AC_MSG_WARN(try to find it based on the location of the 'convert' program.)
+   # ImageMagick not in SCIRun Thirdparty... Therefore it probably is
+   # just in /usr/lib...
+   MAGICK_DIR=`which convert`
+   if test -z "$MAGICK_DIR"; then
+      _sci_lib=$MAGICK_DIR/../lib
+   else
+      AC_MSG_WARN('convert' program not found...)
+   fi
+fi
 
 found_magic_config="no"
 
