@@ -33,8 +33,6 @@
 #ifndef Ptolemy_Core_Comm_PtolemyServer_h
 #define Ptolemy_Core_Comm_PtolemyServer_h
 
-//NOTE: took out JNIUTILS so this may mess some header up
-
 #include <Core/Thread/Runnable.h>
 #include <Core/GuiInterface/TCLInterface.h>
 #include <Dataflow/Network/Network.h>
@@ -62,9 +60,11 @@ class PtolemyServer : public Runnable
 
 class QuitSCIRun : public Runnable {
 	public:
-		QuitSCIRun() {}
+		QuitSCIRun(TCLInterface *tclInt) : gui(tclInt) {}
 		virtual ~QuitSCIRun() {}
 		void run();
+	private:
+		TCLInterface *gui;
 };
 
 class LoadNet : public Runnable {
