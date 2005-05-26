@@ -302,6 +302,12 @@ int video_card_memory_size_ATI()
     // carry out the extension function and wait for reply
     // 3rd parameter, called "extra": number of extra 32 bit words
     // reply structures must be multiple of 4 with a minimum of 32 bytes
+#ifdef __ia64__
+    //SGI prism crashes in the _XReply() call, need to track this down
+    //the firegl cards actually have 256MB of RAM, so return that.
+    SyncHandle();
+    return 256;
+#endif
     if (!_XReply(dpy, (xReply *)&rep, (sizeof(rep) - 32) / 4, xFalse))
     {
       SyncHandle();
@@ -432,6 +438,17 @@ int video_card_memory_size()
 }
 
 #elif __APPLE__
+#define __CARBONSOUND__    
+//                            <- I had to add the #define __CARBONSOUND__ 
+//                               line above because on my 10.3.9 Mac this 
+//                               directory is empty:
+//                               /System/Library/Frameworks/Carbon.framework/Versions/A/Frameworks/CarbonSound.framework/Versions/Current/Headers
+//                               I believe an Apple update from early 
+//                               May 2005 deleted those files for some
+//                               reason (and my guess is that this has
+//                               broken lots of other software as well).
+//                               Anyhow, with the #define hack above
+//                               everything compiles and runs again.  -DMW
 
 #include <AGL/agl.h>
 
