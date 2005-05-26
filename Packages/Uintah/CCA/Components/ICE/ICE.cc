@@ -5095,64 +5095,44 @@ void ICE::TestConservation(const ProcessorGroup*,
   }  // patch loop
 }
 
-
 /*_____________________________________________________________________
  Function:  hydrostaticPressureAdjustment--
- Notes:     press_hydro_ = rho_micro_CC[SURROUNDING_MAT] * grav * some_distance
+ Notes:     press_hydro = rho_micro_CC[SURROUNDING_MAT] * grav * some_distance
 _______________________________________________________________________ */
 void ICE::hydrostaticPressureAdjustment(const Patch* patch,
-                          const CCVariable<double>& rho_micro_CC,
+                                const CCVariable<double>& rho_micro_CC,
                                 CCVariable<double>& press_CC)
 {
-  Vector dx             = patch->dCell();
-  Vector gravity        = d_sharedState->getGravity();
-  double press_hydro;
-  double dist_from_p_ref;
-#if 0  // To reference the hydrostatic pressure from ceiling  
-  IntVector HighIndex;
-  IntVector L;
-  const Level* level= patch->getLevel();
-  level->findIndexRange(L, HighIndex);
-  int press_ref_x = HighIndex.x() -2;   // we want the interiorCellHighIndex 
-  int press_ref_y = HighIndex.y() -2;   // therefore we subtract off 2
-  int press_ref_z = HighIndex.z() -2;
-#endif  
-  int press_ref_x = 0;  // to reference the hydrostatic pressure from the floor
-  int press_ref_y = 0;  
-  int press_ref_z = 0;
-  //__________________________________
-  //  X direction
-  if (gravity.x() != 0.)  {
-    for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
-                                                             iter++) {
-      IntVector c = *iter;
-      dist_from_p_ref  = (double) (c.x() - press_ref_x) * dx.x();
-      press_hydro      = rho_micro_CC[c] * gravity.x() * dist_from_p_ref;
-      press_CC[c] += press_hydro;
+  Vector gravity = d_sharedState->getGravity();
+  // find the upper and lower point of the domain.
+  const Level* level = patch->getLevel();
+  GridP grid = level->getGrid();
+  BBox b;
+  grid->getSpatialRange(b);
+  Vector gridMin = b.min().asVector();
+  Vector dx_L0 = grid->getLevel(0)->dCell();
+  
+  // Pressure reference point is assumed to be 
+  //at CELL-CENTER of cell 0,0,0 
+  Vector press_ref_pt = gridMin + 1.5*dx_L0;
+  
+  // Which direction is the gravitational vector pointing
+  int dir = -9;
+  for (int i = 0; i < 3; i++){
+    if ( gravity[i] != 0.0){
+      dir = i;
     }
   }
   //__________________________________
-  //  Y direction
-  if (gravity.y() != 0.)  {
-    for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
-                                                             iter++) {
-      IntVector c = *iter;
-      dist_from_p_ref = (double) (c.y() - press_ref_y) * dx.y();
-      press_hydro     = rho_micro_CC[c] * gravity.y() * dist_from_p_ref;
-      press_CC[c] += press_hydro;
-    }
+  // Tack on the hydrostatic pressure adjustment
+  for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
+    IntVector c = *iter;
+    Point here = level->getCellPosition(c);
+    Vector dist_from_p_ref = (here.asVector() - press_ref_pt);
+
+    double press_hydro = rho_micro_CC[c] * gravity[dir] * dist_from_p_ref[dir];
+    press_CC[c] += press_hydro;
   }
-  //__________________________________
-  //  Z direction
-  if (gravity.z() != 0.)  {
-    for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
-                                                             iter++) {
-      IntVector c = *iter;
-      dist_from_p_ref   = (double) (c.z() - press_ref_z) * dx.z();
-      press_hydro       = rho_micro_CC[c] * gravity.z() * dist_from_p_ref;
-      press_CC[c] += press_hydro;
-    }
-  }   
 }
 
 /*_____________________________________________________________________
