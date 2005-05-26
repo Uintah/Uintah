@@ -353,6 +353,7 @@ TextureRenderer::load_brick(TextureBrickHandle brick, bool use_cmap2)
       tex_pool_[idx[c]].brick = brick;
       tex_pool_[idx[c]].comp = c;
       // bind texture object
+      glPixelStorei(GL_UNPACK_ALIGNMENT,nb);
       glBindTexture(GL_TEXTURE_3D, tex_pool_[idx[c]].id);
       // set border behavior
       glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
