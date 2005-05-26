@@ -26,7 +26,7 @@ namespace Uintah {
     ImplicitHeatConduction(SimulationStateP& ss,MPMLabel* lb, MPMFlags* mflags);
     ~ImplicitHeatConduction();
 
-    void scheduleInitialize(            const LevelP& level, SchedulerP&);
+    void problemSetup();
 
     void scheduleFormHCStiffnessMatrix( SchedulerP&, const PatchSet*,
                                         const MaterialSet*);
@@ -54,12 +54,6 @@ namespace Uintah {
 
     void scheduleGetTemperatureIncrement(        SchedulerP&, const PatchSet*,
                                                  const MaterialSet*);
-
-    void actuallyInitializeHC(           const ProcessorGroup*,
-                                         const PatchSubset* patches,
-                                         const MaterialSubset* matls,
-                                         DataWarehouse* old_dw,
-                                         DataWarehouse* new_dw);
 
     void destroyHCMatrix(                const ProcessorGroup*,
                                          const PatchSubset* patches,
