@@ -399,8 +399,8 @@ void DataArchiver::initializeOutput(const ProblemSpecP& params) {
       string inputname = d_dir.getName()+"/input.xml";
       ofstream out(inputname.c_str());
       if (!out) {
-	throw InternalError("DataArchiver::initializeOutput(): The file \"" + \
-			    inputname + "\" could not be opened for writing!");
+	throw ErrnoException("DataArchiver::initializeOutput(): The file \"" + \
+			    inputname + "\" could not be opened for writing!",errno);
       }
       out << params << endl; 
       createIndexXML(d_dir);
@@ -746,8 +746,8 @@ void DataArchiver::createIndexXML(Dir& dir)
    string iname = dir.getName()+"/index.xml";
    ofstream out(iname.c_str());
    if (!out) {
-     throw InternalError("DataArchiver::createIndexXML(): The file \"" + \
-			 iname + "\" could not be opened for writing!");
+     throw ErrnoException("DataArchiver::createIndexXML(): The file \"" + \
+			 iname + "\" could not be opened for writing!",errno);
    }
    out << rootElem << endl;
    rootElem->releaseDocument();
@@ -1214,8 +1214,8 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
       string name = baseDirs[i]->getName()+"/"+tname.str()+"/timestep.xml";
       ofstream out(name.c_str());
       if (!out) {
-	throw InternalError("DataArchiver::outputTimestep(): The file \"" + \
-			    name + "\" could not be opened for writing!");
+	throw ErrnoException("DataArchiver::outputTimestep(): The file \"" + \
+			    name + "\" could not be opened for writing!",errno);
       }
       out << rootElem << endl;
       rootElem->releaseDocument();
@@ -1294,8 +1294,8 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
       
       ofstream out(xmlFilename.c_str());
       if (!out) {
-	throw InternalError("DataArchiver::executedTimestep(): The file \"" + \
-			    xmlFilename + "\" could not be opened for writing!");
+	throw ErrnoException("DataArchiver::executedTimestep(): The file \"" + \
+			    xmlFilename + "\" could not be opened for writing!",errno);
       }
       out << tempXMLDataFile << endl;
       tempXMLDataFile->releaseDocument();
@@ -1332,8 +1332,8 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
       
       ofstream out(xmlFilename.c_str());
       if (!out) {
-	throw InternalError("DataArchiver::executedTimestep(): The file \"" + \
-              xmlFilename + "\" could not be opened for writing!");
+	throw ErrnoException("DataArchiver::executedTimestep(): The file \"" + \
+              xmlFilename + "\" could not be opened for writing!",errno);
       }
       out << tempXMLDataFile << endl;
       tempXMLDataFile->releaseDocument();
@@ -1475,8 +1475,8 @@ void DataArchiver::outputReduction(const ProcessorGroup*,
       ofstream out(filename.str().c_str(), ios_base::app);
 #endif
       if (!out) {
-	throw InternalError("DataArchiver::outputReduction(): The file \"" + \
-	      filename.str() + "\" could not be opened for writing!");
+	throw ErrnoException("DataArchiver::outputReduction(): The file \"" + \
+	      filename.str() + "\" could not be opened for writing!",errno);
       }
       out << setprecision(17) << d_tempElapsedTime << "\t";
       new_dw->print(out, var, 0, matlIndex);
@@ -1792,8 +1792,8 @@ void DataArchiver::output(const ProcessorGroup*,
     {
       ofstream out(xmlFilename.c_str());
       if (!out) {
-	throw InternalError("DataArchiver::output(): The file \"" + \
-	      xmlFilename + "\" could not be opened for writing!");
+	throw ErrnoException("DataArchiver::output(): The file \"" + \
+	      xmlFilename + "\" could not be opened for writing!",errno);
       }
       out << doc << endl;
       doc->releaseDocument();
