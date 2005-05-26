@@ -48,7 +48,10 @@
 void QuitSCIRun::run()
 {
     // what else for shutdown?
-	Thread::exitAll(0);
+	//Thread::exitAll(0);
+	ASSERT(gui);
+	cout << "about to exit" << endl;
+	gui->eval("exit");  //WORKS in main but rarely here!
 }
 
 void LoadNet::run()
@@ -300,10 +303,11 @@ void PtolemyServer::quit(int sockfd,int listenfd)
 	Close(sockfd);
 	Close(listenfd);
 	
-	QuitSCIRun *quit = new QuitSCIRun();
+	QuitSCIRun *quit = new QuitSCIRun(gui);
 
 	Thread *t = new Thread(quit, "quit scirun", 0, Thread::NotActivated);
-	t->setStackSize(1024*1024);
+	t->setDaemon();
+	t->setStackSize(1024*10);
 	t->activate(false);
 	t->detach();
 	iterSem().down();
