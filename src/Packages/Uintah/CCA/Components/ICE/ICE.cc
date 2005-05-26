@@ -745,7 +745,7 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
 {
   Task* t = 0;
   if (d_EqForm) {             // EQ 
-    cout_doing << "ICE::scheduleComputeStableTimestep \t\tL-"
+    cout_doing << "ICE::scheduleComputeStableTimestep \t\t\tL-"
                <<level->getIndex() << endl;
     t = scinew Task("ICE::actuallyComputeStableTimestep",
                      this, &ICE::actuallyComputeStableTimestep);
@@ -791,7 +791,7 @@ void
 ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, 
                           int step, int nsteps )
 {
-  cout_doing << "ICE::scheduleTimeAdvance\t\t\tL-" <<level->getIndex()<< endl;
+  cout_doing << "ICE::scheduleTimeAdvance\t\t\t\tL-" <<level->getIndex()<< endl;
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
@@ -953,9 +953,9 @@ void ICE::scheduleComputeThermoTransportProperties(SchedulerP& sched,
  Function~  ICE::scheduleComputePressure--
 _____________________________________________________________________*/
 void ICE::scheduleComputePressure(SchedulerP& sched,
-                                          const PatchSet* patches,
-                                          const MaterialSubset* press_matl,
-                                          const MaterialSet* ice_matls)
+                                  const PatchSet* patches,
+                                  const MaterialSubset* press_matl,
+                                  const MaterialSet* ice_matls)
 {
   Task* t = 0;
   if (d_RateForm) {     //RATE FORM
@@ -1731,10 +1731,11 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
                                     DataWarehouse* /*old_dw*/,
                                     DataWarehouse* new_dw)
 {
+  const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing Compute Stable Timestep on patch " << patch->getID() 
-         << "\t\t ICE" << endl;
+         << "\t\t ICE \tL-" <<level->getIndex()<< endl;
       
     Vector dx = patch->dCell();
     double delX = dx.x();
@@ -1886,9 +1887,11 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     
     //__________________________________
     //  Bullet proofing
-    if(delt < 1e-20) {  
-      string warn = " E R R O R \n ICE::ComputeStableTimestep: delT < 1e-20";
-      throw InvalidValue(warn);
+    if(delt < 1e-20) { 
+      ostringstream warn;
+      warn << "ERROR ICE:(L-"<< level->getIndex()
+           << "):ComputeStableTimestep: delT < 1e-20";
+      throw InvalidValue(warn.str());
     }
     new_dw->put(delt_vartype(delt), lb->delTLabel);
   }  // patch loop
@@ -1915,10 +1918,13 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
           patch->getCellHighIndex() << endl;
   }
 
+  const Level* level = getLevel(patches);
+  int L_indx = level->getIndex();
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing Initialize on patch " << patch->getID() 
-         << "\t\t\t ICE" << endl;
+         << "\t\t\t ICE \tL-" <<L_indx<< endl;
     int numMatls    = d_sharedState->getNumICEMatls();
     int numALLMatls = d_sharedState->getNumMatls();
     Vector grav     = d_sharedState->getGravity();
@@ -2015,25 +2021,23 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       
       //____ B U L L E T   P R O O F I N G----
       IntVector neg_cell;
-      ostringstream warn;
+      ostringstream warn, base;
+      base <<"ERROR ICE:(L-"<<L_indx<<"):actuallyInitialize, mat "<< indx <<" cell ";
+      
       if( !areAllValuesPositive(press_CC, neg_cell) ) {
-        warn<<"ERROR ICE::actuallyInitialize, mat "<<indx<< " cell "
-            <<neg_cell << " press_CC is negative\n";
+        warn << base.str()<< neg_cell << " press_CC is negative\n";
         throw ProblemSetupException(warn.str() );
       }
       if( !areAllValuesPositive(rho_CC[m], neg_cell) ) {
-        warn<<"ERROR ICE::actuallyInitialize, mat "<<indx<< " cell "
-            <<neg_cell << " rho_CC is negative\n";
+        warn << base.str()<< neg_cell << " rho_CC is negative\n";
         throw ProblemSetupException(warn.str() );
       }
       if( !areAllValuesPositive(Temp_CC[m], neg_cell) ) {
-        warn<<"ERROR ICE::actuallyInitialize, mat "<<indx<< " cell "
-            <<neg_cell << " Temp_CC is negative\n";
+        warn << base.str()<< neg_cell << " Temp_CC is negative\n";
         throw ProblemSetupException(warn.str() );
       }
       if( !areAllValuesPositive(sp_vol_CC[m], neg_cell) ) {
-        warn<<"ERROR ICE::actuallyInitialize, mat "<<indx<< " cell "
-            <<neg_cell << " sp_vol_CC is negative\n";
+        warn << base.str()<< neg_cell << " sp_vol_CC is negative\n";
         throw ProblemSetupException(warn.str() );
       }
     }   // numMatls
@@ -2068,10 +2072,12 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
                                           DataWarehouse* /*old_dw*/,
                                           DataWarehouse* new_dw)
 { 
+  const Level* level = getLevel(patches);
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing initialize_hydrostaticAdj on patch "
-               << patch->getID() << "\t ICE" << endl;
+               << patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
    
     Ghost::GhostType  gn = Ghost::None;
     int numMatls = d_sharedState->getNumICEMatls();
@@ -2138,10 +2144,12 @@ void ICE::computeThermoTransportProperties(const ProcessorGroup*,
                                           DataWarehouse* /*old_dw*/,
                                           DataWarehouse* new_dw)
 { 
+  const Level* level = getLevel(patches);
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing computeThermoTransportProperties on patch "
-               << patch->getID() << "\t ICE" << endl;
+               << patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
    
     int numMatls = d_sharedState->getNumICEMatls();
     
@@ -2208,11 +2216,13 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
                                        DataWarehouse* old_dw, 
                                        DataWarehouse* new_dw)
 {
-
+  const Level* level = getLevel(patches);
+  int L_indx = level->getIndex();
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing calc_equilibration_pressure on patch "<<patch->getID()
-               << "\t\t ICE" << endl;
+               << "\t\t ICE \tL-" <<L_indx<< endl;
     double    converg_coeff = 15;              
     double    convergence_crit = converg_coeff * DBL_EPSILON;
     double    sum=0., tmp;
@@ -2378,7 +2388,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       //__________________________________
       //      BULLET PROOFING
       if(test_max_iter == d_max_iter_equilibration) {
-	throw MaxIteration(c,count,n_passes,"MaxIterations reached");
+	throw MaxIteration(c,count,n_passes, L_indx,
+                          "MaxIterations reached");
       }
 
       for (int m = 0; m < numMatls; m++) {
@@ -2386,19 +2397,19 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
                ( vol_frac[m][c] < 1.0));
       }
       if ( fabs(sum - 1.0) > convergence_crit) {  
-        throw MaxIteration(c,count,n_passes,
+        throw MaxIteration(c,count,n_passes, L_indx,
                          "MaxIteration reached vol_frac != 1");
       }
        
       if ( press_new[c] < 0.0 ){ 
-        throw MaxIteration(c,count,n_passes,
+        throw MaxIteration(c,count,n_passes, L_indx,
                          "MaxIteration reached press_new < 0");
       }
 
       for (int m = 0; m < numMatls; m++){
         if ( rho_micro[m][c] < 0.0 || vol_frac[m][c] < 0.0) { 
           cout << "m = " << m << endl;
-          throw MaxIteration(c,count,n_passes,
+          throw MaxIteration(c,count,n_passes, L_indx,
                       "MaxIteration reached rho_micro < 0 || vol_frac < 0");
         }
       }
@@ -2583,7 +2594,7 @@ void ICE::computeTempFC(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     
     cout_doing << "Doing compute_FC_Temp on patch " 
-              << patch->getID() << "\t\t\t ICE" << endl;
+              << patch->getID() << "\t\t\t ICE \tL-" <<level->getIndex()<< endl;
             
     int numMatls = d_sharedState->getNumMatls();
     Ghost::GhostType  gac = Ghost::AroundCells; 
@@ -2684,7 +2695,7 @@ void ICE::computeVel_FC(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     
     cout_doing << "Doing computeVel_FC on patch " 
-              << patch->getID() << "\t\t\t\t ICE" << endl;
+           << patch->getID() << "\t\t\t\t ICE \tL-"<<level->getIndex()<< endl;
 
     int numMatls = d_sharedState->getNumMatls();
     
@@ -2900,7 +2911,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing Add_exchange_contribution_to_FC_vel on patch " <<
-      patch->getID() << "\t ICE" << endl;
+      patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
  
     // change the definition of parent(old/new)DW
     // when implicit
@@ -3047,7 +3058,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
     cout_doing << "Doing explicit delPress on patch " << patch->getID() 
-         <<  "\t\t\t ICE" << endl;
+         <<  "\t\t\t ICE \tL-" <<level->getIndex()<< endl;
 
     int numMatls  = d_sharedState->getNumMatls();
     delt_vartype delT;
@@ -3249,11 +3260,13 @@ void ICE::computePressFC(const ProcessorGroup*,
                       DataWarehouse*,
                       DataWarehouse* new_dw)
 {
+  const Level* level = getLevel(patches);
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
     cout_doing << "Doing press_face_MM on patch " << patch->getID() 
-         << "\t\t\t\t ICE" << endl;
+         << "\t\t\t\t ICE \tL-" <<level->getIndex()<< endl;
     Ghost::GhostType  gac = Ghost::AroundCells;
     
     constCCVariable<double> press_CC;
@@ -3401,7 +3414,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     cout_doing << "Doing accumulate_momentum_source_sinks_MM on patch " <<
-      patch->getID() << "\t ICE" << endl;
+      patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
 
     int indx;
     int numMatls  = d_sharedState->getNumMatls();
@@ -3631,7 +3644,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing accumulate_energy_source_sinks on patch " 
-         << patch->getID() << "\t\t ICE" << endl;
+         << patch->getID() << "\t\t ICE \tL-" <<level->getIndex()<< endl;
 
     int numMatls = d_sharedState->getNumMatls();
 
@@ -3756,11 +3769,13 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
                                   DataWarehouse* old_dw, 
                                   DataWarehouse* new_dw)
 {
+  const Level* level = getLevel(patches);
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
     cout_doing << "Doing Lagrangian mass, momentum and energy on patch " <<
-      patch->getID() << "\t ICE" << endl;
+      patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
 
     int numALLMatls = d_sharedState->getNumMatls();
     Vector  dx = patch->dCell();
@@ -3888,7 +3903,8 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
         IntVector neg_cell;
         if (!areAllValuesPositive(int_eng_L, neg_cell) ) {
          ostringstream warn;
-         warn<<"ICE::computeLagrangianValues, mat "<<indx<<" cell "
+         int idx = level->getIndex();
+         warn<<"ICE:(L-"<<idx<<"):computeLagrangianValues, mat "<<indx<<" cell "
              <<neg_cell<<" Negative int_eng_L \n";
          throw InvalidValue(warn.str());
         }
@@ -3911,7 +3927,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     cout_doing << "Doing computeLagrangianSpecificVolume " <<
-      patch->getID() << "\t\t\t ICE" << endl;
+      patch->getID() << "\t\t\t ICE \tL-" <<level->getIndex()<< endl;
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(),level);
@@ -4066,7 +4082,8 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
         cout << "mass sp_vol_L_old "
              << (rho_CC[neg_cell]*vol*sp_vol_CC[neg_cell]) << endl;
         ostringstream warn;
-        warn<<"ERROR ICE::computeLagrangianSpecificVolumeRF, mat "<<indx
+        int L = level->getIndex();
+        warn<<"ERROR ICE:("<<L<<"):computeLagrangianSpecificVolumeRF, mat "<<indx
             << " cell " <<neg_cell << " sp_vol_L is negative\n";
         throw InvalidValue(warn.str());
      }
@@ -4084,11 +4101,12 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup*,
                                              DataWarehouse* old_dw, 
                                              DataWarehouse* new_dw)
 {
+  const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
     cout_doing << "Doing computeLagrangian_Transported_Vars on patch " 
-               << patch->getID() << "\t ICE" << endl;
+               << patch->getID() << "\t ICE \tL-" <<level->getIndex()<< endl;
     Ghost::GhostType  gn  = Ghost::None;
     int numMatls = d_sharedState->getNumICEMatls();
     
@@ -4198,7 +4216,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing doCCMomExchange on patch "<< patch->getID()
-               <<"\t\t\t ICE" << endl;
+               <<"\t\t\t ICE \tL-" <<level->getIndex()<< endl;
 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
     int numICEMatls = d_sharedState->getNumICEMatls();
@@ -4556,10 +4574,12 @@ void ICE::maxMach_on_Lodi_BC_Faces(const ProcessorGroup*,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw)
 {
+  const Level* level = getLevel(patches);
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing maxMach_on_Lodi_BC_Faces " <<
-      patch->getID() << "\t\t\t ICE" << endl;
+      patch->getID() << "\t\t\t ICE \tL-" <<level->getIndex()<< endl;
       
     Ghost::GhostType  gn = Ghost::None;
     int numICEMatls = d_sharedState->getNumICEMatls();
@@ -4658,12 +4678,13 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
                                  const double AMR_subCycleProgressVar)
 {
   const Level* level = getLevel(patches);
+  int L_indx = level->getIndex();
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
  
-    cout_doing << "Doing Advect and Advance in Time on patch " << 
-      patch->getID() << "\t\t ICE" << endl;
+    cout_doing << "Doing Advect and Advance in Time on patch " 
+               << patch->getID() << "\t\t ICE \tL-" <<L_indx<< endl;
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(),level);
@@ -4891,20 +4912,19 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       }
       //____ B U L L E T   P R O O F I N G----
       IntVector neg_cell;
-      ostringstream warn;
+      ostringstream base, warn;
+      base <<"ERROR ICE:(L-"<<L_indx<<"):advectAndAdvanceInTime, mat "<< indx <<" cell ";
+      
       if (!areAllValuesPositive(rho_CC, neg_cell)) {
-        warn <<"ERROR ICE::advectAndAdvanceInTime, mat "<< indx <<" cell "
-             << neg_cell << " negative rho_CC\n ";
+        warn << base.str() << neg_cell << " negative rho_CC\n ";
         throw InvalidValue(warn.str());
       }
       if (!areAllValuesPositive(temp, neg_cell)) {
-        warn <<"ERROR ICE::advectAndAdvanceInTime, mat "<< indx <<" cell "
-             << neg_cell << " negative temp_CC\n ";
+        warn << base.str() << neg_cell << " negative temp_CC\n ";
         throw InvalidValue(warn.str());
       }
       if (!areAllValuesPositive(sp_vol_CC, neg_cell)) {
-        warn <<"ERROR ICE::advectAndAdvanceInTime, mat "<< indx <<" cell "
-             << neg_cell << " negative sp_vol_CC\n ";        
+       warn << base.str() << neg_cell << " negative sp_vol_CC\n ";        
        throw InvalidValue(warn.str());
       } 
       delete varBasket;
@@ -4931,7 +4951,7 @@ void ICE::TestConservation(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     
     cout_doing << "Doing TestConservation on patch " 
-               << patch->getID() << "\t\t\t ICE" << endl;      
+               << patch->getID() << "\t\t\t ICE \tL-"<<level->getIndex()<< endl;      
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
 
