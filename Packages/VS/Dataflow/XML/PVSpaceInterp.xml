@@ -46,7 +46,7 @@
     </description>
   </overview>
   <io>
-    <inputs lastportdynamic="yes">
+    <inputs lastportdynamic="no">
       <!-- one of (device port file) -->
       <port>
 	<name>Time</name>
@@ -79,18 +79,32 @@
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
+	<name>Potential Curves</name>
+	<description>
+	  <p>bundle of matrix of per node curves per frequency.</p>
+	</description>
+	<datatype>SCIRun::Bundle</datatype>
+      </port>
+      <port>
 	<name>PPV Space</name>
 	<description>
 	  <p>meshes that describe the ppv space.</p>
 	</description>
-	<datatype>SCIRun::Field</datatype>
+	<datatype>SCIRun::Bundle</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-	<name>Current</name>
+	<name>Current Mechanical</name>
 	<description>
-	  <p>The interpolated Field that belongs to the current time.</p>
+	  <p>The interpolated Field that belongs to the current time. (mechanical)</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+	<name>Current Electrical</name>
+	<description>
+	  <p>The interpolated Field that belongs to the current time. (electrical)</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
       </port>
