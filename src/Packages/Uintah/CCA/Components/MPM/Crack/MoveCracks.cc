@@ -30,6 +30,13 @@
 #include <fstream>
 #include <sgi_stl_warnings_on.h>
 
+// AIX is defining hz to something else
+#ifdef _AIX
+    #ifdef hz
+        #undef hz
+    #endif
+#endif
+
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
