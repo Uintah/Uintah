@@ -340,18 +340,9 @@ main(int argc, char *argv[], char **environment) {
 
   SCIRunInit();
 
-  // Always switch on this option, Its needed for running external applications
-  // Disable use_eai for OS 10.4, something seems broken in readline().
-  //  #ifdef __APPLE__
-  //  const bool use_eai = false;
-  //#else
-  const bool use_eai = true;
-  //#endif
-
-  
-  // bool use_eai = sci_getenv_p("SCIRUN_EXTERNAL_APPLICATION_INTERFACE");
-  // Now split of a process for running external processes
+  const bool use_eai = sci_getenv_p("SCIRUN_EXTERNAL_APPLICATION_INTERFACE");
   if (use_eai) {
+    // Now split off a process for running external processes
     systemcallmanager_ = scinew SystemCallManager();
     systemcallmanager_->create();
     start_eai();
