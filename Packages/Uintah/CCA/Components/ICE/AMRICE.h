@@ -125,6 +125,7 @@ namespace Uintah {
                         const int indx,
                         const Patch* coarsePatch,
                         const Patch* finePatch,
+                        const Level* coarseLevel,
                         const Level* fineLevel,
                         DataWarehouse* new_dw);
 
@@ -166,6 +167,7 @@ namespace Uintah {
     double d_vol_frac_threshold;
     double d_vel_threshold;
     
+    bool d_doRefluxing;
     bool d_regridderTest;     
   };
 }
