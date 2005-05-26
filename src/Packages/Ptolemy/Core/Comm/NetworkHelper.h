@@ -34,6 +34,7 @@ void Bind(int fd, const struct sockaddr *sa, socklen_t salen);
 void Connect(int fd, const struct sockaddr *sa, socklen_t salen);
 void Inet_pton(int family, const char *strptr, void *addrptr);
 void Listen(int fd, int backlog);
+void Setsockopt(int fd, int level, int optname, const void *optval, socklen_t *optlen);
 int Socket(int family, int type, int protocol);
 
 static ssize_t my_read(int fd, char *ptr);
@@ -46,7 +47,7 @@ void Writen(int fd, void *ptr, size_t nbytes);
 void Close(int fd);
 
 //TODO fix waring that this is not used
-//TODO fix goto
+//TODO test the goto more but its probably ok
 //TODO may not be thread safe so fix that too
 //figure 23.11 in Stevens talks about this problem.
 static ssize_t my_read(int fd, char *ptr)

@@ -67,6 +67,12 @@ void Listen(int fd, int backlog)
 		print_error("listen error");
 }
 
+void Setsockopt(int fd, int level, int optname, const void *optval, int optlen)
+{
+	if(setsockopt(fd, level, optname, optval, optlen) < 0)
+		print_error("set socket option error"); 
+}
+
 int Socket(int family, int type, int protocol)
 {
 	int n;
@@ -118,7 +124,11 @@ void startUpServer(int *listenfd, struct sockaddr_in *serverAddr)
 	serverAddr->sin_family = AF_INET;
 	serverAddr->sin_addr.s_addr = htonl(INADDR_ANY);
 	serverAddr->sin_port = htons(SERV_PORT);
-
+	
+	const int val = 1;
+	//added to fix problem with bind error when we restart too soon
+	Setsockopt(*listenfd, SOL_SOCKET, SO_REUSEADDR, (void *) &val, sizeof(val));
+			
 	Bind(*listenfd, (SA *) serverAddr, sizeof(*serverAddr));
 	Listen(*listenfd, LISTENQ);	
 }
