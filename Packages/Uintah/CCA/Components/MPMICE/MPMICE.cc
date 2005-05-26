@@ -1454,6 +1454,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw)
 {
+  const Level* level = getLevel(patches);
+  int L_indx = level->getIndex();
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
@@ -1695,18 +1698,19 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       //__________________________________
       //      BULLET PROOFING
       if(test_max_iter == d_ice->d_max_iter_equilibration) 
-       throw MaxIteration(c,count,n_passes,"MaxIterations reached");
+       throw MaxIteration(c,count,n_passes,L_indx,
+                         "MaxIterations reached");
 
       for (int m = 0; m < numALLMatls; m++) {
            ASSERT(( vol_frac[m][c] > 0.0 ) ||
                   ( vol_frac[m][c] < 1.0));
       }
       if ( fabs(sum - 1.0) > convergence_crit) {  
-         throw MaxIteration(c,count,n_passes,
+         throw MaxIteration(c,count,n_passes, L_indx,
                          "MaxIteration reached vol_frac != 1");
       }
       if ( press_new[c] < 0.0 ) {
-         throw MaxIteration(c,count,n_passes,
+         throw MaxIteration(c,count,n_passes, L_indx,
                          "MaxIteration reached press_new < 0");
       }
 

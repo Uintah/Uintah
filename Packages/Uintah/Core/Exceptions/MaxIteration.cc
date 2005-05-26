@@ -10,11 +10,15 @@ using namespace SCIRun;
 using namespace std;
 
 
-MaxIteration::MaxIteration(IntVector c,int count, int n_passes, string mes)
+MaxIteration::MaxIteration(IntVector c,
+                           const int count, 
+                           const int n_passes,
+                           const int L_indx, 
+                           const string mes)
 {
   ostringstream s;
-  s << " cell["<<c.x()<<"]["<<c.y()<<"]["<<c.z()
-    << "], iter " << count << ", n_passes " << n_passes;
+  s << " cell"<< c << ", Level " << L_indx
+    << ", iter " << count << ", n_passes " << n_passes;
 
   d_msg =  mes + s.str();
   

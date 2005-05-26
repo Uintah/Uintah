@@ -24,7 +24,12 @@ namespace Uintah {
   using namespace std;
   class MaxIteration : public SCIRun::Exception {
   public:
-    MaxIteration(SCIRun::IntVector loc,int count, int n_passes, string mes);
+    MaxIteration(SCIRun::IntVector c,
+                const int count, 
+                const int n_passes,
+                const int L_indx, 
+                const string mes);
+    
     MaxIteration(const MaxIteration&);
     virtual ~MaxIteration();
     virtual const char* message() const;
