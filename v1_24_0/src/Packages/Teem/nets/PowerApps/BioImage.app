@@ -710,13 +710,17 @@ class BioImageApp {
 	init_Vframe $attachedVFr.f 2
 
 	incrProgress 5
-	### pack 3 frames
-	pack $attachedPFr -side left -anchor n -fill y
+	### pack 3 frames in proper order so that viewer
+	# is the last to be packed and will be the one to resize
+	pack $attachedVFr -side right -anchor n -fill y
+
  	incrProgress 5
+	pack $attachedPFr -side left -anchor n -fill y
+
+	incrProgress 5
+
 	pack $win.viewers -side left -anchor n -fill both -expand 1
 
-	pack $attachedVFr -side left -anchor n -fill y
-	incrProgress 5
 	set total_width [expr $process_width + $viewer_width + $vis_width]
 
 	set total_height $viewer_height
@@ -2369,7 +2373,20 @@ class BioImageApp {
 
 	} else {
 	    wm withdraw $detachedPFr
-	    pack $attachedPFr -anchor n -side left -before $win.viewers
+
+	    # unpack everything and repack in the proper order
+	    # (viewer last) so that viewer is the one to resize
+	    pack forget $win.viewers
+
+	    if { $IsVAttached } {
+		pack forget $attachedVFr
+		pack $attachedVFr -side right -anchor n 
+	    }
+
+	    pack $attachedPFr -side left -anchor n
+
+	    pack $win.viewers -side left -anchor n -fill both -expand 1
+
 	    set new_width [expr $c_width + $process_width]
             append geom $new_width x $c_height + [expr $x - $process_width] + $y
 	    wm geometry $win $geom
@@ -2402,7 +2419,20 @@ class BioImageApp {
 	    set IsVAttached 0
 	} else {
 	    wm withdraw $detachedVFr
-	    pack $attachedVFr -anchor n -side left -after $win.viewers 
+
+	    # unpack everything and repack in proper order
+	    # (viewer last) so that viewer is the one to resize
+	    pack forget $win.viewers
+
+	    pack $attachedVFr -anchor n -side right 
+
+	    if { $IsPAttached } {
+		pack forget $attachedPFr
+		pack $attachedPFr -side left -anchor n 
+	    }
+
+	    pack $win.viewers -side left -anchor n -fill both -expand 1
+
 	    set new_width [expr $c_width + $vis_width]
             append geom $new_width x $c_height
 	    wm geometry $win $geom
