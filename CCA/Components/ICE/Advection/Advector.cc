@@ -191,6 +191,7 @@ namespace Uintah {
     cout << "ERROR: ICE Advection operator: "
          << " Influx_outflux error detected, "
          << " patch " << patch->getID()
+         << ", Level " << patch->getLevel()->getIndex()
          << ", matl indx "<< indx << endl;
          
     for (int i = 0; i<(int) badCells.size(); i++) {
