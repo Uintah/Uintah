@@ -60,3 +60,15 @@ interface CorbaServices{
 	bool go();
 	string getIOR(in string portName);
 }
+
+
+interface TaoServices {
+  void registerUsesPort(in string portName, 
+  	   	        in string type); 
+
+  void unregisterUsesPort(in string portName);
+  void addProvidesPort(in string portName,
+                       in string type);
+
+  void removeProvidesPort(in string portName);
+}
