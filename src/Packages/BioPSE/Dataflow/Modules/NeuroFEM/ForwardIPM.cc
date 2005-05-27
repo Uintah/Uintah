@@ -61,6 +61,7 @@ namespace SCIRun {
 class ForwardIPM : public Module {
 public:
 
+  GuiString ipm_pathTCL_;
   GuiInt associativityTCL_;
   GuiDouble eps_matTCL_;
   
@@ -81,6 +82,7 @@ DECLARE_MAKER(ForwardIPM)
 
 ForwardIPM::ForwardIPM(GuiContext* ctx)
   : Module("ForwardIPM", ctx, Filter, "NeuroFEM", "BioPSE"),
+    ipm_pathTCL_(ctx->subVar("ipm_pathTCL")),
     associativityTCL_(ctx->subVar("associativityTCL")),
     eps_matTCL_(ctx->subVar("eps_matTCL"))
 {
@@ -903,13 +905,8 @@ ForwardIPM::execute()
   }
 
   // Make our tmp directory
-  //<<<<<<< .mine
-  //const string tmpdir = "/tmp/ForwardIPM" + to_string(getpid()) +"/";
-  //const string tmpdir = "/tmp/ForwardIPM/";
-  //=======
   //const string tmpdir = "/tmp/ForwardIPM" + to_string(getpid()) +"/";
   const string tmpdir = "/tmp/ForwardIPM/";
-  //>>>>>>> .r30030
   const string tmplog = tmpdir + "forward.log";
   const string resultfile = tmpdir + "fwd_result";
   const string condmeshfile = tmpdir + "ca_head.geo";
@@ -967,7 +964,7 @@ ForwardIPM::execute()
     if(!write_pebbles_file(tmpdir+"pebbles.inp")) {throw false; }
 
     // Construct our command line.
-    const string ipmfile = "ipm";
+    const string ipmfile = ipm_pathTCL_.get();
     const string command = "(cd " + tmpdir + ";" +
       ipmfile + " -i sourcesimulation" +
       " -h " + condmeshfile + " -p " + parafile + " -s " + electrodefile +
