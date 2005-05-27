@@ -61,8 +61,10 @@ private:
   // Turn on across-execution accumulation of fields.
   GuiInt gui_accumulating_;
   GuiInt gui_clear_;
+  GuiInt gui_precision_;
 
   int force_pointcloud_;
+  int precision_;
 
   FieldHandle fHandle_;
   vector< int > fGeneration_;
@@ -75,7 +77,9 @@ GatherFields::GatherFields(GuiContext* ctx)
     gui_force_pointcloud_(ctx->subVar("force-pointcloud")),
     gui_accumulating_(ctx->subVar("accumulating")),
     gui_clear_(ctx->subVar("clear", false)),
+    gui_precision_(ctx->subVar("precision")),
     force_pointcloud_(0),
+    precision_(0),
     error_(0)
 {
 }
@@ -169,7 +173,13 @@ GatherFields::execute()
     remark("No non-empty input fields.");
     return;
   }
-
+  
+  gui_precision_.reset();
+  if(precision_ != gui_precision_.get())
+  {
+    precision_ = gui_precision_.get();
+    update = true;
+  }
   while( fGeneration_.size() > nFields )
   {
     update = true;
@@ -235,7 +245,8 @@ GatherFields::execute()
 	CompileInfoHandle ci = GatherFieldsAlgo::get_compile_info(ftd0);
 	Handle<GatherFieldsAlgo> algo;
 	if (!module_dynamic_compile(ci, algo)) return;
-	fHandle_ = algo->execute(fHandles, new_basis, copy_data);
+	fHandle_ = algo->execute(fHandles, new_basis, copy_data, 
+				 precision_);
       }
       else
       {
