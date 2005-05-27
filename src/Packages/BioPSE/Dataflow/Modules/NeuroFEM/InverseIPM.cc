@@ -60,6 +60,7 @@ namespace SCIRun {
 
 class InverseIPM : public Module {
 public:
+  GuiString ipm_pathTCL_;
   GuiInt numchanTCL_;
   GuiInt numsamplesTCL_;
   GuiInt startsampleTCL_;
@@ -91,6 +92,7 @@ DECLARE_MAKER(InverseIPM)
 
 InverseIPM::InverseIPM(GuiContext* ctx)
   : Module("InverseIPM", ctx, Filter, "NeuroFEM", "BioPSE"),
+    ipm_pathTCL_(ctx->subVar("ipm_pathTCL")),
     numchanTCL_(ctx->subVar("numchanTCL")),
     numsamplesTCL_(ctx->subVar("numsamplesTCL")),
     startsampleTCL_(ctx->subVar("startsampleTCL")),
@@ -587,7 +589,7 @@ InverseIPM::execute()
     if(!write_pebbles_file(tmpdir+"pebbles.inp")) {throw false; }
     
     // Construct our command line.
-    const string ipmfile = "ipm";
+    const string ipmfile = ipm_pathTCL_.get();
     const string command = "(cd " + tmpdir + ";" +
       ipmfile + " -i movingdipolefit" +
       " -h " + condmeshfile + " -p " + parafile + " -s " + electrodefile +
