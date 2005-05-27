@@ -381,8 +381,8 @@ HotBox::HotBox(GuiContext* ctx)
   hipvarpath_(ctx->subVar("hipvarpath")),
   currentselection_(ctx->subVar("currentselection")),
   gui_curTime_(ctx->subVar("currentTime")),
-  currentTime_(0),
-  lastTime_(currentTime_),
+  currentTime_(0.0),
+  lastTime_(-1000.0),
   timeEps_(0.25),
   timeSyncer_(0),
   timeSyncer_thread_(0),
@@ -821,6 +821,7 @@ HotBox::execute()
     }
   } // end else (HIP data path has been selected)
 
+  // if selection or time has changed
   if(currentSelection_ != lastSelection_ ||
      lastTime_ < currentTime_ - timeEps_ ||
      currentTime_ + timeEps_ < lastTime_)
@@ -936,14 +937,8 @@ HotBox::execute()
     inj1highlightOutport->send(inj1GeomFieldhandle_);
 
   int currentTime_step = get_timeStep(currentTime_);
-  if(currentTime_step < injured_tissue_list_.size() &&
-     injured_tissue_list_[currentTime_step]->size() > 0)
-  {
-    injured_tissue_ = (vector <VH_injury> *)
-                      injured_tissue_list_[currentTime_step];
-    // build geometry from wound icon descriptions
-    makeInjGeometry();
-  }
+  // build geometry from wound icon descriptions
+  makeInjGeometry();
 
   // get output geometry port -- Injury Icon
   SimpleOPort<FieldHandle> *
@@ -2040,20 +2035,20 @@ HotBox::get_timeStep(double targ_timeStamp)
   double wound_timeStamp = targ_timeStamp;
 
   // debugging...
-  // cerr << "HotBox::get_timeStep(" << targ_timeStamp << ")" << endl;
-  // cerr << "	" << injured_tissue_list_.size() << " timeSteps" << endl;
+  cerr << "HotBox::get_timeStep(" << targ_timeStamp << ")" << endl;
+  cerr << "	" << injured_tissue_list_.size() << " timeSteps" << endl;
   for(int i = 0; i < injured_tissue_list_.size(); i++)
   {
     injured_tissue_ =
           (vector <VH_injury> *)injured_tissue_list_[i];
     // debugging...
-    // cerr << " injured_tissue_list_[" << i << "] size: ";
-    // cerr << injured_tissue_->size();
+    cerr << " injured_tissue_list_[" << i << "] size: ";
+    cerr << injured_tissue_->size();
     if(injured_tissue_ && injured_tissue_->size() > 0)
     {
       VH_injury woundPtr = (*injured_tissue_)[0];
       // debugging...
-      // cerr << " timeStamp " << woundPtr.timeStamp;
+      cerr << " timeStamp " << woundPtr.timeStamp;
       // target timeStamp is in seconds -- convert wound timeStamp to match
       if(woundPtr.timeUnit == "min")
          wound_timeStamp = woundPtr.timeStamp * 60;
@@ -2069,9 +2064,9 @@ HotBox::get_timeStep(double targ_timeStamp)
       else
       {
         // debugging...
-        // cerr << " target = " << targ_timeStamp << " <= " << wound_timeStamp;
-        // cerr << " - " << timeEps_ << " || " << targ_timeStamp << " >= ";
-        // cerr << wound_timeStamp << " + " << timeEps_ << endl;
+         cerr << " target = " << targ_timeStamp << " <= " << wound_timeStamp;
+         cerr << " - " << timeEps_ << " || " << targ_timeStamp << " >= ";
+         cerr << wound_timeStamp << " + " << timeEps_ << endl;
       }
     } // end if(injured_tissue_ && injured_tissue_->size > 0)
   } // end for(int i = 0; i < injured_tissue_list_.size(); i++)
