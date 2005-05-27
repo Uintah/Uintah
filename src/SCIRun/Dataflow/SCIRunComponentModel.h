@@ -47,7 +47,7 @@ namespace SCIRun {
 class Network;
 class SCIRunComponentDescription;
 class SCIRunFramework;
-class GuiInterface;
+class TCLInterface;
 
 /**
  * \class SCIRunComponentModel
@@ -93,7 +93,7 @@ public:
 
   /** Initialize SCIRun GUI elements. */
   static void initGuiInterface();
-  static GuiInterface* gui;
+  static TCLInterface* gui;
   static Network* net;
   
 private:
