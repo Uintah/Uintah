@@ -47,8 +47,10 @@
 #include <SCIRun/Internal/InternalComponentModel.h>
 #include <SCIRun/Internal/InternalComponentInstance.h>
 
-#ifdef HAVE_RUBY
-#include <SCIRun/Bridge/AutoBridge.h>
+#ifdef HAVE_BABEL
+ #ifdef HAVE_RUBY
+  #include <SCIRun/Bridge/AutoBridge.h>
+ #endif
 #endif
 
 namespace SCIRun {
@@ -222,8 +224,10 @@ class BuilderService : public sci::cca::ports::BuilderService,
     /** ? */
     void emitConnectionEvent(ConnectionEvent* event);
 
-#ifdef HAVE_RUBY
+#ifdef HAVE_BABEL
+ #ifdef HAVE_RUBY
     AutoBridge autobr;
+ #endif
 #endif
   };
 }
