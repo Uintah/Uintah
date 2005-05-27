@@ -151,23 +151,24 @@ protected:
   Ray compute_view();
   void create_pbuffers(int w, int h);
   void build_colormap();
-  void bind_colormap();
-  void release_colormap();
+  void bind_colormap( int reg = 0);
+  void release_colormap( int reg = 0);
+  void load_flow_tex();
   void build_flow_tex();
-  void bind_flow_tex();
-  void release_flow_tex();
-  void build_noise();
+  void bind_flow_tex( int reg = 0 );
+  void release_flow_tex( int reg = 0);
+  void build_noise(float scale = 1.0, float shftx = 0, float shfty = 0);
   void rebuild_noise(){ build_noise_ = true; }
-  void bind_noise();
-  void release_noise();
+  void bind_noise( int reg = 0 );
+  void release_noise( int reg = 0 );
   void build_adv(float scale,pair<float, float>& shift);
   void load_adv();
-  void bind_adv();
-  void release_adv();
+  void bind_adv( int reg = 0 );
+  void release_adv( int reg = 0 );
   void build_conv(float scale);
   void load_conv();
-  void bind_conv();
-  void release_conv();
+  void bind_conv( int reg = 0 );
+  void release_conv( int reg = 0 );
   void next_shift(int *shft);
 
   void adv_init( Pbuffer*& pb, float scale,
@@ -182,14 +183,6 @@ protected:
 #endif
   
 public:
-  bool auto_tex_;
-  float tex_x_, tex_y_;
-  void set_auto_tex( bool b ){ auto_tex_ = b; }
-  bool get_auto_tex() { return auto_tex_; }
-  void set_tex_x( float f ) { tex_x_ = f; }
-  void set_tex_y( float f ) { tex_y_ = f; }
-  float get_tex_x() { return tex_x_; }
-  float get_tex_y() { return tex_y_; }
 };
 
 } // End namespace SCIRun
