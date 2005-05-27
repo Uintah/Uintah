@@ -356,10 +356,12 @@ itcl_class CardioWave_DataIO_TimeDataReader {
 		Tooltip $vcr.fforward $ToolTipText(VCRfastforward)
 		
 		set $this-cur $cur
-		scale $cur.cur -variable $this-current -length 200 -showvalue true -orient horizontal -relief groove -command "$this MaybeRestart"
+		scale $cur.cur -variable $this-current -length 200 -showvalue true -orient horizontal -relief groove -command "$this maybeRestart"
     bind $cur.cur <ButtonRelease> "$this Restart"
 		pack $cur.cur	
 	
+    $this update_range
+  
 		moveToCursor $w
 	}
 
