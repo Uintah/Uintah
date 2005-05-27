@@ -33,7 +33,9 @@
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/PointCloudMesh.h>
-
+#include <sstream>
+#include <iomanip>
+#include <sci_hash_map.h>
 
 namespace SCIRun {
 
@@ -81,7 +83,7 @@ class GatherFieldsAlgo : public DynamicAlgoBase
 {
 public:
   virtual FieldHandle execute(vector<FieldHandle> &fields,
-                              int out_basis, bool cdata) = 0;
+                              int out_basis, bool cdata, int precision) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *ftype);
@@ -91,38 +93,97 @@ public:
 template <class FIELD>
 class GatherFieldsAlgoT : public GatherFieldsAlgo
 {
+  struct str_hasher
+  {
+    size_t operator()(const string s) const
+    {
+      hash<const char*> H;
+      return H(s.c_str());
+    }
+  };
+  struct eqstr
+  {
+    bool operator()(const string s1, const string s2) const
+    {
+      return s1 == s2;
+    }
+  };
+  typedef hash_map<string, unsigned, str_hasher, eqstr> points_ht;
+  points_ht pnts_table_;
+
+  struct equint
+  {
+    bool operator()(const unsigned s1, const unsigned s2) const
+    {
+      return s1 == s2;
+    }
+  };
+  typedef hash_map<unsigned, unsigned, hash<unsigned>, equint> idx_ht;
+  idx_ht node_table_;
+
+
 protected:
   FieldHandle append_fields(vector<FIELD *> fields,
-                            int out_basis, bool cdata);
+                            int out_basis, bool cdata, int precision);
 
 public:
   //! virtual interface. 
   virtual FieldHandle execute(vector<FieldHandle> &fields,
-                              int out_basis, bool cdata);
+                              int out_basis, bool cdata, int precision);
 };
 
+string
+hash_str(const Point &pnt, int prec) 
+{
+  ostringstream str;
+  str << setiosflags(ios::scientific);
+  str << setprecision(prec);
+  str << pnt.x() << pnt.y() << pnt.z(); 
+  string s = str.str();
+  //  cerr << prec << " : " << s << std::endl;
+
+  return s;
+}
 
 template <class FIELD>
 FieldHandle
 GatherFieldsAlgoT<FIELD>::append_fields(vector<FIELD *> fields,
-                                        int out_basis, bool cdata)
+                                        int out_basis, bool cdata, 
+					int precision)
 {
   typename FIELD::mesh_type *omesh = scinew typename FIELD::mesh_type();
-
+  pnts_table_.clear();
   unsigned int offset = 0;
   unsigned int i;
   for (i=0; i < fields.size(); i++)
   {
+    node_table_.clear();
     typename FIELD::mesh_handle_type imesh = fields[i]->get_typed_mesh();
     typename FIELD::mesh_type::Node::iterator nitr, nitr_end;
     imesh->begin(nitr);
     imesh->end(nitr_end);
+    unsigned int input_field_node_idx = 0;
     while (nitr != nitr_end)
     {
       Point p;
       imesh->get_center(p, *nitr);
-      omesh->add_point(p);
-      ++nitr;
+      //hash p
+      // if it is unique map index to index
+      // else map index to previously hashed index
+      string p_str = hash_str(p, precision);
+      typename points_ht::iterator ins = pnts_table_.find(p_str);
+      unsigned out_node_idx;
+      if(ins == pnts_table_.end()) {
+	// p was not in the table.
+	out_node_idx = omesh->add_point(p);
+	pnts_table_[p_str] = out_node_idx;
+
+      } else {
+	// p already existed in the table
+	out_node_idx = (*ins).second;
+      }
+      node_table_[input_field_node_idx] = out_node_idx;
+      ++nitr; ++input_field_node_idx;
     }
 
     typename FIELD::mesh_type::Elem::iterator eitr, eitr_end;
@@ -135,7 +196,10 @@ GatherFieldsAlgoT<FIELD>::append_fields(vector<FIELD *> fields,
       unsigned int j;
       for (j = 0; j < nodes.size(); j++)
       {
-	nodes[j] = ((unsigned int)nodes[j]) + offset;
+	// set the indeces to the matching output node indeces.
+	typename idx_ht::iterator nt_iter = 
+	  node_table_.find((unsigned int)nodes[j]);
+	nodes[j] = (*nt_iter).second;
       }
       omesh->add_elem(nodes);
       ++eitr;
@@ -143,7 +207,6 @@ GatherFieldsAlgoT<FIELD>::append_fields(vector<FIELD *> fields,
     
     typename FIELD::mesh_type::Node::size_type size;
     imesh->size(size);
-    offset += (unsigned int)size;
   }
 
   FIELD *ofield = scinew FIELD(omesh, out_basis);
@@ -175,7 +238,6 @@ GatherFieldsAlgoT<FIELD>::append_fields(vector<FIELD *> fields,
     }
     if (out_basis == 1)
     {
-      offset = 0;
       for (i=0; i < fields.size(); i++)
       {
         typename FIELD::mesh_handle_type imesh = fields[i]->get_typed_mesh();
@@ -184,17 +246,22 @@ GatherFieldsAlgoT<FIELD>::append_fields(vector<FIELD *> fields,
         imesh->end(nitr_end);
         while (nitr != nitr_end)
         {
+	  // Note: that for duplicated points it is assumed that these input
+	  // nodes have the same data associated with them.  There is no 
+          // averaging, just last one written wins.
           typename FIELD::value_type val;
           fields[i]->value(val, *nitr);
-          typename FIELD::mesh_type::Node::index_type
-            new_index(((unsigned int)(*nitr)) + offset);
+
+	  typename idx_ht::iterator nt_iter = 
+	    node_table_.find((unsigned int)*nitr);
+          typename FIELD::mesh_type::Node::index_type 
+	    new_index((*nt_iter).second);
           ofield->set_value(val, new_index);
           ++nitr;
         }
 
         typename FIELD::mesh_type::Node::size_type size;
         imesh->size(size);
-        offset += (unsigned int)size;
       }
     }
     // basis == -1, no data to copy.
@@ -206,7 +273,7 @@ GatherFieldsAlgoT<FIELD>::append_fields(vector<FIELD *> fields,
 template <class FIELD>
 FieldHandle
 GatherFieldsAlgoT<FIELD>::execute(vector<FieldHandle> &fields_h,
-                                  int out_basis, bool cdata)
+                                  int out_basis, bool cdata, int p)
 {
   vector<FIELD *> fields;
   for (unsigned int i = 0; i < fields_h.size(); i++)
@@ -214,7 +281,7 @@ GatherFieldsAlgoT<FIELD>::execute(vector<FieldHandle> &fields_h,
     fields.push_back((FIELD*)(fields_h[i].get_rep()));
   }
   
-  return append_fields(fields, out_basis, cdata);
+  return append_fields(fields, out_basis, cdata, p);
 }
 
 } // End namespace SCIRun
