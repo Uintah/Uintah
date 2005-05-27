@@ -38,8 +38,10 @@ itcl_class BioPSE_NeuroFEM_ForwardIPM {
     }
 
     method set_defaults {} {
+	global $this-ipm_pathTCL
 	global $this-associativityTCL
 	global $this-eps_matTCL
+	set $this-ipm_pathTCL "ipm_linux_dbx"
 	set $this-associativityTCL 1
 	set $this-eps_matTCL 1e-2
     }
@@ -54,6 +56,7 @@ itcl_class BioPSE_NeuroFEM_ForwardIPM {
     }
 
     method ui {} {
+	global $this-ipm_pathTCL
 	global $this-associativityTCL
 	global $this-eps_matTCL
 
@@ -64,10 +67,12 @@ itcl_class BioPSE_NeuroFEM_ForwardIPM {
         }
         toplevel $w
 
+	make_entry $w.ipm_path "Path to NeuroFEM execution file: " $this-ipm_pathTCL "$this-c needexecute"
 	make_entry $w.associativity "Lead Field Basis(yes=1, no=0): " $this-associativityTCL "$this-c needexecute"
 	make_entry $w.eps_mat "Pebbles Solver EPS_MAT: " $this-eps_matTCL "$this-c needexecute"
 
-	bind $w.associativity <Return> "$this-c needexecute"
+#	bind $w.associativity <Return> "$this-c needexecute"
+	pack $w.ipm_path -side top -fill x
 	pack $w.associativity -side top -fill x
 	pack $w.eps_mat -side top -fill x
 
