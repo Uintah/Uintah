@@ -64,16 +64,13 @@ void HypoElasticImplicit::initializeCMData(const Patch* patch,
 
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
   ParticleVariable<Matrix3> deformationGradient, pstress;
-  ParticleVariable<double> pIntHeatRate;
   new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,pset);
   new_dw->allocateAndPut(pstress, lb->pStressLabel, pset);
-  new_dw->allocateAndPut(pIntHeatRate,lb->pInternalHeatRateLabel,pset);
 
 
   for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++){
      deformationGradient[*iter] = Identity;
      pstress[*iter] = zero;
-     pIntHeatRate[*iter] = 0.;
   }
 }
 
@@ -100,9 +97,7 @@ HypoElasticImplicit::allocateCMDataAdd( DataWarehouse* new_dw,
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
   ParticleVariable<Matrix3> pstress,deformationGradient;
-  ParticleVariable<double> pIntHeatRate;
   constParticleVariable<Matrix3> o_stress, o_deformationGradient;
-  constParticleVariable<double> o_pIntHeatRate;
 
   new_dw->allocateTemporary(deformationGradient,addset);
   new_dw->allocateTemporary(pstress,            addset);
@@ -110,18 +105,15 @@ HypoElasticImplicit::allocateCMDataAdd( DataWarehouse* new_dw,
   new_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel_preReloc,
                                                                         delset);
   new_dw->get(o_stress,             lb->pStressLabel_preReloc,          delset);
-  new_dw->get(o_pIntHeatRate,       lb->pInternalHeatRateLabel_preReloc,delset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
     deformationGradient[*n] = o_deformationGradient[*o];
     pstress[*n] = o_stress[*o];
-    pIntHeatRate[*n] = o_pIntHeatRate[*o];
   }
 
   (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
   (*newState)[lb->pStressLabel]=pstress.clone();
-  (*newState)[lb->pInternalHeatRateLabel]=pIntHeatRate.clone();
 }
 
 
@@ -129,9 +121,6 @@ void
 HypoElasticImplicit::addParticleState( std::vector<const VarLabel*>& from,
 				       std::vector<const VarLabel*>& to )
 {
-   from.push_back(lb->pInternalHeatRateLabel);
-                                                                                
-   to.push_back(lb->pInternalHeatRateLabel_preReloc);
 }
 
 void HypoElasticImplicit::computeStableTimestep(const Patch*,
@@ -426,7 +415,6 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<double> pvolume_deformed;
     constParticleVariable<Vector> pvelocity;
     constNCVariable<Vector> dispNew;
-    ParticleVariable<double> pIntHeatRate;
     delt_vartype delT;
 
     old_dw->get(px,                  lb->pXLabel,                  pset);
@@ -445,8 +433,6 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
     new_dw->allocateAndPut(deformationGradient_new,
 			   lb->pDeformationMeasureLabel_preReloc,        pset);
-    new_dw->allocateAndPut(pIntHeatRate, lb->pInternalHeatRateLabel_preReloc,
-                                                                         pset);
  
     double G    = d_initialData.G;
     double bulk = d_initialData.K;
@@ -458,7 +444,6 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
         pstress_new[idx] = Matrix3(0.0);
         deformationGradient_new[idx] = Identity;
         pvolume_deformed[idx] = pvolumeold[idx];
-        pIntHeatRate[idx] = 0.;
       }
     }
     else{
@@ -466,7 +451,6 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 	  iter != pset->end(); iter++){
 	particleIndex idx = *iter;
 	
-        pIntHeatRate[idx] = 0.;
         dispGrad.set(0.0);
 	// Get the node indices that surround the cell
 	
@@ -565,7 +549,6 @@ void HypoElasticImplicit::addComputesAndRequires(Task* task,
   task->computes(lb->pStressLabel_preReloc,                matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc,    matlset);
   task->computes(lb->pVolumeDeformedLabel,                 matlset);
-  task->computes(lb->pInternalHeatRateLabel_preReloc,      matlset);
 }
 
 // The "CM" versions use the pressure-volume relationship of the CNH model

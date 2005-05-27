@@ -287,9 +287,7 @@ ViscoScramImplicit::allocateCMDataAdd( DataWarehouse* new_dw,
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
   ParticleVariable<Matrix3> pstress,deformationGradient;
-  ParticleVariable<double> pIntHeatRate;
   constParticleVariable<Matrix3> o_stress, o_deformationGradient;
-  constParticleVariable<double> o_pIntHeatRate;
 
   new_dw->allocateTemporary(deformationGradient,addset);
   new_dw->allocateTemporary(pstress,            addset);
@@ -297,18 +295,15 @@ ViscoScramImplicit::allocateCMDataAdd( DataWarehouse* new_dw,
   new_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel_preReloc,
                                                                         delset);
   new_dw->get(o_stress,             lb->pStressLabel_preReloc,          delset);
-  new_dw->get(o_pIntHeatRate,       lb->pInternalHeatRateLabel_preReloc,delset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
     deformationGradient[*n] = o_deformationGradient[*o];
     pstress[*n] = o_stress[*o];
-    pIntHeatRate[*n] = o_pIntHeatRate[*o];
   }
 
   (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
   (*newState)[lb->pStressLabel]=pstress.clone();
-  (*newState)[lb->pInternalHeatRateLabel]=pIntHeatRate.clone();
 }
 
 
@@ -316,7 +311,6 @@ void
 ViscoScramImplicit::addParticleState( std::vector<const VarLabel*>& from,
                                        std::vector<const VarLabel*>& to )
 {
-  from.push_back(lb->pInternalHeatRateLabel);
   from.push_back(pVolChangeHeatRateLabel);
   from.push_back(pViscousHeatRateLabel);
   from.push_back(pCrackHeatRateLabel);
@@ -325,7 +319,6 @@ ViscoScramImplicit::addParticleState( std::vector<const VarLabel*>& from,
   from.push_back(pStatedataLabel);
   from.push_back(pRandLabel);
                                                                                 
-  to.push_back(lb->pInternalHeatRateLabel_preReloc);
   to.push_back(pVolChangeHeatRateLabel_preReloc);
   to.push_back(pViscousHeatRateLabel_preReloc);
   to.push_back(pCrackHeatRateLabel_preReloc);
@@ -657,7 +650,6 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<double> pvolume_deformed;
     constParticleVariable<Vector> pvelocity;
     constNCVariable<Vector> dispNew;
-    ParticleVariable<double> pIntHeatRate;
     delt_vartype delT;
 
     old_dw->get(px,                  lb->pXLabel,                  pset);
@@ -676,8 +668,6 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
     new_dw->allocateAndPut(deformationGradient_new,
                            lb->pDeformationMeasureLabel_preReloc,        pset);
-    new_dw->allocateAndPut(pIntHeatRate, lb->pInternalHeatRateLabel_preReloc,
-                                                                         pset);
     double G    = d_G;
     double bulk = d_bulk;
 
@@ -698,7 +688,6 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
         pstress_new[idx] = Matrix3(0.0);
         deformationGradient_new[idx] = Identity;
         pvolume_deformed[idx] = pvolumeold[idx];
-        pIntHeatRate[idx] = 0.;
       }
     }
     else{
@@ -706,7 +695,6 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
         
-        pIntHeatRate[idx] = 0.;
         dispGrad.set(0.0);
         // Get the node indices that surround the cell
         
@@ -805,7 +793,6 @@ void ViscoScramImplicit::addComputesAndRequires(Task* task,
   task->computes(lb->pStressLabel_preReloc,                matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc,    matlset);
   task->computes(lb->pVolumeDeformedLabel,                 matlset);
-  task->computes(lb->pInternalHeatRateLabel_preReloc,      matlset);
   task->computes(pVolChangeHeatRateLabel_preReloc,         matlset);
   task->computes(pViscousHeatRateLabel_preReloc,           matlset);
   task->computes(pCrackHeatRateLabel_preReloc,             matlset);
