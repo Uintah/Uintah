@@ -170,6 +170,7 @@ class MatlabBundle : public Module, public ServiceBase
 	GuiString   output_bundle_name_;
 	GuiString   output_bundle_pnrrds_;
 	GuiString   output_bundle_pbundles_;
+  GuiString   configfile_;
   
 	// Fields per port
 	std::vector<std::string>   input_bundle_name_list_;
@@ -379,6 +380,7 @@ MatlabBundle::MatlabBundle(GuiContext *context) :
   matlab_var_(context->subVar("matlab-var")),
   matlab_add_output_(context->subVar("matlab-add-output")),
   matlab_update_status_(context->subVar("matlab-update-status")),
+  configfile_(context->subVar("configfile")),
   need_file_transfer_(false)
 {
 
@@ -1197,7 +1199,17 @@ void MatlabBundle::tcl_command(GuiArgs& args, void* userdata)
         }
         return;
     }
-
+    if (args[1] == "configfile")
+    {
+      ServiceDBHandle servicedb = scinew ServiceDB;     
+      // load all services and find all makers
+      servicedb->loadpackages();
+      
+      ServiceInfo *si = servicedb->getserviceinfo("matlabengine");
+      configfile_.set(si->rcfile);
+      reset_vars();
+      return;
+    }
   }
 
   Module::tcl_command(args, userdata);

@@ -188,6 +188,7 @@ class Matlab : public Module, public ServiceBase
 	GuiString   output_matrix_name_;
 	GuiString   output_field_name_;
 	GuiString   output_nrrd_name_;
+  GuiString   configfile_;
 
 
 	// Fields per port
@@ -429,6 +430,7 @@ Matlab::Matlab(GuiContext *context) :
   matlab_var_(context->subVar("matlab-var")),
   matlab_add_output_(context->subVar("matlab-add-output")),
   matlab_update_status_(context->subVar("matlab-update-status")),
+  configfile_(context->subVar("configfile")),
   need_file_transfer_(false)
 {
 
@@ -1102,6 +1104,7 @@ bool Matlab::generate_matlab_code()
 			if (output_nrrd_name_list_[p] == "") continue;
 		
 			ostringstream oss;
+      
 			oss << "output_nrrd" << p << ".mat";
 			output_nrrd_matfile_[p] = oss.str();
 			std::string cmd;
@@ -1517,7 +1520,20 @@ void Matlab::tcl_command(GuiArgs& args, void* userdata)
         return;
     }
 
+    if (args[1] == "configfile")
+    {
+      ServiceDBHandle servicedb = scinew ServiceDB;     
+      // load all services and find all makers
+      servicedb->loadpackages();
+      
+      ServiceInfo *si = servicedb->getserviceinfo("matlabengine");
+      configfile_.set(si->rcfile);
+      reset_vars();
+      return;
+    }
   }
+
+
 
   Module::tcl_command(args, userdata);
 }
