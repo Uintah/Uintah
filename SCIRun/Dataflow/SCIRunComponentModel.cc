@@ -41,8 +41,10 @@
 #include <SCIRun/Dataflow/SCIRunComponentModel.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/OS/Dir.h>
+#include <Core/Init/init.h>
 #include <Core/Util/soloader.h>
 #include <Core/Util/Environment.h>
+#include <Core/TCLThread/TCLThread.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/NetworkEditor.h>
@@ -59,7 +61,7 @@
 
 namespace SCIRun {
 
-GuiInterface*
+TCLInterface*
 SCIRunComponentModel::gui(0);
 
 Network*
@@ -115,9 +117,10 @@ SCIRunComponentModel::createInstance(const std::string& name,
     initGuiInterface();
   }
 
+  std::cerr << "SCIRunComponentModel::createInstance: have gui" << std::endl;
+
   Module* m = net->add_module2(package, category, module);
-  SCIRunComponentInstance* ci = new SCIRunComponentInstance(framework, name,
-							    type, m);
+  SCIRunComponentInstance* ci = new SCIRunComponentInstance(framework, name, type, m);
   return ci;
 }
 
@@ -125,30 +128,39 @@ void SCIRunComponentModel::initGuiInterface() {
 std::cerr << "SCIRunComponentModel::initGuiInterface" << std::endl;
   int argc=1;
   char* argv[2];
-  argv[0]="sr";
-  argv[1]=0;
-  TCLTask* tcl_task = new TCLTask(argc, argv);
-  Thread* t=new Thread(tcl_task, "TCL main event loop");
+  argv[0] = "sr";
+  argv[1] = 0;
+
+  SCIRunInit();
+
+  net = new Network();
+  //TCLTask* tcl_task = new TCLTask(argc, argv);
+  TCLThread* tcl_task = new TCLThread(argc, argv, net, 0);
+  Thread* t = new Thread(tcl_task, "TCL main event loop", 0, Thread::NotActivated);
+  t->setStackSize(1024*1024);
+  t->activate(false);
   t->detach();
   tcl_task->mainloop_waitstart();
   
   // Create user interface link
-  gui = new TCLInterface();
+  //gui = new TCLInterface();
+  gui = tcl_task->getTclInterface();
   gui->eval("set scirun2 1");
   
-  tcl_task->release_mainloop();
-  
-  net = new Network();
-  Scheduler* sched_task=new Scheduler(net);
-  new NetworkEditor(net, gui);
+  //net = new Network();
+  //new NetworkEditor(net, gui);
   gui->execute("wm withdraw .");
-  packageDB->setGui(gui);
+  //packageDB->setGui(gui);
+
+  Scheduler* sched_task=new Scheduler(net);
 
   // Activate the scheduler.  Arguments and return
   // values are meaningless
   Thread* t2=new Thread(sched_task, "Scheduler");
   t2->setDaemon(true);
   t2->detach();
+  
+  tcl_task->release_mainloop();
 }
 
 bool SCIRunComponentModel::destroyInstance(ComponentInstance * ic)
