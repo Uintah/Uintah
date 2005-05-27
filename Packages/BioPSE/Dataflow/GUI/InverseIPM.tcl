@@ -38,6 +38,7 @@ itcl_class BioPSE_NeuroFEM_InverseIPM {
     }
 
     method set_defaults {} {
+	global $this-ipm_pathTCL
 	global $this-numchanTCL
 	global $this-numsamplesTCL
 	global $this-startsampleTCL
@@ -50,6 +51,7 @@ itcl_class BioPSE_NeuroFEM_InverseIPM {
 	global $this-diryTCL
 	global $this-dirzTCL
 	global $this-eps_matTCL
+	set $this-ipm_pathTCL "ipm_linux_dbx"
 	set $this-numchanTCL  71
 	set $this-numsamplesTCL 1
 	set $this-startsampleTCL 0
@@ -74,6 +76,7 @@ itcl_class BioPSE_NeuroFEM_InverseIPM {
     }
 
     method ui {} {
+	global $this-ipm_pathTCL
 	global $this-numchanTCL
 	global $this-numsamplesTCL
 	global $this-startsampleTCL
@@ -94,6 +97,7 @@ itcl_class BioPSE_NeuroFEM_InverseIPM {
         }
         toplevel $w
 
+	make_entry $w.ipm_path "Path to NeuroFEM execution file: " $this-ipm_pathTCL "$this-c needexecute"
 	make_entry $w.numchan "Number of Channel: " $this-numchanTCL "$this-c needexecute"
 	make_entry $w.numsamples "Number of Samples: " $this-numsamplesTCL "$this-c needexecute"
 	make_entry $w.startsample "Start Sample: " $this-startsampleTCL "$this-c needexecute"
@@ -120,6 +124,7 @@ itcl_class BioPSE_NeuroFEM_InverseIPM {
 	bind $w.dirz <Return> "$this-c needexecute"
 	bind $w.eps_mat <Return> "$this-c needexecute"
 
+	pack $w.ipm_path -side top -fill x
 	pack $w.numchan $w.numsamples $w.startsample $w.stopsample $w.associativity -side top -fill x
 	pack $w.posx $w.posy $w.posz $w.dirx $w.diry $w.dirz -side top -fill x
 	pack $w.eps_mat -side top -fill x
