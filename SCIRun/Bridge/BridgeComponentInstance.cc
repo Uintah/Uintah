@@ -156,6 +156,7 @@ Port* BridgeComponentInstance::getDataflowOPort(const std::string& name)
    return static_cast<Port*>(op);
 }
 
+#if HAVE_VTK
 vtk::Port* BridgeComponentInstance::getVtkPort(const std::string& name)
 {
 
@@ -168,7 +169,6 @@ vtk::Port* BridgeComponentInstance::getVtkPort(const std::string& name)
     return 0;
   mutex->unlock();
   return pr->port;
-
 }
 
 void BridgeComponentInstance::addVtkPort(vtk::Port* vtkport, VtkPortInstance::PortType portT) 
@@ -183,6 +183,7 @@ void BridgeComponentInstance::addVtkPort(vtk::Port* vtkport, VtkPortInstance::Po
                                                                                                       
   ports.insert(make_pair(portName, new VtkPortInstance(NULL, vtkport, portT)));
 }
+#endif
 
 void BridgeComponentInstance::releasePort(const std::string& name, const modelT model)
 {
