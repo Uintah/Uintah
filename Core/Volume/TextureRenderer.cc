@@ -295,7 +295,7 @@ TextureRenderer::compute_view()
   v.safe_normalize();
   Transform mv;
   mv.set_trans(mvmat);
-  Point p = tex_->bbox().center();
+  Point p = field_trans.unproject(mv.unproject(Point(0,0,0)));
   return Ray(p, v);
 }
 
