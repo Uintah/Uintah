@@ -37,8 +37,10 @@
  *   October 2001
  *
  */
+
 #include <sci_defs/babel_defs.h>
 #include <sci_defs/ruby_defs.h>
+#include <sci_defs/vtk_defs.h>
 
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/TypeMap.h>
@@ -46,14 +48,18 @@
 #include <SCIRun/Internal/ComponentEvent.h>
 #include <SCIRun/Internal/ComponentEventService.h>
 #include <SCIRun/CCA/CCAComponentModel.h>
+
 #if HAVE_BABEL 
-#if HAVE_RUBY
-#include <SCIRun/Bridge/BridgeComponentModel.h>
-#endif
-#include <SCIRun/Babel/BabelComponentModel.h>
+ #if HAVE_RUBY
+  #include <SCIRun/Bridge/BridgeComponentModel.h>
+ #endif
+ #include <SCIRun/Babel/BabelComponentModel.h>
 #endif
 
+#if HAVE_VTK
 #include <SCIRun/Vtk/VtkComponentModel.h>
+#endif
+
 #include <SCIRun/Corba/CorbaComponentModel.h>
 #include <SCIRun/Tao/TaoComponentModel.h>
 
@@ -61,9 +67,10 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/spec/cca_sidl.h>
+#include <Core/Util/NotFinished.h>
+
 #include <iostream>
 #include <sstream>
-#include <Core/Util/NotFinished.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -81,12 +88,16 @@ SCIRunFramework::SCIRunFramework()
   models.push_back(dflow = new SCIRunComponentModel(this));
   models.push_back(cca = new CCAComponentModel(this));
 #if HAVE_BABEL 
-#if HAVE_RUBY
+ #if HAVE_RUBY
   models.push_back(new BridgeComponentModel(this));
-#endif
+ #endif
   models.push_back(babel = new BabelComponentModel(this));
 #endif
+
+#if HAVE_VTK
   models.push_back(vtk = new VtkComponentModel(this));
+#endif
+
   models.push_back(corba = new CorbaComponentModel(this));
   models.push_back(tao = new TaoComponentModel(this));
 }
