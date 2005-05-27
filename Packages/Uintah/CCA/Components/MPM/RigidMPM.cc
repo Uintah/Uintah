@@ -178,7 +178,6 @@ void RigidMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pMassLabel,             Ghost::None);
   t->requires(Task::OldDW, lb->pParticleIDLabel,       Ghost::None);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      Ghost::None);
-  t->requires(Task::OldDW, lb->pSp_volLabel,           Ghost::None); 
   t->requires(Task::OldDW, lb->pVelocityLabel,         Ghost::None);
   t->requires(Task::OldDW, lb->pDispLabel,             Ghost::None);
   t->requires(Task::OldDW, lb->pSizeLabel,             Ghost::None);
@@ -205,7 +204,6 @@ void RigidMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pParticleIDLabel_preReloc);
   t->computes(lb->pTemperatureLabel_preReloc);
   t->computes(lb->pTempPreviousLabel_preReloc); // for thermal stress 
-  t->computes(lb->pSp_volLabel_preReloc);
   t->computes(lb->pMassLabel_preReloc);
   t->computes(lb->pVolumeLabel_preReloc);
   t->computes(lb->pSizeLabel_preReloc);
@@ -287,8 +285,8 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ParticleVariable<Point> pxnew,pxx;
       constParticleVariable<Vector> pvelocity, psize;
       ParticleVariable<Vector> pvelocitynew, psizeNew;
-      constParticleVariable<double> pmass, pvolume, pTemperature, pSp_vol;
-      ParticleVariable<double> pmassNew,pvolumeNew,pTempNew, pSp_volNew;
+      constParticleVariable<double> pmass, pvolume, pTemperature;
+      ParticleVariable<double> pmassNew,pvolumeNew,pTempNew;
       constParticleVariable<long64> pids;
       ParticleVariable<long64> pids_new;
       constParticleVariable<Vector> pdisp;
@@ -309,7 +307,6 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pdisp,                 lb->pDispLabel,                  pset);
       old_dw->get(pmass,                 lb->pMassLabel,                  pset);
       old_dw->get(pids,                  lb->pParticleIDLabel,            pset);
-      old_dw->get(pSp_vol,               lb->pSp_volLabel,                pset);
       new_dw->get(pvolume,               lb->pVolumeDeformedLabel,        pset);
       old_dw->get(pvelocity,             lb->pVelocityLabel,              pset);
       old_dw->get(pTemperature,          lb->pTemperatureLabel,           pset);
@@ -323,7 +320,6 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocateAndPut(pvolumeNew,   lb->pVolumeLabel_preReloc,     pset);
       new_dw->allocateAndPut(pids_new,     lb->pParticleIDLabel_preReloc, pset);
       new_dw->allocateAndPut(pTempNew,     lb->pTemperatureLabel_preReloc,pset);
-      new_dw->allocateAndPut(pSp_volNew,   lb->pSp_volLabel_preReloc,     pset);
       // for thermal stress analysis
       new_dw->allocateAndPut(pTempPreNew, lb->pTempPreviousLabel_preReloc, pset);
      
@@ -385,7 +381,6 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         // Update the particle's position and velocity
         pxnew[idx]           = px[idx] + pvelocity[idx]*delT;
         pdispnew[idx]        = pvelocity[idx]*delT;
-        pSp_volNew[idx]      = pSp_vol[idx];
         pmassNew[idx]        = pmass[idx];
         pvolumeNew[idx]      = pvolume[idx];
         // pxx is only useful if we're not in normal grid resetting mode.
