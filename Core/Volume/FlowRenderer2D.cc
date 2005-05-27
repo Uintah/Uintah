@@ -93,7 +93,7 @@ FlowRenderer2D::FlowRenderer2D(FieldHandle field,
   re_accum_(true),
   noise_tex_(0),
   build_noise_(true),
-  use_pbuffer_(true),
+  use_pbuffer_(false),
   buffer_width_(0),
   buffer_height_(0),
   adv_buffer_(0),
@@ -114,10 +114,7 @@ FlowRenderer2D::FlowRenderer2D(FieldHandle field,
   adv_accum_rect_(new FragmentProgramARB( AdvAccumRect )),
   conv_rewire_rect_(new FragmentProgramARB( ConvRewireRect )),
   adv_rewire_rect_(new FragmentProgramARB( AdvRewireRect )),
-  is_initialized_(false),
-  auto_tex_(true),
-  tex_x_(1.0),
-  tex_y_(1.0)
+  is_initialized_(false)
 {
   mode_ = MODE_LIC;
   
@@ -171,10 +168,7 @@ FlowRenderer2D::FlowRenderer2D(const FlowRenderer2D& copy):
   adv_accum_rect_(copy.adv_accum_rect_),
   conv_rewire_rect_(copy.conv_rewire_rect_),
   adv_rewire_rect_(copy.adv_rewire_rect_),
-  is_initialized_(copy.is_initialized_),
-  auto_tex_(copy.auto_tex_),
-  tex_x_(copy.tex_x_),
-  tex_y_(copy.tex_y_)
+  is_initialized_(copy.is_initialized_)
 {}
 
 FlowRenderer2D::~FlowRenderer2D()
@@ -184,6 +178,24 @@ GeomObj*
 FlowRenderer2D::clone()
 {
   return scinew FlowRenderer2D(*this);
+}
+
+void
+FlowRenderer2D::set_field(FieldHandle field)
+{
+  mutex_.lock();
+  field_ = field;
+  flow_dirty_ = true;
+  mutex_.unlock();
+}
+
+void
+FlowRenderer2D::set_colormap(ColorMapHandle cmap)
+{
+  mutex_.lock();
+  cmap_ = cmap;
+  cmap_dirty_ = true;
+  mutex_.unlock();
 }
 
 void
@@ -235,7 +247,8 @@ FlowRenderer2D::draw()
   build_flow_tex();
   build_noise();
   build_colormap();
-  bind_colormap();
+  //--------------------------------------------------------------------------
+  bind_colormap(3);
   //--------------------------------------------------------------------------
   // set up pbuffers
 //   if(!pbuffers_created_ && use_pbuffer_)
@@ -249,9 +262,11 @@ FlowRenderer2D::draw()
 //     bind_noise();
   int c_shift = current_shift_;
   build_adv( scale, shift_list_[c_shift] );
+  //  load_adv();
   next_shift(&c_shift);
     
 
+  cerr<<"re_accum = "<<re_accum_<<"\n";
   if( re_accum_ ){
     //must be called after build_flow_tex()
       float pixelx = 1.f/(float)w_;
@@ -271,33 +286,15 @@ FlowRenderer2D::draw()
    }
   
   load_conv();
-  bind_conv();
-  bind_noise();
-  bind_flow_tex();
-    
-
-  float tx, ty;
-  if( auto_tex_ ){
-    tx = 0.25 + tex_coords_[2] * 0.5;
-    ty = 0.25 + tex_coords_[5] * 0.5;
-    tex_x_ = tx;
-    tex_y_ = ty;
-  } else {
-    tx = tex_x_;
-    ty = tex_y_;
-  }
-    
-   float tex_coords[] = { 0.25, 0.25, tx, 0.25, tx,
-                          ty, 0.25, ty };
-//   float tex_coords[] = { 0.25, 0.25, 0.75, 0.25, 0.75, 0.75, 0.25, 0.75 };
-//   float tex_coords[] = { 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0 };
-  float pos_coords[] = { 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0 };
+  bind_conv( 1 );
+//   bind_noise();
+//   bind_flow_tex();
 
   //-----------------------------------------------------
   // set up shader
   FragmentProgramARB* shader; // = adv_accum_;
   shader = new FragmentProgramARB( DrawNoise );
-//   //-----------------------------------------------------
+  //-----------------------------------------------------
   if( shader ){
     if(!shader->valid()) {
       shader->create();
@@ -307,11 +304,6 @@ FlowRenderer2D::draw()
     }
     shader->bind();
   }
-
-//   glActiveTexture(GL_TEXTURE0_ARB);
-//   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-//   adv_buffer_->bind(GL_FRONT);
-//   glActiveTexture(GL_TEXTURE0_ARB);
   
   glBegin( GL_QUADS );
   {
@@ -319,8 +311,6 @@ FlowRenderer2D::draw()
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
        glMultiTexCoord2fv(GL_TEXTURE0,tex_coords_+i*2);
        glMultiTexCoord2fv(GL_TEXTURE1,tex_coords_+i*2);
-//       glMultiTexCoord2fv(GL_TEXTURE2,tex_coords+i*2);
-//       glMultiTexCoord2fv(GL_TEXTURE0,tex_coords_+i*2);
 //       if(use_fog) {
 // 	float *pos = pos_coords_+i*3;
 // 	float vz = mvmat[2]* pos[0]
@@ -329,8 +319,7 @@ FlowRenderer2D::draw()
 // 	glMultiTexCoord3f(GL_TEXTURE2, -vz, 0.0, 0.0);
 //    }
 #else
-//        glTexCoord2fv(tex_coords_+i*2);
-      glTexCoord2fv(tex_coords+i*2);
+       glTexCoord2fv(tex_coords_+i*2);
 #endif
       glVertex3fv(pos_coords_+i*3);
     }
@@ -339,18 +328,13 @@ FlowRenderer2D::draw()
   glFlush();
   glDisable(GL_ALPHA_TEST);
   
-//   glActiveTexture(GL_TEXTURE0_ARB);
-//   adv_buffer_->release(GL_FRONT);
-//   glActiveTexture(GL_TEXTURE0_ARB);
-
   if(shader)
     shader->release();
   
-//   }
-  release_flow_tex();
-  release_noise();
-  release_conv();
-  release_colormap();
+//   release_flow_tex();
+//   release_noise();
+  release_conv(1);
+  release_colormap(3);
   
   glPopMatrix();
   
@@ -361,106 +345,65 @@ void
 FlowRenderer2D::adv_init( Pbuffer*& pb, float scale,
                           pair<float, float>& shift)
   {
-//   if(!adv_init_->valid()) {
-//     adv_init_->create();
-//     adv_init_->setLocalParam(1, scale, 1.0, 1.0, 1.0);
-//     adv_init_->setLocalParam(2, shift.first, shift.second, 1.0, 1.0);
-//   }
+  if(!adv_init_->valid()) {
+    adv_init_->create();
+    adv_init_->setLocalParam(1, scale, 1.0, 1.0, 1.0);
+    adv_init_->setLocalParam(2, shift.first, shift.second, 1.0, 1.0);
+  }
   pb->activate();
-  //bind_noise in pbuffer context
   
-//   pb->set_use_texture_matrix(false);
-//   pb->set_use_default_shader(false);
+  pb->set_use_texture_matrix(false);
+  pb->set_use_default_shader(false);
 
-//   float w = pb->width(), h = pb->height();
+  glDrawBuffer(GL_FRONT);
+  glViewport(0, 0, pb->width(), pb->height());
+  glClearColor(0.0, 0.0, 0.0, 0.0);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  pb->swapBuffers();
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  glTranslatef(-1.0, -1.0, 0.0);
+  glScalef(2.0, 2.0, 2.0);
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_LIGHTING);
+  glDisable(GL_CULL_FACE);
+  glDisable(GL_BLEND);
 
-//   glDrawBuffer(GL_FRONT);
-//   glViewport(0, 0, pb->width(), pb->height());
-//   glClearColor(0.0, 0.0, 0.0, 0.0);
-//   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//   pb->swapBuffers();
-//   glMatrixMode(GL_PROJECTION);
-//   glLoadIdentity();
-//   glMatrixMode(GL_MODELVIEW);
-//   glLoadIdentity();
-//   glTranslatef(-1.0, -1.0, 0.0);
-//   glScalef(2.0, 2.0, 2.0);
-//   glDisable(GL_DEPTH_TEST);
-//   glDisable(GL_LIGHTING);
-//   glDisable(GL_CULL_FACE);
-//   glDisable(GL_BLEND);
+  //bind_noise in pbuffer context
 
-// #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
-//   glActiveTexture(GL_TEXTURE0);
-// #endif
+  bind_noise();
+  adv_init_->bind();
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
+  glActiveTexture(GL_TEXTURE0);
+#endif
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
-//   pb->bind(GL_FRONT);
-  glColor3f(0.0, 1.0, 0.0);
-
-//   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  CHECK_OPENGL_ERROR("adv_init()");
-  glBegin(GL_QUADS);
+  float tex_coords [] = {0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0};
+  float pos_coords [] = {0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0};
+  glBegin( GL_QUADS );
   {
-//     glTexCoord2f( 0.0,  0.0);
-     glVertex2f( 0.0,  0.0);
-//     glTexCoord2f(1.0,  0.0);
-    glVertex2f( 1.0,  0.0);
-//     glTexCoord2f(1.0,  1.0);
-    glVertex2f( 1.0,  1.0);
-//     glTexCoord2f( 0.0,  1.0);
-    glVertex2f( 0.0,  1.0);
+    for (int i = 0; i < 4; i++) {
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
+      glMultiTexCoord2fv(GL_TEXTURE0,tex_coords+i*2);
+      CHECK_OPENGL_ERROR("adv_init()");
+
+#else
+      glTexCoord2fv(tex_coords+i*2);
+#endif
+       glVertex3fv(pos_coords+i*3);
+      CHECK_OPENGL_ERROR("adv_init()");
+    }
   }
   glEnd();
-//   pb->release(GL_FRONT);
   CHECK_OPENGL_ERROR("adv_init()");
-  
-  float tex_coords[] = { 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0 };
-//   float pos_coords[] = { 0.0, 0.0, w, 0.0, w, h, 0.0, h };
-  float pos_coords[] = { 0.0, 0.0, 0.0, 
-                         1.0, 0.0, 0.0,
-                         1.0, 1.0, 0.0,
-                         0.0, 1.0, 0.0};
+  pb->swapBuffers();
 
-
-//   glDrawPixels(pb->height(), pb->width(), GL_RGBA, GL_FLOAT, 
-//                &noise_array_(0,0,0));
-//   pb->swapBuffers();
-
-//   bind_noise();
-//   adv_init_->bind();
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
-//   glActiveTexture(GL_TEXTURE0);
-#endif
-//   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-      
-//   if(pb->target() ==  GL_TEXTURE_RECTANGLE_NV)
-//     cerr<<"Pbuffer texture target = GL_TEXTURE_RECTANGLE_NV\n";
-
-//   glColor3f(0.0, 1.0, 0.0);
-//   pb->swapBuffers();
-//   CHECK_OPENGL_ERROR("adv_init()");
-//   glBegin( GL_QUADS );
-//   {
-//     for (int i = 0; i < 4; i++) {
-// #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
-//       glMultiTexCoord2fv(GL_TEXTURE0,tex_coords+i*2);
-// //       CHECK_OPENGL_ERROR("adv_init()");
-
-// #else
-//       glTexCoord2fv(tex_coords+i*2);
-// #endif
-//        glVertex3fv(pos_coords+i*3);
-// //       CHECK_OPENGL_ERROR("adv_init()");
-//     }
-//   }
-//   glEnd();
-  CHECK_OPENGL_ERROR("adv_init()");
-//   pb->swapBuffers();
-
-//   adv_init_->release();
-//   release_noise();
+  adv_init_->release();
+  release_noise();
   pb->deactivate();
-//   pb->set_use_texture_matrix(true);
+  pb->set_use_texture_matrix(true);
 
 }
 
@@ -487,26 +430,6 @@ FlowRenderer2D::draw_wireframe()
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
 }
-
-
-void
-FlowRenderer2D::set_field(FieldHandle field)
-{
-  mutex_.lock();
-  field_ = field;
-  flow_dirty_ = true;
-  mutex_.unlock();
-}
-
-void
-FlowRenderer2D::set_colormap(ColorMapHandle cmap)
-{
-  mutex_.lock();
-  cmap_ = cmap;
-  cmap_dirty_ = true;
-  mutex_.unlock();
-}
-
 
 void
 FlowRenderer2D::set_sw_raster(bool b)
@@ -622,7 +545,7 @@ FlowRenderer2D::build_colormap()
 
 
 void
-FlowRenderer2D::bind_colormap()
+FlowRenderer2D::bind_colormap( int reg )
 {
 #if defined( GL_TEXTURE_COLOR_TABLE_SGI ) && defined(__sgi)
   glEnable(GL_TEXTURE_COLOR_TABLE_SGI);
@@ -635,7 +558,7 @@ FlowRenderer2D::bind_colormap()
 #elif defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
   if (ShaderProgramARB::shaders_supported())
   {
-    glActiveTexture(GL_TEXTURE3_ARB);
+    glActiveTexture(GL_TEXTURE0+reg);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glEnable(GL_TEXTURE_1D);
     glBindTexture(GL_TEXTURE_1D, cmap_tex_);
@@ -661,7 +584,7 @@ FlowRenderer2D::bind_colormap()
   {
     static bool warned = false;
     if( !warned ) {
-      std::cerr << "No volume colormaps available." << std::endl;
+      std::cerr << "No colormaps available." << std::endl;
       warned = true;
     }
   }
@@ -673,7 +596,7 @@ FlowRenderer2D::bind_colormap()
 
 
 void
-FlowRenderer2D::release_colormap()
+FlowRenderer2D::release_colormap( int reg )
 {
 #if defined(GL_TEXTURE_COLOR_TABLE_SGI) && defined(__sgi)
   glDisable(GL_TEXTURE_COLOR_TABLE_SGI);
@@ -681,7 +604,7 @@ FlowRenderer2D::release_colormap()
   if (ShaderProgramARB::shaders_supported())
   {
     // bind texture to unit 3
-    glActiveTexture(GL_TEXTURE3_ARB);
+    glActiveTexture(GL_TEXTURE0+reg);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glDisable(GL_TEXTURE_1D);
     glBindTexture(GL_TEXTURE_1D, 0);
@@ -775,8 +698,10 @@ FlowRenderer2D::build_flow_tex()
       double tmin_x, tmax_x, tmin_y, tmax_y;
       // Field needs to be scaled, use min and max for now...
       // To do: add Tcl variable for fixing the scale
+#if 0
       double min_x = MAXDOUBLE, min_y = MAXDOUBLE, 
         max_x = -MAXDOUBLE, max_y = -MAXDOUBLE;
+#endif
       if( field_->basis_order() == 0){
         // Set texture coords
         tmin_x = 0.0;
@@ -786,6 +711,7 @@ FlowRenderer2D::build_flow_tex()
         ImageMesh::Face::iterator iter, end;
         im->begin( iter ); im->end( end );
 
+#if 0  // if we need to normalize the field use this
         // Get minmax values
         while(iter != end){
           Vector val;
@@ -796,9 +722,10 @@ FlowRenderer2D::build_flow_tex()
           max_y = Max(max_y, val[vj]);
           ++iter;
         }
-        
         // Reset iterator
         im->begin( iter );
+#endif        
+
         while(iter != end){
           // Note the i,j switch here
           int i = iter.j_;
@@ -806,12 +733,16 @@ FlowRenderer2D::build_flow_tex()
           Vector val;
           ifv_->value( val, *iter);
           // Scale the values
-          flow_array_(i,j, 0) = val[vi];// (val[vi] - min_x)/(max_x - min_x);
-          flow_array_(i,j, 1) = val[vj];//(val[vj] - min_y)/(max_y - min_y);
+#if 0  // again normalization
+          flow_array_(i,j, 0) = (val[vi] - min_x)/(max_x - min_x);
+          flow_array_(i,j, 1) = (val[vj] - min_y)/(max_y - min_y);
+#endif
+          flow_array_(i,j, 0) = val[vi];
+          flow_array_(i,j, 1) = val[vj];
           ++iter;
         }
 
-      } else { // basis better be 1 for now
+      } else if( field_->basis_order() == 1){ // basis better be 1 for now
 
         // Set texture coords.
         tmin_x = 0.5/(double)buffer_width_;
@@ -820,6 +751,7 @@ FlowRenderer2D::build_flow_tex()
         tmax_y = ( h - 0.5)/(double)buffer_height_;
         ImageMesh::Node::iterator iter, end;
         im->begin( iter ); im->end( end );
+#if 0  // for normalization
         // Get minmax values
         while(iter != end){
           Vector val;
@@ -830,18 +762,23 @@ FlowRenderer2D::build_flow_tex()
           max_y = Max(max_y, val[vj]);
           ++iter;
         }
-        
         // Reset iterator
         im->begin( iter );
+#endif
+
         while(iter != end){
           int i = (*iter).j_;
           int j = (*iter).i_;
           Vector val;
           ifv_->value( val, *iter);
-//           flow_array_(i,j) = sqrt( val[vi] * val[vi] + val[vj] * val[vj]);
+
           // Scale the values
           flow_array_(i,j, 0) = val[vi];//(val[vi] - min_x)/(max_x - min_x);
           flow_array_(i,j, 1) = val[vj];//(val[vj] - min_y)/(max_y - min_y);
+#if 0  // again normalization
+          flow_array_(i,j, 0) = val[vi];//(val[vi] - min_x)/(max_x - min_x);
+          flow_array_(i,j, 1) = val[vj];//(val[vj] - min_y)/(max_y - min_y);
+#endif
           ++iter;
         }
       } 
@@ -849,15 +786,18 @@ FlowRenderer2D::build_flow_tex()
       tex_coords_[4] = tmax_x; tex_coords_[3] = tmin_y;
       tex_coords_[2] = tmax_x; tex_coords_[5] = tmax_y;
       tex_coords_[6] = tmin_x; tex_coords_[7] = tmax_y;
-//       cerr<<"tex coords are ("<<tmin_x<<" "<<tmin_y<<"), (" << 
-//         tmax_x<<" "<<tmin_y<<"), (" << 
-//         tmax_x<<" "<<tmax_y<<"), (" << 
-//         tmin_x<<" "<<tmax_y<<")\n";
+  }
+   is_initialized_ = true;
+     CHECK_OPENGL_ERROR("FlowRenderer2D::build_flow_tex()");
 
+}
+
+void
+FlowRenderer2D::load_flow_tex()
+{
 
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
-      // This texture is not used if there is no shaders.
-      // glColorTable is used instead.
+      // This texture is not loaded if there are no shaders.
       if (ShaderProgramARB::shaders_supported())
       {
         // Update 2D texture.
@@ -889,20 +829,18 @@ FlowRenderer2D::build_flow_tex()
         }
       }
 #endif
-      is_initialized_ = true;
-  }
-  CHECK_OPENGL_ERROR("FlowRenderer2D::buildflow_tex()");
+     CHECK_OPENGL_ERROR("FlowRenderer2D::load_flow_tex()");
 
 }
 
 
 void
-FlowRenderer2D::bind_flow_tex()
+FlowRenderer2D::bind_flow_tex( int reg )
 {
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
   if (ShaderProgramARB::shaders_supported())
   {
-    glActiveTexture(GL_TEXTURE0_ARB);
+    glActiveTexture(GL_TEXTURE0+reg);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, flow_tex_);
@@ -914,13 +852,13 @@ FlowRenderer2D::bind_flow_tex()
 }
 
 void
-FlowRenderer2D::release_flow_tex()
+FlowRenderer2D::release_flow_tex( int reg )
 {
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
   if (ShaderProgramARB::shaders_supported())
   {
     // bind texture to unit 1
-    glActiveTexture(GL_TEXTURE0_ARB);
+    glActiveTexture(GL_TEXTURE0+reg);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glDisable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -934,14 +872,13 @@ FlowRenderer2D::release_flow_tex()
 float 
 FlowRenderer2D::get_interpolated_value( Array3<float>& array, float x, float y )
 { 
-//   int nx = buffer_width_ * 2;
-//   int ny = buffer_height_ * 2;
-//   if( x >= float(nx-1) || y >= float(ny-1) || x < 0 || y < 0)
-//     cerr<<"x,y = "<<x<<", "<<y<<" ";
+  // Array3 will assert that x,y is in range.
   int i = int(x);
   int j = int(y);
+  // compute the remainders
   float ir = x - float(i);
   float jr = y - float(j);
+  // compute weights
   float w[4];
   w[0] =  (1 - ir) * (1 - jr);
   w[1] =  ir * (1 - jr);
@@ -954,6 +891,7 @@ FlowRenderer2D::get_interpolated_value( Array3<float>& array, float x, float y )
 void
 FlowRenderer2D::build_adv(float scale, pair<float, float>& shift)
 {
+  // Software version.  
   if( !adv_is_initialized_ ) {
     int nx = buffer_width_;
     int ny = buffer_height_;
@@ -986,8 +924,7 @@ void
 FlowRenderer2D::load_adv()
 {
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
-  // This texture is not used if there is no shaders.
-  // glColorTable is used instead.
+  // This texture is not loaded if there are no shaders.
   if (adv_dirty_)
   {
     // Update 2D texture.
@@ -1017,33 +954,23 @@ FlowRenderer2D::load_adv()
 }
 
 void
-FlowRenderer2D::adv_accum( float pixel_x, float pixel_y, float scale, pair<float,float>&  shift)
+FlowRenderer2D::adv_accum( float pixel_x, float pixel_y,
+                           float scale, pair<float,float>&  shift)
 {
-  int nx = buffer_width_ * 2;
-  int ny = buffer_height_ * 2;
 
-  int x_off = int( 0.25 * (ny));
-  int y_off = int( 0.25 * (nx));
-  
+  // Software version.  Hardware version is done with adv_acc shader
   int endy = int(tex_coords_[2] * (flow_array_.dim2() - 1));
   int endx = int(tex_coords_[7] * (flow_array_.dim1() - 1));
   
   float r0[4], r1[4], noise;
   int x = 0, y = 1, z = 2, w = 3;
 
-  cerr<<"flow_index_max = ("<<endx<<", "<<endy<<")\n";
-  cerr<<"adv_index_max = ("<<endx+x_off<<", "<<endy+y_off<<")\n";
-  
   for(int j = 0; j < endy; j++ ){
     for(int i = 0; i < endx; i++ ) {
       r0[x] = adv_array_( i, j, x);
       r0[y] = adv_array_( i, j, y);
       r0[z] = adv_array_( i, j, z);
       r0[w] = adv_array_( i, j, w);
-//       r0[x] = adv_array_( i + x_off, j + y_off, x);
-//       r0[y] = adv_array_( i + x_off, j + y_off, y);
-//       r0[z] = adv_array_( i + x_off, j + y_off, z);
-//       r0[w] = adv_array_( i + x_off, j + y_off, w);
       
       r1[z] = Clamp((r0[x] * 2) - 0.5, 0.0, 1.0);
       r1[w] = Clamp((r0[y] * 2) - 0.5, 0.0, 1.0);
@@ -1072,49 +999,12 @@ FlowRenderer2D::adv_accum( float pixel_x, float pixel_y, float scale, pair<float
       
     
   
-//   int nx = buffer_width_ * 2;
-//   int ny = buffer_height_ * 2;
-//   float r0[4], r1[4], noise;
-//   int x = 0, y = 1, z = 2, w = 3;
-//   int startx = int(nx * 0.25);
-//   int starty = int(ny * 0.25);
-//   int endx = int(nx * 0.75);
-//   int endy = int(ny * 0.75);
-
-//   for(int i = startx; i < endx; i++) {
-//     for(int j = starty; j < endy; j++){
-//       r0[x] = adv_array_( i, j, x);
-//       r0[y] = adv_array_( i, j, y);
-//       r0[z] = adv_array_( i, j, z);
-//       r0[w] = adv_array_( i, j, w);
-//       r1[z] = Clamp((r0[x] * 2) - 0.5, 0.0, 1.0);
-//       r1[w] = Clamp((r0[y] * 2) - 0.5, 0.0, 1.0);
-// //       cerr<<"r1[2,3] = "<<r1[2]<<", "<<r1[3]<<" | ";
-//       r1[x] = flow_array_( int(r1[z] * (flow_array_.dim1() - 1)), 
-//                            int(r1[w] * (flow_array_.dim2() - 1)), 0) - 0.5;
-//       r1[y] = flow_array_( int(r1[z] * (flow_array_.dim1() - 1)), 
-//                            int(r1[w] * (flow_array_.dim2() - 1)), 1) - 0.5;
-//       r1[z] = r1[z] + shift.first;
-//       r1[w] = r1[w] + shift.second;
-//       r1[z] = r1[z] > 1 ? r1[z] - 1.0 : r1[z];
-//       r1[w] = r1[w] > 1 ? r1[w] - 1.0 : r1[w];      
-//       r1[x] = pixel * r1[x];
-//       r1[y] = pixel * r1[y];
-// //       cerr<<"r1[2,3] = "<<r1[2]<<", "<<r1[3]<<" | ";
-//       noise = get_interpolated_value(adv_array_, r1[z] * (nx - 2),
-//                                      r1[w] * (ny - 2));
-//       adv_array_( i, j, x ) = r1[x] * 4 + r0[x];
-//       adv_array_( i, j, y ) = r1[y] * 4 + r0[y];
-//       adv_array_( i, j, z ) = noise * scale + r0[z];
-//       adv_array_( i, j, w ) = r0[w] + scale;
-//     }
-//   }
-//   cerr<<"\n";
 }
 
 void
 FlowRenderer2D::adv_rewire()
 {
+  // software version
   float r0[4];
   int x = 0, y = 1, z = 2, w = 3;
 
@@ -1168,8 +1058,7 @@ void
 FlowRenderer2D::load_conv()
 {
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
-  // This texture is not used if there is no shaders.
-  // glColorTable is used instead.
+  // This texture is not loaded if there are no shaders.
   if (conv_dirty_)
   {
     // Update 2D texture.
@@ -1201,21 +1090,12 @@ FlowRenderer2D::load_conv()
 void
 FlowRenderer2D::conv_accum( float pixel_x, float pixel_y, float scale)
 {
-  int nx = buffer_width_ * 2;
-  int ny = buffer_height_ * 2;
-
-  int x_off = int( 0.25 * (ny));
-  int y_off = int( 0.25 * (nx));
-  
   int endy = int(tex_coords_[2] * (flow_array_.dim2() - 1));
   int endx = int(tex_coords_[7] * (flow_array_.dim1() - 1));
   
   float r0[4], r1[4], noise;
   int x = 0, y = 1, z = 2, w = 3;
 
-  cerr<<"flow_index_max = ("<<endx<<", "<<endy<<")\n";
-  cerr<<"conv_index_max = ("<<endx+x_off<<", "<<endy+y_off<<")\n";
-  
   for(int j = 0; j < endy; j++ ){
     for(int i = 0; i < endx; i++ ) {
       r0[x] = conv_array_( i, j, x);
@@ -1239,8 +1119,6 @@ FlowRenderer2D::conv_accum( float pixel_x, float pixel_y, float scale)
       r0[x] = Clamp(r1[x] * pixel_x + r0[x], 0.0, 1.0);
       r0[y] = Clamp(r1[y] * pixel_y + r0[y], 0.0, 1.0);
       
-//       r0[x] = ( r0[x] > 1.0 ) ? r0[x] - 1 : r0[x];
-//       r0[y] = ( r0[y] > 1.0 ) ? r0[y] - 1 : r0[y];
       noise = get_interpolated_value(adv_array_, 
                                      r0[y] * (adv_array_.dim1() - 2 ),
                                      r0[x] * (adv_array_.dim2() - 2));
@@ -1254,45 +1132,6 @@ FlowRenderer2D::conv_accum( float pixel_x, float pixel_y, float scale)
       conv_array_( i, j, w ) = r0[w];
     }
   }
-//   int nx = buffer_width_ * 2;
-//   int ny = buffer_height_ * 2;
-//   float r[4], r1[4], noise;
-
-//   int startx = int(nx * 0.25);
-//   int starty = int(ny * 0.25);
-//   int endx = int(nx * 0.75);
-//   int endy = int(ny * 0.75);
-
-//   for(int i = startx; i < endx; i++) {
-//     for(int j = starty; j < endy; j++){
-//       r[0] = Clamp( conv_array_( i, j, 0), 0.0, 1.0);
-//       r[1] = Clamp( conv_array_( i, j, 1), 0.0, 1.0);
-//       r[2] = conv_array_( i, j, 2);
-//       r[3] = conv_array_( i, j, 3);
-//       r1[0] = flow_array_( int(r[0] * (flow_array_.dim1() - 1)), 
-//                            int(r[1] * (flow_array_.dim2() - 1)), 0) - 0.5;
-//       r1[1] = flow_array_( int(r[0] * (flow_array_.dim1() - 1)), 
-//                            int(r[1] * (flow_array_.dim2() - 1)), 1) - 0.5;
-//       r1[2] = r1[0] * r1[0];
-//       r1[3] = r1[1] * r1[1];
-//       r1[2] = r1[2] + r1[3];
-//       r1[2] = 1.0/sqrt(r1[2]);
-//       r1[0] = r1[2] * r1[0];  
-//       r1[1] = r1[2] * r1[1];  
-//       r[0] = Clamp(r1[0] * pixel + r[0], 0.0, 1.0);
-//       r[1] = Clamp(r1[1] * pixel + r[1], 0.0, 1.0);
-// //       cerr<<"r1[2,3] = "<<r1[2]<<", "<<r1[3]<<" | ";
-//       noise = get_interpolated_value(adv_array_, r[0] * (nx - 2),
-//                                      r[1] * (ny - 2));
-//       r[3] = r[3] + scale;
-//       r[2] = noise * scale + r[2];
-//       conv_array_( i, j, 0 ) = r[0];
-//       conv_array_( i, j, 1 ) = r[1];
-//       conv_array_( i, j, 2 ) = r[2];
-//       conv_array_( i, j, 3 ) = r[3];
-//     }
-//   }
-  //  cerr<<"\n";
 }
 
 void
@@ -1315,13 +1154,13 @@ FlowRenderer2D::conv_rewire()
 }
 
 void
-FlowRenderer2D::bind_adv()
+FlowRenderer2D::bind_adv( int reg )
 {
   NOT_FINISHED("FlowRenderer2D::bind_adv()");  
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
   if (ShaderProgramARB::shaders_supported())
   {
-    glActiveTexture(GL_TEXTURE1_ARB);
+    glActiveTexture(GL_TEXTURE0+reg);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, adv_tex_);
@@ -1333,14 +1172,14 @@ FlowRenderer2D::bind_adv()
 }
 
 void
-FlowRenderer2D::release_adv()
+FlowRenderer2D::release_adv( int reg )
 {
   NOT_FINISHED("FlowRenderer2D::release_adv()");  
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
   if (ShaderProgramARB::shaders_supported())
   {
     // bind texture to unit 2
-    glActiveTexture(GL_TEXTURE1_ARB);
+    glActiveTexture(GL_TEXTURE0+reg);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glDisable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -1352,13 +1191,13 @@ FlowRenderer2D::release_adv()
 
 }
 void
-FlowRenderer2D::bind_conv()
+FlowRenderer2D::bind_conv( int reg )
 {
   NOT_FINISHED("FlowRenderer2D::bind_conv()");  
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
   if (ShaderProgramARB::shaders_supported())
   {
-    glActiveTexture(GL_TEXTURE1_ARB);
+    glActiveTexture(GL_TEXTURE0+reg);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, conv_tex_);
@@ -1370,14 +1209,14 @@ FlowRenderer2D::bind_conv()
 }
 
 void
-FlowRenderer2D::release_conv()
+FlowRenderer2D::release_conv( int reg )
 {
   NOT_FINISHED("FlowRenderer2D::release_conv()");  
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
   if (ShaderProgramARB::shaders_supported())
   {
     // bind texture to unit 2
-    glActiveTexture(GL_TEXTURE1_ARB);
+    glActiveTexture(GL_TEXTURE0+reg);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glDisable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -1391,7 +1230,7 @@ FlowRenderer2D::release_conv()
 
 
 void
-FlowRenderer2D::build_noise()
+FlowRenderer2D::build_noise( float scale, float shftx, float shfty )
 {
   if(build_noise_){
     noise_array_.resize(buffer_height_, buffer_width_, 4);
@@ -1406,65 +1245,62 @@ FlowRenderer2D::build_noise()
       }
     }
 
-//     if( use_pbuffer_ ){
-//       noise_buffer_->activate();
-//       glDrawBuffer(GL_FRONT);
-//       glViewport(0, 0, noise_buffer_->width(), noise_buffer_->height());
-//       glClearColor(0.0, 0.0, 0.0, 0.0);
-//       glClear(GL_COLOR_BUFFER_BIT);
-//       noise_buffer_->swapBuffers();
-//       glMatrixMode(GL_PROJECTION);
-//       glLoadIdentity();
-//       glMatrixMode(GL_MODELVIEW);
-//       glLoadIdentity();
-//       glTranslatef(-1.0, -1.0, 0.0);
-//       glScalef(2.0, 2.0, 2.0);
-//       glDisable(GL_DEPTH_TEST);
-//       glDisable(GL_LIGHTING);
-//       glDisable(GL_CULL_FACE);
-//       glDisable(GL_BLEND);
-//       glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    if( use_pbuffer_ ){
+      noise_buffer_->activate();
+      glDrawBuffer(GL_FRONT);
+      glViewport(0, 0, noise_buffer_->width(), noise_buffer_->height());
+      glClearColor(0.0, 0.0, 0.0, 0.0);
+      glClear(GL_COLOR_BUFFER_BIT);
+      noise_buffer_->swapBuffers();
+      glMatrixMode(GL_PROJECTION);
+      glLoadIdentity();
+      glMatrixMode(GL_MODELVIEW);
+      glLoadIdentity();
+      glTranslatef(-1.0, -1.0, 0.0);
+      glScalef(2.0, 2.0, 2.0);
+      glDisable(GL_DEPTH_TEST);
+      glDisable(GL_LIGHTING);
+      glDisable(GL_CULL_FACE);
+      glDisable(GL_BLEND);
+      glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
-//       // Bind Textures
+      // Bind Textures
       
-//       //-----------------------------------------------------
-//       // set up shader
-//       FragmentProgramARB* shader = 0;
-//       shader = new FragmentProgramARB( AdvInit );
-//       //-----------------------------------------------------
-//       if( shader ){
-//         if(!shader->valid()) {
-//           shader->create();
-//           shader->setLocalParam(1, 1.0, 1.0, 1.0, 1.0);
-//           shader->setLocalParam(2, 1.0, 0.5, 0.5, 0.5);
-//         }
-//         shader->bind();
-//       }
+      //-----------------------------------------------------
+      // set up shader
+      FragmentProgramARB* shader  = adv_init_;
+      //-----------------------------------------------------
+      if( shader ){
+        if(!shader->valid()) {
+          shader->create();
+          shader->setLocalParam(1, scale, 1.0, 1.0, 1.0);
+          shader->setLocalParam(2, shftx, shfty, 0.5, 0.5);
+        }
+        shader->bind();
+      }
 
-//       float tex_coords[] = { 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0 };
-//       float pos_coords[] = { 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0 };
-// //         { 0, 0, noise_buffer_->width(), 0
-// //           noise_buffer_->width(), noise_buffer_->height(),
-// //           0, noise_buffer_->height()};
+      float tex_coords[] = { 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0 };
+      float pos_coords[] = { 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0 };
 
-//       glBegin( GL_QUADS );
-//       {
-//         for (int i = 0; i < 4; i++) {
-// #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
-//           glMultiTexCoord2fv(GL_TEXTURE1,tex_coords+i*2);
-// #else
-//           glTexCoord2fv(tex_coords+i*2);
-// #endif
-//           glVertex2fv(pos_coords+i*2);
-//         }
-//       }
-//       glEnd();
-//       noise_buffer_->release(GL_FRONT);
-//       shader->release();
-//       noise_buffer_->swapBuffers();
-//       noise_buffer_->deactivate();
-// //       noise_buffer_->set_use_texture_matrix(true);
-//     } else {
+      glBegin( GL_QUADS );
+      {
+        for (int i = 0; i < 4; i++) {
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
+          glMultiTexCoord2fv(GL_TEXTURE1,tex_coords+i*2);
+#else
+          glTexCoord2fv(tex_coords+i*2);
+#endif
+          glVertex2fv(pos_coords+i*2);
+        }
+      }
+      glEnd();
+      noise_buffer_->release(GL_FRONT);
+      if(shader)
+        shader->release();
+      noise_buffer_->swapBuffers();
+      noise_buffer_->deactivate();
+      noise_buffer_->set_use_texture_matrix(true);
+    } else {
       // software 
       //-------------------------------------------------------
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
@@ -1503,17 +1339,17 @@ FlowRenderer2D::build_noise()
     CHECK_OPENGL_ERROR("FlowRenderer2D::build_noise()");
 
 
-//   }
+  }
 }
 
 void
-FlowRenderer2D::bind_noise()
+FlowRenderer2D::bind_noise( int reg)
 {
   NOT_FINISHED("FlowRenderer2D::bind_noise()");  
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
   if (ShaderProgramARB::shaders_supported())
   {
-    glActiveTexture(GL_TEXTURE2_ARB);
+    glActiveTexture(GL_TEXTURE0+reg);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, noise_tex_);
@@ -1524,14 +1360,14 @@ FlowRenderer2D::bind_noise()
   CHECK_OPENGL_ERROR("FlowRenderer2D::bind_noise()");
 }
 void
-FlowRenderer2D::release_noise()
+FlowRenderer2D::release_noise( int reg )
 {
   NOT_FINISHED("FlowRenderer2D::release_noise()");  
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
   if (ShaderProgramARB::shaders_supported())
   {
     // bind texture to unit 2
-    glActiveTexture(GL_TEXTURE2_ARB);
+    glActiveTexture(GL_TEXTURE0+reg);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glDisable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -1546,169 +1382,32 @@ FlowRenderer2D::release_noise()
 void
 FlowRenderer2D::create_pbuffers(int w, int h)
 {
-//   int psize[2];
-//   psize[0] = NextPowerOf2(w);
-//   psize[1] = NextPowerOf2(h);
-//   if(!adv_buffer_ && use_pbuffer_) {
-//      adv_buffer_ = new Pbuffer( psize[0], psize[1], GL_FLOAT, 
-//                                  32, true, GL_FALSE);
-//  //     noise_buffer_ = new Pbuffer( psize[0], psize[1], GL_FLOAT, 
-//  //                                  32, true, GL_FALSE);
-//     CHECK_OPENGL_ERROR("");    
-//     if(!adv_buffer_->create() ) { //|| noise_buffer_->create() ) {
-//       NOT_FINISHED("Something wrong with pbuffers"); 
-//       adv_buffer_->destroy();
-//  //       noise_buffer_->destroy();
-//       delete adv_buffer_;
-//  //       delete noise_buffer_;
-//       adv_buffer_ = 0;
-//  //       noise_buffer_ = 0;
-//       use_pbuffer_ = false;
-//       return;
-//     } else {
-//       adv_buffer_->set_use_default_shader(false);
-//     }
-//   }
-//   pbuffers_created_ = true;
-//   if( adv_buffer_->is_current() ){
-//     cerr<<"adv_buffer is the current graphics context\n";
-//   }
-//   CHECK_OPENGL_ERROR("");
-//   adv_buffer_->activate();
-//   if( adv_buffer_->is_current() ){
-//     cerr<<"adv_buffer is the current graphics context\n";
-//   }
-//   CHECK_OPENGL_ERROR("");
-//   adv_buffer_->set_use_texture_matrix(false);
-//   glDrawBuffer(GL_FRONT);
-//   glViewport(0, 0, adv_buffer_->width(), adv_buffer_->height());
-//   glClearColor(0.0, 0.0, 0.0, 0.0);
-//   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//   adv_buffer_->swapBuffers();
-//   glMatrixMode(GL_PROJECTION);
-//   glLoadIdentity();
-//   glMatrixMode(GL_MODELVIEW);
-//   glLoadIdentity();
-//   glTranslatef(-1.0, -1.0, 0.0);
-//   glScalef(2.0, 2.0, 2.0);
-//   glDisable(GL_DEPTH_TEST);
-//   glDisable(GL_LIGHTING);
-//   glDisable(GL_CULL_FACE);
-//   glDisable(GL_BLEND);
-//   CHECK_OPENGL_ERROR("");
-// #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
-// #  ifdef _WIN32
-// 	if (glActiveTexture)
-// #  endif
-//         glActiveTexture(GL_TEXTURE0);
-// #endif
-//         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
- 
-//         adv_buffer_->bind(GL_FRONT);
-//         glBegin(GL_POINTS);
-//         glEnd();
-//         glFinish();
-//   CHECK_OPENGL_ERROR("");
-//  glBegin(GL_POINTS);
-//   {
-//     glColor3f(0.0, 1.0, 0.0);
-//     glVertex2f( 0.0,  0.0);
-//     glColor3f(0.0, 1.0, 0.0);
-//     glVertex2f( 1.0,  0.0);
-//     glColor3f(0.0, 1.0, 0.0);
-//     glVertex2f( 1.0,  1.0);
-//     glColor3f(0.0, 1.0, 0.0);
-//     glVertex2f( 0.0,  1.0);
-//   }
-//   glEnd();
-//   CHECK_OPENGL_ERROR("");
-//   adv_buffer_->release(GL_FRONT);
-//   CHECK_OPENGL_ERROR("");
-//   adv_buffer_->swapBuffers();
-//   CHECK_OPENGL_ERROR("");
-//   adv_buffer_->deactivate();
-//   CHECK_OPENGL_ERROR("");
-//   NOT_FINISHED("FlowRenderer2D::pbuffers_created"); 
-
-
-
-//---------------------------------------------------------------------------
-      adv_buffer_ = new Pbuffer(256, 64, GL_FLOAT, 32, true, GL_FALSE);
-      CM2ShaderFactory* shader_factory_ = new CM2ShaderFactory();
-      if (!adv_buffer_->create())
-      {
-        adv_buffer_->destroy();
-        delete adv_buffer_;
-        adv_buffer_ = 0;
-        shader_factory_ = 0;
-        use_pbuffer_ = false;
-      }
-      else
-      {
-        adv_buffer_->set_use_default_shader(false);
-      }
-
-      pbuffers_created_ = true;
-    if( use_pbuffer_) {
-      //--------------------------------------------------------------
-      // hardware advization
-      {
-        adv_buffer_->activate();
-        adv_buffer_->set_use_texture_matrix(false);
-        glDrawBuffer(GL_FRONT);
-        glViewport(0, 0, adv_buffer_->width(), adv_buffer_->height());
-        glClearColor(0.0, 0.0, 0.0, 0.0);
-        glClear(GL_COLOR_BUFFER_BIT);
-        adv_buffer_->swapBuffers();
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-        glTranslatef(-1.0, -1.0, 0.0);
-        glScalef(2.0, 2.0, 2.0);
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_LIGHTING);
-        glDisable(GL_CULL_FACE);
-        glDisable(GL_BLEND);
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
-#  ifdef _WIN32
-	if (glActiveTexture)
-#  endif
-        glActiveTexture(GL_TEXTURE0);
-#endif
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-        // make two green buffers
-
-        for(int i = 0; i < 2; i++){
-//         adv_buffer_->bind(GL_FRONT);
-        glColor4f(0.0, 1.0, 0.0, 1.0);
-        glBegin(GL_QUADS);
-        glVertex2f( 0.0,  0.0);
-        glVertex2f( 1.0,  0.0);
-        glVertex2f( 1.0,  1.0);
-        glVertex2f( 0.0,  1.0);
-//         glTexCoord2f( 0.0,  0.0);
-//         glVertex2f( 0.0,  0.0);
-//         glTexCoord2f(1.0,  0.0);
-//         glVertex2f( 1.0,  0.0);
-//         glTexCoord2f(1.0,  1.0);
-//         glVertex2f( 1.0,  1.0);
-//         glTexCoord2f( 0.0,  1.0);
-//         glVertex2f( 0.0,  1.0);
-
-        glEnd();
-//         adv_buffer_->release(GL_FRONT);
-        adv_buffer_->swapBuffers();
-        }
-      }
-      adv_buffer_->deactivate();
-      CHECK_OPENGL_ERROR("");
-      adv_buffer_->set_use_texture_matrix(true);
-      adv_buffer_->set_use_default_shader(true);
+  int psize[2];
+  psize[0] = NextPowerOf2(w);
+  psize[1] = NextPowerOf2(h);
+  if(!adv_buffer_ && use_pbuffer_) {
+     adv_buffer_ = new Pbuffer( psize[0], psize[1], GL_FLOAT, 
+                                 32, true, GL_FALSE);
+     noise_buffer_ = new Pbuffer( psize[0], psize[1], GL_FLOAT, 
+                                  32, true, GL_FALSE);
+    CHECK_OPENGL_ERROR("");    
+    if(!adv_buffer_->create() ) { //|| noise_buffer_->create() ) {
+      NOT_FINISHED("Something wrong with pbuffers"); 
+      adv_buffer_->destroy();
+      noise_buffer_->destroy();
+      delete adv_buffer_;
+      delete noise_buffer_;
+      adv_buffer_ = 0;
+      noise_buffer_ = 0;
+      use_pbuffer_ = false;
+      return;
+    } else {
+      adv_buffer_->set_use_default_shader(false);
     }
-
-
+  }
+  pbuffers_created_ = true;
 }
+
 
 void
 FlowRenderer2D::next_shift(int *shft)
