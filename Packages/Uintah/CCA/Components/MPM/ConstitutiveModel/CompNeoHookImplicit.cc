@@ -67,20 +67,17 @@ void CompNeoHookImplicit::initializeCMData(const Patch* patch,
 
    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
    ParticleVariable<Matrix3> deformationGradient, pstress, bElBar;
-   ParticleVariable<double> pIntHeatRate;
 
    new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,
                                                                         pset);
    new_dw->allocateAndPut(pstress,lb->pStressLabel,                     pset);
    new_dw->allocateAndPut(bElBar,lb->bElBarLabel,                       pset);
-   new_dw->allocateAndPut(pIntHeatRate,lb->pInternalHeatRateLabel,      pset);
 
    for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++) {
           deformationGradient[*iter] = Identity;
           pstress[*iter] = zero;
           bElBar[*iter] = Identity;
-          pIntHeatRate[*iter] = 0.0;
    }
 
 }
@@ -114,43 +111,35 @@ void CompNeoHookImplicit::allocateCMDataAdd(DataWarehouse* new_dw,
   // constitutive model parameters and deformationMeasure
   
   ParticleVariable<Matrix3> deformationGradient, pstress, bElBar;
-  ParticleVariable<double> pIntHeatRate;
   constParticleVariable<Matrix3> o_deformationGradient, o_stress, o_bElBar;
-  constParticleVariable<double> o_pIntHeatRate;
   
   new_dw->allocateTemporary(deformationGradient,addset);
   new_dw->allocateTemporary(pstress,            addset);
   new_dw->allocateTemporary(bElBar,             addset);
-  new_dw->allocateTemporary(pIntHeatRate,       addset);
   
   new_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel_preReloc,
                                                                  delset);
   new_dw->get(o_stress,lb->pStressLabel_preReloc,                delset);
   new_dw->get(o_bElBar,bElBarLabel_preReloc,                     delset);
-  new_dw->get(o_pIntHeatRate,lb->pInternalHeatRateLabel_preReloc,delset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
     deformationGradient[*n] = o_deformationGradient[*o];
     bElBar[*n] = o_bElBar[*o];
     pstress[*n] = o_stress[*o];
-    pIntHeatRate[*n] = o_pIntHeatRate[*o];
   }
   
   (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
   (*newState)[lb->pStressLabel]=pstress.clone();
   (*newState)[lb->bElBarLabel]=bElBar.clone();
-  (*newState)[lb->pInternalHeatRateLabel]=pIntHeatRate.clone();
 }
 
 void CompNeoHookImplicit::addParticleState(std::vector<const VarLabel*>& from,
                                    std::vector<const VarLabel*>& to)
 {
    from.push_back(lb->bElBarLabel);
-   from.push_back(lb->pInternalHeatRateLabel);
 
    to.push_back(lb->bElBarLabel_preReloc);
-   to.push_back(lb->pInternalHeatRateLabel_preReloc);
 }
 
 void CompNeoHookImplicit::computeStableTimestep(const Patch*,
@@ -518,10 +507,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
                             lb->pDeformationMeasureLabel_preReloc, pset);
      new_dw->allocateAndPut(bElBar_new,lb->bElBarLabel_preReloc,   pset);
 
-     ParticleVariable<double> pIntHeatRate;
-     new_dw->allocateAndPut(pIntHeatRate, lb->pInternalHeatRateLabel_preReloc, 
-                           pset);
-
      double shear = d_initialData.Shear;
      double bulk  = d_initialData.Bulk;
 
@@ -533,7 +518,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
         bElBar_new[idx] = Identity;
         deformationGradient_new[idx] = Identity;
         pvolume_deformed[idx] = pvolumeold[idx];
-        pIntHeatRate[idx] = 0.;
       }
     }
     else{
@@ -541,7 +525,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
                                   iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
-        pIntHeatRate[idx] = 0.;
 	dispGrad.set(0.0);
 	// Get the node indices that surround the cell
 
@@ -632,7 +615,6 @@ void CompNeoHookImplicit::addComputesAndRequires(Task* task,
   task->computes(lb->bElBarLabel_preReloc,              matlset);
   task->computes(lb->pVolumeDeformedLabel,              matlset);
   task->computes(lb->pStressLabel_preReloc,             matlset);
-  task->computes(lb->pInternalHeatRateLabel_preReloc,   matlset);
 }
 
 // The "CM" versions use the pressure-volume relationship of the CNH model

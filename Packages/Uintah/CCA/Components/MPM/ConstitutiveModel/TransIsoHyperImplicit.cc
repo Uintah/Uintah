@@ -127,19 +127,17 @@ void TransIsoHyperImplicit::initializeCMData(const Patch* patch,
    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
    ParticleVariable<Matrix3> deformationGradient, pstress;
    ParticleVariable<double> stretch,fail;//fail_label
-   ParticleVariable<double> pIntHeatRate;
 
-   new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,pset);
-   new_dw->allocateAndPut(pstress,            lb->pStressLabel,            pset);
-   new_dw->allocateAndPut(pIntHeatRate,       lb->pInternalHeatRateLabel,  pset);
-   new_dw->allocateAndPut(stretch,            pStretchLabel,               pset);
-   new_dw->allocateAndPut(fail,               pFailureLabel,               pset);
+   new_dw->allocateAndPut(deformationGradient,
+                                             lb->pDeformationMeasureLabel,pset);
+   new_dw->allocateAndPut(pstress,           lb->pStressLabel,            pset);
+   new_dw->allocateAndPut(stretch,           pStretchLabel,               pset);
+   new_dw->allocateAndPut(fail,              pFailureLabel,               pset);
 
    for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++) {
           deformationGradient[*iter] = Identity;
           pstress[*iter] = zero;
-	  pIntHeatRate[*iter] = 0.0;
 	  stretch[*iter] = 1.0;
 	  fail[*iter] = 0.0;
    }
@@ -177,20 +175,16 @@ void TransIsoHyperImplicit::allocateCMDataAdd(DataWarehouse* new_dw,
 
   ParticleVariable<Matrix3> deformationGradient, pstress;
   constParticleVariable<Matrix3> o_defGrad, o_stress;
-  ParticleVariable<double> pIntHeatRate;
-  constParticleVariable<double> o_pIntHeatRate;
   ParticleVariable<double> stretch,fail;
   constParticleVariable<double> o_stretch,o_fail;
 
   new_dw->allocateTemporary(deformationGradient,addset);
   new_dw->allocateTemporary(pstress,            addset);
-  new_dw->allocateTemporary(pIntHeatRate,       addset);
   new_dw->allocateTemporary(stretch,            addset);
   new_dw->allocateTemporary(fail,               addset);
 
   new_dw->get(o_defGrad,     lb->pDeformationMeasureLabel_preReloc,   delset);
   new_dw->get(o_stress,      lb->pStressLabel_preReloc,               delset);
-  new_dw->get(o_pIntHeatRate,lb->pInternalHeatRateLabel_preReloc,     delset);
   new_dw->get(o_stretch,     pStretchLabel_preReloc,                  delset);
   new_dw->get(o_fail,        pFailureLabel_preReloc,                  delset);
 
@@ -198,13 +192,11 @@ void TransIsoHyperImplicit::allocateCMDataAdd(DataWarehouse* new_dw,
   for (o=delset->begin(); o != delset->end(); o++, n++) {
     deformationGradient[*n] = o_defGrad[*o];
     pstress[*n] = o_stress[*o];
-    pIntHeatRate[*n] = o_pIntHeatRate[*o];
     stretch[*n] = o_stretch[*o];
     fail[*n] = o_fail[*o];
   }
   (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
   (*newState)[lb->pStressLabel]=pstress.clone();
-  (*newState)[lb->pInternalHeatRateLabel]=pIntHeatRate.clone();
   (*newState)[pStretchLabel]=stretch.clone();
   (*newState)[pFailureLabel]=fail.clone();
 }
@@ -972,8 +964,6 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
      new_dw->allocateAndPut(pfiberdir_carry, lb->pFiberDirLabel_preReloc,pset);
      new_dw->allocateAndPut(stretch,         pStretchLabel_preReloc,     pset);
      new_dw->allocateAndPut(fail,            pFailureLabel_preReloc,     pset);
-     ParticleVariable<double> pIntHeatRate;
-     new_dw->allocateAndPut(pIntHeatRate,    lb->pInternalHeatRateLabel_preReloc,pset);
      //_____________________________________________material parameters
      double Bulk  = d_initialData.Bulk;
      //Vector a0 = d_initialData.a0;
@@ -995,14 +985,12 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         pstress[idx] = Matrix3(0.0);
         deformationGradient_new[idx] = Identity;
         pvolume_deformed[idx] = pvolumeold[idx];
-	pIntHeatRate[idx] = 0.;
       }
     }
     else{
      for(ParticleSubset::iterator iter = pset->begin();
                                   iter != pset->end(); iter++){
         particleIndex idx = *iter;
-	pIntHeatRate[idx] = 0.;
         dispGrad.set(0.0);
         // Get the node indices that surround the cell
 
@@ -1203,7 +1191,6 @@ void TransIsoHyperImplicit::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, lb->pFiberDirLabel,          matlset, Ghost::None);
   task->requires(Task::OldDW, pFailureLabel,               matlset, Ghost::None);
   //
-  task->computes(lb->pInternalHeatRateLabel_preReloc,   matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(lb->pVolumeDeformedLabel,              matlset);
   task->computes(lb->pStressLabel_preReloc,             matlset);
