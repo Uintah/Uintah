@@ -111,6 +111,7 @@ class TimeDataFile {
   
     std::string datafilename;
     std::list<std::string> datafilenames;
+    std::vector<int> coloffset;
     std::string content;
     std::string encoding;
     std::string endian;
@@ -125,6 +126,8 @@ class TimeDataFile {
     int         ntype;
     int         dimension;
     std::map<std::string,std::string> keyvalue;
+    
+
     
     int         start;
     int         end;

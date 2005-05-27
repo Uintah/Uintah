@@ -1,11 +1,37 @@
 /*
- *  TimeDataReader.cc:
- *
- *  Written by:
- *   jeroen
- *   TODAY'S DATE HERE
- *
+  For more information, please see: http://software.sci.utah.edu
+
+  The MIT License
+
+  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  University of Utah.
+
+  License for the specific language governing rights and limitations under
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
+*/
+
+/*
+ * FILE: TimeDataReader.cc
+ * AUTH: Jeroen G Stinstra
+ * DATE: 23 MAR 2005
  */
+ 
 
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/NrrdPort.h>
@@ -249,6 +275,8 @@ void TimeDataReader::execute()
       filenameoport->send(nrrdH);
   }
   
+  ctx->reset();
+  
   try
   {
     datafile_.open(filename);
@@ -261,13 +289,12 @@ void TimeDataReader::execute()
 
   update_state(JustStarted);
   
-  bool changed_p = false;
+  bool changed_p = true;
   
   if (didrun_ == false) { changed_p = true; }
 
   bool use_row = (row_or_col_.get() == "row");
   if( use_row_ != use_row ) {
-    use_row_ = use_row;
     changed_p = true;
   }
 
@@ -321,8 +348,6 @@ void TimeDataReader::execute()
   if (changed_p) gui->execute(id + " update_range");
   reset_vars();
 
-  
-    
   int which;
   
   // If there is a current index matrix, use it.
@@ -346,12 +371,14 @@ void TimeDataReader::execute()
   SCIRun::MatrixHandle currentH;
   if (icur->get(currentH) && currentH.get_rep()) 
   {
+    use_row_ = use_row;
     which = (int)(currentH->get(0, 0));
     send_selection(which, send_amount);
   } 
   else 
   {
     // Get the current start and end.
+    ctx->reset();
     const int start = range_min_.get();
     const int end = range_max_.get();
 
@@ -376,8 +403,9 @@ void TimeDataReader::execute()
     which = current_.get();
 
     // If updating, we're done for now.
-    if (didrun_ == false) 
+    if ((didrun_ == false)||(use_row!=use_row_)) 
     {
+      use_row_ = use_row;
       send_selection(which, send_amount);
       didrun_ = true;
     } 
