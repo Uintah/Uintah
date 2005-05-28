@@ -17,30 +17,8 @@
 \subsection kosta Kosta
 
 \li Optionally build Bridge component with SCIRun2: by May 27
-\li Add TAO/CORBA as a configure option: by June 3
+\li Add TAO Corba as a configure option: by June 3
 \li Status of separate compilation of SIDL files using PIDL compiler: by June 3
 \li Complete SCIM integration: by June 20
-
-<!--
-1. Create simple build configuration by making Ruby, VTK and Qt optional
-build features: Ayla, by May 27
-   Optionally build Bridge component with SCIRun2: Kosta, by May 27
-
-2. Create SCIRun2 dependency list organized by feature or component
-model (as web page): Ayla, by May 27
-
-3. Add TAO/CORBA as a configure option: Kosta, by June 3
-
-4. Remove MPI dependencies from SCIRun2 except for ploader: Keming, by
-June 3
-   Make MPI an optional build feature: Ayla, by June 3
-
-5. Status of separate compilation of SIDL files using PIDL compiler:
-Kosta, by June 3
-
-6. Complete SCIM integration: Kosta, by June 20
-
-7. Complete parallel component implementation: Keming, by July 18
--->
 
 */
