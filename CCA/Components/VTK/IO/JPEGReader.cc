@@ -26,12 +26,16 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#include <sci_defs/qt_defs.h>
 #include <iostream>
 #include <vtkJPEGReader.h>
 #include <vtkImageData.h>
 
 #include "JPEGReader.h"
-#include <qfiledialog.h>
+
+#if HAVE_QT
+ #include <qfiledialog.h>
+#endif
 
 extern "C" SCIRun::vtk::Component* make_Vtk_JPEGReader()
 {
@@ -55,13 +59,14 @@ SCIRun::vtk::JPEGReader::~JPEGReader()
 int
 SCIRun::vtk::JPEGReader::popupUI()
 {
+#if HAVE_QT
   QString fn = QFileDialog::getOpenFileName("./","Vtk Image Files");
-  if(fn.isNull())
-    {
+  if(fn.isNull()) {
     return 1;
-    }
+  }
   reader->SetFileName(fn);
   reader->Update();
+#endif
 
   return 0;
 }

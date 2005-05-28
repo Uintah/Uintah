@@ -54,14 +54,17 @@ extern "C" sci::cca::Component::pointer make_SCIRun_LinSolver()
   return sci::cca::Component::pointer(new LinSolver);
 }
 
-LinSolver::LinSolver(){
-}
-
 void LinSolver::setServices(const sci::cca::Services::pointer& svc)
 {
-  services=svc;
+  services = svc;
+  LSComponentIcon::pointer cip(&ciPort);
   myLinSolverPort::pointer lsp(new myLinSolverPort);
-  svc->addProvidesPort(lsp,"linsolver","sci.cca.ports.LinSolverPort", sci::cca::TypeMap::pointer(NULL));
+
+  svc->addProvidesPort(lsp, "linsolver", "sci.cca.ports.LinSolverPort",
+    sci::cca::TypeMap::pointer(0));
+  svc->addProvidesPort(cip, "icon", "sci.cca.ports.ComponentIcon",
+    sci::cca::TypeMap::pointer(0));
+
 }
 
 int 
@@ -103,6 +106,30 @@ myLinSolverPort::jacobi(const SSIDL::array2<double> &A,
     x=tempx;
   }
 
-  if(iter!=maxiter) return 0;
-  else return 1;
+  if (iter != maxiter) {
+      return 0;
+  } else {
+      return 1;
+  }
 }  
+
+
+std::string LSComponentIcon::getDisplayName()
+{
+    return "Jacobi Linear Solver";
+}
+
+std::string LSComponentIcon::getDescription()
+{
+    return "Jacobi Linear Solver Component";
+}
+
+int LSComponentIcon::getProgressBar()
+{
+    return 0;
+}
+ 
+std::string LSComponentIcon::getIconShape()
+{
+    return "RECT";
+}

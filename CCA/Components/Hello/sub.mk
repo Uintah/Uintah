@@ -34,11 +34,14 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Components/Hello
 
 SRCS     += \
-	$(SRCDIR)/Hello.cc
-PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm\
-	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
-#QT_LIBDIR := /home/sparker/SCIRun/SCIRun_Thirdparty_32_linux/lib
-LIBS := $(QT_LIBRARY)
+            $(SRCDIR)/Hello.cc
+
+PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm \
+           Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
+
+ifeq ($(HAVE_QT),yes)
+ LIBS := $(QT_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

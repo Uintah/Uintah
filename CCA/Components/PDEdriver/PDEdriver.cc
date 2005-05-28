@@ -63,24 +63,31 @@ PDEdriver::PDEdriver()
 
 PDEdriver::~PDEdriver()
 {
+   services->unregisterUsesPort("progress");
 }
 
 void PDEdriver::setServices(const sci::cca::Services::pointer& svc)
 {
   services=svc;
   //register provides ports here ...  
-  
   sci::cca::TypeMap::pointer props = svc->createTypeMap();
 
   myGoPort::pointer goport(new myGoPort(svc));
   svc->addProvidesPort(goport,"go","sci.cca.ports.GoPort", props);
 
-  sci::cca::TypeMap::pointer nullProperty(NULL);
+  PDEComponentIcon::pointer cip(new PDEComponentIcon);
+  svc->addProvidesPort(cip, "icon", "sci.cca.ports.ComponentIcon",
+    sci::cca::TypeMap::pointer(0));
+
+  sci::cca::TypeMap::pointer nullProperty(0);
+
   svc->registerUsesPort("pde","sci.cca.ports.PDEdescriptionPort", nullProperty);
   svc->registerUsesPort("mesh","sci.cca.ports.MeshPort", nullProperty);
   svc->registerUsesPort("fem_matrix","sci.cca.ports.FEMmatrixPort", nullProperty);
   svc->registerUsesPort("linsolver","sci.cca.ports.LinSolverPort", nullProperty);
   svc->registerUsesPort("viewer","sci.cca.ports.ViewPort", nullProperty);
+
+  svc->registerUsesPort("progress","sci.cca.ports.Progress", nullProperty);
 }
 
 myGoPort::myGoPort(sci::cca::Services::pointer svc){
@@ -98,7 +105,17 @@ int myGoPort::go()
   SSIDL::array2<double> Ag;
   SSIDL::array1<double> fg;
   SSIDL::array1<double> x;
+
   int size;
+  int progressCounter = 0;
+
+  sci::cca::Port::pointer progPort = svc->getPort("progress");	
+  if (progPort.isNull()) {
+    std::cerr << "progress is not available!\n";
+    return 0;
+  }  
+  sci::cca::ports::Progress::pointer pPtr =
+    pidl_cast<sci::cca::ports::Progress::pointer>(progPort);
 
   sci::cca::Port::pointer pp=svc->getPort("pde");	
   if(pp.isNull()){
@@ -110,7 +127,7 @@ int myGoPort::go()
   pdePort->getPDEdescription(nodes, boundries, dirichletNodes, dirichletValues);
   svc->releasePort("pde");
 
-
+  pPtr->updateProgress(progressCounter++);
 
   pp=svc->getPort("mesh");	
   if(pp.isNull()){
@@ -122,6 +139,7 @@ int myGoPort::go()
   meshPort->triangulate(nodes, boundries, triangles);
   svc->releasePort("mesh");
 
+  pPtr->updateProgress(progressCounter++);
 
   pp=svc->getPort("fem_matrix");	
   if(pp.isNull()){
@@ -133,6 +151,7 @@ int myGoPort::go()
   fem_matrixPort->makeFEMmatrices(triangles, nodes, dirichletNodes, dirichletValues, Ag, fg, size);
   svc->releasePort("fem_matrix");
 
+  pPtr->updateProgress(progressCounter++);
 
   pp=svc->getPort("linsolver");	
   if(pp.isNull()){
@@ -141,6 +160,8 @@ int myGoPort::go()
   }
   sci::cca::ports::LinSolverPort::pointer linsolverPort=
     pidl_cast<sci::cca::ports::LinSolverPort::pointer>(pp);
+
+  pPtr->updateProgress(progressCounter++);
 
   /////////////////////////////
   //NEED REVERSE THIS dr[0] dr[1] AFTER KOSTA CHANGES THE
@@ -159,6 +180,8 @@ int myGoPort::go()
   linsolverPort->jacobi(Ag, fg, x);
   svc->releasePort("linsolver");
 
+  pPtr->updateProgress(progressCounter++);
+
 
   pp=svc->getPort("viewer");	
   if(pp.isNull()){
@@ -168,13 +191,36 @@ int myGoPort::go()
   sci::cca::ports::ViewPort::pointer viewPort=
     pidl_cast<sci::cca::ports::ViewPort::pointer>(pp);
   viewPort->view2dPDE(nodes, triangles, x);
+
+  pPtr->updateProgress(progressCounter++);
+
   svc->releasePort("viewer");
+
+  svc->releasePort("progress");
 
   return 0;
 }
 
 
+std::string PDEComponentIcon::getDisplayName()
+{
+    return "PDE Driver";
+}
 
+std::string PDEComponentIcon::getDescription()
+{
+    return "PDE Driver Component";
+}
+
+int PDEComponentIcon::getProgressBar()
+{
+    return 6;
+}
+ 
+std::string PDEComponentIcon::getIconShape()
+{
+    return "RECT";
+}
 
 
 

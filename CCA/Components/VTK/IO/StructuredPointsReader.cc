@@ -38,15 +38,17 @@
  *
  */
 
+#include <sci_defs/qt_defs.h>
 #include <iostream>
 #include <vtkStructuredPointsReader.h>
 #include <vtkStructuredPoints.h>
 #include <vtkPolyData.h>
 
 #include "StructuredPointsReader.h"
-#include <qfiledialog.h>
 
-
+#if HAVE_QT
+ #include <qfiledialog.h>
+#endif
 
 
 #include "vtkStructuredPoints.h"
@@ -100,11 +102,13 @@ StructuredPointsReader::~StructuredPointsReader(){
 
 int
 StructuredPointsReader::popupUI(){
+#if HAVE_QT
   QString fn = QFileDialog::getOpenFileName(
 	    "./","Vtk StructuredPoints Files(*.vtk)");
   if(fn.isNull())   return 1;
   reader->SetFileName(fn);
   update(Port::RESETCAMERA);
+#endif
   return 0;
 }
 

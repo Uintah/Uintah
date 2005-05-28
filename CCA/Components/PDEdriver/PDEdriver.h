@@ -47,7 +47,7 @@
 
 namespace SCIRun {
   
-class PDEdriver : public sci::cca::Component{
+class PDEdriver : public sci::cca::Component {
                 
   public:
     PDEdriver();
@@ -65,6 +65,16 @@ public:
   virtual ~myGoPort(){}
   virtual int go();
   sci::cca::Services::pointer svc;
+};
+
+class PDEComponentIcon : public virtual sci::cca::ports::ComponentIcon {
+public:
+  virtual ~PDEComponentIcon() {}
+
+  virtual std::string getDisplayName();
+  virtual std::string getDescription();
+  virtual std::string getIconShape();
+  virtual int getProgressBar();
 };
 
 }

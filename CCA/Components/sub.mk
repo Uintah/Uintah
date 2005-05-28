@@ -31,16 +31,28 @@
 
 SRCDIR   := CCA/Components
 
-
-
 ifeq ($(HAVE_QT),yes)
-SUBDIRS := $(SRCDIR)/Builder $(SRCDIR)/TxtBuilder $(SRCDIR)/Hello  $(SRCDIR)/ListPlotter \
-	$(SRCDIR)/ZList $(SRCDIR)/Viewer $(SRCDIR)/LinSolver \
-	$(SRCDIR)/FileReader $(SRCDIR)/FEM $(SRCDIR)/Tri $(SRCDIR)/TableTennis \
-	$(SRCDIR)/TTClient $(SRCDIR)/World $(SRCDIR)/PDEdriver
-
+ SUBDIRS := \
+            $(SRCDIR)/Builder \
+            $(SRCDIR)/TxtBuilder \
+            $(SRCDIR)/Hello \
+            $(SRCDIR)/World \
+            $(SRCDIR)/Viewer \
+            $(SRCDIR)/FileReader \
+            $(SRCDIR)/LinSolver \
+            $(SRCDIR)/FEM \
+            $(SRCDIR)/Tri \
+            $(SRCDIR)/PDEdriver \
+            $(SRCDIR)/TableTennis \
+            $(SRCDIR)/TTClient \
+            $(SRCDIR)/ListPlotter \
+            $(SRCDIR)/ZList \
+            $(SRCDIR)/ZListWriter
 else
-SUBDIRS := $(SRCDIR)/TxtBuilder $(SRCDIR)/Hello $(SRCDIR)/World
+ SUBDIRS := \
+            $(SRCDIR)/TxtBuilder \
+            $(SRCDIR)/Hello \
+            $(SRCDIR)/World
 endif
 
 
@@ -49,11 +61,11 @@ endif
 #endif
 
 ifeq ($(HAVE_BABEL),yes)
-SUBDIRS+= $(SRCDIR)/BabelTest
+ SUBDIRS += $(SRCDIR)/BabelTest
 endif
 
 ifeq ($(HAVE_VTK),yes)
-SUBDIRS+= $(SRCDIR)/VTK
+ SUBDIRS += $(SRCDIR)/VTK
 endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

@@ -76,9 +76,9 @@ void TableTennis::setServices(const sci::cca::Services::pointer& svc)
   myUIPort::pointer uip(&uiPort);
   myGoPort::pointer gop(&goPort);
   myTTPort::pointer ttp(&ttPort);
-  svc->addProvidesPort(uip,"ui","sci.cca.UIPort", props);
-  svc->addProvidesPort(gop,"go","sci.cca.GoPort", props);
-  svc->addProvidesPort(ttp,"tt","sci.cca.TTPort", props);
+  svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", props);
+  svc->addProvidesPort(gop,"go","sci.cca.ports.GoPort", props);
+  svc->addProvidesPort(ttp,"tt","sci.cca.ports.TTPort", props);
   // Remember that if the PortInfo is created but not used in a call to the svc object
   // then it must be freed.
   // Actually - the ref counting will take care of that automatically - Steve
