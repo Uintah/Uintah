@@ -1,6 +1,5 @@
 /*!
 \page building Instructions for Configuring and Building the SCIRun2 Framework and Components
-\section Overview
 
 This document describes the process of configuring and building the SCIRun2
 research code, including the SCIRun2 framework, GUI, and various
@@ -266,8 +265,8 @@ to learn how to run the software.
 
 \section reporting Reporting bugs
 
-<a href="http://software.sci.utah.edu/bugzilla">
-Report SCIRun2 bugs under the CCA product category.</a>.
+<a href="http://software.sci.utah.edu/bugzilla">Report</a>
+SCIRun2 bugs under the CCA product category.
 
 */
 
