@@ -38,6 +38,7 @@
  *
  */
 
+#include <sci_defs/qt_defs.h>
 #include <CCA/Components/Hello/Hello.h>
 #include <CCA/Components/Builder/QtUtils.h>
 #include <Core/Thread/Time.h>
@@ -45,8 +46,10 @@
 
 #include <iostream>
 
-#include <qmessagebox.h>
-#include <qstring.h>
+#if HAVE_QT
+ #include <qmessagebox.h>
+ #include <qstring.h>
+#endif
 
 #include <unistd.h>
 
@@ -111,7 +114,9 @@ void Hello::setServices(const sci::cca::Services::pointer& svc)
 
 int myUIPort::ui()
 {
+#if HAVE_QT
     QMessageBox::information(0, "Hello", com->text);
+#endif
     return 0;
 }
 

@@ -45,23 +45,41 @@
 #include <Core/CCA/spec/cca_sidl.h>
 
 namespace SCIRun {
+  class LinSolver;
 
   class myLinSolverPort : public virtual sci::cca::ports::LinSolverPort {
   public:
+    virtual ~myLinSolverPort() {}
     virtual int jacobi(const SSIDL::array2<double> &A, 
 		       const SSIDL::array1<double> &b,
 		       SSIDL::array1<double> &x);
   };
-  
-  class LinSolver: public sci::cca::Component{
+
+  class LSComponentIcon : public virtual sci::cca::ports::ComponentIcon {
   public:
-    LinSolver();
+    virtual ~LSComponentIcon() {}
+
+    virtual std::string getDisplayName();
+    virtual std::string getDescription();
+    virtual std::string getIconShape();
+    virtual int getProgressBar();
+    void setParent(LinSolver *com) { this->com = com; }
+  private:
+    LinSolver *com;
+  };
+  
+  class LinSolver: public sci::cca::Component {
+  public:
+    LinSolver() {}
+    virtual ~LinSolver() {}
     virtual void setServices(const sci::cca::Services::pointer& svc);
   private:
     LinSolver(const LinSolver&);
     LinSolver& operator=(const LinSolver&);
     sci::cca::Services::pointer services;
+    LSComponentIcon ciPort;
   };
+
 }
 
 #endif

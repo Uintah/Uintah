@@ -38,10 +38,14 @@
  *
  */
 
+#include <sci_defs/qt_defs.h>
 #include <CCA/Components/World/World.h>
-#include <qinputdialog.h>
-#include <qstring.h>
 #include <iostream>
+
+#if HAVE_QT
+ #include <qinputdialog.h>
+ #include <qstring.h>
+#endif
 
 //using namespace std;
 using namespace SCIRun;
@@ -84,12 +88,14 @@ std::string StringPort::getString() { return com->text; }
 
 int WUIPort::ui()
 {
+#if HAVE_QT
     bool ok;
     QString t = QInputDialog::getText("World", "Enter some text:",
         QLineEdit::Normal, QString::null, &ok);
     if (ok && !t.isEmpty()) {
         com->text = t.ascii();
     }
+#endif
     return 0;
 }
 

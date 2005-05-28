@@ -29,10 +29,16 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := CCA/Components/BabelTest
+SRCDIR := CCA/Components/BabelTest
 
-SUBDIRS := $(SRCDIR)/hello $(SRCDIR)/who $(SRCDIR)/whoc $(SRCDIR)/NewPort $(SRCDIR)/BridgeTest \
-	#$(SRCDIR)/whof77
+SUBDIRS := \
+           $(SRCDIR)/hello \
+           $(SRCDIR)/who \
+           $(SRCDIR)/whoc \
+           $(SRCDIR)/NewPort \
+           $(SRCDIR)/BridgeTest
+
+#$(SRCDIR)/whof77
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

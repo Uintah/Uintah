@@ -1,4 +1,3 @@
-#
 #  For more information, please see: http://software.sci.utah.edu
 # 
 #  The MIT License
@@ -31,14 +30,11 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := CCA/Components/Viewer
+SRCDIR   := CCA/Components/ZListWriter
 
 SRCS     += \
-	$(SRCDIR)/Viewer.cc \
-	$(SRCDIR)/ViewerWindow.cc \
-	$(SRCDIR)/moc_ViewerWindow.cc \
-	$(SRCDIR)/MainWindow.cc \
-	$(SRCDIR)/Colormap.cc
+	$(SRCDIR)/ZListWriter.cc
+
 PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm\
 	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
 
@@ -50,7 +46,3 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 #include $(SCIRUN_SCRIPTS)/program.mk
 
-$(SRCDIR)/Viewer.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/ViewerWindow.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/MainWindow.o: Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/Colormap.o: Core/CCA/spec/cca_sidl.h

@@ -76,9 +76,9 @@ void TTClient::setServices(const sci::cca::Services::pointer& svc)
   sci::cca::TypeMap::pointer props = svc->createTypeMap();
   ttUIPort::pointer uip(&uiPort);
   ttGoPort::pointer gop(&goPort);
-  svc->addProvidesPort(uip,"ui","sci.cca.UIPort", props);
-  svc->addProvidesPort(gop,"go","sci.cca.GoPort", props);
-  svc->registerUsesPort("tt","sci.cca.TTPort", props);
+  svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", props);
+  svc->addProvidesPort(gop,"go","sci.cca.ports.GoPort", props);
+  svc->registerUsesPort("tt","sci.cca.ports.TTPort", props);
   // Remember that if the PortInfo is created but not used in a call to the svc object
   // then it must be freed.
   // Actually - the ref counting will take care of that automatically - Steve
