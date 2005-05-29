@@ -40,11 +40,11 @@ namespace Uintah {
     public:
       RadiationVariables();
       ~RadiationVariables();
-      CCVariable<int> cellType;
 
       CCVariable<double> ABSKG;
       CCVariable<double> absorption;
       CCVariable<double> c2h2;
+      CCVariable<int> cellType;
       CCVariable<double> cenint;
       CCVariable<double> co2;
       CCVariable<double> cp;

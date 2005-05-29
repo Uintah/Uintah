@@ -65,100 +65,105 @@ c      IF (LPROBTWO.OR.LPROBTHREE)GO TO 30
 
                if ((j.ge.idxlo(2) .and. j.le.idxhi(2)) .and.
      $              (k.ge.idxlo(3) .and. k.le.idxhi(3))) then
+
                   relerr = (abs(src(i,j,k))-srcbm(i))*100/big
-            relerr2 = (abs(qfluxb(i,j,kk))-qfluxbbm(i))*100/big2 
-            relerrsq=relerrsq+(relerr**2)
-            relerrsq2=relerrsq2+(relerr2**2)
 
-            err = abs(src(i,j,k))-srcbm(i)
+                  relerr2 = (abs(qfluxb(i,j,kk))-qfluxbbm(i))*100/big2 
+                  relerrsq=relerrsq+(relerr**2)
+                  relerrsq2=relerrsq2+(relerr2**2)
 
-            if (abs(src(i,j,k)) .gt. 10*srcbm(i)) then
-               print*, 'found large source at ',i,j,k,'value = ',
-     $              src(i,j,k),srcbm(i)
-            end if
-            err2 = abs(qfluxb(i,j,kk))-qfluxbbm(i)
-            errsq = errsq + err**2
-            errsq2 = errsq2 + err2**2
+                  err = abs(src(i,j,k))-srcbm(i)
 
-            m=m+1
-         endif
+                  if (abs(src(i,j,k)) .gt. 10*srcbm(i)) then
+                     print*, 'found large source at ',i,j,k,'value = ',
+     $                    src(i,j,k),srcbm(i)
+                  end if
 
-20    continue
+                  print*,'source at ',i,j,k,' = ',src(i,j,k)
+                  print*,'flux at ',i,j,kk,' = ',qfluxb(i,j,kk)
+                  err2 = abs(qfluxb(i,j,kk))-qfluxbbm(i)
+                  errsq = errsq + err**2
+                  errsq2 = errsq2 + err2**2
 
-      if (m.gt.0) then
-         rmserrnm = sqrt(relerrsq/m)
-         rmserrnm2 = sqrt(relerrsq2/m)
-      
-         rms_errnm_abs = sqrt(errsq/m)
-         rms_errnm2_abs = sqrt(errsq2/m)
+                  m=m+1
+               endif
 
-         print*,'outputting rdombmcalc stuff',rmserrnm,rmserrnm2
-         print*,'absolute norms = ',rms_errnm_abs,rms_errnm2_abs
-      endif
+ 20         continue
 
-      END IF
+            if (m.gt.0) then
+               rmserrnm = sqrt(relerrsq/m)
+               rmserrnm2 = sqrt(relerrsq2/m)
+               
+               rms_errnm_abs = sqrt(errsq/m)
+               rms_errnm2_abs = sqrt(errsq2/m)
 
-c30    continue
+               print*,'outputting rdombmcalc stuff',rmserrnm,rmserrnm2
+               print*,'absolute norms = ',rms_errnm_abs,rms_errnm2_abs
+            endif
+
+         END IF
+
+ 30      continue
 
       IF (LPROBTWO)THEN
 
-c      DO 40 jj=idxlo(2),idxhi(2)
+         DO 40 jj=idxlo(2),idxhi(2)
+            
+c            write(6,*)jj,qfluxw(ii,jj,k)
+            
+ 40      continue
 
-c      write(6,*)jj,qfluxw(ii,jj,k)
+         DO 45 i=idxlo(1),idxhi(1)
 
-c40    continue
+            write(6,*)xx(i),src(i,j,k),zz(k)
+            write(6,*)zz(k),qfluxe(i,j,k),xx(i)
+            write(6,*)xx(i),qfluxb(i,j,kk),zz(kk)
 
-c      DO 45 i=idxlo(1),idxhi(1)
-
-c      write(6,*)xx(i),src(i,j,k),zz(k)
-c      write(6,*)zz(k),qfluxe(i,j,k),xx(i)
-c      write(6,*)xx(i),qfluxb(i,j,kk),zz(kk)
-
-c45    continue
+ 45      continue
 
       END IF
 
 c     Calculate relative error in energy balance for lprob(one/two)
 c     Note: We make use of the symmetry in heat fluxes here
 
-c      do 60 k=idxlo(3),idxhi(3)
-c         do 55 j=idxlo(2),idxhi(2)
-c            do 50 i=idxlo(1),idxhi(1)
+      do 60 k=idxlo(3),idxhi(3)
+         do 55 j=idxlo(2),idxhi(2)
+            do 50 i=idxlo(1),idxhi(1)
 
-c            if (pcell(i,j,k).eq.ffield) then
+            if (pcell(i,j,k).eq.ffield) then
 
-c               volume(i,j,k) = sew(i) * sns(j) * stb(k)
-c               srcsum = srcsum - src(i,j,k)*volume(i,j,k)
+               volume(i,j,k) = sew(i) * sns(j) * stb(k)
+               srcsum = srcsum - src(i,j,k)*volume(i,j,k)
 
-c            endif
+            endif
 
-c            if (pcell(i-1,j,k).ne.ffield) then
+            if (pcell(i-1,j,k).ne.ffield) then
 
-c            areaew = sns(j)*stb(k)
-c            fluxsumw = fluxsumw + (qfluxw(i,j,k))*areaew 
+            areaew = sns(j)*stb(k)
+            fluxsumw = fluxsumw + (qfluxw(i,j,k))*areaew 
 
-c            endif
+            endif
 
-c            if (pcell(i+1,j,k).ne.ffield) then
+            if (pcell(i+1,j,k).ne.ffield) then
 
-c            areaew = sns(j)*stb(k)
-c            fluxsume = fluxsume + (qfluxe(i,j,k))*areaew 
+            areaew = sns(j)*stb(k)
+            fluxsume = fluxsume + (qfluxe(i,j,k))*areaew 
 
-c            endif
+            endif
 
-c            if (pcell(i,j,k-1).ne.ffield) then
+            if (pcell(i,j,k-1).ne.ffield) then
 
-c            areatb(i) = sew(i) * sns(j)
-c            fluxsumtb = fluxsumtb + (qfluxb(i,j,k))*areatb(i) 
+            areatb = sew(i) * sns(j)
+            fluxsumtb = fluxsumtb + (qfluxb(i,j,k))*areatb
 
-c            endif
+            endif
 
-c 50         continue
-c 55      continue
-c 60   continue
+ 50         continue
+ 55      continue
+ 60   continue
 
-c      egerror = (srcsum - (fluxsume + fluxsumw + 4*fluxsumtb))/srcsum
-c      write(6,*)"% relative error in energy balance =",egerror*100
+      egerror = (srcsum - (fluxsume + fluxsumw + 4*fluxsumtb))/srcsum
+      write(6,*)"% relative error in energy balance =",egerror*100
 
       IF (LPROBTHREE)THEN
 

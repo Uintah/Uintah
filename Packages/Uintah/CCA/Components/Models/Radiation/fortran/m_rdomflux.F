@@ -7,37 +7,39 @@
 
       if (plusX) then
 
-      qfluxe(i,j,k) = qfluxe(i,j,k) + wt(l) 
-     1                  * abs(omu(l)) * cenint(i,j,k)
+         qfluxe(i,j,k) = qfluxe(i,j,k) + wt(l) 
+     1        * abs(omu(l)) * cenint(i,j,k)
 
       else
 
-      qfluxw(i,j,k) = qfluxw(i,j,k) + wt(l) 
-     1                  * abs(omu(l)) * cenint(i,j,k)
+         qfluxw(i,j,k) = qfluxw(i,j,k) + wt(l) 
+     1        * abs(omu(l)) * cenint(i,j,k)
 
       endif
+
 
       if (plusY) then
 
-      qfluxn(i,j,k) = qfluxn(i,j,k) + wt(l) 
-     1                  * abs(oeta(l)) * cenint(i,j,k)
+         qfluxn(i,j,k) = qfluxn(i,j,k) + wt(l) 
+     1        * abs(oeta(l)) * cenint(i,j,k)
 
       else
 
-      qfluxs(i,j,k) = qfluxs(i,j,k) + wt(l) 
-     1                  * abs(oeta(l)) * cenint(i,j,k)
+         qfluxs(i,j,k) = qfluxs(i,j,k) + wt(l) 
+     1        * abs(oeta(l)) * cenint(i,j,k)
 
       endif
 
+
       if (plusZ) then
 
-      qfluxt(i,j,k) = qfluxt(i,j,k) + wt(l) 
-     1                  * abs(oxi(l)) * cenint(i,j,k)
+         qfluxt(i,j,k) = qfluxt(i,j,k) + wt(l) 
+     1        * abs(oxi(l)) * cenint(i,j,k)
 
       else
 
-      qfluxb(i,j,k) = qfluxb(i,j,k) + wt(l) 
-     1                  * abs(oxi(l)) * cenint(i,j,k)
+         qfluxb(i,j,k) = qfluxb(i,j,k) + wt(l) 
+     1        * abs(oxi(l)) * cenint(i,j,k)
 
       endif
 

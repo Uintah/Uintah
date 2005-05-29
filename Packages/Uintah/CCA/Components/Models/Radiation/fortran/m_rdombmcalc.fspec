@@ -1,4 +1,5 @@
 void m_rdombmcalc(IntVector idxlo, IntVector idxhi, 
+             constCCVariable<int> pcell, int ffield,
              OffsetArray1<double> xx,
              OffsetArray1<double> zz,
              OffsetArray1<double> sew,

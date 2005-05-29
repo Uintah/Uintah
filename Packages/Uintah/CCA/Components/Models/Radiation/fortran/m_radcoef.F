@@ -328,13 +328,3 @@ c       OPEN(UNIT=15,FILE='qpts.methanol.24x24x50',STATUS='OLD')
 
         RETURN
         END
-
-
-
-
-
-
-
-
-
-
