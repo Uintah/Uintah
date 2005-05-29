@@ -15,109 +15,194 @@
       JST=idxlo(2)
       KST=idxlo(3)
 
-      if (xminus.or.xplus) then
+c     Specification of boundary values of temperature and absorption
+c     coefficient for real (fire) problems.  Temperature is set at 293 K
+c     because of a validation case in which the temperature at the radiometer
+c     location was 293 K. The emissivity at the boundary is assumed to be one,
+c     because otherwise the different directions will depend on each other
+c     (rho + epsilon = 1, rho = reflectivity).  Here the absorption 
+c     coefficient is arbitrarily set to one; the value is not really used
+c     anywhere, only makes the graphing pretty.
+
+      if (xminus) then
+
          DO 30 K=KST,KEND
             DO 20 J=JST,JEND
-               if (xminus) then
-                  i = ist -1
-c                  IF (PCELL(I,J,K).NE.FFIELD) THEN
-
-                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0d0
-                     if (lprobtwo)then
-                     tg(i,j,k) = 0.0d0
-                     end if
-                     ABSKG(I,J,K) = 1.0d0  
-                     tg(i,j,k) = 293.0d0
-
-c                 END IF
-               endif
-               if (xplus) then
-                  i = iend + 1
-c                  IF (PCELL(I,J,K).NE.FFIELD) THEN
-
-                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0d0
-                     if (lprobtwo)then
-                     tg(i,j,k) = 0.0d0
-                     end if
-                     ABSKG(I,J,K) = 1.0d0
-                     tg(i,j,k) = 293.0d0
-
-c                  END IF
-               endif
+               i = ist -1
+               IF (PCELL(I,J,K).NE.FFIELD) THEN
+                  ABSKG(I,J,K) = 1.0d0  
+                  tg(i,j,k) = 293.0d0
+               END IF
  20         CONTINUE
  30      CONTINUE
+
       endif
-      if (yminus.or.yplus) then
+
+      if (xplus) then
+
+         DO 130 K=KST,KEND
+            DO 120 J=JST,JEND
+               i = iend + 1
+               IF (PCELL(I,J,K).NE.FFIELD) THEN
+                  ABSKG(I,J,K) = 1.0d0
+                  tg(i,j,k) = 293.0d0
+               END IF
+ 120         CONTINUE
+ 130      CONTINUE
+
+      endif
+
+      if (yminus) then
+            
          DO 50 K=KST,KEND
             DO 40 I=IST,IEND
-               if (yminus) then
-                  j = jst -1
-c                  IF (PCELL(I,J,K).NE.FFIELD) THEN
-
-                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0d0
-                     if (lprobtwo)then
-                     tg(i,j,k) = 0.0d0
-                     end if
-                     ABSKG(I,J,K) = 1.0d0
-                     tg(i,j,k) = 293.0d0
-
-c                  END IF
-               endif
-               if (yplus) then
-                  j = jend + 1
-c                  IF (PCELL(I,J,K).NE.FFIELD) THEN
-
-                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0d0
-                     if (lprobtwo)then
-                     tg(i,j,k) = 0.0d0
-                     end if
-                     ABSKG(I,J,K) = 1.0d0
-                     tg(i,j,k) = 293.0d0
-
-c                  END IF
-               endif
+               j = jst -1
+               IF (PCELL(I,J,K).NE.FFIELD) THEN
+                  ABSKG(I,J,K) = 1.0d0
+                  tg(i,j,k) = 293.0d0
+               END IF
  40         CONTINUE
  50      CONTINUE
+
       endif
-      if (zminus.or.zplus) then
+
+      if (yplus) then
+
+         DO 150 K=KST,KEND
+            DO 140 I=IST,IEND
+               j = jend + 1
+               IF (PCELL(I,J,K).NE.FFIELD) THEN
+                  ABSKG(I,J,K) = 1.0d0
+                  tg(i,j,k) = 293.0d0
+               END IF
+ 140         CONTINUE
+ 150      CONTINUE
+
+      endif
+         
+      if (zminus) then
+
          DO 70 J=JST,JEND
             DO 60 I=IST,IEND
-               if (zminus) then
-                  k = kst -1
-c                  IF (PCELL(I,J,K).NE.FFIELD) THEN
-
-                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0d0
-                     if (lprobtwo)then
-                     tg(i,j,k) = 0.0d0
-                     end if
-                     ABSKG(I,J,K) = 1.0d0 
-                     tg(i,j,k) = 293.0d0
- 
-c                 END IF
-               endif
-               if (zplus) then
-                  k = kend + 1
-c                  IF (PCELL(I,J,K).NE.FFIELD) THEN
-
-                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0d0
-                     if (lprobtwo)then
-                     tg(i,j,k) = 0.0d0
-                     end if
-                     ABSKG(I,J,K) = 1.0d0 
-                     tg(i,j,k) = 293.0d0
-
-c                  END IF
-               endif
+               k = kst -1
+               IF (PCELL(I,J,K).NE.FFIELD) THEN
+                  ABSKG(I,J,K) = 1.0d0 
+                  tg(i,j,k) = 293.0d0
+               END IF
  60         CONTINUE
  70      CONTINUE
+
       endif
+
+      if (zplus) then
+
+         DO 170 J=JST,JEND
+            DO 160 I=IST,IEND
+               k = kend + 1
+               IF (PCELL(I,J,K).NE.FFIELD) THEN
+                  ABSKG(I,J,K) = 1.0d0 
+                  tg(i,j,k) = 293.0d0
+               END IF
+ 160         CONTINUE
+ 170      CONTINUE
+
+      endif
+
+      if (l_testproblems) then
+
+c     Specification for test problems.  Problems 1 and 3 have zero
+c     temperature at the boundaries, and Problem 2 has a specified temperature
+c     that may be different from zero.
+
+         if (xminus) then
+            
+            DO 230 K=KST,KEND
+               DO 220 J=JST,JEND
+                  i = ist -1
+                  IF (PCELL(I,J,K).NE.FFIELD) THEN
+                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0d0
+                     if (lprobtwo)then
+                        tg(i,j,k) = 0.0d0
+                     end if
+                  END IF
+ 220            CONTINUE
+ 230         CONTINUE
+
+         endif
+
+         if (xplus) then
+            
+            DO 330 K=KST,KEND
+               DO 320 J=JST,JEND
+                  i = iend + 1
+                  IF (PCELL(I,J,K).NE.FFIELD) THEN
+                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0d0
+                     if (lprobtwo)then
+                        tg(i,j,k) = 0.0d0
+                     end if
+                  END IF
+ 320            CONTINUE
+ 330         CONTINUE
+
+         endif
+
+         if (yminus) then
+            DO 250 K=KST,KEND
+               DO 240 I=IST,IEND
+                  j = jst -1
+                  IF (PCELL(I,J,K).NE.FFIELD) THEN
+                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0d0
+                     if (lprobtwo)then
+                        tg(i,j,k) = 0.0d0
+                     end if
+                  END IF
+ 240            CONTINUE
+ 250         CONTINUE
+         endif
+
+         if (yplus) then
+            DO 350 K=KST,KEND
+               DO 340 I=IST,IEND
+                  j = jend + 1
+                  IF (PCELL(I,J,K).NE.FFIELD) THEN
+                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0d0
+                     if (lprobtwo)then
+                        tg(i,j,k) = 0.0d0
+                     end if
+                  END IF
+ 340           CONTINUE
+ 350        CONTINUE
+         endif
+
+         if (zminus) then
+            DO 270 J=JST,JEND
+               DO 260 I=IST,IEND
+                  k = kst -1
+                  IF (PCELL(I,J,K).NE.FFIELD) THEN
+                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0d0
+                     if (lprobtwo)then
+                        tg(i,j,k) = 0.0d0
+                     end if
+                  END IF
+ 260           CONTINUE
+ 270        CONTINUE
+         endif
+
+         if (zplus) then
+            DO 370 J=JST,JEND
+               DO 360 I=IST,IEND
+                  k = kend + 1
+                  IF (PCELL(I,J,K).NE.FFIELD) THEN
+                     if (lprobone.or.lprobthree) tg(i,j,k) = 0.0d0
+                     if (lprobtwo)then
+                        tg(i,j,k) = 0.0d0
+                     end if
+                  END IF
+ 360            CONTINUE
+ 370         CONTINUE
+         endif
+
+      endif
+
       RETURN
       end
-
-
-
-
-
-
-
-

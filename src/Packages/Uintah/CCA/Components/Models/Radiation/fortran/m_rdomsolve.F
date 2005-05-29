@@ -1,6 +1,6 @@
 #include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rdomsolve_fort.h>
 
-      integer i,j,k,ii,jj,kk,iii,jjj,kkk
+      integer i,j,k,ii,jj,kk
 
       double precision PI,PI1,SIG
       double precision val, factor
@@ -17,160 +17,174 @@
          do 20 j=idxlo(2),idxhi(2)
             do 10 i=idxlo(1),idxhi(1)
 
-      if (omu(l).gt.0) then
+               if (omu(l).gt.0) then
          
-         ii = i
-         iii=ii-1
-         plusX = .true.
+                  ii = i
+                  plusX = .true.
 
-      else
+               else
+                  
+                  ii = idxlo(1)+idxhi(1)-i
+                  plusX = .false.
 
-         ii = idxlo(1)+idxhi(1)-i
-         iii=ii+1
-         plusX = .false.
+               end if
 
-      end if
+               if (oeta(l).gt.0) then
+                  
+                  jj = j 
+                  plusY = .true.
 
-      if (oeta(l).gt.0) then
+               else
+                  
+                  jj = idxlo(2)+idxhi(2)-j
+                  plusY = .false.
 
-         jj = j 
-         jjj=jj-1
-         plusY = .true.
+               end if
 
-      else
+               if (oxi(l).gt.0) then
+                  
+                  kk = k
+                  plusZ = .true.
 
-         jj = idxlo(2)+idxhi(2)-j
-         jjj=jj+1
-         plusY = .false.
-
-      end if
-
-      if (oxi(l).gt.0) then
+               else
+                  
+                  kk = idxlo(3)+idxhi(3)-k
+                  plusZ = .false.
          
-         kk = k
-         kkk=kk-1
-         plusZ = .true.
+               end if
 
-      else
+               volume(ii,jj,kk) = sew(ii) * sns(jj) * stb(kk)
 
-         kk = idxlo(3)+idxhi(3)-k
-         kkk=kk+1
-         plusZ = .false.
-         
-      end if
+               su(ii,jj,kk) = esrcg(ii,jj,kk)*volume(ii,jj,kk)
 
-      volume(ii,jj,kk) = sew(ii) * sns(jj) * stb(kk)
-      su(ii,jj,kk) = esrcg(ii,jj,kk)*volume(ii,jj,kk)
+               areaew = sns(jj)*stb(kk)
+               arean = sew(ii)*stb(kk)                 
+               areatb = sew(ii) * sns(jj)
 
-      areaew = sns(jj)*stb(kk)
-      arean = sew(ii)*stb(kk)                 
-      areatb = sew(ii) * sns(jj)
-
-c      if (pcell(ii,jj,kk).ne.ffield) then
+               if (pcell(ii,jj,kk).ne.ffield) then
 c  call fixval assume abskg to be one but change it in props calculation
 
-c         val = abs(fraction(bands))*SIG*PI1*tg(ii,jj,kk)**4
-c         factor = 1.d0
-c         call fixradval(val, 
-c     $        aw(ii,jj,kk),as(ii,jj,kk),ab(ii,jj,kk),
-c     $        ae(ii,jj,kk),an(ii,jj,kk),at(ii,jj,kk),
-c     $        ap(ii,jj,kk),su(ii,jj,kk),factor)
-c      else
+                  val = abs(fraction(bands))*SIG*PI1*
+     $                 tg(ii,jj,kk)**4
+                  factor = 1.d0
+                  call fixradval(val, 
+     $                 aw(ii,jj,kk),as(ii,jj,kk),ab(ii,jj,kk),
+     $                 ae(ii,jj,kk),an(ii,jj,kk),at(ii,jj,kk),
+     $                 ap(ii,jj,kk),su(ii,jj,kk),factor)
+               else
 
-         if (plusX) then          
-c            if (pcell(ii-1,jj,kk).eq.ffield) then
+                  if (plusX) then          
 
-               aw(ii,jj,kk) = abs(omu(l))*areaew
+                     if (pcell(ii-1,jj,kk).eq.ffield) then
 
-c            else
-c               aw(ii,jj,kk) = 0.0d0
-c               su(ii,jj,kk) = su(ii,jj,kk) + (abs(omu(l))*areaew) *
-c     &         PI1 * (SIG * abs(fraction(bands))*
-c     &              tg(ii-1,jj,kk)**4)
-c            end if
-         else
-c            if (pcell(ii+1,jj,kk).eq.ffield) then
+                        aw(ii,jj,kk) = abs(omu(l))*areaew
 
-               aw(ii,jj,kk) = abs(omu(l))*areaew
-
-c            else
-c               aw(ii,jj,kk) = 0.0d0
-c               su(ii,jj,kk) = su(ii,jj,kk) + (abs(omu(l)) * areaew) * 
-c     &         PI1 * (SIG * abs(fraction(bands))*
+                     else
+                        aw(ii,jj,kk) = 0.0d0
+                        su(ii,jj,kk) = su(ii,jj,kk) + 
+     $                       (abs(omu(l))*areaew) *
+     &                       PI1 * (SIG * abs(fraction(bands))*
 c     Empirical model for emissivity at boundaries
-c     &              1.0d0*
-c     &              tg(ii+1,jj,kk)**4)
-c            end if
-         endif
+     &                       1.0d0*
+     &                       tg(ii-1,jj,kk)**4)
+                     end if
+
+                  else
+
+                     if (pcell(ii+1,jj,kk).eq.ffield) then
+
+                        aw(ii,jj,kk) = abs(omu(l))*areaew
+
+                     else
+                        aw(ii,jj,kk) = 0.0d0
+                        su(ii,jj,kk) = su(ii,jj,kk) + 
+     $                       (abs(omu(l)) * areaew) * 
+     &                       PI1 * (SIG * abs(fraction(bands))*
+c     Empirical model for emissivity at boundaries
+     &                       1.0d0*
+     &                       tg(ii+1,jj,kk)**4)
+                     end if
+
+                  endif
          
-         if (plusY) then
-c            if (pcell(ii,jj-1,kk).eq.ffield) then
+                  if (plusY) then
 
-               as(ii,jj,kk) = abs(oeta(l))*arean
+                     if (pcell(ii,jj-1,kk).eq.ffield) then
 
-c            else
-c               as(ii,jj,kk) = 0.0d0
-c               su(ii,jj,kk) = su(ii,jj,kk) + 
-c     &              (abs(oeta(l))*arean) *
-c     &         PI1 * (SIG * abs(fraction(bands)) *
+                        as(ii,jj,kk) = abs(oeta(l))*arean
+
+                     else
+                        as(ii,jj,kk) = 0.0d0
+                        su(ii,jj,kk) = su(ii,jj,kk) + 
+     &                       (abs(oeta(l))*arean) *
+     &                       PI1 * (SIG * abs(fraction(bands)) *
 c     Empirical model for emissivity at boundaries
-c     &              1.0d0*
-c     &              tg(ii,jj-1,kk)**4)
-c            end if
-         else
-c            if (pcell(ii,jj+1,kk).eq.ffield) then
+     &                       1.0d0*
+     &                       tg(ii,jj-1,kk)**4)
+                     end if
 
-               as(ii,jj,kk) = abs(oeta(l))*arean
+                  else
 
-c            else
-c               as(ii,jj,kk) = 0.0d0
-c               su(ii,jj,kk) = su(ii,jj,kk) + 
-c     &              (abs(oeta(l))*arean) *
-c     &         PI1 * (SIG * abs(fraction(bands)) *
+                     if (pcell(ii,jj+1,kk).eq.ffield) then
+
+                        as(ii,jj,kk) = abs(oeta(l))*arean
+
+                     else
+                        as(ii,jj,kk) = 0.0d0
+                        su(ii,jj,kk) = su(ii,jj,kk) + 
+     &                       (abs(oeta(l))*arean) *
+     &                       PI1 * (SIG * abs(fraction(bands)) *
 c     Empirical model for emissivity at boundaries
-c     &              1.0d0*
-c     &              tg(ii,jj+1,kk)**4)
-c            end if
-         endif
+     &                       1.0d0*
+     &                       tg(ii,jj+1,kk)**4)
+                     end if
 
-         if (plusZ) then
-c            if (pcell(ii,jj,kk-1).eq.ffield) then
+                  endif
 
-               ab(ii,jj,kk) = abs(oxi(l))*areatb
+                  if (plusZ) then
 
-c            else
-c               ab(ii,jj,kk) = 0.0d0
-c               su(ii,jj,kk) = su(ii,jj,kk) + 
-c     &              (abs(oxi(l))*areatb) *
-c     &         PI1 * (SIG * abs(fraction(bands)) *
+                     if (pcell(ii,jj,kk-1).eq.ffield) then
+
+                        ab(ii,jj,kk) = abs(oxi(l))*areatb
+
+                     else
+                        ab(ii,jj,kk) = 0.0d0
+                        su(ii,jj,kk) = su(ii,jj,kk) + 
+     &                       (abs(oxi(l))*areatb) *
+     &                       PI1 * (SIG * abs(fraction(bands)) *
 c     Empirical model for emissivity at boundaries
-c     &              1.0d0*
-c     &              tg(ii,jj,kk-1)**4)
-c            end if
-         else
-c            if (pcell(ii,jj,kk+1).eq.ffield) then
+     &                       1.0d0*
+     &                       tg(ii,jj,kk-1)**4)
+                     end if
 
-               ab(ii,jj,kk) = abs(oxi(l))*areatb
+                  else
 
-c            else
-c               ab(ii,jj,kk) = 0.0d0
-c               su(ii,jj,kk) = su(ii,jj,kk) + 
-c     &              (abs(oxi(l))*areatb) * 
+                     if (pcell(ii,jj,kk+1).eq.ffield) then
+
+                        ab(ii,jj,kk) = abs(oxi(l))*areatb
+                        
+                     else
+                        ab(ii,jj,kk) = 0.0d0
+                        su(ii,jj,kk) = su(ii,jj,kk) + 
+     &                       (abs(oxi(l))*areatb) * 
 c     Empirical model for emissivity at boundaries
-c     &              1.0d0*
-c     &         PI1 * (SIG * abs(fraction(bands)) *
-c     &              tg(ii,jj,kk+1)**4)
-c            end if
-         endif
+     &                       1.0d0*
+     &                       PI1 * (SIG * abs(fraction(bands)) *
+     &                       tg(ii,jj,kk+1)**4)
+                     end if
+
+                  endif
          
-         ap(ii,jj,kk) =  abs(omu(l))*areaew + abs(oeta(l))*arean + 
-     &        abs(oxi(l))*areatb + abskg(ii,jj,kk)*
-     &        volume(ii,jj,kk)
+                  ap(ii,jj,kk) =  abs(omu(l))*areaew + 
+     $                 abs(oeta(l))*arean + 
+     &                 abs(oxi(l))*areatb + 
+     $                 abskg(ii,jj,kk)*volume(ii,jj,kk)
 
-c      endif
-10    continue
-20    continue
-30    continue
+               endif
+
+ 10         continue
+ 20      continue
+ 30   continue
          
       RETURN
       end

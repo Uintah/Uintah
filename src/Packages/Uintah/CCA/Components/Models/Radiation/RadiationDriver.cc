@@ -38,9 +38,13 @@ RadiationDriver::RadiationDriver(const ProcessorGroup* myworld,
 
   d_cellInfoLabel = VarLabel::create("radCellInformation",
 				     PerPatch<Models_CellInformationP>::getTypeDescription());
+
+  cellType_CCLabel = VarLabel::create("cellType_CC", CCVariable<double>::getTypeDescription());
+
   shgamma_CCLabel = VarLabel::create("shgamma", CCVariable<double>::getTypeDescription());
   abskg_CCLabel = VarLabel::create("abskg", CCVariable<double>::getTypeDescription());
   esrcg_CCLabel = VarLabel::create("esrcg", CCVariable<double>::getTypeDescription());
+  cenint_CCLabel = VarLabel::create("cenint", CCVariable<double>::getTypeDescription());
 
   qfluxE_CCLabel = VarLabel::create("qfluxE", CCVariable<double>::getTypeDescription());
   qfluxW_CCLabel = VarLabel::create("qfluxW", CCVariable<double>::getTypeDescription());
@@ -72,9 +76,12 @@ RadiationDriver::~RadiationDriver()
 
   VarLabel::destroy(d_cellInfoLabel);
 
+  VarLabel::destroy(cellType_CCLabel);  
+
   VarLabel::destroy(shgamma_CCLabel);  
   VarLabel::destroy(abskg_CCLabel);  
   VarLabel::destroy(esrcg_CCLabel);  
+  VarLabel::destroy(cenint_CCLabel);  
 
   VarLabel::destroy(qfluxE_CCLabel);  
   VarLabel::destroy(qfluxW_CCLabel);  
@@ -131,6 +138,8 @@ void RadiationDriver::scheduleInitialize(SchedulerP& sched,
   t->computes(qfluxT_CCLabel);
   t->computes(qfluxB_CCLabel);
   t->computes(radiationSrc_CCLabel);
+
+  t->computes(cellType_CCLabel);
   
   sched->addTask(t, patches, matls);
 }
@@ -154,6 +163,8 @@ RadiationDriver::initialize(const ProcessorGroup*,
     int iceIndex = 0;
     int matlIndex = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
 
+    new_dw->allocateAndPut(vars.cellType, cellType_CCLabel, matlIndex, patch);
+
     new_dw->allocateAndPut(vars.qfluxe, qfluxE_CCLabel, matlIndex, patch);
     new_dw->allocateAndPut(vars.qfluxw, qfluxW_CCLabel, matlIndex, patch);
     new_dw->allocateAndPut(vars.qfluxn, qfluxN_CCLabel, matlIndex, patch);
@@ -170,6 +181,94 @@ RadiationDriver::initialize(const ProcessorGroup*,
     vars.qfluxb.initialize(0.0);
     vars.src.initialize(0.0);
     
+    IntVector idxLo = patch->getCellFORTLowIndex();
+    IntVector idxHi = patch->getCellFORTHighIndex();
+
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+    // set cellType in domain to be ffield, and at boundaries to be 10
+    // We can generalize this with volume fraction information to account
+    // for intrusions
+
+    int ffield = -1;
+    vars.cellType.initialize(ffield);
+
+    if (xminus) {
+      int colX = idxLo.x();
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	  IntVector xminusCell(colX-1, colY, colZ);
+	  vars.cellType[xminusCell] = 10;
+	}
+      }
+    }
+    
+    if (xplus) {
+      int colX = idxHi.x();
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	  IntVector xplusCell(colX+1, colY, colZ);
+	  vars.cellType[xplusCell] = 10;
+	}
+      }
+    }
+    
+    if (yminus) {
+      int colY = idxLo.y();
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  IntVector yminusCell(colX, colY-1, colZ);
+	  vars.cellType[yminusCell] = 10;
+	}
+      }
+    }
+
+    if (yplus) {
+      int colY = idxHi.y();
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  IntVector yplusCell(colX, colY+1, colZ);
+	  vars.cellType[yplusCell] = 10;
+	}
+      }
+    }
+
+    if (zminus) {
+      int colZ = idxLo.z();
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  IntVector zminusCell(colX, colY, colZ-1);
+	  vars.cellType[zminusCell] = 10;
+	}
+      }
+    }
+      
+    if (zplus) {
+      int colZ = idxHi.z();
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  IntVector zplusCell(colX, colY, colZ+1);
+	  vars.cellType[zplusCell] = 10;
+	}
+      }
+    }
+
+    /*
+
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  IntVector currCell(colX,colY,colZ);
+	  //	  cerr << "cellType at " << colX << " " << colY << " " << colZ << " " << vars.cellType[currCell] << endl;
+	}
+      }
+    }
+    */
   }
 }
 
@@ -245,6 +344,8 @@ RadiationDriver::scheduleCopyValues(const LevelP& level,
   Task* t = scinew Task("RadiationDriver::copyValues",
 		      this, &RadiationDriver::copyValues);
   int zeroGhostCells = 0;
+
+  t->requires(Task::OldDW, cellType_CCLabel, Ghost::None, zeroGhostCells);
   
   t->requires(Task::OldDW, qfluxE_CCLabel, Ghost::None, zeroGhostCells);
   t->requires(Task::OldDW, qfluxW_CCLabel, Ghost::None, zeroGhostCells);
@@ -253,6 +354,8 @@ RadiationDriver::scheduleCopyValues(const LevelP& level,
   t->requires(Task::OldDW, qfluxT_CCLabel, Ghost::None, zeroGhostCells);
   t->requires(Task::OldDW, qfluxB_CCLabel, Ghost::None, zeroGhostCells);
   t->requires(Task::OldDW, radiationSrc_CCLabel, Ghost::None, zeroGhostCells);
+
+  t->computes(cellType_CCLabel);
 
   t->computes(qfluxE_CCLabel);
   t->computes(qfluxW_CCLabel);
@@ -283,6 +386,8 @@ RadiationDriver::copyValues(const ProcessorGroup*,
     int matlIndex = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
     int zeroGhostCells = 0;
 
+    constCCVariable<int> oldPcell;
+
     constCCVariable<double> oldFluxE;
     constCCVariable<double> oldFluxW;
     constCCVariable<double> oldFluxN;
@@ -290,6 +395,9 @@ RadiationDriver::copyValues(const ProcessorGroup*,
     constCCVariable<double> oldFluxT;
     constCCVariable<double> oldFluxB;
     constCCVariable<double> oldRadiationSrc;
+
+    old_dw->get(oldPcell, cellType_CCLabel, matlIndex, patch,
+		Ghost::None, zeroGhostCells);
 
     old_dw->get(oldFluxE, qfluxE_CCLabel, matlIndex, patch,
 		Ghost::None, zeroGhostCells);
@@ -306,6 +414,8 @@ RadiationDriver::copyValues(const ProcessorGroup*,
     old_dw->get(oldRadiationSrc, radiationSrc_CCLabel, matlIndex, patch,
 		Ghost::None, zeroGhostCells);
 
+    CCVariable<int> pcell;
+    
     CCVariable<double> fluxE;
     CCVariable<double> fluxW;
     CCVariable<double> fluxN;
@@ -314,6 +424,8 @@ RadiationDriver::copyValues(const ProcessorGroup*,
     CCVariable<double> fluxB;
     CCVariable<double> radiationSrc;
 
+    new_dw->allocateAndPut(pcell, cellType_CCLabel, matlIndex, patch);    
+
     new_dw->allocateAndPut(fluxE, qfluxE_CCLabel, matlIndex, patch);    
     new_dw->allocateAndPut(fluxW, qfluxW_CCLabel, matlIndex, patch);    
     new_dw->allocateAndPut(fluxN, qfluxN_CCLabel, matlIndex, patch);    
@@ -321,6 +433,8 @@ RadiationDriver::copyValues(const ProcessorGroup*,
     new_dw->allocateAndPut(fluxT, qfluxT_CCLabel, matlIndex, patch);    
     new_dw->allocateAndPut(fluxB, qfluxB_CCLabel, matlIndex, patch);    
     new_dw->allocateAndPut(radiationSrc, radiationSrc_CCLabel, matlIndex, patch);    
+
+    pcell.copyData(oldPcell);
 
     fluxE.copyData(oldFluxE);
     fluxW.copyData(oldFluxW);
@@ -460,7 +574,9 @@ RadiationDriver::scheduleBoundaryCondition(const LevelP& level,
 {
   Task* t=scinew Task("RadiationDriver::boundaryCondition",
 		      this, &RadiationDriver::boundaryCondition);
+  int numGhostCells = 1;
 
+  t->requires(Task::NewDW, cellType_CCLabel, Ghost::AroundCells, numGhostCells);
   t->modifies(tempCopy_CCLabel);
   t->modifies(abskg_CCLabel);
 
@@ -483,16 +599,21 @@ RadiationDriver::boundaryCondition(const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     int iceIndex = 0;
     int matlIndex = d_sharedState->getICEMaterial(iceIndex)->getDWIndex();
+    int numGhostCells = 1;
     
     RadiationVariables radVars;
+    RadiationConstVariables constRadVars;
     d_radCounter = d_sharedState->getCurrentTopLevelTimeStep();
 
     //    if (d_radCounter%d_radCalcFreq == 0) {
 
+      new_dw->get(constRadVars.cellType, cellType_CCLabel, matlIndex, patch,
+		  Ghost::AroundCells, numGhostCells);
+
       new_dw->getModifiable(radVars.temperature, tempCopy_CCLabel, matlIndex, patch);
       new_dw->getModifiable(radVars.ABSKG, abskg_CCLabel, matlIndex, patch);
 
-      d_DORadiation->boundaryCondition(pc, patch, &radVars);
+      d_DORadiation->boundaryCondition(pc, patch, &radVars, &constRadVars);
 
       //    }
   }
@@ -518,6 +639,7 @@ RadiationDriver::scheduleIntensitySolve(const LevelP& level,
   t->requires(Task::NewDW, h2o_CCLabel, Ghost::None, zeroGhostCells);
   t->requires(Task::NewDW, sootVFCopy_CCLabel, Ghost::None, zeroGhostCells);
 
+  t->requires(Task::NewDW, cellType_CCLabel, Ghost::AroundCells, numGhostCells);
   t->requires(Task::NewDW, tempCopy_CCLabel, Ghost::AroundCells, numGhostCells);
   //  t->modifies(tempCopy_CCLabel);
 
@@ -589,8 +711,12 @@ RadiationDriver::intensitySolve(const ProcessorGroup* pc,
 		  Ghost::None, zeroGhostCells);
 
       //            new_dw->getModifiable(radVars.temperature, tempCopy_CCLabel, matlIndex, patch);
-      new_dw->getCopy(radVars.temperature, tempCopy_CCLabel, matlIndex, patch,
-      		      Ghost::AroundCells, numGhostCells);
+      //      new_dw->getCopy(radVars.temperature, tempCopy_CCLabel, matlIndex, patch,
+      //      		      Ghost::AroundCells, numGhostCells);
+      new_dw->get(constRadVars.temperature, tempCopy_CCLabel, matlIndex, patch,
+		  Ghost::AroundCells, numGhostCells);
+      new_dw->get(constRadVars.cellType, cellType_CCLabel, matlIndex, patch,
+		  Ghost::AroundCells, numGhostCells);
 
       new_dw->getModifiable(radVars.ABSKG, abskg_CCLabel, matlIndex, patch);
       new_dw->getModifiable(radVars.ESRCG, esrcg_CCLabel, matlIndex, patch);
@@ -615,14 +741,29 @@ RadiationDriver::intensitySolve(const ProcessorGroup* pc,
       new_dw->getModifiable(energySource, mi->energy_source_CCLabel, matlIndex, patch);
 
       d_DORadiation->intensitysolve(pc, patch, cellinfo, &radVars, &constRadVars);
-
+ 
       //    }
 
+      /*
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
-      //      energySource[c] += radVars.src[c];
-      //      energySource[c] += zeroSource[c];
+    IntVector c = *iter;
+    //    energySource[c] += radVars.src[c];
+    //    energySource[c] += zeroSource[c];
     }
+      */
+      /*
+    IntVector indexLow = patch->getCellFORTLowIndex();
+    IntVector indexHigh = patch->getCellFORTHighIndex();
+    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+	  IntVector currCell(colX, colY, colZ);
+	  double vol=cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
+	  energySource[currCell] += vol*radVars.src[currCell];
+	}
+      }
+    }
+      */
   }
 }
 //______________________________________________________________________

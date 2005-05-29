@@ -136,6 +136,9 @@ class RadiationDriver : public ModelInterface {
   VarLabel* shgamma_CCLabel;
   VarLabel* abskg_CCLabel;
   VarLabel* esrcg_CCLabel;  
+  VarLabel* cenint_CCLabel;  
+
+  VarLabel* cellType_CCLabel;
 
   VarLabel* qfluxE_CCLabel;
   VarLabel* qfluxW_CCLabel;

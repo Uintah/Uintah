@@ -44,6 +44,7 @@ namespace Uintah {
       constCCVariable<double> absorption;
       constCCVariable<double> co2;
       constCCVariable<double> c2h2;
+      constCCVariable<int> cellType;
       constCCVariable<double> density;
       constCCVariable<double> h2o;
       constCCVariable<double> mixfrac;
