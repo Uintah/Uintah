@@ -31,9 +31,7 @@ c     Initial calculation of the matrix elements
                su(i,j,k) = 4.0d0*pi*esrcg(i,j,k)*volume(i,j,k)
 
                areaew = sns(j)*stb(k)
-c               arean(i) = sew(i)*stb(k)   
                arean = sew(i)*stb(k)                 
-c               areatb(i) = sew(i) * sns(j)
                areatb = sew(i) * sns(j)              
 
                if (pcell(i,j,k).ne.ffield) then
@@ -54,7 +52,7 @@ c     Calculate coefficients for all the interior nodes
 
                      ae(i,j,k) = (2.0d0*shgamma(i+1,j,k)*
      &                    shgamma(i,j,k)/(shgamma(i+1,j,k)+
-     &                    shgamma(i,j,k)))*(1.0d0/(xx(i+1)-xx(i)))*
+     &                    shgamma(i,j,k)))*(1.0d0/dxep(i))*
      $                    areaew
 
                   else
@@ -67,7 +65,7 @@ c     Calculate coefficients for all the interior nodes
 
                      aw(i,j,k) = (2.0d0*shgamma(i-1,j,k)*
      &                    shgamma(i,j,k)/(shgamma(i-1,j,k)+
-     &                    shgamma(i,j,k)))*(1.0d0/(xx(i)-xx(i-1)))*
+     &                    shgamma(i,j,k)))*(1.0d0/(dxpw(i)))*
      $                    areaew
 
                   else
@@ -80,9 +78,7 @@ c     Calculate coefficients for all the interior nodes
 
                      an(i,j,k) = (2.0d0*shgamma(i,j+1,k)*
      &                    shgamma(i,j,k)/(shgamma(i,j+1,k)+
-c     &                    shgamma(i,j,k)))*(1.0d0/(yy(j+1)-yy(j)))*
-c     $                    arean(i)
-     &                    shgamma(i,j,k)))*(1.0d0/(yy(j+1)-yy(j)))*
+     &                    shgamma(i,j,k)))*(1.0d0/(dynp(j)))*
      $                    arean
 
                   else
@@ -95,9 +91,7 @@ c     $                    arean(i)
 
                      as(i,j,k) = (2.0d0*shgamma(i,j-1,k)*
      &                    shgamma(i,j,k)/(shgamma(i,j-1,k)+
-c     &                    shgamma(i,j,k)))*(1.0d0/(yy(j)-yy(j-1)))*
-c     $                    arean(i)
-     &                    shgamma(i,j,k)))*(1.0d0/(yy(j)-yy(j-1)))*
+     &                    shgamma(i,j,k)))*(1.0d0/(dyps(j)))*
      $                    arean
 
                   else
@@ -110,9 +104,7 @@ c     $                    arean(i)
 
                      at(i,j,k) = (2.0d0*shgamma(i,j,k+1)*
      &                    shgamma(i,j,k)/(shgamma(i,j,k+1)+
-c     &                    shgamma(i,j,k)))*(1.0d0/(zz(k+1)-zz(k)))*
-c     $                    areatb(i)
-     &                    shgamma(i,j,k)))*(1.0d0/(zz(k+1)-zz(k)))*
+     &                    shgamma(i,j,k)))*(1.0d0/(dztp(k)))*
      $                    areatb
 
                   else
@@ -125,9 +117,7 @@ c     $                    areatb(i)
 
                      ab(i,j,k) = (2.0d0*shgamma(i,j,k-1)*
      &                    shgamma(i,j,k)/(shgamma(i,j,k-1)+
-c     &                    shgamma(i,j,k)))*(1.0d0/(zz(k)-zz(k-1)))*
-c     $                    areatb(i)
-     &                    shgamma(i,j,k)))*(1.0d0/(zz(k)-zz(k-1)))*
+     &                    shgamma(i,j,k)))*(1.0d0/(dzpb(k)))*
      $                    areatb
 
                   else
@@ -191,12 +181,10 @@ c     Final calculation of the matrix elements
                   aterm = abskg(i,j-1,k)/(2.0d0*(2.0d0 - 
      &                 abskg(i,j-1,k)))
 
-c                  ap(i,j,k) = ap(i,j,k) + (arean(i)*aterm)
                   ap(i,j,k) = ap(i,j,k) + (arean*aterm)
 
                   su(i,j,k) = su(i,j,k) + (4*sig*
      &                 abs(fraction(bands))*(tg(i,j-1,k)**4)*
-c     $                 arean(i)*aterm)
      $                 arean*aterm)
 
                endif
@@ -206,12 +194,10 @@ c     $                 arean(i)*aterm)
                   aterm = abskg(i,j+1,k)/(2.0d0*(2.0d0 - 
      &                 abskg(i,j+1,k)))
 
-c                  ap(i,j,k) = ap(i,j,k) + (arean(i)*aterm)
                   ap(i,j,k) = ap(i,j,k) + (arean*aterm)
 
                   su(i,j,k) = su(i,j,k) + (4*sig*
      &                 abs(fraction(bands))*(tg(i,j+1,k)**4)*
-c     $                 arean(i)*aterm)
      $                 arean*aterm)
 
                endif
@@ -221,12 +207,10 @@ c     $                 arean(i)*aterm)
                   aterm = abskg(i,j,k-1)/(2.0d0*(2.0d0 - 
      &                 abskg(i,j,k-1)))
 
-c                  ap(i,j,k) = ap(i,j,k) + (areatb(i)*aterm)
                   ap(i,j,k) = ap(i,j,k) + (areatb*aterm)
 
                   su(i,j,k) = su(i,j,k) + (4*sig*
      &                 abs(fraction(bands))*(tg(i,j,k-1)**4)*
-c     $                 areatb(i)*aterm)
      $                 areatb*aterm)
 
                endif
@@ -236,12 +220,10 @@ c     $                 areatb(i)*aterm)
                   aterm = abskg(i,j,k+1)/(2.0d0*(2.0d0 - 
      &                 abskg(i,j,k+1)))
  
-c                  ap(i,j,k) = ap(i,j,k) + (areatb(i)*aterm)
                   ap(i,j,k) = ap(i,j,k) + (areatb*aterm)
 
                   su(i,j,k) = su(i,j,k) + (4*sig*
      &                 abs(fraction(bands))*(tg(i,j,k+1)**4)*
-c     $                 areatb(i)*aterm) 
      $                 areatb*aterm) 
 
                endif

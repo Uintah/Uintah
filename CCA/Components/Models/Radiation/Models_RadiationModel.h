@@ -93,7 +93,8 @@ public:
       //
       virtual void boundaryCondition(const ProcessorGroup*,
 				     const Patch* patch,
-				     RadiationVariables* vars)  = 0;
+				     RadiationVariables* vars,
+				     RadiationConstVariables* constvars)  = 0;
 
       /////////////////////////////////////////////////////////////////////////
       //

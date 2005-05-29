@@ -259,7 +259,7 @@ Models_HypreSolver::setMatrix(const ProcessorGroup* pc,
 
   HYPRE_StructMatrixCreate(MPI_COMM_WORLD, d_grid, d_stencil, &d_A);
 
-  //  HYPRE_StructMatrixSetSymmetric(d_A, 1); 
+  //HYPRE_StructMatrixSetSymmetric(d_A, 1); 
   //  above for spherical harmonics
   // This parameter has to be set to 1 if SH is used and 0 if 
   // DO is used, because the matrix is nonsymmetric for DO
