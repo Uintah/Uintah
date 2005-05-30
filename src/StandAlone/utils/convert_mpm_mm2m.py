@@ -76,7 +76,7 @@ if __name__ == '__main__' :
         outp = sys.argv[2]
     except :
         show_usage()
-        exit(1);
+        sys.exit(1);
 
     lns = convert(open(inp))
     o = open(outp, 'w')
