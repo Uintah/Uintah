@@ -42,77 +42,140 @@
 #include <Dataflow/Network/Scheduler.h>
 
 
-//TODO try load net thread do a join so we wait until it finishes? mabye
-//this would help with quit scirun
 
-void QuitSCIRun::run()
+void ServerTime::run()
 {
-    // what else for shutdown?
-	//Thread::exitAll(0);
-	ASSERT(gui);
-	cout << "about to exit" << endl;
-	gui->eval("exit");  //WORKS in main but rarely here!
-}
+	double temp = 0.0;
+	while(true){
+		temp =wc->time();
+		//cout << "time: " << temp << endl;
+		if(temp>max_time){
+			cout << "timed out " << endl;
+			gui->eval("exit");
+		}
+		else{
+			Thread::yield();
+		}
+	}
+}		
 
-void LoadNet::run()
+	//TODO figure out if we want to close this and where/when
+	//Close(listenfd);  no closed when we quit but what if two
+	//people log into the same machine and both want to use
+	//SCIRun then in this case they will have to get different ports
+	// or somehow share the same port.......       so we have a security
+	// issue in that people that both want to use the same machine
+	//may be talking to the wrong person's SCIRun.		
+
+PtolemyServer::~PtolemyServer()
 {
-	string netName = "/scratch/test/test2.net";
-	ASSERT(gui);
-	cout << "about to load" << endl;
-	string evalret = gui->eval("loadnet " + netName);
-	cout << "eval " << evalret << endl;
-	//gui->execute("loadnet {" + netName + "}");
-	//cout << "loaded" << endl;
-	PtolemyServer::iterSem().up();
-}
-
-		//TODO figure out if we want to close this and where/when
-		//Close(listenfd);  no closed when we quit but what if two
-		//people log into the same machine and both want to use
-		//SCIRun then in this case they will have to get different ports
-		// or somehow share the same port.......       so we have a security
-		// issue in that people that both want to use the same machine
-		//may be talking to the wrong person's SCIRun.		
-		
+	Close(listenfd);
+	//cout << "LIsten closed" << endl;
+}	
+	
 void PtolemyServer::run()
 {
-	//iterSem().down();
-	//cout << "net should be loaded" << endl;
+	servSem().down();		//TODO may not need but could
+	//be useful when we get to the point where pt starts up 
+	//the server bc we wait for main to finish
 	
 	//networking variables
-	ssize_t n;
-	char line[MAXLINE];	  //lines we get sent  
-	int listenfd, connfd;
+	int connfd;
 	socklen_t	 clientLength;
 	struct sockaddr_in clientAddr, serverAddr;
-	string task = "";
 	
 	//start up the server
 	startUpServer(&listenfd, &serverAddr);
+	//time how long the server has been running
+	WallClockTimer *wc = new WallClockTimer();
+	wc->start();
+	ServerTime *st = new ServerTime(gui, wc, 60.0);
+	Thread *idle_time = new Thread(st, "time idleness",0, Thread::NotActivated);
+	idle_time->setDaemon();
+	idle_time->setStackSize(1024*2);
+	idle_time->activate(false);
+	idle_time->detach();
+	
+	servSem().up();
 	
 	while(true){
 		clientLength = sizeof(clientAddr);
 		connfd = Accept(listenfd, (SA *) &clientAddr, &clientLength);
-	
-		cout << "Here and listening" << endl;
-		//read in task
-		if( (n = Readline(connfd, line, MAXLINE)) == 0){
-			print_error("connection closed by other end");
-		}
-		task = string(line);
-		task = task.substr(0, task.size()-1);
-		cout << "task : " << task << endl;
-		// process the request 
-		if(task == "iterate"){
-			processItrRequest(connfd);
-		}else if (task == "quit"){
-			quit(connfd, listenfd);
-		}
-		Close(connfd);			 
+		cout << "here stopping timer and accepting" << endl;
+		
+		servSem().down();
+			PtolemyServer::state = 1;  //set state to running
+			PtolemyServer::worker_count++;
+			if(PtolemyServer::worker_count==1){
+				//stop the timer thread
+				idle_time->stop();
+				wc->stop();
+				wc->clear();  //clear time because something happened
+			}
+		servSem().up();
+		
+		ProcessRequest *proc_req = new ProcessRequest(gui,net,connfd,idle_time,wc);
+		Thread *pr = new Thread(proc_req,"process client request", 0, Thread::NotActivated);
+		pr->setDaemon();
+		pr->setStackSize(1024*512);
+		pr->activate(false);
+		pr->detach();
 	}
 }
 
-Semaphore& PtolemyServer::iterSem()
+Semaphore& PtolemyServer::servSem()
+{
+	static Semaphore sem_("pt server semaphore", 0);
+	return sem_;
+}
+
+ProcessRequest::~ProcessRequest()
+{ 
+	Close(connfd); 
+}
+		
+
+void ProcessRequest::run()
+{
+	//iterSem().down();  //right now it starts down so we dont have to do it	
+	cout << "Here and listening" << endl;
+	
+	//networking variables
+	ssize_t n;
+	char line[MAXLINE];	  //lines we get sent  
+	string task = "";
+	
+	//read in task
+	if( (n = Readline(connfd, line, MAXLINE)) == 0){
+		print_error("connection closed by other end");
+	}
+	task = string(line);
+	task = task.substr(0, task.size()-1);
+	cout << "task : " << task << endl;
+
+		// process the request 
+	if(task == "iterate"){
+		processItrRequest(connfd);
+	}else if (task == "quit"){
+		quit(connfd);
+	}
+	else if (task == "stop"){
+		stop(connfd);
+	}
+	
+
+	PtolemyServer::servSem().down();
+	PtolemyServer::worker_count--;
+	//if we are the last thread start timer and set state to idle
+	if(PtolemyServer::worker_count==0){
+		wc->start();
+		idle_time->resume(); 
+		PtolemyServer::state = 0;
+	}
+	PtolemyServer::servSem().up();
+}
+
+Semaphore& ProcessRequest::iterSem()
 {
 	static Semaphore sem_("iterate semaphore", 0);
 	return sem_;
@@ -122,7 +185,7 @@ Semaphore& PtolemyServer::iterSem()
 //Note that if you add this callback at the beginning of a task
 //it is necessary to remove it at the end so it wont modify the static
 //semephore in the future when it is needed again.
-bool PtolemyServer::iter_callback(void *data)
+bool ProcessRequest::iter_callback(void *data)
 {
 	iterSem().up();
 	return false;
@@ -130,10 +193,9 @@ bool PtolemyServer::iter_callback(void *data)
 
 
 
-string PtolemyServer::Iterate(vector<string> doOnce, int size1, vector<string> iterate, int size2, int numParams, string picPath, string picFormat)
+string ProcessRequest::Iterate(vector<string> doOnce, int size1, vector<string> iterate, int size2, int numParams, string picPath, string picFormat)
 {
-	iterSem().down();
-	
+	//iterSem().down();  //we block sooner now... as soon as a request is made
 	string name;
 
 	//get a pointer to the viewer if we need it and check to see if its valid
@@ -174,6 +236,11 @@ string PtolemyServer::Iterate(vector<string> doOnce, int size1, vector<string> i
 	
 	//iterate through the tasks given to SCIRun
 	for(int i = 0; i < numParams; i++){
+		if (PtolemyServer::state == 0){
+			sched->remove_callback(iter_callback, 0);
+			iterSem().up();
+			return "early abort";
+		}
 		for(int j = 0; j < size2; j=j+numParams-i){
 			//TODO ask if it would be better here to have a dynamically
 			//allocated array of module pointers for each thing
@@ -223,14 +290,14 @@ string PtolemyServer::Iterate(vector<string> doOnce, int size1, vector<string> i
 	return "OK";
 }
 
-void PtolemyServer::processItrRequest(int sockfd)
+void ProcessRequest::processItrRequest(int sockfd)
 {
 	ssize_t n;   //return value of some network functions
 	char line[MAXLINE];	  //lines we get sent
 	char *retVal;	  //value we will return to client
 	string rv = "none";	   //return value for a run
 	
-	string picPath, picFormat, temp;	//path were pictures will be saved
+	string net, picPath, picFormat, temp;	//path were pictures will be saved
 	int size1, size2, numParams;   //size of each input, number of iterations  
 	vector<string> input1;
 	vector<string> input2;
@@ -256,6 +323,26 @@ void PtolemyServer::processItrRequest(int sockfd)
 	}
 	numParams = atoi(line);
 	
+	//get network file path/name
+	if( (n = Readline(sockfd, line, MAXLINE)) == 0){
+		print_error("connection closed by other end");
+	}
+	net = string(line);
+	net = net.substr(0,net.size()-1);
+	ASSERT(gui);
+	
+	if(PtolemyServer::loaded_net != net){
+		temp = gui->eval("ClearCanvas 0");  //clear the net	
+		cout << "Clear Canv result: " << temp << "!" <<endl;
+		Thread::yield();  //necessary to avoid a "Error: bad window path name"
+		cout << "loaded net " << PtolemyServer::loaded_net << "!" << endl;
+		temp = gui->eval("source " + net);
+		cout << "source result: " << temp << "!" << endl;
+		PtolemyServer::loaded_net = net;
+		//TODO test string for net that doesnt exist?  source doesnt
+		//return a value aparntly so that doesnt work.
+	}
+		  
 	//read in picPath
 	if( (n = Readline(sockfd, line, MAXLINE)) == 0){
 		print_error("connection closed by other end");
@@ -269,23 +356,7 @@ void PtolemyServer::processItrRequest(int sockfd)
 	}
 	picFormat = string(line);
 	picFormat = picFormat.substr(0,picFormat.size()-1);
-	/*
-	string netName = "/scratch/test/test2.net";
-	ASSERT(gui);
-	string evalret = gui->eval("loadnet {" + netName + "}");
-	cout << "eval " << evalret << endl;
-	//cout << "Here and loaded" << endl;
-	//gui->execute("loadnet {" + netName + "}");
-	*/
-	/*
-	//iterSem().down();
-	LoadNet *load = new LoadNet(gui);
-	Thread *t = new Thread(load, "load a network", 0, Thread::NotActivated);
-	t->setStackSize(1024*1024);
-	t->activate(false);
-	t->join();
-	iterSem().down();
-	*/
+	
 	rv = Iterate(input1, size1, input2, size2, numParams, picPath, picFormat);
 	cout << "done iterating rv = " << rv << "??" << endl;
 	
@@ -294,21 +365,20 @@ void PtolemyServer::processItrRequest(int sockfd)
 	
 }
 
-void PtolemyServer::quit(int sockfd,int listenfd)
+void ProcessRequest::quit(int sockfd)
 {
-	iterSem().down();
-	
+	//iterSem().down();  we block as soon as there is a request now
 	char message[8] = "quiting";
-	Writen(sockfd, message, 7);
-	Close(sockfd);
-	Close(listenfd);
-	
-	QuitSCIRun *quit = new QuitSCIRun(gui);
+	Writen(sockfd, message, 7);	
+	ASSERT(gui);
+	gui->eval("exit");
+}
 
-	Thread *t = new Thread(quit, "quit scirun", 0, Thread::NotActivated);
-	t->setDaemon();
-	t->setStackSize(1024*10);
-	t->activate(false);
-	t->detach();
-	iterSem().down();
+void ProcessRequest::stop(int sockfd)
+{
+	char message[7] = "stoped";
+	Writen(sockfd, message, 6);
+	PtolemyServer::servSem().down();
+	PtolemyServer::state = 0;
+	PtolemyServer::servSem().up();
 }

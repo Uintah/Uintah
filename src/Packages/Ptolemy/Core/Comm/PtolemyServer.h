@@ -33,10 +33,12 @@
 #ifndef Ptolemy_Core_Comm_PtolemyServer_h
 #define Ptolemy_Core_Comm_PtolemyServer_h
 
+#include <Core/Util/Timer.h>
 #include <Core/Thread/Runnable.h>
+#include <Core/Thread/Semaphore.h>
 #include <Core/GuiInterface/TCLInterface.h>
 #include <Dataflow/Network/Network.h>
-#include <Core/Thread/Semaphore.h>
+
 
 using namespace SCIRun;
 
@@ -44,36 +46,57 @@ class PtolemyServer : public Runnable
 {
 	public:
 		PtolemyServer(TCLInterface *tclInt, Network *n) : gui(tclInt), net(n) {}
-		virtual ~PtolemyServer() {}
+		~PtolemyServer();
+		void run();
+		static Semaphore& servSem();
+		static string loaded_net;
+		static int state;  //0 for listening, 1 for iterating
+		static int worker_count;
+	private:
+		TCLInterface *gui;
+		Network *net;
+		int listenfd;
+		//TODO make timer and associated thread static and have 
+		//a function to deal with exiting of a process request
+		//ie start timeer and tread again set state appropriately
+};
+
+string PtolemyServer::loaded_net = "";
+int PtolemyServer::state = 0;
+int PtolemyServer::worker_count = 0;
+
+class ProcessRequest : public Runnable
+{
+	public:
+		ProcessRequest(TCLInterface *tclInt, Network *n, int fd,Thread* t, WallClockTimer* w)
+	: gui(tclInt), net(n), connfd(fd), idle_time(t), wc(w) {}
+		~ProcessRequest();
 		void run();
 		static Semaphore& iterSem();
-		void processItrRequest(int sockfd);
-
+		void processItrRequest(int sockfd);	
 	private:
 		static bool iter_callback(void *data);	
 		string Iterate(vector<string> doOnce, int size1, vector<string> iterate, int size2, int numParams, string picPath, string picFormat);
-		void quit(int sockfd, int listenfd);
+		void quit(int sockfd);
+		void stop(int sockfd);
 		TCLInterface *gui;
 		Network *net;
-		
-};
+		string loaded_net;
+		int connfd;
+		Thread *idle_time;	
+		WallClockTimer *wc;	
+};			
 
-class QuitSCIRun : public Runnable {
+class ServerTime : public Runnable
+{
 	public:
-		QuitSCIRun(TCLInterface *tclInt) : gui(tclInt) {}
-		virtual ~QuitSCIRun() {}
+		ServerTime(TCLInterface *tclInt, WallClockTimer* w,  double max) : gui(tclInt), wc(w), max_time(max) {}
+		virtual ~ServerTime() {}
 		void run();
 	private:
 		TCLInterface *gui;
-};
-
-class LoadNet : public Runnable {
-	public:
-		LoadNet(TCLInterface *tclInt) : gui(tclInt) {}
-		virtual ~LoadNet() {}
-		void run();
-	private:
-		TCLInterface *gui;
+		WallClockTimer* wc;
+		double max_time;
 };
 
 #endif
