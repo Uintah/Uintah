@@ -66,7 +66,7 @@ def convert(input) :
 
 
 def show_usage() :
-    print "python convert_m_to_mm.py <input> <output>"
+    print "python convert_mpm_mm2m.py <input> <output>"
 
 if __name__ == '__main__' :
     inp = ''
