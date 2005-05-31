@@ -168,7 +168,7 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 		checkbutton $e.shade -text "" -padx 15 -justify center \
 		    -relief flat -variable $this-shadeType-$i \
 		    -onvalue 1 -offvalue 0 -anchor w \
-		    -command "$this-c shade $i; $this select_widget $i"
+		    -command "$this select_widget $i; $this-c shade $i; "
 
 		checkbutton $e.on -text "" -padx 15 -justify center \
 		    -relief flat -variable $this-on-$i -onvalue 1 -offvalue 0 \

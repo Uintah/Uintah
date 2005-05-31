@@ -1305,6 +1305,7 @@ EditColorMap2D::gui_color_change(GuiArgs &args) {
 			      widgets_[n]->clone()));
     widgets_[n]->set_color(new_color);
     widgets_[n]->set_alpha(a);
+    just_resend_selection_ = false;
     redraw(true);
     force_execute();
   }
@@ -1318,6 +1319,7 @@ EditColorMap2D::gui_shade_change(GuiArgs &args) {
   // Toggle the shading type from flat to normal and vice-versa
   gui_sstate_[n]->reset();
   widgets_[n]->set_shadeType(gui_sstate_[n]->get());
+  just_resend_selection_ = false;
   redraw(true);
   force_execute();
 }
@@ -1329,6 +1331,7 @@ EditColorMap2D::gui_toggle_change(GuiArgs &args) {
   if (n < 0 || n >= gui_num_entries_.get()) return;
   gui_onstate_[n]->reset();
   widgets_[n]->set_onState(gui_onstate_[n]->get());  // toggle on/off state.
+  just_resend_selection_ = false;
   redraw(true);
   force_execute();
 }
