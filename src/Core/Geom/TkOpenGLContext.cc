@@ -544,8 +544,7 @@ TkOpenGLContext::listvisuals()
     TCLTask::unlock();
     return string("");
   }
-  int i;
-  for(i=0;i<nvis;i++)
+  for(int i=0;i<nvis;i++)
   {
     int score=0;
     int value;
@@ -621,9 +620,9 @@ TkOpenGLContext::listvisuals()
     visualtags.push_back(tag);
     scores.push_back(score);
   }
-  for(i=0;(unsigned int)i<scores.size()-1;i++)
+  for(int i=0;i < int(scores.size())-1;i++)
   {
-    for(unsigned int j=i+1;j<scores.size();j++)
+    for(int j=i+1;j< int(scores.size());j++)
     {
       if(scores[i] < scores[j])
       {
