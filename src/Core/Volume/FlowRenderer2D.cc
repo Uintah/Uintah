@@ -179,6 +179,17 @@ FlowRenderer2D::clone()
 {
   return scinew FlowRenderer2D(*this);
 }
+void
+FlowRenderer2D::reset()
+{
+  flow_dirty_ = true;
+  adv_dirty_ = true;
+  conv_dirty_ = true;
+  re_accum_ = true;
+  is_initialized_ = false;
+  adv_is_initialized_ = false;
+  conv_is_initialized_ = false;
+}
 
 void
 FlowRenderer2D::set_field(FieldHandle field)
@@ -186,6 +197,7 @@ FlowRenderer2D::set_field(FieldHandle field)
   mutex_.lock();
   field_ = field;
   flow_dirty_ = true;
+  re_accum_ = true;
   mutex_.unlock();
 }
 
@@ -275,7 +287,6 @@ FlowRenderer2D::draw()
         adv_accum( pixelx, pixely, scale, shift_list_[c_shift] );
         next_shift(&c_shift);
       }
-      re_accum_ = false;
       adv_rewire();
       
       build_conv(scale);
@@ -283,6 +294,7 @@ FlowRenderer2D::draw()
         conv_accum( pixelx, pixely, scale);
       }
       conv_rewire();
+      re_accum_ = false;
    }
   
   load_conv();
@@ -649,8 +661,10 @@ FlowRenderer2D::build_flow_tex()
 
     // Array3 is ordered opposite what OpenGL expects, 
     // switch height and width.
-    flow_array_.resize(buffer_height_, buffer_width_,2);
-
+    if(flow_array_.dim1() != buffer_height_ ||
+       flow_array_.dim2() != buffer_width_ ) {
+      flow_array_.resize(buffer_height_, buffer_width_,2);
+    }
     BBox bb = im->get_bounding_box();
 
     //***************************************************
@@ -816,7 +830,6 @@ FlowRenderer2D::load_flow_tex()
                        flow_array_.dim2(), flow_array_.dim1(), 
                        0, GL_LUMINANCE_ALPHA, GL_FLOAT, &flow_array_(0,0,0));
           flow_dirty_ = false;
-          re_accum_ = true;
           glBindTexture(GL_TEXTURE_2D, 0);
         }
         else
@@ -892,10 +905,12 @@ void
 FlowRenderer2D::build_adv(float scale, pair<float, float>& shift)
 {
   // Software version.  
-  if( !adv_is_initialized_ ) {
+  if( !adv_is_initialized_ || re_accum_) {
     int nx = buffer_width_;
     int ny = buffer_height_;
-    adv_array_.resize(ny, nx, 4);
+    if( adv_array_.dim1() != ny || adv_array_.dim2() != nx ){
+      adv_array_.resize(ny, nx, 4);
+    }
     int x = 0, y = 1, z = 2, w = 3;
     float r0[4];
     for(int j = 0; j < adv_array_.dim2(); j++){
@@ -997,7 +1012,7 @@ FlowRenderer2D::adv_accum( float pixel_x, float pixel_y,
     }
   }
       
-    
+  adv_dirty_ = true;   
   
 }
 
@@ -1026,10 +1041,12 @@ FlowRenderer2D::adv_rewire()
 void
 FlowRenderer2D::build_conv(float scale )
 {
-  if( !conv_is_initialized_ ) {
+  if( !conv_is_initialized_  || re_accum_) {
     int nx = buffer_width_;
     int ny = buffer_height_;
-    conv_array_.resize(ny, nx, 4);
+    if( conv_array_.dim1() != ny || conv_array_.dim2() != nx ){
+      conv_array_.resize(ny, nx, 4);
+    }
     int x = 0, y = 1, z = 2, w = 3;
     float r0[4];
     for(int j = 0; j < conv_array_.dim2(); j++){
@@ -1038,8 +1055,8 @@ FlowRenderer2D::build_conv(float scale )
          double y_coord = (i)/float(conv_array_.dim1()-1);
          r0[x] = x_coord;
          r0[y] = y_coord;
-         r0[x] = ( r0[x] > 1.0 ) ? r0[x] - 1 : r0[x];
-         r0[y] = ( r0[y] > 1.0 ) ? r0[y] - 1 : r0[y];
+//          r0[x] = ( r0[x] > 1.0 ) ? r0[x] - 1 : r0[x];
+//          r0[y] = ( r0[y] > 1.0 ) ? r0[y] - 1 : r0[y];
          r0[x] = get_interpolated_value(adv_array_,
                                         r0[y] * (adv_array_.dim1() - 2),
                                         r0[x] * (adv_array_.dim2() - 2));
