@@ -68,11 +68,10 @@ TimestepSelector::execute()
 
   vector< double > times;
   vector< int > indices;
-  DataArchive& archive = *((*(handle.get_rep()))());
+  DataArchiveHandle archive = handle->getDataArchive();
   try {
-    archive.queryTimesteps( indices, times );
-    if( archiveH.get_rep() == 0 ||
-        archiveH.get_rep() != handle.get_rep()){
+    archive->queryTimesteps( indices, times );
+    if( archiveH.get_rep() == 0 || archiveH != handle){
       gui->execute(id + " SetTimeRange " + to_string((int)times.size()));
       archiveH = handle;
     }
@@ -114,9 +113,8 @@ TimestepSelector::execute()
   double v, hour, min, sec, microseconds;
 
   if( animate.get() ){
-    //DataArchive& archive = *((*(handle.get_rep()))());
     while( animate.get() ) { // && idx < (int)times.size() - 1){
-      archive.turnOffXMLCaching();
+      archive->turnOffXMLCaching();
       // Get tinc and make sure it is a good value.
       int tinc_val = tinc.get();
       if (tinc_val < 0) {
@@ -165,7 +163,7 @@ TimestepSelector::execute()
       sleep(unsigned( anisleep.get()));
     }
     animate.set(0);
-    archive.turnOnXMLCaching();
+    archive->turnOnXMLCaching();
   }
   time.set( idx );
   reset_vars();

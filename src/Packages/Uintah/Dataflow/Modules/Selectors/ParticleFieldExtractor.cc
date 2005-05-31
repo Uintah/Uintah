@@ -113,19 +113,19 @@ void ParticleFieldExtractor::add_type(string &type_list,
   }
 }  
 
-bool ParticleFieldExtractor::setVars(DataArchive& archive, int timestep,
+bool ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
 				     bool archive_dirty )
 {
   string command;
 
   names.clear();
   types.clear();
-  archive.queryVariables(names, types);
+  archive->queryVariables(names, types);
 
   vector< double > times;
   vector< int > indices;
-  archive.queryTimesteps( indices, times );
-  GridP grid = archive.queryGrid(times[timestep]);
+  archive->queryTimesteps( indices, times );
+  GridP grid = archive->queryGrid(times[timestep]);
   int levels = grid->numLevels();
   int guilevel = level_.get();
   LevelP level = grid->getLevel( (guilevel == levels ? 0 : guilevel) );
@@ -134,7 +134,7 @@ bool ParticleFieldExtractor::setVars(DataArchive& archive, int timestep,
   int nm = 0;
   for( int i = 0; i < (int)names.size(); i++ ){
     ConsecutiveRangeSet matls =
-      archive.queryMaterials(names[i], r, times[timestep]);
+      archive->queryMaterials(names[i], r, times[timestep]);
     nm = ( (int)matls.size() > nm ? (int)matls.size() : nm );
   }
   if( !archive_dirty && nm == num_materials ){
@@ -174,8 +174,8 @@ bool ParticleFieldExtractor::setVars(DataArchive& archive, int timestep,
       td = types[i];
       if(td->getType() ==  TypeDescription::ParticleVariable){
 	const TypeDescription* subtype = td->getSubType();
-	ConsecutiveRangeSet matls = archive.queryMaterials(names[i], r,
-							   times[timestep]);
+	ConsecutiveRangeSet matls = archive->queryMaterials(names[i], r,
+                                                            times[timestep]);
 	switch ( subtype->getType() ) {
 	case TypeDescription::double_type:
 	case TypeDescription::float_type:
@@ -380,8 +380,8 @@ void ParticleFieldExtractor::callback(long64 particleID)
 // to be super speedy, just responsive.
 int ParticleFieldExtractor::get_matl_from_particleID(long64 particleID, 
                                                      const ConsecutiveRangeSet& matls) {
-  DataArchive& archive = *((*(archiveH.get_rep()))());
-  GridP grid = archive.queryGrid( time );
+  DataArchiveHandle archive = archiveH->getDataArchive();
+  GridP grid = archive->queryGrid( time );
   LevelP level = grid->getLevel( 0 );
   // loop over all the materials
   
@@ -393,7 +393,7 @@ int ParticleFieldExtractor::get_matl_from_particleID(long64 particleID,
           iter != matls.end(); ++iter) {
 	ParticleVariable< long64 > pvi;
         try {
-          archive.query(pvi, particleIDs, *iter, *patch, time);
+          archive->query(pvi, particleIDs, *iter, *patch, time);
         } catch(VariableNotFoundInGrid& e) {
           cout << e.message() << "\n";
           continue;
@@ -459,7 +459,7 @@ void ParticleFieldExtractor::execute()
      return;
    }
    
-   DataArchive& archive = *((*(handle.get_rep()))());
+   DataArchiveHandle archive = handle->getDataArchive();
 
    int new_generation = handle->generation;
    bool archive_dirty = new_generation != generation;
@@ -497,7 +497,7 @@ void ParticleFieldExtractor::execute()
    // what time is it?
    times.clear();
    indices.clear();
-   archive.queryTimesteps( indices, times );
+   archive->queryTimesteps( indices, times );
    int idx = handle->timestep();
    time = times[idx];
 
@@ -511,14 +511,14 @@ void ParticleFieldExtractor::execute()
 
 
 void 
-ParticleFieldExtractor::buildData(DataArchive& archive, double time,
+ParticleFieldExtractor::buildData(DataArchiveHandle& archive, double time,
 				  ScalarParticles*& sp,
 				  VectorParticles*& vp,
 				  TensorParticles*& tp)
 {
 
   
-  GridP grid = archive.queryGrid( time );
+  GridP grid = archive->queryGrid( time );
   int levels = grid->numLevels();
   int guilevel = level_.get();
   LevelP level = grid->getLevel( (guilevel == levels ? 0 : guilevel) );
@@ -605,7 +605,7 @@ void PFEThread::run(){
       continue;
     if (pfe->pvVar.get() != ""){
       have_vp = true;
-      archive.query(pvv, pfe->pvVar.get(), matl, patch, pfe->time);	
+      archive->query(pvv, pfe->pvVar.get(), matl, patch, pfe->time);	
       if( !have_subset){
 	source_subset = pvv.getParticleSubset();
 	have_subset = true;
@@ -615,7 +615,7 @@ void PFEThread::run(){
       have_sp = true;
       switch (scalar_type) {
       case TypeDescription::double_type:
-	archive.query(pvs, pfe->psVar.get(), matl, patch, pfe->time);
+	archive->query(pvs, pfe->psVar.get(), matl, patch, pfe->time);
 	if( !have_subset){
 	  source_subset = pvs.getParticleSubset();
 	  have_subset = true;
@@ -623,7 +623,7 @@ void PFEThread::run(){
 	break;
       case TypeDescription::float_type:
 	//cerr << "Getting data for ParticleVariable<float>\n";
-	archive.query(pvfloat, pfe->psVar.get(), matl, patch, pfe->time);
+	archive->query(pvfloat, pfe->psVar.get(), matl, patch, pfe->time);
 	if( !have_subset){
 	  source_subset = pvfloat.getParticleSubset();
 	  have_subset = true;
@@ -632,7 +632,7 @@ void PFEThread::run(){
         break;
       case TypeDescription::int_type:
 	//cerr << "Getting data for ParticleVariable<int>\n";
-	archive.query(pvint, pfe->psVar.get(), matl, patch, pfe->time);
+	archive->query(pvint, pfe->psVar.get(), matl, patch, pfe->time);
 	if( !have_subset){
 	  source_subset = pvint.getParticleSubset();
 	  have_subset = true;
@@ -643,19 +643,19 @@ void PFEThread::run(){
     }
     if (pfe->ptVar.get() != ""){
       have_tp = true;
-      archive.query(pvt, pfe->ptVar.get(), matl, patch, pfe->time);
+      archive->query(pvt, pfe->ptVar.get(), matl, patch, pfe->time);
       if( !have_subset){
 	source_subset = pvt.getParticleSubset();
 	have_subset = true;
       }
     }
     if(pfe->positionName != "")
-      archive.query(pvp, pfe->positionName, matl, patch, pfe->time);
+      archive->query(pvp, pfe->positionName, matl, patch, pfe->time);
 
     if(pfe->particleIDs != ""){
       //cerr<<"paricleIDs = "<<pfe->particleIDs<<endl;
       have_ids = true;
-      archive.query(pvi, pfe->particleIDs, matl, patch, pfe->time);
+      archive->query(pvi, pfe->particleIDs, matl, patch, pfe->time);
     }
 
     if( !have_subset ){
@@ -812,10 +812,10 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
     error("ParticleFieldExtractor::graph::Type for specified variable is not found");
     return;
   }
-  DataArchive& archive = *((*(this->archiveH.get_rep()))());
+  DataArchiveHandle archive = this->archiveH->getDataArchive();
   vector< int > indices;
   times.clear();
-  archive.queryTimesteps( indices, times );
+  archive->queryTimesteps( indices, times );
   gui->execute(id + " setTime_list " + vector_to_string(indices).c_str());
 
   string name_list("");
@@ -839,7 +839,7 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
 	int matl = atoi(mat_list[i].c_str());
 	cerr << "querying data archive for "<<varname<<" with matl="<<matl<<", particleID="<<partID<<", from time "<<times[0]<<" to time "<<times[times.size()-1]<<endl;
 	try {
-	  archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
+	  archive->query(values, varname, matl, partID, times[0], times[times.size()-1]);
 	} catch (const VariableNotFoundInGrid& exception) {
 	  error("Particle Variable "+particleID+" not found.\n");
 	  return;
@@ -865,7 +865,7 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
 	int matl = atoi(mat_list[i].c_str());
 	cerr << "querying data archive for "<<varname<<" with matl="<<matl<<", particleID="<<partID<<", from time "<<times[0]<<" to time "<<times[times.size()-1]<<endl;
 	try {
-	  archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
+	  archive->query(values, varname, matl, partID, times[0], times[times.size()-1]);
 	} catch (const VariableNotFoundInGrid& exception) {
 	  error("Particle Variable "+particleID+" not found.\n");
 	  return;
@@ -890,7 +890,7 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
 	vector< int > values;
 	int matl = atoi(mat_list[i].c_str());
 	try {
-	  archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
+	  archive->query(values, varname, matl, partID, times[0], times[times.size()-1]);
 	} catch (const VariableNotFoundInGrid& exception) {
 	  error("Particle Variable "+particleID+" not found.\n");
 	  return;
@@ -915,7 +915,7 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
 	vector< Vector > values;
 	int matl = atoi(mat_list[i].c_str());
 	try {
-	  archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
+	  archive->query(values, varname, matl, partID, times[0], times[times.size()-1]);
 	} catch (const VariableNotFoundInGrid& exception) {
 	  error("Particle Variable "+particleID+" not found.\n");
 	  return;
@@ -941,7 +941,7 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
 	vector< Matrix3 > values;
 	int matl = atoi(mat_list[i].c_str());
 	try {
-	  archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
+	  archive->query(values, varname, matl, partID, times[0], times[times.size()-1]);
 	} catch (const VariableNotFoundInGrid& exception) {
 	  error("Particle Variable "+particleID+" not found.\n");
 	  return;

@@ -139,12 +139,13 @@ private:
 
   ArchiveHandle archiveH;
   void add_type(string &type_list, const TypeDescription *subtype);
-  bool setVars(DataArchive& archive, int timestep, bool archive_dirty = true);
+  bool setVars(DataArchiveHandle& archive, int timestep,
+               bool archive_dirty = true);
   void showVarsForMatls();
   std::string getVarsForMaterials(std::list<VarInfo>& vars,
 				  const ConsecutiveRangeSet& matls,
 				  bool& needToUpdate);
-  void buildData(DataArchive& archive, double time,
+  void buildData(DataArchiveHandle& archive, double time,
 		 ScalarParticles*& sp,
 		 VectorParticles*& vp,
 		 TensorParticles*& tp);
@@ -187,7 +188,8 @@ private:
  class  PFEThread : public Runnable
     {
     public:
-      PFEThread( ParticleFieldExtractor *pfe, DataArchive& archive,
+      PFEThread( ParticleFieldExtractor *pfe,
+                 const DataArchiveHandle& archive,
 		 Patch *patch,
 		 ScalarParticles*& sp, VectorParticles*& vp,
 		 TensorParticles*& tp, PSetHandle pseth,
@@ -206,7 +208,7 @@ private:
       void  run();
     private:
       ParticleFieldExtractor *pfe;
-      DataArchive&  archive;
+      DataArchiveHandle archive;
       LevelP level;
       Patch *patch;
       ScalarParticles*& sp;

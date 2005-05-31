@@ -42,13 +42,17 @@ WARNING
 class Archive;
 typedef LockingHandle<Archive> ArchiveHandle;
 
+  // This is defined here, so that we don't have to include
+  // LockingHandle and Persistent stuff in DataArchive.
+  typedef LockingHandle<DataArchive> DataArchiveHandle;
+  
 class Archive : public Datatype {
 
 public:
   // GROUP: Constructors:
   //////////
   // Constructor
-  Archive(DataArchive *archive);
+  Archive(const DataArchiveHandle& archive);
   //////////
   // Constructor
   Archive();
@@ -60,7 +64,8 @@ public:
   // GROUP: Access
   //////////
   // return the archive
-  DataArchive* operator()(){ return archive; };
+  DataArchiveHandle operator()(){ return archive; };
+  DataArchiveHandle getDataArchive() { return archive; };
   //////////
   // return the selected timestep
   int timestep(){ return _timestep; }
@@ -76,7 +81,7 @@ public:
   
 
 private:
-  DataArchive *archive;
+  DataArchiveHandle archive;
   int _timestep;
 };
 } // End namespace Uintah

@@ -325,6 +325,11 @@ public:
   // corresponding documentation.
   void setTimestepCacheSize(int new_size);
 
+  // These are here for the LockingHandle interface.  The names should
+  // match those found in Core/Datatypes/Datatype.h.
+  int ref_cnt;
+  Mutex lock;
+
 protected:
   DataArchive();
   
@@ -386,7 +391,7 @@ private:
   int d_numProcessors;
   
   Mutex d_lock;
-  
+
   ProblemSpecP findVariable(const string& name, const Patch* patch,
 			int matl, double time, XMLURL& url);
   void findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,

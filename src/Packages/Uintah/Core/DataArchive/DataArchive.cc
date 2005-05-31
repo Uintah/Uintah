@@ -41,6 +41,7 @@ DebugStream DataArchive::dbg("DataArchive", false);
 DataArchive::DataArchive(const std::string& filebase,
                          int processor /* = 0 */, int numProcessors /* = 1 */,
                          bool verbose /* = true */ ) :
+  ref_cnt(0), lock("DataArchive ref_cnt lock"),
   d_filebase(filebase), d_varHashMaps(NULL),
   d_processor(processor), d_numProcessors(numProcessors),
   d_lock("DataArchive lock")
@@ -86,6 +87,7 @@ DataArchive::DataArchive(const std::string& filebase,
 
 DataArchive::~DataArchive()
 {
+  cerr << "DataArchive::~DataArchive destroyed for file "<<d_filebase<<"!\n";
   delete d_varHashMaps;
   d_indexDoc->releaseDocument();
 
