@@ -801,6 +801,7 @@ set mods(SeedPoints-NegSeeds) $m28
 set mods(FieldInfo-Smoothed) $m55
 set mods(ImageToField-Seg) $m18
 set mods(ShowField-Seg) $m19
+set mods(BinaryThreshold-Output) $m4
 
 # Seeds
 set mods(BuildSeedVolume-PosSeeds) $m13
@@ -2894,7 +2895,19 @@ class LevelSetSegmenterApp {
 		set has_autoviewed 1
 		after 100 "$mods(Viewer-Vol)-ViewWindow_0-c autoview; global $mods(Viewer-Vol)-ViewWindow_0-pos; set $mods(Viewer-Vol)-ViewWindow_0-pos \"z1_y1\"; $mods(Viewer-Vol)-ViewWindow_0-c Views;"
 	    }
-	}
+	} elseif {$which == $mods(BinaryThreshold-Seed) && \
+		      $state == "JustStarted"} {
+            change_indicate_val 1
+        } elseif {$which == $mods(BinaryThreshold-Seed) && \
+		      $state == "Completed"} {
+            change_indicate_val 2
+        } elseif {$which == $mods(BinaryThreshold-Output) && \
+		      $state == "JustStarted"} {
+            change_indicate_val 1
+        } elseif {$which == $mods(BinaryThreshold-Output) && \
+		      $state == "Completed"} {
+            change_indicate_val 2
+        }
 	
 # # 	if {$which == $mods(PasteImageFilter-Smooth) \
 # # 		&& $state == "Completed"} {
