@@ -1,0 +1,6 @@
+void outarea(IntVector indexLow, IntVector indexHigh,
+     constCCVariable<int> pcell, constCCVariable<double> den,
+     OffsetArray1<double> sew, OffsetArray1<double> sns,
+     OffsetArray1<double> stb, double areaout, int pfield,
+     bool xminus, bool xplus, bool yminus, bool yplus,
+     bool zminus, bool zplus);

@@ -1,0 +1,323 @@
+	if ((integTemp[*iter] < (297.995)) && (solid_fraction_cc[0][*iter] > 0.99)) {
+	  cout << "Spurious Temperature value" << endl;
+	  cout << "Index number " << *iter << endl;
+	  cout.precision(16);
+	  cout << "Value = " << integTemp[*iter] << endl;
+	  cout << "solid fraction = " << solid_fraction_cc[0][*iter] << endl;
+	}
+
+	  if (*iter == IntVector(7,9,9)) {
+	    cout << "Printing solid fraction at 7,9,9 " << endl;
+	    cout << solid_fraction_cc[0][*iter] << endl; 
+	  }
+
+void MPMArches::computeIntegratedSolidProps
+
+      if ((integTemp[*iter] < 298.0) && (*iter == IntVector(28,51,38)) && (solid_fraction_cc[0][*iter] > 1.0e-10)) {
+	cout << "Spurious Temperature value" << endl;
+	cout << "Index number " << *iter << endl;
+	cout << "Value = " << integTemp[*iter] << endl;
+	cout << "solid fraction = " << solid_fraction_cc[0][*iter] << endl;
+      }
+
+void MPMArches::doMomExchange
+
+    // debug, sk, 04/12/02
+    //    uVelLinearSrc_cc.initialize(0.);
+    //    uVelLinearSrc_fcy.initialize(0.);
+    //    uVelLinearSrc_fcz.initialize(0.);
+    
+    //    uVelNonlinearSrc_cc.initialize(0.);
+    //    uVelNonlinearSrc_fcy.initialize(0.);
+    //    uVelNonlinearSrc_fcz.initialize(0.);
+    
+    //    vVelLinearSrc_cc.initialize(0.);
+    //    vVelLinearSrc_fcz.initialize(0.);
+    //    vVelLinearSrc_fcx.initialize(0.);
+    
+    //    vVelNonlinearSrc_cc.initialize(0.);
+    //    vVelNonlinearSrc_fcz.initialize(0.);
+    //    vVelNonlinearSrc_fcx.initialize(0.);
+    
+    //    wVelLinearSrc_cc.initialize(0.);
+    //    wVelLinearSrc_fcx.initialize(0.);
+    //    wVelLinearSrc_fcy.initialize(0.);
+    
+    //    wVelNonlinearSrc_cc.initialize(0.);
+    //    wVelNonlinearSrc_fcx.initialize(0.);
+    //    wVelNonlinearSrc_fcy.initialize(0.);
+
+    // end debug, sk, 04/12/02
+    
+    // Calculation done: now put things back in data warehouse
+    
+    // Solid variables
+    
+    for (int m = 0; m < numMPMMatls; m++) {
+      
+      Material* matl = d_sharedState->getMPMMaterial( m );
+      int idx = matl->getDWIndex();
+      
+      // allocateAndPut instead:
+      /* new_dw->put(dragForceX_cc[m], d_MAlb->DragForceX_CCLabel,
+		  idx, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(dragForceY_cc[m], d_MAlb->DragForceY_CCLabel,
+		  idx, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(dragForceZ_cc[m], d_MAlb->DragForceZ_CCLabel,
+		  idx, patch); */;
+      
+      // allocateAndPut instead:
+      /* new_dw->put(dragForceX_fcy[m], d_MAlb->DragForceX_FCYLabel,
+		  idx, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(dragForceX_fcz[m], d_MAlb->DragForceX_FCZLabel,
+		  idx, patch); */;
+      
+      // allocateAndPut instead:
+      /* new_dw->put(dragForceY_fcz[m], d_MAlb->DragForceY_FCZLabel,
+		  idx, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(dragForceY_fcx[m], d_MAlb->DragForceY_FCXLabel,
+		  idx, patch); */;
+      
+      // allocateAndPut instead:
+      /* new_dw->put(dragForceZ_fcx[m], d_MAlb->DragForceZ_FCXLabel,
+		  idx, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(dragForceZ_fcy[m], d_MAlb->DragForceZ_FCYLabel,
+		  idx, patch); */;
+      
+      // allocateAndPut instead:
+      /* new_dw->put(pressForceX[m], d_MAlb->PressureForce_FCXLabel,
+		  idx, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(pressForceY[m], d_MAlb->PressureForce_FCYLabel,
+		  idx, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(pressForceZ[m], d_MAlb->PressureForce_FCZLabel,
+		  idx, patch); */;
+
+    }
+    
+    // Gas variables
+    
+    // allocateAndPut instead:
+    /* new_dw->put(uVelLinearSrc_cc, d_MAlb->d_uVel_mmLinSrc_CCLabel,
+		matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(uVelLinearSrc_fcy, d_MAlb->d_uVel_mmLinSrc_FCYLabel,
+		matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(uVelLinearSrc_fcz, d_MAlb->d_uVel_mmLinSrc_FCZLabel,
+		matlIndex, patch); */;
+    
+    // allocateAndPut instead:
+    /* new_dw->put(uVelNonlinearSrc_cc, d_MAlb->d_uVel_mmNonlinSrc_CCLabel,
+		matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(uVelNonlinearSrc_fcy, d_MAlb->d_uVel_mmNonlinSrc_FCYLabel,
+		matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(uVelNonlinearSrc_fcz, d_MAlb->d_uVel_mmNonlinSrc_FCZLabel,
+		matlIndex, patch); */;
+    
+    // allocateAndPut instead:
+    /* new_dw->put(vVelLinearSrc_cc, d_MAlb->d_vVel_mmLinSrc_CCLabel,
+		matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(vVelLinearSrc_fcz, d_MAlb->d_vVel_mmLinSrc_FCZLabel,
+		matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(vVelLinearSrc_fcx, d_MAlb->d_vVel_mmLinSrc_FCXLabel,
+		matlIndex, patch); */;
+    
+    // allocateAndPut instead:
+    /* new_dw->put(vVelNonlinearSrc_cc, d_MAlb->d_vVel_mmNonlinSrc_CCLabel,
+		matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(vVelNonlinearSrc_fcz, d_MAlb->d_vVel_mmNonlinSrc_FCZLabel,
+		matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(vVelNonlinearSrc_fcx, d_MAlb->d_vVel_mmNonlinSrc_FCXLabel,
+		matlIndex, patch); */;
+    
+    // allocateAndPut instead:
+    /* new_dw->put(wVelLinearSrc_cc, d_MAlb->d_wVel_mmLinSrc_CCLabel,
+		matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(wVelLinearSrc_fcx, d_MAlb->d_wVel_mmLinSrc_FCXLabel,
+		matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(wVelLinearSrc_fcy, d_MAlb->d_wVel_mmLinSrc_FCYLabel,
+		matlIndex, patch); */;
+
+    // allocateAndPut instead:
+    /* new_dw->put(wVelNonlinearSrc_cc, d_MAlb->d_wVel_mmNonlinSrc_CCLabel,
+		matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(wVelNonlinearSrc_fcx, d_MAlb->d_wVel_mmNonlinSrc_FCXLabel,
+		matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(wVelNonlinearSrc_fcy, d_MAlb->d_wVel_mmNonlinSrc_FCYLabel,
+		matlIndex, patch); */;
+
+void MPMArches::interpolateCCToFCGasMomExchSrcs
+
+    // debug, April 18, 2002
+    /*
+    su_dragx_fcx.initialize(0);
+    sp_dragx_fcx.initialize(0);
+    su_dragy_fcy.initialize(0);
+    sp_dragy_fcy.initialize(0);
+    su_dragz_fcz.initialize(0);
+    sp_dragz_fcz.initialize(0);
+
+    // Calculation done: now put things in DW
+    
+    */
+    // end debug, sk, April 18, 2002
+    
+    // allocateAndPut instead:
+    /* new_dw->put(su_dragx_fcx, d_MAlb->d_uVel_mmNonlinSrcLabel,
+		matlIndex, patch); */;
+    
+    // allocateAndPut instead:
+    /* new_dw->put(sp_dragx_fcx, d_MAlb->d_uVel_mmLinSrcLabel,
+		matlIndex, patch); */;
+    
+    // allocateAndPut instead:
+    /* new_dw->put(su_dragy_fcy, d_MAlb->d_vVel_mmNonlinSrcLabel,
+		matlIndex, patch); */;
+    
+    // allocateAndPut instead:
+    /* new_dw->put(sp_dragy_fcy, d_MAlb->d_vVel_mmLinSrcLabel,
+		matlIndex, patch); */;
+    
+    // allocateAndPut instead:
+    /* new_dw->put(su_dragz_fcz, d_MAlb->d_wVel_mmNonlinSrcLabel,
+		matlIndex, patch); */;
+    
+    // allocateAndPut instead:
+    /* new_dw->put(sp_dragz_fcz, d_MAlb->d_wVel_mmLinSrcLabel,
+		matlIndex, patch); */;
+
+void MPMArches::doEnergyExchange
+
+    // debug, sk, April 16, 2002
+    //    sp_enth_cc.initialize(0.);
+    //    sp_enth_fcx.initialize(0.);
+    //    sp_enth_fcy.initialize(0.);
+    //    sp_enth_fcz.initialize(0.);
+    //    su_enth_cc.initialize(0.);
+    //    su_enth_fcx.initialize(0.);
+    //    su_enth_fcy.initialize(0.);
+    //    su_enth_fcz.initialize(0.);
+    // end debug, sk, April 16, 2002
+    
+void MPMArches::collectToCCGasEnergyExchSrcs
+
+    // Calculation done: now put things in DW
+    
+    // debug, sk, April 17, 2002
+    //    su_enth_cc.initialize(0.0);
+    //    sp_enth_cc.initialize(0.0);
+    // end debug, sk, April 17, 2002
+    
+    // allocateAndPut instead:
+    /* new_dw->put(su_enth_cc, d_MAlb->d_enth_mmNonLinSrc_CCLabel,
+		matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(sp_enth_cc, d_MAlb->d_enth_mmLinSrc_CCLabel,
+		matlIndex, patch); */;
+
+void MPMArches::interpolateCCToFC
+
+      // allocateAndPut instead:
+      /* new_dw->put(xvel_CC, d_MAlb->xvel_CCLabel, matlindex, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(yvel_CC, d_MAlb->yvel_CCLabel, matlindex, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(zvel_CC, d_MAlb->zvel_CCLabel, matlindex, patch); */;
+      
+      // allocateAndPut instead:
+      /* new_dw->put(xvelFCX, d_MAlb->xvel_FCXLabel, matlindex, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(yvelFCX, d_MAlb->yvel_FCXLabel, matlindex, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(zvelFCX, d_MAlb->zvel_FCXLabel, matlindex, patch); */;
+      
+      // allocateAndPut instead:
+      /* new_dw->put(xvelFCY, d_MAlb->xvel_FCYLabel, matlindex, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(yvelFCY, d_MAlb->yvel_FCYLabel, matlindex, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(zvelFCY, d_MAlb->zvel_FCYLabel, matlindex, patch); */;
+      
+      // allocateAndPut instead:
+      /* new_dw->put(xvelFCZ, d_MAlb->xvel_FCZLabel, matlindex, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(yvelFCZ, d_MAlb->yvel_FCZLabel, matlindex, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(zvelFCZ, d_MAlb->zvel_FCZLabel, matlindex, patch); */;
+
+      if (d_calcEnergyExchange) {
+	// allocateAndPut instead:
+	/* new_dw->put(tempSolid_FCX, d_MAlb->tempSolid_FCXLabel, 
+		    matlindex, patch); */;
+	// allocateAndPut instead:
+	/* new_dw->put(tempSolid_FCY, d_MAlb->tempSolid_FCYLabel, 
+		    matlindex, patch); */;
+	// allocateAndPut instead:
+	/* new_dw->put(tempSolid_FCZ, d_MAlb->tempSolid_FCZLabel, 
+		    matlindex, patch); */;
+      }
+      
+void MPMArches::collectToCCGasMomExchSrcs
+
+    // Calculation done: now put things in DW
+    
+    // allocateAndPut instead:
+    /* new_dw->put(su_dragx_cc, d_MAlb->d_uVel_mmNonlinSrc_CC_CollectLabel,
+		matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(sp_dragx_cc, d_MAlb->d_uVel_mmLinSrc_CC_CollectLabel,
+		matlIndex, patch); */;
+    
+    // allocateAndPut instead:
+    /* new_dw->put(su_dragy_cc, d_MAlb->d_vVel_mmNonlinSrc_CC_CollectLabel,
+		matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(sp_dragy_cc, d_MAlb->d_vVel_mmLinSrc_CC_CollectLabel,
+		matlIndex, patch); */;
+    
+    // allocateAndPut instead:
+    /* new_dw->put(su_dragz_cc, d_MAlb->d_wVel_mmNonlinSrc_CC_CollectLabel,
+		matlIndex, patch); */;
+    // allocateAndPut instead:
+    /* new_dw->put(sp_dragz_cc, d_MAlb->d_wVel_mmLinSrc_CC_CollectLabel,
+		matlIndex, patch); */;
+
+void MPMArches::putAllForcesOnCC
+
+      // allocateAndPut instead:
+      /* new_dw->put(totalforce, d_MAlb->SumAllForcesCCLabel, matlindex, patch); */;
+      // allocateAndPut instead:
+      /* new_dw->put(acc_arches, d_MAlb->AccArchesCCLabel,    matlindex, patch); */;
+
+      if (d_calcEnergyExchange)
+	// allocateAndPut instead:
+	/* new_dw->put(htrate_cc, d_MAlb->heaTranSolid_CCLabel,    matlindex, patch); */;
+
+void MPMArches::initializeKStability(const ProcessorGroup*,
+
+	/* debug stuff
+	   cout << "Patch number  " << p << " has index "<< ccinfo->patchindex << endl;
+	   cout << "for patch  " << p << " ist = " << istart << " jst = " << jstart << " kst = " << kstart << endl;
+	   cout << "for patch  " << p << " iend = " << iend << " jend = " << jend << " kend = " << kend << endl;
+	   cout << "dimLo for patch " << p << " " <<dimLo << endl;
+	   cout << "dimHi for patch " << p << " " <<dimHi << endl;
+	   cout << "It took me " << ii << " tries" << endl;
+	*/
+

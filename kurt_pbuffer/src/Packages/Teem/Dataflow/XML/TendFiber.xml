@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="TendFiber" category="Tend">  <overview>
+    <authors>
+      <author>Martin Cole</author>
+    </authors>
+    <summary>Extract a single fiber tract, given a start point.</summary>
+    <description>
+      <p>Extract a single fiber tract, given a start point. Currently,
+only fibers based on 4th-order Runge-Kutta on principal eigenvector are
+supported via tend. The world space in which fibers are calculated has the
+volume inscribed in a bi-unit cubecentered at the origin. The output fiber is
+in the form of a 3xN array of doubles, with N points along fiber. </p>
+      <p>Step Size : stepsize along fiber, in world space. This value should be a double.</p>
+      <p>Stopping Criteria : the conditions that should signify the end of a fiber.
+      Multiple stopping criteria are logically OR-ed and tested
+      at every point along the fiber. These conditions include Fiber Length, Number of Steps,
+      Confidence Threshold, and Anisotropy Threshold.</p>
+      <p>Kernel : Kernel for reconstructing tensor field.</p>
+    </description>
+    <examplesr></examplesr>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>nin</name>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>SeedPoints</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Fibers</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

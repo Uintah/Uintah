@@ -1,0 +1,61 @@
+#!/usr/bin/perl
+#
+#  For more information, please see: http://software.sci.utah.edu
+# 
+#  The MIT License
+# 
+#  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+#  University of Utah.
+# 
+#  License for the specific language governing rights and limitations under
+#  Permission is hereby granted, free of charge, to any person obtaining a
+#  copy of this software and associated documentation files (the "Software"),
+#  to deal in the Software without restriction, including without limitation
+#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+#  and/or sell copies of the Software, and to permit persons to whom the
+#  Software is furnished to do so, subject to the following conditions:
+# 
+#  The above copyright notice and this permission notice shall be included
+#  in all copies or substantial portions of the Software.
+# 
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+#
+
+# Wrapper for talkative /opt/MIPSpro/bin/{cc|CC} on SGIs.
+
+pipe IN,OUT;
+
+$pid=fork();
+
+if($pid==0) {
+  $doEcho=1;
+  close(OUT);
+  while(<IN>) {
+    chop;
+    if($_=~/^No such feature/) { $doEcho=0; }
+    if($_=~/^Cannot connect/) { $doEcho=0; }
+    if(length($_) != 0 && $doEcho==1) { printf STDERR "%s\n",$_; }
+    if($_=~/^ Graphics support/) { $doEcho=1; }
+  }
+  exit(42);
+} else {
+  close(IN);
+  open(STDERR,">&OUT");
+  $Prog=$0;
+  $Prog=~s/^.*\///g;
+  $result=system "VERBOSE_CC", @ARGV;
+  close(OUT);
+  close(STDERR);
+  close(STDIN);
+
+  # SGI's Perl exits with arg mod 256???
+  if($result>255) { $result=255; }
+
+  exit($result);
+}

@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+For more information, please see: http://software.sci.utah.edu
+
+The MIT License
+
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
+
+License for the specific language governing rights and limitations under
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+-->
+
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<section os="linux;osx" id="sec.itk_inst">
+  <title id="title.itk_inst">Insight Toolkit (<acronym>ITK</acronym>)
+  Installation</title>
+
+  <section>
+    <title>Introduction</title>
+
+    <para>The <ulink url="http://www.itk.org">Insight Toolkit</ulink>
+    (<acronym>ITK</acronym>) is an open-source software library for
+    performing segmentation and registration.  When the
+    <acronym>ITK</acronym> toolkit is present, and SCIRun is appropriately
+    configured, <acronym>ITK</acronym> filters are encapsulated in SCIRun
+    modules for use in SCIRun networks.  By default, SCIRun encapsulates a
+    subset of <acronym>ITK</acronym> filters.</para>
+
+    <para>SCIRun encapsulates <acronym>ITK</acronym> filters using
+    <acronym>XML</acronym>-based  description files.  An
+    <acronym>XSLT</acronym> processor generates code for SCIRun modules from
+    the <acronym>XML</acronym> descriptions and <acronym>XSL</acronym>
+    stylesheets.  Users may encapsulate additional filters by writing
+    <acronym>XML</acronym> descriptions of them.  See the <ulink url="(%=
+    doc.treeUrl(%Q{doc/User/Guide/usersguide/srug8.html}) %)">SCIRun Users
+    Guide</ulink> for more information.</para>
+
+    <note os="linux">
+      <para>The SCIRun/Insight <acronym>RPM</acronym> distribution of SCIRun
+      <emphasis>includes</emphasis> support for <acronym>ITK</acronym>.  The
+      <acronym>RPM</acronym> distribution installs Insight libraries in
+      /usr/local/lib/InsightTookit.  The instructions in sections <xref
+      linkend="sec.obitk"/>, <xref linkend="sec.cmake"/>, and <xref
+      linkend="sec.itk_configsr"/> apply only to a source code installation
+      of SCIRun.</para>
+    </note>
+
+    <para os="linux">SCIRun's <acronym>ITK</acronym> support depends on
+    the presence of Java JDK 1.2.2 or later.  Environment variable
+    <envar>JAVA_HOME</envar> must contain the path to the java
+    <quote>JDK</quote> directory. The JDK directory is typically
+    <filename>/usr/java</filename>, <filename>/usr/java2</filename>,
+    or
+    <filename>/usr/java/jdk<replaceable>x.x.x</replaceable></filename>.</para>
+
+    <para os="linux">
+      For an sh-type shell:
+      <literallayout class="monospaced">
+JAVA_HOME=/usr/java
+export JAVA_HOME
+      </literallayout>
+      for a csh-type shell:
+      <literallayout class="monospaced">
+setenv JAVA_HOME /usr/java
+      </literallayout>
+    </para>
+
+    <para os="linux">Environment variable <envar>PATH</envar> must contain the
+    path to the <command>java</command> command.  <envar>PATH</envar>
+    is set as follows:</para>
+    <para>
+      For an sh-type shell:
+      <literallayout class="monospaced">
+PATH=$JAVA_HOME/bin:$PATH
+      </literallayout>
+      and for a csh-type shell:
+      <literallayout class="monospaced">
+setenv PATH $JAVA_HOME/bin:$PATH
+      </literallayout>
+    </para>
+
+  </section>
+
+  <section id="sec.obitk">
+    <title id="sec.title.obitk">Obtaining <acronym>ITK</acronym></title>
+
+    <para>
+      The Insight toolkit must be installed before building SCIRun.
+      The Insight toolkit and its complete installation instructions
+      are available on the <ulink
+      url="http://www.itk.org"><acronym>ITK</acronym> web
+      site</ulink>.  A brief set of ITK installation instructions are
+      given <link linkend="sec.cmake">below</link>.  SCIRun supports
+      <acronym>ITK</acronym> versions 1.8, and 2.0.
+    </para>
+
+    <note os="linux;osx">
+      <para>
+	<acronym>ITK</acronym> version 1.8 is not compatible
+	with GCC 3.4.  Use <acronym>ITK</acronym> 2.0 if compiling
+	with GCC 3.4.
+      </para>
+    </note>
+
+    <para>
+      <acronym>ITK</acronym> installation requires CMake, an
+      open-source, cross-platform build tool.  CMake can be obtained
+      from the <ulink url="http://www.cmake.org">CMake web
+      site</ulink>.
+    </para>
+
+    <note>
+      <para>SCIRun's Insight package must also be downloaded to add support
+      for ITK in SCIRun.  See <xref linkend="sec.sources"/>.</para>
+    </note>
+
+  </section>
+
+  <section id="sec.cmake">
+    <title id="sec.title.cmake">Building ITK</title>
+
+    <note os="osx">
+      <title>Gcc Note</title>
+      <para>
+	If using gcc 3.3 be sure the command <command>gcc
+	-v</command> yields build number 1671.  If the build number is
+	1666 then gcc must be updated with Apple's
+	<filename>November2004GCCUpdater</filename> package, available
+	from <ulink url="http://developer.apple.com/">Apple's
+	Developer Connection page</ulink>.
+      </para>
+    </note>
+    <para>
+      <command>CMake</command> is a program that generates ITK's
+      makefiles.  After running <command>cmake</command>,
+      <command>make</command> must be invoked to build ITK.
+    </para>
+    <para>
+      To build ITK, first unpack its source code tarball.  The
+      following command creates directory
+      <filename>InsightToolkit-<replaceable>x.x.x</replaceable></filename>:
+      <literallayout class="monospaced">
+gunzip -c InsightToolkit-<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
+      </literallayout>
+    </para>
+    <para>
+      Create an ITK binary directory and <command>cd</command> to it:
+      <literallayout class="monospaced">
+mkdir InsightToolkit-<replaceable>x.x.x</replaceable>-bin
+cd InsightToolkit-<replaceable>x.x.x</replaceable>-bin
+      </literallayout>
+    </para>
+    <para>
+      Run <command>cmake</command> as follows:
+      <literallayout class="monospaced">
+cmake <replaceable>path-to-itk-source-directory</replaceable> \
+ -DBUILD_EXAMPLES:BOOL=OFF \
+ -DBUILD_SHARED_LIBS:BOOL=ON \
+ -DBUILD_TESTING:BOOL=OFF \
+ -DITK_USE_SYSTEM_PNG:BOOL=ON \
+ -DPNG_LIBRARY:STRING=<replaceable>path-to-png-lib</replaceable> \
+ -DPNG_PNG_INCLUDE_DIR:STRING=<replaceable>path-png-include-directory</replaceable>
+      </literallayout>
+      Above, replace
+      <replaceable>path-to-itk-source-directory</replaceable> with the
+      path to the ITK source code directory (e.g.
+      <filename>../InsightToolkit-<replaceable>x.x.x</replaceable></filename>).
+      Replace <replaceable>path-to-png-lib</replaceable>
+      with the path to the PNG library, typically
+      <filename os="osx">/sw/lib/libpng.a</filename><filename
+      os="linux;irix">/usr/lib/libpng.a</filename>.  Replace
+      <replaceable>path-png-include-directory</replaceable> with the
+      path to a directory containing PNG header (include or
+      <filename>.h</filename>) files, typically <filename
+      os="osx">/sw/include</filename><filename
+      os="linux;irix">/usr/include</filename>.
+    </para>
+    <para>
+      After <command>cmake</command> completes, type:
+      <literallayout class="monospaced">
+make  
+      </literallayout>
+      to build ITK.  This builds ITK libraries in the ITK binary
+      directory.  SCIRun will use the ITK libraries in the ITK binary
+      directory by providing SCIRun's configure command with option
+      <option>--with-insight=<replaceable>path-to-itk-binary-directory</replaceable></option>.
+    </para>
+    <para>
+      Alternatively, ITK can be installed in
+      <filename>/usr/local/</filename> by typing:
+      <literallayout class="monospaced">
+make install  
+      </literallayout>
+      This installs ITK libraries in
+      <filename>/usr/local/lib/InsightToolkit</filename>.  SCIRun will
+      use these libraries by providing SCIRun's configure command with
+      option
+      <option>--with-insight=/usr/local/lib/InsightToolkit</option>.
+    </para>
+  </section>
+
+  <section id="sec.itk_configsr">
+    <title id="sec.title.itk_configsr">SCIRun Insight Configure Options</title>
+
+    <para>
+      The configure options below add support for Insight
+      in SCIRun.  Include these options in the SCIRun
+      <command>configure</command> command (see <xref linkend="sec.build-sr"
+      />).
+      <variablelist>
+	<varlistentry>
+	  <term><option>--with-insight=<replaceable>path-to-insight-bin-directory</replaceable></option></term>
+	  <listitem>
+	    <para>
+	      Specifies the ITK binary directory created previously
+	      (e.g. InsightToolkit-<replaceable>x.x.x</replaceable>-bin)
+	      or the ITK installation directory
+	      (e.g. <filename>/usr/local/lib/InsightToolkit</filename>).
+	    </para>
+	  </listitem>
+	</varlistentry>
+      </variablelist>
+    </para>
+    <para>
+      Here is an example SCIRun <command>configure</command> command:
+      <literallayout class="monospaced">
+	../src/configure \
+	<phrase os="linux">--with-thirdparty=/usr/local/Thirdparty/1.8.0/Linux/gcc-3.2-32bit \</phrase><phrase os="osx">--with-thirdparty=/usr/local/Thirdparty_osx \</phrase>
+	--enable-package="BioPSE Teem Insight" \
+	--with-insight=/usr/local/lib/InsightToolkit \<phrase os="osx">
+	--with-png=/sw</phrase>
+	.
+	.
+	.
+      </literallayout>
+      Note that package Teem must be enabled.
+    </para>
+
+  </section>
+
+</section>

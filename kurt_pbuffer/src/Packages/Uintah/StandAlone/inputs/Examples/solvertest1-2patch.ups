@@ -1,0 +1,68 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+	<title>Poisson1 test</title>
+   </Meta>
+
+   <Time>
+	<maxTime>0.1</maxTime>
+	<initTime>0.0</initTime>
+	<delt_min>0.00001</delt_min>
+	<delt_max>1</delt_max>
+	<timestep_multiplier>1</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+        <filebase>solvertest.uda</filebase>
+	<outputTimestepInterval>1</outputTimestepInterval>
+	<save label = "pressure"/>
+	<checkpoint cycle = "2" interval = ".01"/>
+   </DataArchiver>
+
+    <SolverTest>
+        <delt>.01</delt>
+        <X_Laplacian/>
+    </SolverTest>
+
+    <Grid>
+	<Level>
+	    <Box label = "1">
+		<lower>[0,0,0]</lower>
+		<upper>[1.0,1.0,1.0]</upper>
+	        <resolution>[10,10,10]</resolution>
+		<patches>[2,1,1]</patches>
+	    </Box>
+	</Level>
+    </Grid>
+
+    <CFD>
+       <SolverTest>
+        <ImplicitSolver>
+           <max_outer_iterations>      20    </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-8  </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
+           <Parameters variable="implicitPressure">
+
+	     <!-- CGSolver options -->
+              <norm>     LInfinity  </norm>
+              <criteria> Absolute   </criteria>
+
+	     <!-- Hypre options -->
+	     <solver>         hybrid  </solver>
+	     <preconditioner> pfmg    </preconditioner>
+	     <tolerance>      1.e-10  </tolerance>
+	     <maxiterations>  7500    </maxiterations>
+	     <npre>           1       </npre>
+	     <npost>          1       </npost>
+	     <skip>           0       </skip>
+	     <jump>           0       </jump>
+           </Parameters>
+        </ImplicitSolver>
+        
+      </SolverTest>        
+    </CFD>
+
+</Uintah_specification>
+
