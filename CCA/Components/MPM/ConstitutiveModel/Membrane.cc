@@ -539,7 +539,7 @@ void Membrane::addComputesAndRequires(Task* task,
   // constitutive models.  The method is defined in the ConstitutiveModel
   // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
-  addSharedCRForExplicit(task, matlset, patches);
+  addSharedCRForHypoExplicit(task, matlset, patches);
 
   // Other constitutive model and input dependent computes and requires
   Ghost::GhostType  gnone = Ghost::None;

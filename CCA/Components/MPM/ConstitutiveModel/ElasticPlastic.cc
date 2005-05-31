@@ -494,7 +494,7 @@ ElasticPlastic::addComputesAndRequires(Task* task,
   // constitutive models.  The method is defined in the ConstitutiveModel
   // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
-  addSharedCRForExplicit(task, matlset, patch);
+  addSharedCRForHypoExplicit(task, matlset, patch);
 
   // Other constitutive model and input dependent computes and requires
   Ghost::GhostType  gnone = Ghost::None;
