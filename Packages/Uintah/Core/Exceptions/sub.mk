@@ -17,7 +17,8 @@ SRCS     += \
 	$(SRCDIR)/MaxIteration.cc	    
 
 PSELIBS := \
-	Core/Exceptions 
+	Core/Exceptions \
+	Core/Geometry
 
 LIBS := 
 
