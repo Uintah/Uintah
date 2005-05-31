@@ -4247,11 +4247,11 @@ class BioImageApp {
             set x [lindex [$detachedPFr.f.p.sf xview] 0]
             set y [lindex [$detachedPFr.f.p.sf yview] 0]
             if {$which ==" up"} {                
-		$attachedPFr.f.p.sf yview moveto [expr $y - 0.0.5]
-		$detachedPFr.f.p.sf yview moveto [expr $y - 0.0.5]
+		$attachedPFr.f.p.sf yview moveto [expr $y - 0.05]
+		$detachedPFr.f.p.sf yview moveto [expr $y - 0.05]
 	    } elseif {$which == "down"} {
-		$attachedPFr.f.p.sf yview moveto [expr $y + 0.0.5]
-		$detachedPFr.f.p.sf yview moveto [expr $y + 0.0.5]
+		$attachedPFr.f.p.sf yview moveto [expr $y + 0.05]
+		$detachedPFr.f.p.sf yview moveto [expr $y + 0.05]
 	    } elseif {$which == "right"} {
 		$attachedPFr.f.p.sf xview moveto [expr $x + 0.05]
 		$detachedPFr.f.p.sf xview moveto [expr $x + 0.05]
