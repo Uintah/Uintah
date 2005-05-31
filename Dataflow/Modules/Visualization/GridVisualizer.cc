@@ -379,9 +379,18 @@ void GridVisualizer::execute()
     ogeom->delObj(id_list[i]);
   id_list.clear();
 
-  if (initialize_grid() == 2)
+  switch (initialize_grid()) {
+  case 0:
+    // Grid didn't change, so don't update gui
+    break;
+  case 1:
+    // Grid changed so update the gui
+    update_tcl_window();
+    break;
+  case 2:
+    // Didn't get a grid handle
     return;
-  update_tcl_window();
+  }
   
   setup_widget();
   update_widget();

@@ -78,7 +78,7 @@ public:
   class QueryInfo {
   public:
     QueryInfo() {}
-    QueryInfo(DataArchive* archive, int generation,
+    QueryInfo(const DataArchiveHandle& archive, int generation,
               GridP& grid, LevelP& level,
               string varname,
               int mat,
@@ -92,7 +92,7 @@ public:
       time(time), timestep(timestep), dt(dt)
     {}
     
-    DataArchive* archive;
+    DataArchiveHandle archive;
     int generation;
     GridP grid;
     LevelP level;

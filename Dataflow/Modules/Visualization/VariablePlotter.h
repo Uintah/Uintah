@@ -62,7 +62,7 @@ protected:
   int old_generation;
   int old_timestep;
   GridP grid;
-  DataArchive* archive;
+  DataArchiveHandle archive;
   int numLevels;
 
   VariableCache material_data_list;
