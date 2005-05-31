@@ -103,6 +103,17 @@ void ConstitutiveModel::scheduleCheckNeedAddMPMMaterial(Task* task,
 }
 
 void 
+ConstitutiveModel::addSharedCRForHypoExplicit(Task* task,
+                                              const MaterialSubset* matlset,
+                                              const PatchSet* p) const
+{
+  Ghost::GhostType  gnone = Ghost::None;
+  addSharedCRForExplicit(task, matlset, p);
+  task->requires(Task::OldDW, lb->pStressLabel,             matlset, gnone);
+
+}
+
+void 
 ConstitutiveModel::addSharedCRForExplicit(Task* task,
                                           const MaterialSubset* matlset,
                                           const PatchSet* ) const
@@ -116,7 +127,6 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
   task->requires(Task::OldDW, lb->pVolumeLabel,             matlset, gnone);
   task->requires(Task::OldDW, lb->pTemperatureLabel,        matlset, gnone);
   task->requires(Task::OldDW, lb->pVelocityLabel,           matlset, gnone);
-  task->requires(Task::OldDW, lb->pStressLabel,             matlset, gnone);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel, matlset, gnone);
   task->requires(Task::NewDW, lb->gVelocityLabel,           matlset, gac, NGN);
   task->requires(Task::OldDW, lb->pSizeLabel,             matlset, gnone);
