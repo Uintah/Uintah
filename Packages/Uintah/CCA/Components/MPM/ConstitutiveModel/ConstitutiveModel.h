@@ -349,6 +349,14 @@ namespace Uintah {
 
 
     /////////////////////////////////////////////////////////////////
+    /*! Computes and Requires common to all hypo-elastic constitutive models
+     *  that do explicit time stepping : called by addComputesAndRequires */
+    /////////////////////////////////////////////////////////////////
+    void addSharedCRForHypoExplicit(Task* task,
+                                    const MaterialSubset* matlset,
+                                    const PatchSet* patches) const;
+
+    /////////////////////////////////////////////////////////////////
     /*! Computes and Requires common to all constitutive models that
      *  do explicit time stepping : called by addComputesAndRequires */
     /////////////////////////////////////////////////////////////////
