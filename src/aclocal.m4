@@ -1127,8 +1127,6 @@ case $1 in
   ;;
   SCIRun2)
     sci_required_babel=yes
-    sci_required_uuid=yes
-    sci_required_ruby=yes
   ;;
   Remote)
     sci_required_jpeg=yes
