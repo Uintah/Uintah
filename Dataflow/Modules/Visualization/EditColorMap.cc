@@ -432,7 +432,7 @@ EditColorMap::DrawGraphs( int flush)
   ctxs_[0]->swap();
   CHECK_OPENGL_ERROR("");
   ctxs_[0]->release();
-  gui->unlock();
+  gui->unlock();  
 
   // Update the colormap.
   cmap = scinew ColorMap(rgbs_, rgbT_, alphas_, alphaT_, resolution_.get());
@@ -584,10 +584,8 @@ EditColorMap::tcl_command( GuiArgs& args, void* userdata)
 	ctxs_[i] = 0;
       }
   } else if(args[1] == "setgl") {
-    int win = 0;
-    string_to_int(args[2], win);
-    makeCurrent(win);
-    gui->unlock();
+    if (makeCurrent(args.get_int(2)))
+      gui->unlock();
   }else if (args[1] == "unpickle") {
      tcl_unpickle();
   }else if (args[1] == "toggle-hsv") {
@@ -1055,15 +1053,18 @@ EditColorMap::makeCurrent(int win)
       myname = ".ui" + id + ".f.gl3.gl";
       height = 64;
     }
-	
-    ctxs_[win] = scinew TkOpenGLContext(myname, 0, 512, height);
-    winX[win] = 512;//ctxs_[win]->width();
-    winY[win] = height;//ctxs_[win]->height();    
+    try {
+      ctxs_[win] = scinew TkOpenGLContext(myname, 0, 512, height);
+    } catch (...) {
+      ctxs_[win] = 0;
+    }
+    winX[win] = 512;
+    winY[win] = height;    
   }	
 
   if(!ctxs_[win])
   {
-    error("Unable to create OpenGL Context!");
+    remark("Unable to create OpenGL context.");
     gui->unlock();
     return 0;
   }
