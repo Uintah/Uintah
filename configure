@@ -2648,8 +2648,6 @@ case SCIRun2 in
   ;;
   SCIRun2)
     sci_required_babel=yes
-    sci_required_uuid=yes
-    sci_required_ruby=yes
   ;;
   Remote)
     sci_required_jpeg=yes
@@ -2830,8 +2828,6 @@ case $i in
   ;;
   SCIRun2)
     sci_required_babel=yes
-    sci_required_uuid=yes
-    sci_required_ruby=yes
   ;;
   Remote)
     sci_required_jpeg=yes
@@ -2916,8 +2912,6 @@ case Teem in
   ;;
   SCIRun2)
     sci_required_babel=yes
-    sci_required_uuid=yes
-    sci_required_ruby=yes
   ;;
   Remote)
     sci_required_jpeg=yes
@@ -3002,8 +2996,6 @@ case DataIO in
   ;;
   SCIRun2)
     sci_required_babel=yes
-    sci_required_uuid=yes
-    sci_required_ruby=yes
   ;;
   Remote)
     sci_required_jpeg=yes
@@ -3090,8 +3082,6 @@ case Ptolemy in
   ;;
   SCIRun2)
     sci_required_babel=yes
-    sci_required_uuid=yes
-    sci_required_ruby=yes
   ;;
   Remote)
     sci_required_jpeg=yes
@@ -4656,7 +4646,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4659:" \
+echo "$as_me:4649:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -39912,7 +39902,7 @@ echo "$as_me: WARNING: Found libmpi but not in requested directory: $with_mpi/li
 ## arg 2 : mpi library and header-2
 ## arg 3 : mpi.h
 ## arg 4 : $_sci_inc /usr/include/mpi
-## arg 5 : mpi lam util pthread
+## arg 5 : mpi lam lammpi++ lammpio util pthread
 ## arg 6 : $_sci_lib
 ## arg 7 : -DMPIPP_H
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -39995,10 +39985,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "mpi lam util pthread"; then
+if test -n "mpi lam lammpi++ lammpio util pthread"; then
 
    found_framework=no
-   for lib in "" mpi lam util pthread; do
+   for lib in "" mpi lam lammpi++ lammpio util pthread; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -40321,7 +40311,7 @@ echo "$as_me: error: Specifically requested MPI include file '$_sci_inc /usr/inc
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" mpi lam util pthread; do
+  for i in "" mpi lam lammpi++ lammpio util pthread; do
     if test -z "$i"; then
        continue
     fi
@@ -54112,7 +54102,7 @@ sci_defs_files="$sci_defs_files include/sci_defs/qt_testdefs.h"
 
 ##  --  search for ruby  ----------------------------------------------------
 if test "$sci_required_ruby" = "yes"; then
-  _sci_optional=required
+  _sci_optional=optional
 
   if test "$with_ruby" = "yes"; then
     # --with-ruby has been specified without a parameter.
