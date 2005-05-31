@@ -99,7 +99,7 @@ FieldExtractor::build_GUI_frame()
 double
 FieldExtractor::field_update()
 {
-  DataArchive& archive = *((*(archiveH.get_rep()))());
+  DataArchiveHandle archive = archiveH->getDataArchive();
   // set the index for the correct timestep.
   int new_timestep = archiveH->timestep();
   vector< const TypeDescription *> types;
@@ -107,7 +107,7 @@ FieldExtractor::field_update()
   vector< int > indices;
   double time;
   // check to see if we have a new Archive
-  archive.queryVariables(names, types);
+  archive->queryVariables(names, types);
   int new_generation = archiveH->generation;
   bool archive_dirty =  new_generation != generation;
   if (archive_dirty) {
@@ -115,13 +115,13 @@ FieldExtractor::field_update()
     timestep = -1; // make sure old timestep is different from current
     times.clear();
     mesh_handle_ = 0;
-    archive.queryTimesteps( indices, times );
+    archive->queryTimesteps( indices, times );
   }
 
   if (timestep != new_timestep) {
     time = times[new_timestep];
     grid = 0;
-    grid = archive.queryGrid(time);
+    grid = archive->queryGrid(time);
     //      BBox gbox; grid->getSpatialRange(gbox);
     //     cerr<<"box: min("<<gbox.min()<<"), max("<<gbox.max()<<")\n";
     timestep = new_timestep;
@@ -150,14 +150,14 @@ void
 FieldExtractor::update_GUI(const string& var,
                            const string& varnames)
 {
-  DataArchive& archive = *((*(archiveH.get_rep()))());
+  DataArchiveHandle archive = archiveH->getDataArchive();
   int levels = grid->numLevels();
   int guilevel = level_.get();
   LevelP level = grid->getLevel((guilevel == levels ? 0 : guilevel) );
 
   Patch* r = *(level->patchesBegin());
   ConsecutiveRangeSet matls = 
-    archive.queryMaterials(var, r, times[timestep]);
+    archive->queryMaterials(var, r, times[timestep]);
 
   ostringstream os;
   os << levels;
@@ -226,7 +226,6 @@ FieldExtractor::execute()
   }
   
   archiveH = handle;
-  DataArchive& archive = *((*(archiveH.get_rep()))());
 
   //   cerr<<"Gui say levels = "<<level_.get()<<"\n";
   // get time, set timestep, set generation, update grid and update gui
@@ -280,7 +279,8 @@ FieldExtractor::execute()
   
   update_mesh_handle( level, hi, range, box, type->getType(), mesh_handle_);
 
-  QueryInfo qinfo(&archive, generation, grid, level, var, mat, type,
+  QueryInfo qinfo(archiveH->getDataArchive(),
+                  generation, grid, level, var, mat, type,
                   get_all_levels, time, timestep, dt);
 
   FieldHandle fHandle_;

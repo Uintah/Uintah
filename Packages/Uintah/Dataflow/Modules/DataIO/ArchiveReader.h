@@ -54,7 +54,7 @@ protected:
 private:
   ArchiveOPort *out;
   ArchiveHandle archiveH;
-  DataArchive *reader;
+  DataArchiveHandle reader;
 
   // Used to remember the last thing we loaded
   string aName;

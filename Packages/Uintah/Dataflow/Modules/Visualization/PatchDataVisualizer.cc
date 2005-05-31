@@ -80,7 +80,7 @@ private:
   GuiDouble radius;
   GuiInt polygons;
   
-  DataArchive* archive;
+  DataArchiveHandle archive;
   int old_generation;
   int old_timestep;
   int numLevels;
@@ -133,10 +133,10 @@ bool PatchDataVisualizer::getGrid()
   }
 
   // access the grid through the handle and dataArchive
-  archive = (*(handle.get_rep()))();
-  int new_generation = (*(handle.get_rep())).generation;
+  archive = handle->getDataArchive();
+  int new_generation = handle->generation;
   bool archive_dirty =  new_generation != old_generation;
-  int timestep = (*(handle.get_rep())).timestep();
+  int timestep = handle->timestep();
   vector< double > times; 
   if (archive_dirty) {
     old_generation = new_generation;

@@ -21,7 +21,7 @@ Archive::Archive() :
 {
 }
 
-Archive::Archive(DataArchive *ar) :
+Archive::Archive(const DataArchiveHandle& ar) :
   archive(ar)
 {
 }

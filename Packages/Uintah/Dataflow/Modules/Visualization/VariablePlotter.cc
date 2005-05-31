@@ -96,10 +96,10 @@ VariablePlotter::getGrid()
   }
 
   // access the grid through the handle and dataArchive
-  archive = (*(handle.get_rep()))();
-  int new_generation = (*(handle.get_rep())).generation;
+  archive = handle->getDataArchive();
+  int new_generation = handle->generation;
   bool archive_dirty =  new_generation != old_generation;
-  int timestep = (*(handle.get_rep())).timestep();
+  int timestep = handle->timestep();
   if (archive_dirty) {
     old_generation = new_generation;
     vector< int > indices;
@@ -230,11 +230,14 @@ VariablePlotter::initialize_grid()
 
   // setup the tickle stuff
   if (new_grid) {
+    cerr << "VariablePlotter::initialize_grid(): new_grid is true\n";
     nl.set(numLevels);
     names.clear();
     types.clear();
     archive->queryVariables(names, types);
-  }
+  } else {
+    cerr << "VariablePlotter::initialize_grid(): new_grid is false\n";
+  }    
   setVars(grid);
 
   if (new_grid)

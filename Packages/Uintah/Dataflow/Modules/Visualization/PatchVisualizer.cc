@@ -94,7 +94,7 @@ private:
   GuiInt patch_seperate;
   
   vector< double > times;
-  DataArchive* archive;
+  DataArchiveHandle archive;
   int old_generation;
   int old_timestep;
   int numLevels;
@@ -149,10 +149,10 @@ bool PatchVisualizer::getGrid()
   }
 
   // access the grid through the handle and dataArchive
-  archive = (*(handle.get_rep()))();
-  int new_generation = (*(handle.get_rep())).generation;
+  archive = handle->getDataArchive();
+  int new_generation = handle->generation;
   bool archive_dirty =  new_generation != old_generation;
-  int timestep = (*(handle.get_rep())).timestep();
+  int timestep = handle->timestep();
   if (archive_dirty) {
     old_generation = new_generation;
     vector< int > indices;
