@@ -49,6 +49,7 @@ class Argument;
 class SymbolTable;
 class Class;
 class BaseInterface;
+class BaseExtension;
 class EmitState;
 class SState;
 class ArrayType;
@@ -128,6 +129,7 @@ public:
   void detectRedistribution();
   void gatherParents(std::vector<CI*>& parents) const;
   void gatherParentInterfaces(std::vector<BaseInterface*>& parents) const;
+  //void gatherParentInterfaces(std::vector<CI*>& parents) const;
   void gatherMethods(std::vector<Method*>&) const;
   void gatherVtable(std::vector<Method*>&, bool onlyNewMethods) const;
   std::vector<Method*>& myMethods();
@@ -146,7 +148,9 @@ protected:
   void emit_proxy(EmitState& e);
   void emit_header(EmitState& e);
   Class* parentclass;
+  //std::vector<CI*> parent_ifaces;
   std::vector<BaseInterface*> parent_ifaces;
+  //std::vector<BaseException*> parent_exception_ifaces;
   MethodList* mymethods;
   DistributionArrayList* mydistarrays;
 private:
@@ -253,6 +257,12 @@ public:
   std::vector<Definition*> list;
 };
 
+// class Interface {
+// public:
+//     virtual ScopedNameList* getInterfaceExtends = 0;
+// };
+
+
 class BaseInterface : public CI {
 public:
   BaseInterface(const std::string& curfile, int lineno, const std::string& id,
@@ -264,6 +274,19 @@ public:
 private:
   ScopedNameList* interface_extends;
 };
+
+// class BaseException : public CI {
+// public:
+//   BaseException(const std::string& curfile, int lineno, const std::string& id,
+// 	    ScopedNameList* interface_extends, MethodList*, DistributionArrayList* );
+//   virtual ~BaseException();
+//   virtual void staticCheck(SymbolTable*);
+//   virtual void gatherSymbols(SymbolTable*);
+//   Method* findMethod(const Method*) const;
+// private:
+//   ScopedNameList* interface_extends;
+// };
+
 
 class Method {
 public:
@@ -287,6 +310,7 @@ public:
 
   void setClass(Class* c);
   void setInterface(BaseInterface* c);
+//   void setInterface(BaseException* c);
 
   enum MatchWhich {
     TypesOnly,
@@ -336,6 +360,7 @@ private:
   Modifier modifier;
   Class* myclass;
   BaseInterface* myinterface;
+//   BaseException* myexception;
   bool checked;
 };
 
@@ -348,6 +373,7 @@ public:
   void staticCheck(SymbolTable*) const;
   void setClass(Class* c);
   void setInterface(BaseInterface* c);
+//   void setInterface(BaseException* c);
   Method* findMethod(const Method* match) const;
   void gatherMethods(std::vector<Method*>&) const;
   void gatherVtable(std::vector<Method*>&) const;
