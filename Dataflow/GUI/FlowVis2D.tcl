@@ -37,13 +37,9 @@ itcl_class SCIRun_Visualization_FlowVis2D {
     }
     method set_defaults {} {
 	global $this-vis_type
-        global $this-tex_x
-        global $this-tex_y
-        global $this-auto_tex
+        global $this-clear
         set $this-vis_type 0
-        set $this-auto_tex 1
-        set $this-tex_x 1
-        set $this-tex_y 1
+        set $this-clear 1
     }
 
     method ui {} {
@@ -64,16 +60,16 @@ itcl_class SCIRun_Visualization_FlowVis2D {
             -variable $this-vis_type
         radiobutton $w.f.lea -text LEA -value 2 \
             -variable $this-vis_type
-        checkbutton $w.f.at -text "Auto Tex?" -variable $this-auto_tex \
-            -command $n
-        scale $w.f.x  -from 0 -to 1 -command $n \
-            -resolution 0.01 -variable $this-tex_x -orient horizontal
-        scale $w.f.y  -from 0 -to 1 -command $n \
-            -resolution 0.01 -variable $this-tex_y -orient horizontal
-
-        pack  $w.f.lic $w.f.ibfv $w.f.lea $w.f.at $w.f.x $w.f.y -side top
+        button $w.f.clear -text "Clear buffers" \
+            -command "$this clear"
+    
+        pack  $w.f.lic $w.f.ibfv $w.f.lea $w.f.clear -side top
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
+    }
+    method clear {} {
+        set $this-clear 1
+        $this-c needexecute
     }
 }

@@ -180,9 +180,12 @@ protected:
   void conv_accum( float pixel_x, float pixel_y, float scale);
   void conv_rewire();
   float get_interpolated_value( Array3<float>& array, float x, float y );
+
 #endif
   
 public:
+  void reset();
+
 };
 
 } // End namespace SCIRun

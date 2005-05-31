@@ -60,9 +60,7 @@ private:
   int cmap_prev_generation_;
   int card_mem_;
   GuiInt gui_vis_type_;
-  GuiDouble gui_tex_x_;
-  GuiDouble gui_tex_y_;
-  GuiInt gui_auto_tex_;
+  GuiInt gui_clear_;
 
   FlowRenderer2D* flowren_;
 
@@ -77,9 +75,7 @@ FlowVis2D::FlowVis2D(GuiContext* ctx)
     cmap_prev_generation_(-1),
     card_mem_(video_card_memory_size()),
     gui_vis_type_(ctx->subVar("vis_type")),
-    gui_tex_x_(ctx->subVar("tex_x")),
-    gui_tex_y_(ctx->subVar("tex_y")),
-    gui_auto_tex_(ctx->subVar("auto_tex")),
+    gui_clear_(ctx->subVar("clear")),
     flowren_(0)
 {}
 
@@ -160,15 +156,13 @@ FlowVis2D::execute()
   if( !flowren_ ){
     build2DVectorTexture();
     flowren_ = new FlowRenderer2D(vfield, cmap, int(card_mem_*1024*1024*0.8));
-
     geomID = ogeom->addObj(flowren_, "FlowRenderer");
   }
 
-  flowren_->set_auto_tex(( gui_auto_tex_.get() == 1 ));
-  flowren_->set_tex_x( gui_tex_x_.get() );
-  flowren_->set_tex_y( gui_tex_y_.get() );
-  
-
+  if( gui_clear_.get() == 1 ){
+    flowren_->reset();
+    gui_clear_.set(0);
+  }
 
   if( field_dirty )
   {
