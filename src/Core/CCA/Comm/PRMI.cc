@@ -73,6 +73,7 @@
 #include <Core/CCA/Comm/SocketSpChannel.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <deque>
+#include <sci_defs/mpi_defs.h> // For MPIPP_H
 #include <mpi.h>
 #include <Core/CCA/Comm/PRMI.h>
 

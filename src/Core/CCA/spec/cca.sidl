@@ -1008,7 +1008,6 @@ package cca {
 				 in string usingPortName, 	
 				 in cca.ComponentID provider, 
 			  	 in string providingPortName);
-
 	    //>>>>>>>>>>>>>>>>>>>>>		
 	} // end interface BuilderService
 	
