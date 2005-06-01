@@ -267,6 +267,7 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   out << "#include <vector>\n"; 
   out << "#include <sci_defs/config_defs.h>\n";
 #ifdef MxNDEBUG 
+  out << "#include <sci_defs/mpi_defs.h> // For MPIPP_H\n";
   out << "#include <mpi.h> //Debugging purposes\n";
 #endif
   out << "using namespace std;\n";

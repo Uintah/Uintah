@@ -54,6 +54,7 @@
 #include <Core/CCA/Comm/DT/DTAddress.h>
 #include <Core/CCA/Comm/DT/DTMessageTag.h>
 #include <Core/CCA/Comm/SocketEpChannel.h>
+#include <sci_defs/mpi_defs.h> // For MPIPP_H
 #include <mpi.h>
 
 namespace SCIRun {

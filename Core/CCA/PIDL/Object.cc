@@ -46,6 +46,7 @@
 #include <stdlib.h>
 #include <Core/CCA/PIDL/ProxyBase.h>
 #include <Core/CCA/spec/cca_sidl.h>
+#include <sci_defs/mpi_defs.h> // For MPIPP_H
 #include <mpi.h>
 
 using namespace std;
