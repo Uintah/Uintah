@@ -865,9 +865,8 @@ void
 DataArchive::TimeHashMaps::updateCacheSize(int new_size) 
 {
   dbg << "TimeHashMaps::updateCacheSize:new_size = "<<new_size<<", timestep_cache_size = "<<timestep_cache_size<<"\n";
-  if (new_size >= timestep_cache_size ||
-      new_size <= 0) {
-    timestep_cache_size = new_size;
+  // new_size needs to be at least 1.
+  if (new_size < 1) {
     return;
   }
 

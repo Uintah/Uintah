@@ -116,7 +116,8 @@ private:
     MaterialHashMaps* findPatchData(double time, const Patch* patch);
 
     // This will purge the cache to the point where
-    // d_lasNtimesteps.size() <= new_size.
+    // d_lastNtimesteps.size() <= new_size.  If new_size < 1 nothing
+    // will be done.
     void updateCacheSize(int new_size);
 
     // Sets the cache size back to the default.
