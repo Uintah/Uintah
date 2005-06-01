@@ -212,6 +212,7 @@ class VH_injury
   float axisX1, axisY1, axisZ1; // center axis endpoint 1
   float inside_rad0, inside_rad1, rad0, rad1, len;
   float probability;
+  string diagnosis;
 
   VH_injury() { context = UNSET; rad0set = rad1set = false;
                 inside_rad0set = inside_rad1set = false;
@@ -232,6 +233,13 @@ class VH_injury
 
 bool
 is_injured(char *targetName, vector<VH_injury> &injured_tissue_list);
+
+bool
+is_diagnosis(vector<VH_injury> &injured_tissue_list);
+
+string
+get_diagnosis(vector<VH_injury> &injured_tissue_list);
+
 
 /******************************************************************************
  * class VH_HIPvarMap
