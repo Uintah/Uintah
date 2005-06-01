@@ -49,6 +49,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <iostream>
+#include <sci_defs/mpi_defs.h> // For MPIPP_H
 #include <mpi.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/PIDL/URL.h>

@@ -43,7 +43,7 @@
 #ifndef LUFactor_LUFactor_impl_h
 #define LUFactor_LUFactor_impl_h
 
-#include <sci_defs/config_defs.h> // For MPIPP_H on SGI
+#include <sci_defs/mpi_defs.h> // For MPIPP_H
 #include <mpi.h>
 #include <testprograms/Component/LUFactor/LUFactor_sidl.h>
 

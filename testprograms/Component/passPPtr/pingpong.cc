@@ -43,7 +43,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <sci_defs/config_defs.h> // For MPIPP_H on SGI
+#include <sci_defs/mpi_defs.h> // For MPIPP_H
 #include <mpi.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/PIDL/MxNArrayRep.h>

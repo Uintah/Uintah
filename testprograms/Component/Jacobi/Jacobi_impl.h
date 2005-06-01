@@ -43,7 +43,7 @@
 #ifndef Jacobi_Jacobi_impl_h
 #define Jacobi_Jacobi_impl_h
 
-#include <sci_defs/config_defs.h> // For MPIPP_H on SGI
+#include <sci_defs/mpi_defs.h> // For MPIPP_H
 #include <mpi.h>
 #include <testprograms/Component/Jacobi/Jacobi_sidl.h>
 

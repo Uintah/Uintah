@@ -54,6 +54,7 @@
 #include <Core/Thread/Runnable.h>
 #include <stdlib.h>
 #include <time.h>
+#include <sci_defs/mpi_defs.h> // For MPIPP_H
 #include <mpi.h>
 
 using namespace SCIRun;
