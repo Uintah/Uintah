@@ -93,7 +93,7 @@ FlowRenderer2D::FlowRenderer2D(FieldHandle field,
   re_accum_(true),
   noise_tex_(0),
   build_noise_(true),
-  use_pbuffer_(false),
+  use_pbuffer_(true),
   buffer_width_(0),
   buffer_height_(0),
   adv_buffer_(0),
@@ -263,45 +263,45 @@ FlowRenderer2D::draw()
   bind_colormap(3);
   //--------------------------------------------------------------------------
   // set up pbuffers
-//   if(!pbuffers_created_ && use_pbuffer_)
-//     create_pbuffers(buffer_width_, buffer_height_);
+  if(!pbuffers_created_ && use_pbuffer_)
+    create_pbuffers(buffer_width_, buffer_height_);
   
 //   if( adv_buffer_ ){
   float scale = 1.0;
 //   pair<float,float> shft = shift_list_[current_shift_];
 //     adv_init(adv_buffer_,scale, shift_list_[current_shift_]);
 
-//     bind_noise();
+//     bind_noise(1);
   int c_shift = current_shift_;
-  build_adv( scale, shift_list_[c_shift] );
-  //  load_adv();
-  next_shift(&c_shift);
+//   build_adv( scale, shift_list_[c_shift] );
+//   //  load_adv();
+//   next_shift(&c_shift);
     
 
-  cerr<<"re_accum = "<<re_accum_<<"\n";
-  if( re_accum_ ){
-    //must be called after build_flow_tex()
-      float pixelx = 1.f/(float)w_;
-      float pixely = 1.f/(float)h_;
-      for(int i = 0; i < 10; i++){
-        adv_accum( pixelx, pixely, scale, shift_list_[c_shift] );
-        next_shift(&c_shift);
-      }
-      adv_rewire();
+//   cerr<<"re_accum = "<<re_accum_<<"\n";
+//   if( re_accum_ ){
+//     //must be called after build_flow_tex()
+//       float pixelx = 1.f/(float)w_;
+//       float pixely = 1.f/(float)h_;
+//       for(int i = 0; i < 10; i++){
+//         adv_accum( pixelx, pixely, scale, shift_list_[c_shift] );
+//         next_shift(&c_shift);
+//       }
+//       adv_rewire();
       
-      build_conv(scale);
-      for(int i = 0; i < 10; i++){
-        conv_accum( pixelx, pixely, scale);
-      }
-      conv_rewire();
-      re_accum_ = false;
-   }
+//       build_conv(scale);
+//       for(int i = 0; i < 10; i++){
+//         conv_accum( pixelx, pixely, scale);
+//       }
+//       conv_rewire();
+//       re_accum_ = false;
+//    }
   
-  load_conv();
-  bind_conv( 1 );
-//   bind_noise();
+//   load_conv();
+//   bind_conv( 1 );
+//   bind_noise(1);
 //   bind_flow_tex();
-
+  noise_buffer_->bind();
   //-----------------------------------------------------
   // set up shader
   FragmentProgramARB* shader; // = adv_accum_;
@@ -342,10 +342,10 @@ FlowRenderer2D::draw()
   
   if(shader)
     shader->release();
-  
+  noise_buffer_->release();
 //   release_flow_tex();
-//   release_noise();
-  release_conv(1);
+//   release_noise(1);
+//   release_conv(1);
   release_colormap(3);
   
   glPopMatrix();
@@ -1296,21 +1296,22 @@ FlowRenderer2D::build_noise( float scale, float shftx, float shfty )
         shader->bind();
       }
 
-      float tex_coords[] = { 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0 };
-      float pos_coords[] = { 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0 };
-
+//       float tex_coords[] = { 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0 };
+//       float pos_coords[] = { 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0 };
+      CHECK_OPENGL_ERROR("FlowRenderer2D::build_noise()");
       glBegin( GL_QUADS );
       {
         for (int i = 0; i < 4; i++) {
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
-          glMultiTexCoord2fv(GL_TEXTURE1,tex_coords+i*2);
+          glMultiTexCoord2fv(GL_TEXTURE0,tex_coords_+i*2);
 #else
-          glTexCoord2fv(tex_coords+i*2);
+          glTexCoord2fv(tex_coords_+i*2);
 #endif
-          glVertex2fv(pos_coords+i*2);
+          glVertex2fv(pos_coords_+i*2);
         }
       }
       glEnd();
+      CHECK_OPENGL_ERROR("FlowRenderer2D::build_noise()");
       noise_buffer_->release(GL_FRONT);
       if(shader)
         shader->release();
@@ -1408,7 +1409,7 @@ FlowRenderer2D::create_pbuffers(int w, int h)
      noise_buffer_ = new Pbuffer( psize[0], psize[1], GL_FLOAT, 
                                   32, true, GL_FALSE);
     CHECK_OPENGL_ERROR("");    
-    if(!adv_buffer_->create() ) { //|| noise_buffer_->create() ) {
+    if(!adv_buffer_->create() || noise_buffer_->create() ) {
       NOT_FINISHED("Something wrong with pbuffers"); 
       adv_buffer_->destroy();
       noise_buffer_->destroy();
