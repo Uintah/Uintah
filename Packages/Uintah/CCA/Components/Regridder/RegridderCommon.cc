@@ -178,17 +178,6 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
       d_latticeRefinementRatio[i] = lastRatio;
   }
 
-  // time refinement ratio, expand to max levels
-  if (!regrid_spec->get("time_refinement_ratio", d_timeRefinementRatio))
-    d_timeRefinementRatio.push_back(2); // default
-  size = (int) d_timeRefinementRatio.size();
-  int ratio = d_timeRefinementRatio[size - 1];
-  if (size < d_maxLevels) {
-    d_timeRefinementRatio.resize(d_maxLevels);
-    for (int i = size; i < d_maxLevels; i++)
-      d_timeRefinementRatio[i] = ratio;
-  }
-
   // get other init parameters
   d_cellCreationDilation = IntVector(1,1,1);
   d_cellDeletionDilation = IntVector(1,1,1);

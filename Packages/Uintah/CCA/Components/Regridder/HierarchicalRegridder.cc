@@ -425,7 +425,7 @@ Grid* HierarchicalRegridder::CreateGrid(Grid* oldGrid, const ProblemSpecP& ups)
     }
 
     LevelP newLevel = newGrid->addLevel(anchor, spacing);
-    newLevel->setTimeRefinementRatio(d_timeRefinementRatio[levelIdx-1];
+    newLevel->setTimeRefinementRatio(newGrid->getLevel(0)->getRefinementRatio());
     newLevel->setExtraCells(extraCells);
 
     rdbg << "HierarchicalRegridder::regrid(): Setting extra cells to be: " << extraCells << endl;
@@ -683,9 +683,7 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid, const ProblemSpecP& ups)
     }
 
     LevelP newLevel = newGrid->addLevel(anchor, spacing);
-    if (levelIdx > 0)
-      newLevel->setTimeRefinementRatio(d_timeRefinementRatio[levelIdx-1]);
-
+    newLevel->setTimeRefinementRatio(oldGrid->getLevel(0)->timeRefinementRatio());
     newLevel->setExtraCells(extraCells);
 
     rdbg << "HierarchicalRegridder::regrid(): Setting extra cells to be: " << extraCells << endl;
