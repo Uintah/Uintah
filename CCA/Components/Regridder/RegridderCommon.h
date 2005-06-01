@@ -113,7 +113,6 @@ WARNING
     SizeList  d_cellRefinementRatio;
     IntVector d_cellCreationDilation;
     IntVector d_cellDeletionDilation;
-    vector<int> d_timeRefinementRatio;
     IntVector d_minBoundaryCells; //! min # of cells to be between levels' boundaries
     FilterType d_filterType;
 

@@ -215,6 +215,9 @@ WARNING
 
       int d_id;
       IntVector d_refinementRatio;
+
+      // should technically be a "grid" parameter, but here we have a way
+      // to check if it's been finalized.
       int d_timeRefinementRatio;
 
       // vars for select_grid - don't ifdef them here, so if we change it
