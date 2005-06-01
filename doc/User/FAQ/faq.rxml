@@ -1238,6 +1238,33 @@ PRINT_TEXT
       </answer>
     </qandaentry>
 
+    <qandaentry>
+      <revhistory>
+	<revision>
+	  <revnumber>001</revnumber>
+	  <date>6/1/2005</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>
+           I'm trying to use SCIRun/BioImage to do volume rendering.
+           In the Viewer Window I see the axis, but I'm not seeing my data.
+	</para>
+      </question>
+      <answer>
+	<para>
+           Try running the command 'glxinfo'.  If you see something like
+           'Xlib:  extension "XFree86-DRI" missing on display ":0.0"', then 
+           take a look at this thread:  http://lists.debian.org/debian-user/2004/10/msg00200.html.
+           If this doesn't help, please send email to scirun-users@sci.utah.edu
+           with the output from the glxinfo command and a description of
+           what you are trying to do, the OS you are running on, the graphics
+           card you have, and any other pertinent information about your
+           system that you think we should know.
+	</para>
+      </answer>
+    </qandaentry>
+
   </qandaset>
 
 </article>
