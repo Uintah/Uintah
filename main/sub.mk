@@ -40,6 +40,9 @@ else
   PSELIBS := Dataflow/Network Core/Containers Core/TCLThread Core/GuiInterface \
 	Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
 	Core/ICom Core/Services Dataflow/XMLUtil Core/SystemCall Core/Geom Core/Init
+  ifeq ($(HAVE_PTOLEMY), yes)	
+	PSELIBS += Packages/Ptolemy/Core/Comm
+  endif
   ifeq ($(OS_NAME),Darwin)
     PSELIBS += Core/Datatypes Core/ImportExport Core/Persistent
   endif
