@@ -2995,7 +2995,7 @@ if test "$sci_required_mpi" = "yes"; then
           # Use -DMPIPP_H soe we don't include mpi++.h where we don't want it.
 
           SCI_TRY_LINK(MPI,mpi library and header-2,mpi.h,
-          $_sci_inc /usr/include/mpi,mpi lam lammpi++ lammpio util pthread,$_sci_lib,-DMPIPP_H,,optional)
+          $_sci_inc /usr/include/mpi,mpi lam util pthread,$_sci_lib,-DMPIPP_H,,optional)
 
           # verify that it was found in the location requested.
           if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&

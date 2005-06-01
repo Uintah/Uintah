@@ -39902,7 +39902,7 @@ echo "$as_me: WARNING: Found libmpi but not in requested directory: $with_mpi/li
 ## arg 2 : mpi library and header-2
 ## arg 3 : mpi.h
 ## arg 4 : $_sci_inc /usr/include/mpi
-## arg 5 : mpi lam lammpi++ lammpio util pthread
+## arg 5 : mpi lam util pthread
 ## arg 6 : $_sci_lib
 ## arg 7 : -DMPIPP_H
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -39985,10 +39985,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "mpi lam lammpi++ lammpio util pthread"; then
+if test -n "mpi lam util pthread"; then
 
    found_framework=no
-   for lib in "" mpi lam lammpi++ lammpio util pthread; do
+   for lib in "" mpi lam util pthread; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -40311,7 +40311,7 @@ echo "$as_me: error: Specifically requested MPI include file '$_sci_inc /usr/inc
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" mpi lam lammpi++ lammpio util pthread; do
+  for i in "" mpi lam util pthread; do
     if test -z "$i"; then
        continue
     fi
