@@ -43,6 +43,7 @@
  */
 
 #include <Core/GuiInterface/GuiContext.h>
+#include <Core/GuiInterface/GuiInterface.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geom/GuiView.h>
@@ -62,21 +63,21 @@ GuiView::~GuiView()
 View
 GuiView::get()
 {
-  ctx->lock();
+  ctx->getInterface()->lock();
   View v(eyep.get(), lookat.get(), up.get(), fov.get());
-  ctx->unlock();
+  ctx->getInterface()->unlock();
   return v;
 }
 
 void
 GuiView::set(const View& view)
 {
-  ctx->lock();
+  ctx->getInterface()->lock();
   eyep.set(view.eyep());
   lookat.set(view.lookat());
   up.set(view.up());
   fov.set(view.fov());
-  ctx->unlock();
+  ctx->getInterface()->unlock();
 }
 
 GuiExtendedView::GuiExtendedView(GuiContext* ctx)
@@ -94,17 +95,17 @@ GuiExtendedView::~GuiExtendedView()
 ExtendedView
 GuiExtendedView::get()
 {
-  ctx->lock();
+  ctx->getInterface()->lock();
   ExtendedView v(eyep.get(), lookat.get(), up.get(), fov.get(), xres.get(),
 		 yres.get(), bg.get()*( 1. / 255 ) );
-  ctx->unlock();
+  ctx->getInterface()->unlock();
   return v;
 }
 
 void
 GuiExtendedView::set(const ExtendedView& view)
 {
-  ctx->lock();
+  ctx->getInterface()->lock();
   eyep.set(view.eyep());
   lookat.set(view.lookat());
   up.set(view.up());
@@ -112,6 +113,6 @@ GuiExtendedView::set(const ExtendedView& view)
   xres.set(view.xres());
   yres.set(view.yres());
   bg.set( view.bg()*255 );
-  ctx->unlock();
+  ctx->getInterface()->unlock();
 }
 
