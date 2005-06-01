@@ -26,8 +26,6 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
-
 /*
  *  GuiContext.cc:
  *
@@ -43,7 +41,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiContext.h>
 #include <Core/GuiInterface/GuiInterface.h>
-#include <Core/Util/Environment.h>
 #include <Core/Util/Assert.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Containers/StringUtil.h>
@@ -55,33 +52,32 @@ using std::string;
 using std::vector;
 using namespace SCIRun;
 
-GuiContext::GuiContext(GuiInterface* gui, const std::string& name, bool save, GuiContext *parent)
-  : gui(gui),
-    parent(parent),
-    name(name),
-    children(),
-    context_state(CACHE_E)
+GuiContext::GuiContext(GuiInterface* gui, 
+		       const string& name,
+		       bool save, // default = true
+		       GuiContext *parent) // default = 0
+  : gui_(gui),
+    parent_(parent),
+    name_(name),
+    children_(),
+    context_state_(CACHE_E)
 {
-  context_state |= save?SAVE_E:0;
+  context_state_ |= save?SAVE_E:0;
   if (save)
     tcl_setVarStates();
 }
-
-//GuiContext::GuiContext()
-//{
-//}
 
 
 GuiContext::~GuiContext()
 {
   dontSave();
-  if (parent) {
-    for(vector<GuiContext*>::iterator iter = parent->children.begin();
-	iter != parent->children.end(); ++iter) 
+  if (parent_) {
+    for(vector<GuiContext*>::iterator iter = parent_->children_.begin();
+	iter != parent_->children_.end(); ++iter) 
     {
       if (*iter == this)
       {
-	parent->children.erase(iter);
+	parent_->children_.erase(iter);
 	return;
       } 
     }
@@ -90,58 +86,50 @@ GuiContext::~GuiContext()
 
 
 
-GuiContext* GuiContext::subVar(const std::string& subname, bool saveChild)
+GuiContext* GuiContext::subVar(const string& subname, bool saveChild)
 {
   dontSave(); // Do not save intermediate nodes
-  GuiContext* child = scinew GuiContext(gui, name+"-"+subname, saveChild, this);
-  children.push_back(child);
+  GuiContext* child = 
+    scinew GuiContext(gui_, name_+"-"+subname, saveChild, this);
+  children_.push_back(child);
   return child;
 }
 
-void GuiContext::lock()
-{
-  gui->lock();
-}
 
-void GuiContext::unlock()
+bool GuiContext::get(string& value)
 {
-  gui->unlock();
-}
-
-bool GuiContext::get(std::string& value)
-{
-  if((context_state & CACHE_E) && (context_state & CACHED_E))
+  if((context_state_ & CACHE_E) && (context_state_ & CACHED_E))
     return true;
-  context_state &= ~CACHED_E;
-  if(!getString(name, value))
+  context_state_ &= ~CACHED_E;
+  if(!getString(name_, value))
     return false;
-  context_state |= CACHED_E;
+  context_state_ |= CACHED_E;
   return true;
 }
 
-void GuiContext::set(const std::string& value)
+void GuiContext::set(const string& value)
 {
   string tmp;
-  if ((context_state & SAVE_E) && getString(name, tmp) && tmp == value) { 
+  if ((context_state_ & SAVE_E) && getString(name_, tmp) && tmp == value) { 
     return; 
   }
-  context_state &= ~CACHED_E;
-  setString(name, value);
+  context_state_ &= ~CACHED_E;
+  setString(name_, value);
 }
 
 bool GuiContext::get(double& value)
 {
-  if((context_state & CACHE_E) && (context_state & CACHED_E))
+  if((context_state_ & CACHE_E) && (context_state_ & CACHED_E))
     return true;
-  context_state &= ~CACHED_E;
+  context_state_ &= ~CACHED_E;
   string result;
-  if(!getString(name, result))
+  if(!getString(name_, result))
     return false;
   istringstream s(result);
   s >> value;
   if(!s)
     return false;
-  context_state |= CACHED_E;
+  context_state_ |= CACHED_E;
   return true;
 }
 
@@ -152,28 +140,28 @@ void GuiContext::set(double value)
   // Print the number 17 digits wide with decimal
   stream << setiosflags(ios::showpoint) << setprecision(17) << value;
   // Evaluate it in TCL to pare down extra 0's at the end
-  const string svalue = gui->eval("expr "+stream.str());
+  const string svalue = gui_->eval("expr "+stream.str());
   string tmp;
-  if ((context_state & SAVE_E) && getString(name, tmp) && tmp == svalue) { 
+  if ((context_state_ & SAVE_E) && getString(name_, tmp) && tmp == svalue) { 
     return; 
   }
-  context_state &= ~CACHED_E;
-  gui->set(name, svalue);
+  context_state_ &= ~CACHED_E;
+  gui_->set(name_, svalue);
 }
 
 bool GuiContext::get(int& value)
 {
-  if ((context_state & CACHE_E) && (context_state & CACHED_E))
+  if ((context_state_ & CACHE_E) && (context_state_ & CACHED_E))
     return true;
-  context_state &= ~CACHED_E;
+  context_state_ &= ~CACHED_E;
   string result;
-  if(!getString(name, result))
+  if(!getString(name_, result))
     return false;
   istringstream s(result);
   s >> value;
   if(!s)
     return false;
-  context_state |= CACHED_E;
+  context_state_ |= CACHED_E;
   return true;
 }
 
@@ -182,64 +170,11 @@ void GuiContext::set(int value)
   ostringstream val;
   val << value;
   string tmp;
-  if ((context_state & SAVE_E) && gui->get(name, tmp) && tmp == val.str()) { 
+  if ((context_state_ & SAVE_E) && gui_->get(name_,tmp) && tmp == val.str()) { 
     return; 
   }
-  context_state &= ~CACHED_E;
-  setString(name, val.str());
-}
-
-// if GuiVar has a varname like:
-//    ::PSECommon_Visualization_GenStandardColorMaps_0-width
-// then we want to return:
-//    width
-// i.e. take off everything upto and including the last occurence of _#-
-//    
-string GuiContext::getName()
-{
-  int state=0;
-  int end_of_modulename = -1;
-  //int space = 0;
-  for (unsigned int i=0; i<name.size(); i++) {
-    if (name[i] == ' ') return "unused";
-    if (state == 0 && name[i] == '_') state=1;
-    else if (state == 1 && isdigit(name[i])) state = 2;
-    else if (state == 2 && isdigit(name[i])) state = 2;
-    else if (state == 2 && name[i] == '-') {
-      end_of_modulename = i;
-      state = 0;
-    } else state = 0;
-  }
-  if (end_of_modulename == -1)
-    cerr << "Error -- couldn't format name "<< name << endl;
-  return name.substr(end_of_modulename+1);
-}
-
-
-// if GuiVar has a varname like:
-//    ::PSECommon_Visualization_GenStandardColorMaps_0-width
-// then we want to return:
-// ::PSECommon_Visualization_GenStandardColorMaps_0
-// i.e. everything upto but not including the last occurence of "-"
-//    
-string GuiContext::getPrefix()
-{
-  int state=0;
-  int end_of_modulename = 0;
-  //int space = 0;
-  for (unsigned int i=0; i<name.size(); i++) {
-    if (name[i] == ' ') return "unused";
-    if (state == 0 && name[i] == '_') state=1;
-    else if (state == 1 && isdigit(name[i])) state = 2;
-    else if (state == 2 && isdigit(name[i])) state = 2;
-    else if (state == 2 && name[i] == '-') {
-      end_of_modulename = i;
-      state = 0;
-    } else state = 0;
-  }
-  if (!end_of_modulename)
-    cerr << "Error -- couldn't format name "<< name << endl;
-  return name.substr(0,end_of_modulename);
+  context_state_ &= ~CACHED_E;
+  setString(name_, val.str());
 }
 
 
@@ -287,7 +222,7 @@ int GuiContext::popLastListIndexFromString(string &varname) {
 
 
 
-bool GuiContext::getString(const std::string& varname, std::string& value) {
+bool GuiContext::getString(const string& varname, string& value) {
   bool success = false;
   if (stringIsaListElement(varname))
   {
@@ -302,23 +237,25 @@ bool GuiContext::getString(const std::string& varname, std::string& value) {
       //      cerr << "Cannot find list variable: " << listname;
       return false;
     }
-    success = gui->extract_element_from_list (list_contents, indexes, value);
-    //    if (!success) cerr << "Cannont find List Element: " << varname << std::endl;
+    success = gui_->extract_element_from_list (list_contents, indexes, value);
+    //    if (!success) cerr << "Cannont find List Element: " 
+    //                       << varname << std::endl;
     return success;
   } else if (stringIsaMap(varname)) {
-    success = gui->get_map(getMapNameFromString(varname), 
+    success = gui_->get_map(getMapNameFromString(varname), 
 			   getMapKeyFromString(varname), 
 			   value);
-    //    if (!success) cerr << "Cannot find Map Element: " << varname << std::endl;
+    //    if (!success) cerr << "Cannot find Map Element: " 
+    //                       << varname << std::endl;
     return success;
   }
   // else? just do a standard gui get
-  success = gui->get(varname, value);
+  success = gui_->get(varname, value);
   return success;
 }
 
 
-bool GuiContext::setString(const std::string& varname, const std::string& value) {
+bool GuiContext::setString(const string& varname, const string& value) {
   bool success = true;
   if (stringIsaListElement(varname))
   {
@@ -333,7 +270,7 @@ bool GuiContext::setString(const std::string& varname, const std::string& value)
       //      cerr << "Cannot find list variable: " << listname;
       return false;
     }
-    success = gui->set_element_in_list(list_contents, indexes, value);
+    success = gui_->set_element_in_list(list_contents, indexes, value);
     //    if (!success) cerr << "Cannont find List Element: " << varname << std::endl;
     success = setString(listname, list_contents);
     //    if (!success) 
@@ -342,14 +279,14 @@ bool GuiContext::setString(const std::string& varname, const std::string& value)
 
     return success;
   } else if (stringIsaMap(varname)) {
-    success = gui->set_map(getMapNameFromString(varname), 
+    success = gui_->set_map(getMapNameFromString(varname), 
 			   getMapKeyFromString(varname), 
 			   value);
     //    if (!success) cerr << "Cannot set Map Element: " << varname << std::endl;
     return success;
   }
   // else just do a standard gui set
-  gui->set(varname, value);
+  gui_->set(varname, value);
   return success;
 }
 
@@ -370,58 +307,57 @@ bool GuiContext::stringIsaMap(const string &str) {
 
 void GuiContext::reset()
 {
-  context_state &= ~CACHED_E;
-  for(vector<GuiContext*>::iterator iter = children.begin();
-      iter != children.end(); ++iter)
+  context_state_ &= ~CACHED_E;
+  for(vector<GuiContext*>::iterator iter = children_.begin();
+      iter != children_.end(); ++iter)
     (*iter)->reset();
 }
 
 string GuiContext::getfullname()
 {
-  return name;
+  return name_;
 }
 
 GuiInterface* GuiContext::getInterface()
 {
-  return gui;
+  return gui_;
 }
 
 void GuiContext::tcl_setVarStates() {
-  const string save_flag = (context_state & SAVE_E)?"1":"0";
-  const string sub_flag = (context_state & SUBSTITUTE_DATADIR_E)?" 1":" 0";
-  gui->execute("setVarStates \""+name+"\" "+save_flag+sub_flag);
+  const string save_flag = (context_state_ & SAVE_E)?"1":"0";
+  const string sub_flag = (context_state_ & SUBSTITUTE_DATADIR_E)?" 1":" 0";
+  gui_->execute("setVarStates \""+name_+"\" "+save_flag+sub_flag);
 }
 
 void
 GuiContext::dontSave()
 {
-  if ((context_state & SAVE_E) == 0) return;
-  context_state &= ~SAVE_E;
+  if ((context_state_ & SAVE_E) == 0) return;
+  context_state_ &= ~SAVE_E;
   tcl_setVarStates();
 }
 
 void
 GuiContext::doSave()
 {
-  if ((context_state & SAVE_E) == SAVE_E) return;
-  context_state |= SAVE_E;
+  if ((context_state_ & SAVE_E) == SAVE_E) return;
+  context_state_ |= SAVE_E;
+  tcl_setVarStates();
+}
+
+
+void
+GuiContext::dontSubstituteDatadir()
+{
+  if ((context_state_ & SUBSTITUTE_DATADIR_E) == 0) return;
+  context_state_ &= ~SUBSTITUTE_DATADIR_E;
   tcl_setVarStates();
 }
 
 void
-GuiContext::setUseDatadir(bool flag)
+GuiContext::doSubstituteDatadir()
 {
-  if (flag) {
-    if ((context_state & SUBSTITUTE_DATADIR_E) == SUBSTITUTE_DATADIR_E)
-      return;
-    context_state |= SUBSTITUTE_DATADIR_E;
-  }
-  else {
-    if ((context_state & SUBSTITUTE_DATADIR_E) == 0)
-      return;
-    context_state &= ~SUBSTITUTE_DATADIR_E;
-  }
+  if ((context_state_ & SUBSTITUTE_DATADIR_E) == SUBSTITUTE_DATADIR_E) return;
+  context_state_ |= SUBSTITUTE_DATADIR_E;
   tcl_setVarStates();
 }
-
-

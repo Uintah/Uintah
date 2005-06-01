@@ -42,6 +42,7 @@
 
 #include <Core/Geom/GuiGeom.h>
 #include <Core/GuiInterface/GuiContext.h>
+#include <Core/GuiInterface/GuiInterface.h>
 #include <Core/Datatypes/Color.h>
 #include <Core/Geom/Material.h>
 using namespace SCIRun;
@@ -58,19 +59,19 @@ GuiColor::~GuiColor()
 
 Color GuiColor::get()
 {
-  ctx->lock();
+  ctx->getInterface()->lock();
   Color c(r.get(), g.get(), b.get());
-  ctx->unlock();
+  ctx->getInterface()->unlock();
   return c;
 }
 
 void GuiColor::set(const Color& p)
 {
-  ctx->lock();
+  ctx->getInterface()->lock();
   r.set(p.r());
   g.set(p.g());
   b.set(p.b());
-  ctx->unlock();
+  ctx->getInterface()->unlock();
 }
 
 GuiMaterial::GuiMaterial(GuiContext* ctx)
