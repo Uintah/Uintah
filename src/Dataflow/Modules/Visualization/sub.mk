@@ -45,6 +45,7 @@ SRCS     += \
 	$(SRCDIR)/ChooseColorMap.cc\
 	$(SRCDIR)/EditColorMap.cc\
 	$(SRCDIR)/EditColorMap2D.cc\
+	$(SRCDIR)/FlowVis2D.cc\
 	$(SRCDIR)/GenAxes.cc\
 	$(SRCDIR)/GenClock.cc\
 	$(SRCDIR)/GenStandardColorMaps.cc\

@@ -101,6 +101,7 @@ SRCS := \
         $(SRCDIR)/FieldSlicer.tcl\
         $(SRCDIR)/FieldSubSample.tcl\
         $(SRCDIR)/FieldWriter.tcl \
+	$(SRCDIR)/FlowVis2D.tcl \
         $(SRCDIR)/FrameWidget.tcl \
         $(SRCDIR)/GatherFields.tcl \
         $(SRCDIR)/GaugeWidget.tcl \
