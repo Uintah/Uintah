@@ -32,6 +32,7 @@ include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 SRCDIR := Packages/Ptolemy/Core
 
 SUBDIRS := \
+        $(SRCDIR)/Comm \
         $(SRCDIR)/Datatypes \
         $(SRCDIR)/PtolemyInterface
 #$(SRCDIR)/jni
