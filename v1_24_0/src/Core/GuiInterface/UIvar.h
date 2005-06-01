@@ -44,7 +44,6 @@
 #ifndef SCIRun_src_Core_GuiInterface_UIvar_h
 #define SCIRun_src_Core_GuiInterface_UIvar_h 1
 
-#include <Core/share/share.h>
 #include <Core/GuiInterface/GuiContext.h>
 #include <Core/Util/Assert.h>
 #include <sgi_stl_warnings_off.h>
@@ -203,5 +202,178 @@ typedef UiSingle<double> UIdouble;
 
 
 
+template<class T>
+inline UiSingle<T> & UiSingle<T>::operator=(GuiContext *new_context) {
+  context_ = new_context;
+  if (context_) context_->reset();
+  return *this;
 }
+
+template<class T>
+inline GuiContext & UiSingle<T>::operator->() {
+  return *context_;
+}
+
+template<class T>
+inline bool UiSingle<T>::operator!() {
+  get();
+  return !value_;
+}
+
+
+template<class T>
+inline UiSingle<T> & UiSingle<T>::operator()() {
+  if (context_) context_->reset();
+  return *this;
+}
+
+template<class T>
+UiSingle<T> & UiSingle<T>::operator*() {
+  if (context_) context_->reset();
+  return *this;    
+}
+
+template<class T>
+const T & UiSingle<T>::operator&() {
+  get();
+  return value_;    
+}
+
+template<class T>
+UiSingle<T> & UiSingle<T>::operator=(const T &right) {
+  set(right);
+  return *this;
+}
+
+template<class T>
+T UiSingle<T>::operator+(const T & right) {
+  get();
+  return value_+right;
+}
+
+template<class T>
+UiSingle<T> & UiSingle<T>::operator+=(const T & right) {
+  set(get() + right);
+  return *this;
+}
+
+template<class T>
+T UiSingle<T>::operator-(const T & right) {
+  get();
+  return value_-right;
+}
+
+
+template<class T>
+UiSingle<T> & UiSingle<T>::operator-=(const T & right) {
+  set(get() - right);
+  return *this;
+}
+
+
+template<class T>
+T UiSingle<T>::operator*(const T & right) {
+  get();
+  return value_*right;
+}
+
+
+template<class T>
+UiSingle<T> & UiSingle<T>::operator*=(const T & right) {
+  get();
+  set(value_ * right);
+  return *this;
+}
+
+
+template<class T>
+T UiSingle<T>::operator/(const T & right) {
+  get();
+  return value_ / right;
+}
+
+
+
+template<class T>
+inline UiSingle<T> & UiSingle<T>::operator/=(const T & right) {
+  get();
+  set(value_ / right);
+  return *this;
+}
+
+
+
+template<class T>
+inline bool UiSingle<T>::operator&&(const T & right) {
+  get();
+  return value_ && right;
+}
+
+template<class T>
+inline bool UiSingle<T>::operator||(const T & right) {
+  get();
+  return value_ || right;
+}
+
+
+template<class T>
+inline bool UiSingle<T>::operator==(const T & right) {
+  get();
+  return value_ == right;
+}
+
+template<class T>
+inline bool UiSingle<T>::operator!=(const T & right) {
+  get();
+  return value_ != right;
+}
+
+template<class T>
+inline bool UiSingle<T>::operator<(const T & right) {
+  get();
+  return value_ < right;
+}
+
+
+template<class T>
+inline bool UiSingle<T>::operator>(const T & right) {
+  get();
+  return value_ > right;
+}
+
+
+template<class T>
+inline bool UiSingle<T>::operator<=(const T & right) {
+  get();
+  return value_ < right;
+}
+
+
+template<class T>
+inline bool UiSingle<T>::operator>=(const T & right) {
+  get();
+  return value_ > right;
+}
+
+
+template<class T>
+inline UiSingle<T> UiSingle<T>::operator--(int) {
+  get();
+  UiSingle<T> rval(context_, value_);
+  set(--value_);
+  return rval;
+}
+
+
+template<class T>
+inline UiSingle<T> UiSingle<T>::operator++(int) {
+  get();
+  UiSingle<T> rval(context_, value_);
+  set(++value_);
+  return rval;
+}
+
+  
+
+} // end namespace SCIRun
 #endif
