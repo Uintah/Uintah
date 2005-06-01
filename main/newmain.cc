@@ -43,6 +43,7 @@
 #include <Core/Thread/Thread.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <iostream>
+#include <sci_defs/mpi_defs.h>
 #include <mpi.h>
 #include <sci_defs/qt_defs.h>
 
