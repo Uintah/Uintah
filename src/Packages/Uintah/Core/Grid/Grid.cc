@@ -194,6 +194,11 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
 
    // anchor/highpoint on the grid
    Point anchor(MAXDOUBLE, MAXDOUBLE, MAXDOUBLE);
+
+   // time refinement between a level and the previous one
+   int trr = 2;
+   grid_ps->get("time_refinement_ratio", trr);
+
    int levelIndex = 0;
 
    for(ProblemSpecP level_ps = grid_ps->findBlock("Level");
@@ -248,17 +253,13 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
            }
         }
       }
-
-      // time refinement between this level and the previous one
-      int trr = 2;
-      level_ps->get("time_refinement_ratio", trr);
-      
         
       if(!have_levelspacing && !have_patchspacing)
         throw ProblemSetupException("Box resolution is not specified");
 
       LevelP level = addLevel(anchor, spacing);
       level->setTimeRefinementRatio(trr);
+      cout << "SETTING TRR to " << trr << endl;
       IntVector anchorCell(level->getCellIndex(levelAnchor + Vector(1.e-6,1.e-6,1.e-6)));
       IntVector highPointCell(level->getCellIndex(levelHighPoint + Vector(1.e-6,1.e-6,1.e-6)));
 
