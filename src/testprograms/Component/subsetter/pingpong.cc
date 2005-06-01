@@ -41,8 +41,7 @@
  */
 
 #include <iostream>
-#include <sci_defs/mpi_defs.h> // For MPIPP_H
-#include <mpi.h>
+#include <sci_defs/mpi_defs.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/PIDL/MxNArrayRep.h>
 
@@ -52,6 +51,8 @@
 #include <testprograms/Component/pingpongArr/PingPong_sidl.h>
 #include <Core/Thread/Time.h>
 #include <signal.h>
+#include <sci_mpi.h>
+
 
 using namespace std;
 using namespace SCIRun;

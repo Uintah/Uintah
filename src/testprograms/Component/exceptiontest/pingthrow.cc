@@ -40,10 +40,10 @@
  *  Copyright (C) 1999 U of U
  */
 
+#include <sci_defs/mpi_defs.h>
 #include <iostream>
 #include <vector>
-#include <sci_defs/mpi_defs.h> // For MPIPP_H
-#include <mpi.h>
+#include <sci_mpi.h>
 #include <Core/CCA/PIDL/PIDL.h>
 
 #include <Core/CCA/PIDL/MalformedURL.h>
