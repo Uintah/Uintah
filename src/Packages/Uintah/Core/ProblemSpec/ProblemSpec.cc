@@ -1333,6 +1333,10 @@ void ProblemSpec::output(char* filename) const {
 }
 
 void ProblemSpec::releaseDocument() {
+  // You would think this would delete the memory, but Xerces keeps a
+  // handle on the memory for later use.  It looks like Xerces
+  // maintains a memory pool that is never released to the system or
+  // resized smaller.
   d_node->getOwnerDocument()->release();
 }
 
