@@ -60,7 +60,7 @@ ReferenceMgr::ReferenceMgr(const ReferenceMgr& copy)
   :localSize(copy.localSize),localRank(copy.localRank),
    s_lSize(copy.s_lSize), s_refSize(copy.s_refSize)
 {
-  intracomm = PIDL::getIntraComm();
+  //  intracomm = PIDL::getIntraComm();
   for(unsigned int i=0; i < copy.d_ref.size(); i++) {
     d_ref.push_back(copy.d_ref[i]->clone());
   }

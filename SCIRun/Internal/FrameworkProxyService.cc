@@ -43,10 +43,7 @@ int FrameworkProxyService::addLoader(const std::string &loaderName,
     std::string sp = " ";
     std::cerr << "FrameworkProxyService::addLoader() not implemented" << std::endl;
     std::string cmd = "xterm -e ssh ";
-    // cmd+=user+"@"+domain+" "+loaderPath+" "+loaderName+" "+getFrameworkURL() +"&";
-
-    cmd = "xterm -e " + loaderPath + sp + loaderName + sp +
-           framework->getURL().getString()  + "&";
+    cmd+=user+"@"+domain+sp+loaderPath+sp+loaderName+sp+framework->getURL().getString() +"&";
 
     std::cout << cmd << std::endl;
     system(cmd.c_str());

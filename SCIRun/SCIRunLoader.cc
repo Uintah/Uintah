@@ -39,7 +39,6 @@
  */
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H 
-#include <mpi.h>
 #include <SCIRun/SCIRunLoader.h>
 #include <SCIRun/CCA/CCAComponentModel.h>
 #include <SCIRun/CCA/CCAComponentDescription.h>
@@ -70,6 +69,9 @@
 #endif
 #include <iostream>
 #include <sstream>
+
+#include <sci_mpi.h>
+
 
 using namespace std;
 

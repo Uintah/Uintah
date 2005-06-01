@@ -64,7 +64,7 @@ class ClusterDialog : public QDialog
 
 public:
     ClusterDialog(const char* defaultLoader, const char* defaultDomain,
-		    const char* defaultLogin, QWidget* parent = 0,
+		    const char* defaultLogin, const char* defaultPath, QWidget* parent = 0,
 		    const char* name = 0, bool modal = FALSE, WFlags fl = 0);
     ClusterDialog(QWidget* parent = 0, const char* name = 0,
 		    bool modal = FALSE, WFlags fl = 0);
@@ -73,7 +73,9 @@ public:
     QString loader() const;
     QString domain() const;
     QString login() const;
+    QString path() const;
     QString password() const;
+    QString copies() const;
     QString where() const;
 
 protected:
@@ -83,6 +85,7 @@ protected:
     QHBoxLayout* layoutLoader;
     QHBoxLayout* layoutDomain;
     QHBoxLayout* layoutLogin;
+    QHBoxLayout* layoutPath;
     QHBoxLayout* layoutPasswd;
     QHBoxLayout* layoutCopies;
     QGridLayout* layoutWhere;
@@ -94,7 +97,7 @@ protected slots:
     virtual void languageChange();
 
 private:
-    void setDefaultText(const char* defaultLoader, const char* defaultDomain, const char* defaultLogin);
+    void setDefaultText(const char* defaultLoader, const char* defaultDomain, const char* defaultLogin, const char* defaultPath);
     void setWidgets(const char* name, bool modal, WFlags fl);
 
     QLabel* textLabelLoader;
@@ -103,6 +106,8 @@ private:
     QComboBox* comboBoxDomain;
     QLabel* textLabelLogin;
     QComboBox* comboBoxLogin;
+    QLabel* textLabelPath;
+    QComboBox* comboBoxPath;
     QLabel* textLabelPasswd;
     QLineEdit* lineEditPasswd;
     QLabel* textLabelCopies;

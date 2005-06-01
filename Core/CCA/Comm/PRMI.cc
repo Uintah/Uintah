@@ -72,10 +72,12 @@
 #include <Core/CCA/Comm/SocketEpChannel.h>
 #include <Core/CCA/Comm/SocketSpChannel.h>
 #include <Core/CCA/PIDL/PIDL.h>
+#include <Core/CCA/Comm/PRMI.h>
 #include <deque>
 #include <sci_defs/mpi_defs.h> // For MPIPP_H
 #include <mpi.h>
 #include <Core/CCA/Comm/PRMI.h>
+
 
 using namespace SCIRun;
 using namespace std;
@@ -125,17 +127,23 @@ PRMI:: lock_req_map;
 PRMI::states 
 PRMI::fwkstate;
 
+#ifdef HAVE_MPI
 MPI_Comm
 PRMI::MPI_COMM_WORLD_Dup;
+#endif
 
 void 
 PRMI::init(){
+#ifdef HAVE_MPI
   //set size, rank
   MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
   MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
 
   MPI_Comm_dup(MPI_COMM_WORLD, &MPI_COMM_WORLD_Dup);
-
+#else
+  mpi_size=mpi_rank=0;
+#endif
+  
 
   DTAddress dtAddr=PIDL::getDT()->getAddress();
   if(mpi_rank==0){
@@ -152,20 +160,23 @@ PRMI::init(){
     int_buf=new int[mpi_size];
     short_buf=new short[mpi_size];
   }
+  DTPoint* lockSvc_ep=lockSvcEp.getEP();
+
+#ifdef HAVE_MPI
   //root broadcast order service ep and DT address
   MPI_Bcast(&orderSvc_ep, 1, MPI_INT,0,MPI_COMM_WORLD);
   MPI_Bcast(&orderSvc_addr.ip, 1, MPI_INT,0,MPI_COMM_WORLD);
   MPI_Bcast(&orderSvc_addr.port, 1, MPI_SHORT,0,MPI_COMM_WORLD);
-
-
   //root gatheres lockSvc_ep and lockSvc_addr
-  DTPoint* lockSvc_ep=lockSvcEp.getEP();
   MPI_Gather(&lockSvc_ep, 1, MPI_INT, lockSvc_ep_list, 1, MPI_INT,
 	     0, MPI_COMM_WORLD);
   MPI_Gather(&dtAddr.ip, 1, MPI_INT, int_buf, 1, MPI_INT,
 	     0, MPI_COMM_WORLD);
   MPI_Gather(&dtAddr.port, 1, MPI_SHORT, short_buf, 1, MPI_SHORT,
 	     0, MPI_COMM_WORLD);
+#else
+  //TODO: need do the broadcasting somehow....
+#endif
   if(mpi_rank==0){
     for(int i=0; i<mpi_size; i++){
       lockSvc_addr_list[i].ip=int_buf[i];
@@ -245,20 +256,26 @@ PRMI::internal_unlock(){
   }
 }
 
-void inline
+void 
 PRMI::lock(){
+#ifdef HAVE_MPI
 #ifndef MPI_IS_THREADSAFE
   internal_lock();
 #endif
-}
-
-void inline
-PRMI::unlock(){
-#ifndef MPI_IS_THREADSAFE
-  internal_unlock();
 #endif
 }
 
+void 
+PRMI::unlock(){
+#ifdef HAVE_MPI
+#ifndef MPI_IS_THREADSAFE
+  internal_unlock();
+#endif
+#endif
+}
+
+
+#ifdef HAVE_MPI
 int 
 PRMI::getComm(MPI_Comm *newComm){
   int retval;
@@ -267,6 +284,7 @@ PRMI::getComm(MPI_Comm *newComm){
   internal_unlock();
   return retval;
 }
+#endif
 
 void
 PRMI::addStat(states *stat){

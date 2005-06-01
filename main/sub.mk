@@ -105,10 +105,11 @@ endif
 
 ifeq ($(HAVE_MPI),yes)
 LIBS := $(MPI_LIBRARY) 
+endif
+
 PROGRAM := ploader
 SRCS      := $(SRCDIR)/ploader.cc
 include $(SCIRUN_SCRIPTS)/program.mk
-endif
 
 endif #Build SCIRun2
 

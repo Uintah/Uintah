@@ -55,10 +55,10 @@
 
 #include <iostream>
 
-ClusterDialog::ClusterDialog(const char* defaultLoader, const char* defaultDomain, const char* defaultLogin, QWidget* parent, const char* name, bool modal, WFlags fl) :  QDialog(parent, name, modal, fl)
+ClusterDialog::ClusterDialog(const char* defaultLoader, const char* defaultDomain, const char* defaultLogin, const char* defaultPath, QWidget* parent, const char* name, bool modal, WFlags fl) :  QDialog(parent, name, modal, fl)
 {
     setWidgets(name, modal, fl);
-    setDefaultText(defaultLoader, defaultDomain, defaultLogin);
+    setDefaultText(defaultLoader, defaultDomain, defaultLogin, defaultPath);
 }
 
 /*
@@ -145,6 +145,26 @@ void ClusterDialog::setWidgets(const char* name, bool modal, WFlags fl)
     layoutLogin->addWidget(comboBoxLogin);
     layoutDialog->addLayout(layoutLogin);
 
+
+    layoutPath = new QHBoxLayout(0, 0, 2, "layoutPath"); 
+
+    textLabelPath = new QLabel(privateLayoutWidget, "textLabelPath");
+    textLabelPath->setSizePolicy(QSizePolicy((QSizePolicy::SizeType)0, (QSizePolicy::SizeType)0, 0, 0, textLabelPath->sizePolicy().hasHeightForWidth()));
+    textLabelPath->setAlignment(int(QLabel::AlignVCenter | QLabel::AlignRight));
+    layoutPath->addWidget(textLabelPath);
+
+    comboBoxPath = new QComboBox(FALSE, privateLayoutWidget, "comboBoxPath");
+    comboBoxPath->setSizePolicy(QSizePolicy((QSizePolicy::SizeType)5, (QSizePolicy::SizeType)0, 0, 0, comboBoxPath->sizePolicy().hasHeightForWidth()));
+    comboBoxPath->setEditable(TRUE);
+    comboBoxPath->setSizeLimit( 5 );
+    comboBoxPath->setMaxCount(20);
+    comboBoxPath->setInsertionPolicy(QComboBox::AtTop);
+    comboBoxPath->setDuplicatesEnabled(FALSE);
+    layoutPath->addWidget(comboBoxPath);
+    layoutDialog->addLayout(layoutPath);
+
+
+
     layoutPasswd = new QHBoxLayout(0, 0, 2, "layoutPasswd"); 
 
     textLabelPasswd = new QLabel(privateLayoutWidget, "textLabelPasswd");
@@ -174,7 +194,7 @@ void ClusterDialog::setWidgets(const char* name, bool modal, WFlags fl)
 
     spinBoxCopies = new QSpinBox(privateLayoutWidget, "spinBoxCopies");
     spinBoxCopies->setSizePolicy(QSizePolicy((QSizePolicy::SizeType)0, (QSizePolicy::SizeType)0, 0, 0, spinBoxCopies->sizePolicy().hasHeightForWidth()));
-    spinBoxCopies->setEnabled(FALSE);
+    spinBoxCopies->setEnabled(TRUE);
     spinBoxCopies->setMinimumSize(QSize(70, 0));
     spinBoxCopies->setMaximumSize(QSize(70, 32767));
     spinBoxCopies->setButtonSymbols(QSpinBox::UpDownArrows);
@@ -297,6 +317,7 @@ void ClusterDialog::languageChange()
     textLabelLoader->setText(tr("Loader name"));
     textLabelDomain->setText(tr("Domain name"));
     textLabelLogin->setText(tr("Login"));
+    textLabelPath->setText(tr("Path"));
     textLabelPasswd->setText(tr("Password"));
     QToolTip::add(lineEditPasswd, QString::null);
     textLabelCopies->setText(tr("Run this many copies"));
@@ -317,7 +338,7 @@ void ClusterDialog::languageChange()
 
 }
 
-void ClusterDialog::setDefaultText(const char* defaultLoader, const char* defaultDomain, const char* defaultLogin)
+void ClusterDialog::setDefaultText(const char* defaultLoader, const char* defaultDomain, const char* defaultLogin, const char* defaultPath)
 {
     comboBoxLoader->clear();
     comboBoxLoader->insertItem( tr(defaultLoader) );
@@ -330,6 +351,10 @@ void ClusterDialog::setDefaultText(const char* defaultLoader, const char* defaul
     comboBoxLogin->clear();
     comboBoxLogin->insertItem( tr(defaultLogin) );
     comboBoxLogin->setCurrentItem(0);
+
+    comboBoxPath->clear();
+    comboBoxPath->insertItem( tr(defaultPath) );
+    comboBoxPath->setCurrentItem(0);
 }
 
 QString ClusterDialog::loader() const
@@ -347,9 +372,19 @@ QString ClusterDialog::login() const
     return comboBoxLogin->currentText();
 }
 
+QString ClusterDialog::path() const
+{
+    return comboBoxPath->currentText();
+}
+
 QString ClusterDialog::password() const
 {
     return lineEditPasswd->text();
+}
+
+QString ClusterDialog::copies() const
+{
+    return spinBoxCopies->text();
 }
 
 QString ClusterDialog::where() const

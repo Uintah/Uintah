@@ -73,8 +73,7 @@ endif
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 ifeq ($(HAVE_MPI),yes)
-SUBDIRS := \
-        $(SRCDIR)/Intra   
+SUBDIRS := $(SRCDIR)/DT
 endif
-SUBDIRS+=$(SRCDIR)/DT
+
 include $(SCIRUN_SCRIPTS)/recurse.mk

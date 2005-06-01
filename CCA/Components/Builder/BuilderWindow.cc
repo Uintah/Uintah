@@ -38,6 +38,7 @@
  *
  */
 
+#include <sci_defs/mpi_defs.h>
 #include <CCA/Components/Builder/BuilderWindow.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/spec/cca_sidl.h>
@@ -1028,12 +1029,12 @@ void BuilderWindow::addLoader()
     ClusterDialog *dialog;
     if (fwkProperties.isNull()) {
         displayMsg("Error: Cannot find framework properties.");
-        dialog = new ClusterDialog("qwerty", "qwerty.sci.utah.edu",
-                    "", this, "Add Parallel Component Loader", TRUE);
+        dialog = new ClusterDialog("localhost", "localhost",
+                    "","/work/csr/SCIRun/debug", this, "Add Parallel Component Loader", TRUE);
     } else {
         sci::cca::TypeMap::pointer tm = fwkProperties->getProperties();
-        dialog = new ClusterDialog("qwerty", "qwerty.sci.utah.edu",
-            (tm->getString("default_login", "")).c_str(), this,
+        dialog = new ClusterDialog("localhost", "localhost",
+            (tm->getString("default_login", "")).c_str(),"/work/csr/SCIRun/debug", this,
             "Add Loader", TRUE);
         services->releasePort("cca.FrameworkProperties");
     }
@@ -1042,7 +1043,18 @@ void BuilderWindow::addLoader()
         std::string loaderName = dialog->loader();
         std::string domainName = dialog->domain();
         std::string login = dialog->login();
-        std::string loaderPath="mpirun -np 3 ploader";
+        std::string path = dialog->path();
+        std::string copies = dialog->copies();
+
+	//this is based on the assumption that ploader & SCIrun2 Framework both have MPI or
+	//neither of them has it. In the long run, this is not the case, and it should be changed.
+#ifdef HAVE_MPI
+        std::string loaderPath="'cd "+path+" && mpirun -np "+copies+" "+path+"/ploader'";
+#else
+	std::string loaderPath="'cd "+path+" && "+path+"/ploader'";
+#endif 
+
+
         //string password="****"; //not used;
 
         proxy->addLoader(loaderName, login, domainName, loaderPath); // spawns xterm

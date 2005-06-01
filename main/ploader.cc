@@ -38,6 +38,7 @@
  *
  */
 
+#include <sci_defs/mpi_defs.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/Comm/DT/DataTransmitter.h>
 #include <Core/CCA/Comm/PRMI.h>
@@ -47,6 +48,7 @@
 #include <SCIRun/SCIRunLoader.h>
 #include <iostream>
 #include <sys/stat.h>
+#include <sci_mpi.h>
 #include <sci_defs/qt_defs.h>
 #include <mpi.h>
 
@@ -129,14 +131,12 @@ main(int argc, char *argv[] )
     urlString s;
     std::strcpy(s, ploader->getURL().getString().c_str());
 
+#ifdef HAVE_MPI
     urlString *buf;
-
     if(sl->mpi_rank==0){
       buf=new urlString[sl->mpi_size];
     }
-
     MPI_Gather(  s, 100, MPI_CHAR,    buf, 100, MPI_CHAR,   0, MPI_COMM_WORLD);
-    
     if(sl->mpi_rank==0){
       SSIDL::array1< std::string> URLs;
       for(int i=0; i<sl->mpi_size; i++){
@@ -147,6 +147,12 @@ main(int argc, char *argv[] )
       framework->registerLoader(loaderName, URLs);
       delete buf;
     }
+#else
+    SSIDL::array1< std::string> URLs;
+    std::string url(s);
+    URLs.push_back(url);
+    framework->registerLoader(loaderName, URLs);
+#endif
   }catch(const MalformedURL& e) {
 	std::cerr << "slaveTest.cc: Caught MalformedURL exception:\n";
 	std::cerr << e.message() << '\n';

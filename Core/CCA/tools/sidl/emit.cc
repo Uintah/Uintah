@@ -267,8 +267,8 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   out << "#include <vector>\n"; 
   out << "#include <sci_defs/config_defs.h>\n";
 #ifdef MxNDEBUG 
-  out << "#include <sci_defs/mpi_defs.h> // For MPIPP_H\n";
-  out << "#include <mpi.h> //Debugging purposes\n";
+  out << "#include <sci_defs/mpi_defs.h>\n";
+  out << "#include <sci_mpi.h> //Debugging purposes\n";
 #endif
   out << "using namespace std;\n";
   out << "\n"; 
@@ -820,7 +820,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     e.out << leader2 << "//Unmarshal distribution flag\n";
     e.out << leader2 << "::SCIRun::callType _flag;\n";
     e.out << leader2 << "message->unmarshalInt((int*)&_flag);\n";
-#ifdef HAVE_MPI
+//#ifdef HAVE_MPI
     e.out << leader2 << "//Unmarshal sessionID and number of calls\n";
     //    e.out << leader2 << "::std::string _sessionID(36, ' ');\n";
     //    e.out << leader2 << "message->unmarshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
@@ -839,7 +839,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     e.out << leader2 << "//Unmarshal callID\n";
     e.out << leader2 << "int _callID;\n";
     e.out << leader2 << "message->unmarshalInt(&_callID);\n";
-#endif
+//#endif
   }
 
   /***********************************/
@@ -1096,7 +1096,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     e.out.pop_leader(f_leader);
   }
 
-#ifdef HAVE_MPI
+  //#ifdef HAVE_MPI
   if(isCollective) {
     //e.out << "releaseTicket:\n";
     //e.out << leader2 << "if(_flag != ::SCIRun::REDIS) {\n";
@@ -1104,7 +1104,7 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     //e.out << leader2 << "  _sc->gatekeeper->releaseOneTicket(" << e.handlerNum << ");\n";
     //e.out << leader2 << "}\n";
   }
-#endif
+  //#endif
 
   e.out.pop_leader(oldleader);
   e.out << "}\n\n";
@@ -1399,30 +1399,30 @@ void CI::emit_proxy(EmitState& e)
   e.out << "\n// subsetting proxy method\n";
   e.out << "void " << fn << "::createSubset(int localsize, int remotesize)\n"; 
   e.out << "{\n";
-#ifdef HAVE_MPI
+  //#ifdef HAVE_MPI
   e.out << "  _proxycreateSubset(localsize, remotesize);\n";
-#endif
+  //#endif
   e.out << "}\n";
 
   e.out << "\n// set rank and size methods\n";
   e.out << "void " << fn << "::setRankAndSize(int rank, int size)\n"; 
   e.out << "{\n";
-#ifdef HAVE_MPI
+  //#ifdef HAVE_MPI
   e.out << "  _proxysetRankAndSize(rank, size);\n";
-#endif
+  //#endif
   e.out << "}\n";
   e.out << "void " << fn << "::resetRankAndSize()\n"; 
   e.out << "{\n";
-#ifdef HAVE_MPI
+  //#ifdef HAVE_MPI
   e.out << "  _proxyresetRankAndSize();\n";
-#endif
+  //#endif
   e.out << "}\n";
 
 
   e.out << "\n// \"smoke\" out all exceptions method\n";
   e.out << "void " << fn << "::getException()\n";
   e.out << "{\n";
-#ifdef HAVE_MPI
+  //#ifdef HAVE_MPI
   e.out << "  ::SCIRun::Message* _xMsg;\n";
   e.out << "  int _xid = xr->checkException(&_xMsg);\n";
   e.out << "  if(_xid != 0) {\n";
@@ -1439,7 +1439,7 @@ void CI::emit_proxy(EmitState& e)
   e.out << "      }\n";
   e.out << "    }\n";
   e.out << "  }\n";
-#endif
+  //#endif
   e.out << "}\n";
 
   // Emit setCallerDistribution proxy
@@ -1542,12 +1542,12 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "::std::vector < ::SCIRun::Message*> save_callnoret_msg;\n";
     e.out << leader2 << "//Imprecise exception check if someone caught an exception\n";
     e.out << leader2 << "::SCIRun::Message* _xMsg;\n";
-#ifdef HAVE_MPI
+    //#ifdef HAVE_MPI
     e.out << leader2 << "int _xid = xr->checkException(&_xMsg);\n";
     e.out << leader2 << "if(_xid != 0) {\n";
     e.out << leader2 << "  _castException(_xid,&_xMsg);\n";
     e.out << leader2 << "}\n";
-#endif
+    //#endif
 
     if(throws_clause) {
       //Write things for the castException method
@@ -1569,14 +1569,14 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     }
  
     e.out << leader2 << "int remoteSize = _rm->getRemoteSize();\n";
-#ifdef HAVE_MPI
+    //#ifdef HAVE_MPI
     //    e.out << leader2 << "::std::string _sessionID = getProxyUUID();\n";
     e.out << leader2 << "SCIRun::ProxyID _sessionID = getProxyUUID();\n";
     //    e.out << leader2 << "//::std::cout << \" sending _sessionID = '\" << _sessionID << \"'\\n\";\n";
     e.out << leader2 << "//::std::cout << \" sending _sessionID = '\" << _sessionID.iid <<'|'<<_sessionID.pid << \"'\\n\";\n";
     e.out << leader2 << "int _numCalls = (_rm->getSize() / remoteSize);\n";
     e.out << leader2 << "((_rm->getSize() % remoteSize) > _rm->getRank()) ?_numCalls++ :0;\n\n";
-#endif
+    //#endif
   }
 
   if(reply_required()){
@@ -1624,7 +1624,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "// this message is NOCALLRET:\n";
     e.out << leader2 << "_flag = ::SCIRun::NOCALLRET;\n";
     e.out << leader2 << "message->marshalInt((int*)&_flag);\n";
-#ifdef HAVE_MPI
+    //#ifdef HAVE_MPI
     e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
     //    e.out << leader2 << "message->marshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
     e.out << leader2 << "message->marshalInt(&_sessionID.iid);\n";
@@ -1633,7 +1633,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "message->marshalInt(&_nextID.iid);\n";
     e.out << leader2 << "message->marshalInt(&_nextID.pid);\n";
     e.out << leader2 << "message->marshalInt(&_numCalls);\n";
-#endif
+    //#endif
     e.out << leader2 << "//Marshal callID\n";
     e.out << leader2 << "int _callID = xr->getlineID();\n";
     e.out << leader2 << "message->marshalInt(&_callID);\n";
@@ -1702,7 +1702,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "// this message is CALLNORET\n";
     e.out << leader2 << "_flag = ::SCIRun::CALLNORET;\n";
     e.out << leader2 << "message->marshalInt((int*)&_flag);\n";
-#ifdef HAVE_MPI
+    //#ifdef HAVE_MPI
     e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
     //    e.out << leader2 << "message->marshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
     e.out << leader2 << "message->marshalInt(&_sessionID.iid);\n";
@@ -1711,7 +1711,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "message->marshalInt(&_nextID.iid);\n";
     e.out << leader2 << "message->marshalInt(&_nextID.pid);\n";
     e.out << leader2 << "message->marshalInt(&_numCalls);\n";
-#endif
+    //#endif
     e.out << leader2 << "//Marshal callID\n";
     e.out << leader2 << "int _callID = xr->getlineID();\n";
     e.out << leader2 << "message->marshalInt(&_callID);\n";
@@ -1768,7 +1768,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "// this message is CALLONLY:\n";
     e.out << leader2 << "_flag = ::SCIRun::CALLONLY;\n";
     e.out << leader2 << "message->marshalInt((int*)&_flag);\n";
-#ifdef HAVE_MPI
+    //#ifdef HAVE_MPI
     e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
     //    e.out << leader2 << "message->marshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
     e.out << leader2 << "message->marshalInt(&_sessionID.iid);\n";
@@ -1777,7 +1777,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "message->marshalInt(&_nextID.iid);\n";
     e.out << leader2 << "message->marshalInt(&_nextID.pid);\n";
     e.out << leader2 << "message->marshalInt(&_numCalls);\n";
-#endif
+    //#endif
     e.out << leader2 << "//Marshal callID\n";
     e.out << leader2 << "int _callID = xr->getlineID();\n";
     e.out << leader2 << "message->marshalInt(&_callID);\n";
@@ -2591,7 +2591,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  //Marshal the redistribution call flag\n";
 	e.out << leader2 << "  ::SCIRun::callType _r_flag = ::SCIRun::REDIS;\n";
 	e.out << leader2 << "  message->marshalInt((int*)&_r_flag);\n";
-#ifdef HAVE_MPI
+	//#ifdef HAVE_MPI
 	e.out << leader2 << "  //Marshal the sessionID and number of actual calls from this proxy\n";
 	//	e.out << leader2 << "  message->marshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
 	e.out << leader2 << "message->marshalInt(&_sessionID.iid);\n";
@@ -2600,7 +2600,7 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "message->marshalInt(&_nextID.iid);\n";
 	e.out << leader2 << "message->marshalInt(&_nextID.pid);\n";
 	e.out << leader2 << "  message->marshalInt(&_numCalls);\n";
-#endif
+	//#endif
 	e.out << leader2 << "  //Marshal callID\n";
 	e.out << leader2 << "  int _callID = xr->getlineID();\n";
 	e.out << leader2 << "  message->marshalInt(&_callID);\n";
@@ -2867,7 +2867,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	e.out << leader2 << "  //Marshal the distribution flag\n";
 	e.out << leader2 << "  ::SCIRun::callType _r_flag = ::SCIRun::REDIS;\n";
 	e.out << leader2 << "  message->marshalInt((int*)&_r_flag);\n";
-#ifdef HAVE_MPI
+	//#ifdef HAVE_MPI
 	e.out << leader2 << "  //Marshal the sessionID and number of actual calls from this proxy\n";
 	//	e.out << leader2 << "  message->marshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
 	e.out << leader2 << "message->marshalInt(&_sessionID.iid);\n";
@@ -2876,7 +2876,7 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	e.out << leader2 << "message->marshalInt(&_nextID.iid);\n";
 	e.out << leader2 << "message->marshalInt(&_nextID.pid);\n";
 	e.out << leader2 << "  message->marshalInt(&_numCalls);\n";
-#endif
+	//#endif
 	e.out << leader2 << "  //Marshal callID\n";
 	e.out << leader2 << "  int _callID = xr->getlineID();\n";
 	e.out << leader2 << "  message->marshalInt(&_callID);\n";
