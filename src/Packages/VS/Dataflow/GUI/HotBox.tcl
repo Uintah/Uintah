@@ -70,6 +70,7 @@ itcl_class VS_DataFlow_HotBox {
     global $this-gui_child(15)
     global $this-gui_child_list
     global $this-gui_childlist_name
+    global $this-gui_diagnosis
     global $this-FME_on
     global $this-Files_on
     global $this-Ontology_on
@@ -178,6 +179,7 @@ itcl_class VS_DataFlow_HotBox {
                                    [set $this-gui_child(15)]]
     # this holds the name of this instance of the list
     set $this-gui_childlist_name $this-gui_child_list
+    set $this-gui_diagnosis ""
     set $this-FME_on "no"
     set $this-Files_on "no"
     set $this-Ontology_on "no"
@@ -571,13 +573,11 @@ itcl_class VS_DataFlow_HotBox {
     button $w.f.row1.nw   -background gray -textvariable $this-gui_label(1) -command "$this set_selection 1"
     button $w.f.row1.n    -background gray -textvariable $this-gui_label(2) -command "$this set_selection 2"
     button $w.f.row1.ne   -background gray -textvariable $this-gui_label(3) -command "$this set_selection 3"
-frame $w.f.row2
-
+    frame $w.f.row2
     button $w.f.row2.west -background gray -textvariable $this-gui_label(4) -command "$this set_selection 4"
     button $w.f.row2.c    -background yellow  -textvariable $this-gui_label(5) -command "$this set_selection 5"
     button $w.f.row2.e    -background gray -textvariable $this-gui_label(6) -command "$this set_selection 6"
-frame $w.f.row3
-
+    frame $w.f.row3
     button $w.f.row3.sw   -background gray -textvariable $this-gui_label(7) -command "$this set_selection 7"
     button $w.f.row3.s    -background gray -textvariable $this-gui_label(8) -command "$this set_selection 8"
     button $w.f.row3.se   -background gray -textvariable $this-gui_label(9) -command "$this set_selection 9"
@@ -619,13 +619,17 @@ tk_optionMenu $w.probeUI.loc.hotlist $this-selnameloc "Human" "Pericardium,448.9
     bind $w.probeUI.slideTime.slide <B1-Motion> "$this-c needexecute"
 
     ######################################
-    # time
+    # time -- read-only
     ######################################
     label $w.probeUI.slideTime.timeLabel -text "Time"
     entry $w.probeUI.slideTime.timeVal -width 5 -textvariable $this-currentTime
-    bind $w.probeUI.slideTime.timeVal <KeyPress-Return> "$this-c needexecute"
     pack $w.probeUI.slideTime.slide $w.probeUI.slideTime.timeLabel $w.probeUI.slideTime.timeVal -side left -expand yes -fill x
     pack $w.probeUI.slideTime $w.probeUI.loc -side bottom -expand yes -fill x
+
+    frame $w.diagInfo
+    label $w.diagInfo.diagnosisLabel -text "Diagnosis:"
+    entry $w.diagInfo.diagnosisEntry -width 25 -textvariable  $this-gui_diagnosis
+    pack $w.diagInfo.diagnosisLabel $w.diagInfo.diagnosisEntry -side left -expand yes -fill x
 
     checkbutton $w.togOntologyUI -text "Ontology" -command "$this toggle_Ontology_on"
 
@@ -732,15 +736,15 @@ tk_optionMenu $w.probeUI.loc.hotlist $this-selnameloc "Human" "Pericardium,448.9
 
     if { [set $this-Ontology_on] == "yes" } {
       if { [set $this-Files_on] == "yes" } {
-        pack $w.togFilesUI $w.files $w.f $w.probeUI $w.togOntologyUI $w.hier $w.controls2 $w.controls $w.close -side top -expand yes -fill both -padx 5 -pady 5
+        pack $w.togFilesUI $w.files $w.f $w.probeUI $w.diagInfo $w.togOntologyUI $w.hier $w.controls2 $w.controls $w.close -side top -expand yes -fill both -padx 5 -pady 5
       } else {
-    pack $w.togFilesUI $w.f $w.probeUI $w.togOntologyUI $w.hier $w.controls2 $w.controls $w.close -side top -expand yes -fill both -padx 5 -pady 5
+    pack $w.togFilesUI $w.f $w.probeUI $w.diagInfo $w.togOntologyUI $w.hier $w.controls2 $w.controls $w.close -side top -expand yes -fill both -padx 5 -pady 5
       }
     } else {
       if { [set $this-Files_on] == "yes" } {
-        pack $w.togFilesUI $w.files $w.f $w.probeUI $w.togOntologyUI $w.close -side top -expand yes -fill both -padx 5 -pady 5
+        pack $w.togFilesUI $w.files $w.f $w.probeUI $w.diagInfo $w.togOntologyUI $w.close -side top -expand yes -fill both -padx 5 -pady 5
     } else {
-        pack $w.togFilesUI $w.f $w.probeUI $w.togOntologyUI $w.close -side top -expand yes -fill both -padx 5 -pady 5
+        pack $w.togFilesUI $w.f $w.probeUI $w.diagInfo $w.togOntologyUI $w.close -side top -expand yes -fill both -padx 5 -pady 5
       } 
     }
 

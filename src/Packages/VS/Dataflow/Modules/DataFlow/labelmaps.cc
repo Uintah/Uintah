@@ -639,6 +639,32 @@ is_injured(char *targetName, vector<VH_injury> &injured_tissue_list)
   // (else)
   return false;
 } // end is_injured()
+
+bool
+is_diagnosis(vector<VH_injury> &injured_tissue_list)
+{
+  VH_injury injPtr;
+  for(unsigned int i = 0; i < injured_tissue_list.size(); i++)
+  {
+    injPtr = (VH_injury)injured_tissue_list[i];
+    if(injPtr.diagnosis != "") return true;
+  }
+  // (else)
+  return false;
+} // end is_diagnosis()
+                                                                                
+string
+get_diagnosis(vector<VH_injury> &injured_tissue_list)
+{
+  VH_injury injPtr;
+  for(unsigned int i = 0; i < injured_tissue_list.size(); i++)
+  {
+    injPtr = (VH_injury)injured_tissue_list[i];
+    if(injPtr.diagnosis != "") return injPtr.diagnosis;
+  }
+  // (else)
+  return string("");
+} // end get_diagnosis()
  
 /******************************************************************************
  * VH_injury::iscomplete()
@@ -675,6 +701,8 @@ void VH_injury::print()
   else if(isStun) cout << "Stunned ";
   cout << "fmaEntity: " << anatomyname;
   cout << " timeStamp: " << timeStamp;
+  cout << " time units: " << timeUnit;
+  cout << " diagnosis: " << diagnosis;
   cout << " probability: " << probability;
   if(isGeometry)
   {

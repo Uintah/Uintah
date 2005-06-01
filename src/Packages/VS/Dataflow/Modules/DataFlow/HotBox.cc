@@ -116,6 +116,8 @@ private:
   GuiInt gui_is_injured7_;
   GuiInt gui_is_injured8_;
   GuiInt gui_is_injured9_;
+  // diagnosis
+  GuiString gui_diagnosis_;
   // hierarchical relations -- 0-based in GUI ListBox
   // this stores the Tcl name of the HotBox GUI instance
   GuiString gui_name_;
@@ -336,6 +338,7 @@ HotBox::HotBox(GuiContext* ctx)
   gui_is_injured7_(ctx->subVar("gui_is_injured(7)")),
   gui_is_injured8_(ctx->subVar("gui_is_injured(8)")),
   gui_is_injured9_(ctx->subVar("gui_is_injured(9)")),
+  gui_diagnosis_(ctx->subVar("gui_diagnosis")),
   gui_name_(ctx->subVar("gui_name")),
   gui_parent0_(ctx->subVar("gui_parent(0)")),
   gui_parent1_(ctx->subVar("gui_parent(1)")),
@@ -627,6 +630,7 @@ HotBox::execute()
     cout << "VS/HotBox: selected '" << selectName << "'" << endl;
   else
     remark("Selected [NULL]");
+  currentSelection_ = (string)currentselection_.get();
 
   if( boundingBoxDataSrc == "" ) {
     error("No Bounding Box file has been selected.  Please choose a file.");
@@ -699,10 +703,10 @@ HotBox::execute()
 //    cerr << "TEST BEFORE: selectname: " << selectName << endl;
     selectBox = VH_Anatomy_findBoundingBox( boundBoxList_, selectName);
 //    cerr << "TEST AFTER: selectname: " << selectName << endl;
-    cerr << "Anatomy: " << selectBox->get_anatomyname() << endl;
-    cerr << "Bounding Box(minX, maxX): " << selectBox->get_minX() <<"," << selectBox->get_maxX() <<endl;
-    cerr << "Bounding Box(minY, maxY): " << selectBox->get_minY() <<"," << selectBox->get_maxY() <<endl;
-    cerr << "Bounding Box(minZ, maxZ): " << selectBox->get_minZ() <<"," << selectBox->get_maxZ() <<endl;
+//    cerr << "Anatomy: " << selectBox->get_anatomyname() << endl;
+//    cerr << "Bounding Box(minX, maxX): " << selectBox->get_minX() <<"," << selectBox->get_maxX() <<endl;
+//    cerr << "Bounding Box(minY, maxY): " << selectBox->get_minY() <<"," << selectBox->get_maxY() <<endl;
+//    cerr << "Bounding Box(minZ, maxZ): " << selectBox->get_minZ() <<"," << selectBox->get_maxZ() <<endl;
 
   }
   else
@@ -1055,7 +1059,7 @@ HotBox::execAdjacency()
   cerr << "labelIndexVal_: "<< labelIndexVal_ << endl;
   for (int i = 0;i < anatomytable_->get_num_names() ; i++)
   {
-    cerr << "Adjacencies: " <<  adjPtr[i] << endl;
+ //   cerr << "Adjacencies: " <<  adjPtr[i] << endl;
   }
   // fill in text labels in the HotBox
   char *adjacentName;
@@ -1075,7 +1079,7 @@ HotBox::execAdjacency()
     cerr << adjacentName << endl;
     gui_label1_.set(adjacentName);
 
-//    if(is_injured(adjacentName, injured_tissue_))
+//    if(is_injured(adjacentName, *injured_tissue_))
 //    { gui_is_injured1_.set(1); }
 //    else
 //    { gui_is_injured1_.set(0); }
@@ -1099,7 +1103,7 @@ HotBox::execAdjacency()
     cerr << adjacentName << endl;
     gui_label2_.set(adjacentName);
 
-//    if(is_injured(adjacentName, injured_tissue_))
+//    if(is_injured(adjacentName, *injured_tissue_))
 //    { gui_is_injured1_.set(1); }
 //    else
 //    { gui_is_injured1_.set(0); }
@@ -1122,7 +1126,7 @@ HotBox::execAdjacency()
     cerr << adjacentName << endl;
     gui_label3_.set(adjacentName);
 
-//    if(is_injured(adjacentName, injured_tissue_))
+//    if(is_injured(adjacentName, *injured_tissue_))
 //    { gui_is_injured2_.set(1); }
 //    else
 //    { gui_is_injured2_.set(0); }
@@ -1146,7 +1150,7 @@ HotBox::execAdjacency()
     cerr << adjacentName << endl;
     gui_label4_.set(adjacentName);
 
-//    if(is_injured(adjacentName, injured_tissue_))
+//    if(is_injured(adjacentName, *injured_tissue_))
 //    { gui_is_injured3_.set(1); }
 //    else
 //    { gui_is_injured3_.set(0); }
@@ -1173,7 +1177,7 @@ HotBox::execAdjacency()
     cerr << adjacentName << endl;
     gui_label6_.set(adjacentName);
                                                                                               
-//    if(is_injured(adjacentName, injured_tissue_))
+//    if(is_injured(adjacentName, *injured_tissue_))
 //    { gui_is_injured7_.set(1); }
 //    else
 //    { gui_is_injured7_.set(0); }
@@ -1197,7 +1201,7 @@ HotBox::execAdjacency()
     cerr << adjacentName << endl;
     gui_label7_.set(adjacentName);
 
-//    if(is_injured(adjacentName, injured_tissue_))
+//    if(is_injured(adjacentName, *injured_tissue_))
 //    { gui_is_injured7_.set(1); }
 //    else
 //    { gui_is_injured7_.set(0); }
@@ -1220,7 +1224,7 @@ HotBox::execAdjacency()
     cerr << adjacentName << endl;
     gui_label8_.set(adjacentName);
 
-//    if(is_injured(adjacentName, injured_tissue_))
+//    if(is_injured(adjacentName, *injured_tissue_))
 //    { gui_is_injured8_.set(1); }
 //    else
 //    { gui_is_injured8_.set(0); }
@@ -1243,7 +1247,7 @@ HotBox::execAdjacency()
     cerr << adjacentName << endl;
     gui_label9_.set(adjacentName);
 
-//    if(is_injured(adjacentName, injured_tissue_))
+//    if(is_injured(adjacentName, *injured_tissue_))
 //    { gui_is_injured9_.set(1); }
 //    else
 //    { gui_is_injured9_.set(0); }
@@ -1702,6 +1706,7 @@ HotBox::executeOQAFMA()
   // <event>
   // <wound woundName="Left ventricular penetration" woundID="1.0">
   //     <timeStamp time="1.0" unit="s"/>
+  //     <diagnosis>tamponade</diagnosis>
   //     <primaryInjuryList>
   //         <injuryEntity injuryName="Ablated LV myocardium" injuryID="1.1" >
   //             <ablateRegion>
@@ -1740,6 +1745,7 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, double *curTime,
 {
   // debugging...
   if(!strcmp(to_char_ptr(woundNode.getNodeName()), "timeStamp") ||
+     !strcmp(to_char_ptr(woundNode.getNodeName()), "diagnosis") ||
      !strcmp(to_char_ptr(woundNode.getNodeName()), "probability") ||
      !strcmp(to_char_ptr(woundNode.getNodeName()), "primaryInjuryList") ||
      !strcmp(to_char_ptr(woundNode.getNodeName()), "secondaryInjuryList") ||
@@ -1860,6 +1866,11 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, double *curTime,
   {
     (*injuryPtr)->isStun = true;
   }
+  else if(!strcmp(to_char_ptr(woundNode.getNodeName()),
+          "diagnosis"))
+  {
+    (*injuryPtr)->diagnosis = string(to_char_ptr(woundNode.getNodeValue()));
+  }
   // get attributes
   if(woundNode.hasAttributes())
   {
@@ -1871,6 +1882,7 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, double *curTime,
 
       // debugging...
       if(!strcmp(to_char_ptr(woundNode.getNodeName()), "timeStamp") ||
+         !strcmp(to_char_ptr(woundNode.getNodeName()), "diagnosis") ||
          !strcmp(to_char_ptr(woundNode.getNodeName()), "probability") ||
          !strcmp(to_char_ptr(woundNode.getNodeName()), "fmaEntity") ||
          !strcmp(to_char_ptr(woundNode.getNodeName()), "dimEntity")
@@ -1920,16 +1932,18 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, double *curTime,
     (*injuryPtr)->print();
     injured_tissue_->push_back(**injuryPtr);
     double woundTime = (*injuryPtr)->timeStamp;
+    string woundUnit = (*injuryPtr)->timeUnit;
     // global clock is in seconds -- convert wound timeStamp to match
     if((*injuryPtr)->timeUnit == "min")
-        *curTime = woundTime * 60;
+        *curTime = woundTime * 60.0;
     else // units default to seconds
         *curTime = woundTime;
     // create the next injury record
     *injuryPtr = new VH_injury();
 
-    // carry through timeStamp
+    // carry through timeStamp and units
     (*injuryPtr)->timeStamp =  woundTime;
+    (*injuryPtr)->timeUnit =  woundUnit;
     (*injuryPtr)->timeSet = true;
   }
   if(woundNode.hasChildNodes())
@@ -2014,10 +2028,17 @@ HotBox::parseInjuryList()
       injured_tissue_ = new vector <VH_injury>;
     } // end for(int i = 0; i < num_woundList; i++)
   } // end else (num_woundList > 0)
+  // initialize the injury list to timeStep 0
+  injured_tissue_ = (vector <VH_injury> *)injured_tissue_list_[0];
 
   // compute average time increment, epsilon
   timeIncr = timeIncr / (double)num_woundList;
   timeEps_ = timeIncr/4.0;
+
+  cerr << "HotBox::parseInjuryList(): " << injured_tissue_list_.size();
+  cerr << " injury events found, time range[" << min_timeStep << ", ";
+  cerr << max_timeStep<< "] increment " << timeIncr << endl;
+
 } // end parseInjuryList()
 
 /*****************************************************************************
@@ -2033,6 +2054,7 @@ HotBox::get_timeStep(double targ_timeStamp)
   int retIndex = -1;
   // units default to seconds
   double wound_timeStamp = targ_timeStamp;
+  vector <VH_injury> *saveInjury = injured_tissue_;
 
   // debugging...
   cerr << "HotBox::get_timeStep(" << targ_timeStamp << ")" << endl;
@@ -2042,16 +2064,16 @@ HotBox::get_timeStep(double targ_timeStamp)
     injured_tissue_ =
           (vector <VH_injury> *)injured_tissue_list_[i];
     // debugging...
-    cerr << " injured_tissue_list_[" << i << "] size: ";
-    cerr << injured_tissue_->size();
+    // cerr << " injured_tissue_list_[" << i << "] size: ";
+    // cerr << injured_tissue_->size();
     if(injured_tissue_ && injured_tissue_->size() > 0)
     {
       VH_injury woundPtr = (*injured_tissue_)[0];
       // debugging...
-      cerr << " timeStamp " << woundPtr.timeStamp;
+      // cerr << " timeStamp " << woundPtr.timeStamp;
       // target timeStamp is in seconds -- convert wound timeStamp to match
       if(woundPtr.timeUnit == "min")
-         wound_timeStamp = woundPtr.timeStamp * 60;
+         wound_timeStamp = woundPtr.timeStamp * 60.0;
       else // default to seconds
          wound_timeStamp = woundPtr.timeStamp;
 
@@ -2064,12 +2086,14 @@ HotBox::get_timeStep(double targ_timeStamp)
       else
       {
         // debugging...
-         cerr << " target = " << targ_timeStamp << " <= " << wound_timeStamp;
-         cerr << " - " << timeEps_ << " || " << targ_timeStamp << " >= ";
-         cerr << wound_timeStamp << " + " << timeEps_ << endl;
+        // cerr << " target = " << targ_timeStamp << " <= " << wound_timeStamp;
+        // cerr << " - " << timeEps_ << " || " << targ_timeStamp << " >= ";
+        // cerr << wound_timeStamp << " + " << timeEps_ << endl;
       }
     } // end if(injured_tissue_ && injured_tissue_->size > 0)
   } // end for(int i = 0; i < injured_tissue_list_.size(); i++)
+  if(retIndex == -1) // restore previous injury list
+    injured_tissue_ = saveInjury;
   return retIndex;
 } // end HotBox::get_timeStep()
 
@@ -2083,23 +2107,15 @@ HotBox::execInjuryList()
 
   char message[256];
 
+  // get the injury list for the current time
   int currentTime_step = get_timeStep(currentTime_);
 
-  // get the injury list for the current time
-  if(currentTime_step >= 0 && currentTime_step < injured_tissue_list_.size())
-  {
-      injured_tissue_ =
-          (vector <VH_injury> *)injured_tissue_list_[currentTime_step];
-  }
-  else // time step out of range
-  {
-     sprintf(message, "%f", currentTime_);
-      error(string("execInjuryList: time step ")+string(message)+
-            string(" out of range"));
-  }
   // report number of injuries read
   cerr << "HotBox::execInjuryList(): timeStep[" << currentTime_step << "] ";
   cerr << injured_tissue_->size() << " injuries found" << endl;
+
+  if(is_diagnosis(*injured_tissue_))
+     gui_diagnosis_.set(get_diagnosis(*injured_tissue_));
 
 } // end execInjuryList()
 
