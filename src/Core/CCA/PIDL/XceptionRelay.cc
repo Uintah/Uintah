@@ -49,7 +49,8 @@ XceptionRelay::~XceptionRelay()
 
 void XceptionRelay::relayException(int* x_id, Message** message) 
 { 
-  IntraComm* icomm = mypb->rm.intracomm; 
+
+  IntraComm* icomm = NULL; //mypb->rm.intracomm; //intracomm is temporarily removed
   int xlineID;
 
   //If this is a serial object, intracomm. may be NULL
@@ -179,7 +180,7 @@ int XceptionRelay::checkException(Message** _xMsg)
 
 int XceptionRelay::readException(Message** _xMsg, int* _xlineID)
 {
-  IntraComm* icomm = mypb->rm.intracomm;
+  IntraComm* icomm = NULL; //mypb->rm.intracomm; //intracomm is removed temporarily.
   Message* message = mypb->rm.getIndependentReference()->chan->getMessage();
   
   //If this is a serial object, intracomm. may be NULL

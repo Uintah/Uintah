@@ -56,9 +56,10 @@ else
 endif
 
 
-#ifeq ($(HAVE_MPI),yes)
-#SUBDIRS += $(SRCDIR)/PWorld $(SRCDIR)/PHello  $(SRCDIR)/PLinSolver
-#endif
+ifeq ($(HAVE_MPI),yes)
+SUBDIRS += $(SRCDIR)/PWorld $(SRCDIR)/PHello 
+# $(SRCDIR)/PLinSolver
+endif
 
 ifeq ($(HAVE_BABEL),yes)
  SUBDIRS += $(SRCDIR)/BabelTest

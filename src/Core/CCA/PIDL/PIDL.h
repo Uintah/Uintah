@@ -53,7 +53,6 @@ namespace SCIRun {
 
   class SpChannel;
   class URL;
-  class IntraComm;
 /**************************************
  
 CLASS
@@ -120,7 +119,7 @@ DESCRIPTION
     //////////
     // Get the inter-component communication object
     // (only in parallel components)
-    static IntraComm* getIntraComm();
+    //    static IntraComm* getIntraComm();
 
     static DataTransmitter *getDT();
 
@@ -152,7 +151,7 @@ DESCRIPTION
     //////////
     // Initialize a parallel communication library to
     // be used within a component 
-    static void setIntraCommunication(int c);
+    //    static void setIntraCommunication(int c);
 
     //////////
     // The warehouse singleton object

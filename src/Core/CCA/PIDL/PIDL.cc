@@ -50,16 +50,16 @@
 #include <Core/CCA/Comm/SocketSpChannel.h>
 #include <Core/CCA/Comm/SocketEpChannel.h>
 #include <Core/CCA/Comm/SocketMessage.h>
-#include <Core/CCA/Comm/Intra/IntraComm.h>
+//#include <Core/CCA/Comm/Intra/IntraComm.h>
 #include <Core/Exceptions/InternalError.h> 
 #include <sys/types.h>
 #include <unistd.h>
 #include <iostream>
 #include <sstream>
 
-#ifdef HAVE_MPI
-#include <Core/CCA/Comm/Intra/IntraCommMPI.h>
-#endif
+//#ifdef HAVE_MPI
+//#include <Core/CCA/Comm/Intra/IntraCommMPI.h>
+//#endif
 
 #ifdef HAVE_GLOBUS
 #include <Core/CCA/Comm/NexusSpChannel.h>
@@ -72,7 +72,7 @@
 #define COMM_SOCKET 2
 
 //Intra-Component Comm libraries supported
-#define INTRA_COMM_MPI 1
+//#define INTRA_COMM_MPI 1
 
 static int comm_type = 0;
 static int intra_comm_type = 0;
@@ -120,9 +120,9 @@ PIDL::initialize(int rank,int size)
     break;
 #endif
   }
-#ifdef HAVE_MPI
-  setIntraCommunication(INTRA_COMM_MPI);
-#endif
+  //#ifdef HAVE_MPI
+  //  setIntraCommunication(INTRA_COMM_MPI);
+  //#endif
 
   PIDL::rank = rank;
   PIDL::size = size;
@@ -228,19 +228,19 @@ PIDL::serveObjects()
   warehouse->run();
 }
 
-IntraComm* 
-PIDL::getIntraComm()
-{
-#ifdef HAVE_MPI
-  switch (intra_comm_type) {
-  case (INTRA_COMM_MPI):
-    return (new IntraCommMPI());
-  default:
-    return (new IntraCommMPI());
-  }
-#endif
-  return NULL;
-}
+// IntraComm* 
+// PIDL::getIntraComm()
+// {
+// #ifdef HAVE_MPI
+//   switch (intra_comm_type) {
+//   case (INTRA_COMM_MPI):
+//     return (new IntraCommMPI());
+//   default:
+//     return (new IntraCommMPI());
+//   }
+// #endif
+//   return NULL;
+// }
  
 //PRIVATE:
 
@@ -254,15 +254,17 @@ PIDL::setCommunication(int c)
   }
 }
 
-void
-PIDL::setIntraCommunication(int c)
-{
-  if (intra_comm_type != 0)
-    throw SCIRun::InternalError("Cannot modify communication setting after it has been set once\n");
-  else {
-    intra_comm_type = c;
-  }
-}
+
+// void
+// PIDL::setIntraCommunication(int c)
+// {
+//   if (intra_comm_type != 0)
+//     throw SCIRun::InternalError("Cannot modify communication setting after it has been set once\n");
+//   else {
+//     intra_comm_type = c;
+//   }
+// }
+
 
 DataTransmitter*
 PIDL::getDT(){

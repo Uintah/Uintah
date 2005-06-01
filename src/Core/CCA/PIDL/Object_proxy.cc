@@ -62,7 +62,7 @@ Object_proxy::Object_proxy(const URL& url)
 
   rm.localSize = 1;
   rm.localRank = 0;
-  rm.intracomm = NULL;
+  //  rm.intracomm = NULL;
   //TODO: need verify this statement
   rm.s_lSize = 1;
 }
@@ -79,10 +79,10 @@ Object_proxy::Object_proxy(const int urlc, const URL urlv[], int mysize, int myr
   rm.s_lSize = mysize;
   rm.localRank = myrank;
 
-  if(mysize > 1)
-    rm.intracomm = PIDL::getIntraComm();
-  else
-    rm.intracomm = NULL;
+//   if(mysize > 1)
+//     rm.intracomm = PIDL::getIntraComm();
+//   else
+//     rm.intracomm = NULL;
 }
 
 Object_proxy::Object_proxy(const std::vector<URL>& urlv, int mysize, int myrank)
@@ -98,10 +98,10 @@ Object_proxy::Object_proxy(const std::vector<URL>& urlv, int mysize, int myrank)
   rm.s_lSize = mysize;
   rm.localRank = myrank;
 
-  if(mysize > 1)
-    rm.intracomm = PIDL::getIntraComm();
-  else
-    rm.intracomm = NULL;
+//   if(mysize > 1)
+//     rm.intracomm = PIDL::getIntraComm();
+//   else
+//     rm.intracomm = NULL;
 }
 
 Object_proxy::Object_proxy(const std::vector<Object::pointer>& pxy, int mysize, int myrank)
@@ -124,10 +124,10 @@ Object_proxy::Object_proxy(const std::vector<Object::pointer>& pxy, int mysize, 
   rm.s_lSize = mysize;
   rm.localRank = myrank;
 
-  if(mysize > 1)
-    rm.intracomm = PIDL::getIntraComm();
-  else
-    rm.intracomm = NULL;
+//   if(mysize > 1)
+//     rm.intracomm = PIDL::getIntraComm();
+//   else
+//     rm.intracomm = NULL;
 }
 
 

@@ -44,7 +44,7 @@
 #include <SCIRun/SCIRunFramework.h>
 #include <iostream>
 #include <sci_defs/mpi_defs.h>
-#include <mpi.h>
+#include <sci_mpi.h>
 #include <sci_defs/qt_defs.h>
 
 using namespace SCIRun;
@@ -103,7 +103,6 @@ parse_args( int argc, char *argv[])
 int
 main(int argc, char *argv[]) {
   bool framework = true;
-  //  MPI_Init(&argc,&argv);
   
   parse_args( argc, argv);
   

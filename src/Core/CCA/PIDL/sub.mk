@@ -54,7 +54,7 @@ SRCS     += \
 	$(SRCDIR)/MxNMetaSynch.cc \
 	$(SRCDIR)/HandlerStorage.cc \
 	$(SRCDIR)/HandlerGateKeeper.cc \
-	$(SRCDIR)/ReferenceMgr.cc \
+	$(SRCDIR)/ReferenceMgr.cc  \
 	$(SRCDIR)/XceptionRelay.cc
 
 
@@ -68,10 +68,13 @@ PSELIBS += Core/globus_threads
 LIBS +=  $(GLOBUS_LIBRARY) $(GLOBUS_IO_LIBRARYK) 
 endif
 
-ifeq ($(HAVE_MPI),yes) 
-PSELIBS += Core/CCA/Comm/Intra
-LIBS += $(MPI_LIBRARY)
-endif
+####################################################################
+#Intra is removed before the completion of Parallel CCA Components
+#ifeq ($(HAVE_MPI),yes) 
+#PSELIBS += Core/CCA/Comm/Intra
+#LIBS += $(MPI_LIBRARY)
+#endif
+####################################################################
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
