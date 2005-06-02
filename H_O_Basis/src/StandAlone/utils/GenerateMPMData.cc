@@ -53,11 +53,13 @@ using std::endl;
 using namespace SCIRun;
 
 vector<ofstream*> *files = 0;
+vector<ofstream*> *aux_files = 0;
 vector<unsigned> fcount;
 vector<unsigned> num_files;
 vector<string> prename;
 
 const unsigned int max_lines = 25000000;
+double part_per_mm = 4.;
 
 template<class Fld>
 void
@@ -68,6 +70,7 @@ write_MPM_fibdir(FieldHandle& field_h, const string &outdir)
   typename Fld::mesh_handle_type mesh = ifield->get_typed_mesh();
 
   files = new vector<ofstream*>;
+  aux_files = new vector<ofstream*>;
   fcount.push_back(0);
   num_files.push_back(1);
   stringstream fname(stringstream::in | stringstream::out);
@@ -83,7 +86,9 @@ write_MPM_fibdir(FieldHandle& field_h, const string &outdir)
   fname << right << 1;
   string nm1;
   fname >> nm1;
+  string aux_nm = nm1 + ".elems";
   files->push_back(new ofstream(nm1.c_str(), ios_base::out));
+  aux_files->push_back(new ofstream(aux_nm.c_str(), ios_base::out));
 
 #if defined(__sgi)
 #  define round(var) ((var)>=0?(int)((var)+0.5):(int)((var)-0.5))
@@ -121,7 +126,6 @@ write_MPM_fibdir(FieldHandle& field_h, const string &outdir)
 
     double vol = dx * dy * dz; 
     
-    const double part_per_mm = 4.;
     const int div_per_x = (int)round(part_per_mm * dx);
     const int div_per_y = (int)round(part_per_mm * dy);
     const int div_per_z = (int)round(part_per_mm * dz);
@@ -159,22 +163,22 @@ write_MPM_fibdir(FieldHandle& field_h, const string &outdir)
 	    fname.width(4);
 	    fname << right << ++num_files[0];
 	    fname >> nm;
+	    string aux_nm = nm + ".elems";
 	    delete (*files)[0];
 	    (*files)[0] = new ofstream(nm.c_str(), ios_base::out);
+	    (*aux_files)[0] = new ofstream(aux_nm.c_str(), ios_base::out);
 	    fcount[0] = 0;
 	  }
-	  double units_sf = .001;
-	  ofstream* str = (*files)[0];
-// 	  (*str) << setprecision (9) 
-// 		 << c.x() << " " << c.y() << " " << c.z() << " " 
-// 		 << part_vol << " "
-// 		 << v.x() << " " << v.y() << " " << v.z() << endl;
 
+	  ofstream* str = (*files)[0];
+	  ofstream* aux_str = (*aux_files)[0];
 	  (*str) << setprecision (9) 
-		 << c.x() * units_sf << " " << c.y() * units_sf << " " 
-		 << c.z() * units_sf << " " 
-		 << part_vol * units_sf * units_sf * units_sf << " "
+		 << c.x() << " " << c.y() << " " << c.z() << " " 
+		 << part_vol << " "
 		 << v.x() << " " << v.y() << " " << v.z() << endl;
+
+	  // aux file just writes the elem number that the particle belongs to.
+	  (*aux_str) << *iter << endl;
 	  fcount[0]++;
 	}
       }
@@ -283,7 +287,7 @@ main(int argc, char **argv)
 {
   if (argc != 3)
   {
-    cout << "Usage:  GenerateMPMData <input-text-field> <dest-dir>" << endl;
+    cout << "Usage:  GenerateMPMData <input-text-field> <dest-dir> <num particles per millimeter>" << endl;
     exit(0);
   }
 
@@ -299,6 +303,9 @@ main(int argc, char **argv)
     cout << "Directory  " << argv[2] << " not found\n";
     exit(100);
   }
+  string ppm(argv[3]);
+  part_per_mm = atof(ppm.c_str());
+
 
   string outdir(argv[2]);
 
