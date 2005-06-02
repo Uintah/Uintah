@@ -82,7 +82,12 @@ namespace Uintah {
                                    DataWarehouse*, 
                                    DataWarehouse* new_dw,
                                    double factor);
-
+                                   
+    void iteratorTest(const Patch* finePatch,
+                      const Level* fineLevel,
+                      const Level* coarseLevel,
+                      DataWarehouse* new_dw);
+                      
     void refine(const ProcessorGroup*,
                 const PatchSubset* patches,
                 const MaterialSubset* matls,
