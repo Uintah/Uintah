@@ -1315,9 +1315,10 @@ void Patch::getOtherLevelPatches(int levelOffset,
   if (levelOffset < 0) {
     // if for some reason the levelOffset is -2 or less...
     IntVector crr = otherLevel->getRelativeLevel(1)->getRefinementRatio();
-    IntVector offset((high.x() % crr.x()) == 0 ? 0 : 1,
-                     (high.x() % crr.x()) == 0 ? 0 : 1,
-                     (high.x() % crr.x()) == 0 ? 0 : 1);
+    IntVector highIndex = getHighIndex();
+    IntVector offset((highIndex.x() % crr.x()) == 0 ? 0 : 1,
+                     (highIndex.y() % crr.y()) == 0 ? 0 : 1,
+                     (highIndex.z() % crr.z()) == 0 ? 0 : 1);
     high += offset;
   }
   otherLevel->selectPatches(low, high, selected_patches); 
