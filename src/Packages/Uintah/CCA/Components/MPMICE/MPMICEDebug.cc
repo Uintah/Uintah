@@ -1,4 +1,5 @@
 #include <Packages/Uintah/CCA/Components/MPMICE/MPMICE.h>
+#include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
