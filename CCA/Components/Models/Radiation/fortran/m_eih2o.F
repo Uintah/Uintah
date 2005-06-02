@@ -1,4 +1,4 @@
-	SUBROUTINE eih2o(TK, PLA, EH2O)
+	SUBROUTINE m_eih2o(TK, PLA, EH2O)
 
         IMPLICIT NONE
 
@@ -29,9 +29,9 @@ C	Set bounds, interpolate Hottel chart to find H2O emissivity
 	  PL = MIN(PLA, 20.0d0)
 	  TMP = MAX(TR, 500.0d0)
 	  TMP = MIN(TR, 5000.0d0)
-	  CALL FIND(TMP, A, TEMP, AA, 5, ITEMP)
-	  CALL FIND(TMP, B, TEMP, BB, 5, ITEMP)
-	  CALL FIND(TMP, C, TEMP, CC, 5, ITEMP)
+	  CALL m_FIND(TMP, A, TEMP, AA, 5, ITEMP)
+	  CALL m_FIND(TMP, B, TEMP, BB, 5, ITEMP)
+	  CALL m_FIND(TMP, C, TEMP, CC, 5, ITEMP)
 	  ALOGPL = DLOG(PL)
 	  EH2O = EXP(A + ALOGPL * (B + ALOGPL * C))
 	ELSE
