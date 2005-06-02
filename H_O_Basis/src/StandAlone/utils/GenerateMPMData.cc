@@ -285,9 +285,9 @@ write_MPM(FieldHandle& field_h, const string &outdir)
 int
 main(int argc, char **argv)
 {
-  if (argc != 3)
+  if (argc != 4)
   {
-    cout << "Usage:  GenerateMPMData <input-text-field> <dest-dir> <num particles per millimeter>" << endl;
+    cout << "Usage:  GenerateMPMData <input-field> <dest-dir> <num particles per millimeter>" << endl;
     exit(0);
   }
 
