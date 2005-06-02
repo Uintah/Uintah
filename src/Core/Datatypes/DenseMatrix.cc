@@ -267,13 +267,16 @@ DenseMatrix::transpose()
 
 void DenseMatrix::getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val)
 {
-  idx.resize(ncols_);
-  val.resize(ncols_);
+  idx.reserve(ncols_);
+  idx.remove_all();
+  val.reserve(ncols_);
+  val.remove_all();
   int i=0;
   for (int c=0; c<ncols_; c++) {
-    if (data[r][c]!=0.0) {
-      idx[i]=c;
-      val[i]=data[r][c];
+    if (data[r][c]!=0.0)
+    {
+      idx.add(c);
+      val.add(data[r][c]);
       i++;
     }
   }
