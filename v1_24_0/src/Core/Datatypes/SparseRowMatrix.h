@@ -116,6 +116,7 @@ public:
   virtual MatrixHandle submatrix(int r1, int c1, int r2, int c2);
 
   void sparse_mult(const DenseMatrix& x, DenseMatrix& b) const;
+  void sparse_mult_transXB(const DenseMatrix& x, DenseMatrix &b) const;
   MatrixHandle sparse_sparse_mult(const SparseRowMatrix &x) const;
   void solve(ColumnMatrix&);
 
