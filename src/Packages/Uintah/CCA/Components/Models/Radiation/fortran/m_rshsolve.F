@@ -39,7 +39,7 @@ c     Initial calculation of the matrix elements
 c  call fixval assume abskg to be one but change it in props calculation
                   val = -4*abs(fraction(bands))*SIG*tg(i,j,k)**4
                   factor = 1.d0
-                  call fixradval(val,
+                  call m_fixradval(val,
      $                 aw(i,j,k),as(i,j,k),ab(i,j,k),
      $                 ae(i,j,k),an(i,j,k),at(i,j,k),
      $                 ap(i,j,k),su(i,j,k),factor)
