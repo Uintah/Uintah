@@ -697,8 +697,6 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
     }
     else if (mesh->dimensionality() == 1)
     {
-      typename Fld::value_type val;
-      sfld->value(val, *eiter);
       if (def_color)
       {
 	if (cyl)
@@ -712,6 +710,8 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
       }
       else if (vec_color)
       {
+        typename Fld::value_type val;
+        sfld->value(val, *eiter);
 	Vector v(0, 0, 0);
 	to_vector(val, v);
 	sciVectorToColor(vcol0->diffuse, v);
@@ -726,6 +726,8 @@ RenderField<Fld, Loc>::render_edges(Fld *sfld,
       }
       else
       {
+        typename Fld::value_type val;
+        sfld->value(val, *eiter);
 	double dval;
 	to_double(val, dval);
 	if (cyl)
