@@ -14,12 +14,6 @@ SUBDIRS := \
 	$(SRCDIR)/MPM \
 	$(SRCDIR)/ICE \
 	$(SRCDIR)/MPMICE \
-	$(SRCDIR)/MPMArches \
-	$(SRCDIR)/Arches \
-	$(SRCDIR)/Arches/fortran \
-	$(SRCDIR)/Arches/Mixing \
-	$(SRCDIR)/Arches/Radiation \
-	$(SRCDIR)/Arches/Radiation/fortran \
 	$(SRCDIR)/ProblemSpecification \
 	$(SRCDIR)/PatchCombiner \
 	$(SRCDIR)/Solvers
