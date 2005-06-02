@@ -32,6 +32,12 @@
  * DATE: 23 MAR 2005
  */
  
+// STILL TO DO
+// (1) ADD SPACING / KINDS / UNITS INFORMATION
+// (2) DEAL WITH 3D DATA AS WELL
+// (3) UPGRADE ROW/COLUMN SECTION 
+ 
+ 
 #ifndef JGS_CARDIOWAVE_TIMEDATATILE_H
 #define JGS_CARDIOWAVE_TIMEDATATILE_H 1
 
@@ -87,6 +93,11 @@ class TimeDataFile {
     int getncols();
     int getnrows();
     
+    int         getsize(int dim);
+    double      getspacing(int dim);
+    std::string getkind(int dim);
+    std::string getunit(int dim);
+    
     std::string getcontent();
     std::string getunit();
     
@@ -95,12 +106,6 @@ class TimeDataFile {
     void getcolnrrd(NrrdDataHandle& nh,int colstart,int colend);
     void getrownrrd(NrrdDataHandle& nh,int rowstart,int rowend);
 
-//    void getcolmatrix(MatrixHandle& mh,std::vector<int> indices);
-//    void getrowmatrix(MatrixHandle& mh,std::vector<int> indices);
-//    void getcolnrrd(NrrdDataHandle& nh,std::vector<int> indices);
-//    void getrownrrd(NrrdDataHandle& nh,std::vector<int> indices);
-
-    
   private:  
     std::string remspaces(std::string str);
     void gettype(std::string type,int& nrrdtype, int& elsize);
@@ -109,37 +114,35 @@ class TimeDataFile {
   
   private:
   
-    std::string datafilename;
-    std::list<std::string> datafilenames;
-    std::vector<int> coloffset;
-    std::string content;
-    std::string encoding;
-    std::string endian;
-    std::string type;
-    std::string unit;
-    int         ncols;
-    int         nrows;
-    int         ndims;
-    int         lineskip;
-    int         byteskip;
-    int         elemsize;
-    int         ntype;
-    int         dimension;
-    std::map<std::string,std::string> keyvalue;
+    std::string             datafilename_;
+    std::list<std::string>  datafilenames_;
+    std::list<std::string>  units_;
+    std::list<std::string>  kinds_;
+    std::list<double>       spacings_;
+    std::vector<int>        coloffset_;
+    std::string             content_;
+    std::string             encoding_;
+    std::string             endian_;
+    std::string             type_;
+    std::string             unit_;
+    int                     ncols_;
+    int                     nrows_;
+    int                     lineskip_;
+    int                     byteskip_;
+    int                     elemsize_;
+    int                     ntype_;
+    int                     dimension_;
+    std::map<std::string,std::string> keyvalue_;
     
 
     
-    int         start;
-    int         end;
-    int         step;
-    int         subdim;
-    bool        useformatting;
+    int                     start_;
+    int                     end_;
+    int                     step_;
+    int                     subdim_;
     
-    
-    bool        swapbytes;
-    
-    FILE*        datafile;
-    int          datafile_uni;
+    bool                    useformatting_;
+    bool                    swapbytes_;
     
   };
   

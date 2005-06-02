@@ -36,47 +36,50 @@ itcl_class CardioWave_DataIO_TimeDataReader {
     }
 
     method set_defaults {} {   
-	
-		# Variables for file selector
-		setGlobal $this-filename	""
-		 
-		# Variables for wrapper creation
-		
-		# Variables for nd matrix information
-		
-		# Variables for play buttons
+
+    # Variables for file selector
+    setGlobal $this-filename	""
+     
+    # Variables for wrapper creation
+    
+    # Variables for nd matrix information
+    
+    # Variables for play buttons
 		
     setGlobal $this-dimension         2
+    setGlobal $this-dimension-label   {"Row" "Column"}
     setGlobal $this-row_or_col        column
     setGlobal $this-selectable_min    0
-		setGlobal $this-selectable_max    100
-		setGlobal $this-selectable_inc    1
-		setGlobal $this-selectable_units  ""
-		setGlobal $this-range_min         0
-		setGlobal $this-range_max         100
-		setGlobal $this-playmode          once
+    setGlobal $this-selectable_max    100
+    setGlobal $this-selectable_inc    1
+    setGlobal $this-selectable_units  ""
+    setGlobal $this-range_min         0
+    setGlobal $this-range_max         100
+    setGlobal $this-playmode          once
     setGlobal $this-current           0
-		setGlobal $this-execmode          init
+    setGlobal $this-execmode          init
     setGlobal $this-delay             0
-		setGlobal $this-inc-amount        1
-		setGlobal $this-send-amount       1
-		trace variable $this-current w "update idletasks;\#"
-		setGlobal $this-scrollbar         ""
+    setGlobal $this-inc-amount        1
+    setGlobal $this-send-amount       1
+    trace variable $this-current w "update idletasks;\#"
+    setGlobal $this-scrollbar         ""
     setGlobal $this-cur               ""
-		setGlobal $this-filename          ""
-		setGlobal $this-filename-set      ""
-		setGlobal $this-filename-entry    ""		
+    setGlobal $this-filename          ""
+    setGlobal $this-filename-set      ""
+    setGlobal $this-filename-entry    ""		
       
     }
 	
-	method maybeRestart { args } {
-		upvar \#0 $this-execmode execmode
-		if ![string equal $execmode play] return
-		$this-c needexecute
+    method maybeRestart { args } {
+      upvar \#0 $this-execmode execmode
+      if [string equal $execmode play] return
+      $this-c needexecute
     }
 	
     method Restart { args } {
-          $this-c needexecute
+      upvar \#0 $this-execmode execmode
+      if [string equal $execmode play] return
+      $this-c needexecute
     }
 	
     method update_range { args } {
@@ -84,6 +87,7 @@ itcl_class CardioWave_DataIO_TimeDataReader {
     global $this-scrollbar
     global $this-cur
     global $this-dimension
+    global $this-dimension-label
 		
     set w .ui[modname]
     if {[winfo exists $w]} {
@@ -121,10 +125,10 @@ itcl_class CardioWave_DataIO_TimeDataReader {
       upvar \#0 $this-selectable_units units $this-row_or_col roc
       set pre $roc		
       
-      $scrollbar.min configure -label "Start $pre:" -from $min -to $max
-      $scrollbar.cur config -label "Current $pre:" -from $min -to $max
-      $scrollbar.max config -label "End $pre:" -from $min -to $max
-      $scrollbar.inc config -label "Increment current $pre by:" -from 1 -to [expr $max-$min]
+      $scrollbar.min.slider configure -label "Start $pre:" -from $min -to $max
+      $scrollbar.cur.slider config -label "Current $pre:" -from $min -to $max
+      $scrollbar.max.slider config -label "End $pre:" -from $min -to $max
+      $scrollbar.inc.slider config -label "Increment current $pre by:" -from 1 -to [expr $max-$min]
 
     }
 		
@@ -267,12 +271,34 @@ itcl_class CardioWave_DataIO_TimeDataReader {
     set rmax [set $this-range_max]
 
     # Create the various range sliders
-    scale $scrollbar.min -variable $this-range_min -length 200 -showvalue true -orient horizontal -relief groove -command "$this maybeRestart"
-    scale $scrollbar.cur -variable $this-current -length 200 -showvalue true -orient horizontal -relief groove -command "$this maybeRestart"
-    bind $scrollbar.cur <ButtonRelease> "$this Restart"
-    scale $scrollbar.max -variable $this-range_max -length 200 -showvalue true -orient horizontal -relief groove -command "$this maybeRestart"
-    scale $scrollbar.inc -variable $this-inc-amount -length 200 -showvalue true -orient horizontal -relief groove -command "$this maybeRestart"
+    frame $scrollbar.min
+    frame $scrollbar.cur
+    frame $scrollbar.max
+    frame $scrollbar.inc
     pack $scrollbar.min $scrollbar.cur $scrollbar.max $scrollbar.inc -side top -anchor w -fill x -expand yes
+       
+    scale $scrollbar.min.slider -variable $this-range_min -length 200 -showvalue true -orient horizontal -relief groove -command "$this maybeRestart"
+    iwidgets::spinint $scrollbar.min.count -range {0 86400000} -justify right -width 5 -step 1 -textvariable $this-range_min -repeatdelay 300 -repeatinterval 10 -command "$this Restart"
+    pack $scrollbar.min.slider -side left -anchor w -fill x -expand yes
+    pack $scrollbar.min.count -side left
+
+    scale $scrollbar.cur.slider -variable $this-current -length 200 -showvalue true -orient horizontal -relief groove 
+    iwidgets::spinint $scrollbar.cur.count -range {0 86400000} -justify right -width 5 -step 1 -textvariable $this-current -repeatdelay 300 -repeatinterval 10 -command "$this Restart" -decrement "incr $this-current -1; $this Restart" -increment "incr $this-current 1; $this Restart"  
+    pack $scrollbar.cur.slider -side left -anchor w -fill x -expand yes
+    pack $scrollbar.cur.count -side left
+    bind $scrollbar.cur.slider <ButtonRelease> "$this Restart"
+
+    
+    scale $scrollbar.max.slider -variable $this-range_max -length 200 -showvalue true -orient horizontal -relief groove -command "$this maybeRestart"
+    iwidgets::spinint $scrollbar.max.count -range {0 86400000} -justify right -width 5 -step 1 -textvariable $this-range_max -repeatdelay 300 -repeatinterval 10 -command "$this Restart"
+    pack $scrollbar.max.slider -side left -anchor w -fill x -expand yes
+    pack $scrollbar.max.count -side left
+
+    scale $scrollbar.inc.slider -variable $this-inc-amount -length 200 -showvalue true -orient horizontal -relief groove -command "$this maybeRestart"
+    iwidgets::spinint $scrollbar.inc.count -range {0 86400000} -justify right -width 5 -step 1 -textvariable $this-inc-amount -repeatdelay 300 -repeatinterval 10 -command "$this Restart"
+    pack $scrollbar.inc.slider -side left -anchor w -fill x -expand yes
+    pack $scrollbar.inc.count -side left
+
     update_range
 
     # Restore range to pre-loaded value
@@ -327,7 +353,8 @@ itcl_class CardioWave_DataIO_TimeDataReader {
 		set vcr $w.vcr
 		set cur $w.cur
 		
-		pack $w.vcr $w.cur -side top
+		pack $w.vcr 
+    pack $w.cur -side top -expand yes -fill x
 		
 		# load the VCR button bitmaps
 		set image_dir [netedit getenv SCIRUN_SRCDIR]/pixmaps
@@ -346,7 +373,7 @@ itcl_class CardioWave_DataIO_TimeDataReader {
     button $vcr.stepf -image $stepf -command "set $this-execmode step;     $this-c needexecute"
     button $vcr.fforward -image $fforward -command "set $this-execmode fforward; $this-c needexecute"
 		
-		pack $vcr.rewind $vcr.stepb $vcr.pause $vcr.play $vcr.stepf $vcr.fforward -side left -fill both -expand 1
+		pack $vcr.rewind $vcr.stepb $vcr.pause $vcr.play $vcr.stepf $vcr.fforward -side left -fill both -expand yes
 		global ToolTipText
 		Tooltip $vcr.rewind $ToolTipText(VCRrewind)
 		Tooltip $vcr.stepb $ToolTipText(VCRstepback)
@@ -356,10 +383,11 @@ itcl_class CardioWave_DataIO_TimeDataReader {
 		Tooltip $vcr.fforward $ToolTipText(VCRfastforward)
 		
 		set $this-cur $cur
-		scale $cur.cur -variable $this-current -length 200 -showvalue true -orient horizontal -relief groove -command "$this maybeRestart"
+		scale $cur.cur -variable $this-current -length 200 -showvalue true -orient horizontal -relief groove 
+    iwidgets::spinint $cur.count -range {0 86400000} -justify right -width 5 -step 1 -textvariable $this-current -repeatdelay 300 -repeatinterval 10 -command "$this Restart" -decrement "incr $this-current -1; $this Restart" -increment "incr $this-current 1; $this Restart" 
     bind $cur.cur <ButtonRelease> "$this Restart"
-		pack $cur.cur	
-	
+		pack $cur.cur	 -fill x -expand yes -side left
+    pack $cur.count -side left
     $this update_range
   
 		moveToCursor $w
