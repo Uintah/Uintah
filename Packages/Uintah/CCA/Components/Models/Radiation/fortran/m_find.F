@@ -1,4 +1,4 @@
-      SUBROUTINE find(ARG,ANS,X,Y,NPTS,I)
+      SUBROUTINE m_find(ARG,ANS,X,Y,NPTS,I)
 
       IMPLICIT NONE
 

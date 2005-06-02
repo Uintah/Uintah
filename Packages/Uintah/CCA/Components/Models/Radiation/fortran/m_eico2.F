@@ -1,4 +1,4 @@
-	SUBROUTINE eico2(TK, PLA, ECO2)
+	SUBROUTINE m_eico2(TK, PLA, ECO2)
 
         IMPLICIT NONE
 
@@ -33,9 +33,9 @@ C	Set up bounds, interpolate Hottel chart to find CO2 emissivity
 	  PL = MIN (PLA, 5.0d0)
 	  TMP = MAX (TR, 500.0d0)
 	  TMP = MIN (TR, 5000.0d0)
-	  CALL FIND( TMP, A, TEMP, AA, 7, ITEMP)
-	  CALL FIND( TMP, B, TEMP, BB, 7, ITEMP)
-	  CALL FIND( TMP, C, TEMP, CC, 7, ITEMP)
+	  CALL m_FIND( TMP, A, TEMP, AA, 7, ITEMP)
+	  CALL m_FIND( TMP, B, TEMP, BB, 7, ITEMP)
+	  CALL m_FIND( TMP, C, TEMP, CC, 7, ITEMP)
 	  ALOGPL = DLOG(PL)
 	  ECO2 = EXP(A + ALOGPL * (B + ALOGPL * C))
 	ELSE
