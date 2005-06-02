@@ -1904,6 +1904,12 @@ HotBox::traverseDOMtree(DOMNode &woundNode, int nodeIndex, double *curTime,
       {
         (*injuryPtr)->timeUnit = to_char_ptr(elem->getNodeValue());
       }
+     else if(!strcmp(to_char_ptr(woundNode.getNodeName()), "diagnosis") &&
+         !strcmp(to_char_ptr(elem->getNodeName()), "value"))
+      {
+        (*injuryPtr)->diagnosis = to_char_ptr(elem->getNodeValue());
+      }
+
       else if(!strcmp(to_char_ptr(woundNode.getNodeName()), "probability") &&
          !strcmp(to_char_ptr(elem->getNodeName()), "prop"))
       {
