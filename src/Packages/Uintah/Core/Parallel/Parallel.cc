@@ -125,9 +125,6 @@ Parallel::determineIfRunningUnderMPI( int argc, char** argv )
   } else if(getenv("SLURM_PROCID") || getenv("SLURM_NPROCS")){
     // Look for ALC's MPI
     ::usingMPI=true;
-  } else if(getenv("PBS_JOBID") || getenv("PBS_NODENUM")){
-    // Look for turing mpi
-    ::usingMPI=true;
   } else {
     // Look for mpich
     for(int i=0;i<argc;i++){
@@ -171,7 +168,7 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
    int required = MPI_THREAD_SINGLE;
 #endif
    if(::usingMPI){	
-
+     cout << "  Calling MPI_INIT\n";
 #ifdef THREADED_MPI_AVAILABLE
      if( scheduler == "MixedScheduler" ) {
        required = MPI_THREAD_MULTIPLE;
@@ -258,6 +255,7 @@ Parallel::finalizeManager(Circumstances circumstances)
       cerr.flush();
       cout.flush();
       Time::waitFor(1.0);
+      cout << "  Before MPI Abort...\n";
       MPI_Abort(worldComm, errorcode);
     } else {
       int status;
