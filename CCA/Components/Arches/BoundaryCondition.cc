@@ -386,7 +386,7 @@ BoundaryCondition::sched_mmWallCellTypeInit(SchedulerP& sched, const PatchSet* p
   // New DW warehouse variables to calculate cell types if we are
   // recalculating cell types and resetting void fractions
 
-  double time = d_lab->d_sharedState->getElapsedTime();
+  //  double time = d_lab->d_sharedState->getElapsedTime();
   bool recalculateCellType = false;
   int dwnumber = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
   //  cout << "Current DW number = " << dwnumber << endl;
@@ -423,6 +423,8 @@ BoundaryCondition::sched_mmWallCellTypeInit(SchedulerP& sched, const PatchSet* p
   }
   else {
 
+    tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel, 
+		  Ghost::None, numGhostcells);
     tsk->computes(d_lab->d_mmgasVolFracLabel);
     tsk->computes(d_lab->d_mmcellTypeLabel);
     tsk->computes(d_MAlab->mmCellType_MPMLabel);
@@ -451,7 +453,7 @@ BoundaryCondition::mmWallCellTypeInit(const ProcessorGroup*,
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     int numGhostcells = 0;
 
-    double time = d_lab->d_sharedState->getElapsedTime();
+    //    double time = d_lab->d_sharedState->getElapsedTime();
     bool recalculateCellType = false;
     int dwnumber = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
     //    cout << "Current DW number = " << dwnumber << endl;
@@ -514,6 +516,8 @@ BoundaryCondition::mmWallCellTypeInit(const ProcessorGroup*,
     }
     else {
 
+      old_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
+		  Ghost::None, numGhostcells);
       new_dw->allocateAndPut(mmGasVolFrac, d_lab->d_mmgasVolFracLabel, 
 			     matlIndex, patch);
       new_dw->allocateAndPut(mmCellType, d_lab->d_mmcellTypeLabel, 
