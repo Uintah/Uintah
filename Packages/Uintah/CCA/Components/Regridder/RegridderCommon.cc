@@ -247,7 +247,7 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
 	ostringstream msg;
 	msg << "Regridder: patch size is not divisible by  the lattice ratio on level " << k;
        msg << "Problem Setup: Regridder: you've specified a patch size that is not divisible by lattice ratio on level" << k
-           << "\npatch size " <<  d_patchSize[0] << " lattice refinement ratio " << d_latticeRefinementRatio[0] << endl; 
+           << "\npatch size " <<  d_patchSize[k] << " lattice refinement ratio " << d_latticeRefinementRatio[k] << endl; 
 	throw ProblemSetupException(msg.str());
       }
     }
