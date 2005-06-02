@@ -128,7 +128,7 @@ WARNING
     MPMLabel* Mlb;
     MaterialSet* mymatls;
     
-    static const double R = 8.314;
+    static const double R;
     double Ac; /* PreExpCondPh */
     double Ec; /* ActEnergyCondPh in unit of Temperature */
     double Bg; /* PreExpGasPh */
@@ -170,14 +170,21 @@ WARNING
     double Bisection(double l, double r);
     double BisectionSecant();
     
-    static const double EPS = 1.e-5;
-    static const double UNDEFINED = -10;
+    static const double EPS;
+    static const double UNDEFINED;
     #define d_SMALL_NUM 1e-100
     #define d_TINY_RHO 1e-12
   };
 }
 
-
-
-
 #endif
+
+
+
+
+
+
+
+
+
+
