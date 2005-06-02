@@ -1502,7 +1502,7 @@ ImageCM2Widget::draw()
 
 
 
-#define PAINTCM2WIDGET_VERSION 1
+#define PAINTCM2WIDGET_VERSION 2
 
 static Persistent* PaintCM2Widget_maker()
 {
@@ -1515,10 +1515,22 @@ PersistentTypeID PaintCM2Widget::type_id("PaintCM2Widget", "CM2Widget",
 void
 PaintCM2Widget::io(Piostream &stream)
 {
-  stream.begin_class("PaintCM2Widget", PAINTCM2WIDGET_VERSION);
+  const int version = 
+    stream.begin_class("PaintCM2Widget", PAINTCM2WIDGET_VERSION);
   
   Pio(stream, strokes_);
   Pio(stream, name_);
+
+  if (version >= 2) {
+    Pio(stream, color_);
+    Pio(stream, alpha_);
+    Pio(stream, shadeType_);
+    Pio(stream, onState_);
+    Pio(stream, faux_);
+    Pio(stream, value_range_.first);
+    Pio(stream, value_range_.second);
+  }
+
   stream.end_class();
 }
 
