@@ -31,7 +31,12 @@ using namespace std;
 static DebugStream cout_doing("MPMICE_DOING_COUT", false);
 
 
-Steady_Burn::Steady_Burn(const ProcessorGroup* myworld, ProblemSpecP& params): ModelInterface(myworld), params(params){
+const double Steady_Burn::R = 8.314;
+const double Steady_Burn::EPS = 1.e-5; 
+const double Steady_Burn::UNDEFINED = -10; 
+
+Steady_Burn::Steady_Burn(const ProcessorGroup* myworld, ProblemSpecP& params)
+  : ModelInterface(myworld), params(params) { 
   mymatls = 0;
   Mlb  = scinew MPMLabel();
   Ilb  = scinew ICELabel();
