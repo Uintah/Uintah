@@ -336,7 +336,8 @@ void ICE::setupMatrix(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing<<"Doing setupMatrix on patch "
-              << patch->getID() <<"\t\t\t\t ICE" << endl;
+              << patch->getID() <<"\t\t\t\t ICE \tL-" 
+              << level->getIndex()<<endl;
               
     // define parent_new/old_dw
     DataWarehouse* whichDW;
@@ -470,7 +471,8 @@ void ICE::setupRHS(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing<<"Doing setupRHS on patch "
-              << patch->getID() <<"\t\t\t\t ICE" << endl;
+              << patch->getID() <<"\t\t\t\t ICE \tL-"
+              << level->getIndex()<<endl;
     // define parent_new/old_dw 
     
     DataWarehouse* pNewDW;
@@ -622,10 +624,13 @@ void ICE::updatePressure(const ProcessorGroup*,
                          DataWarehouse* old_dw,                         
                          DataWarehouse* new_dw)                         
 {
+  const Level* level = getLevel(patches);
+ 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing<<"Doing updatePressure on patch "
-              << patch->getID() <<"\t\t\t\t ICE" << endl;
+              << patch->getID() <<"\t\t\t\t ICE \tL-" 
+              << level->getIndex()<<endl;
 
    // define parent_dw
     DataWarehouse* parent_new_dw = 
@@ -654,7 +659,8 @@ void ICE::updatePressure(const ProcessorGroup*,
     }             
     //__________________________________
     //  add delP to press
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
+    //  AMR:  hit the extra cells, BC aren't set
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) { 
       IntVector c = *iter;
       press_CC[c] = pressure[c] + imp_delP[c];
     }  
@@ -679,15 +685,6 @@ void ICE::updatePressure(const ProcessorGroup*,
            d_customBC_var_basket);
            
     delete_CustomBCs(d_customBC_var_basket);      
-
-    //____ B U L L E T   P R O O F I N G----
-    IntVector neg_cell;
-    if(!areAllValuesPositive(press_CC, neg_cell)) {
-      ostringstream warn;
-      warn <<"ERROR ICE::updatePressure cell "
-           << neg_cell << " negative pressure\n ";        
-      throw InvalidValue(warn.str());
-     }
         
     //---- P R I N T   D A T A ------  
     if (switchDebug_updatePressure) {
@@ -695,6 +692,14 @@ void ICE::updatePressure(const ProcessorGroup*,
       desc << "BOT_updatePressure_patch_" << patch->getID();
       printData( 0, patch, 1,desc.str(), "imp_delP",      imp_delP); 
       printData( 0, patch, 1,desc.str(), "Press_CC",      press_CC);
+    }
+    //____ B U L L E T   P R O O F I N G----
+    IntVector neg_cell;
+    if(!areAllValuesPositive(press_CC, neg_cell)) {
+      ostringstream warn;
+      warn <<"ERROR ICE::updatePressure cell "
+           << neg_cell << " negative pressure\n ";        
+      throw InvalidValue(warn.str());
     }
   } // patch loop
 }
@@ -708,11 +713,13 @@ void ICE::computeDel_P(const ProcessorGroup*,
                          DataWarehouse*,
                          DataWarehouse* new_dw)                         
 {
-   
+  const Level* level = getLevel(patches);
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing<<"Doing computeDel_P on patch "
-              << patch->getID() <<"\t\t\t\t ICE" << endl;
+              << patch->getID() <<"\t\t\t\t ICE \tL-" 
+              << level->getIndex()<<endl;
             
     int numMatls  = d_sharedState->getNumMatls(); 
       
@@ -784,7 +791,8 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
                                 const MaterialSubset* ice_matls,
                                 const MaterialSubset* mpm_matls)
 {
-  cout_doing<<"Doing implicitPressureSolve "<<"\t\t\t\t ICE" << endl;
+  cout_doing<<"Doing implicitPressureSolve "<<"\t\t\t\t ICE \tL-" 
+            << level->getIndex()<< endl;
 
   //__________________________________
   // define Matl sets and subsets
