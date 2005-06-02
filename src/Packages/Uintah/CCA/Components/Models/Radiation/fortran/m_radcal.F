@@ -149,14 +149,14 @@ c                 PkPa(6) = 0.67d0
 
                  GO TO(112,113,114,115),L
 
-112          CALL ECO2(OMEGA,TEMP,GC,SD15,SDWEAK,GDINV,GDDINV)     
+112          CALL m_ECO2(OMEGA,TEMP,GC,SD15,SDWEAK,GDINV,GDDINV)     
                  GO TO 116
-113          CALL EH2O(OMEGA,TEMP,GC,SD,SDWEAK,GDINV,GDDINV)
+113          CALL m_EH2O(OMEGA,TEMP,GC,SD,SDWEAK,GDINV,GDDINV)
                  GO TO 116
-c114         CALL EFUEL(OMEGA,TEMP,PkPa,PTOT,GC,SDWEAK,SD7,SD3)
+c114         CALL m_EFUEL(OMEGA,TEMP,PkPa,PTOT,GC,SDWEAK,SD7,SD3)
 114              CONTINUE
                  GO TO 116
-c115          CALL ECO(OMEGA,TEMP,GC,SDWEAK,GDINV,GDDINV)
+c115          CALL m_ECO(OMEGA,TEMP,GC,SDWEAK,GDINV,GDDINV)
 115              CONTINUE
 
 116              CONTINUE
@@ -205,7 +205,7 @@ c     Convert to (1/m)
 160             CONTINUE
 
                  FV = SFV(I,J,K)
-                 CALL SOOT(OMEGA,FV,ABSKP)
+                 CALL m_SOOT(OMEGA,FV,ABSKP)
                  SDTOTAL=SDTOTAL+ABSKP
 
 C     Calculate blackbody emissive intensity (emissive power / pi)

@@ -113,8 +113,8 @@ C       emissivities for carbon dioxide and water vapor, respectively;
 C       PLA units are atm-ft, Pc and Pw are in atm, TGI is in K
 C
                   TGI = MIN(TG(I,J,K),1200.0d0)
-                  CALL EICO2( TGI,PCO2F,ECO2 )
-                  CALL EIH2O( TGI,PH2OF,EH2O )
+                  CALL m_EICO2( TGI,PCO2F,ECO2 )
+                  CALL m_EIH2O( TGI,PH2OF,EH2O )
 
 C       Calculate total gas emissivity accounting for spectral overlap
 C       and pressure correction
@@ -186,7 +186,7 @@ c-- first guess for SO2 effects, assume same as CO2
 c                  IF (IDSO2.NE.0) THEN
 c                    PSO2F = SPECIE(I,J,K,IDSO2) * PATM * OPF
 c                    TSO2 = TG(I,J,K)
-c                    CALL EICO2( TSO2,PSO2F,ESO2 )
+c                    CALL m_EICO2( TSO2,PSO2F,ESO2 )
 c                    EMG = EMG + ESO2
 c                  END IF
 

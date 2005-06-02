@@ -1,5 +1,5 @@
 #include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_radarray_fort.h>
-c      SUBROUTINE radarray(RGAMMA,SD15,SD,SD7,SD3)
+c      SUBROUTINE m_radarray(RGAMMA,SD15,SD,SD7,SD3)
 
 
       Integer I,J
