@@ -37,6 +37,7 @@
 #include <Core/Datatypes/PrismVolMesh.h>
 #include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Basis/NoData.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 /*
@@ -74,6 +75,7 @@ template class GenericField<PVMesh, PFDushortBasis, vector<unsigned short> >;
 template class GenericField<PVMesh, PFDucharBasis,  vector<unsigned char> >;
 template class GenericField<PVMesh, PFDulongBasis,  vector<unsigned long> >;
 
+typedef NoDataBasis<double>                 NDBasis;
 typedef TetLinearLgn<Tensor>                TFDTensorBasis;
 typedef TetLinearLgn<Vector>                TFDVectorBasis;
 typedef TetLinearLgn<double>                TFDdoubleBasis;
@@ -90,6 +92,7 @@ typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
 template class GenericField<TVMesh, TFDTensorBasis, vector<Tensor> >;       
 template class GenericField<TVMesh, TFDVectorBasis, vector<Vector> >;       
 template class GenericField<TVMesh, TFDdoubleBasis, vector<double> >;       
+template class GenericField<TVMesh, NDBasis, vector<double> >;  
 template class GenericField<TVMesh, TFDfloatBasis,  vector<float> >;        
 template class GenericField<TVMesh, TFDintBasis,    vector<int> >;          
 template class GenericField<TVMesh, TFDshortBasis,  vector<short> >;        
