@@ -1,4 +1,4 @@
-      subroutine fixradval(val,
+      subroutine m_fixradval(val,
      $     aw, as, ab, 
      $     ae, an, at,
      $     ap, su, const)

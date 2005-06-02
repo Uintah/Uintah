@@ -67,7 +67,7 @@ c  call fixval assume abskg to be one but change it in props calculation
                   val = abs(fraction(bands))*SIG*PI1*
      $                 tg(ii,jj,kk)**4
                   factor = 1.d0
-                  call fixradval(val, 
+                  call m_fixradval(val, 
      $                 aw(ii,jj,kk),as(ii,jj,kk),ab(ii,jj,kk),
      $                 ae(ii,jj,kk),an(ii,jj,kk),at(ii,jj,kk),
      $                 ap(ii,jj,kk),su(ii,jj,kk),factor)
