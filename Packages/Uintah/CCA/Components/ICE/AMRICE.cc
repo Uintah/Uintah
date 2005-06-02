@@ -842,10 +842,11 @@ void AMRICE::refine(const ProcessorGroup*,
                     DataWarehouse*,
                     DataWarehouse* new_dw)
 {
-  cout_doing << "Doing refine \t\t\t\t\t\t AMRICE";
+  
   const Level* fineLevel = getLevel(patches);
   const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
   
+  cout_doing << "Doing refine \t\t\t\t\t\t AMRICE L-"<< fineLevel->getIndex();
   IntVector rr(fineLevel->getRefinementRatio());
   double invRefineRatio = 1./(rr.x()*rr.y()*rr.z());
   
@@ -1128,9 +1129,10 @@ void AMRICE::coarsen(const ProcessorGroup*,
                      DataWarehouse*,
                      DataWarehouse* new_dw)
 {
-  cout_doing << "Doing coarsen \t\t\t\t\t\t AMRICE";
+  
   const Level* coarseLevel = getLevel(patches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
+  cout_doing << "Doing coarsen \t\t\t\t\t\t AMRICE L-" <<fineLevel->getIndex();
   
   IntVector rr(fineLevel->getRefinementRatio());
   double invRefineRatio = 1./(rr.x()*rr.y()*rr.z());
@@ -1346,9 +1348,10 @@ void AMRICE::reflux(const ProcessorGroup*,
                     DataWarehouse*,
                     DataWarehouse* new_dw)
 {
-  cout_doing << "Doing reflux \t\t\t\t\t\t AMRICE";
   const Level* coarseLevel = getLevel(coarsePatches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
+  
+  cout_doing << "Doing reflux \t\t\t\t\t\t AMRICE L-"<<fineLevel->getIndex();
   
   bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
   
@@ -1845,10 +1848,12 @@ AMRICE::errorEstimate(const ProcessorGroup*,
                       DataWarehouse* new_dw,
                       bool /*initial*/)
 {
-  cout_doing << "Doing errorEstimate \t\t\t\t\t AMRICE"<< endl;
+  const Level* level = getLevel(patches);
+  cout_doing << "Doing errorEstimate \t\t\t\t\t AMRICE L-"<< level->getIndex();
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     
+    cout_doing << " patch " << patch->getID()<< endl;
     Ghost::GhostType  gac  = Ghost::AroundCells;
     const VarLabel* refineFlagLabel = d_sharedState->get_refineFlag_label();
     const VarLabel* refinePatchLabel= d_sharedState->get_refinePatchFlag_label();
