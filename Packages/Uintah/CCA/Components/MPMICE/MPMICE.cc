@@ -1,5 +1,7 @@
 // MPMICE.cc
 #include <Packages/Uintah/CCA/Components/MPMICE/MPMICE.h>
+#include <Packages/Uintah/CCA/Components/ICE/AMRICE.h>
+#include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/RigidMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/ShellMPM.h>
@@ -68,8 +70,12 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
     d_mpm = scinew SerialMPM(myworld);
   }
 
-  d_ice      = scinew ICE(myworld, doAMR);
-  d_SMALL_NUM = d_ice->d_SMALL_NUM; 
+  if(doAMR)
+    d_ice      = scinew AMRICE(myworld);
+  else
+    d_ice      = scinew ICE(myworld, doAMR);
+
+  d_SMALL_NUM = d_ice->d_SMALL_NUM;
   d_TINY_RHO  = d_ice->d_TINY_RHO;
   
   // Turn off all the debuging switches
@@ -2169,4 +2175,40 @@ void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*,
     }
   }
   new_dw->refinalize();
+}
+
+
+void MPMICE::scheduleRefineInterface(const LevelP& fineLevel,
+                                     SchedulerP& scheduler,
+                                     int step, 
+                                     int nsteps)
+{
+  d_ice->scheduleRefineInterface(fineLevel, scheduler, step, nsteps);
+  d_mpm->scheduleRefineInterface(fineLevel, scheduler, step, nsteps);
+}
+  
+void MPMICE::scheduleRefine (const PatchSet* patches, 
+                              SchedulerP& sched)
+{
+  d_ice->scheduleRefine(patches, sched);
+  d_mpm->scheduleRefine(patches, sched);
+}
+    
+void MPMICE::scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched)
+{
+  d_ice->scheduleCoarsen(coarseLevel, sched);
+  d_mpm->scheduleCoarsen(coarseLevel, sched);
+}
+
+void MPMICE::scheduleInitialErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched)
+{
+  d_ice->scheduleInitialErrorEstimate(coarseLevel, sched);
+  d_mpm->scheduleInitialErrorEstimate(coarseLevel, sched);
+}
+                                               
+void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
+                           SchedulerP& sched)
+{
+  d_ice->scheduleErrorEstimate(coarseLevel, sched);
+  d_mpm->scheduleErrorEstimate(coarseLevel, sched);
 }
