@@ -103,6 +103,7 @@ private:
   
   // GUI variables
   GuiString				guifilename_;		// .mat filename (import from GUI)
+  GuiString       guifilenameset_;
   GuiString				guimatrixname_;   	// A list of the matrix names
   GuiString				guidataformat_;		// A list of the dataformat for each matrix (int, double etc.)
   GuiString				guimatrixformat_;   // A list of the matlabarray format (numeric array, structured array)
@@ -122,9 +123,10 @@ DECLARE_MAKER(MatlabDataWriter)
 MatlabDataWriter::MatlabDataWriter(GuiContext* ctx)
   : Module("MatlabDataWriter", ctx, Sink, "DataIO", "MatlabInterface"),
     guifilename_(ctx->subVar("filename")),
+    guifilenameset_(ctx->subVar("filename-set")),
     guimatrixname_(ctx->subVar("matrixname")),  
-	guidataformat_(ctx->subVar("dataformat")),       
-	guimatrixformat_(ctx->subVar("matrixformat"))
+    guidataformat_(ctx->subVar("dataformat")),       
+    guimatrixformat_(ctx->subVar("matrixformat"))
 {
 }
 
