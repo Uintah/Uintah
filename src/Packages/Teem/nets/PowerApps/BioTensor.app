@@ -2542,7 +2542,7 @@ class BioTensorApp {
 	    
 	    
             ### Nrrd
-            set page [$step_tab.tnb add -label "Generic" -command {app configure_readers Nrrd}]
+            set page [$step_tab.tnb add -label "Generic" -command {app configure_readers Generic}]
 
 	    #Tooltip $page $tips(NrrdTab)
 
