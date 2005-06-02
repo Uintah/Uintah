@@ -187,6 +187,8 @@ include $(SCIRUN_SCRIPTS)/program.mk
 SRCS := $(SRCDIR)/partextract.cc
 PROGRAM := Packages/Uintah/StandAlone/partextract
 
+include $(SCIRUN_SCRIPTS)/program.mk
+
 ##############################################
 # parvarRange
 
