@@ -105,6 +105,7 @@ private:
   
   // GUI variables
   GuiString				guifilename_;		// .mat filename (import from GUI)
+  GuiString       guifilenameset_;
   GuiString				guicolormapinfotexts_;   	// A list of colormap-information strings of the contents of a .mat-file
   GuiString				guicolormapnames_;	// A list of colormap-names of the contents of a .mat-file 
   GuiString				guicolormapname_;		// the name of the colormap that has been selected
@@ -129,6 +130,7 @@ DECLARE_MAKER(MatlabColorMapsReader)
 MatlabColorMapsReader::MatlabColorMapsReader(GuiContext* ctx)
   : Module("MatlabColorMapsReader", ctx, Source, "DataIO", "MatlabInterface"),
     guifilename_(ctx->subVar("filename")),
+    guifilenameset_(ctx->subVar("filename-set")),
     guicolormapinfotexts_(ctx->subVar("colormapinfotexts")),     
     guicolormapnames_(ctx->subVar("colormapnames")),    
 	guicolormapname_(ctx->subVar("colormapname")),

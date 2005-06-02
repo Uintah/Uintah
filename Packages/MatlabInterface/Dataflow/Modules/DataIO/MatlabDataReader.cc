@@ -115,6 +115,7 @@ private:
   
   // GUI variables
   GuiString				guifilename_;		// .mat filename (import from GUI)
+  GuiString       guifilenameset_;
   GuiString				guimatrixinfotextslist_;   	// A list of matrix-information strings of the contents of a .mat-file
   GuiString				guimatrixnameslist_;	// A list of matrix-names of the contents of a .mat-file 
   GuiString				guimatrixname_;		// the name of the matrix that has been selected
@@ -139,6 +140,7 @@ DECLARE_MAKER(MatlabDataReader)
 MatlabDataReader::MatlabDataReader(GuiContext* ctx)
   : Module("MatlabDataReader", ctx, Source, "DataIO", "MatlabInterface"),
     guifilename_(ctx->subVar("filename")),
+    guifilenameset_(ctx->subVar("filename-set")),
     guimatrixinfotextslist_(ctx->subVar("matrixinfotextslist")),     
     guimatrixnameslist_(ctx->subVar("matrixnameslist")),    
 	guimatrixname_(ctx->subVar("matrixname"))

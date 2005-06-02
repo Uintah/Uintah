@@ -101,6 +101,7 @@ private:
   
   // GUI variables
   GuiString				guifilename_;		// .mat filename (import from GUI)
+  GuiString       guifilenameset_;
   GuiString				guimatrixname_;   	// A list of the matrix names
   GuiString				guimatrixformat_;   // A list of the matlabarray format (numeric array, structured array)
   
@@ -118,6 +119,7 @@ DECLARE_MAKER(MatlabFieldsWriter)
 MatlabFieldsWriter::MatlabFieldsWriter(GuiContext* ctx)
   : Module("MatlabFieldsWriter", ctx, Sink, "DataIO", "MatlabInterface"),
     guifilename_(ctx->subVar("filename")),
+    guifilenameset_(ctx->subVar("filename-set")),
     guimatrixname_(ctx->subVar("matrixname")),     
 	guimatrixformat_(ctx->subVar("matrixformat"))
 {
