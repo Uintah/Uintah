@@ -70,6 +70,7 @@ class TimeDataReader : public Module {
   bool      didrun_;
 
   GuiString guifilename_;
+  GuiString guifilenameset_;
   TimeDataFile datafile_;
   
   void send_selection(int which, int amount);
@@ -102,6 +103,7 @@ TimeDataReader::TimeDataReader(GuiContext* ctx)
     inc_amount_(ctx->subVar("inc-amount")),
     send_amount_(ctx->subVar("send-amount")),
     guifilename_(ctx->subVar("filename")), 
+    guifilenameset_(ctx->subVar("filename-set")), 
     inc_(1),
     loop_(false),
     use_row_(false),
@@ -130,6 +132,13 @@ void TimeDataReader::send_selection(int which, int amount)
     error("Unable to initialize oport 'Selected Index'.");
     return;
   }
+
+  SCIRun::MatrixOPort *tsel = (SCIRun::MatrixOPort *)get_oport("Selected Time");
+  if (!tsel) {
+    error("Unable to initialize oport 'Selected Time'.");
+    return;
+  }
+
   
   if (ovec->nconnections())
   {
@@ -194,10 +203,16 @@ void TimeDataReader::send_selection(int which, int amount)
     onrrdvec->send(nrrd);
   }
   
-  
   SCIRun::ColumnMatrix *selected = scinew SCIRun::ColumnMatrix(1);
-  selected->put(0, 0, (double)which);
+  selected->put(0, 0, static_cast<double>(which));
   osel->send(MatrixHandle(selected));
+
+  double spacing = datafile_.getspacing(1);
+  if (use_row_) spacing = datafile_.getspacing(0);
+  
+  SCIRun::ColumnMatrix *selectedtime = scinew SCIRun::ColumnMatrix(1);
+  selectedtime->put(0, 0, static_cast<double>(which*spacing));
+  tsel->send(MatrixHandle(selectedtime));
 }
 
 
@@ -475,6 +490,7 @@ void TimeDataReader::execute()
     }
   }
   current_.set(which);
+  current_.reset();
 }
 
 void

@@ -120,6 +120,10 @@
         <datatype>SCIRun::Matrix</datatype>
       </port>
       <port>
+        <name>Selected Time</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
         <name>Filename</name>
         <datatype>SCIRun::Nrrd</datatype>
       </port>
