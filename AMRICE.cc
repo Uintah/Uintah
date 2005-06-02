@@ -855,6 +855,9 @@ void AMRICE::refine(const ProcessorGroup*,
     
     Level::selectType coarsePatches;
     finePatch->getCoarseLevelPatches(coarsePatches);
+    
+    // bullet proofing
+    iteratorTest(finePatch, fineLevel, coarseLevel, new_dw);
 
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
@@ -928,6 +931,73 @@ void AMRICE::refine(const ProcessorGroup*,
     }
   }  // course patch loop 
 }
+
+/*_____________________________________________________________________
+ Function~  AMRICE::iteratorTest--
+ Purpose~   Verify that the all of the fine level cells will be accessed 
+_____________________________________________________________________*/
+void AMRICE::iteratorTest(const Patch* finePatch,
+                          const Level* fineLevel,
+                          const Level* coarseLevel,
+                          DataWarehouse* new_dw)
+{
+  Level::selectType coarsePatches;
+  finePatch->getCoarseLevelPatches(coarsePatches); 
+  IntVector fl = finePatch->getCellLowIndex();
+  IntVector fh = finePatch->getCellHighIndex();
+  
+  CCVariable<double> hitCells;
+  new_dw->allocateTemporary(hitCells, finePatch);
+  hitCells.initialize(d_EVIL_NUM);
+  
+  for(int i=0;i<coarsePatches.size();i++){
+    const Patch* coarsePatch = coarsePatches[i];
+    // iterator should hit the cells over the intersection of the fine and coarse patches
+
+    IntVector cl = coarsePatch->getLowIndex();
+    IntVector ch = coarsePatch->getHighIndex();
+         
+    IntVector fl_tmp = coarseLevel->mapCellToFiner(cl);
+    IntVector fh_tmp = coarseLevel->mapCellToFiner(ch);
+    
+    IntVector lo = Max(fl, fl_tmp);
+    IntVector hi = Min(fh, fh_tmp);
+    
+    for(CellIterator iter(lo,hi); !iter.done(); iter++){
+      IntVector c = *iter;
+      hitCells[c] = 1.0;
+    }
+#if 0
+    cout << " coarsePatch.size() " << coarsePatches.size() 
+         << " coarsePatch " << coarsePatch->getID()
+         << " finePatch " << finePatch->getID() 
+         << " fineLevel: fl " << fl << " fh " << fh
+         << " coarseLevel: cl " << cl << " ch " << ch 
+         << " final Iterator: " << lo << " " << hi << endl;
+#endif    
+    
+  }
+  
+ //____ B U L L E T   P R O O F I N G_______ 
+  // All cells must be initialized at this point
+  // even in the extra cells 
+  IntVector badCell;
+  if( isEqual<double>(d_EVIL_NUM,finePatch,hitCells, badCell) ){
+  
+    IntVector c_badCell = fineLevel->mapCellToCoarser(badCell);
+    const Patch* patch = coarseLevel->selectPatchForCellIndex(c_badCell);
+    
+    ostringstream warn;
+    warn <<"ERROR AMRICE::Refine Task:iteratorTest "
+         << "detected an fine level cell that won't get initialized "
+         << badCell << " Patch " << finePatch->getID() 
+         << " Level idx "<<fineLevel->getIndex()<<"\n "
+         << "The underlying coarse cell "<< c_badCell 
+         << " belongs to coarse level patch " << patch->getID() << "\n";
+    throw InvalidValue(warn.str());
+  }  
+}
+
 /*_____________________________________________________________________
  Function~  AMRICE::CoarseToFineOperator--
  Purpose~   push data from coarse Grid to the fine grid
@@ -962,19 +1032,12 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
     // coarse cell 
     IntVector cl = coarsePatch->getLowIndex();
     IntVector ch = coarsePatch->getHighIndex();
-    
-#if 0
-    cout << " coarsePatch " << coarsePatch->getID()<<endl;
-    cout << " before: fl " << fl << " fh " << fh
-         << " cl " << cl << " ch " << ch << endl;
-#endif
          
-    cl = coarseLevel->mapCellToFiner(cl);
-    ch = coarseLevel->mapCellToFiner(ch);
+    IntVector fl_tmp = coarseLevel->mapCellToFiner(cl);
+    IntVector fh_tmp = coarseLevel->mapCellToFiner(ch);
     
-    
-    fl = Max(fl, cl);
-    fh = Min(fh, ch);
+    IntVector lo = Max(fl, fl_tmp);
+    IntVector hi = Min(fh, fh_tmp);
     
     // compute the mid point of the patch, needed by linear interpolation
     Point  f_loPos = fineLevel->getCellPosition(fl);   
@@ -982,7 +1045,7 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
     Vector patchMidPoint= f_loPos.asVector() + (f_hiPos.asVector() - f_loPos.asVector())/2.0;
 /*`==========TESTING==========*/
       linearInterpolation<T>(coarse_q_CC, coarseLevel, fineLevel,
-                            refineRatio, fl,fh, patchMidPoint,q_CC);
+                            refineRatio, lo,hi, patchMidPoint,q_CC);
 /*===========TESTING==========`*/
   }
   
@@ -1870,6 +1933,9 @@ AMRICE::errorEstimate(const ProcessorGroup*,
       double timeToMove = fmod((double)dw, nTimeSteps);
       static int counter = 0;
 
+      IntVector lo = patch->getInteriorCellLowIndex();
+      IntVector hi = patch->getInteriorCellHighIndex() - IntVector(1,1,1);
+
       if (level->getIndex() == 0 ){
         //__________________________________
         // counter to move the error flag around
@@ -1882,8 +1948,6 @@ AMRICE::errorEstimate(const ProcessorGroup*,
         //__________________________________
         //  find the 8 corner cells of level 0
         vector<IntVector> corners;
-        IntVector lo = patch->getInteriorCellLowIndex();
-        IntVector hi = patch->getInteriorCellHighIndex() - IntVector(1,1,1);
 
         for(int k = 0; k< 2; k++){
           for(int j = 0; j< 2; j++){
@@ -1896,13 +1960,42 @@ AMRICE::errorEstimate(const ProcessorGroup*,
           }
         }
         if(timeToMove == 0){
-          cout << "RegridderTest:  moving the error flag to "<< corners[counter]<<endl; 
+          cout << "RegridderTest:  moving the error flag to "
+               << corners[counter]<< " on level " 
+               << level->getIndex() <<endl; 
         }
         //__________________________________
         //  Set the refinement flag      
         PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
         refineFlag[corners[counter]] = true;
         refinePatch->set();
+      }
+      
+      //__________________________________
+      //  Levels other than 0
+      if(level->getIndex() && timeToMove == 0){
+        Vector randNum(drand48());
+        
+        IntVector diff = hi - lo;
+        Vector here = randNum * diff.asVector();
+        int i = RoundUp(here.x());
+        int j = RoundUp(here.y());
+        int k = RoundUp(here.z());
+        
+        IntVector twk(i,j,k);
+        IntVector c = twk + lo;
+        
+        c = Max(c, lo+IntVector(2,2,2));
+        c = Min(c, hi-IntVector(2,2,2));
+        
+        cout << "RegridderTest:  moving the error flag to "
+               << c << " on level " 
+               << level->getIndex() <<endl;
+    
+        //  Set the refinement flag      
+        PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
+        refineFlag[c] = true;
+        refinePatch->set();        
       }
     }  // regridderTest
     
