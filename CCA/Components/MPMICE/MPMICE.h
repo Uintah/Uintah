@@ -9,7 +9,6 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
@@ -18,6 +17,7 @@
 #include <Core/Geometry/Vector.h>
 
 namespace Uintah {
+  class ICE;
   class ICELabel;
   class MPMLabel;
   class MPMICELabel;
@@ -259,6 +259,25 @@ public:
   virtual void addMaterial(const ProblemSpecP& params,
                            GridP& grid,
                            SimulationStateP&);
+
+  // AMR
+  virtual void scheduleRefineInterface(const LevelP& fineLevel,
+                                       SchedulerP& scheduler,
+                                       int step, 
+                                       int nsteps);
+  
+  virtual void scheduleRefine (const PatchSet* patches, 
+                               SchedulerP& sched); 
+    
+  virtual void scheduleCoarsen(const LevelP& coarseLevel, 
+                               SchedulerP& sched);
+
+
+  virtual void scheduleInitialErrorEstimate(const LevelP& coarseLevel,
+                                            SchedulerP& sched);
+                                               
+  virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
+                                     SchedulerP& sched);
 
 private:
   void setBC_rho_micro(const Patch* patch,
