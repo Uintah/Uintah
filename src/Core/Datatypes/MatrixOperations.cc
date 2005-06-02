@@ -154,6 +154,16 @@ operator*(MatrixHandle A, MatrixHandle B)
     if (!(B->is_dense())) { delete bd; }
     return cd;
   }
+  else if (B->is_sparse())
+  {
+    DenseMatrix *ad = A->dense();
+    SparseRowMatrix *bst = B->sparse()->transpose();
+    DenseMatrix *cd = scinew DenseMatrix(A->nrows(), B->ncols());
+    bst->sparse_mult_transXB(*ad, *cd);
+    if (!A->is_dense()) { delete ad; }
+    delete bst;
+    return cd;
+  }
   else
   {
     DenseMatrix *ad = A->dense();

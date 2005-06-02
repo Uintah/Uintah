@@ -495,6 +495,33 @@ SparseRowMatrix::sparse_mult(const DenseMatrix& x, DenseMatrix& b) const
 }
 
 
+
+void
+SparseRowMatrix::sparse_mult_transXB(const DenseMatrix& x,
+                                     DenseMatrix& b) const
+{
+  // Compute A*xT=bT
+  ASSERT(x.ncols() == ncols_);
+  ASSERT(b.ncols() == nrows_);
+  ASSERT(x.nrows() == b.nrows());
+  int i, j, k;
+
+  for (j = 0; j < b.nrows(); j++)
+  {
+    for (i = 0; i < b.ncols(); i++)
+    {
+      double sum = 0.0;
+      for (k = rows[i]; k < rows[i+1]; k++)
+      {
+       sum += a[k] * x.get(j, columns[k]);
+      }
+      b.put(j, i, sum);
+    }
+  }
+}
+
+
+
 MatrixHandle
 SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
 {
