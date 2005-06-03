@@ -97,6 +97,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
       # make outputpath/dbg or opt dirs
       environ['outputlinks'] ="1"
       mkdir(outputpath)
+      system("chmod -R 775 %s" % outputpath)
     except Exception:
       pass
   except Exception:
@@ -279,6 +280,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
   if outputpath != startpath:
     #system("cp -f %s-short* %s/ > /dev/null 2>&1" % (upper(algo),outputpath))
     system("cp -r %s %s/" % (resultsdir, outputpath))
+    system("chmod -R gu+rwX,a+rX %s/%s-results > /dev/null 2>&1" % (outputpath, ALGO))
     # remove uda dirs from web server
     system("find %s -name '*.uda*' | xargs rm -rf " % outputpath)
 
