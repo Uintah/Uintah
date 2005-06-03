@@ -187,8 +187,8 @@ void HierarchicalRegridder::MarkPatches( const GridP& oldGrid, int levelIdx  )
 
   for (Level::patchIterator patchIter = level->patchesBegin(); patchIter != level->patchesEnd(); patchIter++) {
     const Patch* patch = *patchIter;
-    IntVector startCell = patch->getCellLowIndex();
-    IntVector endCell = patch->getCellHighIndex();
+    IntVector startCell = patch->getCellInteriorLowIndex();
+    IntVector endCell = patch->getCellInteriorHighIndex();
     IntVector latticeIdx = StartCellToLattice( startCell, levelIdx );
     IntVector realPatchSize = endCell - startCell; // + IntVector(1,1,1); // RNJ this is incorrect maybe?
     IntVector realSubPatchNum = realPatchSize / subPatchSize;
@@ -326,8 +326,8 @@ void HierarchicalRegridder::MarkPatches2(const ProcessorGroup*,
   IntVector subPatchSize = d_patchSize[levelIdx+1]/d_cellRefinementRatio[levelIdx];
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    IntVector startCell = patch->getCellLowIndex();
-    IntVector endCell = patch->getCellHighIndex();
+    IntVector startCell = patch->getInteriorCellLowIndex();
+    IntVector endCell = patch->getInteriorCellHighIndex();
     IntVector latticeIdx = StartCellToLattice( startCell, levelIdx );
     IntVector realPatchSize = endCell - startCell; // + IntVector(1,1,1); // RNJ this is incorrect maybe?
     IntVector numSubPatches = realPatchSize / subPatchSize;

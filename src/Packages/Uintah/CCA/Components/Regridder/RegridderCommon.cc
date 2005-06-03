@@ -296,16 +296,16 @@ void RegridderCommon::problemSetup_BulletProofing(const int k){
 //______________________________________________________________________
 bool RegridderCommon::flaggedCellsExist(constCCVariable<int>& flaggedCells, IntVector low, IntVector high)
 {
-  //  rdbg << "RegridderCommon::flaggedCellsExist() BGN" << endl;
+  //  rdbg << "RegridderCommon::flaggedCellsExist() BGN " << low << " " << high << endl;
 
-  if (low > high) {
+  if (high < low) {
     throw InternalError("Regridder has given flagCellsExist incorrect parameters!");
   }
   IntVector newHigh( high + IntVector( 1, 1, 1 ) );
   for ( CellIterator iter( low, newHigh ); !iter.done(); iter++ ) {
     IntVector idx( *iter );
     if (flaggedCells[idx]) {
-      //      rdbg << "RegridderCommon::flaggedCellsExist( true ) END" << endl;
+      //    rdbg << "RegridderCommon::flaggedCellsExist( true ) END " << idx << endl;
       return true;
     }
   }
@@ -491,11 +491,11 @@ void RegridderCommon::Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& di
   }
 
   if (dilate_dbg.active()) {
-    dilate_dbg << "----------------------------------------------------------------" << endl;
-    dilate_dbg << "FLAGGED CELLS" << endl;
-
     IntVector low  = flaggedCells.getLowIndex();
     IntVector high = flaggedCells.getHighIndex();
+    dilate_dbg << "----------------------------------------------------------------" << endl;
+    dilate_dbg << "FLAGGED CELLS " << low << " " << high << endl;
+
     
     for (int z = high.z()-1; z >= low.z(); z--) {
       for (int y = high.y()-1; y >= low.y(); y--) {
@@ -508,7 +508,7 @@ void RegridderCommon::Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& di
     }
     
     dilate_dbg << "----------------------------------------------------------------" << endl;
-    dilate_dbg << "DILATED FLAGGED CELLS" << endl;
+    dilate_dbg << "DILATED FLAGGED CELLS " << low << " " << high << endl;
 
     for (int z = high.z()-1; z >= low.z(); z--) {
       for (int y = high.y()-1; y >= low.y(); y--) {
@@ -587,12 +587,12 @@ void RegridderCommon::Dilate2(const ProcessorGroup*,
 
   rdbg << "G\n";
     if (dilate_dbg.active()) {
-      dilate_dbg << "----------------------------------------------------------------" << endl;
-      dilate_dbg << "FLAGGED CELLS" << endl;
-
       IntVector low  = flaggedCells.getLowIndex();
       IntVector high = flaggedCells.getHighIndex();
       
+      dilate_dbg << "----------------------------------------------------------------" << endl;
+      dilate_dbg << "FLAGGED CELLS " << low << " " << high << endl;
+
       for (int z = low.z(); z < high.z(); z++) {
         for (int y = low.y(); y < high.y(); y++) {
           for (int x = low.x(); x < high.x(); x++) {
@@ -604,7 +604,7 @@ void RegridderCommon::Dilate2(const ProcessorGroup*,
       }
       
       dilate_dbg << "----------------------------------------------------------------" << endl;
-      dilate_dbg << "DILATED FLAGGED CELLS" << endl;
+      dilate_dbg << "DILATED FLAGGED CELLS " << low << " " << high << endl;
 
       for (int z = low.z(); z < high.z(); z++) {
         for (int y = low.y(); y < high.y(); y++) {
