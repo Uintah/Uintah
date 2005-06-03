@@ -74,7 +74,6 @@ protected:
 
   GuiInt    iShowValue_;
   GuiDouble dValue_;
-  GuiInt    iBbox_;
   GuiString sFormat_;
   GuiInt    dSize_;
   GuiString sLocation_;
@@ -84,7 +83,6 @@ protected:
 
   int    showValue_;
   double value_;
-  int    bbox_;
   string format_;
   int    size_;
   string location_;
@@ -102,7 +100,6 @@ GenTitle::GenTitle(GuiContext *context)
   : Module("GenTitle", context, Source, "Visualization", "SCIRun"),
     iShowValue_(context->subVar("showValue")),
     dValue_(context->subVar("value")),
-    iBbox_(context->subVar("bbox")),
     sFormat_(context->subVar("format")),
     dSize_(context->subVar("size")),
     sLocation_(context->subVar("location")),
@@ -144,7 +141,6 @@ void GenTitle::execute(){
 
       showValue_ != iShowValue_.get() ||
       value_     != dValue_.get() ||
-      bbox_      != iBbox_.get() ||
       format_    != sFormat_.get() ||
       size_      != dSize_.get() ||
       location_  != sLocation_.get() ) {
@@ -155,7 +151,6 @@ void GenTitle::execute(){
     dValue_.reset();
 
     showValue_ = iShowValue_.get();
-    bbox_      = iBbox_.get();
     format_    = sFormat_.get();
     size_      = dSize_.get();
     location_  = sLocation_.get();
@@ -185,24 +180,6 @@ GeomHandle GenTitle::generate()
     
   double dx = (nchars * 14.0 * size_/100.0 * scale + 2.0 * border) / 2;
   double dy =  1.0    * 15.0 * size_/100.0 * scale + 2.0 * border;
-
-  if( bbox_ ) {
-    GeomGroup *box = scinew GeomGroup();
-    
-    box->add( new GeomLine( Point(-border,-border,0),
-			    Point(dx,-border,0) ) );
-    
-    box->add( new GeomLine( Point(dx,-border,0),
-			    Point(dx,dy,0) ) );
-
-    box->add( new GeomLine( Point(dx,dy,0),
-			    Point(-border,dy,0) ) );
-    
-    box->add( new GeomLine( Point(-border,dy,0),
-			    Point(-border,-border,0) ) );
-    
-    group->add( scinew GeomMaterial(box, material_) );
-  }
 
   Vector refVec;
 
