@@ -350,7 +350,9 @@ void ImpMPM::scheduleApplyExternalLoads(SchedulerP& sched,
                     this, &ImpMPM::applyExternalLoads);
                                                                                 
   t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
+  t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
   t->computes(             lb->pExtForceLabel_preReloc);
+  t->computes(             lb->pExternalHeatRateLabel);
 
   sched->addTask(t, patches, matls);
                                                                                 
@@ -370,6 +372,7 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pTemperatureLabel,      Ghost::AroundNodes,1);
   t->requires(Task::OldDW, lb->pXLabel,                Ghost::AroundNodes,1);
   t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,Ghost::AroundNodes,1);
+  t->requires(Task::NewDW, lb->pExternalHeatRateLabel, Ghost::AroundNodes,1);
 
   t->computes(lb->gMassLabel);
   t->computes(lb->gMassAllLabel);
@@ -1073,6 +1076,24 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
                                        *flags->d_forceIncrementFactor;
         }
       }
+
+      // Prescribe an external heat rate to some particles
+      constParticleVariable<Point> px;
+      ParticleVariable<double> pExtHeatRate;
+      old_dw->get(px,                      lb->pXLabel,                 pset);
+      new_dw->allocateAndPut(pExtHeatRate, lb->pExternalHeatRateLabel,  pset);
+
+      ParticleSubset::iterator iter = pset->begin();
+      for(;iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+        pExtHeatRate[idx]=0.0;
+#if 0
+        if(px[idx].x()*px[idx].x() + px[idx].y()*px[idx].y() > 0.0562*0.0562){
+          pExtHeatRate[idx]=0.1;
+        }
+#endif
+      }
+
     } // matl loop
   }  // patch loop
 }
@@ -1128,6 +1149,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // Create arrays for the particle data
       constParticleVariable<Point>  px;
       constParticleVariable<double> pmass, pvolume,pvolumeold,pTemperature;
+      constParticleVariable<double> pextheatrate;
       constParticleVariable<Vector> pvelocity, pacceleration,pexternalforce;
 
       ParticleSubset* pset = old_dw->getParticleSubset(matl, patch,
@@ -1142,6 +1164,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pTemperature,   lb->pTemperatureLabel,       pset);
       old_dw->get(pacceleration,  lb->pAccelerationLabel,      pset);
       new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
+      new_dw->get(pextheatrate,   lb->pExternalHeatRateLabel,  pset);
 
       new_dw->allocateAndPut(gmass[m],      lb->gMassLabel,         matl,patch);
       new_dw->allocateAndPut(gmassall[m],   lb->gMassAllLabel,      matl,patch);
@@ -1198,6 +1221,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
             gTemperature[m][ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
             gvel_old[m][ni[k]]       += pmom                * S[k];
             gacc[m][ni[k]]           += pmassacc            * S[k];
+            gExternalHeatRate[m][ni[k]] += pextheatrate[idx]* S[k];
           }
         }
       }
@@ -2488,8 +2512,6 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
     delt_vartype old_delT;
     old_dw->get(old_delT, d_sharedState->get_delt_label(), patch->getLevel());
 
-    double L = dx.minComponent();
- 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -2510,15 +2532,6 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
       }
       ParticleSpeed = dx/ParticleSpeed;
       double delT_new = .8*ParticleSpeed.minComponent();
-
-      // Now find the stable dt for explicit conduction
-      double cp = mpm_matl->getSpecificHeat();
-      double kappa = mpm_matl->getThermalConductivity();
-      double rho_orig = mpm_matl->getInitialDensity();
-      double inv_thermalDiffusivity = cp*rho_orig/kappa;
-      double delT_cond = (L*L)*inv_thermalDiffusivity;
-
-      delT_new = min(delT_new, delT_cond);
 
       double old_dt=old_delT;
       if(d_numIterations <= d_num_iters_to_increase_delT){
