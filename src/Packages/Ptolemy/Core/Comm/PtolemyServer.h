@@ -50,20 +50,22 @@ class PtolemyServer : public Runnable
 		void run();
 		static Semaphore& servSem();
 		static string loaded_net;
-		static int state;  //0 for listening, 1 for iterating
+		static int state;  //0 for listening, 1 for iterating, 2 for detached
 		static int worker_count;
+		static int next_tag;
+		map<int, string> saved_results;//TODO make static? 
+												//store stuff in it etc.... stoped this thought here.
+												//so detach just stops the timer right now
 	private:
 		TCLInterface *gui;
 		Network *net;
 		int listenfd;
-		//TODO make timer and associated thread static and have 
-		//a function to deal with exiting of a process request
-		//ie start timeer and tread again set state appropriately
 };
 
 string PtolemyServer::loaded_net = "";
 int PtolemyServer::state = 0;
 int PtolemyServer::worker_count = 0;
+int PtolemyServer::next_tag = 0;
 
 class ProcessRequest : public Runnable
 {
@@ -72,13 +74,16 @@ class ProcessRequest : public Runnable
 	: gui(tclInt), net(n), connfd(fd), idle_time(t), wc(w) {}
 		~ProcessRequest();
 		void run();
-		static Semaphore& iterSem();
+		static Semaphore& mutex();		//disallows two iterate requests at once
 		void processItrRequest(int sockfd);	
 	private:
+		static Semaphore& iterSem();
 		static bool iter_callback(void *data);	
 		string Iterate(vector<string> doOnce, int size1, vector<string> iterate, int size2, int numParams, string picPath, string picFormat);
 		void quit(int sockfd);
 		void stop(int sockfd);
+		void detach(int sockfd);
+		void eval(int sockfd, string command);
 		TCLInterface *gui;
 		Network *net;
 		string loaded_net;
@@ -96,7 +101,7 @@ class ServerTime : public Runnable
 	private:
 		TCLInterface *gui;
 		WallClockTimer* wc;
-		double max_time;
+		double max_time;	//TODO right now this is hard coded..  make command line option?
 };
 
 #endif
