@@ -42,6 +42,7 @@
 #define SCIRun_BuilderService_h
 
 #include <sci_defs/ruby_defs.h>
+#include <sci_defs/babel_defs.h>
 
 #include <Core/CCA/spec/cca_sidl.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
