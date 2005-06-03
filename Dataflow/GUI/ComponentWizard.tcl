@@ -903,8 +903,6 @@ proc CreateNewModule { packname catname compname } {
     if {![expr \
            [file exists $basepath/Dataflow] &&\
 	   [file isdirectory $basepath/Dataflow] &&\
-	   [file exists $basepath/Core] &&\
-	   [file isdirectory $basepath/Core] &&\
            [file exists $basepath/Dataflow/Modules] && \
            [file isdirectory $basepath/Dataflow/Modules] && \
            [file exists $basepath/Dataflow/XML] && \
