@@ -1050,7 +1050,9 @@ class LevelSetSegmenterApp {
 	frame $win.detachedP.f -relief flat
 	pack $win.detachedP.f -side left -anchor n -fill both -expand 1
 	
-	wm title $win.detachedP "Processing Window"
+	wm title $win.detachedP "Processing Pane"
+	wm protocol $win.detachedP WM_DELETE_WINDOW \
+	    { app hide_processing_window }
 	
 	wm sizefrom $win.detachedP user
 	wm positionfrom $win.detachedP user
