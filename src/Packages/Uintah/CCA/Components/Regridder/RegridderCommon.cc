@@ -248,10 +248,12 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
 //_________________________________________________________________
 void RegridderCommon::problemSetup_BulletProofing(const int k){
 
-  if (d_maxTimestepsBetweenRegrids > d_cellCreationDilation.x()+1 || 
-      d_maxTimestepsBetweenRegrids > d_cellCreationDilation.y()+1 || 
-      d_maxTimestepsBetweenRegrids > d_cellCreationDilation.z()+1) {
-    throw ProblemSetupException("Problem Setup: Regridder: max_timestep_interval can be at most 1 greater than any component of \ncell_creation_dilation");
+  if(k == 0){  
+    if (d_maxTimestepsBetweenRegrids > d_cellCreationDilation.x()+1 || 
+        d_maxTimestepsBetweenRegrids > d_cellCreationDilation.y()+1 || 
+        d_maxTimestepsBetweenRegrids > d_cellCreationDilation.z()+1) {
+      throw ProblemSetupException("Problem Setup: Regridder: max_timestep_interval can be at most 1 greater than any component of \ncell_creation_dilation");
+    }
   }
 
   // For 2D problems the lattice refinement ratio 
