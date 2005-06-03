@@ -42,6 +42,7 @@
 #include <Core/Volume/CM2Shader.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/NotFinished.h>
+#include <Core/Util/Environment.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <string>
@@ -304,14 +305,16 @@ FlowRenderer2D::draw()
 //   noise_buffer_->bind();
 
   //temporary: make texture1 active bind adv_buffer as texture
-  if( adv_buffer_ ){
+  if(sci_getenv_p("TEST_FLOW") && adv_buffer_ ){
     glActiveTexture(GL_TEXTURE1);
     adv_buffer_->bind();  // hopefully binds the noise
     glActiveTexture(GL_TEXTURE0);
-  }
+  } else {
+    
   // to see what this should look like comment out the above if
   // and uncomment the next line.  Do the same below, at release.
-//   bind_noise(1);
+    bind_noise(1);
+  }
 
   //-----------------------------------------------------
   // set up shader
@@ -356,12 +359,13 @@ FlowRenderer2D::draw()
   if(shader)
     shader->release();
 
-  if(adv_buffer_){
+  if(sci_getenv_p("TEST_FLOW") && adv_buffer_){
     glActiveTexture(GL_TEXTURE1);
     adv_buffer_->release();
     glActiveTexture(GL_TEXTURE0);
+  } else {
+    release_noise(1);
   }
-//   release_noise(1);
 
 //  noise_buffer_->release();
 //   release_flow_tex();
