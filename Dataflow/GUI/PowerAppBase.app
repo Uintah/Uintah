@@ -102,6 +102,7 @@ class PowerAppBase {
                          \t\tsave your [appname] session\n\
                          \t\tload at a later time\n\
         Save Image...    \tSave the viewer image\n\
+        Restore Panes    \tRestore any closed panes\n\
         Quit             \tQuit [appname]} ]
 
 	set tips(HelpMenu) [subst {\
@@ -226,6 +227,9 @@ class PowerAppBase {
 	
 	$m.main_menu.file.menu add command -label "Save Image..." \
 	    -underline 0 -command "$this save_image" -state active 
+
+	$m.main_menu.file.menu add command -label "Restore Panes   Ctr+R" \
+	    -underline 0 -command "$this restore_panes" -state active 
 	
 	$m.main_menu.file.menu add command -label "Quit        Ctr+Q" \
 	    -underline 0 -command "$this exit_app" -state active
@@ -1402,7 +1406,34 @@ class PowerAppBase {
 	return [string range $f $start $end]
     }
 
+    # instead of destroying the pane, just
+    # withdraw it
+    method hide_processing_window {} {
+	wm withdraw .standalone.detachedP
+    }
+
+    # instead of destroying the pane, just
+    # withdraw it
+    method hide_visualization_window {} {
+	wm withdraw .standalone.detachedV
+    }
+
+    # raise any of the panes that have been
+    # closed (really withdrawn)
+    method restore_panes {} {
+	# check if each pane has been withdrawn and
+	# deiconify those that have
 	
+	if {$IsPAttached == 0 && \
+		[winfo exists .standalone.detachedP]} {
+	    SciRaise .standalone.detachedP
+	}
+	
+	if {$IsVAttached == 0 && \
+		[winfo exists .standalone.detachedV]} {
+	    SciRaise .standalone.detachedV
+	}
+    }	
 
     
 
@@ -1533,4 +1564,10 @@ bind all <Control-n> {
 	    wm deiconify  .
 	}
     }
+}
+
+# Raise any panes that have been closed (which
+# really just withdrew them
+bind all <Control-r> {
+    app restore_panes
 }
