@@ -333,6 +333,8 @@ class BioFEMApp {
 	pack $win.detachedV.f -side left -anchor n
 
 	wm title $win.detachedV "Visualization Window"
+	wm protocol $win.detachedV WM_DELETE_WINDOW \
+	    { app hide_visualization_window }
 
 	wm sizefrom $win.detachedV user
 	wm positionfrom $win.detachedV user
