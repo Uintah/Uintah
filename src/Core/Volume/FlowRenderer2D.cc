@@ -256,7 +256,7 @@ FlowRenderer2D::draw()
 
   //--------------------------------------------------------------------------
   // build textures
-  build_flow_tex();
+  build_flow_tex();  // must be done first, change later
   build_noise();
   build_colormap();
   //--------------------------------------------------------------------------
@@ -266,11 +266,11 @@ FlowRenderer2D::draw()
   if(!pbuffers_created_ && use_pbuffer_)
     create_pbuffers(buffer_width_, buffer_height_);
   
-//   if( adv_buffer_ ){
-  float scale = 1.0;
-//   pair<float,float> shft = shift_list_[current_shift_];
-//     adv_init(adv_buffer_,scale, shift_list_[current_shift_]);
-
+   if( adv_buffer_ ){
+     float scale = 1.0;
+     // This should put noise in adv_buffer_
+    adv_init(adv_buffer_,scale, shift_list_[current_shift_]);
+   }
 //     bind_noise(1);
   int c_shift = current_shift_;
 //   build_adv( scale, shift_list_[c_shift] );
@@ -301,11 +301,24 @@ FlowRenderer2D::draw()
 //   bind_conv( 1 );
 //   bind_noise(1);
 //   bind_flow_tex();
-  noise_buffer_->bind();
+//   noise_buffer_->bind();
+
+  //temporary: make texture1 active bind adv_buffer as texture
+  if( adv_buffer_ ){
+    glActiveTexture(GL_TEXTURE1);
+    adv_buffer_->bind();  // hopefully binds the noise
+    glActiveTexture(GL_TEXTURE0);
+  }
+  // to see what this should look like comment out the above if
+  // and uncomment the next line.  Do the same below, at release.
+//   bind_noise(1);
+
   //-----------------------------------------------------
   // set up shader
   FragmentProgramARB* shader; // = adv_accum_;
   shader = new FragmentProgramARB( DrawNoise );
+  // Again see the bottom of FlowShaders.h for DrawNoise, 
+  // works on TEXTURE1 (adv_buffer_) and TEXTURE3 (colormap)
   //-----------------------------------------------------
   if( shader ){
     if(!shader->valid()) {
@@ -316,7 +329,7 @@ FlowRenderer2D::draw()
     }
     shader->bind();
   }
-  
+    
   glBegin( GL_QUADS );
   {
     for (int i = 0; i < 4; i++) {
@@ -342,9 +355,16 @@ FlowRenderer2D::draw()
   
   if(shader)
     shader->release();
-  noise_buffer_->release();
-//   release_flow_tex();
+
+  if(adv_buffer_){
+    glActiveTexture(GL_TEXTURE1);
+    adv_buffer_->release();
+    glActiveTexture(GL_TEXTURE0);
+  }
 //   release_noise(1);
+
+//  noise_buffer_->release();
+//   release_flow_tex();
 //   release_conv(1);
   release_colormap(3);
   
@@ -385,35 +405,38 @@ FlowRenderer2D::adv_init( Pbuffer*& pb, float scale,
 
   //bind_noise in pbuffer context
 
-  bind_noise();
-  adv_init_->bind();
+  bind_noise(2);  //noise texture bound to GL_TEXTURE2
+
+  adv_init_->bind(); // fragment program (see FlowShaders.h AdvInit) 
+                     // looks at TEXTURE2.
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
   glActiveTexture(GL_TEXTURE0);
 #endif
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
+  // cover the viewport
   float tex_coords [] = {0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0};
   float pos_coords [] = {0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0};
+
   glBegin( GL_QUADS );
   {
     for (int i = 0; i < 4; i++) {
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
-      glMultiTexCoord2fv(GL_TEXTURE0,tex_coords+i*2);
-      CHECK_OPENGL_ERROR("adv_init()");
-
+      // set coordinates for TEXTURE2
+      glMultiTexCoord2fv(GL_TEXTURE2,tex_coords+i*2);
 #else
       glTexCoord2fv(tex_coords+i*2);
 #endif
        glVertex3fv(pos_coords+i*3);
-      CHECK_OPENGL_ERROR("adv_init()");
     }
   }
   glEnd();
   CHECK_OPENGL_ERROR("adv_init()");
-  pb->swapBuffers();
+
+  pb->swapBuffers();  // won't this put the texture in the back buffer?
 
   adv_init_->release();
-  release_noise();
+  release_noise(2);
   pb->deactivate();
   pb->set_use_texture_matrix(true);
 
@@ -1261,109 +1284,42 @@ FlowRenderer2D::build_noise( float scale, float shftx, float shfty )
         noise_array_(i,j,3) = 1.0;
       }
     }
-
-    if( use_pbuffer_ ){
-      noise_buffer_->activate();
-      glDrawBuffer(GL_FRONT);
-      glViewport(0, 0, noise_buffer_->width(), noise_buffer_->height());
-      glClearColor(0.0, 0.0, 0.0, 0.0);
-      glClear(GL_COLOR_BUFFER_BIT);
-      noise_buffer_->swapBuffers();
-      glMatrixMode(GL_PROJECTION);
-      glLoadIdentity();
-      glMatrixMode(GL_MODELVIEW);
-      glLoadIdentity();
-      glTranslatef(-1.0, -1.0, 0.0);
-      glScalef(2.0, 2.0, 2.0);
-      glDisable(GL_DEPTH_TEST);
-      glDisable(GL_LIGHTING);
-      glDisable(GL_CULL_FACE);
-      glDisable(GL_BLEND);
-      glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-
-      // Bind Textures
-      
-      //-----------------------------------------------------
-      // set up shader
-      FragmentProgramARB* shader  = adv_init_;
-      //-----------------------------------------------------
-      if( shader ){
-        if(!shader->valid()) {
-          shader->create();
-          shader->setLocalParam(1, scale, 1.0, 1.0, 1.0);
-          shader->setLocalParam(2, shftx, shfty, 0.5, 0.5);
-        }
-        shader->bind();
-      }
-
-//       float tex_coords[] = { 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0 };
-//       float pos_coords[] = { 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0 };
-      CHECK_OPENGL_ERROR("FlowRenderer2D::build_noise()");
-      glBegin( GL_QUADS );
-      {
-        for (int i = 0; i < 4; i++) {
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
-          glMultiTexCoord2fv(GL_TEXTURE0,tex_coords_+i*2);
-#else
-          glTexCoord2fv(tex_coords_+i*2);
-#endif
-          glVertex2fv(pos_coords_+i*2);
-        }
-      }
-      glEnd();
-      CHECK_OPENGL_ERROR("FlowRenderer2D::build_noise()");
-      noise_buffer_->release(GL_FRONT);
-      if(shader)
-        shader->release();
-      noise_buffer_->swapBuffers();
-      noise_buffer_->deactivate();
-      noise_buffer_->set_use_texture_matrix(true);
-    } else {
-      // software 
-      //-------------------------------------------------------
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
-      // This texture is not used if there is no shaders.
-      // glColorTable is used instead.
-      if (ShaderProgramARB::shaders_supported())
-      {
-        // Update 2D texture.
-        glDeleteTextures(1, &noise_tex_);
-        glGenTextures(1, &noise_tex_);
-        glBindTexture(GL_TEXTURE_2D, noise_tex_);
-        //           glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16,
-                     // Note the dim1, dim2 switch here.
-                     noise_array_.dim2(), noise_array_.dim1(), 
-                     0, GL_RGBA, GL_FLOAT, &noise_array_(0,0,0));
-      }
-      else
-      {
-        glBindTexture(GL_TEXTURE_2D, noise_tex_);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
-                        // Note the dim1, dim2 switch here.
-                        noise_array_.dim2(), noise_array_.dim1(), 
-                        GL_RGBA, GL_FLOAT, &noise_array_(0,0,0));
-      }
+    
+    if (ShaderProgramARB::shaders_supported())
+    {
+      // Update 2D texture.
+      glDeleteTextures(1, &noise_tex_);
+      glGenTextures(1, &noise_tex_);
+      glBindTexture(GL_TEXTURE_2D, noise_tex_);
+      //           glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16,
+                   // Note the dim1, dim2 switch here.
+                   noise_array_.dim2(), noise_array_.dim1(), 
+                   0, GL_RGBA, GL_FLOAT, &noise_array_(0,0,0));
+    }
+  } else { // noise_array has already been built, just reload
+    glBindTexture(GL_TEXTURE_2D, noise_tex_);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
+                    // Note the dim1, dim2 switch here.
+                    noise_array_.dim2(), noise_array_.dim1(), 
+                    GL_RGBA, GL_FLOAT, &noise_array_(0,0,0));
+  }
   
 #endif
-      //-------------------------------------------------------
-      build_noise_ = false;
-      NOT_FINISHED("FlowRenderer2D::build_noise()");  
-    }
-    CHECK_OPENGL_ERROR("FlowRenderer2D::build_noise()");
-
-
-  }
+  //-------------------------------------------------------
+  build_noise_ = false;
+  NOT_FINISHED("FlowRenderer2D::build_noise()");  
+  CHECK_OPENGL_ERROR("FlowRenderer2D::build_noise()");
 }
 
 void
 FlowRenderer2D::bind_noise( int reg)
 {
-  NOT_FINISHED("FlowRenderer2D::bind_noise()");  
+//   NOT_FINISHED("FlowRenderer2D::bind_noise()");  
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
   if (ShaderProgramARB::shaders_supported())
   {
@@ -1380,7 +1336,7 @@ FlowRenderer2D::bind_noise( int reg)
 void
 FlowRenderer2D::release_noise( int reg )
 {
-  NOT_FINISHED("FlowRenderer2D::release_noise()");  
+//   NOT_FINISHED("FlowRenderer2D::release_noise()");  
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
   if (ShaderProgramARB::shaders_supported())
   {
@@ -1404,19 +1360,15 @@ FlowRenderer2D::create_pbuffers(int w, int h)
   psize[0] = NextPowerOf2(w);
   psize[1] = NextPowerOf2(h);
   if(!adv_buffer_ && use_pbuffer_) {
+    // just create the advection buffer for now, add convolution later
      adv_buffer_ = new Pbuffer( psize[0], psize[1], GL_FLOAT, 
                                  32, true, GL_FALSE);
-     noise_buffer_ = new Pbuffer( psize[0], psize[1], GL_FLOAT, 
-                                  32, true, GL_FALSE);
     CHECK_OPENGL_ERROR("");    
-    if(!adv_buffer_->create() || noise_buffer_->create() ) {
+    if(!adv_buffer_->create() ) {
       NOT_FINISHED("Something wrong with pbuffers"); 
       adv_buffer_->destroy();
-      noise_buffer_->destroy();
       delete adv_buffer_;
-      delete noise_buffer_;
       adv_buffer_ = 0;
-      noise_buffer_ = 0;
       use_pbuffer_ = false;
       return;
     } else {
@@ -1434,7 +1386,7 @@ FlowRenderer2D::next_shift(int *shft)
   *shft = ( shift % shift_list_.size());
 }
 
-#endif // SCI_OPENGL
+//#endif // SCI_OPENGL
 
 
 } // namespace SCIRun

@@ -199,17 +199,17 @@ ChangeFieldBounds::build_widget(FieldHandle f, bool reset)
 
     // build a widget identical to the BBox
     size = Vector(bbox.max()-bbox.min());
-    if (fabs(size.x())<1.e-4) {
+    if (fabs(size.x())<1.e-6) {
       size.x(2.e-4); 
       bbox.extend(bbox.min()-Vector(1.0e-4, 0.0, 0.0));
       bbox.extend(bbox.max()+Vector(1.0e-4, 0.0, 0.0));
     }
-    if (fabs(size.y())<1.e-4) {
+    if (fabs(size.y())<1.e-6) {
       size.y(2.e-4); 
       bbox.extend(bbox.min()-Vector(0.0, 1.0e-4, 0.0));
       bbox.extend(bbox.max()+Vector(0.0, 1.0e-4, 0.0));
     }
-    if (fabs(size.z())<1.e-4) {
+    if (fabs(size.z())<1.e-6) {
       size.z(2.e-4); 
       bbox.extend(bbox.min()-Vector(0.0, 0.0, 1.0e-4));
       bbox.extend(bbox.max()+Vector(0.0, 0.0, 1.0e-4));
@@ -296,17 +296,17 @@ ChangeFieldBounds::execute()
       bbox.extend(Point(1,1,1));
     }
     Vector size(bbox.max()-bbox.min());
-     if (fabs(size.x())<1.e-4) {
-      size.x(2.e-4); 
-      bbox.extend(bbox.min()-Vector(1.e-4,0,0));
+     if (fabs(size.x())<1.e-8) {
+      size.x(2.e-8); 
+      bbox.extend(bbox.min()-Vector(1.e-8,0,0));
     }
-    if (fabs(size.y())<1.e-4) {
-      size.y(2.e-4); 
-      bbox.extend(bbox.min()-Vector(0,1.e-4,0));
+    if (fabs(size.y())<1.e-8) {
+      size.y(2.e-8); 
+      bbox.extend(bbox.min()-Vector(0,1.e-8,0));
     }
-    if (fabs(size.z())<1.e-4) {
-      size.z(2.e-4); 
-      bbox.extend(bbox.min()-Vector(0,0,1.e-4));
+    if (fabs(size.z())<1.e-8) {
+      size.z(2.e-8); 
+      bbox.extend(bbox.min()-Vector(0,0,1.e-8));
     }
     Point center(bbox.min() + size/2.);
     Vector sizex(size.x(),0,0);
