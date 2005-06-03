@@ -139,7 +139,7 @@ Environment Variables set:
   DBG_CONFIGURE           configure options in dbg build
   OPT_CONFIGURE           configure options in opt build
   HTMLLOG                 where to save the log file locally
-    currently set to /usr/sci/www/worthen/tester/OS/BUILDROOT
+    currently set to /usr/sci/projects/Uintah/csafeweb/tester/OS/BUILDROOT
   WEBLOG                  where to find the log file on the internet
   SEND_MAIL_TO            who to send test results to
   MAIL_REMAKE_LOG_TO      who to send make log to
