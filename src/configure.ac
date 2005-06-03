@@ -2992,7 +2992,7 @@ if test "$sci_required_mpi" = "yes"; then
         if test "$HAVE_MPI" != "yes"; then
           # Try without pmpi (and with pthreads) (for the newer version
           # of lam mpi.
-          # Use -DMPIPP_H soe we don't include mpi++.h where we don't want it.
+          # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
 
           SCI_TRY_LINK(MPI,mpi library and header-2,mpi.h,
           $_sci_inc /usr/include/mpi,mpi lam util pthread,$_sci_lib,-DMPIPP_H,,optional)
@@ -3279,7 +3279,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
     fi
 
 # For petsc 2.2 use this line below:  petsc petscvec petscmat petscdm petscsnes petscts petscksp,
-# Use -DMPIPP_H soe we don't include mpi++.h where we don't want it.
+# Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
     SCI_TRY_LINK(PETSC_UNI,
                  petsc-uni libraries and headers,
                  petsc.h,
@@ -3294,7 +3294,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
       DEF_PETSC_UNI="#define PETSC_UNI 1"
     else
     # Give it a shot on the old petsc-uni version
-      SCI_TRY_LINK(PETSC-UNI,
+      SCI_TRY_LINK(PETSC_UNI,
                    petsc libraries and headers (old),
                    petsc.h,
                    $_sci_inc /usr/include/petsc,
@@ -4234,6 +4234,7 @@ if test "$sci_required_ruby" = "yes"; then
     # --with-ruby has been specified without a parameter.
     _sci_lib="$sci_thirdparty_lib"
     _ruby_inc="$sci_thirdparty_include"
+    _sci_optional=required
   else 
    if test "$with_ruby"; then
      #if --with-ruby has been specified with a parameter, then use that parameter
@@ -4244,7 +4245,7 @@ if test "$sci_required_ruby" = "yes"; then
     # configure will also fail unless ruby.h is in a standard path.
     echo "Searching for ruby.h under $with_ruby"
     _ruby_inc=`find $with_ruby -name "ruby.h" -print | sed 's/ruby.h//'`
-    _sci_optional=specific;
+    _sci_optional=specific
    fi
   fi
   
