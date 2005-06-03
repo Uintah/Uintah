@@ -24,13 +24,18 @@ endif
 unalias rm
 #__________________________________
 # remove your droppings and make a copy of the output file
-rm -f gp .data .plotStats_tmp .tmp
+rm -f gp .data .plotStats_tmp .plotStats_tmp1 .tmp
 cp $out .tmp
-grep Time= .tmp |grep Mem >& .plotStats_tmp
+grep Time= .tmp |grep Mem >& .plotStats_tmp1
 
 #__________________________________
 # extract the data
 echo "Now extracting the data"
+
+# When running on frost, the mpirun utility will prepend all text output with "   n:" 
+# where n is the processor rank.  This extra colon screws up the grepping below. 
+# Check for this pattern of "  0:" and remove it from the .plotStats_tmp file.
+sed -e 's/^   0://' .plotStats_tmp1 >& .plotStats_tmp
 
 echo "?">&.meanTime
 echo "?">>.meanTime  # mean time data isn't collect the first 4 timestps
@@ -49,7 +54,7 @@ grep delT .plotStats_tmp | cut -d"=" -f5 | cut -d" " -f4 | cut -d"/" -f2 > .memU
 paste -d "  " .elapsedTime .meanTime .physicalTime .delT .memUse1 .memUse2 .memUse3 .memUse4>& .data
 
 rm -f .elapsedTime .meanTime .physicalTime .delT .memUse1 .memUse2 .memUse3  .memUse4 
-rm -f .plotStats_tmp .tmp
+rm -f .plotStats_tmp .plotStats_tmp1 .tmp
 echo "Done extracting data"
 
 echo "" > gp
