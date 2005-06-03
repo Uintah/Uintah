@@ -39863,7 +39863,7 @@ echo "$as_me: WARNING: Found libmpi but not in requested directory: $with_mpi/li
         if test "$HAVE_MPI" != "yes"; then
           # Try without pmpi (and with pthreads) (for the newer version
           # of lam mpi.
-          # Use -DMPIPP_H soe we don't include mpi++.h where we don't want it.
+          # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
 
 
 ##
@@ -43544,7 +43544,7 @@ echo "$as_me: error: One or more of the PETSc components is missing." >&2;}
     fi
 
 # For petsc 2.2 use this line below:  petsc petscvec petscmat petscdm petscsnes petscts petscksp,
-# Use -DMPIPP_H soe we don't include mpi++.h where we don't want it.
+# Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
 
 ##
 ## SCI_TRY_LINK (PETSC_UNI):  petsc-uni libraries and headers
@@ -44029,7 +44029,7 @@ _sci_includes=''
     # Give it a shot on the old petsc-uni version
 
 ##
-## SCI_TRY_LINK (PETSC-UNI):  petsc libraries and headers (old)
+## SCI_TRY_LINK (PETSC_UNI):  petsc libraries and headers (old)
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -44060,7 +44060,7 @@ _sci_includes=''
 ##
 ## Here are the specific values for this invocation:
 ##
-## arg 1 : PETSC-UNI
+## arg 1 : PETSC_UNI
 ## arg 2 : petsc libraries and headers (old)
 ## arg 3 : petsc.h
 ## arg 4 : $_sci_inc /usr/include/petsc
@@ -44073,12 +44073,12 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_PETSC-UNI        => lib path
-##      PETSC-UNI_LIB_DIR_FLAG   => all the -L's
-##      PETSC-UNI_LIB_FLAG       => all the -l's
-##      HAVE_PETSC-UNI           => yes or no
-##      INC_PETSC-UNI_H          => all the -I's
-##      HAVE_PETSC-UNI_H         => yes or no
+##      LIB_DIR_PETSC_UNI        => lib path
+##      PETSC_UNI_LIB_DIR_FLAG   => all the -L's
+##      PETSC_UNI_LIB_FLAG       => all the -l's
+##      HAVE_PETSC_UNI           => yes or no
+##      INC_PETSC_UNI_H          => all the -I's
+##      HAVE_PETSC_UNI_H         => yes or no
 
 if test 9 != 9; then
      { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for petsc libraries and headers (old).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
@@ -44109,8 +44109,8 @@ for inc in $_sci_inc /usr/include/petsc; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     { { echo "$as_me:$LINENO: error: Please do not specify /usr/include as the location for PETSC-UNI include files." >&5
-echo "$as_me: error: Please do not specify /usr/include as the location for PETSC-UNI include files." >&2;}
+     { { echo "$as_me:$LINENO: error: Please do not specify /usr/include as the location for PETSC_UNI include files." >&5
+echo "$as_me: error: Please do not specify /usr/include as the location for PETSC_UNI include files." >&2;}
    { (exit 1); exit 1; }; }
   fi
 
@@ -44125,8 +44125,8 @@ echo "$as_me: error: Please do not specify /usr/include as the location for PETS
         # Has some other -?.
         if test "$debugging" = "yes"; then
           echo
-          { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/include/petsc) of PETSC-UNI check.  Skipping $inc." >&5
-echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/include/petsc) of PETSC-UNI check.  Skipping $inc." >&2;}
+          { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/include/petsc) of PETSC_UNI check.  Skipping $inc." >&5
+echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/include/petsc) of PETSC_UNI check.  Skipping $inc." >&2;}
         fi
         continue
      fi
@@ -44180,8 +44180,8 @@ if test -n "petsc petscvec petscmat petscdm petscsnes petscts"; then
             # Has some other -?.
             if test "$debugging" = "yes"; then
               echo
-              { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of PETSC-UNI check (disregarding $lib)." >&5
-echo "$as_me: WARNING: Only -l options are allowed in arg 5 of PETSC-UNI check (disregarding $lib)." >&2;}
+              { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of PETSC_UNI check (disregarding $lib)." >&5
+echo "$as_me: WARNING: Only -l options are allowed in arg 5 of PETSC_UNI check (disregarding $lib)." >&2;}
             fi
             continue
          fi
@@ -44218,8 +44218,8 @@ if test -n "$_sci_lib"; then
             # Has some other -?.
             if test "$debugging" = "yes"; then
               echo
-              { echo "$as_me:$LINENO: WARNING: Only -L options are allowed in arg 6 of PETSC-UNI check (disregarding $path)." >&5
-echo "$as_me: WARNING: Only -L options are allowed in arg 6 of PETSC-UNI check (disregarding $path)." >&2;}
+              { echo "$as_me:$LINENO: WARNING: Only -L options are allowed in arg 6 of PETSC_UNI check (disregarding $path)." >&5
+echo "$as_me: WARNING: Only -L options are allowed in arg 6 of PETSC_UNI check (disregarding $path)." >&2;}
             fi
             continue
          fi
@@ -44256,8 +44256,8 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for PETSC-UNI only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: For specific SCI-TRY-LINK test for PETSC-UNI only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for PETSC_UNI only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for PETSC_UNI only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
   fi
   # and only one include path:
@@ -44276,8 +44276,8 @@ echo "$as_me: error: For specific SCI-TRY-LINK test for PETSC-UNI only one libra
     fi
   done
   if test -n "$_sci_inc /usr/include/petsc" && test $__sci_pass != "true"; then
-       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for PETSC-UNI only one include path may be specified for arg 4 (you had: $_sci_inc /usr/include/petsc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: For specific SCI-TRY-LINK test for PETSC-UNI only one include path may be specified for arg 4 (you had: $_sci_inc /usr/include/petsc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for PETSC_UNI only one include path may be specified for arg 4 (you had: $_sci_inc /usr/include/petsc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for PETSC_UNI only one include path may be specified for arg 4 (you had: $_sci_inc /usr/include/petsc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
   fi
 fi
@@ -44354,7 +44354,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
 
-eval LIB_DIR_PETSC-UNI='"$_sci_lib"'
+eval LIB_DIR_PETSC_UNI='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -44371,7 +44371,7 @@ _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 # Remove leading spaces
 _final_dirs=`echo "$_final_dirs" | sed "s/^ *//"`
 
-eval PETSC-UNI_LIB_DIR_FLAG="'$_final_dirs'"
+eval PETSC_UNI_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
@@ -44385,8 +44385,8 @@ done
 
 # Remove leading spaces
 final_libs=`echo $final_libs | sed "s/^ *//"`
-eval PETSC-UNI_LIB_FLAG="'$final_libs'"
-eval HAVE_PETSC-UNI="yes"
+eval PETSC_UNI_LIB_FLAG="'$final_libs'"
+eval HAVE_PETSC_UNI="yes"
 
 final_incs=
 for inc in "" $_sci_includes; do
@@ -44398,8 +44398,8 @@ done
 # Remove leading spaces
 final_incs=`echo $final_incs | sed "s/^ *//"`
 
-eval INC_PETSC-UNI_H="'$final_incs'"
-eval HAVE_PETSC-UNI_H="yes"
+eval INC_PETSC_UNI_H="'$final_incs'"
+eval HAVE_PETSC_UNI_H="yes"
 
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -44409,12 +44409,12 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_PETSC-UNI=''
-eval PETSC-UNI_LIB_DIR_FLAG=''
-eval PETSC-UNI_LIB_FLAG=''
-eval HAVE_PETSC-UNI="no"
-eval INC_PETSC-UNI_H=''
-eval HAVE_PETSC-UNI_H="no"
+eval LIB_DIR_PETSC_UNI=''
+eval PETSC_UNI_LIB_DIR_FLAG=''
+eval PETSC_UNI_LIB_FLAG=''
+eval HAVE_PETSC_UNI="no"
+eval INC_PETSC_UNI_H=''
+eval HAVE_PETSC_UNI_H="no"
 echo "$as_me:$LINENO: result: not found" >&5
 echo "${ECHO_T}not found" >&6
 if test "optional" != "optional"; then
@@ -44445,13 +44445,13 @@ echo "$as_me: WARNING:
   " >&2;}
 fi
 
-{ { echo "$as_me:$LINENO: error: Test for required PETSC-UNI failed.
+{ { echo "$as_me:$LINENO: error: Test for required PETSC_UNI failed.
     To see the failed compile information, look in config.log,
-    search for PETSC-UNI. Please install the relevant libraries
+    search for PETSC_UNI. Please install the relevant libraries
      or specify the correct paths and try to configure again." >&5
-echo "$as_me: error: Test for required PETSC-UNI failed.
+echo "$as_me: error: Test for required PETSC_UNI failed.
     To see the failed compile information, look in config.log,
-    search for PETSC-UNI. Please install the relevant libraries
+    search for PETSC_UNI. Please install the relevant libraries
      or specify the correct paths and try to configure again." >&2;}
    { (exit 1); exit 1; }; }
 
@@ -44467,8 +44467,8 @@ if test "optional" = "specific"; then
   for i in "" petsc.h; do
     #echo looking for $_sci_inc /usr/include/petsc/$i
     if test ! -e $_sci_inc /usr/include/petsc/$i; then
-     { { echo "$as_me:$LINENO: error: Specifically requested PETSC-UNI include file '$_sci_inc /usr/include/petsc/$i' was not found" >&5
-echo "$as_me: error: Specifically requested PETSC-UNI include file '$_sci_inc /usr/include/petsc/$i' was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested PETSC_UNI include file '$_sci_inc /usr/include/petsc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested PETSC_UNI include file '$_sci_inc /usr/include/petsc/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -44482,8 +44482,8 @@ echo "$as_me: error: Specifically requested PETSC-UNI include file '$_sci_inc /u
        i=`echo $i | sed 's/-l//g'`
     fi
     if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specifically requested PETSC-UNI library file '$_sci_lib/$i' (.so or .a) was not found" >&5
-echo "$as_me: error: Specifically requested PETSC-UNI library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
+     { { echo "$as_me:$LINENO: error: Specifically requested PETSC_UNI library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested PETSC_UNI library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -44500,7 +44500,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (PETSC-UNI):  petsc libraries and headers (old)
+## END of SCI_TRY_LINK (PETSC_UNI):  petsc libraries and headers (old)
 ##
 
 
@@ -54108,6 +54108,7 @@ if test "$sci_required_ruby" = "yes"; then
     # --with-ruby has been specified without a parameter.
     _sci_lib="$sci_thirdparty_lib"
     _ruby_inc="$sci_thirdparty_include"
+    _sci_optional=required
   else
    if test "$with_ruby"; then
      #if --with-ruby has been specified with a parameter, then use that parameter
@@ -54118,7 +54119,7 @@ if test "$sci_required_ruby" = "yes"; then
     # configure will also fail unless ruby.h is in a standard path.
     echo "Searching for ruby.h under $with_ruby"
     _ruby_inc=`find $with_ruby -name "ruby.h" -print | sed 's/ruby.h//'`
-    _sci_optional=specific;
+    _sci_optional=specific
    fi
   fi
 
