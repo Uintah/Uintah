@@ -37,7 +37,6 @@ static DebugStream dbgSig("VSSig", false);
 ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb,  MPMFlags* Mflag)
   : ConstitutiveModel(Mlb,Mflag)
 {
-  cout << "ViscoSCRAM:Label = " << Mlb << endl;
   ps->require("PR",d_initialData.PR);
   //d_initialData.CoefThermExp = 12.5e-5;  // strains per K
   d_initialData.CoefThermExp = 0.0;  // keep from breaking RT
