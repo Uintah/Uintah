@@ -102,6 +102,7 @@ class PowerAppBase {
                          \t\tsave your [appname] session\n\
                          \t\tload at a later time\n\
         Save Image...    \tSave the viewer image\n\
+        Restore Panes    \tRestore any closed panes\n\
         Quit             \tQuit [appname]} ]
 
 	set tips(HelpMenu) [subst {\
