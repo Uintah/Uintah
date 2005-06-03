@@ -2240,6 +2240,8 @@ OpenGL::render_rotation_axis(const View &view,
     glViewport(xoff - xysize, yoff - xysize, xysize, xysize);
   }
 
+  view_window_->setState(drawinfo_, "global");
+
   // Disable fog for the orientation axis.
   const bool fog = drawinfo_->fog;
   if (fog) { glDisable(GL_FOG); }
