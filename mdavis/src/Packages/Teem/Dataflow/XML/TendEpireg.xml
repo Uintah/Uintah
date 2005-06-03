@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+
+<component name="TendEpireg" category="Tend">  <overview>
+    <authors>
+      <author>Martin Cole</author>
+    </authors>
+    <summary>Register diffusion-weighted echo-planar images.</summary>
+    <description>
+      <p>Register diffusion-weighted echo-planar images. This
+registration corrects the shear, scale, and translate along the phase encoding
+direction (assumed to be the Y (second) axis of the image) caused by eddy
+currents from the diffusion-encoding gradients with echo-planar imaging. The
+method is based on calculating moments of segmented images, where the
+segmentation is a simple procedure based on blurring (optional), thresholding
+and connected component analysis. The registered DWIs are resampled with the
+chosen kernel, with the seperate DWIs stacked along axis 0.</p>
+      <p>List of Gradients : List of gradients, one gradient per line.</p>
+      <p>Reference :which of the DW volumes (zero-based numbering) should be
+      used as the standard, to which all other images are
+      transformed. Using -1 means that 9
+      intrinsic parameters governing the relationship between
+      the gradient direction and the resulting distortion are
+      estimated and fitted, ensuring good registration with the
+      non-diffusion-weighted T2 image (which is never
+      explicitly used in registration). Otherwise, by picking a
+      specific DWI, no distortion parameter estimation is done.
+      This value should be an integer.</p>
+      <p>Blur X :standard devs in X direction of gaussian filter
+      used to blur the DWIs prior to doing segmentation. This
+      blurring does not effect the final resampling of
+      registered DWIs. Use 0.0  to indicate no blurring
+      This value should be a float.</p>
+      <p>Blur Y :standard devs in Y direction of gaussian filter
+      used to blur the DWIs prior to doing segmentation. This
+      blurring does not effect the final resampling of
+      registered DWIs. Use 0.0  to indicate no blurring
+      This value should be a float.</p>
+      <p>Threshold : Threshold value to use on DWIs, to do initial seperation
+      of brain and non-brain. If the Use Default Threshold checkbox is checked, 
+      the threshold is determined automatically by histogram analysis. </p>
+      <p>CC Analysis : Use connected component analysis, after thresholding and
+      before moment calculation.  Doing connected components analysis usually
+      gives better results because it converts the thresholding output into
+      something much closer to a real segmentation.</p>
+      <p>Fitting : Only meaningful when the Reference equals -1. hen doing linear fitting
+      of the intrinsic distortion parameters, it is good to
+      ignore the slices for which the segmentation was poor. A
+      heuristic is used to rank the slices according to
+      segmentation quality. This option controls how many of
+      the (best) slices contribute to the fitting. Use 0 to
+      disable distortion parameter fitting. This value should be a flot.</p>
+      <p>Kernel : kernel for resampling DWIs along the phase-encoding
+      direction during final registration stage.</p>
+      <p>Sigma : sigma used when kernel is gaussian.</p>
+      <p>Extent : extent used when kernel is gaussian.</p>
+    </description>
+    <examplesr></examplesr>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>nin</name>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>ngrad</name>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>nout</name>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

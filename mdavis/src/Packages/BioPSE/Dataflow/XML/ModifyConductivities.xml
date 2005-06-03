@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<component name="ModifyConductivities" category="Modeling">
+  <overview>
+    <authors>
+      <author>Michael Callahan</author>
+    </authors>
+    <summary>Change the conductivity tensors in a field.</summary>
+    <description>
+      <p>
+        ModifyConductivities is used to interactively change the conductivity
+        tensors in a field.  These tensors are then used by many BioPSE
+        modules to create the support matrices that are then used to solve
+        forward and inverse problems.
+      </p>
+      <p>
+	The tensors are stored as a 'conductivities' property in the
+        input and output fields.  The fields should be of integer type
+        and contain indices into this conductivities table.  The
+        indices start at value zero.  Internally the table consists of
+        a vector of entry pairs, each containing the tensor and a
+        reference name.
+      </p>
+      <p>
+        The 'Tensor Matrix' input port is optional.  If there is an
+        Nx9 or 9xN matrix present on that port, then default
+        conductivities will be extracted from that matrix.
+      </p>
+      <p>
+        Generating the GUI table can become intractable as the number
+        of entries in the table grows.  The default is to not generate
+        the GUI table if there are more than 250 entries.  You can force the
+        GUI to update anyway by checking the "Force GUI Update"
+        button.  It is not recommended that you do so with more than a
+        thousand or so entries.
+      </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Input</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Tensor Matrix</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Output Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Output Matrix</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

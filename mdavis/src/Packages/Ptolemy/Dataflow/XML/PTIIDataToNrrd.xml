@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+                                                                                       
+<component name="PTIIDataToNrrd" category="Converters">
+  <overview>
+    <authors>
+      <author>Ayla Khan</author>
+      <author>Oscar Barney</author>
+    </authors>
+    <summary>PTII data to Nrrd</summary>
+    <description>
+        <p>Test PTII interface.</p>
+        <p>The Ptolemy module has only been built and used with Sun's Java distribution on Red Hat 9.</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+    </inputs>
+    <outputs>
+      <port>
+        <name>Points</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Connections</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Data</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>

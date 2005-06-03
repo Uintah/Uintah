@@ -1,0 +1,361 @@
+# SCIRun Network v1.25.0
+
+#######################################################################
+# Check environment variables.  Ask user for input if not set:
+set results [sourceSettingsFile]
+set DATADIR [lindex $results 0]
+set DATASET [lindex $results 1]
+######################################################################
+
+set name {Main}
+set bbox {5 0 867 601}
+set creationDate {Thu May 26 2005}
+set creationTime {09:24:10}
+set runDate {}
+set runTime {}
+set notes {}
+set geometry {878x714+18+271}
+
+# Create a VS->Fields->PVSpaceInterp Module
+set m1 [addModuleAtPosition "VS" "Fields" "PVSpaceInterp" 243 240]
+
+# Create a Teem->DataIO->NrrdReader Module
+set m2 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 251 9]
+set Notes($m2) {pv-hip data}
+set Notes($m2-Position) {s}
+set Notes($m2-Color) {white}
+
+# Create a VS->Render->ICUMonitor Module
+set m3 [addModuleAtPosition "VS" "Render" "ICUMonitor" 26 176]
+
+# Create a SCIRun->Time->TimeControls Module
+set m4 [addModuleAtPosition "SCIRun" "Time" "TimeControls" 15 11]
+set Notes($m4) {global time}
+set Notes($m4-Position) {s}
+set Notes($m4-Color) {white}
+
+# Create a Teem->DataIO->NrrdReader Module
+set m5 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 442 0]
+set Notes($m5) {interp space}
+set Notes($m5-Position) {s}
+set Notes($m5-Color) {white}
+
+# Create a SCIRun->DataIO->FieldReader Module
+set m6 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 491 75]
+set Notes($m6) {connectivity}
+set Notes($m6-Position) {s}
+set Notes($m6-Color) {white}
+
+# Create a SCIRun->Visualization->ShowField Module
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 234 462]
+
+# Create a SCIRun->Render->Viewer Module
+set m8 [addModuleAtPosition "SCIRun" "Render" "Viewer" 58 542]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 5 237]
+
+# Create a SCIRun->FieldsCreate->FieldBoundary Module
+set m10 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldBoundary" 238 327]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m11 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 30 382]
+
+# Create a SCIRun->Render->Viewer Module
+set m12 [addModuleAtPosition "SCIRun" "Render" "Viewer" 298 557]
+
+# Create a SCIRun->DataIO->BundleReader Module
+set m13 [addModuleAtPosition "SCIRun" "DataIO" "BundleReader" 666 31]
+set Notes($m13) {potential curves}
+set Notes($m13-Position) {s}
+set Notes($m13-Color) {white}
+
+# Create a SCIRun->DataIO->BundleReader Module
+set m14 [addModuleAtPosition "SCIRun" "DataIO" "BundleReader" 702 105]
+set Notes($m14) {ppv fields}
+set Notes($m14-Position) {s}
+set Notes($m14-Color) {white}
+
+# Create a SCIRun->FieldsCreate->FieldBoundary Module
+set m15 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldBoundary" 392 325]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m16 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 427 454]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m17 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 636 376]
+
+# Create the Connections between Modules
+set c1 [addConnection $m10 0 $m7 0]
+set c2 [addConnection $m15 0 $m16 0]
+set c3 [addConnection $m4 0 $m1 0]
+set c4 [addConnection $m4 0 $m3 0]
+set c5 [addConnection $m9 0 $m11 0]
+set c6 [addConnection $m9 0 $m17 0]
+set c7 [addConnection $m7 0 $m8 0]
+set c8 [addConnection $m16 0 $m12 0]
+set c9 [addConnection $m1 0 $m10 0]
+set c10 [addConnection $m1 1 $m15 0]
+set c11 [addConnection $m10 0 $m11 1]
+set c12 [addConnection $m11 0 $m7 1]
+set c13 [addConnection $m17 0 $m16 1]
+set c14 [addConnection $m2 0 $m1 1]
+set c15 [addConnection $m2 0 $m3 1]
+set c16 [addConnection $m1 1 $m17 1]
+set c17 [addConnection $m5 0 $m1 2]
+set c18 [addConnection $m6 0 $m1 3]
+set c19 [addConnection $m13 0 $m1 4]
+set c20 [addConnection $m14 0 $m1 5]
+
+# Set GUI variables for the VS->Fields->PVSpaceInterp Module
+set $m1-phase_index {1}
+set $m1-vol_index {3}
+set $m1-lvp_index {4}
+set $m1-rvp_index {5}
+
+# Set GUI variables for the Teem->DataIO->NrrdReader Module
+set $m2-filename $DATADIR/$DATASET/isovol27ml.repeat20.nrrd
+set $m2-filetype {Nrrd Files (*.nhdr,*.nrrd,*.nd,*.vff,*.pic,*.pict,*.vol,*.v)}
+
+# Set GUI variables for the VS->Render->ICUMonitor Module
+set $m3-time {0.904}
+set $m3-sample_rate {100.0}
+set $m3-time_markers_mode {0}
+set $m3-top_margin {40}
+set $m3-left_margin {30}
+set $m3-font_scale {1.5}
+set $m3-show_name {1}
+set $m3-show_date {1}
+set $m3-show_time {1}
+set $m3-plot_count {3}
+set $m3-geom {936x587+1+0}
+set $m3-2ndplot_color-r {1.0}
+set $m3-2ndplot_color-g {0.11}
+set $m3-nw_label-0 {}
+set $m3-sw_label-0 {mmHg}
+set $m3-min_ref_label-0 {0}
+set $m3-max_ref_label-0 {90}
+set $m3-label-0 {Left Ventricle Pressure (Plvc)}
+set $m3-aux_data_label-0 {phase}
+set $m3-min-0 {0}
+set $m3-max-0 {90}
+set $m3-idx-0 {4}
+set $m3-snd-0 {0}
+set $m3-clamp-0 {0}
+set $m3-lines-0 {1}
+set $m3-auxidx-0 {1}
+set $m3-draw_aux_data-0 {1}
+set $m3-use_plot_color-0 {1}
+set $m3-plot_color-0-r {0.5}
+set $m3-plot_color-0-g {0.84}
+set $m3-plot_color-0-b {0.25}
+set $m3-nw_label-1 {}
+set $m3-sw_label-1 {ml}
+set $m3-min_ref_label-1 {20}
+set $m3-max_ref_label-1 {50}
+set $m3-label-1 {Left Ventricle Volume (Vlv)}
+set $m3-aux_data_label-1 {Time (t) sec.}
+set $m3-min-1 {20}
+set $m3-max-1 {50}
+set $m3-idx-1 {3}
+set $m3-snd-1 {0}
+set $m3-clamp-1 {0}
+set $m3-lines-1 {1}
+set $m3-auxidx-1 {0}
+set $m3-draw_aux_data-1 {1}
+set $m3-use_plot_color-1 {1}
+set $m3-plot_color-1-r {0.63}
+set $m3-plot_color-1-g {0.59}
+set $m3-plot_color-1-b {0.91}
+set $m3-nw_label-2 {}
+set $m3-sw_label-2 {mmHg}
+set $m3-min_ref_label-2 {0}
+set $m3-max_ref_label-2 {90}
+set $m3-label-2 {Right Ventricle Pressure (Prvc)}
+set $m3-aux_data_label-2 {}
+set $m3-min-2 {0}
+set $m3-max-2 {90}
+set $m3-idx-2 {5}
+set $m3-snd-2 {0}
+set $m3-clamp-2 {0}
+set $m3-lines-2 {1}
+set $m3-auxidx-2 {}
+set $m3-draw_aux_data-2 {0}
+set $m3-use_plot_color-2 {0}
+set $m3-plot_color-2-r {0.85}
+set $m3-plot_color-2-g {0.91}
+set $m3-plot_color-2-b {0.0}
+
+# Open the VS->Render->ICUMonitor UI
+$m3 initialize_ui
+
+# Set GUI variables for the SCIRun->Time->TimeControls Module
+set $m4-execmode {play}
+set $m4-scale_factor {0.3}
+
+# Open the SCIRun->Time->TimeControls UI
+$m4 initialize_ui
+
+# Set GUI variables for the Teem->DataIO->NrrdReader Module
+set $m5-filename $DATADIR/$DATASET/healthy_all.nrrd
+set $m5-filetype {Nrrd Files (*.nhdr,*.nrrd,*.nd,*.vff,*.pic,*.pict,*.vol,*.v)}
+
+# Set GUI variables for the SCIRun->DataIO->FieldReader Module
+set $m6-filename $DATADIR/$DATASET/ucsd-heart-001.fld
+set $m6-filetype {SCIRun Field File (*.fld)}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m7-nodes-on {0}
+set $m7-nodes-as-disks {1}
+set $m7-edges-transparency {1}
+set $m7-use-normals {1}
+set $m7-has_vector_data {1}
+set $m7-active_tab {Edges}
+set $m7-scalars_scale {0.3}
+
+$m8 addViewer
+set $m8-ViewWindow_0-geometry 648x590+958+80
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m8-ViewWindow_0-view-eyep-x {-22.918230194}
+set $m8-ViewWindow_0-view-eyep-y {-105.564083161}
+set $m8-ViewWindow_0-view-eyep-z {-257.774766931}
+set $m8-ViewWindow_0-view-lookat-x {0.925533294678}
+set $m8-ViewWindow_0-view-lookat-y {3.99627876282}
+set $m8-ViewWindow_0-view-lookat-z {63.3665132523}
+set $m8-ViewWindow_0-view-up-x {-0.19576884298}
+set $m8-ViewWindow_0-view-up-y {0.932474831631}
+set $m8-ViewWindow_0-view-up-z {-0.303587299623}
+set $m8-ViewWindow_0-view-fov {20.0}
+set $m8-ViewWindow_0-sr {1}
+set $m8-ViewWindow_0-do_stereo {0}
+set $m8-ViewWindow_0-ortho-view {0}
+set $m8-ViewWindow_0-trackViewWindow0 {1}
+set $m8-ViewWindow_0-raxes {1}
+set $m8-ViewWindow_0-ambient-scale {1.0}
+set $m8-ViewWindow_0-diffuse-scale {0.75}
+set $m8-ViewWindow_0-specular-scale {0.4}
+set $m8-ViewWindow_0-emission-scale {1.0}
+set $m8-ViewWindow_0-shininess-scale {1.0}
+set $m8-ViewWindow_0-polygon-offset-factor {1.0}
+set $m8-ViewWindow_0-polygon-offset-units {0.0}
+set $m8-ViewWindow_0-point-size {1.0}
+set $m8-ViewWindow_0-line-width {1.0}
+set $m8-ViewWindow_0-sbase {0.4}
+set $m8-ViewWindow_0-bgcolor-r {0.0}
+set $m8-ViewWindow_0-bgcolor-g {0.0}
+set $m8-ViewWindow_0-bgcolor-b {0.0}
+set $m8-ViewWindow_0-fogusebg {1}
+set $m8-ViewWindow_0-fogcolor-r {0.0}
+set $m8-ViewWindow_0-fogcolor-g {0.0}
+set $m8-ViewWindow_0-fogcolor-b {1.0}
+set $m8-ViewWindow_0-fog-start {0.0}
+set $m8-ViewWindow_0-fog-end {0.714265}
+set $m8-ViewWindow_0-fog-visibleonly {1}
+set $m8-ViewWindow_0-currentvisual {0}
+set $m8-ViewWindow_0-caxes {0}
+set $m8-ViewWindow_0-global-light0 {1}
+set $m8-ViewWindow_0-global-light1 {0}
+set $m8-ViewWindow_0-global-light2 {0}
+set $m8-ViewWindow_0-global-light3 {0}
+set $m8-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m8-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m8-ViewWindow_0-global-light {1}
+set $m8-ViewWindow_0-global-fog {0}
+set $m8-ViewWindow_0-global-debug {0}
+set $m8-ViewWindow_0-global-clip {1}
+set $m8-ViewWindow_0-global-cull {0}
+set $m8-ViewWindow_0-global-dl {0}
+set $m8-ViewWindow_0-global-type {Gouraud}
+set "$m8-ViewWindow_0-Transparent Edges (1)" {1}
+set "$m8-ViewWindow_0-Faces (1)" {1}
+
+# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+set $m11-main_frame {.uiSCIRun_Visualization_RescaleColorMap_0}
+set $m11-isFixed {1}
+set $m11-min {-0.2}
+set $m11-max {0.2}
+
+$m12 addViewer
+set $m12-ViewWindow_0-geometry 654x612+933+650
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m12-ViewWindow_0-view-eyep-x {259.966254591}
+set $m12-ViewWindow_0-view-eyep-y {-158.909847484}
+set $m12-ViewWindow_0-view-eyep-z {-75.6033455654}
+set $m12-ViewWindow_0-view-lookat-x {0.802302360535}
+set $m12-ViewWindow_0-view-lookat-y {4.30603504181}
+set $m12-ViewWindow_0-view-lookat-z {62.6987953186}
+set $m12-ViewWindow_0-view-up-x {-0.512512357955}
+set $m12-ViewWindow_0-view-up-y {-0.0902162982635}
+set $m12-ViewWindow_0-view-up-z {-0.853927457382}
+set $m12-ViewWindow_0-view-fov {20.0}
+set $m12-ViewWindow_0-sr {1}
+set $m12-ViewWindow_0-do_stereo {0}
+set $m12-ViewWindow_0-ortho-view {0}
+set $m12-ViewWindow_0-trackViewWindow0 {1}
+set $m12-ViewWindow_0-raxes {1}
+set $m12-ViewWindow_0-ambient-scale {1.0}
+set $m12-ViewWindow_0-diffuse-scale {1.0}
+set $m12-ViewWindow_0-specular-scale {0.4}
+set $m12-ViewWindow_0-emission-scale {1.0}
+set $m12-ViewWindow_0-shininess-scale {1.0}
+set $m12-ViewWindow_0-polygon-offset-factor {1.0}
+set $m12-ViewWindow_0-polygon-offset-units {0.0}
+set $m12-ViewWindow_0-point-size {1.0}
+set $m12-ViewWindow_0-line-width {1.0}
+set $m12-ViewWindow_0-sbase {0.4}
+set $m12-ViewWindow_0-bgcolor-r {0.0}
+set $m12-ViewWindow_0-bgcolor-g {0.0}
+set $m12-ViewWindow_0-bgcolor-b {0.0}
+set $m12-ViewWindow_0-fogusebg {1}
+set $m12-ViewWindow_0-fogcolor-r {0.0}
+set $m12-ViewWindow_0-fogcolor-g {0.0}
+set $m12-ViewWindow_0-fogcolor-b {1.0}
+set $m12-ViewWindow_0-fog-start {0.0}
+set $m12-ViewWindow_0-fog-end {0.714265}
+set $m12-ViewWindow_0-fog-visibleonly {1}
+set $m12-ViewWindow_0-currentvisual {0}
+set $m12-ViewWindow_0-caxes {0}
+set $m12-ViewWindow_0-global-light0 {1}
+set $m12-ViewWindow_0-global-light1 {0}
+set $m12-ViewWindow_0-global-light2 {0}
+set $m12-ViewWindow_0-global-light3 {0}
+set $m12-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m12-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m12-ViewWindow_0-global-light {1}
+set $m12-ViewWindow_0-global-fog {0}
+set $m12-ViewWindow_0-global-debug {0}
+set $m12-ViewWindow_0-global-clip {1}
+set $m12-ViewWindow_0-global-cull {0}
+set $m12-ViewWindow_0-global-dl {0}
+set $m12-ViewWindow_0-global-type {Gouraud}
+set "$m12-ViewWindow_0-Transparent Edges (1)" {1}
+set "$m12-ViewWindow_0-Faces (1)" {1}
+
+# Set GUI variables for the SCIRun->DataIO->BundleReader Module
+set $m13-filename $DATADIR/$DATASET/curve-lookup.bdl
+set $m13-types {{{{SCIRun Bundle File} {.bdl} } {{SCIRun Bundle Any} {.*} } }}
+set $m13-filetype {SCIRun Bundle File (*.bdl)}
+
+# Set GUI variables for the SCIRun->DataIO->BundleReader Module
+set $m14-filename $DATADIR/$DATASET/ppv-field-bundle.bdl
+set $m14-types {{{{SCIRun Bundle File} {.bdl} } {{SCIRun Bundle Any} {.*} } }}
+set $m14-filetype {SCIRun Bundle File (*.bdl)}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m16-nodes-on {0}
+set $m16-edges-transparency {1}
+set $m16-use-normals {1}
+set $m16-has_scalar_data {1}
+set $m16-active_tab {Edges}
+set $m16-scalars_scale {0.3}
+
+# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+set $m17-main_frame {.uiSCIRun_Visualization_RescaleColorMap_1}
+set $m17-isFixed {1}
+set $m17-min {-80}
+set $m17-max {80}
+
+
+::netedit scheduleok
