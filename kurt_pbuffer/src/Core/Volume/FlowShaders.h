@@ -44,7 +44,7 @@ static const string AdvInit =
 "#               { 1.0, 1.0, 1.0, 1.0 }, \n"
 "#               { 0.5, 0.5, 0.5, 0.5 } }; \n"
 "TEMP R0; \n"
-"ADD R0.xy, fragment.texcoord[0], c[1]; \n"
+"ADD R0.xy, fragment.texcoord[2], c[1]; \n"
 "TEX R0.x, R0, texture[2], 2D; \n"
 "MAD result.color.xy, fragment.texcoord[0], c[0].x, c[0].y; \n"
 "MUL result.color.z, R0.x, c[2].x; \n"
