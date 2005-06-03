@@ -117,16 +117,16 @@ itcl_class SCIRun_Visualization_GenTitle {
 	set style [$w.style childsite]
 
 # Style - box
-	frame $style.bbox
+	#frame $style.bbox
 
-	checkbutton $style.bbox.button -variable $this-bbox \
-	     -command "$this-c needexecute"
-	label $style.bbox.label -text "Box" -width 4 \
-	    -anchor w -just left
+	#checkbutton $style.bbox.button -variable $this-bbox \
+	#    -command "$this-c needexecute"
+	#label $style.bbox.label -text "Box" -width 4 \
+	#    -anchor w -just left
 	
-	pack $style.bbox.button $style.bbox.label -side left
+	#pack $style.bbox.button $style.bbox.label -side left
 
-	pack $style.bbox -side left
+	#pack $style.bbox -side left
 
 # Style - color
 	frame $style.color
