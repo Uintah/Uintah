@@ -488,6 +488,7 @@ BinaryPiostream::io(string& data)
 
     if (version() == 1)
     {
+#if 0
       // Some of the property manager's objects write out
       // strings of size 0 followed a character, followed
       // by an unsigned short which is the size of the following
@@ -524,27 +525,31 @@ BinaryPiostream::io(string& data)
 	delete [] buf;
       }
       else
+#endif
       {
 	// Create buffer which is multiple of 4.
 	int extra = 4 - (chars%4);
 	if (extra == 4)
 	  extra = 0;
 	unsigned int buf_size = chars + extra;
-	char* buf = new char[buf_size];
-	
-	// Read in data plus padding.
-	if (!fread(buf, sizeof(char), buf_size, fp_))
-        {
-	  err = true;
-	  delete [] buf;
-	  return;
-	}
-	
-	// Only use actual size of string.
 	data = "";
-	for (unsigned int i=0; i<chars; i++)
-	  data += buf[i];
-	delete [] buf;
+        if (buf_size)
+        {
+          char* buf = new char[buf_size];
+	
+          // Read in data plus padding.
+          if (!fread(buf, sizeof(char), buf_size, fp_))
+          {
+            err = true;
+            delete [] buf;
+            return;
+          }
+	
+          // Only use actual size of string.
+          for (unsigned int i=0; i<chars; i++)
+            data += buf[i];
+          delete [] buf;
+        }
       }
     }
     else
