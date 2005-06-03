@@ -41,7 +41,7 @@
 #include <Dataflow/Modules/Render/Viewer.h>
 #include <Dataflow/Network/Scheduler.h>
 
-
+#include <sstream>
 
 void ServerTime::run()
 {
@@ -63,9 +63,7 @@ void ServerTime::run()
 	//Close(listenfd);  no closed when we quit but what if two
 	//people log into the same machine and both want to use
 	//SCIRun then in this case they will have to get different ports
-	// or somehow share the same port.......       so we have a security
-	// issue in that people that both want to use the same machine
-	//may be talking to the wrong person's SCIRun.		
+	// or somehow share the same port.......       		
 
 PtolemyServer::~PtolemyServer()
 {
@@ -78,6 +76,7 @@ void PtolemyServer::run()
 	servSem().down();		//TODO may not need but could
 	//be useful when we get to the point where pt starts up 
 	//the server bc we wait for main to finish
+	ProcessRequest::mutex().up();//disallows simultanious work requests
 	
 	//networking variables
 	int connfd;
@@ -101,19 +100,18 @@ void PtolemyServer::run()
 	while(true){
 		clientLength = sizeof(clientAddr);
 		connfd = Accept(listenfd, (SA *) &clientAddr, &clientLength);
-		cout << "here stopping timer and accepting" << endl;
 		
 		servSem().down();
-			PtolemyServer::state = 1;  //set state to running
 			PtolemyServer::worker_count++;
-			if(PtolemyServer::worker_count==1){
+			if(PtolemyServer::worker_count==1 && PtolemyServer::state != 2){
+				PtolemyServer::state = 1;  //set state to running
 				//stop the timer thread
 				idle_time->stop();
 				wc->stop();
 				wc->clear();  //clear time because something happened
-			}
+			}//TODO fatal errors after this need to start time out timer back up
 		servSem().up();
-		
+
 		ProcessRequest *proc_req = new ProcessRequest(gui,net,connfd,idle_time,wc);
 		Thread *pr = new Thread(proc_req,"process client request", 0, Thread::NotActivated);
 		pr->setDaemon();
@@ -132,12 +130,10 @@ Semaphore& PtolemyServer::servSem()
 ProcessRequest::~ProcessRequest()
 { 
 	Close(connfd); 
-}
-		
+}	
 
 void ProcessRequest::run()
 {
-	//iterSem().down();  //right now it starts down so we dont have to do it	
 	cout << "Here and listening" << endl;
 	
 	//networking variables
@@ -155,19 +151,34 @@ void ProcessRequest::run()
 
 		// process the request 
 	if(task == "iterate"){
+		mutex().down();
 		processItrRequest(connfd);
+		mutex().up();
 	}else if (task == "quit"){
 		quit(connfd);
 	}
 	else if (task == "stop"){
 		stop(connfd);
 	}
+	else if(task == "detach"){
+		detach(connfd);
+	}
+	else if(task == "eval"){
+		if( (n = Readline(connfd, line, MAXLINE)) == 0){
+			print_error("connection closed by other end");
+		}
+		eval(connfd, string(line));
+	}
+	else {
+		//TODO handle this because it could be a hacker
+		cout << "unknown task: " << task << endl;
+	}
 	
 
 	PtolemyServer::servSem().down();
 	PtolemyServer::worker_count--;
 	//if we are the last thread start timer and set state to idle
-	if(PtolemyServer::worker_count==0){
+	if(PtolemyServer::worker_count==0 && PtolemyServer::state != 2){
 		wc->start();
 		idle_time->resume(); 
 		PtolemyServer::state = 0;
@@ -176,6 +187,12 @@ void ProcessRequest::run()
 }
 
 Semaphore& ProcessRequest::iterSem()
+{
+	static Semaphore sem_("iterate semaphore", 0);
+	return sem_;
+}
+
+Semaphore& ProcessRequest::mutex()
 {
 	static Semaphore sem_("iterate semaphore", 0);
 	return sem_;
@@ -195,7 +212,6 @@ bool ProcessRequest::iter_callback(void *data)
 
 string ProcessRequest::Iterate(vector<string> doOnce, int size1, vector<string> iterate, int size2, int numParams, string picPath, string picFormat)
 {
-	//iterSem().down();  //we block sooner now... as soon as a request is made
 	string name;
 
 	//get a pointer to the viewer if we need it and check to see if its valid
@@ -204,7 +220,6 @@ string ProcessRequest::Iterate(vector<string> doOnce, int size1, vector<string> 
 		viewer = (Viewer*)net->get_module_by_id("SCIRun_Render_Viewer_0");
 		if(viewer == 0){
 			//returnValue = "no viewer present";
-			iterSem().up();
 			return "no viewer present";
 		}
 	}
@@ -221,7 +236,6 @@ string ProcessRequest::Iterate(vector<string> doOnce, int size1, vector<string> 
 		if(modptr == 0){
 			//returnValue = doOnce[i] + " not present in the network";
 			sched->remove_callback(iter_callback, 0);
-			iterSem().up();
 			return doOnce[i] + " not present in the network";
 		}
 		i++;
@@ -238,7 +252,6 @@ string ProcessRequest::Iterate(vector<string> doOnce, int size1, vector<string> 
 	for(int i = 0; i < numParams; i++){
 		if (PtolemyServer::state == 0){
 			sched->remove_callback(iter_callback, 0);
-			iterSem().up();
 			return "early abort";
 		}
 		for(int j = 0; j < size2; j=j+numParams-i){
@@ -249,7 +262,6 @@ string ProcessRequest::Iterate(vector<string> doOnce, int size1, vector<string> 
 			if(modptr == 0){
 				//returnValue = iterate[j] + " not present in the network";
 				sched->remove_callback(iter_callback, 0);
-				iterSem().up();
 				return iterate[j] + " not present in the network";
 			}
 			j++;
@@ -276,7 +288,7 @@ string ProcessRequest::Iterate(vector<string> doOnce, int size1, vector<string> 
 
 			//when the viewer is done save the image
 			ViewerMessage *msg1 = scinew ViewerMessage
-					(MessageTypes::ViewWindowDumpImage,"::SCIRun_Render_Viewer_0-ViewWindow_0",name, picFormat,"640","473");
+					(MessageTypes::ViewWindowDumpImage,"::SCIRun_Render_Viewer_0-ViewWindow_0",name, picFormat,"640","470");
 			viewer->mailbox.send(msg1); 
 
 			ViewerMessage *msg2 = scinew ViewerMessage("::SCIRun_Render_Viewer_0-ViewWindow_0");
@@ -286,7 +298,6 @@ string ProcessRequest::Iterate(vector<string> doOnce, int size1, vector<string> 
 	}
 	
 	sched->remove_callback(iter_callback, 0);
-	iterSem().up();	
 	return "OK";
 }
 
@@ -334,13 +345,11 @@ void ProcessRequest::processItrRequest(int sockfd)
 	if(PtolemyServer::loaded_net != net){
 		temp = gui->eval("ClearCanvas 0");  //clear the net	
 		cout << "Clear Canv result: " << temp << "!" <<endl;
+		//TODO this yield is probably due to scirun error that needs to be fixed
 		Thread::yield();  //necessary to avoid a "Error: bad window path name"
 		cout << "loaded net " << PtolemyServer::loaded_net << "!" << endl;
 		temp = gui->eval("source " + net);
-		cout << "source result: " << temp << "!" << endl;
 		PtolemyServer::loaded_net = net;
-		//TODO test string for net that doesnt exist?  source doesnt
-		//return a value aparntly so that doesnt work.
 	}
 		  
 	//read in picPath
@@ -367,18 +376,43 @@ void ProcessRequest::processItrRequest(int sockfd)
 
 void ProcessRequest::quit(int sockfd)
 {
-	//iterSem().down();  we block as soon as there is a request now
-	char message[8] = "quiting";
-	Writen(sockfd, message, 7);	
+	char message[9] = "quiting\n";
+	Writen(sockfd, message, 8);	
 	ASSERT(gui);
 	gui->eval("exit");
 }
 
 void ProcessRequest::stop(int sockfd)
 {
-	char message[7] = "stoped";
-	Writen(sockfd, message, 6);
+	char message[8] = "stoped\n";
+	Writen(sockfd, message, 7);
 	PtolemyServer::servSem().down();
+	//TODO may need to fix this in relation to detached
 	PtolemyServer::state = 0;
+	
 	PtolemyServer::servSem().up();
+}
+
+void ProcessRequest::detach(int sockfd)
+{
+	stringstream ss;
+	ss << PtolemyServer::next_tag;
+	string temp = ss.str();
+	//cout << "temp: " << temp << "len: " << temp.length() << endl;
+	char message[10] = "detached\n";
+	Writen(sockfd, message, 9);
+	Writen(sockfd, (void*)temp.c_str(),temp.length());
+	PtolemyServer::servSem().down();
+	PtolemyServer::state = 2;
+	PtolemyServer::servSem().up();
+	
+}
+
+void ProcessRequest::eval(int sockfd, string command)
+{
+	string temp;
+	int retVal = gui->eval(command, temp);
+	//TODO retVal should be 1 for sucsess so test it
+	//cout << "retVal equals: " << retVal << "!" << endl;
+	Writen(sockfd, (void*)temp.c_str(),temp.length());
 }
