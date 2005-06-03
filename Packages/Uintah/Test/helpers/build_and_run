@@ -37,7 +37,7 @@ fi
 if [ "$retval" = "0" -a "$NOTESTS" = "0" ]; then
   run $1
   retval=$?
-  chmod -R a+rX "$HTMLLOG"-"$mode"
+#  chmod -R a+rX "$HTMLLOG"-"$mode"
   exit $retval
 else
   exit $retval
