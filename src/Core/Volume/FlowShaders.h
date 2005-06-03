@@ -234,7 +234,7 @@ static const string DrawNoise =
 "!!ARBfp1.0 \n"
 "TEMP X; \n"
 "TEMP C; \n"
-"TEX X, fragment.texcoord[1], texture[1], 2D; \n"
+"TEX X, fragment.texcoord[0], texture[0], 2D; \n"
 "TEX C, X.z, texture[3], 1D; \n"
 "MOV result.color, C; \n"
 "END";
