@@ -318,8 +318,8 @@ FlowRenderer2D::draw()
 
   //-----------------------------------------------------
   // set up shader
-  FragmentProgramARB* shader = 0; // = adv_accum_;
-  //  shader = new FragmentProgramARB( DrawNoise );
+  FragmentProgramARB* shader; // = adv_accum_;
+  shader = new FragmentProgramARB( DrawNoise );
   // Again see the bottom of FlowShaders.h for DrawNoise, 
   // works on TEXTURE1 (adv_buffer_) and TEXTURE3 (colormap)
   //-----------------------------------------------------
@@ -389,7 +389,7 @@ FlowRenderer2D::adv_init( Pbuffer*& pb, float scale,
   pb->activate();
   
   pb->set_use_texture_matrix(false);
-  //  pb->set_use_default_shader(false);
+  pb->set_use_default_shader(false);
 
   glDrawBuffer(GL_FRONT);
   glViewport(0, 0, pb->width(), pb->height());
@@ -1376,7 +1376,7 @@ FlowRenderer2D::create_pbuffers(int w, int h)
       use_pbuffer_ = false;
       return;
     } else {
-      //      adv_buffer_->set_use_default_shader(false);
+      adv_buffer_->set_use_default_shader(false);
     }
   }
   pbuffers_created_ = true;
