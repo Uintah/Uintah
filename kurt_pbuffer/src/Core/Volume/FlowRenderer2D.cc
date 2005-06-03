@@ -305,7 +305,7 @@ FlowRenderer2D::draw()
 //   noise_buffer_->bind();
 
   //temporary: make texture1 active bind adv_buffer as texture
-  if(sci_getenv_p("TEST_FLOW") && adv_buffer_ ){
+  if(adv_buffer_ ){
     glActiveTexture(GL_TEXTURE1);
     adv_buffer_->bind();  // hopefully binds the noise
     glActiveTexture(GL_TEXTURE0);
@@ -359,7 +359,7 @@ FlowRenderer2D::draw()
   if(shader)
     shader->release();
 
-  if(sci_getenv_p("TEST_FLOW") && adv_buffer_){
+  if(adv_buffer_){
     glActiveTexture(GL_TEXTURE1);
     adv_buffer_->release();
     glActiveTexture(GL_TEXTURE0);
@@ -1316,7 +1316,7 @@ FlowRenderer2D::build_noise( float scale, float shftx, float shfty )
 #endif
   //-------------------------------------------------------
   build_noise_ = false;
-  NOT_FINISHED("FlowRenderer2D::build_noise()");  
+  //  NOT_FINISHED("FlowRenderer2D::build_noise()");  
   CHECK_OPENGL_ERROR("FlowRenderer2D::build_noise()");
 }
 
