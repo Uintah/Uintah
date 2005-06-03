@@ -3,12 +3,12 @@
 # to differentiate among the build names & even directories
 OS=`uname -s`
 
-BUILD_DIR=/local/csafe/raid1/tester/"$OS"
+BUILD_DIR=/usr/csafe/raid2/csafe-tester/"$OS"
 USE_DEFAULT_BUILD="yes"
-SCRIPT_DIR=/local/csafe/raid1/tester/bin
-TEST_DATA=/usr/sci/projects/Uintah/tester/"$OS"-TestData
+SCRIPT_DIR=/usr/csafe/raid1/tester/bin
+TEST_DATA=/usr/csafe/raid2/csafe-tester/"$OS"/TestData
 USE_DEFAULT_TEST_DATA="yes"
-TEMP_DIR=/usr/sci/projects/Uintah/tester/"$OS"
+TEMP_DIR=/usr/csafe/raid2/csafe-tester/"$OS"
 COMPILE="yes"
 USE_PREVTREE="no"
 USE_TREE="new"
@@ -23,7 +23,6 @@ WEEKLY="0"
 NOTESTS="0"
 MONTHLYBACKUP="no"
 mallocstrict="no"
-LD_LIBRARY_PATH=""
 USER=""
 
 # test OS, if Linux or IRIX, set appropriate compiler env. vars, else, abort
@@ -32,7 +31,6 @@ if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
     CXX=CC
     F77=f77
 elif [ "$OS" == "Linux" ]; then
-#    LD_LIBRARY_PATH="/usr/sci/local/gcc32/lib"
     CC=gcc
     CXX=c++
     F77=g77
@@ -169,8 +167,7 @@ if [ "$WEEKLY" == "1" ]; then
 fi
 
 PATH="$PATH":"$SCRIPT_DIR":/usr/bin:/local/bin:/usr/sci/local/bin/:/usr/gnu/bin:/usr/local/bin:/bin:/usr/lib:.
-CVSROOT="/usr/sci/projects/cvsrepository"
-export PATH CVSROOT WEEKLY mallocstrict NOTESTS USER COMPILE
+export PATH WEEKLY mallocstrict NOTESTS USER COMPILE
 
 # set number of processors to use when building
 if [ "$PARALLELISM" == "0" ]; then
@@ -275,38 +272,23 @@ else
     echo "$BUILDROOT" >> "$BUILDROOT"/log
 
     if [ $VERBOSE == "yes" ]; then
-	echo "TIME STAMP: CVS CHECKOUT STARTING AT:"
+	echo "TIME STAMP: SVN CHECKOUT STARTING AT:"
 	date
     fi
-    cd "$BUILD_DIR"
+    cd "$BUILDROOT"
 
-    # right now in Linux there's a problem checking out into /local/csafe/raid1
-    if [ $OS = "Linux" ]; then
-	cd "$TEMP_DIR"
-        cvs checkout -P -N -d SCIRun."$ID" Uintah > "$BUILDROOT"/cvs_co.log 2>&1
-	retval=$?
-	mv SCIRun."$ID"/* "$BUILDROOT"
-    else
-        cvs checkout -P -N -d SCIRun."$ID" Uintah > "$BUILDROOT"/cvs_co.log 2>&1
-	retval=$?
-    fi
+    svn co https://code.sci.utah.edu/svn/SCIRun/trunk/src src  > "$BUILDROOT"/svn_co.log 2>&1
+    retval=$?
 
     if [ $VERBOSE == "yes" ]; then
-      cat "$BUILDROOT"/cvs_co.log
+      cat "$BUILDROOT"/svn_co.log
     fi
 
     if [ $retval != "0" ]; then
-	echo "CVS checkout failed with code $retval"
-	echo "Look at ${BUILDROOT}/cvs_co.log for more information"
+	echo "SVN checkout failed with code $retval"
+	echo "Look at ${BUILDROOT}/svn_co.log for more information"
 	exit 1
     fi
-
-    cd "$BUILDROOT"
-    rm -rf CVS/
-    cd SCIRun
-    mv * ..
-    cd ..
-    rm -rf SCIRun
 
 # link directly from the build root to the Uintah code
     ln -s src/Packages/Uintah Uintah
@@ -314,7 +296,7 @@ else
     cd "$BUILD_DIR"
 
     if [ $VERBOSE == "yes" ]; then
-	echo "TIME STAMP: CVS CHECKOUT DONE AT:"
+	echo "TIME STAMP: SVN CHECKOUT DONE AT:"
 	date
     fi
 fi
@@ -341,17 +323,17 @@ fi
 
 # where the webpage will be, and init webpage
 if [ "$WEEKLY" == "0" ]; then
-    HTMLLOG=/usr/sci/www/worthen/tester/"$OS"/SCIRun.${ID}
-    WEBLOG=http://www.sci.utah.edu/~worthen/tester/"$OS"/SCIRun.${ID}
+    HTMLLOG=/usr/sci/projects/Uintah/csafeweb/tester/"$OS"/SCIRun.${ID}
+    WEBLOG=http://www.csafe.utah.edu/tester/"$OS"/SCIRun.${ID}
 else
-    HTMLLOG=/usr/sci/www/worthen/tester/"$OS"/Weekly/SCIRun.${ID}
-    WEBLOG=http://www.sci.utah.edu/~worthen/tester/"$OS"/Weekly/SCIRun.${ID}
+    HTMLLOG=/usr/sci/projects/Uintah/csafeweb/tester/"$OS"/Weekly/SCIRun.${ID}
+    WEBLOG=http://www.csafe.utah.edu/tester/"$OS"/Weekly/SCIRun.${ID}
 fi
 # set configure command options based on architecture
 if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
-	DBG_CONFIGURE="'--enable-package=Uintah' '--enable-debug' '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.2.1' '--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.7.7b/src/hypre'"
-#	OPT_CONFIGURE="'--enable-package=Uintah' '--enable-optimize=-O3 -INLINE:=ON:all -TARG:processor=r10k -G0 -OPT:div_split=OFF:fast_complex=ON:fast_nint=ON:Olimit=0:roundoff=3' '--disable-sci-malloc' '--enable-assertion-level=0' '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.2.1' '--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.7.7b/src/hypre'"
-        OPT_CONFIGURE="--enable-package=Uintah --enable-64bit --enable-optimize='-O3 -G0 -OPT:div_split=OFF:Olimit=0:roundoff=3:alias=typed' --enable-assertion-level=0 --disable-sci-malloc --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.2.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.7.7b/src/hypre"
+	DBG_CONFIGURE="'--enable-package=Uintah' --enable-debug '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.4.2m-64bit/petsc-2.2.1' '--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.4.2m-64bit/hypre-1.7.7b/src/hypre'"
+#	OPT_CONFIGURE="'--enable-package=Uintah' '--enable-optimize=-O3 -INLINE:=ON:all -TARG:processor=r10k -G0 -OPT:div_split=OFF:fast_complex=ON:fast_nint=ON:Olimit=0:roundoff=3' '--disable-sci-malloc' '--enable-assertion-level=0' '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.4.2m-64bit/petsc-2.2.1' '--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.4.2m-64bit/hypre-1.7.7b/src/hypre'"
+        OPT_CONFIGURE="--enable-package=Uintah --enable-64bit --enable-optimize='-O3 -G0 -OPT:div_split=OFF:Olimit=0:roundoff=3:alias=typed' --enable-assertion-level=0 --disable-sci-malloc --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.4.2m-64bit/petsc-2.2.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.4.2m-64bit/hypre-1.7.7b/src/hypre"
 else
 	DBG_CONFIGURE="--enable-package='Uintah' --enable-debug --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-lam-32bit/petsc-2.2.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-lam-32bit/hypre-1.7.7b/src/hypre --with-mpi=/usr/local/lam-mpi"
 	OPT_CONFIGURE="--enable-package='Uintah' '--enable-optimize=-march=pentium4 -msse -msse2 -O3' --disable-sci-malloc --enable-assertion-level=0 --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-lam-32bit/petsc-2.2.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-lam-32bit/hypre-1.7.7b/src/hypre --with-mpi=/usr/local/lam-mpi"
