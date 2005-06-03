@@ -817,8 +817,7 @@ OpenGL::redraw_frame()
     glEnable(GL_NORMALIZE);
     glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
     glEnable(GL_COLOR_MATERIAL);
-    string globals("global");
-    view_window_->setState(drawinfo_,globals);
+    view_window_->setState(drawinfo_, "global");
     drawinfo_->pickmode=0;
 
     CHECK_OPENGL_ERROR("after setting up the graphics state: ");
@@ -2355,6 +2354,8 @@ OpenGL::render_rotation_axis(const View &view,
     const int yoff = hi_res_.resy - hi_res_.row * viewport[3];
     glViewport(xoff - xysize, yoff - xysize, xysize, xysize);
   }
+
+  view_window_->setState(drawinfo_, "global");
 
   // Disable fog for the orientation axis.
   const bool fog = drawinfo_->fog;
