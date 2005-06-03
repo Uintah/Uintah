@@ -158,6 +158,7 @@ WARNING
     IntVector Mod     (const IntVector& a, const IntVector& b);
     IntVector Ceil    (const Vector& a);
 
+    void problemSetup_BulletProofing(const int k);
     void Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& dilatedFlaggedCells, CCVariable<int>& filter, IntVector depth );
     void GetFlaggedCells ( const GridP& origGrid, int levelIdx, DataWarehouse* dw );
     void initFilter(CCVariable<int>& filter, FilterType ft, IntVector& depth);

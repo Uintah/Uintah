@@ -189,14 +189,6 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   regrid_spec->get("min_boundary_cells", d_minBoundaryCells);
   regrid_spec->get("max_timestep_interval", d_maxTimestepsBetweenRegrids);
 
-  if (d_maxTimestepsBetweenRegrids > d_cellCreationDilation.x()+1 || 
-      d_maxTimestepsBetweenRegrids > d_cellCreationDilation.y()+1 || 
-      d_maxTimestepsBetweenRegrids > d_cellCreationDilation.z()+1) {
-    throw ProblemSetupException("max_timestep_interval can be at most 1 greater than any component of \ncell_creation_dilation");
-  }
-    
-
-
   const LevelP level0 = oldGrid->getLevel(0);
   d_cellNum.resize(d_maxLevels);
   d_patchNum.resize(d_maxLevels);
@@ -221,13 +213,9 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   d_patchActive[0]->initialize(1);
   d_patchCreated[0]->initialize(0);
   d_patchDeleted[0]->initialize(0);
-  if ( Mod( d_patchSize[0], d_latticeRefinementRatio[0] ) != IntVector(0,0,0) ) {
-    ostringstream msg;
-    msg << "Problem Setup: Regridder: you've specified a patch size that is not divisible by the lattice ratio on level 0 \n"
-        << " patch size " <<  d_patchSize[0] << " lattice refinement ratio " << d_latticeRefinementRatio[0] << endl;
-    throw ProblemSetupException(msg.str());
-  }
-
+  
+  problemSetup_BulletProofing(0);
+  
   for (int k = 1; k < d_maxLevels; k++) {
     d_cellNum[k] = d_cellNum[k-1] * d_cellRefinementRatio[k-1];
     d_patchSize[k] = d_patchSize[k-1] * d_cellRefinementRatio[k-1] /
@@ -243,13 +231,7 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
     d_patchCreated[k]->initialize(0);
     d_patchDeleted[k]->initialize(0);
     if (k < (d_maxLevels-1)) {
-      if ( Mod( d_patchSize[k], d_latticeRefinementRatio[k] ) != IntVector(0,0,0) ) {
-	ostringstream msg;
-	msg << "Regridder: patch size is not divisible by  the lattice ratio on level " << k;
-       msg << "Problem Setup: Regridder: you've specified a patch size that is not divisible by lattice ratio on level" << k
-           << "\npatch size " <<  d_patchSize[k] << " lattice refinement ratio " << d_latticeRefinementRatio[k] << endl; 
-	throw ProblemSetupException(msg.str());
-      }
+      problemSetup_BulletProofing(k);
     }
   }
 
@@ -263,6 +245,53 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   rdbg << "RegridderCommon::problemSetup() END" << endl;
 }
 
+//_________________________________________________________________
+void RegridderCommon::problemSetup_BulletProofing(const int k){
+
+  if (d_maxTimestepsBetweenRegrids > d_cellCreationDilation.x()+1 || 
+      d_maxTimestepsBetweenRegrids > d_cellCreationDilation.y()+1 || 
+      d_maxTimestepsBetweenRegrids > d_cellCreationDilation.z()+1) {
+    throw ProblemSetupException("Problem Setup: Regridder: max_timestep_interval can be at most 1 greater than any component of \ncell_creation_dilation");
+  }
+
+  // For 2D problems the lattice refinement ratio 
+  // and the cell refinement ratio must be 1 in that plane
+  for(int dir = 0; dir <3; dir++){
+    if(d_cellNum[k][dir] == 1 && (d_latticeRefinementRatio[k][dir] != 1 || d_cellRefinementRatio[k][dir] != 1) ){
+    ostringstream msg;
+    msg << "Problem Setup: Regridder: The problem you're running is 2D. \n"
+        << " The lattice refinement ratio AND the cell refinement ration must be 1 in that direction. \n"
+        << "Grid Size: " << d_cellNum[k] 
+        << " lattice refinement ratio: " << d_latticeRefinementRatio[k] 
+        << " cell refinement ratio: " << d_cellRefinementRatio[k] << endl;
+    throw ProblemSetupException(msg.str());
+
+    }
+  }
+  // For 2D problems the cell Creation/dilation & minBoundaryCells must be 0 in that plane
+  for(int dir = 0; dir <3; dir++){
+    if(d_cellNum[k][dir] == 1 && 
+    (d_cellCreationDilation[dir] != 0 || d_minBoundaryCells[dir] != 0 || d_minBoundaryCells[dir] != 0 )){
+    ostringstream msg;
+    msg << "Problem Setup: Regridder: The problem you're running is 2D. \n"
+        << " You must specifify cell_creation_dilation, cell_deletion_dilation & min_boundary_cells = 0 in that direction \n"
+        << "Grid Size " << d_cellNum[k] 
+        << " cell_creation_dilation " << d_cellCreationDilation
+        << " cell_deletion_dilation " << d_cellDeletionDilation
+        << " min_boundary_cells " << d_minBoundaryCells << endl;
+    throw ProblemSetupException(msg.str());
+    
+    }
+  }
+  
+  if ( Mod( d_patchSize[k], d_latticeRefinementRatio[k] ) != IntVector(0,0,0) ) {
+    ostringstream msg;
+    msg << "Problem Setup: Regridder: you've specified a patch size that is not divisible by the lattice ratio on level 0 \n"
+        << " patch size " <<  d_patchSize[k] << " lattice refinement ratio " << d_latticeRefinementRatio[k] << endl;
+    throw ProblemSetupException(msg.str());
+  }
+}
+//______________________________________________________________________
 bool RegridderCommon::flaggedCellsExist(constCCVariable<int>& flaggedCells, IntVector low, IntVector high)
 {
   //  rdbg << "RegridderCommon::flaggedCellsExist() BGN" << endl;
