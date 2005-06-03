@@ -259,7 +259,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
 
       LevelP level = addLevel(anchor, spacing);
       level->setTimeRefinementRatio(trr);
-      cout << "SETTING TRR to " << trr << endl;
+      //cout << "SETTING TRR to " << trr << endl;
       IntVector anchorCell(level->getCellIndex(levelAnchor + Vector(1.e-6,1.e-6,1.e-6)));
       IntVector highPointCell(level->getCellIndex(levelHighPoint + Vector(1.e-6,1.e-6,1.e-6)));
 
