@@ -344,7 +344,7 @@ void ProcessRequest::processItrRequest(int sockfd)
 	
 	if(PtolemyServer::loaded_net != net){
 		temp = gui->eval("ClearCanvas 0");  //clear the net	
-		cout << "Clear Canv result: " << temp << "!" <<endl;
+		//temp seems to be 0 always
 		//TODO this yield is probably due to scirun error that needs to be fixed
 		Thread::yield();  //necessary to avoid a "Error: bad window path name"
 		cout << "loaded net " << PtolemyServer::loaded_net << "!" << endl;
@@ -412,7 +412,7 @@ void ProcessRequest::eval(int sockfd, string command)
 {
 	string temp;
 	int retVal = gui->eval(command, temp);
-	//TODO retVal should be 1 for sucsess so test it
-	//cout << "retVal equals: " << retVal << "!" << endl;
+	if(retVal != 1)
+		cerr << "gui->eval error" << endl;
 	Writen(sockfd, (void*)temp.c_str(),temp.length());
 }
