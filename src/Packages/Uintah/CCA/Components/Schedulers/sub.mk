@@ -15,6 +15,7 @@ SRCS += \
 	$(SRCDIR)/OnDemandDataWarehouse.cc \
 	$(SRCDIR)/Relocate.cc \
 	$(SRCDIR)/SchedulerCommon.cc \
+	$(SRCDIR)/SchedulerFactory.cc \
 	$(SRCDIR)/SendState.cc \
 	$(SRCDIR)/SimpleScheduler.cc \
 	$(SRCDIR)/SingleProcessorScheduler.cc \
@@ -35,7 +36,6 @@ PSELIBS := \
 	Packages/Uintah/CCA/Ports        \
 	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/Exceptions  \
-	Packages/Uintah/CCA/Components/ProblemSpecification \
 	Core/Geometry                    \
 	Core/Containers                  \
 	Core/Thread                      \

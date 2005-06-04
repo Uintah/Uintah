@@ -60,7 +60,7 @@ class MPMICE : public SimulationInterface, public UintahParallelComponent {
 
 public:
 //  MPMICE(const ProcessorGroup* myworld, const bool doAMR);
-  MPMICE(const ProcessorGroup* myworld, MPMType type, const bool doAMR);
+  MPMICE(const ProcessorGroup* myworld, MPMType type, const bool doAMR = false);
   virtual ~MPMICE();
   
   virtual bool restartableTimesteps();

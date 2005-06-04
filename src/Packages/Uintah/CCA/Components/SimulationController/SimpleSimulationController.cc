@@ -170,7 +170,7 @@ SimpleSimulationController::run()
    double t;
 
    // Parse time struct: get info like max time, init time, num timesteps, etc.
-   SimulationTime timeinfo(ups);
+   d_timeinfo = new SimulationTime(ups);
 
    if (d_combinePatches) {
      Dir combineFromDir(d_fromDir);
@@ -178,11 +178,11 @@ SimpleSimulationController::run()
 
      // somewhat of a hack, but the patch combiner specifies exact delt's
      // and should not use a delt factor.
-     timeinfo.delt_factor = 1;
-     timeinfo.delt_min = 0;
-     timeinfo.maxTime = static_cast<PatchCombiner*>(sim)->getMaxTime();
-     cout << " MaxTime: " << timeinfo.maxTime << endl;
-     timeinfo.delt_max = timeinfo.maxTime;
+     d_timeinfo->delt_factor = 1;
+     d_timeinfo->delt_min = 0;
+     d_timeinfo->maxTime = static_cast<PatchCombiner*>(sim)->getMaxTime();
+     cout << " MaxTime: " << d_timeinfo->maxTime << endl;
+     d_timeinfo->delt_max = d_timeinfo->maxTime;
    }   
    
    if(d_restarting){
@@ -213,8 +213,8 @@ SimpleSimulationController::run()
       scheduler->get_dw(1)->setID( output->getCurrentTimestep() );
       
       // just in case you want to change the delt on a restart....
-      if (timeinfo.override_restart_delt != 0) {
-        double newdelt = timeinfo.override_restart_delt;
+      if (d_timeinfo->override_restart_delt != 0) {
+        double newdelt = d_timeinfo->override_restart_delt;
         if (d_myworld->myrank() == 0)
           cout << "Overriding restart delt with " << newdelt << endl;
         scheduler->get_dw(1)->override(delt_vartype(newdelt), 
@@ -255,7 +255,7 @@ SimpleSimulationController::run()
    //   calcStartTime();  // DONE EARLIER
 
    if (!d_restarting){
-     t = timeinfo.initTime;
+     t = d_timeinfo->initTime;
      sim->scheduleComputeStableTimestep(level,scheduler);
    }
 
@@ -273,7 +273,7 @@ SimpleSimulationController::run()
    scheduler->execute();
 
    if(output)
-     output->executedTimestep(0);
+     output->executedTimestep(0,grid);
 
    initSimulationStatsVars();
 
@@ -283,11 +283,11 @@ SimpleSimulationController::run()
    
    // if we end the simulation for a timestep, decide whether to march max_iterations
    // or to end at a certain timestep
-   int max_iterations = timeinfo.max_iterations;
-   if (timeinfo.maxTimestep - sharedState->getCurrentTopLevelTimeStep() < max_iterations)
-     max_iterations = timeinfo.maxTimestep - sharedState->getCurrentTopLevelTimeStep();
+   int max_iterations = d_timeinfo->max_iterations;
+   if (d_timeinfo->maxTimestep - sharedState->getCurrentTopLevelTimeStep() < max_iterations)
+     max_iterations = d_timeinfo->maxTimestep - sharedState->getCurrentTopLevelTimeStep();
 
-   while( t < timeinfo.maxTime && iterations < max_iterations) {
+   while( t < d_timeinfo->maxTime && iterations < max_iterations) {
       iterations ++;
 
       calcWallTime();
@@ -298,40 +298,40 @@ SimpleSimulationController::run()
 
       double prev_delt = delt;
       delt = delt_var;
-      delt *= timeinfo.delt_factor;
+      delt *= d_timeinfo->delt_factor;
       
       // Bind delt to the min and max read from the ups file
-      if(delt < timeinfo.delt_min){
+      if(delt < d_timeinfo->delt_min){
         if(d_myworld->myrank() == 0)
            cerr << "WARNING: raising delt from " << delt
-               << " to minimum: " << timeinfo.delt_min << '\n';
-        delt = timeinfo.delt_min;
+               << " to minimum: " << d_timeinfo->delt_min << '\n';
+        delt = d_timeinfo->delt_min;
       }
-      if(iterations > 1 && timeinfo.max_delt_increase < 1.e90
-        && delt > (1+timeinfo.max_delt_increase)*prev_delt){
+      if(iterations > 1 && d_timeinfo->max_delt_increase < 1.e90
+        && delt > (1+d_timeinfo->max_delt_increase)*prev_delt){
        if(d_myworld->myrank() == 0)
          cerr << "WARNING: lowering delt from " << delt 
-              << " to maxmimum: " << (1+timeinfo.max_delt_increase)*prev_delt
-              << " (maximum increase of " << timeinfo.max_delt_increase
+              << " to maxmimum: " << (1+d_timeinfo->max_delt_increase)*prev_delt
+              << " (maximum increase of " << d_timeinfo->max_delt_increase
               << ")\n";
-       delt = (1+timeinfo.max_delt_increase)*prev_delt;
+       delt = (1+d_timeinfo->max_delt_increase)*prev_delt;
       }
-      if(t <= timeinfo.initial_delt_range && delt > timeinfo.max_initial_delt){
+      if(t <= d_timeinfo->initial_delt_range && delt > d_timeinfo->max_initial_delt){
         if(d_myworld->myrank() == 0)
            cerr << "WARNING: lowering delt from " << delt 
-               << " to maximum: " << timeinfo.max_initial_delt
+               << " to maximum: " << d_timeinfo->max_initial_delt
                << " (for initial timesteps)\n";
-        delt = timeinfo.max_initial_delt;
+        delt = d_timeinfo->max_initial_delt;
       }
-      if(delt > timeinfo.delt_max){
+      if(delt > d_timeinfo->delt_max){
         if(d_myworld->myrank() == 0)
            cerr << "WARNING: lowering delt from " << delt 
-               << " to maximum: " << timeinfo.delt_max << '\n';
-        delt = timeinfo.delt_max;
+               << " to maximum: " << d_timeinfo->delt_max << '\n';
+        delt = d_timeinfo->delt_max;
       }
 
       // clamp timestep to output/checkpoint
-      if (timeinfo.timestep_clamping && output) {
+      if (d_timeinfo->timestep_clamping && output) {
         double orig_delt = delt;
         double nextOutput = output->getNextOutputTime();
         double nextCheckpoint = output->getNextCheckpointTime();
@@ -463,7 +463,7 @@ SimpleSimulationController::run()
 	}
       } while(!success);
       if(output) {
-	output->executedTimestep(delt);
+	output->executedTimestep(delt,grid);
       }
 
       t += delt;

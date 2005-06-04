@@ -13,7 +13,8 @@ BNRRegridder::~BNRRegridder()
 
 }
 
-Grid* BNRRegridder::regrid(Grid* oldgrid, SchedulerP& sched)
+Grid* BNRRegridder::regrid(Grid* oldgrid, SchedulerP& sched, 
+                           const ProblemSpecP& ups)
 {
   return oldgrid;
 }
