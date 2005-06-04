@@ -56,7 +56,9 @@ WARNING
       void attachPort(const string& name, UintahParallelPort* port);
       
       UintahParallelPort* getPort(const std::string& name);
+      UintahParallelPort* getPort(const std::string& name, unsigned int i);
       void releasePort(const std::string& name);
+      unsigned int numConnections(const std::string& name);
       
    protected:
       const ProcessorGroup* d_myworld;

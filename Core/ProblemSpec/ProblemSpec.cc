@@ -657,8 +657,11 @@ bool ProblemSpec::get(string &value)
 	child = child->getNextSibling()) {
       if (child->getNodeType() == DOMNode::TEXT_NODE) {
 	 const char* s = XMLString::transcode(child->getNodeValue());
-	 value = s;
+         // Remove the white space
+         string tmp(s);
 	 delete [] s;
+         istringstream tmp_str(tmp);
+         tmp_str >> value;
 	 return true;
       }
    }

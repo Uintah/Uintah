@@ -47,7 +47,27 @@ UintahParallelPort* UintahParallelComponent::getPort(const std::string& name)
 	return iter->second->connections[0];
 }
 
+UintahParallelPort* UintahParallelComponent::getPort(const std::string& name,
+                                                     unsigned int i)
+{
+    map<string, PortRecord*>::iterator iter = portmap.find(name);
+    if(iter == portmap.end())
+	return 0;
+    else if(iter->second->connections.size()> 1)
+	return iter->second->connections[i];
+    else
+	return iter->second->connections[0];
+}
+
 void UintahParallelComponent::releasePort(const std::string&)
 {
 }
 
+unsigned int UintahParallelComponent::numConnections(const std::string& name)
+{
+  map<string, PortRecord*>::iterator iter = portmap.find(name);
+  if(iter == portmap.end())
+    return 0;
+  else 
+    return iter->second->connections.size();
+}
