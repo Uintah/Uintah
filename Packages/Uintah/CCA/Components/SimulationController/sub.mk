@@ -5,7 +5,10 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Uintah/CCA/Components/SimulationController
 
 SRCS     += $(SRCDIR)/SimulationController.cc \
-            $(SRCDIR)/AMRSimulationController.cc
+            $(SRCDIR)/AMRSimulationController.cc \
+            $(SRCDIR)/MultipleSimulationController.cc \
+            $(SRCDIR)/SimpleSimulationController.cc \
+            $(SRCDIR)/SimulationControllerFactory.cc
 
 PSELIBS := \
 	Packages/Uintah/Core/Disclosure  \

@@ -62,6 +62,8 @@ using namespace SCIRun;
 
 static DebugStream dbg("DataArchiver", false);
 
+bool DataArchiver::wereSavesAndCheckpointsInitialized = false;
+
 DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
   : UintahParallelComponent(myworld),
     d_udaSuffix(udaSuffix),
@@ -760,7 +762,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 {
   //this function should get called exactly once per timestep
 
-  static bool wereSavesAndCheckpointsInitialized = false;
+  //  static bool wereSavesAndCheckpointsInitialized = false;
   dbg << "DataArchiver finalizeTimestep, delt= " << delt << endl;
   d_tempElapsedTime = time+delt;
   //d_currentTime=time+delt;
