@@ -45,13 +45,14 @@ using namespace Uintah;
 
 bool verbose = false;
 bool quiet = false;
-
+bool d_printCell_coords = false;
+  
 void usage(const std::string& badarg, const std::string& progname)
 {
     if(badarg != "")
-	cerr << "Error parsing argument: " << badarg << endl;
+        cerr << "Error parsing argument: " << badarg << endl;
     cerr << "Usage: " << progname << " [options] "
-	 << "-uda <archive file>\n\n";
+         << "-uda <archive file>\n\n";
     cerr << "Valid options are:\n";
     cerr << "  -h,--help\n";
     cerr << "  -v,--variable <variable name>\n";
@@ -65,6 +66,7 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "  -o,--out <outputfilename> [defaults to stdout]\n"; 
     cerr << "  -vv,--verbose (prints status of output)\n";
     cerr << "  -q,--quiet (only print data values)\n";
+    cerr << "  -cellCoords (prints the cell centered coordinates on that level)\n";
     cerr << "  --cellIndexFile <filename> (file that contains a list of cell indices)\n";
     cerr << "                                   [int 100, 43, 0]\n";
     cerr << "                                   [int 101, 43, 0]\n";
@@ -79,7 +81,7 @@ void usage(const std::string& badarg, const std::string& progname)
 //
 template<class T>
 void printData(DataArchive* archive, string& variable_name,
-	       int material, const bool use_cellIndex_file, int levelIndex,
+               int material, const bool use_cellIndex_file, int levelIndex,
                IntVector& var_start, IntVector& var_end, vector<IntVector> cells,
                unsigned long time_start, unsigned long time_end, ostream& out) 
 
@@ -106,7 +108,7 @@ void printData(DataArchive* archive, string& variable_name,
   // bullet proofing 
   if (time_end >= times.size() || time_end < time_start) {
     cerr << "timestephigh("<<time_end<<") must be greater than " << time_start 
-	 << " and less than " << times.size()-1 << endl;
+         << " and less than " << times.size()-1 << endl;
     exit(1);
   }
   if (time_start >= times.size() || time_end > times.size()) {
@@ -136,46 +138,82 @@ void printData(DataArchive* archive, string& variable_name,
   for (unsigned long time_step = time_start; time_step <= time_end; time_step++) {
   
     cerr << "%outputting for times["<<time_step<<"] = " << times[time_step]<< endl;
-    
-    // for each type available, we need to query the values for the time range, 
-    // variable name, and material
-    
+
     //__________________________________
-    // User input starting and ending indicies    
-    if(!use_cellIndex_file) {
-      for (CellIterator ci(var_start, var_end + IntVector(1,1,1)); !ci.done(); ci++) {
-        vector<T> values;
-        try {
-          archive->query(values, variable_name, material, *ci, 
-                          times[time_step], times[time_step], levelIndex);
-        } catch (const VariableNotFoundInGrid& exception) {
-          cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
-          exit(1);
-        }
-        IntVector c = *ci;
-        out << c.x() << " "<< c.y() << " " << c.z() << " "<< values[0] << endl;
+    //  does the requested level exist
+    bool levelExists = false;
+    GridP grid = archive->queryGrid(times[time_step]); 
+    int numLevels = grid->numLevels();
+   
+    for (int L = 0;L < numLevels; L++) {
+      const LevelP level = grid->getLevel(L);
+      if (level->getIndex() == levelIndex){
+        levelExists = true;
       }
     }
-    
-    //__________________________________
-    // If the cell indicies were read from a file. 
-    if(use_cellIndex_file) {
-      for (int i = 0; i<(int) cells.size(); i++) {
-        IntVector c = cells[i];
-        vector<T> values;
-        try {
-          archive->query(values, variable_name, material, c, 
-                          times[time_step], times[time_step], levelIndex);
-        } catch (const VariableNotFoundInGrid& exception) {
-          cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
-          exit(1);
-        }
-        out << c.x() << " "<< c.y() << " " << c.z() << " "<< values[0] << endl;
-      }
+    if (!levelExists){
+      cerr<< " Level " << levelIndex << " does not exist at this timestep " << time_step << endl;
     }
-    out << endl;
-  }
+    
+    if(levelExists){   // only extract data if the level exists
+      const LevelP level = grid->getLevel(levelIndex);
+      //__________________________________
+      // Find the intersection of the starting and
+      // ending indices with that level
+      IntVector grid_hi, grid_lo;
+      level->findCellIndexRange(grid_lo, grid_hi);
+      var_start = Max(grid_lo, var_start);
+      var_end   = Min(grid_hi- IntVector(1,1,1), var_end);
+    
+      //__________________________________
+      // User input starting and ending indicies    
+      if(!use_cellIndex_file) {
+        for (CellIterator ci(var_start, var_end + IntVector(1,1,1)); !ci.done(); ci++) {
+          vector<T> values;
+          try {
+            archive->query(values, variable_name, material, *ci, 
+                            times[time_step], times[time_step], levelIndex);
+          } catch (const VariableNotFoundInGrid& exception) {
+            cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
+            exit(1);
+          }
+          IntVector c = *ci;
+          if(d_printCell_coords){
+            Point p = level->getCellPosition(c);
+            out << p.x() << " "<< p.y() << " " << p.z() << " "<< values[0] << endl;
+          }else{
+            out << c.x() << " "<< c.y() << " " << c.z() << " "<< values[0] << endl;
+          }
+        }
+      }
+
+      //__________________________________
+      // If the cell indicies were read from a file. 
+      if(use_cellIndex_file) {
+        for (int i = 0; i<(int) cells.size(); i++) {
+          IntVector c = cells[i];
+          vector<T> values;
+          try {
+            archive->query(values, variable_name, material, c, 
+                            times[time_step], times[time_step], levelIndex);
+          } catch (const VariableNotFoundInGrid& exception) {
+            cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
+            exit(1);
+          }
+          if(d_printCell_coords){
+            Point p = level->getCellPosition(c);
+            out << p.x() << " "<< p.y() << " " << p.z() << " "<< values[0] << endl;
+          }else{
+            out << c.x() << " "<< c.y() << " " << c.z() << " "<< values[0] << endl;
+          }
+        }
+      }
+      out << endl;
+    } // if level exists
+    
+  } // timestep loop
 } 
+
 /*_______________________________________________________________________
  Function:  readCellIndicies--
  Purpose: reads in a list of cell indicies
@@ -275,7 +313,9 @@ int main(int argc, char** argv)
     } else if (s == "--cellIndexFile") {
       use_cellIndex_file = true;
       input_file_cellIndices = string(argv[++i]);
-    } else {
+    } else if (s == "--cellCoords" || s == "-cellCoords" ) {
+      d_printCell_coords = true;
+    }else {
       usage(s, argv[0]);
     }
   }
@@ -298,8 +338,8 @@ int main(int argc, char** argv)
     unsigned int var_index = 0;
     for (;var_index < vars.size(); var_index++) {
       if (variable_name == vars[var_index]) {
-	var_found = true;
-	break;
+        var_found = true;
+        break;
       }
     }
     //__________________________________
@@ -310,7 +350,7 @@ int main(int argc, char** argv)
       cerr << "Possible variable names are:\n";
       var_index = 0;
       for (;var_index < vars.size(); var_index++) {
-	cout << "vars[" << var_index << "] = " << vars[var_index] << endl;
+        cout << "vars[" << var_index << "] = " << vars[var_index] << endl;
       }
       cerr << "Aborting!!\n";
       exit(-1);
@@ -336,8 +376,8 @@ int main(int argc, char** argv)
       output->open(output_file_name.c_str());
       
       if (!(*output)) {   // bullet proofing
-	cerr << "Could not open "<<output_file_name<<" for writing.\n";
-	exit(1);
+        cerr << "Could not open "<<output_file_name<<" for writing.\n";
+        exit(1);
       }
       output_stream = output;
     } else {
@@ -356,22 +396,22 @@ int main(int argc, char** argv)
     case Uintah::TypeDescription::double_type:
       printData<double>(archive, variable_name, material, use_cellIndex_file,
                         levelIndex, var_start, var_end, cells,
-		        time_start, time_end, *output_stream);
+                        time_start, time_end, *output_stream);
       break;
     case Uintah::TypeDescription::float_type:
       printData<float>(archive, variable_name, material, use_cellIndex_file,
                         levelIndex, var_start, var_end, cells,
-		        time_start, time_end, *output_stream);
+                        time_start, time_end, *output_stream);
       break;
     case Uintah::TypeDescription::int_type:
       printData<int>(archive, variable_name, material, use_cellIndex_file,
                      levelIndex, var_start, var_end, cells,
-		     time_start, time_end, *output_stream);
+                     time_start, time_end, *output_stream);
       break;
     case Uintah::TypeDescription::Vector:
       printData<Vector>(archive, variable_name, material, use_cellIndex_file,
                         levelIndex, var_start, var_end, cells,
-		        time_start, time_end, *output_stream);    
+                        time_start, time_end, *output_stream);    
       break;
     case Uintah::TypeDescription::Matrix3:
     case Uintah::TypeDescription::bool_type:
