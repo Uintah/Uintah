@@ -3557,7 +3557,7 @@ bool matlabconverter::mladdfield(vector<Tensor> &fdata,matlabarray mlarray)
 // given for both FData2d and FData3d. The Vectors SCIRun uses are not STL objects
 // and are not recognized by any of the matlabclasses
 
-bool mladdfield(FData2d<Vector> &fdata,matlabarray mlarray)
+bool matlabconverter::mladdfield(FData2d<Vector> &fdata,matlabarray mlarray)
 {
   matlabarray field;
   matlabarray fieldtype;
@@ -3590,7 +3590,7 @@ bool mladdfield(FData2d<Vector> &fdata,matlabarray mlarray)
   return(true);
 }       
 
-bool mladdfield(FData3d<Vector> &fdata,matlabarray mlarray)
+bool matlabconverter::mladdfield(FData3d<Vector> &fdata,matlabarray mlarray)
 {
   matlabarray field;
   matlabarray fieldtype;
@@ -3633,7 +3633,7 @@ bool mladdfield(FData3d<Vector> &fdata,matlabarray mlarray)
 // SCIRun special classes. Hence a overloaded version of the mladdfield function is
 // given for both FData2d and FData3d
 
-bool mladdfield(FData2d<Tensor> &fdata,matlabarray mlarray)
+bool matlabconverter::mladdfield(FData2d<Tensor> &fdata,matlabarray mlarray)
 {
   matlabarray field;
   matlabarray fieldtype;
@@ -3673,7 +3673,7 @@ bool mladdfield(FData2d<Tensor> &fdata,matlabarray mlarray)
   return(true);
 }
 
-bool mladdfield(FData3d<Tensor> &fdata,matlabarray mlarray)
+bool matlabconverter::mladdfield(FData3d<Tensor> &fdata,matlabarray mlarray)
 {
   matlabarray field;
   matlabarray fieldtype;
