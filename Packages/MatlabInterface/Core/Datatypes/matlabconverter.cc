@@ -3564,10 +3564,10 @@ bool matlabconverter::mladdfield(FData2d<Vector> &fdata,matlabarray mlarray)
 
   fieldtype.createstringarray("vector");
         
-  vector<long> dims(2);
+  vector<long> dims(3);
   // Note: the dimensions are in reverse order as SCIRun uses C++
   // ordering
-  dims[0] = fdata.dim2(); dims[1] = fdata.dim1();
+  dims[0] = 3; dims[1] = fdata.dim2(); dims[2] = fdata.dim1();
   field.createdensearray(dims,matlabarray::miDOUBLE);
                 
   unsigned int p,q,r;
@@ -3597,10 +3597,10 @@ bool matlabconverter::mladdfield(FData3d<Vector> &fdata,matlabarray mlarray)
 
   fieldtype.createstringarray("vector");
         
-  vector<long> dims(3);
+  vector<long> dims(4);
   // Note: the dimensions are in reverse order as SCIRun uses C++
   // ordering
-  dims[0] = fdata.dim3(); dims[1] = fdata.dim2(); dims[2] = fdata.dim1();
+  dims[0] = 3; dims[1] = fdata.dim3(); dims[2] = fdata.dim2(); dims[3] = fdata.dim1();
   field.createdensearray(dims,matlabarray::miDOUBLE);
                 
   unsigned int p,q,r,s;
@@ -3640,10 +3640,10 @@ bool matlabconverter::mladdfield(FData2d<Tensor> &fdata,matlabarray mlarray)
 
   fieldtype.createstringarray("tensor");
         
-  vector<long> dims(2);
+  vector<long> dims(3);
   // Note: the dimensions are in reverse order as SCIRun uses C++
   // ordering
-  dims[0] = fdata.dim2(); dims[1] = fdata.dim1();
+  dims[0] = 9; dims[1] = fdata.dim2(); dims[2] = fdata.dim1();
   field.createdensearray(dims,matlabarray::miDOUBLE);
                 
   unsigned int p,q,r;
@@ -3680,10 +3680,10 @@ bool matlabconverter::mladdfield(FData3d<Tensor> &fdata,matlabarray mlarray)
 
   fieldtype.createstringarray("tensor");
         
-  vector<long> dims(3);
+  vector<long> dims(4);
   // Note: the dimensions are in reverse order as SCIRun uses C++
   // ordering   
-  dims[0] = fdata.dim3(); dims[1] = fdata.dim2(); dims[2] = fdata.dim1();
+  dims[0] = 9; dims[1] = fdata.dim3(); dims[2] = fdata.dim2(); dims[3] = fdata.dim1();
   field.createdensearray(dims,matlabarray::miDOUBLE);
                 
   unsigned int p,q,r,s;
