@@ -68,7 +68,7 @@ namespace Uintah {
   class FileGeometryPiece : public SmoothGeomPiece {
   private:
     enum FileFormat {FFText, FFSplit, FFLSBBin, FFMSBBin, FFGzip};
-    enum InputVar   {IVvolume, IVextforces, IVfiberdirn};
+    enum InputVar   {IVvolume, IVtemperature, IVextforces, IVfiberdirn};
     
   public:
     //////////////////////////////////////////////////////////////////////

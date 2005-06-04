@@ -77,9 +77,11 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     // Special case exception for SmoothGeomPieces and FileGeometryPieces
     SmoothGeomPiece *sgp = dynamic_cast<SmoothGeomPiece*>(piece);
     vector<double>* volumes = 0;
+    vector<double>* temperatures = 0;
     vector<Vector>* pforces = 0;
     vector<Vector>* pfiberdirs = 0;
     if (sgp) volumes = sgp->getVolume();
+    if (sgp) temperatures = sgp->getTemperature();
     if (sgp) pforces = sgp->getForces();
     if (sgp) pfiberdirs = sgp->getFiberDirs();
 
@@ -88,6 +90,13 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     geomvols::key_type volkey(patch,*obj);
     if (volumes) {
       if (!volumes->empty()) voliter = d_object_vols[volkey].begin();
+    }
+
+    // For getting particle temps (if they exist)
+    vector<double>::const_iterator tempiter;
+    geomvols::key_type tempkey(patch,*obj);
+    if (temperatures) {
+      if (!temperatures->empty()) tempiter = d_object_temps[tempkey].begin();
     }
 
     // For getting particle external forces (if they exist)
@@ -120,6 +129,13 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     	  pvolume[pidx] = *voliter;
           pmass[pidx] = matl->getInitialDensity()*pvolume[pidx];
           ++voliter;
+        }
+      }
+
+      if (temperatures) {
+        if (!temperatures->empty()) {
+    	  ptemperature[pidx] = *tempiter;
+          ++tempiter;
         }
       }
 
@@ -481,6 +497,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
     }
     vector<Point>* points = sgp->getPoints();
     vector<double>* vols = sgp->getVolume();
+    vector<double>* temps = sgp->getTemperature();
     vector<Vector>* pforces = sgp->getForces();
     vector<Vector>* pfiberdirs = sgp->getFiberDirs();
     Point p;
@@ -492,6 +509,10 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
         if (!vols->empty()) {
           double vol = vols->at(ii); 
           d_object_vols[volkey].push_back(vol);
+        }
+        if (!temps->empty()) {
+          double temp = temps->at(ii); 
+          d_object_temps[volkey].push_back(temp);
         }
         if (!pforces->empty()) {
           Vector pforce = pforces->at(ii); 

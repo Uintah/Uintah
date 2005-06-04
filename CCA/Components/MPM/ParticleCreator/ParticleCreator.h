@@ -121,6 +121,7 @@ namespace Uintah {
     geompoints d_object_points;
     typedef map<pair<const Patch*,GeometryObject*>,vector<double> > geomvols;
     geomvols d_object_vols;
+    geomvols d_object_temps;
     typedef map<pair<const Patch*,GeometryObject*>,vector<Vector> > geomvecs;
     geomvecs d_object_forces;
     geomvecs d_object_fibers;
