@@ -30,6 +30,7 @@ FileGeometryPiece::FileGeometryPiece(ProblemSpecP& ps)
     string next_var_name("EMPTY!");
     varblock->get(next_var_name);
     if      (next_var_name=="p.volume")        d_vars.push_back(IVvolume);
+    else if (next_var_name=="p.temperature")   d_vars.push_back(IVtemperature);
     else if (next_var_name=="p.externalforce") d_vars.push_back(IVextforces);
     else if (next_var_name=="p.fiberdir")      d_vars.push_back(IVfiberdirn);
     else 
@@ -40,6 +41,8 @@ FileGeometryPiece::FileGeometryPiece(ProblemSpecP& ps)
   for(list<InputVar>::const_iterator vit(d_vars.begin());vit!=d_vars.end();vit++) {
     if       (*vit==IVvolume) {
       cerr << " volume";
+    } else if(*vit==IVtemperature) {
+      cerr << " temperature";
     } else if(*vit==IVextforces) {
       cerr << " externalforce";
     } else if(*vit==IVfiberdirn) {
@@ -130,6 +133,8 @@ FileGeometryPiece::read_line(istream & is, Point & xmin, Point & xmax)
     for(list<InputVar>::const_iterator vit(d_vars.begin());vit!=d_vars.end();vit++) {
       if       (*vit==IVvolume) {
         if(is >> v1) d_volume.push_back(v1);
+      } else if(*vit==IVtemperature) {
+        if(is >> v1) d_temperature.push_back(v1);
       } else if(*vit==IVextforces) {
         if(is >> v1 >> v2 >> v3) d_forces.push_back(Vector(v1,v2,v3));
       } else if(*vit==IVfiberdirn) {
@@ -159,6 +164,11 @@ FileGeometryPiece::read_line(istream & is, Point & xmin, Point & xmax)
         if(is.read((char*)&v[0], sizeof(double))) {
           if(needflip) swapbytes(v[0]);
           d_volume.push_back(v[0]);
+      } else if(*vit==IVtemperature) {
+        if(is.read((char*)&v[0], sizeof(double))) {
+          if(needflip) swapbytes(v[0]);
+          d_temperature.push_back(v[0]);
+        }
       } else if(*vit==IVextforces) {
         if(is.read((char*)&v[0], sizeof(double)*3)) {
           if(needflip) {
