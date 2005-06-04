@@ -1154,6 +1154,8 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
 	  levelElem->appendElement("periodic", level->getPeriodicBoundaries(),0,2);
 	levelElem->appendElement("numPatches", level->numPatches(),0,2);
 	levelElem->appendElement("totalCells", level->totalCells(),0,2);
+        if (level->getExtraCells() != IntVector(0,0,0))
+          levelElem->appendElement("extraCells", level->getExtraCells(),0,2);
 	levelElem->appendElement("cellspacing", level->dCell(),0,2);
 	levelElem->appendElement("anchor", level->getAnchor(),0,2);
 	levelElem->appendElement("id", level->getID(),0,2);
