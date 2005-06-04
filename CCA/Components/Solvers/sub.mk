@@ -6,7 +6,8 @@ SRCDIR   := Packages/Uintah/CCA/Components/Solvers
 
 SRCS     += \
 	$(SRCDIR)/CGSolver.cc \
-	$(SRCDIR)/DirectSolve.cc
+	$(SRCDIR)/DirectSolve.cc \
+	$(SRCDIR)/SolverFactory.cc
 
 ifeq ($(HAVE_HYPRE),yes)
 SRCS +=  $(SRCDIR)/HypreSolver.cc

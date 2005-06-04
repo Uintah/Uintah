@@ -1,6 +1,8 @@
 # Makefile fragment for this subdirectory
 
-SRCDIR := Packages/Uintah/CCA/Components
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+
+SRCDIR	:= Packages/Uintah/CCA/Components
 
 SUBDIRS := \
 	$(SRCDIR)/DataArchiver \
@@ -22,6 +24,17 @@ SUBDIRS := \
 	$(SRCDIR)/Arches/Radiation/fortran \
 	$(SRCDIR)/ProblemSpecification \
 	$(SRCDIR)/PatchCombiner \
-	$(SRCDIR)/Solvers
+	$(SRCDIR)/Solvers \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
+
+SRCS	:= $(SRCDIR)/ComponentFactory.cc
+
+PSELIBS := \
+	Packages/Uintah/Core/ProblemSpec \
+	Packages/Uintah/Core/Parallel \
+	Packages/Uintah/Core/Exceptions  \
+
+LIBS 	:= $(XML_LIBRARY) $(MPI_LIBRARY)
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

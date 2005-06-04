@@ -5,6 +5,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Uintah/CCA/Components/Regridder
 
 SRCS     += $(SRCDIR)/RegridderCommon.cc \
+	    $(SRCDIR)/RegridderFactory.cc \
 	    $(SRCDIR)/HierarchicalRegridder.cc \
 	    $(SRCDIR)/BNRRegridder.cc
 

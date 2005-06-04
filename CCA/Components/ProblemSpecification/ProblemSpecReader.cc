@@ -82,8 +82,6 @@ ProblemSpecReader::readInputFile()
     throw ProblemSetupException(ex);
   }
 
-  //  string test1 = d_filename.substr(d_filename.length()-3,3);
-  //if (test1 == "ups")
   resolveIncludes(prob_spec);
   return prob_spec;
 }
@@ -126,7 +124,8 @@ ProblemSpecReader::resolveIncludes(ProblemSpecP params)
         // nodes to be substituted must be enclosed in a 
         // "Uintah_Include" node
 
-        if (include->getNodeName() == "Uintah_Include") {
+        if (include->getNodeName() == "Uintah_Include" || 
+            include->getNodeName() == "Uintah_specification") {
           ProblemSpecP incChild = include->getFirstChild();
           while (incChild != 0) {
             //make include be created from same document that created params

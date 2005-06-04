@@ -55,6 +55,8 @@ using std::pair;
       DataArchiver(const ProcessorGroup* myworld, int udaSuffix = -1);
       virtual ~DataArchiver();
 
+      static bool wereSavesAndCheckpointsInitialized;
+
       //! Sets up when the DataArchiver will output and what data, according
       //! to params.  Also stores state to keep track of time and timesteps
       //! in the simulation.  (If you only need to use DataArchiver to copy 
