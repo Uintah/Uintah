@@ -1088,8 +1088,10 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
         particleIndex idx = *iter;
         pExtHeatRate[idx]=0.0;
 #if 0
-        if(px[idx].x()*px[idx].x() + px[idx].y()*px[idx].y() > 0.0562*0.0562){
-          pExtHeatRate[idx]=0.1;
+//        if(px[idx].x()*px[idx].x() + px[idx].y()*px[idx].y() > 0.0562*0.0562 ||
+//           px[idx].z()>.0562 || px[idx].z()<-.0562){
+        if(px[idx].x()*px[idx].x() + px[idx].y()*px[idx].y() > 0.0562*0.0562){ 
+          pExtHeatRate[idx]=0.01;
         }
 #endif
       }
