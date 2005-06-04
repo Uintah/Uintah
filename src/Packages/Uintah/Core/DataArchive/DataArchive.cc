@@ -259,6 +259,9 @@ DataArchive::queryGrid( double time, const ProblemSpec* ups)
       Vector dcell;
       if(!n->get("cellspacing", dcell))
         throw InternalError("Error parsing level cellspacing");
+      IntVector extraCells(0,0,0);
+      n->get("extraCells", extraCells);
+      
       int id;
       if(!n->get("id", id)){
         static bool warned_once=false;
@@ -270,6 +273,7 @@ DataArchive::queryGrid( double time, const ProblemSpec* ups)
         id=-1;
       }
       LevelP level = grid->addLevel(anchor, dcell, id);
+      level->setExtraCells(extraCells);
       int numPatches = -1234;
       long totalCells = 0;
       IntVector periodicBoundaries(0, 0, 0);      
