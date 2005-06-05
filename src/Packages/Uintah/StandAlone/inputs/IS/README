@@ -1,0 +1,14 @@
+JP8_IS.ups
+---------------------------------------
+A modified version of the ../Models/JP8Fire_container.ups file.  
+	- Set the boundry conditions in the grid variables section for 3D
+	- Set level in the grid variables section for 3D
+	- Changed the output name to JP8_IS.uda
+	- Added p.volume to the list of saved properties
+	- Set the ICE settings dyanmic_viscosity and thermal_conductivity to 0
+
+
+JP8_IS_lowres.ups
+---------------------------------------
+The same settings as JP8_IS.ups with resolution cut in half in each dimension 
+to [50,200,50].  Output name was set to JP8_IS_lowres.uda as well.
