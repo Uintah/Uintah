@@ -117,6 +117,26 @@ bool setupOutFiles(FILE** data, FILE** header, string name, string head) {
   *header = headerfile;
   return true;
 }
+//__________________________________
+void findTimestep_loopLimits(const bool tslow_set, 
+                             const bool tsup_set,
+                             const vector<double> times,
+                             unsigned long & time_step_lower,
+                             unsigned long & time_step_upper)
+{
+  if (!tslow_set){
+   time_step_lower =0;
+  }else if (time_step_lower >= times.size()) {
+   cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
+   abort();
+  }
+  if (!tsup_set){
+   time_step_upper = times.size()-1;
+  }else if (time_step_upper >= times.size()) {
+   cerr << "timestephigh must be between 0 and " << times.size()-1 << endl;
+   abort();
+  }
+}
 
 // given the various parts of the name we piece together the full name
 string makeFileName(string raydatadir, string variable_file, string time_file, 
@@ -346,16 +366,21 @@ int main(int argc, char** argv)
       for(int i=0;i<(int)index.size();i++)
 	cout << index[i] << ": " << times[i] << endl;
     }
+    //______________________________________________________________________
+    //    DO GRIDSTATS
     if(do_gridstats){
       vector<int> index;
       vector<double> times;
       da->queryTimesteps(index, times);
       ASSERTEQ(index.size(), times.size());
-      cout << "There are " << index.size() << " timesteps:\n";
-      for(int i=0;i<(int)index.size();i++){
+      
+      findTimestep_loopLimits(tslow_set, tsup_set,times, time_step_lower, time_step_upper);
+           
+      for(unsigned long t=time_step_lower;t<=time_step_upper;t++){
+	 double time = times[t];
         cout << "__________________________________"<<endl;
-	 cout << "Timestep " << index[i] << ": " << times[i] << endl;
-	 GridP grid = da->queryGrid(times[i]);
+	 cout << "Timestep " << t << ": " << time << endl;
+	 GridP grid = da->queryGrid(time);
 	 grid->performConsistencyCheck();
 	 grid->printStatistics();
 
@@ -929,18 +954,7 @@ int main(int argc, char** argv)
       for(int i=0;i<(int)index.size();i++)
 	cout << index[i] << ": " << times[i] << endl;
       
-      if (!tslow_set)
-	time_step_lower =0;
-      else if (time_step_lower >= times.size()) {
-	cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
-	abort();
-      }
-      if (!tsup_set)
-	time_step_upper = times.size()-1;
-      else if (time_step_upper >= times.size()) {
-	cerr << "timestephigh must be between 0 and " << times.size()-1 << endl;
-	abort();
-      }
+       findTimestep_loopLimits(tslow_set, tsup_set,times, time_step_lower, time_step_upper);
       
       for(unsigned long t=time_step_lower;t<=time_step_upper;t++){
 	double time = times[t];
@@ -1628,18 +1642,7 @@ int main(int argc, char** argv)
       for(int i=0;i<(int)index.size();i++)
 	cout << index[i] << ": " << times[i] << endl;
       
-      if (!tslow_set)
-	time_step_lower =0;
-      else if (time_step_lower >= times.size()) {
-	cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
-	abort();
-      }
-      if (!tsup_set)
-	time_step_upper = times.size()-1;
-      else if (time_step_upper >= times.size()) {
-	cerr << "timestephigh must be between 0 and " << times.size()-1 << endl;
-	abort();
-      }
+       findTimestep_loopLimits(tslow_set, tsup_set,times, time_step_lower, time_step_upper);
       
       for(unsigned long t=time_step_lower;t<=time_step_upper;t+=time_step_inc){
 	double time = times[t];
@@ -1702,18 +1705,7 @@ int main(int argc, char** argv)
       else
 	cout << "There are " << index.size() << " timesteps:\n";
       
-      if (!tslow_set)
-	time_step_lower =0;
-      else if (time_step_lower >= times.size()) {
-	cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
-	abort();
-      }
-      if (!tsup_set)
-	time_step_upper = times.size()-1;
-      else if (time_step_upper >= times.size()) {
-	cerr << "timestephigh must be between 0 and " << times.size()-1 << endl;
-	abort();
-      }
+      findTimestep_loopLimits(tslow_set, tsup_set,times, time_step_lower, time_step_upper);
       
       // Loop over time
       for(unsigned long t=time_step_lower;t<=time_step_upper;t++){
@@ -2044,18 +2036,7 @@ int main(int argc, char** argv)
       
       cout << "There are " << index.size() << " timesteps:\n";
       
-      if (!tslow_set)
-	time_step_lower =0;
-      else if (time_step_lower >= times.size()) {
-	cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
-	abort();
-      }
-      if (!tsup_set)
-	time_step_upper = times.size()-1;
-      else if (time_step_upper >= times.size()) {
-	cerr << "timestephigh must be between 0 and " << times.size()-1 << endl;
-	abort();
-      }
+      findTimestep_loopLimits(tslow_set, tsup_set,times, time_step_lower, time_step_upper);
       
       // obtain the desired timesteps
       unsigned long t = 0, start_time, stop_time;
@@ -2208,18 +2189,7 @@ int main(int argc, char** argv)
       std::string patchID_file;
       std::string materialType_file;
       
-      if (!tslow_set)
-	time_step_lower =0;
-      else if (time_step_lower >= times.size()) {
-	cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
-	abort();
-      }
-      if (!tsup_set)
-	time_step_upper = times.size()-1;
-      else if (time_step_upper >= times.size()) {
-	cerr << "timestephigh must be between 0 and " << times.size()-1 << endl;
-	abort();
-      }
+      findTimestep_loopLimits(tslow_set, tsup_set,times, time_step_lower, time_step_upper);
       
       // for all timesteps
       for(unsigned long t=time_step_lower;t<=time_step_upper;t++){
