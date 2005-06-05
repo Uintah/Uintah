@@ -109,7 +109,7 @@ DataArchive::queryEndianness()
   d_lock.lock();
   ProblemSpecP meta = d_indexDoc->findBlock("Meta");
   if( meta == 0)
-    throw InternalError("Meta node not found in index.xml");
+    throw InternalError("DataArchive::Meta node not found in index.xml");
   ProblemSpecP endian_node = meta->findBlock("endianness");
   if( endian_node== 0 ){
     cout<<"\nXML Warning: endianness node not found.\n"<<
@@ -136,7 +136,7 @@ DataArchive::queryNBits()
   d_lock.lock();
   ProblemSpecP meta = d_indexDoc->findBlock("Meta");
   if( meta == 0 )
-    throw InternalError("Meta node not found in index.xml");
+    throw InternalError("DataArchive::queryNBitsMeta node not found in index.xml");
   ProblemSpecP nBits_node = meta->findBlock("nBits");
   if( nBits_node == 0){
     cout<<"\nXML Warning: nBits node not found.\n"<<
@@ -165,14 +165,14 @@ DataArchive::queryTimesteps( std::vector<int>& index,
     if(!have_timesteps){
       ProblemSpecP ts = d_indexDoc->findBlock("timesteps");
       if(ts == 0)
-        throw InternalError("timesteps node not found in index.xml");
+        throw InternalError("DataArchive::queryTimestepstimes:steps node not found in index.xml");
       for(ProblemSpecP t = ts->getFirstChild(); t != 0; t = t->getNextSibling()){
         if(t->getNodeType() == ProblemSpec::ELEMENT_NODE){
           map<string,string> attributes;
           t->getAttributes(attributes);
           string tsfile = attributes["href"];
           if(tsfile == "")
-            throw InternalError("timestep href not found");
+            throw InternalError("DataArchive::queryTimesteps:timestep href not found");
           
           XMLURL url(d_base, tsfile.c_str());
           
@@ -186,15 +186,15 @@ DataArchive::queryTimesteps( std::vector<int>& index,
           d_tsurl.push_back(url);
           ProblemSpecP time = top->findBlock("Time");
           if(time == 0)
-            throw InternalError("Cannot find Time block");
+            throw InternalError("DataArchive::queryTimesteps:Cannot find Time block");
           
           int timestepNumber;
           if(!time->get("timestepNumber", timestepNumber))
-            throw InternalError("Cannot find timestepNumber");
+            throw InternalError("DataArchive::queryTimesteps:Cannot find timestepNumber");
           
           double currentTime;
           if(!time->get("currentTime", currentTime))
-            throw InternalError("Cannot find currentTime");
+            throw InternalError("DataArchive::queryTimesteps:Cannot find currentTime");
           d_tsindex.push_back(timestepNumber);
           d_tstimes.push_back(currentTime);
         }
@@ -242,23 +242,23 @@ DataArchive::queryGrid( double time, const ProblemSpec* ups)
   d_lock.lock();
   ProblemSpecP top = getTimestep(time, url);
   if (top == 0)
-    throw InternalError("Cannot find Grid in timestep");
+    throw InternalError("DataArchive::queryGrid:Cannot find Grid in timestep");
   ProblemSpecP gridnode = top->findBlock("Grid");
   if(gridnode == 0)
-    throw InternalError("Cannot find Grid in timestep");
+    throw InternalError("DataArchive::queryGrid:Cannot find Grid in timestep");
   int numLevels = -1234;
   GridP grid = scinew Grid;
   for(ProblemSpecP n = gridnode->getFirstChild(); n != 0; n=n->getNextSibling()){
     if(n->getNodeName() == "numLevels") {
       if(!n->get(numLevels))
-        throw InternalError("Error parsing numLevels");
+        throw InternalError("DataArchive::queryGrid:Error parsing numLevels");
     } else if(n->getNodeName() == "Level"){
       Point anchor;
       if(!n->get("anchor", anchor))
-        throw InternalError("Error parsing level anchor point");
+        throw InternalError("DataArchive::queryGrid:DataArchive::queryGrid:Error parsing level anchor point");
       Vector dcell;
       if(!n->get("cellspacing", dcell))
-        throw InternalError("Error parsing level cellspacing");
+        throw InternalError("DataArchive::queryGrid:Error parsing level cellspacing");
       IntVector extraCells(0,0,0);
       n->get("extraCells", extraCells);
       
@@ -281,39 +281,40 @@ DataArchive::queryGrid( double time, const ProblemSpec* ups)
         if(r->getNodeName() == "numPatches" ||
            r->getNodeName() == "numRegions") {
           if(!r->get(numPatches))
-            throw InternalError("Error parsing numRegions");
+            throw InternalError("DataArchive::queryGrid:Error parsing numRegions");
         } else if(r->getNodeName() == "totalCells") {
           if(!r->get(totalCells))
-            throw InternalError("Error parsing totalCells");
+            throw InternalError("DataArchive::queryGrid:Error parsing totalCells");
         } else if(r->getNodeName() == "Patch" ||
                   r->getNodeName() == "Region") {
           int id;
           if(!r->get("id", id))
-            throw InternalError("Error parsing patch id");
+            throw InternalError("DataArchive::queryGrid:Error parsing patch id");
           IntVector lowIndex;
           if(!r->get("lowIndex", lowIndex))
-            throw InternalError("Error parsing patch lowIndex");
+            throw InternalError("DataArchive::queryGrid:Error parsing patch lowIndex");
           IntVector highIndex;
           if(!r->get("highIndex", highIndex))
-            throw InternalError("Error parsing patch highIndex");
+            throw InternalError("DataArchive::queryGrid:Error parsing patch highIndex");
           IntVector inLowIndex = lowIndex;
           IntVector inHighIndex = highIndex;
           r->get("interiorLowIndex", inLowIndex);
           r->get("interiorHighIndex", inHighIndex);
           long totalCells;
           if(!r->get("totalCells", totalCells))
-            throw InternalError("Error parsing patch total cells");
+            throw InternalError("DataArchive::queryGrid:Error parsing patch total cells");
           USE_IF_ASSERTS_ON(Patch* patch =) level->addPatch(lowIndex, highIndex,inLowIndex, inHighIndex,id);
           ASSERTEQ(patch->totalCells(), totalCells);
         } else if(r->getNodeName() == "anchor"
-                  || r->getNodeName() == "cellspacing"
-                  || r->getNodeName() == "id") {
+                  || r->getNodeName() == "cellspacing"    // This could use a comment or 2 --Todd
+                  || r->getNodeName() == "id"
+                  || r->getNodeName() == "extraCells") {
           // Nothing - handled above
         } else if(r->getNodeName() == "periodic") {
           if(!n->get("periodic", periodicBoundaries))
-            throw InternalError("Error parsing periodoc");
+            throw InternalError("DataArchive::queryGrid:Error parsing periodoc");
         } else if(r->getNodeType() != ProblemSpec::TEXT_NODE){
-          cerr << "WARNING: Unknown level data: " << r->getNodeName() << '\n';
+          cerr << "DataArchive::queryGrid:WARNING: Unknown level data: " << r->getNodeName() << '\n';
         }
       }
       ASSERTEQ(level->numPatches(), numPatches);
@@ -334,7 +335,7 @@ DataArchive::queryGrid( double time, const ProblemSpec* ups)
        }
 
     } else if(n->getNodeType() != ProblemSpec::TEXT_NODE){
-      cerr << "WARNING: Unknown grid data: " << n->getNodeName() << '\n';
+      cerr << "DataArchive::queryGrid:WARNING: Unknown grid data: " << n->getNodeName() << '\n';
     }
   }
   
@@ -367,7 +368,7 @@ DataArchive::queryVariables( vector<string>& names,
   d_lock.lock();
   ProblemSpecP vars = d_indexDoc->findBlock("variables");
   if(vars == 0)
-    throw InternalError("variables section not found\n");
+    throw InternalError("DataArchive::queryVariables:variables section not found\n");
   queryVariables(vars, names, types);
 
   d_lock.unlock();
@@ -401,7 +402,7 @@ DataArchive::queryVariables(ProblemSpecP vars, vector<string>& names,
 
       string type = attributes["type"];
       if(type == "")
-        throw InternalError("Variable type not found");
+        throw InternalError("DataArchive::queryVariables:Variable type not found");
       const TypeDescription* td = TypeDescription::lookupType(type);
       if(!td){
         static TypeDescription* unknown_type = 0;
@@ -414,10 +415,10 @@ DataArchive::queryVariables(ProblemSpecP vars, vector<string>& names,
       types.push_back(td);
       string name = attributes["name"];
       if(name == "")
-        throw InternalError("Variable name not found");
+        throw InternalError("DataArchive::queryVariables:Variable name not found");
       names.push_back(name);
     } else if(n->getNodeType() != ProblemSpec::TEXT_NODE){
-      cerr << "WARNING: Unknown variable data: " << n->getNodeName() << '\n';
+      cerr << "DataArchive::queryVariables:WARNING: Unknown variable data: " << n->getNodeName() << '\n';
     }
   }
 }
@@ -433,7 +434,7 @@ DataArchive::query( Variable& var, const std::string& name,
   d_lock.unlock();
   if(vnode == 0){
     cerr << "VARIABLE NOT FOUND: " << name << ", index " << matlIndex << ", patch " << patch->getID() << ", time " << time << '\n';
-    throw InternalError("Variable not found");
+    throw InternalError("DataArchive::query:Variable not found");
   }
   query(var, vnode, url, matlIndex, patch);
   dbg << "DataArchive::query() completed in "
@@ -450,7 +451,7 @@ DataArchive::query( Variable& var, ProblemSpecP vnode, XMLURL url,
 
   string type = attributes["type"];
   if(type == "")
-    throw InternalError("Variable doesn't have a type");
+    throw InternalError("DataArchive::query:Variable doesn't have a type");
   const TypeDescription* td = var.virtualGetTypeDescription();
 
   ASSERT(td->getName() == type);
@@ -458,7 +459,7 @@ DataArchive::query( Variable& var, ProblemSpecP vnode, XMLURL url,
   if (td->getType() == TypeDescription::ParticleVariable) {
     int numParticles;
     if(!vnode->get("numParticles", numParticles))
-      throw InternalError("Cannot get numParticles");
+      throw InternalError("DataArchive::query:Cannot get numParticles");
     psetDBType::key_type key(matlIndex, patch);
     ParticleSubset* psubset = 0;
     psetDBType::iterator psetIter = d_psetDB.find(key);
@@ -485,13 +486,13 @@ DataArchive::query( Variable& var, ProblemSpecP vnode, XMLURL url,
 
   long start;
   if(!vnode->get("start", start))
-    throw InternalError("Cannot get start");
+    throw InternalError("DataArchive::query:Cannot get start");
   long end;
   if(!vnode->get("end", end))
-    throw InternalError("Cannot get end");
+    throw InternalError("DataArchive::query:Cannot get end");
   string filename;  
   if(!vnode->get("filename", filename))
-    throw InternalError("Cannot get filename");
+    throw InternalError("DataArchive::query:Cannot get filename");
   string compressionMode;  
   if(!vnode->get("compression", compressionMode))
     compressionMode = "";
@@ -499,7 +500,7 @@ DataArchive::query( Variable& var, ProblemSpecP vnode, XMLURL url,
   XMLURL dataurl(url, filename.c_str());
   if(dataurl.getProtocol() != XMLURL::File) {
     char* urlpath = XMLString::transcode(dataurl.getPath());
-    throw InternalError(string("Cannot read over: ")+urlpath);
+    throw InternalError(string("DataArchive::query:Cannot read over: ")+urlpath);
   }
   char* urlpath = XMLString::transcode(dataurl.getPath());
   string datafile(urlpath);
