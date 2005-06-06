@@ -1,24 +1,34 @@
 /*!
-\page devtasks Preliminary SCIRun2 tasks
+\page devtasks SCIRun2 Release Criteria tasks
 
 \section TODO Developer TODO lists
 
 \subsection ayla Ayla
 
-\li Create simple build configuration by making Ruby, VTK and Qt optional build features: by May 27
-\li Create SCIRun2 dependency list organized by feature or component model (as web page): by May 27
-\li Make MPI an optional build feature: by June 3
+\li Bug #2644 Dataflow components broken in SCIRun2: by June 10
+\li Bug #2609 Load network files broken: by June 17
+\li Babel upgrade: by June 20
+\li Replace Qt GUI toolkit: TBD
+\li Make MPI an optional build feature: TDB
 
 \subsection keming Keming
 
-\li Remove MPI dependencies from SCIRun2 except for ploader: by June 3
+\li Remove MPI dependencies from SCIRun2 except for ploader: TDB
 \li Complete parallel component implementation: by July 18
+\li Updates to text builder: TBD
 
 \subsection kosta Kosta
 
-\li Optionally build Bridge component with SCIRun2: by May 27
-\li Add TAO Corba as a configure option: by June 3
-\li Status of separate compilation of SIDL files using PIDL compiler: by June 3
+\li Add TAO Corba as a configure option: by June 10
+\li Status of separate compilation of SIDL files using PIDL compiler: by June 10
+\li Audit existing test programs: find broken tests, write some documentation for each, locate script for test automation: by June 10
 \li Complete SCIM integration: by June 20
+
+\subsection rc Unassigned Release Criteria tasks
+
+\li Standardize the addition of a component model and component 
+\li RMI Security model
+\li Tests: framework, components, interfaces
+
 
 */
