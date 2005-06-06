@@ -55,10 +55,20 @@ public:
   void set_time(double t);
   void inc_pause(double t);
   bool playing() { return playing_; }
-  bool rewind() { return rewind_; }
-  void done_rewind() { rewind_ = false; }
+  bool big_rewind() { return big_rewind_; }
+  void done_big_rewind() { big_rewind_ = false; }
   bool fforward() { return fforward_; }
   void done_fforward() { fforward_ = false; }
+  bool forward_sec() { return forward_sec_; }
+  void done_forward_sec() { forward_sec_ = false; }
+  bool forward_min() { return forward_min_; }
+  void done_forward_min() { forward_min_ = false; }
+  bool rewind() { return rewind_; }
+  void done_rewind() { rewind_ = false; }
+  bool rewind_sec() { return rewind_sec_; }
+  void done_rewind_sec() { rewind_sec_ = false; }
+  bool rewind_min() { return rewind_min_; }
+  void done_rewind_min() { rewind_min_ = false; }
   double time_sf() { return time_sf_.get(); }
 
 private:
@@ -68,8 +78,13 @@ private:
   RTTime                  *trun_;
   Thread                  *trun_thread_;
   bool                     playing_;
-  bool                     rewind_;
+  bool                     big_rewind_;
   bool                     fforward_;
+  bool                     forward_sec_;
+  bool                     forward_min_;
+  bool                     rewind_;
+  bool                     rewind_sec_;
+  bool                     rewind_min_;
 };
 
 class RTTime : public Runnable {
@@ -102,13 +117,13 @@ RTTime::run()
   double tlast = t;
   while (!dead_) {
 
-    if (module_->rewind()) {
+    if (module_->big_rewind()) {
       bool playing = throttle_.current_state() != Timer::Stopped;
       if (playing) throttle_.stop();
       throttle_.clear();
       if (playing) throttle_.start();
       tlast = 0;
-      module_->done_rewind();
+      module_->done_big_rewind();
     }
     if (module_->fforward()) {
       // fforward increments the time by 10 mins. + 
@@ -118,6 +133,80 @@ RTTime::run()
       if (!playing) throttle_.stop();
       tlast += 600.;
       module_->done_fforward();
+    }
+
+    if (module_->forward_sec()) {
+      // forward_sec increments the time by 1 sec. + 
+      bool playing = throttle_.current_state() != Timer::Stopped;
+      if (!playing) throttle_.start();
+      throttle_.add(1.);
+      if (!playing) throttle_.stop();
+      tlast += 1.;
+      module_->done_forward_sec();
+    }
+
+    if (module_->forward_min()) {
+      // forward_min increments the time by 1 mins. + 
+      bool playing = throttle_.current_state() != Timer::Stopped;
+      if (!playing) throttle_.start();
+      throttle_.add(60.);
+      if (!playing) throttle_.stop();
+      tlast += 60.;
+      module_->done_forward_min();
+    }
+
+    if (module_->rewind()) {
+      // rewind decrements the time by 10 mins. + 
+      bool playing = throttle_.current_state() != Timer::Stopped;
+
+		if (tlast - 600 < 0) {
+      	if (playing) throttle_.stop();
+      	throttle_.clear();
+      	if (playing) throttle_.start();
+      	tlast = 0;
+		} else {
+      	if (!playing) throttle_.start();
+      	throttle_.add(-600.);
+      	if (!playing) throttle_.stop();
+      	tlast += -600.;
+		}
+      module_->done_rewind();
+    }
+
+    if (module_->rewind_sec()) {
+      // rewind_sec decrements the time by 1 sec. + 
+      bool playing = throttle_.current_state() != Timer::Stopped;
+
+		if (tlast - 1 < 0) {
+      	if (playing) throttle_.stop();
+      	throttle_.clear();
+      	if (playing) throttle_.start();
+      	tlast = 0;
+		} else {
+      	if (!playing) throttle_.start();
+      	throttle_.add(-1.);
+      	if (!playing) throttle_.stop();
+      	tlast += -1.;
+		}
+      module_->done_rewind_sec();
+    }
+
+    if (module_->rewind_min()) {
+      // rewind_min decrements the time by 1 min. + 
+      bool playing = throttle_.current_state() != Timer::Stopped;
+
+		if (tlast - 60 < 0) {
+      	if (playing) throttle_.stop();
+      	throttle_.clear();
+      	if (playing) throttle_.start();
+      	tlast = 0;
+		} else {
+      	if (!playing) throttle_.start();
+      	throttle_.add(-60.);
+      	if (!playing) throttle_.stop();
+      	tlast += -60.;
+		}
+      module_->done_rewind_min();
     }
 
     t = throttle_.time();
@@ -149,8 +238,13 @@ TimeControls::TimeControls(GuiContext* ctx) :
   exec_mode_(ctx->subVar("execmode")),
   time_sf_(ctx->subVar("scale_factor")),
   playing_(false),
+  big_rewind_(false),
+  fforward_(false),
+  forward_sec_(false),
+  forward_min_(false),
   rewind_(false),
-  fforward_(false)
+  rewind_sec_(false),
+  rewind_min_(false)
 {
   trun_ = scinew RTTime(this);
   trun_thread_ = scinew Thread(trun_, 
@@ -215,8 +309,18 @@ TimeControls::tcl_command(GuiArgs& args, void* userdata)
     time_sf_.reset();
   } else if (args[1] == "fforward") {
     fforward_ = true;
+  } else if (args[1] == "forward_sec") {
+    forward_sec_ = true;
+  } else if (args[1] == "forward_min") {
+    forward_min_ = true;
   } else if (args[1] == "rewind") {
     rewind_ = true;
+  } else if (args[1] == "rewind_sec") {
+    rewind_sec_ = true;
+  } else if (args[1] == "rewind_min") {
+    rewind_min_ = true;
+  } else if (args[1] == "big_rewind") {
+    big_rewind_ = true;
   } else if (args[1] == "play") {
     playing_ = true;
     want_to_execute();
