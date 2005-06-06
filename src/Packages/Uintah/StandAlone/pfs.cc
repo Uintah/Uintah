@@ -32,19 +32,24 @@ using namespace std;
 void usage( char *prog_name );
 
 void
-parseArgs( int argc, char *argv[], string & infile)
+parseArgs( int argc, char *argv[], string & infile, bool & binmode)
 {
-  if( argc < 2 || argc > 2 ) {
-    usage( argv[0] );
+  binmode = false;
+  infile = argv[argc-1];
+  
+  if( argc < 2) usage( argv[0] );
+  
+  if(string(argv[1])=="-b") {
+    binmode = true;
+    argc--;
   }
-
-  infile = argv[1];
+  if( argc > 2) usage( argv[0] );
 }
 
 void
 usage( char *prog_name )
 {
-  cout << "Usage: " << prog_name << " infile \n";
+  cout << "Usage: " << prog_name << " [-b] [-B] infile \n";
   exit( 1 );
 }
 
@@ -56,8 +61,9 @@ main(int argc, char *argv[])
     Uintah::Parallel::initializeManager( argc, argv, "" );
 
     string infile;
+    bool binmode;
     
-    parseArgs( argc, argv, infile);
+    parseArgs( argc, argv, infile, binmode);
     
     ProblemSpecInterface* reader = scinew ProblemSpecReader(infile);
     
@@ -168,16 +174,45 @@ main(int argc, char *argv[])
                 char fnum[5];
                 sprintf(fnum,".%d",pid);
                 of_name = f_name+fnum;
+                
+                // ADB: change this to always be 128 bytes, so that we can 
+                // cleanly read the header off a binary file
                 ofstream dest(of_name.c_str());
-                dest << min.x() << " " << min.y() << " " << min.z() << " " 
-                     << max.x() << " " << max.y() << " " << max.z() << endl;
+                if(binmode) {
+                  double x0 = min.x(), y0 = min.y(), z0 = min.z();
+                  double x1 = max.x(), y1 = max.y(), z1 = max.z();
+                  dest.write((char*)&x0, sizeof(double));
+                  dest.write((char*)&y0, sizeof(double));
+                  dest.write((char*)&z0, sizeof(double));
+                  dest.write((char*)&x1, sizeof(double));
+                  dest.write((char*)&y1, sizeof(double));
+                  dest.write((char*)&z1, sizeof(double));
+                } else {
+                  dest << min.x() << " " << min.y() << " " << min.z() << " " 
+                       << max.x() << " " << max.y() << " " << max.z();
+                }
                 for (int I = 0; I < (int) points[pid].size(); I++) {
                   Point  p = points[pid][I].first;
                   vector<double> r = points[pid][I].second;
-                  dest << p.x() << " " << p.y() << " " << p.z();
-                  for(vector<double>::const_iterator rit(r.begin());rit!=r.end();rit++)
-                    dest << " " << *rit;
-                  dest << endl;
+                  
+                  // FIXME: should have way of specifying endiness
+                  if(binmode) {
+                    double x = p.x();
+                    double y = p.y();
+                    double z = p.z();
+                    dest.write((char*)&x, sizeof(double));
+                    dest.write((char*)&y, sizeof(double));
+                    dest.write((char*)&z, sizeof(double));
+                    for(vector<double>::const_iterator rit(r.begin());rit!=r.end();rit++) {
+                      double v = *rit;
+                      dest.write((char*)&v, sizeof(double));
+                    }
+                  } else {
+                    dest << p.x() << " " << p.y() << " " << p.z();
+                    for(vector<double>::const_iterator rit(r.begin());rit!=r.end();rit++)
+                      dest << " " << *rit;
+                    dest << endl;
+                  }
                 }
                 dest.close();
               }
