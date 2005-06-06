@@ -162,7 +162,7 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
                << level->getIndex() << " step " << subCycleProgress<<endl;
     int  numMatls = d_sharedState->getNumICEMatls();
     Ghost::GhostType  gac = Ghost::AroundCells;
-
+    Ghost::GhostType  gn = Ghost::None;
     bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
       
     for(int p=0;p<patches->size();p++){
@@ -174,11 +174,11 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
         constCCVariable<double> press_CC, rho_CC, sp_vol_CC, temp_CC;
         constCCVariable<Vector> vel_CC;
 
-        fine_old_dw->get(press_CC, lb->press_CCLabel,  indx,patch, gac,1);
-        fine_old_dw->get(rho_CC,   lb->rho_CCLabel,    indx,patch, gac,1);
-        fine_old_dw->get(sp_vol_CC,lb->sp_vol_CCLabel, indx,patch, gac,1);
-        fine_old_dw->get(temp_CC,  lb->temp_CCLabel,   indx,patch, gac,1);
-        fine_old_dw->get(vel_CC,   lb->vel_CCLabel,    indx,patch, gac,1);
+        fine_old_dw->get(press_CC, lb->press_CCLabel,  indx,patch, gn,0);
+        fine_old_dw->get(rho_CC,   lb->rho_CCLabel,    indx,patch, gn,0);
+        fine_old_dw->get(sp_vol_CC,lb->sp_vol_CCLabel, indx,patch, gn,0);
+        fine_old_dw->get(temp_CC,  lb->temp_CCLabel,   indx,patch, gn,0);
+        fine_old_dw->get(vel_CC,   lb->vel_CCLabel,    indx,patch, gn,0);
 
         //__________________________________
         //  Print Data 
