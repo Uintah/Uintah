@@ -90,7 +90,7 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
       count = 0;
       continue;
     }
-    
+
     // Find volume of influence of each particle as a
     // fraction of the cell size
     IntVector ppc = (*obj)->getNumParticlesPerCell();
@@ -119,7 +119,6 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
         particleIndex pidx = start+idx;
 	pvelocity[pidx]=(*obj)->getInitialVelocity();
 	ptemperature[pidx]=(*obj)->getInitialTemperature();
-	psp_vol[pidx]=1.0/matl->getInitialDensity();
         pdisp[pidx] = Vector(0.,0.,0.);
         pfiberdir[pidx] = Vector(0.0,0.0,0.0);
         perosion[pidx] = 1.0;
