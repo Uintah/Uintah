@@ -21,9 +21,9 @@ main(int argc, char *argv[])
   int zsize_raw = atoi(argv[3]);
 
   // physical size of each voxel dx, dy, dz
-  int dx = atoi(argv[4]);
-  int dy = atoi(argv[5]);
-  int dz = atoi(argv[6]);
+  double dx = atof(argv[4]);
+  double dy = atof(argv[5]);
+  double dz = atof(argv[6]);
 
   int lx,ly,lz,hx,hy,hz,threshold;
 
@@ -41,9 +41,9 @@ main(int argc, char *argv[])
   }
   else{
     lx=0;ly=0;lz=0;
-    hx=xsize_raw-1;
-    hy=ysize_raw-1;
-    hz=zsize_raw-1;
+    hx=xsize_raw;
+    hy=ysize_raw;
+    hz=zsize_raw;
     threshold=atoi(argv[7]);
   }
 
