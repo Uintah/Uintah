@@ -510,7 +510,6 @@ void FractureMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pVelocityLabel,         gan,NGP);
   t->requires(Task::OldDW, lb->pXLabel,                gan,NGP);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
-  t->requires(Task::OldDW, lb->pSp_volLabel,           gan,NGP); 
   t->requires(Task::OldDW, lb->pSizeLabel,             gan,NGP);
   t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,gan,NGP);
 //t->requires(Task::OldDW, lb->pExternalHeatRateLabel, gan,NGP);
@@ -1016,7 +1015,6 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pMassLabel,             gnone);
   t->requires(Task::OldDW, lb->pParticleIDLabel,       gnone);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      gnone);
-  t->requires(Task::OldDW, lb->pSp_volLabel,           gnone); 
   t->requires(Task::OldDW, lb->pVelocityLabel,         gnone);
   t->requires(Task::OldDW, lb->pDispLabel,             gnone);
   t->requires(Task::OldDW, lb->pSizeLabel,             gnone);
@@ -1052,7 +1050,6 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pParticleIDLabel_preReloc);
   t->computes(lb->pTemperatureLabel_preReloc);
   t->computes(lb->pTempPreviousLabel_preReloc); //for thermal stress
-  t->computes(lb->pSp_volLabel_preReloc);
   t->computes(lb->pMassLabel_preReloc);
   t->computes(lb->pVolumeLabel_preReloc);
   t->computes(lb->pSizeLabel_preReloc);
@@ -1511,7 +1508,7 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
       // Create arrays for the particle data
       constParticleVariable<Point>  px;
-      constParticleVariable<double> pmass, pvolume, pTemperature, pSp_vol;
+      constParticleVariable<double> pmass, pvolume, pTemperature;
       constParticleVariable<Vector> pvelocity, pexternalforce, psize, pdisp;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
@@ -1520,7 +1517,6 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(px,             lb->pXLabel,             pset);
       old_dw->get(pmass,          lb->pMassLabel,          pset);
       old_dw->get(pvolume,        lb->pVolumeLabel,        pset);
-      old_dw->get(pSp_vol,        lb->pSp_volLabel,        pset);
       old_dw->get(pvelocity,      lb->pVelocityLabel,      pset);
       old_dw->get(pTemperature,   lb->pTemperatureLabel,   pset);
       old_dw->get(psize,          lb->pSizeLabel,          pset);
@@ -1617,7 +1613,8 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       double totalmass = 0;
       Vector total_mom(0.0,0.0,0.0);
       Vector pmom;
-
+      
+      double pSp_vol = 1./mpm_matl->getInitialDensity();
       for (ParticleSubset::iterator iter = pset->begin();
                                     iter != pset->end(); 
                                     iter++){
@@ -1641,7 +1638,7 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
               gTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
               //gexternalheatrate[ni[k]] += pexternalheatrate[idx]      * S[k];
               gnumnearparticles[ni[k]] += 1.0;
-              gSp_vol[ni[k]]        += pSp_vol[idx]  * pmass[idx]     *S[k];
+              gSp_vol[ni[k]]        += pSp_vol * pmass[idx]           * S[k];
               gdisplacement[ni[k]]  += pdisp[idx] * pmass[idx]        * S[k];
             }
             else if(pgCode[idx][k]==2) {  // below crack
@@ -1651,7 +1648,7 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
               Gexternalforce[ni[k]] += pexternalforce[idx]            * S[k];
               GTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
               //Gexternalheatrate[ni[k]] += pexternalheatrate[idx]      * S[k];
-              GSp_vol[ni[k]]        += pSp_vol[idx]  * pmass[idx]     *S[k];
+              GSp_vol[ni[k]]        += pSp_vol * pmass[idx]           * S[k];
               Gdisplacement[ni[k]]  += pdisp[idx] * pmass[idx]        * S[k];
 	    }
 	  }
@@ -3030,8 +3027,8 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       ParticleVariable<Point> pxnew,pxx;
       constParticleVariable<Vector> pvelocity, psize;
       ParticleVariable<Vector> pvelocitynew, psizeNew;
-      constParticleVariable<double> pmass, pvolume, pTemperature, pSp_vol;
-      ParticleVariable<double> pmassNew,pvolumeNew,pTempNew, pSp_volNew;
+      constParticleVariable<double> pmass, pvolume, pTemperature;
+      ParticleVariable<double> pmassNew,pvolumeNew,pTempNew;
       constParticleVariable<long64> pids;
       ParticleVariable<long64> pids_new;
       constParticleVariable<Vector> pdisp;
@@ -3053,7 +3050,6 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pdisp,                 lb->pDispLabel,                  pset);
       old_dw->get(pmass,                 lb->pMassLabel,                  pset);
       old_dw->get(pids,                  lb->pParticleIDLabel,            pset);
-      old_dw->get(pSp_vol,               lb->pSp_volLabel,                pset);
       new_dw->get(pvolume,               lb->pVolumeDeformedLabel,        pset);
       old_dw->get(pvelocity,             lb->pVelocityLabel,              pset);
       old_dw->get(pTemperature,          lb->pTemperatureLabel,           pset);
@@ -3067,7 +3063,6 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocateAndPut(pvolumeNew,   lb->pVolumeLabel_preReloc,     pset);
       new_dw->allocateAndPut(pids_new,     lb->pParticleIDLabel_preReloc, pset);
       new_dw->allocateAndPut(pTempNew,     lb->pTemperatureLabel_preReloc,pset);
-      new_dw->allocateAndPut(pSp_volNew,   lb->pSp_volLabel_preReloc,     pset);
       new_dw->allocateAndPut(pkineticEnergyDensity,
                                           lb->pKineticEnergyDensityLabel, pset);
       // for thermal stress analysis
@@ -3161,7 +3156,6 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         // pxx is only useful if we're not in normal grid resetting mode.
 	pxx[idx]             = px[idx]    + pdispnew[idx];	
 	pTempNew[idx]        = pTemperature[idx] + tempRate*delT;
-	pSp_volNew[idx]      = pSp_vol[idx];
         pTempPreNew[idx]     = pTempCurrent[idx]; // for thermal stress
 
         if (cout_heat.active()) {
@@ -3470,7 +3464,7 @@ FractureMPM::refine(const ProcessorGroup*,
 	
 	// Create arrays for the particle data
 	ParticleVariable<Point>  px;
-	ParticleVariable<double> pmass, pvolume, pTemperature, pSp_vol;
+	ParticleVariable<double> pmass, pvolume, pTemperature;
 	ParticleVariable<Vector> pvelocity, pexternalforce, psize, pdisp;
 	ParticleVariable<int>    pLoadCurve;
 	ParticleVariable<long64> pID;
@@ -3479,7 +3473,6 @@ FractureMPM::refine(const ProcessorGroup*,
         new_dw->allocateAndPut(px,             lb->pXLabel,             pset);
         new_dw->allocateAndPut(pmass,          lb->pMassLabel,          pset);
         new_dw->allocateAndPut(pvolume,        lb->pVolumeLabel,        pset);
-        new_dw->allocateAndPut(pSp_vol,        lb->pSp_volLabel,        pset);
         new_dw->allocateAndPut(pvelocity,      lb->pVelocityLabel,      pset);
         new_dw->allocateAndPut(pTemperature,   lb->pTemperatureLabel,   pset);
         new_dw->allocateAndPut(pexternalforce, lb->pExternalForceLabel, pset);
