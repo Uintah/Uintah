@@ -37,6 +37,9 @@ FileGeometryPiece::FileGeometryPiece(ProblemSpecP& ps)
       throw ProblemSetupException("Unexpected field variable of '"+next_var_name+"'");
   }
   
+  d_file_format = FFText; 
+  d_presplit    = true;  // default expects input to have been been processed with pfs
+#if 0
   cerr << "reading: positions";
   for(list<InputVar>::const_iterator vit(d_vars.begin());vit!=d_vars.end();vit++) {
     if       (*vit==IVvolume) {
@@ -50,21 +53,27 @@ FileGeometryPiece::FileGeometryPiece(ProblemSpecP& ps)
     }
   }
   cerr << endl;
+#endif
   
-  d_file_format = FFSplit; // default expects input to have been been processed with pfs
-
   string fformat_txt;
   if(ps->get("format",fformat_txt)) {
-    if     (fformat_txt=="split") d_file_format = FFSplit;
+    if (fformat_txt=="split") 
+      {
+        // leave for backward compatibility
+        d_file_format = FFText;
+        d_presplit    = true;
+      }
     else if(fformat_txt=="text")  d_file_format = FFText;
+    else if(fformat_txt=="bin")   d_file_format = isLittleEndian()?FFLSBBin:FFMSBBin;
     else if(fformat_txt=="lsb")   d_file_format = FFLSBBin;
     else if(fformat_txt=="msb")   d_file_format = FFMSBBin;
     else if(fformat_txt=="gzip")  d_file_format = FFGzip;
     else
       throw ProblemSetupException("Unexpected file geometry format");
   }
+  ps->get("split", d_presplit);
   
-  if(d_file_format==FFSplit) {
+  if(this->d_presplit) {
     // read points now to find bounding box
     
     // We must first read in the min and max from file.0 so
@@ -75,19 +84,19 @@ FileGeometryPiece::FileGeometryPiece(ProblemSpecP& ps)
       throw ProblemSetupException("ERROR: opening MPM geometry file '"+file_name+"'\nFailed to find point file");
     }
     
+    // note that the header is always text, even for binary formats
     Point min, max;
-    source >> min(0) >> min(1) >> min(2) >> max(0) >> max(1) >> max(2);
+    read_bbox(source, min, max);
     source.close();
     
     Vector fudge(1.e-5,1.e-5,1.e-5);
     min = min - fudge;
     max = max + fudge;
     d_box = Box(min,max);
-    cerr << "bbox of " << min << " " << max << endl;
     
   } else {
     // if not using split format, have to read points now to find bounding box
-    readPoints(-1);
+    readPoints(-1); // pass pid of -1 to say we are reading all points
   }
 }
 
@@ -118,11 +127,30 @@ Box FileGeometryPiece::getBoundingBox() const
   return d_box;
 }
 
+
+void FileGeometryPiece::read_bbox(istream & source, Point & min, Point & max) const
+{
+  if(d_file_format==FFText) {
+    source >> min(0) >> min(1) >> min(2) >> max(0) >> max(1) >> max(2);
+  } else {
+    // FIXME: never changes, should save this !
+    const bool iamlittle = isLittleEndian();
+    const bool needflip = (iamlittle && (d_file_format==FFMSBBin)) || (!iamlittle && (d_file_format==FFLSBBin));
+    double t;
+    source.read((char *)&t, sizeof(double)); if(needflip) swapbytes(t); min(0) = t;
+    source.read((char *)&t, sizeof(double)); if(needflip) swapbytes(t); min(1) = t;
+    source.read((char *)&t, sizeof(double)); if(needflip) swapbytes(t); min(2) = t;
+    source.read((char *)&t, sizeof(double)); if(needflip) swapbytes(t); max(0) = t;
+    source.read((char *)&t, sizeof(double)); if(needflip) swapbytes(t); max(1) = t;
+    source.read((char *)&t, sizeof(double)); if(needflip) swapbytes(t); max(2) = t;
+  }
+}
+
 bool
 FileGeometryPiece::read_line(istream & is, Point & xmin, Point & xmax)
 {
   double x1,x2,x3;
-  if(d_file_format==FFSplit || d_file_format==FFText) {
+  if(d_file_format==FFText) {
     double v1,v2,v3;
     
     // line always starts with coordinates
@@ -156,7 +184,11 @@ FileGeometryPiece::read_line(istream & is, Point & xmin, Point & xmax)
     is.read((char*)&x1, sizeof(double)); if(!is) return false;
     is.read((char*)&x2, sizeof(double));
     is.read((char*)&x3, sizeof(double));
-    
+    if(needflip) {
+      swapbytes(x1);
+      swapbytes(x2);
+      swapbytes(x3);
+    }
     d_points.push_back(Point(x1,x2,x3));
     
     for(list<InputVar>::const_iterator vit(d_vars.begin());vit!=d_vars.end();vit++) {
@@ -204,15 +236,16 @@ FileGeometryPiece::read_line(istream & is, Point & xmin, Point & xmax)
 
 void FileGeometryPiece::readPoints(int pid)
 {
-  if(d_file_format!=FFSplit && pid!=-1) return; // already read points
-
+  // use pid of -1 to indicate reading all points
+  if(!d_presplit && pid!=-1) return; // already read points
+  
   ifstream source;
   
   Point minpt( 1e30, 1e30, 1e30);
   Point maxpt(-1e30,-1e30,-1e30);
   
   string file_name;
-  if(d_file_format==FFSplit) {
+  if(d_presplit) {
     // pre-processed split point files
     char fnum[5];
     sprintf(fnum,".%d",pid);
@@ -220,8 +253,9 @@ void FileGeometryPiece::readPoints(int pid)
     
     source.open(file_name.c_str());
     
-    // re-reading these
-    source >> minpt(0) >> minpt(1) >> minpt(2) >> maxpt(0) >> maxpt(1) >> maxpt(2);
+    // read past the bounding box line
+    Point fakemin, fakemax;
+    read_bbox(source, fakemin, fakemax);
     
   } else {
     file_name = d_file_name;
@@ -239,13 +273,10 @@ void FileGeometryPiece::readPoints(int pid)
       readpts++;
   }
   
-  if(d_file_format!=FFSplit) {
+  if(!d_presplit) { // pre-split reads the bounding box from the input file
     Vector fudge(1.e-5,1.e-5,1.e-5);
     d_box = Box(minpt-fudge,maxpt+fudge);
   }
-  
-  cerr << "   Read " << readpts << " from file " << endl;
-  cerr << "   Box = " << d_box << endl;
 }
 
 int FileGeometryPiece::createPoints()

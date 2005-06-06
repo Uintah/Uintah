@@ -30,25 +30,31 @@ namespace Uintah {
   \verbatim
     <file>
       <name>file_name.txt</name>
-      <format>split</format>
-      <var1>p.volume</var1>
-      <var2>p.fiberdir</var2>
-      <var3>p.externalforce</var3>
+      <format>text </format>
+      <split> true </split>
+      <var>p.volume</var>
+      <var>p.fiberdir</var>
+      <var>p.externalforce</var>
     </file>
   \endverbatim
   
   Requires one input: file name <name>points.txt</name>
   
   The format field can be used to specify that the point file is 
-    split - pre-processed across processors using pfs (the default)
     text  - plain text list of points (slow for may processors)
     lsb   - least significant byte binary double
     msb   - most significant byte binary double
+    bin   - use native binary ordering.
 
+    if split is specified (the default), the points file is assumed to have
+    been run through pfs.
+    
     the 'split' format must match the number of processors, and 
     expects files in file_name.txt.iproc
     where iproc is the mpi rank of the processor.
-    it has a bounding box a the first line.
+    
+    Note, for all formats (text and binary), there needs to be a 128 line
+    buffer containing the bounding box of the whole data set in every file.
   
   If <var?> tags are present, extra fields values can be assigned to each 
   point.
@@ -67,7 +73,7 @@ namespace Uintah {
 
   class FileGeometryPiece : public SmoothGeomPiece {
   private:
-    enum FileFormat {FFText, FFSplit, FFLSBBin, FFMSBBin, FFGzip};
+    enum FileFormat {FFText, FFLSBBin, FFMSBBin, FFGzip};
     enum InputVar   {IVvolume, IVtemperature, IVextforces, IVfiberdirn};
     
   public:
@@ -104,11 +110,13 @@ namespace Uintah {
   private:
     Box                 d_box;
     string              d_file_name;
+    bool                d_presplit;
     FileFormat          d_file_format;
     std::list<InputVar> d_vars;
     
   private:
     bool read_line(std::istream & is, Point & xmin, Point & xmax);
+    void read_bbox(std::istream & source, Point & lowpt, Point & highpt) const;
   };
   
 } // End namespace Uintah
