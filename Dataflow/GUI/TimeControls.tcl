@@ -56,6 +56,15 @@ itcl_class SCIRun_Time_TimeControls {
 	$this-c update_scale
     }
 
+    method do_rewind {} {
+	set w .ui[modname]
+	set cur [$w.tf get -clicks]
+	incr cur -600
+	$w.tf show $cur
+	set $this-time [$w.tf get -clicks]
+	$this-c "rewind"
+    }
+
     method do_fforward {} {
 	set w .ui[modname]
 	set cur [$w.tf get -clicks]
@@ -65,11 +74,47 @@ itcl_class SCIRun_Time_TimeControls {
 	$this-c "fforward"
     }
 
-    method do_rewind {} {
+    method do_rewind_sec {} {
+	set w .ui[modname]
+	set cur [$w.tf get -clicks]
+	incr cur -1 
+	$w.tf show $cur
+	set $this-time [$w.tf get -clicks]
+	$this-c "rewind_sec"
+    }
+
+    method do_forward_sec {} {
+	set w .ui[modname]
+	set cur [$w.tf get -clicks]
+	incr cur 1 
+	$w.tf show $cur
+	set $this-time [$w.tf get -clicks]
+	$this-c "forward_sec"
+    }
+
+    method do_rewind_min {} {
+	set w .ui[modname]
+	set cur [$w.tf get -clicks]
+	incr cur -60
+	$w.tf show $cur
+	set $this-time [$w.tf get -clicks]
+	$this-c "rewind_min"
+    }
+
+    method do_forward_min {} {
+	set w .ui[modname]
+	set cur [$w.tf get -clicks]
+	incr cur 60
+	$w.tf show $cur
+	set $this-time [$w.tf get -clicks]
+	$this-c "forward_min"
+    }
+
+    method do_big_rewind {} {
 	set w .ui[modname]
 	$w.tf show "00:00:00"
 	set $this-time [$w.tf get -clicks]
-	$this-c "rewind"
+	$this-c "big_rewind"
     }
     
     method do_update {t} {
@@ -81,7 +126,7 @@ itcl_class SCIRun_Time_TimeControls {
 	    $w.tf show $val
 	}
     }
-    
+
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -107,24 +152,36 @@ itcl_class SCIRun_Time_TimeControls {
 	set fforward [image create photo -file ${image_dir}/fast-forward-icon.ppm]
 
 	# Create and pack the VCR buttons frame
-	button $vcr.rewind -image $rewind -command "$this do_rewind"
-	button $vcr.stepb -image $stepb -command "$this do_stepb"
+	#button $vcr.rewind -image $rewind -command "$this do_big_rewind"
+	button $vcr.rewind -image $rewind
+	bind $vcr.rewind <ButtonPress-1> "$this do_rewind_min"
+	bind $vcr.rewind <Shift-ButtonPress-1> "$this do_rewind"
+	#button $vcr.stepb -image $stepb -command "$this do_stepb"
+	button $vcr.stepb -image $stepb -command "$this do_rewind_sec"
 	button $vcr.pause -image $pause \
 	    -command "set $this-execmode pause; $this-c pause"
 	button $vcr.play  -image $play  \
 	    -command "set $this-execmode play; $this-c play"
-	button $vcr.stepf -image $stepf -command "$this do_stepf"
-	button $vcr.fforward -image $fforward -command "$this do_fforward"
+	#button $vcr.stepf -image $stepf -command "$this do_stepf"
+	button $vcr.stepf -image $stepf -command "$this do_forward_sec"
+	#button $vcr.fforward -image $fforward -command "$this do_fforward"
+	button $vcr.fforward -image $fforward
+	bind $vcr.fforward <ButtonPress-1> "$this do_forward_min"
+	bind $vcr.fforward <Shift-ButtonPress-1> "$this do_fforward"
 
 	pack $vcr.rewind $vcr.stepb $vcr.pause \
 	    $vcr.play $vcr.stepf $vcr.fforward -side left -fill both -expand 1
 	global ToolTipText
-	Tooltip $vcr.rewind "Reset time to 00:00:00"
-	Tooltip $vcr.stepb "Decrement Play Rate"
+	#Tooltip $vcr.rewind "Reset time to 00:00:00"
+	Tooltip $vcr.rewind "Rewind 1 min (Press Shift to rewind 10 mins)"
+	#Tooltip $vcr.stepb "Decrement Play Rate"
+	Tooltip $vcr.stepb "Rewind 1 second"
 	Tooltip $vcr.pause "Pause"
 	Tooltip $vcr.play $ToolTipText(VCRplay)
-	Tooltip $vcr.stepf "Increment Play Rate"
-	Tooltip $vcr.fforward "Jump ahead 10 minutes"
+	#Tooltip $vcr.stepf "Increment Play Rate"
+	Tooltip $vcr.stepf "Fast forward 1 second"
+	#Tooltip $vcr.fforward "Jump ahead 10 minutes"
+	Tooltip $vcr.fforward "Fast forward 1 min (Press Shift to fast forward 10 mins)"
 
 
 
@@ -139,9 +196,12 @@ itcl_class SCIRun_Time_TimeControls {
 	pack $w.tf -fill x -expand yes -padx 10 -pady 10
         pack $w.vcr $w.roc -padx 5 -pady 5 -fill x -expand 0
 
+	button $w.big_rewind -text "Reset Time" -command "$this do_big_rewind"
+	Tooltip $w.big_rewind "Reset time to 00:00:00"
+
 	iwidgets::entryfield $w.nef -labeltext "Play Rate:" -validate real \
 	    -width 6 -textvariable $this-scale_factor -fixed 7
-	pack $w.nef -fill x -expand yes -padx 10 -pady 5
+	pack $w.big_rewind $w.nef -fill x -expand yes -padx 10 -pady 5
 
 	# Create the sci button panel
 	makeSciButtonPanel $w $w $this "-no_execute"
