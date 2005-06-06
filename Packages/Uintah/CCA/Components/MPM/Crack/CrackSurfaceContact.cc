@@ -69,17 +69,14 @@ void Crack::AdjustCrackContactInterpolated(const ProcessorGroup*,
                                 DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    
     double mua=0.0,mub=0.0;
     double ma,mb,dvan,dvbn,dvat,dvbt,ratioa,ratiob;
-    double vol0,normVol;
     Vector va,vb,vc,dva,dvb,ta,tb,na,nb,norm;
 
     int numMatls = d_sharedState->getNumMPMMatls();
     ASSERTEQ(numMatls, matls->size());
-
-    const Patch* patch = patches->get(p);
-    Vector dx = patch->dCell();
-    double vcell = dx.x()*dx.y()*dx.z();
 
     // Nodal solutions above crack
     StaticArray<constNCVariable<int> >    gNumPatls(numMatls);
@@ -122,7 +119,7 @@ void Crack::AdjustCrackContactInterpolated(const ProcessorGroup*,
 
       if(crackType[m]=="NO_CRACK") continue;  // no crack in this material
 
-      // Loop over nodes to see if there is contact. If yes, adjust velocity field
+      // Check if there is contact. If yes, adjust velocity field
       for(NodeIterator iter=patch->getNodeIterator();!iter.done();iter++) {
         IntVector c = *iter;
 
@@ -137,57 +134,20 @@ void Crack::AdjustCrackContactInterpolated(const ProcessorGroup*,
         mb=Gmass[m][c];
         vb=Gvelocity[m][c];
         vc=(va*ma+vb*mb)/(ma+mb);
-        short Contact=NO;
-
-        if(separateVol[m]<0. || contactVol[m] <0.) { 
-          // Use displacement criterion
-          Vector u1=gdisplacement[m][c];
-          Vector u2=Gdisplacement[m][c];
-          if(Dot((u2-u1),norm) >0. ) {
-            Contact=YES;
-          }
+	
+	// Check if contact
+        short contact=YES;
+	if(Dot((vb-va),norm) <= 0.) { // Moving apart, no contact 
+  	  contact=NO;
+	}  
+	else { // Approaching, check displacements 
+          Vector ua=gdisplacement[m][c];
+          Vector ub=Gdisplacement[m][c];
+          if(Dot((ub-ua),norm) <= 0. ) contact=NO;
         }
-        else { // Use volume criterion
-          // Evaluate the nodal saturated volume (vol0) for general cases
-          int numCellsWithPatls=0;
-          IntVector cellIndex[8];
-          patch->findCellsFromNode(c,cellIndex);
-          ParticleSubset* psetWGCs= old_dw->getParticleSubset(dwi, patch,
-                                 Ghost::AroundCells, NGN, lb->pXLabel);
-          constParticleVariable<Point> pxWGCs;
-          old_dw->get(pxWGCs, lb->pXLabel, psetWGCs);
-
-          short cellWithPatls[8];
-          for(int k=0; k<8; k++)  cellWithPatls[k]=0;
-          for(ParticleSubset::iterator iter=psetWGCs->begin();
-                                     iter!=psetWGCs->end();iter++) {
-            particleIndex idx=*iter;
-            double xp=pxWGCs[idx].x();
-            double yp=pxWGCs[idx].y();
-            double zp=pxWGCs[idx].z();
-            for(int k=0; k<8; k++) { // Loop over 8 cells around the node
-              Point l=patch->nodePosition(cellIndex[k]);
-              Point h=patch->nodePosition(cellIndex[k]+IntVector(1,1,1));
-              if(xp>l.x() && xp<=h.x() && yp>l.y() && yp<=h.y() &&
-                 zp>l.z() && zp<=h.z()) cellWithPatls[k]=1;
-            } // End of loop over 8 cells
-            short allCellsWithPatls=1;
-            for(int k=0; k<8; k++) {
-              if(cellWithPatls[k]==0) allCellsWithPatls=0;
-            }
-            if(allCellsWithPatls) break;
-          } // End of loop over patls
-          for(int k=0; k<8; k++) numCellsWithPatls+=cellWithPatls[k];
-          vol0=(float)numCellsWithPatls/8.*vcell;
-
-          normVol=(gvolume[m][c]+Gvolume[m][c])/vol0;
-          if(normVol>=contactVol[m] ||
-            (normVol>separateVol[m] && Dot((vb-va),norm) > 0. )) {
-            Contact=YES;
-          }
-        }
-
-        if(!Contact) { // No contact
+	
+	// If contact, adjust velocity field 
+        if(!contact) { // No contact
           gvelocity[m][c]=gvelocity[m][c];
           Gvelocity[m][c]=Gvelocity[m][c];
           frictionWork[m][c] += 0.;
@@ -290,17 +250,14 @@ void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
                                 DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+	      
     double mua=0.0,mub=0.0;
     double ma,mb,dvan,dvbn,dvat,dvbt,ratioa,ratiob;
-    double vol0,normVol;
     Vector aa,ab,va,vb,vc,dva,dvb,ta,tb,na,nb,norm;
 
     int numMatls = d_sharedState->getNumMPMMatls();
     ASSERTEQ(numMatls, matls->size());
-
-    const Patch* patch = patches->get(p);
-    Vector dx = patch->dCell();
-    double vcell = dx.x()*dx.y()*dx.z();
 
     // Nodal solutions above crack
     StaticArray<constNCVariable<double> > gmass(numMatls);
@@ -368,59 +325,22 @@ void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
         vb=Gvelocity_star[m][c];
         ab=Gacceleration[m][c];
         vc=(va*ma+vb*mb)/(ma+mb);
-        short Contact=NO;
-
-        if(separateVol[m]<0. || contactVol[m] <0.) {
-          // Use displacement criterion
-          Vector u1=gdisplacement[m][c];
-          //+delT*gvelocity_star[m][c];
-          Vector u2=Gdisplacement[m][c];
-          //+delT*Gvelocity_star[m][c];
-          if(Dot((u2-u1),norm) >0. ) {
-            Contact=YES;
-          }
+	
+	// Check if contact
+        short contact=YES;
+        if(Dot((vb-va),norm) <= 0.) { // Moving apart, no contact
+	  contact=NO;
+	}
+	else { // Approaching, check displacements
+          Vector ua=gdisplacement[m][c];
+                    //+delT*gvelocity_star[m][c];
+          Vector ub=Gdisplacement[m][c];
+                    //+delT*Gvelocity_star[m][c];
+          if(Dot((ub-ua),norm) <= 0.) contact=NO;
         }
-        else { // Use volume criterion
-          int numCellsWithPatls=0;
-          IntVector cellIndex[8];
-          patch->findCellsFromNode(c,cellIndex);
-          ParticleSubset* psetWGCs= old_dw->getParticleSubset(dwi, patch,
-                                 Ghost::AroundCells, NGN, lb->pXLabel);
-          constParticleVariable<Point> pxWGCs;
-          old_dw->get(pxWGCs, lb->pXLabel, psetWGCs);
-
-          short cellWithPatls[8];
-          for(int k=0; k<8; k++)  cellWithPatls[k]=0;
-          for(ParticleSubset::iterator iter=psetWGCs->begin();
-                                     iter!=psetWGCs->end();iter++) {
-            particleIndex idx=*iter;
-            double xp=pxWGCs[idx].x();
-            double yp=pxWGCs[idx].y();
-            double zp=pxWGCs[idx].z();
-            for(int k=0; k<8; k++) { // Loop over 8 cells around the node
-              Point l=patch->nodePosition(cellIndex[k]);
-              Point h=patch->nodePosition(cellIndex[k]+IntVector(1,1,1));
-              if(xp>l.x() && xp<=h.x() && yp>l.y() && yp<=h.y() &&
-                 zp>l.z() && zp<=h.z()) cellWithPatls[k]=1;
-            } //End of loop over 8 cells
-            short allCellsWithPatls=1;
-            for(int k=0; k<8; k++) {
-              if(cellWithPatls[k]==0) allCellsWithPatls=0;
-            }
-            if(allCellsWithPatls) break;
-          } // End of loop over patls
-          for(int k=0; k<8; k++) numCellsWithPatls+=cellWithPatls[k];
-          vol0=(float)numCellsWithPatls/8.*vcell;
-
-          normVol=(gvolume[m][c]+Gvolume[m][c])/vol0;
-
-          if(normVol>=contactVol[m] ||
-             (normVol>separateVol[m] && Dot((vb-va),norm) > 0.)) {
-            Contact=YES;
-          }
-        }
-
-        if(!Contact) { // No contact
+	
+	// If contact, adjust velocity field  
+        if(!contact) { // No contact
           gvelocity_star[m][c]=gvelocity_star[m][c];
           gacceleration[m][c]=gacceleration[m][c];
           Gvelocity_star[m][c]=Gvelocity_star[m][c];
