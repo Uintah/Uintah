@@ -208,6 +208,16 @@ void Crack::MoveCracks(const ProcessorGroup*,
 
               // Apply symmetric BCs for the new position
               ApplySymmetricBCsToCrackPoints(dx,pt,cptmp[j]);
+
+	      // Check if the node is still inside the grid
+              if(!PhysicalGlobalGridContainsPoint(dx_min,cptmp[j])) {
+                cout << "Error: cx[" << m << "," << idx << "]=" << cx[m][idx]
+                     << " has moved to " << cptmp[j] << ", outside the global grid."
+                     << " Center-of-mass velocity, vcm=" << vcm 
+		     << ". Program terminated." << endl;
+                exit(1);
+              }	  
+	      
             } // End of loop over numNodes
           } // End if(pid==i)
 
@@ -224,16 +234,6 @@ void Crack::MoveCracks(const ProcessorGroup*,
 
         } // End of if(numNodes>0)
       } // End of loop over patch_size
-
-      // Detect if crack nodes are outside the global grid
-      for(int i=0; i<(int)cx[m].size();i++) {
-        if(!PhysicalGlobalGridContainsPoint(dx_min,cx[m][i])) {
-          cout << "Error: cx[" << m << "," << i << "]=" << cx[m][i]
-               << " outside the global grid."
-               << " Program terminated." << endl;
-          exit(1);
-        }
-      }
 
       MPI_Barrier(mpi_crack_comm);
       
