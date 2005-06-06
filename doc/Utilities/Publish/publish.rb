@@ -84,6 +84,16 @@ class Log
       @log.flush
     end
   end
+  # Execute cmd and write its output to log.
+  def command(cmd)
+    IO.popen(cmd) do |p|
+      l = p.gets("\n")
+      while l != nil
+	write(l, "\n")
+	l = p.gets("\n")
+      end
+    end
+  end
 end
 
 module TreeDir
@@ -130,7 +140,7 @@ class ConfHash < Hash
     @iv = {}
   end
   
-  # selfP() is used to retrieve conf value with triggering its
+  # selfP() is used to retrieve conf value without triggering its
   # iv.
   alias selfP []
 
@@ -212,12 +222,12 @@ class SCMCommand
       Dir.chdir(m)
       cmd = updateDirCmd() + " " + @redirect
       $log.write(cmd, "\n")
-      $log.write(`#{cmd}`, "\n")
+      $log.command(cmd)
     elsif FileTest.file?(m)
       Dir.chdir(File.dirname(m))
       cmd = updateFileCmd() + " " + File.basename(m) + " " + @redirect
       $log.write(cmd, "\n")
-      $log.write(`#{cmd}`, "\n")
+      $log.command(cmd)
     else
       $log.write(m, " doesn't exist - ignoring\n")
     end
@@ -575,7 +585,7 @@ class Docs
     $log.write("Begin clean starting at ", dir, "\n")
     pwd = Dir.pwd()
     Dir.chdir(dir)
-    $log.write(`#{@conf[Configuration::Make]} veryclean #{@redirect}`)
+    $log.command("#{@conf[Configuration::Make]} veryclean #{@redirect}")
     Dir.chdir(pwd)
     $log.write("End clean\n")
   end
@@ -644,18 +654,18 @@ INSTALL_SCRIPT
     $log.write("Delivering to ", dest[Dest::Mach], "\n")
     $log.write("Transfering #{tarball}...\n")
     if dest[Dest::Mach] == "."
-      $log.write(`cp #{tarball} #{dest[Dest::Dir]} #{@redirect}`)
+      $log.command("cp #{tarball} #{dest[Dest::Dir]} #{@redirect}")
     else
-      $log.write(`scp -p -q #{tarball} #{dest[Dest::User]}@#{dest[Dest::Mach]}:#{dest[Dest::Dir]} #{@redirect}`)
+      $log.command("scp -p -q #{tarball} #{dest[Dest::User]}@#{dest[Dest::Mach]}:#{dest[Dest::Dir]} #{@redirect}")
     end
     if $? != 0
       raise("Failed to transfer tarball.")
     else
       $log.write("Installing...\n")
       if dest[Dest::Mach] == "."
-	$log.write(`#{installScript}`)
+	$log.command("#{installScript}")
       else
-	$log.write(`ssh #{dest[Dest::User]}@#{dest[Dest::Mach]} '#{installScript}'`)
+	$log.command("ssh #{dest[Dest::User]}@#{dest[Dest::Mach]} '#{installScript}'")
       end
       if $? == 0
 	$log.write("Finished this delivery.\n")
@@ -677,14 +687,17 @@ INSTALL_SCRIPT
     SrcTopLevel.filesAndDirs(srcTop).each do |m|
       updateOne(srcTop + "/" + m)
     end
-    $log.write("Done Updating\n")
+    $log.write("Done Updating src directory\n")
+    updateOne(@treeRoot + "/doc")
+    $log.write("Done Updating doc directory\n")
   end
 
   def make(startDir)
     $log.write("Making docs...\n")
     pwd = Dir.pwd()
     Dir.chdir(startDir)
-    $log.write(`#{@conf[Configuration::Make]} WITH_CV=#{@conf[Configuration::CodeViews] ? "true" : "false"} #{@conf[Configuration::Tarball] ? "tarball" : ""} #{@redirect}`)
+    cmd = "#{@conf[Configuration::Make]} WITH_CV=#{@conf[Configuration::CodeViews] ? 'true' : 'false'} #{@conf[Configuration::Tarball] ? 'tarball' : ''} #{@redirect}"
+    $log.command(cmd)
     Dir.chdir(pwd)
     $log.write("Done making docs\n")
   end
