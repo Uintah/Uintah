@@ -148,8 +148,6 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   // Physical properties of cracks
   crackType.resize(numMPMMatls);
   cmu.resize(numMPMMatls);
-  separateVol.resize(numMPMMatls);
-  contactVol.resize(numMPMMatls);
   
   // Quad crack segments
   quads.resize(numMPMMatls);
@@ -207,14 +205,6 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
        cmu[m]=0.0;
        if(crackType[m]=="friction") crk_ps->get("mu",cmu[m]);
 
-       // Critical volumes of volume contact criterion. Displacement criterion 
-       // is used by default. If separateVol and contactVol are specified, volume 
-       // criterion will be used.
-       separateVol[m]=-1.;
-       contactVol[m]=-1.;
-       crk_ps->get("separate_volume",separateVol[m]);
-       crk_ps->get("contact_volume",contactVol[m]);
-       
        // Read in crack segments. Presently seven kinds of basic shapes are available.
        // More complicated crack plane can be input by combining the basic shapes.
        ProblemSpecP geom_ps=crk_ps->findBlock("crack_segments");
@@ -477,16 +467,6 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
              << "  Crack contact type: " << crackType[m] << endl;
         if(crackType[m]=="friction")
           cout << "    Frictional coefficient: " << cmu[m] << endl;
-
-        if(crackType[m]!="null") {
-          if(separateVol[m]<0. || contactVol[m]<0.)
-            cout  << "    Check crack contact by displacement criterion." << endl;
-          else {
-            cout  << "Check crack contact by volume criterion with\n"
-                  << "            separate volume = " << separateVol[m]
-                  << "\n            contact volume = " << contactVol[m] << endl;
-          }
-        }
 
         cout <<"  Crack geometry:" << endl;
         // quad cracks
