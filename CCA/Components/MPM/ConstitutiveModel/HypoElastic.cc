@@ -49,9 +49,9 @@ HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb, MPMFlags* Mflag)
          crackPropagationCriterion!="max_energy_release_rate" &&
          crackPropagationCriterion!="strain_energy_density" &&
          crackPropagationCriterion!="empirical_criterion") {
-        cout << "!!! Undefinded crack propagation criterion: "
+        cout << "Error: undefinded crack propagation criterion: "
              << crackPropagationCriterion 
-             << " for hypo-elastic material. Program terminated."
+             << " for hypoelastic materials. Program terminated."
              << endl;
         exit(1);       
       }     
@@ -69,8 +69,8 @@ HypoElastic::HypoElastic(ProblemSpecP& ps, MPMLabel* Mlb, MPMFlags* Mflag)
       for(ProblemSpecP child_ps=curve_ps->findBlock("point"); child_ps!=0; 
           child_ps=child_ps->findNextBlock("point")) {
         double Vc,KIc,KIIc;
-        child_ps->get("Vc",Vc);
-        child_ps->get("KIc",KIc);
+        child_ps->require("Vc",Vc);
+        child_ps->require("KIc",KIc);
         if(r<0.) { // Input KIIc manually
           child_ps->get("KIIc",KIIc);
         }
@@ -517,6 +517,7 @@ HypoElastic::ConvertJToK(const MPMMaterial* matl,const Vector& J,
     KII = 0.;
   }
   else {
+    if(J1<0.) cout << "Warning: J1=" << J1 << ", less than zero." << endl;	  
     KI =V1*sqrt(2.*G*B2*fabs(J1)/A1/COD2);
     KII=V2*sqrt(2.*G*B1*fabs(J1)/A2/COD2);
   }
