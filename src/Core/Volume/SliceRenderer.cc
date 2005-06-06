@@ -441,7 +441,7 @@ SliceRenderer::multi_level_draw()
     tex_->get_sorted_bricks(blevels[levels - (k + 1)], view_ray, k);
   }
   if( use_stencil_){
-    glStencilMask(~0);
+    glStencilMask(~(GLuint(0)));
     glClear(GL_STENCIL_BUFFER_BIT);
     glStencilMask(1);
   }
@@ -461,7 +461,7 @@ SliceRenderer::multi_level_draw()
       Ray r(cyl_mid, phi);
 
       if( use_stencil_){
-	glStencilMask(~0);
+	glStencilMask(~(GLuint(0)));
 	glClear(GL_STENCIL_BUFFER_BIT);
 	glStencilMask(1);
       }
@@ -502,7 +502,7 @@ SliceRenderer::multi_level_draw()
       Ray r(cyl_mid, phi);
 
       if( use_stencil_){
-	glStencilMask(~0);
+	glStencilMask(~(GLuint(0)));
 	glClear(GL_STENCIL_BUFFER_BIT);
 	glStencilMask(1);
       }
@@ -543,7 +543,7 @@ SliceRenderer::multi_level_draw()
   } else {
     if(draw_view_) {
       if( use_stencil_){
-	glStencilMask(~0);
+	glStencilMask(~(GLuint(0)));
 	glClear(GL_STENCIL_BUFFER_BIT);
 	glStencilMask(1);
       }
@@ -580,7 +580,7 @@ SliceRenderer::multi_level_draw()
     } else {
       if(draw_x_) {
 	if( use_stencil_){
-	  glStencilMask(~0);
+	  glStencilMask(~(GLuint(0)));
 	  glClear(GL_STENCIL_BUFFER_BIT);
 	  glStencilMask(1);
 	}
@@ -630,7 +630,7 @@ SliceRenderer::multi_level_draw()
       }
       if(draw_y_) {
 	if( use_stencil_){
-	  glStencilMask(~0);
+	  glStencilMask(~(GLuint(0)));
 	  glClear(GL_STENCIL_BUFFER_BIT);
 	  glStencilMask(1);
 	}
@@ -685,7 +685,7 @@ SliceRenderer::multi_level_draw()
     
   if (draw_z) {
     if( use_stencil_){
-      glStencilMask(~0);
+      glStencilMask(~(GLuint(0)));
       glClear(GL_STENCIL_BUFFER_BIT);
       glStencilMask(1);
     }
