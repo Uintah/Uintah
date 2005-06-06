@@ -190,8 +190,6 @@ class Crack
     // Physical parameters of cracks
     vector<string> crackType;      // Crack contact type
     vector<double> cmu;            // Crack surface frcition coefficients
-    vector<double> separateVol;    // Critical separate volume
-    vector<double> contactVol;     // Critical contact volume
 
     // Geometrical parameters of crack segments
     vector<vector<vector<Point> > > quads;
