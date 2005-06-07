@@ -86,6 +86,8 @@ public:
     Big,
     Little
   };
+
+  static const int PERSISTENT_VERSION;
   
 protected:
   Piostream(Direction, int, const string &, ProgressReporter *pr);

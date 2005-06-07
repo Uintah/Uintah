@@ -65,9 +65,6 @@ using namespace std;
 #endif
 
 
-#define PERSISTENT_VERSION 2
-
-
 namespace SCIRun {
 
 // BinaryPiostream -- portable
