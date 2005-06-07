@@ -664,7 +664,7 @@ bool ProblemSpec::get(string &value)
  	 delete [] s;
           istringstream tmp_str(tmp);
           string w;
-          while(temp_str>>w) value += w;
+          while(tmp_str>>w) value += w;
           cerr << "value=" << value << '\n';
  	 return true;
       }
