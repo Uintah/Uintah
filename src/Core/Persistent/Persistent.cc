@@ -358,7 +358,7 @@ auto_istream(const string& filename)
     return 0;
   }
   if(version != 1){
-    cerr << "Unkown PIO version: " << version << ", found in file: " << filename << '\n';
+    cerr << "Unknown PIO version: " << version << ", found in file: " << filename << '\n';
     return 0;
   }
   char m1=hdr[4];
