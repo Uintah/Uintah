@@ -31,7 +31,7 @@ Test::~Test()
 }
 
 void Test::problemSetup(const ProblemSpecP& params, GridP& /*grid*/,
-			 SimulationStateP& sharedState)
+                        SimulationStateP& sharedState)
 {
   sharedState_ = sharedState;
   matl = scinew SimpleMaterial();
@@ -49,7 +49,7 @@ void Test::scheduleInitialize(const LevelP& level,
 }
  
 void Test::scheduleComputeStableTimestep(const LevelP& level,
-					  SchedulerP& sched)
+                                         SchedulerP& sched)
 {
   Task* task = scinew Task("computeStableTimestep",
 			   this, &Test::computeStableTimestep);
@@ -58,8 +58,8 @@ void Test::scheduleComputeStableTimestep(const LevelP& level,
 }
 
 void
-Test::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
-                           int, int )
+Test::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched,
+                          int, int )
 {
   Task* task = scinew Task("timeAdvance",
 			   this, &Test::timeAdvance);
@@ -69,19 +69,19 @@ Test::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
 }
 
 void Test::computeStableTimestep(const ProcessorGroup* pg,
-				     const PatchSubset* /*patches*/,
-				     const MaterialSubset* /*matls*/,
-				     DataWarehouse*,
-				     DataWarehouse* new_dw)
+                                 const PatchSubset* /*patches*/,
+                                 const MaterialSubset* /*matls*/,
+                                 DataWarehouse*,
+                                 DataWarehouse* new_dw)
 {
   delt_ = 1.;
   new_dw->put(delt_vartype(delt_),delt_label);
 }
 
 void Test::initialize(const ProcessorGroup*,
-			  const PatchSubset* patches,
-			  const MaterialSubset* matls,
-			  DataWarehouse* /*old_dw*/, DataWarehouse* new_dw)
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* /*old_dw*/, DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -91,6 +91,7 @@ void Test::initialize(const ProcessorGroup*,
 
   }
 }
+
 
 
 void Test::timeAdvance(const ProcessorGroup*,
@@ -118,4 +119,10 @@ void Test::timeAdvance(const ProcessorGroup*,
       
     }
   }
+}
+
+bool Test::switchComponent()
+{
+  return false;
+
 }
