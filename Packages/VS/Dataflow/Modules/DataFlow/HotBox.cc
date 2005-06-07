@@ -182,6 +182,8 @@ private:
   GuiString oqafmadatasource_;
   GuiString geometrypath_;
   GuiString hipvarpath_;
+// add tcl gui String: demotype_
+  GuiString demotype_;
 
   // the current selection
   GuiString currentselection_;
@@ -302,7 +304,8 @@ void
 TimeSync::run()
 {
   throttle_.start();
-  const double inc = 1./5.; // the rate at which we refresh the time stamp
+//  const double inc = 1./5.; // the rate at which we refresh the time stamp
+  const double inc = 15.;
   double t = throttle_.time();
   while (!dead_)
   {
@@ -380,6 +383,8 @@ HotBox::HotBox(GuiContext* ctx)
   boundingboxdatasource_(ctx->subVar("boundingboxdatasource")),
   injurylistdatasource_(ctx->subVar("injurylistdatasource")),
   oqafmadatasource_(ctx->subVar("oqafmadatasource")),
+// add tcl gui String: demotype_
+  demotype_(ctx->subVar("demotype")),
   geometrypath_(ctx->subVar("geometrypath")),
   hipvarpath_(ctx->subVar("hipvarpath")),
   currentselection_(ctx->subVar("currentselection")),
@@ -1022,13 +1027,16 @@ HotBox::sync_time(double t)
 { // time from the input to the HotBox is in seconds
     char time_str[256];
     currentTime_ = floor(t);
+// add tcl GUI string: demotype_
+    const string demoType(demotype_.get());
     
-    if(lastTime_ < currentTime_ - timeEps_ ||
+     if(lastTime_ < currentTime_ - timeEps_ ||
             currentTime_ + timeEps_ < lastTime_)
-    { // time has moved forward one second
+     { // time has moved forward one second
         gui_curTime_.set( to_HMS(time_str, currentTime_) );
-        want_to_execute();
-    }
+      cerr << "demoType: "  << demoType << endl;
+        if (demoType != "human") want_to_execute();
+     }
 } // end HotBox::sync_time()
 
 /*****************************************************************************
@@ -1281,6 +1289,10 @@ HotBox::executeOQAFMA()
   { // OQAFMA Web services URL has changed
     ws.endpoint = strdup(oqafmaDataSrc.c_str());
   }
+  // get the current selection
+  const string currentSelection(currentselection_.get());
+  strcpy(selectName, currentSelection.c_str());
+cerr << "In OQAFMA: selectName: " << selectName;
 
   /////////////////////////////////////////////////////////////////////////////
   // get the hierarchical children of the selection from the FMA
@@ -1706,7 +1718,7 @@ HotBox::executeOQAFMA()
   // <event>
   // <wound woundName="Left ventricular penetration" woundID="1.0">
   //     <timeStamp time="1.0" unit="s"/>
-  //     <diagnosis>tamponade</diagnosis>
+  //     <diagnosis value="tamponade"/>
   //     <primaryInjuryList>
   //         <injuryEntity injuryName="Ablated LV myocardium" injuryID="1.1" >
   //             <ablateRegion>
