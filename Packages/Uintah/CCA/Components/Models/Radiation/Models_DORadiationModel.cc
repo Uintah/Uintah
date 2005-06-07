@@ -142,7 +142,7 @@ Models_DORadiationModel::problemSetup(const ProblemSpecP& params)
   else if (linear_sol == "hypre") d_linearSolver = scinew Models_HypreSolver(d_myworld);
 #endif
   
-  d_linearSolver->problemSetup(db);
+  d_linearSolver->problemSetup(db, d_SHRadiationCalc);
 
   // Variable to deal with cell typing used in radiation modules ...
   // may be useful later for people writing MPMICE code, when they 

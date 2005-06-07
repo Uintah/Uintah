@@ -103,7 +103,8 @@ public:
 				  Models_CellInformation* cellinfo,
 				  RadiationVariables* vars,
 				  RadiationConstVariables* constvars)  = 0;
-  Models_RadiationSolver* d_linearSolver;
+
+      Models_RadiationSolver* d_linearSolver;
  protected:
       void computeOpticalLength();
       double d_opl; // optical length

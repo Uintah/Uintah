@@ -58,17 +58,19 @@ Models_HypreSolver::~Models_HypreSolver()
 // Problem setup
 // ****************************************************************************
 void 
-Models_HypreSolver::problemSetup(const ProblemSpecP& params)
+Models_HypreSolver::problemSetup(const ProblemSpecP& params, bool shradiation)
 {
+  d_shrad = shradiation;
   ProblemSpecP db = params->findBlock("LinearSolver");
+
   db->getWithDefault("ksptype", d_kspType, "gmres");
 
-      if (d_kspType == "smg")
-	   d_kspType = "1";
-      else
-      if (d_kspType == "pfmg")
-	   d_kspType = "2";
-      else
+  if (d_kspType == "smg")
+    d_kspType = "1";
+  else
+    if (d_kspType == "pfmg")
+      d_kspType = "2";
+    else
       if (d_kspType == "gmres")
 	{
 	  d_kspFix = "gmres";
@@ -78,24 +80,24 @@ Models_HypreSolver::problemSetup(const ProblemSpecP& params)
 	  else
 	    if (d_pcType == "pfmg")
 	      d_kspType = "4";
-	  else
-	    if (d_pcType == "jacobi")
-	      d_kspType = "5";
+	    else
+	      if (d_pcType == "jacobi")
+		d_kspType = "5";
 	}
       else
-      if (d_kspType == "cg")
-	{
-	  d_kspFix = "cg";
-	  db->getWithDefault("pctype", d_pcType, "pfmg");
-	  if (d_pcType == "smg")
+	if (d_kspType == "cg")
+	  {
+	    d_kspFix = "cg";
+	    db->getWithDefault("pctype", d_pcType, "pfmg");
+	    if (d_pcType == "smg")
 	      d_kspType = "6";
-	  else
-	  if (d_pcType == "pfmg")
-	      d_kspType = "7";
-	  else
-	  if (d_pcType == "jacobi")
-	      d_kspType = "8";
-	}
+	    else
+	      if (d_pcType == "pfmg")
+		d_kspType = "7";
+	      else
+		if (d_pcType == "jacobi")
+		  d_kspType = "8";
+	  }
 
   db->getWithDefault("max_iter", d_maxSweeps, 75);
   db->getWithDefault("underrelax", d_underrelax, 1.0);
@@ -259,13 +261,16 @@ Models_HypreSolver::setMatrix(const ProcessorGroup* pc,
 
   HYPRE_StructMatrixCreate(MPI_COMM_WORLD, d_grid, d_stencil, &d_A);
 
-  //HYPRE_StructMatrixSetSymmetric(d_A, 1); 
-  //  above for spherical harmonics
   // This parameter has to be set to 1 if SH is used and 0 if 
   // DO is used, because the matrix is nonsymmetric for DO
   // and symmetric for spherical harmonics
-  HYPRE_StructMatrixSetSymmetric(d_A, 0);
+  // HYPRE_StructMatrixSetSymmetric(d_A, 0);
   // above for discrete ordinates
+
+  if (d_shrad)
+    HYPRE_StructMatrixSetSymmetric(d_A, 1); 
+  else
+    HYPRE_StructMatrixSetSymmetric(d_A, 0); 
 
   HYPRE_StructMatrixSetNumGhost(d_A, d_A_num_ghost);
   HYPRE_StructMatrixInitialize(d_A); 

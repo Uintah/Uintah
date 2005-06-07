@@ -120,7 +120,15 @@ private:
       int sfield;
       int pbcfld;
       int outletfield;
-      bool d_SHRadiationCalc, lprobone, lprobtwo, lprobthree, lradcal, lwsgg, lplanckmean, lpatchmean;
+      bool d_SHRadiationCalc;
+
+      bool lprobone;
+      bool lprobtwo;
+      bool lprobthree;
+      bool lradcal;
+      bool lwsgg;
+      bool lplanckmean;
+      bool lpatchmean;
 
       OffsetArray1<double> fraction;
       OffsetArray1<double> fractiontwo;
