@@ -25,10 +25,11 @@ SUBDIRS := \
 	$(SRCDIR)/ProblemSpecification \
 	$(SRCDIR)/PatchCombiner \
 	$(SRCDIR)/Solvers \
+	$(SRCDIR)/Switcher 
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
-SRCS	:= $(SRCDIR)/ComponentFactory.cc
+SRCS	:= $(SRCDIR)/ComponentFactory.cc 
 
 PSELIBS := \
 	Packages/Uintah/Core/ProblemSpec \

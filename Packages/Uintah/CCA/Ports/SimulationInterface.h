@@ -100,6 +100,8 @@ WARNING
      // direct component to add a new material
      virtual void addMaterial(const ProblemSpecP& params, GridP& grid,
                               SimulationStateP& state);
+
+     virtual bool switchComponent() {return false;}
  
    private:
      SimulationInterface(const SimulationInterface&);
