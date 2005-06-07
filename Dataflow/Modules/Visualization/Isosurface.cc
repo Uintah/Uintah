@@ -315,11 +315,11 @@ Isosurface::execute()
     MatrixHandle mHandle;
 
     if (!imatrix_port->get(mHandle)) {
-      gui->execute("set-isomatrix \"No matrix present\"");
+      gui->execute(id + " set-isomatrix-list \"No matrix present\"");
       error("Matrix selected - but no matrix is present.");
       return;
     } else if(!mHandle.get_rep()) {
-      gui->execute("set-isomatrix \"No matrix representation\"");
+      gui->execute(id + " set-isomatrix-list \"No matrix representation\"");
       error( "No matrix representation." );
       return;
     }
