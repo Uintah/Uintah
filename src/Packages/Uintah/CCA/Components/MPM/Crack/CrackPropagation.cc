@@ -116,11 +116,15 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
                               v1.y(), v2.y(), v3.y(),
                               v1.z(), v2.z(), v3.z());
 
-            // Determine if the node propagates and the propagation direction
-            cp[i]=NO;
+            // Get fracture parameters at crack-front nodes
             double KI  = cfSegK[m][i].x();
             double KII = cfSegK[m][i].y();
 	    double Vc  = cfSegVel[m][i];
+	    // If KI less than zero, set it to zero.
+	    if(KI<0.) KI=0.;    	    
+	     
+            // Determine if the node propagates and the propagation direction
+            cp[i]=NO;
 	    double theta;
             if(cm->CrackPropagates(Vc,KI,KII,theta)) cp[i]=YES;
 
