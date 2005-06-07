@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+	<title>test</title>
+   </Meta>
+
+   <SimulationController>Single</SimulationController>
+  
+   <SimulationComponent>  test </SimulationComponent>
+   <Time>
+	<maxTime>10.0</maxTime>
+	<initTime>0.0</initTime>
+	<delt_min>0.00001</delt_min>
+	<delt_max>1</delt_max>
+	<timestep_multiplier>1</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+        <filebase>test2.uda</filebase>
+	<outputInterval>1</outputInterval>
+	<save label = "sole.double"/>
+	<checkpoint cycle = "1" interval = "1"/>
+   </DataArchiver>
+
+    <Grid>
+	<Level>
+	    <Box label = "1">
+		<lower>[0,0,0]</lower>
+		<upper>[1.0,1.0,1.0]</upper>
+	        <resolution>[2,1,1]</resolution>
+		<patches>[1,1,1]</patches>
+	    </Box>
+	</Level>
+    </Grid>
+
+</Uintah_specification>
+
