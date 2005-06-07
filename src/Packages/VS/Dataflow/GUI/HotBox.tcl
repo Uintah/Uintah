@@ -72,6 +72,10 @@ itcl_class VS_DataFlow_HotBox {
     global $this-gui_childlist_name
     global $this-gui_diagnosis
     global $this-FME_on
+# add demotype (human/porcine)
+    global $this-human_on
+    global $this-demotype
+#
     global $this-Files_on
     global $this-Ontology_on
     global $this-enableDraw
@@ -181,6 +185,10 @@ itcl_class VS_DataFlow_HotBox {
     set $this-gui_childlist_name $this-gui_child_list
     set $this-gui_diagnosis ""
     set $this-FME_on "no"
+# add demotype (human,porcine)
+    set $this-demotype "porcine"
+    set $this-human_on "no"
+#
     set $this-Files_on "no"
     set $this-Ontology_on "no"
     set $this-enableDraw "no"
@@ -292,6 +300,19 @@ itcl_class VS_DataFlow_HotBox {
     }
   }
   # end method launch_filebrowser
+
+# add demotype (human, porcine)
+   method toggle_human_on {} {
+    if {[set $this-human_on] == "yes"} {
+      # toggle human subject off
+      set $this-human_on "no"
+      set $this-demotype "porcine" 
+   } else {set $this-human_on "yes"
+       set $this-demotype "human"
+   }
+    $this-c needexecute
+  }
+  # end method toggle_human_on
 
   method toggle_FME_on {} {
     if {[set $this-FME_on] == "yes"} {
@@ -627,9 +648,12 @@ tk_optionMenu $w.probeUI.loc.hotlist $this-selnameloc "Human" "Pericardium,448.9
     pack $w.probeUI.slideTime $w.probeUI.loc -side bottom -expand yes -fill x
 
     frame $w.diagInfo
+# add demotype checkbutton (human/porcine)
+    checkbutton $w.diagInfo.human -text "Human:" -command "$this toggle_human_on"
+
     label $w.diagInfo.diagnosisLabel -text "Diagnosis:"
     entry $w.diagInfo.diagnosisEntry -width 25 -textvariable  $this-gui_diagnosis
-    pack $w.diagInfo.diagnosisLabel $w.diagInfo.diagnosisEntry -side left -expand yes -fill x
+    pack $w.diagInfo.human $w.diagInfo.diagnosisLabel $w.diagInfo.diagnosisEntry -side left -expand yes -fill x
 
     checkbutton $w.togOntologyUI -text "Ontology" -command "$this toggle_Ontology_on"
 

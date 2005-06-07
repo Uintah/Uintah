@@ -355,8 +355,8 @@ VH_AdjacencyMapping::readFile(char *infilename)
     { // expect lines of the form: index0,index1,...indexn
       int num_adj = countCommas(inLine);
       numrel[num_names] = num_adj;
-   cerr << "line[" << num_names << "], " << strlen(inLine) << " chars, ";
-   cerr << num_adj << " relations" << endl;
+//   cerr << "line[" << num_names << "], " << strlen(inLine) << " chars, ";
+//   cerr << num_adj << " relations" << endl;
       rellist[num_names] = new int[num_adj];
       indexStr = strtok(inLine, ",");
       // first index is the MasterAnatomy name index
@@ -551,9 +551,8 @@ VH_Anatomy_readBoundingBox_File(char *infilename)
            "VH_AnatomyBoundingBox::readFile(%s): format error line %d\n",
            infilename, inLine_cnt);
       }
-//      if(newStr=="Myocaridal zone 12") {
-         cerr << "BB: " <<  minX <<","<< maxX <<","<< minY <<","<<  maxY <<","<<  minZ <<","<<  maxZ <<","<< endl;  
-//      }
+//cerr << "BB: " <<  minX <<","<< maxX <<","<< minY <<","<<  maxY <<","<<  minZ <<","<<  maxZ << endl;
+
       listPtr->set_minX(minX); listPtr->set_maxX(maxX);
       listPtr->set_minY(minY); listPtr->set_maxY(maxY);
       listPtr->set_minZ(minZ); listPtr->set_maxZ(maxZ);
