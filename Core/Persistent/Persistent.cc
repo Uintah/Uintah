@@ -59,6 +59,7 @@ using namespace std;
 namespace SCIRun {
 
 static Piostream::MapStringPersistentTypeID* table = 0;  
+const int Piostream::PERSISTENT_VERSION = 2;
 
 #ifdef __APPLE__
   // On the Mac, this comes from Core/Util/DynamicLoader.cc because
@@ -452,7 +453,7 @@ auto_istream(const string& filename, ProgressReporter *pr)
   if (!in)
   {
     if (pr) pr->error("File not found: " + filename);
-    else cerr << "File not found: " << filename << endl;
+    else cerr << "ERROR - File not found: " << filename << endl;
     return 0;
   }
 
@@ -463,8 +464,8 @@ auto_istream(const string& filename, ProgressReporter *pr)
 
   if (!in)
   {
-    if (pr) pr->error("Error reading header of file: " + filename);
-    else cerr << "Error reading header of file: " << filename << endl;
+    if (pr) pr->error("Unable to open file: " + filename);
+    else cerr << "ERROR - Unable to open file: " << filename << endl;
     return 0;
   }
 
@@ -476,8 +477,17 @@ auto_istream(const string& filename, ProgressReporter *pr)
 
   if (!Piostream::readHeader(pr, filename, hdr, 0, version, file_endian))
   {
-    if (pr) pr->error("Error parsing header of file: " + filename);
-    else cerr << "Error parsing header of file: " << filename << endl;
+    if (pr) pr->error("Cannot parse header of file: " + filename);
+    else cerr << "ERROR - Cannot parse header of file: " << filename << endl;
+    return 0;
+  }
+  if (version > Piostream::PERSISTENT_VERSION)
+  {
+    const string errmsg = "File '" + filename + "' has version " +
+      to_string(version) + ", this build only supports up to version " +
+      to_string(Piostream::PERSISTENT_VERSION) + ".";
+    if (pr) pr->error(errmsg);
+    else cerr << "ERROR - " + errmsg;
     return 0;
   }
 
