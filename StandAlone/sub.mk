@@ -148,7 +148,6 @@ else
         Packages/Uintah/CCA/Components/Solvers \
         Packages/Uintah/CCA/Components/ICE \
         Packages/Uintah/CCA/Components/Examples \
-        Packages/Uintah/CCA/Components/Arches \
         Packages/Uintah/CCA/Components/MPMArches \
         Packages/Uintah/CCA/Components/PatchCombiner \
         $(AIX_LIBRARY)

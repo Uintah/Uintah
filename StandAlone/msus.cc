@@ -35,6 +35,7 @@
 #include <Packages/Uintah/CCA/Components/LoadBalancers/LoadBalancerFactory.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SchedulerFactory.h>
 #include <Packages/Uintah/CCA/Components/ComponentFactory.h>
+#include <Packages/Uintah/CCA/Components/Switcher/Switcher.h>
 
 #include <Core/Exceptions/Exception.h>
 #include <Core/Exceptions/InternalError.h>
@@ -240,8 +241,6 @@ main( int argc, char** argv )
         vector<string> input_files;
         vector<string> simulations;
         vector<ProblemSpecInterface*> readers;
-        vector<UintahParallelComponent*> comps;
-        vector<SimulationInterface*> sims;
 
         for (ProblemSpecP in_ps = d_ups->findBlock("input_file"); in_ps != 0;
              in_ps = in_ps->findNextBlock("input_file")) {
@@ -278,15 +277,20 @@ main( int argc, char** argv )
 #else
         SimulationController* ctl = scinew MultipleSimulationController(world);
 #endif
+
+        // Switcher component
+        Switcher* switcher = scinew Switcher(world);
         
         if (readers.empty()) {
           ctl->attachPort("problem spec", reader);
+
+          ctl->attachPort("switcher", switcher);
 
           // SimulationComponentFactory
           SimulationComponent* simcomp = ComponentFactory::create(d_ups,world);
           SimulationInterface* sim = simcomp->d_sim;
           UintahParallelComponent* comp = simcomp->d_comp;
-          ctl->attachPort("sim", sim);
+          switcher->attachPort("sim", sim);
 
           // SolverFactory
           SolverInterface* solve = SolverFactory::create(d_ups,world);
@@ -303,7 +307,9 @@ main( int argc, char** argv )
 
           // Load balancer
           // LoadBalancerFactory
-          LoadBalancerCommon* bal_com = LoadBalancerFactory::create(d_ups,world);
+          LoadBalancerCommon* bal_com = 
+            LoadBalancerFactory::create(d_ups,world);
+
           LoadBalancer* bal = bal_com;
           UintahParallelComponent* lb = bal_com;
           
@@ -335,67 +341,78 @@ main( int argc, char** argv )
 
         }
         else {
+          ctl->attachPort("problem spec", reader);
+          ctl->attachPort("switcher",switcher);
+
+          // RegridderFactory
+          // Should only be listed once
+          RegridderCommon* regrid_com = 
+            RegridderFactory::create(d_ups,world);
+          Regridder* regrid = regrid_com;
+          if (!regrid)
+            ctl->attachPort("regridder",regrid_com);
+          
+          // Load balancer
+          // LoadBalancerFactory
+          // Should only be listed once
+          LoadBalancerCommon* bal_com = 
+            LoadBalancerFactory::create(d_ups,world);
+          
+          LoadBalancer* bal = bal_com;
+          UintahParallelComponent* lb = bal_com;
+          
+          
+          // Output
+          DataArchiver* dataarchiver = scinew DataArchiver(world, udaSuffix);
+          Output* output = dataarchiver;
+          ctl->attachPort("output", output);
+          dataarchiver->attachPort("load balancer", bal);
+
+          // Scheduler
+          // SchdulerFactory
+          // Should only be listed once
+          
+          SchedulerCommon* sch_com=
+            SchedulerFactory::create(d_ups,world,output);
+          
+          Scheduler* sch = sch_com;
+          
+          sch_com->attachPort("load balancer", bal);
+          ctl->attachPort("scheduler", sch_com);
+          
+          lb->attachPort("scheduler", sch);
+          
+          sch->addReference();
+          if (emit_graphs) 
+            sch->doEmitTaskGraphDocs();
+          
+          // Load up the individual simulation component input files
+          // and add to the switcher component.
           for (unsigned int i = 0; i < readers.size(); i++) {
-            ctl->attachPort("problem spec", readers[i]);
+            switcher->attachPort("problem spec", readers[i]);
 
           // SimulationComponentFactory
-            ProblemSpecP ups = readers[i]->readInputFile();
+            ProblemSpecP sim_ups = readers[i]->readInputFile();
 
-            SimulationComponent* simcomp = ComponentFactory::create(ups,world);
+            SimulationComponent* simcomp = 
+              ComponentFactory::create(sim_ups,world);
             SimulationInterface* sim = simcomp->d_sim;
             UintahParallelComponent* comp = simcomp->d_comp;
-            sims.push_back(sim);
-            comps.push_back(comp);
-            ctl->attachPort("sim", sim);
+            switcher->attachPort("sim", sim);
 
             // SolverFactory
-            SolverInterface* solve = SolverFactory::create(ups,world);
+            SolverInterface* solve = SolverFactory::create(sim_ups,world);
             comp->attachPort("solver",solve);
 
-            // RegridderFactory
-            RegridderCommon* regrid_com = RegridderFactory::create(ups,world);
-            Regridder* regrid = regrid_com;
-            if (!regrid)
-              ctl->attachPort("regridder",regrid_com);
-
+            // ModelMaker
             ModelMaker* modelmaker = scinew ModelFactory(world);
             comp->attachPort("modelmaker", modelmaker);
 
-
-            // Load balancer
-            // LoadBalancerFactory
-            LoadBalancerCommon* bal_com = LoadBalancerFactory::create(ups,world);
-            LoadBalancer* bal = bal_com;
-            UintahParallelComponent* lb = bal_com;
-            
-            
             // Output
-            DataArchiver* dataarchiver = scinew DataArchiver(world, udaSuffix);
-            Output* output = dataarchiver;
-            ctl->attachPort("output", output);
-            dataarchiver->attachPort("load balancer", bal);
             comp->attachPort("output", output);
-            
-            // Scheduler
-            // SchdulerFactory
-            
-            SchedulerCommon* sch_com=SchedulerFactory::create(ups,world,output);
-            Scheduler* sch = sch_com;
-            
-            sch_com->attachPort("load balancer", bal);
-            ctl->attachPort("scheduler", sch_com);
-            
-            lb->attachPort("scheduler", sch);
-            
-            sch->addReference();
-            if (emit_graphs) 
-              sch->doEmitTaskGraphDocs();
-
           }
         }
-
-
-        
+       
 	/*
 	 * Start the simulation controller
 	 */
@@ -403,6 +420,7 @@ main( int argc, char** argv )
 
         ctl->run();
 	delete ctl;
+        delete switcher;
 
 #if 0
 	sch->removeReference();
