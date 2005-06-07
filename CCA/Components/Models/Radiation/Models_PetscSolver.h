@@ -72,7 +72,7 @@ public:
       // GROUP: Problem Setup:
       ////////////////////////////////////////////////////////////////////////
       // Problem setup
-      void problemSetup(const ProblemSpecP& params);
+      void problemSetup(const ProblemSpecP& params, bool shradiation);
 
       // to close petsc 
       void finalizeSolver();

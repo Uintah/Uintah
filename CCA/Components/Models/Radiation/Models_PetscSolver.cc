@@ -45,7 +45,7 @@ Models_PetscSolver::~Models_PetscSolver()
 // Problem setup
 // ****************************************************************************
 void 
-Models_PetscSolver::problemSetup(const ProblemSpecP& params)
+Models_PetscSolver::problemSetup(const ProblemSpecP& params, bool shradiation)
 {
   if (params) {
     ProblemSpecP db = params->findBlock("LinearSolver");

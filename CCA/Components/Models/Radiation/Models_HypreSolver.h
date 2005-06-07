@@ -68,7 +68,7 @@ public:
       // GROUP: Problem Setup:
       ////////////////////////////////////////////////////////////////////////
       // Problem setup
-      void problemSetup(const ProblemSpecP& params);
+      void problemSetup(const ProblemSpecP& params, bool shradiation);
 
       ////////////////////////////////////////////////////////////////////////
       // HYPRE grid and stencil setup
@@ -117,6 +117,8 @@ private:
   double d_initResid;
   double d_residual;
   double init_norm;
+
+  bool d_shrad;
 
   double *d_value;
   const ProcessorGroup* d_myworld;

@@ -116,8 +116,8 @@ c            write(6,*)jj,qfluxw(ii,jj,k)
          DO 45 i=idxlo(1),idxhi(1)
 
             write(6,*)xx(i),src(i,j,k),zz(k)
-            write(6,*)zz(k),qfluxe(i,j,k),xx(i)
-            write(6,*)xx(i),qfluxb(i,j,kk),zz(kk)
+c            write(6,*)zz(k),qfluxe(i,j,k),xx(i)
+c            write(6,*)xx(i),qfluxb(i,j,kk),zz(kk)
 
  45      continue
 
