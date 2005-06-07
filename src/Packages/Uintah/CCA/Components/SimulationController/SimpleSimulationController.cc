@@ -30,6 +30,7 @@
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Packages/Uintah/CCA/Components/Switcher/Switcher.h>
 #include <TauProfilerForSCIRun.h>
 #include <iostream>
 #include <iomanip>
@@ -135,9 +136,13 @@ SimpleSimulationController::run()
    if (d_myworld->myrank() == 0)
      grid->printStatistics();
 
+   Switcher* switcher = dynamic_cast<Switcher*>(getPort("switcher"));
+   if (!switcher)
+     throw InternalError("No switcher component");
+
    // Initialize the CFD and/or MPM components
    SimulationInterface* sim = 
-     dynamic_cast<SimulationInterface*>(getPort("sim"));
+     dynamic_cast<SimulationInterface*>(switcher->getPort("sim"));
 
    if(!sim)
      throw InternalError("No simulation component");

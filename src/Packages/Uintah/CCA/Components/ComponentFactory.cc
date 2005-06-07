@@ -22,6 +22,7 @@
 #include <Packages/Uintah/CCA/Components/Examples/AMRSimpleCFD.h>
 #include <Packages/Uintah/CCA/Components/Examples/SolverTest1.h>
 #include <Packages/Uintah/CCA/Components/Examples/Test.h>
+#include <Packages/Uintah/CCA/Components/Switcher/Switcher.h>
 #include <iosfwd>
 
 using std::cerr;
@@ -131,10 +132,14 @@ SimulationComponent* ComponentFactory::create(ProblemSpecP& ps,
     AMRSimpleCFD* amrsimplecfd  = scinew AMRSimpleCFD(world);
     sim = amrsimplecfd;
     comp = amrsimplecfd;
-  } else if (sim_comp == "test" || sim_comp == "test") {
+  } else if (sim_comp == "test" || sim_comp == "TEST") {
     Test* test  = scinew Test(world);
     sim = test;
     comp = test;
+  } else if (sim_comp == "switcher" || sim_comp == "SWITCHER") {
+    Switcher* switcher  = scinew Switcher(world);
+    sim = switcher;
+    comp = switcher;
   } else {
     throw ProblemSetupException("Unknown simulationComponent");
   }

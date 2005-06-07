@@ -21,6 +21,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Util        \
 	Packages/Uintah/CCA/Components/PatchCombiner   \
 	Packages/Uintah/CCA/Components/Regridder   \
+	Packages/Uintah/CCA/Components/Switcher   \
 	Core/OS       \
 	Core/Geometry \
 	Core/Thread   \
