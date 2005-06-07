@@ -657,12 +657,25 @@ bool ProblemSpec::get(string &value)
 	child = child->getNextSibling()) {
       if (child->getNodeType() == DOMNode::TEXT_NODE) {
 	 const char* s = XMLString::transcode(child->getNodeValue());
-         // Remove the white space
-         string tmp(s);
-	 delete [] s;
-         istringstream tmp_str(tmp);
-         tmp_str >> value;
-	 return true;
+         // Remove the white space from the front and back of the string
+         string str(s);  
+         cout << "before str:**" << str << "**\n";
+         string::iterator itr = str.begin();
+         if(*itr==' ') str.erase(itr);
+         itr = str.end();
+         if(*itr==' ') str.erase(itr);
+         cout << "after str:**" << str << "**\n";
+         value = str;
+         return true;
+         // removing whitespace with streams....causes problems
+//           cerr << "s=" << s << '\n';
+//           string tmp(s);
+//           cerr << "tmp=" << tmp << '\n';
+//  	 delete [] s;
+//           istringstream tmp_str(tmp);
+//           tmp_str >> value;
+//           cerr << "value=" << value << '\n';
+//  	 return true;
       }
    }
    return false;
