@@ -198,66 +198,6 @@ public:
 };
 
 
-class GzipPiostream : public Piostream {
-private:
-  gzFile gzfile_;
-
-  inline int fileOpen() { return (gzfile_ != 0); }
-  template <class T> void gen_io(T&, const char *);
-
-public:
-  GzipPiostream(const string& filename, Direction dir,
-                ProgressReporter *pr = 0);
-  virtual ~GzipPiostream();
-
-  virtual void io(char&);
-  virtual void io(signed char&);
-  virtual void io(unsigned char&);
-  virtual void io(short&);
-  virtual void io(unsigned short&);
-  virtual void io(int&);
-  virtual void io(unsigned int&);
-  virtual void io(long&);
-  virtual void io(unsigned long&);
-  virtual void io(long long&);
-  virtual void io(unsigned long long&);
-  virtual void io(double&);
-  virtual void io(float&);
-  virtual void io(string& str);
-
-  virtual bool supports_block_io() { return true; }
-  virtual bool block_io(void*, size_t, size_t);
-};
-
-
-class GunzipPiostream : public Piostream {
-private:
-  int unzipfile_;	// file descriptor
-
-  inline int fileOpen() { return (unzipfile_ > 0); }
-  template <class T> void gen_io(T&, const char *);
-
-public:
-  GunzipPiostream(const string& filename, Direction dir,
-                  ProgressReporter *pr = 0);
-  virtual ~GunzipPiostream();
-
-  virtual void io(char&);
-  virtual void io(signed char&);
-  virtual void io(unsigned char&);
-  virtual void io(short&);
-  virtual void io(unsigned short&);
-  virtual void io(int&);
-  virtual void io(unsigned int&);
-  virtual void io(long&);
-  virtual void io(unsigned long&);
-  virtual void io(long long&);
-  virtual void io(unsigned long long&);
-  virtual void io(double&);
-  virtual void io(float&);
-  virtual void io(string& str);
-};
-
 } // End namespace SCIRun
 
 

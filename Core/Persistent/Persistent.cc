@@ -512,10 +512,6 @@ auto_istream(const string& filename, ProgressReporter *pr)
   {
     return scinew TextPiostream(filename, Piostream::Read, pr);
   }
-  else if (m1 == 'G' && m2 == 'Z' && m3 == 'P')
-  {
-    return scinew GunzipPiostream(filename, Piostream::Read, pr);
-  }
 
   if (pr) pr->error(filename + " is an unknown type!");
   else cerr << filename << " is an unknown type!" << endl;
@@ -530,8 +526,6 @@ auto_ostream(const string& filename, const string& type, ProgressReporter *pr)
   // Based on the type string do the following
   //     Binary:  Return a BinaryPiostream 
   //     Fast:    Return FastPiostream
-  //     Gzip:    Return GzipPiostream
-  //     Gunzip:  Return GunzipPiostream
   //     Text:    Return a TextPiostream
   //     Default: Return BinaryPiostream 
   // NOTE: Binary will never return BinarySwap so we always write
@@ -544,14 +538,6 @@ auto_ostream(const string& filename, const string& type, ProgressReporter *pr)
   else if (type == "Text")
   {
     stream = scinew TextPiostream(filename, Piostream::Write, pr);
-  }
-  else if (type == "Gzip")
-  {
-    stream = scinew GzipPiostream(filename, Piostream::Write, pr);
-  }
-  else if (type == "Gunzip")
-  {
-    stream = scinew GunzipPiostream(filename, Piostream::Write, pr);
   }
   else if (type == "Fast")
   {
