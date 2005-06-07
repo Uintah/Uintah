@@ -658,14 +658,11 @@ bool ProblemSpec::get(string &value)
       if (child->getNodeType() == DOMNode::TEXT_NODE) {
 	 const char* s = XMLString::transcode(child->getNodeValue());
          // Remove the white space from the front and back of the string
-          cerr << "s=" << s << '\n';
           string tmp(s);
-          cerr << "tmp=" << tmp << '\n';
  	 delete [] s;
           istringstream tmp_str(tmp);
           string w;
           while(tmp_str>>w) value += w;
-          cerr << "value=" << value << '\n';
  	 return true;
       }
    }
