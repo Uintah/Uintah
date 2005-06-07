@@ -78,7 +78,7 @@ public:
       // GROUP: Problem Setup:
       ////////////////////////////////////////////////////////////////////////
       // Setup the problem (etc.)
-      virtual void problemSetup(const ProblemSpecP& params) = 0;
+      virtual void problemSetup(const ProblemSpecP& params, bool shradiation) = 0;
 
 //      inline double getInitNorm() { return init_norm; }
 
