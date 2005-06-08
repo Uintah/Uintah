@@ -122,7 +122,7 @@ RescaleColorMap::execute()
 
 	nFields++;
       } else if (pi != range.second) {
-	error("Input port " + to_string(nFields) + " contained no data.");
+	warning("Input port " + to_string(nFields) + " contained no data.");
 	return;
       }
     }
