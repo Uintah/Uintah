@@ -66,7 +66,8 @@ namespace SCIRun {
     CCA = 1,
     Babel,
     Dataflow,
-    Vtk
+    Vtk,
+    Tao
   } modelT;
   
   class BridgeServices {

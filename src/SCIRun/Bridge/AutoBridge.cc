@@ -160,10 +160,11 @@ std::string AutoBridge::genBridge(std::string modelFrom, std::string cFrom, std:
     cFrom = cFrom.substr(cFrom.rfind(".")+1); //SCIRun.yyy.xxx
   } else if(modelFrom == "vtk") {
     cFrom = cFrom.substr(cFrom.rfind(".")+1); //Vtk.xxx
-  }
-  else {}
+  } else if(modelFrom == "tao") {
+    cFrom = cFrom.substr(cFrom.rfind(".")+1); //Tao.xxx
+  } else {}
   
-  
+
   if(modelTo == "babel") {
     cTo = cTo.substr(0,cTo.find(".")); //Babel xxx.Com 
     if(modelFrom != "cca") cCCA = cTo;
@@ -174,8 +175,9 @@ std::string AutoBridge::genBridge(std::string modelFrom, std::string cFrom, std:
     cTo = cTo.substr(cTo.rfind(".")+1); //SCIRun.yyy.xxx
   } else if(modelTo == "vtk") {
     cTo = cTo.substr(cTo.rfind(".")+1); //Vtk.xxx
-  }
-  else {}
+  } else if(modelTo == "tao") {
+    cTo = cTo.substr(cTo.rfind(".")+1); //Tao.xxx
+  } else {}
 
   string name = cFrom+"__"+cTo;
 
@@ -207,6 +209,10 @@ std::string AutoBridge::genBridge(std::string modelFrom, std::string cFrom, std:
     plugin = "/home/sci/damevski/dev/supa/template/BabeltoVtk.erb";
     hdrplugin = "/home/sci/damevski/dev/supa/template/BabeltoVtk.hdr.erb";
     util = "/home/sci/damevski/dev/supa/template/BabeltoVtk.util.rb";
+  } else if((modelFrom == "cca")&&(modelTo == "tao")) {
+    plugin = "/home/sci/damevski/dev/supa/template/CCAtoTao.erb";
+    hdrplugin = "/home/sci/damevski/dev/supa/template/CCAtoTao.hdr.erb";
+    util = "/home/sci/damevski/dev/supa/template/CCAtoBabel.util.rb";
   }
   else {}
 
@@ -255,6 +261,9 @@ bool AutoBridge::canBridge(PortInstance* pr1, PortInstance* pr2)
   //For Vtk
   if( pr1->portType()!=pr2->portType() &&
       (pr1->getModel() == "vtk" || pr2->getModel() == "vtk") )
+    return true;
+
+  if(pr1->getModel() == "tao" || pr2->getModel() == "tao")
     return true;
 
   return false;

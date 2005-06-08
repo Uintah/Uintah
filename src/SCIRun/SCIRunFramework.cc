@@ -41,6 +41,7 @@
 #include <sci_defs/babel_defs.h>
 #include <sci_defs/ruby_defs.h>
 #include <sci_defs/vtk_defs.h>
+#include <sci_defs/tao_defs.h>
 
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/TypeMap.h>
@@ -60,8 +61,10 @@
 #include <SCIRun/Vtk/VtkComponentModel.h>
 #endif
 
+#if HAVE_TAO
 #include <SCIRun/Corba/CorbaComponentModel.h>
 #include <SCIRun/Tao/TaoComponentModel.h>
+#endif
 
 #include <SCIRun/ComponentInstance.h>
 #include <Core/Exceptions/InternalError.h>
@@ -98,8 +101,10 @@ SCIRunFramework::SCIRunFramework()
   models.push_back(vtk = new VtkComponentModel(this));
 #endif
 
+#if HAVE_TAO
   models.push_back(corba = new CorbaComponentModel(this));
   models.push_back(tao = new TaoComponentModel(this));
+#endif
 }
 
 SCIRunFramework::~SCIRunFramework()
