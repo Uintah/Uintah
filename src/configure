@@ -902,15 +902,18 @@ Optional Features:
 --enable-verbosity      Turn on verbose configure output
 --enable-threads        Specify a thread implementation (pthreads or irix)
 --enable-debug          Turn on debugging (default is -g) or specify your
-                          own. example: --enable-debug='-O0 -g'
+                          own.
+ example: --enable-debug='-O0 -g'
 --enable-optimize       Turn on optimize (default is -O2) or specify your
-                          own. example: --enable-optimize='-O3'
+                          own.
+ example: --enable-optimize='-O3'
 --enable-64bit          Compile in 64 bit mode
 --enable-32bit          Compile in 32 bit mode
 --enable-output-avg-walltime
                           Output ellapsed wall-times
 --enable-perfex         Use perfex hardware counters (sgi only)
---enable-package=<list> Use the SCIRun packages specified by list. example:
+--enable-package=<list> Use the SCIRun packages specified by list.
+ example:
                           --enable-package='BioPSE Teem'
 --enable-exename=<name> Use name for executable name instead of the default:
                           scirun
@@ -17337,6 +17340,8 @@ echo "$as_me: error: scirun-develop@sci.utah.edu for more help." >&2;}
    { (exit 1); exit 1; }; }
   fi
   _sci_tcl_inc="$_sci_inc $TCL_SRC_DIR/generic"
+else
+  _sci_tcl_inc="$_sci_inc"
 fi
 
 
@@ -17874,6 +17879,8 @@ fi
 if test -f "$_sci_lib/tkConfig.sh"; then
   . $_sci_lib/tkConfig.sh;
   _sci_tk_inc="$_sci_inc $TK_SRC_DIR/generic $TK_SRC_DIR/unix"
+else
+  _sci_tk_inc="$_sci_inc"
 fi
 
 # Note: TK_DEFS (used below to help resolve tk issues) comes from tkConfig.sh
@@ -19953,6 +19960,18 @@ fi
 CORRECT_TCL_VERSION=no
 CORRECT_TK_VERSION=no
 CORRECT_ITCL_VERSION=no
+
+# if we don't have the tcl/tkConfig.sh files, we can grab the version number from the header file
+if ! test -f "$_sci_lib/tclConfig.sh"; then
+  TCL_VERSION=`grep TCL_VERSION $sci_thirdparty_include/tcl.h | head -n 1 | awk '{print $3}' | sed 's,\",,g'`
+  TCL_PATCH_LEVEL=".`grep TCL_RELEASE_SERIAL $sci_thirdparty_include/tcl.h | head -n 1 | awk '{print $3}'`"
+  TCL_PREFIX=$sci_thirdparty_dir
+fi
+
+if ! test -f "$_sci_lib/tkConfig.sh"; then
+  TK_VERSION=`grep TK_VERSION $sci_thirdparty_include/tk.h | head -n 1 | awk '{print $3}' | sed 's,\",,g'`
+  TK_PATCH_LEVEL=".`grep TK_RELEASE_SERIAL $sci_thirdparty_include/tk.h | head -n 1 | awk '{print $3}'`"
+fi
 
 
     ##  SCI_CHECK_VAR_VERSION
@@ -56660,7 +56679,8 @@ fi
 
 
 
-                                                  ac_config_files="$ac_config_files configVars.mk Makefile on-the-fly-libs/Makefile disjointPackageMakefile $sci_defs_files"
+                                                            ac_config_files="$ac_config_files configVars.mk Makefile on-the-fly-libs/Makefile 
+ disjointPackageMakefile $sci_defs_files"
 
 
 ##   Only do the following if configuring with Uintah
@@ -57217,6 +57237,9 @@ do
   "configVars.mk" ) CONFIG_FILES="$CONFIG_FILES configVars.mk" ;;
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "on-the-fly-libs/Makefile" ) CONFIG_FILES="$CONFIG_FILES on-the-fly-libs/Makefile" ;;
+  "
+" ) CONFIG_FILES="$CONFIG_FILES 
+" ;;
   "disjointPackageMakefile" ) CONFIG_FILES="$CONFIG_FILES disjointPackageMakefile" ;;
   "$sci_defs_files" ) CONFIG_FILES="$CONFIG_FILES $sci_defs_files" ;;
   "Packages/Uintah/tools/fspec.pl" ) CONFIG_FILES="$CONFIG_FILES Packages/Uintah/tools/fspec.pl" ;;

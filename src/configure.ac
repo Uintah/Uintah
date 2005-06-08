@@ -2128,6 +2128,8 @@ if test -f "$_sci_lib/tclConfig.sh"; then
      AC_MSG_ERROR(scirun-develop@sci.utah.edu for more help.)
   fi
   _sci_tcl_inc="$_sci_inc $TCL_SRC_DIR/generic"
+else
+  _sci_tcl_inc="$_sci_inc"  
 fi
 
 SCI_TRY_LINK(TCL,tcl library and headers,tcl.h tclPort.h tclMath.h tclInt.h,
@@ -2151,6 +2153,8 @@ AC_SUBST(INC_TCL_H)
 if test -f "$_sci_lib/tkConfig.sh"; then 
   . $_sci_lib/tkConfig.sh; 
   _sci_tk_inc="$_sci_inc $TK_SRC_DIR/generic $TK_SRC_DIR/unix"
+else
+  _sci_tk_inc="$_sci_inc"  
 fi
 
 # Note: TK_DEFS (used below to help resolve tk issues) comes from tkConfig.sh
@@ -2211,6 +2215,18 @@ AC_SUBST(INC_BLT_H)
 CORRECT_TCL_VERSION=no
 CORRECT_TK_VERSION=no
 CORRECT_ITCL_VERSION=no
+
+# if we don't have the tcl/tkConfig.sh files, we can grab the version number from the header file
+if ! test -f "$_sci_lib/tclConfig.sh"; then 
+  TCL_VERSION=`grep TCL_VERSION $sci_thirdparty_include/tcl.h | head -n 1 | awk '{print $3}' | sed 's,\",,g'`
+  TCL_PATCH_LEVEL=".`grep TCL_RELEASE_SERIAL $sci_thirdparty_include/tcl.h | head -n 1 | awk '{print $3}'`"
+  TCL_PREFIX=$sci_thirdparty_dir
+fi
+
+if ! test -f "$_sci_lib/tkConfig.sh"; then 
+  TK_VERSION=`grep TK_VERSION $sci_thirdparty_include/tk.h | head -n 1 | awk '{print $3}' | sed 's,\",,g'`
+  TK_PATCH_LEVEL=".`grep TK_RELEASE_SERIAL $sci_thirdparty_include/tk.h | head -n 1 | awk '{print $3}'`"
+fi
 
 SCI_CHECK_VAR_VERSION(Tcl,$TCL_VERSION$TCL_PATCH_LEVEL,8.3.2,,continue)
 SCI_CHECK_VAR_VERSION(Tk,$TK_VERSION$TK_PATCH_LEVEL,8.3.2,,continue)
