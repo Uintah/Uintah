@@ -14,27 +14,27 @@ clear function;
 
 %________________________________
 % USER INPUTS
-uda = 'AMR_HotBlob.uda.000'
+uda = 'AMR_HotBlob_10.uda'
 
-desc = '1D hotBlob';
-legendText = {'L-0','L-1'}
+
+desc = '1D hotBlob, Lattice refinement ratio 10,1,1, cell refinement ratio 4,1,1';
+legendText = {'L-0','L-1', 'L-2'}
 pDir = 1;                    
-symbol = {'+','*r'}
+symbol = {'+','*r','xg'}
 mat      = 0;
-
 
 numPlotCols = 1;
 numPlotRows = 4;
 
 plotRho   = true;
 plotTemp  = true;           
-plotPress    = true;
-plotVol_frac = false;
-plotSp_vol   = true
-plotVel      = false; 
-
+plotPress      = true;
+plotVol_frac   = false;
+plotSp_vol     = false;
+plotVel        = false; 
+plotRefineFlag = true;
 % lineExtract start and stop
-startEnd ={'-istart 0 0 0 -iend 100 0 0';'-istart 0 0 0 -iend 100 0 0' };
+startEnd ={'-istart 0 0 0 -iend 100 0 0';'-istart 0 0 0 -iend 200 0 0' ;'-istart 0 0 0 -iend 200 0 0'};
 
 %________________________________
 %  extract the physical time for each dump
@@ -44,10 +44,10 @@ physicalTime  = importdata('tmp');
 nDumps = length(physicalTime) - 1;
 
   
-%set(0,'DefaultFigurePosition',[0,0,1024,768]);
+%set(0,'DefaultFigurePosition',[0,0,640,480]);
 %_________________________________
 % Loop over all the timesteps
-for(ts = 1:nDumps )
+for(ts = 10:nDumps )
   ts = input('input timestep') 
   time = sprintf('%d sec',physicalTime(ts+1));
   
@@ -73,22 +73,30 @@ for(ts = 1:nDumps )
       plotNum = 1;
       level
       
-      %______________________________
+      %______________________________THIS IS GROSS AND NEEDS TO BE
+      %ENCAPSULATED
       %  temperature   
       if plotTemp
+        clear temp1;
         c1 = sprintf('lineextract -v temp_CC -l %i -cellCoords -timestep %i %s -o temp -m %i  -uda %s',level,ts,S_E,mat,uda);
         [s1, r1]   = unix(c1);
         temp1{1,L} = importdata('temp');
         
         x = temp1{1,L}(:,pDir)
         subplot(numPlotRows,numPlotCols,plotNum), plot(x,temp1{1,L}(:,4),symbol{L})
-        %xlim ([0 50])
+        %xlim([-0.15 0.15])
+        ylim([300 400])
         %axis([0 5 295 320])
+        %legend(legendText);
         xlabel('x')
         ylabel('temp')
         title(time);
         grid on;
-        hold
+        if (L == maxLevel)
+         hold off;
+        else
+         hold on;
+        end
         plotNum = plotNum+ 1;
       end
       %______________________________
@@ -97,16 +105,19 @@ for(ts = 1:nDumps )
         c2 = sprintf('lineextract -v press_CC -l %i -cellCoords -timestep %i %s -o press -m 0 -uda %s',level,ts,S_E,uda);
         [s2, r2]    = unix(c2);
         press1{1,L} = importdata('press');
-        
        
         subplot(numPlotRows,numPlotCols,plotNum),plot(x,press1{1,L}(:,4),symbol{L})
-        %xlim ([0 50])
+        %xlim([-0.15 0.15])
         %axis([0 5 101000 109000])
         xlabel('x')
         ylabel('pressure')
         title(desc);
         grid on;
-        hold
+        if (L == maxLevel)
+         hold off;
+        else
+         hold on;
+        end
         plotNum = plotNum+ 1;
       end
       %_____________________________
@@ -118,12 +129,17 @@ for(ts = 1:nDumps )
         
         
         subplot(numPlotRows,numPlotCols,plotNum), plot(x,rho1{1,L}(:,4),symbol{L})
-        %xlim ([0 50])
+        %xlim([-0.15 0.15])
+        ylim([1.5 2.1])
         %axis([0 5 1.75 1.9])
         xlabel('x')
         ylabel('rho')
         grid on;
-        hold
+        if (L == maxLevel)
+         hold off;
+        else
+         hold on;
+        end
         plotNum = plotNum+ 1;
       end
       %____________________________
@@ -135,11 +151,15 @@ for(ts = 1:nDumps )
         
         
         subplot(numPlotRows,numPlotCols,plotNum), plot(x,f1{1,L}(:,4),symbol{L})
-        %xlim ([0 50])
+        %xlim([-0.15 0.15])
         %axis([0 50 0 0.01])
         ylabel('sp vol');
         grid on;
-        hold
+        if (L == maxLevel)
+         hold off;
+        else
+         hold on;
+        end
         plotNum = plotNum+ 1;
       end
       %____________________________
@@ -154,10 +174,15 @@ for(ts = 1:nDumps )
         
         subplot(numPlotRows,numPlotCols,plotNum), plot(x, vel1{1,L}(:,5),symbol{L})
         legend('y');
-        %xlim ([0 50])
+        %xlim([-0.15 0.15])
         %axis([0 5 -10 10])
         ylabel('vel CC');
         grid on;
+        if (L == maxLevel)
+         hold off;
+        else
+         hold on;
+        end
         plotNum = plotNum+ 1;
       end
       %____________________________
@@ -169,19 +194,44 @@ for(ts = 1:nDumps )
         
         
         subplot(numPlotRows,numPlotCols,plotNum), plot(x,vf{1,L}(:,4),symbol{L})
-        %xlim ([0 50])
+        %xlim([-0.15 0.15])
         %axis([0 5 -10 10])
         ylabel('vol frac');
         grid on;
-        hold
+        if (L == maxLevel)
+         hold off;
+        else
+         hold on;
+        end
+        plotNum = plotNum+ 1;
+      end
+      %____________________________
+      %   refineFlag
+      if plotRefineFlag
+        c6 = sprintf('lineextract -v refineFlag -l %i -cellCoords -timestep %i %s -o refineFlag -m %i  -uda %s',level,ts,S_E,mat,uda);
+        [s6, r6]=unix(c6);
+        rF{1,L} = importdata('refineFlag');
+        
+        
+        subplot(numPlotRows,numPlotCols,plotNum), plot(x,rF{1,L}(:,4),symbol{L})
+        %xlim([-0.15 0.15])
+        %axis([0 5 -10 10])
+        ylabel('refineFlag');
+        grid on;
+        if (L == maxLevel)
+         hold off;
+        else
+         hold on;
+        end
         plotNum = plotNum+ 1;
       end
     end  % if level exists
- end
-end
+  end  % level loop
+  %M(ts) = getframe(gcf);
+end  % timestep loop
 %__________________________________
 % show the move and make an avi file
-%hFig = figure;
+hFig = figure;
 %movie(hFig,M,1,3)
-%movie2avi(M,'delT.avi','fps',5,'quality',100);
+%movie2avi(M,'test.avi','fps',30,'quality',100);
 %clear all
