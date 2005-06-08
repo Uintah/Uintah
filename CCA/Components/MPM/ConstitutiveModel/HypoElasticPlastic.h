@@ -3,6 +3,7 @@
 
 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include "ImplicitCM.h"
 #include "PlasticityModels/YieldCondition.h"
 #include "PlasticityModels/StabilityCheck.h"
 #include "PlasticityModels/PlasticityModel.h"
@@ -45,7 +46,7 @@ namespace Uintah {
   */
   /////////////////////////////////////////////////////////////////////////////
 
-  class HypoElasticPlastic : public ConstitutiveModel {
+  class HypoElasticPlastic : public ConstitutiveModel, public ImplicitCM {
 
   public:
     // Create datatype for storing model parameters
@@ -94,7 +95,7 @@ namespace Uintah {
     const VarLabel* pPlasticTempIncLabel_preReloc;  
     const VarLabel* pLocalizedLabel_preReloc;  
 
-  private:
+  protected:
 
     CMData           d_initialData;
     PorosityData     d_porosity;
@@ -115,6 +116,8 @@ namespace Uintah {
     DamageModel*        d_damage;
     MPMEquationOfState* d_eos;
          
+  private:
+
     // Prevent copying of this class
     // copy constructor
     //HypoElasticPlastic(const HypoElasticPlastic &cm);
@@ -137,6 +140,20 @@ namespace Uintah {
     HypoElasticPlastic* clone();
          
     ////////////////////////////////////////////////////////////////////////
+    /*! \brief Initial CR */
+    ////////////////////////////////////////////////////////////////////////
+    virtual void addInitialComputesAndRequires(Task* task,
+                                               const MPMMaterial* matl,
+                                               const PatchSet* patches) const;
+
+    ////////////////////////////////////////////////////////////////////////
+    /*! \brief initialize  each particle's constitutive model data */
+    ////////////////////////////////////////////////////////////////////////
+    virtual void initializeCMData(const Patch* patch,
+                                  const MPMMaterial* matl,
+                                  DataWarehouse* new_dw);
+
+    ////////////////////////////////////////////////////////////////////////
     /*! \brief compute stable timestep for this patch */
     ////////////////////////////////////////////////////////////////////////
     virtual void computeStableTimestep(const Patch* patch,
@@ -144,8 +161,15 @@ namespace Uintah {
                                        DataWarehouse* new_dw);
 
     ////////////////////////////////////////////////////////////////////////
+    /*! \brief Computes and requires explicit. */
+    ////////////////////////////////////////////////////////////////////////
+    virtual void addComputesAndRequires(Task* task,
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches) const;
+
+    ////////////////////////////////////////////////////////////////////////
     /*! 
-      \brief Compute stress at each particle in the patch 
+      \brief Compute stress at each particle in the patch (explicit)
 
       The plastic work is converted into a rate of temperature increase
       using an equation of the form
@@ -159,6 +183,27 @@ namespace Uintah {
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
 
+    ////////////////////////////////////////////////////////////////////////
+    /*! \brief Computes and Requires Implicit */
+    ////////////////////////////////////////////////////////////////////////
+    virtual void addComputesAndRequires(Task* task,
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches,
+                                        const bool recursion) const;
+
+    ////////////////////////////////////////////////////////////////////////
+    /*! \brief Compute Stress Tensor Implicit */
+    ////////////////////////////////////////////////////////////////////////
+    virtual void computeStressTensor(const PatchSubset* patches,
+                                     const MPMMaterial* matl,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw,
+#ifdef HAVE_PETSC
+                                     MPMPetscSolver* solver,
+#else
+                                     SimpleSolver* solver,
+#endif
+                                     const bool recursion);
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief carry forward CM data for RigidMPM */
@@ -169,17 +214,20 @@ namespace Uintah {
                               DataWarehouse* new_dw);
 
     ////////////////////////////////////////////////////////////////////////
-    /*! \brief initialize  each particle's constitutive model data */
+    /*! \brief Put documentation here. */
     ////////////////////////////////////////////////////////////////////////
-    virtual void addParticleState(std::vector<const VarLabel*>& from,
-                                  std::vector<const VarLabel*>& to);
+    virtual void addRequiresDamageParameter(Task* task,
+                                            const MPMMaterial* matl,
+                                            const PatchSet* patches) const;
+
 
     ////////////////////////////////////////////////////////////////////////
-    /*! \brief initialize  each particle's constitutive model data */
+    /*! \brief Put documentation here. */
     ////////////////////////////////////////////////////////////////////////
-    virtual void initializeCMData(const Patch* patch,
-                                  const MPMMaterial* matl,
-                                  DataWarehouse* new_dw);
+    virtual void getDamageParameter(const Patch* patch, 
+                                    ParticleVariable<int>& damage, int dwi,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw);
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Put documentation here. */
@@ -201,28 +249,6 @@ namespace Uintah {
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Put documentation here. */
     ////////////////////////////////////////////////////////////////////////
-    virtual void addInitialComputesAndRequires(Task* task,
-                                               const MPMMaterial* matl,
-                                               const PatchSet* patches) const;
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Put documentation here. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void addComputesAndRequires(Task* task,
-                                        const MPMMaterial* matl,
-                                        const PatchSet* patches) const;
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Put documentation here. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void addComputesAndRequires(Task* task,
-                                        const MPMMaterial* matl,
-                                        const PatchSet* patches,
-                                        const bool recursion) const;
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Put documentation here. */
-    ////////////////////////////////////////////////////////////////////////
     void scheduleCheckNeedAddMPMMaterial(Task* task,
                                          const MPMMaterial* matl,
                                          const PatchSet* patches) const;
@@ -236,20 +262,10 @@ namespace Uintah {
                                          DataWarehouse* new_dw);
 
     ////////////////////////////////////////////////////////////////////////
-    /*! \brief Put documentation here. */
+    /*! \brief initialize  each particle's constitutive model data */
     ////////////////////////////////////////////////////////////////////////
-    virtual void addRequiresDamageParameter(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches) const;
-
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Put documentation here. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void getDamageParameter(const Patch* patch, 
-                                    ParticleVariable<int>& damage, int dwi,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw);
+    virtual void addParticleState(std::vector<const VarLabel*>& from,
+                                  std::vector<const VarLabel*>& to);
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Get the increment in plastic temperature. */
@@ -287,7 +303,6 @@ namespace Uintah {
                           const Matrix3& DD, 
                           const Matrix3& WW,
                           Matrix3& VV, 
-
                           Matrix3& RR);  
 
     ////////////////////////////////////////////////////////////////////////
@@ -298,12 +313,75 @@ namespace Uintah {
                                   const Matrix3& tensorW);
 
     ////////////////////////////////////////////////////////////////////////
+    /*! compute stress at each particle in the patch */
+    ////////////////////////////////////////////////////////////////////////
+    void computeStressTensorImplicit(const PatchSubset* patches,
+                                     const MPMMaterial* matl,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw);
+
+    ////////////////////////////////////////////////////////////////////////
+    /*! Compute the quantity 
+                   \f$d(\gamma)/dt * \Delta T = \Delta \gamma \f$ 
+                   using Newton iterative root finder */
+    ////////////////////////////////////////////////////////////////////////
+    double computeDeltaGamma(const double& delT,
+                             const double& tolerance,
+                             const double& normTrialS,
+                             const MPMMaterial* matl,
+                             const particleIndex idx,
+                             PlasticityState* state);
+
+    ////////////////////////////////////////////////////////////////////////
+    /*! Compute the elastic tangent modulus tensor for isotropic
+        materials
+        Assume: [stress] = [s11 s22 s33 s23 s31 s12]
+                [strain] = [e11 e22 e33 2e23 2e31 2e12] */
+    ////////////////////////////////////////////////////////////////////////
+    void computeElasticTangentModulus(const double& K,
+                                      const double& mu,
+                                      double Ce[6][6]);
+
+    ////////////////////////////////////////////////////////////////////////
     /*! \brief Compute the elastic tangent modulus tensor for isotropic
       materials */
     ////////////////////////////////////////////////////////////////////////
     void computeElasticTangentModulus(double bulk,
                                       double shear,
                                       TangentModulusTensor& Ce);
+
+    ////////////////////////////////////////////////////////////////////////
+    /*! Compute the elastic-plastic tangent modulus tensor for isotropic
+        materials for use in the implicit stress update
+        Assume: [stress] = [s11 s22 s33 s23 s31 s12]
+                [strain] = [e11 e22 e33 2e23 2e31 2e12] 
+        Uses alogorithm for small strain plasticity (Simo 1998, p.124) */
+    ////////////////////////////////////////////////////////////////////////
+    void computeEPlasticTangentModulus(const double& K,
+                                       const double& mu,
+                                       const double& delGamma,
+                                       const double& normTrialS,
+                                       const particleIndex idx,
+                                       const Matrix3& n,
+                                       PlasticityState* state,
+                                       double Cep[6][6]);
+
+    ////////////////////////////////////////////////////////////////////////
+    /*! Compute K matrix */
+    ////////////////////////////////////////////////////////////////////////
+    void computeStiffnessMatrix(const double B[6][24],
+                                const double Bnl[3][24],
+                                const double D[6][6],
+                                const Matrix3& sig,
+                                const double& vol_old,
+                                const double& vol_new,
+                                double Kmatrix[24][24]);
+
+    ////////////////////////////////////////////////////////////////////////
+    /*! Compute stiffness matrix for geomtric nonlinearity */
+    ////////////////////////////////////////////////////////////////////////
+    void BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
+                    double Kgeo[24][24]) const;
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Compute Porosity.
@@ -344,6 +422,10 @@ namespace Uintah {
     /*! \brief Calculate void nucleation factor */
     ////////////////////////////////////////////////////////////////////////
     inline double voidNucleationFactor(double plasticStrain);
+
+  private:
+
+    void initializeLocalMPMLabels();
 
   };
 

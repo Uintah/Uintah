@@ -2207,7 +2207,6 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constParticleVariable<double> pmass, pvolume,pvolumeold,pTempOld,pEro;
       ParticleVariable<double> pmassNew,pvolumeNew,newpvolold,pTemp,pEroNew;
       ParticleVariable<double> pTempPreNew;
-      constParticleVariable<double> pTempPre;
   
       // Get the arrays of grid data on which the new part. values depend
       constNCVariable<Vector> dispNew, gacceleration;
@@ -2247,13 +2246,12 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       old_dw->get(psize,                 lb->pSizeLabel,                 pset);
       old_dw->get(pEro,                  lb->pErosionLabel,              pset);
-      old_dw->get(pTempPre,              lb->pTempPreviousLabel,         pset);
       new_dw->allocateAndPut(psizeNew,   lb->pSizeLabel_preReloc,        pset);
       new_dw->allocateAndPut(pEroNew,    lb->pErosionLabel_preReloc,     pset);
       new_dw->allocateAndPut(pTempPreNew,lb->pTempPreviousLabel_preReloc,pset);
       psizeNew.copyData(psize);
       pEroNew.copyData(pEro);
-      pTempPreNew.copyData(pTempPre);
+      pTempPreNew.copyData(pTempOld);
      
       NCVariable<double> dTdt_create, massBurnFraction_create;  
       new_dw->allocateTemporary(dTdt_create, patch,Ghost::AroundCells,1);
