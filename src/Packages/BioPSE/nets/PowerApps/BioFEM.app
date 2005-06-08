@@ -237,6 +237,8 @@ set mods(GenStandardColorMaps) $m8
 
 set mods(ShowDipole) $m6
 
+set mods(SolveMatrix) $m3
+
 #######################################################
 # Build up a simplistic standalone application.
 #######################################################
@@ -530,6 +532,24 @@ class BioFEMApp {
 	button $f.probe.b -text Browse -command "$mods(FieldReader-probe) initialize_ui"
 	pack $f.probe.l $f.probe.e $f.probe.b -side left
 	pack $f.probe -padx 5 -anchor w
+
+        global $mods(SolveMatrix)-target_error
+	set err [set $mods(SolveMatrix)-target_error]
+
+	blt::graph $f.graph -title "Convergence" -height 250 \
+		-plotbackground gray99
+	$f.graph yaxis configure -logscale true -title "error (RMS)"  -min [expr $err/10] -max 1 -loose true
+	$f.graph xaxis configure -title "Iteration" \
+		-loose true
+	bind $f.graph <ButtonPress-1> "$mods(SolveMatrix) select_error $f.graph %x %y"
+	bind $f.graph <Button1-Motion> "$mods(SolveMatrix) move_error $f.graph %x %y"
+	bind $f.graph <ButtonRelease-1> "$mods(SolveMatrix) deselect_error $f.graph %x %y"
+	set iter 1
+	$f.graph element create "Current Target" -linewidth 0
+	$f.graph element configure "Current Target" -data "0 $err" \
+		-symbol diamond
+	pack $f.graph -fill x
+        $mods(SolveMatrix) add_graph $f.graph
     }
     
     
