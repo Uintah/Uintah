@@ -80,12 +80,14 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
   Ghost::GhostType  gnone = Ghost::None;
   Ghost::GhostType  gac   = Ghost::AroundCells;
 
+  task->requires(Task::OldDW, d_lb->delTLabel);
   task->requires(Task::OldDW, d_lb->pXLabel,           matlset, gnone);
   task->requires(Task::OldDW, d_lb->pMassLabel,        matlset, gnone);
   task->requires(Task::OldDW, d_lb->pVolumeLabel,      matlset, gnone);
+  task->requires(Task::OldDW, d_lb->pVolumeOldLabel,   matlset, gnone);
   task->requires(Task::OldDW, d_lb->pTemperatureLabel, matlset, gnone);
   task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,
-                                                     matlset, gnone);
+                                                       matlset, gnone);
   task->requires(Task::OldDW, d_lb->pStressLabel,      matlset, gnone);
   task->requires(Task::OldDW, d_lb->dispNewLabel,      matlset, gac, 1);
 

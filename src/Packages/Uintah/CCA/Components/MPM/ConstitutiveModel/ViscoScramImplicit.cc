@@ -777,9 +777,9 @@ void ViscoScramImplicit::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, lb->delTLabel);
   task->requires(Task::OldDW, lb->pXLabel,                 matlset,gnone);
   task->requires(Task::OldDW, lb->pMassLabel,              matlset,gnone);
-  task->requires(Task::OldDW, lb->pStressLabel,            matlset,gnone);
   task->requires(Task::OldDW, lb->pVolumeLabel,            matlset,gnone);
   task->requires(Task::OldDW, lb->pVolumeOldLabel,         matlset,gnone);
+  task->requires(Task::OldDW, lb->pStressLabel,            matlset,gnone);
   task->requires(Task::OldDW, lb->pVelocityLabel,          matlset,gnone);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,gnone);
 //  task->requires(Task::OldDW, lb->pTempPreviousLabel,      matlset,gnone);
