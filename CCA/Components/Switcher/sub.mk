@@ -10,6 +10,8 @@ PSELIBS := \
 	Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/Core/Parallel \
 	Packages/Uintah/Core/Exceptions  \
+	Packages/Uintah/Core/Util \
+	Packages/Uintah/CCA/Ports
 
 LIBS 	:= $(XML_LIBRARY) $(MPI_LIBRARY)
 
