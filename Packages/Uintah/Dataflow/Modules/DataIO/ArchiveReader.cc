@@ -43,11 +43,19 @@ ArchiveReader::execute()
      return;
 
    string index( filebase.get() + "/index.xml" );
-   stat( index.c_str(), &statbuffer);
+   errno = 0;
+   int result = stat( index.c_str(), &statbuffer);
+
+   if( result != 0 ) {
+     char msg[1024];
+     sprintf( msg, "ArchiveReader unable to open %s.  (Errno: %d)", index.c_str(), errno );
+     error( msg );
+     return;
+   }
 
    if(filebase.get() != aName || aName_size != statbuffer.st_size) {
      try {
-       reader = scinew DataArchive(filebase.get());
+       reader = scinew DataArchive(filebase.get(),0,1,false);
      } catch ( const Exception& ex) {
        error("ArchiveReader caught exception: " + string(ex.message()));
        return;
