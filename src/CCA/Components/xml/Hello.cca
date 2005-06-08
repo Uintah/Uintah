@@ -1,3 +1,3 @@
 <component name="SCIRun.Hello" model="cca">
-<sidl source="/home/sci/damevski/dev/strauss/StringPort.sidl"></sidl>
+<sidl source="/home/sci/damevski/SR2/SCIRun/src/CCA/Components/Hello/StringPort.sidl"></sidl>
 </component>
