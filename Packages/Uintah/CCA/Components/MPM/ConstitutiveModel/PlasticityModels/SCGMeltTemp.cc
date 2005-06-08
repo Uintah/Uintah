@@ -39,6 +39,8 @@ SCGMeltTemp::computeMeltingTemp(const PlasticityState* state)
   double eta = state->density/state->initialDensity;
   double power = 2.0*(d_Gamma0 - d_a - 1.0/3.0);
   double Tm = d_Tm0*exp(2.0*d_a*(1.0 - 1.0/eta))*pow(eta,power);
+  
+  //cout << " SCG Melting Temp : " << Tm << " eta = " << eta << endl;
   return Tm;
 }
 
