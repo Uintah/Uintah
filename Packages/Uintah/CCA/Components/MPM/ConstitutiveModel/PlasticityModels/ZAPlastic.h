@@ -1,8 +1,7 @@
 #ifndef __ZERILLI_ARMSTRONG_MODEL_H__
 #define __ZERILLI_ARMSTRONG_MODEL_H__
 
-
-#include "PlasticityModel.h"    
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityModel.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
