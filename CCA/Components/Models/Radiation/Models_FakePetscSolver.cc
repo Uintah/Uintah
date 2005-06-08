@@ -30,7 +30,7 @@ Models_PetscSolver::~Models_PetscSolver()
 // Problem setup
 // ****************************************************************************
 void 
-Models_PetscSolver::problemSetup(const ProblemSpecP& )
+Models_PetscSolver::problemSetup(const ProblemSpecP&, bool )
 {
   throw InternalError("PetscSolver not configured");
 }
