@@ -21,9 +21,9 @@ ifeq ($(CC),newmpxlc)
         Core/Containers   \
 	Core/Persistent   \
 	Core/OS		  \
-        Packages/Uintah/Core/GeometryPiece \
-        Packages/Uintah/CCA/Components/Arches/Mixing \
-        Packages/Uintah/CCA/Components/Arches/fortran \
+        Packages/Uintah/Core/GeometryPiece              \
+        Packages/Uintah/CCA/Components/Arches/Mixing    \
+        Packages/Uintah/CCA/Components/Arches/fortran   \
         Packages/Uintah/CCA/Components/Arches/Radiation \
         Packages/Uintah/CCA/Components/Arches/Radiation/fortran
 endif
@@ -40,31 +40,32 @@ else
         Core/Geometry     \
         Core/Util         \
         Core/Math         \
-        Packages/Uintah/Core/DataArchive   \
-        Packages/Uintah/Core/Grid \
-        Packages/Uintah/Core/Parallel \
-        Packages/Uintah/Core/Labels \
-        Packages/Uintah/Core/Util \
-        Packages/Uintah/Core/Math \
-        Packages/Uintah/Core/Disclosure \
-        Packages/Uintah/Core/Exceptions \
-        Packages/Uintah/CCA/Ports \
+        Packages/Uintah/Core/DataArchive \
+        Packages/Uintah/Core/Grid        \
+        Packages/Uintah/Core/Parallel    \
+        Packages/Uintah/Core/Labels      \
+        Packages/Uintah/Core/Util        \
+        Packages/Uintah/Core/Math        \
+        Packages/Uintah/Core/Disclosure  \
+        Packages/Uintah/Core/Exceptions  \
+        Packages/Uintah/CCA/Ports        \
+	Packages/Uintah/CCA/Components        \
 	Packages/Uintah/CCA/Components/Models \
-        Packages/Uintah/CCA/Components/MPM \
+        Packages/Uintah/CCA/Components/MPM    \
         Packages/Uintah/CCA/Components/MPMICE \
-        Packages/Uintah/CCA/Components/DataArchiver \
+        Packages/Uintah/CCA/Components/DataArchiver  \
         Packages/Uintah/CCA/Components/LoadBalancers \
-        Packages/Uintah/CCA/Components/Regridder \
-        Packages/Uintah/Core/ProblemSpec \
+        Packages/Uintah/CCA/Components/Regridder     \
+        Packages/Uintah/Core/ProblemSpec             \
         Packages/Uintah/CCA/Components/SimulationController \
-        Packages/Uintah/CCA/Components/Schedulers \
-        Packages/Uintah/CCA/Components/Scheduler3 \
+        Packages/Uintah/CCA/Components/Schedulers           \
+        Packages/Uintah/CCA/Components/Scheduler3           \
         Packages/Uintah/CCA/Components/ProblemSpecification \
-        Packages/Uintah/CCA/Components/Solvers \
-        Packages/Uintah/CCA/Components/ICE \
-        Packages/Uintah/CCA/Components/Examples \
-        Packages/Uintah/CCA/Components/Arches \
-        Packages/Uintah/CCA/Components/MPMArches \
+        Packages/Uintah/CCA/Components/Solvers              \
+        Packages/Uintah/CCA/Components/ICE           \
+        Packages/Uintah/CCA/Components/Examples      \
+        Packages/Uintah/CCA/Components/Arches        \
+        Packages/Uintah/CCA/Components/MPMArches     \
         Packages/Uintah/CCA/Components/PatchCombiner \
         $(AIX_LIBRARY)
 endif
@@ -105,9 +106,9 @@ ifeq ($(CC),newmpxlc)
         Core/Containers   \
 	Core/Persistent   \
 	Core/OS		  \
-        Packages/Uintah/Core/GeometryPiece \
-        Packages/Uintah/CCA/Components/Arches/Mixing \
-        Packages/Uintah/CCA/Components/Arches/fortran \
+        Packages/Uintah/Core/GeometryPiece              \
+        Packages/Uintah/CCA/Components/Arches/Mixing    \
+        Packages/Uintah/CCA/Components/Arches/fortran   \
         Packages/Uintah/CCA/Components/Arches/Radiation \
         Packages/Uintah/CCA/Components/Arches/Radiation/fortran
 endif
@@ -125,30 +126,32 @@ else
         Core/Util         \
         Core/Math         \
         Packages/Uintah/Core/DataArchive   \
-        Packages/Uintah/Core/Grid \
+        Packages/Uintah/Core/Grid     \
         Packages/Uintah/Core/Parallel \
-        Packages/Uintah/Core/Labels \
-        Packages/Uintah/Core/Util \
-        Packages/Uintah/Core/Math \
+        Packages/Uintah/Core/Labels   \
+        Packages/Uintah/Core/Util     \
+        Packages/Uintah/Core/Math     \
         Packages/Uintah/Core/Disclosure \
         Packages/Uintah/Core/Exceptions \
-        Packages/Uintah/CCA/Ports \
-	Packages/Uintah/CCA/Components \
+        Packages/Uintah/CCA/Ports       \
+	Packages/Uintah/CCA/Components  \
 	Packages/Uintah/CCA/Components/Models \
-        Packages/Uintah/CCA/Components/MPM \
+        Packages/Uintah/CCA/Components/MPM    \
         Packages/Uintah/CCA/Components/MPMICE \
-        Packages/Uintah/CCA/Components/DataArchiver \
+        Packages/Uintah/CCA/Components/DataArchiver  \
         Packages/Uintah/CCA/Components/LoadBalancers \
-        Packages/Uintah/CCA/Components/Regridder \
+        Packages/Uintah/CCA/Components/Regridder     \
+        Packages/Uintah/CCA/Components/Switcher      \
         Packages/Uintah/Core/ProblemSpec \
         Packages/Uintah/CCA/Components/SimulationController \
         Packages/Uintah/CCA/Components/Schedulers \
         Packages/Uintah/CCA/Components/Scheduler3 \
         Packages/Uintah/CCA/Components/ProblemSpecification \
-        Packages/Uintah/CCA/Components/Solvers \
-        Packages/Uintah/CCA/Components/ICE \
-        Packages/Uintah/CCA/Components/Examples \
-        Packages/Uintah/CCA/Components/MPMArches \
+        Packages/Uintah/CCA/Components/Solvers   \
+        Packages/Uintah/CCA/Components/ICE       \
+        Packages/Uintah/CCA/Components/Examples  \
+        Packages/Uintah/CCA/Components/Arches        \
+        Packages/Uintah/CCA/Components/MPMArches     \
         Packages/Uintah/CCA/Components/PatchCombiner \
         $(AIX_LIBRARY)
 endif
