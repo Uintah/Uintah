@@ -3,7 +3,7 @@
 // This is a hack.  gcc 3.3 #undefs isnan in the cmath header, which
 // make the isnan function not work.  This define makes the cmath header
 // not get included since we do not need it anyway.
-#define _CPP_CMATH
+#  define _CPP_CMATH
 #endif
 
 #include <Packages/Uintah/CCA/Components/MPM/ImpMPM.h> 
@@ -924,6 +924,10 @@ void ImpMPM::iterate(const ProcessorGroup*,
     bool restart_nan=false;
     bool restart_neg_residual=false;
     bool restart_num_iters=false;
+
+#ifdef __APPLE__
+#  define isnan  __isnand
+#endif
     if ((isnan(dispIncQNorm/dispIncQNorm0)||isnan(dispIncNorm/dispIncNormMax)) 
         && isnan(dispIncQNorm0)){
       restart_nan=true;
