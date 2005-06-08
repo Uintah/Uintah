@@ -3496,8 +3496,8 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         double viscosity_test = ice_matl->getViscosity();
         if(viscosity_test != 0.0){
           if(numMatls > 1){
-            throw InternalError("ICE:Compute viscous ShearStress:  currently the shear stress" 
-            " calculation doesn't work for multiple materials. Set the dynamic viscosity to 0.0 --Todd");
+            cout << "ICE:Compute viscous ShearStress:  currently the shear stress" 
+            " calculation doesn't work for multiple materials. Set the dynamic viscosity to 0.0 --Todd"<< endl;
           }
         
           CCVariable<double> viscosity;  // don't alter the original value
@@ -3692,8 +3692,8 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
         double thermalCond_test = ice_matl->getThermalConductivity();
         if(thermalCond_test != 0.0 ){
           if(numMatls > 1){
-            throw InternalError("ICE:Compute heat diffusion:  currently the heat diffusion" 
-            " calculation doesn't work for multiple materials. Set the ICE: thermal conductivity to 0.0 --Todd");
+            cout <<"ICE:Compute heat diffusion:  currently the heat diffusion" 
+            " calculation doesn't work for multiple materials. Set the ICE: thermal conductivity to 0.0 --Todd"<< endl;
           }
           constCCVariable<double> Temp_CC;
           constCCVariable<double> thermalCond;
