@@ -15,9 +15,10 @@ namespace Uintah {
 
 class Index_ID {
 public:
-  Index_ID(): id(IntVector(0,0,0)), level(0) {}
-  IntVector id;
-  int level;
+  Index_ID(): id_(IntVector(0,0,0)), level_(0) {}
+  
+  IntVector id_;
+  int       level_;
 };
   
 class VariablePlotter : public Module {
@@ -44,28 +45,28 @@ protected:
   int initialize_grid();
   void update_tcl_window();
   
-  ArchiveIPort* in; // incoming data archive
+  ArchiveIPort* in_; // incoming data archive
 
-  GuiInt var_orientation; // whether node center or cell centered
-  GuiInt nl;      // number of levels in the scene
-  GuiInt index_x; // x index for the variable
-  GuiInt index_y; // y index for the variable
-  GuiInt index_z; // z index for the variable
-  GuiInt index_l; // index of the level for the variable
-  GuiString curr_var;
+  GuiInt var_orientation_; // whether node center or cell centered
+  GuiInt nl_;      // number of levels in the scene
+  GuiInt index_x_; // x index for the variable
+  GuiInt index_y_; // y index for the variable
+  GuiInt index_z_; // z index for the variable
+  GuiInt index_l_; // index of the level for the variable
+  GuiString curr_var_;
   
-  Index_ID currentNode;
-  vector< string > names;
-  vector< double > times;
-  vector< const TypeDescription *> types;
-  double time;
-  int old_generation;
-  int old_timestep;
-  GridP grid;
-  DataArchiveHandle archive;
-  int numLevels;
+  Index_ID currentNode_;
+  vector< string > names_;
+  vector< double > times_;
+  vector< const TypeDescription *> types_;
+  double time_;
+  int old_generation_;
+  int old_timestep_;
+  GridP grid_;
+  DataArchiveHandle archive_;
+  int numLevels_;
 
-  VariableCache material_data_list;
+  VariableCache material_data_list_;
 };
 
 } // namespace Uintah
