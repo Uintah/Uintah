@@ -45,7 +45,6 @@ itcl_class Uintah_Visualization_VariablePlotter {
 
 
     method set_defaults {} {
-	puts "In VariablePlotter"
 	global $this-nl
 	set $this-nl 0
 
