@@ -336,10 +336,16 @@ SCI_ARG_WITH(qt,
   [with_qt=""])
 SCI_ARG_WITH(ruby,
   AC_HELP_STRING(--with-ruby=DIR,
-                 Use the ruby installation in DIR, where DIR points to the --prefix option specified when installing ruby.  A standard ruby install defaults to --prefix=/usr/local),
+                 Use the ruby installation in DIR where DIR points to the --prefix option specified when installing ruby.  A standard ruby install defaults to --prefix=/usr/local),
   [with_ruby="$withval"
    sci_required_ruby=yes],
   [with_ruby=""])
+SCI_ARG_WITH(tao,
+  AC_HELP_STRING(--with-tao=DIR,
+                 Use the tao corba installation in DIR where DIR points to the --prefix option specified when installing tao.),
+  [with_tao="$withval"
+   sci_required_tao=yes],
+  [with_tao=""])
 SCI_ARG_WITH(vtk,
   AC_HELP_STRING(--with-vtk=DIR,
                  Build the VTK components. Use VTK build in DIR.  DIR should be the directory specified in the VTK CMake variable CMAKE_INSTALL_PREFIX, which is /usr/local by default),
@@ -4286,6 +4292,40 @@ AC_SUBST(INC_RUBY_H)
 AC_SUBST(RUBY_LIB_FLAG)
 AC_SUBST(RUBY_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/ruby_testdefs.h"
+
+##  --  search for tao corba ----------------------------------------------------
+if test "$sci_required_tao" = "yes"; then
+  if test "$with_tao" = "yes"; then
+    # --with-tao has been specified without a parameter.
+    _sci_lib="$sci_thirdparty_lib"
+    _tao_inc="$sci_thirdparty_include"
+  else
+   if test "$with_tao"; then
+    _sci_lib="$with_tao/ace"
+    _tao_inc="$with_tao/ace"
+   fi
+  fi
+                                                                                                                                                
+  # Only looking for one .h file... assuming all the rest are in the same place.
+  SCI_TRY_LINK(TAO,tao corba library,pre.h,$_tao_inc,TAO_IORTable TAO_PortableServer TAO_IORInterceptor TAO ACE,$_sci_lib,,,optional)
+                                                                                                                                                
+  if test "$HAVE_TAO" = "yes"; then
+     DEF_TAO="#define HAVE_TAO 1"
+     HAVE_TAO="yes"
+  fi
+                                                                                                                                                
+  if test "$with_tao" && test ! "$DEF_TAO"; then
+    echo
+    AC_MSG_ERROR(One or more of the Tao components are missing.)
+    echo
+  fi
+fi # end sci_required_tao
+                                                                                                                                                
+AC_SUBST(HAVE_TAO)
+AC_SUBST(DEF_TAO)
+AC_SUBST(TAO_LIB_FLAG)
+AC_SUBST(TAO_LIB_DIR_FLAG)
+sci_defs_files="$sci_defs_files include/sci_defs/tao_testdefs.h"
 
 ##  --  search for vtk  ----------------------------------------------------
 if test "$sci_required_vtk" = "yes"; then
