@@ -321,36 +321,6 @@ ifeq ($(SSTREAM_COMPAT),yes)
   INCLUDES := $(INCLUDES) -I$(SRCTOP)/include/compat
 endif
 
-## Remove duplicates from the final list of include paths.
-#    Also, split 'our' thirdparty includes off of the list so
-#    that they can be placed at the beginning of the includes.
-#    This (hopefully on all systems) will mean that our (thirdparty)
-#    include files will be used before any "system" include files.
-
-TP_INCLUDES := $(shell                                 \
-       uniques=;                                       \
-       for i in $(INCLUDES); do                        \
-          found=`echo \"$$uniques\" | grep -- "$$i "`; \
-          if test -z "$$found"; then                   \
-            echo $$i;                                  \
-            uniques="$$uniques$$i ";                   \
-          fi;                                          \
-       done                                            \
-       | grep Thirdparty; )
-
-OTHER_INCLUDES := $(shell                              \
-       uniques=;                                       \
-       for i in $(INCLUDES); do                        \
-          found=`echo \"$$uniques\" | grep -- "$$i "`; \
-          if test -z "$$found"; then                   \
-            echo $$i;                                  \
-            uniques="$$uniques$$i ";                   \
-          fi;                                          \
-       done                                            \
-       | grep -v Thirdparty; )
-
-INCLUDES := $(TP_INCLUDES) $(OTHER_INCLUDES)
-
 # variables and suffix rules for module transformation
 #------------------------------------------------------------------------------
 
