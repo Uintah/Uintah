@@ -1,9 +1,15 @@
-#include "JohnsonCookPlastic.h"
+#ifdef __APPLE__
+// This is a hack.  gcc 3.3 #undefs isnan in the cmath header, which
+// make the isnan function not work.  This define makes the cmath header
+// not get included since we do not need it anyway.
+#  define _CPP_CMATH
+#endif
+
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/JohnsonCookPlastic.h>
 #include <math.h>
 
 using namespace Uintah;
 using namespace SCIRun;
-
 
 JohnsonCookPlastic::JohnsonCookPlastic(ProblemSpecP& ps)
 {

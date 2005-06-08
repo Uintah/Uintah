@@ -14,6 +14,7 @@ SRCS +=  $(SRCDIR)/HypreSolver.cc
 endif
 
 PSELIBS := \
+	Core/Containers                  \
 	Core/Exceptions                  \
 	Core/Thread                      \
 	Core/Util                        \

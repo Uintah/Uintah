@@ -1,12 +1,19 @@
-#include "ElasticPlastic.h"
-#include "PlasticityModels/YieldConditionFactory.h"
-#include "PlasticityModels/StabilityCheckFactory.h"
-#include "PlasticityModels/PlasticityModelFactory.h"
-#include "PlasticityModels/DamageModelFactory.h"
-#include "PlasticityModels/MPMEquationOfStateFactory.h"
-#include "PlasticityModels/ShearModulusModelFactory.h"
-#include "PlasticityModels/MeltingTempModelFactory.h"
-#include "PlasticityModels/PlasticityState.h"
+#ifdef __APPLE__
+// This is a hack.  gcc 3.3 #undefs isnan in the cmath header, which
+// make the isnan function not work.  This define makes the cmath header
+// not get included since we do not need it anyway.
+#  define _CPP_CMATH
+#endif
+
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ElasticPlastic.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/YieldConditionFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/StabilityCheckFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityModelFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModelFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MPMEquationOfStateFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ShearModulusModelFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MeltingTempModelFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityState.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>

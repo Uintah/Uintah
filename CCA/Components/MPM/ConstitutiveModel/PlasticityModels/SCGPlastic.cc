@@ -1,15 +1,23 @@
+#ifdef __APPLE__
+// This is a hack.  gcc 3.3 #undefs isnan in the cmath header, which
+// make the isnan function not work.  This define makes the cmath header
+// not get included since we do not need it anyway.
+#  define _CPP_CMATH
+#endif
 
-#include "SCGPlastic.h"
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/SCGPlastic.h>
+
 #include <math.h>
+
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
+
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
-
 
 SCGPlastic::SCGPlastic(ProblemSpecP& ps)
 {
