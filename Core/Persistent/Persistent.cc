@@ -81,7 +81,12 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
   :  type(typeName), parent(parentName), maker(maker)
 {
 #if DEBUG
-  cerr << "PersistentTypeID constructor: " << typeName << " " << parentName << ", maker: " << maker << "\n";
+  // Using printf as cerr causes a core dump (probably cerr has not
+  // been initialized as this runs before main...)
+  printf("PersistentTypeID constructor:\n");
+  printf("   typename:   %s\n", typeName.c_str() );
+  printf("   parentname: %s\n", parentName.c_str() );
+  printf("   maker:      %p\n\n", maker );
 #endif
 
   persistentTypeIDMutex.lock();
@@ -90,9 +95,13 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
     table = scinew Piostream::MapStringPersistentTypeID;
 
 #if DEBUG
-    cerr << "table " << &table << ", pointer is " << table << "\n";
+    printf( "created table:  %p\n", table);
 #endif
   }
+#if DEBUG
+  else
+    printf( "table is:  %p\n", table);
+#endif
   
   Piostream::MapStringPersistentTypeID::iterator dummy;
  
@@ -111,7 +120,7 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
   }
   
 #if DEBUG
-  cerr << "putting in table: PersistentTypeID: " << typeName << " " << parentName << endl;
+  printf("putting in table: PersistentTypeID: %s %s\n", typeName.c_str(), parentName.c_str() );
 #endif
 
   (*table)[type] = this;
@@ -286,9 +295,12 @@ static
 PersistentTypeID*
 find_derived( const string& classname, const string& basename )
 {
+#if DEBUG
+  printf("looking for %s, %s\n", classname.c_str(), basename.c_str());
+#endif
   persistentTypeIDMutex.lock();
 #if DEBUG
-  cout << "table is: " << table << "\n";
+  printf("table is: %p\n", table);
 #endif
   if (!table) return 0;
   PersistentTypeID* pid;
@@ -298,7 +310,7 @@ find_derived( const string& classname, const string& basename )
   iter = table->find(classname);
   if(iter == table->end()) {
 #if DEBUG
-    cerr << "not found in table " << &table << ", pointer is " << table << "\n";
+    printf("not found in table %p\n",table );
 #endif
     persistentTypeIDMutex.unlock();
     return 0;
@@ -308,7 +320,7 @@ find_derived( const string& classname, const string& basename )
   pid = (*iter).second;
   if( pid->parent.size() == 0 ) {
 #if DEBUG
-    cout << "size is 0\n";
+    printf("size is 0\n");
 #endif
     return 0;
   }
@@ -325,6 +337,9 @@ find_derived( const string& classname, const string& basename )
 void
 Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 {
+#if DEBUG
+  printf("looking for pid: %s, %s\n", pid.type.c_str(), pid.parent.c_str() );
+#endif
   if (err) return;
   if (dir == Read)
   {
@@ -332,6 +347,10 @@ Piostream::io(Persistent*& data, const PersistentTypeID& pid)
     int pointer_id;
     data = 0;
     emit_pointer(have_data, pointer_id);
+
+#if DEBUG
+    printf("after emit: %d, %d\n", have_data, pointer_id);
+#endif
 
     if (have_data)
     {
@@ -341,6 +360,10 @@ Piostream::io(Persistent*& data, const PersistentTypeID& pid)
       const string in_name(peek_class());
       const string want_name(pid.type);
       
+#if DERIVED
+      printf("in here: %s, %s\n", in_name.c_str(), want_name.c_str());
+#endif
+
       Persistent* (*maker)() = 0;
       if (in_name == want_name)
       {
