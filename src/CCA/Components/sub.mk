@@ -32,22 +32,10 @@
 SRCDIR   := CCA/Components
 
 ifeq ($(HAVE_QT),yes)
- SUBDIRS := \
-            $(SRCDIR)/Builder \
-            $(SRCDIR)/TxtBuilder \
-            $(SRCDIR)/Hello \
-            $(SRCDIR)/World \
-            $(SRCDIR)/Viewer \
-            $(SRCDIR)/FileReader \
-            $(SRCDIR)/LinSolver \
-            $(SRCDIR)/FEM \
-            $(SRCDIR)/Tri \
-            $(SRCDIR)/PDEdriver \
-            $(SRCDIR)/TableTennis \
-            $(SRCDIR)/TTClient \
-            $(SRCDIR)/ListPlotter \
-            $(SRCDIR)/ZList \
-            $(SRCDIR)/ZListWriter
+SUBDIRS := $(SRCDIR)/Builder $(SRCDIR)/TxtBuilder $(SRCDIR)/Hello  $(SRCDIR)/ListPlotter \
+	$(SRCDIR)/ZList $(SRCDIR)/Viewer $(SRCDIR)/LinSolver \
+	$(SRCDIR)/FileReader $(SRCDIR)/FEM $(SRCDIR)/Tri $(SRCDIR)/TableTennis \
+	$(SRCDIR)/TTClient $(SRCDIR)/World $(SRCDIR)/PDEdriver 
 else
  SUBDIRS := \
             $(SRCDIR)/TxtBuilder \
@@ -55,6 +43,9 @@ else
             $(SRCDIR)/World
 endif
 
+ifeq ($(HAVE_TAO),yes)
+SUBDIRS += $(SRCDIR)/TAO
+endif
 
 ifeq ($(HAVE_MPI),yes)
 SUBDIRS += $(SRCDIR)/PWorld $(SRCDIR)/PHello 
