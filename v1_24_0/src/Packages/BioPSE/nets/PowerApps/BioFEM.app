@@ -536,20 +536,24 @@ class BioFEMApp {
         global $mods(SolveMatrix)-target_error
 	set err [set $mods(SolveMatrix)-target_error]
 
-	blt::graph $f.graph -title "Convergence" -height 250 \
-		-plotbackground gray99
-	$f.graph yaxis configure -logscale true -title "error (RMS)"  -min [expr $err/10] -max 1 -loose true
-	$f.graph xaxis configure -title "Iteration" \
+	iwidgets::labeledframe $f.graph -labelpos n -labeltext "Convergence" 
+	pack $f.graph -side bottom -anchor w -fill x
+
+	set g [$f.graph childsite]
+
+	blt::graph $g.graph -height 200 -plotbackground gray99
+	$g.graph yaxis configure -logscale true -title "Error (RMS)"  -min [expr $err/10] -max 1 -loose true
+	$g.graph xaxis configure -title "Iteration" \
 		-loose true
-	bind $f.graph <ButtonPress-1> "$mods(SolveMatrix) select_error $f.graph %x %y"
-	bind $f.graph <Button1-Motion> "$mods(SolveMatrix) move_error $f.graph %x %y"
-	bind $f.graph <ButtonRelease-1> "$mods(SolveMatrix) deselect_error $f.graph %x %y"
+	bind $g.graph <ButtonPress-1> "$mods(SolveMatrix) select_error $g.graph %x %y"
+	bind $g.graph <Button1-Motion> "$mods(SolveMatrix) move_error $g.graph %x %y"
+	bind $g.graph <ButtonRelease-1> "$mods(SolveMatrix) deselect_error $g.graph %x %y"
 	set iter 1
-	$f.graph element create "Current Target" -linewidth 0
-	$f.graph element configure "Current Target" -data "0 $err" \
+	$g.graph element create "Current Target" -linewidth 0
+	$g.graph element configure "Current Target" -data "0 $err" \
 		-symbol diamond
-	pack $f.graph -fill x
-        $mods(SolveMatrix) add_graph $f.graph
+	pack $g.graph -fill x
+        $mods(SolveMatrix) add_graph $g.graph
     }
     
     

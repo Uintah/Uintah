@@ -300,7 +300,7 @@ itcl_class SCIRun_Math_SolveMatrix {
 	
 	blt::graph $w.graph -title "Convergence" -height 250 \
 		-plotbackground gray99
-	$w.graph yaxis configure -logscale true -title "error (RMS)"  -min [expr $err/10] -max 1 -loose true
+	$w.graph yaxis configure -logscale true -title "Error (RMS)"  -min [expr $err/10] -max 1 -loose true
 	$w.graph xaxis configure -title "Iteration" \
 		-loose true
 	bind $w.graph <ButtonPress-1> "$this select_error $w.graph %x %y"
