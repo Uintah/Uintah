@@ -298,9 +298,12 @@ void Patch::findCellNodes27(const Point& pos,
 
 ostream& operator<<(ostream& out, const Patch & r)
 {
+  out.setf(ios::scientific,ios::floatfield);
+  out.precision(4);
   out << "(Patch " << r.getID() << ": box=" << r.getBox()
       << ", lowIndex=" << r.getCellLowIndex() << ", highIndex=" 
       << r.getCellHighIndex() << ")";
+  out.setf(ios::scientific ,ios::floatfield);
   return out;
 }
 
@@ -381,6 +384,14 @@ Patch::setBCType(Patch::FaceType face, BCType newbc)
      }
    }  
         
+}
+
+void
+Patch::printPatchBCs() const
+{
+   cout << " BC types: x- " << getBCType(xminus) << ", x+ "<<getBCType(xplus)
+                 << ", y- "<< getBCType(yminus) << ", y+ "<< getBCType(yplus)
+                 << ", z- "<< getBCType(zminus) << ", z+ "<< getBCType(zplus)<< endl;
 }
 
 void 
