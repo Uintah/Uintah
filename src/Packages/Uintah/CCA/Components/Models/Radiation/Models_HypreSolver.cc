@@ -12,6 +12,7 @@
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Exceptions/PetscError.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
@@ -63,7 +64,17 @@ Models_HypreSolver::problemSetup(const ProblemSpecP& params, bool shradiation)
   d_shrad = shradiation;
   ProblemSpecP db = params->findBlock("LinearSolver");
 
-  db->getWithDefault("ksptype", d_kspType, "gmres");
+  if (d_shrad)
+    db->getWithDefault("ksptype", d_kspType, "cg");
+  else
+    db->getWithDefault("ksptype", d_kspType, "gmres");
+
+  if (!d_shrad && ((d_kspType == "cg") || (d_kspType == "smg") ||(d_kspType == "pfmg")))
+    throw ProblemSetupException("Models_Radiation_HypreSolver:Discrete Ordinates generates a nonsymmetric matrix, so cg/smg/pfmg cannot be used; Use gmres as the ksptype");
+
+  if (d_shrad && (d_kspType == "gmres")) {
+    cerr<< "WARNING: HypreSolver:Spherical Harmonics generates a symmetric matrix; use cg as the ksptype for spherical harmonics; using gmres really slows things down" << endl;
+  }
 
   if (d_kspType == "smg")
     d_kspType = "1";
@@ -75,6 +86,9 @@ Models_HypreSolver::problemSetup(const ProblemSpecP& params, bool shradiation)
 	{
 	  d_kspFix = "gmres";
 	  db->getWithDefault("pctype", d_pcType, "jacobi");
+	  if (!d_shrad && ((d_pcType == "smg") ||(d_pcType == "pfmg")))
+	    throw ProblemSetupException("Discrete Ordinates generates a nonsymmetric Matrix, so smg/pfmg cannot be used as the pctype; use jacobi");
+
 	  if (d_pcType == "smg")
 	    d_kspType = "3";
 	  else
@@ -102,6 +116,7 @@ Models_HypreSolver::problemSetup(const ProblemSpecP& params, bool shradiation)
   db->getWithDefault("max_iter", d_maxSweeps, 75);
   db->getWithDefault("underrelax", d_underrelax, 1.0);
   db->getWithDefault("res_tol", d_residual, 1.0e-8);
+
 }
 // ****************************************************************************
 // Set up the grid structure
@@ -261,16 +276,18 @@ Models_HypreSolver::setMatrix(const ProcessorGroup* pc,
 
   HYPRE_StructMatrixCreate(MPI_COMM_WORLD, d_grid, d_stencil, &d_A);
 
-  // This parameter has to be set to 1 if SH is used and 0 if 
-  // DO is used, because the matrix is nonsymmetric for DO
-  // and symmetric for spherical harmonics
-  // HYPRE_StructMatrixSetSymmetric(d_A, 0);
-  // above for discrete ordinates
+  // The following parameter has to be set to 1 if SH is used and 0 
+  // if DO is used, because the matrix is nonsymmetric for DO
+  // and symmetric for spherical harmonics.  This is essential because
+  // we only set the west, south, and bottom coefficients, and rely
+  // on HYPRE to mirror the matrix in the spherical harmonics case.
 
-  if (d_shrad)
+  if (d_shrad) {
     HYPRE_StructMatrixSetSymmetric(d_A, 1); 
-  else
+    }
+  else {
     HYPRE_StructMatrixSetSymmetric(d_A, 0); 
+  }
 
   HYPRE_StructMatrixSetNumGhost(d_A, d_A_num_ghost);
   HYPRE_StructMatrixInitialize(d_A); 

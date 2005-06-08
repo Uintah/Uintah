@@ -47,36 +47,27 @@ Models_PetscSolver::~Models_PetscSolver()
 void 
 Models_PetscSolver::problemSetup(const ProblemSpecP& params, bool shradiation)
 {
+  d_shsolver = shradiation;
   if (params) {
     ProblemSpecP db = params->findBlock("LinearSolver");
     if (db) {
-      /*
-      if (db->findBlock("shsolver"))
-	db->require("shsolver", d_shsolver);
+
+      db->getWithDefault("underrelax", d_underrelax, 1.0);
+      db->getWithDefault("max_iter", d_maxSweeps, 75);
+      if (d_shsolver)
+	db->getWithDefault("ksptype", d_kspType, "cg");
       else
-	d_shsolver = false;
-      */
-      if (db->findBlock("underelax"))
-	db->require("underrelax", d_underrelax);
-      else
-	d_underrelax = 1.0;
+	db->getWithDefault("ksptype", d_kspType, "gmres");
       
-      if (db->findBlock("max_iter"))
-	db->require("max_iter", d_maxSweeps);
-      else
-	d_maxSweeps = 75;
-      if (db->findBlock("ksptype"))
-	db->require("ksptype",d_kspType);
-      else
-	d_kspType = "gmres";
-      if (db->findBlock("tolerance"))
-	db->require("tolerance",d_tolerance);
-      else
-	d_tolerance = 1.e-08;
-      if (db->findBlock("pctype"))
-	db->require("pctype", d_pcType);
-      else
-	d_pcType = "blockjacobi";
+      if (!d_shsolver && (d_kspType == "cg"))
+	throw ProblemSetupException("Models_Radiation_PetscSolver:Discrete Ordinates generates a nonsymmetric matrix, so cg cannot be used; Use gmres as the ksptype");
+
+      if (d_shsolver && (d_kspType == "gmres"))
+	throw ProblemSetupException("Models_Radiation_PetscSolver:Spherical Harmonics generates a symmetric matrix; use cg as the ksptype");
+
+      db->getWithDefault("tolerance", d_tolerance, 1.0e-8);
+      db->getWithDefault("pctype", d_pcType, "blockjacobi");
+
       if (d_pcType == "asm")
 	db->require("overlap",d_overlap);
       if (d_pcType == "ilu")
@@ -85,18 +76,29 @@ Models_PetscSolver::problemSetup(const ProblemSpecP& params, bool shradiation)
     else {
       d_underrelax = 1.0;
       d_maxSweeps = 75;
-      d_kspType = "gmres";
       d_pcType = "blockjacobi";
+      if (d_shsolver) {
+	d_kspType = "cg";
+      }
+      else {
+	d_kspType = "gmres";
+      }
       d_tolerance = 1.0e-08;
     }
   }
   else  {
     d_underrelax = 1.0;
     d_maxSweeps = 75;
-    d_kspType = "gmres";
     d_pcType = "blockjacobi";
+    if (d_shsolver) {
+      d_kspType = "cg";
+    }
+    else {
+      d_kspType = "gmres";
+    }
     d_tolerance = 1.0e-08;
   }
+
   int argc = 4;
   char** argv;
   argv = new char*[argc];
@@ -212,17 +214,17 @@ Models_PetscSolver::matrixCreate(const PatchSet* allpatches,
   numlcolumns = numlrows;
   globalrows = (int)totalCells;
   globalcolumns = (int)totalCells;
-  /*
+
   if(d_shsolver){
 
-  d_nz = 7;
-  o_nz = 6;
+    d_nz = 7;
+    o_nz = 6;
   }
   else {
-  */
-  d_nz = 4;
-  o_nz = 3;
-  //  }
+
+    d_nz = 4;
+    o_nz = 3;
+  }
 
 #if 0
   cerr << "matrixCreate: local size: " << numlrows << ", " << numlcolumns << ", global size: " << globalrows << ", " << globalcolumns << "\n";
@@ -320,12 +322,10 @@ Models_PetscSolver::setMatrix(const ProcessorGroup* ,
 
   int col[4];
   double value[4];
-  /*
-  if(d_shsolver){
-  int col[7];
-  double value[7];
-  }
-  */
+
+  int col_sh[7];
+  double value_sh[7];
+
   // fill matrix for internal patches
   // make sure that sizeof(d_petscIndex) is the last patch, i.e., appears last in the
   // petsc matrix
@@ -351,52 +351,53 @@ Models_PetscSolver::setMatrix(const ProcessorGroup* ,
 	int ii = colX+facX;
 	int jj = colY+facY;
 	int kk = colZ+facZ;
-	/*
+
 	if(d_shsolver){
-	col[0] = l2g[IntVector(colX,colY,colZ-1)];  //ab
-	col[1] = l2g[IntVector(colX, colY-1, colZ)]; // as
-	col[2] = l2g[IntVector(colX-1, colY, colZ)]; // aw
-	col[3] = l2g[IntVector(colX, colY, colZ)]; //ap
-	col[4] = l2g[IntVector(colX+1, colY, colZ)]; // ae
-	col[5] = l2g[IntVector(colX, colY+1, colZ)]; // an
-	col[6] = l2g[IntVector(colX, colY, colZ+1)]; // at
+	  col_sh[0] = l2g[IntVector(colX,colY,colZ-1)];  //ab
+	  col_sh[1] = l2g[IntVector(colX, colY-1, colZ)]; // as
+	  col_sh[2] = l2g[IntVector(colX-1, colY, colZ)]; // aw
+	  col_sh[3] = l2g[IntVector(colX, colY, colZ)]; //ap
+	  col_sh[4] = l2g[IntVector(colX+1, colY, colZ)]; // ae
+	  col_sh[5] = l2g[IntVector(colX, colY+1, colZ)]; // an
+	  col_sh[6] = l2g[IntVector(colX, colY, colZ+1)]; // at
 	}
 	else {
-	*/
-	col[0] = l2g[IntVector(colX,colY,kk)];  //ab
-	col[1] = l2g[IntVector(colX, jj, colZ)]; // as
-	col[2] = l2g[IntVector(ii, colY, colZ)]; // aw
-	col[3] = l2g[IntVector(colX, colY, colZ)]; //ap
-	//	}
+	  col[0] = l2g[IntVector(colX,colY,kk)];  //ab
+	  col[1] = l2g[IntVector(colX, jj, colZ)]; // as
+	  col[2] = l2g[IntVector(ii, colY, colZ)]; // aw
+	  col[3] = l2g[IntVector(colX, colY, colZ)]; //ap
+	}
 
 	//#ifdef ARCHES_PETSC_DEBUG
-	/*
-	if(d_shsolver){
-	value[0] = -AB[IntVector(colX,colY,colZ)];
-	value[1] = -AS[IntVector(colX,colY,colZ)];
-	value[2] = -AW[IntVector(colX,colY,colZ)];
-	value[3] = AP[IntVector(colX,colY,colZ)];
-	value[4] = -AE[IntVector(colX,colY,colZ)];
-	value[5] = -AN[IntVector(colX,colY,colZ)];
-	value[6] = -AT[IntVector(colX,colY,colZ)];
-	}
-	else{
-	*/
-	value[0] = -AB[IntVector(colX,colY,colZ)];
-	value[1] = -AS[IntVector(colX,colY,colZ)];
-	value[2] = -AW[IntVector(colX,colY,colZ)];
-	value[3] = AP[IntVector(colX,colY,colZ)];
-	//	}
 
-	int row = col[3];
-	/*
 	if(d_shsolver){
-	ierr = MatSetValues(A,1,&row,7,col,value,INSERT_VALUES);
+	  value_sh[0] = -AB[IntVector(colX,colY,colZ)];
+	  value_sh[1] = -AS[IntVector(colX,colY,colZ)];
+	  value_sh[2] = -AW[IntVector(colX,colY,colZ)];
+	  value_sh[3] = AP[IntVector(colX,colY,colZ)];
+	  value_sh[4] = -AE[IntVector(colX,colY,colZ)];
+	  value_sh[5] = -AN[IntVector(colX,colY,colZ)];
+	  value_sh[6] = -AT[IntVector(colX,colY,colZ)];
 	}
 	else{
-	*/
-	ierr = MatSetValues(A,1,&row,4,col,value,INSERT_VALUES);
-	//	}
+	  value[0] = -AB[IntVector(colX,colY,colZ)];
+	  value[1] = -AS[IntVector(colX,colY,colZ)];
+	  value[2] = -AW[IntVector(colX,colY,colZ)];
+	  value[3] = AP[IntVector(colX,colY,colZ)];
+	}
+
+	int row;
+	if (d_shsolver) 
+	  row = col_sh[3];
+	else
+	  row = col[3];
+
+	if(d_shsolver){
+	  ierr = MatSetValues(A,1, &row, 7, col_sh, value_sh, INSERT_VALUES);
+	}
+	else{
+	  ierr = MatSetValues(A,1, &row, 4, col, value, INSERT_VALUES);
+	}
 
 	if(ierr)
 	  throw PetscError(ierr, "MatSetValues");
@@ -467,7 +468,6 @@ Models_PetscSolver::setMatrix(const ProcessorGroup* ,
 #endif
 }
 
-
 bool
 Models_PetscSolver::radLinearSolve()
 {
@@ -486,7 +486,6 @@ Models_PetscSolver::radLinearSolve()
   if(ierr)
     throw PetscError(ierr, "MatAssemblyEnd");
   ierr = VecAssemblyBegin(d_b);
-  // the above line is where PETSc chokes on me --Kumar
   if(ierr)
     throw PetscError(ierr, "VecAssemblyBegin");
   ierr = VecAssemblyEnd(d_b);
