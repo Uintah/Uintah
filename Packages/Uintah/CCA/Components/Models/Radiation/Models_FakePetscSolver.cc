@@ -7,12 +7,11 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
-
 // ****************************************************************************
 // Default constructor for Models_PetscSolver
 // ****************************************************************************
-Models_PetscSolver::Models_PetscSolver(const ProcessorGroup* myworld)
-   : d_myworld(myworld)
+Models_PetscSolver::Models_PetscSolver(const ProcessorGroup* myworld) :
+  d_myworld(myworld)
 {
   throw InternalError("PetscSolver not configured");
 }
@@ -30,7 +29,8 @@ Models_PetscSolver::~Models_PetscSolver()
 // Problem setup
 // ****************************************************************************
 void 
-Models_PetscSolver::problemSetup(const ProblemSpecP&, bool )
+Models_PetscSolver::problemSetup(const ProblemSpecP& /*params*/, 
+                                 bool /* shradiation */)
 {
   throw InternalError("PetscSolver not configured");
 }
@@ -38,7 +38,7 @@ Models_PetscSolver::problemSetup(const ProblemSpecP&, bool )
 
 void 
 Models_PetscSolver::matrixCreate(const PatchSet* ,
-			  const PatchSubset* )
+                                 const PatchSubset* )
 {
   throw InternalError("PetscSolver not configured");
 }
@@ -48,17 +48,17 @@ Models_PetscSolver::matrixCreate(const PatchSet* ,
 // ****************************************************************************
 void 
 Models_PetscSolver::setMatrix(const ProcessorGroup* ,
-			   const Patch* ,
-			   RadiationVariables* ,
-			   bool , bool , bool ,
-			   CCVariable<double>& ,
-			   CCVariable<double>& ,
-			   CCVariable<double>& ,
-			   CCVariable<double>& ,
-			   CCVariable<double>& ,
-			   CCVariable<double>& ,
-			   CCVariable<double>& ,
-			   CCVariable<double>& )
+                           const Patch* ,
+                           RadiationVariables* ,
+                           bool , bool , bool ,
+                           CCVariable<double>& ,
+                           CCVariable<double>& ,
+                           CCVariable<double>& ,
+                           CCVariable<double>& ,
+                           CCVariable<double>& ,
+                           CCVariable<double>& ,
+                           CCVariable<double>& ,
+                           CCVariable<double>& )
 {
   throw InternalError("PetscSolver not configured");
 }
@@ -85,20 +85,9 @@ Models_PetscSolver::destroyMatrix()
 
 
 // Shutdown PETSc
-void Models_PetscSolver::finalizeSolver()
+void
+Models_PetscSolver::finalizeSolver()
 {
   throw InternalError("PetscSolver not configured");
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
