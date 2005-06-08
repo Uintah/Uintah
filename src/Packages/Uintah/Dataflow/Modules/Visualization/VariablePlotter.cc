@@ -47,34 +47,32 @@ using namespace std;
 
 static string widget_name("VariablePlotter Widget");
  
-  DECLARE_MAKER(VariablePlotter)
+DECLARE_MAKER(VariablePlotter)
   
-  VariablePlotter::VariablePlotter(const string& name, GuiContext* ctx)
-: Module(name, ctx, Filter, "Visualization", "Uintah"),
-  var_orientation(ctx->subVar("var_orientation")),
-  nl(ctx->subVar("nl")),
-  index_x(ctx->subVar("index_x")),
-  index_y(ctx->subVar("index_y")),
-  index_z(ctx->subVar("index_z")),
-  index_l(ctx->subVar("index_l")),
-  curr_var(ctx->subVar("curr_var")),
-  old_generation(-1), old_timestep(0), grid(NULL)
+VariablePlotter::VariablePlotter(const string& name, GuiContext* ctx) :
+  Module(name, ctx, Filter, "Visualization", "Uintah"),
+  var_orientation_(ctx->subVar("var_orientation")),
+  nl_(ctx->subVar("nl")),
+  index_x_(ctx->subVar("index_x")),
+  index_y_(ctx->subVar("index_y")),
+  index_z_(ctx->subVar("index_z")),
+  index_l_(ctx->subVar("index_l")),
+  curr_var_(ctx->subVar("curr_var")),
+  old_generation_(-1), old_timestep_(0), grid_(NULL)
 {
-
 }
 
-  VariablePlotter::VariablePlotter(GuiContext* ctx)
-: Module("VariablePlotter", ctx, Filter, "Visualization", "Uintah"),
-  var_orientation(ctx->subVar("var_orientation")),
-  nl(ctx->subVar("nl")),
-  index_x(ctx->subVar("index_x")),
-  index_y(ctx->subVar("index_y")),
-  index_z(ctx->subVar("index_z")),
-  index_l(ctx->subVar("index_l")),
-  curr_var(ctx->subVar("curr_var")),
-  old_generation(-1), old_timestep(0), grid(NULL)
+VariablePlotter::VariablePlotter(GuiContext* ctx) :
+  Module("VariablePlotter", ctx, Filter, "Visualization", "Uintah"),
+  var_orientation_(ctx->subVar("var_orientation")),
+  nl_(ctx->subVar("nl")),
+  index_x_(ctx->subVar("index_x")),
+  index_y_(ctx->subVar("index_y")),
+  index_z_(ctx->subVar("index_z")),
+  index_l_(ctx->subVar("index_l")),
+  curr_var_(ctx->subVar("curr_var")),
+  old_generation_(-1), old_timestep_(0), grid_(NULL)
 {
-
 }
 
 
@@ -89,34 +87,34 @@ bool
 VariablePlotter::getGrid()
 {
   ArchiveHandle handle;
-  if (!(in->get(handle) && handle.get_rep())) {
+  if (!(in_->get(handle) && handle.get_rep())) {
     warning("VariablePlotter::getGrid - No input data\n");
-    grid = NULL;
+    grid_ = NULL;
     return false;
   }
 
   // access the grid through the handle and dataArchive
-  archive = handle->getDataArchive();
+  archive_ = handle->getDataArchive();
   int new_generation = handle->generation;
-  bool archive_dirty =  new_generation != old_generation;
+  bool archive_dirty =  new_generation != old_generation_;
   int timestep = handle->timestep();
   if (archive_dirty) {
-    old_generation = new_generation;
+    old_generation_ = new_generation;
     vector< int > indices;
-    times.clear();
-    archive->queryTimesteps( indices, times );
+    times_.clear();
+    archive_->queryTimesteps( indices, times_ );
     gui->execute(id + " set_time " +
-		 VariableCache::vector_to_string(times).c_str());
+                 VariableCache::vector_to_string(times_).c_str());
     // set old_timestep to something that will cause a new grid
     // to be queried.
-    old_timestep = -1;
+    old_timestep_ = -1;
     // clean out the cached information if the grid has changed
-    material_data_list.clear();
+    material_data_list_.clear();
   }
-  if (timestep != old_timestep) {
-    time = times[timestep];
-    grid = archive->queryGrid(time);
-    old_timestep = timestep;
+  if (timestep != old_timestep_) {
+    time_ = times_[timestep];
+    grid_ = archive_->queryGrid(time_);
+    old_timestep_ = timestep;
     return true;
   }
   return false;
@@ -169,38 +167,38 @@ VariablePlotter::setVars(GridP grid)
   cerr << "Calling clearMat_list\n";
   gui->execute(id + " clearMat_list ");
   
-  for(int i = 0; i< (int)names.size(); i++) {
-    switch (types[i]->getType()) {
+  for(int i = 0; i< (int)names_.size(); i++) {
+    switch (types_[i]->getType()) {
     case TypeDescription::NCVariable:
-      if (var_orientation.get() == NC_VAR) {
-	if (!add_type(type_list,types[i]->getSubType())) {
-	  // Only add this stuff to the gui if the variable was added
-	  // successfully
-	  varNames += " ";
-	  varNames += names[i];
-	  cerr << "Calling appendMat_list for "<<names[i]<<"\n";
-	  gui->execute(id + " appendMat_list " + archive->queryMaterials(names[i], patch, time).expandedString().c_str());
-	} else {
-	  error("Variable " +  names[i] + " was not added, because its subtype is not supported.");
-	}
+      if (var_orientation_.get() == NC_VAR) {
+        if (!add_type(type_list,types_[i]->getSubType())) {
+          // Only add this stuff to the gui if the variable was added
+          // successfully
+          varNames += " ";
+          varNames += names_[i];
+          cerr << "Calling appendMat_list for "<<names_[i]<<"\n";
+          gui->execute(id + " appendMat_list " + archive_->queryMaterials(names_[i], patch, time_).expandedString().c_str());
+        } else {
+          error("Variable " +  names_[i] + " was not added, because its subtype is not supported.");
+        }
       }
       break;
     case TypeDescription::CCVariable:
-      if (var_orientation.get() == CC_VAR) {
-	if (!add_type(type_list,types[i]->getSubType())) {
-	  // Only add this stuff to the gui if the variable was added
-	  // successfully
-	  varNames += " ";
-	  varNames += names[i];
-	  cerr << "Calling appendMat_list for "<<names[i]<<"\n";
-	  gui->execute(id + " appendMat_list " + archive->queryMaterials(names[i], patch, time).expandedString().c_str());
-	} else {
-	  error("Variable " +  names[i] + " was not added, because its subtype is not supported.");
-	}
+      if (var_orientation_.get() == CC_VAR) {
+        if (!add_type(type_list,types_[i]->getSubType())) {
+          // Only add this stuff to the gui if the variable was added
+          // successfully
+          varNames += " ";
+          varNames += names_[i];
+          cerr << "Calling appendMat_list for "<<names_[i]<<"\n";
+          gui->execute(id + " appendMat_list " + archive_->queryMaterials(names_[i], patch, time_).expandedString().c_str());
+        } else {
+          error("Variable " +  names_[i] + " was not added, because its subtype is not supported.");
+        }
       }
       break;
     default:
-      cerr << "VariablePlotter::setVars: Warning!  Ignoring unknown type for variable "<<names[i]<<".\n";
+      cerr << "VariablePlotter::setVars: Warning!  Ignoring unknown type for variable "<<names_[i]<<".\n";
       break;
     }
 
@@ -216,7 +214,7 @@ void
 VariablePlotter::initialize_ports() 
 {
   // Create the input port
-  in = (ArchiveIPort *) get_iport("Data Archive");
+  in_ = (ArchiveIPort *) get_iport("Data Archive");
 }
 
 int
@@ -224,21 +222,21 @@ VariablePlotter::initialize_grid()
 {
   // Get the handle on the grid and the number of levels
   bool new_grid = getGrid();
-  if(!grid)
+  if(!grid_)
     return 2;
-  numLevels = grid->numLevels();
+  numLevels_ = grid_->numLevels();
 
   // setup the tickle stuff
   if (new_grid) {
     cerr << "VariablePlotter::initialize_grid(): new_grid is true\n";
-    nl.set(numLevels);
-    names.clear();
-    types.clear();
-    archive->queryVariables(names, types);
+    nl_.set(numLevels_);
+    names_.clear();
+    types_.clear();
+    archive_->queryVariables(names_, types_);
   } else {
     cerr << "VariablePlotter::initialize_grid(): new_grid is false\n";
   }    
-  setVars(grid);
+  setVars(grid_);
 
   if (new_grid)
     return 1;
@@ -314,10 +312,10 @@ string
 VariablePlotter::currentNode_str() 
 {
   ostringstream ostr;
-  ostr << "Level-" << currentNode.level << "-(";
-  ostr << currentNode.id.x()  << ",";
-  ostr << currentNode.id.y()  << ",";
-  ostr << currentNode.id.z() << ")";
+  ostr << "Level-" << currentNode_.level_ << "-(";
+  ostr << currentNode_.id_.x()  << ",";
+  ostr << currentNode_.id_.y()  << ",";
+  ostr << currentNode_.id_.z() << ")";
   return ostr.str();
 }
 
@@ -335,9 +333,11 @@ VariablePlotter::extract_data( string display_mode, string varname,
 
   // determine type
   const TypeDescription *td = NULL;
-  for(int i = 0; i < (int)names.size() ; i++)
-    if (names[i] == varname)
-      td = types[i];
+  for(int i = 0; i < (int)names_.size() ; i++) {
+    if (names_[i] == varname) {
+      td = types_[i];
+    }
+  }
   
   string name_list("");
   // Key to use for the VariableCache.  This can be used as is unless you
@@ -352,21 +352,22 @@ VariablePlotter::extract_data( string display_mode, string varname,
     for(int i = 0; i < (int)mat_list.size(); i++) {
       string data;
       string cache_key(currentNode_str()+" "+varname+" "+mat_list[i]);
-      if (!material_data_list.get_cached(cache_key,data)) {
-	cerr << "Cache miss.  Querying the data archive\n";
-	// query the value and then cache it
-	vector< double > values;
-	int matl = atoi(mat_list[i].c_str());
-	try {
-	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1], currentNode.level);
-	} catch (const VariableNotFoundInGrid& exception) {
-	  cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
-	  return;
-	} 
-	cerr << "Received data.  Size of data = " << values.size() << endl;
-	material_data_list.cache_value(cache_key, values, data);
+      if (!material_data_list_.get_cached(cache_key,data)) {
+        cerr << "Cache miss.  Querying the data archive\n";
+        // query the value and then cache it
+        vector< double > values;
+        int matl = atoi(mat_list[i].c_str());
+        try {
+          archive_->query(values, varname, matl, currentNode_.id_, times_[0], 
+                         times_[times_.size()-1], currentNode_.level_);
+        } catch (const VariableNotFoundInGrid& exception) {
+          cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
+          return;
+        } 
+        cerr << "Received data.  Size of data = " << values.size() << endl;
+        material_data_list_.cache_value(cache_key, values, data);
       } else {
-	cerr << "Cache hit\n";
+        cerr << "Cache hit\n";
       }
       gui->execute(id+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
@@ -378,21 +379,22 @@ VariablePlotter::extract_data( string display_mode, string varname,
     for(int i = 0; i < (int)mat_list.size(); i++) {
       string data;
       string cache_key(currentNode_str()+" "+varname+" "+mat_list[i]);
-      if (!material_data_list.get_cached(cache_key,data)) {
-	cerr << "Cache miss.  Querying the data archive\n";
-	// query the value and then cache it
-	vector< float > values;
-	int matl = atoi(mat_list[i].c_str());
-	try {
-	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1], currentNode.level);
-	} catch (const VariableNotFoundInGrid& exception) {
-	  cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
-	  return;
-	} 
-	cerr << "Received data.  Size of data = " << values.size() << endl;
-	material_data_list.cache_value(cache_key, values, data);
+      if (!material_data_list_.get_cached(cache_key,data)) {
+        cerr << "Cache miss.  Querying the data archive\n";
+        // query the value and then cache it
+        vector< float > values;
+        int matl = atoi(mat_list[i].c_str());
+        try {
+          archive_->query(values, varname, matl, currentNode_.id_, times_[0], times_[times_.size()-1],
+                          currentNode_.level_);
+        } catch (const VariableNotFoundInGrid& exception) {
+          cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
+          return;
+        } 
+        cerr << "Received data.  Size of data = " << values.size() << endl;
+        material_data_list_.cache_value(cache_key, values, data);
       } else {
-	cerr << "Cache hit\n";
+        cerr << "Cache hit\n";
       }
       gui->execute(id+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
@@ -404,21 +406,22 @@ VariablePlotter::extract_data( string display_mode, string varname,
     for(int i = 0; i < (int)mat_list.size(); i++) {
       string data;
       string cache_key(currentNode_str()+" "+varname+" "+mat_list[i]);
-      if (!material_data_list.get_cached(cache_key,data)) {
-	cerr << "Cache miss.  Querying the data archive\n";
-	// query the value and then cache it
-	vector< int > values;
-	int matl = atoi(mat_list[i].c_str());
-	try {
-	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1], currentNode.level);
-	} catch (const VariableNotFoundInGrid& exception) {
-	  cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
-	  return;
-	} 
-	cerr << "Received data.  Size of data = " << values.size() << endl;
-	material_data_list.cache_value(cache_key, values, data);
+      if (!material_data_list_.get_cached(cache_key,data)) {
+        cerr << "Cache miss.  Querying the data archive\n";
+        // query the value and then cache it
+        vector< int > values;
+        int matl = atoi(mat_list[i].c_str());
+        try {
+          archive_->query(values, varname, matl, currentNode_.id_, times_[0], times_[times_.size()-1],
+                          currentNode_.level_);
+        } catch (const VariableNotFoundInGrid& exception) {
+          cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
+          return;
+        } 
+        cerr << "Received data.  Size of data = " << values.size() << endl;
+        material_data_list_.cache_value(cache_key, values, data);
       } else {
-	cerr << "Cache hit\n";
+        cerr << "Cache hit\n";
       }
       gui->execute(id+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
@@ -432,22 +435,23 @@ VariablePlotter::extract_data( string display_mode, string varname,
       string cache_key(currentNode_str()+" "+varname+" "+mat_list[i]);
       // The suffix to get things like, length, lenght2 and what not.
       string type_suffix(" "+type_list[i]);
-      if (!material_data_list.get_cached(cache_key + type_suffix,data)) {
-	cerr << "Cache miss.  Querying the data archive\n";
-	// query the value and then cache it
-	vector< Vector > values;
-	int matl = atoi(mat_list[i].c_str());
-	try {
-	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1], currentNode.level);
-	} catch (const VariableNotFoundInGrid& exception) {
-	  cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
-	  return;
-	} 
-	cerr << "Received data.  Size of data = " << values.size() << endl;
-	material_data_list.cache_value(cache_key, values);
-	material_data_list.get_cached(cache_key + type_suffix, data);
+      if (!material_data_list_.get_cached(cache_key + type_suffix,data)) {
+        cerr << "Cache miss.  Querying the data archive\n";
+        // query the value and then cache it
+        vector< Vector > values;
+        int matl = atoi(mat_list[i].c_str());
+        try {
+          archive_->query(values, varname, matl, currentNode_.id_, times_[0], times_[times_.size()-1],
+                          currentNode_.level_);
+        } catch (const VariableNotFoundInGrid& exception) {
+          cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
+          return;
+        } 
+        cerr << "Received data.  Size of data = " << values.size() << endl;
+        material_data_list_.cache_value(cache_key, values);
+        material_data_list_.get_cached(cache_key + type_suffix, data);
       } else {
-	cerr << "Cache hit\n";
+        cerr << "Cache hit\n";
       }
       gui->execute(id+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
@@ -461,24 +465,25 @@ VariablePlotter::extract_data( string display_mode, string varname,
       string cache_key(currentNode_str()+" "+varname+" "+mat_list[i]);
       // The suffix to get things like, Determinant and what not.
       string type_suffix(" "+type_list[i]);
-      if (!material_data_list.get_cached(cache_key + type_suffix, data)) {
-	cerr << "Cache miss.  Querying the data archive\n";
-	// query the value and then cache it
-	vector< Matrix3 > values;
-	int matl = atoi(mat_list[i].c_str());
-	try {
-	  archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1], currentNode.level);
-	} catch (const VariableNotFoundInGrid& exception) {
-	  cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
-	  return;
-	} 
-	cerr << "Received data.  Size of data = " << values.size() << endl;
-	material_data_list.cache_value(cache_key, values);
-	material_data_list.get_cached(cache_key + type_suffix, data);
+      if (!material_data_list_.get_cached(cache_key + type_suffix, data)) {
+        cerr << "Cache miss.  Querying the data archive\n";
+        // query the value and then cache it
+        vector< Matrix3 > values;
+        int matl = atoi(mat_list[i].c_str());
+        try {
+          archive_->query(values, varname, matl, currentNode_.id_, times_[0], times_[times_.size()-1],
+                          currentNode_.level_);
+        } catch (const VariableNotFoundInGrid& exception) {
+          cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
+          return;
+        } 
+        cerr << "Received data.  Size of data = " << values.size() << endl;
+        material_data_list_.cache_value(cache_key, values);
+        material_data_list_.get_cached(cache_key + type_suffix, data);
       }
       else {
-	// use cached value that was put into data by is_cached
-	cerr << "Cache hit\n";
+        // use cached value that was put into data by is_cached
+        cerr << "Cache hit\n";
       }
       gui->execute(id+" set_var_val "+data.c_str());
       name_list = name_list + mat_list[i] + " " + type_list[i] + " ";
@@ -491,8 +496,8 @@ VariablePlotter::extract_data( string display_mode, string varname,
     cerr<<"Unknown var type\n";
     }// else { Tensor,Other}
   gui->execute(id+" "+display_mode.c_str()+"_data "+index.c_str()+" "
-	       +varname.c_str()+" "+currentNode_str().c_str()+" "
-	       +name_list.c_str());
+               +varname.c_str()+" "+currentNode_str().c_str()+" "
+               +name_list.c_str());
   
 } // end extract_data()
 
@@ -502,11 +507,11 @@ void
 VariablePlotter::pick()
 {
   reset_vars();
-  currentNode.id.x(index_x.get());
-  currentNode.id.y(index_y.get());
-  currentNode.id.z(index_z.get());
-  currentNode.level = index_l.get();
-  cerr << "Extracting values for " << currentNode.id << ", level " << currentNode.level << endl;
+  currentNode_.id_.x(index_x_.get());
+  currentNode_.id_.y(index_y_.get());
+  currentNode_.id_.z(index_z_.get());
+  currentNode_.level_ = index_l_.get();
+  cerr << "Extracting values for " << currentNode_.id_ << ", level " << currentNode_.level_ << endl;
 }
 
 

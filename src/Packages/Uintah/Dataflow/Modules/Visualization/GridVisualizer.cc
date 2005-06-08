@@ -169,18 +169,22 @@ GridVisualizer::GridVisualizer(GuiContext* ctx):
   widget2d = scinew FrameWidget(this, &widget_lock, INIT, false);
 
   selected_sphere_color = new Material(Color(0,0,0), Color(1,0.6,0.3),
-				       Color(.5,.5,.5), 20);
+                                       Color(.5,.5,.5), 20);
   
 }
 
-void GridVisualizer::initialize_ports() {
+void
+GridVisualizer::initialize_ports()
+{
   // Create the input port
-  in= (ArchiveIPort *) get_iport("Data Archive");
+  in_ = (ArchiveIPort *) get_iport("Data Archive");
   // Create the output port
   ogeom= (GeometryOPort *) get_oport("Geometry");
 }
 
-void GridVisualizer::setup_widget() {
+void
+GridVisualizer::setup_widget()
+{
   // setup widget
   remark("Starting widget stuff");
   if (init == 1) {
@@ -198,14 +202,16 @@ void GridVisualizer::setup_widget() {
   setupColors();
 }
 
-void GridVisualizer::update_widget() {
+void
+GridVisualizer::update_widget() 
+{
   remark("Starting locator");
   widget_on = plane_on.get() != 0;
   widget2d->SetState(widget_on);
 
   Point min, max;
   BBox gridBB;
-  grid->getSpatialRange(gridBB);
+  grid_->getSpatialRange(gridBB);
   // Need to extend the BBox just a smidgen to correct for floating
   // point error.
   Vector offset(1e-12, 1e-12, 1e-12);
@@ -231,14 +237,14 @@ void GridVisualizer::update_widget() {
       // Find the boundary and put in optimal place
       // in yz plane with reasonable frame thickness
       Point right( center.x(), center.y(), max.z());
-      Point down( center.x(), min.y(), center.z());	    
+      Point down( center.x(), min.y(), center.z());         
       widget2d->SetPosition( center, right, down);
       max_scale = Max( (max.z() - min.z()), (max.y() - min.y()) );
     } else {
       // Find the boundary and put in optimal place
       // in xz plane with reasonable frame thickness
       Point right( max.x(), center.y(), center.z());
-      Point down( center.x(), center.y(), min.z());	    
+      Point down( center.x(), center.y(), min.z());         
       widget2d->SetPosition( center, right, down);
       max_scale = Max( (max.x() - min.x()), (max.z() - min.z()) );
     }
@@ -249,15 +255,20 @@ void GridVisualizer::update_widget() {
 
 // default radius =  radius of a sphere that would fill 
 // the volume of a cell.
-void GridVisualizer::update_default_radius() {
-  LevelP level = grid->getLevel(0);
+void
+GridVisualizer::update_default_radius()
+{
+  LevelP level = grid_->getLevel(0);
   Vector dCell = level->dCell();
   double new_default_radius = Min( dCell.x()/2,dCell.y()/2,dCell.z()/2);
-  if (new_default_radius != default_radius.get())
+  if (new_default_radius != default_radius.get()) {
     default_radius.set(new_default_radius);
+  }
 }
 
-Box GridVisualizer::get_widget_boundary() {
+Box
+GridVisualizer::get_widget_boundary() 
+{
   if (widget_on) {
     // get the position of the frame widget and determine
     // the boundaries
@@ -279,46 +290,50 @@ Box GridVisualizer::get_widget_boundary() {
   }
   else {
     BBox gridBB;
-    grid->getSpatialRange(gridBB);
+    grid_->getSpatialRange(gridBB);
     // Need to extend the BBox just a smidgen to correct for floating
     // point error.
     Point offset(1e-12, 1e-12, 1e-12);
     return Box((gridBB.min()-offset).asPoint(),
-	       (gridBB.max()+offset).asPoint());
+               (gridBB.max()+offset).asPoint());
   }
 }
 
 // Returns 0 for success, 1 otherwise
-int GridVisualizer::get_current_node_position(Point &location) {
+int
+GridVisualizer::get_current_node_position(Point &location)
+{
   // This call makes sure that currentNode is updated.
   pick();
   
   // We need to make sure that the grid pointer is valid.
-  if (grid.get_rep() == NULL)
+  if (grid_.get_rep() == NULL)
     return 1;
   // Now we need to get the level that corresponds to currentNode.
-  if (grid->numLevels() <= currentNode.level) {
+  if (grid_->numLevels() <= currentNode_.level_) {
     error("GridVisualizer::get_current_node_position: "
-	  "currentNode.level exceeds number of levels for the grid.");
+          "currentNode.level exceeds number of levels for the grid.");
     return 1;
   }
-  LevelP level = grid->getLevel(currentNode.level);
+  LevelP level = grid_->getLevel(currentNode_.level_);
   // From here we can query the location of the index from the level.
-  switch (var_orientation.get()) {
+  switch (var_orientation_.get()) {
   case NC_VAR:
-    location = level->getNodePosition(currentNode.id);
+    location = level->getNodePosition(currentNode_.id_);
     break;
   case CC_VAR:
-    location = level->getCellPosition(currentNode.id);
+    location = level->getCellPosition(currentNode_.id_);
     break;
   default:
     error("GridVisualizer::get_current_node_position: "
-	  "unknown variable orientation");
+          "unknown variable orientation");
   }
   return 0;
 }
 
-int GridVisualizer::update_selected_node(bool flush_position) {
+int
+GridVisualizer::update_selected_node(bool flush_position) 
+{
   // Since this function could be called from anywhere we need to make sure
   // that our ports are valid and that we have a grid.
   //  initialize_ports();
@@ -352,10 +367,10 @@ int GridVisualizer::update_selected_node(bool flush_position) {
     if (!get_current_node_position(location)) {
       // add the sphere to the data
       selected_sphere_geom_id =
-	ogeom->addObj(scinew GeomMaterial(scinew GeomSphere(location,
-							    rad*1.5,nu,nv),
-					  selected_sphere_color),
-		      "Current Node");
+        ogeom->addObj(scinew GeomMaterial(scinew GeomSphere(location,
+                                                            rad*1.5,nu,nv),
+                                          selected_sphere_color),
+                      "Current Node");
     } else {
       // there was a problem, so don't add the sphere
       error("Can't add selected node.");
@@ -368,7 +383,8 @@ int GridVisualizer::update_selected_node(bool flush_position) {
   return 0;
 }
   
-void GridVisualizer::execute()
+void
+GridVisualizer::execute()
 {
   remark("GridVisualizer::execute:start");
 
@@ -415,8 +431,8 @@ void GridVisualizer::execute()
 
   //-----------------------------------------
   // for each level in the grid
-  for(int l = 0;l<numLevels;l++){
-    LevelP level = grid->getLevel(l);
+  for(int l = 0;l<numLevels_;l++){
+    LevelP level = grid_->getLevel(l);
 
     // there can be up to 6 colors only
     int color_index = l;
@@ -440,48 +456,48 @@ void GridVisualizer::execute()
       Box box = patch->getBox();
       addBoxGeometry(edges, box);
 
-      switch (var_orientation.get()) {
+      switch (var_orientation_.get()) {
       case NC_VAR:
-	//------------------------------------
-	// for each node in the patch
-	for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
-	  nodes->add(patch->nodePosition(*iter),
-		     node_color[color_index].get_rep());
-	}
-	
-	//------------------------------------
-	// for each node in the patch that intersects the widget space
-	if(node_on) {
-	  for(NodeIterator iter = patch->getNodeIterator(widget_box); !iter.done(); iter++){
-	    GeomSphere *s = scinew GeomSphere(patch->nodePosition(*iter),
-					      rad,nu,nv);
-	    s->setId(l);
-	    s->setId(*iter);
-	    spheres->add(s);
-	  }
-	}
-	break;
+        //------------------------------------
+        // for each node in the patch
+        for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
+          nodes->add(patch->nodePosition(*iter),
+                     node_color[color_index].get_rep());
+        }
+        
+        //------------------------------------
+        // for each node in the patch that intersects the widget space
+        if(node_on) {
+          for(NodeIterator iter = patch->getNodeIterator(widget_box); !iter.done(); iter++){
+            GeomSphere *s = scinew GeomSphere(patch->nodePosition(*iter),
+                                              rad,nu,nv);
+            s->setId(l);
+            s->setId(*iter);
+            spheres->add(s);
+          }
+        }
+        break;
 
       case CC_VAR:
-	//------------------------------------
-	// for each node in the patch
-	for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
-	  nodes->add(patch->cellPosition(*iter),
-		     node_color[color_index].get_rep());
-	}
-	
-	//------------------------------------
-	// for each node in the patch that intersects the widget space
-	if(node_on) {
-	  for(CellIterator iter = patch->getCellIterator(widget_box); !iter.done(); iter++){
-	    GeomSphere *s = scinew GeomSphere(patch->cellPosition(*iter),
-					      rad,nu,nv);
-	    s->setId(l);
-	    s->setId(*iter);
-	    spheres->add(s);
-	  }
-	}
-	break;
+        //------------------------------------
+        // for each node in the patch
+        for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
+          nodes->add(patch->cellPosition(*iter),
+                     node_color[color_index].get_rep());
+        }
+        
+        //------------------------------------
+        // for each node in the patch that intersects the widget space
+        if(node_on) {
+          for(CellIterator iter = patch->getCellIterator(widget_box); !iter.done(); iter++){
+            GeomSphere *s = scinew GeomSphere(patch->cellPosition(*iter),
+                                              rad,nu,nv);
+            s->setId(l);
+            s->setId(*iter);
+            spheres->add(s);
+          }
+        }
+        break;
       }
     }
 
@@ -509,7 +525,8 @@ void GridVisualizer::execute()
   remark("GridVisualizer::execute:end");
 }
 
-void GridVisualizer::widget_moved(bool last, BaseWidget*)
+void
+GridVisualizer::widget_moved(bool last, BaseWidget*)
 {
   if(last && !abort_flag) {
     abort_flag=1;
@@ -517,7 +534,8 @@ void GridVisualizer::widget_moved(bool last, BaseWidget*)
   }
 }
 
-void GridVisualizer::tcl_command(GuiArgs& args, void* userdata)
+void
+GridVisualizer::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2) {
     args.error("GridVisualizer needs a minor command");
@@ -545,8 +563,9 @@ void GridVisualizer::tcl_command(GuiArgs& args, void* userdata)
 }
 
 // if a pick event was received extract the id from the picked
-void GridVisualizer::geom_pick(GeomPickHandle /*pick*/, void* /*userdata*/,
-			       GeomHandle picked) {
+void
+GridVisualizer::geom_pick(GeomPickHandle /*pick*/, void* /*userdata*/,
+                          GeomHandle picked) {
   ostringstream str;
 #if DEBUG
   str << "Caught pick event in GridVisualizer!\n";
@@ -562,11 +581,11 @@ void GridVisualizer::geom_pick(GeomPickHandle /*pick*/, void* /*userdata*/,
     str << "Id = " << id << " Level = " << level << endl;
     remark( str.str() );
     
-    currentNode.id = id;
-    index_l.set(level);
-    index_x.set(currentNode.id.x());
-    index_y.set(currentNode.id.y());
-    index_z.set(currentNode.id.z());
+    currentNode_.id_ = id;
+    index_l_.set(level);
+    index_x_.set(currentNode_.id_.x());
+    index_y_.set(currentNode_.id_.y());
+    index_z_.set(currentNode_.id_.z());
 
     update_selected_node(true);
   }
@@ -575,7 +594,8 @@ void GridVisualizer::geom_pick(GeomPickHandle /*pick*/, void* /*userdata*/,
 }
 
 // adds the lines to edges that make up the box defined by box 
-void GridVisualizer::addBoxGeometry(GeomLines* edges, const Box& box)
+void
+GridVisualizer::addBoxGeometry(GeomLines* edges, const Box& box)
 {
   Point min = box.lower();
   Point max = box.upper();
@@ -619,7 +639,9 @@ void GridVisualizer::setupColors() {
 }
 
 // based on the color expressed by color returns the color
-MaterialHandle GridVisualizer::getColor(string color, int type) {
+MaterialHandle
+GridVisualizer::getColor(string color, int type)
+{
   float i;
   if (type == GRID_COLOR)
     i = 1.0;
@@ -627,23 +649,23 @@ MaterialHandle GridVisualizer::getColor(string color, int type) {
     i = 0.7;
   if (color == "red")
     return scinew Material(Color(0,0,0), Color(i,0,0),
-			   Color(.5,.5,.5), 20);
+                           Color(.5,.5,.5), 20);
   else if (color == "green")
     return scinew Material(Color(0,0,0), Color(0,i,0),
-			   Color(.5,.5,.5), 20);
+                           Color(.5,.5,.5), 20);
   else if (color == "yellow")
     return scinew Material(Color(0,0,0), Color(i,i,0),
-			   Color(.5,.5,.5), 20);
+                           Color(.5,.5,.5), 20);
   else if (color == "magenta")
     return scinew Material(Color(0,0,0), Color(i,0,i),
-			   Color(.5,.5,.5), 20);
+                           Color(.5,.5,.5), 20);
   else if (color == "cyan")
     return scinew Material(Color(0,0,0), Color(0,i,i),
-			   Color(.5,.5,.5), 20);
+                           Color(.5,.5,.5), 20);
   else if (color == "blue")
     return scinew Material(Color(0,0,0), Color(0,0,i),
-			   Color(.5,.5,.5), 20);
+                           Color(.5,.5,.5), 20);
   else
     return scinew Material(Color(0,0,0), Color(i,i,i),
-			   Color(.5,.5,.5), 20);
+                           Color(.5,.5,.5), 20);
 }
