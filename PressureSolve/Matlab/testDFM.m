@@ -35,8 +35,8 @@ if (setupGrid)
 
     %--------------- Level 2: local fine grid around center of domain -----------------
 
-%     [grid,k] = addGridLevel(grid,'refineRatio',[2 2]);
-%     [grid,q2] = addGridPatch(grid,k,[6 6],[13 13],q1);              % Local patch around the domain center
+    [grid,k] = addGridLevel(grid,'refineRatio',[2 2]);
+    [grid,q2] = addGridPatch(grid,k,[6 6],[13 13],q1);              % Local patch around the domain center
 
     printGrid(grid);
 end

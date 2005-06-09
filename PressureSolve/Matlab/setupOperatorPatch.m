@@ -36,9 +36,14 @@ pindexInterior  = pindexInterior(:);
 mapInterior     = map(pindexInterior);
 pindexRemaining = setdiff(pindexRemaining,pindexInterior);
 
-edge        = cell(2,1);
-edge{1}     = level.minCell + P.offset;             % First cell next to left domain boundary - patch-based index
-edge{2}     = level.maxCell + P.offset;             % Last Cell next to right domain boundary - patch-based index
+% Domain edges
+edgeDomain        = cell(2,1);
+edgeDomain{1}     = level.minCell + P.offset;             % First cell next to left domain boundary - patch-based index
+edgeDomain{2}     = level.maxCell + P.offset;             % Last Cell next to right domain boundary - patch-based index
+% Patch edges
+edgePatch          = cell(2,1);
+edgePatch{1}       = P.ilower + P.offset;             % First cell next to left domain boundary - patch-based index
+edgePatch{2}       = P.iupper + P.offset;             % Last Cell next to right domain boundary - patch-based index
 
 %=====================================================================
 % Construct interior fluxes
@@ -60,7 +65,7 @@ rhsValues(interior{:}) = prod(h) * ...
 
 %=====================================================================
 % Correct fluxes near DOMAIN boundaries (not necessarily patch
-% boundaries)
+% boundaries). Set corresponding ghost cell boundary conditions.
 %=====================================================================
 
 face = cell(2,1);
@@ -72,7 +77,7 @@ for d = 1:grid.dim,                                             % Loop over dime
             direction = 1;
         end
 
-        [face{:}] = find(matInterior{d} == edge{side}(d));          % Interior cell indices near domain boundary
+        [face{:}] = find(matInterior{d} == edgeDomain{side}(d));          % Interior cell indices near DOMAIN boundary
         for dim = 1:grid.dim                                    % Translate face to patch-based indices (from index in the INTERIOR matInterior)
             face{dim} = face{dim} + 1;
         end
@@ -84,12 +89,31 @@ for d = 1:grid.dim,                                             % Loop over dime
             flux(face{:},dim) = 0.75*flux(face{:},dim);     % 3/4 the boundary of CV in the perpendicular directions
         end
         rhsValues(face{:}) = 0.75*rhsValues(face{:});           % 3/4 less volume of CV ==> correct RHS average
+
+        % Construct corresponding ghost cell equations = boundary conditions
+        ghost           = face;
+        ghost{d}        = face{d} + direction;                      % Ghost cell indices
+        %[ghost{:}]
+        matGhost        = cell(grid.dim,1);
+        [matGhost{:}]   = ndgrid(ghost{:});
+        pindexGhost     = sub2ind(P.size,ghost{:});
+        pindexGhost     = pindexGhost(:);
+        mapGhost        = map(pindexGhost);
+        %mapGhost
+        pindexRemaining = setdiff(pindexRemaining,pindexGhost);
+        % B.C.: Dirichlet, u=0
+        Alist = [Alist; ...
+            [mapGhost mapGhost repmat(1.0,size(mapGhost))]; ...
+            ];
+        b(mapGhost-P.baseIndex+1) = 0.0;                            % This inserts the RHS data into the "chunk" of b that we output from this routine, hence we translate map indices to patch-based 1D indices.
+        
     end
 end
 
 %=====================================================================
 % Construct stencil coefficients from fluxes flux-based, for
-% interior cells and ghost cells (boundary conditions)
+% interior cells. Ignore ghost cells that are not near domain
+% boundaries. They will have an interpolation stencil later.
 %=====================================================================
 
 for d = 1:grid.dim,                                             % Loop over dimensions of patch
@@ -105,7 +129,7 @@ for d = 1:grid.dim,                                             % Loop over dime
         nbhrOffset = zeros(1,grid.dim);
         nbhrOffset(d) = direction;
         
-        [face{:}] = find(matInterior{d} == edge{side}(d));          % Interior cell indices near domain boundary
+        [face{:}] = find(matInterior{d} == edgePatch{side}(d));          % Interior cell indices near PATCH boundary
         for dim = 1:grid.dim                                    % Translate face to patch-based indices (from index in the INTERIOR matInterior)
             face{dim} = face{dim} + 1;
         end
@@ -126,8 +150,9 @@ for d = 1:grid.dim,                                             % Loop over dime
             [mapInterior mapInterior  f]; ...
             [mapInterior mapNbhr     -f] ...
             ];
-
-        % Construct ghost cell equations = boundary conditions
+        
+        % Ghost cell equations of C/F interfaces; they are ignored here and
+        % will have an interpolation stencil later.
         ghost           = face;
         ghost{d}        = face{d} + direction;                      % Ghost cell indices
         %[ghost{:}]
@@ -138,22 +163,22 @@ for d = 1:grid.dim,                                             % Loop over dime
         mapGhost        = map(pindexGhost);
         %mapGhost
         pindexRemaining = setdiff(pindexRemaining,pindexGhost);
-        % B.C.: Dirichlet, u=0
-        Alist = [Alist; ...
-            [mapGhost mapGhost repmat(1.0,size(mapGhost))]; ...
-            ];
-        b(mapGhost) = 0.0;
+        %         % B.C.: Dirichlet, u=0
+        %         Alist = [Alist; ...
+        %             [mapGhost mapGhost repmat(1.0,size(mapGhost))]; ...
+        %             ];
+        %         b(mapGhost-P.baseIndex+1) = 0.0;                            % This inserts the RHS data into the "chunk" of b that we output from this routine, hence we translate map indices to patch-based 1D indices.
 
     end
 end
 
-b(mapInterior) = rhsValues(interior{:});
+b(mapInterior-P.baseIndex+1) = rhsValues(interior{:});                            % This inserts the RHS data into the "chunk" of b that we output from this routine, hence we translate map indices to patch-based 1D indices.
 
 % All remaining points are unused ghost points; set them to 0.
-
 pindexRemaining = setdiff(pindexRemaining,pindexGhost);
+fprintf('Number of unused points in this patch = %d\n',length(pindexRemaining));
 mapRemaining = map(pindexRemaining);
 Alist = [Alist; ...
     [mapRemaining mapRemaining repmat(1.0,size(mapRemaining))]; ...
     ];
-b(mapRemaining) = 0.0;
+b(mapRemaining-P.baseIndex+1) = 0.0;                            % This inserts the RHS data into the "chunk" of b that we output from this routine, hence we translate map indices to patch-based 1D indices.
