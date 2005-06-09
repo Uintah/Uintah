@@ -257,9 +257,9 @@ FlowRenderer2D::draw()
 
   //--------------------------------------------------------------------------
   // build textures
-  build_flow_tex();  // must be done first, change later
-  build_noise();
-  build_colormap();
+  load_flow_tex();  // must be done first, change later
+  load_noise();
+  load_colormap();
   //--------------------------------------------------------------------------
   bind_colormap(3);
   //--------------------------------------------------------------------------
@@ -267,13 +267,22 @@ FlowRenderer2D::draw()
   if(!pbuffers_created_ && use_pbuffer_)
     create_pbuffers(buffer_width_, buffer_height_);
   
-   if( adv_buffer_ ){
-     float scale = 1.0;
-     // This should put noise in adv_buffer_
-    adv_init(adv_buffer_,scale, shift_list_[current_shift_]);
-   }
-//     bind_noise(1);
   int c_shift = current_shift_;
+  float pixelx = 1.f/(float)w_;
+  float pixely = 1.f/(float)h_;
+
+  if( adv_buffer_ ){
+    float scale = 1.0;
+    // This should put noise in adv_buffer_
+   adv_init(adv_buffer_,scale, shift_list_[c_shift]);
+    
+//     for(int i = 0; i < 10; i++){
+//       adv_acc( adv_buffer_, pixelx, pixely, scale, shift_list_[c_shift] );
+//       next_shift(&c_shift);
+//     }
+//     adv_rew( adv_buffer_ );
+  } else {
+
 //   build_adv( scale, shift_list_[c_shift] );
 //   //  load_adv();
 //   next_shift(&c_shift);
@@ -282,8 +291,6 @@ FlowRenderer2D::draw()
 //   cerr<<"re_accum = "<<re_accum_<<"\n";
 //   if( re_accum_ ){
 //     //must be called after build_flow_tex()
-//       float pixelx = 1.f/(float)w_;
-//       float pixely = 1.f/(float)h_;
 //       for(int i = 0; i < 10; i++){
 //         adv_accum( pixelx, pixely, scale, shift_list_[c_shift] );
 //         next_shift(&c_shift);
@@ -303,7 +310,7 @@ FlowRenderer2D::draw()
 //   bind_noise(1);
 //   bind_flow_tex();
 //   noise_buffer_->bind();
-
+  }
   //temporary: make texture1 active bind adv_buffer as texture
   if(adv_buffer_ ){
     glActiveTexture(GL_TEXTURE1);
@@ -315,7 +322,7 @@ FlowRenderer2D::draw()
   // and uncomment the next line.  Do the same below, at release.
     bind_noise(1);
   }
-
+  CHECK_OPENGL_ERROR("");
   //-----------------------------------------------------
   // set up shader
   FragmentProgramARB* shader; // = adv_accum_;
@@ -332,7 +339,7 @@ FlowRenderer2D::draw()
     }
     shader->bind();
   }
-    
+  CHECK_OPENGL_ERROR("");    
   glBegin( GL_QUADS );
   {
     for (int i = 0; i < 4; i++) {
@@ -353,7 +360,9 @@ FlowRenderer2D::draw()
     }
   }
   glEnd();
+  CHECK_OPENGL_ERROR("");
   glFlush();
+  CHECK_OPENGL_ERROR("");
   glDisable(GL_ALPHA_TEST);
   
   if(shader)
@@ -366,12 +375,12 @@ FlowRenderer2D::draw()
   } else {
     release_noise(1);
   }
-
+  CHECK_OPENGL_ERROR("");
 //  noise_buffer_->release();
 //   release_flow_tex();
 //   release_conv(1);
   release_colormap(3);
-  
+  CHECK_OPENGL_ERROR("");  
   glPopMatrix();
   
   CHECK_OPENGL_ERROR("FlowRenderer2D::draw_volume end");
@@ -381,40 +390,34 @@ void
 FlowRenderer2D::adv_init( Pbuffer*& pb, float scale,
                           pair<float, float>& shift)
   {
-  if(!adv_init_->valid()) {
-    adv_init_->create();
-    adv_init_->setLocalParam(1, scale, 1.0, 1.0, 1.0);
-    adv_init_->setLocalParam(2, shift.first, shift.second, 1.0, 1.0);
+    FragmentProgramARB* shader =
+      ( pb->need_shader() ? adv_init_rect_ : adv_init_ );
+
+  if(!shader->valid()) {
+    shader->create();
+    shader->setLocalParam(1, scale, 1.0, 1.0, 1.0);
+    shader->setLocalParam(2, shift.first, shift.second, 1.0, 1.0);
   }
+  cerr<<"activating pbuffer \n";
   pb->activate();
-  
   pb->set_use_texture_matrix(false);
   pb->set_use_default_shader(false);
 
-  glDrawBuffer(GL_FRONT);
-  glViewport(0, 0, pb->width(), pb->height());
-  glClearColor(0.0, 0.0, 0.0, 0.0);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  pb->swapBuffers();
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  glTranslatef(-1.0, -1.0, 0.0);
-  glScalef(2.0, 2.0, 2.0);
-  glDisable(GL_DEPTH_TEST);
-  glDisable(GL_LIGHTING);
-  glDisable(GL_CULL_FACE);
-  glDisable(GL_BLEND);
-
   //bind_noise in pbuffer context
+  bind_noise(0);  //noise texture bound to GL_TEXTURE2
 
-  bind_noise(2);  //noise texture bound to GL_TEXTURE2
-
-  adv_init_->bind(); // fragment program (see FlowShaders.h AdvInit) 
+  shader->bind(); // fragment program (see FlowShaders.h AdvInit) 
                      // looks at TEXTURE2.
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
   glActiveTexture(GL_TEXTURE0);
+  GLint nunits, active;
+  glGetIntegerv(GL_MAX_TEXTURE_UNITS, &nunits);
+  glGetIntegerv(GL_ACTIVE_TEXTURE, &active);
+  active =  (active == GL_TEXTURE0 ? 0 :
+             (active == GL_TEXTURE1 ? 1 :
+              (active == GL_TEXTURE2 ? 2 : 3 )));
+  cerr<<"Pbuffer has "<<nunits<<" texture units. Unit "<<active
+      <<" is currently active\n";
 #endif
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
@@ -427,7 +430,7 @@ FlowRenderer2D::adv_init( Pbuffer*& pb, float scale,
     for (int i = 0; i < 4; i++) {
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
       // set coordinates for TEXTURE2
-      glMultiTexCoord2fv(GL_TEXTURE2,tex_coords+i*2);
+      glMultiTexCoord2fv(GL_TEXTURE0,tex_coords+i*2);
 #else
       glTexCoord2fv(tex_coords+i*2);
 #endif
@@ -435,17 +438,143 @@ FlowRenderer2D::adv_init( Pbuffer*& pb, float scale,
     }
   }
   glEnd();
-  CHECK_OPENGL_ERROR("adv_init()");
+  CHECK_OPENGL_ERROR("");
 
   pb->swapBuffers();  // won't this put the texture in the back buffer?
 
-  adv_init_->release();
-  release_noise(2);
+  shader->release();
+  release_noise(0);
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
+  glActiveTexture(GL_TEXTURE0);
+#endif
+
   pb->deactivate();
   pb->set_use_texture_matrix(true);
 
 }
 
+void
+FlowRenderer2D::adv_acc( Pbuffer*& pb, float pixel_x, float pixel_y,
+                         float scale, pair<float,float>&  shift)
+{
+
+  FragmentProgramARB* shader =
+    ( pb->need_shader() ? adv_accum_rect_ : adv_accum_ );
+
+  if(!shader->valid()) {
+    shader->create();
+    shader->setLocalParam(0, pixel_x, pixel_y, 1.0, 1.0);
+    shader->setLocalParam(2, shift.first, shift.second, 1.0, 1.0);
+    shader->setLocalParam(3, scale, 1.0, 1.0, 1.0);
+  }
+  CHECK_OPENGL_ERROR("adv_init()");
+  pb->activate();
+  
+  pb->set_use_texture_matrix(false);
+  pb->set_use_default_shader(false);
+
+  bind_flow_tex(1);
+  bind_noise(2);
+
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
+  glActiveTexture(GL_TEXTURE0);
+#endif
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+  // cover the viewport
+  float tex_coords [] = {0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0};
+  float pos_coords [] = {0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0};
+
+  pb->bind(GL_FRONT);
+  shader->bind();
+  glBegin( GL_QUADS );
+  {
+    for (int i = 0; i < 4; i++) {
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
+      // set coordinates for TEXTURE2
+      glMultiTexCoord2fv(GL_TEXTURE0,tex_coords+i*2);
+      glMultiTexCoord2fv(GL_TEXTURE1,tex_coords+i*2);
+      glMultiTexCoord2fv(GL_TEXTURE2,tex_coords+i*2);
+      glMultiTexCoord2fv(GL_TEXTURE3,tex_coords+i*2);
+#else
+      glTexCoord2fv(tex_coords+i*2);
+#endif
+       glVertex3fv(pos_coords+i*3);
+    }
+  }
+  glEnd();
+  CHECK_OPENGL_ERROR("");
+  shader->release();
+  CHECK_OPENGL_ERROR("");
+  pb->release(GL_FRONT);
+  pb->swapBuffers();  // won't this put the texture in the back buffer?
+
+  CHECK_OPENGL_ERROR("");
+  release_noise(2);
+  release_flow_tex(1);
+  pb->deactivate();
+  pb->set_use_texture_matrix(true);
+
+}
+  
+void
+FlowRenderer2D::adv_rew( Pbuffer*& pb )
+{
+
+  FragmentProgramARB* shader =
+    ( pb->need_shader() ? adv_rewire_rect_ : adv_rewire_ );
+
+  if(!shader->valid()) {
+    shader->create();
+  }
+  pb->activate();
+  
+  pb->set_use_texture_matrix(false);
+  pb->set_use_default_shader(false);
+//   glDisable(GL_DEPTH_TEST);
+//   glDisable(GL_LIGHTING);
+//   glDisable(GL_CULL_FACE);
+//   glDisable(GL_BLEND);
+
+
+  shader->bind();
+
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
+  glActiveTexture(GL_TEXTURE0);
+#endif
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+  // cover the viewport
+  float tex_coords [] = {0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0};
+  float pos_coords [] = {0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0};
+
+//   glActiveTexture(GL_TEXTURE1);
+  pb->bind(GL_FRONT);
+  glActiveTexture(GL_TEXTURE0);
+  glBegin( GL_QUADS );
+  {
+    for (int i = 0; i < 4; i++) {
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
+      // set coordinates for TEXTURE2
+      glMultiTexCoord2fv(GL_TEXTURE0,tex_coords+i*2);
+#else
+      glTexCoord2fv(tex_coords+i*2);
+#endif
+       glVertex3fv(pos_coords+i*3);
+    }
+  }
+  glEnd();
+//   glActiveTexture(GL_TEXTURE1);
+  pb->release(GL_FRONT);
+  glActiveTexture(GL_TEXTURE0);
+
+  pb->swapBuffers();  // won't this put the texture in the back buffer?
+
+  shader->release();
+  pb->deactivate();
+  pb->set_use_texture_matrix(true);
+
+}
 
 void 
 FlowRenderer2D::init()
@@ -453,7 +582,7 @@ FlowRenderer2D::init()
   ifv_ = dynamic_cast<ImageField<Vector>* >(field_.get_rep());
   ASSERT( ifv_ != 0 );
   is_initialized_ = true;
-  build_flow_tex();
+  load_flow_tex();
 }
 void
 FlowRenderer2D::draw_wireframe()
@@ -529,7 +658,7 @@ FlowRenderer2D::compute_view()
 
 
 void
-FlowRenderer2D::build_colormap()
+FlowRenderer2D::load_colormap()
 {
   if(cmap_dirty_ ) {
     bool size_dirty = false;
@@ -667,7 +796,7 @@ FlowRenderer2D::release_colormap( int reg )
 }
 
 void
-FlowRenderer2D::build_flow_tex()
+FlowRenderer2D::load_flow_tex()
 {
   if( !is_initialized_ || flow_dirty_) {
     ifv_ = dynamic_cast<ImageField<Vector>* >(field_.get_rep());
@@ -827,51 +956,39 @@ FlowRenderer2D::build_flow_tex()
       tex_coords_[4] = tmax_x; tex_coords_[3] = tmin_y;
       tex_coords_[2] = tmax_x; tex_coords_[5] = tmax_y;
       tex_coords_[6] = tmin_x; tex_coords_[7] = tmax_y;
+      is_initialized_ = true;
   }
-   is_initialized_ = true;
-     CHECK_OPENGL_ERROR("FlowRenderer2D::build_flow_tex()");
-
+  CHECK_OPENGL_ERROR("FlowRenderer2D::build_flow_tex()");
+  
+  // Update 2D texture.
+  if (flow_tex_ == 0 || flow_dirty_)
+  {
+    glDeleteTextures(1, &flow_tex_);
+    glGenTextures(1, &flow_tex_);
+    glBindTexture(GL_TEXTURE_2D, flow_tex_);
+    //           glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE16_ALPHA16, 
+                 // Note the dim1, dim2 switch here.
+                 flow_array_.dim2(), flow_array_.dim1(), 
+                 0, GL_LUMINANCE_ALPHA, GL_FLOAT, &flow_array_(0,0,0));
+    flow_dirty_ = false;
+    glBindTexture(GL_TEXTURE_2D, 0);
+  }
+  else
+  {
+    glBindTexture(GL_TEXTURE_2D, flow_tex_);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
+                    // Note the dim1, dim2 switch here.
+                    flow_array_.dim2(), flow_array_.dim1(), 
+                    GL_LUMINANCE_ALPHA, GL_FLOAT, &flow_array_(0,0,0));
+    glBindTexture(GL_TEXTURE_2D, 0);
+  }
 }
 
-void
-FlowRenderer2D::load_flow_tex()
-{
-
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
-      // This texture is not loaded if there are no shaders.
-      if (ShaderProgramARB::shaders_supported())
-      {
-        // Update 2D texture.
-        if (flow_tex_ == 0 || flow_dirty_)
-        {
-          glDeleteTextures(1, &flow_tex_);
-          glGenTextures(1, &flow_tex_);
-          glBindTexture(GL_TEXTURE_2D, flow_tex_);
-//           glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-          glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE16_ALPHA16, 
-                       // Note the dim1, dim2 switch here.
-                       flow_array_.dim2(), flow_array_.dim1(), 
-                       0, GL_LUMINANCE_ALPHA, GL_FLOAT, &flow_array_(0,0,0));
-          flow_dirty_ = false;
-          glBindTexture(GL_TEXTURE_2D, 0);
-        }
-        else
-        {
-          glBindTexture(GL_TEXTURE_2D, flow_tex_);
-          glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
-                          // Note the dim1, dim2 switch here.
-                          flow_array_.dim2(), flow_array_.dim1(), 
-                          GL_LUMINANCE_ALPHA, GL_FLOAT, &flow_array_(0,0,0));
-        }
-      }
-#endif
-     CHECK_OPENGL_ERROR("FlowRenderer2D::load_flow_tex()");
-
-}
 
 
 void
@@ -962,6 +1079,8 @@ FlowRenderer2D::build_adv(float scale, pair<float, float>& shift)
   }
 }
 
+
+
 void
 FlowRenderer2D::load_adv()
 {
@@ -994,6 +1113,7 @@ FlowRenderer2D::load_adv()
   }
 #endif
 }
+  
 
 void
 FlowRenderer2D::adv_accum( float pixel_x, float pixel_y,
@@ -1274,7 +1394,7 @@ FlowRenderer2D::release_conv( int reg )
 
 
 void
-FlowRenderer2D::build_noise( float scale, float shftx, float shfty )
+FlowRenderer2D::load_noise( float scale, float shftx, float shfty )
 {
   if(build_noise_){
     noise_array_.resize(buffer_height_, buffer_width_, 4);
@@ -1289,28 +1409,28 @@ FlowRenderer2D::build_noise( float scale, float shftx, float shfty )
       }
     }
     
-    if (ShaderProgramARB::shaders_supported())
-    {
-      // Update 2D texture.
-      glDeleteTextures(1, &noise_tex_);
-      glGenTextures(1, &noise_tex_);
-      glBindTexture(GL_TEXTURE_2D, noise_tex_);
-      //           glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16,
-                   // Note the dim1, dim2 switch here.
-                   noise_array_.dim2(), noise_array_.dim1(), 
-                   0, GL_RGBA, GL_FLOAT, &noise_array_(0,0,0));
-    }
+    // Update 2D texture.
+    glDeleteTextures(1, &noise_tex_);
+    glGenTextures(1, &noise_tex_);
+    glBindTexture(GL_TEXTURE_2D, noise_tex_);
+    //           glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16,
+                 // Note the dim1, dim2 switch here.
+                 noise_array_.dim2(), noise_array_.dim1(), 
+                 0, GL_RGBA, GL_FLOAT, &noise_array_(0,0,0));
+    glBindTexture(GL_TEXTURE_2D, 0);
+      
   } else { // noise_array has already been built, just reload
     glBindTexture(GL_TEXTURE_2D, noise_tex_);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
                     // Note the dim1, dim2 switch here.
                     noise_array_.dim2(), noise_array_.dim1(), 
                     GL_RGBA, GL_FLOAT, &noise_array_(0,0,0));
+    glBindTexture(GL_TEXTURE_2D, 0);
   }
   
 #endif
@@ -1376,10 +1496,34 @@ FlowRenderer2D::create_pbuffers(int w, int h)
       use_pbuffer_ = false;
       return;
     } else {
+      // set up the context
+      adv_buffer_->activate();
+
+  
+      adv_buffer_->set_use_texture_matrix(false);
       adv_buffer_->set_use_default_shader(false);
+
+      glDrawBuffer(GL_FRONT);
+      glViewport(0, 0, adv_buffer_->width(), adv_buffer_->height());
+      glClearColor(0.0, 0.0, 0.0, 0.0);
+      glClear(GL_COLOR_BUFFER_BIT);
+      adv_buffer_->swapBuffers();
+      glMatrixMode(GL_PROJECTION);
+      glLoadIdentity();
+      glMatrixMode(GL_MODELVIEW);
+      glLoadIdentity();
+      glTranslatef(-1.0, -1.0, 0.0);
+      glScalef(2.0, 2.0, 2.0);
+      glDisable(GL_DEPTH_TEST);
+      glDisable(GL_LIGHTING);
+      glDisable(GL_CULL_FACE);
+      glDisable(GL_BLEND);
+      adv_buffer_->deactivate();
+
+      adv_buffer_->set_use_default_shader(false);
+      pbuffers_created_ = true;
     }
   }
-  pbuffers_created_ = true;
 }
 
 
