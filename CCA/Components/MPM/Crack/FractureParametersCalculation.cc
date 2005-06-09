@@ -549,9 +549,12 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
 
 		  
                   // Step 10: Area integral (secondary part of J-integral)
-                 
+		  // Area integral calculation is optional. 
+		  // It can be forced in input file by setting useVolumeIntegral=YES.
+		  // If Jx1 less than zero, it will be activated automatically.  
+			 
                   double Jx2=0.,Jy2=0.;
-                  if(useVolumeIntegral) {
+                  if(useVolumeIntegral || Jx1<0.) {
                     // Define integral points in the area enclosed by J-integral contour
                     int nc=(int)(d_rJ/dx_max);
                     if(d_rJ/dx_max-nc>=0.5) nc++;
@@ -649,7 +652,7 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   // J-integral components
 		  cfJ[l]=Vector(Jx1+Jx2,Jy1+Jy2,0.);
 
-		  
+		   
                   // Step 11: Convert J-integral to stress intensity (K)
                  
                   // Task 11a: Find COD near crack tip (point(-d,0,0) in local coordinates)
@@ -1121,7 +1124,7 @@ void Crack::OutputCrackFrontResults(const int& m)
           else 
             outCrkFrt2 << setw(15) << "inf" << endl;           
         }	  
-        */	
+        */  	
       }
     } // End of loop over i 
   } 
