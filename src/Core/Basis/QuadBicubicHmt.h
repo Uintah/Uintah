@@ -104,10 +104,11 @@ public:
   };
   
   //! return the parametric coordinates for value within the element.
-  //! iterative solution...
   template <class CellData>
   void get_coords(vector<double> &coords, const T& value, 
-		  const CellData &cd) const;  
+		  const CellData &cd) const
+    {
+    }  
 
   //! add derivative values (dx, dy) for nodes.
   void add_derivative(const T &p[2]) { derivs_.push_back(p); }
@@ -157,33 +158,6 @@ QuadBicubicHmt<T>::type_name(int n)
   }
 }
 
-
-
-
-template <class T>
-template <class CellData>
-void 
-QuadBicubicHmt<T>::get_coords(vector<double> &coords, const T& value, 
-			      const CellData &cd) const
-{
-
-  //! Step 1: get a good guess on the curve, evaluate equally spaced points 
-  //!         on the curve and use the closest as our starting point for 
-  //!         Newton iteration.
-  
-  double cur = initial_guess(value, cd);
-  double last = 0.;
-  
-  //! Now closest has our initialization param for Newton iteration.
-  //! Step 2: Newton iteration.
-  
-  while (fabs(cur - last) > 0.00001) {
-    last = cur;
-    cur = next_guess(cur, value, cd);
-  }
-  coords.clear();
-  coords.push_back(cur);
-}
 
 const int QUADBICUBICHMT_VERSION = 1;
 template <class T>

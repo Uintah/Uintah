@@ -110,23 +110,25 @@ public:
       +(3 - 2*y)*y2*sdx2
       +(-1 + y)*y2*sdxy2;
 
-      derivs[0]=6*(-1 + y)*y*cd.node0()
-	+6*x*(-1 + y)*y*sdx0
-	+(1 - 3*x2 + 2*x3 - 4*y + 3*y2)*sdy0
-	+x*(1 - 2*x + x2 - 4*y + 3*y2)*sdxy0
-	+(3 - 2*x)*x2*sdy1
-	+(-1 + x)*x2*sdxy1
-	-6*(-1 + y)*y*cd.node2()
-	-6*x*(-1 + y)*y*sdx2
-	+y*(-2 + 3*y)*sdy2 
-	+x*y*(-2 + 3*y)*sdxy2;
+    derivs[1]=6*(-1 + y)*y*cd.node0()
+      +6*x*(-1 + y)*y*sdx0
+      +(1 - 3*x2 + 2*x3 - 4*y + 3*y2)*sdy0
+      +x*(1 - 2*x + x2 - 4*y + 3*y2)*sdxy0
+      +(3 - 2*x)*x2*sdy1
+      +(-1 + x)*x2*sdxy1
+      -6*(-1 + y)*y*cd.node2()
+      -6*x*(-1 + y)*y*sdx2
+      +y*(-2 + 3*y)*sdy2 
+      +x*y*(-2 + 3*y)*sdxy2;
   }
   
   //! return the parametric coordinates for value within the element.
   //! iterative solution...
   template <class ElemData>
   void get_coords(vector<double> &coords, const T& value, 
-		  const ElemData &cd) const;  
+		  const ElemData &cd) const  
+    {
+    }
 
   //! add derivative values (dx, dy, dxy) for nodes.
   void add_derivatives(const vector<T> &p) { derivs_.push_back(p); }
@@ -181,14 +183,6 @@ TriCubicHmt<T>::type_name(int n)
   }
 }
 
-
-template <class T>
-template <class ElemData>
-void 
-TriCubicHmt<T>::get_coords(vector<double> &coords, const T& value, 
-			   const ElemData &cd) const
-{
-}
 
 const int TRICUBICHMTSCALEFACTORS_VERSION = 1;
 template <class T>

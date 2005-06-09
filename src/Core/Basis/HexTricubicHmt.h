@@ -338,11 +338,14 @@ public:
   
 
   //! return the parametric coordinates for value within the element.
-  //! iterative solution...
   template <class CellData>
   void get_coords(vector<double> &coords, const T& value, 
-		  const CellData &cd) const;  
-
+		  const CellData &cd) const  
+      {
+	HexLocate< HexTricubicHmt<T> > CL;
+	CL.get_coords(this, coords, value, cd);
+      };
+    
   //! add derivative values (dx, dy, dz, dxy, dyz, dzx, dxyz) for nodes.
   void add_derivatives(const vector<T> &p) { derivs_.push_back(p); }
 
@@ -399,15 +402,6 @@ get_type_description(HexTricubicHmt<T> *)
 				"SCIRun");
   }
   return td;
-}
-
-template <class T>
-template <class CellData>
-void 
-HexTricubicHmt<T>::get_coords(vector<double> &coords, const T& value, 
-			      const CellData &cd) const
-{
-  ASSERTFAIL("HexTricubicHmt<T>::get_coords not implemented");
 }
 
 const int HEXTRICUBICHMT_VERSION = 1;

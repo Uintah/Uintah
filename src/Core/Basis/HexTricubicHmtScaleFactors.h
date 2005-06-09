@@ -430,7 +430,7 @@ public:
       +x12*x*(-1 + y)*y2*(1 - 4*z + 3*z2)*sdxyz3
       -6*x12*(1 + 2*x)*y12*(1 + 2*y)*(-1 + z)*z*cd.node4()
       -6*x12*x*y12*(1 + 2*y)*(-1 + z)*z*sdx4
-      -6*x12*(1 + 2*x)*y12*y*(-1 + z)*z*sdy4]
+      -6*x12*(1 + 2*x)*y12*y*(-1 + z)*z*sdy4
       +x12*(1 + 2*x)*y12*(1 + 2*y)*z*(-2 + 3*z)*sdz4
       -6*x12*x*y12*y*(-1 + z)*z*sdxy4
       +x12*(1 + 2*x)*y12*y*z*(-2 + 3*z)*sdyz4
@@ -466,32 +466,25 @@ public:
   //! iterative solution...
   template <class CellData>
   void get_coords(vector<double> &coords, const T& value, 
-		  const CellData &cd) const;  
+		  const CellData &cd) const  
+      {
+	HexLocate< HexTricubicHmtScaleFactors<T> > CL;
+	CL.get_coords(this, coords, value, cd);
+      };
 
   //! add derivative values (dx, dy, dz, dxy, dyz, dzx, dxyz) for nodes.
   void add_derivatives(const vector<T> &p) { derivs_.push_back(p); }
 
   //! add scale factors (sdx, sdy, sdz) for nodes.
-  void add_scalefactors(const vector<T> &p) { scalefactors_.push_back(p); }
+  void add_scalefactors(const vector<double> &p) { scalefactors_.push_back(p); }
 
   static  const string type_name(int n = -1);
   virtual void io (Piostream& str);
 
 protected:
-  //! Find a reasonably close starting set of parametric coordinates, 
-  //! to val.
-  template <class CellData>
-  void initial_guess(vector<double> &coords, const T &val, 
-		     const CellData &cd) const;
-
-  //! next_guess is the next Newton iteration step.
-  template <class CellData>
-  void next_guess(vector<double> &coords, const T &val, 
-		  const CellData &cd) const;
-
   //! support data
   vector<vector<T> >          derivs_; 
-  vector<vector<T> >          scalefactors_; 
+  vector<vector<double> >          scalefactors_; 
 };
 
 template <class T>
@@ -529,99 +522,6 @@ get_type_description(HexTricubicHmtScaleFactors<T> *)
   return td;
 }
 
-
-template <class T>
-template <class CellData>
-void
-HexTricubicHmtScaleFactors<T>::initial_guess(vector<double> &guess, const T &val, 
-				 const CellData &cd) const
-{
-  double dist = DBL_MAX;
-  guess[0] = 0.L;
-  guess[1] = 0.L;
-  guess[2] = 0.L;
-  double cur_d;
-  const double incr = .2500001L;
-
-  vector<double> cur(3, 0.L);
-  for (double k = 0.L; k < 1.0L; k += incr) {
-    cur[2] = k;
-    for (double j = 0.L; j < 1.0L; j += incr) {
-      cur[1] = j;
-      for (double i = 0.L; i < 1.0L; i += incr) {
-	cur[0] = i;
-	T cur_val = interpolate(cur, cd);
-	cur_d = distance(val, cur_val);
-	if (cur_d < dist) {
-	  dist = cur_d;
-	  guess[0] = cur[0];
-	  guess[1] = cur[1];
-	  guess[2] = cur[2];
-	  cerr << "new closest at: " << i << ", " << j << ", " << k 
-	       << " interped: " << cur_val << endl;
-	  cerr << guess[0] << " " << guess[1] << " " << guess[2] << endl;
-	}
-      }
-    }
-  }
-}
-
-
-
-
-template <class T>
-template <class CellData>
-void
-HexTricubicHmtScaleFactors<T>::next_guess(vector<double> &coords, const T &val, 
-			      const CellData &cd) const 
-{
-  T dxi1        = partial_derivate_xi1(coords, cd); 
-  T dxi2        = partial_derivate_xi2(coords, cd); 
-  T dxi3        = partial_derivate_xi3(coords, cd); 
-  T d2xi1xi2    = partial_d2_xi1xi2(coords, cd);
-  T d2xi1xi3    = partial_d2_xi1xi3(coords, cd);
-  T d2xi2xi3    = partial_d2_xi2xi3(coords, cd);
-  T d2xi1xi1    = partial_d2_xi1xi1(coords, cd);
-  T d2xi2xi2    = partial_d2_xi2xi2(coords, cd);
-  T d2xi3xi3    = partial_d2_xi3xi3(coords, cd);
-  
-  T r = (interpolate(coords, cd) - val).asPoint();
-
-  tri_calc_next_guess<T>(coords, r, dxi1, dxi2, dxi3, d2xi1xi2, d2xi1xi3, 
-			 d2xi2xi3, d2xi1xi1, d2xi2xi2, d2xi3xi3);
-}
-
-
-template <class T>
-template <class CellData>
-void 
-HexTricubicHmtScaleFactors<T>::get_coords(vector<double> &coords, const T& value, 
-			      const CellData &cd) const
-{
-  ASSERTFAIL("HexTricubicHmtScaleFactors<T>::get_coords not implemented");
-//   //! Step 1: get a good guess on the curve, evaluate equally spaced points 
-//   //!         on the curve and use the closest as our starting point for 
-//   //!         Newton iteration.
-//   coords.resize(3);
-//   coords.clear();
-//   initial_guess(coords, value, cd);
-//   Vector cur;
-//   cur.x(coords[0]);
-//   cur.y(coords[1]);
-//   cur.z(coords[2]);
-//   Vector last;
-  
-//   //! Now closest has our initialization param for Newton iteration.
-//   //! Step 2: Newton iteration.
-  
-//   while ((cur - last).length() > 0.00001) {
-//     last = cur;
-//     next_guess(coords, value, cd);
-//     cur.x(coords[0]);
-//     cur.y(coords[1]);
-//     cur.z(coords[2]);
-//   }
-}
 
 const int HEXTRICUBICHMTSCALEFACTORS_VERSION = 1;
 template <class T>

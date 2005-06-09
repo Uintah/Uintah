@@ -150,8 +150,12 @@ public:
   //! iterative solution...
   template <class ElemData>
   void get_coords(vector<double> &coords, const T& value, 
-		  const ElemData &cd) const;  
-
+		  const ElemData &cd) const  
+      {
+	HexLocate< HexTriquadraticLgn<T> > CL;
+	CL.get_coords(this, coords, value, cd);
+      };
+    
   //! add a node value corresponding to edge
   void add_node_value(const T &p) { nodes_.push_back(p); }
  
@@ -204,13 +208,6 @@ HexTriquadraticLgn<T>::type_name(int n)
   }
 }
 
-template <class T>
-template <class ElemData>
-void 
-HexTriquadraticLgn<T>::get_coords(vector<double> &coords, const T& value, 
-			       const ElemData &cd) const
-{
-}
 
 const int HEXTRIQUADRATICLGN_VERSION = 1;
 template <class T>
