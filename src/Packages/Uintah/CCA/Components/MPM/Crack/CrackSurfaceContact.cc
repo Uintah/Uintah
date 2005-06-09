@@ -129,23 +129,19 @@ void Crack::AdjustCrackContactInterpolated(const ProcessorGroup*,
         norm=GCrackNorm[m][c];
         if(norm.length()<1.e-16) continue;  // should not happen now, but ...
 
+	// Get nodal solutions
         ma=gmass[m][c];
         va=gvelocity[m][c];
         mb=Gmass[m][c];
         vb=Gvelocity[m][c];
         vc=(va*ma+vb*mb)/(ma+mb);
 	
-	// Check if contact
-        short contact=YES;
-	if(Dot((vb-va),norm) <= 0.) { // Moving apart, no contact 
-  	  contact=NO;
-	}  
-	else { // Approaching, check displacements 
-          Vector ua=gdisplacement[m][c];
-          Vector ub=Gdisplacement[m][c];
-          if(Dot((ub-ua),norm) <= 0. ) contact=NO;
-        }
-	
+        // Check if contact	
+	short contact=NO;
+	Vector ua=gdisplacement[m][c];
+	Vector ub=Gdisplacement[m][c];
+	if(Dot((ub-ua),norm)>0.) contact=YES;  
+	  
 	// If contact, adjust velocity field 
         if(!contact) { // No contact
           gvelocity[m][c]=gvelocity[m][c];
@@ -229,6 +225,7 @@ void Crack::addComputesAndRequiresAdjustCrackContactIntegrated(Task* t,
   t->requires(Task::NewDW, lb->gVolumeLabel,        Ghost::None);
   t->requires(Task::NewDW, lb->gNumPatlsLabel,      Ghost::None);
   t->requires(Task::NewDW, lb->gDisplacementLabel,  Ghost::None);
+  t->requires(Task::NewDW, lb->gVelocityLabel,      Ghost::None); 
   t->modifies(             lb->gVelocityStarLabel,  mss);
   t->modifies(             lb->gAccelerationLabel,  mss);
 
@@ -237,6 +234,7 @@ void Crack::addComputesAndRequiresAdjustCrackContactIntegrated(Task* t,
   t->requires(Task::NewDW, lb->GNumPatlsLabel,      Ghost::None);
   t->requires(Task::NewDW, lb->GCrackNormLabel,     Ghost::None);
   t->requires(Task::NewDW, lb->GDisplacementLabel,  Ghost::None);
+  t->requires(Task::NewDW, lb->gVelocityLabel,      Ghost::None); 
   t->modifies(             lb->GVelocityStarLabel,  mss);
   t->modifies(             lb->GAccelerationLabel,  mss);
   t->modifies(             lb->frictionalWorkLabel, mss);
@@ -254,7 +252,7 @@ void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
 	      
     double mua=0.0,mub=0.0;
     double ma,mb,dvan,dvbn,dvat,dvbt,ratioa,ratiob;
-    Vector aa,ab,va,vb,vc,dva,dvb,ta,tb,na,nb,norm;
+    Vector aa,ab,va0,va,vb0,vb,vc,dva,dvb,ta,tb,na,nb,norm;
 
     int numMatls = d_sharedState->getNumMPMMatls();
     ASSERTEQ(numMatls, matls->size());
@@ -264,6 +262,7 @@ void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
     StaticArray<constNCVariable<double> > gvolume(numMatls);
     StaticArray<constNCVariable<int> >    gNumPatls(numMatls);
     StaticArray<constNCVariable<Vector> > gdisplacement(numMatls);
+    StaticArray<constNCVariable<Vector> > gvelocity(numMatls); 
     StaticArray<NCVariable<Vector> >      gvelocity_star(numMatls);
     StaticArray<NCVariable<Vector> >      gacceleration(numMatls);
     // Nodal solutions below crack
@@ -272,6 +271,7 @@ void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
     StaticArray<constNCVariable<int> >    GNumPatls(numMatls);
     StaticArray<constNCVariable<Vector> > GCrackNorm(numMatls);
     StaticArray<constNCVariable<Vector> > Gdisplacement(numMatls);
+    StaticArray<constNCVariable<Vector> > Gvelocity(numMatls); 
     StaticArray<NCVariable<Vector> >      Gvelocity_star(numMatls);
     StaticArray<NCVariable<Vector> >      Gacceleration(numMatls);
     // Friction work
@@ -286,7 +286,8 @@ void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
       new_dw->get(gvolume[m],   lb->gVolumeLabel,   dwi, patch, gnone, 0);
       new_dw->get(gNumPatls[m], lb->gNumPatlsLabel, dwi, patch, gnone, 0);
       new_dw->get(gdisplacement[m],lb->gDisplacementLabel,dwi,patch,gnone,0);
-
+      new_dw->get(gvelocity[m], lb->gVelocityLabel, dwi, patch, gnone, 0); 
+      
       new_dw->getModifiable(gvelocity_star[m], lb->gVelocityStarLabel,
                                                          dwi, patch);
       new_dw->getModifiable(gacceleration[m],lb->gAccelerationLabel,
@@ -297,7 +298,8 @@ void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
       new_dw->get(GNumPatls[m], lb->GNumPatlsLabel, dwi, patch, gnone, 0);
       new_dw->get(GCrackNorm[m],lb->GCrackNormLabel,dwi, patch, gnone, 0);
       new_dw->get(Gdisplacement[m],lb->GDisplacementLabel,dwi,patch,gnone,0);
-
+      new_dw->get(Gvelocity[m], lb->GVelocityLabel, dwi, patch, gnone, 0); 
+      
       new_dw->getModifiable(Gvelocity_star[m], lb->GVelocityStarLabel,
                                                          dwi, patch);
       new_dw->getModifiable(Gacceleration[m],lb->GAccelerationLabel,
@@ -318,27 +320,23 @@ void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
         norm=GCrackNorm[m][c];
         if(norm.length()<1.e-16) continue;   // should not happen now, but ...
 
-        ma=gmass[m][c];
-        va=gvelocity_star[m][c];
-        aa=gacceleration[m][c];
-        mb=Gmass[m][c];
-        vb=Gvelocity_star[m][c];
-        ab=Gacceleration[m][c];
-        vc=(va*ma+vb*mb)/(ma+mb);
-	
+	// Get nodal solutions
+        ma=gmass[m][c];           // mass above crack
+        mb=Gmass[m][c];           // mass below crack
+        aa=gacceleration[m][c];   // acceleration above crack
+        ab=Gacceleration[m][c];	  // acceleration below crack
+        va0=gvelocity[m][c];      // velocity before integration (above crack)
+        vb0=Gvelocity[m][c];      // velocity before integration (below crack)
+        va=gvelocity_star[m][c];  // velocity after integration  (above crack)
+        vb=Gvelocity_star[m][c];  // velocity after integration  (below crack)
+        vc=(va*ma+vb*mb)/(ma+mb); // center-of-mass velocity
+			
 	// Check if contact
-        short contact=YES;
-        if(Dot((vb-va),norm) <= 0.) { // Moving apart, no contact
-	  contact=NO;
-	}
-	else { // Approaching, check displacements
-          Vector ua=gdisplacement[m][c];
-                    //+delT*gvelocity_star[m][c];
-          Vector ub=Gdisplacement[m][c];
-                    //+delT*Gvelocity_star[m][c];
-          if(Dot((ub-ua),norm) <= 0.) contact=NO;
-        }
-	
+	short contact=NO;
+	Vector ua=gdisplacement[m][c]+delT*(va0+va)/2.;
+	Vector ub=Gdisplacement[m][c]+delT*(vb0+vb)/2.;
+	if(Dot((ub-ua),norm)>0.) contact=YES;	
+	  
 	// If contact, adjust velocity field  
         if(!contact) { // No contact
           gvelocity_star[m][c]=gvelocity_star[m][c];
