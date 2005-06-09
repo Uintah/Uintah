@@ -94,7 +94,9 @@ public:
   //! iterative solution...
   template <class ElemData>
   void get_coords(vector<double> &coords, const T& value, 
-		  const ElemData &cd) const;  
+		  const ElemData &cd) const
+    {
+    }  
 
   //! add a node value corresponding to edge
   void add_node(const T &p) { nodes_.push_back(p); }
@@ -148,31 +150,6 @@ QuadBiquadraticLgn<T>::type_name(int n)
   }
 }
 
-
-template <class T>
-template <class ElemData>
-void 
-QuadBiquadraticLgn<T>::get_coords(vector<double> &coords, const T& value, 
-				const ElemData &cd) const
-{
-
-  //! Step 1: get a good guess on the curve, evaluate equally spaced points 
-  //!         on the curve and use the closest as our starting point for 
-  //!         Newton iteration.
-  
-  double cur = initial_guess(value, cd);
-  double last = 0.;
-  
-  //! Now closest has our initialization param for Newton iteration.
-  //! Step 2: Newton iteration.
-  
-  while (fabs(cur - last) > 0.00001) {
-    last = cur;
-    cur = next_guess(cur, value, cd);
-  }
-  coords.clear();
-  coords.push_back(cur);
-}
 
 const int QUADBIQUADRATICLGN_VERSION = 1;
 template <class T>

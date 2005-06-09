@@ -34,7 +34,6 @@
 
 #include <vector>
 #include <string>
-#include <Core/Basis/LinearLagrangian.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Datatypes/Datatype.h>

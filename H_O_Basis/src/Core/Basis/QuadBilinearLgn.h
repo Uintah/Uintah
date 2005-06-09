@@ -34,7 +34,6 @@
 
 #include <vector>
 #include <string>
-#include <Core/Basis/LinearLagrangian.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Datatypes/Datatype.h>
@@ -147,10 +146,11 @@ public:
   }  
 
   //! return the parametric coordinates for value within the element.
-  //! iterative solution...
   template <class ElemData>
   void get_coords(vector<double> &coords, const T& value, 
-		  const ElemData &cd) const;  
+		  const ElemData &cd) const
+    {
+    }  
 
   static  const string type_name(int n = -1);
   virtual void io (Piostream& str);
@@ -191,30 +191,6 @@ QuadBilinearLgn<T>::type_name(int n)
 }
 
 
-template <class T>
-template <class ElemData>
-void 
-QuadBilinearLgn<T>::get_coords(vector<double> &coords, const T& value, 
-			       const ElemData &cd) const
-{
-
-  //! Step 1: get a good guess on the curve, evaluate equally spaced points 
-  //!         on the curve and use the closest as our starting point for 
-  //!         Newton iteration.
-  
-  double cur = initial_guess(value, cd);
-  double last = 0.;
-  
-  //! Now closest has our initialization param for Newton iteration.
-  //! Step 2: Newton iteration.
-  
-  while (fabs(cur - last) > 0.00001) {
-    last = cur;
-    cur = next_guess(cur, value, cd);
-  }
-  coords.clear();
-  coords.push_back(cur);
-}
 
 const int QUADBILINEARLGN_VERSION = 1;
 template <class T>

@@ -34,7 +34,6 @@
 
 #include <vector>
 #include <string>
-#include <Core/Basis/LinearLagrangian.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Geometry/Transform.h>
@@ -42,175 +41,212 @@
 
 namespace SCIRun {
 
-using std::vector;
-using std::string;
+  using std::vector;
+  using std::string;
 
-class CrvApprox {
-public:
-  static double UnitVertices[1][2];
-  static int UnitEdges[1][2];
+  class CrvApprox {
+  public:
+    static double UnitVertices[1][2];
+    static int UnitEdges[1][2];
 
-  CrvApprox() {}
-  virtual ~CrvApprox() {}
+    CrvApprox() {}
+    virtual ~CrvApprox() {}
   
-  //! Approximate edge for element by piecewise linear segments
-  //! return: coords is vector of the parametric coordinates at the 
-  //!         approximation point. Use interpolate to get the values.
-  virtual void approx_edge(const unsigned /* edge */, 
-			   const unsigned div_per_unit, 
-			   vector<vector<double> > &coords) const
-  {
-    coords.resize(div_per_unit + 1);
-    for(unsigned i = 0; i <= div_per_unit; i++) {
-      vector<double> &tmp = coords[i];
-      tmp.resize(1);
-      tmp[0] = (double)div_per_unit / (double)i;
+    //! Approximate edge for element by piecewise linear segments
+    //! return: coords is vector of the parametric coordinates at the 
+    //!         approximation point. Use interpolate to get the values.
+    virtual void approx_edge(const unsigned /* edge */, 
+			     const unsigned div_per_unit, 
+			     vector<vector<double> > &coords) const
+    {
+      coords.resize(div_per_unit + 1);
+      for(unsigned i = 0; i <= div_per_unit; i++) {
+	vector<double> &tmp = coords[i];
+	tmp.resize(1);
+	tmp[0] = (double)div_per_unit / (double)i;
+      }
     }
-  }
   
-  virtual int get_approx_face_elements() const { return 0; }
+    virtual int get_approx_face_elements() const { return 0; }
   
-  virtual void approx_face(const unsigned /* face */, 
-			   const unsigned /* div_per_unit */, 
-			   vector<vector<double> > & /* coords */) const
-  {}
-};
+    virtual void approx_face(const unsigned /* face */, 
+			     const unsigned /* div_per_unit */, 
+			     vector<vector<double> > & /* coords */) const
+    {}
+  };
  
 
-//! Curve topology
-template <class T>
-class CrvLinearLgn : public CrvApprox
-{
-public:
-  typedef T value_type;
+  template <class CrvBasis>
+    class CrvLocate {
+  public:
 
-  static int    GaussianNum;
-  static double GaussianPoints[1][1];
-  static double GaussianWeights[1];
+    typedef typename CrvBasis::value_type T;
 
-  int polynomial_order() const { return 1; }
+    CrvLocate() {}
+    virtual ~CrvLocate() {}
+ 
+    //! iterative solution...
+    template <class CellData>
+      void get_coords(CrvBasis *pCrv, vector<double> &coords, const T& value, 
+			      const CellData &cd) const  
+      {     
+	//! Step 1: get a good guess on the domain, evaluate equally spaced points 
+	//!         on the domain and use the closest as our starting point for 
+	//!         Newton iteration.
+      
+	vector<double>  cur, last;
+	initial_guess(pCrv, value, cd, cur);
+     
+	//! Now cur has our initialization param for Newton iteration.
+	//! Step 2: Newton iteration.
+	//! f(u) =C'(u) dot (C(u) - P)
+	//! the distance from P to C(u) is minimum when f(u) = 0     
+	do {
+	  last = cur;
+	  T dif = pCrv->interpolate(cur, cd)-value; 
+	  T grad = pCrv->derivate(cur, cd);
+	  cur+=dif/grad;
+	} while (sqrt((last-cur)*(last-cur)) > 0.00001);
+	coords.clear();
+	coords.push_back(cur);
+      };
+ 
+ protected:
+    //! find a reasonable initial guess for starting Newton iteration.
+    template <class CellData>
+      void initial_guess(CrvBasis *pCrv, const T &val, const CellData &cd, vector<double> cur) const
+      {
+	double dist = HUGE;
+	
+	int end = 4;
+	vector<double> guess(1,0.L);
+	for (int x = 0; x <= end; x++) {
+	  guess[0] = x / (double) end;
+	  T dv = pCrv->interpolate(guess, cd)-val;
+	  T cur_d = sqrt(dv*dv);
+	  if (cur_d < dist) {
+	    dist = cur_d;
+	    cur = guess;
+	  }
+	}
+      }
+  };
 
-  CrvLinearLgn() : CrvApprox() {}
-  virtual ~CrvLinearLgn() {}
+
+  //! Curve topology
+  template <class T>
+    class CrvLinearLgn : public CrvApprox
+  {
+  public:
+    typedef T value_type;
+
+    static int    GaussianNum;
+    static double GaussianPoints[1][1];
+    static double GaussianWeights[1];
+
+    int polynomial_order() const { return 1; }
+
+    CrvLinearLgn() : CrvApprox() {}
+      virtual ~CrvLinearLgn() {}
   
-  virtual void approx_edge(const unsigned /* edge */, 
-			   const unsigned /*div_per_unit*/,
-			   vector<vector<double> > &coords) const
-  {
-    coords.resize(2);
-    vector<double> &tmp = coords[0];
-    tmp.resize(1);
-    tmp[0] = 0.0;
-    tmp = coords[1];
-    tmp.resize(1);
-    tmp[0] = 1.0;
-  }
+      virtual void approx_edge(const unsigned /* edge */, 
+			       const unsigned /*div_per_unit*/,
+			       vector<vector<double> > &coords) const
+      {
+	coords.resize(2);
+	vector<double> &tmp = coords[0];
+	tmp.resize(1);
+	tmp[0] = 0.0;
+	tmp = coords[1];
+	tmp.resize(1);
+	tmp[0] = 1.0;
+      }
 
-  // Value at coord
-  template <class ElemData>
-  T interpolate(const vector<double> &coords, const ElemData &cd) const
-  {
-    const double x=coords[0];  
-    return (T)((1-x)*cd.node0()+x*cd.node1());
-  }
+      // Value at coord
+      template <class CellData>
+	T interpolate(const vector<double> &coords, const CellData &cd) const
+	{
+	  const double x=coords[0];  
+	  return (T)((1-x)*cd.node0()+x*cd.node1());
+	}
     
-  //! First derivative at coord.
-  template <class ElemData>
-  void derivate(const vector<double> &coords, const ElemData &cd, 
-		vector<double> &derivs) const
-  {
-    derivs.size(1);
+      //! First derivative at coord.
+      template <class CellData>
+	void derivate(const vector<double> &coords, const CellData &cd, 
+		      vector<double> &derivs) const
+	{
+	  derivs.size(1);
 
-    derivs[0] = -cd.node0() + cd.node1();
-  }
+	  derivs[0] = -cd.node0() + cd.node1();
+	}
 
-  //! return the parametric coordinates for value within the element.
-  //! iterative solution...
-  template <class ElemData>
-  void get_coords(vector<double> &coords, const T& value, 
-		  const ElemData &cd) const;  
-
-  static  const string type_name(int n = -1);
-
-  virtual void io (Piostream& str);
-protected:
-  //! next_guess is the next Newton iteration step.
-  template <class ElemData>
-  double next_guess(double xi, const T &val, const ElemData &cd) const;
-
-  //! find a reasonable initial guess for starting Newton iteration.
-  template <class ElemData>
-  double initial_guess(const T &val, const ElemData &cd) const;
-};
-
-template <class T>
-const TypeDescription* get_type_description(CrvLinearLgn<T> *)
-{
-  static TypeDescription* td = 0;
-  if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
-    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
-    (*subs)[0] = sub;
-    td = scinew TypeDescription(CrvLinearLgn<T>::type_name(0), subs, 
-				string(__FILE__),
-				"SCIRun");
-  }
-  return td;
-}
-
-template <class T>
-const string
-CrvLinearLgn<T>::type_name(int n)
-{
-  ASSERT((n >= -1) && n <= 1);
-  if (n == -1)
-  {
-    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
-    return name;
-  }
-  else if (n == 0)
-  {
-    static const string nm("CrvLinearLgn");
-    return nm;
-  } else {
-    return find_type_name((T *)0);
-  }
-}
-
-const int CRVLINEARLGN_VERSION = 1;
-template <class T>
-void
-CrvLinearLgn<T>::io(Piostream &stream)
-{
-  stream.begin_class(type_name(-1), CRVLINEARLGN_VERSION);
-  stream.end_class();
-}
-
-template <>
-template <class ElemData>
-void 
-CrvLinearLgn<Point>::get_coords(vector<double> &coords, const Point& value, 
-				const ElemData &cd) const;
-
-template <class T>
-template <class ElemData>
-void 
-CrvLinearLgn<T>::get_coords(vector<double> &coords, const T& value, 
-			    const ElemData &cd) const
-{
-  double denominator = cd.node1() - cd.node0();
-  double numerator   = value - cd.node0();
-  coords[0] = numerator / denominator;
-}
+      //! return the parametric coordinates for value within the element.
+      template <class CellData>
+	void get_coords(vector<double> &coords, const T& value, 
+			const CellData &cd) const  
+	{
+	  double denominator = cd.node1() - cd.node0();
+	  double numerator   = value - cd.node0();
+	  coords[0] = numerator / denominator;
+	}
  
-template <class T>
-int CrvLinearLgn<T>::GaussianNum = 1;
+      static  const string type_name(int n = -1);
 
-template <class T>
-double CrvLinearLgn<T>::GaussianPoints[1][1] = {{0.5}};
+      virtual void io (Piostream& str);
+  protected:
+  };
 
-template <class T>
-double CrvLinearLgn<T>::GaussianWeights[1] = {1.};
+  template <class T>
+    const TypeDescription* get_type_description(CrvLinearLgn<T> *)
+    {
+      static TypeDescription* td = 0;
+      if(!td){
+	const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+	TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+	(*subs)[0] = sub;
+	td = scinew TypeDescription(CrvLinearLgn<T>::type_name(0), subs, 
+				    string(__FILE__),
+				    "SCIRun");
+      }
+      return td;
+    }
+
+  template <class T>
+    const string
+    CrvLinearLgn<T>::type_name(int n)
+    {
+      ASSERT((n >= -1) && n <= 1);
+      if (n == -1)
+	{
+	  static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+	  return name;
+	}
+      else if (n == 0)
+	{
+	  static const string nm("CrvLinearLgn");
+	  return nm;
+	} else {
+	return find_type_name((T *)0);
+      }
+    }
+
+  const int CRVLINEARLGN_VERSION = 1;
+  template <class T>
+    void
+    CrvLinearLgn<T>::io(Piostream &stream)
+    {
+      stream.begin_class(type_name(-1), CRVLINEARLGN_VERSION);
+      stream.end_class();
+    }
+
+  template <class T>
+    int CrvLinearLgn<T>::GaussianNum = 1;
+
+  template <class T>
+    double CrvLinearLgn<T>::GaussianPoints[1][1] = {{0.5}};
+
+  template <class T>
+    double CrvLinearLgn<T>::GaussianWeights[1] = {1.};
 
 } //namespace SCIRun
 

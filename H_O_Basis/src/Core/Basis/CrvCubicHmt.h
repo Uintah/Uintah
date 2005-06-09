@@ -37,7 +37,7 @@
 namespace SCIRun {
 
 template <class T>
-class CrvCubicHmt : public CrvApprox<T>
+  class CrvCubicHmt : public CrvApprox
 {
 public:
   typedef T value_type;
@@ -73,27 +73,22 @@ public:
       +x*(-2 + 3*x) * derivs_[cd.node1_index()];
   }
   
-  //! return the parametric coordinates for value within the element.
-  //! iterative solution...
-  template <class CellData>
-  void get_coords(vector<double> &coords, const T& value, 
-		  const CellData &cd) const;  
-
   //! add a derivative value (dx) for nodes
   void add_derivative(const T &p) { derivs_.push_back(p); }
 
   static  const string type_name(int n = -1);
 
+  //! return the parametric coordinates for value within the element.
+    template <class CellData>
+      void get_coords(vector<double> &coords, const T& value, 
+		      const CellData &cd) const  
+      {
+	CrvLocate< CrvCubicHmt<T> > CL;
+	CL.get_coords(this, coords, value, cd);
+      };
+     
   virtual void io (Piostream& str);
 protected:
-  //! next_guess is the next Newton iteration step.
-  template <class CellData>
-  double next_guess(double xi, const T &val, const CellData &cd) const;
-
-  //! find a reasonable initial guess for starting Newton iteration.
-  template <class CellData>
-  double initial_guess(const T &val, const CellData &cd) const;
-
   //! Additional support values.
 
   //! Cubic Hermitian only needs additonal derivatives stored at each node
@@ -169,93 +164,7 @@ CrvCubicHmt<T>::io(Piostream &stream)
   Pio(stream, derivs_);
   stream.end_class();
 }
-
-
-template <class T>
-double calc_next_guess(const double xi, const T &val,
-		       const T &interp, const T &deriv, const T &deriv2);
-
-//! f(u) =C'(u) dot (C(u) - P)
-//! the distance from P to C(u) is minimum when f(u) = 0
-template <>
-double calc_next_guess<Point>(const double xi, const Point &val,
-			      const Point &interp, const Point &deriv, 
-			      const Point &deriv2);
-  
-template <class T>
-double 
-calc_next_guess(const double xi, const T &val,
-		const T &interp, const T &deriv, const T &deriv2) 
-{
-  T num = val - interpolate(xi, cd); 
-  T den = derivate(xi, cd);
-  return num / den + xi;
-}
-
-
-template <class T>
-template <class CellData>
-double 
-CrvCubicHmt<T>::next_guess(double coord, const T &val, 
-			   const CellData &cd) const 
-{
-  vector<double> xi(1, coord);
-  return calc_next_guess(xi[0], val, interpolate(xi, cd), 
-			 derivate(xi, cd), derivate2(xi, cd));
-}
-
-template <class T>
-template <class CellData>
-double 
-CrvCubicHmt<T>::initial_guess(const T &val, const CellData &cd) const
-{
-  double dist = distance(val, cd.node0());
-  double guess = 0.;
-  double cur_d = distance(val, cd.node1());
-  if (cur_d < dist) {
-    dist = cur_d;
-    guess = 1.;
-  }
-  int end = 4;
-  vector<double> cur(1,0.L);
-  for (int g = 1; g < end; g++) {
-    cur[0] = g*(1. / end);
-    T cur_val = interpolate(cur, cd);
-    cur_d = distance(val, cur_val);
-    if (cur_d < dist) {
-      dist = cur_d;
-      guess = cur[0];
-    }
-  }
-  return guess;
-}
-
-template <class T>
-template <class CellData>
-void 
-CrvCubicHmt<T>::get_coords(vector<double> &coords, const T& value, 
-			   const CellData &cd) const
-{
-
-  //! Step 1: get a good guess on the curve, evaluate equally spaced points 
-  //!         on the curve and use the closest as our starting point for 
-  //!         Newton iteration.
-  
-  double cur = initial_guess(value, cd);
-  double last = 0.;
-  
-  //! Now closest has our initialization param for Newton iteration.
-  //! Step 2: Newton iteration.
-  
-  while (fabs(cur - last) > 0.00001) {
-    last = cur;
-    cur = next_guess(cur, value, cd);
-  }
-  coords.clear();
-  coords.push_back(cur);
-}
  
-
 } //namespace SCIRun
 
 #endif // CrvCubicHmt_h
