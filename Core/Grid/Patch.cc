@@ -387,9 +387,9 @@ Patch::setBCType(Patch::FaceType face, BCType newbc)
 }
 
 void
-Patch::printPatchBCs() const
+Patch::printPatchBCs(ostream& out) const
 {
-   cout << " BC types: x- " << getBCType(xminus) << ", x+ "<<getBCType(xplus)
+   out << " BC types: x- " << getBCType(xminus) << ", x+ "<<getBCType(xplus)
                  << ", y- "<< getBCType(yminus) << ", y+ "<< getBCType(yplus)
                  << ", z- "<< getBCType(zminus) << ", z+ "<< getBCType(zplus)<< endl;
 }
