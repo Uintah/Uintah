@@ -517,7 +517,6 @@ HypoElastic::ConvertJToK(const MPMMaterial* matl,const Vector& J,
     KII = 0.;
   }
   else {
-    if(J1<0.) cout << "Warning: J1=" << J1 << ", less than zero." << endl;	  
     KI =V1*sqrt(2.*G*B2*fabs(J1)/A1/COD2);
     KII=V2*sqrt(2.*G*B1*fabs(J1)/A2/COD2);
   }
