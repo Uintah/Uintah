@@ -29,14 +29,14 @@ if (setupGrid)
 
     %--------------- Level 1: global coarse grid -----------------
 
-    resolution          = [8 8];
+    resolution          = [4 4];
     [grid,k] = addGridLevel(grid,'meshsize',grid.domainSize./resolution);
     [grid,q1] = addGridPatch(grid,k,ones(1,grid.dim),resolution,-1);     % One global patch
 
     %--------------- Level 2: local fine grid around center of domain -----------------
 
     [grid,k] = addGridLevel(grid,'refineRatio',[2 2]);
-    [grid,q2] = addGridPatch(grid,k,[6 6],[13 13],q1);              % Local patch around the domain center
+    [grid,q2] = addGridPatch(grid,k,[3 3],[6 6],q1);              % Local patch around the domain center
 
     printGrid(grid);
 end
