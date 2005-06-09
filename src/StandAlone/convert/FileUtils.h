@@ -46,7 +46,7 @@ int getNumNonEmptyLines(char *fname) {
   int c;
   while ((c=fgetc(fin)) != EOF) {
     if (!isspace(c)) haveNonWhiteSpace=1;
-    else if (c=='\n' && haveNonWhiteSpace) {
+    else if ((c=='\n' || c=='\r') && haveNonWhiteSpace) {
       count++;
       haveNonWhiteSpace=0;
     }
