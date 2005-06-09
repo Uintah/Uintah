@@ -41,8 +41,8 @@
 // specify -oneBasedIndexing.  And the SCIRun output file is written in 
 // ASCII, unless you specify -binOutput.
 
-#include <Core/Basis/HexTricubicHmt.h>
-#include <Core/Basis/NoData.h>
+#include <Core/Basis/HexTricubicHmtScaleFactors.h>
+//#include <Core/Basis/NoData.h>
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/Pstreams.h>
@@ -57,8 +57,8 @@
 
 using namespace SCIRun;
 
-typedef HexVolMesh<HexTricubicHmt<Point> >    HVMesh;
-typedef NoDataBasis<double>                DatBasis;
+typedef HexVolMesh<HexTricubicHmtScaleFactors<Point> > HVMesh;
+typedef HexTricubicHmtScaleFactors<double> DatBasis;
 typedef GenericField<HVMesh, DatBasis, vector<double> > HVField;
 
 
@@ -73,6 +73,9 @@ int baseIndex;
 bool elementsCountHeader;
 bool binOutput;
 bool debugOn;
+char *scaleFactorsFileName;
+double scaleFactor;
+char *dataFileName;
 
 void setDefaults() {
   ptsCountHeader=true;
@@ -80,6 +83,9 @@ void setDefaults() {
   elementsCountHeader=true;
   binOutput=false;
   debugOn=false;
+  scaleFactorsFileName=NULL;
+  scaleFactor=1.;
+  dataFileName=NULL;
 }
 
 int parseArgs(int argc, char *argv[]) {
@@ -100,6 +106,15 @@ int parseArgs(int argc, char *argv[]) {
     } else if (!strcmp(argv[currArg], "-debug")) {
       debugOn=true;
       currArg++;
+    } else if (!strcmp(argv[currArg], "-dataFile")) {
+      dataFileName=argv[++currArg];
+      currArg++;
+    } else if (!strcmp(argv[currArg], "-scaleFactorsFile")) {
+      scaleFactorsFileName=argv[++currArg];
+      currArg++;
+    } else if (!strcmp(argv[currArg], "-scaleFactor")) {
+      scaleFactor=atof(argv[++currArg]);
+      currArg++;
     } else {
       cerr << "Error - unrecognized argument: "<<argv[currArg]<<"\n";
       return 0;
@@ -109,7 +124,7 @@ int parseArgs(int argc, char *argv[]) {
 }
 
 void printUsageInfo(char *progName) {
-  cerr << "\n Usage: "<<progName<<" pts hexes HexVolMesh [-noPtsCount] [-noElementsCount] [-oneBasedIndexing] [-binOutput] [-debug]\n\n";
+  cerr << "\n Usage: "<<progName<<" pts hexes HexVolMesh [-noPtsCount] [-noElementsCount] [-oneBasedIndexing] [-binOutput] [-debug] [-dataFile] [-scaleFactorFile] [-scaleFactor] \n\n";
   cerr << "\t This program will read in a .pts (specifying the x/y/z \n";
   cerr << "\t coords of each point, one per line, entries separated by \n";
   cerr << "\t white space, file can have an optional one line header \n";
@@ -136,6 +151,8 @@ main(int argc, char **argv) {
   setDefaults();
 
   HVMesh *hvm = new HVMesh();
+  HVField *hvf = scinew HVField(hvm);
+  
   char *ptsName = argv[1];
   char *hexesName = argv[2];
   char *fieldName = argv[3];
@@ -143,8 +160,7 @@ main(int argc, char **argv) {
     printUsageInfo(argv[0]);
     return 0;
   }
-  int npts = 0;
-  npts = getNumNonEmptyLines(ptsName) - 1;
+  int npts = getNumNonEmptyLines(ptsName) - 1;
   ifstream ptsstream(ptsName);
   cerr << "number of points = "<< npts << endl;
   
@@ -155,12 +171,11 @@ main(int argc, char **argv) {
     ptsstream >> s;
     header.push_back(s);
   }
-  vector<string>::iterator iter = header.begin();
-  while (iter != header.end()) {
-    cerr << *iter++ << endl;
-  }
+  //  vector<string>::iterator iter = header.begin();
+  //  while (iter != header.end()) {
+  //    cerr << *iter++ << endl;
+  //  }
   
-
   for (int i=0; i<npts; i++) {
     double x[3], xdx[3], xdy[3], xdxy[3], xdz[3], xdyz[3], xdxz[3], xdxyz[3];
     for (int j=0; j<3; j++) 
@@ -181,30 +196,29 @@ main(int argc, char **argv) {
     string label;
     int n;
     ptsstream >> label >> n;
-    const double sf = 12.0;
     hvm->add_point(Point(x[0],x[1],x[2]));
     vector<Point> arr(7);
-    arr[0].x(sf * xdx[0]);
-    arr[0].y(sf * xdx[1]);
-    arr[0].z(sf * xdx[2]);
-    arr[1].x(sf * xdy[0]);
-    arr[1].y(sf * xdy[1]);
-    arr[1].z(sf * xdy[2]);
-    arr[2].x(sf * xdz[0]);
-    arr[2].y(sf * xdz[1]);
-    arr[2].z(sf * xdz[2]);
-    arr[3].x(sf * xdxy[0]);
-    arr[3].y(sf * xdxy[1]);
-    arr[3].z(sf * xdxy[2]);
-    arr[4].x(sf * xdyz[0]);
-    arr[4].y(sf * xdyz[1]);
-    arr[4].z(sf * xdyz[2]);
-    arr[5].x(sf * xdxz[0]);
-    arr[5].y(sf * xdxz[1]);
-    arr[5].z(sf * xdxz[2]);
-    arr[6].x(sf * xdxyz[0]);
-    arr[6].y(sf * xdxyz[1]);
-    arr[6].z(sf * xdxyz[2]);
+    arr[0].x(xdx[0]);
+    arr[0].y(xdx[1]);
+    arr[0].z(xdx[2]);
+    arr[1].x(xdy[0]);
+    arr[1].y(xdy[1]);
+    arr[1].z(xdy[2]);
+    arr[2].x(xdz[0]);
+    arr[2].y(xdz[1]);
+    arr[2].z(xdz[2]);
+    arr[3].x(xdxy[0]);
+    arr[3].y(xdxy[1]);
+    arr[3].z(xdxy[2]);
+    arr[4].x(xdyz[0]);
+    arr[4].y(xdyz[1]);
+    arr[4].z(xdyz[2]);
+    arr[5].x(xdxz[0]);
+    arr[5].y(xdxz[1]);
+    arr[5].z(xdxz[2]);
+    arr[6].x(xdxyz[0]);
+    arr[6].y(xdxyz[1]);
+    arr[6].z(xdxyz[2]);
     hvm->get_basis().add_derivatives(arr);
 
     if (debugOn) 
@@ -214,8 +228,32 @@ main(int argc, char **argv) {
 
   cerr << "done adding points.\n";
 
-  int nhexes;
-  nhexes = getNumNonEmptyLines(hexesName) - 1;
+  if(scaleFactorsFileName) {
+    ifstream sfstream(scaleFactorsFileName);
+    vector<double> sf(3);
+    for (int i=0; i<npts; i++) {
+      sfstream >> sf[0] >> sf[1] >> sf[2];
+      sf[0]*=scaleFactor;
+      sf[1]*=scaleFactor;
+      sf[2]*=scaleFactor;
+      hvm->get_basis().add_scalefactors(sf);      
+      hvf->get_basis().add_scalefactors(sf);      
+    }
+  }
+  else {
+    vector<double> sf(3);
+    for (int i=0; i<npts; i++) {
+      sf[0]=scaleFactor;
+      sf[1]=scaleFactor;
+      sf[2]=scaleFactor;
+      hvm->get_basis().add_scalefactors(sf);
+      hvf->get_basis().add_scalefactors(sf);
+    }
+  }
+
+  cerr << "done adding scalefactor.\n";
+
+  int nhexes = getNumNonEmptyLines(hexesName) - 1;
   ifstream hexesstream(hexesName);
 
   cerr << "number of hexes = "<< nhexes <<"\n";
@@ -227,10 +265,10 @@ main(int argc, char **argv) {
     hexesstream >> s;
     eheader.push_back(s);
   }
-  iter = eheader.begin();
-  while (iter != eheader.end()) {
-    cerr << *iter++ << endl;
-  }
+  //  iter = eheader.begin();
+  //  while (iter != eheader.end()) {
+  //    cerr << *iter++ << endl;
+  //  }
 
   for (int i = 0; i < nhexes; i++) {
     int n1, n2, n3, n4, n5, n6, n7, n8;
@@ -284,15 +322,41 @@ main(int argc, char **argv) {
   }
   cerr << "done adding elements.\n";
 
-  HVField *hv = scinew HVField(hvm);
-  FieldHandle hvH(hv);
-  
+  if(dataFileName) {
+    ifstream datastream(dataFileName);
+    vector<double> sf(3);
+    vector<double> data_values;
+    for (int i=0; i<npts; i++) {
+      double x, xdx, xdy, xdxy, xdz, xdyz, xdxz, xdxyz;
+      datastream >> x >> xdx >> xdy >> xdxy >> xdz >> xdyz >> xdxz >> xdxyz;
+      
+      string label;
+      data_values.push_back(x);
+
+      vector<double> arr(7);
+      arr[0]=xdx;
+      arr[1]=xdy;
+      arr[2]=xdz;
+      arr[3]=xdxy;
+      arr[4]=xdyz;
+      arr[5]=xdxz;
+      arr[6]=xdxyz;
+      arr[6]=xdxyz;
+      arr[6]=xdxyz;
+      hvf->get_basis().add_derivatives(arr);
+    }
+    hvf->resize_fdata();
+    hvf->fdata() = data_values;
+    cerr << "done adding data.\n";
+  }
+
+  FieldHandle hvfH(hvf);
   if (binOutput) {
     BinaryPiostream out_stream(fieldName, Piostream::Write);
-    Pio(out_stream, hvH);
+    Pio(out_stream, hvfH);
   } else {
     TextPiostream out_stream(fieldName, Piostream::Write);
-    Pio(out_stream, hvH);
+    Pio(out_stream, hvfH);
   }
   return 0;  
 }    
