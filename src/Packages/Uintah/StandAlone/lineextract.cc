@@ -173,16 +173,20 @@ void printData(DataArchive* archive, string& variable_name,
           try {
             archive->query(values, variable_name, material, *ci, 
                             times[time_step], times[time_step], levelIndex);
+            IntVector c = *ci;
+            if(d_printCell_coords){
+              Point p = level->getCellPosition(c);
+              out << p.x() << " "<< p.y() << " " << p.z() << " "<< values[0] << endl;
+            }else{
+              out << c.x() << " "<< c.y() << " " << c.z() << " "<< values[0] << endl;
+            }
           } catch (const VariableNotFoundInGrid& exception) {
-            cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
-            exit(1);
-          }
-          IntVector c = *ci;
-          if(d_printCell_coords){
-            Point p = level->getCellPosition(c);
-            out << p.x() << " "<< p.y() << " " << p.z() << " "<< values[0] << endl;
-          }else{
-            out << c.x() << " "<< c.y() << " " << c.z() << " "<< values[0] << endl;
+            // only puke if the level is 0, as the data might not be there on other levels.
+            // Probably will be slow, but if it is a problem we can do better
+            if (levelIndex == 0) {
+              cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
+              exit(1);
+            }
           }
         }
       }
