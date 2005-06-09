@@ -7,30 +7,39 @@
 %
 %   See also: ?.
 
+setupGrid           = 1;
+setupMatrix         = 1;
+solveSystem         = 1;
+plotSolution        = 1;
+
 %-------------------------------------------------------------------------
 % Set up grid (AMR levels, patches)
 %-------------------------------------------------------------------------
-fprintf('-------------------------------------------------------------------------\n');
-fprintf(' Set up grid\n');
-fprintf('-------------------------------------------------------------------------\n');
+if (setupGrid)
+    fprintf('-------------------------------------------------------------------------\n');
+    fprintf(' Set up grid\n');
+    fprintf('-------------------------------------------------------------------------\n');
 
-grid.maxLevels  	= 5;
-grid.maxPatches  	= 5;
-grid.level          = cell(grid.maxLevels,1);
-grid.numLevels      = 0;
+    grid.maxLevels  	= 5;
+    grid.maxPatches  	= 5;
+    grid.level          = cell(grid.maxLevels,1);
+    grid.numLevels      = 0;
+    grid.domainSize     = [1.0 1.0];                                % Domain is from [0.,0.] to [1.,1.]
+    grid.dim            = length(grid.domainSize);
 
-%--------------- Level 1: global coarse grid -----------------
-dim         = 2;
-domainSize  = [1.0 1.0];
-resolution  = [256 256];
+    %--------------- Level 1: global coarse grid -----------------
 
-[grid,k] = addGridLevel(grid,'meshsize',domainSize./resolution);
-[grid,q1] = addGridPatch(grid,k,ones(1,dim),resolution,-1);     % One global patch
+    resolution          = [8 8];
+    [grid,k] = addGridLevel(grid,'meshsize',grid.domainSize./resolution);
+    [grid,q1] = addGridPatch(grid,k,ones(1,grid.dim),resolution,-1);     % One global patch
 
-% %--------------- Level 2: local fine grid around center of domain -----------------
-% 
-% [grid,k] = addGridLevel(grid,'refineRatio',[2 2]);
-% [grid,q2] = addGridPatch(grid,k,[6 6],[13 13],q1);              % Local patch around the domain center
+    %--------------- Level 2: local fine grid around center of domain -----------------
+
+%     [grid,k] = addGridLevel(grid,'refineRatio',[2 2]);
+%     [grid,q2] = addGridPatch(grid,k,[6 6],[13 13],q1);              % Local patch around the domain center
+
+    printGrid(grid);
+end
 
 %-------------------------------------------------------------------------
 % Set up stencils
@@ -49,51 +58,73 @@ end
 %-------------------------------------------------------------------------
 % Set up the the matrix
 %-------------------------------------------------------------------------
-fprintf('-------------------------------------------------------------------------\n');
-fprintf(' Set up the the matrix\n');
-fprintf('-------------------------------------------------------------------------\n');
-
-[A,b] = setupOperator(grid);        % Structured part (stencils on each patch)
+if (setupMatrix)
+    fprintf('-------------------------------------------------------------------------\n');
+    fprintf(' Set up the the matrix\n');
+    fprintf('-------------------------------------------------------------------------\n');
+    tStartCPU        = cputime;
+    tStartElapsed    = clock;
+    [A,b] = setupOperator(grid);        % Structured part (stencils on each patch)
+    tCPU        = cputime - tStartCPU;
+    tElapsed    = etime(clock,tStartElapsed);
+    fprintf('CPU time     = %f\n',tCPU);
+    fprintf('Elapsed time = %f\n',tElapsed);
+end
 
 %-------------------------------------------------------------------------
 % Solve the linear system
 %-------------------------------------------------------------------------
-fprintf('-------------------------------------------------------------------------\n');
-fprintf(' Solve the linear system\n');
-fprintf('-------------------------------------------------------------------------\n');
-
-x = A\b;                            % Direct solver
-u = sparseToAMR(x,grid);           % Translate the solution vector to patch-based
+if (solveSystem)
+    fprintf('-------------------------------------------------------------------------\n');
+    fprintf(' Solve the linear system\n');
+    fprintf('-------------------------------------------------------------------------\n');
+    tStartCPU        = cputime;
+    tStartElapsed    = clock;
+    x = A\b;                            % Direct solver
+    u = sparseToAMR(x,grid);           % Translate the solution vector to patch-based
+    tCPU        = cputime - tStartCPU;
+    tElapsed    = etime(clock,tStartElapsed);
+    fprintf('CPU time     = %f\n',tCPU);
+    fprintf('Elapsed time = %f\n',tElapsed);
+end
 
 %-------------------------------------------------------------------------
 % Computed exact solution vector, patch-based
 %-------------------------------------------------------------------------
-fprintf('-------------------------------------------------------------------------\n');
-fprintf(' Compute exact solution, plot\n');
-fprintf('-------------------------------------------------------------------------\n');
+if (plotSolution)
+    fprintf('-------------------------------------------------------------------------\n');
+    fprintf(' Compute exact solution, plot\n');
+    fprintf('-------------------------------------------------------------------------\n');
+    tStartCPU        = cputime;
+    tStartElapsed    = clock;
 
-uExact = exactSolutionAMR(grid);
+    uExact = exactSolutionAMR(grid);
 
-% Plot discretization error
+    % Plot discretization error
 
-k=1;
-q=1;
+    k=1;
+    q=1;
 
-figure(1);
-clf;
-surf(u{k}{q});
-title('Discrete solution');
+    figure(1);
+    clf;
+    surf(u{k}{q});
+    title('Discrete solution');
 
-figure(2);
-clf;
-surf(uExact{k}{q});
-title('Exact solution');
+    figure(2);
+    clf;
+    surf(uExact{k}{q});
+    title('Exact solution');
 
-figure(3);
-clf;
-surf(u{k}{q}-uExact{k}{q});
-title('Discretization error');
-shg;
+    figure(3);
+    clf;
+    surf(u{k}{q}-uExact{k}{q});
+    title('Discretization error');
+    shg;
 
-fprintf('L2 discretization error = %e\n',Lpnorm(u{k}{q}-uExact{k}{q}));
+    tCPU        = cputime - tStartCPU;
+    tElapsed    = etime(clock,tStartElapsed);
+    fprintf('CPU time     = %f\n',tCPU);
+    fprintf('Elapsed time = %f\n',tElapsed);
 
+    fprintf('L2 discretization error = %e\n',Lpnorm(u{k}{q}-uExact{k}{q}));
+end
