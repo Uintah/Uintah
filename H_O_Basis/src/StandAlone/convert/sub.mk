@@ -218,3 +218,7 @@ SRCS := $(SRCDIR)/geoToPts.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 ####################################
 
+
+PROGRAM := $(SRCDIR)/SampleHexTricubicHmt
+SRCS := $(SRCDIR)/SampleHexTricubicHmt.cc
+include $(SCIRUN_SCRIPTS)/program.mk
