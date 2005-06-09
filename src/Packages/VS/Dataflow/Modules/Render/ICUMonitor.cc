@@ -60,6 +60,7 @@
 #include <Core/Geom/FreeType.h>
 
 #include <Core/Util/Environment.h>
+#include <Core/Thread/CleanupManager.h>
 
 #include <typeinfo>
 #include <iostream>
@@ -89,6 +90,9 @@ public:
   void                  inc_time(double d);
   
 private:
+  void on_exit();
+  static void on_exit_wrap(void*);
+
   //! Storage for each digit texture.
   struct LabelTex
   {
@@ -473,16 +477,29 @@ ICUMonitor::ICUMonitor(GuiContext* ctx) :
 	    "Please set SCIRUN_FONT_PATH to a directory with scirun.ttf\n");
     }
   }
-
+  CleanupManager::add_callback(this->on_exit_wrap, this);
 }
 
-ICUMonitor::~ICUMonitor()
+void
+ICUMonitor::on_exit_wrap(void *ptr) 
+{
+  ((ICUMonitor*)ptr)->on_exit();
+}
+
+void
+ICUMonitor::on_exit() 
 {
   if (runner_thread_) {
     runner_->set_dead(true);
     runner_thread_->join();
     runner_thread_ = 0;
+    runner_ = 0;
   }
+}
+
+ICUMonitor::~ICUMonitor()
+{
+  CleanupManager::invoke_remove_callback(this->on_exit_wrap, this);
 }
 
 // absolute elapsed time.

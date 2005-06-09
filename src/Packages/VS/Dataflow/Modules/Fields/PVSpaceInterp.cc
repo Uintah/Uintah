@@ -41,6 +41,7 @@
 #include <Dataflow/Ports/TimePort.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Scheduler.h>
+#include <Core/Thread/CleanupManager.h>
 
 namespace VS {
 
@@ -71,6 +72,13 @@ private:
   void interp_field(const double *weights, const unsigned *interp_idxs);
   void check_lv_vol(const Point &);
   void apply_potentials(float e_phase, float HR);
+
+  HexVolMesh::Node::index_type find_closest(HexVolMesh *mesh, 
+					    const Point &p) const;
+  void set_field(const unsigned idx);
+
+  void on_exit();
+  static void on_exit_wrap(void*);
 
   InterpController *		        runner_;
   Thread *		                runner_thread_;
@@ -179,15 +187,29 @@ PVSpaceInterp::PVSpaceInterp(GuiContext* ctx) :
   ppv_generation_(-1),
   crv_generation_(-1)
 {
+  CleanupManager::add_callback(this->on_exit_wrap, this);
 }
 
-PVSpaceInterp::~PVSpaceInterp()
+void
+PVSpaceInterp::on_exit_wrap(void *ptr) 
+{
+  ((PVSpaceInterp*)ptr)->on_exit();
+}
+
+void
+PVSpaceInterp::on_exit() 
 {
   if (runner_thread_) {
     runner_->set_dead(true);
     runner_thread_->join();
     runner_thread_ = 0;
+    runner_ = 0;
   }
+}
+
+PVSpaceInterp::~PVSpaceInterp()
+{
+  CleanupManager::invoke_remove_callback(this->on_exit_wrap, this);
 }
 
 void
@@ -339,6 +361,30 @@ PVSpaceInterp::apply_potentials(float e_phase, float HR)
   }
 }
 
+
+HexVolMesh::Node::index_type
+PVSpaceInterp::find_closest(HexVolMesh *mesh, const Point &p) const
+{
+  double mindist = DBL_MAX;
+
+  HexVolMesh::Node::index_type index;
+  HexVolMesh::Node::iterator bi, ei;
+  mesh->begin(bi); mesh->end(ei);
+  while (bi != ei)
+  {
+    Point c;
+    mesh->get_center(c, *bi);
+    const double dist = (p - c).length2();
+    if (dist < mindist)
+    {
+      mindist = dist;
+      index = *bi;
+    }
+    ++bi;
+  }
+  return index;
+}
+
 void 
 PVSpaceInterp::send_interp_field(const Point &p, unsigned phase_idx, 
 				 float e_phase, float HR) 
@@ -354,27 +400,47 @@ PVSpaceInterp::send_interp_field(const Point &p, unsigned phase_idx,
   //find closest...
   if (! mesh->get_weights(p, nodes, weights)) 
   {
-    cerr << "Point " << p << " outside of mesh with phase index: " 
-	 << phase_idx << std::endl;
-    want_to_execute();
-    return;
-  }    
- 
-  //  cerr << "Point " << p << " interp with weights at phase mesh: " 
-  //     << phase_idx << std::endl;
-  interp_idxs[0] = phase_idx * 44 + nodes[0];
-  interp_idxs[1] = phase_idx * 44 + nodes[1];
-  interp_idxs[2] = phase_idx * 44 + nodes[2];
-  interp_idxs[3] = phase_idx * 44 + nodes[3];
-  interp_idxs[4] = phase_idx * 44 + nodes[4];
-  interp_idxs[5] = phase_idx * 44 + nodes[5];
-  interp_idxs[6] = phase_idx * 44 + nodes[6];
-  interp_idxs[7] = phase_idx * 44 + nodes[7];
-
-  interp_field(weights, interp_idxs);
+    HexVolMesh::Node::index_type ni = find_closest(mesh, p);
+    set_field(phase_idx * 44 + ni);
+  } else { 
+    interp_idxs[0] = phase_idx * 44 + nodes[0];
+    interp_idxs[1] = phase_idx * 44 + nodes[1];
+    interp_idxs[2] = phase_idx * 44 + nodes[2];
+    interp_idxs[3] = phase_idx * 44 + nodes[3];
+    interp_idxs[4] = phase_idx * 44 + nodes[4];
+    interp_idxs[5] = phase_idx * 44 + nodes[5];
+    interp_idxs[6] = phase_idx * 44 + nodes[6];
+    interp_idxs[7] = phase_idx * 44 + nodes[7];
+    
+    interp_field(weights, interp_idxs);
+  }
   apply_potentials(e_phase, HR);
   //check_lv_vol(p);
   want_to_execute();
+}
+
+void 
+PVSpaceInterp::set_field(const unsigned node_idx) 
+{
+  const int sz = interp_space_->nrrd->axis[1].size;
+  float *dat = (float*)interp_space_->nrrd->data;
+
+  out_fld_ = con_fld_;
+  out_fld_->generation++;
+
+  LockingHandle<HexVolMesh> mesh = 
+    ((HexVolField<double>*)out_fld_.get_rep())->get_typed_mesh();
+  vector<Point> &points = mesh->get_points();
+  vector<double> &data = ((HexVolField<double>*)out_fld_.get_rep())->fdata();
+
+  for (int i = 0; i < sz; ++i) {
+    int idx = node_idx * sz * 4;
+
+    points[i].x(dat[idx + i * 4]);
+    points[i].y(dat[idx + i * 4 + 1]);
+    points[i].z(dat[idx + i * 4 + 2]);
+    data[i] = dat[idx + i * 4 + 3];
+  }
 }
 
 void 
@@ -398,8 +464,7 @@ PVSpaceInterp::interp_field(const double *weights,
   }
   out_fld_ = con_fld_;
   out_fld_->generation++;
-  //out_fld_.detach();
-  //((HexVolField<double>*)out_fld_.get_rep())->mesh_detach();
+
   LockingHandle<HexVolMesh> mesh = 
     ((HexVolField<double>*)out_fld_.get_rep())->get_typed_mesh();
   vector<Point> &points = mesh->get_points();
@@ -416,30 +481,29 @@ PVSpaceInterp::interp_field(const double *weights,
 
 inline 
 int
-find_phase_index(float phase) 
+find_phase_index(float phase, int &p_idx) 
 {
-  // phase centers from roy are:
-  // 0.0375, 0.0750, 0.1250, 0.2000, 0.2750, 
-  // 0.3500, 0.4250, 0.5000, 0.5750, 0.6500, 0.7000,
-  // 0.8000, 0.9000, 1.0000
+  
+  const float phase_lookup[] = {0.050000,0.190000,0.320000,0.450000,
+				0.570000,0.620000,0.650000,0.670000,0.690000,
+				0.720000,0.770000,0.850000,0.950000};
 
-  const float phase_lookup[] = {0.01875, 0.05625, 0.1, 0.1625, 0.2375, 0.3125, 
-				0.3875, 0.4625, 0.5375, 0.6125, 0.675, 0.75, 
-				0.85, 0.95};
-  int phase_mesh = 0;
+  const int phase_index[] = {5, 0, 1, 2, 3, 4, 3, 2, 1, 0, 5, 5, 5};
+
+  p_idx = 0;
   bool found = false;
-  for (int i = 0; i < 13; ++i) 
+  for (int i = 0; i < 12; ++i) 
   {
     if (phase > phase_lookup[i] && 
 	phase <= phase_lookup[i + 1]) 
     {
-      phase_mesh = i;
+      p_idx = i;
       found = true;
       break;
     }
   }
-  if (! found) { phase_mesh = 13; }
-  return phase_mesh;
+  if (! found) { p_idx = 12; }
+  return phase_index[p_idx];
 }
 
 Point
@@ -474,14 +538,19 @@ PVSpaceInterp::get_hip_params(unsigned &phase_mesh, float &e_phase, float &HR)
   e_phase = cur_phase;
   HR = 98.0;
 
-  phase_mesh = find_phase_index(cur_phase);
+  int phase_index = 0;
+  phase_mesh = find_phase_index(cur_phase, phase_index);
 
   // phase centers from roy are:
-  const float phase_centers[] = { 0.0375, 0.0750, 0.1250, 0.2000, 0.2750, 
-				  0.3500, 0.4250, 0.5000, 0.5750, 0.6500, 
-				  0.7000, 0.8000, 0.9000, 1.0000 };
 
-  const float center = phase_centers[phase_mesh];
+  const float phase_centers[] = { 0.10, 0.28, 0.36, 0.54, 0.60, 0.64, 0.66, 
+				  0.68, 0.70, 0.74, 0.80, 0.90, 1.0};
+
+//   const float phase_centers[] = { 0.0375, 0.0750, 0.1250, 0.2000, 0.2750, 
+// 				  0.3500, 0.4250, 0.5000, 0.5750, 0.6500, 
+// 				  0.7000, 0.8000, 0.9000, 1.0000 };
+
+  const float center = phase_centers[phase_index];
   int f_idx = idx;
   float last_delta = fabs(cur_phase - center);
   if (last_delta > 0.0001) {
@@ -644,8 +713,8 @@ PVSpaceInterp::execute()
     // new input
     ppv_generation_ = ppv_bdl->generation;
     int size = ppv_bdl->numFields();
-    if (size != 14) {
-      error ("Need 14 PPVspace fields.");
+    if (size != 6) {
+      error ("Need 6 PPVspace fields.");
       return;
     } 
 

@@ -1,16 +1,13 @@
 # SCIRun Network v1.25.0
 
-#######################################################################
-# Check environment variables.  Ask user for input if not set:
-set results [sourceSettingsFile]
-set DATADIR [lindex $results 0]
-set DATASET [lindex $results 1]
-######################################################################
+
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
 
 set name {Main}
 set bbox {5 0 867 601}
-set creationDate {Thu May 26 2005}
-set creationTime {09:24:10}
+set creationDate {Wed Jun 01 2005}
+set creationTime {11:31:24}
 set runDate {}
 set runTime {}
 set notes {}
@@ -114,11 +111,11 @@ set $m1-lvp_index {4}
 set $m1-rvp_index {5}
 
 # Set GUI variables for the Teem->DataIO->NrrdReader Module
-set $m2-filename $DATADIR/$DATASET/isovol27ml.repeat20.nrrd
+set $m2-filename "$DATADIR/$DATASET/isovol27ml.repeat20.nrrd"
 set $m2-filetype {Nrrd Files (*.nhdr,*.nrrd,*.nd,*.vff,*.pic,*.pict,*.vol,*.v)}
 
 # Set GUI variables for the VS->Render->ICUMonitor Module
-set $m3-time {0.904}
+set $m3-time {0.314}
 set $m3-sample_rate {100.0}
 set $m3-time_markers_mode {0}
 set $m3-top_margin {40}
@@ -197,11 +194,11 @@ set $m4-scale_factor {0.3}
 $m4 initialize_ui
 
 # Set GUI variables for the Teem->DataIO->NrrdReader Module
-set $m5-filename $DATADIR/$DATASET/healthy_all.nrrd
+set $m5-filename "$DATADIR/$DATASET/healthy_all.nrrd"
 set $m5-filetype {Nrrd Files (*.nhdr,*.nrrd,*.nd,*.vff,*.pic,*.pict,*.vol,*.v)}
 
 # Set GUI variables for the SCIRun->DataIO->FieldReader Module
-set $m6-filename $DATADIR/$DATASET/ucsd-heart-001.fld
+set $m6-filename "$DATADIR/$DATASET/ucsd-heart-001.fld"
 set $m6-filetype {SCIRun Field File (*.fld)}
 
 # Set GUI variables for the SCIRun->Visualization->ShowField Module
@@ -214,18 +211,18 @@ set $m7-active_tab {Edges}
 set $m7-scalars_scale {0.3}
 
 $m8 addViewer
-set $m8-ViewWindow_0-geometry 648x590+958+80
+set $m8-ViewWindow_0-geometry 648x589+950+20
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
-set $m8-ViewWindow_0-view-eyep-x {-22.918230194}
-set $m8-ViewWindow_0-view-eyep-y {-105.564083161}
-set $m8-ViewWindow_0-view-eyep-z {-257.774766931}
+set $m8-ViewWindow_0-view-eyep-x {81.9861452456}
+set $m8-ViewWindow_0-view-eyep-y {-97.6146269961}
+set $m8-ViewWindow_0-view-eyep-z {-250.971077278}
 set $m8-ViewWindow_0-view-lookat-x {0.925533294678}
 set $m8-ViewWindow_0-view-lookat-y {3.99627876282}
 set $m8-ViewWindow_0-view-lookat-z {63.3665132523}
-set $m8-ViewWindow_0-view-up-x {-0.19576884298}
-set $m8-ViewWindow_0-view-up-y {0.932474831631}
-set $m8-ViewWindow_0-view-up-z {-0.303587299623}
+set $m8-ViewWindow_0-view-up-x {-0.387681974917}
+set $m8-ViewWindow_0-view-up-y {0.843162987645}
+set $m8-ViewWindow_0-view-up-z {-0.372530351233}
 set $m8-ViewWindow_0-view-fov {20.0}
 set $m8-ViewWindow_0-sr {1}
 set $m8-ViewWindow_0-do_stereo {0}
@@ -277,18 +274,18 @@ set $m11-min {-0.2}
 set $m11-max {0.2}
 
 $m12 addViewer
-set $m12-ViewWindow_0-geometry 654x612+933+650
+set $m12-ViewWindow_0-geometry 654x611+943+628
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
-set $m12-ViewWindow_0-view-eyep-x {259.966254591}
-set $m12-ViewWindow_0-view-eyep-y {-158.909847484}
-set $m12-ViewWindow_0-view-eyep-z {-75.6033455654}
+set $m12-ViewWindow_0-view-eyep-x {-30.1656913231}
+set $m12-ViewWindow_0-view-eyep-y {-18.0739517741}
+set $m12-ViewWindow_0-view-eyep-z {-271.176900375}
 set $m12-ViewWindow_0-view-lookat-x {0.802302360535}
 set $m12-ViewWindow_0-view-lookat-y {4.30603504181}
 set $m12-ViewWindow_0-view-lookat-z {62.6987953186}
-set $m12-ViewWindow_0-view-up-x {-0.512512357955}
-set $m12-ViewWindow_0-view-up-y {-0.0902162982635}
-set $m12-ViewWindow_0-view-up-z {-0.853927457382}
+set $m12-ViewWindow_0-view-up-x {-0.743684199758}
+set $m12-ViewWindow_0-view-up-y {0.668093076785}
+set $m12-ViewWindow_0-view-up-z {0.0241961108721}
 set $m12-ViewWindow_0-view-fov {20.0}
 set $m12-ViewWindow_0-sr {1}
 set $m12-ViewWindow_0-do_stereo {0}
@@ -334,12 +331,12 @@ set "$m12-ViewWindow_0-Transparent Edges (1)" {1}
 set "$m12-ViewWindow_0-Faces (1)" {1}
 
 # Set GUI variables for the SCIRun->DataIO->BundleReader Module
-set $m13-filename $DATADIR/$DATASET/curve-lookup.bdl
+set $m13-filename "$DATADIR/$DATASET/curve-lookup.bdl"
 set $m13-types {{{{SCIRun Bundle File} {.bdl} } {{SCIRun Bundle Any} {.*} } }}
 set $m13-filetype {SCIRun Bundle File (*.bdl)}
 
 # Set GUI variables for the SCIRun->DataIO->BundleReader Module
-set $m14-filename $DATADIR/$DATASET/ppv-field-bundle.bdl
+set $m14-filename "$DATADIR/$DATASET/ppv-field-bundle.bdl"
 set $m14-types {{{{SCIRun Bundle File} {.bdl} } {{SCIRun Bundle Any} {.*} } }}
 set $m14-filetype {SCIRun Bundle File (*.bdl)}
 
