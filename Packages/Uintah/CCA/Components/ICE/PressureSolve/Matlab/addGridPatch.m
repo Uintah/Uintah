@@ -13,7 +13,7 @@ P.iupper            = iupper;
 P.size              = P.iupper - P.ilower + 3;          % Size including ghost cells
 P.parent            = parentQ;
 P.children          = [];
-P.offset            = -P.ilower+2;                      % Add to level-global cell index to get this-patch cell index
+P.offset            = -P.ilower+2;                      % Add to level-global cell index to get this-patch cell index. Lower left corner (a ghost cell) is (1,1) in patch indices
 
 grid.level{k}.patch{q}    = P;
 if (k > 1)    
@@ -21,4 +21,4 @@ if (k > 1)
 end
 grid = updateGrid(grid);
 
-fprintf('  Created level k=%3d patch q=%3d (parentQ = %3d), ilower = [%3d %3d], iupper = [%3d %3d]\n',k,q,parentQ,ilower,iupper);
+fprintf('Created level k=%3d patch q=%3d (parentQ = %3d), ilower = [%3d %3d], iupper = [%3d %3d]\n',k,q,parentQ,ilower,iupper);
