@@ -28,5 +28,9 @@ switch lower(type)   % LHS matrix, data is LHS matrix data structure
         error('addGridLevel: unknown type');
 end
 
+grid.level{k}.domainSize    = grid.domainSize;
+grid.level{k}.minCell       = ones(1,grid.dim);
+grid.level{k}.maxCell       = grid.domainSize./grid.level{k}.h;
+
 grid.level{k}.patch = cell(grid.maxPatches,1);
 grid.level{k}.numPatches = 0;
