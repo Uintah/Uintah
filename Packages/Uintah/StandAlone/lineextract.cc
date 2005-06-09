@@ -80,7 +80,7 @@ void usage(const std::string& badarg, const std::string& progname)
 //______________________________________________________________________
 //
 template<class T>
-void printData(DataArchive* archive, string& variable_name,
+void printData(DataArchive* archive, string& variable_name, const Uintah::TypeDescription* variable_type,
                int material, const bool use_cellIndex_file, int levelIndex,
                IntVector& var_start, IntVector& var_end, vector<IntVector> cells,
                unsigned long time_start, unsigned long time_end, ostream& out) 
@@ -133,6 +133,7 @@ void printData(DataArchive* archive, string& variable_name,
   out.setf(ios::scientific,ios::floatfield);
   out.precision(16);
   
+  bool cellNotFound = false;
   //__________________________________
   // loop over timesteps
   for (unsigned long time_step = time_start; time_step <= time_end; time_step++) {
@@ -158,37 +159,86 @@ void printData(DataArchive* archive, string& variable_name,
     if(levelExists){   // only extract data if the level exists
       const LevelP level = grid->getLevel(levelIndex);
       //__________________________________
-      // Find the intersection of the starting and
-      // ending indices with that level
-      IntVector grid_hi, grid_lo;
-      level->findCellIndexRange(grid_lo, grid_hi);
-      var_start = Max(grid_lo, var_start);
-      var_end   = Min(grid_hi- IntVector(1,1,1), var_end);
-    
-      //__________________________________
       // User input starting and ending indicies    
       if(!use_cellIndex_file) {
-        for (CellIterator ci(var_start, var_end + IntVector(1,1,1)); !ci.done(); ci++) {
-          vector<T> values;
-          try {
-            archive->query(values, variable_name, material, *ci, 
-                            times[time_step], times[time_step], levelIndex);
-            IntVector c = *ci;
-            if(d_printCell_coords){
-              Point p = level->getCellPosition(c);
-              out << p.x() << " "<< p.y() << " " << p.z() << " "<< values[0] << endl;
-            }else{
-              out << c.x() << " "<< c.y() << " " << c.z() << " "<< values[0] << endl;
-            }
-          } catch (const VariableNotFoundInGrid& exception) {
-            // only puke if the level is 0, as the data might not be there on other levels.
-            // Probably will be slow, but if it is a problem we can do better
-            if (levelIndex == 0) {
-              cerr << "Caught VariableNotFoundInGrid Exception: " << exception.message() << endl;
-              exit(1);
-            }
+          
+        // find the corresponding patches
+        Level::selectType patches;
+        level->selectPatches(var_start, var_end + IntVector(1,1,1), patches);
+
+        // query all the data up front
+        vector<Variable*> vars(patches.size());
+        for (int p = 0; p < patches.size(); p++) {
+          switch (variable_type->getType()) {
+          case Uintah::TypeDescription::CCVariable:
+            vars[p] = scinew CCVariable<T>;
+            archive->query( *(CCVariable<T>*)vars[p], variable_name, 
+                            material, patches[p], times[time_step]);
+            break;
+          case Uintah::TypeDescription::NCVariable:
+            vars[p] = scinew NCVariable<T>;
+            archive->query( *(NCVariable<T>*)vars[p], variable_name, 
+                            material, patches[p], times[time_step]);
+            break;
+          case Uintah::TypeDescription::SFCXVariable:
+            vars[p] = scinew SFCXVariable<T>;
+            archive->query( *(SFCXVariable<T>*)vars[p], variable_name, 
+                            material, patches[p], times[time_step]);
+            break;
+          case Uintah::TypeDescription::SFCYVariable:
+            vars[p] = scinew SFCYVariable<T>;
+            archive->query( *(SFCYVariable<T>*)vars[p], variable_name, 
+                            material, patches[p], times[time_step]);
+            break;
+          case Uintah::TypeDescription::SFCZVariable:
+            vars[p] = scinew SFCZVariable<T>;
+            archive->query( *(SFCZVariable<T>*)vars[p], variable_name, 
+                            material, patches[p], times[time_step]);
+            break;
+          default:
+            cerr << "Unknown variable type: " << variable_type->getName() << endl;
           }
+          
         }
+
+        for (CellIterator ci(var_start, var_end + IntVector(1,1,1)); !ci.done(); ci++) {
+          IntVector c = *ci;
+
+          // find out which patch it's on (to keep the printing in sorted order.
+          // alternatively, we could just iterate through the patches)
+          int p = 0;
+          for (; p < patches.size(); p++) {
+            IntVector low = patches[p]->getLowIndex();
+            IntVector high = patches[p]->getHighIndex();
+            if (c.x() >= low.x() && c.y() >= low.y() && c.z() >= low.z() && 
+                c.x() < high.x() && c.y() < high.y() && c.z() < high.z())
+              break;
+          }
+          if (p == patches.size()) {
+            cellNotFound = true;
+            continue;
+          }
+          
+          if(d_printCell_coords){
+            Point point = level->getCellPosition(c);
+            out << point.x() << " "<< point.y() << " " << point.z() << " ";
+          }else{
+            out << c.x() << " "<< c.y() << " " << c.z() << " ";
+          }
+
+          T val;
+          switch (variable_type->getType()) {
+          case Uintah::TypeDescription::CCVariable: val = (*dynamic_cast<CCVariable<T>*>(vars[p]))[c]; break;
+          case Uintah::TypeDescription::NCVariable: val = (*dynamic_cast<NCVariable<T>*>(vars[p]))[c]; break;
+          case Uintah::TypeDescription::SFCXVariable: val = (*dynamic_cast<SFCXVariable<T>*>(vars[p]))[c]; break;
+          case Uintah::TypeDescription::SFCYVariable: val = (*dynamic_cast<SFCYVariable<T>*>(vars[p]))[c]; break;
+          case Uintah::TypeDescription::SFCZVariable: val = (*dynamic_cast<SFCZVariable<T>*>(vars[p]))[c]; break;
+          default: break;
+          }
+          out << val << endl;
+        }
+        for (unsigned i = 0; i < vars.size(); i++)
+          delete vars[i];
       }
 
       //__________________________________
@@ -398,22 +448,22 @@ int main(int argc, char** argv)
     //  print data
     switch (subtype->getType()) {
     case Uintah::TypeDescription::double_type:
-      printData<double>(archive, variable_name, material, use_cellIndex_file,
+      printData<double>(archive, variable_name, td, material, use_cellIndex_file,
                         levelIndex, var_start, var_end, cells,
                         time_start, time_end, *output_stream);
       break;
     case Uintah::TypeDescription::float_type:
-      printData<float>(archive, variable_name, material, use_cellIndex_file,
+      printData<float>(archive, variable_name, td, material, use_cellIndex_file,
                         levelIndex, var_start, var_end, cells,
                         time_start, time_end, *output_stream);
       break;
     case Uintah::TypeDescription::int_type:
-      printData<int>(archive, variable_name, material, use_cellIndex_file,
+      printData<int>(archive, variable_name, td, material, use_cellIndex_file,
                      levelIndex, var_start, var_end, cells,
                      time_start, time_end, *output_stream);
       break;
     case Uintah::TypeDescription::Vector:
-      printData<Vector>(archive, variable_name, material, use_cellIndex_file,
+      printData<Vector>(archive, variable_name, td, material, use_cellIndex_file,
                         levelIndex, var_start, var_end, cells,
                         time_start, time_end, *output_stream);    
       break;
