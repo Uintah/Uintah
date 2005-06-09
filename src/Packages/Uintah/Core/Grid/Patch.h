@@ -318,7 +318,7 @@ WARNING
      
      BCType getBCType(FaceType face) const;
      void setBCType(FaceType face, BCType newbc);
-     void printPatchBCs() const;
+     void printPatchBCs(std::ostream& out) const;
      void setArrayBCValues(FaceType face, BCDataArray* bc);
 
      const BCDataArray* getBCDataArray(Patch::FaceType face) const;
