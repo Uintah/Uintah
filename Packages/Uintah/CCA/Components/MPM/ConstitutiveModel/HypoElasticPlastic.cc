@@ -1,37 +1,48 @@
+#ifdef __APPLE__
+// This is a hack.  gcc 3.3 #undefs isnan in the cmath header, which
+// make the isnan function not work.  This define makes the cmath header
+// not get included since we do not need it anyway.
+#  define _CPP_CMATH
+#endif
+
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticPlastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include "PlasticityModels/YieldConditionFactory.h"
-#include "PlasticityModels/StabilityCheckFactory.h"
-#include "PlasticityModels/PlasticityModelFactory.h"
-#include "PlasticityModels/DamageModelFactory.h"
-#include "PlasticityModels/MPMEquationOfStateFactory.h"
-#include "PlasticityModels/PlasticityState.h"
-#include <math.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/YieldConditionFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/StabilityCheckFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityModelFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModelFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MPMEquationOfStateFactory.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityState.h>
+
+#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+
+#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
+#include <Packages/Uintah/Core/Math/FastMatrix.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
+#include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Gaussian.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/FastMatrix.h>
-#include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
-#include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
+
+#include <math.h>
+
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
-
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 
 using std::cerr;
 using namespace Uintah;
@@ -44,10 +55,9 @@ static DebugStream CSTir("HEPir",false);
 
 
 HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps, MPMLabel* Mlb, 
-                                       MPMFlags* Mflag)
-  : ConstitutiveModel(Mlb,Mflag), ImplicitCM(Mlb)
+                                       MPMFlags* Mflag) :
+  ConstitutiveModel(Mlb,Mflag), ImplicitCM(Mlb)
 {
-
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
   d_initialData.alpha = 1.0e-5; // default is per K
@@ -208,7 +218,8 @@ HypoElasticPlastic::~HypoElasticPlastic()
   delete d_eos;
 }
 
-HypoElasticPlastic* HypoElasticPlastic::clone()
+HypoElasticPlastic*
+HypoElasticPlastic::clone()
 {
   return scinew HypoElasticPlastic(*this);
 }
@@ -2753,10 +2764,11 @@ HypoElasticPlastic::BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
   Kgeo[23][23] = t90*Bnl[2][23];
 }
 
-void HypoElasticPlastic::carryForward(const PatchSubset* patches,
-                                      const MPMMaterial* matl,
-                                      DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw)
+void
+HypoElasticPlastic::carryForward(const PatchSubset* patches,
+                                 const MPMMaterial* matl,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -2834,10 +2846,11 @@ void HypoElasticPlastic::carryForward(const PatchSubset* patches,
   }
 }
 
-void HypoElasticPlastic::allocateCMDataAddRequires(Task* task,
-                                                   const MPMMaterial* matl,
-                                                   const PatchSet* patch,
-                                                   MPMLabel* lb) const
+void
+HypoElasticPlastic::allocateCMDataAddRequires(Task* task,
+                                              const MPMMaterial* matl,
+                                              const PatchSet* patch,
+                                              MPMLabel* lb) const
 {
   Ghost::GhostType  gnone = Ghost::None;
   const MaterialSubset* matlset = matl->thisMaterial();
@@ -2860,12 +2873,13 @@ void HypoElasticPlastic::allocateCMDataAddRequires(Task* task,
   d_plastic->allocateCMDataAddRequires(task,matl,patch,lb);
 }
 
-void HypoElasticPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
-                                           ParticleSubset* addset,
-                                           map<const VarLabel*, 
-                                           ParticleVariableBase*>* newState,
-                                           ParticleSubset* delset,
-                                           DataWarehouse* old_dw)
+void
+HypoElasticPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
+                                      ParticleSubset* addset,
+                                      map<const VarLabel*, 
+                                      ParticleVariableBase*>* newState,
+                                      ParticleSubset* delset,
+                                      DataWarehouse* old_dw)
 {
   // Copy the data common to all constitutive models from the particle to be 
   // deleted to the particle to be added. 
@@ -2947,19 +2961,21 @@ HypoElasticPlastic::getPlasticTemperatureIncrement(ParticleSubset* pset,
   for(;iter != pset->end();iter++) T[*iter] = pPlasticTempInc[*iter];
 }
 
-void HypoElasticPlastic::addRequiresDamageParameter(Task* task,
-                                                    const MPMMaterial* matl,
-                                                    const PatchSet* ) const
+void
+HypoElasticPlastic::addRequiresDamageParameter(Task* task,
+                                               const MPMMaterial* matl,
+                                               const PatchSet* ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::NewDW, pLocalizedLabel_preReloc,matlset,Ghost::None);
 }
 
-void HypoElasticPlastic::getDamageParameter(const Patch* patch,
-                                            ParticleVariable<int>& damage,
-                                            int dwi,
-                                            DataWarehouse* old_dw,
-                                            DataWarehouse* new_dw)
+void
+HypoElasticPlastic::getDamageParameter(const Patch* patch,
+                                       ParticleVariable<int>& damage,
+                                       int dwi,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw)
 {
   ParticleSubset* pset = old_dw->getParticleSubset(dwi,patch);
   constParticleVariable<int> pLocalized;
@@ -3134,7 +3150,7 @@ HypoElasticPlastic::updatePorosity(const Matrix3& D,
 }
 
 // Calculate the void nucleation factor
-inline double 
+double 
 HypoElasticPlastic::voidNucleationFactor(double ep)
 {
   double temp = (ep - d_porosity.en)/d_porosity.sn;
@@ -3143,9 +3159,10 @@ HypoElasticPlastic::voidNucleationFactor(double ep)
   return A;
 }
 
-double HypoElasticPlastic::computeRhoMicroCM(double pressure,
-                                             const double p_ref,
-                                             const MPMMaterial* matl)
+double
+HypoElasticPlastic::computeRhoMicroCM(double pressure,
+                                      const double p_ref,
+                                      const MPMMaterial* matl)
 {
   double rho_orig = matl->getInitialDensity();
   double bulk = d_initialData.Bulk;
@@ -3169,10 +3186,11 @@ double HypoElasticPlastic::computeRhoMicroCM(double pressure,
 //  return (rho_orig/(1.0-p_gauge/bulk));
 //}
 
-void HypoElasticPlastic::computePressEOSCM(double rho_cur,double& pressure,
-                                           double p_ref,  
-                                           double& dp_drho, double& tmp,
-                                           const MPMMaterial* matl)
+void
+HypoElasticPlastic::computePressEOSCM(double rho_cur,double& pressure,
+                                      double p_ref,  
+                                      double& dp_drho, double& tmp,
+                                      const MPMMaterial* matl)
 {
   double bulk = d_initialData.Bulk;
   double rho_orig = matl->getInitialDensity();
@@ -3199,7 +3217,8 @@ void HypoElasticPlastic::computePressEOSCM(double rho_cur,double& pressure,
 //  tmp = bulk/rho_cur;  // speed of sound squared
 //}
 
-double HypoElasticPlastic::getCompressibility()
+double
+HypoElasticPlastic::getCompressibility()
 {
   return 1.0/d_initialData.Bulk;
 }
@@ -3216,10 +3235,11 @@ HypoElasticPlastic::scheduleCheckNeedAddMPMMaterial(Task* task,
   task->computes(lb->NeedAddMPMMaterialLabel);
 }
 
-void HypoElasticPlastic::checkNeedAddMPMMaterial(const PatchSubset* patches,
-                                                 const MPMMaterial* matl,
-                                                 DataWarehouse* old_dw,
-                                                 DataWarehouse* new_dw)
+void
+HypoElasticPlastic::checkNeedAddMPMMaterial(const PatchSubset* patches,
+                                            const MPMMaterial* matl,
+                                            DataWarehouse* old_dw,
+                                            DataWarehouse* new_dw)
 {
   if (cout_CST.active()) {
     cout_CST << getpid() << "checkNeedAddMPMMaterial: In : Matl = " << matl
@@ -3253,6 +3273,6 @@ void HypoElasticPlastic::checkNeedAddMPMMaterial(const PatchSubset* patches,
 
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1209
+#  pragma set woff 1209
 #endif
 
