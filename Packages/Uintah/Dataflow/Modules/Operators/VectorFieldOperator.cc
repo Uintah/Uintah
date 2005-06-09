@@ -5,10 +5,13 @@
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Geometry/BBox.h>
 
+#include <iostream>
+
 //#include <SCICore/Math/Mat.h>
 
 
 using namespace SCIRun;
+using std::cerr;
 
 namespace Uintah {
  
@@ -42,6 +45,8 @@ VectorFieldOperator::execute(void)
     return;
   }
 
+  // WARNING: will not yet work on a Mult-level Dataset!!!!
+
   LatVolField<double>  *scalarField = 0;  
   if( LatVolField<Vector> *vectorField =
       dynamic_cast<LatVolField<Vector>*>(hTF.get_rep())) {
@@ -49,7 +54,63 @@ VectorFieldOperator::execute(void)
     scalarField = scinew LatVolField<double>(hTF->basis_order());
 
     performOperation( vectorField, scalarField );
+    
+    for(int i = 0; i < vectorField->nproperties(); i++){
+      string prop_name(vectorField->get_property_name( i ));
+      if(prop_name == "varname"){
+        string prop_component;
+        vectorField->get_property( prop_name, prop_component);
+        switch(guiOperation.get()) {
+        case 0: // extract element 1
+          scalarField->set_property("varname",
+                                    string(prop_component +":1"), true);
+          break;
+        case 1: // extract element 2
+          scalarField->set_property("varname", 
+                                    string(prop_component +":2"), true);
+          break;
+        case 2: // extract element 3
+          scalarField->set_property("varname", 
+                                    string(prop_component +":3"), true);
+          break;
+        case 3: // Vector length
+          scalarField->set_property("varname", 
+                                    string(prop_component +":length"), true);
+          break;
+        case 4: // Vector curvature
+          scalarField->set_property("varname",
+                           string(prop_component +":vorticity"), true);
+          break;
+        default:
+          scalarField->set_property("varname",
+                                    string(prop_component.c_str()), true);
+        }
+      } else if( prop_name == "generation") {
+        int generation;
+        vectorField->get_property( prop_name, generation);
+        scalarField->set_property(prop_name.c_str(), generation , true);
+      } else if( prop_name == "timestep" ) {
+        int timestep;
+        vectorField->get_property( prop_name, timestep);
+        scalarField->set_property(prop_name.c_str(), timestep , true);
+      } else if( prop_name == "offset" ){
+        IntVector offset(0,0,0);        
+        vectorField->get_property( prop_name, offset);
+        scalarField->set_property(prop_name.c_str(), IntVector(offset) , true);
+        cerr<<"vector offset is "<< offset <<"n";
+      } else if( prop_name == "delta_t" ){
+        double dt;
+        vectorField->get_property( prop_name, dt);
+        scalarField->set_property(prop_name.c_str(), dt , true);
+      } else if( prop_name == "vartype" ){
+        int vartype;
+        vectorField->get_property( prop_name, vartype);
+        scalarField->set_property(prop_name.c_str(), vartype , true);
+      } else {
+        warning( "Unknown field property, not transferred.");
+      }
   }
+  }   
 
   if( scalarField )
     sfout->send(scalarField);

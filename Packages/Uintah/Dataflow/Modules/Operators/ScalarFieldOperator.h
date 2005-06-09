@@ -32,9 +32,10 @@ using namespace SCIRun;
     
   protected:
     template<class Field, class ScalarField>      
-     void performOperation(Field* field,
-			   ScalarField* scalarField);
-    
+    void performOperation(Field* field,
+                          ScalarField* scalarField);
+    template<class T1, class T2> 
+    void set_properties( T1* sf1, T2* sf2);
   private:
     //    TCLstring tcl_status;
     GuiInt guiOperation;
