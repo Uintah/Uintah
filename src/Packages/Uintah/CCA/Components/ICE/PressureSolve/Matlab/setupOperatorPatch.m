@@ -1,6 +1,15 @@
-function [Alist,b] = setupOperatorPatch(grid,k,q)
-% Set the discrete equations at all interior cells of patch q at
-% level k. The ghost cells are either "ghost" or boundary values.
+function [Alist,b] = setupOperatorPatch(grid,k,q,ilower,iupper)
+%SETUPOPERATORPATCH  Set the discrete operator at a patch.
+%   The usage [Alist,b] = setupOperatorPatch(grid,k,q,ilower,iupper)
+%   Set the discrete equations at all interior cells of patch q at
+%   level k. The ghost cells are either ignored (if they are on an interior
+%   interface) or assigned a boundary condition (if against the domain
+%   boundary). We set the equations within the box [ilower,iupper] in the
+%   patch. On output we return Alist (list of [i j aij]) and the part of b
+%   that should be added to a global list Alist to be converted to sparse
+%   format, and to a global RHS vector b.
+%
+%   See also: TESTDFM, SETOPERATOR.
 
 fprintf('--- setupOperatorPatch(k = %d, q = %d) ---\n',k,q);
 level       = grid.level{k};
@@ -16,7 +25,7 @@ b           = zeros(prod(P.size),1);
 % Prepare a list of all cell indices in this patch including ghosts
 all    = cell(grid.dim,1);
 for dim = 1:grid.dim
-    all{dim} = [P.ilower(dim)-1:P.iupper(dim)+1] + P.offset(dim);  % Patch-based cell indices including ghosts
+    all{dim} = [ilower(dim)-1:iupper(dim)+1] + P.offset(dim);  % Patch-based cell indices including ghosts
 end
 matAll      = cell(grid.dim,1);
 [matAll{:}] = ndgrid(all{:});
@@ -27,7 +36,7 @@ pindexRemaining = pindexAll;
 % Prepare a list of all interior cells
 interior    = cell(grid.dim,1);
 for dim = 1:grid.dim
-    interior{dim} = [P.ilower(dim):P.iupper(dim)] + P.offset(dim);  % Patch-based cell indices including ghosts
+    interior{dim} = [ilower(dim):iupper(dim)] + P.offset(dim);  % Patch-based cell indices including ghosts
 end
 matInterior      = cell(grid.dim,1);
 [matInterior{:}] = ndgrid(interior{:});
@@ -42,8 +51,8 @@ edgeDomain{1}     = level.minCell + P.offset;             % First cell next to l
 edgeDomain{2}     = level.maxCell + P.offset;             % Last Cell next to right domain boundary - patch-based index
 % Patch edges
 edgePatch          = cell(2,1);
-edgePatch{1}       = P.ilower + P.offset;             % First cell next to left domain boundary - patch-based index
-edgePatch{2}       = P.iupper + P.offset;             % Last Cell next to right domain boundary - patch-based index
+edgePatch{1}       = ilower + P.offset;             % First cell next to left domain boundary - patch-based index
+edgePatch{2}       = iupper + P.offset;             % Last Cell next to right domain boundary - patch-based index
 
 %=====================================================================
 % Construct interior fluxes
@@ -61,7 +70,7 @@ for direction = 1:2*grid.dim
 end
 rhsValues = zeros(P.size);
 rhsValues(interior{:}) = prod(h) * ...
-    rhs(([P.ilower(1):P.iupper(1)]-0.5)*level.h(1),([P.ilower(2):P.iupper(2)]-0.5)*level.h(2));
+    rhs(([ilower(1):iupper(1)]-0.5)*level.h(1),([ilower(2):iupper(2)]-0.5)*level.h(2));
 
 %=====================================================================
 % Correct fluxes near DOMAIN boundaries (not necessarily patch
@@ -78,6 +87,11 @@ for d = 1:grid.dim,                                             % Loop over dime
         end
 
         [face{:}] = find(matInterior{d} == edgeDomain{side}(d));          % Interior cell indices near DOMAIN boundary
+        % Process only if this face is non-empty.
+        if (isempty(face{1}))
+            continue;
+        end
+
         for dim = 1:grid.dim                                    % Translate face to patch-based indices (from index in the INTERIOR matInterior)
             face{dim} = face{dim} + 1;
         end
@@ -106,7 +120,7 @@ for d = 1:grid.dim,                                             % Loop over dime
             [mapGhost mapGhost repmat(1.0,size(mapGhost))]; ...
             ];
         b(mapGhost-P.baseIndex+1) = 0.0;                            % This inserts the RHS data into the "chunk" of b that we output from this routine, hence we translate map indices to patch-based 1D indices.
-        
+
     end
 end
 

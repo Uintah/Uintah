@@ -14,9 +14,15 @@ for k = 1:grid.numLevels,
         P = grid.level{k}.patch{q};
         map = P.cellIndex;
 
-        [AlistPatch,bPatch] = setupOperatorPatch(grid,k,q);
+        % Create equations in the interior patch and set boundary
+        % conditions on appropriate ghost cells.
+        [AlistPatch,bPatch] = setupOperatorPatch(grid,k,q,P.ilower,P.iupper);
         Alist = [Alist; AlistPatch];
         b(map(:)) = bPatch;
+        
+        % Delete data of parent patch under the current patch
+        [Alist,b] = deleteUnderlyingData(grid,k,q,Alist,b);
+        
     end
 end
 
