@@ -22,7 +22,7 @@ grid.numLevels      = 0;
 %--------------- Level 1: global coarse grid -----------------
 dim         = 2;
 domainSize  = [1.0 1.0];
-resolution  = [64 64];
+resolution  = [256 256];
 
 [grid,k] = addGridLevel(grid,'meshsize',domainSize./resolution);
 [grid,q1] = addGridPatch(grid,k,ones(1,dim),resolution,-1);     % One global patch
