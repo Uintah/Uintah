@@ -1,6 +1,6 @@
-function [Alist,b] = setupOperatorPatch(grid,k,q,ilower,iupper,ghostConnections)
+function [Alist,b] = setupOperatorPatch(grid,k,q,ilower,iupper,interiorConnections,ghostConnections)
 %SETUPOPERATORPATCH  Set the discrete operator at a patch.
-%   The usage [Alist,b] = setupOperatorPatch(grid,k,q,ilower,iupper,ghostConnections)
+%   The usage [Alist,b] = setupOperatorPatch(grid,k,q,ilower,iupper,interiorConnections,ghostConnections)
 %   Set the discrete equations at all interior cells of patch q at
 %   level k. The ghost cells are either ignored (if they are on an interior
 %   interface) or assigned a boundary condition (if against the domain
@@ -9,7 +9,11 @@ function [Alist,b] = setupOperatorPatch(grid,k,q,ilower,iupper,ghostConnections)
 %   that should be added to a global list Alist to be converted to sparse
 %   format, and to a global RHS vector b. If ghostConnections=1, Alist also
 %   includes the connections from ghost cells to interior cells, otherwise
-%   does not include that.
+%   does not include that. If interiorConnections=1, Alist includes the
+%   equations at interior nodes and boundary conditions at ghost cells at
+%   domain boundaries. If not, only ghostConnections to interior
+%   nodes will be in Alist, if ghostConnections=1; otherwise, Alist is
+%   empty.
 %
 %   See also: TESTDFM, SETOPERATOR, DELETEUNDERLYINGDATA.
 
@@ -129,11 +133,12 @@ for d = 1:grid.dim,                                             % Loop over dime
         %mapGhost
         pindexRemaining = setdiff(pindexRemaining,pindexGhost);
         % B.C.: Dirichlet, u=0
-        Alist = [Alist; ...
-            [mapGhost mapGhost repmat(1.0,size(mapGhost))]; ...
-            ];
-        b(pindexGhost) = 0.0;                            % This inserts the RHS data into the "chunk" of b that we output from this routine, hence we translate map indices to patch-based 1D indices.
-
+        if (interiorConnections)
+            Alist = [Alist; ...
+                [mapGhost mapGhost repmat(1.0,size(mapGhost))]; ...
+                ];
+            b(pindexGhost) = 0.0;                            % This inserts the RHS data into the "chunk" of b that we output from this routine, hence we translate map indices to patch-based 1D indices.
+        end
     end
 end
 
@@ -173,10 +178,12 @@ for d = 1:grid.dim,                                             % Loop over dime
         mapNbhr         = map(pindexNbhr);
         f = flux(interior{:},2*d+side-2);
         f = f(:);
-        Alist = [Alist; ...
-            [mapInterior mapInterior  f]; ...
-            [mapInterior mapNbhr     -f] ...
-            ];
+        if (interiorConnections)
+            Alist = [Alist; ...
+                [mapInterior mapInterior  f]; ...
+                [mapInterior mapNbhr     -f] ...
+                ];
+        end
 
         % Ghost cell equations of C/F interfaces; they are normally ignored here and
         % will have an interpolation stencil later. However, for
@@ -229,15 +236,16 @@ for d = 1:grid.dim,                                             % Loop over dime
     end
 end
 
-b(pindexInterior) = rhsValues(interior{:});                            % This inserts the RHS data into the "chunk" of b that we output from this routine, hence we translate map indices to patch-based 1D indices.
-
-if (~ghostConnections)
-    % All remaining points are unused ghost points; set them to 0.
-    pindexRemaining = setdiff(pindexRemaining,pindexGhost);
-    fprintf('Number of unused points in this patch = %d\n',length(pindexRemaining));
-    mapRemaining = map(pindexRemaining);
-    Alist = [Alist; ...
-        [mapRemaining mapRemaining repmat(1.0,size(mapRemaining))]; ...
-        ];
-    b(pindexRemaining) = 0.0;                            % This inserts the RHS data into the "chunk" of b that we output from this routine, hence we translate map indices to patch-based 1D indices.
+if (interiorConnections)
+    b(pindexInterior) = rhsValues(interior{:});                            % This inserts the RHS data into the "chunk" of b that we output from this routine, hence we translate map indices to patch-based 1D indices.
+    if (~ghostConnections)
+        % All remaining points are unused ghost points; set them to 0.
+        pindexRemaining = setdiff(pindexRemaining,pindexGhost);
+        fprintf('Number of unused points in this patch = %d\n',length(pindexRemaining));
+        mapRemaining = map(pindexRemaining);
+        Alist = [Alist; ...
+            [mapRemaining mapRemaining repmat(1.0,size(mapRemaining))]; ...
+            ];
+        b(pindexRemaining) = 0.0;                            % This inserts the RHS data into the "chunk" of b that we output from this routine, hence we translate map indices to patch-based 1D indices.
+    end
 end
