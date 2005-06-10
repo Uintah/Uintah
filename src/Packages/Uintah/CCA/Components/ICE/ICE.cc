@@ -209,6 +209,10 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   ProblemSpecP cfd_ice_ps = cfd_ps->findBlock("ICE"); 
   
   cfd_ice_ps->require("max_iteration_equilibration",d_max_iter_equilibration);
+
+  // Min/Max for AMR and semi-AMR problems
+  cfd_ice_ps->getWithDefault("min_grid_level", d_minGridLevel, 0);
+  cfd_ice_ps->getWithDefault("max_grid_level", d_maxGridLevel, 1000);
   
   d_advector = AdvectionFactory::create(cfd_ice_ps, d_useCompatibleFluxes);
   cout_norm << " d_use_compatibleFluxes:  " << d_useCompatibleFluxes<<endl;
@@ -434,6 +438,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
                                lb->specific_heatLabel,
                                lb->gammaLabel);
   }
+
 }
 /*______________________________________________________________________
  Function~  ICE::addMaterial--
@@ -743,6 +748,9 @@ _____________________________________________________________________*/
 void ICE::scheduleComputeStableTimestep(const LevelP& level,
                                       SchedulerP& sched)
 {
+  if(!doICEOnThisLevel(level))
+    return;
+
   Task* t = 0;
   if (d_EqForm) {             // EQ 
     cout_doing << "ICE::scheduleComputeStableTimestep \t\t\tL-"
@@ -791,6 +799,9 @@ void
 ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, 
                           int step, int nsteps )
 {
+  if(!doICEOnThisLevel(level))
+    return;
+
   cout_doing << "ICE::scheduleTimeAdvance\t\t\t\tL-" <<level->getIndex()<< endl;
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
@@ -925,6 +936,9 @@ void ICE::scheduleComputeThermoTransportProperties(SchedulerP& sched,
                                 const LevelP& level,
                                 const MaterialSet* ice_matls)
 { 
+  if(!doICEOnThisLevel(level))
+    return;
+
   Task* t;
   cout_doing << "ICE::schedulecomputeThermoTransportProperties" << endl;
   t = scinew Task("ICE::computeThermoTransportProperties", 
@@ -957,6 +971,9 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
                                   const MaterialSubset* press_matl,
                                   const MaterialSet* ice_matls)
 {
+  if(!doICEOnThisLevel(getLevel(patches)))
+    return;
+
   Task* t = 0;
   if (d_RateForm) {     //RATE FORM
     cout_doing << "ICE::scheduleComputeRateFormPressure" << endl;
@@ -1005,6 +1022,9 @@ void ICE::scheduleComputeTempFC(SchedulerP& sched,
                                 const MaterialSubset* mpm_matls,
                                 const MaterialSet* all_matls)
 { 
+  if(!doICEOnThisLevel(getLevel(patches)))
+    return;
+
   Task* t;
   cout_doing << "ICE::scheduleComputeTempFC" << endl;
   t = scinew Task("ICE::computeTempFC", this, &ICE::computeTempFC);
@@ -1030,6 +1050,9 @@ void ICE::scheduleComputeVel_FC(SchedulerP& sched,
                                 const MaterialSet* all_matls,
                                 bool recursion)
 { 
+  if(!doICEOnThisLevel(getLevel(patches)))
+    return;
+
   Task* t = 0;
   if (d_RateForm) {     //RATE FORM
     cout_doing << "ICE::scheduleComputeFaceCenteredVelocitiesRF" << endl;
@@ -1074,6 +1097,9 @@ void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
                                            const MaterialSet* all_matls,
                                            const bool recursion)
 {
+  if(!doICEOnThisLevel(getLevel(patches)))
+    return;
+
   cout_doing << "ICE::scheduleAddExchangeContributionToFCVel" << endl;
   Task* task = scinew Task("ICE::addExchangeContributionToFCVel",
                      this, &ICE::addExchangeContributionToFCVel, recursion);
@@ -1106,6 +1132,9 @@ void ICE::scheduleComputeModelSources(SchedulerP& sched,
                                       const LevelP& level,
                                       const MaterialSet* matls)
 {
+  if(!doICEOnThisLevel(level))
+    return;
+
   if(d_models.size() != 0){
     cout_doing << "ICE::scheduleModelMassExchange" << endl;
     Task* task = scinew Task("ICE::zeroModelSources",this, 
@@ -1138,6 +1167,9 @@ _____________________________________________________________________*/
 void ICE::scheduleUpdateVolumeFraction(SchedulerP& sched, const LevelP& level,
                                 const MaterialSet* matls)
 {
+  if(!doICEOnThisLevel(level))
+    return;
+
   if(d_models.size() != 0){
     cout_doing << "ICE::scheduleUpdateVolumeFraction" << endl;
     Task* task = scinew Task("ICE::updateVolumeFraction",
@@ -1162,6 +1194,9 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
 					    const MaterialSubset* /*mpm_matls*/,
                                             const MaterialSet* matls)
 {
+  if(!doICEOnThisLevel(getLevel(patches)))
+    return;
+
   cout_doing << "ICE::scheduleComputeDelPressAndUpdatePressCC" << endl;
   Task *task = scinew Task("ICE::computeDelPressAndUpdatePressCC",
                             this, &ICE::computeDelPressAndUpdatePressCC);
@@ -1207,6 +1242,9 @@ void ICE::scheduleComputePressFC(SchedulerP& sched,
                              const MaterialSubset* press_matl,
                              const MaterialSet* matls)
 { 
+  if(!doICEOnThisLevel(getLevel(patches)))
+    return;
+
   cout_doing << "ICE::scheduleComputePressFC" << endl;                   
   Task* task = scinew Task("ICE::computePressFC",
                      this, &ICE::computePressFC);
@@ -1234,6 +1272,9 @@ ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
 					   const MaterialSubset* /*mpm_matls_sub*/,
 					   const MaterialSet* matls)
 {
+  if(!doICEOnThisLevel(getLevel(patches)))
+    return;
+
   Task* t;
   cout_doing << "ICE::scheduleAccumulateMomentumSourceSinks" << endl; 
   t = scinew Task("ICE::accumulateMomentumSourceSinks", 
@@ -1285,6 +1326,9 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
                                          const MaterialSet* matls)
 
 {
+  if(!doICEOnThisLevel(getLevel(patches)))
+    return;
+
   Task* t;              // EQ
     cout_doing << "ICE::scheduleAccumulateEnergySourceSinks" << endl;
     t = scinew Task("ICE::accumulateEnergySourceSinks",
@@ -1341,6 +1385,9 @@ void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
                                      const PatchSet* patches,
                                      const MaterialSet* ice_matls)
 {
+  if(!doICEOnThisLevel(getLevel(patches)))
+    return;
+
   cout_doing << "ICE::scheduleComputeLagrangianValues" << endl;
   Task* t = scinew Task("ICE::computeLagrangianValues",
                       this,&ICE::computeLagrangianValues);
@@ -1375,6 +1422,9 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
                                             const MaterialSubset* press_matl,
                                             const MaterialSet* matls)
 {
+  if(!doICEOnThisLevel(getLevel(patches)))
+    return;
+
   Task* t = 0;
 
   if (d_RateForm) {     //RATE FORM
@@ -1430,6 +1480,9 @@ void ICE::scheduleComputeLagrangian_Transported_Vars(SchedulerP& sched,
                                                      const PatchSet* patches,
                                                      const MaterialSet* matls)
 {
+  if(!doICEOnThisLevel(getLevel(patches)))
+    return;
+
   if(d_models.size() > 0 && d_modelSetup->tvars.size() > 0){
     cout_doing << "ICE::scheduleComputeLagrangian_Transported_Vars" << endl;
     Task* t = scinew Task("ICE::computeLagrangian_Transported_Vars",
@@ -1464,6 +1517,9 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
                                const MaterialSubset* press_matl,
                                const MaterialSet* all_matls)
 {
+  if(!doICEOnThisLevel(getLevel(patches)))
+    return;
+
   Task* t = 0;
   if (d_RateForm) {     //RATE FORM
     cout_doing << "ICE::scheduleAddExchangeToMomentumAndEnergy_RF" << endl;
@@ -1527,6 +1583,9 @@ void ICE::scheduleMaxMach_on_Lodi_BC_Faces(SchedulerP& sched,
                                      const MaterialSet* matls,
                                      vector<PatchSubset*> & /*maxMach_PSS*/)
 { 
+  if(!doICEOnThisLevel(level))
+    return;
+
   if(d_customBC_var_basket->usingLodi) {
     cout_doing << "ICE::scheduleMaxMach_on_Lodi_BC_Faces" << endl;
     Task* task = scinew Task("ICE::maxMach_on_Lodi_BC_Faces",
@@ -1627,6 +1686,9 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
                                     const MaterialSubset* /*press_matl*/,
                                     const MaterialSet* ice_matls)
 {
+  if(!doICEOnThisLevel(getLevel(patch_set)))
+    return;
+
   Ghost::GhostType  gac  = Ghost::AroundCells; 
   Ghost::GhostType  gn   = Ghost::None;
   
@@ -1681,6 +1743,9 @@ void ICE::scheduleTestConservation(SchedulerP& sched,
                                    const MaterialSubset* ice_matls,
                                    const MaterialSet* all_matls)
 {
+  if(!doICEOnThisLevel(getLevel(patches)))
+    return;
+
   if(d_conservationTest->onOff) {
     cout_doing << "ICE::scheduleTestConservation" << endl;
     Task* t= scinew Task("ICE::TestConservation",
@@ -5399,6 +5464,16 @@ void ICE::setNeedAddMaterialFlag(const ProcessorGroup*,
       d_sharedState->setNeedAddMaterial(0);
     }
  }
+
+bool ICE::doICEOnThisLevel(const Level* level)
+{
+  return level->getIndex() >= d_minGridLevel && level->getIndex() <= d_maxGridLevel;
+}
+
+bool ICE::doICEOnThisLevel(const LevelP& level)
+{
+  return doICEOnThisLevel(level.get_rep());
+}
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1209

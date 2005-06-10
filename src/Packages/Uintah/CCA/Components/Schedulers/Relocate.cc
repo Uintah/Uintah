@@ -4,6 +4,7 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
@@ -452,6 +453,9 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
 				     const VarLabel* particleIDLabel,
 				     const MaterialSet* matls)
 {
+  // Only allow particles at the finest level for now
+  if(level->getIndex() != level->getGrid()->numLevels()-1)
+    return;
   reloc_old_posLabel = old_posLabel;
   reloc_old_labels = old_labels;
   reloc_new_posLabel = new_posLabel;
