@@ -11,9 +11,6 @@ function [Alist,b] = deleteUnderlyingData(grid,k,q,Alist,b)
 fprintf('--- deleteUnderlyingData(k = %d, q = %d) ---\n',k,q);
 level       = grid.level{k};
 numPatches  = length(level.numPatches);
-s           = level.stencilOffsets;
-numEntries  = size(s,1);
-h           = level.h;
 P           = grid.level{k}.patch{q};
 map         = P.cellIndex;
 
@@ -28,7 +25,7 @@ underLower = coarsenIndex(grid,k,P.ilower);
 underUpper = coarsenIndex(grid,k,P.iupper);
 under       = cell(grid.dim,1);
 for dim = 1:grid.dim
-    under{dim} = [underLower(dim)-1:underUpper(dim)+1] + Q.offset(dim);  % Patch-based cell indices including ghosts
+    under{dim} = [underLower(dim):underUpper(dim)] + Q.offset(dim);  % Patch-based cell indices including ghosts
 end
 matUnder      = cell(grid.dim,1);
 [matUnder{:}] = ndgrid(under{:});
@@ -38,13 +35,26 @@ mapUnder      = Q.cellIndex(pindexUnder);
 
 % Compute chunk of patch Q (level k-1) equations of the underlying area and
 % subtract them from the equations so that they disappear from level k-1 equations.
-[AlistUnder,bUnder] = setupOperatorPatch(grid,k-1,P.parent,underLower,underUpper);
+AlistUnder = setupOperatorPatch(grid,k-1,P.parent,underLower,underUpper,1);
 AlistUnder(:,3) = -AlistUnder(:,3);
 Alist = [Alist; AlistUnder];
-b(mapUnder(:)) = bUnder(mapUnder - Q.baseIndex + 1);
 
 % Place an identity operator over the deleted region and ghost cells of it
 % that are at domain boundaries (B.C. are now defined at patch P instead).
-[AlistUnder,bUnder] = setupIdentityPatch(grid,k-1,P.parent,underLower,underUpper);
+AlistUnder = setupIdentityPatch(grid,k-1,P.parent,underLower,underUpper);
 Alist = [Alist; AlistUnder];
-b(mapUnder(:)) = bUnder(mapUnder - Q.baseIndex + 1);
+b(mapUnder) = 0.0;
+
+% At this point, the LHS at the interior of the box in the parent patch
+% underlying the fine patch, is the identity operator. Ghost cells of this
+% box that are at domain boundaries also have LHS set to identity. Ghost
+% cells of this box that are not at domain boundaries (i.e., at C/F
+% interface), retain their previously defined LHS equations, except the
+% fluxes in those equations directed into the box: these are removed in
+% setupOperatorPatch(...,1). The RHS vector is set to 0 at the box and ALL
+% its ghost cells. Thus, following this function, we should
+% (1) Add the fine fluxes to the equations of the coarse C/F interface cells.
+% (2) Modify the right-hand-side of these equations to the correct one.
+
+
+

@@ -1,5 +1,13 @@
-function plotGrid(grid)
-% Plot gridlines (works in 2D only).
+function plotGrid(grid,showGhosts,showCellIndex)
+% Plot gridlines (works in 2D only). If showGhosts=1 we add ghost cells to
+% the plot.
+
+if (nargin < 2)
+    showGhosts = 0;
+end
+if (nargin < 3)
+    showCellIndex = 0;
+end
 
 figure(1);
 clf;
@@ -10,7 +18,16 @@ for k = 1:grid.numLevels,
     level = grid.level{k};
     h = level.h;
     if (k == 1)
-        axis([(level.minCell(1)-2.5)*h(1) (level.maxCell(1)+1.5)*h(1) (level.minCell(2)-2.5)*h(2) (level.maxCell(2)+1.5)*h(2)]);
+        offsetLower = [-1.5 -1.5];
+        offsetUpper = [0.5 0.5];
+        if (showGhosts)
+            offsetLower = offsetLower - 1;
+            offsetUpper = offsetUpper + 1;
+        end
+        axis([...
+            (level.minCell(1)+offsetLower(1))*h(1) (level.maxCell(1)+offsetUpper(1))*h(1) ...
+            (level.minCell(2)+offsetLower(2))*h(2) (level.maxCell(2)+offsetUpper(2))*h(2) ...
+            ]);
         hold on;
     end
     set(gcf,'position',[488   233   850   850]);
@@ -27,21 +44,42 @@ for k = 1:grid.numLevels,
         x2          = x2(:);
 
         for i = 1:length(x1)
-            a = rectangle('Position',[x1(i)-0.5*h(1) x2(i)-0.5*h(2) h(1) h(2)]);
-            set(a,'edgecolor',levelColor{k});
-            set(a,'linewidth',k);
-
-            b = plot(x1(i),x2(i),'o');
-            set(b,'markersize',10);
-            set(b,'markeredgecolor',levelColor{k});
-            
             if (    (mat1(i) >= P.ilower(1)) & (mat1(i) <= P.iupper(1)) & ...
                     (mat2(i) >= P.ilower(2)) & (mat2(i) <= P.iupper(2)))
+                a = rectangle('Position',[x1(i)-0.5*h(1) x2(i)-0.5*h(2) h(1) h(2)]);
+                set(a,'edgecolor',levelColor{k});
+                set(a,'linewidth',k);
                 set(a,'linestyle','-')
+
+                b = plot(x1(i),x2(i),'o');
+                set(b,'markersize',10);
+                set(b,'markeredgecolor',levelColor{k});
                 set(b,'markerfacecolor',levelColor{k});
-            else
+
+                if (showCellIndex)
+                    index = P.cellIndex(mat1(i)+P.offset(1),mat2(i)+P.offset(2));
+                    c = text(x1(i)-0.125*h(1),x2(i)-0.125*h(2),sprintf('%d',index));
+                    set(c,'fontsize',10);
+                    set(c,'color','k');
+                end
+
+            elseif (showGhosts)
+                a = rectangle('Position',[x1(i)-0.5*h(1) x2(i)-0.5*h(2) h(1) h(2)]);
+                set(a,'edgecolor',levelColor{k});
+                set(a,'linewidth',k);
                 set(a,'linestyle','--')
+
+                b = plot(x1(i),x2(i),'o');
+                set(b,'markersize',10);
+                set(b,'markeredgecolor',levelColor{k});
                 set(b,'markerfacecolor','white');
+
+                if (showCellIndex)
+                    index = P.cellIndex(mat1(i)+P.offset(1),mat2(i)+P.offset(2));
+                    c = text(x1(i)-0.125*h(1),x2(i)-0.125*h(2),sprintf('%d',index));
+                    set(c,'fontsize',10);
+                    set(c,'color','k');
+                end
             end
         end
 
@@ -68,4 +106,5 @@ set(a,'edgecolor','black');
 xlabel('x');
 ylabel('y');
 title(sprintf('Grid, numLevels = %d, # total vars = %d',grid.numLevels,grid.totalVars));
+axis equal;
 print -depsc grid.eps
