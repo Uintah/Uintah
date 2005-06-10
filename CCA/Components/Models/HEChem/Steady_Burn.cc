@@ -42,7 +42,7 @@ Steady_Burn::Steady_Burn(const ProcessorGroup* myworld, ProblemSpecP& params)
   Ilb  = scinew ICELabel();
   MIlb = scinew MPMICELabel();
   /*  diagnostic labels  */
-  /****/PartFlagLabel = VarLabel::create("Steady_Burn::PartFlag", CCVariable<double>::getTypeDescription());
+  /****/PartFlagLabel = VarLabel::create("Steady_Burn::PartFlag", CCVariable<int>::getTypeDescription());
 }
 
 
@@ -72,6 +72,7 @@ void Steady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup
   params->require("HeatConductCondPh", Kc);
   params->require("SpecificHeatBoth",  Cp);
   params->require("MoleWeightGasPh",   MW);
+  params->require("IgnitionTemp",      ignitionTemp);
 
   CC1 = Ac*R*Kc/Ec/Cp;        
   CC2 = Qc/Cp/2;              
@@ -110,7 +111,7 @@ void Steady_Burn::scheduleInitialize(SchedulerP& sched, const LevelP& level, con
   one_matl->add(0);
   one_matl->addReference();     
 
-  const MaterialSubset* react_matl = matl0->thisMaterial();
+  //const MaterialSubset* react_matl = matl0->thisMaterial();
   sched->addTask(t, level->eachPatch(), mymatls);
 }
 
@@ -121,7 +122,7 @@ void Steady_Burn::initialize(const ProcessorGroup*,
 			     DataWarehouse*, 
 			     DataWarehouse* new_dw){
 
-  int m0 = matl0->getDWIndex();
+  //int m0 = matl0->getDWIndex();
   
   for(int p=0;p<patches->size();p++) {
     const Patch* patch = patches->get(p);
@@ -140,8 +141,10 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched, const LevelP& l
   cout_doing << "Steady_Burn::scheduleComputeModelSources" << endl;
   
   t->requires( Task::OldDW, mi->delT_Label);
+
   Ghost::GhostType  gac = Ghost::AroundCells;  
   Ghost::GhostType  gn  = Ghost::None;
+
   const MaterialSubset* react_matl = matl0->thisMaterial();
   const MaterialSubset* prod_matl  = matl1->thisMaterial();
   MaterialSubset* one_matl     = scinew MaterialSubset();
@@ -253,8 +256,6 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     
     Ghost::GhostType  gn  = Ghost::None;    
     Ghost::GhostType  gac = Ghost::AroundCells;
-    Ghost::GhostType  gan = Ghost::AroundNodes;
-
     
     /* Reactant data */
     new_dw->get(solidTemp,       MIlb->temp_CCLabel,    m0, patch, gn, 0);
@@ -267,7 +268,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     new_dw->get(NCsolidMass,     Mlb->gMassLabel,       m0, patch, gac,1);
     new_dw->get(solidVol_frac,   Ilb->vol_frac_CCLabel, m0, patch, gn, 0);
 
-    /****/ParticleSubset* pset = old_dw->getParticleSubset(m0, patch, gan, 1, Mlb->pXLabel);
+    /****/ParticleSubset* pset = old_dw->getParticleSubset(m0, patch, gn,0, Mlb->pXLabel);
     /****/old_dw->get(px,              Mlb->pXLabel,       pset);
     
 
@@ -284,7 +285,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     /*    Misc    */
     new_dw->get(press_CC,       Ilb->press_equil_CCLabel,      0, patch, gn,  0);
     old_dw->get(NC_CCweight,    MIlb->NC_CCweightLabel,        0, patch, gac, 1);   
-    /****/new_dw->allocateAndPut(PartFlag,  Steady_Burn::PartFlagLabel,   0, patch);
+    /****/new_dw->allocateAndPut(PartFlag, Steady_Burn::PartFlagLabel, 0, patch, gac, 1);
 
     IntVector nodeIdx[8];
 
@@ -304,7 +305,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     
     
     /****/
-    PartFlag.initialize(100);/* initialize extra cells for BC to 100 */
+    PartFlag.initialize(100);// initialize extra cells for BC to 100
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       PartFlag[*iter] = 0; 
     }
@@ -314,9 +315,15 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
       patch->findCell(px[idx],c);
       PartFlag[c] += 1;
     }
-    
+
+    /*
+    for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+      cout <<"   cell = "<< *iter << "   PartFlag = " << PartFlag[*iter] <<endl ; 
+    }
+    */
+
     Vector  dx = patch->dCell();
-    double vol = dx.x()*dx.y()*dx.z();   
+    //double vol = dx.x()*dx.y()*dx.z();   
     
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
@@ -336,8 +343,9 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
       }
       */
       
-      ignitionTemp = 450;      
-      if( (MaxMass-MinMass)/MaxMass>0.4 && (MaxMass-MinMass)/MaxMass<1.0 && MaxMass>d_TINY_RHO /****/&& PartFlag[c]>0 ){ /* near interface and containing particles */
+      if( (MaxMass-MinMass)/MaxMass>0.4 && (MaxMass-MinMass)/MaxMass<1.0 && MaxMass>d_TINY_RHO ){//****/&& PartFlag[c]>0 ){ 
+	/* near interface and containing particles */
+	burning = 0;
 	for(int i = -1; i<=1; i++){
 	  for(int j = -1; j<=1; j++){
 	    for(int k = -1; k<=1; k++){
@@ -345,7 +353,9 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
 	      //cout<<"  cell = "<<cell<< "  partflag = "<< PartFlag[cell]<<endl;
 	      if( 0 == PartFlag[cell] ){
 		for (int m = 0; m < numAllMatls; m++){
-		  //cout<<"  cell = "<<cell<< "  partflag = "<< PartFlag[cell]<<"  m = "<< m <<"  volfrac ="<<vol_frac_CC[m][cell] << "  temp =" <<temp_CC[m][cell] <<endl;
+		  //cout<<"  cell = "<<cell<< "  partflag = "<< PartFlag[cell]
+		  //<<"  m = "<< m  <<"  volfrac ="<<vol_frac_CC[m][cell] 
+		  //<< "  temp =" <<temp_CC[m][cell] <<endl;
 		  if(vol_frac_CC[m][cell] > 0.3 && temp_CC[m][cell] > ignitionTemp){
 		    burning = 1;
 		    break;
@@ -361,9 +371,9 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
       }
       
       if(burning){
-		
+	
 	//cout<<"\tThe burning cell is : " << c << " solid vol_frac = " << solidVol_frac[c] <<"  solidMass = " <<solidMass[c] <<endl;
-		
+	
 	Vector rhoGradVector = computeDensityGradientVector(nodeIdx, NCsolidMass, NC_CCweight,dx);
 	
 	double surfArea = computeSurfaceArea(rhoGradVector, dx); 
@@ -377,7 +387,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
         Vector momX = vel_CC[c] * burnedMass;
         momentum_src_0[c] -= momX;
         momentum_src_1[c] += momX;
-
+	
         double energyX   = Cp*solidTemp[c]*burnedMass; 
         double releasedHeat = burnedMass * (Qc + Qg);
         energy_src_0[c] -= energyX;
