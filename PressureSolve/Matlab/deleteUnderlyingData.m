@@ -35,7 +35,7 @@ mapUnder      = Q.cellIndex(pindexUnder);
 
 % Compute chunk of patch Q (level k-1) equations of the underlying area and
 % subtract them from the equations so that they disappear from level k-1 equations.
-AlistUnder = setupOperatorPatch(grid,k-1,P.parent,underLower,underUpper,1);
+AlistUnder = setupOperatorPatch(grid,k-1,P.parent,underLower,underUpper,1,1);
 AlistUnder(:,3) = -AlistUnder(:,3);
 Alist = [Alist; AlistUnder];
 
