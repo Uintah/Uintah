@@ -80,6 +80,18 @@ $filename = "$srcroot" . "/src/Packages/Uintah/CCA/Components/sub.mk";
   $replacement_str2 = "SRCS    := \$\(SRCDIR\)/ComponentFactory.cc 
 SRCS := \$\(SRCS\) \$\(SRCDIR\)/FakeArches.cc";
 
+  #  find and replace 3
+  $search_str3       = "
+        Packages/Uintah/CCA/Components/Arches .
+        Packages/Uintah/CCA/Components/Examples .
+        Packages/Uintah/CCA/Components/ICE      .
+        Packages/Uintah/CCA/Components/MPM      .
+        Packages/Uintah/CCA/Components/MPMArches   .";
+  $replacement_str3  = "
+        Packages/Uintah/CCA/Components/Examples \\
+        Packages/Uintah/CCA/Components/ICE      \\
+        Packages/Uintah/CCA/Components/MPM      \\";
+
   @lines = <IN>;
   $text = join("", @lines);
   
@@ -93,10 +105,15 @@ SRCS := \$\(SRCS\) \$\(SRCDIR\)/FakeArches.cc";
     $changed2 = "true";
   }
 
+  $changed3 = "false";
+  if ($text =~ s/$search_str3/$replacement_str3/g) {
+    $changed3 = "true";
+  }
+
   close IN;
   
-  print "   Find and replace results: 1) ",$changed1, ", 2) ",$changed2, "\n";
-  if ($changed1 eq "false" || $changed2 eq "false" ) {
+  print "   Find and replace results: 1) ",$changed1, ", 2) ",$changed2, ", 3) ", $changed3, "\n";
+  if ($changed1 eq "false" || $changed2 eq "false" || $changed3 eq "false" ) {
     print "   The sub.mk file WAS NOT changed.\n";
   } else {
 
