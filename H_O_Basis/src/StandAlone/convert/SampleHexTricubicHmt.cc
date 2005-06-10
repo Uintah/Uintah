@@ -77,31 +77,6 @@ bool ptsCountHeader;
 int baseIndex;
 bool elementsCountHeader;
 
-void setDefaults() {
-  ptsCountHeader=true;
-  baseIndex=0;
-  elementsCountHeader=true;
-}
-
-int parseArgs(int argc, char *argv[]) {
-  int currArg = 4;
-  while (currArg < argc) {
-    if (!strcmp(argv[currArg],"-noPtsCount")) {
-      ptsCountHeader=false;
-      currArg++;
-    } else if (!strcmp(argv[currArg], "-noElementsCount")) {
-      elementsCountHeader=false;
-      currArg++;
-    } else if (!strcmp(argv[currArg], "-oneBasedIndexing")) {
-      baseIndex=1;
-      currArg++;
-    } else {
-      cerr << "Error - unrecognized argument: "<<argv[currArg]<<"\n";
-      return 0;
-    }
-  }
-  return 1;
-}
 
 void printUsageInfo(char *progName) {
   cerr << "\n Usage: "<<progName<<" HexVolField dataIn PointCloadField dataOut \n\n";
@@ -118,17 +93,11 @@ main(int argc, char **argv) {
   macForceLoad(); // Attempting to force load (and thus instantiation of
 	          // static constructors) Core/Datatypes;
 #endif
-  setDefaults();
 
   char *hvName = argv[1];
   char *dataIn = argv[2];
   char *pcName = argv[3];
   char *dataOut = argv[4];
-
-  if (!parseArgs(argc, argv)) {
-    printUsageInfo(argv[0]);
-    return 2;
-  }
 
   FieldHandle hhandle;
   Piostream* hstream=auto_istream(hvName);
@@ -197,29 +166,31 @@ main(int argc, char **argv) {
   HVMesh::Cell::iterator citer_end; 
   HVMesh::Node::array_type cell_nodes(8);
   hvm->size(csize);
-  hvm->begin(citer);
   hvm->end(citer_end);
+
   FILE *fdataOut = fopen(dataOut, "w");
   if (!fdataOut) {
     cerr << "Error opening output file "<<dataOut<<"\n";
     return 2;
   }
  
-
-  while(citer != citer_end) {
-    hvm->get_nodes(cell_nodes, *citer);
-    fprintf(fdataOut, "%d %d %d %d %d %d %d %d\n", 
-	    (int)cell_nodes[0]+baseIndex,
-	    (int)cell_nodes[1]+baseIndex,
-	    (int)cell_nodes[2]+baseIndex,
-	    (int)cell_nodes[3]+baseIndex,
-	    (int)cell_nodes[4]+baseIndex,
-	    (int)cell_nodes[5]+baseIndex,
-	    (int)cell_nodes[6]+baseIndex,
-	    (int)cell_nodes[7]+baseIndex);
-    ++citer;
+  while(niter != niter_end) {
+    Point p;
+    pcm->get_center(p, *niter);
+    fprintf(stderr, "%lf %lf %lf\n", p.x(), p.y(), p.z());
+    hvm->begin(citer);
+    while(citer != citer_end) {
+      vector<double> coords;
+      hvm->get_coords(coords, p, *citer);
+      if (coords[0]>=0. && coords[0]<=1.)
+	if (coords[1]>=0. && coords[1]<=1.)
+	  if (coords[2]>=0. && coords[2]<=1.)
+	    break;
+      ++citer;
+    }
+    ++niter;
   }
   fclose(fdataOut);
-
+  
   return 0;  
 }    
