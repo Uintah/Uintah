@@ -39,11 +39,11 @@
 #include <sgi_stl_warnings_on.h>
 
 #ifdef _WIN32
-#include <windows.h> // for LoadLibrary(), GetProcAddress() and HINSTANCE
-typedef HINSTANCE LIBRARY_HANDLE;
+#  include <windows.h> // for LoadLibrary(), GetProcAddress() and HINSTANCE
+   typedef HINSTANCE LIBRARY_HANDLE;
 #else
-#include <dlfcn.h>   // for dlopen() and dlsym()
-typedef void* LIBRARY_HANDLE;
+#  include <dlfcn.h>   // for dlopen() and dlsym()
+   typedef void* LIBRARY_HANDLE;
 #endif
 
 /////////////////////////////////////////////////////////////////
@@ -84,6 +84,7 @@ void CloseLibrary(LIBRARY_HANDLE);
 
 const char* SOError();
 
+LIBRARY_HANDLE findLib(std::string lib);
 LIBRARY_HANDLE FindLibInPath(const std::string& lib, const std::string& path);
 
 #endif
