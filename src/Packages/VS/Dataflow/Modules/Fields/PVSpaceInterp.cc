@@ -72,11 +72,13 @@ private:
   void interp_field(const double *weights, const unsigned *interp_idxs);
   void check_lv_vol(const Point &);
   void apply_potentials(float e_phase, float HR);
+  void set_phase_ranges();
 
   HexVolMesh::Node::index_type find_closest(HexVolMesh *mesh, 
 					    const Point &p) const;
   void set_field(const unsigned idx);
-
+  inline 
+  int find_phase_index(float phase, int &p_idx);
   void on_exit();
   static void on_exit_wrap(void*);
 
@@ -89,6 +91,8 @@ private:
   BundleHandle                          crv_bdl_;
   vector<FieldHandle>                   ppv_flds_;
   vector<MatrixHandle>                  crv_mats_;
+  NrrdDataHandle                        phase_info_data_;
+  double                               *phase_ranges_;
   FieldHandle                           out_fld_;
   FieldHandle                           out_fld_pot_;
   TimeViewerHandle                      time_viewer_h_;
@@ -99,6 +103,7 @@ private:
   NrrdIPort                            *ispace_port_;
   BundleIPort                          *bdl_port_;
   BundleIPort                          *ppv_port_;
+  NrrdIPort                            *phase_info_port_;
   FieldIPort                           *fld_port_;
   FieldOPort                           *out_port_;
   FieldOPort                           *out_port_pot_;
@@ -111,6 +116,7 @@ private:
 
   int                                   ppv_generation_;
   int                                   crv_generation_;
+  int                                   phase_info_generation_;
 };
 
 
@@ -167,6 +173,8 @@ PVSpaceInterp::PVSpaceInterp(GuiContext* ctx) :
   interp_space_(0),
   con_fld_(0),
   crv_bdl_(0),
+  phase_info_data_(0),
+  phase_ranges_(0),
   out_fld_(0),
   out_fld_pot_(0),
   time_viewer_h_(0),
@@ -176,6 +184,7 @@ PVSpaceInterp::PVSpaceInterp(GuiContext* ctx) :
   ispace_port_(0),
   bdl_port_(0),
   ppv_port_(0),
+  phase_info_port_(0),
   fld_port_(0),
   out_port_(0),
   out_port_pot_(0),
@@ -185,7 +194,8 @@ PVSpaceInterp::PVSpaceInterp(GuiContext* ctx) :
   lvp_idx_(ctx->subVar("lvp_index")),
   rvp_idx_(ctx->subVar("rvp_index")),
   ppv_generation_(-1),
-  crv_generation_(-1)
+  crv_generation_(-1),
+  phase_info_generation_(-1)
 {
   CleanupManager::add_callback(this->on_exit_wrap, this);
 }
@@ -353,6 +363,7 @@ PVSpaceInterp::apply_potentials(float e_phase, float HR)
   }
 
   int phase_idx = Round(e_phase * crv->ncols());
+  if (phase_idx >= crv->ncols()) { phase_idx = crv->ncols() - 1; }
   vector<double>::iterator iter = data.begin();
   int row = 0;
   while (iter != data.end()) {
@@ -478,32 +489,47 @@ PVSpaceInterp::interp_field(const double *weights,
   }
 }
 
+void 
+PVSpaceInterp::set_phase_ranges()
+{
+  if (! phase_info_data_.get_rep()) return;
+
+  float *dat = (float *)phase_info_data_->nrrd->data;
+  int row_l = phase_info_data_->nrrd->axis[0].size;
+  int sz = phase_info_data_->nrrd->axis[1].size - 1;
+  if (phase_ranges_ != 0) delete[] phase_ranges_;
+  phase_ranges_ = new double[phase_info_data_->nrrd->axis[1].size];
+
+  for (int i = 0; i < sz; ++i) {
+    int idx = i * row_l;
+    phase_ranges_[i] = ((dat[(i + 1) * row_l] - dat[idx]) * 0.5) + dat[idx];
+  }
+  
+}
 
 inline 
 int
-find_phase_index(float phase, int &p_idx) 
+PVSpaceInterp::find_phase_index(float phase, int &p_idx) 
 {
   
-  const float phase_lookup[] = {0.050000,0.190000,0.320000,0.450000,
-				0.570000,0.620000,0.650000,0.670000,0.690000,
-				0.720000,0.770000,0.850000,0.950000};
-
-  const int phase_index[] = {5, 0, 1, 2, 3, 4, 3, 2, 1, 0, 5, 5, 5};
-
+  int len = phase_info_data_->nrrd->axis[1].size - 1;
   p_idx = 0;
   bool found = false;
-  for (int i = 0; i < 12; ++i) 
+  for (int i = 0; i < len; ++i) 
   {
-    if (phase > phase_lookup[i] && 
-	phase <= phase_lookup[i + 1]) 
+    if (phase > phase_ranges_[i] && 
+	phase <= phase_ranges_[i + 1]) 
     {
       p_idx = i;
       found = true;
       break;
     }
   }
-  if (! found) { p_idx = 12; }
-  return phase_index[p_idx];
+  if (! found) { p_idx = len; }
+
+  int idx = phase_info_data_->nrrd->axis[0].size * p_idx + 1;
+  float *dat = (float *)phase_info_data_->nrrd->data;
+  return (int)dat[idx] - 1;
 }
 
 Point
@@ -541,16 +567,10 @@ PVSpaceInterp::get_hip_params(unsigned &phase_mesh, float &e_phase, float &HR)
   int phase_index = 0;
   phase_mesh = find_phase_index(cur_phase, phase_index);
 
-  // phase centers from roy are:
-
-  const float phase_centers[] = { 0.10, 0.28, 0.36, 0.54, 0.60, 0.64, 0.66, 
-				  0.68, 0.70, 0.74, 0.80, 0.90, 1.0};
-
-//   const float phase_centers[] = { 0.0375, 0.0750, 0.1250, 0.2000, 0.2750, 
-// 				  0.3500, 0.4250, 0.5000, 0.5750, 0.6500, 
-// 				  0.7000, 0.8000, 0.9000, 1.0000 };
-
-  const float center = phase_centers[phase_index];
+  // fetch the phase center for the range.
+  int pidx = phase_info_data_->nrrd->axis[0].size * phase_idx;
+  float *pdat = (float *)phase_info_data_->nrrd->data;
+  const float center = pdat[pidx];
   int f_idx = idx;
   float last_delta = fabs(cur_phase - center);
   if (last_delta > 0.0001) {
@@ -724,6 +744,27 @@ PVSpaceInterp::execute()
       ppv_flds_.push_back(ppv_bdl->getField(name.str()));
     }
   }
+
+
+  if (! phase_info_port_) {
+    phase_info_port_ = (NrrdIPort*)get_iport("Phase Info");
+    if (! phase_info_port_) {
+      error("Unable to initialize iport 'Phase Info Data'.");
+      return;
+    }
+  }
+  phase_info_port_->get(phase_info_data_);
+  if (! phase_info_data_.get_rep()) {
+    error ("Unable to get input Phase Info Data.");
+    return;
+  } 
+
+  if (phase_info_generation_ != phase_info_data_->generation) 
+  {
+    phase_info_generation_ = phase_info_data_->generation;
+    set_phase_ranges();
+  }
+
   if (runner_) runner_->unlock();
   if (!runner_) {
     runner_ = scinew InterpController(this, time_viewer_h_);

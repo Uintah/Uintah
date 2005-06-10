@@ -92,6 +92,13 @@
 	</description>
 	<datatype>SCIRun::Bundle</datatype>
       </port>
+      <port>
+	<name>Phase Info</name>
+	<description>
+	  <p>phase centers and corresponding indexes</p>
+	</description>
+	<datatype>SCIRun::Nrrd</datatype>
+      </port>
     </inputs>
     <outputs>
       <port>
