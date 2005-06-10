@@ -3330,18 +3330,49 @@ bool matlabconverter::mladdmesh(LockingHandle<StructCurveMesh> meshH,matlabarray
 
 bool matlabconverter::mladdmesh(LockingHandle<ScanlineMesh> meshH,matlabarray mlarray)
 {
+  Transform T;
+  matlabarray transform;
+  double data[16];
+  
+  T =meshH->get_transform();
+  T.get_trans(data);
+  transform.createdensearray(4,4,matlabarray::miDOUBLE);
+  transform.setnumericarray(data,16);
+  mlarray.setfield(0,"tranform",transform);
+
+
   mladdmeshclass("scanline",mlarray);
   return(true);
 }
 
 bool matlabconverter::mladdmesh(LockingHandle<ImageMesh> meshH,matlabarray mlarray)
 {
+  Transform T;
+  matlabarray transform;
+  double data[16];
+  
+  T = meshH->get_transform();
+  T.get_trans(data);
+  transform.createdensearray(4,4,matlabarray::miDOUBLE);
+  transform.setnumericarray(data,16);
+  mlarray.setfield(0,"tranform",transform);
+
   mladdmeshclass("image",mlarray);
   return(true);
 }
 
 bool matlabconverter::mladdmesh(LockingHandle<LatVolMesh> meshH,matlabarray mlarray)
 {
+  Transform T;
+  matlabarray transform;
+  double data[16];
+  
+  T = meshH->get_transform();
+  T.get_trans(data);
+  transform.createdensearray(4,4,matlabarray::miDOUBLE);
+  transform.setnumericarray(data,16);
+  mlarray.setfield(0,"tranform",transform);
+
   mladdmeshclass("latvol",mlarray);
   return(true);
 }

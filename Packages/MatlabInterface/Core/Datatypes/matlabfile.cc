@@ -413,15 +413,7 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
 	if (matrixclass.size() == 0) { closechild(); return; }
 	unsigned long classinfo =  matrixclass.getandcastvalue<unsigned long>(0);
   mxtype matrixtype = static_cast<mxtype>((0x000000FF & classinfo));
-	
-	// the second byte contains flags.
-	// logical = logical matrix 
-	// global  = variable was defined in the global workspace
-	// complex = matrix complex  
-	if (classinfo & 0x0200) matrix.setlogical(1);
-	if (classinfo & 0x0400) matrix.setglobal(1);
-	if (classinfo & 0x0800) matrix.setcomplex(1);
-		
+    
 
   std::vector<long> dims;
 	matrixdims.getandcastvector(dims);
@@ -454,7 +446,14 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
         // create cell matrix
         matrix.createcellarray(dims);
         matrix.setname(name);
-            
+        // the second byte contains flags.
+        // logical = logical matrix 
+        // global  = variable was defined in the global workspace
+        // complex = matrix complex  
+        if (classinfo & 0x0200) matrix.setlogical(1);
+        if (classinfo & 0x0400) matrix.setglobal(1);
+        if (classinfo & 0x0800) matrix.setcomplex(1);
+           
         long numcells = matrix.getnumelements();
         matlabarray submatrix;
         
@@ -486,7 +485,14 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
             
             matrix.createstructarray(dims,fieldnames); 
             matrix.setname(name);
-            
+            // the second byte contains flags.
+            // logical = logical matrix 
+            // global  = variable was defined in the global workspace
+            // complex = matrix complex  
+            if (classinfo & 0x0200) matrix.setlogical(1);
+            if (classinfo & 0x0400) matrix.setglobal(1);
+            if (classinfo & 0x0800) matrix.setcomplex(1);
+                        
             long numcells = matrix.getnumelements()*matrix.getnumfields();
             matlabarray submatrix;
             
@@ -521,6 +527,14 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
 			
             matrix.createclassarray(dims,fieldnames,classname); 
             matrix.setname(name);
+
+            // the second byte contains flags.
+            // logical = logical matrix 
+            // global  = variable was defined in the global workspace
+            // complex = matrix complex  
+            if (classinfo & 0x0200) matrix.setlogical(1);
+            if (classinfo & 0x0400) matrix.setglobal(1);
+            if (classinfo & 0x0800) matrix.setcomplex(1);
             
             long numcells = matrix.getnumelements()*matrix.getnumfields();
             matlabarray submatrix;
@@ -546,12 +560,28 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
             std::string str = matrixstring.getstring();            
             matrix.createstringarray(str);
             matrix.setname(name);
+            // the second byte contains flags.
+            // logical = logical matrix 
+            // global  = variable was defined in the global workspace
+            // complex = matrix complex  
+            if (classinfo & 0x0200) matrix.setlogical(1);
+            if (classinfo & 0x0400) matrix.setglobal(1);
+            if (classinfo & 0x0800) matrix.setcomplex(1);            
+            
+            
 			}
 			break;
       case mxSPARSE:
 			{
             matrix.createsparsearray(dims,miDOUBLE);
             matrix.setname(name);
+            // the second byte contains flags.
+            // logical = logical matrix 
+            // global  = variable was defined in the global workspace
+            // complex = matrix complex  
+            if (classinfo & 0x0200) matrix.setlogical(1);
+            if (classinfo & 0x0400) matrix.setglobal(1);
+            if (classinfo & 0x0800) matrix.setcomplex(1);
           
             if (nexttag())
             {
