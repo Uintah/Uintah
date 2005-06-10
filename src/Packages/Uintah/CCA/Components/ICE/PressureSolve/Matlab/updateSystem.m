@@ -18,7 +18,7 @@ bnew        = [b; zeros(grid.totalVars-length(b),1)];
 
 % Create equations in the interior patch and set boundary
 % conditions on appropriate ghost cells.
-[AlistPatch,bPatch] = setupOperatorPatch(grid,k,q,P.ilower,P.iupper,0);
+[AlistPatch,bPatch] = setupOperatorPatch(grid,k,q,P.ilower,P.iupper,1,0);
 Alist = [Alist; AlistPatch];
 bnew(map(:)) = bPatch;
 
