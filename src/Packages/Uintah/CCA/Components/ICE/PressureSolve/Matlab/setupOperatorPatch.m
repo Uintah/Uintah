@@ -1,58 +1,70 @@
-function [Alist,b] = setupOperatorPatch(grid,k,q,ilower,iupper)
+function [Alist,b] = setupOperatorPatch(grid,k,q,ilower,iupper,ghostConnections)
 %SETUPOPERATORPATCH  Set the discrete operator at a patch.
-%   The usage [Alist,b] = setupOperatorPatch(grid,k,q,ilower,iupper)
+%   The usage [Alist,b] = setupOperatorPatch(grid,k,q,ilower,iupper,ghostConnections)
 %   Set the discrete equations at all interior cells of patch q at
 %   level k. The ghost cells are either ignored (if they are on an interior
 %   interface) or assigned a boundary condition (if against the domain
 %   boundary). We set the equations within the box [ilower,iupper] in the
 %   patch. On output we return Alist (list of [i j aij]) and the part of b
 %   that should be added to a global list Alist to be converted to sparse
-%   format, and to a global RHS vector b.
+%   format, and to a global RHS vector b. If ghostConnections=1, Alist also
+%   includes the connections from ghost cells to interior cells, otherwise
+%   does not include that.
 %
-%   See also: TESTDFM, SETOPERATOR.
+%   See also: TESTDFM, SETOPERATOR, DELETEUNDERLYINGDATA.
 
 fprintf('--- setupOperatorPatch(k = %d, q = %d) ---\n',k,q);
 level       = grid.level{k};
 numPatches  = length(level.numPatches);
-s           = level.stencilOffsets;
-numEntries  = size(s,1);
 h           = level.h;
 P           = grid.level{k}.patch{q};
-map         = P.cellIndex;
 Alist       = zeros(0,3);
-b           = zeros(prod(P.size),1);
+boxSize     = iupper-ilower+3;
+boxOffset   = P.offset + P.ilower - ilower;
+b           = zeros(prod(boxSize),1);
 
-% Prepare a list of all cell indices in this patch including ghosts
-all    = cell(grid.dim,1);
-for dim = 1:grid.dim
-    all{dim} = [ilower(dim)-1:iupper(dim)+1] + P.offset(dim);  % Patch-based cell indices including ghosts
+% Find local map of the box (including ghost cells)
+all         = cell(grid.dim,1);
+for dim     = 1:grid.dim
+    all{dim} = [ilower(dim)-1:iupper(dim)+1] + P.offset(dim);   % Patch-based cell indices including ghosts
 end
 matAll      = cell(grid.dim,1);
 [matAll{:}] = ndgrid(all{:});
-pindexAll   = sub2ind(P.size,matAll{:});                      % Patch-based cell indices - list
+pindexAll   = sub2ind(P.size,matAll{:});                        % Patch-based cell indices - list
+pindexAll   = pindexAll(:);
+map         = P.cellIndex(pindexAll);                           % Cell global indices for the box [ilower-1,iupper+1]
+
+% Prepare a list of all cell indices in this box including ghosts
+all    = cell(grid.dim,1);
+for dim = 1:grid.dim
+    all{dim} = [ilower(dim)-1:iupper(dim)+1] + boxOffset(dim);  % Box-based cell indices including ghosts
+end
+matAll      = cell(grid.dim,1);
+[matAll{:}] = ndgrid(all{:});
+pindexAll   = sub2ind(boxSize,matAll{:});                       % Box-based cell indices - list
 pindexAll   = pindexAll(:);
 pindexRemaining = pindexAll;
 
 % Prepare a list of all interior cells
 interior    = cell(grid.dim,1);
 for dim = 1:grid.dim
-    interior{dim} = [ilower(dim):iupper(dim)] + P.offset(dim);  % Patch-based cell indices including ghosts
+    interior{dim} = [ilower(dim):iupper(dim)] + boxOffset(dim);  % Patch-based cell indices including ghosts
 end
 matInterior      = cell(grid.dim,1);
 [matInterior{:}] = ndgrid(interior{:});
-pindexInterior   = sub2ind(P.size,matInterior{:});                      % Patch-based cell indices - list
+pindexInterior   = sub2ind(boxSize,matInterior{:});                      % Patch-based cell indices - list
 pindexInterior  = pindexInterior(:);
 mapInterior     = map(pindexInterior);
 pindexRemaining = setdiff(pindexRemaining,pindexInterior);
 
 % Domain edges
 edgeDomain        = cell(2,1);
-edgeDomain{1}     = level.minCell + P.offset;             % First cell next to left domain boundary - patch-based index
-edgeDomain{2}     = level.maxCell + P.offset;             % Last Cell next to right domain boundary - patch-based index
+edgeDomain{1}     = level.minCell + boxOffset;             % First cell next to left domain boundary - patch-based index
+edgeDomain{2}     = level.maxCell + boxOffset;             % Last Cell next to right domain boundary - patch-based index
 % Patch edges
 edgePatch          = cell(2,1);
-edgePatch{1}       = ilower + P.offset;             % First cell next to left domain boundary - patch-based index
-edgePatch{2}       = iupper + P.offset;             % Last Cell next to right domain boundary - patch-based index
+edgePatch{1}       = ilower + boxOffset;             % First cell next to left domain boundary - patch-based index
+edgePatch{2}       = iupper + boxOffset;             % Last Cell next to right domain boundary - patch-based index
 
 %=====================================================================
 % Construct interior fluxes
@@ -64,11 +76,11 @@ edgePatch{2}       = iupper + P.offset;             % Last Cell next to right do
 % discretization.
 
 % Fluxes for interior cells not near boundaries: [1 1 1 1]
-flux = zeros([P.size 2*grid.dim]);
+flux = zeros([boxSize 2*grid.dim]);
 for direction = 1:2*grid.dim
     flux(interior{:},direction) = 1;
 end
-rhsValues = zeros(P.size);
+rhsValues = zeros(boxSize);
 rhsValues(interior{:}) = prod(h) * ...
     rhs(([ilower(1):iupper(1)]-0.5)*level.h(1),([ilower(2):iupper(2)]-0.5)*level.h(2));
 
@@ -107,10 +119,11 @@ for d = 1:grid.dim,                                             % Loop over dime
         % Construct corresponding ghost cell equations = boundary conditions
         ghost           = face;
         ghost{d}        = face{d} + direction;                      % Ghost cell indices
+        ghost{d}        = ghost{d}(1);                              % Because face is an ndgrid-like structure, it repeats the same value in ghost{d}, lengthghostnbhr{d}) times. So shrink it back to a scalar so that ndgrid and flux(...) return the correct size vectors. We need to do that only for dimension d as we are on a face which is grid.dim-1 dimensional object.
         %[ghost{:}]
         matGhost        = cell(grid.dim,1);
         [matGhost{:}]   = ndgrid(ghost{:});
-        pindexGhost     = sub2ind(P.size,ghost{:});
+        pindexGhost     = sub2ind(boxSize,matGhost{:});
         pindexGhost     = pindexGhost(:);
         mapGhost        = map(pindexGhost);
         %mapGhost
@@ -119,7 +132,7 @@ for d = 1:grid.dim,                                             % Loop over dime
         Alist = [Alist; ...
             [mapGhost mapGhost repmat(1.0,size(mapGhost))]; ...
             ];
-        b(mapGhost-P.baseIndex+1) = 0.0;                            % This inserts the RHS data into the "chunk" of b that we output from this routine, hence we translate map indices to patch-based 1D indices.
+        b(pindexGhost) = 0.0;                            % This inserts the RHS data into the "chunk" of b that we output from this routine, hence we translate map indices to patch-based 1D indices.
 
     end
 end
@@ -142,7 +155,7 @@ for d = 1:grid.dim,                                             % Loop over dime
         % Outward normal direction
         nbhrOffset = zeros(1,grid.dim);
         nbhrOffset(d) = direction;
-        
+
         [face{:}] = find(matInterior{d} == edgePatch{side}(d));          % Interior cell indices near PATCH boundary
         for dim = 1:grid.dim                                    % Translate face to patch-based indices (from index in the INTERIOR matInterior)
             face{dim} = face{dim} + 1;
@@ -155,7 +168,7 @@ for d = 1:grid.dim,                                             % Loop over dime
         end
         matNbhr         = cell(grid.dim,1);
         [matNbhr{:}]    = ndgrid(nbhr{:});
-        pindexNbhr      = sub2ind(P.size,matNbhr{:});                      % Patch-based cell indices - list
+        pindexNbhr      = sub2ind(boxSize,matNbhr{:});                      % Patch-based cell indices - list
         pindexNbhr      = pindexNbhr(:);
         mapNbhr         = map(pindexNbhr);
         f = flux(interior{:},2*d+side-2);
@@ -164,35 +177,67 @@ for d = 1:grid.dim,                                             % Loop over dime
             [mapInterior mapInterior  f]; ...
             [mapInterior mapNbhr     -f] ...
             ];
-        
-        % Ghost cell equations of C/F interfaces; they are ignored here and
-        % will have an interpolation stencil later.
+
+        % Ghost cell equations of C/F interfaces; they are normally ignored here and
+        % will have an interpolation stencil later. However, for
+        % deleteUnderlyingData(), we also need the coefficients of interior
+        % patch nodes in the surrounding cell equations (which are denoted for
+        % notation unifomity "ghost cells" w.r.t the box [ilower,iupper]).
         ghost           = face;
         ghost{d}        = face{d} + direction;                      % Ghost cell indices
+        ghost{d}        = ghost{d}(1);                              % Because face is an ndgrid-like structure, it repeats the same value in ghost{d}, lengthghostnbhr{d}) times. So shrink it back to a scalar so that ndgrid and flux(...) return the correct size vectors. We need to do that only for dimension d as we are on a face which is grid.dim-1 dimensional object.
         %[ghost{:}]
         matGhost        = cell(grid.dim,1);
         [matGhost{:}]   = ndgrid(ghost{:});
-        pindexGhost     = sub2ind(P.size,ghost{:});
+        pindexGhost     = sub2ind(boxSize,matGhost{:});
         pindexGhost     = pindexGhost(:);
         mapGhost        = map(pindexGhost);
         %mapGhost
         pindexRemaining = setdiff(pindexRemaining,pindexGhost);
+
+        if (ghostConnections & (edgePatch{side}(d) ~= edgeDomain{side}(d)))
+            % Add the following connections only if we are not near a
+            % domain boundary where there are B.C. at the ghost cells.
+            % Add fluxes of the reverse direction (inward normal to this face)
+            % to list of non-zeros Alist and to b
+            % Inward normal direction
+            nbhrOffset = zeros(1,grid.dim);
+            nbhrOffset(d) = -direction;
+            % Nbhrs of all ghost cells in this direction
+            nbhr = cell(grid.dim,1);
+            for dim = 1:grid.dim
+                nbhr{dim} = ghost{dim} + nbhrOffset(dim);
+            end
+            matNbhr         = cell(grid.dim,1);
+            [matNbhr{:}]    = ndgrid(nbhr{:});
+            pindexNbhr      = sub2ind(boxSize,matNbhr{:});                      % Patch-based cell indices - list
+            pindexNbhr      = pindexNbhr(:);
+            mapNbhr         = map(pindexNbhr);
+            f = flux(nbhr{:},2*d+side-2);
+            f = f(:);
+            Alist = [Alist; ...
+                [mapGhost mapGhost  f]; ...
+                [mapGhost mapNbhr  -f] ...
+                ];
+        end
         %         % B.C.: Dirichlet, u=0
         %         Alist = [Alist; ...
         %             [mapGhost mapGhost repmat(1.0,size(mapGhost))]; ...
         %             ];
-        %         b(mapGhost-P.baseIndex+1) = 0.0;                            % This inserts the RHS data into the "chunk" of b that we output from this routine, hence we translate map indices to patch-based 1D indices.
+        %         b(pindexGhost) = 0.0;                            % This inserts the RHS data into the "chunk" of b that we output from this routine, hence we translate map indices to patch-based 1D indices.
 
     end
 end
 
-b(mapInterior-P.baseIndex+1) = rhsValues(interior{:});                            % This inserts the RHS data into the "chunk" of b that we output from this routine, hence we translate map indices to patch-based 1D indices.
+b(pindexInterior) = rhsValues(interior{:});                            % This inserts the RHS data into the "chunk" of b that we output from this routine, hence we translate map indices to patch-based 1D indices.
 
-% All remaining points are unused ghost points; set them to 0.
-pindexRemaining = setdiff(pindexRemaining,pindexGhost);
-fprintf('Number of unused points in this patch = %d\n',length(pindexRemaining));
-mapRemaining = map(pindexRemaining);
-Alist = [Alist; ...
-    [mapRemaining mapRemaining repmat(1.0,size(mapRemaining))]; ...
-    ];
-b(mapRemaining-P.baseIndex+1) = 0.0;                            % This inserts the RHS data into the "chunk" of b that we output from this routine, hence we translate map indices to patch-based 1D indices.
+if (~ghostConnections)
+    % All remaining points are unused ghost points; set them to 0.
+    pindexRemaining = setdiff(pindexRemaining,pindexGhost);
+    fprintf('Number of unused points in this patch = %d\n',length(pindexRemaining));
+    mapRemaining = map(pindexRemaining);
+    Alist = [Alist; ...
+        [mapRemaining mapRemaining repmat(1.0,size(mapRemaining))]; ...
+        ];
+    b(pindexRemaining) = 0.0;                            % This inserts the RHS data into the "chunk" of b that we output from this routine, hence we translate map indices to patch-based 1D indices.
+end
