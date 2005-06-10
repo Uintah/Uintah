@@ -59,68 +59,68 @@ public:
     const double y12=(y-1)*(y-1);
     const double z12=(z-1)*(z-1);
 
-    const double sdx0=derivs_[cd.node0_index()][0]*scalefactors_[cd.elem][0];
-    const double sdx1=derivs_[cd.node1_index()][0]*scalefactors_[cd.elem][0];
-    const double sdx2=derivs_[cd.node2_index()][0]*scalefactors_[cd.elem][0];
-    const double sdx3=derivs_[cd.node3_index()][0]*scalefactors_[cd.elem][0];
-    const double sdx4=derivs_[cd.node4_index()][0]*scalefactors_[cd.elem][0];
-    const double sdx5=derivs_[cd.node5_index()][0]*scalefactors_[cd.elem][0];
-    const double sdx6=derivs_[cd.node6_index()][0]*scalefactors_[cd.elem][0];
-    const double sdx7=derivs_[cd.node7_index()][0]*scalefactors_[cd.elem][0];
+    const double sdx0=derivs_[cd.node0_index()][0]*scalefactors_[cd.node0_index()][0];
+    const double sdx1=derivs_[cd.node1_index()][0]*scalefactors_[cd.node1_index()][0];
+    const double sdx2=derivs_[cd.node2_index()][0]*scalefactors_[cd.node2_index()][0];
+    const double sdx3=derivs_[cd.node3_index()][0]*scalefactors_[cd.node3_index()][0];
+    const double sdx4=derivs_[cd.node4_index()][0]*scalefactors_[cd.node4_index()][0];
+    const double sdx5=derivs_[cd.node5_index()][0]*scalefactors_[cd.node5_index()][0];
+    const double sdx6=derivs_[cd.node6_index()][0]*scalefactors_[cd.node6_index()][0];
+    const double sdx7=derivs_[cd.node7_index()][0]*scalefactors_[cd.node7_index()][0];
 
-    const double sdy0=derivs_[cd.node0_index()][1]*scalefactors_[cd.elem][1];
-    const double sdy1=derivs_[cd.node1_index()][1]*scalefactors_[cd.elem][1];
-    const double sdy2=derivs_[cd.node2_index()][1]*scalefactors_[cd.elem][1];
-    const double sdy3=derivs_[cd.node3_index()][1]*scalefactors_[cd.elem][1];
-    const double sdy4=derivs_[cd.node4_index()][1]*scalefactors_[cd.elem][1];
-    const double sdy5=derivs_[cd.node5_index()][1]*scalefactors_[cd.elem][1];
-    const double sdy6=derivs_[cd.node6_index()][1]*scalefactors_[cd.elem][1];
-    const double sdy7=derivs_[cd.node7_index()][1]*scalefactors_[cd.elem][1];
+    const double sdy0=derivs_[cd.node0_index()][1]*scalefactors_[cd.node0_index()][1];
+    const double sdy1=derivs_[cd.node1_index()][1]*scalefactors_[cd.node1_index()][1];
+    const double sdy2=derivs_[cd.node2_index()][1]*scalefactors_[cd.node2_index()][1];
+    const double sdy3=derivs_[cd.node3_index()][1]*scalefactors_[cd.node3_index()][1];
+    const double sdy4=derivs_[cd.node4_index()][1]*scalefactors_[cd.node4_index()][1];
+    const double sdy5=derivs_[cd.node5_index()][1]*scalefactors_[cd.node5_index()][1];
+    const double sdy6=derivs_[cd.node6_index()][1]*scalefactors_[cd.node6_index()][1];
+    const double sdy7=derivs_[cd.node7_index()][1]*scalefactors_[cd.node7_index()][1];
 
-    const double sdz0=derivs_[cd.node0_index()][2]*scalefactors_[cd.elem][2];
-    const double sdz1=derivs_[cd.node1_index()][2]*scalefactors_[cd.elem][2];
-    const double sdz2=derivs_[cd.node2_index()][2]*scalefactors_[cd.elem][2];
-    const double sdz3=derivs_[cd.node3_index()][2]*scalefactors_[cd.elem][2];
-    const double sdz4=derivs_[cd.node4_index()][2]*scalefactors_[cd.elem][2];
-    const double sdz5=derivs_[cd.node5_index()][2]*scalefactors_[cd.elem][2];
-    const double sdz6=derivs_[cd.node6_index()][2]*scalefactors_[cd.elem][2];
-    const double sdz7=derivs_[cd.node7_index()][2]*scalefactors_[cd.elem][2];
+    const double sdz0=derivs_[cd.node0_index()][2]*scalefactors_[cd.node0_index()][2];
+    const double sdz1=derivs_[cd.node1_index()][2]*scalefactors_[cd.node1_index()][2];
+    const double sdz2=derivs_[cd.node2_index()][2]*scalefactors_[cd.node2_index()][2];
+    const double sdz3=derivs_[cd.node3_index()][2]*scalefactors_[cd.node3_index()][2];
+    const double sdz4=derivs_[cd.node4_index()][2]*scalefactors_[cd.node4_index()][2];
+    const double sdz5=derivs_[cd.node5_index()][2]*scalefactors_[cd.node5_index()][2];
+    const double sdz6=derivs_[cd.node6_index()][2]*scalefactors_[cd.node6_index()][2];
+    const double sdz7=derivs_[cd.node7_index()][2]*scalefactors_[cd.node7_index()][2];
 
-    const double sdxy0=derivs_[cd.node0_index()][3]*scalefactors_[cd.elem][0]*scalefactors_[cd.elem][1];
-    const double sdxy1=derivs_[cd.node1_index()][3]*scalefactors_[cd.elem][0]*scalefactors_[cd.elem][1];
-    const double sdxy2=derivs_[cd.node2_index()][3]*scalefactors_[cd.elem][0]*scalefactors_[cd.elem][1];
-    const double sdxy3=derivs_[cd.node3_index()][3]*scalefactors_[cd.elem][0]*scalefactors_[cd.elem][1];
-    const double sdxy4=derivs_[cd.node4_index()][3]*scalefactors_[cd.elem][0]*scalefactors_[cd.elem][1];
-    const double sdxy5=derivs_[cd.node5_index()][3]*scalefactors_[cd.elem][0]*scalefactors_[cd.elem][1];
-    const double sdxy6=derivs_[cd.node6_index()][3]*scalefactors_[cd.elem][0]*scalefactors_[cd.elem][1];
-    const double sdxy7=derivs_[cd.node7_index()][3]*scalefactors_[cd.elem][0]*scalefactors_[cd.elem][1];
+    const double sdxy0=derivs_[cd.node0_index()][3]*scalefactors_[cd.node0_index()][0]*scalefactors_[cd.node0_index()][1];
+    const double sdxy1=derivs_[cd.node1_index()][3]*scalefactors_[cd.node1_index()][0]*scalefactors_[cd.node1_index()][1];
+    const double sdxy2=derivs_[cd.node2_index()][3]*scalefactors_[cd.node2_index()][0]*scalefactors_[cd.node2_index()][1];
+    const double sdxy3=derivs_[cd.node3_index()][3]*scalefactors_[cd.node3_index()][0]*scalefactors_[cd.node3_index()][1];
+    const double sdxy4=derivs_[cd.node4_index()][3]*scalefactors_[cd.node4_index()][0]*scalefactors_[cd.node4_index()][1];
+    const double sdxy5=derivs_[cd.node5_index()][3]*scalefactors_[cd.node5_index()][0]*scalefactors_[cd.node5_index()][1];
+    const double sdxy6=derivs_[cd.node6_index()][3]*scalefactors_[cd.node6_index()][0]*scalefactors_[cd.node6_index()][1];
+    const double sdxy7=derivs_[cd.node7_index()][3]*scalefactors_[cd.node7_index()][0]*scalefactors_[cd.node7_index()][1];
 
-    const double sdyz0=derivs_[cd.node0_index()][4]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1];
-    const double sdyz1=derivs_[cd.node1_index()][4]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1];
-    const double sdyz2=derivs_[cd.node2_index()][4]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1];
-    const double sdyz3=derivs_[cd.node3_index()][4]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1];
-    const double sdyz4=derivs_[cd.node4_index()][4]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1];
-    const double sdyz5=derivs_[cd.node5_index()][4]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1];
-    const double sdyz6=derivs_[cd.node6_index()][4]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1];
-    const double sdyz7=derivs_[cd.node7_index()][4]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1];
+    const double sdyz0=derivs_[cd.node0_index()][4]*scalefactors_[cd.node0_index()][2]*scalefactors_[cd.node0_index()][1];
+    const double sdyz1=derivs_[cd.node1_index()][4]*scalefactors_[cd.node1_index()][2]*scalefactors_[cd.node1_index()][1];
+    const double sdyz2=derivs_[cd.node2_index()][4]*scalefactors_[cd.node2_index()][2]*scalefactors_[cd.node2_index()][1];
+    const double sdyz3=derivs_[cd.node3_index()][4]*scalefactors_[cd.node3_index()][2]*scalefactors_[cd.node3_index()][1];
+    const double sdyz4=derivs_[cd.node4_index()][4]*scalefactors_[cd.node4_index()][2]*scalefactors_[cd.node4_index()][1];
+    const double sdyz5=derivs_[cd.node5_index()][4]*scalefactors_[cd.node5_index()][2]*scalefactors_[cd.node5_index()][1];
+    const double sdyz6=derivs_[cd.node6_index()][4]*scalefactors_[cd.node6_index()][2]*scalefactors_[cd.node6_index()][1];
+    const double sdyz7=derivs_[cd.node7_index()][4]*scalefactors_[cd.node7_index()][2]*scalefactors_[cd.node7_index()][1];
 
-    const double sdxz0=derivs_[cd.node0_index()][5]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][0];
-    const double sdxz1=derivs_[cd.node1_index()][5]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][0];
-    const double sdxz2=derivs_[cd.node2_index()][5]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][0];
-    const double sdxz3=derivs_[cd.node3_index()][5]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][0];
-    const double sdxz4=derivs_[cd.node4_index()][5]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][0];
-    const double sdxz5=derivs_[cd.node5_index()][5]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][0];
-    const double sdxz6=derivs_[cd.node6_index()][5]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][0];
-    const double sdxz7=derivs_[cd.node7_index()][5]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][0];
+    const double sdxz0=derivs_[cd.node0_index()][5]*scalefactors_[cd.node0_index()][2]*scalefactors_[cd.node0_index()][0];
+    const double sdxz1=derivs_[cd.node1_index()][5]*scalefactors_[cd.node1_index()][2]*scalefactors_[cd.node1_index()][0];
+    const double sdxz2=derivs_[cd.node2_index()][5]*scalefactors_[cd.node2_index()][2]*scalefactors_[cd.node2_index()][0];
+    const double sdxz3=derivs_[cd.node3_index()][5]*scalefactors_[cd.node3_index()][2]*scalefactors_[cd.node3_index()][0];
+    const double sdxz4=derivs_[cd.node4_index()][5]*scalefactors_[cd.node4_index()][2]*scalefactors_[cd.node4_index()][0];
+    const double sdxz5=derivs_[cd.node5_index()][5]*scalefactors_[cd.node5_index()][2]*scalefactors_[cd.node5_index()][0];
+    const double sdxz6=derivs_[cd.node6_index()][5]*scalefactors_[cd.node6_index()][2]*scalefactors_[cd.node6_index()][0];
+    const double sdxz7=derivs_[cd.node7_index()][5]*scalefactors_[cd.node7_index()][2]*scalefactors_[cd.node7_index()][0];
 
-    const double sdxyz0=derivs_[cd.node0_index()][6]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1]*scalefactors_[cd.elem][0];
-    const double sdxyz1=derivs_[cd.node1_index()][6]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1]*scalefactors_[cd.elem][0];
-    const double sdxyz2=derivs_[cd.node2_index()][6]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1]*scalefactors_[cd.elem][0];
-    const double sdxyz3=derivs_[cd.node3_index()][6]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1]*scalefactors_[cd.elem][0];
-    const double sdxyz4=derivs_[cd.node4_index()][6]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1]*scalefactors_[cd.elem][0];
-    const double sdxyz5=derivs_[cd.node5_index()][6]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1]*scalefactors_[cd.elem][0];
-    const double sdxyz6=derivs_[cd.node6_index()][6]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1]*scalefactors_[cd.elem][0];
-    const double sdxyz7=derivs_[cd.node7_index()][6]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1]*scalefactors_[cd.elem][0];
+    const double sdxyz0=derivs_[cd.node0_index()][6]*scalefactors_[cd.node0_index()][2]*scalefactors_[cd.node0_index()][1]*scalefactors_[cd.node0_index()][0];
+    const double sdxyz1=derivs_[cd.node1_index()][6]*scalefactors_[cd.node1_index()][2]*scalefactors_[cd.node1_index()][1]*scalefactors_[cd.node1_index()][0];
+    const double sdxyz2=derivs_[cd.node2_index()][6]*scalefactors_[cd.node2_index()][2]*scalefactors_[cd.node2_index()][1]*scalefactors_[cd.node2_index()][0];
+    const double sdxyz3=derivs_[cd.node3_index()][6]*scalefactors_[cd.node3_index()][2]*scalefactors_[cd.node3_index()][1]*scalefactors_[cd.node3_index()][0];
+    const double sdxyz4=derivs_[cd.node4_index()][6]*scalefactors_[cd.node4_index()][2]*scalefactors_[cd.node4_index()][1]*scalefactors_[cd.node4_index()][0];
+    const double sdxyz5=derivs_[cd.node5_index()][6]*scalefactors_[cd.node5_index()][2]*scalefactors_[cd.node5_index()][1]*scalefactors_[cd.node5_index()][0];
+    const double sdxyz6=derivs_[cd.node6_index()][6]*scalefactors_[cd.node6_index()][2]*scalefactors_[cd.node6_index()][1]*scalefactors_[cd.node6_index()][0];
+    const double sdxyz7=derivs_[cd.node7_index()][6]*scalefactors_[cd.node7_index()][2]*scalefactors_[cd.node7_index()][1]*scalefactors_[cd.node7_index()][0];
 
     return (T)(x12*(1 + 2*x)*y12*(1 + 2*y)*z12*(1 + 2*z)*cd.node0()
       +x12*x*y12*(1 + 2*y)*z12*(1 + 2*z)*sdx0
@@ -203,68 +203,68 @@ public:
 
     derivs.size(3);
 
-    const double sdx0=derivs_[cd.node0_index()][0]*scalefactors_[cd.elem][0];
-    const double sdx1=derivs_[cd.node1_index()][0]*scalefactors_[cd.elem][0];
-    const double sdx2=derivs_[cd.node2_index()][0]*scalefactors_[cd.elem][0];
-    const double sdx3=derivs_[cd.node3_index()][0]*scalefactors_[cd.elem][0];
-    const double sdx4=derivs_[cd.node4_index()][0]*scalefactors_[cd.elem][0];
-    const double sdx5=derivs_[cd.node5_index()][0]*scalefactors_[cd.elem][0];
-    const double sdx6=derivs_[cd.node6_index()][0]*scalefactors_[cd.elem][0];
-    const double sdx7=derivs_[cd.node7_index()][0]*scalefactors_[cd.elem][0];
+    const double sdx0=derivs_[cd.node0_index()][0]*scalefactors_[cd.node0_index()][0];
+    const double sdx1=derivs_[cd.node1_index()][0]*scalefactors_[cd.node1_index()][0];
+    const double sdx2=derivs_[cd.node2_index()][0]*scalefactors_[cd.node2_index()][0];
+    const double sdx3=derivs_[cd.node3_index()][0]*scalefactors_[cd.node3_index()][0];
+    const double sdx4=derivs_[cd.node4_index()][0]*scalefactors_[cd.node4_index()][0];
+    const double sdx5=derivs_[cd.node5_index()][0]*scalefactors_[cd.node5_index()][0];
+    const double sdx6=derivs_[cd.node6_index()][0]*scalefactors_[cd.node6_index()][0];
+    const double sdx7=derivs_[cd.node7_index()][0]*scalefactors_[cd.node7_index()][0];
 
-    const double sdy0=derivs_[cd.node0_index()][1]*scalefactors_[cd.elem][1];
-    const double sdy1=derivs_[cd.node1_index()][1]*scalefactors_[cd.elem][1];
-    const double sdy2=derivs_[cd.node2_index()][1]*scalefactors_[cd.elem][1];
-    const double sdy3=derivs_[cd.node3_index()][1]*scalefactors_[cd.elem][1];
-    const double sdy4=derivs_[cd.node4_index()][1]*scalefactors_[cd.elem][1];
-    const double sdy5=derivs_[cd.node5_index()][1]*scalefactors_[cd.elem][1];
-    const double sdy6=derivs_[cd.node6_index()][1]*scalefactors_[cd.elem][1];
-    const double sdy7=derivs_[cd.node7_index()][1]*scalefactors_[cd.elem][1];
+    const double sdy0=derivs_[cd.node0_index()][1]*scalefactors_[cd.node0_index()][1];
+    const double sdy1=derivs_[cd.node1_index()][1]*scalefactors_[cd.node1_index()][1];
+    const double sdy2=derivs_[cd.node2_index()][1]*scalefactors_[cd.node2_index()][1];
+    const double sdy3=derivs_[cd.node3_index()][1]*scalefactors_[cd.node3_index()][1];
+    const double sdy4=derivs_[cd.node4_index()][1]*scalefactors_[cd.node4_index()][1];
+    const double sdy5=derivs_[cd.node5_index()][1]*scalefactors_[cd.node5_index()][1];
+    const double sdy6=derivs_[cd.node6_index()][1]*scalefactors_[cd.node6_index()][1];
+    const double sdy7=derivs_[cd.node7_index()][1]*scalefactors_[cd.node7_index()][1];
 
-    const double sdz0=derivs_[cd.node0_index()][2]*scalefactors_[cd.elem][2];
-    const double sdz1=derivs_[cd.node1_index()][2]*scalefactors_[cd.elem][2];
-    const double sdz2=derivs_[cd.node2_index()][2]*scalefactors_[cd.elem][2];
-    const double sdz3=derivs_[cd.node3_index()][2]*scalefactors_[cd.elem][2];
-    const double sdz4=derivs_[cd.node4_index()][2]*scalefactors_[cd.elem][2];
-    const double sdz5=derivs_[cd.node5_index()][2]*scalefactors_[cd.elem][2];
-    const double sdz6=derivs_[cd.node6_index()][2]*scalefactors_[cd.elem][2];
-    const double sdz7=derivs_[cd.node7_index()][2]*scalefactors_[cd.elem][2];
+    const double sdz0=derivs_[cd.node0_index()][2]*scalefactors_[cd.node0_index()][2];
+    const double sdz1=derivs_[cd.node1_index()][2]*scalefactors_[cd.node1_index()][2];
+    const double sdz2=derivs_[cd.node2_index()][2]*scalefactors_[cd.node2_index()][2];
+    const double sdz3=derivs_[cd.node3_index()][2]*scalefactors_[cd.node3_index()][2];
+    const double sdz4=derivs_[cd.node4_index()][2]*scalefactors_[cd.node4_index()][2];
+    const double sdz5=derivs_[cd.node5_index()][2]*scalefactors_[cd.node5_index()][2];
+    const double sdz6=derivs_[cd.node6_index()][2]*scalefactors_[cd.node6_index()][2];
+    const double sdz7=derivs_[cd.node7_index()][2]*scalefactors_[cd.node7_index()][2];
 
-    const double sdxy0=derivs_[cd.node0_index()][3]*scalefactors_[cd.elem][0]*scalefactors_[cd.elem][1];
-    const double sdxy1=derivs_[cd.node1_index()][3]*scalefactors_[cd.elem][0]*scalefactors_[cd.elem][1];
-    const double sdxy2=derivs_[cd.node2_index()][3]*scalefactors_[cd.elem][0]*scalefactors_[cd.elem][1];
-    const double sdxy3=derivs_[cd.node3_index()][3]*scalefactors_[cd.elem][0]*scalefactors_[cd.elem][1];
-    const double sdxy4=derivs_[cd.node4_index()][3]*scalefactors_[cd.elem][0]*scalefactors_[cd.elem][1];
-    const double sdxy5=derivs_[cd.node5_index()][3]*scalefactors_[cd.elem][0]*scalefactors_[cd.elem][1];
-    const double sdxy6=derivs_[cd.node6_index()][3]*scalefactors_[cd.elem][0]*scalefactors_[cd.elem][1];
-    const double sdxy7=derivs_[cd.node7_index()][3]*scalefactors_[cd.elem][0]*scalefactors_[cd.elem][1];
+    const double sdxy0=derivs_[cd.node0_index()][3]*scalefactors_[cd.node0_index()][0]*scalefactors_[cd.node0_index()][1];
+    const double sdxy1=derivs_[cd.node1_index()][3]*scalefactors_[cd.node1_index()][0]*scalefactors_[cd.node1_index()][1];
+    const double sdxy2=derivs_[cd.node2_index()][3]*scalefactors_[cd.node2_index()][0]*scalefactors_[cd.node2_index()][1];
+    const double sdxy3=derivs_[cd.node3_index()][3]*scalefactors_[cd.node3_index()][0]*scalefactors_[cd.node3_index()][1];
+    const double sdxy4=derivs_[cd.node4_index()][3]*scalefactors_[cd.node4_index()][0]*scalefactors_[cd.node4_index()][1];
+    const double sdxy5=derivs_[cd.node5_index()][3]*scalefactors_[cd.node5_index()][0]*scalefactors_[cd.node5_index()][1];
+    const double sdxy6=derivs_[cd.node6_index()][3]*scalefactors_[cd.node6_index()][0]*scalefactors_[cd.node6_index()][1];
+    const double sdxy7=derivs_[cd.node7_index()][3]*scalefactors_[cd.node7_index()][0]*scalefactors_[cd.node7_index()][1];
 
-    const double sdyz0=derivs_[cd.node0_index()][4]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1];
-    const double sdyz1=derivs_[cd.node1_index()][4]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1];
-    const double sdyz2=derivs_[cd.node2_index()][4]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1];
-    const double sdyz3=derivs_[cd.node3_index()][4]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1];
-    const double sdyz4=derivs_[cd.node4_index()][4]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1];
-    const double sdyz5=derivs_[cd.node5_index()][4]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1];
-    const double sdyz6=derivs_[cd.node6_index()][4]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1];
-    const double sdyz7=derivs_[cd.node7_index()][4]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1];
+    const double sdyz0=derivs_[cd.node0_index()][4]*scalefactors_[cd.node0_index()][2]*scalefactors_[cd.node0_index()][1];
+    const double sdyz1=derivs_[cd.node1_index()][4]*scalefactors_[cd.node1_index()][2]*scalefactors_[cd.node1_index()][1];
+    const double sdyz2=derivs_[cd.node2_index()][4]*scalefactors_[cd.node2_index()][2]*scalefactors_[cd.node2_index()][1];
+    const double sdyz3=derivs_[cd.node3_index()][4]*scalefactors_[cd.node3_index()][2]*scalefactors_[cd.node3_index()][1];
+    const double sdyz4=derivs_[cd.node4_index()][4]*scalefactors_[cd.node4_index()][2]*scalefactors_[cd.node4_index()][1];
+    const double sdyz5=derivs_[cd.node5_index()][4]*scalefactors_[cd.node5_index()][2]*scalefactors_[cd.node5_index()][1];
+    const double sdyz6=derivs_[cd.node6_index()][4]*scalefactors_[cd.node6_index()][2]*scalefactors_[cd.node6_index()][1];
+    const double sdyz7=derivs_[cd.node7_index()][4]*scalefactors_[cd.node7_index()][2]*scalefactors_[cd.node7_index()][1];
 
-    const double sdxz0=derivs_[cd.node0_index()][5]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][0];
-    const double sdxz1=derivs_[cd.node1_index()][5]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][0];
-    const double sdxz2=derivs_[cd.node2_index()][5]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][0];
-    const double sdxz3=derivs_[cd.node3_index()][5]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][0];
-    const double sdxz4=derivs_[cd.node4_index()][5]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][0];
-    const double sdxz5=derivs_[cd.node5_index()][5]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][0];
-    const double sdxz6=derivs_[cd.node6_index()][5]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][0];
-    const double sdxz7=derivs_[cd.node7_index()][5]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][0];
+    const double sdxz0=derivs_[cd.node0_index()][5]*scalefactors_[cd.node0_index()][2]*scalefactors_[cd.node0_index()][0];
+    const double sdxz1=derivs_[cd.node1_index()][5]*scalefactors_[cd.node1_index()][2]*scalefactors_[cd.node1_index()][0];
+    const double sdxz2=derivs_[cd.node2_index()][5]*scalefactors_[cd.node2_index()][2]*scalefactors_[cd.node2_index()][0];
+    const double sdxz3=derivs_[cd.node3_index()][5]*scalefactors_[cd.node3_index()][2]*scalefactors_[cd.node3_index()][0];
+    const double sdxz4=derivs_[cd.node4_index()][5]*scalefactors_[cd.node4_index()][2]*scalefactors_[cd.node4_index()][0];
+    const double sdxz5=derivs_[cd.node5_index()][5]*scalefactors_[cd.node5_index()][2]*scalefactors_[cd.node5_index()][0];
+    const double sdxz6=derivs_[cd.node6_index()][5]*scalefactors_[cd.node6_index()][2]*scalefactors_[cd.node6_index()][0];
+    const double sdxz7=derivs_[cd.node7_index()][5]*scalefactors_[cd.node7_index()][2]*scalefactors_[cd.node7_index()][0];
 
-    const double sdxyz0=derivs_[cd.node0_index()][6]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1]*scalefactors_[cd.elem][0];
-    const double sdxyz1=derivs_[cd.node1_index()][6]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1]*scalefactors_[cd.elem][0];
-    const double sdxyz2=derivs_[cd.node2_index()][6]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1]*scalefactors_[cd.elem][0];
-    const double sdxyz3=derivs_[cd.node3_index()][6]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1]*scalefactors_[cd.elem][0];
-    const double sdxyz4=derivs_[cd.node4_index()][6]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1]*scalefactors_[cd.elem][0];
-    const double sdxyz5=derivs_[cd.node5_index()][6]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1]*scalefactors_[cd.elem][0];
-    const double sdxyz6=derivs_[cd.node6_index()][6]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1]*scalefactors_[cd.elem][0];
-    const double sdxyz7=derivs_[cd.node7_index()][6]*scalefactors_[cd.elem][2]*scalefactors_[cd.elem][1]*scalefactors_[cd.elem][0];
+    const double sdxyz0=derivs_[cd.node0_index()][6]*scalefactors_[cd.node0_index()][2]*scalefactors_[cd.node0_index()][1]*scalefactors_[cd.node0_index()][0];
+    const double sdxyz1=derivs_[cd.node1_index()][6]*scalefactors_[cd.node1_index()][2]*scalefactors_[cd.node1_index()][1]*scalefactors_[cd.node1_index()][0];
+    const double sdxyz2=derivs_[cd.node2_index()][6]*scalefactors_[cd.node2_index()][2]*scalefactors_[cd.node2_index()][1]*scalefactors_[cd.node2_index()][0];
+    const double sdxyz3=derivs_[cd.node3_index()][6]*scalefactors_[cd.node3_index()][2]*scalefactors_[cd.node3_index()][1]*scalefactors_[cd.node3_index()][0];
+    const double sdxyz4=derivs_[cd.node4_index()][6]*scalefactors_[cd.node4_index()][2]*scalefactors_[cd.node4_index()][1]*scalefactors_[cd.node4_index()][0];
+    const double sdxyz5=derivs_[cd.node5_index()][6]*scalefactors_[cd.node5_index()][2]*scalefactors_[cd.node5_index()][1]*scalefactors_[cd.node5_index()][0];
+    const double sdxyz6=derivs_[cd.node6_index()][6]*scalefactors_[cd.node6_index()][2]*scalefactors_[cd.node6_index()][1]*scalefactors_[cd.node6_index()][0];
+    const double sdxyz7=derivs_[cd.node7_index()][6]*scalefactors_[cd.node7_index()][2]*scalefactors_[cd.node7_index()][1]*scalefactors_[cd.node7_index()][0];
 
     derivs[0]=6*(-1 + x)*x*y12*(1 + 2*y)*z12*(1 + 2*z)*cd.node0()
       +(1 - 4*x + 3*x2)*y12*(1 + 2*y)*z12*(1 + 2*z)*sdx0
@@ -463,7 +463,6 @@ public:
   }  
 
   //! return the parametric coordinates for value within the element.
-  //! iterative solution...
   template <class CellData>
   void get_coords(vector<double> &coords, const T& value, 
 		  const CellData &cd) const  
