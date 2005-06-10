@@ -8,7 +8,6 @@
 %   See also: ?.
 
 setupGrid           = 1;
-setupMatrix         = 1;
 solveSystem         = 1;
 plotSolution        = 1;
 
@@ -17,8 +16,10 @@ plotSolution        = 1;
 %-------------------------------------------------------------------------
 if (setupGrid)
     fprintf('-------------------------------------------------------------------------\n');
-    fprintf(' Set up grid\n');
+    fprintf(' Set up grid & system\n');
     fprintf('-------------------------------------------------------------------------\n');
+    tStartCPU           = cputime;
+    tStartElapsed       = clock;
 
     grid.maxLevels  	= 5;
     grid.maxPatches  	= 5;
@@ -26,49 +27,30 @@ if (setupGrid)
     grid.numLevels      = 0;
     grid.domainSize     = [1.0 1.0];                                % Domain is from [0.,0.] to [1.,1.]
     grid.dim            = length(grid.domainSize);
-
+    A                   = [];
+    b                   = [];
+    
     %--------------- Level 1: global coarse grid -----------------
 
     resolution          = [4 4];
-    [grid,k] = addGridLevel(grid,'meshsize',grid.domainSize./resolution);
-    [grid,q1] = addGridPatch(grid,k,ones(1,grid.dim),resolution,-1);     % One global patch
+    [grid,k]            = addGridLevel(grid,'meshsize',grid.domainSize./resolution);
+    
+    [grid,q1]           = addGridPatch(grid,k,ones(1,grid.dim),resolution,-1);     % One global patch
+    [A,b]               = updateSystem(grid,k,q,A,b);
 
     %--------------- Level 2: local fine grid around center of domain -----------------
 
-    [grid,k] = addGridLevel(grid,'refineRatio',[2 2]);
-    [grid,q2] = addGridPatch(grid,k,[3 3],[6 6],q1);              % Local patch around the domain center
+    [grid,k]            = addGridLevel(grid,'refineRatio',[2 2]);
+    [grid,q2]           = addGridPatch(grid,k,[3 3],[6 6],q1);              % Local patch around the domain center
+    [A,b]               = updateSystem(grid,k,q,A,b);
 
-    printGrid(grid);
-end
 
-%-------------------------------------------------------------------------
-% Set up stencils
-%-------------------------------------------------------------------------
-
-for k = 1:grid.numLevels,
-    grid.level{k}.stencilOffsets = [...                      % -Laplacian stencil non-zero structure
-        [ 0 0 ]; ...
-        [-1  0]; ...
-        [ 1  0]; ...
-        [ 0 -1]; ...
-        [ 0  1]...
-        ];
-end
-
-%-------------------------------------------------------------------------
-% Set up the the matrix
-%-------------------------------------------------------------------------
-if (setupMatrix)
-    fprintf('-------------------------------------------------------------------------\n');
-    fprintf(' Set up the the matrix\n');
-    fprintf('-------------------------------------------------------------------------\n');
-    tStartCPU        = cputime;
-    tStartElapsed    = clock;
-    [A,b] = setupOperator(grid);        % Structured part (stencils on each patch)
     tCPU        = cputime - tStartCPU;
     tElapsed    = etime(clock,tStartElapsed);
     fprintf('CPU time     = %f\n',tCPU);
     fprintf('Elapsed time = %f\n',tElapsed);
+
+    printGrid(grid);
 end
 
 %-------------------------------------------------------------------------
