@@ -12,12 +12,13 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.1        </maxTime>
+       <maxTime>            0.5e-2        </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-7      </delt_init>
        <max_delt_increase>  2.0        </max_delt_increase>
+       <!--<max_iterations>     2         </max_iterations> -->
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
     <!--____________________________________________________________________-->
@@ -112,14 +113,25 @@
     </BoundaryConditions>
     <!--____________________________________________________________________-->
     <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
-    <!--____________________________________________________________________-->
+    <!--____________________________________________________________________-->    
+<!--
        <Level>
-           <Box label="1">
-              <lower>        [-0.5,-0.5,-0.5]    </lower>
-              <upper>        [0.5,0.5,0.5]    </upper>
-              <extraCells>   [1,1,1]    </extraCells>
-              <patches>      [1,1,1]    </patches>
-              <resolution>   [20,20,20] </resolution>
+           <Box label="1D">
+              <lower>        [-0.5,-0.025,-0.025]    </lower>
+              <upper>        [0.5,  0.025, 0.025]    </upper>
+              <extraCells>   [1,1,1]                  </extraCells>
+              <patches>      [1,1,1]                  </patches>
+              <resolution>   [50,1,1]                 </resolution>
+           </Box>
+       </Level>
+-->  
+       <Level>
+           <Box label="2D">
+              <lower>        [-0.5,-0.5,-0.025]    </lower>
+              <upper>        [0.5,  0.5, 0.025]    </upper>
+              <extraCells>   [1,1,1]               </extraCells>
+              <patches>      [1,1,1]               </patches>
+              <resolution>   [50,50,1]             </resolution>
            </Box>
        </Level>
     </Grid>    
@@ -133,7 +145,9 @@
       <save label="rho_CC"/>
       <save label="vel_CC"/>
       <save label="temp_CC"/>
+      <save label="sp_vol_CC"/>
       <save label="press_CC"/>
+      <save label="vol_frac_CC"/>
       <save label="delP_Dilatate"/>
       <save label="uvel_FCME"/>
       <save label="vvel_FCME"/>
@@ -148,19 +162,22 @@
    </DataArchiver>
    
    <Debug>
-       <dbg_timeStart>       0.00    </dbg_timeStart>
+       <dbg_timeStart>       1.00    </dbg_timeStart>
        <dbg_timeStop>        0.01    </dbg_timeStop>
        <dbg_outputInterval>  1e-9    </dbg_outputInterval>
-       <dbg_Matls>           [0]        </dbg_Matls>
-       <dbg_BeginIndex>      [9,9,19]   </dbg_BeginIndex>
-       <dbg_EndIndex>      [11,11,21]   </dbg_EndIndex>
-       <dbg_SigFigs>         10         </dbg_SigFigs> 
+       <dbg_Matls>           [0]       </dbg_Matls>
+       <dbg_BeginIndex>      [29,39,0]  </dbg_BeginIndex>
+       <dbg_EndIndex>      [32,41,1]    </dbg_EndIndex>
+       <dbg_SigFigs>         5         </dbg_SigFigs> 
        <dbg_Level>            1        </dbg_Level>   
-       <debug label = "switchDebug_AMR_refine"/>
-       <debug label = "switchDebug_AMR_refineInterface"/>   
-       <debug label = "switchDebug_EQ_RF_press"/>
        
-    <!--<debug label = "switchDebugInitialize"/>        
+       <debug label = "switchDebug_AMR_refineInterface"/> 
+       
+    <!--
+       <debug label = "switchDebug_EQ_RF_press"/>
+       <debug label = "switchDebug_AMR_refine"/>
+       <debug label = "switchDebug_AMR_refineInterface"/> 
+       <debug label = "switchDebugInitialize"/>        
        <debug label = "switchDebug_EQ_RF_press"/> 
        <debug label = "switchDebug_vel_FC"/> 
        <debug label = "switchDebug_setupMatrix"/>               
@@ -184,8 +201,8 @@
           <do_Refluxing>  true    </do_Refluxing>
           <Refinement_Criteria_Thresholds>
             <Density>     1e100    </Density>
-            <Temperature> 1000    </Temperature>
-            <Pressure>    1e100    </Pressure>
+            <Temperature> 1e100    </Temperature>
+            <Pressure>    1e5    </Pressure>
             <VolumeFrac>  1e100    </VolumeFrac>
             <Velocity>    1e100    </Velocity>
           </Refinement_Criteria_Thresholds>
@@ -195,15 +212,27 @@
     
     <!--____________________________________________________________________-->
     <!--    A M R   G R I D                                                 -->
-    <!--____________________________________________________________________-->  
+    <!--____________________________________________________________________--> 
+<!--1D
     <Regridder>
       <max_levels>2</max_levels>
-      <cell_refinement_ratio>    [[2,2,2]]  </cell_refinement_ratio>
-      <lattice_refinement_ratio> [[4,4,4][2,2,2]]  </lattice_refinement_ratio>
-      <cell_creation_dilation>   [2,2,2]   </cell_creation_dilation>   
-      <cell_deletion_dilation>   [1,1,1]   </cell_deletion_dilation>   
-      <min_boundary_cells>       [1,1,1]   </min_boundary_cells>
+      <cell_refinement_ratio>    [[2,1,1]]  </cell_refinement_ratio>
+      <lattice_refinement_ratio> [[5,1,1][2,1,1]]  </lattice_refinement_ratio>
+      <cell_creation_dilation>   [2,0,0]   </cell_creation_dilation>   
+      <cell_deletion_dilation>   [1,0,0]   </cell_deletion_dilation>   
+      <min_boundary_cells>       [1,0,0]   </min_boundary_cells>
     </Regridder>
+-->
+
+    <Regridder>
+      <max_levels>2</max_levels>
+      <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
+      <lattice_refinement_ratio> [[5,5,1]]  </lattice_refinement_ratio>
+      <cell_creation_dilation>   [2,2,0]   </cell_creation_dilation>   
+      <cell_deletion_dilation>   [1,1,0]   </cell_deletion_dilation>   
+      <min_boundary_cells>       [1,1,0]   </min_boundary_cells>
+    </Regridder>
+
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
     <!--____________________________________________________________________-->   
@@ -237,8 +266,8 @@
                 </box>
  
                 <box label="hot_spot">
-                    <min>[ -0.1, -0.1, -0.1 ]              </min>
-                    <max>[  0.1,  0.1,  0.1 ]              </max>
+                    <min>[ -0.05, -0.05, -0.05 ]              </min>
+                    <max>[  0.05,  0.05,  0.05 ]              </max>
                 </box>
              </difference>
                <res>           [2,2,2]                  </res>
@@ -250,8 +279,8 @@
            
            <geom_object>
                 <box label="hot_spot">
-                    <min>[ -0.1, -0.1, -0.1 ]              </min>
-                    <max>[  0.1,  0.1,  0.1 ]              </max>
+                    <min>[ -0.05, -0.05, -0.05 ]              </min>
+                    <max>[  0.05,  0.05,  0.05 ]              </max>
                 </box>
                <res>           [2,2,2]                  </res>
                <velocity>      [0.0,0.0,0.0]            </velocity>
