@@ -65,6 +65,7 @@ void AMRICE::problemSetup(const ProblemSpecP& params, GridP& grid,
   refine_ps->getWithDefault("Pressure",    d_press_threshold,   1e100);
   refine_ps->getWithDefault("VolumeFrac",  d_vol_frac_threshold,1e100);
   refine_ps->getWithDefault("Velocity",    d_vel_threshold,     1e100);
+
 }
 //___________________________________________________________________              
 void AMRICE::scheduleInitialize(const LevelP& level,
@@ -1128,10 +1129,11 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
   
   //__________________________________
   // schedule refluxing
+#if 0
   if(d_doRefluxing){
     scheduleReflux( coarseLevel, sched);
   }
-  
+#endif
 }
 
 /*___________________________________________________________________
@@ -1755,6 +1757,9 @@ ______________________________________________________________________*/
 void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
                                    SchedulerP& sched)
 {
+  if(!coarseLevel->hasFinerLevel() || !doICEOnThisLevel(coarseLevel->getFinerLevel()))
+    return;
+
   cout_doing << "AMRICE::scheduleErrorEstimate \t\t\t\tL-" 
              << coarseLevel->getIndex() << '\n';
   

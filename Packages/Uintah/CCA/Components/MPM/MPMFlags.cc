@@ -1,4 +1,5 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
 #include <Packages/Uintah/Core/Grid/Node27Interpolator.h>
 #include <Core/Util/DebugStream.h>
@@ -28,7 +29,8 @@ MPMFlags::MPMFlags()
   d_addNewMaterial = false;
   d_with_color = false;
   d_fracture = false;
-  d_finestLevelOnly = false;
+  d_minGridLevel = 0;
+  d_maxGridLevel = 1000;
                       
   d_doErosion = false;
   d_erosionAlgorithm = "none";
@@ -51,7 +53,7 @@ MPMFlags::~MPMFlags()
 }
 
 void
-MPMFlags::readMPMFlags(ProblemSpecP& ps)
+MPMFlags::readMPMFlags(ProblemSpecP& ps, const GridP& grid)
 {
   ps->get("time_integrator", d_integrator_type);
   if (d_integrator_type == "implicit") 
@@ -74,7 +76,8 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   bool adiabaticHeatingOn = false;
   ps->get("turn_on_adiabatic_heating", adiabaticHeatingOn);
   if (adiabaticHeatingOn) d_adiabaticHeating = 0.0;
-  ps->get("finest_level_only", d_finestLevelOnly);
+  ps->getWithDefault("min_grid_level", d_minGridLevel, 0);
+  ps->getWithDefault("max_grid_level", d_maxGridLevel, 1000);
   ps->get("ForceBC_force_increment_factor", d_forceIncrementFactor);
   ps->get("create_new_particles", d_createNewParticles);
   ps->get("manual_new_material", d_addNewMaterial);
@@ -126,4 +129,14 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
     dbg << " Extra Solver flushes        = " << d_extraSolverFlushes << endl;
     dbg << "---------------------------------------------------------\n";
   }
+}
+
+bool MPMFlags::doMPMOnThisLevel(const Level* level)
+{
+  return level->getIndex() >= d_minGridLevel && level->getIndex() <= d_maxGridLevel;
+}
+
+bool MPMFlags::doMPMOnThisLevel(const LevelP& level)
+{
+  return doMPMOnThisLevel(level.get_rep());
 }

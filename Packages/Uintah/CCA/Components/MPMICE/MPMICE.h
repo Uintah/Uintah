@@ -171,7 +171,19 @@ public:
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw);
   
+  void coarsenCC_0(const ProcessorGroup*,
+                   const PatchSubset* patch,
+                   const MaterialSubset* matls,
+                   DataWarehouse* old_dw,
+                   DataWarehouse* new_dw);
+  
   void computeLagrangianValuesMPM(const ProcessorGroup*,
+                                  const PatchSubset* patch,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw);
+
+  void coarsenLagrangianValuesMPM(const ProcessorGroup*,
                                   const PatchSubset* patch,
                                   const MaterialSubset* matls,
                                   DataWarehouse* old_dw,
@@ -190,11 +202,23 @@ public:
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw);
 
+  void refineCC(const ProcessorGroup*,
+                const PatchSubset* patch,
+                const MaterialSubset* matls,
+                DataWarehouse* old_dw,
+                DataWarehouse* new_dw);
+
   void interpolatePressCCToPressNC(const ProcessorGroup*,
                                    const PatchSubset* patch,
                                    const MaterialSubset* matls,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw);
+
+  void refinePressCC(const ProcessorGroup*,
+                     const PatchSubset* patch,
+                     const MaterialSubset* matls,
+                     DataWarehouse* old_dw,
+                     DataWarehouse* new_dw);
 
   void interpolatePAndGradP(const ProcessorGroup*,
                             const PatchSubset* patch,

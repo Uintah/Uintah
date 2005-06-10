@@ -3,6 +3,8 @@
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/ParticleInterpolator.h>
+#include <Packages/Uintah/Core/Grid/GridP.h>
+#include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
@@ -46,7 +48,10 @@ namespace Uintah {
     bool        d_with_color;         // to turn on the color variable
     bool        d_fracture;         // to turn on fracture
 
-    bool        d_finestLevelOnly; // turn off AMR work on all but 1 level
+    int         d_minGridLevel; // Only do MPM on this grid level
+    int         d_maxGridLevel; // Only do MPM on this grid level
+    bool        doMPMOnThisLevel(const LevelP& level);
+    bool        doMPMOnThisLevel(const Level* level);
     
     std::string d_erosionAlgorithm; // Algorithm to erode material points
 
@@ -68,7 +73,7 @@ namespace Uintah {
 
     ~MPMFlags();
 
-    void readMPMFlags(ProblemSpecP& ps);
+    void readMPMFlags(ProblemSpecP& ps, const GridP& grid);
 
   private:
 
