@@ -151,6 +151,7 @@
         <advection type = "FirstOrder" />
         <solution technique = "EqForm" />
         <AMR>
+          <do_Refluxing>  false    </do_Refluxing>
           <Refinement_Criteria_Thresholds>
             <Density>     1e100    </Density>
             <Temperature> 1e100    </Temperature>
