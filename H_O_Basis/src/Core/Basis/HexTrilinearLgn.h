@@ -114,18 +114,18 @@ namespace SCIRun {
     }
   };
   
-  template <class CrvBasis>
+  template <class HexBasis>
     class HexLocate {
   public:
 
-    typedef typename CrvBasis::value_type T;
+    typedef typename HexBasis::value_type T;
 
     HexLocate() {}
     virtual ~HexLocate() {}
  
     //! iterative solution...
     template <class CellData>
-      void get_coords(CrvBasis *pCrv, vector<double> &coords, const T& value, 
+      void get_coords(const HexBasis *pHex, vector<double> &coords, const T& value, 
 		      const CellData &cd) const  
       {     
 	//! Step 1: get a good guess on the domain, evaluate equally spaced points 
@@ -133,20 +133,22 @@ namespace SCIRun {
 	//!         Newton iteration.
       
 	vector<double> cur, last; 
-	initial_guess(pCrv, value, cd, cur);
+	initial_guess(pHex, value, cd, cur);
       
 	//! Now cur has our initialization param for Newton iteration.
 	//! Step 2: Newton iteration.
 	//! f(u) =C'(u) dot (C(u) - P)
-	//! the distance from P to C(u) is minimum when f(u) = 0   
+	//! the distance from P to C(u) is minimum when f(u) = 0 
+	double dist;
 	do {
 	  last = cur;
-	  T dif = pCrv->interpolate(cur, cd)-value; 
-	  T grad = pCrv->derivate(cur, cd);
+	  T dif = pHex->interpolate(cur, cd)-value; 
+	  T grad = pHex->derivate(cur, cd);
 	  cur[0] +=dif[0]/grad[0];
 	  cur[1] +=dif[1]/grad[1];
 	  cur[2] +=dif[2]/grad[2];
-	} while (sqrt((last-cur)*(last-cur)) > 0.00001);
+	  dist=(last-cur).length();
+	} while (dist > 0.00001);
 	coords.clear();
 	coords.push_back(cur);
       };
@@ -154,7 +156,7 @@ namespace SCIRun {
   protected:
     //! find a reasonable initial guess for starting Newton iteration.
     template <class CellData>
-      void initial_guess(CrvBasis *pCrv, const T &val, const CellData &cd, vector<double> cur) const
+      void initial_guess(HexBasis *pHex, const T &val, const CellData &cd, vector<double> cur) const
       {
 	double dist = HUGE;
 	
@@ -167,8 +169,8 @@ namespace SCIRun {
 	    guess[1] = y / (double) end;
 	    for (int x = 0; x <= end; x++) {
 	      guess[0] = x / (double) end;	      
-	      T dv = pCrv->interpolate(guess, cd)-val;
-	      T cur_d = sqrt(dv*dv);
+	      T dv = pHex->interpolate(guess, cd)-val;
+	      double cur_d = dv.length();
 	      if (cur_d < dist) {
 		dist = cur_d;
 		cur = guess;
