@@ -50,7 +50,9 @@
 // -noElementsCount flag is used).  The hex entries will be zero-based, 
 // unless the user specifies -oneBasedIndexing.
 
+#include <Core/Basis/Constant.h>
 #include <Core/Datatypes/GenericField.h>
+#include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Basis/HexTricubicHmtScaleFactors.h>
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Persistent/Pstreams.h>
@@ -102,23 +104,13 @@ int parseArgs(int argc, char *argv[]) {
 }
 
 void printUsageInfo(char *progName) {
-  cerr << "\n Usage: "<<progName<<" HexVolField pts hexes [-noPtsCount] [-noElementsCount] [-oneBasedIndexing]\n\n";
-  cerr << "\t This program will read in a SCIRun HexVolField, and will \n";
-  cerr << "\t save out the HexVolMesh into two files: a .pts file and a \n";
-  cerr << "\t .hex file.  The .pts file will specify the x/y/z \n";
-  cerr << "\t coordinates of each point, one per line, entries separated \n";
-  cerr << "\t by white space; the file will also have a one line header, \n";
-  cerr << "\t specifying number of points, unless the user specifies the \n";
-  cerr << "\t -noPtsCount command-line argument.  The .hex file will \n";
-  cerr << "\t specify the i/j/k/l/m/n/o/p indices for each hex, also one \n";
-  cerr << "\t per line, again with a one line header (unless a \n";
-  cerr << "\t -noElementsCount flag is used).  The hex entries will be \n";
-  cerr << "\t zero-based, unless the user specifies -oneBasedIndexing.\n\n";
+  cerr << "\n Usage: "<<progName<<" HexVolField dataIn PointCloadField dataOut \n\n";
+  cerr << "\t This program will read in a SCIRun HexVolField...\n";
 }
 
 int
 main(int argc, char **argv) {
-  if (argc < 4 || argc > 7) {
+  if (argc < 5 || argc > 5) {
     printUsageInfo(argv[0]);
     return 2;
   }
@@ -128,55 +120,77 @@ main(int argc, char **argv) {
 #endif
   setDefaults();
 
-  char *fieldName = argv[1];
-  char *ptsName = argv[2];
-  char *hexesName = argv[3];
+  char *hvName = argv[1];
+  char *dataIn = argv[2];
+  char *pcName = argv[3];
+  char *dataOut = argv[4];
+
   if (!parseArgs(argc, argv)) {
     printUsageInfo(argv[0]);
     return 2;
   }
 
-  FieldHandle handle;
-  Piostream* stream=auto_istream(fieldName);
-  if (!stream) {
-    cerr << "Couldn't open file "<<fieldName<<".  Exiting...\n";
+  FieldHandle hhandle;
+  Piostream* hstream=auto_istream(hvName);
+  if (!hstream) {
+    cerr << "Couldn't open file "<<hvName<<".  Exiting...\n";
     return 2;
   }
-  Pio(*stream, handle);
-  if (!handle.get_rep()) {
-    cerr << "Error reading surface from file "<<fieldName<<".  Exiting...\n";
+  Pio(*hstream, hhandle);
+  if (!hhandle.get_rep()) {
+    cerr << "Error reading surface from file "<<hvName<<".  Exiting...\n";
     return 2;
   }
-  if (handle->get_type_description(1)->get_name().find("HexVolField") != 
+  if (hhandle->get_type_description(1)->get_name().find("HexVolField") != 
       string::npos) {
     cerr << "Error -- input field wasn't a HexVolField (type_name="
-	 << handle->get_type_description(1)->get_name() << std::endl;
+	 << hhandle->get_type_description(1)->get_name() << std::endl;
     return 2;
   }
 
-  MeshHandle mH = handle->mesh();
-  HVMesh *hvm = dynamic_cast<HVMesh *>(mH.get_rep());
-  HVMesh::Node::iterator niter; 
-  HVMesh::Node::iterator niter_end; 
-  HVMesh::Node::size_type nsize; 
-  hvm->begin(niter);
-  hvm->end(niter_end);
-  hvm->size(nsize);
-  FILE *fPts = fopen(ptsName, "wt");
-  if (!fPts) {
-    cerr << "Error opening output file "<<ptsName<<"\n";
+  MeshHandle hmH = hhandle->mesh();
+  HVMesh *hvm = dynamic_cast<HVMesh *>(hmH.get_rep());
+
+
+  FieldHandle phandle;
+  Piostream* pstream=auto_istream(pcName);
+  if (!pstream) {
+    cerr << "Couldn't open file "<<pcName<<".  Exiting...\n";
     return 2;
   }
-  int size=(unsigned)(nsize);
-  if (ptsCountHeader) fprintf(fPts, "%d\n", size);
-  cerr << "Number of points = "<< nsize <<"\n";
-  while(niter != niter_end) {
-    Point p;
-    hvm->get_center(p, *niter);
-    fprintf(fPts, "%lf %lf %lf\n", p.x(), p.y(), p.z());
-    ++niter;
+  Pio(*pstream, phandle);
+  if (!phandle.get_rep()) {
+    cerr << "Error reading surface from file "<<pcName<<".  Exiting...\n";
+    return 2;
   }
-  fclose(fPts);
+  if (phandle->get_type_description(1)->get_name().find("PointCloudField") != 
+      string::npos) 
+  {
+    cerr << "Error -- input field wasn't a PointCloudField (type_name="
+	 << phandle->get_type_description(1)->get_name() << std::endl;
+    return 2;
+  }
+  typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;  
+  MeshHandle pmH = phandle->mesh();
+  PCMesh *pcm = dynamic_cast<PCMesh *>(pmH.get_rep());
+  PCMesh::Node::iterator niter; 
+  PCMesh::Node::iterator niter_end; 
+  PCMesh::Node::size_type nsize; 
+  pcm->begin(niter);
+  pcm->end(niter_end);
+  pcm->size(nsize);
+
+
+
+
+
+
+  FILE *fdataIn = fopen(dataIn, "r");
+  if (!fdataIn) {
+    cerr << "Error opening input file "<<dataIn<<"\n";
+    return 2;
+  }
+  fclose(fdataIn);
 
   HVMesh::Cell::size_type csize; 
   HVMesh::Cell::iterator citer; 
@@ -185,17 +199,16 @@ main(int argc, char **argv) {
   hvm->size(csize);
   hvm->begin(citer);
   hvm->end(citer_end);
-  FILE *fHexes = fopen(hexesName, "wt");
-  if (!fHexes) {
-    cerr << "Error opening output file "<<hexesName<<"\n";
+  FILE *fdataOut = fopen(dataOut, "w");
+  if (!fdataOut) {
+    cerr << "Error opening output file "<<dataOut<<"\n";
     return 2;
   }
-  size=(unsigned)(csize);
-  if (elementsCountHeader) fprintf(fHexes, "%d\n", size);
-  cerr << "Number of hexes = "<< csize <<"\n";
+ 
+
   while(citer != citer_end) {
     hvm->get_nodes(cell_nodes, *citer);
-    fprintf(fHexes, "%d %d %d %d %d %d %d %d\n", 
+    fprintf(fdataOut, "%d %d %d %d %d %d %d %d\n", 
 	    (int)cell_nodes[0]+baseIndex,
 	    (int)cell_nodes[1]+baseIndex,
 	    (int)cell_nodes[2]+baseIndex,
@@ -206,7 +219,7 @@ main(int argc, char **argv) {
 	    (int)cell_nodes[7]+baseIndex);
     ++citer;
   }
-  fclose(fHexes);
+  fclose(fdataOut);
 
   return 0;  
 }    

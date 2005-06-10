@@ -41,8 +41,8 @@
 // specify -oneBasedIndexing.  And the SCIRun output file is written in 
 // ASCII, unless you specify -binOutput.
 
+
 #include <Core/Basis/HexTricubicHmtScaleFactors.h>
-//#include <Core/Basis/NoData.h>
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/Pstreams.h>
@@ -61,8 +61,6 @@ typedef HexVolMesh<HexTricubicHmtScaleFactors<Point> > HVMesh;
 typedef HexTricubicHmtScaleFactors<double> DatBasis;
 typedef GenericField<HVMesh, DatBasis, vector<double> > HVField;
 
-
-
 using std::cerr;
 using std::ifstream;
 using std::endl;
@@ -79,7 +77,7 @@ char *dataFileName;
 
 void setDefaults() {
   ptsCountHeader=true;
-  baseIndex=1;
+  baseIndex=0;
   elementsCountHeader=true;
   binOutput=false;
   debugOn=false;
@@ -122,6 +120,7 @@ int parseArgs(int argc, char *argv[]) {
   }
   return 1;
 }
+
 
 void printUsageInfo(char *progName) {
   cerr << "\n Usage: "<<progName<<" pts hexes HexVolMesh [-noPtsCount] [-noElementsCount] [-oneBasedIndexing] [-binOutput] [-debug] [-dataFile] [-scaleFactorFile] [-scaleFactor] \n\n";
@@ -187,7 +186,7 @@ main(int argc, char **argv) {
       ptsstream >> f[j] >> fdx[j] >> fdy[j] >> fdxy[j] >> fdz[j] 
 		>> fdyz[j] >> fdxz[j] >> fdxyz[j];
 
-    double v[3][3], vdx[3][3], vdy[3][3], vdxy[3][3], vdz[3][3], vdyz[3][3], vdxz[3][3], vdxyz[3][3];
+    /*    double v[3][3], vdx[3][3], vdy[3][3], vdxy[3][3], vdz[3][3], vdyz[3][3], vdxz[3][3], vdxyz[3][3];
     for (int j=0; j<3; j++) 
       for (int k=0; k<3; k++) 
 	ptsstream >> v[j][k] >> vdx[j][k] >> vdy[j][k] >> vdxy[j][k] 
@@ -196,6 +195,13 @@ main(int argc, char **argv) {
     string label;
     int n;
     ptsstream >> label >> n;
+    */
+
+    int c;
+    do {
+      c=ptsstream.get();
+    } while (c!='\n' && c!='\r' && !ptsstream.eof());
+ 
     hvm->add_point(Point(x[0],x[1],x[2]));
     vector<Point> arr(7);
     arr[0].x(xdx[0]);
@@ -258,13 +264,33 @@ main(int argc, char **argv) {
 
   cerr << "number of hexes = "<< nhexes <<"\n";
 
-  // parse header out.
-  vector<string> eheader;
-  for (int i = 0; i < 10; i++) {
-    string s;
-    hexesstream >> s;
-    eheader.push_back(s);
-  }
+
+  int c;
+  do {
+    c=hexesstream.get();
+  } while (c!='\n' && c!='\r' && !hexesstream.eof());
+  
+
+//   // parse header out.
+//   vector<string> eheader;
+//   for (int i = 0; i < 10; i++) {
+//     string s;
+//     hexesstream >> s;
+//     eheader.push_back(s);
+//   }
+  //  iter = eheader.begin();
+  //  while (iter != eheader.end()) {
+  //    cerr << *iter++ << endl;
+  //  }
+
+
+ // parse header out.
+//   vector<string> eheader;
+//   for (int i = 0; i < 10; i++) {
+//     string s;
+//     hexesstream >> s;
+//     eheader.push_back(s);
+//   }
   //  iter = eheader.begin();
   //  while (iter != eheader.end()) {
   //    cerr << *iter++ << endl;
@@ -273,8 +299,15 @@ main(int argc, char **argv) {
   for (int i = 0; i < nhexes; i++) {
     int n1, n2, n3, n4, n5, n6, n7, n8;
     string label;
-    int e;
-    hexesstream >> n1 >> n2 >> n3 >> n4 >> n5 >> n6 >> n7 >> n8 >> label >> e;
+    int e; 
+    hexesstream >> n1 >> n2 >> n3 >> n4 >> n5 >> n6 >> n7 >> n8;
+
+    int c;
+    do {
+      c=hexesstream.get();
+    } while (c!='\n' && c!='\r' && !hexesstream.eof());
+ 
+    // >> label >> e;
     n1-=baseIndex; 
     n2-=baseIndex; 
     n3-=baseIndex; 
@@ -321,7 +354,7 @@ main(int argc, char **argv) {
       cerr << "Added hex #"<<i<<": ["<<n1<<" "<<n2<<" "<<n3<<" "<<n4<<" "<<n5<<" "<<n6<<" "<<n7<<" "<<n8<<"]\n";
   }
   cerr << "done adding elements.\n";
-
+  
   if(dataFileName) {
     ifstream datastream(dataFileName);
     vector<double> sf(3);
