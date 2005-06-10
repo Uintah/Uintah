@@ -305,7 +305,7 @@ TimeSync::run()
 {
   throttle_.start();
 //  const double inc = 1./5.; // the rate at which we refresh the time stamp
-  const double inc = 15.;
+  const double inc = 1.;
   double t = throttle_.time();
   while (!dead_)
   {
