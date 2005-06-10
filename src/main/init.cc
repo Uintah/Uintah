@@ -63,13 +63,14 @@ namespace SCIRun {
 extern void macImportExportForceLoad();
 }
 
+
 // #include <Core/Datatypes/PointCloudField.h>
 // #include <Core/Datatypes/TriSurfField.h>
 // #include <Core/Datatypes/StructQuadSurfField.h>
 // #include <Core/Datatypes/TriSurfMesh.h>
 // #include <Core/Datatypes/StructHexVolField.h>
-// #include <iostream>
-
+#include <iostream>
+ 
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Basis/HexTricubicHmtScaleFactors.h>
@@ -91,15 +92,24 @@ macForceLoad()
   // solution (or upgrade to the next OS version (jaguar) which I
   // think will fix this) I suggest that we just add the types to this
   // file as we find them "missing"...  -Dd
-typedef HexVolMesh<HexTricubicHmtScaleFactors<Point> > HVMesh;
-typedef HexTricubicHmtScaleFactors<double> DatBasis;
-typedef GenericField<HVMesh, DatBasis, vector<double> > HVField;
 
 //   PointCloudField<double> pcfd;
 //   TriSurfField<double> tsfd;
 //   StructQuadSurfField<double> sqsfd;
 //   TriSurfMesh tsmd;
 //   StructHexVolField<double> shvfd;
+
+typedef HexVolMesh<HexTricubicHmtScaleFactors<Point> > HVMesh;
+typedef HexTricubicHmtScaleFactors<double> DatBasis;
+typedef GenericField<HVMesh, DatBasis, vector<double> > HVField;
+ HVField dummy;
+
+//   PointCloudField<double> pcfd;
+//   TriSurfField<double> tsfd;
+//   StructQuadSurfField<double> sqsfd;
+//   TriSurfMesh tsmd;
+//   StructHexVolField<double> shvfd;
+>>>>>>> .r30657
 }
 #endif
 
