@@ -63,14 +63,17 @@ namespace SCIRun {
 extern void macImportExportForceLoad();
 }
 
-#include <Core/Datatypes/PointCloudField.h>
-#include <Core/Datatypes/TriSurfField.h>
-#include <Core/Datatypes/StructQuadSurfField.h>
-#include <Core/Datatypes/TriSurfMesh.h>
-#include <Core/Datatypes/StructHexVolField.h>
-#include <iostream>
+// #include <Core/Datatypes/PointCloudField.h>
+// #include <Core/Datatypes/TriSurfField.h>
+// #include <Core/Datatypes/StructQuadSurfField.h>
+// #include <Core/Datatypes/TriSurfMesh.h>
+// #include <Core/Datatypes/StructHexVolField.h>
+// #include <iostream>
 
-
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Basis/HexTricubicHmtScaleFactors.h>
+#include <Core/Datatypes/HexVolMesh.h>
 //  The Macintosh does not run static object constructors when loading a 
 //  dynamic library until a symbol from that library is referenced.  See:
 //
@@ -88,11 +91,15 @@ macForceLoad()
   // solution (or upgrade to the next OS version (jaguar) which I
   // think will fix this) I suggest that we just add the types to this
   // file as we find them "missing"...  -Dd
-  PointCloudField<double> pcfd;
-  TriSurfField<double> tsfd;
-  StructQuadSurfField<double> sqsfd;
-  TriSurfMesh tsmd;
-  StructHexVolField<double> shvfd;
+typedef HexVolMesh<HexTricubicHmtScaleFactors<Point> > HVMesh;
+typedef HexTricubicHmtScaleFactors<double> DatBasis;
+typedef GenericField<HVMesh, DatBasis, vector<double> > HVField;
+
+//   PointCloudField<double> pcfd;
+//   TriSurfField<double> tsfd;
+//   StructQuadSurfField<double> sqsfd;
+//   TriSurfMesh tsmd;
+//   StructHexVolField<double> shvfd;
 }
 #endif
 
