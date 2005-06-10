@@ -35,6 +35,11 @@
 #include <iostream>
 #include <string>
 #include <sgi_stl_warnings_on.h>
+
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
+
 using namespace std;
 
 void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
@@ -65,15 +70,73 @@ void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
   
 #ifdef _WIN32
   return (void*) GetProcAddress(LibraryHandle,symbolname);
+#elif defined __APPLE__
+  //*** Workaround for a bug in 10.4's dyld library ***//
+  // Add a leading underscore to the symbolname for call to mach lib functions
+  // If you don't check against the underscored symbol name NSIsSymbolNameDefined
+  // will never return true.
+  char* underscoredSymbol = 0;
+  asprintf(&underscoredSymbol,"_%s",symbolname);
+  if( NSIsSymbolNameDefined(underscoredSymbol) ) {
+    return dlsym(LibraryHandle,symbolname);
+  } else {
+    return 0;
+  }
 #else
   return dlsym(LibraryHandle,symbolname);
 #endif
+}
+
+LIBRARY_HANDLE
+findLib(string lib)
+{
+  LIBRARY_HANDLE handle=0;
+  const char *env = SCIRun::sci_getenv("PACKAGE_LIB_PATH");
+  string tempPaths(env?env:"");
+  // try to find the library in the specified path
+  while (tempPaths!="") {
+    string dir;
+#ifdef _WIN32
+    // make sure we don't throw away the drive letter
+    const unsigned int firstColon = tempPaths.find(':',2);
+#else
+    const unsigned int firstColon = tempPaths.find(':');
+#endif
+    if(firstColon < tempPaths.size()) {
+      dir=tempPaths.substr(0,firstColon);
+      tempPaths=tempPaths.substr(firstColon+1);
+    } else {
+      dir=tempPaths;
+      tempPaths="";
+    }
+
+    handle = GetLibraryHandle((dir+"/"+lib).c_str());
+    if (handle)
+      return handle;
+  }
+
+  // if not yet found, try to find it in the rpath 
+  // or the LD_LIBRARY_PATH (last resort)
+  handle = GetLibraryHandle(lib.c_str());
+  return handle;
 }
 
 void* GetHandleSymbolAddress(LIBRARY_HANDLE handle, const char* symbolname)
 {
 #ifdef _WIN32
   return (void*) GetProcAddress(handle,symbolname);
+#elif defined __APPLE__
+  //*** Workaround for a bug in 10.4's dyld library ***//
+  // Add a leading underscore to the symbolname for call to mach lib functions
+  // If you don't check against the underscored symbol name NSIsSymbolNameDefined
+  // will never return true.
+  char* underscoredSymbol = 0;
+  asprintf(&underscoredSymbol,"_%s",symbolname);
+  if( NSIsSymbolNameDefined(underscoredSymbol) ) {
+    return dlsym(handle,symbolname);
+  } else {
+    return 0;
+  }
 #else
  return dlsym(handle,symbolname);
 #endif
