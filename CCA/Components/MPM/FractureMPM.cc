@@ -120,7 +120,7 @@ void FractureMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   if(mpm_soln_ps) {
 	        
     // Read all MPM flags (look in MPMFlags.cc)
-    flags->readMPMFlags(mpm_soln_ps);
+    flags->readMPMFlags(mpm_soln_ps, grid);
     if (flags->d_integrator_type == "implicit")
       throw ProblemSetupException("Can't use implicit integration with -mpm");
 
@@ -407,9 +407,9 @@ FractureMPM::scheduleTimeAdvance(const LevelP & level,
 			       SchedulerP   & sched,
 			       int, int ) // AMR Parameters
 {
-  if (flags->d_finestLevelOnly &&
-      level->getIndex() != level->getGrid()->numLevels()-1)
+  if (!flags->doMPMOnThisLevel(level))
     return;
+
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
 

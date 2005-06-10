@@ -444,8 +444,22 @@ void MPMICE::scheduleInterpolatePressCCToPressNC(SchedulerP& sched,
                                            const MaterialSubset* press_matl,
                                            const MaterialSet* matls)
 {
+  if(!d_mpm->flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
   if (cout_doing.active())
     cout_doing << "MPMICE::scheduleInterpolatePressCCToPressNC" << endl;
+  if(d_doAMR){
+    Task* t0=scinew Task("MPMICE::refinePressCC",
+                        this, &MPMICE::refinePressCC);
+
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    t0->requires(Task::NewDW, Ilb->press_CCLabel, 0, Task::CoarseLevel, press_matl, Task::OutOfDomain, gac, 1);
+    t0->computes(Ilb->press_CCLabel);
+    t0->computes(MIlb->press_NCLabel, press_matl);
+    
+    sched->addTask(t0, patches, matls);
+  }
+    
 
   Task* t=scinew Task("MPMICE::interpolatePressCCToPressNC",
                     this, &MPMICE::interpolatePressCCToPressNC);
@@ -465,9 +479,23 @@ void MPMICE::scheduleInterpolatePAndGradP(SchedulerP& sched,
                                      const MaterialSubset* mpm_matl,
                                      const MaterialSet* all_matls)
 {
+  if(!d_mpm->flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
+
   if (cout_doing.active())
     cout_doing << "MPMICE::scheduleInterpolatePAndGradP" << endl;
  
+  if(d_doAMR){
+    Task* t0=scinew Task("MPMICE::refinePressCC",
+                        this, &MPMICE::refinePressCC);
+
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    t0->requires(Task::NewDW, Ilb->press_force_CCLabel,  0, Task::CoarseLevel, mpm_matl, Task::OutOfDomain,  gac, 1);
+    t0->computes(Ilb->press_force_CCLabel);
+    
+    sched->addTask(t0, patches, all_matls);
+  }
+
    Task* t=scinew Task("MPMICE::interpolatePAndGradP",
                  this, &MPMICE::interpolatePAndGradP);
    Ghost::GhostType  gac = Ghost::AroundCells;
@@ -493,33 +521,57 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
                                     const MaterialSubset* one_matl,
                                     const MaterialSet* mpm_matls)
 {
-  if (cout_doing.active())
-    cout_doing << "MPMICE::scheduleInterpolateNCToCC_0" << endl;
+  if(d_mpm->flags->doMPMOnThisLevel(getLevel(patches))){
+    if (cout_doing.active())
+      cout_doing << "MPMICE::scheduleInterpolateNCToCC_0" << endl;
  
-   /* interpolateNCToCC */
-   Task* t=scinew Task("MPMICE::interpolateNCToCC_0",
-                 this, &MPMICE::interpolateNCToCC_0);
-   const MaterialSubset* mss = mpm_matls->getUnion();
-   t->requires(Task::NewDW, Mlb->gMassLabel,       Ghost::AroundCells, 1);
-   t->requires(Task::NewDW, Mlb->gVolumeLabel,     Ghost::AroundCells, 1);
-   t->requires(Task::NewDW, Mlb->gVelocityLabel,   Ghost::AroundCells, 1); 
-   t->requires(Task::NewDW, Mlb->gTemperatureLabel,Ghost::AroundCells, 1);
-   t->requires(Task::NewDW, Mlb->gSp_volLabel,     Ghost::AroundCells, 1);
-   t->requires(Task::OldDW, MIlb->NC_CCweightLabel,one_matl,
+    /* interpolateNCToCC */
+    Task* t=scinew Task("MPMICE::interpolateNCToCC_0",
+                        this, &MPMICE::interpolateNCToCC_0);
+    const MaterialSubset* mss = mpm_matls->getUnion();
+    t->requires(Task::NewDW, Mlb->gMassLabel,       Ghost::AroundCells, 1);
+    t->requires(Task::NewDW, Mlb->gVolumeLabel,     Ghost::AroundCells, 1);
+    t->requires(Task::NewDW, Mlb->gVelocityLabel,   Ghost::AroundCells, 1); 
+    t->requires(Task::NewDW, Mlb->gTemperatureLabel,Ghost::AroundCells, 1);
+    t->requires(Task::NewDW, Mlb->gSp_volLabel,     Ghost::AroundCells, 1);
+    t->requires(Task::OldDW, MIlb->NC_CCweightLabel,one_matl,
                                                    Ghost::AroundCells, 1);
-   t->requires(Task::OldDW, Ilb->sp_vol_CCLabel,   Ghost::None, 0); 
-   t->requires(Task::OldDW, MIlb->temp_CCLabel,    Ghost::None, 0);
-   t->requires(Task::OldDW, MIlb->vel_CCLabel,     Ghost::None, 0);
+    t->requires(Task::OldDW, Ilb->sp_vol_CCLabel,   Ghost::None, 0); 
+    t->requires(Task::OldDW, MIlb->temp_CCLabel,    Ghost::None, 0);
+    t->requires(Task::OldDW, MIlb->vel_CCLabel,     Ghost::None, 0);
     
-   t->computes(MIlb->cMassLabel);
-   t->computes(MIlb->cVolumeLabel);
+    t->computes(MIlb->cMassLabel);
+    t->computes(MIlb->cVolumeLabel);
 
-   t->computes(MIlb->vel_CCLabel);
-   t->computes(MIlb->temp_CCLabel);
-   t->computes(Ilb->sp_vol_CCLabel, mss);
-   t->computes(Ilb->rho_CCLabel, mss); 
+    t->computes(MIlb->vel_CCLabel);
+    t->computes(MIlb->temp_CCLabel);
+    t->computes(Ilb->sp_vol_CCLabel, mss);
+    t->computes(Ilb->rho_CCLabel, mss); 
    
-   sched->addTask(t, patches, mpm_matls);
+    sched->addTask(t, patches, mpm_matls);
+  } else {
+    if (cout_doing.active())
+      cout_doing << "MPMICE::coarsenCC_0" << endl;
+    Task* t=scinew Task("MPMICE::coarsenCC_0",
+                        this, &MPMICE::coarsenCC_0);
+    t->requires(Task::NewDW, MIlb->cMassLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
+    t->requires(Task::NewDW, MIlb->cVolumeLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
+
+    t->requires(Task::NewDW, MIlb->vel_CCLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
+    t->requires(Task::NewDW, MIlb->temp_CCLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
+    t->requires(Task::NewDW, Ilb->sp_vol_CCLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
+    t->requires(Task::NewDW, Ilb->rho_CCLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
+
+    t->computes(MIlb->cMassLabel);
+    t->computes(MIlb->cVolumeLabel);
+
+    t->computes(MIlb->vel_CCLabel);
+    t->computes(MIlb->temp_CCLabel);
+    t->computes(Ilb->sp_vol_CCLabel);
+    t->computes(Ilb->rho_CCLabel); 
+   
+    sched->addTask(t, patches, mpm_matls);
+  }
 }
 
 //______________________________________________________________________
@@ -529,39 +581,59 @@ void MPMICE::scheduleComputeLagrangianValuesMPM(SchedulerP& sched,
                                    const MaterialSubset* one_matl,
                                    const MaterialSet* mpm_matls)
 {
-  if (cout_doing.active())
-    cout_doing << "MPMICE::scheduleComputeLagrangianValuesMPM" << endl;
+  if(d_mpm->flags->doMPMOnThisLevel(getLevel(patches))){
+    if (cout_doing.active())
+      cout_doing << "MPMICE::scheduleComputeLagrangianValuesMPM" << endl;
 
-   /* interpolateNCToCC */
+    /* interpolateNCToCC */
 
-   Task* t=scinew Task("MPMICE::computeLagrangianValuesMPM",
-                 this, &MPMICE::computeLagrangianValuesMPM);
+    Task* t=scinew Task("MPMICE::computeLagrangianValuesMPM",
+                        this, &MPMICE::computeLagrangianValuesMPM);
 
-   const MaterialSubset* mss = mpm_matls->getUnion();
-   Ghost::GhostType  gac = Ghost::AroundCells;
-   Ghost::GhostType  gn  = Ghost::None;
-   t->requires(Task::NewDW, Mlb->gVelocityStarLabel, mss, gac,1);
-   t->requires(Task::NewDW, Mlb->gMassLabel,              gac,1);
-   t->requires(Task::NewDW, Mlb->gTemperatureStarLabel,   gac,1);
-   t->requires(Task::OldDW, MIlb->NC_CCweightLabel,       one_matl, gac,1);
-   t->requires(Task::NewDW, MIlb->cMassLabel,             gn);
+    const MaterialSubset* mss = mpm_matls->getUnion();
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gn  = Ghost::None;
+    t->requires(Task::NewDW, Mlb->gVelocityStarLabel, mss, gac,1);
+    t->requires(Task::NewDW, Mlb->gMassLabel,              gac,1);
+    t->requires(Task::NewDW, Mlb->gTemperatureStarLabel,   gac,1);
+    t->requires(Task::OldDW, MIlb->NC_CCweightLabel,       one_matl, gac,1);
+    t->requires(Task::NewDW, MIlb->cMassLabel,             gn);
 
-   t->requires(Task::NewDW, MIlb->temp_CCLabel,           gn);
-   t->requires(Task::NewDW, MIlb->vel_CCLabel,            gn);
+    t->requires(Task::NewDW, MIlb->temp_CCLabel,           gn);
+    t->requires(Task::NewDW, MIlb->vel_CCLabel,            gn);
 
-   if(d_ice->d_models.size() > 0){
-     t->requires(Task::NewDW, Ilb->modelMass_srcLabel,   gn);
-     t->requires(Task::NewDW, Ilb->modelMom_srcLabel,    gn);
-     t->requires(Task::NewDW, Ilb->modelEng_srcLabel,    gn);
-   }
+    if(d_ice->d_models.size() > 0){
+      t->requires(Task::NewDW, Ilb->modelMass_srcLabel,   gn);
+      t->requires(Task::NewDW, Ilb->modelMom_srcLabel,    gn);
+      t->requires(Task::NewDW, Ilb->modelEng_srcLabel,    gn);
+    }
 
-   t->modifies( Ilb->rho_CCLabel); 
-   t->computes( Ilb->mass_L_CCLabel);
-   t->computes( Ilb->mom_L_CCLabel);
-   t->computes( Ilb->int_eng_L_CCLabel);
-   t->computes(MIlb->NC_CCweightLabel, one_matl);
+    t->modifies( Ilb->rho_CCLabel); 
+    t->computes( Ilb->mass_L_CCLabel);
+    t->computes( Ilb->mom_L_CCLabel);
+    t->computes( Ilb->int_eng_L_CCLabel);
+    t->computes(MIlb->NC_CCweightLabel, one_matl);
+    
+    sched->addTask(t, patches, mpm_matls);
+  } else {
+    if (cout_doing.active())
+      cout_doing << "MPMICE::scheduleComputeLagrangianValuesMPM" << endl;
 
-   sched->addTask(t, patches, mpm_matls);
+    /* interpolateNCToCC */
+
+    Task* t=scinew Task("MPMICE::coarsenLagrangianValuesMPM",
+                        this, &MPMICE::coarsenLagrangianValuesMPM);
+
+    t->requires( Task::NewDW,  Ilb->rho_CCLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
+    t->requires( Task::NewDW,  Ilb->mass_L_CCLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
+    t->requires( Task::NewDW,  Ilb->mom_L_CCLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
+    t->requires( Task::NewDW,  Ilb->int_eng_L_CCLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
+
+    t->modifies( Ilb->rho_CCLabel); 
+    t->computes( Ilb->mass_L_CCLabel);
+    t->computes( Ilb->mom_L_CCLabel);
+    t->computes( Ilb->int_eng_L_CCLabel);
+  }
 }
 
 //______________________________________________________________________
@@ -570,15 +642,33 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
                                    const PatchSet* patches,
                                    const MaterialSet* mpm_matls)
 {
+  if(!d_mpm->flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
 
   if (cout_doing.active())
     cout_doing << "MPMICE::scheduleInterpolateCCToNC" << endl;
 
+  if(d_doAMR){
+    Task* t0=scinew Task("MPMICE::refineCC",
+                         this, &MPMICE::refineCC);
+
+    t0->requires(Task::NewDW, Ilb->mom_L_ME_CCLabel, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundCells, 1);
+    t0->requires(Task::NewDW, Ilb->eng_L_ME_CCLabel, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundCells, 1);
+    t0->requires(Task::NewDW, Ilb->sp_vol_src_CCLabel, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundCells, 1);
+
+    t0->computes(Ilb->mom_L_ME_CCLabel);
+    t0->computes(Ilb->eng_L_ME_CCLabel);
+    t0->computes(Ilb->sp_vol_src_CCLabel);
+      
+    sched->addTask(t0, patches, mpm_matls);
+  }
+
+
   Task* t=scinew Task("MPMICE::interpolateCCToNC",
-                this, &MPMICE::interpolateCCToNC);               
+                      this, &MPMICE::interpolateCCToNC);               
   const MaterialSubset* mss = mpm_matls->getUnion();
   Ghost::GhostType  gac = Ghost::AroundCells;
-
+  
   t->requires(Task::OldDW, d_sharedState->get_delt_label());
   t->requires(Task::NewDW, Ilb->mass_L_CCLabel,         gac,1);
   t->requires(Task::NewDW, Ilb->mom_L_CCLabel,          gac,1);  
@@ -604,6 +694,8 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
                                      const MaterialSubset* press_matl,
                                      const MaterialSet* all_matls)
 {
+  if(!d_ice->doICEOnThisLevel(getLevel(patches)))
+    return;
   Task* t = NULL;
   if (d_ice->d_RateForm) {     // R A T E   F O R M
     if (cout_doing.active())
@@ -684,6 +776,9 @@ void MPMICE::scheduleSolveEquationsMotion(SchedulerP& sched,
                                           const PatchSet* patches,
                                           const MaterialSet* matls)
 {
+  if(!d_mpm->flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
+  
   d_mpm->scheduleSolveEquationsMotion(sched,patches,matls);
 
   if (!d_rigidMPM) {
@@ -884,6 +979,43 @@ void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
       }
     }
   }
+}
+
+//______________________________________________________________________
+//
+void MPMICE::refinePressCC(const ProcessorGroup*,
+                           const PatchSubset* patches,
+                           const MaterialSubset* ,
+                           DataWarehouse*,
+                           DataWarehouse* new_dw)
+{
+  cerr << "refinePressCC not finished\n";
+#if 0
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    if (cout_doing.active()) {
+      cout_doing<<"Doing refinePressCC on patch "<<patch->getID()
+                <<"\t\t MPMICE" << endl;
+    }
+
+    constCCVariable<double> pressCC;
+    NCVariable<double> pressNC;
+
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    new_dw->get(pressCC, Ilb->press_CCLabel, 0, patch, gac, 1);
+    new_dw->allocateAndPut(pressNC, MIlb->press_NCLabel, 0, patch);
+    pressNC.initialize(0.0);
+    
+    IntVector cIdx[8];
+    // Interpolate CC pressure to nodes
+    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+       patch->findCellsFromNode(*iter,cIdx);
+      for (int in=0;in<8;in++){
+        pressNC[*iter]  += .125*pressCC[cIdx[in]];
+      }
+    }
+  }
+#endif
 }
 
 //______________________________________________________________________
@@ -1126,6 +1258,158 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
     }
   }  //patches
 }
+
+void MPMICE::coarsenCC_0(const ProcessorGroup*,
+                         const PatchSubset* patches,
+                         const MaterialSubset* ,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw)
+{
+  cerr << "coarsenCC_0 not finished\n";
+#if 0
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    if (cout_doing.active()) {
+      cout_doing << "Doing coarsenCC_0 on patch "<< patch->getID()
+                 <<"\t\t\t MPMICE" << endl;
+    }
+
+    int numMatls = d_sharedState->getNumMPMMatls();
+    Vector dx = patch->dCell();
+    double cell_vol = dx.x()*dx.y()*dx.z(); 
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gn = Ghost::None;     
+    
+    constNCVariable<double> NC_CCweight;
+    old_dw->get(NC_CCweight, MIlb->NC_CCweightLabel,  0, patch, gac, 1);
+
+    for(int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int indx = mpm_matl->getDWIndex();
+      // Create arrays for the grid data
+      constNCVariable<double> gmass, gvolume, gtemperature, gSp_vol;
+      constNCVariable<Vector> gvelocity;
+      CCVariable<double> cmass, cvolume,Temp_CC, sp_vol_CC, rho_CC;
+      CCVariable<Vector> vel_CC;
+      constCCVariable<double> Temp_CC_ice, sp_vol_CC_ice;
+      constCCVariable<Vector> vel_CC_ice;
+
+      new_dw->allocateAndPut(cmass,    MIlb->cMassLabel,     indx, patch);  
+      new_dw->allocateAndPut(cvolume,  MIlb->cVolumeLabel,   indx, patch);  
+      new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,    indx, patch);  
+      new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,   indx, patch);  
+      new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel, indx, patch); 
+      new_dw->allocateAndPut(rho_CC,    Ilb->rho_CCLabel,    indx, patch);
+      
+      double rho_orig = mpm_matl->getInitialDensity();
+      double very_small_mass = d_TINY_RHO * cell_vol;
+      cmass.initialize(very_small_mass);
+      cvolume.initialize( very_small_mass/rho_orig);
+         
+      new_dw->get(gmass,        Mlb->gMassLabel,        indx, patch,gac, 1);
+      new_dw->get(gvolume,      Mlb->gVolumeLabel,      indx, patch,gac, 1);
+      new_dw->get(gvelocity,    Mlb->gVelocityLabel,    indx, patch,gac, 1);
+      new_dw->get(gtemperature, Mlb->gTemperatureLabel, indx, patch,gac, 1);
+      new_dw->get(gSp_vol,      Mlb->gSp_volLabel,      indx, patch,gac, 1);
+      old_dw->get(sp_vol_CC_ice,Ilb->sp_vol_CCLabel,    indx, patch,gn, 0); 
+      old_dw->get(Temp_CC_ice,  MIlb->temp_CCLabel,     indx, patch,gn, 0);
+      old_dw->get(vel_CC_ice,   MIlb->vel_CCLabel,      indx, patch,gn, 0);
+      IntVector nodeIdx[8];
+      
+      //---- P R I N T   D A T A ------ 
+#if 0
+      if(switchDebug_InterpolateNCToCC_0) {
+        ostringstream desc;
+        desc<< "TOP_MPMICE::interpolateNCToCC_0_mat_"<<indx<<"_patch_"
+            <<  patch->getID();
+        printData(     indx, patch, 1,desc.str(), "gmass",       gmass);
+        printData(     indx, patch, 1,desc.str(), "gvolume",     gvolume);
+        printData(     indx, patch, 1,desc.str(), "gtemperatue", gtemperature);
+        printNCVector( indx, patch, 1,desc.str(), "gvelocity", 0, gvelocity);
+      }
+#endif 
+      //__________________________________
+      //  compute CC Variables
+      for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
+        IntVector c = *iter;
+        patch->findNodesFromCell(*iter,nodeIdx);
+ 
+        double Temp_CC_mpm = 0.0;  
+        double sp_vol_mpm = 0.0;   
+        Vector vel_CC_mpm  = Vector(0.0, 0.0, 0.0);
+        
+        for (int in=0;in<8;in++){
+          double NC_CCw_mass = NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
+          cmass[c]    += NC_CCw_mass;
+          cvolume[c]  += NC_CCweight[nodeIdx[in]]  * gvolume[nodeIdx[in]];
+          sp_vol_mpm  += gSp_vol[nodeIdx[in]]      * NC_CCw_mass;
+          vel_CC_mpm  += gvelocity[nodeIdx[in]]    * NC_CCw_mass;
+          Temp_CC_mpm += gtemperature[nodeIdx[in]] * NC_CCw_mass;
+        } 
+        double inv_cmass = 1.0/cmass[c];
+        vel_CC_mpm  *= inv_cmass;    
+        Temp_CC_mpm *= inv_cmass;
+        sp_vol_mpm  *= inv_cmass;
+        
+        //__________________________________
+        // set *_CC = to either vel/Temp_CC_ice or vel/Temp_CC_mpm
+        // depending upon if there is cmass.  You need
+        // a well defined vel/temp_CC even if there isn't any mass
+        // If you change this you must also change 
+        // MPMICE::computeLagrangianValuesMPM
+        double one_or_zero = (cmass[c] - very_small_mass)/cmass[c];
+
+        Temp_CC[c]  =(1.0-one_or_zero)*Temp_CC_ice[c]  +one_or_zero*Temp_CC_mpm;
+//      This allows propagation of messed up solid matl velocities,
+//      and has thus been abandoned for now.
+//      vel_CC[c]   =(1.0-one_or_zero)*vel_CC_ice[c]   +one_or_zero*vel_CC_mpm;
+        vel_CC[c]   =vel_CC_mpm;
+        sp_vol_CC[c]=(1.0-one_or_zero)*sp_vol_CC_ice[c]+one_or_zero*sp_vol_mpm;
+        rho_CC[c]    = cmass[c]/cell_vol;
+      }
+      //  Set BC's
+      setBC(Temp_CC, "Temperature",patch, d_sharedState, indx, new_dw);
+      setBC(rho_CC,  "Density",    patch, d_sharedState, indx, new_dw);
+      setBC(vel_CC,  "Velocity",   patch, d_sharedState, indx, new_dw);
+      //  Set if symmetric Boundary conditions
+      setBC(cmass,    "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
+      setBC(cvolume,  "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
+      setBC(sp_vol_CC,"set_if_sym_BC",patch, d_sharedState, indx, new_dw); 
+      
+     //---- P R I N T   D A T A ------
+     if(switchDebug_InterpolateNCToCC_0) {
+        ostringstream desc;
+        desc<< "BOT_MPMICE::interpolateNCToCC_0_Mat_"<< indx <<"_patch_"
+            <<  patch->getID();
+        d_ice->printData(   indx, patch, 1,desc.str(), "sp_vol",    sp_vol_CC); 
+        d_ice->printData(   indx, patch, 1,desc.str(), "cmass",     cmass);
+        d_ice->printData(   indx, patch, 1,desc.str(), "cvolume",   cvolume);
+        d_ice->printData(   indx, patch, 1,desc.str(), "Temp_CC",   Temp_CC);
+        d_ice->printData(   indx, patch, 1,desc.str(), "rho_CC",    rho_CC);
+        d_ice->printVector( indx, patch, 1,desc.str(), "vel_CC", 0, vel_CC);
+      }
+      //---- B U L L E T   P R O O F I N G------
+      IntVector neg_cell;
+      ostringstream warn;
+      if (!d_ice->areAllValuesPositive(Temp_CC, neg_cell)) {
+        warn <<"ERROR MPMICE::interpolateNCToCC_0, mat "<< indx <<" cell "
+             << neg_cell << " Temp_CC " << Temp_CC[neg_cell] << "\n ";
+        throw InvalidValue(warn.str());
+      }
+      if (!d_ice->areAllValuesPositive(rho_CC, neg_cell)) {
+        warn <<"ERROR MPMICE::interpolateNCToCC_0, mat "<< indx <<" cell "
+             << neg_cell << " rho_CC " << rho_CC[neg_cell]<< "\n ";
+        throw InvalidValue(warn.str());
+      }
+      if (!d_ice->areAllValuesPositive(sp_vol_CC, neg_cell)) {
+        warn <<"ERROR MPMICE::interpolateNCToCC_0, mat "<< indx <<" cell "
+             << neg_cell << " sp_vol_CC " << sp_vol_CC[neg_cell]<<"\n ";
+        throw InvalidValue(warn.str());
+      } 
+    }
+  }  //patches
+#endif
+}
 //______________________________________________________________________
 //
 void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
@@ -1319,6 +1603,201 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
   }  //patches
 }
 
+
+void MPMICE::coarsenLagrangianValuesMPM(const ProcessorGroup*,
+                                        const PatchSubset* patches,
+                                        const MaterialSubset* ,
+                                        DataWarehouse* old_dw,
+                                        DataWarehouse* new_dw)
+{
+  cerr << "MPMICE::coarsenLagrangianValuesMPM not finished\n";
+#if 0
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    if (cout_doing.active()) {
+      cout_doing << "Doing computeLagrangianValuesMPM on patch "
+                 << patch->getID() <<"\t\t MPMICE" << endl;
+    }
+
+    int numMatls = d_sharedState->getNumMPMMatls();
+
+    Vector dx = patch->dCell();
+    double cellVol = dx.x()*dx.y()*dx.z();
+    double inv_cellVol = 1.0/cellVol;
+    double very_small_mass = d_TINY_RHO * cellVol; 
+    Ghost::GhostType  gn = Ghost::None;
+    Ghost::GhostType  gac = Ghost::AroundCells;         
+         
+    constNCVariable<double> NC_CCweight;
+    NCVariable<double>NC_CCweight_copy;
+    new_dw->allocateAndPut(NC_CCweight_copy, MIlb->NC_CCweightLabel, 0,patch);
+    old_dw->get(NC_CCweight,                 MIlb->NC_CCweightLabel, 0,patch, 
+                                                                      gac, 1);
+    for(int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int indx = mpm_matl->getDWIndex();
+
+      // Create arrays for the grid data
+      constNCVariable<double> gmass, gvolume,gtempstar;
+      constNCVariable<Vector> gvelocity;
+      CCVariable<Vector> cmomentum;
+      CCVariable<double> int_eng_L, rho_CC, mass_L;              
+      constCCVariable<double> cmass, Temp_CC_sur;
+      constCCVariable<Vector> vel_CC_sur; 
+      new_dw->get(gmass,       Mlb->gMassLabel,           indx,patch,gac,1);
+      new_dw->get(gvelocity,   Mlb->gVelocityStarLabel,   indx,patch,gac,1);
+      new_dw->get(gtempstar,   Mlb->gTemperatureStarLabel,indx,patch,gac,1);
+      new_dw->get(cmass,       MIlb->cMassLabel,          indx,patch,gn,0);    
+      new_dw->get(Temp_CC_sur, MIlb->temp_CCLabel,        indx,patch,gn,0);    
+      new_dw->get(vel_CC_sur,  MIlb->vel_CCLabel,         indx,patch,gn,0);
+                                                           
+      new_dw->getModifiable(rho_CC,     Ilb->rho_CCLabel,      indx,patch);
+      new_dw->allocateAndPut(mass_L,    Ilb->mass_L_CCLabel,   indx,patch); 
+      new_dw->allocateAndPut(cmomentum, Ilb->mom_L_CCLabel,    indx,patch);
+      new_dw->allocateAndPut(int_eng_L, Ilb->int_eng_L_CCLabel,indx,patch);
+
+      cmomentum.initialize(Vector(0.0, 0.0, 0.0));
+      int_eng_L.initialize(0.);
+      mass_L.initialize(0.); 
+      double cv = mpm_matl->getSpecificHeat();
+
+      IntVector nodeIdx[8];
+
+      //---- P R I N T   D A T A ------ 
+      if(d_ice->switchDebugLagrangianValues) {
+        ostringstream desc;
+        desc <<"TOP_MPMICE::computeLagrangianValuesMPM_mat_"<<indx<<"_patch_"
+             <<  indx<<patch->getID();
+        d_ice->printData(indx, patch,1,desc.str(), "cmass",    cmass);
+        printData(     indx, patch,  1,desc.str(), "gmass",    gmass);
+        d_ice->printData(indx, patch,1,desc.str(), "rho_CC",   rho_CC);
+        printData(     indx, patch,  1,desc.str(), "gtemStar", gtempstar);
+        //printNCVector( indx, patch,  1,desc.str(), "gvelocityStar", 0,
+        //                                                       gvelocity);
+      }
+ 
+      for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
+                                                          iter++){ 
+        patch->findNodesFromCell(*iter,nodeIdx);
+        IntVector c = *iter;
+        double int_eng_L_mpm = 0.0;
+        double int_eng_L_sur = cmass[c] * Temp_CC_sur[c] * cv;
+        Vector cmomentum_mpm = Vector(0.0, 0.0, 0.0);
+        Vector cmomentum_sur = vel_CC_sur[c] * cmass[c];
+        
+        for (int in=0;in<8;in++){
+          double NC_CCw_mass = NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
+          cmomentum_mpm +=gvelocity[nodeIdx[in]]      * NC_CCw_mass;
+          int_eng_L_mpm +=gtempstar[nodeIdx[in]] * cv * NC_CCw_mass;
+        }
+        //__________________________________
+        // set cmomentum/int_eng_L to either 
+        // what's calculated from mpm or 
+        // the surrounding value.
+        // If you change this you must also change MPMICE::interpolateNCToCC_0  
+        double one_or_zero = (cmass[c] - very_small_mass)/cmass[c];
+        cmomentum[c] = (1.0 - one_or_zero)* cmomentum_sur + 
+                              one_or_zero * cmomentum_mpm;
+        int_eng_L[c] = (1.0 - one_or_zero)* int_eng_L_sur + 
+                              one_or_zero * int_eng_L_mpm;
+      }
+      //__________________________________
+      //  NO REACTION
+      if(d_ice->d_models.size() == 0)  { 
+        for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
+                                                    iter++){ 
+         IntVector c = *iter;
+         mass_L[c]    = cmass[c];
+         rho_CC[c]    = mass_L[c] * inv_cellVol;
+        }
+      }
+      //__________________________________
+      //   M O D E L   B A S E D   E X C H A N G E
+      // The reaction can't completely eliminate 
+      //  all the mass, momentum and internal E.
+      // If it does then we'll get erroneous vel,
+      // and temps in CCMomExchange.  If the mass
+      // goes to min_mass then cmomentum and int_eng_L
+      // need to be scaled by min_mass to avoid inf temp and vel_CC
+      // in 
+      if(d_ice->d_models.size() > 0)  { 
+        constCCVariable<double> modelMass_src;
+        constCCVariable<double> modelEng_src;
+        constCCVariable<Vector> modelMom_src;
+        new_dw->get(modelMass_src,Ilb->modelMass_srcLabel,indx, patch, gn, 0);
+        new_dw->get(modelMom_src, Ilb->modelMom_srcLabel, indx, patch, gn, 0);
+        new_dw->get(modelEng_src, Ilb->modelEng_srcLabel, indx, patch, gn, 0);
+                
+        for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
+                                                    iter++){ 
+          IntVector c = *iter;
+          //  must have a minimum mass
+          double min_mass = d_TINY_RHO * cellVol;
+          double inv_cmass = 1.0/cmass[c];
+          mass_L[c] = std::max( (cmass[c] + modelMass_src[c] ), min_mass);
+          rho_CC[c] = mass_L[c] * inv_cellVol;
+              
+          //  must have a minimum momentum 
+          for (int dir = 0; dir <3; dir++) {  //loop over all three directons
+            double min_mom_L = min_mass * cmomentum[c][dir] * inv_cmass;
+            double mom_L_tmp = cmomentum[c][dir] + modelMom_src[c][dir];
+
+            // Preserve the original sign on momemtum     
+            // Use d_SMALL_NUMs to avoid nans when mom_L_temp = 0.0
+            double plus_minus_one = (mom_L_tmp+d_SMALL_NUM)/
+                                    (fabs(mom_L_tmp+d_SMALL_NUM));
+
+            mom_L_tmp = (mom_L_tmp/mass_L[c] ) * (cmass[c] + modelMass_src[c] );
+                                
+            cmomentum[c][dir] = plus_minus_one *
+                                std::max( fabs(mom_L_tmp), fabs(min_mom_L) );
+          }
+          // must have a minimum int_eng   
+          double min_int_eng = min_mass * int_eng_L[c] * inv_cmass;
+          int_eng_L[c] = (int_eng_L[c]/mass_L[c]) * (cmass[c]+modelMass_src[c]);
+          int_eng_L[c] = std::max((int_eng_L[c] + modelEng_src[c]),min_int_eng);
+        }
+      }  // if(model.size() >0)      
+       
+       //__________________________________
+       //  Set Boundary conditions
+       setBC(cmomentum, "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
+       setBC(int_eng_L, "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
+       setBC(rho_CC,    "Density",      patch, d_sharedState, indx, new_dw);  
+
+      //---- P R I N T   D A T A ------ 
+      if(d_ice->switchDebugLagrangianValues) {
+        ostringstream desc;
+        desc<<"BOT_MPMICE::computeLagrangianValuesMPM_mat_"<<indx<<"_patch_"
+            <<  patch->getID();
+        d_ice->printData(  indx,patch, 1,desc.str(), "rho_CC",        rho_CC);
+        d_ice->printData(  indx,patch, 1,desc.str(), "int_eng_L",    int_eng_L);
+        d_ice->printVector(indx,patch, 1,desc.str(), "mom_L_CC", 0,  cmomentum);
+      }
+      
+      //---- B U L L E T   P R O O F I N G------
+      IntVector neg_cell;
+      ostringstream warn;
+      if (!d_ice->areAllValuesPositive(int_eng_L, neg_cell)) {
+        warn <<"ERROR MPMICE::computeLagrangianValuesMPM, mat "<< indx<<" cell "
+             << neg_cell << " int_eng_L " << int_eng_L[neg_cell] << "\n ";
+        throw InvalidValue(warn.str());
+      }
+      if (!d_ice->areAllValuesPositive(rho_CC, neg_cell)) {
+        warn <<"ERROR MPMICE::computeLagrangianValuesMPM, mat "<<indx<<" cell "
+             << neg_cell << " rho_CC " << rho_CC[neg_cell]<< "\n ";
+        throw InvalidValue(warn.str());
+      }
+    }  //numMatls
+    //__________________________________
+    // carry forward interpolation weight 
+    IntVector low = patch->getNodeLowIndex();
+    IntVector hi  = patch->getNodeHighIndex();
+    NC_CCweight_copy.copyPatch(NC_CCweight, low,hi);
+  }  //patches
+#endif
+}
+
 //______________________________________________________________________
 //
 void MPMICE::interpolateCCToNC(const ProcessorGroup*,
@@ -1428,6 +1907,118 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       }
     }  
   }  //patches
+}
+
+void MPMICE::refineCC(const ProcessorGroup*,
+                      const PatchSubset* patches,
+                      const MaterialSubset* ,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw)
+{ 
+  cerr << "MPMICE::refineCC not finished\n";
+#if 0
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    if (cout_doing.active()) {
+      cout_doing << "Doing interpolateCCToNC on patch "<< patch->getID()
+                 <<"\t\t\t MPMICE" << endl;
+    }
+
+    //__________________________________
+    // This is where I interpolate the CC 
+    // changes to NCs for the MPMMatls
+    int numMPMMatls = d_sharedState->getNumMPMMatls();
+
+    delt_vartype delT;
+    old_dw->get(delT, d_sharedState->get_delt_label());
+
+    for (int m = 0; m < numMPMMatls; m++) {
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int indx = mpm_matl->getDWIndex();
+      NCVariable<Vector> gacceleration, gvelocity;
+      NCVariable<double> dTdt_NC;
+
+      constCCVariable<double> mass_L_CC;
+      constCCVariable<Vector> mom_L_ME_CC, old_mom_L_CC;
+      constCCVariable<double> eng_L_ME_CC, old_int_eng_L_CC; 
+      
+      new_dw->getModifiable(gvelocity,    Mlb->gVelocityStarLabel,indx,patch);
+      new_dw->getModifiable(gacceleration,Mlb->gAccelerationLabel,indx,patch);
+                  
+      Ghost::GhostType  gac = Ghost::AroundCells;
+      new_dw->get(old_mom_L_CC,    Ilb->mom_L_CCLabel,       indx,patch,gac,1);
+      new_dw->get(old_int_eng_L_CC,Ilb->int_eng_L_CCLabel,   indx,patch,gac,1);
+      new_dw->get(mass_L_CC,       Ilb->mass_L_CCLabel,      indx,patch,gac,1);
+      new_dw->get(mom_L_ME_CC,     Ilb->mom_L_ME_CCLabel,    indx,patch,gac,1);
+      new_dw->get(eng_L_ME_CC,     Ilb->eng_L_ME_CCLabel,    indx,patch,gac,1);
+
+      double cv = mpm_matl->getSpecificHeat();     
+
+      new_dw->allocateAndPut(dTdt_NC,     Mlb->dTdt_NCLabel,    indx, patch);
+      dTdt_NC.initialize(0.0);
+      IntVector cIdx[8];
+      Vector dvdt_tmp;
+      double dTdt_tmp;
+      //__________________________________
+      //  Take care of momentum and specific volume source
+     if(!d_rigidMPM){
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+        patch->findCellsFromNode(*iter,cIdx);
+        for(int in=0;in<8;in++){
+          dvdt_tmp  = (mom_L_ME_CC[cIdx[in]] - old_mom_L_CC[cIdx[in]])
+                    / (mass_L_CC[cIdx[in]] * delT); 
+          gvelocity[*iter]     +=  dvdt_tmp*.125*delT;
+          gacceleration[*iter] +=  dvdt_tmp*.125;
+        }
+      }
+     }    
+      
+      //__________________________________
+      //  E Q  F O R M
+      if (d_ice->d_EqForm){
+        for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+         patch->findCellsFromNode(*iter,cIdx);
+         for(int in=0;in<8;in++){
+                         // eng_L_ME = internal energy
+            dTdt_tmp  = ( eng_L_ME_CC[cIdx[in]] - old_int_eng_L_CC[cIdx[in]])
+                      / (mass_L_CC[cIdx[in]] * cv * delT);
+            dTdt_NC[*iter]  +=  dTdt_tmp*.125;
+          }
+        } 
+      }
+      //__________________________________
+      //   R A T E   F O R M
+      if (d_ice->d_RateForm){
+        double KE, int_eng_L_ME;
+        Vector vel_CC;
+      
+        for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+          patch->findCellsFromNode(*iter,cIdx);
+          for(int in=0;in<8;in++){
+            // convert total energy to internal energy
+            vel_CC = mom_L_ME_CC[cIdx[in]]/mass_L_CC[cIdx[in]];
+            KE = 0.5 * mass_L_CC[cIdx[in]] * vel_CC.length() * vel_CC.length();
+            int_eng_L_ME = eng_L_ME_CC[cIdx[in]] - KE;
+
+            dTdt_tmp  = ( int_eng_L_ME - old_int_eng_L_CC[cIdx[in]])
+                        / (mass_L_CC[cIdx[in]] * cv * delT); 
+            dTdt_NC[*iter]   +=  dTdt_tmp*.125;
+          }
+        }
+      }
+  
+      //---- P R I N T   D A T A ------ 
+      if(switchDebug_InterpolateCCToNC) {
+        ostringstream desc;
+        desc<< "BOT_MPMICE::interpolateCCToNC_mat_"<< indx<<"_patch_"
+            <<patch->getID();                   
+        printData(    indx,patch, 1,desc.str(), "dTdt_NC",     dTdt_NC);
+        printNCVector(indx,patch, 1,desc.str(),"gvelocity",    0,gvelocity);
+        printNCVector(indx,patch, 1,desc.str(),"gacceleration",0,gacceleration);
+      }
+    }  
+  }  //patches
+#endif
 }
 
 /* --------------------------------------------------------------------- 

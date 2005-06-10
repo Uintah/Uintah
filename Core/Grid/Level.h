@@ -97,6 +97,8 @@ WARNING
      // Move up and down the hierarchy
      const LevelP& getCoarserLevel() const;
      const LevelP& getFinerLevel() const;
+     bool hasCoarserLevel() const;
+     bool hasFinerLevel() const;
      IntVector mapNodeToCoarser(const IntVector& idx) const;
      IntVector mapNodeToFiner(const IntVector& idx) const;
      IntVector mapCellToCoarser(const IntVector& idx) const;
@@ -259,6 +261,7 @@ WARNING
    };
 
    const Level* getLevel(const PatchSubset* subset);
+   const Level* getLevel(const PatchSet* set);
 } // End namespace Uintah
 
 #endif

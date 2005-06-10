@@ -34,9 +34,11 @@ SRCS    := $(SRCDIR)/ComponentFactory.cc
 PSELIBS := \
         Core/Exceptions \
         Core/Util       \
+        Packages/Uintah/CCA/Components/Arches \
         Packages/Uintah/CCA/Components/Examples \
         Packages/Uintah/CCA/Components/ICE      \
         Packages/Uintah/CCA/Components/MPM      \
+        Packages/Uintah/CCA/Components/MPMArches   \
         Packages/Uintah/CCA/Components/MPMICE   \
         Packages/Uintah/CCA/Components/Switcher \
         Packages/Uintah/CCA/Ports        \

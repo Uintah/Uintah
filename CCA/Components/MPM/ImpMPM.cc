@@ -104,7 +104,7 @@ ImpMPM::~ImpMPM()
   delete thermalContactModel;
 }
 
-void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
+void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
                              SimulationStateP& sharedState)
 {
    d_sharedState = sharedState;
@@ -119,7 +119,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
    if (mpm_ps) {
 
      // Read all MPM flags (look in MPMFlags.cc)
-     flags->readMPMFlags(mpm_ps);
+     flags->readMPMFlags(mpm_ps, grid);
      if (flags->d_integrator_type != "implicit")
        throw ProblemSetupException("Can't use explicit integration with -impm");
 

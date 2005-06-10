@@ -683,6 +683,16 @@ const LevelP& Level::getFinerLevel() const
   return getRelativeLevel(1);
 }
 
+bool Level::hasCoarserLevel() const
+{
+  return getIndex() > 0;
+}
+
+bool Level::hasFinerLevel() const
+{
+  return getIndex() < grid->numLevels()-1;
+}
+
 IntVector Level::interpolateCellToCoarser(const IntVector& idx, Vector& weight) const
 {
   IntVector i(idx-(d_refinementRatio-IntVector(1,1,1)));
@@ -798,6 +808,12 @@ namespace Uintah {
       ASSERT(level == subset->get(i)->getLevel());
     }
     return level;
+  }
+
+  const Level* getLevel(const PatchSet* set)
+  {
+    ASSERT(set->size()>0);
+    return getLevel(set->getSubset(0));
   }
 }
 

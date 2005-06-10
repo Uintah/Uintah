@@ -109,7 +109,7 @@ SerialMPM::~SerialMPM()
 
 }
 
-void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,GridP&,
+void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
                              SimulationStateP& sharedState)
 {
   d_sharedState = sharedState;
@@ -119,7 +119,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,GridP&,
   if(mpm_soln_ps) {
 
     // Read all MPM flags (look in MPMFlags.cc)
-    flags->readMPMFlags(mpm_soln_ps);
+    flags->readMPMFlags(mpm_soln_ps, grid);
     if (flags->d_integrator_type == "implicit")
       throw ProblemSetupException("Can't use implicit integration with -mpm");
 
@@ -396,9 +396,9 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                SchedulerP   & sched,
                                int, int ) // AMR Parameters
 {
-  if (flags->d_finestLevelOnly &&
-      level->getIndex() != level->getGrid()->numLevels()-1)
+  if (!flags->doMPMOnThisLevel(level))
     return;
+
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
 
@@ -441,6 +441,8 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
                                            const PatchSet* patches,
                                            const MaterialSet* matls)
 {
+  if (!flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
  /*
   * applyExternalLoads
   *   in(p.externalForce, p.externalheatrate)
@@ -466,6 +468,9 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
                                                    const PatchSet* patches,
                                                    const MaterialSet* matls)
 {
+  if (!flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
+
   /* interpolateParticlesToGrid
    *   in(P.MASS, P.VELOCITY, P.NAT_X)
    *   operation(interpolate the P.MASS and P.VEL to the grid
@@ -514,6 +519,8 @@ void SerialMPM::scheduleComputeHeatExchange(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls)
 {
+  if (!flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
   /* computeHeatExchange
    *   in(G.MASS, G.TEMPERATURE, G.EXTERNAL_HEAT_RATE)
    *   operation(peform heat exchange which will cause each of
@@ -536,6 +543,8 @@ void SerialMPM::scheduleExMomInterpolated(SchedulerP& sched,
                                           const PatchSet* patches,
                                           const MaterialSet* matls)
 {
+  if (!flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
   contactModel->addComputesAndRequiresInterpolated(sched, patches, matls);
 }
 
@@ -548,6 +557,9 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls)
 {
+  if (!flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
+
   // for thermal stress analysis
   scheduleComputeParticleTempFromGrid(sched, patches, matls); 
 
@@ -595,6 +607,9 @@ void SerialMPM::scheduleUpdateErosionParameter(SchedulerP& sched,
                                                const PatchSet* patches,
                                                const MaterialSet* matls)
 {
+  if (!flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
+
   Task* t = scinew Task("MPM::updateErosionParameter",
                         this, &SerialMPM::updateErosionParameter);
   t->requires(Task::OldDW, lb->pErosionLabel,          Ghost::None);
@@ -613,6 +628,9 @@ void SerialMPM::scheduleComputeAccStrainEnergy(SchedulerP& sched,
                                                const PatchSet* patches,
                                                const MaterialSet* matls)
 {
+  if (!flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
+
   Task* t = scinew Task("MPM::computeAccStrainEnergy",
                         this, &SerialMPM::computeAccStrainEnergy);
   t->requires(Task::OldDW, lb->AccStrainEnergyLabel);
@@ -625,6 +643,9 @@ void SerialMPM::scheduleComputeArtificialViscosity(SchedulerP& sched,
                                                    const PatchSet* patches,
                                                    const MaterialSet* matls)
 {
+  if (!flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
+
   Task* t = scinew Task("MPM::computeArtificialViscosity",
                         this, &SerialMPM::computeArtificialViscosity);
 
@@ -644,6 +665,9 @@ void SerialMPM::scheduleComputeContactArea(SchedulerP& sched,
                                            const PatchSet* patches,
                                            const MaterialSet* matls)
 {
+  if (!flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
+
   /*
    * computeContactArea */
   if(d_bndy_traction_faces.size()>0) {
@@ -665,6 +689,9 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
                                              const PatchSet* patches,
                                              const MaterialSet* matls)
 {
+  if (!flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
+
   /*
    * computeInternalForce
    *   in(P.CONMOD, P.NAT_X, P.VOLUME)
@@ -721,6 +748,9 @@ void SerialMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
                                                 const PatchSet* patches,
                                                 const MaterialSet* matls)
 {  
+  if (!flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
+
   heatConductionModel->scheduleComputeInternalHeatRate(sched,patches,matls);
 }
 
@@ -728,6 +758,9 @@ void SerialMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
                                              const PatchSet* patches,
                                              const MaterialSet* matls)
 {
+  if (!flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
+
   /* solveEquationsMotion
    *   in(G.MASS, G.F_INTERNAL)
    *   operation(acceleration = f/m)
@@ -756,6 +789,9 @@ void SerialMPM::scheduleSolveHeatEquations(SchedulerP& sched,
                                            const PatchSet* patches,
                                            const MaterialSet* matls)
 {
+  if (!flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
+
   heatConductionModel->scheduleSolveHeatEquations(sched,patches,matls);
 }
 
@@ -763,6 +799,9 @@ void SerialMPM::scheduleIntegrateAcceleration(SchedulerP& sched,
                                               const PatchSet* patches,
                                               const MaterialSet* matls)
 {
+  if (!flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
+
   /* integrateAcceleration
    *   in(G.ACCELERATION, G.VELOCITY)
    *   operation(v* = v + a*dt)
@@ -785,6 +824,9 @@ void SerialMPM::scheduleIntegrateTemperatureRate(SchedulerP& sched,
                                                  const PatchSet* patches,
                                                  const MaterialSet* matls)
 {
+  if (!flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
+
   heatConductionModel->scheduleIntegrateTemperatureRate(sched,patches,matls);
 }
 
@@ -792,6 +834,9 @@ void SerialMPM::scheduleExMomIntegrated(SchedulerP& sched,
                                         const PatchSet* patches,
                                         const MaterialSet* matls)
 {
+  if (!flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
+
   /* exMomIntegrated
    *   in(G.MASS, G.VELOCITY_STAR, G.ACCELERATION)
    *   operation(peform operations which will cause each of
@@ -807,6 +852,9 @@ void SerialMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
                                                   const MaterialSet* matls)
 
 {
+  if (!flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
+
   Task* t=scinew Task("MPM::setGridBoundaryConditions",
                       this, &SerialMPM::setGridBoundaryConditions);
                   
@@ -824,6 +872,9 @@ void SerialMPM::scheduleCalculateDampingRate(SchedulerP& sched,
                                              const PatchSet* patches,
                                              const MaterialSet* matls)
 {
+  if (!flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
+
   /*
    * calculateDampingRate
    *   in(G.VELOCITY_STAR, P.X, P.Size)
@@ -847,6 +898,9 @@ void SerialMPM::scheduleAddNewParticles(SchedulerP& sched,
                                         const PatchSet* patches,
                                         const MaterialSet* matls)
 {
+  if (!flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
+
 //if  manual_new_material==false, DON't do this task OR
 //if  create_new_particles==true, DON'T do this task
   if (!flags->d_addNewMaterial || flags->d_createNewParticles) return;
@@ -875,6 +929,9 @@ void SerialMPM::scheduleConvertLocalizedParticles(SchedulerP& sched,
                                                   const PatchSet* patches,
                                                   const MaterialSet* matls)
 {
+  if (!flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
+
 //if  create_new_particles==false, DON't do this task OR
 //if  manual_create_new_matl==true, DON'T do this task
   if (!flags->d_createNewParticles || flags->d_addNewMaterial) return;
@@ -924,6 +981,9 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
                                                         const MaterialSet* matls)
 
 {
+  if (!flags->doMPMOnThisLevel(getLevel(patches)))
+    return;
+
   /*
    * interpolateToParticlesAndUpdate
    *   in(G.ACCELERATION, G.VELOCITY_STAR, P.NAT_X)
