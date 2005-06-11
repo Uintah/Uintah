@@ -117,6 +117,7 @@ private:
   int                                   ppv_generation_;
   int                                   crv_generation_;
   int                                   phase_info_generation_;
+  bool                                  injured_p_;
 };
 
 
@@ -195,7 +196,8 @@ PVSpaceInterp::PVSpaceInterp(GuiContext* ctx) :
   rvp_idx_(ctx->subVar("rvp_index")),
   ppv_generation_(-1),
   crv_generation_(-1),
-  phase_info_generation_(-1)
+  phase_info_generation_(-1),
+  injured_p_(false)
 {
   CleanupManager::add_callback(this->on_exit_wrap, this);
 }
@@ -407,21 +409,34 @@ PVSpaceInterp::send_interp_field(const Point &p, unsigned phase_idx,
   HexVolMesh::Node::array_type nodes;
   unsigned    interp_idxs[8];
   double      weights[8];
+
+  const int healthy_sz = 44;
+  const int injured_sz = 24;
+
+  int idx_off = 0;
+  int ppv_nodes = healthy_sz;
+  if (injured_p_) {
+    //cout << "Injured !!" << endl;
+    idx_off = 264;
+    phase_idx = phase_idx - 6;
+    ppv_nodes = injured_sz;
+  }
+
   
   //find closest...
   if (! mesh->get_weights(p, nodes, weights)) 
   {
     HexVolMesh::Node::index_type ni = find_closest(mesh, p);
-    set_field(phase_idx * 44 + ni);
+    set_field(phase_idx * ppv_nodes + ni + idx_off);
   } else { 
-    interp_idxs[0] = phase_idx * 44 + nodes[0];
-    interp_idxs[1] = phase_idx * 44 + nodes[1];
-    interp_idxs[2] = phase_idx * 44 + nodes[2];
-    interp_idxs[3] = phase_idx * 44 + nodes[3];
-    interp_idxs[4] = phase_idx * 44 + nodes[4];
-    interp_idxs[5] = phase_idx * 44 + nodes[5];
-    interp_idxs[6] = phase_idx * 44 + nodes[6];
-    interp_idxs[7] = phase_idx * 44 + nodes[7];
+    interp_idxs[0] = phase_idx * ppv_nodes + nodes[0] + idx_off;
+    interp_idxs[1] = phase_idx * ppv_nodes + nodes[1] + idx_off;
+    interp_idxs[2] = phase_idx * ppv_nodes + nodes[2] + idx_off;
+    interp_idxs[3] = phase_idx * ppv_nodes + nodes[3] + idx_off;
+    interp_idxs[4] = phase_idx * ppv_nodes + nodes[4] + idx_off;
+    interp_idxs[5] = phase_idx * ppv_nodes + nodes[5] + idx_off;
+    interp_idxs[6] = phase_idx * ppv_nodes + nodes[6] + idx_off;
+    interp_idxs[7] = phase_idx * ppv_nodes + nodes[7] + idx_off;
     
     interp_field(weights, interp_idxs);
   }
@@ -496,13 +511,20 @@ PVSpaceInterp::set_phase_ranges()
 
   float *dat = (float *)phase_info_data_->nrrd->data;
   int row_l = phase_info_data_->nrrd->axis[0].size;
-  int sz = phase_info_data_->nrrd->axis[1].size - 1;
+  int sz = phase_info_data_->nrrd->axis[1].size;
   if (phase_ranges_ != 0) delete[] phase_ranges_;
   phase_ranges_ = new double[phase_info_data_->nrrd->axis[1].size];
-
-  for (int i = 0; i < sz; ++i) {
+  cout << "size is : " << sz << endl;
+  for (int i = 0; i < 15; ++i) {
     int idx = i * row_l;
     phase_ranges_[i] = ((dat[(i + 1) * row_l] - dat[idx]) * 0.5) + dat[idx];
+    //    cout << phase_ranges_[i] << " h " << i << " " << dat[idx] << endl;
+  }
+
+  for (int i = 16; i < sz - 1; ++i) {
+    int idx = i * row_l;
+    phase_ranges_[i] = ((dat[(i + 1) * row_l] - dat[idx]) * 0.5) + dat[idx];
+    //    cout << phase_ranges_[i] << " i " << i << " " << dat[idx] << endl;
   }
   
 }
@@ -511,25 +533,34 @@ inline
 int
 PVSpaceInterp::find_phase_index(float phase, int &p_idx) 
 {
-  
-  int len = phase_info_data_->nrrd->axis[1].size - 1;
+  // healthy first then injured
+  //  int sz = phase_info_data_->nrrd->axis[1].size / 2;
+  int s = 0;
+  int e = 14;
+  int pm_off = 0;
+  if (injured_p_) {
+    s = 16;
+    e = 32;
+    pm_off = 6;
+  }
   p_idx = 0;
   bool found = false;
-  for (int i = 0; i < len; ++i) 
+  for (int i = s; i < e; ++i) 
   {
     if (phase > phase_ranges_[i] && 
 	phase <= phase_ranges_[i + 1]) 
     {
-      p_idx = i;
+      p_idx = i + 1;
       found = true;
       break;
     }
   }
-  if (! found) { p_idx = len; }
+  if (! found) { p_idx = e + 1; }
 
   int idx = phase_info_data_->nrrd->axis[0].size * p_idx + 1;
   float *dat = (float *)phase_info_data_->nrrd->data;
-  return (int)dat[idx] - 1;
+
+  return (int)dat[idx] - 1 + pm_off;
 }
 
 Point
@@ -556,6 +587,8 @@ PVSpaceInterp::get_hip_params(unsigned &phase_mesh, float &e_phase, float &HR)
     idx = hip_data_->nrrd->axis[1].size - 1;
   }
 
+  char *inj_time_string = nrrdKeyValueGet(hip_data_->nrrd, "inj_time");
+  float inj_time = atof(inj_time_string);
   float *dat = (float *)hip_data_->nrrd->data;
   int row = idx * hip_data_->nrrd->axis[0].size;
   float cur_phase = dat[row + phase_idx];
@@ -564,7 +597,7 @@ PVSpaceInterp::get_hip_params(unsigned &phase_mesh, float &e_phase, float &HR)
   e_phase = cur_phase;
   HR = 98.0;
 
-  int phase_index = 0;
+  int phase_index = 0; //has actual index for combined H and I
   phase_mesh = find_phase_index(cur_phase, phase_index);
 
   // fetch the phase center for the range.
@@ -621,6 +654,9 @@ PVSpaceInterp::get_hip_params(unsigned &phase_mesh, float &e_phase, float &HR)
   float cur_lvp   = dat[row + lvp_idx];
   float cur_rvp   = dat[row + rvp_idx];
   float cur_vol   = dat[row + vol_idx];
+  float cur_time  = dat[row]; // time is in the 0th col.
+  
+  injured_p_ = cur_time >= inj_time;
 
   return Point(cur_vol, cur_lvp, cur_rvp);
 }
@@ -733,14 +769,20 @@ PVSpaceInterp::execute()
     // new input
     ppv_generation_ = ppv_bdl->generation;
     int size = ppv_bdl->numFields();
-    if (size != 6) {
-      error ("Need 6 PPVspace fields.");
+    if (size != 12) {
+      error ("Need 12 PPVspace fields.");
       return;
     } 
 
-    for (int i = 0; i < size; ++i) {
+    for (int i = 0; i < 6; ++i) {
       ostringstream name;
       name << "ppv " << i;
+      ppv_flds_.push_back(ppv_bdl->getField(name.str()));
+    }
+
+    for (int i = 0; i < 6; ++i) {
+      ostringstream name;
+      name << "ppv inj " << i;
       ppv_flds_.push_back(ppv_bdl->getField(name.str()));
     }
   }
