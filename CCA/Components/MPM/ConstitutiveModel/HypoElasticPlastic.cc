@@ -795,6 +795,8 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       state->temperature = temperature;
       state->density = rho_cur;
       state->initialDensity = rho_0;
+      state->volume = pVolume_deformed[idx];
+      state->initialVolume = pMass[idx]/rho_0;
       state->bulkModulus = bulk ;
       state->initialBulkModulus = bulk;
       state->shearModulus = shear ;
@@ -1248,7 +1250,6 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
                                  pIntHeatRate;
 
   // Local variables
-  double Jinc = 0.0, J = 0.0;
   Matrix3 DispGrad(0.0); // Displacement gradient
   Matrix3 DefGrad, incDefGrad, incFFt, incFFtInv, LeftStretch, Rotation; 
   Matrix3 incTotalStrain(0.0), incThermalStrain(0.0), incStrain(0.0);
@@ -1379,12 +1380,12 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
 
       // Compute the deformation gradient increment
       incDefGrad = DispGrad + One;
-      Jinc = incDefGrad.Determinant();
+      //double Jinc = incDefGrad.Determinant();
 
       // Update the deformation gradient
       DefGrad = incDefGrad*pDeformGrad[idx];
       pDeformGrad_new[idx] = DefGrad;
-      J = DefGrad.Determinant();
+      double J = DefGrad.Determinant();
 
       // Check 1: Look at Jacobian
       if (!(J > 0.0)) {
@@ -1395,7 +1396,7 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
 
       // Calculate the current density and deformed volume
       double rho_cur = rho_0/J;
-      pVolume_deformed[idx]=pMass[idx]/rho_cur;
+      pVolume_deformed[idx]=pVolumeOld[idx]*J;
 
       // Compute polar decomposition of F (F = VR)
       // (**NOTE** This is being done to provide reasonable starting 
@@ -1421,7 +1422,7 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       // the volumetric strain and deviatoric strain increments at t_n+1
       oldStress = pStress[idx];
       double pressure = oldStress.Trace()/3.0;
-      Matrix3 devStressOld = oldStress - One*pressure;
+      //Matrix3 devStressOld = oldStress - One*pressure;
       
       // Set up the PlasticityState
       PlasticityState* state = scinew PlasticityState();
@@ -1431,6 +1432,8 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       state->temperature = pTemperature[idx];
       state->density = rho_cur;
       state->initialDensity = rho_0;
+      state->volume = pVolume_deformed[idx];
+      state->initialVolume = pVolumeOld[idx];
       state->bulkModulus = bulk ;
       state->initialBulkModulus = bulk;
       state->shearModulus = shear ;
@@ -1447,7 +1450,7 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
 
       // Compute trial stress
       double lambda = bulk - (2.0/3.0)*mu_cur;
-      trialStress = One*(lambda*incStrain.Trace()) + incStrain*(2.0*mu_cur);
+      trialStress = oldStress + One*(lambda*incStrain.Trace()) + incStrain*(2.0*mu_cur);
       devTrialStress = trialStress - One*(trialStress.Trace()/3.0);
       
       // Calculate the equivalent stress
@@ -1611,7 +1614,6 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
   ParticleVariable<double>       pVolume_deformed, pPlasticStrain_new; 
 
   // Local variables
-  double Jinc = 0.0, J = 0.0;
   Matrix3 DispGrad(0.0); // Displacement gradient
   Matrix3 DefGrad, incDefGrad, incFFt, incFFtInv;
   Matrix3 incTotalStrain(0.0), incThermalStrain(0.0), incStrain(0.0);
@@ -1717,14 +1719,14 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       // Compute the deformation gradient increment
       incDefGrad = DispGrad + One;
-      Jinc = incDefGrad.Determinant();
+      //double Jinc = incDefGrad.Determinant();
 
       //CSTir << " particle = " << idx << " Jinc = " << Jinc << endl;
 
       // Update the deformation gradient
       DefGrad = incDefGrad*pDeformGrad[idx];
       pDeformGrad_new[idx] = DefGrad;
-      J = DefGrad.Determinant();
+      double J = DefGrad.Determinant();
 
       // Check 1: Look at Jacobian
       if (!(J > 0.0)) {
@@ -1758,7 +1760,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // the volumetric strain and deviatoric strain increments at t_n+1
       oldStress = pStress[idx];
       double pressure = oldStress.Trace()/3.0;
-      Matrix3 devStressOld = oldStress - One*pressure;
+      //Matrix3 devStressOld = oldStress - One*pressure;
       
       // Set up the PlasticityState
       PlasticityState* state = scinew PlasticityState();
@@ -1768,6 +1770,8 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       state->temperature = pTemperature[idx];
       state->density = rho_cur;
       state->initialDensity = rho_0;
+      state->volume = pVolume_deformed[idx];
+      state->initialVolume = pVolumeOld[idx];
       state->bulkModulus = bulk ;
       state->initialBulkModulus = bulk;
       state->shearModulus = shear ;
@@ -1784,7 +1788,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       // Compute trial stress
       double lambda = bulk - (2.0/3.0)*mu_cur;
-      trialStress = One*(lambda*incStrain.Trace()) + incStrain*(2.0*mu_cur);
+      trialStress = oldStress + One*(lambda*incStrain.Trace()) + incStrain*(2.0*mu_cur);
       devTrialStress = trialStress - One*(trialStress.Trace()/3.0);
       
       // Calculate the equivalent stress
@@ -1845,9 +1849,9 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       //CSTir << " particle = " << idx << " Computed K matrix " << endl;
 
       // Assemble into global K matrix
-      for (int I = 0; I < 24; I++){
-        for (int J = 0; J < 24; J++){
-          v[24*I+J] = Kmatrix[I][J];
+      for (int ii = 0; ii < 24; ii++){
+        for (int jj = 0; jj < 24; jj++){
+          v[24*ii+jj] = Kmatrix[ii][jj];
         }
       }
       solver->fillMatrix(24,dof,24,dof,v);
