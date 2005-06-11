@@ -509,19 +509,25 @@ PVSpaceInterp::set_phase_ranges()
 {
   if (! phase_info_data_.get_rep()) return;
 
+  int h_end;
+  ASSERT(phase_info_data_->get_property("h-end", h_end));
+  int i_end;
+  ASSERT(phase_info_data_->get_property("i-end", i_end));
+  //  cout <<"h_end: " << h_end << " i_end:" << i_end << endl;
+
   float *dat = (float *)phase_info_data_->nrrd->data;
   int row_l = phase_info_data_->nrrd->axis[0].size;
   int sz = phase_info_data_->nrrd->axis[1].size;
   if (phase_ranges_ != 0) delete[] phase_ranges_;
   phase_ranges_ = new double[phase_info_data_->nrrd->axis[1].size];
-  cout << "size is : " << sz << endl;
-  for (int i = 0; i < 15; ++i) {
+  //cout << "size is : " << sz << endl;
+  for (int i = 0; i < h_end + 1; ++i) {
     int idx = i * row_l;
     phase_ranges_[i] = ((dat[(i + 1) * row_l] - dat[idx]) * 0.5) + dat[idx];
     //    cout << phase_ranges_[i] << " h " << i << " " << dat[idx] << endl;
   }
 
-  for (int i = 16; i < sz - 1; ++i) {
+  for (int i = h_end + 2; i < sz - 1; ++i) {
     int idx = i * row_l;
     phase_ranges_[i] = ((dat[(i + 1) * row_l] - dat[idx]) * 0.5) + dat[idx];
     //    cout << phase_ranges_[i] << " i " << i << " " << dat[idx] << endl;
@@ -535,12 +541,17 @@ PVSpaceInterp::find_phase_index(float phase, int &p_idx)
 {
   // healthy first then injured
   //  int sz = phase_info_data_->nrrd->axis[1].size / 2;
+  int h_end;
+  ASSERT(phase_info_data_->get_property("h-end", h_end));
+  int i_end;
+  ASSERT(phase_info_data_->get_property("i-end", i_end));
+  //cout <<"h_end: " << h_end << " i_end:" << i_end << endl;
   int s = 0;
-  int e = 14;
+  int e = h_end;
   int pm_off = 0;
   if (injured_p_) {
-    s = 16;
-    e = 32;
+    s = h_end + 2;
+    e = i_end;
     pm_off = 6;
   }
   p_idx = 0;
