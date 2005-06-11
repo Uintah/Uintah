@@ -119,7 +119,7 @@ JohnsonCookPlastic::computeFlowStress(const PlasticityState* state,
                                       const double& ,
                                       const double& ,
                                       const MPMMaterial* matl,
-                                      const particleIndex )
+                                      const particleIndex idx )
 {
   double epdot = state->plasticStrainRate/d_CM.epdot_0;
   double ep = state->plasticStrain;
@@ -139,7 +139,13 @@ JohnsonCookPlastic::computeFlowStress(const PlasticityState* state,
   double tempPart = (Tstar < 0.0) ? 1.0 : (1.0-pow(Tstar,m));
   double sigy = strainPart*strainRatePart*tempPart;
   if (isnan(sigy)) {
-    cout << "**ERROR** JohnsonCook: sig_y == nan " << endl; 
+    cout << "**ERROR** JohnsonCook: sig_y == nan " 
+	 << " Particle = " << idx << " epdot = " << epdot
+	 << " ep = " << ep << " T = " << T 
+	 << " strainPart = " << strainPart 
+	 << " strainRatePart = " << strainRatePart 
+	 << " Tstar = " << Tstar 
+	 << " tempPart = " << tempPart << endl; 
   }
   return sigy;
 }
