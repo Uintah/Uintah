@@ -15,6 +15,7 @@ SRCDIR := Packages/VS/Dataflow/GUI
 SRCS := \
 	$(SRCDIR)/EinthovenLeads.tcl \
 	$(SRCDIR)/ExecutiveState.tcl \
+	$(SRCDIR)/StatForecast.tcl \
 	$(SRCDIR)/HotBox.tcl         \
 	$(SRCDIR)/ICUMonitor.tcl     \
 	$(SRCDIR)/PVSpaceInterp.tcl     \
