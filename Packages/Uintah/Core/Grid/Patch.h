@@ -440,6 +440,10 @@ WARNING
      const vector<FaceType>* getCoarseFineInterfaceFaces() const 
      { return &d_coarseFineInterfaceFaces; }
      
+     bool hasCoarseFineInterfaceFace() const
+     { return d_hasCoarsefineInterfaceFace;}
+     
+     
      //////////
      // Return the list of corner cells for the given face.
      const vector<IntVector> getCornerCells(const Patch::FaceType face) const { return d_CornerCells[face]; }
@@ -610,6 +614,7 @@ WARNING
      //////////
      // Keep track of faces on the edge of a courseFineInterface
      vector<FaceType> d_coarseFineInterfaceFaces;
+     bool d_hasCoarsefineInterfaceFace;
 
      //////////
      // Keep track of cells on the corner of the domain
