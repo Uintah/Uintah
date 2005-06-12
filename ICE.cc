@@ -942,7 +942,13 @@ void ICE::scheduleComputeThermoTransportProperties(SchedulerP& sched,
   Task* t;
   cout_doing << "ICE::schedulecomputeThermoTransportProperties" << endl;
   t = scinew Task("ICE::computeThermoTransportProperties", 
-            this, &ICE::computeThermoTransportProperties);   
+            this, &ICE::computeThermoTransportProperties); 
+            
+  if(d_doAMR && level->getIndex() !=0){
+  // dummy variable needed to keep the taskgraph in sync
+    t->requires(Task::NewDW,lb->AMR_SyncTaskgraphLabel,Ghost::None,0);
+  }           
+  
   t->computes(lb->viscosityLabel);
   t->computes(lb->thermalCondLabel);
   t->computes(lb->gammaLabel);
