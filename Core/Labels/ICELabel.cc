@@ -215,6 +215,9 @@ ICELabel::ICELabel()
 		      CCVariable<double>::getTypeDescription());
   //__________________________________
   // AMR variables
+   AMR_SyncTaskgraphLabel = 
+    VarLabel::create("AMR_SyncTaskgraph",CCVariable<int>::getTypeDescription()); 
+  
   rho_CC_gradLabel = 
     VarLabel::create("rho_CC_grad",     CCVariable<Vector>::getTypeDescription());
   temp_CC_gradLabel = 
@@ -360,6 +363,7 @@ ICELabel::~ICELabel()
     VarLabel::destroy(modelVol_srcLabel);
     
     // AMR variables
+    VarLabel::destroy(AMR_SyncTaskgraphLabel);
     VarLabel::destroy(rho_CC_gradLabel);
     VarLabel::destroy(temp_CC_gradLabel);
     VarLabel::destroy(vel_CC_mag_gradLabel);
