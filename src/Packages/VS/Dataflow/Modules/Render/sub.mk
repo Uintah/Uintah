@@ -15,6 +15,7 @@ SRCDIR   := Packages/VS/Dataflow/Modules/Render
 SRCS     += \
 	$(SRCDIR)/EinthovenLeads.cc \
 	$(SRCDIR)/ExecutiveState.cc \
+	$(SRCDIR)/StatForecast.cc \
 	$(SRCDIR)/ICUMonitor.cc     \
 
 
