@@ -116,11 +116,13 @@ namespace Uintah {
     const VarLabel*  maxMach_zplusLabel;
     
     // AMR variables
+    const VarLabel* AMR_SyncTaskgraphLabel;
     const VarLabel* rho_CC_gradLabel;
     const VarLabel* temp_CC_gradLabel;
     const VarLabel* vel_CC_mag_gradLabel;
     const VarLabel* vol_frac_CC_gradLabel;
     const VarLabel* press_CC_gradLabel;
+    
     const VarLabel* mass_X_FC_fluxLabel;
     const VarLabel* mass_Y_FC_fluxLabel;
     const VarLabel* mass_Z_FC_fluxLabel;
