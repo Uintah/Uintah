@@ -141,6 +141,9 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
       }
     }
     
+    // dummy variable needed to keep the taskgraph in sync
+    task->computes(lb->AMR_SyncTaskgraphLabel); 
+    
     const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
     sched->addTask(task, fineLevel->eachPatch(), ice_matls);
   }
@@ -167,6 +170,11 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
       
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
+      
+      // dummy variable needed to keep the taskgraph in sync
+      CCVariable<int> dummy;
+      fine_new_dw->allocateAndPut(dummy, lb->AMR_SyncTaskgraphLabel,0, patch);
+      
       
       for (int m = 0; m < numMatls; m++) {
         ICEMaterial* matl = d_sharedState->getICEMaterial(m);
