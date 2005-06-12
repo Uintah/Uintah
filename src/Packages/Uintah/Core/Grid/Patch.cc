@@ -84,11 +84,14 @@ Patch::Patch(const Level* level,
   setBCType(yplus, None);
   setBCType(zminus, None);
   setBCType(zplus, None);
+  
+  d_hasCoarsefineInterfaceFace = false;
 
   d_nodeHighIndex = d_highIndex+
     IntVector(getBCType(xplus) == Neighbor?0:1,
 	      getBCType(yplus) == Neighbor?0:1,
 	      getBCType(zplus) == Neighbor?0:1);
+  
 }
 
 Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
@@ -377,6 +380,7 @@ Patch::setBCType(Patch::FaceType face, BCType newbc)
    if (newbc == Patch::Coarse ) {
      if(face_Idx == d_coarseFineInterfaceFaces.end()){  
        d_coarseFineInterfaceFaces.push_back(face);
+       d_hasCoarsefineInterfaceFace = true;
      }
    } else {
      if (face_Idx != d_coarseFineInterfaceFaces.end()) {
