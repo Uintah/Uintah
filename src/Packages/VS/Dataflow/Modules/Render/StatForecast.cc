@@ -148,22 +148,17 @@ private:
   GuiDouble                            gui_time_;	 
   GuiDouble                            gui_sample_rate_; 
   GuiDouble                            gui_sweep_speed_; 
-  GuiDouble                            gui_dots_per_inch_;
-  GuiDouble                            gui_plot_height_;
   GuiInt                               gui_play_mode_;
   GuiInt                               gui_time_markers_mode_;
   GuiInt                               gui_selected_marker_;
-  GuiInt                               gui_plot_count_;
   GuiDouble                            gui_font_scale_;
   GuiInt                               gui_show_name_;
-  GuiInt                               gui_show_vectors_;
-  GuiInt                               gui_horiz_comp_;
-  GuiInt                               gui_both_comp_;
-  GuiInt											gui_vector_mode_;
-  GuiInt                               gui_show_cross_;
-  GuiInt											gui_show_trend_;
-  GuiInt											gui_show_threshold_;
+  GuiInt                               gui_show_alarm_;
   GuiInt                               gui_injury_offset_;
+  GuiInt                               gui_threshold_squ_;
+  GuiInt                               gui_threshold_sod_;
+  GuiInt                               gui_threshold_dqu_;
+  GuiInt                               gui_threshold_ttd_;
   GuiInt											gui_geom_;
 
   GLXContext                            ctx_;
@@ -192,9 +187,15 @@ private:
 	YellowTriangle, 
 	YellowQuestionTriangle,
 	RedOctagon,
-	RedQuestionOctagon
+	RedQuestionOctagon,
+	GreenECircle,
+	GreenQuestionECircle,
+	YellowETriangle,
+	YellowQuestionETriangle,
+	RedEOctagon,
+	RedQuestionEOctagon
   };
-  GLuint texName[8];
+  GLuint texName[14];
   int 					mouse_last_x_;
   int 					mouse_last_y_;
   double 				pan_x_;
@@ -383,22 +384,17 @@ StatForecast::StatForecast(GuiContext* ctx) :
   gui_time_(ctx->subVar("time")),
   gui_sample_rate_(ctx->subVar("sample_rate")),
   gui_sweep_speed_(ctx->subVar("sweep_speed")),
-  gui_dots_per_inch_(ctx->subVar("dots_per_inch")),
-  gui_plot_height_(ctx->subVar("plot_height")),
   gui_play_mode_(ctx->subVar("play_mode")),
   gui_time_markers_mode_(ctx->subVar("time_markers_mode")),
   gui_selected_marker_(ctx->subVar("selected_marker")),
-  gui_plot_count_(ctx->subVar("plot_count")),
   gui_font_scale_(ctx->subVar("font_scale")),
   gui_show_name_(ctx->subVar("show_name")),
-  gui_show_vectors_(ctx->subVar("show_vectors")),
-  gui_horiz_comp_(ctx->subVar("horiz_comp")),
-  gui_both_comp_(ctx->subVar("both_comp")),
-  gui_vector_mode_(ctx->subVar("vector_mode")),
-  gui_show_cross_(ctx->subVar("show_cross")),
-  gui_show_trend_(ctx->subVar("show_trend")),
-  gui_show_threshold_(ctx->subVar("show_threshold")),
+  gui_show_alarm_(ctx->subVar("show_alarm")),
   gui_injury_offset_(ctx->subVar("injury_offset")),
+  gui_threshold_squ_(ctx->subVar("threshold_squ")),
+  gui_threshold_sod_(ctx->subVar("threshold_sod")),
+  gui_threshold_dqu_(ctx->subVar("threshold_dqu")),
+  gui_threshold_ttd_(ctx->subVar("threshold_ttd")),
   gui_geom_(ctx->subVar("geom")),
   ctx_(0),
   dpy_(0),
@@ -616,7 +612,6 @@ StatForecast::draw_plots()
 {
 	//cerr << "Draw Plots" << endl;
 	reset_vars();
-	//const int gr_ht = (int)gui_plot_height_.get();
 
 	CHECK_OPENGL_ERROR("start draw_plots")
 
@@ -684,23 +679,48 @@ StatForecast::draw_plots()
 			// forecast indicator
 			glEnable(GL_TEXTURE_2D);
 
-			if (file_time < 0) {							// no injury
+			GLuint t_squ = gui_threshold_squ_.get();
+			GLuint t_sod = gui_threshold_sod_.get();
+			GLuint t_dqu = gui_threshold_dqu_.get();
+			GLuint t_ttd = gui_threshold_ttd_.get();
+
+			// no injury
+			if (file_time < 0) {
 				cur_forecast = WhiteSquare;
 
-			} else if (pos != pos) {					// injury but no valid prob
+			// injury but no valid prob
+			} else if (pos != pos) {
 				cur_forecast = YellowQuestionSquare;
 
-			} else if (prob > 50 && prob < 60) {	// prob between 50 and 59
-				cur_forecast = (ttd > 30)?YellowQuestionTriangle:RedQuestionOctagon;
+			// prob between t_sod (50) and t_dqu (60)
+			} else if (prob > t_sod && prob < t_dqu) {
+				if (alarm_now)
+					cur_forecast =
+						(ttd > t_ttd)?YellowQuestionETriangle:RedQuestionEOctagon;
+				else
+					cur_forecast =
+						(ttd > t_ttd)?YellowQuestionTriangle:RedQuestionOctagon;
 
-			} else if (prob >= 60) {					// prob between 60 and 100
-				cur_forecast = (ttd > 30)?YellowTriangle:RedOctagon;
+			// prob between t_dqu (60) and 100
+			} else if (prob >= t_dqu) {
+				if (alarm_now)
+					cur_forecast = (ttd > t_ttd)?YellowETriangle:RedEOctagon;
+				else
+					cur_forecast = (ttd > t_ttd)?YellowTriangle:RedOctagon;
 
-			} else if (prob <= 50 && prob > 40) {	// prob between 41 and 49
-				cur_forecast = GreenQuestionCircle;
+			// prob between t_squ (40) and t_sod (50)
+			} else if (prob <= t_sod && prob > t_squ) {
+				if (alarm_now)
+					cur_forecast = GreenQuestionECircle;
+				else
+					cur_forecast = GreenQuestionCircle;
 
-			} else if (prob <= 40) {					 // prob between 0 and 40
-				cur_forecast = GreenCircle;
+			// prob between 0 and t_squ (40)
+			} else if (prob <= t_squ) {
+				if (alarm_now)
+					cur_forecast = GreenECircle;
+				else
+					cur_forecast = GreenCircle;
 			}
 
 			glBindTexture(GL_TEXTURE_2D, texName[cur_forecast]);
@@ -715,7 +735,7 @@ StatForecast::draw_plots()
 			glDisable(GL_TEXTURE_2D);
 
 			// alarm flash
-			if (alarm_now) {
+			if (alarm_now && gui_show_alarm_.get()) {
 				glMatrixMode(GL_MODELVIEW);
 				glPushMatrix();
 					glLoadIdentity();
@@ -759,7 +779,7 @@ StatForecast::draw_plots()
 			glScaled(2.0, 2.0, 2.0);
 			glTranslated(-.5, -.5, -.5);
 
-			if (alarm_label && alarm_now) {
+			if (alarm_label && alarm_now && gui_show_alarm_.get()) {
 				float xoff = alarm_label->tex_width_ * alarm_label->u_;
 				float yoff = alarm_label->tex_height_ * alarm_label->v_ * 1.5;
 				//alarm_label->draw(w - xoff - x_margin, h - yoff, sx, sy);
@@ -795,31 +815,37 @@ StatForecast::draw_plots()
 						info2 << " ";
 						break;
 					case GreenCircle:
+					case GreenECircle:
 						glColor4f(0.0, 1.0, 0.0, 1.0);
 						info1 << pos << "% probability of survival";
 						info2 << " ";
 						break;
 					case GreenQuestionCircle:
+					case GreenQuestionECircle:
 						glColor4f(0.0, 1.0, 0.0, 1.0);
 						info1 << pos << "% probability of survival";
 						info2 << " ";
 						break;
 					case YellowTriangle:
+					case YellowETriangle:
 						glColor4f(1.0, 1.0, 0.0, 1.0);
 						info1 << ttd << " mins. before death (est.)";
 						info2 << prob << "% probability of death";
 						break;
 					case YellowQuestionTriangle:
+					case YellowQuestionETriangle:
 						glColor4f(1.0, 1.0, 0.0, 1.0);
 						info1 << prob << "% probability of death";
 						info2 << " ";
 						break;
 					case RedOctagon:
+					case RedEOctagon:
 						glColor4f(1.0, 0.0, 0.0, 1.0);
 						info1 << ttd << " mins. before death (est.)";
 						info2 << prob << "% probability of death";
 						break;
 					case RedQuestionOctagon:
+					case RedQuestionEOctagon:
 						glColor4f(1.0, 0.0, 0.0, 1.0);
 						info1 << prob << "% probability of death";
 						info2 << " ";
@@ -931,7 +957,7 @@ StatForecast::draw_plots()
 				//status_label1a->bind(font);
 
 				ostringstream statb;
-				if (prob >= 50) 
+				if (prob >= t_sod) 
 					statb << " " << ttd << " mins.";
 				else
 					statb << " NA.";
@@ -1162,8 +1188,6 @@ StatForecast::createDecisionSpaceArrays()
 
   decision_space_dirty_ = false;
 
-  //cerr << "Create Decision Space Arrays" << endl;
-
   string images = string(sci_getenv("SCIRUN_SRCDIR")) + string("/pixmaps/VS/");
   string path;
 
@@ -1190,6 +1214,24 @@ StatForecast::createDecisionSpaceArrays()
 
   path = images + string("redquestionoctagon.raw");
   createTextureMap(path, 256, 256, RedQuestionOctagon);
+
+  path = images + string("greenecircle.raw");
+  createTextureMap(path, 256, 256, GreenECircle);
+
+  path = images + string("greenecircle.raw");
+  createTextureMap(path, 256, 256, GreenQuestionECircle);
+
+  path = images + string("yellowetriangle.raw");
+  createTextureMap(path, 256, 256, YellowETriangle);
+
+  path = images + string("yellowetriangle.raw");
+  createTextureMap(path, 256, 256, YellowQuestionETriangle);
+
+  path = images + string("redeoctagon.raw");
+  createTextureMap(path, 256, 256, RedEOctagon);
+
+  path = images + string("redeoctagon.raw");
+  createTextureMap(path, 256, 256, RedQuestionEOctagon);
 }
 
 void
