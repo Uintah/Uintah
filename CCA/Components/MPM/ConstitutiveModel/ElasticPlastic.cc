@@ -60,6 +60,10 @@ ElasticPlastic::ElasticPlastic(ProblemSpecP& ps,MPMLabel* Mlb,MPMFlags* Mflag)
   ps->get("coeff_thermal_expansion", d_initialData.alpha);
   d_initialData.Chi = 0.9;
   ps->get("taylor_quinney_coeff",d_initialData.Chi);
+  bool isothermal = false;
+  d_isothermal = 1.0;
+  ps->get("isothermal", isothermal);
+  if (isothermal) d_isothermal = 0.0;
 
   d_tol = 1.0e-10;
   ps->get("tolerance",d_tol);
@@ -149,6 +153,7 @@ ElasticPlastic::ElasticPlastic(const ElasticPlastic* cm)
 
   d_tol = cm->d_tol ;
   d_useModifiedEOS = cm->d_useModifiedEOS;
+  d_isothermal = cm->d_isothermal;
 
   d_initialMaterialTemperature = cm->d_initialMaterialTemperature ;
   d_checkTeplaFailureCriterion = cm->d_checkTeplaFailureCriterion;
@@ -796,7 +801,8 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       tensorD = (tensorR.Transpose())*(tensorD*tensorR);
 
       // Subtract the thermal expansion to get D_e + D_p
-      double dT_dt = (pTemperature[idx] - pTempPrev[idx])/delT;
+      double temperature = pTemperature[idx];
+      double dT_dt = (temperature - pTempPrev[idx])/delT;
       tensorD -= one*(alpha*dT_dt);
       
       // Calculate the deviatoric part of the non-thermal part
@@ -812,14 +818,11 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       Matrix3 tensorP = one*pressure;
       tensorS = tensorSig - tensorP;
 
-      // Calculate the temperature at the start of the time step
-      double temperature = pTemperature[idx];
-
       // Set up the PlasticityState (for t_n+1)
       PlasticityState* state = scinew PlasticityState();
-      //state->plasticStrainRate = pPlasticStrainRate[idx];
-      //state->plasticStrainRate = sqrtTwoThird*tensorD.Norm();
-      state->plasticStrainRate = sqrtTwoThird*tensorEta.Norm();
+      state->plasticStrainRate = pPlasticStrainRate[idx];
+      //state->plasticStrainRate = pStrainRate_new[idx];
+      //state->plasticStrainRate = sqrtTwoThird*tensorEta.Norm();
       state->plasticStrain = pPlasticStrain[idx] + state->plasticStrainRate*delT;
       state->pressure = pressure;
       state->temperature = temperature;
@@ -986,15 +989,11 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
                 Stilde = trialS/denom;
 
                 /*
-                if (idx == 1) {
-		*/
-                  double delLambda = sqrtqq*delGamma/sqrtqs;
-                  cout << "idx = " << idx << " delGamma = " << delLambda 
+                double delLambda = sqrtqq*delGamma/sqrtqs;
+                cout << "idx = " << idx << " delGamma = " << delLambda 
                      << " sigy = " << state->yieldStress 
                      << " epdot = " << state->plasticStrainRate 
                      << " ep = " << state->plasticStrain << endl;
-		  /*
-                }
                 */
 
                 // We have found Stilde. Turn off Newton Iterations.
@@ -1008,6 +1007,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
           if (doNewtonIterations) {
 
+	    /*
             cout << "sqrtSxS = 0 || gammadotplus <= 0 || delGamma <= 0.0" 
                  << endl;
             cout << " Before::idx = " << idx
@@ -1019,10 +1019,13 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
                  << " epdot_n = " << pPlasticStrainRate[idx]
                  << " epdot_n+1 = " << state->plasticStrainRate
                  << endl;
+            */
 
             // Compute Stilde using Newton iterations a la Simo
+            state->plasticStrain = pPlasticStrain[idx];
             computeStilde(trialS, delT, matl, idx, Stilde, state, delGamma);
 
+	    /*
             cout << "After::idx = " << idx
                  << " delGamma = " << delGamma  
                  << " Tau_n+1 = " << state->yieldStress
@@ -1032,6 +1035,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
                  << " epdot_n = " << pPlasticStrainRate[idx]
                  << " epdot_n+1 = " << state->plasticStrainRate
                  << endl;
+            */
 
           }
 
@@ -1121,8 +1125,8 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
         double fac = taylorQuinney/(rho_cur*C_p);
 
         // Calculate Tdot (internal plastic heating rate)
-	pIntHeatRate[idx] = state->yieldStress*state->plasticStrainRate*fac;
-        //pIntHeatRate[idx] = tensorS.Contract(tensorEta)*fac;
+        double Tdot = state->yieldStress*state->plasticStrainRate*fac;
+        pIntHeatRate[idx] = Tdot*d_isothermal;
       }
 
       //-----------------------------------------------------------------------
@@ -1563,7 +1567,8 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       pStrainRate_new[idx] = incTotalStrain.Norm()*sqrtTwoThird/delT;
       
       // Compute thermal strain
-      double incT = pTemperature[idx] - pTempPrev[idx];
+      double temperature = pTemperature[idx];
+      double incT = temperature - pTempPrev[idx];
       incThermalStrain = One*(alpha*incT);
       incStrain = incTotalStrain - incThermalStrain;
       
@@ -1578,7 +1583,7 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       state->plasticStrainRate = pPlasticStrainRate[idx];
       state->plasticStrain = pPlasticStrain[idx];
       state->pressure = pressure;
-      state->temperature = pTemperature[idx];
+      state->temperature = temperature;
       state->density = rho_cur;
       state->initialDensity = rho_0;
       state->volume = pVolume_deformed[idx];
@@ -1662,18 +1667,21 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
           pDamage_new[idx] = 
             d_damage->computeScalarDamage(state->plasticStrainRate, 
                                           pStress_new[idx],
-                                          pTemperature[idx],
+                                          temperature,
                                           delT, matl, d_tol, 
                                           pDamage[idx]);
         else
           pDamage_new[idx] = pDamage[idx];
 
         // Calculate rate of temperature increase due to plastic strain
-        double taylorQuinney = 0.9;
+        double taylorQuinney = d_initialData.Chi;
         double C_p = matl->getSpecificHeat();
-        double Tdot = flowStress*state->plasticStrainRate*taylorQuinney/
-                      (rho_cur*C_p);
-        pIntHeatRate[idx] = Tdot;
+        if (d_computeSpecificHeat) C_p = computeSpecificHeat(temperature);
+        double fac = taylorQuinney/(rho_cur*C_p);
+
+        // Calculate Tdot (internal plastic heating rate)
+        double Tdot = state->yieldStress*state->plasticStrainRate*fac;
+        pIntHeatRate[idx] = Tdot*d_isothermal;
 
         // No failure implemented for implcit time integration
         pLocalized_new[idx] = pLocalized[idx];
@@ -1901,7 +1909,8 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       incTotalStrain = (One - incFFtInv)*0.5;
       
       // Compute thermal strain
-      double incT = pTemperature[idx] - pTempPrev[idx];
+      double temperature = pTemperature[idx];
+      double incT = temperature - pTempPrev[idx];
       incThermalStrain = One*(alpha*incT);
       incStrain = incTotalStrain - incThermalStrain;
       
@@ -1918,7 +1927,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       state->plasticStrainRate = pPlasticStrainRate[idx];
       state->plasticStrain = pPlasticStrain[idx];
       state->pressure = pressure;
-      state->temperature = pTemperature[idx];
+      state->temperature = temperature;
       state->density = rho_cur;
       state->initialDensity = rho_0;
       state->volume = pVolume_deformed[idx];
