@@ -46,10 +46,6 @@ else
  LIBS :=
 endif
 
-ifeq ($(HAVE_MPI),yes)
- LIBS += $(MPI_LIBRARY) 
-endif
-
 
 PROGRAM := $(SRCDIR)/argtest
 SRCS := $(SRCDIR)/argtest.cc $(SRCDIR)/argtest_sidl.cc
