@@ -127,17 +127,17 @@ namespace SCIRun {
       //...
     };
 
-    static void init();
+    static void init(int rank, int size);
     static void lock();
     static void unlock();
 
     static void internal_lock();
     static void internal_unlock();
 
-#ifdef HAVE_MPI
+    //#ifdef HAVE_MPI
     //duplicate MPI_COMM_WORLD
-    static int getComm(MPI_Comm *);
-#endif
+    //    static int getComm(MPI_Comm *);
+    //#endif
 
     static void order_service(DTMessage *dtmsg);
     static void lock_service(DTMessage *dtmsg);
@@ -167,9 +167,9 @@ namespace SCIRun {
     static DTPoint** lockSvc_ep_list;
     static DTAddress  * lockSvc_addr_list;
 
-#ifdef HAVE_MPI
-    static MPI_Comm MPI_COMM_WORLD_Dup;
-#endif
+    //#ifdef HAVE_MPI
+    //    static MPI_Comm MPI_COMM_WORLD_Dup;
+    //#endif
 
   private:
 
