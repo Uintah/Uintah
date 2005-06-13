@@ -13,9 +13,13 @@
 
 \subsection keming Keming
 
-\li Remove MPI dependencies from SCIRun2 except for ploader: TDB
+\li Remove MPI dependencies from SCIRun2 except for ploader: Completed 
 \li Complete parallel component implementation: by July 18
-\li Updates to text builder: TBD
+\li Updates to text builder: by June 24
+\li PRMI without data redistribution, by July 1
+\li PRMI data redistribution, by July 8
+\li PRMI synchronization, by July 14
+\li PRMI concurrency control, by July 17
 
 \subsection kosta Kosta
 
