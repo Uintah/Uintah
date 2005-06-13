@@ -47,14 +47,12 @@ itcl_class VS_Render_StatForecast {
 	global  $this-selected_marker
 	global  $this-font_scale
 	global  $this-show_name
-	global  $this-show_vectors
-	global  $this-vector_mode
-	global  $this-show_cross
-	global  $this-show_trend
+	global  $this-show_alarm
 	global  $this-injury_offset
-	global  $this-horiz_comp
-	global  $this-both_comp
-	global  $this-show_threshold
+	global  $this-threshold_squ
+	global  $this-threshold_sod
+	global  $this-threshold_dqu
+	global  $this-threshold_ttd
 	global  $this-geom
 
 	set $this-edit          0
@@ -70,14 +68,12 @@ itcl_class VS_Render_StatForecast {
 	set $this-selected_marker -1
 	set $this-font_scale 1.0
 	set $this-show_name 0
-	set $this-show_vectors 0
-	set $this-vector_mode 1
-	set $this-show_cross 0
-	set $this-show_trend 0
+	set $this-show_alarm 1
 	set $this-injury_offset 0
-	set $this-horiz_comp 0
-	set $this-both_comp 0
-	set $this-show_threshold 0
+	set $this-threshold_squ 40
+	set $this-threshold_sod 50
+	set $this-threshold_dqu 60
+	set $this-threshold_ttd 30
 	set $this-geom "640x640+0+0"
     }
 
@@ -160,41 +156,6 @@ itcl_class VS_Render_StatForecast {
         $this-c "init"
     }
 
-    method vector_mode {} {
-        set w .ui[modname]
-        set gen [$w.prefs.gen childsite]
-
-	     global $this-show_vectors
-	     global $this-horiz_comp
-
-		  if {([set $this-horiz_comp] == 1) && ([set $this-show_vectors] == 1)} {
-		    $gen.slidingy.tog configure -state normal
-		    $gen.onhead.tog configure -state normal
-		  } else {
-		    $gen.slidingy.tog configure -state disabled
-		    $gen.onhead.tog configure -state disabled
-		  }
-    }
-
-    method show_vectors {} {
-        set w .ui[modname]
-        set gen [$w.prefs.gen childsite]
-
-	     global $this-show_vectors
-
-		  if {[set $this-show_vectors] == 1} {
-		    $gen.hor.tog configure -state normal
-		    $gen.vert.tog configure -state normal
-          $gen.showthreshold.tog configure -state normal
-		  } else {
-		    $gen.hor.tog configure -state disabled
-		    $gen.vert.tog configure -state disabled
-          $gen.showthreshold.tog configure -state disabled
-		  }
-
-		  vector_mode
-    }
-
 	method centerWindow {w1 w2} {
 		update
 		#wm overrideredirect $w1 1
@@ -271,74 +232,11 @@ itcl_class VS_Render_StatForecast {
                 -onvalue 1 -offvalue 0 -anchor w
             pack $gen.showname -side top -fill x -pady 2
                                                                                 
-            checkbutton $gen.showvec -text "Show 2nd Difference Vectors" -padx 6 \
-                -justify left -relief flat -variable $this-show_vectors \
-                -onvalue 1 -offvalue 0 -anchor w -command "$this show_vectors"
-            #pack $gen.showvec -side top -fill x -pady 2
+            checkbutton $gen.showalarm -text "Show Alarm" -padx 6 \
+                -justify left -relief flat -variable $this-show_alarm \
+                -onvalue 1 -offvalue 0 -anchor w
+            pack $gen.showalarm -side top -fill x -pady 2
                                                                                 
-            frame $gen.hor
-            pack $gen.hor -side top -fill x -pady 2
-            label $gen.hor.l -text "    "
-            pack $gen.hor.l -side left
-            checkbutton $gen.hor.tog -text "Horizontal Component" -padx 6 \
-                -justify left -relief flat -variable $this-horiz_comp \
-                -onvalue 1 -offvalue 0 -anchor w -command "$this vector_mode"
-            #pack $gen.hor.tog -side left -fill x -pady 2
-
-            frame $gen.slidingy
-            #pack $gen.slidingy -side top -fill x -pady 2
-            label $gen.slidingy.l -text "        "
-            #pack $gen.slidingy.l -side left
-            #checkbutton $gen.slidingy.tog -text "Slide Along Y Axis" -padx 6 \
-                -justify left -relief flat -variable $this-slide_yaxis \
-                -onvalue 1 -offvalue 0 -anchor w
-            radiobutton $gen.slidingy.tog -text "Sliding Along Y Axis" -padx 6 \
-                -justify left -relief flat -variable $this-vector_mode \
-                -anchor w -value 0 -state disabled
-            #pack $gen.slidingy.tog -side left -fill x -pady 2
-
-            frame $gen.onhead
-            #pack $gen.onhead -side top -fill x -pady 2
-            label $gen.onhead.l -text "        "
-            #pack $gen.onhead.l -side left
-            #checkbutton $gen.onhead.tog -text "Follow Path" -padx 6 \
-                -justify left -relief flat -variable $this-follow_path \
-                -onvalue 1 -offvalue 0 -anchor w
-            radiobutton $gen.onhead.tog -text "Attached To Path" -padx 6 \
-                -justify left -relief flat -variable $this-vector_mode \
-                -anchor w -value 1 -state disabled
-                #-justify left -relief flat -variable $this-follow_path \
-                -anchor w
-            #pack $gen.onhead.tog -side left -fill x -pady 2
-
-            frame $gen.vert
-            #pack $gen.vert -side top -fill x -pady 2
-            label $gen.vert.l -text "    "
-            #pack $gen.vert.l -side left
-            checkbutton $gen.vert.tog -text "Horizontal and Vertical Components" -padx 6 \
-                -justify left -relief flat -variable $this-both_comp \
-                -onvalue 1 -offvalue 0 -anchor w -wraplength 150
-            #pack $gen.vert.tog -side left -fill x -pady 2
-
-            frame $gen.showthreshold
-            #pack $gen.showthreshold -side top -fill x -pady 2
-            label $gen.showthreshold.l -text "    "
-            #pack $gen.showthreshold.l -side left
-            checkbutton $gen.showthreshold.tog -text "Show Alarm Threshold" -padx 6 \
-                -justify left -relief flat -variable $this-show_threshold \
-                -onvalue 1 -offvalue 0 -anchor w
-            #pack $gen.showthreshold.tog -side left -fill x -pady 2
-
-            checkbutton $gen.showcross -text "Show Crosshairs" -padx 6 \
-                -justify left -relief flat -variable $this-show_cross \
-                -onvalue 1 -offvalue 0 -anchor w
-            #pack $gen.showcross -side top -fill x -pady 2
-
-            checkbutton $gen.showtrend -text "Show Trend Gradient" -padx 6 \
-                -justify left -relief flat -variable $this-show_trend \
-                -onvalue 1 -offvalue 0 -anchor w
-            #pack $gen.showtrend -side top -fill x -pady 2
-
             frame $gen.fs -borderwidth 4
             pack $gen.fs -side top -fill x -pady 2
             scale $gen.fs.font -variable $this-font_scale \
@@ -348,8 +246,6 @@ itcl_class VS_Render_StatForecast {
             pack $gen.fs.font -fill x
                                                                                 
             pack $w.prefs.gen -fill x -expand yes -side top
-
-				#show_vectors
 
             iwidgets::labeledframe $w.prefs.time -labeltext "Timeline" \
                 -labelpos nw
@@ -364,77 +260,64 @@ itcl_class VS_Render_StatForecast {
             entry $time.f.offset.val -textvariable $this-injury_offset \
                 -width 6
             label $time.f.offset.u -text "s"
-            pack $time.f.offset.l -side left
-            pack $time.f.offset.val -side left
-            pack $time.f.offset.u -side left
+            #pack $time.f.offset.l -side left
+            #pack $time.f.offset.val -side left
+            #pack $time.f.offset.u -side left
+            pack $time.f.offset.u -side right
+            pack $time.f.offset.val -side right
+            pack $time.f.offset.l -side right
                                                                                 
             pack $w.prefs.time -fill x -expand yes -side top
 
-            iwidgets::labeledframe $w.prefs.plot -labeltext "Plot Labels" \
+            iwidgets::labeledframe $w.prefs.plot -labeltext "Thresholds" \
                 -labelpos nw
             set plot [$w.prefs.plot childsite]
 
             frame $plot.f -borderwidth 2
             pack $plot.f -side top -fill both
 
-            frame $plot.f.xaxis
-            pack $plot.f.xaxis -side top -fill x -pady 2
-            label $plot.f.xaxis.l -text "X Axis:"
-            entry $plot.f.xaxis.val -textvariable $this-x_axis_label \
-                -width 18
-            pack $plot.f.xaxis.val -side right
-            pack $plot.f.xaxis.l -side right
+            frame $plot.f.squ
+            pack $plot.f.squ -side top -fill x -pady 2
+            label $plot.f.squ.l -text "Survival Probability Threshold:"
+            entry $plot.f.squ.val -textvariable $this-threshold_squ \
+                -width 4
+            label $plot.f.squ.u -text "%"
+            pack $plot.f.squ.u -side right
+            pack $plot.f.squ.val -side right
+            pack $plot.f.squ.l -side right
                                                                                 
-            frame $plot.f.xtrendl
-            pack $plot.f.xtrendl -side top -fill x -pady 2
-            label $plot.f.xtrendl.l -text "X Axis Trend:"
-            entry $plot.f.xtrendl.val -textvariable $this-x_trend_l_label \
-                -width 18
-            pack $plot.f.xtrendl.val -side right
-            pack $plot.f.xtrendl.l -side right
+            frame $plot.f.sod
+            pack $plot.f.sod -side top -fill x -pady 2
+            label $plot.f.sod.l -text "Survival/Death Threshold:"
+            entry $plot.f.sod.val -textvariable $this-threshold_sod \
+                -width 4
+            label $plot.f.sod.u -text "%"
+            pack $plot.f.sod.u -side right
+            pack $plot.f.sod.val -side right
+            pack $plot.f.sod.l -side right
                                                                                 
-            frame $plot.f.xtrendm
-            pack $plot.f.xtrendm -side top -fill x -pady 2
-            entry $plot.f.xtrendm.val -textvariable $this-x_trend_m_label \
-                -width 18
-            pack $plot.f.xtrendm.val -side right
+            frame $plot.f.dqu
+            pack $plot.f.dqu -side top -fill x -pady 2
+            label $plot.f.dqu.l -text "Death Probability Threshold:"
+            entry $plot.f.dqu.val -textvariable $this-threshold_dqu \
+                -width 4
+            label $plot.f.dqu.u -text "%"
+            pack $plot.f.dqu.u -side right
+            pack $plot.f.dqu.val -side right
+            pack $plot.f.dqu.l -side right
 
-            frame $plot.f.xtrendh
-            pack $plot.f.xtrendh -side top -fill x -pady 2
-            entry $plot.f.xtrendh.val -textvariable $this-x_trend_h_label \
-                -width 18
-            pack $plot.f.xtrendh.val -side right
-
-            frame $plot.f.spacer
+				frame $plot.f.spacer
             pack $plot.f.spacer -side top -fill x -pady 4
 
-            frame $plot.f.yaxis
-            pack $plot.f.yaxis -side top -fill x -pady 2
-            label $plot.f.yaxis.l -text "Y Axis:"
-            entry $plot.f.yaxis.val -textvariable $this-y_axis_label \
-                -width 18
-            pack $plot.f.yaxis.val -side right
-            pack $plot.f.yaxis.l -side right
-
-            frame $plot.f.ytrendl
-            pack $plot.f.ytrendl -side top -fill x -pady 2
-            label $plot.f.ytrendl.l -text "Y Axis Trend:"
-            entry $plot.f.ytrendl.val -textvariable $this-y_trend_l_label \
-                -width 18
-            pack $plot.f.ytrendl.val -side right
-            pack $plot.f.ytrendl.l -side right
-
-            frame $plot.f.ytrendm
-            pack $plot.f.ytrendm -side top -fill x -pady 2
-            entry $plot.f.ytrendm.val -textvariable $this-y_trend_m_label \
-                -width 18
-            pack $plot.f.ytrendm.val -side right
-
-            frame $plot.f.ytrendh
-            pack $plot.f.ytrendh -side top -fill x -pady 2
-            entry $plot.f.ytrendh.val -textvariable $this-y_trend_h_label \
-                -width 18
-            pack $plot.f.ytrendh.val -side right
+            frame $plot.f.ttd
+            pack $plot.f.ttd -side top -fill x -pady 2
+            label $plot.f.ttd.l -text "Time To Death Threshold:"
+            entry $plot.f.ttd.val -textvariable $this-threshold_ttd \
+                -width 4
+            label $plot.f.ttd.u -text "m"
+            pack $plot.f.ttd.u -side right
+            pack $plot.f.ttd.val -side right
+            pack $plot.f.ttd.l -side right
 
             pack $w.prefs.plot -fill x -expand yes -side top
                                                                                 
