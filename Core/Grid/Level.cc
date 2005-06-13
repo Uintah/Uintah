@@ -293,9 +293,9 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
     }
     return;
   }
+  int orig_size = neighbors.size();
 #endif
 
-  int orig_size = neighbors.size();
 #if defined( SELECT_LINEAR )
    // This sucks - it should be made faster.  -Steve
    for(const_patchIterator iter=d_virtualAndRealPatches.begin();

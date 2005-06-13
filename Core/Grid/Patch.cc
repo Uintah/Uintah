@@ -485,8 +485,9 @@ Patch::getFace(FaceType face, const IntVector& insideOffset,
 	       const IntVector& outsideOffset,
 	       IntVector& l, IntVector& h) const
 {
-  IntVector ll=getCellLowIndex();
-  IntVector hh=getCellHighIndex();
+  // don't count extra cells
+  IntVector ll=getInteriorCellLowIndex();
+  IntVector hh=getInteriorCellHighIndex();
   l=ll;
   h=hh;
   switch(face){

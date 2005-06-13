@@ -66,8 +66,8 @@ void PatchRangeTree::query(const IntVector& low, const IntVector& high,
   for (list<PatchPoint*>::iterator it = foundPoints.begin();
        it != foundPoints.end(); it++) {    
     const Patch* patch = (*it)->getPatch();
-    IntVector l=Max(patch->getCellLowIndex(), low);
-    IntVector u=Min(patch->getCellHighIndex(), high);
+    IntVector l=Max(patch->getInteriorCellLowIndex(), low);
+    IntVector u=Min(patch->getInteriorCellHighIndex(), high);
     if (u.x() > l.x() && u.y() > l.y() && u.z() > l.z())
       foundPatches.push_back(patch);
   }
