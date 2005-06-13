@@ -5,4 +5,4 @@ if (k == 1)
 end
 
 r = grid.level{k}.refRatio;
-indexC = ceil(indexF./r);
+indexC = ceil(indexF./repmat(r,size(indexF)./size(r)));

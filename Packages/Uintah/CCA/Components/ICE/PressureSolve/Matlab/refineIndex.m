@@ -5,5 +5,5 @@ if (k == grid.numLevels)
 end
 
 r = grid.level{k+1}.refRatio;
-indexF = r.*(indexC - 1) + 1;
+indexF = repmat(r,size(indexC)./size(r)).*(indexC - 1) + 1;
 
