@@ -15,13 +15,16 @@ ProgressiveWarning::ProgressiveWarning(std::string message, int multiplier /* =-
   
 }
 
-void ProgressiveWarning::invoke(int numTimes /* =-1*/)
+bool ProgressiveWarning::invoke(int numTimes /* =-1*/)
 {
+  bool warning_printed = false;
   d_numOccurences += numTimes;
   if (d_numOccurences >= d_nextOccurence && (!d_warned || d_multiplier != -1)) {
+    d_warned = true;
 
     if (d_multiplier != -1) {
       showWarning();
+      warning_printed = true;
       while (d_nextOccurence <= d_numOccurences)
         d_nextOccurence *= d_multiplier;
     }
@@ -29,9 +32,9 @@ void ProgressiveWarning::invoke(int numTimes /* =-1*/)
       (*out) << d_message << std::endl;
       (*out) << "  This message will only occur once\n";
     }
-    d_warned = true;
+    return true;
   }
- 
+  return false;
 }
 
 void ProgressiveWarning::changeMessage(std::string message)
