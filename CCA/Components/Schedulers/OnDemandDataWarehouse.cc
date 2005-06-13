@@ -2044,6 +2044,8 @@ getGridVar(VariableBase& var, DWDatabase& db,
 	//SCI_THROW(InternalError(errmsg.str().c_str()));
 	//warn << "WARNING: this needs to be fixed:\n" << errmsg.str() << '\n';
        cout << "WARNING: this needs to be fixed:\n" << errmsg.str() << '\n';
+       cout << "Ignore this if this is the initialization dw in its old state"
+            << endl;
       }
     }
     
