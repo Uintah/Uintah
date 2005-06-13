@@ -110,6 +110,7 @@ namespace Uintah {
     
     double d_tol;
     double d_initialMaterialTemperature;
+    double d_isothermal;
     bool   d_useModifiedEOS;
     bool   d_evolvePorosity;
     bool   d_evolveDamage;
