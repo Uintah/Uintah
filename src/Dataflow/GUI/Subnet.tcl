@@ -1278,3 +1278,10 @@ proc loadSubnetScriptsFromDisk { } {
 	addSubnetToDatabase $script
     }
 }
+
+proc generateSubnetScriptsFromNetwork { } {
+    global Subnet
+    for {set i 1} {$i <= $Subnet(num)} {incr i} {
+	addSubnetToDatabase [genSubnetScript $i]
+    }    
+}
