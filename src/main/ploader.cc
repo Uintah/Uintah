@@ -109,8 +109,53 @@ main(int argc, char *argv[] )
     MPI_Comm_size(MPI_COMM_WORLD,&(sl->mpi_size));
     MPI_Comm_rank(MPI_COMM_WORLD,&(sl->mpi_rank));
 
-    //start MPI lock manager
-    PRMI::init();
+    //--------------------------------------
+    //initialize MPI lock manager
+    PRMI::init(mpi_rank, mpi_size);
+    
+    //   MPI_Comm_dup(MPI_COMM_WORLD, &MPI_COMM_WORLD_Dup);
+    
+    DTAddress dtAddr=PIDL::getDT()->getAddress();
+    if(mpi_rank==0){
+      PRMI::orderSvc_ep=PRMI::orderSvcEp.getEP();
+      PRMI::orderSvc_addr.ip=dtAddr.ip;
+      PRMI::orderSvc_addr.port=dtAddr.port;
+    }
+    //root broadcasts its orderSvc_ep and orderSvc_addr
+    int* int_buf;
+    short* short_buf;
+    if(mpi_rank==0){
+      PRMI::lockSvc_ep_list=new DTPoint*[mpi_size];
+      PRMI::lockSvc_addr_list=new DTAddress[mpi_size];
+      int_buf=new int[mpi_size];
+      short_buf=new short[mpi_size];
+    }
+    DTPoint* lockSvc_ep=PRMI::lockSvcEp.getEP();
+
+#ifdef HAVE_MPI
+    //root broadcast order service ep and DT address
+    MPI_Bcast(&PRMI::orderSvc_ep, 1, MPI_INT,0,MPI_COMM_WORLD);
+    MPI_Bcast(&PRMI::orderSvc_addr.ip, 1, MPI_INT,0,MPI_COMM_WORLD);
+    MPI_Bcast(&PRMI::orderSvc_addr.port, 1, MPI_SHORT,0,MPI_COMM_WORLD);
+    //root gatheres lockSvc_ep and lockSvc_addr
+    MPI_Gather(&lockSvc_ep, 1, MPI_INT, PRMI::lockSvc_ep_list, 1, MPI_INT,
+	     0, MPI_COMM_WORLD);
+    MPI_Gather(&dtAddr.ip, 1, MPI_INT, int_buf, 1, MPI_INT,
+	       0, MPI_COMM_WORLD);
+    MPI_Gather(&dtAddr.port, 1, MPI_SHORT, short_buf, 1, MPI_SHORT,
+	       0, MPI_COMM_WORLD);
+#else
+    //TODO: need do the broadcasting somehow....
+#endif
+    if(mpi_rank==0){
+      for(int i=0; i<mpi_size; i++){
+	PRMI::lockSvc_addr_list[i].ip=int_buf[i];
+	PRMI::lockSvc_addr_list[i].port=short_buf[i];
+      }
+      delete []int_buf;
+      delete []short_buf;
+    }
+    //=================================================
 
     //Inform everyone else of my distribution
     //(this is in correspondence with the instantiate() call)
