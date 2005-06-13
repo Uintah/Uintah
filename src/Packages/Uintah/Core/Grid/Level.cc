@@ -558,7 +558,6 @@ void Level::setBCTypes()
       Patch::selectType neighbors;
       selectPatches(l, h, neighbors);
       
-      cout << "Patch: " << patch->getID() << " " << l << " " << h << " " << neighbors.size() << " neighbors\n";
       if(neighbors.size() == 0){
 	if(d_index != 0){
 	  // See if there are any patches on the coarse level at that face
