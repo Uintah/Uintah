@@ -2036,16 +2036,14 @@ getGridVar(VariableBase& var, DWDatabase& db,
       if (!ignore && !warned ) {
 	warned = true;
 	ostringstream errmsg;
-	errmsg << d_myworld->myrank() << " Reallocation Error:" <<
-	  " Reallocation needed for " << label->getName();
+	errmsg << d_myworld->myrank() << label->getName(); 
 	if (patch)
 	  errmsg << " on patch " << patch->getID();
 	errmsg << " for material " << matlIndex;
-	//SCI_THROW(InternalError(errmsg.str().c_str()));
-	//warn << "WARNING: this needs to be fixed:\n" << errmsg.str() << '\n';
-       cout << "WARNING: this needs to be fixed:\n" << errmsg.str() << '\n';
-       cout << "Ignore this if this is the initialization dw in its old state"
-            << endl;
+        errmsg << " needs to be reallocated\nfor the ghost region you requested (from the OldDW).\n";
+        errmsg << "This only means the data you get back will be a copy of what's in the DW\n.";
+        errmsg << "You may ignore this under normal circumstances";
+        cout << "WARNING: "<< errmsg.str() << '\n';
       }
     }
     
