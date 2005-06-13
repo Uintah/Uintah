@@ -7,6 +7,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/ProgressiveWarning.h>
 #include <Core/Util/FancyAssert.h>
 
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
@@ -2035,15 +2036,18 @@ getGridVar(VariableBase& var, DWDatabase& db,
       bool ignore = d_isInitializationDW && d_finalized;
       if (!ignore && !warned ) {
 	warned = true;
-	ostringstream errmsg;
-	errmsg << d_myworld->myrank() << label->getName(); 
-	if (patch)
-	  errmsg << " on patch " << patch->getID();
-	errmsg << " for material " << matlIndex;
-        errmsg << " needs to be reallocated\nfor the ghost region you requested (from the OldDW).\n";
-        errmsg << "This only means the data you get back will be a copy of what's in the DW\n.";
-        errmsg << "You may ignore this under normal circumstances";
-        cout << "WARNING: "<< errmsg.str() << '\n';
+        static ProgressiveWarning rw("Warning: Reallocation needed for ghost region you requested.\nThis means the data you get back will be a copy of what's in the DW", 5, warn);
+        if (rw.invoke()) {
+          // print out this message if the ProgressiveWarning does
+          ostringstream errmsg;
+          errmsg << d_myworld->myrank() << " This occurrence for " << label->getName(); 
+          if (patch)
+            errmsg << " on patch " << patch->getID();
+          errmsg << " for material " << matlIndex;
+
+          errmsg << "You may ignore this under normal circumstances";
+          warn << errmsg.str() << '\n';
+        }
       }
     }
     
