@@ -8,30 +8,30 @@ function [Alist,b] = deleteUnderlyingData(grid,k,q,Alist,b)
 %
 %   See also: TESTDFM, SETOPERATOR, SETOPERATORPATCH, ADDPATCH.
 
-fprintf('--- deleteUnderlyingData(k = %d, q = %d) ---\n',k,q);
 level       = grid.level{k};
 numPatches  = length(level.numPatches);
 P           = grid.level{k}.patch{q};
 map         = P.cellIndex;
 
-if (P.parent < 0)                                   % Base patch at coarsest level, nothing to delete
+if (P.parent < 0)                                                   % Base patch at coarsest level, nothing to delete
     fprintf('Nothing to delete\n');
     return;
 end
+fprintf('--- deleteUnderlyingData(k = %d, q = %d) ---\n',k,q);
 
 % Find box in Q-coordinates underlying P
-Q           = grid.level{k-1}.patch{P.parent};      % Parent patch
-underLower = coarsenIndex(grid,k,P.ilower);
-underUpper = coarsenIndex(grid,k,P.iupper);
-under       = cell(grid.dim,1);
+Q               = grid.level{k-1}.patch{P.parent};                  % Parent patch
+underLower      = coarsenIndex(grid,k,P.ilower);
+underUpper      = coarsenIndex(grid,k,P.iupper);
+under           = cell(grid.dim,1);
 for dim = 1:grid.dim
-    under{dim} = [underLower(dim):underUpper(dim)] + Q.offset(dim);  % Patch-based cell indices including ghosts
+    under{dim} = [underLower(dim):underUpper(dim)] + Q.offset(dim); % Patch-based cell indices including ghosts
 end
-matUnder      = cell(grid.dim,1);
-[matUnder{:}] = ndgrid(under{:});
-pindexUnder   = sub2ind(P.size,matUnder{:});                      % Patch-based cell indices - list
-pindexUnder   = pindexUnder(:);
-mapUnder      = Q.cellIndex(pindexUnder);
+matUnder         = cell(grid.dim,1);
+[matUnder{:}]   = ndgrid(under{:});
+pindexUnder     = sub2ind(P.size,matUnder{:});                      % Patch-based cell indices - list
+pindexUnder     = pindexUnder(:);
+mapUnder        = Q.cellIndex(pindexUnder);
 
 % Compute chunk of patch Q (level k-1) equations of the underlying area and
 % subtract them from the equations so that they disappear from level k-1 equations.
@@ -44,7 +44,7 @@ Alist = [Alist; AlistUnder];
 AlistUnder = setupIdentityPatch(grid,k-1,P.parent,underLower,underUpper);
 Alist = [Alist; AlistUnder];
 b(mapUnder) = 0.0;
-
+aaa=0;
 % At this point, the LHS at the interior of the box in the parent patch
 % underlying the fine patch, is the identity operator. Ghost cells of this
 % box that are at domain boundaries also have LHS set to identity. Ghost
@@ -55,6 +55,3 @@ b(mapUnder) = 0.0;
 % its ghost cells. Thus, following this function, we should
 % (1) Add the fine fluxes to the equations of the coarse C/F interface cells.
 % (2) Modify the right-hand-side of these equations to the correct one.
-
-
-

@@ -32,17 +32,17 @@ if (setupGrid)
     
     %--------------- Level 1: global coarse grid -----------------
 
-    resolution          = [4 4];
+    resolution          = [64 64];
     [grid,k]            = addGridLevel(grid,'meshsize',grid.domainSize./resolution);
     
     [grid,q1]           = addGridPatch(grid,k,ones(1,grid.dim),resolution,-1);     % One global patch
     [A,b]               = updateSystem(grid,k,q1,A,b);
 
     %--------------- Level 2: local fine grid around center of domain -----------------
-
-    [grid,k]            = addGridLevel(grid,'refineRatio',[2 2]);
-    [grid,q2]           = addGridPatch(grid,k,[3 3],[6 6],q1);              % Local patch around the domain center
-    [A,b]               = updateSystem(grid,k,q2,A,b);
+% 
+%     [grid,k]            = addGridLevel(grid,'refineRatio',[2 2]);
+%     [grid,q2]           = addGridPatch(grid,k,[3 3],[6 6],q1);              % Local patch around the domain center
+%     [A,b]               = updateSystem(grid,k,q2,A,b);
 
 
     tCPU        = cputime - tStartCPU;
@@ -108,5 +108,5 @@ if (plotSolution)
     fprintf('CPU time     = %f\n',tCPU);
     fprintf('Elapsed time = %f\n',tElapsed);
 
-    fprintf('L2 discretization error = %e\n',Lpnorm(u{k}{q}-uExact{k}{q}));
+    fprintf('L2 discretization error = %e\n',Lpnorm(u{k}{q}(2:end-1,2:end-1)-uExact{k}{q}(2:end-1,2:end-1)));
 end
