@@ -309,7 +309,6 @@ proc canvasScroll { canvas { dx 0.0 } { dy 0.0 } } {
 # Activate the "File" menu items - called from C after all packages are loaded
 proc activate_file_submenus { } {
     global maincanvas minicanvas    
-    loadSubnetScriptsFromDisk
     
     .main_menu.file.menu entryconfig  0 -state active
     .main_menu.file.menu entryconfig  1 -state active
@@ -506,10 +505,12 @@ proc createModulesMenu { menu subnet } {
 
 proc createSubnetMenu { menu { subnet 0 } } {
     global SubnetScripts
-    
+    loadSubnetScriptsFromDisk
+    generateSubnetScriptsFromNetwork
+
     $menu.subnet delete 0 end
     .main_menu.subnet.menu delete 0 end
-    set names [array names SubnetScripts *]
+    set names [lsort -dictionary [array names SubnetScripts *]]
 
     if { ![llength $names] } {
 	$menu entryconfigure Sub-Networks -state disabled
