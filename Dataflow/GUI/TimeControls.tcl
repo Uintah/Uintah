@@ -173,7 +173,8 @@ itcl_class SCIRun_Time_TimeControls {
 	    $vcr.play $vcr.stepf $vcr.fforward -side left -fill both -expand 1
 	global ToolTipText
 	#Tooltip $vcr.rewind "Reset time to 00:00:00"
-	Tooltip $vcr.rewind "Rewind 1 min (Press Shift to rewind 10 mins)"
+	#Tooltip $vcr.rewind "Rewind 1 min (Press Shift to rewind 10 mins)"
+	Tooltip $vcr.rewind "Rewind 1 min/10 mins"
 	#Tooltip $vcr.stepb "Decrement Play Rate"
 	Tooltip $vcr.stepb "Rewind 1 second"
 	Tooltip $vcr.pause "Pause"
@@ -181,7 +182,8 @@ itcl_class SCIRun_Time_TimeControls {
 	#Tooltip $vcr.stepf "Increment Play Rate"
 	Tooltip $vcr.stepf "Fast forward 1 second"
 	#Tooltip $vcr.fforward "Jump ahead 10 minutes"
-	Tooltip $vcr.fforward "Fast forward 1 min (Press Shift to fast forward 10 mins)"
+	#Tooltip $vcr.fforward "Fast forward 1 min (Press Shift to fast forward 10 mins)"
+	Tooltip $vcr.fforward "Fast forward 1 min/10 mins"
 
 
 
