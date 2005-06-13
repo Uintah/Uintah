@@ -45,9 +45,9 @@ else
  LIBS :=
 endif
 
-ifeq ($(HAVE_MPI),yes)
- LIBS += $(MPI_LIBRARY) 
-endif
+# ifeq ($(HAVE_MPI),yes)
+#  LIBS += $(MPI_LIBRARY) 
+# endif
 
 
 PROGRAM := $(SRCDIR)/pingpong
