@@ -68,7 +68,15 @@ end
 fineFlux = setupOperatorPatch(grid,k,q,P.ilower,P.iupper,0,1);
 if (~isempty(fineFlux))
     i = setupOperatorPatch(grid,k,q,P.ilower,P.iupper,0,2);         % Each row: [ghost fineNbhr alpha=interpCoefficient(fineNbhr->ghost)]
-    Anew(:,i(:,2)) = Anew(:,i(:,2)) + Anew(:,i(:,1));               % Pass to flux ghost points (by means of a Gaussian elimination on the appropriate columns, in effect). Every entry in i(:,2) appears exactly once.
+    % We would like to do that, but entries in i(:,2) are not unique; so do
+    % it over each face separately, and there i(:,2) entries are unique.   
+    %Anew(:,i(:,2)) = Anew(:,i(:,2)) + Anew(:,i(:,1));               % Pass to flux ghost points (by means of a Gaussian elimination on the appropriate columns, in effect). Every entry in i(:,2) appears exactly once.
+    faceSize = size(i,1)/(2*grid.dim);
+    for f = 1:2*grid.dim    
+        face = [(f-1)*faceSize:f*faceSize-1]+1;
+        Anew(:,i(face,2)) = Anew(:,i(face,2)) + Anew(:,i(face,1));               % Pass to flux ghost points (by means of a Gaussian elimination on the appropriate columns, in effect)
+    end
+    Anew(i(:,1),:) = Anew(:,i(:,1))';                                       % Induced interpolation stencils of ghost points is transpose of their appearance in all equations
     Anew(i(:,1),i(:,1)) = diag(1./(i(:,3)-1));                            % Set diagonal coefficient of ghost point interp stencil to 1/(alpha-1) to be consistent with the original interpolation formula
 end
 
