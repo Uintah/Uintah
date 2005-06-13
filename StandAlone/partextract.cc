@@ -382,7 +382,7 @@ getParticleStrains(DataArchive* da, int mat, string flag) {
                         //cerr << "True Strain = ";
                         cout << time << " " << patchIndex << " " << matl ;
                         for (int ii = 0; ii < 3; ++ii) {
-                          double strain = (lambda[ii] - 1.0)/lambda[ii];
+                          double strain = log(lambda[ii]);
                           cout << " " << strain ;
                         }
                         cout << endl;
