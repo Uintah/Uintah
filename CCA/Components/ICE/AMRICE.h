@@ -126,7 +126,8 @@ namespace Uintah {
                                    const Patch* finePatch,
                                    const Level* fineLevel,
                                    CellIterator& iter,
-                                   IntVector& coarse_FC_offset);
+                                   IntVector& coarse_FC_offset,
+                                   bool& CP_containsCell);
     
     void scheduleReflux_computeCorrectionFluxes(const LevelP& coarseLevel,
                                                 SchedulerP& sched);
@@ -139,8 +140,7 @@ namespace Uintah {
     
     template<class T>
     void refluxOperator_computeCorrectionFluxes( 
-                              CCVariable<T>& q_CC_coarse,
-                              CCVariable<double>& rho_CC_coarse,
+                              constCCVariable<double>& rho_CC_coarse,
                               constCCVariable<double>& cv,
                               const string& fineVarLabel,
                               const int indx,
