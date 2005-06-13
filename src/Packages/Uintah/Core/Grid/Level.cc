@@ -182,7 +182,9 @@ void Level::performConsistencyCheck() const
     Patch* r1 = d_virtualAndRealPatches[i];
     for(int j=i+1;j<(int)d_virtualAndRealPatches.size();j++){
       Patch* r2 = d_virtualAndRealPatches[j];
-      if(r1->getBox().overlaps(r2->getBox())){
+      Box b1 = getBox(r1->getInteriorCellLowIndex(), r1->getInteriorCellHighIndex());
+      Box b2 = getBox(r2->getInteriorCellLowIndex(), r2->getInteriorCellHighIndex());
+      if(b1.overlaps(b2)){
 	cerr << "r1: " << *r1 << '\n';
 	cerr << "r2: " << *r2 << '\n';
 	SCI_THROW(InvalidGrid("Two patches overlap"));
@@ -555,7 +557,8 @@ void Level::setBCTypes()
       patch->getFace(face, IntVector(0,0,0), IntVector(1,1,1), l, h);
       Patch::selectType neighbors;
       selectPatches(l, h, neighbors);
-
+      
+      cout << "Patch: " << patch->getID() << " " << l << " " << h << " " << neighbors.size() << " neighbors\n";
       if(neighbors.size() == 0){
 	if(d_index != 0){
 	  // See if there are any patches on the coarse level at that face
