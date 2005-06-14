@@ -3,4 +3,5 @@
 <Uintah_Include>
   <shear_modulus> 0.769e9 </shear_modulus>
   <bulk_modulus>  1.667e9 </bulk_modulus>
+  <coeffThermalExpansion> 12.5e-5 </coeffThermalExpansion> 
 </Uintah_Include>
