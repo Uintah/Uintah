@@ -58,6 +58,10 @@ itcl_class SubnetModule {
 	}
     }
 
+    method have_ui {} {
+	return [expr ![envBool SCIRUN_DISABLE_SUBNET_UI_BUTTON]]
+    }
+
     method execute {} {
 	global Subnet
 	foreach modid $Subnet(Subnet${subnetNumber}_Modules) {
@@ -138,7 +142,7 @@ itcl_class SubnetModule {
 	    pack $p.subnet -side left -padx 3 -ipady 0 -anchor w
 #	    place $p.subnet -in $p -x 5 -y 50 -anchor nw
 
-	    Tooltip $p.ui $ToolTipText(ModuleSubnetBtn)
+	    Tooltip $p.subnet $ToolTipText(ModuleSubnetBtn)
 	}
 
 	# Make the message indicator

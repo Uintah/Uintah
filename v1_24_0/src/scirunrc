@@ -59,7 +59,7 @@
 #   The version number of this .scirunrc file.
 #   Used in determining if the users existing.scirunrc 
 #   needs to be updated upon starup of SCIRun.
-SCIRUN_RCFILE_VERSION = 1.24.1.1
+SCIRUN_RCFILE_VERSION = 1.24.2.1
 
 
 # The MALLOC_* environment variables can be set in order to help
@@ -311,6 +311,12 @@ SCIRUN_GUI_MoveGuiToMouse = on
 #   Use straight lines to represent connections between modules in the
 #   network editor.
 # SCIRUN_STRAIGHT_CONNECTIONS = off
+
+
+### SCIRUN_DISABLE_SUBNET_UI_BUTTON = [boolean]
+#   Dont create a button on the Subnetwork icons
+SCIRUN_DISABLE_SUBNET_UI_BUTTON = on
+
 
 #################
 # UNDOCUMENTED ##

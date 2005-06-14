@@ -193,10 +193,10 @@ proc makeNetworkEditor {} {
     Tooltip .main_menu.file $ToolTipText(FileMenu)
     
     menubutton .main_menu.subnet -text "Sub-Networks" -underline 0 \
-	-menu .main_menu.subnet.menu -direction below
-    menu .main_menu.subnet.menu -tearoff false
+	-menu .main_menu.subnet.menu -direction below 
+    menu .main_menu.subnet.menu -tearoff false -postcommand createSubnetMenu
     pack .main_menu.subnet -side left
-    .main_menu.subnet configure -state disabled
+    createSubnetMenu
 
 
     menubutton .main_menu.help -text "Help" -underline 0 \
@@ -503,25 +503,32 @@ proc createModulesMenu { menu subnet } {
     update idletasks
 }
 
-proc createSubnetMenu { menu { subnet 0 } } {
+proc createSubnetMenu { { menu "" } { subnet 0 } } {
     global SubnetScripts
     loadSubnetScriptsFromDisk
     generateSubnetScriptsFromNetwork
 
-    $menu.subnet delete 0 end
+    if { [winfo exists $menu ] } {
+	$menu.subnet delete 0 end
+    }
     .main_menu.subnet.menu delete 0 end
     set names [lsort -dictionary [array names SubnetScripts *]]
 
     if { ![llength $names] } {
-	$menu entryconfigure Sub-Networks -state disabled
-	.main_menu.subnet configure -state disabled
+	if { [winfo exists $menu ] } {
+	    $menu entryconfigure Sub-Networks -state disabled
+	}
+	.main_menu configure Sub-Netowrks configure -state disabled
     } else {
-	$menu entryconfigure Sub-Networks -state normal
+	if { [winfo exists $menu ] } {
+	    $menu entryconfigure Sub-Networks -state normal
+	}
 	.main_menu.subnet configure -state normal
 	foreach name $names {
-	    $menu.subnet add command -label "$name" \
-		-command "instanceSubnet \"$name\" 0 0 $subnet"
-	    
+	    if { [winfo exists $menu ] } {
+		$menu.subnet add command -label "$name" \
+		    -command "instanceSubnet \"$name\" 0 0 $subnet"
+	    }
 	    .main_menu.subnet.menu add command -label "$name" \
 		-command "instanceSubnet \"$name\" 0 0 $subnet"
 	}
