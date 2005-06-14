@@ -659,10 +659,15 @@ void ICE::updatePressure(const ProcessorGroup*,
     }             
     //__________________________________
     //  add delP to press
-    //  AMR:  hit the extra cells, BC aren't set
+    //  AMR:  hit the extra cells, BC aren't set an you need a valid pressure
+    // imp_delP is ill-defined in teh extraCells
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) { 
       IntVector c = *iter;
-      press_CC[c] = pressure[c] + imp_delP[c];
+      press_CC[c] = pressure[c];
+    }    
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
+      IntVector c = *iter;
+      press_CC[c] += imp_delP[c];
     }  
     //____ C L A M P ________________
     // This was done to help robustify the equilibration
