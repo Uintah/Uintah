@@ -220,7 +220,7 @@ SliceRenderer::draw_slice()
   for(unsigned int i=0; i<bricks.size(); i++) {
     double t;
     TextureBrickHandle b = bricks[i];
-    load_brick(b, use_cmap2);
+    load_brick(bricks, i, use_cmap2);
     vertex.clear();
     texcoord.clear();
     size.clear();
@@ -473,7 +473,7 @@ SliceRenderer::multi_level_draw()
 	for(unsigned int i=0; i<bs.size(); i++) {
 	  double t;
 	  TextureBrickHandle b = bs[i];
-	  load_brick(b, use_cmap2);
+	  load_brick(bs, i, use_cmap2);
 	  vertex.resize(0);
 	  texcoord.resize(0);
 	  size.resize(0);
@@ -514,7 +514,7 @@ SliceRenderer::multi_level_draw()
 	for(unsigned int i=0; i<bs.size(); i++) {
 	  double t;
 	  TextureBrickHandle b = bs[i];
-	  load_brick(b, use_cmap2);
+	  load_brick(bs, i, use_cmap2);
 	  vertex.resize(0);
 	  texcoord.resize(0);
 	  size.resize(0);
@@ -555,7 +555,7 @@ SliceRenderer::multi_level_draw()
 	for(unsigned int i=0; i<bs.size(); i++) {
 	  double t;
 	  TextureBrickHandle b = bs[i];
-	  load_brick(b, use_cmap2);
+	  load_brick(bs, i, use_cmap2);
 	  vertex.resize(0);
 	  texcoord.resize(0);
 	  size.resize(0);
@@ -592,7 +592,7 @@ SliceRenderer::multi_level_draw()
 	  for(unsigned int i=0; i<bs.size(); i++) {
 	    double t;
 	    TextureBrickHandle b = bs[i];
-	    load_brick(b, use_cmap2);
+	    load_brick(bs, i, use_cmap2);
 	    vertex.resize(0);
 	    texcoord.resize(0);
 	    size.resize(0);
@@ -642,7 +642,7 @@ SliceRenderer::multi_level_draw()
 	  for(unsigned int i=0; i<bs.size(); i++) {
 	    double t;
 	    TextureBrickHandle b = bs[i];
-	    load_brick(b, use_cmap2);
+	    load_brick(bs, i, use_cmap2);
 	    vertex.resize(0);
 	    texcoord.resize(0);
 	    size.resize(0);
@@ -697,7 +697,7 @@ SliceRenderer::multi_level_draw()
       for(unsigned int i=0; i<bs.size(); i++) {
 	double t;
 	TextureBrickHandle b = bs[i];
-	load_brick(b, use_cmap2);
+	load_brick(bs, i, use_cmap2);
 	vertex.resize(0);
 	texcoord.resize(0);
 	size.resize(0);
