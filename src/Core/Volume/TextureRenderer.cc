@@ -255,8 +255,10 @@ TextureRenderer::compute_view()
 }
 
 void
-TextureRenderer::load_brick(TextureBrickHandle brick, bool use_cmap2)
+TextureRenderer::load_brick(vector<TextureBrickHandle> &bricks, int bindex,
+                            bool use_cmap2)
 {
+  TextureBrickHandle brick = bricks[bindex];
   int nc = use_cmap2?brick->nc():1;
 #if !defined(GL_ARB_fragment_program) && !defined(GL_ATI_fragment_shader)
   nc = 1;
@@ -293,11 +295,31 @@ TextureRenderer::load_brick(TextureBrickHandle brick, bool use_cmap2)
       }
     } else {
       // find matching texture object
-      for(unsigned int i=0; i<tex_pool_.size() && idx[c]<0; i++) {
+      for(unsigned int i=0; i<tex_pool_.size() && idx[c]<0; i++)
+      {
         if(tex_pool_[i].id != 0 && c == tex_pool_[i].comp
            && nx == tex_pool_[i].nx && ny == tex_pool_[i].ny
-           && nz == tex_pool_[i].nz && nb == tex_pool_[i].nb) {
-          idx[c] = i;
+           && nz == tex_pool_[i].nz && nb == tex_pool_[i].nb)
+        {
+          if (tex_pool_[i].brick == brick)
+          {
+            idx[c] = i;
+          }
+          else
+          {
+            bool found = false;
+            for (unsigned int j = 0; j < bricks.size(); j++)
+            {
+              if (bricks[j] == brick)
+              {
+                found = true;
+              }
+            }
+            if (!found)
+            {
+              idx[c] = i;
+            }
+          }
         }
       }
       bool reuse = (idx[c] >= 0);

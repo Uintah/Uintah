@@ -386,7 +386,7 @@ VolumeRenderer::draw_volume()
   
   for(unsigned int i=0; i<bricks.size(); i++) {
     TextureBrickHandle b = bricks[i];
-    load_brick(b, use_cmap2);
+    load_brick(bricks, i, use_cmap2);
     vertex.clear();
     texcoord.clear();
     size.clear();
@@ -795,7 +795,7 @@ VolumeRenderer::multi_level_draw()
 	if( vertex.size() == 0 ) {
 	  continue;
 	}
-	load_brick(b, use_cmap2);
+	load_brick(bs, j, use_cmap2);
 	draw_polygons(vertex, texcoord, size, false, use_fog,
 		      blend_num_bits_ > 8 ? blend_buffer_ : 0);
       }
