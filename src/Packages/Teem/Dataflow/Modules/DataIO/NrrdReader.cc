@@ -244,7 +244,7 @@ bool NrrdReader::write_tmpfile(string filename, string* tmpfilename, string conv
     command.replace(loc, 2, "'"+*tmpfilename+"'");
   }
   const int status = sci_system(command.c_str());
-  ASSERT(status == 0);
+  //ASSERT(status == 0);
   return true;
 }
 
