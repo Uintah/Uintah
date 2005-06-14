@@ -89,7 +89,7 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
   task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,
                                                        matlset, gnone);
   task->requires(Task::OldDW, d_lb->pStressLabel,      matlset, gnone);
-  task->requires(Task::OldDW, d_lb->dispNewLabel,      matlset, gac, 1);
+  task->requires(Task::NewDW, d_lb->dispNewLabel,      matlset, gac, 1);
 
   task->computes(d_lb->pStressLabel_preReloc,             matlset);  
   task->computes(d_lb->pDeformationMeasureLabel_preReloc, matlset);
