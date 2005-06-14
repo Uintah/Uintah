@@ -1321,15 +1321,19 @@ void Patch::computeExtents(VariableBasis basis,
 void Patch::getOtherLevelPatches(int levelOffset,
 				 Patch::selectType& selected_patches) const
 {
+  ASSERT(levelOffset == 1 || levelOffset == -1);
+
   const LevelP& otherLevel = d_level->getRelativeLevel(levelOffset);
   IntVector low = 
     otherLevel->getCellIndex(d_level->getCellPosition(getLowIndex()));
   IntVector high =
     otherLevel->getCellIndex(d_level->getCellPosition(getHighIndex()));
 
-  // we don't grab enough in the high direction in this case...
   if (levelOffset < 0) {
-    // if for some reason the levelOffset is -2 or less...
+    // we don't grab enough in the high direction if the fine extra cell
+    // is on the other side of a coarse boundary
+
+    // refinement ratio between the two levels
     IntVector crr = otherLevel->getRelativeLevel(1)->getRefinementRatio();
     IntVector highIndex = getHighIndex();
     IntVector offset((highIndex.x() % crr.x()) == 0 ? 0 : 1,
@@ -1337,7 +1341,30 @@ void Patch::getOtherLevelPatches(int levelOffset,
                      (highIndex.z() % crr.z()) == 0 ? 0 : 1);
     high += offset;
   }
-  otherLevel->selectPatches(low, high, selected_patches); 
+  
+  if (levelOffset > 0) {
+    // the getCellPosition->getCellIndex seems to always add one...
+    // maybe we should just separate this back to coarser/finer patches
+    // and use mapCellToFiner...
+    
+    // also subtract more from low and keep high where it is to get extra 
+    // cells, since selectPatches doesn't 
+    // use extra cells. 
+    low = low - IntVector(2,2,2);
+    
+  }
+  //cout << "  Patch:Golp: " << low << " " << high << endl;
+  Level::selectType patches;
+  otherLevel->selectPatches(low, high, patches); 
+  
+  // based on the expanded range above to search for extra cells, we might
+  // have grabbed more patches than we wanted, so refine them here
+  
+  for (int i = 0; i < patches.size(); i++) {
+    if (levelOffset < 0 || getBox().overlaps(patches[i]->getBox())) {
+      selected_patches.push_back(patches[i]);
+    }
+  }
 }
 
 Patch::VariableBasis Patch::translateTypeToBasis(TypeDescription::Type type,
