@@ -159,7 +159,7 @@ itcl_class SCIRun_Render_ViewSlices {
 	bind $w <Leave>		"$this-c leave %W; $this-c redrawall"
 	bind $w <Motion>	"$this-c motion   $w %x %y %s %t %X %Y"
 	bind $w <KeyPress>	"$this-c keypress $w %k %K %t"
-	bind $w <ButtonPress>	"$this-c button   $w %b %s %X %Y"
+	bind $w <ButtonPress>	"$this-c button   $w %b %s %X %Y %x %y"
 	bind $w <ButtonRelease> "$this-c release  $w %b %s %X %Y"
 	return $w
     }

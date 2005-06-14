@@ -2740,16 +2740,14 @@ ViewSlices::handle_gui_button_release(GuiArgs &args) {
 
 void
 ViewSlices::handle_gui_button(GuiArgs &args) {
-  if (args.count() != 7)
+  if (args.count() != 9)
     SCI_THROW(GuiException(args[0]+" "+args[1]+
 			   " expects a window #, button #, and state"));
 
   int button = args.get_int(3);
   int state = args.get_int(4);
-  int x = args.get_int(5);
-  int y = args.get_int(6);
-  pick_x_ = x;
-  pick_y_ = y;
+  pick_x_ = args.get_int(5);
+  pick_y_ = args.get_int(6);
   
   ASSERT(layouts_.find(args[2]) != layouts_.end());
   WindowLayout &layout = *layouts_[args[2]];
@@ -2784,8 +2782,15 @@ ViewSlices::handle_gui_button(GuiArgs &args) {
     case 2:
       if (state & SHIFT_E == SHIFT_E)
 	autoview(window);
-      else
+      else {
 	probe_ = 1;
+	window.viewport_->make_current();
+	setup_gl_view(window);
+	const int y = layout.opengl_->height() - 1 - args.get_int(8);
+	cursor_ = screen_to_world(window, args.get_int(7), y);
+	window.viewport_->release();	
+	for_each(&ViewSlices::set_probe);
+      }
       break;
     case 3:
       if (state & SHIFT_E == SHIFT_E) {
