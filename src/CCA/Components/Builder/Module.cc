@@ -38,6 +38,7 @@
  *
  */
 
+#include <sci_defs/tao_defs.h>
 #include <CCA/Components/Builder/Module.h>
 #include <CCA/Components/Builder/NetworkCanvasView.h>
 #include <SCIRun/SCIRunFramework.h>
@@ -93,8 +94,9 @@ Module::Module(NetworkCanvasView *parent,
     instanceName = cid->getInstanceName();
     menu = new QPopupMenu(this);
     makePorts();
-    // only needed for Corba component model?
+#ifdef HAVE_TAO
     updatePorts();
+#endif
 }
 
 
