@@ -113,6 +113,9 @@ private:
   GuiInt                                vol_idx_;
   GuiInt                                lvp_idx_;
   GuiInt                                rvp_idx_;
+  GuiInt                                qrs_idx_;
+  GuiInt                                hr_idx_;
+  GuiInt                                tm_idx_;
 
   int                                   ppv_generation_;
   int                                   crv_generation_;
@@ -194,6 +197,9 @@ PVSpaceInterp::PVSpaceInterp(GuiContext* ctx) :
   vol_idx_(ctx->subVar("vol_index")),
   lvp_idx_(ctx->subVar("lvp_index")),
   rvp_idx_(ctx->subVar("rvp_index")),
+  qrs_idx_(ctx->subVar("qrs_index")),
+  hr_idx_(ctx->subVar("hr_index")),
+  tm_idx_(ctx->subVar("tm_index")),
   ppv_generation_(-1),
   crv_generation_(-1),
   phase_info_generation_(-1),
@@ -340,12 +346,18 @@ PVSpaceInterp::apply_potentials(float e_phase, float HR)
 {
   const double hr2Hz = 1. / 60.;
   double cur_freq = HR * hr2Hz;
-  double freq[] = {3.0, 2.0, 1.0, 0.666, 0.5}; // Hz
-  const int len_freq = 5;
-  double dist = fabs(cur_freq - freq[0]);
+  int lastc = crv_mats_.size() - 1;
+  MatrixHandle fcrv = crv_mats_[lastc];
+  int start = 0;
+  int end = 2;
+  if (injured_p_) {
+    start = 3;
+    end = 4;
+  }
+  double dist = fabs(cur_freq - fcrv->get(start, 0));
   int closest = 0;
-  for (int i = 1; i < len_freq; ++i) {
-    double d = fabs(cur_freq - freq[i]);
+  for (int i = start; i <= end; ++i) {
+    double d = fabs(cur_freq - fcrv->get(i, 0));
     if (d < dist) {
       closest = i;
       dist = d;
@@ -360,17 +372,17 @@ PVSpaceInterp::apply_potentials(float e_phase, float HR)
   if (crv.get_rep() == 0) {
     return;
   }
-  if (crv->nrows() != 1044) {
-    cerr << "ERROR: wrong number of rows in crv matrix." << std::endl;
+  if (crv->ncols() != 1044) {
+    cerr << "ERROR: wrong number of cols in crv matrix." << std::endl;
   }
 
-  int phase_idx = Round(e_phase * crv->ncols());
-  if (phase_idx >= crv->ncols()) { phase_idx = crv->ncols() - 1; }
+  int phase_idx = int(e_phase);
+  if (phase_idx >= crv->nrows()) { phase_idx = crv->nrows() - 1; }
   vector<double>::iterator iter = data.begin();
-  int row = 0;
+  int col = 0;
   while (iter != data.end()) {
-    *iter = crv->get(row, phase_idx);
-    ++iter; ++row;
+    *iter = crv->get(phase_idx, col);
+    ++iter; ++col;
   }
 }
 
@@ -582,10 +594,16 @@ PVSpaceInterp::get_hip_params(unsigned &phase_mesh, float &e_phase, float &HR)
   vol_idx_.reset();
   lvp_idx_.reset();
   rvp_idx_.reset();
+  qrs_idx_.reset();
+  hr_idx_.reset();
+  tm_idx_.reset();
   const unsigned phase_idx = phase_idx_.get();
   const unsigned vol_idx = vol_idx_.get();
   const unsigned lvp_idx = lvp_idx_.get();
   const unsigned rvp_idx = rvp_idx_.get();
+  const unsigned qrs_idx = qrs_idx_.get();
+  const unsigned hr_idx = hr_idx_.get();
+  const unsigned time_idx = tm_idx_.get();
 
   // Fetch the hip values for the current time.
   double abs_seconds = time_viewer_h_->view_elapsed_since_start();
@@ -605,8 +623,21 @@ PVSpaceInterp::get_hip_params(unsigned &phase_mesh, float &e_phase, float &HR)
   float cur_phase = dat[row + phase_idx];
 
   //FIX_ME get phase from hip will have its own index. fix HR
-  e_phase = cur_phase;
-  HR = 98.0;
+
+  int e_idx = idx;
+  int e_count = 0;
+  bool found = false;
+  while (! found) {
+    int row = e_idx * hip_data_->nrrd->axis[0].size;
+    float cur_qrs = dat[row + qrs_idx];    
+    if (cur_qrs > 9.0) {
+      found = true;
+      HR = dat[row + hr_idx];    
+    }
+    e_count++;
+    e_idx--;
+  }
+  e_phase = e_count * 10.0;
 
   int phase_index = 0; //has actual index for combined H and I
   phase_mesh = find_phase_index(cur_phase, phase_index);
@@ -665,7 +696,7 @@ PVSpaceInterp::get_hip_params(unsigned &phase_mesh, float &e_phase, float &HR)
   float cur_lvp   = dat[row + lvp_idx];
   float cur_rvp   = dat[row + rvp_idx];
   float cur_vol   = dat[row + vol_idx];
-  float cur_time  = dat[row]; // time is in the 0th col.
+  float cur_time  = dat[row + time_idx]; 
   
   injured_p_ = cur_time >= inj_time;
 
@@ -745,8 +776,8 @@ PVSpaceInterp::execute()
     // new input
     crv_generation_ = crv_bdl->generation;
     int size = crv_bdl->numMatrices();
-    if (size != 5) {
-      error ("Need 5 curve matricies.");
+    if (size != 6) {
+      error ("Need 6 curve matricies.");
       return;
     } 
 
