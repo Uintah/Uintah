@@ -1,4 +1,4 @@
-function [Alist,b] = deleteUnderlyingData(grid,k,q,Alist,b)
+function [Alist,b,grid] = deleteUnderlyingData(grid,k,q,Alist,b)
 %DELETEUNDERLYINGDATA  Delete parent data underlying the current patch.
 %   [Alist,b] = deleteUnderlyingData(grid,k,q) deletes the discrete
 %   equations of the parent patch of patch q at level k, and replaces them
@@ -24,9 +24,17 @@ Q               = grid.level{k-1}.patch{P.parent};                  % Parent pat
 underLower      = coarsenIndex(grid,k,P.ilower);
 underUpper      = coarsenIndex(grid,k,P.iupper);
 under           = cell(grid.dim,1);
+% Save box in deletedBoxes list of parent
+numDeletesBoxes = length(Q.deletedBoxes);
+Box.child       = q;
+Box.ilower      = underLower;
+Box.iupper      = underUpper;
+Q.deletedBoxes{numDeletesBoxes+1} = Box;
+grid.level{k-1}.patch{P.parent} = Q;                  % Update parent patch
 for dim = 1:grid.dim
     under{dim} = [underLower(dim):underUpper(dim)] + Q.offset(dim); % Patch-based cell indices including ghosts
 end
+
 matUnder         = cell(grid.dim,1);
 [matUnder{:}]   = ndgrid(under{:});
 pindexUnder     = sub2ind(P.size,matUnder{:});                      % Patch-based cell indices - list
