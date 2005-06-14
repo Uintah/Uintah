@@ -71,8 +71,6 @@
 #include <sstream>
 
 #include <sci_mpi.h>
-
-
 using namespace std;
 
 namespace SCIRun {
