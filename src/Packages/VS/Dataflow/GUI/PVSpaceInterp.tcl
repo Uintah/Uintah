@@ -53,6 +53,15 @@ itcl_class VS_Fields_PVSpaceInterp {
 	global $this-rvp_index
 	set $this-rvp_index 3
 
+	global $this-qrs_index
+	set $this-qrs_index 7
+
+	global $this-hr_index
+	set $this-hr_index 9
+
+	global $this-tm_index
+	set $this-tm_index 0
+
     }
 
     method ui {} {
@@ -88,6 +97,18 @@ itcl_class VS_Fields_PVSpaceInterp {
 	iwidgets::entryfield $w.f.options.rvpi -labeltext "RVP index:" \
 	    -textvariable $this-rvp_index
         pack $w.f.options.rvpi -side top -expand yes -fill x
+
+	iwidgets::entryfield $w.f.options.qrsi -labeltext "QRS phase index:" \
+	    -textvariable $this-qrs_index
+        pack $w.f.options.qrsi -side top -expand yes -fill x
+
+	iwidgets::entryfield $w.f.options.hri -labeltext "HR index:" \
+	    -textvariable $this-hr_index
+        pack $w.f.options.hri -side top -expand yes -fill x
+
+	iwidgets::entryfield $w.f.options.tmi -labeltext "Time index:" \
+	    -textvariable $this-time_index
+        pack $w.f.options.tmi -side top -expand yes -fill x
 	
 	makeSciButtonPanel $w.f $w $this
 	moveToCursor $w
