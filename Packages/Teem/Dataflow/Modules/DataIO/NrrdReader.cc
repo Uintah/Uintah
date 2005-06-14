@@ -322,11 +322,11 @@ NrrdReader::write_tmpfile(string filename, string* tmpfilename,
     conv_command;
   while ((loc = command.find("%f")) != string::npos)
   {
-    command.replace(loc, 2, filename);
+    command.replace(loc, 2, "'"+filename+"'");
   }
   while ((loc = command.find("%t")) != string::npos)
   {
-    command.replace(loc, 2, *tmpfilename);
+    command.replace(loc, 2, "'"+*tmpfilename+"'");
   }
   const int status = sci_system(command.c_str());
   ASSERT(status == 0);
