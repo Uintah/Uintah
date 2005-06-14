@@ -13,8 +13,11 @@ solveSystem         = 1;
 plotResults         = 1;
 saveResults         = 1;
 
+outputDir           = 'ProblemA_1Level';
 verboseLevel        = 0;
-numCellsRange       = 2.^[2:1:6];
+numCellsRange       = 2.^[2:1:4];
+
+success = mkdir('.',outputDir);
 
 for count = 1:length(numCellsRange)
     numCells = numCellsRange(count);
@@ -117,7 +120,7 @@ for count = 1:length(numCellsRange)
                 clf;
                 surf(u{k}{q});
                 title(sprintf('Discrete solution on Level %d, Patch %d',k,q));
-                eval(sprintf('print -depsc DiscSolution%d_L%dP%d.eps',numCells,k,q));
+                eval(sprintf('print -depsc %s/DiscSolution%d_L%dP%d.eps',outputDir,numCells,k,q));
 
                 fig = fig+1;
                 figure(fig);
@@ -130,7 +133,7 @@ for count = 1:length(numCellsRange)
                 clf;
                 surf(u{k}{q}-uExact{k}{q});
                 title(sprintf('Discretization error on Level %d, Patch %d',k,q));
-                eval(sprintf('print -depsc DiscError%d_L%dP%d.eps',numCells,k,q));
+                eval(sprintf('print -depsc %s/DiscError%d_L%dP%d.eps',outputDir,numCells,k,q));
                 shg;
             end
         end
@@ -143,7 +146,7 @@ for count = 1:length(numCellsRange)
 
         % Plot grid
         if (grid.totalVars <= 200)
-            plotGrid(grid,sprintf('grid%d.eps',numCells),1,0);
+            plotGrid(grid,sprintf('%s/grid%d.eps',outputDir,numCells),1,0);
         end
     end
 
@@ -160,7 +163,7 @@ for k = 1:grid.numLevels,
         Label{5} = '{\mbox{factor}}';
         Label{6} = '\|e\|_{\mbox{median}}';
         Label{7} = '{\mbox{factor}}';
-        fileName = sprintf('DiscErrorL%dP%d',k,q);
+        fileName = sprintf('%s/DiscErrorL%dP%d',outputDir,k,q);
         Caption = sprintf('Discretization error on level %d, patch %d',k,q);
         data = [numCellsRange'];
         e = err{k}{q};
