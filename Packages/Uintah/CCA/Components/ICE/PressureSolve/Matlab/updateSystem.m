@@ -1,4 +1,4 @@
-function [Anew,bnew] = updateSystem(grid,k,q,A,b)
+function [Anew,bnew,grid] = updateSystem(grid,k,q,A,b)
 %==============================================================
 % Update Sparse LHS Matrix A and RHS b as a result of adding
 % patch q at level k
@@ -26,7 +26,7 @@ bnew(map(:)) = bPatch;
 % Delete data of coarse patch underlying the fine patch (disconnect these
 % nodes from rest of coarse patch and put there the identity operator with
 % zero RHS).
-[Alist,bnew] = deleteUnderlyingData(grid,k,q,Alist,bnew);
+[Alist,bnew,grid] = deleteUnderlyingData(grid,k,q,Alist,bnew);
 
 % Add fine fluxes using DFM to equations of coarse nodes at the C/F
 % interface.
@@ -56,9 +56,6 @@ if (~isempty(i))
         face = [(f-1)*faceSize:f*faceSize-1]+1;
         Anew(:,i(face,2)) = Anew(:,i(face,2)) + Anew(:,i(face,1));               % Pass to flux ghost points (by means of a Gaussian elimination on the appropriate columns, in effect)
     end
-
-%    B = sparse(i(:,1),i(:,2),ones(size(i(:,3))));
-%    Anew(1:size(B,1),1:size(B,2)) = Anew(1:size(B,1),1:size(B,2)) + B;
     Anew(i(:,1),:) = diag(-i(:,3))*Anew(i(:,1),:);                  % Diagonally scale by (-flux)
     bnew(i(:,1))   = diag(-i(:,3))*bnew(i(:,1));                         % Scale RHS accordingly
 end

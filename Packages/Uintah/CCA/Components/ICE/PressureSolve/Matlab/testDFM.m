@@ -29,20 +29,20 @@ if (setupGrid)
     grid.dim            = length(grid.domainSize);
     A                   = [];
     b                   = [];
-    
+
     %--------------- Level 1: global coarse grid -----------------
 
-    resolution          = [4 4];
+    resolution          = [64 64];
     [grid,k]            = addGridLevel(grid,'meshsize',grid.domainSize./resolution);
-    
+
     [grid,q1]           = addGridPatch(grid,k,ones(1,grid.dim),resolution,-1);     % One global patch
-    [A,b]               = updateSystem(grid,k,q1,A,b);
+    [A,b,grid]          = updateSystem(grid,k,q1,A,b);
 
     %--------------- Level 2: local fine grid around center of domain -----------------
 
     [grid,k]            = addGridLevel(grid,'refineRatio',[2 2]);
-    [grid,q2]           = addGridPatch(grid,k,[3 3],[6 6],q1);              % Local patch around the domain center
-    [A,b]               = updateSystem(grid,k,q2,A,b);
+    [grid,q2]           = addGridPatch(grid,k,resolution/2 + 1,3*resolution/2,q1);              % Local patch around the domain center
+    [A,b,grid]          = updateSystem(grid,k,q2,A,b);
 
 
     tCPU        = cputime - tStartCPU;
@@ -83,30 +83,38 @@ if (plotSolution)
     uExact = exactSolutionAMR(grid);
 
     % Plot discretization error
+    fig = 0;
+    for k = 1:grid.numLevels,
+        level       = grid.level{k};
+        for q = 1:grid.level{k}.numPatches,
+            P = level.patch{q};
+            e = u{k}{q}-uExact{k}{q};
+            e = e(:);
+            fprintf('Level %2d, Patch %2d  L2_error = %e   max_error = %e   median_error = %e\n',...
+                k,q,Lpnorm(e),max(abs(e)),median(abs(e)));
+            fig = fig+1;
+            figure(fig);
+            clf;
+            surf(u{k}{q});
+            title(sprintf('Discrete solution on Level %d, Patch %d',k,q));
 
-    k=1;
-    q=1;
+            fig = fig+1;
+            figure(fig);
+            clf;
+            surf(uExact{k}{q});
+            title(sprintf('Exact solution on Level %d, Patch %d',k,q));
 
-    figure(1);
-    clf;
-    surf(u{k}{q});
-    title('Discrete solution');
-
-    figure(2);
-    clf;
-    surf(uExact{k}{q});
-    title('Exact solution');
-
-    figure(3);
-    clf;
-    surf(u{k}{q}-uExact{k}{q});
-    title('Discretization error');
-    shg;
-
+            fig = fig+1;
+            figure(fig);
+            clf;
+            surf(u{k}{q}-uExact{k}{q});
+            title(sprintf('Discretization error on Level %d, Patch %d',k,q));
+            shg;
+        end
+    end
     tCPU        = cputime - tStartCPU;
     tElapsed    = etime(clock,tStartElapsed);
     fprintf('CPU time     = %f\n',tCPU);
     fprintf('Elapsed time = %f\n',tElapsed);
 
-    fprintf('L2 discretization error = %e\n',Lpnorm(u{k}{q}(2:end-1,2:end-1)-uExact{k}{q}(2:end-1,2:end-1)));
 end
