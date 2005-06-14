@@ -18,6 +18,8 @@ function Alist = distributeFineFluxes(grid,k,q,ilower,iupper)
 %
 %   See also: TESTDFM, SETOPERATOR, DELETEUNDERLYINGDATA.
 
+global verboseLevel
+
 level       = grid.level{k};
 numPatches  = length(level.numPatches);
 h           = level.h;
@@ -25,10 +27,14 @@ P           = grid.level{k}.patch{q};
 Alist       = zeros(0,3);
 
 if (P.parent < 0)                                                   % Base patch at coarsest level, nothing to delete
+if (verboseLevel >= 1)
     fprintf('No C/F interface to update\n');
+end
     return;
 end
+if (verboseLevel >= 1)
 fprintf('--- distributeFineFluxes(k = %d, q = %d) ---\n',k,q);
+end
 
 boxSize     = iupper-ilower+3;
 boxOffset   = P.offset + P.ilower - ilower;

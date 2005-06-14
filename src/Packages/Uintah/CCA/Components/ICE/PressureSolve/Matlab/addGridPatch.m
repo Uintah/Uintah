@@ -1,4 +1,5 @@
 function [grid,q] = addGridPatch(grid,k,ilower,iupper,parentQ)
+global verboseLevel
 % Add a patch to level k; patch id returned = q
 
 if (max(ilower > iupper))
@@ -22,4 +23,6 @@ if (k > 1)
 end
 grid = updateGrid(grid);
 
-fprintf('Created level k=%3d patch q=%3d (parentQ = %3d), ilower = [%3d %3d], iupper = [%3d %3d]\n',k,q,parentQ,ilower,iupper);
+if (verboseLevel >= 1)
+    fprintf('Created level k=%3d patch q=%3d (parentQ = %3d), ilower = [%3d %3d], iupper = [%3d %3d]\n',k,q,parentQ,ilower,iupper);
+end

@@ -16,8 +16,11 @@ function [Alist,b] = setupOperatorPatch(grid,k,q,ilower,iupper,interiorConnectio
 %   empty.
 %
 %   See also: TESTDFM, SETOPERATOR, DELETEUNDERLYINGDATA.
+global verboseLevel
 
-fprintf('--- setupOperatorPatch(k = %d, q = %d) ---\n',k,q);
+if (verboseLevel >= 1)
+    fprintf('--- setupOperatorPatch(k = %d, q = %d) ---\n',k,q);
+end
 %=====================================================================
 % Initialize; set patch "pointers" (in matlab: we actually copy P)
 %=====================================================================
@@ -265,7 +268,9 @@ if (interiorConnections == 1)
     if (~ghostConnections)
         % All remaining points are unused ghost points; set them to 0.
         pindexRemaining = setdiff(pindexRemaining,pindexGhost);
-        fprintf('Number of unused points in this patch = %d\n',length(pindexRemaining));
+        if (verboseLevel >= 2)
+            fprintf('Number of unused points in this patch = %d\n',length(pindexRemaining));
+        end
         mapRemaining = map(pindexRemaining);
         Alist = [Alist; ...
             [mapRemaining mapRemaining repmat(1.0,size(mapRemaining))]; ...
