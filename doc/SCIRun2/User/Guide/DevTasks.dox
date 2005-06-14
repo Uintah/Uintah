@@ -5,15 +5,15 @@
 
 \subsection ayla Ayla
 
-\li Bug #2644 Dataflow components broken in SCIRun2: by June 10
-\li Bug #2609 Load network files broken: by June 17
-\li Babel upgrade: by June 20
+\li Bug #2644 Dataflow components broken in SCIRun2: by June 17
+\li Bug #2609 Load network files broken: by June 24
+\li Babel upgrade: TBD
 \li Replace Qt GUI toolkit: TBD
-\li Make MPI an optional build feature: TDB
+
+<!-- Test MPI implementations with SCIRun2: TDB -->
 
 \subsection keming Keming
 
-\li Remove MPI dependencies from SCIRun2 except for ploader: Completed 
 \li Complete parallel component implementation: by July 18
 \li Updates to text builder: by June 24
 \li PRMI without data redistribution, by July 1
@@ -28,6 +28,7 @@
 
 \subsection rc Unassigned Release Criteria tasks
 
+\li New name for SCIRun2
 \li Standardize the addition of a component model and component 
 \li RMI Security model
 \li Tests: framework, components, interfaces
