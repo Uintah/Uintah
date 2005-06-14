@@ -80,6 +80,7 @@
 #define LVP_POWER_IDX 6
 //#define VECTOR_IDX 7
 #define ALARM_IDX 11
+#define EVER_ALARM_IDX 12
 //#define FIRST_ALARM_IDX 10
 
 //#define VM_SLIDING 0
@@ -641,6 +642,7 @@ StatForecast::draw_plots()
 		int nrrd_idx_ = cur_idx_ * data_->nrrd->axis[0].size;
 
 		bool alarm_now = ((int)dat2[nrrd_idx_ + ALARM_IDX] == 1);
+		bool ever_alarm = ((int)dat2[nrrd_idx_ + EVER_ALARM_IDX] == 1);
 		float file_time = dat2[nrrd_idx_ + TIME_IDX];
 		float lv_inj = dat2[nrrd_idx_ + PROB_OF_LV_INJURY_IDX];
 		float rv_inj = dat2[nrrd_idx_ + PROB_OF_RV_INJURY_IDX];
@@ -694,7 +696,7 @@ StatForecast::draw_plots()
 
 			// prob between t_sod (50) and t_dqu (60)
 			} else if (prob > t_sod && prob < t_dqu) {
-				if (alarm_now)
+				if (ever_alarm)
 					cur_forecast =
 						(ttd > t_ttd)?YellowQuestionETriangle:RedQuestionEOctagon;
 				else
@@ -703,21 +705,21 @@ StatForecast::draw_plots()
 
 			// prob between t_dqu (60) and 100
 			} else if (prob >= t_dqu) {
-				if (alarm_now)
+				if (ever_alarm)
 					cur_forecast = (ttd > t_ttd)?YellowETriangle:RedEOctagon;
 				else
 					cur_forecast = (ttd > t_ttd)?YellowTriangle:RedOctagon;
 
 			// prob between t_squ (40) and t_sod (50)
 			} else if (prob <= t_sod && prob > t_squ) {
-				if (alarm_now)
+				if (ever_alarm)
 					cur_forecast = GreenQuestionECircle;
 				else
 					cur_forecast = GreenQuestionCircle;
 
 			// prob between 0 and t_squ (40)
 			} else if (prob <= t_squ) {
-				if (alarm_now)
+				if (ever_alarm)
 					cur_forecast = GreenECircle;
 				else
 					cur_forecast = GreenCircle;
