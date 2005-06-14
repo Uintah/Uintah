@@ -1,11 +1,14 @@
 function [Anew,bnew,grid] = updateSystem(grid,k,q,A,b)
+global verboseLevel
 %==============================================================
 % Update Sparse LHS Matrix A and RHS b as a result of adding
 % patch q at level k
 %==============================================================
-fprintf('-------------------------------------------------------------------------\n');
-fprintf(' Update System (level = %d, patch = %d)\n',k,q);
-fprintf('-------------------------------------------------------------------------\n');
+if (verboseLevel >= 1)
+    fprintf('-------------------------------------------------------------------------\n');
+    fprintf(' Update System (level = %d, patch = %d)\n',k,q);
+    fprintf('-------------------------------------------------------------------------\n');
+end
 tStartCPU        = cputime;
 tStartElapsed    = clock;
 
@@ -49,10 +52,10 @@ end
 i = setupOperatorPatch(grid,k,q,P.ilower,P.iupper,2,0);
 if (~isempty(i))
     % We would like to do that, but entries in i(:,2) are not unique; so do
-    % it over each face separately, and there i(:,2) entries are unique.   
-    %Anew(:,i(:,2)) = Anew(:,i(:,2)) + Anew(:,i(:,1));               % Pass to flux ghost points (by means of a Gaussian elimination on the appropriate columns, in effect)        
+    % it over each face separately, and there i(:,2) entries are unique.
+    %Anew(:,i(:,2)) = Anew(:,i(:,2)) + Anew(:,i(:,1));               % Pass to flux ghost points (by means of a Gaussian elimination on the appropriate columns, in effect)
     faceSize = size(i,1)/(2*grid.dim);
-    for f = 1:2*grid.dim    
+    for f = 1:2*grid.dim
         face = [(f-1)*faceSize:f*faceSize-1]+1;
         Anew(:,i(face,2)) = Anew(:,i(face,2)) + Anew(:,i(face,1));               % Pass to flux ghost points (by means of a Gaussian elimination on the appropriate columns, in effect)
     end
@@ -66,10 +69,10 @@ fineFlux = setupOperatorPatch(grid,k,q,P.ilower,P.iupper,0,1);
 if (~isempty(fineFlux))
     i = setupOperatorPatch(grid,k,q,P.ilower,P.iupper,0,2);         % Each row: [ghost fineNbhr alpha=interpCoefficient(fineNbhr->ghost)]
     % We would like to do that, but entries in i(:,2) are not unique; so do
-    % it over each face separately, and there i(:,2) entries are unique.   
+    % it over each face separately, and there i(:,2) entries are unique.
     %Anew(:,i(:,2)) = Anew(:,i(:,2)) + Anew(:,i(:,1));               % Pass to flux ghost points (by means of a Gaussian elimination on the appropriate columns, in effect). Every entry in i(:,2) appears exactly once.
     faceSize = size(i,1)/(2*grid.dim);
-    for f = 1:2*grid.dim    
+    for f = 1:2*grid.dim
         face = [(f-1)*faceSize:f*faceSize-1]+1;
         Anew(:,i(face,2)) = Anew(:,i(face,2)) + Anew(:,i(face,1));               % Pass to flux ghost points (by means of a Gaussian elimination on the appropriate columns, in effect)
     end
@@ -79,5 +82,7 @@ end
 
 tCPU        = cputime - tStartCPU;
 tElapsed    = etime(clock,tStartElapsed);
-fprintf('CPU time     = %f\n',tCPU);
-fprintf('Elapsed time = %f\n',tElapsed);
+if (verboseLevel >= 1)
+    fprintf('CPU time     = %f\n',tCPU);
+    fprintf('Elapsed time = %f\n',tElapsed);
+end
