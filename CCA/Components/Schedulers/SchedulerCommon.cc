@@ -484,8 +484,11 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& stat
           for (int i = 0; i < union_matls->size(); i++) 
             if (!matls->contains(union_matls->get(i)))
               matls->add(union_matls->get(i));
+          if (union_matls->removeReference())
+            delete union_matls;
         }
-        matls->sort();        
+        matls->sort();
+        cout << "  Adding " << dep->var << endl;
         label_matls_[level][dep->var] = matls;
       }
     }
@@ -510,7 +513,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& stat
 
     if (i > 0) {
 
-      PatchSet* refineSet = scinew PatchSet;
+      PatchSet* refineSet;
       if (i >= oldGrid->numLevels())
         refineSet = const_cast<PatchSet*>(newLevel->eachPatch());
       else {
@@ -602,6 +605,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& stat
     ReductionVariableBase* v = dynamic_cast<ReductionVariableBase*>(currentReductionVar.label_->typeDescription()->createInstance());
     oldDataWarehouse->get(*v, currentReductionVar.label_, currentReductionVar.domain_, currentReductionVar.matlIndex_);
     newDataWarehouse->put(*v, currentReductionVar.label_, newLevel, currentReductionVar.matlIndex_);
+    delete v; // copied on the put command
   }
   newDataWarehouse->refinalize();
 }
