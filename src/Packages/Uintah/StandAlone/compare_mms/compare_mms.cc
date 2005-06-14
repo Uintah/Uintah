@@ -16,6 +16,8 @@
 #include <Packages/Uintah/StandAlone/compare_mms/MMS.h>
 #include <Packages/Uintah/StandAlone/compare_mms/MMS1.h>
 
+#include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
+
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -85,6 +87,37 @@ main( int argc, char *argv[] )
 
   try {
     DataArchive* da1 = scinew DataArchive(udaFileName);
+
+//     // Sample of how to read data from the DA xml file.
+//     ProblemSpecReader psr( udaFileName + "/input.xml" );
+//     ProblemSpecP docTop = psr.readInputFile();
+//     double dyVis;
+//     int    sos;
+
+//     ProblemSpecP matBlock = ((docTop->findBlock("MaterialProperties"))->findBlock("ICE"))->findBlock("material");
+
+//     if( matBlock == 0 )
+//       {
+//         printf("Failed to find MaterialProperties->ICE->material in input.xml file.\n");
+//         exit(1);
+//       }
+
+//     if( matBlock->get( string("dynamic_viscosity"), dyVis ) == 0 )
+//       {
+//         printf("Failed to find dynamic_viscosity in input.xml file.\n");
+//         exit(1);
+//       }
+
+//     if( matBlock->get( string("speed_of_sound"), sos ) == 0 )
+//       {
+//         printf("Failed to find speed_of_sound in input.xml file.\n");
+//         exit(1);
+//       }
+
+//     printf( "read dynamic viscosity value of %lf\nSpeed of sound: %d\n", dyVis, sos );
+//     // When done, free up problem spec:
+//     docTop->releaseDocument();
+
 
     vector<int> index;
     vector<double> times;
