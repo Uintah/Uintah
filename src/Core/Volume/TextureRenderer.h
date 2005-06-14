@@ -146,7 +146,7 @@ protected:
   vector<TexParam> tex_pool_;
   
   Ray compute_view();
-  void load_brick(TextureBrickHandle b, bool use_cmap2);
+  void load_brick(vector<TextureBrickHandle> &b, int i, bool use_cmap2);
   void draw_polygons(vector<float>& vertex, vector<float>& texcoord,
 		     vector<int>& poly,
                      bool normal, bool fog, Pbuffer* buffer);
