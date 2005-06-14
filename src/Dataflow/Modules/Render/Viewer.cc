@@ -906,9 +906,9 @@ Viewer::finishPort(int portid)
 
 
 void
-Viewer::set_context(Scheduler* sched, Network* network)
+Viewer::set_context(Network* network)
 {
-  Module::set_context(sched, network);
+  Module::set_context(network);
   if (sci_getenv("SCI_REGRESSION_TESTING"))
   {
     sched->add_callback(save_image_callback, this, -1);

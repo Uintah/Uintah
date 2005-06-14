@@ -62,7 +62,7 @@ public:
   bool check_consumed();
   void produce();
 private:
-  virtual void set_context(Scheduler* sched, Network* network);
+  virtual void set_context(Network* network);
   static bool consumed_callback(void *ths);
   void set_consumed(bool c) { consumed_ = c; }
   Point get_hip_params(unsigned &phase_mesh, float &e_phase, float &HR);
@@ -231,9 +231,9 @@ PVSpaceInterp::~PVSpaceInterp()
 }
 
 void
-PVSpaceInterp::set_context(Scheduler* sched, Network* network)
+PVSpaceInterp::set_context(Network* network)
 {
-  Module::set_context(sched, network);
+  Module::set_context(network);
   sched->add_callback(consumed_callback, this);
 }
 
