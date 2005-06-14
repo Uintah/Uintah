@@ -7,6 +7,7 @@ function [Alist,b,grid] = deleteUnderlyingData(grid,k,q,Alist,b)
 %   by the identity matrix with zero RHS to make the underlying data = 0.
 %
 %   See also: TESTDFM, SETOPERATOR, SETOPERATORPATCH, ADDPATCH.
+global verboseLevel
 
 level       = grid.level{k};
 numPatches  = length(level.numPatches);
@@ -14,11 +15,14 @@ P           = grid.level{k}.patch{q};
 map         = P.cellIndex;
 
 if (P.parent < 0)                                                   % Base patch at coarsest level, nothing to delete
-    fprintf('Nothing to delete\n');
+    if (verboseLevel >= 1)
+        fprintf('Nothing to delete\n');
+    end
     return;
 end
-fprintf('--- deleteUnderlyingData(k = %d, q = %d) ---\n',k,q);
-
+if (verboseLevel >= 1)
+    fprintf('--- deleteUnderlyingData(k = %d, q = %d) ---\n',k,q);
+end
 % Find box in Q-coordinates underlying P
 Q               = grid.level{k-1}.patch{P.parent};                  % Parent patch
 underLower      = coarsenIndex(grid,k,P.ilower);

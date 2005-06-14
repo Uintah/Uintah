@@ -1,11 +1,14 @@
-function plotGrid(grid,showGhosts,showCellIndex)
+function plotGrid(grid,fileName,showGhosts,showCellIndex)
 % Plot gridlines (works in 2D only). If showGhosts=1 we add ghost cells to
 % the plot.
 
 if (nargin < 2)
-    showGhosts = 0;
+    fileName = 'grid.eps';
 end
 if (nargin < 3)
+    showGhosts = 0;
+end
+if (nargin < 4)
     showCellIndex = 0;
 end
 
@@ -107,4 +110,4 @@ xlabel('x');
 ylabel('y');
 title(sprintf('Grid, numLevels = %d, # total vars = %d',grid.numLevels,grid.totalVars));
 axis equal;
-print -depsc grid.eps
+eval(sprintf('print -depsc %s',fileName));
