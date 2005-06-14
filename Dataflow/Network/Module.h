@@ -227,7 +227,7 @@ public:
 
   void request_multisend(OPort*);
   Mailbox<MessageBase*> mailbox;
-  virtual void set_context(Scheduler* sched, Network* network);
+  virtual void set_context(Network* network);
 
   // Callbacks
   virtual void connection(Port::ConnectionState, int, bool);

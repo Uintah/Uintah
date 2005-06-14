@@ -100,10 +100,6 @@ Module* Network::module(int i)
     return modules[i];
 }
 
-int Network::nconnections()
-{
-    return connections.size();
-}
 
 Connection* Network::connection(int i)
 {
@@ -163,14 +159,8 @@ Module* Network::add_module2(const string& packageName,
 			     const string& moduleName)
 {
   Module* module = add_module(packageName, categoryName, moduleName);
-
-  GuiInterface* gui = module->gui;
-  // Add a TCL command for this module...
-  gui->add_command(module->id+"-c", module, 0);
-  ostringstream command;
-  command << "addModule2 " << packageName << " " << categoryName << " "
-	 << moduleName << " " << module->id << '\n';
-  gui->execute(command.str());
+  module->getGui()->eval("addModule2 "+packageName+" "+categoryName+
+			 " "+moduleName+" "+module->id);
   return module;
 }
 
@@ -178,23 +168,17 @@ Module* Network::add_module(const string& packageName,
                             const string& categoryName,
                             const string& moduleName)
 { 
-
+  const string name = 
+    remove_spaces(packageName + "_" + categoryName + "_" + moduleName + "_");
   // Find a unique id in the Network for the new instance of this module and
   // form an instance name from it
-
   string instanceName;
-  {
-    const string name = remove_spaces(packageName + "_" +
-				      categoryName + "_" +
-				      moduleName + "_");
-    for (int i=0; get_module_by_id(instanceName = name + to_string(i)); i++);
-  }
+  for (int i=0; get_module_by_id(instanceName = name + to_string(i)); i++);
 
   // Instantiate the module
-
   Module* mod = packageDB->instantiateModule(packageName, categoryName,
 					     moduleName, instanceName);
-  if(!mod) {
+  if (!mod) {
     cerr << "Error: can't create instance " << instanceName << "\n";
     return 0;
   }
@@ -202,11 +186,11 @@ Module* Network::add_module(const string& packageName,
 
   // Binds NetworkEditor and Network instances to module instance.  
   // Instantiates ModuleHelper and starts event loop.
-  mod->set_context(sched, this);
+  mod->set_context(this);
 
   // add Module id and ptr to Module to hash table of modules in network
   module_ids[mod->id] = mod;
-  
+  mod->gui->add_command(mod->id+"-c", mod, 0);
   return mod;
 }
 
@@ -220,7 +204,7 @@ void Network::add_instantiated_module(Module* mod)
 
   // Binds NetworkEditor and Network instances to module instance.
   // Instantiates ModuleHelper and starts event loop.
-  mod->set_context(sched, this);
+  mod->set_context(this);
   
   // add Module id and ptr to Module to hash table of modules in network
   module_ids[mod->id] = mod;
@@ -228,14 +212,8 @@ void Network::add_instantiated_module(Module* mod)
   GuiInterface* gui = mod->gui;
   // Add a TCL command for this module...
   gui->add_command(mod->id+"-c", mod, 0);
-  ostringstream command;
 
-  string packageName = "unknown";
-  string categoryName = "unknown";
-  string moduleName = "unknonw";
-  command << "addModule2 " << packageName << " " << categoryName << " "
-	 << moduleName << " " << mod->id << '\n';
-  gui->execute(command.str());
+  gui->eval("addModule2 unknown unknown unknown "+mod->id);
 }
 
 Module* Network::get_module_by_id(const string& id)

@@ -48,6 +48,7 @@
 #include <Dataflow/Network/ModuleHelper.h>
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Scheduler.h>
+#include <Dataflow/Network/Network.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/GuiContext.h>
 #include <Core/GuiInterface/GuiInterface.h>
@@ -523,10 +524,10 @@ void Module::connection(Port::ConnectionState mode, int which_port, bool is_opor
   // do nothing by default
 }
 
-void Module::set_context(Scheduler* sched, Network* network)
+void Module::set_context(Network* network)
 {
   this->network=network;
-  this->sched=sched;
+  this->sched=network->get_scheduler();
   ASSERT(helper == 0);
   // Start up the event loop
   helper=scinew ModuleHelper(this);
