@@ -44,11 +44,8 @@ SRCS     += \
             $(SRCDIR)/PortInstanceIterator.cc\
             $(SRCDIR)/CCACommunicator.cc \
             $(SRCDIR)/resourceReference.cc \
-            $(SRCDIR)/TypeMap.cc
-
-ifeq ($(HAVE_MPI),yes)
- SRCS += $(SRCS) $(SRCDIR)/SCIRunLoader.cc
-endif
+            $(SRCDIR)/TypeMap.cc \
+            $(SRCDIR)/SCIRunLoader.cc
 
 
 SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Dataflow $(SRCDIR)/Internal \
