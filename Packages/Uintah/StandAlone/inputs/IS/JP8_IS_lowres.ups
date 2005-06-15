@@ -26,6 +26,7 @@
     <!--    e) turn all the viscosities and thermal conductivities to 0     -->
     <!--    f) set advection to SecondOrder if it isn't already             -->
     <!--    g) change the nodes8or27 flag to 27                             -->
+    <!--    h) change <CanAddIceMaterial> from false to true                -->
     <!--                                                                    -->
     <!-- 4) Edit the DataArchiver section to:
             a)  Lower the outputInterval to reflect the faster rate at
@@ -244,8 +245,8 @@
               <lower>        [0.0,-0.1,0.0]     </lower>
               <upper>        [0.1, 0.3,0.1]     </upper>
               <extraCells>   [1,1,1]            </extraCells>
-              <patches>      [4,8,4]            </patches>
-              <resolution>   [50,200,50]        </resolution>
+              <patches>      [2,4,2]            </patches>
+              <resolution>   [20,80,20]        </resolution>
            </Box> 
        </Level>
     </Grid>
@@ -253,7 +254,7 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>JP8_IS_lowres.uda</filebase>
+      <filebase>JP8_IS.uda</filebase>
       <outputInterval> 0.0005  </outputInterval>
       <!--
       use the following for the explicit phase
@@ -274,9 +275,9 @@
       <save label="p.particleID"/>
       <save label="p.mass"/>
       <save label="p.temperature"/>
-
+      <!-- 
       <save label="p.volume"/>
-<!--  <save label="p.stress"/> 
+      <save label="p.stress"/> 
       <save label="p.plasticStrain"/> 
       <save label="p.strainRate"/> 
       <save label="p.localized"/> 
@@ -286,7 +287,7 @@
       <save label= "modelEng_src"/>
       <save label="g.mass"/>
       <save label="g.temperature"/>  -->
-      <checkpoint cycle = "4" timestepInterval = "5000"/>
+      <checkpoint cycle = "4" timestepInterval = "500"/>
    </DataArchiver>
 
    <Debug>
@@ -305,7 +306,7 @@
     <!--____________________________________________________________________-->
     <CFD>
        <cfl>0.3</cfl>  <!-- IMPLICIT CFL = 0.5, EXPLICIT CFL = 0.2ISH -->
-       
+       <CanAddICEMaterial>false</CanAddICEMaterial>
        <ICE>
         <max_iteration_equilibration> 1000 </max_iteration_equilibration>
         <advection type = "FirstOrder" />
@@ -536,7 +537,26 @@
             <pressure>           101325.0            </pressure>
            </geom_object>
          </material>
+      </ICE>
 
+      <exchange_properties> 
+         <exchange_coefficients>
+              <momentum>  [ 0, 0, 1e15,
+                               0, 1e15,
+                                  1e15]     </momentum>
+
+              <heat>      [ 0, 0, 1e10,
+                               0, 1e10,
+                                  1e10]     </heat>
+        </exchange_coefficients>
+        <do_convective_heat_transfer> true </do_convective_heat_transfer>
+        <convective_fluid>3</convective_fluid>
+        <convective_solid>0</convective_solid>
+      </exchange_properties> 
+    </MaterialProperties>
+
+    <AddMaterialProperties>  
+      <ICE>
          <material name = "PBXproductGases">  <!-- MATL 4 -->
            <EOS type = "JWLC">
              <A>  8.580805e11</A>
@@ -565,8 +585,7 @@
              <pressure>           101325.0            </pressure>
            </geom_object>
          </material>
-      </ICE>       
-       
+      </ICE>
       <exchange_properties> 
          <exchange_coefficients>
               <momentum>  [ 0, 0, 1e15, 1e15,
@@ -583,13 +602,14 @@
         <convective_fluid>3</convective_fluid>
         <convective_solid>0</convective_solid>
       </exchange_properties> 
-    </MaterialProperties>
+    </AddMaterialProperties>
     <!--____________________________________________________________________-->
     <!--      M O D E L S                                                   -->
     <!--____________________________________________________________________-->
     <Models>
 <!-- 
       <Model type="Simple_Burn">
+        <Active>       false        </Active>
         <fromMaterial> reactant     </fromMaterial>
         <toMaterial>  PBXproductGases </toMaterial>
         <ThresholdTemp>       450.0 </ThresholdTemp>
