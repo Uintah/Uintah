@@ -44,13 +44,13 @@
 #include <Core/Init/init.h>
 #include <Core/Util/soloader.h>
 #include <Core/Util/Environment.h>
-#include <Core/TCLThread/TCLThread.h>
+//#include <Core/TCLThread/TCLThread.h>
+//#include <Core/GuiInterface/TCLTask.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Scheduler.h>
-#include <Core/GuiInterface/TCLTask.h>
 #include <Core/GuiInterface/TCLInterface.h>
 #include <Dataflow/XMLUtil/StrX.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
@@ -59,6 +59,48 @@
 #include <SCIRun/SCIRunErrorHandler.h>
 #include <iostream>
 
+#include <Core/Util/sci_system.h>
+#include <main/sci_version.h>
+#include <tcl.h>
+#include <tk.h>
+
+
+typedef void (Tcl_LockProc)();
+
+#ifdef _WIN32
+#  ifdef __cplusplus
+     extern "C" {
+#  endif // __cplusplus
+       __declspec(dllimport) void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
+       int tkMain(int argc, char** argv, 
+		  void (*nwait_func)(void*), void* nwait_func_data);
+#  ifdef __cplusplus
+     }
+#  endif // __cplusplus
+
+#else // _WIN32
+  extern "C" void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
+  extern "C" int tkMain(int argc, char** argv,
+			void (*nwait_func)(void*), void* nwait_func_data);
+
+#endif // _WIN32
+
+extern "C" Tcl_Interp* the_interp;
+
+static
+int
+x_error_handler3(Display* dpy, XErrorEvent* error)
+{
+#ifndef _WIN32
+    char msg[200];
+    XGetErrorText(dpy, error->error_code, msg, 200);
+    std::cerr << "X Error: " << msg << std::endl;
+    abort();
+#endif
+    return 0; // Never reached...
+}
+
+
 namespace SCIRun {
 
 TCLInterface*
@@ -66,6 +108,65 @@ SCIRunComponentModel::gui(0);
 
 Network*
 SCIRunComponentModel::net(0);
+
+void wait(void* p);
+
+void
+do_lock3()
+{
+  TCLTask::lock();
+}
+
+void
+do_unlock3()
+{
+  TCLTask::unlock();
+}
+
+void
+wait(void* p)
+{
+  TestThread* thr = (TestThread*) p;
+  thr->startTCL();
+}
+
+TestThread::TestThread(Network* net) : net(net), start("SCIRun startup semaphore", 0)
+{
+  XSetErrorHandler(x_error_handler3);
+
+  Tcl_SetLock(do_lock3, do_unlock3);
+}
+
+void
+TestThread::run()
+{
+  char* argv[2];
+  argv[0] = "sr";
+  argv[1] = 0;
+
+  do_lock3();
+  tkMain(1, argv, wait, this);
+  //do_unlock3();
+}
+
+void
+TestThread::startTCL()
+{
+  gui = new TCLInterface;
+  new NetworkEditor(net, gui);
+
+  packageDB->setGui(gui);
+  gui->eval("set scirun2 1");
+  gui->execute("wm withdraw .");
+
+  start.up();
+}
+
+void
+TestThread::tclWait()
+{
+    start.down();
+}
 
 static bool split_name(const std::string& type, std::string& package,
 		       std::string& category, std::string& module)
@@ -91,7 +192,7 @@ SCIRunComponentModel::SCIRunComponentModel(SCIRunFramework* framework)
   create_sci_environment(0,0);
   packageDB = new PackageDB(0);
   // load the packages
-  packageDB->loadPackage(false);
+  packageDB->loadPackage();
 }
 
 SCIRunComponentModel::~SCIRunComponentModel()
@@ -113,7 +214,7 @@ SCIRunComponentModel::createInstance(const std::string& name,
   std::string package, category, module;
   if(!split_name(type, package, category, module))
     return 0;
-  if(!gui) {
+  if (!gui) {
     initGuiInterface();
   }
 
@@ -126,41 +227,33 @@ SCIRunComponentModel::createInstance(const std::string& name,
 
 void SCIRunComponentModel::initGuiInterface() {
 std::cerr << "SCIRunComponentModel::initGuiInterface" << std::endl;
-  int argc=1;
-  char* argv[2];
-  argv[0] = "sr";
-  argv[1] = 0;
+
+  sci_putenv("SCIRUN_NOSPLASH", "1");
+  sci_putenv("SCIRUN_HIDE_PROGRESS", "1");
 
   SCIRunInit();
 
   net = new Network();
-  //TCLTask* tcl_task = new TCLTask(argc, argv);
-  TCLThread* tcl_task = new TCLThread(argc, argv, net, 0);
-  Thread* t = new Thread(tcl_task, "TCL main event loop", 0, Thread::NotActivated);
+
+  TestThread *thr = new TestThread(net);
+  Thread* t = new Thread(thr, "SR2 TCL event loop", 0, Thread::NotActivated);
+
   t->setStackSize(1024*1024);
   t->activate(false);
   t->detach();
-  tcl_task->mainloop_waitstart();
-  
+
+  thr->tclWait();
+
   // Create user interface link
-  //gui = new TCLInterface();
-  gui = tcl_task->getTclInterface();
-  gui->eval("set scirun2 1");
-  
-  //net = new Network();
-  //new NetworkEditor(net, gui);
-  gui->execute("wm withdraw .");
-  //packageDB->setGui(gui);
+  gui = thr->getTclInterface();
 
   Scheduler* sched_task=new Scheduler(net);
 
   // Activate the scheduler.  Arguments and return
   // values are meaningless
-  Thread* t2=new Thread(sched_task, "Scheduler");
+  Thread* t2 = new Thread(sched_task, "Scheduler");
   t2->setDaemon(true);
   t2->detach();
-  
-  tcl_task->release_mainloop();
 }
 
 bool SCIRunComponentModel::destroyInstance(ComponentInstance * ic)
