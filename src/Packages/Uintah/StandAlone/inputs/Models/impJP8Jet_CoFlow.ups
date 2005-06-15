@@ -182,8 +182,8 @@
           <lower>         [-3, 0, -3]   </lower>
           <upper>         [ 3, 6,  3]   </upper>
           <extraCells>    [1,1,1]         </extraCells>
-          <patches>       [10,6,10]       </patches>
-          <resolution>    [300,300,300] </resolution>
+          <patches>       [5,4,5]       </patches>
+          <resolution>    [100,100,100] </resolution>
         </Box>
        </Level>
     </Grid>
@@ -283,6 +283,7 @@
     <!--____________________________________________________________________-->   
     <PhysicalConstants>
        <gravity>            [0,-9.81,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
     </PhysicalConstants>
     <!--____________________________________________________________________-->
     <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
