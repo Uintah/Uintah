@@ -34,7 +34,10 @@ FWKSIDL := ${SRCDIR}/framework.sidl
 OUTPUTDIR :=${OBJTOP_ABS}/$(SRCDIR)
 
 INCLUDES := -I$(OUTPUTDIR) $(INCLUDES)
-LIBS := $(QT_LIBRARY) $(LIBS)
+
+ifeq ($(HAVE_QT),yes)
+  LIBS := $(QT_LIBRARY) $(LIBS)
+endif
 
 ${OUTPUTDIR}/framework.make: ${FWKSIDL} Core/Babel/timestamp
 	if ! test -d $(dir $@); then mkdir -p $(dir $@); fi
