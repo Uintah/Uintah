@@ -215,25 +215,28 @@ C       (COAL) CALCULATIONS.
 C-----------------------------------------------------------------------
 
                     FV = SFV(I,J,K)
-            ABSKG(I,J,K) = ABSKG(I,J,K) + MIN( 25.0d0,((4.0d0/OPL) 
-     1                 * DLOG(1.0d0 + 350.0d0*FV*TG(I,J,K)*OPL)) )
+                    ABSKG(I,J,K) = ABSKG(I,J,K) + 
+     $                   MIN( 25.0d0,((4.0d0/OPL) 
+     1                   *DLOG(1.0d0 + 350.0d0*FV*TG(I,J,K)*OPL)))
 
-            abskgtemp = abskg(i,j,k)
-        if(abskgtemp.le.1.0d-06)abskgtemp = 1.0d-06
+                    abskgtemp = abskg(i,j,k)
+                    if(abskgtemp.le.1.0d-06)abskgtemp = 1.0d-06
 
 c     Anisotropic scattering properties for the interior nodes
 c     (for spherical harmonics only)
 
-            scatcoef = 0.0d0
-            phfunc   = 0.0d0
-            shgamma(i,j,k) = 3.0d0*(abskgtemp + scatcoef) - 
-     &      phfunc*scatcoef
-            shgamma(i,j,k) = 1.0d0/shgamma(i,j,k)
+                    scatcoef = 0.0d0
+                    phfunc   = 0.0d0
+                    shgamma(i,j,k) = 3.0d0*
+     $                   (abskgtemp + scatcoef) - 
+     &                   phfunc*scatcoef
+                    shgamma(i,j,k) = 1.0d0/shgamma(i,j,k)
             
 C       Calculate blackbody emissive intensity (emissive power / pi)
 C
-        ESRCG(I,J,K) = abs(fraction(lambda)) * SIG * PI1 * 
-     1  ABSKG(I,J,K) * TG(I,J,K)**4
+                    ESRCG(I,J,K) = abs(fraction(lambda)) * 
+     $                   SIG * PI1 * 
+     1                   ABSKG(I,J,K) * TG(I,J,K)**4
 
 c                END IF
 220           CONTINUE
@@ -275,12 +278,13 @@ c                IF (PCELL(I,J,K).EQ.FFIELD) THEN
 c     Anisotropic scattering properties for the interior nodes
 c     (for spherical harmonics only)
 
-            scatcoef = 0.0d0
-            phfunc   = 0.0d0
-            shgamma(i,j,k) = 3.0d0*(abskg(i,j,k) + scatcoef) - 
-     &      phfunc*scatcoef
-        if(shgamma(i,j,k).eq.0.0d0)shgamma(i,j,k) = 1.0d-10
-            shgamma(i,j,k) = 1.0d0/shgamma(i,j,k)
+                 scatcoef = 0.0d0
+                 phfunc   = 0.0d0
+                 shgamma(i,j,k) = 3.0d0*(abskg(i,j,k) + 
+     $                scatcoef) - phfunc*scatcoef
+                 if(shgamma(i,j,k).eq.0.0d0) 
+     $                shgamma(i,j,k) = 1.0d-10
+                 shgamma(i,j,k) = 1.0d0/shgamma(i,j,k)
 
 c                END IF
 
