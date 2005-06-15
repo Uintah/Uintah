@@ -43,6 +43,8 @@
 
 #include <SCIRun/ComponentModel.h>
 
+#include <Core/Thread/Runnable.h>
+
 namespace SCIRun {
 class Network;
 class SCIRunComponentDescription;
@@ -101,6 +103,22 @@ private:
   
   SCIRunComponentModel(const SCIRunComponentModel&);
   SCIRunComponentModel& operator=(const SCIRunComponentModel&);
+
+
+};
+
+class TestThread : public Runnable {
+public:
+    TestThread(Network *net);
+    virtual void run();
+    void startTCL();
+    void tclWait();
+    inline TCLInterface* getTclInterface() { return gui;};
+
+private:
+    TCLInterface* gui;
+    Network* net;
+    Semaphore start;
 };
 
 } // end namespace SCIRun
