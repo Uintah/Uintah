@@ -45,38 +45,38 @@ C      IMPLICIT NONE
       TWALL = 293.0d0
       TWALLTWO = 293.0d0
 
-	if (bands.eq.1) then
+      if (bands.eq.1) then
 
-            a = 0.4201d0
-	    b(1) = 6.508d0
-	    b(2) = -5.551d0
-	    b(3) = 3.029d0
-	    b(4) = -5.353d0
+         a = 0.4201d0
+         b(1) = 6.508d0
+         b(2) = -5.551d0
+         b(3) = 3.029d0
+         b(4) = -5.353d0
 
-	else if (bands.eq.2) then
+      else if (bands.eq.2) then
  
-            a = 6.516d0
-	    b(1) = -0.2504d0
-	    b(2) = 6.112d0
-	    b(3) = -3.882d0
-	    b(4) = 6.528d0
+         a = 6.516d0
+         b(1) = -0.2504d0
+         b(2) = 6.112d0
+         b(3) = -3.882d0
+         b(4) = 6.528d0
 
-	else if (bands.eq.3) then 
+      else if (bands.eq.3) then 
 
-            a = 131.9d0 
-	    b(1) = 2.718d0
-	    b(2) = -3.118d0
-	    b(3) = 1.221d0
-	    b(4) = -1.612d0
+         a = 131.9d0 
+         b(1) = 2.718d0
+         b(2) = -3.118d0
+         b(3) = 1.221d0
+         b(4) = -1.612d0
 
-	else if (bands.eq.4) then 
+      else if (bands.eq.4) then 
 
-            a = 0.0d0 
-	    b(1) = 8.9756d0
-	    b(2) = -2.557d0
-	    b(3) = 0.368d0
-	    b(4) = -0.437d0
-	end if
+         a = 0.0d0 
+         b(1) = 8.9756d0
+         b(2) = -2.557d0
+         b(3) = 0.368d0
+         b(4) = -0.437d0
+      end if
 
       DO 80 K=idxlo(3)-1,idxhi(3)+1
         DO 70 J=idxlo(2)-1,idxhi(2)+1
@@ -99,69 +99,65 @@ c
 c
      $            ) goto 666
 
-          IF (PCELL(I,J,K).EQ.FFIELD) THEN
+             IF (PCELL(I,J,K).EQ.FFIELD) THEN
 
-	    temp = TG(I,J,K)
-            ABSKG(I,J,K) = a*(CO2(I,J,K)+H2O(I,J,K))+
-     &      402.834d0*SFV(I,J,K)*TG(I,J,K)
-
-            abskgtemp = abskg(i,j,k)
-        if(abskgtemp.le.1.0d-06)abskgtemp = 1.0d-06
+                temp = TG(I,J,K)
+                ABSKG(I,J,K) = a*(CO2(I,J,K)+H2O(I,J,K))+
+     &               402.834d0*SFV(I,J,K)*TG(I,J,K)
+                
+                abskgtemp = abskg(i,j,k)
+                if(abskgtemp.le.1.0d-06)abskgtemp = 1.0d-06
 
 c     Anisotropic scattering properties for the interior nodes
 c     (for spherical harmonics only)
 
-            scatcoef = 0.0d0
-            phfunc   = 0.0d0
-            shgamma(i,j,k) = 3.0d0*(abskgtemp + scatcoef) - 
-     &      phfunc*scatcoef
-            shgamma(i,j,k) = 1.0d0/shgamma(i,j,k)
+                scatcoef = 0.0d0
+                phfunc   = 0.0d0
+                shgamma(i,j,k) = 3.0d0*(abskgtemp + scatcoef) - 
+     &               phfunc*scatcoef
+                shgamma(i,j,k) = 1.0d0/shgamma(i,j,k)
+                
+                fracn = (b(1)*1E-01)+
+     &               (b(2)*1E-04)*temp +
+     &               (b(3)*1E-07)*(temp**2)+
+     &               (b(4)*1E-011)*(temp**3)
 
-            fracn = (b(1)*1E-01)+
-     &	    (b(2)*1E-04)*temp +
-     &	    (b(3)*1E-07)*(temp**2)+
-     &      (b(4)*1E-011)*(temp**3)
+                if (bands.eq.4) then
+                   fracn = 1.0d0 - fracn
+                end if
 
-	     if (bands.eq.4) then
-               fracn = 1.0d0 - fracn
-	     end if
+                ESRCG(I,J,K) = abs(fracn) * SIG * PI1 * 
+     &               ABSKG(I,J,K) * TG(I,J,K)**4
 
-            ESRCG(I,J,K) = abs(fracn) * SIG * PI1 * 
-     &	ABSKG(I,J,K) * TG(I,J,K)**4
+             ENDIF
+             
+ 666         continue
 
-          ENDIF
-
- 666       continue
-
-60        CONTINUE
-70      CONTINUE
-80    CONTINUE
+ 60       CONTINUE
+ 70    CONTINUE
+ 80   CONTINUE
 
 c     Emissivity curve-fit stuff for wall bc's
 
-	fraction(bands) = (b(1)*1E-01)+
-     &	    (b(2)*1E-04)*twall +
-     &	    (b(3)*1E-07)*(twall**2)+
-     &      (b(4)*1E-011)*(twall**3)
-
-	if (bands.eq.4) then
-
-           fraction(bands) = 1.0d0 - fraction(bands)
-
-	end if
+      fraction(bands) = (b(1)*1E-01)+
+     &     (b(2)*1E-04)*twall +
+     &     (b(3)*1E-07)*(twall**2)+
+     &     (b(4)*1E-011)*(twall**3)
+      
+      if (bands.eq.4) then
+         fraction(bands) = 1.0d0 - fraction(bands)
+      end if
 
 c     Emissivity curve-fit stuff for the second wall bc's
 
-	fractiontwo(bands) = (b(1)*1E-01)+
-     &	    (b(2)*1E-04)*twalltwo +
-     &	    (b(3)*1E-07)*(twalltwo**2)+
-     &      (b(4)*1E-011)*(twalltwo**3)
+      fractiontwo(bands) = (b(1)*1E-01)+
+     &     (b(2)*1E-04)*twalltwo +
+     &     (b(3)*1E-07)*(twalltwo**2)+
+     &     (b(4)*1E-011)*(twalltwo**3)
 
-	if (bands.eq.4) then
-
-           fractiontwo(bands) = 1.0d0 - fractiontwo(bands)
-
-	end if
+      if (bands.eq.4) then
+         fractiontwo(bands) = 1.0d0 - fractiontwo(bands)
+      end if
 
 c     Absorptivity curve-fit stuff
 
