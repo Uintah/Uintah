@@ -29,3 +29,7 @@ JP8_IS_lowres.ups
 ---------------------------------------
 The same settings as JP8_IS.ups with resolution cut in half in each dimension 
 to [50,200,50].  Output name was set to JP8_IS_lowres.uda as well.
+
+6/16/05 Modifications by David Groulx
+Copied Jim's changes to the full res version into the low res version.  Also
+further lowered the resolution to [20,80,20] and the patches to [2,4,2]
