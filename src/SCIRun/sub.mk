@@ -59,7 +59,7 @@ ifeq ($(HAVE_BABEL),yes)
  ifeq ($(HAVE_RUBY),yes)
   SUBDIRS += $(SRCDIR)/Bridge
  endif
-  SUBDIRS += $(SRCDIR)/Babel
+ SUBDIRS += $(SRCDIR)/Babel
 endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
@@ -73,10 +73,11 @@ else
  PSELIBS := Core/OS Core/Containers Core/Util Dataflow/XMLUtil \
             Dataflow/Network Core/GuiInterface Core/CCA/spec \
             Core/CCA/PIDL Core/CCA/SSIDL \
-            Core/Exceptions Core/Thread Core/TCLThread Core/Init Core/CCA/Comm
+            Core/Exceptions Core/Thread \
+            Core/TkExtensions Core/TCLThread Core/Init Core/CCA/Comm
 endif
 
-LIBS := $(XML_LIBRARY)  
+LIBS := $(XML_LIBRARY)
 
 ifeq ($(HAVE_RUBY),yes)
  PSELIBS := $(PSELIBS) Core/CCA/tools/strauss
