@@ -463,11 +463,12 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& stat
         const PatchSet* ps = graph.getTask(i)->getPatchSet();
         int level = -1;
         if (ps) 
-          if (ps->getSubset(0))
-            level = getLevel(ps->getSubset(0))->getIndex();
+          level = getLevel(ps)->getIndex();
         
-        if (level == -1)
-          // shouldn't really happen...
+        // we don't want data with an invalid level, or requiring from a different level (remember, we are
+        // using an old task graph).  That willbe copied later (and chances are, it's to modify anyway).
+        if (level == -1 || level > grid->numLevels()-1 || 
+            dep->patches_dom == Task::CoarseLevel || dep->patches_dom == Task::FineLevel)
           continue;
 
         const MaterialSubset* matSubset = (dep->matls != 0) ?
@@ -480,15 +481,18 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& stat
         
         MaterialSubset* union_matls;
         union_matls = label_matls_[level][dep->var];
+
         if (union_matls) {
-          for (int i = 0; i < union_matls->size(); i++) 
-            if (!matls->contains(union_matls->get(i)))
-              matls->add(union_matls->get(i));
-          if (union_matls->removeReference())
+          for (int i = 0; i < union_matls->size(); i++) {
+            if (!matls->contains(union_matls->get(i))) {
+              matls->add(union_matls->get(i)); 
+            } 
+          }
+          if (union_matls->removeReference()) {
             delete union_matls;
+          }
         }
         matls->sort();
-        cout << "  Adding " << dep->var << endl;
         label_matls_[level][dep->var] = matls;
       }
     }
@@ -582,8 +586,10 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& stat
   // neighborhood isn't good enough for the copy data timestep
   state->setCopyDataTimestep(true);
 
+  const char* tag = AllocatorSetDefaultTag("DoDataCopy");
   this->compile(); 
   this->execute();
+  AllocatorSetDefaultTag(tag);
   
   state->setCopyDataTimestep(false);
 
