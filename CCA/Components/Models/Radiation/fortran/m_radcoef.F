@@ -228,7 +228,6 @@ c     (for spherical harmonics only)
             phfunc   = 0.0d0
             shgamma(i,j,k) = 3.0d0*(abskgtemp + scatcoef) - 
      &      phfunc*scatcoef
-
             shgamma(i,j,k) = 1.0d0/shgamma(i,j,k)
             
 C       Calculate blackbody emissive intensity (emissive power / pi)

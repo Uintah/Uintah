@@ -103,6 +103,7 @@ Models_HypreSolver::problemSetup(const ProblemSpecP& params, bool shradiation)
 	  {
 	    d_kspFix = "cg";
 	    db->getWithDefault("pctype", d_pcType, "pfmg");
+
 	    if (d_pcType == "smg")
 	      d_kspType = "6";
 	    else

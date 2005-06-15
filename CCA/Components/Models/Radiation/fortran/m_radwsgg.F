@@ -82,10 +82,26 @@ C      IMPLICIT NONE
         DO 70 J=idxlo(2)-1,idxhi(2)+1
           DO 60 I=idxlo(1)-1,idxhi(1)+1
 
+             if ((i.eq.idxlo(1)-1 .and. j.eq.idxlo(2)-1) .or.
+     $            (i.eq.idxlo(1)-1 .and. k.eq.idxlo(3)-1) .or.
+     $            (i.eq.idxlo(1)-1 .and. k.eq.idxhi(3)+1) .or.
+     $            (i.eq.idxlo(1)-1 .and. j.eq.idxhi(2)+1) .or.
+c
+     $            (i.eq.idxhi(1)+1 .and. j.eq.idxlo(2)-1) .or.
+     $            (i.eq.idxhi(1)+1 .and. k.eq.idxlo(3)-1) .or.
+     $            (i.eq.idxhi(1)+1 .and. j.eq.idxhi(2)+1) .or.
+     $            (i.eq.idxhi(1)+1 .and. k.eq.idxhi(3)+1) .or.
+c
+     $            (j.eq.idxlo(2)-1 .and. k.eq.idxlo(3)-1) .or.
+     $            (j.eq.idxlo(2)-1 .and. k.eq.idxhi(3)+1) .or.
+     $            (j.eq.idxhi(2)+1 .and. k.eq.idxlo(3)-1) .or.
+     $            (j.eq.idxhi(2)+1 .and. k.eq.idxhi(3)+1)
+c
+     $            ) goto 666
+
           IF (PCELL(I,J,K).EQ.FFIELD) THEN
 
 	    temp = TG(I,J,K)
-
             ABSKG(I,J,K) = a*(CO2(I,J,K)+H2O(I,J,K))+
      &      402.834d0*SFV(I,J,K)*TG(I,J,K)
 
@@ -114,6 +130,8 @@ c     (for spherical harmonics only)
      &	ABSKG(I,J,K) * TG(I,J,K)**4
 
           ENDIF
+
+ 666       continue
 
 60        CONTINUE
 70      CONTINUE
