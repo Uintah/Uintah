@@ -36,14 +36,14 @@ c               volq(i,j,k) = volq(i,j,k) + cenint(i,j,k)
 
                if (pcell(i+1,j,k).eq.ffield) then
 
-c            if (i.ne.idxhi(1)) then
+            if (i.ne.idxhi(1)) then
                   qfluxe(i,j,k) = qfluxe(i,j,k)+ 
      &                 (2.0d0*shgamma(i+1,j,k)*shgamma(i,j,k)/
      &                 (shgamma(i+1,j,k)+shgamma(i,j,k)))*
      &                 abs((cenint(i+1,j,k)-cenint(i,j,k))/(dxep(i)))
-c            else
-c      qfluxe(i,j,k) = 0.0d0
-c            end if
+            else
+      qfluxe(i,j,k) = 0.0d0
+            end if
 
                else
 
@@ -59,14 +59,14 @@ c            end if
 
                if (pcell(i-1,j,k).eq.ffield) then
 
-c            if (i.ne.idxlo(1)) then
+            if (i.ne.idxlo(1)) then
                   qfluxw(i,j,k) = qfluxw(i,j,k)+
      &                 (2.0d0*shgamma(i-1,j,k)*shgamma(i,j,k)/
      &                 (shgamma(i-1,j,k)+shgamma(i,j,k)))*
      &                 abs((cenint(i,j,k)-cenint(i-1,j,k))/(dxpw(i)))
-c            else
-c      qfluxw(i,j,k) = 0.0d0
-c            end if
+            else
+      qfluxw(i,j,k) = 0.0d0
+            end if
 
                else
 
@@ -82,14 +82,14 @@ c            end if
 
                if (pcell(i,j+1,k).eq.ffield) then
 
-c            if (j.ne.idxhi(2)) then
+            if (j.ne.idxhi(2)) then
                   qfluxn(i,j,k) = qfluxn(i,j,k)+
      &                 (2.0d0*shgamma(i,j+1,k)*shgamma(i,j,k)/
      &                 (shgamma(i,j+1,k)+shgamma(i,j,k)))*
      &                 abs((cenint(i,j+1,k)-cenint(i,j,k))/(dynp(j)))
-c            else
-c      qfluxn(i,j,k) = 0.0d0
-c            end if
+            else
+      qfluxn(i,j,k) = 0.0d0
+            end if
 
                else
 
@@ -105,14 +105,14 @@ c            end if
 
                if (pcell(i,j-1,k).eq.ffield) then
 
-c            if (j.ne.idxlo(2)) then
+            if (j.ne.idxlo(2)) then
                   qfluxs(i,j,k) = qfluxs(i,j,k) + 
      &                 (2.0d0*shgamma(i,j-1,k)*shgamma(i,j,k)/
      &                 (shgamma(i,j-1,k)+shgamma(i,j,k)))*
      &                 abs((cenint(i,j,k)-cenint(i,j-1,k))/(dyps(j)))
-c            else
-c      qfluxs(i,j,k) = 0.0d0
-c            end if
+            else
+      qfluxs(i,j,k) = 0.0d0
+            end if
 
                else
 
@@ -128,14 +128,14 @@ c            end if
 
                if (pcell(i,j,k+1).eq.ffield) then
 
-c            if (k.ne.idxhi(3)) then
+            if (k.ne.idxhi(3)) then
                   qfluxt(i,j,k) = qfluxt(i,j,k)+
      &                 (2.0d0*shgamma(i,j,k+1)*shgamma(i,j,k)/
      &                 (shgamma(i,j,k+1)+shgamma(i,j,k)))*
      &                 abs((cenint(i,j,k+1)-cenint(i,j,k))/(dztp(k)))
-c            else
-c      qfluxt(i,j,k) = 0.0d0
-c            end if
+            else
+      qfluxt(i,j,k) = 0.0d0
+            end if
 
                else
 
@@ -151,14 +151,14 @@ c            end if
 
                if (pcell(i,j,k-1).eq.ffield) then
 
-c            if (k.ne.idxlo(3)) then
+            if (k.ne.idxlo(3)) then
                   qfluxb(i,j,k) = qfluxb(i,j,k)+
      &                 (2.0d0*shgamma(i,j,k-1)*shgamma(i,j,k)/
      &                 (shgamma(i,j,k-1)+shgamma(i,j,k)))*
      &                 abs((cenint(i,j,k)-cenint(i,j,k-1))/(dzpb(k)))
-c            else
-c      qfluxb(i,j,k) = 0.0d0
-c            end if
+            else
+      qfluxb(i,j,k) = 0.0d0
+            end if
 
                else
 

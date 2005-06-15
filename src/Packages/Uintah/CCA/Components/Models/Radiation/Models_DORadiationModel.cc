@@ -516,7 +516,6 @@ Models_DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 		   vars->ESRCG,
 		   volq, 
 		   vars->src);
-
     }
 
     int me = d_myworld->myrank();
@@ -610,7 +609,6 @@ Models_DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       ap.initialize(0.0);
       bool plusX, plusY, plusZ;
 
-      // replacing vars->temperature with constvars->temperature
       fort_m_rshsolve(idxLo, idxHi, 
 		    constvars->cellType, ffield, 
 		    cellinfo->sew, 
@@ -669,7 +667,6 @@ Models_DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       }
       d_linearSolver->destroyMatrix();
 
-      // replacing vars->temperature with constvars->temperature
       fort_m_rshresults(idxLo, idxHi, 
 		      vars->cenint, 
 		      volq,
