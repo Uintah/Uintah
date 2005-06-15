@@ -955,6 +955,16 @@ TextPiostream::begin_class(const string& classname, int current_version)
     }
   }
   io(version);
+
+  if (dir == Read && version > current_version)
+  {
+    err = true;
+    reporter_->error("File too new.  " + classname + " has version " +
+                     to_string(version) +
+                     ", but this scirun build is at version " +
+                     to_string(current_version) + ".");
+  }
+
   return version;
 }
 
