@@ -47,8 +47,6 @@
 
 using namespace SCIRun;
 
-#ifndef DISABLE_SCI_MALLOC
-
 #ifdef __sgi
 
 // This is ugly, but necessary, since --LANG:std remaps the mangling
@@ -99,6 +97,11 @@ void AllocatorResetDefaultTag()
   AllocatorResetDefaultTagNew();
 }
 }
+
+#ifndef DISABLE_SCI_MALLOC
+
+
+
 void* operator new(size_t size) throw(std::bad_alloc)
 {
     if(!default_allocator)
