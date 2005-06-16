@@ -212,6 +212,7 @@ GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
   else return 0;
 }
 
+
 int
 GeomObj::post_draw(DrawInfoOpenGL* di)
 {
@@ -227,11 +228,13 @@ GeomObj::post_draw(DrawInfoOpenGL* di)
   return 1;  // needed to quiet visual c++ 
 }
 
+
 static void
 quad_error(GLenum code)
 {
   cerr << "WARNING: Quadric Error (" << (char*)gluErrorString(code) << ")" << endl;
 }
+
 
 // May need to do this for really old GCC compilers?
 //typedef void (*gluQuadricCallbackType)(...);
@@ -267,6 +270,7 @@ DrawInfoOpenGL::DrawInfoOpenGL() :
 #endif
 }
 
+
 void
 DrawInfoOpenGL::reset()
 {
@@ -281,6 +285,7 @@ DrawInfoOpenGL::reset()
   npicks =0;
 }
 
+
 DrawInfoOpenGL::~DrawInfoOpenGL()
 {
   //gluDeleteQuadric(qobj);
@@ -293,6 +298,7 @@ DrawInfoOpenGL::~DrawInfoOpenGL()
     ++loc;
   }
 }
+
 
 void
 DrawInfoOpenGL::set_drawtype(DrawType dt)
@@ -315,6 +321,7 @@ DrawInfoOpenGL::set_drawtype(DrawType dt)
     break;
   }
 }
+
 
 void
 DrawInfoOpenGL::init_lighting(int use_light)
@@ -347,6 +354,7 @@ DrawInfoOpenGL::init_lighting(int use_light)
     glDisable(GL_CULL_FACE);
 }
 
+
 void
 DrawInfoOpenGL::init_clip(void)
 {
@@ -364,6 +372,7 @@ DrawInfoOpenGL::init_clip(void)
     clps >>= 1;
   }
 }
+
 
 void
 DrawInfoOpenGL::set_matl(Material* matl)
@@ -457,6 +466,7 @@ DrawInfoOpenGL::dl_remove(GeomDL *obj)
   return false;
 }
 
+
 // this is for transparent rendering stuff...
 
 void
@@ -504,14 +514,14 @@ DrawInfoOpenGL::init_view( double /*znear*/, double /*zfar*/,
   }
   
   multiple_transp = 0;
-
 }
+
 
 // WARNING - doesn''t respond to lighting correctly yet!
 
-void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
+void
+GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-
   int n=positions.size();
   di->polycount+=6*n;
 
@@ -950,7 +960,8 @@ GeomDL::~GeomDL()
 }
 
 
-void GeomDL::reset_bbox()
+void
+GeomDL::reset_bbox()
 {
   GeomContainer::reset_bbox();
 
@@ -964,7 +975,8 @@ void GeomDL::reset_bbox()
 }
 
 
-void GeomDL::draw(DrawInfoOpenGL* di, Material *m, double time)
+void
+GeomDL::draw(DrawInfoOpenGL* di, Material *m, double time)
 {
   if ( !child_.get_rep() ) return;
 
@@ -1095,7 +1107,8 @@ GeomColorMap::draw(DrawInfoOpenGL* di, Material *m, double time)
 }
 
 
-void GeomBillboard::draw(DrawInfoOpenGL* di, Material* m, double time)
+void
+GeomBillboard::draw(DrawInfoOpenGL* di, Material* m, double time)
 {
 
 //   MaterialHandle red = new Material(Color(.8,.0,0), Color(.2,0,0),
@@ -1159,7 +1172,9 @@ void GeomBillboard::draw(DrawInfoOpenGL* di, Material* m, double time)
 //   glPopMatrix();
 }  
 
-void GeomCappedCylinder::draw(DrawInfoOpenGL* di, Material* matl, double)
+
+void
+GeomCappedCylinder::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(height < 1.e-6 || rad < 1.e-6)return;
     if(!pre_draw(di, matl, 1)) return;
@@ -1179,7 +1194,9 @@ void GeomCappedCylinder::draw(DrawInfoOpenGL* di, Material* matl, double)
     post_draw(di);
 }
 
-void GeomCone::draw(DrawInfoOpenGL* di, Material* matl, double)
+
+void
+GeomCone::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(height < 1.e-6 || (bot_rad < 1.e-6 && top_rad < 1.e-6))return;
     if(!pre_draw(di, matl, 1)) return;
@@ -1192,7 +1209,9 @@ void GeomCone::draw(DrawInfoOpenGL* di, Material* matl, double)
     post_draw(di);
 }
 
-void GeomCappedCone::draw(DrawInfoOpenGL* di, Material* matl, double)
+
+void
+GeomCappedCone::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(height < 1.e-6 || (bot_rad < 1.e-6 && top_rad < 1.e-6))return;
     if(!pre_draw(di, matl, 1)) return;
@@ -1332,7 +1351,8 @@ ColorMapTex::draw(DrawInfoOpenGL *di, Material *matl, double time)
 }
 
 
-void GeomCylinder::draw(DrawInfoOpenGL* di, Material* matl, double)
+void
+GeomCylinder::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(height < 1.e-6 || rad < 1.e-6)return;
     if(!pre_draw(di, matl, 1)) return;
@@ -1344,6 +1364,7 @@ void GeomCylinder::draw(DrawInfoOpenGL* di, Material* matl, double)
     glPopMatrix();
     post_draw(di);
 }
+
 
 void
 GeomCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
@@ -1548,7 +1569,8 @@ GeomCappedCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
 }
 
 
-void GeomDisc::draw(DrawInfoOpenGL* di, Material* matl, double)
+void
+GeomDisc::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(rad < 1.e-6)return;
     if(!pre_draw(di, matl, 1)) return;
@@ -1577,7 +1599,9 @@ TexGeomGrid::~TexGeomGrid()
     }
 }
 
-void TexGeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
+
+void
+TexGeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if(!pre_draw(di, matl, 0)) return;
   //int nu=dimU;
@@ -1710,142 +1734,10 @@ void TexGeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
   }
   post_draw(di);
 }
-#if 0
-void TimeGrid::draw(DrawInfoOpenGL* di, Material* matl, double t)
-{
-  if(!pre_draw(di, matl, 0)) return;
-  int nu=dimU;
-  int nv=dimV;
-  di->polycount+=2; 
-  Vector uu(u/(nu-1));
-  Vector vv(v/(nv-1));
 
-  // first find which ones need to be drawn...
-  int i;
-  for(i=0;i<time.size() && (time[i] <= t);i++)
-    ;
 
-  int start,end;
-  double dt;
-
-  if (i) { // if it was zero, just keep it...
-    if (i != (time.size()))
-      --i;
-  }
-
-  start = i;
-  end = i+1;
-
-  if (end == time.size())
-    end--; // can't wrap over...
-
-  dt = (t-time[i])/(time[1]-time[0]);
-  cerr << dt << " Trying to do texture draw...\n";
-  
-
-  if (dt < 0.0) dt = 0.0;
-  if (dt > 1.0) dt = 1.0;
-
-  switch(di->get_drawtype()){
-  case DrawInfoOpenGL::WireFrame:
-    break;
-  case DrawInfoOpenGL::Flat:
-  case DrawInfoOpenGL::Gouraud:
-    {
-      if (tmap_dlist[start] == 0) {
-	tmap_dlist[start] = glGenLists(1);
-	glNewList(tmap_dlist[start],GL_COMPILE_AND_EXECUTE);
-	glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,
-		  GL_MODULATE);
-	glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,
-			GL_LINEAR);
-	cerr << tmap_size << " Trying to do texture draw... bf\n";
-	glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,
-			GL_LINEAR);
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glTexImage2D(GL_TEXTURE_2D,0,4,tmap_size,tmap_size,
-		     0,GL_RGBA,GL_FLOAT,tmap[start]);
-	cerr << "Trying to do texture draw... cf\n";
-	glEndList();
-      }
-      else {
-	glCallList(tmap_dlist[start]);
-      }
-      cerr << "Trying to do texture draw... ef\n";
-
-      glColor4f(1.0,1.0,1.0,1.0-dt);
-//      glColor4f(1.0,1.0,1.0,1.0);
-      glEnable(GL_TEXTURE_2D);
-      
-      glBlendFunc(GL_SRC_ALPHA,GL_ZERO); // just add in the first part
-      
-      glEnable(GL_BLEND);
-
-      glBegin(GL_QUADS);
-      glTexCoord2f(0.0,0.0);
-      glVertex3d(corner.x(),corner.y(),corner.z());
-      
-      glTexCoord2f(dimU/(1.0*tmap_size),0.0);
-      glVertex3d(corner.x()+u.x(),corner.y()+u.y(),corner.z()+u.z());
-      
-      glTexCoord2f(dimU/(1.0*tmap_size),
-		   dimV/(1.0*tmap_size));
-      glVertex3d(corner.x()+v.x()+u.x(),
-		 corner.y()+v.y()+u.y(),
-		 corner.z()+v.z()+u.z());
-      
-      glTexCoord2f(0.0,dimV/(1.0*tmap_size));
-      glVertex3d(corner.x()+v.x(),corner.y()+v.y(),corner.z()+v.z());
-      
-      glEnd();
-#if 1
-      if (tmap_dlist[end] == 0) {
-	tmap_dlist[end] = glGenLists(1);
-	glNewList(tmap_dlist[end],GL_COMPILE_AND_EXECUTE);
-	glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,
-		  GL_MODULATE);
-	glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,
-			GL_LINEAR);
-	glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,
-			GL_LINEAR);
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glTexImage2D(GL_TEXTURE_2D,0,4,tmap_size,tmap_size,
-		     0,GL_RGBA,GL_FLOAT,tmap[end]);
-	glEndList();
-      }
-      else {
-	glCallList(tmap_dlist[end]);
-      }
-      glColor4f(1.0,1.0,1.0,dt);
-      glBlendFunc(GL_SRC_ALPHA,GL_ONE); // just add in the first part
-      
-      glBegin(GL_QUADS);
-      glTexCoord2f(0.0,0.0);
-      glVertex3d(corner.x(),corner.y(),corner.z());
-      
-      glTexCoord2f(dimU/(1.0*tmap_size),0.0);
-      glVertex3d(corner.x()+u.x(),corner.y()+u.y(),corner.z()+u.z());
-      
-      glTexCoord2f(dimU/(1.0*tmap_size),
-		   dimV/(1.0*tmap_size));
-      glVertex3d(corner.x()+v.x()+u.x(),
-		 corner.y()+v.y()+u.y(),
-		 corner.z()+v.z()+u.z());
-      
-      glTexCoord2f(0.0,dimV/(1.0*tmap_size));
-      glVertex3d(corner.x()+v.x(),corner.y()+v.y(),corner.z()+v.z());
-      
-      glEnd();
-#endif      
-      glDisable(GL_BLEND);
-      glDisable(GL_TEXTURE_2D);
-      break;
-    }
-  }
-  post_draw(di);
-}
-#else
-void TimeGrid::draw(DrawInfoOpenGL* di, Material* matl, double t)
+void
+TimeGrid::draw(DrawInfoOpenGL* di, Material* matl, double t)
 {
   if(!pre_draw(di, matl, 0)) return;
   //int nu=dimU;
@@ -1978,10 +1870,12 @@ void TimeGrid::draw(DrawInfoOpenGL* di, Material* matl, double t)
   }
   post_draw(di);
 }
-#endif
+
+
 // WARNING doesn't respond to lighting correctly yet!
 #ifdef BROKEN_BUT_FAST
-void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
+void
+GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(!pre_draw(di, matl, 1)) return;
     di->polycount+=2*(nu-1)*(nv-1);
@@ -2133,7 +2027,8 @@ void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
     post_draw(di);
 }
 #else
-void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
+void
+GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     int nu=verts.dim1();
     int nv=verts.dim2();
@@ -2348,10 +2243,11 @@ void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
     }
     post_draw(di);
 }
-
 #endif
 
-void GeomQMesh::draw(DrawInfoOpenGL* di, Material* matl, double)
+
+void
+GeomQMesh::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if(!pre_draw(di, matl, 1)) return; 
 
@@ -2397,7 +2293,9 @@ void GeomQMesh::draw(DrawInfoOpenGL* di, Material* matl, double)
   post_draw(di);
 }
 
-void GeomGroup::draw(DrawInfoOpenGL* di, Material* matl, double time)
+
+void
+GeomGroup::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
   if(di->pickmode){
     for (unsigned int i=0; i<objs.size(); i++)
@@ -2410,7 +2308,9 @@ void GeomGroup::draw(DrawInfoOpenGL* di, Material* matl, double time)
       objs[i]->draw(di, matl, time);
 }
 
-void GeomTimeGroup::draw(DrawInfoOpenGL* di, Material* matl, double time)
+
+void
+GeomTimeGroup::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
   int i;
   for (i=0; i<(int)(objs.size()) && (start_times[i] <= time); i++) 
@@ -2427,7 +2327,9 @@ void GeomTimeGroup::draw(DrawInfoOpenGL* di, Material* matl, double time)
   }
 }
 
-void GeomLine::draw(DrawInfoOpenGL* di, Material* matl, double)
+
+void
+GeomLine::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(!pre_draw(di, matl, 0)) return;
     di->polycount++;
@@ -2444,6 +2346,7 @@ void GeomLine::draw(DrawInfoOpenGL* di, Material* matl, double)
     glLineWidth(lw);
     post_draw(di);
 }
+
 
 void
 GeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
@@ -2503,6 +2406,7 @@ GeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   post_draw(di);
 }
+
 
 void
 GeomCull::draw(DrawInfoOpenGL* di, Material* matl, double time)
@@ -2651,7 +2555,8 @@ GeomCLineStrips::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 //const int OD_TEX_INIT = 4096; // 12tg bit of clip planes...
 
-void TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
+void
+TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if(!pre_draw(di, matl, 0)) return;  // lighting is turned off here...
   di->polycount+=pts.size()/2;
@@ -2932,9 +2837,9 @@ GeomMaterial::draw(DrawInfoOpenGL* di, Material* /* old_matl */, double time)
 }
 
 
-void GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
+void
+GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
-
     if(draw_only_on_pick_ && !di->pickmode) return;
     if(di->pickmode){
 	// cerr <<"found a widget " << (GLuint)this << endl;
@@ -2973,7 +2878,9 @@ void GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
     }
 }
 
-void GeomPolyline::draw(DrawInfoOpenGL* di, Material* matl, double currenttime)
+
+void
+GeomPolyline::draw(DrawInfoOpenGL* di, Material* matl, double currenttime)
 {
     if(!pre_draw(di, matl, 0)) return;
     di->polycount+=verts.size()-1;
@@ -2991,9 +2898,10 @@ void GeomPolyline::draw(DrawInfoOpenGL* di, Material* matl, double currenttime)
     post_draw(di);
 }
 
-void GeomPolylineTC::draw(DrawInfoOpenGL* di, Material* matl, double currenttime)
-{
 
+void
+GeomPolylineTC::draw(DrawInfoOpenGL* di, Material* matl, double currenttime)
+{
   if(data.size() == 0)
     return;
   if(!pre_draw(di, matl, 0)) return;
@@ -3060,10 +2968,11 @@ void GeomPolylineTC::draw(DrawInfoOpenGL* di, Material* matl, double currenttime
     glEnd();
   }
   post_draw(di);
-
 }
 
-void GeomPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
+
+void
+GeomPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   //  if (!pre_draw(di, matl, have_normal)) { return; }
   if (!pre_draw(di, matl, 0)) { return; }
@@ -3223,8 +3132,9 @@ GeomTranspPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
 }
 
 
-
-void GeomTexSlices::draw(DrawInfoOpenGL* di, Material* matl, double) {
+void
+GeomTexSlices::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
     if(!pre_draw(di, matl, 0)) return;
     if (!have_drawn) {
 	have_drawn=1;
@@ -3382,7 +3292,9 @@ void GeomTexSlices::draw(DrawInfoOpenGL* di, Material* matl, double) {
     post_draw(di);
 }
 
-void GeomTube::draw(DrawInfoOpenGL* di, Material* matl, double)
+
+void
+GeomTube::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(!pre_draw(di, matl, 1)) return;
     di->polycount+=(verts.size()-1)*2*20;
@@ -3456,9 +3368,11 @@ void GeomTube::draw(DrawInfoOpenGL* di, Material* matl, double)
     post_draw(di);
 }
 
+
 // --------------------------------------------------
 
-void GeomRenderMode::draw(DrawInfoOpenGL* di, Material* matl, double time)
+void
+GeomRenderMode::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
 //    int save_lighting=di->lighting;
     NOT_FINISHED("GeomRenderMode");
@@ -3469,7 +3383,9 @@ void GeomRenderMode::draw(DrawInfoOpenGL* di, Material* matl, double time)
     }
 }    
 
-void GeomSphere::draw(DrawInfoOpenGL* di, Material* matl, double)
+
+void
+GeomSphere::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if(rad < 1.e-6)return;
   if(!pre_draw(di, matl, 1)) return;
@@ -3485,7 +3401,8 @@ void GeomSphere::draw(DrawInfoOpenGL* di, Material* matl, double)
 }
 
 
-void GeomSuperquadric::draw(DrawInfoOpenGL* di, Material* matl, double)
+void
+GeomSuperquadric::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 1)) return;
 
@@ -3558,7 +3475,8 @@ GeomSpheres::draw(DrawInfoOpenGL* di, Material* matl, double)
 }
 
 
-void GeomEllipsoid::draw(DrawInfoOpenGL* di, Material* matl, double)
+void
+GeomEllipsoid::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     pre_draw(di,matl,1);
     glPushMatrix();
@@ -3570,7 +3488,8 @@ void GeomEllipsoid::draw(DrawInfoOpenGL* di, Material* matl, double)
 }
 
 
-void GeomSwitch::draw(DrawInfoOpenGL* di, Material* matl, double time)
+void
+GeomSwitch::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
    if (state && child_.get_rep())
    {
@@ -3578,9 +3497,10 @@ void GeomSwitch::draw(DrawInfoOpenGL* di, Material* matl, double time)
    }
 }
 
-void GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
-{
 
+void
+GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
     if(!pre_draw(di, matl, 1)) return;
     di->polycount+=4;
 
@@ -3705,16 +3625,20 @@ void GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
     post_draw(di);
 }
 
-void GeomTimeSwitch::draw(DrawInfoOpenGL* di, Material* matl, double time)
+
+void
+GeomTimeSwitch::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
     if(time >= tbeg && time < tend) {
 	child_->draw(di, matl, time);
     }
 }
 
+
 // WARNING not fixed for lighting correctly yet!
 
-void GeomTorus::draw(DrawInfoOpenGL* di, Material* matl, double)
+void
+GeomTorus::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(!pre_draw(di, matl, 1)) return;
     glPushMatrix();
@@ -3838,7 +3762,9 @@ void GeomTorus::draw(DrawInfoOpenGL* di, Material* matl, double)
     post_draw(di);
 }
 
-void GeomTransform::draw(DrawInfoOpenGL* di, Material* matl, double time)
+
+void
+GeomTransform::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
   glPushMatrix();
   double mat[16];
@@ -3848,7 +3774,9 @@ void GeomTransform::draw(DrawInfoOpenGL* di, Material* matl, double time)
   glPopMatrix();
 }
 
-void GeomTri::draw(DrawInfoOpenGL* di, Material* matl, double)
+
+void
+GeomTri::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(!pre_draw(di, matl, 1)) return;
     di->polycount++;
@@ -3909,7 +3837,9 @@ void GeomTri::draw(DrawInfoOpenGL* di, Material* matl, double)
     post_draw(di);
 }
 
-void GeomTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
+
+void
+GeomTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(!pre_draw(di, matl, 1)) return;
     if(verts.size() <= 2)
@@ -4441,7 +4371,8 @@ GeomTranspQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
 }
 
 
-void GeomTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
+void
+GeomTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(points.size() == 0)
       return;
@@ -4522,7 +4453,9 @@ void GeomTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
     post_draw(di);
 }
 
-void GeomTrianglesPT1d::draw(DrawInfoOpenGL* di, Material* matl, double)
+
+void
+GeomTrianglesPT1d::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
 //  return;
   if(!pre_draw(di,matl,1)) return;
@@ -4599,7 +4532,9 @@ void GeomTrianglesPT1d::draw(DrawInfoOpenGL* di, Material* matl, double)
   post_draw(di);
 }
 
-void GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
+
+void
+GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!size())
   {
@@ -4811,7 +4746,8 @@ void GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 
 #if 0
-void GeomSquares::draw(DrawInfoOpenGL* di, Material* matl, double)
+void
+GeomSquares::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if ( pts.size() == 0 )
     return;
@@ -4833,7 +4769,9 @@ void GeomSquares::draw(DrawInfoOpenGL* di, Material* matl, double)
 }
 #endif
 
-void GeomBox::draw(DrawInfoOpenGL* di, Material* matl, double)
+
+void
+GeomBox::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if(!pre_draw(di,matl,1)) return;
   
@@ -5212,7 +5150,8 @@ GeomBoxes::draw(DrawInfoOpenGL* di, Material* matl, double)
 }
 
 
-void GeomTrianglesPC::draw(DrawInfoOpenGL* di, Material* matl, double)
+void
+GeomTrianglesPC::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(points.size() == 0)
       return;
@@ -5298,7 +5237,9 @@ void GeomTrianglesPC::draw(DrawInfoOpenGL* di, Material* matl, double)
     post_draw(di);
 }
 
-void GeomTrianglesVP::draw(DrawInfoOpenGL* di, Material* matl, double)
+
+void
+GeomTrianglesVP::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(points.size() == 0)
       return;
@@ -5375,7 +5316,9 @@ void GeomTrianglesVP::draw(DrawInfoOpenGL* di, Material* matl, double)
     post_draw(di);
 }
 
-void GeomTrianglesVPC::draw(DrawInfoOpenGL* di, Material* matl, double)
+
+void
+GeomTrianglesVPC::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(points.size() == 0)
       return;
@@ -5464,9 +5407,11 @@ void GeomTrianglesVPC::draw(DrawInfoOpenGL* di, Material* matl, double)
     post_draw(di);
 }
 
+
 // WARNING not fixed for lighting correctly yet!
 
-void GeomTorusArc::draw(DrawInfoOpenGL* di, Material* matl, double)
+void
+GeomTorusArc::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(!pre_draw(di, matl, 1)) return;
     glPushMatrix();
@@ -5601,7 +5546,9 @@ void GeomTorusArc::draw(DrawInfoOpenGL* di, Material* matl, double)
     post_draw(di);
 }
 
-void GeomTriStrip::draw(DrawInfoOpenGL* di, Material* matl, double)
+
+void
+GeomTriStrip::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if(!pre_draw(di, matl, 1)) return;
   if(verts.size() <= 2)
@@ -5672,7 +5619,9 @@ void GeomTriStrip::draw(DrawInfoOpenGL* di, Material* matl, double)
   post_draw(di);
 }
 
-void GeomTriStripList::draw(DrawInfoOpenGL* di, Material* matl, double)
+
+void
+GeomTriStripList::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(pts.size() == 0)
       return;
@@ -5740,73 +5689,98 @@ void GeomTriStripList::draw(DrawInfoOpenGL* di, Material* matl, double)
     post_draw(di);
 }
 
-void GeomVertex::emit_all(DrawInfoOpenGL*)
+
+void
+GeomVertex::emit_all(DrawInfoOpenGL*)
 {
     glVertex3d(p.x(), p.y(), p.z());
 }
 
-void GeomVertex::emit_point(DrawInfoOpenGL*)
+
+void
+GeomVertex::emit_point(DrawInfoOpenGL*)
 {
     glVertex3d(p.x(), p.y(), p.z());
 }
 
-void GeomVertex::emit_matl(DrawInfoOpenGL*)
+
+void
+GeomVertex::emit_matl(DrawInfoOpenGL*)
 {
     // Do nothing
 }
 
-void GeomVertex::emit_normal(DrawInfoOpenGL*)
+
+void
+GeomVertex::emit_normal(DrawInfoOpenGL*)
 {
     // Do nothing
 }
 
-void GeomNVertex::emit_all(DrawInfoOpenGL*)
+
+void
+GeomNVertex::emit_all(DrawInfoOpenGL*)
 {
     glNormal3d(normal.x(), normal.y(), normal.z());
     glVertex3d(p.x(), p.y(), p.z());
 }
 
-void GeomNVertex::emit_normal(DrawInfoOpenGL*)
+
+void
+GeomNVertex::emit_normal(DrawInfoOpenGL*)
 {
     glNormal3d(normal.x(), normal.z(), normal.z());
 }
 
-void GeomNMVertex::emit_all(DrawInfoOpenGL* di)
+
+void
+GeomNMVertex::emit_all(DrawInfoOpenGL* di)
 {
     di->set_matl(matl.get_rep());
     glNormal3d(normal.x(), normal.y(), normal.z());
     glVertex3d(p.x(), p.y(), p.z());
 }
 
-void GeomNMVertex::emit_matl(DrawInfoOpenGL* di)
+
+void
+GeomNMVertex::emit_matl(DrawInfoOpenGL* di)
 {
     di->set_matl(matl.get_rep());
 }
 
-void GeomMVertex::emit_all(DrawInfoOpenGL* di)
+
+void
+GeomMVertex::emit_all(DrawInfoOpenGL* di)
 {
     di->set_matl(matl.get_rep());
     glVertex3d(p.x(), p.y(), p.z());
 }
 
-void GeomMVertex::emit_matl(DrawInfoOpenGL* di)
+
+void
+GeomMVertex::emit_matl(DrawInfoOpenGL* di)
 {
     di->set_matl(matl.get_rep());
 }
 
-void GeomCVertex::emit_all(DrawInfoOpenGL* /*di*/)
+
+void
+GeomCVertex::emit_all(DrawInfoOpenGL* /*di*/)
 {
     glColor3f(color.r(),color.g(),color.b());
     glVertex3d(p.x(), p.y(), p.z());
 }
 
-void GeomCVertex::emit_matl(DrawInfoOpenGL* /*di*/)
+
+void
+GeomCVertex::emit_matl(DrawInfoOpenGL* /*di*/)
 {
     glColor3f(color.r(),color.g(),color.b());
 }
 
 
-void Light::opengl_reset_light(int i)
+void
+Light::opengl_reset_light(int i)
 {
   float f[4];
   f[0]=0.0; f[1]=0.0; f[2]=0.0; f[3]=1.0;
@@ -5835,12 +5809,13 @@ void Light::opengl_reset_light(int i)
   
 }
 
-void SpotLight::opengl_setup( const View&, DrawInfoOpenGL*, int& idx)
+
+void
+SpotLight::opengl_setup( const View&, DrawInfoOpenGL*, int& idx)
 {
   if(on ) {
     int i = idx++;
     float f[4];
-//     cerr<<"Turning on spot light: light "<<idx<<".\n";
 
     opengl_reset_light( i );
 
@@ -5865,7 +5840,9 @@ void SpotLight::opengl_setup( const View&, DrawInfoOpenGL*, int& idx)
   }
 }
 
-void DirectionalLight::opengl_setup( const View&, DrawInfoOpenGL*, int& idx)
+
+void
+DirectionalLight::opengl_setup( const View&, DrawInfoOpenGL*, int& idx)
 {
   if(on ) {
     int i = idx++;
@@ -5892,8 +5869,10 @@ void DirectionalLight::opengl_setup( const View&, DrawInfoOpenGL*, int& idx)
     }
   }
 }
+
     
-void PointLight::opengl_setup(const View&, DrawInfoOpenGL*, int& idx)
+void
+PointLight::opengl_setup(const View&, DrawInfoOpenGL*, int& idx)
 {
   if( on ) {
     int i=idx++;
@@ -5919,7 +5898,9 @@ void PointLight::opengl_setup(const View&, DrawInfoOpenGL*, int& idx)
   }
 }
 
-void HeadLight::opengl_setup(const View& /*view*/, DrawInfoOpenGL*, int& idx)
+
+void
+HeadLight::opengl_setup(const View& /*view*/, DrawInfoOpenGL*, int& idx)
 {
   if ( on ) {
     int i=idx++;
@@ -5943,8 +5924,10 @@ void HeadLight::opengl_setup(const View& /*view*/, DrawInfoOpenGL*, int& idx)
   }
 }
 
+
 //----------------------------------------------------------------------
-void GeomIndexedGroup::draw(DrawInfoOpenGL* di, Material* m, double time)
+void
+GeomIndexedGroup::draw(DrawInfoOpenGL* di, Material* m, double time)
 {  
   MapIntGeomObj::iterator iter;
   for (iter = objs.begin(); iter != objs.end(); iter++) {
@@ -5956,8 +5939,6 @@ void GeomIndexedGroup::draw(DrawInfoOpenGL* di, Material* m, double time)
 bool
 DrawInfoOpenGL::init_font(int a)
 {
-
-
 #ifndef _WIN32
   if (a > GEOM_FONT_COUNT || a < 0) { return false; }
 
@@ -6033,13 +6014,13 @@ DrawInfoOpenGL::init_font(int a)
       return true;
     }
   return false;
-  
 #endif
 }
 
 
 //----------------------------------------------------------------------
-void GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
+void
+GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if(!pre_draw(di,matl,0)) return;
 
@@ -6063,7 +6044,8 @@ void GeomText::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 
 //----------------------------------------------------------------------
-void GeomTexts::draw(DrawInfoOpenGL* di, Material* matl, double)
+void
+GeomTexts::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if(!pre_draw(di,matl,0)) return;
 
@@ -6106,7 +6088,8 @@ void GeomTexts::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 
 //----------------------------------------------------------------------
-void GeomTextsCulled::draw(DrawInfoOpenGL* di, Material* matl, double)
+void
+GeomTextsCulled::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
 
   if(!pre_draw(di,matl,0)) return;
@@ -6158,7 +6141,8 @@ void GeomTextsCulled::draw(DrawInfoOpenGL* di, Material* matl, double)
 }
 
 
-void GeomTextTexture::draw(DrawInfoOpenGL* di, Material* matl, double)
+void
+GeomTextTexture::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if(!pre_draw(di,matl,0)) return;
 
@@ -6204,7 +6188,8 @@ void GeomTextTexture::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 
 #if 0
-void ColorMapTex::draw(DrawInfoOpenGL* di, Material* matl, double) 
+void
+ColorMapTex::draw(DrawInfoOpenGL* di, Material* matl, double) 
 {
   if(!pre_draw(di, matl, 0)) return;
   static GLuint texName = 0;
@@ -6245,7 +6230,8 @@ void ColorMapTex::draw(DrawInfoOpenGL* di, Material* matl, double)
 #endif
 
 
-void HistogramTex::draw(DrawInfoOpenGL* di, Material* matl, double) 
+void
+HistogramTex::draw(DrawInfoOpenGL* di, Material* matl, double) 
 {
   if(!pre_draw(di, matl, 0)) return;
   static GLuint texName = 0;
@@ -6294,7 +6280,9 @@ void HistogramTex::draw(DrawInfoOpenGL* di, Material* matl, double)
   post_draw(di);
 }
 
-void TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double) 
+
+void
+TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double) 
 {
   if(!pre_draw(di, matl, 1)) return;
   glEnable(GL_TEXTURE_2D);
@@ -6332,6 +6320,7 @@ void TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double)
   post_draw(di);
 }
 
+
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
 #define FRAG \
 "!!ARBfp1.0 \n" \
@@ -6363,7 +6352,9 @@ void TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double)
 "END"
 #endif
 
-void GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double) 
+
+void
+GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double) 
 {
 #ifdef _WIN32
   if (glActiveTexture == NULL) {
@@ -6535,7 +6526,10 @@ void GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double)
   post_draw(di);
 }
 
-void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
+
+void
+GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t)
+{
   if(!pre_draw(di, matl, 0)) return;
 
   int ii = 0;
@@ -6577,5 +6571,6 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
   }
   post_draw(di);
 }  
+
 
 } // End namespace SCIRun
