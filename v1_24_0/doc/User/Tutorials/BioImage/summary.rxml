@@ -69,4 +69,49 @@ DEALINGS IN THE SOFTWARE.
     the CT Tooth dataset.  For further questions and reference,
     please see the reference guide.
   </para>
+
+  <section>
+    <title>Other Demo Datasets</title>
+    
+    <para>The SCIRunData download contains other sample datasets and their
+    corresponding transfer functions. Two of these are the Engine and 
+    CT Head datasets as seen in <xref linkend="fig.Engine"/> and
+    <xref linkend="fig.CThead"/> respectively and are found in the volume
+    directory of SCIRunData. To load these datasets into BioImage, simply
+    navigate to the engine.nhdr or CThead.nhdr files in the 
+    SCIRunData volume directory. The corresponding transfer function will
+    load.
+    </para>
+
+    <figure id="fig.Engine">
+      <title><ulink url="Figures/Engine_hires.jpg">Engine Dataset in BioImage</ulink></title>
+      <mediaobject>
+	<textobject>
+	  <phrase>Engine Dataset in BioImage</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/Engine.eps" align="center" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/Engine.jpg" align="center" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+    </figure>
+
+    <figure id="fig.CThead">
+      <title><ulink url="Figures/CThead_hires.jpg">CThead Dataset in BioImage</ulink></title>
+      <mediaobject>
+	<textobject>
+	  <phrase>CThead Dataset in BioImage</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/CThead.eps" align="center" format="EPS"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/CThead.jpg" align="center" format="JPG"/>
+	</imageobject>
+      </mediaobject>
+    </figure>
+
+  </section>
 </chapter>
