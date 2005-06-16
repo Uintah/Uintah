@@ -97,6 +97,43 @@ doc.insertDocType("article", entities)
       </answer>
     </qandaentry>
 
+<!-- -------------------- -->
+
+    <qandaentry>
+      <revhistory>
+	<revision>
+	  <revnumber>001</revnumber>
+	  <date>6/16/05</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>
+        I am getting the following error... any ideas?
+	</para>
+	<para>
+	./scirun: error while loading shared libraries:
+        /usr/local/SCIRun/Thirdparty/1.24.1/Linux/gcc-3.4.3-32bit/lib/libteem.so:
+        cannot restore segment prot after reloc: Permission denied
+	</para>
+      </question>
+      <answer>
+	<para>
+        Frank Sainsbury writes:
+	</para>
+	<para>
+        We fixed this by:
+        change /etc/selinux/config
+        set SELINUX DISABLED
+
+        reboot.
+
+        Am still looking at what it is doing...
+	</para>
+      </answer>
+    </qandaentry>
+
+<!-- -------------------- -->
+
     <qandaentry id="card1">
       <revhistory>
 	<revision>
