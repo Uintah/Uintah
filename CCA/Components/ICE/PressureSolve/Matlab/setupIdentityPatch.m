@@ -13,8 +13,11 @@ function Alist = setupIdentityPatch(grid,k,q,ilower,iupper)
 %   does not include that.
 %
 %   See also: SETOPERATORPATCH, DELETEUNDERLYINGDATA.
+global verboseLevel
 
-fprintf('--- setupIdentityPatch(k = %d, q = %d) ---\n',k,q);
+if (verboseLevel >= 1)
+    fprintf('--- setupIdentityPatch(k = %d, q = %d) ---\n',k,q);
+end
 level       = grid.level{k};
 numPatches  = length(level.numPatches);
 h           = level.h;
