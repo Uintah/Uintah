@@ -47,12 +47,15 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   }
   //__________________________________
   // with ICE or MPMICE you must a reference pressure
-  ProblemSpecP ice_ps = ps->findBlock("CFD")->findBlock("ICE");
-  if(ice_ps && d_ref_press == 0.0){
-    throw ProblemSetupException("\n Could not find <reference_pressure> inside of <PhysicalConstants> \n"
-                                " This pressure is used during the problem intialization and when\n"
-                                " the pressure gradient is interpolated to the MPM particles \n"
-                                " you must have it for all MPMICE and multimaterial ICE problems\n" );  
+  ProblemSpecP cfd_ps = ps->findBlock("CFD");
+  if(cfd_ps){
+    ProblemSpecP ice_ps=cfd_ps->findBlock("ICE");
+    if(ice_ps && d_ref_press == 0.0){
+      throw ProblemSetupException("\n Could not find <reference_pressure> inside of <PhysicalConstants> \n"
+                                 " This pressure is used during the problem intialization and when\n"
+                                  " the pressure gradient is interpolated to the MPM particles \n"
+                                  " you must have it for all MPMICE and multimaterial ICE problems\n" );  
+    }
   }
 
   all_mpm_matls = 0;
