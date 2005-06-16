@@ -168,7 +168,8 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
   Vector gravity = sharedState->getGravity(); 
   int timestep = sharedState->getCurrentTopLevelTimeStep();
   int numMatls  = sharedState->getNumICEMatls();
-  if ( custom_BC_basket->usingLodi  && timestep > 0 ) {
+  
+  if (timestep > 0 ) {
     numMatls += sharedState->getNumMPMMatls();
   }
       
@@ -345,34 +346,36 @@ void setBC(CCVariable<double>& press_CC,
         Vector press_ref_pt = gridMin + 1.5*dx_L0;
 
         int p_dir = patch->faceAxes(face)[0];     // normal  face direction
-
+        
         // Only apply this correction in case of Neumann or Dirichlet BC
         bool Neumann_BC = (bc_kind=="Neumann" || bc_kind=="zeroNeumann");
-        if (gravity.length() > 0 && topLevelTimestep > 0 &&
+        if (gravity[p_dir] != 0 && topLevelTimestep > 0  &&
             (bc_kind=="Dirichlet" || Neumann_BC)) {
-          if (gravity[p_dir] != 0 || bc_kind=="Dirichlet") {
-            IntVector oneCell = patch->faceDirection(face);
-            vector<IntVector>::const_iterator iter;
+            
+          double oneZero = 1;  
+          if (bc_kind=="Dirichlet") {
+            oneZero = 0.0;
+          }    
+          
+          IntVector oneCell = patch->faceDirection(face);
+          
+          vector<IntVector>::const_iterator iter;
+          for (iter=bound.begin();iter != bound.end(); iter++) {
+            IntVector R = *iter;
+            IntVector L = *iter - oneCell;
+            Point here_L = level->getCellPosition(L);
+            Point here_R = level->getCellPosition(R);
+            Vector dist_L = (here_L.asVector() - press_ref_pt);
+            Vector dist_R = (here_R.asVector() - press_ref_pt);
+            double rho_L = rho_micro[surroundingMatl_indx][L];
+            double rho_R = rho_micro[surroundingMatl_indx][R];
 
-            for (iter=bound.begin();iter != bound.end(); iter++) { 
-              IntVector R = *iter;
-              Point here_R = level->getCellPosition(R);
-              Vector dist_from_p_ref_R = (here_R.asVector() - press_ref_pt);
-              double rho_R = rho_micro[surroundingMatl_indx][R];
-              double correction_R = Dot(gravity,dist_from_p_ref_R);
-              press_CC[R] += correction_R*rho_R;
-              if (Neumann_BC) {
-                IntVector L = *iter - oneCell;
-                Point here_L = level->getCellPosition(L);
-                Vector dist_from_p_ref_L = (here_L.asVector() - press_ref_pt);
-                double rho_L = rho_micro[surroundingMatl_indx][L];
-                double correction_L = Dot(gravity,dist_from_p_ref_L);
-                press_CC[R] -= correction_L*rho_L;
-              }
-            }
+            double correction = gravity[p_dir]
+                              *(rho_R * dist_R[p_dir] - oneZero * rho_L * dist_L[p_dir]);
+            press_CC[R] += correction;
           }
           IveSetBC = true;
-        }  // with gravity 
+        } // with gravity 
 
         //__________________________________
         //  debugging
