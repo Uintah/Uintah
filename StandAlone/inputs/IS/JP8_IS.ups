@@ -356,7 +356,7 @@
     <use_load_curves>                false      </use_load_curves>
     <create_new_particles>           false       </create_new_particles>
     <manual_new_material>            true       </manual_new_material>
-    <erosion algorithm = "KeepStress"/>
+    <erosion algorithm = "ZeroStress"/>
   </MPM>
 
   <!--____________________________________________________________________-->
