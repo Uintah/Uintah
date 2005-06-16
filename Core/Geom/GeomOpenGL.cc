@@ -94,9 +94,6 @@
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Geom/GeomEllipsoid.h>
 #include <Core/Geom/GeomDL.h>
-#if 0
-#include <Core/Geom/Squares.h>
-#endif
 #include <Core/Geom/GeomSwitch.h>
 #include <Core/Geom/GeomTetra.h>
 #include <Core/Geom/GeomTexSlices.h>
@@ -5095,32 +5092,6 @@ GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
   }
   post_draw(di);
 }
-
-
-#if 0
-void
-GeomSquares::draw(DrawInfoOpenGL* di, Material* matl, double)
-{
-  if ( pts.size() == 0 )
-    return;
-
-  if (!pre_draw(di,matl,1)) return;
-
-  di->polycount += pts.size()/2;
-
-  Point *p = &pts[0];
-  glBegin(GL_QUADS);
-  for (int i=0; i<pts.size(); i+=2, p++ )
-  {
-    glVertex3d( p[0].x(), p[0].y(), p[0].z() );
-    glVertex3d( p[0].x(), p[1].y(), p[0].z() );
-    glVertex3d( p[1].x(), p[1].y(), p[0].z() );
-    glVertex3d( p[1].x(), p[0].y(), p[0].z() );
-  }
-  glEnd();
-  post_draw(di);
-}
-#endif
 
 
 void
