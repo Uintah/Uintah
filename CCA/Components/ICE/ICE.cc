@@ -697,8 +697,6 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
     t2->modifies(lb->temp_CCLabel);
     t2->modifies(lb->press_CCLabel, d_press_matl, oims); 
 
-    cout << "ICE: press_matl: " << d_press_matl->size()<< "\n";
-
     sched->addTask(t2, level->eachPatch(), ice_matls);
   }
   
@@ -729,11 +727,12 @@ void ICE::restartInitialize()
   for (int m = 0; m < numMatls; m++ ) {
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
     if(ice_matl->isSurroundingMatl()) {
-      d_surroundingMatl_indx = m;
+      d_surroundingMatl_indx = ice_matl->getDWIndex();
     } 
   }
+  
   // --------bulletproofing
-  Vector grav     = d_sharedState->getGravity();
+  Vector grav = d_sharedState->getGravity();
   if (grav.length() >0.0 && d_surroundingMatl_indx == -9)  {
     throw ProblemSetupException("ERROR ICE::restartInitialize \n"
           "You must have \n" 
@@ -2013,7 +2012,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     
     new_dw->allocateAndPut(press_CC,         lb->press_CCLabel,     0,patch);
     new_dw->allocateAndPut(imp_initialGuess, lb->initialGuessLabel, 0,patch);
-    press_CC.initialize(0.0);
     imp_initialGuess.initialize(0.0); 
 
     //__________________________________
@@ -2033,7 +2031,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       thermalCond.initialize( ice_matl->getThermalConductivity());
       
       if(ice_matl->isSurroundingMatl()) {
-        d_surroundingMatl_indx = m;  //which matl. is the surrounding matl
+        d_surroundingMatl_indx = indx;  //which matl. is the surrounding matl
       } 
     }
     // --------bulletproofing
@@ -2153,39 +2151,32 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
     Ghost::GhostType  gn = Ghost::None;
     int numMatls = d_sharedState->getNumICEMatls();
     //__________________________________
-    //  grab rho micro for all matls
-    StaticArray<CCVariable<double>   > rho_micro(numMatls);
-    for (int m = 0; m < numMatls; m++) {
-      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-      int indx = ice_matl->getDWIndex();
-      new_dw->getModifiable(rho_micro[m],lb->rho_micro_CCLabel,  indx, patch);
-    }
-    
-    CCVariable<double> press_CC;
+    // adjust the pressure field
+    CCVariable<double> rho_micro, press_CC;
     new_dw->getModifiable(press_CC, lb->press_CCLabel,0, patch);
+    new_dw->getModifiable(rho_micro,lb->rho_micro_CCLabel,
+                                            d_surroundingMatl_indx, patch);
     
-    //_________________________________
+    hydrostaticPressureAdjustment(patch, rho_micro, press_CC);
+    
+    //__________________________________
+    //  Adjust Temp field if g != 0
+    //  so fields are thermodynamically consistent
     for (int m = 0; m < numMatls; m++) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx = ice_matl->getDWIndex();
       constCCVariable<double> gamma, cv;
       CCVariable<double> Temp;   
-      
+ 
       new_dw->get(gamma, lb->gammaLabel,         indx, patch,gn,0);   
       new_dw->get(cv,    lb->specific_heatLabel, indx, patch,gn,0);
-      new_dw->getModifiable(Temp, lb->temp_CCLabel,  indx, patch);  
-       
-      //__________________________________
-      //  Adjust pressure and Temp field if g != 0
-      //  so fields are thermodynamically consistent.
-      StaticArray<constCCVariable<double> > placeHolder(0);
-      hydrostaticPressureAdjustment(patch, rho_micro[d_surroundingMatl_indx],
-                                    press_CC);
-
+      new_dw->getModifiable(Temp,     lb->temp_CCLabel,       indx, patch);  
+      new_dw->getModifiable(rho_micro,lb->rho_micro_CCLabel,  indx, patch); 
+ 
       Patch::FaceType dummy = Patch::invalidFace; // This is a dummy variable
       ice_matl->getEOS()->computeTempCC( patch, "WholeDomain",
 					 press_CC, gamma, cv,
-					 rho_micro[m], Temp, dummy );
+					 rho_micro, Temp, dummy );
 
       //__________________________________
       //  Print Data
@@ -2197,7 +2188,7 @@ void ICE::initializeSubTask_hydrostaticAdj(const ProcessorGroup*,
           ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
           int indx = ice_matl->getDWIndex();      
           desc1 << "hydroStaticAdj_Mat_" << indx << "_patch_"<< patch->getID();
-          printData(indx, patch,   1, desc.str(), "rho_micro_CC",rho_micro[m]);
+          printData(indx, patch,   1, desc.str(), "rho_micro_CC",rho_micro);
           printData(indx, patch,   1, desc.str(), "Temp_CC",     Temp);
         }   
       }
