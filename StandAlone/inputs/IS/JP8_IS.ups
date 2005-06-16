@@ -276,9 +276,9 @@
     <save label="p.particleID"/>
     <save label="p.mass"/>
     <save label="p.temperature"/>
-    <!-- 
     <save label="p.volume"/>
     <save label="p.stress"/> 
+    <!-- 
     <save label="p.plasticStrain"/> 
     <save label="p.strainRate"/> 
     <save label="p.localized"/> 
