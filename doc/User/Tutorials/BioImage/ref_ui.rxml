@@ -43,12 +43,15 @@ DEALINGS IN THE SOFTWARE.
       <title>File and Help Menus</title>
       <para>
 	The Processing Pane guides the user through processing their data for 
-	visualization.  It has two top-level menus: File and Help. The File menu 
-	items Save Session... and Load Session... allow the user to stop and resume 
-	BioImage sessions. After loading a saved session with Load Session..., 
-	resume processing and visualization by clicking Update.  The Help menu item 
-	Show Tooltips toggles tooltips. &quot;Hovering&quot; the mouse pointer over 
-	a control displays a tooltip describing a control. 
+	visualization.  It has two top-level menus: File and Help. The File 
+	menu items Save Session... and Load Session... allow the user to 
+	stop and resume BioImage sessions. After loading a saved session 
+	with Load Session..., resume processing and visualization by 
+	clicking Update.  The Restore Panes File option (or Control-R) will
+	bring any detached Panes that have been hidden or closed to the front
+        of the screen. The Help menu item Show Tooltips toggles 
+	tooltips. &quot;Hovering&quot; the mouse pointer over a control 
+	displays a tooltip describing a control. 
       </para>
     </section> <!-- End of File and Help Menus section -->
     <section>

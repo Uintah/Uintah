@@ -77,7 +77,10 @@ DEALINGS IN THE SOFTWARE.
     corresponding transfer functions. Two of these are the Engine and 
     CT Head datasets as seen in <xref linkend="fig.Engine"/> and
     <xref linkend="fig.CThead"/> respectively and are found in the volume
-    directory of SCIRunData.
+    directory of SCIRunData. To load these datasets into BioImage, simply
+    navigate to the engine.nhdr or CThead.nhdr files in the
+    SCIRunData volume directory. The corresponding transfer function will
+    load.
     </para>
 
     <figure id="fig.Engine">
