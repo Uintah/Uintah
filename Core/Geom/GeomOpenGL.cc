@@ -44,18 +44,8 @@
 #include <sci_defs/bits_defs.h>
 
 #ifdef _WIN32
-// // #define WINGDIAPI __declspec(dllimport)
-// // #define APIENTRY __stdcall
-// // #define CALLBACK APIENTRY
-// #include <stddef.h>
-// #include <stdlib.h>
-// #define GL_INTENSITY_EXT GL_INTENSITY
-//#include <windows.h>
-
 #define GL_ARB_fragment_program
-
 #endif
-
 
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/Environment.h>
@@ -207,7 +197,6 @@ GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
     glPushName((GLuint)this);
 #endif
     glPushName(0x12345678);
-    //if (di->pickchild) cerr << "picking a child " <<(GLuint)this << endl;
     return 1;
   }
   else return 0;
@@ -291,8 +280,6 @@ DrawInfoOpenGL::reset()
 
 DrawInfoOpenGL::~DrawInfoOpenGL()
 {
-  //gluDeleteQuadric(qobj);
-
   map<GeomDL *, pair<unsigned int, unsigned int> >::iterator loc;
   loc = dl_map_.begin();
   while (loc != dl_map_.end())
@@ -306,7 +293,7 @@ DrawInfoOpenGL::~DrawInfoOpenGL()
 void
 DrawInfoOpenGL::set_drawtype(DrawType dt)
 {
-  drawtype=dt;
+  drawtype = dt;
   switch(drawtype)
   {
   case DrawInfoOpenGL::WireFrame:
@@ -365,17 +352,21 @@ DrawInfoOpenGL::init_lighting(int use_light)
 void
 DrawInfoOpenGL::init_clip(void)
 {
-  int clps=clip_planes;
-  int i=0;
+  int clps = clip_planes;
+  int i = 0;
 
   while (i < 6)
   {
     if (clps&1)
     {
       if (check_clip)
+      {
         glEnable((GLenum)(GL_CLIP_PLANE0+i));
-      else      
+      }
+      else
+      {
         glDisable((GLenum)(GL_CLIP_PLANE0+i));
+      }
     }
     i++;
     clps >>= 1;
@@ -478,7 +469,7 @@ DrawInfoOpenGL::dl_remove(GeomDL *obj)
 }
 
 
-// this is for transparent rendering stuff...
+// this is for transparent rendering stuff.
 
 void
 DrawInfoOpenGL::init_view( double /*znear*/, double /*zfar*/,
@@ -603,7 +594,7 @@ GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
         double zrotangle;
         if ( Abs(axis.y())+Abs(axis.x()) < 1.e-5)
         {
-          // Only in x-z plane...
+          // Only in x-z plane.
           zrotaxis=Vector(0,-1,0);
         }
         else
@@ -638,7 +629,7 @@ GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
         double zrotangle;
         if ( Abs(axis.y())+Abs(axis.x()) < 1.e-5)
         {
-          // Only in x-z plane...
+          // Only in x-z plane.
           zrotaxis=Vector(0,-1,0);
         }
         else
@@ -785,7 +776,6 @@ GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
             dir.normalize();
             from = top - dir * h;
           }
-          //Point to(from+directions[i]);
           Point p1(from+v1[i]);
           Point p2(from+v2[i]);
           glVertex3d(top.x(), top.y(), top.z());
@@ -818,7 +808,6 @@ GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
           glBegin(GL_TRIANGLE_FAN);
           Point from(positions[i]+directions[i]);
           glVertex3d(from.x(), from.y(), from.z());
-          //      from-=directions[i]*(1.0-headlength);
           if (normalize_headsize == 0 ) from-=directions[i]*(1.0-headlength);
           else
           {
@@ -826,7 +815,6 @@ GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
             dir.normalize();
             from -= dir*(1.0-headlength);
           }
-          //Point to(from+directions[i]);
           Point p1(from+v1[i]);
           glVertex3d(p1.x(), p1.y(), p1.z());
           Point p2(from+v2[i]);
@@ -856,7 +844,6 @@ GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
           Vector n(dn+v1[i]+v2[i]);
           glNormal3d(n.x(), n.y(), n.z());
           Point top(positions[i]+directions[i]);
-          //      Point from=top-directions[i]*h;
           Point from;
           if (normalize_headsize == 0 )
           {
@@ -868,7 +855,6 @@ GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
             dir.normalize();
             from = top - dir * h;
           }
-          //Point to(from+directions[i]);
           Point p1(from+v1[i]);
           Point p2(from+v2[i]);
           glVertex3d(top.x(), top.y(), top.z());
@@ -913,7 +899,6 @@ GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
             dir.normalize();
             from -= dir*(1.0-headlength);
           }
-          //Point to(from+directions[i]);
           Point p1(from+v1[i]);
           glVertex3d(p1.x(), p1.y(), p1.z());
           Point p2(from+v2[i]);
@@ -962,7 +947,7 @@ GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
         double zrotangle;
         if ( Abs(axis.y())+Abs(axis.x()) < 1.e-5)
         {
-          // Only in x-z plane...
+          // Only in x-z plane.
           zrotaxis=Vector(0,-1,0);
         }
         else
@@ -970,24 +955,24 @@ GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
           zrotaxis=Cross(axis, z);
           zrotaxis.normalize();
         }
-        double cangle=Dot(z, axis)/axis.length();
-        zrotangle=-Acos(cangle);
+        const double cangle = Dot(z, axis)/axis.length();
+        zrotangle = -Acos(cangle);
         glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
-        double bot_rad = 0.5*headwidth;
-        double top_rad = 0.01*headwidth;
-        di->polycount+=2*(nu-1)*(nv-1);
+        double bot_rad = 0.5 * headwidth;
+        double top_rad = 0.01 * headwidth;
+        di->polycount += 2 * (nu - 1) * (nv - 1);
         gluCylinder(di->qobj, bot_rad, top_rad, headlength, nu, nv);
         if (bot_rad > 1.e-6)
         {
           // Bottom endcap
-          di->polycount+=2*(nu-1)*(nvdisc-1);
+          di->polycount += 2*(nu-1)*(nvdisc-1);
           gluDisk(di->qobj, 0, bot_rad, nu, nvdisc);
         }
         if (top_rad > 1.e-6)
         {
           // Top endcap
           glTranslated(0, 0, headlength);
-          di->polycount+=2*(nu-1)*(nvdisc-1);
+          di->polycount += 2 * (nu - 1) * (nvdisc - 1);
           gluDisk(di->qobj, 0, top_rad, nu, nvdisc);
         }
         glPopMatrix();
@@ -1009,7 +994,7 @@ GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
         double zrotangle;
         if ( Abs(axis.y())+Abs(axis.x()) < 1.e-5)
         {
-          // Only in x-z plane...
+          // Only in x-z plane.
           zrotaxis=Vector(0,-1,0);
         }
         else
@@ -1206,22 +1191,6 @@ GeomColorMap::draw(DrawInfoOpenGL* di, Material *m, double time)
 void
 GeomBillboard::draw(DrawInfoOpenGL* di, Material* m, double time)
 {
-
-  //   MaterialHandle red = new Material(Color(.8,.0,0), Color(.2,0,0),
-  //                                   Color(.5,.5,.5), 20);
-  //   MaterialHandle green = new Material(Color(0,.2,0), Color(0,.2,0),
-  //                                   Color(.5,.5,.5), 20);
-  //   MaterialHandle yellow = new Material(Color(.8,.2,0), Color(.2,.2,0),
-  //                                   Color(.5,.5,.5), 20);
-
-
-  //   GeomArrows x(0.4);
-  //   x.add(Point(0,0,0), Vector(10,0,0), red, red, red);
-  //   GeomArrows y(0.4);
-  //   y.add(Point(0,0,0), Vector(0,10,0), green, green, green);
-  //   GeomArrows z(0.4);
-  //   z.add(Point(0,0,0), Vector(0,0,10), yellow, yellow, yellow);
-
   double mat[16];
 
   glGetDoublev(GL_MODELVIEW_MATRIX, mat);
@@ -1233,8 +1202,6 @@ GeomBillboard::draw(DrawInfoOpenGL* di, Material* m, double time)
   Vector v( 0, 0, 1 );
   Vector w = Cross(u,v);
   w.normalize();
-  //  Vector v( mat[1], mat[5], mat[9] );
-  //  Vector w( mat[2], mat[6], mat[10]);
   mat[0] = u.x();
   mat[1] = u.y();
   mat[2] = u.z();
@@ -1251,21 +1218,9 @@ GeomBillboard::draw(DrawInfoOpenGL* di, Material* m, double time)
   mat[15] = 1;
   glMultMatrixd(mat);
 
-  //  glTranslated( at.x(), at.y(), at.z() );
-
   child_->draw(di,m,time);
 
-  //   x.draw(di,m,time);
-  //   y.draw(di,m,time);
-
   glPopMatrix();
-  //   glPushMatrix();
-  //   glTranslated( at.x(), at.y(), at.z() );
-
-  //   x.draw(di,m,time);
-  //   y.draw(di,m,time);
-  //   z.draw(di,m,time);
-  //   glPopMatrix();
 }
 
 
@@ -1705,13 +1660,7 @@ void
 TexGeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 0)) return;
-  //int nu=dimU;
-  //int nv=dimV;
   di->polycount+=2;
-  //Vector uu(u/(nu-1));
-  //Vector vv(v/(nv-1));
-
-  cerr << "Trying to do texture draw...\n";
 
   if (!convolve)
   {
@@ -1814,7 +1763,6 @@ TexGeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
                        0,GL_RED,GL_UNSIGNED_BYTE,tmapdata);
 #endif
           glEndList();
-          // cerr << "Generated List " << tmap_dlist << endl;
         }
         else
         {
@@ -1854,13 +1802,9 @@ void
 TimeGrid::draw(DrawInfoOpenGL* di, Material* matl, double t)
 {
   if (!pre_draw(di, matl, 0)) return;
-  //int nu=dimU;
-  //int nv=dimV;
-  di->polycount+=2;
-  //Vector uu(u/(nu-1));
-  //Vector vv(v/(nv-1));
+  di->polycount += 2;
 
-  // first find which ones need to be drawn...
+  // First find which ones need to be drawn.
 
   int i;
   for (i=0;i<time.size() && (time[i] <= t);i++)
@@ -1870,18 +1814,16 @@ TimeGrid::draw(DrawInfoOpenGL* di, Material* matl, double t)
   double dt;
   int last_frame=0;
 
-  last_frame = (t >= time[time.size()-1]); // 1 if last time step...
+  last_frame = (t >= time[time.size()-1]); // 1 if last time step.
 
-  if (i) { // if it was zero, just keep it.
-    i--;
-  }
+  if (i) { i--; } // If it was zero, just keep it.
 
   start = i;
   end = i+1;
 
   if (last_frame)
   {
-    start = time.size()-1; // just go to end....
+    start = time.size()-1; // just go to end.
     end = start;
   }
 
@@ -1899,16 +1841,11 @@ TimeGrid::draw(DrawInfoOpenGL* di, Material* matl, double t)
   case DrawInfoOpenGL::Flat:
   case DrawInfoOpenGL::Gouraud:
     {
-      // first blend two images together...
+      // First blend two images together.
 
       float *startM=tmap[start],*endM=tmap[end];
       double bval = dt;
-
-      //      int mapsz = map->rcolors.size();
       double cdenom = 1.0/(map->getMax()-map->getMin()); // index
-
-      //double min = 1000000;
-      //double max = -100000;
 
       if (last_frame)
       {
@@ -1941,7 +1878,7 @@ TimeGrid::draw(DrawInfoOpenGL* di, Material* matl, double t)
           {
             float nval = startM[sindex + i] +
               bval*(endM[sindex+i]-startM[sindex + i]);
-            // now look this up in the color map...
+            // now look this up in the color map.
         
             double rmapval = (nval-map->getMin())*cdenom;
             MaterialHandle hand = map->lookup2(rmapval);
@@ -1949,11 +1886,10 @@ TimeGrid::draw(DrawInfoOpenGL* di, Material* matl, double t)
             bmap[bindex + i*3 + 0] = hand->diffuse.r();
             bmap[bindex + i*3 + 1] = hand->diffuse.g();
             bmap[bindex + i*3 + 2] = hand->diffuse.b();
-            //    bmap[bindex + i*4 + 3] = 1.0;
           }
         }
       }
-      // now bmap contains the blended texture...
+      // now bmap contains the blended texture.
       glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,
                 GL_MODULATE);
       glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,
@@ -2501,14 +2437,14 @@ GeomTimeGroup::draw(DrawInfoOpenGL* di, Material* matl, double time)
   for (i=0; i<(int)(objs.size()) && (start_times[i] <= time); i++)
     ;
   if (i)
-  { // you can go...
+  { // you can go.
     if (i > (int)(objs.size()-1)) { i = (int)(objs.size()-1); }
 
     if (start_times[i] > time) { --i; }
 
     if (i < 0) { i = 0; }
 
-    objs[i]->draw(di,matl,time); // run with it...
+    objs[i]->draw(di,matl,time); // run with it.
   }
 }
 
@@ -2739,23 +2675,23 @@ GeomCLineStrips::draw(DrawInfoOpenGL* di, Material* matl, double)
 }
 
 
-//const int OD_TEX_INIT = 4096; // 12tg bit of clip planes...
+//const int OD_TEX_INIT = 4096; // 12tg bit of clip planes.
 
 void
 TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-  if (!pre_draw(di, matl, 0)) return;  // lighting is turned off here...
+  if (!pre_draw(di, matl, 0)) return;  // lighting is turned off here.
   di->polycount+=pts.size()/2;
 
   static Vector view;  // shared by all of them - should be in ViewWindow!
 
-  // always assume you are not there...
-  // can't mix them...
+  // always assume you are not there.
+  // can't mix them.
 
-  // first set up the line size stuff...
+  // first set up the line size stuff.
 
-  // here is where the texture stuff has to be done...
-  // first setup the texture matrix...
+  // here is where the texture stuff has to be done.
+  // first setup the texture matrix.
 
   double model_mat[16]; // this is the modelview matrix
 
@@ -2783,11 +2719,11 @@ TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
   // you might want to zero out the rest, but id doesn't matter for 1D
   // texture maps
 
-  glLoadMatrixd(model_mat); // loads the matrix...
+  glLoadMatrixd(model_mat); // loads the matrix.
 
   if (!tmapid)
   { // has the texture been created?
-    tmap1d.resize(256*3); // that is the size of the 1D texture...
+    tmap1d.resize(256*3); // that is the size of the 1D texture.
     for (int i=0;i<256;i++)
     {
       double r,ks,LdotT;
@@ -2804,23 +2740,14 @@ TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
         cerr << "Negative r!\n";
 
       if (r>1.0 || ks>1.0)
-        cerr << r << " " << ks << " Error - out of range...\n";
+        cerr << r << " " << ks << " Error - out of range.\n";
 
       tmap1d[i*3+0] = (unsigned char)(r*255);
-      tmap1d[i*3+1] = (unsigned char)(r*255);    // just have them be red for now...
+      tmap1d[i*3+1] = (unsigned char)(r*255);    // just have them be red for now.
       tmap1d[i*3+2] = (unsigned char)(r*255);
     }
-    // now set the end conditions...
 
-#if 0
-    tmap1d[0*3 + 0] = 0;
-    tmap1d[0*3 + 1] = 255;
-    tmap1d[0*3 + 2] = 0;
-
-    tmap1d[255*3 + 0] = 0;
-    tmap1d[255*3 + 1] = 0;
-    tmap1d[255*3 + 2] = 255;
-#endif
+    // Now set the end conditions.
     tmapid = glGenLists(1);
     glNewList(tmapid,GL_COMPILE_AND_EXECUTE);
 
@@ -2831,7 +2758,7 @@ TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
 
     GLfloat brder[4];
 
-    brder[3] = 1.0; // this is just the alpha component...
+    brder[3] = 1.0; // this is just the alpha component.
 
     brder[0] = (tmap1d[0] + tmap1d[255*3 + 0])/510.0;
     brder[0] = (tmap1d[1] + tmap1d[255*3 + 1])/510.0;
@@ -2853,14 +2780,14 @@ TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   glEnable(GL_TEXTURE_1D);
 
-  // see if you need to create the sorted lists...
-  if (!colors.size()) // set if you don't have colors...
-    glColor4f(1.0,0.0,0.0,1.0);  // this state always needs to be set...
+  // see if you need to create the sorted lists.
+  if (!colors.size()) // set if you don't have colors.
+    glColor4f(1.0,0.0,0.0,1.0);  // this state always needs to be set.
 
   if (alpha != 1.0)
-  { // create sorted lists...
+  { // create sorted lists.
     if (!sorted.size())
-      SortVecs(); // creates sorted lists...
+      SortVecs(); // creates sorted lists.
   }
 
   mutex.lock();
@@ -2931,13 +2858,13 @@ TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
   }
   else
   {
-    // render with transparency...
+    // render with transparency.
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 
     if (!colors.size())
-      glColor4f(1,0,0,alpha); // make sure it is used...
+      glColor4f(1,0,0,alpha); // make sure it is used.
 
     int sort_start=0;
     int sort_dir=1; // positive direction
@@ -2996,25 +2923,25 @@ TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
       for (int p=0;p<pts.size()/2;p++)
       {
         Point& pt=pts[sorted[i]];
-        Point& pt2=pts[sorted[i]+1]; // already times2...
+        Point& pt2=pts[sorted[i]+1]; // already times2.
         glTexCoord3d(tangents[sorted[i]/2].x(),
                      tangents[sorted[i]/2].y(),
                      tangents[sorted[i]/2].z());
         
         glVertex3d(pt.x(), pt.y(), pt.z());
         glVertex3d(pt2.x(), pt2.y(), pt2.z());
-        i += sort_dir; // increment i...
+        i += sort_dir; // increment i.
       }
     }
     else
-    { // this is from the stream line data...
+    { // this is from the stream line data.
       if (colors.size())
       {
-        unsigned char aval = (unsigned char)(alpha*255); // quantize this...
+        unsigned char aval = (unsigned char)(alpha*255); // quantize this.
         for (int p=0;p<pts.size()/2;p++)
         {
           Point& pt=pts[sorted[i]];
-          Point& pt2=pts[sorted[i]+1]; // already times2...
+          Point& pt2=pts[sorted[i]+1]; // already times2.
           glColor4ub(colors[sorted[i]].r(),
                      colors[sorted[i]].g(),
                      colors[sorted[i]].b(),
@@ -3031,7 +2958,7 @@ TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
                        tangents[sorted[i]+1].y(),
                        tangents[sorted[i]+1].z());
           glVertex3d(pt2.x(), pt2.y(), pt2.z());
-          i += sort_dir; // increment i...
+          i += sort_dir; // increment i.
         }
       }
       else
@@ -3039,7 +2966,7 @@ TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
         for (int p=0;p<pts.size()/2;p++)
         {
           Point& pt=pts[sorted[i]];
-          Point& pt2=pts[sorted[i]+1]; // already times2...
+          Point& pt2=pts[sorted[i]+1]; // already times2.
           glTexCoord3d(tangents[sorted[i]].x(),
                        tangents[sorted[i]].y(),
                        tangents[sorted[i]].z());
@@ -3048,7 +2975,7 @@ TexGeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
                        tangents[sorted[i]+1].y(),
                        tangents[sorted[i]+1].z());
           glVertex3d(pt2.x(), pt2.y(), pt2.z());
-          i += sort_dir; // increment i...
+          i += sort_dir; // increment i.
         }
       }
     }
@@ -3077,7 +3004,6 @@ GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
   if (draw_only_on_pick_ && !di->pickmode) return;
   if (di->pickmode)
   {
-    // cerr <<"found a widget " << (GLuint)this << endl;
     ++di->npicks;
 #ifdef SCI_64BITS
     unsigned long o=(unsigned long)this;
@@ -3112,7 +3038,7 @@ GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
 #endif
         
     if ((--di->npicks)<1)
-    {//could have multiple picks in stack
+    { // Could have multiple picks in stack.
       di->pickchild=0;
     }
   }
@@ -3170,7 +3096,7 @@ GeomPolylineTC::draw(DrawInfoOpenGL* di, Material* matl, double currenttime)
   }
   else
   {
-    // Find the start and end points...
+    // Find the start and end points.
     int n=(dend-d)/7;
     int l=0;
     int h=n-1;
@@ -3237,7 +3163,6 @@ GeomPolylineTC::draw(DrawInfoOpenGL* di, Material* matl, double currenttime)
 void
 GeomPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-  //  if (!pre_draw(di, matl, have_normal)) { return; }
   if (!pre_draw(di, matl, 0)) { return; }
 
   di->polycount+=points_.size()/3;
@@ -3556,7 +3481,7 @@ GeomTexSlices::draw(DrawInfoOpenGL* di, Material* matl, double)
       break;
     }
         
-    // now draw the quad for this texture...
+    // now draw the quad for this texture.
 
     for (int j=0;j<4;j++)  // v has been rescaled based on dir
       pts[j] += v;      
@@ -3671,12 +3596,10 @@ GeomTube::draw(DrawInfoOpenGL* di, Material* matl, double)
 void
 GeomRenderMode::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
-  //    int save_lighting=di->lighting;
   NOT_FINISHED("GeomRenderMode");
   if (child_.get_rep())
   {
     child_->draw(di, matl, time);
-    // We don't put things back if no children.
   }
 }
 
@@ -3807,9 +3730,6 @@ GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
     if (di->currently_lit)
     {
       Vector n1(Plane(p1, p2, p3).normal());
-      //Vector n2(Plane(p1, p2, p4).normal());
-      //Vector n3(Plane(p4, p2, p3).normal());
-      //Vector n4(Plane(p1, p4, p3).normal());
       glBegin(GL_LINE_STRIP);
       glNormal3d(n1.x(),n1.y(),n1.z());
       glVertex3d(p1.x(), p1.y(), p1.z());
@@ -3837,7 +3757,7 @@ GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
     }
     break;
   case DrawInfoOpenGL::Flat:
-    // this should be made into a tri-strip, but I couldn;t remember how...
+    // this should be made into a tri-strip, but I couldn;t remember how.
 
     /* this can be done as a triangle strip using 8 vertices, or
      * as a triangle fan with 5 and 1 single triangle (8 verts)
@@ -3845,7 +3765,7 @@ GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
      * will switch to the tri-strip when I can test it, if it's faster
      */ 
   case DrawInfoOpenGL::Gouraud:
-    // this should be made into a tri-strip, but I couldn;t remember how...
+    // this should be made into a tri-strip, but I couldn;t remember how.
 
     /*
      * These are actualy just flat shaded, to get "gourad" shading
@@ -3899,7 +3819,7 @@ GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
     }
 #if 0
     /*
-     * This has inconsistant ordering....
+     * This has inconsistant ordering.
      */
     glBegin(GL_TRIANGLES);
     glVertex3d(p1.x(), p1.y(), p1.z());
@@ -4141,7 +4061,7 @@ GeomTri::draw(DrawInfoOpenGL* di, Material* matl, double)
       glEnd();
       break;
     case DrawInfoOpenGL::Gouraud:
-      // posible change to just material and point...
+      // posible change to just material and point.
       glBegin(GL_TRIANGLES);
       verts[0]->emit_all(di);
       verts[1]->emit_all(di);
@@ -4704,18 +4624,11 @@ GeomTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   // DAVE: Hack for 3d texture mapping
   if (!pre_draw(di,matl,1)) return;
-  //    if (!pre_draw(di,matl,0)) return;
 
   di->polycount += size();
 
-  // DAVE: Also a hack for 3d texture mapping
-  //    glColor3f(1,1,1);
-
   if (di->currently_lit)
   {
-    // Dave Hack
-    //    glEnable(GL_CULL_FACE);
-
 #ifdef SCI_NORM_OGL
     glEnable(GL_NORMALIZE);
 #else
@@ -4748,8 +4661,6 @@ GeomTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
       break;
     }
     glEnable(GL_NORMALIZE);
-    // Dave Hack
-    //    glDisable(GL_CULL_FACE);
   }
   else
   { // lights are off, don't emit the normals
@@ -4789,7 +4700,7 @@ GeomTrianglesPT1d::draw(DrawInfoOpenGL* di, Material* matl, double)
   di->polycount += size();
 
   if (cmap)
-  { // use 1D texturing...
+  { // use 1D texturing.
 #if 1
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -4805,14 +4716,14 @@ GeomTrianglesPT1d::draw(DrawInfoOpenGL* di, Material* matl, double)
     glMatrixMode(GL_TEXTURE);
     glLoadIdentity();
     glMatrixMode(GL_MODELVIEW);
-    glAlphaFunc(GL_GREATER,0.0); // exactly 0 means draw nothing...
+    glAlphaFunc(GL_GREATER,0.0); // exactly 0 means draw nothing.
     glEnable(GL_ALPHA_TEST);
 #endif
   }
   else
   {
     cerr << "No color map!\n";
-    return; // don't draw if no color map...
+    return; // don't draw if no color map.
   }
 
   if (di->currently_lit)
@@ -4882,7 +4793,7 @@ GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
   { // multiple transparent objects!!!
     if (!sorted_p_)
     {
-      SortPolys(); // sort the iso-surface.
+      SortPolys(); // Sort the iso-surface.
     }
 
     Array1<float>& check = (di->axis==0)?xc:(di->axis==1)?yc:zc;
@@ -4895,7 +4806,7 @@ GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
     {
       int list_pos=0;
       if (sort_dir == -1) list_pos = cur_list.size()-1;
-      if (!pre_draw(di,matl,1)) return; // yes, this is lit...
+      if (!pre_draw(di,matl,1)) return; // yes, this is lit.
 
       di->polycount += size();
     }
@@ -4911,19 +4822,19 @@ GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
       glColor4f(r,g,b,alpha_);
     }
 
-    glDepthMask(GL_FALSE); // no zbuffering for now...
+    glDepthMask(GL_FALSE); // no zbuffering for now.
 #ifdef SCI_NORM_OGL
     glEnable(GL_NORMALIZE);
 #else
     glDisable(GL_NORMALIZE);
 #endif
-    glBegin(GL_TRIANGLES); // just spit out triangles...
+    glBegin(GL_TRIANGLES); // just spit out triangles.
 
     if (di->currently_lit)
     {
 
       if (sort_dir == -1)
-      { // toggle based on direction...
+      { // toggle based on direction.
         while ((list_pos >= 0) && (check[cur_list[list_pos]] >= di->axis_val))
         {
           int nindex = cur_list[list_pos]*3;
@@ -4955,9 +4866,9 @@ GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
       }
     }
     else
-    { // don't emit the normals...
+    { // don't emit the normals.
       if (sort_dir == -1)
-      { // toggle based on direction...
+      { // toggle based on direction.
         while ((list_pos >= 0) && (check[cur_list[list_pos]] >= di->axis_val))
         {
           int nindex = cur_list[list_pos]*3;
@@ -4988,14 +4899,14 @@ GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
     }
     glEnd();
 
-    glDepthMask(GL_TRUE); // turn zbuff back on...
+    glDepthMask(GL_TRUE); // turn zbuff back on.
     glDisable(GL_BLEND);
     glEnable(GL_NORMALIZE);
   }
   else
 #endif
   {
-    if (!pre_draw(di,matl,1)) return; // yes, this is lit...
+    if (!pre_draw(di,matl,1)) return; // yes, this is lit.
 
     di->polycount += size();
 
@@ -5013,22 +4924,18 @@ GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
 
     if (!sorted_p_)
     {
-      SortPolys(); // sort the iso-surface...
+      SortPolys(); // sort the iso-surface.
     }
 
-    glDepthMask(GL_FALSE); // no zbuffering for now...
+    glDepthMask(GL_FALSE); // no zbuffering for now.
 #ifdef SCI_NORM_OGL
     glEnable(GL_NORMALIZE);
 #else
     glDisable(GL_NORMALIZE);
 #endif
 
-#if 1
     GLdouble matrix[16];
     glGetDoublev(GL_MODELVIEW_MATRIX, matrix);
-    //const Vector vx(matrix[0], matrix[1], matrix[2]);
-    //const Vector vy(matrix[4], matrix[5], matrix[6]);
-    //const Vector vz(matrix[8], matrix[9], matrix[10]);
     const double lvx = fabs(matrix[2]);
     const double lvy = fabs(matrix[6]);
     const double lvz = fabs(matrix[10]);
@@ -5051,7 +4958,6 @@ GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
       if (matrix[10] > 0) { di->dir = 1; }
       else { di->dir = -1; }
     }
-#endif
 
     const vector<pair<float, unsigned int> >&cur_list =
       (di->axis==0)?xlist_:((di->axis==1)?ylist_:zlist_);
@@ -5086,7 +4992,7 @@ GeomTranspTrianglesP::draw(DrawInfoOpenGL* di, Material* matl, double)
     }
     glEnd();
 
-    glDepthMask(GL_TRUE); // turn zbuff back on...
+    glDepthMask(GL_TRUE); // turn zbuff back on.
     glDisable(GL_BLEND);
     glEnable(GL_NORMALIZE);
   }
@@ -5181,15 +5087,14 @@ GeomBox::draw(DrawInfoOpenGL* di, Material* matl, double)
         glBegin(GL_QUADS);
         //front
         glVertex3d(max.x(),min.y(),max.z());
-        //      glColor4f(0.0,1.0,0.0,0.8);
         glVertex3d(max.x(),max.y(),max.z());
         glColor4f(0.0,1.0,0.0,0.2);
         glVertex3d(min.x(),max.y(),max.z());
         glVertex3d(min.x(),min.y(),max.z());
+
         //back
         glVertex3d(max.x(),max.y(),min.z());
         glVertex3d(max.x(),min.y(),min.z());
-        //      glColor4f(1.0,0.0,0.0,0.8);
         glVertex3d(min.x(),min.y(),min.z());
         glColor4f(0.0,1.0,0.0,0.2);
         glVertex3d(min.x(),max.y(),min.z());
@@ -5200,14 +5105,12 @@ GeomBox::draw(DrawInfoOpenGL* di, Material* matl, double)
         glVertex3d(min.x(),min.y(),max.z());
         glVertex3d(min.x(),max.y(),max.z());
         glVertex3d(min.x(),max.y(),min.z());
-        //      glColor4f(1.0,0.0,0.0,0.8);
         glVertex3d(min.x(),min.y(),min.z());
         glColor4f(1.0,0.0,0.0,0.2);
         
         //right
         glVertex3d(max.x(),min.y(),min.z());
         glVertex3d(max.x(),max.y(),min.z());
-        //      glColor4f(0.0,1.0,0.0,0.8);
         glVertex3d(max.x(),max.y(),max.z());
         glColor4f(1.0,0.0,0.0,0.2);
         glVertex3d(max.x(),min.y(),max.z());
@@ -5217,13 +5120,12 @@ GeomBox::draw(DrawInfoOpenGL* di, Material* matl, double)
         
         //top
         glVertex3d(min.x(),max.y(),max.z());
-        //      glColor4f(0.0,1.0,0.0,0.8);
         glVertex3d(max.x(),max.y(),max.z());
         glColor4f(0.0,0.0,1.0,0.2);
         glVertex3d(max.x(),max.y(),min.z());
         glVertex3d(min.x(),max.y(),min.z());
+
         //bottom
-        //      glColor4f(1.0,0.0,0.0,0.8);
         glVertex3d(min.x(),min.y(),min.z());
         glColor4f(0.0,0.0,1.0,0.2);
         glVertex3d(max.x(),min.y(),min.z());
@@ -5577,9 +5479,6 @@ GeomTrianglesVP::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   if (di->currently_lit)
   {
-    // Dave Hack
-    //    glEnable(GL_CULL_FACE);
-
 #ifdef SCI_NORM_OGL
     glEnable(GL_NORMALIZE);
 #else
@@ -5616,8 +5515,6 @@ GeomTrianglesVP::draw(DrawInfoOpenGL* di, Material* matl, double)
       break;
     }
     glEnable(GL_NORMALIZE);
-    // Dave Hack
-    //    glDisable(GL_CULL_FACE);
   }
   else { // lights are off, don't emit the normals
     switch(di->get_drawtype())
@@ -6210,9 +6107,7 @@ DirectionalLight::opengl_setup( const View&, DrawInfoOpenGL*, int& idx)
 {
   if (on )
   {
-    int i = idx++;
-    //     cerr<<"Turning on directional light: light "<<idx<<".\n";
-
+    const int i = idx++;
     float f[4];
 
     opengl_reset_light( i );
@@ -6243,8 +6138,7 @@ PointLight::opengl_setup(const View&, DrawInfoOpenGL*, int& idx)
 {
   if ( on )
   {
-    int i=idx++;
-    //     cerr<<"Turning on point light: light "<<idx<<".\n";
+    const int i = idx++;
     float f[4];
 
     opengl_reset_light( i );
@@ -6274,8 +6168,7 @@ HeadLight::opengl_setup(const View& /*view*/, DrawInfoOpenGL*, int& idx)
 {
   if ( on )
   {
-    int i=idx++;
-    //     cerr<<"Turning on headlight: light "<<idx<<".\n";
+    const int i = idx++;
     float f[4];
 
     opengl_reset_light(i);
@@ -6520,21 +6413,6 @@ GeomTextTexture::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di,matl,0)) return;
 
-#if 0
-  //used for debugging to indicate left and up directions
-  glColor4d(1.0,0.0,0.0,1.0);
-  glBegin(GL_LINE_STRIP);
-  glVertex3d(origin_.x(), origin_.y(), origin_.z());
-  glVertex3d(origin_.x()+up_.x(), origin_.y()+up_.y(), origin_.z()+up_.z());
-  glEnd();
-
-  glColor4d(1.0,1.0,0.0,1.0);
-  glBegin(GL_LINE_STRIP);
-  glVertex3d(origin_.x(), origin_.y(), origin_.z());
-  glVertex3d(origin_.x()+left_.x(), origin_.y()+left_.y(), origin_.z()+left_.z());
-  glEnd();
-#endif
-
   glColor4d(1.0,1.0,1.0,1.0);
   glEnable(GL_BLEND);
   glDepthMask(GL_FALSE);
@@ -6559,53 +6437,6 @@ GeomTextTexture::draw(DrawInfoOpenGL* di, Material* matl, double)
   glDisable(GL_BLEND);
   post_draw(di);
 }
-
-
-#if 0
-void
-ColorMapTex::draw(DrawInfoOpenGL* di, Material* matl, double)
-{
-  if (!pre_draw(di, matl, 0)) return;
-  static GLuint texName = 0;
-  glClearColor(0.0, 0.0, 0.0, 0.0);
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  if ( !glIsTexture( texName ) )
-  {
-    glGenTextures(1, &texName);
-    glBindTexture(GL_TEXTURE_1D, texName);
-  }
-
-  glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-  glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-  glTexImage1D( GL_TEXTURE_1D, 0, GL_RGB, numcolors_, 0,
-                GL_RGBA, GL_FLOAT, texture_ );
-
-  if (GL_NO_ERROR == glGetError())
-  {
-    glEnable(GL_TEXTURE_1D);
-    glShadeModel(GL_FLAT);
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_LIGHTING);
-    glBegin( GL_QUADS );
-    glTexCoord1f(0.0); glVertex3f( a_.x(), a_.y(), a_.z() );
-    glTexCoord1f(1.0); glVertex3f( b_.x(), b_.y(), b_.z() );
-    glTexCoord1f(1.0); glVertex3f( c_.x(), c_.y(), c_.z() );
-    glTexCoord1f(0.0); glVertex3f( d_.x(), d_.y(), d_.z() );
-    glEnd();
-    glFlush();
-
-    glDisable(GL_TEXTURE_1D);
-    glEnable(GL_LIGHTING);
-  }
-  else
-  {
-    cerr<<"Some sort of texturing error\n";
-  }
-  post_draw(di);
-}
-#endif
 
 
 void
@@ -6633,7 +6464,6 @@ HistogramTex::draw(DrawInfoOpenGL* di, Material* matl, double)
   }
 
   int vp[4];
-  //float proj[16];
   glGetIntegerv( GL_VIEWPORT, vp );
   glClearColor(0.0, 0.0, 0.0, 0.0);
 
@@ -6829,7 +6659,6 @@ GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double)
 
     GLfloat ones[4] = {1.0, 1.0, 1.0, 1.0};
     glColor4fv(ones);
-    //     glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, ones);
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glDepthMask(GL_TRUE);
 
@@ -6840,6 +6669,7 @@ GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double)
       glEnable(GL_ALPHA_TEST);
 #endif
       glEnable(GL_BLEND);
+
       // Workaround for old bad nvidia headers.
 #if defined(GL_FUNC_ADD)
       glBlendEquation(GL_FUNC_ADD);
