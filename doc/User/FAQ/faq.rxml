@@ -97,7 +97,7 @@ doc.insertDocType("article", entities)
       </answer>
     </qandaentry>
 
-<!-- -------------------- -->
+<!-- ++++++++++++++++++++ -->
 
     <qandaentry>
       <revhistory>
@@ -132,7 +132,7 @@ doc.insertDocType("article", entities)
       </answer>
     </qandaentry>
 
-<!-- -------------------- -->
+<!-- -+++++++++++++++++++ -->
 
     <qandaentry id="card1">
       <revhistory>
