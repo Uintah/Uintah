@@ -33,3 +33,13 @@ to [50,200,50].  Output name was set to JP8_IS_lowres.uda as well.
 6/16/05 Modifications by David Groulx
 Copied Jim's changes to the full res version into the low res version.  Also
 further lowered the resolution to [20,80,20] and the patches to [2,4,2]
+
+ContainerHeatUp3D.ups
+---------------------------------------
+This input file is similar to the IS, but it is set up to do the slow heatup
+part of the calculation.  Run it with sus -impm ContainerHeatUp3D.ups
+As of 6/15/05, thermal expansion of the steel is implemented, but not yet
+in the PBX.  Note also that for now, the top half of the domain has been
+lopped off as there isn't anything interesting there, so that would kill
+our load balancing.
+
