@@ -61,7 +61,7 @@ struct GeomVertex : public Persistent {
 #ifdef SCI_OPENGL
   virtual void emit_all(DrawInfoOpenGL* di);
   void emit_point(DrawInfoOpenGL* di);
-  virtual void emit_matl(DrawInfoOpenGL* di);
+  virtual void emit_material(DrawInfoOpenGL* di);
   virtual void emit_normal(DrawInfoOpenGL* di);
 #endif
 
@@ -101,7 +101,7 @@ struct GeomNMVertex : public GeomNVertex {
   virtual ~GeomNMVertex();
 #ifdef SCI_OPENGL
   virtual void emit_all(DrawInfoOpenGL* di);
-  virtual void emit_matl(DrawInfoOpenGL* di);
+  virtual void emit_material(DrawInfoOpenGL* di);
 #endif
 
   virtual void io(Piostream&);
@@ -120,7 +120,7 @@ struct GeomMVertex : public GeomVertex {
   ~GeomMVertex();
 #ifdef SCI_OPENGL
   virtual void emit_all(DrawInfoOpenGL* di);
-  virtual void emit_matl(DrawInfoOpenGL* di);
+  virtual void emit_material(DrawInfoOpenGL* di);
 #endif
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
@@ -138,7 +138,7 @@ struct GeomCVertex : public GeomVertex {
   ~GeomCVertex();
 #ifdef SCI_OPENGL
   virtual void emit_all(DrawInfoOpenGL* di);
-  virtual void emit_matl(DrawInfoOpenGL* di);
+  virtual void emit_material(DrawInfoOpenGL* di);
 #endif
   virtual void io(Piostream&);
   static PersistentTypeID type_id;

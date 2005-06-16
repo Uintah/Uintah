@@ -152,7 +152,6 @@ static PFNGLMULTITEXCOORD3FPROC glMultiTexCoord3f = 0;
 
 #include <stdio.h>
 
-#define MAX_MATL_STACK 100
 
 namespace SCIRun {
 
@@ -200,7 +199,7 @@ GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
         break;
       }
     }
-    di->set_matl(matl);
+    di->set_material(matl);
 #ifdef SCI_64BITS
     unsigned long o=(unsigned long)this;
     unsigned int o1=(o>>32)&0xffffffff;
@@ -388,7 +387,7 @@ DrawInfoOpenGL::init_clip(void)
 
 
 void
-DrawInfoOpenGL::set_matl(Material* matl)
+DrawInfoOpenGL::set_material(Material* matl)
 {
   if (matl==current_matl || ignore_matl)
   {
@@ -576,7 +575,7 @@ GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
       glBegin(GL_LINES);
       for (int i=0;i<n;i++)
       {
-        di->set_matl(shaft_matls[i+1].get_rep());
+        di->set_material(shaft_matls[i+1].get_rep());
         Point from(positions[i]);
         Point to(from+directions[i]*shaft_scale);
         glVertex3d(from.x(), from.y(), from.z());
@@ -632,7 +631,7 @@ GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
       if (!pre_draw(di, matl, 1)) return;
       for ( int i =0; i < n; i++ )
       {
-        di->set_matl(shaft_matls[i+1].get_rep());
+        di->set_material(shaft_matls[i+1].get_rep());
         Point from(positions[i]);
         Point to(from+directions[i]*shaft_scale);
         // create cylinder along axis with endpoints from and to
@@ -730,7 +729,7 @@ GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
       {
         for (int i=0;i<n;i++)
         {
-          di->set_matl(back_matls[i+1].get_rep());
+          di->set_material(back_matls[i+1].get_rep());
           glNormal3d(directions[i].x(), directions[i].y(), directions[i].z());
           Point from(positions[i]+directions[i]*headlength);
           Point p1(from+v1[i]);
@@ -747,7 +746,7 @@ GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
       {
         for (int i=0;i<n;i++)
         {
-          di->set_matl(back_matls[i+1].get_rep());
+          di->set_material(back_matls[i+1].get_rep());
           Point from(positions[i]+directions[i]*headlength);
           Point p1(from+v1[i]);
           glVertex3d(p1.x(), p1.y(), p1.z());
@@ -855,7 +854,7 @@ GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
         for (int i=0;i<n;i++)
         {
           glBegin(GL_TRIANGLES);
-          di->set_matl(head_matls[i+1].get_rep());
+          di->set_material(head_matls[i+1].get_rep());
           Vector dn(directions[i]*w2h2);
           Vector n(dn+v1[i]+v2[i]);
           glNormal3d(n.x(), n.y(), n.z());
@@ -903,7 +902,7 @@ GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
         for (int i=0;i<n;i++)
         {
           glBegin(GL_TRIANGLE_FAN);
-          di->set_matl(head_matls[i+1].get_rep());
+          di->set_material(head_matls[i+1].get_rep());
           Point from(positions[i]+directions[i]);
           glVertex3d(from.x(), from.y(), from.z());
           from-=directions[i]*(1.0-headlength);
@@ -1002,7 +1001,7 @@ GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
       if (!pre_draw(di, matl, 1)) return;
       for (int i=0;i<n;i++)
       {
-        di->set_matl(head_matls[i+1].get_rep());
+        di->set_material(head_matls[i+1].get_rep());
         glPushMatrix();
         Point top(positions[i]+directions[i]);
         Point bottom = top - directions[i]*(1-headlength);
@@ -2197,7 +2196,7 @@ GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
       {
         if (have_matls)
         {
-          di->set_matl(matls(i,j).get_rep());
+          di->set_material(matls(i,j).get_rep());
         }
         glVertex3d(p1.x(), p1.y(), p1.z());
         glVertex3d(p2.x(), p2.y(), p2.z());
@@ -2231,7 +2230,7 @@ GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
         {
           Point pp1(p1+w*verts(i, j));
           if (have_matls)
-            di->set_matl(matls(i, j).get_rep());
+            di->set_material(matls(i, j).get_rep());
           if (have_normals)
           {
             Vector normal(normals(i, j));
@@ -2253,7 +2252,7 @@ GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
         {
           Point pp1(p1+w*verts(i, j));
           if (have_matls)
-            di->set_matl(matls(i, j).get_rep());
+            di->set_material(matls(i, j).get_rep());
           if (have_normals)
           {
             Vector normal(normals(i, j));
@@ -2286,7 +2285,7 @@ GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
           Point pp1(p1+w*verts(i, j));
           Point pp2(p2+w*verts(i+1, j));
           if (have_matls)
-            di->set_matl(matls(i, j).get_rep());
+            di->set_material(matls(i, j).get_rep());
           if (have_normals)
           {
             Vector normal(normals(i, j));
@@ -2295,7 +2294,7 @@ GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
           glVertex3d(pp1.x(), pp1.y(), pp1.z());
 
           if (have_matls)
-            di->set_matl(matls(i+1, j).get_rep());
+            di->set_material(matls(i+1, j).get_rep());
           if (have_normals)
           {
             Vector normal(normals(i+1, j));
@@ -2309,7 +2308,7 @@ GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
       }
 #endif
       if (have_matls)
-        di->set_matl(matls(0,0).get_rep());
+        di->set_material(matls(0,0).get_rep());
       Point rstart(corner);
       if (have_normals && have_matls)
       {
@@ -3096,7 +3095,7 @@ GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
   }
   if (selected_ && highlight_.get_rep())
   {
-    di->set_matl(highlight_.get_rep());
+    di->set_material(highlight_.get_rep());
     int old_ignore=di->ignore_matl;
     di->ignore_matl=1;
     child_->draw(di, highlight_.get_rep(), time);
@@ -3648,13 +3647,13 @@ GeomTube::draw(DrawInfoOpenGL* di, Material* matl, double)
         {
           Point pt1(pp1[j]);
           Vector n1(pt1-cen1);
-          verts[i]->emit_matl(di);
+          verts[i]->emit_material(di);
           glNormal3d(n1.x(), n1.y(), n1.z());
           glVertex3d(pt1.x(), pt1.y(), pt1.z());
 
           Point pt2(pp2[j]);
           Vector n2(pt2-cen2);
-          verts[i+1]->emit_matl(di);
+          verts[i+1]->emit_material(di);
           glNormal3d(n2.x(), n2.y(), n2.z());
           glVertex3d(pt2.x(), pt2.y(), pt2.z());
         }
@@ -4140,7 +4139,7 @@ GeomTri::draw(DrawInfoOpenGL* di, Material* matl, double)
       glBegin(GL_TRIANGLES);
       verts[0]->emit_point(di);
       verts[1]->emit_point(di);
-      verts[2]->emit_matl(di);
+      verts[2]->emit_material(di);
       verts[2]->emit_point(di);
       glEnd();
       break;
@@ -4299,7 +4298,7 @@ GeomFastTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_NORMAL_ARRAY);
   }
 
-  if (material_.get_rep()) { di->set_matl(material_.get_rep()); }
+  if (material_.get_rep()) { di->set_material(material_.get_rep()); }
 
   if (colors_.size())
   {
@@ -4419,7 +4418,7 @@ GeomTranspTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_NORMAL_ARRAY);
   }
 
-  if (material_.get_rep()) { di->set_matl(material_.get_rep()); }
+  if (material_.get_rep()) { di->set_material(material_.get_rep()); }
 
   if (colors_.size())
   {
@@ -4504,7 +4503,7 @@ GeomFastQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisable(GL_NORMALIZE);
   }
 
-  if (material_.get_rep()) { di->set_matl(material_.get_rep()); }
+  if (material_.get_rep()) { di->set_material(material_.get_rep()); }
 
   if (colors_.size())
   {
@@ -4628,7 +4627,7 @@ GeomTranspQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisable(GL_NORMALIZE);
   }
 
-  if (material_.get_rep()) { di->set_matl(material_.get_rep()); }
+  if (material_.get_rep()) { di->set_material(material_.get_rep()); }
 
   if (colors_.size())
   {
@@ -5966,18 +5965,18 @@ GeomTriStrip::draw(DrawInfoOpenGL* di, Material* matl, double)
     {
     case DrawInfoOpenGL::WireFrame:
       {
-        verts[0]->emit_matl(di);
+        verts[0]->emit_material(di);
         verts[0]->emit_point(di);
-        verts[1]->emit_matl(di);
+        verts[1]->emit_material(di);
         verts[1]->emit_point(di);
         for (int i=2;i<verts.size();i++)
         {
           glBegin(GL_LINE_LOOP);
-          verts[i-2]->emit_matl(di);
+          verts[i-2]->emit_material(di);
           verts[i-2]->emit_point(di);
-          verts[i-1]->emit_matl(di);
+          verts[i-1]->emit_material(di);
           verts[i-1]->emit_point(di);
-          verts[i]->emit_matl(di);
+          verts[i]->emit_material(di);
           verts[i]->emit_point(di);
           glEnd();
         }
@@ -5989,7 +5988,7 @@ GeomTriStrip::draw(DrawInfoOpenGL* di, Material* matl, double)
         glBegin(GL_TRIANGLE_STRIP);
         for (int i=0;i<verts.size();i++)
         {
-          verts[i]->emit_matl(di);
+          verts[i]->emit_material(di);
           verts[i]->emit_point(di);
         }
         glEnd();
@@ -6093,7 +6092,7 @@ GeomVertex::emit_point(DrawInfoOpenGL*)
 
 
 void
-GeomVertex::emit_matl(DrawInfoOpenGL*)
+GeomVertex::emit_material(DrawInfoOpenGL*)
 {
   // Do nothing
 }
@@ -6124,31 +6123,31 @@ GeomNVertex::emit_normal(DrawInfoOpenGL*)
 void
 GeomNMVertex::emit_all(DrawInfoOpenGL* di)
 {
-  di->set_matl(matl.get_rep());
+  di->set_material(matl.get_rep());
   glNormal3d(normal.x(), normal.y(), normal.z());
   glVertex3d(p.x(), p.y(), p.z());
 }
 
 
 void
-GeomNMVertex::emit_matl(DrawInfoOpenGL* di)
+GeomNMVertex::emit_material(DrawInfoOpenGL* di)
 {
-  di->set_matl(matl.get_rep());
+  di->set_material(matl.get_rep());
 }
 
 
 void
 GeomMVertex::emit_all(DrawInfoOpenGL* di)
 {
-  di->set_matl(matl.get_rep());
+  di->set_material(matl.get_rep());
   glVertex3d(p.x(), p.y(), p.z());
 }
 
 
 void
-GeomMVertex::emit_matl(DrawInfoOpenGL* di)
+GeomMVertex::emit_material(DrawInfoOpenGL* di)
 {
-  di->set_matl(matl.get_rep());
+  di->set_material(matl.get_rep());
 }
 
 
@@ -6161,7 +6160,7 @@ GeomCVertex::emit_all(DrawInfoOpenGL* /*di*/)
 
 
 void
-GeomCVertex::emit_matl(DrawInfoOpenGL* /*di*/)
+GeomCVertex::emit_material(DrawInfoOpenGL* /*di*/)
 {
   glColor3f(color.r(),color.g(),color.b());
 }
