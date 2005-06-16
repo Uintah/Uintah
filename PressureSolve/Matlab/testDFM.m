@@ -8,6 +8,7 @@
 %   See also: ?.
 global verboseLevel
 
+twoLevel            = 1;
 setupGrid           = 1;
 solveSystem         = 1;
 plotResults         = 1;
@@ -15,13 +16,13 @@ saveResults         = 1;
 
 outputDir           = 'ProblemA_1Level';
 verboseLevel        = 0;
-numCellsRange       = 2.^[2:1:4];
+numCellsRange       = 2.^[2:1:6];
 
 success = mkdir('.',outputDir);
 
 for count = 1:length(numCellsRange)
     numCells = numCellsRange(count);
-
+    fprintf('#### nCells = %d ####\n',numCells);
     %-------------------------------------------------------------------------
     % Set up grid (AMR levels, patches)
     %-------------------------------------------------------------------------
@@ -53,7 +54,7 @@ for count = 1:length(numCellsRange)
 
         %--------------- Level 2: local fine grid around center of domain -----------------
 
-        if (1)
+        if (twoLevel)
             [grid,k]            = addGridLevel(grid,'refineRatio',[2 2]);
             [grid,q2]           = addGridPatch(grid,k,resolution/2 + 1,3*resolution/2,q1);              % Local patch around the domain center
             [A,b,grid]          = updateSystem(grid,k,q2,A,b);
@@ -101,9 +102,14 @@ for count = 1:length(numCellsRange)
         tStartCPU        = cputime;
         tStartElapsed    = clock;
 
-        uExact = exactSolutionAMR(grid);
+        % Plot grid
+        if (grid.totalVars <= 200)
+            plotGrid(grid,sprintf('%s/grid%d.eps',outputDir,numCells),1,0);
+        end
 
         % Plot and print discretization error at all patches
+        uExact = exactSolutionAMR(grid);
+        tau = sparseToAMR(A*AMRToSparse(uExact,grid)-b,grid);
         fig = 0;
         for k = 1:grid.numLevels,
             level = grid.level{k};
@@ -111,8 +117,8 @@ for count = 1:length(numCellsRange)
                 P = level.patch{q};
                 e = u{k}{q}-uExact{k}{q};
                 e = e(:);
-                fprintf('Level %2d, Patch %2d  L2_error = %e   max_error = %e   median_error = %e\n',...
-                    k,q,Lpnorm(e),max(abs(e)),median(abs(e)));
+                fprintf('Level %2d, Patch %2d  L2_error = %e   max_error = %e   median_error = %e  max_tau = %e\n',...
+                    k,q,Lpnorm(e),max(abs(e)),median(abs(e)),max(abs(tau{k}{q}(:))));
                 err{k}{q}(count,:) = [Lpnorm(e) max(abs(e)) median(abs(e))];
 
                 fig = fig+1;
@@ -135,6 +141,14 @@ for count = 1:length(numCellsRange)
                 title(sprintf('Discretization error on Level %d, Patch %d',k,q));
                 eval(sprintf('print -depsc %s/DiscError%d_L%dP%d.eps',outputDir,numCells,k,q));
                 shg;
+                
+                fig = fig+1;
+                figure(fig);
+                clf;
+                surf(tau{k}{q});
+                title(sprintf('Truncation error on Level %d, Patch %d',k,q));
+                eval(sprintf('print -depsc %s/TruncError%d_L%dP%d.eps',outputDir,numCells,k,q));
+                shg;
             end
         end
         tCPU        = cputime - tStartCPU;
@@ -142,11 +156,6 @@ for count = 1:length(numCellsRange)
         if (verboseLevel >= 1)
             fprintf('CPU time     = %f\n',tCPU);
             fprintf('Elapsed time = %f\n',tElapsed);
-        end
-
-        % Plot grid
-        if (grid.totalVars <= 200)
-            plotGrid(grid,sprintf('%s/grid%d.eps',outputDir,numCells),1,0);
         end
     end
 

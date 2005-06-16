@@ -55,7 +55,7 @@ for k = 1:grid.numLevels,
 
         %=====================================================================
         % Set boundary conditions
-        %=====================================================================
+        %==================================================================        
         face = cell(grid.dim,1);
         for d = 1:grid.dim,                                                 % Loop over dimensions of patch
             for side = 1:2                                                  % side=1 (left) and side=2 (right) in dimension d
@@ -79,14 +79,18 @@ for k = 1:grid.numLevels,
                     matGhost        = cell(grid.dim,1);
                     [matGhost{:}]   = ndgrid(ghost{:});
 
+                    % Inward normal direction
+                    inwardNormal = zeros(1,grid.dim);
+                    inwardNormal(d) = -direction;
+
                     % Ghost point physical locations
                     ghostLocation   = cell(grid.dim,1);
                     for dim = 1:grid.dim                                                % Translate face to patch-based indices (from index in the INTERIOR matInterior)
-                        ghostLocation{dim} = (ghost{dim} - boxOffset(dim) - 0.5)*h(dim);
+                        ghostLocation{dim} = (ghost{dim} - boxOffset(dim) - 0.5 + 0.5*inwardNormal(dim))*h(dim);
                     end
                     matGhostLocation = cell(grid.dim,1);
                     [matGhostLocation{:}]   = ndgrid(ghostLocation{:});
-                    u{k}{q}(ghost{:}) = 0.0;
+                    u{k}{q}(ghost{:}) = exactSolution(matGhostLocation{:});
                     continue;                                                           % Skip the rest of the code in this loop as B.C. prevail on C/F interface values
                 end
 
