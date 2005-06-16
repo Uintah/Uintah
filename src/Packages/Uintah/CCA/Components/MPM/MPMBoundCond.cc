@@ -76,7 +76,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 	  }
 	if (type == "Symmetric")
 	  if (vel_bcs != 0) {
-	    if (face == Patch::xplus || face == Patch::xminus)
+	    if (face == Patch::xplus || face == Patch::xminus){
 	      for (b=nbound.begin(); b != nbound.end();b++) {
 		variable[*b] = Vector(0.,variable[*b].y(), variable[*b].z());
 	      }
@@ -85,7 +85,8 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                   variable[*b] = Vector(0.,variable[*b].y(), variable[*b].z());
                 }
               }
-	    if (face == Patch::yplus || face == Patch::yminus)
+            }
+	    if (face == Patch::yplus || face == Patch::yminus){
 	      for (b=nbound.begin(); b != nbound.end();b++)
 		variable[*b] = Vector(variable[*b].x(),0.,variable[*b].z());
               if(n8or27==27){
@@ -93,7 +94,8 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                   variable[*b] = Vector(variable[*b].x(),0.,variable[*b].z());
                 }
               }
-	    if (face == Patch::zplus || face == Patch::zminus)
+            }
+	    if (face == Patch::zplus || face == Patch::zminus){
 	      for (b=nbound.begin(); b != nbound.end();b++)
 		variable[*b] = Vector(variable[*b].x(), variable[*b].y(),0.);
               if(n8or27==27){
@@ -101,6 +103,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                   variable[*b] = Vector(variable[*b].x(), variable[*b].y(),0.);
                 }
               }
+            }
 	    delete vel_bcs;
 	  }
       }
