@@ -2,7 +2,7 @@
 <!-- PBX 9501 -->
 <Uintah_Include>
   <PR>                     0.3      </PR>
-  <CoeffThermalExpansion>  5.0e-5   </CoeffThermalExpansion>
+  <CoeffThermalExpansion>  12.5e-5   </CoeffThermalExpansion>
   <CrackParameterA>        1.0e-3   </CrackParameterA>
   <InitialCrackRadius>     3.0e-5   </InitialCrackRadius>
   <CrackPowerValue>        10.0     </CrackPowerValue>
