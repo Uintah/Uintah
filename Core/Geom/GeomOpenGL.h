@@ -106,7 +106,7 @@ public:
     int clip_planes; // clipping planes that are on
 
     Material* current_matl;
-    void set_matl(Material*);
+    void set_material(Material*);
 
     int ignore_matl;
 
