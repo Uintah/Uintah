@@ -143,12 +143,24 @@ for d = 1:grid.dim,                                                 % Loop over 
         mapGhost        = map(pindexGhost);
         pindexRemaining = setdiff(pindexRemaining,pindexGhost);
         
-        %======== HARDCODED: B.C.: Dirichlet, u=0 =============
+        %======== B.C.: Dirichlet, u=rhsBC =============
         if (interiorConnections == 1)
+            inwardNormal = zeros(1,grid.dim);
+            inwardNormal(d) = -direction;
+
+            % Ghost point physical locations
+            ghostLocation   = cell(grid.dim,1);
+            for dim = 1:grid.dim                                                % Translate face to patch-based indices (from index in the INTERIOR matInterior)
+                ghostLocation{dim} = (ghost{dim} - boxOffset(dim) - 0.5 + 0.5*inwardNormal(dim))*h(dim);
+            end
+            matGhostLocation = cell(grid.dim,1);
+            [matGhostLocation{:}]   = ndgrid(ghostLocation{:});
+            %rhsBCValues = zeros(boxSize);
+            rhsBCValues = rhsBC(ghostLocation{:});
             Alist = [Alist; ...
                 [mapGhost mapGhost repmat(1.0,size(mapGhost))]; ...
                 ];
-            b(pindexGhost) = 0.0;                                   % This inserts the RHS data into the "chunk" of b that we output from this routine, hence we translate map indices to patch-based 1D indices.
+            b(pindexGhost) = rhsBCValues(:);                                   % This inserts the RHS data into the "chunk" of b that we output from this routine, hence we translate map indices to patch-based 1D indices.
         end
     end
 end

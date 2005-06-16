@@ -241,6 +241,15 @@ for d = 1:grid.dim,                                             % Loop over dime
             weight = newWeight.* ...
                 repmat([(xGhost-xRight)./(xLeft-xRight) (xGhost-xLeft)./(xRight-xLeft)],1,size(weight,2));
         end
+        
+        %%%%%%%% FIX NEAR CORNERS; THE FOLLOWING CODE WORKS ONLY IN 2D %%%%%%%%%%
+        
+        %         weight(1,:)     = [0.0 1.0];
+        %         weight(end,:)   = [1.0 0.0];
+
+        
+        %%%%%%%% END FIX %%%%%%%%
+        
         % weight is a matrix of size nGhost x 2^(nDims-1). Each row is the
         % interp weights for one ghost points. Column one is the weight of
         % (0,0) (relative to cNodesLeft), then (0,1), (1,0), (1,1). This is
