@@ -315,7 +315,7 @@
     <create_new_particles>           false    </create_new_particles>
     <manual_new_material>            true     </manual_new_material>
     <do_contact_friction_heating>    false    </do_contact_friction_heating>    
-    <erosion algorithm = "KeepStress"/>
+    <erosion algorithm = "ZeroStress"/>
   </MPM>
 -->
 
