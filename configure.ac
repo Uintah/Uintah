@@ -4302,7 +4302,7 @@ if test "$sci_required_tao" = "yes"; then
   else
    if test "$with_tao"; then
     _sci_lib="$with_tao/ace"
-    _tao_inc="$with_tao/ace"
+    _tao_inc="$with_tao $with_tao/ace $with_tao/TAO $with_tao/TAO/tao"
    fi
   fi
                                                                                                                                                 
@@ -4323,6 +4323,7 @@ fi # end sci_required_tao
                                                                                                                                                 
 AC_SUBST(HAVE_TAO)
 AC_SUBST(DEF_TAO)
+AC_SUBST(INC_TAO_H)
 AC_SUBST(TAO_LIB_FLAG)
 AC_SUBST(TAO_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/tao_testdefs.h"
