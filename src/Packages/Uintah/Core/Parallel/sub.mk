@@ -11,6 +11,7 @@ SRCS     += \
 	$(SRCDIR)/UintahParallelPort.cc      \
 	$(SRCDIR)/BufferInfo.cc              \
 	$(SRCDIR)/PackBufferInfo.cc          \
+	$(SRCDIR)/MPI_Communicator.cc        \
 	$(SRCDIR)/Vampir.cc
 
 PSELIBS := \
