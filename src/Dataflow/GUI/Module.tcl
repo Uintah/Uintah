@@ -339,6 +339,7 @@ itcl_class Module {
 	global Subnet Color Disabled
 	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
 	set m $canvas.module[modname]
+	if { ![winfo exists $m] } return
 	if ![string length $color] {
 	    set color $Color(Basecolor)
 	    if { [$this is_selected] } { set color $Color(Selected) }
@@ -393,7 +394,7 @@ itcl_class Module {
 	set graph $canvas.module[modname].ff.inset.graph
 	if {$width == 0} { 
 #	    place forget $graph
-	} else {
+	} elseif { [winfo exists $graph] } {
 	    $graph configure -width $width
 	    if {$old_width == 0} { place $graph -relheight 1 -anchor nw }
 	}
@@ -401,7 +402,10 @@ itcl_class Module {
     }
 	
     method update_time {} {
-	if {!$make_time} return
+	global Subnet
+	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
+	set time $canvas.module[modname].ff.time
+	if { !$make_time || ![winfo exists $time] } return
 
 	if {$state == "JustStarted"} {
 	    set tstr " ?.??"
@@ -420,9 +424,7 @@ itcl_class Module {
 		set tstr [format "%d::%02d" $hrs $mins]
 	    }
 	}
-	global Subnet
-	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
-	$canvas.module[modname].ff.time configure -text $tstr
+	$time configure -text $tstr
     }
 
     method update_state {} {
@@ -445,13 +447,16 @@ itcl_class Module {
 	    set progress 0
 	}
 
-	if {[winfo exists .standalone]} {
+	if { [winfo exists .standalone] } {
 	    app update_progress [modname] $state
 	}
 	
 	global Subnet
 	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
-	$canvas.module[modname].ff.inset.graph configure -background $color
+	set graph $canvas.module[modname].ff.inset.graph
+	if { [winfo exists $graph] } {
+	    $canvas.module[modname].ff.inset.graph configure -background $color
+	}
 	update_progress
     }
 
@@ -476,9 +481,9 @@ itcl_class Module {
 	set number $Subnet([modname])
 	set canvas $Subnet(Subnet${number}_canvas)
 	set indicator $canvas.module[modname].ff.msg.indicator
-#	place forget $indicator
-	$indicator configure -width $indicator_width -background $color
-	place $indicator -relheight 1 -anchor nw 
+	if { [winfo exists $indicator] } {
+	    $indicator configure -width $indicator_width -background $color
+	}
 
 	if $number {
 	    SubnetIcon$number update_msg_state

@@ -222,6 +222,7 @@ proc drawPort { port { color red } { connected 0 } } {
     } else {
 	set modframe $Subnet(Subnet${subnet}_canvas).module[pMod port]
     }
+    if { ![winfo exists $modframe] } return
     set isoport [string equal [pType port] o]
     set x [expr [pNum port]*$port_spacing+($isSubnetEditor?13:6)]
     set e [expr $connected?"out":""][expr $isoport?"bottom":"top"]
