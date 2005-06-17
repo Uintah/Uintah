@@ -51,20 +51,20 @@ grep elap .plotStats_tmp | cut -d"=" -f2 | cut -d" " -f1 >& .physicalTime
 
 paste -d "  " .elapsedTime .meanTime .physicalTime .solverTime .solverIters >& .data
 
-#rm -f .elapsedTime .meanTime .physicalTime .solverTime .solverIters
-#rm -f .plotStats_tmp .plotStats_tmp1 .tmp
+rm -f .elapsedTime .meanTime .physicalTime .solverTime .solverIters
+rm -f .plotStats_tmp .plotStats_tmp1 .tmp
 echo "Done extracting data"
 
 echo "" > gp
 #__________________________________
 # if making a hardcopy
 if( $hardcopy == "y" || $hardcopy == "Y" ) then 
-echo "Generating the postscript file plotStats.ps"
+echo "Generating the postscript file plotSolverStats.ps"
 /bin/rm gp
 cat > gp << fin
 set terminal x11 1
 set terminal postscript color solid "Times-Roman" 9
-set output "plotStat.ps"
+set output "plotSolverStat.ps"
 fin
 endif
 
@@ -104,6 +104,6 @@ gnuplot gp
 
 #__________________________________
 # clean up
-#rm -f gp .data
+rm -f gp .data
 
 exit(1)
