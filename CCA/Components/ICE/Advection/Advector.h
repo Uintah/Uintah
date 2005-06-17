@@ -11,6 +11,7 @@
 #include <Packages/Uintah/Core/Labels/ICELabel.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Util/ProgressiveWarning.h>
 
 namespace Uintah {
 
