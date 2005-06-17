@@ -326,6 +326,8 @@ main( int argc, char** argv )
 		  s, argv[0]);
 	  }
 	  numThreads = atoi(argv[i]);
+        } else if(s == "-threadmpi"){
+          //used threaded mpi (this option is handled in MPI_Communicator.cc  MPI_Init_thread
 	} else if(s == "-scheduler"){
 	  if(++i == argc){
 	    usage("You must provide a scheduler name for -scheduler",
