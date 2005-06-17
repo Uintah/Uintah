@@ -428,6 +428,17 @@ include $(SCIRUN_SCRIPTS)/program.mk
 ##############################################
 # restart_merger
 
+SRCS := $(SRCDIR)/async_mpi_test.cc
+PROGRAM := Packages/Uintah/StandAlone/async_mpi_test
+PSELIBS := \
+	Core/Thread \
+	Packages/Uintah/Core/Parallel
+LIBS    := $(XML_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY)
+ 
+include $(SCIRUN_SCRIPTS)/program.mk
+ 
+##############################################
+
 SRCS := $(SRCDIR)/restart_merger.cc
 PROGRAM := Packages/Uintah/StandAlone/restart_merger
 ifeq ($(LARGESOS),yes)
@@ -473,6 +484,7 @@ uintah: sus \
         restart_merger \
         partextract \
         partvarRange \
+	async_mpi_test \
         extractV \
         extractF \
         gambitFileReader \
@@ -532,6 +544,8 @@ restart_merger: prereqs Packages/Uintah/StandAlone/restart_merger
 partextract: prereqs Packages/Uintah/StandAlone/partextract
 
 partvarRange: prereqs Packages/Uintah/StandAlone/partvarRange
+
+async_mpi_test: prereqs Packages/Uintah/StandAlone/async_mpi_test
 
 extractV: prereqs Packages/Uintah/StandAlone/extractV
 
