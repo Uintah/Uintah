@@ -47,6 +47,68 @@
 
 using namespace SCIRun;
 
+#ifdef DISABLE_SCI_MALLOC
+
+// These stubs are needed when your code uses these functions but
+// DISABLE_SCI_MALLOC is set.
+namespace SCIRun {
+  const char* AllocatorSetDefaultTagNew(const char* tag) {
+    return
+      "AllocatorSetDefaultTagNew::NOT IMPLEMENTED.  DISABLE_SCI_MALLOC is set";
+  }
+
+  void AllocatorResetDefaultTagNew() {}
+
+  const char* AllocatorSetDefaultTag(const char* tag) {
+    return
+      "AllocatorSetDefaultTag::NOT IMPLEMENTED.  DISABLE_SCI_MALLOC is set";
+  }
+
+  void AllocatorResetDefaultTag() {}
+}
+
+void* operator new(size_t size, Allocator*, char*, int)
+{
+    return new char[size];
+}
+
+void* operator new[](size_t size, Allocator*, char*, int)
+{
+    return new char[size];
+}
+
+#else // ifdef DISABLE_SCI_MALLOC
+
+static const char* default_new_tag = "Unknown - operator new";
+static const char* default_new_array_tag = "Unknown - operator new[]";
+
+namespace SCIRun {
+  const char* AllocatorSetDefaultTagNew(const char* tag)
+  {
+    const char* old = default_new_tag;
+    default_new_tag=tag;
+    return old;
+  }
+
+  void AllocatorResetDefaultTagNew()
+  {
+    default_new_tag = "Unknown - operator new";
+    default_new_array_tag = "Unknown - operator new[]";
+  }
+
+  const char* AllocatorSetDefaultTag(const char* tag)
+  {
+    AllocatorSetDefaultTagMalloc(tag);
+    return AllocatorSetDefaultTagNew(tag);
+  }
+
+  void AllocatorResetDefaultTag()
+  {
+    AllocatorResetDefaultTagMalloc();
+    AllocatorResetDefaultTagNew();
+  }
+}
+
 #ifdef __sgi
 
 // This is ugly, but necessary, since --LANG:std remaps the mangling
@@ -68,39 +130,6 @@ extern "C" {
     }
 }
 #endif
-
-static const char* default_new_tag = "Unknown - operator new";
-static const char* default_new_array_tag = "Unknown - operator new[]";
-namespace SCIRun {
-const char* AllocatorSetDefaultTagNew(const char* tag)
-{
-  const char* old = default_new_tag;
-  default_new_tag=tag;
-  return old;
-}
-
-void AllocatorResetDefaultTagNew()
-{
-  default_new_tag = "Unknown - operator new";
-  default_new_array_tag = "Unknown - operator new[]";
-}
-
-const char* AllocatorSetDefaultTag(const char* tag)
-{
-  AllocatorSetDefaultTagMalloc(tag);
-  return AllocatorSetDefaultTagNew(tag);
-}
-
-void AllocatorResetDefaultTag()
-{
-  AllocatorResetDefaultTagMalloc();
-  AllocatorResetDefaultTagNew();
-}
-}
-
-#ifndef DISABLE_SCI_MALLOC
-
-
 
 void* operator new(size_t size) throw(std::bad_alloc)
 {
@@ -163,16 +192,5 @@ void* operator new[](size_t size, Allocator* a, char* tag, int linenum)
     }
     return a->alloc(size, tag, linenum);
 }
-#else
 
-void* operator new(size_t size, Allocator*, char*, int)
-{
-    return new char[size];
-}
-
-void* operator new[](size_t size, Allocator*, char*, int)
-{
-    return new char[size];
-}
-
-#endif
+#endif // ifdef DISABLE_SCI_MALLOC
