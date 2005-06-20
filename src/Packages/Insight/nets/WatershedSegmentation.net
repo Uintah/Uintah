@@ -113,19 +113,22 @@ set Notes($m19-Position) {n}
 set Notes($m19-Color) {white}
 
 # Create a SCIRun->Visualization->ShowField Module
-set m20 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 207 456]
+set m20 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 207 524]
 
 # Create a SCIRun->FieldsGeometry->ChangeFieldBounds Module
 set m21 [addModuleAtPosition "SCIRun" "FieldsGeometry" "ChangeFieldBounds" 8 678]
 
 # Create a SCIRun->Visualization->RescaleColorMap Module
-set m22 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 225 391]
+set m22 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 227 394]
+
+# Create a SCIRun->FieldsGeometry->ChangeFieldBounds Module
+set m23 [addModuleAtPosition "SCIRun" "FieldsGeometry" "ChangeFieldBounds" 207 465]
 
 # Create the Connections between Modules
 set c1 [addConnection $m6 0 $m10 0]
 set c2 [addConnection $m11 0 $m15 0]
 set c3 [addConnection $m16 0 $m17 0]
-set c4 [addConnection $m19 0 $m20 0]
+set c4 [addConnection $m19 0 $m23 0]
 set c5 [addConnection $m9 0 $m6 0]
 set c6 [addConnection $m1 0 $m11 0]
 set c7 [addConnection $m1 0 $m2 0]
@@ -139,20 +142,24 @@ set c14 [addConnection $m10 0 $m21 0]
 set c15 [addConnection $m15 0 $m12 0]
 set c16 [addConnection $m17 0 $m18 0]
 set c17 [addConnection $m21 0 $m7 0]
-set c18 [addConnection $m13 0 $m14 0]
-set c19 [addConnection $m13 0 $m22 0]
-set c20 [addConnection $m7 0 $m8 0]
-set c21 [addConnection $m11 0 $m14 1]
-set c22 [addConnection $m19 0 $m22 1]
-set c23 [addConnection $m14 0 $m12 1]
-set c24 [addConnection $m14 0 $m18 1]
-set c25 [addConnection $m22 0 $m20 1]
-set c26 [addConnection $m20 0 $m8 1]
-set c27 [addConnection $m18 0 $m8 2]
-set c28 [addConnection $m12 0 $m8 3]
+set c18 [addConnection $m23 0 $m20 0]
+set c19 [addConnection $m13 0 $m14 0]
+set c20 [addConnection $m13 0 $m22 0]
+set c21 [addConnection $m7 0 $m8 0]
+set c22 [addConnection $m11 0 $m14 1]
+set c23 [addConnection $m19 0 $m22 1]
+set c24 [addConnection $m14 0 $m12 1]
+set c25 [addConnection $m14 0 $m18 1]
+set c26 [addConnection $m22 0 $m20 1]
+set c27 [addConnection $m20 0 $m8 1]
+set c28 [addConnection $m18 0 $m8 2]
+set c29 [addConnection $m12 0 $m8 3]
 
 # Set GUI variables for the Insight->DataIO->ImageReaderFloat2D Module
 set $m1-filename $DATADIR/insight/BrainProtonDensitySlice.mhd
+
+# Set GUI variables for the Insight->Filters->GradientAnisotropicDiffusionImageFilter
+set $m2-time_step {0.125}
 
 # Set GUI variables for the Insight->Filters->WatershedImageFilter Module
 set $m4-level {0.1}
@@ -169,20 +176,16 @@ set $m7-nodes-as-disks {1}
 set $m7-edges-on {0}
 set $m7-normalize-vectors {}
 set $m7-has_vector_data {1}
-set $m7-active_tab {Edges}
+set $m7-active_tab {Faces}
 set $m7-node_scale {0.03}
 set $m7-edge_scale {0.015}
 set $m7-vectors_scale {0.3}
 set $m7-show_progress {}
 
 $m8 addViewer
-set $m8-ViewWindow_0-geometry 654x647+18+230
+set $m8-ViewWindow_0-geometry 654x646+847+217
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
-set $m8-ViewWindow_0-pos {z1_y1}
-set $m8-ViewWindow_0-caxes {0}
-set $m8-ViewWindow_0-raxes {1}
-set $m8-ViewWindow_0-have_collab_vis {0}
 set $m8-ViewWindow_0-view-eyep-x {-20.0388593317}
 set $m8-ViewWindow_0-view-eyep-y {125.0}
 set $m8-ViewWindow_0-view-eyep-z {1704.82633666}
@@ -196,18 +199,11 @@ set $m8-ViewWindow_0-view-fov {20.0}
 set $m8-ViewWindow_0-view-eyep_offset-x {}
 set $m8-ViewWindow_0-view-eyep_offset-y {}
 set $m8-ViewWindow_0-view-eyep_offset-z {}
-set $m8-ViewWindow_0-trackViewWindow0 {1}
-set $m8-ViewWindow_0-global-light0 {1}
-set $m8-ViewWindow_0-global-light1 {0}
-set $m8-ViewWindow_0-global-light2 {0}
-set $m8-ViewWindow_0-global-light3 {0}
-set $m8-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
-set $m8-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
-set $m8-ViewWindow_0-bgcolor-r {0}
-set $m8-ViewWindow_0-bgcolor-g {0}
-set $m8-ViewWindow_0-bgcolor-b {0}
-set $m8-ViewWindow_0-shading {}
+set $m8-ViewWindow_0-sr {1}
 set $m8-ViewWindow_0-do_stereo {0}
+set $m8-ViewWindow_0-ortho-view {0}
+set $m8-ViewWindow_0-trackViewWindow0 {1}
+set $m8-ViewWindow_0-raxes {1}
 set $m8-ViewWindow_0-ambient-scale {1.0}
 set $m8-ViewWindow_0-diffuse-scale {1.0}
 set $m8-ViewWindow_0-specular-scale {0.4}
@@ -218,23 +214,19 @@ set $m8-ViewWindow_0-polygon-offset-units {0.0}
 set $m8-ViewWindow_0-point-size {1.0}
 set $m8-ViewWindow_0-line-width {1.0}
 set $m8-ViewWindow_0-sbase {0.4}
-set $m8-ViewWindow_0-sr {1}
-set $m8-ViewWindow_0-do_bawgl {0}
-set $m8-ViewWindow_0-drawimg {}
-set $m8-ViewWindow_0-saveprefix {}
-set $m8-ViewWindow_0-resx {}
-set $m8-ViewWindow_0-resy {}
-set $m8-ViewWindow_0-aspect {}
-set $m8-ViewWindow_0-aspect_ratio {}
-set $m8-ViewWindow_0-global-light {1}
-set $m8-ViewWindow_0-global-fog {0}
-set $m8-ViewWindow_0-global-debug {0}
-set $m8-ViewWindow_0-global-clip {1}
-set $m8-ViewWindow_0-global-cull {0}
-set $m8-ViewWindow_0-global-dl {0}
-set $m8-ViewWindow_0-global-type {Gouraud}
-set $m8-ViewWindow_0-ortho-view {0}
+set $m8-ViewWindow_0-bgcolor-r {0}
+set $m8-ViewWindow_0-bgcolor-g {0}
+set $m8-ViewWindow_0-bgcolor-b {0}
+set $m8-ViewWindow_0-fogusebg {1}
+set $m8-ViewWindow_0-fogcolor-r {0.0}
+set $m8-ViewWindow_0-fogcolor-g {0.0}
+set $m8-ViewWindow_0-fogcolor-b {1.0}
+set $m8-ViewWindow_0-fog-start {0.0}
+set $m8-ViewWindow_0-fog-end {0.714265}
+set $m8-ViewWindow_0-fog-visibleonly {1}
 set $m8-ViewWindow_0-currentvisual {0}
+set $m8-ViewWindow_0-caxes {0}
+set $m8-ViewWindow_0-pos {z1_y1}
 set $m8-ViewWindow_0-clip-num {}
 set $m8-ViewWindow_0-clip-visible {}
 set $m8-ViewWindow_0-clip-selected {}
@@ -268,12 +260,23 @@ set $m8-ViewWindow_0-clip-normal-x-6 {}
 set $m8-ViewWindow_0-clip-normal-y-6 {}
 set $m8-ViewWindow_0-clip-normal-z-6 {}
 set $m8-ViewWindow_0-clip-normal-d-6 {}
-set "$m8-ViewWindow_0-Nodes (1)" {1}
-set "$m8-ViewWindow_0-Edges (1)" {1}
-set "$m8-ViewWindow_0-Faces (1)" {1}
+set $m8-ViewWindow_0-global-light0 {1}
+set $m8-ViewWindow_0-global-light1 {0}
+set $m8-ViewWindow_0-global-light2 {0}
+set $m8-ViewWindow_0-global-light3 {0}
+set $m8-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m8-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m8-ViewWindow_0-global-light {1}
+set $m8-ViewWindow_0-global-fog {0}
+set $m8-ViewWindow_0-global-debug {0}
+set $m8-ViewWindow_0-global-clip {1}
+set $m8-ViewWindow_0-global-cull {0}
+set $m8-ViewWindow_0-global-dl {0}
+set $m8-ViewWindow_0-global-type {Gouraud}
+set "$m8-ViewWindow_0-Faces (4)" {1}
 set "$m8-ViewWindow_0-Faces (2)" {1}
 set "$m8-ViewWindow_0-Faces (3)" {1}
-set "$m8-ViewWindow_0-Faces (4)" {1}
+set "$m8-ViewWindow_0-Faces (1)" {1}
 
 # Set GUI variables for the SCIRun->FieldsData->TransformData Module
 set $m10-function {result = Vector(v.x()/255.0, v.y()/255.0, v.z()/255.0);}
@@ -284,8 +287,9 @@ set $m11-copy {1}
 # Set GUI variables for the SCIRun->Visualization->ShowField Module
 set $m12-nodes-on {0}
 set $m12-edges-on {0}
+set $m12-faces-usetexture {1}
 set $m12-has_scalar_data {1}
-set $m12-active_tab {Edges}
+set $m12-active_tab {Faces}
 set $m12-node_scale {0.03}
 set $m12-edge_scale {0.015}
 set $m12-scalars_scale {0.3}
@@ -293,8 +297,7 @@ set $m12-scalars_scale {0.3}
 # Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
 set $m13-width {398}
 set $m13-height {40}
-set $m13-mapType {0}
-set $m13-minRes {2}
+set $m13-mapName {Gray}
 
 # Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
 set $m14-min {0.0}
@@ -315,8 +318,9 @@ set $m17-useoutputcenter {1}
 # Set GUI variables for the SCIRun->Visualization->ShowField Module
 set $m18-nodes-on {0}
 set $m18-edges-on {0}
+set $m18-faces-usetexture {1}
 set $m18-has_scalar_data {1}
-set $m18-active_tab {Edges}
+set $m18-active_tab {Faces}
 set $m18-node_scale {0.03}
 set $m18-edge_scale {0.015}
 set $m18-scalars_scale {0.3}
@@ -327,8 +331,9 @@ set $m19-copy {1}
 # Set GUI variables for the SCIRun->Visualization->ShowField Module
 set $m20-nodes-on {0}
 set $m20-edges-on {0}
+set $m20-faces-usetexture {1}
 set $m20-has_scalar_data {1}
-set $m20-active_tab {Edges}
+set $m20-active_tab {Faces}
 set $m20-node_scale {0.03}
 set $m20-edge_scale {0.015}
 set $m20-scalars_scale {0.3}
@@ -341,5 +346,7 @@ set $m21-useoutputcenter {1}
 set $m22-min {0.000583909044508}
 set $m22-max {133.652801514}
 
+# Set GUI variables for the SCIRun->FieldsGeometry->ChangeFieldBounds Module
+set $m23-useoutputcenter {1}
 
 ::netedit scheduleok
