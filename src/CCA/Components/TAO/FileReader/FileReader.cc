@@ -4,7 +4,8 @@
 #include "FileReader.h"
 #include <iostream>
 #include <fstream>
-
+#include <Core/Util/Environment.h>
+                                                                                           
 ACE_RCSID(FileReader, FileReader, "FileReader.cc,v 1.3 2002/01/29 20:21:07 okellogg Exp")
 
 FileReader::FileReader (CORBA::ORB_ptr orb)
@@ -40,7 +41,8 @@ FileReader::getPDEdescription (
   dirichletValues=new Test::FileReader::double_array;
 
 
-  ifstream is("L.pde");
+  std::string srcdir(SCIRun::sci_getenv("SCIRUN_SRCDIR"));
+  ifstream is((srcdir + std::string("/CCA/Component/Tao/FileReader/L.pde")).c_str());
 
 
   while(true){
