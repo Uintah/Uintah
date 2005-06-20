@@ -129,15 +129,11 @@ $m7 addViewer
 set $m7-ViewWindow_0-geometry 654x646+22+150
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
-set $m7-ViewWindow_0-pos {z0_y0}
-set $m7-ViewWindow_0-caxes {0}
-set $m7-ViewWindow_0-raxes {1}
-set $m7-ViewWindow_0-have_collab_vis {0}
-set $m7-ViewWindow_0-view-eyep-x {-14.623745279}
-set $m7-ViewWindow_0-view-eyep-y {53.4825207082}
-set $m7-ViewWindow_0-view-eyep-z {-1236.87357105}
-set $m7-ViewWindow_0-view-lookat-x {100.0}
-set $m7-ViewWindow_0-view-lookat-y {0.0}
+set $m7-ViewWindow_0-view-eyep-x {-17.9303228436}
+set $m7-ViewWindow_0-view-eyep-y {52.6856645914}
+set $m7-ViewWindow_0-view-eyep-z {-1256.38385313}
+set $m7-ViewWindow_0-view-lookat-x {195.0}
+set $m7-ViewWindow_0-view-lookat-y {104.0}
 set $m7-ViewWindow_0-view-lookat-z {0.0}
 set $m7-ViewWindow_0-view-up-x {-0.00413149}
 set $m7-ViewWindow_0-view-up-y {-0.997335}
@@ -146,18 +142,11 @@ set $m7-ViewWindow_0-view-fov {20.0}
 set $m7-ViewWindow_0-view-eyep_offset-x {}
 set $m7-ViewWindow_0-view-eyep_offset-y {}
 set $m7-ViewWindow_0-view-eyep_offset-z {}
-set $m7-ViewWindow_0-trackViewWindow0 {1}
-set $m7-ViewWindow_0-global-light0 {1}
-set $m7-ViewWindow_0-global-light1 {0}
-set $m7-ViewWindow_0-global-light2 {0}
-set $m7-ViewWindow_0-global-light3 {0}
-set $m7-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
-set $m7-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
-set $m7-ViewWindow_0-bgcolor-r {                0}
-set $m7-ViewWindow_0-bgcolor-g {                0}
-set $m7-ViewWindow_0-bgcolor-b {                0}
-set $m7-ViewWindow_0-shading {}
+set $m7-ViewWindow_0-sr {1}
 set $m7-ViewWindow_0-do_stereo {0}
+set $m7-ViewWindow_0-ortho-view {0}
+set $m7-ViewWindow_0-trackViewWindow0 {1}
+set $m7-ViewWindow_0-raxes {1}
 set $m7-ViewWindow_0-ambient-scale {1.0}
 set $m7-ViewWindow_0-diffuse-scale {1.0}
 set $m7-ViewWindow_0-specular-scale {0.4}
@@ -168,14 +157,26 @@ set $m7-ViewWindow_0-polygon-offset-units {0.0}
 set $m7-ViewWindow_0-point-size {1.0}
 set $m7-ViewWindow_0-line-width {1.0}
 set $m7-ViewWindow_0-sbase {0.4}
-set $m7-ViewWindow_0-sr {1}
-set $m7-ViewWindow_0-do_bawgl {0}
-set $m7-ViewWindow_0-drawimg {}
-set $m7-ViewWindow_0-saveprefix {}
-set $m7-ViewWindow_0-resx {}
-set $m7-ViewWindow_0-resy {}
-set $m7-ViewWindow_0-aspect {}
-set $m7-ViewWindow_0-aspect_ratio {}
+set $m7-ViewWindow_0-bgcolor-r {                0}
+set $m7-ViewWindow_0-bgcolor-g {                0}
+set $m7-ViewWindow_0-bgcolor-b {                0}
+set $m7-ViewWindow_0-fogusebg {1}
+set $m7-ViewWindow_0-fogcolor-r {0.0}
+set $m7-ViewWindow_0-fogcolor-g {0.0}
+set $m7-ViewWindow_0-fogcolor-b {1.0}
+set $m7-ViewWindow_0-fog-start {0.0}
+set $m7-ViewWindow_0-fog-end {0.714265}
+set $m7-ViewWindow_0-fog-visibleonly {1}
+set $m7-ViewWindow_0-total_frames {34}
+set $m7-ViewWindow_0-currentvisual {0}
+set $m7-ViewWindow_0-caxes {0}
+set $m7-ViewWindow_0-pos {z0_y0}
+set $m7-ViewWindow_0-global-light0 {1}
+set $m7-ViewWindow_0-global-light1 {0}
+set $m7-ViewWindow_0-global-light2 {0}
+set $m7-ViewWindow_0-global-light3 {0}
+set $m7-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m7-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
 set $m7-ViewWindow_0-global-light {1}
 set $m7-ViewWindow_0-global-fog {0}
 set $m7-ViewWindow_0-global-debug {0}
@@ -183,10 +184,10 @@ set $m7-ViewWindow_0-global-clip {0}
 set $m7-ViewWindow_0-global-cull {0}
 set $m7-ViewWindow_0-global-dl {0}
 set $m7-ViewWindow_0-global-type {Gouraud}
-set $m7-ViewWindow_0-ortho-view {0}
-set $m7-ViewWindow_0-currentvisual {0}
 set "$m7-ViewWindow_0-Faces (1)" {1}
 set "$m7-ViewWindow_0-Faces (2)" {1}
+set "$m7-ViewWindow_0-Title (3)" {1}
+set "$m7-ViewWindow_0-Title (4)" {1}
 
 # Set GUI variables for the SCIRun->Visualization->ShowField Module
 set $m9-nodes-on {0}
@@ -202,7 +203,8 @@ set $m10-min {0.0}
 set $m10-max {255.0}
 
 # Set GUI variables for the SCIRun->FieldsGeometry->ChangeFieldBounds Module
-set $m11-outputcenterx {200}
+set $m11-outputcenterx {300}
+set $m11-outputcentery {108}
 set $m11-useoutputcenter {1}
 
 
