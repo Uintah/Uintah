@@ -42,7 +42,7 @@ FileReader::getPDEdescription (
 
 
   std::string srcdir(SCIRun::sci_getenv("SCIRUN_SRCDIR"));
-  ifstream is((srcdir + std::string("/CCA/Component/Tao/FileReader/L.pde")).c_str());
+  ifstream is((srcdir + std::string("/CCA/Components/TAO/FileReader/L.pde")).c_str());
 
 
   while(true){
