@@ -1,3 +1,4 @@
+#ifndef __APPLE__
 #include <mpi.h>
 #ifdef LAM_MPI
 #include <iostream>
@@ -292,4 +293,5 @@ RET_TYPE MPI_CALL(NAME)(CALLSIG){\
 } \
 
 #include <Packages/Uintah/Core/Parallel/stubs.h>
+#endif
 #endif
