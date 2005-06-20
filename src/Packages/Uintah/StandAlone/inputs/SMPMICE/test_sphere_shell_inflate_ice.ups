@@ -11,19 +11,19 @@
    </Meta>
 
    <Time>
-     <maxTime>             2.2e-4  </maxTime>
+     <maxTime>             1.6e-4  </maxTime>
      <initTime>            0.0     </initTime>
      <delt_min>            0.0     </delt_min>
      <delt_max>            1.0e-3  </delt_max>
      <delt_init>           1.0e-6  </delt_init>
-     <max_iterations>      500     </max_iterations>
+     <max_iterations>      40      </max_iterations>
      <max_delt_increase>   2.0     </max_delt_increase>
-     <timestep_multiplier> 0.8     </timestep_multiplier>
+     <timestep_multiplier> 1.0     </timestep_multiplier>
    </Time>
 
    <DataArchiver>
      <filebase>test_sphere_shell_inflate_ice.uda</filebase>
-     <outputTimestepInterval> 10 </outputTimestepInterval>
+     <outputTimestepInterval> 9 </outputTimestepInterval>
      <save label = "KineticEnergy"/>
      <save label = "TotalMass"/>
      <save label = "StrainEnergy"/>
@@ -72,7 +72,7 @@
      <save label = "mom_L_CC"/>
      <save label = "mom_source_CC"/>
      <save label = "mom_L_ME_CC"/>
-     <checkpoint cycle = "2" timestepInterval = "10"/>
+     <checkpoint cycle = "2" timestepInterval = "20"/>
    </DataArchiver>
 
    <MPM>
@@ -147,7 +147,10 @@
          <burn type = "null"/>
          <EOS type = "ideal_gas">
          </EOS>
+         <!--
          <dynamic_viscosity>          1.0e-2         </dynamic_viscosity>
+         -->
+         <dynamic_viscosity>          0.0            </dynamic_viscosity>
          <thermal_conductivity>       0.0            </thermal_conductivity>
          <specific_heat>              716.0          </specific_heat>
          <speed_of_sound>             376            </speed_of_sound>
@@ -174,7 +177,10 @@
          <burn type = "null"/>
          <EOS type = "ideal_gas">
          </EOS>
+         <!--
          <dynamic_viscosity>          1.0e-2         </dynamic_viscosity>
+         -->
+         <dynamic_viscosity>          0.0            </dynamic_viscosity>
          <thermal_conductivity>       0.0            </thermal_conductivity>
          <specific_heat>              716.0          </specific_heat>
          <speed_of_sound>             376            </speed_of_sound>
