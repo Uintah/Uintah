@@ -39060,16 +39060,55 @@ echo $ECHO_N "checking for Insight.... $ECHO_C" >&6
     INSIGHT_LIB_DIR_FLAG="$LDRUN_PREFIX$insight_libs_dir -L$insight_libs_dir"
     INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon  -litkvnl -litkvnl_algo -litknetlib -litksys -lITKDICOMParser -litkzlib"
 
-    INSIGHT_VERSION_MINOR="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_VERSION_MINOR' | sed 's/SET(ITK_VERSION_MINOR \"//' | sed 's/\")//' | tr -d '\r'`"
-    INSIGHT_VERSION_MAJOR="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_VERSION_MAJOR' | sed 's/SET(ITK_VERSION_MAJOR \"//' | sed 's/\")//' | tr -d '\r'`"
-    if test "$INSIGHT_VERSION_MAJOR" = "2"; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -lITKNrrdIO -litktiff -litkjpeg8 -litkjpeg12 -litkjpeg16"
-    elif test "$INSIGHT_VERSION_MINOR" = "9" || test "$INSIGHT_VERSION_MAJOR" = "2"; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff -litkjpeg8 -litkjpeg12 -litkjpeg16"
-    elif test "$INSIGHT_VERSION_MINOR" = "8" || test "$INSIGHT_VERSION_MINOR" = "6"; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff -litkjpeg"
-    elif test "$INSIGHT_VERSION_MINOR" = "4"; then
+    if test -a "$insight_libs_dir/libitkzlib.$SO_OR_ARCHIVE_EXTENSION"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkzlib"
+    elif test "$HAVE_Z" = "yes"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $Z_LIB_DIR_FLAG $Z_LIB_FLAG"
+    fi
+
+    if test -a "$insight_libs_dir/libitktiff.$SO_OR_ARCHIVE_EXTENSION"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff"
+    elif test "$HAVE_TIFF" = "yes"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $TIFF_LIB_DIR_FLAG $TIFF_LIB_FLAG"
+    fi
+
+
+    INSIGHT_JPEG_LINKED=no
+
+    if test -a "$insight_libs_dir/libitkjpeg8.$SO_OR_ARCHIVE_EXTENSION"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg8"
+       INSIGHT_JPEG_LINKED=yes
+    elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no" ; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
+       INSIGHT_JPEG_LINKED=yes
+    fi
+
+    if test -a "$insight_libs_dir/libitkjpeg12.$SO_OR_ARCHIVE_EXTENSION"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg12"
+       INSIGHT_JPEG_LINKED=yes
+    elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no" ; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
+       INSIGHT_JPEG_LINKED=yes
+    fi
+
+    if test -a "$insight_libs_dir/libitkjpeg16.$SO_OR_ARCHIVE_EXTENSION"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg16"
+       INSIGHT_JPEG_LINKED=yes
+    elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no" ; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
+       INSIGHT_JPEG_LINKED=yes
+    fi
+
+    if test -a "$insight_libs_dir/libitkjpeg.$SO_OR_ARCHIVE_EXTENSION" && test "$INSIGHT_JPEG_LINKED" = "no"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg"
+       INSIGHT_JPEG_LINKED=yes
+    elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
+       INSIGHT_JPEG_LINKED=yes
+    fi
+
+    if test -a "$insight_libs_dir/libITKNrrdIO.$SO_OR_ARCHIVE_EXTENSION"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -lITKNrrdIO"
     fi
 
     if ! test "$HAVE_PNG" = "yes"; then
@@ -39078,6 +39117,20 @@ echo $ECHO_N "checking for Insight.... $ECHO_C" >&6
     else
       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $PNG_LIB_DIR_FLAG $PNG_LIB_FLAG"
     fi
+
+
+#    INSIGHT_VERSION_MINOR="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_VERSION_MINOR' | sed 's/SET(ITK_VERSION_MINOR \"//' | sed 's/\")//' | tr -d '\r'`"
+#    INSIGHT_VERSION_MAJOR="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_VERSION_MAJOR' | sed 's/SET(ITK_VERSION_MAJOR \"//' | sed 's/\")//' | tr -d '\r'`"
+#    if test "$INSIGHT_VERSION_MAJOR" = "2"; then
+#       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -lITKNrrdIO -litktiff -litkjpeg8 -litkjpeg12 -litkjpeg16"
+#    elif test "$INSIGHT_VERSION_MINOR" = "9" || test "$INSIGHT_VERSION_MAJOR" = "2"; then
+#       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff -litkjpeg8 -litkjpeg12 -litkjpeg16"
+#    elif test "$INSIGHT_VERSION_MINOR" = "8" || test "$INSIGHT_VERSION_MINOR" = "6"; then
+#       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff -litkjpeg"
+#    elif test "$INSIGHT_VERSION_MINOR" = "4"; then
+#       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg"
+#    fi
+
 
 #    INSIGHT_LIB_FLAG="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARIES' | sed 's/SET(ITK_LIBRARIES//' | sed 's/)//' | sed 's/ / -l/g'`"
 
