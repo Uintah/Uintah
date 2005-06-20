@@ -40,7 +40,7 @@ FileReader::getPDEdescription (
   dirichletValues=new Test::FileReader::double_array;
 
 
-  ifstream is("/scratch/ACE_wrappers/TAO/tests/FileReader/L.pde");
+  ifstream is("L.pde");
 
 
   while(true){
