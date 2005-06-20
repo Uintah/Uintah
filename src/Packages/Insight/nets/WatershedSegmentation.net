@@ -158,6 +158,9 @@ set c29 [addConnection $m12 0 $m8 3]
 # Set GUI variables for the Insight->DataIO->ImageReaderFloat2D Module
 set $m1-filename $DATADIR/insight/BrainProtonDensitySlice.mhd
 
+# Set GUI variables for the Insight->Filters->GradientAnisotropicDiffusionImageFilter
+set $m2-time_step {0.125}
+
 # Set GUI variables for the Insight->Filters->WatershedImageFilter Module
 set $m4-level {0.1}
 

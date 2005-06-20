@@ -165,31 +165,25 @@ set $m5-max {255}
 set $m5-makeSymmetric {0}
 set $m6-notes {}
 $m6 ui
-set $m6-ViewWindow_0-pos {z1_y1}
-set $m6-ViewWindow_0-caxes {0}
-set $m6-ViewWindow_0-raxes {1}
-set $m6-ViewWindow_0-iaxes {}
-set $m6-ViewWindow_0-have_collab_vis {0}
-set $m6-ViewWindow_0-view-eyep-x {0}
-set $m6-ViewWindow_0-view-eyep-y {0}
-set $m6-ViewWindow_0-view-eyep-z {801.2881009007435}
-set $m6-ViewWindow_0-view-lookat-x {0}
-set $m6-ViewWindow_0-view-lookat-y {0}
-set $m6-ViewWindow_0-view-lookat-z {0}
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m6-ViewWindow_0-view-eyep-x {1.79584472645}
+set $m6-ViewWindow_0-view-eyep-y {2.15501367174}
+set $m6-ViewWindow_0-view-eyep-z {785.299334119}
+set $m6-ViewWindow_0-view-lookat-x {90.0}
+set $m6-ViewWindow_0-view-lookat-y {108.0}
+set $m6-ViewWindow_0-view-lookat-z {0.0}
 set $m6-ViewWindow_0-view-up-x {0}
 set $m6-ViewWindow_0-view-up-y {1}
 set $m6-ViewWindow_0-view-up-z {0}
-set $m6-ViewWindow_0-view-fov {20}
+set $m6-ViewWindow_0-view-fov {20.0}
 set $m6-ViewWindow_0-view-eyep_offset-x {}
 set $m6-ViewWindow_0-view-eyep_offset-y {}
 set $m6-ViewWindow_0-view-eyep_offset-z {}
-set $m6-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
-set $m6-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
-set $m6-ViewWindow_0-bgcolor-r {0}
-set $m6-ViewWindow_0-bgcolor-g {0}
-set $m6-ViewWindow_0-bgcolor-b {0}
-set $m6-ViewWindow_0-shading {}
+set $m6-ViewWindow_0-sr {1}
 set $m6-ViewWindow_0-do_stereo {0}
+set $m6-ViewWindow_0-ortho-view {0}
+set $m6-ViewWindow_0-trackViewWindow0 {1}
+set $m6-ViewWindow_0-raxes {1}
 set $m6-ViewWindow_0-ambient-scale {1.0}
 set $m6-ViewWindow_0-diffuse-scale {1.0}
 set $m6-ViewWindow_0-specular-scale {0.4}
@@ -199,23 +193,21 @@ set $m6-ViewWindow_0-polygon-offset-factor {1.0}
 set $m6-ViewWindow_0-polygon-offset-units {0.0}
 set $m6-ViewWindow_0-point-size {1.0}
 set $m6-ViewWindow_0-line-width {1.0}
-set $m6-ViewWindow_0-sbase {0.40}
-set $m6-ViewWindow_0-sr {1}
-set $m6-ViewWindow_0-do_bawgl {0}
-set $m6-ViewWindow_0-drawimg {}
-set $m6-ViewWindow_0-saveprefix {}
-set $m6-ViewWindow_0-resx {}
-set $m6-ViewWindow_0-resy {}
-set $m6-ViewWindow_0-aspect {}
-set $m6-ViewWindow_0-aspect_ratio {}
-set $m6-ViewWindow_0-global-light {1}
-set $m6-ViewWindow_0-global-fog {0}
-set $m6-ViewWindow_0-global-debug {0}
-set $m6-ViewWindow_0-global-clip {1}
-set $m6-ViewWindow_0-global-cull {0}
-set $m6-ViewWindow_0-global-dl {0}
-set $m6-ViewWindow_0-global-type {Gouraud}
-set $m6-ViewWindow_0-ortho-view {0}
+set $m6-ViewWindow_0-sbase {0.4}
+set $m6-ViewWindow_0-bgcolor-r {0}
+set $m6-ViewWindow_0-bgcolor-g {0}
+set $m6-ViewWindow_0-bgcolor-b {0}
+set $m6-ViewWindow_0-fogusebg {1}
+set $m6-ViewWindow_0-fogcolor-r {0.0}
+set $m6-ViewWindow_0-fogcolor-g {0.0}
+set $m6-ViewWindow_0-fogcolor-b {1.0}
+set $m6-ViewWindow_0-fog-start {0.0}
+set $m6-ViewWindow_0-fog-end {0.714265}
+set $m6-ViewWindow_0-fog-visibleonly {1}
+set $m6-ViewWindow_0-total_frames {8}
+set $m6-ViewWindow_0-currentvisual {0}
+set $m6-ViewWindow_0-caxes {0}
+set $m6-ViewWindow_0-pos {z1_y1}
 set $m6-ViewWindow_0-clip-num {}
 set $m6-ViewWindow_0-clip-visible {}
 set $m6-ViewWindow_0-clip-selected {}
@@ -249,7 +241,20 @@ set $m6-ViewWindow_0-clip-normal-x-6 {}
 set $m6-ViewWindow_0-clip-normal-y-6 {}
 set $m6-ViewWindow_0-clip-normal-z-6 {}
 set $m6-ViewWindow_0-clip-normal-d-6 {}
-set $m6-ViewWindow_0-unused {1}
+set $m6-ViewWindow_0-global-light0 {1}
+set $m6-ViewWindow_0-global-light1 {0}
+set $m6-ViewWindow_0-global-light2 {0}
+set $m6-ViewWindow_0-global-light3 {0}
+set $m6-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m6-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m6-ViewWindow_0-global-light {1}
+set $m6-ViewWindow_0-global-fog {0}
+set $m6-ViewWindow_0-global-debug {0}
+set $m6-ViewWindow_0-global-clip {1}
+set $m6-ViewWindow_0-global-cull {0}
+set $m6-ViewWindow_0-global-dl {0}
+set $m6-ViewWindow_0-global-type {Gouraud}
+set "$m6-ViewWindow_0-Faces (1)" {1}
 set $m7-notes {}
 set $m7-number_of_iterations {5}
 set $m7-multiplier {2.5}

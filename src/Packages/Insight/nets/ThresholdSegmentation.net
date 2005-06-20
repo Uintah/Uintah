@@ -84,7 +84,7 @@ set $m0-filename $DATADIR/insight/BrainProtonDensitySliceSeed.mhd
 set $m1-notes {}
 set $m1-filename $DATADIR/insight/BrainProtonDensitySlice.mhd
 set $m2-notes {}
-set $m2-time_step {0.25}
+set $m2-time_step {0.125}
 set $m2-iterations {10}
 set $m2-conductance_parameter {1}
 set $m3-notes {}
@@ -176,31 +176,24 @@ set $m7-edge-resolution {6}
 set $m7-data-resolution {6}
 set $m8-notes {}
 $m8 ui
-set $m8-ViewWindow_0-pos {}
-set $m8-ViewWindow_0-caxes {0}
-set $m8-ViewWindow_0-raxes {1}
-set $m8-ViewWindow_0-iaxes {}
-set $m8-ViewWindow_0-have_collab_vis {0}
-set $m8-ViewWindow_0-view-eyep-x {-30.574316225407664}
-set $m8-ViewWindow_0-view-eyep-y {196.19395588139963}
-set $m8-ViewWindow_0-view-eyep-z {776.29618285038362}
-set $m8-ViewWindow_0-view-lookat-x {0}
-set $m8-ViewWindow_0-view-lookat-y {0}
-set $m8-ViewWindow_0-view-lookat-z {0}
-set $m8-ViewWindow_0-view-up-x {0.024596971916088332}
-set $m8-ViewWindow_0-view-up-y {0.96945272277855399}
-set $m8-ViewWindow_0-view-up-z {-0.24404181459292462}
-set $m8-ViewWindow_0-view-fov {20}
+set $m8-ViewWindow_0-view-eyep-x {-31.6046248695}
+set $m8-ViewWindow_0-view-eyep-y {196.947574048}
+set $m8-ViewWindow_0-view-eyep-z {782.929640892}
+set $m8-ViewWindow_0-view-lookat-x {90.0}
+set $m8-ViewWindow_0-view-lookat-y {108.0}
+set $m8-ViewWindow_0-view-lookat-z {0.0}
+set $m8-ViewWindow_0-view-up-x {0.0245969719161}
+set $m8-ViewWindow_0-view-up-y {0.969452722779}
+set $m8-ViewWindow_0-view-up-z {-0.244041814593}
+set $m8-ViewWindow_0-view-fov {20.0}
 set $m8-ViewWindow_0-view-eyep_offset-x {}
 set $m8-ViewWindow_0-view-eyep_offset-y {}
 set $m8-ViewWindow_0-view-eyep_offset-z {}
-set $m8-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
-set $m8-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
-set $m8-ViewWindow_0-bgcolor-r {0}
-set $m8-ViewWindow_0-bgcolor-g {0}
-set $m8-ViewWindow_0-bgcolor-b {0}
-set $m8-ViewWindow_0-shading {}
+set $m8-ViewWindow_0-sr {1}
 set $m8-ViewWindow_0-do_stereo {0}
+set $m8-ViewWindow_0-ortho-view {0}
+set $m8-ViewWindow_0-trackViewWindow0 {1}
+set $m8-ViewWindow_0-raxes {1}
 set $m8-ViewWindow_0-ambient-scale {1.0}
 set $m8-ViewWindow_0-diffuse-scale {1.0}
 set $m8-ViewWindow_0-specular-scale {0.4}
@@ -210,15 +203,27 @@ set $m8-ViewWindow_0-polygon-offset-factor {1.0}
 set $m8-ViewWindow_0-polygon-offset-units {0.0}
 set $m8-ViewWindow_0-point-size {1.0}
 set $m8-ViewWindow_0-line-width {1.0}
-set $m8-ViewWindow_0-sbase {0.40}
-set $m8-ViewWindow_0-sr {1}
-set $m8-ViewWindow_0-do_bawgl {0}
-set $m8-ViewWindow_0-drawimg {}
-set $m8-ViewWindow_0-saveprefix {}
-set $m8-ViewWindow_0-resx {}
-set $m8-ViewWindow_0-resy {}
-set $m8-ViewWindow_0-aspect {}
-set $m8-ViewWindow_0-aspect_ratio {}
+set $m8-ViewWindow_0-sbase {0.4}
+set $m8-ViewWindow_0-bgcolor-r {0}
+set $m8-ViewWindow_0-bgcolor-g {0}
+set $m8-ViewWindow_0-bgcolor-b {0}
+set $m8-ViewWindow_0-fogusebg {1}
+set $m8-ViewWindow_0-fogcolor-r {0.0}
+set $m8-ViewWindow_0-fogcolor-g {0.0}
+set $m8-ViewWindow_0-fogcolor-b {1.0}
+set $m8-ViewWindow_0-fog-start {0.0}
+set $m8-ViewWindow_0-fog-end {0.714265}
+set $m8-ViewWindow_0-fog-visibleonly {1}
+set $m8-ViewWindow_0-total_frames {54}
+set $m8-ViewWindow_0-currentvisual {0}
+set $m8-ViewWindow_0-caxes {0}
+set $m8-ViewWindow_0-pos {}
+set $m8-ViewWindow_0-global-light0 {1}
+set $m8-ViewWindow_0-global-light1 {0}
+set $m8-ViewWindow_0-global-light2 {0}
+set $m8-ViewWindow_0-global-light3 {0}
+set $m8-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m8-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
 set $m8-ViewWindow_0-global-light {1}
 set $m8-ViewWindow_0-global-fog {0}
 set $m8-ViewWindow_0-global-debug {0}
@@ -226,10 +231,8 @@ set $m8-ViewWindow_0-global-clip {1}
 set $m8-ViewWindow_0-global-cull {0}
 set $m8-ViewWindow_0-global-dl {0}
 set $m8-ViewWindow_0-global-type {Gouraud}
-set $m8-ViewWindow_0-ortho-view {0}
-set $m8-ViewWindow_0-unused {1}
-set $m8-ViewWindow_0-unused {1}
-set $m8-ViewWindow_0-unused {1}
+set "$m8-ViewWindow_0-Faces (2)" {1}
+set "$m8-ViewWindow_0-Transparent Faces (1)" {1}
 set $m9-notes {}
 set $m9-copy {0}
 set $m10-notes {}
