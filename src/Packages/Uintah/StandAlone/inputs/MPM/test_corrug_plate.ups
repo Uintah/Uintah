@@ -19,7 +19,6 @@
 
   <DataArchiver>
     <filebase>test_corrug_plate.uda</filebase>
-    <outputInitTimestep/>
     <outputTimestepInterval>2</outputTimestepInterval>
     <save label = "KineticEnergy"/>
     <save label = "TotalMass"/>
@@ -33,6 +32,7 @@
     <save label = "p.stress"/>
     <save label = "p.deformationMeasure"/>
     <!--
+    <outputInitTimestep/>
     <save label = "p.strainRate"/>
     <save label = "p.plasticStrain"/>
     <save label = "p.plasticTemp"/>
