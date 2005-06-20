@@ -404,8 +404,8 @@ itcl_class Module {
     method update_time {} {
 	global Subnet
 	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
-	set time $canvas.module[modname].ff.time
-	if { !$make_time || ![winfo exists $time] } return
+	set timeframe $canvas.module[modname].ff.time
+	if { !$make_time || ![winfo exists $timeframe] } return
 
 	if {$state == "JustStarted"} {
 	    set tstr " ?.??"
@@ -424,7 +424,7 @@ itcl_class Module {
 		set tstr [format "%d::%02d" $hrs $mins]
 	    }
 	}
-	$time configure -text $tstr
+	$timeframe configure -text $tstr
     }
 
     method update_state {} {
