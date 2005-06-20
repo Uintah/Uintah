@@ -392,7 +392,7 @@ bool
   // or the input data has changed. If
   // this is the case, set the inputs.
 
-  if(filter_ == 0<xsl:for-each select="/filter/filter-itk/inputs/input"><xsl:variable name="optional"><xsl:value-of select="@optional"/></xsl:variable> || <xsl:choose>
+  if(!filter_ <xsl:for-each select="/filter/filter-itk/inputs/input"><xsl:variable name="optional"><xsl:value-of select="@optional"/></xsl:variable> || <xsl:choose>
 <xsl:when test="$optional='yes'">
      (inport_<xsl:value-of select="@name"/>_has_data_ &amp;&amp; inhandle_<xsl:value-of select="@name"/>_->generation != last_<xsl:value-of select="@name"/>_)</xsl:when><xsl:otherwise>
      inhandle_<xsl:value-of select="@name"/>_->generation != last_<xsl:value-of select="@name"/>_</xsl:otherwise></xsl:choose></xsl:for-each>) {

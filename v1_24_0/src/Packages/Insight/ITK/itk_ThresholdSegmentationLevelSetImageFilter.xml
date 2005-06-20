@@ -97,7 +97,7 @@
     <param>
       <name>max_iterations</name>
       <type>int</type>
-      <call>SetMaximumIterations</call>
+      <call>SetNumberOfIterations</call>
       <default>100</default>
     </param>
     <param>
