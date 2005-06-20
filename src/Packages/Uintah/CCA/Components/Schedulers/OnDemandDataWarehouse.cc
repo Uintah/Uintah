@@ -510,7 +510,7 @@ OnDemandDataWarehouse::recvMPI(SendState& rs, BufferInfo& buffer,
           psubset = old_dw->createParticleSubset(numParticles, matlIndex, patch, gt, ngc);
         }
         else {
-          old_dw->printParticleSubsets();
+          //old_dw->printParticleSubsets();
           psubset = old_dw->getParticleSubset(matlIndex,patch,gt,ngc);
           ASSERTEQ(numParticles, psubset->numParticles());
         }
