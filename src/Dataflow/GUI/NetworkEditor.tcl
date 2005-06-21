@@ -679,6 +679,7 @@ proc addModuleAtPosition {package category module { xpos 10 } { ypos 10 } } {
 # as an instance of the SCIRunComponentModel.
 proc addModule2 {package category module modid} {  
     global Subnet
+
     set Subnet($modid) $Subnet(Loading)
     set Subnet(${modid}_connections) ""
     lappend Subnet(Subnet$Subnet(Loading)_Modules) $modid
@@ -692,10 +693,8 @@ proc addModule2 {package category module modid} {
         Module $modid -name "$module"
     }
 
-    # fix for bug 2441: since SCIRun2's builder GUI takes care of
-    # creating and displaying module icons, make_icon should not be
-    # necessary
-    #$modid make_icon 10 10 0
+    redrawMinicanvas
+    $modid make_icon 10 10 0
 
     return $modid
 }
