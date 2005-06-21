@@ -65,7 +65,7 @@ itcl_class SCIRun_FieldsCreate_ClipByFunction {
 
 	frame $w.location -relief groove -borderwidth 2
 	label $w.location.label -text "Location To Test"
-        Tooltip $w.location "The function will be evaluated at these location(s) to determine which elements are preserved."
+        Tooltip $w.location "The user defined function will be evaluated at this location to determine which elements are preserved.\nThe v variable will be zero if the location does not match the field basis."
 	radiobutton $w.location.cell -text "Element Center" \
 	    -variable $this-clipmode -value cell -command $c
 	radiobutton $w.location.nodeone -text "One Node" \
