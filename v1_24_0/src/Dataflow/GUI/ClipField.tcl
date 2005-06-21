@@ -117,7 +117,7 @@ itcl_class SCIRun_FieldsCreate_ClipField {
 	frame $w.executes -relief groove -borderwidth 2
 
 	label $w.location.label -text "Location To Test"
-        Tooltip $w.location "The function will be evaluated at these location(s) to determine which elements are preserved."
+        Tooltip $w.location "The clip test will be performed at this location to determine which elements are preserved."
 	radiobutton $w.location.cell -text "Element Center" -variable $this-clip-location -value cell -command "$this locationclip"
 	radiobutton $w.location.nodeone -text "One Node" -variable $this-clip-location -value nodeone -command "$this locationclip"
 	radiobutton $w.location.nodeall -text "All Nodes" -variable $this-clip-location -value nodeall -command "$this locationclip"
