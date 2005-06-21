@@ -373,7 +373,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
 
   if restart == "yes":
     print "Running restart test for %s%s on %s" % (testname, mpimsg, date())
-    susinput = "-restart ../*.uda.000 -t 0 -move"
+    susinput = "-restart ../*.uda.000 -t 0 -copy"
     startpath = "../../.."
     restart_text = " (restart)"
   else:
@@ -422,8 +422,8 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
   if restart == "yes":
     chdir("..")
     replace_msg = "%s%s/replace_gold_standard" % (replace_msg, getcwd())
-    system("rm *.uda")
-    system("ln -s restart/*.uda .")
+#    system("rm *.uda")
+#    system("ln -s restart/*.uda .")
     chdir("restart")
   else:
     replace_msg = "%s%s/replace_gold_standard" % (replace_msg, getcwd())
