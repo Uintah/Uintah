@@ -148,11 +148,13 @@ ParticleSubset::expand(particleIndex amount)
   if(amount < minAmount)
     amount = minAmount;
   d_allocatedSize += minAmount;
+#if 0
   if(d_numExpansions++ > 18){
     static ProgressiveWarning warn("Performance warning in ParticleSubset",10);
     warn.changeMessage("Performance warning in ParticleSubset, more than 18 expansions occured");
     warn.invoke();
   }
+#endif
   particleIndex* newparticles = scinew particleIndex[d_allocatedSize];
   if(d_particles){
     for(particleIndex i = 0; i < d_numParticles; i++)
