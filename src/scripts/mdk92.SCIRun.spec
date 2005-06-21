@@ -28,20 +28,20 @@
 
 %define defname SCIRun
 %define defver	1.24
-%define dotver  1
+%define dotver  2
 %define gccver  3.3.1
 %define plat	mdk9.2
 %define distro  Mandrake 9.2
 %define debug   opt
 %undefine	__check_files
-%define thirdpartydotver 1
+%define thirdpartydotver 2
 %define thirdpartyversion %{defver}.%{thirdpartydotver}
-%define insightver  2.0.0
+%define insightver  2.0.1
 
 
 Name:		%{defname}BioPSE
 Version:	%{defver}.%{dotver}
-Serial:		8
+Serial:		9
 Release:	%{plat}
 Summary:	Problem Solving Environment Software
 Copyright:	University of Utah Limited
