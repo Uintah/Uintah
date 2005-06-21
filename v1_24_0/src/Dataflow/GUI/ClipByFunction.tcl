@@ -64,8 +64,9 @@ itcl_class SCIRun_FieldsCreate_ClipByFunction {
 	set c "$this-c needexecute"
 
 	frame $w.location -relief groove -borderwidth 2
-	label $w.location.label -text "Clip Location"
-	radiobutton $w.location.cell -text "Cell Centers" \
+	label $w.location.label -text "Location To Test"
+        Tooltip $w.location "The function will be evaluated at these location(s) to determine which elements are preserved."
+	radiobutton $w.location.cell -text "Element Center" \
 	    -variable $this-clipmode -value cell -command $c
 	radiobutton $w.location.nodeone -text "One Node" \
 	    -variable $this-clipmode -value onenode -command $c
