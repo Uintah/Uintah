@@ -320,20 +320,21 @@ void setBC(CCVariable<double>& press_CC,
         }                    
                                             
         //__________________________________________________________
-        // Tack on hydrostatic pressure after Dirichlet or Neumann BC
-        // has been applied.  Note, during the intializaton phase the 
-        // hydrostatic pressure adjustment is  handled by a completely
-        // separate task, therefore don't do this on the first DW
+        // Tack on hydrostatic pressure correction after Dirichlet 
+        // or Neumann BC have been applied.  Note, during the intializaton 
+        //phase the hydrostatic pressure adjustment is  handled by a completely
+        // separate task, therefore ignore it        
         // 
-        // Assuming gravity is aligned with the grid axis.
         // Hydrostatic pressure adjustment (HPA): 
         //   gravity*rho_micro*distance_from_ref_point.
         // R is BC location, L is adjacent to BC location
+        //
         // Dirichlet BC: P_R= P_Dirichlet_R + HPA_R
-        // Neumann BC: P_R = P_neumann_R + HPA_R - HPA_L,
+        // Neumann BC:   P_R = P_neumann_R + HPA_R - HPA_L,
         // where HPA_R - HPA_L is zero if BC normal is orthogonal to gravity
-
         // find the upper and lower point of the domain.
+        // 
+        // On Dirichlet side walls you still have to add HPA
         const Level* level = patch->getLevel();
         GridP grid = level->getGrid();
         BBox b;
@@ -342,40 +343,43 @@ void setBC(CCVariable<double>& press_CC,
         Vector dx_L0 = grid->getLevel(0)->dCell();
  
         // Pressure reference point is assumed to be 
-        //at CELL-CENTER of cell 0,0,0 
+        //at the cell center of cell 0,0,0 
         Vector press_ref_pt = gridMin + 1.5*dx_L0;
 
         int p_dir = patch->faceAxes(face)[0];     // normal  face direction
         
         // Only apply this correction in case of Neumann or Dirichlet BC
         bool Neumann_BC = (bc_kind=="Neumann" || bc_kind=="zeroNeumann");
-        if (gravity[p_dir] != 0 && topLevelTimestep > 0  &&
-            (bc_kind=="Dirichlet" || Neumann_BC)) {
+        if ( topLevelTimestep > 0 ){
+          if ((gravity[p_dir] != 0 && Neumann_BC) || 
+              (gravity.length() != 0 && bc_kind =="Dirichlet")){  
             
-          double oneZero = 1;  
-          if (bc_kind=="Dirichlet") {
-            oneZero = 0.0;
-          }    
-          
-          IntVector oneCell = patch->faceDirection(face);
-          
-          vector<IntVector>::const_iterator iter;
-          for (iter=bound.begin();iter != bound.end(); iter++) {
-            IntVector R = *iter;
-            IntVector L = *iter - oneCell;
-            Point here_L = level->getCellPosition(L);
-            Point here_R = level->getCellPosition(R);
-            Vector dist_L = (here_L.asVector() - press_ref_pt);
-            Vector dist_R = (here_R.asVector() - press_ref_pt);
-            double rho_L = rho_micro[surroundingMatl_indx][L];
-            double rho_R = rho_micro[surroundingMatl_indx][R];
+            double oneZero = 1;  
+            if (bc_kind=="Dirichlet") {
+              oneZero = 0.0;
+            }    
 
-            double correction = gravity[p_dir]
-                              *(rho_R * dist_R[p_dir] - oneZero * rho_L * dist_L[p_dir]);
-            press_CC[R] += correction;
-          }
-          IveSetBC = true;
-        } // with gravity 
+            IntVector oneCell = patch->faceDirection(face);
+
+            vector<IntVector>::const_iterator iter;
+            for (iter=bound.begin();iter != bound.end(); iter++) {
+              IntVector R = *iter;
+              IntVector L = *iter - oneCell;
+              Point here_L = level->getCellPosition(L);
+              Point here_R = level->getCellPosition(R);
+              Vector dist_L = (here_L.asVector() - press_ref_pt);
+              Vector dist_R = (here_R.asVector() - press_ref_pt);
+              double rho_L = rho_micro[surroundingMatl_indx][L];
+              double rho_R = rho_micro[surroundingMatl_indx][R];
+              // Need the dot product to get the sideWall dirichlet BC's right 
+              double correction_L = Dot(gravity,dist_L) * rho_L;
+              double correction_R = Dot(gravity,dist_R) * rho_R;
+
+              press_CC[R] += correction_R - oneZero * correction_L;
+            }
+            IveSetBC = true;    
+          } // Dirichlet || Neumann
+        } // // not initialization step 
 
         //__________________________________
         //  debugging
