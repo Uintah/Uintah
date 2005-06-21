@@ -1,4 +1,4 @@
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(__sgi)
 #include <mpi.h>
 #ifdef LAM_MPI
 #include <iostream>
