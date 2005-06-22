@@ -115,6 +115,12 @@ public:
   /** ? */
   int removeLoader(const std::string &loaderName);
 
+  /** Get/set the directory path to component DLLs.  By default,
+   * the sidlDLLPath is initialized to the environment variable
+   * SIDL_DLL_PATH. */
+  std::string getSidlDLLPath() const { return sidlDLLPath; }
+  void setSidlDLLPath( const std::string& s) { sidlDLLPath = s; }
+
   static const std::string DEFAULT_PATH;
   
 private:
@@ -122,6 +128,8 @@ private:
   typedef std::map<std::string, CCAComponentDescription*> componentDB_type;
   componentDB_type components;
     
+  std::string sidlDLLPath;
+
   void readComponentDescription(const std::string& file);
   resourceReference *getLoader(std::string loaderName);
 
