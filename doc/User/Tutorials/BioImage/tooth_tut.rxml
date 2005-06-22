@@ -42,7 +42,7 @@ DEALINGS IN THE SOFTWARE.
   <section>
     <title>Loading Data</title>
     <para>
-      To load data, start by clicking the <guilabel>Nrrd</guilabel> tab
+      To load data, start by clicking the <guilabel>Generic</guilabel> tab
       in the Processing Pane, then click the
       <guibutton>Browse</guibutton> button.  See item 2 in <xref
       linkend="fig.load"/>.
@@ -130,10 +130,11 @@ DEALINGS IN THE SOFTWARE.
     <para>
       BioImage supports <firstterm>Dynamic Filters</firstterm>.
       Dynamic filters change data in some way.  Currently, BioImage
-      supports Resample, Crop, Histogram, and Cmedian.  Filters can be
-      added, modified, and removed at any time.  Filters are added by
-      pressing one of the filter buttons located at the top of the
-      Processing Pane, see item 1 in <xref linkend="fig.load"/>.
+      supports Resample, Crop, Histogram, and Median Filtering.  
+      These filters can be added, modified, and removed at any time.  
+      Filters are added by pressing one of the filter buttons 
+      located at the top of the Processing Pane, see item 1 
+      in <xref linkend="fig.load"/>.
     </para>
 
     <para>
@@ -262,16 +263,16 @@ DEALINGS IN THE SOFTWARE.
 	Changes in the slice panes are reflected in the volume pane
 	(when it is displaying orthogonal slices).  Slices are
 	selected using slider controls or mouse actions.  <xref
-	linkend="fig.2dview"/> shows the saggital slice pane, its
+	linkend="fig.2dview"/> shows the sagittal slice pane, its
 	slider, and cross-hairs controls.
       </para>
 
       <para>
 	Initially, the slice plane is placed at the center of the
 	volume, which, for the tooth dataset, corresponds to the
-	51<superscript>st</superscript> slice along the saggital axis.
-	Move the saggital slice plane slider to the right until it
-	reads 68. The 68th saggital slice is now displayed in both the
+	51<superscript>st</superscript> slice along the sagittal axis.
+	Move the sagittal slice plane slider to the right until it
+	reads 68. The 68th sagittal slice is now displayed in both the
 	slice and volume panes, as shown in <xref
 	linkend="fig.68saggitalBoth"/>.
       </para>
@@ -305,10 +306,10 @@ DEALINGS IN THE SOFTWARE.
       </figure>
 
       <figure id="fig.68saggitalBoth">
-	<title><ulink url="Figures/68saggitalBoth_hires.jpg">Slice plane slider moved to 68th saggital slice</ulink></title>
+	<title><ulink url="Figures/68saggitalBoth_hires.jpg">Slice plane slider moved to 68th sagittal slice</ulink></title>
 	<mediaobject>
 	  <textobject>
-	    <phrase>Slice plane slider moved to 68th saggital slice.</phrase>
+	    <phrase>Slice plane slider moved to 68th sagittal slice.</phrase>
 	  </textobject>
 	  <imageobject>
 	    <imagedata fileref="Figures/68saggitalBoth.eps" align="center" format="EPS"/>
@@ -371,7 +372,7 @@ DEALINGS IN THE SOFTWARE.
 	Visualization Settings pane's <guilabel>Planes</guilabel> tab.
 	Then select a color range by clicking one of the
 	<guilabel>Color Planes By</guilabel> radio buttons&#x2014;see
-	<xref linkend="fig.planesTab"/>, item 9.
+	<xref linkend="fig.planesTab"/>, item 10.
 	
 	<figure id="fig.planesTab">
 	  <title>Options for controlling planes</title>
@@ -526,7 +527,7 @@ DEALINGS IN THE SOFTWARE.
     <para>
       Turn on volume rendering by clicking the Visualization Settings pane's
       <guilabel>Volume Rendering</guilabel> tab and then click the
-      check-box labeled <guilabel>Show Volume Rendering</guilabel>.
+      check-box labeled <guilabel>Show Volume Rendering</guilabel>. NOTE: On machines with graphics cards that do not support shaders, the user must manipulate the Global Opacity to perform volume rendering.
     </para>
 
     <figure id="fig.volrender_tab">
@@ -597,7 +598,7 @@ DEALINGS IN THE SOFTWARE.
 	First click on the Volume Rendering Tab, shown in <xref linkend="fig.volrender_tab"/>
 	and then click the Add Paint Layer button shown in <xref linkend="fig.volrender_tab"/>
 	item 10. Note a new item named "Paint" is added to the list of color layers 
-	in <xref linkend="fig.pb_paint_layer_added"/> item 11. 
+	in <xref linkend="fig.pb_paint_layer_added"/>. 
       </para>
       <figure id="fig.pb_paint_layer_added">
 	<title>Paint Layer</title>
@@ -658,7 +659,7 @@ DEALINGS IN THE SOFTWARE.
 	</mediaobject>
       </figure>
       <para>
-	Using your left mouse button, color the area inside of the top of the tooth as displayed inside of the saggital
+	Using your left mouse button, color the area inside of the top of the tooth as displayed inside of the sagittal
 	viewer. You should now see the blue color applied to the volume as shown in <xref linkend="fig.pb_painted_enamel"/>.
       </para>
       <figure id="fig.pb_painted_enamel">
@@ -677,7 +678,7 @@ DEALINGS IN THE SOFTWARE.
       </figure>
       <para>
 	Now add another paint layer, and set its color to red. Again, using the left mouse button color the area
-	inside of the root displaye in the saggital viewer. You should now see the root colored in red and the
+	inside of the root display in the sagittal viewer. You should now see the root colored in red and the
 	top of the tooth colored in blue. 
       </para>
     </section>
@@ -699,10 +700,10 @@ DEALINGS IN THE SOFTWARE.
 	pane's <guilabel>Volume Rendering
 	Tab</guilabel>, see <xref linkend="fig.volrender_tab"/> item 3.  
 	The new paint layer appears in the list of current editing widgets.
-	To remove the paint layer, click any of the controls for the paint
-	layer and it will highlight in white.  Click the Delete button to remove
-	it from the available widgets.  You may also turn it on or off using
-	the On toggle.	After removing the paint layer, the transfer function 
+	To remove any layer, click the red X  delete button next to the paint
+	layer to remove	it from the available widgets.  You may also turn it 
+	on or off using	the On toggle.	After removing the paint layer, 
+	the transfer function 
 	editor should look as it does in <xref linkend="fig.editTFWindow"/>. 
       </para>
 
@@ -722,8 +723,8 @@ DEALINGS IN THE SOFTWARE.
       </figure>
 
       <para>
-	The  transfer function editor displays a histogram
-	<xref linkend="fig.histo"/> of data values.
+	The transfer function editor displays a histogram
+	of data values as shown in <xref linkend="fig.histo"/>.
       </para>
 
      <para>
@@ -775,7 +776,7 @@ DEALINGS IN THE SOFTWARE.
       <para>
 	Turn off the current widgets by clicking the corresponding 
 	On checkboxes. The tooth's root is visualized by adding a 
-	rectangle over them first material area, as shown in <xref
+	rectangle over the first material area, as shown in <xref
 	linkend="fig.root_ren_tf"/>. To do this, click the 
 	<guibutton>Add Rectangle</guibutton> button in the Editor UI.
       </para>

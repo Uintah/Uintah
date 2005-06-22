@@ -29,6 +29,6 @@ DEALINGS IN THE SOFTWARE.
 <chapter id="ch.ref_data">
   <title>Data Input</title>
   <para>
-    Input data to BioImage can take a variety of formats.  Currently, the formats supported are Nrrd, DICOM, and Analyze.  In order to read in these various formats, simply click the appropriate tab in the Load Data pane and select the desired file or series from the window that is presented.  Note:  In order to properly read in DICOM and Analyze data, the Insight Toolkit (ITK) must be installed properly on the system, and BioImage must have been built with Insight support.  This requirement is not necessary for reading in Nrrd datasets.
+    Input data to BioImage can take a variety of formats.  Currently, the formats supported are Nrrd, VOL/VFF, DICOM, and Analyze formats.  In order to read in these various formats, simply click the appropriate tab in the Load Data pane and select the desired file or series from the window that is presented.  Note:  In order to properly read in DICOM and Analyze data, the Insight Toolkit (ITK) must be installed properly on the system, and BioImage must have been built with Insight support.  This requirement is not necessary for reading in Nrrd datasets.
   </para>
 </chapter>

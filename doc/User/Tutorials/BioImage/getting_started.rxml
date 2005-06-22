@@ -69,7 +69,7 @@ DEALINGS IN THE SOFTWARE.
 	<listitem><para>Apply resampling and cropping filters to the
 	tooth volume</para></listitem>
 	<listitem><para>Visualize tooth planes</para></listitem>
-	<listitem><para>Visualize the tooth's volume</para></listitem>
+	<listitem><para>Visualize the tooth volume</para></listitem>
       </itemizedlist>
     </para>
 
@@ -91,14 +91,14 @@ DEALINGS IN THE SOFTWARE.
       <envar>SCIRUN_DATA</envar> must be set to point to SCIRun's
       sample dataset directory.  This tutorial assumes the SCIRun
       sample data directory is
-      <filename>/usr/local/SCIRunData/1.24.0</filename>.
+      <filename>/usr/local/SCIRunData/1.24.2</filename>.
       For a csh-like shell:
       <literallayout class="monospaced">
-  setenv SCIRUN_DATA /usr/local/SCIRunData/1.24.0	    
+  setenv SCIRUN_DATA /usr/local/SCIRunData/1.24.2	    
       </literallayout>
       For an sh-like shell:
       <literallayout class="monospaced">
-  export SCIRUN_DATA=/usr/local/SCIRunData/1.24.0
+  export SCIRUN_DATA=/usr/local/SCIRunData/1.24.2
       </literallayout>
     </para>
 
@@ -153,12 +153,11 @@ DEALINGS IN THE SOFTWARE.
 	  <term>Visualization Pane</term>
 	  <listitem>
 	    <para>
-	      The Visualization pane <xref
-	      linkend="fig.gui-launch"/>, item 2 in <xref
+	      The Visualization pane as shown in item 2 of <xref
 	      linkend="fig.gui-launch"/>, contains four sub-panes. The
 	      top pane displays three dimensional
 	      visualizations. The bottom three panes (left to right)
-	      display sagittal, coronal, and axial slice planes.
+	      display coronal, axial, and sagittal slice planes.
 	    </para>
 	  </listitem>
 	</varlistentry>
