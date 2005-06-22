@@ -37,6 +37,7 @@ SRCS     += \
             $(SRCDIR)/SCIRunComponentInstance.cc \
             $(SRCDIR)/SCIRunPortInstance.cc \
             $(SRCDIR)/SCIRunUIPort.cc \
+            $(SRCDIR)/SCIRunTCLThread.cc \
             $(SRCDIR)/DataflowScheduler.cc 
 
 
