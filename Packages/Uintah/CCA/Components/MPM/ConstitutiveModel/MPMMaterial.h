@@ -7,6 +7,7 @@
 #include <Packages/Uintah/Core/Grid/Material.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
@@ -69,12 +70,13 @@ WARNING
    MPMMaterial();
 
    // Standard MPM Material Constructor
-   MPMMaterial(ProblemSpecP&, MPMLabel* lb, MPMFlags* flags);
+   MPMMaterial(ProblemSpecP&, MPMLabel* lb, MPMFlags* flags,SimulationStateP&);
 	 
    ~MPMMaterial();
 
    /*!  Create a copy of the material without the associated geometry */
-   void copyWithoutGeom(const MPMMaterial* mat, MPMFlags* flags);
+   void copyWithoutGeom(const MPMMaterial* mat, MPMFlags* flags,
+                        SimulationStateP& sharedState);
 	 
    //////////
    // Return correct constitutive model pointer for this material
@@ -155,8 +157,7 @@ WARNING
    // The standard set of initialization actions except particlecreator
    //
    void standardInitialization(ProblemSpecP& ps, MPMLabel* lb, 
-                               MPMFlags* flags);
-
+                               MPMFlags* flags,SimulationStateP& sharedState);
  };
 
 } // End namespace Uintah
