@@ -20,7 +20,8 @@ SRCS     += \
 	$(SRCDIR)/SolverTest1.cc \
 	$(SRCDIR)/BoundaryConditions.cc \
 	$(SRCDIR)/RegionDB.cc \
-	$(SRCDIR)/Test.cc		
+	$(SRCDIR)/Test.cc	\
+	$(SRCDIR)/Test1.cc		
 
 PSELIBS := \
 	Core/Geometry \
