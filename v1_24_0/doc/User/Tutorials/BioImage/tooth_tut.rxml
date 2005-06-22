@@ -79,7 +79,7 @@ DEALINGS IN THE SOFTWARE.
     </para>
 
     <figure id="fig.viewing-pane">
-      <title>Visualization Pane After Clicking Update</title>
+      <title><ulink url="Figures/viewing-pane_hires.jpg">Visualization Pane After Clicking Update</ulink></title>
       <mediaobject>
 	<textobject>
 	  <phrase>Vizualization Pane</phrase>
@@ -206,7 +206,7 @@ DEALINGS IN THE SOFTWARE.
     </para>
 
     <figure id="fig.crop_module_added">
-      <title>Adding a crop filter</title>
+      <title><ulink url="Figures/crop_module_added_hires.jpg">Adding a crop filter</ulink></title>
       <mediaobject>
 	<textobject>
 	  <phrase>Adding a crop filter.</phrase>
@@ -306,7 +306,7 @@ DEALINGS IN THE SOFTWARE.
       </figure>
 
       <figure id="fig.68saggitalBoth">
-	<title>Slice plane slider moved to 68th sagittal slice</title>
+	<title><ulink url="Figures/68saggitalBoth_hires.jpg">Slice plane slider moved to 68th sagittal slice</ulink></title>
 	<mediaobject>
 	  <textobject>
 	    <phrase>Slice plane slider moved to 68th sagittal slice.</phrase>
@@ -510,7 +510,7 @@ DEALINGS IN THE SOFTWARE.
 -->
 
     <figure id="fig.3dVolRen">
-      <title>Volume Rendering</title>
+      <title><ulink url="3dVolRen_hires.jpg">Volume Rendering</ulink></title>
       <mediaobject>
 	<textobject>
 	  <phrase>Volume Rendering in Volume Pane</phrase>
@@ -616,7 +616,8 @@ DEALINGS IN THE SOFTWARE.
       </figure>      
       <para>
         The paint color defaults to a random color so that each new paint layer has a unique
-	color. Click on the "Color" rectangle in <xref linkend="fig.volrender_tab"/> to bring up the color picker.
+	color. Click on the "Color" rectangle in <xref linkend="fig.volrender_tab"/> item 11
+	to bring up the color picker.
       </para>
       <para>
 	Using the color picker, set the color to blue by moving the red and green scrolls to the left, the blue
@@ -662,7 +663,7 @@ DEALINGS IN THE SOFTWARE.
 	viewer. You should now see the blue color applied to the volume as shown in <xref linkend="fig.pb_painted_enamel"/>.
       </para>
       <figure id="fig.pb_painted_enamel">
-	<title>Paint applied to enamel</title>
+	<title><ulink url="Figures/pb_painted_enamel_hires.jpg">Paint applied to enamel</ulink></title>
 	<mediaobject>
 	  <textobject>
 	    <phrase>Paing applied to enamel</phrase>
@@ -722,7 +723,7 @@ DEALINGS IN THE SOFTWARE.
       </figure>
 
       <para>
-	The  transfer function editor displays a histogram
+	The transfer function editor displays a histogram
 	of data values as shown in <xref linkend="fig.histo"/>.
       </para>
 
