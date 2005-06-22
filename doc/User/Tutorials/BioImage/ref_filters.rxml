@@ -92,7 +92,11 @@ DEALINGS IN THE SOFTWARE.
       in one or more axes.  To choose the axes to apply the filter on,
       change the values of the appropriate axes.  Values preceeded by an
       'x' represent multiplication coefficients.  This means that 'x0.5'
-      would produce half as many samples along the specified axis.
+      would produce half as many samples along the specified axis. Setting
+      an axis to '=' will leave the axis untouched.  Users can also
+      enter an explicit number of samples for an axis.
+    </para>
+    <para>
       After changing the axes to be resampled, the kernel, or filter
       type, must be chosen.  The possible kernel types are Gaussian,
       box, tent, Catmull-Romm, B-Spline, and Quartic.

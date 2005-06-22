@@ -111,7 +111,7 @@ DEALINGS IN THE SOFTWARE.
 	    to be the string &quot;Filter - Unknown&quot;.  By right 
 	    clicking on the label, the user can edit the label to be 
 	    something more meaningful.  This is especially useful when 
-	    a pipeline contains many filters.
+	    a pipeline contains many instances of the same type of filter.
 	  </para>
 	  <para>
 	    The red close button, labeled 3 in 
@@ -165,7 +165,7 @@ DEALINGS IN THE SOFTWARE.
 	    </mediaobject>
 	  </figure>
 	  <para>
-	    There is another approach to adding filters to the pipeline which allows
+	    The second approach to adding filters to the pipeline allows
 	    the user to insert a filter between two existing filters.  One of these
 	    filters may also be the Load Data step.  To insert a filter, the user
 	    must click the blue bar which separates the two filters, causing a menu
@@ -232,7 +232,6 @@ DEALINGS IN THE SOFTWARE.
 	more information on navigating inside of the volume pane's Viewer Window.
 	<ulink url="../../Guide/usersguide/srug6_3.html"><citetitle>Section 6.3 of the SCIRun Userguide:
 	"Mouse Control in the Viewer Window"</citetitle></ulink>.
-	http://software.sci.utah.edu/doc/Guide/usersguide/srug6_3.html
       </para>
     </section> <!-- End of the 3D Viewing Windows section -->
     <section>
@@ -242,7 +241,7 @@ DEALINGS IN THE SOFTWARE.
 	slice planes as well as maximum intensity projections (MIP). The lower 
 	right pane controls the axial plane, the lower center pane 
 	controls the coronal plane, and the lower left pane controls 
-	the saggital plane. The sagittal plane and its controls can be seen
+	the sagittal plane. The sagittal plane and its controls can be seen
 	in <xref linkend="fig.2dview"/>.
       </para>
       <para>
@@ -300,7 +299,7 @@ DEALINGS IN THE SOFTWARE.
       </para>
       <para>
 	The &quot;window width&quot; and &quot;level&quot; controls can be 
-	used to emphasise data values in all four viewer windows. The 
+	used to emphasize data values in all four viewer windows. The 
 	default &quot;level&quot; (or center value) is the center 
 	value of the dataset, and the &quot;range&quot; (range of displayed 
 	values)	is the whole dataset. With the default window and level, 
@@ -369,7 +368,7 @@ DEALINGS IN THE SOFTWARE.
 	<!-- Edit Transfer Function... -->
 	<!-- Shading... -->
 	<!-- Lights... -->
-	The Mode allows the selection of standard (Over Operator), 
+	The Mode allows the selection of standard (Over Operator), or
 	maximum intensity projection (MIP) rendering styles.
       </para>
       <para>
