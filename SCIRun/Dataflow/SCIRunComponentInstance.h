@@ -58,25 +58,24 @@ class Module;
  * framework. This class is a container for information about a SCIRun dataflow
  * component instantiation that is used by the framework.
  */
-class SCIRunComponentInstance : public ComponentInstance
-{
+class SCIRunComponentInstance : public ComponentInstance {
 public:
   SCIRunComponentInstance(SCIRunFramework* fwk,
                           const std::string& instanceName,
                           const std::string& className,
                           Module* module);
   virtual ~SCIRunComponentInstance();
-  
-  // Methods from ComponentInstance
+
   /** Returns a uses or provides port instance named \em name.  If no such port
       exists, returns a null pointer.*/
   virtual PortInstance* getPortInstance(const std::string& name);
+
   /** Returns an iterator for the list of ports associated with this component. */
   virtual PortInstanceIterator* getPorts();
 
-  /** ? */
-  Module* getModule()
-  {  return module;  }
+  /** Return the stored pointer to the SCIRun Module class. */
+  Module* getModule() const { return module; }
+
 private:
   class Iterator : public PortInstanceIterator {
   public:
@@ -84,13 +83,13 @@ private:
     virtual ~Iterator();
     virtual PortInstance* get();
     virtual bool done();
-    virtual void next();
+    virtual inline void next() { idx++; }
   private:
     Iterator(const Iterator&);
     Iterator& operator=(const Iterator&);
-    
+
     SCIRunComponentInstance* component;
-      int idx;
+    int idx;
   };
   Module* module;
   std::vector<CCAPortInstance*> specialPorts;
