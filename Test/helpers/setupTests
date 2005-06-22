@@ -21,7 +21,7 @@ fi
 rm -f susdir inputs goldStandard TestScripts
 ln -s "$BUILDROOT/Packages/Uintah/StandAlone" susdir
 ln -s "$SCIRUNROOT/src/Packages/Uintah/StandAlone/inputs" inputs
-ln -s "/usr/sci/projects/Uintah/tester/$OS-TestData/$mode" goldStandard
+ln -s "/usr/csafe/raid2/csafe-tester/$OS/TestData/$mode" goldStandard
 ln -s "$SCIRUNROOT/src/Packages/Uintah/Test" TestScripts
 
 dir=`pwd`
