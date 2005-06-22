@@ -8,6 +8,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
+#include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
 #include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
@@ -19,6 +20,9 @@ using std::endl;
 
 MPMLabel::MPMLabel()
 {
+
+  switchLabel = VarLabel::create("switch.bool",
+                                 SoleVariable<bool>::getTypeDescription());
   // Particle Variables
 
   //non PermanentParticleState
@@ -565,6 +569,7 @@ MPMLabel::MPMLabel()
 
 MPMLabel::~MPMLabel()
 {
+  VarLabel::destroy(switchLabel);
   //non PermanentParticleState
   VarLabel::destroy(pVolumeDeformedLabel);
   VarLabel::destroy(pTemperatureGradientLabel);

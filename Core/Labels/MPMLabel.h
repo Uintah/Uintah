@@ -17,6 +17,8 @@ using std::vector;
       MPMLabel();
       ~MPMLabel();
 
+      const VarLabel* switchLabel;
+
       const VarLabel* delTLabel;
       const VarLabel* doMechLabel;
 
@@ -132,10 +134,6 @@ using std::vector;
       const VarLabel* CenterOfMassVelocityLabel;
 
       const VarLabel* pCellNAPIDLabel;
-
-      vector<vector<const VarLabel* > > d_particleState;
-      vector<vector<const VarLabel* > > d_particleState_preReloc;
-
 
       // Implicit MPM labels
       const VarLabel* gVelocityOldLabel;
