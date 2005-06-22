@@ -94,8 +94,14 @@ Module::Module(NetworkCanvasView *parent,
     instanceName = cid->getInstanceName();
     menu = new QPopupMenu(this);
     makePorts();
+
 #ifdef HAVE_TAO
-    updatePorts();
+    // TODO: find a better way to handle port detection for
+    // Corba components
+    std::string componentName = mName.substr(0, mName.find('.'));
+    if ("Corba" == componentName || "Tao" == componentName) {
+        updatePorts();
+    }
 #endif
 }
 
@@ -112,6 +118,7 @@ Module::makePorts() {
 
     // get pointer to the framework that instantiated the component with ComponentID cid
     // until port properties are implemented properly    
+    // TODO: finish port properties
     ComponentID *compID = dynamic_cast<ComponentID*>(cid.getPointer());
     SCIRunFramework* fwk = compID->framework;
     if (!fwk) {
