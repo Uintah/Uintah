@@ -118,7 +118,7 @@ DEALINGS IN THE SOFTWARE.
     interface window shown in <xref linkend="fig.gui-launch"/>.</para>
 
     <figure id="fig.gui-launch">
-      <title>BioImage User Interface</title>
+      <title><ulink url="Figures/gui-launch_hires.jpg">BioImage User Interface</ulink></title>
       <mediaobject>
 	<textobject>
 	  <phrase>BioImage interface window just after
@@ -157,7 +157,7 @@ DEALINGS IN THE SOFTWARE.
 	      linkend="fig.gui-launch"/>, contains four sub-panes. The
 	      top pane displays three dimensional
 	      visualizations. The bottom three panes (left to right)
-	      display coronal, axial, and sagital slice planes.
+	      display coronal, axial, and sagittal slice planes.
 	    </para>
 	  </listitem>
 	</varlistentry>

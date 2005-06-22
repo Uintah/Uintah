@@ -185,12 +185,16 @@ DEALINGS IN THE SOFTWARE.
 	<section>
 	  <title>Currently Viewed Data - The Eye</title>
 	  <para>
-	    The radiobuttons to the left of the insert bars indicate the currenlty viewed data
-	    or the eye.  Changing the eye allows the user to view input and output data to a filter. For example, if the radiobutton below a crop filter is 
-	    selected, the cropped image will be shown in the Visualization Pane.  If the radiobutton above a crop filter is selected, the un-cropped dataset will be shown.  As filters
-	    are added or inserted, the eye will update to be the set to the output of the
-	    new filter.  It is especially helpful when editing Crop value to have the eye
-	    selected for the Crop filter being edited.  
+	    The radiobuttons to the left of the insert bars indicate the 
+	    currenlty viewed data or the eye.  Changing the eye allows 
+	    the user to view input and output data to a filter. For example, 
+	    if the radiobutton below a crop filter is selected, the cropped 
+	    image will be shown in the Visualization Pane.  If the radiobutton 
+	    above a crop filter is selected, the un-cropped dataset will be 
+	    shown.  As filters are added or inserted, the eye will update to 
+	    be the set to the output of the new filter.  It is especially 
+	    helpful when editing Crop value to have the eye selected for 
+	    the Crop filter being edited. 
 	  </para>
 	</section> <!-- End of Currently Viewed Data section-->
       </section> <!-- End of Dynamic Filters Section -->
