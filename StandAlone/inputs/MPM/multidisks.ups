@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+	<title>Colliding Disks</title>
+   </Meta>
+
+   <SimulationController>Multiple</SimulationController>
+  
+   <SimulationComponent>  MPM   </SimulationComponent>
+   <input_file> inputs/MPM/disks_include.ups </input_file>
+   
+   <SimulationComponent> MPM </SimulationComponent>
+   <input_file> inputs/MPM/disks_include1.ups </input_file>
+   
+
+</Uintah_specification>
+
