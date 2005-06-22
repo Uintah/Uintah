@@ -59,6 +59,9 @@ class SimulationState : public RefCounted {
 public:
   SimulationState(ProblemSpecP &ps);
   ~SimulationState();
+
+  void clearMaterials();
+
   const VarLabel* get_delt_label() const {
     return delt_label;
   }
@@ -151,6 +154,12 @@ public:
 
   bool isCopyDataTimestep() { return d_isCopyDataTimestep; }
   void setCopyDataTimestep(bool is_cdt) { d_isCopyDataTimestep = is_cdt; }
+
+  vector<vector<const VarLabel* > > d_particleState;
+  vector<vector<const VarLabel* > > d_particleState_preReloc;
+
+  bool d_switchState;
+
 private:
 
   void registerMaterial(Material*);
