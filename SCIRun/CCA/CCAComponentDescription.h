@@ -71,6 +71,14 @@ public:
   virtual std::string getLoaderName() const;
   /** ? */
   void setLoaderName(const std::string& loaderName);
+
+  /** Get/Set the name of the DLL for this component.  The loader will search
+   *    the SIDL_DLL_PATH for a matching library name. */
+  std::string getLibrary() const
+  { return library; }
+  void setLibrary(const std::string &l)
+  { library = l; }
+
 protected:
   friend class CCAComponentModel;
   friend class SCIRunLoader;
@@ -80,6 +88,7 @@ protected:
 private:
   CCAComponentDescription(const CCAComponentDescription&);
   CCAComponentDescription& operator=(const CCAComponentDescription&);
+  std::string library;
 };
 
 } // end namespace SCIRun
