@@ -41,8 +41,12 @@
     <summary>Select a subset of a field.</summary>
     <description>
       <p>
-        This module clips out a subset of a field.  The new field
-        contains just the selected portion of the input field.
+        The ClipByFunction module clips out a subset of a field.  It does so by
+        preserving all of the elements in the input field for which
+        the user specified C++ expression evaluates to true at the specified
+        test location.  As a side effect of this algorithm any
+        degenerate non-element items in the input field are discarded
+        by the clip.
       </p>
       <p>
         The type of the field is preserved in the clip, as well as the
@@ -53,19 +57,19 @@
         unstructured versions before clipping.
       </p>
       <p>
-        The function should be a valid C++ expression.  It will be
+        The user function should be a valid C++ expression.  It will be
 	dynamically compiled into a function of the form "bool
         inside_p(double x, double y, double z, TYPE v) { return EXPR; }"
         where TYPE is the data type contained in the field, and EXPR is the
         function typed into the GUI.
       </p>
       <p>
-        The data location of the test can be specified in addition to
-        the function.  The test can be valid if it works at cell
-        centers, at one node, or at all of the nodes in a mesh
+        The geometric location of the test is be specified in addition to
+        the function.  The test can be valid if it works at element
+        centers, at one node, or at all of the nodes in each mesh
         element.  If the data location of the clip is different that
         the location of the data in the field, 'v' will always be 0
-        for that test.
+        for that test (because there is no data there).
       </p>
       <p>
         For example, "x gt 0" would clip the field to only those
