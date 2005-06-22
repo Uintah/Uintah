@@ -103,119 +103,126 @@ void BabelComponentModel::destroyComponentList()
 
 void BabelComponentModel::buildComponentList()
 {
-std::cerr << "BabelComponentModel::buildComponentList" << std::endl;
-
   // Initialize the XML4C system
   try {
     XMLPlatformUtils::Initialize();
   }
   catch (const XMLException& toCatch) {
-    std::cerr << "Error during initialization! :\n"
+    std::cerr << "Error during initialization! :" << std::endl
               << StrX(toCatch.getMessage()) << std::endl;
     return;
   }
-
+                                                                                                                                                                                                                                                                                 
   destroyComponentList();
-
-   std::string search_path = sidl::Loader::getSearchPath();
-   SSIDL::array1<std::string> sArray;
-   sci::cca::TypeMap::pointer tm;
-   sci::cca::ports::FrameworkProperties::pointer fwkProperties =
+                                                                                                                                        
+  std::string search_path = sidl::Loader::getSearchPath();
+  SSIDL::array1<std::string> sArray;
+  sci::cca::TypeMap::pointer tm;
+  sci::cca::ports::FrameworkProperties::pointer fwkProperties =
     pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
         framework->getFrameworkService("cca.FrameworkProperties", "")
-    );
-    if (fwkProperties.isNull()) {
-        std::cerr << "Error: Cannot find framework properties" << std::cerr;
-        //return sci_getenv("SCIRUN_SRCDIR") + DEFAULT_PATH;
-    } else {
-        tm = fwkProperties->getProperties();
-        sArray = tm->getStringArray("sidl_xml_path", sArray);
+        );
+  if (fwkProperties.isNull()) {
+    std::cerr << "Error: Cannot find framework properties" << std::cerr;
+    //return sci_getenv("SCIRUN_SRCDIR") + DEFAULT_PATH;
+  } else {
+    tm = fwkProperties->getProperties();
+    sArray = tm->getStringArray("sidl_xml_path", sArray);
+  }
+  framework->releaseFrameworkService("cca.FrameworkProperties", "");
+                                                                                                                                        
+  for (SSIDL::array1<std::string>::iterator it = sArray.begin(); it != sArray.end(); it++) {
+    if (search_path.find(*it) == std::string::npos) {
+       // This is the path that sidl::Loader will search for .scl files.
+       // Babel .scl files are necessary for mapping component names
+       // with their DLLs.
+       sidl::Loader::addSearchPath(*it); // *it appended to ';' separated search path
     }
-    framework->releaseFrameworkService("cca.FrameworkProperties", "");
 
-    for (SSIDL::array1<std::string>::iterator it = sArray.begin(); it != sArray.end(); it++) {
-        if (search_path.find(*it) == std::string::npos) {
-            // SIDL_XML_PATH is not already in the sidl runtime search path
-            // sidl::Loader::addSearchPath(component_path);
-            // This is the path that sidl::Loader will search for .scl files.
-            // Babel .scl files are necessary for mapping component names
-            // with their DLLs.
-            sidl::Loader::addSearchPath(*it); // *it appended to ';' separated search path
-        }
-        Dir d(*it);
-
-        std::cerr << "BabelComponentModel: Looking at directory: " << *it << std::endl;
-
-        std::vector<std::string> files;
-        d.getFilenamesBySuffix(".cca", files);
-        for(std::vector<std::string>::iterator iter = files.begin();
-                iter != files.end(); iter++) {
-            std::string& file = *iter;
-            std::cerr << "BabelComponentModel: Parsing file " << file << std::endl;
-            readComponentDescription(*it+"/"+file);
-        }
+    Dir d(*it);
+    std::cerr << "Babel Component Model: Looking at directory: " << *it << std::endl;
+    std::vector<std::string> files;
+    d.getFilenamesBySuffix(".xml", files);
+                                                                                                                                        
+    for(std::vector<std::string>::iterator iter = files.begin();
+        iter != files.end(); iter++) {
+      std::string& file = *iter;
+      std::cerr << "Babel Component Model: Looking at file" << file << std::endl;
+      readComponentDescription(*it+"/"+file);
     }
+  }
+
 }
 
 void BabelComponentModel::readComponentDescription(const std::string& file)
 {
   // Instantiate the DOM parser.
-  XercesDOMParser parser;
-  parser.setDoValidation(false);
-  
   SCIRunErrorHandler handler;
+  XercesDOMParser parser;
+  parser.setDoValidation(true);
   parser.setErrorHandler(&handler);
-  
+                                                                                                                                        
   try {
+    std::cout << "Parsing file: " << file << std::endl;
     parser.parse(file.c_str());
   }
   catch (const XMLException& toCatch) {
     std::cerr << "Error during parsing: '" <<
-      file << "'\nException message is:  " <<
+      file << "' " << std::endl << "Exception message is:  " <<
       xmlto_string(toCatch.getMessage()) << std::endl;
     handler.foundError=true;
     return;
   }
-  
-  DOMDocument* doc = parser.getDocument();
-  DOMNodeList* list = doc->getElementsByTagName(to_xml_ch_ptr("component"));
-
-  int nlist = list->getLength();
-  if(nlist == 0) {
-    std::cerr << "WARNING: file " << file << " has no components!" << std::endl;
+  catch ( ... ) {
+    std::cerr << "Unknown error occurred during parsing: '" << file << "' "
+              << std::endl;
+    handler.foundError=true;
+    return;
   }
 
-  for (int i=0;i<nlist;i++) {    
-    DOMNode* d = list->item(i);
-    BabelComponentDescription* cd = new BabelComponentDescription(this);
-
-    // Is this component a Babel component?
-    DOMNode* model= d->getAttributes()->getNamedItem(to_xml_ch_ptr("model"));
-    if (model != 0) {
-      if (strcmp(to_char_ptr(model->getNodeValue()),
-                  this->prefixName.c_str()) != 0 ) {
-        // not a babel component, ignore it
-        continue;
-      }
-    } else { // no model, ignore this component
-      std::cerr << "ERROR: Component has no model in file" << file << std::endl;
-      continue;
-    }
-
-    DOMNode* name = d->getAttributes()->getNamedItem(to_xml_ch_ptr("name"));
-    if (name==0) {
-      std::cout << "ERROR: Component has no name." << std::endl;
-      cd->type = "unknown type";
-    } else {
-      cd->type = to_char_ptr(name->getNodeValue());
-    }
-    
-    componentDB_type::iterator iter = components.find(cd->type);
-    if(iter != components.end()) {
-      std::cerr << "WARNING: Component multiply defined: " << cd->type << std::endl;
-    } else {
-        //std::cerr << "Added Babel component of type: " << cd->type << std::endl;
-        components[cd->type]=cd;
+  // Get all the top-level document node
+  DOMDocument* document = parser.getDocument();
+                                                                                                                                        
+  // Check that this document is actually describing CCA components
+  DOMElement *metacomponentmodel = static_cast<DOMElement *>(
+        document->getElementsByTagName(to_xml_ch_ptr("metacomponentmodel"))->item(0));
+                                                                                                                                                                                                                                                                                 
+  std::string compModelName
+    = to_char_ptr(metacomponentmodel->getAttribute(to_xml_ch_ptr("name")));
+  //std::cout << "Component model name = " << compModelName << std::endl;
+                                                                                                                                        
+                                                                                                                                        
+  if ( compModelName != std::string(this->prefixName) ) {
+    return;
+  }
+                                                                                                                                        
+  // Get a list of the library nodes.  Traverse the list and read component
+  // elements at each list node.
+  DOMNodeList* libraries
+    = document->getElementsByTagName(to_xml_ch_ptr("library"));
+                                                                                                                                        
+  for (unsigned int i = 0; i < libraries->getLength(); i++) {
+    DOMElement *library = static_cast<DOMElement *>(libraries->item(i));
+    // Read the library name
+    std::string library_name(to_char_ptr(library->getAttribute(to_xml_ch_ptr("name"))));
+    std::cout << "Library name = ->" << library_name << "<-" << std::endl;
+                                                                                                                                        
+    // Get the list of components.
+    DOMNodeList* comps
+      = library->getElementsByTagName(to_xml_ch_ptr("component"));
+    for (unsigned int j = 0; j < comps->getLength(); j++) {
+      // Read the component name
+      DOMElement *component = static_cast<DOMElement *>(comps->item(j));
+      std::string
+        component_name(to_char_ptr(component->getAttribute(to_xml_ch_ptr("name"))));
+      //std::cout << "Component name = ->" << component_name << "<-" << std::endl;
+                                                                                                                                        
+                                                                                                                                        
+      // Register this component
+      BabelComponentDescription* cd = new BabelComponentDescription(this);
+      cd->type = component_name;
+      //cd->setLibrary(library_name.c_str()); // record the DLL name
+      this->components[cd->type] = cd;
     }
   }
 }
