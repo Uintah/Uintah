@@ -193,7 +193,7 @@ void FractureMPM::addMaterial(const ProblemSpecP& prob_spec,GridP&,
   for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
     //Create and register as an MPM material
-    MPMMaterial *mat = scinew MPMMaterial(ps, lb, flags);
+    MPMMaterial *mat = scinew MPMMaterial(ps, lb, flags,sharedState);
     sharedState->registerMPMMaterial(mat);
   }
 }
@@ -211,14 +211,14 @@ FractureMPM::materialProblemSetup(const ProblemSpecP& prob_spec,
        ps = ps->findNextBlock("material") ) {
 
     //Create and register as an MPM material
-    MPMMaterial *mat = scinew MPMMaterial(ps, lb, flags);
+    MPMMaterial *mat = scinew MPMMaterial(ps, lb, flags,sharedState);
     sharedState->registerMPMMaterial(mat);
 
     // If new particles are to be created, create a copy of each material
     // without the associated geometry
     if (flags->d_createNewParticles) {
       MPMMaterial *mat_copy = scinew MPMMaterial();
-      mat_copy->copyWithoutGeom(mat, flags);
+      mat_copy->copyWithoutGeom(mat, flags,sharedState);
       sharedState->registerMPMMaterial(mat_copy);
     }
   }
@@ -450,8 +450,9 @@ FractureMPM::scheduleTimeAdvance(const LevelP & level,
   }
 
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
-				    lb->d_particleState_preReloc,
-				    lb->pXLabel, lb->d_particleState,
+				    d_sharedState->d_particleState_preReloc,
+				    lb->pXLabel, 
+                                    d_sharedState->d_particleState,
 				    lb->pParticleIDLabel, matls);
 }
 
