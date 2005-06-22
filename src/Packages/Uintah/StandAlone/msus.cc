@@ -279,12 +279,14 @@ main( int argc, char** argv )
 #endif
 
         // Switcher component
-        Switcher* switcher = scinew Switcher(world);
+        Switcher* switcher = 0;
+
         
         if (readers.empty()) {
+          switcher = scinew Switcher(world,1);
           ctl->attachPort("problem spec", reader);
 
-          ctl->attachPort("switcher", switcher);
+          ctl->attachPort("sim", switcher);
 
           // SimulationComponentFactory
           SimulationComponent* simcomp = ComponentFactory::create(d_ups,world);
@@ -336,13 +338,11 @@ main( int argc, char** argv )
           if (emit_graphs) 
             sch->doEmitTaskGraphDocs();
           
-
-
-
         }
         else {
+          switcher = scinew Switcher(world,input_files.size());
           ctl->attachPort("problem spec", reader);
-          ctl->attachPort("switcher",switcher);
+          ctl->attachPort("sim",switcher);
 
           // RegridderFactory
           // Should only be listed once
@@ -389,6 +389,8 @@ main( int argc, char** argv )
           // Load up the individual simulation component input files
           // and add to the switcher component.
           for (unsigned int i = 0; i < readers.size(); i++) {
+            cout << "numConnections(problem spec) = " 
+                 << switcher->numConnections("problem spec") << endl;
             switcher->attachPort("problem spec", readers[i]);
 
           // SimulationComponentFactory
