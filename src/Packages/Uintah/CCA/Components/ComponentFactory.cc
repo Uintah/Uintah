@@ -22,6 +22,7 @@
 #include <Packages/Uintah/CCA/Components/Examples/AMRSimpleCFD.h>
 #include <Packages/Uintah/CCA/Components/Examples/SolverTest1.h>
 #include <Packages/Uintah/CCA/Components/Examples/Test.h>
+#include <Packages/Uintah/CCA/Components/Examples/Test1.h>
 #include <Packages/Uintah/CCA/Components/Switcher/Switcher.h>
 #include <iosfwd>
 
@@ -136,6 +137,10 @@ SimulationComponent* ComponentFactory::create(ProblemSpecP& ps,
     Test* test  = scinew Test(world);
     sim = test;
     comp = test;
+  } else if (sim_comp == "test1" || sim_comp == "TEST1") {
+    Test1* test1  = scinew Test1(world);
+    sim = test1;
+    comp = test1;
   } else if (sim_comp == "switcher" || sim_comp == "SWITCHER") {
     Switcher* switcher  = scinew Switcher(world);
     sim = switcher;
