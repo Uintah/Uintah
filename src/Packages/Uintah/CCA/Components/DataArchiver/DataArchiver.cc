@@ -773,7 +773,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
   // some changes here - we need to redo this if we add a material, or if we schedule output
   // on the initialization timestep (because there will be new computes on subsequent timestep)
   // - BJW
-  if (((delt != 0 || d_outputInitTimestep) && !wereSavesAndCheckpointsInitialized) || addMaterial !=0) {
+  if (((delt != 0 || d_outputInitTimestep) && !wereSavesAndCheckpointsInitialized) || addMaterial !=0 || d_sharedState->d_switchState) {
       /* skip the initialization timestep (normally, anyway) for this
          because it needs all computes to be set
          to find the save labels */
