@@ -48,7 +48,8 @@ WARNING
     //
     ShellParticleCreator(MPMMaterial* matl, 
 			 MPMLabel* lb,
-			 MPMFlags* flags);
+			 MPMFlags* flags,
+                         SimulationStateP& sharedState);
     virtual ~ShellParticleCreator();
     
     /////////////////////////////////////////////////////////////////////////

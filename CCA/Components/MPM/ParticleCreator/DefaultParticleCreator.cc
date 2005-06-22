@@ -16,12 +16,13 @@ using namespace Uintah;
 
 DefaultParticleCreator::DefaultParticleCreator(MPMMaterial* matl, 
                                                MPMLabel* lb,
-                                               MPMFlags* flags)
-  :  ParticleCreator(matl,lb, flags)
+                                               MPMFlags* flags,
+                                               SimulationStateP& sharedState)
+  :  ParticleCreator(matl,lb, flags,sharedState)
 {
-  // Transfer to the lb's permanent particle state array of vectors
-  lb->d_particleState.push_back(particle_state);
-  lb->d_particleState_preReloc.push_back(particle_state_preReloc);
+  // Transfer to the sharedState's permanent particle state array of vectors
+  sharedState->d_particleState.push_back(particle_state);
+  sharedState->d_particleState_preReloc.push_back(particle_state_preReloc);
 }
 
 DefaultParticleCreator::~DefaultParticleCreator()
