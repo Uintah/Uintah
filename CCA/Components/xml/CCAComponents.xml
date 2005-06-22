@@ -1,0 +1,87 @@
+<?xml version="1.0" ?>
+<!DOCTYPE metacomponentmodel SYSTEM "metacomponentmodel.dtd">
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<metacomponentmodel name = "cca">
+  <library name="libCCA_Components_Hello.so">
+    <component name="SCIRun.Hello" />
+  </library>
+  <library name="libCCA_Components_World.so">
+    <component name="SCIRun.World" />
+  </library>
+  <library name="libCCA_Components_Builder.so">
+    <component name="SCIRun.Builder" />
+  </library>
+  <library name="libCCA_Components_FEM.so">
+    <component name="SCIRun.FEM" />
+  </library>
+  <library name="libCCA_Components_FileReader.so">
+    <component name="SCIRun.FileReader" />
+  </library>
+  <library name="libCCA_Components_LinSolver.so">
+    <component name="SCIRun.LinSolver" />
+  </library>
+  <library name="libCCA_Components_ListPlotter.so">
+    <component name="SCIRun.ListPlotter" />
+  </library>
+  <library name="libCCA_Components_PDEdriver.so">
+    <component name="SCIRun.PDEdriver" />
+  </library>
+  <library name="libCCA_Components_PHello.so">
+    <component name="SCIRun.PHello" />
+  </library>
+  <library name="libCCA_Components_PLinSolver.so">
+    <component name="SCIRun.PLinSolver" />
+  </library>
+  <library name="libCCA_Components_PWorld.so">
+    <component name="SCIRun.PWorld" />
+  </library>
+  <library name="libCCA_Components_TableTennis.so">
+    <component name="SCIRun.TableTennis" />
+  </library>
+  <library name="libCCA_Components_Tri.so">
+    <component name="SCIRun.Tri" />
+  </library>
+  <library name="libCCA_Components_TTClient.so">
+    <component name="SCIRun.TTClient" />
+  </library>
+  <library name="libCCA_Components_TxtBuilder.so">
+    <component name="SCIRun.TxtBuilder" />
+  </library>
+  <library name="libCCA_Components_Viewer.so">
+    <component name="SCIRun.Viewer" />
+  </library>
+  <library name="libCCA_Components_ZList.so">
+    <component name="SCIRun.ZList" />
+  </library>
+  <library name="libCCA_Components_ZListWriter.so">
+    <component name="SCIRun.ZListWriter" />
+  </library>
+</metacomponentmodel>
