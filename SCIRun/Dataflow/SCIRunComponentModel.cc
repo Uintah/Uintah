@@ -39,16 +39,13 @@
  */
 
 #include <SCIRun/Dataflow/SCIRunComponentModel.h>
+#include <SCIRun/Dataflow/SCIRunTCLThread.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/OS/Dir.h>
 #include <Core/Init/init.h>
-#include <Core/Util/soloader.h>
 #include <Core/Util/Environment.h>
-//#include <Core/TCLThread/TCLThread.h>
-//#include <Core/GuiInterface/TCLTask.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Network.h>
-#include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Scheduler.h>
 #include <Core/GuiInterface/TCLInterface.h>
@@ -59,47 +56,8 @@
 #include <SCIRun/SCIRunErrorHandler.h>
 #include <iostream>
 
-#include <Core/Util/sci_system.h>
+//#include <Core/Util/sci_system.h>
 #include <main/sci_version.h>
-#include <tcl.h>
-#include <tk.h>
-
-
-typedef void (Tcl_LockProc)();
-
-#ifdef _WIN32
-#  ifdef __cplusplus
-     extern "C" {
-#  endif // __cplusplus
-       __declspec(dllimport) void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
-       int tkMain(int argc, char** argv, 
-		  void (*nwait_func)(void*), void* nwait_func_data);
-#  ifdef __cplusplus
-     }
-#  endif // __cplusplus
-
-#else // _WIN32
-  extern "C" void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
-  extern "C" int tkMain(int argc, char** argv,
-			void (*nwait_func)(void*), void* nwait_func_data);
-
-#endif // _WIN32
-
-extern "C" Tcl_Interp* the_interp;
-
-static
-int
-x_error_handler3(Display* dpy, XErrorEvent* error)
-{
-#ifndef _WIN32
-    char msg[200];
-    XGetErrorText(dpy, error->error_code, msg, 200);
-    std::cerr << "X Error: " << msg << std::endl;
-    abort();
-#endif
-    return 0; // Never reached...
-}
-
 
 namespace SCIRun {
 
@@ -109,80 +67,27 @@ SCIRunComponentModel::gui(0);
 Network*
 SCIRunComponentModel::net(0);
 
-void wait(void* p);
-
-void
-do_lock3()
-{
-  TCLTask::lock();
-}
-
-void
-do_unlock3()
-{
-  TCLTask::unlock();
-}
-
-void
-wait(void* p)
-{
-  TestThread* thr = (TestThread*) p;
-  thr->startTCL();
-}
-
-TestThread::TestThread(Network* net) : net(net), start("SCIRun startup semaphore", 0)
-{
-  XSetErrorHandler(x_error_handler3);
-
-  Tcl_SetLock(do_lock3, do_unlock3);
-}
-
-void
-TestThread::run()
-{
-  char* argv[2];
-  argv[0] = "sr";
-  argv[1] = 0;
-
-  do_lock3();
-  tkMain(1, argv, wait, this);
-  //do_unlock3();
-}
-
-void
-TestThread::startTCL()
-{
-  gui = new TCLInterface;
-  new NetworkEditor(net, gui);
-
-  packageDB->setGui(gui);
-  gui->eval("set scirun2 1");
-  gui->execute("wm withdraw .");
-
-  start.up();
-}
-
-void
-TestThread::tclWait()
-{
-    start.down();
-}
-
-static bool split_name(const std::string& type, std::string& package,
-		       std::string& category, std::string& module)
+static bool
+split_name(const std::string &type,
+           std::string &package,
+           std::string &category,
+           std::string &module)
 {
   unsigned int dot = type.find('.');
-  if(dot >= type.size())
+  if (dot >= type.size()) {
     return false;
+  }
   package = type.substr(0, dot);
   std::string rest = type.substr(dot+1);
   dot = rest.find('.');
-  if(dot >= rest.size())
+  if (dot >= rest.size()) {
     return false;
+  }
   category = rest.substr(0, dot);
   module = rest.substr(dot+1);
-  if(module.size()<1)
+  if (module.size() < 1) {
     return false;
+  }
   return true;
 }
 
@@ -199,33 +104,39 @@ SCIRunComponentModel::~SCIRunComponentModel()
 {
 }
 
-bool SCIRunComponentModel::haveComponent(const std::string& type)
+bool
+SCIRunComponentModel::haveComponent(const std::string& type)
 {
-  std::string package, category, module;
-  if(!split_name(type, package, category, module))
-    return false;
-  return packageDB->haveModule(package, category, module);
+    std::string package, category, module;
+    if (! split_name(type, package, category, module) ) {
+        return false;
+    }
+    return packageDB->haveModule(package, category, module);
 }
 
 ComponentInstance*
 SCIRunComponentModel::createInstance(const std::string& name,
-				     const std::string& type)
+                                     const std::string& type)
 {
-  std::string package, category, module;
-  if(!split_name(type, package, category, module))
-    return 0;
-  if (!gui) {
-    initGuiInterface();
-  }
+    std::string package, category, module;
+    if (! split_name(type, package, category, module) ) {
+        return 0;
+    }
+    if (! gui) {
+        initGuiInterface();
+    }
 
-  std::cerr << "SCIRunComponentModel::createInstance: have gui" << std::endl;
+    std::cerr << "SCIRunComponentModel::createInstance: have gui" << std::endl;
 
-  Module* m = net->add_module2(package, category, module);
-  SCIRunComponentInstance* ci = new SCIRunComponentInstance(framework, name, type, m);
-  return ci;
+    Module* m = net->add_module2(package, category, module);
+    SCIRunComponentInstance* ci =
+        new SCIRunComponentInstance(framework, name, type, m);
+    return ci;
 }
 
-void SCIRunComponentModel::initGuiInterface() {
+void
+SCIRunComponentModel::initGuiInterface()
+{
 std::cerr << "SCIRunComponentModel::initGuiInterface" << std::endl;
 
   sci_putenv("SCIRUN_NOSPLASH", "1");
@@ -235,7 +146,7 @@ std::cerr << "SCIRunComponentModel::initGuiInterface" << std::endl;
 
   net = new Network();
 
-  TestThread *thr = new TestThread(net);
+  SCIRunTCLThread *thr = new SCIRunTCLThread(net);
   Thread* t = new Thread(thr, "SR2 TCL event loop", 0, Thread::NotActivated);
 
   t->setStackSize(1024*1024);
@@ -256,51 +167,55 @@ std::cerr << "SCIRunComponentModel::initGuiInterface" << std::endl;
   t2->detach();
 }
 
-bool SCIRunComponentModel::destroyInstance(ComponentInstance * ic)
+bool
+SCIRunComponentModel::destroyInstance(ComponentInstance * ic)
 {
   std::cerr<<"Warning:I don't know how to destroy a SCIRun component instance"
            << std::endl;
   return true; 
 }
 
-std::string SCIRunComponentModel::getName() const
+std::string
+SCIRunComponentModel::getName() const
 {
-  return "Dataflow";
+    return "Dataflow";
 }
 
-void SCIRunComponentModel::destroyComponentList()
+void
+SCIRunComponentModel::destroyComponentList()
 {
   std::cerr << "Error: SCIRunComponentModel does not implement destroyComponentList"
             << std::endl;
 }
 
-void SCIRunComponentModel::buildComponentList()
+void
+SCIRunComponentModel::buildComponentList()
 {
   std::cerr << "Error: SCIRunComponentModel does not implement buildComponentList"
             << std::endl;
 }
 
-void SCIRunComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list,
-						 bool /*listInternal*/)
+void
+SCIRunComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list,
+                                            bool /*listInternal*/)
 {
-  std::vector<std::string> packages = packageDB->packageNames();
-  typedef std::vector<std::string>::iterator striter;
+    std::vector<std::string> packages = packageDB->packageNames();
+    typedef std::vector<std::string>::iterator striter;
 
-  for(striter iter = packages.begin(); iter != packages.end(); ++iter)
-    {
-    std::string package = *iter;
-    std::vector<std::string> categories = packageDB->categoryNames(package);
-    for(striter iter = categories.begin(); iter != categories.end(); ++iter)
-      {
-      std::string category = *iter;
-      std::vector<std::string> modules = packageDB->moduleNames(package, category);
-      for(striter iter = modules.begin(); iter != modules.end(); ++iter)
-        {
-        std::string module = *iter;
-        list.push_back(new SCIRunComponentDescription(this, package,
-                                                      category, module));
+    for (striter iter = packages.begin(); iter != packages.end(); ++iter) {
+        std::string package = *iter;
+        std::vector<std::string> categories =
+            packageDB->categoryNames(package);
+        for (striter iter = categories.begin(); iter != categories.end(); ++iter) {
+            std::string category = *iter;
+            std::vector<std::string> modules =
+                packageDB->moduleNames(package, category);
+            for (striter iter = modules.begin(); iter != modules.end(); ++iter) {
+                std::string module = *iter;
+                list.push_back(
+                    new SCIRunComponentDescription(this, package, category, module));
+            }
         }
-      }
     }
 }
 
