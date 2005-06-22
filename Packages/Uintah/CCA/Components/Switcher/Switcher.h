@@ -7,10 +7,12 @@
 
 namespace Uintah {
 
-  class SimpleMaterial;
 
   class Switcher : public UintahParallelComponent, public SimulationInterface {
   public:
+    enum switchState {idle, switching, post_switch};
+
+    Switcher(const ProcessorGroup* myworld, unsigned int num_components);
     Switcher(const ProcessorGroup* myworld);
     virtual ~Switcher();
 
@@ -23,20 +25,24 @@ namespace Uintah {
     virtual void scheduleTimeAdvance( const LevelP& level, 
 				      SchedulerP&, int step, int nsteps );
 
-  private:
-    void initialize(const ProcessorGroup*,
-		    const PatchSubset* patches, const MaterialSubset* matls,
-		    DataWarehouse* old_dw, DataWarehouse* new_dw);
-    void computeStableTimestep(const ProcessorGroup*,
-			       const PatchSubset* patches,
-			       const MaterialSubset* matls,
-			       DataWarehouse* old_dw, DataWarehouse* new_dw);
-    void timeAdvance(const ProcessorGroup*,
-		     const PatchSubset* patches,
-		     const MaterialSubset* matls,
-		     DataWarehouse* old_dw, DataWarehouse* new_dw);
+    virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
 
-    SimulationStateP sharedState_;
+    virtual bool needRecompile(double time, double delt, const GridP& grid);
+
+  private:
+    void switchTest(const ProcessorGroup*,
+                    const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    DataWarehouse* old_dw, DataWarehouse* new_dw);
+
+    SimulationInterface* d_sim;
+
+    SimulationStateP d_sharedState;
+    unsigned int d_numComponents;
+    unsigned int d_componentIndex;
+    switchState d_switchState;
+    
+    const VarLabel* switchLabel;
 
     Switcher(const Switcher&);
     Switcher& operator=(const Switcher&);

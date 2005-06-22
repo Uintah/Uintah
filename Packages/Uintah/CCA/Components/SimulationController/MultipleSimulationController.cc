@@ -76,13 +76,6 @@ void MultipleSimulationController::doCombinePatches(std::string fromDir)
 void 
 MultipleSimulationController::run()
 {
-  Switcher* switcher = dynamic_cast<Switcher*>(getPort("switcher"));
-  if (!switcher)
-    throw InternalError("No switcher component");
-
-  int num = switcher->numConnections("sim");
-  cout << "Number of problem specs = " << num << endl;
-
   if (DataArchiver::wereSavesAndCheckpointsInitialized)
     DataArchiver::wereSavesAndCheckpointsInitialized = false;
   
@@ -143,51 +136,25 @@ MultipleSimulationController::run()
   // Print out meta data
   if (d_myworld->myrank() == 0)
     grid->printStatistics();
-  
 
+  // Initialize the CFD and/or MPM components
+  SimulationInterface* sim = 
+    dynamic_cast<SimulationInterface*>(getPort("sim"));
+  
+  if(!sim)
+    throw InternalError("No simulation component");
+  sim->problemSetup(d_ups, grid, sharedState);
+
+  // Finalize the shared state/materials
+  sharedState->finalizeMaterials();
+  
+  
   Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
   sched->problemSetup(d_ups);
   SchedulerP scheduler(sched);
 
   LoadBalancer* lb = sched->getLoadBalancer();
   lb->problemSetup(d_ups, sharedState);
-  
-  // Loop over the various problem specifications inside the switcher 
-  // component
-  for (int n = 0; n < num; n++) {
-
-    ProblemSpecInterface* psi = 
-      dynamic_cast<ProblemSpecInterface*>(switcher->getPort("problem spec",n));
-    
-    if( !psi ){
-      cout << "MultipleSimulationController::run() psi dynamic_cast failed...\n";
-      throw InternalError("psi dynamic_cast failed");
-    }
-    
-    // Get the problem specification
-    ProblemSpecP ups = psi->readInputFile();
-    ups->writeMessages(d_myworld->myrank() == 0);
-    if(!ups)
-      throw ProblemSetupException("Cannot read problem specification");
-    
-    switcher->releasePort("problem spec");
-    
-    if(ups->getNodeName() != "Uintah_specification")
-      throw ProblemSetupException("Input file is not a Uintah specification");
-    
-      
-    // Initialize the CFD and/or MPM components
-    SimulationInterface* sim = 
-      dynamic_cast<SimulationInterface*>(switcher->getPort("sim",n));
-    
-    if(!sim)
-      throw InternalError("No simulation component");
-
-    sim->problemSetup(ups, grid, sharedState);
-    // Finalize the shared state/materials
-    sharedState->finalizeMaterials();
-        
-  }
   
   // done after the sim->problemSetup to get defaults into the
   // input.xml, which it writes along with index.xml
@@ -218,7 +185,7 @@ MultipleSimulationController::run()
     d_timeinfo->delt_min = 0;
 #if 0
     // Broken for multiple sims
-    d_timeinfo->maxTime = static_cast<PatchCombiner*>(switcher->getMaxTime());
+    d_timeinfo->maxTime = static_cast<PatchCombiner*>(sim->getMaxTime());
     cout << " MaxTime: " << d_timeinfo->maxTime << endl;
     d_timeinfo->delt_max = d_timeinfo->maxTime;
 #endif
@@ -269,7 +236,7 @@ MultipleSimulationController::run()
       
     }
     scheduler->get_dw(1)->finalize();
-    switcher->restartInitialize();
+    sim->restartInitialize();
   } else {
     
     dbg << "Setting up initial tasks\n";
@@ -279,7 +246,7 @@ MultipleSimulationController::run()
     for(int i=0;i<grid->numLevels();i++){
       LevelP level = grid->getLevel(i);
       dbg << "calling scheduleInitialize: \n";
-      switcher->scheduleInitialize(level, scheduler);
+      sim->scheduleInitialize(level, scheduler);
     }
   }
 
@@ -287,7 +254,7 @@ MultipleSimulationController::run()
   
   if (!d_restarting){
     t = d_timeinfo->initTime;
-    switcher->scheduleComputeStableTimestep(level,scheduler);
+    sim->scheduleComputeStableTimestep(level,scheduler);
   }
     
   setStartSimTime(t);
@@ -317,14 +284,6 @@ MultipleSimulationController::run()
   int max_iterations = d_timeinfo->max_iterations;
   if (d_timeinfo->maxTimestep - sharedState->getCurrentTopLevelTimeStep() < max_iterations)
     max_iterations = d_timeinfo->maxTimestep - sharedState->getCurrentTopLevelTimeStep();
-  
-  // Initialize the first component
-  unsigned int n = 0;
-  SimulationInterface* sim = 
-    dynamic_cast<SimulationInterface*>(switcher->getPort("sim",n));
-  
-  if(!sim)
-    throw InternalError("No simulation component");
 
   while( t < d_timeinfo->maxTime && iterations < max_iterations) {
     iterations ++;
@@ -508,14 +467,6 @@ MultipleSimulationController::run()
     
     t += delt;
 
-    // Hardwired for mtests.ups
-    if (sim->switchComponent()) {
-      cout << "Switching to the next component" << endl;
-      sim = dynamic_cast<SimulationInterface*>(switcher->getPort("sim",n++));
-      if(!sim)
-        throw InternalError("No simulation component");
-    }
-
     TAU_DB_DUMP();
   } // End looping over time
   
@@ -526,10 +477,10 @@ MultipleSimulationController::run()
 
 bool
 MultipleSimulationController::needRecompile(double time, double delt,
-                                     const GridP& grid,
-                                     SimulationInterface* sim,
-                                     Output* output,
-                                     LoadBalancer* lb)
+                                            const GridP& grid,
+                                            SimulationInterface* sim,
+                                            Output* output,
+                                            LoadBalancer* lb)
 {
   // Currently, output, sim, and load balancer can request a recompile. --bryan
   

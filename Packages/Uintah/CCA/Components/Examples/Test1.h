@@ -1,5 +1,5 @@
-#ifndef Packages_Uintah_CCA_Components_Examples_Test_h
-#define Packages_Uintah_CCA_Components_Examples_Test_h
+#ifndef Packages_Uintah_CCA_Components_Examples_Test1_h
+#define Packages_Uintah_CCA_Components_Examples_Test1_h
 
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
@@ -9,10 +9,10 @@ namespace Uintah {
 
   class SimpleMaterial;
 
-  class Test : public UintahParallelComponent, public SimulationInterface {
+  class Test1 : public UintahParallelComponent, public SimulationInterface {
   public:
-    Test(const ProcessorGroup* myworld);
-    virtual ~Test();
+    Test1(const ProcessorGroup* myworld);
+    virtual ~Test1();
 
     virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
 			      SimulationStateP&);
@@ -52,8 +52,8 @@ namespace Uintah {
     const VarLabel* delt_label;
     const VarLabel* switchLabel;
 
-    Test(const Test&);
-    Test& operator=(const Test&);
+    Test1(const Test1&);
+    Test1& operator=(const Test1&);
 	 
   };
 

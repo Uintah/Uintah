@@ -1,4 +1,4 @@
-#include <Packages/Uintah/CCA/Components/Examples/Test.h>
+#include <Packages/Uintah/CCA/Components/Examples/Test1.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
@@ -12,10 +12,10 @@
 
 using namespace Uintah;
 
-Test::Test(const ProcessorGroup* myworld)
+Test1::Test1(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
-  cout << "Instantiating Test" << endl;
+  cout << "Instantiating Test1" << endl;
   SVariableLabel = VarLabel::create("sole.double",
                                    SoleVariable<double>::getTypeDescription());
 
@@ -26,7 +26,7 @@ Test::Test(const ProcessorGroup* myworld)
  
 }
 
-Test::~Test()
+Test1::~Test1()
 {
   VarLabel::destroy(SVariableLabel);
   VarLabel::destroy(delt_label);
@@ -34,7 +34,7 @@ Test::~Test()
   
 }
 
-void Test::problemSetup(const ProblemSpecP& params, GridP& /*grid*/,
+void Test1::problemSetup(const ProblemSpecP& params, GridP& /*grid*/,
                         SimulationStateP& sharedState)
 {
   sharedState_ = sharedState;
@@ -42,41 +42,41 @@ void Test::problemSetup(const ProblemSpecP& params, GridP& /*grid*/,
   sharedState->registerSimpleMaterial(matl);
 }
  
-void Test::scheduleInitialize(const LevelP& level,
+void Test1::scheduleInitialize(const LevelP& level,
 			       SchedulerP& sched)
 {
   Task* task = scinew Task("initialize",
-			   this, &Test::initialize);
+			   this, &Test1::initialize);
   task->computes(SVariableLabel);
 
   sched->addTask(task, level->eachPatch(),sharedState_->allMaterials());
 }
  
-void Test::scheduleComputeStableTimestep(const LevelP& level,
+void Test1::scheduleComputeStableTimestep(const LevelP& level,
                                          SchedulerP& sched)
 {
   Task* task = scinew Task("computeStableTimestep",
-			   this, &Test::computeStableTimestep);
+			   this, &Test1::computeStableTimestep);
   task->computes(delt_label);
   sched->addTask(task, level->eachPatch(),sharedState_->allMaterials());
 }
 
 void
-Test::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched,
+Test1::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched,
                           int, int )
 {
   Task* task = scinew Task("timeAdvance",
-			   this, &Test::timeAdvance);
+			   this, &Test1::timeAdvance);
   task->requires(Task::OldDW, SVariableLabel);
   task->computes(SVariableLabel);
   sched->addTask(task, level->eachPatch(),sharedState_->allMaterials());
 }
 
 void
-Test::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
+Test1::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
   Task* task = scinew Task("switchTest",
-			   this, &Test::switchTest);
+			   this, &Test1::switchTest);
 
   task->requires(Task::NewDW, SVariableLabel);
   task->computes(switchLabel);
@@ -84,7 +84,7 @@ Test::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 }
 
 
-void Test::computeStableTimestep(const ProcessorGroup* pg,
+void Test1::computeStableTimestep(const ProcessorGroup* pg,
                                  const PatchSubset* /*patches*/,
                                  const MaterialSubset* /*matls*/,
                                  DataWarehouse*,
@@ -94,7 +94,7 @@ void Test::computeStableTimestep(const ProcessorGroup* pg,
   new_dw->put(delt_vartype(delt_),delt_label);
 }
 
-void Test::initialize(const ProcessorGroup*,
+void Test1::initialize(const ProcessorGroup*,
                       const PatchSubset* patches,
                       const MaterialSubset* matls,
                       DataWarehouse* /*old_dw*/, DataWarehouse* new_dw)
@@ -110,7 +110,7 @@ void Test::initialize(const ProcessorGroup*,
 
 
 
-void Test::timeAdvance(const ProcessorGroup*,
+void Test1::timeAdvance(const ProcessorGroup*,
 			const PatchSubset* patches,
 			const MaterialSubset* matls,
 			DataWarehouse* old_dw, DataWarehouse* new_dw)
@@ -126,10 +126,10 @@ void Test::timeAdvance(const ProcessorGroup*,
       SoleVariable<double> sdouble;
       old_dw->get(sdouble,SVariableLabel,getLevel(patches));
       double total;
-      total = sdouble + sdouble * delt;
+      total = sdouble + 2.*sdouble * delt;
       SoleVariable<double> sdouble_new(total);
 
-      cout << "Test sdouble_new = " << sdouble_new << endl;
+      cout << "Test1: sdouble_new = " << sdouble_new << endl;
 
       new_dw->put(sdouble_new,SVariableLabel,getLevel(patches));
       
@@ -137,7 +137,7 @@ void Test::timeAdvance(const ProcessorGroup*,
   }
 }
 
-void Test::switchTest(const ProcessorGroup*,
+void Test1::switchTest(const ProcessorGroup*,
                       const PatchSubset* patches,
                       const MaterialSubset* matls,
                       DataWarehouse* old_dw, DataWarehouse* new_dw)
@@ -147,7 +147,7 @@ void Test::switchTest(const ProcessorGroup*,
   new_dw->get(sdouble,SVariableLabel,getLevel(patches));
 
   bool sw = false;
-  if (sdouble > 70.)
+  if (sdouble < 70.)
     sw = true;
   else
     sw = false;
