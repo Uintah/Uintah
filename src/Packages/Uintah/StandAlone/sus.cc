@@ -467,10 +467,12 @@ main( int argc, char** argv )
 	const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 	SimulationController* ctl = 
           scinew AMRSimulationController(world, do_AMR);
+        Regridder* reg = 0;
         if(do_AMR) {
            // if we ever decide to allow multiple algorithms, switch on them here
            HierarchicalRegridder* regridder = scinew HierarchicalRegridder(world);
            ctl->attachPort("regridder", regridder);
+           reg = regridder;
         }
 
 	// Reader
@@ -756,6 +758,7 @@ main( int argc, char** argv )
 
 	sch->removeReference();
 	delete sch;
+        if (reg) delete reg;
 	delete bal;
 	delete sim;
 	delete solve;
