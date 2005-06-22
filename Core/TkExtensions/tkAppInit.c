@@ -159,7 +159,11 @@ tkMain(argc, argv, nwait_func, nwait_func_data)
   TkConsoleCreate();
   */
 #endif
+#ifndef SCIRUN_NOGUI
   Tk_Main(argc, argv, Tcl_AppInit);
+#else
+  Tcl_Main(argc, argv, Tcl_AppInit);
+#endif
   return 0;			/* Needed only to prevent compiler warning. */
 }
 
@@ -197,6 +201,8 @@ Tcl_AppInit(interp)
     return TCL_ERROR;
   }
   fflush(stdout);
+
+#ifndef SCIRUN_NOGUI
   printf("tk, ");
   if (Tk_Init(interp) == TCL_ERROR) {
     printf("Tk_Init() failed.  Is the DISPLAY environment variable set properly?\n");
@@ -205,6 +211,7 @@ Tcl_AppInit(interp)
   }
   fflush(stdout);
   Tcl_StaticPackage(interp, "Tk", Tk_Init, Tk_SafeInit);
+#endif
 
 #ifdef _WIN32
   /*
@@ -245,6 +252,7 @@ Tcl_AppInit(interp)
     return TCL_ERROR;
   }
   fflush(stdout);
+#ifndef SCIRUN_NOGUI
   printf("itk, ");
   if (Itk_Init(interp) == TCL_ERROR) {
     printf("Itk_Init() failed\n");
@@ -256,11 +264,12 @@ Tcl_AppInit(interp)
     printf("Blt_Init() failed\n");
     return TCL_ERROR;
   }
-
+#endif
   Tcl_StaticPackage(interp, "Itcl", Itcl_Init, Itcl_SafeInit);
+#ifndef SCIRUN_NOGUI
   Tcl_StaticPackage(interp, "Itk", Itk_Init, (Tcl_PackageInitProc *) NULL);
   Tcl_StaticPackage(interp, "BLT", Blt_Init, Blt_SafeInit);
-
+#endif
   printf("Done.\n");
   fflush(stdout);
 
@@ -269,19 +278,27 @@ Tcl_AppInit(interp)
    *  default into the global namespace.  Fix up the autoloader
    *  to do the same.
    */
+#ifndef SCIRUN_NOGUI 
   if (Tcl_Import(interp, Tcl_GetGlobalNamespace(interp),
 		 "::itk::*", /* allowOverwrite */ 1) != TCL_OK) {
     return TCL_ERROR;
   }
+#endif
 
   if (Tcl_Import(interp, Tcl_GetGlobalNamespace(interp),
 		 "::itcl::*", /* allowOverwrite */ 1) != TCL_OK) {
     return TCL_ERROR;
   }
 
+#ifndef SCIRUN_NOGUI
   if (Tcl_Eval(interp, "auto_mkindex_parser::slavehook { _%@namespace import -force ::itcl::* ::itk::* }") != TCL_OK) {
     return TCL_ERROR;
   }
+#else
+  if (Tcl_Eval(interp, "auto_mkindex_parser::slavehook { _%@namespace import -force ::itcl::* }") != TCL_OK) {
+    return TCL_ERROR;
+  }
+#endif
 
   /*
    * Call Tcl_CreateCommand for application-specific commands, if
@@ -299,6 +316,7 @@ Tcl_AppInit(interp)
 #define PARAMETERTYPE
 #endif
 
+#ifndef SCIRUN_NOGUI 
   printf("Adding SCI extensions to tcl: ");
   fflush(stdout);
 
@@ -328,6 +346,7 @@ Tcl_AppInit(interp)
    */
 
   BLineInit();
+#endif
 
   /*
    * Specify a user-specific startup file to invoke if the application
