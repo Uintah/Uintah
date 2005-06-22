@@ -35,33 +35,40 @@ using namespace Uintah;
 using namespace SCIRun;
 
 // Standard Constructor
-MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, MPMFlags* flags)
+MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb, MPMFlags* flags,
+                         SimulationStateP& sharedState)
   : Material(ps), lb(lb), d_cm(0), d_particle_creator(0)
 {
   // The standard set of initializations needed
-  standardInitialization(ps, lb, flags);
+  standardInitialization(ps, lb, flags,sharedState);
 
   // Check to see which ParticleCreator object we need
   if (flags->d_integrator_type == "implicit") 
-    d_particle_creator = scinew ImplicitParticleCreator(this,lb, flags);
+    d_particle_creator = scinew ImplicitParticleCreator(this,lb, flags,
+                                                        sharedState);
 
   else if (flags->d_integrator_type == "fracture") 
-    d_particle_creator = scinew FractureParticleCreator(this,lb, flags);
+    d_particle_creator = scinew FractureParticleCreator(this,lb, flags,
+                                                        sharedState);
 
   else if (dynamic_cast<Membrane*>(d_cm) != 0)
-    d_particle_creator = scinew MembraneParticleCreator(this,lb, flags);
+    d_particle_creator = scinew MembraneParticleCreator(this,lb, flags,
+                                                        sharedState);
 
   else if (dynamic_cast<ShellMaterial*>(d_cm) != 0) {
-    d_particle_creator = scinew ShellParticleCreator(this,lb, flags);
+    d_particle_creator = scinew ShellParticleCreator(this,lb, flags,
+                                                     sharedState);
   }
 
   else
-    d_particle_creator = scinew DefaultParticleCreator(this,lb, flags);
+    d_particle_creator = scinew DefaultParticleCreator(this,lb, flags,
+                                                       sharedState);
 }
 
 void
 MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMLabel* lb, 
-                                    MPMFlags* flags)
+                                    MPMFlags* flags,
+                                    SimulationStateP& sharedState)
 {
   // Follow the layout of the input file
   // Steps:
@@ -150,7 +157,8 @@ MPMMaterial::~MPMMaterial()
 }
 
 void
-MPMMaterial::copyWithoutGeom(const MPMMaterial* mat, MPMFlags* flags)
+MPMMaterial::copyWithoutGeom(const MPMMaterial* mat, MPMFlags* flags,
+                             SimulationStateP& sharedState)
 {
   lb = mat->lb;
   d_cm = mat->d_cm->clone();
@@ -165,19 +173,24 @@ MPMMaterial::copyWithoutGeom(const MPMMaterial* mat, MPMFlags* flags)
 
   // Check to see which ParticleCreator object we need
   if (dynamic_cast<ImplicitParticleCreator*>(d_cm))
-    d_particle_creator = scinew ImplicitParticleCreator(this,lb, flags);
+    d_particle_creator = scinew ImplicitParticleCreator(this,lb, flags,
+                                                        sharedState);
 
   else if (dynamic_cast<ImplicitParticleCreator*>(d_cm))
-    d_particle_creator = scinew FractureParticleCreator(this,lb, flags);
+    d_particle_creator = scinew FractureParticleCreator(this,lb, flags,
+                                                        sharedState);
 
   else if (dynamic_cast<Membrane*>(d_cm))
-    d_particle_creator = scinew MembraneParticleCreator(this,lb, flags);
+    d_particle_creator = scinew MembraneParticleCreator(this,lb, flags,
+                                                        sharedState);
 
   else if (dynamic_cast<ShellMaterial*>(d_cm))
-    d_particle_creator = scinew ShellParticleCreator(this,lb, flags);
+    d_particle_creator = scinew ShellParticleCreator(this,lb, flags,
+                                                     sharedState);
 
   else
-    d_particle_creator = scinew DefaultParticleCreator(this,lb, flags);
+    d_particle_creator = scinew DefaultParticleCreator(this,lb, flags,
+                                                       sharedState);
 }
 
 ConstitutiveModel * MPMMaterial::getConstitutiveModel() const
