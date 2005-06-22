@@ -1027,8 +1027,9 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
 
   sched->scheduleParticleRelocation(level, 
                                     Mlb->pXLabel_preReloc,
-                                    Mlb->d_particleState_preReloc,
-                                    Mlb->pXLabel, Mlb->d_particleState,
+                                    d_sharedState->d_particleState_preReloc,
+                                    Mlb->pXLabel, 
+                                    d_sharedState->d_particleState,
 				    Mlb->pParticleIDLabel,
 				    mpm_matls);
 
