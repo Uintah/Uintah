@@ -7,7 +7,7 @@
 	<title>Test test</title>
    </Meta>
 
-   <SimulationComponent> test </SimulationComponent>
+   <SimulationComponent> test1 </SimulationComponent>
 
 </Uintah_specification>
 
