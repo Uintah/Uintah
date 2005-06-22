@@ -12,7 +12,7 @@
    <SimulationComponent>  test </SimulationComponent>
    <input_file> inputs/Examples/test.ups </input_file>
    
-   <SimulationComponent>  test </SimulationComponent>
+   <SimulationComponent>  test1 </SimulationComponent>
    <input_file> inputs/Examples/test1.ups </input_file>
 
    <Time>
@@ -23,7 +23,7 @@
 	<timestep_multiplier>1</timestep_multiplier>
    </Time>
    <DataArchiver>
-        <filebase>test.uda</filebase>
+        <filebase>mtest.uda</filebase>
 	<outputInterval>1</outputInterval>
 	<save label = "sole.double"/>
 	<checkpoint cycle = "1" interval = "1"/>
