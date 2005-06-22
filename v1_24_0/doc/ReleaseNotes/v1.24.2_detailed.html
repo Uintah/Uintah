@@ -75,7 +75,7 @@ DEALINGS IN THE SOFTWARE.
 
     <h2> SCIRun Modules (Category in parentheses) </h2>
     <ul>
-      <li></li>
+      <li>EditColorMap (Visualization) - Fix GUI lockup when creating module.</li>
       
     </ul>
 
@@ -105,25 +105,30 @@ DEALINGS IN THE SOFTWARE.
 
     <h2>Power App (Package in parentheses)</h2> 
     <ul>
-      <li></li>
+      <li>(BioImage) - Paint layers now save correctly using the 'QuickSave' button in the Transfer Funciton Editor.</li>
+      <li>(BioImage) - Fixed crash volume rendering some abritrary sized volumes.</li>
 
     </ul>
 
     <h1>Infrastructure Enhancements</h1>
     <ul>
+      <li>SCIRun now compiles and runs under Macintosh OS X 10.4 (Tiger).</li>
+      <li>Fix compile of SCIRun on Macintosh OSX 10.3.9.</li>
       <li>Better checking in 'configure' to disallow building SCIRun
       in the 'src' directory.</li>
+      <li>Better checking in 'configure' to allow Insight Toolkit builds that use system image libraries.</li>
       <li>Better wording on .scirunrc update dialog to specify exactly
       what is being updated.</li>
       <li>The SCIRun repository was converted from using CVS to using
       SVN.  (This should not be noticeable by the external
       user/developer.  We believe we have caught and fixed all of the
       problems that the conversion script caused). </li>
+      <li>Allow loading of .vff files with spaces in filenames.</li>
     </ul>
 
     <h1>Environment Variables</h1>
     <ul>
-      <li></li>
+      <li>SCIRUN_DISABLE_SUBNET_UI_BUTTON - Turns off creation of "UI" button on Sub-Network modules.</li>
     </ul>
 
     <h1>GUI Enhancements</h1>
