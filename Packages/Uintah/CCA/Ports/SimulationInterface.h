@@ -101,7 +101,8 @@ WARNING
      virtual void addMaterial(const ProblemSpecP& params, GridP& grid,
                               SimulationStateP& state);
 
-     virtual bool switchComponent() {return false;}
+     virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
+       {};
  
    private:
      SimulationInterface(const SimulationInterface&);
