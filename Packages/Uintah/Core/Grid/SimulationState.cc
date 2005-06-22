@@ -65,6 +65,8 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   allInOneMatl = 0;
   refine_flag_matls = 0;
   d_isCopyDataTimestep = 0;
+
+  d_switchState = false;
 }
 
 void SimulationState::registerMaterial(Material* matl)
@@ -162,12 +164,8 @@ int SimulationState::getNumVelFields() const {
   return num_vf+1;
 }
 
-SimulationState::~SimulationState()
+void SimulationState::clearMaterials()
 {
-  VarLabel::destroy(delt_label);
-  VarLabel::destroy(refineFlag_label);
-  VarLabel::destroy(oldRefineFlag_label);
-  VarLabel::destroy(refinePatchFlag_label);
   for (int i = 0; i < (int)matls.size(); i++)
     delete matls[i];
 
@@ -183,12 +181,38 @@ SimulationState::~SimulationState()
   if(all_ice_matls && all_ice_matls->removeReference())
     delete all_ice_matls;
 
-  if(refine_flag_matls && refine_flag_matls->removeReference())
-    delete refine_flag_matls;
-
   if (allInOneMatl && allInOneMatl->removeReference()) {
     delete allInOneMatl;
   }
+
+  matls.clear();
+  mpm_matls.clear();
+  arches_matls.clear();
+  ice_matls.clear();
+  simple_matls.clear();
+  named_matls.clear();
+  d_particleState.clear();
+  d_particleState_preReloc.clear();
+
+  all_matls = 0;
+  all_mpm_matls = 0;
+  all_arches_matls = 0;
+  all_ice_matls = 0;
+  allInOneMatl = 0;
+}
+
+SimulationState::~SimulationState()
+{
+  VarLabel::destroy(delt_label);
+  VarLabel::destroy(refineFlag_label);
+  VarLabel::destroy(oldRefineFlag_label);
+  VarLabel::destroy(refinePatchFlag_label);
+  clearMaterials();
+
+  if(refine_flag_matls && refine_flag_matls->removeReference())
+    delete refine_flag_matls;
+
+
 }
 
 const MaterialSet* SimulationState::allMPMMaterials() const
