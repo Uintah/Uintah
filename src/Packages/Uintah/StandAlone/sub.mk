@@ -60,7 +60,6 @@ else
         Packages/Uintah/Core/ProblemSpec             \
         Packages/Uintah/CCA/Components/SimulationController \
         Packages/Uintah/CCA/Components/Schedulers           \
-        Packages/Uintah/CCA/Components/Scheduler3           \
         Packages/Uintah/CCA/Components/ProblemSpecification \
         Packages/Uintah/CCA/Components/Solvers              \
         Packages/Uintah/CCA/Components/ICE           \
@@ -146,7 +145,6 @@ else
         Packages/Uintah/Core/ProblemSpec \
         Packages/Uintah/CCA/Components/SimulationController \
         Packages/Uintah/CCA/Components/Schedulers \
-        Packages/Uintah/CCA/Components/Scheduler3 \
         Packages/Uintah/CCA/Components/ProblemSpecification \
         Packages/Uintah/CCA/Components/Solvers   \
         Packages/Uintah/CCA/Components/ICE       \

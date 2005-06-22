@@ -45,8 +45,6 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MixedScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/NullScheduler.h>
-#include <Packages/Uintah/CCA/Components/Scheduler3/SingleProcessorScheduler3.h>
-#include <Packages/Uintah/CCA/Components/Scheduler3/MPIScheduler3.h>
 #include <Packages/Uintah/CCA/Components/LoadBalancers/SingleProcessorLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/LoadBalancers/NirvanaLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/LoadBalancers/ParticleLoadBalancer.h>
@@ -234,7 +232,7 @@ main( int argc, char** argv )
     string udaDir; // for restart or combine_patches
     bool   restartFromScratch = true;
     bool   restartRemoveOldDir = false;
-    bool   useScheduler3 = false;
+//     bool   useScheduler3 = false;
     int    numThreads = 0;
     string filename;
     string scheduler;
@@ -317,8 +315,8 @@ main( int argc, char** argv )
 	    do_mpm=true;
 	} else if(s == "-AMR" || s == "-amr"){
 	    do_AMR=true;
-	} else if(s == "-s3"){
-	    useScheduler3=true;
+// 	} else if(s == "-s3"){
+// 	    useScheduler3=true;
 	} else if(s == "-nthreads"){
 	  cerr << "reading number of threads\n";
 	  if(++i == argc){
@@ -677,20 +675,20 @@ main( int argc, char** argv )
 	// Scheduler
 	Scheduler * sch = 0;
 	if(scheduler == "SingleProcessorScheduler"){
-           if (useScheduler3) {
-             SingleProcessorScheduler3* sched =  
-	      scinew SingleProcessorScheduler3(world, output);
-             sched->attachPort("load balancer", bal);
-             ctl->attachPort("scheduler", sched);
-             sch=sched;
-           }
-           else {
-             SingleProcessorScheduler* sched = 
-               scinew SingleProcessorScheduler(world, output);
-             sched->attachPort("load balancer", bal);
-             ctl->attachPort("scheduler", sched);
-             sch=sched;
-           }
+//            if (useScheduler3) {
+//              SingleProcessorScheduler3* sched =  
+// 	      scinew SingleProcessorScheduler3(world, output);
+//              sched->attachPort("load balancer", bal);
+//              ctl->attachPort("scheduler", sched);
+//              sch=sched;
+//            }
+//            else {
+          SingleProcessorScheduler* sched = 
+            scinew SingleProcessorScheduler(world, output);
+          sched->attachPort("load balancer", bal);
+          ctl->attachPort("scheduler", sched);
+          sch=sched;
+//           }
 	} else if(scheduler == "SimpleScheduler"){
 	   SimpleScheduler* sched = 
 	      scinew SimpleScheduler(world, output);
@@ -698,20 +696,20 @@ main( int argc, char** argv )
 	   sched->attachPort("load balancer", bal);
 	   sch=sched;
 	} else if(scheduler == "MPIScheduler"){
-           if (useScheduler3) {
-             MPIScheduler3*sched =  
-	      scinew MPIScheduler3(world, output);
-             sched->attachPort("load balancer", bal);
-             ctl->attachPort("scheduler", sched);
-             sch=sched;
-           }
-           else {
-             MPIScheduler* sched = 
-               scinew MPIScheduler(world, output);
-             sched->attachPort("load balancer", bal);
-             ctl->attachPort("scheduler", sched);
-             sch=sched;
-           }
+//            if (useScheduler3) {
+//              MPIScheduler3*sched =  
+// 	      scinew MPIScheduler3(world, output);
+//              sched->attachPort("load balancer", bal);
+//              ctl->attachPort("scheduler", sched);
+//              sch=sched;
+//            }
+//            else {
+          MPIScheduler* sched = 
+            scinew MPIScheduler(world, output);
+          sched->attachPort("load balancer", bal);
+          ctl->attachPort("scheduler", sched);
+          sch=sched;
+//            }
 	} else if(scheduler == "MixedScheduler"){
 #ifdef HAVE_MPICH
 	  cerr << "MPICH does not support the MixedScheduler.  Exiting\n";
