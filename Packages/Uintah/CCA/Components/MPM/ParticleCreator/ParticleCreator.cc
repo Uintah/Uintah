@@ -29,7 +29,8 @@ using std::ofstream;
 
 ParticleCreator::ParticleCreator(MPMMaterial* matl, 
                                  MPMLabel* lb,
-                                 MPMFlags* flags)
+                                 MPMFlags* flags, 
+                                 SimulationStateP& sharedState)
 {
   d_useLoadCurves = flags->d_useLoadCurves;
   d_with_color = flags->d_with_color;
