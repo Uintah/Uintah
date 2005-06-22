@@ -27,39 +27,26 @@
 */
 
 
-/*
- *  SCIRunUIPort.cc: CCA-style Interface to old TCL interfaces
- *
- *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
- *   University of Utah
- *   May 2002
- *
- */
-
-#include <SCIRun/Dataflow/SCIRunUIPort.h>
+#include <SCIRun/Dataflow/SCIRunGoPort.h>
 #include <SCIRun/Dataflow/SCIRunComponentInstance.h>
 #include <Dataflow/Network/Module.h>
-#include <iostream>
 
 namespace SCIRun {
 
-SCIRunUIPort::SCIRunUIPort(SCIRunComponentInstance* component)
+SCIRunGoPort::SCIRunGoPort(SCIRunComponentInstance* component)
   : component(component)
 {
 }
 
-SCIRunUIPort::~SCIRunUIPort()
+SCIRunGoPort::~SCIRunGoPort()
 {
 }
 
-int SCIRunUIPort::ui()
+int SCIRunGoPort::go()
 {
   Module* module = component->getModule();
-  module->popupUI();
-  //std::cerr << "Warning: need return correct value (0 success, -1 fatal error, other values for other errors !" << std::endl;
-  // Module::popupUI has void return value
+  module->want_to_execute();
+  // Module::want_to_execute() has void return value,
   // TODO: report success or failure of function call
   return 0;
 }

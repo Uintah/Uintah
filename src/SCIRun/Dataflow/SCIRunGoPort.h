@@ -26,42 +26,27 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#ifndef SCIRun_Dataflow_SCIRunGoPort
+#define SCIRun_Dataflow_SCIRunGoPort 1
 
-/*
- *  SCIRunUIPort.cc: CCA-style Interface to old TCL interfaces
- *
- *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
- *   University of Utah
- *   May 2002
- *
- */
-
-#include <SCIRun/Dataflow/SCIRunUIPort.h>
-#include <SCIRun/Dataflow/SCIRunComponentInstance.h>
-#include <Dataflow/Network/Module.h>
-#include <iostream>
+#include <Core/CCA/spec/cca_sidl.h>
 
 namespace SCIRun {
+class SCIRunComponentInstance;
 
-SCIRunUIPort::SCIRunUIPort(SCIRunComponentInstance* component)
-  : component(component)
-{
+class SCIRunGoPort : public sci::cca::ports::GoPort {
+public:
+    SCIRunGoPort(SCIRunComponentInstance* component);
+    virtual ~SCIRunGoPort();
+    virtual int go();
+
+private:
+    SCIRunComponentInstance* component;
+    SCIRunGoPort(const SCIRunGoPort&);
+    SCIRunGoPort& operator=(const SCIRunGoPort&);
+};
+
 }
 
-SCIRunUIPort::~SCIRunUIPort()
-{
-}
 
-int SCIRunUIPort::ui()
-{
-  Module* module = component->getModule();
-  module->popupUI();
-  //std::cerr << "Warning: need return correct value (0 success, -1 fatal error, other values for other errors !" << std::endl;
-  // Module::popupUI has void return value
-  // TODO: report success or failure of function call
-  return 0;
-}
-
-} // end namespace SCIRun
+#endif
