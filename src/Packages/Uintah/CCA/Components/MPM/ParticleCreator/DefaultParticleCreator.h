@@ -10,7 +10,7 @@ namespace Uintah {
     
     DefaultParticleCreator(MPMMaterial* matl, 
                            MPMLabel* lb,
-                           MPMFlags* flags);
+                           MPMFlags* flags,SimulationStateP& sharedState);
     virtual ~DefaultParticleCreator();
 
     virtual ParticleSubset* createParticles(MPMMaterial* matl,

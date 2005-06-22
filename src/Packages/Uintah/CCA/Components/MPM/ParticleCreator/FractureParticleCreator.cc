@@ -8,16 +8,17 @@ using std::vector;
 
 FractureParticleCreator::FractureParticleCreator(MPMMaterial* matl,
 						 MPMLabel* lb,
-						 MPMFlags* flags)
-  :  ParticleCreator(matl,lb,flags)
+						 MPMFlags* flags,
+                                                 SimulationStateP& sharedState)
+  :  ParticleCreator(matl,lb,flags,sharedState)
 {
   registerPermanentParticleState(matl,lb);
   d_fracture = flags->d_fracture = true;
 
   // Transfer to the lb's permanent particle state array of vectors
 
-  lb->d_particleState.push_back(particle_state);
-  lb->d_particleState_preReloc.push_back(particle_state_preReloc);
+  sharedState->d_particleState.push_back(particle_state);
+  sharedState->d_particleState_preReloc.push_back(particle_state_preReloc);
 }
 
 FractureParticleCreator::~FractureParticleCreator()

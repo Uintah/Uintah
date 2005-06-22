@@ -4,6 +4,8 @@
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
+#include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <map>
@@ -28,7 +30,7 @@ namespace Uintah {
     
     ParticleCreator(MPMMaterial* matl, 
                     MPMLabel* lb,
-                    MPMFlags* flags);
+                    MPMFlags* flags, SimulationStateP& sharedState);
 
     virtual ~ParticleCreator();
 
