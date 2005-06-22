@@ -73,3 +73,4 @@ void SimulationInterface::scheduleInitializeAddedMaterial(const LevelP&
 {
   throw InternalError("scheduleInitializeAddedMaterial not implemented for this component");
 }
+
