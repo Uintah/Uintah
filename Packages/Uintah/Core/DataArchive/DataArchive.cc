@@ -87,7 +87,6 @@ DataArchive::DataArchive(const std::string& filebase,
 
 DataArchive::~DataArchive()
 {
-  cerr << "DataArchive::~DataArchive destroyed for file "<<d_filebase<<"!\n";
   delete d_varHashMaps;
 
   // You would think this would delete the memory, but Xerces keeps a
