@@ -189,7 +189,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    int numMatls=0;
    for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
-     MPMMaterial *mat = scinew MPMMaterial(ps, lb, flags);
+     MPMMaterial *mat = scinew MPMMaterial(ps, lb, flags,sharedState);
      //register as an MPM material
      sharedState->registerMPMMaterial(mat);
      numMatls++;
@@ -336,8 +336,9 @@ ImpMPM::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int, int )
   scheduleInterpolateStressToGrid(        sched, d_perproc_patches,matls);
 
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc, 
-                                    lb->d_particleState_preReloc,
-                                    lb->pXLabel, lb->d_particleState,
+                                    d_sharedState->d_particleState_preReloc,
+                                    lb->pXLabel, 
+                                    d_sharedState->d_particleState,
                                     lb->pParticleIDLabel, matls);
 }
 
@@ -806,6 +807,16 @@ void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
   }
   sched->addTask(t, patches, matls);
 }
+
+void ImpMPM::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
+{
+  Task* task = scinew Task("switchTest",this, &ImpMPM::switchTest);
+
+  task->computes(lb->switchLabel);
+  sched->addTask(task, level->eachPatch(),d_sharedState->allMaterials());
+
+}
+
 
 void ImpMPM::iterate(const ProcessorGroup*,
                      const PatchSubset* patches,
@@ -2559,4 +2570,25 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
 double ImpMPM::recomputeTimestep(double current_dt)
 {
   return current_dt*d_delT_decrease_factor;
+}
+
+
+void ImpMPM::switchTest(const ProcessorGroup* group,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw)
+{
+  int time_step = d_sharedState->getCurrentTopLevelTimeStep();
+  cout << "time_step = " << time_step << endl;
+  bool sw = false;
+#if 1
+  if (time_step == 3 )
+    sw = true;
+  else
+    sw = false;
+#endif
+
+  SoleVariable<bool> switch_condition(sw);
+  new_dw->put(switch_condition,lb->switchLabel,getLevel(patches));
 }

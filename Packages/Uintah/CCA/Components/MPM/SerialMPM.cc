@@ -174,6 +174,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     d_outputInterval = 1.0;
 
   materialProblemSetup(prob_spec, d_sharedState, lb, flags);
+
 //  GridP grid;
 //  addMaterial(prob_spec, grid ,sharedState);
 }
@@ -188,7 +189,7 @@ void SerialMPM::addMaterial(const ProblemSpecP& prob_spec,GridP&,
   for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
     //Create and register as an MPM material
-    MPMMaterial *mat = scinew MPMMaterial(ps, lb, flags);
+    MPMMaterial *mat = scinew MPMMaterial(ps, lb, flags,sharedState);
     sharedState->registerMPMMaterial(mat);
   }
 }
@@ -205,14 +206,14 @@ SerialMPM::materialProblemSetup(const ProblemSpecP& prob_spec,
        ps = ps->findNextBlock("material") ) {
 
     //Create and register as an MPM material
-    MPMMaterial *mat = scinew MPMMaterial(ps, lb, flags);
+    MPMMaterial *mat = scinew MPMMaterial(ps, lb, flags,sharedState);
     sharedState->registerMPMMaterial(mat);
 
     // If new particles are to be created, create a copy of each material
     // without the associated geometry
     if (flags->d_createNewParticles) {
       MPMMaterial *mat_copy = scinew MPMMaterial();
-      mat_copy->copyWithoutGeom(mat, flags);    
+      mat_copy->copyWithoutGeom(mat, flags,sharedState);    
       sharedState->registerMPMMaterial(mat_copy);
     }
   }
@@ -432,8 +433,9 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   }
 
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
-                                    lb->d_particleState_preReloc,
-                                    lb->pXLabel, lb->d_particleState,
+                                    d_sharedState->d_particleState_preReloc,
+                                    lb->pXLabel, 
+                                    d_sharedState->d_particleState,
                                     lb->pParticleIDLabel, matls);
 }
 
@@ -1127,6 +1129,16 @@ void SerialMPM::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
   task->modifies(d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials());
   task->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
   sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allMPMMaterials());
+}
+
+void SerialMPM::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
+{
+  Task* task = scinew Task("switchTest",this, &SerialMPM::switchTest);
+
+  task->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  task->computes(lb->switchLabel);
+  sched->addTask(task, level->eachPatch(),d_sharedState->allMaterials());
+
 }
 
 void SerialMPM::printParticleCount(const ProcessorGroup* pg,
@@ -3437,4 +3449,27 @@ bool SerialMPM::needRecompile(double , double , const GridP& )
   else{
     return false;
   }
+}
+
+
+void SerialMPM::switchTest(const ProcessorGroup* group,
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw)
+{
+  int time_step = d_sharedState->getCurrentTopLevelTimeStep();
+  cout << "time_step = " << time_step << endl;
+
+  bool sw = false;
+#if 0
+  if (delT > 1.5e-6)
+    sw = true;
+  else
+    sw = false;
+
+#endif
+
+  SoleVariable<bool> switch_condition(sw);
+  new_dw->put(switch_condition,lb->switchLabel,getLevel(patches));
 }
