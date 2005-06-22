@@ -72,6 +72,7 @@ using std::string;
                    _c = *++_p; *_p = _p[3]; _p[3] = _c; \
                    _c = *++_p; *_p = _p[1]; _p[1] = _c; }
 
+void swapbytes(bool& i);
 void swapbytes(int8_t& i);
 void swapbytes(uint8_t& i);
 void swapbytes(int16_t& i);
