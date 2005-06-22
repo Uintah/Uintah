@@ -32,18 +32,32 @@
 parms_chunk := chunk.section.depth=2 use.id.as.filename=1
 stylesheet_chunk := ${STYLESHEET_XSL_HTML}/srdocbook-chunk.xsl
 stylesheet_nochunk := ${STYLESHEET_XSL_HTML}/srdocbook.xsl
+
+processor := dsssl
+ifeq (${processor},fop)
+stylesheet_print := ${STYLESHEET_XSL_PRINT}/profile-docbook.xsl
+params_print := ${params_common} section.autolabel=1 ulink.footnotes=1 \
+  section.label.includes.component.label=1 fop.extensions=1 \
+  double.sided=1
+else
 stylesheet_print := ${STYLESHEET_DSSSL_PRINT}/docbook.dsl
 params_print := -V %footnote-ulinks% -V %section-autolabel% \
-  -V %generate-article-toc% -V bop-footnotes
+   -V %generate-article-toc% -V bop-footnotes
+endif
+
 rxmlsrcs := ${wildcard *.rxml}
 treetop := ../../../..
 edition := ${treetop}/src/main/sci_version.h
+printfigures := ${patsubst %.gif,%.eps,${wildcard Figures/*.gif}} \
+              ${patsubst %.jpg,%.eps,${wildcard Figures/*.jpg}}
 
 .PHONY: all html print clean veryclean
 
 .DELETE_ON_ERROR:
 
 all: html print
+
+printfigs: ${printfigures}
 
 # Implicit rule to generate sources for html output
 %.hxml : %.rxml
@@ -52,6 +66,12 @@ all: html print
 # Implicit rule to generate sources for print output
 %.pxml : %.rxml
 	TREETOP=${treetop} OUTPUT_MODE=print eruby --delimiters xml $< > $@
+
+# Make figures used in print output.
+Figures/%.eps : Figures/%.jpg
+	convert -density 72 -geometry '360x432>' $< EPS:$@
+Figures/%.eps : Figures/%.gif
+	convert -density 72 -geometry '360x432>' $< EPS:$@
 
 # HTML versions
 html: bioimage.html
@@ -67,15 +87,22 @@ bioimage.html: ${hxmlsrcs} ${edition}
 print: bioimage.pdf
 
 pxmlsrcs := ${rxmlsrcs:.rxml=.pxml}
-bioimage.pdf : ${pxmlsrcs} ${edition}
+bioimage.pdf : ${pxmlsrcs} ${edition} ${printfigures}
+ifeq (${processor},fop)
+	java com.icl.saxon.StyleSheet -w2 -o bioimage.fo \
+          main.pxml ${stylesheet_print} ${params_print} >$@
+	fop -fo bioimage.fo -pdf bioimage.pdf
+else
+bioimage.pdf : ${pxmlsrcs} ${edition} ${printfigures}
 	openjade -t tex -V tex-backend -c ${CATALOG} -o bioimage.tex \
           -d ${stylesheet_print} ${params_print} ${XML_DCL} main.pxml
 	for i in 1 2 3; do jadetex bioimage.tex ; done
 	dvipdfm -p letter bioimage.dvi
+endif
 
 # Cleanage
 clean:
-	-rm -f *.[ph]xml bioimage.aux bioimage.log bioimage.out bioimage.dvi bioimage.tex *~
+	-rm -f *.[ph]xml bioimage.fo bioimage.aux bioimage.log bioimage.out bioimage.dvi bioimage.tex Figures/*.eps *~
 
 veryclean: clean
 	-rm -f *.html bioimage.pdf
