@@ -298,10 +298,11 @@ ElasticPlastic::getInitialDamageData(ProblemSpecP& ps)
 }
 
 /*! Compute specific heat
-  double T = temperature;
-  C_p = 1.0e3*(A + B*T + C/T^2)
-  ** For steel **
-  C_p = 1.0e3*(0.09278 + 7.454e-4*T + 12404.0/(T*T));
+
+    double T = temperature;
+    C_p = 1.0e3*(A + B*T + C/T^2)
+    ** For steel **
+    C_p = 1.0e3*(0.09278 + 7.454e-4*T + 12404.0/(T*T));
 */
 void 
 ElasticPlastic::getSpecificHeatData(ProblemSpecP& ps)
@@ -398,9 +399,9 @@ ElasticPlastic::initializeCMData(const Patch* patch,
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
   ParticleVariable<Matrix3> pRotation;
-  ParticleVariable<double> pPlasticStrain, pDamage, pPorosity, 
-    pPlasticStrainRate, pStrainRate;
-  ParticleVariable<int> pLocalized;
+  ParticleVariable<double>  pPlasticStrain, pDamage, pPorosity, 
+                            pPlasticStrainRate, pStrainRate;
+  ParticleVariable<int>     pLocalized;
 
   new_dw->allocateAndPut(pRotation, pRotationLabel, pset);
   new_dw->allocateAndPut(pStrainRate, pStrainRateLabel, pset);
@@ -720,10 +721,10 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       pIntHeatRate[idx] = 0.0;
 
       /*
-        if (cout_EP.active()) {
+      if (cout_EP.active()) {
         cout_EP << getpid() << " idx = " << idx 
-        << " vel = " << pVelocity[idx] << endl;
-        }
+                << " vel = " << pVelocity[idx] << endl;
+      }
       */
 
       //-----------------------------------------------------------------------
@@ -743,14 +744,6 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       } else {
         computeVelocityGradient(tensorL,ni,d_S,oodx,gVelocity,pErosion[idx]);
       }
-
-      /*
-        for (int ii = 0; ii < 3; ++ii) {
-        for (int jj = 0; jj < 3; ++jj) {
-        tensorL(ii,jj)=(fabs(tensorL(ii,jj)) < d_tol) ? 0.0 : tensorL(ii,jj);
-        }
-        }
-      */
 
       // Compute the deformation gradient increment using the time_step
       // velocity gradient F_n^np1 = dudx * dt + Identity
@@ -782,8 +775,8 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       // If the particle is just sitting there, do nothing
       /*
-        double defRateSq = tensorD.NormSquared();
-        if (!(defRateSq > 0)) {
+      double defRateSq = tensorD.NormSquared();
+      if (!(defRateSq > 0)) {
         pStress_new[idx] = pStress[idx];
         pStrainRate_new[idx] = 0.0;
         pPlasticStrain_new[idx] = pPlasticStrain[idx];
@@ -793,7 +786,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
         pLocalized_new[idx] = pLocalized[idx];
         d_plastic->updateElastic(idx);
         continue;
-        }
+      }
       */
 
       // Rotate the total rate of deformation tensor back to the 
@@ -995,11 +988,11 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
                 Stilde = trialS/denom;
 
                 /*
-                  double delLambda = sqrtqq*delGamma/sqrtqs;
-                  cout << "idx = " << idx << " delGamma = " << delLambda 
-                  << " sigy = " << state->yieldStress 
-                  << " epdot = " << state->plasticStrainRate 
-                  << " ep = " << state->plasticStrain << endl;
+                double delLambda = sqrtqq*delGamma/sqrtqs;
+                cout << "idx = " << idx << " delGamma = " << delLambda 
+                     << " sigy = " << state->yieldStress 
+                     << " epdot = " << state->plasticStrainRate 
+                     << " ep = " << state->plasticStrain << endl;
                 */
 
                 // We have found Stilde. Turn off Newton Iterations.
@@ -1014,17 +1007,17 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
           if (doNewtonIterations) {
 
             /*
-              cout << "sqrtSxS = 0 || gammadotplus <= 0 || delGamma <= 0.0" 
-              << endl;
-              cout << " Before::idx = " << idx
-              << " delGamma = " << delGamma  
-              << " Tau_n+1 = " << state->yieldStress
-              << " Tau_n = " << sqrtThreeTwo*sqrtSxS
-              << " ep_n = " << pPlasticStrain[idx]
-              << " ep_n+1 = " << state->plasticStrain
-              << " epdot_n = " << pPlasticStrainRate[idx]
-              << " epdot_n+1 = " << state->plasticStrainRate
-              << endl;
+            cout << "sqrtSxS = 0 || gammadotplus <= 0 || delGamma <= 0.0" 
+                 << endl;
+            cout << " Before::idx = " << idx
+                 << " delGamma = " << delGamma  
+                 << " Tau_n+1 = " << state->yieldStress
+                 << " Tau_n = " << sqrtThreeTwo*sqrtSxS
+                 << " ep_n = " << pPlasticStrain[idx]
+                 << " ep_n+1 = " << state->plasticStrain
+                 << " epdot_n = " << pPlasticStrainRate[idx]
+                 << " epdot_n+1 = " << state->plasticStrainRate
+                 << endl;
             */
 
             // Compute Stilde using Newton iterations a la Simo
@@ -1032,15 +1025,15 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
             computeStilde(trialS, delT, matl, idx, Stilde, state, delGamma);
 
             /*
-              cout << "After::idx = " << idx
-              << " delGamma = " << delGamma  
-              << " Tau_n+1 = " << state->yieldStress
-              << " Tau_n = " << sqrtThreeTwo*sqrtSxS
-              << " ep_n = " << pPlasticStrain[idx]
-              << " ep_n+1 = " << state->plasticStrain
-              << " epdot_n = " << pPlasticStrainRate[idx]
-              << " epdot_n+1 = " << state->plasticStrainRate
-              << endl;
+            cout << "After::idx = " << idx
+                 << " delGamma = " << delGamma  
+                 << " Tau_n+1 = " << state->yieldStress
+                 << " Tau_n = " << sqrtThreeTwo*sqrtSxS
+                 << " ep_n = " << pPlasticStrain[idx]
+                 << " ep_n+1 = " << state->plasticStrain
+                 << " epdot_n = " << pPlasticStrainRate[idx]
+                 << " epdot_n+1 = " << state->plasticStrainRate
+                 << endl;
             */
 
           }
@@ -1066,12 +1059,12 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
                                         delT);
 
       /*
-        if (flag->d_artificial_viscosity) {
+      if (flag->d_artificial_viscosity) {
         double Dkk = tensorD.Trace();
         double c_bulk = sqrt(bulk/rho_cur);
         double q = artificialBulkViscosity(Dkk, c_bulk, rho_cur, dx_ave);
         p -= q;
-        }
+      }
       */
 
       Matrix3 tensorHy = one*p;
@@ -1154,7 +1147,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
           // Check 2: Modified Tepla rule
           if (d_checkTeplaFailureCriterion) {
             tepla = pow(pPorosity_new[idx]/d_porosity.fc,2.0) + 
-              pow(pDamage_new[idx],2.0);
+                    pow(pDamage_new[idx],2.0);
             if (tepla > 1.0) isLocalized = true;
           } 
 
@@ -1349,7 +1342,7 @@ ElasticPlastic::computeDeltaGamma(const double& delT,
       cout << "idx = " << idx << " iter = " << count 
            << " g = " << g << " Dg = " << Dg << " deltaGamma = " << deltaGamma 
            << " sigy = " << sigma_y 
-           << " dsigy/depdot = " << dsigy_depdot << " dsigy/dep = " << dsigy_dep 
+           << " dsigy/depdot = " << dsigy_depdot << " dsigy/dep= " << dsigy_dep 
            << " epdot = " << state->plasticStrainRate 
            << " ep = " << state->plasticStrain << endl;
       throw ParameterNotFound("**ERROR**:ElasticPlastic: Found nan.");
@@ -1404,9 +1397,9 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
   delt_vartype delT;
   constParticleVariable<int>     pLocalized;
   constParticleVariable<double>  pMass, pVolume, pVolumeOld, 
-    pTempPrev, pTemperature,
-    pPlasticStrain, pDamage, pPorosity, 
-    pStrainRate, pPlasticStrainRate;
+                                 pTempPrev, pTemperature,
+                                 pPlasticStrain, pDamage, pPorosity, 
+                                 pStrainRate, pPlasticStrainRate;
 
   constParticleVariable<Point>   px;
   constParticleVariable<Matrix3> pDeformGrad, pStress, pRotation;
@@ -1415,15 +1408,15 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
   ParticleVariable<int>          pLocalized_new;
   ParticleVariable<Matrix3>      pDeformGrad_new, pStress_new, pRotation_new;
   ParticleVariable<double>       pVolume_deformed, pPlasticStrain_new, 
-    pDamage_new, pPorosity_new, pStrainRate_new,
-    pPlasticStrainRate_new, pIntHeatRate;
+                                 pDamage_new, pPorosity_new, pStrainRate_new,
+                                 pPlasticStrainRate_new, pIntHeatRate;
 
   // Local variables
   Matrix3 DispGrad(0.0); // Displacement gradient
   Matrix3 DefGrad, incDefGrad, incFFt, incFFtInv, Rotation, RightStretch; 
   Matrix3 incTotalStrain(0.0), incThermalStrain(0.0), incStrain(0.0);
   Matrix3 oldStress(0.0), devStressOld(0.0), trialStress(0.0),
-    devTrialStress(0.0);
+          devTrialStress(0.0);
   DefGrad.Identity(); incDefGrad.Identity(); incFFt.Identity(); 
   incFFtInv.Identity(); Rotation.Identity(), RightStretch.Identity();
 
@@ -1763,9 +1756,9 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
   // Particle and Grid data
   delt_vartype delT;
   constParticleVariable<double>  pMass, pVolumeOld, 
-    pTempPrev, pTemperature,
-    pPlasticStrain, pPlasticStrainRate,
-    pPorosity;
+                                 pTempPrev, pTemperature,
+                                 pPlasticStrain, pPlasticStrainRate,
+                                 pPorosity;
 
   constParticleVariable<Point>   px;
   constParticleVariable<Matrix3> pDeformGrad, pStress;
@@ -1773,14 +1766,14 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
   ParticleVariable<Matrix3>      pDeformGrad_new, pStress_new;
   ParticleVariable<double>       pVolume_deformed, pPlasticStrain_new,
-    pPlasticStrainRate_new; 
+                                 pPlasticStrainRate_new; 
 
   // Local variables
   Matrix3 DispGrad(0.0); // Displacement gradient
   Matrix3 DefGrad, incDefGrad, incFFt, incFFtInv;
   Matrix3 incTotalStrain(0.0), incThermalStrain(0.0), incStrain(0.0);
   Matrix3 oldStress(0.0), devStressOld(0.0), trialStress(0.0),
-    devTrialStress(0.0);
+          devTrialStress(0.0);
   DefGrad.Identity(); incDefGrad.Identity(); incFFt.Identity(); 
   incFFtInv.Identity(); 
 
@@ -2054,9 +2047,9 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
 }
 
 /*! Compute the elastic tangent modulus tensor for isotropic
-  materials
-  Assume: [stress] = [s11 s22 s33 s12 s23 s31]
-  [strain] = [e11 e22 e33 2e12 2e23 2e31] 
+    materials
+    Assume: [stress] = [s11 s22 s33 s12 s23 s31]
+            [strain] = [e11 e22 e33 2e12 2e23 2e31] 
 */
 void 
 ElasticPlastic::computeElasticTangentModulus(const double& K,
@@ -2989,14 +2982,14 @@ ElasticPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
   ParticleSubset::iterator n,o;
 
   ParticleVariable<Matrix3> pRotation;
-  ParticleVariable<double> pPlasticStrain, pDamage,pPorosity, pStrainRate,
-    pPlasticStrainRate;
-  ParticleVariable<int> pLocalized;
+  ParticleVariable<double>  pPlasticStrain, pDamage,pPorosity, pStrainRate,
+                            pPlasticStrainRate;
+  ParticleVariable<int>     pLocalized;
 
   constParticleVariable<Matrix3> o_Rotation;
-  constParticleVariable<double> o_PlasticStrain, o_Damage,o_Porosity, 
-    o_StrainRate, o_PlasticStrainRate;
-  constParticleVariable<int> o_Localized;
+  constParticleVariable<double>  o_PlasticStrain, o_Damage,o_Porosity, 
+                                 o_StrainRate, o_PlasticStrainRate;
+  constParticleVariable<int>     o_Localized;
 
   new_dw->allocateTemporary(pRotation,addset);
   new_dw->allocateTemporary(pPlasticStrain,addset);
