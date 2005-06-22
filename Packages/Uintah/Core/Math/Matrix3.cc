@@ -463,12 +463,12 @@ void Matrix3::polarDecomposition(Matrix3& U,
   if (!rightFlag) U = F*R.Transpose();
 
   // Set small values to zero
-  for (int i = 0 ; i < 3; ++i) {
-    for (int j = 0 ; j < 3; ++j) {
-      R(i,j) = (fabs(R(i,j)) > tolerance) ? R(i,j) : 0.0;
-      U(i,j) = (fabs(U(i,j)) > tolerance) ? U(i,j) : 0.0;
-    }
-  }
+  //for (int i = 0 ; i < 3; ++i) {
+  //  for (int j = 0 ; j < 3; ++j) {
+  //    R(i,j) = (fabs(R(i,j)) > tolerance) ? R(i,j) : 0.0;
+  //    U(i,j) = (fabs(U(i,j)) > tolerance) ? U(i,j) : 0.0;
+  //  }
+  //}
 }
 
 
