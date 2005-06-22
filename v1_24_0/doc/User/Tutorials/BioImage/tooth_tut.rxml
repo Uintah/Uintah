@@ -131,7 +131,7 @@ DEALINGS IN THE SOFTWARE.
       BioImage supports <firstterm>Dynamic Filters</firstterm>.
       Dynamic filters change data in some way.  Currently, BioImage
       supports Resample, Crop, Histogram, and Median Filtering.  
-      Filters can be added, modified, and removed at any time.  
+      These filters can be added, modified, and removed at any time.  
       Filters are added by pressing one of the filter buttons 
       located at the top of the Processing Pane, see item 1 
       in <xref linkend="fig.load"/>.
@@ -263,16 +263,16 @@ DEALINGS IN THE SOFTWARE.
 	Changes in the slice panes are reflected in the volume pane
 	(when it is displaying orthogonal slices).  Slices are
 	selected using slider controls or mouse actions.  <xref
-	linkend="fig.2dview"/> shows the saggital slice pane, its
+	linkend="fig.2dview"/> shows the sagittal slice pane, its
 	slider, and cross-hairs controls.
       </para>
 
       <para>
 	Initially, the slice plane is placed at the center of the
 	volume, which, for the tooth dataset, corresponds to the
-	51<superscript>st</superscript> slice along the saggital axis.
-	Move the saggital slice plane slider to the right until it
-	reads 68. The 68th saggital slice is now displayed in both the
+	51<superscript>st</superscript> slice along the sagittal axis.
+	Move the sagittal slice plane slider to the right until it
+	reads 68. The 68th sagittal slice is now displayed in both the
 	slice and volume panes, as shown in <xref
 	linkend="fig.68saggitalBoth"/>.
       </para>
@@ -306,10 +306,10 @@ DEALINGS IN THE SOFTWARE.
       </figure>
 
       <figure id="fig.68saggitalBoth">
-	<title>Slice plane slider moved to 68th saggital slice</title>
+	<title>Slice plane slider moved to 68th sagittal slice</title>
 	<mediaobject>
 	  <textobject>
-	    <phrase>Slice plane slider moved to 68th saggital slice.</phrase>
+	    <phrase>Slice plane slider moved to 68th sagittal slice.</phrase>
 	  </textobject>
 	  <imageobject>
 	    <imagedata fileref="Figures/68saggitalBoth.eps" align="center" format="EPS"/>
@@ -658,7 +658,7 @@ DEALINGS IN THE SOFTWARE.
 	</mediaobject>
       </figure>
       <para>
-	Using your left mouse button, color the area inside of the top of the tooth as displayed inside of the saggital
+	Using your left mouse button, color the area inside of the top of the tooth as displayed inside of the sagittal
 	viewer. You should now see the blue color applied to the volume as shown in <xref linkend="fig.pb_painted_enamel"/>.
       </para>
       <figure id="fig.pb_painted_enamel">
@@ -677,7 +677,7 @@ DEALINGS IN THE SOFTWARE.
       </figure>
       <para>
 	Now add another paint layer, and set its color to red. Again, using the left mouse button color the area
-	inside of the root display in the saggital viewer. You should now see the root colored in red and the
+	inside of the root display in the sagittal viewer. You should now see the root colored in red and the
 	top of the tooth colored in blue. 
       </para>
     </section>
@@ -723,7 +723,7 @@ DEALINGS IN THE SOFTWARE.
 
       <para>
 	The  transfer function editor displays a histogram
-	<xref linkend="fig.histo"/> of data values.
+	of data values as shown in <xref linkend="fig.histo"/>.
       </para>
 
      <para>
@@ -775,7 +775,7 @@ DEALINGS IN THE SOFTWARE.
       <para>
 	Turn off the current widgets by clicking the corresponding 
 	On checkboxes. The tooth's root is visualized by adding a 
-	rectangle over them first material area, as shown in <xref
+	rectangle over the first material area, as shown in <xref
 	linkend="fig.root_ren_tf"/>. To do this, click the 
 	<guibutton>Add Rectangle</guibutton> button in the Editor UI.
       </para>
