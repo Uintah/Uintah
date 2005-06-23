@@ -966,7 +966,7 @@ bool MatlabBundle::save_input_matrices()
 			if (handle.get_rep() == 0) 
 			{
 				// we do not need the old file any more so delete it
-				input_bundle_matfile_[p].clear();
+                                input_bundle_matfile_[p] = "";
 				continue;
 			}
 			// if the data as the same before

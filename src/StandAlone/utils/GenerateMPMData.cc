@@ -55,6 +55,12 @@ vector<string> prename;
 
 const unsigned int max_lines = 25000000;
 
+inline double
+round(double var)
+{
+  return ((var)>=0?(int)((var)+0.5):(int)((var)-0.5));
+}
+
 template<class Fld>
 void
 write_MPM(FieldHandle& field_h, const string &outdir)
@@ -81,7 +87,7 @@ write_MPM(FieldHandle& field_h, const string &outdir)
       fname << nm << "-"; 
       fname.fill('0');
       fname.width(4);
-      fname << right << 1;
+      fname << ios::right << 1;
       string nm1;
       fname >> nm1;
       files->push_back(new ofstream(nm1.c_str(), ios::out));
@@ -94,10 +100,6 @@ write_MPM(FieldHandle& field_h, const string &outdir)
   Point minb, maxb;
   minb = bbox.min();
   maxb = bbox.max();
-
-#if defined(__sgi)
-#  define round(var) ((var)>=0?(int)((var)+0.5):(int)((var)-0.5))
-#endif
 
   int sizex = (int)(round(maxb.x() - minb.x()) / max_vol_s);
   int sizey = (int)(round(maxb.y() - minb.y()) / max_vol_s);
@@ -123,7 +125,7 @@ write_MPM(FieldHandle& field_h, const string &outdir)
 	fname << prename[val] << "-";
 	fname.fill('0');
 	fname.width(4);
-	fname << right << ++num_files[val];
+	fname << ios::right << ++num_files[val];
 	fname >> nm;
 	delete (*files)[val];
 	(*files)[val] = new ofstream(nm.c_str(), ios::out);
