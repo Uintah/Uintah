@@ -39,6 +39,7 @@
 #include <SCIRun/SCIRunErrorHandler.h>
 #include <Core/Util/sci_system.h>
 #include <Core/OS/Dir.h>
+#include <Core/Util/Environment.h>
 
 #ifdef __sgi
 #define IRIX
@@ -59,7 +60,7 @@ using namespace std;
 
 #define COMPILEDIR std::string("on-the-fly-libs")
 
-string readMetaFile(string component, string ext) {
+string readMetaFile(string componentN, string extN) {
   // Initialize the XML4C system
   try {
     XMLPlatformUtils::Initialize();
@@ -68,62 +69,84 @@ string readMetaFile(string component, string ext) {
 	      << StrX(toCatch.getMessage()) << endl;
     return "";
   }
-  
-  string component_path ="../src/CCA/Components/xml:../src/CCA/Components/BabelTest/xml";
-  string file;
-  while(component_path != ""){
-    unsigned int firstColon = component_path.find(':');
-    string dir;
-    if(firstColon < component_path.size()){
-      dir=component_path.substr(0, firstColon);
-      component_path = component_path.substr(firstColon+1);
-    } else {
-      dir = component_path;
-      component_path="";
-    }
+ 
+  std::string srcdir(SCIRun::sci_getenv("SCIRUN_SRCDIR"));
+ 
+  std::vector<std::string> sArray;
+  sArray.resize(2);
+  sArray[0] = srcdir + "/CCA/Components/xml";
+  sArray[1] = srcdir + "/CCA/Components/BabelTest/xml";
 
-    file = dir+"/"+component+"."+ext;
-    struct stat s;
-    if( stat( file.c_str(), &s ) == -1 ) {
-      file = "";
-    } else {
-      break;
+  for (std::vector<std::string>::iterator it = sArray.begin(); it != sArray.end(); it++) {
+    Dir d(*it);
+    std::vector<std::string> files;
+    d.getFilenamesBySuffix(".xml", files);
+    
+    for(std::vector<std::string>::iterator iter = files.begin();
+        iter != files.end(); iter++) {
+      std::string& xmlfile = *iter;
+      std::cerr << "Auto Bridge: Looking at file" << xmlfile << std::endl;
+      std::string file(*it+"/"+xmlfile);
+                                                                                                                                      
+      // Instantiate the DOM parser.
+      XercesDOMParser parser;
+      parser.setDoValidation(false);
+  
+      SCIRunErrorHandler handler;
+      parser.setErrorHandler(&handler);
+      
+      try {
+	parser.parse(file.c_str());
+      }  catch (const XMLException& toCatch) {
+	std::cerr << "Error during parsing: '" <<
+	  file << "'\nException message is:  " <<
+	  xmlto_string(toCatch.getMessage()) << '\n';
+	handler.foundError=true;
+	return "";
+      }
+      
+      DOMDocument* document = parser.getDocument();
+      
+      // Get a list of the library nodes.  Traverse the list and read component
+      // elements at each list node.
+      DOMNodeList* libraries
+	= document->getElementsByTagName(to_xml_ch_ptr("library"));
+      
+      for (unsigned int i = 0; i < libraries->getLength(); i++) {
+	DOMElement *library = static_cast<DOMElement *>(libraries->item(i));
+	// Read the library name
+	std::string library_name(to_char_ptr(library->getAttribute(to_xml_ch_ptr("name"))));
+	
+	// Get the list of components.
+	DOMNodeList* comps
+	  = library->getElementsByTagName(to_xml_ch_ptr("component"));
+	for (unsigned int j = 0; j < comps->getLength(); j++) {
+	  // Read the component name
+	  DOMElement *component = static_cast<DOMElement *>(comps->item(j));
+	  std::string
+	    component_name(to_char_ptr(component->getAttribute(to_xml_ch_ptr("name"))));
+
+std::cerr << "comparing " << componentN << " " << component_name << "\n";
+	  if(componentN != component_name) {
+	    continue;
+	  }
+	  
+	  DOMNodeList* ifaces 
+	    = library->getElementsByTagName(to_xml_ch_ptr("interface"));
+	  if(ifaces->getLength() != 1) {
+	    std::cerr << "Error during parsing: '" << file << "'\n";
+	    return "";
+	  }                 
+	  DOMElement *interface = static_cast<DOMElement *>(ifaces->item(0));
+	  std::string
+	    file_name(to_char_ptr(interface->getAttribute(to_xml_ch_ptr("file"))));
+          std::string wholename(srcdir + "/" + file_name); 
+	  return wholename; 
+	}
+      }
     }
-  } 
-  if(file == "") { cerr << "Meta file does not exist\n"; return ""; }
-  
-  // Instantiate the DOM parser.
-  XercesDOMParser parser;
-  parser.setDoValidation(false);
-  
-  SCIRunErrorHandler handler;
-  parser.setErrorHandler(&handler);
-  
-  try {
-    parser.parse(file.c_str());
-  }  catch (const XMLException& toCatch) {
-    std::cerr << "Error during parsing: '" <<
-      file << "'\nException message is:  " <<
-      xmlto_string(toCatch.getMessage()) << '\n';
-    handler.foundError=true;
-    return "";
   }
-  
-  DOMDocument* doc = parser.getDocument();
-  DOMNodeList* list = doc->getElementsByTagName(to_xml_ch_ptr("sidl"));
-  int nlist = list->getLength();
-  if(nlist == 0){
-    cerr << "WARNING: file " << file << " does not contain a sidl file reference!\n";
-    return "";
-  }
-  DOMNode* d = list->item(0);
-  DOMNode* name = d->getAttributes()->getNamedItem(to_xml_ch_ptr("source"));
-  if (name==0) {
-    cout << "ERROR: Component has no name." << endl;
-    return "";
-  } else {
-    return (to_char_ptr(name->getNodeValue()));
-  } 
+  return "";
 }
 
 AutoBridge::AutoBridge() 
@@ -151,11 +174,11 @@ std::string AutoBridge::genBridge(std::string modelFrom, std::string cFrom, std:
   string cCCA; //Used so that we read xml data only from components that have .cca files 
  
   if(modelFrom == "babel") {
-    cFrom = cFrom.substr(0,cFrom.find(".")); //Babel xxx.Com 
     if(modelTo != "cca") cCCA = cFrom;
+    cFrom = cFrom.substr(0,cFrom.find(".")); //Babel xxx.Com 
   } else if(modelFrom == "cca") {
-    cFrom = cFrom.substr(cFrom.find(".")+1); //CCA SCIRun.xxx
     cCCA = cFrom;
+    cFrom = cFrom.substr(cFrom.find(".")+1); //CCA SCIRun.xxx
   } else if(modelFrom == "dataflow") {
     cFrom = cFrom.substr(cFrom.rfind(".")+1); //SCIRun.yyy.xxx
   } else if(modelFrom == "vtk") {
@@ -166,11 +189,11 @@ std::string AutoBridge::genBridge(std::string modelFrom, std::string cFrom, std:
   
 
   if(modelTo == "babel") {
-    cTo = cTo.substr(0,cTo.find(".")); //Babel xxx.Com 
     if(modelFrom != "cca") cCCA = cTo;
+    cTo = cTo.substr(0,cTo.find(".")); //Babel xxx.Com 
   } else if(modelTo == "cca") {
-    cTo = cTo.substr(cTo.find(".")+1); //CCA SCIRun.xxx
     cCCA = cTo;
+    cTo = cTo.substr(cTo.find(".")+1); //CCA SCIRun.xxx
   } else if(modelTo == "dataflow") {
     cTo = cTo.substr(cTo.rfind(".")+1); //SCIRun.yyy.xxx
   } else if(modelTo == "vtk") {
