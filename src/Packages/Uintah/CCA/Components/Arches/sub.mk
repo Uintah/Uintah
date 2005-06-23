@@ -63,7 +63,8 @@ PSELIBS := \
         Core/Util \
         Core/Thread \
 	Core/Exceptions \
-	Core/Geometry
+	Core/Geometry \
+	Core/Containers
 
 ifneq ($(HAVE_PETSC),)
 LIBS := $(LIBS) $(PETSC_LIBRARY) 
