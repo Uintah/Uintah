@@ -2596,7 +2596,7 @@ void MPMICE::coarsenVariableCC(const ProcessorGroup*,
       for(int i=0;i<finePatches.size();i++){
         const Patch* finePatch = finePatches[i];
         constCCVariable<T> fine_q_CC;
-        new_dw->get(fine_q_CC, variable, indx, finePatch, Ghost::AroundCells, 1);
+        new_dw->get(fine_q_CC, variable, indx, finePatch, Ghost::None, 0);
         IntVector fl(finePatch->getInteriorCellLowIndex());
         IntVector fh(finePatch->getInteriorCellHighIndex());
         IntVector cl(fineLevel->mapCellToCoarser(fl));
