@@ -96,7 +96,7 @@ void RigidMPM::scheduleComputeInternalForce(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls)
 {
-  if (!flags->doMPMOnThisLevel(getLevel(patches)))
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex()))
     return;
 
   Task* t = scinew Task("MPM::computeInternalForce",
@@ -125,7 +125,7 @@ void RigidMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
                                              const PatchSet* patches,
                                              const MaterialSet* matls)
 {
-  if (!flags->doMPMOnThisLevel(getLevel(patches)))
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex()))
     return;
 
   Task* t = scinew Task("MPM::solveEquationsMotion",
@@ -169,7 +169,7 @@ void RigidMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
                                                        const MaterialSet* matls)
 
 {
-  if (!flags->doMPMOnThisLevel(getLevel(patches)))
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex()))
     return;
 
   Task* t=scinew Task("MPM::interpolateToParticlesAndUpdate",
