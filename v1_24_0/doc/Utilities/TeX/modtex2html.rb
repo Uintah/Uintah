@@ -31,6 +31,8 @@
 # Translate latex version of module description to html
 #
 
+require 'fileutils'
+
 def findTreeTop(treetop="")
   if File.basename(Dir.pwd) == "src"
     treetop + ".."
@@ -207,7 +209,7 @@ def main()
   texFile = moduleName + ".tex"
   begin
     origTexFile = texFile + ".O"
-    File.rename(texFile, origTexFile)
+    FileUtils.copy(texFile, origTexFile)
     texUtils = treeTop() + "/doc/Utilities/TeX"
     ["sty", "tex", "perl"].each do |ext|
       File.symlink("#{texUtils}/scirun-doc.#{ext}", "scirun-doc.#{ext}")
