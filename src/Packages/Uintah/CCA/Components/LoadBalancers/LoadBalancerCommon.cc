@@ -272,53 +272,13 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid)
 	  if(d_neighbors.find(neighbor) == d_neighbors.end())
 	    d_neighbors.insert(neighbor);
 	}
-      }
-
-      if (d_myworld->myrank() == 0 && clusterDebug.active()) {
-        Patch::selectType n;
-        IntVector lowGhost, highGhost;
-        
-        // don't use computeVariableExtents here - in certain cases it may not 
-        // create a complete neighborhood.  
-        Patch::getGhostOffsets(Patch::CellBased, Ghost::AroundCells,
-                               maxGhost, lowGhost, highGhost);
-        
-        IntVector low(patch->getLowIndex(Patch::CellBased, IntVector(0,0,0)));
-        IntVector high(patch->getHighIndex(Patch::CellBased, IntVector(0,0,0)));
-        level->selectPatches(low-lowGhost, high+highGhost, n);
-        
-        // use only for the coarse-fine relationship
-        IntVector lowIndex = low-lowGhost, highIndex = high+highGhost;
-        
-
-        clusterDebug << "  INTRA-LEVEL communication for level " << l << endl;
-        clusterDebug << patch->getID() << " ";
-        for (int i = 0; i < n.size(); i++)
-          if (n[i]->getID() >= 0)
-            clusterDebug << n[i]->getID() << " ";
-        clusterDebug << endl;
-
-        clusterDebug << " TOTAL communication for level " << l << endl;
-
-        // add amr stuff - so the patch will know about coarsening and refining
-        if (l > 0) {
-          const LevelP& coarseLevel = level->getCoarserLevel();
-          coarseLevel->selectPatches(level->mapCellToCoarser(lowIndex), 
-                                     level->mapCellToCoarser(highIndex), n);
-          //          cout << d_myworld->myrank() << "  C: " << level->mapCellToCoarser(lowIndex) << " " << level->mapCellToCoarser(highIndex) << endl;
+        if (d_myworld->myrank() == 0 && clusterDebug.active()) {
+          clusterDebug << patch->getID() << " ";
+          for (int i = 0; i < n.size(); i++)
+            if (n[i]->getID() >= 0)
+              clusterDebug << n[i]->getID() << " ";
+          clusterDebug << endl;
         }
-        if (l < grid->numLevels()-1) {
-          const LevelP& fineLevel = level->getFinerLevel();
-          fineLevel->selectPatches(level->mapCellToFiner(lowIndex), 
-                                   level->mapCellToFiner(highIndex), n);
-          //          cout << d_myworld->myrank() << "  F: " << level->mapCellToFiner(lowIndex) << " " << level->mapCellToFiner(highIndex) << endl;
-        }
-        
-        clusterDebug << patch->getID() << " ";
-        for (int i = 0; i < n.size(); i++)
-          if (n[i]->getID() >= 0)
-            clusterDebug << n[i]->getID() << " ";
-        clusterDebug << endl;
       }
     }
   }
