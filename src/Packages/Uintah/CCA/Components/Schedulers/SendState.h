@@ -44,10 +44,9 @@ namespace Uintah {
     SendState();
     ~SendState();
     ParticleSubset* find_sendset(int dest, const Patch*, int matl, 
-                                 Ghost::GhostType gt = Ghost::None,
-                                 int numgc = 0, int dwid = 0) const;
+                                 IntVector low, IntVector high, int dwid = 0) const;
     void add_sendset(ParticleSubset* pset, int dest, const Patch*, int matl,  
-                     Ghost::GhostType gt = Ghost::None, int numgc = 0, int dwid = 0);
+                     IntVector low, IntVector high, int dwid = 0);
 
     void print();
   private:

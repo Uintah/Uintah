@@ -631,6 +631,11 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid, DataWarehouse* 
   if (lb)
     lb->restartInitialize(d_restartTimestepDoc, d_restartTimestepURL, grid);
 
+  // set here instead of the SimCont because we need the DW ID to be set 
+  // before saving particle subsets
+  dw->setID( timestep );
+    
+
   ASSERTL3(indices.size() == d_tstop.size());
   ASSERTL3(d_tsurl.size() == d_tstop.size());
 
