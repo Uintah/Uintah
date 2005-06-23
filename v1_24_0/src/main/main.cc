@@ -289,8 +289,8 @@ public:
       if (gui_->complete_command(buffer)) {
         buffer = gui_->eval(buffer);
         if (!buffer.empty()) buffer.append("\n");
-        transmitter_->putMessage(buffer+"scirun> ");
-        buffer.clear();
+        transmitter_->putMessage(buffer + "scirun> ");
+        buffer = "";
       } else {
         transmitter_->putMessage("scirun>> ");
       }

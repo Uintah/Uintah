@@ -1209,7 +1209,7 @@ EditColorMap2D::redraw(bool force_cmap_dirty, bool save_ppm)
     gui->unlock(); 
     return; 
   }
-  CHECK_OPENGL_ERROR()
+  CHECK_OPENGL_ERROR("dummy")
   if (force_cmap_dirty) cmap_dirty_ = true;
   if (select_widget()) cmap_dirty_ = true;
 
@@ -1282,7 +1282,7 @@ EditColorMap2D::redraw(bool force_cmap_dirty, bool save_ppm)
   
   ctx_->swap();
   ctx_->release();
-  CHECK_OPENGL_ERROR()
+  CHECK_OPENGL_ERROR("dummy")
   gui->unlock();
 }
 
