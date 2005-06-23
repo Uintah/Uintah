@@ -80,17 +80,21 @@ DEALINGS IN THE SOFTWARE.
       <li>Fix data wrapping problem when min/max do not match data in NrrdTextureBuilder.  See Bugzilla #2584 for details.</li>
       <li>Reset global state for orientation axis in the Viewer.  See Bugzilla #2668 for details.</li>
       <li>Copy properties from source into destination in DirectMapping.  See Bugzilla #2587 for details.</li>
+      <li>Writers (DataIO) - Writers no longer execute when Set button is pressed in the case of a non-existant file name.</li>
     </ul>
 
     <h2>Teem Modules (Category in parentheses)</h2>
     <ul>
       <li>Make min 'Window Width' be 1 instead of 0, 0 is an invalid UnuJhisto width.</li>
       <li>Fix crash bug if UnuJhisto min/max are the same value.</li>
+      <li>DicomNrrdReader (DataIO) - Reader now handles filenames with spaces in them.</li>
+      <li>Unu2op (UnuAtoM) - Add missing "exists" case.</li>
     </ul>
 
     <h2>Insight Modules (Category in parentheses)</h2>
     <ul>
-      <li></li>
+      <li>All generated modules (Filters) - Modified the check of the filter smart pointer to work with current CVS version of ITK (greater than 2.0).</li>
+      <li>ThresholdSegmentationLevelSetImageFilter (Filters) - Changed call to SetMaximumIterations to be SetNumberOfIterations due to depreciation.</li>
     </ul>
 
     <h2> BioPSE Modules (Category in parentheses)</h2>
@@ -113,6 +117,8 @@ DEALINGS IN THE SOFTWARE.
       <li>(BioImage) - Fixed crash volume rendering some abritrary sized volumes.</li>
       <li>(BioFEM) - Add a SolveMatrix convergence plot to the first panel of BioFEM.</li>
       <li>(BioFEM) - Add an option for enabling continuous isosurface updates to BioFEM.</li>
+      <li>(BioImage, BioFEM, BioTensor, FusionViewer) - When resizing the app, the viewer windows changes size first.</li>
+      <li>(BioImage, BioFEM, BioTensor, FusionViewer) - Withdraw panes when closed by user instead of destroying them so that they may be retrieved later using the new File->Restore Panes menu option (also Control-R).</li>
     </ul>
 
     <h1>Infrastructure Enhancements</h1>
@@ -155,7 +161,7 @@ DEALINGS IN THE SOFTWARE.
 
     <h1>Documentation</h1>
     <ul>
-      <li></li>
+      <li>Updated Powerapp tutorial images.</li>
     </ul>
 
     <h1>Data Sets</h1>
