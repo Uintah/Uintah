@@ -131,12 +131,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, const GridP& grid)
   }
 }
 
-bool MPMFlags::doMPMOnThisLevel(const Level* level)
+bool MPMFlags::doMPMOnLevel(int level) const
 {
-  return level->getIndex() >= d_minGridLevel && level->getIndex() <= d_maxGridLevel;
-}
-
-bool MPMFlags::doMPMOnThisLevel(const LevelP& level)
-{
-  return doMPMOnThisLevel(level.get_rep());
+  return level >= d_minGridLevel && level <= d_maxGridLevel;
 }

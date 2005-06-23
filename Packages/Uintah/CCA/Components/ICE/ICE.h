@@ -12,8 +12,8 @@
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/GridP.h>
+#include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
@@ -667,8 +667,7 @@ namespace Uintah {
       int d_iters_before_timestep_restart;
       double d_outer_iter_tolerance;
 
-      bool doICEOnThisLevel(const LevelP& level);
-      bool doICEOnThisLevel(const Level* level);
+      bool doICEOnLevel(int level);
       int d_minGridLevel;
       int d_maxGridLevel;
       

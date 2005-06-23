@@ -16,6 +16,7 @@
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/ModelMaker.h>
 
+#include <Packages/Uintah/Core/Grid/Variables/AMRInterpolate.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
@@ -444,20 +445,19 @@ void MPMICE::scheduleInterpolatePressCCToPressNC(SchedulerP& sched,
                                            const MaterialSubset* press_matl,
                                            const MaterialSet* matls)
 {
-  if(!d_mpm->flags->doMPMOnThisLevel(getLevel(patches)))
+  if(!d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex()))
     return;
   if (cout_doing.active())
     cout_doing << "MPMICE::scheduleInterpolatePressCCToPressNC" << endl;
   if(d_doAMR){
-    Task* t0=scinew Task("MPMICE::refinePressCC",
-                        this, &MPMICE::refinePressCC);
-
-    Ghost::GhostType  gac = Ghost::AroundCells;
-    t0->requires(Task::NewDW, Ilb->press_CCLabel, 0, Task::CoarseLevel, press_matl, Task::OutOfDomain, gac, 1);
-    t0->computes(Ilb->press_CCLabel);
-    t0->computes(MIlb->press_NCLabel, press_matl);
-    
-    sched->addTask(t0, patches, matls);
+    MaterialSet* press_matls = scinew MaterialSet();
+    vector<int> pm;
+    pm.push_back(0);
+    press_matls->addAll(pm);
+    press_matls->addReference();
+    scheduleRefineVariableCC(sched, patches, press_matls, Ilb->press_CCLabel);
+    if(press_matls->removeReference())
+      delete press_matls;
   }
     
 
@@ -470,6 +470,7 @@ void MPMICE::scheduleInterpolatePressCCToPressNC(SchedulerP& sched,
   
   sched->addTask(t, patches, matls);
 }
+
 //______________________________________________________________________
 //
 void MPMICE::scheduleInterpolatePAndGradP(SchedulerP& sched,
@@ -479,21 +480,14 @@ void MPMICE::scheduleInterpolatePAndGradP(SchedulerP& sched,
                                      const MaterialSubset* mpm_matl,
                                      const MaterialSet* all_matls)
 {
-  if(!d_mpm->flags->doMPMOnThisLevel(getLevel(patches)))
+  if(!d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex()))
     return;
 
   if (cout_doing.active())
     cout_doing << "MPMICE::scheduleInterpolatePAndGradP" << endl;
  
   if(d_doAMR){
-    Task* t0=scinew Task("MPMICE::refinePressCC",
-                        this, &MPMICE::refinePressCC);
-
-    Ghost::GhostType  gac = Ghost::AroundCells;
-    t0->requires(Task::NewDW, Ilb->press_force_CCLabel,  0, Task::CoarseLevel, mpm_matl, Task::OutOfDomain,  gac, 1);
-    t0->computes(Ilb->press_force_CCLabel);
-    
-    sched->addTask(t0, patches, all_matls);
+    scheduleRefineVariableCC(sched, patches, all_matls, Ilb->press_force_CCLabel);
   }
 
    Task* t=scinew Task("MPMICE::interpolatePAndGradP",
@@ -521,7 +515,7 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
                                     const MaterialSubset* one_matl,
                                     const MaterialSet* mpm_matls)
 {
-  if(d_mpm->flags->doMPMOnThisLevel(getLevel(patches))){
+  if(d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex())){
     if (cout_doing.active())
       cout_doing << "MPMICE::scheduleInterpolateNCToCC_0" << endl;
  
@@ -552,25 +546,12 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
   } else {
     if (cout_doing.active())
       cout_doing << "MPMICE::coarsenCC_0" << endl;
-    Task* t=scinew Task("MPMICE::coarsenCC_0",
-                        this, &MPMICE::coarsenCC_0);
-    t->requires(Task::NewDW, MIlb->cMassLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
-    t->requires(Task::NewDW, MIlb->cVolumeLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
-
-    t->requires(Task::NewDW, MIlb->vel_CCLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
-    t->requires(Task::NewDW, MIlb->temp_CCLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
-    t->requires(Task::NewDW, Ilb->sp_vol_CCLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
-    t->requires(Task::NewDW, Ilb->rho_CCLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
-
-    t->computes(MIlb->cMassLabel);
-    t->computes(MIlb->cVolumeLabel);
-
-    t->computes(MIlb->vel_CCLabel);
-    t->computes(MIlb->temp_CCLabel);
-    t->computes(Ilb->sp_vol_CCLabel);
-    t->computes(Ilb->rho_CCLabel); 
-   
-    sched->addTask(t, patches, mpm_matls);
+    scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->cMassLabel);
+    scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->cVolumeLabel);
+    scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->temp_CCLabel);
+    scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->vel_CCLabel);
+    scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->sp_vol_CCLabel);
+    scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->rho_CCLabel);
   }
 }
 
@@ -581,7 +562,7 @@ void MPMICE::scheduleComputeLagrangianValuesMPM(SchedulerP& sched,
                                    const MaterialSubset* one_matl,
                                    const MaterialSet* mpm_matls)
 {
-  if(d_mpm->flags->doMPMOnThisLevel(getLevel(patches))){
+  if(d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex())){
     if (cout_doing.active())
       cout_doing << "MPMICE::scheduleComputeLagrangianValuesMPM" << endl;
 
@@ -619,20 +600,10 @@ void MPMICE::scheduleComputeLagrangianValuesMPM(SchedulerP& sched,
     if (cout_doing.active())
       cout_doing << "MPMICE::scheduleComputeLagrangianValuesMPM" << endl;
 
-    /* interpolateNCToCC */
-
-    Task* t=scinew Task("MPMICE::coarsenLagrangianValuesMPM",
-                        this, &MPMICE::coarsenLagrangianValuesMPM);
-
-    t->requires( Task::NewDW,  Ilb->rho_CCLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
-    t->requires( Task::NewDW,  Ilb->mass_L_CCLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
-    t->requires( Task::NewDW,  Ilb->mom_L_CCLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
-    t->requires( Task::NewDW,  Ilb->int_eng_L_CCLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
-
-    t->modifies( Ilb->rho_CCLabel); 
-    t->computes( Ilb->mass_L_CCLabel);
-    t->computes( Ilb->mom_L_CCLabel);
-    t->computes( Ilb->int_eng_L_CCLabel);
+    scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->rho_CCLabel); // modifies
+    scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->mass_L_CCLabel);
+    scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->mom_L_CCLabel);
+    scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->int_eng_L_CCLabel);
   }
 }
 
@@ -642,25 +613,16 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
                                    const PatchSet* patches,
                                    const MaterialSet* mpm_matls)
 {
-  if(!d_mpm->flags->doMPMOnThisLevel(getLevel(patches)))
+  if(!d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex()))
     return;
 
   if (cout_doing.active())
     cout_doing << "MPMICE::scheduleInterpolateCCToNC" << endl;
 
   if(d_doAMR){
-    Task* t0=scinew Task("MPMICE::refineCC",
-                         this, &MPMICE::refineCC);
-
-    t0->requires(Task::NewDW, Ilb->mom_L_ME_CCLabel, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundCells, 1);
-    t0->requires(Task::NewDW, Ilb->eng_L_ME_CCLabel, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundCells, 1);
-    t0->requires(Task::NewDW, Ilb->sp_vol_src_CCLabel, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundCells, 1);
-
-    t0->computes(Ilb->mom_L_ME_CCLabel);
-    t0->computes(Ilb->eng_L_ME_CCLabel);
-    t0->computes(Ilb->sp_vol_src_CCLabel);
-      
-    sched->addTask(t0, patches, mpm_matls);
+    scheduleRefineVariableCC(sched, patches, mpm_matls, Ilb->mom_L_ME_CCLabel);
+    scheduleRefineVariableCC(sched, patches, mpm_matls, Ilb->eng_L_ME_CCLabel);
+    scheduleRefineVariableCC(sched, patches, mpm_matls, Ilb->sp_vol_src_CCLabel);
   }
 
 
@@ -694,7 +656,7 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
                                      const MaterialSubset* press_matl,
                                      const MaterialSet* all_matls)
 {
-  if(!d_ice->doICEOnThisLevel(getLevel(patches)))
+  if(!d_ice->doICEOnLevel(getLevel(patches)->getIndex()))
     return;
   Task* t = NULL;
   if (d_ice->d_RateForm) {     // R A T E   F O R M
@@ -776,7 +738,7 @@ void MPMICE::scheduleSolveEquationsMotion(SchedulerP& sched,
                                           const PatchSet* patches,
                                           const MaterialSet* matls)
 {
-  if(!d_mpm->flags->doMPMOnThisLevel(getLevel(patches)))
+  if(!d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex()))
     return;
   
   d_mpm->scheduleSolveEquationsMotion(sched,patches,matls);
@@ -979,43 +941,6 @@ void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
       }
     }
   }
-}
-
-//______________________________________________________________________
-//
-void MPMICE::refinePressCC(const ProcessorGroup*,
-                           const PatchSubset* patches,
-                           const MaterialSubset* ,
-                           DataWarehouse*,
-                           DataWarehouse* new_dw)
-{
-  cerr << "refinePressCC not finished\n";
-#if 0
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing<<"Doing refinePressCC on patch "<<patch->getID()
-                <<"\t\t MPMICE" << endl;
-    }
-
-    constCCVariable<double> pressCC;
-    NCVariable<double> pressNC;
-
-    Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(pressCC, Ilb->press_CCLabel, 0, patch, gac, 1);
-    new_dw->allocateAndPut(pressNC, MIlb->press_NCLabel, 0, patch);
-    pressNC.initialize(0.0);
-    
-    IntVector cIdx[8];
-    // Interpolate CC pressure to nodes
-    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-       patch->findCellsFromNode(*iter,cIdx);
-      for (int in=0;in<8;in++){
-        pressNC[*iter]  += .125*pressCC[cIdx[in]];
-      }
-    }
-  }
-#endif
 }
 
 //______________________________________________________________________
@@ -1259,157 +1184,6 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
   }  //patches
 }
 
-void MPMICE::coarsenCC_0(const ProcessorGroup*,
-                         const PatchSubset* patches,
-                         const MaterialSubset* ,
-                         DataWarehouse* old_dw,
-                         DataWarehouse* new_dw)
-{
-  cerr << "coarsenCC_0 not finished\n";
-#if 0
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing << "Doing coarsenCC_0 on patch "<< patch->getID()
-                 <<"\t\t\t MPMICE" << endl;
-    }
-
-    int numMatls = d_sharedState->getNumMPMMatls();
-    Vector dx = patch->dCell();
-    double cell_vol = dx.x()*dx.y()*dx.z(); 
-    Ghost::GhostType  gac = Ghost::AroundCells;
-    Ghost::GhostType  gn = Ghost::None;     
-    
-    constNCVariable<double> NC_CCweight;
-    old_dw->get(NC_CCweight, MIlb->NC_CCweightLabel,  0, patch, gac, 1);
-
-    for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int indx = mpm_matl->getDWIndex();
-      // Create arrays for the grid data
-      constNCVariable<double> gmass, gvolume, gtemperature, gSp_vol;
-      constNCVariable<Vector> gvelocity;
-      CCVariable<double> cmass, cvolume,Temp_CC, sp_vol_CC, rho_CC;
-      CCVariable<Vector> vel_CC;
-      constCCVariable<double> Temp_CC_ice, sp_vol_CC_ice;
-      constCCVariable<Vector> vel_CC_ice;
-
-      new_dw->allocateAndPut(cmass,    MIlb->cMassLabel,     indx, patch);  
-      new_dw->allocateAndPut(cvolume,  MIlb->cVolumeLabel,   indx, patch);  
-      new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,    indx, patch);  
-      new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,   indx, patch);  
-      new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel, indx, patch); 
-      new_dw->allocateAndPut(rho_CC,    Ilb->rho_CCLabel,    indx, patch);
-      
-      double rho_orig = mpm_matl->getInitialDensity();
-      double very_small_mass = d_TINY_RHO * cell_vol;
-      cmass.initialize(very_small_mass);
-      cvolume.initialize( very_small_mass/rho_orig);
-         
-      new_dw->get(gmass,        Mlb->gMassLabel,        indx, patch,gac, 1);
-      new_dw->get(gvolume,      Mlb->gVolumeLabel,      indx, patch,gac, 1);
-      new_dw->get(gvelocity,    Mlb->gVelocityLabel,    indx, patch,gac, 1);
-      new_dw->get(gtemperature, Mlb->gTemperatureLabel, indx, patch,gac, 1);
-      new_dw->get(gSp_vol,      Mlb->gSp_volLabel,      indx, patch,gac, 1);
-      old_dw->get(sp_vol_CC_ice,Ilb->sp_vol_CCLabel,    indx, patch,gn, 0); 
-      old_dw->get(Temp_CC_ice,  MIlb->temp_CCLabel,     indx, patch,gn, 0);
-      old_dw->get(vel_CC_ice,   MIlb->vel_CCLabel,      indx, patch,gn, 0);
-      IntVector nodeIdx[8];
-      
-      //---- P R I N T   D A T A ------ 
-#if 0
-      if(switchDebug_InterpolateNCToCC_0) {
-        ostringstream desc;
-        desc<< "TOP_MPMICE::interpolateNCToCC_0_mat_"<<indx<<"_patch_"
-            <<  patch->getID();
-        printData(     indx, patch, 1,desc.str(), "gmass",       gmass);
-        printData(     indx, patch, 1,desc.str(), "gvolume",     gvolume);
-        printData(     indx, patch, 1,desc.str(), "gtemperatue", gtemperature);
-        printNCVector( indx, patch, 1,desc.str(), "gvelocity", 0, gvelocity);
-      }
-#endif 
-      //__________________________________
-      //  compute CC Variables
-      for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
-        IntVector c = *iter;
-        patch->findNodesFromCell(*iter,nodeIdx);
- 
-        double Temp_CC_mpm = 0.0;  
-        double sp_vol_mpm = 0.0;   
-        Vector vel_CC_mpm  = Vector(0.0, 0.0, 0.0);
-        
-        for (int in=0;in<8;in++){
-          double NC_CCw_mass = NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
-          cmass[c]    += NC_CCw_mass;
-          cvolume[c]  += NC_CCweight[nodeIdx[in]]  * gvolume[nodeIdx[in]];
-          sp_vol_mpm  += gSp_vol[nodeIdx[in]]      * NC_CCw_mass;
-          vel_CC_mpm  += gvelocity[nodeIdx[in]]    * NC_CCw_mass;
-          Temp_CC_mpm += gtemperature[nodeIdx[in]] * NC_CCw_mass;
-        } 
-        double inv_cmass = 1.0/cmass[c];
-        vel_CC_mpm  *= inv_cmass;    
-        Temp_CC_mpm *= inv_cmass;
-        sp_vol_mpm  *= inv_cmass;
-        
-        //__________________________________
-        // set *_CC = to either vel/Temp_CC_ice or vel/Temp_CC_mpm
-        // depending upon if there is cmass.  You need
-        // a well defined vel/temp_CC even if there isn't any mass
-        // If you change this you must also change 
-        // MPMICE::computeLagrangianValuesMPM
-        double one_or_zero = (cmass[c] - very_small_mass)/cmass[c];
-
-        Temp_CC[c]  =(1.0-one_or_zero)*Temp_CC_ice[c]  +one_or_zero*Temp_CC_mpm;
-//      This allows propagation of messed up solid matl velocities,
-//      and has thus been abandoned for now.
-//      vel_CC[c]   =(1.0-one_or_zero)*vel_CC_ice[c]   +one_or_zero*vel_CC_mpm;
-        vel_CC[c]   =vel_CC_mpm;
-        sp_vol_CC[c]=(1.0-one_or_zero)*sp_vol_CC_ice[c]+one_or_zero*sp_vol_mpm;
-        rho_CC[c]    = cmass[c]/cell_vol;
-      }
-      //  Set BC's
-      setBC(Temp_CC, "Temperature",patch, d_sharedState, indx, new_dw);
-      setBC(rho_CC,  "Density",    patch, d_sharedState, indx, new_dw);
-      setBC(vel_CC,  "Velocity",   patch, d_sharedState, indx, new_dw);
-      //  Set if symmetric Boundary conditions
-      setBC(cmass,    "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
-      setBC(cvolume,  "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
-      setBC(sp_vol_CC,"set_if_sym_BC",patch, d_sharedState, indx, new_dw); 
-      
-     //---- P R I N T   D A T A ------
-     if(switchDebug_InterpolateNCToCC_0) {
-        ostringstream desc;
-        desc<< "BOT_MPMICE::interpolateNCToCC_0_Mat_"<< indx <<"_patch_"
-            <<  patch->getID();
-        d_ice->printData(   indx, patch, 1,desc.str(), "sp_vol",    sp_vol_CC); 
-        d_ice->printData(   indx, patch, 1,desc.str(), "cmass",     cmass);
-        d_ice->printData(   indx, patch, 1,desc.str(), "cvolume",   cvolume);
-        d_ice->printData(   indx, patch, 1,desc.str(), "Temp_CC",   Temp_CC);
-        d_ice->printData(   indx, patch, 1,desc.str(), "rho_CC",    rho_CC);
-        d_ice->printVector( indx, patch, 1,desc.str(), "vel_CC", 0, vel_CC);
-      }
-      //---- B U L L E T   P R O O F I N G------
-      IntVector neg_cell;
-      ostringstream warn;
-      if (!d_ice->areAllValuesPositive(Temp_CC, neg_cell)) {
-        warn <<"ERROR MPMICE::interpolateNCToCC_0, mat "<< indx <<" cell "
-             << neg_cell << " Temp_CC " << Temp_CC[neg_cell] << "\n ";
-        throw InvalidValue(warn.str());
-      }
-      if (!d_ice->areAllValuesPositive(rho_CC, neg_cell)) {
-        warn <<"ERROR MPMICE::interpolateNCToCC_0, mat "<< indx <<" cell "
-             << neg_cell << " rho_CC " << rho_CC[neg_cell]<< "\n ";
-        throw InvalidValue(warn.str());
-      }
-      if (!d_ice->areAllValuesPositive(sp_vol_CC, neg_cell)) {
-        warn <<"ERROR MPMICE::interpolateNCToCC_0, mat "<< indx <<" cell "
-             << neg_cell << " sp_vol_CC " << sp_vol_CC[neg_cell]<<"\n ";
-        throw InvalidValue(warn.str());
-      } 
-    }
-  }  //patches
-#endif
-}
 //______________________________________________________________________
 //
 void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
@@ -1907,118 +1681,6 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       }
     }  
   }  //patches
-}
-
-void MPMICE::refineCC(const ProcessorGroup*,
-                      const PatchSubset* patches,
-                      const MaterialSubset* ,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw)
-{ 
-  cerr << "MPMICE::refineCC not finished\n";
-#if 0
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing << "Doing interpolateCCToNC on patch "<< patch->getID()
-                 <<"\t\t\t MPMICE" << endl;
-    }
-
-    //__________________________________
-    // This is where I interpolate the CC 
-    // changes to NCs for the MPMMatls
-    int numMPMMatls = d_sharedState->getNumMPMMatls();
-
-    delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label());
-
-    for (int m = 0; m < numMPMMatls; m++) {
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int indx = mpm_matl->getDWIndex();
-      NCVariable<Vector> gacceleration, gvelocity;
-      NCVariable<double> dTdt_NC;
-
-      constCCVariable<double> mass_L_CC;
-      constCCVariable<Vector> mom_L_ME_CC, old_mom_L_CC;
-      constCCVariable<double> eng_L_ME_CC, old_int_eng_L_CC; 
-      
-      new_dw->getModifiable(gvelocity,    Mlb->gVelocityStarLabel,indx,patch);
-      new_dw->getModifiable(gacceleration,Mlb->gAccelerationLabel,indx,patch);
-                  
-      Ghost::GhostType  gac = Ghost::AroundCells;
-      new_dw->get(old_mom_L_CC,    Ilb->mom_L_CCLabel,       indx,patch,gac,1);
-      new_dw->get(old_int_eng_L_CC,Ilb->int_eng_L_CCLabel,   indx,patch,gac,1);
-      new_dw->get(mass_L_CC,       Ilb->mass_L_CCLabel,      indx,patch,gac,1);
-      new_dw->get(mom_L_ME_CC,     Ilb->mom_L_ME_CCLabel,    indx,patch,gac,1);
-      new_dw->get(eng_L_ME_CC,     Ilb->eng_L_ME_CCLabel,    indx,patch,gac,1);
-
-      double cv = mpm_matl->getSpecificHeat();     
-
-      new_dw->allocateAndPut(dTdt_NC,     Mlb->dTdt_NCLabel,    indx, patch);
-      dTdt_NC.initialize(0.0);
-      IntVector cIdx[8];
-      Vector dvdt_tmp;
-      double dTdt_tmp;
-      //__________________________________
-      //  Take care of momentum and specific volume source
-     if(!d_rigidMPM){
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
-        patch->findCellsFromNode(*iter,cIdx);
-        for(int in=0;in<8;in++){
-          dvdt_tmp  = (mom_L_ME_CC[cIdx[in]] - old_mom_L_CC[cIdx[in]])
-                    / (mass_L_CC[cIdx[in]] * delT); 
-          gvelocity[*iter]     +=  dvdt_tmp*.125*delT;
-          gacceleration[*iter] +=  dvdt_tmp*.125;
-        }
-      }
-     }    
-      
-      //__________________________________
-      //  E Q  F O R M
-      if (d_ice->d_EqForm){
-        for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
-         patch->findCellsFromNode(*iter,cIdx);
-         for(int in=0;in<8;in++){
-                         // eng_L_ME = internal energy
-            dTdt_tmp  = ( eng_L_ME_CC[cIdx[in]] - old_int_eng_L_CC[cIdx[in]])
-                      / (mass_L_CC[cIdx[in]] * cv * delT);
-            dTdt_NC[*iter]  +=  dTdt_tmp*.125;
-          }
-        } 
-      }
-      //__________________________________
-      //   R A T E   F O R M
-      if (d_ice->d_RateForm){
-        double KE, int_eng_L_ME;
-        Vector vel_CC;
-      
-        for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
-          patch->findCellsFromNode(*iter,cIdx);
-          for(int in=0;in<8;in++){
-            // convert total energy to internal energy
-            vel_CC = mom_L_ME_CC[cIdx[in]]/mass_L_CC[cIdx[in]];
-            KE = 0.5 * mass_L_CC[cIdx[in]] * vel_CC.length() * vel_CC.length();
-            int_eng_L_ME = eng_L_ME_CC[cIdx[in]] - KE;
-
-            dTdt_tmp  = ( int_eng_L_ME - old_int_eng_L_CC[cIdx[in]])
-                        / (mass_L_CC[cIdx[in]] * cv * delT); 
-            dTdt_NC[*iter]   +=  dTdt_tmp*.125;
-          }
-        }
-      }
-  
-      //---- P R I N T   D A T A ------ 
-      if(switchDebug_InterpolateCCToNC) {
-        ostringstream desc;
-        desc<< "BOT_MPMICE::interpolateCCToNC_mat_"<< indx<<"_patch_"
-            <<patch->getID();                   
-        printData(    indx,patch, 1,desc.str(), "dTdt_NC",     dTdt_NC);
-        printNCVector(indx,patch, 1,desc.str(),"gvelocity",    0,gvelocity);
-        printNCVector(indx,patch, 1,desc.str(),"gacceleration",0,gacceleration);
-      }
-    }  
-  }  //patches
-#endif
 }
 
 /* --------------------------------------------------------------------- 
@@ -2798,8 +2460,170 @@ void MPMICE::scheduleInitialErrorEstimate(const LevelP& coarseLevel, SchedulerP&
 }
                                                
 void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
-                           SchedulerP& sched)
+                                   SchedulerP& sched)
 {
   d_ice->scheduleErrorEstimate(coarseLevel, sched);
   d_mpm->scheduleErrorEstimate(coarseLevel, sched);
+}
+
+ void MPMICE::scheduleRefineVariableCC(SchedulerP& sched,
+                                       const PatchSet* patches,
+                                       const MaterialSet* matls,
+                                       const VarLabel* variable)
+ {
+   ostringstream taskName;
+   taskName << "MPMICE::refineVariable(" << variable->getName() << ")";
+   Task* t=scinew Task(taskName.str().c_str(),
+                       this, &MPMICE::refineVariableCC, variable);
+
+   Ghost::GhostType  gac = Ghost::AroundCells;
+   t->requires(Task::NewDW, variable, 0, Task::CoarseLevel, 0, Task::NormalDomain, gac, 1);
+   t->computes(variable);
+   sched->addTask(t, patches, matls);
+ }
+
+ void MPMICE::scheduleCoarsenVariableCC(SchedulerP& sched,
+                                        const PatchSet* patches,
+                                        const MaterialSet* matls,
+                                        const VarLabel* variable)
+ {
+   ostringstream taskName;
+   taskName << "MPMICE::coarsenVariable(" << variable->getName() << ")";
+   Task* t;
+   switch(variable->typeDescription()->getSubType()->getType()){
+   case TypeDescription::double_type:
+     t=scinew Task(taskName.str().c_str(),
+                   this, &MPMICE::coarsenVariableCC<double>, variable);
+     break;
+   case TypeDescription::Vector:
+     t=scinew Task(taskName.str().c_str(),
+                   this, &MPMICE::coarsenVariableCC<Vector>, variable);
+     break;
+   default:
+     throw InternalError("Unknown variable type for coarsen");
+   }
+
+   t->requires(Task::NewDW, variable, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
+   t->computes(variable);
+   sched->addTask(t, patches, matls);
+ }
+
+//______________________________________________________________________
+//
+void MPMICE::refineVariableCC(const ProcessorGroup*,
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse*,
+                              DataWarehouse* new_dw,
+                              const VarLabel* variable)
+{
+  const Level* fineLevel = getLevel(patches);
+  const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
+  IntVector refineRatio(fineLevel->getRefinementRatio());
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* finePatch = patches->get(p);
+    
+    Level::selectType coarsePatches;
+    finePatch->getCoarseLevelPatches(coarsePatches);
+    
+    if (cout_doing.active()) {
+      cout_doing<<"Doing refineVariableCC (" << variable->getName() 
+                << ") on patch "<<finePatch->getID()
+                <<"\t\t MPMICE" << endl;
+    }
+
+    for(int m = 0;m<matls->size();m++){
+      int indx = matls->get(m);
+
+      CCVariable<double> fine_q_CC;
+      new_dw->allocateAndPut(fine_q_CC, variable, indx, finePatch);
+      
+      IntVector fl = finePatch->getCellLowIndex();
+      IntVector fh = finePatch->getCellHighIndex();
+
+      for(int i=0;i<coarsePatches.size();i++){
+        const Patch* coarsePatch = coarsePatches[i];
+        constCCVariable<double> coarse_q_CC;
+        new_dw->get(coarse_q_CC, variable, indx, coarsePatch,
+                    Ghost::AroundCells, 1);
+    
+        // Only interpolate over the intersection of the fine and coarse patches
+        // coarse cell 
+        IntVector cl = coarsePatch->getLowIndex();
+        IntVector ch = coarsePatch->getHighIndex();
+         
+        IntVector fl_tmp = coarseLevel->mapCellToFiner(cl);
+        IntVector fh_tmp = coarseLevel->mapCellToFiner(ch);
+    
+        IntVector lo = Max(fl, fl_tmp);
+        IntVector hi = Min(fh, fh_tmp);
+        linearInterpolation<double>(coarse_q_CC, coarseLevel, fineLevel,
+                                    refineRatio, lo, hi, fine_q_CC);
+      }
+    }
+  }
+}
+
+//______________________________________________________________________
+//
+template<typename T>
+void MPMICE::coarsenVariableCC(const ProcessorGroup*,
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse*,
+                               DataWarehouse* new_dw,
+                               const VarLabel* variable)
+{
+  const Level* coarseLevel = getLevel(patches);
+  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
+  cout_doing << "Doing coarsen \t\t\t\t\t\t MPMICE L-" <<fineLevel->getIndex();
+  
+  IntVector refineRatio(fineLevel->getRefinementRatio());
+  
+  for(int p=0;p<patches->size();p++){  
+    const Patch* coarsePatch = patches->get(p);
+    cout_doing << " patch " << coarsePatch->getID()<< endl;
+
+    for(int m = 0;m<matls->size();m++){
+      int indx = matls->get(m);
+
+      CCVariable<T> coarse_q_CC;
+      new_dw->allocateAndPut(coarse_q_CC, variable, indx, coarsePatch);
+
+      Level::selectType finePatches;
+      coarsePatch->getFineLevelPatches(finePatches);
+      for(int i=0;i<finePatches.size();i++){
+        const Patch* finePatch = finePatches[i];
+        constCCVariable<T> fine_q_CC;
+        new_dw->get(fine_q_CC, variable, indx, finePatch, Ghost::AroundCells, 1);
+        IntVector fl(finePatch->getInteriorCellLowIndex());
+        IntVector fh(finePatch->getInteriorCellHighIndex());
+        IntVector cl(fineLevel->mapCellToCoarser(fl));
+        IntVector ch(fineLevel->mapCellToCoarser(fh));
+    
+        cl = Max(cl, coarsePatch->getCellLowIndex());
+        ch = Min(ch, coarsePatch->getCellHighIndex());
+    
+        IntVector refinementRatio = fineLevel->getRefinementRatio();
+        double ratio = 1./(refinementRatio.x()*refinementRatio.y()*refinementRatio.z());
+        
+        T zero(0.0);
+        // iterate over coarse level cells
+        for(CellIterator iter(cl, ch); !iter.done(); iter++){
+          IntVector c = *iter;
+          T q_CC_tmp(zero);
+          IntVector fineStart = coarseLevel->mapCellToFiner(c);
+    
+          // for each coarse level cell iterate over the fine level cells   
+          for(CellIterator inside(IntVector(0,0,0),refinementRatio );
+              !inside.done(); inside++){
+            IntVector fc = fineStart + *inside;
+            q_CC_tmp += fine_q_CC[fc];
+          }
+          coarse_q_CC[c] =q_CC_tmp*ratio;
+        }
+      }
+    }
+  }
 }
