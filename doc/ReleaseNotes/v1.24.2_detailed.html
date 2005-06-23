@@ -76,12 +76,16 @@ DEALINGS IN THE SOFTWARE.
     <h2> SCIRun Modules (Category in parentheses) </h2>
     <ul>
       <li>EditColorMap (Visualization) - Fix GUI lockup when creating module.</li>
-      
+      <li>Disable the GenTitle bounding box on the branch.  See Bugzilla #2581 for details.</li>
+      <li>Fix data wrapping problem when min/max do not match data in NrrdTextureBuilder.  See Bugzilla #2584 for details.</li>
+      <li>Reset global state for orientation axis in the Viewer.  See Bugzilla #2668 for details.</li>
+      <li>Copy properties from source into destination in DirectMapping.  See Bugzilla #2587 for details.</li>
     </ul>
 
     <h2>Teem Modules (Category in parentheses)</h2>
     <ul>
-      <li></li>
+      <li>Make min 'Window Width' be 1 instead of 0, 0 is an invalid UnuJhisto width.</li>
+      <li>Fix crash bug if UnuJhisto min/max are the same value.</li>
     </ul>
 
     <h2>Insight Modules (Category in parentheses)</h2>
@@ -107,7 +111,8 @@ DEALINGS IN THE SOFTWARE.
     <ul>
       <li>(BioImage) - Paint layers now save correctly using the 'QuickSave' button in the Transfer Funciton Editor.</li>
       <li>(BioImage) - Fixed crash volume rendering some abritrary sized volumes.</li>
-
+      <li>(BioFEM) - Add a SolveMatrix convergence plot to the first panel of BioFEM.</li>
+      <li>(BioFEM) - Add an option for enabling continuous isosurface updates to BioFEM.</li>
     </ul>
 
     <h1>Infrastructure Enhancements</h1>
@@ -124,6 +129,18 @@ DEALINGS IN THE SOFTWARE.
       user/developer.  We believe we have caught and fixed all of the
       problems that the conversion script caused). </li>
       <li>Allow loading of .vff files with spaces in filenames.</li>
+      <li>Add support dense/sparse matrix multiplies.  See Bugzilla #2598 for details.</li>
+      <li>Allow multiple texture bricks on the video card. This is because Apple limits the texture size to be 128 even though many of these would fit on the card. This makes Apple volume rendering much faster.  See Bugzilla #2685 for details.</li>
+      <li>Fix DenseMatrix::getRowNonzeros(), contains bad data at zeros.</li>
+      <li>Merge DenseMatrix reader bug fix from trunk.  See Bugzilla #2599 for details.</li>
+      <li>Get merge default.settings fix from trunk.  See Bugzilla #2548 for details.</li>
+      <li>Use airStrdup for nrrd labels in Teem modules.  It's safer and handles NULL better.  This fixes some crashes there.</li>
+      <li>Update filetype selection when creating file dialog.  See Bugzilla #2554 for details.</li>
+      <li>Fix Matrix inverse/solve scramble of data.  See Bugzilla #2577 for details.</li>
+      <li>Fix copy onto default constructor crash in DenseMatrix.  It could crash on null pointer deletion.</li>
+      <li>Don't use <limits>, not defined everywhere.  (Fixes gcc 2.96 compilation.)</li>
+      <li>Use ios:: instead of ios_base::.  (Fixes gcc 2.96 compilation.)</li>
+      <li>Remove gratuitous typename from Core/Datatypes files.  Fixes gcc 2.96 compilation.)</li>
     </ul>
 
     <h1>Environment Variables</h1>
