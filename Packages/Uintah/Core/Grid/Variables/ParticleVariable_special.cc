@@ -50,11 +50,7 @@ using namespace std;
       delete d_pset;
 
 #if SCI_ASSERTION_LEVEL >= 2
-    IntVector lowIndex, highIndex;
-    pset->getPatch()->
-      computeVariableExtents(Patch::CellBased, IntVector(0,0,0),
-			     pset->getGhostType(), pset->numGhostCells(),
-			     lowIndex, highIndex);
+    IntVector lowIndex(pset->getLow()), highIndex(pset->getHigh());
     Box box = pset->getPatch()->getLevel()->getBox(lowIndex, highIndex);
 #endif
     
@@ -90,7 +86,7 @@ using namespace std;
 	}
       }
     }
-    ASSERT(dstiter+extra == pset->end());    
+    ASSERTEQ(dstiter+extra,pset->end());    
   }
 
 

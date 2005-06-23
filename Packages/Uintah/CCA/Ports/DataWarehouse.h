@@ -107,23 +107,24 @@ public:
 
 
   // Particle Variables
+  // changed way PS's were stored from ghost info to low-high range.
+  // we can still keep the getPS function API the same though to not annoy
+  // everybody -- BJW, May 05
   virtual ParticleSubset* createParticleSubset(particleIndex numParticles,
 					       int matlIndex, const Patch*,
-                                               Ghost::GhostType gt=Ghost::None,
-                                               int ngc = 0) = 0;
+                                               IntVector low = IntVector(0,0,0),
+                                               IntVector high = IntVector(0,0,0)) = 0;
   virtual void saveParticleSubset(ParticleSubset* psubset, 
                                   int matlIndex, const Patch*,
-                                  Ghost::GhostType gt=Ghost::None, 
-                                  int ngc=0) = 0;
+                                  IntVector low = IntVector(0,0,0),
+                                  IntVector high = IntVector(0,0,0)) = 0;
   virtual bool haveParticleSubset(int matlIndex, const Patch*,
-                                  Ghost::GhostType gt = Ghost::None, 
-                                  int ngc = 0) = 0;
+                                  IntVector low = IntVector(0,0,0),
+                                  IntVector high = IntVector(0,0,0)) = 0;
   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*,
-                                            Ghost::GhostType gt=Ghost::None, 
-                                            int ngc = 0) = 0;
-  virtual ParticleSubset* getDeleteSubset(int matlIndex, const Patch*,
-                                          Ghost::GhostType gt=Ghost::None, 
-                                          int ngc = 0) = 0;
+                                            IntVector low, IntVector high) = 0;
+  virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*) = 0;
+  virtual ParticleSubset* getDeleteSubset(int matlIndex, const Patch*) = 0;
   virtual map<const VarLabel*, ParticleVariableBase*>* getNewParticleState(int matlIndex, const Patch*) = 0;
   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*, 
 					    Ghost::GhostType, 

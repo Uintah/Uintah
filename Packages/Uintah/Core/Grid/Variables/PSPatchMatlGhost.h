@@ -3,7 +3,9 @@
 #define UINTAH_HOMEBREW_PSPatchMatlGhost_H
 
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Ghost.h>
+#include <Core/Geometry/IntVector.h>
+
+using SCIRun::IntVector;
 
 namespace Uintah {
 
@@ -41,19 +43,19 @@ namespace Uintah {
 
 struct PSPatchMatlGhost {
   PSPatchMatlGhost(const Patch* patch, int matl, 
-                   Ghost::GhostType gt = Ghost::None, int ngc = 0, int dwid = 0)
-    : patch_(patch), matl_(matl), gt_(gt), numGhostCells_(ngc), dwid_(dwid)
+                   IntVector low, IntVector high, int dwid)
+    : patch_(patch), matl_(matl), low_(low), high_(high), dwid_(dwid)
   {}
   PSPatchMatlGhost(const PSPatchMatlGhost& copy)
-    : patch_(copy.patch_), matl_(copy.matl_), gt_(copy.gt_), 
-       numGhostCells_(copy.numGhostCells_), dwid_(copy.dwid_)
+    : patch_(copy.patch_), matl_(copy.matl_), low_(copy.low_), 
+       high_(copy.high_), dwid_(copy.dwid_)
   {}
   
   bool operator<(const PSPatchMatlGhost& other) const;
   const Patch* patch_;
   int matl_;
-  Ghost::GhostType gt_;
-  int numGhostCells_;
+  IntVector low_;
+  IntVector high_;
   int dwid_;
 };  
 

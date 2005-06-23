@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
 #include <Packages/Uintah/Core/Util/RefCounted.h>
 #include <Packages/Uintah/Core/Grid/Ghost.h>
+#include <Core/Geometry/IntVector.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
@@ -12,6 +13,7 @@
 
 
 using std::ostream;
+using SCIRun::IntVector;
 
 namespace Uintah {
   class Patch;
@@ -53,12 +55,12 @@ WARNING
 		   particleIndex sizeHint);
     ParticleSubset(ParticleSet* pset, bool fill,
 		   int matlIndex, const Patch*,
-                   Ghost::GhostType gt, int numgc,
+                   IntVector low, IntVector high,
 		   particleIndex sizeHint);
     ParticleSubset(ParticleSet* pset, bool fill,
 		   int matlIndex, const Patch*,
-		   Ghost::GhostType gtype, int numGhostCells,
-		   const std::vector<const Patch*>& neighbors,
+		   IntVector low, IntVector high,
+                   const std::vector<const Patch*>& neighbors,
 		   const std::vector<ParticleSubset*>& subsets);
     ParticleSubset();
     ~ParticleSubset();
@@ -119,14 +121,14 @@ WARNING
       d_particles[idx] = value;
     }
 
-    int numGhostCells() const {
-      return d_numGhostCells;
+    IntVector getLow() const {
+      return d_low;
+    }
+    IntVector getHigh() const {
+      return d_high;
     }
     const Patch* getPatch() const {
       return d_patch;
-    }
-    Ghost::GhostType getGhostType() const {
-      return d_gtype;
     }
     int getMatlIndex() const {
       return d_matlIndex;
@@ -153,8 +155,7 @@ WARNING
 
     int d_matlIndex;
     const Patch* d_patch;
-    Ghost::GhostType d_gtype;
-    int d_numGhostCells;
+    IntVector d_low, d_high;
 
     std::vector<const Patch*> neighbors;
     std::vector<ParticleSubset*> neighbor_subsets;

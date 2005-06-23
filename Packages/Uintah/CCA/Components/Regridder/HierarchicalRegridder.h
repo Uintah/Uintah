@@ -63,25 +63,7 @@ class VarLabel;
     // patches a level can be divided into.
     const VarLabel* d_activePatchesLabel;
 
-    // to store a list of the subpatches in sorted order
-    class IntVectorCompare {
-    public:
-      bool operator() (const IntVector &a, const IntVector& b) const
-      {
-        // we want to sort IntVectors by x first then y then z
-        if (a.x() < b.x())
-          return true;
-        if (a.x() > b.x())
-          return false;
-        if (a.y() < b.y())
-          return true;
-        if (a.y() > b.y())
-          return false;
-        return a.z() < b.z();
-      }
-    };
-
-    typedef set<IntVector, IntVectorCompare> subpatchset;
+    typedef set<IntVector> subpatchset;
     vector<subpatchset> d_patches;    
   };
 
