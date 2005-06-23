@@ -204,8 +204,6 @@ namespace Uintah {
     // timestep.)
     d_scheduler->setGeneration( d_restartTimestep+1 );
     
-    d_scheduler->get_dw(1)->setID( d_restartTimestep );
-    
     // just in case you want to change the delt on a restart....
     if (d_timeinfo->override_restart_delt != 0) {
       double newdelt = d_timeinfo->override_restart_delt;

@@ -37,10 +37,19 @@ ParticleSubset::ParticleSubset()
 ParticleSubset::ParticleSubset(ParticleSet* pset, bool fill,
 			       int matlIndex, const Patch* patch,
 			       particleIndex sizeHint)
-    : d_pset(pset), d_matlIndex(matlIndex), d_patch(patch),
-      d_gtype(Ghost::None), d_numGhostCells(0)
+    : d_pset(pset), d_matlIndex(matlIndex), d_patch(patch)
 {
   init();
+
+  if (patch) {
+    d_low = patch->getLowIndex();
+    d_high = patch->getHighIndex();
+  }
+  else {
+    // don't matter...
+    d_low = IntVector(0,0,0);
+    d_high = IntVector(0,0,0);
+  }
   if(sizeHint != 0){
     d_allocatedSize = sizeHint;
     d_particles = scinew particleIndex[d_allocatedSize];
@@ -52,11 +61,11 @@ ParticleSubset::ParticleSubset(ParticleSet* pset, bool fill,
 
 ParticleSubset::ParticleSubset(ParticleSet* pset, bool fill,
 			       int matlIndex, const Patch* patch,
-			       Ghost::GhostType gtype, int numGhostCells,
+                               IntVector low, IntVector high,
 			       const vector<const Patch*>& neighbors,
 			       const vector<ParticleSubset*>& neighbor_subsets)
   : d_pset(pset), d_matlIndex(matlIndex), d_patch(patch),
-    d_gtype(gtype), d_numGhostCells(numGhostCells),
+    d_low(low), d_high(high),
     neighbors(neighbors), neighbor_subsets(neighbor_subsets)
 {
   init();
@@ -69,10 +78,10 @@ ParticleSubset::ParticleSubset(ParticleSet* pset, bool fill,
 
 ParticleSubset::ParticleSubset(ParticleSet* pset, bool fill,
                                int matlIndex, const Patch* patch,
-                               Ghost::GhostType gt, int numgc,
+                               IntVector low, IntVector high,
                                particleIndex /*sizeHint*/)
   : d_pset(pset), d_matlIndex(matlIndex), d_patch(patch),
-    d_gtype(gt), d_numGhostCells(numgc)
+    d_low(low), d_high(high)
 {
   init();
   d_pset->addReference();
@@ -191,8 +200,8 @@ ostream& operator<<(ostream& out, ParticleSubset& pset)
     out << &pset
         << " patch: " << pset.getPatch() << " (" << (pset.getPatch()?pset.getPatch()->getID():0)
         << "), matl "
-        << pset.getMatlIndex() << " ghost (" << pset.getGhostType() 
-        << "," << pset.numGhostCells() << ") " 
+        << pset.getMatlIndex() << " range [" << pset.getLow() 
+        << ", " << pset.getHigh() << ") " 
         << pset.numParticles() << " particles, " 
         << pset.getNeighbors().size() << " neighbors" ;
     return out;

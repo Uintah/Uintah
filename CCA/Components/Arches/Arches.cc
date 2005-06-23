@@ -904,7 +904,8 @@ Arches::readCCInitialCondition(const ProcessorGroup* ,
 	  IntVector currCell(colX-1, colY-1, colZ-1);
 
 	  fd >> uvel >> vvel >> wvel >> pres >> tmp;
-	  if ((currCell <= idxHi)&&(currCell >= idxLo)) {
+	  if ((currCell.x() <= idxHi.x() && currCell.y() <= idxHi.y() && currCell.z() <= idxHi.z()) &&
+              (currCell.x() >= idxLo.x() && currCell.y() >= idxLo.y() && currCell.z() >= idxLo.z())) {
 	    uVelocityCC[currCell] = 0.01*uvel;
 	    vVelocityCC[currCell] = 0.01*vvel;
 	    wVelocityCC[currCell] = 0.01*wvel;

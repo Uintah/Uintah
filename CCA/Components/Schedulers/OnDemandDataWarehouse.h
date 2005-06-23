@@ -113,15 +113,17 @@ public:
    // Particle Variables
    virtual ParticleSubset* createParticleSubset(particleIndex numParticles,
 						int matlIndex, const Patch*,
-                                                Ghost::GhostType=Ghost::None, int numgc=0);
+                                                IntVector low = IntVector(0,0,0),
+                                                IntVector high = IntVector(0,0,0));
    virtual void saveParticleSubset(ParticleSubset*,int matlIndex, const Patch*,
-				   Ghost::GhostType=Ghost::None, int numgc=0);
+                                   IntVector low = IntVector(0,0,0), IntVector high = IntVector(0,0,0));
    virtual bool haveParticleSubset(int matlIndex, const Patch*, 
-                                   Ghost::GhostType=Ghost::None, int numgc=0);
+                                   IntVector low = IntVector(0,0,0),
+                                   IntVector high = IntVector(0,0,0));
    virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*,
-                                             Ghost::GhostType=Ghost::None, int numgc=0);
-   virtual ParticleSubset* getDeleteSubset(int matlIndex, const Patch*,
-                                           Ghost::GhostType=Ghost::None, int numgc=0);
+                                            IntVector low, IntVector high);
+   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*);
+   virtual ParticleSubset* getDeleteSubset(int matlIndex, const Patch*);
    virtual map<const VarLabel*, ParticleVariableBase*>* getNewParticleState(int matlIndex, const Patch*);
    virtual ParticleSubset* getParticleSubset(int matlIndex,
 					     const Patch*, Ghost::GhostType, 
