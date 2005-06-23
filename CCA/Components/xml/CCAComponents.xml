@@ -31,10 +31,14 @@
 
 <metacomponentmodel name = "cca">
   <library name="libCCA_Components_Hello.so">
-    <component name="SCIRun.Hello" />
+    <component name="SCIRun.Hello">
+      <interface file="CCA/Components/Hello/StringPort.sidl" />
+    </component>
   </library>
   <library name="libCCA_Components_World.so">
-    <component name="SCIRun.World" />
+    <component name="SCIRun.World">
+      <interface file="CCA/Components/World/StringPort.sidl" />
+    </component>
   </library>
   <library name="libCCA_Components_Builder.so">
     <component name="SCIRun.Builder" />
