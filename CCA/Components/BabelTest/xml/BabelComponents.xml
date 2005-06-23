@@ -37,7 +37,9 @@
     <component name="hello.Com" />
   </library>
   <library name="libCCA_Components_BabelTest_NewPort.so">
-    <component name="NewPort.Com" />
+    <component name="NewPort.Com">
+      <interface file="CCA/Components/BabelTest/NewPort.sidl" /> 
+    </component>
   </library>
   <library name="libCCA_Components_BabelTest_PrinterComponent.so">
     <component name="PrinterComponent.Com" />
