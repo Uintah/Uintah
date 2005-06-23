@@ -4,7 +4,6 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/ParticleInterpolator.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
@@ -50,8 +49,7 @@ namespace Uintah {
 
     int         d_minGridLevel; // Only do MPM on this grid level
     int         d_maxGridLevel; // Only do MPM on this grid level
-    bool        doMPMOnThisLevel(const LevelP& level);
-    bool        doMPMOnThisLevel(const Level* level);
+    bool        doMPMOnLevel(int level) const;
     
     std::string d_erosionAlgorithm; // Algorithm to erode material points
 

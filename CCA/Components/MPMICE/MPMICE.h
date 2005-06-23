@@ -202,23 +202,11 @@ public:
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw);
 
-  void refineCC(const ProcessorGroup*,
-                const PatchSubset* patch,
-                const MaterialSubset* matls,
-                DataWarehouse* old_dw,
-                DataWarehouse* new_dw);
-
   void interpolatePressCCToPressNC(const ProcessorGroup*,
                                    const PatchSubset* patch,
                                    const MaterialSubset* matls,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw);
-
-  void refinePressCC(const ProcessorGroup*,
-                     const PatchSubset* patch,
-                     const MaterialSubset* matls,
-                     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw);
 
   void interpolatePAndGradP(const ProcessorGroup*,
                             const PatchSubset* patch,
@@ -302,6 +290,31 @@ public:
                                                
   virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                      SchedulerP& sched);
+
+  void scheduleRefineVariableCC(SchedulerP& sched,
+                                const PatchSet* patches,
+                                const MaterialSet* matls,
+                                const VarLabel* variable);
+
+  void scheduleCoarsenVariableCC(SchedulerP& sched,
+                                const PatchSet* patches,
+                                const MaterialSet* matls,
+                                const VarLabel* variable);
+
+  void refineVariableCC(const ProcessorGroup*,
+                        const PatchSubset* patch,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw,
+                        const VarLabel* variable);
+
+  template<typename T>
+    void coarsenVariableCC(const ProcessorGroup*,
+                           const PatchSubset* patch,
+                           const MaterialSubset* matls,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw,
+                           const VarLabel* variable);
 
 private:
   void setBC_rho_micro(const Patch* patch,

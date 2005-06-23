@@ -407,7 +407,7 @@ FractureMPM::scheduleTimeAdvance(const LevelP & level,
 			       SchedulerP   & sched,
 			       int, int ) // AMR Parameters
 {
-  if (!flags->doMPMOnThisLevel(level))
+  if (!flags->doMPMOnLevel(level))
     return;
 
   const PatchSet* patches = level->eachPatch();
