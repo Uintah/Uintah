@@ -26,19 +26,23 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-
 # This program determines if the doxygen generated documents are out
 # of date with respect to Doxyconfig.r and .c, .cc, and .h files in the
 # src side of the tree. Returns 0 if out of date and 1 if not.
 
 require 'find'
+require "../../Utilities/Publish/utils.rb"
 
 begin
   timestamp = File.mtime("html")
   exit(0) if File.mtime("Doxyconfig.r") > timestamp
   sourceMatch = /\.(c|cc|h)$/
-  Find.find("../../../src") do |f|
-    exit(0) if (f =~ sourceMatch) and (File.mtime(f) > timestamp)
+  srcRoot = "../../../src"
+  dirs = SrcTopLevel.dirs(srcRoot)
+  dirs.each do |d|
+    Find.find(srcRoot + "/" + d) do |f|
+      exit(0) if (f =~ sourceMatch) and (File.mtime(f) > timestamp)
+    end
   end
 rescue
   exit(0)

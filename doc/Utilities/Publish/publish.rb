@@ -28,13 +28,13 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-
 #
 # Update, build, and deliver scirun docs.
 #
 
 require 'net/smtp'
 require 'getoptlong'
+require 'utils'
 
 class CmdLine
   attr_reader :checkSyntax, :confFile
@@ -50,7 +50,7 @@ class CmdLine
     @confFile = "publish.conf"
     @checkSyntax = false
     checkSyntaxOpt = "--check-syntax"
-    opts = GetoptLong.new ([ checkSyntaxOpt, "-c", GetoptLong::NO_ARGUMENT ])
+    opts = GetoptLong.new([checkSyntaxOpt, "-c", GetoptLong::NO_ARGUMENT])
     opts.quiet = true;
     opts.each do |opt, arg|
       case opt
@@ -82,6 +82,16 @@ class Log
     if @log != nil
       @log.write(args)
       @log.flush
+    end
+  end
+  # Execute cmd and write its output to log.
+  def command(cmd)
+    IO.popen(cmd) do |p|
+      l = p.gets("\n")
+      while l != nil
+	write(l, "\n")
+	l = p.gets("\n")
+      end
     end
   end
 end
@@ -126,53 +136,129 @@ class ConfError < RuntimeError
 end
 
 class ConfHash < Hash
-  def ConfHash.[](*args)
-    super
+  def ivinit()
+    @iv = {}
   end
+  
+  # selfP() is used to retrieve conf value without triggering its
+  # iv.
+  alias selfP []
+
+  # Invoke iv on key before returning value.
+  def [](key)
+    @iv[key].call
+    selfP(key)
+  end
+
+  # Utilities for iv procs
   def confError(m)
     raise(ConfError, m)
   end
+
   def missing?(key)
     not has_key?(key)
   end
+
   def empty?(key)
-    self[key].size() == 0
+    selfP(key).size() == 0
   end
+
   def errorIfMissing(key)
     confError("Missing \"#{key}\"") if missing?(key)
   end
+
   def boolean?(key)
-    self[key].instance_of?(FalseClass) or self[key].instance_of?(TrueClass)
+    selfP(key).instance_of?(FalseClass) or selfP(key).instance_of?(TrueClass)
   end
+
   def string?(key)
-    self[key].instance_of?(String)
+    selfP(key).instance_of?(String)
   end
+
   def dest?(d)
     d.instance_of?(Dest)
   end
+
   def array?(key)
-    self[key].instance_of?(Array)
+    selfP(key).instance_of?(Array)
   end
+
   def errorIfNotBoolean(key)
     confError("Not boolean \"#{key}\"") if not boolean?(key)
   end
+
   def errorIfNotString(key)
     confError("Not string \"#{key}\"") if not string?(key)
   end
+
   def errorIfEmpty(key)
-    confError("Empty \"#{key}\"") if self[key].size() == 0
+    confError("Empty \"#{key}\"") if selfP(key).size() == 0
   end
+
   def errorIfNotDest(d)
     confError("Not a Dest \"#{d}\"") if not dest?(d)
   end
+
   def errorIfNotArray(key)
     confError("Not an array \"#{key}\"") if not array?(key)
   end
+
   def errorIfNotEnum(key, enum)
     enum.each do |v|
-      return if v == self[key]
+      return if v == selfP(key)
     end
-    confError("\"#{self[key]}\" is an invalid enumeration value")
+    confError("\"#{selfP(key)}\" is an invalid enumeration value")
+  end
+end
+
+class SCMCommand
+  def initialize()
+    @redirect = "2>&1"
+  end
+
+  def update(m)
+    $log.write("Updating ", m, "\n")
+    if FileTest.directory?(m)
+      Dir.chdir(m)
+      cmd = updateDirCmd() + " " + @redirect
+      $log.write(cmd, "\n")
+      $log.command(cmd)
+    elsif FileTest.file?(m)
+      Dir.chdir(File.dirname(m))
+      cmd = updateFileCmd() + " " + File.basename(m) + " " + @redirect
+      $log.write(cmd, "\n")
+      $log.command(cmd)
+    else
+      $log.write(m, " doesn't exist - ignoring\n")
+    end
+  end
+  def updateDirCmd()
+    raise("Oops from class SCMCommand::updateDirCmd: I'm not implemented!")
+  end
+  def updateFileCmd()
+    raise("Oops from class SCMCommand::updateFileCmd: I'm not implemented!")
+  end
+end
+
+class CVSCommand < SCMCommand
+  def initialize()
+    super
+    ENV["CVS_RSH"] = "ssh"
+  end
+  def updateDirCmd()
+    "cvs update -P -d"
+  end
+  def updateFileCmd()
+    "cvs update"
+  end
+end
+
+class SVNCommand < SCMCommand
+  def updateDirCmd()
+    "svn update"
+  end
+  def updateFileCmd()
+    "svn update"
   end
 end
 
@@ -185,38 +271,43 @@ class Dest < ConfHash
   Tar = "tar"
 
   def Dest.[](*args)
-    super(*args).init()
+    d = super
+    d.ivinit()
+    d
   end
 
-  def init()
-    self[Mach] = "." if missing?(Mach)
-    self[Tar] = "/usr/local/bin/tar" if missing?(Tar)
-    self
-  end
-
-  def validate
-    errorIfNotString(Mach)
-    @remote = self[Mach] != "."
-    if @remote == true
+  def ivinit()
+    super
+    @iv[Mach] = proc {
+      self[Mach] = "." if missing?(Mach)
+      errorIfNotString(Mach)
+    }
+    @iv[Tar] = proc {
+      self[Tar] = "/usr/local/bin/tar" if missing?(Tar)
+      errorIfNotString(Tar)
+    }
+    @iv[User] = proc {
       errorIfMissing(User)
       errorIfNotString(User)
-    end
-    errorIfMissing(Dir)
-    errorIfNotString(Dir)
-    errorIfNotString(Tar)
+    }
+    @iv[Dir] = proc {
+      errorIfMissing(Dir)
+      errorIfNotString(Dir)
+    }
+    @remote = self[Mach] != "."
   end
+
 end
 
 class Configuration < ConfHash
-  attr_reader :groupDirs
 
-  NO_UPDATE = 0
-  LOCAL_UPDATE = 1
-  REMOTE_UPDATE = 2
+  NO_UPDATE,  LOCAL_UPDATE, REMOTE_UPDATE = 0, 1, 2
   UPDATE_ENUM = [NO_UPDATE, LOCAL_UPDATE, REMOTE_UPDATE]
+  
+  SCM_CVS, SCM_SVN = 0, 1
+  SCM_ENUM = [SCM_CVS, SCM_SVN]
 
   LogFile = "logFile"
-  Group = "group"
   BuildDir = "buildDir"
   Tree = "treeToPublish"
   Wait = "wait"
@@ -242,129 +333,171 @@ class Configuration < ConfHash
   SMTPServer = "smtpServer"
   FromAddr = "fromAddr"
   ToAddr = "toAddr"
+  SCM = "scm"
+  SCM_Command = "scmCommand"
+  UpdateList = "updateList"
 
-  def Configuration.new(file)
-    eval("Configuration[#{File.new(file, 'r').read}]").init()
-  end
-
-  def Configuration.[](*args)
+  def ivinit()
     super
+    @iv[BuildDir] = proc {
+      self[BuildDir] = "." if missing?(BuildDir)
+      errorIfNotString(BuildDir)
+      self[BuildDir] = File.expand_path(selfP(BuildDir))
+    }
+    @iv[Wait] = proc {
+      self[Wait] = false if missing?(Wait)
+      errorIfNotBoolean(Wait)
+    }
+    @iv[CodeViews] = proc {
+      self[CodeViews] = false if missing?(CodeViews)
+      errorIfNotBoolean(CodeViews)
+    }
+    @iv[PwdOnly] = proc {
+      self[PwdOnly] = false if missing?(PwdOnly)
+      errorIfNotBoolean(PwdOnly)
+    }
+    @iv[Tree] = proc {
+      self[Tree] = "SCIRunDocs" if missing?(Tree)
+      errorIfNotString(Tree)
+    }
+    @iv[Dests] = proc {
+      errorIfMissing(Dests)
+      errorIfNotArray(Dests)
+      selfP(Dests).each { |d| errorIfNotDest(d) }
+      selfP(Dests).each { |d|
+	if d.remote
+	  @iv[SSHAgentFile].call
+	  break;
+	end
+      }
+    }
+    @iv[Deliver] = proc {
+      self[Deliver] = false if missing?(Deliver) or self[PwdOnly] == true
+      errorIfNotBoolean(Deliver)
+      @iv[Dests].call if selfP(Deliver) == true
+    }
+    @iv[Tarball] = proc {
+      self[Tarball] = false if missing?(Tarball) or self[PwdOnly] == true
+      errorIfNotBoolean(Tarball)
+    }
+    @iv[Build] = proc {
+      self[Build] = true if missing?(Build)
+      errorIfNotBoolean(Build)
+    }
+    @iv[ToolsPath] = proc {
+      self[ToolsPath] = "" if missing?(ToolsPath)
+      errorIfNotString(ToolsPath)
+    }
+    @iv[Make] = proc {
+      self[Make] = "/usr/bin/gnumake" if missing?(Make)
+      errorIfNotString(Make)
+    }
+    @iv[Update] = proc {
+      self[Update] = REMOTE_UPDATE if missing?(Update)
+      errorIfNotEnum(Update, UPDATE_ENUM)
+    }
+    @iv[LogFile] = proc {
+      self[LogFile] = $stderr if missing?(LogFile)
+    }
+    @iv[Clean] = proc {
+      self[Clean] = false if missing?(Clean)
+      errorIfNotBoolean(Clean)
+    }
+    @iv[DB_DTD] = proc {
+      self[DB_DTD] = "/usr/local/share/sgml/dtd/docbook/4.3/docbook.dtd" if missing?(DB_DTD)
+      errorIfNotString(DB_DTD)
+    }
+    @iv[SendMailOnError] = proc {
+      self[SendMailOnError] = false if missing?(SendMailOnError)
+      errorIfNotBoolean(SendMailOnError)
+      if selfP(SendMailOnError) == true
+	@iv[SMTPServer].call
+	@iv[FromAddr].call
+      end
+    }
+    @iv[SMTPServer]  = proc {
+      errorIfMissing(SMTPServer)
+      errorIfNotString(SMTPServer)
+    }
+    @iv[FromAddr]  = proc {
+      self[FromAddr] = self[ToAddr] if missing?(FromAddr)
+      errorIfNotString(FromAddr)
+    }
+    @iv[ToAddr]  = proc {
+      errorIfMissing(ToAddr)
+      errorIfNotString(ToAddr)
+    }
+    @iv[SSHAgentFile] = proc {
+      errorIfMissing(SSHAgentFile)
+      errorIfNotString(SSHAgentFile)
+    }
+    @iv[ClassPath]  = proc {
+      errorIfMissing(ClassPath)
+      errorIfNotString(ClassPath)
+    }
+    @iv[Stylesheet_XSL_HTML]  = proc {
+      errorIfMissing(Stylesheet_XSL_HTML)
+      errorIfNotString(Stylesheet_XSL_HTML)
+    }
+    @iv[Stylesheet_XSL_Print]  = proc {
+      errorIfMissing(Stylesheet_XSL_Print)
+      errorIfNotString(Stylesheet_XSL_Print)
+    }
+    @iv[Stylesheet_DSSSL_Print]  = proc {
+      errorIfMissing(XML_DCL)
+      errorIfNotString(Stylesheet_DSSSL_Print)
+    }
+    @iv[XML_DCL]  = proc {
+      errorIfMissing(XML_DCL)
+      errorIfNotString(XML_DCL)
+    }
+    @iv[Catalog]  = proc {
+      errorIfMissing(Catalog)
+      errorIfNotString(Catalog)
+    }
+    @iv[SCM] = proc {
+      self[SCM] = SCM_SVN if missing?(SCM)
+      errorIfNotEnum(SCM, SCM_ENUM)
+    }
+    @iv[SCM_Command] = proc {
+      case self[SCM]
+      when SCM_CVS
+	self[SCM_Command] = CVSCommand.new
+      when SCM_SVN
+	self[SCM_Command] = SVNCommand.new
+      end
+    }
   end
 
-  def init()
-    self[Group] = "BioPSE" if missing?(Group)
-    self[BuildDir] = "." if missing?(BuildDir)
-    self[BuildDir] = File.expand_path(self[BuildDir])
-    self[Wait] = false if missing?(Wait)
-    self[CodeViews] = false if missing?(CodeViews)
-    self[PwdOnly] = false if missing?(PwdOnly)
-    self[Tree] = "SCIRunDocs" if missing?(Tree)
-    self[Deliver] = false if missing?(Deliver) or self[PwdOnly] == true
-    self[Tarball] = false if missing?(Tarball) or self[PwdOnly] == true
-    self[Build] = true if missing?(Build)
-    self[ToolsPath] = "" if missing?(ToolsPath)
-    self[Make] = "/usr/bin/gnumake" if missing?(Make)
-    self[Update] = REMOTE_UPDATE if missing?(Update)
-    self[LogFile] = $stderr if missing?(LogFile)
-    self[Clean] = false if missing?(Clean)
-    self[DB_DTD] = "/usr/local/share/sgml/dtd/docbook/4.1/docbook.dtd" if missing?(DB_DTD)
-    self[SendMailOnError] = false if missing?(SendMailOnError)
-    
-    validate()
+  def initialize(file)
+    ivinit()
 
-    if self[PwdOnly] == false
-      initializeGroupsDB()
-      @groupDirs = @groupsDB[self[Group]]
+    eval("{#{File.new(file, 'r').read}}").each do |key, value|
+      self[key] = value;
     end
 
-    if self[Deliver] == true || self[Update] == REMOTE_UPDATE
+    @iv[SendMailOnError].call
+
+    remoteDelivery = false
+    if self[Deliver] == true
       self[Dests].each do |d|
 	if d.remote
-	  ENV["CVS_RSH"] = "ssh"
-	  begin
-	    File.open(self[SSHAgentFile], "r") do |f|
-	      s = f.read
-	      ENV['SSH_AUTH_SOCK']=/SSH_AUTH_SOCK=(.*?);/.match(s)[1]
-	      ENV['SSH_AGENT_PID']=/SSH_AGENT_PID=(\d+);/.match(s)[1]
-	    end
-	  rescue
-	    confError("Can't get ssh agent info from #{self[SSHAgentFile]}")
-	  end
-	  break;
+	  remoteDelivery = true
+	  break
 	end
       end
     end
-    self
-  end
-
-  def validate()
-    errorIfNotString(Group)
-    if not self[Group] =~ /^(BioPSE|SCIRun|Uintah)$/
-      confError("\"#{Group}\" must be one of \"BioPSE\", \"SCIRun\", or \"Uintah\"")
-    end
-    errorIfNotString(BuildDir)
-    errorIfEmpty(BuildDir)
-    errorIfMissing(Tree)
-    errorIfNotString(Tree)
-    errorIfNotBoolean(Wait)
-    errorIfNotBoolean(CodeViews)
-    errorIfNotBoolean(Deliver)
-    if self[Deliver] == true
-      errorIfMissing(Dests)
-      errorIfNotArray(Dests)
-      needAgent = false
-      self[Dests].each do |d|
-	errorIfNotDest(d)
-	d.validate()
-	needAgent = true if d.remote
-      end
-      if needAgent
-	errorIfMissing(SSHAgentFile)
-	errorIfNotString(SSHAgentFile)
-	errorIfEmpty(SSHAgentFile)
+    if remoteDelivery || self[Update] == REMOTE_UPDATE
+      begin
+	File.open(self[SSHAgentFile], "r") do |f|
+	  s = f.read
+	  ENV['SSH_AUTH_SOCK']=/SSH_AUTH_SOCK=(.*?);/.match(s)[1]
+	  ENV['SSH_AGENT_PID']=/SSH_AGENT_PID=(\d+);/.match(s)[1]
+	end
+      rescue
+	confError("Can't get ssh agent info from #{self[SSHAgentFile]}")
       end
     end
-    errorIfNotBoolean(Tarball)
-    errorIfNotBoolean(Build)
-    errorIfNotString(ToolsPath)
-    errorIfMissing(ClassPath)
-    errorIfNotString(ClassPath)
-    errorIfMissing(Stylesheet_XSL_HTML)
-    errorIfNotString(Stylesheet_XSL_HTML)
-    errorIfMissing(Stylesheet_XSL_Print)
-    errorIfNotString(Stylesheet_XSL_Print)
-    errorIfMissing(Stylesheet_DSSSL_Print)
-    errorIfNotString(Stylesheet_DSSSL_Print)
-    errorIfMissing(XML_DCL)
-    errorIfNotString(XML_DCL)
-    errorIfMissing(Catalog)
-    errorIfNotString(Catalog)
-    errorIfNotString(Make)
-    errorIfEmpty(Make)
-    errorIfNotEnum(Update, UPDATE_ENUM)
-    errorIfNotBoolean(Clean)
-    errorIfNotString(DB_DTD)
-    if self[SendMailOnError] == true
-      errorIfMissing(SMTPServer)
-      errorIfNotString(SMTPServer)
-      errorIfMissing(ToAddr)
-      errorIfNotString(ToAddr)
-      self[FromAddr] = self[ToAddr] if missing?(self[FromAddr])
-      errorIfNotString(FromAddr)
-    end
-  end
-
-  def initializeGroupsDB()
-    @groupsDB = {}
-    @groupsDB["SCIRun"] = ["doc"]
-    srcRoot = self[BuildDir] + "/" + self[Tree] + "/src"
-    Dir.foreach(srcRoot) do |m|
-      @groupsDB["SCIRun"] << "src/#{m}" if not m =~ /^(\.|\.\.|Packages|CVS)$/
-    end
-    @groupsDB["BioPSE"] = @groupsDB["SCIRun"] + [ "src/Packages/BioPSE",
-      "src/Packages/Teem", "src/Packages/MatlabInterface",
-      "src/Packages/DataIO", "src/Packages/Fusion" ]
-    @groupsDB["Uintah"] = @groupsDB["SCIRun"] + [ "src/Packages/Uintah" ]
   end
 
 end
@@ -398,7 +531,10 @@ class Docs
 	$log.write("Elapsed time: ", tend - tbeg, "\n")
       rescue
 	$log.write($!, "\n")
-	sendMail($!) if @conf[Configuration::SendMailOnError] == true
+	if @conf[Configuration::SendMailOnError] == true
+	  msg = "From " + @treeRoot + ": " + $!
+	  sendMail(msg)
+	end
       ensure
 	doclock.flock(File::LOCK_UN)
       end
@@ -449,7 +585,7 @@ class Docs
     $log.write("Begin clean starting at ", dir, "\n")
     pwd = Dir.pwd()
     Dir.chdir(dir)
-    $log.write(`#{@conf[Configuration::Make]} veryclean #{@redirect}`)
+    $log.command("#{@conf[Configuration::Make]} veryclean #{@redirect}")
     Dir.chdir(pwd)
     $log.write("End clean\n")
   end
@@ -501,7 +637,12 @@ then
   then 
     echo failed to remove #{@conf[Configuration::Tree]} 
     exit 1 
-  fi 
+  fi
+  if ! mv #{@conf[Configuration::Tree]}.tar.gz doc
+  then
+    echo failed to move #{@conf[Configuration::Tree]}.tar.gz into doc
+    exit 1
+  fi
   exit 0   
 else 
   echo tar failed 
@@ -513,18 +654,18 @@ INSTALL_SCRIPT
     $log.write("Delivering to ", dest[Dest::Mach], "\n")
     $log.write("Transfering #{tarball}...\n")
     if dest[Dest::Mach] == "."
-      $log.write(`cp #{tarball} #{dest[Dest::Dir]} #{@redirect}`)
+      $log.command("cp #{tarball} #{dest[Dest::Dir]} #{@redirect}")
     else
-      $log.write(`scp -p -q #{tarball} #{dest[Dest::User]}@#{dest[Dest::Mach]}:#{dest[Dest::Dir]} #{@redirect}`)
+      $log.command("scp -p -q #{tarball} #{dest[Dest::User]}@#{dest[Dest::Mach]}:#{dest[Dest::Dir]} #{@redirect}")
     end
     if $? != 0
       raise("Failed to transfer tarball.")
     else
       $log.write("Installing...\n")
       if dest[Dest::Mach] == "."
-	$log.write(`#{installScript}`)
+	$log.command("#{installScript}")
       else
-	$log.write(`ssh #{dest[Dest::User]}@#{dest[Dest::Mach]} '#{installScript}'`)
+	$log.command("ssh #{dest[Dest::User]}@#{dest[Dest::Mach]} '#{installScript}'")
       end
       if $? == 0
 	$log.write("Finished this delivery.\n")
@@ -536,33 +677,27 @@ INSTALL_SCRIPT
 
   def updateOne(m)
     pwd = Dir.pwd
-    $log.write("Updating ", m, "\n")
-    if FileTest.directory?(m)
-      Dir.chdir(m)
-      $log.write(`cvs update -P -d #{@redirect}`, "\n")
-    elsif FileTest.file?(m)
-      Dir.chdir(File.dirname(m))
-      $log.write(`cvs update #{File.basename(m)} #{@redirect}`, "\n")
-    else
-      $log.write(m, " doesn't exist - ignoring\n")
-    end
+    @conf[Configuration::SCM_Command].update(m);
     Dir.chdir(pwd)
   end
 
   def update()
     $log.write("Updating...\n")
-    @conf.groupDirs.each do |m|
-      updateOne(@treeRoot + "/" + m)
+    srcTop = @treeRoot + "/src"
+    SrcTopLevel.filesAndDirs(srcTop).each do |m|
+      updateOne(srcTop + "/" + m)
     end
-    $log.write("Done Updating\n")
+    $log.write("Done Updating src directory\n")
+    updateOne(@treeRoot + "/doc")
+    $log.write("Done Updating doc directory\n")
   end
 
   def make(startDir)
     $log.write("Making docs...\n")
-    group = @conf[Configuration::Group].downcase()
     pwd = Dir.pwd()
     Dir.chdir(startDir)
-    $log.write(`#{@conf[Configuration::Make]} SRGROUP=#{group} WITH_CV=#{@conf[Configuration::CodeViews] ? "true" : "false"} #{@conf[Configuration::Tarball] ? "tarball" : ""} #{@redirect}`)
+    cmd = "#{@conf[Configuration::Make]} WITH_CV=#{@conf[Configuration::CodeViews] ? 'true' : 'false'} #{@conf[Configuration::Tarball] ? 'tarball' : ''} #{@redirect}"
+    $log.command(cmd)
     Dir.chdir(pwd)
     $log.write("Done making docs\n")
   end
