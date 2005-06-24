@@ -612,7 +612,7 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
 
 
   BoundCondReader reader;
-  reader.read(bc_ps);
+  reader.read(bc_ps, grid_ps);
 
   for (Patch::FaceType face_side = Patch::startFace; 
        face_side <= Patch::endFace; face_side=Patch::nextFace(face_side)) {
