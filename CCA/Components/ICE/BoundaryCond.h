@@ -31,6 +31,8 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
 
   void is_BC_specified(const ProblemSpecP& prob_spec, string variable);
   
+  void BC_bulletproofing(const ProblemSpecP& prob_spec,SimulationStateP& sharedState );
+  
   //__________________________________
   //  Temperature, pressure and other CCVariables
   void setBC(CCVariable<double>& var,     

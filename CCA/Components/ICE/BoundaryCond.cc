@@ -682,6 +682,45 @@ void is_BC_specified(const ProblemSpecP& prob_spec, string variable)
     }
   }
 }
+
+/* --------------------------------------------------------------------- 
+ Function~  BC_bulletproofing--
+ Purpose~   if BCType id = "all" and it's a single material problem 
+            throw an exception.  
+ ---------------------------------------------------------------------  */
+void BC_bulletproofing(const ProblemSpecP& prob_spec,SimulationStateP& sharedState )
+{
+  
+  ProblemSpecP grid_ps= prob_spec->findBlock("Grid");
+  ProblemSpecP bc_ps  = grid_ps->findBlock("BoundaryConditions");
+  int numAllMatls = sharedState->getNumMatls();
+  
+  // loop over all faces
+  for (ProblemSpecP face_ps = bc_ps->findBlock("Face");face_ps != 0; 
+                    face_ps=face_ps->findNextBlock("Face")) {
+   
+    bool getMad = false;
+    map<string,string> face;
+    face_ps->getAttributes(face);
+    
+    // loop over all BCTypes  
+    for(ProblemSpecP bc_iter = face_ps->findBlock("BCType"); bc_iter != 0;
+                     bc_iter = bc_iter->findNextBlock("BCType")){
+      map<string,string> bc_type;
+      bc_iter->getAttributes(bc_type);
+      
+      if (bc_type["id"] == "all" && numAllMatls == 0) {
+        ostringstream warn;
+        warn <<"\n__________________________________\n"   
+             << "ERROR: This is a single material problem and you've specified 'BCType id = all' \n"
+             << "The boundary condition machinery essentially treats 'all' and '0' as two separate materials, \n"
+             << "setting the boundary conditions twice on each face.  Set BCType id = '0' \n" 
+             << " Face:  " << face["side"] << " BCType " << bc_type["label"]<< endl;
+        throw ProblemSetupException(warn.str());
+      }
+    }
+  }
+}
 //______________________________________________________________________
 //______________________________________________________________________
 //      S T U B   F U N C T I O N S
