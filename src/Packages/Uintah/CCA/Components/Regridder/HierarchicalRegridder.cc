@@ -313,13 +313,13 @@ void HierarchicalRegridder::GatherSubPatches(const GridP& oldGrid, SchedulerP& s
         int index = subpatchSorter[lb->getPatchwiseProcessorAssignment(patch)];
 
         subpatchSorter[lb->getPatchwiseProcessorAssignment(patch)]+=nsppp;
-        IntVector patchIndex = patch->getCellLowIndex()/d_patchSize[i];
+        IntVector patchIndex = patch->getInteriorCellLowIndex()/d_patchSize[i];
 
         // create the recv buffers to 
         SubPatchFlagP spf1 = scinew SubPatchFlag;
         spf1->initialize(d_latticeRefinementRatio[i]*patchIndex,
                          d_latticeRefinementRatio[i]*(patchIndex+IntVector(1,1,1)), &recvbuf[index]);
-              
+
         allSubpatches[index/nsppp] = spf1;
 
         if (procAssignment[patch->getLevelIndex()] != d_myworld->myrank())
