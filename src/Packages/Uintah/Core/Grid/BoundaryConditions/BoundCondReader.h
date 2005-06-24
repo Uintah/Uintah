@@ -73,6 +73,9 @@ namespace Uintah {
     /// Destructor
     ~BoundCondReader();
 
+    void whichPatchFace(const std::string fc, Patch::FaceType& face_side,
+                        int& plusMinusFaces, int& p_dir);
+
     /// Read in the boundary conditions given a problem specification, ps.
     /// Each face is read in and processed using the function 
     /// createBoundaryConditionFace() which indicates whether the boundary
@@ -87,12 +90,13 @@ namespace Uintah {
     /// boundary condition.
     /// 
     /// 
-    void read(ProblemSpecP& ps);
+    void read(ProblemSpecP& ps,const ProblemSpecP& grid_ps );
 
     /// Read in the geometric tags: side, circle, and rectangle.  Performs
     /// error checking if the tag is not present or if the circle and rectangle
     /// tags are not specified correctly.
     BCGeomBase* createBoundaryConditionFace(ProblemSpecP& ps,
+                                       const ProblemSpecP& grid_ps,
 					    Patch::FaceType& face_side);
 
 

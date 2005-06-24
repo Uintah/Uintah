@@ -40,9 +40,68 @@ BoundCondReader::~BoundCondReader()
 {
 }
 
+void BoundCondReader::whichPatchFace(const std::string fc,
+                                Patch::FaceType& face_side, 
+                                int& plusMinusFaces,
+                                int& p_dir)
+{
+  if (fc ==  "x-"){
+    plusMinusFaces = -1;
+    p_dir = 0;
+    face_side = Patch::xminus;
+  }
+  if (fc == "x+"){
+    plusMinusFaces = 1;
+    p_dir = 0;
+    face_side = Patch::xplus;
+  }
+  if (fc == "y-"){
+    plusMinusFaces = -1;
+    p_dir = 1;
+    face_side = Patch::yminus;
+  }
+  if (fc == "y+"){
+    plusMinusFaces = 1;
+    p_dir = 1;
+    face_side = Patch::yplus;
+  }
+  if (fc == "z-"){
+    plusMinusFaces = -1;
+    p_dir = 2;
+    face_side = Patch::zminus;
+  }
+  if (fc == "z+"){
+    plusMinusFaces = 1;
+    p_dir = 2;
+    face_side = Patch::zplus;
+  }
+}
+
 BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
+                                              const ProblemSpecP& grid_ps,
 						    Patch::FaceType& face_side)
 {
+
+  // Determine the Level 0 grid high and low points, need by 
+  // the bullet proofing
+  Point grid_LoPt(1e30, 1e30, 1e30);
+  Point grid_HiPt(-1e30, -1e30, -1e30); 
+  
+  for(ProblemSpecP level_ps = grid_ps->findBlock("Level");
+      level_ps != 0; level_ps = level_ps->findNextBlock("Level")){
+
+     //find upper/lower corner
+     for(ProblemSpecP box_ps = level_ps->findBlock("Box");
+        box_ps != 0; box_ps = box_ps->findNextBlock("Box")){
+       Point lower;
+       Point upper;
+       box_ps->require("lower", lower);
+       box_ps->require("upper", upper);
+       grid_LoPt=Min(lower, grid_LoPt);
+       grid_HiPt=Max(upper, grid_HiPt);
+     }
+   }
+
 
   map<string,string> values;
   face_ps->getAttributes(values);
@@ -56,13 +115,16 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
   // BoundaryCondition.
   
   std::string fc;
+  int plusMinusFaces, p_dir;
   BCGeomBase* bcGeom;
   if (values.find("side") != values.end()) {
     fc = values["side"];
+    whichPatchFace(fc, face_side, plusMinusFaces, p_dir);
     bcGeom = scinew SideBCData();
   }
   else if (values.find("circle") != values.end()) {
     fc = values["circle"];
+    whichPatchFace(fc, face_side, plusMinusFaces, p_dir);
     string origin = values["origin"];
     string radius = values["radius"];
     stringstream origin_stream(origin);
@@ -72,16 +134,38 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     origin_stream >> o[0] >> o[1] >> o[2];
     Point p(o[0],o[1],o[2]);
     
+    
+    //  bullet proofing-- origin must be on the same plane as the face
+    bool test = true;
+    if(plusMinusFaces == -1){    // x-, y-, z- faces
+      test = (p(p_dir) != grid_LoPt(p_dir));
+    }
+    if(plusMinusFaces == 1){     // x+, y+, z+ faces
+      test = (p(p_dir) != grid_HiPt(p_dir));
+    }    
+    
+    if(test){
+      ostringstream warn;
+      warn<<"ERROR: Input file\n The Circle BC geometry is not correctly specified."
+          << " The origin " << p << " must be on the same plane" 
+          << " as face (" << fc <<"). Double check the origin and Level:box spec. \n\n";
+      throw ProblemSetupException(warn.str());
+    }
+    
+    
     if (origin == "" || radius == "") {
       ostringstream warn;
       warn<<"ERROR\n Circle BC geometry not correctly specified \n"
           << " you must specify origin [x,y,z] and radius [r] \n\n";
       throw ProblemSetupException(warn.str());
     }
+    
+    
     bcGeom = scinew CircleBCData(p,r);
   }
   else if (values.find("annulus") != values.end()) {
     fc = values["annulus"];
+    whichPatchFace(fc, face_side, plusMinusFaces, p_dir);
     string origin = values["origin"];
     string in_radius = values["inner_radius"];
     string out_radius = values["outer_radius"];
@@ -93,10 +177,27 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     out_radius_stream >> o_r;
     origin_stream >> o[0] >> o[1] >> o[2];
     Point p(o[0],o[1],o[2]);
+
+    //  bullet proofing-- origin must be on the same plane as the face
+    bool test = true;
+    if(plusMinusFaces == -1){    // x-, y-, z- faces
+      test = (p(p_dir) != grid_LoPt(p_dir));
+    }
+    if(plusMinusFaces == 1){     // x+, y+, z+ faces
+      test = (p(p_dir) != grid_HiPt(p_dir));
+    }    
+    
+    if(test){
+      ostringstream warn;
+      warn<<"ERROR: Input file\n The Annulus BC geometry is not correctly specified."
+          << " The origin " << p << " must be on the same plane" 
+          << " as face (" << fc <<"). Double check the origin and Level:box spec. \n\n";
+      throw ProblemSetupException(warn.str());
+    }
     
     if (origin == "" || in_radius == "" || out_radius == "" ) {
       ostringstream warn;
-      warn<<"ERROR\n Circle BC geometry not correctly specified \n"
+      warn<<"ERROR\n Annulus BC geometry not correctly specified \n"
           << " you must specify origin [x,y,z], inner_radius [r] outer_radius [r] \n\n";
       throw ProblemSetupException(warn.str());
     }
@@ -104,6 +205,7 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
   }
   else if (values.find("rectangle") != values.end()) {
     fc = values["rectangle"];
+    whichPatchFace(fc, face_side, plusMinusFaces, p_dir);
     string low = values["lower"];
     string up = values["upper"];
     stringstream low_stream(low), up_stream(up);
@@ -111,6 +213,17 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     low_stream >> lower[0] >> lower[1] >> lower[2];
     up_stream >> upper[0] >> upper[1] >> upper[2];
     Point l(lower[0],lower[1],lower[2]),u(upper[0],upper[1],upper[2]);
+   
+    //  bullet proofing-- rectangle must be on the same plane as the face
+    bool test = (l(p_dir) != grid_LoPt(p_dir) && u(p_dir) != grid_HiPt(p_dir));   
+    
+    if(test){
+      ostringstream warn;
+      warn<<"ERROR: Input file\n The rectangle BC geometry is not correctly specified."
+          << " The low " << l << " high " << u << " points must be on the same plane" 
+          << " as face (" << fc <<"). Double check against and Level:box spec. \n\n";
+      throw ProblemSetupException(warn.str());
+    }   
    
     if (low == "" || up == "") {
       ostringstream warn;
@@ -137,26 +250,14 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
   }
   
 
-  BCR_dbg << "Face = " << fc << endl;      
-
-  if (fc ==  "x-")
-    face_side = Patch::xminus;
-  if (fc == "x+")
-    face_side = Patch::xplus;
-  if (fc == "y-")
-    face_side = Patch::yminus;
-  if (fc == "y+")
-    face_side = Patch::yplus;
-  if (fc == "z-")
-    face_side = Patch::zminus;
-  if (fc == "z+")
-    face_side = Patch::zplus;
-  
+  BCR_dbg << "Face = " << fc << endl;
   return bcGeom;
 }
 
+
+
 void
-BoundCondReader::read(ProblemSpecP& bc_ps)
+BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
 {  
   // This function first looks for the geometric specification for the 
   // boundary condition which includes the tags side, circle and rectangle.
@@ -177,7 +278,7 @@ BoundCondReader::read(ProblemSpecP& bc_ps)
        face_ps != 0; face_ps=face_ps->findNextBlock("Face")) {
 
       Patch::FaceType face_side;
-      BCGeomBase* bcGeom = createBoundaryConditionFace(face_ps,face_side);
+      BCGeomBase* bcGeom = createBoundaryConditionFace(face_ps,grid_ps,face_side);
       BCR_dbg << endl << endl << "Face = " << face_side << " Geometry type = " 
 	      << typeid(*bcGeom).name() << " " << bcGeom << endl;
 	      
