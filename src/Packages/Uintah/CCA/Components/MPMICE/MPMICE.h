@@ -183,12 +183,6 @@ public:
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw);
 
-  void coarsenLagrangianValuesMPM(const ProcessorGroup*,
-                                  const PatchSubset* patch,
-                                  const MaterialSubset* matls,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw);
-
   void computeEquilibrationPressure(const ProcessorGroup*,
                                     const PatchSubset* patch,
                                     const MaterialSubset* matls,
@@ -296,17 +290,20 @@ public:
                                 const MaterialSet* matls,
                                 const VarLabel* variable);
 
-  void scheduleCoarsenVariableCC(SchedulerP& sched,
-                                const PatchSet* patches,
-                                const MaterialSet* matls,
-                                const VarLabel* variable);
+  template<typename T>
+    void scheduleCoarsenVariableCC(SchedulerP& sched,
+                                   const PatchSet* patches,
+                                   const MaterialSet* matls,
+                                   const VarLabel* variable,
+                                   T defaultValue);
 
-  void refineVariableCC(const ProcessorGroup*,
-                        const PatchSubset* patch,
-                        const MaterialSubset* matls,
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw,
-                        const VarLabel* variable);
+  template<typename T>
+    void refineVariableCC(const ProcessorGroup*,
+                          const PatchSubset* patch,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw,
+                          const VarLabel* variable);
 
   template<typename T>
     void coarsenVariableCC(const ProcessorGroup*,
@@ -314,7 +311,8 @@ public:
                            const MaterialSubset* matls,
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw,
-                           const VarLabel* variable);
+                           const VarLabel* variable,
+                           T defaultValue);
 
 private:
   void setBC_rho_micro(const Patch* patch,
