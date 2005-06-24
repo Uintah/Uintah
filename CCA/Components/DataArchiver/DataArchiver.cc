@@ -1142,9 +1142,14 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
       timeElem->appendElement("timestepNumber", timestep);
       timeElem->appendElement("currentTime", d_tempElapsedTime);
       timeElem->appendElement("delt", delt);
-      
-      ProblemSpecP gridElem = rootElem->appendChild("Grid");
       int numLevels = grid->numLevels();
+      
+      // in amr, we're not guaranteed that a proc do work on a given level
+      //   quick check to see that, so DataArchive won't crash on loading
+      //   a file that won't be written
+      vector<vector<int> > procOnLevel(numLevels);
+
+      ProblemSpecP gridElem = rootElem->appendChild("Grid");
       gridElem->appendElement("numLevels", numLevels);
       for(int l = 0;l<numLevels;l++){
 	LevelP level = grid->getLevel(l);
@@ -1163,8 +1168,13 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
 
 	Level::const_patchIterator iter;
 
+        procOnLevel[l].resize(d_myworld->size());
+
 	for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
 	  const Patch* patch=*iter;
+
+          procOnLevel[l][lb->getPatchwiseProcessorAssignment(patch)] = 1;
+
 	  Box box = patch->getBox();
 	  ProblemSpecP patchElem = levelElem->appendChild("Patch",1,2);
 	  patchElem->appendElement("id", patch->getID(),0,3);
@@ -1188,7 +1198,7 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
 
         // create a pxxxxx.xml file for each proc doing the outputting
 	for(int i=0;i<d_myworld->size();i++){
-          if (i % lb->getNthProc() != 0 )
+          if (i % lb->getNthProc() != 0 || procOnLevel[l][i] == 0)
             continue;
 	  ostringstream pname;
 	  pname << lname.str() << "/p" << setw(5) << setfill('0') << i 
