@@ -197,6 +197,10 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   d_customBC_var_basket->sharedState    = sharedState;
 
   //__________________________________
+  //  boundary condition warnings
+  BC_bulletproofing(prob_spec,sharedState);
+
+  //__________________________________
   // read in all the printData switches
   printData_problemSetup( prob_spec);
 
