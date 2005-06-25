@@ -967,17 +967,16 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
                                          int numGhostCells,
                                          const VarLabel* pos_var)
 {
-  if(gtype == Ghost::None){
-    if(numGhostCells != 0)
-      SCI_THROW(InternalError("Ghost cells specified with task type none!\n"));
-    return getParticleSubset(matlIndex, patch);
-  }
-  
-  Patch::selectType neighbors;
   IntVector lowIndex, highIndex;
   patch->computeVariableExtents(Patch::CellBased, pos_var->getBoundaryLayer(),
-				gtype, numGhostCells,
-                                neighbors, lowIndex, highIndex);
+				gtype, numGhostCells, lowIndex, highIndex);
+  if(gtype == Ghost::None || (lowIndex == patch->getLowIndex() && highIndex == patch->getHighIndex())) {
+    return getParticleSubset(matlIndex, patch);
+  }
+
+  Patch::selectType neighbors;
+  patch->getLevel()->selectPatches(lowIndex, highIndex, neighbors);
+  
   Box box = patch->getLevel()->getBox(lowIndex, highIndex);
   
   particleIndex totalParticles = 0;
@@ -1033,7 +1032,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
                                                     matlIndex, patch,
                                                     lowIndex, highIndex,
                                                     vneighbors, subsets);
-  
+
   return newsubset;
 }
 
