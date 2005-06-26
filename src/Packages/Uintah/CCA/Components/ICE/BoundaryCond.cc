@@ -688,7 +688,8 @@ void is_BC_specified(const ProblemSpecP& prob_spec, string variable)
  Purpose~   if BCType id = "all" and it's a single material problem 
             throw an exception.  
  ---------------------------------------------------------------------  */
-void BC_bulletproofing(const ProblemSpecP& prob_spec,SimulationStateP& sharedState )
+void BC_bulletproofing(const ProblemSpecP& prob_spec,
+                       SimulationStateP& sharedState )
 {
   
   ProblemSpecP grid_ps= prob_spec->findBlock("Grid");
@@ -698,8 +699,7 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,SimulationStateP& sharedSta
   // loop over all faces
   for (ProblemSpecP face_ps = bc_ps->findBlock("Face");face_ps != 0; 
                     face_ps=face_ps->findNextBlock("Face")) {
-   
-    bool getMad = false;
+                    
     map<string,string> face;
     face_ps->getAttributes(face);
     
