@@ -40,12 +40,17 @@
  */
 
 #include <Core/Exceptions/InternalError.h>
+#include <iostream>
+
 namespace SCIRun {
 
 
 InternalError::InternalError(const std::string& message)
     : message_(message)
 {
+#ifdef EXCEPTIONS_CRASH
+	std::cout << message_ << "\n";
+#endif
 }
 
 InternalError::InternalError(const InternalError& copy)

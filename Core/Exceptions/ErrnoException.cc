@@ -44,6 +44,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <sstream>
 #include <sgi_stl_warnings_on.h>
+#include <iostream>
 
 namespace SCIRun {
 
@@ -58,6 +59,10 @@ ErrnoException::ErrnoException(const std::string& message, int err)
       s="(none)";
    str << message << " (errno=" << err << ": " << s << ")";
    message_ = str.str();
+
+#ifdef EXCEPTIONS_CRASH
+	std::cout << message_ << "\n";
+#endif
 }
 
 ErrnoException::ErrnoException(const ErrnoException& copy)

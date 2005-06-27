@@ -3,6 +3,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <sstream>
 #include <sgi_stl_warnings_on.h>
+#include <iostream>
 
 using namespace Uintah;
 using namespace std;
@@ -13,6 +14,10 @@ PetscError::PetscError(int petsc_code, const std::string& msg)
   ostringstream out;
   out << "PETSc error: " << petsc_code << ", " << msg;
   d_msg = out.str();
+  
+#ifdef EXCEPTIONS_CRASH
+  cout << d_msg << "\n";
+#endif  
 }
 
 PetscError::PetscError(const PetscError& copy)

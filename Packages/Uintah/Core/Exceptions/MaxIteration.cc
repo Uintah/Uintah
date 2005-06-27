@@ -4,6 +4,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <sstream>
 #include <sgi_stl_warnings_on.h>
+#include <iostream>
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -22,6 +23,9 @@ MaxIteration::MaxIteration(IntVector c,
 
   d_msg =  mes + s.str();
   
+#ifdef EXCEPTIONS_CRASH
+  cout << d_msg << "\n";
+#endif
 }
 
 
