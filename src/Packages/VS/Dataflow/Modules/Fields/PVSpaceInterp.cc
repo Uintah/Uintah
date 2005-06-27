@@ -354,7 +354,7 @@ PVSpaceInterp::apply_potentials(float e_phase, float HR)
     start = 3;
     end = 4;
   }
-  double dist = fabs(cur_freq - fcrv->get(start, 0));
+  double dist = 9999999.0;
   int closest = 0;
   for (int i = start; i <= end; ++i) {
     double d = fabs(cur_freq - fcrv->get(i, 0));
@@ -618,6 +618,7 @@ PVSpaceInterp::get_hip_params(unsigned &phase_mesh, float &e_phase, float &HR)
 
   char *inj_time_string = nrrdKeyValueGet(hip_data_->nrrd, "inj_time");
   float inj_time = atof(inj_time_string);
+  
   float *dat = (float *)hip_data_->nrrd->data;
   int row = idx * hip_data_->nrrd->axis[0].size;
   float cur_phase = dat[row + phase_idx];
@@ -697,7 +698,7 @@ PVSpaceInterp::get_hip_params(unsigned &phase_mesh, float &e_phase, float &HR)
   float cur_rvp   = dat[row + rvp_idx];
   float cur_vol   = dat[row + vol_idx];
   float cur_time  = dat[row + time_idx]; 
-  
+    
   injured_p_ = cur_time >= inj_time;
 
   return Point(cur_vol, cur_lvp, cur_rvp);
