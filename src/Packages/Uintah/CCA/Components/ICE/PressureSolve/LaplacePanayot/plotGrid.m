@@ -57,8 +57,9 @@ for k = 1:grid.numLevels,
                 b = plot(x1(i),x2(i),'o');
                 set(b,'markersize',10);
                 set(b,'markeredgecolor',levelColor{k});
-                set(b,'markerfacecolor',levelColor{k});
-
+                %set(b,'markerfacecolor',levelColor{k});
+                set(b,'markerfacecolor','white');
+                
                 if (showCellIndex)
                     index = P.cellIndex(mat1(i)+P.offsetSub(1),mat2(i)+P.offsetSub(2));
                     c = text(x1(i)-0.125*h(1),x2(i)-0.125*h(2),sprintf('%d',index));
@@ -72,7 +73,7 @@ for k = 1:grid.numLevels,
                 set(a,'linewidth',k);
                 set(a,'linestyle','--')
 
-                b = plot(x1(i),x2(i),'o');
+                b = plot(x1(i),x2(i),'^');
                 set(b,'markersize',10);
                 set(b,'markeredgecolor',levelColor{k});
                 set(b,'markerfacecolor','white');

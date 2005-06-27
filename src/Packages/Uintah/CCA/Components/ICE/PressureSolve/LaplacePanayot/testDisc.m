@@ -1,11 +1,12 @@
-%TESTDFM  Test Distributive Flux Matching (DFM) discretization.
-%   We test DFM discretization error for a simple 2D Poisson problem with a
+%TESTDISC  Test pressure equation discretization.
+%   We test pressure equation discretization error for a simple 2D Poisson problem with a
 %   known solution. We prepare an AMR grid with two levels: a global level
 %   1, and a local level 2 patch around the center of the domain, where the
-%   solution u has more variations. DFM is a cell-centered, finite volume,
+%   solution u has more variations. The scheme is a cell-centered, finite volume,
 %   symmetric discretization on the composite AMR grid.
 %
 %   See also: ?.
+
 global verboseLevel
 
 twoLevel            = 1;
@@ -15,8 +16,8 @@ plotResults         = 1;
 saveResults         = 0;
 
 outputDir           = 'ProblemA_1Level';
-verboseLevel        = 0;
-numCellsRange       = 16; %2.^[2:1:6];
+verboseLevel        = 2;
+numCellsRange       = 8; %2.^[2:1:6];
 
 success = mkdir('.',outputDir);
 
@@ -48,16 +49,13 @@ for count = 1:length(numCellsRange)
 
         resolution          = [numCells numCells];
         [grid,k]            = addGridLevel(grid,'meshsize',grid.domainSize./resolution);
-
-        [grid,q1]           = addGridPatch(grid,k,ones(1,grid.dim),resolution,-1);     % One global patch
-        [A,b,grid]          = updateSystem(grid,k,q1,A,b);
+        [grid,q1,A,b]       = addGridPatch(grid,k,ones(1,grid.dim),resolution,-1,A,b);     % One global patch
 
         %--------------- Level 2: local fine grid around center of domain -----------------
 
         if (twoLevel)
             [grid,k]            = addGridLevel(grid,'refineRatio',[2 2]);
-            [grid,q2]           = addGridPatch(grid,k,resolution/2 + 1,3*resolution/2,q1);              % Local patch around the domain center
-            [A,b,grid]          = updateSystem(grid,k,q2,A,b);
+            [grid,q2,A,b]       = addGridPatch(grid,k,resolution/2 + 1,3*resolution/2,q1,A,b);              % Local patch around the domain center
         end
 
         tCPU        = cputime - tStartCPU;
