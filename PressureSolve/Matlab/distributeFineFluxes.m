@@ -244,8 +244,8 @@ for d = 1:grid.dim,                                             % Loop over dime
         
         %%%%%%%% FIX NEAR CORNERS; THE FOLLOWING CODE WORKS ONLY IN 2D %%%%%%%%%%
         
-        %         weight(1,:)     = [0.0 1.0];
-        %         weight(end,:)   = [1.0 0.0];
+        weight(1,:)     = [0.0 1.0];
+        weight(end,:)   = [1.0 0.0];
 
         
         %%%%%%%% END FIX %%%%%%%%
