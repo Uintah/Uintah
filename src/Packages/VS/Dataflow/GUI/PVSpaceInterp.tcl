@@ -107,7 +107,7 @@ itcl_class VS_Fields_PVSpaceInterp {
         pack $w.f.options.hri -side top -expand yes -fill x
 
 	iwidgets::entryfield $w.f.options.tmi -labeltext "Time index:" \
-	    -textvariable $this-time_index
+	    -textvariable $this-tm_index
         pack $w.f.options.tmi -side top -expand yes -fill x
 	
 	makeSciButtonPanel $w.f $w $this
