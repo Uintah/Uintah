@@ -13,7 +13,7 @@ for k = 1:grid.numLevels,
         % Prepare a list of all interior cells
         %=====================================================================
         boxSize     = P.iupper - P.ilower+3;
-        boxOffset   = P.offset;
+        boxOffset   = P.offsetSub;
         map         = P.cellIndex;
         x(P.cellIndex) = u{k}{q}(:);
         

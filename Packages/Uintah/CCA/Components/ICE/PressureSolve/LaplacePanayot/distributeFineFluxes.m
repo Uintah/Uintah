@@ -37,12 +37,12 @@ fprintf('--- distributeFineFluxes(k = %d, q = %d) ---\n',k,q);
 end
 
 boxSize     = iupper-ilower+3;
-boxOffset   = P.offset + P.ilower - ilower;
+boxOffset   = P.offsetSub + P.ilower - ilower;
 
 % Find local map of the box (including ghost cells)
 all         = cell(grid.dim,1);
 for dim     = 1:grid.dim
-    all{dim} = [ilower(dim)-1:iupper(dim)+1] + P.offset(dim);   % Patch-based cell indices including ghosts
+    all{dim} = [ilower(dim)-1:iupper(dim)+1] + P.offsetSub(dim);   % Patch-based cell indices including ghosts
 end
 matAll      = cell(grid.dim,1);
 [matAll{:}] = ndgrid(all{:});
@@ -85,7 +85,7 @@ edgePatch{2}       = iupper + boxOffset;             % Last Cell next to right d
 % Parent patch
 Q                   = grid.level{k-1}.patch{P.parent};                  % Parent patch
 coarseMap           = Q.cellIndex;
-coarseOffset        = Q.offset;
+coarseOffset        = Q.offsetSub;
 
 %=====================================================================
 % Construct interior fluxes
@@ -244,8 +244,8 @@ for d = 1:grid.dim,                                             % Loop over dime
         
         %%%%%%%% FIX NEAR CORNERS; THE FOLLOWING CODE WORKS ONLY IN 2D %%%%%%%%%%
         
-        weight(1,:)     = [0.0 1.0];
-        weight(end,:)   = [1.0 0.0];
+        %         weight(1,:)     = [0.0 1.0];
+        %         weight(end,:)   = [1.0 0.0];
 
         
         %%%%%%%% END FIX %%%%%%%%

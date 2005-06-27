@@ -12,11 +12,11 @@ twoLevel            = 1;
 setupGrid           = 1;
 solveSystem         = 1;
 plotResults         = 1;
-saveResults         = 1;
+saveResults         = 0;
 
 outputDir           = 'ProblemA_1Level';
 verboseLevel        = 0;
-numCellsRange       = 2.^[2:1:6];
+numCellsRange       = 16; %2.^[2:1:6];
 
 success = mkdir('.',outputDir);
 
@@ -178,12 +178,12 @@ for k = 1:grid.numLevels,
         e = err{k}{q};
         factors = fac(e);
         fmt{1} = '%4d';
-        for i = 1:size(e,2)
-            data = [data e(:,i) [0; factors(:,i)]];
-            fmt{2*i} = '%.3e';
-            fmt{2*i+1} = '%.3f';
-        end
-%        latexTable(data,Label,fileName,Caption,'%3d','%.3e');
-        latexTableFactors(data,Label,fileName,Caption,fmt{:});
+%         for i = 1:size(e,2)
+%             data = [data e(:,i) [0; factors(:,i)]];
+%             fmt{2*i} = '%.3e';
+%             fmt{2*i+1} = '%.3f';
+%         end
+% %        latexTable(data,Label,fileName,Caption,'%3d','%.3e');
+%         latexTableFactors(data,Label,fileName,Caption,fmt{:});
     end
 end

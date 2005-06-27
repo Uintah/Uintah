@@ -36,7 +36,7 @@ Box.iupper      = underUpper;
 Q.deletedBoxes{numDeletesBoxes+1} = Box;
 grid.level{k-1}.patch{P.parent} = Q;                  % Update parent patch
 for dim = 1:grid.dim
-    under{dim} = [underLower(dim):underUpper(dim)] + Q.offset(dim); % Patch-based cell indices including ghosts
+    under{dim} = [underLower(dim):underUpper(dim)] + Q.offsetSub(dim); % Patch-based cell indices including ghosts
 end
 
 matUnder         = cell(grid.dim,1);
