@@ -1,11 +1,15 @@
 
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <iostream>
 
 using namespace Uintah;
 
 ProblemSetupException::ProblemSetupException(const std::string& msg)
     : d_msg(msg)
 {
+#ifdef EXCEPTIONS_CRASH
+  std::cout << d_msg << "\n";
+#endif
 }
 
 ProblemSetupException::ProblemSetupException(const ProblemSetupException& copy)

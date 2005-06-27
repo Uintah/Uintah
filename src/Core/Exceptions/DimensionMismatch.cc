@@ -44,6 +44,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <iostream>
 
 namespace SCIRun {
 
@@ -54,6 +55,10 @@ DimensionMismatch::DimensionMismatch(long value, long expected)
     char buf[120];
     sprintf(buf, "Dimension mismatch, got %ld, expeced %ld", value, expected);
     msg=strdup(buf);
+    
+#ifdef EXCEPTIONS_CRASH
+	std::cout << msg << "\n";
+#endif
 }
 
 DimensionMismatch::DimensionMismatch(const DimensionMismatch& copy)

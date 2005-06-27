@@ -1,4 +1,5 @@
 #include <Packages/Uintah/Core/Exceptions/InvalidCompressionMode.h>
+#include <iostream>
 
 using namespace Uintah;
 using namespace std;
@@ -12,6 +13,10 @@ InvalidCompressionMode::InvalidCompressionMode(const std::string& invalidmode,
   if (vartype != "") {
     d_msg += string(" for a variable of type ") + vartype;
   }
+  
+#ifdef EXCEPTIONS_CRASH
+  cout << d_msg << "\n";
+#endif
 }
 
 InvalidCompressionMode::InvalidCompressionMode(const InvalidCompressionMode& copy)

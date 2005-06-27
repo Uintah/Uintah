@@ -1,11 +1,15 @@
 
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
+#include <iostream>
 
 using namespace Uintah;
 
 InvalidGrid::InvalidGrid(const std::string& msg)
     : d_msg(msg)
 {
+#ifdef EXCEPTIONS_CRASH
+  std::cout << d_msg << "\n";
+#endif
 }
 
 InvalidGrid::InvalidGrid(const InvalidGrid& copy)

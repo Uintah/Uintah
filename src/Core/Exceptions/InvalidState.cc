@@ -40,12 +40,17 @@
  */
 
 #include <Core/Exceptions/InvalidState.h>
+#include <iostream>
+
 namespace SCIRun {
 
 
 InvalidState::InvalidState(const std::string& message)
     : message_(message)
 {
+#ifdef EXCEPTIONS_CRASH
+	std::cout << message_ << "\n";
+#endif
 }
 
 InvalidState::InvalidState(const InvalidState& copy)

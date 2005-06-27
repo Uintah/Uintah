@@ -533,6 +533,11 @@ SCI_ARG_ENABLE(throw-level,
                  Use throw level N (0-3)),
   [enable_throw_level="$enableval"],
   [enable_throw_level=${enable_throw_level=0}])
+SCI_ARG_ENABLE(--enable-exceptions-crash,
+  AC_HELP_STRING(--enable-exceptions-crash,
+                 Force exceptions to printout for pre-gcc3.4 compilers),
+  [enable_exceptions_crash="$enableval"],
+  [enable_exceptions_crash=${enable_exceptions_crash=0}])
 SCI_ARG_ENABLE(scirun2,
   AC_HELP_STRING(--enable-scirun2,
                  Build experimental SCIRun 2),
@@ -897,7 +902,7 @@ esac
 
 ASSERTION_LEVEL="$enable_assertion_level"
 THROW_LEVEL="$enable_throw_level"
-
+EXCEPTIONS_CRASH="$enable_exceptions_crash"
 extra_cflags="";
 
 if test "$output_avg_walltime" != "no"; then
@@ -931,6 +936,7 @@ sci_defs_files="$sci_defs_files include/sci_defs/malloc_testdefs.h"
 
 AC_SUBST(ASSERTION_LEVEL)
 AC_SUBST(THROW_LEVEL)
+AC_SUBST(EXCEPTIONS_CRASH)
 sci_defs_files="$sci_defs_files include/sci_defs/error_testdefs.h"
 
 #########################################################################
