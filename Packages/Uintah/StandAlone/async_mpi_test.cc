@@ -1,3 +1,6 @@
+
+
+#include <sci_defs/mpi_defs.h>
 #include <mpi.h>
 #include <iostream>
 #include <vector>
