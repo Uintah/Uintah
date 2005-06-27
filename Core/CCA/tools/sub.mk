@@ -37,8 +37,7 @@ SUBDIRS := $(SRCDIR)/sidl
 
 ifeq ($(HAVE_RUBY),yes)
 SUBDIRS += \
-	$(SRCDIR)/strauss \
-	$(SRCDIR)/kwai 
+	$(SRCDIR)/strauss 
 endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
