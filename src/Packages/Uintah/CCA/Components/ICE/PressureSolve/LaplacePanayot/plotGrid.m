@@ -60,7 +60,7 @@ for k = 1:grid.numLevels,
                 set(b,'markerfacecolor',levelColor{k});
 
                 if (showCellIndex)
-                    index = P.cellIndex(mat1(i)+P.offset(1),mat2(i)+P.offset(2));
+                    index = P.cellIndex(mat1(i)+P.offsetSub(1),mat2(i)+P.offsetSub(2));
                     c = text(x1(i)-0.125*h(1),x2(i)-0.125*h(2),sprintf('%d',index));
                     set(c,'fontsize',10);
                     set(c,'color','k');
@@ -78,7 +78,7 @@ for k = 1:grid.numLevels,
                 set(b,'markerfacecolor','white');
 
                 if (showCellIndex)
-                    index = P.cellIndex(mat1(i)+P.offset(1),mat2(i)+P.offset(2));
+                    index = P.cellIndex(mat1(i)+P.offsetSub(1),mat2(i)+P.offsetSub(2));
                     c = text(x1(i)-0.125*h(1),x2(i)-0.125*h(2),sprintf('%d',index));
                     set(c,'fontsize',10);
                     set(c,'color','k');
@@ -93,8 +93,8 @@ for k = 1:grid.numLevels,
         %                         (i2 >= P.ilower(2)) & (i2 <= P.iupper(2)))
         %                     continue;
         %                 end
-        %                 j1 = i1 + P.offset(1);
-        %                 j2 = i2 + P.offset(2);
+        %                 j1 = i1 + P.offsetSub(1);
+        %                 j2 = i2 + P.offsetSub(2);
         %             end
         %         end
 

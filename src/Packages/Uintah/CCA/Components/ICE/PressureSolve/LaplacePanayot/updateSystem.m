@@ -9,32 +9,32 @@ if (verboseLevel >= 1)
     fprintf(' Update System (level = %d, patch = %d)\n',k,q);
     fprintf('-------------------------------------------------------------------------\n');
 end
-tStartCPU        = cputime;
-tStartElapsed    = clock;
+tStartCPU           = cputime;
+tStartElapsed       = clock;
 
-level       = grid.level{k};
-numPatches  = length(level.numPatches);
-P           = grid.level{k}.patch{q};
-map         = P.cellIndex;
-Alist       = zeros(0,3);
-bnew        = [b; zeros(grid.totalVars-length(b),1)];
+level               = grid.level{k};
+numPatches          = length(level.numPatches);
+P                   = grid.level{k}.patch{q};
+map                 = P.cellIndex;
+Alist               = zeros(0,3);
+bnew                = [b; zeros(grid.totalVars-length(b),1)];
 
 % Create equations in the interior of fine patch and set boundary
 % conditions on ghost cells at domain boundaries, but not at C/F
 % interfaces.
 [AlistPatch,bPatch] = setupOperatorPatch(grid,k,q,P.ilower,P.iupper,1,0);
-Alist = [Alist; AlistPatch];
-bnew(map(:)) = bPatch;
+Alist               = [Alist; AlistPatch];
+bnew(map(:))        = bPatch;
 
 % Delete data of coarse patch underlying the fine patch (disconnect these
 % nodes from rest of coarse patch and put there the identity operator with
 % zero RHS).
-[Alist,bnew,grid] = deleteUnderlyingData(grid,k,q,Alist,bnew);
+[Alist,bnew,grid]   = deleteUnderlyingData(grid,k,q,Alist,bnew);
 
 % Add fine fluxes using DFM to equations of coarse nodes at the C/F
 % interface.
-AlistCF = distributeFineFluxes(grid,k,q,P.ilower,P.iupper);
-Alist = [Alist; AlistCF];
+AlistCF             = distributeFineFluxes(grid,k,q,P.ilower,P.iupper);
+Alist               = [Alist; AlistCF];
 
 % Create or update sparse LHS matrix
 if (isempty(A))
@@ -80,8 +80,8 @@ if (~isempty(fineFlux))
     Anew(i(:,1),i(:,1)) = diag(1./(i(:,3)-1));                            % Set diagonal coefficient of ghost point interp stencil to 1/(alpha-1) to be consistent with the original interpolation formula
 end
 
-tCPU        = cputime - tStartCPU;
-tElapsed    = etime(clock,tStartElapsed);
+tCPU                = cputime - tStartCPU;
+tElapsed            = etime(clock,tStartElapsed);
 if (verboseLevel >= 1)
     fprintf('CPU time     = %f\n',tCPU);
     fprintf('Elapsed time = %f\n',tElapsed);

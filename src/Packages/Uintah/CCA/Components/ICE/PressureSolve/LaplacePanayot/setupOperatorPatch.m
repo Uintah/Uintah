@@ -30,7 +30,7 @@ h           = level.h;
 P           = grid.level{k}.patch{q};
 Alist       = zeros(0,3);
 boxSize     = iupper-ilower+3;
-boxOffset   = P.offset + P.ilower - ilower;
+boxOffset   = P.offsetSub + P.ilower - ilower;
 b           = zeros(prod(boxSize),1);
 
 %=====================================================================
@@ -38,7 +38,7 @@ b           = zeros(prod(boxSize),1);
 %=====================================================================
 all         = cell(grid.dim,1);
 for dim     = 1:grid.dim
-    all{dim} = [ilower(dim)-1:iupper(dim)+1] + P.offset(dim);       % Patch-based cell indices including ghosts
+    all{dim} = [ilower(dim)-1:iupper(dim)+1] + P.offsetSub(dim);       % Patch-based cell indices including ghosts
 end
 matAll      = cell(grid.dim,1);
 [matAll{:}] = ndgrid(all{:});

@@ -14,7 +14,7 @@ P.iupper            = iupper;
 P.size              = P.iupper - P.ilower + 3;          % Size including ghost cells
 P.parent            = parentQ;
 P.children          = [];
-P.offset            = -P.ilower+2;                      % Add to level-global cell index to get this-patch cell index. Lower left corner (a ghost cell) is (1,1) in patch indices
+P.offsetSub         = -P.ilower+2;                      % Add to level-global cell index to get this-patch cell index. Lower left corner (a ghost cell) is (1,1) in patch indices
 P.deletedBoxes      = [];
 
 grid.level{k}.patch{q}    = P;

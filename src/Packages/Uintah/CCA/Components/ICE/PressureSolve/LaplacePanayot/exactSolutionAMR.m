@@ -16,7 +16,7 @@ for k = 1:grid.numLevels,
         %=====================================================================
         boxSize     = P.iupper - P.ilower+3;
         u{k}{q}     = zeros(boxSize);
-        boxOffset   = P.offset;
+        boxOffset   = P.offsetSub;
         map         = P.cellIndex;
         % Interior point patch-based subscripts
         interior    = cell(grid.dim,1);
