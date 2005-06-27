@@ -840,7 +840,7 @@ class BioFEMApp {
     }
     
     method show_about {} {
-	tk_messageBox -message "BioFEM About Box" -type ok -icon info -parent .standalone
+	tk_messageBox -message "BioFEM is a SCIRun PowerApp that computes the electric field in a volume produced by a set of dipoles. BioFEM computes a solution to the bioelectric field forward problem. BioFEM also computes voltage values at electrode positions, which can be compared with values recorded via ECG or EKG." -type ok -icon info -parent .standalone
     }
     
 
