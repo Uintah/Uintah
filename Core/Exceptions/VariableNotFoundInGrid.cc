@@ -23,6 +23,10 @@ VariableNotFoundInGrid::VariableNotFoundInGrid(const std::string& varname,
   if(extramsg != "")
     s << " (" << extramsg << ")";
   d_msg = s.str();
+  
+#ifdef EXCEPTIONS_CRASH
+  cout << d_msg << "\n";
+#endif
 }
 
 VariableNotFoundInGrid::VariableNotFoundInGrid(const std::string& varname,

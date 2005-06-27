@@ -4,6 +4,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <sstream>
 #include <sgi_stl_warnings_on.h>
+#include <iostream>
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -20,6 +21,10 @@ ConvergenceFailure::ConvergenceFailure(const string& message,
     << ", final residual=" << final_residual 
     << ", target_residual=" << target_residual;
   d_msg = s.str();
+  
+#ifdef EXCEPTIONS_CRASH
+  cout << d_msg << "\n";
+#endif
 }
 
 
