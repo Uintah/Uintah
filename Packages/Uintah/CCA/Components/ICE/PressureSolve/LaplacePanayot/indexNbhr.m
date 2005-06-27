@@ -1,36 +1,29 @@
-function indNbhr = indexNbhr(P,ind,d,s)
+function indNbhr = indexNbhr(P,indCell,n)
 %INDEXNBHR  Index of neighbouring cells.
-%   INDNBHR = INDEXNBHR(P,IND,D,S) returns the cell indices of the
-%   neighbours of indices IND in patch P, in dimension D (between 1 and
-%   numDims) and direction S (-1 if left nbhrs, +1 if right nbhrs).
+%   INDNBHR = INDEXNBHR(P,INDCELL,N) returns the cell indices of the
+%   neighbours of indices INDCELL in patch P, in the normal direction N.
+%   For instance, if N=(1,0), INDNBHR are the x-right neighbors of INDCELL.
 %
-%   See also: SETPATCHINTERIOR.
+%   See also: INDEXBOX, SETPATCHINTERIOR.
 
 ind                 = P.cellIndex;                                          % Global indices of patch cells
 numDims             = length(size(ind));
 
 %=====================================================================
-% Convert ind to patch subscripts
+% Convert indCell to patch subscripts
 %=====================================================================
-sub                 = cell(numDims,1);
-[sub{:}]            = ind2sub(P.size,ind - P.offsetInd);
-
-%=====================================================================
-% Compute normal direction
-%=====================================================================
-% Outward normal direction
-nbhrOffset          = zeros(1,numDims);
-nbhrOffset(d)       = s;
+subCell             = cell(numDims,1);
+[subCell{:}]        = ind2sub(P.size,indCell - P.offsetInd);
 
 %=====================================================================
 % Compute nbhr patch subscripts
 %=====================================================================
 subNbhr             = cell(numDims,1);
 for dim = 1:numDims
-    subNbhr{dim}    = subNbhr{dim} + nbhrOffset(d);
+    subNbhr{dim}    = subCell{dim} + n(dim);
 end
 
 %=====================================================================
 % Convert nbhr patch subs to indices
 %=====================================================================
-indNbhr             = ind(subNbhr{:});
+indNbhr             = ind(sub2ind(P.size,subNbhr{:}));
