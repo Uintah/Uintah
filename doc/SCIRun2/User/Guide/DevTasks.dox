@@ -35,6 +35,7 @@
 \li Standardize addition of a component model and individual components
 \li Tutorial for component authors
 \li RMI Security model
+\li Test SCIRun2 with MPI distributions
 
 
 */

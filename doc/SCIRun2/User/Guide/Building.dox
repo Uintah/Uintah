@@ -81,7 +81,7 @@ Be sure to carefully check the build instructions for each thirdparty dependency
     <tr>
      <td>TAO Corba components</td>
      <td>TAO</td>
-     <td>none</td>
+     <td>--with-tao=/path/to/ACE+TAO</td>
     </tr>
 </table>
 
@@ -112,7 +112,15 @@ LD_LIBRARY_PATH=$SCIRUN_THIRDPARTY/lib:$LD_LIBARARY_PATH
 
 \subsection depend_flex Flex
 
+Flex is widely available in various binary formats for Linux.
+Alternatively, source downloads are available from the
+<a href="http://www.gnu.org/">GNU</a> site.
+
 \subsection depend_bison Bison
+
+Bison is widely available in various binary formats for Linux.
+Alternatively, source downloads are available from the
+<a href="http://www.gnu.org/">GNU</a> site.
 
 \subsection depend_gawk Gawk
 
@@ -225,7 +233,7 @@ Estimated time to build: 2-3 hours
 See the
 <a href="http://deuce.doc.wustl.edu">Center for Distributed Object Computing</a>
 site for project details.
-Download TAO <a href="http://deuce.doc.wustl.edu/Download.html">here</a>.
+Download the ACE+TAO distribution <a href="http://deuce.doc.wustl.edu/Download.html">here</a>.
 
 \section config Configuring SCIRun2
 
