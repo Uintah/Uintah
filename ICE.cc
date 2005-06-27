@@ -804,6 +804,11 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   if(!doICEOnLevel(level))
     return;
 
+  // for AMR, we need to reset the initial Delt otherwise some unsuspecting level will
+  // get the init delt when it didn't compute delt on L0.
+  if (d_sharedState->getCurrentTopLevelTimeStep() > 1)
+    d_initialDt = 10000.0;
+    
   cout_doing << "ICE::scheduleTimeAdvance\t\t\t\tL-" <<level->getIndex()<< endl;
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
@@ -1954,10 +1959,11 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 
     const Level* level = getLevel(patches);
     GridP grid = level->getGrid();
-      for(int i=1;i<=level->getIndex();i++) {     // REFINE
-        delt *= grid->getLevel(i)->timeRefinementRatio();
-      }
+    for(int i=1;i<=level->getIndex();i++) {     // REFINE
+      delt *= grid->getLevel(i)->timeRefinementRatio();
+    }
     
+  
     //__________________________________
     //  Bullet proofing
     if(delt < 1e-20) { 
