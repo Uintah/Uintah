@@ -1,72 +1,70 @@
-function [A,b] = setupPatchInterior(grid,k,q,A,b)
+function [A,b,indInterior] = setupPatchInterior(grid,k,q,A,b)
 %SETUPPATCCHINTERIOR  Set the discrete operator in a patch's interior.
-%   [A,B] = SETUPPATCHINTERIOR(GRID,K,Q,A,B) updates the LHS matrix A and
-%   the RHS matrix B, adding to them all the equations at interior nodes
-%   (not near patch boundaries).
+%   [A,B,INDINTERIOR] = SETUPPATCHINTERIOR(GRID,K,Q,A,B) updates the LHS
+%   matrix A and the RHS matrix B, adding to them all the equations at 
+%   interior nodes (not near patch boundaries). INDINTERIOR is the list of
+%   interior cell indices.
 %
-%   See also: TESTDFM, UPDATESYSTEM.
+%   See also: TESTDISC, ADDGRIDPATCH.
+
 global verboseLevel
 
 if (verboseLevel >= 1)
     fprintf('--- setupPatchInterior(k = %d, q = %d) ---\n',k,q);
 end
 %=====================================================================
-% Initialize; set patch "pointers" (in matlab: we actually copy P)
+% Initialize; set patch "pointers" (in matlab: we actually copy P).
 %=====================================================================
-level               = grid.level{k};
-numPatches          = length(level.numPatches);
-h                   = level.h;
-P                   = grid.level{k}.patch{q};
-ind                 = P.cellIndex;                                          % Global indices of patch cells
-
-Alist               = zeros(0,3);
-b                   = zeros(prod(boxSize),1);
+level                   = grid.level{k};
+numPatches              = length(level.numPatches);
+h                       = level.h;
+P                       = grid.level{k}.patch{q};
+ind                     = P.cellIndex;                              % Global 1D indices of cells
 
 %=====================================================================
-% Prepare a list of all interior cells
+% Prepare a list of all cell indices whose equations are created below.
 %=====================================================================
-interior            = cell(grid.dim,1);
-for dim = 1:grid.dim
-    interior{dim}   = [P.ilower(dim):P.iupper(dim)] + P.offsetSub(dim);     % Patch-based cell indices including ghosts
-end
-indInterior         = ind(interior{:});
+[indInterior,interior]  = indexBox(P,P.ilower+1,P.iupper-1);
 
 %=====================================================================
-% Construct LHS stencil coefficients from fluxes flux-based, for
-% interior cells. Ignore ghost cells that are not near domain
-% boundaries. They will have an interpolation stencil later. Stencils are
-% stored in Alist and converted to sparse matrix format to update A.
+% Create a list of non-zeros to be added to A, consisting of the stencil
+% coefficients of all interior cells.
 %=====================================================================
+Alist                   = zeros(0,3);
 for d = 1:grid.dim,                                                 % Loop over dimensions of patch
-    for s = 1:2                                                     % s=-1 (left) and s=2 (right) directions in dimension d
-        % Outward normal direction
-        nbhrOffset      = zeros(1,grid.dim);
-        nbhrOffset(d)   = direction;
+    for s = -1:1                                                    % s=-1 (left) and s=+1 (right) directions in dimension d
+        % Direction vector ("normal") from cell to its nbhr
+        nbhrNormal      = zeros(1,grid.dim);
+        nbhrNormal(d)   = s;
 
         % Compute flux in dimension=d, direction=s
-        flux = zeros(boxSize);
-        flux(interior{:}) = 1;                                      % Laplace operator flux for interior cells not near boundaries: [1 1 1 1]
+        flux            = zeros(P.size);
+        flux(interior{:}) = 1;                                      % Laplace flux for interior cells = u_{cell} - u_{nbhr}
+        indFlux         = flux(interior{:});
+        indFlux         = indFlux(:);
 
         % Add fluxes to list of non-zeros Alist and to b
-        indNbhr         = indexNbhr(P,indInterior,d,s);
-        indFlux         = flux(:);
+        indNbhr         = indexNbhr(P,indInterior,nbhrNormal);
         Alist = [Alist; ...
             [indInterior    indInterior    indFlux]; ...
             [indInterior    indNbhr        -indFlux] ...
             ];
     end
 end
-Ainterior           = spconvert(Alist);                             % Size = #interiors x #theirNbhrs
-Aold                = A;
-A                   = sparse(max(size(Aold),size(Ainterior)));
-A(1:size(Aold,1),1:size(Aold,2)) = Aold;
-A(indInterior,:)    = Ainterior;
 
 %=====================================================================
-% Update LHS vector b
+% Merge old matrix with new list of non-zeros into LHS matrix A.
+%=====================================================================
+[i,j]               = find(A);
+data                = A(find(A));
+Alist               = [[i j data]; Alist];
+A                   = spconvert(Alist);
+
+%=====================================================================
+% Update LHS vector b.
 %=====================================================================
 x = cell(grid.dim,1);
 for dim = 1:grid.dim,
-    x{dim} = ([P.ilower(d):P.iupper(d)] - 0.5) * h(d);
+    x{dim} = (interior{dim} - P.offsetSub(dim) - 0.5) * h(d);
 end
 b(indInterior) = prod(h) * rhs(x{:});
