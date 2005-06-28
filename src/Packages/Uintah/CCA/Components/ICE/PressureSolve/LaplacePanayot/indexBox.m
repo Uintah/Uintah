@@ -1,8 +1,9 @@
-function [indCell,range] = indexBox(P,ilower,iupper)
+function [indCell,range,matRange] = indexBox(P,ilower,iupper,type)
 %INDEXBOX  Index of a box of cells.
-%   INDCELL = INDEXBOX(P,ILOWER,IUPPER) returns the cell indices of the
+%   [INDCELL,R,M] = INDEXBOX(P,ILOWER,IUPPER,TYPE) returns the cell indices of the
 %   D-dimensional box [ILOWER(1):IUPPER(1)] x ... x [ILOWER(D),IUPPER(D)]
-%   in patch P.
+%   in patch P. R is a cell array of the box's ranges, and M is the same as
+%   R, but in "ndgrid format" where all ranges are d-dimensional arrays.
 %
 %   See also: INDEXNBHR, SETPATCHINTERIOR.
 

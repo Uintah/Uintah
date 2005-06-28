@@ -1,12 +1,17 @@
 function grid = updateGrid(grid)
-global verboseLevel
-% Update grid tree:
-% - Update ID and base index for each patch.
-% - Update index maps of each patch.
+%UPDATEGRID  Update AMR grid tree.
+%   After adding or deleting a patch, this function is called to update
+%   index and subscript offsets of each patch, and update the cellIndex
+%   maps of each patch.
+%
+%   See also: ADDGRIDPATCH.
 
-if (verboseLevel >= 1)
+globalParams;
+
+if (P.verboseLevel >= 1)
     fprintf('--- Updating grid ---\n');
 end
+
 index = 0;
 for k = 1:grid.numLevels,
     for q = 1:grid.level{k}.numPatches,
