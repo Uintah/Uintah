@@ -563,12 +563,15 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
       task->computes(tvar->var);
     }
   }
-  
-  task->computes(lb->press_CCLabel);
-  task->computes(lb->rho_CCLabel);
-  task->computes(lb->sp_vol_CCLabel);
-  task->computes(lb->temp_CCLabel);
-  task->computes(lb->vel_CCLabel);
+
+  // if this is a new level, then we need to schedule compute, otherwise, the copydata will yell at us.
+  if (patches == getLevel(patches->getSubset(0))->eachPatch()) {
+    task->computes(lb->press_CCLabel);
+    task->computes(lb->rho_CCLabel);
+    task->computes(lb->sp_vol_CCLabel);
+    task->computes(lb->temp_CCLabel);
+    task->computes(lb->vel_CCLabel);
+  }
 
   sched->addTask(task, patches, d_sharedState->allMaterials()); 
 }
