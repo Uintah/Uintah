@@ -41,7 +41,7 @@ switch lower(type)   % LHS matrix, data is LHS matrix data structure
         error('addGridLevel: unknown type');
 end
 
-if (P.verboseLevel >= 1)
+if (param.verboseLevel >= 1)
     if (k == 1)
         fprintf('Created empty level k=%d, meshsize = [%.5f %.5f]\n',k,grid.level{k}.h);
     else

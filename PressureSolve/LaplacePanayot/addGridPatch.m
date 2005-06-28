@@ -20,7 +20,7 @@ end
 %==============================================================
 % 1. Create an empty patch
 %==============================================================
-if (P.verboseLevel >= 2)
+if (param.verboseLevel >= 2)
     fprintf('#########################################################################\n');
     fprintf(' 1. Create an empty patch\n');
     fprintf('#########################################################################\n');
@@ -36,15 +36,16 @@ P.children                  = [];
 P.offsetSub                 = -P.ilower+2;                      % Add to level-global cell index to get this-patch cell index. Lower left corner (a ghost cell) is (1,1) in patch indices
 P.deletedBoxes              = [];
 grid.level{k}.patch{q}      = P;
-if (k > 1)    
+if (k > 1)
     grid.level{k-1}.patch{parentQ}.children = [grid.level{k-1}.patch{q}.children parentQ];
 end
-if (P.verboseLevel >= 1)
+if (param.verboseLevel >= 1)
     fprintf('Created level k=%3d patch q=%3d (parentQ = %3d), ilower = [%3d %3d], iupper = [%3d %3d]\n',...
         k,q,parentQ,ilower,iupper);
 end
 
 grid                        = updateGrid(grid);
+P                           = grid.level{k}.patch{q};           % Updated patch
 Anew                        = sparse([],[],[],grid.totalVars,grid.totalVars,(2*grid.dim+1)*grid.totalVars);
 Anew(1:size(A,1),1:size(A,2)) = A;
 A                           = Anew;
@@ -53,7 +54,7 @@ b                           = [b; zeros(grid.totalVars-length(b),1)];
 %==============================================================
 % 2. Create patch interior equations
 %==============================================================
-if (P.verboseLevel >= 2)
+if (param.verboseLevel >= 2)
     fprintf('#########################################################################\n');
     fprintf(' 2. Create patch interior equations\n');
     fprintf('#########################################################################\n');
@@ -63,7 +64,7 @@ end
 %==============================================================
 % 3. Create patch edge equations
 %==============================================================
-if (P.verboseLevel >= 2)
+if (param.verboseLevel >= 2)
     fprintf('#########################################################################\n');
     fprintf(' 3. Create patch edge equations\n');
     fprintf('#########################################################################\n');
@@ -76,109 +77,58 @@ for d = 1:grid.dim,
         alpha(2*d)      = 0.25;     % Dirichlet boundary on the right in dimension d
     end
 end
-[A,b,indEdge]           = setupPatchEdge(grid,k,q,alpha,A,b);
+[A,b,P.indEdge]         = setupPatchEdge(grid,k,q,alpha,A,b);
 
 %==============================================================
 % 4. Create patch boundary equations
 %==============================================================
-if (P.verboseLevel >= 2)
+if (param.verboseLevel >= 2)
     fprintf('#########################################################################\n');
     fprintf(' 4. Create patch boundary equations\n');
     fprintf('#########################################################################\n');
 end
-
-
-
-% Add fine fluxes using DFM to equations of coarse nodes at the C/F
-% interface.
-AlistCF             = distributeFineFluxes(grid,k,q,P.ilower,P.iupper);
-Alist               = [Alist; AlistCF];
-
-% Create or update sparse LHS matrix
-if (isempty(A))
-    Anew = sparse(Alist(:,1),Alist(:,2),Alist(:,3));
-else
-    B = sparse(Alist(:,1),Alist(:,2),Alist(:,3));
-    Anew = sparse(size(B,1),size(B,2));
-    Anew(1:size(A,1),1:size(A,2)) = A;
-    Anew = Anew + B;
-end
-
-% Diagonally scale the Dirichlet boundary equations to make the matrix
-% symmetric. This means to pass to flux boundary nodes like the ghost nodes
-% flux form below.
-i = setupOperatorPatch(grid,k,q,P.ilower,P.iupper,2,0);
-if (~isempty(i))
-    % We would like to do that, but entries in i(:,2) are not unique; so do
-    % it over each face separately, and there i(:,2) entries are unique.
-    %Anew(:,i(:,2)) = Anew(:,i(:,2)) + Anew(:,i(:,1));               % Pass to flux ghost points (by means of a Gaussian elimination on the appropriate columns, in effect)
-    faceSize = size(i,1)/(2*grid.dim);
-    for f = 1:2*grid.dim
-        face = [(f-1)*faceSize:f*faceSize-1]+1;
-        Anew(:,i(face,2)) = Anew(:,i(face,2)) + Anew(:,i(face,1));               % Pass to flux ghost points (by means of a Gaussian elimination on the appropriate columns, in effect)
-    end
-    Anew(i(:,1),:) = diag(-i(:,3))*Anew(i(:,1),:);                  % Diagonally scale by (-flux)
-    bnew(i(:,1))   = diag(-i(:,3))*bnew(i(:,1));                         % Scale RHS accordingly
-end
-
-% Pass to flux ghost points. No need to scale RHS because it's 0 for the
-% ghost point equations.
-fineFlux = setupOperatorPatch(grid,k,q,P.ilower,P.iupper,0,1);
-if (~isempty(fineFlux))
-    i = setupOperatorPatch(grid,k,q,P.ilower,P.iupper,0,2);         % Each row: [ghost fineNbhr alpha=interpCoefficient(fineNbhr->ghost)]
-    % We would like to do that, but entries in i(:,2) are not unique; so do
-    % it over each face separately, and there i(:,2) entries are unique.
-    %Anew(:,i(:,2)) = Anew(:,i(:,2)) + Anew(:,i(:,1));               % Pass to flux ghost points (by means of a Gaussian elimination on the appropriate columns, in effect). Every entry in i(:,2) appears exactly once.
-    faceSize = size(i,1)/(2*grid.dim);
-    for f = 1:2*grid.dim
-        face = [(f-1)*faceSize:f*faceSize-1]+1;
-        Anew(:,i(face,2)) = Anew(:,i(face,2)) + Anew(:,i(face,1));               % Pass to flux ghost points (by means of a Gaussian elimination on the appropriate columns, in effect)
-    end
-    Anew(i(:,1),:) = Anew(:,i(:,1))';                                       % Induced interpolation stencils of ghost points is transpose of their appearance in all equations
-    Anew(i(:,1),i(:,1)) = diag(1./(i(:,3)-1));                            % Set diagonal coefficient of ghost point interp stencil to 1/(alpha-1) to be consistent with the original interpolation formula
-end
+[A,b,indBC]           = setupPatchBC(grid,k,q,alpha,A,b);
 
 %==============================================================
-% 5. Initialize patch unused equations
+% 5. Modify coarse patch edge equations
 %==============================================================
-if (P.verboseLevel >= 2)
+if (param.verboseLevel >= 2)
     fprintf('#########################################################################\n');
-    fprintf(' 5. Initialize patch unused equations\n');
+    fprintf(' 5. Modify coarse patch edge equations\n');
     fprintf('#########################################################################\n');
 end
+% Fine cells at C/F interface are the same size as any other fine cell
+alphaCF                 = zeros(1,2*grid.dim);
+for d = 1:grid.dim,
+    for s = [-1 1],
+        alphaCF(2*d-1)  = 0.5;
+        alphaCF(2*d)    = 0.5;
+    end
+end
+[A,b,indUnder] = setupInterface(grid,k,q,alphaCF,A,b);
 
 %==============================================================
 % 6. Delete underlying coarse patch equations and replace them by the identity
-% operator (including ghost equations).
+% operator (including ghost equations). Delete unused gridpoints.
 %==============================================================
-if (P.verboseLevel >= 2)
+if (param.verboseLevel >= 2)
     fprintf('#########################################################################\n');
     fprintf(' 6. Delete underlying coarse patch equations and replace them by the\n');
-    fprintf(' identity operator (including ghost equations).\n');
+    fprintf(' identity operator (including ghost equations). Delete unused gridpoints.\n');
     fprintf('#########################################################################\n');
 end
-
-
-% Delete data of coarse patch underlying the fine patch (disconnect these
-% nodes from rest of coarse patch and put there the identity operator with
-% zero RHS).
-[Alist,bnew,grid]   = deleteUnderlyingData(grid,k,q,Alist,bnew);
-
-
-%==============================================================
-% 7. Modify coarse patch edge equations
-%==============================================================
-if (P.verboseLevel >= 2)
-    fprintf('#########################################################################\n');
-    fprintf(' 7. Modify coarse patch edge equations\n');
-    fprintf('#########################################################################\n');
+patchRange              = P.offsetInd + [1:prod(P.size)];
+indUnused               = patchRange(find(abs(diag(A(patchRange,patchRange))) < eps));
+indUnused               = union(indUnused,indUnder);
+A(indUnused,indUnused)  = eye(length(indUnused));
+b(indUnused)            = 0.0;
+if (param.verboseLevel >= 3)
+    indUnused
 end
 
-
-tCPU                = cputime - tStartCPU;
-tElapsed            = etime(clock,tStartElapsed);
-
-if (P.verboseLevel >= 1)
+tCPU        = cputime - tStartCPU;
+tElapsed    = etime(clock,tStartElapsed);
+if (param.verboseLevel >= 2)
     fprintf('CPU time     = %f\n',tCPU);
     fprintf('Elapsed time = %f\n',tElapsed);
 end

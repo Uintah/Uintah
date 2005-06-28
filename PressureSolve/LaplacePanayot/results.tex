@@ -217,7 +217,7 @@ that the discretization error in $U$ is $O(h^2)$.
 
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=0.8\textwidth]{grid4.eps}
+\includegraphics[width=0.8\textwidth]{ProblemA_1Level/grid4.eps}
 \end{center}
 \caption{AMR Grid Layout for $h = \frac14$.}
 \label{grid4}
@@ -225,18 +225,26 @@ that the discretization error in $U$ is $O(h^2)$.
 
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=1\textwidth]{grid8.eps}
+\includegraphics[width=1\textwidth]{ProblemA_1Level/grid8.eps}
 \end{center}
 \caption{AMR Grid Layout for $h = \frac18$.}
 \label{grid8}
 \end{figure}  
 
-\subsection{Discretization Error}
+\newpage
+\subsection{Smooth Solution}
+We analyze the discretization and truncation error convergence on increasingly
+finer grids. In this case, $U$ is smooth and the convergence is second
+order in $h$.
+
+\subsubsection{Discretization Error}
+The discretization error $e^h := U^h-u^h$ is converges as $O(h^2)$ when
+$h \rightarrow 0$, in both global ($L_2$) and a local ($L_{\infty}$) norms.
 
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=0.45\textwidth]{DiscSolution32_L1P1.eps}
-\includegraphics[width=0.45\textwidth]{DiscError32_L1P1.eps}
+\includegraphics[width=0.45\textwidth]{ProblemA_1Level/DiscSolution32_L1P1.eps}
+\includegraphics[width=0.45\textwidth]{ProblemA_1Level/DiscError32_L1P1.eps}
 \end{center}
 \caption{Left: discrete solution $u^h$ at level 1, patch 1, for
 $h = \frac{1}{32}$. Right: discretization error $U^h-u^h$.}
@@ -245,15 +253,48 @@ $h = \frac{1}{32}$. Right: discretization error $U^h-u^h$.}
 
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=0.45\textwidth]{DiscSolution64_L1P1.eps}
-\includegraphics[width=0.45\textwidth]{DiscError64_L1P1.eps}
+\includegraphics[width=0.45\textwidth]{ProblemA_1Level/DiscSolution64_L1P1.eps}
+\includegraphics[width=0.45\textwidth]{ProblemA_1Level/DiscError64_L1P1.eps}
 \end{center}
 \caption{Left: discrete solution $u^h$ at level 1, patch 1, for
 $h = \frac{1}{64}$. Right: discretization error $U^h-u^h$.}
 \label{solution64}
 \end{figure}  
 
-\input DiscErrorL1P1
+\input ProblemA_1Level/DiscErrorL1P1
+
+\subsubsection{Truncation Error}
+For a smooth solution $U$, the truncation error $\tau := f^h - L(I^h U)$
+(where $I^h$ is the injection operator of a continuous function to grid $h$)
+is $O(h^4)$ for interior cells,
+thanks to the symmetry of the stencil and cancellation of $O(h^3)$ terms.
+However, near boundaries $\tau=O(h^3)$ as can be seen in the analysis below.
+Indeed, the results depicted in Figs.~\ref{Trunc_8_16}--\ref{Trunc_32_64}
+and Table~\ref{Table-ProblemA_1Level/TruncErrorL1P1} confirm this analysis:
+the maximum truncation error is attained near boundaries and is much larger
+than the median truncation error.
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=0.45\textwidth]{ProblemA_1Level/TruncError8_L1P1.eps}
+\includegraphics[width=0.45\textwidth]{ProblemA_1Level/TruncError16_L1P1.eps}
+\end{center}
+\caption{Left: truncation error $\tau^h$ at level 1, patch 1. Left:
+$h = \frac{1}{8}$. Right:$h = \frac{1}{16}$.}
+\label{Trunc_8_16}
+\end{figure}  
+
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=0.45\textwidth]{ProblemA_1Level/TruncError32_L1P1.eps}
+\includegraphics[width=0.45\textwidth]{ProblemA_1Level/TruncError64_L1P1.eps}
+\end{center}
+\caption{Left: truncation error $\tau^h$ at level 1, patch 1. Left:
+$h = \frac{1}{32}$. Right:$h = \frac{1}{64}$.}
+\label{Trunc_32_64}
+\end{figure}  
+
+\input ProblemA_1Level/TruncErrorL1P1
 
 %========================= TWO LEVEL RESULTS ===============================
 \newpage
