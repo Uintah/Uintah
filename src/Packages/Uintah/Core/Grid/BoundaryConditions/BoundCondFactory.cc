@@ -6,11 +6,13 @@
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/TemperatureBoundCond.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/PressureBoundCond.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/DensityBoundCond.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/SpecificVolBoundCond.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/MassFracBoundCond.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <map>
 #include <stdlib.h>
@@ -97,15 +99,23 @@ void BoundCondFactory::create(ProblemSpecP& child,
             bc_attr["var"]   == "Dirichlet") ) {
     bc = scinew DensityBoundCond(child,bc_attr["var"]);
   } 
+  else if (bc_attr["label"] == "SpecificVol" &&
+           (bc_attr["var"]   == "Neumann" ||
+            bc_attr["var"]   == "Dirichlet" ||
+            bc_attr["var"]   == "computeFromEOS" ||
+            bc_attr["var"]   == "computeFromDensity") ) {
+    bc = scinew SpecificVolBoundCond(child,bc_attr["var"]);
+  }
   else if (ModelsBC &&
            (bc_attr["var"]   == "Neumann"  ||
             bc_attr["var"]   == "Dirichlet") ) {  
     bc = scinew MassFractionBoundCond(child,bc_attr["var"],bc_attr["label"]);
   }
   else {
-    cerr << "BoundCondFactory: Unknown Boundary Condition Type " << "(" << bc_attr["var"] 
-         << ")  " << bc_attr["label"]<<endl;
-    exit(1);
+    ostringstream warn;
+    warn << "BoundCondFactory: Unknown Boundary Condition: "<< bc_attr["label"]
+         << " Type " << "(" << bc_attr["var"] << ")  " <<endl;
+    SCI_THROW(ProblemSetupException(warn.str()));
   }
 }
 
