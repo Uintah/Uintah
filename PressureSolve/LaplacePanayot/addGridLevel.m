@@ -1,6 +1,13 @@
 function [grid,k] = addGridLevel(grid,type,arg)
-global verboseLevel
-% Add a level to grid hierarchy; level id returned = k
+%ADDGRIDLEVEL  Add a level to the AMR grid.
+%   [GRID,K] = ADDGRIDLEVEL(GRID,TYPE,ARG) adds a new level (whose index is
+%   returned in K) to the grid GRID. type can be either 'meshsize' (specify
+%   level meshsize) or 'refineratio', a refinement ratio from the previous
+%   level's meshsize.
+%
+%   See also: ADDGRIDPATCH, TESTDISC.
+
+globalParams;
 
 grid.numLevels = grid.numLevels+1;
 k = grid.numLevels;
@@ -34,7 +41,7 @@ switch lower(type)   % LHS matrix, data is LHS matrix data structure
         error('addGridLevel: unknown type');
 end
 
-if (verboseLevel >= 1)
+if (P.verboseLevel >= 1)
     if (k == 1)
         fprintf('Created empty level k=%d, meshsize = [%.5f %.5f]\n',k,grid.level{k}.h);
     else

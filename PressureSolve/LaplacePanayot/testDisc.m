@@ -5,21 +5,29 @@
 %   solution u has more variations. The scheme is a cell-centered, finite volume,
 %   symmetric discretization on the composite AMR grid.
 %
-%   See also: ?.
+%   See also: ADDGRIDLEVEL, ADDGRIDPATCH.
 
-global verboseLevel
+globalParams;
 
-twoLevel            = 1;
-setupGrid           = 1;
-solveSystem         = 1;
-plotResults         = 1;
-saveResults         = 0;
+%=========================================================================
+% Initialize parameters struct
+%=========================================================================
+P                       = [];
+P.twoLevel              = 1;
+P.setupGrid             = 1;
+P.solveSystem           = 1;
+P.plotResults           = 1;
+P.saveResults           = 0;
 
-outputDir           = 'ProblemA_1Level';
-verboseLevel        = 2;
-numCellsRange       = 8; %2.^[2:1:6];
+P.outputDir             = 'ProblemA_1Level';
+P.verboseLevel          = 2;
 
-success = mkdir('.',outputDir);
+
+%=========================================================================
+% Run discretization on a sequence of successively finer grids
+%=========================================================================
+numCellsRange           = 8; %2.^[2:1:6];
+success = mkdir('.',P.outputDir);
 
 for count = 1:length(numCellsRange)
     numCells = numCellsRange(count);
@@ -27,8 +35,8 @@ for count = 1:length(numCellsRange)
     %-------------------------------------------------------------------------
     % Set up grid (AMR levels, patches)
     %-------------------------------------------------------------------------
-    if (setupGrid)
-        if (verboseLevel >= 1)
+    if (P.setupGrid)
+        if (P.verboseLevel >= 1)
             fprintf('-------------------------------------------------------------------------\n');
             fprintf(' Set up grid & system\n');
             fprintf('-------------------------------------------------------------------------\n');
@@ -60,7 +68,7 @@ for count = 1:length(numCellsRange)
 
         tCPU        = cputime - tStartCPU;
         tElapsed    = etime(clock,tStartElapsed);
-        if (verboseLevel >= 1)
+        if (P.verboseLevel >= 1)
             fprintf('CPU time     = %f\n',tCPU);
             fprintf('Elapsed time = %f\n',tElapsed);
             printGrid(grid);
@@ -71,7 +79,7 @@ for count = 1:length(numCellsRange)
     % Solve the linear system
     %-------------------------------------------------------------------------
     if (solveSystem)
-        if (verboseLevel >= 1)
+        if (P.verboseLevel >= 1)
             fprintf('-------------------------------------------------------------------------\n');
             fprintf(' Solve the linear system\n');
             fprintf('-------------------------------------------------------------------------\n');
@@ -82,7 +90,7 @@ for count = 1:length(numCellsRange)
         u = sparseToAMR(x,grid);           % Translate the solution vector to patch-based
         tCPU        = cputime - tStartCPU;
         tElapsed    = etime(clock,tStartElapsed);
-        if (verboseLevel >= 1)
+        if (P.verboseLevel >= 1)
             fprintf('CPU time     = %f\n',tCPU);
             fprintf('Elapsed time = %f\n',tElapsed);
         end
@@ -92,7 +100,7 @@ for count = 1:length(numCellsRange)
     % Computed exact solution vector, patch-based
     %-------------------------------------------------------------------------
     if (plotResults)
-        if (verboseLevel >= 1)
+        if (P.verboseLevel >= 1)
             fprintf('-------------------------------------------------------------------------\n');
             fprintf(' Compute exact solution, plot\n');
             fprintf('-------------------------------------------------------------------------\n');
@@ -139,7 +147,7 @@ for count = 1:length(numCellsRange)
                 title(sprintf('Discretization error on Level %d, Patch %d',k,q));
                 eval(sprintf('print -depsc %s/DiscError%d_L%dP%d.eps',outputDir,numCells,k,q));
                 shg;
-                
+
                 fig = fig+1;
                 figure(fig);
                 clf;
@@ -151,7 +159,7 @@ for count = 1:length(numCellsRange)
         end
         tCPU        = cputime - tStartCPU;
         tElapsed    = etime(clock,tStartElapsed);
-        if (verboseLevel >= 1)
+        if (P.verboseLevel >= 1)
             fprintf('CPU time     = %f\n',tCPU);
             fprintf('Elapsed time = %f\n',tElapsed);
         end
@@ -176,12 +184,12 @@ for k = 1:grid.numLevels,
         e = err{k}{q};
         factors = fac(e);
         fmt{1} = '%4d';
-%         for i = 1:size(e,2)
-%             data = [data e(:,i) [0; factors(:,i)]];
-%             fmt{2*i} = '%.3e';
-%             fmt{2*i+1} = '%.3f';
-%         end
-% %        latexTable(data,Label,fileName,Caption,'%3d','%.3e');
-%         latexTableFactors(data,Label,fileName,Caption,fmt{:});
+        %         for i = 1:size(e,2)
+        %             data = [data e(:,i) [0; factors(:,i)]];
+        %             fmt{2*i} = '%.3e';
+        %             fmt{2*i+1} = '%.3f';
+        %         end
+        % %        latexTable(data,Label,fileName,Caption,'%3d','%.3e');
+        %         latexTableFactors(data,Label,fileName,Caption,fmt{:});
     end
 end
