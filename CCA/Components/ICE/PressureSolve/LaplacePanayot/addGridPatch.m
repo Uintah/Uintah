@@ -1,6 +1,14 @@
 function [grid,q,A,b] = addGridPatch(grid,k,ilower,iupper,parentQ,A,b)
-global verboseLevel
-% Add a patch to level k; patch id returned = q
+%ADDGRIDPATCH  Add a patch to the AMR grid.
+%   [GRID,Q,A,B] = ADDGRIDPATCH(GRID,K,ILOWER,IUPPER,PARENTQ,A,B) updates
+%   the left hand side matrix A and the right hand side B of the composite
+%   grid linear system with a new patch Q at level K, whose extents
+%   (without ghost cells) are ILOWER to IUPPER, under the parent patch
+%   PARENTQ.
+%
+%   See also: ADDGRIDLEVEL, TESTDISC.
+
+globalParams;
 
 tStartCPU           = cputime;
 tStartElapsed       = clock;
@@ -12,7 +20,7 @@ end
 %==============================================================
 % 1. Create an empty patch
 %==============================================================
-if (verboseLevel >= 2)
+if (P.verboseLevel >= 2)
     fprintf('#########################################################################\n');
     fprintf(' 1. Create an empty patch\n');
     fprintf('#########################################################################\n');
@@ -31,41 +39,55 @@ grid.level{k}.patch{q}      = P;
 if (k > 1)    
     grid.level{k-1}.patch{parentQ}.children = [grid.level{k-1}.patch{q}.children parentQ];
 end
-if (verboseLevel >= 1)
+if (P.verboseLevel >= 1)
     fprintf('Created level k=%3d patch q=%3d (parentQ = %3d), ilower = [%3d %3d], iupper = [%3d %3d]\n',...
         k,q,parentQ,ilower,iupper);
 end
 
 grid                        = updateGrid(grid);
+Anew                        = sparse([],[],[],grid.totalVars,grid.totalVars,(2*grid.dim+1)*grid.totalVars);
+Anew(1:size(A,1),1:size(A,2)) = A;
+A                           = Anew;
 b                           = [b; zeros(grid.totalVars-length(b),1)];
 
 %==============================================================
 % 2. Create patch interior equations
 %==============================================================
-if (verboseLevel >= 2)
+if (P.verboseLevel >= 2)
     fprintf('#########################################################################\n');
     fprintf(' 2. Create patch interior equations\n');
     fprintf('#########################################################################\n');
 end
-[A,b,P.indInterior] = setupPatchInterior(grid,k,q,A,b);
+[A,b,P.indInterior]     = setupPatchInterior(grid,k,q,A,b);
 
 %==============================================================
 % 3. Create patch edge equations
 %==============================================================
-if (verboseLevel >= 2)
+if (P.verboseLevel >= 2)
     fprintf('#########################################################################\n');
     fprintf(' 3. Create patch edge equations\n');
     fprintf('#########################################################################\n');
 end
 
+alpha                   = zeros(1,2*grid.dim);
+for d = 1:grid.dim,
+    for s = [-1 1],
+        alpha(2*d-1)    = 0.25;     % Dirichlet boundary on the left in dimension d
+        alpha(2*d)      = 0.25;     % Dirichlet boundary on the right in dimension d
+    end
+end
+[A,b,indEdge]           = setupPatchEdge(grid,k,q,alpha,A,b);
+
 %==============================================================
 % 4. Create patch boundary equations
 %==============================================================
-if (verboseLevel >= 2)
+if (P.verboseLevel >= 2)
     fprintf('#########################################################################\n');
     fprintf(' 4. Create patch boundary equations\n');
     fprintf('#########################################################################\n');
 end
+
+
 
 % Add fine fluxes using DFM to equations of coarse nodes at the C/F
 % interface.
@@ -119,7 +141,7 @@ end
 %==============================================================
 % 5. Initialize patch unused equations
 %==============================================================
-if (verboseLevel >= 2)
+if (P.verboseLevel >= 2)
     fprintf('#########################################################################\n');
     fprintf(' 5. Initialize patch unused equations\n');
     fprintf('#########################################################################\n');
@@ -129,7 +151,7 @@ end
 % 6. Delete underlying coarse patch equations and replace them by the identity
 % operator (including ghost equations).
 %==============================================================
-if (verboseLevel >= 2)
+if (P.verboseLevel >= 2)
     fprintf('#########################################################################\n');
     fprintf(' 6. Delete underlying coarse patch equations and replace them by the\n');
     fprintf(' identity operator (including ghost equations).\n');
@@ -146,7 +168,7 @@ end
 %==============================================================
 % 7. Modify coarse patch edge equations
 %==============================================================
-if (verboseLevel >= 2)
+if (P.verboseLevel >= 2)
     fprintf('#########################################################################\n');
     fprintf(' 7. Modify coarse patch edge equations\n');
     fprintf('#########################################################################\n');
@@ -156,7 +178,7 @@ end
 tCPU                = cputime - tStartCPU;
 tElapsed            = etime(clock,tStartElapsed);
 
-if (verboseLevel >= 1)
+if (P.verboseLevel >= 1)
     fprintf('CPU time     = %f\n',tCPU);
     fprintf('Elapsed time = %f\n',tElapsed);
 end

@@ -2,6 +2,8 @@ function plotGrid(grid,fileName,showGhosts,showCellIndex)
 % Plot gridlines (works in 2D only). If showGhosts=1 we add ghost cells to
 % the plot.
 
+globalParams;
+
 if (nargin < 2)
     fileName = 'grid.eps';
 end
