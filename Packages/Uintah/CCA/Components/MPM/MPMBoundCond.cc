@@ -35,14 +35,16 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
       for (int child = 0; child < numChildren; child++) {
 	vector<IntVector> bound,nbound,sfx,sfy,sfz;
 	vector<IntVector>::const_iterator b;  // boundary cell iterator
-	if (type == "Acceleration")
+	if (type == "Acceleration"){
 	  vel_bcs = patch->getArrayBCValues(face,dwi,"Velocity",bound,
 					    nbound,sfx,sfy,sfz,child);
-	else
+        }
+	else{
 	  vel_bcs  = patch->getArrayBCValues(face,dwi,type,bound,
 					     nbound,sfx,sfy,sfz,child);
+        }
 
-	if (type == "Velocity")
+	if (type == "Velocity"){
 	  if (vel_bcs != 0) {
 	    const VelocityBoundCond* bc =
 	      dynamic_cast<const VelocityBoundCond*>(vel_bcs);
@@ -58,7 +60,8 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 	    }
 	    delete vel_bcs;
 	  }
-	if (type == "Acceleration")
+	}
+	if (type == "Acceleration"){
 	  if (vel_bcs != 0) {
 	    const VelocityBoundCond* bc =
 	      dynamic_cast<const VelocityBoundCond*>(vel_bcs);
@@ -74,7 +77,8 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 	    }
 	    delete vel_bcs;
 	  }
-	if (type == "Symmetric")
+	}
+	if (type == "Symmetric"){
 	  if (vel_bcs != 0) {
 	    if (face == Patch::xplus || face == Patch::xminus){
 	      for (b=nbound.begin(); b != nbound.end();b++) {
@@ -106,6 +110,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
             }
 	    delete vel_bcs;
 	  }
+	}
       }
     } else
       continue;
