@@ -8,7 +8,7 @@ function grid = updateGrid(grid)
 
 globalParams;
 
-if (P.verboseLevel >= 1)
+if (param.verboseLevel >= 1)
     fprintf('--- Updating grid ---\n');
 end
 
