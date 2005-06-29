@@ -42,16 +42,13 @@
 #define SCIRun_BuilderService_h
 
 #include <sci_defs/ruby_defs.h>
-#include <sci_defs/babel_defs.h>
 
 #include <Core/CCA/spec/cca_sidl.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
 #include <SCIRun/Internal/InternalComponentInstance.h>
 
-#ifdef HAVE_BABEL
- #ifdef HAVE_RUBY
+#ifdef HAVE_RUBY
   #include <SCIRun/Bridge/AutoBridge.h>
- #endif
 #endif
 
 namespace SCIRun {
@@ -158,9 +155,9 @@ class BuilderService : public sci::cca::ports::BuilderService,
   /** */
   virtual sci::cca::ConnectionID::pointer
   connect(const sci::cca::ComponentID::pointer &user,
-          const std::string &usingPortName,
+          const std::string &usesPortName,
           const sci::cca::ComponentID::pointer &provider,
-          const ::std::string &providingPortName);
+          const ::std::string &providesPortName);
 
   /** */
   virtual SSIDL::array1<sci::cca::ConnectionID::pointer>
@@ -188,9 +185,9 @@ class BuilderService : public sci::cca::ports::BuilderService,
 
   /** */
   virtual SSIDL::array1<std::string>
-  getCompatiblePortList(const sci::cca::ComponentID::pointer &c1,
-                        const std::string &port1,
-                        const sci::cca::ComponentID::pointer &c2);
+  getCompatiblePortList(const sci::cca::ComponentID::pointer &user,
+                        const std::string &usesPortName,
+                        const sci::cca::ComponentID::pointer &provider);
 
 
   // Bridge methods 
