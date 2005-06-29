@@ -566,8 +566,13 @@ Patch::getFaceNodes(FaceType face, int offset,IntVector& l, IntVector& h) const
 {
   // Change from getNodeLowIndex to getInteriorNodeLowIndex.  Need to do this
   // when we have extra cells.
+#if 0
   IntVector lorig=l=getInteriorNodeLowIndex();
   IntVector horig=h=getInteriorNodeHighIndex();
+#endif
+
+  IntVector lorig=l=getNodeLowIndex();
+  IntVector horig=h=getNodeHighIndex();
   switch(face){
   case xminus:
     l.x(lorig.x()-offset);
