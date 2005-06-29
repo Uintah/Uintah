@@ -3,6 +3,7 @@
 #include <Packages/Uintah/CCA/Components/Solvers/DirectSolve.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolver.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 
 
 #include <iostream>
@@ -11,15 +12,18 @@ using std::endl;
 
 using namespace Uintah;
 
-SolverInterface* SolverFactory::create(ProblemSpecP& ps, 
-                                       const ProcessorGroup* world)
+SolverInterface* SolverFactory::create(ProblemSpecP& ps, const ProcessorGroup* world, string cmdline)
 {
-  string solver = "CGSolver";
+  string solver = "CGSolver";;
+  if (cmdline == "") {
+    ProblemSpecP sol_ps = ps->findBlock("Solver");
+    if (sol_ps)
+      sol_ps->get("type",solver);
+  }
+  else
+    solver = cmdline;
 
   SolverInterface* solve = 0;
-  
-  ps->get("SolverInterface",solver);
-
   if(solver == "CGSolver") {
     solve = new CGSolver(world);
   } else if(solver == "DirectSolve") {
@@ -31,8 +35,10 @@ SolverInterface* SolverFactory::create(ProblemSpecP& ps,
     cerr << "Hypre solver not available, hypre not configured\n";
     exit(1);
 #endif
+  } else {
+    throw ProblemSetupException("Unknown solver.  Valid Solvers: CGSolver, DirectSolve, hypre");
   }
-  
+
   return solve;
 
 }

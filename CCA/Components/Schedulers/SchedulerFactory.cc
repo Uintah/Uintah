@@ -8,6 +8,7 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <iostream>
 
 using std::cerr;
@@ -22,38 +23,36 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
   SchedulerCommon* sch = 0;
   string scheduler = "";
   
-  ps->get("Scheduler",scheduler);
+  ProblemSpecP sc_ps = ps->findBlock("Scheduler");
+  if (sc_ps)
+    sc_ps->get("type",scheduler);
 
   // Default settings
   if (Uintah::Parallel::usingMPI()) {
     if (scheduler == "")
       scheduler = "MPIScheduler";
     Uintah::Parallel::noThreading();
+
   }
-  else // No MPI
+  else {// No MPI
     if (scheduler == "")
       scheduler = "SingleProcessorScheduler";
+  }
 
+  if (world->myrank() == 0)
+    cout << "Using scheduler " << scheduler << endl;
 
   if(scheduler == "SingleProcessorScheduler"){
-    SingleProcessorScheduler* sched = 
-      scinew SingleProcessorScheduler(world, output);
-    sch=sched;
+    sch = scinew SingleProcessorScheduler(world, output);
   } else if(scheduler == "SimpleScheduler"){
-    SimpleScheduler* sched = 
-      scinew SimpleScheduler(world, output);
-    sch=sched;
+    sch = scinew SimpleScheduler(world, output);
   } else if(scheduler == "MPIScheduler"){
-    MPIScheduler* sched = 
-      scinew MPIScheduler(world, output);
-    sch=sched;
-  }  else if(scheduler == "NullScheduler"){
-    NullScheduler* sched =
-      scinew NullScheduler(world, output);
-    sch=sched;
+    sch = scinew MPIScheduler(world, output);
+  } else if(scheduler == "NullScheduler"){
+    sch = scinew NullScheduler(world, output);
   } else {
     sch = 0;   
-    cerr << "Unknown scheduler: " + scheduler << endl;
+    throw ProblemSetupException("Unknown scheduler");
   }
   
   return sch;

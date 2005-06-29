@@ -7,9 +7,9 @@
 	<title>test</title>
    </Meta>
 
-   <SimulationController>Single</SimulationController>
-  
-   <SimulationComponent>  test </SimulationComponent>
+   <SimulationComponent>
+        <type> test <type>
+   </SimulationComponent>
    <Time>
 	<maxTime>10.0</maxTime>
 	<initTime>0.0</initTime>

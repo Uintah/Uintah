@@ -9,9 +9,11 @@ RegridderCommon* RegridderFactory::create(ProblemSpecP& ps,
                                           const ProcessorGroup* world)
 {
   RegridderCommon* regrid = 0;
-  string regridder = "";
+  string regridder = "Hierarchical";
   
-  ps->get("Regridder",regridder);
+  ProblemSpecP reg_ps = ps->findBlock("Regridder");
+  if (reg_ps)
+    reg_ps->get("type",regridder);
 
   if(regridder == "Hierarchical") {
     regrid = new HierarchicalRegridder(world);

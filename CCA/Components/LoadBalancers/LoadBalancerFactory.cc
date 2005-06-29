@@ -7,9 +7,11 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <iostream>
 
 using std::cerr;
+using std::cout;
 using std::endl;
 
 using namespace Uintah;
@@ -21,7 +23,9 @@ LoadBalancerCommon* LoadBalancerFactory::create(ProblemSpecP& ps,
   string loadbalancer = "";
   IntVector layout(1,1,1);
   
-  ps->get("LoadBalancer",loadbalancer);
+  ProblemSpecP lb_ps = ps->findBlock("LoadBalancer");
+  if (lb_ps)
+    lb_ps->get("type",loadbalancer);
 
   // Default settings
   if (Uintah::Parallel::usingMPI()) {
@@ -33,33 +37,26 @@ LoadBalancerCommon* LoadBalancerFactory::create(ProblemSpecP& ps,
       loadbalancer = "SingleProcessorLoadBalancer";
 
 
+  if (world->myrank() == 0)
+    cout << "Using Load Balancer " << loadbalancer << endl;
+
   if(loadbalancer == "SingleProcessorLoadBalancer"){
-    SingleProcessorLoadBalancer* splb 
-      = scinew SingleProcessorLoadBalancer(world);
-    bal = splb;
+    bal = scinew SingleProcessorLoadBalancer(world);
   } else if(loadbalancer == "RoundRobinLoadBalancer" || 
             loadbalancer == "RoundRobin" || 
             loadbalancer == "roundrobin"){
-    RoundRobinLoadBalancer* rrlb 
-      = scinew RoundRobinLoadBalancer(world);
-    bal = rrlb;
+    bal = scinew RoundRobinLoadBalancer(world);
   } else if(loadbalancer == "SimpleLoadBalancer") {
-    SimpleLoadBalancer* slb
-      = scinew SimpleLoadBalancer(world);
-    bal = slb;
+    bal = scinew SimpleLoadBalancer(world);
   } else if( (loadbalancer == "NirvanaLoadBalancer") ||
              (loadbalancer == "NLB") ) {
-    NirvanaLoadBalancer* nlb
-      = scinew NirvanaLoadBalancer(world, layout);
-    bal = nlb;
+    bal = scinew NirvanaLoadBalancer(world, layout);
   } else if( (loadbalancer == "ParticleLoadBalancer") ||
              (loadbalancer == "PLB") ) {
-    ParticleLoadBalancer* plb 
-      = scinew ParticleLoadBalancer(world);
-    bal = plb;
+    bal = scinew ParticleLoadBalancer(world);
   } else {
     bal = 0;   
-    cerr << "Unknown load balancer: " + loadbalancer << endl;
+    throw ProblemSetupException("Unknown load balancer");
   }
   
   return bal;
