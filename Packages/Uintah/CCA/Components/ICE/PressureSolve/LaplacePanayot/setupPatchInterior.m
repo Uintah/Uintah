@@ -1,4 +1,4 @@
-function [A,b] = setupPatchInterior(grid,k,q,A,b,ilower,iupper,reallyUpdate)
+function [A,b,Alist] = setupPatchInterior(grid,k,q,A,b,ilower,iupper,reallyUpdate)
 %SETUPPATCCHINTERIOR  Set the discrete operator at a patch's edge.
 %   [A,B] = SETUPPATCHINTERIOR(GRID,K,Q,A,B,ALPHA,ILOWER,IUPPER,REALLYUPDATE) updates the LHS
 %   matrix A and the RHS matrix B, adding to them all the equations at
