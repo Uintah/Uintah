@@ -53,8 +53,10 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 		variable[*b] = bc->getValue();
               }
               if(n8or27==27){
-	        for (b=bound.begin();b!=bound.end();b++){
-                  variable[*b] = bc->getValue();
+                // add an offset to the nbound iterator to fill in the
+                // interior nodes.
+	        for (b=nbound.begin();b!=nbound.end();b++){
+                  variable[*b - oneCell] = bc->getValue();
                 }
               }
 	    }
@@ -70,8 +72,8 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 		variable[*b] = Vector(0,0,0);
 	      }
               if(n8or27==27){
-	        for (b=bound.begin();b!=bound.end();b++){
-                  variable[*b] = Vector(0.,0.,0.);
+	        for (b=nbound.begin();b!=nbound.end();b++){
+                  variable[*b - oneCell] = Vector(0.,0.,0.);
                 }
               }
 	    }
@@ -85,8 +87,9 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 		variable[*b] = Vector(0.,variable[*b].y(), variable[*b].z());
 	      }
               if(n8or27==27){
-	        for (b=bound.begin(); b != bound.end();b++){
-                  variable[*b] = Vector(0.,variable[*b].y(), variable[*b].z());
+	        for (b=nbound.begin(); b != nbound.end();b++){
+                  variable[*b - oneCell] = Vector(0.,variable[*b].y(), 
+                                                  variable[*b].z());
                 }
               }
             }
@@ -94,8 +97,9 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 	      for (b=nbound.begin(); b != nbound.end();b++)
 		variable[*b] = Vector(variable[*b].x(),0.,variable[*b].z());
               if(n8or27==27){
-	        for (b=bound.begin(); b != bound.end();b++){
-                  variable[*b] = Vector(variable[*b].x(),0.,variable[*b].z());
+	        for (b=nbound.begin(); b != nbound.end();b++){
+                  variable[*b - oneCell] = Vector(variable[*b].x(),0.,
+                                                  variable[*b].z());
                 }
               }
             }
@@ -103,8 +107,9 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 	      for (b=nbound.begin(); b != nbound.end();b++)
 		variable[*b] = Vector(variable[*b].x(), variable[*b].y(),0.);
               if(n8or27==27){
-	        for (b=bound.begin(); b != bound.end();b++){
-                  variable[*b] = Vector(variable[*b].x(), variable[*b].y(),0.);
+	        for (b=nbound.begin(); b != nbound.end();b++){
+                  variable[*b - oneCell] = Vector(variable[*b].x(), 
+                                                  variable[*b].y(),0.);
                 }
               }
             }
@@ -142,8 +147,8 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 	    for (b = nbound.begin(); b != nbound.end();b++)
 	      variable[*b] = bc->getValue();
               if(n8or27==27){
-               for (b = bound.begin();b!=bound.end();b++)
-                 variable[*b] = bc->getValue();
+               for (b = nbound.begin();b!=nbound.end();b++)
+                 variable[*b - oneCell] = bc->getValue();
               }
 	  }
 	  delete temp_bcs;
