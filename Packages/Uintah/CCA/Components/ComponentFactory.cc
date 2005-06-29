@@ -31,127 +31,74 @@ using std::endl;
 
 using namespace Uintah;
 
-SimulationComponent* ComponentFactory::create(ProblemSpecP& ps, 
-                                              const ProcessorGroup* world)
+UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const ProcessorGroup* world, bool doAMR)
 {
   string sim_comp = "";
-  ps->get("SimulationComponent",sim_comp);
 
-  SimulationInterface* sim = 0;
-  UintahParallelComponent* comp = 0;
-  SimulationComponent* d_simcomp = scinew SimulationComponent;
+  ProblemSpecP sim_ps = ps->findBlock("SimulationComponent");
+  if (sim_ps)
+    sim_ps->get("type",sim_comp);
 
   if (sim_comp == "mpm" || sim_comp == "MPM") {
-    SerialMPM* mpm = scinew SerialMPM(world);
-    sim = mpm;
-    comp = mpm;
+    return scinew SerialMPM(world);
   } else if (sim_comp == "fracturempm" || sim_comp == "FRACTUREMPM") {
-    FractureMPM* fmpm = scinew FractureMPM(world);
-    sim = fmpm;
-    comp = fmpm;
+    return scinew FractureMPM(world);
   } else if (sim_comp == "rigidmpm" || sim_comp == "RIGIDMPM") {
-    RigidMPM* rmpm = scinew RigidMPM(world);
-    sim = rmpm;
-    comp = rmpm;
+    return scinew RigidMPM(world);
   } else if (sim_comp == "shellmpm" || sim_comp == "SHELLMPM") {
-    ShellMPM* smpm = scinew ShellMPM(world);
-    sim = smpm;
-    comp = smpm;
+    return scinew ShellMPM(world);
   } else if (sim_comp == "impm" || sim_comp == "IMPM") {
-     ImpMPM* impm = scinew ImpMPM(world);
-     sim = impm;
-     comp = impm;
+    return scinew ImpMPM(world);
   } else if (sim_comp == "ice" || sim_comp == "ICE") {
-    ICE* ice = scinew ICE(world);
-    sim = ice;
-    comp = ice;
-  } else if (sim_comp == "amrice" || sim_comp == "AMRICE") {
-    AMRICE* amrice = scinew AMRICE(world);
-    sim = amrice;
-    comp = amrice;
+    if (doAMR)
+      return scinew AMRICE(world);
+    else
+      return scinew ICE(world);
   } else if (sim_comp == "mpmice" || sim_comp == "MPMICE") {
-    MPMICE* mpmice  = scinew MPMICE(world,STAND_MPMICE);
-    sim = mpmice;
-    comp = mpmice;
+    return scinew MPMICE(world,STAND_MPMICE, doAMR);
   } else if (sim_comp == "shellmpmice" || sim_comp == "SHELLMPMICE") {
-    MPMICE* smpmice  = scinew MPMICE(world,SHELL_MPMICE);
-    sim = smpmice;
-    comp = smpmice;
+    return scinew MPMICE(world,SHELL_MPMICE, doAMR);
   } else if (sim_comp == "rigidmpmice" || sim_comp == "RIGIDMPMICE") {
-    MPMICE* rmpmice  = scinew MPMICE(world,RIGID_MPMICE);
-    sim = rmpmice;
-    comp = rmpmice;
+    return scinew MPMICE(world,RIGID_MPMICE, doAMR);
   } else if (sim_comp == "fracturempmice" || sim_comp == "FRACTUREMPMICE") {
-    MPMICE* fmpmice  = scinew MPMICE(world,FRACTURE_MPMICE);
-    sim = fmpmice;
-    comp = fmpmice;
+    return scinew MPMICE(world,FRACTURE_MPMICE, doAMR);
   } else if (sim_comp == "mpmarches" || sim_comp == "MPMARCHES") {
-    MPMArches* mpmarches  = scinew MPMArches(world);
-    sim = mpmarches;
-    comp = mpmarches;
+    return scinew MPMArches(world);
   } else if (sim_comp == "burger" || sim_comp == "BURGER") {
-    Burger* burger  = scinew Burger(world);
-    sim = burger;
-    comp = burger;
+    return scinew Burger(world);
   } else if (sim_comp == "wave" || sim_comp == "WAVE") {
-    Wave* wave  = scinew Wave(world);
-    sim = wave;
-    comp = wave;
-  } else if (sim_comp == "amrwave" || sim_comp == "AMRWAVE") {
-    Wave* amrwave  = scinew AMRWave(world);
-    sim = amrwave;
-    comp = amrwave;
+    if (doAMR)
+      return scinew AMRWave(world);
+    else
+      return scinew Wave(world);
   } else if (sim_comp == "poisson1" || sim_comp == "POISSON1") {
-    Poisson1* poisson1  = scinew Poisson1(world);
-    sim = poisson1;
-    comp = poisson1;
+    return scinew Poisson1(world);
   } else if (sim_comp == "regriddertest" || sim_comp == "REGRIDDERTEST") {
-    RegridderTest* regriddertest  = scinew RegridderTest(world);
-    sim = regriddertest;
-    comp = regriddertest;
+    return scinew RegridderTest(world);
   } else if (sim_comp == "poisson2" || sim_comp == "POISSON2") {
-    Poisson2* poisson2  = scinew Poisson2(world);
-    sim = poisson2;
-    comp = poisson2;
+    return scinew Poisson2(world);
   } else if (sim_comp == "poisson3" || sim_comp == "POISSON3") {
-    Poisson3* poisson3  = scinew Poisson3(world);
-    sim = poisson3;
-    comp = poisson3;
+    return scinew Poisson3(world);
   } else if (sim_comp == "particletest" || sim_comp == "PARTICLETEST") {
-    ParticleTest1* particletest  = scinew ParticleTest1(world);
-    sim = particletest;
-    comp = particletest;
+    return scinew ParticleTest1(world);
   } else if (sim_comp == "solvertest" || sim_comp == "SOLVERTEST") {
-    SolverTest1* solvertest  = scinew SolverTest1(world);
-    sim = solvertest;
-    comp = solvertest;
+    return scinew SolverTest1(world);
   } else if (sim_comp == "simplecfd" || sim_comp == "SIMPLECFD") {
-    SimpleCFD* simplecfd  = scinew SimpleCFD(world);
-    sim = simplecfd;
-    comp = simplecfd;
-  } else if (sim_comp == "amrsimplecfd" || sim_comp == "AMRSIMPLECFD") {
-    AMRSimpleCFD* amrsimplecfd  = scinew AMRSimpleCFD(world);
-    sim = amrsimplecfd;
-    comp = amrsimplecfd;
+    if (doAMR)
+      return scinew AMRSimpleCFD(world);
+    else
+      return scinew SimpleCFD(world);
   } else if (sim_comp == "test" || sim_comp == "TEST") {
-    Test* test  = scinew Test(world);
-    sim = test;
-    comp = test;
+    return scinew Test(world);
   } else if (sim_comp == "test1" || sim_comp == "TEST1") {
-    Test1* test1  = scinew Test1(world);
-    sim = test1;
-    comp = test1;
+    return scinew Test1(world);
   } else if (sim_comp == "switcher" || sim_comp == "SWITCHER") {
-    Switcher* switcher  = scinew Switcher(world);
-    sim = switcher;
-    comp = switcher;
+    return scinew Switcher(world, ps, doAMR);
   } else {
-    throw ProblemSetupException("Unknown simulationComponent");
+    char *c = 0;
+    *c = 0;
+    throw ProblemSetupException("Unknown simulationComponent. Must specify -arches, -ice, -mpm, "
+		  "-impm, -fmpmice, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, or -poisson3");
   }
  
-  d_simcomp->d_sim = sim;
-  d_simcomp->d_comp = comp;
-
-  return d_simcomp;
-
 }

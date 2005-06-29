@@ -7,13 +7,21 @@
 	<title>Multi tests</title>
    </Meta>
 
-   <SimulationController>Multiple</SimulationController>
-  
-   <SimulationComponent>  test </SimulationComponent>
-   <input_file> inputs/Examples/test.ups </input_file>
-   
-   <SimulationComponent>  test1 </SimulationComponent>
-   <input_file> inputs/Examples/test1.ups </input_file>
+   <SimulationComponent>
+       <type>switcher</type>
+       <subcomponent>
+           <SimulationComponent>
+               <type> test </type>
+           </SimulationComponent>
+           <input_file> inputs/Examples/test.ups</input_file>
+       </subcomponent>
+       <subcomponent>
+           <SimulationComponent>
+               <type> test2 </type>
+           </SimulationComponent>
+           <input_file> inputs/Examples/test1.ups</input_file>
+       </subcomponent>
+   </SimulationComponent>
 
    <Time>
 	<maxTime>10.0</maxTime>

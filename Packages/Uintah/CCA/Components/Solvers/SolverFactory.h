@@ -13,8 +13,7 @@ namespace Uintah {
   public:
     // this function has a switch for all known solvers
     
-    static SolverInterface* create(ProblemSpecP& ps,
-                                   const ProcessorGroup* world);
+    static SolverInterface* create(ProblemSpecP& ps, const ProcessorGroup* world, string cmdline);
 
 
   };

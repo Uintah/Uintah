@@ -1,4 +1,6 @@
 #include <Packages/Uintah/CCA/Components/Switcher/Switcher.h>
+#include <Packages/Uintah/CCA/Components/ComponentFactory.h>
+#include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
@@ -7,32 +9,42 @@
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
 #include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/SimpleMaterial.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 
-Switcher::Switcher(const ProcessorGroup* myworld, unsigned int num_components)
+Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups, bool doAMR)
   : UintahParallelComponent(myworld)
 {
+  int num_components = 0;
+  d_componentIndex = 0;
+  d_switchState = idle;
+
+  SolverInterface* solver = dynamic_cast<SolverInterface*>(getPort("solver"));
+  ProblemSpecP sim_block = ups->findBlock("SimulationComponent");
+  for (ProblemSpecP child = sim_block->findBlock("subcomponent"); child != 0; 
+       child = child->findNextBlock("subcomponent")) {
+
+    num_components++;
+    string in("");
+    if (!child->get("input_file",in))
+      throw ProblemSetupException("Need input file for subcomponent");
+
+    UintahParallelComponent* comp = ComponentFactory::create(child, myworld, doAMR);
+    SimulationInterface* sim = dynamic_cast<SimulationInterface*>(comp);
+    attachPort("sim", sim);
+    attachPort("problem spec", scinew ProblemSpecReader(in));
+    comp->attachPort("solver", solver);
+
+  }
+  
   d_numComponents = num_components;
-  d_componentIndex = 0;
-  d_switchState = idle;
-
-  switchLabel = VarLabel::create("switch.bool",
-                                 SoleVariable<bool>::getTypeDescription());
-}
-
-
-Switcher::Switcher(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld)
-{
-  d_numComponents = 1;
-  d_componentIndex = 0;
-  d_switchState = idle;
 
   switchLabel = VarLabel::create("switch.bool",
                                  SoleVariable<bool>::getTypeDescription());

@@ -7,13 +7,21 @@
 	<title>Colliding Disks</title>
    </Meta>
 
-   <SimulationController>Multiple</SimulationController>
-  
-   <SimulationComponent>  MPM   </SimulationComponent>
-   <input_file> inputs/MPM/disks_include.ups </input_file>
-   
-   <SimulationComponent> MPM </SimulationComponent>
-   <input_file> inputs/MPM/disks_include1.ups </input_file>
+   <SimulationComponent>
+       <type>switcher</type>
+       <subcomponent>
+           <SimulationComponent>
+               <type> mpm </type>
+           </SimulationComponent>
+           <input_file> inputs/IMPM/disks_include1.ups</input_file>
+       </subcomponent>
+       <subcomponent>
+           <SimulationComponent>
+               <type> mpm </type>
+           </SimulationComponent>
+           <input_file> inputs/IMPM/disks_include1.ups</input_file>
+       </subcomponent>
+   </SimulationComponent>
    
 
 </Uintah_specification>

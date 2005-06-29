@@ -32,6 +32,9 @@ ProblemSpecReader::~ProblemSpecReader()
 ProblemSpecP
 ProblemSpecReader::readInputFile()
 {
+  if (d_xmlData != 0)
+    return d_xmlData;
+
   ProblemSpecP prob_spec;
   static bool initialized = false;
   try {
@@ -83,6 +86,7 @@ ProblemSpecReader::readInputFile()
   }
 
   resolveIncludes(prob_spec);
+  d_xmlData = prob_spec;
   return prob_spec;
 }
 
