@@ -331,6 +331,7 @@ public:
   int ref_cnt;
   Mutex lock;
 
+  const ProblemSpecP getTimestep(double time, XMLURL& url);
 protected:
   DataArchive();
   
@@ -338,7 +339,6 @@ private:
   DataArchive(const DataArchive&);
   DataArchive& operator=(const DataArchive&);
   
-  ProblemSpecP getTimestep(double time, XMLURL& url);
   string queryEndianness();  
   int queryNBits();  
 

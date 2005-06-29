@@ -207,7 +207,7 @@ DataArchive::queryTimesteps( std::vector<int>& index,
   dbg << "DataArchive::queryTimesteps completed in " << Time::currentSeconds()-start << " seconds\n";
 }
 
-ProblemSpecP
+const ProblemSpecP
 DataArchive::getTimestep(double searchtime, XMLURL& found_url)
 {
   if(!have_timesteps){
@@ -239,7 +239,7 @@ DataArchive::queryGrid( double time, const ProblemSpec* ups)
   double start = Time::currentSeconds();
   XMLURL url;
   d_lock.lock();
-  ProblemSpecP top = getTimestep(time, url);
+  const ProblemSpecP top = getTimestep(time, url);
   if (top == 0)
     throw InternalError("DataArchive::queryGrid:Cannot find Grid in timestep");
   ProblemSpecP gridnode = top->findBlock("Grid");
