@@ -326,8 +326,7 @@ SSIDL::array1<std::string> BuilderService::getBridgablePortList(
 {
   SSIDL::array1<std::string> availablePorts;
 
-#ifdef HAVE_BABEL
- #ifdef HAVE_RUBY
+#ifdef HAVE_RUBY
   ComponentID* cid1 = dynamic_cast<ComponentID*>(c1.getPointer());
   ComponentID* cid2 = dynamic_cast<ComponentID*>(c2.getPointer());
   if (!cid1 || !cid2)
@@ -352,7 +351,6 @@ SSIDL::array1<std::string> BuilderService::getBridgablePortList(
     if ((pr1->getModel() != pr2->getModel())&&(autobr.canBridge(pr1,pr2)))
       availablePorts.push_back(pr2->getUniqueName());
   }
- #endif
 #endif
 
   return availablePorts;
@@ -364,8 +362,7 @@ BuilderService::generateBridge(const sci::cca::ComponentID::pointer& c1,
                                const sci::cca::ComponentID::pointer& c2,
                                const std::string& port2)
 {
-#ifdef HAVE_BABEL
- #ifdef HAVE_RUBY
+#ifdef HAVE_RUBY
   ComponentID* cid1 = dynamic_cast<ComponentID*>(c1.getPointer());
   ComponentID* cid2 = dynamic_cast<ComponentID*>(c2.getPointer());
   if (!cid1 || !cid2) {
@@ -385,7 +382,6 @@ BuilderService::generateBridge(const sci::cca::ComponentID::pointer& c1,
     throw CCAException("Unknown port");
   }
   return (autobr.genBridge(pr1->getModel(),cid1->name,pr2->getModel(),cid2->name));
- #endif
 #endif
 }
 
