@@ -12,8 +12,7 @@ namespace Uintah {
   public:
     enum switchState {idle, switching, post_switch};
 
-    Switcher(const ProcessorGroup* myworld, unsigned int num_components);
-    Switcher(const ProcessorGroup* myworld);
+    Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups, bool doAMR);
     virtual ~Switcher();
 
     virtual void problemSetup(const ProblemSpecP& params, GridP& grid,

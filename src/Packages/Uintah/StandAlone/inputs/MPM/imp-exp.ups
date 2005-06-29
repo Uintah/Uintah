@@ -7,13 +7,21 @@
         <title>Compaction of cylinders using both impm and mpm</title>
    </Meta>
 
-   <SimulationController>Multiple</SimulationController>
-  
-   <SimulationComponent> impm </SimulationComponent>
-   <input_file> inputs/IMPM/4disks_2d.1mat.ups</input_file>
-   
-   <SimulationComponent> mpm </SimulationComponent>
-   <input_file> inputs/MPM/4disks_2d.1mat.ups </input_file>
+   <SimulationComponent>
+       <type>switcher</type>
+       <subcomponent>
+           <SimulationComponent>
+               <type> impm </type>
+           </SimulationComponent>
+           <input_file> inputs/IMPM/4disks_2d.1mat.ups</input_file>
+       </subcomponent>
+       <subcomponent>
+           <SimulationComponent>
+               <type> mpm </type>
+           </SimulationComponent>
+           <input_file> inputs/MPM/4disks_2d.1mat.ups</input_file>
+       </subcomponent>
+   </SimulationComponent>
 
   <Time>
      <maxTime>3.e-6</maxTime>
