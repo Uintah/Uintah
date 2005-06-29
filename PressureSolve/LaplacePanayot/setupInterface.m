@@ -38,36 +38,47 @@ if (P.parent < 0)                                                  % Base patch 
     end
     return;
 end
-Q                           = grid.level{k-1}.patch{P.parent};          % Parent patch
-underLower                  = coarsenIndex(grid,k,P.ilower);
-underUpper                  = coarsenIndex(grid,k,P.iupper);
+Qlevel                      = grid.level{k-1};
+Q                           = Qlevel.patch{P.parent};          % Parent patch
+QedgeDomain                 = cell(2,1);                                % Domain edges
+QedgeDomain{1}              = Qlevel.minCell;              % First domain cell - next to left domain boundary - patch-based sub
+QedgeDomain{2}              = Qlevel.maxCell;              % Last domain cell - next to right domain boundary - patch-based sub
+QedgeDomain{:}
+
+underLower                  = coarsenIndex(grid,k,P.ilower);      % level based sub
+underUpper                  = coarsenIndex(grid,k,P.iupper);      % level based sub
+underLower
+underUpper
 
 % underLower,underUpper are inside Q, so add to them BC vars whenever they
 % are near the boundary.
-lowerNearEdge               = find(underLower == edgeDomain{1});
+lowerNearEdge               = find(underLower == QedgeDomain{1});
 underLower(lowerNearEdge)   = underLower(lowerNearEdge) - 1;
 
-upperNearEdge               = find(underUpper == edgeDomain{2});
+upperNearEdge               = find(underUpper == QedgeDomain{2});
 underUpper(upperNearEdge)   = underUpper(upperNearEdge) + 1;
+
+underLower
+underUpper
 
 % Delete the equations at indDel. Note that there still remain connections
 % from equations outside the deleted box to indDel variables.
 %indDel                      = cell(grid.dim,1);
 [indDel,del,matDel]         = indexBox(Q,underLower,underUpper);
 A(indDel,indDel)            = eye(length(indDel));
-b(indUnused)            = 0.0;
+b(indDel)                   = 0.0;
 if (param.verboseLevel >= 3)
     indDel
 end
 
-% Delete remaining connections from outside the deleted box to inside the
-% delete box.
-
-
-
-[A,b,temp,indFull,fullList] = setupPatchInterior(grid,k-1,P.parent,A,b,underLower,underUpper,0);
-Anew                = spconvert([fullList; [grid.totalVars grid.totalVars 0]]);
-A(indFull,:)        = A(indFull,:) - Anew(indFull,:);                       % Do not replace the non-zeros in A here, rather subtract from them.
+% Delete remaining connections from outside the deleted box (indOut) to the
+% deleted box (indDel).
+[temp1,temp2,Alist] = setupPatchInterior(grid,k-1,P.parent,A,b,underLower,underUpper,0);
+in2out              = Alist(~ismember(Alist(:,2),indDel),:);
+out2in              = [in2out(:,2) in2out(:,2) -in2out(:,3)];
+indOut              = unique(out2in(:,1));
+Anew                = spconvert([out2in; [grid.totalVars grid.totalVars 0]]);
+A(indOut,:)         = A(indOut,:) - Anew(indOut,:);
 
 %=====================================================================
 % Loop over all faces.
