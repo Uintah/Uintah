@@ -2279,14 +2279,20 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
    ostringstream taskName;
    taskName << "MPMICE::refineVariable(" << variable->getName() << ")";
    Task* t;
+
+   // the sgis don't like accepting a templated function over a function call for some reason...
+   void (MPMICE::*func)(const ProcessorGroup*, const PatchSubset*, const MaterialSubset*,
+                        DataWarehouse*, DataWarehouse*, const VarLabel*);
    switch(variable->typeDescription()->getSubType()->getType()){
    case TypeDescription::double_type:
+     func = &MPMICE::refineVariableCC<double>;
      t=scinew Task(taskName.str().c_str(),
-                   this, &MPMICE::refineVariableCC<double>, variable);
+                   this, func, variable);
      break;
    case TypeDescription::Vector:
+     func = &MPMICE::refineVariableCC<Vector>;
      t=scinew Task(taskName.str().c_str(),
-                   this, &MPMICE::refineVariableCC<Vector>, variable);
+                   this, func, variable);
      break;
    default:
      throw InternalError("Unknown variable type for refine");
@@ -2307,8 +2313,14 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
  {
    ostringstream taskName;
    taskName << "MPMICE::coarsenVariable(" << variable->getName() << ")";
+
+   // the sgis don't like accepting a templated function over a function call for some reason...
+   void (MPMICE::*func)(const ProcessorGroup*, const PatchSubset*, const MaterialSubset*,
+                        DataWarehouse*, DataWarehouse*, const VarLabel*, T);
+   func = &MPMICE::coarsenVariableCC<T>;
+
    Task* t=scinew Task(taskName.str().c_str(),
-                       this, &MPMICE::coarsenVariableCC<T>, variable, defaultValue);
+                       this, func, variable, defaultValue);
    t->requires(Task::NewDW, variable, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
    t->computes(variable);
    sched->addTask(t, patches, matls);
