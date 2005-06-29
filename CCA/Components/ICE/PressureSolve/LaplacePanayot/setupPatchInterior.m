@@ -1,4 +1,4 @@
-function [A,b] = setupPatchInterior(grid,k,q,A,b,alpha,ilower,iupper,reallyUpdate)
+function [A,b] = setupPatchInterior(grid,k,q,A,b,ilower,iupper,reallyUpdate)
 %SETUPPATCCHINTERIOR  Set the discrete operator at a patch's edge.
 %   [A,B] = SETUPPATCHINTERIOR(GRID,K,Q,A,B,ALPHA,ILOWER,IUPPER,REALLYUPDATE) updates the LHS
 %   matrix A and the RHS matrix B, adding to them all the equations at
@@ -22,18 +22,7 @@ if (nargin < 5)
     error('Too few input arguments (need at least grid,k,q,A,b)\n');
 end
 
-if (nargin < 6)
-    % Standard alphas near boundaries = 0.25 (assuming Dirichlet BC
-    % at all domain boundaries)
-    alpha                   = zeros(1,2*grid.dim);
-    for d = 1:grid.dim,
-        for s = [-1 1],
-            alpha(2*d-1)    = 0.25;                                 % Dirichlet boundary on the left in dimension d
-            alpha(2*d)      = 0.25;                                 % Dirichlet boundary on the right in dimension d
-        end
-    end
-end
-if (nargin < 9)
+if (nargin < 8)
     reallyUpdate = 1;
 end
 
@@ -53,10 +42,10 @@ edgeDomain{2}           = level.maxCell + P.offsetSub;              % Last domai
 % Prepare a list of all cell indices whose equations are created below.
 %=====================================================================
 
-if (nargin < 7)
+if (nargin < 6)
     ilower              = P.ilower;
 end
-if (nargin < 8)
+if (nargin < 7)
     iupper              = P.iupper;
 end
 boxSize                 = iupper-ilower+1;
@@ -75,48 +64,27 @@ end
 %=====================================================================
 % Compute cell lengths and volumes.
 %=====================================================================
-cellLength              = cell(2*grid.dim,1);
-near                    = cell(2*grid.dim,1);
-far                     = cell(2*grid.dim,1);
+% Cell extent is 
+% [x{1}-0.5*h(1),x{1}+0.5*h(1)] x ... x [x{dim}-0.5*h(dim),x{dim}+0.5*h(dim)].
+% Cell volume is thus prod(h).
+diffLength              = cell(2*grid.dim,1);                               % Distance along which we approximate the flux by finite difference
+volume                  = prod(h).*ones(boxSize);                           % Cell volume
+centroid                = x;                                                % Cell centroid
+near                    = cell(2*grid.dim,1);                               % Cells near domain boundaries in the fluxNum direction
+far                     = cell(2*grid.dim,1);                               % Cells far from domain boundaries in the fluxNum direction
 
-% Standard interior cells. Cell's extents are
-% [x{1}-cellLength{1},x{1}+cellLength{2}] x ... x
-% [x{dim}-cellLength{2*dim-1},x{dim}+cellLength{2*dim-1}].
 for dim = 1:grid.dim,                                                       % Loop over dimensions of face
     for side = [-1 1]                                                       % side=-1 (left) and side=+1 (right) directions in dimension d
-        sideNum                 = (side+3)/2;                                       % side=-1 ==> 1; side=1 ==> 2
+        sideNum                 = (side+3)/2;                               % side=-1 ==> 1; side=1 ==> 2
         fluxNum                 = 2*dim+sideNum-2;
-        cellLength{fluxNum}     = zeros(boxSize);
-        cellLength{fluxNum}(:)  = 0.5*h(dim);
+        diffLength{fluxNum}     = h(dim)*ones(boxSize);                     % Standard FD is over distance h        
+        % Adjust distances for FD near domain boundaries
+        nearBoundary            = cell(1,grid.dim);
+        [nearBoundary{:}] = find(matBox{dim} == edgeDomain{sideNum}(dim));  % Interior cell subs near DOMAIN boundary
+        near{fluxNum}   = find(matBox{dim} == edgeDomain{sideNum}(dim));    % Interior cell indices near DOMAIN boundary (actually Dirichlet boundaries only)
+        far{fluxNum}    = find(~(matBox{dim} == edgeDomain{sideNum}(dim))); % The rest of the cells
+        diffLength{fluxNum}(nearBoundary{:}) = 0.5*h(dim);                  % Twice smaller distance in this direction
     end
-end
-
-% Adjust cells near domain boundaries
-for dim = 1:grid.dim,                                                       % Loop over dimensions of face
-    for side = [-1 1]                                                       % side=-1 (left) and side=+1 (right) directions in dimension d
-        sideNum         = (side+3)/2;                                       % side=-1 ==> 1; side=1 ==> 2
-        fluxNum         = 2*dim+sideNum-2;
-        nearBoundary    = cell(1,grid.dim);
-        [nearBoundary{:}] = find(matBox{dim} == edgeDomain{sideNum}(dim)); % Interior cell subs near DOMAIN boundary
-        near{fluxNum}   = find(matBox{dim} == edgeDomain{sideNum}(dim));     % Interior cell indices near DOMAIN boundary (actually Dirichlet boundaries only)
-        far{fluxNum}    = find(~(matBox{dim} == edgeDomain{sideNum}(dim)));   % The rest of the cells
-        cellLength{fluxNum}(nearBoundary{:}) = alpha(fluxNum)*h(dim);       % Shrink cell in this direction
-    end
-end
-
-% Compute cell volumes and centroids
-volume                  = ones(boxSize);
-centroid                = cell(grid.dim,1);
-for dim = 1:grid.dim,                                                       % Loop over dimensions of face
-    volume              = volume .* (cellLength{2*dim-1} + cellLength{2*dim});
-    centroid{dim}		= x{dim} + 0.5*(-cellLength{2*dim-1} + cellLength{2*dim});
-end
-
-if (param.verboseLevel >= 3)
-    fprintf('Cell Lengths = \n');
-    cellLength{:}
-    fprintf('Cell volumes = \n');
-    volume
 end
 
 %=====================================================================
@@ -127,8 +95,8 @@ for dim = 1:grid.dim,                                                       % Lo
     for side = [-1 1]                                                       % side=-1 (left) and side=+1 (right) directions in dimension d
         sideNum         = (side+3)/2;                                       % side=-1 ==> 1; side=1 ==> 2
         fluxNum         = 2*dim+sideNum-2;
-        faceArea        = volume ./ (cellLength{2*dim-1} + cellLength{2*dim});
-        flux{fluxNum}   = faceArea ./ (2*cellLength{fluxNum});              % Flux_coef = avg_diffusion_coef * face_area / (2*cellLength_of_this_direction)
+        faceArea        = volume ./ h(dim);
+        flux{fluxNum}   = faceArea ./ diffLength{fluxNum};                  % Flux_coef = avg_diffusion_coef (=1 here) * face_area / (FD length)
     end
 end
 if (param.verboseLevel >= 3)
@@ -141,6 +109,7 @@ end
 % coefficients of all cells.
 %=====================================================================
 Alist                   = zeros(0,3);
+indAll                  = indBox;
 
 for dim = 1:grid.dim,                                                       % Loop over dimensions of patch
     for side = [-1 1]                                                       % side=-1 (left) and side=+1 (right) directions in dimension d
@@ -159,30 +128,53 @@ for dim = 1:grid.dim,                                                       % Lo
         indFlux         = flux{fluxNum}(:);
         thisNear        = near{fluxNum};
         thisFar         = far{fluxNum};
+        
+        % Contribution of flux to interior equation at indBox
         Alist = [Alist; ...                                                 % Far from Dirichlet boundaries, nbhrs are cell-center values
             [indBox(thisFar)    indBox(thisFar)         indFlux(thisFar)]; ...
             [indBox(thisFar)    indNbhr(thisFar)        -indFlux(thisFar)] ...
             ];
-
         Alist = [Alist; ...                                                 % near Dirichlet boundaries, nbhrs are fluxes
             [indBox(thisNear)   indNbhr(thisNear)       -indFlux(thisNear)] ...
             ];
-    end
+
+        % Contribution of flux to BC equation (Dirichlet B.C.) at indNbhr
+        % BC vars are fluxes so that A will be symmetric.
+        if (~isempty(thisNear))
+            indBC = indNbhr(thisNear);
+            Alist = [Alist; ...                                                 % BC vars (= nbhr vars) are fluxes
+                [indBC   indBC       -indFlux(thisNear)]; ...
+                [indBC   indBox(thisNear)        -indFlux(thisNear)] ...
+                ];
+            indAll = union(indAll,indBC);
+            if (reallyUpdate)
+                %=====================================================================
+                % Update LHS vector b with boundary equations.
+                %=====================================================================
+                xBC                 = cell(grid.dim,1);
+                for d = 1:grid.dim
+                    xBC{d}          = x{d}(thisNear);                                 % BC RHS location (at faces, not cell centers) - to be corrected below
+                end
+                xBC{d}              = xBC{d} - side * h(dim);                      % Move from cell center to cell face
+                rhsBCValues         = rhsBC(xBC);
+                b(indBC)            = -indFlux(thisNear) .* rhsBCValues(:);
+            end
+        end
+    end    
 end
 
 if (reallyUpdate)
     %=====================================================================
     % Set the equations of A of indices in the box [ilower,iupper] to
-    % those specified by Alist.
+    % those specified by Alist, and the BC equations of the BC vars
+    % neighboring the box.
     %=====================================================================
     Anew                    = spconvert([Alist; [grid.totalVars grid.totalVars 0]]);
-    A(indBox,:)             = Anew(indBox,:);
+    A(indAll,:)             = Anew(indAll,:);
 
     %=====================================================================
-    % Update LHS vector b.
+    % Update LHS vector b with interior equations.
     %=====================================================================
-    %rhsValues = rhs(x);
-    rhsValues = rhs(centroid);
-
-    b(indBox)               = volume(:) .* rhsValues(:);
+    rhsValues               = rhs(centroid);
+    b(indBox)               = volume(:) .* rhsValues(:);        
 end
