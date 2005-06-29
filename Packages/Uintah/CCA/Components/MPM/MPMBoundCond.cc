@@ -88,8 +88,8 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 	      }
               if(n8or27==27){
 	        for (b=nbound.begin(); b != nbound.end();b++){
-                  variable[*b - oneCell] = Vector(0.,variable[*b].y(), 
-                                                  variable[*b].z());
+                  variable[*b - oneCell] = Vector(0.,variable[*b-oneCell].y(), 
+                                                  variable[*b-oneCell].z());
                 }
               }
             }
@@ -98,8 +98,8 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 		variable[*b] = Vector(variable[*b].x(),0.,variable[*b].z());
               if(n8or27==27){
 	        for (b=nbound.begin(); b != nbound.end();b++){
-                  variable[*b - oneCell] = Vector(variable[*b].x(),0.,
-                                                  variable[*b].z());
+                  variable[*b - oneCell] = Vector(variable[*b-oneCell].x(),0.,
+                                                  variable[*b-oneCell].z());
                 }
               }
             }
@@ -108,8 +108,8 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 		variable[*b] = Vector(variable[*b].x(), variable[*b].y(),0.);
               if(n8or27==27){
 	        for (b=nbound.begin(); b != nbound.end();b++){
-                  variable[*b - oneCell] = Vector(variable[*b].x(), 
-                                                  variable[*b].y(),0.);
+                  variable[*b - oneCell] = Vector(variable[*b-oneCell].x(), 
+                                                  variable[*b-oneCell].y(),0.);
                 }
               }
             }
