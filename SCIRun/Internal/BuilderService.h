@@ -225,10 +225,8 @@ class BuilderService : public sci::cca::ports::BuilderService,
     /** ? */
     void emitConnectionEvent(ConnectionEvent* event);
 
-#ifdef HAVE_BABEL
- #ifdef HAVE_RUBY
+#ifdef HAVE_RUBY
     AutoBridge autobr;
- #endif
 #endif
   };
 }
