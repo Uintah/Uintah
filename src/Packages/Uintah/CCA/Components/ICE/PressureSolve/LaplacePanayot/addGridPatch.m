@@ -52,32 +52,15 @@ A                           = Anew;
 b                           = [b; zeros(grid.totalVars-length(b),1)];
 
 %==============================================================
-% 2. Create patch interior equations
+% 2. Create patch interior & BC equations
 %==============================================================
 if (param.verboseLevel >= 2)
     fprintf('#########################################################################\n');
-    fprintf(' 2. Create patch interior equations\n');
+    fprintf(' 2. Create patch interior & BC equations\n');
     fprintf('#########################################################################\n');
 end
 
-alpha       = zeros(1,2*grid.dim);
-for d = 1:grid.dim,
-    for s = [-1 1],
-        alpha(2*d-1)    = 0.25;     % Dirichlet boundary on the left in dimension d
-        alpha(2*d)      = 0.25;     % Dirichlet boundary on the right in dimension d
-    end
-end
-[A,b]                   = setupPatchInterior(grid,k,q,A,b,alpha);
-
-%==============================================================
-% 4. Create patch boundary equations
-%==============================================================
-if (param.verboseLevel >= 2)
-    fprintf('#########################################################################\n');
-    fprintf(' 4. Create patch boundary equations\n');
-    fprintf('#########################################################################\n');
-end
-[A,b]                   = setupPatchBC(grid,k,q,alpha,A,b);
+[A,b]                   = setupPatchInterior(grid,k,q,A,b);
 
 %==============================================================
 % 5. Modify equations near C/F interface on both coarse and fine patches;
