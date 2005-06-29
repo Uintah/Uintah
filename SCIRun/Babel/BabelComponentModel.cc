@@ -315,7 +315,7 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
       }
     else
       {
-      std::cerr << "FATAL ERROR: Could not find library for type " << type
+      std::cerr << "Could not find library for type " << type
                 << std::endl;
       return 0;
       }
@@ -333,8 +333,8 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
       }
     else
       {
-      std::cerr << "Cannot load babel component of type " << type << std::endl;
-      std::cerr << "FATAL ERROR: babel component not created!" << std::endl;
+        std::cerr << "Cannot load babel component of type " << type
+                  << ". Babel component not created." << std::endl;
       return 0;
       }
       
