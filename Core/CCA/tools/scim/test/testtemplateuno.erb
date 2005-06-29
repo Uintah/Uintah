@@ -1,0 +1,21 @@
+
+inPackage=<%= $inPackage%>
+outPackage=<%= $outPackage%>
+
+templateArgv[0]=<%= $templateArgv[0]%>
+
+<port>
+  PORT
+  <%= $inPortName%>
+  <%= $outPortName%>
+  EOF_PORT
+</port>
+
+<port> 
+ <method> 
+  PORTMETHOD
+  <%= $inMethodType%> <%= $inMethodName%>
+  <%= $inMethodName%>
+  EOF_PORTMETHOD
+ </method> 
+</port>

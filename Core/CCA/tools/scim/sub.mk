@@ -29,23 +29,32 @@
 
 # Makefile fragment for this subdirectory
 
-include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR := Core/CCA/tools
+SRCDIR  := Core/CCA/tools/scim
+
+SRCS    += \
+	$(SRCDIR)/feMain.cc \
+	$(SRCDIR)/IR.cc \
+	$(SRCDIR)/IR_wrap.cc \
+	$(SRCDIR)/staticCheck.cc 
+
 
 SUBDIRS := $(SRCDIR)/sidl
 
-ifeq ($(HAVE_RUBY),yes)
+ifeq ($(HAVE_PDT),yes)
 SUBDIRS += \
-	$(SRCDIR)/strauss \
-	$(SRCDIR)/scim
+	$(SRCDIR)/pdt
 endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
-PSELIBS :=
-LIBS :=
 
-include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
+PROGRAM := $(SRCDIR)/scim
+SCIM_EXE := $(PROGRAM)
 
+PSELIBS := 
+LIBS := $(RUBY_LIBRARY)
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
