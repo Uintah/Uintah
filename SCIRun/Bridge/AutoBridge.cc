@@ -126,7 +126,6 @@ string readMetaFile(string componentN, string extN) {
 	  std::string
 	    component_name(to_char_ptr(component->getAttribute(to_xml_ch_ptr("name"))));
 
-std::cerr << "comparing " << componentN << " " << component_name << "\n";
 	  if(componentN != component_name) {
 	    continue;
 	  }
@@ -216,26 +215,29 @@ std::string AutoBridge::genBridge(std::string modelFrom, std::string cFrom, std:
   string hdrplugin;
   string plugin;
   string util;
+  string srcdir = sci_getenv("SCIRUN_SRCDIR");
+  string templatedir(srcdir + string("/Core/CCA/tools/scim/template/"));
+
   if((modelFrom == "babel")&&(modelTo == "cca")) {
-    plugin = "/home/sci/damevski/dev/supa/template/BabeltoCCA.erb";
-    hdrplugin = "/home/sci/damevski/dev/supa/template/BabeltoCCA.hdr.erb";
-    util = "/home/sci/damevski/dev/supa/template/CCAtoBabel.util.rb";
+    plugin = templatedir + string("BabeltoCCA.erb");
+    hdrplugin = templatedir + string("BabeltoCCA.hdr.erb"); 
+    util = templatedir + string("CCAtoBabel.util.rb"); 
   } else if((modelFrom == "cca")&&(modelTo == "babel")) {
-    plugin = "/home/sci/damevski/dev/supa/template/CCAtoBabel.erb";
-    hdrplugin = "/home/sci/damevski/dev/supa/template/CCAtoBabel.hdr.erb";
-    util = "/home/sci/damevski/dev/supa/template/CCAtoBabel.util.rb";
+    plugin = templatedir + string("CCAtoBabel.erb"); 
+    hdrplugin = templatedir + string("CCAtoBabel.hdr.erb"); 
+    util = templatedir + string("CCAtoBabel.util.rb"); 
   } else if((modelFrom == "dataflow")&&(modelTo == "cca")) {
-    plugin = "/home/sci/damevski/dev/supa/template/BabeltoCCA.erb";
+    plugin = templatedir + string("BabeltoCCA.erb"); 
   } else if((modelFrom == "cca")&&(modelTo == "dataflow")) {
-    plugin = "../src/Core/CCA/tools/strauss/ruby/CCAtoDataflow.erb";
+    plugin = templatedir + string("CCAtoDataflow.erb"); 
   } else if((modelFrom == "babel")&&(modelTo == "vtk")) {
-    plugin = "/home/sci/damevski/dev/supa/template/BabeltoVtk.erb";
-    hdrplugin = "/home/sci/damevski/dev/supa/template/BabeltoVtk.hdr.erb";
-    util = "/home/sci/damevski/dev/supa/template/BabeltoVtk.util.rb";
+    plugin = templatedir + string("BabeltoVtk.erb"); 
+    hdrplugin = templatedir + string("BabeltoVtk.hdr.erb"); ;
+    util = templatedir + string("BabeltoVtk.util.rb"); 
   } else if((modelFrom == "cca")&&(modelTo == "tao")) {
-    plugin = "/home/sci/damevski/dev/supa/template/CCAtoTao.erb";
-    hdrplugin = "/home/sci/damevski/dev/supa/template/CCAtoTao.hdr.erb";
-    util = "/home/sci/damevski/dev/supa/template/CCAtoBabel.util.rb";
+    plugin = templatedir + string("CCAtoTao.erb"); 
+    hdrplugin = templatedir + string("CCAtoTao.hdr.erb"); 
+    util = templatedir + string("CCAtoBabel.util.rb"); 
   }
   else {}
 
