@@ -112,14 +112,14 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   // Get parameters
   params->getWithDefault("varianceScale", varianceScale, 0.0);
   params->getWithDefault("varianceMax", varianceMax, 1.0);
-  useVariance = (varianceScale != 0.0);
+  d_useVariance = (varianceScale != 0.0);
 
   //__________________________________
   //setup the table
   string tablename = "adiabatic";
   table = TableFactory::readTable(params, tablename);
   table->addIndependentVariable("F");
-  if(useVariance)
+  if(d_useVariance)
     table->addIndependentVariable("Fvar");
   
   for (ProblemSpecP child = params->findBlock("tableValue"); child != 0;
@@ -148,7 +148,7 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   int ng = 100;
   vector<double> mm;
   int nv;
-  if(useVariance){
+  if(d_useVariance){
     mm.resize(2);
     nv = 10;
   } else {
@@ -156,7 +156,7 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
     nv = 0;
   }
   for(int j=0;j<=nv;j++){
-    if(useVariance)
+    if(d_useVariance)
       mm[1] = j/(double)nv;
     for(int i=0;i<=ng;i++){
       double mix = i/(double)ng;
@@ -209,6 +209,7 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
    }
    
    child->getWithDefault("test_conservation", d_test_conservation, false);
+   child->getWithDefault("doTableTest",       d_doTableTest,      false);
    
    ProblemSpecP const_ps = child->findBlock("constants");
    if(!const_ps) {
@@ -345,13 +346,23 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
       } // Over cells
     } // regions
     
+    
+    if(d_doTableTest){   // 1D table test problem
+      for(CellIterator iter = patch->getExtraCellIterator();
+            !iter.done(); iter++){
+        IntVector c = *iter;
+        Point p = patch->cellPosition(c); 
+        f[c] = p.x();
+      }
+    }
+    
     setBC(f,"scalar-f", patch, sharedState,indx, new_dw); 
 
     //__________________________________
     // initialize other properties
     vector<constCCVariable<double> > ind_vars;
     ind_vars.push_back(f);
-    if(useVariance){
+    if(d_useVariance){
       // Variance is zero for initialization
       CCVariable<double> variance;
       new_dw->allocateTemporary(variance, patch);
@@ -439,7 +450,7 @@ void AdiabaticTable::scheduleModifyThermoTransportProperties(SchedulerP& sched,
   t->modifies(lb->gammaLabel);
   t->modifies(lb->thermalCondLabel);
   t->modifies(lb->viscosityLabel);
-  if(useVariance){
+  if(d_useVariance){
     t->requires(Task::NewDW, d_scalar->varianceLabel, Ghost::None, 0);
     t->computes(d_scalar->scaledVarianceLabel);
   }
@@ -477,29 +488,8 @@ void AdiabaticTable::modifyThermoTransportProperties(const ProcessorGroup*,
     
     vector<constCCVariable<double> > ind_vars;
     ind_vars.push_back(f_old);
-    CCVariable<double> scaledvariance;
-    if(useVariance){
-      constCCVariable<double> variance;
-      new_dw->get(variance, d_scalar->varianceLabel, indx, patch,
-                  Ghost::None, 0);
-      
-      // This is put into the DW instead of allocated as a temporary
-      // so that we can save it.
-      new_dw->allocateAndPut(scaledvariance, d_scalar->scaledVarianceLabel,
-                             indx, patch);
-      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
-        const IntVector& c = *iter;
-        double denom = f_old[c] * (1-f_old[c]);
-        if(denom < 1.e-20)
-          denom = 1.e-20;
-        double sv = variance[c] / denom;
-        if(sv < 0)
-          sv = 0;
-        else if(sv > varianceMax)
-          sv = varianceMax;
-        scaledvariance[c] = sv;
-      }
-      ind_vars.push_back(scaledvariance);
+    if(d_useVariance){
+      computeScaledVariance(patch, new_dw, indx, f_old, ind_vars);
     }
     
     CellIterator iter = patch->getExtraCellIterator();
@@ -535,26 +525,8 @@ void AdiabaticTable::computeSpecificHeat(CCVariable<double>& cv_new,
   // interpolate cv
   vector<constCCVariable<double> > ind_vars;
   ind_vars.push_back(f);
-  CCVariable<double> scaledvariance;
-  if(useVariance){
-    constCCVariable<double> variance;
-    new_dw->get(variance, d_scalar->varianceLabel, indx, patch, Ghost::None, 0);
-
-    new_dw->allocateTemporary(scaledvariance, patch);
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
-      const IntVector& c = *iter;
-      double denom = f[c] * (1-f[c]);
-      if(denom < 1.e-20)
-        denom = 1.e-20;
-      double sv = variance[c] / denom;
-      if(sv < 0)
-        sv = 0;
-      else if(sv > varianceMax)
-        sv = varianceMax;
-      scaledvariance[c] = sv;
-    }
-        
-    ind_vars.push_back(scaledvariance);
+  if(d_useVariance){
+    computeScaledVariance(patch, new_dw, indx, f, ind_vars);
   }
   table->interpolate(d_cv_index, cv_new, patch->getExtraCellIterator(),
                      ind_vars);
@@ -587,7 +559,7 @@ void AdiabaticTable::scheduleComputeModelSources(SchedulerP& sched,
   if(d_scalar->scalar_src_CCLabel){
     t->modifies(d_scalar->scalar_src_CCLabel);
   }
-  if(useVariance){
+  if(d_useVariance){
     t->requires(Task::NewDW, d_scalar->varianceLabel, gn, 0);
   }
 
@@ -644,37 +616,19 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
       //  grab values from the tables
       vector<constCCVariable<double> > ind_vars;
       ind_vars.push_back(f_old);
-      CCVariable<double> scaledvariance;
-      if(useVariance){
-        constCCVariable<double> variance;
-        new_dw->get(variance, d_scalar->varianceLabel, matl, patch, gn, 0);
-
-        new_dw->allocateTemporary(scaledvariance, patch);
-        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-          const IntVector& c = *iter;
-          double denom = f_old[c] * (1-f_old[c]);
-          if(denom < 1.e-20)
-            denom = 1.e-20;
-          double sv = variance[c] / denom;
-          if(sv < 0)
-            sv = 0;
-          else if(sv > varianceMax)
-            sv = varianceMax;
-          scaledvariance[c] = sv;
-        }
-        
-        ind_vars.push_back(scaledvariance);
+      if(d_useVariance){
+        computeScaledVariance(patch, new_dw, matl, f_old, ind_vars);
       }
 
-      CellIterator iter = patch->getCellIterator();
-      table->interpolate(d_temp_index,  flameTemp,  iter, ind_vars);
-
+      CellIterator iter = patch->getExtraCellIterator();
+      
+      table->interpolate(d_temp_index,      flameTemp,  iter, ind_vars);
       CCVariable<double> ref_temp;
       new_dw->allocateTemporary(ref_temp, patch); 
       table->interpolate(d_ref_temp_index, ref_temp, iter, ind_vars);
       CCVariable<double> ref_cv;
       new_dw->allocateTemporary(ref_cv, patch); 
-      table->interpolate(d_ref_cv_index, ref_cv, iter, ind_vars);
+      table->interpolate(d_ref_cv_index,    ref_cv, iter, ind_vars);
       CCVariable<double> ref_gamma;
       new_dw->allocateTemporary(ref_gamma, patch); 
       table->interpolate(d_ref_gamma_index, ref_gamma, iter, ind_vars);
@@ -682,19 +636,7 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
       Vector dx = patch->dCell();
       double volume = dx.x()*dx.y()*dx.z();
       
-#if 0
-      double maxTemp = 0;
-      double maxIncrease = 0;    //debugging
-      double maxDecrease = 0;
-      double totalEnergy = 0;
-      double maxFlameTemp=0;
-      double esum = 0;
-      double fsum = 0;
-      int ncells = 0;
-      double cpsum = 0;
-      double masssum=0;
-#endif
-
+      
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
 
@@ -702,48 +644,33 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
         // cp might need to change to be interpolated from the table
         // when we make the cp in the dw correct
         double cp        = gamma[c] * cv[c];
+        double ref_cp    = ref_gamma[c] * ref_cv[c];
         double energyNew = flameTemp[c] * cp;
-        // double icp = initial_cp[c];
-        double ref_cp = ref_gamma[c] * ref_cv[c];
+        
         double energyOrig = ref_temp[c] * ref_cp;
-        double erelease = (energyNew-energyOrig) - eReleased[c];
+        double erelease   = (energyNew-energyOrig) - eReleased[c];
 
         // Add energy released to the cumulative total and hand it to ICE
         // as a source
         eReleased_src[c] += erelease;
         energySource[c] += erelease*mass;
-
-#if 0
-        //__________________________________
-        // debugging
-        totalEnergy += erelease*mass;
-        fsum += f_old[c] * mass;
-        esum += oldTemp[c]*cp*mass;
-        cpsum += cp;
-        masssum += mass;
-        ncells++;
-        double newTemp = oldTemp[c] + erelease/cp;
-        if(newTemp > maxTemp)
-          maxTemp = newTemp;
-        if(flameTemp[c] > maxFlameTemp)
-          maxFlameTemp = flameTemp[c];
-        double dtemp = newTemp-oldTemp[c];
-        if(dtemp > maxIncrease)
-          maxIncrease = dtemp;
-        if(dtemp < maxDecrease)
-          maxDecrease = dtemp;
-#endif
       }
-#if 0
-      cerr << "MaxTemp = " << maxTemp << ", maxFlameTemp=" << maxFlameTemp << ", maxIncrease=" << maxIncrease << ", maxDecrease=" << maxDecrease << ", totalEnergy=" << totalEnergy << '\n';
-      double cp = cpsum/ncells;
-      double mass = masssum/ncells;
-      double e = esum/ncells;
-      double atemp = e/(mass*cp);
-      vector<double> tmp(1);
-      tmp[0]=fsum/masssum;
-      cerr << "AverageTemp=" << atemp << ", AverageF=" << fsum/masssum << ", targetTemp=" << table->interpolate(d_temp_index, tmp) << '\n';
-#endif
+      
+      //__________________________________
+      //  table sanity test
+      if(d_doTableTest){
+        CCVariable<double> rho_table;
+        new_dw->allocateTemporary(rho_table, patch);
+        table->interpolate(d_density_index, rho_table,   iter, ind_vars);
+        
+        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+          IntVector c = *iter;
+          double press = (rho_table[c] * cv[c] * (gamma[c]-1) * flameTemp[c]);
+          double thermo = cv[c] * (gamma[c]-1);
+          double physical = rho_table[c] * flameTemp[c];
+          cout << level->getCellPosition(c) << " " << flameTemp[c] <<  " " << gamma[c] << " " << cv[c] << " " << rho_table[c] << " " << press << " " <<thermo << " " <<physical <<endl;
+        }
+      }
 
       //__________________________________
       //  Tack on diffusion
@@ -807,6 +734,37 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
     }
   }
 }
+
+//______________________________________________________________________
+void AdiabaticTable::computeScaledVariance(const Patch* patch,
+                                           DataWarehouse* new_dw,
+                                           const int indx,
+                                           constCCVariable<double> f,
+                                           vector<constCCVariable<double> >& ind_vars)
+{
+  CCVariable<double> scaledvariance;
+  constCCVariable<double> variance;
+  new_dw->get(variance, d_scalar->varianceLabel, indx, patch, Ghost::None, 0);
+  new_dw->allocateAndPut(scaledvariance, d_scalar->scaledVarianceLabel,
+                         indx, patch);
+                         
+  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+    const IntVector& c = *iter;
+    double denom = f[c] * (1-f[c]);
+    if(denom < 1.e-20){
+      denom = 1.e-20;
+    }
+    double sv = variance[c] / denom;
+    if(sv < 0){
+      sv = 0;
+    }else if(sv > varianceMax){
+      sv = varianceMax;
+    }
+    scaledvariance[c] = sv;
+  }
+  ind_vars.push_back(scaledvariance);
+}
+
 //______________________________________________________________________
 void AdiabaticTable::scheduleTestConservation(SchedulerP& sched,
                                               const PatchSet* patches,

@@ -107,6 +107,13 @@ WARNING
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw,
                           const ModelInfo* mi);
+
+    void computeScaledVariance(const Patch* Patch,
+                               DataWarehouse* new_dw,                                 
+                               const int indx,                                        
+                               constCCVariable<double> f_old,                         
+                               vector<constCCVariable<double> >& ind_vars);            
+
     //__________________________________
     AdiabaticTable(const AdiabaticTable&);
     AdiabaticTable& operator=(const AdiabaticTable&);
@@ -171,8 +178,8 @@ WARNING
     int d_ref_gamma_index;
     int d_ref_temp_index;
     bool d_test_conservation;
-
-    bool useVariance;
+    bool  d_doTableTest;
+    bool d_useVariance;
     double varianceScale;
     double varianceMax;
   };
