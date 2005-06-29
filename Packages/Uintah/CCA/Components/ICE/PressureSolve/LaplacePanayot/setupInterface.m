@@ -1,17 +1,13 @@
-function [A,b,indDelete] = setupInterface(grid,k,q,alpha,A,b)
+function [A,b] = setupInterface(grid,k,q,A,b)
 %SETUPINTERFACE  Set the discrete operator at coarse-fine interface.
-%   [A,B] = SETUPINTERFACE(GRID,K,Q,D,S,ALPHA,A,B) updates the LHS
+%   [A,B] = SETUPINTERFACE(GRID,K,Q,D,S,A,B) updates the LHS
 %   matrix A and the RHS matrix B, adding to them all the equations at
 %   coarse-fine interface on the coarse side (subtracting the original
 %   coarse flux and adding instead hc/hf fine fluxes that use ghost
-%   points). ALPHA is a parameter vector,
-%   where each of its entries ALPHA(DIR), DIR=1,...,2*numDims is in (0,1)
-%   that specifies the size of the face cells in the DIR direction.
-%   ALPHA(DIR)=0.5 is a regular cell, 0.25 is used in Dirichlet B.C.
-%   In the modified Panayot method we use ALPHA(DIR) smaller than 0.5
-%   (maybe even smaller than 0.25) at C/F interfaces.
+%   points). The effective ALPHA is 0.5 in all directions (see
+%   SETUPPATCHBC).
 %
-%   See also: TESTDISC, ADDGRIDPATCH, SETUPPATCHINTERIOR.
+%   See also: TESTDISC, ADDGRIDPATCH, SETUPPATCHBC.
 
 globalParams;
 
@@ -33,43 +29,42 @@ edgeDomain{2}           = level.maxCell + P.offsetSub;              % Last domai
 
 %=====================================================================
 % Set coarse patch "pointers" (in matlab: we actually copy Q).
-% Find Q-indices that lie under the fine patch.
+% Find Q-indices (interior,edge,BC) that lie under the fine patch and
+% delete them (indDelete).
 %=====================================================================
 if (P.parent < 0)                                                  % Base patch at coarsest level, nothing to delete
     if (param.verboseLevel >= 2)
         fprintf('No parent patch\n');
     end
-    indUnder = [];
     return;
 end
 Q                           = grid.level{k-1}.patch{P.parent};          % Parent patch
 underLower                  = coarsenIndex(grid,k,P.ilower);
 underUpper                  = coarsenIndex(grid,k,P.iupper);
-under                       = cell(grid.dim,1);
-[indUnder,under,matUnder]   = indexBox(Q,underLower,underUpper);
 
-% Coarse cells for deletion are the cells under the fine patch plus
-% coarse boundary variables, if the fine patch is against a domain boundary.
-indEdgeAll              = [];
-for dim = 1:grid.dim,                                                       % Loop over dimensions of face
-    for side = [-1 1]                                                       % side=-1 (left) and side=+1 (right) directions in dimension d
-        sideNum         = (side+3)/2;                                       % side=-1 ==> 1; side=1 ==> 2
-        fluxNum         = 2*dim+sideNum-2;
-        nearBoundary    = cell(1,grid.dim);
-        [nearBoundary{:}] = find(matEdge{dim} == edgeDomain{sideNum}(dim)); % Interior cell subs near DOMAIN boundary
-        near{fluxNum}   = find(matEdge{dim} == edgeDomain{sideNum}(dim));     % Interior cell indices near DOMAIN boundary (actually Dirichlet boundaries only)
-        far{fluxNum}    = find(~(matEdge{dim} == edgeDomain{sideNum}(dim)));   % The rest of the cells
-        cellLength{fluxNum}(nearBoundary{:}) = alpha(fluxNum)*h(dim);       % Shrink cell in this direction
-    end
+% underLower,underUpper are inside Q, so add to them BC vars whenever they
+% are near the boundary.
+lowerNearEdge               = find(underLower == edgeDomain{1});
+underLower(lowerNearEdge)   = underLower(lowerNearEdge) - 1;
+
+upperNearEdge               = find(underUpper == edgeDomain{2});
+underUpper(upperNearEdge)   = underUpper(upperNearEdge) + 1;
+
+% Delete the equations at indDel. Note that there still remain connections
+% from equations outside the deleted box to indDel variables.
+%indDel                      = cell(grid.dim,1);
+[indDel,del,matDel]         = indexBox(Q,underLower,underUpper);
+A(indDel,indDel)            = eye(length(indDel));
+b(indUnused)            = 0.0;
+if (param.verboseLevel >= 3)
+    indDel
 end
 
+% Delete remaining connections from outside the deleted box to inside the
+% delete box.
 
 
 
-%=====================================================================
-% Delete the A-connections of underlying coarse nodes (including BC
-% nodes) to the rest of the system.
-%=====================================================================
 [A,b,temp,indFull,fullList] = setupPatchInterior(grid,k-1,P.parent,A,b,underLower,underUpper,0);
 Anew                = spconvert([fullList; [grid.totalVars grid.totalVars 0]]);
 A(indFull,:)        = A(indFull,:) - Anew(indFull,:);                       % Do not replace the non-zeros in A here, rather subtract from them.
