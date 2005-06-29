@@ -69,6 +69,14 @@ ZAPlastic::addComputesAndRequires(Task* ,
 }
 
 void 
+ZAPlastic::addComputesAndRequires(Task* task,
+                                   const MPMMaterial* matl,
+                                   const PatchSet*,
+                                   bool ) const
+{
+}
+
+void 
 ZAPlastic::addParticleState(std::vector<const VarLabel*>& ,
                             std::vector<const VarLabel*>& )
 {
