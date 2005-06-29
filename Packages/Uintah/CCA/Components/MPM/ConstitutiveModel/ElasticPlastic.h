@@ -360,7 +360,8 @@ namespace Uintah {
                                        const particleIndex idx,
                                        const Matrix3& n,
                                        PlasticityState* state,
-                                       double Cep[6][6]);
+                                       double Cep[6][6],
+                                       bool consistent);
 
     ////////////////////////////////////////////////////////////////////////
     /*! compute stress at each particle in the patch */

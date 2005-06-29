@@ -103,6 +103,16 @@ MTSPlastic::addComputesAndRequires(Task* task,
 }
 
 void 
+MTSPlastic::addComputesAndRequires(Task* task,
+                                   const MPMMaterial* matl,
+                                   const PatchSet*,
+                                   bool ) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::ParentOldDW, pMTSLabel, matlset,Ghost::None);
+}
+
+void 
 MTSPlastic::addParticleState(std::vector<const VarLabel*>& from,
                              std::vector<const VarLabel*>& to)
 {
@@ -208,16 +218,18 @@ MTSPlastic::computeFlowStress(const PlasticityState* state,
 {
   // Calculate strain rate and incremental strain
   double edot = state->plasticStrainRate;
-  ASSERT(edot > 0.0);
-  double delEps = edot*delT;
+  if (edot == 0.0) edot = 1.0e-10;
 
   // Check if temperature is correct
   double T = state->temperature;
-  ASSERT(T > 0.0);
 
   // Check if shear modulus is correct
   double mu = state->shearModulus;
-  ASSERT(mu > 0.0);
+  if ((mu <= 0.0) || (T <= 0.0) ) {
+    cerr << "**ERROR** MTSPlastic::computeFlowStress: mu = " << mu 
+         << " T = " << T  << endl;
+  }
+  double mu_mu_0 = mu/d_CM.mu_0;
 
   // Calculate S_i
   double CC = d_CM.koverbcubed*T/mu;
@@ -245,18 +257,57 @@ MTSPlastic::computeFlowStress(const PlasticityState* state,
   double powees = pow(edot/d_CM.edot_es0, CCes);
   double sigma_es = d_CM.sigma_es0*powees;
 
+  // Compute sigma_e (incremental)
+  //double sigma_e_old = pMTS[idx];
+  //double delEps = edot*delT;
+
+  // Compute sigma_e (total)
+  double sigma_e_old = 0.0;
+  double delEps = state->plasticStrain;
+  double sigma_e = computeSigma_e(theta_0, sigma_es, sigma_e_old, delEps, 100);
+
   // Calculate X and FX
-  double X = pMTS[idx]/sigma_es;
-  double FX = tanh(d_CM.alpha*X);
+  //double X = pMTS[idx]/sigma_es;
+  //double FX = tanh(d_CM.alpha*X)/tanh(d_CM.alpha);
 
   // Calculate theta
-  double theta = theta_0*(1.0 - FX) + d_CM.theta_IV*FX;
+  //double theta = theta_0*(1.0 - FX) + d_CM.theta_IV*FX;
+
+  //double sigma_e = pMTS[idx] + delEps*theta; 
+  //sigma_e = (sigma_e > sigma_es) ? sigma_es : sigma_e;
+  pMTS_new[idx] = sigma_e;
 
   // Calculate the flow stress
-  double sigma_e = pMTS[idx] + delEps*theta; 
-  pMTS_new[idx] = sigma_e;
-  double sigma = d_CM.sigma_a + S_i*d_CM.sigma_i + S_e*sigma_e;
+  double sigma = d_CM.sigma_a + (S_i*d_CM.sigma_i + S_e*sigma_e)*mu_mu_0;
   return sigma;
+}
+
+double 
+MTSPlastic::computeSigma_e(const double& theta_0, 
+                           const double& sigma_es,
+                           const double& sigma_e_old,
+                           const double& deltaEps,
+                           const int& numSubcycles)
+{
+  double delEps = deltaEps/(double) numSubcycles;
+  double sigma_e = sigma_e_old; 
+  for (int ii = 0; ii < numSubcycles; ++ii) {
+
+    // Calculate X and FX
+    double X = sigma_e/sigma_es;
+    double FX = tanh(d_CM.alpha*X)/tanh(d_CM.alpha);
+
+    // Calculate theta
+    double theta = theta_0*(1.0 - FX) + d_CM.theta_IV*FX;
+
+    // Calculate sigma_e
+    sigma_e += delEps*theta; 
+    if (sigma_e > sigma_es) {
+      sigma_e = sigma_es;
+      break;
+    }
+  }
+  return sigma_e;
 }
 
 double 
@@ -294,6 +345,9 @@ MTSPlastic::evalFAndFPrime(const double& tau,
                            double& f,
                            double& fPrime)
 {
+  // Compute mu/mu0
+  double mu_mu_0 = mu/d_CM.mu_0;
+
   // Calculate S_i
   double CC = d_CM.koverbcubed*T/mu;
   double S_i = 0.0;
@@ -324,10 +378,10 @@ MTSPlastic::evalFAndFPrime(const double& tau,
   double t_e = numer_t_e/denom_t_e;
 
   // Calculate f(epdot)
-  f = tau - (d_CM.sigma_a + S_i*d_CM.sigma_i + S_e*sigma_e);
+  f = tau - (d_CM.sigma_a + (S_i*d_CM.sigma_i + S_e*sigma_e)*mu_mu_0);
 
   // Calculate f'(epdot)
-  fPrime =  - (t_i*d_CM.sigma_i + t_e*sigma_e);
+  fPrime =  - (t_i*d_CM.sigma_i + t_e*sigma_e)*mu_mu_0;
 }
 
 /*! The evolving internal variable is \f$q = \hat\sigma_e\f$.  If the 
@@ -360,6 +414,7 @@ MTSPlastic::computeTangentModulus(const Matrix3& stress,
   // Calculate the equivalent stress and strain rate
   double sigeqv = sqrt(sigdev.NormSquared()); 
   double edot = state->plasticStrainRate;
+  if (edot == 0.0) edot = 1.0e-10;
 
   // Calculate the direction of plastic loading (r)
   Matrix3 rr = sigdev*(1.5/sigeqv);
@@ -381,7 +436,7 @@ MTSPlastic::computeTangentModulus(const Matrix3& stress,
 
   // Calculate X and FX
   double X = pMTS_new[idx]/sigma_es;
-  double FX = tanh(d_CM.alpha*X);
+  double FX = tanh(d_CM.alpha*X)/tanh(d_CM.alpha);
 
   // Calculate theta
   double theta = theta_0*(1.0 - FX) + d_CM.theta_IV*FX;
@@ -442,6 +497,7 @@ MTSPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
 {
   // Get the state data
   double edot = state->plasticStrainRate;
+  if (edot == 0.0) edot = 1.0e-10;
   double mu = state->shearModulus;
   double T = state->temperature;
 
@@ -463,7 +519,7 @@ MTSPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
 
   // Calculate X and FX
   double X = pMTS_new[idx]/sigma_es;
-  double FX = tanh(d_CM.alpha*X);
+  double FX = tanh(d_CM.alpha*X)/tanh(d_CM.alpha);
 
   // Calculate theta
   double dsig_e_dep = theta_0*(1.0 - FX) + d_CM.theta_IV*FX;
@@ -507,6 +563,7 @@ MTSPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
 {
   // Get the state data
   double edot = state->plasticStrainRate;
+  if (edot == 0.0) edot = 1.0e-10;
   double T = state->temperature;
   double mu = state->shearModulus;
 
@@ -594,6 +651,7 @@ MTSPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
 {
   // Get the state data
   double edot = state->plasticStrainRate;
+  if (edot == 0.0) edot = 1.0e-10;
   double T = state->temperature;
   double mu = state->shearModulus;
 
@@ -659,6 +717,7 @@ MTSPlastic::evalDerivativeWRTSigmaE(const PlasticityState* state,
 {
   // Get the state data
   double edot = state->plasticStrainRate;
+  if (edot == 0.0) edot = 1.0e-10;
   double T = state->temperature;
   double mu = state->shearModulus;
   double mu_mu_0 = mu/d_CM.mu_0;

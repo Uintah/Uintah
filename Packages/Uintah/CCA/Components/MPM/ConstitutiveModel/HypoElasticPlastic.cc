@@ -793,6 +793,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       state->plasticStrain = ep;
       state->pressure = pressure;
       state->temperature = temperature;
+      state->initialTemperature = d_initialMaterialTemperature;
       state->density = rho_cur;
       state->initialDensity = rho_0;
       state->volume = pVolume_deformed[idx];
@@ -1430,6 +1431,7 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       state->plasticStrain = pPlasticStrain[idx];
       state->pressure = pressure;
       state->temperature = pTemperature[idx];
+      state->initialTemperature = d_initialMaterialTemperature;
       state->density = rho_cur;
       state->initialDensity = rho_0;
       state->volume = pVolume_deformed[idx];
@@ -1768,6 +1770,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       state->plasticStrain = pPlasticStrain[idx];
       state->pressure = pressure;
       state->temperature = pTemperature[idx];
+      state->initialTemperature = d_initialMaterialTemperature;
       state->density = rho_cur;
       state->initialDensity = rho_0;
       state->volume = pVolume_deformed[idx];

@@ -51,7 +51,7 @@ PTWPlastic::computeFlowStress(const PlasticityState* state,
                               const double& ,
                               const double& ,
                               const MPMMaterial* ,
-                              const particleIndex )
+                              const particleIndex idx )
 {
   // Retrieve plastic strain and strain rate
   double epdot = state->plasticStrainRate;
@@ -62,11 +62,9 @@ PTWPlastic::computeFlowStress(const PlasticityState* state,
   // Check if temperature is correct
   double T = state->temperature;
   double Tm = state->meltingTemp;
-  ASSERT(T > 0.0); ASSERT(!(T > Tm));
 
   // Check if shear modulus is correct
   double mu = state->shearModulus;
-  ASSERT(mu > 0.0);
 
   // Get the current mass density
   double rho = state->density;
@@ -75,9 +73,9 @@ PTWPlastic::computeFlowStress(const PlasticityState* state,
   double Mkg = d_CM.M*1.66043998903379e-27;
   // Compute invxidot - the time required for a transverse wave to cross 
   // an atom
-  if (mu < 0.0 || rho < 0.0) {
+  if ((mu <= 0.0) || rho < 0.0 || (T > Tm) || (T <= 0.0) ) {
     cerr << "**ERROR** PTWPlastic::computeFlowStress: mu = " << mu 
-         << " rho = " << rho << endl;
+         << " rho = " << rho << " T = " << T << " Tm = " << Tm << endl;
   }
   
   double xidot = 0.5*pow(4.0*M_PI*rho/(3.0*Mkg),(1.0/3.0))*sqrt(mu/rho);
@@ -103,7 +101,7 @@ PTWPlastic::computeFlowStress(const PlasticityState* state,
   double tauhat_y = d_CM.y0 - (d_CM.y0 - d_CM.yinf)*erf(arrhen);
 
   // The overdriven shock regime
-  if (epdot > 1.0e8) {
+  if (epdot > 1.0e3) {
 
     // Calculate the saturation hardening flow stress in the overdriven 
     // shock regime
@@ -523,7 +521,7 @@ PTWPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
                        (alpha*d_CM.p*Z8 - Omega*Z2));
 
   // Also calculate the slope in the overdriven shock regime
-  if (epdot > 1.0e8) {
+  if (epdot > 1.0e3) {
     double dtau_dpsi_OD = d_CM.beta*d_CM.s0*
             pow(edot/d_CM.gamma, d_CM.beta)/epdot;
     dtauhatdpsi = max(dtauhatdpsi, dtau_dpsi_OD);
@@ -547,6 +545,14 @@ void
 PTWPlastic::addComputesAndRequires(Task* ,
                                    const MPMMaterial* ,
                                    const PatchSet*) const
+{
+}
+
+void 
+PTWPlastic::addComputesAndRequires(Task* task,
+                                   const MPMMaterial* matl,
+                                   const PatchSet*,
+                                   bool ) const
 {
 }
 

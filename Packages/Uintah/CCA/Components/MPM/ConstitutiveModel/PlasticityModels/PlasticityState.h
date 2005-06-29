@@ -22,6 +22,7 @@ namespace Uintah {
     double plasticStrain;
     double pressure;
     double temperature;
+    double initialTemperature;
     double density;
     double initialDensity;
     double volume;

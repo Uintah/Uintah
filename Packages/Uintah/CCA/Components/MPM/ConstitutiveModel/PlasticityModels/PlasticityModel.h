@@ -49,6 +49,11 @@ namespace Uintah {
                                         const MPMMaterial* matl,
                                         const PatchSet* patches) const = 0;
 
+    virtual void addComputesAndRequires(Task* task,
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches,
+                                        bool recurse) const = 0;
+
     virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
                                            const PatchSet* patch, 
                                            MPMLabel* lb) const = 0;
