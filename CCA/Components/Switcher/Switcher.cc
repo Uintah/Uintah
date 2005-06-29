@@ -60,39 +60,15 @@ void Switcher::problemSetup(const ProblemSpecP& params, GridP& grid,
 {
   d_sim = dynamic_cast<SimulationInterface*>(getPort("sim",d_componentIndex));
 
-  if (d_numComponents == 1)
-    d_sim->problemSetup(params,grid,sharedState);
-  else {
-    ProblemSpecInterface* psi = 
-      dynamic_cast<ProblemSpecInterface*>(getPort("problem spec",0));
-    if (psi) {
-      ProblemSpecP ups = psi->readInputFile();
-      SimulationInterface* sim = 
-        dynamic_cast<SimulationInterface*>(getPort("sim",0));
-      sim->problemSetup(ups,grid,sharedState);
-      releasePort("problem spec");
-    } else {
-      throw InternalError("psi dynamic_cast failed");
-    }
+  ProblemSpecInterface* psi = 
+    dynamic_cast<ProblemSpecInterface*>(getPort("problem spec",d_componentIndex));
+  if (psi) {
+    ProblemSpecP ups = psi->readInputFile();
+    d_sim->problemSetup(ups,grid,sharedState);
+  } else {
+    throw InternalError("psi dynamic_cast failed");
   }
     
-#if 0
-  else {
-    for (unsigned int n = 0; n < d_numComponents; n++) {
-      ProblemSpecInterface* psi = 
-        dynamic_cast<ProblemSpecInterface*>(getPort("problem spec",n));
-      if (psi) {
-        ProblemSpecP ups = psi->readInputFile();
-        SimulationInterface* sim = 
-          dynamic_cast<SimulationInterface*>(getPort("sim",n));
-        sim->problemSetup(ups,grid,sharedState);
-        releasePort("problem spec");
-      } else {
-        throw InternalError("psi dynamic_cast failed");
-      }
-    }
-  }
-#endif
   d_sharedState = sharedState;
 }
  
@@ -176,4 +152,22 @@ bool Switcher::needRecompile(double time, double delt, const GridP& grid)
     d_sharedState->d_switchState = false;
   retval |= d_sim->needRecompile(time, delt, grid);
   return retval;
+}
+
+void Switcher::addToTimestepXML(ProblemSpecP& spec)
+{
+  spec->appendElement("switcherComponentIndex", (int) d_componentIndex, true);
+  spec->appendElement("switcherState", (int) d_switchState, true);
+}
+
+void Switcher::readFromTimestepXML(const ProblemSpecP& spec)
+{
+  // problemSpec doesn't handle unsigned
+  ProblemSpecP ps = (ProblemSpecP) spec;
+  int tmp;
+  ps->get("switcherComponentIndex", tmp);
+  d_componentIndex = tmp; 
+  ps->get("switcherState", tmp);
+  d_switchState = (switchState) tmp;
+  cout << "  RESTART index = " << d_componentIndex << " STATE = " << d_switchState << endl;
 }

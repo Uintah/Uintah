@@ -103,6 +103,9 @@ WARNING
 
      virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
        {};
+
+     virtual void addToTimestepXML(ProblemSpecP&) {};
+     virtual void readFromTimestepXML(const ProblemSpecP&) {};
  
    private:
      SimulationInterface(const SimulationInterface&);

@@ -19,6 +19,7 @@ class Output;
 class LoadBalancer;
 struct SimulationTime;
 class Regridder;
+class DataArchive;
 /**************************************
       
   CLASS
@@ -100,6 +101,7 @@ class Regridder;
       SimulationTime* d_timeinfo;
       SimulationInterface* d_sim;
       Regridder* d_regridder;
+      DataArchive* d_archive;
 
       bool d_doAMR;
 
@@ -107,6 +109,7 @@ class Regridder;
       bool           d_restarting;
       std::string d_fromDir;
       int d_restartTimestep;
+      double d_restartTime;
 
       bool d_combinePatches;
       bool d_reduceUda;

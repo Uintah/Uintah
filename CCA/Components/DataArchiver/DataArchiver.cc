@@ -13,6 +13,7 @@
 #include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
+#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -1224,7 +1225,10 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
 	df->setAttribute("href", "global.xml");
 	dataElem->appendText("\n");
       }
-	 
+
+      SimulationInterface* sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
+      sim->addToTimestepXML(rootElem);
+
       string name = baseDirs[i]->getName()+"/"+tname.str()+"/timestep.xml";
       ofstream out(name.c_str());
       if (!out) {
