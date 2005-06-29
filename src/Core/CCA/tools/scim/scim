@@ -1,0 +1,232 @@
+#!/usr/local/bin/ruby 
+
+objtop = ENV['SIDL_DLL_PATH']
+
+require objtop + '/libCore_CCA_tools_scim'
+require 'preproc'
+require 'erb'
+require 'template/template.util'
+
+
+######
+#argument error reporting function
+def usage( errstr )
+  puts "ERROR: " + errstr
+  puts "USAGE: scim [-o outputfile] <-t template> <interfacefile>"
+  exit
+end
+
+####
+#error reporting function
+def errHandler( errstr )
+  puts "ERROR: " + errstr
+  exit
+end
+
+#####
+#classes to ease access of method arguments
+class Argument 
+  def initialize(mode, type, name, mappedType)
+    @mode = mode 
+    @type = type 
+    @name = name
+    @mappedType = mappedType
+  end
+
+  def to_s
+    return "#{@mode} #{@type} #{@name}"
+  end
+
+  attr_reader :mode, :type, :name, :mappedType
+end
+
+class ConvertFuncEntry
+  def initialize(typeFrom, typeTo, func)
+    @typeFrom = typeFrom
+    @typeTo = typeTo
+    @func = func
+  end
+
+  attr_reader :typeFrom, :typeTo, :func
+end
+$convertList = Array.new
+
+######
+#variable loading functions provide the
+#sound variable bindings per port/method 
+def loadPortVars( portnum )
+  $pMap = Scim::IrMap_p.new
+  $pMap.assign(Ir.getMap(portnum))
+  $map = $pMap.value
+  $inPortName = $map.getInSymbol
+  $outPortName = $map.getOutSymbol
+end
+                                                                                                                                                 
+def loadMethodVars( map, mapnum )
+  $pMethodMap = Scim::IrMethodMap_p.new
+  $pMethodMap.assign(map.getMethodMap(mapnum))
+  methodmap = $pMethodMap.value
+  $inMethodName = methodmap.inMethod.getName
+  $inMethodType = methodmap.inMethod.getReturnType
+  $outMethodName = methodmap.outMethod.getName
+  $outMethodType = methodmap.outMethod.getReturnType
+
+  ###
+  #populate the argument array: used directly in the
+  #template file:
+  argList = methodmap.inMethod.getArgList
+  for i in 0...argList.getArgSize
+    $args[i] = Argument.new(argList.getArg(i).getMode,
+                     argList.getArg(i).getType,
+                     argList.getArg(i).getName,
+                     argList.getArg(i).getMappedType)
+  end
+end
+
+
+#####
+#function the performs a runtime check ensuring
+#a method loop is defined properly within a port 
+def runtimeCheckMethodLoop
+  if($map == nil) 
+    errHandler("<method></method> construct defined outside the scope of a port construct")
+  end
+end
+
+
+#############
+#RUNNING MAIN...
+
+#####
+#create a random bridge name to be used to
+#distinguish between different components
+rndBridgeName = "_Bridge_" + Kernel.rand(10000).to_s
+
+######
+#process arguments 
+template = nil
+tempfile = "temp.scim"
+$outfile = "out.scim"
+debug = false 
+debugfile = "debug.scim"
+srcfile = nil 
+nsrcfiles = 0
+req = false
+reqfiles = Array.new 
+$templateArgv = Array.new
+
+i = 0
+while (i<ARGV.size)
+  if(ARGV[i][0,1] == '-')                                                         
+    if(ARGV[i][1,1] == 't')
+      i = i+1
+      template = ARGV[i]
+    elsif(ARGV[i][1,1] == 'o')
+      i = i+1
+      $outfile = ARGV[i]
+    elsif(ARGV[i][1,1] == 'd')
+      i = i+1
+      debug = true
+      debugfile = ARGV[i]
+    elsif(ARGV[i][1,1] == 'r')
+      i = i+1
+      rndBridgeName = ARGV[i]
+    elsif(ARGV[i][1,1] == 'T')
+      #defining '-T templateArg1,templateArg2,...'
+      i = i+1
+      $templateArgv = ARGV[i].split(',')
+    elsif(ARGV[i][1,1] == 'R')
+      #defining '-R requiredrubyfile1'
+      i = i+1
+      req = true
+      reqfiles[reqfiles.size] = ARGV[i]
+    else
+      usage("Undefined option")
+    end
+  else
+    nsrcfiles = nsrcfiles + 1 
+    srcfile = ARGV[i]  
+  end
+  i = i + 1 
+end
+
+if(template == nil) 
+  usage("Template not defined")
+end
+
+if(nsrcfiles != 1)
+puts(nsrcfiles)
+  usage("Wrong number of source files specified")
+end 
+
+if(req == true)
+  for i in 0...reqfiles.size
+    require reqfiles[i]
+  end
+end
+
+
+#####
+#putting in loops for repetitive code 
+body = emitPreProcess(template)
+
+#####
+#language differentiation in the source file
+dosidl,docpp = emitSrcPreProcess(srcfile)
+
+#####
+#compile a necessary argument list to
+#send to the front end start functions 
+Ir = Scim::allocateIR
+
+#disable PDT for now
+#if(docpp == true)
+#  if(Scim::frontEndCpp(srcfile+".cpp") != 0) then exit end
+#  File.delete(srcfile+".cpp")
+#end
+
+#keep idl processing last as it may contain some 
+#commands that apply to the other languages
+if(dosidl == true)
+  if(Scim::frontEndIdl(srcfile+".idl") != 0) then exit end
+  File.delete(srcfile+".idl")
+end
+Ir.staticCheck
+
+########
+#print out IR debug info  
+if(debug)
+  Ir.outFile(debugfile) 
+end
+
+#####
+#prepare global variables for the ruby template
+#and emit the output
+$pMap = Scim::IrMap_p.new
+$pMethodMap = Scim::IrMethodMap_p.new
+$map = nil
+####
+$inPackage = ""
+$outPackage = ""
+$inPortName = "" 
+$outPortName = ""
+$inMethodName = "" 
+$inMethodType = ""
+$outMethodName = ""
+$outMethodType = "" 
+$args = Array.new 
+
+if(Ir.getMapSize > 0)
+  $pMap.assign(Ir.getMap(0))
+  $inPackage = $pMap.value.getInPackage
+  $outPackage = $pMap.value.getOutPackage
+end
+
+#####
+# invokes Erb to do the output
+erb = ERB.new(body)
+text = erb.result(binding)
+out = File.open($outfile,"w")
+out.write(text)
+out.close
+

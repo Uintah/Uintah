@@ -36,7 +36,7 @@
 #include <assert.h>
 #include <unistd.h>
 
-
+#include <Core/Util/Environment.h>
 #include <Core/Util/sci_system.h>
 #include <Core/CCA/tools/strauss/strauss.h>
 
@@ -107,7 +107,9 @@ int Strauss::emit()
   //Run SUPA
   int status;
   string execline;
-  string executable = "supa";
+
+  string srcdir = sci_getenv("SCIRUN_SRCDIR");
+  string executable(srcdir + string("/Core/CCA/tools/scim/scim"));
 
   ///////////////////////////
   //IMPLEMENTATION:
