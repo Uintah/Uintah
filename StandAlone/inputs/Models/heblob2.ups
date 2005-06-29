@@ -12,7 +12,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            1.0        </maxTime>
+       <maxTime>            10.0        </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
@@ -24,17 +24,12 @@
     <!--____________________________________________________________________-->
     <Grid>
     <BoundaryConditions>
-      
-      <LODI>
-        <press_infinity>  101325.0  </press_infinity>
-        <sigma>           0.27      </sigma>
-      </LODI>
 
       <Face side = "x-">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
                               <value> [0.0,0.0,0.0] </value>
         </BCType>
         <BCType id = "0"   label = "Temperature"  var = "Neumann">
@@ -54,7 +49,7 @@
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
                               <value> [0.0,0.0,0.0] </value>
         </BCType>
         <BCType id = "0"   label = "Temperature"  var = "Neumann">
@@ -75,7 +70,7 @@
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
                               <value> [0.0,0.0,0.0] </value>
         </BCType>
         <BCType id = "0"   label = "Temperature"  var = "Neumann">
@@ -95,7 +90,7 @@
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
                               <value> [0.0,0.0,0.0] </value>
         </BCType>
         <BCType id = "0"   label = "Temperature"  var = "Neumann">
@@ -113,11 +108,11 @@
       </Face>
 
       <Face side = "z-">
-        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        <BCType id = "all"   label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>
       <Face side = "z+">
-        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        <BCType id = "all"   label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>
 
@@ -140,15 +135,18 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>HeliumBlob2.uda</filebase>
-      <!--<outputInterval>0.005</outputInterval> -->
-      <outputTimestepInterval> 1 </outputTimestepInterval>
+      <outputInterval>0.1</outputInterval>
       <save label="vel_CC"/>
       <save label="temp_CC"/>
       <save label="press_CC"/>
       <save label="rho_CC"/>
       <save label="sp_vol_CC"/>
       <save label="delP_Dilatate"/>
-      <save label = "scalar-f"/>
+      <save label= "modelEng_src"/>
+      <save label= "cumulativeEnergyReleased"/>
+      <save label= "rhs"/>
+      <save label="sum_scalar_f"/>
+      <save label="TotalIntEng"/>
       <save label="TotalMass"/>
       <checkpoint interval="0.005" cycle="2"/>"
    </DataArchiver>
@@ -179,11 +177,35 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>0.15</cfl>
+         <cfl>0.35</cfl>
        <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
-        <advection type = "FirstOrder" />
-        <solution technique = "EqForm" />
+       <advection type = "SecondOrder" useCompatibleFluxes = "true"/>
+        <solution technique = "EqForm"/>
+	
+        <TimeStepControl>
+          <Scheme_for_delT_calc> conservative   </Scheme_for_delT_calc>
+          <knob_for_speedSound>  0.00           </knob_for_speedSound>
+        </TimeStepControl>
+	
+         
+        <ImplicitSolver>
+           <max_outer_iterations>      20    </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-6  </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 10 </iters_before_timestep_restart>
+           <Parameters variable="implicitPressure">
+              <tolerance>     1.e-8   </tolerance>
+              <norm>     LInfinity    </norm>
+              <criteria> Absolute     </criteria>
+	     <solver>         hybrid  </solver>
+	     <preconditioner> pfmg    </preconditioner>
+	     <maxiterations>  7500    </maxiterations>
+	     <npre>           1       </npre>
+	     <npost>          1       </npost>
+	     <skip>           0       </skip>
+	     <jump>           0       </jump>
+           </Parameters>
+        </ImplicitSolver>
       </ICE>        
     </CFD>
     <!--____________________________________________________________________-->
@@ -264,6 +286,7 @@
 	</table>
         <material>BackgroundGas</material>
         <scalar name="f">
+        <test_conservation>  true  </test_conservation>
         <constants>
         </constants>
        <geom_object>
