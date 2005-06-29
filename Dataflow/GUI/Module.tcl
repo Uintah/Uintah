@@ -482,6 +482,7 @@ itcl_class Module {
 	set canvas $Subnet(Subnet${number}_canvas)
 	set indicator $canvas.module[modname].ff.msg.indicator
 	if { [winfo exists $indicator] } {
+	    place $indicator -relheight 1 -anchor nw
 	    $indicator configure -width $indicator_width -background $color
 	}
 
