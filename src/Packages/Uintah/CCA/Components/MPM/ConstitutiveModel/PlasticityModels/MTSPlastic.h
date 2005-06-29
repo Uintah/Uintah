@@ -166,6 +166,11 @@ namespace Uintah {
                                         const MPMMaterial* matl,
                                         const PatchSet* patches) const;
 
+    virtual void addComputesAndRequires(Task* task,
+                                        const MPMMaterial* matl,
+                                        const PatchSet* patches,
+                                        const bool recurse) const;
+
 
     virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
                                            const PatchSet* patch, 
@@ -408,6 +413,16 @@ namespace Uintah {
     double evalDerivativeWRTSigmaE(const PlasticityState* state,
                                    const particleIndex idx);
 
+    ///////////////////////////////////////////////////////////////////////////
+    /*! 
+      \brief Do subcycling to compute \f$ \sigma_e \f$.
+    */
+    ///////////////////////////////////////////////////////////////////////////
+    double computeSigma_e(const double& theta_0, 
+                          const double& sigma_es,
+                          const double& sigma_e_old,
+                          const double& deltaEps,
+                          const int& numSubcycles);
   };
 
 } // End namespace Uintah

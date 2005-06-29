@@ -111,6 +111,14 @@ SCGPlastic::addComputesAndRequires(Task* ,
 }
 
 void 
+SCGPlastic::addComputesAndRequires(Task* task,
+                                   const MPMMaterial* matl,
+                                   const PatchSet*,
+                                   bool ) const
+{
+}
+
+void 
 SCGPlastic::addParticleState(std::vector<const VarLabel*>& ,
                              std::vector<const VarLabel*>& )
 {

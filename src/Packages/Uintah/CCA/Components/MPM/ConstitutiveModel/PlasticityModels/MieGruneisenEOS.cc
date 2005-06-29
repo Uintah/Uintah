@@ -36,6 +36,7 @@ MieGruneisenEOS::computePressure(const MPMMaterial* matl,
   // Get the state data
   double rho = state->density;
   double T = state->temperature;
+  double T_0 = state->initialTemperature;
 
   // Get original density
   double rho_0 = matl->getInitialDensity();
@@ -45,13 +46,16 @@ MieGruneisenEOS::computePressure(const MPMMaterial* matl,
   if (zeta == 0.0) return 0.0;
 
   // Calculate internal energy E
-  double E = (matl->getSpecificHeat())*(T - 294.0)*rho_0;
+  double E = (matl->getSpecificHeat())*(T - T_0)*rho_0;
  
   // Calculate the pressure
   double numer = rho_0*(d_const.C_0*d_const.C_0)*(1.0/zeta+
                          (1.0-0.5*d_const.Gamma_0));
   double denom = 1.0/zeta - (d_const.S_alpha-1.0);
-  if (denom == 0.0) denom = 1.0e-5;
+  if (denom == 0.0) {
+    cout << "rh0_0 = " << rho_0 << " zeta = " << zeta << " numer = " << numer << endl;
+    denom = 1.0e-5;
+  }
   double p = numer/(denom*denom) + d_const.Gamma_0*E;
   return -p;
 }

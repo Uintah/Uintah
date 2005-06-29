@@ -57,7 +57,7 @@ NPShear::computeShearModulus(const PlasticityState* state)
     double t2 = 1.0 - That;
     double k_amu = 1.38e4/1.6605402;
     double t3 = state->density*k_amu*state->temperature/(d_C*d_m);
-    double mu = 1.0/J*(t1*t2 + t3);
+    mu = 1.0/J*(t1*t2 + t3);
 
     if (mu < 1.0e-7) {
       cout << "mu = " << mu << " T = " << state->temperature

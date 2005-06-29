@@ -57,6 +57,14 @@ JohnsonCookPlastic::addComputesAndRequires(Task* ,
 }
 
 void 
+JohnsonCookPlastic::addComputesAndRequires(Task* task,
+                                   const MPMMaterial* matl,
+                                   const PatchSet*,
+                                   bool ) const
+{
+}
+
+void 
 JohnsonCookPlastic::addParticleState(std::vector<const VarLabel*>& ,
                                      std::vector<const VarLabel*>& )
 {

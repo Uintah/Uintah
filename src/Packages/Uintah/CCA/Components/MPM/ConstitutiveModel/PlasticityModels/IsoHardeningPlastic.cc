@@ -58,6 +58,16 @@ IsoHardeningPlastic::addComputesAndRequires(Task* task,
 }
 
 void 
+IsoHardeningPlastic::addComputesAndRequires(Task* task,
+                                   const MPMMaterial* matl,
+                                   const PatchSet*,
+                                   bool ) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::ParentOldDW, pAlphaLabel, matlset,Ghost::None);
+}
+
+void 
 IsoHardeningPlastic::addParticleState(std::vector<const VarLabel*>& from,
                                       std::vector<const VarLabel*>& to)
 {
