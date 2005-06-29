@@ -575,12 +575,14 @@ main( int argc, char** argv )
     ctl->attachPort("output", output);
     dataarchiver->attachPort("load balancer", bal);
     comp->attachPort("output", output);
+    dataarchiver->attachPort("sim", sim);
     
     // Scheduler
     SchedulerCommon* sched = SchedulerFactory::create(ups, world, output);
     Scheduler* sch = sched;
     sched->attachPort("load balancer", bal);
     ctl->attachPort("scheduler", sched);
+    lb->attachPort("scheduler", sched);
     sch->addReference();
     
     if (emit_graphs) sch->doEmitTaskGraphDocs();
