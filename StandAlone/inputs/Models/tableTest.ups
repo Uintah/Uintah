@@ -168,6 +168,7 @@
     <!--____________________________________________________________________-->   
     <PhysicalConstants>
        <gravity>            [0,0,0]   </gravity>
+       <reference_pressure>  101325   </reference_pressure>
     </PhysicalConstants>
     <!--____________________________________________________________________-->
     <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
