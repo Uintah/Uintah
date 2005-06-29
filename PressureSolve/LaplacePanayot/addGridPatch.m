@@ -59,25 +59,15 @@ if (param.verboseLevel >= 2)
     fprintf(' 2. Create patch interior equations\n');
     fprintf('#########################################################################\n');
 end
-[A,b,P.indInterior]     = setupPatchInterior(grid,k,q,A,b);
 
-%==============================================================
-% 3. Create patch edge equations
-%==============================================================
-if (param.verboseLevel >= 2)
-    fprintf('#########################################################################\n');
-    fprintf(' 3. Create patch edge equations\n');
-    fprintf('#########################################################################\n');
-end
-
-alpha                   = zeros(1,2*grid.dim);
+alpha       = zeros(1,2*grid.dim);
 for d = 1:grid.dim,
     for s = [-1 1],
         alpha(2*d-1)    = 0.25;     % Dirichlet boundary on the left in dimension d
         alpha(2*d)      = 0.25;     % Dirichlet boundary on the right in dimension d
     end
 end
-[A,b,P.indEdge]         = setupPatchEdge(grid,k,q,alpha,A,b);
+[A,b]                   = setupPatchInterior(grid,k,q,A,b,alpha);
 
 %==============================================================
 % 4. Create patch boundary equations
@@ -87,39 +77,34 @@ if (param.verboseLevel >= 2)
     fprintf(' 4. Create patch boundary equations\n');
     fprintf('#########################################################################\n');
 end
-[A,b,indBC]           = setupPatchBC(grid,k,q,alpha,A,b);
+[A,b]                   = setupPatchBC(grid,k,q,alpha,A,b);
 
 %==============================================================
-% 5. Modify coarse patch edge equations
+% 5. Modify equations near C/F interface on both coarse and fine patches;
+% interpolate ghost points.
 %==============================================================
 if (param.verboseLevel >= 2)
     fprintf('#########################################################################\n');
-    fprintf(' 5. Modify coarse patch edge equations\n');
+    fprintf(' 5. Modify equations near C/F interface on both coarse and fine patches;\n');
+    fprintf(' interpolate ghost points.\n');
     fprintf('#########################################################################\n');
 end
-% Fine cells at C/F interface are the same size as any other fine cell
-alphaCF                 = zeros(1,2*grid.dim);
-for d = 1:grid.dim,
-    for s = [-1 1],
-        alphaCF(2*d-1)  = 0.5;
-        alphaCF(2*d)    = 0.5;
-    end
-end
-[A,b,indUnder] = setupInterface(grid,k,q,alphaCF,A,b);
+
+% To align fine cell boundaries with coarse cell boundaries, alpha has to
+% be 0.5 here (otherwise near corners, coarse cells at the C/F interface
+% have a weird shape).
+[A,b]                   = setupInterface(grid,k,q,A,b);
 
 %==============================================================
-% 6. Delete underlying coarse patch equations and replace them by the identity
-% operator (including ghost equations). Delete unused gridpoints.
+% 6. Delete unused gridpoints / put identity operator there.
 %==============================================================
 if (param.verboseLevel >= 2)
     fprintf('#########################################################################\n');
-    fprintf(' 6. Delete underlying coarse patch equations and replace them by the\n');
-    fprintf(' identity operator (including ghost equations). Delete unused gridpoints.\n');
+    fprintf(' 6. Delete unused gridpoints / put identity operator there.\n');
     fprintf('#########################################################################\n');
 end
 patchRange              = P.offsetInd + [1:prod(P.size)];
 indUnused               = patchRange(find(abs(diag(A(patchRange,patchRange))) < eps));
-indUnused               = union(indUnused,indUnder);
 A(indUnused,indUnused)  = eye(length(indUnused));
 b(indUnused)            = 0.0;
 if (param.verboseLevel >= 3)

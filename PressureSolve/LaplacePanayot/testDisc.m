@@ -12,8 +12,8 @@ globalParams;
 %=========================================================================
 % Initialize parameters struct
 %=========================================================================
-param                      = [];
-param.twoLevel              = 1;
+param                       = [];
+param.twoLevel              = 0;
 param.setupGrid             = 1;
 param.solveSystem           = 1;
 param.plotResults           = 1;
@@ -26,7 +26,7 @@ param.verboseLevel          = 2;
 %=========================================================================
 % Run discretization on a sequence of successively finer grids
 %=========================================================================
-numCellsRange           = 4; %2.^[2:1:7];
+numCellsRange           = 2.^[2:1:7];
 success = mkdir('.',param.outputDir);
 
 for count = 1:length(numCellsRange)
