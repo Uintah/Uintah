@@ -28,6 +28,8 @@ namespace Uintah {
 
     virtual bool needRecompile(double time, double delt, const GridP& grid);
 
+    virtual void addToTimestepXML(ProblemSpecP&);
+    virtual void readFromTimestepXML(const ProblemSpecP&);
   private:
     void switchTest(const ProcessorGroup*,
                     const PatchSubset* patches,

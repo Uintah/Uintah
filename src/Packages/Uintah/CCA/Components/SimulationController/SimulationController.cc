@@ -61,12 +61,14 @@ namespace Uintah {
 
     d_restarting = false;
     d_combinePatches = false;
-
+    d_archive = NULL;
   }
 
   SimulationController::~SimulationController()
   {
     delete d_timeinfo;
+    if (d_archive)
+      delete d_archive;
   }
 
   void SimulationController::doCombinePatches(std::string fromDir, bool reduceUda)
@@ -127,25 +129,21 @@ namespace Uintah {
   {
     GridP grid;
 
-    // Setup the initial grid.  We need to load it from the data archive
-    // if we're restarting from an AMR grid. 
 
-    if (!d_doAMR || !d_restarting) {
-      grid = scinew Grid;
-      grid->problemSetup(d_ups, d_myworld, d_doAMR);
-      grid->performConsistencyCheck();
-    }
-    else {
-      // create a temporary DataArchive for reading in the grid
-      // for restarting.
+    if (d_restarting) {
+      // create the DataArchive here, and store it, as we use it a few times...
+      // We need to read the grid before ProblemSetup, and we can't load all
+      // the data until after problemSetup, so we have to do a few 
+      // different DataArchive operations
+
       Dir restartFromDir(d_fromDir);
       Dir checkpointRestartDir = restartFromDir.getSubdir("checkpoints");
-      DataArchive archive(checkpointRestartDir.getName(),
+      d_archive = scinew DataArchive(checkpointRestartDir.getName(),
                           d_myworld->myrank(), d_myworld->size());
 
       vector<int> indices;
       vector<double> times;
-      archive.queryTimesteps(indices, times);
+      d_archive->queryTimesteps(indices, times);
 
       unsigned i;
       // find the right time to query the grid
@@ -168,7 +166,19 @@ namespace Uintah {
         throw InternalError(message.str());
       }
       
-      grid = archive.queryGrid(times[i], d_ups.get_rep());
+      d_restartTime = times[i];
+    }
+
+    if (!d_doAMR || !d_restarting) {
+      grid = scinew Grid;
+      grid->problemSetup(d_ups, d_myworld, d_doAMR);
+      grid->performConsistencyCheck();
+    }
+    else {
+      // maybe someday enforce to always load the grid from the DataArchive, but for
+      // now only do that with AMR.
+
+      grid = d_archive->queryGrid(d_restartTime, d_ups.get_rep());
       
     }
     if(grid->numLevels() == 0){
@@ -195,7 +205,7 @@ namespace Uintah {
     
     double delt = 0;
     
-    archive.restartInitialize(d_restartTimestep, grid, d_scheduler->get_dw(1), d_lb, 
+    d_archive->restartInitialize(d_restartTimestep, grid, d_scheduler->get_dw(1), d_lb, 
                               &t, &delt);
     
     d_sharedState->setCurrentTopLevelTimeStep( d_restartTimestep );
@@ -221,8 +231,8 @@ namespace Uintah {
       }
     }
     d_scheduler->get_dw(1)->finalize();
-    ProblemSpecP pspec = archive.getRestartTimestepDoc();
-    XMLURL url = archive.getRestartTimestepURL();
+    ProblemSpecP pspec = d_archive->getRestartTimestepDoc();
+    XMLURL url = d_archive->getRestartTimestepURL();
     //d_lb->restartInitialize(pspec, url);
     
     d_output->restartSetup(restartFromDir, 0, d_restartTimestep, t,
@@ -235,6 +245,16 @@ namespace Uintah {
     d_sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
     if(!d_sim)
       throw InternalError("No simulation component");
+
+    if (d_restarting) {
+      // do these before calling sim->problemSetup
+      XMLURL blah; // unused
+      const ProblemSpecP spec = d_archive->getTimestep(d_restartTime, blah);
+      d_sim->readFromTimestepXML(spec);
+
+      // eventually we will also probably query the material properties here.
+    }
+
     d_sim->problemSetup(d_ups, grid, d_sharedState);
     
     // Finalize the shared state/materials
