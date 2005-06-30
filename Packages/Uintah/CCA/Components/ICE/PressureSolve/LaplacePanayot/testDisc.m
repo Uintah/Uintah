@@ -26,7 +26,7 @@ param.verboseLevel          = 0;
 %=========================================================================
 % Run discretization on a sequence of successively finer grids
 %=========================================================================
-numCellsRange           = 2.^[2:1:7];
+numCellsRange           = 2.^[2:1:6];
 success = mkdir('.',param.outputDir);
 
 for count = 1:length(numCellsRange)
@@ -52,18 +52,20 @@ for count = 1:length(numCellsRange)
         grid.dim            = length(grid.domainSize);
         A                   = [];
         b                   = [];
+        T                   = [];
+        TI                  = [];
 
         %--------------- Level 1: global coarse grid -----------------
 
         resolution          = [numCells numCells];
         [grid,k]            = addGridLevel(grid,'meshsize',grid.domainSize./resolution);
-        [grid,q1,A,b]       = addGridPatch(grid,k,ones(1,grid.dim),resolution,-1,A,b);     % One global patch
+        [grid,q1,A,b,T,TI]  = addGridPatch(grid,k,ones(1,grid.dim),resolution,-1,A,b,T,TI);     % One global patch
 
         %--------------- Level 2: local fine grid around center of domain -----------------
 
         if (param.twoLevel)
             [grid,k]            = addGridLevel(grid,'refineRatio',[2 2]);
-            [grid,q2,A,b]       = addGridPatch(grid,k,resolution/2 + 1,3*resolution/2,q1,A,b);              % Local patch around the domain center
+            [grid,q2,A,b,T,TI]  = addGridPatch(grid,k,resolution/2 + 1,3*resolution/2,q1,A,b,T,TI);              % Local patch around the domain center
         end
 
         tCPU        = cputime - tStartCPU;
@@ -84,12 +86,12 @@ for count = 1:length(numCellsRange)
             fprintf(' Solve the linear system\n');
             fprintf('-------------------------------------------------------------------------\n');
         end
-        tStartCPU        = cputime;
-        tStartElapsed    = clock;
-        x = A\b;                            % Direct solver
-        u = sparseToAMR(x,grid,1);           % Translate the solution vector to patch-based
-        tCPU        = cputime - tStartCPU;
-        tElapsed    = etime(clock,tStartElapsed);
+        tStartCPU       = cputime;
+        tStartElapsed   = clock;
+        x               = A\b;                            % Direct solver
+        u               = sparseToAMR(x,grid,TI,1);           % Translate the solution vector to patch-based
+        tCPU            = cputime - tStartCPU;
+        tElapsed        = etime(clock,tStartElapsed);
         if (param.verboseLevel >= 1)
             fprintf('CPU time     = %f\n',tCPU);
             fprintf('Elapsed time = %f\n',tElapsed);
@@ -114,9 +116,9 @@ for count = 1:length(numCellsRange)
         end
 
         % Plot and print discretization error at all patches
-        uExact = exactSolutionAMR(grid);
-        tau = sparseToAMR(b-A*AMRToSparse(uExact,grid),grid,0);
-        f = sparseToAMR(b,grid,0);
+        uExact = exactSolutionAMR(grid,T,TI);
+        tau = sparseToAMR(b-A*AMRToSparse(uExact,grid,T,1),grid,TI,0);
+        f = sparseToAMR(b,grid,TI,0);
         fig = 0;
         for k = 1:grid.numLevels,
             level = grid.level{k};
@@ -146,11 +148,11 @@ for count = 1:length(numCellsRange)
                 title(sprintf('Discrete solution on Level %d, Patch %d',k,q));
                 eval(sprintf('print -depsc %s/DiscSolution%d_L%dP%d.eps',param.outputDir,numCells,k,q));
 
-%                 fig = fig+1;
-%                 figure(fig);
-%                 clf;
-%                 surf(uExact{k}{q});
-%                 title(sprintf('Exact solution on Level %d, Patch %d',k,q));
+                fig = fig+1;
+                figure(fig);
+                clf;
+                surf(uExact{k}{q});
+                title(sprintf('Exact solution on Level %d, Patch %d',k,q));
 
                 fig = fig+1;
                 figure(fig);
@@ -160,13 +162,13 @@ for count = 1:length(numCellsRange)
                 eval(sprintf('print -depsc %s/DiscError%d_L%dP%d.eps',param.outputDir,numCells,k,q));
                 shg;
 
-%                 fig = fig+1;
-%                 figure(fig);
-%                 clf;
-%                 surf(tau{k}{q});
-%                 title(sprintf('Truncation error on Level %d, Patch %d',k,q));
-%                 eval(sprintf('print -depsc %s/TruncError%d_L%dP%d.eps',param.outputDir,numCells,k,q));
-%                 shg;
+                fig = fig+1;
+                figure(fig);
+                clf;
+                surf(tau{k}{q});
+                title(sprintf('Truncation error on Level %d, Patch %d',k,q));
+                eval(sprintf('print -depsc %s/TruncError%d_L%dP%d.eps',param.outputDir,numCells,k,q));
+                shg;
             end
         end
         tCPU        = cputime - tStartCPU;
