@@ -42,6 +42,7 @@
 #define SCIRun_Framework_ComponentInstance_h
 
 #include <SCIRun/CCA/ComponentID.h>
+#include <Core/CCA/spec/cca_sidl.h>
 #include <string>
 
 namespace SCIRun
@@ -62,24 +63,51 @@ class PortInstanceIterator;
 class ComponentInstance
 {
 public:
-  ComponentInstance(SCIRunFramework* framework,
-                    const std::string& instanceName,
-                    const std::string& className);
-  virtual ~ComponentInstance();
+    ComponentInstance(SCIRunFramework* framework,
+                      const std::string& instanceName,
+                      const std::string& className,
+                      const sci::cca::TypeMap::pointer& tm);
+    virtual ~ComponentInstance();
 
-  /** The framework to which this component instance belongs, i.e. the
-      framework in which it was instantiated. */
-  SCIRunFramework* framework;
+    /** The framework to which this component instance belongs, i.e. the
+        framework in which it was instantiated. */
+    SCIRunFramework* framework;
+
+    /** Returns a pointer to the port named \em name.  If no such port exists in
+        this component, returns a null pointer. */
+    virtual PortInstance* getPortInstance(const std::string& name) = 0;
+
+    /** Returns the list of ports associated with this component. */
+    virtual PortInstanceIterator* getPorts() = 0;
+
+    inline void
+    setInstanceName(const std::string &name) { instanceName = name; }
+
+    inline std::string
+    getInstanceName() const { return instanceName; }
+
+    inline void
+    setClassName(const std::string &name) { className = name; }
+
+    inline std::string
+    getClassName() const { return className; }
+        
+    inline sci::cca::TypeMap::pointer
+    getComponentProperties() { return comProperties; }
+        
+    inline void
+    setComponentProperties(const sci::cca::TypeMap::pointer &tm) { comProperties = tm; }
+
+
+protected:
   /** The unique name of this component instance. */
   std::string instanceName;
+
   /** The type of the component. */
   std::string className;
 
-  /** Returns a pointer to the port named \em name.  If no such port exists in
-      this component, returns a null pointer. */
-  virtual PortInstance* getPortInstance(const std::string& name) = 0;
-  /** Returns the list of ports associated with this component. */
-  virtual PortInstanceIterator* getPorts() = 0;
+  sci::cca::TypeMap::pointer comProperties;
+
 private:
   ComponentInstance(const ComponentInstance&);
   ComponentInstance& operator=(const ComponentInstance&);
