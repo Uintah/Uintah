@@ -115,15 +115,15 @@ void CCAComponentModel::buildComponentList()
               << StrX(toCatch.getMessage()) << std::endl;
     return;
   }
-                                                                                                                                                
+
   destroyComponentList();
-                                                                                                                                                
+
   SSIDL::array1<std::string> sArray;
   sci::cca::TypeMap::pointer tm;
   sci::cca::ports::FrameworkProperties::pointer fwkProperties =
     pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
         framework->getFrameworkService("cca.FrameworkProperties", "")
-	);
+    );
   if (fwkProperties.isNull()) {
     std::cerr << "Error: Cannot find framework properties" << std::cerr;
     //return sci_getenv("SCIRUN_SRCDIR") + DEFAULT_PATH;
@@ -140,7 +140,7 @@ void CCAComponentModel::buildComponentList()
     d.getFilenamesBySuffix(".xml", files);
     
     for(std::vector<std::string>::iterator iter = files.begin();
-	iter != files.end(); iter++) {
+    iter != files.end(); iter++) {
       std::string& file = *iter;
       std::cerr << "CCA Component Model: Looking at file" << file << std::endl;
       readComponentDescription(*it+"/"+file);
@@ -179,7 +179,7 @@ void CCAComponentModel::readComponentDescription(const std::string& file)
   
   // Check that this document is actually describing CCA components
   DOMElement *metacomponentmodel = static_cast<DOMElement *>(
-	document->getElementsByTagName(to_xml_ch_ptr("metacomponentmodel"))->item(0));
+    document->getElementsByTagName(to_xml_ch_ptr("metacomponentmodel"))->item(0));
                                                                                                                                                 
   std::string compModelName
     = to_char_ptr(metacomponentmodel->getAttribute(to_xml_ch_ptr("name")));
@@ -224,10 +224,8 @@ CCAComponentModel::createServices(const std::string& instanceName,
                   const std::string& className,
                   const sci::cca::TypeMap::pointer& properties)
 {
-  CCAComponentInstance* ci = new CCAComponentInstance(framework,
-                              instanceName, className,
-                              properties,
-                              sci::cca::Component::pointer(0));
+std::cerr << "CCAComponentModel::createServices: " << instanceName << ", " << className << std::endl;
+  CCAComponentInstance* ci = new CCAComponentInstance(framework, instanceName, className, properties, sci::cca::Component::pointer(0));
   framework->registerComponent(ci, instanceName);
   ci->addReference();
   return sci::cca::Services::pointer(ci);
@@ -240,7 +238,7 @@ bool CCAComponentModel::destroyServices(const sci::cca::Services::pointer& svc)
     if (ci == 0) {
         return false;
     }
-    framework->unregisterComponent(ci->instanceName);
+    framework->unregisterComponent(ci->getInstanceName());
     ci->deleteReference();
     return true;
 }
@@ -253,15 +251,16 @@ bool CCAComponentModel::haveComponent(const std::string& type)
 
 
 
-ComponentInstance* CCAComponentModel::createInstance(const std::string& name,
-                             const std::string& type,
-                             const sci::cca::TypeMap::pointer& properties)
+ComponentInstance*
+CCAComponentModel::createInstance(const std::string& name,
+                                  const std::string& type,
+                                  const sci::cca::TypeMap::pointer& properties)
 
 {
-  std::string loaderName="";
-  if(!properties.isNull()){
+  std::string loaderName;
+  if (! properties.isNull()) {
     properties->addReference();
-    loaderName=properties->getString("LOADER NAME","");
+    loaderName = properties->getString("LOADER NAME", "");
   }
   std::cerr<<"creating cca component <" <<
       name << "," << type << "> with loader:"
@@ -313,9 +312,8 @@ ComponentInstance* CCAComponentModel::createInstance(const std::string& name,
     component=pidl_cast<sci::cca::Component::pointer>(comObj);
     properties->putInt("np",loader->getSize() );
   }
-  CCAComponentInstance* ci = new CCAComponentInstance(framework, name, type,
-                                                      properties, //sci::cca::TypeMap::pointer(0),
-                                                      component);
+  CCAComponentInstance* ci =
+        new CCAComponentInstance(framework, name, type, properties, component);
   component->setServices(sci::cca::Services::pointer(ci));
   return ci;
 }

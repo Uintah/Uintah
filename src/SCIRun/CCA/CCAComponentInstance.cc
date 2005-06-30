@@ -38,31 +38,26 @@
  *
  */
 
-#include <SCIRun/CCA/CCAComponentInstance.h>
-#include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/TypeMap.h>
+#include <SCIRun/SCIRunFramework.h>
+#include <SCIRun/CCA/CCAComponentInstance.h>
 #include <SCIRun/CCA/CCAPortInstance.h>
 #include <SCIRun/CCA/CCAException.h>
-#include <iostream>
 #include <Core/Thread/Mutex.h>
+#include <iostream>
 
 namespace SCIRun {
 
-CCAComponentInstance::CCAComponentInstance(SCIRunFramework* framework,
-                                           const std::string& instanceName,
-                                           const std::string& typeName,
-                            const sci::cca::TypeMap::pointer& com_properties,
-                     const sci::cca::Component::pointer& component)
-  : ComponentInstance(framework, instanceName, typeName),
-        component(component), size(0), rank(0)
+CCAComponentInstance::CCAComponentInstance(
+    SCIRunFramework* framework,
+    const std::string &instanceName,
+    const std::string &typeName,
+    const sci::cca::TypeMap::pointer &tm,
+    const sci::cca::Component::pointer &component)
+: ComponentInstance(framework, instanceName, typeName, tm),
+  component(component), size(0), rank(0)
 {
-  if (com_properties.isNull()) {
-    std::cerr << "### Null properties for cca comp" << std::endl;
-    this->com_properties=createTypeMap();
-  } else {
-    this->com_properties=com_properties;
-  }
-  mutex=new Mutex("getPort mutex");
+    mutex = new Mutex("getPort mutex");
 }
 
 CCAComponentInstance::~CCAComponentInstance()
@@ -92,7 +87,8 @@ sci::cca::Port::pointer CCAComponentInstance::getPort(const std::string& name)
 sci::cca::Port::pointer
 CCAComponentInstance::getPortNonblocking(const std::string& name)
 {
-    sci::cca::Port::pointer svc = framework->getFrameworkService(name, instanceName);
+    sci::cca::Port::pointer svc =
+        framework->getFrameworkService(name, instanceName);
     if (!svc.isNull()) {
         return svc;
     }
@@ -221,9 +217,9 @@ void CCAComponentInstance::addProvidesPort(const sci::cca::Port::pointer& port,
     } else {
       precond[portName]->wait(*mutex);
       if (--precnt[portName]==0){
-	precnt.erase(portName);
-	delete precond[portName];
-	precond.erase(portName);
+        precnt.erase(portName);
+        delete precond[portName];
+        precond.erase(portName);
       }
     }
     mutex->unlock();
@@ -259,17 +255,14 @@ void CCAComponentInstance::removeProvidesPort(const std::string& name)
 sci::cca::TypeMap::pointer
 CCAComponentInstance::getPortProperties(const std::string& portName)
 { 
-  if (portName=="") {
-    //return component property.
-    return com_properties;
-  }
   std::cerr << "getPortProperties not done, name=" << portName << std::endl;
   return sci::cca::TypeMap::pointer(0);
 }
 
-sci::cca::ComponentID::pointer CCAComponentInstance::getComponentID()
+sci::cca::ComponentID::pointer
+CCAComponentInstance::getComponentID()
 {
-  return sci::cca::ComponentID::pointer(new ComponentID(framework, instanceName));
+    return sci::cca::ComponentID::pointer(new ComponentID(framework, instanceName));
 }
 
 PortInstanceIterator* CCAComponentInstance::getPorts()
@@ -288,12 +281,12 @@ CCAComponentInstance::Iterator::~Iterator()
 
 PortInstance* CCAComponentInstance::Iterator::get()
 {
-  return iter->second;
+    return iter->second;
 }
 
 bool CCAComponentInstance::Iterator::done()
 {
-  return iter == comp->ports.end();
+    return iter == comp->ports.end();
 }
 
 void CCAComponentInstance::Iterator::next()
