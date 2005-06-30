@@ -1,6 +1,7 @@
 #include <Packages/Uintah/CCA/Components/Solvers/SolverFactory.h>
 #include <Packages/Uintah/CCA/Components/Solvers/CGSolver.h>
 #include <Packages/Uintah/CCA/Components/Solvers/DirectSolve.h>
+#include <sci_defs/hypre_defs.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolver.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
