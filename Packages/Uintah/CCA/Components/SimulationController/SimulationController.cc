@@ -67,8 +67,6 @@ namespace Uintah {
   SimulationController::~SimulationController()
   {
     delete d_timeinfo;
-    if (d_archive)
-      delete d_archive;
   }
 
   void SimulationController::doCombinePatches(std::string fromDir, bool reduceUda)
@@ -192,53 +190,6 @@ namespace Uintah {
     return grid;
   }
 
-  void SimulationController::restartSetup( GridP& grid, double& t )
-  {
-    simdbg << "Restarting... loading data\n";
-    
-    // create a temporary DataArchive for reading in the checkpoints
-    // archive for restarting.
-    Dir restartFromDir(d_fromDir);
-    Dir checkpointRestartDir = restartFromDir.getSubdir("checkpoints");
-    DataArchive archive(checkpointRestartDir.getName(),
-                        d_myworld->myrank(), d_myworld->size());
-    
-    double delt = 0;
-    
-    d_archive->restartInitialize(d_restartTimestep, grid, d_scheduler->get_dw(1), d_lb, 
-                              &t, &delt);
-    
-    d_sharedState->setCurrentTopLevelTimeStep( d_restartTimestep );
-    // Tell the scheduler the generation of the re-started simulation.
-    // (Add +1 because the scheduler will be starting on the next
-    // timestep.)
-    d_scheduler->setGeneration( d_restartTimestep+1 );
-    
-    // just in case you want to change the delt on a restart....
-    if (d_timeinfo->override_restart_delt != 0) {
-      double newdelt = d_timeinfo->override_restart_delt;
-      if (d_myworld->myrank() == 0)
-        cout << "Overriding restart delt with " << newdelt << endl;
-      d_scheduler->get_dw(1)->override(delt_vartype(newdelt), 
-                                       d_sharedState->get_delt_label());
-      double delt_fine = newdelt;
-      for(int i=0;i<grid->numLevels();i++){
-        const Level* level = grid->getLevel(i).get_rep();
-        if(i != 0)
-          delt_fine /= level->timeRefinementRatio();
-        d_scheduler->get_dw(1)->override(delt_vartype(delt_fine), d_sharedState->get_delt_label(),
-                                         level);
-      }
-    }
-    d_scheduler->get_dw(1)->finalize();
-    ProblemSpecP pspec = d_archive->getRestartTimestepDoc();
-    XMLURL url = d_archive->getRestartTimestepURL();
-    //d_lb->restartInitialize(pspec, url);
-    
-    d_output->restartSetup(restartFromDir, 0, d_restartTimestep, t,
-                           d_restartFromScratch, d_restartRemoveOldDir);
-  }
-  
   void SimulationController::postGridSetup( GridP& grid)
   {
     // Initialize the CFD and/or MPM components
@@ -279,6 +230,54 @@ namespace Uintah {
 
   }
 
+  void SimulationController::restartSetup( GridP& grid, double& t )
+  {
+    simdbg << "Restarting... loading data\n";
+    
+    // create a temporary DataArchive for reading in the checkpoints
+    // archive for restarting.
+    Dir restartFromDir(d_fromDir);
+    Dir checkpointRestartDir = restartFromDir.getSubdir("checkpoints");
+    
+    double delt = 0;
+    
+    d_archive->restartInitialize(d_restartTimestep, grid, d_scheduler->get_dw(1), d_lb, 
+                              &t, &delt);
+    
+    d_sharedState->setCurrentTopLevelTimeStep( d_restartTimestep );
+    // Tell the scheduler the generation of the re-started simulation.
+    // (Add +1 because the scheduler will be starting on the next
+    // timestep.)
+    d_scheduler->setGeneration( d_restartTimestep+1 );
+    
+    // just in case you want to change the delt on a restart....
+    if (d_timeinfo->override_restart_delt != 0) {
+      double newdelt = d_timeinfo->override_restart_delt;
+      if (d_myworld->myrank() == 0)
+        cout << "Overriding restart delt with " << newdelt << endl;
+      d_scheduler->get_dw(1)->override(delt_vartype(newdelt), 
+                                       d_sharedState->get_delt_label());
+      double delt_fine = newdelt;
+      for(int i=0;i<grid->numLevels();i++){
+        const Level* level = grid->getLevel(i).get_rep();
+        if(i != 0)
+          delt_fine /= level->timeRefinementRatio();
+        d_scheduler->get_dw(1)->override(delt_vartype(delt_fine), d_sharedState->get_delt_label(),
+                                         level);
+      }
+    }
+    d_scheduler->get_dw(1)->finalize();
+    ProblemSpecP pspec = d_archive->getRestartTimestepDoc();
+    XMLURL url = d_archive->getRestartTimestepURL();
+    //d_lb->restartInitialize(pspec, url);
+    
+    d_output->restartSetup(restartFromDir, 0, d_restartTimestep, t,
+                           d_restartFromScratch, d_restartRemoveOldDir);
+
+    // don't need it anymore...
+    delete d_archive;
+  }
+  
   void SimulationController::adjustDelT(double& delt, double prev_delt, int iterations, double t) 
   {
     delt *= d_timeinfo->delt_factor;
