@@ -11,6 +11,11 @@ list = [i j data];
 list = sortrows(list);
 
 for k = 1:size(list,1)
+    if (k > 1)
+        if (list(k,1) ~= list(k-1,1))
+            fprintf(f,'\n');
+        end
+    end
     fprintf(f,'(%5d , %5d)   %+f\n',list(k,:));
 end
 
