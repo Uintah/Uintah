@@ -116,7 +116,8 @@ SCIRunComponentModel::haveComponent(const std::string& type)
 
 ComponentInstance*
 SCIRunComponentModel::createInstance(const std::string& name,
-                                     const std::string& type)
+                                     const std::string& type,
+                                     const sci::cca::TypeMap::pointer& tm)
 {
     std::string package, category, module;
     if (! split_name(type, package, category, module) ) {
@@ -130,7 +131,7 @@ SCIRunComponentModel::createInstance(const std::string& name,
 
     Module* m = net->add_module2(package, category, module);
     SCIRunComponentInstance* ci =
-        new SCIRunComponentInstance(framework, name, type, m);
+        new SCIRunComponentInstance(framework, name, type, tm, m);
     return ci;
 }
 
