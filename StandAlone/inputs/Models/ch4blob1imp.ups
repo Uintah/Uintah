@@ -12,12 +12,13 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            1.0        </maxTime>
+       <maxTime>            100.0        </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-9      </delt_init>
 	<max_delt_increase>  0.25      </max_delt_increase>
+      <!-- <max_iterations>     1          </max_iterations> -->
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
     <!--____________________________________________________________________-->
@@ -123,11 +124,11 @@
     <!--____________________________________________________________________-->
        <Level>
            <Box label="1">
-              <lower>        [-2.5,-2.5,2.5]    </lower>
-              <upper>        [2.5,  2.5,2.55]    </upper>
-              <extraCells>   [1,1,1]    </extraCells>
-              <patches>      [1,1,1]    </patches>
-              <resolution>   [100,100,1] </resolution>
+              <lower>        [-2.5,-2.5,-0.03]    </lower>
+              <upper>        [2.5,  2.5, 0.03]    </upper>
+              <extraCells>   [1,1,1]              </extraCells>
+              <patches>      [1,1,1]              </patches>
+              <resolution>   [100,100,1]          </resolution>
            </Box>
        </Level>
     </Grid>    
@@ -135,7 +136,7 @@
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>imp_ch4blob1.uda</filebase>
+      <filebase>CH4blob.uda</filebase>
       <outputInterval>0.01</outputInterval>
       <!--<outputTimestepInterval> 1 </outputTimestepInterval>-->
       <save label= "vel_CC"/>
@@ -145,11 +146,9 @@
       <save label= "sp_vol_CC"/>
       <save label= "delP_Dilatate"/>
       <save label= "scalar-f"/>
-      <save label= "modelMass_src"/>
-      <save label= "modelMom_src"/>
       <save label= "modelEng_src"/>
       <save label= "specific_heat"/>
-      <save label= "gamma"/>
+      <save label = "cumulativeEnergyReleased"/>
       <checkpoint interval="0.005" cycle="2"/>"
    </DataArchiver>
    
@@ -176,37 +175,37 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>0.4</cfl>
+         <cfl>0.35</cfl>
         <TimeStepControl>
           <Scheme_for_delT_calc> conservative   </Scheme_for_delT_calc>
           <knob_for_speedSound>  0.0            </knob_for_speedSound>
         </TimeStepControl>
        <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
-        <advection type = "FirstOrder" />
-        <solution technique = "EqForm" />
+        <advection type = "SecondOrder" useCompatibleFluxes = "true"/>
+        <solution technique = "EqForm"/>
+     
         <ImplicitSolver>
-           <max_outer_iterations>          50   </max_outer_iterations>
-           <outer_iteration_tolerance>   1e-8   </outer_iteration_tolerance>
-           <iters_before_timestep_restart> 50   </iters_before_timestep_restart>           
-           <Parameters variable = "implicitPressure">
+           <max_outer_iterations>      20    </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-6   </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 15 </iters_before_timestep_restart>
+           <Parameters variable="implicitPressure">
 	     <!-- Common options -->
-            <tolerance>1.e-10    </tolerance>
+              <tolerance>1.e-8    </tolerance>
 
-	     <!-- CGSolver options -->
-            <norm>     LInfinity    </norm>
-            <criteria> Absolute     </criteria>
+	     <!-- Steve's CGSolver options -->
+              <norm>     LInfinity  </norm>
+              <criteria> Absolute   </criteria>
 
 	     <!-- Hypre options -->
-	     <solver>         cg      </solver>
+	     <solver>         hybrid  </solver>
 	     <preconditioner> pfmg    </preconditioner>
-	     <maxiterations>  50      </maxiterations>
+	     <maxiterations>  7500    </maxiterations>
 	     <npre>           1       </npre>
 	     <npost>          1       </npost>
 	     <skip>           0       </skip>
 	     <jump>           0       </jump>
-           
-	    </Parameters>
+           </Parameters>
         </ImplicitSolver>
       </ICE>        
     </CFD>
@@ -215,6 +214,7 @@
     <!--____________________________________________________________________-->   
     <PhysicalConstants>
        <gravity>[0,0,0]</gravity>
+       <reference_pressure> 101325 </reference_pressure>
     </PhysicalConstants>
     <!--____________________________________________________________________-->
     <!--     MATERIAL PROPERTIES AND INITIAL CONDITIONS                     -->
@@ -236,34 +236,15 @@
            <speed_of_sound>         270.287             </speed_of_sound>        
            <gamma>                  1.4                 </gamma>
            <geom_object>
-              <difference>
                 <box label="world">
                   <min>       [ -6.0, -6.0, -6.0 ]    </min>
                   <max>       [ 6.0, 6.0, 6.0 ]       </max>
                 </box>
-                <cylinder label = "CH4_blob">
-                   <bottom>           [0.0,0.0,-5]   </bottom>
-                   <top>              [0.0,0.0, 5]   </top>
-                   <radius>           0.5             </radius>
-                </cylinder>
-              </difference>
               <res>                [2,2,2]             </res>
               <velocity>           [.0,.0,.0]          </velocity>
               <density>       111.176829268292683      </density>
               <pressure>      101325.0                 </pressure>     
               <temperature>   9300.0                   </temperature>
-           </geom_object>
-           <geom_object>
-                <cylinder label = "CH4_blob">
-                   <bottom>           [0.0,0.0,-5]     </bottom>
-                   <top>              [0.0,0.0, 5]     </top>
-                   <radius>           0.5              </radius>
-                </cylinder>
-              <res>                [2,2,2]             </res>
-              <velocity>           [0.0,0.0,0.0]       </velocity>
-              <density>        110.1176829268292683    </density>
-              <pressure>      101325.0                 </pressure>     
-              <temperature>   93000.0                  </temperature>
            </geom_object>
          </material>
       </ICE>       
@@ -286,28 +267,27 @@
         <scalar name="f">
         <constants>
         </constants>
-       <geom_object>
-              <difference>
+        <geom_object>
                 <box label="world">
                   <min>       [ -6.0, -6.0, -6.0 ]   </min>
                   <max>       [ 6.0, 6.0, 6.0 ]      </max>
                 </box>
-                <cylinder label = "CH4_blob">
-                   <bottom>           [0.0,0.0,-5]    </bottom>
-                   <top>              [0.0,0.0, 5]    </top>
-                   <radius>           0.5             </radius>
-                </cylinder>
-              </difference>
-              <scalar>    0.00   </scalar>
-           </geom_object>
-           <geom_object>
-               <cylinder label = "CH4_blob">
-                  <bottom>           [0.0,0.,-5]   </bottom>
-                  <top>              [0.0,0., 5]   </top>
-                  <radius>           0.5             </radius>
-               </cylinder>
+            <scalar>    0.00   </scalar>
+        </geom_object>
+        <geom_object>
+              <sphere label = "CH4_blob">
+                 <origin>           [0.0,0.0,0.0]   </origin>
+                 <radius>           0.5             </radius>
+              </sphere>
                <scalar>    1.00   </scalar>
-           </geom_object>
+        </geom_object>
+        <geom_object>
+              <sphere label = "hole in middle">
+                 <origin>           [0.0,0.0,0.0]    </origin>
+                 <radius>           0.25             </radius>
+              </sphere>
+              <scalar>    0.00   </scalar>
+        </geom_object>
 	</scalar>
       </Model>
     </Models>                
