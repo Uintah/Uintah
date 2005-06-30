@@ -120,16 +120,21 @@ sci::cca::Port::pointer getPort(const std::string& name);
                        const std::string& type,
                        const sci::cca::TypeMap::pointer& properties);
 
-  /** A proxy method for gov::cca::Services.  Calls the corresponding method in
-      SCIRunFramework::Services. */
+  /** A proxy method for gov::cca::Services.  Calls the corresponding
+      method in SCIRunFramework::Services. */
   void removeProvidesPort(const std::string& name);
 
-  /** A proxy method for gov::cca::Services.  Calls the corresponding method in
-      SCIRunFramework::Services. */
+  /** Returns the complete list of the properties for a Port.
+   *
+   * Keys:
+   * cca.portName
+   * cca.portType
+   * Properties from addProvidesPort/registerUsesPort...
+   */
   sci::cca::TypeMap::pointer getPortProperties(const std::string& portName);
 
-  /** A proxy method for gov::cca::Services.  Calls the corresponding method in
-      SCIRunFramework::Services. */
+  /** A proxy method for gov::cca::Services.  Calls the corresponding
+      method in SCIRunFramework::Services. */
   sci::cca::ComponentID::pointer getComponentID();
   
   // Methods from ComponentInstance
@@ -137,7 +142,6 @@ sci::cca::Port::pointer getPort(const std::string& name);
   virtual PortInstanceIterator* getPorts();
 
 private:
-  sci::cca::TypeMap::pointer com_properties;
   class Iterator : public PortInstanceIterator
   {
     std::map<std::string, CCAPortInstance*>::iterator iter;
