@@ -147,8 +147,8 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>imp_CH4Jet_CoFlow.uda</filebase>
-     <outputInterval>0.01</outputInterval>
+      <filebase>CH4Jet_CoFlow.uda</filebase>
+     <outputInterval>0.1</outputInterval>
       <save label = "delP_Dilatate"/>
       <save label = "press_CC"/>  
       <save label = "vel_CC"/>
@@ -172,10 +172,10 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-      <cfl>0.20</cfl>
+      <cfl>0.2</cfl>
       <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
-        <advection type = "SecondOrder"/>
+        <advection type = "SecondOrder" useCompatibleFluxes = "true"/>
         <solution technique = "EqForm"/>
         
         <!--______________turbulence models____________-->
@@ -222,7 +222,6 @@
 	     <!-- Hypre options -->
 	     <solver>         hybrid  </solver>
 	     <preconditioner> pfmg    </preconditioner>
-	      <tolerance>      1.e-8  </tolerance>
 	     <maxiterations>  7500    </maxiterations>
 	     <npre>           1       </npre>
 	     <npost>          1       </npost>
@@ -259,34 +258,15 @@
            <speed_of_sound>             376             </speed_of_sound>
            <gamma>                      1.4             </gamma>
            <geom_object>
-                <difference>
               <box label = "world">
                   <min>            [-5.0, -5.0, -5.0] </min>
                   <max>            [ 5.0,  8.0,  5.0] </max>                 
               </box>
-                <cylinder label = "fuelSlug">
-                   <bottom>           [0.0,0.0,0.0]   </bottom>
-                   <top>              [0.0,0.25,0.0]   </top>
-                   <radius>           0.5             </radius>
-                </cylinder>
-              </difference>
               <res>                [2,2,2]             </res>
-              <velocity>           [.0,.01,.0]         </velocity>
+              <velocity>           [0.0,0.01,0.0]         </velocity>
               <density>            1.1784717376136     </density>
               <pressure>           101325.0            </pressure>     
               <temperature>        300.0               </temperature>
-           </geom_object>
-           <geom_object>
-                <cylinder label = "fuelSlug">
-                   <bottom>           [0.0,0.0,0.0]    </bottom>
-                   <top>              [0.0,0.25,0.0]    </top>
-                   <radius>           0.5              </radius>
-                </cylinder>
-              <res>                [2,2,2]             </res>
-              <velocity>           [0.0,0.351,0.0]     </velocity>
-              <density>             0.23861344         </density>
-              <pressure>            101325.0           </pressure>     
-              <temperature>         627.4657             </temperature>
            </geom_object>
          </material>
       </ICE>       
@@ -311,27 +291,12 @@
 	   <diffusivity>0</diffusivity>
         </constants> 
           <geom_object>
-              <difference>
              <box label = "world">
                   <min>       [-5, -5, -5]   </min>
                   <max>       [5,   8,  5]   </max>
              </box>
-                <cylinder label = "fuelSlug">
-                   <bottom>           [0.0,0.0,0.0]   </bottom>
-                   <top>              [0.0,0.25,0.0]  </top>
-                   <radius>           0.5             </radius>
-                </cylinder>
-              </difference>
              <scalar>    0.00   </scalar>
           </geom_object>
-           <geom_object>
-               <cylinder label = "fuelSlug">
-                  <bottom>           [0.0,0.0,0.0]   </bottom>
-                  <top>              [0.0,0.25,0.0]  </top>
-                  <radius>           0.5             </radius>
-               </cylinder>
-               <scalar>    1.00   </scalar>
-           </geom_object>
 	</scalar>
       
 	<varianceScale>0</varianceScale>
