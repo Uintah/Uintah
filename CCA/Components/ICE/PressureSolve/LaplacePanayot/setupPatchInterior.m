@@ -1,4 +1,4 @@
-function [A,b,Alist] = setupPatchInterior(grid,k,q,A,b,ilower,iupper,reallyUpdate)
+function [A,b,T,Alist,Tlist] = setupPatchInterior(grid,k,q,A,b,T,ilower,iupper,reallyUpdate)
 %SETUPPATCCHINTERIOR  Set the discrete operator at a patch's edge.
 %   [A,B] = SETUPPATCHINTERIOR(GRID,K,Q,A,B,ALPHA,ILOWER,IUPPER,REALLYUPDATE) updates the LHS
 %   matrix A and the RHS matrix B, adding to them all the equations at
@@ -18,11 +18,11 @@ if (param.verboseLevel >= 1)
     fprintf('--- setupPatchInterior(k = %d, q = %d) BEGIN ---\n',k,q);
 end
 
-if (nargin < 5)
+if (nargin < 6)
     error('Too few input arguments (need at least grid,k,q,A,b)\n');
 end
 
-if (nargin < 8)
+if (nargin < 9)
     reallyUpdate = 1;
 end
 
@@ -42,10 +42,10 @@ edgeDomain{2}           = level.maxCell + P.offsetSub;              % Last domai
 % Prepare a list of all cell indices whose equations are created below.
 %=====================================================================
 
-if (nargin < 6)
+if (nargin < 7)
     ilower              = P.ilower;
 end
-if (nargin < 7)
+if (nargin < 8)
     iupper              = P.iupper;
 end
 boxSize                 = iupper-ilower+1;
@@ -109,7 +109,9 @@ end
 % coefficients of all cells.
 %=====================================================================
 Alist                   = zeros(0,3);
+Tlist                   = zeros(0,3);
 indAll                  = indBox;
+indTransformed          = [];
 
 for dim = 1:grid.dim,                                                       % Loop over dimensions of patch
     for side = [-1 1]                                                       % side=-1 (left) and side=+1 (right) directions in dimension d
@@ -143,10 +145,16 @@ for dim = 1:grid.dim,                                                       % Lo
         if (~isempty(thisNear))
             indBC = indNbhr(thisNear);
             Alist = [Alist; ...                                                 % BC vars (= nbhr vars) are fluxes
-                [indBC   indBC       -indFlux(thisNear)]; ...
+                [indBC   indBC                   -indFlux(thisNear)]; ...
                 [indBC   indBox(thisNear)        -indFlux(thisNear)] ...
                 ];
+            Tlist = [Tlist; ...                                                 % BC vars (= nbhr vars) are fluxes
+                [indBC   indBC                   repmat(1.0,size(indBC))]; ...
+                [indBC   indBox(thisNear)        repmat(-1.0,size(indBC))] ...
+                ];
             indAll = union(indAll,indBC);
+            indTransformed = union(indTransformed,indBC);
+            
             if (reallyUpdate)
                 %=====================================================================
                 % Update LHS vector b with boundary equations.
@@ -155,7 +163,7 @@ for dim = 1:grid.dim,                                                       % Lo
                 for d = 1:grid.dim
                     xBC{d}          = x{d}(thisNear);                                 % BC RHS location (at faces, not cell centers) - to be corrected below
                 end
-                xBC{d}              = xBC{d} - side * h(dim);                      % Move from cell center to cell face
+                xBC{dim}            = xBC{dim} + side*0.5*h(dim);                      % Move from cell center to cell face
                 rhsBCValues         = rhsBC(xBC);
                 b(indBC)            = -indFlux(thisNear) .* rhsBCValues(:);
             end
@@ -177,6 +185,12 @@ if (reallyUpdate)
     %=====================================================================
     rhsValues               = rhs(centroid);
     b(indBox)               = volume(:) .* rhsValues(:);        
+
+    %=====================================================================
+    % Update transformation matrix T.
+    %=====================================================================
+    Tnew                    = spconvert([Tlist; [grid.totalVars grid.totalVars 0]]);
+    T(indTransformed,:)     = Tnew(indTransformed,:);
 end
 
 if (param.verboseLevel >= 1)
