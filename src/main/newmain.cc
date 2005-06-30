@@ -54,7 +54,7 @@ using namespace sci::cca;
                         // SCIRun/doc/edition.xml
 #include <sys/stat.h>
 
-std::string defaultBuilder = "qt";
+std::string defaultBuilder = "gui";
 
 void
 usage()
@@ -62,7 +62,7 @@ usage()
   std::cout << "Usage: scirun [args] [net_file]\n";
   std::cout << "       [-]-v[ersion]          : prints out version information\n";
   std::cout << "       [-]-h[elp]             : prints usage information\n";
-  std::cout << "       [-]-b[uilder] qt/txt   : selects QT or Textual builder\n";
+  std::cout << "       [-]-b[uilder] gui/txt  : selects GUI or Textual builder\n";
   std::cout << "       net_file               : SCIRun Network Input File\n";
   exit( 0 );
 }
@@ -161,10 +161,9 @@ main(int argc, char *argv[]) {
     defaultBuilder="txt";
 #   endif
     
-    if(defaultBuilder=="qt") {
+    if (defaultBuilder=="gui") {
       ComponentID::pointer gui_id =
-        builder->createInstance("QtBuilder", "cca:SCIRun.Builder",
-                                  sci::cca::TypeMap::pointer(0));
+        builder->createInstance("SCIRun.Builder", "cca:SCIRun.Builder", sci::cca::TypeMap::pointer(0));
       if(gui_id.isNull()) {
         std::cerr << "Cannot create component: cca:SCIRun.Builder\n";
         Thread::exitAll(1);
