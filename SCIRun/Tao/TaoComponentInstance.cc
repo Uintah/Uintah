@@ -49,14 +49,16 @@
 
 namespace SCIRun {
 
-TaoComponentInstance::TaoComponentInstance(SCIRunFramework* framework,
-                                           const std::string& instanceName,
-                                           const std::string& typeName,
-                                           tao::Component* component)
-  : ComponentInstance(framework, instanceName, typeName),
+TaoComponentInstance::TaoComponentInstance(
+    SCIRunFramework *framework,
+    const std::string &instanceName,
+    const std::string &typeName,
+    const sci::cca::TypeMap::pointer &tm,
+    tao::Component* component)
+  : ComponentInstance(framework, instanceName, typeName, tm),
     component(component)
 {
-  mutex=new Mutex("getPort mutex");
+    mutex = new Mutex("getPort mutex");
 }
 
 TaoComponentInstance::~TaoComponentInstance()
@@ -71,7 +73,7 @@ TaoComponentInstance::getPortInstance(const std::string& portname)
   if (iter == ports.end()) {
     return 0;
   } else {
-    if(portname=="go") {
+    if(portname == "go") {
       return new CCAPortInstance("go", "sci.cca.ports.GoPort",
                                  sci::cca::TypeMap::pointer(0),
                                  sci::cca::Port::pointer(new TaoGoPort(this)),
