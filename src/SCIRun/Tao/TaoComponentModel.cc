@@ -97,7 +97,7 @@ TaoComponentModel::~TaoComponentModel()
 
 void TaoComponentModel::destroyComponentList()
 {
-  for(componentDB_type::iterator iter=components.begin();
+  for (componentDB_type::iterator iter=components.begin();
       iter != components.end(); iter++) {
     delete iter->second;
   }
@@ -133,11 +133,11 @@ void TaoComponentModel::buildComponentList()
   }
   framework->releaseFrameworkService("cca.FrameworkProperties", "");
 
-  for(SSIDL::array1<std::string>::iterator it = sArray.begin(); it != sArray.end(); it++) {
+  for (SSIDL::array1<std::string>::iterator it = sArray.begin(); it != sArray.end(); it++) {
     Dir d(*it);
     std::vector<std::string> files;
     d.getFilenamesBySuffix(".xml", files);
-    for(std::vector<std::string>::iterator iter = files.begin();
+    for (std::vector<std::string>::iterator iter = files.begin();
       iter != files.end();
       iter++) {
       std::string& file = *iter;
@@ -171,33 +171,33 @@ void TaoComponentModel::readComponentDescription(const std::string& file)
     handler.foundError=true;
     return;
   }
-                                                                                                                                                                     
+
   // Get all the top-level document node
   DOMDocument* document = parser.getDocument();
-                                                                                                                                                                     
+
   // Check that this document is actually describing TAO components
   DOMElement *metacomponentmodel = static_cast<DOMElement *>(
     document->getElementsByTagName(to_xml_ch_ptr("metacomponentmodel"))->item(0));
-                                                                                                                                                                     
+
   std::string compModelName
     = to_char_ptr(metacomponentmodel->getAttribute(to_xml_ch_ptr("name")));
   //std::cout << "Component model name = " << compModelName << std::endl;
-                                                                                                                                                                     
+
   if ( compModelName != std::string(this->prefixName) ) {
     return;
   }
-                                                                                                                                                                     
+
   // Get a list of the library nodes.  Traverse the list and read component
   // elements at each list node.
   DOMNodeList* libraries
     = document->getElementsByTagName(to_xml_ch_ptr("library"));
-                                                                                                                                                                     
+
   for (unsigned int i = 0; i < libraries->getLength(); i++) {
     DOMElement *library = static_cast<DOMElement *>(libraries->item(i));
     // Read the library name
     std::string library_name(to_char_ptr(library->getAttribute(to_xml_ch_ptr("name"))));
     std::cout << "Library name = ->" << library_name << "<-" << std::endl;
-                                                                                                                                                                     
+
     // Get the list of components.
     DOMNodeList* comps
       = library->getElementsByTagName(to_xml_ch_ptr("component"));
@@ -207,7 +207,7 @@ void TaoComponentModel::readComponentDescription(const std::string& file)
       std::string
         component_name(to_char_ptr(component->getAttribute(to_xml_ch_ptr("name"))));
       //std::cout << "Component name = ->" << component_name << "<-" << std::endl;
-                                                                                                                                                                     
+
       // Register this component
       TaoComponentDescription* cd = new TaoComponentDescription(this, component_name);
       cd->setLibrary(library_name.c_str()); // record the DLL name
@@ -221,9 +221,9 @@ TaoComponentModel::createServices(const std::string& instanceName,
                   const std::string& className,
                   const sci::cca::TypeMap::pointer& properties)
 {
-  TaoComponentInstance* ci = new TaoComponentInstance(framework,
-                              instanceName, className,
-                              NULL);
+  TaoComponentInstance* ci =
+      new TaoComponentInstance(framework, instanceName, className,
+                               properties, 0);
   framework->registerComponent(ci, instanceName);
   ci->addReference();
   return sci::cca::TaoServices::pointer(ci);
@@ -236,7 +236,7 @@ bool TaoComponentModel::destroyServices(const sci::cca::TaoServices::pointer& sv
     if (ci == 0) {
         return false;
     }
-    framework->unregisterComponent(ci->instanceName);
+    framework->unregisterComponent(ci->getInstanceName());
     ci->deleteReference();
     return true;
 }
@@ -248,42 +248,42 @@ bool TaoComponentModel::haveComponent(const std::string& type)
 }
 
 
-ComponentInstance* TaoComponentModel::createInstance(const std::string& name,
-                             const std::string& type)
+ComponentInstance*
+TaoComponentModel::createInstance(const std::string& name,
+                                  const std::string& type,
+                                  const sci::cca::TypeMap::pointer &tm)
 {
   tao::Component *component;
-                                                                                                                                                                       
   componentDB_type::iterator iter = components.find(type);
   if (iter == components.end()) { // could not find this component
     return 0;
   }
-                                                                                                                                                                       
   // Get the list of DLL paths to search for the appropriate component library
   std::vector<std::string> possible_paths = splitPathString(this->getSidlDLLPath());
   LIBRARY_HANDLE handle;
-                                                                                                                                                                       
+
   for (std::vector<std::string>::iterator it = possible_paths.begin();
        it != possible_paths.end(); it++) {
     std::string so_name = *it + "/" + iter->second->getLibrary();
     handle = GetLibraryHandle(so_name.c_str());
-    if (handle)  {  break;   }
+    if (handle)  {  break; }
   }
-                                                                                                                                                                       
+
   if ( !handle ) {
     std::cerr << "Could not find component DLL: " << iter->second->getLibrary()
               << " for type " << type << std::endl;
     std::cerr << SOError() << std::endl;
     return 0;
   }
-                                                                                                                                                                       
+
   std::string makername = "make_"+type;
-  for(int i = 0; i < static_cast<int>(makername.size()); i++) {
+  for (int i = 0; i < static_cast<int>(makername.size()); i++) {
     if (makername[i] == '.') { makername[i]='_'; }
   }
-                                                                                                                                                                       
+
   //  std::cerr << "looking for symbol:" << makername << std::endl;
   void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
-  if(!maker_v) {
+  if (!maker_v) {
     //    std::cerr <<"Cannot load component symbol " << type << std::endl;
     std::cerr << SOError() << std::endl;
     return 0;
@@ -292,19 +292,18 @@ ComponentInstance* TaoComponentModel::createInstance(const std::string& name,
   //  std::cerr << "about to create Tao component" << std::endl;
   component = (*maker)();
 
-  TaoComponentInstance* ci = new TaoComponentInstance(framework, name, type, component);
+  TaoComponentInstance* ci =
+      new TaoComponentInstance(framework, name, type, tm, component);
   ci->addReference(); 
   component->setServices(sci::cca::TaoServices::pointer(ci));
 
   return ci;
-
 }
-                                                                                                                                                                       
 
 bool TaoComponentModel::destroyInstance(ComponentInstance *ci)
 {
   TaoComponentInstance* cca_ci = dynamic_cast<TaoComponentInstance*>(ci);
-  if(!cca_ci) {
+  if (!cca_ci) {
     std::cerr << "error: in destroyInstance() cca_ci is 0" << std::endl;
     return false;
   }
@@ -317,12 +316,12 @@ std::string TaoComponentModel::getName() const
   return "Tao";
 }
 
-                                                                                                                                                                       
-void TaoComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list,
-                          bool /*listInternal*/)
+void
+TaoComponentModel::listAllComponentTypes(
+    std::vector<ComponentDescription*>& list, bool /*listInternal*/)
 {
-  for(componentDB_type::iterator iter=components.begin();
-      iter != components.end(); iter++){
+  for (componentDB_type::iterator iter=components.begin();
+      iter != components.end(); iter++) {
     list.push_back(iter->second);
   }
 }
@@ -337,15 +336,12 @@ int TaoComponentModel::addLoader(resourceReference *rr)
 int TaoComponentModel::removeLoader(const std::string &loaderName)
 {
   resourceReference *rr=getLoader(loaderName);
-  if(rr!=0)
-    {
+  if (rr!=0) {
     std::cerr<<"loader "<<rr->getName()<<" is removed from cca component model\n";
     delete rr;
-    }
-  else
-    {
+  } else {
     std::cerr<<"loader "<<loaderName<<" not found in cca component model\n";
-    }
+  }
   return 0;
 }
 
@@ -353,14 +349,12 @@ resourceReference *
 TaoComponentModel::getLoader(std::string loaderName)
 {
   resourceReference *rr=0;
-  for(unsigned int i=0; i<loaderList.size(); i++)
-    {
-    if(loaderList[i]->getName()==loaderName)
-      {
+  for (unsigned int i=0; i<loaderList.size(); i++) {
+    if (loaderList[i]->getName()==loaderName) {
       rr=loaderList[i];
       break;
-      }
     }
+  }
   return rr;
 }
 

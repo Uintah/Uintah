@@ -70,6 +70,7 @@ public:
   TaoComponentInstance(SCIRunFramework* framework,
                        const std::string& instanceName,
                        const std::string& className,
+                       const sci::cca::TypeMap::pointer& tm,
                        tao::Component* component);
   virtual ~TaoComponentInstance();
   
