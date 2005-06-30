@@ -46,19 +46,22 @@
 
 namespace SCIRun {
 
-CorbaComponentInstance::CorbaComponentInstance(SCIRunFramework* framework,
-                                           const std::string& instanceName,
-                                           const std::string& className,
-                                           corba::Component* component)
-  : ComponentInstance(framework, instanceName, className), component(component)
+CorbaComponentInstance::CorbaComponentInstance(
+    SCIRunFramework* framework,
+    const std::string &instanceName,
+    const std::string &className,
+    const sci::cca::TypeMap::pointer &tm,
+    corba::Component* component)
+  : ComponentInstance(framework, instanceName, className, tm), component(component)
+
 {
-  // See if we have a user-interface...
-  if(component->haveUI()){
-    specialPorts.push_back(new CCAPortInstance("ui", "sci.cca.ports.UIPort",
-                                             sci::cca::TypeMap::pointer(0),
-                                             sci::cca::Port::pointer(new CorbaUIPort(this)),
-					     CCAPortInstance::Provides));
-  }
+    // See if we have a user-interface...
+    if (component->haveUI()) {
+        specialPorts.push_back(new CCAPortInstance("ui", "sci.cca.ports.UIPort",
+                               sci::cca::TypeMap::pointer(0),
+                               sci::cca::Port::pointer(new CorbaUIPort(this)),
+                               CCAPortInstance::Provides));
+    }
 }
 
 CorbaComponentInstance::~CorbaComponentInstance()
@@ -67,26 +70,29 @@ CorbaComponentInstance::~CorbaComponentInstance()
 
 PortInstance* CorbaComponentInstance::getPortInstance(const std::string& name)
 {
-  //if the port is CCA port, find it from the specialPorts
-  if(name=="ui" || name=="go"){
-  for(unsigned int i=0;i<specialPorts.size();i++)
-    if(specialPorts[i]->getName() == name)
-      return specialPorts[i];
-  return 0;
-  }
+    //if the port is CCA port, find it from the specialPorts
+    if (name=="ui" || name=="go") {
+        for(unsigned int i=0; i < specialPorts.size(); i++) {
+            if (specialPorts[i]->getName() == name) {
+                return specialPorts[i];
+            }
+            return 0;
+        }
+    }
 
-  //otherwise it is corba port
-  corba::Port* port = component->getPort(name);
-  if(!port){
-  return 0;
-  }
-  //TODO: check memory leak
-  return new CorbaPortInstance(this, port, port->isUses() ? CorbaPortInstance::Uses : CorbaPortInstance::Provides);
+    //otherwise it is corba port
+    corba::Port* port = component->getPort(name);
+    if (!port) {
+        return 0;
+    }
+    //TODO: check memory leak
+    return new CorbaPortInstance(this, port, port->isUses() ?
+        CorbaPortInstance::Uses : CorbaPortInstance::Provides);
 }
 
 PortInstanceIterator* CorbaComponentInstance::getPorts()
 {
-  return new Iterator(this);
+    return new Iterator(this);
 }
 
 CorbaComponentInstance::Iterator::Iterator(CorbaComponentInstance* ci)
@@ -100,7 +106,7 @@ CorbaComponentInstance::Iterator::~Iterator()
 
 void CorbaComponentInstance::Iterator::next()
 {
-  index++;
+    index++;
 }
 
 bool CorbaComponentInstance::Iterator::done()
@@ -115,20 +121,20 @@ PortInstance* CorbaComponentInstance::Iterator::get()
   
   corba::Component* component = ci->component;
   int spsize = static_cast<int>(ci->specialPorts.size());
-  if(index < spsize)
+  if (index < spsize) {
     return ci->specialPorts[index];
-  else if(index < spsize+component->numProvidesPorts())
+  } else if (index < spsize+component->numProvidesPorts()) {
     //TODO: check memory leak
     return new CorbaPortInstance(ci,
                                component->getProvidesPort(index-spsize),
                                CorbaPortInstance::Provides);
-  else if(index < spsize+component->numProvidesPorts()
-          +component->numUsesPorts())
+  } else if (index < spsize+component->numProvidesPorts() +component->numUsesPorts()) {
     return new CorbaPortInstance(ci,
                                component->getUsesPort(index-spsize-component->numProvidesPorts()),
                                CorbaPortInstance::Uses);
-  else
+  } else {
     return 0; // Illegal
+  }
 }
 
 } // end namespace SCIRun
