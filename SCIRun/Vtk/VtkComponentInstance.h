@@ -69,10 +69,11 @@ public:
   /** Constructor specifies the SCIRunFramework to which this instance belongs
       (\em fwk), the unique \em instanceName of the component instance, and a
       pointer to an allocated vtk::Component object.*/
-  VtkComponentInstance(SCIRunFramework* fwk,
-                       const std::string& instanceName,
-                       const std::string& className,
-                       vtk::Component * component);
+  VtkComponentInstance(SCIRunFramework *fwk,
+                       const std::string &instanceName,
+                       const std::string &className,
+                       const sci::cca::TypeMap::pointer &tm,
+                       vtk::Component *component);
   virtual ~VtkComponentInstance();
   
   // Methods from ComponentInstance
