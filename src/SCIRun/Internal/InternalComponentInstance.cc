@@ -43,10 +43,12 @@
 
 namespace SCIRun {
 
-InternalComponentInstance::InternalComponentInstance(SCIRunFramework* framework,
-                                                     const std::string& instanceName,
-                                                     const std::string& className)
-  : ComponentInstance(framework, instanceName, className), useCount(0)
+InternalComponentInstance::InternalComponentInstance(
+    SCIRunFramework* framework,
+    const std::string& instanceName,
+    const std::string& className)
+  : ComponentInstance(framework, instanceName, className,
+                      sci::cca::TypeMap::pointer(0)), useCount(0)
 {
 }
 
