@@ -54,12 +54,12 @@ using namespace SCIRun;
 BridgeComponentInstance::BridgeComponentInstance(SCIRunFramework* framework,
 					   const std::string& instanceName,
 					   const std::string& typeName,
-					   BridgeComponent* component
-)
-  : ComponentInstance(framework, instanceName, typeName), component(component)
+                       const sci::cca::TypeMap::pointer &tm,
+					   BridgeComponent* component)
+  : ComponentInstance(framework, instanceName, typeName, tm), component(component)
 {
-  mutex=new Mutex("getPort mutex");
-  if(!SCIRunComponentModel::gui) {
+  mutex = new Mutex("getPort mutex");
+  if (!SCIRunComponentModel::gui) {
     SCIRunComponentModel::initGuiInterface();
   }
   bmdl = new BridgeModule(component);
