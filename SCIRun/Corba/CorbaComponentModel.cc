@@ -239,8 +239,10 @@ bool CorbaComponentModel::haveComponent(const std::string& type)
   return components.find(type) != components.end();
 }
 
-ComponentInstance* CorbaComponentModel::createInstance(const std::string& name,
-                             const std::string& type)
+ComponentInstance*
+CorbaComponentModel::createInstance(const std::string& name,
+                                    const std::string& type,
+                                    const sci::cca::TypeMap::pointer &tm)
 {
     corba::Component *component;
 
@@ -291,8 +293,8 @@ ComponentInstance* CorbaComponentModel::createInstance(const std::string& name,
   services->check();
 
   //TODO: do we really need a "component" here?
-  CorbaComponentInstance* ci = new CorbaComponentInstance(framework, name, type,
-                              component);
+  CorbaComponentInstance* ci =
+      new CorbaComponentInstance(framework, name, type, tm, component);
   return ci;
 }
 
@@ -305,14 +307,12 @@ bool CorbaComponentModel::destroyInstance(ComponentInstance *ci)
 
 std::string CorbaComponentModel::getName() const
 {
-  return "Corba";
+    return "Corba";
 }
 
-void CorbaComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list,
-                          bool /*listInternal*/)
+void CorbaComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list, bool /*listInternal*/)
 {
-  for(componentDB_type::iterator iter=components.begin();
-      iter != components.end(); iter++){
+  for (componentDB_type::iterator iter=components.begin(); iter != components.end(); iter++) {
     list.push_back(iter->second);
   }
 }

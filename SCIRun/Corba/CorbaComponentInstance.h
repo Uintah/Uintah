@@ -46,6 +46,7 @@
 #include <SCIRun/Corba/Port.h>
 #include <SCIRun/Corba/Component.h>
 #include <SCIRun/Corba/CorbaPortInstance.h>
+#include <Core/CCA/spec/cca_sidl.h>
 #include <string>
 #include <vector>
 
@@ -69,16 +70,18 @@ public:
   /** Constructor specifies the SCIRunFramework to which this instance belongs
       (\em fwk), the unique \em instanceName of the component instance, and a
       pointer to an allocated corba::Component object.*/
-  CorbaComponentInstance(SCIRunFramework* fwk,
-                       const std::string& instanceName,
-                       const std::string& className,
-                       corba::Component * component);
+  CorbaComponentInstance(SCIRunFramework *fwk,
+                       const std::string &instanceName,
+                       const std::string &className,
+                       const sci::cca::TypeMap::pointer &tm,
+                       corba::Component *component);
   virtual ~CorbaComponentInstance();
   
   // Methods from ComponentInstance
   /** Returns a pointer to the port named \em name.  If no such port exists in
       this component, returns a null pointer. */
   virtual PortInstance* getPortInstance(const std::string& name);
+
   /** Returns the list of ports associated with this component. */
   virtual PortInstanceIterator* getPorts();
 
