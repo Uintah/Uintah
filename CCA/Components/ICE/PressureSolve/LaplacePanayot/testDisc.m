@@ -20,13 +20,13 @@ param.plotResults           = 1;
 param.saveResults           = 0;
 
 param.outputDir             = 'ProblemA_1Level';
-param.verboseLevel          = 3;
+param.verboseLevel          = 0;
 
 
 %=========================================================================
 % Run discretization on a sequence of successively finer grids
 %=========================================================================
-numCellsRange           = 4;%2.^[2:1:7];
+numCellsRange           = 2.^[2:1:7];
 success = mkdir('.',param.outputDir);
 
 for count = 1:length(numCellsRange)
@@ -132,12 +132,12 @@ for count = 1:length(numCellsRange)
                 err{k}{q}(count,:) = [Lpnorm(e) max(abs(e)) median(abs(e))];
                 trunc{k}{q}(count,:) = [Lpnorm(t) max(abs(t)) median(abs(t))];
 
-                fig = fig+1;
-                figure(fig);
-                clf;
-                surf(f{k}{q});
-                title(sprintf('Discrete RHS on Level %d, Patch %d',k,q));
-                eval(sprintf('print -depsc %s/DiscRHS%d_L%dP%d.eps',param.outputDir,numCells,k,q));
+%                 fig = fig+1;
+%                 figure(fig);
+%                 clf;
+%                 surf(f{k}{q});
+%                 title(sprintf('Discrete RHS on Level %d, Patch %d',k,q));
+%                 eval(sprintf('print -depsc %s/DiscRHS%d_L%dP%d.eps',param.outputDir,numCells,k,q));
 
                 fig = fig+1;
                 figure(fig);
@@ -146,11 +146,11 @@ for count = 1:length(numCellsRange)
                 title(sprintf('Discrete solution on Level %d, Patch %d',k,q));
                 eval(sprintf('print -depsc %s/DiscSolution%d_L%dP%d.eps',param.outputDir,numCells,k,q));
 
-                fig = fig+1;
-                figure(fig);
-                clf;
-                surf(uExact{k}{q});
-                title(sprintf('Exact solution on Level %d, Patch %d',k,q));
+%                 fig = fig+1;
+%                 figure(fig);
+%                 clf;
+%                 surf(uExact{k}{q});
+%                 title(sprintf('Exact solution on Level %d, Patch %d',k,q));
 
                 fig = fig+1;
                 figure(fig);
@@ -160,13 +160,13 @@ for count = 1:length(numCellsRange)
                 eval(sprintf('print -depsc %s/DiscError%d_L%dP%d.eps',param.outputDir,numCells,k,q));
                 shg;
 
-                fig = fig+1;
-                figure(fig);
-                clf;
-                surf(tau{k}{q});
-                title(sprintf('Truncation error on Level %d, Patch %d',k,q));
-                eval(sprintf('print -depsc %s/TruncError%d_L%dP%d.eps',param.outputDir,numCells,k,q));
-                shg;
+%                 fig = fig+1;
+%                 figure(fig);
+%                 clf;
+%                 surf(tau{k}{q});
+%                 title(sprintf('Truncation error on Level %d, Patch %d',k,q));
+%                 eval(sprintf('print -depsc %s/TruncError%d_L%dP%d.eps',param.outputDir,numCells,k,q));
+%                 shg;
             end
         end
         tCPU        = cputime - tStartCPU;

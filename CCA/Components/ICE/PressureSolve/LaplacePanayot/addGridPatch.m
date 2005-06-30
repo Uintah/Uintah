@@ -50,7 +50,7 @@ Anew                        = sparse([],[],[],grid.totalVars,grid.totalVars,(2*g
 Anew(1:size(A,1),1:size(A,2)) = A;
 A                           = Anew;
 b                           = [b; zeros(grid.totalVars-length(b),1)];
-
+%return;
 %==============================================================
 % 2. Create patch interior & BC equations
 %==============================================================
@@ -89,6 +89,7 @@ end
 patchRange              = P.offsetInd + [1:prod(P.size)];
 indUnused               = patchRange(find(abs(diag(A(patchRange,patchRange))) < eps));
 A(indUnused,:)         = 0.0;
+A(:,indUnused)         = 0.0;
 A(indUnused,indUnused)  = eye(length(indUnused));
 b(indUnused)            = 0.0;
 if (param.verboseLevel >= 3)

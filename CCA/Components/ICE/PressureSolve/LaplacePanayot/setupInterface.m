@@ -53,12 +53,9 @@ Q                           = Qlevel.patch{P.parent};             % Parent patch
 QedgeDomain                 = cell(2,1);                          % Domain edges
 QedgeDomain{1}              = Qlevel.minCell;                     % First domain cell - next to left domain boundary - patch-based sub
 QedgeDomain{2}              = Qlevel.maxCell;                     % Last domain cell - next to right domain boundary - patch-based sub
-QedgeDomain{:}
 
 underLower                  = coarsenIndex(grid,k,P.ilower);      % level based sub
 underUpper                  = coarsenIndex(grid,k,P.iupper);      % level based sub
-underLower
-underUpper
 
 % underLower,underUpper are inside Q, so add to them BC vars whenever they
 % are near the boundary.
@@ -66,8 +63,10 @@ lowerNearEdge               = find(underLower == QedgeDomain{1});
 underLower(lowerNearEdge)   = underLower(lowerNearEdge) - 1;
 upperNearEdge               = find(underUpper == QedgeDomain{2});
 underUpper(upperNearEdge)   = underUpper(upperNearEdge) + 1;
-underLower
-underUpper
+if (param.verboseLevel >= 3)
+    underLower
+    underUpper
+end
 
 % Delete the equations at indDel. Note that there still remain connections
 % from equations outside the deleted box to indDel variables.
@@ -75,6 +74,7 @@ underUpper
 [indDel,del,matDel]         = indexBox(Q,underLower,underUpper);
 if (reallyUpdate)
     A(indDel,:)             = 0.0;
+    A(:,indDel)             = 0.0;
     A(indDel,indDel)        = speye(length(indDel));
     b(indDel)               = 0.0;
 end
@@ -116,8 +116,10 @@ for d = 1:grid.dim,
         nbhrNormal(dim) = side;
         sideNum         = (side+3)/2;                                       % side=-1 ==> 1; side=1 ==> 2
         fluxNum         = 2*dim+sideNum-2;
-        otherDim        = setdiff(1:grid.dim,d)
-
+        otherDim        = setdiff(1:grid.dim,d);
+        if (param.verboseLevel >= 3)
+            otherDim
+        end
         %=====================================================================
         % Prepare a list of all coarse and fine cell indices at this face.
         %=====================================================================
@@ -167,7 +169,6 @@ for d = 1:grid.dim,
         for other = 1:D
             subInterp(:,other)  = temp{other}';
         end
-        subInterp
 
         % Compute barycentric interpolation weights of points to mirror
         % m (separate for each dimension; dimension other weights
@@ -199,7 +200,6 @@ for d = 1:grid.dim,
         for other = 1:D,
             wInterp             = wInterp .* w(other,subInterp(:,other))';
         end
-        wInterp
 
         % Loop over different types of fine cells with respect to a coarse
         % cell (there are 2^D types) and add connections to Alist.
@@ -210,32 +210,42 @@ for d = 1:grid.dim,
         for dim = 1:D
             subChilds(:,dim)    = temp{dim}' - 1;
         end
-        subChilds
+        if (param.verboseLevel >= 3)
+            subInterp
+            wInterp
+            subChilds
+        end
         matCoarseNbhr           = matCoarse;
         matCoarseNbhr{d}    = matCoarse{d} - s;
         for dim = 1:grid.dim,
             matCoarseNbhr{dim} = matCoarseNbhr{dim}(:)';
         end
-        fprintf('matCoarseNbhr = \n');
-        matCoarseNbhr{:}
         colCoarseNbhr           = cell2mat(matCoarseNbhr)';
         colCoarseNbhr           = colCoarseNbhr ...
-            - repmat(Q.offsetSub,size(colCoarseNbhr)./size(Q.offsetSub))
-        childBase               = refineIndex(grid,k-1,colCoarseNbhr)
+            - repmat(Q.offsetSub,size(colCoarseNbhr)./size(Q.offsetSub));
+        childBase               = refineIndex(grid,k-1,colCoarseNbhr);
         if (s == 1)
             % Because childBase returns the lower-left corner of the first
             % coarse cell under the interface, if we are at a right face,
             % add 1 to the coarse cell, get the lower left corner of that
             % coarse cell, and subtract 1 from the result.
-            colCoarseNbhr(:,d) = colCoarseNbhr(:,d)+1
+            colCoarseNbhr(:,d) = colCoarseNbhr(:,d)+1;
             childBase          = refineIndex(grid,k-1,colCoarseNbhr);
-            childBase(:,d) = childBase(:,d)-1
+            childBase(:,d) = childBase(:,d)-1;
         end
-            
+        if (param.verboseLevel >= 3)
+            fprintf('matCoarseNbhr = \n');
+            matCoarseNbhr{:}
+            colCoarseNbhr
+            childBase
+        end
+
         j                       = zeros(1,grid.dim);
         jump                    = zeros(1,grid.dim);
         for t = 1:numChilds,
-            fprintf('------------------- t = %d ---------------\n',t);
+            if (param.verboseLevel >= 2)
+                fprintf('------------------- Fine cell child type t = %d ---------------\n',t);
+            end
             %=====================================================================
             % Create a list of non-zeros to be added to A, consisting of the
             % connections of type-t-fine-cells at this face to their coarse
@@ -246,40 +256,50 @@ for d = 1:grid.dim,
             jump            = r-1-2*j;
             jump(d)         = 0;
 
-            subInterpFine   = zeros(numInterp,grid.dim)
-            subInterpFine(:,otherDim) = (subInterp-1)
-            subInterpFine   = subInterpFine .* repmat(jump,size(subInterpFine)./size(jump))
-            dupInterpFine   = repmat(subInterpFine,[size(childBase,1),1])
+            % subInterpFine = offsets for interpolation stencils of mi
+            subInterpFine   = zeros(numInterp,grid.dim);
+            subInterpFine(:,otherDim) = (subInterp-1);
+            subInterpFine   = subInterpFine .* repmat(jump,size(subInterpFine)./size(jump));
+            dupInterpFine   = repmat(subInterpFine,[size(childBase,1),1]);
 
-            childBase            
-            dupChildBase    = reshape(repmat((childBase(:))',[size(subInterpFine,1),1]),[size(dupInterpFine,1) grid.dim]);
-            dupInterpFine   = dupChildBase + dupInterpFine;
-            dupwInterp      = repmat(wInterp,[size(childBase,1),1])
+            % u_i's, also = lower-left corner of interpolation stencil of mi
+            thisChild       = childBase + repmat(j,size(childBase)./size(j)) ...
+                + repmat(P.offsetSub,size(childBase)./size(P.offsetSub));     % Patch-based indices of the fine interface cells ("childs") of type t
+            matThisChild    = mat2cell(thisChild,size(thisChild,1),[1 1]);
+            indThisChild    = ind(sub2ind(P.size,matThisChild{:}));
+            indThisChild    = indThisChild(:);
+            dupThisChild    = reshape(repmat((thisChild(:))',[size(subInterpFine,1),1]),[size(dupInterpFine,1) grid.dim]);
+            %dupThisChild    = dupThisChild + repmat(P.offsetSub,size(dupThisChild)./size(P.offsetSub));      % Patch-based indices of the fine interface cells ("childs") of type t
+
+            dupInterpFine   = dupThisChild + dupInterpFine;
+            dupwInterp      = repmat(wInterp,[size(childBase,1),1]);
             matInterpFine   = mat2cell(dupInterpFine,size(dupInterpFine,1),[1 1]);
             indInterpFine   = ind(sub2ind(P.size,matInterpFine{:}));
             indInterpFine   = indInterpFine(:);
 
-            wInterp
-            a
+            if (param.verboseLevel >= 3)
+                thisChild
+                subInterpFine
+                dupwInterp
+                indInterpFine
+                a
+            end
 
-            thisChild       = childBase + repmat(j,size(childBase)./size(j)) + repmat(P.offsetSub,size(childBase)./size(P.offsetSub));      % Patch-based indices of the fine interface cells ("childs") of type t
-            matThisChild    = mat2cell(thisChild,size(thisChild,1),[1 1]);
-            indThisChild    = ind(sub2ind(P.size,matThisChild{:}));
-            indThisChild    = indThisChild(:);
             dupThisChild    = reshape(repmat((thisChild(:))',[size(subInterpFine,1),1]),[size(dupInterpFine,1) grid.dim]);
             matDupThisChild = mat2cell(dupThisChild,size(dupThisChild,1),[1 1]);
             indDupThisChild = ind(sub2ind(P.size,matDupThisChild{:}));
             indDupThisChild = indDupThisChild(:);
             indGhost        = indexNbhr(P,indThisChild,-nbhrNormal);
-            indCoarse
-            indThisChild
-            indGhost
-
+            if (param.verboseLevel >= 3)
+                indCoarse
+                indThisChild
+                indGhost
+            end
             % Create ghost equations
             Alist = [Alist; ...                                                 % We are never near boundaries according to the C/F interface existence rules
                 [indGhost       indGhost             repmat(1.0/(a-1.0),size(indGhost))]; ...
-                [indGhost       indCoarse            repmat(1.0,size(indGhost))]; ...
-                [indGhost       indThisChild         repmat(-1.0,size(indGhost))] ...
+                [indGhost       indCoarse            repmat(-1.0,size(indGhost))]; ...
+                [indGhost       indThisChild         repmat(1.0,size(indGhost))] ...
                 ];
 
             % Add (flux-based) ghost points to coarse equations
@@ -287,11 +307,19 @@ for d = 1:grid.dim,
                 [indCoarse      indGhost             repmat(-1.0,size(indGhost))]; ...
                 ];
 
-            % Add correction terms to fine grid equations due to 
-            % the linear interpolation (actually extrapolation) scheme 
+            % Add correction terms to fine grid equations due to
+            % the linear interpolation (actually extrapolation) scheme
             % of ghost points. For constant interpolation of ghosts, there
             % are no correction terms.
 
+            if (reallyUpdate)
+                % Ghost points have coefficients in indThisChild's
+                % equations from setupPatchInterior(). Zero out these
+                % connections and replace them with the first line of the
+                % appended list to Alist below.
+                A(indThisChild,indThisChild) = A(indThisChild,indThisChild) + A(indThisChild,indGhost);     % Remove ghost flux from diagonal entry
+                A(indThisChild,indGhost) = 0.0;                % Remove ghost flux from off-diagonal entry
+            end
             Alist = [Alist; ...                                                 % We are never near boundaries according to the C/F interface existence rules
                 [indThisChild   indGhost             repmat(1.0,size(indGhost))]; ... % Ghost flux term
                 [indThisChild   indThisChild         repmat(a,size(indGhost))]; ... % Self-term (results from ui in the definition of the ghost flux = ui-gi+a*(mirrorGhostInterpTerms)
