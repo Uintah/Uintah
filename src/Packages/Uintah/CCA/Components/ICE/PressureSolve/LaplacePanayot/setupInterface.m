@@ -1,4 +1,4 @@
-function [A,b,Alist] = setupInterface(grid,k,q,A,b,reallyUpdate)
+function [A,b,T,Alist,Tlist] = setupInterface(grid,k,q,A,b,T,reallyUpdate)
 %SETUPINTERFACE  Set the discrete operator at coarse-fine interface.
 %   [A,B] = SETUPINTERFACE(GRID,K,Q,D,S,A,B) updates the LHS
 %   matrix A and the RHS matrix B, adding to them all the equations at
@@ -15,11 +15,11 @@ if (param.verboseLevel >= 1)
     fprintf('--- setupPatchInterface(k = %d, q = %d) BEGIN ---\n',k,q);
 end
 
-if (nargin < 5)
+if (nargin < 6)
     error('Too few input arguments (need at least grid,k,q,A,b)\n');
 end
 
-if (nargin < 6)
+if (nargin < 7)
     reallyUpdate = 1;
 end
 
@@ -77,6 +77,8 @@ if (reallyUpdate)
     A(:,indDel)             = 0.0;
     A(indDel,indDel)        = speye(length(indDel));
     b(indDel)               = 0.0;
+    T(indDel,:)             = 0.0;
+    T(:,indDel)             = 0.0;
 end
 if (param.verboseLevel >= 3)
     indDel
@@ -85,7 +87,7 @@ end
 
 % Delete remaining connections from outside the deleted box (indOut) to the
 % deleted box (indDel).
-[temp1,temp2,Alist] = setupPatchInterior(grid,k-1,P.parent,A,b,underLower,underUpper,0);
+[temp1,temp2,temp3,Alist] = setupPatchInterior(grid,k-1,P.parent,A,b,T,underLower,underUpper,0);
 in2out              = Alist(~ismember(Alist(:,2),indDel),:);
 out2in              = [in2out(:,2) in2out(:,2) -in2out(:,3)];
 indOut              = unique(out2in(:,1));
@@ -98,7 +100,10 @@ end
 % Loop over all fine patch faces.
 %=====================================================================
 Alist                   = zeros(0,3);
+Tlist                   = zeros(0,3);
 indAll                  = [];
+indTransformed          = [];
+
 % Restore underLower,underUpper to exclude BC variables
 underLower(lowerNearEdge)   = underLower(lowerNearEdge) - 1;
 upperNearEdge               = find(underUpper == QedgeDomain{2});
@@ -290,6 +295,9 @@ for d = 1:grid.dim,
             indDupThisChild = ind(sub2ind(P.size,matDupThisChild{:}));
             indDupThisChild = indDupThisChild(:);
             indGhost        = indexNbhr(P,indThisChild,-nbhrNormal);
+            indDupGhost     = repmat((indGhost(:))',[size(subInterpFine,1),1]);
+            indDupGhost     = indDupGhost(:);
+
             if (param.verboseLevel >= 3)
                 indCoarse
                 indThisChild
@@ -303,7 +311,7 @@ for d = 1:grid.dim,
                 ];
 
             % Add (flux-based) ghost points to coarse equations
-            Alist = [Alist; ...                                                 % We are never near boundaries according to the C/F interface existence rules
+            Alist = [Alist; ...                                                         % We are never near boundaries according to the C/F interface existence rules
                 [indCoarse      indGhost             repmat(-1.0,size(indGhost))]; ...
                 ];
 
@@ -318,12 +326,17 @@ for d = 1:grid.dim,
                 % connections and replace them with the first line of the
                 % appended list to Alist below.
                 A(indThisChild,indThisChild) = A(indThisChild,indThisChild) + A(indThisChild,indGhost);     % Remove ghost flux from diagonal entry
-                A(indThisChild,indGhost) = 0.0;                % Remove ghost flux from off-diagonal entry
+                A(indThisChild,indGhost) = 0.0;                                         % Remove ghost flux from off-diagonal entry
             end
-            Alist = [Alist; ...                                                 % We are never near boundaries according to the C/F interface existence rules
-                [indThisChild   indGhost             repmat(1.0,size(indGhost))]; ... % Ghost flux term
-                [indThisChild   indThisChild         repmat(a,size(indGhost))]; ... % Self-term (results from ui in the definition of the ghost flux = ui-gi+a*(mirrorGhostInterpTerms)
-                [indDupThisChild indInterpFine      -a*dupwInterp]; ...             % Interpolation terms
+            Alist = [Alist; ...                                                         % We are never near boundaries according to the C/F interface existence rules
+                [indThisChild   indGhost             repmat(1.0,size(indGhost))]; ...   % Ghost flux term
+                [indThisChild   indThisChild         repmat(a,size(indGhost))]; ...     % Self-term (results from ui in the definition of the ghost flux = ui-gi+a*(mirrorGhostInterpTerms)
+                [indDupThisChild indInterpFine      -a*dupwInterp]; ...                 % Interpolation terms
+                ];
+            Tlist = [Tlist; ...                                                         % We are never near boundaries according to the C/F interface existence rules
+                [indGhost       indGhost             repmat(-1.0,size(indGhost))]; ...   % Ghost flux term
+                [indGhost       indThisChild         repmat(1-a,size(indGhost))]; ...    % Self-term (results from ui in the definition of the ghost flux = ui-gi+a*(mirrorGhostInterpTerms)
+                [indDupGhost    indInterpFine        a*dupwInterp]; ...                 % Interpolation terms
                 ];
 
             % Add C,F,ghost nodes to global index list for the A-update
@@ -331,6 +344,8 @@ for d = 1:grid.dim,
             indAll          = union(indAll,indCoarse);
             indAll          = union(indAll,indThisChild);
             indAll          = union(indAll,indGhost);
+            indTransformed  = union(indTransformed,indGhost);
+
         end
 
     end
@@ -342,6 +357,12 @@ if (reallyUpdate)
     %=====================================================================
     Anew                = spconvert([Alist; [grid.totalVars grid.totalVars 0]]);
     A(indAll,:)         = A(indAll,:) + Anew(indAll,:);                       % Do not replace the non-zeros in A here, rather add to them.
+    
+    %=====================================================================
+    % Update transformation matrix T.
+    %=====================================================================
+    Tnew                    = spconvert([Tlist; [grid.totalVars grid.totalVars 0]]);
+    T(indTransformed,:)     = Tnew(indTransformed,:);
 end
 
 if (param.verboseLevel >= 1)

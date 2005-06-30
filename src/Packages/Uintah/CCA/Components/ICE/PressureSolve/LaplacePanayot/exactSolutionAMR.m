@@ -1,4 +1,4 @@
-function u = exactSolutionAMR(grid)
+function u = exactSolutionAMR(grid,T,TI)
 % Exact solution in patch-based AMR format.
 
 u = cell(grid.numLevels,1);
@@ -121,17 +121,21 @@ for k = 1:grid.numLevels,
             end
         end
 
-        %=====================================================================
-        % Delete values in deleted Boxes
-        %=====================================================================
-        % Interior point patch-based subscripts
-        for i = 1:length(P.deletedBoxes)
-            B = P.deletedBoxes{i};
-            box = cell(grid.dim,1);
-            for dim = 1:grid.dim
-                box{dim} = [B.ilower(dim):B.iupper(dim)] + boxOffset(dim);     % Patch-based cell indices including ghosts
-            end
-            u{k}{q}(box{:}) = 0.0;
-        end
+%         %=====================================================================
+%         % Delete values in deleted Boxes
+%         %=====================================================================
+%         % Interior point patch-based subscripts
+%         for i = 1:length(P.deletedBoxes)
+%             B = P.deletedBoxes{i};
+%             box = cell(grid.dim,1);
+%             for dim = 1:grid.dim
+%                 box{dim} = [B.ilower(dim):B.iupper(dim)] + boxOffset(dim);     % Patch-based cell indices including ghosts
+%             end
+%             u{k}{q}(box{:}) = 0.0;
+%         end
     end
 end
+
+% Affect zero values at unused gridpoints
+temp    = AMRToSparse(u,grid,T,1);
+u       = SparseToAMR(temp,grid,TI,1);
