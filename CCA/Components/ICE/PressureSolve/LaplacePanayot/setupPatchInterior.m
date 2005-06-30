@@ -15,7 +15,7 @@ function [A,b,Alist] = setupPatchInterior(grid,k,q,A,b,ilower,iupper,reallyUpdat
 globalParams;
 
 if (param.verboseLevel >= 1)
-    fprintf('--- setupPatchInterior(k = %d, q = %d) ---\n',k,q);
+    fprintf('--- setupPatchInterior(k = %d, q = %d) BEGIN ---\n',k,q);
 end
 
 if (nargin < 5)
@@ -177,4 +177,8 @@ if (reallyUpdate)
     %=====================================================================
     rhsValues               = rhs(centroid);
     b(indBox)               = volume(:) .* rhsValues(:);        
+end
+
+if (param.verboseLevel >= 1)
+    fprintf('--- setupPatchInterior(k = %d, q = %d) END ---\n',k,q);
 end

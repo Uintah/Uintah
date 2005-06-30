@@ -20,7 +20,7 @@ param.plotResults           = 1;
 param.saveResults           = 0;
 
 param.outputDir             = 'ProblemA_1Level';
-param.verboseLevel          = 2;
+param.verboseLevel          = 3;
 
 
 %=========================================================================
