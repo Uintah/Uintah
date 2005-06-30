@@ -13,6 +13,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/FancyAssert.h>
+#include <Core/Util/DebugStream.h>
 #include <Core/Thread/AtomicCounter.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
@@ -36,6 +37,8 @@ using namespace std;
 
 static AtomicCounter* ids = 0;
 static Mutex ids_init("ID init");
+
+static DebugStream bcout("BCTypes", false);
 
 Level::Level(Grid* grid, const Point& anchor, const Vector& dcell, 
              int index, IntVector refinementRatio, int id /*=-1*/)
@@ -585,14 +588,18 @@ void Level::setBCTypes()
 	  coarseLevel->selectPatches(coarseLow, coarseHigh, neighbors);
 	  if(neighbors.size() == 0){
 	    patch->setBCType(face, Patch::None);
+            bcout << "  Setting Patch " << patch->getID() << " face " << face << " to None\n";
 	  } else {
 	    patch->setBCType(face, Patch::Coarse);
+            bcout << "  Setting Patch " << patch->getID() << " face " << face << " to Coarse\n";
 	  }
 	} else {
 	  patch->setBCType(face, Patch::None);
+          bcout << "  Setting Patch " << patch->getID() << " face " << face << " to None\n";
 	}
       } else {
 	patch->setBCType(face, Patch::Neighbor);
+        bcout << "  Setting Patch " << patch->getID() << " face " << face << " to Neighbor\n";
       }
     }
     patch->finalizePatch();
