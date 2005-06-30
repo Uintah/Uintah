@@ -63,6 +63,7 @@ public:
   SCIRunComponentInstance(SCIRunFramework* fwk,
                           const std::string& instanceName,
                           const std::string& className,
+                          const sci::cca::TypeMap::pointer& tm,
                           Module* module);
   virtual ~SCIRunComponentInstance();
 

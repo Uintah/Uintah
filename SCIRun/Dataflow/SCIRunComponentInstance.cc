@@ -47,11 +47,13 @@
 
 namespace SCIRun {
 
-SCIRunComponentInstance::SCIRunComponentInstance(SCIRunFramework* framework,
-                                                 const std::string& instanceName,
-                                                 const std::string& className,
-                                                 Module* module)
-  : ComponentInstance(framework, instanceName, className), module(module)
+SCIRunComponentInstance::SCIRunComponentInstance(
+    SCIRunFramework* framework,
+    const std::string& instanceName,
+    const std::string& className,
+    const sci::cca::TypeMap::pointer& tm,
+    Module* module)
+ : ComponentInstance(framework, instanceName, className, tm), module(module)
 {
     // See if we have a user-interface...
     if (module->haveUI()) {
