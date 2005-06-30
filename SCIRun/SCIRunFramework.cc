@@ -49,6 +49,7 @@
 #include <SCIRun/Internal/ComponentEvent.h>
 #include <SCIRun/Internal/ComponentEventService.h>
 #include <SCIRun/CCA/CCAComponentModel.h>
+#include <SCIRun/CCA/ComponentID.h>
 
 #if HAVE_BABEL 
  #if HAVE_RUBY
@@ -69,7 +70,6 @@
 #include <SCIRun/ComponentInstance.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/CCA/PIDL/PIDL.h>
-#include <Core/CCA/spec/cca_sidl.h>
 #include <Core/Util/NotFinished.h>
 
 #include <iostream>
@@ -115,18 +115,19 @@ SCIRunFramework::~SCIRunFramework()
 
 sci::cca::Services::pointer
 SCIRunFramework::getServices(const std::string& selfInstanceName,
-    const std::string& selfClassName,
-    const sci::cca::TypeMap::pointer& selfProperties)
+                             const std::string& selfClassName,
+                             const sci::cca::TypeMap::pointer& selfProperties)
 {
-  return cca->createServices(selfInstanceName, selfClassName, selfProperties);
+    return cca->createServices(selfInstanceName, selfClassName, selfProperties);
 }
 
 sci::cca::ComponentID::pointer
 SCIRunFramework::createComponentInstance(const std::string& name,
-    const std::string& t,
-    const sci::cca::TypeMap::pointer properties)
+                                         const std::string& className,
+                                         const sci::cca::TypeMap::pointer properties)
 {
-    std::string type = t;
+    std::string type = className;
+
     // See if the type is of the form:
     //   model:name
     // If so, extract the model and look up that component specifically.
@@ -168,6 +169,7 @@ SCIRunFramework::createComponentInstance(const std::string& name,
         std::cerr << "No component model wants to build " << type << std::endl;
         return ComponentID::pointer(0);
     }
+
     ComponentInstance* ci;
     if (mod->getName() == "CCA") {
         ci = ((CCAComponentModel*)mod)->createInstance(name, type, properties);
@@ -178,19 +180,15 @@ SCIRunFramework::createComponentInstance(const std::string& name,
         std::cerr << "Error: failed to create ComponentInstance" << std::endl;
         return ComponentID::pointer(0);
     }
-    registerComponent(ci, name);
-    sci::cca::ComponentID::pointer cid =
-             ComponentID::pointer(new ComponentID(this, ci->instanceName));
-    //emitComponentEvent(
-    //    new ComponentEvent(sci::cca::ports::InstantiatePending, cid, properties)
-    //); 
 
-    //ComponentID::pointer()
+    sci::cca::ComponentID::pointer cid = registerComponent(ci, name);
+
     compIDs.push_back(cid);
     emitComponentEvent(
         new ComponentEvent(sci::cca::ports::ComponentInstantiated, cid, properties)
     ); 
-    return compIDs[compIDs.size()-1];
+    //return compIDs[compIDs.size()-1];
+    return cid;
 }
 
 void
@@ -218,7 +216,8 @@ SCIRunFramework::destroyComponentInstance(const sci::cca::ComponentID::pointer
   ComponentInstance *ci = unregisterComponent(cid->getInstanceName());
   
   //#3 find the associated component model
-  std::string type = ci->className;
+  std::string type = ci->getClassName();
+
   // See if the type is of the form:
   //   model:name
   // If so, extract the model and look up that component specifically.
@@ -264,32 +263,39 @@ SCIRunFramework::destroyComponentInstance(const sci::cca::ComponentID::pointer
     emitComponentEvent(
         new ComponentEvent(sci::cca::ports::ComponentDestroyed,
                            cid, sci::cca::TypeMap::pointer(0))
-    ); 
-
-  return;
+    );
 }
 
 
-void
-SCIRunFramework::registerComponent(ComponentInstance* ci, const std::string& name)
+sci::cca::ComponentID::pointer
+SCIRunFramework::registerComponent(ComponentInstance *ci, const std::string& name)
 {
-  std::string goodname = name;
-  int count = 0;
-  while(activeInstances.find(goodname) != activeInstances.end()) {
-    std::ostringstream newname;
-    newname << name << "_" << count++;
-    goodname = newname.str();
-  }
-  ci->framework = this;
-  ci->instanceName = goodname;
-  activeInstances[ci->instanceName] = ci;
+    std::string goodname = name;
+    int count = 0;
+    while (activeInstances.find(goodname) != activeInstances.end()) {
+        std::ostringstream newname;
+        newname << name << "_" << count++;
+        goodname = newname.str();
+    }
+
+    sci::cca::ComponentID::pointer cid =
+        ComponentID::pointer(new ComponentID(this, goodname));
+    // TODO: get some properties
+    emitComponentEvent(
+        new ComponentEvent(sci::cca::ports::InstantiatePending,
+            cid, sci::cca::TypeMap::pointer(0)));
+
+    ci->framework = this;
+    ci->setInstanceName(goodname);    
+
+    activeInstances[goodname] = ci;
+    return cid;
 }
 
 ComponentInstance*
 SCIRunFramework::unregisterComponent(const std::string& instanceName)
 {
-  std::map<std::string, ComponentInstance*>::iterator found =
-    activeInstances.find(instanceName);
+  ComponentInstanceMap::iterator found = activeInstances.find(instanceName);
   if (found != activeInstances.end()) {
     ComponentInstance *ci = found->second;
     activeInstances.erase(found);
@@ -304,26 +310,24 @@ SCIRunFramework::unregisterComponent(const std::string& instanceName)
 ComponentInstance*
 SCIRunFramework::lookupComponent(const std::string& name)
 {
-  std::map<std::string, ComponentInstance*>::iterator iter =
-    activeInstances.find(name);
-  if (iter == activeInstances.end()) {
-    return 0;
-  } else {
-    return iter->second;
-  }
+    ComponentInstanceMap::iterator iter = activeInstances.find(name);
+    if (iter == activeInstances.end()) {
+        return 0;
+    } else {
+        return iter->second;
+    }
 }
 
 sci::cca::ComponentID::pointer
 SCIRunFramework::lookupComponentID(const std::string& componentInstanceName)
 {
-  for (unsigned i = 0; i<compIDs.size();i++) {
-    if (componentInstanceName == compIDs[i]->getInstanceName()) {
-      return compIDs[i];
+    for (unsigned i = 0; i < compIDs.size(); i++) {
+        if (componentInstanceName == compIDs[i]->getInstanceName()) {
+            return compIDs[i];
+        }
     }
-  }
-  return sci::cca::ComponentID::pointer(0);
+    return sci::cca::ComponentID::pointer(0);
 }
-     
 
 
 sci::cca::Port::pointer
