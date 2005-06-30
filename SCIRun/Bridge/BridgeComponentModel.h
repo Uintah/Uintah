@@ -59,16 +59,26 @@ namespace SCIRun {
     virtual ~BridgeComponentModel();
 
     BridgeServices* createServices(const std::string& instanceName,
-					       const std::string& className);
+                                   const std::string& className,
+                                   const sci::cca::TypeMap::pointer &tm);
+
     virtual bool haveComponent(const std::string& type);
-    virtual ComponentInstance* createInstance(const std::string& name,
-					      const std::string& type);
+
+    virtual ComponentInstance*
+    createInstance(const std::string& name,
+                   const std::string& type,
+                   const sci::cca::TypeMap::pointer &tm);
     
     virtual bool destroyInstance(ComponentInstance *ci);
+
     virtual std::string getName() const;
-    virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
-				       bool);
+
+    virtual void
+    listAllComponentTypes(std::vector<ComponentDescription*>&,
+	                      bool);
+
     int addLoader(resourceReference *rr);
+
     int removeLoader(const std::string &loaderName);
 
     static const std::string DEFAULT_PATH;

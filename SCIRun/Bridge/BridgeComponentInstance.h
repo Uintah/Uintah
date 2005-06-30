@@ -73,6 +73,7 @@ namespace SCIRun {
     BridgeComponentInstance(SCIRunFramework* framework,
 			 const std::string& instanceName,
 			 const std::string& className,
+             const sci::cca::TypeMap::pointer &tm,
 			 BridgeComponent* component);
     virtual ~BridgeComponentInstance();
 
