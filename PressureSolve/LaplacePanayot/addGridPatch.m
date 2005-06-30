@@ -1,4 +1,4 @@
-function [grid,q,A,b] = addGridPatch(grid,k,ilower,iupper,parentQ,A,b)
+function [grid,q,A,b,T,TI] = addGridPatch(grid,k,ilower,iupper,parentQ,A,b,T,TI)
 %ADDGRIDPATCH  Add a patch to the AMR grid.
 %   [GRID,Q,A,B] = ADDGRIDPATCH(GRID,K,ILOWER,IUPPER,PARENTQ,A,B) updates
 %   the left hand side matrix A and the right hand side B of the composite
@@ -50,6 +50,12 @@ Anew                        = sparse([],[],[],grid.totalVars,grid.totalVars,(2*g
 Anew(1:size(A,1),1:size(A,2)) = A;
 A                           = Anew;
 b                           = [b; zeros(grid.totalVars-length(b),1)];
+
+% Transformation point values -> ghost values (T)
+Tnew                                = speye(grid.totalVars);
+Tnew(1:size(T,1),1:size(T,2))       = T;
+T                                   = Tnew;
+
 %return;
 %==============================================================
 % 2. Create patch interior & BC equations
@@ -60,7 +66,7 @@ if (param.verboseLevel >= 2)
     fprintf('#########################################################################\n');
 end
 
-[A,b]                   = setupPatchInterior(grid,k,q,A,b);
+[A,b,T]              = setupPatchInterior(grid,k,q,A,b,T);
 
 %==============================================================
 % 5. Modify equations near C/F interface on both coarse and fine patches;
@@ -76,7 +82,7 @@ end
 % To align fine cell boundaries with coarse cell boundaries, alpha has to
 % be 0.5 here (otherwise near corners, coarse cells at the C/F interface
 % have a weird shape).
-[A,b]                   = setupInterface(grid,k,q,A,b);
+[A,b,T]              = setupInterface(grid,k,q,A,b,T);
 
 %==============================================================
 % 6. Delete unused gridpoints / put identity operator there.
@@ -86,16 +92,29 @@ if (param.verboseLevel >= 2)
     fprintf(' 6. Delete unused gridpoints / put identity operator there.\n');
     fprintf('#########################################################################\n');
 end
+
 patchRange              = P.offsetInd + [1:prod(P.size)];
 indUnused               = patchRange(find(abs(diag(A(patchRange,patchRange))) < eps));
-A(indUnused,:)         = 0.0;
-A(:,indUnused)         = 0.0;
+A(indUnused,:)          = 0.0;
+A(:,indUnused)          = 0.0;
 A(indUnused,indUnused)  = eye(length(indUnused));
 b(indUnused)            = 0.0;
+T(indUnused,:)          = 0.0;
+T(:,indUnused)          = 0.0;
+TI(indUnused,:)         = 0.0;
+TI(:,indUnused)         = 0.0;
 if (param.verboseLevel >= 3)
     indUnused
     A(indUnused,:)
 end
+
+% Define inverse of T (except unused points)
+patchRange              = [1:grid.totalVars];           % All variables here
+indZero                 = patchRange(find(abs(diag(T(patchRange,patchRange))) < eps));
+T(indZero,indZero)      = eye(length(indZero));
+TI                      = inv(T);
+T(indZero,:)            = 0.0;
+TI(indZero,:)           = 0.0;
 
 tCPU        = cputime - tStartCPU;
 tElapsed    = etime(clock,tStartElapsed);
