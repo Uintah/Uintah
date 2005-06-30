@@ -722,12 +722,8 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // Assign zero internal heating by default - modify if necessary.
       pIntHeatRate[idx] = 0.0;
 
-      /*
-      if (cout_EP.active()) {
-        cout_EP << getpid() << " idx = " << idx 
-                << " vel = " << pVelocity[idx] << endl;
-      }
-      */
+      //  cout << getpid() << " idx = " << idx 
+      //       << " vel = " << pVelocity[idx] << endl;
 
       //-----------------------------------------------------------------------
       // Stage 1:
@@ -889,10 +885,8 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
                                                  porosity, state->yieldStress);
         // Compute the deviatoric stress
         /*
-        if (idx == 1) {
-          cerr << "Phi = " << Phi << " s_eq = " << equivStress
-               << " s_flow = " << flowStress << endl;
-        }
+        cout << "Phi = " << Phi << " s_eq = " << equivStress
+             << " s_flow = " << flowStress << endl;
         */
 
         if (Phi < 0.0) {
@@ -977,36 +971,38 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
               if (delGamma > 0.0) {
 
                 // Compute the actual epdot, ep, yieldStress
-                state->plasticStrainRate = 
-                  (sqrtTwoThird*sqrtqq*delGamma)/(sqrtqs*delT);
-                state->plasticStrain = pPlasticStrain[idx] + 
-                  state->plasticStrainRate*delT;
-                state->yieldStress = d_plastic->computeFlowStress(state, delT, 
-                                                                  d_tol, matl, 
-                                                                  idx);
+                double epdot = (sqrtTwoThird*sqrtqq*delGamma)/(sqrtqs*delT);
+                if (epdot <= pStrainRate[idx]) {
+                
+                  state->plasticStrainRate = epdot;
+                  state->plasticStrain = pPlasticStrain[idx] + 
+                    state->plasticStrainRate*delT;
+                  state->yieldStress = d_plastic->computeFlowStress(state, delT,
+                                                                    d_tol, matl,
+                                                                    idx);
 
-                // Calculate Stilde
+                  // Calculate Stilde
 
-                // The exact form of denom will be different for 
-                // different yield conditions ** WARNING ***
-                ASSERT(state->yieldStress != 0.0);
-                double denom = 1.0 + (3.0*sqrtTwo*mu_cur*delGamma)/
-                  state->yieldStress; 
-                ASSERT(denom != 0.0);
-                Stilde = trialS/denom;
+                  // The exact form of denom will be different for 
+                  // different yield conditions ** WARNING ***
+                  ASSERT(state->yieldStress != 0.0);
+                  double denom = 1.0 + (3.0*sqrtTwo*mu_cur*delGamma)/
+                    state->yieldStress; 
+                  ASSERT(denom != 0.0);
+                  Stilde = trialS/denom;
 
-                /*
-                if (idx == 1) {
-                double delLambda = sqrtqq*delGamma/sqrtqs;
-                cout << "idx = " << idx << " delGamma = " << delLambda 
-                     << " sigy = " << state->yieldStress 
-                     << " epdot = " << state->plasticStrainRate 
-                     << " ep = " << state->plasticStrain << endl;
-                }
-                */
+                  /*
+                  double delLambda = sqrtqq*delGamma/sqrtqs;
+                  cout << "idx = " << idx << " delGamma = " << delLambda 
+                       << " sigy = " << state->yieldStress 
+                       << " epdot = " << state->plasticStrainRate 
+                       << " ep = " << state->plasticStrain << endl;
+                  */
 
-                // We have found Stilde. Turn off Newton Iterations.
-                doNewtonIterations = false;
+                  // We have found Stilde. Turn off Newton Iterations.
+                  doNewtonIterations = false;
+
+                } // end of epdot <= edot if
         
               } // end of delGamma > 0 if
 
@@ -1017,7 +1013,6 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
           if (doNewtonIterations) {
 
             /*
-            if (idx == 1) {
             cout << "sqrtSxS = 0 || gammadotplus <= 0 || delGamma <= 0.0" 
                  << endl;
             cout << " Before::idx = " << idx
@@ -1029,15 +1024,14 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
                  << " epdot_n = " << pPlasticStrainRate[idx]
                  << " epdot_n+1 = " << state->plasticStrainRate
                  << endl;
-            }
             */
 
             // Compute Stilde using Newton iterations a la Simo
+            state->plasticStrainRate = pStrainRate_new[idx];
             state->plasticStrain = pPlasticStrain[idx];
             computeStilde(trialS, delT, matl, idx, Stilde, state, delGamma);
 
             /*
-            if (idx == 1) {
             cout << "After::idx = " << idx
                  << " delGamma = " << delGamma  
                  << " Tau_n+1 = " << state->yieldStress
@@ -1047,7 +1041,6 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
                  << " epdot_n = " << pPlasticStrainRate[idx]
                  << " epdot_n+1 = " << state->plasticStrainRate
                  << endl;
-            }
             */
 
           }
@@ -1057,9 +1050,11 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
           ASSERT(stst != 0.0);
           tensorS = Stilde*(state->yieldStress/stst);
 
-          //equivStress = sqrtThreeTwo*tensorS.Norm();
-          //cout << "idx = " << " sig_eq = " << equivStress
-          //                 << " sig_y = " << state->yieldStress << endl;
+          /*
+          equivStress = sqrtThreeTwo*tensorS.Norm();
+          cout << "idx = " << idx << " sig_eq = " << equivStress
+                           << " sig_y = " << state->yieldStress << endl;
+          */
 
           // Update internal variables
           d_plastic->updatePlastic(idx, delGamma);
@@ -1114,6 +1109,14 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
         // Update the plastic strain
         pPlasticStrain_new[idx] = state->plasticStrain;
         pPlasticStrainRate_new[idx] = state->plasticStrainRate;
+
+        /*
+        if (pPlasticStrainRate_new[idx] > pStrainRate_new[idx]) {
+          cout << "Patch = " << patch->getID() << " particle = " << idx
+               << " edot = " << pStrainRate_new[idx] 
+               << " epdot = " << pPlasticStrainRate_new[idx] << endl;
+        }
+        */
 
         // Update the porosity
         if (d_evolvePorosity) 
@@ -1260,7 +1263,6 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     }
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
-    //cout << "new delT = " << delT_new << endl;
     new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
                 lb->delTLabel);
     new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
