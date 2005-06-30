@@ -88,10 +88,12 @@ if (param.verboseLevel >= 2)
 end
 patchRange              = P.offsetInd + [1:prod(P.size)];
 indUnused               = patchRange(find(abs(diag(A(patchRange,patchRange))) < eps));
+A(indUnused,:)         = 0.0;
 A(indUnused,indUnused)  = eye(length(indUnused));
 b(indUnused)            = 0.0;
 if (param.verboseLevel >= 3)
     indUnused
+    A(indUnused,:)
 end
 
 tCPU        = cputime - tStartCPU;

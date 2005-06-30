@@ -12,7 +12,15 @@ function [A,b,Alist] = setupInterface(grid,k,q,A,b,reallyUpdate)
 globalParams;
 
 if (param.verboseLevel >= 1)
-    fprintf('--- setupPatchInterface(k = %d, q = %d) ---\n',k,q);
+    fprintf('--- setupPatchInterface(k = %d, q = %d) BEGIN ---\n',k,q);
+end
+
+if (nargin < 5)
+    error('Too few input arguments (need at least grid,k,q,A,b)\n');
+end
+
+if (nargin < 6)
+    reallyUpdate = 1;
 end
 
 %=====================================================================
@@ -65,10 +73,14 @@ underUpper
 % from equations outside the deleted box to indDel variables.
 %indDel                      = cell(grid.dim,1);
 [indDel,del,matDel]         = indexBox(Q,underLower,underUpper);
-A(indDel,indDel)            = eye(length(indDel));
-b(indDel)                   = 0.0;
+if (reallyUpdate)
+    A(indDel,:)             = 0.0;
+    A(indDel,indDel)        = speye(length(indDel));
+    b(indDel)               = 0.0;
+end
 if (param.verboseLevel >= 3)
     indDel
+    A(indDel,:)
 end
 
 % Delete remaining connections from outside the deleted box (indOut) to the
@@ -78,7 +90,9 @@ in2out              = Alist(~ismember(Alist(:,2),indDel),:);
 out2in              = [in2out(:,2) in2out(:,2) -in2out(:,3)];
 indOut              = unique(out2in(:,1));
 Anew                = spconvert([out2in; [grid.totalVars grid.totalVars 0]]);
-A(indOut,:)         = A(indOut,:) - Anew(indOut,:);
+if (reallyUpdate)
+    A(indOut,:)         = A(indOut,:) - Anew(indOut,:);
+end
 
 %=====================================================================
 % Loop over all fine patch faces.
@@ -198,12 +212,26 @@ for d = 1:grid.dim,
         end
         subChilds
         matCoarseNbhr           = matCoarse;
-        matCoarseNbhr{d}        = matCoarse{d} - s;
+        matCoarseNbhr{d}    = matCoarse{d} - s;
+        for dim = 1:grid.dim,
+            matCoarseNbhr{dim} = matCoarseNbhr{dim}(:)';
+        end
+        fprintf('matCoarseNbhr = \n');
         matCoarseNbhr{:}
         colCoarseNbhr           = cell2mat(matCoarseNbhr)';
         colCoarseNbhr           = colCoarseNbhr ...
             - repmat(Q.offsetSub,size(colCoarseNbhr)./size(Q.offsetSub))
         childBase               = refineIndex(grid,k-1,colCoarseNbhr)
+        if (s == 1)
+            % Because childBase returns the lower-left corner of the first
+            % coarse cell under the interface, if we are at a right face,
+            % add 1 to the coarse cell, get the lower left corner of that
+            % coarse cell, and subtract 1 from the result.
+            colCoarseNbhr(:,d) = colCoarseNbhr(:,d)+1
+            childBase          = refineIndex(grid,k-1,colCoarseNbhr);
+            childBase(:,d) = childBase(:,d)-1
+        end
+            
         j                       = zeros(1,grid.dim);
         jump                    = zeros(1,grid.dim);
         for t = 1:numChilds,
@@ -234,15 +262,18 @@ for d = 1:grid.dim,
             wInterp
             a
 
-            thisChild       = childBase + repmat(j,size(childBase)./size(j))
+            thisChild       = childBase + repmat(j,size(childBase)./size(j)) + repmat(P.offsetSub,size(childBase)./size(P.offsetSub));      % Patch-based indices of the fine interface cells ("childs") of type t
             matThisChild    = mat2cell(thisChild,size(thisChild,1),[1 1]);
             indThisChild    = ind(sub2ind(P.size,matThisChild{:}));
             indThisChild    = indThisChild(:);
             dupThisChild    = reshape(repmat((thisChild(:))',[size(subInterpFine,1),1]),[size(dupInterpFine,1) grid.dim]);
-            matDupThisChild    = mat2cell(dupThisChild,size(dupThisChild,1),[1 1]);
-            indDupThisChild    = ind(sub2ind(P.size,matDupThisChild{:}));
-            indDupThisChild    = indDupThisChild(:);
-            indGhost        = indexNbhr(P,indThisChild,-nbhrNormal)
+            matDupThisChild = mat2cell(dupThisChild,size(dupThisChild,1),[1 1]);
+            indDupThisChild = ind(sub2ind(P.size,matDupThisChild{:}));
+            indDupThisChild = indDupThisChild(:);
+            indGhost        = indexNbhr(P,indThisChild,-nbhrNormal);
+            indCoarse
+            indThisChild
+            indGhost
 
             % Create ghost equations
             Alist = [Alist; ...                                                 % We are never near boundaries according to the C/F interface existence rules
@@ -264,7 +295,6 @@ for d = 1:grid.dim,
             Alist = [Alist; ...                                                 % We are never near boundaries according to the C/F interface existence rules
                 [indThisChild   indGhost             repmat(1.0,size(indGhost))]; ... % Ghost flux term
                 [indThisChild   indThisChild         repmat(a,size(indGhost))]; ... % Self-term (results from ui in the definition of the ghost flux = ui-gi+a*(mirrorGhostInterpTerms)
-                [indThisChild   indThisChild         repmat(a,size(indGhost))]; ... % Self-term (results from ui in the definition of the ghost flux = ui-gi+a*(mirrorGhostInterpTerms)                
                 [indDupThisChild indInterpFine      -a*dupwInterp]; ...             % Interpolation terms
                 ];
 
@@ -284,4 +314,8 @@ if (reallyUpdate)
     %=====================================================================
     Anew                = spconvert([Alist; [grid.totalVars grid.totalVars 0]]);
     A(indAll,:)         = A(indAll,:) + Anew(indAll,:);                       % Do not replace the non-zeros in A here, rather add to them.
+end
+
+if (param.verboseLevel >= 1)
+    fprintf('--- setupPatchInterface(k = %d, q = %d) END ---\n',k,q);
 end
