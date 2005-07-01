@@ -95,9 +95,8 @@ public:
     inline sci::cca::TypeMap::pointer
     getComponentProperties() { return comProperties; }
         
-    inline void
-    setComponentProperties(const sci::cca::TypeMap::pointer &tm) { comProperties = tm; }
-
+    void
+    setComponentProperties(const sci::cca::TypeMap::pointer &tm);
 
 protected:
   /** The unique name of this component instance. */
