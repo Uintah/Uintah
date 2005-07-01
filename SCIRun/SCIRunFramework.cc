@@ -49,12 +49,14 @@
 #include <SCIRun/Internal/ComponentEvent.h>
 #include <SCIRun/Internal/ComponentEventService.h>
 #include <SCIRun/CCA/CCAComponentModel.h>
+#include <SCIRun/Babel/BabelComponentModel.h>
 #include <SCIRun/CCA/ComponentID.h>
 
-#if HAVE_BABEL 
- #if HAVE_RUBY
+#if HAVE_RUBY
   #include <SCIRun/Bridge/BridgeComponentModel.h>
- #endif
+#endif
+
+#if HAVE_BABEL 
  #include <SCIRun/Babel/BabelComponentModel.h>
 #endif
 
@@ -90,10 +92,12 @@ SCIRunFramework::SCIRunFramework()
   models.push_back(internalServices = new InternalComponentModel(this));
   models.push_back(dflow = new SCIRunComponentModel(this));
   models.push_back(cca = new CCAComponentModel(this));
-#if HAVE_BABEL 
- #if HAVE_RUBY
+
+#if HAVE_RUBY
   models.push_back(new BridgeComponentModel(this));
- #endif
+#endif
+
+#if HAVE_BABEL 
   models.push_back(babel = new BabelComponentModel(this));
 #endif
 
@@ -124,8 +128,14 @@ SCIRunFramework::getServices(const std::string& selfInstanceName,
 sci::cca::ComponentID::pointer
 SCIRunFramework::createComponentInstance(const std::string& name,
                                          const std::string& className,
-                                         const sci::cca::TypeMap::pointer properties)
+                                         const sci::cca::TypeMap::pointer &tm)
 {
+    sci::cca::TypeMap::pointer properties;
+    if (tm.isNull()) {
+        properties = createTypeMap();
+    } else {
+        properties = tm;
+    }
     std::string type = className;
 
     // See if the type is of the form:
@@ -169,12 +179,14 @@ SCIRunFramework::createComponentInstance(const std::string& name,
         std::cerr << "No component model wants to build " << type << std::endl;
         return ComponentID::pointer(0);
     }
-
+    // "cca.className" is a standard CCA component property key
+    properties->putString("cca.className", className);
     ComponentInstance* ci;
-    if (mod->getName() == "CCA") {
-        ci = ((CCAComponentModel*)mod)->createInstance(name, type, properties);
+    if (mod->getName() == "babel") {
+        ci = ((BabelComponentModel*) mod)->createInstance(name, type);
+        ci->setComponentProperties(properties);
     } else {
-        ci = mod->createInstance(name, type);
+        ci = mod->createInstance(name, type, properties);
     }
     if (!ci) {
         std::cerr << "Error: failed to create ComponentInstance" << std::endl;
@@ -183,11 +195,9 @@ SCIRunFramework::createComponentInstance(const std::string& name,
 
     sci::cca::ComponentID::pointer cid = registerComponent(ci, name);
 
-    compIDs.push_back(cid);
     emitComponentEvent(
         new ComponentEvent(sci::cca::ports::ComponentInstantiated, cid, properties)
     ); 
-    //return compIDs[compIDs.size()-1];
     return cid;
 }
 
@@ -268,7 +278,8 @@ SCIRunFramework::destroyComponentInstance(const sci::cca::ComponentID::pointer
 
 
 sci::cca::ComponentID::pointer
-SCIRunFramework::registerComponent(ComponentInstance *ci, const std::string& name)
+SCIRunFramework::registerComponent(ComponentInstance *ci,
+                                   const std::string& name)
 {
     std::string goodname = name;
     int count = 0;
@@ -277,9 +288,10 @@ SCIRunFramework::registerComponent(ComponentInstance *ci, const std::string& nam
         newname << name << "_" << count++;
         goodname = newname.str();
     }
-
     sci::cca::ComponentID::pointer cid =
         ComponentID::pointer(new ComponentID(this, goodname));
+    compIDs.push_back(cid);
+
     // TODO: get some properties
     emitComponentEvent(
         new ComponentEvent(sci::cca::ports::InstantiatePending,
