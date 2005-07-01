@@ -19,7 +19,7 @@ PSELIBS := \
 	Packages/Uintah/CCA/Components/DataArchiver    \
 	Packages/Uintah/CCA/Components/PatchCombiner   \
 	Packages/Uintah/CCA/Components/Regridder       \
-	Packages/Uintah/CCA/Components/Switcher   \
+	Packages/Uintah/CCA/Components/Parent   \
 	Packages/Uintah/CCA/Components/DataArchiver \
 	Core/OS       \
 	Core/Geometry \
