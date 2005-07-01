@@ -50,13 +50,13 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 	      dynamic_cast<const VelocityBoundCond*>(vel_bcs);
 	    if (bc->getKind() == "Dirichlet") {
 	      for (b=nbound.begin();b!=nbound.end();b++){ 
-		variable[*b] = bc->getValue();
+                IntVector nd = *b;
+		variable[nd] = bc->getValue();
               }
               if(n8or27==27){
-                // add an offset to the nbound iterator to fill in the
-                // interior nodes.
-	        for (b=nbound.begin();b!=nbound.end();b++){
-                  variable[*b - oneCell] = bc->getValue();
+	        for (b=bound.begin();b!=bound.end();b++){
+                  IntVector nd = *b;
+                  variable[nd] = bc->getValue();
                 }
               }
 	    }
@@ -69,11 +69,13 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 	      dynamic_cast<const VelocityBoundCond*>(vel_bcs);
 	    if (bc->getKind() == "Dirichlet") {
 	      for (b=nbound.begin();b != nbound.end();b++){
-		variable[*b] = Vector(0,0,0);
+                IntVector nd = *b;
+		variable[nd] = Vector(0,0,0);
 	      }
               if(n8or27==27){
-	        for (b=nbound.begin();b!=nbound.end();b++){
-                  variable[*b - oneCell] = Vector(0.,0.,0.);
+	        for (b=bound.begin();b!=bound.end();b++){
+                  IntVector nd = *b;
+                  variable[nd] = Vector(0.,0.,0.);
                 }
               }
 	    }
@@ -84,32 +86,37 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 	  if (vel_bcs != 0) {
 	    if (face == Patch::xplus || face == Patch::xminus){
 	      for (b=nbound.begin(); b != nbound.end();b++) {
-		variable[*b] = Vector(0.,variable[*b].y(), variable[*b].z());
+                IntVector nd = *b;
+		variable[nd] = Vector(0.,variable[nd].y(), variable[nd].z());
 	      }
               if(n8or27==27){
-	        for (b=nbound.begin(); b != nbound.end();b++){
-                  variable[*b - oneCell] = Vector(0.,variable[*b-oneCell].y(), 
-                                                  variable[*b-oneCell].z());
+	        for (b=bound.begin(); b != bound.end();b++){
+                  IntVector nd = *b;
+                  variable[nd] = Vector(0.,variable[nd].y(), variable[nd].z());
                 }
               }
             }
 	    if (face == Patch::yplus || face == Patch::yminus){
-	      for (b=nbound.begin(); b != nbound.end();b++)
-		variable[*b] = Vector(variable[*b].x(),0.,variable[*b].z());
+	      for (b=nbound.begin(); b != nbound.end();b++){
+                IntVector nd = *b;
+		variable[nd] = Vector(variable[nd].x(),0.,variable[nd].z());
+              }
               if(n8or27==27){
-	        for (b=nbound.begin(); b != nbound.end();b++){
-                  variable[*b - oneCell] = Vector(variable[*b-oneCell].x(),0.,
-                                                  variable[*b-oneCell].z());
+	        for (b=bound.begin(); b != bound.end();b++){
+                  IntVector nd = *b;
+                  variable[nd] = Vector(variable[nd].x(),0.,variable[nd].z());
                 }
               }
             }
 	    if (face == Patch::zplus || face == Patch::zminus){
-	      for (b=nbound.begin(); b != nbound.end();b++)
-		variable[*b] = Vector(variable[*b].x(), variable[*b].y(),0.);
+	      for (b=nbound.begin(); b != nbound.end();b++){
+                IntVector nd = *b;
+		variable[nd] = Vector(variable[nd].x(), variable[nd].y(),0.);
+              }
               if(n8or27==27){
-	        for (b=nbound.begin(); b != nbound.end();b++){
-                  variable[*b - oneCell] = Vector(variable[*b-oneCell].x(), 
-                                                  variable[*b-oneCell].y(),0.);
+	        for (b=bound.begin(); b != bound.end();b++){
+                  IntVector nd = *b;
+                  variable[nd] = Vector(variable[nd].x(), variable[nd].y(),0.);
                 }
               }
             }
@@ -144,12 +151,16 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 	  const TemperatureBoundCond* bc =
 	    dynamic_cast<const TemperatureBoundCond*>(temp_bcs);
 	  if (bc->getKind() == "Dirichlet") {
-	    for (b = nbound.begin(); b != nbound.end();b++)
-	      variable[*b] = bc->getValue();
-              if(n8or27==27){
-               for (b = nbound.begin();b!=nbound.end();b++)
-                 variable[*b - oneCell] = bc->getValue();
-              }
+	    for (b = nbound.begin(); b != nbound.end();b++){
+              IntVector nd = *b;
+	      variable[nd] = bc->getValue();
+            }
+            if(n8or27==27){
+              for (b = bound.begin();b!=bound.end();b++){
+                IntVector nd = *b;
+                variable[nd] = bc->getValue();
+             }
+           }
 	  }
 	  delete temp_bcs;
 	}
@@ -188,8 +199,10 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 	    dynamic_cast<const TemperatureBoundCond*>(temp_bcs);
 	  if (bc->getKind() == "Neumann"){
 	    double value = bc->getValue();
-	    for (boundary=nbound.begin(); boundary != nbound.end(); boundary++)
-	      variable[*boundary]+= value*2.*gvolume[*boundary]/dx;
+	    for (boundary=nbound.begin(); boundary != nbound.end(); boundary++){
+              IntVector nd = *boundary;
+	      variable[nd] += value*2.*gvolume[nd]/dx;
+            }
 	  }
 	  delete temp_bcs;
 	}
