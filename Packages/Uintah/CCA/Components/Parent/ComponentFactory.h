@@ -1,5 +1,5 @@
-#ifndef Packages_Uintah_CCA_Components_Component_ComponentFactory_h
-#define Packages_Uintah_CCA_Components_Component_ComponentFactory_h
+#ifndef Packages_Uintah_CCA_Components_Parent_ComponentFactory_h
+#define Packages_Uintah_CCA_Components_Parent_ComponentFactory_h
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>

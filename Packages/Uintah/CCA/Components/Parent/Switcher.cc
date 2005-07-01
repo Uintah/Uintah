@@ -1,5 +1,5 @@
-#include <Packages/Uintah/CCA/Components/Switcher/Switcher.h>
-#include <Packages/Uintah/CCA/Components/ComponentFactory.h>
+#include <Packages/Uintah/CCA/Components/Parent/Switcher.h>
+#include <Packages/Uintah/CCA/Components/Parent/ComponentFactory.h>
 #include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
