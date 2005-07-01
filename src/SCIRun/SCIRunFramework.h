@@ -256,7 +256,7 @@ protected:
     sci::cca::ComponentID::pointer
     createComponentInstance(const std::string& name,
                             const std::string& className,
-                            const sci::cca::TypeMap::pointer properties);
+                            const sci::cca::TypeMap::pointer &tm);
 
     /** ? */
     void
