@@ -1286,10 +1286,13 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
 	}
       }
 
-
-      hssize_t *start = new hssize_t[ndims];
+#if H5_VERS_RELEASE == 2
+      hssize_t *start  = new hssize_t[ndims];
+#else
+      hsize_t *start  = new hsize_t[ndims];
+#endif
       hsize_t *stride = new hsize_t[ndims];
-      hsize_t *block = new hsize_t[ndims];
+      hsize_t *block  = new hsize_t[ndims];
 
       for( int ic=0; ic<nDims_.get(); ic++ ) {
 	start[ic]  = starts_[ic];
