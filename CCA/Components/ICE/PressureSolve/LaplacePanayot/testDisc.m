@@ -120,6 +120,19 @@ for count = 1:length(numCellsRange)
         tau = sparseToAMR(b-A*AMRToSparse(uExact,grid,T,1),grid,TI,0);
         f = sparseToAMR(b,grid,TI,0);
         fig = 0;
+        
+        % AMR grid norms
+        err = cell(size(u));
+        for k = 1:grid.numLevels,
+            level = grid.level{k};
+            for q = 1:grid.level{k}.numPatches,        
+                err{k}{q} = uExact{k}{q}-u{k}{q};
+            end
+        end
+        temp    = AMRToSparse(err,grid,T,1);
+        err     = SparseToAMR(temp,grid,TI,0);
+        normAMR(grid,err,'L2')
+        
         for k = 1:grid.numLevels,
             level = grid.level{k};
             for q = 1:grid.level{k}.numPatches,
@@ -133,7 +146,7 @@ for count = 1:length(numCellsRange)
                     Lpnorm(t),max(abs(t)),median(abs(t)));
                 err{k}{q}(count,:) = [Lpnorm(e) max(abs(e)) median(abs(e))];
                 trunc{k}{q}(count,:) = [Lpnorm(t) max(abs(t)) median(abs(t))];
-
+                
 %                 fig = fig+1;
 %                 figure(fig);
 %                 clf;
