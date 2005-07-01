@@ -13,21 +13,24 @@ globalParams;
 % Initialize parameters struct
 %=========================================================================
 param                       = [];
+
+param.problemType           = 'ProblemB';
+param.outputDir             = 'ProblemA_1Level';
+
 param.twoLevel              = 1;
 param.setupGrid             = 1;
 param.solveSystem           = 1;
 param.plotResults           = 1;
 param.saveResults           = 0;
-
-param.outputDir             = 'ProblemA_1Level';
 param.verboseLevel          = 0;
 
 
 %=========================================================================
 % Run discretization on a sequence of successively finer grids
 %=========================================================================
-numCellsRange           = 2.^[2:1:6];
-success = mkdir('.',param.outputDir);
+numCellsRange               = 8;%2.^[3:1:6];
+success                     = mkdir('.',param.outputDir);
+errNorm                     = zeros(length(numCellsRange),3);
 
 for count = 1:length(numCellsRange)
     numCells = numCellsRange(count);
@@ -65,7 +68,8 @@ for count = 1:length(numCellsRange)
 
         if (param.twoLevel)
             [grid,k]            = addGridLevel(grid,'refineRatio',[2 2]);
-            [grid,q2,A,b,T,TI]  = addGridPatch(grid,k,resolution/2 + 1,3*resolution/2,q1,A,b,T,TI);              % Local patch around the domain center
+%            [grid,q2,A,b,T,TI]  = addGridPatch(grid,k,resolution/2 + 1,3*resolution/2,q1,A,b,T,TI);              % Local patch around the domain center
+            [grid,q2,A,b,T,TI]  = addGridPatch(grid,k,3*resolution/4 + 1,5*resolution/4,q1,A,b,T,TI);              % Local patch around the domain center
         end
 
         tCPU        = cputime - tStartCPU;
@@ -120,39 +124,44 @@ for count = 1:length(numCellsRange)
         tau = sparseToAMR(b-A*AMRToSparse(uExact,grid,T,1),grid,TI,0);
         f = sparseToAMR(b,grid,TI,0);
         fig = 0;
-        
+
         % AMR grid norms
         err = cell(size(u));
         for k = 1:grid.numLevels,
             level = grid.level{k};
-            for q = 1:grid.level{k}.numPatches,        
+            for q = 1:grid.level{k}.numPatches,
                 err{k}{q} = uExact{k}{q}-u{k}{q};
             end
         end
         temp    = AMRToSparse(err,grid,T,1);
         err     = SparseToAMR(temp,grid,TI,0);
-        normAMR(grid,err,'L2')
-        
+        errNorm(count,:) = [ ...
+            normAMR(grid,err,'L2') ...
+            normAMR(grid,err,'max') ...
+            normAMR(grid,err,'H1') ...
+            ];
+        fprintf('L2=%.3e  max=%.3e  H1=%.3e\n',errNorm(count,:));
+
         for k = 1:grid.numLevels,
             level = grid.level{k};
             for q = 1:grid.level{k}.numPatches,
                 P = level.patch{q};
-                e = uExact{k}{q}-u{k}{q};
-                e = e(:);
-                t = tau{k}{q}(:);
-                fprintf('Level %2d, Patch %2d  err (L2=%.3e  max=%.3e  med=%.3e)  tau (L2=%.3e  max=%.3e  med=%.3e)\n',...
-                    k,q,...
-                    Lpnorm(e),max(abs(e)),median(abs(e)),...
-                    Lpnorm(t),max(abs(t)),median(abs(t)));
-                err{k}{q}(count,:) = [Lpnorm(e) max(abs(e)) median(abs(e))];
-                trunc{k}{q}(count,:) = [Lpnorm(t) max(abs(t)) median(abs(t))];
-                
-%                 fig = fig+1;
-%                 figure(fig);
-%                 clf;
-%                 surf(f{k}{q});
-%                 title(sprintf('Discrete RHS on Level %d, Patch %d',k,q));
-%                 eval(sprintf('print -depsc %s/DiscRHS%d_L%dP%d.eps',param.outputDir,numCells,k,q));
+                %                e = uExact{k}{q}-u{k}{q};
+                %                e = e(:);
+                %                t = tau{k}{q}(:);
+                %                 fprintf('Level %2d, Patch %2d  err (L2=%.3e  max=%.3e  med=%.3e)  tau (L2=%.3e  max=%.3e  med=%.3e)\n',...
+                %                     k,q,...
+                %                     Lpnorm(e),max(abs(e)),median(abs(e)),...
+                %                     Lpnorm(t),max(abs(t)),median(abs(t)));
+                %                err{k}{q}(count,:) = [Lpnorm(e) max(abs(e)) median(abs(e))];
+                %                trunc{k}{q}(count,:) = [Lpnorm(t) max(abs(t)) median(abs(t))];
+
+                %                 fig = fig+1;
+                %                 figure(fig);
+                %                 clf;
+                %                 surf(f{k}{q});
+                %                 title(sprintf('Discrete RHS on Level %d, Patch %d',k,q));
+                %                 eval(sprintf('print -depsc %s/DiscRHS%d_L%dP%d.eps',param.outputDir,numCells,k,q));
 
                 fig = fig+1;
                 figure(fig);
@@ -194,53 +203,50 @@ for count = 1:length(numCellsRange)
 
 end
 
-for k = 1:grid.numLevels,
-    level = grid.level{k};
-    for q = 1:grid.level{k}.numPatches,
-        P = level.patch{q};
-        
-        % Save errors and error factors in latex format
-        Label{1} = 'n';
-        Label{2} = '\|e\|_{L_2}';
-        Label{3} = '{\mbox{factor}}';
-        Label{4} = '\|e\|_{L_{\infty}}';
-        Label{5} = '{\mbox{factor}}';
-        Label{6} = '\|e\|_{\mbox{median}}';
-        Label{7} = '{\mbox{factor}}';
-        fileName = sprintf('%s/DiscErrorL%dP%d',param.outputDir,k,q);
-        Caption = sprintf('Discretization error on level %d, patch %d',k,q);
-        data    = [numCellsRange'];
-        e       = err{k}{q};
-        factors = fac(e);
-        fmt{1} = '%4d';
-        for i = 1:size(e,2)
-            data = [data e(:,i) [0; factors(:,i)]];
-            fmt{2*i} = '%.3e';
-            fmt{2*i+1} = '%.3f';
-        end
-        %        latexTable(data,Label,fileName,Caption,'%3d','%.3e');
-        latexTableFactors(data,Label,fileName,Caption,fmt{:});
+if (param.saveResults)
+    % Save errors and error factors in latex format
+    Label{1}    = 'n';
+    Label{2}    = '\|e\|_{L_2}';
+    Label{3}    = '{\mbox{factor}}';
+    Label{4}    = '\|e\|_{L_{\infty}}';
+    Label{5}    = '{\mbox{factor}}';
+    Label{6}    = '\|e\|_{H_1}';
+    Label{7}    = '{\mbox{factor}}';
 
-        % Save truncation errors and truncation error factors in latex format
-        Label{1} = 'n';
-        Label{2} = '\|\tau\|_{L_2}';
-        Label{3} = '{\mbox{factor}}';
-        Label{4} = '\|\tau\|_{L_{\infty}}';
-        Label{5} = '{\mbox{factor}}';
-        Label{6} = '\|\tau\|_{\mbox{median}}';
-        Label{7} = '{\mbox{factor}}';
-        fileName = sprintf('%s/TruncErrorL%dP%d',param.outputDir,k,q);
-        Caption = sprintf('Truncation error on level %d, patch %d',k,q);
-        data    = [numCellsRange'];
-        e       = trunc{k}{q};
-        factors = fac(e);
-        fmt{1} = '%4d';
-        for i = 1:size(e,2)
-            data = [data e(:,i) [0; factors(:,i)]];
-            fmt{2*i} = '%.3e';
-            fmt{2*i+1} = '%.3f';
-        end
-        %        latexTable(data,Label,fileName,Caption,'%3d','%.3e');
-        latexTableFactors(data,Label,fileName,Caption,fmt{:});
+    fileName    = sprintf('%s/DiscError',param.outputDir);
+    Caption     = sprintf('Discretization error');
+
+    data        = [numCellsRange'];
+    e           = errNorm;
+    factors     = fac(e);
+    fmt{1}      = '%4d';
+    for i = 1:size(e,2)
+        data = [data e(:,i) [0; factors(:,i)]];
+        fmt{2*i} = '%.3e';
+        fmt{2*i+1} = '%.3f';
     end
+    %        latexTable(data,Label,fileName,Caption,'%3d','%.3e');
+    latexTableFactors(data,Label,fileName,Caption,fmt{:});
+
+    %         % Save truncation errors and truncation error factors in latex format
+    %         Label{1} = 'n';
+    %         Label{2} = '\|\tau\|_{L_2}';
+    %         Label{3} = '{\mbox{factor}}';
+    %         Label{4} = '\|\tau\|_{L_{\infty}}';
+    %         Label{5} = '{\mbox{factor}}';
+    %         Label{6} = '\|\tau\|_{\mbox{median}}';
+    %         Label{7} = '{\mbox{factor}}';
+    %         fileName = sprintf('%s/TruncErrorL%dP%d',param.outputDir,k,q);
+    %         Caption = sprintf('Truncation error on level %d, patch %d',k,q);
+    %         data    = [numCellsRange'];
+    %         e       = trunc{k}{q};
+    %         factors = fac(e);
+    %         fmt{1} = '%4d';
+    %         for i = 1:size(e,2)
+    %             data = [data e(:,i) [0; factors(:,i)]];
+    %             fmt{2*i} = '%.3e';
+    %             fmt{2*i+1} = '%.3f';
+    %         end
+    %         %        latexTable(data,Label,fileName,Caption,'%3d','%.3e');
+    %         latexTableFactors(data,Label,fileName,Caption,fmt{:});
 end

@@ -51,7 +51,7 @@ for k = 1:grid.numLevels,
         %=====================================================================
         % Set exact solution in the interior of the patch
         %=====================================================================
-        u{k}{q}(interior{:}) = exactSolution(matInteriorLocation{:});
+        u{k}{q}(interior{:}) = exactSolution(matInteriorLocation);
 
         %=====================================================================
         % Set boundary conditions
@@ -90,7 +90,7 @@ for k = 1:grid.numLevels,
                     end
                     matGhostLocation = cell(grid.dim,1);
                     [matGhostLocation{:}]   = ndgrid(ghostLocation{:});
-                    u{k}{q}(ghost{:}) = exactSolution(matGhostLocation{:});
+                    u{k}{q}(ghost{:}) = exactSolution(matGhostLocation);
                     continue;                                                           % Skip the rest of the code in this loop as B.C. prevail on C/F interface values
                 end
 
@@ -115,7 +115,7 @@ for k = 1:grid.numLevels,
                     end
                     matGhostLocation = cell(grid.dim,1);
                     [matGhostLocation{:}]   = ndgrid(ghostLocation{:});
-                    u{k}{q}(ghost{:}) = exactSolution(matGhostLocation{:});
+                    u{k}{q}(ghost{:}) = exactSolution(matGhostLocation);
                 end
 
             end
