@@ -68,8 +68,6 @@ class ConnectionEvent;
  * SCIRunFramework class and the various SCIRun component model classes.
  *
  *
- * \todo getComponentProperties is not finished?
- * \todo setComponentProperties is not finished?
  * \todo getDeserialization is not finished?
  * \todo addComponentClasses not implemented
  * \todo removeComponentClasses not implemented
@@ -104,12 +102,20 @@ class BuilderService : public sci::cca::ports::BuilderService,
   virtual SSIDL::array1<sci::cca::ComponentID::pointer> getComponentIDs();
 
   /** Returns a CCA TypeMap (i.e. a map) that represents any properties
-      associated with component \em cid */
+      associated with component \em cid.
+      key                    value          meaning
+      cca.className          string         component type (standard key)
+      x                      int            component x position
+      y                      int            component y position
+      LOADER NAME            string         loader name
+      np                     int            number of nodes
+    */
   virtual sci::cca::TypeMap::pointer
   getComponentProperties(const sci::cca::ComponentID::pointer &cid);
 
   /** Associates the properties specified in \em map with an existing framework
-      component \em cid.*/
+      component \em cid.
+      Null TypeMaps are not allowed. */
   virtual void
   setComponentProperties(const sci::cca::ComponentID::pointer &cid,
                          const sci::cca::TypeMap::pointer &map);

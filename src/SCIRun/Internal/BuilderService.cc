@@ -149,18 +149,37 @@ BuilderService::getComponentIDs()
 }
 
 sci::cca::TypeMap::pointer
-BuilderService::getComponentProperties(const sci::cca::ComponentID::pointer& /*cid*/)
+BuilderService::getComponentProperties(const sci::cca::ComponentID::pointer &cid)
 {
-    // TODO: finish this!
-    std::cerr << "BuilderService::getComponentProperties not finished" << std::endl;
-    return sci::cca::TypeMap::pointer(0);
+    if (cid.isNull()) {
+        throw CCAException("Invalid ComponentID");
+    }
+
+    ComponentInstance *ci = framework->lookupComponent(cid->getInstanceName());
+    if (! ci) {
+        throw CCAException("Framework could not locate component "
+            + cid->getInstanceName());
+    }
+    return ci->getComponentProperties();
 }
 
 void
-BuilderService::setComponentProperties(const sci::cca::ComponentID::pointer& /*cid*/, const sci::cca::TypeMap::pointer& /*map*/)
+BuilderService::setComponentProperties(const sci::cca::ComponentID::pointer &cid,
+                                       const sci::cca::TypeMap::pointer &map)
 {
-    // TODO: finish this!
-  std::cerr << "BuilderService::setComponentProperties not finished\n";
+    if (cid.isNull()) {
+        throw CCAException("Invalid ComponentID");
+    }
+    if (map.isNull()) {
+        throw CCAException("Invalid TypeMap");
+    }
+
+    ComponentInstance *ci = framework->lookupComponent(cid->getInstanceName());
+    if (! ci) {
+        throw CCAException("Framework could not locate component "
+            + cid->getInstanceName());
+    }
+    ci->setComponentProperties(map);
 }
 
 sci::cca::ComponentID::pointer
@@ -419,6 +438,8 @@ BuilderService::generateBridge(const sci::cca::ComponentID::pointer& c1,
     throw CCAException("Unknown provides port");
   }
   return (autobr.genBridge(pr1->getModel(),cid1->name,pr2->getModel(),cid2->name));
+#else
+  return std::string();
 #endif
 }
 
