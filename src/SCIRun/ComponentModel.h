@@ -76,8 +76,10 @@ public:
       \em name is assigned as the unique name of the newly created instance.
       Returns a smart pointer to the newly created instance, or a null pointer
       on failure. */
-  virtual ComponentInstance* createInstance(const std::string& name,
-                                            const std::string& type);
+  virtual ComponentInstance*
+  createInstance(const std::string &name,
+                 const std::string &type,
+                 const sci::cca::TypeMap::pointer &tm);
 
   /** Deallocates the component instance \em ci.  Returns \code true on success and
       \code false on failure. */
@@ -88,8 +90,8 @@ public:
 
   /** Creates a list of all the available components (as ComponentDescriptions)
       registered in this ComponentModel. */
-  virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
-                                     bool) = 0;
+  virtual void
+  listAllComponentTypes(std::vector<ComponentDescription*>&, bool) = 0;
 
   /** ? */
   virtual void destroyComponentList() = 0;
