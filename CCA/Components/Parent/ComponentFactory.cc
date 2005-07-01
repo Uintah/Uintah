@@ -1,4 +1,5 @@
-#include <Packages/Uintah/CCA/Components/ComponentFactory.h>
+#include <Packages/Uintah/CCA/Components/Parent/ComponentFactory.h>
+#include <Packages/Uintah/CCA/Components/Parent/Switcher.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
@@ -23,7 +24,6 @@
 #include <Packages/Uintah/CCA/Components/Examples/SolverTest1.h>
 #include <Packages/Uintah/CCA/Components/Examples/Test.h>
 #include <Packages/Uintah/CCA/Components/Examples/Test1.h>
-#include <Packages/Uintah/CCA/Components/Switcher/Switcher.h>
 #include <iosfwd>
 
 using std::cerr;
