@@ -107,7 +107,7 @@ ComponentEventService::moveComponent(const sci::cca::ComponentID::pointer& id, i
 {
     ComponentInstance* ci = framework->lookupComponent(id->getInstanceName());
     if (ci) {
-        std::string cn = ci->className;
+        std::string cn = ci->getClassName();
         unsigned int firstColon = cn.find(':');
         std::string modelName;
         if (firstColon != std::string::npos) {
