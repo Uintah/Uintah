@@ -48,7 +48,7 @@
 #include <Packages/Uintah/CCA/Components/Regridder/RegridderFactory.h>
 #include <Packages/Uintah/CCA/Components/LoadBalancers/LoadBalancerFactory.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SchedulerFactory.h>
-#include <Packages/Uintah/CCA/Components/ComponentFactory.h>
+#include <Packages/Uintah/CCA/Components/Parent/ComponentFactory.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
