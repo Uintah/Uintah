@@ -562,6 +562,44 @@ Patch::getFaceName(FaceType face)
 }
 
 void
+Patch::getFaceExtraNodes(FaceType face, int offset,IntVector& l,
+                                                   IntVector& h) const
+{
+  // Change from getNodeLowIndex to getInteriorNodeLowIndex.  Need to do this
+  // when we have extra cells.
+  IntVector lorig=l=getNodeLowIndex();
+  IntVector horig=h=getNodeHighIndex();
+  switch(face){
+  case xminus:
+    l.x(lorig.x()-offset);
+    h.x(lorig.x()+1-offset);
+    break;
+  case xplus:
+    l.x(horig.x()-1+offset);
+    h.x(horig.x()+offset);
+    break;
+  case yminus:
+    l.y(lorig.y()-offset);
+    h.y(lorig.y()+1-offset);
+    break;
+  case yplus:
+    l.y(horig.y()-1+offset);
+    h.y(horig.y()+offset);
+    break;
+  case zminus:
+    l.z(lorig.z()-offset);
+    h.z(lorig.z()+1-offset);
+    break;
+  case zplus:
+    l.z(horig.z()-1+offset);
+    h.z(horig.z()+offset);
+    break;
+  default:
+    SCI_THROW(InternalError("Illegal FaceType in Patch::getFaceExtraNodes"));
+  }
+}
+
+void
 Patch::getFaceNodes(FaceType face, int offset,IntVector& l, IntVector& h) const
 {
   // Change from getNodeLowIndex to getInteriorNodeLowIndex.  Need to do this
@@ -629,7 +667,7 @@ Patch::getFaceCells(FaceType face, int offset,IntVector& l, IntVector& h) const
       h.z(horig.z()+offset);
       break;
    default:
-     SCI_THROW(InternalError("Illegal FaceType in Patch::getFaceNodes"));
+     SCI_THROW(InternalError("Illegal FaceType in Patch::getFaceCells"));
    }
 }
 
