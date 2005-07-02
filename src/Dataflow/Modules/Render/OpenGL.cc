@@ -470,7 +470,6 @@ void
 OpenGL::render_and_save_image(int x, int y,
                               const string& fname, const string &ftype)
 {
-  cerr << fname << std::endl;
 
 #ifndef HAVE_MAGICK
   if (ftype != "ppm" && ftype != "raw")
