@@ -150,7 +150,7 @@ Index* MxNScheduler::makeBlock(int rank, int size, int length)
 
   ////////////
   // Block size per process is calculated using a ceiling division
-  sizePproc = (int)std::ceil(length*1.0 / size*1.0);
+  sizePproc = (int)/*std::*/ceil(length*1.0 / size*1.0);
 
   sta = rank * sizePproc;
   fin = std::min(((rank+1) * sizePproc),length);
