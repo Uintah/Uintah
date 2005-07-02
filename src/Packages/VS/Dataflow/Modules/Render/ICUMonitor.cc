@@ -40,13 +40,12 @@
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Runnable.h>
-#include <Core/Util/Timer.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/GuiInterface/UIvar.h>
 #include <Core/Geom/Material.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
-
+#include <Core/Util/Timer.h>
 #include <Core/Geom/GeomSwitch.h>
 #include <Core/Algorithms/Visualization/RenderField.h>
 #include <Dataflow/Ports/NrrdPort.h>
@@ -67,6 +66,15 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+
+#ifndef _WIN32
+#include <sys/times.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <unistd.h>
+#else
+#include <windows.h>
+#endif
 
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 extern Tcl_Interp* the_interp;
@@ -1068,9 +1076,17 @@ ICUMonitor::draw_plots()
   if (gui_dump_frames_.get()) {
     ostringstream fname;
     fname << "icu_frame."; 
-    fname << setfill('0');
+    fname.fill('0');
     fname.width(5); 
-    fname << frame_count_++ << ".ppm";
+    fname << frame_count_++;
+
+    timeval tv;    
+    gettimeofday(&tv, 0);
+    fname << "." << tv.tv_sec << ".";
+    fname.fill('0');
+    fname.width(6);
+    fname << tv.tv_usec << ".ppm";
+	
     save_image(width_, height_, fname.str(), "ppm");
   }
   CHECK_OPENGL_ERROR();

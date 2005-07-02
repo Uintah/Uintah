@@ -470,6 +470,8 @@ void
 OpenGL::render_and_save_image(int x, int y,
                               const string& fname, const string &ftype)
 {
+  cerr << fname << std::endl;
+
 #ifndef HAVE_MAGICK
   if (ftype != "ppm" && ftype != "raw")
   {
@@ -1184,12 +1186,24 @@ OpenGL::redraw_frame()
         string message = "Bad Format - Illegal Frame Format.";
         view_window_->setMessage( message );
         view_window_->setMovie( 0 );
+	
       }
       else
       {
         char fname[256];
         sprintf(fname, movie_name_.c_str(), current_movie_frame_);
-        string fullpath = string(fname) + string(".ppm");
+
+	timeval tv;
+
+	gettimeofday(&tv, 0);
+	ostringstream timestr;
+	timestr << "." << tv.tv_sec << ".";
+	timestr.fill('0');
+	timestr.width(6);
+	timestr << tv.tv_usec;
+
+        string fullpath = string(fname) + string(timestr.str()) + 
+	                  string(".ppm");
         
         string message = "Dumping " + fullpath;
         view_window_->setMessage( message );
