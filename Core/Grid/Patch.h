@@ -431,6 +431,9 @@ WARNING
      void getFaceNodes(FaceType face, int offset, IntVector& l,
 		       IntVector& h) const;
 
+     void getFaceExtraNodes(FaceType face, int offset, IntVector& l,
+		            IntVector& h) const;
+
      void getFaceCells(FaceType face, int offset, IntVector& l,
 		       IntVector& h) const;
 
