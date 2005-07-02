@@ -1128,6 +1128,10 @@ case $1 in
   SCIRun2)
     sci_required_babel=yes
   ;;
+  Plume)
+    sci_required_loki=yes
+    sci_required_boost=yes
+  ;;
   Remote)
     sci_required_jpeg=yes
     sci_required_tiff=yes

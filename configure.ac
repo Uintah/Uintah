@@ -446,6 +446,18 @@ SCI_ARG_WITH(uuid,
                  Use UUID tools on IRIX or from ext2fs development tools on GNU/linux (SCIRun2 only, default).  Installing the ext2fs package on GNU/Linux is recommended.),
   [sci_required_uuid=yes],
   [with_uuid=""])
+SCI_ARG_WITH(boost,
+  AC_HELP_STRING(--with-boost=DIR,
+                 Use the Boost in DIR),
+  [with_boost="$withval"
+   sci_required_boost=yes],
+  [with_boost=""])
+SCI_ARG_WITH(loki,
+  AC_HELP_STRING(--with-loki=DIR,
+                 Use the Loki in DIR),
+  [with_loki="$withval"
+   sci_required_loki=yes],
+  [with_loki=""])
 
 
 
@@ -545,6 +557,13 @@ SCI_ARG_ENABLE(scirun2,
    [SCI_SET_PACKAGE_CHECKS(SCIRun2, $host)]
   ],
   [enable_scirun2=${enable_scirun2='no'}])
+SCI_ARG_ENABLE(plume,
+  AC_HELP_STRING(--enable-plume,
+                 Build Plume (based on SCIRun 2)),
+  [enable_plume="$enableval"
+   [SCI_SET_PACKAGE_CHECKS(Plume, $host)]
+   ],
+  [enable_plume=${enable_plume='no'}])
 SCI_ARG_ENABLE(rath,
   AC_HELP_STRING(--enable-rpath,
                  Use the default runtime library search path),
@@ -1441,6 +1460,21 @@ if test "$IS_WIN" = "yes"; then
   echo "skipping bison, lex, etags, perl tests"
 else
 
+##  --  Plume ----------------------
+
+if test "$enable_plume" = "yes"; then
+   enable_scirun2="yes"
+   sci_required_qt="no"
+   BUILD_PLUME="yes"
+   PACKAGE_DIRS=$PACKAGE_DIRS" Packages/Plume"
+   # set the package dependent checks
+   SCI_SET_PACKAGE_CHECKS(Plume, $host)
+   package="$package Plume"
+else
+  BUILD_PLUME="no"
+fi
+AC_SUBST(BUILD_PLUME)
+
 ## test for bison. yacc is not sufficient as it has no -o option.
 ## Only need for SCIRun2 currently.
 AC_CHECK_PROG(YACC, bison, bison, nobison, $PATH /usr/bin)
@@ -1630,6 +1664,10 @@ if test -z "$thirdparty"; then
   # extra thirdparty code for rtrt
   rtrt_tp_version=1.0.0
   rtrt_tp_path=$_sci_tp_base/rtrt/Thirdparty/$rtrt_tp_version/$_sci_tp_subdir
+
+  # extra thirdparty code for plume
+  plume_tp_version=1.0.0
+  plume_tp_path=$_sci_tp_base/plume/Thirdparty/$plume_tp_version/$_sci_tp_subdir
 
   AC_MSG_RESULT(Using default thirdparty directory $sci_thirdparty_dir)
 fi
@@ -4508,7 +4546,87 @@ AC_SUBST(DEF_HYPRE)
 AC_SUBST(INC_HYPRE_H)
 AC_SUBST(HYPRE_LIB_FLAG)
 AC_SUBST(HYPRE_LIB_DIR_FLAG)
+
 sci_defs_files="$sci_defs_files include/sci_defs/hypre_testdefs.h"
+
+##  --  search for boost stuff  -------------------------------------------
+if test "$sci_required_boost" = "yes"; then
+  _sci_optional=required
+
+  if test "$with_boost" = ""; then
+    _sci_lib=/usr/local/lib/
+    _sci_inc="/usr/local/include"
+    _sci_optional=required
+  else 
+  if test "$with_boost" = "yes"; then
+    # --with-boost has been specified without a parameter.
+    _sci_lib=/usr/local/lib/
+    _sci_inc=/usr/local/include
+    _sci_optional=required
+  else 
+   if test "$with_boost"; then
+     #if --with-boost has been specified with a parameter, then use that parameter
+    _sci_lib="$with_boost/lib"
+    _sci_inc="$with_boost/include"
+    _sci_optional=specific
+   fi
+  fi
+  fi
+  
+  # Only looking for one .h file... assuming all the rest are in the same place.
+  SCI_TRY_LINK(BOOST,boost library,boost/program_options.hpp,$_sci_inc,boost_program_options-gcc-mt,$_sci_lib,,,$_sci_optional)
+
+  if test "$HAVE_BOOST" = "yes"; then
+     DEF_BOOST="#define HAVE_BOOST"
+     HAVE_BOOST="yes"
+  fi
+  
+  if test "$with_boost" && test ! "$DEF_BOOST"; then
+    echo
+    AC_MSG_ERROR(One or more of the boost components are missing.)
+    echo
+  fi
+fi # end sci_required_boost
+
+
+AC_SUBST(BOOST_LIB_FLAG)
+AC_SUBST(BOOST_LIB_DIR_FLAG)
+AC_SUBST(DEF_BOOST)
+AC_SUBST(INC_BOOST_H)
+
+sci_defs_files="$sci_defs_files include/sci_defs/boost_testdefs.h"
+
+##  --  search for loki stuff  -------------------------------------------
+_sci_lib=/usr/local/lib
+_sci_inc=/usr/local/include
+_sci_optional=optional
+
+if test "$with_loki" = "yes"; then
+  _sci_optional=required
+elif test "$with_log"; then
+  _sci_lib="$with_loki"
+  _sci_inc="$with_loki"
+  _sci_optional=specific
+fi
+
+SCI_TRY_LINK(LOKI,loki library,loki/Singleton.h,$_sci_inc,loki,$_sci_lib,,,$_sci_optional)
+
+if test "$HAVE_LOKI" = "yes"; then
+  DEF_LOKI="#define HAVE_LOKI 1"
+fi
+
+if test "$with_loki" && test ! "$DEF_LOKI"; then
+  echo
+  AC_MSG_ERROR(One or more of the Loki components is missing.)
+fi
+
+AC_SUBST(LOKI_LIB_FLAG)
+AC_SUBST(LOKI_LIB_DIR_FLAG)
+AC_SUBST(DEF_LOKI)
+AC_SUBST(INC_LOKI_H)
+
+sci_defs_files="$sci_defs_files include/sci_defs/loki_testdefs.h"
+
 
 ##  --  finis flags  ------------------------------------------------
 case $host in
