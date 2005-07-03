@@ -11,7 +11,7 @@ globalParams;
 
 switch (param.problemType)
 
-    case {'ProblemA','ProblemB'},
+    case {'ProblemA','ProblemB','quadratic'},
         g       = exactSolution(x);
 
     otherwise,

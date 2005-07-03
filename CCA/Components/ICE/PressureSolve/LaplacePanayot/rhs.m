@@ -11,13 +11,16 @@ globalParams;
 
 switch (param.problemType)
 
+    case 'quadratic',
+        f       = 2*(x{1}.*(1-x{1}) + x{2}.*(1-x{2}));
+
     case 'ProblemA',
         f       = 2*pi*pi*sin(pi*x{1}).*sin(pi*x{2});
 
     case 'ProblemB',
         K       = 1;
         x0      = [0.5 0.5];
-        sigma   = [0.25 0.25];
+        sigma   = [0.05 0.05];
         f       = -exp(-((x{1}-x0(1)).^2/sigma(1)^2 + (x{2}-x0(2)).^2/sigma(2)^2)) .* ( ...
             (4*((x{1}-x0(1))/sigma(1)).^2 - 2)/sigma(1)^2 + ...
             (4*((x{2}-x0(2))/sigma(2)).^2 - 2)/sigma(2)^2);
