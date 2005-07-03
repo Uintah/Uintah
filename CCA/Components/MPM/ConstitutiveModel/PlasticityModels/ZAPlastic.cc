@@ -145,12 +145,9 @@ ZAPlastic::computeFlowStress(const PlasticityState* state,
   double epdot = state->plasticStrainRate;
   double ep = state->plasticStrain;
   double T = state->temperature;
-  ASSERT(epdot > 0.0);
-  ASSERT(!(ep < 0.0));
-  ASSERT(T > 0.0);
   epdot = (epdot == 0.0) ? 1.0e-8 : epdot;
-  ep = (ep == 0.0) ? 1.0e-8 : ep;
-  T = (T == 0.0) ? 1.0e-8 : T;
+  ep = (ep < 0.0) ? 0.0 : ep;
+  T = (T < 0.0) ? 0.0 : T;
 
   double sigma_a = d_CM.c_0 + d_CM.K*pow(ep, d_CM.n);
   double alpha = d_CM.alpha_0 - d_CM.alpha_1*log(epdot);
@@ -182,10 +179,8 @@ ZAPlastic::computeEpdot(const PlasticityState* state ,
   double tau = state->yieldStress;
   double ep = state->plasticStrain;
   double T = state->temperature;
-  ASSERT(!(ep < 0.0));
-  ASSERT(T > 0.0);
-  ep = (ep == 0.0) ? 1.0e-8 : ep;
-  T = (T == 0.0) ? 1.0e-8 : T;
+  ep = (ep < 0.0) ? 0.0 : ep;
+  T = (T < 0.0) ? 0.0 : T;
 
   double sigma_a = d_CM.c_0 + d_CM.K*pow(ep, d_CM.n);
   double B0_sqrtEp = d_CM.B_0*sqrt(ep);
@@ -280,13 +275,9 @@ ZAPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
   double ep = state->plasticStrain;
   double epdot = state->plasticStrainRate;
   double T = state->temperature;
-  ASSERT(!(ep < 0.0));
-  ASSERT(epdot > 0.0);
-  ASSERT(T > 0.0);
-
   epdot = (epdot == 0.0) ? 1.0e-8 : epdot;
-  ep = (ep == 0.0) ? 1.0e-8 : ep;
-  T = (T == 0.0) ? 1.0e-8 : T;
+  ep = (ep < 0.0) ? 0.0 : ep;
+  T = (T < 0.0) ? 0.0 : T;
 
   double alpha = d_CM.alpha_0 - d_CM.alpha_1*log(epdot);
   double term1 = d_CM.K*d_CM.n*pow(ep,d_CM.n-1.0);
@@ -322,13 +313,9 @@ ZAPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
   double ep = state->plasticStrain;
   double epdot = state->plasticStrainRate;
   double T = state->temperature;
-  ASSERT(!(ep < 0.0));
-  ASSERT(epdot > 0.0);
-  ASSERT(T > 0.0);
-
   epdot = (epdot == 0.0) ? 1.0e-8 : epdot;
-  ep = (ep == 0.0) ? 1.0e-8 : ep;
-  T = (T == 0.0) ? 1.0e-8 : T;
+  ep = (ep < 0.0) ? 0.0 : ep;
+  T = (T < 0.0) ? 0.0 : T;
 
   double alpha = d_CM.alpha_0 - d_CM.alpha_1*log(epdot);
   double beta = d_CM.beta_0 - d_CM.beta_1*log(epdot);
@@ -347,13 +334,9 @@ ZAPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
   double ep = state->plasticStrain;
   double epdot = state->plasticStrainRate;
   double T = state->temperature;
-  ASSERT(!(ep < 0.0));
-  ASSERT(epdot > 0.0);
-  ASSERT(T > 0.0);
-
   epdot = (epdot == 0.0) ? 1.0e-8 : epdot;
-  ep = (ep == 0.0) ? 1.0e-8 : ep;
-  T = (T == 0.0) ? 1.0e-8 : T;
+  ep = (ep < 0.0) ? 0.0 : ep;
+  T = (T < 0.0) ? 0.0 : T;
 
   double alpha = d_CM.alpha_0 - d_CM.alpha_1*log(epdot);
   double beta = d_CM.beta_0 - d_CM.beta_1*log(epdot);
