@@ -19,31 +19,31 @@
 
   <DataArchiver>
     <filebase>test_corrug_plate.uda</filebase>
-    <outputTimestepInterval>2</outputTimestepInterval>
+    <outputInterval>0.0004</outputInterval>
     <save label = "KineticEnergy"/>
     <save label = "TotalMass"/>
     <save label = "StrainEnergy"/>
     <save label = "CenterOfMassPosition"/>
     <save label = "CenterOfMassVelocity"/>
+    <save label = "p.particleID"/>
     <save label = "p.x"/>
     <save label = "p.velocity"/>
     <save label = "p.mass"/>
     <save label = "p.volume"/>
     <save label = "p.stress"/>
     <save label = "p.deformationMeasure"/>
+    <save label = "p.plasticStrain"/>
     <!--
     <outputInitTimestep/>
     <save label = "p.strainRate"/>
-    <save label = "p.plasticStrain"/>
     <save label = "p.plasticTemp"/>
     <save label = "p.damage"/>
     <save label = "p.porosity"/>
     <save label = "g.mass"/>
     <save label = "g.volume"/>
     <save label = "g.stressFS"/>
-    <checkpoint cycle = "2" interval = "2.0e-6"/>
     -->
-    <checkpoint cycle = "2" timestepInterval = "15"/>
+    <checkpoint cycle = "2" interval = "0.0012"/>
   </DataArchiver>
 
   <MPM>
