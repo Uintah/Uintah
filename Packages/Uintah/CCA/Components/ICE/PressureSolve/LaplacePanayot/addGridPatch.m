@@ -35,6 +35,7 @@ P.parent                    = parentQ;
 P.children                  = [];
 P.offsetSub                 = -P.ilower+2;                      % Add to level-global cell index to get this-patch cell index. Lower left corner (a ghost cell) is (1,1) in patch indices
 P.deletedBoxes              = [];
+P.nbhrPatch                 = -ones(grid.dim,2);
 grid.level{k}.patch{q}      = P;
 if (k > 1)
     grid.level{k-1}.patch{parentQ}.children = [grid.level{k-1}.patch{q}.children parentQ];

@@ -125,15 +125,22 @@ for d = 1:grid.dim,
         if (param.verboseLevel >= 3)
             otherDim
         end
-        %=====================================================================
-        % Prepare a list of all coarse and fine cell indices at this face.
-        %=====================================================================
-        % Coarse face variables
+
         if (    (underLower(d) == QedgeDomain{1}(d)) | ...
                 (underLower(d) == QedgeDomain{2}(d)) )
             % This face is at the domain boundary, skip it
             continue;
         end
+
+        if (P.nbhrPatch(dim,(s+3)/2) > 0)
+            fprintf('Found nbhring patch for d=%d, s=%d\n',d,s);
+%            continue;
+        end
+            
+        %=====================================================================
+        % Prepare a list of all coarse and fine cell indices at this face.
+        %=====================================================================
+        % Coarse face variables        
         Qilower                 = underLower;
         Qiupper                 = underUpper;
         if (s == -1)
