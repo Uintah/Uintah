@@ -43,7 +43,7 @@
     <save label = "p.damage"/>
     <save label = "p.porosity"/>
     <save label = "p.temperature"/>
-    <checkpoint cycle = "2" interval = "0.01"/>
+    <checkpoint cycle = "2" interval = "1.2e-4"/>
   </DataArchiver>
 
   <MPM>
