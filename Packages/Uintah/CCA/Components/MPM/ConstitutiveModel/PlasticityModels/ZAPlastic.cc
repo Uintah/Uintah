@@ -276,7 +276,7 @@ ZAPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
   double epdot = state->plasticStrainRate;
   double T = state->temperature;
   epdot = (epdot == 0.0) ? 1.0e-8 : epdot;
-  ep = (ep < 0.0) ? 0.0 : ep;
+  ep = (ep <= 0.0) ? 1.0e-8 : ep;
   T = (T < 0.0) ? 0.0 : T;
 
   double alpha = d_CM.alpha_0 - d_CM.alpha_1*log(epdot);
