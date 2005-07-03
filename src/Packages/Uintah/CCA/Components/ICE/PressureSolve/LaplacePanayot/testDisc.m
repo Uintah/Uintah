@@ -14,7 +14,7 @@ globalParams;
 %=========================================================================
 param                       = [];
 
-param.problemType           = 'ProblemB';
+param.problemType           = 'ProblemB'; %'quadratic';
 param.outputDir             = 'ProblemA_1Level';
 
 param.twoLevel              = 1;
@@ -28,11 +28,12 @@ param.verboseLevel          = 0;
 %=========================================================================
 % Run discretization on a sequence of successively finer grids
 %=========================================================================
-numCellsRange               = 8;%2.^[3:1:6];
+numCellsRange               = 8;%2.^[3:1:7];
 success                     = mkdir('.',param.outputDir);
-errNorm                     = zeros(length(numCellsRange),3);
+errNorm                     = zeros(length(numCellsRange),4);
 
 for count = 1:length(numCellsRange)
+    pack;
     numCells = numCellsRange(count);
     fprintf('#### nCells = %d ####\n',numCells);
     %-------------------------------------------------------------------------
@@ -68,8 +69,21 @@ for count = 1:length(numCellsRange)
 
         if (param.twoLevel)
             [grid,k]            = addGridLevel(grid,'refineRatio',[2 2]);
+            % Cover central half of the domain
 %            [grid,q2,A,b,T,TI]  = addGridPatch(grid,k,resolution/2 + 1,3*resolution/2,q1,A,b,T,TI);              % Local patch around the domain center
-            [grid,q2,A,b,T,TI]  = addGridPatch(grid,k,3*resolution/4 + 1,5*resolution/4,q1,A,b,T,TI);              % Local patch around the domain center
+
+% Cover central quarter of the domain
+%            [grid,q2,A,b,T,TI]  = addGridPatch(grid,k,3*resolution/4 + 1,5*resolution/4,q1,A,b,T,TI);              % Local patch around the domain center
+
+            % Two fine patch next to each other
+            ilower = 3*resolution/4 + 1;
+            iupper = 5*resolution/4;
+            iupper(1) = resolution(1);
+            [grid,q2,A,b,T,TI]  = addGridPatch(grid,k,ilower,iupper,q1,A,b,T,TI);              % Local patch around the domain center
+            ilower = 3*resolution/4 + 1;
+            iupper = 5*resolution/4;
+            ilower(1) = resolution(1)+1;
+            [grid,q3,A,b,T,TI]  = addGridPatch(grid,k,ilower,iupper,q1,A,b,T,TI);              % Local patch around the domain center
         end
 
         tCPU        = cputime - tStartCPU;
@@ -139,8 +153,9 @@ for count = 1:length(numCellsRange)
             normAMR(grid,err,'L2') ...
             normAMR(grid,err,'max') ...
             normAMR(grid,err,'H1') ...
+            normAMR(grid,err,'H1max') ...
             ];
-        fprintf('L2=%.3e  max=%.3e  H1=%.3e\n',errNorm(count,:));
+        fprintf('L2=%.3e  max=%.3e  H1=%.3e  H1max=%.3e\n',errNorm(count,:));
 
         for k = 1:grid.numLevels,
             level = grid.level{k};

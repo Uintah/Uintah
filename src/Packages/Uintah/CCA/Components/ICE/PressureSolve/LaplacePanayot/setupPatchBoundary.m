@@ -1,4 +1,4 @@
-function [A,b,indBC] = setupPatchBC(grid,k,q,alpha,A,b)
+function [A,b,indBC] = setupPatchBoundary(grid,k,q,alpha,A,b)
 %SETUPPATCCHBC  Set boundary conditions for a patch.
 %   [A,B,INDEDGE] = SETUPPATCHPATCH(GRID,K,Q,D,S,ALPHA,A,B) updates the LHS
 %   matrix A and the RHS matrix B, adding to them all the equations at
@@ -15,7 +15,7 @@ function [A,b,indBC] = setupPatchBC(grid,k,q,alpha,A,b)
 globalParams;
 
 if (P.verboseLevel >= 1)
-    fprintf('--- setupPatchBC(k = %d, q = %d) ---\n',k,q);
+    fprintf('--- setupPatchBoundary(k = %d, q = %d) ---\n',k,q);
 end
 
 %=====================================================================
