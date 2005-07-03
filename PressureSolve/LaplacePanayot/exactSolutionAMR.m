@@ -138,4 +138,4 @@ end
 
 % Affect zero values at unused gridpoints
 temp    = AMRToSparse(u,grid,T,1);
-u       = SparseToAMR(temp,grid,TI,1);
+u       = sparseToAMR(temp,grid,TI,1);

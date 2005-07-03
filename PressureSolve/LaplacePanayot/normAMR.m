@@ -81,7 +81,7 @@ for k = 1:grid.numLevels,
                 result = result + sum(volume(:).*abs(uinterior(:)).^2);
             case 'max',
                 result = max(result,max(abs(uinterior(:))));
-            case 'H1',
+            case {'H1','H1max'},
                 for dim = 1:grid.dim,                                                       % Loop over dimensions of patch
                     for side = [-1 1]                                                       % side=-1 (left) and side=+1 (right) directions in dimension d
                         % Direction vector ("normal") from cell to its nbhr
@@ -93,7 +93,7 @@ for k = 1:grid.numLevels,
                             nbhr{d}      = [P.ilower(d):P.iupper(d)] + nbhrNormal(d) + P.offsetSub(d);     % Patch-based cell indices including ghosts
                         end
                         unbhr           = u(nbhr{:});
-                        
+
                         % Add fluxes in dimension=dim, direction=side to list of non-zeros Alist and to b
                         sideNum         = (side+3)/2;                                       % side=-1 ==> 1; side=1 ==> 2
                         fluxNum         = 2*dim+sideNum-2;
@@ -102,8 +102,15 @@ for k = 1:grid.numLevels,
                         thisFar         = far{fluxNum};
 
                         % Contribution of flux to interior equation at indBox
-                        result = result + ...
-                            sum(volume(:).*abs(diffusion{fluxNum}(:).*(uinterior(:) - unbhr(:))).^2);
+                        switch (type)
+                            case 'H1',
+                                result = result + ...
+                                    0.5*sum(volume(:).*abs(diffusion{fluxNum}(:).*(uinterior(:) - unbhr(:))).^2);
+                            case 'H1max',
+                                result = max(result,...
+                                0.5*max(abs(diffusion{fluxNum}(:).*(uinterior(:) - unbhr(:)))));
+                        end
+
                     end
                 end
         end
@@ -112,7 +119,7 @@ end
 
 % Scale result
 switch (type)
-    case {'L1','max'},
+    case {'L1','max','H1max'},
     case {'L2','H1'},
         result = sqrt(result);
     case 'max',

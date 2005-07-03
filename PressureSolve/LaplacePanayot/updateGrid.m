@@ -20,7 +20,7 @@ for k = 1:grid.numLevels,
         % Update base index
         P.offsetInd = index;
 
-        % Create cell index map
+        % Create cell index map (P.cellIndex)
         sub         = cell(grid.dim,1);
         for d = 1:grid.dim
             sub{d}  = [P.ilower(d)-1:P.iupper(d)+1] + P.offsetSub(d);
@@ -31,6 +31,31 @@ for k = 1:grid.numLevels,
 
         grid.level{k}.patch{q} = P;
         index       = index + prod(P.size);
+
+        % Create list of neighbouring patches of this patch
+        for r = 1:grid.level{k}.numPatches,
+            R = grid.level{k}.patch{r};
+            for d = 1:grid.dim,
+                if (P.ilower(d) == R.iupper(d))
+                    for other = setdiff(1:grid.dim,d)
+                        if (    max(P.ilower(other),R.ilower(other)) <= ...
+                                min(P.iupper(other),R.iupper(other)))
+                            P.nbhrPatch(dim,1) = r;
+                            R.nbhrPatch(dim,2) = q;
+                        end
+                    end
+                end
+                if (P.iupper(d) == R.ilower(d))
+                    for other = setdiff(1:grid.dim,d)
+                        if (    max(P.ilower(other),R.ilower(other)) <= ...
+                                min(P.iupper(other),R.iupper(other)))
+                            P.nbhrPatch(dim,2) = r;
+                            R.nbhrPatch(dim,1) = q;
+                        end
+                    end
+                end
+            end
+        end
     end
 end
 grid.totalVars      = index;

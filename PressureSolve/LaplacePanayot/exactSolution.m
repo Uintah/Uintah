@@ -1,3 +1,4 @@
+
 function u = exactSolution(x)
 %EXACTSOLUTION  Exact solution for test problems.
 %   U = EXACTSOLUTION(X) returns the exact solution evaluated at the
@@ -13,13 +14,16 @@ globalParams;
 
 switch (param.problemType)
 
+    case 'quadratic',
+        u       = x{1}.*(1-x{1}).*x{2}.*(1-x{2});
+
     case 'ProblemA',
         u       = sin(pi*x{1}).*sin(pi*x{2});
 
     case 'ProblemB',
         K       = 1;
         x0      = [0.5 0.5];
-        sigma   = [0.25 0.25];
+        sigma   = [0.05 0.05];
         u       = exp(-((x{1}-x0(1)).^2/sigma(1)^2 + (x{2}-x0(2)).^2/sigma(2)^2));
 
     otherwise,
