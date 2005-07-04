@@ -38,10 +38,10 @@ MTSPlastic::MTSPlastic(ProblemSpecP& ps)
   ps->require("sigma_es0",d_CM.sigma_es0);
 
   // Initialize internal variable labels for evolution
-  pMTSLabel = VarLabel::create("p.mtStress",
-        ParticleVariable<double>::getTypeDescription());
-  pMTSLabel_preReloc = VarLabel::create("p.mtStress+",
-        ParticleVariable<double>::getTypeDescription());
+  //pMTSLabel = VarLabel::create("p.mtStress",
+  //      ParticleVariable<double>::getTypeDescription());
+  //pMTSLabel_preReloc = VarLabel::create("p.mtStress+",
+  //      ParticleVariable<double>::getTypeDescription());
 }
          
 MTSPlastic::MTSPlastic(const MTSPlastic* cm)
@@ -71,16 +71,16 @@ MTSPlastic::MTSPlastic(const MTSPlastic* cm)
   d_CM.sigma_es0 = cm->d_CM.sigma_es0;
 
   // Initialize internal variable labels for evolution
-  pMTSLabel = VarLabel::create("p.mtStress",
-        ParticleVariable<double>::getTypeDescription());
-  pMTSLabel_preReloc = VarLabel::create("p.mtStress+",
-        ParticleVariable<double>::getTypeDescription());
+  //pMTSLabel = VarLabel::create("p.mtStress",
+  //      ParticleVariable<double>::getTypeDescription());
+  //pMTSLabel_preReloc = VarLabel::create("p.mtStress+",
+  //      ParticleVariable<double>::getTypeDescription());
 }
          
 MTSPlastic::~MTSPlastic()
 {
-  VarLabel::destroy(pMTSLabel);
-  VarLabel::destroy(pMTSLabel_preReloc);
+  //VarLabel::destroy(pMTSLabel);
+  //VarLabel::destroy(pMTSLabel_preReloc);
 }
          
 void 
@@ -88,8 +88,8 @@ MTSPlastic::addInitialComputesAndRequires(Task* task,
                                           const MPMMaterial* matl,
                                           const PatchSet*) const
 {
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(pMTSLabel, matlset);
+  //const MaterialSubset* matlset = matl->thisMaterial();
+  //task->computes(pMTSLabel, matlset);
 }
 
 void 
@@ -97,9 +97,9 @@ MTSPlastic::addComputesAndRequires(Task* task,
                                    const MPMMaterial* matl,
                                    const PatchSet*) const
 {
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW, pMTSLabel, matlset,Ghost::None);
-  task->computes(pMTSLabel_preReloc, matlset);
+  //const MaterialSubset* matlset = matl->thisMaterial();
+  //task->requires(Task::OldDW, pMTSLabel, matlset,Ghost::None);
+  //task->computes(pMTSLabel_preReloc, matlset);
 }
 
 void 
@@ -108,16 +108,16 @@ MTSPlastic::addComputesAndRequires(Task* task,
                                    const PatchSet*,
                                    bool ) const
 {
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::ParentOldDW, pMTSLabel, matlset,Ghost::None);
+  //const MaterialSubset* matlset = matl->thisMaterial();
+  //task->requires(Task::ParentOldDW, pMTSLabel, matlset,Ghost::None);
 }
 
 void 
 MTSPlastic::addParticleState(std::vector<const VarLabel*>& from,
                              std::vector<const VarLabel*>& to)
 {
-  from.push_back(pMTSLabel);
-  to.push_back(pMTSLabel_preReloc);
+  //from.push_back(pMTSLabel);
+  //to.push_back(pMTSLabel_preReloc);
 }
 
 void 
@@ -126,9 +126,8 @@ MTSPlastic::allocateCMDataAddRequires(Task* task,
                                       const PatchSet* ,
                                       MPMLabel* ) const
 {
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW, pMTSLabel_preReloc, matlset, Ghost::None);
-  //task->requires(Task::OldDW, pMTSLabel, matlset, Ghost::None);
+  //const MaterialSubset* matlset = matl->thisMaterial();
+  //task->requires(Task::NewDW, pMTSLabel_preReloc, matlset, Ghost::None);
 }
 
 void 
@@ -142,20 +141,19 @@ MTSPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
  
-  ParticleVariable<double> pMTS;
-  constParticleVariable<double> o_MTS;
+  //ParticleVariable<double> pMTS;
+  //constParticleVariable<double> o_MTS;
 
-  new_dw->allocateTemporary(pMTS,addset);
+  //new_dw->allocateTemporary(pMTS,addset);
 
-  new_dw->get(o_MTS,pMTSLabel_preReloc,delset);
-  //old_dw->get(o_MTS,pMTSLabel,delset);
+  //new_dw->get(o_MTS,pMTSLabel_preReloc,delset);
 
-  ParticleSubset::iterator o,n = addset->begin();
-  for(o = delset->begin(); o != delset->end(); o++, n++) {
-    pMTS[*n] = o_MTS[*o];
-  }
+  //ParticleSubset::iterator o,n = addset->begin();
+  //for(o = delset->begin(); o != delset->end(); o++, n++) {
+  //  pMTS[*n] = o_MTS[*o];
+  //}
 
-  (*newState)[pMTSLabel]=pMTS.clone();
+  //(*newState)[pMTSLabel]=pMTS.clone();
 
 }
 
@@ -165,48 +163,48 @@ void
 MTSPlastic::initializeInternalVars(ParticleSubset* pset,
                                    DataWarehouse* new_dw)
 {
-  new_dw->allocateAndPut(pMTS_new, pMTSLabel, pset);
-  ParticleSubset::iterator iter = pset->begin();
-  for(;iter != pset->end(); iter++) {
-    pMTS_new[*iter] = 0.0;
-  }
+  //new_dw->allocateAndPut(pMTS_new, pMTSLabel, pset);
+  //ParticleSubset::iterator iter = pset->begin();
+  //for(;iter != pset->end(); iter++) {
+  //  pMTS_new[*iter] = 0.0;
+  //}
 }
 
 void 
 MTSPlastic::getInternalVars(ParticleSubset* pset,
                             DataWarehouse* old_dw) 
 {
-  old_dw->get(pMTS, pMTSLabel, pset);
+  //old_dw->get(pMTS, pMTSLabel, pset);
 }
 
 void 
 MTSPlastic::allocateAndPutInternalVars(ParticleSubset* pset,
                                        DataWarehouse* new_dw) 
 {
-  new_dw->allocateAndPut(pMTS_new, pMTSLabel_preReloc, pset);
+  //new_dw->allocateAndPut(pMTS_new, pMTSLabel_preReloc, pset);
 }
 
 void
 MTSPlastic::allocateAndPutRigid(ParticleSubset* pset,
                                 DataWarehouse* new_dw)
 {
-  new_dw->allocateAndPut(pMTS_new, pMTSLabel_preReloc, pset);
-  ParticleSubset::iterator iter = pset->begin();
-  for(;iter != pset->end(); iter++){
-     pMTS_new[*iter] = 0.0;
-  }
+  //new_dw->allocateAndPut(pMTS_new, pMTSLabel_preReloc, pset);
+  //ParticleSubset::iterator iter = pset->begin();
+  //for(;iter != pset->end(); iter++){
+  //   pMTS_new[*iter] = 0.0;
+  //}
 }
 
 void
 MTSPlastic::updateElastic(const particleIndex idx)
 {
-  pMTS_new[idx] = pMTS[idx];
+  //pMTS_new[idx] = pMTS[idx];
 }
 
 void
 MTSPlastic::updatePlastic(const particleIndex idx, const double& )
 {
-  pMTS_new[idx] = pMTS_new[idx];
+  //pMTS_new[idx] = pMTS_new[idx];
 }
 
 double 
@@ -257,14 +255,14 @@ MTSPlastic::computeFlowStress(const PlasticityState* state,
   double powees = pow(edot/d_CM.edot_es0, CCes);
   double sigma_es = d_CM.sigma_es0*powees;
 
-  // Compute sigma_e (incremental)
-  //double sigma_e_old = pMTS[idx];
-  //double delEps = edot*delT;
-
   // Compute sigma_e (total)
   double sigma_e_old = 0.0;
   double delEps = state->plasticStrain;
   double sigma_e = computeSigma_e(theta_0, sigma_es, sigma_e_old, delEps, 100);
+
+  // Compute sigma_e (incremental)
+  //double sigma_e_old = pMTS[idx];
+  //double delEps = edot*delT;
 
   // Calculate X and FX
   //double X = pMTS[idx]/sigma_es;
@@ -275,7 +273,7 @@ MTSPlastic::computeFlowStress(const PlasticityState* state,
 
   //double sigma_e = pMTS[idx] + delEps*theta; 
   //sigma_e = (sigma_e > sigma_es) ? sigma_es : sigma_e;
-  pMTS_new[idx] = sigma_e;
+  //pMTS_new[idx] = sigma_e;
 
   // Calculate the flow stress
   double sigma = d_CM.sigma_a + (S_i*d_CM.sigma_i + S_e*sigma_e)*mu_mu_0;
@@ -321,7 +319,24 @@ MTSPlastic::computeEpdot(const PlasticityState* state,
   double tau = state->yieldStress;
   double T = state->temperature;
   double mu = state->shearModulus;
-  double sigma_e = pMTS[idx];
+
+  // Calculate theta_0
+  double edot = state->plasticStrainRate;
+  if (edot == 0.0) edot = 1.0e-10;
+  double theta_0 = d_CM.a_0 + d_CM.a_1*log(edot) + d_CM.a_2*sqrt(edot)
+    - d_CM.a_3*T;
+
+  // Calculate sigma_es
+  double CC = d_CM.koverbcubed*T/mu;
+  double CCes = CC/d_CM.g_0es;
+  double powees = pow(edot/d_CM.edot_es0, CCes);
+  double sigma_es = d_CM.sigma_es0*powees;
+
+  // Compute sigma_e (total)
+  double sigma_e_old = 0.0;
+  double delEps = state->plasticStrain;
+  double sigma_e = computeSigma_e(theta_0, sigma_es, sigma_e_old, delEps, 100);
+  //double sigma_e = pMTS[idx];
 
   // Do Newton iteration
   double epdot = 1.0;
@@ -434,8 +449,14 @@ MTSPlastic::computeTangentModulus(const Matrix3& stress,
   double logees = log(edot/d_CM.edot_es0);
   double sigma_es = d_CM.sigma_es0*exp(CCes*logees);
 
+  // Compute sigma_e (total)
+  double sigma_e_old = 0.0;
+  double delEps = state->plasticStrain;
+  double sigma_e = computeSigma_e(theta_0, sigma_es, sigma_e_old, delEps, 100);
+
   // Calculate X and FX
-  double X = pMTS_new[idx]/sigma_es;
+  //double X = pMTS_new[idx]/sigma_es;
+  double X = sigma_e/sigma_es;
   double FX = tanh(d_CM.alpha*X)/tanh(d_CM.alpha);
 
   // Calculate theta
@@ -517,8 +538,14 @@ MTSPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
   double powees = pow(edot/d_CM.edot_es0, CCes);
   double sigma_es = d_CM.sigma_es0*powees;
 
+  // Compute sigma_e (total)
+  double sigma_e_old = 0.0;
+  double delEps = state->plasticStrain;
+  double sigma_e = computeSigma_e(theta_0, sigma_es, sigma_e_old, delEps, 100);
+
   // Calculate X and FX
-  double X = pMTS_new[idx]/sigma_es;
+  //double X = pMTS_new[idx]/sigma_es;
+  double X = sigma_e/sigma_es;
   double FX = tanh(d_CM.alpha*X)/tanh(d_CM.alpha);
 
   // Calculate theta
@@ -567,14 +594,28 @@ MTSPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
   double T = state->temperature;
   double mu = state->shearModulus;
 
-  double sigma_e = pMTS_new[idx];
-
   // Calculate exp(T0/T)
   double expT0T = exp(d_CM.T_0/T);
 
   // Calculate mu/mu_0 and CC
   double mu_mu_0 = mu/d_CM.mu_0;
   double CC = d_CM.koverbcubed/mu;
+
+  // Calculate theta_0
+  double theta_0 = d_CM.a_0 + d_CM.a_1*log(edot) + d_CM.a_2*sqrt(edot)
+    - d_CM.a_3*T;
+
+  // Calculate sigma_es
+  double CCes = CC/d_CM.g_0es;
+  double powees = pow(edot/d_CM.edot_es0, CCes);
+  double sigma_es = d_CM.sigma_es0*powees;
+
+  // Compute sigma_e (total)
+  double sigma_e_old = 0.0;
+  double delEps = state->plasticStrain;
+  double sigma_e = computeSigma_e(theta_0, sigma_es, sigma_e_old, delEps, 100);
+
+  //double sigma_e = pMTS_new[idx];
 
   // Materials with (sigma_i != 0) are treated specially
   double numer1i = 0.0;
@@ -658,7 +699,21 @@ MTSPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
   double mu_mu_0 = mu/d_CM.mu_0;
   double CC = d_CM.koverbcubed*T/mu;
 
-  double sigma_e = pMTS_new[idx];
+  // Calculate theta_0
+  double theta_0 = d_CM.a_0 + d_CM.a_1*log(edot) + d_CM.a_2*sqrt(edot)
+    - d_CM.a_3*T;
+
+  // Calculate sigma_es
+  double CCes = CC/d_CM.g_0es;
+  double powees = pow(edot/d_CM.edot_es0, CCes);
+  double sigma_es = d_CM.sigma_es0*powees;
+
+  // Compute sigma_e (total)
+  double sigma_e_old = 0.0;
+  double delEps = state->plasticStrain;
+  double sigma_e = computeSigma_e(theta_0, sigma_es, sigma_e_old, delEps, 100);
+
+  //double sigma_e = pMTS_new[idx];
 
   // Materials with (sigma_i != 0) are treated specially
   double ratioi = 0.0;
