@@ -136,8 +136,8 @@ namespace Uintah {
     constParticleVariable<double> pMTS;
     ParticleVariable<double> pMTS_new;
 
-    const VarLabel* pMTSLabel; // For MTS model
-    const VarLabel* pMTSLabel_preReloc; // For MTS model
+    //const VarLabel* pMTSLabel; // For MTS model
+    //const VarLabel* pMTSLabel_preReloc; // For MTS model
 
   private:
 
