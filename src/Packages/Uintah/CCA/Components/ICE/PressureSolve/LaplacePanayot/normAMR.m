@@ -108,7 +108,7 @@ for k = 1:grid.numLevels,
                                     0.5*sum(volume(:).*abs(diffusion{fluxNum}(:).*(uinterior(:) - unbhr(:))).^2);
                             case 'H1max',
                                 result = max(result,...
-                                0.5*max(abs(diffusion{fluxNum}(:).*(uinterior(:) - unbhr(:)))));
+                                max(abs(diffusion{fluxNum}(:).*(uinterior(:) - unbhr(:)))));
                         end
 
                     end

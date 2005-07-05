@@ -34,27 +34,32 @@ for k = 1:grid.numLevels,
 
         % Create list of neighbouring patches of this patch
         for r = 1:grid.level{k}.numPatches,
+            if (q == r)
+                continue;
+            end
             R = grid.level{k}.patch{r};
             for d = 1:grid.dim,
-                if (P.ilower(d) == R.iupper(d))
+                if (P.ilower(d) == R.iupper(d)+1)
                     for other = setdiff(1:grid.dim,d)
                         if (    max(P.ilower(other),R.ilower(other)) <= ...
                                 min(P.iupper(other),R.iupper(other)))
-                            P.nbhrPatch(dim,1) = r;
-                            R.nbhrPatch(dim,2) = q;
+                            P.nbhrPatch(d,1) = r;
+                            R.nbhrPatch(d,2) = q;
                         end
                     end
                 end
-                if (P.iupper(d) == R.ilower(d))
+                if (P.iupper(d) == R.ilower(d)-1)
                     for other = setdiff(1:grid.dim,d)
                         if (    max(P.ilower(other),R.ilower(other)) <= ...
                                 min(P.iupper(other),R.iupper(other)))
-                            P.nbhrPatch(dim,2) = r;
-                            R.nbhrPatch(dim,1) = q;
+                            P.nbhrPatch(d,2) = r;
+                            R.nbhrPatch(d,1) = q;
                         end
                     end
                 end
             end
+            grid.level{k}.patch{q} = P;
+            grid.level{k}.patch{r} = R;
         end
     end
 end

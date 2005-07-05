@@ -1,4 +1,4 @@
-function [indCell,range,matRange] = indexBox(P,ilower,iupper,type)
+function [indCell,range,matRange] = indexBox(P,ilower,iupper,ind)
 %INDEXBOX  Index of a box of cells.
 %   [INDCELL,R,M] = INDEXBOX(P,ILOWER,IUPPER,TYPE) returns the cell indices of the
 %   D-dimensional box [ILOWER(1):IUPPER(1)] x ... x [ILOWER(D),IUPPER(D)]
@@ -7,7 +7,9 @@ function [indCell,range,matRange] = indexBox(P,ilower,iupper,type)
 %
 %   See also: INDEXNBHR, SETPATCHINTERIOR.
 
-ind                 = P.cellIndex;                                          % Global indices of patch cells
+if (nargin < 4)
+    ind                 = P.cellIndex;                                          % Global indices of patch cells
+end
 numDims             = length(size(ind));
 
 %=====================================================================

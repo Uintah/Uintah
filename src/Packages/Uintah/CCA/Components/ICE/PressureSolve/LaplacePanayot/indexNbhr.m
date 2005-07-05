@@ -1,4 +1,4 @@
-function indNbhr = indexNbhr(P,indCell,n)
+function indNbhr = indexNbhr(P,indCell,n,ind)
 %INDEXNBHR  Index of neighbouring cells.
 %   INDNBHR = INDEXNBHR(P,INDCELL,N) returns the cell indices of the
 %   neighbours of indices INDCELL in patch P, in the normal direction N.
@@ -6,7 +6,9 @@ function indNbhr = indexNbhr(P,indCell,n)
 %
 %   See also: INDEXBOX, SETPATCHINTERIOR.
 
-ind                 = P.cellIndex;                                          % Global indices of patch cells
+if (nargin < 4)
+    ind                 = P.cellIndex;                                          % Global indices of patch cells
+end
 numDims             = length(size(ind));
 
 %=====================================================================
