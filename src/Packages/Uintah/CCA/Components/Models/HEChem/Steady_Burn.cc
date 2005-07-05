@@ -343,7 +343,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
       }
       */
       
-      if( (MaxMass-MinMass)/MaxMass>0.4 && (MaxMass-MinMass)/MaxMass<1.0 && MaxMass>d_TINY_RHO ){//****/&& PartFlag[c]>0 ){ 
+      if( (MaxMass-MinMass)/MaxMass>0.4 && (MaxMass-MinMass)/MaxMass<1.0 && MaxMass>d_TINY_RHO && PartFlag[c]>0 ){ 
 	/* near interface and containing particles */
 	burning = 0;
 	for(int i = -1; i<=1; i++){
