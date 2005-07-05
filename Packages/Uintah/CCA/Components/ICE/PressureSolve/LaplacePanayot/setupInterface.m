@@ -129,14 +129,10 @@ for d = 1:grid.dim,
         if (    (underLower(d) == QedgeDomain{1}(d)) | ...
                 (underLower(d) == QedgeDomain{2}(d)) )
             % This face is at the domain boundary, skip it
+            fprintf('Skipping face near domain boundary\n');
             continue;
         end
-
-        if (P.nbhrPatch(dim,(s+3)/2) > 0)
-            fprintf('Found nbhring patch for d=%d, s=%d\n',d,s);
-%            continue;
-        end
-            
+           
         %=====================================================================
         % Prepare a list of all coarse and fine cell indices at this face.
         %=====================================================================
@@ -164,6 +160,29 @@ for d = 1:grid.dim,
         boxSize                 = iupper-ilower+1;
         [indFine,fine,matFine]  = indexBox(P,ilower,iupper);
 
+        r                       = P.nbhrPatch(d,(s+3)/2);
+        if (r > 0)
+            fprintf('Found nbhring patch r=%d for d=%d, s=%d\n',r,d,s);
+            indGhost    = indexNbhr(P,indFine,-nbhrNormal);
+            flux        = A(indFine,indGhost);
+            % Ghost vars at fine patch/fine patch interface
+            % are already fluxes (see setupPatchInterior, refer to (r > 0)
+            % condition).
+            if (~isempty(thisNear))
+                Alist = [Alist; ...                                                 % BC vars (= nbhr vars) are fluxes
+                    [indGhost   indBC                -flux]; ...
+                    [indGhost   indBox(thisNear)     -flux] ...
+                    ];
+                Tlist = [Tlist; ...                                                 % BC vars (= nbhr vars) are fluxes
+                    [indBC   indBC                   repmat(1.0,size(indBC))]; ...
+                    [indBC   indBox(thisNear)        repmat(-1.0,size(indBC))] ...
+                    ];
+                indAll = union(indAll,indBC);
+                indTransformed = union(indTransformed,indBC);
+                continue;
+            end
+        end
+        
         %=====================================================================
         % Compute interpolation stencil of "ghost mirror" points m_i.
         %=====================================================================
