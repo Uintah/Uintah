@@ -28,4 +28,3 @@ SUBDIRS := \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
-# include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
