@@ -54,6 +54,9 @@ if (param.verboseLevel >= 3)
     ilower
     iupper
 end
+edgePatch               = cell(2,1);                                % Domain edges
+edgePatch{1}            = ilower + P.offsetSub;                     % First patch cell - next to left domain boundary - patch-based sub
+edgePatch{2}            = iupper + P.offsetSub;                     % Last patch cell - next to right domain boundary - patch-based sub
 [indBox,box,matBox]     = indexBox(P,ilower,iupper);                % Indices whose equations are created and added to Alist below
 x                       = cell(grid.dim,1);
 for dim = 1:grid.dim,
@@ -78,9 +81,20 @@ for dim = 1:grid.dim,                                                       % Lo
         sideNum                 = (side+3)/2;                               % side=-1 ==> 1; side=1 ==> 2
         fluxNum                 = 2*dim+sideNum-2;
         diffLength{fluxNum}     = h(dim)*ones(boxSize);                     % Standard FD is over distance h        
-        % Adjust distances for FD near domain boundaries
+
+        % Adjust distances for FD near domain boundaries and fine
+        % patch/fine patch boundaries
+        r                       = P.nbhrPatch(dim,(side+3)/2);
+        if (r > 0)
+            fprintf('Found nbhring patch r=%d for d=%d, s=%d\n',r,d,s);
+        end
+        
         nearBoundary            = cell(1,grid.dim);
-        [nearBoundary{:}] = find(matBox{dim} == edgeDomain{sideNum}(dim));  % Interior cell subs near DOMAIN boundary
+        [nearBoundary{:}]       = find(...
+            (matBox{dim} == edgeDomain{sideNum}(dim)) | ...
+            ((r > 0) & (matBox{dim} == edgePatch{sideNum}(dim))) ...
+            );  % Interior cell subs near DOMAIN boundary
+
         near{fluxNum}   = find(matBox{dim} == edgeDomain{sideNum}(dim));    % Interior cell indices near DOMAIN boundary (actually Dirichlet boundaries only)
         far{fluxNum}    = find(~(matBox{dim} == edgeDomain{sideNum}(dim))); % The rest of the cells
         diffLength{fluxNum}(nearBoundary{:}) = 0.5*h(dim);                  % Twice smaller distance in this direction
