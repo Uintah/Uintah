@@ -53,5 +53,6 @@ grid.level{k}.domainSize    = grid.domainSize;
 grid.level{k}.minCell       = ones(1,grid.dim);
 grid.level{k}.maxCell       = grid.domainSize./grid.level{k}.h;
 
-grid.level{k}.patch = cell(grid.maxPatches,1);
-grid.level{k}.numPatches = 0;
+grid.level{k}.patch         = cell(grid.maxPatches,1);
+grid.level{k}.numPatches    = 0;
+grid.level{k}.indDel        = [];

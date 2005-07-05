@@ -35,7 +35,7 @@ for k = 1:grid.numLevels,
             ]);
         hold on;
     end
-    set(gcf,'position',[488   233   850   850]);
+    %set(gcf,'position',[488   233   850   850]);
 
     for q = 1:grid.level{k}.numPatches,
         P = grid.level{k}.patch{q};
