@@ -101,7 +101,7 @@ WARNING
      virtual void addMaterial(const ProblemSpecP& params, GridP& grid,
                               SimulationStateP& state);
 
-     virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
+     virtual void scheduleSwitchTest(const LevelP& /*level*/, SchedulerP& /*sched*/)
        {};
 
      virtual void addToTimestepXML(ProblemSpecP&) {};
