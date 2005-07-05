@@ -9,6 +9,7 @@ UNUSED = [ ("4disks2matsv", "4disks_2d.2matsv.ups", "", 4, "Linux"), \
 TESTS = [   ("4disks1mat", "4disks_2d.1mat.ups", "", 1, "None"), \
 	    ("billet.static", "billet.static.ups", "", 1.1, "ALL"), \
 	    ("adiCuJC01s296K", "adiCuJC01s296K.ups", "", 1, "ALL"), \
+	    ("adiCuMTS01s296K", "adiCuMTS01s296K.ups", "", 1, "ALL"), \
 	    ("adiCuPTW01s296K", "adiCuPTW01s296K.ups", "", 1, "ALL"), \
 	    ("adiCuSCG01s296K", "adiCuSCG01s296K.ups", "", 1, "ALL"), \
 	    ("adiCuZA01s296K", "adiCuZA01s296K.ups", "", 1, "ALL"), \
