@@ -1,8 +1,8 @@
 #__________________________________
 #   Move data to a central location
 #__________________________________
-!../inputs/ICE/gnuplotScripts/combinePatches
-!cp ../inputs/ICE/gnuplotScripts/test2.dat /tmp/exactSolution
+!../inputs/ICE/Scripts/combinePatches
+!cp ../inputs/ICE/Scripts/test2.dat /tmp/exactSolution
 !cp BOT_explicit_Pressure/215/L-0/patch_combined/Press_CC /tmp/.
 !cp BOT_Advection_after_BC/215/L-0/patch_combined/Mat_0/Temp_CC /tmp/.
 !cp BOT_Advection_after_BC/215/L-0/patch_combined/Mat_0/X_vel_CC /tmp/.
