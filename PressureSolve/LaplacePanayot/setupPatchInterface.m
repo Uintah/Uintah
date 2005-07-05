@@ -1,5 +1,5 @@
-function [A,b,T,Alist,Tlist] = setupInterface(grid,k,q,A,b,T,reallyUpdate)
-%SETUPINTERFACE  Set the discrete operator at coarse-fine interface.
+function [A,b,T,Alist,Tlist,indDel] = setupPatchInterface(grid,k,q,A,b,T,reallyUpdate)
+%SETUPPATCHINTERFACE  Set the discrete operator at coarse-fine interface.
 %   [A,B] = SETUPINTERFACE(GRID,K,Q,D,S,A,B) updates the LHS
 %   matrix A and the RHS matrix B, adding to them all the equations at
 %   coarse-fine interface on the coarse side (subtracting the original
@@ -45,6 +45,9 @@ if (P.parent < 0)                                                 % Base patch a
     if (param.verboseLevel >= 2)
         fprintf('No parent patch\n');
     end
+    Alist = [];
+    Tlist = [];
+    indDel = [];
     return;
 end
 r                           = level.refRatio;                     % Refinement ratio H./h (H=coarse meshsize)
@@ -80,6 +83,9 @@ if (reallyUpdate)
     T(indDel,:)             = 0.0;
     T(:,indDel)             = 0.0;
 end
+if (param.verboseLevel >= 2)
+    fprintf('# unused deleted gridpoints at parent patch = %d\n',length(indDel));   
+end
 if (param.verboseLevel >= 3)
     indDel
     A(indDel,:)
@@ -87,22 +93,24 @@ end
 
 % Delete remaining connections from outside the deleted box (indOut) to the
 % deleted box (indDel).
-[temp1,temp2,temp3,Alist] = setupPatchInterior(grid,k-1,P.parent,A,b,T,underLower,underUpper,0);
-in2out              = Alist(~ismember(Alist(:,2),indDel),:);
-out2in              = [in2out(:,2) in2out(:,2) -in2out(:,3)];
-indOut              = unique(out2in(:,1));
-Anew                = spconvert([out2in; [grid.totalVars grid.totalVars 0]]);
+[temp1,temp2,temp3,Alist]   = setupPatchInterior(grid,k-1,P.parent,A,b,T,underLower,underUpper,0);
+in2out                      = Alist(~ismember(Alist(:,2),indDel),:);
+out2in                      = [in2out(:,2) in2out(:,2) -in2out(:,3)];
+alreadyDeleted              = ismember(out2in(:,1),grid.level{k-1}.indDel);
+out2in(alreadyDeleted,:)    = [];
+indOut                      = unique(out2in(:,1));
+Anew                        = spconvert([out2in; [grid.totalVars grid.totalVars 0]]);
 if (reallyUpdate)
-    A(indOut,:)         = A(indOut,:) - Anew(indOut,:);
+    A(indOut,:)             = A(indOut,:) - Anew(indOut,:);
 end
 
 %=====================================================================
 % Loop over all fine patch faces.
 %=====================================================================
-Alist                   = zeros(0,3);
-Tlist                   = zeros(0,3);
-indAll                  = [];
-indTransformed          = [];
+Alist                       = zeros(0,3);
+Tlist                       = zeros(0,3);
+indAll                      = [];
+indTransformed              = [];
 
 % Restore underLower,underUpper to exclude BC variables
 underLower(lowerNearEdge)   = underLower(lowerNearEdge) - 1;
@@ -129,14 +137,25 @@ for d = 1:grid.dim,
         if (    (underLower(d) == QedgeDomain{1}(d)) | ...
                 (underLower(d) == QedgeDomain{2}(d)) )
             % This face is at the domain boundary, skip it
-            fprintf('Skipping face near domain boundary\n');
+            if (param.verboseLevel >= 2)
+                fprintf('Skipping face near domain boundary\n');
+            end
             continue;
         end
-           
+
+        qn               = P.nbhrPatch(d,(s+3)/2);
+        if (qn > 0)
+            % This face is near another patch of this level
+            if (param.verboseLevel >= 2)
+                fprintf('Skipping face near nbhring fine patch qn=%d for d=%d, s=%d\n',qn,d,s);
+            end
+            continue;
+        end
+
         %=====================================================================
         % Prepare a list of all coarse and fine cell indices at this face.
         %=====================================================================
-        % Coarse face variables        
+        % Coarse face variables
         Qilower                 = underLower;
         Qiupper                 = underUpper;
         if (s == -1)
@@ -160,29 +179,6 @@ for d = 1:grid.dim,
         boxSize                 = iupper-ilower+1;
         [indFine,fine,matFine]  = indexBox(P,ilower,iupper);
 
-        r                       = P.nbhrPatch(d,(s+3)/2);
-        if (r > 0)
-            fprintf('Found nbhring patch r=%d for d=%d, s=%d\n',r,d,s);
-            indGhost    = indexNbhr(P,indFine,-nbhrNormal);
-            flux        = A(indFine,indGhost);
-            % Ghost vars at fine patch/fine patch interface
-            % are already fluxes (see setupPatchInterior, refer to (r > 0)
-            % condition).
-            if (~isempty(thisNear))
-                Alist = [Alist; ...                                                 % BC vars (= nbhr vars) are fluxes
-                    [indGhost   indBC                -flux]; ...
-                    [indGhost   indBox(thisNear)     -flux] ...
-                    ];
-                Tlist = [Tlist; ...                                                 % BC vars (= nbhr vars) are fluxes
-                    [indBC   indBC                   repmat(1.0,size(indBC))]; ...
-                    [indBC   indBox(thisNear)        repmat(-1.0,size(indBC))] ...
-                    ];
-                indAll = union(indAll,indBC);
-                indTransformed = union(indTransformed,indBC);
-                continue;
-            end
-        end
-        
         %=====================================================================
         % Compute interpolation stencil of "ghost mirror" points m_i.
         %=====================================================================
@@ -383,7 +379,7 @@ if (reallyUpdate)
     %=====================================================================
     Anew                = spconvert([Alist; [grid.totalVars grid.totalVars 0]]);
     A(indAll,:)         = A(indAll,:) + Anew(indAll,:);                       % Do not replace the non-zeros in A here, rather add to them.
-    
+
     %=====================================================================
     % Update transformation matrix T.
     %=====================================================================

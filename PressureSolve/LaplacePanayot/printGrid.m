@@ -29,5 +29,6 @@ for k = 1:grid.numLevels,
         end
         fprintf(' ]\n');        
     end
+    fprintf('\n');
 end
 fprintf('Grid Total variables = %d\n\n',grid.totalVars);

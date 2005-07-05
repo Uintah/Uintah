@@ -20,15 +20,14 @@ param.outputDir             = 'ProblemA_1Level';
 param.twoLevel              = 1;
 param.setupGrid             = 1;
 param.solveSystem           = 1;
-param.plotResults           = 1;
+param.plotResults           = 0;
 param.saveResults           = 0;
 param.verboseLevel          = 0;
-
 
 %=========================================================================
 % Run discretization on a sequence of successively finer grids
 %=========================================================================
-numCellsRange               = 8;%2.^[3:1:7];
+numCellsRange               = 2.^[2:1:7];
 success                     = mkdir('.',param.outputDir);
 errNorm                     = zeros(length(numCellsRange),4);
 
@@ -63,29 +62,59 @@ for count = 1:length(numCellsRange)
 
         resolution          = [numCells numCells];
         [grid,k]            = addGridLevel(grid,'meshsize',grid.domainSize./resolution);
-        [grid,q1,A,b,T,TI]  = addGridPatch(grid,k,ones(1,grid.dim),resolution,-1,A,b,T,TI);     % One global patch
+        [grid,q1]           = addGridPatch(grid,k,ones(1,grid.dim),resolution,-1);     % One global patch
+        for q = 1:grid.level{k}.numPatches,
+            [grid,A,b,T,TI]      = updateSystem(grid,k,q,A,b,T,TI);
+        end
 
         %--------------- Level 2: local fine grid around center of domain -----------------
 
         if (param.twoLevel)
             [grid,k]            = addGridLevel(grid,'refineRatio',[2 2]);
-            % Cover central half of the domain
-%            [grid,q2,A,b,T,TI]  = addGridPatch(grid,k,resolution/2 + 1,3*resolution/2,q1,A,b,T,TI);              % Local patch around the domain center
 
-% Cover central quarter of the domain
-%            [grid,q2,A,b,T,TI]  = addGridPatch(grid,k,3*resolution/4 + 1,5*resolution/4,q1,A,b,T,TI);              % Local patch around the domain center
+            if (0)
+                % Cover central half of the domain
+                [grid,q2]  = addGridPatch(grid,k,resolution/2 + 1,3*resolution/2,q1);              % Local patch around the domain center
+            end
 
-            % Two fine patch next to each other
-            ilower = 3*resolution/4 + 1;
-            iupper = 5*resolution/4;
-            iupper(1) = resolution(1);
-            [grid,q2,A,b,T,TI]  = addGridPatch(grid,k,ilower,iupper,q1,A,b,T,TI);              % Local patch around the domain center
-            ilower = 3*resolution/4 + 1;
-            iupper = 5*resolution/4;
-            ilower(1) = resolution(1)+1;
-            [grid,q3,A,b,T,TI]  = addGridPatch(grid,k,ilower,iupper,q1,A,b,T,TI);              % Local patch around the domain center
+            if (0)
+                % Cover central quarter of the domain
+                [grid,q2]  = addGridPatch(grid,k,3*resolution/4 + 1,5*resolution/4,q1);              % Local patch around the domain center
+            end
+
+            if (1)
+                % Two fine patches next to each other at the center of the
+                % domain
+                ilower = resolution/2 + 1;
+                iupper = 3*resolution/2;
+                iupper(1) = resolution(1);
+                [grid,q2]  = addGridPatch(grid,k,ilower,iupper,q1);
+                ilower = resolution/2 + 1;
+                iupper = 3*resolution/2;
+                ilower(1) = resolution(1)+1;
+                [grid,q3]  = addGridPatch(grid,k,ilower,iupper,q1);
+            end
+
+            if (0)
+                % Two fine patches next to each other at the central
+                % quarter of the domain
+                ilower = 3*resolution/4 + 1;
+                iupper = 5*resolution/4;
+                iupper(1) = resolution(1);
+                [grid,q2]  = addGridPatch(grid,k,ilower,iupper,q1);
+                ilower = 3*resolution/4 + 1;
+                iupper = 5*resolution/4;
+                ilower(1) = resolution(1)+1;
+                [grid,q3]  = addGridPatch(grid,k,ilower,iupper,q1);
+            end
+
+            for q = 1:grid.level{k}.numPatches,
+                [grid,A,b,T,TI]      = updateSystem(grid,k,q,A,b,T,TI);
+            end
         end
 
+        %-------------------------------------------------------------------------
+        
         tCPU        = cputime - tStartCPU;
         tElapsed    = etime(clock,tStartElapsed);
         if (param.verboseLevel >= 1)
@@ -97,7 +126,7 @@ for count = 1:length(numCellsRange)
 
     %-------------------------------------------------------------------------
     % Solve the linear system
-    %-----------------------tau--------------------------------------------------
+    %-------------------------------------------------------------------------
     if (param.solveSystem)
         if (param.verboseLevel >= 1)
             fprintf('-------------------------------------------------------------------------\n');
@@ -119,44 +148,44 @@ for count = 1:length(numCellsRange)
     %-------------------------------------------------------------------------
     % Computed exact solution vector, patch-based
     %-------------------------------------------------------------------------
+    if (param.verboseLevel >= 1)
+        fprintf('-------------------------------------------------------------------------\n');
+        fprintf(' Compute exact solution, plot\n');
+        fprintf('-------------------------------------------------------------------------\n');
+    end
+    tStartCPU        = cputime;
+    tStartElapsed    = clock;
+
+    % Plot grid
+    if (grid.totalVars <= 200)
+        plotGrid(grid,sprintf('%s/grid%d.eps',param.outputDir,numCells),1,0);
+    end
+
+    % Plot and print discretization error at all patches
+    uExact = exactSolutionAMR(grid,T,TI);
+    tau = sparseToAMR(b-A*AMRToSparse(uExact,grid,T,1),grid,TI,0);
+    f = sparseToAMR(b,grid,TI,0);
+    fig = 0;
+
+    % AMR grid norms
+    err = cell(size(u));
+    for k = 1:grid.numLevels,
+        level = grid.level{k};
+        for q = 1:grid.level{k}.numPatches,
+            err{k}{q} = uExact{k}{q}-u{k}{q};
+        end
+    end
+    temp    = AMRToSparse(err,grid,T,1);
+    err     = SparseToAMR(temp,grid,TI,0);
+    errNorm(count,:) = [ ...
+        normAMR(grid,err,'L2') ...
+        normAMR(grid,err,'max') ...
+        normAMR(grid,err,'H1') ...
+        normAMR(grid,err,'H1max') ...
+        ];
+    fprintf('L2=%.3e  max=%.3e  H1=%.3e  H1max=%.3e\n',errNorm(count,:));
+
     if (param.plotResults)
-        if (param.verboseLevel >= 1)
-            fprintf('-------------------------------------------------------------------------\n');
-            fprintf(' Compute exact solution, plot\n');
-            fprintf('-------------------------------------------------------------------------\n');
-        end
-        tStartCPU        = cputime;
-        tStartElapsed    = clock;
-
-        % Plot grid
-        if (grid.totalVars <= 200)
-            plotGrid(grid,sprintf('%s/grid%d.eps',param.outputDir,numCells),1,0);
-        end
-
-        % Plot and print discretization error at all patches
-        uExact = exactSolutionAMR(grid,T,TI);
-        tau = sparseToAMR(b-A*AMRToSparse(uExact,grid,T,1),grid,TI,0);
-        f = sparseToAMR(b,grid,TI,0);
-        fig = 0;
-
-        % AMR grid norms
-        err = cell(size(u));
-        for k = 1:grid.numLevels,
-            level = grid.level{k};
-            for q = 1:grid.level{k}.numPatches,
-                err{k}{q} = uExact{k}{q}-u{k}{q};
-            end
-        end
-        temp    = AMRToSparse(err,grid,T,1);
-        err     = SparseToAMR(temp,grid,TI,0);
-        errNorm(count,:) = [ ...
-            normAMR(grid,err,'L2') ...
-            normAMR(grid,err,'max') ...
-            normAMR(grid,err,'H1') ...
-            normAMR(grid,err,'H1max') ...
-            ];
-        fprintf('L2=%.3e  max=%.3e  H1=%.3e  H1max=%.3e\n',errNorm(count,:));
-
         for k = 1:grid.numLevels,
             level = grid.level{k};
             for q = 1:grid.level{k}.numPatches,

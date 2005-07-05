@@ -82,19 +82,44 @@ for dim = 1:grid.dim,                                                       % Lo
         fluxNum                 = 2*dim+sideNum-2;
         diffLength{fluxNum}     = h(dim)*ones(boxSize);                     % Standard FD is over distance h        
 
-        % Adjust distances for FD near domain boundaries and fine
-        % patch/fine patch boundaries
-        r                       = P.nbhrPatch(dim,(side+3)/2);
-        if (r > 0)
-            fprintf('Found nbhring patch r=%d for d=%d, s=%d\n',r,d,s);
+        % Adjust ind map near a nbhring fine patch (override ghost point
+        % indices with interior indices from nbhring patch PN)
+        qn                      = P.nbhrPatch(dim,(side+3)/2);
+        if (qn > 0)
+            if (param.verboseLevel >= 2)
+                fprintf('Found nbhring patch qn=%d for dim=%d, side=%d, modifying ind near this face\n',qn,dim,side);
+            end
+            % indices of this face in P.cellIndex
+            flower                  = P.ilower;
+            fupper                  = P.iupper;
+            if (side == -1)
+                flower(dim)         = flower(dim)-1;                        % Ghost points on the PN-face
+                fupper(dim)         = flower(dim);
+            else
+                fupper(dim)         = fupper(dim)+1;                        % Ghost points of the PN-face
+                flower(dim)         = fupper(dim);
+            end
+            [indFace,face,matFace]  = indexBox(P,flower,fupper);
+            
+            % indices of the interior points in PN.cellIndex replacing the
+            % ghost points of this face in P
+            PN                      = grid.level{k}.patch{qn};
+            flower                  = PN.ilower;
+            fupper                  = PN.iupper;
+            if (side == 1)                                                  % Refering to face(dim,-side) in PN
+                fupper(dim)         = flower(dim);
+            else
+                flower(dim)         = fupper(dim);
+            end
+            [indNFace,NFace,matNFace] = indexBox(PN,flower,fupper);
+            
+            % Override ghost cell indices in ind (but not in P.cellIndex!)
+            ind(matFace{:})         = PN.cellIndex(matNFace{:});            
         end
-        
-        nearBoundary            = cell(1,grid.dim);
-        [nearBoundary{:}]       = find(...
-            (matBox{dim} == edgeDomain{sideNum}(dim)) | ...
-            ((r > 0) & (matBox{dim} == edgePatch{sideNum}(dim))) ...
-            );  % Interior cell subs near DOMAIN boundary
 
+        % Adjust distances for FD near domain boundaries        
+        nearBoundary            = cell(1,grid.dim);
+        [nearBoundary{:}]       = find(matBox{dim} == edgeDomain{sideNum}(dim));  % Interior cell subs near DOMAIN boundary
         near{fluxNum}   = find(matBox{dim} == edgeDomain{sideNum}(dim));    % Interior cell indices near DOMAIN boundary (actually Dirichlet boundaries only)
         far{fluxNum}    = find(~(matBox{dim} == edgeDomain{sideNum}(dim))); % The rest of the cells
         diffLength{fluxNum}(nearBoundary{:}) = 0.5*h(dim);                  % Twice smaller distance in this direction
@@ -136,7 +161,7 @@ for dim = 1:grid.dim,                                                       % Lo
         % Direction vector ("normal") from cell to its nbhr
         nbhrNormal      = zeros(1,grid.dim);
         nbhrNormal(dim) = side;
-        indNbhr         = indexNbhr(P,indBox,nbhrNormal);
+        indNbhr         = indexNbhr(P,indBox,nbhrNormal,ind);
 
         % Add fluxes in dimension=dim, direction=side to list of non-zeros Alist and to b
         sideNum         = (side+3)/2;                                       % side=-1 ==> 1; side=1 ==> 2
