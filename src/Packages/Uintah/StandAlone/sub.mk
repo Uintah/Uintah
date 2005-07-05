@@ -442,7 +442,9 @@ link_regression_tester:
 
 TOP_ABS:= $(SRCTOP_ABS)/..
 faster_gmake: 
-	@( $(SRCTOP_ABS)/Packages/Uintah/Test/helpers/useFakeArches.pl $(TOP_ABS)) 
+	@( $(SRCTOP_ABS)/Packages/Uintah/scripts/useFakeArches.pl $(TOP_ABS)) 
+fake_arches: 
+	@( $(SRCTOP_ABS)/Packages/Uintah/scripts/useFakeArches.pl $(TOP_ABS)) 
 
 sus: prereqs Packages/Uintah/StandAlone/sus
 
