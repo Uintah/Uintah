@@ -1212,7 +1212,9 @@ public:
         cerr << "Solve of " << X_label->getName() 
               << " on level " << level->getIndex()
              << " completed in "
-             << niter << " iterations, " << dt << " seconds (" 
+             << dt << " seconds ("
+             << niter << " iterations, "
+             << e << " residual, " 
               << mflops<< " MFLOPS, " << memrate << " GB/sec)\n";
       }else{
         if(params->restart){
