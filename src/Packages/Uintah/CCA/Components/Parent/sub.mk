@@ -7,7 +7,6 @@ SRCDIR  := Packages/Uintah/CCA/Components/Parent
 SRCS    := $(SRCDIR)/Switcher.cc \
 	   $(SRCDIR)/ComponentFactory.cc 
 
-
 PSELIBS := \
 	Core/Exceptions \
 	Core/Util \
@@ -18,11 +17,11 @@ PSELIBS := \
         Packages/Uintah/Core/Parallel    \
         Packages/Uintah/Core/ProblemSpec \
         Packages/Uintah/Core/Util        \
-        Packages/Uintah/CCA/Components/Arches \
-        Packages/Uintah/CCA/Components/Examples \
-        Packages/Uintah/CCA/Components/ICE      \
-        Packages/Uintah/CCA/Components/MPM      \
-        Packages/Uintah/CCA/Components/MPMArches   \
+        Packages/Uintah/CCA/Components/Arches    \
+        Packages/Uintah/CCA/Components/MPMArches \
+        Packages/Uintah/CCA/Components/Examples  \
+        Packages/Uintah/CCA/Components/ICE       \
+        Packages/Uintah/CCA/Components/MPM       \
         Packages/Uintah/CCA/Components/MPMICE  
 
 LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY)
