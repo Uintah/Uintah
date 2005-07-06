@@ -545,11 +545,6 @@ SCI_ARG_ENABLE(throw-level,
                  Use throw level N (0-3)),
   [enable_throw_level="$enableval"],
   [enable_throw_level=${enable_throw_level=0}])
-SCI_ARG_ENABLE(--enable-exceptions-crash,
-  AC_HELP_STRING(--enable-exceptions-crash,
-                 Force exceptions to printout for pre-gcc3.4 compilers),
-  [enable_exceptions_crash="$enableval"],
-  [enable_exceptions_crash=${enable_exceptions_crash=0}])
 SCI_ARG_ENABLE(scirun2,
   AC_HELP_STRING(--enable-scirun2,
                  Build experimental SCIRun 2),
@@ -631,7 +626,6 @@ if test "$package" = "all"; then
   package=`echo $_sci_tmp | sed 's/CVS //g'`
   AC_MSG_RESULT(Packages include $package)
 fi
-
 PACKAGE_DIRS=""
 for i in $package; do
    PACKAGE_DIRS=$PACKAGE_DIRS" Packages/$i"
@@ -956,7 +950,6 @@ esac
 
 ASSERTION_LEVEL="$enable_assertion_level"
 THROW_LEVEL="$enable_throw_level"
-EXCEPTIONS_CRASH="$enable_exceptions_crash"
 extra_cflags="";
 
 if test "$output_avg_walltime" != "no"; then
@@ -990,7 +983,6 @@ sci_defs_files="$sci_defs_files include/sci_defs/malloc_testdefs.h"
 
 AC_SUBST(ASSERTION_LEVEL)
 AC_SUBST(THROW_LEVEL)
-AC_SUBST(EXCEPTIONS_CRASH)
 sci_defs_files="$sci_defs_files include/sci_defs/error_testdefs.h"
 
 #########################################################################
@@ -2558,6 +2550,38 @@ AC_SUBST(PNG_LIB_FLAG)
 AC_SUBST(PNG_LIB_DIR_FLAG)
 AC_SUBST(INC_PNG_H)
 AC_SUBST(DEF_PNG)
+
+
+##  --  check if exceptions work properly --------------------------------
+
+AC_MSG_CHECKING(for working exceptions.)
+cat > conftest-exc.cc <<EOF
+
+    #include <stdio.h>
+
+    int main() {       
+      try {
+        throw "hello world";        
+      }
+      catch( const char* e ) {
+        printf("error is %s\n", e);
+      }
+    }
+EOF
+    $CXX -o conftest-exc conftest-exc.cc
+    exc_error=`./conftest-exc`
+    rm -r conftest-exc.cc conftest-exc
+
+    if test "$?" != "0"; then
+       AC_MSG_RESULT(Exceptions do not work on your compiler, adding custom output.)
+       enable_exceptions_crash=1
+    else
+       AC_MSG_RESULT(yes.)
+       enable_exceptions_crash=0
+    fi
+
+EXCEPTIONS_CRASH="$enable_exceptions_crash"
+AC_SUBST(EXCEPTIONS_CRASH)
 
 ##  --  search for mpeg  -------------------------------------------------
 
