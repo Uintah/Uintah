@@ -164,6 +164,13 @@ DenseColMajMatrix::sparse()
 }
 
 
+DenseColMajMatrix *
+DenseColMajMatrix::dense_col_maj()
+{
+  return this;
+}
+
+
 double *
 DenseColMajMatrix::get_data_pointer()
 {

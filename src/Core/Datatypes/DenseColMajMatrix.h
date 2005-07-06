@@ -54,9 +54,6 @@ namespace SCIRun {
 
 using std::vector;
 
-class ColumnMatrix;
-class SparseRowMatrix;
-
 class DenseColMajMatrix : public Matrix
 {
   double*  dataptr_;
@@ -77,7 +74,7 @@ public:
   virtual DenseMatrix *dense();
   virtual SparseRowMatrix *sparse();
   virtual ColumnMatrix *column();
-  //virtual DenseColMajMatrix *dense_col_maj();
+  virtual DenseColMajMatrix *dense_col_maj();
 
   virtual double *get_data_pointer();
   virtual size_t get_data_size();
@@ -103,12 +100,14 @@ public:
   double  sumOfCol(int);
   double  sumOfRow(int);
   
+#if 0
   bool    solve(ColumnMatrix&, int overwrite=0);
   bool    solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
 		int overwrite=0);
   bool    solve(vector<double>& sol, int overwrite=0);
   bool    solve(const vector<double>& rhs, vector<double>& lhs,
 		int overwrite=0);
+#endif
 
   //! fast accessors
   inline double &iget(int r, int c)
@@ -123,7 +122,7 @@ public:
   };
 
   //! Return false if not invertable.
-  bool invert();
+  //bool invert();
 
   //! Throws an assertion if not square
   double determinant();
@@ -138,7 +137,6 @@ public:
   //! Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-
 };
 
 

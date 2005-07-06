@@ -59,6 +59,7 @@ using namespace std;
 class SparseRowMatrix;
 class DenseMatrix;
 class ColumnMatrix;
+class DenseColMajMatrix;
 class Matrix;
 typedef LockingHandle<Matrix> MatrixHandle;
 
@@ -76,17 +77,20 @@ public:
   virtual DenseMatrix* dense() = 0;
   virtual SparseRowMatrix* sparse() = 0;
   virtual ColumnMatrix* column() = 0;
+  virtual DenseColMajMatrix *dense_col_maj() = 0;
 
   // No conversion is done.
   // NULL is returned if the matrix is not of the appropriate type.
   DenseMatrix *as_dense();
   SparseRowMatrix *as_sparse();
   ColumnMatrix *as_column();
+  DenseColMajMatrix *as_dense_col_maj();
 
   // Test to see if the matrix is this subtype.
   inline bool is_dense() { return as_dense() != NULL; }
   inline bool is_sparse() { return as_sparse() != NULL; }
   inline bool is_column() { return as_column() != NULL; }
+  inline bool is_dense_col_maj() { return as_dense_col_maj() != NULL; }
 
   inline int nrows() const { return nrows_; }
   inline int ncols() const { return ncols_; }

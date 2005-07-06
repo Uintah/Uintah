@@ -53,9 +53,6 @@
 
 namespace SCIRun {
 
-class DenseMatrix;
-class SparseRowMatrix;
-
 class ColumnMatrix : public Matrix {
   double* data;
 
@@ -69,6 +66,7 @@ public:
   virtual DenseMatrix *dense();
   virtual SparseRowMatrix *sparse();
   virtual ColumnMatrix *column();
+  virtual DenseColMajMatrix *dense_col_maj();
 
   virtual double *get_data_pointer();
   virtual size_t get_data_size();

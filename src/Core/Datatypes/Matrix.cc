@@ -41,6 +41,7 @@
 
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/DenseColMajMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Math/MiscMath.h>
@@ -402,6 +403,12 @@ ColumnMatrix *
 Matrix::as_column()
 {
   return dynamic_cast<ColumnMatrix *>(this);
+}
+
+DenseColMajMatrix *
+Matrix::as_dense_col_maj()
+{
+  return dynamic_cast<DenseColMajMatrix *>(this);
 }
 
 
