@@ -3,10 +3,7 @@
      49     27
      31
                      Temp               mix_mol_wt                  density            heat_capac            sensible_h              equiv_ratio            soot_vol_frac                         CO          CH4         CH          H           H2          OH          H2O         H2O2        N2          O2          O           NO          NH3         HCN         C(GR)       CO2         ETHANE      PROPANE     HEPTANE     ACETYLENE   MCH         C6H5CH3     C6H6        I-C8H18     
-                        K          kg_mix/kmol_mix                    kg/m3                kj/kmol-K                       kJ                        -                        -                mass_frac
-
-
-
+                        K          kg_mix/kmol_mix                    kg/m3                kj/kmol-K                       kJ                        -                        -                mass_frac mass_frac mass_frac mass_frac mass_frac mass_frac mass_frac mass_frac mass_frac mass_frac mass_frac mass_frac mass_frac mass_frac mass_frac mass_frac mass_frac mass_frac mass_frac mass_frac mass_frac mass_frac mass_frac mass_frac 
   -1.0000000E+00  -9.2307693E-01  -8.4615386E-01  -7.6923072E-01  -6.9230771E-01  -6.1538458E-01  -5.3846151E-01  -4.6153843E-01  -3.8461536E-01  -3.0769229E-01  -2.3076922E-01  -1.5384614E-01  -7.6923013E-02   0.0000000E+00   7.6923132E-02   1.5384614E-01   2.3076928E-01   3.0769241E-01   3.8461542E-01   4.6153855E-01   5.3846157E-01   6.1538470E-01   6.9230771E-01   7.6923084E-01   8.4615397E-01   9.2307699E-01   1.0000000E+00
 
    0.0000000E+00   3.9834986E-03   7.9669971E-03   1.1950496E-02   1.5933994E-02   1.9917492E-02   2.3900991E-02   2.7884491E-02   3.1867988E-02   3.5851486E-02   3.9834984E-02   4.3818485E-02   4.7801983E-02   5.1785480E-02   5.5768982E-02   5.9752479E-02   6.3735977E-02   6.7719474E-02   7.1702972E-02   7.5686470E-02   7.9669967E-02   8.3653472E-02   8.7636970E-02   9.1620468E-02   9.5603965E-02   1.3328713E-01   1.7097026E-01   2.0865351E-01   2.4633664E-01   2.8401977E-01   3.2170302E-01   3.5938615E-01   3.9706928E-01   4.3475252E-01   4.7243565E-01   5.1011878E-01   5.4780203E-01   5.8548516E-01   6.2316829E-01   6.6085154E-01   6.9853467E-01   7.3621780E-01   7.7390105E-01   8.1158417E-01   8.4926730E-01   8.8695055E-01   9.2463368E-01   9.6231681E-01   1.0000000E+00
