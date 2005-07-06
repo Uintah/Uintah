@@ -49,7 +49,6 @@
 #include <SCIRun/Internal/ComponentEvent.h>
 #include <SCIRun/Internal/ComponentEventService.h>
 #include <SCIRun/CCA/CCAComponentModel.h>
-#include <SCIRun/Babel/BabelComponentModel.h>
 #include <SCIRun/CCA/ComponentID.h>
 
 #if HAVE_RUBY
