@@ -1131,8 +1131,11 @@ case $1 in
   Plume)
     sci_required_loki=yes
     sci_required_boost=yes
-    if test "$packages" != "all"; then
-      packages="$packages Plume"
+    sci_required_qt="no"
+    enable_scirun2="yes"
+    
+    if test "$package" != "all"; then
+      package="$package Plume"
     fi
   ;;
   Remote)

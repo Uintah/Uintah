@@ -1750,6 +1750,7 @@ esac
 
 ##  ----------------------------------------------------------------------
 
+AC_LANG([C++])
 # Each of the HAVE_??? statements for these header files is found
 # in include/sci_defs/config_testedefs.h
 AC_CHECK_HEADERS(limits.h sys/select.h unistd.h sys/time.h ext/algorithm stdint.h inttypes.h)
