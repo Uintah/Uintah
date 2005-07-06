@@ -69,6 +69,14 @@ end
 
 patchRange              = P.offsetInd + [1:prod(P.size)];
 indUnused               = patchRange(find(abs(diag(A(patchRange,patchRange))) < eps));
+
+switch (param.problemType)
+    
+    case 'Lshaped',     % Delete upper-rigt quadrant
+        indOut          = LshapedOut(grid,k,q);
+        indUnused       = union(indUnused,indOut);
+end
+
 A(indUnused,:)          = 0.0;
 A(:,indUnused)          = 0.0;
 A(indUnused,indUnused)  = eye(length(indUnused));
