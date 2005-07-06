@@ -2067,7 +2067,8 @@ ViewSlices::draw_all_labels(SliceWindow &window) {
   draw_window_label(window);
 
 }
-  
+
+
 void
 ViewSlices::set_slice_coords(NrrdSlice &slice, bool origin) {
   slice.do_lock();
@@ -2092,18 +2093,49 @@ ViewSlices::set_slice_coords(NrrdSlice &slice, bool origin) {
   double x_wid=0,y_wid=0,z_wid=0;
   double x_hei=0,y_hei=0,z_hei=0;
   
-  if (axis == 0) {
-    x_pos = slice_num+0.5;
-    y_wid = slice.volume_->nrrd_->nrrd->axis[1].size;
-    z_hei = slice.volume_->nrrd_->nrrd->axis[2].size; 
-  } else if (axis == 1) {
-    y_pos = slice_num+0.5;
-    x_wid = slice.volume_->nrrd_->nrrd->axis[0].size;
-    z_hei = slice.volume_->nrrd_->nrrd->axis[2].size;
-  } else /*if (axis == 2)*/ {
-    z_pos = slice_num+0.5;
-    x_wid = slice.volume_->nrrd_->nrrd->axis[0].size;
-    y_hei = slice.volume_->nrrd_->nrrd->axis[1].size;
+
+  if (origin) {
+    if (axis == 0) {
+      x_pos = slice_num+0.5;
+      y_wid = slice.volume_->nrrd_->nrrd->axis[1].size;
+      z_hei = slice.volume_->nrrd_->nrrd->axis[2].size; 
+    } else if (axis == 1) {
+      y_pos = slice_num+0.5;
+      x_wid = slice.volume_->nrrd_->nrrd->axis[0].size;
+      z_hei = slice.volume_->nrrd_->nrrd->axis[2].size;
+    } else /*if (axis == 2)*/ {
+      z_pos = slice_num+0.5;
+      x_wid = slice.volume_->nrrd_->nrrd->axis[0].size;
+      y_hei = slice.volume_->nrrd_->nrrd->axis[1].size;
+    }
+  } else {
+    if (axis == 0) {
+      x_pos = (slice_num+0.5)*(slice.volume_->nrrd_->nrrd->axis[0].max - 
+			       slice.volume_->nrrd_->nrrd->axis[0].min)/
+	slice.volume_->nrrd_->nrrd->axis[0].size;
+      y_wid = slice.volume_->nrrd_->nrrd->axis[1].max - 
+	slice.volume_->nrrd_->nrrd->axis[1].min;
+      z_hei = slice.volume_->nrrd_->nrrd->axis[2].max - 
+	slice.volume_->nrrd_->nrrd->axis[2].min;
+    } else if (axis == 1) {
+      y_pos = (slice_num+0.5)*(slice.volume_->nrrd_->nrrd->axis[1].max - 
+			       slice.volume_->nrrd_->nrrd->axis[1].min)/
+	slice.volume_->nrrd_->nrrd->axis[1].size;
+
+      x_wid = slice.volume_->nrrd_->nrrd->axis[0].max - 
+	slice.volume_->nrrd_->nrrd->axis[0].min;
+      z_hei = slice.volume_->nrrd_->nrrd->axis[2].max - 
+	slice.volume_->nrrd_->nrrd->axis[2].min;
+    } else /*if (axis == 2)*/ {
+      z_pos = (slice_num+0.5)*(slice.volume_->nrrd_->nrrd->axis[2].max - 
+			       slice.volume_->nrrd_->nrrd->axis[2].min)/
+	slice.volume_->nrrd_->nrrd->axis[2].size;
+
+      x_wid = slice.volume_->nrrd_->nrrd->axis[0].max - 
+	slice.volume_->nrrd_->nrrd->axis[0].min;
+      y_hei = slice.volume_->nrrd_->nrrd->axis[1].max - 
+	slice.volume_->nrrd_->nrrd->axis[1].min;
+    }
   }
 
   if (*slice.volume_->flip_x_) {
@@ -2366,9 +2398,12 @@ ViewSlices::next_slice(SliceWindow &window)
   redraw_all();
 }
 
+extern "C" void backtrace_linux_i386(FILE *);
+
 void
 ViewSlices::zoom_in(SliceWindow &window)
 {
+  backtrace_linux_i386(0);
   window.zoom_ *= 1.1;
   window.cursor_moved_ = true;
   window.redraw_ = true;
