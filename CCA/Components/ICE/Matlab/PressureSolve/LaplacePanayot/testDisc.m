@@ -14,20 +14,21 @@ globalParams;
 %=========================================================================
 param                       = [];
 
-param.problemType           = 'ProblemB'; %'quadratic';
+param.problemType           = 'ProblemB'; %'quadratic'; %'Lshaped'; %
 param.outputDir             = 'ProblemA_1Level';
 
 param.twoLevel              = 1;
+param.threeLevel            = 1;
 param.setupGrid             = 1;
 param.solveSystem           = 1;
-param.plotResults           = 0;
+param.plotResults           = 1;
 param.saveResults           = 0;
 param.verboseLevel          = 0;
 
 %=========================================================================
 % Run discretization on a sequence of successively finer grids
 %=========================================================================
-numCellsRange               = 2.^[2:1:7];
+numCellsRange               = 2.^[3:1:6];
 success                     = mkdir('.',param.outputDir);
 errNorm                     = zeros(length(numCellsRange),4);
 
@@ -77,12 +78,12 @@ for count = 1:length(numCellsRange)
                 [grid,q2]  = addGridPatch(grid,k,resolution/2 + 1,3*resolution/2,q1);              % Local patch around the domain center
             end
 
-            if (0)
+            if (1)
                 % Cover central quarter of the domain
                 [grid,q2]  = addGridPatch(grid,k,3*resolution/4 + 1,5*resolution/4,q1);              % Local patch around the domain center
             end
 
-            if (1)
+            if (0)
                 % Two fine patches next to each other at the center of the
                 % domain
                 ilower = resolution/2 + 1;
@@ -113,7 +114,25 @@ for count = 1:length(numCellsRange)
             end
         end
 
-        %-------------------------------------------------------------------------
+        %--------------- Level 3: yet local fine grid around center of domain -----------------
+        if ((param.twoLevel) & (param.threeLevel))
+            [grid,k]   = addGridLevel(grid,'refineRatio',[2 2]);
+            
+            if (0)
+                % Cover central half of the domain
+                [grid,q3]  = addGridPatch(grid,k,3*resolution/2 + 1,5*resolution/2,q2);              % Local patch around the domain center
+            end
+            
+            if (1)
+                % Cover central half of the central quarter of the domain
+                [grid,q3]  = addGridPatch(grid,k,7*resolution/4 + 1,9*resolution/4,q2);              % Local patch around the domain center
+%                [grid,q3]  = addGridPatch(grid,k,15*resolution/4 + 1,17*resolution/4,q2);              % Local patch around the domain center
+            end
+            
+            for q = 1:grid.level{k}.numPatches,
+                [grid,A,b,T,TI]      = updateSystem(grid,k,q,A,b,T,TI);
+            end
+        end
         
         tCPU        = cputime - tStartCPU;
         tElapsed    = etime(clock,tStartElapsed);
