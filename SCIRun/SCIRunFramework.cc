@@ -181,10 +181,13 @@ SCIRunFramework::createComponentInstance(const std::string& name,
     // "cca.className" is a standard CCA component property key
     properties->putString("cca.className", className);
     ComponentInstance* ci;
+#if HAVE_BABEL 
     if (mod->getName() == "babel") {
         ci = ((BabelComponentModel*) mod)->createInstance(name, type);
         ci->setComponentProperties(properties);
-    } else {
+    } else 
+#endif 
+    {
         ci = mod->createInstance(name, type, properties);
     }
     if (!ci) {
