@@ -1,0 +1,3 @@
+A Matlab simulation of Distributive Flux Matching (DFM) Discretization
+for a simple 2D Poisson problem with AMR (two levels of refinement).
+We test discretization accuracy for a problem with a known solution.
