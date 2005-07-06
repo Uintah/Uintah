@@ -1,4 +1,3 @@
-
 function u = exactSolution(x)
 %EXACTSOLUTION  Exact solution for test problems.
 %   U = EXACTSOLUTION(X) returns the exact solution evaluated at the
@@ -25,7 +24,16 @@ switch (param.problemType)
         x0      = [0.5 0.5];
         sigma   = [0.05 0.05];
         u       = exp(-((x{1}-x0(1)).^2/sigma(1)^2 + (x{2}-x0(2)).^2/sigma(2)^2));
-
+        
+    case 'Lshaped',
+        x0          = [0.5 0.5];
+        r           = sqrt((x{1}-x0(1)).^2+(x{2}-x0(2)).^2);
+        t           = atan2(x{2}-x0(2),x{1}-x0(1));
+        t           = mod(-t+2*pi,2*pi);
+        alpha       = 2/3;
+        u           = r.^(alpha).*sin(alpha*t);
+        u(find(min(x{1}-x0(1),x{2}-x0(2)) >= 0)) = 0.0;
+        
     otherwise,
         error('Unknown problem type');
 end
