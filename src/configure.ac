@@ -226,7 +226,7 @@ SCI_ARG_WITH(fortran,
   [with_fortran=""])
 SCI_ARG_WITH(ptolemyII,
   AC_HELP_STRING(--with-ptolemyII=DIR, 
-                 Use the Ptolemy II (eg: ptII4.0.1) installation in DIR (Ptolemy package only)),
+                 Use the Ptolemy II (eg: ptII4.0.1) installation in DIR (Ptolemypa ckage only)),
   [with_ptolemyII="$withval"
    sci_required_ptolemyII=yes],
   [with_ptolemyII=""])
@@ -785,6 +785,40 @@ fi
 AC_MSG_RESULT($NUM_CPUS)
 
 
+##  ----------  determine if this is a 32 or 64 bit machine
+AC_LANG([C])
+
+MY_TEMP=$CPPFLAGS
+
+AC_CHECK_SIZEOF(void*)
+
+case $ac_cv_sizeof_voidp in
+ 8)
+  NBITS=64
+  ;;
+ 4)
+  NBITS=32
+  ;;
+ *)
+  SCI_MSG_ERROR([
+  This machine has some strange sizeof(void*): $ac_cv_sizeof_void_p.
+  Usually this means that your LD_LIBRARY_PATH is set incorrectly for the 
+  compiler you are using.  To verify that this is the problem you will need 
+  to copy the C++  program from the end of the config.log file and run the 
+  compile command which is just before it in config.log.  Run the executable 
+  and see what error message you get. You can also just fix your 
+  LD_LIBRARY_PATH if you know what is wrong with it.
+  Exiting due to size of void* problem! Read above warnings!])
+  ;;
+esac
+
+AC_SUBST(NBITS)
+sci_defs_files="$sci_defs_files include/sci_defs/bits_testdefs.h"
+
+## --------------
+
+AC_LANG([C++])
+
 if test "$CC" = ""; then
   # Apparently AC_PROG_CC will set CFLAGS to "-O2 -g" if you don't specify
   # its value first, so...
@@ -869,13 +903,14 @@ else
   fi
 fi
 
-AC_MSG_CHECKING(host system word length)
+AC_MSG_CHECKING(target build word length)
 if test "$enable_64bit" = "yes"; then
   AC_MSG_RESULT(64 bits)
   if test "$enable_32bit" = "yes"; then
     SCI_MSG_ERROR(Both 64 and 32 bit compiles specified.)
   fi
 else
+  enable_32bit="yes"
   AC_MSG_RESULT(32 bits)
 fi
 
@@ -907,7 +942,7 @@ case $host in
 	;;
 	
      *-aix*)
-        # On AIX, don't automatically generate .so's.  Make .a's and then
+        # On AIX, doesn't automatically generate .so's.  Make .a's and then
         # later we will make .so's from them.
 	SO_OR_ARCHIVE_EXTENSION=a
 	;;
@@ -1275,7 +1310,7 @@ case $host in
       CXXFLAGS=" -Wall"
     fi
 
-# fPIC option for ppc architecture
+    # fPIC option for ppc architecture
     if test `uname -m` = "ppc"; then
        CFLAGS="-fPIC $CFLAGS"
        FFLAGS="-fPIC $FFLAGS"
@@ -1286,6 +1321,21 @@ case $host in
        CFLAGS="-fPIC $CFLAGS"
        FFLAGS="-fPIC $FFLAGS"
        CXXFLAGS="-fPIC $CXXFLAGS"
+    fi
+
+    AC_MSG_CHECKING(special 32/64 bits flags required)
+    if test "$enable_32bit" = "yes" -a $NBITS=64; then
+       CFLAGS="-m32 $CFLAGS"
+       CXXFLAGS="-m32 $CXXFLAGS"
+       AC_MSG_RESULT(-m32)
+    else 
+      if test "$enable_64bit" = "yes" -a $NBITS=32; then
+        CFLAGS="-m64 $CFLAGS"
+        CXXFLAGS="-m64 $CXXFLAGS"
+        AC_MSG_RESULT(-m64)
+      else 
+        AC_MSG_RESULT(no)
+      fi
     fi
 
     if test "$CC" != "pgcc"; then
@@ -1463,13 +1513,7 @@ else
 ##  --  Plume ----------------------
 
 if test "$enable_plume" = "yes"; then
-   enable_scirun2="yes"
-   sci_required_qt="no"
    BUILD_PLUME="yes"
-   PACKAGE_DIRS=$PACKAGE_DIRS" Packages/Plume"
-   # set the package dependent checks
-   SCI_SET_PACKAGE_CHECKS(Plume, $host)
-   package="$package Plume"
 else
   BUILD_PLUME="no"
 fi
@@ -1551,36 +1595,7 @@ sci_defs_files="$sci_defs_files include/sci_defs/template_testdefs.h"
 
 ##  set the default language after the build tools are found
 AC_LANG([C])
-##  ----------  See if this is a 64 bit machine --------------------------
 
-MY_TEMP=$CPPFLAGS
-
-AC_CHECK_SIZEOF(void*)
-
-case $ac_cv_sizeof_voidp in
- 8)
-  NBITS=64
-  ;;
- 4)
-  NBITS=32
-  ;;
- *)
-  SCI_MSG_ERROR([
-  This machine has some strange sizeof(void*): $ac_cv_sizeof_void_p.
-  Usually this means that your LD_LIBRARY_PATH is set incorrectly for the 
-  compiler you are using.  To verify that this is the problem you will need 
-  to copy the C++  program from the end of the config.log file and run the 
-  compile command which is just before it in config.log.  Run the executable 
-  and see what error message you get. You can also just fix your 
-  LD_LIBRARY_PATH if you know what is wrong with it.
-  Exiting due to size of void* problem! Read above warnings!])
-  ;;
-esac
-
-AC_SUBST(NBITS)
-sci_defs_files="$sci_defs_files include/sci_defs/bits_testdefs.h"
-
-AC_LANG([C++])
 #########################################################################
 ## Make sure number of bit build for Thirdparty and SCIRun compile match
 ##
@@ -4556,13 +4571,11 @@ if test "$sci_required_boost" = "yes"; then
   if test "$with_boost" = ""; then
     _sci_lib=/usr/local/lib/
     _sci_inc="/usr/local/include"
-    _sci_optional=required
   else 
   if test "$with_boost" = "yes"; then
     # --with-boost has been specified without a parameter.
     _sci_lib=/usr/local/lib/
     _sci_inc=/usr/local/include
-    _sci_optional=required
   else 
    if test "$with_boost"; then
      #if --with-boost has been specified with a parameter, then use that parameter
@@ -4597,28 +4610,41 @@ AC_SUBST(INC_BOOST_H)
 sci_defs_files="$sci_defs_files include/sci_defs/boost_testdefs.h"
 
 ##  --  search for loki stuff  -------------------------------------------
-_sci_lib=/usr/local/lib
-_sci_inc=/usr/local/include
-_sci_optional=optional
-
-if test "$with_loki" = "yes"; then
+if test "$sci_required_loki" = "yes"; then
   _sci_optional=required
-elif test "$with_log"; then
-  _sci_lib="$with_loki"
-  _sci_inc="$with_loki"
-  _sci_optional=specific
-fi
 
-SCI_TRY_LINK(LOKI,loki library,loki/Singleton.h,$_sci_inc,loki,$_sci_lib,,,$_sci_optional)
+  if test "$with_loki" = ""; then
+    _sci_lib=/usr/local/lib/
+    _sci_inc="/usr/local/include"
+  else 
+  if test "$with_boost" = "yes"; then
+    # --with-boost has been specified without a parameter.
+    _sci_lib=/usr/local/lib/
+    _sci_inc=/usr/local/include
+  else 
+   if test "$with_boost"; then
+     #if --with-boost has been specified with a parameter, then use that parameter
+    _sci_lib="$with_loki"
+    _sci_inc="$with_loki"
+    _sci_optional=specific
+   fi
+  fi
+  fi
+  
+  # Only looking for one .h file... assuming all the rest are in the same place.
+   SCI_TRY_LINK(LOKI,loki library,loki/Singleton.h,$_sci_inc,loki,$_sci_lib,,,$_sci_optional)
 
-if test "$HAVE_LOKI" = "yes"; then
-  DEF_LOKI="#define HAVE_LOKI 1"
-fi
+  if test "$HAVE_LOKI" = "yes"; then
+    DEF_LOKI="#define HAVE_LOKI"
+    HAVE_LOKI="yes"
+  fi
 
-if test "$with_loki" && test ! "$DEF_LOKI"; then
-  echo
-  AC_MSG_ERROR(One or more of the Loki components is missing.)
-fi
+  if test "$with_loki" && test ! "$DEF_LOKI"; then
+    echo
+    AC_MSG_ERROR(One or more of the loki components are missing.)
+    echo
+  fi
+fi # end sci_required_loki
 
 AC_SUBST(LOKI_LIB_FLAG)
 AC_SUBST(LOKI_LIB_DIR_FLAG)
