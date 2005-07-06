@@ -41,6 +41,7 @@
 
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/DenseColMajMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -97,6 +98,8 @@ void CastMatrix::execute() {
 
   if (newtype == "DenseMatrix") {
     omH = imH->dense();
+  } else if (newtype == "DenseColMajMatrix") {
+    omH = imH->dense_col_maj();
   } else if (newtype == "SparseRowMatrix") {
     omH = imH->sparse();
   } else if (newtype == "ColumnMatrix") {
