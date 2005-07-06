@@ -40,7 +40,6 @@
  */
 
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Core/Datatypes/DenseMatrix.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/StringUtil.h>
 
