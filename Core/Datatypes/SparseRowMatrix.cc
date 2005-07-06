@@ -41,6 +41,7 @@
 
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/DenseColMajMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Math/ssmult.h>
 #include <Core/Math/MiscMath.h>
@@ -175,6 +176,27 @@ SparseRowMatrix::dense()
     while (count<nextRow)
     {
       (*dm)[r][columns[count]]=a[count];
+      count++;
+    }
+  }
+  return dm;
+}
+
+
+DenseColMajMatrix *
+SparseRowMatrix::dense_col_maj()
+{
+  DenseColMajMatrix *dm = scinew DenseColMajMatrix(nrows_, ncols_);
+  if (nrows_ == 0) return dm;
+  dm->zero();
+  int count = 0;
+  int nextRow;
+  for (int r = 0; r<nrows_; r++)
+  {
+    nextRow = rows[r+1];
+    while (count<nextRow)
+    {
+      dm->iget(r, columns[count]) = a[count];
       count++;
     }
   }

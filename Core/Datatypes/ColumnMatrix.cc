@@ -42,6 +42,7 @@
 
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/DenseColMajMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Util/Assert.h>
 #include <Core/Malloc/Allocator.h>
@@ -81,19 +82,41 @@ ColumnMatrix::ColumnMatrix(const ColumnMatrix& c) :
   }
 }
 
-ColumnMatrix *ColumnMatrix::column() {
+
+ColumnMatrix *
+ColumnMatrix::column()
+{
   return this;
 }
 
-DenseMatrix *ColumnMatrix::dense()
+
+DenseMatrix *
+ColumnMatrix::dense()
 {
   DenseMatrix *dm = scinew DenseMatrix(nrows_, 1);
-  for (int i=0; i<nrows_; i++)
+  for (int i = 0; i < nrows_; i++)
+  {
     (*dm)[i][0] = data[i];
+  }
   return dm;
 }
 
-SparseRowMatrix *ColumnMatrix::sparse() {
+
+DenseColMajMatrix *
+ColumnMatrix::dense_col_maj()
+{
+  DenseColMajMatrix *dm = scinew DenseColMajMatrix(nrows_, 1);
+  for (int i = 0; i < nrows_; i++)
+  {
+    dm->iget(i, 0) = data[i];
+  }
+  return dm;
+}
+
+
+SparseRowMatrix *
+ColumnMatrix::sparse()
+{
   int nnz = 0;
   int r;
   int *row = scinew int[nrows_+1];
