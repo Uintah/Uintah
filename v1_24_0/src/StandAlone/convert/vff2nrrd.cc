@@ -47,59 +47,81 @@
 
 using namespace std;
 
-int main(int argc, char **argv){
-
+int
+main(int argc, char **argv)
+{
   int nrrdSkip = 0;
-  int x=0, y=0, z=0;
+  int dim, i;
+  int size[3];
   char *in = argv[1];
   ifstream vffFileStream(in, ios::binary);
   char *out = argv[2];
   ofstream nrrdHeader(out, ios::binary);
 
-  if (argc < 3) {
+  if (argc < 3)
+  {
     cerr << "Usage: "<<argv[0]<<" inputFile.vff outputFile.nhdr \n";
     return 2;
   }
 
-	
-  if (! vffFileStream){
+  if (! vffFileStream)
+  {
     cout<<"could not input vff file "<<in<<endl;
     return 1;
   }
-  if (! nrrdHeader){
+  if (! nrrdHeader)
+  {
     cout<<"could not create nrrd header file "<<out<<endl;
     return 1;
   }
-	
+
   int lineCount = 0;
   int foundFormFeed = 0;	
   char temp[1025];
-  while (! vffFileStream.eof() && !foundFormFeed){
+  while (! vffFileStream.eof() && !foundFormFeed)
+  {
     vffFileStream.getline(temp,1024);
     lineCount++;
 
-    if (temp[0] == '\f'){
+    if (temp[0] == '\f')
+    {
       nrrdSkip = lineCount;
       foundFormFeed = 1;
     }
 	  
-    if (strncmp(temp,"size=",5) == 0){
+    if (strncmp(temp,"size=",5) == 0)
+    {
       istringstream sizeLine(&temp[5]);
-      sizeLine>>x>>y>>z;	    
+      sizeLine >> size[0] >> size[1] >> size[2];	    
     }
-
   }
+  
+  for (dim = 0; dim < 3; dim++)
+  {
+    if (size[dim] <= 0) break;
+  }
+
   vffFileStream.close();
 
-  nrrdHeader<<"NRRD0001"<<endl
-	    <<"type: short"<<endl
-	    <<"dimension: 3"<<endl
-	    <<"sizes: "<<x<<" "<<y<<" "<<z<<endl
-	    <<"spacings: 1 1 1"<<endl
-	    <<"data file: "<<in<<endl
-	    <<"endian: big"<<endl
-	    <<"encoding: raw"<<endl
-	    <<"line skip: "<<nrrdSkip<<endl;
+  nrrdHeader << "NRRD0001" << endl
+	     << "type: short" << endl
+	     << "dimension: " << dim << endl
+	     << "sizes:";
+  for (i = 0; i < dim; i++)
+  {
+    nrrdHeader << " " << size[i];
+  }
+  nrrdHeader << endl
+             << "spacings:";
+  for (i = 0; i < dim; i++)
+  {
+    nrrdHeader << " 1";
+  }
+  nrrdHeader << endl
+             << "data file: " << in << endl
+             << "endian: big" << endl
+             << "encoding: raw" << endl
+             << "line skip: " << nrrdSkip << endl;
 
   nrrdHeader.close();
   return 0;
