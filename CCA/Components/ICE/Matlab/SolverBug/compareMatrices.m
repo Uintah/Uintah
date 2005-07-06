@@ -97,6 +97,37 @@ end
 U = spconvert(uList);               % Convert non-zeros list to sparse matrix
 
 %=================================================================
+% Load Uintah vector file
+% Format of every row: "[int" i1 i2 i3 "] A.b" A.b " A.w " ...
+% A.w " A.s " A.s " A.p " A.p " A.n " A.n " A.e " A.e " A.t " A.t
+%=================================================================
+fprintf('Loading Uintah vector\n');
+% We assume the file was stripped from any headers/tails so that it
+% contains only the matrix data.
+
+dim                     = 3;        % Problem dimension
+
+%uintah                  = load('uintah.A.matrix','-ascii');
+f = fopen('uintah.B.vector','r');
+uintah = fscanf(f,'[%d, %d, %d]~ %f\n',inf);
+fclose(f);
+uintah                  = reshape(uintah,[4 length(uintah)/4])';
+bigOffset               = 2;
+listCell                = uintah(:,1:3);
+bigNumCells             = max(listCell,[],1) - min(listCell,[],1) + 3;
+
+% Remove extra cell dummy equations
+extraCells              = [];
+for d = 1:dim
+    extraCells = union(extraCells,...
+        find((listCell(:,d) < 2-bigOffset) | ...
+        (listCell(:,d) > bigNumCells(d)-1-bigOffset)));
+end
+uintah(extraCells,:)    = [];
+listCell(extraCells,:)  = [];
+UB = uintah(:,4);
+
+%=================================================================
 % Load Hypre matrix file
 % Format of every row: i1 i2 i3 A.w A.s A.p A.n A.e A.t
 %=================================================================
@@ -159,6 +190,48 @@ indNbhr                 = sub2ind(numCells,subNbhr{:});
 % Add rows to list of non-zeros
 hList                   = [hList; [indCell indNbhr hypre(:,6)]];
 H                       = spconvert(hList);
+
+%=================================================================
+% Load Hypre RHS vector file
+%=================================================================
+fprintf('\nLoading Hypre vector\n');
+f                       = fopen('hypre.HB.00000','r');
+interface               = fscanf(f,'%s\n\n',1);
+dim                     = fscanf(f,'Grid:\n%d\n',1);
+numParts                = fscanf(f,'%d\n',1);
+parts                   = fscanf(f,'%d: (%d, %d, %d)  x  (%d, %d, %d)\n',[numParts 7]);
+part                    = parts(:,1);
+lower                   = parts(:,2:4);
+upper                   = parts(:,5:7);
+numCells                = upper-lower+1;
+temp                    = fscanf(f,'\n%s:\n',1);      % temp = 'Data'
+hypre                   = fscanf(f,'%d: (%d, %d, %d; %d) %f\n',inf);
+fclose(f);
+
+hypre                   = reshape(hypre,[6 length(hypre)/6])';
+listCell                = hypre(:,2:4);
+
+% Remove extra cell dummy equations
+extraCells              = [];
+for d = 1:dim
+    extraCells = union(extraCells,...
+        find((listCell(:,d) < lower(d)) | ...
+        (listCell(:,d) > upper(d))));
+end
+hypre(extraCells,:)     = [];
+listCell(extraCells,:)  = [];
+
+% Move to 1-based subscripts and translate to cell indices
+offset                  = 1;
+numCellsTotal           = prod(numCells);
+subCell                 = cell(dim,1);
+for d = 1:dim
+    subCell{d}          = listCell(:,d) + offset;
+end
+indCell                 = sub2ind(numCells,subCell{:});
+
+% Add rows to list of non-zeros
+HB                     = hypre(:,6);
 
 %=================================================================
 % Measure discrepancy between U and H
