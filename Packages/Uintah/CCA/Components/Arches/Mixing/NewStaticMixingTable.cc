@@ -413,9 +413,11 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
   // Non-dimensionalized variance values normalized by maximum mixture fraction: f_mean*(1.0-f_mean)
   variance=vector<double>(d_mixvarcount);
   // Reading variance values
-  for (int mm=0; mm< d_mixvarcount; mm++){
+  // Jennifer's bug fix
+  if (Fvar_index != -1) {
+   for (int mm=0; mm< d_mixvarcount; mm++){
 	fd >> variance[mm];
-	//cout << variance[mm] << endl;
+   }
   }
 
   //Reading the data
