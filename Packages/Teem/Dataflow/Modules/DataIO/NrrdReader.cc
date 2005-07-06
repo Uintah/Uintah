@@ -329,7 +329,10 @@ NrrdReader::write_tmpfile(string filename, string* tmpfilename,
     command.replace(loc, 2, "'"+*tmpfilename+"'");
   }
   const int status = sci_system(command.c_str());
-  ASSERT(status == 0);
+  if (status)
+  {
+    remark("'" + command + "' failed.  Read may not work.");
+  }
   return true;
 }
 
