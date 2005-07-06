@@ -2709,8 +2709,11 @@ case SCIRun2 in
   Plume)
     sci_required_loki=yes
     sci_required_boost=yes
-    if test "$packages" != "all"; then
-      packages="$packages Plume"
+    sci_required_qt="no"
+    enable_scirun2="yes"
+
+    if test "$package" != "all"; then
+      package="$package Plume"
     fi
   ;;
   Remote)
@@ -2799,8 +2802,11 @@ case Plume in
   Plume)
     sci_required_loki=yes
     sci_required_boost=yes
-    if test "$packages" != "all"; then
-      packages="$packages Plume"
+    sci_required_qt="no"
+    enable_scirun2="yes"
+
+    if test "$package" != "all"; then
+      package="$package Plume"
     fi
   ;;
   Remote)
@@ -2985,8 +2991,11 @@ case $i in
   Plume)
     sci_required_loki=yes
     sci_required_boost=yes
-    if test "$packages" != "all"; then
-      packages="$packages Plume"
+    sci_required_qt="no"
+    enable_scirun2="yes"
+
+    if test "$package" != "all"; then
+      package="$package Plume"
     fi
   ;;
   Remote)
@@ -3076,8 +3085,11 @@ case Teem in
   Plume)
     sci_required_loki=yes
     sci_required_boost=yes
-    if test "$packages" != "all"; then
-      packages="$packages Plume"
+    sci_required_qt="no"
+    enable_scirun2="yes"
+
+    if test "$package" != "all"; then
+      package="$package Plume"
     fi
   ;;
   Remote)
@@ -3167,8 +3179,11 @@ case DataIO in
   Plume)
     sci_required_loki=yes
     sci_required_boost=yes
-    if test "$packages" != "all"; then
-      packages="$packages Plume"
+    sci_required_qt="no"
+    enable_scirun2="yes"
+
+    if test "$package" != "all"; then
+      package="$package Plume"
     fi
   ;;
   Remote)
@@ -3260,8 +3275,11 @@ case Ptolemy in
   Plume)
     sci_required_loki=yes
     sci_required_boost=yes
-    if test "$packages" != "all"; then
-      packages="$packages Plume"
+    sci_required_qt="no"
+    enable_scirun2="yes"
+
+    if test "$package" != "all"; then
+      package="$package Plume"
     fi
   ;;
   Remote)
@@ -6538,7 +6556,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:6541:" \
+echo "$as_me:6559:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -10266,8 +10284,15 @@ esac
 
 ##  ----------------------------------------------------------------------
 
+ac_ext=cc
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
 # Each of the HAVE_??? statements for these header files is found
 # in include/sci_defs/config_testedefs.h
+
 
 
 
@@ -10308,7 +10333,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
+	 { ac_try='test -z "$ac_cxx_werror_flag"
 			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
@@ -10352,8 +10377,8 @@ if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } >/dev/null; then
   if test -s conftest.err; then
-    ac_cpp_err=$ac_c_preproc_warn_flag
-    ac_cpp_err=$ac_cpp_err$ac_c_werror_flag
+    ac_cpp_err=$ac_cxx_preproc_warn_flag
+    ac_cpp_err=$ac_cpp_err$ac_cxx_werror_flag
   else
     ac_cpp_err=
   fi
@@ -10373,7 +10398,7 @@ echo "$as_me:$LINENO: result: $ac_header_preproc" >&5
 echo "${ECHO_T}$ac_header_preproc" >&6
 
 # So?  What about this header?
-case $ac_header_compiler:$ac_header_preproc:$ac_c_preproc_warn_flag in
+case $ac_header_compiler:$ac_header_preproc:$ac_cxx_preproc_warn_flag in
   yes:no: )
     { echo "$as_me:$LINENO: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&5
 echo "$as_me: WARNING: $ac_header: accepted by the compiler, rejected by the preprocessor!" >&2;}
@@ -59046,7 +59071,6 @@ esac
 ##  --  search for uuid functions, either uuid_create or uuid_generate ----
 
 if test "$sci_required_uuid" = "yes"; then
-
 
 
 for ac_header in sys/uuid.h uuid/uuid.h
