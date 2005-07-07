@@ -55,4 +55,4 @@ grid.level{k}.maxCell       = grid.domainSize./grid.level{k}.h;
 
 grid.level{k}.patch         = cell(grid.maxPatches,1);
 grid.level{k}.numPatches    = 0;
-grid.level{k}.indDel        = [];
+grid.level{k}.indUnused     = [];
