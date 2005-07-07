@@ -34,8 +34,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include <Dataflow/XMLUtil/StrX.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/XMLUtil/StrX.h>
+#include <Core/XMLUtil/XMLUtil.h>
 #include <SCIRun/SCIRunErrorHandler.h>
 #include <Core/Util/sci_system.h>
 #include <Core/OS/Dir.h>

@@ -47,8 +47,8 @@
 #include <SCIRun/SCIRunErrorHandler.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/OS/Dir.h>
-#include <Dataflow/XMLUtil/StrX.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/XMLUtil/StrX.h>
+#include <Core/XMLUtil/XMLUtil.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/soloader.h>
 #include <Core/CCA/PIDL/PIDL.h>

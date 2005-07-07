@@ -43,7 +43,7 @@ SRCS     += 	$(SRCDIR)/Service.cc \
 		$(SRCDIR)/SimpleService.cc \
 		$(SRCDIR)/FileTransfer.cc \
 		$(SRCDIR)/FileTransferClient.cc
-			
+
 PSELIBS := \
 	Core/Thread \
 	Core/Util \
@@ -51,8 +51,7 @@ PSELIBS := \
 	Core/Containers \
 	Core/ICom \
 	Core/SystemCall \
-	Dataflow/XMLUtil \
-	Dataflow/Network \
+	Core/XMLUtil 
 
 LIBS := $(XML_LIBRARY)
 

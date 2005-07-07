@@ -107,13 +107,25 @@ main(int argc, char *argv[])
     //sr->share(main_services);
 
     PIDL::serveObjects();
+    std::cerr << "before finalize\n";
     PIDL::finalize();
+    std::cerr << "after finalize\n";
   }
   catch(const Exception& e) {
     std::cerr << "Plume: " <<  e.message() << std::endl;
     return 1;
   }
+  catch (const std::exception &e) {
+    std::cerr << "Plume std: " <<  e.what() << std::endl;
+    return 1;
+  }
+  catch(...) {
+    std::cerr << "Plume [unknown exception]\n";
+    return 1;
+  }
 
+  std::cerr << "exiting...\n";
+  Thread::exitAll(0);
   return 0;
 }
 

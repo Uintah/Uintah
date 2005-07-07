@@ -18,7 +18,7 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 
-#include <Dataflow/XMLUtil/SimpleErrorHandler.h>
+#include <Core/XMLUtil/SimpleErrorHandler.h>
 
 #include <Core/Util/DebugStream.h>
 #include <Core/Exceptions/ErrnoException.h>

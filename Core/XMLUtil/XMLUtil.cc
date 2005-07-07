@@ -29,7 +29,7 @@
 
 
 #include <Core/Util/notset.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/XMLUtil/XMLUtil.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>

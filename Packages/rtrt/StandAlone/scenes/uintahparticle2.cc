@@ -63,7 +63,7 @@ using namespace SCIRun;
 #  include <Core/Thread/Semaphore.h>
 #endif
 
-#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/XMLUtil/XMLUtil.h>
 // general
 
 #include <sgi_stl_warnings_off.h>

@@ -40,7 +40,7 @@
 
 #include <SCIRun/SCIRunErrorHandler.h>
 #include <Core/Containers/StringUtil.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/XMLUtil/XMLUtil.h>
 #include <iostream>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)

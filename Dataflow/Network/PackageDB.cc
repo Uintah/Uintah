@@ -37,9 +37,9 @@
 #include <Dataflow/Network/FileUtils.h>
 #include <Dataflow/Network/ComponentNode.h>
 #include <Dataflow/Network/PackageDBHandler.h>
-#include <Dataflow/XMLUtil/StrX.h>
+#include <Core/XMLUtil/StrX.h>
 #include <Dataflow/Network/NetworkEditor.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/XMLUtil/XMLUtil.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/GuiInterface.h>
 #include <Core/Util/Environment.h>
