@@ -44,8 +44,8 @@
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Scheduler.h>
+#include <Dataflow/TCLThread/TCLThread.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/TCLThread/TCLThread.h>
 #include <Core/GuiInterface/TCLInterface.h>
 #include <Core/Init/init.h>
 #include <Core/Util/Environment.h>

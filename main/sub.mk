@@ -37,7 +37,7 @@ SRCS     := $(SRCDIR)/main.cc
 ifeq ($(LARGESOS),yes)
   PSELIBS := Dataflow Core
 else
-  PSELIBS := Dataflow/Network Core/Containers Core/TCLThread Core/GuiInterface \
+  PSELIBS := Dataflow/Network Core/Containers Dataflow/TCLThread Core/GuiInterface \
 	Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
 	Core/ICom Core/Services Dataflow/XMLUtil Core/SystemCall Core/Geom Core/Init
   ifeq ($(HAVE_PTOLEMY), yes)	

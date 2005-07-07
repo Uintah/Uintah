@@ -55,7 +55,6 @@ SUBDIRS := \
 	$(SRCDIR)/Services \
 	$(SRCDIR)/SystemCall \
 	$(SRCDIR)/Thread \
-	$(SRCDIR)/TCLThread \
 	$(SRCDIR)/TkExtensions \
 	$(SRCDIR)/Util \
 	$(SRCDIR)/Volume \

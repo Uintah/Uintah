@@ -26,7 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Core/TCLThread/TCLThread.h>
+#include <Dataflow/TCLThread/TCLThread.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/TCLInterface.h>
 #include <Core/GuiInterface/TCLTask.h>

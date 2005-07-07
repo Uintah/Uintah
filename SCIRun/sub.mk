@@ -67,13 +67,13 @@ ifeq ($(HAVE_GLOBUS),yes)
  PSELIBS := Core/OS Core/Containers Core/Util Dataflow/XMLUtil \
             Dataflow/Network Core/GuiInterface Core/CCA/spec \
             Core/CCA/PIDL Core/CCA/SSIDL \
-            Core/Exceptions Core/TkExtensions Core/TCLThread Core/Init Core/Thread \
+            Core/Exceptions Core/TkExtensions Dataflow/TCLThread Core/Init Core/Thread \
             Core/globus_threads Core/CCA/Comm
 else
  PSELIBS := Core/OS Core/Containers Core/Util Dataflow/XMLUtil \
             Dataflow/Network Core/GuiInterface Core/CCA/spec \
             Core/CCA/PIDL Core/CCA/SSIDL \
-            Core/Exceptions Core/Thread \
+            Core/Exceptions Dataflow/Thread \
             Core/TkExtensions Core/TCLThread Core/Init Core/CCA/Comm
 endif
 
