@@ -2,6 +2,7 @@
 #define Config_h
 
 #include <string>
+#include <map>
 #include <iostream>
 #include <loki/Singleton.h>
 #include <boost/program_options.hpp>
@@ -31,6 +32,9 @@ namespace Dugway {
   class Config
   {
   public:
+    typedef std::map<std::string,std::string> Builders;
+
+  public:
     Config();
 
     bool init(int, char *[]);
@@ -39,8 +43,9 @@ namespace Dugway {
   public:
     bool is_server;
     std::string framework;
-    std::pair<std::string, std::string > builder;
-    std::pair<std::string, std::string > default_builder;
+    std::string  builder;
+    std::string  default_builder;
+    Builders builder_types;
 
   private:
     po::variables_map _config;

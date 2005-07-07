@@ -31,13 +31,15 @@ namespace Dugway {
       config.add_options()
 	("server,s", "run as a server")
 	("framework,f", po::value<string>(&framework)->default_value("socket://localhost.localdomain:32780/142355952"), "master framework")
-	("builder,b", po::value<pair<string,string> >(&builder)->default_value(make_pair("", "")), "Builder")
+	("builder,b", po::value<string>(&builder)->default_value(""), "Builder")
 	;
       
       // config file only
       po::options_description file_only("Configurations");
       file_only.add_options()
-	("default_builder", po::value<pair<string,string> >(&default_builder)->default_value(make_pair("TxtBuilder", "cca:SCIRun.TxtBuilder")))
+	("default_builder", po::value<string>(&default_builder)->default_value("TxtBuilder"))
+// 	("builder_types", 
+// 	 po::value<vector<pair<string,string> > >(&default_builder))//->default_value(vector<make_pair("TxtBuilder", "cca:SCIRun.TxtBuilder")))
 	;
 
       //
@@ -83,6 +85,10 @@ namespace Dugway {
 
     if ( _config.count("server") ) 
       is_server = true;
+    
+    // temp hack
+    builder_types["TxtBuilder"] = "cca:SCIRun.TxtBuilder";
+
     return false;
   }
 }    
