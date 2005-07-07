@@ -45,7 +45,7 @@ def frontEndPreProcess( text )
           else
             #both tags outside of statement
             middlelen = right-(left+patternstart.length)
-            cpptext += intag + "\n" + text.slice(left+patternstart.length,middlelen) + "\n" + intagC +"\n"
+            cpptext += intag + "\n" + text.slice(left+patternstart.length,middlelen) + "\n" + intagC + "\n"
             text[left,right+patternend.length-left] = ""
           end
           break
@@ -62,7 +62,7 @@ def frontEndPreProcess( text )
           elsif(e_tag < s_tag)&&(e_tag > right)
             #both tags outside of statement
             middlelen = right-(left+patternstart.length)
-            cpptext += intag + "\n" + text.slice(left+patternstart.length,middlelen) + "\n" + intagC +"\n"
+            cpptext += intag + "\n" + text.slice(left+patternstart.length,middlelen) + "\n" + intagC + "\n"
             text[left,right+patternend.length-left] = ""
             e_tag = text.index(intagC,left)
             break
