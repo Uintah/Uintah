@@ -77,12 +77,12 @@ else
   PSELIBS := Core/OS Core/Containers Core/Util Core/XMLUtil \
             Core/GuiInterface Core/CCA/spec \
             Core/CCA/PIDL Core/CCA/SSIDL \
-            Core/Exceptions \
+            Core/Exceptions Core/Thread \
             Core/TkExtensions Core/Init Core/CCA/Comm
 endif
 
 ifeq ($(BUILD_DATAFLOW),yes)
- PSELIBS += Dataflow/Network Dataflow/Thread Dataflow/TCLThread 
+ PSELIBS += Dataflow/Network
 endif
 
 LIBS := $(XML_LIBRARY)
