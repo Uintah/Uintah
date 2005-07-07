@@ -2398,12 +2398,9 @@ ViewSlices::next_slice(SliceWindow &window)
   redraw_all();
 }
 
-extern "C" void backtrace_linux_i386(FILE *);
-
 void
 ViewSlices::zoom_in(SliceWindow &window)
 {
-  backtrace_linux_i386(0);
   window.zoom_ *= 1.1;
   window.cursor_moved_ = true;
   window.redraw_ = true;
