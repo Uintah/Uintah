@@ -23,6 +23,28 @@ namespace std {
     std::cerr << "pair ("<<p.first<<", "<<p.second<<")\n";
     return in;
   }
+
+  template<typename First, typename Second>
+  inline std::istream& operator>>( std::istream& in, std::map<First, Second >& m )
+  {
+    std::string key,value;
+    char ch;
+
+    while (in >> ch && ch == ' ');
+    if ( ch == '(' ) {
+      while (in >> ch  && ch != ',') key += ch;
+      while (in >> ch && ch  == ' ');
+      while (ch != ')') { value += ch; in >> ch;}
+
+      //std::cerr << "map add ("<<key<<") ("<<value<<")\n";
+      m[key]=value;
+    }
+    else {
+      std::cerr << "error reading map entry\n";
+    }
+    return in;
+  }
+
 }
 
 namespace po = boost::program_options;

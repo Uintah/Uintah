@@ -60,6 +60,7 @@ SUBDIRS := \
 	$(SRCDIR)/Volume \
 	$(SRCDIR)/2d \
 	$(SRCDIR)/ICom \
+	$(SRCDIR)/XMLUtil \
 #	$(SRCDIR)/Util/Comm \
 #	$(SRCDIR)/Parts \
 #	$(SRCDIR)/PartsGui \

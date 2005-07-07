@@ -54,7 +54,7 @@ PSELIBS := \
 	Core/Persistent \
 	Core/Thread \
 	Core/Util
-#	Dataflow/Network Dataflow/XMLUtil
+#	Dataflow/Network Core/XMLUtil
 
 ifeq ($(IS_WIN), yes)
   PSELIBS += Core/Math

@@ -17,7 +17,7 @@ PSELIBS := \
         Core/Thread Core/Persistent Core/Exceptions \
         Core/GuiInterface Core/Containers Core/Datatypes \
         Core/Geom Core/GeomInterface \
-	Core/Geometry Dataflow/Widgets Dataflow/XMLUtil \
+	Core/Geometry Dataflow/Widgets Core/XMLUtil \
 	Core/Util \
 	Packages/rtrt/Core \
 	Packages/rtrt/Dataflow/Ports

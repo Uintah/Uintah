@@ -48,8 +48,12 @@ SRCS     += \
             $(SRCDIR)/SCIRunLoader.cc
 
 
-SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Dataflow $(SRCDIR)/Internal \
+SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Internal \
            $(SRCDIR)/Corba $(SRCDIR)/Tao
+
+ifeq ($(BUILD_DATAFLOW),yes)
+  SUBDIRS += $(SRCDIR)/Dataflow 
+endif
 
 ifeq ($(HAVE_VTK),yes)
  SUBDIRS += $(SRCDIR)/Vtk
@@ -64,17 +68,21 @@ endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 ifeq ($(HAVE_GLOBUS),yes)
- PSELIBS := Core/OS Core/Containers Core/Util Dataflow/XMLUtil \
-            Dataflow/Network Core/GuiInterface Core/CCA/spec \
+  PSELIBS := Core/OS Core/Containers Core/Util Core/XMLUtil \
+            Core/GuiInterface Core/CCA/spec \
             Core/CCA/PIDL Core/CCA/SSIDL \
-            Core/Exceptions Core/TkExtensions Dataflow/TCLThread Core/Init Core/Thread \
+            Core/Exceptions Core/TkExtensions Core/Init Core/Thread \
             Core/globus_threads Core/CCA/Comm
 else
- PSELIBS := Core/OS Core/Containers Core/Util Dataflow/XMLUtil \
-            Dataflow/Network Core/GuiInterface Core/CCA/spec \
+  PSELIBS := Core/OS Core/Containers Core/Util Core/XMLUtil \
+            Core/GuiInterface Core/CCA/spec \
             Core/CCA/PIDL Core/CCA/SSIDL \
-            Core/Exceptions Dataflow/Thread \
-            Core/TkExtensions Core/TCLThread Core/Init Core/CCA/Comm
+            Core/Exceptions \
+            Core/TkExtensions Core/Init Core/CCA/Comm
+endif
+
+ifeq ($(BUILD_DATAFLOW),yes)
+ PSELIBS += Dataflow/Network Dataflow/Thread Dataflow/TCLThread 
 endif
 
 LIBS := $(XML_LIBRARY)

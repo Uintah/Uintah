@@ -31,7 +31,7 @@
 
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/GuiInterface.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/XMLUtil/XMLUtil.h>
 #include <Dataflow/Network/NetworkEditor.h>
 
 namespace SCIRun {

@@ -52,7 +52,7 @@ ifeq ($(LARGESOS),yes)
 else
     PSELIBS := Dataflow/Network Core/Containers Core/GuiInterface \
                Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
-               Core/Malloc Core/Services Dataflow/XMLUtil Core/SystemCall \
+               Core/Malloc Core/Services Core/XMLUtil Core/SystemCall \
                Dataflow/Modules/Render \
                    Packages/Ptolemy/Core/PtolemyInterface \
 

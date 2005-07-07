@@ -83,6 +83,7 @@ VPATH := $(SRCTOP)
 
 PACKAGE_DIRS := @PACKAGE_DIRS@
 LOAD_PACKAGE := @LOAD_PACKAGE@
+BUILD_DATAFLOW := @BUILD_DATAFLOW@
 BUILD_SCIRUN2 := @BUILD_SCIRUN2@
 BUILD_PLUME := @BUILD_PLUME@
 
@@ -91,8 +92,18 @@ THREAD_IMPL = $(SRCDIR)/@THREAD_IMPL@
 TIME_IMPL = $(SRCDIR)/@TIME_IMPL@
 
 # Subdirectories
-SUBDIRS := Core Dataflow StandAlone $(COMPONENT_DIRS) main \
-	testprograms $(PACKAGE_DIRS)
+SUBDIRS := Core 
+ifeq ($(BUILD_DATAFLOW),yes)
+  SUBDIRS += Dataflow
+endif
+
+SUBDIRS += StandAlone $(COMPONENT_DIRS)
+
+ifeq ($(BUILD_DATAFLOW),yes)
+  SUBDIRS += main 
+endif
+
+SUBDIRS += testprograms $(PACKAGE_DIRS)
 
 IS_OSX := @IS_OSX@
 IS_WIN := @IS_WIN@

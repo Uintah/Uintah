@@ -9,7 +9,7 @@ SRCS     += \
 PSELIBS := Core/Exceptions Core/Geometry \
 	Core/Persistent Core/Datatypes \
 	Core/Containers  Core/Geom Core/Thread \
-	Dataflow/Network Dataflow/XMLUtil \
+	Dataflow/Network Core/XMLUtil \
 	Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/Datatypes \
 	Packages/Uintah/Core/Exceptions \

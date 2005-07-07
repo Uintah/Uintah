@@ -51,7 +51,9 @@ SRCS     += \
         $(SRCDIR)/ProgressiveWarning.cc
 
 ifeq ($(BUILD_SCIRUN2),yes)
-SRCS += $(SRCDIR)/GenerateUUID.cc
+  ifneq ($(HAVE_UUID),yes)
+    SRCS += $(SRCDIR)/GenerateUUID.cc
+  endif
 endif
 
 PSELIBS := Core/Containers Core/Exceptions Core/Thread Core/Math

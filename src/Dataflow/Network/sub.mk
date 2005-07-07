@@ -47,7 +47,7 @@ SRCS     += $(SRCDIR)/Connection.cc \
 	$(SRCDIR)/PackageDBHandler.cc \
 	$(SRCDIR)/Scheduler.cc
 
-PSELIBS := Dataflow/Comm Dataflow/XMLUtil Core/Exceptions Core/Thread \
+PSELIBS := Dataflow/Comm Core/XMLUtil Core/Exceptions Core/Thread \
 	Core/Containers Core/GuiInterface Core/Util Core/GeomInterface
 LIBS := $(TCL_LIBRARY) $(XML_LIBRARY)
 

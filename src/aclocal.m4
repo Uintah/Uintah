@@ -1052,6 +1052,7 @@ AC_DEFUN([INIT_PACKAGE_CHECK_VARS], [
   sci_required_babel=no
   sci_required_blas=no
   sci_required_crypto=no
+  sci_required_dataflow=yes
   sci_required_etags=no
   sci_required_exc=no 
   sci_required_fortran=no
@@ -1086,6 +1087,8 @@ AC_DEFUN([INIT_PACKAGE_CHECK_VARS], [
   sci_required_uuid=no
   sci_required_vdt=no
   sci_required_vtk=no 
+
+  plume_checked=no
 
 ])
 ##
@@ -1129,14 +1132,17 @@ case $1 in
     sci_required_babel=yes
   ;;
   Plume)
-    sci_required_loki=yes
-    sci_required_boost=yes
-    sci_required_qt="no"
-    enable_scirun2="yes"
-    
-    if test "$package" != "all"; then
-      package="$package Plume"
-    fi
+    if test "$plume_checked" = "no"; then
+      plume_checked=yes
+      sci_required_loki=yes
+      sci_required_boost=yes
+      sci_required_qt="no"
+      enable_scirun2="yes"
+	    
+      if test "$package" != "all"; then
+        package="$package Plume"
+      fi
+   fi
   ;;
   Remote)
     sci_required_jpeg=yes

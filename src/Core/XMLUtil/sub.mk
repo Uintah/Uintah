@@ -31,7 +31,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Dataflow/XMLUtil
+SRCDIR   := Core/XMLUtil
 
 SRCS     += $(SRCDIR)/SimpleErrorHandler.cc $(SRCDIR)/XMLUtil.cc \
 	$(SRCDIR)/StrX.cc

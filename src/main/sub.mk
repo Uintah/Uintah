@@ -39,7 +39,7 @@ ifeq ($(LARGESOS),yes)
 else
   PSELIBS := Dataflow/Network Core/Containers Dataflow/TCLThread Core/GuiInterface \
 	Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
-	Core/ICom Core/Services Dataflow/XMLUtil Core/SystemCall Core/Geom Core/Init
+	Core/ICom Core/Services Core/XMLUtil Core/SystemCall Core/Geom Core/Init
   ifeq ($(HAVE_PTOLEMY), yes)	
 	PSELIBS += Packages/Ptolemy/Core/Comm
   endif
@@ -124,7 +124,7 @@ ifeq ($(LARGESOS),yes)
 else
   PSELIBS := Dataflow/Network Core/Containers Core/GuiInterface \
 	Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
-	Core/ICom Core/Services Dataflow/XMLUtil Core/SystemCall Core/Init
+	Core/ICom Core/Services Core/XMLUtil Core/SystemCall Core/Init
   ifeq ($(OS_NAME),Darwin)
     PSELIBS += Core/Datatypes Core/ImportExport
   endif

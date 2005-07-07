@@ -520,6 +520,11 @@ SCI_ARG_ENABLE(package,
                  example: --enable-package='BioPSE Teem'),
   [package="$enableval"],
   [package=""])
+SCI_ARG_ENABLE(dataflow,
+  AC_HELP_STRING(--disable-dataflow,
+                 do not build Dataflow),
+  [sci_required_dataflow=no],
+  [sci_required_dataflow=yes])
 SCI_ARG_ENABLE(exename,
   AC_HELP_STRING(--enable-exename=<name>,
                  Use name for executable name instead of the default: scirun),
@@ -619,6 +624,11 @@ myargs=`echo $args | sed 's%\^% %g'`
 
 ## Cut off the /configure from the configure command (eg: ../src/configure)
 path_to_src=`echo $0 | sed 's/\/configure//'`
+
+ 
+BUILD_DATAFLOW="$sci_required_dataflow"
+AC_SUBST(BUILD_DATAFLOW)
+
 
 if test "$package" = "all"; then
   AC_MSG_RESULT(Enabling all the packages in your SCIRun/src/Packages directory.)
@@ -1516,7 +1526,7 @@ else
 if test "$enable_plume" = "yes"; then
    BUILD_PLUME="yes"
 else
-  BUILD_PLUME="no"
+   BUILD_PLUME="no"
 fi
 AC_SUBST(BUILD_PLUME)
 

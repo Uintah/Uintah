@@ -13,7 +13,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/XMLUtil/XMLUtil.h>
 
 // rtrt stuff
 #include <Packages/rtrt/Core/BrickArray3.h>

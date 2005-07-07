@@ -105,12 +105,14 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 
-PSELIBS := Dataflow/Network Dataflow/Ports Dataflow/XMLUtil Dataflow/Widgets \
+PSELIBS := Dataflow/Network Dataflow/Ports  Dataflow/Widgets \
 	Core/Algorithms/Fields \
 	Core/Datatypes Core/Persistent Core/Exceptions Core/ImportExport \
 	Core/Thread Core/Containers Core/GuiInterface Core/Geom \
 	Core/Datatypes Core/Geometry Core/TkExtensions Core/ImportExport \
-	Core/Math Core/Util Core/Algorithms/Geometry Core/GeomInterface
+	Core/Math Core/Util Core/Algorithms/Geometry Core/GeomInterface \
+	Core/XMLUtil
+
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(LEX_LIBRARY) $(M_LIBRARY) $(XML_LIBRARY) $(THREAD_LIBRARY)
 
 # Sandia Meshing Library

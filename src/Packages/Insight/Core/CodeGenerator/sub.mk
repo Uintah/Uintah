@@ -36,7 +36,7 @@ SRCS := $(SRCDIR)/main.cc \
 	$(SRCDIR)/Parser.cc \
 	$(SRCDIR)/Translator.cc \
 
-PSELIBS := Dataflow/XMLUtil
+PSELIBS := Core/XMLUtil
 
 LIBS := $(XML_LIBRARY) $(XALAN_LIBRARY) 
 INCLUDES += $(XALAN_INCLUDE) 

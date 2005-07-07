@@ -44,8 +44,8 @@
 #include <Dataflow/Ports/NrrdPort.h>
 #include <Dataflow/Ports/TimePort.h>
 #include <Dataflow/Widgets/PointWidget.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
-#include <Dataflow/XMLUtil/StrX.h>
+#include <Core/XMLUtil/XMLUtil.h>
+#include <Core/XMLUtil/StrX.h>
 
 #include <sys/stat.h>
 #include <math.h>

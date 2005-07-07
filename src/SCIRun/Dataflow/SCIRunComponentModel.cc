@@ -49,8 +49,8 @@
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Scheduler.h>
 #include <Core/GuiInterface/TCLInterface.h>
-#include <Dataflow/XMLUtil/StrX.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/XMLUtil/StrX.h>
+#include <Core/XMLUtil/XMLUtil.h>
 #include <SCIRun/Dataflow/SCIRunComponentDescription.h>
 #include <SCIRun/Dataflow/SCIRunComponentInstance.h>
 #include <SCIRun/SCIRunErrorHandler.h>

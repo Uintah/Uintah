@@ -57,7 +57,7 @@
 #include <Dataflow/Network/Port.h>
 #include <Dataflow/Network/ComponentNode.h>
 #include <Dataflow/Network/GenFiles.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/XMLUtil/XMLUtil.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/GuiInterface/GuiCallback.h>

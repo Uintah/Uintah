@@ -38,8 +38,7 @@ namespace Dugway {
       po::options_description file_only("Configurations");
       file_only.add_options()
 	("default_builder", po::value<string>(&default_builder)->default_value("TxtBuilder"))
-// 	("builder_types", 
-// 	 po::value<vector<pair<string,string> > >(&default_builder))//->default_value(vector<make_pair("TxtBuilder", "cca:SCIRun.TxtBuilder")))
+ 	("builder_types", po::value<map<string,string> >(&builder_types))//->default_value(vector<make_pair("TxtBuilder", "cca:SCIRun.TxtBuilder")))
 	;
 
       //
@@ -60,6 +59,7 @@ namespace Dugway {
       ifstream ifs(".plumerc");
       po::store( po::parse_config_file(ifs, config_file), _config );
 
+      cerr << "config read file\n";
       // done
       po::notify(_config);
     }
@@ -86,9 +86,6 @@ namespace Dugway {
     if ( _config.count("server") ) 
       is_server = true;
     
-    // temp hack
-    builder_types["TxtBuilder"] = "cca:SCIRun.TxtBuilder";
-
     return false;
   }
 }    

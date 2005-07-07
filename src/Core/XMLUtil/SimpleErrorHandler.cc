@@ -28,8 +28,8 @@
 
 
 
-#include <Dataflow/XMLUtil/SimpleErrorHandler.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/XMLUtil/SimpleErrorHandler.h>
+#include <Core/XMLUtil/XMLUtil.h>
 #include <Core/Containers/StringUtil.h>
 #include <iostream>
 #ifndef __sgi

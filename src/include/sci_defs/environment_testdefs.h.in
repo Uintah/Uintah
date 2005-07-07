@@ -37,6 +37,7 @@
 #define SCIRUN_SRCDIR "@scirun_src_dir@"
 #define SCIRUN_OBJDIR "@scirun_obj_dir@"
 #define SCIRUN_THIRDPARTY_DIR "@SCI_THIRDPARTY_DIR@"
+#define BUILD_DATAFLOW "@BUILD_DATAFLOW@"
 #define LOAD_PACKAGE "@LOAD_PACKAGE@"
 #define ITCL_WIDGETS "@LIB_DIR_ITCL@/iwidgets/scripts"
 

@@ -27,7 +27,7 @@
 */
 
 
-#include <Dataflow/XMLUtil/StrX.h>
+#include <Core/XMLUtil/StrX.h>
 
 namespace SCIRun {
 
