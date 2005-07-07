@@ -34,7 +34,6 @@
 #endif
 
 #include <Dataflow/Network/PackageDB.h>
-#include <Dataflow/Network/FileUtils.h>
 #include <Dataflow/Network/ComponentNode.h>
 #include <Dataflow/Network/PackageDBHandler.h>
 #include <Core/XMLUtil/StrX.h>
@@ -44,6 +43,7 @@
 #include <Core/GuiInterface/GuiInterface.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/soloader.h>
+#include <Core/Util/FileUtils.h>
 #include <Core/OS/Dir.h> // for LSTAT
 
 #include <stdio.h>
