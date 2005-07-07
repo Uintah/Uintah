@@ -5,8 +5,8 @@
 
 \subsection ayla Ayla
 
-\li Bug #2609 Load network files broken: by June 29
-\li Babel upgrade: July 11
+\li Bug #2609 Load network files broken: by July 8
+\li Babel upgrade: July 15
 \li Replace Qt GUI toolkit: TBD
 \li Migrate loading/saving network files to a Framework service: TBD
 
@@ -15,16 +15,17 @@
 \subsection keming Keming
 
 \li Complete parallel component implementation: by July 18
-\li Updates to text builder: by June 24
 \li PRMI without data redistribution, by July 1
 \li PRMI data redistribution, by July 8
 \li PRMI synchronization, by July 14
 \li PRMI concurrency control, by July 17
+\li Updates to text builder: TBD
 
 \subsection kosta Kosta
 
 \li Audit existing test programs: find broken tests, write some documentation for each, locate script for test automation: (Waiting on Keming to finish parallel components)
 \li Complete SCIM integration: by July 20
+\li Fix absolute path problems in SCIM script
 
 \subsection rc Unassigned Release Criteria tasks
 
