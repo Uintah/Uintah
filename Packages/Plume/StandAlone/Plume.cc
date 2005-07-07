@@ -45,12 +45,14 @@
 #include <SCIRun/SCIRunFramework.h>
 
 #include <Packages/Plume/StandAlone/Config.h>
-#include <Packages/Plume/StandAlone/Plume.defs>
+//#include <Packages/Plume/StandAlone/Plume.defs>
 
 using namespace SCIRun;
 using namespace sci::cca;
 
 #include <sys/stat.h>
+
+bool init(int argc, char *argv[]);
 
 int
 main(int argc, char *argv[]) 
@@ -59,19 +61,20 @@ main(int argc, char *argv[])
 
   Dugway::Config& config = Dugway::ProgramOptions::Instance();
 
-  // Create a new framework
+  // SCIRun Framework
   try {
     AbstractFramework::pointer sr;
-    if(config.framework == "") {
+
+    if(config.framework == "create") {
       sr = AbstractFramework::pointer(new SCIRunFramework());
       std::cerr << "URL to framework:\n" << sr->getURL().getString() << std::endl;
-    } else {
-      std::cerr << "Not finished: connect to existing framework\n";
-      return 0;
+    } 
+    else {
+      sr = pidl_cast<AbstractFramework::pointer>(PIDL::objectFrom(config.framework));
     }
     
     sci::cca::Services::pointer main_services
-      = sr->getServices("SCIRun main", "main", sci::cca::TypeMap::pointer(0));
+      = sr->getServices("Plume", "main", sci::cca::TypeMap::pointer(0));
 
     sci::cca::ports::FrameworkProperties::pointer properties =
       pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
@@ -90,7 +93,7 @@ main(int argc, char *argv[])
     }
     
     ComponentID::pointer builder =
-      builder->createInstance(config.builder.first, config.builder.second, sci::cca::TypeMap::pointer(0));
+      builder_service->createInstance(config.builder.first, config.builder.second, sci::cca::TypeMap::pointer(0));
     if(builder.isNull()) {
       std::cerr << "Cannot create builder " << config.builder.first << " of type " << config.builder.second << std::endl;
       Thread::exitAll(1);
@@ -133,4 +136,6 @@ bool init(int argc, char *argv[])
     std::cerr << "PIDL: " << e.message() << std::endl;
     return false;
   }
+
+  return true;
 }  

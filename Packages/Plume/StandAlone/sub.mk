@@ -4,7 +4,7 @@
 SRCDIR := Packages/Plume/StandAlone
 
 SRCS := $(SRCDIR)/Plume.cc \
-	Config.cc
+	$(SRCDIR)/Config.cc
 
 ifeq ($(LARGESOS),yes)
   PSELIBS := Core/CCA Packages/Plume
