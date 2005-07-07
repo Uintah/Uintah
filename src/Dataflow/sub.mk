@@ -40,6 +40,7 @@ SUBDIRS := \
 	$(SRCDIR)/Modules \
 	$(SRCDIR)/Network \
 	$(SRCDIR)/Ports \
+	$(SRCDIR)/TCLThread \
 	$(SRCDIR)/Widgets \
 	$(SRCDIR)/XMLUtil \
 

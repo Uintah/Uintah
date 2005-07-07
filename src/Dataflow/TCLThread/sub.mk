@@ -31,7 +31,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Core/TCLThread
+SRCDIR   := Dataflow/TCLThread
 
 SRCS     += $(SRCDIR)/TCLThread.cc
 
