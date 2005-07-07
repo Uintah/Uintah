@@ -15,6 +15,7 @@ namespace Dugway {
   {
   }
 
+
   bool Config::init( int argc, char *argv[] ) 
   {
     try {
@@ -28,13 +29,15 @@ namespace Dugway {
       // command line & config file 
       po::options_description config("Configurations");
       config.add_options()
-	("framework", po::value<string>(&framework)->default_value("create"), "master framework")
-	("builder", po::value<pair<string,string> >(&builder)->default_value(make_pair("TxtBuilder", "cca:SCIRun.TxtBuilder")), "Builder")
+	("server,s", "run as a server")
+	("framework,f", po::value<string>(&framework)->default_value("socket://localhost.localdomain:32780/142355952"), "master framework")
+	("builder,b", po::value<pair<string,string> >(&builder)->default_value(make_pair("", "")), "Builder")
 	;
       
       // config file only
       po::options_description file_only("Configurations");
       file_only.add_options()
+	("default_builder", po::value<pair<string,string> >(&default_builder)->default_value(make_pair("TxtBuilder", "cca:SCIRun.TxtBuilder")))
 	;
 
       //
@@ -63,6 +66,7 @@ namespace Dugway {
       return false;
     }
 
+    return !inform();
   };
 
   bool Config::inform()
@@ -77,6 +81,8 @@ namespace Dugway {
       return true;
     }
 
+    if ( _config.count("server") ) 
+      is_server = true;
     return false;
   }
 }    

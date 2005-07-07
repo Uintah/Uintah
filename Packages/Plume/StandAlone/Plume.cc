@@ -43,6 +43,7 @@
 #include <Core/CCA/spec/cca_sidl.h>
 #include <Core/Thread/Thread.h>
 #include <SCIRun/SCIRunFramework.h>
+#include <Core/Exceptions/InvalidState.h>
 
 #include <Packages/Plume/StandAlone/Config.h>
 //#include <Packages/Plume/StandAlone/Plume.defs>
@@ -53,6 +54,7 @@ using namespace sci::cca;
 #include <sys/stat.h>
 
 bool init(int argc, char *argv[]);
+sci::cca::Services::pointer validate_framework(AbstractFramework::pointer sr);
 
 int
 main(int argc, char *argv[]) 
@@ -61,55 +63,49 @@ main(int argc, char *argv[])
 
   Dugway::Config& config = Dugway::ProgramOptions::Instance();
 
-  // SCIRun Framework
   try {
     AbstractFramework::pointer sr;
 
-    if(config.framework == "create") {
+    if(config.is_server) {
+      PIDL::isfrwk=true;
       sr = AbstractFramework::pointer(new SCIRunFramework());
-      std::cerr << "URL to framework:\n" << sr->getURL().getString() << std::endl;
+      std::cerr << "Server mode: " << sr->getURL().getString() << std::endl;
     } 
     else {
+      PIDL::isfrwk=false;
       sr = pidl_cast<AbstractFramework::pointer>(PIDL::objectFrom(config.framework));
     }
     
-    sci::cca::Services::pointer main_services
-      = sr->getServices("Plume", "main", sci::cca::TypeMap::pointer(0));
+    sci::cca::Services::pointer main_services = validate_framework(sr);
 
-    sci::cca::ports::FrameworkProperties::pointer properties =
-      pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
-			main_services->getPort("cca.FrameworkProperties"));
-    if (properties.isNull()) {
-      std::cerr << "Cannot find framework properties service\n";
-      Thread::exitAll(1);
+    if ( !config.is_server && config.builder.first == "" )
+      config.builder = config.default_builder;
+
+    std::cerr << "builder = " << config.builder << "\n";
+    if ( !config.is_server || config.builder.first != "") {
+      
+      sci::cca::ports::BuilderService::pointer builder_service
+	= pidl_cast<sci::cca::ports::BuilderService::pointer>(main_services->getPort("cca.BuilderService"));
+      if(builder_service.isNull()) 
+	throw InvalidState("Cannot find plume builder service");
+      
+      ComponentID::pointer builder =
+	builder_service->createInstance(config.builder.first, config.builder.second, sci::cca::TypeMap::pointer(0));
+      if(builder.isNull()) {
+	std::cerr << "Cannot create builder " << config.builder.first << " of type " << config.builder.second << std::endl;
+	throw InternalError("quitting");	
+      }
+
+      main_services->releasePort("cca.BuilderService");
     }
 
-    sci::cca::ports::BuilderService::pointer builder_service
-      = pidl_cast<sci::cca::ports::BuilderService::pointer>(
-                          main_services->getPort("cca.BuilderService"));
-    if(builder_service.isNull()) {
-      std::cerr << "Cannot find builder service\n";
-      Thread::exitAll(1);
-    }
-    
-    ComponentID::pointer builder =
-      builder_service->createInstance(config.builder.first, config.builder.second, sci::cca::TypeMap::pointer(0));
-    if(builder.isNull()) {
-      std::cerr << "Cannot create builder " << config.builder.first << " of type " << config.builder.second << std::endl;
-      Thread::exitAll(1);
-    }
-
-    main_services->releasePort("cca.FrameworkProperties");
-    main_services->releasePort("cca.BuilderService");
     std::cout << "Plume ready" << std::endl;
     
     //broadcast, listen to URL periodically
     //sr->share(main_services);
-    
+
     PIDL::serveObjects();
-    std::cout << "serveObjects done!\n";
     PIDL::finalize();
-    
   }
   catch(const Exception& e) {
     std::cerr << "Plume: " <<  e.message() << std::endl;
@@ -117,6 +113,22 @@ main(int argc, char *argv[])
   }
 
   return 0;
+}
+
+sci::cca::Services::pointer validate_framework(AbstractFramework::pointer sr)
+{
+  sci::cca::Services::pointer main_services
+    = sr->getServices("Plume", "main", sci::cca::TypeMap::pointer(0));
+  
+  sci::cca::ports::FrameworkProperties::pointer properties =
+    pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(main_services->getPort("cca.FrameworkProperties"));
+
+  if (properties.isNull()) 
+    throw InternalError("Cannot find framework properties service");
+  main_services->releasePort("cca.FrameworkProperties");
+
+  return main_services;
+
 }
 
 bool init(int argc, char *argv[])
@@ -127,10 +139,6 @@ bool init(int argc, char *argv[])
   // PIDL
   try {
     PIDL::initialize();
-    PIDL::isfrwk=true;
-    //all threads in the framework share the same
-    //invocation id
-    PRMI::setInvID(ProxyID(1,0));
   }
   catch(const Exception& e) {
     std::cerr << "PIDL: " << e.message() << std::endl;
