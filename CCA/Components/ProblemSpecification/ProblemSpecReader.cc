@@ -4,8 +4,8 @@
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
-#include <Dataflow/XMLUtil/SimpleErrorHandler.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/XMLUtil/SimpleErrorHandler.h>
+#include <Core/XMLUtil/XMLUtil.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>

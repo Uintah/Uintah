@@ -16,7 +16,7 @@ SRCS := $(SRCDIR)/sus.cc
 
 ifeq ($(CC),newmpxlc)
   AIX_LIBRARY := \
-        Dataflow/XMLUtil  \
+        Core/XMLUtil  \
         Core/Malloc       \
         Core/Math         \
         Core/Containers   \
@@ -114,7 +114,7 @@ else
         Packages/Uintah/Core/DataArchive   \
 	Packages/Uintah/CCA/Ports          \
         Packages/Uintah/CCA/Components/ProblemSpecification \
-        Dataflow/XMLUtil \
+        Core/XMLUtil \
         Core/Exceptions  \
         Core/Persistent  \
         Core/Geometry    \
@@ -149,7 +149,7 @@ else
         Packages/Uintah/Core/DataArchive   \
 	Packages/Uintah/CCA/Ports          \
         Packages/Uintah/CCA/Components/ProblemSpecification \
-        Dataflow/XMLUtil \
+        Core/XMLUtil \
         Core/Exceptions  \
         Core/Persistent  \
         Core/Geometry    \
@@ -216,7 +216,7 @@ else
         Packages/Uintah/Core/DataArchive   \
 	Packages/Uintah/CCA/Ports          \
         Packages/Uintah/CCA/Components/ProblemSpecification \
-        Dataflow/XMLUtil \
+        Core/XMLUtil \
         Core/Exceptions  \
         Core/Persistent  \
         Core/Geometry    \
@@ -257,7 +257,7 @@ else
 	Packages/Uintah/Core/Parallel   \
 	Packages/Uintah/CCA/Ports          \
 	Packages/Uintah/CCA/Components/ProblemSpecification \
-	Dataflow/XMLUtil  \
+	Core/XMLUtil  \
 	Core/Persistent   \
 	Core/Datatypes    \
         Core/Geometry    \
@@ -287,7 +287,7 @@ ifeq ($(LARGESOS),yes)
   PSELIBS := Datflow Packages/Uintah
 else
   PSELIBS := \
-        Dataflow/XMLUtil  \
+        Core/XMLUtil  \
         Packages/Uintah/Core/Exceptions    \
         Packages/Uintah/Core/Grid          \
         Packages/Uintah/Core/Util          \
