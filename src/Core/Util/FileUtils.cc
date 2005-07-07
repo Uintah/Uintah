@@ -33,7 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
-#include <Dataflow/Network/FileUtils.h>
+#include <Core/Util/FileUtils.h>
 
 namespace SCIRun {
 
