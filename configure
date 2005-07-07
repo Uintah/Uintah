@@ -26002,18 +26002,18 @@ cat > conftest-exc.cc <<EOF
     }
 EOF
     $CXX -o conftest-exc conftest-exc.cc
-
+    exc_error=`./conftest-exc >& the_void`
     if test "$?" != "0"; then
-       echo "$as_me:$LINENO: result: Exceptions do not work on your compiler" >&5
-echo "${ECHO_T}Exceptions do not work on your compiler" >&6
+       echo "$as_me:$LINENO: result: not found" >&5
+echo "${ECHO_T}not found" >&6
        enable_exceptions_crash=1
     else
-       echo "$as_me:$LINENO: result: yes." >&5
-echo "${ECHO_T}yes." >&6
+       echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
        enable_exceptions_crash=0
     fi
 
-    rm -r conftest-exc.cc conftest-exc
+    rm -r conftest-exc.cc conftest-exc the_void
 EXCEPTIONS_CRASH="$enable_exceptions_crash"
 
 
