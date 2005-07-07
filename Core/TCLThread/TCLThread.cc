@@ -182,20 +182,29 @@ TCLThread::startNetworkEditor()
         show_license_and_copy_scirunrc(gui);
   }
 
-  // determine if we are loading an app
+  if (sci_getenv_p("SCIRUN_NOGUI"))
+  {
+    gui->eval(string("rename unknown _old_unknown"));
+    gui->eval(string("proc unknown args {\n") +
+              string("    catch \"[uplevel 1 _old_unknown $args]\" result\n") +
+              string("    return $result\n") +
+              string("}"));
+  }
+
+  // Determine if we are loading an app.
   const bool powerapp_p = (startnetno && ends_with(argv[startnetno],".app"));
   if (!powerapp_p) {
     gui->eval("set PowerApp 0");
-    // wait for the main window to display before continuing the startup.
+    // Wait for the main window to display before continuing the startup.
     gui->eval("wm deiconify .");
     gui->eval("tkwait visibility $minicanvas");
     gui->eval("showProgress 1 0 1");
-  } else { // if loading an app, don't wait
+  } else { // If loading an app, don't wait.
     gui->eval("set PowerApp 1");
     if (argv[startnetno+1]) {
       gui->eval("set PowerAppSession {"+string(argv[startnetno+1])+"}");
     }
-    // determine which standalone and set splash
+    // Determine which standalone and set splash.
     if(strstr(argv[startnetno], "BioTensor")) {
       gui->eval("set splashImageFile $bioTensorSplashImageFile");
       gui->eval("showProgress 1 2575 1");
@@ -203,11 +212,11 @@ TCLThread::startNetworkEditor()
       gui->eval("set splashImageFile $bioFEMSplashImageFile");
       gui->eval("showProgress 1 465 1");
     } else if(strstr(argv[startnetno], "BioImage")) {
-      // need to make a BioImage splash screen
+      // Need to make a BioImage splash screen.
       gui->eval("set splashImageFile $bioImageSplashImageFile");
       gui->eval("showProgress 1 660 1");
     } else if(strstr(argv[startnetno], "FusionViewer")) {
-      // need to make a FusionViewer splash screen
+      // Need to make a FusionViewer splash screen.
       gui->eval("set splashImageFile $fusionViewerSplashImageFile");
       gui->eval("showProgress 1 310 1");
     }
@@ -234,7 +243,8 @@ TCLThread::startNetworkEditor()
   if (startnetno) {
     gui->eval("loadnet {"+string(argv[startnetno])+"}");
     if (sci_getenv_p("SCIRUN_EXECUTE_ON_STARTUP") || 
-	sci_getenv_p("SCI_REGRESSION_TESTING")) {
+	sci_getenv_p("SCI_REGRESSION_TESTING"))
+    {
       gui->eval("netedit scheduleall");
     }
   }

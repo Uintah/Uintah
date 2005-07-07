@@ -229,9 +229,13 @@ ShaderProgramARB::init_shaders_supported()
     ShaderProgramARB_mInitMutex.lock();
     if (!mInit)
     {
-      if (sci_getenv_p("SCIRUN_DISABLE_SHADERS")) {
+      if (sci_getenv_p("SCIRUN_DISABLE_SHADERS") ||
+          sci_getenv_p("SCIRUN_NOGUI"))
+      {
 	mSupported = false;
-      } else {
+      }
+      else
+      {
 	// Create a test context.
 
 	TkOpenGLContext *context =
