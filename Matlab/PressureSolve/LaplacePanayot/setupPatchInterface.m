@@ -59,6 +59,10 @@ QedgeDomain{2}              = Qlevel.maxCell;                     % Last domain 
 
 underLower                  = coarsenIndex(grid,k,P.ilower);      % level based sub
 underUpper                  = coarsenIndex(grid,k,P.iupper);      % level based sub
+if (param.verboseLevel >= 3)
+    underLower
+    underUpper
+end
 
 % underLower,underUpper are inside Q, so add to them BC vars whenever they
 % are near the boundary.
@@ -96,7 +100,7 @@ end
 [temp1,temp2,temp3,Alist]   = setupPatchInterior(grid,k-1,P.parent,A,b,T,underLower,underUpper,0);
 in2out                      = Alist(~ismember(Alist(:,2),indDel),:);
 out2in                      = [in2out(:,2) in2out(:,2) -in2out(:,3)];
-alreadyDeleted              = ismember(out2in(:,1),grid.level{k-1}.indDel);
+alreadyDeleted              = ismember(out2in(:,1),grid.level{k-1}.indUnused);
 out2in(alreadyDeleted,:)    = [];
 indOut                      = unique(out2in(:,1));
 Anew                        = spconvert([out2in; [grid.totalVars grid.totalVars 0]]);
@@ -113,9 +117,13 @@ indAll                      = [];
 indTransformed              = [];
 
 % Restore underLower,underUpper to exclude BC variables
-underLower(lowerNearEdge)   = underLower(lowerNearEdge) - 1;
-upperNearEdge               = find(underUpper == QedgeDomain{2});
-underUpper(upperNearEdge)   = underUpper(upperNearEdge) + 1;
+underLower(lowerNearEdge)   = underLower(lowerNearEdge) + 1;
+underUpper(upperNearEdge)   = underUpper(upperNearEdge) - 1;
+if (param.verboseLevel >= 3)
+    fprintf('Readjusting Qunder box to exclude BC vars\n');
+    underLower
+    underUpper
+end
 
 for d = 1:grid.dim,
     for s = [-1 1],

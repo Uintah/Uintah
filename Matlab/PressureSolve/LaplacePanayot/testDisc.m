@@ -1,3 +1,4 @@
+function [grid,A,b,T,TI,u] = testDisc(twoLevel)
 %TESTDISC  Test pressure equation discretization.
 %   We test pressure equation discretization error for a simple 2D Poisson problem with a
 %   known solution. We prepare an AMR grid with two levels: a global level
@@ -14,21 +15,21 @@ globalParams;
 %=========================================================================
 param                       = [];
 
-param.problemType           = 'ProblemB'; %'quadratic'; %'Lshaped'; %
+param.problemType           = 'Lshaped'; %'ProblemB'; %'quadratic'; %'Lshaped'; %
 param.outputDir             = 'ProblemA_1Level';
 
-param.twoLevel              = 1;
-param.threeLevel            = 1;
+param.twoLevel              = twoLevel; %0;
+param.threeLevel            = 0;
 param.setupGrid             = 1;
 param.solveSystem           = 1;
-param.plotResults           = 1;
+param.plotResults           = 0;
 param.saveResults           = 0;
 param.verboseLevel          = 0;
 
 %=========================================================================
 % Run discretization on a sequence of successively finer grids
 %=========================================================================
-numCellsRange               = 2.^[3:1:6];
+numCellsRange               = 16; %2.^[2:1:6];
 success                     = mkdir('.',param.outputDir);
 errNorm                     = zeros(length(numCellsRange),4);
 
@@ -74,11 +75,16 @@ for count = 1:length(numCellsRange)
             [grid,k]            = addGridLevel(grid,'refineRatio',[2 2]);
 
             if (0)
+                % Cover the entire domain
+                [grid,q2]  = addGridPatch(grid,k,ones(1,grid.dim),2*resolution,q1);              % Local patch around the domain center
+            end
+
+            if (1)
                 % Cover central half of the domain
                 [grid,q2]  = addGridPatch(grid,k,resolution/2 + 1,3*resolution/2,q1);              % Local patch around the domain center
             end
 
-            if (1)
+            if (0)
                 % Cover central quarter of the domain
                 [grid,q2]  = addGridPatch(grid,k,3*resolution/4 + 1,5*resolution/4,q1);              % Local patch around the domain center
             end
@@ -177,7 +183,7 @@ for count = 1:length(numCellsRange)
 
     % Plot grid
     if (grid.totalVars <= 200)
-        plotGrid(grid,sprintf('%s/grid%d.eps',param.outputDir,numCells),1,0);
+        plotGrid(grid,sprintf('%s/grid%d.eps',param.outputDir,numCells),1,0,0,0);
     end
 
     % Plot and print discretization error at all patches

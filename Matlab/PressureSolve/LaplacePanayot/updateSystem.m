@@ -55,7 +55,7 @@ end
 % have a weird shape).
 [A,b,T,Alist,Tlist,indDel]          = setupPatchInterface(grid,k,q,A,b,T);
 if (k > 1)
-    grid.level{k-1}.indDel  = union(grid.level{k-1}.indDel,indDel);
+    grid.level{k-1}.indUnused   = union(grid.level{k-1}.indUnused,indDel);
 end
 
 %==============================================================
@@ -73,7 +73,7 @@ indUnused               = patchRange(find(abs(diag(A(patchRange,patchRange))) < 
 switch (param.problemType)
     
     case 'Lshaped',     % Delete upper-rigt quadrant
-        indOut          = LshapedOut(grid,k,q);
+        [A,indOut]      = LshapedOut(grid,k,q,A,1);
         indUnused       = union(indUnused,indOut);
 end
 
@@ -100,6 +100,9 @@ T(indZero,indZero)      = eye(length(indZero));
 TI                      = inv(T);
 T(indZero,:)            = 0.0;
 TI(indZero,:)           = 0.0;
+
+% Save changes to grid structure
+grid.level{k}.indUnused   = union(grid.level{k}.indUnused,indUnused);
 
 tCPU        = cputime - tStartCPU;
 tElapsed    = etime(clock,tStartElapsed);

@@ -1,4 +1,4 @@
-function plotGrid(grid,fileName,showGhosts,showCellIndex)
+function plotGrid(grid,fileName,showGhosts,showCellIndex,showCircles,showUnused)
 % Plot gridlines (works in 2D only). If showGhosts=1 we add ghost cells to
 % the plot.
 
@@ -12,6 +12,12 @@ if (nargin < 3)
 end
 if (nargin < 4)
     showCellIndex = 0;
+end
+if (nargin < 5)
+    showCellIndex = 0;
+end
+if (nargin < 6)
+    showUnused = 0;
 end
 
 figure(1);
@@ -49,6 +55,11 @@ for k = 1:grid.numLevels,
         x2          = x2(:);
 
         for i = 1:length(x1)
+            index = P.cellIndex(mat1(i)+P.offsetSub(1),mat2(i)+P.offsetSub(2));
+            if ((~showUnused) & (ismember(index,level.indUnused)))
+                continue;
+            end
+
             if (    (mat1(i) >= P.ilower(1)) & (mat1(i) <= P.iupper(1)) & ...
                     (mat2(i) >= P.ilower(2)) & (mat2(i) <= P.iupper(2)))
                 a = rectangle('Position',[x1(i)-0.5*h(1) x2(i)-0.5*h(2) h(1) h(2)]);
@@ -56,14 +67,15 @@ for k = 1:grid.numLevels,
                 set(a,'linewidth',k);
                 set(a,'linestyle','-')
 
-                b = plot(x1(i),x2(i),'o');
-                set(b,'markersize',10);
-                set(b,'markeredgecolor',levelColor{k});
-                %set(b,'markerfacecolor',levelColor{k});
-                set(b,'markerfacecolor','white');
-                
+                if (showCircles)
+                    b = plot(x1(i),x2(i),'o');
+                    set(b,'markersize',10);
+                    set(b,'markeredgecolor',levelColor{k});
+                    %set(b,'markerfacecolor',levelColor{k});
+                    set(b,'markerfacecolor','white');
+                end
+
                 if (showCellIndex)
-                    index = P.cellIndex(mat1(i)+P.offsetSub(1),mat2(i)+P.offsetSub(2));
                     c = text(x1(i)-0.125*h(1),x2(i)-0.125*h(2),sprintf('%d',index));
                     set(c,'fontsize',10);
                     set(c,'color','k');
@@ -75,10 +87,12 @@ for k = 1:grid.numLevels,
                 set(a,'linewidth',k);
                 set(a,'linestyle','--')
 
-                b = plot(x1(i),x2(i),'^');
-                set(b,'markersize',10);
-                set(b,'markeredgecolor',levelColor{k});
-                set(b,'markerfacecolor','white');
+                if (showCircles)
+                    b = plot(x1(i),x2(i),'^');
+                    set(b,'markersize',10);
+                    set(b,'markeredgecolor',levelColor{k});
+                    set(b,'markerfacecolor','white');
+                end
 
                 if (showCellIndex)
                     index = P.cellIndex(mat1(i)+P.offsetSub(1),mat2(i)+P.offsetSub(2));
@@ -106,9 +120,39 @@ for k = 1:grid.numLevels,
 end
 
 % Domain boundaries
-a = rectangle('Position',[0.0 0.0 grid.domainSize(1:2)]);
-set(a,'linewidth',5);
-set(a,'edgecolor','black');
+switch (param.problemType)
+
+    case 'Lshaped',     % Delete upper-rigt quadrant
+        a = line([0.0 grid.domainSize(1)],[0.0 0.0]);
+        set(a,'linewidth',5);
+        set(a,'color','black');
+
+        a = line([grid.domainSize(1) grid.domainSize(1)],[0 0.5*grid.domainSize(2)]);
+        set(a,'linewidth',5);
+        set(a,'color','black');
+
+        a = line([grid.domainSize(1) 0.5*grid.domainSize(1)],[0.5*grid.domainSize(2) 0.5*grid.domainSize(2)]);
+        set(a,'linewidth',5);
+        set(a,'color','black');
+
+        a = line([0.5*grid.domainSize(1) 0.5*grid.domainSize(1)],[0.5*grid.domainSize(2) grid.domainSize(2)]);
+        set(a,'linewidth',5);
+        set(a,'color','black');
+
+        a = line([0.5*grid.domainSize(1) 0.0],[grid.domainSize(2) grid.domainSize(2)]);
+        set(a,'linewidth',5);
+        set(a,'color','black');
+
+        a = line([0.0 0.0],[grid.domainSize(2) 0.0]);
+        set(a,'linewidth',5);
+        set(a,'color','black');
+
+    otherwise,
+        a = rectangle('Position',[0.0 0.0 grid.domainSize(1:2)]);
+        set(a,'linewidth',5);
+        set(a,'edgecolor','black');
+end
+
 xlabel('x');
 ylabel('y');
 title(sprintf('Grid, numLevels = %d, # total vars = %d',grid.numLevels,grid.totalVars));
