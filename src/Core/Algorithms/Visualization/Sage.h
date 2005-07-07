@@ -50,10 +50,7 @@
 #include <sgi_stl_warnings_on.h>
 
 #include <Core/Thread/Time.h>
-#include <Dataflow/Network/Module.h> 
 #include <Core/Datatypes/Field.h> 
-#include <Dataflow/Ports/FieldPort.h>  
-
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomObj.h>
