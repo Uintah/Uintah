@@ -876,6 +876,32 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
     constHandle<MaterialSubset> matls =
       req->getMaterialsUnderDomain(task->matls);
 
+    // this section is just to find the low and the high of the patch that will use the other
+    // level's data.  Otherwise, we have to use the entire set of patches (and ghost patches if 
+    // applicable) that lay above/beneath this patch.
+
+    IntVector otherLevelLow, otherLevelHigh;
+    if (req->patches_dom == Task::CoarseLevel || req->patches_dom == Task::FineLevel) {
+      // the requires should have been done with Task::CoarseLevel or FineLevel, with null patches
+      // and the task->patches should be size one (so we don't have to worry about overlapping regions)
+      ASSERT(req->patches == NULL);
+      ASSERT(task->patches->size() == 1);
+      const Patch* origPatch = task->patches->get(0);
+      origPatch->computeVariableExtents(req->var->typeDescription()->getType(),
+                                        req->var->getBoundaryLayer(),
+                                        req->gtype, req->numGhostCells,
+                                        otherLevelLow, otherLevelHigh);
+      if (req->patches_dom == Task::CoarseLevel) {
+        otherLevelLow = origPatch->getLevel()->mapCellToCoarser(otherLevelLow);
+        otherLevelHigh = origPatch->getLevel()->mapCellToCoarser(otherLevelHigh) + 
+          origPatch->getLevel()->getRefinementRatio() - IntVector(1,1,1);
+      }
+      else {
+        otherLevelLow = origPatch->getLevel()->mapCellToFiner(otherLevelLow);
+        otherLevelHigh = origPatch->getLevel()->mapCellToFiner(otherLevelHigh);
+      }
+    }
+
     if(patches && !patches->empty() && matls && !matls->empty()){
       for(int i=0;i<patches->size();i++){
 	const Patch* patch = patches->get(i);
@@ -884,7 +910,20 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	patch->computeVariableExtents(req->var->typeDescription()->getType(),
 				      req->var->getBoundaryLayer(),
 				      req->gtype, req->numGhostCells,
-				      neighbors, low, high);
+				      low, high);
+
+        if (req->patches_dom == Task::CoarseLevel || req->patches_dom == Task::FineLevel) {
+          // make sure the bounds of the dep are limited to the original patch's (see above)
+          // also limit to current patch, as patches already loops over all patches
+          IntVector origlow = low, orighigh = high;
+          low = Max(low, otherLevelLow);
+          high = Min(high, otherLevelHigh);
+
+          if (high.x() <= low.x() || high.y() <= low.y() || high.z() <= low.z())
+            continue;
+        }
+
+        patch->getLevel()->selectPatches(low, high, neighbors);
 	ASSERT(is_sorted(neighbors.begin(), neighbors.end(),
 			 Patch::Compare()));
 	if(dbg.active()){
@@ -977,10 +1016,10 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 		    // modified so create a dependency between them so the
 		    // modifying won't conflist with the previous require.
 		    if (dbg.active()) {
-		      dbg << d_myworld->myrank() << "       Requires to modifies dependency from "
-			  << prevReqTask->getTask()->getName()
-			  << " to " << task->getTask()->getName() << "\n";
-		    }
+		      cout << d_myworld->myrank() << "       Requires to modifies dependency from "
+			  << prevReqTask->getName()
+                           << " to " << task->getName() << " (created by " << creator->getName() << ")\n";
+                    }
 		    dt->possiblyCreateDependency(prevReqTask, 0, 0, task, req, 0,
 					        matl, from_l, from_h);
 		  }
