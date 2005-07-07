@@ -139,7 +139,8 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
     # create the gold_standard algo subdir
     chdir(gold_standard)
     mkdir(ALGO)
-
+    system("chmod -R 775 %s" % ALGO)
+    
   environ['PATH'] = "%s%s%s" % (helperspath, pathsep, environ['PATH'])
   environ['SCI_SIGNALMODE'] = 'exit'
   environ['SCI_EXCEPTIONMODE'] = 'abort'
