@@ -2579,16 +2579,16 @@ cat > conftest-exc.cc <<EOF
     }
 EOF
     $CXX -o conftest-exc conftest-exc.cc
-
+    exc_error=`./conftest-exc >& the_void`
     if test "$?" != "0"; then
-       AC_MSG_RESULT(Exceptions do not work on your compiler, adding custom output.)
+       AC_MSG_RESULT(not found)
        enable_exceptions_crash=1
     else
-       AC_MSG_RESULT(yes.)
+       AC_MSG_RESULT(yes)
        enable_exceptions_crash=0
     fi
 
-    rm -r conftest-exc.cc conftest-exc
+    rm -r conftest-exc.cc conftest-exc the_void
 EXCEPTIONS_CRASH="$enable_exceptions_crash"
 AC_SUBST(EXCEPTIONS_CRASH)
 
