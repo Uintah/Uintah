@@ -41,13 +41,13 @@
 \begin{document}
 \setlength{\abovedisplayskip}{0.1in}
 \setlength{\mathindent}{0.0in}
-\section{\underline{Overview of implicit ICE\hspace{ 0.5in}03/31/05}  }
+\section{\underline{Overview of implicit ICE\hspace{ 0.5in}07/7/05}  }
 
 \begin{algorithmic}
 \STATE --Compute $ \velFC$ (add Exchange contribution, set boundary
              conditions on $\velFC$ )
              
-\STATE --Form RHS $B = -\beta (P^{ \iter} - P^{old}) - \SUM{m}$ \text{Advection} $(\theta_m \velFC)$
+\STATE --Form RHS $B = -\SUM{m} \theta_m \kappa_m (P^{ \iter} - P^{old}) - \SUM{m}$ \text{Advection} $(\theta_m \velFC)$
     
 \WHILE{ $| \text{outer residual} | <$ convergence criteria}
 
@@ -58,15 +58,15 @@
       $A_b = \frac{\delt^2}{\dely^2} \SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_{b}$ \\ \quad
       $A_f = \frac{\delt^2}{\delz^2} \SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_{f}$ \quad
       $A_{bk} = \frac{\delt^2}{\delz^2} \SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_{bk}$ \\ \quad
-      $A_{p} =\beta +( A_r + A_l + A_t + A_b + A_f + A_ {bk})$
+      $A_{p} =\SUM{m} \theta_m \kappa_m +( A_r + A_l + A_t + A_b + A_f + A_ {bk})$
       
     \STATE --Solve for $\delta{P}$
     \STATE --Update pressure $P^{\iter} = P^{\iter -1 } + \delta{P}$, set boundary condition on $P^{\iter}$
     \STATE --Compute $ \velFC$ (add Exchange contribution, set boundary
              conditions on $\velFC$, compute $ \rhoMFC $)
              
-    \STATE --Form RHS $B = -\beta (P^{ \iter} - P^{old}) - \SUM{m}$ \text{Advection} $(\theta_m \velFC)$,\\ \quad
-             where outer residual = $Max(RHS^2), \beta = \SUM{m} \frac{\theta_m}{\rhoM c_m^2}$
+    \STATE --Form RHS $B = -\SUM{m} \theta_m \kappa_m (P^{ \iter} - P^{old}) - \SUM{m}$ \text{Advection} $(\theta_m \velFC)$,\\ \quad
+             where outer residual = $Max(RHS), \kappa_m = \frac{v^o_m}{c_m^2}$
     
 \ENDWHILE
 
@@ -89,27 +89,26 @@ and the face-centered velocity
     = \termA - \termB{P^{\iter}} + \text{Exchange term}   + \delt\vec{g}
 \]
 %
-Write eq.{\ref{GE}} in terms of $P^{\iter} = P^{\iter -1 } + \delta{P}$, $\Delta{P} = P^{\iter} - P^{old}$ and 
- $\beta = \SUM{m} \frac{\theta_m}{\rhoM c_m^2}$
+Write eq.{\ref{GE}} in terms of $P^{\iter} = P^{\iter -1 } + \delta{P}$, $\Delta{P} = P^{\iter} - P^{old}$ 
 \begin{equation}
 \label{eq2}
-\beta (P^{\iter} -P^{old}) =
+\SUM{m} \theta_m \kappa_m (P^{\iter} -P^{old}) =
      \delt \massSrc 
   -  \delt \nabla \cdot \thetaUW \B{(} \termA -\termB{P^{\iter}} +\text{Exch} + \delt\vec{g} \B{)}
 \end{equation}
 Substitite in for$P^{\iter} = P^{\iter -1 } + \delta{P}$
 \[
-  \beta ((P^{\iter -1 } + \delta{P}) -P^{old}) =
+  \SUM{m} \theta_m \kappa_m ((P^{\iter -1 } + \delta{P}) -P^{old}) =
     \delt \massSrc 
   - \delt \nabla \cdot \thetaUW \B{(} \termA -\termB{(P^{\iter -1 } + \delta{P})} 
   +\text{Exch} + \delt\vec{g} \B{)}
 \]
 Now factor out $\delta{P}$
 \begin{align}
-  \beta \delta{P} - 
+  \SUM{m} \theta_m \kappa_m \delta{P} - 
   \delt^2 \nabla \cdot \SUM{m} \frac{\thetaUW}{\rhoMFC} \nabla \delta{P} \notag
   & = 
-     \beta(P^{\iter} - P^{old} ) + \delt \massSrc \notag \\
+     \SUM{m} \theta_m \kappa_m(P^{\iter} - P^{old} ) + \delt \massSrc \notag \\
   &- \delt \nabla \cdot \SUM{m} \thetaUW  \notag
   \overbrace {\B{(} \termA -\termB{P^{\iter}} +\text{Exch} + \delt\vec{g} \B{)} }^{\velFC} \notag
 \end{align}
@@ -118,10 +117,10 @@ Now factor out $\delta{P}$
 The ODE we have to solve is
 \begin{equation}
 \label{eq3}
-  \beta \delta{P} - 
+  \SUM{m} \theta_m \kappa_m \delta{P} - 
   \delt^2 \nabla \cdot \SUM{m} \frac{\thetaUW}{\rhoMFC} \nabla \delta{P}
   =
-  -\beta(P^{\iter} - P^{old} )
+  -\SUM{m} \theta_m \kappa_m(P^{\iter} - P^{old} )
   + \delt \massSrc
   -  \delt \nabla \cdot \B{(} \SUM{m} \thetaUW \velFC \B{)} ^{\iter}
 \end{equation}
@@ -130,10 +129,10 @@ The ODE we have to solve is
 \newpage
 Step 2: \hspace{0.25in} Integrate eq. {\ref{eq3}} over a cell volume
 \begin{align}
-  \int_{V} \beta \delta{P} dV 
+  \int_{V} \SUM{m} \theta_m \kappa_m \delta{P} dV 
   - \delt^2 \int_{V} \nabla \cdot \SUM{m} \frac{\thetaUW}{\rhoMFC} \nabla \delta{P} dV
   = 
-  &- \int_{V} \beta(P^{\iter} - P^{old} ) dV \notag\\
+  &- \int_{V} \SUM{m} \theta_m \kappa_m(P^{\iter} - P^{old} ) dV \notag\\
   &+ \int_{V} \delt \massSrc \notag \\
   &- \delt \int_{V} \nabla \cdot \B{(} \SUM{m} \thetaUW \velFC \B{)} ^{\iter} dV \notag
 \end{align}
@@ -144,10 +143,10 @@ Invoke the divergence theorem
 to convert the volume to surface integrals.
 %
 \begin{align}
-  V \beta \delta{P} 
+  V \SUM{m} \theta_m \kappa_m \delta{P} 
   - \delt^2 \int_{S}  \SUM{m} \frac{\thetaUW}{\rhoMFC} \nabla \delta{P} \cdot d\vec{s}
   =
-  &-V \beta(P^{\iter} - P^{old} )
+  &-V \SUM{m} \theta_m \kappa_m(P^{\iter} - P^{old} )
   + \delt  \SUM{m}  \frac{\dot{m}} {\rhoM} \notag \\
   - \delt \int_{S}  \B{(} \SUM{m} \thetaUW \velFC \B{)} ^{\iter} \cdot d\vec{S} \notag
 \end{align}
@@ -175,26 +174,26 @@ Form the stencil of Matrix A from eq. {\ref{eq4}}\\
 %
 %
 \begin{align}
-V \beta \delta{P} 
+V \SUM{m} \theta_m \kappa_m \delta{P} 
 - \delt^2 \B{[}
    &A_R(\delta{P_R} - \delta{P} ) - A_L(\delta{P} - \delta{P_L} )  \\
 +  &A_T(\delta{P_T} - \delta{P})  - A_B(\delta{P} - \delta{P_B} ) \notag \\
    &A_F(\delta{P_F} - \delta{P} ) - A_{BK}(\delta{P} - \delta{P_{BK}} )
 \B{]}
 = 
--V \beta(P^{\iter} - P^{old} )
+-V \SUM{m} \theta_m \kappa_m(P^{\iter} - P^{old} )
 + \delt  \SUM{m}  \frac{\dot{m}} {\rhoM}
 - \delt \text{Advection}  \B{(} \SUM{m} \thetaUW \velFC \B{)} ^{\iter} \notag
 \end{align}
 %
 Factor out $\delta{P}$ and divide by $V$ to nondimensionalize the equation\\
 %
-$\beta - \frac{ \delt^2}{V} \B{[} A_R +A_L+ A_T + A_B + A_F + A_{BK} \B{]} \delta{p}
+$\SUM{m} \theta_m \kappa_m - \frac{ \delt^2}{V} \B{[} A_R +A_L+ A_T + A_B + A_F + A_{BK} \B{]} \delta{p}
 - 
  \frac{ \delt^2}{V} \B{[} A_R \delta{P_R} + A_L \delta{P_L} + A_T \delta{P_T} + A_B \delta{P_B}
 + A_F \delta{P_F} + A_{BK} \delta{P_{BK}} \B{]}
 = \\
--  \beta(P^{\iter} - P^{old} )
+-  \SUM{m} \theta_m \kappa_m(P^{\iter} - P^{old} )
 + \frac{\delt}{V}  \SUM{m}  \frac{\dot{m}} {\rhoM}
 -  \frac{\delt}{V} \text{Advection}  \B{(} \SUM{m} \thetaUW \velFC \B{)} ^{\iter} 
 $

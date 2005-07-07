@@ -66,8 +66,8 @@ set boundary conditions on $\vec{U}^{*^{f}}$
 \item \underline{Compute $\Delta P$}  \\
 $     \Delta P =  
               \frac{  - \Delta{t} \overbrace{ \nabla \cdot \theta \vec{U}^{*^{f}} } ^{\text{Advection}(\theta, \vec{U}^{*^{f}}) } }
-              {\frac{1} {\rhoM c^2}} $\\
-where $P^{n+1} = P_{eq} + \Delta{P}$ for a single material $\theta = 1.0$ \\
+              {\kappa} $\\
+where $P^{n+1} = P_{eq} + \Delta{P}$ for a single material $\theta = 1.0$ and $\kappa = \frac{v^o}{c^2}$ \\
 set boundary conditions on $P^{n+1}$
 %
 %__________________________________
@@ -85,7 +85,7 @@ $ P^{*^{f}} = \frac{\frac{P}{\rho} + \frac{P_{adj}}{\rho_{adj}}}
     + m \vec{g}\delt$
     
  $\Delta(me) =  
-    (\frac{V} {\rhoM c^2}( P \Delta{P})
+    V \kappa P \Delta{P}
     - \nabla q^{*^f} 
     + \bigS{(m e)}$\\
 where $q^{*^f} = -k^f \nabla T$
