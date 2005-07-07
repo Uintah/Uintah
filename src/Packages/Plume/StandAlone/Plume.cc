@@ -78,23 +78,25 @@ main(int argc, char *argv[])
     
     sci::cca::Services::pointer main_services = validate_framework(sr);
 
-    if ( !config.is_server && config.builder.first == "" )
+    if ( !config.is_server && config.builder == "" )
       config.builder = config.default_builder;
 
     std::cerr << "builder = " << config.builder << "\n";
-    if ( !config.is_server || config.builder.first != "") {
+    if ( !config.is_server || config.builder != "") {
       
       sci::cca::ports::BuilderService::pointer builder_service
 	= pidl_cast<sci::cca::ports::BuilderService::pointer>(main_services->getPort("cca.BuilderService"));
       if(builder_service.isNull()) 
 	throw InvalidState("Cannot find plume builder service");
       
+      Dugway::Config::Builders::iterator builder_iter = config.builder_types.find(config.builder);
+      if ( builder_iter == config.builder_types.end() )
+	throw InvalidState("Can not find builder type");
+
       ComponentID::pointer builder =
-	builder_service->createInstance(config.builder.first, config.builder.second, sci::cca::TypeMap::pointer(0));
-      if(builder.isNull()) {
-	std::cerr << "Cannot create builder " << config.builder.first << " of type " << config.builder.second << std::endl;
-	throw InternalError("quitting");	
-      }
+	builder_service->createInstance((*builder_iter).first, (*builder_iter).second, sci::cca::TypeMap::pointer(0));
+      if(builder.isNull())
+	throw("Cannot create builder");
 
       main_services->releasePort("cca.BuilderService");
     }
