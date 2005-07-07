@@ -1,9 +1,11 @@
-#include <Config.h>
+#include <Packages/Plume/StandAlone/Config.h>
 
 #include<iostream>
 #include<fstream>
 
-#include <plume.defs>
+//#include <plume.defs>
+
+#define PLUME_VERSION 0.1
 
 namespace Dugway {
 
@@ -26,7 +28,7 @@ namespace Dugway {
       // command line & config file 
       po::options_description config("Configurations");
       config.add_options()
-	("framework", po::value<string>(&framework)->default_value(""), "master framework")
+	("framework", po::value<string>(&framework)->default_value("create"), "master framework")
 	("builder", po::value<pair<string,string> >(&builder)->default_value(make_pair("TxtBuilder", "cca:SCIRun.TxtBuilder")), "Builder")
 	;
       
@@ -50,7 +52,7 @@ namespace Dugway {
 		 options(cmdline).run(),
 		 _config );
 
-      ifsteeam ifs(".plumerc");
+      ifstream ifs(".plumerc");
       po::store( po::parse_config_file(ifs, config_file), _config );
 
       // done
@@ -71,7 +73,7 @@ namespace Dugway {
     }
 
     if ( _config.count("version")) {
-      count << "Plume version " << PLUME_VERSION << endl;
+      std::cout << "Plume version " << PLUME_VERSION << endl;
       return true;
     }
 
