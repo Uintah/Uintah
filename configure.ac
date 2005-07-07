@@ -2770,6 +2770,8 @@ case $host in
       SCI_TRY_LINK(F,fortran libraries,,,pgftnrtl,$_sci_lib,,,$_sci_optional)
     elif test "$F77" = "gfortran-4.0"; then
       SCI_TRY_LINK(F,fortran libraries,,,gfortran,$_sci_lib,,,$_sci_optional)
+    elif test "$F77" = "ifort"; then
+      SCI_TRY_LINK(F,fortran libraries,,,ifcore,$_sci_lib,,,$_sci_optional)
     else
       SCI_TRY_LINK(F,fortran libraries,,,g2c,$_sci_lib,,,$_sci_optional)
     fi
