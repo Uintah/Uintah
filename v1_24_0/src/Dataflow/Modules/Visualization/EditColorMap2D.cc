@@ -254,7 +254,8 @@ EditColorMap2D::EditColorMap2D(GuiContext* ctx)
   pan_x_.set(0.0);
   pan_y_.set(0.0);
   scale_.set(1.0);
-  widgets_.push_back(scinew TriangleCM2Widget());
+  //  widgets_.push_back(scinew TriangleCM2Widget());
+  widgets_.push_back(scinew RectangleCM2Widget());
   widgets_.push_back(scinew RectangleCM2Widget());
   resize_gui(2);
   update_to_gui(false);

@@ -1300,7 +1300,7 @@ proc hideProgress { args } {
     update idletasks
 }
 
-proc showProgress { { show_image 0 } { steps none } { okbutton 0 } } {
+proc showProgress { { show_image 0 } { steps none } { okbutton 0 } { over . } } {
     if { [envBool SCIRUN_HIDE_PROGRESS] && ![winfo exists .standalone] } return
     update idletasks
     set w .splash
@@ -1387,7 +1387,7 @@ proc showProgress { { show_image 0 } { steps none } { okbutton 0 } } {
 	pack $w.scaffold -side bottom
     }
 
-    centerWindow .splash .
+    centerWindow .splash $over
 }
 
 proc addProgressSteps { steps } {

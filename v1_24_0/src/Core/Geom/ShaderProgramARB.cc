@@ -139,6 +139,14 @@ ShaderProgramARB::init_shaders_supported()
 	TkOpenGLContext *context =
 	  new TkOpenGLContext(".testforshadersupport", 0, 0, 0);
 	context->make_current();
+	GLboolean supported;
+	glGetBooleanv(GL_STEREO, &supported);
+	if (supported)
+	  sci_putenv("SCIRUN_OPENGL_STEREO_SUPPORTED", "1");
+	else
+	  sci_putenv("SCIRUN_OPENGL_STEREO_SUPPORTED", "0");
+	  
+
 
 #if defined(__sgi)
         max_texture_size_1_ = 256; // TODO: Just a guess, should verify this.
