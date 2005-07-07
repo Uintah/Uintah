@@ -27,6 +27,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/OS/Dir.h>
 #include <Core/Thread/Thread.h>
+#include <Core/Util/ProgressiveWarning.h>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -986,16 +987,20 @@ void buildPatchMap(LevelP level, const string& filebase,
     const Patch* patch = *iter;
     ASSERT(Min(patch->getNodeLowIndex(), low) == low);
     ASSERT(Max(patch->getNodeHighIndex(), high) == high);
-    patchMap.rewindow(patch->getNodeLowIndex(),
-		      patch->getNodeHighIndex());
+    IntVector newlow = patch->getInteriorNodeLowIndex();
+    IntVector newhigh = patch->getInteriorNodeHighIndex();
+
+    patchMap.rewindow(newlow,
+		      newhigh);
     for (Array3<const Patch*>::iterator iter = patchMap.begin();
 	 iter != patchMap.end(); iter++) {
       if (*iter != 0) {
-	cerr << "Patches " << patch->getID() << " and " << (*iter)->getID()
+        static ProgressiveWarning pw("Two patches on the same grid overlap", 10);
+        if (pw.invoke()) 
+          cerr << "Patches " << patch->getID() << " and " << (*iter)->getID()
 	     << " overlap on the same file at time " << time
-	     << " in " << filebase << endl;
-	cerr << "Cannot be handled\n";
-	abort_uncomparable();
+	     << " in " << filebase << " at index " << iter.getIndex() << endl;
+	//abort_uncomparable();
       }
       else
 	*iter = patch;
