@@ -11,6 +11,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
@@ -563,7 +564,7 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
       task->computes(tvar->var);
     }
   }
-
+  
   // if this is a new level, then we need to schedule compute, otherwise, the copydata will yell at us.
   if (patches == getLevel(patches->getSubset(0))->eachPatch()) {
     task->computes(lb->press_CCLabel);
@@ -619,7 +620,7 @@ void AMRICE::refine(const ProcessorGroup*,
       sp_vol_CC.initialize(d_EVIL_NUM);
       temp.initialize(d_EVIL_NUM);
       vel_CC.initialize(Vector(d_EVIL_NUM));
-      
+
       // refine data
       CoarseToFineOperator<double>(press_CC,  lb->press_CCLabel,indx, new_dw, 
                          invRefineRatio, finePatch, fineLevel, coarseLevel);
@@ -760,34 +761,39 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
   finePatch->getCoarseLevelPatches(coarsePatches); 
   IntVector refineRatio = coarseLevel->getRefinementRatio();
                        
-  IntVector fl = finePatch->getCellLowIndex();
-  IntVector fh = finePatch->getCellHighIndex();
+  // region of fine space that will correspond to the coarse we need to get
+  IntVector fl, fh;
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  finePatch->computeVariableExtents(varLabel->typeDescription()->getType(),
+                                    IntVector(0,0,0), gac, 1,
+                                    fl, fh);
+
+  // coarse region we need to get from the dw
+  IntVector cl = finePatch->getLevel()->mapCellToCoarser(fl);
+  IntVector ch = finePatch->getLevel()->mapCellToCoarser(fh) + 
+    finePatch->getLevel()->getRefinementRatio() - IntVector(1,1,1);
+
+  // fine region to work over
+  IntVector lo = finePatch->getLowIndex();
+  IntVector hi = finePatch->getHighIndex();
+
   cout_dbg <<" coarseToFineOperator: " << varLabel->getName()
            <<" finePatch  "<< finePatch->getID() << " " 
            << fl<<" "<< fh<<endl;
-  Ghost::GhostType  gac = Ghost::AroundCells;
   
-  for(int i=0;i<coarsePatches.size();i++){
-    const Patch* coarsePatch = coarsePatches[i];
-    constCCVariable<T> coarse_q_CC;
-    new_dw->get(coarse_q_CC, varLabel, indx, coarsePatch,gac, 1);
+  constCCVariable<T> coarse_q_CC;
+
+  // coarsePatches gives us the patches we need.  Don't use get with
+  // ghost cells because you might get more patches that we don't have.
+  // so here we calculate the range for this patch.
+
+  new_dw->getRegion(coarse_q_CC, varLabel, indx, coarseLevel, cl, ch);
     
-    // Only interpolate over the intersection of the fine and coarse patches
-    // coarse cell 
-    IntVector cl = coarsePatch->getLowIndex();
-    IntVector ch = coarsePatch->getHighIndex();
-         
-    IntVector fl_tmp = coarseLevel->mapCellToFiner(cl);
-    IntVector fh_tmp = coarseLevel->mapCellToFiner(ch);
-    
-    IntVector lo = Max(fl, fl_tmp);
-    IntVector hi = Min(fh, fh_tmp);
     
 /*`==========TESTING==========*/
       linearInterpolation<T>(coarse_q_CC, coarseLevel, fineLevel,
                             refineRatio, lo,hi,q_CC);
 /*===========TESTING==========`*/
-  }
   
   //____ B U L L E T   P R O O F I N G_______ 
   // All values must be initialized at this point
@@ -967,7 +973,7 @@ void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
     const Patch* finePatch = finePatches[i];
     
     constCCVariable<T> fine_q_CC;
-    new_dw->get(fine_q_CC, varLabel, indx, finePatch,Ghost::AroundCells, 1);
+    new_dw->get(fine_q_CC, varLabel, indx, finePatch,Ghost::None, 0);
 
     IntVector fl(finePatch->getInteriorCellLowIndex());
     IntVector fh(finePatch->getInteriorCellHighIndex());
@@ -1107,22 +1113,13 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
   bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
   
 /*`==========TESTING==========*/
-cout << endl;
   for(int c_p=0;c_p<coarsePatches->size();c_p++){  
     const Patch* coarsePatch = coarsePatches->get(c_p);
     
     Level::selectType finePatches;
     coarsePatch->getFineLevelPatches(finePatches);
     
-    cout << "II coarse Level " << coarseLevel->getIndex() << " coarsePatch " << *coarsePatch << endl;
-    cout << "II    getFinePatches " << endl;
-    
-    for(int i=0; i < finePatches.size();i++){  
-        const Patch* finePatch = finePatches[i]; 
-        cout << "II     finePatch " << *finePatch << endl;
-    }
   }   
-cout << endl;
 /*===========TESTING==========`*/
   
   for(int c_p=0;c_p<coarsePatches->size();c_p++){  

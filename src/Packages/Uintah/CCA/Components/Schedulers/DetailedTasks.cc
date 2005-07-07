@@ -98,7 +98,7 @@ DetailedTasks::assignMessageTags(int me)
       batches_[i]->messageTag = ++perPairBatchIndices[fromToPair]; /* start with
 								     one */
       if (messagedbg.active())
-        messagedbg << me << " assigning message num " << batch->messageTag << " from task " << batch->fromTask->getName() 
+        messagedbg << me << " assigning message num " << batch->messageTag << " from task " << batch->fromTask->getName() << " to task " << batch->toTasks.front()->getName()
                    << ", process " << from << " to process " << to << "\n";
     }
   }
