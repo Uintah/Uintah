@@ -40,6 +40,7 @@
 
 #include <CCA/Components/TxtBuilder/TxtBuilder.h>
 #include <Core/CCA/spec/cca_sidl.h>
+#include <SCIRun/CCA/CCAException.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Thread.h>
@@ -179,7 +180,7 @@ bool TxtBuilder::exec_command(char cmdline[])
    else if(cmd==SAVE) save(args);
    else if(cmd==INSERT) insert(args);
    else if(cmd==CLEAR) clear(args);
-   else if(cmd==QUIT) return true; //quit(args);
+   else if(cmd==QUIT) quit(args);
    else if(cmd==HELP) help(args);
    else bad_command(args);
    return false;
@@ -253,16 +254,22 @@ void TxtBuilder::list_components(string args[])
 
 void TxtBuilder::list_ports(string args[])
 {
-  ComponentID::pointer cid=bs->getComponentID(args[0]);
-  SSIDL::array1<string> ppNames=bs->getProvidedPortNames(cid);
-  SSIDL::array1<string> upNames=bs->getUsedPortNames(cid);
-  cout<<"Provided Port Names:\n";
-  for(unsigned i=0; i<ppNames.size();i++){
-    cout<<"#"<<i<<":\t"<<ppNames[i]<<endl;
+  ComponentID::pointer cid;
+  try {
+      cid=bs->getComponentID(args[0]);
+      SSIDL::array1<string> ppNames=bs->getProvidedPortNames(cid);
+      SSIDL::array1<string> upNames=bs->getUsedPortNames(cid);
+      cout<<"Provided Port Names:\n";
+      for(unsigned i=0; i<ppNames.size();i++){
+        cout<<"#"<<i<<":\t"<<ppNames[i]<<endl;
+      }
+      cout<<"Used Port Names:\n";
+      for(unsigned i=0; i<upNames.size();i++){
+        cout<<"#"<<i<<":\t"<<upNames[i]<<endl;
+      }
   }
-  cout<<"Used Port Names:\n";
-  for(unsigned i=0; i<upNames.size();i++){
-    cout<<"#"<<i<<":\t"<<upNames[i]<<endl;
+  catch (CCAException &e) {
+      std::cerr << e.message() << std::endl;
   }
 }
 
@@ -438,7 +445,7 @@ void TxtBuilder::quit(string args[])
 {
   svc->releasePort("cca.BuilderService"); 
   cout<<"TxtBuilder quits!\n";
-  exit(0);
+  Thread::exitAll(0);
 }
 
 void TxtBuilder::help(string args[])
