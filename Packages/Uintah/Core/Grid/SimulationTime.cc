@@ -38,7 +38,7 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
   max_iterations = MAXINT-1;
   maxTimestep = MAXINT-1;
   time_ps->get( "max_iterations", max_iterations );
-  time_ps->get( "maxTimestep", maxTimestep );
+  time_ps->get( "max_Timesteps", maxTimestep );
   time_ps->get( "override_restart_delt", override_restart_delt);
 
   if (!time_ps->get("clamp_timesteps_to_output", timestep_clamping))
