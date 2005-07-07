@@ -220,24 +220,24 @@ class BioImageApp {
     method show_help {} {
 	set splashImageFile [file join [netedit getenv SCIRUN_SRCDIR] Packages Teem Dataflow GUI splash-bioimage.ppm]
 
-	showProgress 1 none 1
+	showProgress 1 none 1 .standalone
 
 	global tutorial_link
 	set tutorial_link "http://software.sci.utah.edu/doc/User/Tutorials/BioImage/bioimage.html"
 	set help_font "-Adobe-Helvetica-normal-R-Normal-*-12-120-75-*"
 
 	if {![winfo exists .splash.frame.m1]} {
-	    label .splash.frame.m1 -text "Please refer to the online BioTensor Tutorial" \
+	    label .splash.frame.m1 -text "Please refer to the online BioImage Tutorial" \
 		-font $help_font
 	    
 	    entry .splash.frame.m2 -relief flat -textvariable tutorial_link \
 		-state disabled -width 55 -font $help_font
 	    pack .splash.frame.m1 .splash.frame.m2 -before .splash.frame.ok -anchor n \
 		-pady 2	    
-	} else {
-	    SciRaise .splash
 	}
-	update idletasks
+	
+#	centerWindow .splash .standalone
+#	 update idletasks
     }
     
 
@@ -498,6 +498,7 @@ class BioImageApp {
  			"Original Samples: ($0_samples, $1_samples, $2_samples)"
  		    $history1.0.f0.childsite.ui.samples configure -text \
  			"Original Samples: ($0_samples, $1_samples, $2_samples)"
+		    enable_all
  		} else {
                     after 0 {tk_messageBox -type ok -icon info -parent .standalone -message "BioImage only supports 3D data.\nPlease load in a 3D dataset."}
  		}
@@ -861,7 +862,7 @@ class BioImageApp {
 	# slice slider
 	scale $window.modes.slider.slice.s \
 	    -variable $mods(ViewSlices)-$axis-viewport0-slice \
-	    -from 0 -to 20 -width 15 \
+	    -from 0 -to 0 -width 15 \
 	    -showvalue false \
 	    -orient horizontal \
 	    -command "$mods(ViewSlices)-c rebind $slice_frame($axis).bd.$axis; \
@@ -966,25 +967,33 @@ class BioImageApp {
 	    button $filter.resamp -text "Resample" \
 		-background $scolor -padx 3 \
 		-activebackground "#6c90ce" \
-		-command "$this add_Resample -1"
+		-disabledforeground grey \
+		-command "$this add_Resample -1" \
+		-state disabled
 	    Tooltip $filter.resamp "Resample using UnuResample"
 
 	    button $filter.crop -text "Crop" \
 		-background $scolor -padx 3 \
 		-activebackground "#6c90ce" \
-		-command "$this add_Crop -1"
+		-disabledforeground grey \
+		-command "$this add_Crop -1" \
+		-state disabled
 	    Tooltip $filter.crop "Crop the image"
 
 	    button $filter.cmedian -text "Median Filtering" \
 		-background $scolor -padx 3 \
 		-activebackground "#6c90ce" \
-		-command "$this add_Cmedian -1"
+		-disabledforeground grey \
+		-command "$this add_Cmedian -1" \
+		-state disabled
 	    Tooltip $filter.cmedian "Perform median filtering"
 
 	    button $filter.histo -text "Histogram" \
 		-background $scolor -padx 3 \
 		-activebackground "#6c90ce" \
-		-command "$this add_Histo -1"
+		-disabledforeground grey \
+		-command "$this add_Histo -1" \
+		-state disabled
 	    Tooltip $filter.histo \
 		"Perform Histogram Equilization\nusing UnuHeq"
 
@@ -997,8 +1006,7 @@ class BioImageApp {
 
 	    set history [$m.p.sf childsite]
 
-	    Tooltip $history \
-		"Shows a history of steps\nin the dynamic pipeline"
+#	    Tooltip $history "Shows a history of steps\nin the dynamic pipeline"
 
 	    # Add Load UI
 	    $this add_Load $history $case
@@ -1906,7 +1914,7 @@ class BioImageApp {
 	    ### Tabs
 	    iwidgets::tabnotebook $vis.tnb -width $notebook_width \
 		-height [expr $vis_height - 25] -tabpos n \
-                -equaltabs false
+                -equaltabs false -backdrop gray
 	    pack $vis.tnb -padx 0 -pady 0 -anchor n -fill both -expand 1
 
             set vis_frame_tab$case $vis.tnb
@@ -2113,11 +2121,11 @@ class BioImageApp {
 			  -command "$this change_vis_frame {Volume Rendering}"]
 
             global show_volume_ren
-	    checkbutton $page.toggle -text "Show Volume Rendering" \
+	    checkbutton $page.showvolume -text "Show Volume Rendering" \
 		-variable show_vol_ren \
 		-command "$this toggle_show_vol_ren"
-            Tooltip $page.toggle "Turn volume rendering on/off"
-            pack $page.toggle -side top -anchor nw -padx 3 -pady 3
+            Tooltip $page.showvolume "Turn volume rendering on/off"
+            pack $page.showvolume -side top -anchor nw -padx 3 -pady 3
 
 
             button $page.vol -text "Edit Transfer Function" \
@@ -2184,7 +2192,7 @@ class BioImageApp {
 	    
 	    scale $sratehi.srate_lo -label "Interactive Rate" \
 		-variable $VolumeVisualizer-sampling_rate_lo \
-		-from 0.1 -to 20.0 \
+		-from 0.1 -to 10.0 \
 		-showvalue true -resolution 0.1 \
 		-orient horizontal -width 15 
 	    pack $sratehi.srate_hi $sratehi.srate_lo \
@@ -2477,7 +2485,8 @@ class BioImageApp {
 	set img [image create photo -width 1 -height 1]	
   	button $f.insert -image $img -borderwidth 2 -relief raised \
 	    -cursor plus -background "#6c90ce" \
-	    -activebackground "#4c70ae" -height 3 -width 198
+	    -activebackground "#4c70ae" -height 3 -width 198 \
+	    -disabledforeground grey
 	pack $rb -side left -anchor w
 	pack $f.insert -side left -fill x -expand 1
 	grid config $f -column 0 -row 1
@@ -2490,6 +2499,7 @@ class BioImageApp {
     }
 
     method popup_insert_menu {x y which} {
+	if { !$data_enabled } return
 	set mouseX $x
 	set mouseY $y
 	set menu_id ".standalone.insertmenu"
@@ -2935,7 +2945,6 @@ class BioImageApp {
 	}
 	set UnuCrop [lindex [lindex $filters($which) $modules] 0]
 	upvar \#0 $UnuCrop-show_roi show
-	puts "show crop roi $show"
 
 	if {$show} {
 	    start_crop $which
@@ -4085,7 +4094,6 @@ class BioImageApp {
        set $mods(Viewer)-ViewWindow_0-view-up-z $upz
        set $mods(Viewer)-ViewWindow_0-view-fov $fov
 
-       set has_autoviewed 1
        set 2D_fixed 1
     }	
 
@@ -4208,6 +4216,7 @@ class BioImageApp {
 	if { $autoview } {
 	    global mods
 	    set var $mods(Viewer)-ViewWindow_0-total_frames
+	    enable *.v2.gohome
 	    global $var
 	    trace variable $var w "$this autoview"
 	}
@@ -4310,6 +4319,61 @@ class BioImageApp {
     }
     
 
+    method enable_all {} {
+	enable *.p.filters.resamp
+	enable *.p.filters.cmedian
+	enable *.p.filters.crop
+	enable *.p.filters.histo
+	enable *.showvolume
+	enable *.f.insert
+	enable *.slider.slice.*
+	enable *.slider.slab.*
+	enable *.modes.buttons.*
+	set data_enabled 1
+    }
+
+    method disable_all {} {
+	disable *.p.filters.resamp
+	disable *.p.filters.cmedian
+	disable *.p.filters.crop
+	disable *.p.filters.histo
+	disable *.showvolume
+	disable *.f.insert
+	disable *.slider.slice.*
+	disable *.slider.slab.*
+	disable *.modes.buttons.*
+	disable *.v2.gohome
+	set data_enabled 0
+    }
+
+    method enable { w } {
+	set widgets [info commands $w]
+	foreach widget $widgets { 
+	    enable_widget $widget
+	}
+    }
+
+    method disable { w } {
+	set widgets [info commands $w]
+	foreach widget $widgets { 
+	    disable_widget $widget
+	}
+    }
+
+    method enable_widget { w } {
+	if { [winfo exists $w] } {
+	    $w configure -state normal
+	}
+    }
+
+    method disable_widget { w } {
+	if { [winfo exists $w] } {
+	    $w configure -state disabled
+	}
+    }
+
+
+
 
     # Application placing and size
     variable notebook_width
@@ -4362,6 +4426,7 @@ class BioImageApp {
 
     variable has_autoviewed
     variable has_executed
+    variable data_enabled
 
     variable data_dir
     variable 2D_fixed
@@ -4389,6 +4454,16 @@ app build_app $DATADIR
 hideProgress
 
 
+#bind all <Control-e> {
+#    app enable_all
+#}
+
+#bind all <Control-r> {
+#    app disable_all
+#}
+
+
+
 ### Bind shortcuts - Must be after instantiation of App
 bind all <Control-s> {
     app save_session
@@ -4414,3 +4489,6 @@ bind all <KeyPress-Up>  "app scroll_history %W up"
 bind all <KeyPress-Right>  "app scroll_history %W right"
 bind all <KeyPress-Left>  "app scroll_history %W left"
 
+app disable_all
+
+wm minsize .standalone 575 390
