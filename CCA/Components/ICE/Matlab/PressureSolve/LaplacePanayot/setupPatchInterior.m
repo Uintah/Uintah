@@ -48,8 +48,9 @@ end
 if (nargin < 8)
     iupper              = P.iupper;
 end
+ilower                  = max(ilower,P.ilower);
+iupper                  = min(iupper,P.iupper);
 boxSize                 = iupper-ilower+1;
-
 if (param.verboseLevel >= 3)
     ilower
     iupper
@@ -180,7 +181,7 @@ for dim = 1:grid.dim,                                                       % Lo
             ];
 
         % Contribution of flux to BC equation (Dirichlet B.C.) at indNbhr
-        % BC vars are fluxes so that A will be symmetric.
+        % BC vars are fluxes to keep A symmetric.
         if (~isempty(thisNear))
             indBC = indNbhr(thisNear);
             Alist = [Alist; ...                                                 % BC vars (= nbhr vars) are fluxes
