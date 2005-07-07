@@ -806,8 +806,9 @@ case $ac_cv_sizeof_voidp in
   ;;
 esac
 
-AC_SUBST(NBITS)
-sci_defs_files="$sci_defs_files include/sci_defs/bits_testdefs.h"
+# the next two lines were moved to a later stage to allow us to change this default based on --enable-32/64bit
+#AC_SUBST(NBITS)
+#sci_defs_files="$sci_defs_files include/sci_defs/bits_testdefs.h"
 
 ## --------------
 
@@ -1317,11 +1318,13 @@ case $host in
 
     AC_MSG_CHECKING(special 32/64 bits flags required)
     if test "$enable_32bit" = "yes" -a $NBITS=64; then
+       NBITS=32
        CFLAGS="-m32 $CFLAGS"
        CXXFLAGS="-m32 $CXXFLAGS"
        AC_MSG_RESULT(-m32)
     else 
       if test "$enable_64bit" = "yes" -a $NBITS=32; then
+        NBITS=64
         CFLAGS="-m64 $CFLAGS"
         CXXFLAGS="-m64 $CXXFLAGS"
         AC_MSG_RESULT(-m64)
@@ -1373,6 +1376,12 @@ case $host in
     NEED_SONAME=yes
     ;;
 esac
+
+# now that we know which NBITS the user wants, we can save this info
+AC_SUBST(NBITS)
+sci_defs_files="$sci_defs_files include/sci_defs/bits_testdefs.h"
+
+###
 
 AC_SUBST(WIN_DLLFLAGS)
 
