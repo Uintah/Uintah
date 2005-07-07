@@ -33,7 +33,7 @@
 \begin{document}
 \setlength{\abovedisplayskip}{0.1in}
 \setlength{\mathindent}{0.0in}
-\underline{ I C E  ~ E Q ~  F O R M  \hspace{ 0.5in}03/31/05}
+\underline{ I C E  ~ E Q ~  F O R M  \hspace{ 0.5in}07/07/05}
 
 \begin{enumerate}
 \item \underline{Compute Thermodynamic/Transport Properties
@@ -42,6 +42,11 @@ $c_v, k, \mu, \gamma$}
 %__________________________________
 \item \underline{Compute the equilibration pressure}
 $P_{eq}, c_m, \rhoM, \theta_m, \f$, such that $\SUM{m}\theta_m = 1$, see attached for details.
+
+%__________________________________
+\item \underline{Compute the mass exchange between materials}
+$  \bigS{m_m},  \bigS{(m \U)_m}, \bigS{(m e)_m}, \bigS{(m v^o)_m }$
+
 %__________________________________
 \item \underline{Compute the face-centered velocities} 
 \[
@@ -60,9 +65,6 @@ $P_{eq}, c_m, \rhoM, \theta_m, \f$, such that $\SUM{m}\theta_m = 1$, see attache
    + \delt\vec{g}
 \]
 The exchange contribution involves a pointwise implicit solve, see attached for details.
-%__________________________________
-\item \underline{Compute the mass exchange between materials}
-$  \bigS{m_m},  \bigS{(m \U)_m}, \bigS{(m e)_m}, \bigS{(m v^o)_m }$
 
 %__________________________________
 \item \underline{Update the volume fraction}\\
@@ -75,9 +77,10 @@ $\theta_m = \frac{V_m^{new}}{V_{total}} $
      \Delta P = \Delta t 
                         \frac{   \SUM{r}  \bigS{(m v^o)_r}
                       - \overbrace { \SUM{m} \nabla \cdot \theta_m \vec{U_m}^{*^{f}} } ^{\text{Advection}(\theta, \vec{U_m}^{*^{f}}) } }
-                       {\SUM{m}  \frac{\theta_m +\bigS{\theta_m}  } {\rhoM c^2_m}}
+                       {\SUM{m} (\theta_m +\bigS{\theta_m}) \kappa_m}
 \]
-where $P^{n+1} = P_{eq} + \Delta{P}$ and $\bigS{\theta_m} = \frac{ \bigS{(m v^o)}}{V}$ .
+where $P^{n+1} = P_{eq} + \Delta{P}, \bigS{\theta_m} = \frac{ \bigS{(m v^o)}}{V}$
+and $\kappa_m = \frac{v^o_m}{c^2_m}$ .
 %__________________________________
 \item \underline{Compute the face centered pressure}
 \[
@@ -93,12 +96,12 @@ where $P^{n+1} = P_{eq} + \Delta{P}$ and $\bigS{\theta_m} = \frac{ \bigS{(m v^o)
  $\Delta(m\vec{U})_m = 
     - \delt V \theta_m \nabla{ P^{*^f}} 
     + \delt V \SUM{l} \theta_m \theta_l K_{ml}(\U_l^{{n+1}^L} - \U_m^{{n+1}^L} )
-    + \nabla{ \cdot (\theta^{*^f}_m \tau^{*^f}_m})
+    + \delt \nabla{ \cdot (\theta^{*^f}_m \tau^{*^f}_m})
     + m_m \vec{g}\delt$
     
  $\Delta(me)_m =  
-    (\frac{V} {\rhoM c^2_m}(\theta_m P \Delta P_{\text{Dilatate}})
-    - \nabla (\theta^{*^f} q_{m}^{*^f})
+    V \theta_m \kappa_m P \Delta P_{\text{Dilatate}}
+    - \delt \nabla (\theta^{*^f} q_{m}^{*^f})
     + \delt V \SUM{l}  \theta_m \theta_l R_{ml}(T_l^{{n+1}^L} - T_m^{{n+1}^L} )$ \\
 where $q^{*^f} = - k^f \nabla T$ and $\theta^{*^f} = \text{ Computed during the advection of } \theta_m$
 %__________________________________
