@@ -34,20 +34,21 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Core/Util
 
 SRCS     += \
-	$(SRCDIR)/DebugStream.cc \
-	$(SRCDIR)/DynamicLoader.cc \
+	$(SRCDIR)/DebugStream.cc        \
+	$(SRCDIR)/DynamicLoader.cc      \
 	$(SRCDIR)/DynamicCompilation.cc \
-	$(SRCDIR)/Endian.cc \
-	$(SRCDIR)/Environment.cc \
-	$(SRCDIR)/ProgressReporter.cc \
-	$(SRCDIR)/SizeTypeConvert.cc \
-	$(SRCDIR)/RWS.cc \
-	$(SRCDIR)/sci_system.cc \
-	$(SRCDIR)/soloader.cc \
-        $(SRCDIR)/Signals.cc \
-	$(SRCDIR)/Timer.cc \
-	$(SRCDIR)/TypeDescription.cc \
-        $(SRCDIR)/XMLParser.cc \
+	$(SRCDIR)/Endian.cc             \
+	$(SRCDIR)/Environment.cc        \
+	$(SRCDIR)/FileUtils.cc          \
+	$(SRCDIR)/ProgressReporter.cc   \
+	$(SRCDIR)/SizeTypeConvert.cc    \
+	$(SRCDIR)/RWS.cc                \
+	$(SRCDIR)/sci_system.cc         \
+	$(SRCDIR)/soloader.cc           \
+        $(SRCDIR)/Signals.cc            \
+	$(SRCDIR)/Timer.cc              \
+	$(SRCDIR)/TypeDescription.cc    \
+        $(SRCDIR)/XMLParser.cc          \
         $(SRCDIR)/ProgressiveWarning.cc
 
 ifeq ($(BUILD_SCIRUN2),yes)
