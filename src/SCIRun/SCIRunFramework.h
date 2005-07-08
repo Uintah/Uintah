@@ -41,6 +41,8 @@
 #ifndef SCIRun_Framework_SCIRunFramework_h
 #define SCIRun_Framework_SCIRunFramework_h
 
+#include <include/sci_defs/dataflow_defs.h>
+
 #ifdef BUILD_DATAFLOW
 #include <SCIRun/Dataflow/SCIRunComponentModel.h>
 #endif

@@ -632,6 +632,7 @@ if test "$sci_required_dataflow"; then
 fi
 AC_SUBST(DEF_BUILD_DATAFLOW)
 AC_SUBST(BUILD_DATAFLOW)
+sci_defs_files="$sci_defs_files include/sci_defs/dataflow_testdefs.h"
 
 
 if test "$package" = "all"; then
