@@ -26,10 +26,9 @@ set xrange [0:1.0]
 #  gamma
 #__________________________________
 set terminal x11 1
-set multiplot
 #set terminal postscript color "Times-Roman" 9
 #set output "thermoProps.ps"
-
+set multiplot
 set size 1.0,0.51  
 set origin 0.0,0.0
 set ylabel "gamma"
