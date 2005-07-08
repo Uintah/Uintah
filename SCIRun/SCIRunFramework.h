@@ -41,7 +41,10 @@
 #ifndef SCIRun_Framework_SCIRunFramework_h
 #define SCIRun_Framework_SCIRunFramework_h
 
+#ifdef BUILD_DATAFLOW
 #include <SCIRun/Dataflow/SCIRunComponentModel.h>
+#endif
+
 #include <Core/CCA/spec/cca_sidl.h>
 #include <SCIRun/resourceReference.h>
 #include <vector>
@@ -232,10 +235,12 @@ public:
     //void share(const sci::cca::Services::pointer &svc);
     //std::string createComponent(const std::string& name, const std::string& type);
 
+#ifdef BUILD_DATAFLOW
     /** A pointer to the framework's SCIRun dataflow component model.  This
         pointer is also in the \em models list.  The \em dflow ivar is public so
         that it can be accessed by the SCIRun scheduler service.  */
     SCIRunComponentModel* dflow; 
+#endif
 
 protected:
     friend class Services;
