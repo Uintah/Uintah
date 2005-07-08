@@ -26,11 +26,14 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-
-
 # Makefile fragment for this subdirectory
 
-SRCDIR   := main
+########################################################################
+#
+# scirun (aka PROGRAM_PSE)
+#
+
+RCDIR   := main
 SRCS     := $(SRCDIR)/main.cc
 
 
@@ -61,60 +64,75 @@ endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
+########################################################################
+#
+# SCIRun2 Stuff:
+#
+
 ifeq ($(BUILD_SCIRUN2),yes)
 
-SRCS      := $(SRCDIR)/newmain.cc
+  ########################################################################
+  #
+  # sr
+  #
+  SRCS      := $(SRCDIR)/newmain.cc
 
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Core/CCA
-else
-ifeq ($(HAVE_GLOBUS),yes)	
-  PSELIBS := Core/Exceptions Core/CCA/Comm\
-        Core/CCA/PIDL Core/globus_threads Core/CCA/spec \
+  ifeq ($(LARGESOS),yes)
+    PSELIBS := Core/CCA
+  else
+    PSELIBS := Core/Exceptions Core/CCA/Comm    \
+        Core/CCA/PIDL Core/CCA/spec Core/Util \
 	SCIRun Core/CCA/SSIDL Core/Thread
-else
-  PSELIBS := Core/Exceptions Core/CCA/Comm\
-        Core/CCA/PIDL Core/CCA/spec \
-	SCIRun Core/CCA/SSIDL Core/Thread
-endif
+    ifeq ($(HAVE_GLOBUS),yes)	
+      PSELIBS += Core/globus_threads
+    endif
+  endif
 
-endif
+  LIBS := $(GLOBUS_LIBRARY)
 
-LIBS := $(GLOBUS_LIBRARY)
+  ifeq ($(HAVE_MPI),yes)
+    LIBS += $(MPI_LIBRARY) 
+  endif
 
-ifeq ($(HAVE_MPI),yes)
-LIBS += $(MPI_LIBRARY) 
-endif
-PROGRAM := sr
+  PROGRAM := sr
 
-include $(SCIRUN_SCRIPTS)/program.mk
+  include $(SCIRUN_SCRIPTS)/program.mk
 
+  ########################################################################
+  #
+  # ploader
+  #
 
-#build the SCIRun CCA Component Loader here
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Core/CCA/Component
-else
+  #build the SCIRun CCA Component Loader here
+  ifeq ($(LARGESOS),yes)
+    PSELIBS := Core/CCA/Component
+  else
 
-ifeq ($(HAVE_GLOBUS),yes)
-  PSELIBS := Core/Exceptions Core/CCA/Comm Core/CCA/Comm/DT \
+    ifeq ($(HAVE_GLOBUS),yes)
+      PSELIBS := Core/Exceptions Core/CCA/Comm Core/CCA/Comm/DT \
         Core/CCA/PIDL Core/globus_threads Core/CCA/spec \
 	SCIRun Core/CCA/SSIDL Core/Thread 
-else
-  PSELIBS := Core/Exceptions Core/CCA/Comm\
+    else
+      PSELIBS := Core/Exceptions Core/CCA/Comm\
         Core/CCA/PIDL Core/CCA/spec \
 	SCIRun Core/CCA/SSIDL Core/Thread 
-endif
-endif
+    endif
+  endif
 
-ifeq ($(HAVE_MPI),yes)
-LIBS := $(MPI_LIBRARY) 
-endif
+  ifeq ($(HAVE_MPI),yes)
+    LIBS := $(MPI_LIBRARY) 
+  endif
 
-PROGRAM := ploader
-SRCS      := $(SRCDIR)/ploader.cc
-include $(SCIRUN_SCRIPTS)/program.mk
+  PROGRAM := ploader
+  SRCS      := $(SRCDIR)/ploader.cc
+  include $(SCIRUN_SCRIPTS)/program.mk
 
-endif #Build SCIRun2
+endif # Build SCIRun2
+
+########################################################################
+#
+# scirunremote
+#
 
 SRCDIR   := main
 SRCS     := $(SRCDIR)/scirunremote.cc
@@ -140,4 +158,5 @@ endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
+########################################################################
 
