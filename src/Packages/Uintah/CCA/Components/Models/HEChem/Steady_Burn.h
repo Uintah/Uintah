@@ -116,7 +116,7 @@ WARNING
     Steady_Burn(const Steady_Burn&);
     Steady_Burn& operator=(const Steady_Burn&);
     
-    /****/const VarLabel* PartFlagLabel;   // diagnostic labels
+    const VarLabel* PartFlagLabel; /* for indicating cells containing particles */  
     
     ProblemSpecP params;
     const Material* matl0;
@@ -155,7 +155,7 @@ WARNING
     
     double T_ignition; /*  T_ignition = C2 */
     double Tmin, Tmax; /* define the range of Ts */
-    double L0, R0; /* used for interval update, left values and right values  */
+    double L0, R0; /* for interval update, left values and right values  */
     double L1, R1;
     double L2, R2;
     double L3, R3; 
