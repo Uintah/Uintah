@@ -18,11 +18,11 @@ param                       = [];
 param.problemType           = 'Lshaped'; %'ProblemB'; %'quadratic'; %'Lshaped'; %
 param.outputDir             = 'ProblemA_1Level';
 
-param.twoLevel              = 0;
+param.twoLevel              = 1;
 param.threeLevel            = 0;
 param.setupGrid             = 1;
 param.solveSystem           = 1;
-param.plotResults           = 0;
+param.plotResults           = 1;
 param.saveResults           = 0;
 param.verboseLevel          = 0;
 
@@ -123,23 +123,23 @@ for count = 1:length(numCellsRange)
         %--------------- Level 3: yet local fine grid around center of domain -----------------
         if ((param.twoLevel) & (param.threeLevel))
             [grid,k]   = addGridLevel(grid,'refineRatio',[2 2]);
-            
+
             if (0)
                 % Cover central half of the domain
                 [grid,q3]  = addGridPatch(grid,k,3*resolution/2 + 1,5*resolution/2,q2);              % Local patch around the domain center
             end
-            
+
             if (1)
                 % Cover central half of the central quarter of the domain
                 [grid,q3]  = addGridPatch(grid,k,7*resolution/4 + 1,9*resolution/4,q2);              % Local patch around the domain center
-%                [grid,q3]  = addGridPatch(grid,k,15*resolution/4 + 1,17*resolution/4,q2);              % Local patch around the domain center
+                %                [grid,q3]  = addGridPatch(grid,k,15*resolution/4 + 1,17*resolution/4,q2);              % Local patch around the domain center
             end
-            
+
             for q = 1:grid.level{k}.numPatches,
                 [grid,A,b,T,TI]      = updateSystem(grid,k,q,A,b,T,TI);
             end
         end
-        
+
         tCPU        = cputime - tStartCPU;
         tElapsed    = etime(clock,tStartElapsed);
         if (param.verboseLevel >= 1)
@@ -190,7 +190,6 @@ for count = 1:length(numCellsRange)
     uExact = exactSolutionAMR(grid,T,TI);
     tau = sparseToAMR(b-A*AMRToSparse(uExact,grid,T,1),grid,TI,0);
     f = sparseToAMR(b,grid,TI,0);
-    fig = 0;
 
     % AMR grid norms
     err = cell(size(u));
@@ -211,63 +210,13 @@ for count = 1:length(numCellsRange)
     fprintf('#vars = %5d  L2=%.3e  max=%.3e  H1=%.3e  H1max=%.3e\n',grid.totalVars,errNorm(count,:));
 
     if (param.plotResults)
-        for k = 1:grid.numLevels,
-            level = grid.level{k};
-            for q = 1:grid.level{k}.numPatches,
-                P = level.patch{q};
-                %                e = uExact{k}{q}-u{k}{q};
-                %                e = e(:);
-                %                t = tau{k}{q}(:);
-                %                 fprintf('Level %2d, Patch %2d  err (L2=%.3e  max=%.3e  med=%.3e)  tau (L2=%.3e  max=%.3e  med=%.3e)\n',...
-                %                     k,q,...
-                %                     Lpnorm(e),max(abs(e)),median(abs(e)),...
-                %                     Lpnorm(t),max(abs(t)),median(abs(t)));
-                %                err{k}{q}(count,:) = [Lpnorm(e) max(abs(e)) median(abs(e))];
-                %                trunc{k}{q}(count,:) = [Lpnorm(t) max(abs(t)) median(abs(t))];
-
-                %                 fig = fig+1;
-                %                 figure(fig);
-                %                 clf;
-                %                 surf(f{k}{q});
-                %                 title(sprintf('Discrete RHS on Level %d, Patch %d',k,q));
-                %                 eval(sprintf('print -depsc %s/DiscRHS%d_L%dP%d.eps',param.outputDir,numCells,k,q));
-
-                fig = fig+1;
-                figure(fig);
-                clf;
-                surf(u{k}{q});
-                title(sprintf('Discrete solution on Level %d, Patch %d',k,q));
-                eval(sprintf('print -depsc %s/DiscSolution%d_L%dP%d.eps',param.outputDir,numCells,k,q));
-
-                fig = fig+1;
-                figure(fig);
-                clf;
-                surf(uExact{k}{q});
-                title(sprintf('Exact solution on Level %d, Patch %d',k,q));
-
-                fig = fig+1;
-                figure(fig);
-                clf;
-                surf(u{k}{q}-uExact{k}{q});
-                title(sprintf('Discretization error on Level %d, Patch %d',k,q));
-                eval(sprintf('print -depsc %s/DiscError%d_L%dP%d.eps',param.outputDir,numCells,k,q));
-                shg;
-
-                fig = fig+1;
-                figure(fig);
-                clf;
-                surf(tau{k}{q});
-                title(sprintf('Truncation error on Level %d, Patch %d',k,q));
-                eval(sprintf('print -depsc %s/TruncError%d_L%dP%d.eps',param.outputDir,numCells,k,q));
-                shg;
-            end
-        end
-        tCPU        = cputime - tStartCPU;
-        tElapsed    = etime(clock,tStartElapsed);
-        if (param.verboseLevel >= 1)
-            fprintf('CPU time     = %f\n',tCPU);
-            fprintf('Elapsed time = %f\n',tElapsed);
-        end
+        plotResults(grid,u,uExact,tau,numCells);
+    end
+    tCPU        = cputime - tStartCPU;
+    tElapsed    = etime(clock,tStartElapsed);
+    if (param.verboseLevel >= 1)
+        fprintf('CPU time     = %f\n',tCPU);
+        fprintf('Elapsed time = %f\n',tElapsed);
     end
 
 end

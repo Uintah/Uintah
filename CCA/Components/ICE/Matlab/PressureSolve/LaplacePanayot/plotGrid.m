@@ -86,7 +86,7 @@ for k = 1:grid.numLevels,
             elseif (showGhosts)
                 a = rectangle('Position',[x1(i)-0.5*h(1) x2(i)-0.5*h(2) h(1) h(2)]);
                 set(a,'edgecolor',levelColor{k});
-                set(a,'linewidth',k);
+                set(a,'linewidth',levelWidth(k));
                 set(a,'linestyle','--')
 
                 if (showCircles)

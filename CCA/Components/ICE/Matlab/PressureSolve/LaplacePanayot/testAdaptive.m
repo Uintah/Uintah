@@ -27,10 +27,10 @@ param.verboseLevel          = 0;
 success                     = mkdir('.',param.outputDir);
 
 % Create an empty grid
-resolution          = [8 8];                                    % Coarsest level resolution
-numGlobalLevels     = 2;
-threshold           = 1e-6;
-maxVars             = 4000;
+resolution          = [8 8]; %[4 4];                                    % Coarsest level resolution
+numGlobalLevels     = 2; %3;
+threshold           = 1e-5;
+maxVars             = 5000;
 grid.maxLevels  	= 20;
 grid.maxPatches  	= 100;
 grid.level          = cell(grid.maxLevels,1);
@@ -159,6 +159,9 @@ for numLevels = 1:grid.maxLevels,
         ];
     fprintf('#vars = %5d  L2=%.3e  max=%.3e  H1=%.3e  H1max=%.3e\n',grid.totalVars,errNorm(numLevels,:));
 
+    if (param.plotResults)
+        plotResults(grid,u,uExact,tau,numCells);
+    end
     tCPU        = cputime - tStartCPU;
     tElapsed    = etime(clock,tStartElapsed);
     if (param.verboseLevel >= 1)
