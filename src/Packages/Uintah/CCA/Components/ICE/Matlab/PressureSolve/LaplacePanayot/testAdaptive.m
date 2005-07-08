@@ -27,9 +27,12 @@ param.verboseLevel          = 0;
 success                     = mkdir('.',param.outputDir);
 
 % Create an empty grid
-resolution          = [4 4];                                    % Coarsest level resolution
-grid.maxLevels  	= 3;
-grid.maxPatches  	= 3;
+resolution          = [8 8];                                    % Coarsest level resolution
+numGlobalLevels     = 2;
+threshold           = 1e-6;
+maxVars             = 4000;
+grid.maxLevels  	= 20;
+grid.maxPatches  	= 100;
 grid.level          = cell(grid.maxLevels,1);
 grid.numLevels      = 0;
 grid.domainSize     = [1.0 1.0];                                % Domain is from [0.,0.] to [1.,1.]
@@ -40,12 +43,7 @@ T                   = [];
 TI                  = [];
 
 % Prepare quantities to be saved for each refinement stage
-uAll                = cell(grid.maxLevels,1);
-AAll                = cell(grid.maxLevels,1);
-bAll                = cell(grid.maxLevels,1);
-TAll                = cell(grid.maxLevels,1);
-TIAll               = cell(grid.maxLevels,1);
-gridAll             = cell(grid.maxLevels,1);
+AMR                 = cell(grid.maxLevels,1);
 errNorm             = zeros(grid.maxLevels,4);
 patchID             = cell(grid.maxLevels,1);
 
@@ -70,17 +68,23 @@ for numLevels = 1:grid.maxLevels,
         patchID{numLevels}  = q;
     else
         [grid,k]            = addGridLevel(grid,'refineRatio',[2 2]);
-        if (numLevels <= 3)
+        if (numLevels <= numGlobalLevels)
             [grid,q]       = addGridPatch(grid,k,ones(1,grid.dim),2.^(numLevels-1)*resolution,patchID{k-1});
             patchID{numLevels}  = q;
         else
+            [ilower,iupper,needRefinement] = adaptiveRefinement(AMR,grid,k-1,threshold);
+            if (~needRefinement)
+                fprintf('No more refinement levels needed, stopping\n');
+                break;
+            end
+            [grid,q]       = addGridPatch(grid,k,ilower,iupper,patchID{k-1});
+            patchID{numLevels}  = q;
         end
     end
-
-    for q = 1:grid.level{k}.numPatches,
-        [grid,A,b,T,TI]      = updateSystem(grid,k,q,A,b,T,TI);
+    if (grid.totalVars > maxVars)
+        fprintf('Reached maximum allowed #vars, stopping\n');
+        break;
     end
-
     tCPU        = cputime - tStartCPU;
     tElapsed    = etime(clock,tStartElapsed);
     if (param.verboseLevel >= 1)
@@ -88,6 +92,17 @@ for numLevels = 1:grid.maxLevels,
         fprintf('Elapsed time = %f\n',tElapsed);
         printGrid(grid);
     end
+    %     % Plot grid
+    %         plotGrid(grid,sprintf('%s/grid%d.eps',param.outputDir,numLevels),0,0,0,0);
+
+    %-------------------------------------------------------------------------
+    % Update the linear system with the new patches
+    %-------------------------------------------------------------------------
+    for q = 1:grid.level{k}.numPatches,
+        [grid,A,b,T,TI]      = updateSystem(grid,k,q,A,b,T,TI);
+    end
+    % Plot grid
+    plotGrid(grid,sprintf('%s/grid%d.eps',param.outputDir,numLevels),0,0,0,0);
 
     %-------------------------------------------------------------------------
     % Solve the linear system
@@ -120,11 +135,6 @@ for numLevels = 1:grid.maxLevels,
     tStartCPU        = cputime;
     tStartElapsed    = clock;
 
-    % Plot grid
-    if (grid.totalVars <= 2000)
-        plotGrid(grid,sprintf('%s/grid%d.eps',param.outputDir,numLevels),0,0,0,0);
-    end
-
     % Plot and print discretization error at all patches
     uExact = exactSolutionAMR(grid,T,TI);
     tau = sparseToAMR(b-A*AMRToSparse(uExact,grid,T,1),grid,TI,0);
@@ -147,7 +157,7 @@ for numLevels = 1:grid.maxLevels,
         normAMR(grid,err,'H1') ...
         normAMR(grid,err,'H1max') ...
         ];
-    fprintf('L2=%.3e  max=%.3e  H1=%.3e  H1max=%.3e\n',errNorm(numLevels,:));
+    fprintf('#vars = %5d  L2=%.3e  max=%.3e  H1=%.3e  H1max=%.3e\n',grid.totalVars,errNorm(numLevels,:));
 
     tCPU        = cputime - tStartCPU;
     tElapsed    = etime(clock,tStartElapsed);
@@ -158,12 +168,12 @@ for numLevels = 1:grid.maxLevels,
     end
     
     % Save quantities of this refinement stage
-    uAll{numLevels} = u;
-    TAll{numLevels} = A;
-    bAll{numLevels} = b;
-    TAll{numLevels} = T;
-    TIAll{numLevels} = TI;
-    gridAll{numLevels} = grid;
+    AMR{numLevels}.grid = grid;
+    AMR{numLevels}.A = A;
+    AMR{numLevels}.b = b;
+    AMR{numLevels}.T = T;
+    AMR{numLevels}.TI = TI;
+    AMR{numLevels}.u = u;
 end
 
 if (param.saveResults)

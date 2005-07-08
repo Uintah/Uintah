@@ -1,4 +1,4 @@
-function [grid,A,b,T,TI,u] = testDisc(twoLevel)
+%function [grid,A,b,T,TI,u] = testDisc(twoLevel)
 %TESTDISC  Test pressure equation discretization.
 %   We test pressure equation discretization error for a simple 2D Poisson problem with a
 %   known solution. We prepare an AMR grid with two levels: a global level
@@ -18,7 +18,7 @@ param                       = [];
 param.problemType           = 'Lshaped'; %'ProblemB'; %'quadratic'; %'Lshaped'; %
 param.outputDir             = 'ProblemA_1Level';
 
-param.twoLevel              = twoLevel; %0;
+param.twoLevel              = 0;
 param.threeLevel            = 0;
 param.setupGrid             = 1;
 param.solveSystem           = 1;
@@ -29,7 +29,7 @@ param.verboseLevel          = 0;
 %=========================================================================
 % Run discretization on a sequence of successively finer grids
 %=========================================================================
-numCellsRange               = 16; %2.^[2:1:6];
+numCellsRange               = 2.^[2:1:6];
 success                     = mkdir('.',param.outputDir);
 errNorm                     = zeros(length(numCellsRange),4);
 
@@ -208,7 +208,7 @@ for count = 1:length(numCellsRange)
         normAMR(grid,err,'H1') ...
         normAMR(grid,err,'H1max') ...
         ];
-    fprintf('L2=%.3e  max=%.3e  H1=%.3e  H1max=%.3e\n',errNorm(count,:));
+    fprintf('#vars = %5d  L2=%.3e  max=%.3e  H1=%.3e  H1max=%.3e\n',grid.totalVars,errNorm(count,:));
 
     if (param.plotResults)
         for k = 1:grid.numLevels,
