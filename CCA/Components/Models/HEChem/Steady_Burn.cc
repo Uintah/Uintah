@@ -41,8 +41,7 @@ Steady_Burn::Steady_Burn(const ProcessorGroup* myworld, ProblemSpecP& params)
   Mlb  = scinew MPMLabel();
   Ilb  = scinew ICELabel();
   MIlb = scinew MPMICELabel();
-  /*  diagnostic labels  */
-  /****/PartFlagLabel = VarLabel::create("Steady_Burn::PartFlag", CCVariable<int>::getTypeDescription());
+  PartFlagLabel = VarLabel::create("Steady_Burn::PartFlag", CCVariable<int>::getTypeDescription());
 }
 
 
@@ -51,8 +50,7 @@ Steady_Burn::~Steady_Burn(){
   delete Mlb;
   delete MIlb;
 
-  /****/VarLabel::destroy(PartFlagLabel);
-  
+  VarLabel::destroy(PartFlagLabel);
   if(mymatls && mymatls->removeReference())
     delete mymatls;
 }
@@ -90,7 +88,7 @@ void Steady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup
   
   if( m_tmp[0] != 0 && m_tmp[1] != 0){
     vector<int> m(3);
-    m[0] = 0;    // needed for the pressure and NC_CCWeight 
+    m[0] = 0;    /* needed for the pressure and NC_CCWeight */ 
     m[1] = m_tmp[0];
     m[2] = m_tmp[1];
     mymatls->addAll(m);
@@ -110,8 +108,6 @@ void Steady_Burn::scheduleInitialize(SchedulerP& sched, const LevelP& level, con
   MaterialSubset* one_matl  = scinew MaterialSubset();
   one_matl->add(0);
   one_matl->addReference();     
-
-  //const MaterialSubset* react_matl = matl0->thisMaterial();
   sched->addTask(t, level->eachPatch(), mymatls);
 }
 
@@ -121,9 +117,6 @@ void Steady_Burn::initialize(const ProcessorGroup*,
 			     const MaterialSubset* /*matls*/, 
 			     DataWarehouse*, 
 			     DataWarehouse* new_dw){
-
-  //int m0 = matl0->getDWIndex();
-  
   for(int p=0;p<patches->size();p++) {
     const Patch* patch = patches->get(p);
     cout_doing << "Doing Initialize on patch " << patch->getID()<< "\t\t\t STEADY_BURN" << endl; 
@@ -177,11 +170,10 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched, const LevelP& l
   
   
   /*     Misc      */
-  /****///t->requires(Task::OldDW,  PartFlagLabel,             one_matl,  gn);     //new
   t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, press_matl, gn);
   t->requires(Task::OldDW,  MIlb->NC_CCweightLabel,   one_matl,   gac, 1);  
   
-  /****/t->computes(PartFlagLabel, one_matl);  
+  t->computes(PartFlagLabel, one_matl);  
  
   t->modifies(mi->mass_source_CCLabel);
   t->modifies(mi->momentum_source_CCLabel);
@@ -245,8 +237,8 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     constCCVariable<double> press_CC, gasTemp, gasVol_frac, gasSp_vol, solidVol_frac;
     constCCVariable<double> solidTemp, solidMass, solidSp_vol;
 
-    /****/constParticleVariable<Point>  px;
-    /****/CCVariable<int> PartFlag;
+    constParticleVariable<Point>  px;
+    CCVariable<int> PartFlag;
         
     constNCVariable<double>   NC_CCweight, NCsolidMass;
     constSFCXVariable<double> gasTempX_FC, solidTempX_FC;
@@ -268,24 +260,24 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     new_dw->get(NCsolidMass,     Mlb->gMassLabel,       m0, patch, gac,1);
     new_dw->get(solidVol_frac,   Ilb->vol_frac_CCLabel, m0, patch, gn, 0);
 
-    /****/ParticleSubset* pset = old_dw->getParticleSubset(m0, patch, gn,0, Mlb->pXLabel);
-    /****/old_dw->get(px,              Mlb->pXLabel,       pset);
+    ParticleSubset* pset = old_dw->getParticleSubset(m0, patch, gn,0, Mlb->pXLabel);
+    old_dw->get(px,              Mlb->pXLabel,       pset);
     
 
-    /* Product Data  */
+    /* Product Data */
     new_dw->get(gasTempX_FC,      Ilb->TempX_FCLabel,m1,patch,gac,2);
     new_dw->get(gasTempY_FC,      Ilb->TempY_FCLabel,m1,patch,gac,2);
     new_dw->get(gasTempZ_FC,      Ilb->TempZ_FCLabel,m1,patch,gac,2);
     old_dw->get(gasTemp,          Ilb->temp_CCLabel, m1,patch,gn, 0);
     new_dw->get(gasVol_frac,      Ilb->vol_frac_CCLabel,m1,patch,gn,0);
     
-    /*     Get a new variable from the dw   */
+    /* Get a new variable from the dw */
     new_dw->get(gasSp_vol,        Ilb->sp_vol_CCLabel,m1,patch,gn,0);
    
-    /*    Misc    */
+    /* Misc */
     new_dw->get(press_CC,       Ilb->press_equil_CCLabel,      0, patch, gn,  0);
     old_dw->get(NC_CCweight,    MIlb->NC_CCweightLabel,        0, patch, gac, 1);   
-    /****/new_dw->allocateAndPut(PartFlag, Steady_Burn::PartFlagLabel, 0, patch, gac, 1);
+    new_dw->allocateAndPut(PartFlag, Steady_Burn::PartFlagLabel, 0, patch, gac, 1);
 
     IntVector nodeIdx[8];
 
@@ -304,8 +296,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     }
     
     
-    /****/
-    PartFlag.initialize(100);// initialize extra cells for BC to 100
+    PartFlag.initialize(100);/* initialize extra cells for BC to 100 */
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       PartFlag[*iter] = 0; 
     }
@@ -316,14 +307,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
       PartFlag[c] += 1;
     }
 
-    /*
-    for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
-      cout <<"   cell = "<< *iter << "   PartFlag = " << PartFlag[*iter] <<endl ; 
-    }
-    */
-
     Vector  dx = patch->dCell();
-    //double vol = dx.x()*dx.y()*dx.z();   
     
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
@@ -337,12 +321,6 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
 	MinMass = std::min(MinMass,NC_CCweight[nodeIdx[nN]]*NCsolidMass[nodeIdx[nN]]); 
       } 
     
-      /*
-      for (int m = 0; m < numAllMatls; m++){
-	cout<<"\t cell = " <<c <<"  m = " <<m <<"  mass = " <<rho_CC[m][c]*vol <<"  vol_frac = "<<vol_frac_CC[m][c]<<endl;
-      }
-      */
-      
       if( (MaxMass-MinMass)/MaxMass>0.4 && (MaxMass-MinMass)/MaxMass<1.0 && MaxMass>d_TINY_RHO && PartFlag[c]>0 ){ 
 	/* near interface and containing particles */
 	burning = 0;
@@ -350,12 +328,8 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
 	  for(int j = -1; j<=1; j++){
 	    for(int k = -1; k<=1; k++){
 	      IntVector cell = c + IntVector(i,j,k);
-	      //cout<<"  cell = "<<cell<< "  partflag = "<< PartFlag[cell]<<endl;
 	      if( 0 == PartFlag[cell] ){
 		for (int m = 0; m < numAllMatls; m++){
-		  //cout<<"  cell = "<<cell<< "  partflag = "<< PartFlag[cell]
-		  //<<"  m = "<< m  <<"  volfrac ="<<vol_frac_CC[m][cell] 
-		  //<< "  temp =" <<temp_CC[m][cell] <<endl;
 		  if(vol_frac_CC[m][cell] > 0.3 && temp_CC[m][cell] > ignitionTemp){
 		    burning = 1;
 		    break;
@@ -371,12 +345,10 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
       }
       
       if(burning){
-	
-	//cout<<"\tThe burning cell is : " << c << " solid vol_frac = " << solidVol_frac[c] <<"  solidMass = " <<solidMass[c] <<endl;
-	
-	Vector rhoGradVector = computeDensityGradientVector(nodeIdx, NCsolidMass, NC_CCweight,dx);
-	
-	double surfArea = computeSurfaceArea(rhoGradVector, dx); 
+       	//cout<<"\tThe burning cell is : " << c << " solid vol_frac = " << solidVol_frac[c] <<"  solidMass = " <<solidMass[c] <<endl;
+       	Vector rhoGradVector = computeDensityGradientVector(nodeIdx, NCsolidMass, NC_CCweight,dx);
+       	double surfArea = computeSurfaceArea(rhoGradVector, dx); 
+
 	double burnedMass = computeBurnedMass(300.0 /* solidTemp[c] */, press_CC[c], solidSp_vol[c], 
 					      surfArea, delT, solidMass[c]);
 	
@@ -481,7 +453,7 @@ void Steady_Burn::setMPMLabel(MPMLabel* MLB){
 
 
 
-/*******************************************************************/
+/******************* Bisection Secant Solver ********************************/
 double Steady_Burn::computeBurnedMass(double To, double P, double Vc, double surfArea, double delT, double solidMass){  
   UpdateConstants(To, P, Vc);
   double Ts = Tmin + (Tmax - Tmin) * BisectionSecant();
