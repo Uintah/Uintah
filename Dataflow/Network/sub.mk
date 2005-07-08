@@ -40,7 +40,6 @@ SRCS     += $(SRCDIR)/Connection.cc \
 	$(SRCDIR)/Module.cc \
 	$(SRCDIR)/NetworkEditor.cc \
 	$(SRCDIR)/PackageDB.cc \
-	$(SRCDIR)/FileUtils.cc \
 	$(SRCDIR)/GenFiles.cc \
 	$(SRCDIR)/ComponentNode.cc \
 	$(SRCDIR)/SkeletonFiles.cc \
