@@ -7454,13 +7454,23 @@ echo "$as_me: error: Looked in $COMPILER_DIR" >&2;}
     CPP="$CC"
     CXXCPP="$CXX -c"
     ##  this WOFF is required for configure
-    WOFF=" -woff 3625,3303,1047,1209,1110 -Wl,-woff,84 -woff 1342"
-    CPPFLAGS=" $WOFF -LANG:std"
-    if test "$enable_64bit" = "yes"; then
-      BINARYFLAGS="-64 -mips4"
+    if test "$USING_74" = "yes"; then
+        WOFF=" -woff 3625,3303,1047,1209,1110 -Wl,-woff,84 -woff 1342"
     else
+        WOFF=" -woff 3303,1047,1209,1110 -Wl,-woff,84 -woff 1342"
+    fi
+    CPPFLAGS=" $WOFF -LANG:std"
+
+    if test "$enable_64bit" = "yes"; then
+      if test $NBITS = "32"; then
+        BINARYFLAGS="-64 -mips4"
+      fi
+      NBITS=64
+    else
+      NBITS=32
       BINARYFLAGS="-n32 -mips4"
     fi
+
     FFLAGS="$BINARYFLAGS $extra_cflags"
     CFLAGS="-fullwarn -xansi -LANG:std $BINARYFLAGS $extra_cflags"
     CXXFLAGS="$CFLAGS"
@@ -8449,8 +8459,8 @@ fi
        CXXFLAGS="-fPIC $CXXFLAGS"
     fi
 
-    echo "$as_me:$LINENO: checking special 32/64 bits flags required" >&5
-echo $ECHO_N "checking special 32/64 bits flags required... $ECHO_C" >&6
+    echo "$as_me:$LINENO: checking if special 32/64 bits flags required" >&5
+echo $ECHO_N "checking if special 32/64 bits flags required... $ECHO_C" >&6
     if test "$enable_32bit" = "yes" -a $NBITS=64; then
        NBITS=32
        CFLAGS="-m32 $CFLAGS"

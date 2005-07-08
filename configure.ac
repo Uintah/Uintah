@@ -1094,13 +1094,23 @@ case $host in
     CPP="$CC"
     CXXCPP="$CXX -c"
     ##  this WOFF is required for configure 
-    WOFF=" -woff 3625,3303,1047,1209,1110 -Wl,-woff,84 -woff 1342"
-    CPPFLAGS=" $WOFF -LANG:std"
-    if test "$enable_64bit" = "yes"; then
-      BINARYFLAGS="-64 -mips4"
+    if test "$USING_74" = "yes"; then
+        WOFF=" -woff 3625,3303,1047,1209,1110 -Wl,-woff,84 -woff 1342"
     else
+        WOFF=" -woff 3303,1047,1209,1110 -Wl,-woff,84 -woff 1342"
+    fi
+    CPPFLAGS=" $WOFF -LANG:std"
+
+    if test "$enable_64bit" = "yes"; then
+      if test $NBITS = "32"; then
+        BINARYFLAGS="-64 -mips4"
+      fi
+      NBITS=64
+    else
+      NBITS=32
       BINARYFLAGS="-n32 -mips4"
     fi
+
     FFLAGS="$BINARYFLAGS $extra_cflags"
     CFLAGS="-fullwarn -xansi -LANG:std $BINARYFLAGS $extra_cflags"
     CXXFLAGS="$CFLAGS"
@@ -1326,7 +1336,7 @@ case $host in
        CXXFLAGS="-fPIC $CXXFLAGS"
     fi
 
-    AC_MSG_CHECKING(special 32/64 bits flags required)
+    AC_MSG_CHECKING(if special 32/64 bits flags required)
     if test "$enable_32bit" = "yes" -a $NBITS=64; then
        NBITS=32
        CFLAGS="-m32 $CFLAGS"
