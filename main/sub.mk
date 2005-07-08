@@ -35,9 +35,7 @@ SRCDIR   := main
 # scirun (aka PROGRAM_PSE)
 #
 
-RCDIR   := main
 SRCS    := $(SRCDIR)/main.cc
-
 
 ifeq ($(LARGESOS),yes)
   PSELIBS := Dataflow Core
