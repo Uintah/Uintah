@@ -89,7 +89,9 @@ SCIRunFramework::SCIRunFramework()
   //:d_slave_sema("Wait for a slave to regester Semaphore",0)
 {
   models.push_back(internalServices = new InternalComponentModel(this));
+#ifdef BUILD_DATAFLOW
   models.push_back(dflow = new SCIRunComponentModel(this));
+#endif
   models.push_back(cca = new CCAComponentModel(this));
 
 #if HAVE_RUBY
