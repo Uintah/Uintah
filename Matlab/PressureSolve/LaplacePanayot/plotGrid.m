@@ -23,8 +23,10 @@ end
 figure(1);
 clf;
 
-levelColor = {'blue','red','green'};
-
+levelColor = {'blue','red','green','black','cyan','blue','red','green','black','cyan',...
+    'blue','red','green','black','cyan','blue','red','green','black','cyan'};
+levelWidth = [3 3 3 2 2 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1];
+    
 for k = 1:grid.numLevels,
     level = grid.level{k};
     h = level.h;
@@ -64,7 +66,7 @@ for k = 1:grid.numLevels,
                     (mat2(i) >= P.ilower(2)) & (mat2(i) <= P.iupper(2)))
                 a = rectangle('Position',[x1(i)-0.5*h(1) x2(i)-0.5*h(2) h(1) h(2)]);
                 set(a,'edgecolor',levelColor{k});
-                set(a,'linewidth',k);
+                set(a,'linewidth',levelWidth(k));
                 set(a,'linestyle','-')
 
                 if (showCircles)

@@ -64,13 +64,16 @@ indOut                  = indOut(:);
 [i,j,data]              = find(A(indOut,:));
 in2out                  = find(~ismember(j,indOut));
 out2in                  = [j(in2out) j(in2out) -data(in2out)];
-indNbhr                 = unique(out2in(:,1));
-Aold                    = spconvert([out2in; [grid.totalVars grid.totalVars 0]]);
-out2inNew               = [out2in(:,1:2) 2*out2in(:,3)];
-Anew                    = spconvert([out2inNew; [grid.totalVars grid.totalVars 0]]);
-if (reallyUpdate)
-    A(indNbhr,:)        = A(indNbhr,:) - Aold(indNbhr,:) + Anew(indNbhr,:);
+if (~isempty(out2in))
+    indNbhr                 = unique(out2in(:,1));
+    Aold                    = spconvert([out2in; [grid.totalVars grid.totalVars 0]]);
+    out2inNew               = [out2in(:,1:2) 2*out2in(:,3)];
+    Anew                    = spconvert([out2inNew; [grid.totalVars grid.totalVars 0]]);
+    if (reallyUpdate)
+        A(indNbhr,:)        = A(indNbhr,:) - Aold(indNbhr,:) + Anew(indNbhr,:);
+    end
 end
+
 if (param.verboseLevel >= 1)
     fprintf('--- LshapedOut(k = %d, q = %d) END ---\n',k,q);
 end

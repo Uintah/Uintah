@@ -1,4 +1,4 @@
-function uc = coarsen(grid,k,q,u)
+function [uc,QLower,QUpper] = coarsen(grid,k,q,u)
 %COARSEN  Fine-to-coarse averaging on a patch.
 %   UC = COARSEN(GRID,K,Q,U) coarsens the function U defined at patch q at
 %   level k, to UC defined at the parent patch part underlying the fine
