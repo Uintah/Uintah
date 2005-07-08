@@ -28,23 +28,25 @@
 
 # Makefile fragment for this subdirectory
 
+SRCDIR   := main
+
 ########################################################################
 #
 # scirun (aka PROGRAM_PSE)
 #
 
 RCDIR   := main
-SRCS     := $(SRCDIR)/main.cc
+SRCS    := $(SRCDIR)/main.cc
 
 
 ifeq ($(LARGESOS),yes)
   PSELIBS := Dataflow Core
 else
   PSELIBS := Dataflow/Network Core/Containers Dataflow/TCLThread Core/GuiInterface \
-	Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
-	Core/ICom Core/Services Core/XMLUtil Core/SystemCall Core/Geom Core/Init
-  ifeq ($(HAVE_PTOLEMY), yes)	
-	PSELIBS += Packages/Ptolemy/Core/Comm
+        Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
+        Core/ICom Core/Services Core/XMLUtil Core/SystemCall Core/Geom Core/Init
+  ifeq ($(HAVE_PTOLEMY), yes)   
+        PSELIBS += Packages/Ptolemy/Core/Comm
   endif
   ifeq ($(OS_NAME),Darwin)
     PSELIBS += Core/Datatypes Core/ImportExport Core/Persistent
@@ -82,8 +84,8 @@ ifeq ($(BUILD_SCIRUN2),yes)
   else
     PSELIBS := Core/Exceptions Core/CCA/Comm    \
         Core/CCA/PIDL Core/CCA/spec Core/Util \
-	SCIRun Core/CCA/SSIDL Core/Thread
-    ifeq ($(HAVE_GLOBUS),yes)	
+        SCIRun Core/CCA/SSIDL Core/Thread
+    ifeq ($(HAVE_GLOBUS),yes)   
       PSELIBS += Core/globus_threads
     endif
   endif
@@ -111,11 +113,11 @@ ifeq ($(BUILD_SCIRUN2),yes)
     ifeq ($(HAVE_GLOBUS),yes)
       PSELIBS := Core/Exceptions Core/CCA/Comm Core/CCA/Comm/DT \
         Core/CCA/PIDL Core/globus_threads Core/CCA/spec \
-	SCIRun Core/CCA/SSIDL Core/Thread 
+        SCIRun Core/CCA/SSIDL Core/Thread 
     else
       PSELIBS := Core/Exceptions Core/CCA/Comm\
         Core/CCA/PIDL Core/CCA/spec \
-	SCIRun Core/CCA/SSIDL Core/Thread 
+        SCIRun Core/CCA/SSIDL Core/Thread 
     endif
   endif
 
@@ -134,15 +136,14 @@ endif # Build SCIRun2
 # scirunremote
 #
 
-SRCDIR   := main
 SRCS     := $(SRCDIR)/scirunremote.cc
 
 ifeq ($(LARGESOS),yes)
   PSELIBS := Dataflow Core
 else
   PSELIBS := Dataflow/Network Core/Containers Core/GuiInterface \
-	Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
-	Core/ICom Core/Services Core/XMLUtil Core/SystemCall Core/Init
+        Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
+        Core/ICom Core/Services Core/XMLUtil Core/SystemCall Core/Init
   ifeq ($(OS_NAME),Darwin)
     PSELIBS += Core/Datatypes Core/ImportExport
   endif
