@@ -2719,14 +2719,16 @@ case SCIRun2 in
   ;;
   SCIRun2)
     sci_required_babel=yes
+    sci_required_uuid=yes
   ;;
   Plume)
     if test "$plume_checked" = "no"; then
       plume_checked=yes
       sci_required_loki=yes
       sci_required_boost=yes
-      sci_required_qt="no"
-      enable_scirun2="yes"
+      sci_required_qt=no
+      enable_scirun2=yes
+      sci_required_uuid=yes
 
       if test "$package" != "all"; then
         package="$package Plume"
@@ -2815,14 +2817,16 @@ case Plume in
   ;;
   SCIRun2)
     sci_required_babel=yes
+    sci_required_uuid=yes
   ;;
   Plume)
     if test "$plume_checked" = "no"; then
       plume_checked=yes
       sci_required_loki=yes
       sci_required_boost=yes
-      sci_required_qt="no"
-      enable_scirun2="yes"
+      sci_required_qt=no
+      enable_scirun2=yes
+      sci_required_uuid=yes
 
       if test "$package" != "all"; then
         package="$package Plume"
@@ -3017,14 +3021,16 @@ case $i in
   ;;
   SCIRun2)
     sci_required_babel=yes
+    sci_required_uuid=yes
   ;;
   Plume)
     if test "$plume_checked" = "no"; then
       plume_checked=yes
       sci_required_loki=yes
       sci_required_boost=yes
-      sci_required_qt="no"
-      enable_scirun2="yes"
+      sci_required_qt=no
+      enable_scirun2=yes
+      sci_required_uuid=yes
 
       if test "$package" != "all"; then
         package="$package Plume"
@@ -3114,14 +3120,16 @@ case Teem in
   ;;
   SCIRun2)
     sci_required_babel=yes
+    sci_required_uuid=yes
   ;;
   Plume)
     if test "$plume_checked" = "no"; then
       plume_checked=yes
       sci_required_loki=yes
       sci_required_boost=yes
-      sci_required_qt="no"
-      enable_scirun2="yes"
+      sci_required_qt=no
+      enable_scirun2=yes
+      sci_required_uuid=yes
 
       if test "$package" != "all"; then
         package="$package Plume"
@@ -3211,14 +3219,16 @@ case DataIO in
   ;;
   SCIRun2)
     sci_required_babel=yes
+    sci_required_uuid=yes
   ;;
   Plume)
     if test "$plume_checked" = "no"; then
       plume_checked=yes
       sci_required_loki=yes
       sci_required_boost=yes
-      sci_required_qt="no"
-      enable_scirun2="yes"
+      sci_required_qt=no
+      enable_scirun2=yes
+      sci_required_uuid=yes
 
       if test "$package" != "all"; then
         package="$package Plume"
@@ -3310,14 +3320,16 @@ case Ptolemy in
   ;;
   SCIRun2)
     sci_required_babel=yes
+    sci_required_uuid=yes
   ;;
   Plume)
     if test "$plume_checked" = "no"; then
       plume_checked=yes
       sci_required_loki=yes
       sci_required_boost=yes
-      sci_required_qt="no"
-      enable_scirun2="yes"
+      sci_required_qt=no
+      enable_scirun2=yes
+      sci_required_uuid=yes
 
       if test "$package" != "all"; then
         package="$package Plume"
@@ -6599,7 +6611,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:6602:" \
+echo "$as_me:6614:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -58526,6 +58538,19 @@ if test "$sci_required_boost" = "yes"; then
   fi
   fi
 
+
+  case $host in
+    *linux*)
+       boost_ver=gcc_mt
+       ;;
+    *-darwin*)
+       boost_ver=1_32
+       ;;
+    *)
+       #assume there is no specific version
+       ;;
+  esac
+
   # Only looking for one .h file... assuming all the rest are in the same place.
 
 ##
@@ -58564,7 +58589,7 @@ if test "$sci_required_boost" = "yes"; then
 ## arg 2 : boost library
 ## arg 3 : boost/program_options.hpp
 ## arg 4 : $_sci_inc
-## arg 5 : boost_program_options-gcc-mt
+## arg 5 : boost_program_options-$boost_ver
 ## arg 6 : $_sci_lib
 ## arg 7 :
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -58647,10 +58672,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "boost_program_options-gcc-mt"; then
+if test -n "boost_program_options-$boost_ver"; then
 
    found_framework=no
-   for lib in "" boost_program_options-gcc-mt; do
+   for lib in "" boost_program_options-$boost_ver; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -58973,7 +58998,7 @@ echo "$as_me: error: Specifically requested BOOST include file '$_sci_inc/$i' wa
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" boost_program_options-gcc-mt; do
+  for i in "" boost_program_options-$boost_ver; do
     if test -z "$i"; then
        continue
     fi

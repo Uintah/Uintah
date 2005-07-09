@@ -4646,8 +4646,21 @@ if test "$sci_required_boost" = "yes"; then
   fi
   fi
   
+  
+  case $host in
+    *linux*)
+       boost_ver=gcc_mt
+       ;;
+    *-darwin*)
+       boost_ver=1_32
+       ;;
+    *)
+       #assume there is no specific version
+       ;;
+  esac
+
   # Only looking for one .h file... assuming all the rest are in the same place.
-  SCI_TRY_LINK(BOOST,boost library,boost/program_options.hpp,$_sci_inc,boost_program_options-gcc-mt,$_sci_lib,,,$_sci_optional)
+  SCI_TRY_LINK(BOOST,boost library,boost/program_options.hpp,$_sci_inc,boost_program_options-$boost_ver,$_sci_lib,,,$_sci_optional)
 
   if test "$HAVE_BOOST" = "yes"; then
      DEF_BOOST="#define HAVE_BOOST"
