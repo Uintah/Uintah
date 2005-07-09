@@ -1032,7 +1032,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
             computeStilde(trialS, delT, matl, idx, Stilde, state, delGamma);
 
             /*
-            cout << "After::idx = " << idx
+            cout << "After:: patch = " << patch->getID() << " idx = " << idx
                  << " delGamma = " << delGamma  
                  << " Tau_n+1 = " << state->yieldStress
                  << " Tau_n = " << sqrtThreeTwo*sqrtSxS
@@ -1431,8 +1431,7 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
   Matrix3 DispGrad(0.0); // Displacement gradient
   Matrix3 DefGrad, incDefGrad, incFFt, incFFtInv, Rotation, RightStretch; 
   Matrix3 incTotalStrain(0.0), incThermalStrain(0.0), incStrain(0.0);
-  Matrix3 oldStress(0.0), devStressOld(0.0), trialStress(0.0),
-          devTrialStress(0.0);
+  Matrix3 oldStress(0.0), trialStress(0.0), devTrialStress(0.0);
   DefGrad.Identity(); incDefGrad.Identity(); incFFt.Identity(); 
   incFFtInv.Identity(); Rotation.Identity(), RightStretch.Identity();
 
@@ -1797,8 +1796,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
   Matrix3 DispGrad(0.0); // Displacement gradient
   Matrix3 DefGrad, incDefGrad, incFFt, incFFtInv;
   Matrix3 incTotalStrain(0.0), incThermalStrain(0.0), incStrain(0.0);
-  Matrix3 oldStress(0.0), devStressOld(0.0), trialStress(0.0),
-          devTrialStress(0.0);
+  Matrix3 oldStress(0.0), trialStress(0.0), devTrialStress(0.0);
   DefGrad.Identity(); incDefGrad.Identity(); incFFt.Identity(); 
   incFFtInv.Identity(); 
 
@@ -1929,7 +1927,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // the volumetric strain and deviatoric strain increments at t_n+1
       oldStress = pStress[idx];
       double pressure = oldStress.Trace()/3.0;
-      Matrix3 devStressOld = oldStress - One*pressure;
+      //Matrix3 devStressOld = oldStress - One*pressure;
       
       // Set up the PlasticityState
       PlasticityState* state = scinew PlasticityState();
