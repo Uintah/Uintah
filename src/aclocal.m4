@@ -1130,14 +1130,16 @@ case $1 in
   ;;
   SCIRun2)
     sci_required_babel=yes
+    sci_required_uuid=yes
   ;;
   Plume)
     if test "$plume_checked" = "no"; then
       plume_checked=yes
       sci_required_loki=yes
       sci_required_boost=yes
-      sci_required_qt="no"
-      enable_scirun2="yes"
+      sci_required_qt=no
+      enable_scirun2=yes
+      sci_required_uuid=yes
 	    
       if test "$package" != "all"; then
         package="$package Plume"
