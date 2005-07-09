@@ -1,3 +1,10 @@
+#ifdef __APPLE__
+// This is a hack.  gcc 3.3 #undefs isnan in the cmath header, which
+// make the isnan function not work.  This define makes the cmath header
+// not get included since we do not need it anyway.
+#  define _CPP_CMATH
+#endif
+
 #include "NPShear.h"
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
@@ -48,6 +55,7 @@ NPShear::computeShearModulus(const PlasticityState* state)
 
   double j_denom = d_zeta*(1.0 - That/(1.0+d_zeta));
   double J = 1.0 + exp((That-1.0)/j_denom);
+  if (!finite(J)) return mu;
 
   double eta = state->density/state->initialDensity;
   ASSERT(eta > 0.0);
@@ -61,12 +69,13 @@ NPShear::computeShearModulus(const PlasticityState* state)
   double t3 = state->density*k_amu*state->temperature/(d_C*d_m);
   mu = 1.0/J*(t1*t2 + t3);
 
-  if (mu < 1.0e-7) {
+  if (mu < 1.0e-8) {
     cout << "mu = " << mu << " T = " << state->temperature
          << " Tm = " << state->meltingTemp << " T/Tm = " << That
          << " J = " << J << " rho/rho_0 = " << eta 
          << " p = " << P << " t1 = " << t1 
          << " t2 = " << t2 << " t3 = " << t3 << endl;
+    mu = 1.0e-8;
   }
   return mu;
 }
