@@ -31,7 +31,7 @@ resolution          = [8 8]; %[4 4];                                    % Coarse
 numGlobalLevels     = 2; %3;
 threshold           = 1e-5;
 maxVars             = 5000;
-grid.maxLevels  	= 20;
+grid.maxLevels  	= 6; %20;
 grid.maxPatches  	= 100;
 grid.level          = cell(grid.maxLevels,1);
 grid.numLevels      = 0;
@@ -150,7 +150,7 @@ for numLevels = 1:grid.maxLevels,
         end
     end
     temp    = AMRToSparse(err,grid,T,1);
-    err     = SparseToAMR(temp,grid,TI,0);
+    err     = sparseToAMR(temp,grid,TI,0);
     errNorm(numLevels,:) = [ ...
         normAMR(grid,err,'L2') ...
         normAMR(grid,err,'max') ...
