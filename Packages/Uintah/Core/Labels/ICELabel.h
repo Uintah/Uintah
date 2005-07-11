@@ -25,6 +25,8 @@ namespace Uintah {
     const VarLabel* sp_vol_CCLabel;
     const VarLabel* DLabel;
     const VarLabel* sum_rho_CCLabel;
+    const VarLabel* compressiblityLabel;
+    const VarLabel* sumKappaLabel;
     const VarLabel* rho_CCLabel;
     const VarLabel* temp_CCLabel;
     const VarLabel* temp_CC_XchangeLabel;

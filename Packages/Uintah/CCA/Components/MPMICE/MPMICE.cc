@@ -285,7 +285,8 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched,
                                                                   all_matls);
   d_ice->scheduleComputeModelSources(             sched, level,   all_matls);
 
-  d_ice->scheduleUpdateVolumeFraction(            sched, level,   all_matls);
+  d_ice->scheduleUpdateVolumeFraction(            sched, level,   press_matl,
+                                                                  all_matls);
   
   d_ice->scheduleComputeVel_FC(                   sched, patches, ice_matls_sub,
                                                                   mpm_matls_sub,
@@ -645,7 +646,7 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
 
   sched->addTask(t, patches, mpm_matls);
 }
-/* ---------------------------------------------------------------------
+/*_____________________________________________________________________
  Function~  MPMICE::scheduleComputePressure--
  Note:  Handles both Rate and Equilibration form of solution technique
 _____________________________________________________________________*/
@@ -664,14 +665,14 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
       cout_doing << "MPMICE::scheduleComputeRateFormPressure" << endl;
 
     t = scinew Task("MPMICE::computeRateFormPressure",
-                     this, &MPMICE::computeRateFormPressure);
+              this, &MPMICE::computeRateFormPressure);
   }
   if (d_ice->d_EqForm) {       // E Q   F O R M
     if (cout_doing.active())
       cout_doing << "MPMICE::scheduleComputeEquilibrationPressure" << endl;
 
     t = scinew Task("MPMICE::computeEquilibrationPressure",
-                    this, &MPMICE::computeEquilibrationPressure);
+              this, &MPMICE::computeEquilibrationPressure);
   }
                               // I C E
   t->requires(Task::OldDW,Ilb->temp_CCLabel,         ice_matls, Ghost::None);
@@ -699,9 +700,12 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
     t->computes(Ilb->matl_press_CCLabel);
   }
   t->computes(Ilb->f_theta_CCLabel);
+  t->computes(Ilb->compressiblityLabel, ice_matls);
+  t->computes(Ilb->compressiblityLabel, mpm_matls);
 
   t->computes(Ilb->speedSound_CCLabel); 
   t->computes(Ilb->vol_frac_CCLabel);
+  t->computes(Ilb->sumKappaLabel,       press_matl);
   t->computes(Ilb->press_equil_CCLabel, press_matl);  // diagnostic variable
   t->computes(Ilb->press_CCLabel,       press_matl);  // needed by implicit ICE
   t->modifies(Ilb->sp_vol_CCLabel,      mpm_matls);
@@ -755,10 +759,10 @@ void MPMICE::scheduleSolveEquationsMotion(SchedulerP& sched,
 }
 //______________________________________________________________________
 void MPMICE::solveEquationsMotion(const ProcessorGroup* pg,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset* ms,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw)
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* ms,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -777,12 +781,8 @@ void MPMICE::solveEquationsMotion(const ProcessorGroup* pg,
           !iter.done();iter++)
         acceleration[*iter] += gradPAccNC[*iter];
     }
-    
   }
-  
 }
-
-
 
 //______________________________________________________________________
 //       A C T U A L   S T E P S :
@@ -1545,7 +1545,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     StaticArray<double> press_eos(numALLMatls);
     StaticArray<double> dp_drho(numALLMatls),dp_de(numALLMatls);
     StaticArray<double> mat_volume(numALLMatls);
-    StaticArray<double> kappa(numALLMatls);
 
     StaticArray<CCVariable<double> > vol_frac(numALLMatls);
     StaticArray<CCVariable<double> > rho_micro(numALLMatls);
@@ -1553,6 +1552,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     StaticArray<CCVariable<double> > speedSound(numALLMatls);
     StaticArray<CCVariable<double> > sp_vol_new(numALLMatls);
     StaticArray<CCVariable<double> > f_theta(numALLMatls);
+    StaticArray<CCVariable<double> > kappa(numALLMatls);
     StaticArray<constCCVariable<double> > placeHolder(0);
     StaticArray<constCCVariable<double> > cv(numALLMatls);
     StaticArray<constCCVariable<double> > gamma(numALLMatls);
@@ -1562,13 +1562,14 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > mass_CC(numALLMatls);
     StaticArray<constCCVariable<Vector> > vel_CC(numALLMatls);
     constCCVariable<double> press;    
-    CCVariable<double> press_new, delPress_tmp, press_copy;    
+    CCVariable<double> press_new, delPress_tmp, press_copy,sumKappa;    
     Ghost::GhostType  gn = Ghost::None;
     //__________________________________
     //  Implicit press calc. needs two copies of the pressure
     old_dw->get(press,                Ilb->press_CCLabel, 0,patch,gn, 0); 
     new_dw->allocateAndPut(press_new, Ilb->press_equil_CCLabel, 0,patch);
     new_dw->allocateAndPut(press_copy,Ilb->press_CCLabel,       0,patch);
+    new_dw->allocateAndPut(sumKappa,  Ilb->sumKappaLabel,       0,patch);
     new_dw->allocateTemporary(delPress_tmp, patch); 
 
     StaticArray<MPMMaterial*> mpm_matl(numALLMatls);
@@ -1599,11 +1600,12 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
       }
       new_dw->allocateTemporary(rho_micro[m],  patch);
-      new_dw->allocateAndPut(rho_CC_new[m], Ilb->rho_CCLabel,indx, patch);
+      new_dw->allocateAndPut(rho_CC_new[m], Ilb->rho_CCLabel,       indx,patch);
       new_dw->allocateAndPut(vol_frac[m],   Ilb->vol_frac_CCLabel,  indx,patch);
       new_dw->allocateAndPut(f_theta[m],    Ilb->f_theta_CCLabel,   indx,patch);
       new_dw->allocateAndPut(speedSound[m], Ilb->speedSound_CCLabel,indx,patch);
       new_dw->allocateAndPut(sp_vol_new[m], Ilb->sp_vol_CCLabel,    indx,patch);
+      new_dw->allocateAndPut(kappa[m],     Ilb->compressiblityLabel,indx,patch);
     }
 
     press_new.copyData(press);
@@ -1844,13 +1846,13 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     //  compute f_theta  
     for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
       const IntVector& c = *iter;
-      double sumVolFrac_kappa = 0.0;
+      sumKappa[c] = 0.0;
       for (int m = 0; m < numALLMatls; m++) {
-        kappa[m] = sp_vol_new[m][c]/(speedSound[m][c]*speedSound[m][c]);
-        sumVolFrac_kappa += vol_frac[m][c]*kappa[m];
+        kappa[m][c] = sp_vol_new[m][c]/(speedSound[m][c]*speedSound[m][c]);
+        sumKappa[c] += vol_frac[m][c]*kappa[m][c];
       }
       for (int m = 0; m < numALLMatls; m++) {
-        f_theta[m][c] = vol_frac[m][c]*kappa[m]/sumVolFrac_kappa;
+        f_theta[m][c] = vol_frac[m][c]*kappa[m][c]/sumKappa[c];
       }
     }
     
