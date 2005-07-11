@@ -55,7 +55,7 @@ void ICE::scheduleSetupMatrix(  SchedulerP& sched,
   t->requires( whichDW,   lb->vol_fracX_FCLabel,  gac,1);        
   t->requires( whichDW,   lb->vol_fracY_FCLabel,  gac,1);        
   t->requires( whichDW,   lb->vol_fracZ_FCLabel,  gac,1);        
-  t->requires( whichDW,   lb->betaLabel, one_matl,oims,gn,0);      
+  t->requires( whichDW,   lb->sumKappaLabel, one_matl,oims,gn,0);      
 
   t->computes(lb->matrixLabel,  one_matl, oims);
   sched->addTask(t, patches, all_matls);                     
@@ -95,20 +95,21 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
     t->requires(pNewDW, lb->modelMass_srcLabel,           gn,0);
   } 
   t->requires( pNewDW,      lb->press_equil_CCLabel,press_matl,oims,gn,0); 
+  t->requires( pNewDW,      lb->sumKappaLabel,      press_matl,oims,gn,0);
   t->requires( pNewDW,      lb->sp_vol_CCLabel,                gn,0);
   t->requires( pNewDW,      lb->speedSound_CCLabel,            gn,0);
-  t->requires( pNewDW,      lb->vol_frac_CCLabel,              gac,2); 
+  t->requires( pNewDW,      lb->vol_frac_CCLabel,              gac,2);
   t->requires( Task::NewDW, lb->uvel_FCMELabel,                gac,2);          
   t->requires( Task::NewDW, lb->vvel_FCMELabel,                gac,2);          
   t->requires( Task::NewDW, lb->wvel_FCMELabel,                gac,2);          
-  t->requires( Task::NewDW, lb->press_CCLabel,      press_matl,oims,gn,0);      
-
+  t->requires( Task::NewDW, lb->press_CCLabel,      press_matl,oims,gn,0);
+        
   t->computes(lb->vol_fracX_FCLabel);
   t->computes(lb->vol_fracY_FCLabel);
   t->computes(lb->vol_fracZ_FCLabel);
+  
   t->computes(lb->term2Label,        one_matl,oims);
   t->computes(lb->rhsLabel,          one_matl,oims);
-  t->computes(lb->betaLabel,         one_matl,oims);
   t->computes(lb->max_RHSLabel);
   
   sched->addTask(t, patches, all_matls);                     
@@ -224,7 +225,7 @@ void ICE::scheduleComputeDel_P(  SchedulerP& sched,
 
   t->requires(Task::NewDW, lb->press_equil_CCLabel,  press_matl, oims, gn);
   t->requires(Task::NewDW, lb->press_CCLabel,        press_matl, oims, gn);      
-  t->requires(Task::NewDW, lb->betaLabel,            one_matl,   oims, gn);      
+  t->requires(Task::NewDW, lb->sumKappaLabel,        one_matl,   oims, gn);      
   t->requires(Task::NewDW, lb->term2Label,           one_matl,   oims, gn);
   t->requires(Task::NewDW, lb->rho_CCLabel,                       gn);    
 
@@ -268,8 +269,8 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   t->requires( Task::NewDW, lb->vol_frac_CCLabel,   gac,2); 
   t->requires( Task::NewDW, lb->sp_vol_CCLabel,     gac,1);
   t->requires( Task::NewDW, lb->press_equil_CCLabel, press_matl, oims,gac,1);
-  t->requires( Task::NewDW, lb->rhsLabel,           one_matl,    oims,gn,0);
-  //t->requires( Task::OldDW, lb->initialGuessLabel,  one_matl,    oims,gn,0);
+  t->requires( Task::NewDW, lb->rhsLabel,            one_matl,   oims,gn,0);
+  //t->requires( Task::OldDW, lb->initialGuessLabel, one_matl,   oims,gn,0);
   //__________________________________
   // SetupRHS
   if(d_models.size() > 0){  
@@ -286,7 +287,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   t->requires( Task::NewDW, lb->vol_fracX_FCLabel,  gac,1);            
   t->requires( Task::NewDW, lb->vol_fracY_FCLabel,  gac,1);            
   t->requires( Task::NewDW, lb->vol_fracZ_FCLabel,  gac,1);            
-  t->requires( Task::NewDW, lb->betaLabel, one_matl,oims,gn,0);         
+  t->requires( Task::NewDW, lb->sumKappaLabel,  press_matl,oims,gn,0);         
    
   //__________________________________
   // Update Pressure
@@ -303,8 +304,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
 
   //__________________________________
   //  what's produced from this task
-  t->modifies(lb->press_CCLabel, press_matl,oims); 
-  t->modifies(lb->betaLabel,     one_matl,  oims);   
+  t->modifies(lb->press_CCLabel, press_matl,oims);  
   t->modifies(lb->term2Label,    one_matl,  oims);   
 
   t->modifies(lb->uvel_FCMELabel);
@@ -354,17 +354,18 @@ void ICE::setupMatrix(const ProcessorGroup*,
     Vector dx     = patch->dCell();
     int numMatls  = d_sharedState->getNumMatls();
     CCVariable<Stencil7> A; 
-    constCCVariable<double> beta;
+    constCCVariable<double> sumKappa;
    
     Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
     new_dw->allocateAndPut(A,    lb->matrixLabel,  0, patch, gn, 0);
-    whichDW->get(beta,           lb->betaLabel,    0, patch, gn, 0); 
+    whichDW->get(sumKappa,       lb->sumKappaLabel,0, patch, gn, 0); 
+    
     IntVector right, left, top, bottom, front, back;
     IntVector R_CC, L_CC, T_CC, B_CC, F_CC, BK_CC;
 
     //__________________________________
-    //  Initialize beta and A
+    //  Initialize A
     for(CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++){
       IntVector c = *iter;
       Stencil7&  A_tmp=A[c];
@@ -440,7 +441,7 @@ void ICE::setupMatrix(const ProcessorGroup*,
       A_tmp.t *= -tmp_t_b;
       A_tmp.b *= -tmp_t_b;
       
-      A_tmp.p = beta[c] -
+      A_tmp.p = sumKappa[c] -
           (A_tmp.n + A_tmp.s + A_tmp.e + A_tmp.w + A_tmp.t + A_tmp.b);
     }  
     //__________________________________
@@ -494,19 +495,19 @@ void ICE::setupRHS(const ProcessorGroup*,
     double invvol = 1./vol;
 
     Advector* advector = d_advector->clone(new_dw,patch);
-    CCVariable<double> q_advected, beta, rhs;
+    CCVariable<double> q_advected, rhs;
     CCVariable<double> sumAdvection, massExchTerm;
-    constCCVariable<double> press_CC, oldPressure, speedSound;
+    constCCVariable<double> press_CC, oldPressure, speedSound, sumKappa;
     
     const IntVector gc(1,1,1);
     Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;   
 
     pNewDW->get(oldPressure,            lb->press_equil_CCLabel,0,patch,gn,0);
+    pNewDW->get(sumKappa,               lb->sumKappaLabel,      0,patch,gn,0);
     new_dw->get(press_CC,               lb->press_CCLabel,      0,patch,gn,0);
- 
-    new_dw->allocateAndPut(rhs,         lb->rhsLabel,           0,patch); 
-    new_dw->allocateAndPut(beta,        lb->betaLabel,          0,patch);
+    
+    new_dw->allocateAndPut(rhs,         lb->rhsLabel,           0,patch);
     new_dw->allocateAndPut(massExchTerm,lb->term2Label,         0,patch);
     new_dw->allocateTemporary(q_advected,       patch);
     new_dw->allocateTemporary(sumAdvection,     patch);  
@@ -514,7 +515,6 @@ void ICE::setupRHS(const ProcessorGroup*,
     rhs.initialize(0.0);
     sumAdvection.initialize(0.0);
     massExchTerm.initialize(0.0);
-    beta.initialize(0.0);
     double rhs_max = 0.0;
     
     for(int m = 0; m < numMatls; m++) {
@@ -525,12 +525,12 @@ void ICE::setupRHS(const ProcessorGroup*,
       constSFCZVariable<double> wvel_FC;
       SFCXVariable<double> vol_fracX_FC;
       SFCYVariable<double> vol_fracY_FC;
-      SFCZVariable<double> vol_fracZ_FC;      
+      SFCZVariable<double> vol_fracZ_FC;
       constCCVariable<double> vol_frac, burnedMass, sp_vol_CC, speedSound;
 
-      new_dw->allocateAndPut(vol_fracX_FC, lb->vol_fracX_FCLabel, indx,patch);
-      new_dw->allocateAndPut(vol_fracY_FC, lb->vol_fracY_FCLabel, indx,patch);
-      new_dw->allocateAndPut(vol_fracZ_FC, lb->vol_fracZ_FCLabel, indx,patch);
+      new_dw->allocateAndPut(vol_fracX_FC, lb->vol_fracX_FCLabel,  indx,patch);
+      new_dw->allocateAndPut(vol_fracY_FC, lb->vol_fracY_FCLabel,  indx,patch);
+      new_dw->allocateAndPut(vol_fracZ_FC, lb->vol_fracZ_FCLabel,  indx,patch);
       
       // lowIndex is the same for all vel_FC
       IntVector lowIndex(patch->getSFCXLowIndex());
@@ -579,13 +579,7 @@ void ICE::setupRHS(const ProcessorGroup*,
           IntVector c = *iter;
           massExchTerm[c] += burnedMass[c] * (sp_vol_CC[c] * invvol);
         }
-      } 
-      //__________________________________
-      // sum beta = sum ( vol_frac * sp_vol/speedSound^2)
-      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
-        IntVector c = *iter;
-        beta[c] += vol_frac[c] * sp_vol_CC[c]/(speedSound[c] * speedSound[c]);
-      }    
+      }     
     }  //matl loop
     delete advector;  
       
@@ -595,7 +589,7 @@ void ICE::setupRHS(const ProcessorGroup*,
     for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
       IntVector c = *iter;
       
-      double term1 = beta[c] *  (press_CC[c] - oldPressure[c]); 
+      double term1 = sumKappa[c] *  (press_CC[c] - oldPressure[c]); 
       rhs[c] = -term1 + massExchTerm[c] + sumAdvection[c];
       rhs_max = std::max(rhs_max, rhs[c] * rhs[c]); 
     }
@@ -606,7 +600,6 @@ void ICE::setupRHS(const ProcessorGroup*,
       ostringstream desc;
       desc << "BOT_setupRHS_patch_" << patch->getID();
       printData( 0, patch, 0,desc.str(), "rhs",              rhs);
-      printData( 0, patch, 0, desc.str(), "beta",            beta);
       printData( 0, patch, 0,desc.str(), "sumAdvection",     sumAdvection);
   //  printData( 0, patch, 0,desc.str(), "MassExchangeTerm", massExchTerm);
       printData( 0, patch, 0,desc.str(), "Press_CC",         press_CC);
@@ -732,14 +725,14 @@ void ICE::computeDel_P(const ProcessorGroup*,
     CCVariable<double> delP_MassX;
     CCVariable<double> sum_rho_CC, initialGuess;
     constCCVariable<double> rho_CC;
-    constCCVariable<double> beta;
+    constCCVariable<double> sumKappa;
     constCCVariable<double> massExchTerm; 
     constCCVariable<double> press_equil, press_CC;
     
     Ghost::GhostType  gn = Ghost::None;
     new_dw->get(press_equil,          lb->press_equil_CCLabel,  0,patch,gn,0);
     new_dw->get(press_CC,             lb->press_CCLabel,        0,patch,gn,0);
-    new_dw->get(beta,                 lb->betaLabel,            0,patch,gn,0);
+    new_dw->get(sumKappa,             lb->sumKappaLabel,        0,patch,gn,0);
     new_dw->get(massExchTerm,         lb->term2Label,           0,patch,gn,0);
              
     new_dw->allocateAndPut(delP_Dilatate,lb->delP_DilatateLabel,0, patch);
@@ -766,7 +759,7 @@ void ICE::computeDel_P(const ProcessorGroup*,
     // backout delP_Dilatate and delP_MassX
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
       IntVector c = *iter;
-      delP_MassX[c]    = massExchTerm[c]/beta[c];
+      delP_MassX[c]    = massExchTerm[c]/sumKappa[c];
       delP_Dilatate[c] = (press_CC[c] - delP_MassX[c]) - press_equil[c];
       initialGuess[c]  = delP_Dilatate[c];
     }    
@@ -971,25 +964,21 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   bool replace = true;
   const MaterialSubset* all_matls_sub = all_matls->getUnion();
   ParentNewDW->transferFrom(subNewDW,         // press
-                    lb->press_CCLabel,    patch_sub,  d_press_matl, replace); 
+                    lb->press_CCLabel,       patch_sub,  d_press_matl, replace); 
   ParentNewDW->transferFrom(subNewDW,         // term2
-                    lb->term2Label,       patch_sub,  one_matl,   replace);   
-  ParentNewDW->transferFrom(subNewDW,         // beta
-                    lb->betaLabel,        patch_sub,  one_matl,   replace);   
+                    lb->term2Label,          patch_sub,  one_matl,     replace);    
   ParentNewDW->transferFrom(subNewDW,         // uvel_FC
-                    lb->uvel_FCMELabel,   patch_sub,  all_matls_sub,replace); 
+                    lb->uvel_FCMELabel,      patch_sub,  all_matls_sub,replace); 
   ParentNewDW->transferFrom(subNewDW,         // vvel_FC
-                    lb->vvel_FCMELabel,   patch_sub,  all_matls_sub,replace); 
+                    lb->vvel_FCMELabel,      patch_sub,  all_matls_sub,replace); 
   ParentNewDW->transferFrom(subNewDW,         // wvel_FC
-                    lb->wvel_FCMELabel,   patch_sub,  all_matls_sub,replace); 
+                    lb->wvel_FCMELabel,      patch_sub,  all_matls_sub,replace); 
   ParentNewDW->transferFrom(subNewDW,        // vol_fracX_FC
-                    lb->vol_fracX_FCLabel, patch_sub, all_matls_sub,replace); 
+                    lb->vol_fracX_FCLabel,   patch_sub, all_matls_sub,replace); 
   ParentNewDW->transferFrom(subNewDW,         // vol_fracY_FC
-                    lb->vol_fracY_FCLabel, patch_sub, all_matls_sub,replace); 
+                    lb->vol_fracY_FCLabel,   patch_sub, all_matls_sub,replace); 
   ParentNewDW->transferFrom(subNewDW,         // vol_fracZ_FC
-                    lb->vol_fracZ_FCLabel, patch_sub, all_matls_sub,replace); 
-                    
-                    
+                    lb->vol_fracZ_FCLabel,   patch_sub, all_matls_sub,replace);                 
     
   //__________________________________
   //  Turn scrubbing back on
