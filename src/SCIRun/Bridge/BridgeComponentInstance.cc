@@ -62,6 +62,7 @@ BridgeComponentInstance::BridgeComponentInstance(SCIRunFramework* framework,
   if (!SCIRunComponentModel::gui) {
     SCIRunComponentModel::initGuiInterface();
   }
+  comProperties->putBool("bridge", true);
   bmdl = new BridgeModule(component);
 }
 
