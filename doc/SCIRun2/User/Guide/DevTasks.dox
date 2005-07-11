@@ -14,11 +14,12 @@
 
 \subsection keming Keming
 
-\li Complete parallel component implementation: by July 18
-\li PRMI without data redistribution, by July 1
-\li PRMI data redistribution, by July 8
-\li PRMI synchronization, by July 14
-\li PRMI concurrency control, by July 17
+\li Complete parallel component implementation: by Aug 15
+\li Updates to text builder: by July 18
+\li PRMI without data redistribution, by July 25
+\li PRMI data redistribution, by Aug 1
+\li PRMI synchronization, by Aug 8
+\li PRMI concurrency control, by Aug 15
 \li Updates to text builder: TBD
 
 \subsection kosta Kosta
