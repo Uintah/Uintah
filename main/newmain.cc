@@ -39,13 +39,15 @@
  */
 
 #include <Core/CCA/PIDL/PIDL.h>
+#include <Core/Util/Environment.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <Core/Thread/Thread.h>
 #include <SCIRun/SCIRunFramework.h>
-#include <iostream>
+
 #include <sci_defs/mpi_defs.h>
-#include <sci_mpi.h>
 #include <sci_defs/qt_defs.h>
+#include <sci_mpi.h>
+#include <iostream>
 
 using namespace SCIRun;
 using namespace sci::cca;
@@ -59,19 +61,20 @@ std::string defaultBuilder = "gui";
 void
 usage()
 {
-  std::cout << "Usage: scirun [args] [net_file]\n";
+  std::cout << "Usage: scirun [args] [network file]\n";
   std::cout << "       [-]-v[ersion]          : prints out version information\n";
   std::cout << "       [-]-h[elp]             : prints usage information\n";
   std::cout << "       [-]-b[uilder] gui/txt  : selects GUI or Textual builder\n";
-  std::cout << "       net_file               : SCIRun Network Input File\n";
+  std::cout << "       network file           : SCIRun Network Input File\n";
   exit( 0 );
 }
 
 // Apparently some args are passed through to TCL where they are parsed...
 // Probably need to check to make sure they are at least valid here???
-void
+bool
 parse_args( int argc, char *argv[])
 {
+  bool load = false;
   for( int cnt = 0; cnt < argc; cnt++ ) {
     std::string arg( argv[ cnt ] );
     if( ( arg == "--version" ) || ( arg == "-version" )
@@ -95,21 +98,25 @@ parse_args( int argc, char *argv[])
         std::cerr << "Couldn't find net file " << arg
                   << ".\nNo such file or directory.  Exiting." << std::endl;
         exit(0);
+      } else {
+          load = true;
       }
     }
   }
+  return load;
 }
 
 int
 main(int argc, char *argv[]) {
   bool framework = true;
   
-  parse_args( argc, argv);
+  bool loadNet = parse_args( argc, argv);
+  create_sci_environment(0,0);
   
   try {
     // TODO: Move this out of here???
     PIDL::initialize();
-    PIDL::isfrwk=true;
+    PIDL::isfrwk = true;
     //all threads in the framework share the same
     //invocation id
     PRMI::setInvID(ProxyID(1,0));
