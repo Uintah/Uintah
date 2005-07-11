@@ -33,7 +33,7 @@
 \begin{document}
 \setlength{\abovedisplayskip}{0.1in}
 \setlength{\mathindent}{0.0in}
-\underline{ I C E  ~ E Q ~  F O R M  \hspace{ 0.5in}07/07/05}
+\underline{ I C E  ~ E Q ~  F O R M  \hspace{ 0.5in}07/11/05}
 
 \begin{enumerate}
 \item \underline{Compute Thermodynamic/Transport Properties
@@ -41,7 +41,7 @@ $c_v, k, \mu, \gamma$}
 
 %__________________________________
 \item \underline{Compute the equilibration pressure}
-$P_{eq}, c_m, \rhoM, \theta_m, \f$, such that $\SUM{m}\theta_m = 1$, see attached for details.
+$P_{eq}, c_m, \rhoM, \theta_m, \f, \kappa_m$, such that $\SUM{m}\theta_m = 1$, see attached for details.
 
 %__________________________________
 \item \underline{Compute the mass exchange between materials}
@@ -70,14 +70,14 @@ The exchange contribution involves a pointwise implicit solve, see attached for 
 \item \underline{Update the volume fraction}\\
 $V_{total} = \SUM{m}(\rho_m V v^o_m)$\\
 $V_m^{new} = \theta_m V_{total}  v^o_m + \bigS{(m v^o)_m}$\\
-$\theta_m = \frac{V_m^{new}}{V_{total}} $
+$\theta_m = \frac{V_m^{new}}{V_{total}}, \SUM{m} \theta_m \kappa_m $
 %__________________________________
 \item \underline{Compute $\Delta P$} 
 \[
      \Delta P = \Delta t 
                         \frac{   \SUM{r}  \bigS{(m v^o)_r}
                       - \overbrace { \SUM{m} \nabla \cdot \theta_m \vec{U_m}^{*^{f}} } ^{\text{Advection}(\theta, \vec{U_m}^{*^{f}}) } }
-                       {\SUM{m} (\theta_m +\bigS{\theta_m}) \kappa_m}
+                       {\SUM{m} (\theta_m) \kappa_m}
 \]
 where $P^{n+1} = P_{eq} + \Delta{P}, \bigS{\theta_m} = \frac{ \bigS{(m v^o)}}{V}$
 and $\kappa_m = \frac{v^o_m}{c^2_m}$ .
@@ -167,7 +167,7 @@ $
 \ENDWHILE 
 \STATE BulletProofing$(P, \rhoM, \theta_m) $
 
-\STATE compute $  \f = \frac{\theta_m \kappa_m}{\SUM{s}{\theta_s \kappa_s}},  \quad\sv{} = \frac {1}{\rhoM}$
+\STATE compute $ \kappa_m = \frac{v^o_m}{c^2_m}, \f = \frac{\theta_m \kappa_m}{\SUM{s}{\theta_s \kappa_s}},  \quad\sv{} = \frac {1}{\rhoM}$
 \end{algorithmic}
 
 %______________________________________________________________________
