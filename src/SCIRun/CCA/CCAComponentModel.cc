@@ -84,7 +84,6 @@ CCAComponentModel::CCAComponentModel(SCIRunFramework* framework)
   if (dll_path != 0) {
     this->setSidlDLLPath(std::string(dll_path));
   } else {
-    if ( !sci_getenv("SCIRUN_OBJDIR")) create_sci_environment(0,0);
     this->setSidlDLLPath(sci_getenv("SCIRUN_OBJDIR") + std::string("/lib"));
   }
 
