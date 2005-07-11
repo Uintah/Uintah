@@ -239,8 +239,9 @@ namespace Uintah {
                                        const LevelP& level,
                                        const MaterialSet* matls);
       void scheduleUpdateVolumeFraction(SchedulerP& sched,
-                                            const LevelP& level,
-                                            const MaterialSet* matls);
+                                        const LevelP& level,
+                                        const MaterialSubset* press_matl,
+                                        const MaterialSet* matls);
                                         
       void scheduleComputeLagrangian_Transported_Vars(SchedulerP& sched,
                                                       const PatchSet* patches,

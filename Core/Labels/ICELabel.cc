@@ -31,6 +31,10 @@ ICELabel::ICELabel()
     VarLabel::create("delP_MassX",   CCVariable<double>::getTypeDescription()); 
   sum_rho_CCLabel       = 
     VarLabel::create("sum_rho_CC",   CCVariable<double>::getTypeDescription());
+  compressiblityLabel   = 
+    VarLabel::create("compressiblity",CCVariable<double>::getTypeDescription());
+  sumKappaLabel   = 
+    VarLabel::create("sumKappa",     CCVariable<double>::getTypeDescription());
   rho_CCLabel       = 
     VarLabel::create("rho_CC",       CCVariable<double>::getTypeDescription());
   temp_CCLabel      = 
@@ -268,6 +272,8 @@ ICELabel::~ICELabel()
     VarLabel::destroy(delP_MassXLabel);
     VarLabel::destroy(rho_CCLabel);
     VarLabel::destroy(sum_rho_CCLabel);
+    VarLabel::destroy(compressiblityLabel);
+    VarLabel::destroy(sumKappaLabel);    
     VarLabel::destroy(temp_CCLabel);
     VarLabel::destroy(temp_CC_XchangeLabel);
     VarLabel::destroy(vel_CCLabel);
