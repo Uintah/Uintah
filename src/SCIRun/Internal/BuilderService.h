@@ -109,6 +109,7 @@ class BuilderService : public sci::cca::ports::BuilderService,
       y                      int            component y position
       LOADER NAME            string         loader name
       np                     int            number of nodes
+      bridge                 bool           is a bridge
     */
   virtual sci::cca::TypeMap::pointer
   getComponentProperties(const sci::cca::ComponentID::pointer &cid);
@@ -170,7 +171,16 @@ class BuilderService : public sci::cca::ports::BuilderService,
   getConnectionIDs(const SSIDL::array1<sci::cca::ComponentID::pointer>
                        &componentList);
 
-  /** */
+
+  /** Returns a CCA TypeMap that represents any properties associated
+      with \em connID.
+      key                    value          meaning
+      user                   string         unique uses component name
+      provider               string         unique provides component name
+      uses port              string         uses port name
+      provides port          string         provides port name
+      bridge                 bool           is a bridge
+    */
   virtual sci::cca::TypeMap::pointer
   getConnectionProperties(const sci::cca::ConnectionID::pointer &connID);
 
