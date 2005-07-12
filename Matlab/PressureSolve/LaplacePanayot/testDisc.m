@@ -1,12 +1,18 @@
 %function [grid,A,b,T,TI,u] = testDisc(twoLevel)
 %TESTDISC  Test pressure equation discretization.
-%   We test pressure equation discretization error for a simple 2D Poisson problem with a
-%   known solution. We prepare an AMR grid with two levels: a global level
+%   We test pressure equation discretization error for a
+%   simple 2D Poisson problem with a known solution. 
+%   We prepare an AMR grid with two levels: a global level
 %   1, and a local level 2 patch around the center of the domain, where the
-%   solution u has more variations. The scheme is a cell-centered, finite volume,
-%   symmetric discretization on the composite AMR grid.
+%   solution u has more variations. The scheme is a cell-centered,
+%   finite volume, symmetric discretization on the composite AMR grid.
+%   We study the discretization error vs. meshsize on a sequence of
+%   increasingly finer composite grids with the same refinement "pattern".
 %
-%   See also: ADDGRIDLEVEL, ADDGRIDPATCH.
+%   See also: ADDGRIDLEVEL, ADDGRIDPATCH, TESTADAPTIVE.
+
+% Revision history:
+% 12-JUL-2005    Oren Livne    Added comments
 
 globalParams;
 

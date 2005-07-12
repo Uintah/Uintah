@@ -2,9 +2,10 @@ function [A,b,T,Alist,Tlist,indDel] = setupPatchInterface(grid,k,q,A,b,T,reallyU
 %SETUPPATCHINTERFACE  Set the discrete operator at coarse-fine interface.
 %   [A,B,T,ALIST,TLIST,INDDEL] = SETUPINTERFACE(GRID,K,Q,A,B,T,FLAG)
 %   updates the sparse LHS matrix A and the RHS matrix B of the linear
-%   system, adding to them all the equations at coarse-fine interface on the coarse
-%   side (subtracting the original coarse flux and adding instead hc/hf fine fluxes
-%   that use ghost points). Level K is the coarse level, K+1 is the fine level.
+%   system, adding to them all the equations at coarse-fine interface on
+%   the coarse side (subtracting the original coarse flux and 
+%   adding instead hc/hf fine fluxes that use ghost points).
+%   Level K is the coarse level, K+1 is the fine level.
 %   Equations for ghost points are constructed. The transformation
 %   matrix T is also updated; ALIST and TLIST are list-of-nonzeros added to
 %   A and to T, respectively. INDDEL are the level K (coarse level) indices
