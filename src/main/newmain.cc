@@ -40,9 +40,11 @@
 
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/Util/Environment.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <Core/Thread/Thread.h>
 #include <SCIRun/SCIRunFramework.h>
+#include <SCIRun/TypeMap.h>
 
 #include <sci_defs/mpi_defs.h>
 #include <sci_defs/qt_defs.h>
@@ -57,6 +59,7 @@ using namespace sci::cca;
 #include <sys/stat.h>
 
 std::string defaultBuilder = "gui";
+static std::string fileName;
 
 void
 usage()
@@ -95,11 +98,14 @@ parse_args( int argc, char *argv[])
     } else {
       struct stat buf;
       if (stat(arg.c_str(),&buf) < 0) {
-        std::cerr << "Couldn't find net file " << arg
+        std::cerr << "Couldn't find network file " << arg
                   << ".\nNo such file or directory.  Exiting." << std::endl;
         exit(0);
       } else {
-          load = true;
+          if (ends_with(arg, ".net")) {
+              fileName = arg;
+              load = true;
+          }
       }
     }
   }
@@ -163,15 +169,21 @@ main(int argc, char *argv[]) {
       std::cerr << "Fatal Error: Cannot find builder service\n";
       Thread::exitAll(1);
     }
-    
+
+    if (loadNet) {
+        sci::cca::TypeMap::pointer map = fwkProperties->getProperties();
+        map->putString("network file", fileName);
+        //fwkProperties->setProperties(map);
+    }
+
 #   if !defined(HAVE_QT)
     defaultBuilder="txt";
 #   endif
     
     if (defaultBuilder=="gui") {
       ComponentID::pointer gui_id =
-        builder->createInstance("SCIRun.Builder", "cca:SCIRun.Builder", sci::cca::TypeMap::pointer(0));
-      if(gui_id.isNull()) {
+          builder->createInstance("SCIRun.Builder", "cca:SCIRun.Builder", sci::cca::TypeMap::pointer(0));
+      if (gui_id.isNull()) {
         std::cerr << "Cannot create component: cca:SCIRun.Builder\n";
         Thread::exitAll(1);
       }
