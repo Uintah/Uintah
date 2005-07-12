@@ -103,14 +103,14 @@ Builder::~Builder()
         builderPort.services->removeProvidesPort("builderPort");
         builderPort.services->unregisterUsesPort("builder");
     }
-    catch (CCAException e) {
+    catch (const CCAException &e) {
         std::cerr << e.type() << ", " << e.message() << std::endl;
     }
 }
 
 void Builder::setServices(const sci::cca::Services::pointer& services)
 {
-#if DEBUG
+#ifdef DEBUG
     std::cerr << "Builder::setServices" << std::endl;
 #endif
     builderPort.setServices(services);
