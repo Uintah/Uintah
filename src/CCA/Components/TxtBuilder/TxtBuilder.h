@@ -76,7 +76,7 @@ namespace SCIRun {
     void use_cluster(string args[]);
     void list_all(string args[]);
     void list_components(string args[]);
-    void list_ports(string args[]);
+    void list_ports( string args[4] );
     void list_compatible(string args[]);
     void list_connections(string args[]);
     void create(string args[]);
