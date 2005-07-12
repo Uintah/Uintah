@@ -1,5 +1,15 @@
 function saveResults(errNorm)
-% Save errors and error factors in latex format
+%SAVERESULTS  Save errors and error factors in latex format.
+%   SAVERESULTS(ERRNORM) prints to a file a summary of the discretization
+%   errors vs. grid resolution (or number of levels), specified by ERRNORM.
+%   ERRNORM(:,1) is the grid resolution or number of levels, ERRNORM(:,2)
+%   are L2 errors of all grids, and ERRNORM(:,3) the corresponding factors.
+%   Similarly Columns 4 and 5 represents the maximum norm, and so on.
+%
+%   See also: LATEXTABLEFACTORS, TESTDISC, TESTADATPIVE.
+
+% Revision history:
+% 12-JUL-2005    Oren Livne    Added comments
 
 globalParams;
 

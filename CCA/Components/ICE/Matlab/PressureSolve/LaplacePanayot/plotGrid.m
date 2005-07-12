@@ -1,6 +1,19 @@
 function plotGrid(grid,fileName,showGhosts,showCellIndex,showCircles,showUnused)
-% Plot gridlines (works in 2D only). If showGhosts=1 we add ghost cells to
-% the plot.
+%PLOTGRID  Plot 2D grid.
+%   PLOT(GRID,FILENAME,SHOWGHOSTS,SHOWCELLINDEX,SHOWCIRCLES,SHOWUNUSED)
+%   plots a 2D (works only in 2D forn now) grid hierarchy GRID, and prints it
+%   to the filename FILENAME in eps format (default FILENAME = 'grid.eps').
+%   options:
+%   'SHOWGHOSTS'        Show ghost cells.
+%   'SHOWCELLINDEX'     Show cell global 1D index of each cell.
+%   'SHOWCIRCLES'       Plot circles at cell centers to indicate where the
+%                       data is.
+%   'SHOWUNUSED'        Plot cells that are not used in the actual discretization.
+%
+%   See also: PLOTRESULTS, TESTDISC, TESTADATPIVE.
+
+% Revision history:
+% 12-JUL-2005    Oren Livne    Added comments
 
 globalParams;
 

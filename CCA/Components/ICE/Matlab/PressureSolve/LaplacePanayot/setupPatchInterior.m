@@ -1,16 +1,16 @@
 function [A,b,T,Alist,Tlist] = setupPatchInterior(grid,k,q,A,b,T,ilower,iupper,reallyUpdate)
-%SETUPPATCCHINTERIOR  Set the discrete operator at a patch's edge.
-%   [A,B] = SETUPPATCHINTERIOR(GRID,K,Q,A,B,ALPHA,ILOWER,IUPPER,REALLYUPDATE) updates the LHS
-%   matrix A and the RHS matrix B, adding to them all the equations at
-%   edge nodes (near patch boundaries) near all faces of the patches.
-%   ALPHA is a parameter vector,
-%   where each of its entries ALPHA(DIR), DIR=1,...,2*numDims is in (0,1)
-%   that specifies the size of the face cells in the DIR direction.
-%   ALPHA(DIR)=0.5 is a regular cell, 0.25 is used in Dirichlet B.C.
-%   In the modified Panayot method we use ALPHA(DIR) smaller than 0.5
-%   (maybe even smaller than 0.25) at C/F interfaces.
+%SETUPPATCHINTERIOR  Set the discrete operator at a patch.
+%   [A,B,T,ALIST,TLIST] = SETUPINTERIOR(GRID,K,Q,A,B,T,ILOWER,IUPPER,FLAG)
+%   sets the the sparse LHS matrix A and the RHS matrix B of the linear
+%   system, adding to them all the equations at patch Q of level K (both
+%   interior equations and domain boundary equations). The transofmation
+%   matrix T is also updated; ALIST and TLIST are list-of-nonzeros added to
+%   A and to T, respectively.
 %
-%   See also: TESTDISC, ADDGRIDPATCH, SETUPPATCHINTERIOR.
+%   See also: TESTDISC, ADDGRIDPATCH, SETUPPATCHINTERFACE.
+
+% Revision history:
+% 12-JUL-2005    Oren Livne    Updated comments
 
 globalParams;
 

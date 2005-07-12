@@ -1,12 +1,15 @@
 function [grid,A,b,T,TI] = updateSystem(grid,k,q,A,b,T,TI)
 %UPDATESYSTEM  Add a patch to the AMR grid.
-%   [GRID,Q,A,B] = ADDGRIDPATCH(GRID,K,ILOWER,IUPPER,PARENTQ,A,B) updates
-%   the left hand side matrix A and the right hand side B of the composite
-%   grid linear system with a new patch Q at level K, whose extents
-%   (without ghost cells) are ILOWER to IUPPER, under the parent patch
-%   PARENTQ.
+%   [GRID,A,B,T,TI] = UPDATESYSTEM(GRID,K,Q,A,B,T,TI) updates the linear
+%   system left hand side matrix A and the right hand side B of the composite
+%   grid linear system with a new patch Q at level K, which is already
+%   updated in the grid hierarchy GRID. The transformation matrices T,TI
+%   are also updated as well as GRID.
 %
-%   See also: ADDGRIDLEVEL, TESTDISC.
+%   See also: ADDGRIDLEVEL, ADDPGRIDPATCH, TESTDISC, TESTADAPTIVE.
+
+% Revision history:
+% 12-JUL-2005    Oren Livne    Added comments
 
 globalParams;
 
