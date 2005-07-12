@@ -1,15 +1,31 @@
-function r = densityIntegral(diffusionType,x1,x2,y,dim)
+function a = harmonicAvg(y,z)
 % Integral of 1/a along the curve [x1,x2]. Here x1,x2 are x-coordinates if
 % dim=1, and y is the fixed y-coordinate along the curve. If dim=2, x1,x2
 % are y-coordinates and y is the fixed x-coordinate along the curve.
 
-r = zeros(size(x1));
+%HARMONICAVG  Harmonic average of the diffusion coefficient.
+%   A = HARMONICAVG(Y,Z) returns the harmonic average of the diffusion
+%   coefficient a(X) (X in R^D) along the line connecting the points Y,Z in
+%   R^D. That is,
+%   A = 1/(integral_0^1 1/a(x1(s),...,xD(s)) ds),
+%   where xd(s) = y(d) + s*(z(d) - y(d)) is the arclength parameterization
+%   of the d-coordinate of the line y-z, d = 1...D. A is computed
+%   analytically for the specific cases we consider; in general, use some
+%   simple quadrature formula for A from discrete a-values. See "help
+%   exactSolution" for a list of possible problems, determined by
+%   param.problemType.
+%
+%   See also: DIFFUSION, SETUPPATCHINTERIOR, SETUPPATCHINTERFACE.
 
-switch (diffusionType)
-    case 'smooth',
+% Revision history:
+% 12-JUL-2005    Oren Livne    Created
 
-        % Constant diffusion
-        r = x2-x1;
+r = 0.0;
+
+switch (param.problemType)
+    % Problems with a=1
+    case {'quadratic','sinsin','GaussianSource','Lshaped'},
+        r = 1.0;
 
     case 'jump',
         % Piecewise constant diffusion coefficient with a big jump at x=0.5.
@@ -26,4 +42,7 @@ switch (diffusionType)
             case 2,
                 r = x2-x1;
         end
+
+    otherwise,
+        error('Unknown problem type');
 end
