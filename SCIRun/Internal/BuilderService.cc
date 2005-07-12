@@ -54,9 +54,6 @@
 #include <iostream>
 #include <string>
 
-//REMOVE
-#include <SCIRun/Tao/TaoComponentInstance.h>
-
 using namespace std;
 
 namespace SCIRun {
@@ -337,6 +334,7 @@ BuilderService::setConnectionProperties(const sci::cca::ConnectionID::pointer &c
 }
 
 // TODO: timeout never used
+// TODO: disconnect event
 void
 BuilderService::disconnect(const sci::cca::ConnectionID::pointer& connID,
                            float /*timeout*/)
