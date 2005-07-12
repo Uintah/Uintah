@@ -50,26 +50,27 @@
 #include <SCIRun/Internal/ComponentEventService.h>
 #include <SCIRun/CCA/CCAComponentModel.h>
 #include <SCIRun/CCA/ComponentID.h>
+#include <SCIRun/CCA/CCAException.h>
 
 #if HAVE_RUBY
   #include <SCIRun/Bridge/BridgeComponentModel.h>
 #endif
 
 #if HAVE_BABEL 
- #include <SCIRun/Babel/BabelComponentModel.h>
+  #include <SCIRun/Babel/BabelComponentModel.h>
 #endif
 
 #if HAVE_VTK
-#include <SCIRun/Vtk/VtkComponentModel.h>
+  #include <SCIRun/Vtk/VtkComponentModel.h>
 #endif
 
 #if HAVE_TAO
-#include <SCIRun/Corba/CorbaComponentModel.h>
-#include <SCIRun/Tao/TaoComponentModel.h>
+  #include <SCIRun/Corba/CorbaComponentModel.h>
+  #include <SCIRun/Tao/TaoComponentModel.h>
 #endif
 
 #include <SCIRun/ComponentInstance.h>
-#include <Core/Exceptions/InternalError.h>
+#include <SCIRun/CCACommunicator.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/Util/NotFinished.h>
 
@@ -81,18 +82,17 @@
 #include <unistd.h>
 #include <iostream>
 
-#include "CCACommunicator.h"
-
 namespace SCIRun {
 
 SCIRunFramework::SCIRunFramework()
   //:d_slave_sema("Wait for a slave to regester Semaphore",0)
 {
   models.push_back(internalServices = new InternalComponentModel(this));
+  models.push_back(cca = new CCAComponentModel(this));
+
 #ifdef BUILD_DATAFLOW
   models.push_back(dflow = new SCIRunComponentModel(this));
 #endif
-  models.push_back(cca = new CCAComponentModel(this));
 
 #if HAVE_RUBY
   models.push_back(new BridgeComponentModel(this));
@@ -170,15 +170,12 @@ SCIRunFramework::createComponentInstance(const std::string& name,
             }
         }
         if (count > 1) {
-            std::cerr << "More than one component model wants to build "
-                      << type << std::endl;
-            throw InternalError("Need CCA Exception here");
+            throw CCAException("More than one component model wants to build " + type);
         }
     }
 
     if (!mod) {
-        std::cerr << "No component model wants to build " << type << std::endl;
-        return ComponentID::pointer(0);
+        throw CCAException("Unknown class name for " + name);
     }
     // "cca.className" is a standard CCA component property key
     properties->putString("cca.className", className);
@@ -215,8 +212,7 @@ SCIRunFramework::destroyComponentInstance(const sci::cca::ComponentID::pointer
     // get component properties...
     emitComponentEvent(
         new ComponentEvent(sci::cca::ports::DestroyPending,
-                           cid, sci::cca::TypeMap::pointer(0))
-    ); 
+                           cid, sci::cca::TypeMap::pointer(0))); 
 
   //#1 remove cid from compIDs
   for (unsigned i = 0; i<compIDs.size(); i++) {
@@ -228,7 +224,10 @@ SCIRunFramework::destroyComponentInstance(const sci::cca::ComponentID::pointer
   
   //#2 unregister the component instance
   ComponentInstance *ci = unregisterComponent(cid->getInstanceName());
-  
+  if (ci == 0) {
+      throw CCAException("Invalid component instance");
+  }
+
   //#3 find the associated component model
   std::string type = ci->getClassName();
 
@@ -263,21 +262,18 @@ SCIRunFramework::destroyComponentInstance(const sci::cca::ComponentID::pointer
       }
     }
     if (count > 1) {
-      std::cerr << "More than one component model wants to build " << type << '\n';
-      throw InternalError("Need CCA Exception here");
+        throw CCAException("More than one component model wants to build " + type);
     }
   }
   if (!mod) {
-    std::cerr << "No component model matches component" << type << '\n';
-    return;
+    throw CCAException("Unknown class name for " + type);
   }
   //#4 destroy the component instance
   mod->destroyInstance(ci);
 
     emitComponentEvent(
         new ComponentEvent(sci::cca::ports::ComponentDestroyed,
-                           cid, sci::cca::TypeMap::pointer(0))
-    );
+                           cid, sci::cca::TypeMap::pointer(0)));
 }
 
 
@@ -504,8 +500,7 @@ SCIRunFramework::createComponent(const std::string& name, const std::string& t)
       }
     }
     if(count > 1){
-      std::cerr << "More than one component model wants to build " << type << '\n';
-      throw InternalError("Need CCA Exception here");
+      // use a CCAException here
     }
   }
   if(!mod){

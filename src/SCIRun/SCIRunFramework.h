@@ -44,7 +44,7 @@
 #include <include/sci_defs/dataflow_defs.h>
 
 #ifdef BUILD_DATAFLOW
-#include <SCIRun/Dataflow/SCIRunComponentModel.h>
+  #include <SCIRun/Dataflow/SCIRunComponentModel.h>
 #endif
 
 #include <Core/CCA/spec/cca_sidl.h>
@@ -52,6 +52,7 @@
 #include <vector>
 #include <map>
 #include <string>
+
 
 namespace SCIRun {
 
