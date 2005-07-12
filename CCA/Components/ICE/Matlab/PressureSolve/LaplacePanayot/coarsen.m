@@ -4,7 +4,10 @@ function [uc,QLower,QUpper] = coarsen(grid,k,q,u)
 %   level k, to UC defined at the parent patch part underlying the fine
 %   patch.
 %
-%   See also: MARKREFINEMENT.
+%   See also: MARKREFINEMENT, COARSENINDEX, REFINEINDEX.
+
+% Revision history:
+% 12-JUL-2005    Oren Livne    Added comments
 
 globalParams;
 

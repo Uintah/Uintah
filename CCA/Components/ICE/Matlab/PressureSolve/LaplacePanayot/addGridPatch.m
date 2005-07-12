@@ -1,8 +1,7 @@
 function [grid,q] = addGridPatch(grid,k,ilower,iupper,parentQ)
 %ADDGRIDPATCH  Add a patch to the AMR grid.
-%   [GRID,Q,A,B] = ADDGRIDPATCH(GRID,K,ILOWER,IUPPER,PARENTQ,A,B) updates
-%   the left hand side matrix A and the right hand side B of the composite
-%   grid linear system with a new patch Q at level K, whose extents
+%   [GRID,Q] = ADDGRIDPATCH(GRID,K,ILOWER,IUPPER,PARENTQ) updates the grid
+%   structure with a new patch Q at level K, whose extents
 %   (without ghost cells) are ILOWER to IUPPER, under the parent patch
 %   PARENTQ.
 %
