@@ -410,7 +410,7 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
   }
 
 
-  if (!context_) throw scinew InternalError("Cannot create WGL Context");
+  if (!context_) throw scinew InternalError("Cannot create WGL Context", __FILE__, __LINE__);
 
   fprintf(stderr,"%s\n",ReportCapabilities());
 
