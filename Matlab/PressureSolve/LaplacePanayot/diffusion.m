@@ -16,6 +16,10 @@ globalParams;
 a = zeros(size(x));
 
 switch (param.problemType)
+    % Problems with a=1 (Laplace operator)
+    case {'quadratic','sinsin','GaussianSource','Lshaped'},
+        r = 1.0;
+
     case 'smooth',
         % Constant diffusion
         a = repmat(1,size(x));
@@ -26,4 +30,7 @@ switch (param.problemType)
         right = find(x > 0.5);
         a(left) = 1.0;
         a(right) = 1.0e+6;
+
+    otherwise,
+        error('Unknown problem type');
 end
