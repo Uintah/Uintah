@@ -3,7 +3,7 @@
 %     the command GLOBALPARAMS. Refrain from using local variables that have a
 %     name that appears in the list of GLOBALPARAMS.
 %
-%    See also TESTDISC.
+%    See also TESTADAPTIVE, TESTDISC.
 
 % Revision history:
 % 27-JUN-2005    Oren Livne    Created

@@ -6,6 +6,9 @@ function indNbhr = indexNbhr(P,indCell,n,ind)
 %
 %   See also: INDEXBOX, SETPATCHINTERIOR.
 
+% Revision history:
+% 12-JUL-2005    Oren Livne    Added comments
+
 if (nargin < 4)
     ind                 = P.cellIndex;                                          % Global indices of patch cells
 end

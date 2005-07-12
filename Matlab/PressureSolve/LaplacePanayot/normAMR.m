@@ -1,5 +1,18 @@
 function result = normAMR(grid,e,type)
-% Volume-scaled L2,H1,Linfinity norm of an AMR function e.
+%NORMAMR  Discrete norms of an AMR function.
+%   RESULT = NORMAMR(GRID,E,TYPE) returns the discrete norm of the AMR
+%   function E defined on the hierarchy GRID. TYPE specifies the norm
+%   option:
+%   'L2'    Discrete finite-volume-weighted L2 norm.
+%   'max'   Maximum (L-infinity) norm.
+%   'H1'    Enerhy/flux semi-norm (not working properly yet).
+%   'H1max' Maximum flux norm (not working properly yet).
+%
+%   See also: TESTADAPTIVE, LATEXTABLEFACTORS.
+
+% Revision history:
+% 12-JUL-2005    Oren Livne    Added comments
+
 globalParams;
 
 result = 0;

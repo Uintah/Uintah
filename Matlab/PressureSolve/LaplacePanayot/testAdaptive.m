@@ -8,6 +8,9 @@
 %
 %   See also: ADDGRIDLEVEL, ADDGRIDPATCH.
 
+% Revision history:
+% 12-JUL-2005    Oren Livne    Added comments
+
 globalParams;
 
 %=========================================================================
@@ -44,7 +47,7 @@ TI                  = [];
 
 % Prepare quantities to be saved for each refinement stage
 AMR                 = cell(grid.maxLevels,1);
-errNorm             = zeros(grid.maxLevels,4);
+errNorm             = zeros(grid.maxLevels,5);
 patchID             = cell(grid.maxLevels,1);
 
 for numLevels = 1:grid.maxLevels,
@@ -152,12 +155,13 @@ for numLevels = 1:grid.maxLevels,
     temp    = AMRToSparse(err,grid,T,1);
     err     = sparseToAMR(temp,grid,TI,0);
     errNorm(numLevels,:) = [ ...
+        numLevels ...
         normAMR(grid,err,'L2') ...
         normAMR(grid,err,'max') ...
         normAMR(grid,err,'H1') ...
         normAMR(grid,err,'H1max') ...
         ];
-    fprintf('#vars = %5d  L2=%.3e  max=%.3e  H1=%.3e  H1max=%.3e\n',grid.totalVars,errNorm(numLevels,:));
+    fprintf('#vars = %5d  L2=%.3e  max=%.3e  H1=%.3e  H1max=%.3e\n',grid.totalVars,errNorm(numLevels,2:end));
 
     if (param.plotResults)
         plotResults(grid,u,uExact,tau,numCells);
@@ -180,28 +184,5 @@ for numLevels = 1:grid.maxLevels,
 end
 
 if (param.saveResults)
-    % Save errors and error factors in latex format
-    Label{1}    = 'n';
-    Label{2}    = '\|e\|_{L_2}';
-    Label{3}    = '{\mbox{factor}}';
-    Label{4}    = '\|e\|_{L_{\infty}}';
-    Label{5}    = '{\mbox{factor}}';
-    Label{6}    = '\|e\|_{H_1}';
-    Label{7}    = '{\mbox{factor}}';
-    Label{8}    = '\|e\|_{H_1,max}';
-    Label{9}    = '{\mbox{factor}}';
-
-    fileName    = sprintf('%s/DiscError',param.outputDir);
-    Caption     = sprintf('Discretization error');
-
-    data        = [1:grid.maxLevels]';
-    e           = errNorm;
-    factors     = fac(e);
-    fmt{1}      = '%4d';
-    for i = 1:size(e,2)
-        data = [data e(:,i) [0; factors(:,i)]];
-        fmt{2*i} = '%.3e';
-        fmt{2*i+1} = '%.3f';
-    end
-    latexTableFactors(data,Label,fileName,Caption,fmt{:});
+    saveResults(errNorm);
 end
