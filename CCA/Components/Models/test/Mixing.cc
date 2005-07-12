@@ -85,7 +85,7 @@ void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
       
       GeometryPiece* mainpiece;
       if(pieces.size() == 0){
-	throw ParameterNotFound("No piece specified in geom_object");
+	throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
       } else if(pieces.size() > 1){
 	mainpiece = scinew UnionGeometryPiece(pieces);
       } else {
@@ -96,7 +96,8 @@ void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
       count++;
     }
     if(count == 0)
-      throw ProblemSetupException("Variable: "+stream->name+" does not have any initial value regions");
+      throw ProblemSetupException("Variable: "+stream->name+" does not have any initial value regions",
+                                  __FILE__, __LINE__);
 
     setup->registerTransportedVariable(mymatls->getSubset(0),
 				       stream->massFraction_CCLabel,
@@ -104,7 +105,7 @@ void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
     streams.push_back(stream);
   }
   if(streams.size() == 0)
-    throw ProblemSetupException("Mixing specified with no streams!");
+    throw ProblemSetupException("Mixing specified with no streams!", __FILE__, __LINE__);
 
   for (ProblemSpecP child = params->findBlock("reaction"); child != 0;
        child = child->findNextBlock("reaction")) {
@@ -116,7 +117,7 @@ void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
       if((*iter)->name == from)
 	break;
     if(iter == streams.end())
-      throw ProblemSetupException("Reaction needs stream: "+from+" but not found");
+      throw ProblemSetupException("Reaction needs stream: "+from+" but not found", __FILE__, __LINE__);
 
     string to;
     child->require("to", to);
@@ -124,7 +125,7 @@ void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
       if((*iter)->name == to)
 	break;
     if(iter == streams.end())
-      throw ProblemSetupException("Reaction needs stream: "+to+" but not found");
+      throw ProblemSetupException("Reaction needs stream: "+to+" but not found", __FILE__, __LINE__);
     rxn->fromStream = (*iter)->index;
     rxn->toStream = (*iter)->index;
 
@@ -134,7 +135,7 @@ void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
     reactions.push_back(rxn);
   }
   if(reactions.size() > 1)
-    throw ProblemSetupException("More than one reaction not finished");
+    throw ProblemSetupException("More than one reaction not finished", __FILE__, __LINE__);
 
 //  setup.registerMixer(matl);
 }
@@ -197,7 +198,7 @@ void Mixing::initialize(const ProcessorGroup*,
 	  ostringstream msg;
 	  msg << "Initial massFraction != 1.0: value=";
 	  msg << sum[*iter] << " at " << *iter;
-	  throw ProblemSetupException(msg.str());
+	  throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
 	}
       } // Over cells
     } // Over matls

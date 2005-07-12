@@ -551,7 +551,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       if (!(J > 0.0)) {
         cerr << getpid() 
              << "**ERROR** Negative Jacobian of deformation gradient" << endl;
-        throw ParameterNotFound("**ERROR**:ViscoScram");
+        throw ParameterNotFound("**ERROR**:ViscoScram", __FILE__, __LINE__);
       }
       double rho_cur = rho_0/J;
 

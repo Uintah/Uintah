@@ -23,16 +23,16 @@ ConeGeometryPiece::ConeGeometryPiece(ProblemSpecP& ps)
   ps->get("top_radius",topRad);
   
   if (botRad == 0.0 && topRad == 0.0) {
-    SCI_THROW(ProblemSetupException("** INPUT ERROR ** Cone volume == 0.0"));
+    SCI_THROW(ProblemSetupException("** INPUT ERROR ** Cone volume == 0.0", __FILE__, __LINE__));
   }
   double near_zero = 1e-100;
   Vector axis = top - bottom;
   
   if ( axis.length()  < near_zero ) {
-    SCI_THROW(ProblemSetupException("** INPUT ERROR ** Cone height == 0.0"));
+    SCI_THROW(ProblemSetupException("** INPUT ERROR ** Cone height == 0.0", __FILE__, __LINE__));
   }
   if (botRad < 0.0 || topRad < 0.0) {
-    SCI_THROW(ProblemSetupException("** INPUT ERROR ** Cone radius < 0.0"));
+    SCI_THROW(ProblemSetupException("** INPUT ERROR ** Cone radius < 0.0", __FILE__, __LINE__));
   }
   d_bottom = bottom;
   d_top = top;
@@ -46,15 +46,15 @@ ConeGeometryPiece::ConeGeometryPiece(const Point& top,
                                      double botRad)
 {
   if (botRad == 0.0 && topRad == 0.0) {
-    SCI_THROW(ProblemSetupException("** INPUT ERROR ** Cone volume == 0.0"));
+    SCI_THROW(ProblemSetupException("** INPUT ERROR ** Cone volume == 0.0", __FILE__, __LINE__));
   }
   double near_zero = 1e-100;
   Vector axis = top - bottom;
   if ( axis.length()  < near_zero ) {
-    SCI_THROW(ProblemSetupException("** INPUT ERROR ** Cone height == 0.0"));
+    SCI_THROW(ProblemSetupException("** INPUT ERROR ** Cone height == 0.0", __FILE__, __LINE__));
   }
   if (botRad < 0.0 || topRad < 0.0) {
-    SCI_THROW(ProblemSetupException("** INPUT ERROR ** Cone radius < 0.0"));
+    SCI_THROW(ProblemSetupException("** INPUT ERROR ** Cone radius < 0.0", __FILE__, __LINE__));
   }
   d_bottom = bottom;
   d_top = top;

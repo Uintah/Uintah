@@ -17,7 +17,7 @@ void MaterialProperties::parse(ProblemSpecP& p)
 {
   ProblemSpecP params = p->findBlock("properties");
   if(!params)
-    throw ProblemSetupException("Cannot find properties block");
+    throw ProblemSetupException("Cannot find properties block", __FILE__, __LINE__);
   params->require("cp", Cp);
   params->require("molecularweight", molecularWeight);
 }

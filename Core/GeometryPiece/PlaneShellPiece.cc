@@ -24,11 +24,11 @@ PlaneShellPiece::PlaneShellPiece(ProblemSpecP& ps)
   ps->require("num_radius", d_numRadius);
   
   if (d_normal.length2() < 1.0)
-    SCI_THROW(ProblemSetupException("PlaneShell: Incorrect normal in input file."));
+    SCI_THROW(ProblemSetupException("PlaneShell: Incorrect normal in input file.", __FILE__, __LINE__));
   if (d_radius <= 0.0 || d_thickness <= 0.0)
-    SCI_THROW(ProblemSetupException("PlaneShell: Incorrect plane dimensions."));
+    SCI_THROW(ProblemSetupException("PlaneShell: Incorrect plane dimensions.", __FILE__, __LINE__));
   if (d_numRadius < 1.0)
-    SCI_THROW(ProblemSetupException("PlaneShell: Incorrect subdivision of plane."));
+    SCI_THROW(ProblemSetupException("PlaneShell: Incorrect subdivision of plane.", __FILE__, __LINE__));
 
   cout << "Creating a plane shell" << endl;
   cout << "   Center = " << d_center << endl;

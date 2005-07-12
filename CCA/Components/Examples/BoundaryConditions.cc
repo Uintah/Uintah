@@ -29,13 +29,13 @@ void BoundaryConditions::problemSetup(ProblemSpecP& ps, const RegionDB& regiondb
 {
   ProblemSpecP conds = ps->findBlock("BoundaryConditions");
   if(!conds)
-    throw ProblemSetupException("BoundaryConditions not found");
+    throw ProblemSetupException("BoundaryConditions not found", __FILE__, __LINE__);
   for(ProblemSpecP child = conds->findBlock("Condition"); child != 0;
       child = child->findNextBlock("Condition")){
     string var;
     if(!child->getAttribute("var", var)){
       if(!child->getAttribute("variable", var)){
-	throw ProblemSetupException("variable attribute not found for boundary condition");
+	throw ProblemSetupException("variable attribute not found for boundary condition", __FILE__, __LINE__);
       }
     }
     Patch::VariableBasis begin_basis, end_basis;
@@ -55,28 +55,28 @@ void BoundaryConditions::problemSetup(ProblemSpecP& ps, const RegionDB& regiondb
       begin_basis = Patch::XFaceBased;
       end_basis = Patch::ZFaceBased;
     } else {
-      throw ProblemSetupException("Boundary condition cannot be applied at: "+atname);
+      throw ProblemSetupException("Boundary condition cannot be applied at: "+atname, __FILE__, __LINE__);
     }
 
     for(Patch::VariableBasis basis = begin_basis; basis <= end_basis;
 	basis = Patch::VariableBasis(int(basis)+1)){
       MapType::iterator iter = conditions.find(make_pair(var, basis));
       if(iter == conditions.end())
-	throw ProblemSetupException("Boundary condition set for unknown variable: "+var);
+	throw ProblemSetupException("Boundary condition set for unknown variable: "+var, __FILE__, __LINE__);
     }
     
     ProblemSpecP c = child->findBlock("region");
     if(c == 0){
       // This is a global value...
-      throw ProblemSetupException("Boundary condition requires a region");
+      throw ProblemSetupException("Boundary condition requires a region", __FILE__, __LINE__);
     } else {
       for(; c != 0; c = c->findNextBlock("region")){
 	string name;
 	if(!c->getAttribute("name", name))
-	  throw ProblemSetupException("Region does not have a name");
+	  throw ProblemSetupException("Region does not have a name", __FILE__, __LINE__);
 	const GeometryPiece* piece = regiondb.getObject(name);
 	if(!piece)
-	  throw ProblemSetupException("Unknown piece: "+name);
+	  throw ProblemSetupException("Unknown piece: "+name, __FILE__, __LINE__);
 
 	string type;
 	child->require("type", type);
@@ -92,7 +92,7 @@ void BoundaryConditions::problemSetup(ProblemSpecP& ps, const RegionDB& regiondb
 	  bctype=BC::FreeFlow;
 	  valueRequired=false;
 	} else {
-	  throw ProblemSetupException("Unknown BC type: "+type);
+	  throw ProblemSetupException("Unknown BC type: "+type, __FILE__, __LINE__);
 	}
 
 	for(Patch::VariableBasis basis = begin_basis; basis <= end_basis;
@@ -128,7 +128,7 @@ void BoundaryConditions::set(NCVariable<int>& bctype, const Patch* patch)
       centeroffset=IntVector(0,0,1);
       break;
     default:
-      throw InternalError("Unknown BC basis");
+      throw InternalError("Unknown BC basis", __FILE__, __LINE__);
     }
 #if 0
     cerr << "\n\ncondition: " << iter->first.first << '\n';
@@ -161,18 +161,18 @@ void InitialConditions::problemSetup(ProblemSpecP& ps, const RegionDB& regiondb)
 {
   ProblemSpecP conds = ps->findBlock("InitialConditions");
   if(!conds)
-    throw ProblemSetupException("InitialConditions not found");
+    throw ProblemSetupException("InitialConditions not found", __FILE__, __LINE__);
   for(ProblemSpecP child = conds->findBlock("Condition"); child != 0;
       child = child->findNextBlock("Condition")){
     string var;
     if(!child->getAttribute("var", var)){
       if(!child->getAttribute("variable", var)){
-	throw ProblemSetupException("variable attribute not found for initial condition");
+	throw ProblemSetupException("variable attribute not found for initial condition", __FILE__, __LINE__);
       }
     }
     MapType::iterator iter = conditions.find(var);
     if(iter == conditions.end())
-      throw ProblemSetupException("Initial condition set for unknown variable: "+var);
+      throw ProblemSetupException("Initial condition set for unknown variable: "+var, __FILE__, __LINE__);
     
     ProblemSpecP c = child->findBlock("region");
     if(c == 0){
@@ -182,10 +182,10 @@ void InitialConditions::problemSetup(ProblemSpecP& ps, const RegionDB& regiondb)
       for(; c != 0; c = c->findNextBlock("region")){
 	string name;
 	if(!c->getAttribute("name", name))
-	  throw ProblemSetupException("Region does not have a name");
+	  throw ProblemSetupException("Region does not have a name", __FILE__, __LINE__);
 	const GeometryPiece* piece = regiondb.getObject(name);
 	if(!piece)
-	  throw ProblemSetupException("Unknown piece: "+name);
+	  throw ProblemSetupException("Unknown piece: "+name, __FILE__, __LINE__);
 	iter->second->parseCondition(child, piece, BC::FreeFlow, true);
       }
     }
@@ -207,7 +207,7 @@ void InitialConditions::setupCondition(const std::string& name,
 {
   if(conditions.find(name) != conditions.end()){
     // Already set up with this name!
-    throw ProblemSetupException("Redundant initial condition setup: "+name);
+    throw ProblemSetupException("Redundant initial condition setup: "+name, __FILE__, __LINE__);
   }
   conditions[name]=cond;
 }
@@ -218,7 +218,7 @@ void BoundaryConditions::setupCondition(const std::string& name,
 {
   if(conditions.find(make_pair(name, basis)) != conditions.end()){
     // Already set up with this name!
-    throw ProblemSetupException("Redundant boundary condition setup: "+name);
+    throw ProblemSetupException("Redundant boundary condition setup: "+name, __FILE__, __LINE__);
   }
   conditions[make_pair(name, basis)]=cond;
 }

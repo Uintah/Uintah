@@ -60,7 +60,7 @@ bool read_MicroSlip_BC_inputs(const ProblemSpecP& prob_spec,
     ProblemSpecP slip = bc_ps->findBlock("microSlip");
     if (!slip) {
       string warn="ERROR:\n Inputs:Boundary Conditions: Cannot find Slip block";
-      throw ProblemSetupException(warn);
+      throw ProblemSetupException(warn, __FILE__, __LINE__);
     }
 
     slip->require("alpha_momentum",   svb->alpha_momentum);
@@ -275,7 +275,7 @@ void set_MicroSlipVelocity_BC(const Patch* patch,
     
     // bulletproofing
     if (!sv){
-      throw InternalError("set_MicroSlipTemperature_BC: MicroSlip_vars = null");
+      throw InternalError("set_MicroSlipTemperature_BC: MicroSlip_vars = null", __FILE__, __LINE__);
     }
 
     // define shortcuts
@@ -357,7 +357,7 @@ void set_MicroSlipTemperature_BC(const Patch* patch,
 
     // bulletproofing
     if (!sv){
-      throw InternalError("set_MicroSlipTemperature_BC: Slip_vars = null");
+      throw InternalError("set_MicroSlipTemperature_BC: Slip_vars = null", __FILE__, __LINE__);
     } 
     // shortcuts  
     constCCVariable<double>& gamma     = sv->gamma;

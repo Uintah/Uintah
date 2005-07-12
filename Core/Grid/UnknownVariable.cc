@@ -3,13 +3,16 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <sstream>
+#include <iostream>
 
 using namespace Uintah;
 using namespace std;
 
 UnknownVariable::UnknownVariable(const std::string& varname, int dwid,
 				 const Patch* patch, int matlIndex,
-				 const std::string& extramsg)
+				 const std::string& extramsg,
+                                 const char* file,
+                                 int line)
 {
    ostringstream s;
    s << "Unknown variable: " << varname;
@@ -25,11 +28,19 @@ UnknownVariable::UnknownVariable(const std::string& varname, int dwid,
    if(extramsg != "")
       s << " (" << extramsg << ")";
    d_msg = s.str();
+
+#ifdef EXCEPTIONS_CRASH
+   std::cout << "An UnknownVariable exception was thrown.\n";
+   std::cout << file << ":" << line << "\n";
+   std::cout << d_msg << "\n";
+#endif
 }
 
 UnknownVariable::UnknownVariable(const std::string& varname, int dwid,
 				 const Level* level, int matlIndex,
-				 const std::string& extramsg)
+				 const std::string& extramsg,
+                                 const char* file,
+                                 int line)
 {
    ostringstream s;
    s << "Unknown variable: " << varname;
@@ -44,6 +55,12 @@ UnknownVariable::UnknownVariable(const std::string& varname, int dwid,
    if(extramsg != "")
       s << " (" << extramsg << ")";
    d_msg = s.str();
+
+#ifdef EXCEPTIONS_CRASH
+   std::cout << "An UnknownVariable exception was thrown.\n";
+   std::cout << file << ":" << line << "\n";
+   std::cout << d_msg << "\n";
+#endif
 }
 
 UnknownVariable::UnknownVariable(const UnknownVariable& copy)

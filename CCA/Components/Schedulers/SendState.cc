@@ -38,7 +38,7 @@ SendState::add_sendset(ParticleSubset* sendset, int dest, const Patch* patch,
   maptype::iterator iter = 
     sendSubsets.find(make_pair(PSPatchMatlGhost(patch,matlIndex,low,high,dwid), dest));
   if(iter != sendSubsets.end())
-    SCI_THROW(InternalError("sendSubset already exists"));
+    SCI_THROW(InternalError("sendSubset already exists", __FILE__, __LINE__));
   sendSubsets[make_pair(PSPatchMatlGhost(patch, matlIndex, low, high, dwid), dest)]=sendset;
 }
 

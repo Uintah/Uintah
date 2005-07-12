@@ -71,10 +71,10 @@ main(int argc, char *argv[])
     ProblemSpecP ups = reader->readInputFile();
     ups->writeMessages(true);
     if(!ups)
-      throw ProblemSetupException("Cannot read problem specification");
+      throw ProblemSetupException("Cannot read problem specification", __FILE__, __LINE__);
     
     if(ups->getNodeName() != "Uintah_specification")
-      throw ProblemSetupException("Input file is not a Uintah specification");
+      throw ProblemSetupException("Input file is not a Uintah specification", __FILE__, __LINE__);
     
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
     
@@ -107,7 +107,7 @@ main(int argc, char *argv[])
       IntVector diff = high-low;
       long cells = diff.x()*diff.y()*diff.z();
       if(cells != level->totalCells())
-        throw ProblemSetupException("pfs can only handle square grids");
+        throw ProblemSetupException("pfs can only handle square grids", __FILE__, __LINE__);
 
       // Parse the geometry from the UPS
       ProblemSpecP mp = ups->findBlock("MaterialProperties");
@@ -138,7 +138,7 @@ main(int argc, char *argv[])
                 else if (next_var_name=="p.externalforce") ncols += 3;
                 else if (next_var_name=="p.fiberdir")      ncols += 3;
                 else 
-                  throw ProblemSetupException("Unexpected field variable of '"+next_var_name+"'");
+                  throw ProblemSetupException("Unexpected field variable of '"+next_var_name+"'", __FILE__, __LINE__);
               }
               
               vector<vector<pair<Point,vector<double> > > > points(level->numPatches());

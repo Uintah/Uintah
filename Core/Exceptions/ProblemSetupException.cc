@@ -4,10 +4,12 @@
 
 using namespace Uintah;
 
-ProblemSetupException::ProblemSetupException(const std::string& msg)
+ProblemSetupException::ProblemSetupException(const std::string& msg, const char* file, int line)
     : d_msg(msg)
 {
 #ifdef EXCEPTIONS_CRASH
+  std::cout << "A ProblemSetup exception was thrown.\n";
+  std::cout << file << ":" << line << "\n";
   std::cout << d_msg << "\n";
 #endif
 }

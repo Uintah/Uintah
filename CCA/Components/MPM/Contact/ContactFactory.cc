@@ -49,7 +49,7 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
       
       else {
         cerr << "Unknown Contact Type R (" << con_type << ")" << std::endl;;
-        throw ProblemSetupException(" E R R O R----->MPM:Unknown Contact type");
+        throw ProblemSetupException(" E R R O R----->MPM:Unknown Contact type", __FILE__, __LINE__);
       }
    }
    

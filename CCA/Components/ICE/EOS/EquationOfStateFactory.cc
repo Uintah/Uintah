@@ -26,10 +26,10 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
 {
     ProblemSpecP child = ps->findBlock("EOS");
     if(!child)
-      throw ProblemSetupException("Cannot find EOS tag");
+      throw ProblemSetupException("Cannot find EOS tag", __FILE__, __LINE__);
     std::string mat_type;
     if(!child->getAttribute("type",mat_type))
-      throw ProblemSetupException("No type for EOS"); 
+      throw ProblemSetupException("No type for EOS", __FILE__, __LINE__); 
     
     if (mat_type == "ideal_gas") 
       return(scinew IdealGas(child));
@@ -52,6 +52,6 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
       return(scinew StiffGas(child));
 #endif    
     else
-      throw ProblemSetupException("Unknown EOS Type R ("+mat_type+")");
+      throw ProblemSetupException("Unknown EOS Type R ("+mat_type+")", __FILE__, __LINE__);
 
 }

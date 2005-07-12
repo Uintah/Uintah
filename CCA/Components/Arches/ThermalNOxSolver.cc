@@ -76,7 +76,7 @@ ThermalNOxSolver::problemSetup(const ProblemSpecP& params)
     d_discretize = scinew Discretization();
   else {
     throw InvalidValue("Finite Differencing scheme "
-		       "not supported: " + finite_diff);
+		       "not supported: " + finite_diff, __FILE__, __LINE__);
     //throw InvalidValue("Finite Differencing scheme "
 	//	       "not supported: " + finite_diff, db);
   }
@@ -88,7 +88,7 @@ ThermalNOxSolver::problemSetup(const ProblemSpecP& params)
     else if (conv_scheme == "eno") d_conv_scheme = 1;
          else if (conv_scheme == "weno") d_conv_scheme = 2;
 	      else throw InvalidValue("Convection scheme "
-		       "not supported: " + conv_scheme);
+		       "not supported: " + conv_scheme, __FILE__, __LINE__);
 //  } else
 //    d_conv_scheme = 0;
   // make source and boundary_condition objects
@@ -101,7 +101,7 @@ ThermalNOxSolver::problemSetup(const ProblemSpecP& params)
      d_linearSolver = scinew PetscSolver(0); // CHEAT - steve d_myworld);
   else {
     throw InvalidValue("linear solver option"
-		       " not supported" + linear_sol);
+		       " not supported" + linear_sol, __FILE__, __LINE__);
     //throw InvalidValue("linear solver option"
 	//	       " not supported" + linear_sol, db);
   }

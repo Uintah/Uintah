@@ -16,17 +16,18 @@ MeltingTempModel* MeltingTempModelFactory::create(ProblemSpecP& ps)
 {
    ProblemSpecP child = ps->findBlock("melting_temp_model");
    if(!child)
-      throw ProblemSetupException("MPM::ConstitutiveModel:Cannot find melting temp model.");
+      throw ProblemSetupException("MPM::ConstitutiveModel:Cannot find melting temp model.", __FILE__, __LINE__);
    string mat_type;
    if(!child->getAttribute("type", mat_type))
-      throw ProblemSetupException("MPM::ConstitutiveModel:No type for melting temp model.");
+      throw ProblemSetupException("MPM::ConstitutiveModel:No type for melting temp model.", __FILE__, __LINE__);
    
    if (mat_type == "constant_Tm")
       return(scinew ConstantMeltTemp(child));
    else if (mat_type == "scg_Tm")
       return(scinew SCGMeltTemp(child));
    else 
-      throw ProblemSetupException("MPM::ConstitutiveModel:Unknown Melting Temp Model ("+mat_type+")");
+      throw ProblemSetupException("MPM::ConstitutiveModel:Unknown Melting Temp Model ("+mat_type+")",
+                                  __FILE__, __LINE__);
 }
 
 MeltingTempModel* 
@@ -37,5 +38,5 @@ MeltingTempModelFactory::createCopy(const MeltingTempModel* mtm)
    else if (dynamic_cast<const SCGMeltTemp*>(mtm))
       return(scinew SCGMeltTemp(dynamic_cast<const SCGMeltTemp*>(mtm)));
    else 
-      throw ProblemSetupException("Cannot create copy of unknown melting temp model");
+      throw ProblemSetupException("Cannot create copy of unknown melting temp model", __FILE__, __LINE__);
 }

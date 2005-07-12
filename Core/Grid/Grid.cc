@@ -113,7 +113,7 @@ void Grid::performConsistencyCheck() const
              << " "<< F_box.min() << " "<< F_box.max()
              << " can't lay outside of coarser level " << level->getIndex()
              << " "<< C_box.min() << " "<< C_box.max() << endl;
-        throw InvalidGrid(desc.str());
+        throw InvalidGrid(desc.str(),__FILE__,__LINE__);
       }
       
       //__________________________________
@@ -238,14 +238,16 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         IntVector resolution;
         if(box_ps->get("resolution", resolution)){
            if(have_levelspacing){
-              throw ProblemSetupException("Cannot specify level spacing and patch resolution");
+              throw ProblemSetupException("Cannot specify level spacing and patch resolution", 
+                                          __FILE__, __LINE__);
            } else {
               // all boxes on same level must have same spacing
               Vector newspacing = (upper-lower)/resolution;
               if(have_patchspacing){
                 Vector diff = spacing-newspacing;
                 if(diff.length() > 1.e-6)
-                   throw ProblemSetupException("Using patch resolution, and the patch spacings are inconsistent");
+                   throw ProblemSetupException("Using patch resolution, and the patch spacings are inconsistent",
+                                               __FILE__, __LINE__);
               } else {
                 spacing = newspacing;
               }
@@ -255,7 +257,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       }
         
       if(!have_levelspacing && !have_patchspacing)
-        throw ProblemSetupException("Box resolution is not specified");
+        throw ProblemSetupException("Box resolution is not specified", __FILE__, __LINE__);
 
       LevelP level = addLevel(anchor, spacing);
       level->setTimeRefinementRatio(trr);
@@ -284,7 +286,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           cerr << "lower2=" << lower2 << '\n';
           cerr << "diff=" << diff_lower << '\n';
           
-          throw ProblemSetupException("Box lower corner does not coincide with grid");
+          throw ProblemSetupException("Box lower corner does not coincide with grid", __FILE__, __LINE__);
         }
         if(diff_upper > 1.e-6){
           cerr << "upper=" << upper << '\n';
@@ -292,7 +294,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           cerr << "highCell =" << highCell << '\n';
           cerr << "upper2=" << upper2 << '\n';
           cerr << "diff=" << diff_upper << '\n';
-          throw ProblemSetupException("Box upper corner does not coincide with grid");
+          throw ProblemSetupException("Box upper corner does not coincide with grid", __FILE__, __LINE__);
         }
         // Determine the interior cell limits.  For no extraCells, the limits
         // will be the same.  For extraCells, the interior cells will have
@@ -306,7 +308,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         IntVector resolution(highCell-lowCell);
         if(resolution.x() < 1 || resolution.y() < 1 || resolution.z() < 1) {
           cerr << "highCell: " << highCell << " lowCell: " << lowCell << '\n';
-          throw ProblemSetupException("Degenerate patch");
+          throw ProblemSetupException("Degenerate patch", __FILE__, __LINE__);
         }
         
         IntVector patches;
@@ -334,7 +336,8 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         }
       }
       if (pg->size() > 1 && (level->numPatches() < pg->size()) && !do_amr) {
-        throw ProblemSetupException("Number of patches must >= the number of processes in an mpi run");
+        throw ProblemSetupException("Number of patches must >= the number of processes in an mpi run",
+                                    __FILE__, __LINE__);
       }
       
       IntVector periodicBoundaries;
@@ -350,7 +353,8 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       levelIndex++;
    }
    if(numLevels() >1 && !do_amr) {  // bullet proofing
-    throw ProblemSetupException("Grid.cc:problemSetup: Multiple levels encountered in non-AMR grid");
+    throw ProblemSetupException("Grid.cc:problemSetup: Multiple levels encountered in non-AMR grid",
+                                __FILE__, __LINE__);
    }
 } // end problemSetup()
 

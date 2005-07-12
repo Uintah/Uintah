@@ -361,7 +361,8 @@ void    ICE::printData_driver( int matl,
   //  bullet proof
   if (d_dbgMatls.size() == 0){
     throw ProblemSetupException(
-          "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls");
+          "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls",
+          __FILE__, __LINE__);
   }
 }
 
@@ -469,7 +470,8 @@ void    ICE::printVector_driver(int matl,
   //  bullet proof
   if (d_dbgMatls.size() == 0){
     throw ProblemSetupException(
-          "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls");
+          "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls",
+          __FILE__, __LINE__);
   }
 }
 
@@ -497,7 +499,8 @@ void    ICE::symmetryTest_driver( int matl,
   int numPatches = level->numPatches();
   if(numPatches !=1 ){
       throw ProblemSetupException("PRINT_DATA: symmetryTest_driver:  "
-                                  "this only works with one patch");
+                                  "this only works with one patch",
+                                  __FILE__, __LINE__);
   }
 
   // This only works with an even number of cells in the patch interior
@@ -511,7 +514,7 @@ void    ICE::symmetryTest_driver( int matl,
       nCells.z() % 2 !=0 && d_dbgSymPlanes.z()){
       cout << " number of interior cells " << nCells << endl;
       throw ProblemSetupException("PRINT_DATA: symmetryTest_driver:  "
-             "Only works if the number of interior cells is even ");
+             "Only works if the number of interior cells is even ", __FILE__, __LINE__);
   }
   
   //__________________________________
@@ -619,7 +622,8 @@ void    ICE::symmetryTest_driver( int matl,
   //  bullet proof
   if (d_dbgMatls.size() == 0){
     throw ProblemSetupException(
-          "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls");
+          "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls",
+          __FILE__, __LINE__);
   }
 }
 /*_______________________________________________________________________
@@ -638,7 +642,8 @@ void    ICE::symmetryTest_Vector( int matl,
   int numPatches = level->numPatches();
   if(numPatches !=1 ){
       throw ProblemSetupException("PRINT_DATA: symmetryTest_driver:  "
-                                  "this only works with one patch");
+                                  "this only works with one patch",
+                                  __FILE__, __LINE__);
   }
 
   // The patch interior can only have an even number of cells
@@ -652,7 +657,8 @@ void    ICE::symmetryTest_Vector( int matl,
       nCells.z() % 2 !=0 && d_dbgSymPlanes.z()){
       cout << " number of interior cells " << nCells << endl;
       throw ProblemSetupException("PRINT_DATA: symmetryTest_driver:  "
-             "Only works if the number of interior cells is even ");
+             "Only works if the number of interior cells is even ",
+                                  __FILE__, __LINE__);
   }
     
   //__________________________________
@@ -738,7 +744,8 @@ void    ICE::symmetryTest_Vector( int matl,
   //  bullet proof
   if (d_dbgMatls.size() == 0){
     throw ProblemSetupException(
-          "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls");
+          "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls",
+          __FILE__, __LINE__);
   }
 }
 /*_______________________________________________________________________
@@ -885,7 +892,8 @@ void    ICE::readData(const Patch* patch, int include_EC,
   
   ifstream fp(filename.c_str());
   if (!fp)
-    throw ProblemSetupException("Couldn't open the file with hardwired variables");
+    throw ProblemSetupException("Couldn't open the file with hardwired variables",
+                                __FILE__, __LINE__);
         
   //  fscanf(fp,"______________________________________________\n");
   fp >> text;  // scan over the "______"
@@ -893,7 +901,8 @@ void    ICE::readData(const Patch* patch, int include_EC,
   fp >> text;
   
   if (var_name != text)
-    throw ProblemSetupException("You're trying to read in apples and orangs " + var_name + " " +  text);
+    throw ProblemSetupException("You're trying to read in apples and orangs " + var_name + " " +  text,
+                                __FILE__, __LINE__);
   
   if (include_EC == 1)  { 
     lowIndex = patch->getCellLowIndex();
@@ -925,7 +934,8 @@ void    ICE::readData(const Patch* patch, int include_EC,
        
        fp >> number;
        if (!fp.good())       
-        throw ProblemSetupException("Having problem reading " + var_name);
+        throw ProblemSetupException("Having problem reading " + var_name,
+                                    __FILE__, __LINE__);
               
       // cerr << number;
        q_CC[idx] = number;
@@ -960,7 +970,7 @@ void ICE::createDirs( const Patch* patch,
     ostringstream warn;
     warn << "ICE:printData:Dumping GnuPlot Data:  The main uda directory does not exist. "
          << " Make sure you're dumping out at least one timestep in the input file";
-    throw ProblemSetupException(warn.str());
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   closedir(check);
   
@@ -968,7 +978,7 @@ void ICE::createDirs( const Patch* patch,
     ostringstream warn;
     warn<< "\n \nICE:PrintData:GNUPLOT the printData description isn't properly formatted"
         << " you must have _patch_ at the end of the description \n\n";
-    throw InternalError(warn.str());
+    throw InternalError(warn.str(), __FILE__, __LINE__);
   }
   
   
@@ -992,7 +1002,7 @@ void ICE::createDirs( const Patch* patch,
     ostringstream warn;
     warn<< "\n \nICE:PrintData:GNUPLOT the printData description isn't properly formatted"
         << " you must have _patch_ at the end of the description \n\n";
-    throw InternalError(warn.str());
+    throw InternalError(warn.str(), __FILE__, __LINE__);
   }
   //  cout << desc << " dirName "<< dirName << " matDir "<< matDir 
   //        << " patchDir "<< patchDir<<endl;

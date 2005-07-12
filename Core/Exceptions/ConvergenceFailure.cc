@@ -14,7 +14,9 @@ using namespace std;
 ConvergenceFailure::ConvergenceFailure(const string& message,
 				       int numiterations,
 				       double final_residual,
-				       double target_residual)
+				       double target_residual,
+                                       char* file,
+                                       int line)
 {
   ostringstream s;
   s << message << " failed to converge in " << numiterations << " iterations"
@@ -23,6 +25,8 @@ ConvergenceFailure::ConvergenceFailure(const string& message,
   d_msg = s.str();
   
 #ifdef EXCEPTIONS_CRASH
+  cout << "A ConvergenceFailure exception was thrown.\n";
+  cout << file << ":" << line << "\n";
   cout << d_msg << "\n";
 #endif
 }

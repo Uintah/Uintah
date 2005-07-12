@@ -180,7 +180,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   }
   solver = dynamic_cast<SolverInterface*>(getPort("solver"));
   if(!solver) {
-    throw InternalError("ICE:couldn't get solver port");
+    throw InternalError("ICE:couldn't get solver port", __FILE__, __LINE__);
   }
       
   //__________________________________
@@ -220,11 +220,11 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   // Grab the solution technique
   ProblemSpecP child = cfd_ice_ps->findBlock("solution");
   if(!child){
-    throw ProblemSetupException("Cannot find Solution Technique tag for ICE");
+    throw ProblemSetupException("Cannot find Solution Technique tag for ICE", __FILE__, __LINE__);
   }
   string solution_technique;
   if(!child->getAttribute("technique",solution_technique)){
-    throw ProblemSetupException("Nothing specified for solution technique");
+    throw ProblemSetupException("Nothing specified for solution technique", __FILE__, __LINE__);
   }
   if (solution_technique == "RateForm") {
     d_RateForm = true;
@@ -236,7 +236,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   }
   if (d_RateForm == false && d_EqForm == false ) {
     string warn="ERROR:\nMust specify EqForm or RateForm in ICE solution";
-    throw ProblemSetupException(warn);
+    throw ProblemSetupException(warn, __FILE__, __LINE__);
   }
     
   cout_norm << "cfl = " << d_CFL << endl;
@@ -287,11 +287,11 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     
     if (d_delT_scheme != "conservative" && d_delT_scheme != "aggressive") {
      string warn="ERROR:\n Scheme_for_delT_calc:  must specify either aggressive or conservative";
-     throw ProblemSetupException(warn);
+     throw ProblemSetupException(warn, __FILE__, __LINE__);
     }
     if (d_delT_knob< 0.0 || d_delT_knob > 1.0) {
      string warn="ERROR:\n knob_for_speedSound:  must be between 0 and 1";
-     throw ProblemSetupException(warn);
+     throw ProblemSetupException(warn, __FILE__, __LINE__);
     }
   } 
   cout_norm << "Scheme for calculating delT: " << d_delT_scheme<< endl;
@@ -322,7 +322,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   // Pull out the exchange coefficients
   ProblemSpecP exch_ps = mat_ps->findBlock("exchange_properties");
   if (!exch_ps)
-    throw ProblemSetupException("Cannot find exchange_properties tag");
+    throw ProblemSetupException("Cannot find exchange_properties tag", __FILE__, __LINE__);
   
   ProblemSpecP exch_co_ps = exch_ps->findBlock("exchange_coefficients");
   exch_co_ps->require("momentum",d_K_mom);
@@ -333,7 +333,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     if( d_K_mom[i] < 0.0 || d_K_mom[i] > 1e15 ) {
       ostringstream warn;
       warn<<"ERROR\n Momentum exchange coef. is either too big or negative\n";
-      throw ProblemSetupException(warn.str());
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   }
   for (int i = 0; i<(int)d_K_heat.size(); i++) {
@@ -341,7 +341,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     if( d_K_heat[i] < 0.0 || d_K_heat[i] > 1e15 ) {
       ostringstream warn;
       warn<<"ERROR\n Heat exchange coef. is either too big or negative\n";
-      throw ProblemSetupException(warn.str());
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   }
 
@@ -464,7 +464,7 @@ void ICE::addMaterial(const ProblemSpecP& prob_spec, GridP& grid,
   // Pull out the exchange coefficients
   ProblemSpecP exch_ps = mat_ps->findBlock("exchange_properties");
   if (!exch_ps){
-    throw ProblemSetupException("Cannot find exchange_properties tag");
+    throw ProblemSetupException("Cannot find exchange_properties tag", __FILE__, __LINE__);
   }
   
   ProblemSpecP exch_co_ps = exch_ps->findBlock("exchange_coefficients");
@@ -478,7 +478,7 @@ void ICE::addMaterial(const ProblemSpecP& prob_spec, GridP& grid,
     if( d_K_mom[i] < 0.0 || d_K_mom[i] > 1e15 ) {
       ostringstream warn;
       warn<<"ERROR\n Momentum exchange coef. is either too big or negative\n";
-      throw ProblemSetupException(warn.str());
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   }
   for (int i = 0; i<(int)d_K_heat.size(); i++) {
@@ -486,7 +486,7 @@ void ICE::addMaterial(const ProblemSpecP& prob_spec, GridP& grid,
     if( d_K_heat[i] < 0.0 || d_K_heat[i] > 1e15 ) {
       ostringstream warn;
       warn<<"ERROR\n Heat exchange coef. is either too big or negative\n";
-      throw ProblemSetupException(warn.str());
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   }
 
@@ -515,7 +515,7 @@ void ICE::updateExchangeCoefficients(const ProblemSpecP& prob_spec,
   ProblemSpecP mat_ps  =  prob_spec->findBlock("AddMaterialProperties");
   ProblemSpecP exch_ps = mat_ps->findBlock("exchange_properties");
   if (!exch_ps){
-    throw ProblemSetupException("Cannot find exchange_properties tag");
+    throw ProblemSetupException("Cannot find exchange_properties tag", __FILE__, __LINE__);
   }
   
   ProblemSpecP exch_co_ps = exch_ps->findBlock("exch_coef_after_MPM_add");
@@ -529,7 +529,7 @@ void ICE::updateExchangeCoefficients(const ProblemSpecP& prob_spec,
     if( d_K_mom[i] < 0.0 || d_K_mom[i] > 1e15 ) {
       ostringstream warn;
       warn<<"ERROR\n Momentum exchange coef. is either too big or negative\n";
-      throw ProblemSetupException(warn.str());
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   }
   for (int i = 0; i<(int)d_K_heat.size(); i++) {
@@ -537,7 +537,7 @@ void ICE::updateExchangeCoefficients(const ProblemSpecP& prob_spec,
     if( d_K_heat[i] < 0.0 || d_K_heat[i] > 1e15 ) {
       ostringstream warn;
       warn<<"ERROR\n Heat exchange coef. is either too big or negative\n";
-      throw ProblemSetupException(warn.str());
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   }
 }
@@ -740,7 +740,8 @@ void ICE::restartInitialize()
     throw ProblemSetupException("ERROR ICE::restartInitialize \n"
           "You must have \n" 
           "       <isSurroundingMatl> true </isSurroundingMatl> \n "
-          "specified inside the ICE material that is the background matl\n");
+          "specified inside the ICE material that is the background matl\n",
+                                __FILE__, __LINE__);
   }
 }
 
@@ -1978,7 +1979,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
       ostringstream warn;
       warn << "ERROR ICE:(L-"<< level->getIndex()
            << "):ComputeStableTimestep: delT < 1e-20";
-      throw InvalidValue(warn.str());
+      throw InvalidValue(warn.str(), __FILE__, __LINE__);
     }
     new_dw->put(delt_vartype(delt), lb->delTLabel);
   }  // patch loop
@@ -2056,7 +2057,8 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       throw ProblemSetupException("ERROR ICE::actuallyInitialize \n"
             "You must have \n" 
             "       <isSurroundingMatl> true </isSurroundingMatl> \n "
-            "specified inside the ICE material that is the background matl\n");
+            "specified inside the ICE material that is the background matl\n",
+                                  __FILE__, __LINE__);
     }
   //__________________________________
   // Note:
@@ -2112,19 +2114,19 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       
       if( !areAllValuesPositive(press_CC, neg_cell) ) {
         warn << base.str()<< neg_cell << " press_CC is negative\n";
-        throw ProblemSetupException(warn.str() );
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
       if( !areAllValuesPositive(rho_CC[m], neg_cell) ) {
         warn << base.str()<< neg_cell << " rho_CC is negative\n";
-        throw ProblemSetupException(warn.str() );
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
       if( !areAllValuesPositive(Temp_CC[m], neg_cell) ) {
         warn << base.str()<< neg_cell << " Temp_CC is negative\n";
-        throw ProblemSetupException(warn.str() );
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
       if( !areAllValuesPositive(sp_vol_CC[m], neg_cell) ) {
         warn << base.str()<< neg_cell << " sp_vol_CC is negative\n";
-        throw ProblemSetupException(warn.str() );
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
     }   // numMatls
 
@@ -2470,7 +2472,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       //      BULLET PROOFING
       if(test_max_iter == d_max_iter_equilibration) {
 	throw MaxIteration(c,count,n_passes, L_indx,
-                          "MaxIterations reached");
+                          "MaxIterations reached", __FILE__, __LINE__);
       }
 
       for (int m = 0; m < numMatls; m++) {
@@ -2479,19 +2481,19 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       }
       if ( fabs(sum - 1.0) > convergence_crit) {  
         throw MaxIteration(c,count,n_passes, L_indx,
-                         "MaxIteration reached vol_frac != 1");
+                         "MaxIteration reached vol_frac != 1", __FILE__, __LINE__);
       }
        
       if ( press_new[c] < 0.0 ){ 
         throw MaxIteration(c,count,n_passes, L_indx,
-                         "MaxIteration reached press_new < 0");
+                         "MaxIteration reached press_new < 0", __FILE__, __LINE__);
       }
 
       for (int m = 0; m < numMatls; m++){
         if ( rho_micro[m][c] < 0.0 || vol_frac[m][c] < 0.0) { 
           cout << "m = " << m << endl;
           throw MaxIteration(c,count,n_passes, L_indx,
-                      "MaxIteration reached rho_micro < 0 || vol_frac < 0");
+                      "MaxIteration reached rho_micro < 0 || vol_frac < 0", __FILE__, __LINE__);
         }
       }
 
@@ -3604,7 +3606,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         }
         if(viscosity_test == 0.0 && d_turbulence){
           string warn="ERROR:\n input :viscosity can't be zero when calculate turbulence";
-          throw ProblemSetupException(warn);
+          throw ProblemSetupException(warn, __FILE__, __LINE__);
         }
       }  // ice_matl
       
@@ -3987,7 +3989,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
          int idx = level->getIndex();
          warn<<"ICE:(L-"<<idx<<"):computeLagrangianValues, mat "<<indx<<" cell "
              <<neg_cell<<" Negative int_eng_L \n";
-         throw InvalidValue(warn.str());
+         throw InvalidValue(warn.str(), __FILE__, __LINE__);
         }
       }  // if (ice_matl)
     }  // end numALLMatl loop
@@ -4165,7 +4167,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
         int L = level->getIndex();
         warn<<"ERROR ICE:("<<L<<"):computeLagrangianSpecificVolumeRF, mat "<<indx
             << " cell " <<neg_cell << " sp_vol_L is negative\n";
-        throw InvalidValue(warn.str());
+        throw InvalidValue(warn.str(), __FILE__, __LINE__);
      }
     }  // end numALLMatl loop
   }  // patch loop
@@ -4997,15 +4999,15 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       
       if (!areAllValuesPositive(rho_CC, neg_cell)) {
         warn << base.str() << neg_cell << " negative rho_CC\n ";
-        throw InvalidValue(warn.str());
+        throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
       if (!areAllValuesPositive(temp, neg_cell)) {
         warn << base.str() << neg_cell << " negative temp_CC\n ";
-        throw InvalidValue(warn.str());
+        throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
       if (!areAllValuesPositive(sp_vol_CC, neg_cell)) {
        warn << base.str() << neg_cell << " negative sp_vol_CC\n ";        
-       throw InvalidValue(warn.str());
+       throw InvalidValue(warn.str(), __FILE__, __LINE__);
       } 
       delete varBasket;
     }  // ice_matls loop
@@ -5269,7 +5271,7 @@ void ICE::getExchangeCoefficients( FastMatrix& K, FastMatrix& H  )
       }
      }
    } else 
-     throw InvalidValue("Number of exchange components don't match.");
+     throw InvalidValue("Number of exchange components don't match.", __FILE__, __LINE__);
   
 }
 /*_____________________________________________________________________
@@ -5391,21 +5393,21 @@ ICE::refineBoundaries(const Patch*, CCVariable<double>&,
 			    DataWarehouse*, const VarLabel*,
 			    int, double)
 {
-  throw InternalError("trying to do AMR iwth the non-AMR component!");
+  throw InternalError("trying to do AMR iwth the non-AMR component!", __FILE__, __LINE__);
 }
 void
 ICE::refineBoundaries(const Patch*, CCVariable<Vector>&,
 			    DataWarehouse*, const VarLabel*,
 			    int, double)
 {
-  throw InternalError("trying to do AMR iwth the non-AMR component!");
+  throw InternalError("trying to do AMR iwth the non-AMR component!", __FILE__, __LINE__);
 }
 void
 ICE::refineBoundaries(const Patch*, SFCXVariable<double>&,
 			    DataWarehouse*, const VarLabel*,
 			    int, double)
 {
-  throw InternalError("trying to do AMR iwth the non-AMR component!");
+  throw InternalError("trying to do AMR iwth the non-AMR component!", __FILE__, __LINE__);
 }
 
 void
@@ -5413,7 +5415,7 @@ ICE::refineBoundaries(const Patch*, SFCYVariable<double>&,
 			    DataWarehouse*, const VarLabel*,
 			    int, double)
 {
-  throw InternalError("trying to do AMR iwth the non-AMR component!");
+  throw InternalError("trying to do AMR iwth the non-AMR component!", __FILE__, __LINE__);
 }
 
 void
@@ -5421,7 +5423,7 @@ ICE::refineBoundaries(const Patch*, SFCZVariable<double>&,
 			    DataWarehouse*, const VarLabel*,
 			    int, double)
 {
-  throw InternalError("trying to do AMR iwth the non-AMR component!");
+  throw InternalError("trying to do AMR iwth the non-AMR component!", __FILE__, __LINE__);
 }
 
 bool ICE::needRecompile(double /*time*/, double /*dt*/, const GridP& /*grid*/)

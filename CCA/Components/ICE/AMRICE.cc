@@ -49,7 +49,7 @@ void AMRICE::problemSetup(const ProblemSpecP& params, GridP& grid,
   if(!amr_ps){
     string warn;
     warn ="\n INPUT FILE ERROR:\n <AMR>  block not found inside of <ICE> block \n";
-    throw ProblemSetupException(warn);
+    throw ProblemSetupException(warn, __FILE__, __LINE__);
     
   }
   ProblemSpecP refine_ps = amr_ps->findBlock("Refinement_Criteria_Thresholds");
@@ -57,7 +57,7 @@ void AMRICE::problemSetup(const ProblemSpecP& params, GridP& grid,
     string warn;
     warn ="\n INPUT FILE ERROR:\n <Refinement_Criteria_Thresholds> "
          " block not found inside of <ICE> block \n";
-    throw ProblemSetupException(warn);
+    throw ProblemSetupException(warn, __FILE__, __LINE__);
   }
   
   amr_ps->getWithDefault( "regridderTest", d_regridderTest,     false);
@@ -464,7 +464,7 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
            << " Q_CC " << Q[badCell] 
            << " Patch " << patch->getID() << " Level idx "
            <<fineLevel->getIndex()<<"\n ";
-      throw InvalidValue(warn.str());
+      throw InvalidValue(warn.str(), __FILE__, __LINE__);
     }
   }
  
@@ -739,7 +739,7 @@ void AMRICE::iteratorTest(const Patch* finePatch,
          << " Level idx "<<fineLevel->getIndex()<<"\n "
          << "The underlying coarse cell "<< c_badCell 
          << " belongs to coarse level patch " << patch->getID() << "\n";
-    throw InvalidValue(warn.str());
+    throw InvalidValue(warn.str(), __FILE__, __LINE__);
   }  
 }
 
@@ -805,7 +805,7 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
          << "detected an uninitialized variable "<< varLabel->getName()
          << " " << badCell << " Patch " << finePatch->getID() 
          << " Level idx "<<fineLevel->getIndex()<<"\n ";
-    throw InvalidValue(warn.str());
+    throw InvalidValue(warn.str(), __FILE__, __LINE__);
   }
 }
 
@@ -1281,7 +1281,7 @@ void AMRICE::refluxOperator_computeCorrectionFluxes(
 
   if(xlabel == NULL || ylabel == NULL || zlabel == NULL){
     throw InternalError( "refluxOperator_computeCorrectionFluxes: variable label not found: " 
-                          + x_name + " or " + y_name + " or " + z_name);
+                          + x_name + " or " + y_name + " or " + z_name, __FILE__, __LINE__);
   }
 
   constSFCXVariable<T> Q_X_fine_flux;
@@ -1689,7 +1689,7 @@ void AMRICE::refluxOperator_applyCorrectionFluxes(
 
   if(xlabel == NULL || ylabel == NULL || zlabel == NULL){
     throw InternalError( "refluxOperator_applyCorrectionFluxes: variable label not found: " 
-                          + x_name + " or " + y_name + " or " + z_name);
+                          + x_name + " or " + y_name + " or " + z_name, __FILE__, __LINE__);
   }
   constSFCXVariable<T>  Q_X_coarse_flux;
   constSFCYVariable<T>  Q_Y_coarse_flux;

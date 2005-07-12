@@ -11,7 +11,8 @@ using namespace std;
 
 VariableNotFoundInGrid::VariableNotFoundInGrid(const std::string& varname,
 					       long particleID, int matlIndex,
-					       const std::string& extramsg)
+					       const std::string& extramsg,
+                                               const char* file, int line)
 {
   ostringstream s;
   s << "Particle Variable not found: " << varname;
@@ -25,6 +26,8 @@ VariableNotFoundInGrid::VariableNotFoundInGrid(const std::string& varname,
   d_msg = s.str();
   
 #ifdef EXCEPTIONS_CRASH
+  cout << "A VariableNotFoundInGrid exception was thrown.\n";
+  cout << file << ":" << line << "\n";
   cout << d_msg << "\n";
 #endif
 }
@@ -32,7 +35,8 @@ VariableNotFoundInGrid::VariableNotFoundInGrid(const std::string& varname,
 VariableNotFoundInGrid::VariableNotFoundInGrid(const std::string& varname,
 					       IntVector loc,
 					       int matlIndex,
-					       const std::string& extramsg)
+					       const std::string& extramsg,
+                                               const char* file, int line)
 {
   ostringstream s;
   s << "Grid Variable not found: " << varname;
@@ -45,16 +49,29 @@ VariableNotFoundInGrid::VariableNotFoundInGrid(const std::string& varname,
   if(extramsg != "")
     s << " (" << extramsg << ")";
   d_msg = s.str();
+
+#ifdef EXCEPTIONS_CRASH
+  cout << "A VariableNotFoundInGrid exception was thrown.\n";
+  cout << file << ":" << line << "\n";
+  cout << d_msg;
+#endif
 }
 
 VariableNotFoundInGrid::VariableNotFoundInGrid(const std::string& varname,
-					       const std::string& extramsg)
+					       const std::string& extramsg,
+                                               const char* file, int line)
 {
   ostringstream s;
   s << "Variable not found: " << varname;
   if(extramsg != "")
     s << " (" << extramsg << ")";
   d_msg = s.str();
+
+#ifdef EXCEPTIONS_CRASH
+  cout << "A VariableNotFoundInGrid exception was thrown.\n";
+  cout << file << ":" << line << "\n";
+  cout << d_msg;
+#endif
 }
 
 VariableNotFoundInGrid::VariableNotFoundInGrid(const VariableNotFoundInGrid& copy)

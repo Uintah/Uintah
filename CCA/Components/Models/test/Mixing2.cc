@@ -126,11 +126,11 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
   catch (CanteraError) {
     showErrors(cerr);
     cerr << "test failed." << endl;
-    throw InternalError("Cantera failed");
+    throw InternalError("Cantera failed", __FILE__, __LINE__);
   }
 
   if(streams.size() == 0)
-    throw ProblemSetupException("Mixing2 specified with no streams!");
+    throw ProblemSetupException("Mixing2 specified with no streams!", __FILE__, __LINE__);
 
   for (ProblemSpecP child = params->findBlock("stream"); child != 0;
        child = child->findNextBlock("stream")) {
@@ -138,7 +138,7 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
     child->getAttribute("name", name);
     map<string, Stream*>::iterator iter = names.find(name);
     if(iter == names.end())
-      throw ProblemSetupException("Stream "+name+" species not found");
+      throw ProblemSetupException("Stream "+name+" species not found", __FILE__, __LINE__);
     Stream* stream = iter->second;
     for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
 	 geom_obj_ps != 0;
@@ -149,7 +149,7 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
       
       GeometryPiece* mainpiece;
       if(pieces.size() == 0){
-	throw ParameterNotFound("No piece specified in geom_object");
+	throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
       } else if(pieces.size() > 1){
 	mainpiece = scinew UnionGeometryPiece(pieces);
       } else {
@@ -159,7 +159,8 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
       stream->regions.push_back(scinew Region(mainpiece, geom_obj_ps));
     }
     if(stream->regions.size() == 0)
-      throw ProblemSetupException("Variable: "+stream->name+" does not have any initial value regions");
+      throw ProblemSetupException("Variable: "+stream->name+" does not have any initial value regions",
+                                  __FILE__, __LINE__);
 
   }
 #if 0
@@ -274,7 +275,7 @@ void Mixing2::initialize(const ProcessorGroup*,
 	  ostringstream msg;
 	  msg << "Initial massFraction != 1.0: value=";
 	  msg << sum[*iter] << " at " << *iter;
-	  throw ProblemSetupException(msg.str());
+	  throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
 	}
       } // Over cells
     } // Over matls

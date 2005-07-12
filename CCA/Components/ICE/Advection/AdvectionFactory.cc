@@ -19,14 +19,14 @@ Advector* AdvectionFactory::create(ProblemSpecP& ps,
 {
   ProblemSpecP advect_ps = ps->findBlock("advection");
   if(!advect_ps){
-    throw ProblemSetupException("Cannot find advection tag");
+    throw ProblemSetupException("Cannot find advection tag", __FILE__, __LINE__);
   }
   
   map<string,string> advect_options;
   advect_ps->getAttributes(advect_options);
   
   if(advect_options.find("type") == advect_options.end()){
-    throw ProblemSetupException("No type for advection");
+    throw ProblemSetupException("No type for advection", __FILE__, __LINE__);
   }  
 
 
@@ -41,7 +41,7 @@ Advector* AdvectionFactory::create(ProblemSpecP& ps,
   if (advect_options.size() > 1 && d_useCompatibleFluxes == false){
         string warn="\n\n ERROR: Advection operator flags: "
                     " Did you misspell compatibleFluxes = 'true' in the input file\n";
-    throw ProblemSetupException(warn);
+    throw ProblemSetupException(warn, __FILE__, __LINE__);
   }
   
   //__________________________________
@@ -58,9 +58,10 @@ Advector* AdvectionFactory::create(ProblemSpecP& ps,
   else if (advect_options["type"] == "SecondOrderCE") {
     string warn="\n\n ERROR:SecondOrderCE has a bug in it.  "
                 "\nTodd use ICE/performanceTest.ups to find it\n \n";
-   throw ProblemSetupException(warn);
+   throw ProblemSetupException(warn, __FILE__, __LINE__);
     //return(scinew SecondOrderCEAdvector());
   }else {
-    throw ProblemSetupException("Unknown advection Type R ("+advect_options["type"]+")"); 
+    throw ProblemSetupException("Unknown advection Type R ("+advect_options["type"]+")",
+                                __FILE__, __LINE__); 
   }
 }

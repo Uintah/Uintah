@@ -83,11 +83,11 @@ void Wave::problemSetup(const ProblemSpecP& params, GridP& /*grid*/,
   if(initial_condition == "Chombo"){
     wave->require("radius", r0);
   } else {
-    throw ProblemSetupException("Unknown initial condition for Wave");
+    throw ProblemSetupException("Unknown initial condition for Wave", __FILE__, __LINE__);
   }
   wave->require("integration", integration);
   if(integration != "Euler" && integration != "RK4")
-    throw ProblemSetupException("Unknown integration method for Wave");
+    throw ProblemSetupException("Unknown integration method for Wave", __FILE__, __LINE__);
   mymat_ = new SimpleMaterial();
   sharedState->registerSimpleMaterial(mymat_);
 
@@ -159,7 +159,7 @@ Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched, int step, int
       sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
     }
   } else {
-    throw ProblemSetupException("Unknown integration method for wave");
+    throw ProblemSetupException("Unknown integration method for wave", __FILE__, __LINE__);
   }
 }
 
@@ -188,7 +188,7 @@ void Wave::initialize(const ProcessorGroup*,
           phi[*iter] = exp(-dist/(r0*r0))/(r0*r0*r0);
         }
       } else {
-        throw ProblemSetupException("Unknown initial condition for Wave");
+        throw ProblemSetupException("Unknown initial condition for Wave", __FILE__, __LINE__);
       }
     }
   }

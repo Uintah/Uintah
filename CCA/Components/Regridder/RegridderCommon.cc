@@ -147,10 +147,10 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
 
   if (simpleRatio != -1 && size > 0)
     throw ProblemSetupException("Cannot specify both simple_refinement_ratio"
-                                " and cell_refinement_ratio\n");
+                                " and cell_refinement_ratio\n", __FILE__, __LINE__);
   if (simpleRatio == -1 && size == 0)
     throw ProblemSetupException("Must specify either simple_refinement_ratio"
-                                " or cell_refinement_ratio\n");
+                                " or cell_refinement_ratio\n", __FILE__, __LINE__);
 
   // as it is not required to have cellRefinementRatio specified to all levels,
   // expand it to all levels here for convenience in looking up later.
@@ -252,7 +252,7 @@ void RegridderCommon::problemSetup_BulletProofing(const int k){
     if (d_maxTimestepsBetweenRegrids > d_cellCreationDilation.x()+1 || 
         d_maxTimestepsBetweenRegrids > d_cellCreationDilation.y()+1 || 
         d_maxTimestepsBetweenRegrids > d_cellCreationDilation.z()+1) {
-      throw ProblemSetupException("Problem Setup: Regridder: max_timestep_interval can be at most 1 greater than any component of \ncell_creation_dilation");
+      throw ProblemSetupException("Problem Setup: Regridder: max_timestep_interval can be at most 1 greater than any component of \ncell_creation_dilation", __FILE__, __LINE__);
     }
   }
 
@@ -267,7 +267,7 @@ void RegridderCommon::problemSetup_BulletProofing(const int k){
         << "Grid Size: " << d_cellNum[k] 
         << " lattice refinement ratio: " << d_latticeRefinementRatio[k] 
         << " cell refinement ratio: " << d_cellRefinementRatio[k] << endl;
-    throw ProblemSetupException(msg.str());
+    throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
 
     }
   }
@@ -282,7 +282,7 @@ void RegridderCommon::problemSetup_BulletProofing(const int k){
         << " cell_creation_dilation " << d_cellCreationDilation
         << " cell_deletion_dilation " << d_cellDeletionDilation
         << " min_boundary_cells " << d_minBoundaryCells << endl;
-    throw ProblemSetupException(msg.str());
+    throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
     
     }
   }
@@ -292,7 +292,7 @@ void RegridderCommon::problemSetup_BulletProofing(const int k){
     ostringstream msg;
     msg << "Problem Setup: Regridder: you've specified a patch size that is not divisible by the lattice ratio on level 0 \n"
         << " patch size " <<  d_patchSize[k] << " lattice refinement ratio " << d_latticeRefinementRatio[k] << endl;
-    throw ProblemSetupException(msg.str());
+    throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
   }
 }
 //______________________________________________________________________
@@ -301,7 +301,7 @@ bool RegridderCommon::flaggedCellsExist(constCCVariable<int>& flaggedCells, IntV
   //  rdbg << "RegridderCommon::flaggedCellsExist() BGN " << low << " " << high << endl;
 
   if (high < low) {
-    throw InternalError("Regridder has given flagCellsExist incorrect parameters!");
+    throw InternalError("Regridder has given flagCellsExist incorrect parameters!", __FILE__, __LINE__);
   }
   IntVector newHigh( high + IntVector( 1, 1, 1 ) );
   for ( CellIterator iter( low, newHigh ); !iter.done(); iter++ ) {
@@ -414,7 +414,7 @@ void RegridderCommon::GetFlaggedCells ( const GridP& oldGrid, int levelIdx, Data
 
 void RegridderCommon::initFilter(CCVariable<int>& filter, FilterType ft, IntVector& depth)
 {
-  if ((depth.x() < 0) || (depth.y() < 0) || (depth.z() < 0))  throw InternalError("Regridder given a bad dilation depth!");
+  if ((depth.x() < 0) || (depth.y() < 0) || (depth.z() < 0))  throw InternalError("Regridder given a bad dilation depth!", __FILE__, __LINE__);
 
   filter.rewindow(IntVector(0,0,0), IntVector(2,2,2)*depth+IntVector(2,2,2));
   filter.initialize(0);
@@ -443,7 +443,7 @@ void RegridderCommon::initFilter(CCVariable<int>& filter, FilterType ft, IntVect
       break;
     }
 
-    default: throw InternalError("Regridder given a bad dilation filter type!");
+    default: throw InternalError("Regridder given a bad dilation filter type!", __FILE__, __LINE__);
   }
 
   if (dilate_dbg.active()) {
@@ -471,7 +471,7 @@ void RegridderCommon::Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& di
   IntVector dilatedArraySize = dilatedFlaggedCells.size();
 
   if (arraySize != dilatedArraySize) {
-    throw InternalError("Original flagged cell array and dilated flagged cell array do not possess the same size!");
+    throw InternalError("Original flagged cell array and dilated flagged cell array do not possess the same size!", __FILE__, __LINE__);
   }
 
   IntVector flagLow = flaggedCells.getLowIndex();
@@ -552,7 +552,7 @@ void RegridderCommon::Dilate2(const ProcessorGroup*,
     depth = d_cellDeletionDilation;
     break;
   default:
-    throw InternalError("Dilate not implemented for this Dilation Type");
+    throw InternalError("Dilate not implemented for this Dilation Type", __FILE__, __LINE__);
   }
 
   int ngc;

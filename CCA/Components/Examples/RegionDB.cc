@@ -26,7 +26,7 @@ void RegionDB::problemSetup(ProblemSpecP& ps, const GridP& grid)
 {
   ProblemSpecP regions = ps->findBlock("Regions");
   if(!regions)
-    throw ProblemSetupException("Regions block not found");
+    throw ProblemSetupException("Regions block not found", __FILE__, __LINE__);
   vector<GeometryPiece*> pieces;
   GeometryPieceFactory::create(regions, pieces);
   for(vector<GeometryPiece*>::iterator iter = pieces.begin();
@@ -92,9 +92,9 @@ void RegionDB::addRegion(GeometryPiece* piece, const string& name)
 void RegionDB::addRegion(GeometryPiece* piece)
 {
   if(piece->getName().length() == 0)
-    throw ProblemSetupException("Geometry pieces in <Region> must be named");
+    throw ProblemSetupException("Geometry pieces in <Region> must be named", __FILE__, __LINE__);
   if(db.find(piece->getName()) != db.end())
-    throw ProblemSetupException("Duplicate name of geometry piece: "+piece->getName());
+    throw ProblemSetupException("Duplicate name of geometry piece: "+piece->getName(), __FILE__, __LINE__);
   db[piece->getName()]=piece;
 }
 

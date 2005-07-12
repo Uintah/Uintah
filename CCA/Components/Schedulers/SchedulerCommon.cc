@@ -688,7 +688,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             {
               if(!oldDataWarehouse->exists(label, matl, oldPatch))
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
-                                          "in copyDataTo NCVariable"));
+                                          "in copyDataTo NCVariable", __FILE__, __LINE__));
               NCVariableBase* v = oldDataWarehouse->d_ncDB.get(label, matl, oldPatch);
               
               if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
@@ -717,7 +717,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             {
               if(!oldDataWarehouse->exists(label, matl, oldPatch))
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
-                                          "in copyDataTo NCVariable"));
+                                          "in copyDataTo NCVariable", __FILE__, __LINE__));
               CCVariableBase* v = oldDataWarehouse->d_ccDB.get(label, matl, oldPatch);
         
               if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
@@ -747,7 +747,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             {
               if(!oldDataWarehouse->exists(label, matl, oldPatch))
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
-                                          "in copyDataTo NCVariable"));
+                                          "in copyDataTo NCVariable", __FILE__, __LINE__));
               SFCXVariableBase* v = oldDataWarehouse->d_sfcxDB.get(label, matl, oldPatch);
               
               if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
@@ -776,7 +776,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             {
               if(!oldDataWarehouse->exists(label, matl, oldPatch))
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
-                                          "in copyDataTo NCVariable"));
+                                          "in copyDataTo NCVariable", __FILE__, __LINE__));
               SFCYVariableBase* v = oldDataWarehouse->d_sfcyDB.get(label, matl, oldPatch);
               
               if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
@@ -805,7 +805,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             {
               if(!oldDataWarehouse->exists(label, matl, oldPatch))
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
-                                          "in copyDataTo NCVariable"));
+                                          "in copyDataTo NCVariable", __FILE__, __LINE__));
               SFCZVariableBase* v = oldDataWarehouse->d_sfczDB.get(label, matl, oldPatch);
               
               if ( !newDataWarehouse->exists(label, matl, newPatch) ) {
@@ -834,7 +834,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             {
               if(!oldDataWarehouse->d_particleDB.exists(label, matl, oldPatch))
                 SCI_THROW(UnknownVariable(label->getName(), oldDataWarehouse->getID(), oldPatch, matl,
-                                          "in copyDataTo ParticleVariable"));
+                                          "in copyDataTo ParticleVariable", __FILE__, __LINE__));
               if ( !newDataWarehouse->d_particleDB.exists(label, matl, newPatch) ) {
                 PatchSubset* ps = new PatchSubset;
                 ps->add(oldPatch);
@@ -849,7 +849,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
               } else {
                 cout << "Particle copy not implemented for pre-existent var (BNR Regridder?)\n";
                 SCI_THROW(UnknownVariable(label->getName(), newDataWarehouse->getID(), oldPatch, matl,
-                                          "in copyDataTo ParticleVariable"));
+                                          "in copyDataTo ParticleVariable", __FILE__, __LINE__));
               }
             }
             break;
@@ -858,7 +858,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             }
             break;
           default:
-            SCI_THROW(InternalError("Unknown variable type in transferFrom: "+label->getName()));
+            SCI_THROW(InternalError("Unknown variable type in transferFrom: "+label->getName(), __FILE__, __LINE__));
           } // end switch
         } // end oldPatches
       } // end matls

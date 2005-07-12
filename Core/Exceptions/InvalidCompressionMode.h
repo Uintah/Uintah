@@ -24,7 +24,9 @@ namespace Uintah {
   class InvalidCompressionMode : public Exception {
   public:
     InvalidCompressionMode(const std::string& invalidmode,
-			   const std::string& vartype="");
+			   const std::string& vartype,
+                           const char* file,
+                           int line);
     InvalidCompressionMode(const InvalidCompressionMode&);
     virtual ~InvalidCompressionMode();
     virtual const char* message() const;

@@ -76,7 +76,7 @@ void SimpleSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
       
       if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
 	  || ( high.z() < low.z() ) )
-	throw InternalError("Patch doesn't overlap?");
+	throw InternalError("Patch doesn't overlap?", __FILE__, __LINE__);
       
       int petscglobalIndex = d_petscGlobalStart[neighbor];
       IntVector dnodes = phigh-plow;

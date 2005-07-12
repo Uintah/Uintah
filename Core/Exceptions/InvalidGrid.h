@@ -22,7 +22,7 @@ namespace Uintah {
 
    class InvalidGrid : public SCIRun::Exception {
    public:
-      InvalidGrid(const std::string& msg);
+      InvalidGrid(const std::string& msg, const char* file, int line);
       InvalidGrid(const InvalidGrid&);
       virtual ~InvalidGrid();
       virtual const char* message() const;

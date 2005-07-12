@@ -54,7 +54,8 @@ void DataWarehouse::copyOutGridData(Variable* var, const VarLabel* label,
   else if ((castVar.sfcz=dynamic_cast<SFCZVariableBase*>(var)) != NULL)
     copyOut(*castVar.sfcz, label, matlIndex, patch, gtype, numGhostCells);
   else
-    throw InternalError("OnDemandDataWarehouse::copyOutGridData: Not a grid variable type");
+    throw InternalError("OnDemandDataWarehouse::copyOutGridData: Not a grid variable type", 
+                        __FILE__, __LINE__);
 }
 
 void DataWarehouse::getCopy(ParticleVariableBase& var, const VarLabel* label,

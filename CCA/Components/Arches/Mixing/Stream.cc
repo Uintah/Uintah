@@ -280,7 +280,7 @@ Stream::speciesIndex(const ChemkinInterface* chemInterf, const char* speciesName
 	return i;
     }
   }
-  throw InvalidValue("Species not found");
+  throw InvalidValue("Species not found", __FILE__, __LINE__);
 }
 
 double

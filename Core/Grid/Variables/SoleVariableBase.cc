@@ -18,6 +18,6 @@ SoleVariableBase::SoleVariableBase()
 RefCounted*
 SoleVariableBase::getRefCounted()
 {
-  SCI_THROW(InternalError("getRefCounted not implemented for SoleVariable"));
+  SCI_THROW(InternalError("getRefCounted not implemented for SoleVariable", __FILE__, __LINE__));
 }
     

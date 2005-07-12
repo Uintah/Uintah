@@ -28,7 +28,9 @@ namespace Uintah {
                 const int count, 
                 const int n_passes,
                 const int L_indx, 
-                const string mes);
+                const string mes,
+                const char* file,
+                int line);
     
     MaxIteration(const MaxIteration&);
     virtual ~MaxIteration();

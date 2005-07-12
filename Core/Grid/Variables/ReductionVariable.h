@@ -78,7 +78,7 @@ WARNING
     virtual void allocate(const Patch*, const IntVector& /*boundary*/)
     {
       SCI_THROW(SCIRun::InternalError("Should not call ReductionVariable<T, Op>"
-                                      "::allocate(const Patch*)")); 
+                                      "::allocate(const Patch*)", __FILE__, __LINE__)); 
     }
 
     virtual const TypeDescription* virtualGetTypeDescription() const;
@@ -151,7 +151,7 @@ WARNING
   {
     const ReductionVariable<T, Op>* c = dynamic_cast<const ReductionVariable<T, Op>* >(&copy);
     if(!c)
-      SCI_THROW(TypeMismatchException("Type mismatch in reduction variable"));
+      SCI_THROW(TypeMismatchException("Type mismatch in reduction variable", __FILE__, __LINE__));
     *this = *c;
   }
    
@@ -161,7 +161,7 @@ WARNING
   {
     const ReductionVariable<T, Op>* c = dynamic_cast<const ReductionVariable<T, Op>* >(&other);
     if(!c)
-      SCI_THROW(TypeMismatchException("Type mismatch in reduction variable"));
+      SCI_THROW(TypeMismatchException("Type mismatch in reduction variable", __FILE__, __LINE__));
     Op op;
     value = op(value, c->value);
   }

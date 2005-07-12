@@ -116,13 +116,13 @@ void SimpleRxn::problemSetup(GridP&, SimulationStateP& in_state,
   // Read in the constants for the scalar
    ProblemSpecP child = params->findBlock("scalar");
    if (!child){
-     throw ProblemSetupException("SimpleRxn: Couldn't find scalar tag");    
+     throw ProblemSetupException("SimpleRxn: Couldn't find scalar tag", __FILE__, __LINE__);    
    }
    child->getWithDefault("test_conservation", d_test_conservation, false);
    
    ProblemSpecP const_ps = child->findBlock("constants");
    if(!const_ps) {
-     throw ProblemSetupException("SimpleRxn: Couldn't find constants tag");
+     throw ProblemSetupException("SimpleRxn: Couldn't find constants tag", __FILE__, __LINE__);
    }
     
   const_ps->getWithDefault("f_stoichometric",d_scalar->f_stoic,    -9);         
@@ -153,7 +153,7 @@ void SimpleRxn::problemSetup(GridP&, SimulationStateP& in_state,
          << "\n rho_fuel         "<< d_rho_fuel
          << "\n R_fuel           "<< d_R_fuel
          << "\n R_air            "<< d_R_air<<endl;
-    throw ProblemSetupException(warn.str());
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   } 
 
   //__________________________________
@@ -166,7 +166,7 @@ void SimpleRxn::problemSetup(GridP&, SimulationStateP& in_state,
 
     GeometryPiece* mainpiece;
     if(pieces.size() == 0){
-     throw ParameterNotFound("No piece specified in geom_object");
+     throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
     } else if(pieces.size() > 1){
      mainpiece = scinew UnionGeometryPiece(pieces);
     } else {
@@ -176,7 +176,7 @@ void SimpleRxn::problemSetup(GridP&, SimulationStateP& in_state,
     d_scalar->regions.push_back(scinew Region(mainpiece, geom_obj_ps));
   }
   if(d_scalar->regions.size() == 0) {
-    throw ProblemSetupException("Variable: scalar-f does not have any initial value regions");
+    throw ProblemSetupException("Variable: scalar-f does not have any initial value regions", __FILE__, __LINE__);
   }
 
   //__________________________________
@@ -522,7 +522,7 @@ void SimpleRxn::computeModelSources(const ProcessorGroup*,
            << "somewhere in the scalar field: "<< sum
            << " cells were touched out of "<< numCells
            << " Total cells ";
-      throw InvalidValue(warn.str());
+      throw InvalidValue(warn.str(), __FILE__, __LINE__);
     }     
     //__________________________________
     //  Tack on diffusion

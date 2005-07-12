@@ -218,7 +218,7 @@ Uintah::p2_p1_ratio( double  gamma,
     cout << " boxed_quantity: u4 " << u4 << " u1 " << u1 << " a1 " << a1 << " gamma " << gamma
          << " fraction " << fraction << endl;
     cout << " (1.0 + gamma_ratio2 * boxed_quantity) " << (1.0 + gamma_ratio2 * boxed_quantity) << endl;
-    throw InternalError( "p2_p1_ratio: I've computed a nan or inf for p2_p1");
+    throw InternalError( "p2_p1_ratio: I've computed a nan or inf for p2_p1", __FILE__, __LINE__);
   }
   return p4_p1 - p2_p1_guess * pow( (1.0 + gamma_ratio2 * boxed_quantity), exponent);
 }
@@ -332,7 +332,7 @@ Uintah::Solve_Riemann_problem(
       cout << " p4/p1 " << p4_p1 << " p4 " << p4 << " p1 " << p1 << endl;
       cout << " p2_p1_guess0 " << p2_p1_guess0 << " p2_p1_guess00 " << p2_p1_guess00 << endl;
       cout << " p2_p1 " << p2_p1 << endl;
-      throw InternalError("Solve_Riemann_problem: p2_p1 is either inf or nan");
+      throw InternalError("Solve_Riemann_problem: p2_p1 is either inf or nan", __FILE__, __LINE__);
     }
 /*______________________________________________________________________
 *   Now compute the properties

@@ -187,7 +187,7 @@ void checkForInputError(const std::string& stringValue,
       warn << "Input file error: I found ("<< stringValue[pos]
            << ") inside of "<< stringValue<< " at position "<< pos
            << "\nIf this is a valid number tell me --Todd "<<endl;
-      throw ProblemSetupException(warn.str());
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     //__________________________________
     // check for two or more "."
@@ -198,7 +198,7 @@ void checkForInputError(const std::string& stringValue,
       warn << "Input file error: I found two (..) "
            << "inside of "<< stringValue
            << "\nIf this is a valid number tell me --Todd "<<endl;
-      throw ProblemSetupException(warn.str());
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   }  
   if (Int_or_float == "int")  {
@@ -209,7 +209,7 @@ void checkForInputError(const std::string& stringValue,
       warn << "Input file error Integer Number: I found ("<< stringValue[pos]
            << ") inside of "<< stringValue<< " at position "<< pos
            << "\nIf this is a valid number tell me --Todd "<<endl;
-      throw ProblemSetupException(warn.str());
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   }
 } 
@@ -319,7 +319,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name, bool &value)
          value = true;
 	} else {
          string error = name + "Must be either true or false";
-         throw ProblemSetupException(error);
+         throw ProblemSetupException(error, __FILE__, __LINE__);
 	}
       }
     }
@@ -1003,7 +1003,7 @@ void ProblemSpec::require(const std::string& name, double& value)
   // Check if the prob_spec is NULL
 
   if (! this->get(name,value))
-      throw ParameterNotFound(name);
+      throw ParameterNotFound(name, __FILE__, __LINE__);
  
 }
 
@@ -1013,7 +1013,7 @@ void ProblemSpec::require(const std::string& name, int& value)
  // Check if the prob_spec is NULL
 
   if (! this->get(name,value))
-      throw ParameterNotFound(name);
+      throw ParameterNotFound(name, __FILE__, __LINE__);
   
 }
 
@@ -1023,7 +1023,7 @@ void ProblemSpec::require(const std::string& name, long& value)
  // Check if the prob_spec is NULL
 
   if (! this->get(name,value))
-      throw ParameterNotFound(name);
+      throw ParameterNotFound(name, __FILE__, __LINE__);
   
 }
 
@@ -1032,7 +1032,7 @@ void ProblemSpec::require(const std::string& name, bool& value)
  // Check if the prob_spec is NULL
 
   if (! this->get(name,value))
-      throw ParameterNotFound(name);
+      throw ParameterNotFound(name, __FILE__, __LINE__);
  
 
 }
@@ -1042,7 +1042,7 @@ void ProblemSpec::require(const std::string& name, std::string& value)
  // Check if the prob_spec is NULL
 
   if (! this->get(name,value))
-      throw ParameterNotFound(name);
+      throw ParameterNotFound(name, __FILE__, __LINE__);
  
 }
 
@@ -1053,7 +1053,7 @@ void ProblemSpec::require(const std::string& name,
   // Check if the prob_spec is NULL
 
  if (! this->get(name,value))
-      throw ParameterNotFound(name);
+      throw ParameterNotFound(name, __FILE__, __LINE__);
 
 }
 
@@ -1064,7 +1064,7 @@ void ProblemSpec::require(const std::string& name,
   // Check if the prob_spec is NULL
 
  if (! this->get(name,value))
-      throw ParameterNotFound(name);
+      throw ParameterNotFound(name, __FILE__, __LINE__);
 
 }
 
@@ -1075,7 +1075,7 @@ void ProblemSpec::require(const std::string& name,
   // Check if the prob_spec is NULL
 
  if (! this->get(name,value))
-      throw ParameterNotFound(name);
+      throw ParameterNotFound(name, __FILE__, __LINE__);
 
 } 
 
@@ -1086,7 +1086,7 @@ void ProblemSpec::require(const std::string& name,
   // Check if the prob_spec is NULL
 
  if (! this->get(name,value))
-      throw ParameterNotFound(name);
+      throw ParameterNotFound(name, __FILE__, __LINE__);
 
 } 
 
@@ -1097,7 +1097,7 @@ void ProblemSpec::require(const std::string& name,
   // Check if the prob_spec is NULL
 
  if (! this->get(name,value))
-      throw ParameterNotFound(name);
+      throw ParameterNotFound(name, __FILE__, __LINE__);
 
 }
 
@@ -1108,7 +1108,7 @@ void ProblemSpec::require(const std::string& name,
   // Check if the prob_spec is NULL
 
  if (! this->get(name,value))
-      throw ParameterNotFound(name);
+      throw ParameterNotFound(name, __FILE__, __LINE__);
 
 }
 
@@ -1154,7 +1154,7 @@ void ProblemSpec::requireOptional(const std::string& name, std::string& value)
  // Check if the prob_spec is NULL
 
   if (! this->getOptional(name,value))
-      throw ParameterNotFound(name);
+      throw ParameterNotFound(name, __FILE__, __LINE__);
  
 }
 
@@ -1326,13 +1326,13 @@ void ProblemSpec::output(char* filename) const {
     char* message = XMLString::transcode(toCatch.getMessage());
     string ex(message);
     delete [] message;
-    throw ProblemSetupException(ex);
+    throw ProblemSetupException(ex, __FILE__, __LINE__);
   }
   catch (const DOMException& toCatch) {
     char* message = XMLString::transcode(toCatch.msg);
     string ex(message);
     delete [] message;
-    throw ProblemSetupException(ex);
+    throw ProblemSetupException(ex, __FILE__, __LINE__);
   }
 }
 

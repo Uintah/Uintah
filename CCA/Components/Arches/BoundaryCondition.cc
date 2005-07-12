@@ -1598,7 +1598,7 @@ BoundaryCondition::addPressureGrad(const ProcessorGroup* ,
 			 ioff, joff, koff);
     break;
   default:
-    throw InvalidValue("Invalid index in BoundaryCondition::addPressGrad");
+    throw InvalidValue("Invalid index in BoundaryCondition::addPressGrad", __FILE__, __LINE__);
   }
 }
 
@@ -2507,7 +2507,7 @@ BoundaryCondition::calculateIntrusionVel(const ProcessorGroup* ,
 
   default:
     
-    throw InvalidValue("Invalid index in Source::calcVelSrc");
+    throw InvalidValue("Invalid index in Source::calcVelSrc", __FILE__, __LINE__);
     
   }
   
@@ -2592,7 +2592,7 @@ BoundaryCondition::calculateVelocityPred_mm(const ProcessorGroup* ,
 
   default:
 
-    throw InvalidValue("Invalid index in Source::calcVelSrc");
+    throw InvalidValue("Invalid index in Source::calcVelSrc", __FILE__, __LINE__);
 
   }
 
@@ -2777,7 +2777,7 @@ BoundaryCondition::calculateVelRhoHat_mm(const ProcessorGroup* ,
 
     break;
   default:
-    throw InvalidValue("Invalid index in LinearSolver for velocity");
+    throw InvalidValue("Invalid index in LinearSolver for velocity", __FILE__, __LINE__);
   }
 }
 
@@ -3787,7 +3787,7 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
                vars->wVelRhoHat[xminusCell] = vars->wVelRhoHat[currCell];
            break;
            default:
-		throw InvalidValue("Invalid index in velocityPressureBC");
+		throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
           }
         }
 	else {
@@ -3803,7 +3803,7 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
              case Arches::ZDIR:
              break;
              default:
-		  throw InvalidValue("Invalid index in velocityPressureBC");
+		  throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
             }
           }
 	  if ((constvars->cellType[xminuszminusCell] == pressure_celltypeval)
@@ -3818,7 +3818,7 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
                  vars->wVelRhoHat[xminusCell] = vars->wVelRhoHat[currCell];
              break;
              default:
-		  throw InvalidValue("Invalid index in velocityPressureBC");
+		  throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
             }
           }
 	}
@@ -3851,7 +3851,7 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
                vars->wVelRhoHat[xplusCell] = vars->wVelRhoHat[currCell];
            break;
            default:
-		throw InvalidValue("Invalid index in velocityPressureBC");
+		throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
           }
         }
 	else {
@@ -3867,7 +3867,7 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
              case Arches::ZDIR:
              break;
              default:
-		  throw InvalidValue("Invalid index in velocityPressureBC");
+		  throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
             }
           }
 	  if ((constvars->cellType[xpluszminusCell] == pressure_celltypeval)
@@ -3882,7 +3882,7 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
                  vars->wVelRhoHat[xplusCell] = vars->wVelRhoHat[currCell];
              break;
              default:
-		  throw InvalidValue("Invalid index in velocityPressureBC");
+		  throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
             }
           }
 	}
@@ -3915,7 +3915,7 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
                vars->wVelRhoHat[yminusCell] = vars->wVelRhoHat[currCell];
            break;
            default:
-		throw InvalidValue("Invalid index in velocityPressureBC");
+		throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
           }
         }
 	else {
@@ -3931,7 +3931,7 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
              case Arches::ZDIR:
              break;
              default:
-		  throw InvalidValue("Invalid index in velocityPressureBC");
+		  throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
             }
           }
 	  if ((constvars->cellType[yminuszminusCell] == pressure_celltypeval)
@@ -3946,7 +3946,7 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
                  vars->wVelRhoHat[yminusCell] = vars->wVelRhoHat[currCell];
              break;
              default:
-		  throw InvalidValue("Invalid index in velocityPressureBC");
+		  throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
             }
           }
 	}  
@@ -3979,7 +3979,7 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
                vars->wVelRhoHat[yplusCell] = vars->wVelRhoHat[currCell];
            break;
            default:
-		throw InvalidValue("Invalid index in velocityPressureBC");
+		throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
           }
         }
 	else {
@@ -3995,7 +3995,7 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
              case Arches::ZDIR:
              break;
              default:
-		  throw InvalidValue("Invalid index in velocityPressureBC");
+		  throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
             }
           }
 	  if ((constvars->cellType[ypluszminusCell] == pressure_celltypeval)
@@ -4010,7 +4010,7 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
                  vars->wVelRhoHat[yplusCell] = vars->wVelRhoHat[currCell];
              break;
              default:
-		  throw InvalidValue("Invalid index in velocityPressureBC");
+		  throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
             }
           }
 	}
@@ -4043,7 +4043,7 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
            case Arches::ZDIR:
            break;
            default:
-		throw InvalidValue("Invalid index in velocityPressureBC");
+		throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
           }
         }
 	else {
@@ -4059,7 +4059,7 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
              case Arches::ZDIR:
              break;
              default:
-		  throw InvalidValue("Invalid index in velocityPressureBC");
+		  throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
             }
           }
 	  if ((constvars->cellType[zminusyminusCell] == pressure_celltypeval)
@@ -4074,7 +4074,7 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
              case Arches::ZDIR:
              break;
              default:
-		  throw InvalidValue("Invalid index in velocityPressureBC");
+		  throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
             }
           }
 	}
@@ -4107,7 +4107,7 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
            case Arches::ZDIR:
            break;
            default:
-		throw InvalidValue("Invalid index in velocityPressureBC");
+		throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
           }
         }
 	else {
@@ -4123,7 +4123,7 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
              case Arches::ZDIR:
              break;
              default:
-		  throw InvalidValue("Invalid index in velocityPressureBC");
+		  throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
             }
           }
 	  if ((constvars->cellType[zplusyminusCell] == pressure_celltypeval)
@@ -4138,7 +4138,7 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
              case Arches::ZDIR:
              break;
              default:
-		  throw InvalidValue("Invalid index in velocityPressureBC");
+		  throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
             }
           }
 	}
@@ -4302,7 +4302,7 @@ BoundaryCondition::addPresGradVelocityOutletBC(const ProcessorGroup*,
   }
   break;
   default:
-   throw InvalidValue("Invalid index in addPresGradVelocityOutletBC");
+   throw InvalidValue("Invalid index in addPresGradVelocityOutletBC", __FILE__, __LINE__);
   }
 }
 //****************************************************************************
@@ -4432,7 +4432,7 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
 			   zminus, zplus, doing_balance,
 			   density, varIN, varOUT);
 	if (fout > 0.0)
-		throw InvalidValue("Flow comming out of inlet");
+		throw InvalidValue("Flow comming out of inlet", __FILE__, __LINE__);
 
       } 
 
@@ -5282,7 +5282,7 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
       if (totalCarbonFlowRate > 0.0)
 	carbonEfficiency = CO2FlowRate * 12.0/28.0 /totalCarbonFlowRate;
       else 
-	throw InvalidValue("No carbon in the domain");
+	throw InvalidValue("No carbon in the domain", __FILE__, __LINE__);
       new_dw->put(delt_vartype(carbonEfficiency), d_lab->d_carbonEfficiencyLabel);
     }
     if (d_enthalpySolve) {
@@ -5292,7 +5292,7 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
 	enthalpyEfficiency -= normTotalRadSrc;
       }
       else 
-	throw InvalidValue("No enthalpy in the domain");
+	throw InvalidValue("No enthalpy in the domain", __FILE__, __LINE__);
       new_dw->put(delt_vartype(enthalpyEfficiency), d_lab->d_enthalpyEfficiencyLabel);
       new_dw->put(delt_vartype(normTotalRadSrc), d_lab->d_normTotalRadSrcLabel);
     }
@@ -5343,7 +5343,7 @@ BoundaryCondition::getVariableFlowRate(const ProcessorGroup*,
 			   balance_var, varIN_inlet, varOUT_inlet);
 
 	if (varOUT_inlet > 0.0)
-		throw InvalidValue("Balance variable comming out of inlet");
+		throw InvalidValue("Balance variable comming out of inlet", __FILE__, __LINE__);
 
 	// Count balance variable comming through the air inlet
 	double scalarValue = fi.streamMixturefraction.d_mixVars[0];

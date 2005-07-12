@@ -56,7 +56,7 @@ ProblemSpecReader::readInputFile()
     parser->parse(d_filename.c_str());
     
     if(handler.foundError){
-      throw ProblemSetupException("Error reading file: "+d_filename);
+      throw ProblemSetupException("Error reading file: "+d_filename, __FILE__, __LINE__);
     }
     
     // Adopt the Node so we can delete the parser but keep the document
@@ -71,7 +71,7 @@ ProblemSpecReader::readInputFile()
 
     if( !doc ) {
       cout << "Parse failed!\n";
-      throw InternalError( "Parse failed!\n" );
+      throw InternalError( "Parse failed!\n", __FILE__, __LINE__ );
     }
 
     delete parser;
@@ -82,7 +82,7 @@ ProblemSpecReader::readInputFile()
     char* ch = XMLString::transcode(toCatch.getMessage());
     string ex("XML Exception: " + string(ch));
     delete [] ch;
-    throw ProblemSetupException(ex);
+    throw ProblemSetupException(ex, __FILE__, __LINE__);
   }
 
   resolveIncludes(prob_spec);
@@ -119,7 +119,7 @@ ProblemSpecReader::resolveIncludes(ProblemSpecP params)
         if (href[0] != '/')
           href = directory + href;
         if (href == "")
-          throw ProblemSetupException("No href attributes in include tag");
+          throw ProblemSetupException("No href attributes in include tag", __FILE__, __LINE__);
         
         // open the file, read it, and replace the index node
         ProblemSpecReader *psr = new ProblemSpecReader(href);
@@ -144,7 +144,7 @@ ProblemSpecReader::resolveIncludes(ProblemSpecP params)
           continue;
         }
         else {
-          throw ProblemSetupException("No href attributes in include tag");
+          throw ProblemSetupException("No href attributes in include tag", __FILE__, __LINE__);
         }
       }
       // recurse on child's children

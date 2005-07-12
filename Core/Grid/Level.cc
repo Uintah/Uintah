@@ -97,7 +97,7 @@ Level::~Level()
 void Level::setTimeRefinementRatio(int trr)
 {
   if (d_finalized)
-    throw InvalidGrid("Level must not be finalized to set the time refinement ratio");
+    throw InvalidGrid("Level must not be finalized to set the time refinement ratio",__FILE__,__LINE__);
   d_timeRefinementRatio = trr;
 }
 
@@ -173,7 +173,7 @@ int Level::numPatches() const
 void Level::performConsistencyCheck() const
 {
    if(!d_finalized)
-     SCI_THROW(InvalidGrid("Consistency check cannot be performed until Level is finalized"));
+     SCI_THROW(InvalidGrid("Consistency check cannot be performed until Level is finalized",__FILE__,__LINE__));
   for(int i=0;i<(int)d_virtualAndRealPatches.size();i++){
     Patch* r = d_virtualAndRealPatches[i];
     r->performConsistencyCheck();
@@ -190,12 +190,12 @@ void Level::performConsistencyCheck() const
       if(b1.overlaps(b2)){
 	cerr << "r1: " << *r1 << '\n';
 	cerr << "r2: " << *r2 << '\n';
-	SCI_THROW(InvalidGrid("Two patches overlap"));
+	SCI_THROW(InvalidGrid("Two patches overlap",__FILE__,__LINE__));
       }
     }
   }
 
-  // Insert code to see if abutting boxes have consistent bounds
+
 }
 
 void Level::findNodeIndexRange(IntVector& lowIndex,IntVector& highIndex) const

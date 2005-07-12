@@ -76,7 +76,7 @@ void bisect(const string& div, int num, int factor,
   else if(div[num] == 'z')
     index=2;
   else {
-    throw InternalError("bad bisection axis: "+div[num]);
+    throw InternalError("bad bisection axis: "+div[num], __FILE__, __LINE__);
   }
 
   if(factor == -1){
@@ -272,10 +272,10 @@ main(int argc, char *argv[])
     ProblemSpecP ups = reader->readInputFile();
     ups->writeMessages(true);
     if(!ups)
-      throw ProblemSetupException("Cannot read problem specification");
+      throw ProblemSetupException("Cannot read problem specification", __FILE__, __LINE__);
     
     if(ups->getNodeName() != "Uintah_specification")
-      throw ProblemSetupException("Input file is not a Uintah specification");
+      throw ProblemSetupException("Input file is not a Uintah specification", __FILE__, __LINE__);
     
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
     
@@ -308,7 +308,7 @@ main(int argc, char *argv[])
       IntVector diff = high-low;
       long cells = diff.x()*diff.y()*diff.z();
       if(cells != level->totalCells())
-        throw ProblemSetupException("Currently slb can only handle square grids");
+        throw ProblemSetupException("Currently slb can only handle square grids", __FILE__, __LINE__);
 
       Uintah::Primes::FactorType factors;
       int n = Uintah::Primes::factorize(nump, factors);
@@ -338,7 +338,7 @@ main(int argc, char *argv[])
           
           GeometryPiece* mainpiece;
           if(pieces.size() == 0){
-            throw ProblemSetupException("No piece specified in geom_object");
+            throw ProblemSetupException("No piece specified in geom_object", __FILE__, __LINE__);
           } else if(pieces.size() > 1){
             mainpiece = scinew UnionGeometryPiece(pieces);
           } else {

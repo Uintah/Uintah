@@ -124,7 +124,7 @@ ParticleSubset::sort(ParticleVariableBase* particleIDs)
   ParticleVariable<long64>* pIDs =
     dynamic_cast<ParticleVariable<long64>*>(particleIDs);
   if (pIDs == 0)
-    SCI_THROW(InternalError("particleID variable must be ParticleVariable<long64>"));
+    SCI_THROW(InternalError("particleID variable must be ParticleVariable<long64>", __FILE__, __LINE__));
   compareIDFunctor comp(pIDs);
   ::sort(d_particles, d_particles+d_numParticles, comp);
 }
@@ -143,7 +143,7 @@ ParticleSubset::resize(particleIndex newSize)
 {
   // Check for spurious resizes
   if(d_particles)
-    SCI_THROW(InternalError("ParticleSubsets should not be resized after creation"));
+    SCI_THROW(InternalError("ParticleSubsets should not be resized after creation", __FILE__, __LINE__));
   d_allocatedSize = d_numParticles = newSize;
   d_particles = scinew particleIndex[newSize];
 }

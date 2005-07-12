@@ -121,7 +121,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
      // Read all MPM flags (look in MPMFlags.cc)
      flags->readMPMFlags(mpm_ps, grid);
      if (flags->d_integrator_type != "implicit")
-       throw ProblemSetupException("Can't use explicit integration with -impm");
+       throw ProblemSetupException("Can't use explicit integration with -impm", __FILE__, __LINE__);
 
      mpm_ps->get("do_grid_reset",  d_doGridReset);
      mpm_ps->get("ForceBC_force_increment_factor",
@@ -182,7 +182,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    if(flags->d_useLoadCurves){
     MPMPhysicalBCFactory::create(prob_spec);
     if( (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size()==0) {
-     throw ProblemSetupException("No load curve in ups, d_useLoadCurve==true?");
+     throw ProblemSetupException("No load curve in ups, d_useLoadCurve==true?", __FILE__, __LINE__);
     }
    }
 

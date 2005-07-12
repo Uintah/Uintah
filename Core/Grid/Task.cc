@@ -195,7 +195,8 @@ Task::requires(WhichDW dw, const VarLabel* var, const PatchSubset* patches,
   else if(vartype == TypeDescription::PerPatch )
     requires(dw,var,patches,NormalDomain,matls,NormalDomain,Ghost::None,0);
   else
-    SCI_THROW(InternalError("Requires should specify ghost type or level for this variable"));
+    SCI_THROW(InternalError("Requires should specify ghost type or level for this variable", 
+                            __FILE__, __LINE__));
   
 }
 
@@ -206,7 +207,7 @@ Task::requires(WhichDW dw, const VarLabel* var, const MaterialSubset* matls)
   if(!(vartype == TypeDescription::PerPatch
        || vartype == TypeDescription::ReductionVariable
        || vartype == TypeDescription::SoleVariable))
-    SCI_THROW(InternalError("Requires should specify ghost type for this variable"));
+    SCI_THROW(InternalError("Requires should specify ghost type for this variable", __FILE__, __LINE__));
   if(vartype == TypeDescription::ReductionVariable 
      || vartype == TypeDescription::SoleVariable)
     requires(dw, var, (const Level*)0, matls);
@@ -221,7 +222,7 @@ Task::requires(WhichDW dw, const VarLabel* var, const Level* level,
   TypeDescription::Type vartype = var->typeDescription()->getType();
   if(!(vartype == TypeDescription::ReductionVariable ||
        vartype == TypeDescription::SoleVariable))
-    SCI_THROW(InternalError("Requires should specify ghost type for this variable"));
+    SCI_THROW(InternalError("Requires should specify ghost type for this variable", __FILE__, __LINE__));
 
   if (matls == 0){
     // default material for a reduction variable is the global material (-1)
@@ -309,14 +310,14 @@ Task::computes(const VarLabel* var, const Level* level,
   TypeDescription::Type vartype = var->typeDescription()->getType();
   if (!(vartype == TypeDescription::ReductionVariable ||
       vartype == TypeDescription::SoleVariable))
-    SCI_THROW(InternalError("Computes should only be used for reduction variable"));
+    SCI_THROW(InternalError("Computes should only be used for reduction variable", __FILE__, __LINE__));
 
   if (matls == 0) {
     // default material for a reduction variable is the global material (-1)
     matls = getGlobalMatlSubset();
     matls_dom = OutOfDomain;
   } else if(matls->size() == 0){
-    throw InternalError("Computes of an empty material set!");
+    throw InternalError("Computes of an empty material set!", __FILE__, __LINE__);
   }
   
   Dependency* dep = scinew Dependency(Computes, this, NewDW, var, level,
@@ -340,7 +341,7 @@ Task::modifies(const VarLabel* var,
     // in order to implement modifies for reduction variables, the
     // TaskGraph::setupTaskConnections would have to be rewritten for
     // one thing.
-    SCI_THROW(InternalError("Modifies not implemented for reduction variables."));
+    SCI_THROW(InternalError("Modifies not implemented for reduction variables.", __FILE__, __LINE__));
     /*
     // default material for a reduction variable is the global material (-1)
     matls = getGlobalMatlSubset();
@@ -503,7 +504,8 @@ getOtherLevelComputeSubset(Task::DomainSpec,
 			   const MaterialSubset*)
 {
   // PatchSubset and MaterialSubset specializations are in Task.cc
-  SCI_THROW(InternalError("The DomainSpec for a Task::Dependency's MaterialSubset cannot be coarseLevel or FineLevel"));
+  SCI_THROW(InternalError("The DomainSpec for a Task::Dependency's MaterialSubset cannot be coarseLevel or FineLevel",
+                          __FILE__, __LINE__));
 }
 
 template <class T>
@@ -522,7 +524,8 @@ getComputeSubsetUnderDomain(string domString, Task::DomainSpec dom,
   case Task::FineLevel:      
     return getOtherLevelComputeSubset(dom, subset, domainSubset);
   default:
-    SCI_THROW(InternalError(string("Unknown ") + domString + " type "+to_string(static_cast<int>(dom))));
+    SCI_THROW(InternalError(string("Unknown ") + domString + " type "+to_string(static_cast<int>(dom)),
+                            __FILE__, __LINE__));
   }
 }
 
@@ -559,7 +562,8 @@ getOtherLevelComputeSubset(Task::DomainSpec dom,
     levelOffset = 1;
     break;
   default:
-    SCI_THROW(InternalError("Unhandled DomainSpec in Task::Dependency::getOtherLevelComputeSubset"));
+    SCI_THROW(InternalError("Unhandled DomainSpec in Task::Dependency::getOtherLevelComputeSubset",
+                            __FILE__, __LINE__));
   }
 
   std::set<const Patch*, Patch::Compare> patches;

@@ -88,7 +88,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMLabel* lb,
     desc << "An error occured in the ConstitutiveModelFactory that has \n" 
 	 << " slipped through the existing bullet proofing. Please tell \n"
 	 << " either Jim, John or Todd "<< endl; 
-    throw ParameterNotFound(desc.str());
+    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
   // Step 2 -- get the general material properties
@@ -127,7 +127,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMLabel* lb,
 
     GeometryPiece* mainpiece;
     if(pieces.size() == 0){
-      throw ParameterNotFound("No piece specified in geom_object");
+      throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
     } else if(pieces.size() > 1){
       mainpiece = scinew UnionGeometryPiece(pieces);
     } else {

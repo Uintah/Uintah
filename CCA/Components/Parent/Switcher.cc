@@ -34,7 +34,7 @@ Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups, bool doAMR)
     num_components++;
     string in("");
     if (!child->get("input_file",in))
-      throw ProblemSetupException("Need input file for subcomponent");
+      throw ProblemSetupException("Need input file for subcomponent", __FILE__, __LINE__);
 
     UintahParallelComponent* comp = ComponentFactory::create(child, myworld, doAMR);
     SimulationInterface* sim = dynamic_cast<SimulationInterface*>(comp);
@@ -66,7 +66,7 @@ void Switcher::problemSetup(const ProblemSpecP& params, GridP& grid,
     ProblemSpecP ups = psi->readInputFile();
     d_sim->problemSetup(ups,grid,sharedState);
   } else {
-    throw InternalError("psi dynamic_cast failed");
+    throw InternalError("psi dynamic_cast failed", __FILE__, __LINE__);
   }
     
   d_sharedState = sharedState;

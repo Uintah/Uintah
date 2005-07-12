@@ -168,6 +168,6 @@ void JWL::hydrostaticTempAdjustment(Patch::FaceType,
                                     CCVariable<double>&)
 { 
   throw InternalError( "ERROR:ICE:EOS:JWL: hydrostaticTempAdj() \n"
-                       " has not been implemented" );
+                       " has not been implemented", __FILE__, __LINE__ );
 }
 

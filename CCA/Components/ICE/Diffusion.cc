@@ -35,7 +35,7 @@ void scalarDiffusionOperator(DataWarehouse* new_dw,
   const Level* level = patch->getLevel();
   if (level->getIndex() > 0) {
     throw InternalError("AMRICE:scalarDiffusionOperator, computational footprint"
-                        " has not been tested " );
+                        " has not been tested ", __FILE__, __LINE__ );
   }
   
   SFCXVariable<double> q_X_FC;
@@ -196,7 +196,7 @@ void computeTauX( const Patch* patch,
   const Level* level = patch->getLevel();
   if (level->getIndex() > 0) {
     throw InternalError("AMRICE:computeTauX, computational footprint "
-                        " has not been tested " );
+                        " has not been tested ", __FILE__, __LINE__ );
   }
   
   double term1, term2, grad_1, grad_2;
@@ -325,7 +325,7 @@ void computeTauY( const Patch* patch,
   const Level* level = patch->getLevel();
   if (level->getIndex() > 0) {
     throw InternalError("AMRICE:computeTauY, computational footprint"
-                        " has not been tested " );
+                        " has not been tested ", __FILE__, __LINE__ );
   }
   
   double term1, term2, grad_1, grad_2;
@@ -453,7 +453,7 @@ void computeTauZ( const Patch* patch,
   const Level* level = patch->getLevel();
   if (level->getIndex() > 0) {
     throw InternalError("AMRICE:computeTauZ, computational footprint"
-                        " has not been tested " );
+                        " has not been tested ", __FILE__, __LINE__ );
   }
   double term1, term2, grad_1, grad_2;
   double grad_uvel, grad_vvel, grad_wvel;

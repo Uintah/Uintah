@@ -86,7 +86,7 @@ ElasticPlastic::ElasticPlastic(ProblemSpecP& ps,MPMLabel* Mlb,MPMFlags* Mflag)
     desc << "An error occured in the YieldConditionFactory that has \n"
          << " slipped through the existing bullet proofing. Please tell \n"
          << " Biswajit.  "<< endl;
-    throw ParameterNotFound(desc.str());
+    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
   d_stable = StabilityCheckFactory::create(ps);
@@ -98,7 +98,7 @@ ElasticPlastic::ElasticPlastic(ProblemSpecP& ps,MPMLabel* Mlb,MPMFlags* Mflag)
     desc << "An error occured in the PlasticityModelFactory that has \n"
          << " slipped through the existing bullet proofing. Please tell \n"
          << " Biswajit.  "<< endl;
-    throw ParameterNotFound(desc.str());
+    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
   d_damage = DamageModelFactory::create(ps);
@@ -107,7 +107,7 @@ ElasticPlastic::ElasticPlastic(ProblemSpecP& ps,MPMLabel* Mlb,MPMFlags* Mflag)
     desc << "An error occured in the DamageModelFactory that has \n"
          << " slipped through the existing bullet proofing. Please tell \n"
          << " Biswajit.  "<< endl;
-    throw ParameterNotFound(desc.str());
+    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
   
   d_eos = MPMEquationOfStateFactory::create(ps);
@@ -116,21 +116,21 @@ ElasticPlastic::ElasticPlastic(ProblemSpecP& ps,MPMLabel* Mlb,MPMFlags* Mflag)
     desc << "An error occured in the EquationOfStateFactory that has \n"
          << " slipped through the existing bullet proofing. Please tell \n"
          << " Biswajit.  "<< endl;
-    throw ParameterNotFound(desc.str());
+    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
   d_shear = ShearModulusModelFactory::create(ps);
   if (!d_shear) {
     ostringstream desc;
     desc << "ElasticPlastic::Error in shear modulus model factory" << endl;
-    throw ParameterNotFound(desc.str());
+    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
   
   d_melt = MeltingTempModelFactory::create(ps);
   if (!d_melt) {
     ostringstream desc;
     desc << "ElasticPlastic::Error in melting temp model factory" << endl;
-    throw ParameterNotFound(desc.str());
+    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
   
   setErosionAlgorithm();
@@ -755,7 +755,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       if (!(J > 0.0)) {
         cerr << getpid() 
              << "**ERROR** Negative Jacobian of deformation gradient" << endl;
-        throw ParameterNotFound("**ERROR**:ElasticPlastic");
+        throw ParameterNotFound("**ERROR**:ElasticPlastic", __FILE__, __LINE__);
       }
 
       // Calculate the current density and deformed volume
@@ -1361,7 +1361,7 @@ ElasticPlastic::computeDeltaGamma(const double& delT,
            << " dsigy/depdot = " << dsigy_depdot << " dsigy/dep= " << dsigy_dep 
            << " epdot = " << state->plasticStrainRate 
            << " ep = " << state->plasticStrain << endl;
-      throw ParameterNotFound("**ERROR**:ElasticPlastic: Found nan.");
+      throw ParameterNotFound("**ERROR**:ElasticPlastic: Found nan.", __FILE__, __LINE__);
     }
 
     // Update local plastic strain rate
@@ -1560,7 +1560,7 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       if (!(J > 0.0)) {
         cerr << getpid() 
              << "**ERROR** Negative Jacobian of deformation gradient" << endl;
-        throw ParameterNotFound("**ERROR**:ElasticPlastic:Implicit");
+        throw ParameterNotFound("**ERROR**:ElasticPlastic:Implicit", __FILE__, __LINE__);
       }
 
       // Calculate the current density and deformed volume
@@ -1905,7 +1905,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       if (!(J > 0.0)) {
         cerr << getpid() 
              << "**ERROR** Negative Jacobian of deformation gradient" << endl;
-        throw ParameterNotFound("**ERROR**:ElasticPlastic:Implicit");
+        throw ParameterNotFound("**ERROR**:ElasticPlastic:Implicit", __FILE__, __LINE__);
       }
 
       // Calculate the current density and deformed volume

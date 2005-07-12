@@ -55,7 +55,7 @@ Parallel::usingMPI()
    if( !determinedIfUsingMPI ) {
       cerr << "Must call determineIfRunningUnderMPI() before usingMPI().\n";
       throw InternalError( "Bad coding... call determineIfRunningUnderMPI()"
-			   " before usingMPI()" );
+			   " before usingMPI()", __FILE__, __LINE__ );
    }
    return ::usingMPI;
 }
@@ -108,7 +108,7 @@ Parallel::determineIfRunningUnderMPI( int argc, char** argv )
       // Empirical evidence points to 16 being the most threads
       // that we should use... (this isn't conclusive evidence)
       cerr << "PSE_MAX_THREADS is out of range 1..16\n";
-      throw InternalError( "PSE_MAX_THREADS is out of range 1..16\n" );
+      throw InternalError( "PSE_MAX_THREADS is out of range 1..16\n", __FILE__, __LINE__ );
     }
   }
   
@@ -153,7 +153,7 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
       cerr << "Must call determineIfRunningUnderMPI() " 
 	   << "before initializeManager().\n";
       throw InternalError( "Bad coding... call determineIfRunningUnderMPI()"
-			   " before initializeManager()" );
+			   " before initializeManager()", __FILE__, __LINE__ );
    }
 
    if( worldRank != -1 ) { // IF ALREADY INITIALIZED, JUST RETURN...
@@ -182,7 +182,7 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
 #ifdef __sgi
      if(Thread::isInitialized()){
        cerr << "Thread library initialization occurs before MPI_Init.  This causes problems\nwith MPI exit.  Look for and remove global Thread primitives.\n";
-       throw InternalError("Bad MPI Init");
+       throw InternalError("Bad MPI Init", __FILE__, __LINE__);
      }
 #endif
 
@@ -201,7 +201,7 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
        ostringstream msg;
        msg << "Provided MPI parallel support of " << provided 
 	   << " is not enough for the required level of " << required;
-       throw InternalError( msg.str() );
+       throw InternalError( msg.str(), __FILE__, __LINE__ );
      }
 #endif
 
@@ -271,7 +271,7 @@ ProcessorGroup*
 Parallel::getRootProcessorGroup()
 {
    if(!rootContext)
-      throw InternalError("Parallel not initialized");
+      throw InternalError("Parallel not initialized", __FILE__, __LINE__);
 
    return rootContext;
 }

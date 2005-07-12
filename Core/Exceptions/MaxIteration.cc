@@ -15,7 +15,9 @@ MaxIteration::MaxIteration(IntVector c,
                            const int count, 
                            const int n_passes,
                            const int L_indx, 
-                           const string mes)
+                           const string mes,
+                           const char* file,
+                           int line)
 {
   ostringstream s;
   s << " cell"<< c << ", Level " << L_indx
@@ -24,6 +26,8 @@ MaxIteration::MaxIteration(IntVector c,
   d_msg =  mes + s.str();
   
 #ifdef EXCEPTIONS_CRASH
+  cout << "A MaxIteration exception was thrown.\n";
+  cout << file << ":" << line << "\n";
   cout << d_msg << "\n";
 #endif
 }

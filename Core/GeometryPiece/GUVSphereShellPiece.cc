@@ -17,11 +17,11 @@ GUVSphereShellPiece::GUVSphereShellPiece(ProblemSpecP& ps)
   ps->require("origin",d_origin);
   ps->require("radius",d_radius);
   if ( d_radius <= 0.0)
-    SCI_THROW(ProblemSetupException("Input File Error: Sphere radius <= 0.0"));
+    SCI_THROW(ProblemSetupException("Input File Error: Sphere radius <= 0.0", __FILE__, __LINE__));
   ps->require("thickness_lipid",d_h_lipid);
   ps->require("thickness_cholesterol",d_h_cholesterol);
   if ( d_h_lipid <= 0.0 || d_h_cholesterol <= 0.0)
-    SCI_THROW(ProblemSetupException("Input File Error: Sphere thcknss <= 0."));
+    SCI_THROW(ProblemSetupException("Input File Error: Sphere thcknss <= 0.", __FILE__, __LINE__));
   for (ProblemSpecP child = ps->findBlock(); child != 0;
        child = child->findNextBlock()) {
     std::string zone_type = child->getNodeName();

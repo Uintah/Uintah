@@ -634,7 +634,7 @@ public:
       parent_which_A_dw = Task::ParentNewDW;
       break;
     default:
-      throw ProblemSetupException("Unknown data warehouse for A matrix");
+      throw ProblemSetupException("Unknown data warehouse for A matrix", __FILE__, __LINE__);
     }
     switch(which_b_dw){
     case Task::OldDW:
@@ -644,7 +644,7 @@ public:
       parent_which_b_dw = Task::ParentNewDW;
       break;
     default:
-      throw ProblemSetupException("Unknown data warehouse for b rhs");
+      throw ProblemSetupException("Unknown data warehouse for b rhs", __FILE__, __LINE__);
     }
     switch(which_guess_dw){
     case Task::OldDW:
@@ -654,7 +654,7 @@ public:
       parent_which_guess_dw = Task::ParentNewDW;
       break;
     default:
-      throw ProblemSetupException("Unknown data warehouse for initial guess");
+      throw ProblemSetupException("Unknown data warehouse for initial guess", __FILE__, __LINE__);
     }
     typedef typename Types::sol_type sol_type;
     R_label = VarLabel::create(A->getName()+" R", sol_type::getTypeDescription());
@@ -1223,7 +1223,7 @@ public:
           new_dw->restartTimestep();
         }else {
         throw ConvergenceFailure("CGSolve variable: "+X_label->getName(), 
-                          niter, e, params->tolerance);
+                          niter, e, params->tolerance,__FILE__,__LINE__);
         }
       }
     }
@@ -1278,7 +1278,7 @@ SolverParameters* CGSolver::readParameters(ProblemSpecP& params, const string& v
         } else if(norm == "LInfinity" || norm == "linfinity") {
           p->norm = CGSolverParams::LInfinity;
         } else {
-          throw ProblemSetupException("Unknown norm type: "+norm);
+          throw ProblemSetupException("Unknown norm type: "+norm, __FILE__, __LINE__);
         }
       }
       string criteria;
@@ -1288,7 +1288,7 @@ SolverParameters* CGSolver::readParameters(ProblemSpecP& params, const string& v
         } else if(criteria == "Relative" || criteria == "relative") {
           p->criteria = CGSolverParams::Relative;
         } else {
-          throw ProblemSetupException("Unknown criteria: "+criteria);
+          throw ProblemSetupException("Unknown criteria: "+criteria, __FILE__, __LINE__);
         }
       }
     }
@@ -1319,7 +1319,7 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
   ASSERTEQ(domtype, b->typeDescription()->getType());
   const CGSolverParams* cgparams = dynamic_cast<const CGSolverParams*>(params);
   if(!cgparams)
-    throw InternalError("Wrong type of params passed to cg solver!");
+    throw InternalError("Wrong type of params passed to cg solver!", __FILE__, __LINE__);
 
   Ghost::GhostType Around;
 
@@ -1365,7 +1365,7 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
     }
     break;
   default:
-    throw InternalError("Unknown variable type in scheduleSolve");
+    throw InternalError("Unknown variable type in scheduleSolve", __FILE__, __LINE__);
   }
 
   task->requires(which_A_dw, A, Ghost::None, 0);

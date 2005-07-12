@@ -37,7 +37,7 @@ SolverInterface* SolverFactory::create(ProblemSpecP& ps, const ProcessorGroup* w
     exit(1);
 #endif
   } else {
-    throw ProblemSetupException("Unknown solver.  Valid Solvers: CGSolver, DirectSolve, hypre");
+    throw ProblemSetupException("Unknown solver.  Valid Solvers: CGSolver, DirectSolve, hypre", __FILE__, __LINE__);
   }
 
   return solve;

@@ -197,7 +197,8 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
     numTimeIntegratorLevels = 3;
   }
   else {
-    throw ProblemSetupException("Integrator type is not defined "+d_timeIntegratorType);
+    throw ProblemSetupException("Integrator type is not defined "+d_timeIntegratorType,
+                                __FILE__, __LINE__);
   }
   db->getWithDefault("turbModelCalcFreq",d_turbModelCalcFreq,1);
   db->getWithDefault("turbModelCalcForAllRKSteps",d_turbModelRKsteps,true);

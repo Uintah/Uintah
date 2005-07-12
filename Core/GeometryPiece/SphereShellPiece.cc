@@ -20,9 +20,9 @@ SphereShellPiece::SphereShellPiece(ProblemSpecP& ps)
   ps->require("num_long",d_numLong);
   
   if ( d_radius <= 0.0)
-    SCI_THROW(ProblemSetupException("Input File Error: Sphere radius <= 0.0"));
+    SCI_THROW(ProblemSetupException("Input File Error: Sphere radius <= 0.0", __FILE__, __LINE__));
   if ( d_h <= 0.0)
-    SCI_THROW(ProblemSetupException("Input File Error: Sphere thcknss <= 0."));
+    SCI_THROW(ProblemSetupException("Input File Error: Sphere thcknss <= 0.", __FILE__, __LINE__));
 }
 
 SphereShellPiece::~SphereShellPiece()

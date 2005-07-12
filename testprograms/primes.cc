@@ -130,14 +130,14 @@ int Primes::factorize(unsigned long n, FactorType result)
 	    result[numFactors++]=primes[primeNumber];
 #if 0
 	    if(numFactors >= MaxFactors)
-		throw InternalError("Too many factors for this number");
+		throw InternalError("Too many factors for this number", __FILE__, __LINE__);
 #endif
 	    n/=primes[primeNumber];
 	} else {
 	    primeNumber++;
 #if 0
 	    if(primeNumber >= numPrimes)
-		throw InternalError("Must increase size of table in class Primes to factorize this number");
+		throw InternalError("Must increase size of table in class Primes to factorize this number", __FILE__, __LINE__);
 #endif
 	}
     }
