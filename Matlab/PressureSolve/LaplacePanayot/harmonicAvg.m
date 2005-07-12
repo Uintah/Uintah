@@ -23,7 +23,7 @@ function a = harmonicAvg(y,z)
 r = 0.0;
 
 switch (param.problemType)
-    % Problems with a=1
+    % Problems with a=1 (Laplace operator)
     case {'quadratic','sinsin','GaussianSource','Lshaped'},
         r = 1.0;
 
