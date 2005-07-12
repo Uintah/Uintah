@@ -33,7 +33,7 @@
 int Connection::RTTI = Rtti_Connection;
 
 Connection::Connection(PortIcon *pU, PortIcon *pP, const sci::cca::ConnectionID::pointer &connID, QCanvasView *cview)
-  : QCanvasPolygon(cview->canvas()), connID(connID), cv(cview), pUse(pU), pProvide(pP)
+  : QCanvasPolygon(cview->canvas()), cv(cview), pUse(pU), pProvide(pP), connID(connID)
 
 {
     resetPoints();
@@ -162,7 +162,7 @@ bool Connection::isConnectedTo(Module *who)
 
 
 MiniConnection::MiniConnection(QCanvasView *cv, QPointArray pa,
-                double scaleX, double scaleY)
+                               double scaleX, double scaleY)
   : QCanvasPolygon(cv->canvas())
 {
     scalePoints(&pa, scaleX, scaleY);
@@ -176,7 +176,7 @@ void MiniConnection::scalePoints(QPointArray *pa, double scaleX, double scaleY)
     this->setPoints(*pa);
 }
 
-void MiniConnection::drawShape(QPainter & p)
+void MiniConnection::drawShape(QPainter &p)
 {
     QPointArray par(Connection::NUM_DRAW_POINTS);
     Connection::drawConnection(p, points(), par);

@@ -64,7 +64,7 @@ public:
     virtual ~ModuleProgress() {}
     virtual void updateProgress(int p);
     virtual void updateProgress(int p, int totalSteps);
-    void setModule(Module *m) { mod = m; }
+    inline void setModule(Module *m) { mod = m; }
 
 protected:
     sci::cca::Services::pointer services;
@@ -88,11 +88,11 @@ public:
     QPoint usesPortPoint(int num);
     QPoint providesPortPoint(int num);
     PortIcon* getPort(const std::string &name, PortIcon::PortType type);
-    NetworkCanvasView* parent() const;
 
-    std::string moduleName() const;
-    std::string displayName() const;
-    sci::cca::ComponentID::pointer componentID() const;
+    inline NetworkCanvasView* parent() const { return viewWindow; }
+    inline std::string moduleName() const { return mName; }
+    inline std::string displayName() const { return dName; }
+    inline sci::cca::ComponentID::pointer componentID() const { return cid; }
 
     // defaults -- replace with framework properties?
     static const int PORT_DIST = 10;
@@ -151,26 +151,6 @@ private:
     bool hasUIPort;
     bool hasComponentIcon;
 };
-
-inline NetworkCanvasView* Module::parent() const
-{
-    return viewWindow;
-}
-
-inline sci::cca::ComponentID::pointer Module::componentID() const
-{
-    return cid;
-}
-
-inline std::string Module::moduleName() const
-{
-    return mName;
-}
-
-inline std::string Module::displayName() const
-{
-    return dName;
-}
 
 
 #endif
