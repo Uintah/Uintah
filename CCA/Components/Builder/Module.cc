@@ -79,6 +79,7 @@ void ModuleProgress::updateProgress(int p, int totalSteps)
     mod->repaint();
 }
 
+// TODO: sort out mName vs. unique instance name
 Module::Module(NetworkCanvasView *parent,
                const std::string &mName,
                const sci::cca::Services::pointer &services,
@@ -98,8 +99,8 @@ Module::Module(NetworkCanvasView *parent,
 #ifdef HAVE_TAO
     // TODO: find a better way to handle port detection for
     // Corba components
-    std::string componentName = mName.substr(0, mName.find('.'));
-    if ("Corba" == componentName || "Tao" == componentName) {
+    std::string componentClass = mName.substr(0, mName.find('.'));
+    if ("Corba" == componentClass || "Tao" == componentClass) {
         updatePorts();
     }
 #endif
@@ -149,7 +150,7 @@ Module::makePorts() {
         std::string loaderName;
         int nNodes = 1;
         sci::cca::TypeMap::pointer properties =
-            bs->getPortProperties(cid, "");
+            bs->getComponentProperties(cid);
         if (!properties.isNull()) {
             loaderName = properties->getString("LOADER NAME", loaderName);
             nNodes = properties->getInt("np", nNodes);
@@ -177,7 +178,8 @@ Module::makePorts() {
         modProgress = ModuleProgress::pointer(mp);
         progPortName = instanceName + "_moduleProgress";
         sci::cca::TypeMap::pointer props = services->createTypeMap();
-        services->addProvidesPort(modProgress, progPortName, "sci.cca.ports.Progress", props);
+        services->addProvidesPort(modProgress,
+            progPortName, "sci.cca.ports.Progress", props);
 
         QPalette pal = progress->palette();
         QColorGroup cg = pal.active();
@@ -269,6 +271,7 @@ Module::makePorts() {
             }
 
             try {
+std::cerr << "Module connect go in " << services->getComponentID()->getInstanceName() << std::endl;
                 bs->connect(services->getComponentID(), goPortName,
                     cid,  isSciPort ? "sci.go" : "go");
             }
@@ -301,7 +304,7 @@ Module::makePorts() {
             sci::cca::ports::ComponentIcon::pointer icon =
                 pidl_cast<sci::cca::ports::ComponentIcon::pointer>(p);
             if (icon.isNull()) {
-                std::cerr << "icon is not connected";
+              std::cerr << "ComponentIcon " << iconName << " is not connected." << std::endl;
             } else {
                 int totalSteps = icon->getProgressBar();
                 if (totalSteps != 0) {
@@ -339,6 +342,7 @@ Module::makePorts() {
                     type = pi->getType();
                     if (type == "sci.cca.ports.Progress") {
                         try {
+std::cerr << "Module connect progress in " << services->getComponentID()->getInstanceName() << std::endl;
                             bs->connect(cid, "progress", services->getComponentID(), progPortName);
                             progress->show();
                         }
@@ -365,7 +369,7 @@ Module::~Module()
             services->unregisterUsesPort(uiPortName);
         }
     }
-    catch (CCAException e) {
+    catch (const CCAException& e) {
         viewWindow->p2BuilderWindow->displayMsg(e.message());
     }
     try {
@@ -373,7 +377,7 @@ Module::~Module()
             services->unregisterUsesPort(goPortName);
         }
     }
-    catch (CCAException e) {
+    catch (const CCAException& e) {
         viewWindow->p2BuilderWindow->displayMsg(e.message());
     }
     try {
@@ -381,14 +385,18 @@ Module::~Module()
             services->unregisterUsesPort(iconName);
         }
     }
-    catch (CCAException e) {
+    catch (const CCAException& e) {
         viewWindow->p2BuilderWindow->displayMsg(e.message());
     }
-    try{
+    try {
         services->removeProvidesPort(progPortName);
     }
-    catch (CCAException e) {
+    catch (const CCAException& e) {
         viewWindow->p2BuilderWindow->displayMsg(e.message());
+    }
+
+    for (unsigned int i = 0; i < ports.size(); i++) {
+        delete ports[i];
     }
 }
 
@@ -513,7 +521,7 @@ void Module::stop()
 
 void Module::destroy()
 {
-  emit destroyModule(this);
+    emit destroyModule(this);
 }
 
 void Module::ui()
@@ -631,15 +639,16 @@ Module::updatePorts() {
                 services->registerUsesPort(uiPortName, "sci.cca.ports.UIPort",
                     sci::cca::TypeMap::pointer(0));
             }
-            catch (CCAException e) {
+            catch (const CCAException& e) {
                 viewWindow->p2BuilderWindow->displayMsg(e.message());
             }  
 
             try {
+std::cerr << "Module connect ui in " << services->getComponentID()->getInstanceName() << std::endl;
                 bs->connect(services->getComponentID(), uiPortName,
                     cid, isSciPort ? "sci.ui" : "ui");
             }
-            catch (CCAException e) {
+            catch (const CCAException& e) {
                 viewWindow->p2BuilderWindow->displayMsg(e.message());
             }  
         }
@@ -663,4 +672,4 @@ Module::updatePorts() {
         services->releasePort("cca.BuilderService");
     }
 }
-  
+

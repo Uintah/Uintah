@@ -54,13 +54,12 @@ public:
     Connection(PortIcon *pU, PortIcon* pP, const sci::cca::ConnectionID::pointer &connID, QCanvasView *cv);
     void resetPoints();
     bool isConnectedTo(Module *who);
-    sci::cca::ConnectionID::pointer getConnectionID();
+    sci::cca::ConnectionID::pointer getConnectionID() const;
     void highlight();
     void setDefault();
     PortIcon* usesPort() const;
     PortIcon* providesPort() const;
-    // TEK 
-    sci::cca::ConnectionID::pointer connID;
+
     // TEK
     virtual std::string getConnectionType();
 
@@ -83,10 +82,11 @@ private:
     QCanvasView *cv;
     PortIcon *pUse, *pProvide;
     std::string uPortName, pPortName;
+    sci::cca::ConnectionID::pointer connID;
 };
 
 
-inline sci::cca::ConnectionID::pointer Connection::getConnectionID()
+inline sci::cca::ConnectionID::pointer Connection::getConnectionID() const
 {
   return connID;
 }

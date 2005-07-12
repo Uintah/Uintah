@@ -63,6 +63,11 @@ class QLabel;
 namespace SCIRun {
 
 class BuilderWindow;
+class MenuTree;
+
+typedef std::map<std::string, int> IntMap;
+typedef std::map<std::string, MenuTree*> MenuMap;
+
 /**
  * \class MenuTree
  *
@@ -80,6 +85,7 @@ public:
     void coalesce();
     void populateMenu( QPopupMenu* );
     void clear();
+    // create menu based on port type? -- from builder service
 
     sci::cca::ComponentClassDescription::pointer cd;
 
@@ -102,18 +108,15 @@ class BuilderWindow : public QMainWindow,
 {
     Q_OBJECT
 public:
-    typedef std::map<std::string, int> IntMap;
-    typedef std::map<std::string, MenuTree*> MenuMap;
-
     BuilderWindow(const sci::cca::Services::pointer& services,
                   QApplication *app);
     virtual ~BuilderWindow();
     void instantiateComponent(
         const sci::cca::ComponentClassDescription::pointer &);
-    // to keep bridge code working...
-    Module* instantiateBridgeComponent(const std::string& className,
-                                       const std::string& type,
-                                       const std::string& loaderName);
+
+    void instantiateBridgeComponent(const std::string& className,
+                                    const std::string& type,
+                                    const std::string& loaderName);
     // From sci::cca::ComponentEventListener
     virtual void componentActivity(
         const sci::cca::ports::ComponentEvent::pointer &e);
@@ -122,8 +125,10 @@ public:
     void buildRemotePackageMenus(
         const sci::cca::ports::ComponentRepository::pointer &reg,
         const std::string &frameworkURL);
+    void loadFile();
+
     QPopupMenu* componentContextMenu() const { return componentMenu; }
-    QApplication* application() const { return app; }
+    const QApplication* application() const { return app; }
     MenuMap* packageMenus() { return &menus; }
 
 public slots:
@@ -170,7 +175,7 @@ private:
     QPopupMenu *componentMenu;
     //QPopupMenu *loaderMenu;
 
-    QString filename;
+    std::string filename;
     sci::cca::Services::pointer services;
     std::vector<QCanvasRectangle*> miniRect;
     //std::vector<sci::cca::ComponentID::pointer> windows;

@@ -72,14 +72,11 @@ void myBuilderPort::setServices(const sci::cca::Services::pointer& svc)
       new QSplashScreen(QPixmap(path), Qt::WStyle_StaysOnTop);
   splash->show();
 
-  std::cerr << "creating builderwindow" << std::endl;
   builder = new BuilderWindow(services, app);
   splash->finish(builder); // wait for a QMainWindow to show
-  std::cerr << "builderwindow created" << std::endl;
 
   builder->addReference();
   builder->show();
-  std::cerr << "builderwindow is shown" << std::endl;
   delete splash;
 #ifdef QT_THREAD_SUPPORT
   app->unlock();
@@ -113,7 +110,9 @@ Builder::~Builder()
 
 void Builder::setServices(const sci::cca::Services::pointer& services)
 {
+#if DEBUG
     std::cerr << "Builder::setServices" << std::endl;
+#endif
     builderPort.setServices(services);
     sci::cca::TypeMap::pointer props = services->createTypeMap();
     myBuilderPort::pointer bp(&builderPort);
@@ -122,17 +121,20 @@ void Builder::setServices(const sci::cca::Services::pointer& services)
     services->registerUsesPort("builder",
                                "sci.cca.ports.BuilderPort", props);
 
-    sci::cca::ports::BuilderService::pointer builder =
-        pidl_cast<sci::cca::ports::BuilderService::pointer>(
-            services->getPort("cca.BuilderService")
-        );
-    if (builder.isNull()) {
-        std::cerr << "Fatal Error: Cannot find builder service\n";
-        return;
-    } 
-    //do not delete the following line	
-    //builder->registerServices(services);
-    services->releasePort("cca.BuilderService"); 
+// The following lines are not required until
+// BuilderService::registerServices is implemented.
+//
+//     sci::cca::ports::BuilderService::pointer builder =
+//         pidl_cast<sci::cca::ports::BuilderService::pointer>(
+//             services->getPort("cca.BuilderService")
+//         );
+//     if (builder.isNull()) {
+//         std::cerr << "Fatal Error: Cannot find builder service\n";
+//         return;
+//     } 
+//     //do not delete the following line	
+//     //builder->registerServices(services);
+//     services->releasePort("cca.BuilderService"); 
 }
 
 } // end namespace SCIRun

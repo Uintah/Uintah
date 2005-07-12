@@ -44,6 +44,7 @@
 
 using namespace SCIRun;
 
+// TODO: filter menu for type, find a better way to show port type
 PortIcon::PortIcon(Module *module, const std::string& model,
                    const std::string& type, const std::string &name,
                    PortType pType, const QRect &r, const int num,
@@ -89,8 +90,7 @@ PortIcon::PortIcon(Module *module, const std::string& model,
     }
 
     if (! s.empty() ) {
-        std::map<std::string, MenuTree*> *menus =
-            module->parent()->p2BuilderWindow->packageMenus();
+        MenuMap *menus = module->parent()->p2BuilderWindow->packageMenus();
         (*menus)[s]->populateMenu(pMenu);
     } else {
         pMenu->hide();
