@@ -171,7 +171,6 @@ usage( const std::string & message,
 int
 main( int argc, char** argv )
 {
-  throw InvalidGrid("omg we're all gonna die!!!",__FILE__,__LINE__);
 #ifdef USE_TAU_PROFILING
 
   // WARNING:
@@ -614,7 +613,7 @@ main( int argc, char** argv )
     
     cerrLock.lock();
     cerr << Uintah::Parallel::getMPIRank() << " Caught exception: " << e.message() << '\n';
-    if(e.stackTrace())
+    if(e.stackTrace() && Uintah::Parallel::getMPIRank() == 0)
       cerr << "Stack trace: " << e.stackTrace() << '\n';
     cerrLock.unlock();
     thrownException = true;
