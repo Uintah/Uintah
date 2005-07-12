@@ -103,6 +103,8 @@ public:
   void addChild(Module* child, int x, int y, bool reposition);
   virtual void connectionActivity(const sci::cca::ports::ConnectionEvent::pointer &e);
 
+  void removeModules();
+
 public slots:
     void removeModule(Module *);
 
