@@ -114,9 +114,9 @@ public:
     void instantiateComponent(
         const sci::cca::ComponentClassDescription::pointer &);
 
-    void instantiateBridgeComponent(const std::string& className,
-                                    const std::string& type,
-                                    const std::string& loaderName);
+    Module* instantiateBridgeComponent(const std::string& className,
+                                       const std::string& type,
+                                       const std::string& loaderName);
     // From sci::cca::ComponentEventListener
     virtual void componentActivity(
         const sci::cca::ports::ComponentEvent::pointer &e);

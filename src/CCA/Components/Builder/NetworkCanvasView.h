@@ -54,13 +54,14 @@
 
 #include <qcanvas.h>
 
+typedef std::map<std::string, Module*> ModuleMap;
+
 class NetworkCanvasView
     : public QCanvasView,
       public sci::cca::ports::ConnectionEventListener
 {
   Q_OBJECT
 public:
-
   NetworkCanvasView(BuilderWindow* p2BuilderWindow,
                     QCanvas* canvas, QWidget* parent,
                     const sci::cca::Services::pointer &services);
@@ -70,10 +71,16 @@ public:
                     int x, int y,
                     const sci::cca::ComponentID::pointer &cid,
                     bool reposition);
-  std::vector<Module*> getModules();
+  Module* getModule(const std::string &instanceName) const;
+  inline const ModuleMap* getModules() const { return &modules; }
 
-  void addConnection(Module *m1, const std::string & portname1,
-                     Module *m2, const std::string & portname2); 
+  void connectComponents(Module *mUses, const std::string &pUses,
+                         Module *mProvides, const std::string &pProvides); 
+
+  void addConnection(Module *mUses, const std::string &pUses,
+                     Module *mProvides, const std::string &pProvides,
+                     sci::cca::ConnectionID::pointer connID);
+
   void removeConnection(QCanvasItem *c);
 
   //Bridge:
@@ -86,8 +93,10 @@ public:
                                PortIcon::PortType);
   void clearPossibleConnections();
   void removeAllConnections(Module *module);
+  inline const std::vector<Connection*>& getConnections() const { return connections; }
 
-  std::vector<Connection*> getConnections();
+  //void addPendingConnection(const sci::cca::ComponentID::pointer &uCid, const std::string &pUses, const sci::cca::ComponentID::pointer &uCid, const std::string pProvides);
+
   // make this private?
   BuilderWindow* p2BuilderWindow;
 
@@ -95,7 +104,7 @@ public:
   virtual void connectionActivity(const sci::cca::ports::ConnectionEvent::pointer &e);
 
 public slots:
-  void removeModule(Module *);
+    void removeModule(Module *);
 
 protected:
   void contentsMousePressEvent(QMouseEvent*);
@@ -119,22 +128,14 @@ private:
   PortIcon::PortType porttype;
   std::string portname;
 
-  std::vector<Module*> modules;
+  ModuleMap modules;
+  //std::stack<sci::cca::ConnectionID::pointer> pendingConnections;
   std::vector<Connection*> connections;
   std::vector<Connection*> possibleConns;
   sci::cca::Services::pointer services;
+
+  const static int TXT_OFFSET = 4;
 };
-
-
-inline std::vector<Module*> NetworkCanvasView::getModules()
-{
-    return modules;
-}
-
-inline std::vector<Connection*> NetworkCanvasView::getConnections()
-{
-    return connections;
-}
 
 inline void NetworkCanvasView::viewportResizeEvent(QResizeEvent* p2QResizeEvent)
 {

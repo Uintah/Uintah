@@ -39,6 +39,8 @@
  */
 
 #include <sci_defs/mpi_defs.h>
+#include <sci_defs/ruby_defs.h>
+
 #include <CCA/Components/Builder/BuilderWindow.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/spec/cca_sidl.h>
@@ -166,13 +168,13 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services,
   : QMainWindow(0, "SCIRun", WDestructiveClose | WType_TopLevel),
     services(services)
 {
+std::cerr << "BuilderWindow::BuilderWindow" << std::endl;
     addReference(); // Do something better than this! - used because of memory leak? (AK)
 
 #if !defined (_WIN32) && !defined (__APPLE__)
     // add enhanced *nix style support
     QApplication::setStyle( new QMotifPlusStyle(TRUE) );
 #endif
-
     menuBar()->setFrameStyle(QFrame::Raised | QFrame::MenuBarPanel);
     QColor bgcolor(0, 51, 102);
     bFont = new QFont(this->font().family(), 11);
@@ -228,6 +230,7 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services,
         std::string url = tm->getString("url", "");
         displayMsg("Framework URL: " + url);
         services->releasePort("cca.FrameworkProperties");
+        filename = tm->getString("network file", "");
     }
     displayMsg("----------------------");
 
@@ -247,8 +250,6 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services,
     setupHelpActions();
     buildPackageMenus();
 
-    statusBar()->message("SCIRun2 ready");
-
     sci::cca::ports::ComponentEventService::pointer ces =
         pidl_cast<sci::cca::ports::ComponentEventService::pointer>(
             services->getPort("cca.ComponentEventService")
@@ -261,8 +262,12 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services,
             listener, true);
         services->releasePort("cca.ComponentEventService");
     }
+
+    statusBar()->message("SCIRun2 ready");
     updateMiniView();
-    filename = QString::null;
+    if (! filename.empty()) {
+        loadFile();
+    }
 }
 
 BuilderWindow::~BuilderWindow()
@@ -515,9 +520,8 @@ void BuilderWindow::buildPackageMenus()
             services->getPort("cca.ComponentRepository")
         );
     if (reg.isNull()) {
-        displayMsg("Error: cannot find component registry, not building component menus.");
+      displayMsg("Error: cannot find component registry, not building component menus.");
         unsetCursor();
-        statusBar()->clear();
         return;
     }
     std::vector<sci::cca::ComponentClassDescription::pointer> list =
@@ -588,27 +592,30 @@ void BuilderWindow::writeFile()
 {
     QCanvasItemList tempQCL = miniCanvas->allItems();
     setCursor(Qt::WaitCursor);
-    std::ofstream saveOutputFile(filename);
+    std::ofstream saveOutputFile(filename.c_str());
 
-    std::vector<Module*> saveModules = networkCanvasView->getModules();
+    const ModuleMap *modules = networkCanvasView->getModules();
+    std::vector<Module*> saveModules;
     std::vector<Connection*> saveConnections = networkCanvasView->getConnections();
 
-    saveOutputFile << saveModules.size() << std::endl;
+    saveOutputFile << modules->size() << std::endl;
     saveOutputFile << saveConnections.size() << std::endl;
 
     if (saveOutputFile.is_open()) {
-        for (unsigned int j = 0; j < saveModules.size(); j++) {
-            saveOutputFile << saveModules[j]->moduleName() << std::endl;
-            saveOutputFile << saveModules[j]->x() << std::endl;
-            saveOutputFile << saveModules[j]->y() << std::endl;
+        for (ModuleMap::const_iterator iter = modules->begin(); iter != modules->end(); iter++) {
+            saveOutputFile << iter->second->componentID()->getInstanceName() << std::endl;
+            saveOutputFile << iter->second->x() << std::endl;
+            saveOutputFile << iter->second->y() << std::endl;
+            saveModules.push_back(iter->second);
         }
-        for (unsigned int k = 0; k < saveConnections.size(); k++) {
-            //Module* getProvidesModule();
 
+        // inefficient (O(n^2)), but will change with improvements to network file format
+        for (unsigned int k = 0; k < saveConnections.size(); k++) {
             Module* um = saveConnections[k]->usesPort()->module();
             Module* pm = saveConnections[k]->providesPort()->module();
             unsigned int iu = 0;
             unsigned int ip = 0;
+
             for (unsigned int i = 0; i < saveModules.size();i++) {
                 if (saveModules[i] == um) {
                     iu = i;
@@ -628,17 +635,17 @@ void BuilderWindow::writeFile()
 
 void BuilderWindow::save()
 {
-    if (filename.isEmpty()) {
-    QString fn = QFileDialog::getSaveFileName(QString::null,
-                          "Network File (*.net)", this);
+    if (filename.empty()) {
+        QString fn = QFileDialog::getSaveFileName(QString::null,
+            "Network File (*.net)", this);
         if (fn.isEmpty()) {
             statusBar()->message("Saving aborted", 2000);
         } else {
             if (fn.endsWith(".net")) {
-                filename = fn;
+                filename = fn.ascii();
             } else {
                 QString fnExt = fn + ".net";
-                filename = fnExt;
+                filename = fnExt.ascii();
             }
             writeFile();
         }
@@ -653,10 +660,10 @@ void BuilderWindow::saveAs()
         statusBar()->message("Saving aborted", 2000);
     } else {
         if (fn.endsWith(".net")) {
-            filename = fn;
+            filename = fn.ascii();
         } else {
             QString fnExt = fn + ".net";
-            filename = fnExt;
+            filename = fnExt.ascii();
         }
         writeFile();
     }
@@ -665,9 +672,6 @@ void BuilderWindow::saveAs()
 void BuilderWindow::load()
 {
     setCursor(Qt::WaitCursor);
-
-    std::vector<Module*> grab_latest_Modules;
-    std::vector<Module*> ptr_table;
     QString fn = QFileDialog::getOpenFileName(QString::null,
                                               "Network File (*.net)",
                                               this);
@@ -675,65 +679,91 @@ void BuilderWindow::load()
         unsetCursor();
         return;
     }
+    filename = fn.ascii();
+    loadFile();
 
-    filename = fn;
-    std::ifstream is( fn ); 
+    statusBar()->message("Loading done.", 4000);
+    unsetCursor();
+    return;
+}
 
-    int load_Modules_size = 0;
-    int load_Connections_size = 0;
-    std::string tmp_moduleName;
-    int tmp_moduleName_x;
-    int tmp_moduleName_y;
+void
+BuilderWindow::loadFile()
+{
+    if (filename.empty()) {
+        displayMsg("Error: cannot load file with empty file name.");
+        return;
+    }
+    std::ifstream is( filename.c_str() ); 
 
-    is >> load_Modules_size >> load_Connections_size;
-    std::cout<<"load_Modules_size"<<load_Modules_size<<std::endl;
-    std::cout<<"load_Connections_size"<<load_Connections_size<<std::endl;
-    for (int i = 0; i < load_Modules_size; i++) {
-        is >> tmp_moduleName >> tmp_moduleName_x >> tmp_moduleName_y;
+    int numMod = 0;
+    int numConn = 0;
+    std::string modName;
+    int modName_x;
+    int modName_y;
+    std::vector<sci::cca::ComponentID::pointer> cidTable;
 
-        sci::cca::ports::BuilderService::pointer builder =
-            pidl_cast<sci::cca::ports::BuilderService::pointer>(
-                services->getPort("cca.BuilderService")
-            );
-        if (builder.isNull()) {
-            displayMsg("Error: Cannot find builder service.");
+    is >> numMod >> numConn;
+    std::cout << "numMod=" << numMod << std::endl;
+    std::cout << "numConn=" << numConn << std::endl;
+
+    sci::cca::ports::BuilderService::pointer builder =
+        pidl_cast<sci::cca::ports::BuilderService::pointer>(
+            services->getPort("cca.BuilderService"));
+    if (builder.isNull()) {
+        displayMsg("Error: Cannot find builder service.");
+        return;
+    }
+
+    // If there's a error creating a component, stop trying to load
+    // the network file until there are improvements to the
+    // network file format.
+    try {
+        for (int i = 0; i < numMod; i++) {
+            is >> modName >> modName_x >> modName_y;
+
+            sci::cca::ComponentID::pointer cid;
+            TypeMap *tm = new TypeMap;
+            tm->putInt("x", modName_x);
+            tm->putInt("y", modName_y);
+
+            cid = builder->createInstance(modName,
+                modName, sci::cca::TypeMap::pointer(tm));
+
+            if (! cid.isNull()) {
+                if (modName != "SCIRun.Builder") {
+                    cidTable.push_back(cid);
+                }
+            }
+        }
+
+        if (cidTable.size() < 2) {
+            // report error
+            unsetCursor();
             return;
         }
 
-        sci::cca::ComponentID::pointer cid;
-        try {
-            cid = builder->createInstance(tmp_moduleName,
-                tmp_moduleName, sci::cca::TypeMap::pointer(0));
-
-            if (tmp_moduleName != "SCIRun.Builder") {
-                networkCanvasView->addModule(tmp_moduleName, tmp_moduleName_x, tmp_moduleName_y, cid, false); //fixed position
-            }
-            grab_latest_Modules = networkCanvasView->getModules();
-            ptr_table.push_back( grab_latest_Modules[grab_latest_Modules.size()-1] );
-
-            for (int i = 0; i < load_Connections_size; i++) {
-                int iu, ip;
-                std::string up, pp;
-                is >> iu >> up >> ip >> pp;
-                networkCanvasView->addConnection(ptr_table[iu], up, ptr_table[ip], pp);
-            }
-            statusBar()->message("Loading done.", 4000);
-        }
-        catch(CCAException e) {
-            displayMsg(e.message());
-        }
-        catch(const Exception& e) {
-            displayMsg(e.message());
-        }
-        catch(...) {
-            displayMsg("Caught unexpected exception while loading network.");
+        for (int i = 0; i < numConn; i++) {
+            int iu, ip;
+            std::string up, pp;
+            is >> iu >> up >> ip >> pp;
+            //networkCanvasView->addPendingConnection(cidTable[iu], up, cidTable[ip], pp);
+            sci::cca::ConnectionID::pointer connID =
+                builder->connect(cidTable[iu], up, cidTable[ip], pp);
         }
     }
+    catch(const CCAException &e) {
+        displayMsg(e.message());
+    }
+    catch(const Exception &e) {
+        displayMsg(e.message());
+    }
+    catch(...) {
+        displayMsg("Caught unexpected exception while loading network.");
+    }
+
     services->releasePort("cca.BuilderService");
     is.close();
-
-    unsetCursor();
-    return;
 }
 
 void BuilderWindow::insert()
@@ -746,14 +776,12 @@ void BuilderWindow::clear()
     std::cerr << "BuilderWindow::clear(): deleting the following: " << std::endl;
     setCursor(Qt::WaitCursor);
 
-    // assign modules to local variable
-    std::vector<Module*> clearModules = networkCanvasView->getModules();
-
-    for (unsigned int j = 0; j < clearModules.size(); j++) {
-        std::cerr << "modules->getName = " <<
-            clearModules[j]->moduleName() << std::endl;
-        clearModules[j]->destroy();
+    const ModuleMap *modules = networkCanvasView->getModules();
+    for (ModuleMap::const_iterator iter = modules->begin();
+            iter != modules->end(); iter++) {
+        iter->second->destroy();
     }
+
     unsetCursor();
 }
 
@@ -803,8 +831,7 @@ void BuilderWindow::instantiateComponent(
 
     sci::cca::ports::BuilderService::pointer builder =
         pidl_cast<sci::cca::ports::BuilderService::pointer>(
-            services->getPort("cca.BuilderService")
-        );
+            services->getPort("cca.BuilderService"));
     if (builder.isNull()) {
         std::cerr << "Fatal Error: Cannot find builder service" << std::endl;
         unsetCursor();
@@ -813,7 +840,6 @@ void BuilderWindow::instantiateComponent(
 
     TypeMap *tm = new TypeMap;
     tm->putString("LOADER NAME", cd->getLoaderName());
-    tm->putString("cca.className", cd->getComponentModelName()); // component type
 
     sci::cca::ComponentID::pointer cid;
     try {
@@ -828,10 +854,7 @@ void BuilderWindow::instantiateComponent(
             statusBar()->clear();
         }
     }
-    catch(CCAException e) {
-        displayMsg(e.message());
-    }
-    catch(const Exception& e) {
+    catch(const CCAException &e) {
         displayMsg(e.message());
     }
     catch(...) {
@@ -841,11 +864,13 @@ void BuilderWindow::instantiateComponent(
     unsetCursor();
 }
 
-Module* BuilderWindow::instantiateBridgeComponent(
-    const std::string& className,
-    const std::string& type,
-    const std::string& loaderName)
+// TODO: update
+Module*
+BuilderWindow::instantiateBridgeComponent(const std::string& className,
+                                          const std::string& type,
+                                          const std::string& loaderName)
 {
+#ifdef HAVE_RUBY
     statusBar()->message("Instantating component " + className, 2000);
     setCursor(Qt::WaitCursor);
 
@@ -857,7 +882,7 @@ Module* BuilderWindow::instantiateBridgeComponent(
     if (builder.isNull()) {
         displayMsg("Error: Cannot find builder service.");
         unsetCursor();
-        return NULL;
+        return 0;
     }
 
     TypeMap *tm = new TypeMap;
@@ -871,13 +896,10 @@ Module* BuilderWindow::instantiateBridgeComponent(
         if (cid.isNull()) {
             statusBar()->message("Instantiate failed.");
             unsetCursor();
-            return NULL;
         }
     }
-    catch(CCAException e) {
+    catch(const CCAException &e) {
         displayMsg(e.message());
-        unsetCursor();
-        statusBar()->clear();
     }
     catch(const Exception& e) {
         displayMsg(e.message());
@@ -886,23 +908,21 @@ Module* BuilderWindow::instantiateBridgeComponent(
         displayMsg("Caught unexpected exception while creating bridge.");
     }
 
-    services->releasePort("cca.BuilderService");
-
     if (className != "SCIRun.Builder") {
+        unsetCursor();
         int x = 20;
         int y = 20;
         // reposition module
         return (networkCanvasView->addModule(className, x, y, cid, true));
     }
+    services->releasePort("cca.BuilderService");
     unsetCursor();
-    return NULL;
+#endif
+    return 0;
 }
 
 void BuilderWindow::componentActivity(const sci::cca::ports::ComponentEvent::pointer& e)
 {
-    if (e->getComponentID()->getInstanceName() == "QtBuilder") {
-        return;
-    }
     if (e->getComponentID()->getInstanceName().find("SCIRun.Builder")
             != std::string::npos) {
         std::cerr << "Got builder window: " <<
@@ -910,24 +930,21 @@ void BuilderWindow::componentActivity(const sci::cca::ports::ComponentEvent::poi
         return;
     }
 
-    bool update = true;
-    //std::cerr << "BuilderWindow::componentActivity: " << e->getComponentID()->getInstanceName() << " " << e->getEventType() << std::endl;
     if (e->getEventType() == sci::cca::ports::ComponentInstantiated) {
-        std::vector<Module*> modules = networkCanvasView->getModules();
-        for (std::vector<Module*>::iterator iter = modules.begin();
-            iter != modules.end(); iter++) {
-            if ((*iter)->componentID()->getInstanceName() ==
-                    e->getComponentID()->getInstanceName()) {
-                update = false;
-                break;
+        sci::cca::TypeMap::pointer tm = e->getComponentProperties();
+        if (! tm.isNull()) {
+            bool isBridge = tm->getBool("bridge", false);
+            // deal with Bridges later
+            if (isBridge) {
+                std::cerr << "Bridge!!!" << std::endl;
+                return;
             }
         }
-
-        if (update) {
+        Module *module = networkCanvasView->getModule(e->getComponentID()->getInstanceName());
+        if (module == 0) {
             sci::cca::ports::BuilderService::pointer builder =
                 pidl_cast<sci::cca::ports::BuilderService::pointer>(
-                    services->getPort("cca.BuilderService")
-                );
+                    services->getPort("cca.BuilderService"));
             if (builder.isNull()) {
                 displayMsg("Error: Cannot find builder service.");
                 return;
@@ -936,19 +953,15 @@ void BuilderWindow::componentActivity(const sci::cca::ports::ComponentEvent::poi
             int x = 20;
             int y = 20;
             // reposition module
-            networkCanvasView->addModule(
+            module = networkCanvasView->addModule(
                 e->getComponentID()->getInstanceName(),
                 x, y, e->getComponentID(), true);
             services->releasePort("cca.BuilderService");
         }
     } else if (e->getEventType() == sci::cca::ports::ComponentDestroyed) {
-        std::vector<Module*> modules = networkCanvasView->getModules();
-        for (std::vector<Module*>::iterator iter = modules.begin();
-            iter != modules.end(); iter++) {
-            if ((*iter)->componentID()->getInstanceName() ==
-                    e->getComponentID()->getInstanceName()) {
-                networkCanvasView->removeModule(*iter);
-            }
+        Module *module = networkCanvasView->getModule(e->getComponentID()->getInstanceName());
+        if (module) {
+            networkCanvasView->removeModule(module);
         }
     }
 }
@@ -970,44 +983,42 @@ void BuilderWindow::updateMiniView()
     QCanvasItemList tempQCL = miniCanvas->allItems();
 
     for (unsigned int i = 0; i < tempQCL.size(); i++) {
-    delete tempQCL[i];
+        delete tempQCL[i];
     }
-  
+                                                                                            
     // assign modules to local variable
-    std::vector<Module*> modules = networkCanvasView->getModules();
+    const ModuleMap *modules = networkCanvasView->getModules();
     std::vector<Connection*> connections = networkCanvasView->getConnections();
-
+                                                                                            
     double scaleH = double( networkCanvas->width() ) / miniCanvas->width();
     double scaleV = double( networkCanvas->height() ) / miniCanvas->height();
-
+                                                                                            
     QCanvasRectangle *viewableRect = new QCanvasRectangle(
         int( networkCanvasView->contentsX() / scaleH ),
         int( networkCanvasView->contentsY() / scaleV ),
         int( networkCanvasView->visibleWidth() / scaleH ),
         int( networkCanvasView->visibleHeight() / scaleV ),
-        miniCanvas
-    );
+        miniCanvas);
     viewableRect->show();
-
-    for (unsigned int i = 0; i < modules.size(); i++) {
-    QPoint pm = modules[i]->posInCanvas();
-    QCanvasRectangle *rect = new QCanvasRectangle(
-        int( pm.x() / scaleH ),
-        int( pm.y() / scaleV ),
-        int( modules[i]->width() / scaleH ),
-        int( modules[i]->height() / scaleV ),
-        miniCanvas
-    );
-    rect->setBrush( Qt::white );
-    rect->show();
+                                                                                            
+    for (ModuleMap::const_iterator iter = modules->begin(); iter != modules->end(); iter++) {
+        QPoint pm = iter->second->posInCanvas();
+        QCanvasRectangle *rect = new QCanvasRectangle(
+            int( pm.x() / scaleH ),
+            int( pm.y() / scaleV ),
+            int( iter->second->width() / scaleH ),
+            int( iter->second->height() / scaleV ),
+            miniCanvas);
+        rect->setBrush( Qt::white );
+        rect->show();
     }
-
+                                                                                            
     for (unsigned int j = 0; j < connections.size(); j++) {
         MiniConnection *mc =
             new MiniConnection(miniView, connections[j]->points(), scaleH, scaleV);
         mc->show();
     }
-
+                                                                                            
     miniCanvas->update();
 }
 
@@ -1046,12 +1057,12 @@ void BuilderWindow::addLoader()
         std::string path = dialog->path();
         std::string copies = dialog->copies();
 
-	//this is based on the assumption that ploader & SCIrun2 Framework both have MPI or
-	//neither of them has it. In the long run, this is not the case, and it should be changed.
+    //this is based on the assumption that ploader & SCIrun2 Framework both have MPI or
+    //neither of them has it. In the long run, this is not the case, and it should be changed.
 #ifdef HAVE_MPI
         std::string loaderPath="'cd "+path+" && mpirun -np "+copies+" "+path+"/ploader'";
 #else
-	std::string loaderPath="'cd "+path+" && "+path+"/ploader'";
+    std::string loaderPath="'cd "+path+" && "+path+"/ploader'";
 #endif 
 
 
@@ -1145,14 +1156,12 @@ void BuilderWindow::addSidlXmlPath()
     SSIDL::array1<std::string> sArray = tm->getStringArray("sidl_xml_path", sArray);
     sArray.push_back(dir);
     tm->putStringArray("sidl_xml_path", sArray);
-    fwkProperties->setProperties(tm);
 
     services->releasePort("cca.FrameworkProperties");
 
     sci::cca::ports::ComponentRepository::pointer reg =
     pidl_cast<sci::cca::ports::ComponentRepository::pointer>(
-        services->getPort("cca.ComponentRepository")
-    );
+        services->getPort("cca.ComponentRepository"));
     if (reg.isNull()) {
         std::cerr << "Error: cannot find component repository" << std::endl;
         return;
