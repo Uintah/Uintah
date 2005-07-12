@@ -162,7 +162,7 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
   BC_doing << "get_rho_micro: Which_var " << which_Var << endl;
   
   if( which_Var !="rho_micro" && which_Var !="sp_vol" ){
-    throw InternalError("setBC (pressure): Invalid option for which_var");
+    throw InternalError("setBC (pressure): Invalid option for which_var", __FILE__, __LINE__);
   }
   
   Vector gravity = sharedState->getGravity(); 
@@ -678,7 +678,7 @@ void is_BC_specified(const ProblemSpecP& prob_spec, string variable)
       warn <<"\n__________________________________\n"  
            << "ERROR: The boundary condition for ( " << variable
            << " ) was not specified on face " << face["side"] << endl;
-      throw ProblemSetupException(warn.str());
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   }
 }
@@ -716,7 +716,7 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
              << "The boundary condition machinery essentially treats 'all' and '0' as two separate materials, \n"
              << "setting the boundary conditions twice on each face.  Set BCType id = '0' \n" 
              << " Face:  " << face["side"] << " BCType " << bc_type["label"]<< endl;
-        throw ProblemSetupException(warn.str());
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }
     }
   }

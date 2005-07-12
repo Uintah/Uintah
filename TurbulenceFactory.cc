@@ -23,14 +23,14 @@ Turbulence* TurbulenceFactory::create(ProblemSpecP& ps, SimulationStateP& shared
     if(child){
       std::string turbulence_model;
       if(!child->getAttribute("model",turbulence_model))
-        throw ProblemSetupException("No model for turbulence"); 
+        throw ProblemSetupException("No model for turbulence", __FILE__, __LINE__); 
     
       if (turbulence_model == "Smagorinsky") 
         return(scinew Smagorinsky_Model(child, sharedState));
       else if (turbulence_model == "Germano") 
         return(scinew DynamicModel(child, sharedState));
       else
-        throw ProblemSetupException("Unknown turbulence model ("+turbulence_model+")");
+        throw ProblemSetupException("Unknown turbulence model ("+turbulence_model+")", __FILE__, __LINE__);
     }
     return 0;
 }

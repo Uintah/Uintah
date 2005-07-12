@@ -35,7 +35,7 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
   // Step 1 -- create the constitutive gmodel.
    d_eos = EquationOfStateFactory::create(ps);
    if(!d_eos) {
-     throw ParameterNotFound("ICE: No EOS specified");
+     throw ParameterNotFound("ICE: No EOS specified", __FILE__, __LINE__);
    }
    
    // Step 2 -- get the general material properties
@@ -62,7 +62,7 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
 
       GeometryPiece* mainpiece;
       if(pieces.size() == 0){
-         throw ParameterNotFound("No piece specified in geom_object");
+         throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
       } else if(pieces.size() > 1){
          mainpiece = scinew UnionGeometryPiece(pieces);
       } else {

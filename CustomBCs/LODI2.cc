@@ -77,7 +77,7 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
     ProblemSpecP lodi = bc_ps->findBlock("LODI");
     if (!lodi) {
       string warn="ERROR:\n Inputs:Boundary Conditions: Cannot find LODI block";
-      throw ProblemSetupException(warn);
+      throw ProblemSetupException(warn, __FILE__, __LINE__);
     }
 
     lodi->require("press_infinity",vb->press_infinity);
@@ -259,7 +259,7 @@ VarLabel* getMaxMach_face_VarLabel( Patch::FaceType face)
   string labelName = "maxMach_" + Patch::getFaceName(face);
   VarLabel* V_Label = VarLabel::find(labelName); 
   if (V_Label == NULL){
-    throw InternalError("Label " + labelName+ " doesn't exist");
+    throw InternalError("Label " + labelName+ " doesn't exist", __FILE__, __LINE__);
   }
   return V_Label;
 }
@@ -792,7 +792,7 @@ void FaceDensity_LODI(const Patch* patch,
   cout_doing << "Setting FaceDensity_LODI on face " << face<<endl;
   // bulletproofing
   if (!lv){
-    throw InternalError("FaceDensityLODI: Lodi_vars = null");
+    throw InternalError("FaceDensityLODI: Lodi_vars = null", __FILE__, __LINE__);
   }  
   
   StaticArray<CCVariable<Vector> >& L = lv->Li;
@@ -871,7 +871,7 @@ void FaceVel_LODI(const Patch* patch,
   cout_doing << "Setting FaceVel_LODI on face " << face << endl;
   // bulletproofing
   if (!lv){
-    throw InternalError("FaceVelLODI: Lodi_vars = null");
+    throw InternalError("FaceVelLODI: Lodi_vars = null", __FILE__, __LINE__);
   }
      
   // shortcuts       
@@ -971,7 +971,7 @@ void FaceTemp_LODI(const Patch* patch,
   
   // bulletproofing
   if (!lv){
-    throw InternalError("FaceTempLODI: Lodi_vars = null");
+    throw InternalError("FaceTempLODI: Lodi_vars = null", __FILE__, __LINE__);
   } 
   // shortcuts  
   StaticArray<CCVariable<Vector> >& L = lv->Li;
@@ -1060,7 +1060,7 @@ void FacePress_LODI(const Patch* patch,
   cout_doing << " I am in FacePress_LODI on face " <<face<< endl;
   // bulletproofing
   if (!lv){
-    throw InternalError("FacePress_LODI: Lodi_vars = null");
+    throw InternalError("FacePress_LODI: Lodi_vars = null", __FILE__, __LINE__);
   }
 
   StaticArray<CCVariable<Vector> >& L = lv->Li;

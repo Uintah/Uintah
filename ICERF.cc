@@ -68,7 +68,7 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
     Ghost::GhostType  gn = Ghost::None;   
     
     if (d_CFL > 0.5) {
-      throw ProblemSetupException("CFL can't exceed 0.5 for RF problems");
+      throw ProblemSetupException("CFL can't exceed 0.5 for RF problems", __FILE__, __LINE__);
     }
     
     vector<IntVector> adj_offset(3);                   
@@ -165,7 +165,7 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
     //  Bullet proofing
     if(delt< 1e-20) {  
       string warn = " E R R O R \n ICE::ComputeStableTimestepRF: delT < 1e-20";
-      throw InvalidValue(warn);
+      throw InvalidValue(warn, __FILE__, __LINE__);
     }
     
     new_dw->put(delt_vartype(delt), lb->delTLabel);
@@ -1344,7 +1344,7 @@ void ICE::computeLagrangianSpecificVolumeRF(const ProcessorGroup*,
         ostringstream warn;
         warn<<"ERROR ICE::computeLagrangianSpecificVolumeRF, mat "<<indx
             << " cell " <<neg_cell << " sp_vol_L is negative\n";
-        throw InvalidValue(warn.str());
+        throw InvalidValue(warn.str(), __FILE__, __LINE__);
      } 
     }  // end numALLMatl loop
   }  // patch loop
