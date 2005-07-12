@@ -1,22 +1,22 @@
 function latexTable(M,Label,fileName,Caption,varargin)
-%LATEX   Print a matrix in LaTeX tabular format.
-%   LATEX(M) prints out the numeric matrix M in a LaTeX tabular
+%LATEXTABLE   Print a table in LaTeX tabular format.
+%   LATEXTABLE(M) prints out the numeric matrix M in a LaTeX tabular
 %   format. The '&' character appears between entries in a row, '\\'
 %   is appended to the ends of rows, and each entry is set in math
 %   mode. Complex numbers are understood, and exponentials will be
 %   converted to a suitable format.
 %
-%   LATEX(M,'nomath') does not include the $$ needed to put each
+%   LATEXTABLE(M,'nomath') does not include the $$ needed to put each
 %   entry in math mode (e.g., for use with the amsmath matrix modes).
 %
-%   LATEX(M,FMT) uses a format specifier FMT of the SPRINTF type for
+%   LATEXTABLE(M,FMT) uses a format specifier FMT of the SPRINTF type for
 %   each entry.
 %
-%   LATEX(M,FMT1,FMT2,...) works through the given format specifiers
+%   LATEXTABLE(M,FMT1,FMT2,...) works through the given format specifiers
 %   on each row of M. If fewer are given than the column size of M,
 %   the last is used repeatedly for the rest of the row.
 %
-%   S = LATEX(M,...) does not display output but returns a character
+%   S = LATEXTABLE(M,...) does not display output but returns a character
 %   array S.
 %
 %   Examples:
@@ -24,9 +24,11 @@ function latexTable(M,Label,fileName,Caption,varargin)
 %     latex( magic(4), '%i', 'nomath' )
 %     latex( magic(4), '%i', '%.2f' )
 %
-%   See also SPRINTF, SYM/LATEX.
+%   See also SPRINTF, SYM/LATEX, LATEX, LATEXTABLEFACTORS.
 
-%   Copyright 2002 by Toby Driscoll. Last updated 12/06/02.
+% Revision history:
+% Copyright 2002 by Toby Driscoll. Last updated 12/06/02.
+% 12-JUL-2005    Oren Livne    Added comments, modified to my desired format
 
 if (nargin < 1)
     error('Need to specify data array M');

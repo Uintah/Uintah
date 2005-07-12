@@ -9,6 +9,9 @@ function list = printSparse(A,b,fileName)
 %
 %   See also: SPARSE.
 
+% Revision history:
+% 12-JUL-2005    Oren Livne    Added comments
+
 if (nargin < 3)
     f = 1;
 else
