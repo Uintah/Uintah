@@ -76,7 +76,7 @@ WARNING
     virtual void allocate(const Patch*,const IntVector& boundary)
     {
       SCI_THROW(SCIRun::InternalError("Should not call SoleVariable<T>"
-			  "::allocate(const Patch*)")); 
+			  "::allocate(const Patch*)", __FILE__, __LINE__)); 
     }
 
     virtual const TypeDescription* virtualGetTypeDescription() const;
@@ -133,7 +133,7 @@ WARNING
   {
     SoleVariable<T>* c = dynamic_cast<SoleVariable<T>* >(&copy);
     if(!c)
-      SCI_THROW(TypeMismatchException("Type mismatch in sole variable"));
+      SCI_THROW(TypeMismatchException("Type mismatch in sole variable", __FILE__, __LINE__));
     *this = *c;
   }
    

@@ -5,7 +5,9 @@ using namespace Uintah;
 using namespace std;
 
 InvalidCompressionMode::InvalidCompressionMode(const std::string& invalidmode,
-					       const std::string& vartype)
+					       const std::string& vartype,
+                                               const char* file,
+                                               int line)
 {
   d_msg = string("'") + invalidmode +
     string("' is not a valid compression mode");
@@ -15,6 +17,8 @@ InvalidCompressionMode::InvalidCompressionMode(const std::string& invalidmode,
   }
   
 #ifdef EXCEPTIONS_CRASH
+  cout << "An InvalidCompressionMode exception was thrown.\n";
+  cout << file << ":" << line << "\n";
   cout << d_msg << "\n";
 #endif
 }

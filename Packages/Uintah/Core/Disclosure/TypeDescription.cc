@@ -120,7 +120,7 @@ MPI_Datatype TypeDescription::getMPIType() const
 	d_mpitype = (*d_mpitypemaker)();
       } else {
 	tdLock.unlock();
-	throw InternalError("MPI Datatype requested, but do not know how to make it");
+	throw InternalError("MPI Datatype requested, but do not know how to make it", __FILE__, __LINE__);
       }
     }
     tdLock.unlock();
@@ -132,7 +132,7 @@ MPI_Datatype TypeDescription::getMPIType() const
 Variable* TypeDescription::createInstance() const
 {
   if(!d_maker)
-    throw InternalError("Do not know how to create instance for type: "+getName());
+    throw InternalError("Do not know how to create instance for type: "+getName(), __FILE__, __LINE__);
   return (*d_maker)();
 }
 

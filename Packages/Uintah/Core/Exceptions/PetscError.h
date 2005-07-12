@@ -23,7 +23,7 @@ namespace Uintah {
   using namespace SCIRun;
   class PetscError : public Exception {
   public:
-    PetscError(int petsc_code, const std::string&);
+    PetscError(int petsc_code, const std::string&, const char* file, int line);
     PetscError(const PetscError&);
     virtual ~PetscError();
     virtual const char* message() const;

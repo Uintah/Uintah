@@ -49,7 +49,8 @@
 
 namespace SCIRun {
 
-ArrayIndexOutOfBounds::ArrayIndexOutOfBounds(long value, long lower, long upper)
+ArrayIndexOutOfBounds::ArrayIndexOutOfBounds(long value, long lower, long upper,
+                                             const char* file, int line)
     : value(value), lower(lower), upper(upper)
 {
     // Format the message now...
@@ -59,7 +60,9 @@ ArrayIndexOutOfBounds::ArrayIndexOutOfBounds(long value, long lower, long upper)
     msg=strdup(buf);
    
 #ifdef EXCEPTIONS_CRASH
-	std::cout << msg << "\n";
+    std::cout << "An ArrayIndexOutOfBounds exception was thrown.\n";
+    std::cout << file << ":" << line << "\n";
+    std::cout << msg << "\n";
 #endif
 }
 

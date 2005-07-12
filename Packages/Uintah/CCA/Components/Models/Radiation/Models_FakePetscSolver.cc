@@ -13,7 +13,7 @@ using namespace SCIRun;
 Models_PetscSolver::Models_PetscSolver(const ProcessorGroup* myworld) :
   d_myworld(myworld)
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 // ****************************************************************************
@@ -32,7 +32,7 @@ void
 Models_PetscSolver::problemSetup(const ProblemSpecP& /*params*/, 
                                  bool /* shradiation */)
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 
@@ -40,7 +40,7 @@ void
 Models_PetscSolver::matrixCreate(const PatchSet* ,
                                  const PatchSubset* )
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 // ****************************************************************************
@@ -60,27 +60,27 @@ Models_PetscSolver::setMatrix(const ProcessorGroup* ,
                            CCVariable<double>& ,
                            CCVariable<double>& )
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 
 bool
 Models_PetscSolver::radLinearSolve()
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 
 void
 Models_PetscSolver::copyRadSoln(const Patch* , RadiationVariables* )
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 void
 Models_PetscSolver::destroyMatrix() 
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 
@@ -88,6 +88,6 @@ Models_PetscSolver::destroyMatrix()
 void
 Models_PetscSolver::finalizeSolver()
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 

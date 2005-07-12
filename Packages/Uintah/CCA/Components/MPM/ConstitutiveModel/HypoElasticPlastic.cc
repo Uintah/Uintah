@@ -109,7 +109,7 @@ HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps, MPMLabel* Mlb,
     desc << "An error occured in the YieldConditionFactory that has \n"
          << " slipped through the existing bullet proofing. Please tell \n"
          << " Biswajit.  "<< endl;
-    throw ParameterNotFound(desc.str());
+    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
   d_stable = StabilityCheckFactory::create(ps);
@@ -121,7 +121,7 @@ HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps, MPMLabel* Mlb,
     desc << "An error occured in the PlasticityModelFactory that has \n"
          << " slipped through the existing bullet proofing. Please tell \n"
          << " Biswajit.  "<< endl;
-    throw ParameterNotFound(desc.str());
+    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
   d_damage = DamageModelFactory::create(ps);
@@ -130,7 +130,7 @@ HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps, MPMLabel* Mlb,
     desc << "An error occured in the DamageModelFactory that has \n"
          << " slipped through the existing bullet proofing. Please tell \n"
          << " Biswajit.  "<< endl;
-    throw ParameterNotFound(desc.str());
+    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
   
   d_eos = MPMEquationOfStateFactory::create(ps);
@@ -139,7 +139,7 @@ HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps, MPMLabel* Mlb,
     desc << "An error occured in the EquationOfStateFactory that has \n"
          << " slipped through the existing bullet proofing. Please tell \n"
          << " Biswajit.  "<< endl;
-    throw ParameterNotFound(desc.str());
+    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
   
   // Initialize local VarLabels
@@ -695,7 +695,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       if (!(J > 0.0)) {
         cerr << getpid() 
              << "**ERROR** Negative Jacobian of deformation gradient" << endl;
-        throw ParameterNotFound("**ERROR**:HypoElasticPlastic");
+        throw ParameterNotFound("**ERROR**:HypoElasticPlastic", __FILE__, __LINE__);
       }
 
       // Calculate the current density and deformed volume
@@ -891,7 +891,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         ASSERT(flowStress != 0);
         if (flowStress == 0) {
           cout << getpid() << " HEP:flowstress = " << flowStress << endl;
-          throw ParameterNotFound("**ERROR**");
+          throw ParameterNotFound("**ERROR**", __FILE__, __LINE__);
         }
 
         Matrix3 Stilde(0.0);
@@ -917,7 +917,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
           if (sqrtqs == 0) {
             cout << getpid() << " HEP:sqrtqs = " << sqrtqs << " q = " << q
                  << " S = " << tensorS << endl;
-            throw ParameterNotFound("**ERROR**");
+            throw ParameterNotFound("**ERROR**", __FILE__, __LINE__);
           }
           Matrix3 u = q/sqrtqs;
 
@@ -930,7 +930,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
           if (cplus == 0) {
             cout << getpid() << " HEP:cplus = " << cplus 
                  << " u = " << u << endl;
-            throw ParameterNotFound("**ERROR**");
+            throw ParameterNotFound("**ERROR**", __FILE__, __LINE__);
           }
           double gammadotplus = dplus/cplus;
 
@@ -943,14 +943,14 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
           if (etaeta == 0) {
             cout << getpid() << " HEP:etaeta = " << etaeta << " L = " << tensorL
                  << " D = " << tensorD  << " Eta = " << tensorEta << endl;
-            throw ParameterNotFound("**ERROR**");
+            throw ParameterNotFound("**ERROR**", __FILE__, __LINE__);
           }
           Matrix3 u_eta = tensorEta/etaeta;
           double qq = sqrt(q.NormSquared());
           ASSERT(qq != 0);
           if (qq == 0) {
             cout << getpid() << " HEP:qq = " << qq << " q = " << q << endl;
-            throw ParameterNotFound("**ERROR**");
+            throw ParameterNotFound("**ERROR**", __FILE__, __LINE__);
           }
           Matrix3 u_q = q/qq;
 
@@ -973,7 +973,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
                    << " u_eta = " << u_eta 
                    << " Eta = " << tensorEta << " u_q = " << u_q
                    << " cplus = " << cplus << endl;
-              throw ParameterNotFound("**ERROR**");
+              throw ParameterNotFound("**ERROR**", __FILE__, __LINE__);
             }
             theta = (dStar - cplus*gammadotplus)/dStar;
             ++count;
@@ -993,7 +993,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
           ASSERT(sig != 0);
           if (sig == 0) {
             cout << getpid() << " HEP:sig = " << sig << endl;
-            throw ParameterNotFound("**ERROR**");
+            throw ParameterNotFound("**ERROR**", __FILE__, __LINE__);
           }
           double denom = 1.0 + (3.0*sqrtTwo*mu_cur*delGamma)/sig; 
           ASSERT(denom != 0);
@@ -1001,7 +1001,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
             cout << getpid() << " HEP:denom = " << denom 
                  << " mu_cur = " << mu_cur
                  << " delGamma = " << delGamma << " sig = " << sig << endl;
-            throw ParameterNotFound("**ERROR**");
+            throw ParameterNotFound("**ERROR**", __FILE__, __LINE__);
           }
           Stilde = trialS/denom;
         }
@@ -1012,7 +1012,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         if (stst == 0) {
           cout << getpid() << " HEP:stst = " << stst 
                << " Stilde = " << Stilde << endl;
-          throw ParameterNotFound("**ERROR**");
+          throw ParameterNotFound("**ERROR**", __FILE__, __LINE__);
         }
         tensorS = Stilde*(sig/stst);
         equivStress = sqrt((tensorS.NormSquared())*1.5);
@@ -1392,7 +1392,7 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       if (!(J > 0.0)) {
         cerr << getpid() 
              << "**ERROR** Negative Jacobian of deformation gradient" << endl;
-        throw ParameterNotFound("**ERROR**:HypoElasticPlastic:Implicit");
+        throw ParameterNotFound("**ERROR**:HypoElasticPlastic:Implicit", __FILE__, __LINE__);
       }
 
       // Calculate the current density and deformed volume
@@ -1734,7 +1734,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       if (!(J > 0.0)) {
         cerr << getpid() 
              << "**ERROR** Negative Jacobian of deformation gradient" << endl;
-        throw ParameterNotFound("**ERROR**:HypoElasticPlastic:Implicit");
+        throw ParameterNotFound("**ERROR**:HypoElasticPlastic:Implicit", __FILE__, __LINE__);
       }
 
       //CSTir << " particle = " << idx << " J = " << J << endl;
@@ -1940,7 +1940,7 @@ HypoElasticPlastic::computeDeltaGamma(const double& delT,
          << " dsigy/depdot = " << dsigy_depdot << " dsigy/dep = " << dsigy_dep 
          << " epdot = " << state->plasticStrainRate 
          << " ep = " << state->plasticStrain << endl;
-      throw ParameterNotFound("**ERROR**:ElasticPlastic: Found nan.");
+      throw ParameterNotFound("**ERROR**:ElasticPlastic: Found nan.", __FILE__, __LINE__);
     }
 
     if (fabs(deltaGamma-deltaGammaOld) < tolerance || count > 100) break;

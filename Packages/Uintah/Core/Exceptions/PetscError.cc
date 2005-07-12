@@ -8,7 +8,7 @@
 using namespace Uintah;
 using namespace std;
 
-PetscError::PetscError(int petsc_code, const std::string& msg)
+PetscError::PetscError(int petsc_code, const std::string& msg, const char* file, int line)
     : petsc_code(petsc_code)
 {
   ostringstream out;
@@ -16,6 +16,8 @@ PetscError::PetscError(int petsc_code, const std::string& msg)
   d_msg = out.str();
   
 #ifdef EXCEPTIONS_CRASH
+  cout << "A PetscError exception was thrown.\n";
+  cout << file << ":" << line << "\n";
   cout << d_msg << "\n";
 #endif  
 }

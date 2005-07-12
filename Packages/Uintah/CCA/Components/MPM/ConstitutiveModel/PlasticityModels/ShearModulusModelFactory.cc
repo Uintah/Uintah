@@ -21,10 +21,12 @@ ShearModulusModel* ShearModulusModelFactory::create(ProblemSpecP& ps)
 {
    ProblemSpecP child = ps->findBlock("shear_modulus_model");
    if(!child)
-      throw ProblemSetupException("MPM::ConstitutiveModel:Cannot find shear modulus model.");
+      throw ProblemSetupException("MPM::ConstitutiveModel:Cannot find shear modulus model.",
+                                  __FILE__, __LINE__);
    string mat_type;
    if(!child->getAttribute("type", mat_type))
-      throw ProblemSetupException("MPM::ConstitutiveModel:No type for shear modulus model.");
+      throw ProblemSetupException("MPM::ConstitutiveModel:No type for shear modulus model.",
+                                  __FILE__, __LINE__);
    
    if (mat_type == "constant_shear")
       return(scinew ConstantShear(child));
@@ -37,7 +39,8 @@ ShearModulusModel* ShearModulusModelFactory::create(ProblemSpecP& ps)
    else if (mat_type == "np_shear")
       return(scinew NPShear(child));
    else 
-      throw ProblemSetupException("MPM::ConstitutiveModel:Unknown Shear Modulus Model ("+mat_type+")");
+      throw ProblemSetupException("MPM::ConstitutiveModel:Unknown Shear Modulus Model ("+mat_type+")",
+                                  __FILE__, __LINE__);
 }
 
 ShearModulusModel* 
@@ -54,5 +57,6 @@ ShearModulusModelFactory::createCopy(const ShearModulusModel* smm)
    else if (dynamic_cast<const NPShear*>(smm))
       return(scinew NPShear(dynamic_cast<const NPShear*>(smm)));
    else 
-      throw ProblemSetupException("Cannot create copy of unknown shear modulus model");
+      throw ProblemSetupException("Cannot create copy of unknown shear modulus model",
+                                  __FILE__, __LINE__);
 }

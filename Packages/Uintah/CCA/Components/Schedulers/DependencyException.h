@@ -30,7 +30,8 @@ namespace Uintah {
   public:
     DependencyException(const Task* task, const VarLabel* label,
 			int matlIndex, const Patch* patch,
-			string has, string needs);
+			string has, string needs,
+                        const char* file, int line);
     DependencyException(const DependencyException& copy);
     virtual ~DependencyException() {}
 

@@ -50,7 +50,8 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
   if(fname!="") {
     std::ifstream is(fname.c_str());
     if (!is ){
-      throw ProblemSetupException("ERROR: opening MPM rigid motion file '"+fname+"'\nFailed to find profile file");
+      throw ProblemSetupException("ERROR: opening MPM rigid motion file '"+fname+"'\nFailed to find profile file",
+                                  __FILE__, __LINE__);
     }
     double t0(-1.e9);
     while(is)
@@ -61,14 +62,16 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
         if(is)
           {
             if(t1<=t0)
-              throw ProblemSetupException("ERROR: profile file is not monotomically increasing");
+              throw ProblemSetupException("ERROR: profile file is not monotomically increasing",
+                                          __FILE__, __LINE__);
             d_vel_profile.push_back( std::pair<double,Vector>(t1,Vector(vx,vy,vz)) );
           }
         t0 = t1;
       }
     if(d_vel_profile.size()<2)
       {
-        throw ProblemSetupException("ERROR: Failed to generate valid velocity profile");
+        throw ProblemSetupException("ERROR: Failed to generate valid velocity profile",
+                                    __FILE__, __LINE__);
       }
   }
   

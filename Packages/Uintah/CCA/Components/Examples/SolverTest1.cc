@@ -36,7 +36,7 @@ void SolverTest1::problemSetup(const ProblemSpecP& prob_spec, GridP&,
 {
   solver = dynamic_cast<SolverInterface*>(getPort("solver"));
   if(!solver) {
-    throw InternalError("ST1:couldn't get solver port");
+    throw InternalError("ST1:couldn't get solver port", __FILE__, __LINE__);
   }
   // TODO - get SolverParameters?
   // I copied this out of ICE.cc
@@ -69,7 +69,8 @@ void SolverTest1::problemSetup(const ProblemSpecP& prob_spec, GridP&,
     z_laplacian = false;
 
   if (!x_laplacian && !y_laplacian && !z_laplacian)
-    throw ProblemSetupException("SolverTest: Must specify one of X_Laplacian, Y_Laplacian, or Z_Laplacian");
+    throw ProblemSetupException("SolverTest: Must specify one of X_Laplacian, Y_Laplacian, or Z_Laplacian",
+                                __FILE__, __LINE__);
   mymat_ = new SimpleMaterial();
   sharedState->registerSimpleMaterial(mymat_);
 }

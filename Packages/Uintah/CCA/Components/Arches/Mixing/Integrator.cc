@@ -53,7 +53,7 @@ Integrator::problemSetup(const ProblemSpecP& params)
     d_mixingPDF = new BetaPDFShape(dimPDF);
   else
     throw InvalidValue("PDF shape not implemented "
-		       + pdfMixModel->getPDFShape());
+		       + pdfMixModel->getPDFShape(), __FILE__, __LINE__);
 }
 
 

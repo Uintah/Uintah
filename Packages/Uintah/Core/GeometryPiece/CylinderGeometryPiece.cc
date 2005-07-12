@@ -30,10 +30,10 @@ CylinderGeometryPiece::CylinderGeometryPiece(ProblemSpecP& ps)
   Vector axis = top - bottom;
   
   if ( axis.length()  < near_zero ) {
-    SCI_THROW(ProblemSetupException("Input File Error: Cylinder axes has zero length"));
+    SCI_THROW(ProblemSetupException("Input File Error: Cylinder axes has zero length", __FILE__, __LINE__));
   }
   if ( rad <= 0.0) {
-    SCI_THROW(ProblemSetupException("Input File Error: Cylinder radius must be > 0.0"));
+    SCI_THROW(ProblemSetupException("Input File Error: Cylinder radius must be > 0.0", __FILE__, __LINE__));
   }
   d_bottom = bottom;
   d_top = top;
@@ -48,10 +48,10 @@ CylinderGeometryPiece::CylinderGeometryPiece(const Point& top,
   Vector axis = top - bottom;
   
   if ( axis.length()  < near_zero ) {
-    SCI_THROW(ProblemSetupException("Input File Error: Cylinder axes has zero length"));
+    SCI_THROW(ProblemSetupException("Input File Error: Cylinder axes has zero length", __FILE__, __LINE__));
   }
   if ( radius <= 0.0) {
-    SCI_THROW(ProblemSetupException("Input File Error: Cylinder radius must be > 0.0"));
+    SCI_THROW(ProblemSetupException("Input File Error: Cylinder radius must be > 0.0", __FILE__, __LINE__));
   }
   d_bottom = bottom;
   d_top = top;

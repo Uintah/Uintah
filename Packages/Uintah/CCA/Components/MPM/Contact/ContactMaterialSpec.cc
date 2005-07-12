@@ -12,7 +12,7 @@ ContactMaterialSpec::ContactMaterialSpec(ProblemSpecP & ps)
     if(ps->get("materials", materials)) {
       for(vector<int>::const_iterator mit(materials.begin());mit!=materials.end();mit++) {
         if(*mit<0)
-          throw ProblemSetupException(" Invalid material index in contact block");
+          throw ProblemSetupException(" Invalid material index in contact block", __FILE__, __LINE__);
         this->add(*mit);
       }
     }

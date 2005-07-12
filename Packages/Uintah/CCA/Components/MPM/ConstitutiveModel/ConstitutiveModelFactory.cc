@@ -41,16 +41,16 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 {
   ProblemSpecP child = ps->findBlock("constitutive_model");
   if(!child)
-    throw ProblemSetupException("Cannot find constitutive_model tag");
+    throw ProblemSetupException("Cannot find constitutive_model tag", __FILE__, __LINE__);
   string mat_type;
   if(!child->getAttribute("type", mat_type))
-    throw ProblemSetupException("No type for constitutive_model");
+    throw ProblemSetupException("No type for constitutive_model", __FILE__, __LINE__);
    
   if (flags->d_integrator_type != "implicit" && 
       flags->d_integrator_type != "explicit" && 
       flags->d_integrator_type != "fracture"){
     string txt="MPM: time integrator [explicit or implicit] hasn't been set.";
-    throw ProblemSetupException(txt);
+    throw ProblemSetupException(txt, __FILE__, __LINE__);
   }   
 
   if (mat_type == "rigid")
@@ -124,7 +124,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew ElasticPlastic(child,lb,flags));
 
   else 
-    throw ProblemSetupException("Unknown Material Type R ("+mat_type+")");
+    throw ProblemSetupException("Unknown Material Type R ("+mat_type+")", __FILE__, __LINE__);
 
   return 0;
 }

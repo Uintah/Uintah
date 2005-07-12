@@ -146,7 +146,7 @@ Discretization::calculateVelRhoHat(const ProcessorGroup* /*pc*/,
 
     break;
   default:
-    throw InvalidValue("Invalid index in LinearSolver for velocity");
+    throw InvalidValue("Invalid index in LinearSolver for velocity", __FILE__, __LINE__);
   }
 }
 
@@ -566,7 +566,7 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
 
     break;
   default:
-    throw InvalidValue("Invalid index in Discretization::calcVelDiagonal");
+    throw InvalidValue("Invalid index in Discretization::calcVelDiagonal", __FILE__, __LINE__);
   }
 
 }
@@ -988,7 +988,7 @@ Discretization::calculateScalarENOscheme(const ProcessorGroup*,
 				 constscal_vars->density[currCell] +
 				 constscal_vars->scalar[xminusCell] *
 				 constscal_vars->density[xminusCell]);
-	  else throw InternalError("x stensil choice error");
+	  else throw InternalError("x stensil choice error", __FILE__, __LINE__);
 
 	  if (x_stencil_begin[xminusCell] == colX-1)
 	     uminus = 0.5 * (constscal_vars->scalar[currCell] *
@@ -1000,7 +1000,7 @@ Discretization::calculateScalarENOscheme(const ProcessorGroup*,
 				 constscal_vars->density[xminusCell] -
 		           0.5 * constscal_vars->scalar[xminusminusCell] *
 				 constscal_vars->density[xminusminusCell];
-	  else throw InternalError("x stensil choice error");
+	  else throw InternalError("x stensil choice error", __FILE__, __LINE__);
 	  
 	  x_mass_flux = constscal_vars->uVelocity[currCell];
 // The following if statement is for oversimplified version of Godunov flux
@@ -1035,7 +1035,7 @@ Discretization::calculateScalarENOscheme(const ProcessorGroup*,
 				 constscal_vars->density[currCell] +
 				 constscal_vars->scalar[yminusCell] *
 				 constscal_vars->density[yminusCell]);
-	  else throw InternalError("y stensil choice error");
+	  else throw InternalError("y stensil choice error", __FILE__, __LINE__);
 
 	  if (y_stencil_begin[yminusCell] == colY-1)
 	     vminus = 0.5 * (constscal_vars->scalar[currCell] *
@@ -1047,7 +1047,7 @@ Discretization::calculateScalarENOscheme(const ProcessorGroup*,
 				 constscal_vars->density[yminusCell] -
 		           0.5 * constscal_vars->scalar[yminusminusCell] *
 				 constscal_vars->density[yminusminusCell];
-	  else throw InternalError("y stensil choice error");
+	  else throw InternalError("y stensil choice error", __FILE__, __LINE__);
 
 	  y_mass_flux = constscal_vars->vVelocity[currCell];
 // The following if statement is for oversimplified version of Godunov flux
@@ -1082,7 +1082,7 @@ Discretization::calculateScalarENOscheme(const ProcessorGroup*,
 				 constscal_vars->density[currCell] +
 				 constscal_vars->scalar[zminusCell] *
 				 constscal_vars->density[zminusCell]);
-	  else throw InternalError("z stensil choice error");
+	  else throw InternalError("z stensil choice error", __FILE__, __LINE__);
 
 	  if (z_stencil_begin[zminusCell] == colZ-1)
 	     wminus = 0.5 * (constscal_vars->scalar[currCell] *
@@ -1094,7 +1094,7 @@ Discretization::calculateScalarENOscheme(const ProcessorGroup*,
 				 constscal_vars->density[zminusCell] -
 		           0.5 * constscal_vars->scalar[zminusminusCell] *
 				 constscal_vars->density[zminusminusCell];
-	  else throw InternalError("z stensil choice error");
+	  else throw InternalError("z stensil choice error", __FILE__, __LINE__);
 
 	  z_mass_flux = constscal_vars->wVelocity[currCell];
 // The following if statement is for oversimplified version of Godunov flux

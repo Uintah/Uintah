@@ -28,7 +28,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #undef CHKERRQ
-#define CHKERRQ(x) if(x) throw PetscError(x, __FILE__);
+#define CHKERRQ(x) if(x) throw PetscError(x, __FILE__, __FILE__, __LINE__);
 
 using namespace std;
 using namespace Uintah;
@@ -72,7 +72,7 @@ Filter::problemSetup(const ProblemSpecP& params)
   argv[3] = "-log_exclude_objects";
   int ierr = PetscInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
   if(ierr)
-    throw PetscError(ierr, "PetscInitialize");
+    throw PetscError(ierr, "PetscInitialize", __FILE__, __LINE__);
 
 }
 
@@ -210,7 +210,7 @@ Filter::matrixCreate(const PatchSet* allpatches,
 
       if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
 	  || ( high.z() < low.z() ) )
-	throw InternalError("Patch doesn't overlap?");
+	throw InternalError("Patch doesn't overlap?", __FILE__, __LINE__);
       
       int petscglobalIndex = d_petscGlobalStart[neighbor];
       IntVector dcells = phigh-plow;
@@ -270,7 +270,7 @@ Filter::matrixCreate(const PatchSet* allpatches,
   int ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
 			     globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
   if(ierr)
-    throw PetscError(ierr, "MatCreateMPIAIJ");
+    throw PetscError(ierr, "MatCreateMPIAIJ", __FILE__, __LINE__);
 
   /* 
      Create vectors.  Note that we form 1 vector from scratch and
@@ -278,13 +278,13 @@ Filter::matrixCreate(const PatchSet* allpatches,
   */
   ierr = VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&d_x);
   if(ierr)
-    throw PetscError(ierr, "VecCreateMPI");
+    throw PetscError(ierr, "VecCreateMPI", __FILE__, __LINE__);
   ierr = VecSetFromOptions(d_x);
   if(ierr)
-    throw PetscError(ierr, "VecSetFromOptions");
+    throw PetscError(ierr, "VecSetFromOptions", __FILE__, __LINE__);
   ierr = VecDuplicate(d_x,&d_b);
   if(ierr)
-    throw PetscError(ierr, "VecDuplicate(d_b)");
+    throw PetscError(ierr, "VecDuplicate(d_b)", __FILE__, __LINE__);
 }
 
 
@@ -401,7 +401,7 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
 	   
 	   ierr = MatSetValues(A,1,&row,d_nz,col,value,INSERT_VALUES);
 	   if(ierr)
-	     throw PetscError(ierr, "MatSetValues");
+	     throw PetscError(ierr, "MatSetValues", __FILE__, __LINE__);
 	 }
        }
      }
@@ -459,7 +459,7 @@ Filter::applyFilter(const ProcessorGroup* ,
 	int row = l2g[IntVector(colX, colY, colZ)];	  
 	ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
 	if(ierr)
-	  throw PetscError(ierr, "VecSetValue");
+	  throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
       }
     }
   }
@@ -469,29 +469,29 @@ Filter::applyFilter(const ProcessorGroup* ,
 #endif
   ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
   if(ierr)
-    throw PetscError(ierr, "MatAssemblyBegin");
+    throw PetscError(ierr, "MatAssemblyBegin", __FILE__, __LINE__);
   ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
 #if 0
   ierr = MatView(A, PETSC_VIEWER_STDOUT_WORLD);
 #endif
 
   if(ierr)
-    throw PetscError(ierr, "MatAssemblyEnd");
+    throw PetscError(ierr, "MatAssemblyEnd", __FILE__, __LINE__);
   ierr = VecAssemblyBegin(d_b);
   if(ierr)
-    throw PetscError(ierr, "VecAssemblyBegin");
+    throw PetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
   ierr = VecAssemblyEnd(d_b);
   if(ierr)
-    throw PetscError(ierr, "VecAssemblyEnd");
+    throw PetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
   ierr = VecAssemblyBegin(d_x);
   if(ierr)
-    throw PetscError(ierr, "VecAssemblyBegin");
+    throw PetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
   ierr = VecAssemblyEnd(d_x);
   if(ierr)
-    throw PetscError(ierr, "VecAssemblyEnd");
+    throw PetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
   ierr = MatMult(A, d_x, d_b);
   if(ierr)
-    throw PetscError(ierr, "MatMult");
+    throw PetscError(ierr, "MatMult", __FILE__, __LINE__);
   // copy vector b in the filterVar array
 #if 0
   ierr = VecView(d_x, PETSC_VIEWER_STDOUT_WORLD);
@@ -500,7 +500,7 @@ Filter::applyFilter(const ProcessorGroup* ,
   double* xvec;
   ierr = VecGetArray(d_b, &xvec);
   if(ierr)
-    throw PetscError(ierr, "VecGetArray");
+    throw PetscError(ierr, "VecGetArray", __FILE__, __LINE__);
   int rowinit = l2g[IntVector(inputLo.x(), inputLo.y(), inputLo.z())]; 
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
@@ -517,7 +517,7 @@ Filter::applyFilter(const ProcessorGroup* ,
 #endif
   ierr = VecRestoreArray(d_b, &xvec);
   if(ierr)
-    throw PetscError(ierr, "VecRestoreArray");
+    throw PetscError(ierr, "VecRestoreArray", __FILE__, __LINE__);
 
   return true;
 }
@@ -570,7 +570,7 @@ Filter::applyFilter(const ProcessorGroup* ,
 	int row = l2g[IntVector(colX, colY, colZ)];	  
 	ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
 	if(ierr)
-	  throw PetscError(ierr, "VecSetValue");
+	  throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
       }
     }
   }
@@ -580,7 +580,7 @@ Filter::applyFilter(const ProcessorGroup* ,
 #endif
   ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
   if(ierr)
-    throw PetscError(ierr, "MatAssemblyBegin");
+    throw PetscError(ierr, "MatAssemblyBegin", __FILE__, __LINE__);
   ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
 #if 0
   cerr << "In the filter class for matview" << endl;
@@ -588,22 +588,22 @@ Filter::applyFilter(const ProcessorGroup* ,
 #endif
 
   if(ierr)
-    throw PetscError(ierr, "MatAssemblyEnd");
+    throw PetscError(ierr, "MatAssemblyEnd", __FILE__, __LINE__);
   ierr = VecAssemblyBegin(d_b);
   if(ierr)
-    throw PetscError(ierr, "VecAssemblyBegin");
+    throw PetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
   ierr = VecAssemblyEnd(d_b);
   if(ierr)
-    throw PetscError(ierr, "VecAssemblyEnd");
+    throw PetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
   ierr = VecAssemblyBegin(d_x);
   if(ierr)
-    throw PetscError(ierr, "VecAssemblyBegin");
+    throw PetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
   ierr = VecAssemblyEnd(d_x);
   if(ierr)
-    throw PetscError(ierr, "VecAssemblyEnd");
+    throw PetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
   ierr = MatMult(A, d_x, d_b);
   if(ierr)
-    throw PetscError(ierr, "MatMult");
+    throw PetscError(ierr, "MatMult", __FILE__, __LINE__);
   // copy vector b in the filterVar array
 #if 0
   cerr << "In the filter class" << endl;
@@ -613,7 +613,7 @@ Filter::applyFilter(const ProcessorGroup* ,
   double* xvec;
   ierr = VecGetArray(d_b, &xvec);
   if(ierr)
-    throw PetscError(ierr, "VecGetArray");
+    throw PetscError(ierr, "VecGetArray", __FILE__, __LINE__);
   int rowinit = l2g[IntVector(inputLo.x(), inputLo.y(), inputLo.z())]; 
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
@@ -630,7 +630,7 @@ Filter::applyFilter(const ProcessorGroup* ,
 #endif
   ierr = VecRestoreArray(d_b, &xvec);
   if(ierr)
-    throw PetscError(ierr, "VecRestoreArray");
+    throw PetscError(ierr, "VecRestoreArray", __FILE__, __LINE__);
 
   return true;
 }
@@ -646,14 +646,14 @@ Filter::destroyMatrix()
   int ierr;
   ierr = VecDestroy(d_b);
   if(ierr)
-    throw PetscError(ierr, "VecDestroy");
+    throw PetscError(ierr, "VecDestroy", __FILE__, __LINE__);
   ierr = VecDestroy(d_x);
   if(ierr)
-    throw PetscError(ierr, "VecDestroy");
+    throw PetscError(ierr, "VecDestroy", __FILE__, __LINE__);
 
   ierr = MatDestroy(A);
   if(ierr)
-    throw PetscError(ierr, "MatDestroy");
+    throw PetscError(ierr, "MatDestroy", __FILE__, __LINE__);
 }
 
 

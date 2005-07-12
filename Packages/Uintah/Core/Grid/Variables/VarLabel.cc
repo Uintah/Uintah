@@ -27,15 +27,15 @@ VarLabel* VarLabel::create(const string& name,
     // two labels with the same name -- make sure they are the same type
     VarLabel* dup = iter->second;
     if(boundaryLayer != dup->d_boundaryLayer)
-      SCI_THROW(InternalError(string("Multiple VarLabels defined with different # of boundary layers")));
+      SCI_THROW(InternalError(string("Multiple VarLabels defined with different # of boundary layers"), __FILE__, __LINE__));
 
 #if !defined(_AIX) && !defined(__APPLE__) && !defined(_WIN32)
     // AIX uses lib.a's, therefore the "same" var labels are different...
     // Need to look into fixing this in a better way...
     // And I am not sure why we have to do this on the mac or windows...
     if (td != dup->d_td || vartype != dup->d_vartype)
-      SCI_THROW(InternalError(string("VarLabel with same name exists, '")
-			  + name + "', but with different type"));
+      SCI_THROW(InternalError(string("VarLabel with same name exists, '"
+			  + name + "', but with different type"), __FILE__, __LINE__));
 #endif
     label = dup;
   }
@@ -108,7 +108,7 @@ VarLabel::getFullName(int matlIndex, const Patch* patch) const
 void VarLabel::allowMultipleComputes()
 {
    if (!d_td->isReductionVariable())
-     SCI_THROW(InternalError(string("Only reduction variables may allow multiple computes.\n'" + d_name + "' is not a reduction variable.")));
+     SCI_THROW(InternalError(string("Only reduction variables may allow multiple computes.\n'" + d_name + "' is not a reduction variable."), __FILE__, __LINE__));
    d_allowMultipleComputes = true;
 }
 

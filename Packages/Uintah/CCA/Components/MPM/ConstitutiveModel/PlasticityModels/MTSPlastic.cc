@@ -600,7 +600,7 @@ MTSPlastic::computeShearModulus(const PlasticityState* state)
     desc << "**MTS Deriv Edot ERROR** Shear modulus <= 0." << endl;
     desc << "T = " << T << " mu0 = " << d_CM.mu_0 << " T0 = " << d_CM.T_0
          << " exp(To/T) = " << expT0_T << " D = " << d_CM.D << endl;
-    throw InvalidValue(desc.str());
+    throw InvalidValue(desc.str(), __FILE__, __LINE__);
   }
   return mu;
 }

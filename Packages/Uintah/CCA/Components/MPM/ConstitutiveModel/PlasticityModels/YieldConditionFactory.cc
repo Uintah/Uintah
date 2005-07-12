@@ -18,17 +18,18 @@ YieldCondition* YieldConditionFactory::create(ProblemSpecP& ps)
 {
    ProblemSpecP child = ps->findBlock("yield_condition");
    if(!child)
-      throw ProblemSetupException("MPM::ConstitutiveModel:Cannot find yield condition.");
+      throw ProblemSetupException("MPM::ConstitutiveModel:Cannot find yield condition.", __FILE__, __LINE__);
    string mat_type;
    if(!child->getAttribute("type", mat_type))
-      throw ProblemSetupException("MPM::ConstitutiveModel:No type for yield condition.");
+      throw ProblemSetupException("MPM::ConstitutiveModel:No type for yield condition.", __FILE__, __LINE__);
    
    if (mat_type == "vonMises")
       return(scinew VonMisesYield(child));
    else if (mat_type == "gurson")
       return(scinew GursonYield(child));
    else 
-      throw ProblemSetupException("MPM::ConstitutiveModel:Unknown Yield Condition ("+mat_type+")");
+      throw ProblemSetupException("MPM::ConstitutiveModel:Unknown Yield Condition ("+mat_type+")",
+                                  __FILE__, __LINE__);
 }
 
 YieldCondition* 
@@ -41,5 +42,5 @@ YieldConditionFactory::createCopy(const YieldCondition* yc)
       return(scinew GursonYield(dynamic_cast<const GursonYield*>(yc)));
 
    else 
-      throw ProblemSetupException("Cannot create copy of unknown yield condition");
+      throw ProblemSetupException("Cannot create copy of unknown yield condition", __FILE__, __LINE__);
 }

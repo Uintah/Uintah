@@ -21,12 +21,12 @@ CorrugEdgeGeomPiece::CorrugEdgeGeomPiece(ProblemSpecP& ps)
   ps->require("xymin", d_xymin);
   ps->require("xymax", d_xymax);
   if ((d_xymax-d_xymin).length2() <= 0.0)
-    SCI_THROW(ProblemSetupException("CorrugEdgeGeom: Check data in input"));
+    SCI_THROW(ProblemSetupException("CorrugEdgeGeom: Check data in input", __FILE__, __LINE__));
   cout << "xmin = " << d_xymin << " xmax = " << d_xymax << endl;
 
   ps->require("thickness", d_thickness);
   if (d_thickness <= 0.0)
-    SCI_THROW(ProblemSetupException("CorrugEdgeGeom: Thickness <= 0"));
+    SCI_THROW(ProblemSetupException("CorrugEdgeGeom: Thickness <= 0", __FILE__, __LINE__));
   cout << "thickness = " << d_thickness << endl;
 
   d_normal = Vector(0.0,0.0,1.0);
@@ -36,23 +36,23 @@ CorrugEdgeGeomPiece::CorrugEdgeGeomPiece(ProblemSpecP& ps)
   d_edge = "x+";
   ps->require("corr_edge", d_edge);
   if (d_edge != "x+" && d_edge != "x-" && d_edge != "y+" && d_edge != "y-")
-    SCI_THROW(ProblemSetupException("CorrugEdgeGeom: Unknown edge."));
+    SCI_THROW(ProblemSetupException("CorrugEdgeGeom: Unknown edge.", __FILE__, __LINE__));
   cout << "corr_edge = " << d_edge << endl;
 
   d_curve = "sin";
   ps->require("curve", d_curve);
   if (d_curve != "sin" && d_curve != "cos")
-    SCI_THROW(ProblemSetupException("CorrugEdgeGeom: Unknown curve"));
+    SCI_THROW(ProblemSetupException("CorrugEdgeGeom: Unknown curve", __FILE__, __LINE__));
   cout << "curve = " << d_curve << endl;
 
   ps->require("wavelength", d_wavelength);
   if (d_wavelength <= 0.0)
-    SCI_THROW(ProblemSetupException("CorrugEdgeGeom: Wavelength <= 0.0"));
+    SCI_THROW(ProblemSetupException("CorrugEdgeGeom: Wavelength <= 0.0", __FILE__, __LINE__));
   cout << "wavelength = " << d_wavelength << endl;
 
   ps->require("amplitude", d_amplitude);
   if (d_amplitude <= 0.0)
-    SCI_THROW(ProblemSetupException("CorrugEdgeGeom: Amplitude <= 0.0"));
+    SCI_THROW(ProblemSetupException("CorrugEdgeGeom: Amplitude <= 0.0", __FILE__, __LINE__));
   cout << "amplitude = " << d_amplitude << endl;
 }
 

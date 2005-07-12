@@ -22,7 +22,7 @@ namespace Uintah {
 
    class ParameterNotFound : public ProblemSetupException {
    public:
-      ParameterNotFound(const std::string&);
+      ParameterNotFound(const std::string&, const char* file, int line);
       ParameterNotFound(const ParameterNotFound&);
       virtual ~ParameterNotFound();
       virtual const char* type() const;

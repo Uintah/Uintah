@@ -126,7 +126,7 @@ Properties::problemSetup(const ProblemSpecP& params)
     d_steadyflamelet = true;
   }
   else
-    throw InvalidValue("Mixing Model not supported" + mixModel);
+    throw InvalidValue("Mixing Model not supported" + mixModel, __FILE__, __LINE__);
   d_mixingModel->problemSetup(db);
   // Read the mixing variable streams, total is noofStreams 0 
   d_numMixingVars = d_mixingModel->getNumMixVars();
@@ -354,7 +354,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 			   bool initialize)
 {
   if (d_bc == 0)
-    throw InvalidValue("BoundaryCondition pointer not assigned");
+    throw InvalidValue("BoundaryCondition pointer not assigned", __FILE__, __LINE__);
 
   for (int p = 0; p < patches->size(); p++) {
 

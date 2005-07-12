@@ -525,7 +525,7 @@ public:
 	
 	destroyPrecond(precond_solver);
       } else {
-	throw InternalError("Unknown solver type: "+params->solvertype);
+	throw InternalError("Unknown solver type: "+params->solvertype, __FILE__, __LINE__);
       }
       if(final_res_norm > params->tolerance || finite(final_res_norm) == 0){
 	if(params->restart){
@@ -538,7 +538,7 @@ public:
 	} else {
 	  throw ConvergenceFailure("HypreSolver variable: "+X_label->getName()+", solver: "+params->solvertype+", preconditioner: "+params->precondtype,
 				   num_iterations, final_res_norm,
-				   params->tolerance);
+				   params->tolerance,__FILE__,__LINE__);
 	}
       }
       double solve_dt = Time::currentSeconds()-solve_start;
@@ -656,7 +656,7 @@ public:
       pcsetup = (HYPRE_PtrToSolverFcn)HYPRE_StructDiagScaleSetup;
     } else {
       // This should have been caught in readParameters...
-      throw InternalError("Unknown preconditionertype: "+params->precondtype);
+      throw InternalError("Unknown preconditionertype: "+params->precondtype, __FILE__, __LINE__);
     }
   }
   void destroyPrecond(HYPRE_StructSolver precond_solver){
@@ -671,7 +671,7 @@ public:
     } else if(params->precondtype == "Diagonal" || params->precondtype == "diagonal"){
     } else {
       // This should have been caught in readParameters...
-      throw InternalError("Unknown preconditionertype in destroyPrecond: "+params->precondtype);
+      throw InternalError("Unknown preconditionertype in destroyPrecond: "+params->precondtype, __FILE__, __LINE__);
     }
   }
 
@@ -746,7 +746,7 @@ void HypreSolver2::scheduleSolve(const LevelP& level, SchedulerP& sched,
   ASSERTEQ(domtype, b->typeDescription()->getType());
   const HypreSolver2Params* dparams = dynamic_cast<const HypreSolver2Params*>(params);
   if(!dparams)
-    throw InternalError("Wrong type of params passed to hypre solver!");
+    throw InternalError("Wrong type of params passed to hypre solver!", __FILE__, __LINE__);
 
   switch(domtype){
   case TypeDescription::SFCXVariable:
@@ -785,7 +785,7 @@ void HypreSolver2::scheduleSolve(const LevelP& level, SchedulerP& sched,
     }
     break;
   default:
-    throw InternalError("Unknown variable type in scheduleSolve");
+    throw InternalError("Unknown variable type in scheduleSolve", __FILE__, __LINE__);
   }
 
   task->requires(which_A_dw, A, Ghost::None, 0);

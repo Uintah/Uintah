@@ -176,7 +176,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_turbModel = scinew CompLocalDynamicProcedure(d_lab, d_MAlab, d_physicalConsts, d_boundaryCondition);
   }
   else 
-    throw InvalidValue("Turbulence Model not supported" + turbModel);
+    throw InvalidValue("Turbulence Model not supported" + turbModel, __FILE__, __LINE__);
 //  if (d_turbModel)
   d_turbModel->problemSetup(db);
   d_dynScalarModel = d_turbModel->getDynScalarModel();
@@ -225,7 +225,7 @@ Arches::problemSetup(const ProblemSpecP& params,
 					   d_myworld);
   }
   else
-    throw InvalidValue("Nonlinear solver not supported: "+nlSolver);
+    throw InvalidValue("Nonlinear solver not supported: "+nlSolver, __FILE__, __LINE__);
 
   d_nlSolver->problemSetup(db);
   d_timeIntegratorType = d_nlSolver->getTimeIntegratorType();

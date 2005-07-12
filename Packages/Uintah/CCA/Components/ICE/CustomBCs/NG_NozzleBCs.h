@@ -192,7 +192,7 @@ void setNGC_Nozzle_BC(const Patch* patch,
         if (p1 <=0 || rho1 <= 0 || finite(p1) == 0 || finite(rho1) == 0){
           cout << " c " << c << " adj " << adj << " p1 " << p1 
                << " rho1 " << rho1 << endl;
-          throw InternalError(" setNGC_Nozzle_BC: one of initial conditions (p1, rho1) = 0");
+          throw InternalError(" setNGC_Nozzle_BC: one of initial conditions (p1, rho1) = 0", __FILE__, __LINE__);
         }
         
         //cout << " c " << c << " adj " << adj << " p1 " << p1 << " rho1 " << rho1 << " u1 " << u1 << endl;

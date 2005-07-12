@@ -20,17 +20,17 @@ DamageModel* DamageModelFactory::create(ProblemSpecP& ps)
 {
    ProblemSpecP child = ps->findBlock("damage_model");
    if(!child)
-      throw ProblemSetupException("Cannot find damage_model tag");
+      throw ProblemSetupException("Cannot find damage_model tag", __FILE__, __LINE__);
    string mat_type;
    if(!child->getAttribute("type", mat_type))
-      throw ProblemSetupException("No type for damage_model");
+      throw ProblemSetupException("No type for damage_model", __FILE__, __LINE__);
    
    if (mat_type == "johnson_cook")
       return(scinew JohnsonCookDamage(child));
    else if (mat_type == "hancock_mackenzie")
       return(scinew HancockMacKenzieDamage(child));
    else 
-      throw ProblemSetupException("Unknown Damage Model ("+mat_type+")");
+      throw ProblemSetupException("Unknown Damage Model ("+mat_type+")", __FILE__, __LINE__);
 
    //return 0;
 }
@@ -44,7 +44,7 @@ DamageModel* DamageModelFactory::createCopy(const DamageModel* dm)
       return(scinew HancockMacKenzieDamage(dynamic_cast<const HancockMacKenzieDamage*>(dm)));
 
    else 
-      throw ProblemSetupException("Cannot create copy of unknown damage model");
+      throw ProblemSetupException("Cannot create copy of unknown damage model", __FILE__, __LINE__);
 
    //return 0;
 }

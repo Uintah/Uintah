@@ -16,7 +16,7 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #undef CHKERRQ
-#define CHKERRQ(x) if(x) throw PetscError(x, __FILE__);
+#define CHKERRQ(x) if(x) throw PetscError(x, __FILE__, __FILE__, __LINE__);
 #include <vector>
 
 using namespace std;
@@ -60,10 +60,12 @@ Models_PetscSolver::problemSetup(const ProblemSpecP& params, bool shradiation)
 	db->getWithDefault("ksptype", d_kspType, "gmres");
       
       if (!d_shsolver && (d_kspType == "cg"))
-	throw ProblemSetupException("Models_Radiation_PetscSolver:Discrete Ordinates generates a nonsymmetric matrix, so cg cannot be used; Use gmres as the ksptype");
+	throw ProblemSetupException("Models_Radiation_PetscSolver:Discrete Ordinates generates a nonsymmetric matrix, so cg cannot be used; Use gmres as the ksptype",
+                                    __FILE__, __LINE__);
 
       if (d_shsolver && (d_kspType == "gmres"))
-	throw ProblemSetupException("Models_Radiation_PetscSolver:Spherical Harmonics generates a symmetric matrix; use cg as the ksptype");
+	throw ProblemSetupException("Models_Radiation_PetscSolver:Spherical Harmonics generates a symmetric matrix; use cg as the ksptype",
+                                    __FILE__, __LINE__);
 
       db->getWithDefault("tolerance", d_tolerance, 1.0e-8);
       db->getWithDefault("pctype", d_pcType, "blockjacobi");
@@ -108,7 +110,7 @@ Models_PetscSolver::problemSetup(const ProblemSpecP& params, bool shradiation)
   argv[3] = "-log_exclude_objects";
   int ierr = PetscInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
   if(ierr)
-    throw PetscError(ierr, "PetscInitialize");
+    throw PetscError(ierr, "PetscInitialize", __FILE__, __LINE__);
 }
 
 
@@ -164,7 +166,7 @@ Models_PetscSolver::matrixCreate(const PatchSet* allpatches,
 
       if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
 	  || ( high.z() < low.z() ) )
-	throw InternalError("Patch doesn't overlap?");
+	throw InternalError("Patch doesn't overlap?", __FILE__, __LINE__);
       
       int petscglobalIndex = d_petscGlobalStart[neighbor];
       IntVector dcells = phigh-plow;
@@ -234,7 +236,7 @@ Models_PetscSolver::matrixCreate(const PatchSet* allpatches,
   ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
 			     globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
   if(ierr)
-    throw PetscError(ierr, "MatCreateMPIAIJ");
+    throw PetscError(ierr, "MatCreateMPIAIJ", __FILE__, __LINE__);
 
   /* 
      Create vectors.  Note that we form 1 vector from scratch and
@@ -242,16 +244,16 @@ Models_PetscSolver::matrixCreate(const PatchSet* allpatches,
   */
   ierr = VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&d_x);
   if(ierr)
-    throw PetscError(ierr, "VecCreateMPI");
+    throw PetscError(ierr, "VecCreateMPI", __FILE__, __LINE__);
   ierr = VecSetFromOptions(d_x);
   if(ierr)
-    throw PetscError(ierr, "VecSetFromOptions");
+    throw PetscError(ierr, "VecSetFromOptions", __FILE__, __LINE__);
   ierr = VecDuplicate(d_x,&d_b);
   if(ierr)
-    throw PetscError(ierr, "VecDuplicate(d_b)");
+    throw PetscError(ierr, "VecDuplicate(d_b)", __FILE__, __LINE__);
   ierr = VecDuplicate(d_x,&d_u);
   if(ierr)
-    throw PetscError(ierr, "VecDuplicate(d_u)");
+    throw PetscError(ierr, "VecDuplicate(d_u)", __FILE__, __LINE__);
 #endif
 }
 
@@ -277,7 +279,7 @@ Models_PetscSolver::setMatrix(const ProcessorGroup* ,
   ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
 			     globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
   if(ierr)
-    throw PetscError(ierr, "MatCreateMPIAIJ");
+    throw PetscError(ierr, "MatCreateMPIAIJ", __FILE__, __LINE__);
 
   /* 
      Create vectors.  Note that we form 1 vector from scratch and
@@ -285,16 +287,16 @@ Models_PetscSolver::setMatrix(const ProcessorGroup* ,
   */
   ierr = VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&d_x);
   if(ierr)
-    throw PetscError(ierr, "VecCreateMPI");
+    throw PetscError(ierr, "VecCreateMPI", __FILE__, __LINE__);
   ierr = VecSetFromOptions(d_x);
   if(ierr)
-    throw PetscError(ierr, "VecSetFromOptions");
+    throw PetscError(ierr, "VecSetFromOptions", __FILE__, __LINE__);
   ierr = VecDuplicate(d_x,&d_b);
   if(ierr)
-    throw PetscError(ierr, "VecDuplicate(d_b)");
+    throw PetscError(ierr, "VecDuplicate(d_b)", __FILE__, __LINE__);
   ierr = VecDuplicate(d_x,&d_u);
   if(ierr)
-    throw PetscError(ierr, "VecDuplicate(d_u)");
+    throw PetscError(ierr, "VecDuplicate(d_u)", __FILE__, __LINE__);
 
   // Get the patch bounds and the variable bounds
   IntVector idxLo = patch->getCellFORTLowIndex();
@@ -400,15 +402,15 @@ Models_PetscSolver::setMatrix(const ProcessorGroup* ,
 	}
 
 	if(ierr)
-	  throw PetscError(ierr, "MatSetValues");
+	  throw PetscError(ierr, "MatSetValues", __FILE__, __LINE__);
 	vecvalueb = SU[IntVector(colX,colY,colZ)];
 	vecvaluex = vars->cenint[IntVector(colX, colY, colZ)];
 	ierr = VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
 	if(ierr)
-	  throw PetscError(ierr, "VecSetValue");
+	  throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
 	ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
 	if(ierr)
-	  throw PetscError(ierr, "VecSetValue");
+	  throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
 
 #ifdef ARCHES_PETSC_DEBUG
 	cerr << "ierr=" << ierr << '\n';
@@ -440,10 +442,10 @@ Models_PetscSolver::setMatrix(const ProcessorGroup* ,
 
   ierr = VecSetValues(d_b, numCells, &indexes[0], &vecb[0], INSERT_VALUES);
   if(ierr)
-    throw PetscError(ierr, "VecSetValue");
+    throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
   ierr = VecSetValues(d_x, numCells, &indexes[0], &vecx[0], INSERT_VALUES);
   if(ierr)
-    throw PetscError(ierr, "VecSetValue");
+    throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
 #endif
 #if 0
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
@@ -454,10 +456,10 @@ Models_PetscSolver::setMatrix(const ProcessorGroup* ,
 	  int row = l2g[IntVector(colX, colY, colZ)];	  
 	  ierr = VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
 	  if(ierr)
-	    throw PetscError(ierr, "VecSetValue");
+	    throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
 	  ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
 	  if(ierr)
-	    throw PetscError(ierr, "VecSetValue");
+	    throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
 	}
       }
     }
@@ -481,22 +483,22 @@ Models_PetscSolver::radLinearSolve()
 #endif
   ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
   if(ierr)
-    throw PetscError(ierr, "MatAssemblyBegin");
+    throw PetscError(ierr, "MatAssemblyBegin", __FILE__, __LINE__);
   ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
   if(ierr)
-    throw PetscError(ierr, "MatAssemblyEnd");
+    throw PetscError(ierr, "MatAssemblyEnd", __FILE__, __LINE__);
   ierr = VecAssemblyBegin(d_b);
   if(ierr)
-    throw PetscError(ierr, "VecAssemblyBegin");
+    throw PetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
   ierr = VecAssemblyEnd(d_b);
   if(ierr)
-    throw PetscError(ierr, "VecAssemblyEnd");
+    throw PetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
   ierr = VecAssemblyBegin(d_x);
   if(ierr)
-    throw PetscError(ierr, "VecAssemblyBegin");
+    throw PetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
   ierr = VecAssemblyEnd(d_x);
   if(ierr)
-    throw PetscError(ierr, "VecAssemblyEnd");
+    throw PetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
   // compute the initial error
   double neg_one = -1.0;
   double init_norm;
@@ -505,22 +507,22 @@ Models_PetscSolver::radLinearSolve()
   Vec u_tmp;
   ierr = VecDuplicate(d_x,&u_tmp);
   if(ierr)
-    throw PetscError(ierr, "VecDuplicate");
+    throw PetscError(ierr, "VecDuplicate", __FILE__, __LINE__);
   ierr = MatMult(A, d_x, u_tmp);
   if(ierr)
-    throw PetscError(ierr, "MatMult");
+    throw PetscError(ierr, "MatMult", __FILE__, __LINE__);
   ierr = VecAXPY(&neg_one, d_b, u_tmp);
   if(ierr)
-    throw PetscError(ierr, "VecAXPY");
+    throw PetscError(ierr, "VecAXPY", __FILE__, __LINE__);
   ierr  = VecNorm(u_tmp,NORM_2,&init_norm);
 #if 0
   cerr << "initnorm" << init_norm << endl;
 #endif
   if(ierr)
-    throw PetscError(ierr, "VecNorm");
+    throw PetscError(ierr, "VecNorm", __FILE__, __LINE__);
   ierr = VecDestroy(u_tmp);
   if(ierr)
-    throw PetscError(ierr, "VecDestroy");
+    throw PetscError(ierr, "VecDestroy", __FILE__, __LINE__);
   /* debugging - steve */
   double norm;
 #if 0
@@ -543,61 +545,61 @@ Models_PetscSolver::radLinearSolve()
   ierr = KSPCreate(PETSC_COMM_WORLD,&solver);
 
   if(ierr)
-    throw PetscError(ierr, "KSPCreate");
+    throw PetscError(ierr, "KSPCreate", __FILE__, __LINE__);
   ierr = KSPSetOperators(solver,A,A,DIFFERENT_NONZERO_PATTERN);
   if(ierr)
-    throw PetscError(ierr, "KSPSetOperators");
+    throw PetscError(ierr, "KSPSetOperators", __FILE__, __LINE__);
 
   ierr = KSPGetPC(solver, &peqnpc);
   if(ierr)
-    throw PetscError(ierr, "KSPGetPC");
+    throw PetscError(ierr, "KSPGetPC", __FILE__, __LINE__);
   if (d_pcType == "jacobi") {
     ierr = PCSetType(peqnpc, PCJACOBI);
     if(ierr)
-      throw PetscError(ierr, "PCSetType");
+      throw PetscError(ierr, "PCSetType", __FILE__, __LINE__);
   }
   else if (d_pcType == "asm") {
     ierr = PCSetType(peqnpc, PCASM);
     if(ierr)
-      throw PetscError(ierr, "PCSetType");
+      throw PetscError(ierr, "PCSetType", __FILE__, __LINE__);
     ierr = PCASMSetOverlap(peqnpc, d_overlap);
     if(ierr)
-      throw PetscError(ierr, "PCASMSetOverlap");
+      throw PetscError(ierr, "PCASMSetOverlap", __FILE__, __LINE__);
   }
   else if (d_pcType == "ilu") {
     ierr = PCSetType(peqnpc, PCILU);
     if(ierr)
-      throw PetscError(ierr, "PCSetType");
+      throw PetscError(ierr, "PCSetType", __FILE__, __LINE__);
     ierr = PCILUSetFill(peqnpc, d_fill);
     if(ierr)
-      throw PetscError(ierr, "PCILUSetFill");
+      throw PetscError(ierr, "PCILUSetFill", __FILE__, __LINE__);
   }
   else {
     ierr = PCSetType(peqnpc, PCBJACOBI);
     if(ierr)
-      throw PetscError(ierr, "PCSetType");
+      throw PetscError(ierr, "PCSetType", __FILE__, __LINE__);
   }
   if (d_kspType == "cg") {
     ierr = KSPSetType(solver, KSPCG);
     if(ierr)
-      throw PetscError(ierr, "KSPSetType");
+      throw PetscError(ierr, "KSPSetType", __FILE__, __LINE__);
   }
   else {
     ierr = KSPSetType(solver, KSPGMRES);
     if(ierr)
-      throw PetscError(ierr, "KSPSetType");
+      throw PetscError(ierr, "KSPSetType", __FILE__, __LINE__);
   }
   ierr = KSPSetTolerances(solver, d_tolerance, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
   if(ierr)
-    throw PetscError(ierr, "KSPSetTolerances");
+    throw PetscError(ierr, "KSPSetTolerances", __FILE__, __LINE__);
 
   ierr = KSPSetInitialGuessNonzero(solver, PETSC_TRUE);
   if(ierr)
-    throw PetscError(ierr, "KSPSetInitialGuessNonzero");
+    throw PetscError(ierr, "KSPSetInitialGuessNonzero", __FILE__, __LINE__);
   
   ierr = KSPSetFromOptions(solver);
   if(ierr)
-    throw PetscError(ierr, "KSPSetFromOptions");
+    throw PetscError(ierr, "KSPSetFromOptions", __FILE__, __LINE__);
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                       Solve the linear system
@@ -605,15 +607,15 @@ Models_PetscSolver::radLinearSolve()
   int its;
   ierr = KSPSolve(solver,d_b,d_x);
   if(ierr)
-    throw PetscError(ierr, "KSPSolve");
+    throw PetscError(ierr, "KSPSolve", __FILE__, __LINE__);
   ierr = KSPGetIterationNumber(solver,&its);
   if (ierr)
-    throw PetscError(ierr, "KSPGetIterationNumber");
+    throw PetscError(ierr, "KSPGetIterationNumber", __FILE__, __LINE__);
   int me = d_myworld->myrank();
 
   ierr = VecNorm(d_x,NORM_1,&norm);
   if(ierr)
-    throw PetscError(ierr, "VecNorm");
+    throw PetscError(ierr, "VecNorm", __FILE__, __LINE__);
 #ifdef ARCHES_PETSC_DEBUG
   ierr = VecView(d_x, VIEWER_STDOUT_WORLD);
 #endif
@@ -621,13 +623,13 @@ Models_PetscSolver::radLinearSolve()
   // check the error
   ierr = MatMult(A, d_x, d_u);
   if(ierr)
-    throw PetscError(ierr, "MatMult");
+    throw PetscError(ierr, "MatMult", __FILE__, __LINE__);
   ierr = VecAXPY(&neg_one, d_b, d_u);
   if(ierr)
-    throw PetscError(ierr, "VecAXPY");
+    throw PetscError(ierr, "VecAXPY", __FILE__, __LINE__);
   ierr  = VecNorm(d_u,NORM_2,&norm);
   if(ierr)
-    throw PetscError(ierr, "VecNorm");
+    throw PetscError(ierr, "VecNorm", __FILE__, __LINE__);
 
   if(me == 0) {
      cerr << "KSPSolve: Norm of error: " << norm << ", iterations: " << its << ", time: " << Time::currentSeconds()-solve_start << " seconds\n";
@@ -637,21 +639,21 @@ Models_PetscSolver::radLinearSolve()
 #if 1
   ierr = KSPDestroy(solver);
   if(ierr)
-    throw PetscError(ierr, "KSPDestroy");
+    throw PetscError(ierr, "KSPDestroy", __FILE__, __LINE__);
 #endif
 #if 0
   ierr = VecDestroy(d_u);
   if(ierr)
-    throw PetscError(ierr, "VecDestroy");
+    throw PetscError(ierr, "VecDestroy", __FILE__, __LINE__);
   ierr = VecDestroy(d_b);
   if(ierr)
-    throw PetscError(ierr, "VecDestroy");
+    throw PetscError(ierr, "VecDestroy", __FILE__, __LINE__);
   ierr = VecDestroy(d_x);
   if(ierr)
-    throw PetscError(ierr, "VecDestroy");
+    throw PetscError(ierr, "VecDestroy", __FILE__, __LINE__);
   ierr = MatDestroy(A);
   if(ierr)
-    throw PetscError(ierr, "MatDestroy");
+    throw PetscError(ierr, "MatDestroy", __FILE__, __LINE__);
 
 #endif
   if ((norm/(init_norm+1.0e-20) < 1.0)&& (norm < 2.0))
@@ -671,7 +673,7 @@ Models_PetscSolver::copyRadSoln(const Patch* patch, RadiationVariables* vars)
   int ierr;
   ierr = VecGetArray(d_x, &xvec);
   if(ierr)
-    throw PetscError(ierr, "VecGetArray");
+    throw PetscError(ierr, "VecGetArray", __FILE__, __LINE__);
   Array3<int> l2g = d_petscLocalToGlobal[patch];
   int rowinit = l2g[IntVector(idxLo.x(), idxLo.y(), idxLo.z())]; 
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
@@ -685,7 +687,7 @@ Models_PetscSolver::copyRadSoln(const Patch* patch, RadiationVariables* vars)
 
   ierr = VecRestoreArray(d_x, &xvec);
   if(ierr)
-    throw PetscError(ierr, "VecRestoreArray");
+    throw PetscError(ierr, "VecRestoreArray", __FILE__, __LINE__);
 }
   
 void
@@ -699,16 +701,16 @@ Models_PetscSolver::destroyMatrix()
   int ierr;
   ierr = VecDestroy(d_u);
   if(ierr)
-    throw PetscError(ierr, "VecDestroy");
+    throw PetscError(ierr, "VecDestroy", __FILE__, __LINE__);
   ierr = VecDestroy(d_b);
   if(ierr)
-    throw PetscError(ierr, "VecDestroy");
+    throw PetscError(ierr, "VecDestroy", __FILE__, __LINE__);
   ierr = VecDestroy(d_x);
   if(ierr)
-    throw PetscError(ierr, "VecDestroy");
+    throw PetscError(ierr, "VecDestroy", __FILE__, __LINE__);
   ierr = MatDestroy(A);
   if(ierr)
-    throw PetscError(ierr, "MatDestroy");
+    throw PetscError(ierr, "MatDestroy", __FILE__, __LINE__);
 #endif
 }
 
@@ -722,7 +724,7 @@ void Models_PetscSolver::finalizeSolver()
 //    throw PetscError(ierrd, "PetscTrDump");
   int ierr = PetscFinalize();
   if(ierr)
-    throw PetscError(ierr, "PetscFinalize");
+    throw PetscError(ierr, "PetscFinalize", __FILE__, __LINE__);
 }
 
 

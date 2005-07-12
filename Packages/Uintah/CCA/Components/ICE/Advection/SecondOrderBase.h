@@ -233,7 +233,7 @@ SecondOrderBase::flux_to_primitive( const bool useCompatibleFluxes,
   // bulletproofing
   if(useCompatibleFluxes && !is_Q_mass_specific){
     throw InternalError("ICE:SecondOrderAdvection:\n"
-    " For compatible fluxes, Q_CC must be a mass-specific quantity \n");
+    " For compatible fluxes, Q_CC must be a mass-specific quantity \n", __FILE__, __LINE__);
   }
                 // compatible fluxes.
   if(useCompatibleFluxes && is_Q_mass_specific) {

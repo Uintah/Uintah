@@ -601,7 +601,7 @@ void AMRSimpleCFD::scheduleCoarsen(const LevelP& coarseLevel,
   // you get a divergence free velocity field
   SolverInterface* solver = dynamic_cast<SolverInterface*>(getPort("solver"));
   if(!solver)
-    throw InternalError("SimpleCFD needs a solver component to work");
+    throw InternalError("SimpleCFD needs a solver component to work", __FILE__, __LINE__);
   schedulePressureSolve(coarseLevel, sched, solver, lb_->pressure2,
 			lb_->pressure2_matrix, lb_->pressure2_rhs, false);
   

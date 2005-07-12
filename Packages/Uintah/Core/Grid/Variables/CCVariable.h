@@ -158,7 +158,7 @@ WARNING
       if(td->isFlat())
 	Array3<T>::write(out, l, h, outputDoubleAsFloat);
       else
-	SCI_THROW(InternalError("Cannot yet write non-flat objects!\n"));
+	SCI_THROW(InternalError("Cannot yet write non-flat objects!\n", __FILE__, __LINE__));
     }
 
     virtual bool emitRLE(ostream& out, const IntVector& l, const IntVector& h,
@@ -171,7 +171,7 @@ WARNING
 	rle.write(out);
       }
       else
-	SCI_THROW(InternalError("Cannot yet write non-flat objects!\n"));
+	SCI_THROW(InternalError("Cannot yet write non-flat objects!\n", __FILE__, __LINE__));
       return true;
     }
 
@@ -181,7 +181,7 @@ WARNING
       if(td->isFlat())
 	Array3<T>::read(in, swapBytes);
       else
-	SCI_THROW(InternalError("Cannot yet read non-flat objects!\n"));
+	SCI_THROW(InternalError("Cannot yet read non-flat objects!\n", __FILE__, __LINE__));
     }
       
     virtual void readRLE(istream& in, bool swapBytes, int nByteMode)
@@ -192,7 +192,7 @@ WARNING
 	rle.copyOut(Array3<T>::begin(), Array3<T>::end());
       }
       else
-	SCI_THROW(InternalError("Cannot yet write non-flat objects!\n"));
+	SCI_THROW(InternalError("Cannot yet write non-flat objects!\n", __FILE__, __LINE__));
     }
 
     static TypeDescription::Register registerMe;
@@ -269,7 +269,7 @@ template<class T>
   {
     CCVariable<T>* c = dynamic_cast<CCVariable<T>* >(&copy);
     if(!c)
-      SCI_THROW(TypeMismatchException("Type mismatch in CC variable"));
+      SCI_THROW(TypeMismatchException("Type mismatch in CC variable", __FILE__, __LINE__));
     copyPointer(*c);
   }
 
@@ -291,7 +291,7 @@ template<class T>
   {
     if(this->getWindow())
       SCI_THROW(InternalError("Allocating a CCvariable that "
-			  "is apparently already allocated!"));
+			  "is apparently already allocated!", __FILE__, __LINE__));
     this->resize(lowIndex, highIndex);
   }
 /*
@@ -311,7 +311,7 @@ template<class T>
   {
     const CCVariable<T>* c = dynamic_cast<const CCVariable<T>* >(srcptr);
     if(!c)
-      SCI_THROW(TypeMismatchException("Type mismatch in CC variable"));
+      SCI_THROW(TypeMismatchException("Type mismatch in CC variable", __FILE__, __LINE__));
     return *c;
   }
 

@@ -7,10 +7,17 @@ using namespace std;
 DependencyException::DependencyException(const Task* task,
 					 const VarLabel* label, int matlIndex,
 					 const Patch* patch,
-					 string has, string needs)
+					 string has, string needs,
+                                         const char* file, int line)
   : task_(task), label_(label), matlIndex_(matlIndex), patch_(patch)
 {
   d_msg = makeMessage( task_, label_, matlIndex_, patch_, has, needs);
+
+#ifdef EXCEPTIONS_CRASH
+  cout << "A DependencyException exception was thrown.\n";
+  cout << file << ":" << line << "\n";
+  cout << d_msg << "\n";
+#endif
 }
 
 string DependencyException::makeMessage(const Task* task,

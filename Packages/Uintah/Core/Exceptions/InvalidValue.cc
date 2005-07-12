@@ -4,10 +4,12 @@
 
 using namespace Uintah;
 
-InvalidValue::InvalidValue(const std::string& msg)
-    : ProblemSetupException(msg)
+InvalidValue::InvalidValue(const std::string& msg, const char* file, int line)
+    : ProblemSetupException(msg, __FILE__, __LINE__)
 {
 #ifdef EXCEPTIONS_CRASH
+  std::cout << "An Invalid Value exception was thrown.\n";
+  std::cout << file << ":" << line << "\n";
   std::cout << msg << "\n";
 #endif
 }

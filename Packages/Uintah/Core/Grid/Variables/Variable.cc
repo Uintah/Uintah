@@ -62,7 +62,7 @@ void Variable::emit(OutputContext& oc, const IntVector& l,
     use_gzip = true;
   else if (compressionModeHint != "" && compressionModeHint != "none") {
     cout << "Invalid Compression Mode - throwing exception...\n";
-    SCI_THROW(InvalidCompressionMode(compressionModeHint));
+    SCI_THROW(InvalidCompressionMode(compressionModeHint, "", __FILE__, __LINE__));
   }
 
   used_rle = use_rle;
@@ -75,7 +75,7 @@ void Variable::emit(OutputContext& oc, const IntVector& l,
       cout << "Invalid Compression Mode - throwing exception...\n";
 
       SCI_THROW(InvalidCompressionMode("rle",
-				   virtualGetTypeDescription()->getName()));
+				   virtualGetTypeDescription()->getName(), __FILE__, __LINE__));
     }
   }
   else
@@ -120,7 +120,7 @@ void Variable::emit(OutputContext& oc, const IntVector& l,
   if(s != (long)writebufferSize) {
     cerr << "Variable::emit - write system call failed writing to " << oc.filename << " with errno " << errno << ": " << strerror(errno) <<  endl;
 
-    SCI_THROW(ErrnoException("Variable::emit (write call)", errno));
+    SCI_THROW(ErrnoException("Variable::emit (write call)", errno, __FILE__, __LINE__));
   }
   oc.cur += writebufferSize;
 
@@ -198,7 +198,7 @@ void Variable::read(InputContext& ic, long end, bool swapBytes, int nByteMode,
   else if (compressionMode == "gzip")
     use_gzip = true;
   else if (compressionMode != "") {
-    SCI_THROW(InvalidCompressionMode(compressionMode));
+    SCI_THROW(InvalidCompressionMode(compressionMode, "", __FILE__, __LINE__));
   }
 
   long datasize = end - ic.cur;
@@ -211,7 +211,7 @@ void Variable::read(InputContext& ic, long end, bool swapBytes, int nByteMode,
   ssize_t s = ::read(ic.fd, const_cast<char*>(data.c_str()), datasize);
   if(s != datasize) {
     cerr << "Error reading file: " << ic.filename << ", errno=" << errno << '\n';
-    SCI_THROW(ErrnoException("Variable::read (read call)", errno));
+    SCI_THROW(ErrnoException("Variable::read (read call)", errno, __FILE__, __LINE__));
   }
   
   ic.cur += datasize;
@@ -260,7 +260,7 @@ bool Variable::emitRLE(ostream& /*out*/, const IntVector& /*l*/,
 void Variable::readRLE(istream& /*in*/, bool /*swapBytes*/, int /*nByteMode*/)
 {
   SCI_THROW(InvalidCompressionMode("rle",
-			       virtualGetTypeDescription()->getName()));
+			       virtualGetTypeDescription()->getName(), __FILE__, __LINE__));
 }
 
 void Variable::offsetGrid(const IntVector& /*offset*/)

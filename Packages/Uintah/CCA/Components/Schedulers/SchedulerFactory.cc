@@ -52,7 +52,7 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
     sch = scinew NullScheduler(world, output);
   } else {
     sch = 0;   
-    throw ProblemSetupException("Unknown scheduler");
+    throw ProblemSetupException("Unknown scheduler", __FILE__, __LINE__);
   }
   
   return sch;

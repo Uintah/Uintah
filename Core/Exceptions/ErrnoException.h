@@ -51,7 +51,7 @@ namespace SCIRun {
 
 class ErrnoException : public Exception {
 public:
-  ErrnoException(const std::string&, int err);
+  ErrnoException(const std::string&, int err, const char* file, int line);
   ErrnoException(const ErrnoException&);
   virtual ~ErrnoException();
   virtual const char* message() const;

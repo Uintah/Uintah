@@ -45,7 +45,7 @@ void ModelFactory::makeModels(const ProblemSpecP& params,
       model = model->findNextBlock("Model")){
     string type;
     if(!model->getAttribute("type", type)){
-      throw ProblemSetupException("Model does not specify type=\"name\"");
+      throw ProblemSetupException("Model does not specify type=\"name\"", __FILE__, __LINE__);
     }
     
     if(type == "SimpleRxn")
@@ -75,6 +75,6 @@ void ModelFactory::makeModels(const ProblemSpecP& params,
     else if(type == "Radiation")
       models.push_back(scinew RadiationDriver(d_myworld, model));
     else
-      throw ProblemSetupException("Unknown model: "+type);
+      throw ProblemSetupException("Unknown model: "+type, __FILE__, __LINE__);
   }
 }

@@ -3,10 +3,12 @@
 #include <iostream>
 using namespace Uintah;
 
-ParameterNotFound::ParameterNotFound(const std::string& msg)
-    : ProblemSetupException("Required parameter not found: "+msg)
+ParameterNotFound::ParameterNotFound(const std::string& msg, const char* file, int line)
+    : ProblemSetupException("Required parameter not found: "+msg, __FILE__, __LINE__)
 {
 #ifdef EXCEPTIONS_CRASH
+  std::cout << "A ProblemNotFound exception was thrown.\n";
+  std::cout << file << ":" << line << "\n";
   std::cout << msg << "\n";
 #endif
 }

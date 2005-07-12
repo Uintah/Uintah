@@ -122,7 +122,7 @@ void FractureMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
     // Read all MPM flags (look in MPMFlags.cc)
     flags->readMPMFlags(mpm_soln_ps, grid);
     if (flags->d_integrator_type == "implicit")
-      throw ProblemSetupException("Can't use implicit integration with -mpm");
+      throw ProblemSetupException("Can't use implicit integration with -mpm", __FILE__, __LINE__);
 
     mpm_soln_ps->get("do_grid_reset", d_doGridReset);
     mpm_soln_ps->get("minimum_particle_mass",    d_min_part_mass);
@@ -150,7 +150,8 @@ void FractureMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   if(flags->d_canAddMPMMaterial){
     cout << "Addition of new material for particle failure is possible"<< endl;
     if(!flags->d_addNewMaterial){
-      throw ProblemSetupException("To use material addition, one must specify manual_add_material==true in the input file.");
+      throw ProblemSetupException("To use material addition, one must specify manual_add_material==true in the input file.",
+                                  __FILE__, __LINE__);
     }
   }
 

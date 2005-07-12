@@ -675,7 +675,7 @@ MPIScheduler::execute()
       } // end case Task::InitialSend or Task::Normal
       break;
     default:
-      SCI_THROW(InternalError("Unknown task type"));
+      SCI_THROW(InternalError("Unknown task type", __FILE__, __LINE__));
     } // end switch( task->getTask()->getType() )
 
     if(!abort && dws[dws.size()-1] && dws[dws.size()-1]->timestepAborted()){

@@ -530,7 +530,7 @@ namespace Uintah {
 	  break;
 
 	  default: 
-		throw InvalidValue("Unknown explicit time integrator type");
+		throw InvalidValue("Unknown explicit time integrator type", __FILE__, __LINE__);
 	}
       }; 
 

@@ -39,7 +39,7 @@
 #include "struct_mv.h"
 
 #undef CHKERRQ
-#define CHKERRQ(x) if(x) throw PetscError(x, __FILE__);
+#define CHKERRQ(x) if(x) throw PetscError(x, __FILE__, __FILE__, __LINE__);
 
 using namespace std;
 using namespace Uintah;
@@ -857,7 +857,7 @@ HypreSolver::computeVelResidual(const ProcessorGroup* ,
 
     break;
   default:
-    throw InvalidValue("Invalid index in LinearSolver for velocity");
+    throw InvalidValue("Invalid index in LinearSolver for velocity", __FILE__, __LINE__);
   }
 }
 
@@ -1043,7 +1043,7 @@ HypreSolver::computeVelUnderrelax(const ProcessorGroup* ,
 
     break;
   default:
-    throw InvalidValue("Invalid index in LinearSolver for velocity");
+    throw InvalidValue("Invalid index in LinearSolver for velocity", __FILE__, __LINE__);
   }
 }
 
@@ -1311,7 +1311,7 @@ HypreSolver::velocityLisolve(const ProcessorGroup*,
 #endif
     break;
   default:
-    throw InvalidValue("Invalid index in LinearSolver for velocity");
+    throw InvalidValue("Invalid index in LinearSolver for velocity", __FILE__, __LINE__);
   }
 #endif
 }

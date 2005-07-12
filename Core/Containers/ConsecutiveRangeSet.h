@@ -87,8 +87,14 @@ WARNING
 class ConsecutiveRangeSetException : public Exception
 {
 public:
-  ConsecutiveRangeSetException(const std::string& msg)
-    : msg_(msg) { }
+  ConsecutiveRangeSetException(const std::string& msg, const char* file, int line)
+    : msg_(msg) {
+#ifdef EXCEPTIONS_CRASH
+    std::cout << "A ConsecutiveRangeSetException was thrown.\n";
+    std::cout << file << ":" << line << "\n";
+    std::cout << msg_;
+#endif
+ }
 
   ConsecutiveRangeSetException(const ConsecutiveRangeSetException& copy)
     : msg_(copy.msg_) { }

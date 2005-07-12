@@ -111,7 +111,8 @@ void DataArchiver::problemSetup(const ProblemSpecP& params,
      d_outputInterval = 0.0; // default
 
    if (d_outputInterval != 0.0 && d_outputTimestepInterval != 0)
-     throw ProblemSetupException("Use <outputInterval> or <outputTimestepInterval>, not both");
+     throw ProblemSetupException("Use <outputInterval> or <outputTimestepInterval>, not both",
+                                 __FILE__, __LINE__);
    
    // set default compression mode - can be "tryall", "gzip", "rle", "rle, gzip", "gzip, rle", or "none"
    string defaultCompressionMode = "";
@@ -134,7 +135,8 @@ void DataArchiver::problemSetup(const ProblemSpecP& params,
       catch (ConsecutiveRangeSetException) {
 	throw ProblemSetupException("'" + attributes["material"] + "'" +
 	       " cannot be parsed as a set of material" +
-	       " indices for saving '" + saveItem.labelName + "'");
+	       " indices for saving '" + saveItem.labelName + "'",
+                                    __FILE__, __LINE__);
       }
 
       if (saveItem.matls.size() == 0)
@@ -152,7 +154,8 @@ void DataArchiver::problemSetup(const ProblemSpecP& params,
       catch (ConsecutiveRangeSetException) {
 	throw ProblemSetupException("'" + attributes["levels"] + "'" +
 	       " cannot be parsed as a set of levels" +
-	       " for saving '" + saveItem.labelName + "'");
+	       " for saving '" + saveItem.labelName + "'",
+                                    __FILE__, __LINE__);
       }
 
       if (saveItem.levels.size() == 0)
@@ -176,7 +179,8 @@ void DataArchiver::problemSetup(const ProblemSpecP& params,
       save = save->findNextBlock("save");
    }
    if(d_saveP_x == false && d_saveParticleVariables == true) {
-     throw ProblemSetupException(" You must save p.x when saving other particle variables");
+     throw ProblemSetupException(" You must save p.x when saving other particle variables",
+                                 __FILE__, __LINE__);
    }     
    
    // get checkpoint information
@@ -216,15 +220,18 @@ void DataArchiver::problemSetup(const ProblemSpecP& params,
    }
    // must specify something
    if ( attrib_1 == "" && attrib_2 == "" && attrib_3 == "" && checkpoint != 0)
-     throw ProblemSetupException("ERROR: \n In checkpointing: must specify either interval, timestepInterval or walltimeStart");
+     throw ProblemSetupException("ERROR: \n In checkpointing: must specify either interval, timestepInterval or walltimeStart",
+                                 __FILE__, __LINE__);
 
    // can't use both checkpointInterval and checkpointTimestepInterval
    if (d_checkpointInterval != 0.0 && d_checkpointTimestepInterval != 0)
-     throw ProblemSetupException("Use <checkpoint interval=...> or <checkpoint timestepInterval=...>, not both");
+     throw ProblemSetupException("Use <checkpoint interval=...> or <checkpoint timestepInterval=...>, not both",
+                                 __FILE__, __LINE__);
 
    // can't have a walltimeStart without a walltimeInterval
    if (d_checkpointWalltimeStart != 0 && d_checkpointWalltimeInterval == 0)
-     throw ProblemSetupException("<checkpoint walltimeStart must have a corresponding walltimeInterval");
+     throw ProblemSetupException("<checkpoint walltimeStart must have a corresponding walltimeInterval",
+                                 __FILE__, __LINE__);
 
    // set walltimeStart to walltimeInterval if not specified
    if (d_checkpointWalltimeInterval != 0 && d_checkpointWalltimeStart == 0)
@@ -314,16 +321,16 @@ void DataArchiver::initializeOutput(const ProblemSpecP& params) {
      // This will be an empty file, everything is encoded in the name anyway
      FILE* tmpout = fopen(fname.c_str(), "w");
      if(!tmpout)
-       throw ErrnoException("fopen failed for " + fname, errno);
+       throw ErrnoException("fopen failed for " + fname, errno, __FILE__, __LINE__);
      fprintf(tmpout, "\n");
      if(fflush(tmpout) != 0)
-       throw ErrnoException("fflush", errno);
+       throw ErrnoException("fflush", errno, __FILE__, __LINE__);
 #ifndef _WIN32
      if(fsync(fileno(tmpout)) != 0)
-       throw ErrnoException("fsync", errno);
+       throw ErrnoException("fsync", errno, __FILE__, __LINE__);
 #endif
      if(fclose(tmpout) != 0)
-       throw ErrnoException("fclose", errno);
+       throw ErrnoException("fclose", errno, __FILE__, __LINE__);
      MPI_Barrier(d_myworld->getComm());
      // See who else we can see
      d_writeMeta=true;
@@ -339,7 +346,7 @@ void DataArchiver::initializeOutput(const ProblemSpecP& params) {
 	 break;
        } else if(errno != ENOENT){
 	 cerr << "Cannot stat file: " << name.str() << ", errno=" << errno << '\n';
-	 throw ErrnoException("stat", errno);
+	 throw ErrnoException("stat", errno, __FILE__, __LINE__);
        }
      }
      MPI_Barrier(d_myworld->getComm());
@@ -348,20 +355,20 @@ void DataArchiver::initializeOutput(const ProblemSpecP& params) {
        string fname = myname.str();
        FILE* tmpout = fopen(fname.c_str(), "w");
        if(!tmpout)
-	 throw ErrnoException("fopen", errno);
+	 throw ErrnoException("fopen", errno, __FILE__, __LINE__);
        string dirname = d_dir.getName();
        fprintf(tmpout, "%s\n", dirname.c_str());
        if(fflush(tmpout) != 0)
-	 throw ErrnoException("fflush", errno);
+	 throw ErrnoException("fflush", errno, __FILE__, __LINE__);
 #if defined(__APPLE__)
        if(fsync(fileno(tmpout)) != 0)
-	 throw ErrnoException("fsync", errno);
+	 throw ErrnoException("fsync", errno, __FILE__, __LINE__);
 #elif !defined(_WIN32)
        if(fdatasync(fileno(tmpout)) != 0)
-	 throw ErrnoException("fdatasync", errno);
+	 throw ErrnoException("fdatasync", errno, __FILE__, __LINE__);
 #endif
        if(fclose(tmpout) != 0)
-	 throw ErrnoException("fclose", errno);
+	 throw ErrnoException("fclose", errno, __FILE__, __LINE__);
      }
      MPI_Barrier(d_myworld->getComm());
      if(!d_writeMeta){
@@ -370,7 +377,8 @@ void DataArchiver::initializeOutput(const ProblemSpecP& params) {
        ifstream in(name.str().c_str()); 
        if (!in) {
 	 throw InternalError("DataArchiver::initializeOutput(): The file \"" + \
-			     name.str() + "\" not found on second pass for filesystem discovery!");
+			     name.str() + "\" not found on second pass for filesystem discovery!",
+                             __FILE__, __LINE__);
        }
        string dirname;
        in >> dirname;
@@ -390,7 +398,7 @@ void DataArchiver::initializeOutput(const ProblemSpecP& params) {
      int s = unlink(myname.str().c_str());
      if(s != 0){
        cerr << "Cannot unlink file: " << myname.str() << '\n';
-       throw ErrnoException("unlink", errno);
+       throw ErrnoException("unlink", errno, __FILE__, __LINE__);
      }
    } else {
       makeVersionedDir();
@@ -403,7 +411,7 @@ void DataArchiver::initializeOutput(const ProblemSpecP& params) {
       ofstream out(inputname.c_str());
       if (!out) {
 	throw ErrnoException("DataArchiver::initializeOutput(): The file \"" + \
-			    inputname + "\" could not be opened for writing!",errno);
+			    inputname + "\" could not be opened for writing!",errno, __FILE__, __LINE__);
       }
       out << params << endl; 
       createIndexXML(d_dir);
@@ -459,7 +467,7 @@ void DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
      ofstream copiedIndex(iname.c_str());
      if (!copiedIndex) {
        throw InternalError("DataArchiver::restartSetup(): The file \"" + \
-			   iname + "\" could not be opened for writing!");
+			   iname + "\" could not be opened for writing!", __FILE__, __LINE__);
      }
      copiedIndex << indexDoc << endl;
      indexDoc->releaseDocument();
@@ -507,7 +515,7 @@ void DataArchiver::combinePatchSetup(Dir& fromDir)
       while (variable != 0) {
 	string varname;
 	if (!variable->getAttribute("name", varname))
-	  throw InternalError("global variable name attribute not found");
+	  throw InternalError("global variable name attribute not found", __FILE__, __LINE__);
 
 	// this isn't the most efficient, but i don't think it matters
 	// to much for this initialization code
@@ -562,7 +570,7 @@ void DataArchiver::copySection(Dir& fromDir, Dir& toDir, string section)
   ofstream indexOut(iname.c_str());
   if (!indexOut) {
     throw InternalError("DataArchiver::copySection(): The file \"" + \
-			iname + "\" could not be opened for writing!");
+			iname + "\" could not be opened for writing!", __FILE__, __LINE__);
   }
   indexOut << myIndexDoc << endl;
 
@@ -626,7 +634,7 @@ void DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
 
 	 string hrefNode = attributes["href"];
 	 if (hrefNode == "")
-	    throw InternalError("timestep href attribute not found");
+	    throw InternalError("timestep href attribute not found", __FILE__, __LINE__);
 
 	 unsigned int href_pos = (unsigned int)hrefNode.find_first_of("/");
 
@@ -664,7 +672,7 @@ void DataArchiver::copyTimesteps(Dir& fromDir, Dir& toDir, int startTimestep,
    ofstream copiedIndex(iname.c_str());
    if (!copiedIndex) {
      throw InternalError("DataArchiver::copyTimesteps(): The file \"" + \
-			 iname + "\" could not be opened for writing!");
+			 iname + "\" could not be opened for writing!", __FILE__, __LINE__);
    }
    copiedIndex << indexDoc << endl;
    indexDoc->releaseDocument();
@@ -694,20 +702,20 @@ void DataArchiver::copyDatFiles(Dir& fromDir, Dir& toDir, int startTimestep,
 	 string hrefNode = attributes["href"];
 
 	 if (hrefNode == "")
-	    throw InternalError("global variable href attribute not found");
+	    throw InternalError("global variable href attribute not found", __FILE__, __LINE__);
 	 const char* href = hrefNode.c_str();
 
 	 ifstream datFile((fromDir.getName()+"/"+href).c_str());
 	 if (!datFile) {
 	   throw InternalError("DataArchiver::copyDatFiles(): The file \"" + \
 			       (fromDir.getName()+"/"+href) + \
-			       "\" could not be opened for reading!");
+			       "\" could not be opened for reading!", __FILE__, __LINE__);
 	 }
 	 ofstream copyDatFile((toDir.getName()+"/"+href).c_str(), ios::app);
 	 if (!copyDatFile) {
 	   throw InternalError("DataArchiver::copyDatFiles(): The file \"" + \
 			       (toDir.getName()+"/"+href) + \
-			       "\" could not be opened for writing!");
+			       "\" could not be opened for writing!", __FILE__, __LINE__);
 	 }
 
 	 // copy up to maxTimestep lines of the old dat file to the copy
@@ -750,7 +758,7 @@ void DataArchiver::createIndexXML(Dir& dir)
    ofstream out(iname.c_str());
    if (!out) {
      throw ErrnoException("DataArchiver::createIndexXML(): The file \"" + \
-			 iname + "\" could not be opened for writing!",errno);
+			 iname + "\" could not be opened for writing!",errno, __FILE__, __LINE__);
    }
    out << rootElem << endl;
    rootElem->releaseDocument();
@@ -910,7 +918,7 @@ void DataArchiver::beginOutputTimestep( double time, double delt,
       ofstream index_backup(ibackup_name.c_str());
       if (!index_backup) {
 	throw InternalError("DataArchiver::beginOutputTimestep(): The file \"" + \
-			    ibackup_name + "\" could not be opened for writing!");
+			    ibackup_name + "\" could not be opened for writing!", __FILE__, __LINE__);
       }
       index_backup << index << endl;
     }
@@ -929,7 +937,7 @@ void DataArchiver::beginOutputTimestep( double time, double delt,
 	ofstream indexout(iname.c_str());
 	if (!indexout) {
 	  throw InternalError("DataArchiver::beginOutputTimestep(): The file \"" + \
-			      iname + "\" could not be opened for writing!");
+			      iname + "\" could not be opened for writing!", __FILE__, __LINE__);
 	}
 	indexout << index << endl;
 	
@@ -1107,7 +1115,7 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
 	if(n->getNodeName() == "timestep") {
 	  int readtimestep;
 	  if(!n->get(readtimestep))
-	    throw InternalError("Error parsing timestep number");
+	    throw InternalError("Error parsing timestep number", __FILE__, __LINE__);
 	  if(readtimestep == timestep){
 	    found=true;
 	    break;
@@ -1130,7 +1138,7 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
       ofstream indexOut(iname.c_str());
       if (!indexOut) {
 	throw InternalError("DataArchiver::executedTimestep(): The file \"" + \
-			    iname + "\" could not be opened for writing!");
+			    iname + "\" could not be opened for writing!", __FILE__, __LINE__);
       }
       indexOut << indexDoc << endl;
       indexDoc->releaseDocument();
@@ -1233,7 +1241,7 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
       ofstream out(name.c_str());
       if (!out) {
 	throw ErrnoException("DataArchiver::outputTimestep(): The file \"" + \
-			    name + "\" could not be opened for writing!",errno);
+			    name + "\" could not be opened for writing!",errno, __FILE__, __LINE__);
       }
       out << rootElem << endl;
       rootElem->releaseDocument();
@@ -1257,7 +1265,7 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
 
       if ( close( fd ) == -1 ) {
 	cerr << "Error closing file: " << filename << ", errno=" << errno << '\n';
-	throw ErrnoException("DataArchiver::executedTimestep (close call)", errno);
+	throw ErrnoException("DataArchiver::executedTimestep (close call)", errno, __FILE__, __LINE__);
       }
 
       dataFileHandleIdx++;  
@@ -1278,7 +1286,7 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
 
       if ( close( fd ) == -1 ) {
 	cerr << "Error closing file: " << filename << ", errno=" << errno << '\n';
-	throw ErrnoException("DataArchiver::executedTimestep (close call)", errno);
+	throw ErrnoException("DataArchiver::executedTimestep (close call)", errno, __FILE__, __LINE__);
       }
       
       dataFileHandleIdx++;  
@@ -1313,7 +1321,7 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
       ofstream out(xmlFilename.c_str());
       if (!out) {
 	throw ErrnoException("DataArchiver::executedTimestep(): The file \"" + \
-			    xmlFilename + "\" could not be opened for writing!",errno);
+			    xmlFilename + "\" could not be opened for writing!",errno, __FILE__, __LINE__);
       }
       out << tempXMLDataFile << endl;
       tempXMLDataFile->releaseDocument();
@@ -1351,7 +1359,7 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
       ofstream out(xmlFilename.c_str());
       if (!out) {
 	throw ErrnoException("DataArchiver::executedTimestep(): The file \"" + \
-              xmlFilename + "\" could not be opened for writing!",errno);
+              xmlFilename + "\" could not be opened for writing!",errno, __FILE__, __LINE__);
       }
       out << tempXMLDataFile << endl;
       tempXMLDataFile->releaseDocument();
@@ -1455,7 +1463,7 @@ void DataArchiver::indexAddGlobals()
     ofstream indexOut(iname.c_str());
     if (!indexOut) {
       throw InternalError("DataArchiver::indexAddGlobals(): The file \"" + \
-	    iname + "\" could not be opened for writing!");
+	    iname + "\" could not be opened for writing!", __FILE__, __LINE__);
     }
     indexOut << indexDoc << endl;
     indexDoc->releaseDocument();
@@ -1494,7 +1502,7 @@ void DataArchiver::outputReduction(const ProcessorGroup*,
 #endif
       if (!out) {
 	throw ErrnoException("DataArchiver::outputReduction(): The file \"" + \
-	      filename.str() + "\" could not be opened for writing!",errno);
+	      filename.str() + "\" could not be opened for writing!",errno, __FILE__, __LINE__);
       }
       out << setprecision(17) << d_tempElapsedTime << "\t";
       new_dw->print(out, var, 0, matlIndex);
@@ -1678,7 +1686,7 @@ void DataArchiver::output(const ProcessorGroup*,
       fd = open(filename, O_WRONLY|O_CREAT, 0666);
       if ( fd == -1 ) {
 	cerr << "Cannot open dataFile: " << dataFilename << '\n';
-	throw ErrnoException("DataArchiver::output (open call)", errno);
+	throw ErrnoException("DataArchiver::output (open call)", errno, __FILE__, __LINE__);
       }
     }
 #ifdef PVFS_FIX
@@ -1707,7 +1715,7 @@ void DataArchiver::output(const ProcessorGroup*,
 
 	if ( fd == -1 ) {
 	  cerr << "Cannot open dataFile: " << dataFilename << '\n';
-	  throw ErrnoException("DataArchiver::output (open call)", errno);
+	  throw ErrnoException("DataArchiver::output (open call)", errno, __FILE__, __LINE__);
 	}
 	else {
 	  (*currentDataFileHandleMap)[level->getIndex()] = make_pair(fd, filename);
@@ -1725,7 +1733,7 @@ void DataArchiver::output(const ProcessorGroup*,
     int s = fstat(fd, &st);
     if(s == -1){
       cerr << "Cannot fstat: " << dataFilename << '\n';
-      throw ErrnoException("DataArchiver::output (stat call)", errno);
+      throw ErrnoException("DataArchiver::output (stat call)", errno, __FILE__, __LINE__);
     }
     ASSERTEQ(cur, st.st_size);
 #endif
@@ -1755,7 +1763,7 @@ void DataArchiver::output(const ProcessorGroup*,
 #endif
         if(ls == -1) {
           cerr << "lseek error - file: " << filename << ", errno=" << errno << '\n';
-	  throw ErrnoException("DataArchiver::output (lseek call)", errno);
+	  throw ErrnoException("DataArchiver::output (lseek call)", errno, __FILE__, __LINE__);
         }
 	// Pad appropriately
 	if(cur%PADSIZE != 0){
@@ -1765,7 +1773,7 @@ void DataArchiver::output(const ProcessorGroup*,
 	  int err = (int)write(fd, zero, pad);
           if (err != pad) {
             cerr << "Error writing to file: " << filename << ", errno=" << errno << '\n';
-            SCI_THROW(ErrnoException("DataArchiver::output (write call)", errno));
+            SCI_THROW(ErrnoException("DataArchiver::output (write call)", errno, __FILE__, __LINE__));
           }
 	  cur+=pad;
 	  delete[] zero;
@@ -1783,7 +1791,7 @@ void DataArchiver::output(const ProcessorGroup*,
 	s = fstat(fd, &st);
 	if(s == -1) {
           cerr << "fstat error - file: " << filename << ", errno=" << errno << '\n';
-	  throw ErrnoException("DataArchiver::output (stat call)", errno);
+	  throw ErrnoException("DataArchiver::output (stat call)", errno, __FILE__, __LINE__);
         }
 	ASSERTEQ(oc.cur, st.st_size);
 #endif
@@ -1800,7 +1808,7 @@ void DataArchiver::output(const ProcessorGroup*,
       int s = close(fd);
       if(s == -1) {
         cerr << "Error closing file: " << filename << ", errno=" << errno << '\n';
-	throw ErrnoException("DataArchiver::output (close call)", errno);
+	throw ErrnoException("DataArchiver::output (close call)", errno, __FILE__, __LINE__);
       }
     }
 
@@ -1811,7 +1819,7 @@ void DataArchiver::output(const ProcessorGroup*,
       ofstream out(xmlFilename.c_str());
       if (!out) {
 	throw ErrnoException("DataArchiver::output(): The file \"" + \
-	      xmlFilename + "\" could not be opened for writing!",errno);
+	      xmlFilename + "\" could not be opened for writing!",errno, __FILE__, __LINE__);
       }
       out << doc << endl;
       doc->releaseDocument();
@@ -1857,7 +1865,7 @@ void DataArchiver::output(const ProcessorGroup*,
 	  n->getAttributes(attributes);
 	  string varname = attributes["name"];
 	  if(varname == "")
-	    throw InternalError("varname not found");
+	    throw InternalError("varname not found", __FILE__, __LINE__);
 	  if(varname == var->getName()){
 	    found=true;
 	    break;
@@ -1875,7 +1883,7 @@ void DataArchiver::output(const ProcessorGroup*,
       ofstream indexOut(iname.c_str());
       if (!indexOut) {
 	throw InternalError("DataArchiver::output(): The file \"" + \
-	      iname + "\" could not be opened for writing!");
+	      iname + "\" could not be opened for writing!", __FILE__, __LINE__);
       }
       indexOut << indexDoc << endl;  
       indexDoc->releaseDocument();
@@ -1971,7 +1979,7 @@ DataArchiver::makeVersionedDir()
     else if( errno != EEXIST )  {
       cerr << "makeVersionedDir: Error " << errno << " in mkdir\n";
       throw ErrnoException("DataArchiver.cc: mkdir failed for some "
-                           "reason besides dir already exists", errno);
+                           "reason besides dir already exists", errno, __FILE__, __LINE__);
     }
   }
 
@@ -1999,7 +2007,7 @@ DataArchiver::makeVersionedDir()
 	  {
 	    int code = rmdir( dirName.c_str() );
 	    if (code != 0)
-	      throw ErrnoException("DataArchiver.cc: rmdir failed", errno);
+	      throw ErrnoException("DataArchiver.cc: rmdir failed", errno, __FILE__, __LINE__);
 	  }
       }
     else
@@ -2008,7 +2016,7 @@ DataArchiver::makeVersionedDir()
 	  {
 	    cerr << "makeVersionedDir: Error " << errno << " in mkdir\n";
 	    throw ErrnoException("DataArchiver.cc: mkdir failed for some "
-				 "reason besides dir already exists", errno);
+				 "reason besides dir already exists", errno, __FILE__, __LINE__);
 	  }
 	dirMin = dirNum + 1;
       }
@@ -2070,7 +2078,7 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
     VarLabel* var = VarLabel::find((*it).labelName);
     if (var == NULL) 
       throw ProblemSetupException((*it).labelName +
-                                  " variable not found to save.");
+                                  " variable not found to save.", __FILE__, __LINE__);
 
     if ((*it).compressionMode != "")
       var->setCompressionMode((*it).compressionMode);
@@ -2086,7 +2094,7 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
       }
       else
         throw ProblemSetupException((*it).labelName +
-                                    " variable not computed for saving.");
+                                    " variable not computed for saving.", __FILE__, __LINE__);
     }
     saveItem.label_ = var;
     ConsecutiveRangeSet matlsToSave =
@@ -2096,7 +2104,7 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
     if (((*it).matls != ConsecutiveRangeSet::all) &&
 	((*it).matls != matlsToSave)) {
       throw ProblemSetupException((*it).labelName +
-				  " variable not computed for all materials specified to save.");
+				  " variable not computed for all materials specified to save.", __FILE__, __LINE__);
     }
     saveItem.levels = (*it).levels;
       
@@ -2148,7 +2156,7 @@ void DataArchiver::initCheckpoints(SchedulerP& sched)
       VarLabel* var = VarLabel::find((*mapIter).first);
       if (var == NULL)
          throw ProblemSetupException((*mapIter).first +
-				  " variable not found to checkpoint.");
+				  " variable not found to checkpoint.", __FILE__, __LINE__);
 
       saveItem.label_ = var;
       saveItem.setMaterials((*mapIter).second, prevMatls_, prevMatlSet_);
@@ -2167,7 +2175,7 @@ void DataArchiver::initCheckpoints(SchedulerP& sched)
    if (!hasDelT) {
      VarLabel* var = VarLabel::find("delT");
      if (var == NULL)
-       throw ProblemSetupException("delT variable not found to checkpoint.");
+       throw ProblemSetupException("delT variable not found to checkpoint.", __FILE__, __LINE__);
      saveItem.label_ = var;
      ConsecutiveRangeSet globalMatl("-1");
      saveItem.setMaterials(globalMatl, prevMatls_, prevMatlSet_);

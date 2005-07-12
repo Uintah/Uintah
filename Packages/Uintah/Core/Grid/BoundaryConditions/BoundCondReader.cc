@@ -149,7 +149,7 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
       warn<<"ERROR: Input file\n The Circle BC geometry is not correctly specified."
           << " The origin " << p << " must be on the same plane" 
           << " as face (" << fc <<"). Double check the origin and Level:box spec. \n\n";
-      throw ProblemSetupException(warn.str());
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     
     
@@ -157,7 +157,7 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
       ostringstream warn;
       warn<<"ERROR\n Circle BC geometry not correctly specified \n"
           << " you must specify origin [x,y,z] and radius [r] \n\n";
-      throw ProblemSetupException(warn.str());
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     
     
@@ -192,14 +192,14 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
       warn<<"ERROR: Input file\n The Annulus BC geometry is not correctly specified."
           << " The origin " << p << " must be on the same plane" 
           << " as face (" << fc <<"). Double check the origin and Level:box spec. \n\n";
-      throw ProblemSetupException(warn.str());
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     
     if (origin == "" || in_radius == "" || out_radius == "" ) {
       ostringstream warn;
       warn<<"ERROR\n Annulus BC geometry not correctly specified \n"
           << " you must specify origin [x,y,z], inner_radius [r] outer_radius [r] \n\n";
-      throw ProblemSetupException(warn.str());
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     bcGeom = scinew AnnulusBCData(p,i_r,o_r);
   }
@@ -222,21 +222,21 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
       warn<<"ERROR: Input file\n The rectangle BC geometry is not correctly specified."
           << " The low " << l << " high " << u << " points must be on the same plane" 
           << " as face (" << fc <<"). Double check against and Level:box spec. \n\n";
-      throw ProblemSetupException(warn.str());
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }   
    
     if (low == "" || up == "") {
       ostringstream warn;
       warn<<"ERROR\n Rectangle BC geometry not correctly specified \n"
           << " you must specify lower [x,y,z] and upper[x,y,z] \n\n";
-      throw ProblemSetupException(warn.str());
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     if ( (l.x() >  u.x() || l.y() >  u.y() || l.z() >  u.z()) ||
          (l.x() == u.x() && l.y() == u.y() && l.z() == u.z())){
       ostringstream warn;
       warn<<"ERROR\n Rectangle BC geometry not correctly specified \n"
           << " lower pt "<< l <<" upper pt " << u;
-      throw ProblemSetupException(warn.str());
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     
     bcGeom = scinew RectangleBCData(l,u);
@@ -246,7 +246,7 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     ostringstream warn;
     warn << "ERROR\n Boundary condition geometry not correctly specified "
       " Valid options (side, circle, rectangle, annulus";
-    throw ProblemSetupException(warn.str());  
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);  
   }
   
 

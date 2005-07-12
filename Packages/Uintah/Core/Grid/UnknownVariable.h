@@ -29,9 +29,11 @@ namespace Uintah {
   class UnknownVariable : public Exception {
   public:
     UnknownVariable(const std::string& varname, int dwid, const Patch* patch,
-		    int matlIndex, const std::string& extramsg = "");
+		    int matlIndex, const std::string& extramsg, 
+                    const char* file, int line);
     UnknownVariable(const std::string& varname, int dwid, const Level* level,
-		    int matlIndex, const std::string& extramsg = "");
+		    int matlIndex, const std::string& extramsg,
+                    const char* file, int line);
     UnknownVariable(const UnknownVariable&);
     virtual ~UnknownVariable();
     virtual const char* message() const;

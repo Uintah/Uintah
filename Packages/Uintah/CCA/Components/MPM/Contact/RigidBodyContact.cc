@@ -49,7 +49,8 @@ RigidBodyContact::RigidBodyContact(const ProcessorGroup* myworld,
   d_direction.z(1^d_direction.z());  // Change 1 to 0, or 0 to 1
   if (d_direction.x() < 0 || d_direction.x() > 1 || d_direction.y() < 0 ||
       d_direction.y() > 1 || d_direction.z() < 0 || d_direction.z() > 1) {
-    throw ProblemSetupException(" E R R O R----->MPM:Dir. of rigid contact should be 0 or 1");
+    throw ProblemSetupException(" E R R O R----->MPM:Dir. of rigid contact should be 0 or 1",
+                                __FILE__, __LINE__);
   }
   //cout << "Direction of contact = " << d_direction << endl;
   

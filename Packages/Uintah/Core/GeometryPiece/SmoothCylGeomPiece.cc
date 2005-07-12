@@ -21,29 +21,29 @@ SmoothCylGeomPiece::SmoothCylGeomPiece(ProblemSpecP& ps)
   ps->require("bottom", d_bottom);
   ps->require("top", d_top);
   if ((d_top-d_bottom).length2() <= 0.0)
-    SCI_THROW(ProblemSetupException("SmoothCylGeom: Check data in input"));
+    SCI_THROW(ProblemSetupException("SmoothCylGeom: Check data in input", __FILE__, __LINE__));
 
   ps->require("radius", d_radius);
   if (d_radius <= 0.0)
-    SCI_THROW(ProblemSetupException("SmoothCylGeom: Radius < 0"));
+    SCI_THROW(ProblemSetupException("SmoothCylGeom: Radius < 0", __FILE__, __LINE__));
 
   ps->require("num_radial", d_numRadial);
   if (d_numRadial < 1)
-    SCI_THROW(ProblemSetupException("SmoothCylGeom: Radial Divs < 1"));
+    SCI_THROW(ProblemSetupException("SmoothCylGeom: Radial Divs < 1", __FILE__, __LINE__));
 
   ps->require("num_axial", d_numAxial);
   if (d_numAxial < 1)
-    SCI_THROW(ProblemSetupException("SmoothCylGeom: Axial Divs < 1"));
+    SCI_THROW(ProblemSetupException("SmoothCylGeom: Axial Divs < 1", __FILE__, __LINE__));
 
   d_thickness = d_radius;
   ps->get("thickness", d_thickness);
   if (d_thickness > d_radius)
-    SCI_THROW(ProblemSetupException("SmoothCylGeom: Thickness > Radius"));
+    SCI_THROW(ProblemSetupException("SmoothCylGeom: Thickness > Radius", __FILE__, __LINE__));
 
   d_capThick = 0.0;
   ps->get("endcap_thickness", d_capThick);
   if (d_capThick < 0.0)
-    SCI_THROW(ProblemSetupException("SmoothCylGeom: Cap Thickness < 0.0"));
+    SCI_THROW(ProblemSetupException("SmoothCylGeom: Cap Thickness < 0.0", __FILE__, __LINE__));
 
   d_fileName = "none";
   ps->get("output_file", d_fileName);

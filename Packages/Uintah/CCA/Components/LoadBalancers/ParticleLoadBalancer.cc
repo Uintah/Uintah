@@ -609,7 +609,7 @@ ParticleLoadBalancer::restartInitialize(ProblemSpecP& pspec, XMLURL tsurl, const
   ASSERT(pspec != 0);
   ProblemSpecP datanode = pspec->findBlock("Data");
   if(datanode == 0)
-    throw InternalError("Cannot find Data in timestep");
+    throw InternalError("Cannot find Data in timestep", __FILE__, __LINE__);
   for(ProblemSpecP n = datanode->getFirstChild(); n != 0; 
       n=n->getNextSibling()){
     if(n->getNodeName() == "Datafile") {
@@ -620,7 +620,7 @@ ParticleLoadBalancer::restartInitialize(ProblemSpecP& pspec, XMLURL tsurl, const
         int procnum = atoi(proc.c_str());
         string datafile = attributes["href"];
         if(datafile == "")
-          throw InternalError("timestep href not found");
+          throw InternalError("timestep href not found", __FILE__, __LINE__);
         
         XMLURL dataurl(tsurl, datafile.c_str());
         char* urltext = XMLString::transcode(dataurl.getURLText());
@@ -631,12 +631,12 @@ ParticleLoadBalancer::restartInitialize(ProblemSpecP& pspec, XMLURL tsurl, const
 
         ProblemSpecP dataDoc = psr.readInputFile();
         if (!dataDoc)
-          throw InternalError("Cannot open data file");
+          throw InternalError("Cannot open data file", __FILE__, __LINE__);
         for(ProblemSpecP r = dataDoc->getFirstChild(); r != 0; r=r->getNextSibling()){
           if(r->getNodeName() == "Variable") {
             int patchid;
             if(!r->get("patch", patchid) && !r->get("region", patchid))
-              throw InternalError("Cannot get patch id");
+              throw InternalError("Cannot get patch id", __FILE__, __LINE__);
             if (d_processorAssignment[patchid] == -1) {
               // assign the patch to the processor
               d_processorAssignment[patchid] = procnum % d_myworld->size();

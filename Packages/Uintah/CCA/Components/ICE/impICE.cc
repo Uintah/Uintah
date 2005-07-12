@@ -156,7 +156,7 @@ void ICE::scheduleImplicitVel_FC(SchedulerP& sched,
 { 
   Task* t = 0;
   if (d_RateForm) {     //RATE FORM
-    throw ProblemSetupException("implicit Rate Form ICE isn't working");
+    throw ProblemSetupException("implicit Rate Form ICE isn't working", __FILE__, __LINE__);
   }
   else if (d_EqForm) {       // EQ 
     cout_doing << "ICE::Implicit scheduleComputeVel_FC" << endl;
@@ -697,7 +697,7 @@ void ICE::updatePressure(const ProcessorGroup*,
       ostringstream warn;
       warn <<"ERROR ICE::updatePressure cell "
            << neg_cell << " negative pressure\n ";        
-      throw InvalidValue(warn.str());
+      throw InvalidValue(warn.str(), __FILE__, __LINE__);
     }
   } // patch loop
 }
@@ -955,7 +955,7 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
       <<" iterations was reached. \n " 
       << "Try either increasing the max_outer_iterations "
       <<" or decrease outer_iteration_tolerance\n ";
-    throw ConvergenceFailure(s.str(),counter,max_RHS,d_outer_iter_tolerance);
+    throw ConvergenceFailure(s.str(),counter,max_RHS,d_outer_iter_tolerance,__FILE__,__LINE__);
   }
 
   //__________________________________

@@ -94,19 +94,19 @@ namespace Uintah {
     
     if( !psi ){
       cout << "SimpleSimulationController::run() psi dynamic_cast failed...\n";
-      throw InternalError("psi dynamic_cast failed");
+      throw InternalError("psi dynamic_cast failed", __FILE__, __LINE__);
     }
 
     // Get the problem specification
     d_ups = psi->readInputFile();
     d_ups->writeMessages(d_myworld->myrank() == 0);
     if(!d_ups)
-      throw ProblemSetupException("Cannot read problem specification");
+      throw ProblemSetupException("Cannot read problem specification", __FILE__, __LINE__);
     
     releasePort("problem spec");
     
     if(d_ups->getNodeName() != "Uintah_specification")
-      throw ProblemSetupException("Input file is not a Uintah specification");
+      throw ProblemSetupException("Input file is not a Uintah specification", __FILE__, __LINE__);
   }
 
   void SimulationController::preGridSetup( void )
@@ -117,7 +117,7 @@ namespace Uintah {
     
     if( !d_output ){
       cout << "dynamic_cast of 'd_output' failed!\n";
-      throw InternalError("dynamic_cast of 'd_output' failed!");
+      throw InternalError("dynamic_cast of 'd_output' failed!", __FILE__, __LINE__);
     }
     d_output->problemSetup(d_ups, d_sharedState.get_rep());
     
@@ -161,7 +161,7 @@ namespace Uintah {
         // timestep not found
         ostringstream message;
         message << "Timestep " << d_restartTimestep << " not found";
-        throw InternalError(message.str());
+        throw InternalError(message.str(), __FILE__, __LINE__);
       }
       
       d_restartTime = times[i];
@@ -180,7 +180,7 @@ namespace Uintah {
       
     }
     if(grid->numLevels() == 0){
-      throw InternalError("No problem (no levels in grid) specified.");
+      throw InternalError("No problem (no levels in grid) specified.", __FILE__, __LINE__);
     }
     
     // Print out meta data
@@ -195,7 +195,7 @@ namespace Uintah {
     // Initialize the CFD and/or MPM components
     d_sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
     if(!d_sim)
-      throw InternalError("No simulation component");
+      throw InternalError("No simulation component", __FILE__, __LINE__);
 
     if (d_restarting) {
       // do these before calling sim->problemSetup

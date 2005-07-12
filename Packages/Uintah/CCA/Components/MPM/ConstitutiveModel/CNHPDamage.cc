@@ -458,7 +458,7 @@ CNHPDamage::computeStressTensorImplicit(const PatchSubset* patches,
       if (!(J > 0.0)) {
         cerr << getpid() << " " << idx << " "
              << "**ERROR** Negative Jacobian of deformation gradient" << endl;
-        throw ParameterNotFound("**ERROR**:CNHPDamage");
+        throw ParameterNotFound("**ERROR**:CNHPDamage", __FILE__, __LINE__);
       }
       pDefGrad_new[idx] = defGrad;
 

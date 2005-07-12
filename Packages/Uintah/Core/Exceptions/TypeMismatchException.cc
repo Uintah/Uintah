@@ -4,10 +4,12 @@
 
 using namespace Uintah;
 
-TypeMismatchException::TypeMismatchException(const std::string& msg)
+TypeMismatchException::TypeMismatchException(const std::string& msg, const char* file, int line)
     : d_msg(msg)
 {
 #ifdef EXCEPTIONS_CRASH
+  std::cout << "A TypeMismatchException was thrown.\n";
+  std::cout << file << ":" << line << "\n";
   std::cout << d_msg << "\n";
 #endif
 }

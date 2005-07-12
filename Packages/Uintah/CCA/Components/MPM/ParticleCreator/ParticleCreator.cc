@@ -398,7 +398,7 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj)
 	  IntVector idx(ix, iy, iz);
 	  Point p = lower + dxpp*idx;
 	  if (!b2.contains(p))
-	    throw InternalError("Particle created outside of patch?");
+	    throw InternalError("Particle created outside of patch?", __FILE__, __LINE__);
 	  if (piece->inside(p)) 
 	    d_object_points[key].push_back(p);
 	}

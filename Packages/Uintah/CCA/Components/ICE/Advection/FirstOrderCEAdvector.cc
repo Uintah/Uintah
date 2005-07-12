@@ -67,7 +67,7 @@ void FirstOrderCEAdvector::inFluxOutFluxVolume(
   if(patch->getLevel()->getID() > 0){
     cout << " WARNING: FirstOrderCE doesn't work with multiple levels" << endl;
     cout << " Todd:  you need to set boundary conditions on the transverse vel_FC" << endl;
-    throw InternalError(" ERROR");
+    throw InternalError(" ERROR", __FILE__, __LINE__);
   }
   Vector dx = patch->dCell();
   double vol = dx.x()*dx.y()*dx.z();

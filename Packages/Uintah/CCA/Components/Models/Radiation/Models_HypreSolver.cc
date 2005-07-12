@@ -33,7 +33,7 @@
 #include "struct_mv.h"
 
 #undef CHKERRQ
-#define CHKERRQ(x) if(x) throw PetscError(x, __FILE__);
+#define CHKERRQ(x) if(x) throw PetscError(x, __FILE__, __FILE__, __LINE__);
 #include <vector>
 
 using namespace std;
@@ -70,7 +70,8 @@ Models_HypreSolver::problemSetup(const ProblemSpecP& params, bool shradiation)
     db->getWithDefault("ksptype", d_kspType, "gmres");
 
   if (!d_shrad && ((d_kspType == "cg") || (d_kspType == "smg") ||(d_kspType == "pfmg")))
-    throw ProblemSetupException("Models_Radiation_HypreSolver:Discrete Ordinates generates a nonsymmetric matrix, so cg/smg/pfmg cannot be used; Use gmres as the ksptype");
+    throw ProblemSetupException("Models_Radiation_HypreSolver:Discrete Ordinates generates a nonsymmetric matrix, so cg/smg/pfmg cannot be used; Use gmres as the ksptype",
+                                __FILE__, __LINE__);
 
   if (d_shrad && (d_kspType == "gmres")) {
     cerr<< "WARNING: HypreSolver:Spherical Harmonics generates a symmetric matrix; use cg as the ksptype for spherical harmonics; using gmres really slows things down" << endl;
@@ -87,7 +88,8 @@ Models_HypreSolver::problemSetup(const ProblemSpecP& params, bool shradiation)
 	  d_kspFix = "gmres";
 	  db->getWithDefault("pctype", d_pcType, "jacobi");
 	  if (!d_shrad && ((d_pcType == "smg") ||(d_pcType == "pfmg")))
-	    throw ProblemSetupException("Discrete Ordinates generates a nonsymmetric Matrix, so smg/pfmg cannot be used as the pctype; use jacobi");
+	    throw ProblemSetupException("Discrete Ordinates generates a nonsymmetric Matrix, so smg/pfmg cannot be used as the pctype; use jacobi",
+                                        __FILE__, __LINE__);
 
 	  if (d_pcType == "smg")
 	    d_kspType = "3";

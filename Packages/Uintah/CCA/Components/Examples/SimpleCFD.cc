@@ -176,7 +176,7 @@ void SimpleCFD::problemSetup(const ProblemSpecP& params, GridP& grid,
   cfd->get("old_initial_guess", old_initial_guess);
   cfd->get("do_thermal", do_thermal);
   if(!grid->getLevel(0)->containsPoint(pressure_pin_))
-    throw ProblemSetupException("velocity pressure pin point is not with the domain");
+    throw ProblemSetupException("velocity pressure pin point is not with the domain", __FILE__, __LINE__);
 
   cfd->require("advection_tolerance", advection_tolerance_);
   cfd->require("buoyancy", buoyancy_);
@@ -211,7 +211,7 @@ void SimpleCFD::problemSetup(const ProblemSpecP& params, GridP& grid,
 
   SolverInterface* solver = dynamic_cast<SolverInterface*>(getPort("solver"));
   if(!solver)
-    throw InternalError("SimpleCFD needs a solver component to work");
+    throw InternalError("SimpleCFD needs a solver component to work", __FILE__, __LINE__);
 
   ProblemSpecP solverinfo = cfd->findBlock("Solver");
   diffusion_params_  = solver->readParameters(solverinfo, "diffusion");
@@ -273,7 +273,7 @@ SimpleCFD::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   cout_doing << "SimpleCFD::scheduleTimeAdvance on level " << level->getIndex() << '\n';
   SolverInterface* solver = dynamic_cast<SolverInterface*>(getPort("solver"));
   if(!solver)
-    throw InternalError("SimpleCFD needs a solver component to work");
+    throw InternalError("SimpleCFD needs a solver component to work", __FILE__, __LINE__);
 
   Task* task;
   //______________________________________________________________________
@@ -838,7 +838,7 @@ void SimpleCFD::advect(Array3<double>& q, const Array3<double>& qold,
       cerr << "bc at idx: " << idx << "=" << b->getType() << '\n';
       cerr << "bctype=" << setbase(16) << bctype[idx] << '\n';
       
-      SCI_THROW(InternalError("Don't know what to do here"));
+      SCI_THROW(InternalError("Don't know what to do here", __FILE__, __LINE__));
     }
   }
 }
@@ -1196,7 +1196,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector&,
             rhs[idx]+=field[idx+W]*(diff*delt*inv_dx2.x());
             break;          
           case BC::FixedFlux:
-            throw InternalError("unknown BC");
+            throw InternalError("unknown BC", __FILE__, __LINE__);
           case BC::Exterior:
             break;
           }
@@ -1213,7 +1213,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector&,
         break;
       case BC::Exterior:
       case BC::CoarseGrid:
-        throw InternalError("unknown BC");
+        throw InternalError("unknown BC", __FILE__, __LINE__);
         BREAK;
       }
     }
@@ -1243,7 +1243,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector&,
             rhs[idx]+=field[idx+E]*(diff*delt*inv_dx2.x());
             break;          
           case BC::FixedFlux:
-            throw InternalError("unknown BC");
+            throw InternalError("unknown BC", __FILE__, __LINE__);
           case BC::Exterior:
             break;
           }
@@ -1260,7 +1260,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector&,
         break;
       case BC::Exterior:
       case BC::CoarseGrid:
-        throw InternalError("unknown BC");
+        throw InternalError("unknown BC", __FILE__, __LINE__);
         BREAK;
       }
     }
@@ -1290,7 +1290,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector&,
             rhs[idx]+=field[idx+S]*(diff*delt*inv_dx2.y());
             break;          
           case BC::FixedFlux:
-            throw InternalError("unknown BC");
+            throw InternalError("unknown BC", __FILE__, __LINE__);
           case BC::Exterior:
             break;
           }
@@ -1307,7 +1307,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector&,
         break;
       case BC::Exterior:
       case BC::CoarseGrid:
-        throw InternalError("unknown BC");
+        throw InternalError("unknown BC", __FILE__, __LINE__);
         BREAK;
       }
     }
@@ -1337,7 +1337,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector&,
             rhs[idx]+=field[idx+N]*(diff*delt*inv_dx2.y());
             break;          
           case BC::FixedFlux:
-            throw InternalError("unknown BC");
+            throw InternalError("unknown BC", __FILE__, __LINE__);
           case BC::Exterior:
             break;
           }
@@ -1354,7 +1354,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector&,
         break;
       case BC::Exterior:
       case BC::CoarseGrid:
-        throw InternalError("unknown BC");
+        throw InternalError("unknown BC", __FILE__, __LINE__);
         BREAK;
       }
     }
@@ -1384,7 +1384,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector&,
             rhs[idx]+=field[idx+B]*(diff*delt*inv_dx2.z());
             break;          
           case BC::FixedFlux:
-            throw InternalError("unknown BC");
+            throw InternalError("unknown BC", __FILE__, __LINE__);
           case BC::Exterior:
             break;
           }
@@ -1401,7 +1401,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector&,
         break;
       case BC::Exterior:
       case BC::CoarseGrid:
-        throw InternalError("unknown BC");
+        throw InternalError("unknown BC", __FILE__, __LINE__);
         BREAK;
       }
     }
@@ -1431,7 +1431,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector&,
             rhs[idx]+=field[idx+T]*(diff*delt*inv_dx2.z());
             break;          
           case BC::FixedFlux:
-            throw InternalError("unknown BC");
+            throw InternalError("unknown BC", __FILE__, __LINE__);
           case BC::Exterior:
             break;
           }
@@ -1448,7 +1448,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector&,
         break;
       case BC::Exterior:
       case BC::CoarseGrid:
-        throw InternalError("unknown BC");
+        throw InternalError("unknown BC", __FILE__, __LINE__);
         BREAK;
       }
     }
@@ -1461,7 +1461,7 @@ void SimpleCFD::applybc(const IntVector& idx, const IntVector&,
   case BC::FixedFlux:
   case BC::Exterior:
   case BC::CoarseGrid:
-    throw InternalError("unknown BC");
+    throw InternalError("unknown BC", __FILE__, __LINE__);
     BREAK;
   }
 }
@@ -1707,14 +1707,14 @@ void SimpleCFD::projectVelocity(const ProcessorGroup*,
                   A[idx].w = 0;
                   break;
                 case BC::FixedFlux:
-                  throw InternalError("unknown pressure bc");
+                  throw InternalError("unknown pressure bc", __FILE__, __LINE__);
                 }
               }
               break;
             case BC::CoarseGrid:
             case BC::FixedFlux:
             case BC::Exterior:
-              throw InternalError("Unknown pressureBC");
+              throw InternalError("Unknown pressureBC", __FILE__, __LINE__);
             }
 
             bc1 = xbc->get(bctype[idx+FE]);
@@ -1747,14 +1747,14 @@ void SimpleCFD::projectVelocity(const ProcessorGroup*,
                   A[idx].e = 0;
                   break;
                 case BC::FixedFlux:
-                  throw InternalError("unknown pressure bc");
+                  throw InternalError("unknown pressure bc", __FILE__, __LINE__);
                 }
               }
               break;
             case BC::CoarseGrid:
             case BC::FixedFlux:
             case BC::Exterior:
-              throw InternalError("Unknown pressureBC");
+              throw InternalError("Unknown pressureBC", __FILE__, __LINE__);
             }
 
             bc1 = ybc->get(bctype[idx+FS]);
@@ -1787,14 +1787,14 @@ void SimpleCFD::projectVelocity(const ProcessorGroup*,
                   A[idx].s = 0;
                   break;
                 case BC::FixedFlux:
-                  throw InternalError("unknown pressure bc");
+                  throw InternalError("unknown pressure bc", __FILE__, __LINE__);
                 }
               }
               break;
             case BC::CoarseGrid:
             case BC::FixedFlux:
             case BC::Exterior:
-              throw InternalError("Unknown pressureBC");
+              throw InternalError("Unknown pressureBC", __FILE__, __LINE__);
             }
 
             bc1 = ybc->get(bctype[idx+FN]);
@@ -1827,14 +1827,14 @@ void SimpleCFD::projectVelocity(const ProcessorGroup*,
                   A[idx].n = 0;
                   break;
                 case BC::FixedFlux:
-                  throw InternalError("unknown pressure bc");
+                  throw InternalError("unknown pressure bc", __FILE__, __LINE__);
                 }
               }
               break;
             case BC::CoarseGrid:
             case BC::FixedFlux:
             case BC::Exterior:
-              throw InternalError("Unknown pressureBC");
+              throw InternalError("Unknown pressureBC", __FILE__, __LINE__);
             }
 
             bc1 = zbc->get(bctype[idx+FB]);
@@ -1867,14 +1867,14 @@ void SimpleCFD::projectVelocity(const ProcessorGroup*,
                   A[idx].b = 0;
                   break;
                 case BC::FixedFlux:
-                  throw InternalError("unknown pressure bc");
+                  throw InternalError("unknown pressure bc", __FILE__, __LINE__);
                 }
               }
               break;
             case BC::CoarseGrid:
             case BC::FixedFlux:
             case BC::Exterior:
-              throw InternalError("Unknown pressureBC");
+              throw InternalError("Unknown pressureBC", __FILE__, __LINE__);
             }
 
             bc1 = zbc->get(bctype[idx+FT]);
@@ -1907,14 +1907,14 @@ void SimpleCFD::projectVelocity(const ProcessorGroup*,
                   A[idx].t = 0;
                   break;
                 case BC::FixedFlux:
-                  throw InternalError("unknown pressure bc");
+                  throw InternalError("unknown pressure bc", __FILE__, __LINE__);
                 }
               }
               break;
             case BC::CoarseGrid:
             case BC::FixedFlux:
             case BC::Exterior:
-              throw InternalError("Unknown pressureBC");
+              throw InternalError("Unknown pressureBC", __FILE__, __LINE__);
             }
 
           }
@@ -1927,7 +1927,7 @@ void SimpleCFD::projectVelocity(const ProcessorGroup*,
         case BC::CoarseGrid:
         case BC::Exterior:
         case BC::FixedFlux:
-          throw InternalError("Unknown pressure BC");
+          throw InternalError("Unknown pressure BC", __FILE__, __LINE__);
           BREAK;
         }
       }
@@ -2025,7 +2025,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
               pr = sol[idx+IntVector(-1,0,0)];
               break;
             case BC::FixedFlux:
-              throw InternalError("Unknown bc");
+              throw InternalError("Unknown bc", __FILE__, __LINE__);
               BREAK;
             }
             //cerr << "RANDY: SimpleCFD::applyProjection() AAA EEE" << endl;
@@ -2049,7 +2049,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
               //cerr << "RANDY: SimpleCFD::applyProjection() AAA JJJ" << endl;
               break;
             case BC::FixedFlux:
-              throw InternalError("Unknown bc");
+              throw InternalError("Unknown bc", __FILE__, __LINE__);
               BREAK;
             }
             double gx = pr-pl;
@@ -2060,7 +2060,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
           break;
         case BC::CoarseGrid:
         case BC::Exterior:
-          throw InternalError("unknown bc");
+          throw InternalError("unknown bc", __FILE__, __LINE__);
           BREAK;
         }
       }
@@ -2089,7 +2089,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
               pr = sol[idx+IntVector(0,-1,0)];
               break;
             case BC::FixedFlux:
-              throw InternalError("Unknown bc");
+              throw InternalError("Unknown bc", __FILE__, __LINE__);
               BREAK;
             }
             BCRegion<double>* bcl = pbc->get(bctype[idx+IntVector(0,-1,0)]);
@@ -2107,7 +2107,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
               pl = sol[idx];
               break;
             case BC::FixedFlux:
-              throw InternalError("Unknown bc");
+              throw InternalError("Unknown bc", __FILE__, __LINE__);
               BREAK;
             }
             double gy = pr-pl;
@@ -2118,7 +2118,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
           break;
         case BC::CoarseGrid:
         case BC::Exterior:
-          throw InternalError("unknown bc");
+          throw InternalError("unknown bc", __FILE__, __LINE__);
           BREAK;
         }
       }
@@ -2147,7 +2147,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
               pr = sol[idx+IntVector(0,0,-1)];
               break;
             case BC::FixedFlux:
-              throw InternalError("Unknown bc");
+              throw InternalError("Unknown bc", __FILE__, __LINE__);
               BREAK;
             }
             BCRegion<double>* bcl = pbc->get(bctype[idx+IntVector(0,0,-1)]);
@@ -2165,7 +2165,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
               pl = sol[idx];
               break;
             case BC::FixedFlux:
-              throw InternalError("Unknown bc");
+              throw InternalError("Unknown bc", __FILE__, __LINE__);
               BREAK;
             }
             double gz = pr-pl;
@@ -2176,7 +2176,7 @@ void SimpleCFD::applyProjection(const ProcessorGroup*,
           break;
         case BC::CoarseGrid:
         case BC::Exterior:
-          throw InternalError("unknown bc");
+          throw InternalError("unknown bc", __FILE__, __LINE__);
           BREAK;
         }
       }
@@ -2387,7 +2387,7 @@ void SimpleCFD::dissipateScalars(const ProcessorGroup*,
         case BC::CoarseGrid:
         case BC::Exterior:
           // Shouldn't happen
-          throw InternalError("illegalBC");
+          throw InternalError("illegalBC", __FILE__, __LINE__);
           BREAK;
         }
       }
@@ -2515,7 +2515,7 @@ SimpleCFD::refineBoundaries(const Patch* /*patch*/,
                             int /*matl*/,
                             double /*subCycleProgress_var*/)
 {
-  throw InternalError("trying to do AMR iwth the non-AMR component!");
+  throw InternalError("trying to do AMR iwth the non-AMR component!", __FILE__, __LINE__);
 }
 
 void
@@ -2526,7 +2526,7 @@ SimpleCFD::refineBoundaries(const Patch* /*patch*/,
                             int /*matl*/,
                             double /*subCycleProgress_var*/)
 {
-  throw InternalError("trying to do AMR iwth the non-AMR component!");
+  throw InternalError("trying to do AMR iwth the non-AMR component!", __FILE__, __LINE__);
 }
 
 void
@@ -2537,7 +2537,7 @@ SimpleCFD::refineBoundaries(const Patch* /*patch*/,
                             int /*matl*/,
                             double /*subCycleProgress_var*/)
 {
-  throw InternalError("trying to do AMR iwth the non-AMR component!");
+  throw InternalError("trying to do AMR iwth the non-AMR component!", __FILE__, __LINE__);
 }
 
 void
@@ -2548,7 +2548,7 @@ SimpleCFD::refineBoundaries(const Patch* /*patch*/,
                             int /*matl*/,
                             double /*subCycleProgress_var*/)
 {
-  throw InternalError("trying to do AMR iwth the non-AMR component!");
+  throw InternalError("trying to do AMR iwth the non-AMR component!", __FILE__, __LINE__);
 }
 
 

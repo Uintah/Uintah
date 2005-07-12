@@ -14,7 +14,7 @@ using namespace SCIRun;
 RadLinearSolver::RadLinearSolver(const ProcessorGroup* myworld)
    : d_myworld(myworld)
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 // ****************************************************************************
@@ -32,7 +32,7 @@ RadLinearSolver::~RadLinearSolver()
 void 
 RadLinearSolver::problemSetup(const ProblemSpecP& )
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 
@@ -40,7 +40,7 @@ void
 RadLinearSolver::matrixCreate(const PatchSet* ,
 			  const PatchSubset* )
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 // ****************************************************************************
@@ -60,34 +60,34 @@ RadLinearSolver::setMatrix(const ProcessorGroup* ,
 			   CCVariable<double>& ,
 			   CCVariable<double>& )
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 
 bool
 RadLinearSolver::radLinearSolve()
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 
 void
 RadLinearSolver::copyRadSoln(const Patch* , ArchesVariables* )
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 void
 RadLinearSolver::destroyMatrix() 
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 
 // Shutdown PETSc
 void RadLinearSolver::finalizeSolver()
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 

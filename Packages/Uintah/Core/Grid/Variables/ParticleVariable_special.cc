@@ -31,7 +31,7 @@ using namespace std;
 	  MPI_Pack(&p, 1, td->getMPIType(), buf, bufsize, bufpos, pg->getComm());
 	}
       } else {
-	SCI_THROW(InternalError("packMPI not finished\n"));
+	SCI_THROW(InternalError("packMPI not finished\n", __FILE__, __LINE__));
       }
     }
   }
@@ -64,7 +64,7 @@ using namespace std;
       ParticleVariable<Point>* srcptr =
 	dynamic_cast<ParticleVariable<Point>*>(srcs[i]);
       if(!srcptr)
-	SCI_THROW(TypeMismatchException("Type mismatch in ParticleVariable::gather"));
+	SCI_THROW(TypeMismatchException("Type mismatch in ParticleVariable::gather", __FILE__, __LINE__));
       ParticleVariable<Point>& src = *srcptr;
       ParticleSubset* subset = subsets[i];
       const Patch* srcPatch = srcPatches[i];
@@ -101,7 +101,7 @@ using namespace std;
       varnode->appendElement("numParticles", d_pset->numParticles());
     }
     if(!td->isFlat()){
-      SCI_THROW(InternalError("Cannot yet write non-flat objects!\n"));
+      SCI_THROW(InternalError("Cannot yet write non-flat objects!\n", __FILE__, __LINE__));
     }
     else {
       if (outputDoubleAsFloat) {

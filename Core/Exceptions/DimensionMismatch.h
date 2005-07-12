@@ -48,7 +48,7 @@
 namespace SCIRun {
 	class DimensionMismatch : public Exception {
 	public:
-	    DimensionMismatch(long value, long expected);
+	    DimensionMismatch(long value, long expected, const char* file, int line);
 	    DimensionMismatch(const DimensionMismatch&);
 	    virtual ~DimensionMismatch();
 	    virtual const char* message() const;

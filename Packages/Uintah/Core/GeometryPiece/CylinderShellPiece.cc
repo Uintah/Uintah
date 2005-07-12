@@ -24,13 +24,13 @@ CylinderShellPiece::CylinderShellPiece(ProblemSpecP& ps)
   Vector axis = d_top - d_bottom;
   
   if (axis.length() < near_zero) 
-    SCI_THROW(ProblemSetupException("Error:CylinderShell:Axis length = 0.0"));
+    SCI_THROW(ProblemSetupException("Error:CylinderShell:Axis length = 0.0", __FILE__, __LINE__));
   if (d_radius <= 0.0) 
-    SCI_THROW(ProblemSetupException("Error:CylinderShell:Radius <= 0.0"));
+    SCI_THROW(ProblemSetupException("Error:CylinderShell:Radius <= 0.0", __FILE__, __LINE__));
   if (d_thickness <= 0.0)
-    SCI_THROW(ProblemSetupException("Error:CylinderShell:Thickness <= 0.0"));
+    SCI_THROW(ProblemSetupException("Error:CylinderShell:Thickness <= 0.0", __FILE__, __LINE__));
   if (d_numAxis < 1 || d_numCircum < 1)
-    SCI_THROW(ProblemSetupException("Error:CylinderShell:Divisions < 1"));
+    SCI_THROW(ProblemSetupException("Error:CylinderShell:Divisions < 1", __FILE__, __LINE__));
 }
 
 ///////////

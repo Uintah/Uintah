@@ -54,7 +54,8 @@ SimulationState::SimulationState(ProblemSpecP &ps)
       throw ProblemSetupException("\n Could not find <reference_pressure> inside of <PhysicalConstants> \n"
                                  " This pressure is used during the problem intialization and when\n"
                                   " the pressure gradient is interpolated to the MPM particles \n"
-                                  " you must have it for all MPMICE and multimaterial ICE problems\n" );  
+                                  " you must have it for all MPMICE and multimaterial ICE problems\n",
+                                  __FILE__, __LINE__);  
     }
   }
 
@@ -258,14 +259,14 @@ Material* SimulationState::parseAndLookupMaterial(ProblemSpecP& params,
 {
   string matlname;
   if(!params->get(name, matlname))
-    throw ProblemSetupException("Cannot find material section");
+    throw ProblemSetupException("Cannot find material section", __FILE__, __LINE__);
   Material* result = getMaterialByName(matlname);
   if(!result){
     int matlidx;
     if(!params->get(name, matlidx))
-      throw ProblemSetupException("Cannot find material called "+matlname);
+      throw ProblemSetupException("Cannot find material called "+matlname, __FILE__, __LINE__);
     if(matlidx < 0 || matlidx >= static_cast<int>(matls.size()))
-      throw ProblemSetupException("Invalid material: "+to_string(matlidx));
+      throw ProblemSetupException("Invalid material: "+to_string(matlidx), __FILE__, __LINE__);
     result = matls[matlidx];
   }
   return result;

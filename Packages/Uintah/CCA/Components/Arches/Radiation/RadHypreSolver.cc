@@ -41,7 +41,7 @@
 #include "struct_mv.h"
 
 #undef CHKERRQ
-#define CHKERRQ(x) if(x) throw PetscError(x, __FILE__);
+#define CHKERRQ(x) if(x) throw PetscError(x, __FILE__, __FILE__, __LINE__);
 #include <vector>
 
 using namespace std;
