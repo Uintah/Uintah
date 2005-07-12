@@ -6,6 +6,9 @@ function grid = updateGrid(grid)
 %
 %   See also: ADDGRIDPATCH.
 
+% Revision history:
+% 12-JUL-2005    Oren Livne    Added comments
+
 globalParams;
 
 if (param.verboseLevel >= 1)
