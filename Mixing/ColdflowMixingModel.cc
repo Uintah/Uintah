@@ -71,7 +71,7 @@ ColdflowMixingModel::computeProps(const InletStream& inStream,
   outStream.d_drhodf = d_streams[0].d_density*d_streams[1].d_density*
     (d_streams[0].d_density - d_streams[1].d_density)/(drhodf*drhodf);
   if (local_den <= 0.0)
-    throw InvalidValue("Computed zero density in ColdflowMixingModel" );
+    throw InvalidValue("Computed zero density in ColdflowMixingModel", __FILE__, __LINE__ );
   else
     outStream.d_density = (1.0/local_den);
 }

@@ -377,7 +377,7 @@ RBGSSolver::computeVelResidual(const ProcessorGroup* ,
 
     break;
   default:
-    throw InvalidValue("Invalid index in LinearSolver for velocity");
+    throw InvalidValue("Invalid index in LinearSolver for velocity", __FILE__, __LINE__);
   }
 }
 
@@ -563,7 +563,7 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
 
     break;
   default:
-    throw InvalidValue("Invalid index in LinearSolver for velocity");
+    throw InvalidValue("Invalid index in LinearSolver for velocity", __FILE__, __LINE__);
   }
 }
 
@@ -830,7 +830,7 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* /*pc*/,
 #endif
     break;
   default:
-    throw InvalidValue("Invalid index in LinearSolver for velocity");
+    throw InvalidValue("Invalid index in LinearSolver for velocity", __FILE__, __LINE__);
   }
 }
 

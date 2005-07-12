@@ -79,7 +79,7 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
     d_discretize = scinew Discretization();
   else {
     throw InvalidValue("Finite Differencing scheme "
-		       "not supported: " + finite_diff);
+		       "not supported: " + finite_diff, __FILE__, __LINE__);
   }
   db->getWithDefault("central",d_central,false);
 //  if (db->findBlock("central"))
@@ -101,7 +101,7 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
   else {
 
     throw InvalidValue("linear solver option"
-		       " not supported" + linear_sol);
+		       " not supported" + linear_sol, __FILE__, __LINE__);
 
   }
 
@@ -212,7 +212,7 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
 
   default:
 
-    throw InvalidValue("Invalid index in MomentumSolver");
+    throw InvalidValue("Invalid index in MomentumSolver", __FILE__, __LINE__);
     
   }
 	
@@ -308,7 +308,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     default:
 
-      throw InvalidValue("Invalid index in MomentumSolver");
+      throw InvalidValue("Invalid index in MomentumSolver", __FILE__, __LINE__);
 
     }
 
@@ -452,7 +452,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
       break;
     default:
-      throw InvalidValue("Invalid index in max abs velocity calculation");
+      throw InvalidValue("Invalid index in max abs velocity calculation", __FILE__, __LINE__);
     }
   }
 }
@@ -813,7 +813,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 	  new_dw->allocateTemporary(velocityVars.wVelocityConvectCoeff[ii],  patch);
 	  break;
 	default:
-	  throw InvalidValue("invalid index for velocity in MomentumSolver");
+	  throw InvalidValue("invalid index for velocity in MomentumSolver", __FILE__, __LINE__);
 	}
       }
   TAU_PROFILE_STOP(input);
@@ -873,7 +873,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 	break;
 
       default:
-	throw InvalidValue("Invalid index in MomentumSolver for calcVelSrc");
+	throw InvalidValue("Invalid index in MomentumSolver for calcVelSrc", __FILE__, __LINE__);
 
       }
 
@@ -912,7 +912,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 			    Ghost::AroundFaces, Arches::TWOGHOSTCELLS);
 	break;
 	default:
-	  throw InvalidValue("Invalid index in MomentumSolver::BuildVelCoeff");
+	  throw InvalidValue("Invalid index in MomentumSolver::BuildVelCoeff", __FILE__, __LINE__);
       }
     }
 
@@ -1004,7 +1004,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 	  }
 	break;
 	default:
-	  throw InvalidValue("Invalid index in MomentumSolver::BuildVelCoeff");
+	  throw InvalidValue("Invalid index in MomentumSolver::BuildVelCoeff", __FILE__, __LINE__);
     }
 #endif
 
@@ -1149,7 +1149,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 	  }
 	  break;
 	default:
-	  throw InvalidValue("Invalid index in MomentumSolver::BuildVelCoeffPred");
+	  throw InvalidValue("Invalid index in MomentumSolver::BuildVelCoeffPred", __FILE__, __LINE__);
 	}
       }
 	
@@ -1251,7 +1251,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 		    ioff, joff, koff, cellinfo->dzpb);
     break;
   default:
-    throw InvalidValue("Invalid index in MomentumSolver::addPressGrad");
+    throw InvalidValue("Invalid index in MomentumSolver::addPressGrad", __FILE__, __LINE__);
   }
   }
 
@@ -2767,6 +2767,6 @@ MomentumSolver::filterNonlinearTerms(const ProcessorGroup*,
     break;
 
     default:
-	  throw InvalidValue("Invalid index in MomentumSolver::filterNterms");
+	  throw InvalidValue("Invalid index in MomentumSolver::filterNterms", __FILE__, __LINE__);
   }
 }

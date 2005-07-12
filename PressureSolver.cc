@@ -94,7 +94,7 @@ PressureSolver::problemSetup(const ProblemSpecP& params)
   if (finite_diff == "second") d_discretize = scinew Discretization();
   else {
     throw InvalidValue("Finite Differencing scheme "
-		       "not supported: " + finite_diff);
+		       "not supported: " + finite_diff, __FILE__, __LINE__);
   }
 
   // make source and boundary_condition objects
@@ -109,7 +109,7 @@ PressureSolver::problemSetup(const ProblemSpecP& params)
 #endif
   else {
     throw InvalidValue("Linear solver option"
-		       " not supported" + linear_sol);
+		       " not supported" + linear_sol, __FILE__, __LINE__);
   }
   d_linearSolver->problemSetup(db);
 }
@@ -414,7 +414,8 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
     d_pressRefPatch = patch;
   }
   if(!d_pressRefPatch)
-    throw InternalError("Patch containing pressure (and density) reference point was not found");
+    throw InternalError("Patch containing pressure (and density) reference point was not found",
+                        __FILE__, __LINE__);
 
   d_pressRefProc = lb->getPatchwiseProcessorAssignment(d_pressRefPatch);
 }
@@ -452,7 +453,7 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
     if (pg->myrank() == 0){
       cerr << "pressure solver not converged, using old values" << endl;
     }
-    throw InternalError("pressure solver is diverging");
+    throw InternalError("pressure solver is diverging", __FILE__, __LINE__);
   }
   double init_norm = d_linearSolver->getInitNorm();
   new_dw->put(max_vartype(init_norm), d_lab->d_InitNormLabel);

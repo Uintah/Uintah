@@ -112,7 +112,7 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
     d_discretize = scinew Discretization();
   else {
     throw InvalidValue("Finite Differencing scheme "
-		       "not supported: " + finite_diff);
+		       "not supported: " + finite_diff, __FILE__, __LINE__);
     //throw InvalidValue("Finite Differencing scheme "
 	//	       "not supported: " + finite_diff, db);
   }
@@ -125,7 +125,7 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
          else if (conv_scheme == "weno") d_conv_scheme = 2;
               else if (conv_scheme == "flux_limited") d_conv_scheme = 3;
 	           else throw InvalidValue("Convection scheme "
-		                           "not supported: " + conv_scheme);
+		                           "not supported: " + conv_scheme, __FILE__, __LINE__);
   string limiter_type;
   if (d_conv_scheme == 3) {
     db->getWithDefault("limiter_type",limiter_type,"superbee");
@@ -137,7 +137,7 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
 	  cout << "which can be unstable." << endl;
 	}
 	  else throw InvalidValue("Flux limiter type "
-		                           "not supported: " + limiter_type);
+		                           "not supported: " + limiter_type, __FILE__, __LINE__);
   }
 
   // make source and boundary_condition objects
@@ -150,7 +150,7 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
      d_linearSolver = scinew PetscSolver(0); // CHEAT - steve d_myworld);
   else {
     throw InvalidValue("linear solver option"
-		       " not supported" + linear_sol);
+		       " not supported" + linear_sol, __FILE__, __LINE__);
     //throw InvalidValue("linear solver option"
 	//	       " not supported" + linear_sol, db);
   }
