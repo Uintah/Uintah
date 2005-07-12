@@ -1,8 +1,4 @@
 function a = harmonicAvg(y,z)
-% Integral of 1/a along the curve [x1,x2]. Here x1,x2 are x-coordinates if
-% dim=1, and y is the fixed y-coordinate along the curve. If dim=2, x1,x2
-% are y-coordinates and y is the fixed x-coordinate along the curve.
-
 %HARMONICAVG  Harmonic average of the diffusion coefficient.
 %   A = HARMONICAVG(Y,Z) returns the harmonic average of the diffusion
 %   coefficient a(X) (X in R^D) along the line connecting the points Y,Z in
