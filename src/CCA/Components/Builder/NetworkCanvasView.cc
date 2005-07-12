@@ -346,10 +346,9 @@ Module* NetworkCanvasView::addModule(const std::string& name,
     addChild(module, x, y, reposition);
 
     connect(module, SIGNAL(destroyModule(Module *)), this, SLOT(removeModule(Module *)));
-
-    //modules.insert(std::make_pair(cid->getInstanceName(), module));
-    modules[cid->getInstanceName()] = module;
-    module->show();       
+                                                                                      
+    modules.insert(std::make_pair(cid->getInstanceName(), module));
+    module->show();
     // have to updateMiniView() after added to canvas
     p2BuilderWindow->updateMiniView();
     return module;
@@ -385,6 +384,42 @@ void NetworkCanvasView::removeModule(Module *module)
     services->releasePort("cca.BuilderService");
 
     delete module;
+    p2BuilderWindow->updateMiniView();
+}
+
+void NetworkCanvasView::removeModules()
+{
+    sci::cca::ports::BuilderService::pointer bs =
+        pidl_cast<sci::cca::ports::BuilderService::pointer>(
+            services->getPort("cca.BuilderService"));
+    if (bs.isNull()) {
+        p2BuilderWindow->displayMsg("Error: cannot find builder service.");
+        return;
+    }
+
+    ModuleMap::iterator iter = modules.begin();
+    while (iter != modules.end()) {
+        Module *module = iter->second;
+        modules.erase(iter);
+        iter = modules.begin();
+
+        removeAllConnections(module);
+        std::string instanceName = module->componentID()->getInstanceName();
+
+        module->hide();
+        try {
+            sci::cca::ComponentID::pointer cid = bs->getComponentID(instanceName);
+            if (cid == module->componentID()) {
+                bs->destroyInstance(module->componentID(), 0);
+            }
+        }
+        catch (const Exception& e) {
+            p2BuilderWindow->displayMsg(e.message());
+        }
+        delete module;
+    }
+
+    services->releasePort("cca.BuilderService");
     p2BuilderWindow->updateMiniView();
 }
 

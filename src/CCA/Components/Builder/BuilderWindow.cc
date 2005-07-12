@@ -773,15 +773,9 @@ void BuilderWindow::insert()
 
 void BuilderWindow::clear()
 {
-    std::cerr << "BuilderWindow::clear(): deleting the following: " << std::endl;
+    statusBar()->message("Clearing network.", 2000);
     setCursor(Qt::WaitCursor);
-
-    const ModuleMap *modules = networkCanvasView->getModules();
-    for (ModuleMap::const_iterator iter = modules->begin();
-            iter != modules->end(); iter++) {
-        iter->second->destroy();
-    }
-
+    networkCanvasView->removeModules();
     unsetCursor();
 }
 
