@@ -269,6 +269,11 @@ SynchronizeGeometry::process_event(MessageBase* msg)
     sched->report_execution_finished(msg);
     break;
 
+  case MessageTypes::SynchronizeModule:
+    // We (mostly) ignore these messages.
+    sched->report_execution_finished(msg);
+    break;
+
   default:
     break;
   }
