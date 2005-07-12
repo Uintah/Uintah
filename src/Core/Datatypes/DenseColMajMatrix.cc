@@ -426,7 +426,7 @@ DenseColMajMatrix::io(Piostream& stream)
           const string errmsg = "Error reading separated file '" +
             raw_filename_ + "'";
           cerr << errmsg << "\n";
-          throw FileNotFound(errmsg);
+          throw FileNotFound(errmsg, __FILE__, __LINE__);
         }
       }
     }
