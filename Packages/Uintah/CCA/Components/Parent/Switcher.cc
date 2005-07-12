@@ -92,6 +92,12 @@ Switcher::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched,
   cout << "d_sim = " << d_sim << endl;
   d_sim->scheduleTimeAdvance(level,sched,a,b);
   scheduleSwitchTest(level,sched);
+
+  // compute vars for the next component that may not have been computed by the current
+  scheduleInitNewVars(level,sched);
+
+  // carry over vars that will be needed by a future component
+  scheduleCarryOverVars(level,sched);
 }
 
 void Switcher::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
@@ -111,6 +117,25 @@ void Switcher::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
   }
 }
 
+void Switcher::scheduleInitNewVars(const LevelP& level, SchedulerP& sched)
+{
+  Task* t = scinew Task("Switcher::initNewVars",
+                        this, & Switcher::initNewVars);
+  sched->addTask(t,level->eachPatch(),d_sharedState->allMaterials());
+  t->requires(Task::NewDW, switchLabel);
+  
+  VarLabel* px = VarLabel::find("p.x");
+  if (px)
+    t->requires(Task::NewDW, px, Ghost::None, 0);
+}
+
+void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
+{
+  Task* t = scinew Task("Switcher::carryOverVars",
+                        this, & Switcher::carryOverVars);
+  sched->addTask(t,level->eachPatch(),d_sharedState->allMaterials());
+}
+
 void Switcher::switchTest(const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
@@ -128,7 +153,30 @@ void Switcher::switchTest(const ProcessorGroup*,
 
 }
 
+void Switcher::initNewVars(const ProcessorGroup*,
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw, DataWarehouse* new_dw)
+{
+  if (d_switchState != switching)
+    return;
+  
+  // loop over certain vars and init them into the DW
+#if 0
+  SoleVariable<double> svi(0);
+  VarLabel* sv = VarLabel::find("sole.int");
+  new_dw->put(svi, sv, getLevel(patches));
+  cout << "  Put sv.int ("<< (double) svi << ") into DW\n";
+#endif
+}
 
+void Switcher::carryOverVars(const ProcessorGroup*,
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw, DataWarehouse* new_dw)
+{
+
+}
 bool Switcher::needRecompile(double time, double delt, const GridP& grid)
 {
   cout << "In needRecompile, returning " << (d_switchState == switching) << endl;

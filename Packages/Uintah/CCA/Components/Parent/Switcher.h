@@ -25,6 +25,8 @@ namespace Uintah {
 				      SchedulerP&, int step, int nsteps );
 
     virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
+    virtual void scheduleInitNewVars(const LevelP& level, SchedulerP& sched);
+    virtual void scheduleCarryOverVars(const LevelP& level, SchedulerP& sched);
 
     virtual bool needRecompile(double time, double delt, const GridP& grid);
 
@@ -32,6 +34,16 @@ namespace Uintah {
     virtual void readFromTimestepXML(const ProblemSpecP&);
   private:
     void switchTest(const ProcessorGroup*,
+                    const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    DataWarehouse* old_dw, DataWarehouse* new_dw);
+
+    void initNewVars(const ProcessorGroup*,
+                    const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    DataWarehouse* old_dw, DataWarehouse* new_dw);
+
+    void carryOverVars(const ProcessorGroup*,
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
                     DataWarehouse* old_dw, DataWarehouse* new_dw);
