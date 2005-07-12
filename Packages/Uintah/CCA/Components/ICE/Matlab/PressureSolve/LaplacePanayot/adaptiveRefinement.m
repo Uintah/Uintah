@@ -1,13 +1,19 @@
 function [ilower,iupper,needRefinement] = adaptiveRefinement(AMR,grid,k,threshold)
 %ADAPTIVEREFINEMENT  Adaptively find areas of refinements.
-%   [ILOWER,IUPPER] = ADAPTIVEREFINEMENT(AMR,K) returns the extents of a
-%   box needing refinement (for an L-shaped domain Poisson problem), from
-%   the current finest level k. AMR contains the data of the AMR process.
-%   AMR{l} is the data of refinement level l (composite grid, LHS matrix,
+%   [ILOWER,IUPPER,FLAG] = ADAPTIVEREFINEMENT(AMR,GRID,K,THRESHOLD) returns
+%   the extents [ILOWER,IUPPER] of a box needing refinement (for an L-shaped domain
+%   Poisson problem), from the current finest level k. AMR contains the data of the
+%   AMR process. AMR{l} is the data of refinement level l (composite grid, LHS matrix,
 %   RHS vector, transformations T,TI, solution). Works for 2D L-shaped only
-%   for now.
+%   for now. FLAG=0 if the region needing refinement is empty, otherwise FLAG=1.
+%   GRID is the grid hierarchy; THRESHOLD is a threshold for the tau
+%   refinement criterion: if tau > THRESHOLD, we mark the coarse cell for
+%   refinement.
 %
 %   See also: TESTADAPTIVE.
+
+% Revision history:
+% 12-JUL-2005    Oren Livne    Added comments
 
 globalParams;
 

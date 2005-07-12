@@ -1,10 +1,15 @@
 function [A,indOut] = LshapedOut(grid,k,q,A,reallyUpdate)
 %LSHAPEDOUT  Indices that are outside an L-shaped domain.
-%   INDOUT = LSHPAEDOUT(GRID,K,Q) is the list of all indices on patch Q at
-%   level K that are in the quadrant [0.5,1] x ... x [0.5,1] that we remove
-%   from the original cubic domain to get an L-shaped domain.
+%   [A,INDOUT] = LSHPAEDOUT(GRID,K,Q,A,FLAG) returns the list INDOUT
+%   of all indices on patch Q at level K that are in the quadrant
+%   [0.5,1] x ... x [0.5,1] that we remove
+%   from the original cubic domain to get an L-shaped domain. the LHS
+%   matrix A is updated accordingly if FLAG=1, and untouched if FLAG=0.
 %
 %   See also: TESTDISC, ADDGRIDPATCH, SETUPPATCHINTERIOR.
+
+% Revision history:
+% 12-JUL-2005    Oren Livne    Added comments
 
 globalParams;
 

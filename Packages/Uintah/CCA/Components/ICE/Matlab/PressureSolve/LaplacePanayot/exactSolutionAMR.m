@@ -1,5 +1,14 @@
 function u = exactSolutionAMR(grid,T,TI)
-% Exact solution in patch-based AMR format.
+%EXACTSOLUTIONAMR  Compute exact solution on the AMR hierarchy.
+%   U = EXACTSOLUTIONAMR(GRID,T,TI) returns the value of the exact solution
+%   values at nodes of the patches of the grid hierarchy GRID, using the
+%   transformations T and TI to transfer boundary/ghost values to solution
+%   values.
+%
+%   See also: AMRTOSPARSE, SPARSETOAMR, TESTADAPTIVE.
+
+% Revision history:
+% 12-JUL-2005    Oren Livne    Added comments
 
 u = cell(grid.numLevels,1);
 

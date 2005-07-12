@@ -7,6 +7,9 @@ function [grid,k] = addGridLevel(grid,type,arg)
 %
 %   See also: ADDGRIDPATCH, TESTDISC.
 
+% Revision history:
+% 12-JUL-2005    Oren Livne    Added comments
+
 globalParams;
 
 grid.numLevels = grid.numLevels+1;
