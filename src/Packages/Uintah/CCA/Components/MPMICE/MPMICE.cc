@@ -128,13 +128,13 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   //  I C E
 
   if(!dataArchiver){
-    throw InternalError("MPMICE needs a dataArchiever component to work");
+    throw InternalError("MPMICE needs a dataArchiever component to work", __FILE__, __LINE__);
   }
   d_ice->attachPort("output", dataArchiver);
   
   SolverInterface* solver = dynamic_cast<SolverInterface*>(getPort("solver"));
   if(!solver){
-    throw InternalError("ICE needs a solver component to work");
+    throw InternalError("ICE needs a solver component to work", __FILE__, __LINE__);
   }
   d_ice->attachPort("solver", solver);
   
@@ -881,17 +881,17 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       if( !d_ice->areAllValuesPositive(rho_CC, neg_cell) ) {
         warn<<"ERROR MPMICE::actuallyInitialize, mat "<<indx<< " cell "
             <<neg_cell << " rho_CC is negative\n";
-        throw ProblemSetupException(warn.str() );
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
       if( !d_ice->areAllValuesPositive(Temp_CC, neg_cell) ) {
         warn<<"ERROR MPMICE::actuallyInitialize, mat "<<indx<< " cell "
             <<neg_cell << " Temp_CC is negative\n";
-        throw ProblemSetupException(warn.str() );
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
       if( !d_ice->areAllValuesPositive(sp_vol_CC, neg_cell) ) {
         warn<<"ERROR MPMICE::actuallyInitialize, mat "<<indx<< " cell "
             <<neg_cell << " sp_vol_CC is negative\n";
-        throw ProblemSetupException(warn.str() );
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
       
       //---- P R I N T   D A T A ------        
@@ -1168,17 +1168,17 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       if (!d_ice->areAllValuesPositive(Temp_CC, neg_cell)) {
         warn <<"ERROR MPMICE::interpolateNCToCC_0, mat "<< indx <<" cell "
              << neg_cell << " Temp_CC " << Temp_CC[neg_cell] << "\n ";
-        throw InvalidValue(warn.str());
+        throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
       if (!d_ice->areAllValuesPositive(rho_CC, neg_cell)) {
         warn <<"ERROR MPMICE::interpolateNCToCC_0, mat "<< indx <<" cell "
              << neg_cell << " rho_CC " << rho_CC[neg_cell]<< "\n ";
-        throw InvalidValue(warn.str());
+        throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
       if (!d_ice->areAllValuesPositive(sp_vol_CC, neg_cell)) {
         warn <<"ERROR MPMICE::interpolateNCToCC_0, mat "<< indx <<" cell "
              << neg_cell << " sp_vol_CC " << sp_vol_CC[neg_cell]<<"\n ";
-        throw InvalidValue(warn.str());
+        throw InvalidValue(warn.str(), __FILE__, __LINE__);
       } 
     }
   }  //patches
@@ -1361,12 +1361,12 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
       if (!d_ice->areAllValuesPositive(int_eng_L, neg_cell)) {
         warn <<"ERROR MPMICE::computeLagrangianValuesMPM, mat "<< indx<<" cell "
              << neg_cell << " int_eng_L " << int_eng_L[neg_cell] << "\n ";
-        throw InvalidValue(warn.str());
+        throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
       if (!d_ice->areAllValuesPositive(rho_CC, neg_cell)) {
         warn <<"ERROR MPMICE::computeLagrangianValuesMPM, mat "<<indx<<" cell "
              << neg_cell << " rho_CC " << rho_CC[neg_cell]<< "\n ";
-        throw InvalidValue(warn.str());
+        throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
     }  //numMatls
     //__________________________________
@@ -1765,7 +1765,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       //      BULLET PROOFING
       if(test_max_iter == d_ice->d_max_iter_equilibration) 
        throw MaxIteration(c,count,n_passes,L_indx,
-                         "MaxIterations reached");
+                         "MaxIterations reached", __FILE__, __LINE__);
 
       for (int m = 0; m < numALLMatls; m++) {
            ASSERT(( vol_frac[m][c] > 0.0 ) ||
@@ -1773,11 +1773,11 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       }
       if ( fabs(sum - 1.0) > convergence_crit) {  
          throw MaxIteration(c,count,n_passes, L_indx,
-                         "MaxIteration reached vol_frac != 1");
+                         "MaxIteration reached vol_frac != 1", __FILE__, __LINE__);
       }
       if ( press_new[c] < 0.0 ) {
          throw MaxIteration(c,count,n_passes, L_indx,
-                         "MaxIteration reached press_new < 0");
+                         "MaxIteration reached press_new < 0", __FILE__, __LINE__);
       }
 
       for (int m = 0; m < numALLMatls; m++)
@@ -2297,7 +2297,7 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
                    this, func, variable);
      break;
    default:
-     throw InternalError("Unknown variable type for refine");
+     throw InternalError("Unknown variable type for refine", __FILE__, __LINE__);
    }
 
    Ghost::GhostType  gac = Ghost::AroundCells;

@@ -23,10 +23,10 @@ PlasticityModel* PlasticityModelFactory::create(ProblemSpecP& ps)
 {
    ProblemSpecP child = ps->findBlock("plasticity_model");
    if(!child)
-      throw ProblemSetupException("Cannot find plasticity_model tag");
+      throw ProblemSetupException("Cannot find plasticity_model tag", __FILE__, __LINE__);
    string mat_type;
    if(!child->getAttribute("type", mat_type))
-      throw ProblemSetupException("No type for plasticity_model");
+      throw ProblemSetupException("No type for plasticity_model", __FILE__, __LINE__);
    if (mat_type == "isotropic_hardening")
       return(scinew IsoHardeningPlastic(child));
    else if (mat_type == "johnson_cook")
@@ -40,7 +40,7 @@ PlasticityModel* PlasticityModelFactory::create(ProblemSpecP& ps)
    else if (mat_type == "preston_tonks_wallace")
       return(scinew PTWPlastic(child));
    else 
-      throw ProblemSetupException("Unknown Plasticity Model ("+mat_type+")");
+      throw ProblemSetupException("Unknown Plasticity Model ("+mat_type+")", __FILE__, __LINE__);
 }
 
 PlasticityModel* 
@@ -67,6 +67,6 @@ PlasticityModelFactory::createCopy(const PlasticityModel* pm)
       return(scinew PTWPlastic(dynamic_cast<const PTWPlastic*>(pm)));
    
    else 
-      throw ProblemSetupException("Cannot create copy of unknown plasticity model");
+      throw ProblemSetupException("Cannot create copy of unknown plasticity model", __FILE__, __LINE__);
 }
 

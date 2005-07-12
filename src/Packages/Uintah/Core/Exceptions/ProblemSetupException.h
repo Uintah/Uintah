@@ -24,7 +24,7 @@ namespace Uintah {
 
    class ProblemSetupException : public Exception {
    public:
-      ProblemSetupException(const std::string& msg);
+      ProblemSetupException(const std::string& msg, const char* file, int line);
       ProblemSetupException(const ProblemSetupException&);
       virtual ~ProblemSetupException();
       virtual const char* message() const;

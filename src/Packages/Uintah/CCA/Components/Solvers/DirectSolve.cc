@@ -244,7 +244,7 @@ void DirectSolve::scheduleSolve(const LevelP& level, SchedulerP& sched,
 			           const SolverParameters* params)
 {
   if(level->numPatches() != 1)
-    throw InternalError("DirectSolve only works with 1 patch");
+    throw InternalError("DirectSolve only works with 1 patch", __FILE__, __LINE__);
 
   Task* task;
   // The extra handle arg ensures that the stencil7 object will get freed
@@ -256,7 +256,7 @@ void DirectSolve::scheduleSolve(const LevelP& level, SchedulerP& sched,
   ASSERTEQ(domtype, b->typeDescription()->getType());
   const DirectSolveParams* dparams = dynamic_cast<const DirectSolveParams*>(params);
   if(!dparams)
-    throw InternalError("Wrong type of params passed to Direct solver!");
+    throw InternalError("Wrong type of params passed to Direct solver!", __FILE__, __LINE__);
 
   switch(domtype){
   case TypeDescription::SFCXVariable:
@@ -295,7 +295,7 @@ void DirectSolve::scheduleSolve(const LevelP& level, SchedulerP& sched,
     }
     break;
   default:
-    throw InternalError("Unknown variable type in scheduleSolve");
+    throw InternalError("Unknown variable type in scheduleSolve", __FILE__, __LINE__);
   }
 
   task->requires(which_A_dw, A, Ghost::None, 0);

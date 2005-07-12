@@ -44,11 +44,13 @@
 
 namespace SCIRun {
 
-FileNotFound::FileNotFound(const std::string& message)
+FileNotFound::FileNotFound(const std::string& message, const char* file, int line)
     : message_(message)
 {
 #ifdef EXCEPTIONS_CRASH
-	std::cout << message_ << "\n";
+  std::cout << "A FileNotFound exception was thrown\n";
+  std::cout << file << ":" << line << "\n";
+  std::cout << message_ << "\n";
 #endif
 }
 

@@ -20,17 +20,17 @@ MPMEquationOfState* MPMEquationOfStateFactory::create(ProblemSpecP& ps)
 {
    ProblemSpecP child = ps->findBlock("equation_of_state");
    if(!child)
-      throw ProblemSetupException("Cannot find equation_of_state tag");
+      throw ProblemSetupException("Cannot find equation_of_state tag", __FILE__, __LINE__);
    string mat_type;
    if(!child->getAttribute("type", mat_type))
-      throw ProblemSetupException("No type for equation_of_state");
+      throw ProblemSetupException("No type for equation_of_state", __FILE__, __LINE__);
    
    if (mat_type == "mie_gruneisen")
       return(scinew MieGruneisenEOS(child));
    else if (mat_type == "default_hypo")
       return(scinew DefaultHypoElasticEOS(child));
    else 
-      throw ProblemSetupException("Unknown MPMEquation of State Model ("+mat_type+")");
+      throw ProblemSetupException("Unknown MPMEquation of State Model ("+mat_type+")", __FILE__, __LINE__);
 
    //return 0;
 }
@@ -45,7 +45,7 @@ MPMEquationOfStateFactory::createCopy(const MPMEquationOfState* eos)
       return(scinew DefaultHypoElasticEOS(dynamic_cast<const DefaultHypoElasticEOS*>(eos)));
 
    else 
-      throw ProblemSetupException("Cannot create copy of unknown MPM EOS");
+      throw ProblemSetupException("Cannot create copy of unknown MPM EOS", __FILE__, __LINE__);
 
    //return 0;
 }

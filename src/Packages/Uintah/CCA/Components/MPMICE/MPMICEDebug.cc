@@ -78,7 +78,7 @@ void    MPMICE::printData(int matl,
   //  bullet proof
   if (d_ice->d_dbgMatls.size() == 0){
     throw ProblemSetupException(
-          "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls");
+          "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls", __FILE__, __LINE__);
   }
 }
 
@@ -153,6 +153,6 @@ void    MPMICE::printNCVector(int matl,
   //  bullet proof
   if (d_ice->d_dbgMatls.size() == 0){
     throw ProblemSetupException(
-          "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls");
+          "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls", __FILE__, __LINE__);
   }
 }

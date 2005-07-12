@@ -358,10 +358,10 @@ WARNING
     }
 
     if (!s1->is_sorted()) {
-      SCI_THROW(InternalError("ComputeSubset s1 not sorted in ComputeSubset<T>::intersectionAndMaybeDifference"));
+      SCI_THROW(InternalError("ComputeSubset s1 not sorted in ComputeSubset<T>::intersectionAndMaybeDifference", __FILE__, __LINE__));
     }
     if (!s2->is_sorted()) {
-      SCI_THROW(InternalError("ComputeSubset s2 not sorted in ComputeSubset<T>::intersectionAndMaybeDifference"));
+      SCI_THROW(InternalError("ComputeSubset s2 not sorted in ComputeSubset<T>::intersectionAndMaybeDifference", __FILE__, __LINE__));
     }
   
     T el2 = s2->get(0);
@@ -370,7 +370,7 @@ WARNING
       if(!compareElems(el2, el)) {
 	ostringstream msgstr;
 	msgstr << "Set not sorted: " << el2 << ", " << el;
-	SCI_THROW(InternalError(msgstr.str())); 
+	SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__)); 
       }
       el2=el;
     }
@@ -440,10 +440,10 @@ WARNING
       return false;
     }
     if (!s1->is_sorted()) {
-      SCI_THROW(InternalError("ComputeSubset s1 not sorted in ComputeSubset<T>::overlaps"));
+      SCI_THROW(InternalError("ComputeSubset s1 not sorted in ComputeSubset<T>::overlaps", __FILE__, __LINE__));
     }
     if (!s2->is_sorted()) {
-      SCI_THROW(InternalError("ComputeSubset s2 not sorted in ComputeSubset<T>::overlaps"));
+      SCI_THROW(InternalError("ComputeSubset s2 not sorted in ComputeSubset<T>::overlaps", __FILE__, __LINE__));
     }
     int i1=0;
     int i2=0;

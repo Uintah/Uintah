@@ -37,7 +37,8 @@ PressureBC::PressureBC(ProblemSpecP& ps)
     d_surface = new CylinderGeometryPiece(child);
     d_surfaceType = "cylinder";
   } else {
-    throw ParameterNotFound("** ERROR ** No surface specified for pressure BC.");
+    throw ParameterNotFound("** ERROR ** No surface specified for pressure BC.",
+                            __FILE__, __LINE__);
   }
   d_numMaterialPoints = 0;
 
@@ -105,7 +106,8 @@ PressureBC::flagMaterialPoint(const Point& p,
     delete volume;
 
   } else {
-    throw ParameterNotFound("** ERROR ** Unknown surface specified for pressure BC");
+    throw ParameterNotFound("** ERROR ** Unknown surface specified for pressure BC",
+                            __FILE__, __LINE__);
   }
   
   return flag;
@@ -127,7 +129,8 @@ PressureBC::getSurfaceArea() const
     SphereGeometryPiece* gp = dynamic_cast<SphereGeometryPiece*>(d_surface);
     area = gp->surfaceArea();
   } else {
-    throw ParameterNotFound("** ERROR ** Unknown surface specified for pressure BC");
+    throw ParameterNotFound("** ERROR ** Unknown surface specified for pressure BC",
+                            __FILE__, __LINE__);
   }
   return area;
 }
@@ -168,7 +171,8 @@ PressureBC::getForceVector(const Point& px, double forcePerParticle) const
     Vector normal = gp->radialDirection(px);
     force = normal*forcePerParticle;
   } else {
-    throw ParameterNotFound("** ERROR ** Unknown surface specified for pressure BC");
+    throw ParameterNotFound("** ERROR ** Unknown surface specified for pressure BC",
+                            __FILE__, __LINE__);
   }
   return force;
 }

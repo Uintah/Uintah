@@ -79,7 +79,7 @@ TaskGraph::overlaps(Task::Dependency* comp, Task::Dependency* req) const
     ps1 = comp->task->getPatchSet()->getUnion();
     if(comp->patches_dom == Task::CoarseLevel
        || comp->patches_dom == Task::FineLevel){
-      SCI_THROW(InternalError("Should not compute onto another level!"));
+      SCI_THROW(InternalError("Should not compute onto another level!", __FILE__, __LINE__));
       // This may not be a big deal if it were needed, but I didn't
       // think that it should be allowed - Steve
       // saveHandle1 = comp->getPatchesUnderDomain(ps1);
@@ -148,7 +148,7 @@ TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
 	if (dbg.active())
           dbg << d_myworld->myrank() << " which = " << comp->whichdw << ", mapped to " << comp->mapDataWarehouse() << '\n';
 	SCI_THROW(InternalError("Variable produced in old datawarehouse: "
-				+comp->var->getName()));
+				+comp->var->getName(), __FILE__, __LINE__));
       } else if(comp->var->typeDescription()->isReductionVariable()){
 	ASSERT(comp->patches == 0);
 	// Look up this variable in the reductionTasks map
@@ -266,7 +266,7 @@ void TaskGraph::addDependencyEdges(Task* task, GraphSortInfoMap& sortinfo,
 	  compiter != iters.second; ++compiter){
 
 	if(req->var->typeDescription() != compiter->first->typeDescription())
-	  SCI_THROW(TypeMismatchException("Type mismatch for variable: "+req->var->getName()));
+	  SCI_THROW(TypeMismatchException("Type mismatch for variable: "+req->var->getName(), __FILE__, __LINE__));
 
         // determine if we need to add a dependency edge
 	bool add=false;
@@ -386,7 +386,7 @@ void TaskGraph::addDependencyEdges(Task* task, GraphSortInfoMap& sortinfo,
 	} else {
 	  cerr << "No matls\n";
 	}
-	SCI_THROW(InternalError("Scheduler could not find specific production for variable: "+req->var->getName()+", required for task: "+task->getName()));
+	SCI_THROW(InternalError("Scheduler could not find specific production for variable: "+req->var->getName()+", required for task: "+task->getName(), __FILE__, __LINE__));
       }
       
       if (modifies) {
@@ -413,7 +413,7 @@ TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks,
     error << "Cycle detected in task graph: already did\n\t"
 	  << task->getName();
     error << "\n";
-    SCI_THROW(InternalError(error.str()));
+    SCI_THROW(InternalError(error.str(), __FILE__, __LINE__));
   }
 
   gsi.visited = true;
@@ -452,7 +452,7 @@ void TaskGraph::processDependencies(Task* task, Task::Dependency* req,
 	    error << ",\nwhile looking for variable: \n\t" 
 		  << req->var->getName();
 	    error << "\n";
-	    SCI_THROW(InternalError(error.str()));
+	    SCI_THROW(InternalError(error.str(), __FILE__, __LINE__));
 	  }
 	  processTask(vtask, sortedTasks, sortinfo);
 	}
@@ -594,9 +594,9 @@ TaskGraph::createDetailedTasks( LoadBalancer* lb, bool useInternalDeps )
     } else if(!ps && !ms){
       createDetailedTask(dt, task, 0, 0);
     } else if(!ps){
-      SCI_THROW(InternalError("Task has MaterialSet, but no PatchSet"));
+      SCI_THROW(InternalError("Task has MaterialSet, but no PatchSet", __FILE__, __LINE__));
     } else {
-      SCI_THROW(InternalError("Task has PatchSet, but no MaterialSet"));
+      SCI_THROW(InternalError("Task has PatchSet, but no MaterialSet", __FILE__, __LINE__));
     }
   }
   return dt;
@@ -686,7 +686,7 @@ void CompTable::remembercomp(Data* newData, const ProcessorGroup* pg)
       for(Data* old = data.lookup(newData); old != 0; old = data.nextMatch(newData, old)){
 	old->comp->task->displayAll(cerr);
       }
-      SCI_THROW(InternalError("Multiple computes for variable: "+newData->comp->var->getName()));
+      SCI_THROW(InternalError("Multiple computes for variable: "+newData->comp->var->getName(), __FILE__, __LINE__));
     }
   }
   data.insert(newData);
@@ -988,7 +988,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 		  cout << "creator=" << *creator << '\n';
 		  cout << "neighbor=" << *neighbor << ", matl=" << matl << '\n';
 		  cout << "me=" << me << '\n';
-		  SCI_THROW(InternalError("Failed to find comp for dep!"));
+		  SCI_THROW(InternalError("Failed to find comp for dep!", __FILE__, __LINE__));
 	        }
 	      }
 	      if (modifies) {
@@ -1043,7 +1043,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
 	if(!ct.findcomp(req, 0, matl, creator, comp, d_myworld)){
 	  cerr << "Failure finding " << *req << " for " 
 	       << task->getTask()->getName() << "\n"; 
-	  SCI_THROW(InternalError("Failed to find comp for dep!"));
+	  SCI_THROW(InternalError("Failed to find comp for dep!", __FILE__, __LINE__));
 	}
 	ASSERTRANGE(task->getAssignedResourceIndex(), 0, d_myworld->size());
 	if(task->getAssignedResourceIndex() ==
@@ -1079,7 +1079,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
       else
         desc << "no req patches\n";
       desc << "domain patches: " << *patches.get_rep() << "\n";
-      SCI_THROW(InternalError(desc.str())); 
+      SCI_THROW(InternalError(desc.str(), __FILE__, __LINE__)); 
     }
   }
 }

@@ -370,7 +370,7 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
 	  map<const VarLabel*, ParticleVariableBase*>::iterator piter;
 	  piter = newParts->find(reloc_new_posLabel);
 	  if(piter == newParts->end())
-	    throw InternalError("didnt create new position");
+	    throw InternalError("didnt create new position", __FILE__, __LINE__);
 	  ParticleVariableBase* addedPos = piter->second;
 	  subsets.push_back(addedPos->getParticleSubset());
 	}
@@ -394,7 +394,7 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
 	  map<const VarLabel*, ParticleVariableBase*>::iterator piter;
 	  piter = newParts->find(reloc_new_posLabel);
 	  if(piter == newParts->end())
-	    throw InternalError("didnt create new position");
+	    throw InternalError("didnt create new position", __FILE__, __LINE__);
 	  ParticleVariableBase* addedPos = piter->second;
 	  invars[subsets.size()-1] = addedPos;
 	  fromPatches.push_back(patch);
@@ -414,7 +414,7 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
 	    if(piter == newParts->end()) {
 	      cout << "reloc_new_labels = " << reloc_new_labels[m][v]->getName()
 		   << endl;
-	      throw InternalError("didnt create new variable of this type");
+	      throw InternalError("didnt create new variable of this type", __FILE__, __LINE__);
 	    }
 	    ParticleVariableBase* addedVar = piter->second;
 	    invars[subsets.size()-1] = addedVar;
@@ -989,7 +989,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
           map<const VarLabel*, ParticleVariableBase*>::iterator piter;
           piter = newParts->find(reloc_new_posLabel);
           if(piter == newParts->end())
-            throw InternalError("didnt create new position");
+            throw InternalError("didnt create new position", __FILE__, __LINE__);
           ParticleVariableBase* addedPos = piter->second;
           subsets.push_back(addedPos->getParticleSubset());
         }
@@ -1017,7 +1017,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
           map<const VarLabel*, ParticleVariableBase*>::iterator piter;
           piter = newParts->find(reloc_new_posLabel);
           if(piter == newParts->end())
-            throw InternalError("didnt create new position");
+            throw InternalError("didnt create new position", __FILE__, __LINE__);
           ParticleVariableBase* addedPos = piter->second;
           invars[subsets.size()-1] = addedPos;
           fromPatches.push_back(patch);
@@ -1037,7 +1037,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
             if(piter == newParts->end()) {
               cout << "reloc_new_labels = " << reloc_new_labels[m][v]->getName()
                    << endl;
-              throw InternalError("didnt create new variable of this type");
+              throw InternalError("didnt create new variable of this type", __FILE__, __LINE__);
             }
             ParticleVariableBase* addedVar = piter->second;
             invars[subsets.size()-1] = addedVar;

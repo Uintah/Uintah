@@ -22,7 +22,7 @@ ArchesTable::ArchesTable(ProblemSpecP& params)
        child = child->findNextBlock("defaultValue")) {
     DefaultValue* df = new DefaultValue;
     if(!child->getAttribute("name", df->name))
-      throw ProblemSetupException("No name for defaultValue");
+      throw ProblemSetupException("No name for defaultValue", __FILE__, __LINE__);
     child->get(df->value);
     defaults.push_back(df);
   }
@@ -30,7 +30,7 @@ ArchesTable::ArchesTable(ProblemSpecP& params)
        child = child->findNextBlock("constantValue")) {
     Dep* dep = new Dep(Dep::ConstantValue);
     if(!child->getAttribute("name", dep->name))
-      throw ProblemSetupException("No name for constantValue");
+      throw ProblemSetupException("No name for constantValue", __FILE__, __LINE__);
     child->get(dep->constantValue);
     deps.push_back(dep);
   }
@@ -38,7 +38,7 @@ ArchesTable::ArchesTable(ProblemSpecP& params)
        child = child->findNextBlock("derivedValue")) {
     Dep* dep = new Dep(Dep::DerivedValue);
     if(!child->getAttribute("name", dep->name))
-      throw ProblemSetupException("No expression for derivedValue");
+      throw ProblemSetupException("No expression for derivedValue", __FILE__, __LINE__);
     string expr;
     child->get(expr);
     string::iterator beg = expr.begin();
@@ -52,7 +52,7 @@ ArchesTable::ArchesTable(ProblemSpecP& params)
       for(string::iterator skip = expr.begin(); skip != beg; skip++)
         cerr << ' ';
       cerr << "^\n";
-      throw ProblemSetupException("Error parsing expression");
+      throw ProblemSetupException("Error parsing expression", __FILE__, __LINE__);
     }
     deps.push_back(dep);
   }
@@ -236,7 +236,7 @@ void ArchesTable::setup()
   ifstream in(filename.c_str());
   startline = true;
   if(!in)
-    throw ProblemSetupException("file not found: "+filename);
+    throw ProblemSetupException("file not found: "+filename, __FILE__, __LINE__);
   
 
   cerr << "Reading table\n";
@@ -258,7 +258,7 @@ void ArchesTable::setup()
     int num = getInt(in);
     axis_sizes[i] = num;
     if(num <= 2)
-      throw InternalError("Table must have at least size 2 in each dimension");
+      throw InternalError("Table must have at least size 2 in each dimension", __FILE__, __LINE__);
   }
 
   for(int i=0;i<nvars;i++)
@@ -324,7 +324,7 @@ void ArchesTable::setup()
     while(in)
       cerr << (char)in.get();
     cerr << '\n';
-    throw InternalError("Data remaining in file after read\n");
+    throw InternalError("Data remaining in file after read\n", __FILE__, __LINE__);
   }
 
   // finalize axes
@@ -347,7 +347,7 @@ void ArchesTable::setup()
       }
     }
     if(!found)
-      throw InternalError(string("Independent variable: ")+ind->name+" not found");
+      throw InternalError(string("Independent variable: ")+ind->name+" not found", __FILE__, __LINE__);
   }
 
   // Create the new axes
@@ -386,7 +386,7 @@ void ArchesTable::setup()
       }
     }
     if(!inputdep)
-      throw InternalError(string("Dependent variable: ")+dep->name+" not found");
+      throw InternalError(string("Dependent variable: ")+dep->name+" not found", __FILE__, __LINE__);
     cerr << "Downslicing: " << dep->name << '\n';
     dep->data = new double[newsize];
 
@@ -442,12 +442,12 @@ void ArchesTable::setup()
         }
       }
       if(!found)
-        throw InternalError("Default value for "+in_inds[i]->name+" not found");
+        throw InternalError("Default value for "+in_inds[i]->name+" not found", __FILE__, __LINE__);
       InterpAxis* axis = inputdep->axes[i];
       int l=0;
       int h=axis->weights.size()-1;
       if(value < axis->weights[l] || value > axis->weights[h])
-	throw InternalError("Interpolate outside range of table");
+	throw InternalError("Interpolate outside range of table", __FILE__, __LINE__);
       while(h > l+1){
 	int m = (h+l)/2;
 	if(value < axis->weights[m])
@@ -536,10 +536,12 @@ void ArchesTable::checkAxes(const vector<InterpAxis*>& a,
     }
   }
   if(a.size() != b.size())
-    throw InternalError("Cannot compute a derived quantity on variables with different dimension");
+    throw InternalError("Cannot compute a derived quantity on variables with different dimension", 
+                        __FILE__, __LINE__);
   for(int i=0;i<static_cast<int>(a.size());i++){
     if(!a[i]->sameAs(b[i]))
-      throw InternalError("Cannot compute a derived quantity on variables with different axes");
+      throw InternalError("Cannot compute a derived quantity on variables with different axes",
+                          __FILE__, __LINE__);
   }
   // They are the same, okay...
   out_axes=a;
@@ -623,13 +625,13 @@ void ArchesTable::evaluate(Expr* expr, vector<InterpAxis*>& out_axes,
           break;
       }
       if(idx == static_cast<int>(inds.size()))
-        throw InternalError("Cannot find variable in expression: "+expr->id);
+        throw InternalError("Cannot find variable in expression: "+expr->id, __FILE__, __LINE__);
       int firstdep=0;
       while(firstdep != static_cast<int>(deps.size())
             && static_cast<int>(deps[firstdep]->axes.size()) == 0)
         firstdep++;
       if(firstdep == static_cast<int>(deps.size()))
-        throw InternalError("Cannot find a variable with axes");
+        throw InternalError("Cannot find a variable with axes", __FILE__, __LINE__);
       out_axes=deps[firstdep]->axes;
       InterpAxis* axis = out_axes[idx];
       int stride = axis->offset[1]-axis->offset[0];
@@ -655,7 +657,7 @@ void ArchesTable::evaluate(Expr* expr, vector<InterpAxis*>& out_axes,
     }
     break;
   default:
-    throw InternalError("Bad op in expression");
+    throw InternalError("Bad op in expression", __FILE__, __LINE__);
   }
 }
     
@@ -700,7 +702,7 @@ void ArchesTable::interpolate(int index, CCVariable<double>& result,
                 cerr << "value=" << value << ", start=" << axis->weights[0] << ", dx=" << axis->dx << '\n';
                 cerr << "index=" << index << ", fraction=" << index-idx << '\n';
                 cerr << "last value=" << axis->weights[axis->weights.size()-1] << '\n';
-                throw InternalError("Interpolate outside range of table");
+                throw InternalError("Interpolate outside range of table", __FILE__, __LINE__);
               }
             }
             w[i] = index-idx;
@@ -717,7 +719,7 @@ void ArchesTable::interpolate(int index, CCVariable<double>& result,
               else {
                 cerr.precision(17);
                 cerr << *iter << ", value=" << value << ", low=" << axis->weights[l] << ", high=" << axis->weights[h] << "\n";
-                throw InternalError("Interpolate outside range of table");
+                throw InternalError("Interpolate outside range of table", __FILE__, __LINE__);
               }
             }
             while(h > l+1){
@@ -778,7 +780,7 @@ double ArchesTable::interpolate(int index, vector<double>& independents)
       if(index < 0 || index >= axis->weights.size()){
         cerr << "value=" << value << ", start=" << axis->weights[0] << ", dx=" << axis->dx << '\n';
         cerr << "index=" << index << '\n';
-        throw InternalError("Interpolate outside range of table");
+        throw InternalError("Interpolate outside range of table", __FILE__, __LINE__);
       }
       int idx = (int)index;
       w[i] = index-idx;
@@ -795,7 +797,7 @@ double ArchesTable::interpolate(int index, vector<double>& independents)
         else {
           cerr.precision(17);
           cerr << "value=" << value << ", low=" << axis->weights[l] << ", high=" << axis->weights[h] << "\n";
-          throw InternalError("Interpolate outside range of table");
+          throw InternalError("Interpolate outside range of table", __FILE__, __LINE__);
         }
       }
       while(h > l+1){
@@ -836,7 +838,7 @@ void ArchesTable::error(istream& in)
 {
   string s;
   getline(in, s);
-  throw InternalError("Error parsing table, text follows: "+s);
+  throw InternalError("Error parsing table, text follows: "+s, __FILE__, __LINE__);
 }
 
 int ArchesTable::getInt(istream& in)
@@ -991,12 +993,12 @@ void ArchesTable::InterpAxis::finalize()
   int n = weights.size();
   dx = (weights[n-1]-weights[0])/(n-1);
   if(dx <= 0)
-    throw InternalError("Backwards table not supported");
+    throw InternalError("Backwards table not supported", __FILE__, __LINE__);
   uniform = true;
   for(int i=1;i<n;i++){
     double dd = weights[i]-weights[i-1];
     if(dd<0){
-      throw InternalError("Backwards table not supported(2)");
+      throw InternalError("Backwards table not supported(2)", __FILE__, __LINE__);
     }
     if(Abs(dd-dx)/dx > 1.e-5){
       uniform = false;

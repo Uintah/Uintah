@@ -46,7 +46,7 @@ MTSShear::computeShearModulus(const PlasticityState* state)
     desc << "**Compute MTS Shear Modulus ERROR** Shear modulus <= 0." << endl;
     desc << "T = " << T << " mu0 = " << d_mu0 << " T0 = " << d_T0
          << " exp(To/T) = " << expT0_T << " D = " << d_D << endl;
-    throw InvalidValue(desc.str());
+    throw InvalidValue(desc.str(), __FILE__, __LINE__);
   }
   return mu;
 }

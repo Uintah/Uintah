@@ -669,7 +669,7 @@ void SecondOrderAdvector::q_FC_fluxes(const CCVariable<T>& /*q_CC*/,
     VarLabel* zlabel = VarLabel::find(z_name);  
     if (xlabel == NULL || ylabel == NULL || zlabel == NULL){
       throw InternalError( "Advector: q_FC_fluxes: variable label not found: " 
-                            + x_name + " or " + y_name + " or " + z_name);
+                            + x_name + " or " + y_name + " or " + z_name, __FILE__, __LINE__);
     }
     Ghost::GhostType  gn  = Ghost::None;
     SFCXVariable<T> q_X_FC_flux;

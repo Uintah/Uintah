@@ -21,9 +21,9 @@ SphereMembraneGeometryPiece::SphereMembraneGeometryPiece(ProblemSpecP& ps)
   ps->require("num_long",d_numLong);
   
   if ( d_radius <= 0.0)
-    SCI_THROW(ProblemSetupException("Input File Error: Sphere radius must be > 0.0"));
+    SCI_THROW(ProblemSetupException("Input File Error: Sphere radius must be > 0.0", __FILE__, __LINE__));
   if ( d_radius <= 0.0)
-    SCI_THROW(ProblemSetupException("Input File Error: Sphere thcknss must be > 0."));
+    SCI_THROW(ProblemSetupException("Input File Error: Sphere thcknss must be > 0.", __FILE__, __LINE__));
 }
 
 SphereMembraneGeometryPiece::~SphereMembraneGeometryPiece()

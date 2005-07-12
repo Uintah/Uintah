@@ -98,7 +98,8 @@ UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const Proces
     char *c = 0;
     *c = 0;
     throw ProblemSetupException("Unknown simulationComponent. Must specify -arches, -ice, -mpm, "
-		  "-impm, -fmpmice, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, or -poisson3");
+		  "-impm, -fmpmice, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, or -poisson3",
+                                __FILE__, __LINE__);
   }
  
 }

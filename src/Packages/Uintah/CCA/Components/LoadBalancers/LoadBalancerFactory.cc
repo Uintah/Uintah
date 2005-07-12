@@ -56,7 +56,7 @@ LoadBalancerCommon* LoadBalancerFactory::create(ProblemSpecP& ps,
     bal = scinew ParticleLoadBalancer(world);
   } else {
     bal = 0;   
-    throw ProblemSetupException("Unknown load balancer");
+    throw ProblemSetupException("Unknown load balancer", __FILE__, __LINE__);
   }
   
   return bal;

@@ -34,7 +34,7 @@ FileGeometryPiece::FileGeometryPiece(ProblemSpecP& ps)
     else if (next_var_name=="p.externalforce") d_vars.push_back(IVextforces);
     else if (next_var_name=="p.fiberdir")      d_vars.push_back(IVfiberdirn);
     else 
-      throw ProblemSetupException("Unexpected field variable of '"+next_var_name+"'");
+      throw ProblemSetupException("Unexpected field variable of '"+next_var_name+"'", __FILE__, __LINE__);
   }
   
   d_file_format = FFText; 
@@ -69,7 +69,7 @@ FileGeometryPiece::FileGeometryPiece(ProblemSpecP& ps)
     else if(fformat_txt=="msb")   d_file_format = FFMSBBin;
     else if(fformat_txt=="gzip")  d_file_format = FFGzip;
     else
-      throw ProblemSetupException("Unexpected file geometry format");
+      throw ProblemSetupException("Unexpected file geometry format", __FILE__, __LINE__);
   }
   ps->get("split", d_presplit);
   
@@ -81,7 +81,8 @@ FileGeometryPiece::FileGeometryPiece(ProblemSpecP& ps)
     string file_name = numbered_str(d_file_name+".", 0);
     ifstream source(file_name.c_str());
     if (!source ){
-      throw ProblemSetupException("ERROR: opening MPM geometry file '"+file_name+"'\nFailed to find point file");
+      throw ProblemSetupException("ERROR: opening MPM geometry file '"+file_name+"'\nFailed to find point file",
+                                  __FILE__, __LINE__);
     }
     
     // note that the header is always text, even for binary formats
@@ -169,7 +170,7 @@ FileGeometryPiece::read_line(istream & is, Point & xmin, Point & xmax)
         if(is >> v1 >> v2 >> v3) d_fiberdirs.push_back(Vector(v1,v2,v3));
       }
       if(!is)
-        throw ProblemSetupException("Failed while reading point text point file");
+        throw ProblemSetupException("Failed while reading point text point file", __FILE__, __LINE__);
     }
     
   } else if(d_file_format==FFLSBBin || d_file_format==FFMSBBin) {
@@ -221,12 +222,12 @@ FileGeometryPiece::read_line(istream & is, Point & xmin, Point & xmax)
         }
       }
       if(!is)
-        throw ProblemSetupException("Failed while reading point text point file");
+        throw ProblemSetupException("Failed while reading point text point file", __FILE__, __LINE__);
       }
     }
     
   } else if(d_file_format==FFGzip) {
-    throw ProblemSetupException("Sorry - gzip not implemented !");
+    throw ProblemSetupException("Sorry - gzip not implemented !", __FILE__, __LINE__);
   }
   
   xmin = Min(xmin, Point(x1,x2,x3));
@@ -263,7 +264,8 @@ void FileGeometryPiece::readPoints(int pid)
   }    
   
   if (!source ){
-    throw ProblemSetupException("ERROR: opening MPM point file '"+file_name+"'\n:  The file must be in the same directory as sus");
+    throw ProblemSetupException("ERROR: opening MPM point file '"+file_name+"'\n:  The file must be in the same directory as sus",
+                                __FILE__, __LINE__);
   }
   
   int readpts = 0;

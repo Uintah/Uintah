@@ -37,8 +37,8 @@ struct SubPatchFlag : public RefCounted {
     initialize(low, high);
   }
   inline SubPatchFlag() {subpatches_ = 0; delSubpatches_ = false;}
-  SubPatchFlag( const SubPatchFlag& ) { throw InternalError( "SubPatchFlag( const SubPatchFlag& ) not implemented!" ); }
-  SubPatchFlag& operator=( const SubPatchFlag& ) { throw InternalError( "SubPatchFlag& operator=( const SubPatchFlag& ) not implemented!" );}
+  SubPatchFlag( const SubPatchFlag& ) { throw InternalError( "SubPatchFlag( const SubPatchFlag& ) not implemented!", __FILE__, __LINE__ ); }
+  SubPatchFlag& operator=( const SubPatchFlag& ) { throw InternalError( "SubPatchFlag& operator=( const SubPatchFlag& ) not implemented!", __FILE__, __LINE__ );}
   inline ~SubPatchFlag() { if (delSubpatches_) delete subpatches_; }
   
   // initialize with our own memory
@@ -56,7 +56,7 @@ struct SubPatchFlag : public RefCounted {
   // use external memory
   inline void initialize(const IntVector& low, const IntVector& high, int* data) {
     if (delSubpatches_)
-      throw InternalError("Memory already allocated for this subpatch flag");
+      throw InternalError("Memory already allocated for this subpatch flag", __FILE__, __LINE__);
     low_ = low; 
     high_ = high;
     range_ = high - low; 

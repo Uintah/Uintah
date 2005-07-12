@@ -22,7 +22,7 @@ namespace Uintah {
 
    class TypeMismatchException : public SCIRun::Exception {
    public:
-      TypeMismatchException(const std::string& msg);
+      TypeMismatchException(const std::string& msg, const char* file, int line);
       TypeMismatchException(const TypeMismatchException&);
       virtual ~TypeMismatchException();
       virtual const char* message() const;

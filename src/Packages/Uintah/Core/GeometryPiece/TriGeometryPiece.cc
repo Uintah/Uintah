@@ -158,7 +158,8 @@ void TriGeometryPiece::readPoints(const string& file)
   string f = file + ".pts";
   ifstream source(f.c_str());
   if (!source) {
-    throw ProblemSetupException("ERROR: opening MPM Tri points file: \n The file must be in the same directory as sus");
+    throw ProblemSetupException("ERROR: opening MPM Tri points file: \n The file must be in the same directory as sus",
+                                __FILE__, __LINE__);
   }
 
   double x,y,z;
@@ -187,7 +188,8 @@ void TriGeometryPiece::readTri(const string& file)
   string f = file + ".tri";
   ifstream source(f.c_str());
   if (!source) {
-    throw ProblemSetupException("ERROR: opening MPM Tri file: \n The file must be in the same directory as sus");
+    throw ProblemSetupException("ERROR: opening MPM Tri file: \n The file must be in the same directory as sus",
+                                __FILE__, __LINE__);
   }
 
   int x,y,z;

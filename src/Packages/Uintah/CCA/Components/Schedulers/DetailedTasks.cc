@@ -448,7 +448,7 @@ void DetailedTasks::setScrubCount(const VarLabel* label, int matlIndex,
       initialRequires.find(label) == initialRequires.end())){
     int scrubcount;
     if(!getScrubCount(label, matlIndex, patch, dw, scrubcount)){
-      SCI_THROW(InternalError("No scrub count for received MPIVariable: "+label->getName()));
+      SCI_THROW(InternalError("No scrub count for received MPIVariable: "+label->getName(), __FILE__, __LINE__));
     }
     if(scrubout.active())
       scrubout << "setting scrubcount for recv of " << dw << "/" << patch->getID() << "/" << matlIndex << "/" << label->getName() << ": " << scrubcount << '\n';
@@ -902,7 +902,7 @@ DetailedTasks::initTimestep()
 void DetailedTasks::incrementDependencyGeneration()
 {
   if (currentDependencyGeneration_ >= ULONG_MAX)
-    SCI_THROW(InternalError("DetailedTasks::currentDependencySatisfyingGeneration has overflowed"));
+    SCI_THROW(InternalError("DetailedTasks::currentDependencySatisfyingGeneration has overflowed", __FILE__, __LINE__));
   currentDependencyGeneration_++;
 }
 

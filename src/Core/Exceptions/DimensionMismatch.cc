@@ -48,7 +48,7 @@
 
 namespace SCIRun {
 
-DimensionMismatch::DimensionMismatch(long value, long expected)
+DimensionMismatch::DimensionMismatch(long value, long expected, const char* file, int line)
     : value(value), expected(expected)
 {
     // Format the message now...
@@ -57,7 +57,9 @@ DimensionMismatch::DimensionMismatch(long value, long expected)
     msg=strdup(buf);
     
 #ifdef EXCEPTIONS_CRASH
-	std::cout << msg << "\n";
+    std::cout << "A DimensionMismatch exception was thrown\n";
+    std::cout << file << ":" << line << "\n";
+    std::cout << msg << "\n";
 #endif
 }
 

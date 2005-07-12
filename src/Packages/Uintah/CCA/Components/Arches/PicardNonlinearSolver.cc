@@ -162,7 +162,8 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
     numTimeIntegratorLevels = 1;
   }
   else {
-    throw ProblemSetupException("Integrator type is not defined "+d_timeIntegratorType);
+    throw ProblemSetupException("Integrator type is not defined "+d_timeIntegratorType,
+                                __FILE__, __LINE__);
   }
   double d_underrelax;
   db->getWithDefault("underrelax",d_underrelax,1.0);

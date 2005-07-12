@@ -166,9 +166,12 @@ usage( const std::string & message,
   quit();
 }
 
+#include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
+
 int
 main( int argc, char** argv )
 {
+  throw InvalidGrid("omg we're all gonna die!!!",__FILE__,__LINE__);
 #ifdef USE_TAU_PROFILING
 
   // WARNING:

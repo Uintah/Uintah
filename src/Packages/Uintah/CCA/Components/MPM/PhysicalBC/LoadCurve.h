@@ -109,7 +109,7 @@ WARNING
    {
       ProblemSpecP loadCurve = ps->findBlock("load_curve");
       if (!loadCurve) 
-         throw ProblemSetupException("**ERROR** No load curve specified.");
+         throw ProblemSetupException("**ERROR** No load curve specified.", __FILE__, __LINE__);
       loadCurve->require("id", d_id);
       for (ProblemSpecP timeLoad = loadCurve->findBlock("time_point");
            timeLoad != 0;

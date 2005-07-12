@@ -250,7 +250,7 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 
     break;
   default:
-    throw InvalidValue("Invalid index in Source::calcVelSrc");
+    throw InvalidValue("Invalid index in Source::calcVelSrc", __FILE__, __LINE__);
   }
 
 
@@ -814,7 +814,7 @@ Source::modifyVelMassSource(const ProcessorGroup* ,
 #endif
     break;
   default:
-    throw InvalidValue("Invalid index in Source::calcVelMassSrc");
+    throw InvalidValue("Invalid index in Source::calcVelMassSrc", __FILE__, __LINE__);
   }
 }
 
@@ -1054,7 +1054,7 @@ Source::addPressureSource(const ProcessorGroup* ,
 		      cellinfo->dzpb);
     break;
   default:
-    throw InvalidValue("Invalid index in Source::calcPressGrad");
+    throw InvalidValue("Invalid index in Source::calcPressGrad", __FILE__, __LINE__);
   }
 }
 
@@ -1109,7 +1109,7 @@ Source::addTransMomSource(const ProcessorGroup* ,
 		     delta_t, cellinfo->sew, cellinfo->sns, cellinfo->stbw);
     break;
   default:
-    throw InvalidValue("Invalid index in Source::calcTrabsSource");
+    throw InvalidValue("Invalid index in Source::calcTrabsSource", __FILE__, __LINE__);
   }
 }
 
@@ -1184,7 +1184,7 @@ Source::computePressureSource(const ProcessorGroup* ,
 		       cellinfo->sns, cellinfo->stbw, cellinfo->dzpb);
     break;
   default:
-    throw InvalidValue("Invalid index in Source::calcPressGrad");
+    throw InvalidValue("Invalid index in Source::calcPressGrad", __FILE__, __LINE__);
   }
 }
 
@@ -1422,7 +1422,7 @@ Source::calculateVelocityPred(const ProcessorGroup* ,
 
     break;
   default:
-    throw InvalidValue("Invalid index in Source::calcVelSrc");
+    throw InvalidValue("Invalid index in Source::calcVelSrc", __FILE__, __LINE__);
   }
 
 }

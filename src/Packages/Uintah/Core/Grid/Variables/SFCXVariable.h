@@ -158,7 +158,7 @@ WARNING
       if(td->isFlat())
 	Array3<T>::write(out, l, h, outputDoubleAsFloat);
       else
-	SCI_THROW(InternalError("Cannot yet write non-flat objects!\n"));
+	SCI_THROW(InternalError("Cannot yet write non-flat objects!\n", __FILE__, __LINE__));
     }
   
     virtual bool emitRLE(ostream& out, const IntVector& l, const IntVector& h,
@@ -171,7 +171,7 @@ WARNING
 	rle.write(out);
       }
       else
-	SCI_THROW(InternalError("Cannot yet write non-flat objects!\n"));
+	SCI_THROW(InternalError("Cannot yet write non-flat objects!\n", __FILE__, __LINE__));
       return true;
     }
   
@@ -181,7 +181,7 @@ WARNING
       if(td->isFlat())
 	Array3<T>::read(in, swapBytes);
       else
-	SCI_THROW(InternalError("Cannot yet read non-flat objects!\n"));
+	SCI_THROW(InternalError("Cannot yet read non-flat objects!\n", __FILE__, __LINE__));
     }
   
     virtual void readRLE(istream& in, bool swapBytes, int nByteMode)
@@ -192,7 +192,7 @@ WARNING
 	rle.copyOut(Array3<T>::begin(), Array3<T>::end());
       }
       else
-	SCI_THROW(InternalError("Cannot yet write non-flat objects!\n"));
+	SCI_THROW(InternalError("Cannot yet write non-flat objects!\n", __FILE__, __LINE__));
     }
  
     static TypeDescription::Register registerMe;
@@ -259,7 +259,7 @@ WARNING
   {
     SFCXVariable<T>* c = dynamic_cast<SFCXVariable<T>* >(&copy);
     if(!c)
-      SCI_THROW(TypeMismatchException("Type mismatch in SFCX variable"));
+      SCI_THROW(TypeMismatchException("Type mismatch in SFCX variable", __FILE__, __LINE__));
     copyPointer(*c);   
   }
 
@@ -281,7 +281,7 @@ WARNING
   {
     if(this->getWindow())
       SCI_THROW(InternalError("Allocating an SFCXvariable that "
-			  "is apparently already allocated!"));
+			  "is apparently already allocated!", __FILE__, __LINE__));
     this->resize(lowIndex, highIndex);
   }
 
@@ -290,7 +290,7 @@ WARNING
   {
     const SFCXVariable<T>* c = dynamic_cast<const SFCXVariable<T>* >(srcptr);
     if(!c)
-      SCI_THROW(TypeMismatchException("Type mismatch in SFCX variable"));
+      SCI_THROW(TypeMismatchException("Type mismatch in SFCX variable", __FILE__, __LINE__));
     return *c;
   }
 

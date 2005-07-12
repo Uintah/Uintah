@@ -52,7 +52,7 @@
 namespace SCIRun {
 	class FileNotFound : public Exception {
 	public:
-	    FileNotFound(const std::string&);
+	    FileNotFound(const std::string&, const char* file, int line);
 	    FileNotFound(const FileNotFound&);
 	    virtual ~FileNotFound();
 	    virtual const char* message() const;

@@ -453,9 +453,9 @@ private:
 	type = *type_iter;
     }
     if (type == NULL)
-      throw InternalError("Unable to determine variable type");
+      throw InternalError("Unable to determine variable type", __FILE__, __LINE__);
     if (type->getType() != TypeDescription::ParticleVariable)    
-      throw InternalError("Variable type is not ParticleVariable");
+      throw InternalError("Variable type is not ParticleVariable", __FILE__, __LINE__);
     // find the first timestep
     int ts = 0;
     while ((ts < (int)d_tstimes.size()) && (startTime > d_tstimes[ts]))
@@ -474,7 +474,7 @@ private:
       //    cerr <<" Patch = 0x"<<hex<<patch<<dec<<", index = "<<idx;
       if (patch == NULL)
 	throw VariableNotFoundInGrid(name,particleID,matlIndex,
-				     "DataArchive::query");
+				     "DataArchive::query", __FILE__, __LINE__);
       
       ParticleVariable<T> var;
       query(var, name, matlIndex, patch, t);
@@ -515,7 +515,7 @@ private:
 	type = *type_iter;
     }
     if (type == NULL)
-      throw InternalError("Unable to determine variable type");
+      throw InternalError("Unable to determine variable type", __FILE__, __LINE__);
     
     // find the first timestep
     int ts = 0;
@@ -602,7 +602,7 @@ private:
 	}
       }
       if (patch == NULL) {
-	throw VariableNotFoundInGrid(name,loc,matlIndex,"DataArchive::query");
+	throw VariableNotFoundInGrid(name,loc,matlIndex,"DataArchive::query", __FILE__, __LINE__);
       }
      
       switch (type->getType()) {

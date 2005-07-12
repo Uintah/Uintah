@@ -45,11 +45,13 @@
 namespace SCIRun {
 
 
-InvalidState::InvalidState(const std::string& message)
+InvalidState::InvalidState(const std::string& message, const char* file, int line)
     : message_(message)
 {
 #ifdef EXCEPTIONS_CRASH
-	std::cout << message_ << "\n";
+  std::cout << "An InvalidState exception was thrown.\n";
+  std::cout << file << ":" << line << "\n";
+  std::cout << message_ << "\n";
 #endif
 }
 

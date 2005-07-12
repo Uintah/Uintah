@@ -50,7 +50,7 @@ namespace SCIRun {
 
 using namespace std;
 
-ErrnoException::ErrnoException(const std::string& message, int err)
+ErrnoException::ErrnoException(const std::string& message, int err, const char* file, int line)
    : errno_(err)
 {
    ostringstream str;
@@ -61,7 +61,9 @@ ErrnoException::ErrnoException(const std::string& message, int err)
    message_ = str.str();
 
 #ifdef EXCEPTIONS_CRASH
-	std::cout << message_ << "\n";
+   std::cout << "An ErrnoException was thrown.\n";
+   std::cout << file << ":" << line << "\n";
+   std::cout << message_ << "\n";
 #endif
 }
 

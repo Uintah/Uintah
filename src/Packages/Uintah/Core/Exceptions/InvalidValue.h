@@ -20,7 +20,7 @@ namespace Uintah {
 
    class InvalidValue : public ProblemSetupException {
    public:
-      InvalidValue(const std::string&);
+      InvalidValue(const std::string&, const char* file, int line);
       InvalidValue(const InvalidValue&);
       virtual ~InvalidValue();
       virtual const char* type() const;

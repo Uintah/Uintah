@@ -57,7 +57,7 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
 
   ProblemSpecP grid_ps = ups->findBlock("Grid");
   if (!grid_ps) {
-    throw InternalError("HierarchicalRegridder::regrid() Grid section of UPS file not found!");
+    throw InternalError("HierarchicalRegridder::regrid() Grid section of UPS file not found!", __FILE__, __LINE__);
   }
 
   // this is for dividing the entire regridding problem into patchwise domains

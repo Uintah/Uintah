@@ -34,7 +34,7 @@ void PatchCombiner::problemSetup(const ProblemSpecP& /*params*/, GridP& grid,
 
   
   if (world_->size() > 1) {
-    throw InternalError("combine_patches not yet supported in parallel");
+    throw InternalError("combine_patches not yet supported in parallel", __FILE__, __LINE__);
   }  
   dataArchive_ = scinew DataArchive(udaDir_, world_->myrank(), world_->size());
   dataArchive_->queryTimesteps(timesteps_, times_);

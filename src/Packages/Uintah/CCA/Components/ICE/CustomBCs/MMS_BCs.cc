@@ -161,7 +161,7 @@ void set_MMS_Velocity_BC(const Patch* patch,
     
     // bulletproofing
     if (!mms_var_basket || !mms_v){
-      throw InternalError("set_MMS_velocity_BC");
+      throw InternalError("set_MMS_velocity_BC", __FILE__, __LINE__);
     }
     if(bc_kind == "MMS_1") {
       double nu = mms_var_basket->viscosity;
@@ -202,7 +202,7 @@ void set_MMS_Temperature_BC(const Patch* /*patch*/,
 
     // bulletproofing
     if (!mms_var_basket || !mms_v){
-      throw InternalError("set_MMS_Temperature_BC");
+      throw InternalError("set_MMS_Temperature_BC", __FILE__, __LINE__);
     }
 
     if(bc_kind == "MMS_1") {    // backout temperature from pressure
@@ -238,7 +238,7 @@ void set_MMS_press_BC(const Patch* patch,
 
   // bulletproofing
   if (!mms_var_basket || !mms_v){
-    throw InternalError("set_MMS_press_BC: mms_vars = null");
+    throw InternalError("set_MMS_press_BC: mms_vars = null", __FILE__, __LINE__);
   }
 
   if(bc_kind == "MMS_1") {

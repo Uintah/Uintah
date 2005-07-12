@@ -83,7 +83,7 @@ WARNING
       {
 	 Stencil<T>* ref=dynamic_cast<Stencil<T>*>(&copy);
 	 if(!ref)
-	   SCI_THROW(TypeMismatchException("Stencil<T>"));
+	   SCI_THROW(TypeMismatchException("Stencil<T>", __FILE__, __LINE__));
 	 *ref = *this;
       }
    

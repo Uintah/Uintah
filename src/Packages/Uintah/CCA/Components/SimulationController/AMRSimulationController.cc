@@ -528,7 +528,7 @@ void AMRSimulationController::executeTimestep(double t, double& delt, GridP& cur
     } else {
       success = true;
       if(d_scheduler->get_dw(1)->timestepAborted()){
-        throw InternalError("Execution aborted, cannot restart timestep\n");
+        throw InternalError("Execution aborted, cannot restart timestep\n", __FILE__, __LINE__);
       }
     }
   } while(!success);

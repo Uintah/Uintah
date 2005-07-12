@@ -42,7 +42,7 @@ void BoundCondFactory::create(ProblemSpecP& child,
   
   // Check to see if "id" is defined
   if (bc_attr.find("id") == bc_attr.end()) 
-    SCI_THROW(ProblemSetupException("id is not specified in the BCType tag"));
+    SCI_THROW(ProblemSetupException("id is not specified in the BCType tag", __FILE__, __LINE__));
   
   if (bc_attr["id"] != "all")
     mat_id = atoi(bc_attr["id"].c_str());
@@ -115,7 +115,7 @@ void BoundCondFactory::create(ProblemSpecP& child,
     ostringstream warn;
     warn << "BoundCondFactory: Unknown Boundary Condition: "<< bc_attr["label"]
          << " Type " << "(" << bc_attr["var"] << ")  " <<endl;
-    SCI_THROW(ProblemSetupException(warn.str()));
+    SCI_THROW(ProblemSetupException(warn.str(), __FILE__, __LINE__));
   }
 }
 

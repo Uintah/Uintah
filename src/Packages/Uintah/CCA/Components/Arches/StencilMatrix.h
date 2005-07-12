@@ -108,7 +108,8 @@ template<class T>
   {
     if (index < 0 || index > 9){
       std::cerr << "Invalid Index" << index << std::endl;
-      throw InvalidValue("Valid Indices for StencilMatrix are AP,AE,AW,AN,AS,AT and AB ");
+      throw InvalidValue("Valid Indices for StencilMatrix are AP,AE,AW,AN,AS,AT and AB ",
+                         __FILE__, __LINE__);
     }
     return d_data[index];
   }

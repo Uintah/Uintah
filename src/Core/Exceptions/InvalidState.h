@@ -52,7 +52,7 @@
 namespace SCIRun {
   class InvalidState : public Exception {
   public:
-    InvalidState(const std::string&);
+    InvalidState(const std::string&, const char* file, int line);
     InvalidState(const InvalidState&);
     virtual ~InvalidState();
     virtual const char* message() const;

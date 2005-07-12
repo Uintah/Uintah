@@ -60,10 +60,12 @@ void NirvanaLoadBalancer::assignResources(DetailedTasks& graph)
   numProcs = d_myworld->size();
   processors_per_host = numProcs/numhosts;
   if(processors_per_host * numhosts != numProcs)
-    SCI_THROW(InternalError("NirvanaLoadBalancer will not work with uneven numbers of processors per host"));
+    SCI_THROW(InternalError("NirvanaLoadBalancer will not work with uneven numbers of processors per host",
+                            __FILE__, __LINE__));
   patches_per_processor = npatches/numProcs;
   if(patches_per_processor * numProcs != npatches) {
-    SCI_THROW(InternalError("NirvanaLoadBalancer will not work with uneven number of patches per processor"));
+    SCI_THROW(InternalError("NirvanaLoadBalancer will not work with uneven number of patches per processor",
+                            __FILE__, __LINE__));
   }
   
   IntVector max(-1,-1,-1);
@@ -71,7 +73,8 @@ void NirvanaLoadBalancer::assignResources(DetailedTasks& graph)
       iter != level->patchesEnd(); iter++){
     IntVector l;
     if(!(*iter)->getLayoutHint(l))
-      SCI_THROW(InternalError("NirvanaLoadBalancer requires layout hints"));
+      SCI_THROW(InternalError("NirvanaLoadBalancer requires layout hints",
+                              __FILE__, __LINE__));
     max = Max(max, l);
   }
   max+=IntVector(1,1,1);
@@ -83,14 +86,14 @@ void NirvanaLoadBalancer::assignResources(DetailedTasks& graph)
       const Patch* patch = patches->get(0);
       IntVector l;
       if(!patch->getLayoutHint(l))
-	SCI_THROW(InternalError("NirvanaLoadBalancer requires layout hints"));
+	SCI_THROW(InternalError("NirvanaLoadBalancer requires layout hints", __FILE__, __LINE__));
       int idx = getproc(l, d, layout, patches_per_processor, processors_per_host);
       task->assignResource(idx);
       for(int i=1;i<patches->size();i++){
 	const Patch* p = patches->get(i);
 	IntVector l;
 	if(!p->getLayoutHint(l))
-	  SCI_THROW(InternalError("NirvanaLoadBalancer requires layout hints"));
+	  SCI_THROW(InternalError("NirvanaLoadBalancer requires layout hints", __FILE__, __LINE__));
 	int pidx = getproc(l, d, layout, patches_per_processor, processors_per_host);
 	if(pidx != idx){
 	  cerr << "WARNING: inconsistent task assignment in NirvanaLoadBalancer\n";
@@ -131,10 +134,12 @@ void NirvanaLoadBalancer::assignResources(DetailedTasks3& graph)
   numProcs = d_myworld->size();
   processors_per_host = numProcs/numhosts;
   if(processors_per_host * numhosts != numProcs)
-    SCI_THROW(InternalError("NirvanaLoadBalancer will not work with uneven numbers of processors per host"));
+    SCI_THROW(InternalError("NirvanaLoadBalancer will not work with uneven numbers of processors per host",
+                            __FILE__, __LINE__));
   patches_per_processor = npatches/numProcs;
   if(patches_per_processor * numProcs != npatches) {
-    SCI_THROW(InternalError("NirvanaLoadBalancer will not work with uneven number of patches per processor"));
+    SCI_THROW(InternalError("NirvanaLoadBalancer will not work with uneven number of patches per processor",
+                            __FILE__, __LINE__));
   }
   
   IntVector max(-1,-1,-1);
@@ -142,7 +147,7 @@ void NirvanaLoadBalancer::assignResources(DetailedTasks3& graph)
       iter != level->patchesEnd(); iter++){
     IntVector l;
     if(!(*iter)->getLayoutHint(l))
-      SCI_THROW(InternalError("NirvanaLoadBalancer requires layout hints"));
+      SCI_THROW(InternalError("NirvanaLoadBalancer requires layout hints", __FILE__, __LINE__));
     max = Max(max, l);
   }
   max+=IntVector(1,1,1);
@@ -154,14 +159,14 @@ void NirvanaLoadBalancer::assignResources(DetailedTasks3& graph)
       const Patch* patch = patches->get(0);
       IntVector l;
       if(!patch->getLayoutHint(l))
-	SCI_THROW(InternalError("NirvanaLoadBalancer requires layout hints"));
+	SCI_THROW(InternalError("NirvanaLoadBalancer requires layout hints", __FILE__, __LINE__));
       int idx = getproc(l, d, layout, patches_per_processor, processors_per_host);
       task->assignResource(idx);
       for(int i=1;i<patches->size();i++){
 	const Patch* p = patches->get(i);
 	IntVector l;
 	if(!p->getLayoutHint(l))
-	  SCI_THROW(InternalError("NirvanaLoadBalancer requires layout hints"));
+	  SCI_THROW(InternalError("NirvanaLoadBalancer requires layout hints", __FILE__, __LINE__));
 	int pidx = getproc(l, d, layout, patches_per_processor, processors_per_host);
 	if(pidx != idx){
 	  cerr << "WARNING: inconsistent task assignment in NirvanaLoadBalancer\n";
@@ -191,10 +196,12 @@ int NirvanaLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch)
     numProcs = d_myworld->size();
     processors_per_host = numProcs/numhosts;
     if(processors_per_host * numhosts != numProcs)
-      SCI_THROW(InternalError("NirvanaLoadBalancer will not work with uneven numbers of processors per host"));
+      SCI_THROW(InternalError("NirvanaLoadBalancer will not work with uneven numbers of processors per host",
+                              __FILE__, __LINE__));
     patches_per_processor = npatches/numProcs;
     if(patches_per_processor * numProcs != npatches) {
-      SCI_THROW(InternalError("NirvanaLoadBalancer will not work with uneven number of patches per processor"));
+      SCI_THROW(InternalError("NirvanaLoadBalancer will not work with uneven number of patches per processor",
+                              __FILE__, __LINE__));
     }
     IntVector max(-1,-1,-1);
     const Level* level = patch->getLevel();
@@ -202,7 +209,7 @@ int NirvanaLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch)
 	iter != level->patchesEnd(); iter++){
       IntVector l;
       if(!(*iter)->getLayoutHint(l))
-	SCI_THROW(InternalError("NirvanaLoadBalancer requires layout hints"));
+	SCI_THROW(InternalError("NirvanaLoadBalancer requires layout hints", __FILE__, __LINE__));
       max = Max(max, l);
     }
     max+=IntVector(1,1,1);
@@ -211,7 +218,7 @@ int NirvanaLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch)
   
   IntVector l;
   if(!patch->getLayoutHint(l))
-    SCI_THROW(InternalError("NirvanaLoadBalancer requires layout hints"));
+    SCI_THROW(InternalError("NirvanaLoadBalancer requires layout hints", __FILE__, __LINE__));
   int pidx = getproc(l, d, layout, patches_per_processor, processors_per_host);
   ASSERTRANGE(pidx, 0, d_myworld->size());
   return pidx;

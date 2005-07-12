@@ -4,11 +4,11 @@
 
 using namespace Uintah;
 
-InvalidGrid::InvalidGrid(const std::string& msg)
+InvalidGrid::InvalidGrid(const std::string& msg, const char* file, int line)
     : d_msg(msg)
 {
 #ifdef EXCEPTIONS_CRASH
-  std::cout << d_msg << "\n";
+  std::cout << "InvalidGrid Exception: " << file << ":" << line << "\n";
 #endif
 }
 

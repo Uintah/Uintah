@@ -287,7 +287,7 @@ public:
   iterator end() const throw(InternalError)
   {
     if (!isFinalized())
-      throw InternalError("You cannot iterate through RunLengthEncoder items until the RunLengthEncoder has been finalized.");
+      throw InternalError("You cannot iterate through RunLengthEncoder items until the RunLengthEncoder has been finalized.", __FILE__, __LINE__);
     return iterator(groups_.end(), 0);
   }
 
@@ -351,7 +351,7 @@ private:
   void write(int fd, void* data, ssize_t size) throw(ErrnoException)
   {
     if (::write(fd, data, size) != size)
-      throw ErrnoException("RunLengthEncoder::write", errno);
+      throw ErrnoException("RunLengthEncoder::write", errno, __FILE__, __LINE__);
   }
 
   inline static ssize_t pread(int fd, void* buf, size_t nbyte, off_t offset)
@@ -804,7 +804,7 @@ long RunLengthEncoder<T, Sequencer>::readPriv(istream& in, bool swapBytes,
   header_size = start_data_pos;
 
   if (header_size % header_item_size != 0)
-    throw InternalError("Invalid RunLengthEncoded data");
+    throw InternalError("Invalid RunLengthEncoded data", __FILE__, __LINE__);
    
   unsigned long num_runs_left = header_size / header_item_size - 1;
   vector<bool> usesDefaultRule(num_runs_left, false);
@@ -891,7 +891,7 @@ T RunLengthEncoder<T, Sequencer>::seekPriv(int fd, unsigned long index,
   readSizeType(fd, needConversion, swapBytes, nByteMode, header_size);
 
   if (header_size % header_item_size != 0)
-    throw InternalError("Invalid RunLengthEncoded data");
+    throw InternalError("Invalid RunLengthEncoded data", __FILE__, __LINE__);
 
   // so it knows which swapbytes to call
   uint32_t group_start_index;
@@ -931,7 +931,8 @@ T RunLengthEncoder<T, Sequencer>::seekPriv(int fd, unsigned long index,
     ASSERT(low == num_runs - 1);
     ostringstream index_str;
     index_str << index << " >= " << group_end_index;
-    throw InternalError(string("RunLengthEncoder<T>::seek (index out of bounds, ") + index_str.str() + ")");
+    throw InternalError(string("RunLengthEncoder<T>::seek (index out of bounds, ") + index_str.str() + ")",
+                        __FILE__, __LINE__);
   }
 
   T item;

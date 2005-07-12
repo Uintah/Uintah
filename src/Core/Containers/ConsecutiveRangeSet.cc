@@ -108,15 +108,15 @@ ConsecutiveRangeSet::ConsecutiveRangeSet(const std::string& setstr)
 	in.clear();
 	in >> c;
 	if (c != ',')
-	  throw ConsecutiveRangeSetException(string("ConsecutiveRangeSet cannot parse integer set string: bad character '") + c + "'");
+	  throw ConsecutiveRangeSetException(string("ConsecutiveRangeSet cannot parse integer set string: bad character '") + c + "'", __FILE__, __LINE__);
 	else {
 	  if (isInterval)
-	    throw ConsecutiveRangeSetException("ConsecutiveRangeSet cannot parse integer set string: ',' following '-'");
+	    throw ConsecutiveRangeSetException("ConsecutiveRangeSet cannot parse integer set string: ',' following '-'", __FILE__, __LINE__);
 	}
       }
       else if (isInterval) {
 	if (!hasLastNumber)
-	  throw ConsecutiveRangeSetException("ConsecutiveRangeSet cannot parse integer set string: ambiguous '-'");
+	  throw ConsecutiveRangeSetException("ConsecutiveRangeSet cannot parse integer set string: ambiguous '-'", __FILE__, __LINE__);
 	rangeSet.push_back(Range(lastNumber, n));
 	isInterval = false;
 	hasLastNumber = false;
@@ -171,7 +171,7 @@ void ConsecutiveRangeSet::addInOrder(int value)
 	 ostringstream msg;
 	 msg << "ConsecutiveRangeSet::addInOrder given value not in order: "
 	     << value << " < " << last_value;
-	 throw ConsecutiveRangeSetException(msg.str());
+	 throw ConsecutiveRangeSetException(msg.str(), __FILE__, __LINE__);
       }
       if (value > last_value) {
 	 if (value == last_value + 1)

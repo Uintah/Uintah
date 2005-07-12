@@ -163,7 +163,7 @@ DWDatabase<VarType, DomainType>::~DWDatabase()
       ostringstream msgstr;
       msgstr << "Failed to scrub: " << iter->first->getName()
 	     << " completely";
-      SCI_THROW(InternalError(msgstr.str()));
+      SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__));
     }
 #endif
     delete iter->second;
@@ -252,7 +252,7 @@ DWDatabase<VarType, DomainType>::scrub(const VarLabel* var, int matlIndex,
 	 << ", patch/level " << domainid
 	 << " not found for scrubbing.";
 
-  SCI_THROW(InternalError(msgstr.str()));
+  SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__));
 }
 
 template<class VarType, class DomainType>
@@ -341,7 +341,7 @@ DWDatabase<VarType, DomainType>::DomainRecord::putVar( int matlIndex,
   
   if (oldVar != 0) {
     if (!replace) {
-      SCI_THROW(InternalError("Put replacing old variable"));
+      SCI_THROW(InternalError("Put replacing old variable", __FILE__, __LINE__));
     }
 
     // replace
@@ -481,7 +481,7 @@ DWDatabase<VarType, DomainType>::getDataItem( const VarLabel* label,
   typename nameDBtype::const_iterator nameiter = names.find(label);
   if(nameiter == names.end())
     SCI_THROW(UnknownVariable(label->getName(), -99, dom, matlIndex,
-			      "no variable name"));
+			      "no variable name", __FILE__, __LINE__));
 
   NameRecord* nr = nameiter->second;
 
@@ -489,12 +489,12 @@ DWDatabase<VarType, DomainType>::getDataItem( const VarLabel* label,
   typename domainDBtype::const_iterator domainiter = nr->domains.find(domainid);
   if(domainiter == nr->domains.end())
     SCI_THROW(UnknownVariable(label->getName(), -98, dom, matlIndex,
-			      "no domain with this variable name"));
+			      "no domain with this variable name", __FILE__, __LINE__));
 
   DataItem* dataItem = domainiter->second->getDataItem(matlIndex);
   if (dataItem == 0 || (dataItem->var == 0)) {
     SCI_THROW(UnknownVariable(label->getName(), -97, dom, matlIndex,
-			  "no material with this domain and variable name"));
+			  "no material with this domain and variable name", __FILE__, __LINE__));
   }
   return *dataItem;
 }

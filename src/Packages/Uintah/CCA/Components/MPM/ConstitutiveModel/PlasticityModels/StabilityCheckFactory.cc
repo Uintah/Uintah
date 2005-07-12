@@ -17,10 +17,10 @@ StabilityCheck* StabilityCheckFactory::create(ProblemSpecP& ps)
 {
    ProblemSpecP child = ps->findBlock("stability_check");
    if(!child)
-      throw ProblemSetupException("Cannot find stability check criterion.");
+      throw ProblemSetupException("Cannot find stability check criterion.", __FILE__, __LINE__);
    string mat_type;
    if(!child->getAttribute("type", mat_type))
-      throw ProblemSetupException("No type for stability check criterion.");
+      throw ProblemSetupException("No type for stability check criterion.", __FILE__, __LINE__);
    
    if (mat_type == "drucker")
       return(scinew DruckerCheck(child));
@@ -31,7 +31,7 @@ StabilityCheck* StabilityCheckFactory::create(ProblemSpecP& ps)
    else if (mat_type == "none")
       return 0;
    else 
-      throw ProblemSetupException("Unknown Stability Check ("+mat_type+")");
+      throw ProblemSetupException("Unknown Stability Check ("+mat_type+")", __FILE__, __LINE__);
 }
 
 StabilityCheck* 
