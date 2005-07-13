@@ -190,7 +190,8 @@ void MPMICE::scheduleInitialize(const LevelP& level,
                             SchedulerP& sched)
 {
   if (cout_doing.active())
-    cout_doing << "\nDoing scheduleInitialize \t\t\t MPMICE" << endl;
+    cout_doing << "\nDoing scheduleInitialize \t\t\t MPMICE L-" 
+               << level->getIndex()<<endl;
 
   d_mpm->scheduleInitialize(level, sched);
   d_ice->scheduleInitialize(level, sched);
@@ -251,6 +252,8 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched,
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
   double AMR_subCycleVar = double(step)/double(nsteps);
+  cout_doing << "---------------------------------------------------------Level " 
+             <<level->getIndex()<< "  step " << step << endl;
  //__________________________________
  // Scheduling
   d_ice->scheduleComputeThermoTransportProperties(sched, level,  ice_matls);
@@ -517,8 +520,9 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
                                     const MaterialSet* mpm_matls)
 {
   if(d_mpm->flags->doMPMOnLevel(getLevel(patches)->getIndex())){
-    if (cout_doing.active())
+    if (cout_doing.active()){
       cout_doing << "MPMICE::scheduleInterpolateNCToCC_0" << endl;
+    }
  
     /* interpolateNCToCC */
     Task* t=scinew Task("MPMICE::interpolateNCToCC_0",
@@ -546,12 +550,23 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
     sched->addTask(t, patches, mpm_matls);
   } else {
     if (cout_doing.active())
-      cout_doing << "MPMICE::coarsenCC_0" << endl;
-    scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->cMassLabel, 0.);
-    scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->cVolumeLabel, 0.);
-    scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->temp_CCLabel, 0.);
-    scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->vel_CCLabel, Vector(0, 0, 0));
-    scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->sp_vol_CCLabel, 0.);
+      cout_doing << "MPMICE::scheduleCoarsenCC mpm_matls" << endl;
+#if 0
+      double rho_orig = mpm_matl->getInitialDensity();
+      double very_small_mass = d_TINY_RHO * cell_vol;
+      cmass.initialize(very_small_mass);
+      cvolume.initialize( very_small_mass/rho_orig);
+#endif
+
+    scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->cMassLabel,
+                                                         1.9531e-15);
+    scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->cVolumeLabel,
+                                                         1.6562e-15);
+    scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->temp_CCLabel,0.);
+    scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->vel_CCLabel,
+                                                         Vector(0, 0, 0));
+    scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->sp_vol_CCLabel,
+                                                         .8479864471);
     scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->rho_CCLabel, 1.e-12);
   }
 }
@@ -599,10 +614,11 @@ void MPMICE::scheduleComputeLagrangianValuesMPM(SchedulerP& sched,
     sched->addTask(t, patches, mpm_matls);
   } else {
     if (cout_doing.active())
-      cout_doing << "MPMICE::scheduleComputeLagrangianValuesMPM" << endl;
+      cout_doing << "MPMICE:scheduleCoarsenCC mpm_matls" << endl;
 
     scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->rho_CCLabel, 1e-12); // modifies??
-    scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->mass_L_CCLabel, 0.);
+    scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->mass_L_CCLabel,
+                                                         1.9531e-15);
     scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->mom_L_CCLabel, Vector(0, 0, 0));
     scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->int_eng_L_CCLabel, 0.);
   }
@@ -621,6 +637,7 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
     cout_doing << "MPMICE::scheduleInterpolateCCToNC" << endl;
 
   if(d_doAMR){
+    cout_doing << "MPMICE::scheduleRefineVariableCC" << endl;
     scheduleRefineVariableCC(sched, patches, mpm_matls, Ilb->mom_L_ME_CCLabel);
     scheduleRefineVariableCC(sched, patches, mpm_matls, Ilb->eng_L_ME_CCLabel);
     scheduleRefineVariableCC(sched, patches, mpm_matls, Ilb->sp_vol_src_CCLabel);
@@ -797,7 +814,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
       cout_doing << "Doing Initialize on patch " << patch->getID() 
-                 << "\t\t\t MPMICE" << endl;
+                 << "\t\t\t MPMICE L-" << getLevel(patches)->getIndex() <<endl;
     }
 
     NCVariable<double> NC_CCweight;
@@ -921,7 +938,7 @@ void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
       cout_doing<<"Doing interpolatePressCCToPressNC on patch "<<patch->getID()
-                <<"\t\t MPMICE" << endl;
+                <<"\t\t MPMICE L-" << getLevel(patches)->getIndex()<<endl;
     }
 
     constCCVariable<double> pressCC;
@@ -954,8 +971,9 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
-      cout_doing<<"Doing interpolatePressureToParticles on patch "<<
-        patch->getID()<<"\t\t MPMICE" << endl;
+      cout_doing<<"Doing interpolatePressureToParticles on patch "
+                <<patch->getID()<<"\t\t MPMICE L-" 
+                <<getLevel(patches)->getIndex()<< endl;
     }
 
     delt_vartype delT;
@@ -1045,7 +1063,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
       cout_doing << "Doing interpolateNCToCC_0 on patch "<< patch->getID()
-                 <<"\t\t\t MPMICE" << endl;
+                 <<"\t\t\t MPMICE L-" << getLevel(patches)->getIndex()<<endl;
     }
 
     int numMatls = d_sharedState->getNumMPMMatls();
@@ -1196,7 +1214,8 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
       cout_doing << "Doing computeLagrangianValuesMPM on patch "
-                 << patch->getID() <<"\t\t MPMICE" << endl;
+                 << patch->getID() <<"\t\t MPMICE L-" 
+                 <<getLevel(patches)->getIndex()<< endl;
     }
 
     int numMatls = d_sharedState->getNumMPMMatls();
@@ -1389,7 +1408,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
       cout_doing << "Doing interpolateCCToNC on patch "<< patch->getID()
-                 <<"\t\t\t MPMICE" << endl;
+                 <<"\t\t\t MPMICE L-" <<getLevel(patches)->getIndex()<< endl;
     }
 
     //__________________________________
@@ -1525,7 +1544,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
       cout_doing<<"Doing computeEquilibrationPressure on patch "
-                << patch->getID() <<"\t\t MPMICE" << endl;
+                << patch->getID() <<"\t\t MPMICE L-" 
+                << getLevel(patches)->getIndex() << endl;
     }
 
     double    converg_coeff = 100.;
@@ -2029,7 +2049,8 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
       cout_doing << "Doing interpolateMassBurnFractionToNC on patch "
-                 << patch->getID() <<"\t MPMICE" << endl;
+                 << patch->getID() <<"\t MPMICE L-" 
+                 << getLevel(patches)->getIndex() << endl;
     }
 
     // Interpolate the CC burn fraction to the nodes
@@ -2305,7 +2326,8 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
    t->computes(variable);
    sched->addTask(t, patches, matls);
  }
-
+ //______________________________________________________________________
+  
  template<typename T>
    void MPMICE::scheduleCoarsenVariableCC(SchedulerP& sched,
                                           const PatchSet* patches,
@@ -2351,7 +2373,7 @@ void MPMICE::refineVariableCC(const ProcessorGroup*,
     if (cout_doing.active()) {
       cout_doing<<"Doing refineVariableCC (" << variable->getName() 
                 << ") on patch "<<finePatch->getID()
-                <<"\t\t MPMICE" << endl;
+                <<"\t\t MPMICE L-" << fineLevel->getIndex()<<endl;
     }
 
     for(int m = 0;m<matls->size();m++){
@@ -2399,7 +2421,8 @@ void MPMICE::coarsenVariableCC(const ProcessorGroup*,
 {
   const Level* coarseLevel = getLevel(patches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
-  cout_doing << "Doing coarsen on variable " << variable->getName() << "\t\t MPMICE L-" <<fineLevel->getIndex();
+  cout_doing << "Doing coarsen on variable " << variable->getName() 
+             << "\t\t\t MPMICE L-" <<fineLevel->getIndex();
   
   IntVector refineRatio(fineLevel->getRefinementRatio());
   
