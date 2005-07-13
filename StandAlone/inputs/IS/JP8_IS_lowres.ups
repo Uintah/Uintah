@@ -3,7 +3,7 @@
 <Uintah_specification>
 
   <Meta>
-    <title/>
+       <title/>
   </Meta>
 
   <!--____________________________________________________________________-->
@@ -21,13 +21,12 @@
   <!--        uncommenting the  <Model type="Simple_Burn"> section        -->
   <!--    b) change <ThresholdTemp>       450.0                           -->
   <!--             <ThresholdTemp>  (temperature from step 2)             -->
-  <!--    c) turn off ICE's implicit pressure solver and run explicit     -->
-  <!--        delete the section  enclosed by  (A)                        -->
-  <!--    d) turn down the CFL                                            -->
-  <!--    e) turn all the viscosities and thermal conductivities to 0     -->
-  <!--    f) set advection to SecondOrder if it isn't already             -->
-  <!--    g) change the nodes8or27 flag to 27                             -->
-  <!--    h) change <CanAddIceMaterial> from false to true                -->
+  <!--    c) turn down the CFL                                            -->
+  <!--    d) turn all the viscosities and thermal conductivities to 0     -->
+  <!--    e) set advection to SecondOrder if it isn't already             -->
+  <!--    f) change the nodes8or27 flag to 27                             -->
+  <!--    g) change <CanAddIceMaterial> from false to true                -->
+  <!--    h) change <DoThermalExpansion> from true to false               -->
   <!--                                                                    -->
   <!-- 4) Edit the DataArchiver section to:
             a)  Lower the outputInterval to reflect the faster rate at
@@ -35,7 +34,7 @@
             b)  Uncomment the saving of those particle data that are only
                 important in the explosive phase of the simulation          -->
   <!--                                                                    -->
-  <!-- 5) run sus -mpmice -restart <uda>                                  -->
+  <!-- 5) run sus -mpmice -restart -solver hypre <uda>                    -->
   <!--____________________________________________________________________-->
    
   <!--____________________________________________________________________-->
@@ -56,14 +55,13 @@
   <!--  Use the following if you want to restart on a different
       number of processors than was originally used.  You also
       need to add -loadbalancer PLB to your command line.
-   <LoadBalancer>
+  <LoadBalancer>
     <timestepInterval>5000</timestepInterval>
     <cellFactor>.5</cellFactor>
     <dynamicAlgorithm>static</dynamicAlgorithm>
-   </LoadBalancer>
+  </LoadBalancer>
   -->
 
-   
   <!--____________________________________________________________________-->
   <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
@@ -247,7 +245,7 @@
               <upper>        [0.1, 0.3,0.1]     </upper>
               <extraCells>   [1,1,1]            </extraCells>
               <patches>      [2,4,2]            </patches>
-              <resolution>   [20,80,20]        </resolution>
+              <resolution>   [20,80,20]         </resolution>
            </Box> 
        </Level>
   </Grid>
@@ -259,7 +257,7 @@
     <filebase>JP8_IS.uda</filebase>
     <outputInterval> 0.0005  </outputInterval>
     <!--
-    use the following for the explicit phase
+    use the following for the explosion phase
     <outputInterval> 0.0000025 </outputInterval>
     -->
     <compression>gzip</compression>
@@ -312,7 +310,7 @@
        <CanAddICEMaterial>false</CanAddICEMaterial>
        <ICE>
         <max_iteration_equilibration> 1000 </max_iteration_equilibration>
-        <advection type = "FirstOrder" />
+        <advection type = "FirstOrder"  useCompatibleFluxes = "true"/>
         <solution technique = "EqForm" />
 
 
@@ -355,8 +353,9 @@
     <turn_on_adiabatic_heating>      false      </turn_on_adiabatic_heating>
     <accumulate_strain_energy>       false      </accumulate_strain_energy>
     <use_load_curves>                false      </use_load_curves>
-    <create_new_particles>           false       </create_new_particles>
+    <create_new_particles>           false      </create_new_particles>
     <manual_new_material>            true       </manual_new_material>
+    <DoThermalExpansion>             true       </DoThermalExpansion>
     <erosion algorithm = "ZeroStress"/>
   </MPM>
 
