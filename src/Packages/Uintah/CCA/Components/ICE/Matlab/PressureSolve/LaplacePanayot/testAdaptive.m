@@ -1,7 +1,7 @@
 %function testAdaptive
 %TESTAdaptive  Test L-shaped problem with adaptive mesh refinement.
 %   We test our diffusion equation discretization on Adaptive Mesh Refined
-%   (AMR) grid. 
+%   (AMR) grid.
 %   This test case is a Laplace equation on a 2D L-shaped domain, and we
 %   apply adaptive mesh refinement to get increasingly higher accuracies
 %   (that stagnate with the # of levels, if we do not refine all existing
@@ -14,20 +14,29 @@
 
 globalParams;
 
-fprintf('=========================================================================\n');
-fprintf(' Testing adaptive mesh refinement for L-shaped Laplace problem\n');
-fprintf('=========================================================================\n');
-
 %=========================================================================
 % Initialize parameters struct
 %=========================================================================
 param                       = [];
 
 param.problemType           = 'Lshaped; %'ProblemB'; %'quadratic'; %'Lshaped'; %
-param.outputDir             = 'Lshaped_adaptive';
+param.outputDir             = 'test';
+param.logFile               = 'testDisc.log';
+param.outputType            = 'screen';
+
+param.twoLevel              = 1;
+param.twoLevelType          = 'nearXMinus'; %'centralHalf'; %'leftHalf';
+
+param.threeLevel            = 0;
+param.threeLevelType        = 'leftHalf';
+
 param.plotResults           = 0;
 param.saveResults           = 1;
-param.verboseLevel          = 0;
+param.verboseLevel          = 1;
+
+out(1,'=========================================================================\n');
+out(1,' Testing adaptive mesh refinement for L-shaped Laplace problem\n');
+out(1,'=========================================================================\n');
 
 %=========================================================================
 % Create a sequence of adaptive mesh refinement levels
@@ -57,16 +66,14 @@ patchID             = cell(grid.maxLevels,1);
 
 for numLevels = 1:grid.maxLevels,
     pack;
-    fprintf('#### numLevels = %d ####\n',numLevels);
-    
+    out(1,'#### numLevels = %d ####\n',numLevels);
+
     %-------------------------------------------------------------------------
     % Set up grid (AMR levels, patches)
     %-------------------------------------------------------------------------
-    if (param.verboseLevel >= 1)
-        fprintf('-------------------------------------------------------------------------\n');
-        fprintf(' Set up grid & system\n');
-        fprintf('-------------------------------------------------------------------------\n');
-    end
+    out(1,'-------------------------------------------------------------------------\n');
+    out(1,' Set up grid & system\n');
+    out(1,'-------------------------------------------------------------------------\n');
     tStartCPU           = cputime;
     tStartElapsed       = clock;
 
@@ -82,7 +89,7 @@ for numLevels = 1:grid.maxLevels,
         else
             [ilower,iupper,needRefinement] = adaptiveRefinement(AMR,grid,k-1,threshold);
             if (~needRefinement)
-                fprintf('No more refinement levels needed, stopping\n');
+                out(1,'No more refinement levels needed, stopping\n');
                 break;
             end
             [grid,q]       = addGridPatch(grid,k,ilower,iupper,patchID{k-1});
@@ -90,14 +97,14 @@ for numLevels = 1:grid.maxLevels,
         end
     end
     if (grid.totalVars > maxVars)
-        fprintf('Reached maximum allowed #vars, stopping\n');
+        out(1,'Reached maximum allowed #vars, stopping\n');
         break;
     end
     tCPU        = cputime - tStartCPU;
     tElapsed    = etime(clock,tStartElapsed);
+    out(1,'CPU time     = %f\n',tCPU);
+    out(1,'Elapsed time = %f\n',tElapsed);
     if (param.verboseLevel >= 1)
-        fprintf('CPU time     = %f\n',tCPU);
-        fprintf('Elapsed time = %f\n',tElapsed);
         printGrid(grid);
     end
     %     % Plot grid
@@ -115,31 +122,25 @@ for numLevels = 1:grid.maxLevels,
     %-------------------------------------------------------------------------
     % Solve the linear system
     %-------------------------------------------------------------------------
-    if (param.verboseLevel >= 1)
-        fprintf('-------------------------------------------------------------------------\n');
-        fprintf(' Solve the linear system\n');
-        fprintf('-------------------------------------------------------------------------\n');
-    end
+    out(1,'-------------------------------------------------------------------------\n');
+    out(1,' Solve the linear system\n');
+    out(1,'-------------------------------------------------------------------------\n');
     tStartCPU       = cputime;
     tStartElapsed   = clock;
     x               = A\b;                            % Direct solver
     u               = sparseToAMR(x,grid,TI,1);           % Translate the solution vector to patch-based
     tCPU            = cputime - tStartCPU;
     tElapsed        = etime(clock,tStartElapsed);
-    if (param.verboseLevel >= 1)
-        fprintf('CPU time     = %f\n',tCPU);
-        fprintf('Elapsed time = %f\n',tElapsed);
-    end
+    out(1,'CPU time     = %f\n',tCPU);
+    out(1,'Elapsed time = %f\n',tElapsed);
 
     %-------------------------------------------------------------------------
     % Computed exact solution vector, patch-based and compute
     % discretization error
     %-------------------------------------------------------------------------
-    if (param.verboseLevel >= 1)
-        fprintf('-------------------------------------------------------------------------\n');
-        fprintf(' Compute exact solution, plot\n');
-        fprintf('-------------------------------------------------------------------------\n');
-    end
+    out(1,'-------------------------------------------------------------------------\n');
+    out(1,' Compute exact solution, plot\n');
+    out(1,'-------------------------------------------------------------------------\n');
     tStartCPU        = cputime;
     tStartElapsed    = clock;
 
@@ -166,19 +167,16 @@ for numLevels = 1:grid.maxLevels,
         normAMR(grid,err,'H1') ...
         normAMR(grid,err,'H1max') ...
         ];
-    fprintf('#vars = %5d  L2=%.3e  max=%.3e  H1=%.3e  H1max=%.3e\n',grid.totalVars,errNorm(numLevels,2:end));
+    out(1,'#vars = %5d  L2=%.3e  max=%.3e  H1=%.3e  H1max=%.3e\n',grid.totalVars,errNorm(numLevels,2:end));
 
     if (param.plotResults)
         plotResults(grid,u,uExact,tau,numCells);
     end
     tCPU        = cputime - tStartCPU;
     tElapsed    = etime(clock,tStartElapsed);
-    if (param.verboseLevel >= 1)
-        fprintf('CPU time     = %f\n',tCPU);
-        fprintf('Elapsed time = %f\n',tElapsed);
+    out(1,'CPU time     = %f\n',tCPU);
+    out(1,'Elapsed time = %f\n',tElapsed);
 
-    end
-    
     % Save quantities of this refinement stage
     AMR{numLevels}.grid = grid;
     AMR{numLevels}.A = A;

@@ -12,9 +12,7 @@ globalParams;
 tStartCPU           = cputime;
 tStartElapsed       = clock;
 
-if (param.verboseLevel >= 1)
-    fprintf('--- addGridPatch(k = %d) BEGIN ---\n',k);
-end
+out(2,'--- addGridPatch(k = %d) BEGIN ---\n',k);
 
 if (max(ilower > iupper))
     error('Cannot create patch: ilower > iupper');
@@ -35,13 +33,11 @@ P.offsetSub                 = -P.ilower+2;                      % Add to level-g
 P.nbhrPatch                 = -ones(grid.dim,2);
 P.deletedBoxes              = [];
 grid.level{k}.patch{q}      = P;
-if (k > 1)    
+if (k > 1)
     grid.level{k-1}.patch{parentQ}.children = [grid.level{k-1}.patch{parentQ}.children q];
 end
-if (param.verboseLevel >= 1)
-    fprintf('Created level k=%3d patch q=%3d (parentQ = %3d), ilower = [%3d %3d], iupper = [%3d %3d]\n',...
-        k,q,parentQ,ilower,iupper);
-end
+out(2,'Created level k=%3d patch q=%3d (parentQ = %3d), ilower = [%3d %3d], iupper = [%3d %3d]\n',...
+    k,q,parentQ,ilower,iupper);
 
 %==============================================================
 % 2. Update grid hierarchy
@@ -51,10 +47,6 @@ grid                        = updateGrid(grid);
 
 tCPU        = cputime - tStartCPU;
 tElapsed    = etime(clock,tStartElapsed);
-if (param.verboseLevel >= 2)
-    fprintf('CPU time     = %f\n',tCPU);
-    fprintf('Elapsed time = %f\n',tElapsed);
-end
-if (param.verboseLevel >= 1)
-    fprintf('--- addGridPatch(k = %d, q = %d) END ---\n',k,q);
-end
+out(2,'CPU time     = %f\n',tCPU);
+out(2,'Elapsed time = %f\n',tElapsed);
+out(2,'--- addGridPatch(k = %d, q = %d) END ---\n',k,q);

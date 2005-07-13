@@ -3,6 +3,8 @@ function printGrid(grid)
 % - Update ID and base index for each patch.
 % - Update index maps of each patch.
 
+globalParams;
+
 fprintf('\n--- Printing Grid Hierarchy ---\n');
 for k = 1:grid.numLevels,
     fprintf('Level k=%3d   numPatches = %3d   meshsize = [%f %f]\n',...

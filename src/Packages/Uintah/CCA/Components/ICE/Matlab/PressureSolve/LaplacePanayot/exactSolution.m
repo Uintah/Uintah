@@ -7,7 +7,11 @@ function u = exactSolution(x)
 %       'linear'
 %           U = linear function with Dirichlet B.C. on the 2D unit
 %           square. Diffusion a=1 (Laplace operator). U is smooth.
-%       'quadratic'
+%       'quad1'
+%           U = quadratic function with Dirichlet B.C. on the 2D unit
+%           square. Diffusion a=1 (Laplace operator). U is smooth. U
+%           depends only on x1.
+%       'quad2'
 %           U = quadratic function with Dirichlet B.C. on the 2D unit
 %           square. Diffusion a=1 (Laplace operator). U is smooth.
 %       'sinsin'
@@ -30,12 +34,12 @@ function u = exactSolution(x)
 %           x1=0.5 (a,u depend only on x1; a = aLeft for x1 <= 0.5, a =
 %           aRight otherwise). Piecewise linear solution U that solves
 %           Laplace's equation with this a.
-%       'jump_quadratic'
+%       'jump_quad'
 %           Piecewise constant diffusion coefficient with a big jump at
 %           x1=0.5 (a,u depend only on x1; a = aLeft for x1 <= 0.5, a =
 %           aRight otherwise). Piecewise quadratic solution U that solves
 %           Poisson's equation with RHS = -1, this a, and appropriate B.C.
-%       'smooth_diffusion'
+%       'diffusion_quad'
 %           a = x{1}^2 and u = x{1}^2 (smooth diffusion and smooth
 %           solution). Appropriate RHS and Dirichlet BC.
 %
@@ -52,8 +56,12 @@ switch (param.problemType)
         % u is a linear function (2D)
         u       = 1 + x{1} + x{2};
 
-    case 'quadratic',
-        % u is a quadratic function (2D)
+    case 'quad1',
+        % Smooth diffusion and smooth solution, depends only on x1 (d-D).
+        u           = x{1}.^2;
+
+    case 'quad2',
+        % u is a quadratic function in x1,x2 (2D)
         u       = x{1}.*(1-x{1}).*x{2}.*(1-x{2});
 
     case 'sinsin',
@@ -90,7 +98,7 @@ switch (param.problemType)
         u(left)     = (x{1}(left) - x0)/aLeft;
         u(right)    = (x{1}(right) - x0)/aRight;
         
-    case 'jump_quadratic',
+    case 'jump_quad',
         % Piecewise constant diffusion coefficient with a big jump at
         % x{1}=x0. Piecewise quadratic solution (d-D).
         u           = zeros(size(x{1}));
@@ -102,11 +110,7 @@ switch (param.problemType)
         u(left)     = (x{1}(left) - x0).^2/(2*aLeft);
         u(right)    = (x{1}(right) - x0).^2/(2*aRight);
 
-    case 'diffusion_const',
-        % Smooth diffusion and smooth solution (d-D).
-        u           = x{1}.^2;
-
-    case 'diffusion_quadratic',
+    case 'diffusion_quad',
         % Smooth diffusion and smooth solution (d-D).
         u           = x{1}.^2;
 

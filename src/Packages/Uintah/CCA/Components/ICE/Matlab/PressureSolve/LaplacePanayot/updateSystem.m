@@ -16,9 +16,7 @@ globalParams;
 tStartCPU           = cputime;
 tStartElapsed       = clock;
 
-if (param.verboseLevel >= 1)
-    fprintf('--- updateSystem(k = %d, q = %d) BEGIN ---\n',k,q);
-end
+out(2,'--- updateSystem(k = %d, q = %d) BEGIN ---\n',k,q);
 
 P                           = grid.level{k}.patch{q};           % Updated patch
 Anew                        = sparse([],[],[],grid.totalVars,grid.totalVars,(2*grid.dim+1)*grid.totalVars);
@@ -39,11 +37,9 @@ TI                                  = TInew;
 %==============================================================
 % 2. Create patch interior & BC equations
 %==============================================================
-if (param.verboseLevel >= 2)
-    fprintf('#########################################################################\n');
-    fprintf(' 2. Create patch interior & BC equations\n');
-    fprintf('#########################################################################\n');
-end
+out(2,'#########################################################################\n');
+out(2,' 2. Create patch interior & BC equations\n');
+out(2,'#########################################################################\n');
 
 [A,b,T]              = setupPatchInterior(grid,k,q,A,b,T);
 
@@ -51,12 +47,10 @@ end
 % 5. Modify equations near C/F interface on both coarse and fine patches;
 % interpolate ghost points.
 %==============================================================
-if (param.verboseLevel >= 2)
-    fprintf('#########################################################################\n');
-    fprintf(' 5. Modify equations near C/F interface on both coarse and fine patches;\n');
-    fprintf(' interpolate ghost points.\n');
-    fprintf('#########################################################################\n');
-end
+out(2,'#########################################################################\n');
+out(2,' 5. Modify equations near C/F interface on both coarse and fine patches;\n');
+out(2,' interpolate ghost points.\n');
+out(2,'#########################################################################\n');
 
 % To align fine cell boundaries with coarse cell boundaries, alpha has to
 % be 0.5 here (otherwise near corners, coarse cells at the C/F interface
@@ -69,17 +63,15 @@ end
 %==============================================================
 % 6. Delete unused gridpoints / put identity operator there.
 %==============================================================
-if (param.verboseLevel >= 2)
-    fprintf('#########################################################################\n');
-    fprintf(' 6. Delete unused gridpoints / put identity operator there.\n');
-    fprintf('#########################################################################\n');
-end
+out(2,'#########################################################################\n');
+out(2,' 6. Delete unused gridpoints / put identity operator there.\n');
+out(2,'#########################################################################\n');
 
 patchRange              = P.offsetInd + [1:prod(P.size)];
 indUnused               = patchRange(find(abs(diag(A(patchRange,patchRange))) < eps));
 
 switch (param.problemType)
-    
+
     case 'Lshaped',     % Delete upper-rigt quadrant
         [A,indOut]      = LshapedOut(grid,k,q,A,1);
         indUnused       = union(indUnused,indOut);
@@ -93,9 +85,7 @@ T(indUnused,:)          = 0.0;
 T(:,indUnused)          = 0.0;
 TI(indUnused,:)         = 0.0;
 TI(:,indUnused)         = 0.0;
-if (param.verboseLevel >= 2)
-    fprintf('# unused gridpoints at this patch = %d\n',length(indUnused));
-end
+out(2,'# unused gridpoints at this patch = %d\n',length(indUnused));
 if (param.verboseLevel >= 3)
     indUnused
     A(indUnused,:)
@@ -114,10 +104,6 @@ grid.level{k}.indUnused   = union(grid.level{k}.indUnused,indUnused);
 
 tCPU        = cputime - tStartCPU;
 tElapsed    = etime(clock,tStartElapsed);
-if (param.verboseLevel >= 2)
-    fprintf('CPU time     = %f\n',tCPU);
-    fprintf('Elapsed time = %f\n',tElapsed);
-end
-if (param.verboseLevel >= 1)
-    fprintf('--- updateSystem(k = %d, q = %d) END ---\n',k,q);
-end
+out(2,'CPU time     = %f\n',tCPU);
+out(2,'Elapsed time = %f\n',tElapsed);
+out(2,'--- updateSystem(k = %d, q = %d) END ---\n',k,q);

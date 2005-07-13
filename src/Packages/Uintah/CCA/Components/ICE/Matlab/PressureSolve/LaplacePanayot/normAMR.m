@@ -76,7 +76,7 @@ for k = 1:grid.numLevels,
             end
         end
         if (param.verboseLevel >= 3)
-            fprintf('Fluxes = \n');
+            out(3,'Fluxes = \n');
             flux{:}
         end
 
