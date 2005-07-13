@@ -258,9 +258,9 @@ CorbaComponentModel::createInstance(const std::string& name,
     struct stat buf;
     if (LSTAT(exec_name.c_str(), &buf) < 0) {
         if (errno == ENOENT) {
-            throw InternalError("File " + exec_name + " does not exist.");
+            throw InternalError("File " + exec_name + " does not exist.", __FILE__, __LINE__);
         } else {
-            throw InternalError("LSTAT on " + exec_name + " failed.");
+            throw InternalError("LSTAT on " + exec_name + " failed.", __FILE__, __LINE__);
         }
     }
 
@@ -287,7 +287,7 @@ CorbaComponentModel::createInstance(const std::string& name,
   string cmdline=exec_name+" "+svc_url.c_str()+"&";
   const int status = sci_system(cmdline.c_str());
   if (status != 0) { // failed
-    throw InternalError("Corba service " + cmdline + " is not available.");
+    throw InternalError("Corba service " + cmdline + " is not available.", __FILE__, __LINE__);
   }
 
   services->check();
