@@ -33,8 +33,14 @@ switch (param.problemType)
             (4*((x{2}-x0(2))/sigma(2)).^2 - 2)/sigma(2)^2);
 
     case 'jump_quadratic',
-        f = -ones(size(x{1}));
+        f       = -ones(size(x{1}));
     
+    case 'diffusion_const',
+        f       = -2*ones(size(x{1}));
+
+    case 'diffusion_quadratic',
+        f       = -2 - 6*x{1}.^2;
+
     otherwise,
         error('Unknown problem type');
 end

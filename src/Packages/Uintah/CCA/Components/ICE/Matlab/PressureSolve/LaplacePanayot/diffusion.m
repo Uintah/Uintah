@@ -32,6 +32,12 @@ switch (param.problemType)
         a(left)     = aLeft;
         a(right)    = aRight;
 
+    case 'diffusion_const',
+        a           = 1.0;
+
+    case 'diffusion_quadratic',
+        a           = 1 + x{1}.^2;
+
     otherwise,
         error('Unknown problem type');
 end
