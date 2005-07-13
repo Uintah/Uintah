@@ -55,7 +55,8 @@ WARNING
     SchedulerCommon(const ProcessorGroup* myworld, Output* oport);
     virtual ~SchedulerCommon();
 
-    virtual void problemSetup(const ProblemSpecP& prob_spec);
+    virtual void problemSetup(const ProblemSpecP& prob_spec,
+                              SimulationStateP& state);
 
     virtual void doEmitTaskGraphDocs();
 
@@ -131,8 +132,7 @@ WARNING
 			   DataWarehouse* old_dw,
 			   DataWarehouse* new_dw);
 
-    virtual void scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& state, 
-                                       SimulationInterface* sim);
+    virtual void scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* sim);
     
   protected:
     void finalizeTimestep();
@@ -145,12 +145,16 @@ WARNING
 		  double execution_flops,
 		  double communication_flops = 0);
     void finalizeNodes(int process=0);
+
+    void printTrackedVars(DetailedTask* dt, bool before);
     
     virtual void verifyChecksum() = 0;
     virtual bool useInternalDeps();
 
     TaskGraph graph;
     int       d_generation;
+
+    SimulationStateP d_sharedState;
 
     std::vector<OnDemandDataWarehouseP> dws;
     int numOldDWs;
@@ -160,6 +164,17 @@ WARNING
 
     Output* m_outPort;
     bool restartable;
+
+    //! These are so we can track certain variables over the taskgraph's
+    //! execution.
+    vector<string> trackingVars_;
+    vector<Task::WhichDW> trackingDWs_;
+    double trackingStartTime_;
+    double trackingEndTime_;
+    int trackingLevel_;
+    IntVector trackingStartIndex_;
+    IntVector trackingEndIndex_;
+
   private:
 
     SchedulerCommon(const SchedulerCommon&);
@@ -177,6 +192,7 @@ WARNING
     //! copyDataToNewGrid.
     typedef map<const VarLabel*, MaterialSubset*> label_matl_map;
     vector<label_matl_map> label_matls_;
+
 
   };
 } // End namespace Uintah

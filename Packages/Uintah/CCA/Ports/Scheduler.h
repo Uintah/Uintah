@@ -60,7 +60,8 @@ WARNING
     // if the simulation has been "restarted."
     virtual void setGeneration( int id ) = 0;
 
-    virtual void problemSetup(const ProblemSpecP& prob_spec) = 0;
+    virtual void problemSetup(const ProblemSpecP& prob_spec, 
+                              SimulationStateP& state) = 0;
     
     //////////
     // Insert Documentation Here:
@@ -114,7 +115,7 @@ WARNING
 					    const MaterialSet* matls) = 0;
 
     //! Schedule copying data to new grid after regridding
-    virtual void scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& state, 
+    virtual void scheduleAndDoDataCopy(const GridP& grid, 
                                        SimulationInterface* sim) = 0;
 
     // Get the SuperPatch (set of connected patches making a larger rectangle)
