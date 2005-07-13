@@ -9,8 +9,8 @@ using namespace Uintah;
 using namespace std;
 
 UnknownVariable::UnknownVariable(const std::string& varname, int dwid,
-				 const Patch* patch, int matlIndex,
-				 const std::string& extramsg,
+                                 const Patch* patch, int matlIndex,
+                                 const std::string& extramsg,
                                  const char* file,
                                  int line)
 {
@@ -19,7 +19,8 @@ UnknownVariable::UnknownVariable(const std::string& varname, int dwid,
 
    s << " requested from DW " << dwid;
    if (patch != NULL) {
-      s << " on patch " << patch->getID()
+      s << ", Level "<< patch->getLevel()->getIndex()
+        << ", patch " << patch->getID()
         << "(" << patch->toString() << ")";
    }
    if (matlIndex >= 0)
@@ -37,8 +38,8 @@ UnknownVariable::UnknownVariable(const std::string& varname, int dwid,
 }
 
 UnknownVariable::UnknownVariable(const std::string& varname, int dwid,
-				 const Level* level, int matlIndex,
-				 const std::string& extramsg,
+                                 const Level* level, int matlIndex,
+                                 const std::string& extramsg,
                                  const char* file,
                                  int line)
 {
