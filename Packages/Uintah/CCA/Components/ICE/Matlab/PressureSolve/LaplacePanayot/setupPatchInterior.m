@@ -68,10 +68,11 @@ end
 %=====================================================================
 % Compute cell lengths and volumes.
 %=====================================================================
-% Cell extent is 
+% Cell extent is
 % [x{1}-0.5*h(1),x{1}+0.5*h(1)] x ... x [x{dim}-0.5*h(dim),x{dim}+0.5*h(dim)].
 % Cell volume is thus prod(h).
 diffLength              = cell(2*grid.dim,1);                               % Distance along which we approximate the flux by finite difference
+a                       = cell(2*grid.dim,1);                               % Diffusion coefficient
 volume                  = prod(h).*ones(boxSize);                           % Cell volume
 centroid                = x;                                                % Cell centroid
 near                    = cell(2*grid.dim,1);                               % Cells near domain boundaries in the fluxNum direction
@@ -81,11 +82,29 @@ for dim = 1:grid.dim,                                                       % Lo
     for side = [-1 1]                                                       % side=-1 (left) and side=+1 (right) directions in dimension d
         sideNum                 = (side+3)/2;                               % side=-1 ==> 1; side=1 ==> 2
         fluxNum                 = 2*dim+sideNum-2;
-        diffLength{fluxNum}     = h(dim)*ones(boxSize);                     % Standard FD is over distance h        
+        diffLength{fluxNum}     = h(dim)*ones(boxSize);                     % Standard FD is over distance h
+        xNbhr                   = x;
+        xNbhr{dim}              = x{dim} + side*h(dim);
+        xFace                   = x;
+        xFace{dim}              = x{dim} + side*0.5*h(dim);
+        a{fluxNum}              = harmonicAvg(x,xNbhr,xFace);
 
-        % Adjust ind map near a nbhring fine patch (override ghost point
+        if (param.verboseLevel >= 3)
+            fprintf('----------------------------------------------------------------------------------------\n');
+            dim
+            side
+            sideNum
+            fluxNum
+            D(x{dim})
+            D(xNbhr{dim})
+            D(xFace{dim})
+            D(a{fluxNum})
+            D(diffLength{fluxNum})
+        end
+
+        % Adjust ind map near a nbhring same-level patch (override ghost point
         % indices with interior indices from nbhring patch PN)
-        qn                      = P.nbhrPatch(dim,(side+3)/2);
+        qn                      = P.nbhrPatch(dim,sideNum);
         if (qn > 0)
             if (param.verboseLevel >= 2)
                 fprintf('Found nbhring patch qn=%d for dim=%d, side=%d, modifying ind near this face\n',qn,dim,side);
@@ -101,7 +120,7 @@ for dim = 1:grid.dim,                                                       % Lo
                 flower(dim)         = fupper(dim);
             end
             [indFace,face,matFace]  = indexBox(P,flower,fupper);
-            
+
             % indices of the interior points in PN.cellIndex replacing the
             % ghost points of this face in P
             PN                      = grid.level{k}.patch{qn};
@@ -112,18 +131,29 @@ for dim = 1:grid.dim,                                                       % Lo
             else
                 flower(dim)         = fupper(dim);
             end
-            [indNFace,NFace,matNFace] = indexBox(PN,flower,fupper);
-            
+            [indNFace,NFace,matNFace]   = indexBox(PN,flower,fupper);
+
             % Override ghost cell indices in ind (but not in P.cellIndex!)
-            ind(matFace{:})         = PN.cellIndex(matNFace{:});            
+            ind(matFace{:})         = PN.cellIndex(matNFace{:});
         end
 
-        % Adjust distances for FD near domain boundaries        
-        nearBoundary            = cell(1,grid.dim);
-        [nearBoundary{:}]       = find(matBox{dim} == edgeDomain{sideNum}(dim));  % Interior cell subs near DOMAIN boundary
-        near{fluxNum}   = find(matBox{dim} == edgeDomain{sideNum}(dim));    % Interior cell indices near DOMAIN boundary (actually Dirichlet boundaries only)
-        far{fluxNum}    = find(~(matBox{dim} == edgeDomain{sideNum}(dim))); % The rest of the cells
-        diffLength{fluxNum}(nearBoundary{:}) = 0.5*h(dim);                  % Twice smaller distance in this direction
+        % Adjust distances for FD near domain boundaries
+        nearBoundary                = cell(1,grid.dim);
+        [nearBoundary{:}]           = find(matBox{dim} == edgeDomain{sideNum}(dim));  % Interior cell subs near DOMAIN boundary
+        near{fluxNum}               = find(matBox{dim} == edgeDomain{sideNum}(dim));    % Interior cell indices near DOMAIN boundary (actually Dirichlet boundaries only)
+        far{fluxNum}                = find(~(matBox{dim} == edgeDomain{sideNum}(dim))); % The rest of the cells
+        diffLength{fluxNum}(nearBoundary{:})    = 0.5*h(dim);                  % Twice smaller distance in this direction
+        xNearBoundary               = cell(grid.dim,1);
+        for d = 1:grid.dim,
+            xNearBoundary{d}        = x{d}(nearBoundary{:});
+        end
+        a{fluxNum}(nearBoundary{:}) = diffusion(xNearBoundary);
+
+        if (param.verboseLevel >= 3)
+            nearBoundary{:}
+            D(a{fluxNum})
+            D(diffLength{fluxNum})
+        end
     end
 end
 
@@ -136,7 +166,13 @@ for dim = 1:grid.dim,                                                       % Lo
         sideNum         = (side+3)/2;                                       % side=-1 ==> 1; side=1 ==> 2
         fluxNum         = 2*dim+sideNum-2;
         faceArea        = volume ./ h(dim);
-        flux{fluxNum}   = faceArea ./ diffLength{fluxNum};                  % Flux_coef = avg_diffusion_coef (=1 here) * face_area / (FD length)
+        if (param.verboseLevel >= 3)
+            fluxNum
+            a{fluxNum}
+            faceArea
+            diffLength{fluxNum}
+        end
+        flux{fluxNum}   = a{fluxNum} .* faceArea ./ diffLength{fluxNum};                  % Flux_coef = avg_diffusion_coef (=1 here) * face_area / (FD length)
     end
 end
 if (param.verboseLevel >= 3)
@@ -170,7 +206,7 @@ for dim = 1:grid.dim,                                                       % Lo
         indFlux         = flux{fluxNum}(:);
         thisNear        = near{fluxNum};
         thisFar         = far{fluxNum};
-        
+
         % Contribution of flux to interior equation at indBox
         Alist = [Alist; ...                                                 % Far from Dirichlet boundaries, nbhrs are cell-center values
             [indBox(thisFar)    indBox(thisFar)         indFlux(thisFar)]; ...
@@ -194,7 +230,7 @@ for dim = 1:grid.dim,                                                       % Lo
                 ];
             indAll = union(indAll,indBC);
             indTransformed = union(indTransformed,indBC);
-            
+
             if (reallyUpdate)
                 %=====================================================================
                 % Update LHS vector b with boundary equations.
@@ -208,7 +244,7 @@ for dim = 1:grid.dim,                                                       % Lo
                 b(indBC)            = -indFlux(thisNear) .* rhsBCValues(:);
             end
         end
-    end    
+    end
 end
 
 if (reallyUpdate)
@@ -224,7 +260,7 @@ if (reallyUpdate)
     % Update LHS vector b with interior equations.
     %=====================================================================
     rhsValues               = rhs(centroid);
-    b(indBox)               = volume(:) .* rhsValues(:);        
+    b(indBox)               = volume(:) .* rhsValues(:);
 
     %=====================================================================
     % Update transformation matrix T.

@@ -16,7 +16,7 @@ globalParams;
 switch (param.problemType)
 
     % Problems with Dirichlet B.C. at all boundaries
-    case {'quadratic','sinsin','GaussianSource','Lshaped'},
+    case {'linear','quadratic','sinsin','GaussianSource','Lshaped','jump_linear','jump_quadratic'},
         g       = exactSolution(x);
 
     otherwise,
