@@ -21,7 +21,7 @@ globalParams;
 %=========================================================================
 param                       = [];
 
-param.problemType           = 'linear';%'diffusion_const'; %'smooth_diffusion'; %'sinsin'; %'ProblemB'; %'quadratic'; %'Lshaped'; %
+param.problemType           = 'jump_quad'; %'quad1'; %'diffusion_quad'; %'smooth_diffusion'; %'sinsin'; %'ProblemB'; %'quadratic'; %'Lshaped'; %
 param.outputDir             = 'test'; %'sinsin_1level';
 param.logFile               = 'testDisc.log';
 param.outputType            = 'screen';
@@ -45,7 +45,7 @@ out(1,'=========================================================================
 %=========================================================================
 % Run discretization on a sequence of successively finer grids
 %=========================================================================
-numCellsRange               = 2.^[2:1:5];
+numCellsRange               = 2.^[2:1:7];
 success                     = mkdir('.',param.outputDir);
 errNorm                     = zeros(length(numCellsRange),4);
 
@@ -110,6 +110,7 @@ for count = 1:length(numCellsRange)
                     ilower      	= ones(size(resolution));
                     ilower(2:end)	= resolution(2:end)/2 + 1;
                     iupper          = ilower + resolution - 1;
+                    iupper(1)       = ilower(1) + resolution(1)/2 - 1;
                     [grid,q2]  = addGridPatch(grid,k,ilower,iupper,q1);
                 case 'centralHalf2Patches',
                     % Two fine patches next to each other at the center of the
