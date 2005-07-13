@@ -158,9 +158,125 @@ SchedulerCommon::finalizeNodes(int process /* = 0*/)
 }
 
 void
-SchedulerCommon::problemSetup(const ProblemSpecP&)
+SchedulerCommon::problemSetup(const ProblemSpecP& prob_spec,
+                              SimulationStateP& state)
 {
-   // For schedulers that need no setup
+  d_sharedState = state;
+  ProblemSpecP params = prob_spec->findBlock("Scheduler");
+  if(params){
+    ProblemSpecP track = params->findBlock("VarTracker");
+    if (track) {
+      track->require("start_time", trackingStartTime_);
+      track->require("end_time", trackingEndTime_);
+      track->getWithDefault("level", trackingLevel_, -1);
+      track->getWithDefault("start_index", trackingStartIndex_, IntVector(-9,-9,-9));
+      track->getWithDefault("end_index", trackingEndIndex_, IntVector(-9,-9,-9));
+
+      for (ProblemSpecP var=track->findBlock("var"); var != 0; var = var->findNextBlock("var")) {
+        map<string,string> attributes;
+        var->getAttributes(attributes);
+        string name = attributes["label"];
+        trackingVars_.push_back(name);
+        string dw = attributes["dw"];
+        if (dw == "OldDW") trackingDWs_.push_back(Task::OldDW);
+        else if (dw == "NewDW") trackingDWs_.push_back(Task::NewDW);
+        else if (dw == "CoarseNewDW") trackingDWs_.push_back(Task::CoarseNewDW);
+        else if (dw == "CoarseOldDW") trackingDWs_.push_back(Task::CoarseOldDW);
+        else if (dw == "ParentOldDW") trackingDWs_.push_back(Task::ParentOldDW);
+        else if (dw == "ParentOldDW") trackingDWs_.push_back(Task::ParentNewDW);
+        else trackingDWs_.push_back(Task::NewDW);
+      }
+    }
+  }
+}
+
+void
+SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
+{
+  bool printedHeader = false;
+  LoadBalancer* lb =  dynamic_cast<LoadBalancer*>(getPort("load balancer"));
+  for (int i = 0; i < (int) trackingVars_.size(); i++) {
+    bool printedVarName = false;
+    OnDemandDataWarehouseP dw = dws[dt->getTask()->mapDataWarehouse(trackingDWs_[i])];
+    
+    if (dw == 0) // old on initialization timestep
+      continue;
+
+    // get the level here, as the grid can be different between the old and new DW
+    
+    const Grid* grid = dw->getGrid();
+
+    int levelnum;
+    
+    if (trackingLevel_ == -1) {
+      levelnum = grid->numLevels() - 1;
+    }
+    else {
+      levelnum = trackingLevel_;
+      if (levelnum >= grid->numLevels())
+        continue;
+    }
+    const LevelP level = grid->getLevel(levelnum);
+    const VarLabel* label = VarLabel::find(trackingVars_[i]);
+
+    if (!label)
+      continue;
+
+    // add one in case we want the extra cells/b.l.'s 
+    Level::selectType patches;
+    level->selectPatches(trackingStartIndex_ - IntVector(1,1,1), trackingEndIndex_ + IntVector(1,1,1), patches);
+    for (int p = 0; p < patches.size(); p++) {
+
+      const Patch* patch = patches[p];
+
+      // don't print ghost patches (dw->get will yell at you)
+      if ((trackingDWs_[i] == Task::OldDW && lb->getOldProcessorAssignment(0,patch,0) != d_myworld->myrank()) ||
+          (trackingDWs_[i] == Task::NewDW && lb->getPatchwiseProcessorAssignment(patch) != d_myworld->myrank()))
+        continue;
+
+      const TypeDescription* td = label->typeDescription();
+      Patch::VariableBasis basis = patch->translateTypeToBasis(td->getType(), false);
+      IntVector start = 
+        Max(patch->getLowIndex(basis, IntVector(0,0,0)), trackingStartIndex_);
+      IntVector end = 
+        Min(patch->getHighIndex(basis, IntVector(0,0,0)), trackingEndIndex_);
+      
+      // loop over matls too
+      for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
+        if (!dw->exists(label, m, patch))
+          continue;
+        if (!(start.x() < end.x() && start.y() < end.y() && start.z() < end.z()))
+          continue;
+        if (!printedHeader) {
+          cout << d_myworld->myrank() << (before ? " BEFORE" : " AFTER") << " execution of " 
+               << *dt << endl;
+          printedHeader = true;
+        }
+        if (!printedVarName) {
+          cout << d_myworld->myrank() << "  Variable: " << trackingVars_[i] << endl;
+        }
+
+        if (td->getType() != TypeDescription::CCVariable || 
+            td->getSubType()->getType() != TypeDescription::double_type)
+          // only allow CCVariable<double> for now
+          continue;
+        constCCVariable<double> var;
+        dw->get(var, label, m, patch, Ghost::None, 0);
+
+        for (int z = start.z(); z < end.z(); z++) {
+          for (int y = start.y(); y < end.y(); y++) {
+            cout << d_myworld->myrank() << "  ";
+            for (int x = start.x(); x < end.x(); x++) {
+              IntVector c(x,y,z);
+              cout << " " << c << ": " << var[c];
+            }
+            cout << endl;
+          }
+          cout << endl;
+        }
+      }
+    }
+  }
 }
 
 LoadBalancer*
@@ -439,8 +555,7 @@ SchedulerCommon::finalizeTimestep()
 }
 
 void
-SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& state, 
-                                       SimulationInterface* sim)
+SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* sim)
 {  
   // clear the old list of vars and matls
   for (unsigned i = 0; i < label_matls_.size(); i++)
@@ -503,6 +618,8 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& stat
   this->clearMappings();
   this->mapDataWarehouse(Task::OldDW, 0);
   this->mapDataWarehouse(Task::NewDW, 1);
+  this->mapDataWarehouse(Task::CoarseOldDW, 0);
+  this->mapDataWarehouse(Task::CoarseNewDW, 1);
   
   DataWarehouse* oldDataWarehouse = this->get_dw(0);
   DataWarehouse* newDataWarehouse = this->getLastDW();
@@ -571,7 +688,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& stat
     
     dataTasks.push_back(scinew Task("SchedulerCommon::copyDataToNewGrid", this,                          
                                      &SchedulerCommon::copyDataToNewGrid));
-    addTask(dataTasks[i], newLevel->eachPatch(), state->allMaterials());
+    addTask(dataTasks[i], newLevel->eachPatch(), d_sharedState->allMaterials());
 
     for ( label_matl_map::iterator iter = label_matls_[i].begin(); iter != label_matls_[i].end(); iter++) {
       const VarLabel* var = iter->first;
@@ -580,18 +697,19 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationStateP& stat
       dataTasks[i]->requires(Task::OldDW, var, 0, Task::OtherGridDomain, matls, Task::NormalDomain, Ghost::None, 0);
       dataTasks[i]->computes(var, matls);
     }
+    sim->scheduleRefineInterface(newLevel, sched, 1, 1);
   }
 
   // set so the load balancer will make an adequate neighborhood, as the default
   // neighborhood isn't good enough for the copy data timestep
-  state->setCopyDataTimestep(true);
+  d_sharedState->setCopyDataTimestep(true);
 
   const char* tag = AllocatorSetDefaultTag("DoDataCopy");
   this->compile(); 
   this->execute();
   AllocatorSetDefaultTag(tag);
   
-  state->setCopyDataTimestep(false);
+  d_sharedState->setCopyDataTimestep(false);
 
   vector<VarLabelMatl<Level> > levelVariableInfo;
   oldDataWarehouse->getVarLabelMatlLevelTriples(levelVariableInfo);

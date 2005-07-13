@@ -131,6 +131,12 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
     addRefineDependencies(task, lb->temp_CCLabel,     step, nsteps);
     addRefineDependencies(task, lb->vel_CCLabel,      step, nsteps);
     
+    task->modifies(lb->press_CCLabel);
+    task->modifies(lb->rho_CCLabel);
+    task->modifies(lb->sp_vol_CCLabel);
+    task->modifies(lb->temp_CCLabel);
+    task->modifies(lb->vel_CCLabel);
+
     //__________________________________
     // Model Variables.
     if(d_modelSetup && d_modelSetup->tvars.size() > 0){
@@ -140,11 +146,12 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
          iter != d_modelSetup->tvars.end(); iter++){
         TransportedVariable* tvar = *iter;
         addRefineDependencies(task, tvar->var, step, nsteps);
+        task->modifies(tvar->var);
       }
     }
     
     // dummy variable needed to keep the taskgraph in sync
-    task->computes(lb->AMR_SyncTaskgraphLabel); 
+    //task->computes(lb->AMR_SyncTaskgraphLabel); 
     
     const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
     sched->addTask(task, fineLevel->eachPatch(), ice_matls);
@@ -174,22 +181,22 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
       const Patch* patch = patches->get(p);
       
       // dummy variable needed to keep the taskgraph in sync
-      CCVariable<int> dummy;
-      fine_new_dw->allocateAndPut(dummy, lb->AMR_SyncTaskgraphLabel,0, patch);
+      //CCVariable<int> dummy;
+      //fine_new_dw->allocateAndPut(dummy, lb->AMR_SyncTaskgraphLabel,0, patch);
       
       
       for (int m = 0; m < numMatls; m++) {
         ICEMaterial* matl = d_sharedState->getICEMaterial(m);
         int indx = matl->getDWIndex();    
-        constCCVariable<double> press_CC, rho_CC, sp_vol_CC, temp_CC;
-        constCCVariable<Vector> vel_CC;
+        CCVariable<double> press_CC, rho_CC, sp_vol_CC, temp_CC;
+        CCVariable<Vector> vel_CC;
 
-        // NEVER use gac, 1 (ask Bryan)
-        fine_old_dw->get(press_CC, lb->press_CCLabel,  indx,patch, gn,0);
-        fine_old_dw->get(rho_CC,   lb->rho_CCLabel,    indx,patch, gn,0);
-        fine_old_dw->get(sp_vol_CC,lb->sp_vol_CCLabel, indx,patch, gn,0);
-        fine_old_dw->get(temp_CC,  lb->temp_CCLabel,   indx,patch, gn,0);
-        fine_old_dw->get(vel_CC,   lb->vel_CCLabel,    indx,patch, gn,0);
+        // NEVER use gac, 1 (ask Bryan) (probably not relevent anymore)
+        fine_new_dw->getModifiable(press_CC, lb->press_CCLabel,  indx,patch);
+        fine_new_dw->getModifiable(rho_CC,   lb->rho_CCLabel,    indx,patch);
+        fine_new_dw->getModifiable(sp_vol_CC,lb->sp_vol_CCLabel, indx,patch);
+        fine_new_dw->getModifiable(temp_CC,  lb->temp_CCLabel,   indx,patch);
+        fine_new_dw->getModifiable(vel_CC,   lb->vel_CCLabel,    indx,patch);
 
         //__________________________________
         //  Print Data 
@@ -204,19 +211,19 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
           printVector(indx, patch, 1, desc.str(), "vel_CC", 0,   vel_CC);
         }
 
-        refineCoarseFineBoundaries(patch, press_CC.castOffConst(), fine_new_dw, 
+        refineCoarseFineBoundaries(patch, press_CC, fine_new_dw, 
                                    lb->press_CCLabel,  indx,subCycleProgress);
 
-        refineCoarseFineBoundaries(patch, rho_CC.castOffConst(),   fine_new_dw, 
+        refineCoarseFineBoundaries(patch, rho_CC,   fine_new_dw, 
                                    lb->rho_CCLabel,    indx,subCycleProgress);
 
-        refineCoarseFineBoundaries(patch, sp_vol_CC.castOffConst(),fine_new_dw,
+        refineCoarseFineBoundaries(patch, sp_vol_CC,fine_new_dw,
                                    lb->sp_vol_CCLabel, indx,subCycleProgress);
 
-        refineCoarseFineBoundaries(patch, temp_CC.castOffConst(),  fine_new_dw,
+        refineCoarseFineBoundaries(patch, temp_CC,  fine_new_dw,
                                    lb->temp_CCLabel,   indx,subCycleProgress);
 
-        refineCoarseFineBoundaries(patch, vel_CC.castOffConst(),   fine_new_dw,
+        refineCoarseFineBoundaries(patch, vel_CC,   fine_new_dw,
                                    lb->vel_CCLabel,    indx,subCycleProgress);
        //__________________________________
        //    Model Variables                     
@@ -227,15 +234,15 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
             TransportedVariable* tvar = *t_iter;
 
             if(tvar->matls->contains(indx)){
-              constCCVariable<double> q_CC;
-              fine_old_dw->get(q_CC, tvar->var, indx, patch, gac, 1);
+              CCVariable<double> q_CC;
+              fine_new_dw->getModifiable(q_CC, tvar->var, indx, patch);
               
               if(switchDebug_AMR_refineInterface){ 
                 string name = tvar->var->getName();
                 printData(indx, patch, 1, "TOP_refineInterface", name, q_CC);
               }              
               
-              refineCoarseFineBoundaries(patch, q_CC.castOffConst(),fine_new_dw,
+              refineCoarseFineBoundaries(patch, q_CC, fine_new_dw,
                                           tvar->var,    indx,subCycleProgress);
               
               if(switchDebug_AMR_refineInterface){ 

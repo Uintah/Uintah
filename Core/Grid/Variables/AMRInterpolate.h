@@ -148,9 +148,6 @@ template<class T>
                         + dist.z() * q_XY_Plane_2;
     
     //interpolationTest(fineLevel,f_cell, ncell, error, q_FineLevel[f_cell]);  
-    if(f_cell == IntVector(30,39,0)){  
-      cout << " plane 1 " << q_XY_Plane_1 << " plane2 " << q_XY_Plane_2 << endl;
-    }
   }
   
   //interpolation test

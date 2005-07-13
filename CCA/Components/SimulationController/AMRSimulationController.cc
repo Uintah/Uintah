@@ -196,8 +196,11 @@ void AMRSimulationController::run()
        d_sim->addMaterial(d_ups, currentGrid, d_sharedState);
        d_sharedState->finalizeMaterials();
        d_scheduler->initialize();
-       for (int i = 0; i < currentGrid->numLevels(); i++)
+       for (int i = 0; i < currentGrid->numLevels(); i++) {
          d_sim->scheduleInitializeAddedMaterial(currentGrid->getLevel(i), d_scheduler);
+         if (d_doAMR && i > 0)
+           d_sim->scheduleRefineInterface(currentGrid->getLevel(i), d_scheduler, 1, 1);
+       }
        d_scheduler->compile();
        d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
        d_scheduler->execute();
@@ -272,9 +275,12 @@ void AMRSimulationController::subCycle(GridP& grid, int startDW, int dwStride, i
     d_scheduler->mapDataWarehouse(Task::CoarseOldDW, startDW);
     d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
 
-    if (d_doAMR)
-      d_sim->scheduleRefineInterface(fineLevel, d_scheduler, step, numSteps);
     d_sim->scheduleTimeAdvance(fineLevel, d_scheduler, step, numSteps);
+
+    // change this to be step+1 instead of step, and move below scheduleTimeAdvance
+    // so we can compute into the new DW
+    if (d_doAMR)
+      d_sim->scheduleRefineInterface(fineLevel, d_scheduler, step+1, numSteps);
     if(numLevel+1 < grid->numLevels()){
       ASSERT(newDWStride > 0);
       subCycle(grid, curDW, newDWStride, numLevel+1);
@@ -331,6 +337,9 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
         // so we can initially regrid
         d_regridder->scheduleInitializeErrorEstimate(d_scheduler, grid->getLevel(i));
         d_sim->scheduleInitialErrorEstimate(grid->getLevel(i), d_scheduler);
+        if (i > 0) {
+          d_sim->scheduleRefineInterface(grid->getLevel(i), d_scheduler, 1, 1);
+        }
       }
     }
   }
@@ -418,7 +427,7 @@ void AMRSimulationController::doRegridding(GridP& currentGrid)
 
     d_lb->possiblyDynamicallyReallocate(currentGrid, false); 
     double scheduleTime = Time::currentSeconds();
-    d_scheduler->scheduleAndDoDataCopy(currentGrid, d_sharedState, d_sim);
+    d_scheduler->scheduleAndDoDataCopy(currentGrid, d_sim);
     scheduleTime = Time::currentSeconds() - scheduleTime;
 
     double time = Time::currentSeconds() - start;

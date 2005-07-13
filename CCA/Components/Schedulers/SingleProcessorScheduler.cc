@@ -119,7 +119,14 @@ SingleProcessorScheduler::execute()
     if(dbg.active())
       dbg << "Running task: " << task->getTask()->getName() << "\n";
     //    cerr << "RANDY: Running task: " << task->getTask()->getName() << endl;
+
+
+    printTrackedVars(task, true);
+
     task->doit(d_myworld, dws, plain_old_dws);
+
+    printTrackedVars(task, false);
+
     if(dbg.active())
       dbg << "calling done\n";
     task->done(dws);

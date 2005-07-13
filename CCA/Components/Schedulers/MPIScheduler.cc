@@ -75,7 +75,8 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld,
 
 
 void
-MPIScheduler::problemSetup(const ProblemSpecP& prob_spec)
+MPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
+                           SimulationStateP& state)
 {
   log.problemSetup(prob_spec);
   ProblemSpecP params = prob_spec->findBlock("Scheduler");
@@ -84,6 +85,7 @@ MPIScheduler::problemSetup(const ProblemSpecP& prob_spec)
   } else {
     d_logTimes = false;
   }
+  SchedulerCommon::problemSetup(prob_spec, state);
 }
 
 MPIScheduler::~MPIScheduler()
@@ -260,11 +262,17 @@ MPIScheduler::runTask( DetailedTask         * task )
 #ifdef USE_PERFEX_COUNTERS
   start_counters(0, 19);
 #endif
+
+  printTrackedVars(task, true);
+
   // TODO - make this not reallocated for each task...
   vector<DataWarehouseP> plain_old_dws(dws.size());
   for(int i=0;i<(int)dws.size();i++)
     plain_old_dws[i] = dws[i].get_rep();
   task->doit(d_myworld, dws, plain_old_dws);
+
+  printTrackedVars(task, false);
+
 #ifdef USE_PERFEX_COUNTERS
   read_counters(0, &dummy, 19, &exec_flops);
   mpi_info_.totalexecflops += exec_flops;
