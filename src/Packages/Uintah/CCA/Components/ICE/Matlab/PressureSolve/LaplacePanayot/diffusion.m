@@ -1,8 +1,8 @@
-function a = diffusion(x,y)
+function a = diffusion(x)
 %DIFFUSION  Diffusion coefficient.
-%   A = DIFFUSION(TYPE,X,Y) returns the value of the diffusion coefficient
-%   at (X,Y). X and Y can be matrices and then A is a corresponding
-%   matrix of values (works for any dimensional array in fact).
+%   A = DIFFUSION(X) returns the value of the diffusion coefficient
+%   at (X,Y). X is a cell array of size Dx1, where D is the number of
+%   dimensions, and A is an array of size size(X{1}).
 %   PARAM.problemType selects the problem type. See "help exactsolution"
 %   for a list of possible problems.
 %
@@ -10,26 +10,27 @@ function a = diffusion(x,y)
 
 % Revision history:
 % 12-JUL-2005    Oren Livne    Created
+% 13-JUL-2005    Oren Livne    Moved from a(x,y) to general dimension a(x)
 
 globalParams;
 
-a = zeros(size(x));
+d                   = length(x);
+a                   = zeros(size(x{1}));
 
 switch (param.problemType)
     % Problems with a=1 (Laplace operator)
-    case {'quadratic','sinsin','GaussianSource','Lshaped'},
-        r = 1.0;
+    case {'linear','quadratic','sinsin','GaussianSource','Lshaped'},
+        a           = repmat(1.0,size(x{1}));
 
-    case 'smooth',
-        % Constant diffusion
-        a = repmat(1,size(x));
-
-    case 'jump',
-        % Piecewise constant diffusion coefficient with a big jump at x=0.5.
-        left = find(x < 0.5);
-        right = find(x > 0.5);
-        a(left) = 1.0;
-        a(right) = 1.0e+6;
+    case {'jump_linear','jump_quadratic'},
+        % Piecewise constant diffusion coefficient with a big jump at x1=0.5.
+        x0          = 0.5;
+        aLeft       = 1.0;
+        aRight      = 1.0e+6;
+        left        = find(x{1} < x0);
+        right       = find(x{1} >= x0);
+        a(left)     = aLeft;
+        a(right)    = aRight;
 
     otherwise,
         error('Unknown problem type');
