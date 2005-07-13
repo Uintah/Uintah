@@ -25,8 +25,8 @@ fprintf('=======================================================================
 %=========================================================================
 param                       = [];
 
-param.problemType           = 'jump_quadratic'; %'sinsin'; %'ProblemB'; %'quadratic'; %'Lshaped'; %
-param.outputDir             = 'jump_quadratic_1level'; %'sinsin_1level';
+param.problemType           = 'diffusion_quadratic'; %'smooth_diffusion'; %'sinsin'; %'ProblemB'; %'quadratic'; %'Lshaped'; %
+param.outputDir             = 'test'; %'sinsin_1level';
 
 param.twoLevel              = 0;
 param.threeLevel            = 0;
@@ -232,51 +232,5 @@ for count = 1:length(numCellsRange)
 end
 
 if (param.saveResults)
-    % Save errors and error factors in latex format
-    Label{1}    = 'n';
-    Label{2}    = '\|e\|_{L_2}';
-    Label{3}    = '{\mbox{factor}}';
-    Label{4}    = '\|e\|_{L_{\infty}}';
-    Label{5}    = '{\mbox{factor}}';
-    Label{6}    = '\|e\|_{H_1}';
-    Label{7}    = '{\mbox{factor}}';
-    Label{8}    = '\|e\|_{H_1,max}';
-    Label{9}    = '{\mbox{factor}}';
-
-    fileName    = sprintf('%s/DiscError',param.outputDir);
-    Caption     = sprintf('Discretization error');
-
-    data        = [numCellsRange'];
-    e           = errNorm;
-    factors     = fac(e);
-    fmt{1}      = '%4d';
-    for i = 1:size(e,2)
-        data = [data e(:,i) [0; factors(:,i)]];
-        fmt{2*i} = '%.3e';
-        fmt{2*i+1} = '%.3f';
-    end
-    %        latexTable(data,Label,fileName,Caption,'%3d','%.3e');
-    latexTableFactors(data,Label,fileName,Caption,fmt{:});
-
-    %         % Save truncation errors and truncation error factors in latex format
-    %         Label{1} = 'n';
-    %         Label{2} = '\|\tau\|_{L_2}';
-    %         Label{3} = '{\mbox{factor}}';
-    %         Label{4} = '\|\tau\|_{L_{\infty}}';
-    %         Label{5} = '{\mbox{factor}}';
-    %         Label{6} = '\|\tau\|_{\mbox{median}}';
-    %         Label{7} = '{\mbox{factor}}';
-    %         fileName = sprintf('%s/TruncErrorL%dP%d',param.outputDir,k,q);
-    %         Caption = sprintf('Truncation error on level %d, patch %d',k,q);
-    %         data    = [numCellsRange'];
-    %         e       = trunc{k}{q};
-    %         factors = fac(e);
-    %         fmt{1} = '%4d';
-    %         for i = 1:size(e,2)
-    %             data = [data e(:,i) [0; factors(:,i)]];
-    %             fmt{2*i} = '%.3e';
-    %             fmt{2*i+1} = '%.3f';
-    %         end
-    %         %        latexTable(data,Label,fileName,Caption,'%3d','%.3e');
-    %         latexTableFactors(data,Label,fileName,Caption,fmt{:});
+    saveResults(errNorm);
 end
