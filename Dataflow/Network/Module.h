@@ -189,6 +189,7 @@ public:
   virtual void postMessage(const std::string&);
   virtual std::ostream &msgStream() { return msgStream_; }
   virtual void msgStream_flush();
+  virtual bool in_power_app();
 
   // Compilation progress.  Should probably have different name.
   virtual void report_progress( ProgressState );
