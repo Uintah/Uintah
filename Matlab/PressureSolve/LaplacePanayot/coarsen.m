@@ -11,9 +11,7 @@ function [uc,QLower,QUpper] = coarsen(grid,k,q,u)
 
 globalParams;
 
-if (param.verboseLevel >= 1)
-    fprintf('--- coarsen(k = %d, q = %d) BEGIN ---\n',k,q);
-end
+out(2,'--- coarsen(k = %d, q = %d) BEGIN ---\n',k,q);
 
 if (nargin ~= 4)
     error('Too few/many input arguments (need grid,k,q,u)\n');
@@ -91,6 +89,4 @@ uctemp(:)   = full(yc(indQBox));
 uc          = zeros(size(indQ));
 uc(QBox{:}) = uctemp;
 
-if (param.verboseLevel >= 1)
-    fprintf('--- coarsen(k = %d, q = %d) END ---\n',k,q);
-end
+out(2,'--- coarsen(k = %d, q = %d) END ---\n',k,q);

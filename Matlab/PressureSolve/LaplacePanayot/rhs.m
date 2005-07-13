@@ -18,7 +18,10 @@ switch (param.problemType)
     case {'linear','Lshaped','jump_linear'}
         f = zeros(size(x{1}));
 
-    case 'quadratic',
+    case 'quad1',
+        f       = -2*ones(size(x{1}));
+
+    case 'quad2',
         f       = 2*(x{1}.*(1-x{1}) + x{2}.*(1-x{2}));
 
     case 'sinsin',
@@ -32,13 +35,10 @@ switch (param.problemType)
             (4*((x{1}-x0(1))/sigma(1)).^2 - 2)/sigma(1)^2 + ...
             (4*((x{2}-x0(2))/sigma(2)).^2 - 2)/sigma(2)^2);
 
-    case 'jump_quadratic',
+    case 'jump_quad',
         f       = -ones(size(x{1}));
     
-    case 'diffusion_const',
-        f       = -2*ones(size(x{1}));
-
-    case 'diffusion_quadratic',
+    case 'diffusion_quad',
         f       = -2 - 6*x{1}.^2;
 
     otherwise,

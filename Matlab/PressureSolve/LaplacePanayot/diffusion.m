@@ -19,10 +19,10 @@ a                   = zeros(size(x{1}));
 
 switch (param.problemType)
     % Problems with a=1 (Laplace operator)
-    case {'linear','quadratic','sinsin','GaussianSource','Lshaped'},
+    case {'linear','quad1','quad2','sinsin','GaussianSource','Lshaped'},
         a           = repmat(1.0,size(x{1}));
 
-    case {'jump_linear','jump_quadratic'},
+    case {'jump_linear','jump_quad'},
         % Piecewise constant diffusion coefficient with a big jump at x1=0.5.
         x0          = 0.5;
         aLeft       = 1.0;
@@ -32,10 +32,7 @@ switch (param.problemType)
         a(left)     = aLeft;
         a(right)    = aRight;
 
-    case 'diffusion_const',
-        a           = 1.0;
-
-    case 'diffusion_quadratic',
+    case 'diffusion_quad',
         a           = 1 + x{1}.^2;
 
     otherwise,

@@ -20,9 +20,7 @@ globalParams;
 tStartCPU           = cputime;
 tStartElapsed       = clock;
 
-if (param.verboseLevel >= 1)
-    fprintf('--- adaptiveRefinement(k = %d) BEGIN ---\n',k);
-end
+out(2,'--- adaptiveRefinement(k = %d) BEGIN ---\n',k);
 
 % Coarse level aliases
 kc      = k-1;
@@ -109,6 +107,6 @@ if (param.verboseLevel >= 3)
     Tiupper
 end
 
-if (param.verboseLevel >= 1)
-    fprintf('--- adaptiveRefinement(k = %d) END ---\n',k);
-end
+out(2,'CPU time     = %f\n',tCPU);
+out(2,'Elapsed time = %f\n',tElapsed);
+out(2,'--- adaptiveRefinement(k = %d) END ---\n',k);

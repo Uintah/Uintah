@@ -44,12 +44,10 @@ switch lower(type)   % LHS matrix, data is LHS matrix data structure
         error('addGridLevel: unknown type');
 end
 
-if (param.verboseLevel >= 1)
-    if (k == 1)
-        fprintf('Created empty level k=%d, meshsize = [%.5f %.5f]\n',k,grid.level{k}.h);
-    else
-        fprintf('Created empty level k=%d, meshsize = [%.5f %.5f], refine ratio = [%3d %3d]\n',k,grid.level{k}.h,grid.level{k}.refRatio);
-    end
+if (k == 1)
+    out(2,'Created empty level k=%d, meshsize = [%.5f %.5f]\n',k,grid.level{k}.h);
+else
+    out(2,'Created empty level k=%d, meshsize = [%.5f %.5f], refine ratio = [%3d %3d]\n',k,grid.level{k}.h,grid.level{k}.refRatio);
 end
 
 grid.level{k}.domainSize    = grid.domainSize;
