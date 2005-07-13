@@ -16,6 +16,11 @@ function a = harmonicAvg(x,y,z)
 %   See "help exactSolution" for a list of possible problems, determined by
 %   param.problemType.
 %
+%   ### NOTE: ### If we use a different refinement ratio in different
+%   dimensions, near the interface we may need to compute A along lines X-Y
+%   that cross more than one cell boundary. This is currently ignored and
+%   we assume all lines cut one cell interface only.
+%
 %   See also: DIFFUSION, SETUPPATCHINTERIOR, SETUPPATCHINTERFACE.
 
 % Revision history:

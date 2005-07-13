@@ -25,25 +25,30 @@ fprintf('=======================================================================
 %=========================================================================
 param                       = [];
 
-param.problemType           = 'diffusion_quadratic'; %'smooth_diffusion'; %'sinsin'; %'ProblemB'; %'quadratic'; %'Lshaped'; %
+param.problemType           = 'diffusion_const'; %'smooth_diffusion'; %'sinsin'; %'ProblemB'; %'quadratic'; %'Lshaped'; %
 param.outputDir             = 'test'; %'sinsin_1level';
 
 param.twoLevel              = 0;
+param.twoLevelType          = 'leftHalf';
+
 param.threeLevel            = 0;
+param.threeLevelType        = 'leftHalf';
+
 param.setupGrid             = 1;
 param.solveSystem           = 1;
-param.plotResults           = 1;
+param.plotResults           = 0;
 param.saveResults           = 1;
 param.verboseLevel          = 0;
 
 %=========================================================================
 % Run discretization on a sequence of successively finer grids
 %=========================================================================
-numCellsRange               = 2.^[2:1:6];
+numCellsRange               = 2.^[2:1:10];
 success                     = mkdir('.',param.outputDir);
 errNorm                     = zeros(length(numCellsRange),4);
 
 for count = 1:length(numCellsRange)
+    %pause
     pack;
     numCells = numCellsRange(count);
     fprintf('#### nCells = %d ####\n',numCells);
@@ -83,66 +88,66 @@ for count = 1:length(numCellsRange)
 
         if (param.twoLevel)
             [grid,k]            = addGridLevel(grid,'refineRatio',[2 2]);
-
-            if (0)
-                % Cover the entire domain
-                [grid,q2]  = addGridPatch(grid,k,ones(1,grid.dim),2*resolution,q1);              % Local patch around the domain center
-            end
-
-            if (1)
-                % Cover central half of the domain
-                [grid,q2]  = addGridPatch(grid,k,resolution/2 + 1,3*resolution/2,q1);              % Local patch around the domain center
-            end
-
-            if (0)
-                % Cover central quarter of the domain
-                [grid,q2]  = addGridPatch(grid,k,3*resolution/4 + 1,5*resolution/4,q1);              % Local patch around the domain center
-            end
-
-            if (0)
-                % Two fine patches next to each other at the center of the
-                % domain
-                ilower = resolution/2 + 1;
-                iupper = 3*resolution/2;
-                iupper(1) = resolution(1);
-                [grid,q2]  = addGridPatch(grid,k,ilower,iupper,q1);
-                ilower = resolution/2 + 1;
-                iupper = 3*resolution/2;
-                ilower(1) = resolution(1)+1;
-                [grid,q3]  = addGridPatch(grid,k,ilower,iupper,q1);
-            end
-
-            if (0)
-                % Two fine patches next to each other at the central
-                % quarter of the domain
-                ilower = 3*resolution/4 + 1;
-                iupper = 5*resolution/4;
-                iupper(1) = resolution(1);
-                [grid,q2]  = addGridPatch(grid,k,ilower,iupper,q1);
-                ilower = 3*resolution/4 + 1;
-                iupper = 5*resolution/4;
-                ilower(1) = resolution(1)+1;
-                [grid,q3]  = addGridPatch(grid,k,ilower,iupper,q1);
+            switch (param.twoLevelType)
+                case 'global',
+                    % Cover the entire domain
+                    [grid,q2]  = addGridPatch(grid,k,ones(1,grid.dim),2*resolution,q1);              % Local patch around the domain center
+                case 'centralHalf',
+                    % Cover central half of the domain
+                    [grid,q2]  = addGridPatch(grid,k,resolution/2 + 1,3*resolution/2,q1);              % Local patch around the domain center
+                case 'centralQuarter',
+                    % Cover central quarter of the domain
+                    [grid,q2]  = addGridPatch(grid,k,3*resolution/4 + 1,5*resolution/4,q1);              % Local patch around the domain center
+                case 'leftHalf',
+                    % Cover left half of the domain in x1
+                    ilower      = ones(size(resolution));
+                    iupper      = 2*resolution;
+                    iupper(1)   = resolution(1);
+                    [grid,q2]  = addGridPatch(grid,k,ilower,iupper,q1);
+                case 'centralHalf2Patches',
+                    % Two fine patches next to each other at the center of the
+                    % domain
+                    ilower = resolution/2 + 1;
+                    iupper = 3*resolution/2;
+                    iupper(1) = resolution(1);
+                    [grid,q2]  = addGridPatch(grid,k,ilower,iupper,q1);
+                    ilower = resolution/2 + 1;
+                    iupper = 3*resolution/2;
+                    ilower(1) = resolution(1)+1;
+                    [grid,q3]  = addGridPatch(grid,k,ilower,iupper,q1);
+                case 'centralQuarter2Patches',
+                    % Two fine patches next to each other at the central
+                    % quarter of the domain
+                    ilower = 3*resolution/4 + 1;
+                    iupper = 5*resolution/4;
+                    iupper(1) = resolution(1);
+                    [grid,q2]  = addGridPatch(grid,k,ilower,iupper,q1);
+                    ilower = 3*resolution/4 + 1;
+                    iupper = 5*resolution/4;
+                    ilower(1) = resolution(1)+1;
+                    [grid,q3]  = addGridPatch(grid,k,ilower,iupper,q1);
+                otherwise,
+                    error('Unknown two level type');
             end
 
             for q = 1:grid.level{k}.numPatches,
                 [grid,A,b,T,TI]      = updateSystem(grid,k,q,A,b,T,TI);
             end
         end
-
+        
         %--------------- Level 3: yet local fine grid around center of domain -----------------
         if ((param.twoLevel) & (param.threeLevel))
             [grid,k]   = addGridLevel(grid,'refineRatio',[2 2]);
-
-            if (0)
-                % Cover central half of the domain
-                [grid,q3]  = addGridPatch(grid,k,3*resolution/2 + 1,5*resolution/2,q2);              % Local patch around the domain center
-            end
-
-            if (1)
-                % Cover central half of the central quarter of the domain
-                [grid,q3]  = addGridPatch(grid,k,7*resolution/4 + 1,9*resolution/4,q2);              % Local patch around the domain center
-                %                [grid,q3]  = addGridPatch(grid,k,15*resolution/4 + 1,17*resolution/4,q2);              % Local patch around the domain center
+            switch (param.threeLevelType)
+                case 'centralHalf',
+                    % Cover central half of the domain
+                    [grid,q3]  = addGridPatch(grid,k,3*resolution/2 + 1,5*resolution/2,q2);              % Local patch around the domain center
+                case 'centralHalfOfcentralQuarter',
+                    % Cover central half of the central quarter of the domain
+                    [grid,q3]  = addGridPatch(grid,k,7*resolution/4 + 1,9*resolution/4,q2);              % Local patch around the domain center
+                    %                [grid,q3]  = addGridPatch(grid,k,15*resolution/4 + 1,17*resolution/4,q2);              % Local patch around the domain center
+                otherwise,
+                    error('Unknown three level type');
             end
 
             for q = 1:grid.level{k}.numPatches,
@@ -217,7 +222,7 @@ for count = 1:length(numCellsRange)
         normAMR(grid,err,'H1') ...
         normAMR(grid,err,'H1max') ...
         ];
-    fprintf('#vars = %5d  L2=%.3e  max=%.3e  H1=%.3e  H1max=%.3e\n',grid.totalVars,errNorm(count,:));
+    fprintf('#vars = %7d  L2=%.3e  max=%.3e  H1=%.3e  H1max=%.3e\n',grid.totalVars,errNorm(count,:));
 
     if (param.plotResults)
         plotResults(grid,u,uExact,tau,numCells);
