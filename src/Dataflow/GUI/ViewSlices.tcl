@@ -156,7 +156,7 @@ itcl_class SCIRun_Render_ViewSlices {
 	bind $w <Destroy>	"$this-c destroygl $w"
 	# the focus belowis to generate keypress events 
 	bind $w <Enter>		"focus $w; $this-c enter $w"
-	bind $w <Leave>		"$this-c leave %W; $this-c redrawall"
+	bind $w <Leave>		"$this-c leave %W"
 	bind $w <Motion>	"$this-c motion   $w %x %y %s %t %X %Y"
 	bind $w <KeyPress>	"$this-c keypress $w %k %K %t"
 	bind $w <ButtonPress>	"$this-c button   $w %b %s %X %Y"

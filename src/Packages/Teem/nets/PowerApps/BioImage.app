@@ -51,6 +51,7 @@ setGlobal "$mods(Viewer)-ViewWindow_0-Slice2 (1)" 1
 setGlobal "$mods(Viewer)-ViewWindow_0-MIP Slice0 (1)" 0
 setGlobal "$mods(Viewer)-ViewWindow_0-MIP Slice1 (1)" 0
 setGlobal "$mods(Viewer)-ViewWindow_0-MIP Slice2 (1)" 0
+setGlobal "$mods(Viewer)-ViewWindow_0-ambient-scale" 4.0
 
 
 proc frametrace { varname args } {
@@ -400,7 +401,7 @@ class BioImageApp {
 		setGlobal $ViewSlices-axial-viewport0-axis 2
 
 		global $ViewSlices-clut_ww $ViewSlices-clut_wl
-		set command "$this change_window_width_and_level 0"
+		set command "$this change_window_width_and_level 1"
 		trace variable $ViewSlices-clut_ww w $command
 		trace variable $ViewSlices-clut_wl w $command
 
@@ -675,6 +676,8 @@ class BioImageApp {
 	init_Pframe $detachedPFr.f 0
 	incrProgress 5
 	init_Pframe $attachedPFr.f 1
+	
+	setProgressText "Creating BioImage Frames..."
 
 	#change_current 0
 
@@ -802,7 +805,7 @@ class BioImageApp {
 		"$ViewSlices-c release %W %b %s %X %Y"
 	    bind $slice_frame($axis).bd.$axis <ButtonRelease-1> \
 		"$ViewSlices-c release %W %b %s %X %Y
-                 $this change_window_width_and_level 1"
+                 $this change_window_width_and_level 0"
 
 	    pack $slice_frame($axis).bd.$axis -expand 1 -fill both \
 		-side top -padx 0 -ipadx 0 -pady 0 -ipady 0
@@ -1070,6 +1073,7 @@ class BioImageApp {
 
 
     method create_network {} {
+	setProgressText "Loading BioImage Modules..."
 	global mods
 	set m1 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 10 10]
 	set m2 [addModuleAtPosition "Teem" "DataIO" "DicomNrrdReader" 28 68]
@@ -1108,7 +1112,7 @@ class BioImageApp {
 		     "RescaleColorMap" 60 2629]
 	set m31 [addModuleAtPosition "SCIRun" "Visualization" \
 		     "VolumeVisualizer" 42 2700]
-	
+	setProgressText "Creating BioImage Connections..."
 	# Create the Connections between Modules
 	set c1 [addConnection $m4 0 $m5 0]
 	set c2 [addConnection $m28 1 $m29 0]
@@ -1154,6 +1158,7 @@ class BioImageApp {
 	set c42 [addConnection $m31 0 $mods(Viewer) 0]
 	set c42 [addConnection $m28 0 $mods(Viewer) 1]
 
+	setProgressText "Creating BioImage Default Settings..."
 	# set some ui parameters
 	setGlobal $m1-filename ${data_dir}volume/tooth.nhdr
 
@@ -2848,8 +2853,8 @@ class BioImageApp {
 
     method change_window_width_and_level { { execute 0 } args } {
 	global mods
-	$mods(ViewSlices)-c setclut ;# set windows to be dirty
 	if {$execute} {
+	    $mods(ViewSlices)-c setclut ;# set windows to be dirty
 	    $mods(ViewSlices)-c background_thresh
 	}
 	$this link_windowlevels $execute
@@ -3124,6 +3129,12 @@ class BioImageApp {
 		-decrement "$this change_crop $UnuCrop max $i -1" \
 		-validate "$this change_crop $UnuCrop max $i 0 %P" -width 4
 
+	    bind $f.minv <Leave> "$this leave_crop $UnuCrop min $i"
+	    bind $f.maxv <Leave> "$this leave_crop $UnuCrop max $i"
+	    bind $f.minv <FocusOut> "$this leave_crop $UnuCrop min $i"
+	    bind $f.maxv <FocusOut> "$this leave_crop $UnuCrop max $i"
+
+
 	    set r [expr $i+1]
             grid configure $f.minl -row $r -column 0 -sticky w -padx 2
             grid configure $f.minv -row $r -column 1 -sticky e -padx 2
@@ -3153,10 +3164,7 @@ class BioImageApp {
 	if { ![string length $newval] } {
 	    set newval [expr $var+$amount]
 	}
-
-	if { ($amount == 0 && ![string is integer $newval]) || \
-		 ($kind == "min" && ($newval > $opp)) || \
-		 ($kind == "max" && ($newval < $opp)) } {
+	if { ![string is integer $newval] } {
 	    return 0
 	} elseif { $newval < 0 } {
 	    setGlobal $varname 0
@@ -3168,6 +3176,24 @@ class BioImageApp {
 	    setGlobal $varname $newval
 	}
 	return 1
+    }
+
+    method leave_crop { crop kind axis } {
+	global mods
+	set varname $crop-${kind}Axis$axis
+	set oppvar $crop-[expr ("$kind"=="min")?"max":"min"]Axis$axis
+	upvar \#0 $varname var $oppvar opp $mods(ViewSlices)-dim$axis max
+	set cache_crop $current_crop
+	set current_crop -1	
+	set temp $var
+	if { $kind == "max" && $var < $opp } {
+	    set var $opp
+	    set opp $temp
+	} elseif { $kind == "min" && $var > $opp } {
+	    set var $opp
+	    set opp $temp
+	}
+	set current_crop $cache_crop
     }
 	
 	
