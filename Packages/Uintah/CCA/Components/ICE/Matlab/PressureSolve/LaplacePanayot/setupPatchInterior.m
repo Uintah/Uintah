@@ -95,10 +95,15 @@ for dim = 1:grid.dim,                                                       % Lo
             side
             sideNum
             fluxNum
+            fprintf('\nx = \n');            
             D(x{dim})
+            fprintf('\nxNbhr = \n');            
             D(xNbhr{dim})
+            fprintf('\nxFace = \n');            
             D(xFace{dim})
+            fprintf('\nDiffusion coefficient for this direction = \n');            
             D(a{fluxNum})
+            fprintf('\nDifference is over distance = \n');            
             D(diffLength{fluxNum})
         end
 

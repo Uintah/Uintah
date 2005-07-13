@@ -25,18 +25,19 @@ function u = exactSolution(x)
 %           equation with Dirichlet B.C. on the L-shaped domain [0,1]^2 \
 %           [0.5,1]^2.Diffusion a=1 (Laplace operator). This is a
 %           re-entrant corner problem where U is singular.
-%
 %       'jump_linear'
 %           Piecewise constant diffusion coefficient with a big jump at
 %           x1=0.5 (a,u depend only on x1; a = aLeft for x1 <= 0.5, a =
 %           aRight otherwise). Piecewise linear solution U that solves
 %           Laplace's equation with this a.
-%
 %       'jump_quadratic'
 %           Piecewise constant diffusion coefficient with a big jump at
 %           x1=0.5 (a,u depend only on x1; a = aLeft for x1 <= 0.5, a =
 %           aRight otherwise). Piecewise quadratic solution U that solves
 %           Poisson's equation with RHS = -1, this a, and appropriate B.C.
+%       'smooth_diffusion'
+%           a = x{1}^2 and u = x{1}^2 (smooth diffusion and smooth
+%           solution). Appropriate RHS and Dirichlet BC.
 %
 %   See also: TESTDISC, RHS, RHSBC, EXACTSOLUTIONAMR, DIFFUSION.
 
@@ -88,7 +89,6 @@ switch (param.problemType)
         right       = find(x{1} >= x0);
         u(left)     = (x{1}(left) - x0)/aLeft;
         u(right)    = (x{1}(right) - x0)/aRight;
-
         
     case 'jump_quadratic',
         % Piecewise constant diffusion coefficient with a big jump at
@@ -101,6 +101,14 @@ switch (param.problemType)
         right       = find(x{1} >= x0);
         u(left)     = (x{1}(left) - x0).^2/(2*aLeft);
         u(right)    = (x{1}(right) - x0).^2/(2*aRight);
+
+    case 'diffusion_const',
+        % Smooth diffusion and smooth solution (d-D).
+        u           = x{1}.^2;
+
+    case 'diffusion_quadratic',
+        % Smooth diffusion and smooth solution (d-D).
+        u           = x{1}.^2;
 
     otherwise,
         error('Unknown problem type');

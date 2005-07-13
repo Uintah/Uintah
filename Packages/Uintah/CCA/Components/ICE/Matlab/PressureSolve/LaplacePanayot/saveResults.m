@@ -16,6 +16,9 @@ globalParams;
 data        = errNorm(:,1);
 e           = errNorm(:,2:end);
 factors     = fac(e);
+if (size(e,1) < 2)
+    factors = zeros(0,size(e,2));
+end
 
 fmt{1}      = '%4d';
 for i = 1:size(e,2)
