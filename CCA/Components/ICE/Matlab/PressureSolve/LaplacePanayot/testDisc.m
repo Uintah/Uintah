@@ -1,7 +1,7 @@
 %function [grid,A,b,T,TI,u] = testDisc(twoLevel)
 %TESTDISC  Test pressure equation discretization.
 %   We test pressure equation discretization error for a
-%   simple 2D Poisson problem with a known solution. 
+%   simple 2D Poisson problem with a known solution.
 %   We prepare an AMR grid with two levels: a global level
 %   1, and a local level 2 patch around the center of the domain, where the
 %   solution u has more variations. The scheme is a cell-centered,
@@ -25,15 +25,15 @@ fprintf('=======================================================================
 %=========================================================================
 param                       = [];
 
-param.problemType           = 'Lshaped'; %'ProblemB'; %'quadratic'; %'Lshaped'; %
-param.outputDir             = 'ProblemA_1Level';
+param.problemType           = 'jump_quadratic'; %'sinsin'; %'ProblemB'; %'quadratic'; %'Lshaped'; %
+param.outputDir             = 'jump_quadratic_1level'; %'sinsin_1level';
 
-param.twoLevel              = 1;
+param.twoLevel              = 0;
 param.threeLevel            = 0;
 param.setupGrid             = 1;
 param.solveSystem           = 1;
 param.plotResults           = 1;
-param.saveResults           = 0;
+param.saveResults           = 1;
 param.verboseLevel          = 0;
 
 %=========================================================================
@@ -240,6 +240,8 @@ if (param.saveResults)
     Label{5}    = '{\mbox{factor}}';
     Label{6}    = '\|e\|_{H_1}';
     Label{7}    = '{\mbox{factor}}';
+    Label{8}    = '\|e\|_{H_1,max}';
+    Label{9}    = '{\mbox{factor}}';
 
     fileName    = sprintf('%s/DiscError',param.outputDir);
     Caption     = sprintf('Discretization error');

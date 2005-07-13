@@ -23,8 +23,8 @@ fprintf('=======================================================================
 %=========================================================================
 param                       = [];
 
-param.problemType           = 'Lshaped'; %'ProblemB'; %'quadratic'; %'Lshaped'; %
-param.outputDir             = 'ProblemA_1Level';
+param.problemType           = 'Lshaped; %'ProblemB'; %'quadratic'; %'Lshaped'; %
+param.outputDir             = 'Lshaped_adaptive';
 param.plotResults           = 0;
 param.saveResults           = 1;
 param.verboseLevel          = 0;
