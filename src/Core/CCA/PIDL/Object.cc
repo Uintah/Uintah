@@ -89,9 +89,9 @@ Object::initializeServer(const TypeInfo* typeinfo, void* ptr, EpChannel* epc)
     d_serverContext->d_objid=-1;
     d_serverContext->d_sched = 0;
   } else if(d_serverContext->d_endpoint_active){
-    throw InternalError("Server reinitialized while endpoint already active?");
+    throw InternalError("Server reinitialized while endpoint already active?", __FILE__, __LINE__);
   } else if(d_serverContext->d_objptr != this){
-    throw InternalError("Server reinitialized with a different base class ptr?");
+    throw InternalError("Server reinitialized with a different base class ptr?", __FILE__, __LINE__);
   }
   // This may happen multiple times, due to multiple inheritance.  It
   // is a "last one wins" approach - the last CTOR to call this function
@@ -108,13 +108,14 @@ Object::initializeServer(const TypeInfo* typeinfo, void* ptr, EpChannel* epc)
 
 Object::~Object()
 {
-  if(ref_cnt != 0)
-    throw InternalError("Object delete while reference count != 0");
+  if(ref_cnt != 0) {
+    throw InternalError("Object delete while reference count != 0", __FILE__, __LINE__);
+  }
   if(d_serverContext){
     Warehouse* warehouse=PIDL::getWarehouse();
     if(d_serverContext->d_endpoint_active){
       if(warehouse->unregisterObject(d_serverContext->d_objid) != this)
-	throw InternalError("Corruption in object warehouse");
+	throw InternalError("Corruption in object warehouse", __FILE__, __LINE__);
       //EpChannel->closeConnection() does nothing, so far.
       d_serverContext->chan->closeConnection(); 
     }
@@ -136,7 +137,7 @@ URL Object::getURL() const
     o << d_serverContext->chan->getUrl() 
       << d_serverContext->d_objid;
   } else {
-    throw InternalError("Object::getURL called for a non-server object");
+    throw InternalError("Object::getURL called for a non-server object", __FILE__, __LINE__);
   }
   return (o.str());
 }
@@ -145,7 +146,7 @@ void
 Object::_getReferenceCopy(ReferenceMgr** refM) const
 {
   if(!d_serverContext)
-    throw InternalError("Object::getReference called for a non-server object");
+    throw InternalError("Object::getReference called for a non-server object", __FILE__, __LINE__);
   if(!d_serverContext->d_endpoint_active)
     activateObject();
   (*refM) = new ReferenceMgr();
@@ -217,8 +218,8 @@ Object::_deleteReference()
   if(del){
     //TODO: 
     //    try to cast the pointer to possible objects such as Typemap, UIPort, goPort etc to find out which one caused the refcnt problem. Review the PHello program and addProvidesPort and related programs first. It may save some time. 
-    int mpi_size, mpi_rank;
 #ifdef TRACED_OBJ
+    int mpi_size, mpi_rank;
     MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
     if(dynamic_cast<TRACED_OBJ *>(this)){
       ::std::cout << "############# "<<TRACED_OBJ_NAME<<"("<<mpi_rank<<") deleted \n";

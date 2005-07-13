@@ -70,7 +70,7 @@ int TypeInfo::computeVtableOffset(const TypeInfo* ti) const
 	ti->d_priv->fullclassname +
 	" should be an ancestor of " +
 	d_priv->fullclassname +
-	", but is not!");
+	", but is not!", __FILE__, __LINE__);
   }
   return iter->second.second-vtable_methods_start;
 }
@@ -148,7 +148,7 @@ Object* TypeInfo::pidl_cast(Object* obj) const
       save_callnoret_msg[i]->unmarshalInt(&_x_flag);
       save_callnoret_msg[i]->destroyMessage();
       if(_x_flag != 0) {
-	throw ::SCIRun::InternalError("Unexpected user exception");
+	throw ::SCIRun::InternalError("Unexpected user exception", __FILE__, __LINE__);
       }
     }
 
