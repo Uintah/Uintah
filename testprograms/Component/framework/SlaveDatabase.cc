@@ -96,7 +96,8 @@ SlaveDatabase::findPosition( string machineId )
     }
   throw InternalError( "This version of find should only be called when "
 		       "you know that the item is in the list.  Thus "
-		       "this exception should never be raised." );
+		       "this exception should never be raised.",
+                       __FILE__, __LINE__ );
 }
 
 void
@@ -104,8 +105,8 @@ SlaveDatabase::add( SlaveInfo * si ) throw (InternalError)
 {
   if( find( si->d_machineId ) )
     throw InternalError( const_cast<char*>
-			    ((si->d_machineId +
-			      " already in SlaveDatabase ").c_str()) );
+        ((si->d_machineId + " already in SlaveDatabase ").c_str()),
+        __FILE__, __LINE__ );
   d_slaves.push_back( si );
   d_numSlaves++;
 }
@@ -115,7 +116,7 @@ SlaveDatabase::remove( SlaveInfo * si )
 {
   if( !find( si->d_machineId ) )
     throw InternalError( const_cast<char*> ((si->d_machineId 
-				     + " not in SlaveDatabase ").c_str()) );
+        + " not in SlaveDatabase ").c_str()), __FILE__, __LINE__ );
   d_slaves.erase( findPosition( si->d_machineId ) );
   d_numSlaves--;
 }

@@ -68,7 +68,7 @@ ComponentRecord::getPort( const string &name )
   
   ProvidePortRecord *provide = use->connection_->provide_;
   if ( !provide ) 
-    throw InternalError( "Provide port is missing..." );
+    throw InternalError( "Provide port is missing...", __FILE__, __LINE__ );
 
   return provide->port_;
 }
@@ -135,7 +135,7 @@ ComponentRecord::releasePort( const string &name)
 {
   use_iterator ui = uses_.find(name);
   if ( ui == uses_.end() ) {
-    throw InternalError( "Release port does not exist" );
+    throw InternalError( "Release port does not exist", __FILE__, __LINE__ );
   }
 
   UsePortRecord *record = ui->second;

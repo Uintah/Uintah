@@ -37,6 +37,11 @@
  *   October 2001
  *
  */
+
+#ifndef DEBUG
+ #define DEBUG 0
+#endif
+
 #include <CCA/Components/Builder/Builder.h>
 #include <CCA/Components/Builder/BuilderWindow.h>
 #include <CCA/Components/Builder/QtUtils.h>
@@ -49,10 +54,6 @@
 
 #include <iostream>
 
-#ifndef DEBUG
- #define DEBUG 0
-#endif
-
 namespace SCIRun {
 
 extern "C" sci::cca::Component::pointer make_SCIRun_Builder()
@@ -63,8 +64,9 @@ extern "C" sci::cca::Component::pointer make_SCIRun_Builder()
 void myBuilderPort::setServices(const sci::cca::Services::pointer& svc)
 {
   services = svc;
+#if DEBUG
   std::cerr << "BuilderPort::setServices" << std::endl;
-  
+#endif
   QApplication* app = QtUtils::getApplication();
 #ifdef QT_THREAD_SUPPORT
   app->lock();
@@ -101,7 +103,6 @@ Builder::Builder()
 
 Builder::~Builder()
 {
-    std::cerr << "~Builder()" << std::endl;
     // cleanup ports
     try {
         builderPort.services->removeProvidesPort("builderPort");
