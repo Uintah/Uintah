@@ -19,19 +19,29 @@ tStartElapsed       = clock;
 out(2,'--- updateSystem(k = %d, q = %d) BEGIN ---\n',k,q);
 
 P                           = grid.level{k}.patch{q};           % Updated patch
-Anew                        = sparse([],[],[],grid.totalVars,grid.totalVars,(2*grid.dim+1)*grid.totalVars);
-Anew(1:size(A,1),1:size(A,2)) = A;
+indAdded                    = [length(b)+1:grid.totalVars]';
+numAdded                    = length(indAdded);
+% Anew                        = sparse([],[],[],grid.totalVars,grid.totalVars,(2*grid.dim+1)*grid.totalVars);
+% Anew(1:size(A,1),1:size(A,2)) = A;
+[i,j,data]                  = find(A);
+Anew                        = spconvert([[i j data]; [grid.totalVars grid.totalVars 0]]);
 A                           = Anew;
-b                           = [b; zeros(grid.totalVars-length(b),1)];
+b                           = [b; zeros(numAdded,1)];
 
 % Transformation point values -> ghost values (T)
-Tnew                                = speye(grid.totalVars);
-Tnew(1:size(T,1),1:size(T,2))       = T;
+% Tnew                                = speye(grid.totalVars);
+% Tnew(1:size(T,1),1:size(T,2))       = T;
+[i,j,data]                  = find(T);
+Tnew                        = spconvert([[i j data]; ...
+    [indAdded indAdded repmat(1.0,size(indAdded))]]);
 T                                   = Tnew;
 
 % Inverse of T
-TInew                               = speye(grid.totalVars);
-TInew(1:size(TI,1),1:size(TI,2))    = TI;
+% TInew                               = speye(grid.totalVars);
+% TInew(1:size(TI,1),1:size(TI,2))    = TI;
+[i,j,data]                  = find(TI);
+TInew                        = spconvert([[i j data]; ...
+    [indAdded indAdded repmat(1.0,size(indAdded))]]);
 TI                                  = TInew;
 
 %==============================================================
