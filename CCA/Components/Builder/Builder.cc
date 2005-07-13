@@ -49,6 +49,10 @@
 
 #include <iostream>
 
+#ifndef DEBUG
+ #define DEBUG 0
+#endif
+
 namespace SCIRun {
 
 extern "C" sci::cca::Component::pointer make_SCIRun_Builder()
@@ -110,7 +114,7 @@ Builder::~Builder()
 
 void Builder::setServices(const sci::cca::Services::pointer& services)
 {
-#ifdef DEBUG
+#if DEBUG
     std::cerr << "Builder::setServices" << std::endl;
 #endif
     builderPort.setServices(services);
