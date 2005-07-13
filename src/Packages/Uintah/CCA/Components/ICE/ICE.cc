@@ -124,6 +124,7 @@ ICE::~ICE()
        t_iter != d_modelSetup->tvars.end(); t_iter++){
        TransportedVariable* tvar = *t_iter;
     VarLabel::destroy(tvar->var_Lagrangian);
+    delete tvar;
   }
   
   // delete refluxing variables
