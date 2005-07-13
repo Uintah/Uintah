@@ -548,7 +548,7 @@ NIMRODPerturbedConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandl
 
 	      for( unsigned int c=0; c<rank; c++ )
 		ndata[cc*rank+c] += 2.0 * ( cos( angle ) * ptrs[c  ][index] -
-					   sin( angle ) * ptrs[c+3][index] );
+					    sin( angle ) * ptrs[c+3][index] );
 	    }
 	  }
 
