@@ -283,43 +283,43 @@ set c32 [addConnection $m34 0 $m37 0]
 set c33 [addConnection $m35 0 $m34 1]
 set c34 [addConnection $m35 1 $m34 2]
 set c35 [addConnection $m46 0 $m37 1]
-set c35a [addConnection $m46 0 $m38 1]
-set c36 [addConnection $m34 0 $m36 0]
-set c37 [addConnection $m36 0 $m38 0]
-set c38 [addConnection $m37 0 $m100 0]
-set c39 [addConnection $m38 0 $m100 1]
+set c36 [addConnection $m46 0 $m38 1]
+set c37 [addConnection $m34 0 $m36 0]
+set c38 [addConnection $m36 0 $m38 0]
+set c39 [addConnection $m37 0 $m100 0]
+set c40 [addConnection $m38 0 $m100 1]
 
 
-set c40 [addConnection $m20 0 $m21 0]
-set c41 [addConnection $m20 0 $m22 0]
-set c42 [addConnection $m18 0 $m23 0]
-set c43 [addConnection $m12 0 $m46 1]
-set c44 [addConnection $m21 0 $m24 0]
-set c45 [addConnection $m22 0 $m25 0]
-set c46 [addConnection $m23 0 $m27 0]
-set c47 [addConnection $m24 0 $m26 0]
-set c48 [addConnection $m25 0 $m26 1]
-set c49 [addConnection $m26 0 $m28 0]
-set c50 [addConnection $m27 0 $m100 2]
-set c51 [addConnection $m28 0 $m100 3]
-set c52 [addConnection $m45 0 $m46 0]
-set c53 [addConnection $m46 0 $m27 1]
-set c54 [addConnection $m46 0 $m28 1]
+set c50 [addConnection $m20 0 $m21 0]
+set c51 [addConnection $m20 0 $m22 0]
+set c52 [addConnection $m18 0 $m23 0]
+set c53 [addConnection $m12 0 $m46 1]
+set c54 [addConnection $m21 0 $m24 0]
+set c55 [addConnection $m22 0 $m25 0]
+set c56 [addConnection $m23 0 $m27 0]
+set c57 [addConnection $m24 0 $m26 0]
+set c58 [addConnection $m25 0 $m26 1]
+set c59 [addConnection $m26 0 $m28 0]
+set c60 [addConnection $m27 0 $m100 2]
+set c61 [addConnection $m28 0 $m100 3]
+set c62 [addConnection $m45 0 $m46 0]
+set c63 [addConnection $m46 0 $m27 1]
+set c64 [addConnection $m46 0 $m28 1]
 
-set c61 [addConnection $m60 0 $m61 1]
-set c62 [addConnection $m61 0 $m62 1]
-set c63 [addConnection $m61 0 $m68 1]
-set c64 [addConnection $m61 0 $m64 0]
-set c65 [addConnection $m62 0 $m63 0]
-set c66 [addConnection $m63 0 $m100 4]
-set c67 [addConnection $m64 0 $m100 5]
-set c68 [addConnection $m65 0 $m67 0]
-set c69 [addConnection $m66 0 $m68 0]
-set c70 [addConnection $m67 0 $m63 1]
-set c71 [addConnection $m68 0 $m64 1]
-set c72 [addConnection $m69 0 $m70 1]
-set c73 [addConnection $m70 0 $m62 0]
-set c74 [addConnection $m70 0 $m67 1]
+set c71 [addConnection $m60 0 $m61 1]
+set c72 [addConnection $m61 0 $m62 1]
+set c73 [addConnection $m61 0 $m68 1]
+set c74 [addConnection $m61 0 $m64 0]
+set c75 [addConnection $m62 0 $m63 0]
+set c76 [addConnection $m63 0 $m100 4]
+set c77 [addConnection $m64 0 $m100 5]
+set c78 [addConnection $m65 0 $m67 0]
+set c79 [addConnection $m66 0 $m68 0]
+set c80 [addConnection $m67 0 $m63 1]
+set c81 [addConnection $m68 0 $m64 1]
+set c82 [addConnection $m69 0 $m70 1]
+set c83 [addConnection $m70 0 $m62 0]
+set c84 [addConnection $m70 0 $m67 1]
 
 set c100 [addConnection $m100 0 $m101 0]
 set c101 [addConnection $m14 0 $m101 1]
@@ -823,11 +823,11 @@ set connections(scalar_to_info)         $c21
 set connections(scalar_to_choose_iso)   $c24
 set connections(scalar_to_transform)    $c25
 set connections(scalar_to_matrix)       $c26
-set connections(scalar_to_color)        $c43
+set connections(scalar_to_color)        $c53
 
 set connections(subsample_to_choose)      $c23
-set connections(subsample_to_slicer_low)  $c40
-set connections(subsample_to_slicer_high) $c41
+set connections(subsample_to_slicer_low)  $c50
+set connections(subsample_to_slicer_high) $c51
 
 
 set connections(transform_to_isosurface)   $c27
@@ -840,16 +840,20 @@ set connections(clipfuction_fld_to_matrix) $c33
 set connections(clipfuction_mtx_to_matrix) $c34
 
 set connections(matrix_to_showfield)       $c32
-set connections(matrix_to_isosurface)      $c36
-set connections(isosurface_to_showfield)   $c37
+set connections(matrix_to_isosurface)      $c37
+set connections(isosurface_to_showfield)   $c38
+set connections(colormap_matrix_to_showfield)       $c35
+set connections(colormap_isosurface_to_showfield)   $c36
 
-set connections(choose_to_iso)       $c42
-set connections(iso_to_showfield)    $c46
-set connections(slicer_low_to_iso)   $c44
-set connections(slicer_high_to_iso)  $c45
-set connections(iso_low_to_gather)   $c47
-set connections(iso_high_to_gather)  $c48
-set connections(gather_to_showfield) $c49
+set connections(choose_to_iso)       $c52
+set connections(iso_to_showfield)    $c56
+set connections(slicer_low_to_iso)   $c54
+set connections(slicer_high_to_iso)  $c55
+set connections(iso_low_to_gather)   $c57
+set connections(iso_high_to_gather)  $c58
+set connections(gather_to_showfield) $c59
+set connections(colormap_iso_to_showfield)    $c63
+set connections(colormap_gather_to_showfield) $c64
 
 
 
@@ -860,23 +864,25 @@ set connections(vector_to_probe)       $c20
 set connections(vector_to_info)        $c22
 
 
-set connections(sample_to_streamlines)       $c61
-set connections(streamlines_to_interpolate)  $c62
-set connections(streamlines_to_showfield)    $c63
-set connections(streamlines_to_rescalecolor) $c64
-set connections(interpolate_to_showfield)    $c65
+set connections(sample_to_streamlines)       $c71
+set connections(streamlines_to_interpolate)  $c72
+set connections(streamlines_to_showfield)    $c73
+set connections(streamlines_to_rescalecolor) $c74
+set connections(interpolate_to_showfield)    $c75
+set connections(rescalecolor_streamlines_to_showfield)    $c80
+set connections(rescalecolor_interpolate_to_showfield)    $c81
 
-set connections(magnitude_to_choose)    $c72
-set connections(choose_to_interpolate)  $c73
-set connections(choose_to_rescalecolor) $c74
+set connections(magnitude_to_choose)    $c82
+set connections(choose_to_interpolate)  $c83
+set connections(choose_to_rescalecolor) $c84
 
 
-
-set connections(showfield_scalarslice_to_sync) $c39
-set connections(showfield_isosurfaces_to_sync) $c50
-set connections(showfield_isocontours_to_sync) $c51
-set connections(showfield_streamline_edges_to_sync) $c66
-set connections(showfield_streamline_nodes_to_sync) $c67
+set connections(showfield_scalarslice_face_to_sync) $c39
+set connections(showfield_scalarslice_edge_to_sync) $c40
+set connections(showfield_isosurfaces_to_sync) $c60
+set connections(showfield_isocontours_to_sync) $c61
+set connections(showfield_streamline_edges_to_sync) $c76
+set connections(showfield_streamline_nodes_to_sync) $c77
 
 set connections(probe_scalar_to_viewer) $c101
 set connections(probe_vector_to_viewer) $c102
@@ -1579,13 +1585,13 @@ class FusionViewerApp {
 	global $mods(HDF5-Points)-file
 
 	$mods(HDF5-Points) \
-	    set_power_app "$this update_hdf5_callback $mods(HDF5-Points)-filename 0 0"
+	    set_power_app_cmd "$this update_hdf5_callback $mods(HDF5-Points)-filename 0 0"
 	$mods(HDF5-Connections) \
-	    set_power_app "$this update_hdf5_callback $mods(HDF5-Connections)-filename 0 0"
+	    set_power_app_cmd "$this update_hdf5_callback $mods(HDF5-Connections)-filename 0 0"
 	$mods(HDF5-Scalar) \
-	    set_power_app "$this update_hdf5_callback $mods(HDF5-Scalar)-filename 0 0"
+	    set_power_app_cmd "$this update_hdf5_callback $mods(HDF5-Scalar)-filename 0 0"
 	$mods(HDF5-Vector) \
-	    set_power_app "$this update_hdf5_callback $mods(HDF5-Vector)-filename 0 0"
+	    set_power_app_cmd "$this update_hdf5_callback $mods(HDF5-Vector)-filename 0 0"
 
 	frame $hdf5.points
 	button $hdf5.points.button -text " Points " \
@@ -1632,13 +1638,13 @@ class FusionViewerApp {
 	set data_mdsplus_tab$case $mdsplus
 	
 
-	$mods(MDSPlus-Points)   set_power_app \
+	$mods(MDSPlus-Points) set_power_app_cmd \
 	    "$this update_mdsplus_callback $mods(MDSPlus-Points)-shot 0 0"
-	$mods(MDSPlus-Connections)   set_power_app \
+	$mods(MDSPlus-Connections) set_power_app_cmd \
 	    "$this update_mdsplus_callback $mods(MDSPlus-Connections)-shot 0 0"
-	$mods(MDSPlus-Scalar) set_power_app \
+	$mods(MDSPlus-Scalar) set_power_app_cmd \
 	    "$this update_mdsplus_callback $mods(MDSPlus-Scalar)-shot 0 0"
-	$mods(MDSPlus-Vector) set_power_app \
+	$mods(MDSPlus-Vector) set_power_app_cmd \
 	    "$this update_mdsplus_callback $mods(MDSPlus-Vector)-shot 0 0"
 
 
@@ -1719,7 +1725,7 @@ class FusionViewerApp {
     method build_subsample_frame { f case } {
 	global mods
 
-	$mods(SubSample) set_power_app "$this update_subsample_frame"
+	$mods(SubSample) set_power_app_cmd "$this update_subsample_frame"
 
 	button $f.button -text "SubSample UI" -command "$mods(SubSample) initialize_ui"
 	pack $f.button -side left -anchor nw -padx 3 -pady 3
@@ -2310,8 +2316,13 @@ class FusionViewerApp {
 	disableConnectionID $connections(isosurface_to_showfield)   $disable
 	disableConnectionID $connections(clipfuction_fld_to_matrix) $disable
 	disableConnectionID $connections(clipfuction_mtx_to_matrix) $disable
+
+	disableConnectionID $connections(colormap_matrix_to_showfield)       $disable
+	disableConnectionID $connections(colormap_isosurface_to_showfield)   $disable
+
 #       Disconnecting a dynamic port causes a hang
-#	disableConnectionID $connections(showfield_scalarslice_to_sync) $disable
+#	disableConnectionID $connections(showfield_scalarslice_face_to_sync) $disable
+#	disableConnectionID $connections(showfield_scalarslice_edge_to_sync) $disable
 
 	enable_widget $scalarslice_frame0.show
 	enable_widget $scalarslice_frame1.show
@@ -2435,9 +2446,9 @@ class FusionViewerApp {
 	disableConnectionID $connections(scalar_to_choose_iso) $disable
 	disableConnectionID $connections(choose_to_iso)        $disable
 	disableConnectionID $connections(iso_to_showfield)     $disable
+	disableConnectionID $connections(colormap_iso_to_showfield)     $disable
 #       Disconnecting a dynamic port causes a hang
-#	disableConnectionID $connections(showfield_isosurfaces_to_sync)  $disable
-
+#	disableConnectionID $connections(showfield_isosurfaces_to_sync) $disable
 
 	enable_widget $isosurfaces_frame0.show
 	enable_widget $isosurfaces_frame1.show
@@ -2488,6 +2499,8 @@ class FusionViewerApp {
 	disableConnectionID $connections(iso_low_to_gather)   $disable
 	disableConnectionID $connections(iso_high_to_gather)  $disable
 	disableConnectionID $connections(gather_to_showfield) $disable
+	disableConnectionID $connections(colormap_gather_to_showfield) $disable
+
 #       Disconnecting a dynamic port causes a hang
 #	disableConnectionID $connections(showfield_isocontours_to_sync) $disable
 	
@@ -2569,6 +2582,8 @@ class FusionViewerApp {
 	disableConnectionID $connections(choose_to_interpolate)  $disable
 	disableConnectionID $connections(choose_to_rescalecolor) $disable
 	disableConnectionID $connections(interpolate_to_showfield)    $disable
+	disableConnectionID $connections(rescalecolor_interpolate_to_showfield)    $disable
+
 #       Disconnecting a dynamic port causes a hang
 #	disableConnectionID $connections(showfield_streamline_edges_to_sync) $disable
 #	disableConnectionID $connections(sample_to_viewer) $disable
@@ -2651,6 +2666,8 @@ class FusionViewerApp {
 	 
 	disableConnectionID $connections(streamlines_to_showfield)    $disable
 	disableConnectionID $connections(streamlines_to_rescalecolor) $disable
+	disableConnectionID $connections(rescalecolor_streamlines_to_showfield)    $disable
+
 #       Disconnecting a dynamic port causes a hang
 #	disableConnectionID $connections(showfield_streamline_nodes_to_sync) $disable
 	
@@ -2692,7 +2709,7 @@ class FusionViewerApp {
 	    }
 
 	    disableConnectionID $connections(scalar_to_probe)        $disable
-#       Disconnecting a dynamic port causes a hang
+#	    Disconnecting a dynamic port causes a hang
 #	    disableConnectionID $connections(probe_scalar_to_viewer) $disable
 	    set "$eviewer-Probe Selection Widget (2)" $probe_scalar
 	    $eviewer-c redraw
@@ -2728,7 +2745,7 @@ class FusionViewerApp {
 	    }
 
 	    disableConnectionID $connections(vector_to_probe)        $disable
-#       Disconnecting a dynamic port causes a hang
+#	    Disconnecting a dynamic port causes a hang
 #	    disableConnectionID $connections(probe_vector_to_viewer) $disable
 	    set "$eviewer-Probe Selection Widget (3)" $probe_vector
 	    $eviewer-c redraw
