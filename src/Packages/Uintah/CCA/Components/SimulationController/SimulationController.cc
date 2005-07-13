@@ -212,7 +212,7 @@ namespace Uintah {
     d_sharedState->finalizeMaterials();
     
     Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
-    sched->problemSetup(d_ups);
+    sched->problemSetup(d_ups, d_sharedState);
     d_scheduler = sched;
     
     d_lb = sched->getLoadBalancer();

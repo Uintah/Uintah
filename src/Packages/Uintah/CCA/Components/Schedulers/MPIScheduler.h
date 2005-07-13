@@ -71,7 +71,8 @@ WARNING
     MPIScheduler(const ProcessorGroup* myworld, Output* oport, MPIScheduler* parentScheduler = 0);
     virtual ~MPIScheduler();
       
-    virtual void problemSetup(const ProblemSpecP& prob_spec);
+    virtual void problemSetup(const ProblemSpecP& prob_spec,
+                              SimulationStateP& state);
       
     //////////
     // Insert Documentation Here:
