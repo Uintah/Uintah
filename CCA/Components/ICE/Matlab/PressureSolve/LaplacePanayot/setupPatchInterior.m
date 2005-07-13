@@ -14,9 +14,7 @@ function [A,b,T,Alist,Tlist] = setupPatchInterior(grid,k,q,A,b,T,ilower,iupper,r
 
 globalParams;
 
-if (param.verboseLevel >= 1)
-    fprintf('--- setupPatchInterior(k = %d, q = %d) BEGIN ---\n',k,q);
-end
+out(2,'--- setupPatchInterior(k = %d, q = %d) BEGIN ---\n',k,q);
 
 if (nargin < 6)
     error('Too few input arguments (need at least grid,k,q,A,b)\n');
@@ -90,20 +88,20 @@ for dim = 1:grid.dim,                                                       % Lo
         a{fluxNum}              = harmonicAvg(x,xNbhr,xFace);
 
         if (param.verboseLevel >= 3)
-            fprintf('----------------------------------------------------------------------------------------\n');
+            out(3,'------------------------------------------------------------------------------\n');
             dim
             side
             sideNum
             fluxNum
-            fprintf('\nx = \n');            
+            out(3,'\nx = \n');            
             D(x{dim})
-            fprintf('\nxNbhr = \n');            
+            out(3,'\nxNbhr = \n');            
             D(xNbhr{dim})
-            fprintf('\nxFace = \n');            
+            out(3,'\nxFace = \n');            
             D(xFace{dim})
-            fprintf('\nDiffusion coefficient for this direction = \n');            
+            out(3,'\nDiffusion coefficient for this direction = \n');            
             D(a{fluxNum})
-            fprintf('\nDifference is over distance = \n');            
+            out(3,'\nDifference is over distance = \n');            
             D(diffLength{fluxNum})
         end
 
@@ -111,9 +109,7 @@ for dim = 1:grid.dim,                                                       % Lo
         % indices with interior indices from nbhring patch PN)
         qn                      = P.nbhrPatch(dim,sideNum);
         if (qn > 0)
-            if (param.verboseLevel >= 2)
-                fprintf('Found nbhring patch qn=%d for dim=%d, side=%d, modifying ind near this face\n',qn,dim,side);
-            end
+            out(2,'Found nbhring patch qn=%d for dim=%d, side=%d, modifying ind near this face\n',qn,dim,side);
             % indices of this face in P.cellIndex
             flower                  = P.ilower;
             fupper                  = P.iupper;
@@ -181,7 +177,7 @@ for dim = 1:grid.dim,                                                       % Lo
     end
 end
 if (param.verboseLevel >= 3)
-    fprintf('Fluxes = \n');
+    out(3,'Fluxes = \n');
     flux{:}
 end
 
@@ -196,9 +192,7 @@ indTransformed          = [];
 
 for dim = 1:grid.dim,                                                       % Loop over dimensions of patch
     for side = [-1 1]                                                       % side=-1 (left) and side=+1 (right) directions in dimension d
-        if (param.verboseLevel >= 2)
-            fprintf('  ==> Adding fluxes to Alist (Face d = %d, s = %+d) ---\n',dim,side);
-        end
+        out(2,'  ==> Adding fluxes to Alist (Face d = %d, s = %+d) ---\n',dim,side);
 
         % Direction vector ("normal") from cell to its nbhr
         nbhrNormal      = zeros(1,grid.dim);
@@ -274,6 +268,4 @@ if (reallyUpdate)
     T(indTransformed,:)     = Tnew(indTransformed,:);
 end
 
-if (param.verboseLevel >= 1)
-    fprintf('--- setupPatchInterior(k = %d, q = %d) END ---\n',k,q);
-end
+out(2,'--- setupPatchInterior(k = %d, q = %d) END ---\n',k,q);

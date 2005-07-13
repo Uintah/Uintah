@@ -3,7 +3,7 @@ function [A,b,T,Alist,Tlist,indDel] = setupPatchInterface(grid,k,q,A,b,T,reallyU
 %   [A,B,T,ALIST,TLIST,INDDEL] = SETUPINTERFACE(GRID,K,Q,A,B,T,FLAG)
 %   updates the sparse LHS matrix A and the RHS matrix B of the linear
 %   system, adding to them all the equations at coarse-fine interface on
-%   the coarse side (subtracting the original coarse flux and 
+%   the coarse side (subtracting the original coarse flux and
 %   adding instead hc/hf fine fluxes that use ghost points).
 %   Level K is the coarse level, K+1 is the fine level.
 %   Equations for ghost points are constructed. The transformation
@@ -18,9 +18,7 @@ function [A,b,T,Alist,Tlist,indDel] = setupPatchInterface(grid,k,q,A,b,T,reallyU
 
 globalParams;
 
-if (param.verboseLevel >= 1)
-    fprintf('--- setupPatchInterface(k = %d, q = %d) BEGIN ---\n',k,q);
-end
+out(2,'--- setupPatchInterface(k = %d, q = %d) BEGIN ---\n',k,q);
 
 if (nargin < 6)
     error('Too few input arguments (need at least grid,k,q,A,b)\n');
@@ -49,9 +47,7 @@ e                       = eye(grid.dim);
 % delete them (indDelete).
 %=====================================================================
 if (P.parent < 0)                                                 % Base patch at coarsest level, nothing to delete
-    if (param.verboseLevel >= 2)
-        fprintf('No parent patch\n');
-    end
+    out(2,'No parent patch\n');
     Alist = [];
     Tlist = [];
     indDel = [];
@@ -94,9 +90,7 @@ if (reallyUpdate)
     T(indDel,:)             = 0.0;
     T(:,indDel)             = 0.0;
 end
-if (param.verboseLevel >= 2)
-    fprintf('# unused deleted gridpoints at parent patch = %d\n',length(indDel));   
-end
+out(2,'# unused deleted gridpoints at parent patch = %d\n',length(indDel));
 if (param.verboseLevel >= 3)
     indDel
     A(indDel,:)
@@ -127,16 +121,18 @@ indTransformed              = [];
 underLower(lowerNearEdge)   = underLower(lowerNearEdge) + 1;
 underUpper(upperNearEdge)   = underUpper(upperNearEdge) - 1;
 if (param.verboseLevel >= 3)
-    fprintf('Readjusting Qunder box to exclude BC vars\n');
+    out(3,'Readjusting Qunder box to exclude BC vars\n');
     underLower
     underUpper
+    out(3,'QedgeDomain{1} = \n');
+    QedgeDomain{1}
+    out(3,'QedgeDomain{2} = \n');
+    QedgeDomain{2}
 end
 
 for d = 1:grid.dim,
     for s = [-1 1],
-        if (param.verboseLevel >= 2)
-            fprintf('  ==> (Fine Patch Face d = %d, s = %+d) ---\n',d,s);
-        end
+        out(2,'  ==> (Fine Patch Face d = %d, s = %+d) ---\n',d,s);
         dim = d;
         side = -s;                                                          % We look in the direction along the interface from the coarse patch into fine patch
         % Direction vector ("normal") from cell to its nbhr
@@ -149,21 +145,17 @@ for d = 1:grid.dim,
             otherDim
         end
 
-        if (    (underLower(d) == QedgeDomain{1}(d)) | ...
-                (underLower(d) == QedgeDomain{2}(d)) )
+        if (((s == -1) & (underLower(d) == QedgeDomain{1}(d))) | ...
+                ((s ==  1) & (underUpper(d) == QedgeDomain{2}(d))) )
             % This face is at the domain boundary, skip it
-            if (param.verboseLevel >= 2)
-                fprintf('Skipping face near domain boundary\n');
-            end
+            out(2,'Skipping face near domain boundary\n');
             continue;
         end
 
         qn               = P.nbhrPatch(d,(s+3)/2);
         if (qn > 0)
             % This face is near another patch of this level
-            if (param.verboseLevel >= 2)
-                fprintf('Skipping face near nbhring fine patch qn=%d for d=%d, s=%d\n',qn,d,s);
-            end
+            out(2,'Skipping face near nbhring fine patch qn=%d for d=%d, s=%d\n',qn,d,s);
             continue;
         end
 
@@ -276,7 +268,7 @@ for d = 1:grid.dim,
             childBase(:,d) = childBase(:,d)-1;
         end
         if (param.verboseLevel >= 3)
-            fprintf('matCoarseNbhr = \n');
+            out(3,'matCoarseNbhr = \n');
             matCoarseNbhr{:}
             colCoarseNbhr
             childBase
@@ -285,9 +277,7 @@ for d = 1:grid.dim,
         j                       = zeros(1,grid.dim);
         jump                    = zeros(1,grid.dim);
         for t = 1:numChilds,
-            if (param.verboseLevel >= 2)
-                fprintf('------------------- Fine cell child type t = %d ---------------\n',t);
-            end
+            out(2,'------------------- Fine cell child type t = %d ---------------\n',t);
             %=====================================================================
             % Create a list of non-zeros to be added to A, consisting of the
             % connections of type-t-fine-cells at this face to their coarse
@@ -402,6 +392,4 @@ if (reallyUpdate)
     T(indTransformed,:)     = Tnew(indTransformed,:);
 end
 
-if (param.verboseLevel >= 1)
-    fprintf('--- setupPatchInterface(k = %d, q = %d) END ---\n',k,q);
-end
+out(2,'--- setupPatchInterface(k = %d, q = %d) END ---\n',k,q);
