@@ -31,6 +31,11 @@ Tnew                                = speye(grid.totalVars);
 Tnew(1:size(T,1),1:size(T,2))       = T;
 T                                   = Tnew;
 
+% Inverse of T
+TInew                               = speye(grid.totalVars);
+TInew(1:size(TI,1),1:size(TI,2))    = TI;
+TI                                  = TInew;
+
 %==============================================================
 % 2. Create patch interior & BC equations
 %==============================================================
