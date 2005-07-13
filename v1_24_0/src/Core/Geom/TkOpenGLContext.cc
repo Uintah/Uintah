@@ -71,8 +71,8 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
   display_ = Tk_Display(mainwin_);
   release();
   screen_number_ = Tk_ScreenNumber(mainwin_);
-  if (!mainwin_) throw scinew InternalError("Cannot find main Tk window");
-  if (!display_) throw scinew InternalError("Cannot find X Display");
+  if (!mainwin_) throw InternalError("Cannot find main Tk window");
+  if (!display_) throw InternalError("Cannot find X Display");
     
   geometry_ = 0;
   cursor_ = 0;
@@ -95,7 +95,7 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
     temp_vi.visualid = visualid_;
     vi_ = XGetVisualInfo(display_, VisualIDMask, &temp_vi, &n);
     if(!vi_ || n!=1) {
-      throw scinew InternalError("Cannot find Visual ID #"+to_string(visualid_));
+      throw InternalError("Cannot find Visual ID #"+to_string(visualid_));
     }
   } else {
     /* Pick the right visual... */
@@ -142,31 +142,31 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
     vi_ = glXChooseVisual(display_, screen_number_, attributes);
   }
 
-  if (!vi_) throw scinew InternalError("Cannot find Visual");
+  if (!vi_) throw InternalError("Cannot find Visual");
   colormap_ = XCreateColormap(display_, Tk_WindowId(mainwin_), 
 			      vi_->visual, AllocNone);
 
   tkwin_ = Tk_CreateWindowFromPath(the_interp, mainwin_, 
 				   ccast_unsafe(id),
 				   (char *) NULL);
-  if (!tkwin_) throw scinew InternalError("Cannot create Tk Window");
+  if (!tkwin_) throw InternalError("Cannot create Tk Window");
   Tk_GeometryRequest(tkwin_, width, height);
 
 
   int result = Tk_SetWindowVisual(tkwin_, vi_->visual, vi_->depth, colormap_);
-  if (result != 1) throw scinew InternalError("Cannot set Tk Window Visual");
+  if (result != 1) throw InternalError("Cannot set Tk Window Visual");
 
   Tk_MakeWindowExist(tkwin_);
 
   x11_win_ = Tk_WindowId(tkwin_);
-  if (!x11_win_) throw scinew InternalError("Cannot get Tk X11 window ID");
+  if (!x11_win_) throw InternalError("Cannot get Tk X11 window ID");
 
   XSync(display_, False);
   if (!first_context) {
     first_context = glXCreateContext(display_, vi_, 0, 1);
   }
   context_ = glXCreateContext(display_, vi_, first_context, 1);
-  if (!context_) throw scinew InternalError("Cannot create GLX Context");
+  if (!context_) throw InternalError("Cannot create GLX Context");
 }
 
 
