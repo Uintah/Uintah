@@ -78,7 +78,7 @@ void TypeInfo_internal::add_castable(const TypeInfo_internal* ti, int vtoffset)
     } else {
       // uuid not used to identify class types anymore
       //if(iter_classname->second.first->uuid != ti->uuid){
-            //throw SCIRun::InternalError("inconsistent typeinfo");
+            //throw SCIRun::InternalError("inconsistent typeinfo", __FILE__, __LINE__);
       //} else {
 	  // Ok...
       //}

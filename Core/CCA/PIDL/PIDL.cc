@@ -192,7 +192,7 @@ Warehouse*
 PIDL::getWarehouse()
 {
   if(!warehouse)
-    throw SCIRun::InternalError("Warehouse not initialized!\n");
+    throw SCIRun::InternalError("Warehouse not initialized!\n", __FILE__, __LINE__);
   return warehouse;
 }
 
@@ -224,7 +224,7 @@ void
 PIDL::serveObjects()
 {
   if(!warehouse)
-    throw SCIRun::InternalError("Warehouse not initialized!\n");
+    throw SCIRun::InternalError("Warehouse not initialized!\n", __FILE__, __LINE__);
   warehouse->run();
 }
 
@@ -248,7 +248,7 @@ void
 PIDL::setCommunication(int c)
 {
   if (comm_type != 0)
-    throw SCIRun::InternalError("Cannot modify communication setting after it has been set once\n");
+    throw SCIRun::InternalError("Cannot modify communication setting after it has been set once\n", __FILE__, __LINE__);
   else { 
     comm_type = c;
   }

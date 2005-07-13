@@ -183,7 +183,7 @@ void emit_cast_exception(EmitState& e)
   e.out << leader2 << "  switch (_xid) {\n";
   e.out << e.xcept.str();
   e.out << leader2 << "  default:\n";
-  e.out << leader2 << "    throw ::SCIRun::InternalError(\"Trying to cast an unknown exception\");\n";
+  e.out << leader2 << "    throw ::SCIRun::InternalError(\"Trying to cast an unknown exception\", __FILE__, __LINE__);\n";
   e.out << leader2 << "  }\n";
   e.out << "}\n\n";
 }
@@ -1853,7 +1853,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
       e.out << leader2 << "  _castException(_x_flag, &message);\n";
     }
     else {
-      e.out << leader2 << "  throw ::SCIRun::InternalError(\"Unexpected user exception\\n\");\n";
+      e.out << leader2 << "  throw ::SCIRun::InternalError(\"Unexpected user exception\\n\", __FILE__, __LINE__);\n";
     }
     e.out << leader2 << "}\n";
 
@@ -1895,7 +1895,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
       e.out << "  save_callnoret_msg[i]->unmarshalInt(&_x_flag);\n";
       e.out << "  save_callnoret_msg[i]->destroyMessage();\n";
       e.out << "  if(_x_flag != 0) {\n";
-      e.out << "    throw ::SCIRun::InternalError(\"Unexpected user exception\");\n";
+      e.out << "    throw ::SCIRun::InternalError(\"Unexpected user exception\", __FILE__, __LINE__);\n";
       e.out << "  }\n";
       e.out << "}\n";
     }
