@@ -88,7 +88,12 @@ itcl_class SCIRun_Visualization_EditColorMap2D {
 	# format the r,g,b colors into a hexadecimal string representation
 	set colstr [format \#%04x%04x%04x [expr int($r * 65535)] \
 			[expr int($g * 65535)] [expr int($b * 65535)]]
-	$button config -background $colstr -activebackground $colstr
+	set button [join [lrange [split $button .] end-1 end] .]
+	foreach frame $frames {
+	    foreach but [info commands ${frame}*${button}] {
+		$but config -background $colstr -activebackground $colstr
+	    }
+	}
 	if { [string length $module_command] } {
 	    eval $this-c $module_command
 	}

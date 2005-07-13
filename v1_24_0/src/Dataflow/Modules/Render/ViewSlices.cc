@@ -322,6 +322,7 @@ class ViewSlices : public Module
   UIdouble		gradient_threshold_;
 
   PaintCM2Widget *	paint_widget_;
+  Mutex			paint_lock_;
 
   float *		temp_tex_data_;
 
@@ -462,6 +463,7 @@ public:
   void			real_draw_all();
   double		fps_;
   WindowLayout *	current_layout_;
+  int			executing_;
 };
 
 
@@ -743,6 +745,7 @@ ViewSlices::ViewSlices(GuiContext* ctx) :
   background_threshold_(ctx->subVar("background_threshold"), 0.0),
   gradient_threshold_(ctx->subVar("gradient_threshold"), 0.0),
   paint_widget_(0),
+  paint_lock_("ViewSlices paint lock"),
   temp_tex_data_(0),
   cmap2_iport_((ColorMap2IPort*)get_iport("InputColorMap2")),
   n1_cmap_iport_((ColorMapIPort *)get_iport("Nrrd1ColorMap")),
@@ -757,7 +760,8 @@ ViewSlices::ViewSlices(GuiContext* ctx) :
   runner_thread_(0),
   slice_lock_("Slice lock"),
   fps_(0.0),
-  current_layout_(0)
+  current_layout_(0),
+  executing_(0)
 {
   nrrd_generations_.resize(2);
   nrrd_generations_[0] = -1;
@@ -848,8 +852,8 @@ ViewSlices::send_all_geometry()
   if (window_level_) return;
   TCLTask::lock();
   slice_lock_.writeLock();
-  int flush = for_each(&ViewSlices::send_mip_textures) +
-    for_each(&ViewSlices::send_slice_textures);
+  int flush = for_each(&ViewSlices::send_mip_textures);
+  flush += for_each(&ViewSlices::send_slice_textures);  
   slice_lock_.writeUnlock();
   TCLTask::unlock();
   if (flush) 
@@ -1306,12 +1310,12 @@ ViewSlices::update_crop_bbox_from_gui()
   }
 
   crop_draw_bbox_ = 
-    BBox(Point(double(crop_min_x_()),
-	       double(crop_min_y_()),
-	       double(crop_min_z_())),
-	 Point(double(crop_max_x_()+1),
-	       double(crop_max_y_()+1),
-	       double(crop_max_z_()+1)));
+    BBox(Point(double(Min(crop_min_x_(), crop_max_x_())),
+	       double(Min(crop_min_y_(), crop_max_y_())),
+	       double(Min(crop_min_z_(), crop_max_z_()))),
+	 Point(double(Max(crop_min_x_(), crop_max_x_())+1),
+	       double(Max(crop_min_y_(), crop_max_y_())+1),
+	       double(Max(crop_min_z_(), crop_max_z_())+1)));
   crop_bbox_ = crop_draw_bbox_;
 }
 
@@ -2438,7 +2442,6 @@ void
 ViewSlices::execute()
 {
   update_state(Module::JustStarted);
-
   unsigned int a, n = 1;
   vector<NrrdIPort *> nrrd_iports;
   NrrdIPort *nrrd_iport;
@@ -2457,8 +2460,6 @@ ViewSlices::execute()
 
   update_state(Module::NeedData);
 
-  gradient_ = 0;
-  grad_iport_->get(gradient_);
 
   vector<NrrdDataHandle> nrrds;
   for (n = 0; n < nrrd_iports.size(); ++n) {
@@ -2491,6 +2492,10 @@ ViewSlices::execute()
   cmap2_oport_->send_intermediate(cm2_);
   cmap2_iport_->get(cm2_);
 
+  paint_lock_.lock();
+  gradient_ = 0;
+  grad_iport_->get(gradient_);
+
   paint_widget_ = 0;
   if (cm2_.get_rep() && (cm2_->selected() >= 0) && 
       (cm2_->selected() < int(cm2_->widgets().size()))) {
@@ -2503,6 +2508,7 @@ ViewSlices::execute()
   if ((show_colormap2_() || painting_) && 
       cm2_.get_rep() && cm2_generation_ != cm2_->generation)
     for_each(&ViewSlices::set_paint_dirty);
+  paint_lock_.unlock();
   
       
   n1_cmap_iport_->get(colormap_);
@@ -2603,8 +2609,11 @@ ViewSlices::execute()
 
   cmap2_oport_->send(cm2_);
   cmap2_iport_->get(cm2_);
+  update_state(Module::Completed);
+  TCLTask::lock();
+  if (executing_) --executing_;
+  TCLTask::unlock();
 
-  update_state(Module::Completed);  
 }
 
 bool
@@ -2725,6 +2734,7 @@ ViewSlices::handle_gui_enter(GuiArgs &args) {
 void
 ViewSlices::handle_gui_leave(GuiArgs &args) {
   current_layout_ = 0;
+  redraw_all();
 }
 
 
@@ -2750,7 +2760,10 @@ ViewSlices::handle_gui_button_release(GuiArgs &args) {
     }
     if (!crop_ && painting_) { 
       painting_ = 2;
-      want_to_execute();
+      if (!executing_) {
+	++executing_;
+	want_to_execute();
+      }
     }
     break;
   case 2:
@@ -2790,8 +2803,10 @@ ViewSlices::handle_gui_button(GuiArgs &args) {
       }
 
       if (!crop_ && painting_ && paint_widget_ && (window.mode_==normal_e)) { 
+	if (!paint_lock_.tryLock()) continue;
 	paint_widget_->add_stroke();
 	do_paint(window); 
+	paint_lock_.unlock();
 	continue;
       }
 
@@ -2889,6 +2904,11 @@ ViewSlices::tcl_command(GuiArgs& args, void* userdata) {
     return;
   }
 
+  //  cerr << ":";
+  //  for (int a = 0; a < args.count(); ++a)
+  //    cerr << args[a] << " ";
+  //  cerr << "\n";
+
   if (args[1] == "motion")	  handle_gui_motion(args);
   else if (args[1] == "button")   handle_gui_button(args);
   else if (args[1] == "release")  handle_gui_button_release(args);
@@ -2961,8 +2981,12 @@ ViewSlices::tcl_command(GuiArgs& args, void* userdata) {
     update_crop_bbox_from_gui();
     redraw_all();
   } else if (args[1] == "setclut") {
+    const double cache_ww = clut_ww_;
+    const double cache_wl = clut_wl_;
     clut_ww_(); // resets gui context
     clut_wl_(); // resets gui context
+    if (fabs(cache_ww - clut_ww_) < 0.0001 && 
+	fabs(cache_wl - clut_wl_) < 0.0001) return;
     for_each(&ViewSlices::rebind_slice);
     for_each(&ViewSlices::redraw_window);
     for (int n = 0; n < 3; ++n)
@@ -3152,7 +3176,11 @@ ViewSlices::extract_window_paint(SliceWindow &window) {
 
 void
 ViewSlices::do_paint(SliceWindow &window) {
-  if (!paint_widget_) return;
+  if (!paint_lock_.tryLock()) return;
+  if (!paint_widget_ || !gradient_.get_rep() || !paint_widget_) {
+    paint_lock_.unlock();
+    return;
+  }
   int xyz[3];
   for (int i = 0; i < 3; ++i) {
     xyz[i] = Floor(cursor_(i)/scale_[i]);
@@ -3164,9 +3192,9 @@ ViewSlices::do_paint(SliceWindow &window) {
   const double value = 
     get_value(volumes_[0]->nrrd_->nrrd,xyz[0],xyz[1],xyz[2]);
   paint_widget_->add_coordinate(make_pair(value, gradient));
-
   rasterize_widgets_to_cm2(cm2_->selected(), cm2_->selected(), cm2_buffer_);
   for_each(&ViewSlices::extract_current_paint);
+  paint_lock_.unlock();
 }
 
 int
