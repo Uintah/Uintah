@@ -2183,8 +2183,10 @@ ViewSlices::set_slice_coords(NrrdSlice &slice, bool origin) {
   slice.pos_coords_[i++] = z_pos+z_hei;
 
   for (i = 0; i < 12; ++i) {
-    slice.pos_coords_[i] *= scale_[i%3];
-    if (!origin) 
+    if (origin)
+      slice.pos_coords_[i] *= scale_[i%3];
+    //    if (!origin) 
+    else
       slice.pos_coords_[i] += slice.volume_->nrrd_->nrrd->axis[i%3].min;
   }
 
