@@ -1975,3 +1975,7 @@ proc compareVersions { ver1 ver2 } {
 proc txt { args } {
     return [join $args \n]
 }
+
+proc in_power_app {} {
+    return [winfo exists .standalone]
+}

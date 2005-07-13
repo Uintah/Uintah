@@ -816,6 +816,10 @@ void Module::msgStream_flush()
   }
 }
 
+bool Module::in_power_app()
+{
+  return (gui->eval("in_power_app") == "1");
+}
 
 void Module::postMessage(const string& str)
 {
