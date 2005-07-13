@@ -13,9 +13,7 @@ function [A,indOut] = LshapedOut(grid,k,q,A,reallyUpdate)
 
 globalParams;
 
-if (param.verboseLevel >= 1)
-    fprintf('--- LshapedOut(k = %d, q = %d) BEGIN ---\n',k,q);
-end
+out(2,'--- LshapedOut(k = %d, q = %d) BEGIN ---\n',k,q);
 
 if (nargin < 5)
     reallyUpdate = 1;
@@ -79,6 +77,4 @@ if (~isempty(out2in))
     end
 end
 
-if (param.verboseLevel >= 1)
-    fprintf('--- LshapedOut(k = %d, q = %d) END ---\n',k,q);
-end
+out(2,'--- LshapedOut(k = %d, q = %d) END ---\n',k,q);

@@ -11,9 +11,7 @@ function grid = updateGrid(grid)
 
 globalParams;
 
-if (param.verboseLevel >= 1)
-    fprintf('--- Updating grid ---\n');
-end
+out(2,'--- Updating grid ---\n');
 
 index = 0;
 for k = 1:grid.numLevels,

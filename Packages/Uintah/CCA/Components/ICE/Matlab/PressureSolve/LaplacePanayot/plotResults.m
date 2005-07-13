@@ -20,16 +20,6 @@ for k = 1:grid.numLevels,
     level = grid.level{k};
     for q = 1:grid.level{k}.numPatches,
         P = level.patch{q};
-        %                e = uExact{k}{q}-u{k}{q};
-        %                e = e(:);
-        %                t = tau{k}{q}(:);
-        %                 fprintf('Level %2d, Patch %2d  err (L2=%.3e  max=%.3e  med=%.3e)  tau (L2=%.3e  max=%.3e  med=%.3e)\n',...
-        %                     k,q,...
-        %                     Lpnorm(e),max(abs(e)),median(abs(e)),...
-        %                     Lpnorm(t),max(abs(t)),median(abs(t)));
-        %                err{k}{q}(count,:) = [Lpnorm(e) max(abs(e)) median(abs(e))];
-        %                trunc{k}{q}(count,:) = [Lpnorm(t) max(abs(t)) median(abs(t))];
-
         %                 fig = fig+1;
         %                 figure(fig);
         %                 clf;

@@ -16,20 +16,18 @@
 
 globalParams;
 
-fprintf('=========================================================================\n');
-fprintf(' Testing discretization accuracy on increasingly finer grids\n');
-fprintf('=========================================================================\n');
-
 %=========================================================================
 % Initialize parameters struct
 %=========================================================================
 param                       = [];
 
-param.problemType           = 'diffusion_const'; %'smooth_diffusion'; %'sinsin'; %'ProblemB'; %'quadratic'; %'Lshaped'; %
+param.problemType           = 'linear';%'diffusion_const'; %'smooth_diffusion'; %'sinsin'; %'ProblemB'; %'quadratic'; %'Lshaped'; %
 param.outputDir             = 'test'; %'sinsin_1level';
+param.logFile               = 'testDisc.log';
+param.outputType            = 'screen';
 
-param.twoLevel              = 0;
-param.twoLevelType          = 'leftHalf';
+param.twoLevel              = 1;
+param.twoLevelType          = 'nearXMinus'; %'centralHalf'; %'leftHalf';
 
 param.threeLevel            = 0;
 param.threeLevelType        = 'leftHalf';
@@ -38,12 +36,16 @@ param.setupGrid             = 1;
 param.solveSystem           = 1;
 param.plotResults           = 0;
 param.saveResults           = 1;
-param.verboseLevel          = 0;
+param.verboseLevel          = 1;
+
+out(1,'=========================================================================\n');
+out(1,' Testing discretization accuracy on increasingly finer grids\n');
+out(1,'=========================================================================\n');
 
 %=========================================================================
 % Run discretization on a sequence of successively finer grids
 %=========================================================================
-numCellsRange               = 2.^[2:1:10];
+numCellsRange               = 2.^[2:1:5];
 success                     = mkdir('.',param.outputDir);
 errNorm                     = zeros(length(numCellsRange),4);
 
@@ -51,16 +53,14 @@ for count = 1:length(numCellsRange)
     %pause
     pack;
     numCells = numCellsRange(count);
-    fprintf('#### nCells = %d ####\n',numCells);
+    out(1,'#### nCells = %d ####\n',numCells);
     %-------------------------------------------------------------------------
     % Set up grid (AMR levels, patches)
     %-------------------------------------------------------------------------
     if (param.setupGrid)
-        if (param.verboseLevel >= 1)
-            fprintf('-------------------------------------------------------------------------\n');
-            fprintf(' Set up grid & system\n');
-            fprintf('-------------------------------------------------------------------------\n');
-        end
+        out(2,'-------------------------------------------------------------------------\n');
+        out(2,' Set up grid & system\n');
+        out(2,'-------------------------------------------------------------------------\n');
         tStartCPU           = cputime;
         tStartElapsed       = clock;
 
@@ -104,6 +104,13 @@ for count = 1:length(numCellsRange)
                     iupper      = 2*resolution;
                     iupper(1)   = resolution(1);
                     [grid,q2]  = addGridPatch(grid,k,ilower,iupper,q1);
+                case 'nearXMinus',
+                    % A patch next to x-minus boundary, covers the central
+                    % half of it, and extends to half of the domain in x.
+                    ilower      	= ones(size(resolution));
+                    ilower(2:end)	= resolution(2:end)/2 + 1;
+                    iupper          = ilower + resolution - 1;
+                    [grid,q2]  = addGridPatch(grid,k,ilower,iupper,q1);
                 case 'centralHalf2Patches',
                     % Two fine patches next to each other at the center of the
                     % domain
@@ -134,7 +141,7 @@ for count = 1:length(numCellsRange)
                 [grid,A,b,T,TI]      = updateSystem(grid,k,q,A,b,T,TI);
             end
         end
-        
+
         %--------------- Level 3: yet local fine grid around center of domain -----------------
         if ((param.twoLevel) & (param.threeLevel))
             [grid,k]   = addGridLevel(grid,'refineRatio',[2 2]);
@@ -157,9 +164,9 @@ for count = 1:length(numCellsRange)
 
         tCPU        = cputime - tStartCPU;
         tElapsed    = etime(clock,tStartElapsed);
-        if (param.verboseLevel >= 1)
-            fprintf('CPU time     = %f\n',tCPU);
-            fprintf('Elapsed time = %f\n',tElapsed);
+        out(2,'CPU time     = %f\n',tCPU);
+        out(2,'Elapsed time = %f\n',tElapsed);
+        if (param.verboseLevel >= 2)
             printGrid(grid);
         end
     end
@@ -168,31 +175,25 @@ for count = 1:length(numCellsRange)
     % Solve the linear system
     %-------------------------------------------------------------------------
     if (param.solveSystem)
-        if (param.verboseLevel >= 1)
-            fprintf('-------------------------------------------------------------------------\n');
-            fprintf(' Solve the linear system\n');
-            fprintf('-------------------------------------------------------------------------\n');
-        end
+        out(2,'-------------------------------------------------------------------------\n');
+        out(2,' Solve the linear system\n');
+        out(2,'-------------------------------------------------------------------------\n');
         tStartCPU       = cputime;
         tStartElapsed   = clock;
         x               = A\b;                            % Direct solver
         u               = sparseToAMR(x,grid,TI,1);           % Translate the solution vector to patch-based
         tCPU            = cputime - tStartCPU;
         tElapsed        = etime(clock,tStartElapsed);
-        if (param.verboseLevel >= 1)
-            fprintf('CPU time     = %f\n',tCPU);
-            fprintf('Elapsed time = %f\n',tElapsed);
-        end
+        out(2,'CPU time     = %f\n',tCPU);
+        out(2,'Elapsed time = %f\n',tElapsed);
     end
 
     %-------------------------------------------------------------------------
     % Computed exact solution vector, patch-based
     %-------------------------------------------------------------------------
-    if (param.verboseLevel >= 1)
-        fprintf('-------------------------------------------------------------------------\n');
-        fprintf(' Compute exact solution, plot\n');
-        fprintf('-------------------------------------------------------------------------\n');
-    end
+    out(2,'-------------------------------------------------------------------------\n');
+    out(2,' Compute exact solution, plot\n');
+    out(2,'-------------------------------------------------------------------------\n');
     tStartCPU        = cputime;
     tStartElapsed    = clock;
 
@@ -222,17 +223,15 @@ for count = 1:length(numCellsRange)
         normAMR(grid,err,'H1') ...
         normAMR(grid,err,'H1max') ...
         ];
-    fprintf('#vars = %7d  L2=%.3e  max=%.3e  H1=%.3e  H1max=%.3e\n',grid.totalVars,errNorm(count,:));
+    out(1,'#vars = %7d  L2=%.3e  max=%.3e  H1=%.3e  H1max=%.3e\n',grid.totalVars,errNorm(count,:));
 
     if (param.plotResults)
         plotResults(grid,u,uExact,tau,numCells);
     end
     tCPU        = cputime - tStartCPU;
     tElapsed    = etime(clock,tStartElapsed);
-    if (param.verboseLevel >= 1)
-        fprintf('CPU time     = %f\n',tCPU);
-        fprintf('Elapsed time = %f\n',tElapsed);
-    end
+    out(2,'CPU time     = %f\n',tCPU);
+    out(2,'Elapsed time = %f\n',tElapsed);
 
 end
 
