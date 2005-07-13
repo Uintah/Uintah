@@ -15,6 +15,9 @@ globalParams;
 
 switch (param.problemType)
 
+    case {'linear','Lshaped','jump_linear'}
+        f = zeros(size(x{1}));
+
     case 'quadratic',
         f       = 2*(x{1}.*(1-x{1}) + x{2}.*(1-x{2}));
 
@@ -29,9 +32,9 @@ switch (param.problemType)
             (4*((x{1}-x0(1))/sigma(1)).^2 - 2)/sigma(1)^2 + ...
             (4*((x{2}-x0(2))/sigma(2)).^2 - 2)/sigma(2)^2);
 
-    case 'Lshaped',
-        f = zeros(size(x{1}));
-        
+    case 'jump_quadratic',
+        f = -ones(size(x{1}));
+    
     otherwise,
         error('Unknown problem type');
 end
