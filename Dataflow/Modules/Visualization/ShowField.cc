@@ -550,6 +550,8 @@ clean_fieldname(string fname)
 void
 ShowField::execute()
 {
+  update_state(JustStarted);
+
   // tell module downstream to delete everything we have sent it before.
   // This is typically viewer, it owns the scene graph memory we create here.
   ColorMapIPort *color_iport = (ColorMapIPort *)get_iport("ColorMap");
@@ -560,7 +562,8 @@ ShowField::execute()
 
   if (!(field_iport->get(fld_handle) && fld_handle.get_rep()))
   {
-    error("Input field is empty.");
+    if( !in_power_app() )
+      error("Input field is empty.");
     return;
   }
 
@@ -622,6 +625,8 @@ ShowField::execute()
     vfld_handle = 0;
     warning( "No Scalar, Vector, no Tensor data found." );
   }
+
+  update_state(Completed);
 
   // What has changed from last time?  A false return value means that we
   // could not load the algorithm from the dynamic loader.

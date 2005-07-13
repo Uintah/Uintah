@@ -43,10 +43,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
     method set_defaults {} {
 
-	global $this-power_app
 	global power_app_command
-
-	set    $this-power_app 0
 	set    power_app_command ""
 
 	global $this-animate_frame
@@ -164,11 +161,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	trace variable $this-selectable_max w "$this update_range_callback"
     }
 
-    method set_power_app { cmd } {
-	global $this-power_app
+    method set_power_app_cmd { cmd } {
 	global power_app_command
-
-	set $this-power_app 1
 	set power_app_command $cmd
     }
 
@@ -604,10 +598,9 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	animate
 
-	global $this-power_app
 	global power_app_command
 
-	if { [set $this-power_app] } {
+	if { [in_power_app] } {
 	    makeSciButtonPanel $w $w $this -no_execute -no_close -no_find \
 		"\"Close\" \"wm withdraw $w; $power_app_command\" \"Hides this GUI\""
 	} else {
@@ -1374,10 +1367,9 @@ itcl_class DataIO_Readers_HDF5DataReader {
     method animate {} {
 	$this-c update_selection;
 
-	global $this-power_app
 	global power_app_command
 
-	if { ![set $this-power_app] } {
+	if { ![in_power_app] } {
 	    set w .ui[modname]
 	    
 	    if [ expr [winfo exists $w] ] {
@@ -1596,10 +1588,9 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	# Create the sci button panel
 
-	global $this-power_app
 	global power_app_command
 
-	if { ![set $this-power_app] } {
+	if { ![in_power_app] } {
 	    makeSciButtonPanel $w $w $this "-no_execute"
 	}
 
