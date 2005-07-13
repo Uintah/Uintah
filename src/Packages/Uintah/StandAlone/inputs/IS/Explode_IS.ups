@@ -259,7 +259,7 @@
     <filebase>Explode_IS.uda</filebase>
     <outputInterval> 0.0000025 </outputInterval>
     <!--
-      use the following for the explicit phase
+      use the following for the heatup phase
       <outputInterval> 0.0005  </outputInterval>
     -->
     <compression>gzip</compression>
@@ -280,6 +280,9 @@
     <save label="p.volume"/>
     <save label="p.stress"/> 
     <save label="p.plasticStrain"/> 
+    <save label="p.plasticStrainRate"/> 
+    <save label="p.porosity"/> 
+    <save label="p.damage"/> 
     <save label="p.strainRate"/> 
     <save label="p.localized"/> 
     <save label="p.velocity"/>
@@ -312,11 +315,12 @@
        <CanAddICEMaterial>true</CanAddICEMaterial>
        <ICE>
         <max_iteration_equilibration> 1000 </max_iteration_equilibration>
-        <advection type = "SecondOrder" />
+        <advection type = "SecondOrder"  useCompatibleFluxes = "true" />
         <solution technique = "EqForm" />
 
 
 <!-- (A)  DELETE THIS TO RUN EXPLICIT
+-->
         <TimeStepControl>
           <Scheme_for_delT_calc> conservative </Scheme_for_delT_calc>  
           <knob_for_speedSound>  0.000        </knob_for_speedSound>   
@@ -340,7 +344,6 @@
              <jump>           0      </jump>  
             </Parameters>
         </ImplicitSolver>
--->
 <!-- (A)  -->
       </ICE>        
   </CFD>
@@ -358,6 +361,7 @@
     <use_load_curves>                false      </use_load_curves>
     <create_new_particles>           false       </create_new_particles>
     <manual_new_material>            true       </manual_new_material>
+    <DoThermalExpansion>             false      </DoThermalExpansion>
     <erosion algorithm = "ZeroStress"/>
   </MPM>
 
