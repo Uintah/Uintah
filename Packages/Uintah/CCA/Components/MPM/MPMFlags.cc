@@ -34,6 +34,7 @@ MPMFlags::MPMFlags()
                       
   d_doErosion = false;
   d_erosionAlgorithm = "none";
+  d_doThermalExpansion = true;
 
   d_adiabaticHeating = 1.0;
   d_artificialDampCoeff = 0.0;
@@ -84,6 +85,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, const GridP& grid)
   ps->get("CanAddMPMMaterial", d_canAddMPMMaterial);
   ps->get("DoImplicitHeatConduction", d_doImplicitHeatConduction);
   ps->get("DoTransientImplicitHeatConduction", d_doTransientImplicitHeatConduction);
+  ps->get("DoThermalExpansion", d_doThermalExpansion);
   bool do_contact_friction = true;
   ps->get("do_contact_friction_heating", do_contact_friction);
   if (!do_contact_friction) d_addFrictionWork = 0.0;

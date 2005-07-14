@@ -588,6 +588,11 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
   double sqrtTwoThird = 1.0/sqrtThreeTwo;
   double totalStrainEnergy = 0.0;
 
+  // Do thermal expansion?
+  if(!flag->d_doThermalExpansion){
+    alpha = 0;
+  }
+
   // Loop thru patches
   for(int patchIndex=0; patchIndex<patches->size(); patchIndex++){
     const Patch* patch = patches->get(patchIndex);
@@ -1409,6 +1414,11 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
   double rho_0 = matl->getInitialDensity();
   double Tm = matl->getMeltTemperature();
 
+  // Do thermal expansion?
+  if(!flag->d_doThermalExpansion){
+    alpha = 0;
+  }
+
   // Particle and Grid data
   delt_vartype delT;
   constParticleVariable<int>     pLocalized;
@@ -1771,6 +1781,11 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
   double alpha = d_initialData.alpha;
   double rho_0 = matl->getInitialDensity();
   double Tm = matl->getMeltTemperature();
+
+  // Do thermal expansion?
+  if(!flag->d_doThermalExpansion){
+    alpha = 0;
+  }
 
   // Data location
   int dwi = matl->getDWIndex();
