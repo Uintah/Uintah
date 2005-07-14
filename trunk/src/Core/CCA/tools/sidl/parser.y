@@ -96,7 +96,7 @@ extern int lineno;
 
 %token ABSTRACT
 %token ARRAY
-%token BABEL_EXT
+%token<string> BABEL_EXT
 %token BOOL
 %token CHAR
 %token CLASS
@@ -548,7 +548,7 @@ method: return_type IDENTIFIER arguments method_modifiers2 opt_throws_clause ';'
        return_type IDENTIFIER BABEL_EXT arguments method_modifiers2 opt_throws_clause ';'
 	{
 	  /* $$=new Method(curfile, lineno, $1.copy, $1.type, $2, $3, $4, $5); */
-	  $$=new Method(curfile, lineno, $1.copy, $1.type, $2, $4, $5, $6);
+	  $$=new Method(curfile, lineno, $1.copy, $1.type, $2, $3, $4, $5, $6);
 	  $$->isCollective = false;
 
 	}

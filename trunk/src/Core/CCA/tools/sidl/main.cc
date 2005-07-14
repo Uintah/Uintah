@@ -150,7 +150,6 @@ std::cerr <<  "sidl: main fxn\n" << std::endl;
       }
     } else {
       if (!done_builtin && !doing_cia) {
-std::cout << "sidl: Doing case !done_builtin && !doing_cia" << std::endl; 
         foremit = false;
         char* builtin = find_builtin();
         char* buf = new char[strlen(cpp) + strlen(builtin) + 10];
@@ -208,13 +207,11 @@ std::cout << "sidl: Doing case !done_builtin && !doing_cia" << std::endl;
    * Process imports...
    */
 
-std::cout << "sidl: do specs.processImports()" << std::endl;
   specs.processImports();
 
   /*
    * Static checking
    */
-std::cout << "sidl: do specs.staticCheck()" << std::endl;
   specs.staticCheck();
 
   /*

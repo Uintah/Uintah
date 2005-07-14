@@ -117,6 +117,7 @@ std::cerr << "BaseInterface::staticCheck: interface_extends not defined" << std:
     if (interface_extends) {
         const vector<ScopedName*>& list = interface_extends->getList();
         for (vector<ScopedName*>::const_iterator iter = list.begin();iter != list.end();iter++) {
+          std::cerr << "BaseInterface::staticCheck: interface_extends=" << (*iter)->getName() << std::endl;
             Symbol* s = names->lookup(*iter);
             if (!s) {
                 cerr << curfile << ':' << lineno 
@@ -130,14 +131,12 @@ std::cerr << "BaseInterface::staticCheck: interface_extends not defined" << std:
                      << (*iter)->getName() << '\n';
                 exit(1);
             }
-//std::cerr << "BaseInterface::staticCheck: scoped name=" << (*iter)->getName();
             (*iter)->bind(s);
             Definition* d = s->getDefinition();
             BaseInterface* i=(BaseInterface*)d;
             //parent_ifaces.push_back(dynamic_cast<CI*>(i));
             parent_ifaces.push_back(i);
         }
-std::cerr << "BaseInterface::staticCheck: full sig.=" << interface_extends->fullsignature() << std::endl;
     }
 
     // Check methods
@@ -189,95 +188,6 @@ Method* BaseInterface::findMethod(const Method* match) const
   return m;
 }
 
-// void BaseException::staticCheck(SymbolTable* names)
-// {
-//     // Handle builtin types - Object
-//     //if (mymethods && !interface_extends && fullname() != ".SSIDL.BaseInterface") {
-//     if (mymethods && !interface_extends && fullname() != ".SSIDL.BaseException") {
-//         if (!interface_extends) {
-//             interface_extends = new ScopedNameList();
-//         }
-//         //interface_extends->prepend(new ScopedName("SSIDL", "BaseInterface"));
-//         interface_extends->prepend(new ScopedName("SSIDL", "BaseException"));
-//     }
-
-//     // Check extends list
-//     if (interface_extends) {
-// std::cerr << "BaseException::staticCheck: " << interface_extends->fullsignature() << std::endl;
-//         const vector<ScopedName*>& list = interface_extends->getList();
-//         for (vector<ScopedName*>::const_iterator iter = list.begin(); iter != list.end(); iter++) {
-//             Symbol* s = names->lookup(*iter);
-//             if (!s) {
-//                 cerr << curfile << ':' << lineno 
-//                      << ": (102) BaseException extends unknown type: " 
-//                      << (*iter)->getName() << '\n';
-//                 exit(1);
-//             }
-//             if (s->getType() != Symbol::InterfaceType) {
-//                 cerr << curfile << ':' << lineno
-//                      << ": (103) BaseException extends a non-interface: " 
-//                      << (*iter)->getName() << '\n';
-//                 exit(1);
-//             }
-// std::cerr << "BaseException::staticCheck: symbol=" << s->fullname() << " scoped name=" << (*iter)->getName();
-//             (*iter)->bind(s);
-//             Definition* d = s->getDefinition();
-//             BaseException* i = (BaseException*)d;
-//             //parent_exception_ifaces.push_back(i);
-//             parent_ifaces.push_back(dynamic_cast<CI*>(i));
-//         }
-//     }
-
-//     // Check methods
-//     if (mymethods) {
-//         mymethods->setInterface(this);
-//         mymethods->staticCheck(symbols);
-//         detectRedistribution();
-//         vector<Method*> allmethods;
-//         gatherMethods(allmethods);
-//         checkMethods(allmethods);
-//     }
-// }
-
-
-// void BaseException::gatherSymbols(SymbolTable* names)
-// {
-//   Symbol* n = names->lookup(name, false);
-//   if (n) {
-//     switch(n->getType()) {
-//     case Symbol::InterfaceType:
-//       cerr << curfile << ':' << lineno
-//        << ": (101) Re-definition of interface " << names->fullname()+"."+name << '\n';
-//       exit(1);
-//       break;
-//     case Symbol::ClassType:
-//     case Symbol::PackageType:
-//     case Symbol::MethodType:
-//     case Symbol::EnumType:
-//     case Symbol::EnumeratorType:
-//     case Symbol::DistArrayType:
-//       cerr << curfile << ':' << lineno 
-//        << ": (100) Re-definition of " << names->fullname()+"."+name << " as interface\n";
-//       exit(1);
-//       break;
-//     }
-//   }
-
-//   n = new Symbol(name);
-//   names->insert(n);
-//   symbols = new SymbolTable(names, name);
-//   mydistarrays->gatherSymbols(symbols);
-//   n->setType(Symbol::InterfaceType);
-//   n->setDefinition(this);
-// }
-
-
-// Method* BaseException::findMethod(const Method* match) const
-// {
-//   Method* m = mymethods->findMethod(match);
-//   return m;
-// }
-
 
 void Class::staticCheck(SymbolTable* names)
 {
@@ -290,10 +200,21 @@ void Class::staticCheck(SymbolTable* names)
         class_extends = new ScopedName("SSIDL", "BaseClass");
     }
 
+std::cerr << "Class::staticCheck: fullname=" << fullname();
 if (class_extends) {
-std::cerr << "Class::staticCheck: fullname=" << fullname() << ", class_extends name=" << class_extends->getName() << std::endl;
-} else {
-std::cerr << "Class::staticCheck: fullname=" << fullname() << ", no class_extends" << std::endl;
+std::cerr << ", class_extends name=" << class_extends->getName() << std::endl;
+}
+if (class_implements) {
+std::vector<ScopedName*> list = class_implements->getList();
+for (vector<ScopedName*>::const_iterator iter=list.begin(); iter != list.end(); iter++) {
+  std::cerr << "  class implements=" << (*iter)->getName() << std::endl;
+}
+}
+if (class_implementsall) {
+std::vector<ScopedName*> list = class_implementsall->getList();
+for (vector<ScopedName*>::const_iterator iter=list.begin(); iter != list.end(); iter++) {
+  std::cerr << "  class implementsall=" << (*iter)->getName() << std::endl;
+}
 }
 
     // Check extends class
@@ -306,16 +227,11 @@ std::cerr << "Class::staticCheck: fullname=" << fullname() << ", no class_extend
             exit(1);
         }
         if (s->getType() != Symbol::ClassType) {
-            if (s->getType() == Symbol::InterfaceType &&
-                    fullname() == ".sci.cca.CCAException" &&
-                    class_extends->getName() == "SSIDL.BaseException") {
-                // do something?
-            } else {
-                cerr << curfile << ':' << lineno
-                     << ": (108) Class extends a non-class: " 
-                     << class_extends->getName() << '\n';
-                exit(1);
-            }
+//s->getType() == Symbol::InterfaceType && fullname() == ".sci.cca.CCAException"
+            cerr << curfile << ':' << lineno
+                 << ": (108) Class extends a non-class: " 
+                 << class_extends->getName() << '\n';
+            exit(1);
         }
         class_extends->bind(s);
         Definition* d = s->getDefinition();
@@ -324,8 +240,10 @@ std::cerr << "Class::staticCheck: fullname=" << fullname() << ", no class_extend
 
 std::cerr << "Class::staticCheck: parent class=" << parentclass->name << std::endl;
 
-        //if it extends BaseException or an exception this class is an exception
-        if ((parentclass->name == "BaseException")||(parentclass->exceptionID)) {
+        //if it extends SIDLException or an exception this class is an exception
+        // see if it implements BaseException???
+        if ((parentclass->name == "SIDLException")||(parentclass->exceptionID)) {
+        //if ((parentclass->name == "BaseException")||(parentclass->exceptionID)) {
             exceptionID = ++exceptionCount;
         }
     }
@@ -465,131 +383,141 @@ void Definition::checkMethods(const vector<Method*>& allmethods)
 
 void Method::staticCheck(SymbolTable* names)
 {
-  /* Method shouldn't match any other in the local namespace */
-  Symbol* n = names->lookup(name, false);
-  if (n) {
-    /* See if types match */
-    switch(n->getType()) {
-    case Symbol::InterfaceType:
-    case Symbol::PackageType:
-    case Symbol::ClassType:
-    case Symbol::EnumType:
-    case Symbol::EnumeratorType:
-    case Symbol::DistArrayType:
-      cerr << curfile << ':' << lineno
-       << ": (113) Internal error - Re-definition of " << names->fullname()+"."+name << " as a method\n";
-      exit(1);
-      break;
-    case Symbol::MethodType:
-      /* This is handled below... */
-      break;
+    // Method shouldn't match any other in the local namespace
+    Symbol* n = names->lookup(name, false);
+    if (n) {
+        // See if types match
+        switch(n->getType()) {
+            case Symbol::InterfaceType:
+            case Symbol::PackageType:
+            case Symbol::ClassType:
+            case Symbol::EnumType:
+            case Symbol::EnumeratorType:
+            case Symbol::DistArrayType:
+                cerr << curfile << ':' << lineno
+                     << ": (113) Internal error - Re-definition of "
+                     << names->fullname()+"."+name << " as a method\n";
+                exit(1);
+                break;
+            case Symbol::MethodType:
+                // This is handled below...
+                break;
+        }
     }
-  }
 
-  /* Check return type and arguments */
-  return_type->staticCheck(names,this);
-  args->staticCheck(names,this);
-  checked = true;
+    // Check return type and arguments
+    return_type->staticCheck(names,this);
+    args->staticCheck(names,this);
+    checked = true;
 
-  /* Method shouldn't match another method exactly */
-  if (myclass) {
-    Method* meth = myclass->findMethod(this, false);
-    if (meth) {
-      cerr << curfile << ':' << lineno
-       << ": (114) Re-definition of method " << names->fullname()+"."+name << '\n';
-      exit(1);
+    // Method shouldn't match another method exactly
+    if (myclass) {
+        Method* meth = myclass->findMethod(this, false);
+        if (meth) {
+            cerr << curfile << ':' << lineno
+                 << ": (114) Re-definition of method "
+                 << names->fullname()+"."+name << '\n';
+            exit(1);
+        }
     }
-  }
-  if (myinterface) {
-    Method* meth = myinterface->findMethod(this);
-    if (meth) {
-      cerr << curfile << ':' << lineno
-       << ": (115) Re-definition of method " << names->fullname()+"."+name << '\n';
-      exit(1);
+    if (myinterface) {
+        Method* meth = myinterface->findMethod(this);
+        if (meth) {
+            cerr << curfile << ':' << lineno
+                 << ": (115) Re-definition of method "
+                 << names->fullname()+"."+name << '\n';
+            exit(1);
+        }
     }
-  }
 
-  /* Shouldn't override a final method */
-  if (myclass) {
-    Class* parent = myclass->getParentClass();
-    if (parent) {
-      Method* m = parent->findMethod(this, true);
-      if (m) {
-    switch(m->getModifier()) {
-    case Method::Abstract:
-    case Method::Static:
-    case Method::Unknown:
-    case Method::NoModifier:
-      // No problem...
-      break;
-    case Method::Final:
-      cerr << curfile << ':' << lineno
-           << ": (117) Method attempts to override a final method: " << name << '\n';
-      exit(1);
+    // Shouldn't override a final method
+    if (myclass) {
+        Class* parent = myclass->getParentClass();
+        if (parent) {
+            Method* m = parent->findMethod(this, true);
+            if (m) {
+                switch(m->getModifier()) {
+                    case Method::Abstract:
+                    case Method::Static:
+                    case Method::Unknown:
+                    case Method::NoModifier:
+                        // No problem...
+                        break;
+                    case Method::Final:
+                        cerr << curfile << ':' << lineno
+                             << ": (117) Method attempts to override a final method: "
+                             << name << '\n';
+                        exit(1);
+                }
+            }
+        }
     }
-      }
-    }
-  }
 
-  /* Check throws clause */
-  if (throws_clause) {
-    const vector<ScopedName*>& list = throws_clause->getList();
-    map<Class*, int> thrown;
-    for (vector<ScopedName*>::const_iterator iter = list.begin();iter != list.end();iter++) {
-      Symbol* s = names->lookup(*iter);
-      if (!s) {
-    cerr << curfile << ':' << lineno
-         << ": (118) Method throws unknown type: "
-         << (*iter)->getName() << '\n';
-    exit(1);
-      }
-      (*iter)->bind(s);
-      switch(s->getType()) {
-      case Symbol::ClassType:
-    {
-      Class* c=(Class*)s->getDefinition();
-      map<Class*, int>::iterator citer = thrown.find(c);
-      if (citer != thrown.end()) {
-        cerr << curfile << ':' << lineno
-         << ": (119) Method specifies redundant throw: "
-         << (*iter)->getName() << '\n';
-        exit(1);
-      }
-      if (!c->getMethods()) {
-        cerr << curfile << ':' << lineno
-         << ": (126) method throws incomplete class: "
-         << (*iter)->getName() << '\n';
-        exit(1);
-      }
-      Class* t = c->findParent(".SSIDL.BaseException");
-      if (!t) {
-        cerr << curfile << ':' << lineno
-         << ": (127) method must throw a derivative of .SSIDL.BaseException: "
-         << (*iter)->getName() << '\n';
-        exit(1);
-      }
-      thrown[c]=1; // Just a dummy value
-    }
-    break;
-      case Symbol::MethodType:
-      case Symbol::PackageType:
-      case Symbol::InterfaceType:
-      case Symbol::EnumType:
-      case Symbol::EnumeratorType:
-      case Symbol::DistArrayType:
-    cerr << curfile << ':' << lineno
-         << ": (120) Method throws a non-class: "
-         << (*iter)->getName() << '\n';
-    exit(1);
-    break;
-      }
-    }
-  }
+    // Check throws clause
+    if (throws_clause) {
+        const vector<ScopedName*>& list = throws_clause->getList();
+        map<Class*, int> thrown;
+        for (vector<ScopedName*>::const_iterator iter = list.begin();
+            iter != list.end(); iter++) {
+            Symbol* s = names->lookup(*iter);
+            if (!s) {
+                cerr << curfile << ':' << lineno
+                     << ": (118) Method throws unknown type: "
+                     << (*iter)->getName() << '\n';
+                exit(1);
+            }
+            (*iter)->bind(s);
+            switch(s->getType()) {
+                case Symbol::ClassType:
+                {
+                    Class* c = (Class*) s->getDefinition();
+                    map<Class*, int>::iterator citer = thrown.find(c);
+                    if (citer != thrown.end()) {
+                        cerr << curfile << ':' << lineno
+                             << ": (119) Method specifies redundant throw: "
+                             << (*iter)->getName() << '\n';
+                        exit(1);
+                    }
+                    if (!c->getMethods()) {
+                        cerr << curfile << ':' << lineno
+                             << ": (126) method throws incomplete class: "
+                             << (*iter)->getName() << '\n';
+                        exit(1);
+                    }
+                    // finding interface hierarchy???
+                    Class* tt = c->findParent(".SSIDL.SIDLException");
+                    if (!tt) {
+                        BaseInterface* t = c->findParentInterface(".SSIDL.BaseException");
+                        if (!t) {
+                            cerr << curfile << ':' << lineno
+                                 << ": (127) method must throw a derivative of .SSIDL.BaseException: "
+                                 << (*iter)->getName() << '\n';
+                            exit(1);
+                        }
+                   }
 
-  n = new Symbol(name);
-  names->insert(n);
-  n->setType(Symbol::MethodType);
-  n->setMethod(this);
+                    thrown[c]=1; // Just a dummy value
+                }
+                    break;
+                case Symbol::MethodType:
+                case Symbol::PackageType:
+                case Symbol::InterfaceType:
+                case Symbol::EnumType:
+                case Symbol::EnumeratorType:
+                case Symbol::DistArrayType:
+                    cerr << curfile << ':' << lineno
+                         << ": (120) Method throws a non-class: "
+                         << (*iter)->getName() << '\n';
+                    exit(1);
+                    break;
+            }
+        }
+    }
+
+    n = new Symbol(name);
+    names->insert(n);
+    n->setType(Symbol::MethodType);
+    n->setMethod(this);
 }
 
 bool Method::matches(const Method* m, Method::MatchWhich match) const
