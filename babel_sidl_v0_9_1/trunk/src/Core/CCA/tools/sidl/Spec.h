@@ -49,7 +49,6 @@ class Argument;
 class SymbolTable;
 class Class;
 class BaseInterface;
-class BaseExtension;
 class EmitState;
 class SState;
 class ArrayType;
@@ -80,6 +79,11 @@ public:
   bool isEmitted() { return emitted_declaration; }
   bool isImport;
   std::string curfile;
+
+  // temporary!!!
+  std::string getName() const { return name; }
+  // temporary!!!
+
 protected:
   Definition(const std::string& curfile, int lineno,
 	     const std::string& name);
@@ -148,9 +152,7 @@ protected:
   void emit_proxy(EmitState& e);
   void emit_header(EmitState& e);
   Class* parentclass;
-  //std::vector<CI*> parent_ifaces;
   std::vector<BaseInterface*> parent_ifaces;
-  //std::vector<BaseException*> parent_exception_ifaces;
   MethodList* mymethods;
   DistributionArrayList* mydistarrays;
 private:
@@ -234,6 +236,7 @@ public:
   virtual ~Class();
   virtual void staticCheck(SymbolTable*);
   virtual void gatherSymbols(SymbolTable*);
+  BaseInterface* findParentInterface(const std::string&);
   Class* getParentClass() const;
   Class* findParent(const std::string&);
   Method* findMethod(const Method*, bool recurse) const;
@@ -257,11 +260,6 @@ public:
   std::vector<Definition*> list;
 };
 
-// class Interface {
-// public:
-//     virtual ScopedNameList* getInterfaceExtends = 0;
-// };
-
 
 class BaseInterface : public CI {
 public:
@@ -274,18 +272,6 @@ public:
 private:
   ScopedNameList* interface_extends;
 };
-
-// class BaseException : public CI {
-// public:
-//   BaseException(const std::string& curfile, int lineno, const std::string& id,
-// 	    ScopedNameList* interface_extends, MethodList*, DistributionArrayList* );
-//   virtual ~BaseException();
-//   virtual void staticCheck(SymbolTable*);
-//   virtual void gatherSymbols(SymbolTable*);
-//   Method* findMethod(const Method*) const;
-// private:
-//   ScopedNameList* interface_extends;
-// };
 
 
 class Method {
@@ -301,6 +287,9 @@ public:
   Method(const std::string& curfile, int lineno, bool copy_return,
 	 Type* return_type, const std::string& name, ArgumentList* args,
 	 Modifier2 modifier2,  ScopedNameList* throws_clause);
+  Method(const std::string& curfile, int lineno, bool copy_return,
+         Type* return_type, const std::string& name, const std::string& babel_ext,
+         ArgumentList* args, Modifier2 modifier2, ScopedNameList* throws_clause);
   ~Method();
 
   bool detectRedistribution();
@@ -310,7 +299,6 @@ public:
 
   void setClass(Class* c);
   void setInterface(BaseInterface* c);
-//   void setInterface(BaseException* c);
 
   enum MatchWhich {
     TypesOnly,
@@ -354,13 +342,13 @@ private:
   bool copy_return;
   Type* return_type;
   std::string name;
+  std::string babel_ext;
   ArgumentList* args;
   Modifier2 modifier2;
   ScopedNameList* throws_clause;
   Modifier modifier;
   Class* myclass;
   BaseInterface* myinterface;
-//   BaseException* myexception;
   bool checked;
 };
 

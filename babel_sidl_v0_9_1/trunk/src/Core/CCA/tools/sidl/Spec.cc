@@ -64,30 +64,31 @@ Definition::~Definition()
 
 string Definition::fullname() const
 {
-std::cerr << "Definition::fullname()" << std::endl;
+  string n;
   if (!symbols) {
     cerr << "ERROR: Definition symboltable not set!\n";
-    std::string r = "NO DEFINITION SYMBOLS";
-    return r;
     //exit(1);
+  } else {
+    n = symbols->fullname();
   }
-  return symbols->fullname();
+  return n;
 }
 
 string CI::cppfullname(SymbolTable* forpackage) const
 {
-std::cerr << "CI::cppfullname()" << std::endl;
+//std::cerr << "CI::cppfullname()" << std::endl;
+  string n;
   if (!symbols) {
     cerr << "ERROR: CI symboltable not set!\n";
-    std::string r = "NO CI SYMBOLS";
-    return r;
     //exit(1);
-  }
-  if (forpackage == symbols->getParent()) {
-    return name;
   } else {
-    return symbols->cppfullname();
+    if (forpackage == symbols->getParent()) {
+       n = name;
+    } else {
+       n = symbols->cppfullname();
+    }
   }
+  return n;
 }
 
 string CI::cppclassname() const
@@ -214,11 +215,28 @@ Class::Class(const string& curfile, int lineno, Modifier modifier,
     class_extends(class_extends), class_implementsall(class_implementsall),
     class_implements(class_implements)
 {
-  std::cerr << "Class::Class: curfile=" << curfile << " name=" << name;
+  std::cerr << "Class::Class: curfile=" << curfile << " name=" << name << std::endl;
 if (class_extends) {
-std::cerr << " class extends=" << class_extends->getName() << std::endl;
-} else {
-std::cerr << std::endl;
+    // hack to support CCAException extends SSIDL.BaseException
+    std::cerr << " class extends=" << class_extends->getName() << std::endl;
+    if (name == "CCAException" && class_extends->getName() == "SSIDL.BaseException") {
+        std::cerr << "\tHave CCAException extends SSIDL.BaseException" << std::endl;
+        delete class_extends;
+        class_extends = 0;
+        class_extends = new ScopedName("SSIDL", "SIDLException");
+    }
+}
+if (class_implements) {
+std::vector<ScopedName*> list = class_implements->getList();
+for (vector<ScopedName*>::const_iterator iter=list.begin(); iter != list.end(); iter++) {
+  std::cerr << "  class implements=" << (*iter)->getName() << std::endl;
+}
+}
+if (class_implementsall) {
+std::vector<ScopedName*> list = class_implementsall->getList();
+for (vector<ScopedName*>::const_iterator iter=list.begin(); iter != list.end(); iter++) {
+  std::cerr << "  class implementsall=" << (*iter)->getName() << std::endl;
+}
 }
 }
 
@@ -309,6 +327,18 @@ Class* Class::getParentClass() const
   return parentclass;
 }
 
+BaseInterface* Class::findParentInterface(const string& str)
+{
+std::cerr << "Class::findParentInterface: " << str << std::endl;
+if (class_implements) {
+std::cerr << "Class::findParentInterface: class_implements fullsignature=" << class_implements->fullsignature()  << std::endl;
+}
+if (class_implementsall) {
+std::cerr << "Class::findParentInterface: class_implementsall fullsignature=" << class_implementsall->fullsignature()  << std::endl;
+}
+    return 0;
+}
+
 Class* Class::findParent(const string& str)
 {
   Class* p=this;
@@ -316,6 +346,11 @@ Class* Class::findParent(const string& str)
     if(p->fullname() == str)
       return p;
     p=p->parentclass;
+if (p) {
+std::cerr << "Class::findParent: parent=" << p->getName() << std::endl;
+} else {
+std::cerr << "Class::findParent: null parent" << std::endl;
+}
   }
   return 0;
 }
@@ -348,13 +383,20 @@ std::cerr << "DefinitionList::processImports: " << pkg->fullname() << std::endl;
   }
 }
 
+// setting parent interfaces or classes for interfaces???
 BaseInterface::BaseInterface(const string& curfile, int lineno, const string& id,
 		     ScopedNameList* interface_extends, MethodList* methods,
 		     DistributionArrayList* arrays)
   : CI(curfile, lineno, id, methods,arrays),
     interface_extends(interface_extends)
 {
-std::cerr << "BaseInterface::BaseInterface: " << curfile << " " << lineno << " " << id << std::endl; 
+std::cerr << "BaseInterface::BaseInterface: " << curfile << " " << lineno << " " << id << std::endl;
+if (interface_extends) {
+std::vector<ScopedName*> list = interface_extends->getList();
+for (vector<ScopedName*>::const_iterator iter=list.begin(); iter != list.end(); iter++) {
+  std::cerr << "  interface extends=" << (*iter)->getName() << std::endl;
+}
+}
 }
 
 
@@ -364,20 +406,20 @@ BaseInterface::~BaseInterface()
     delete interface_extends;
 }
 
-// BaseException::BaseException(const string& curfile, int lineno, const string& id,
-// 		     ScopedNameList* exception_extends, MethodList* methods,
-// 		     DistributionArrayList* arrays)
-//   : CI(curfile, lineno, id, methods,arrays),
-//     interface_extends(interface_extends)
-// {
-// }
-
-
-// BaseException::~BaseException()
-// {
-//   if (interface_extends)
-//     delete interface_extends;
-// }
+Method::Method(const string& curfile, int lineno, bool copy_return,
+               Type* return_type, const string& name, const std::string &babel_ext,
+               ArgumentList* args, Modifier2 modifier2, ScopedNameList* throws_clause)
+  : curfile(curfile), lineno(lineno), copy_return(copy_return),
+    return_type(return_type), name(name), babel_ext(babel_ext), args(args),
+    modifier2(modifier2), throws_clause(throws_clause), modifier(Unknown)
+{
+  doRedistribution = false;
+  myclass = 0;
+  myinterface = 0;
+  checked = false;
+  handlerNum =- 1;
+  std::cerr << "Method::Method: " << curfile << " " << lineno << " " << name << " " << babel_ext << std::endl;
+}
 
 Method::Method(const string& curfile, int lineno, bool copy_return,
 	       Type* return_type, const string& name, ArgumentList* args,
@@ -412,18 +454,15 @@ Method::Modifier Method::getModifier() const
 
 void Method::setClass(Class *c)
 {
+std::cerr << "Method::setClass: " << c->getName() << std::endl;
   myclass=c;
 }
 
 void Method::setInterface(BaseInterface *c)
 {
+std::cerr << "Method::setInterface: " << c->getName() << std::endl;
   myinterface=c;
 }
-
-// void Method::setInterface(BaseException *c)
-// {
-//   myexception=c;
-// }
 
 bool Method::getChecked() const
 {
@@ -442,13 +481,10 @@ int Method::getLineno() const
 
 string Method::fullname() const
 {
-std::cerr << "Method::fullname()" << std::endl;
   string n;
   if (myclass) {
-std::cerr << "Method::fullname(): myclass" << std::endl;
     n = myclass->fullname();
   } else if(myinterface) {
-std::cerr << "Method::fullname(): myinterface" << std::endl;
     n = myinterface->fullname();
   } else {
     cerr << "ERROR: Method does not have an associated class or interface\n";
@@ -514,14 +550,6 @@ std::cerr << "MethodList::setInterface: BaseInterface " << (*iter)->fullname() <
   }
 }
 
-// void MethodList::setInterface(BaseException* c)
-// {
-//   for(vector<Method*>::iterator iter=list.begin();iter != list.end();iter++) {
-// std::cerr << "MethodList::setInterface: BaseException " << (*iter)->fullname() << std::endl;
-//     (*iter)->setInterface(c);
-//   }
-// }
-
 vector<Method*>& MethodList::getList()
 {
   return list;
@@ -564,11 +592,13 @@ Package::~Package()
 ScopedName::ScopedName()
   : leading_dot(false)
 {
+std::cerr << "ScopedName::ScopedName" << std::endl;
   sym=0;
 }
 
 ScopedName::ScopedName(const string& s1, const string& s2)
 {
+std::cerr << "ScopedName::ScopedName s1=" << s1 << " s2=" << s2 << std::endl;
   leading_dot=true;
   add(s1);
   add(s2);
@@ -577,6 +607,7 @@ ScopedName::ScopedName(const string& s1, const string& s2)
 
 ScopedName::ScopedName(const string& s1)
 {
+std::cerr << "ScopedName::ScopedName s1=" << s1 << std::endl;
   leading_dot=false;
   add(s1);
   sym=0;
@@ -638,20 +669,26 @@ int ScopedName::nnames() const
 
 string ScopedName::fullname() const
 {
+  string n;
   if (!sym) {
     cerr << "ERROR: Symbol not bound: " << getName() << " - " << this << "(ScopedName::fullname)\n";
     //exit(1);
+  } else {
+    n = sym->fullname();
   }
-  return sym->fullname();
+  return n;
 }
 
 string ScopedName::cppfullname(SymbolTable* forstab) const
 {
+  string n;
   if (!sym) {
     cerr << "ERROR: Symbol not bound: " << getName() << " - " << this << " (ScopedName::cppfullname)\n";
     //exit(1);
+  } else {
+    n = sym->cppfullname(forstab);
   }
-  return sym->cppfullname(forstab);
+  return n;
 }
 
 ScopedNameList::ScopedNameList()
@@ -666,11 +703,13 @@ ScopedNameList::~ScopedNameList()
 
 void ScopedNameList::prepend(ScopedName* name)
 {
-  list.insert(list.begin(), name);
+std::cerr << "ScopedNameList::prepend: " << name->getName() << std::endl;
+    list.insert(list.begin(), name);
 }
 
 void ScopedNameList::add(ScopedName* name)
 {
+std::cerr << "ScopedNameList::add: " << name->getName() << std::endl;
   list.push_back(name);
 }
 
