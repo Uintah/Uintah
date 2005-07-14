@@ -515,7 +515,7 @@ void ArchesTable::setup()
   // Free up the input deps
   for(int i=0;i<(int)in_inds.size();i++)
     delete inds[i];
-  for(int i=0;i<(int)in_axes.size();i++)
+  for(int i=1;i<(int)in_axes.size();i++)
     if(--in_axes[i]->useCount == 0)
       delete in_axes[i];
   for(int i=0;i<(int)in_deps.size();i++){
