@@ -528,6 +528,11 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
   double sqrtTwo = sqrt(2.0);
   double totalStrainEnergy = 0.0;
 
+  // Do thermal expansion?
+  if(!flag->d_doThermalExpansion){
+    alpha = 0;
+  }
+
   // Loop thru patches
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -1228,6 +1233,11 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
   double rho_0 = matl->getInitialDensity();
   double Tm = matl->getMeltTemperature();
 
+  // Do thermal expansion?
+  if(!flag->d_doThermalExpansion){
+    alpha = 0;
+  }
+
   // Particle and Grid data
   delt_vartype delT;
   constParticleVariable<int>     pLocalized;
@@ -1596,6 +1606,11 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
   double alpha = d_initialData.alpha;
   double rho_0 = matl->getInitialDensity();
   double Tm = matl->getMeltTemperature();
+
+  // Do thermal expansion?
+  if(!flag->d_doThermalExpansion){
+    alpha = 0;
+  }
 
   // Data location
   int dwi = matl->getDWIndex();
