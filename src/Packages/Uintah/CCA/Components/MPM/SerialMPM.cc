@@ -2982,7 +2982,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pvelocitynew[idx]    = pvelocity[idx]    + (acc - alpha*vel)*delT;
         // pxx is only useful if we're not in normal grid resetting mode.
         pxx[idx]             = px[idx]    + pdispnew[idx];
-        pTempNew[idx]        = pTemperature[idx] + tempRate*delT ;
+        pTempNew[idx]        = pTemperature[idx] + tempRate*delT;
         pTempPreNew[idx]     = pTempCurrent[idx]; // for thermal stress
 
         if (cout_heat.active()) {
@@ -3023,11 +3023,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         bool pointInAny = lvl->containsPoint(pxnew[idx]);
         if((!pointInReal && pointInAny) || (pmassNew[idx] <= d_min_part_mass)){
           delset->addParticle(idx);
-	  cout << "Material = " << m << " Deleted Particle = " << idx 
-               << " xold = " << px[idx] << " xnew = " << pxnew[idx]
-	       << " vold = " << pvelocity[idx] << " vnew = " << pvelocitynew[idx]
-	       << " massold = " << pmass[idx] << " massnew = " << pmassNew[idx]
-	       << " volnew = " << pvolumeNew[idx] << endl;
+//	  cout << "Material = " << m << " Deleted Particle = " << idx 
+//               << " xold = " << px[idx] << " xnew = " << pxnew[idx]
+//	       << " vold = " << pvelocity[idx] << " vnew = "<< pvelocitynew[idx]
+//	       << " massold = " << pmass[idx] << " massnew = " << pmassNew[idx]
+//	       << " volnew = " << pvolumeNew[idx] << endl;
         }
         if(pvelocitynew[idx].length() > d_max_vel){
           pvelocitynew[idx]=pvelocity[idx];
