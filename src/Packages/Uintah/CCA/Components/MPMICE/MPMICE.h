@@ -348,6 +348,7 @@ protected:
   int              NGN;
   bool             d_recompile;
   bool             d_doAMR;
+  bool             d_testForNegTemps_mpm;
 
   vector<MPMPhysicalBC*> d_physicalBCs;
   double d_SMALL_NUM;
