@@ -53,6 +53,8 @@ namespace Uintah {
                                   
     void addRefineDependencies(Task* task, 
                                const VarLabel* var,
+                               Task::DomainSpec DS,
+                               const MaterialSubset* matls,
                                int step, 
                                int nsteps);
 
