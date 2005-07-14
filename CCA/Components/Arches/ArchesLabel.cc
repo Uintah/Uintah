@@ -875,7 +875,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_rhoNormLabel);
 
 // label for odt model
-  VarLabel::destroy(d_odtDataLabel);
+  //VarLabel::destroy(d_odtDataLabel);
 
 // labels for max(abs(velocity)) for Lax-Friedrichs flux
   VarLabel::destroy(d_maxAbsU_label);
