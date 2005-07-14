@@ -27,7 +27,7 @@ param.logFile               = 'testDisc.log';
 param.outputType            = 'screen';
 
 param.twoLevel              = 1;
-param.twoLevelType          = 'nearXMinus'; %'centralHalf'; %'leftHalf';
+param.twoLevelType          = 'rightHalf'; %'nearXMinus'; %'centralHalf'; %
 
 param.threeLevel            = 0;
 param.threeLevelType        = 'leftHalf';
@@ -45,9 +45,9 @@ out(1,'=========================================================================
 %=========================================================================
 % Run discretization on a sequence of successively finer grids
 %=========================================================================
-numCellsRange               = 2.^[2:1:7];
+numCellsRange               = 2.^[2:1:5];
 success                     = mkdir('.',param.outputDir);
-errNorm                     = zeros(length(numCellsRange),4);
+errNorm                     = zeros(length(numCellsRange),5);
 
 for count = 1:length(numCellsRange)
     %pause
@@ -61,6 +61,7 @@ for count = 1:length(numCellsRange)
         out(2,'-------------------------------------------------------------------------\n');
         out(2,' Set up grid & system\n');
         out(2,'-------------------------------------------------------------------------\n');
+        out(1,'Setting up grid\n');
         tStartCPU           = cputime;
         tStartElapsed       = clock;
 
@@ -103,6 +104,12 @@ for count = 1:length(numCellsRange)
                     ilower      = ones(size(resolution));
                     iupper      = 2*resolution;
                     iupper(1)   = resolution(1);
+                    [grid,q2]  = addGridPatch(grid,k,ilower,iupper,q1);
+                case 'rightHalf',
+                    % Cover right half of the domain in x1
+                    ilower      = ones(size(resolution));
+                    ilower(1)   = resolution(1) + 1;
+                    iupper      = 2*resolution;
                     [grid,q2]  = addGridPatch(grid,k,ilower,iupper,q1);
                 case 'nearXMinus',
                     % A patch next to x-minus boundary, covers the central
@@ -179,6 +186,7 @@ for count = 1:length(numCellsRange)
         out(2,'-------------------------------------------------------------------------\n');
         out(2,' Solve the linear system\n');
         out(2,'-------------------------------------------------------------------------\n');
+        out(1,'Solving system\n');
         tStartCPU       = cputime;
         tStartElapsed   = clock;
         x               = A\b;                            % Direct solver
@@ -217,14 +225,19 @@ for count = 1:length(numCellsRange)
         end
     end
     temp    = AMRToSparse(err,grid,T,1);
-    err     = SparseToAMR(temp,grid,TI,0);
+    err     = sparseToAMR(temp,grid,TI,0);
     errNorm(count,:) = [ ...
+        numCells ...
         normAMR(grid,err,'L2') ...
         normAMR(grid,err,'max') ...
         normAMR(grid,err,'H1') ...
         normAMR(grid,err,'H1max') ...
         ];
-    out(1,'#vars = %7d  L2=%.3e  max=%.3e  H1=%.3e  H1max=%.3e\n',grid.totalVars,errNorm(count,:));
+    out(1,'#vars = %7d  L2=%.3e  max=%.3e  H1=%.3e  H1max=%.3e\n',grid.totalVars,errNorm(count,2:end));
+    
+    if (param.saveResults)
+        saveResults(errNorm(1:count,:));
+    end
 
     if (param.plotResults)
         plotResults(grid,u,uExact,tau,numCells);
@@ -233,9 +246,5 @@ for count = 1:length(numCellsRange)
     tElapsed    = etime(clock,tStartElapsed);
     out(2,'CPU time     = %f\n',tCPU);
     out(2,'Elapsed time = %f\n',tElapsed);
-
-end
-
-if (param.saveResults)
-    saveResults(errNorm);
+    
 end
