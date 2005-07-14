@@ -8,10 +8,6 @@ function G = grayCode(N,k)
 %    The generated gray code is not necssarily cyclic. G is an array of size
 %    prod(K)xN, whose rows are the gray-code-ordered N-digit strings.
 %
-%    Examples
-%        dec2base(23,3) returns '212'
-%        dec2base(23,3,5) returns '00212'
-%
 %    See also: BASE2DEC, DEC2HEX, DEC2BASE, DEC2BIN.
 
 % Revision history:
@@ -80,7 +76,9 @@ if (fail)
     fprintf('Gray code is incorrect!!!\n');
     %    abs(diff(G,1))
 else
-    fprintf('Gray code is correct.\n');
+    if (verbose >= 1)
+        fprintf('Gray code is correct.\n');
+    end
 end
 %----------------------------------------------------------------------
 function B = insertDigit(A,d,m,N)
