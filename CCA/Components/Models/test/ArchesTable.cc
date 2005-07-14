@@ -520,14 +520,14 @@ void ArchesTable::setup()
   for(int i=0;i<(int)in_axes.size();i++)
     delete in_axes[i];
   for(int i=0;i<(int)in_deps.size();i++){
-    if(deps[i]->data)
-      delete[] deps[i]->data;
-    if(deps[i]->expression)
-      delete deps[i]->expression;
+    if(in_deps[i]->data)
+      delete[] in_deps[i]->data;
+    if(in_deps[i]->expression)
+      delete in_deps[i]->expression;
     // Only delete the first axis - the rest will be deleted
     // out of in_axes
-    delete deps[i]->axes[0];
-    delete deps[i];
+    delete in_deps[i]->axes[0];
+    delete in_deps[i];
   }  
   
   // Compute derived values
