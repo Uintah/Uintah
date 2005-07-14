@@ -87,23 +87,27 @@ void AMRICE::initialize(const ProcessorGroup*,
 _____________________________________________________________________*/
 void AMRICE::addRefineDependencies(Task* task, 
                                    const VarLabel* var,
+                                   Task::DomainSpec DS,
+                                   const MaterialSubset* matls,
                                    int step, 
                                    int nsteps)
 {
-  cout_dbg << "\t addRefineDependencies (" << var->getName()
-           << ") \t step " << step << " nsteps " << nsteps;
+  cout_doing << "\t addRefineDependencies (" << var->getName()
+           << ") \t step " << step << " nsteps " << nsteps << endl;
   ASSERTRANGE(step, 0, nsteps+1);
-  Ghost::GhostType  gac = Ghost::AroundCells;
+  
+  Task::WhichDW whichDW;
   if(step != nsteps) {
     cout_dbg << " requires from CoarseOldDW ";
-    task->requires(Task::CoarseOldDW, var,
-                 0, Task::CoarseLevel, 0, Task::NormalDomain, gac, 1);
+    whichDW = Task::CoarseOldDW;
   }
   if(step != 0) {
     cout_dbg << " requires from CoarseNewDW ";
-    task->requires(Task::CoarseNewDW, var,
-                 0, Task::CoarseLevel, 0, Task::NormalDomain, gac, 1);
+    whichDW = Task::CoarseNewDW;
   }
+  
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  task->requires(whichDW, var, 0, Task::CoarseLevel, matls, DS, gac, 1);
   cout_dbg <<""<<endl;
 }
 /*___________________________________________________________________
@@ -115,7 +119,7 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
                                      int step, 
                                      int nsteps)
 {
-  if(fineLevel->getIndex() > 0){
+  if(fineLevel->getIndex() > 0  && doICEOnLevel(fineLevel->getIndex())){
     cout_doing << "AMRICE::scheduleRefineInterface \t\tL-" 
                << fineLevel->getIndex() << " step "<< step <<'\n';
                
@@ -124,14 +128,20 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
     Task* task = scinew Task("AMRICE::refineCoarseFineInterface", 
                        this, &AMRICE::refineCoarseFineInterface, 
                        subCycleProgress);
+  
+  
+    Task::DomainSpec ND   = Task::NormalDomain;
+    Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+    const MaterialSet* all_matls = d_sharedState->allMaterials();
+    const MaterialSubset* all_matls_sub = all_matls->getUnion();
     
-    addRefineDependencies(task, lb->press_CCLabel,    step, nsteps);
-    addRefineDependencies(task, lb->rho_CCLabel,      step, nsteps);
-    addRefineDependencies(task, lb->sp_vol_CCLabel,   step, nsteps);
-    addRefineDependencies(task, lb->temp_CCLabel,     step, nsteps);
-    addRefineDependencies(task, lb->vel_CCLabel,      step, nsteps);
+    addRefineDependencies(task, lb->press_CCLabel, oims,d_press_matl, step, nsteps);
+    addRefineDependencies(task, lb->rho_CCLabel,   ND,  all_matls_sub,step, nsteps);
+    addRefineDependencies(task, lb->sp_vol_CCLabel,ND,  all_matls_sub,step, nsteps);
+    addRefineDependencies(task, lb->temp_CCLabel,  ND,  all_matls_sub,step, nsteps);
+    addRefineDependencies(task, lb->vel_CCLabel,   ND,  all_matls_sub,step, nsteps);
     
-    task->modifies(lb->press_CCLabel);
+    task->modifies(lb->press_CCLabel, d_press_matl, oims);
     task->modifies(lb->rho_CCLabel);
     task->modifies(lb->sp_vol_CCLabel);
     task->modifies(lb->temp_CCLabel);
@@ -145,16 +155,14 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
       for(iter = d_modelSetup->tvars.begin();
          iter != d_modelSetup->tvars.end(); iter++){
         TransportedVariable* tvar = *iter;
-        addRefineDependencies(task, tvar->var, step, nsteps);
-        task->modifies(tvar->var);
+        addRefineDependencies(task, tvar->var,ND,  all_matls_sub, step, nsteps);
       }
     }
     
     // dummy variable needed to keep the taskgraph in sync
     //task->computes(lb->AMR_SyncTaskgraphLabel); 
     
-    const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
-    sched->addTask(task, fineLevel->eachPatch(), ice_matls);
+    sched->addTask(task, fineLevel->eachPatch(), all_matls);
   }
 }
 /*______________________________________________________________________
@@ -173,8 +181,6 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
     cout_doing << "Doing refineCoarseFineInterface"<< "\t\t\t\t AMRICE L-" 
                << level->getIndex() << " step " << subCycleProgress<<endl;
     int  numMatls = d_sharedState->getNumICEMatls();
-    Ghost::GhostType  gac = Ghost::AroundCells;
-    Ghost::GhostType  gn = Ghost::None;
     bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
       
     for(int p=0;p<patches->size();p++){
@@ -191,8 +197,7 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
         CCVariable<double> press_CC, rho_CC, sp_vol_CC, temp_CC;
         CCVariable<Vector> vel_CC;
 
-        // NEVER use gac, 1 (ask Bryan) (probably not relevent anymore)
-        fine_new_dw->getModifiable(press_CC, lb->press_CCLabel,  indx,patch);
+        fine_new_dw->getModifiable(press_CC, lb->press_CCLabel,  0,   patch);
         fine_new_dw->getModifiable(rho_CC,   lb->rho_CCLabel,    indx,patch);
         fine_new_dw->getModifiable(sp_vol_CC,lb->sp_vol_CCLabel, indx,patch);
         fine_new_dw->getModifiable(temp_CC,  lb->temp_CCLabel,   indx,patch);
@@ -212,7 +217,7 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
         }
 
         refineCoarseFineBoundaries(patch, press_CC, fine_new_dw, 
-                                   lb->press_CCLabel,  indx,subCycleProgress);
+                                   lb->press_CCLabel,  0,   subCycleProgress);
 
         refineCoarseFineBoundaries(patch, rho_CC,   fine_new_dw, 
                                    lb->rho_CCLabel,    indx,subCycleProgress);
@@ -822,24 +827,34 @@ _____________________________________________________________________*/
 void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
                                SchedulerP& sched)
 {
+  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
+  if(!doICEOnLevel(fineLevel->getIndex()))
+    return;
+    
   Ghost::GhostType  gn = Ghost::None; 
-  cout_dbg << "AMRICE::scheduleCoarsen\t\t\t\tL-" << coarseLevel->getIndex() << '\n';
+  cout_doing << "AMRICE::scheduleCoarsen\t\t\t\tL-" << coarseLevel->getIndex() 
+             << '\n';
   Task* task = scinew Task("coarsen",this, &AMRICE::coarsen);
 
+  Task::DomainSpec ND   = Task::NormalDomain;                            
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.  
+  const MaterialSet* all_matls = d_sharedState->allMaterials();          
+  const MaterialSubset* all_matls_sub = all_matls->getUnion();           
+
   task->requires(Task::NewDW, lb->press_CCLabel,
-               0, Task::FineLevel, 0, Task::NormalDomain, gn, 0);
+               0, Task::FineLevel,  d_press_matl,oims, gn, 0);
                  
   task->requires(Task::NewDW, lb->rho_CCLabel,
-               0, Task::FineLevel, 0, Task::NormalDomain, gn, 0);
+               0, Task::FineLevel,  all_matls_sub,ND, gn, 0);
                
   task->requires(Task::NewDW, lb->sp_vol_CCLabel,
-               0, Task::FineLevel, 0, Task::NormalDomain, gn, 0);
+               0, Task::FineLevel,  all_matls_sub,ND, gn, 0);
   
   task->requires(Task::NewDW, lb->temp_CCLabel,
-               0, Task::FineLevel, 0, Task::NormalDomain, gn, 0);
+               0, Task::FineLevel,  all_matls_sub,ND, gn, 0);
   
   task->requires(Task::NewDW, lb->vel_CCLabel,
-               0, Task::FineLevel, 0, Task::NormalDomain, gn, 0);
+               0, Task::FineLevel,  all_matls_sub,ND, gn, 0);
 
   //__________________________________
   // Model Variables.
@@ -850,19 +865,18 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
        iter != d_modelSetup->tvars.end(); iter++){
       TransportedVariable* tvar = *iter;
       task->requires(Task::NewDW, tvar->var,
-                  0, Task::FineLevel, 0, Task::NormalDomain, gn, 0);
+                  0, Task::FineLevel,all_matls_sub,ND, gn, 0);
       task->modifies(tvar->var);
     }
   }
   
-  task->modifies(lb->press_CCLabel);
+  task->modifies(lb->press_CCLabel, d_press_matl, oims);
   task->modifies(lb->rho_CCLabel);
   task->modifies(lb->sp_vol_CCLabel);
   task->modifies(lb->temp_CCLabel);
   task->modifies(lb->vel_CCLabel);
 
-  sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allMaterials()); 
-  
+  sched->addTask(task, coarseLevel->eachPatch(), all_matls); 
   
   //__________________________________
   // schedule refluxing
@@ -870,7 +884,6 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
     scheduleReflux_computeCorrectionFluxes(coarseLevel, sched);
     scheduleReflux_applyCorrection(coarseLevel, sched);
   }
-  
 }
 
 /*___________________________________________________________________
@@ -901,14 +914,14 @@ void AMRICE::coarsen(const ProcessorGroup*,
 
       CCVariable<double> rho_CC, press_CC, temp, sp_vol_CC;
       CCVariable<Vector> vel_CC;
-      new_dw->getModifiable(press_CC, lb->press_CCLabel,  indx, coarsePatch);
+      new_dw->getModifiable(press_CC, lb->press_CCLabel,  0,    coarsePatch);
       new_dw->getModifiable(rho_CC,   lb->rho_CCLabel,    indx, coarsePatch);
       new_dw->getModifiable(sp_vol_CC,lb->sp_vol_CCLabel, indx, coarsePatch);
       new_dw->getModifiable(temp,     lb->temp_CCLabel,   indx, coarsePatch);
       new_dw->getModifiable(vel_CC,   lb->vel_CCLabel,    indx, coarsePatch);  
       
       // coarsen
-      fineToCoarseOperator<double>(press_CC,  lb->press_CCLabel,indx, new_dw, 
+      fineToCoarseOperator<double>(press_CC,  lb->press_CCLabel, 0,   new_dw, 
                          invRefineRatio, coarsePatch, coarseLevel, fineLevel);
                          
       fineToCoarseOperator<double>(rho_CC,    lb->rho_CCLabel,  indx, new_dw, 
@@ -1119,16 +1132,6 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
   
   bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
   
-/*`==========TESTING==========*/
-  for(int c_p=0;c_p<coarsePatches->size();c_p++){  
-    const Patch* coarsePatch = coarsePatches->get(c_p);
-    
-    Level::selectType finePatches;
-    coarsePatch->getFineLevelPatches(finePatches);
-    
-  }   
-/*===========TESTING==========`*/
-  
   for(int c_p=0;c_p<coarsePatches->size();c_p++){  
     const Patch* coarsePatch = coarsePatches->get(c_p);
     
@@ -1138,7 +1141,6 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
       int indx = matls->get(m);
       constCCVariable<double> cv, rho_CC;
 
-      Ghost::GhostType  gn  = Ghost::None;
       Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(rho_CC,lb->rho_CCLabel,       indx,coarsePatch, gac,1);
       new_dw->get(cv,    lb->specific_heatLabel,indx,coarsePatch, gac,1);
