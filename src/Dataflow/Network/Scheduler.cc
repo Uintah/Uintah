@@ -354,12 +354,25 @@ Scheduler::report_execution_finished_real(unsigned int serial)
 
   if (serial_set.size() == 0)
   {
-    // All execution done.
+    // All execution done.  Call the execution finished callbacks
+    // here.  The callbacks are called in priority order until one
+    // returns false.  Then all other callbacks with the same priority
+    // are called and we're done.  The priority level is finished off
+    // because this results in a deterministic result for the order in
+    // which callbacks are added to the queue.
+    bool done = false;
+    int priority = 0;
     for (unsigned int i = 0; i < callbacks_.size(); i++)
     {
+      if (done && callbacks_[i].priority != priority)
+      {
+        break;
+      }
+
       if (!callbacks_[i].callback(callbacks_[i].data))
       {
-	break;
+        priority = callbacks_[i].priority;
+        done = true;
       }
     }
   }
