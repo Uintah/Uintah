@@ -1889,7 +1889,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
 
     if (isCollective && !(throws_clause)){
       e.out << leader2 << "/*CALLNORET reply*/\n";
-      e.out << "for(int i=0; i<save_callnoret_msg.size(); i++){\n";
+      e.out << "for(unsigned int i=0; i<save_callnoret_msg.size(); i++){\n";
       e.out << "  save_callnoret_msg[i]->waitReply();\n";
       e.out << "  save_callnoret_msg[i]->unmarshalInt(&_x_flag);\n";
       e.out << "  save_callnoret_msg[i]->destroyMessage();\n";
