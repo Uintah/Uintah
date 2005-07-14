@@ -19,7 +19,7 @@ globalParams;
 %=========================================================================
 param                       = [];
 
-param.problemType           = 'Lshaped; %'ProblemB'; %'quadratic'; %'Lshaped'; %
+param.problemType           = 'Lshaped'; %'ProblemB'; %'quadratic'; %'Lshaped'; %
 param.outputDir             = 'test';
 param.logFile               = 'testDisc.log';
 param.outputType            = 'screen';
