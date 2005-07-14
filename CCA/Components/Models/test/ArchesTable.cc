@@ -18,25 +18,31 @@ ArchesTable::ArchesTable(ProblemSpecP& params)
 {
   file_read = false;
   params->require("filename", filename);
+
+  // Parse default values
   for (ProblemSpecP child = params->findBlock("defaultValue"); child != 0;
        child = child->findNextBlock("defaultValue")) {
-    DefaultValue* df = new DefaultValue;
+    DefaultValue* df = scinew DefaultValue;
     if(!child->getAttribute("name", df->name))
       throw ProblemSetupException("No name for defaultValue", __FILE__, __LINE__);
     child->get(df->value);
     defaults.push_back(df);
   }
+
+  // Parse constant values
   for (ProblemSpecP child = params->findBlock("constantValue"); child != 0;
        child = child->findNextBlock("constantValue")) {
-    Dep* dep = new Dep(Dep::ConstantValue);
+    Dep* dep = scinew Dep(Dep::ConstantValue);
     if(!child->getAttribute("name", dep->name))
       throw ProblemSetupException("No name for constantValue", __FILE__, __LINE__);
     child->get(dep->constantValue);
     deps.push_back(dep);
   }
+
+  // Parse default values
   for (ProblemSpecP child = params->findBlock("derivedValue"); child != 0;
        child = child->findNextBlock("derivedValue")) {
-    Dep* dep = new Dep(Dep::DerivedValue);
+    Dep* dep = scinew Dep(Dep::DerivedValue);
     if(!child->getAttribute("name", dep->name))
       throw ProblemSetupException("No expression for derivedValue", __FILE__, __LINE__);
     string expr;
@@ -60,6 +66,8 @@ ArchesTable::ArchesTable(ProblemSpecP& params)
 
 ArchesTable::~ArchesTable()
 {
+  for(int i=0;i<(int)defaults.size();i++)
+    delete defaults[i];
   for(int i=0;i<(int)inds.size();i++)
     delete inds[i];
   for(int i=0;i<(int)deps.size();i++){
@@ -67,6 +75,9 @@ ArchesTable::~ArchesTable()
       delete[] deps[i]->data;
     if(deps[i]->expression)
       delete deps[i]->expression;
+    // There is not a first axis for the final variables
+    for(int j=1;j<(int)deps[i]->axes.size();j++)
+      delete deps[i]->axes[j];
     delete deps[i];
   }
 }
@@ -84,7 +95,7 @@ ArchesTable::Expr* ArchesTable::parse_addsub(string::iterator&  begin,
       Expr* child2 = parse_muldiv(begin, end);
       if(!child2)
         return 0;
-      child1 = new Expr(next, child1, child2);
+      child1 = scinew Expr(next, child1, child2);
     } else if(next == ' ' || next == '\t' || next == '\n'){
       begin++;
     } else {
@@ -107,7 +118,7 @@ ArchesTable::Expr* ArchesTable::parse_muldiv(string::iterator&  begin,
       Expr* child2 = parse_sign(begin, end);
       if(!child2)
         return 0;
-      child1 = new Expr(next, child1, child2);
+      child1 = scinew Expr(next, child1, child2);
     } else if(next == ' ' || next == '\t' || next == '\n'){
       begin++;
     } else {
@@ -127,7 +138,7 @@ ArchesTable::Expr* ArchesTable::parse_sign(string::iterator& begin,
       Expr* child = parse_idorconstant(begin, end);
       if(!child)
         return 0;
-      return new Expr(next, child, 0);
+      return scinew Expr(next, child, 0);
     } else if(next == '+'){
       begin++;
       Expr* child = parse_idorconstant(begin, end);
@@ -163,9 +174,9 @@ ArchesTable::Expr* ArchesTable::parse_idorconstant(string::iterator& begin,
     int id_index = addDependentVariable(id);
     Dep* dep = deps[id_index];
     if(dep->type == Dep::ConstantValue)
-      return new Expr(dep->constantValue);
+      return scinew Expr(dep->constantValue);
     else
-      return new Expr(id_index);
+      return scinew Expr(id_index);
   } else if(next == '{'){
     // Independent variable...
     begin++;
@@ -176,7 +187,7 @@ ArchesTable::Expr* ArchesTable::parse_idorconstant(string::iterator& begin,
       return 0;
     begin++; // skip }
 
-    return new Expr(id);
+    return scinew Expr(id);
   } else if(next =='('){
     // Parenthetical
     begin++;
@@ -201,7 +212,7 @@ ArchesTable::Expr* ArchesTable::parse_idorconstant(string::iterator& begin,
     in >> c;
     if(!in)
       return 0;
-    return new Expr(c);
+    return scinew Expr(c);
   } else {
     return 0;
   }
@@ -215,7 +226,7 @@ int ArchesTable::addDependentVariable(const string& name)
     if(dep->name == name)
       return i;
   }
-  Dep* dep = new Dep(Dep::TableValue);
+  Dep* dep = scinew Dep(Dep::TableValue);
   dep->name = name;
   deps.push_back(dep);
   return (int)deps.size()-1;
@@ -224,7 +235,7 @@ int ArchesTable::addDependentVariable(const string& name)
 void ArchesTable::addIndependentVariable(const string& name)
 {
   ASSERT(!file_read);
-  Ind* ind = new Ind;
+  Ind* ind = scinew Ind;
   ind->name = name;
   inds.push_back(ind);
 }
@@ -248,7 +259,7 @@ void ArchesTable::setup()
 
   // Read the names.
   for(int i=0;i<nvars;i++){
-    Ind* ind = new Ind;
+    Ind* ind = scinew Ind;
     ind->name = getString(in);
     in_inds[i] = ind;
   }
@@ -272,7 +283,7 @@ void ArchesTable::setup()
   long stride = axis_sizes[0];
   in_axes[0] = 0;
   for(int i=nvars-1;i>=1;i--){
-    in_axes[i] = new InterpAxis(axis_sizes[i], stride);
+    in_axes[i] = scinew InterpAxis(axis_sizes[i], stride);
     stride *= axis_sizes[i];
   }
   long size = stride;
@@ -280,10 +291,10 @@ void ArchesTable::setup()
   int ndeps = getInt(in);
   vector<Dep*> in_deps(ndeps);
   for(int j=0;j<ndeps;j++){
-    Dep* dep = new Dep(Dep::TableValue);
+    Dep* dep = scinew Dep(Dep::TableValue);
     
     dep->name = getString(in);
-    dep->data = new double[size];
+    dep->data = scinew double[size];
     // Add the first (typically masss fraction) axis with stride 1
     dep->addAxis(scinew InterpAxis(axis_sizes[0], 1));
     for(int i=1;i<nvars;i++)
@@ -502,7 +513,24 @@ void ArchesTable::setup()
       
     }
   }
+
+  // Free up the input deps
+  for(int i=0;i<(int)in_inds.size();i++)
+    delete inds[i];
+  for(int i=0;i<(int)in_axes.size();i++)
+    delete in_axes[i];
+  for(int i=0;i<(int)in_deps.size();i++){
+    if(deps[i]->data)
+      delete[] deps[i]->data;
+    if(deps[i]->expression)
+      delete deps[i]->expression;
+    // Only delete the first axis - the rest will be deleted
+    // out of in_axes
+    delete deps[i]->axes[0];
+    delete deps[i];
+  }  
   
+  // Compute derived values
   for(int i=0;i<static_cast<int>(deps.size());i++){
     Dep* dep = deps[i];
     if(dep->type != Dep::DerivedValue)
