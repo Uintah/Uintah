@@ -82,6 +82,7 @@ ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
   d_dynamic = true;
   heatConductionModel = 0;
   thermalContactModel = 0;
+  d_perproc_patches = 0;
 }
 
 bool ImpMPM::restartableTimesteps()
