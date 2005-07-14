@@ -75,9 +75,6 @@ ArchesTable::~ArchesTable()
       delete[] deps[i]->data;
     if(deps[i]->expression)
       delete deps[i]->expression;
-    // There is not a first axis for the final variables
-    for(int j=1;j<(int)deps[i]->axes.size();j++)
-      delete deps[i]->axes[j];
     delete deps[i];
   }
 }
@@ -284,6 +281,7 @@ void ArchesTable::setup()
   in_axes[0] = 0;
   for(int i=nvars-1;i>=1;i--){
     in_axes[i] = scinew InterpAxis(axis_sizes[i], stride);
+    in_axes[i]->useCount++;
     stride *= axis_sizes[i];
   }
   long size = stride;
@@ -518,15 +516,13 @@ void ArchesTable::setup()
   for(int i=0;i<(int)in_inds.size();i++)
     delete inds[i];
   for(int i=0;i<(int)in_axes.size();i++)
-    delete in_axes[i];
+    if(--in_axes[i]->useCount == )
+      delete in_axes[i];
   for(int i=0;i<(int)in_deps.size();i++){
     if(in_deps[i]->data)
       delete[] in_deps[i]->data;
     if(in_deps[i]->expression)
       delete in_deps[i]->expression;
-    // Only delete the first axis - the rest will be deleted
-    // out of in_axes
-    delete in_deps[i]->axes[0];
     delete in_deps[i];
   }  
   
