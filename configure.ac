@@ -545,6 +545,11 @@ SCI_ARG_ENABLE(assertion-level,
                  Use assertion level N (0-3)),
   [enable_assertion_level="$enableval"],
   [enable_assertion_level=${enable_assertion_level=3}])
+SCI_ARG_ENABLE(scinew-line-numbers,
+  AC_HELP_STRING(--enable-scinew-line-numbers,
+                 Have SCI malloc store the file and line that calls 'scinew'),
+  [enable_scinew_line_numbers="yes"],
+  [enable_scinew_line_numbers="no"])
 SCI_ARG_ENABLE(throw-level,
   AC_HELP_STRING(--enable-throw-level=N,
                  Use throw level N (0-3)),
@@ -986,6 +991,13 @@ else
   DEF_MALLOC="#define DISABLE_SCI_MALLOC 1"
 fi
 
+if test "$enable_scinew_line_numbers" = "yes"; then
+  DEF_MALLOC_LINENUMBERS="#define USE_TAG_LINENUM 1"
+else
+  DEF_MALLOC_LINENUMBERS=""
+fi
+
+
 AC_SUBST(SO_OR_ARCHIVE_EXTENSION)
 AC_SUBST(NOPRINTDIR)
 AC_SUBST(PACKAGE_DIRS)
@@ -995,6 +1007,7 @@ AC_SUBST(LARGESOS)
 AC_SUBST(TIME_IMPL)
 
 AC_SUBST(DEF_MALLOC)
+AC_SUBST(DEF_MALLOC_LINENUMBERS)
 sci_defs_files="$sci_defs_files include/sci_defs/malloc_testdefs.h"
 
 AC_SUBST(ASSERTION_LEVEL)
