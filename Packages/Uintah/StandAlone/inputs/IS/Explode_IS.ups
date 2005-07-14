@@ -362,6 +362,7 @@
     <create_new_particles>           false       </create_new_particles>
     <manual_new_material>            true       </manual_new_material>
     <DoThermalExpansion>             false      </DoThermalExpansion>
+    <testForNegTemps_mpm>            false      </testForNegTemps_mpm>
     <erosion algorithm = "ZeroStress"/>
   </MPM>
 

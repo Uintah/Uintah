@@ -298,6 +298,7 @@
     <do_grid_reset>                 true     </do_grid_reset>
     <DoImplicitHeatConduction>      true     </DoImplicitHeatConduction>
     <DoThermalExpansion>            true     </DoThermalExpansion>
+    <testForNegTemps_mpm>           false    </testForNegTemps_mpm>
   </MPM>
 
 <!--
