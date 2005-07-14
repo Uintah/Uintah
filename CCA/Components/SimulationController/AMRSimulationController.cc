@@ -277,14 +277,15 @@ void AMRSimulationController::subCycle(GridP& grid, int startDW, int dwStride, i
 
     d_sim->scheduleTimeAdvance(fineLevel, d_scheduler, step, numSteps);
 
-    // change this to be step+1 instead of step, and move below scheduleTimeAdvance
-    // so we can compute into the new DW
-    if (d_doAMR)
-      d_sim->scheduleRefineInterface(fineLevel, d_scheduler, step+1, numSteps);
     if(numLevel+1 < grid->numLevels()){
       ASSERT(newDWStride > 0);
       subCycle(grid, curDW, newDWStride, numLevel+1);
     }
+    // do refineInterface after the freshest data we can get; after the finer
+    // level's coarsen completes
+    if (d_doAMR)
+      d_sim->scheduleRefineInterface(fineLevel, d_scheduler, step+1, numSteps);
+
     curDW += newDWStride;
   }
   // Coarsening always happens at the final timestep, completely within the
