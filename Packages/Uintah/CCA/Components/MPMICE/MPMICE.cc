@@ -55,6 +55,7 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
   MIlb = scinew MPMICELabel();
   d_rigidMPM = false;
   d_doAMR = doAMR;
+  d_testForNegTemps_mpm = true;
   
   switch(mpmtype) {
   case RIGID_MPMICE:
@@ -178,7 +179,14 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
       else if (debug_attr["label"] == "switchDebug_InterpolatePAndGradP")
         switchDebug_InterpolatePAndGradP   = true;       
     }
-  }  
+  }
+  
+  ProblemSpecP mpm_ps = prob_spec->findBlock("MPM");
+  if(mpm_ps){ 
+    mpm_ps->get("testForNegTemps_mpm",d_testForNegTemps_mpm);
+  }
+  
+    
   if (cout_norm.active()) {
     cout_norm << "Done with problemSetup \t\t\t MPMICE" <<endl;
     cout_norm << "--------------------------------\n"<<endl;
@@ -1183,13 +1191,13 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       //---- B U L L E T   P R O O F I N G------
       IntVector neg_cell;
       ostringstream warn;
-#if 0
-      if (!d_ice->areAllValuesPositive(Temp_CC, neg_cell)) {
-        warn <<"ERROR MPMICE::interpolateNCToCC_0, mat "<< indx <<" cell "
-             << neg_cell << " Temp_CC " << Temp_CC[neg_cell] << "\n ";
-        throw InvalidValue(warn.str(), __FILE__, __LINE__);
+      if(d_testForNegTemps_mpm){
+        if (!d_ice->areAllValuesPositive(Temp_CC, neg_cell)) {
+          warn <<"ERROR MPMICE::interpolateNCToCC_0, mat "<< indx <<" cell "
+               << neg_cell << " Temp_CC " << Temp_CC[neg_cell] << "\n ";
+          throw InvalidValue(warn.str(), __FILE__, __LINE__);
+        }
       }
-#endif
       if (!d_ice->areAllValuesPositive(rho_CC, neg_cell)) {
         warn <<"ERROR MPMICE::interpolateNCToCC_0, mat "<< indx <<" cell "
              << neg_cell << " rho_CC " << rho_CC[neg_cell]<< "\n ";
@@ -1379,13 +1387,13 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
       //---- B U L L E T   P R O O F I N G------
       IntVector neg_cell;
       ostringstream warn;
-#if 0
-      if (!d_ice->areAllValuesPositive(int_eng_L, neg_cell)) {
-        warn <<"ERROR MPMICE::computeLagrangianValuesMPM, mat "<< indx<<" cell "
-             << neg_cell << " int_eng_L " << int_eng_L[neg_cell] << "\n ";
-        throw InvalidValue(warn.str(), __FILE__, __LINE__);
+      if(d_testForNegTemps_mpm){
+        if (!d_ice->areAllValuesPositive(int_eng_L, neg_cell)) {
+          warn <<"ERROR MPMICE::computeLagrangianValuesMPM, mat "<< indx<<" cell "
+               << neg_cell << " int_eng_L " << int_eng_L[neg_cell] << "\n ";
+          throw InvalidValue(warn.str(), __FILE__, __LINE__);
+        }
       }
-#endif
       if (!d_ice->areAllValuesPositive(rho_CC, neg_cell)) {
         warn <<"ERROR MPMICE::computeLagrangianValuesMPM, mat "<<indx<<" cell "
              << neg_cell << " rho_CC " << rho_CC[neg_cell]<< "\n ";
@@ -1865,7 +1873,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         const IntVector& c = *iter;
         sp_vol_new[m][c] = 1.0/rho_micro[m][c];
       }
-    }
+    }   
     //__________________________________
     //  compute f_theta  
     for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
@@ -1879,6 +1887,27 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         f_theta[m][c] = vol_frac[m][c]*kappa[m][c]/sumKappa[c];
       }
     }
+
+#if 0
+    //__________________________________
+    //  compute f_theta  (alternate)
+    for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+      const IntVector& c = *iter;
+      sumKappa[c] = 0.0;
+      for (int m = 0; m < numALLMatls; m++) {
+        if(ice_matl[m]){
+          kappa[m][c] = sp_vol_new[m][c]/(speedSound[m][c]*speedSound[m][c]);
+        }
+        if(mpm_matl[m]){
+          kappa[m][c] = mpm_matl[m]->getConstitutiveModel()->getCompressibility();
+        }
+        sumKappa[c] += vol_frac[m][c]*kappa[m][c];
+      }
+      for (int m = 0; m < numALLMatls; m++) {
+        f_theta[m][c] = vol_frac[m][c]*kappa[m][c]/sumKappa[c];
+      }
+    }
+#endif
     
   //---- P R I N T   D A T A ------
     if(d_ice -> switchDebug_EQ_RF_press)  { 
