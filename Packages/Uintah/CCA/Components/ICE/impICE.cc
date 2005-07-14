@@ -55,7 +55,8 @@ void ICE::scheduleSetupMatrix(  SchedulerP& sched,
   t->requires( whichDW,   lb->vol_fracX_FCLabel,  gac,1);        
   t->requires( whichDW,   lb->vol_fracY_FCLabel,  gac,1);        
   t->requires( whichDW,   lb->vol_fracZ_FCLabel,  gac,1);        
-  t->requires( whichDW,   lb->sumKappaLabel, one_matl,oims,gn,0);      
+  t->requires( Task::ParentNewDW,   
+                          lb->sumKappaLabel, one_matl,oims,gn,0);      
 
   t->computes(lb->matrixLabel,  one_matl, oims);
   sched->addTask(t, patches, all_matls);                     
@@ -207,6 +208,7 @@ void ICE::scheduleImplicitVel_FC(SchedulerP& sched,
 } 
 /*___________________________________________________________________
  Function~  ICE::scheduleComputeDel_P--
+ Note:      This task is scheduled outside the iteration loop
 _____________________________________________________________________*/
 void ICE::scheduleComputeDel_P(  SchedulerP& sched,
                                  const LevelP&,
@@ -348,6 +350,8 @@ void ICE::setupMatrix(const ProcessorGroup*,
     }
     DataWarehouse* parent_old_dw = 
 	  new_dw->getOtherDataWarehouse(Task::ParentOldDW); 
+    DataWarehouse* parent_new_dw = 
+	  new_dw->getOtherDataWarehouse(Task::ParentNewDW);
             
     delt_vartype delT;
     parent_old_dw->get(delT, d_sharedState->get_delt_label(),level);
@@ -359,7 +363,7 @@ void ICE::setupMatrix(const ProcessorGroup*,
     Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
     new_dw->allocateAndPut(A,    lb->matrixLabel,  0, patch, gn, 0);
-    whichDW->get(sumKappa,       lb->sumKappaLabel,0, patch, gn, 0); 
+    parent_new_dw->get(sumKappa, lb->sumKappaLabel,0, patch, gn, 0); 
     
     IntVector right, left, top, bottom, front, back;
     IntVector R_CC, L_CC, T_CC, B_CC, F_CC, BK_CC;
