@@ -22,11 +22,21 @@ switch (param.problemType)
     case {'linear','quad1','quad2','sinsin','GaussianSource','Lshaped'},
         a           = repmat(1.0,size(x{1}));
 
-    case {'jump_linear','jump_quad'},
+    case {'jump_linear'},
         % Piecewise constant diffusion coefficient with a big jump at x1=0.5.
         x0          = 0.5;
         aLeft       = 1.0;
         aRight      = 1.0e+6;
+        left        = find(x{1} < x0);
+        right       = find(x{1} >= x0);
+        a(left)     = aLeft;
+        a(right)    = aRight;
+
+    case {'jump_quad'},
+        % Piecewise constant diffusion coefficient with a big jump at x1=0.5.
+        x0          = 0.5;
+        aLeft       = 1.0;
+        aRight      =1.0e+6;
         left        = find(x{1} < x0);
         right       = find(x{1} >= x0);
         a(left)     = aLeft;
