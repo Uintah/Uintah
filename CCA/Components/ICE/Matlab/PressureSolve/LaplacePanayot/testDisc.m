@@ -17,6 +17,13 @@
 globalParams;
 
 initParam;                  % Initialize parameters structure
+
+if (param.profile)
+    profile on -detail builtin;                                % Enable profiling
+end
+totalStartCPU           = cputime;
+totalStartElapsed       = clock;
+
 out(1,'=========================================================================\n');
 out(1,' Testing discretization accuracy on increasingly finer grids\n');
 out(1,'=========================================================================\n');
@@ -43,12 +50,13 @@ for count = 1:length(param.numCellsRange)
         tStartCPU           = cputime;
         tStartElapsed       = clock;
 
-        grid.maxLevels  	= 5;
-        grid.maxPatches  	= 5;
-        grid.level          = cell(grid.maxLevels,1);
+        grid                = [];
+        grid.dim            = length(param.domainSize);
+        grid.domainSize     = param.domainSize;
+        grid.maxLevels  	= param.maxLevels;
+        grid.maxPatches  	= param.maxPatches;
         grid.numLevels      = 0;
-        grid.domainSize     = [1.0 1.0];                                % Domain is from [0.,0.] to [1.,1.]
-        grid.dim            = length(grid.domainSize);
+        grid.level          = cell(grid.maxLevels,1);
         A                   = [];
         b                   = [];
         T                   = [];
@@ -165,14 +173,7 @@ for count = 1:length(param.numCellsRange)
         out(2,' Solve the linear system\n');
         out(2,'-------------------------------------------------------------------------\n');
         out(1,'Solving system\n');
-        tStartCPU       = cputime;
-        tStartElapsed   = clock;
-        x               = A\b;                            % Direct solver
-        u               = sparseToAMR(x,grid,TI,1);           % Translate the solution vector to patch-based
-        tCPU            = cputime - tStartCPU;
-        tElapsed        = etime(clock,tStartElapsed);
-        out(2,'CPU time     = %f\n',tCPU);
-        out(2,'Elapsed time = %f\n',tElapsed);
+        u = solveSystem(A,b,grid,TI);
     end
 
     %-------------------------------------------------------------------------
@@ -212,7 +213,7 @@ for count = 1:length(param.numCellsRange)
         normAMR(grid,err,'H1max') ...
         ];
     out(1,'#vars = %7d  L2=%.3e  max=%.3e  H1=%.3e  H1max=%.3e\n',grid.totalVars,errNorm(count,2:end));
-    
+
     if (param.saveResults)
         saveResults(errNorm(1:count,:));
     end
@@ -224,5 +225,13 @@ for count = 1:length(param.numCellsRange)
     tElapsed    = etime(clock,tStartElapsed);
     out(2,'CPU time     = %f\n',tCPU);
     out(2,'Elapsed time = %f\n',tElapsed);
-    
+
+end
+
+totalCPU        = cputime - totalStartCPU;
+totalElapsed    = etime(clock,totalStartElapsed);
+out(1,'CPU time     = %f\n',totalCPU);
+out(1,'Elapsed time = %f\n',totalElapsed);
+if (param.profile)
+    profile report;                             % Generate timing profile report
 end
