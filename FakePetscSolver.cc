@@ -10,10 +10,10 @@ using namespace SCIRun;
 // ****************************************************************************
 // Default constructor for PetscSolver
 // ****************************************************************************
-PetscSolver::PetscSolver(const ProcessorGroup* myworld)
-   : d_myworld(myworld)
+PetscSolver::PetscSolver(const ProcessorGroup* myworld) :
+  d_myworld(myworld)
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 // ****************************************************************************
@@ -29,7 +29,7 @@ PetscSolver::~PetscSolver()
 void 
 PetscSolver::problemSetup(const ProblemSpecP&)
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 
@@ -38,12 +38,12 @@ PetscSolver::problemSetup(const ProblemSpecP&)
 // ****************************************************************************
 void 
 PetscSolver::computePressResidual(const ProcessorGroup*,
-				 const Patch*,
-				 DataWarehouseP&,
-				 DataWarehouseP&,
-				 ArchesVariables*)
+                                  const Patch*,
+                                  DataWarehouseP&,
+                                  DataWarehouseP&,
+                                  ArchesVariables*)
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 
@@ -52,18 +52,18 @@ PetscSolver::computePressResidual(const ProcessorGroup*,
 // ****************************************************************************
 void 
 PetscSolver::computePressOrderOfMagnitude(const ProcessorGroup* ,
-				const Patch* ,
-				DataWarehouseP& ,
-				DataWarehouseP& , ArchesVariables* )
+                                          const Patch* ,
+                                          DataWarehouseP& ,
+                                          DataWarehouseP& , ArchesVariables* )
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 void 
 PetscSolver::matrixCreate(const PatchSet*,
-			  const PatchSubset*)
+                          const PatchSubset*)
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 // ****************************************************************************
@@ -71,11 +71,11 @@ PetscSolver::matrixCreate(const PatchSet*,
 // ****************************************************************************
 void 
 PetscSolver::computePressUnderrelax(const ProcessorGroup*,
-				    const Patch*,
-				    ArchesVariables*,
-				    ArchesConstVariables*)
+                                    const Patch*,
+                                    ArchesVariables*,
+                                    ArchesConstVariables*)
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 // ****************************************************************************
@@ -83,19 +83,19 @@ PetscSolver::computePressUnderrelax(const ProcessorGroup*,
 // ****************************************************************************
 void 
 PetscSolver::setPressMatrix(const ProcessorGroup* ,
-			    const Patch*,
-			    ArchesVariables*,
-			    ArchesConstVariables*,
-			    const ArchesLabel*)
+                            const Patch*,
+                            ArchesVariables*,
+                            ArchesConstVariables*,
+                            const ArchesLabel*)
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 
 bool
 PetscSolver::pressLinearSolve()
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
   return false;
 }
 
@@ -103,13 +103,13 @@ PetscSolver::pressLinearSolve()
 void
 PetscSolver::copyPressSoln(const Patch*, ArchesVariables*)
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
   
 void
 PetscSolver::destroyMatrix() 
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 // ****************************************************************************
@@ -117,20 +117,20 @@ PetscSolver::destroyMatrix()
 // ****************************************************************************
 void 
 PetscSolver::pressLisolve(const ProcessorGroup*,
-			 const Patch*,
-			 DataWarehouseP&,
-			 DataWarehouseP&,
-			 ArchesVariables*,
-			 const ArchesLabel*)
+                          const Patch*,
+                          DataWarehouseP&,
+                          DataWarehouseP&,
+                          ArchesVariables*,
+                          const ArchesLabel*)
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 
 // Shutdown PETSc
 void PetscSolver::finalizeSolver()
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 //****************************************************************************
@@ -139,12 +139,12 @@ void PetscSolver::finalizeSolver()
 
 void 
 PetscSolver::computeVelResidual(const ProcessorGroup* ,
-				const Patch*,
-				DataWarehouseP&,
-				DataWarehouseP&, int,
-				ArchesVariables*)
+                                const Patch*,
+                                DataWarehouseP&,
+                                DataWarehouseP&, int,
+                                ArchesVariables*)
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 
@@ -153,11 +153,11 @@ PetscSolver::computeVelResidual(const ProcessorGroup* ,
 //****************************************************************************
 void 
 PetscSolver::computeVelOrderOfMagnitude(const ProcessorGroup* ,
-				const Patch* ,
-				DataWarehouseP& ,
-				DataWarehouseP& , ArchesVariables* )
+                                        const Patch* ,
+                                        DataWarehouseP& ,
+                                        DataWarehouseP& , ArchesVariables* )
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 
@@ -167,12 +167,12 @@ PetscSolver::computeVelOrderOfMagnitude(const ProcessorGroup* ,
 //****************************************************************************
 void 
 PetscSolver::computeVelUnderrelax(const ProcessorGroup* ,
-				  const Patch*,
-				  int,
-				  ArchesVariables*,
-				  ArchesConstVariables*)
+                                  const Patch*,
+                                  int,
+                                  ArchesVariables*,
+                                  ArchesConstVariables*)
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 
@@ -181,14 +181,14 @@ PetscSolver::computeVelUnderrelax(const ProcessorGroup* ,
 //****************************************************************************
 void 
 PetscSolver::velocityLisolve(const ProcessorGroup*,
-			    const Patch*,
-			     int,
-			     double,
-			     ArchesVariables*,
-			     CellInformation*,
-			     const ArchesLabel*)
+                             const Patch*,
+                             int,
+                             double,
+                             ArchesVariables*,
+                             CellInformation*,
+                             const ArchesLabel*)
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 //****************************************************************************
@@ -196,13 +196,13 @@ PetscSolver::velocityLisolve(const ProcessorGroup*,
 //****************************************************************************
 void 
 PetscSolver::computeScalarResidual(const ProcessorGroup* ,
-				  const Patch*,
-				  DataWarehouseP& ,
-				  DataWarehouseP& , 
-				  int,
-				  ArchesVariables*)
+                                   const Patch*,
+                                   DataWarehouseP& ,
+                                   DataWarehouseP& , 
+                                   int,
+                                   ArchesVariables*)
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 
@@ -211,11 +211,11 @@ PetscSolver::computeScalarResidual(const ProcessorGroup* ,
 //****************************************************************************
 void 
 PetscSolver::computeScalarOrderOfMagnitude(const ProcessorGroup* ,
-				const Patch* ,
-				DataWarehouseP& ,
-				DataWarehouseP& , ArchesVariables* )
+                                           const Patch* ,
+                                           DataWarehouseP& ,
+                                           DataWarehouseP& , ArchesVariables* )
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 //****************************************************************************
@@ -223,12 +223,12 @@ PetscSolver::computeScalarOrderOfMagnitude(const ProcessorGroup* ,
 //****************************************************************************
 void 
 PetscSolver::computeScalarUnderrelax(const ProcessorGroup* ,
-				    const Patch*,
-				    int,
-				    ArchesVariables*,
-				    ArchesConstVariables*)
+                                     const Patch*,
+                                     int,
+                                     ArchesVariables*,
+                                     ArchesConstVariables*)
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 //****************************************************************************
@@ -236,22 +236,22 @@ PetscSolver::computeScalarUnderrelax(const ProcessorGroup* ,
 //****************************************************************************
 void 
 PetscSolver::scalarLisolve(const ProcessorGroup*,
-			  const Patch*,
-			  int, double,
-			  ArchesVariables*,
-			  ArchesConstVariables*,
-			  CellInformation*)
+                           const Patch*,
+                           int, double,
+                           ArchesVariables*,
+                           ArchesConstVariables*,
+                           CellInformation*)
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 void 
 PetscSolver::computeEnthalpyUnderrelax(const ProcessorGroup* ,
-				       const Patch*,
-				       ArchesVariables*,
-				       ArchesConstVariables*)
+                                       const Patch*,
+                                       ArchesVariables*,
+                                       ArchesConstVariables*)
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 
@@ -260,11 +260,11 @@ PetscSolver::computeEnthalpyUnderrelax(const ProcessorGroup* ,
 //****************************************************************************
 void 
 PetscSolver::enthalpyLisolve(const ProcessorGroup*,
-			  const Patch*,
-			  double ,
-			  ArchesVariables*,
-			  ArchesConstVariables*,
-			  CellInformation*)
+                             const Patch*,
+                             double ,
+                             ArchesVariables*,
+                             ArchesConstVariables*,
+                             CellInformation*)
 {
-  throw InternalError("PetscSolver not configured");
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
