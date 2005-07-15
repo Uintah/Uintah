@@ -1161,14 +1161,41 @@ ViewSlices::draw_crop_bbox(SliceWindow &window, BBox &bbox) {
     glColor4dv(green);
   else
     glColor4dv(lt_green);
+  glColor4d(0.0, 0.0, 0.0, 0.75);
+
+
+  Point sll = screen_to_world(window, 0, 0);
+  Point slr = screen_to_world(window, window.viewport_->width(), 0);
+  Point sul = screen_to_world(window, 0, window.viewport_->height());
+  Point sur = screen_to_world(window, window.viewport_->width(), 
+				    window.viewport_->height());
 
   glBegin(GL_QUADS);
-  {
-    glVertex3dv(ll);
-    glVertex3dv(lr);
-    glVertex3dv(ur);
-    glVertex3dv(ul);
-  }
+  
+  glVertex3dv(&sll(0));
+  glVertex3dv(&slr(0));
+  glVertex3d(s==0?lr[0]:slr(0), s==1?lr[1]:slr(1), s==2?lr[2]:slr(2));
+  glVertex3d(s==0?lr[0]:sll(0), s==1?lr[1]:sll(1), s==2?lr[2]:sll(2));
+
+  glVertex3d(s==0?ur[0]:sul(0), s==1?ur[1]:sul(1), s==2?ur[2]:sul(2));
+  glVertex3d(s==0?ur[0]:sur(0), s==1?ur[1]:sur(1), s==2?ur[2]:sur(2));
+  glVertex3dv(&sur(0));
+  glVertex3dv(&sul(0));
+
+  glVertex3d(s==0?ll[0]:sll(0), s==1?ll[1]:sll(1), s==2?ll[2]:sll(2));
+  glVertex3dv(ll);
+  glVertex3dv(ul);
+  glVertex3d(s==0?ul[0]:sul(0), s==1?ul[1]:sul(1), s==2?ul[2]:sul(2));
+
+  glVertex3dv(lr);
+  glVertex3d(s==0?lr[0]:slr(0), s==1?lr[1]:slr(1), s==2?lr[2]:slr(2));
+  glVertex3d(s==0?ur[0]:sur(0), s==1?ur[1]:sur(1), s==2?ur[2]:sur(2));
+  glVertex3dv(ur);
+
+  //  glVertex3dv(ll);
+  //  glVertex3dv(lr);
+  //  glVertex3dv(ur);
+  //  glVertex3dv(ul);
   glEnd();
 
   glColor4dv(black);
