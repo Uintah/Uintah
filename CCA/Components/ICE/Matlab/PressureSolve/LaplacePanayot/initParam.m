@@ -14,7 +14,7 @@ globalParams;
 param                       = [];
 
 % Problem type, title, streams
-param.problemType           = 'jump_quad'; %'diffusion_quad'; %
+param.problemType           = 'GaussianSource'; %'sinsin'; %'diffusion_quad'; %'jump_quad'; %'diffusion_quad'; %
 param.outputDir             = 'test'; %'sinsin_1level';
 param.logFile               = 'testDisc.log';
 param.outputType            = 'screen';
@@ -33,4 +33,4 @@ param.saveResults           = 1;
 param.verboseLevel          = 1;
 
 % For testDisc: experiments are parameterized by the resolution.
-param.numCellsRange         = 4;%2.^[2:1:5];
+param.numCellsRange         = 2.^[1:1:7];
