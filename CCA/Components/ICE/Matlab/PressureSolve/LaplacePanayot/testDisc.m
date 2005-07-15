@@ -16,28 +16,7 @@
 
 globalParams;
 
-%=========================================================================
-% Initialize parameters struct
-%=========================================================================
-param                       = [];
-
-param.problemType           = 'jump_quad'; %'quad1'; %'diffusion_quad'; %'smooth_diffusion'; %'sinsin'; %'ProblemB'; %'quadratic'; %'Lshaped'; %
-param.outputDir             = 'test'; %'sinsin_1level';
-param.logFile               = 'testDisc.log';
-param.outputType            = 'screen';
-
-param.twoLevel              = 1;
-param.twoLevelType          = 'rightHalf'; %'nearXMinus'; %'centralHalf'; %
-
-param.threeLevel            = 0;
-param.threeLevelType        = 'leftHalf';
-
-param.setupGrid             = 1;
-param.solveSystem           = 1;
-param.plotResults           = 0;
-param.saveResults           = 1;
-param.verboseLevel          = 1;
-
+initParam;                  % Initialize parameters structure
 out(1,'=========================================================================\n');
 out(1,' Testing discretization accuracy on increasingly finer grids\n');
 out(1,'=========================================================================\n');
@@ -45,14 +24,13 @@ out(1,'=========================================================================
 %=========================================================================
 % Run discretization on a sequence of successively finer grids
 %=========================================================================
-numCellsRange               = 2.^[2:1:5];
 success                     = mkdir('.',param.outputDir);
-errNorm                     = zeros(length(numCellsRange),5);
+errNorm                     = zeros(length(param.numCellsRange),5);
 
-for count = 1:length(numCellsRange)
+for count = 1:length(param.numCellsRange)
     %pause
     pack;
-    numCells = numCellsRange(count);
+    numCells = param.numCellsRange(count);
     out(1,'#### nCells = %d ####\n',numCells);
     %-------------------------------------------------------------------------
     % Set up grid (AMR levels, patches)

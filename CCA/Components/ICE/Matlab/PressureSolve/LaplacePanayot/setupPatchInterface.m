@@ -55,6 +55,7 @@ if (P.parent < 0)                                                 % Base patch a
 end
 r                           = level.refRatio;                     % Refinement ratio H./h (H=coarse meshsize)
 Qlevel                      = grid.level{k-1};
+hc                          = Qlevel.h;                           % Coarse meshsize h
 Q                           = Qlevel.patch{P.parent};             % Parent patch
 QedgeDomain                 = cell(2,1);                          % Domain edges
 QedgeDomain{1}              = Qlevel.minCell;                     % First domain cell - next to left domain boundary - patch-based sub
@@ -174,6 +175,11 @@ for d = 1:grid.dim,
         end
         QboxSize                = Qiupper-Qilower+1;
         [indCoarse,coarse,matCoarse] = indexBox(Q,Qilower,Qiupper);
+        % Coordinates of coarse points
+        xCoarse                 = cell(grid.dim,1);
+        for allDim = 1:grid.dim,
+            xCoarse{allDim}     = (matCoarse{allDim}' - Q.offsetSub(allDim) - 0.5) * hc(allDim);
+        end
 
         % Fine face variables
         ilower                  = P.ilower;
@@ -196,24 +202,19 @@ for d = 1:grid.dim,
         % Compute interpolation points subscript offsets from u_i, where i
         % is the fine cell whose ghost mirror point will be interpolated
         % later. The same stencil holds for all i.
-        temp                    = cell(D,1);
-        [temp{:}]               = ind2sub(2*ones(D,1),[1:2^D]);
-        numInterp               = length(temp{1});
-        subInterp               = zeros(numInterp,D);
-        for other = 1:D
-            subInterp(:,other)  = temp{other}';
-        end
+        subInterp               = graycode(D,repmat(numPoints,[D 1])) + 1;
+        numInterp               = size(subInterp,1);
 
         % Compute barycentric interpolation weights of points to mirror
         % m (separate for each dimension; dimension other weights
         % are w(other,:))
 
-        % Barycentric weights, independent of m, stored in w
+        % Barycentric weights for every dimension, independent of m, stored in w
         w = zeros(D,numPoints);
         for other = 1:D
             w(other,1)  = 1.0;
             for j = 2:numPoints
-                w(other,1:j-1)  = (points(1:j-1) - points(j)).*w(D,1:j-1);
+                w(other,1:j-1)  = (points(1:j-1) - points(j)).*w(other,1:j-1);
                 w(other,j)      = prod(points(j) - points(1:j-1));
             end
         end
@@ -235,14 +236,24 @@ for d = 1:grid.dim,
             wInterp             = wInterp .* w(other,subInterp(:,other))';
         end
 
+        % Interpolation weights vector of ghost difference u_g - u_i ~ b1
+        % uc + b2 u_i + b2 u(finenbhr,call it u_2) + ... bn u(finenbhr, call it u_n)
+        bb = [1-a ; [wInterp(1)*a-1; wInterp(2:end)*a]];
+        % Summing by parts and using sum(b) = 0, we obtain 
+        % u_i - u_g ~ c1 (u1-uc) + c2 (u2-u1) + ... c_{n-1} (u_{n} -
+        % u_{n-1}) as the interpolation stencil.
+        cc       = cumsum(bb);
+        cc(end)  = [];
+        %wInterp = cc;
+        
         % Loop over different types of fine cells with respect to a coarse
         % cell (there are 2^D types) and add connections to Alist.
         temp                    = cell(D,1);
         [temp{:}]               = ind2sub(r(otherDim),[1:prod(r(otherDim))]);
         numChilds               = length(temp{1});
         subChilds               = zeros(numChilds,D);
-        for dim = 1:D
-            subChilds(:,dim)    = temp{dim}' - 1;
+        for allDim = 1:D
+            subChilds(:,allDim)    = temp{allDim}' - 1;
         end
         if (param.verboseLevel >= 3)
             subInterp
@@ -250,9 +261,9 @@ for d = 1:grid.dim,
             subChilds
         end
         matCoarseNbhr           = matCoarse;
-        matCoarseNbhr{d}    = matCoarse{d} - s;
-        for dim = 1:grid.dim,
-            matCoarseNbhr{dim} = matCoarseNbhr{dim}(:)';
+        matCoarseNbhr{d}        = matCoarse{d} - s;
+        for allDim = 1:grid.dim,
+            matCoarseNbhr{allDim}  = matCoarseNbhr{allDim}(:)';
         end
         colCoarseNbhr           = cell2mat(matCoarseNbhr)';
         colCoarseNbhr           = colCoarseNbhr ...
@@ -288,7 +299,8 @@ for d = 1:grid.dim,
             jump            = r-1-2*j;
             jump(d)         = 0;
 
-            % subInterpFine = offsets for interpolation stencils of mi
+            % subInterpFine = offsets for fine cells in the interpolation
+            % stencils of all mi of type t
             subInterpFine   = zeros(numInterp,grid.dim);
             subInterpFine(:,otherDim) = (subInterp-1);
             subInterpFine   = subInterpFine .* repmat(jump,size(subInterpFine)./size(jump));
@@ -303,12 +315,58 @@ for d = 1:grid.dim,
             dupThisChild    = reshape(repmat((thisChild(:))',[size(subInterpFine,1),1]),[size(dupInterpFine,1) grid.dim]);
             %dupThisChild    = dupThisChild + repmat(P.offsetSub,size(dupThisChild)./size(P.offsetSub));      % Patch-based indices of the fine interface cells ("childs") of type t
 
+            % 1D indices of fine cells in the interpolation stencil of mi
             dupInterpFine   = dupThisChild + dupInterpFine;
             dupwInterp      = repmat(wInterp,[size(childBase,1),1]);
             matInterpFine   = mat2cell(dupInterpFine,size(dupInterpFine,1),[1 1]);
             indInterpFine   = ind(sub2ind(P.size,matInterpFine{:}));
             indInterpFine   = indInterpFine(:);
 
+            % Coordinates of bases for each stencil
+            xThisChild     = cell(grid.dim,1);
+            for allDim = 1:grid.dim,
+                xThisChild{allDim}   = (thisChild(:,allDim) - P.offsetSub(allDim) - 0.5) * h(allDim);
+            end
+
+            % Coordinates of dupInterpFine points u_i
+            xInterpFine     = cell(grid.dim,1);
+            for allDim = 1:grid.dim,
+                xInterpFine{allDim}   = (dupInterpFine(:,allDim) - P.offsetSub(allDim) - 0.5) * h(allDim);
+            end
+
+            % Coordinates of dupInterpFine points u_{i+1}
+            xShifted        = cell(grid.dim,1);
+            for allDim = 1:grid.dim,
+                xShifted{allDim}   =  circshift(xInterpFine{allDim},1);
+            end            
+            
+            % Coordinates of cell edge between points u_i, u_{i+1}
+            xEdge        = cell(grid.dim,1);
+            for allDim = 1:grid.dim,
+                xEdge{allDim}   =  0.5*(xInterpFine{allDim} + xShifted{allDim});
+            end
+            
+            % a_{i,i+1}
+            diffusionCoef = harmonicAvg(xInterpFine,xShifted,xEdge);
+            
+            % a_{c,0}
+            gam = 0.5*repmat(hc(dim),size(xCoarse{dim}))./abs(xThisChild{dim} - xCoarse{dim});
+            % Coordinates of cell edge between points u_i, u_{i+1}
+            xCFEdge     = cell(grid.dim,1);
+            for allDim = 1:grid.dim,
+                xCFEdge{allDim} = (1-gam).*xCoarse{allDim} + gam.*xThisChild{allDim};
+            end
+            % Remove dummy values between stencil groups and replace them
+            % by a_{c,0} values
+            numStencils = length(indCoarse);
+            stencilSize = size(diffusionCoef,1) / numStencils;
+            diffusionCoef(1:stencilSize:size(diffusionCoef,1)) = ...
+                harmonicAvg(xThisChild,xCoarse,xCFEdge);
+            % So now diffusionCoef holds the coefficients a_{i,i+1} c_i
+            % that multiply the difference
+            % (u_{i}-u_{i+1}),i=1,...,stencilSize (u_{1} is uc, u_{2} is
+            % the base child, etc.
+            
             if (param.verboseLevel >= 3)
                 thisChild
                 subInterpFine
