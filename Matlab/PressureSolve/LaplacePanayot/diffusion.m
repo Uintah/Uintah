@@ -35,8 +35,8 @@ switch (param.problemType)
     case {'jump_quad'},
         % Piecewise constant diffusion coefficient with a big jump at x1=0.5.
         x0          = 0.5;
-        aLeft       = 1.0;
-        aRight      =1.0e+6;
+        aLeft       = 10.0;
+        aRight      = 1.0e+6;
         left        = find(x{1} < x0);
         right       = find(x{1} >= x0);
         a(left)     = aLeft;
