@@ -39,9 +39,12 @@ function u = exactSolution(x)
 %           x1=0.5 (a,u depend only on x1; a = aLeft for x1 <= 0.5, a =
 %           aRight otherwise). Piecewise quadratic solution U that solves
 %           Poisson's equation with RHS = -1, this a, and appropriate B.C.
-%       'diffusion_quad'
-%           a = x{1}^2 and u = x{1}^2 (smooth diffusion and smooth
-%           solution). Appropriate RHS and Dirichlet BC.
+%       'diffusion_quad_quad'
+%           a = 1 + x{1} and u = x{1}^2 (linear diffusion and smooth
+%           quadratic solution). Appropriate RHS and Dirichlet BC.
+%       'diffusion_quad_quad'
+%           a = 1 + x{1}^2 and u = x{1}^2 (quadratic diffusion and smooth
+%           quadratic solution). Appropriate RHS and Dirichlet BC.
 %
 %   See also: TESTDISC, RHS, RHSBC, EXACTSOLUTIONAMR, DIFFUSION.
 
@@ -110,8 +113,12 @@ switch (param.problemType)
         u(left)     = (x{1}(left) - x0).^2/(2*aLeft);
         u(right)    = (x{1}(right) - x0).^2/(2*aRight);
 
-    case 'diffusion_quad',
-        % Smooth diffusion and smooth solution (d-D).
+    case 'diffusion_quad_linear',
+        % Linear diffusion and quadratic solution (d-D).
+        u           = x{1}.^2;
+
+    case 'diffusion_quad_quad',
+        % Quadratic diffusion and quadratic solution (d-D).
         u           = x{1}.^2;
 
     otherwise,
