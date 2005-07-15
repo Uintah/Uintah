@@ -42,7 +42,10 @@ switch (param.problemType)
         a(left)     = aLeft;
         a(right)    = aRight;
 
-    case 'diffusion_quad',
+    case 'diffusion_quad_linear',
+        a           = 1 + x{1};
+
+    case 'diffusion_quad_quad',
         a           = 1 + x{1}.^2;
 
     otherwise,
