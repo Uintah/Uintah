@@ -48,6 +48,8 @@
 
 namespace SCIRun {
   using namespace std;
+
+  //  template <class T> class list;
   
 /**************************************
 
@@ -162,7 +164,10 @@ private:
 
     // make a non-run group from the first n items of the list
     // popping items off the list as it goes.
-    Group(list<T>& itemList, unsigned long n)
+    ///// NOTE: Even with 'using namespace std' above, the icpc compiler
+    /////       on thunder doesn't like list... so we have to explicitly
+    /////       use the 'std::' on it...  *shrug*.  -Dd
+    Group(typename std::list<T>& itemList, unsigned long n)
       : data_(n), sequenceRule_(), length_(n)
     {
       for (unsigned long i = 0; i < n; i++) {
@@ -193,7 +198,7 @@ public:
   class iterator
   {
   private:
-    typedef typename list<Group>::const_iterator GroupListIterator;
+    typedef typename std::list<Group>::const_iterator GroupListIterator;
   public:
     iterator(GroupListIterator groupIter, unsigned long groupIndex = 0)
       : groupIter_(groupIter), groupIndex_(groupIndex) {}
@@ -382,11 +387,10 @@ private:
 
   // Temporary place to put items until it figures out what kind
   // of group it belongs in.
-  list<T> considerationItems_;
+  std::list<T> considerationItems_;
 
   // This is where the data is permanently stored and grouped.
-  list<Group> groups_;
-
+  std::list<Group> groups_;
   unsigned long size_; // total number of items added
 
   Sequencer sequencer_;
