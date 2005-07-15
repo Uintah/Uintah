@@ -131,7 +131,7 @@ main(int argc, char *argv[])
               // count number of vars, and their sizes
               for(ProblemSpecP varblock = child->findBlock("var");
                   varblock;varblock=varblock->findNextBlock("var")) {
-                string next_var_name("EMPTY!");
+                string next_var_name("");
                 varblock->get(next_var_name);
                 if      (next_var_name=="p.volume")        ncols += 1;
                 else if (next_var_name=="p.temperature")   ncols += 1;
@@ -189,7 +189,7 @@ main(int argc, char *argv[])
                   dest.write((char*)&z1, sizeof(double));
                 } else {
                   dest << min.x() << " " << min.y() << " " << min.z() << " " 
-                       << max.x() << " " << max.y() << " " << max.z();
+                       << max.x() << " " << max.y() << " " << max.z() << endl;
                 }
                 for (int I = 0; I < (int) points[pid].size(); I++) {
                   Point  p = points[pid][I].first;
