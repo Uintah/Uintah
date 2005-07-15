@@ -38,7 +38,10 @@ switch (param.problemType)
     case 'jump_quad',
         f       = -ones(size(x{1}));
     
-    case 'diffusion_quad',
+    case 'diffusion_quad_linear',
+        f       = -2 - 4*x{1};
+
+    case 'diffusion_quad_quad',
         f       = -2 - 6*x{1}.^2;
 
     otherwise,
