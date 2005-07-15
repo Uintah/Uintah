@@ -104,10 +104,10 @@ end
 % Define inverse of T (except unused points)
 patchRange              = [1:grid.totalVars];           % All variables here
 indZero                 = patchRange(find(abs(diag(T(patchRange,patchRange))) < eps));
-T(indZero,indZero)      = eye(length(indZero));
+T                       = deleteRows(T,indZero,indZero,1);
 TI                      = inv(T);
-T(indZero,:)            = 0.0;
-TI(indZero,:)           = 0.0;
+T                       = deleteRows(T,indZero,indZero,0);
+TI                      = deleteRows(TI,indZero,indZero,0);
 
 % Save changes to grid structure
 grid.level{k}.indUnused   = union(grid.level{k}.indUnused,indUnused);
