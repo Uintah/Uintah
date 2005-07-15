@@ -27,7 +27,7 @@ FileGeometryPiece::FileGeometryPiece(ProblemSpecP& ps)
   
   for(ProblemSpecP varblock = ps->findBlock("var");
       varblock;varblock=varblock->findNextBlock("var")) {
-    string next_var_name("EMPTY!");
+    string next_var_name("");
     varblock->get(next_var_name);
     if      (next_var_name=="p.volume")        d_vars.push_back(IVvolume);
     else if (next_var_name=="p.temperature")   d_vars.push_back(IVtemperature);
