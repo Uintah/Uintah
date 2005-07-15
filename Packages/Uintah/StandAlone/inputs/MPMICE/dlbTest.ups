@@ -23,6 +23,7 @@
    </Time>
    
    <LoadBalancer>
+        <type>ParticleLoadBalancer</type>
         <timestepInterval>100</timestepInterval>
         <dynamicAlgorithm>particle3</dynamicAlgorithm>
         <cellFactor>4.5</cellFactor>
