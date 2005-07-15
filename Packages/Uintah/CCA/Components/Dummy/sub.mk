@@ -15,10 +15,10 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR := Packages/Uintah/CCA/Components/Dummy
 
 SRCS += $(SRCDIR)/FakeArches.cc    \
+	$(SRCDIR)/FakeMPMArches.cc \
 
 #	$(SRCDIR)/FakeICE.cc       \
 #	$(SRCDIR)/FakeMPM.cc       \
-#	$(SRCDIR)/FakeMPMArches.cc \
 #	$(SRCDIR)/FakeMPMICE.cc 
 
 PSELIBS := 
