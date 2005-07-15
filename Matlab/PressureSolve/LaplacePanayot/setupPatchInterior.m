@@ -252,8 +252,14 @@ if (reallyUpdate)
     % those specified by Alist, and the BC equations of the BC vars
     % neighboring the box.
     %=====================================================================
-    Anew                    = spconvert([Alist; [grid.totalVars grid.totalVars 0]]);
-    A(indAll,:)             = Anew(indAll,:);
+    %     Anew                    = spconvert([Alist; [grid.totalVars grid.totalVars 0]]);
+    %     A(indAll,:)             = Anew(indAll,:);
+    [i,j,data]  = find(A);
+    nz          = [i j data];
+    rows        = logical(ismember(i,indAll));
+    nz(rows,:)  = [];
+    nz          = [nz; Alist; [grid.totalVars grid.totalVars 0]];
+    A           = spconvert(nz);
 
     %=====================================================================
     % Update LHS vector b with interior equations.

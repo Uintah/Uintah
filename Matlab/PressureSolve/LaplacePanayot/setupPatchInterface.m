@@ -84,12 +84,9 @@ end
 %indDel                      = cell(grid.dim,1);
 [indDel,del,matDel]         = indexBox(Q,underLower,underUpper);
 if (reallyUpdate)
-    A(indDel,:)             = 0.0;
-    A(:,indDel)             = 0.0;
-    A(indDel,indDel)        = speye(length(indDel));
-    b(indDel)               = 0.0;
-    T(indDel,:)             = 0.0;
-    T(:,indDel)             = 0.0;
+    A           = deleteRows(A,indDel,indDel,1);
+    b(indDel)   = 0.0;
+    T           = deleteRows(T,indDel,indDel,0);
 end
 out(2,'# unused deleted gridpoints at parent patch = %d\n',length(indDel));
 if (param.verboseLevel >= 3)
@@ -182,7 +179,7 @@ for d = 1:grid.dim,
         % Coordinates of coarse points
         xCoarse                 = cell(grid.dim,1);
         for allDim = 1:grid.dim,
-            xCoarse{allDim}     = (matCoarse{allDim}' - Q.offsetSub(allDim) - 0.5) * hc(allDim);
+            xCoarse{allDim}     = (matCoarse{allDim}(:) - Q.offsetSub(allDim) - 0.5) * hc(allDim);
         end
 
         % Fine face variables
@@ -439,7 +436,7 @@ for d = 1:grid.dim,
                 % connections and replace them with the first line of the
                 % appended list to Alist below.
                 A(indThisChild,indThisChild) = A(indThisChild,indThisChild) + A(indThisChild,indGhost);     % Remove ghost flux from diagonal entry
-                A(indThisChild,indGhost) = 0.0;                                         % Remove ghost flux from off-diagonal entry
+                A = deleteRows(A,indThisChild,indGhost,0,1);                                         % Remove ghost flux from off-diagonal entry
             end
             Alist = [Alist; ...                                                         % We are never near boundaries according to the C/F interface existence rules
                 [indThisChild   indGhost  repmat(1.0,size(indGhost))]; ...   % Ghost flux term
@@ -473,8 +470,10 @@ if (reallyUpdate)
     %=====================================================================
     % Add the links above to the relevant equations (rows) in A.
     %=====================================================================
-    Anew                = spconvert([Alist; [grid.totalVars grid.totalVars 0]]);
-    A(indAll,:)         = A(indAll,:) + Anew(indAll,:);                       % Do not replace the non-zeros in A here, rather add to them.
+    [i,j,data]  = find(A);
+    nz          = [i j data];
+    nz          = [nz; Alist; [grid.totalVars grid.totalVars 0]];
+    A           = spconvert(nz);
 
     %=====================================================================
     % Update transformation matrix T.
