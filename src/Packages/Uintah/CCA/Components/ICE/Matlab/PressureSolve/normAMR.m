@@ -3,10 +3,9 @@ function result = normAMR(grid,e,type)
 %   RESULT = NORMAMR(GRID,E,TYPE) returns the discrete norm of the AMR
 %   function E defined on the hierarchy GRID. TYPE specifies the norm
 %   option:
+%   'L1'    Discrete finite-volume-weighted L1 norm.
 %   'L2'    Discrete finite-volume-weighted L2 norm.
 %   'max'   Maximum (L-infinity) norm.
-%   'H1'    Enerhy/flux semi-norm (not working properly yet).
-%   'H1max' Maximum flux norm (not working properly yet).
 %
 %   See also: TESTADAPTIVE, LATEXTABLEFACTORS.
 
@@ -86,52 +85,19 @@ for k = 1:grid.numLevels,
             case 'L1',
                 result = result + sum(volume(:).*abs(uinterior(:)));
             case 'L2',
-                %u(box{:})
-                %median(abs(uinterior(:)))
-                %max(abs(uinterior(:)))
                 result = result + sum(volume(:).*abs(uinterior(:)).^2);
             case 'max',
                 result = max(result,max(abs(uinterior(:))));
-            case {'H1','H1max'},
-                for dim = 1:grid.dim,                                                       % Loop over dimensions of patch
-                    for side = [-1 1]                                                       % side=-1 (left) and side=+1 (right) directions in dimension d
-                        % Direction vector ("normal") from cell to its nbhr
-                        nbhrNormal      = zeros(1,grid.dim);
-                        nbhrNormal(dim) = side;
-                        indNbhr         = indexNbhr(P,indBox,nbhrNormal);
-                        nbhr               = cell(grid.dim,1);
-                        for d = 1:grid.dim
-                            nbhr{d}      = [P.ilower(d):P.iupper(d)] + nbhrNormal(d) + P.offsetSub(d);     % Patch-based cell indices including ghosts
-                        end
-                        unbhr           = u(nbhr{:});
-
-                        % Add fluxes in dimension=dim, direction=side to list of non-zeros Alist and to b
-                        sideNum         = (side+3)/2;                                       % side=-1 ==> 1; side=1 ==> 2
-                        fluxNum         = 2*dim+sideNum-2;
-                        i         = flux{fluxNum}(:);
-                        thisNear        = near{fluxNum};
-                        thisFar         = far{fluxNum};
-
-                        % Contribution of flux to interior equation at indBox
-                        switch (type)
-                            case 'H1',
-                                result = result + ...
-                                    0.5*sum(volume(:).*abs(diffusion{fluxNum}(:).*(uinterior(:) - unbhr(:))).^2);
-                            case 'H1max',
-                                result = max(result,...
-                                max(abs(diffusion{fluxNum}(:).*(uinterior(:) - unbhr(:)))));
-                        end
-
-                    end
-                end
+            otherwise,
+                error('Unknown norm');
         end
     end
 end
 
 % Scale result
 switch (type)
-    case {'L1','max','H1max'},
-    case {'L2','H1'},
+    case {'L1'},
+    case {'L2'},
         result = sqrt(result);
     case 'max',
 end
