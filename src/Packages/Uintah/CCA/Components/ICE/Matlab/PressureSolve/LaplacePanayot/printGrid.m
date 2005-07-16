@@ -7,12 +7,17 @@ globalParams;
 
 fprintf('\n--- Printing Grid Hierarchy ---\n');
 for k = 1:grid.numLevels,
-    fprintf('Level k=%3d   numPatches = %3d   meshsize = [%f %f]\n',...
-        k,grid.level{k}.numPatches,grid.level{k}.h);
+    fprintf('Level k=%3d   numPatches = %3d   meshsize = [',...
+        k,grid.level{k}.numPatches);
+    fprintf(' %f',grid.level{k}.h);
+    fprintf(' ]\n');
     for q = 1:grid.level{k}.numPatches,        
         P = grid.level{k}.patch{q};                
-        fprintf('  Patch q=%3d   ilower = [%3d %3d]   iupper = [%3d %3d]\n',...
-            q,P.ilower,P.iupper);
+        fprintf('  Patch q=%3d   ilower = [',q);
+        fprintf(' %3d',P.ilower);
+        fprintf(' ]   iupper = [');
+        fprintf(' %3d',P.iupper);
+        fprintf(' ]\n');
         fprintf('      offsetInd = %5d    parent = %3d\n',...
             P.offsetInd,P.parent);
         fprintf('      Children  = [');
@@ -33,4 +38,5 @@ for k = 1:grid.numLevels,
     end
     fprintf('\n');
 end
+fprintf('Number of levels     = %d\n',grid.numLevels);
 fprintf('Grid Total variables = %d\n\n',grid.totalVars);

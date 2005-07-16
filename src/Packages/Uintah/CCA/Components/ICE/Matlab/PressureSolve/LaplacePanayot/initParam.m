@@ -20,8 +20,8 @@ param.logFile               = 'testDisc.log';
 param.outputType            = 'screen';
 
 % Domain geometry
-param.dim                   = 2;                    % Number of dimensions
-param.domainSize            = [1.0 1.0];            % Domain is from [0.,0.] to [1.,1.]
+param.dim                   = 3;                                % Number of dimensions
+param.domainSize            = repmat(1.0,[1 param.dim]);        % Domain is from [0.,0.] to [1.,1.]
 
 % AMR hierarchy control
 param.maxLevels             = 5;
@@ -32,7 +32,7 @@ param.threeLevel            = 0;
 param.threeLevelType        = 'leftHalf';
 
 % Modules activation flags
-param.profile               = 1;
+param.profile               = 0;
 param.setupGrid             = 1;
 param.solveSystem           = 1;
 param.plotResults           = 0;
