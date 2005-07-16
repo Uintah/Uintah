@@ -139,19 +139,19 @@ for dim = 1:grid.dim,                                                       % Lo
         end
 
         % Adjust distances for FD near domain boundaries
-        nearBoundary                = cell(1,grid.dim);
-        [nearBoundary{:}]           = find(matBox{dim} == edgeDomain{sideNum}(dim));  % Interior cell subs near DOMAIN boundary
+        %         nearBoundary                = cell(1,grid.dim);
+        %         [nearBoundary{:}]           = find(matBox{dim} == edgeDomain{sideNum}(dim));  % Interior cell subs near DOMAIN boundary
         near{fluxNum}               = find(matBox{dim} == edgeDomain{sideNum}(dim));    % Interior cell indices near DOMAIN boundary (actually Dirichlet boundaries only)
         far{fluxNum}                = find(~(matBox{dim} == edgeDomain{sideNum}(dim))); % The rest of the cells
-        diffLength{fluxNum}(nearBoundary{:})    = 0.5*h(dim);                  % Twice smaller distance in this direction
+        diffLength{fluxNum}(near{fluxNum})    = 0.5*h(dim);                  % Twice smaller distance in this direction
         xNearBoundary               = cell(grid.dim,1);
         for d = 1:grid.dim,
-            xNearBoundary{d}        = x{d}(nearBoundary{:});
+            xNearBoundary{d}        = x{d}(near{fluxNum});
         end
-        a{fluxNum}(nearBoundary{:}) = diffusion(xNearBoundary);
+        a{fluxNum}(near{fluxNum}) = diffusion(xNearBoundary);
 
         if (param.verboseLevel >= 3)
-            nearBoundary{:}
+            near{fluxNum}
             D(a{fluxNum})
             D(diffLength{fluxNum})
         end

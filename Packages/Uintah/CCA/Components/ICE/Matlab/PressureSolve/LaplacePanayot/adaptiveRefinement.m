@@ -107,6 +107,8 @@ if (param.verboseLevel >= 3)
     Tiupper
 end
 
+tCPU        = cputime - tStartCPU;
+tElapsed    = etime(clock,tStartElapsed);
 out(2,'CPU time     = %f\n',tCPU);
 out(2,'Elapsed time = %f\n',tElapsed);
 out(2,'--- adaptiveRefinement(k = %d) END ---\n',k);
