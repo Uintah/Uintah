@@ -1,4 +1,4 @@
-function saveResults(errNorm)
+function errNorm = saveResults(grid,A,b,T,TI,expLabel,expFormat,expValue,y,err,tau,errNorm)
 %SAVERESULTS  Save errors and error factors in latex format.
 %   SAVERESULTS(ERRNORM) prints to a file a summary of the discretization
 %   errors vs. grid resolution (or number of levels), specified by ERRNORM.
@@ -13,6 +13,27 @@ function saveResults(errNorm)
 
 globalParams;
 
+% Compute error norms and label them
+numNorms        = 5;
+normLabels      = cell(numNorms,1);
+normLabels{1}   = '\|e\|_{L_1}';
+normLabels{2}   = '\|e\|_{L_2}';
+normLabels{3}   = '\|e\|_{L_{\infty}}';
+normLabels{4}   = '\|e\|_{H_1}';
+normLabels{5}   = '\|\tau\|_{L_2}';
+
+errNorm = [ ...
+    expValue ...
+    normAMR(grid,err,'L1') ...
+    normAMR(grid,err,'L2') ...
+    normAMR(grid,err,'max') ...
+    sqrt(y'*A*y) ...
+    normAMR(grid,tau,'L2') ...
+    ];
+out(1,'#vars = %7d  L1=%.3e  L2=%.3e  max=%.3e  H1=%.3e  tau=%.3e\n',...
+    grid.totalVars,errNorm(:,2:end));
+
+% Save errNorm in latex table format
 data        = errNorm(:,1);
 e           = errNorm(:,2:end);
 factors     = fac(e);
@@ -20,25 +41,17 @@ if (size(e,1) < 2)
     factors = zeros(0,size(e,2));
 end
 
-fmt{1}      = '%4d';
+Labels              = cell(2*numNorms+1,1);
+Labels{1}           = expLabel;
+fmt{1}              = expFormat;
 for i = 1:size(e,2)
     data = [data e(:,i) [0; factors(:,i)]];
-    fmt{2*i} = '%.3e';
-    fmt{2*i+1} = '%.3f';
+    Labels{2*i}     = normLabels{i};
+    Label{2*i+1}    = '\|e\|_{L_{\infty}}';
+    fmt{2*i}        = '%.3e';
+    fmt{2*i+1}      = '%.3f';   
 end
 
-Label       = cell(9,1);
-Label{1}    = 'n';
-Label{2}    = '\|e\|_{L_2}';
-Label{3}    = '{\mbox{factor}}';
-Label{4}    = '\|e\|_{L_{\infty}}';
-Label{5}    = '{\mbox{factor}}';
-Label{6}    = '\|e\|_{H_1}';
-Label{7}    = '{\mbox{factor}}';
-Label{8}    = '\|e\|_{H_1,max}';
-Label{9}    = '{\mbox{factor}}';
-
-fileName    = sprintf('%s/DiscError',param.outputDir);
-Caption     = sprintf('Discretization error');
-
+fileName            = sprintf('%s/DiscError',param.outputDir);
+Caption             = sprintf('Discretization error');
 latexTableFactors(data,Label,fileName,Caption,fmt{:});
