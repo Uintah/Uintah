@@ -38,7 +38,7 @@ for k = 1:grid.numLevels,
         for dim = 1:grid.dim,
             x{dim}              = (box{dim} - P.offsetSub(dim) - 0.5) * h(dim);
         end
-        [x{:}]                  = ndgrid(x{:});
+        [x{:}]                  = myndgrid(x{:});
         %=====================================================================
         % Compute cell lengths and volumes.
         %=====================================================================
@@ -46,7 +46,7 @@ for k = 1:grid.numLevels,
         % [x{1}-0.5*h(1),x{1}+0.5*h(1)] x ... x [x{dim}-0.5*h(dim),x{dim}+0.5*h(dim)].
         % Cell volume is thus prod(h).
         diffLength              = cell(2*grid.dim,1);                               % Distance along which we approximate the flux by finite difference
-        volume                  = prod(h).*ones(boxSize);                           % Cell volume
+        volume                  = prod(h).*ones(size(x{1}));                           % Cell volume
         centroid                = x;                                                % Cell centroid
         near                    = cell(2*grid.dim,1);                               % Cells near domain boundaries in the fluxNum direction
         far                     = cell(2*grid.dim,1);                               % Cells far from domain boundaries in the fluxNum direction
@@ -54,7 +54,7 @@ for k = 1:grid.numLevels,
             for side = [-1 1]                                                       % side=-1 (left) and side=+1 (right) directions in dimension d
                 sideNum                 = (side+3)/2;                               % side=-1 ==> 1; side=1 ==> 2
                 fluxNum                 = 2*dim+sideNum-2;
-                diffLength{fluxNum}     = h(dim)*ones(boxSize);                     % Standard FD is over distance h
+                diffLength{fluxNum}     = h(dim)*ones(size(x{1}));                     % Standard FD is over distance h
                 % Adjust distances for FD near domain boundaries
                 near{fluxNum}   = find(matBox{dim} == edgeDomain{sideNum}(dim));    % Interior cell indices near DOMAIN boundary (actually Dirichlet boundaries only)
                 far{fluxNum}    = find(~(matBox{dim} == edgeDomain{sideNum}(dim))); % The rest of the cells
