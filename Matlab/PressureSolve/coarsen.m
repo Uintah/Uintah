@@ -34,7 +34,7 @@ subBox                      = cell(1,grid.dim);
 for dim = 1:grid.dim,
     subBox{dim}             = listBox(:,dim) + P.offsetSub(dim);
 end
-indFine                     = ind(sub2ind(P.size,subBox{:}));
+indFine                     = ind(mysub2ind(P.size,subBox{:}));
 
 %=====================================================================
 % Set coarse patch "pointers" (in matlab: we actually copy Q).
@@ -55,7 +55,7 @@ subQBox                     = cell(1,grid.dim);
 for dim = 1:grid.dim,
     subQBox{dim}            = listQBox(:,dim) + Q.offsetSub(dim);
 end
-indCoarse                   = indQ(sub2ind(Q.size,subQBox{:}));
+indCoarse                   = indQ(mysub2ind(Q.size,subQBox{:}));
 
 %=====================================================================
 % Compute interpolation operator I : Q(under) -> P

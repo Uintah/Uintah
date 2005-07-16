@@ -61,7 +61,7 @@ x                       = cell(grid.dim,1);
 for dim = 1:grid.dim,
     x{dim}              = (box{dim} - P.offsetSub(dim) - 0.5) * h(dim);
 end
-[x{:}]                  = ndgrid(x{:});
+[x{:}]                  = myndgrid(x{:});
 
 %=====================================================================
 % Compute cell lengths and volumes.
@@ -71,7 +71,7 @@ end
 % Cell volume is thus prod(h).
 diffLength              = cell(2*grid.dim,1);                               % Distance along which we approximate the flux by finite difference
 a                       = cell(2*grid.dim,1);                               % Diffusion coefficient
-volume                  = prod(h).*ones(boxSize);                           % Cell volume
+volume                  = prod(h).*ones(size(x{1}));                        % Cell volume
 centroid                = x;                                                % Cell centroid
 near                    = cell(2*grid.dim,1);                               % Cells near domain boundaries in the fluxNum direction
 far                     = cell(2*grid.dim,1);                               % Cells far from domain boundaries in the fluxNum direction
@@ -80,7 +80,7 @@ for dim = 1:grid.dim,                                                       % Lo
     for side = [-1 1]                                                       % side=-1 (left) and side=+1 (right) directions in dimension d
         sideNum                 = (side+3)/2;                               % side=-1 ==> 1; side=1 ==> 2
         fluxNum                 = 2*dim+sideNum-2;
-        diffLength{fluxNum}     = h(dim)*ones(boxSize);                     % Standard FD is over distance h
+        diffLength{fluxNum}     = h(dim)*ones(size(x{1}));                  % Standard FD is over distance h
         xNbhr                   = x;
         xNbhr{dim}              = x{dim} + side*h(dim);
         xFace                   = x;

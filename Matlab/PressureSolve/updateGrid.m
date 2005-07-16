@@ -27,8 +27,8 @@ for k = 1:grid.numLevels,
             sub{d}  = [P.ilower(d)-1:P.iupper(d)+1] + P.offsetSub(d);
         end
         matSub      = cell(grid.dim,1);
-        [matSub{:}] = ndgrid(sub{:});
-        P.cellIndex = sub2ind(P.size,matSub{:}) + P.offsetInd;
+        [matSub{:}] = myndgrid(sub{:});
+        P.cellIndex = mysub2ind(P.size,matSub{:}) + P.offsetInd;
 
         grid.level{k}.patch{q} = P;
         index       = index + prod(P.size);
