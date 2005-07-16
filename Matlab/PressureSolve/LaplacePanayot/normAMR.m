@@ -56,11 +56,9 @@ for k = 1:grid.numLevels,
                 fluxNum                 = 2*dim+sideNum-2;
                 diffLength{fluxNum}     = h(dim)*ones(boxSize);                     % Standard FD is over distance h
                 % Adjust distances for FD near domain boundaries
-                nearBoundary            = cell(1,grid.dim);
-                [nearBoundary{:}] = find(matBox{dim} == edgeDomain{sideNum}(dim));  % Interior cell subs near DOMAIN boundary
                 near{fluxNum}   = find(matBox{dim} == edgeDomain{sideNum}(dim));    % Interior cell indices near DOMAIN boundary (actually Dirichlet boundaries only)
                 far{fluxNum}    = find(~(matBox{dim} == edgeDomain{sideNum}(dim))); % The rest of the cells
-                diffLength{fluxNum}(nearBoundary{:}) = 0.5*h(dim);                  % Twice smaller distance in this direction
+                diffLength{fluxNum}(near{fluxNum}) = 0.5*h(dim);                  % Twice smaller distance in this direction
             end
         end
         %=====================================================================
