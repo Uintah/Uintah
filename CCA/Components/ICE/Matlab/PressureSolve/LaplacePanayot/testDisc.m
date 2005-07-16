@@ -31,7 +31,7 @@ out(1,'=========================================================================
 %=========================================================================
 % Run discretization on a sequence of successively finer grids
 %=========================================================================
-success                     = mkdir('.',param.outputDir);
+[success,message,messageid] = mkdir('.',param.outputDir);
 errNorm                     = zeros(length(param.numCellsRange),5);
 
 for count = 1:length(param.numCellsRange)
@@ -75,7 +75,7 @@ for count = 1:length(param.numCellsRange)
         %--------------- Level 2: local fine grid around center of domain -----------------
 
         if (param.twoLevel)
-            [grid,k]            = addGridLevel(grid,'refineRatio',[2 2]);
+            [grid,k]            = addGridLevel(grid,'refineRatio',repmat(2,[1 grid.dim]));
             switch (param.twoLevelType)
                 case 'global',
                     % Cover the entire domain
