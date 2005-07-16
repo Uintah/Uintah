@@ -51,11 +51,12 @@ for count = 1:length(param.numCellsRange)
         tStartElapsed       = clock;
 
         grid                = [];
-        grid.dim            = length(param.domainSize);
+        grid.dim            = param.dim;
         grid.domainSize     = param.domainSize;
         grid.maxLevels  	= param.maxLevels;
         grid.maxPatches  	= param.maxPatches;
         grid.numLevels      = 0;
+        grid.totalVars      = 0;
         grid.level          = cell(grid.maxLevels,1);
         A                   = [];
         b                   = [];
@@ -64,7 +65,7 @@ for count = 1:length(param.numCellsRange)
 
         %--------------- Level 1: global coarse grid -----------------
 
-        resolution          = [numCells numCells];
+        resolution          = repmat(numCells,[1 grid.dim]);
         [grid,k]            = addGridLevel(grid,'meshsize',grid.domainSize./resolution);
         [grid,q1]           = addGridPatch(grid,k,ones(1,grid.dim),resolution,-1);     % One global patch
         for q = 1:grid.level{k}.numPatches,
