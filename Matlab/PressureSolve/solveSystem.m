@@ -1,7 +1,7 @@
 function [u,x] = solveSystem(A,b,grid,TI)
 %SOLVESYSTEM  Solve the linear system of the discretization.
-%   U = SOLVESYSTEM(A,B,GRID,TI) returns the solution to the system A*X = B, where
-%   U is the vector X unwrapped into the original AMR hierarchy data (i.e.,
+%   [U,X] = SOLVESYSTEM(A,B,GRID,TI) returns the solution to the system A*X = B,
+%   where U is the solution vector X unwrapped into the original AMR hierarchy data (i.e.,
 %   U contains the value of the solution at all patches of the GRID
 %   hierarchy). TI is the transformation converting X to U.
 %   We use a direct solver (MATLAB's "A\b").
