@@ -112,7 +112,6 @@ end
 %=====================================================================
 Alist                       = zeros(0,3);
 Tlist                       = zeros(0,3);
-indAll                      = [];
 indTransformed              = [];
 
 % Restore underLower,underUpper to exclude BC variables
@@ -286,8 +285,7 @@ for d = 1:grid.dim,
             childBase
         end
 
-        j                       = zeros(1,grid.dim);
-        jump                    = zeros(1,grid.dim);
+        j                   = zeros(1,grid.dim);
         for t = 1:numChilds,
             out(2,'------------------- Fine cell child type t = %d ---------------\n',t);
             %=====================================================================
@@ -310,7 +308,7 @@ for d = 1:grid.dim,
             % u_i's, also = lower-left corner of interpolation stencil of mi
             thisChild       = childBase + repmat(j,size(childBase)./size(j)) ...
                 + repmat(P.offsetSub,size(childBase)./size(P.offsetSub));     % Patch-based indices of the fine interface cells ("childs") of type t
-            matThisChild    = mat2cell(thisChild,size(thisChild,1),[1 1]);
+            matThisChild    = mat2cell(thisChild,size(thisChild,1),repmat(1,[1 grid.dim]));
             indThisChild    = ind(sub2ind(P.size,matThisChild{:}));
             indThisChild    = indThisChild(:);
             dupThisChild    = reshape(repmat((thisChild(:))',[size(subInterpFine,1),1]),[size(dupInterpFine,1) grid.dim]);
@@ -319,7 +317,7 @@ for d = 1:grid.dim,
             % 1D indices of fine cells in the interpolation stencil of mi
             dupInterpFine   = dupThisChild + dupInterpFine;
             dupwInterp      = repmat(wInterp,[size(childBase,1),1]);
-            matInterpFine   = mat2cell(dupInterpFine,size(dupInterpFine,1),[1 1]);
+            matInterpFine   = mat2cell(dupInterpFine,size(dupInterpFine,1),repmat(1,[1 grid.dim]));
             indInterpFine   = ind(sub2ind(P.size,matInterpFine{:}));
             indInterpFine   = indInterpFine(:);
 
@@ -350,13 +348,13 @@ for d = 1:grid.dim,
             end            
             
             % Coordinates of cell edge between points u_i, u_{i+1}
-            xEdge        = cell(grid.dim,1);
+            xEdge                   = cell(grid.dim,1);
             for allDim = 1:grid.dim,
-                xEdge{allDim}   =  0.5*(xInterpFine{allDim} + xShifted{allDim});
+                xEdge{allDim}       =  0.5*(xInterpFine{allDim} + xShifted{allDim});
             end
             
             % Compute a_{i,g}
-            diffusionCoefGhostEdge = harmonicAvg(xThisChild,xGhost,xGhostEdge);
+            diffusionCoefGhostEdge  = harmonicAvg(xThisChild,xGhost,xGhostEdge);
 
             % Compute a_{i,i+1}
             diffusionCoef = harmonicAvg(xInterpFine,xShifted,xEdge);
@@ -368,14 +366,40 @@ for d = 1:grid.dim,
             % (u_{i+1}-u_{i}),i=1,...,stencilSize (u_{1} is uc, u_{2} is
             % the base child, etc.
             
-            % a_{c,0}, denoted alpha
-            gam = 0.5*repmat(hc(dim),size(xCoarse{dim}))./abs(xThisChild{dim} - xCoarse{dim});
             % Coordinates of cell edge between points u_i, u_{i+1}
-            xCFEdge     = cell(grid.dim,1);
+            gam                 = 0.5*repmat(hc(dim),size(xCoarse{dim}))./abs(xThisChild{dim} - xCoarse{dim});
+            xCFEdge             = cell(grid.dim,1);
             for allDim = 1:grid.dim,
                 xCFEdge{allDim} = (1-gam).*xCoarse{allDim} + gam.*xThisChild{allDim};
             end
-            alpha = (faceArea./diffLength) * cc(1) * harmonicAvg(xThisChild,xCoarse,xCFEdge);
+            % Compute a_{c,0}, denoted alpha
+            alpha               = (faceArea./diffLength) * cc(1) * harmonicAvg(xThisChild,xCoarse,xCFEdge);
+            
+            % Prepare list of nbhring fine cell indices
+            % u_{i+1},u_{i},u_{i+2},u_{i+1},... for the equation of u_i.
+            indNbhr             = reshape([indInterpFine circshift(indInterpFine,1)]',[2*length(indInterpFine) 1]);
+            indNbhr(1:2*stencilSize:length(indNbhr)) = -1;  % Dummy values
+            indNbhr(2:2*stencilSize:length(indNbhr)) = -1;  % Dummy values
+            indNbhr(logical(indNbhr < 0)) = [];
+            diffusionCoef(logical(diffusionCoef < 0)) = [];
+            dupCC               = repmat(cc(2:end),size(diffusionCoef)./size(cc(2:end)));
+            nbhrCoef            = (faceArea./diffLength) .* dupCC .* diffusionCoef;
+            dupNbhrCoef         = repmat(nbhrCoef,[1 2]);
+            dupNbhrCoef(:,2)    = -dupNbhrCoef(:,2);
+            dupNbhrCoef         = reshape(dupNbhrCoef',[2*length(nbhrCoef) 1]);
+
+            % Prepare replication of child, ghost indices to match
+            % size(indNbhr)
+            %             dupThisChild        = reshape(repmat((thisChild(:))',[size(indNbhr,1),1]),[size(indNbhr,1) grid.dim]);
+            %             matDupThisChild     = mat2cell(dupThisChild,size(dupThisChild,1),repmat(1,[1 grid.dim]));
+            %             indDupThisChild     = ind(sub2ind(P.size,matDupThisChild{:}));
+            %             indDupThisChild     = indDupThisChild(:);
+            %             indDupGhost         = repmat((indGhost(:))',[size(subInterpFine,1),1]);
+            %             indDupGhost         = indDupGhost(:);
+            indGhost            = indexNbhr(P,indThisChild,-nbhrNormal);
+            indDupThisChild     = reshape(repmat(indThisChild',[2*(stencilSize-1) 1]),size(indNbhr));
+            indDupGhost         = reshape(repmat(indGhost',[2*(stencilSize-1) 1]),size(indNbhr));
+            dupDiffusionCoefGhostEdge         = reshape(repmat(diffusionCoefGhostEdge',[2*(stencilSize-1) 1]),size(indNbhr));
             
             if (param.verboseLevel >= 3)
                 thisChild
@@ -385,34 +409,11 @@ for d = 1:grid.dim,
                 diffusionCoef
                 gam
                 alpha
-            end
-
-            dupThisChild    = reshape(repmat((thisChild(:))',[size(subInterpFine,1),1]),[size(dupInterpFine,1) grid.dim]);
-            matDupThisChild = mat2cell(dupThisChild,size(dupThisChild,1),[1 1]);
-            indDupThisChild = ind(sub2ind(P.size,matDupThisChild{:}));
-            indDupThisChild = indDupThisChild(:);
-            indGhost        = indexNbhr(P,indThisChild,-nbhrNormal);
-            indDupGhost     = repmat((indGhost(:))',[size(subInterpFine,1),1]);
-            indDupGhost     = indDupGhost(:);
-
-            % Prepare list of indices u_{i+1},u_{i},u_{i+2},u_{i+1},... for
-            % equation of u_i.
-            indNbhr = reshape([indInterpFine circshift(indInterpFine,1)]',[2*length(indInterpFine) 1]);
-            indNbhr(1:2*stencilSize:length(indNbhr)) = -1;  % Dummy values
-            indNbhr(2:2*stencilSize:length(indNbhr)) = -1;  % Dummy values
-            indNbhr(find(indNbhr < 0)) = [];
-            diffusionCoef(find(diffusionCoef < 0)) = [];
-            dupCC = repmat(cc(2:end),size(diffusionCoef)./size(cc(2:end)));
-            nbhrCoef = (faceArea./diffLength) .* dupCC .* diffusionCoef;
-            dupNbhrCoef = repmat(nbhrCoef,[1 2]);
-            dupNbhrCoef(:,2) = -dupNbhrCoef(:,2);
-            dupNbhrCoef = reshape(dupNbhrCoef',[2*length(nbhrCoef) 1]);
-            
-            if (param.verboseLevel >= 3)
                 indCoarse
                 indThisChild
                 indGhost
             end
+            
             % Create ghost equations: (-1/alpha) u_g - u_c + u_i = 0
             Alist = [Alist; ...                                                 % We are never near boundaries according to the C/F interface existence rules
                 [indGhost       indGhost             -1./alpha]; ...
@@ -439,15 +440,10 @@ for d = 1:grid.dim,
                 A = deleteRows(A,indThisChild,indGhost,0,1);                                         % Remove ghost flux from off-diagonal entry
             end
             Alist = [Alist; ...                                                         % We are never near boundaries according to the C/F interface existence rules
-                [indThisChild   indGhost  repmat(1.0,size(indGhost))]; ...   % Ghost flux term
-                [indDupThisChild indNbhr dupNbhrCoef]; ...
+                [indThisChild       indGhost    repmat(1.0,size(indGhost))]; ...   % Ghost flux term
+                [indDupThisChild    indNbhr     dupNbhrCoef]; ...
                 ];
-            %                 [indThisChild   indGhost             repmat(1.0,size(indGhost))]; ...   % Ghost flux term
-            %                 [indThisChild   indThisChild         repmat(a,size(indGhost))]; ...     % Self-term (results from ui in the definition of the ghost flux = ui-gi+a*(mirrorGhostInterpTerms)
-            %                 [indDupThisChild indInterpFine      -a*dupwInterp]; ...                 % Interpolation terms
-            %                 ];
             
-            dupDiffusionCoefGhostEdge = reshape(repmat(diffusionCoefGhostEdge,[1 2])',[2*length(diffusionCoefGhostEdge) 1]);
             Tlist = [Tlist; ...                                                         % We are never near boundaries according to the C/F interface existence rules
                 [indGhost       indGhost             -1./diffusionCoefGhostEdge]; ...   % Ghost flux term
                 [indGhost       indThisChild         repmat(1.0,size(indGhost))]; ...    % Self-term (results from ui in the definition of the ghost flux = a_{i,g}*(ui-gi - mirrorGhostInterpTerms)
@@ -456,9 +452,6 @@ for d = 1:grid.dim,
 
             % Add C,F,ghost nodes to global index list for the A-update
             % following this loop.
-            indAll          = union(indAll,indCoarse);
-            indAll          = union(indAll,indThisChild);
-            indAll          = union(indAll,indGhost);
             indTransformed  = union(indTransformed,indGhost);
 
         end

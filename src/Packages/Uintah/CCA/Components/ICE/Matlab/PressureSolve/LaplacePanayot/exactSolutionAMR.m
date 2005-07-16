@@ -75,7 +75,8 @@ for k = 1:grid.numLevels,
                 end
 
                 % Domain boundary, set boundary conditions
-                [face{:}] = find(matInterior{d} == edgeDomain{side}(d));          % Interior cell indices near PATCH boundary
+%                [face{:}] = find(matInterior{d} == edgeDomain{side}(d));          % Interior cell indices near PATCH boundary
+                [face{:}] = ind2sub(size(matInterior{d}),find(matInterior{d} == edgeDomain{side}(d)));
                 if (~isempty(face{1}))
                     for dim = 1:grid.dim                                    % Translate face to patch-based indices (from index in the INTERIOR matInterior)
                         face{dim} = face{dim} + 1;
@@ -104,7 +105,8 @@ for k = 1:grid.numLevels,
                 end
 
                 % Interior C/F interface, set solution values
-                [face{:}] = find(matInterior{d} == edgePatch{side}(d));                 % Interior cell indices near PATCH boundary
+%                [face{:}] = find(matInterior{d} == edgePatch{side}(d));                 % Interior cell indices near PATCH boundary
+                [face{:}] = ind2sub(size(matInterior{d}),find(matInterior{d} == edgePatch{side}(d)));
                 if (~isempty(face{1}))
                     for dim = 1:grid.dim                                                % Translate face to patch-based indices (from index in the INTERIOR matInterior)
                         face{dim} = face{dim} + 1;
