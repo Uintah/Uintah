@@ -24,7 +24,8 @@ for k = 1:grid.numLevels,
         % Prepare a list of all interior cells
         %=====================================================================
         boxSize     = P.iupper - P.ilower+3;
-        u{k}{q}     = zeros(boxSize);
+        [indBox,box,matBox] = indexBox(P,P.ilower,P.iupper);                % Indices whose equations are created and added to Alist below
+        u{k}{q}     = zeros(size(matBox{1}));
         boxOffset   = P.offsetSub;
         map         = P.cellIndex;
         % Interior point patch-based subscripts
@@ -33,8 +34,8 @@ for k = 1:grid.numLevels,
             interior{dim} = [P.ilower(dim):P.iupper(dim)] + boxOffset(dim);     % Patch-based cell indices including ghosts
         end
         matInterior      = cell(grid.dim,1);
-        [matInterior{:}] = ndgrid(interior{:});
-        pindexInterior   = sub2ind(boxSize,matInterior{:});                 % Patch-based cell indices - list
+        [matInterior{:}] = myndgrid(interior{:});
+        pindexInterior   = mysub2ind(boxSize,matInterior{:});                 % Patch-based cell indices - list
         pindexInterior  = pindexInterior(:);
         mapInterior     = map(pindexInterior);
         % Ghost point physical locations
@@ -43,7 +44,7 @@ for k = 1:grid.numLevels,
             interiorLocation{dim} = (interior{dim} - boxOffset(dim) - 0.5)*h(dim);
         end
         matInteriorLocation = cell(grid.dim,1);
-        [matInteriorLocation{:}]   = ndgrid(interiorLocation{:});
+        [matInteriorLocation{:}]   = myndgrid(interiorLocation{:});
 
         %=====================================================================
         % Compute edge indices
@@ -76,7 +77,7 @@ for k = 1:grid.numLevels,
 
                 % Domain boundary, set boundary conditions
 %                [face{:}] = find(matInterior{d} == edgeDomain{side}(d));          % Interior cell indices near PATCH boundary
-                [face{:}] = ind2sub(size(matInterior{d}),find(matInterior{d} == edgeDomain{side}(d)));
+                [face{:}] = myind2sub(size(matInterior{d}),find(matInterior{d} == edgeDomain{side}(d)));
                 if (~isempty(face{1}))
                     for dim = 1:grid.dim                                    % Translate face to patch-based indices (from index in the INTERIOR matInterior)
                         face{dim} = face{dim} + 1;
@@ -85,9 +86,9 @@ for k = 1:grid.numLevels,
                     % Ghost point patch-based subscripts
                     ghost           = face;
                     ghost{d}        = face{d} + direction;                              % Ghost cell indices
-                    ghost{d}        = ghost{d}(1);                                      % Because face is an ndgrid-like structure, it repeats the same value in ghost{d}, lengthghostnbhr{d}) times. So shrink it back to a scalar so that ndgrid and flux(...) return the correct size vectors. We need to do that only for dimension d as we are on a face which is grid.dim-1 dimensional object.
+                    ghost{d}        = ghost{d}(1);                                      % Because face is an myndgrid-like structure, it repeats the same value in ghost{d}, lengthghostnbhr{d}) times. So shrink it back to a scalar so that myndgrid and flux(...) return the correct size vectors. We need to do that only for dimension d as we are on a face which is grid.dim-1 dimensional object.
                     matGhost        = cell(grid.dim,1);
-                    [matGhost{:}]   = ndgrid(ghost{:});
+                    [matGhost{:}]   = myndgrid(ghost{:});
 
                     % Inward normal direction
                     inwardNormal = zeros(1,grid.dim);
@@ -99,14 +100,14 @@ for k = 1:grid.numLevels,
                         ghostLocation{dim} = (ghost{dim} - boxOffset(dim) - 0.5 + 0.5*inwardNormal(dim))*h(dim);
                     end
                     matGhostLocation = cell(grid.dim,1);
-                    [matGhostLocation{:}]   = ndgrid(ghostLocation{:});
+                    [matGhostLocation{:}]   = myndgrid(ghostLocation{:});
                     u{k}{q}(ghost{:}) = exactSolution(matGhostLocation);
                     continue;                                                           % Skip the rest of the code in this loop as B.C. prevail on C/F interface values
                 end
 
                 % Interior C/F interface, set solution values
 %                [face{:}] = find(matInterior{d} == edgePatch{side}(d));                 % Interior cell indices near PATCH boundary
-                [face{:}] = ind2sub(size(matInterior{d}),find(matInterior{d} == edgePatch{side}(d)));
+                [face{:}] = myind2sub(size(matInterior{d}),find(matInterior{d} == edgePatch{side}(d)));
                 if (~isempty(face{1}))
                     for dim = 1:grid.dim                                                % Translate face to patch-based indices (from index in the INTERIOR matInterior)
                         face{dim} = face{dim} + 1;
@@ -115,9 +116,9 @@ for k = 1:grid.numLevels,
                     % Ghost point patch-based subscripts
                     ghost           = face;
                     ghost{d}        = face{d} + direction;                              % Ghost cell indices
-                    ghost{d}        = ghost{d}(1);                                      % Because face is an ndgrid-like structure, it repeats the same value in ghost{d}, lengthghostnbhr{d}) times. So shrink it back to a scalar so that ndgrid and flux(...) return the correct size vectors. We need to do that only for dimension d as we are on a face which is grid.dim-1 dimensional object.
+                    ghost{d}        = ghost{d}(1);                                      % Because face is an myndgrid-like structure, it repeats the same value in ghost{d}, lengthghostnbhr{d}) times. So shrink it back to a scalar so that myndgrid and flux(...) return the correct size vectors. We need to do that only for dimension d as we are on a face which is grid.dim-1 dimensional object.
                     matGhost        = cell(grid.dim,1);
-                    [matGhost{:}]   = ndgrid(ghost{:});
+                    [matGhost{:}]   = myndgrid(ghost{:});
 
                     % Ghost point physical locations
                     ghostLocation   = cell(grid.dim,1);
@@ -125,7 +126,7 @@ for k = 1:grid.numLevels,
                         ghostLocation{dim} = (ghost{dim} - boxOffset(dim) - 0.5)*h(dim);
                     end
                     matGhostLocation = cell(grid.dim,1);
-                    [matGhostLocation{:}]   = ndgrid(ghostLocation{:});
+                    [matGhostLocation{:}]   = myndgrid(ghostLocation{:});
                     u{k}{q}(ghost{:}) = exactSolution(matGhostLocation);
                 end
 

@@ -12,13 +12,13 @@ function indNbhr = indexNbhr(P,indCell,n,ind)
 if (nargin < 4)
     ind                 = P.cellIndex;                                          % Global indices of patch cells
 end
-numDims             = length(size(ind));
+numDims             = length(P.ilower);
 
 %=====================================================================
 % Convert indCell to patch subscripts
 %=====================================================================
 subCell             = cell(numDims,1);
-[subCell{:}]        = ind2sub(P.size,indCell - P.offsetInd);
+[subCell{:}]        = myind2sub(P.size,indCell - P.offsetInd);
 
 %=====================================================================
 % Compute nbhr patch subscripts
@@ -31,4 +31,5 @@ end
 %=====================================================================
 % Convert nbhr patch subs to indices
 %=====================================================================
-indNbhr             = ind(sub2ind(P.size,subNbhr{:}));
+indNbhr             = ind(mysub2ind(P.size,subNbhr{:}));
+indNbhr             = indNbhr(:);

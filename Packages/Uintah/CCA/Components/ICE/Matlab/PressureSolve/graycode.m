@@ -19,7 +19,11 @@ if (nargin < 2)
     error('Must have at least two arguments');
 end
 
-if ((~isscalar(N)) & (N ~= floor(N)) || (N < 0))
+if ((~isscalar(N)) & (N ~= floor(N)) || (N <= 0))
+    if (N == 0)
+        G = [];
+        return;
+    end
     error('MATLAB:graycode:FirstArg', 'N must be a non-negative integer');
 end
 
