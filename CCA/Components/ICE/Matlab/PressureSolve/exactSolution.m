@@ -56,8 +56,12 @@ globalParams;
 switch (param.problemType)
 
     case 'linear',
-        % u is a linear function (2D)
-        u       = 1 + x{1} + x{2};
+        % u is a linear function (d-D)        
+        u = x{1};
+        for d = 2:param.dim
+            u = u + x{d};
+        end
+        u = u + 1;
 
     case 'quad1',
         % Smooth diffusion and smooth solution, depends only on x1 (d-D).

@@ -37,7 +37,7 @@ x                       = cell(grid.dim,1);
 for dim = 1:grid.dim,
     x{dim}              = (box{dim} - P.offsetSub(dim) - 0.5) * h(dim);
 end
-[x{:}]                  = ndgrid(x{:});
+[x{:}]                  = myndgrid(x{:});
 
 %=====================================================================
 % Find all cells in the quadrant to be removed for the L-shaped problem
@@ -49,7 +49,7 @@ for dim = 1:grid.dim,
     xmin                = min(xmin,x{dim});
     xmax                = min(xmax,x{dim});
 end
-[x{:}]                  = ndgrid(x{:});
+[x{:}]                  = myndgrid(x{:});
 
 subOut                  = cell(grid.dim,1);
 [subOut{:}]             = find(xmin >= 0.5);
@@ -57,7 +57,7 @@ subOut                  = cell(grid.dim,1);
 %=====================================================================
 % Convert range patch subs to indices
 %=====================================================================
-indOut                  = ind(sub2ind(P.size,subOut{:}));
+indOut                  = ind(mysub2ind(P.size,subOut{:}));
 indOut                  = indOut(:);
 
 %=====================================================================

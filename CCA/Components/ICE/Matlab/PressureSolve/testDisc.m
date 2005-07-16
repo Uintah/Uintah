@@ -174,7 +174,7 @@ for count = 1:length(param.numCellsRange)
         out(2,' Solve the linear system\n');
         out(2,'-------------------------------------------------------------------------\n');
         out(1,'Solving system\n');
-        u = solveSystem(A,b,grid,TI);
+        [u,x] = solveSystem(A,b,grid,TI);
     end
 
     %-------------------------------------------------------------------------
@@ -187,7 +187,7 @@ for count = 1:length(param.numCellsRange)
     tStartElapsed    = clock;
 
     % Plot grid
-    if (grid.totalVars <= 200)
+    if (param.plotGrid & (grid.totalVars <= 200))
         plotGrid(grid,sprintf('%s/grid%d.eps',param.outputDir,numCells),1,0,0,0);
     end
 
@@ -197,11 +197,12 @@ for count = 1:length(param.numCellsRange)
     f = sparseToAMR(b,grid,TI,0);
 
     % AMR grid norms
+    uValues  = sparseToAMR(x,grid,TI,1);
     err = cell(size(u));
     for k = 1:grid.numLevels,
         level = grid.level{k};
         for q = 1:grid.level{k}.numPatches,
-            err{k}{q} = uExact{k}{q}-u{k}{q};
+            err{k}{q} = uExact{k}{q}-uValues{k}{q};
         end
     end
     temp    = AMRToSparse(err,grid,T,1);

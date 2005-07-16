@@ -14,7 +14,7 @@ function [indCell,range,matRange] = indexBox(P,ilower,iupper,ind)
 if (nargin < 4)
     ind                 = P.cellIndex;                                          % Global indices of patch cells
 end
-numDims             = length(size(ind));
+numDims             = length(ilower);
 
 %=====================================================================
 % Prepare cell array of ranges of patch subscripts of the box
@@ -28,10 +28,10 @@ end
 % Prepare ndgrid version of range
 %=====================================================================
 matRange            = cell(numDims,1);
-[matRange{:}]       = ndgrid(range{:});
+[matRange{:}]       = myndgrid(range{:});
 
 %=====================================================================
 % Convert range patch subs to indices
 %=====================================================================
-indCell             = ind(sub2ind(P.size,matRange{:}));
+indCell             = ind(mysub2ind(P.size,matRange{:}));
 indCell             = indCell(:);

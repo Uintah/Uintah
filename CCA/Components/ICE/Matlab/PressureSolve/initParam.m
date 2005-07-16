@@ -14,13 +14,13 @@ globalParams;
 param                       = [];
 
 % Problem type, title, streams
-param.problemType           = 'jump_quad';%'diffusion_quad_quad'; %'GaussianSource'; %'sinsin'; % %'jump_quad'; %'diffusion_quad'; %
+param.problemType           = 'jump_quad'; %'diffusion_quad_quad'; %'GaussianSource'; %'sinsin'; % %'jump_quad'; %'diffusion_quad'; %
 param.outputDir             = 'test'; %'sinsin_1level';
 param.logFile               = 'testDisc.log';
 param.outputType            = 'screen';
 
 % Domain geometry
-param.dim                   = 2;                                % Number of dimensions
+param.dim                   = 3;                                % Number of dimensions
 param.domainSize            = repmat(1.0,[1 param.dim]);        % Domain is from [0.,0.] to [1.,1.]
 
 % AMR hierarchy control
@@ -32,9 +32,10 @@ param.threeLevel            = 0;
 param.threeLevelType        = 'leftHalf';
 
 % Modules activation flags
-param.profile               = 1;
+param.profile               = 0;
 param.setupGrid             = 1;
 param.solveSystem           = 1;
+param.plotGrid              = 0;
 param.plotResults           = 0;
 param.saveResults           = 1;
 param.verboseLevel          = 1;

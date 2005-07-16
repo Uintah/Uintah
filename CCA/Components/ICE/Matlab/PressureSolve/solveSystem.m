@@ -1,4 +1,4 @@
-function u = solveSystem(A,b,grid,TI)
+function [u,x] = solveSystem(A,b,grid,TI)
 %SOLVESYSTEM  Solve the linear system of the discretization.
 %   U = SOLVESYSTEM(A,B,GRID,TI) returns the solution to the system A*X = B, where
 %   U is the vector X unwrapped into the original AMR hierarchy data (i.e.,
@@ -18,7 +18,7 @@ out(2,'--- solveSystem() BEGIN ---\n');
 tStartCPU       = cputime;
 tStartElapsed   = clock;
 x               = A\b;                            % Direct solver
-u               = sparseToAMR(x,grid,TI,1);           % Translate the solution vector to patch-based
+u               = sparseToAMR(x,grid,TI,1);       % Translate the solution vector to patch-based
 tCPU            = cputime - tStartCPU;
 tElapsed        = etime(clock,tStartElapsed);
 out(2,'CPU time     = %f\n',tCPU);
