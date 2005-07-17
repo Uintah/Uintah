@@ -20,20 +20,38 @@ switch (param.problemType)
 
     case 'quad1',
         f       = -2*ones(size(x{1}));
-
+        
     case 'quad2',
-        f       = 2*(x{1}.*(1-x{1}) + x{2}.*(1-x{2}));
+        f       = zeros(size(x{1}));
+        for d = 1:param.dim,
+            g   = 2*ones(size(x{1}));
+            for m = 2:param.dim
+                if (m ~= d)
+                    g = g .* x{m}.*(1-x{m});
+                end
+            end
+            f   = f + g;
+        end
 
     case 'sinsin',
-        f       = 2*pi*pi*sin(pi*x{1}).*sin(pi*x{2});
+        f       = param.dim*pi*pi*ones(size(x{1}));
+        for d = 1:param.dim
+            f = f .* sin(pi*x{d});
+        end
 
     case 'GaussianSource',
         K       = 1;
-        x0      = [0.5 0.5];
-        sigma   = [0.05 0.05];
-        f       = -exp(-((x{1}-x0(1)).^2/sigma(1)^2 + (x{2}-x0(2)).^2/sigma(2)^2)) .* ( ...
-            (4*((x{1}-x0(1))/sigma(1)).^2 - 2)/sigma(1)^2 + ...
-            (4*((x{2}-x0(2))/sigma(2)).^2 - 2)/sigma(2)^2);
+        x0      = repmat(0.5,[1 param.dim]);
+        sigma   = repmat(0.05,[1 param.dim]);
+        f       = K * ones(size(x{1}));
+        for d = 1:param.dim
+            f = f .* exp(-((x{d}-x0(d)).^2/sigma(d)^2));
+        end
+        g       = zeros(size(x{1}));
+        for d = 1:param.dim
+            g = g + (4*((x{d}-x0(d))/sigma(d)).^2 - 2)/sigma(d)^2;
+        end
+        f       = f .* g;
 
     case 'jump_quad',
         f       = -ones(size(x{1}));

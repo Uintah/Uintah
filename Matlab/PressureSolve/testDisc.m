@@ -1,4 +1,4 @@
-function errNorm = testDisc(p)
+function [errNorm,success] = testDisc(p)
 %TESTDISC  Test pressure equation discretization.
 %   We test pressure equation discretization error for a
 %   simple 2D Poisson problem with a known solution.
@@ -18,13 +18,13 @@ globalParams;
 
 if (nargin < 1)
     initParam;                                                      % Initialize parameters structure
+    if (param.profile)
+        profile on -detail builtin;                                 % Enable profiling
+    end
 else
     param = p;
 end
 
-if (param.profile)
-    profile on -detail builtin;                                 % Enable profiling
-end
 totalStartCPU           = cputime;
 totalStartElapsed       = clock;
 
@@ -35,11 +35,11 @@ out(1,'=========================================================================
 %=========================================================================
 % Run discretization on a sequence of successively finer grids
 %=========================================================================
-[success,message,messageid] = mkdir('.',param.outputDir);
+[successFlag,message,messageid] = mkdir('.',param.outputDir);
 errNorm                     = [];
 
 for numCells = param.numCellsRange
-%    try;
+    try;
         pack;
         out(1,'#### nCells = %d ####\n',numCells);
         param.baseResolution = numCells;
@@ -78,15 +78,19 @@ for numCells = param.numCellsRange
                 plotResults(grid,u,uExact,tau,numCells);
             end
         end
-%     catch;
-%         fprintf('Failed in numCells = %d: %s\n',numCells,lasterr);
-%     end
+        success = 1;
+    catch;
+        out(1,'Failed in numCells = %d: %s\n',numCells,lasterr);
+        success = numCells;
+    end
 end
 
 totalCPU        = cputime - totalStartCPU;
 totalElapsed    = etime(clock,totalStartElapsed);
 out(1,'CPU time     = %f\n',totalCPU);
 out(1,'Elapsed time = %f\n',totalElapsed);
-if (param.profile)
-    profile report;                             % Generate timing profile report
+if (nargin < 1)
+    if (param.profile)
+        profile report;                             % Generate timing profile report
+    end
 end
