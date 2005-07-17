@@ -14,13 +14,13 @@ globalParams;
 param                       = [];
 
 % Problem type, title, streams
-param.problemType           = 'jump_quad'; %'diffusion_quad_quad'; %'GaussianSource'; %'sinsin'; % %'jump_quad'; %'diffusion_quad'; %
+param.problemType           = 'sinsin'; %'jump_quad'; %'diffusion_quad_quad'; %'GaussianSource'; %'sinsin'; % %'jump_quad'; %'diffusion_quad'; %
 param.outputDir             = 'test'; %'sinsin_1level';
 param.logFile               = 'testDisc.log';
 param.outputType            = 'screen';
 
 % Domain geometry
-param.dim                   = 1;                                % Number of dimensions
+param.dim                   = 3;                                % Number of dimensions
 param.domainSize            = repmat(1.0,[1 param.dim]);        % Domain is from [0.,0.] to [1.,1.]
 
 % AMR hierarchy control
@@ -39,6 +39,7 @@ param.plotGrid              = 0;
 param.plotResults           = 0;
 param.saveResults           = 1;
 param.verboseLevel          = 1;
+param.catchException        = 0;
 
 % For testDisc: experiments are parameterized by the resolution.
-param.numCellsRange         = 2.^[2:1:3]; %2.^[2:1:12];
+param.numCellsRange         = 2.^[2:1:5]; %2.^[2:1:12];
