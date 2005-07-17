@@ -26,8 +26,8 @@ if (nargin < 1)
     end
 else
     param = p;
-    out(1,'=========================================================================\n');
 end
+initTest;
 
 out(1,'=========================================================================\n');
 out(1,' Testing discretization accuracy on increasingly finer grids\n');
@@ -42,14 +42,21 @@ errNorm                     = [];
 for numCells = param.numCellsRange
     if (param.catchException)
         try;
-            [errNorm,success] = testNumCells(numCells,errNorm);
+            errNorm = testNumCells(numCells,errNorm);
+            success = 2;
         catch;
-            out(0,'Failed in numCells = %d: %s\n',numCells,lasterr);
-            success = 0;
+            out(1,'Failed in numCells = %d: %s\n',numCells,lasterr);
+            memoverflow = findstr(lasterr,'Out of memory. Type HELP MEMORY for your options. ');
+            if (isempty(memoverflow))
+                success = 0;
+            else
+                success = 1;
+            end
             break;
         end
     else
-        [errNorm,success] = testNumCells(numCells,errNorm);
+        errNorm = testNumCells(numCells,errNorm);
+        success = 2;
     end
 end
 
@@ -64,7 +71,7 @@ if (nargin < 1)
 end
 
 %-----------------------------------------------------------------------
-function [errNorm,success] = testNumCells(numCells,errNorm)
+function errNorm = testNumCells(numCells,errNorm)
 globalParams;
 pack;
 out(1,'#### nCells = %d ####\n',numCells);
@@ -93,15 +100,6 @@ if (param.setupGrid & param.solveSystem)
     [y,err,tau]   = computeError(grid,A,b,T,TI,u,x,uExact);
     % Save error norms to latex tables
     if (param.saveResults)
-        errNorm = saveResults(grid,A,b,T,TI,'n','%4d',numCells,y,err,tau,errNorm);
-    end
-    % Plot grid
-    if (param.plotGrid & (grid.tVars <= 200))
-        plotGrid(grid,sprintf('%s/grid%d.eps',param.outputDir,numCells),1,0,0,0);
-    end
-    % Plot errors, solutions and save them to eps files
-    if (param.plotResults)
-        plotResults(grid,u,uExact,tau,numCells);
+        [errNorm,orders] = saveResults(grid,A,b,T,TI,u,uExact,'n','%4d',numCells,y,err,tau,errNorm);
     end
 end
-success = 1;

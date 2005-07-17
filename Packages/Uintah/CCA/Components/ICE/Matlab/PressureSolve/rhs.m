@@ -3,7 +3,7 @@ function f = rhs(x)
 %   F = RHS(X) returns the diffusion equation's right hand side,
 %   evaluated at the locations X. X is a Dx1 cell array of coordinates
 %   X{1},...,X{D} in D dimensions. The global struct entry
-%   PARAM.problemType controls which RHS is output. See "help exactsolution"
+%   PARAM.problemType controls which RHS is output. See "help inittest"
 %   for a list of possible problems.
 %
 %   See also: TESTDISC, EXACTSOLUTION, RHSBC, DIFFUSION.
