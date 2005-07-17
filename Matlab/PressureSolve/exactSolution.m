@@ -106,7 +106,7 @@ switch (param.problemType)
         % Piecewise constant diffusion coefficient with a big jump at
         % x{1}=x0. Piecewise quadratic solution (d-D).
         u           = zeros(size(x{1}));
-        x0          = 0.5;
+        x0          = 0.53;
         aLeft       = 10.0;
         aRight      = 1.0e+6;
         left        = find(x{1} < x0);
