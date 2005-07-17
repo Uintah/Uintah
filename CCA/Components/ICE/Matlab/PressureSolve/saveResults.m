@@ -22,16 +22,23 @@ normLabels{3}   = '\|e\|_{L_{\infty}}';
 normLabels{4}   = '\|e\|_{H_1}';
 normLabels{5}   = '\|\tau\|_{L_2}';
 
-errNorm = [ ...
+i1 = logical(diag(A) < 0);
+i2 = logical(diag(A) >= 0);
+n1 = length(full(diag(A(i1,i1))));
+invA11 = spdiags(1./full(diag(A(i1,i1))),0,n1,n1);
+AS = A(i2,i2) - A(i2,i1)*invA11*A(i1,i2);
+ys = y(i2);
+
+errNorm = [ errNorm; [ ...
     expValue ...
     normAMR(grid,err,'L1') ...
     normAMR(grid,err,'L2') ...
     normAMR(grid,err,'max') ...
-    sqrt(y'*A*y) ...
+    sqrt(ys'*AS*ys) ...
     normAMR(grid,tau,'L2') ...
-    ];
+    ]];
 out(1,'#vars = %7d  L1=%.3e  L2=%.3e  max=%.3e  H1=%.3e  tau=%.3e\n',...
-    grid.totalVars,errNorm(:,2:end));
+    grid.totalVars,errNorm(end,2:end));
 
 % Save errNorm in latex table format
 data        = errNorm(:,1);
@@ -54,4 +61,5 @@ end
 
 fileName            = sprintf('%s/DiscError',param.outputDir);
 Caption             = sprintf('Discretization error');
+%data
 latexTableFactors(data,Label,fileName,Caption,fmt{:});
