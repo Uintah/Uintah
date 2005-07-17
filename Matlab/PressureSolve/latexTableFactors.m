@@ -1,4 +1,4 @@
-function latexTable(M,Label,fileName,Caption,varargin)
+function latexTable(M,orders,Label,fileName,Caption,varargin)
 %LATEXTABLEFACTORS   Print a matrix in LaTeX tabular format.
 %   LATEXTABLEFACTORS(M) prints out the numeric matrix M in a LaTeX tabular
 %   format. The '&' character appears between entries in a row, '\\'
@@ -29,10 +29,11 @@ function latexTable(M,Label,fileName,Caption,varargin)
 %
 %   See also SPRINTF, SYM/LATEX, LATEXTABLE.
 
-
 % Revision history:
 % Copyright 2002 by Toby Driscoll. Last updated 12/06/02.
 % 12-JUL-2005    Oren Livne    Added comments, modified to my desired format
+
+globalParams;
 
 if (nargin < 1)
     error('Need to specify data array M');
@@ -170,9 +171,16 @@ fprintf(fout,'%s',S);
 
 %%%%%%%%%%%%%%%%%%%%%%%% LATEX.M ORIGINAL CODE END %%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% Print convergence orders line
 fprintf(fout,'\\hline\n');
+fprintf(fout,'p');
+for i = 1:(size(M,2)-1)/2
+    fprintf(fout,' & $-$ & $%.2f$',orders(i));
+end
+fprintf(fout,'\\\\ \\hline\n');
+
 fprintf(fout,'\\end{tabular}\n');
-fprintf(fout,'\\label{Table-%s}\n',fileName);
 fprintf(fout,'\\caption{%s}\n',Caption);
+fprintf(fout,'\\label{%s_DiscError}\n',param.outputDir);
 fprintf(fout,'\\end{table}\n');
 fclose(fout);

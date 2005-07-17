@@ -3,7 +3,7 @@ function g = rhsBC(x)
 %   G = RHS(X) returns the right hand side for Dirichlet boundaries where
 %   we enforce U = G. G is evaluated at the locations X. X is a Dx1 cell
 %   array of coordinates X{1},...,X{D} in D dimensions. The global struct
-%   entry PARAM.problemType controls which RHS is output. See "help exactsolution"
+%   entry PARAM.problemType controls which RHS is output. See "help inittest"
 %   for a list of possible problems.
 %
 %   See also: TESTDISC, EXACTSOLUTION, RHS, DIFFUSION.

@@ -39,6 +39,10 @@ testCases{1} = {...
 
 testCases{2} = {...
     'linear', ...
+    };
+
+testCasesA{2} = {...
+    'linear', ...
     'quad1', ...
     'quad2', ...
     'sinsin', ...
@@ -64,24 +68,60 @@ p                           = param;
 p.verboseLevel              = 0;
 param.catchException        = 1;
 
+% Write header of results section
+fout = fopen(sprintf('FullResults.tex'),'w');
+fprintf(fout,'%\n========================= RESULTS SECTION ===============================\n');
+fclose(fout);
+
 for dim = 2:3
     p.dim           = dim;
     p.domainSize    = repmat(1.0,[1 p.dim]);        % Domain is from [0.,0.] to [1.,1.]
     out(0,'############\n');
     out(0,' %d-D tests\n',p.dim);
     out(0,'############\n');
+
+    % Write header of results section
+    fout = fopen(sprintf('FullResults.tex'),'a');
+    fprintf(fout,'%\n========================= %d-D RESULTS ===============================\n',dim);
+    fprintf(fout,'\\newpage\n');
+    fprintf(fout,'\\subsection{%d-D Test Cases}\n',dim);
+    fprintf(fout,'\\label{Results%dD}\n',dim);
+    fprintf(fout,'\n');
+    if (dim == 2)
+        fprintf(fout,'\\subsubsection{Grid Layouts}\n');
+        fprintf(fout,'\\begin{figure}[htbp]\n');
+        fprintf(fout,'\\begin{center}\n');
+        fprintf(fout,'\\includegraphics[width=1\\textwidth]{ProblemA_1Level/grid8.eps}\n');
+        fprintf(fout,'\\end{center}\n');
+        fprintf(fout,'\\caption{AMR Grid Layout for $h = \\frac18$.} \\label{grid8}\n');
+        fprintf(fout,'\\end{figure}\n');
+        fprintf(fout,'\n');
+    end
+    fclose(fout);
+
     for count = 1:length(testCases{dim}),
         title = testCases{dim}{count};
         p.problemType           = title;
         p.outputDir             = sprintf('test_%s_%dD',title,p.dim);
-        out(0,'[%3d/%3d] Running %-25s ',count,length(testCases{dim}),title);
-        [success,errNorm,testCPU,testElapsed] = testDisc(p);
-        if (success)
-            out(0,'success');
-        else
-            out(0,'failure');
-        end            
-        out(0,'  cpu=%10.2f  elapsed=%10.2f',testCPU,testElapsed);
+        out(0,'[%3d/%3d] %-25s ',count,length(testCases{dim}),title);
+        [errNorm,success,testCPU,testElapsed] = testDisc(p);
+        switch (success)
+            case 0,
+                result = 'failure';
+            case 1,
+                result = 'mem overflow';
+            case 2,
+                result = 'success';
+            otherwise
+                result = '???';
+        end
+        if (success > 0)
+            fout = fopen(sprintf('FullResults.tex'),'a');
+            fprintf(fout,'\\newpage\n');
+            fprintf(fout,'\\input %s/Results\n\n',param.outputDir);
+            fclose(fout);
+        end
+        out(0,'%-12s  cpu=%10.2f  elapsed=%10.2f',result,testCPU,testElapsed);
         out(0,'\n');
     end
 end
