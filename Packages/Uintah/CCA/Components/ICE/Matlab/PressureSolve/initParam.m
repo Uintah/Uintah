@@ -41,4 +41,4 @@ param.saveResults           = 1;
 param.verboseLevel          = 1;
 
 % For testDisc: experiments are parameterized by the resolution.
-param.numCellsRange         = 2.^[2:1:12];
+param.numCellsRange         = 2.^[2:1:3]; %2.^[2:1:12];
