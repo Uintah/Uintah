@@ -31,29 +31,29 @@ for k = 1:grid.numLevels,
         figure(fig);
         clf;
         surf(u{k}{q});
-        title(sprintf('Discrete solution on Level %d, Patch %d',k,q));
         eval(sprintf('print -depsc %s/DiscSolution%d_L%dP%d.eps',param.outputDir,numCells,k,q));
+        title(sprintf('Discrete solution on Level %d, Patch %d',k,q));
 
-        fig = fig+1;
-        figure(fig);
-        clf;
-        surf(uExact{k}{q});
-        title(sprintf('Exact solution on Level %d, Patch %d',k,q));
+        %         fig = fig+1;
+        %         figure(fig);
+        %         clf;
+        %         surf(uExact{k}{q});
+        %         title(sprintf('Exact solution on Level %d, Patch %d',k,q));
 
         fig = fig+1;
         figure(fig);
         clf;
         surf(u{k}{q}-uExact{k}{q});
-        title(sprintf('Discretization error on Level %d, Patch %d',k,q));
         eval(sprintf('print -depsc %s/DiscError%d_L%dP%d.eps',param.outputDir,numCells,k,q));
+        title(sprintf('Discretization error on Level %d, Patch %d',k,q));
         shg;
 
-        fig = fig+1;
-        figure(fig);
-        clf;
-        surf(tau{k}{q});
-        title(sprintf('Truncation error on Level %d, Patch %d',k,q));
-        eval(sprintf('print -depsc %s/TruncError%d_L%dP%d.eps',param.outputDir,numCells,k,q));
-        shg;
+        %         fig = fig+1;
+        %         figure(fig);
+        %         clf;
+        %         surf(tau{k}{q});
+        %         title(sprintf('Truncation error on Level %d, Patch %d',k,q));
+        %         eval(sprintf('print -depsc %s/TruncError%d_L%dP%d.eps',param.outputDir,numCells,k,q));
+        %         shg;
     end
 end
