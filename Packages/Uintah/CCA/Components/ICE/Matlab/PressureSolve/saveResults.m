@@ -75,7 +75,7 @@ if (grid.totalVars <= 200)
     plotGrid(grid,sprintf('%s/grid%d.eps',param.outputDir,param.baseResolution),1,0,0,0);
 end
 % Plot errors, solutions and save them to eps files
-if (grid.dim == 2)
+if (ismember(grid.dim,[2]))
     plotResults(grid,u,uExact,tau,param.baseResolution);
 end
 

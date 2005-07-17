@@ -26,10 +26,10 @@ if (param.profile)
 end
 
 testCases{1} = {...
-    'sinsin', ...
     'linear', ...
     'quad1', ...
     'quad2', ...
+    'sinsin', ...
     'GaussianSource', ...
     'jump_linear', ...
     'jump_quad', ...
@@ -38,10 +38,6 @@ testCases{1} = {...
     };
 
 testCases{2} = {...
-    'linear', ...
-    };
-
-testCasesA{2} = {...
     'linear', ...
     'quad1', ...
     'quad2', ...
@@ -73,7 +69,7 @@ fout = fopen(sprintf('FullResults.tex'),'w');
 fprintf(fout,'%\n========================= RESULTS SECTION ===============================\n');
 fclose(fout);
 
-for dim = 2:3
+for dim = 1:2
     p.dim           = dim;
     p.domainSize    = repmat(1.0,[1 p.dim]);        % Domain is from [0.,0.] to [1.,1.]
     out(0,'############\n');
@@ -87,13 +83,18 @@ for dim = 2:3
     fprintf(fout,'\\subsection{%d-D Test Cases}\n',dim);
     fprintf(fout,'\\label{Results%dD}\n',dim);
     fprintf(fout,'\n');
-    if (dim == 2)
+    if (ismember(dim,[2]))
+        count = 1;
+        title = testCases{dim}{count};
+        p.problemType           = title;
+        p.outputDir             = sprintf('test_%s_%dD',title,p.dim);
+        n = 8;
         fprintf(fout,'\\subsubsection{Grid Layouts}\n');
         fprintf(fout,'\\begin{figure}[htbp]\n');
         fprintf(fout,'\\begin{center}\n');
-        fprintf(fout,'\\includegraphics[width=1\\textwidth]{ProblemA_1Level/grid8.eps}\n');
+        fprintf(fout,'\\includegraphics[width=1\\textwidth]{%s/grid%d.eps}\n',p.outputDir,n);
         fprintf(fout,'\\end{center}\n');
-        fprintf(fout,'\\caption{AMR Grid Layout for $h = \\frac18$.} \\label{grid8}\n');
+        fprintf(fout,'\\caption{AMR Grid Layout for $h = \\frac1%d$.} \\label{grid%d_%dD}\n',n,n,dim);
         fprintf(fout,'\\end{figure}\n');
         fprintf(fout,'\n');
     end

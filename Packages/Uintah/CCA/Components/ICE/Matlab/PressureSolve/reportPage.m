@@ -22,7 +22,7 @@ fprintf(fout,' and $O(h^{%.1f})$ in the maximum norm,',roundd(orders(2),1));
 fprintf(fout,' as $h \\rightarrow 0$.\n');
 fprintf(fout,'Error norms versus $h$ are shown in Table~\\ref{%s_%s}.\n',param.outputDir,discErrorTitle);
 fprintf(fout,'\n');
-if (param.dim == 2)
+if (ismember(param.dim,[2]))
     fprintf(fout,'\\begin{figure}[htbp]\n');
     fprintf(fout,'\\begin{center}\n');
     fprintf(fout,'\\includegraphics[width=%f\\textwidth]{%s/DiscSolution%d_L1P1.eps}\n',sz,param.outputDir,n);
