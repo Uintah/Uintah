@@ -1,4 +1,4 @@
-function [errNorm,success] = testDisc(p)
+function [errNorm,success,tCPU,tElapsed] = testDisc(p)
 %TESTDISC  Test pressure equation discretization.
 %   We test pressure equation discretization error for a
 %   simple 2D Poisson problem with a known solution.
@@ -16,6 +16,9 @@ function [errNorm,success] = testDisc(p)
 
 globalParams;
 
+tStartCPU           = cputime;
+tStartElapsed       = clock;
+
 if (nargin < 1)
     initParam;                                                      % Initialize parameters structure
     if (param.profile)
@@ -23,10 +26,8 @@ if (nargin < 1)
     end
 else
     param = p;
+    out(1,'=========================================================================\n');
 end
-
-totalStartCPU           = cputime;
-totalStartElapsed       = clock;
 
 out(1,'=========================================================================\n');
 out(1,' Testing discretization accuracy on increasingly finer grids\n');
@@ -39,58 +40,68 @@ out(1,'=========================================================================
 errNorm                     = [];
 
 for numCells = param.numCellsRange
-    try;
-        pack;
-        out(1,'#### nCells = %d ####\n',numCells);
-        param.baseResolution = numCells;
-
-        if (param.setupGrid)
-            out(2,'-------------------------------------------------------------------------\n');
-            out(2,' Set up grid & system\n');
-            out(2,'-------------------------------------------------------------------------\n');
-            out(1,'Setting up grid\n');
-            grid = [];
-            [grid,A,b,T,TI]     = setupGrid;
+    if (param.catchException)
+        try;
+            [errNorm,success] = testNumCells(numCells,errNorm);
+        catch;
+            out(0,'Failed in numCells = %d: %s\n',numCells,lasterr);
+            success = 0;
+            break;
         end
-
-        if (param.setupGrid & param.solveSystem)
-            out(2,'-------------------------------------------------------------------------\n');
-            out(2,' Solve the linear system\n');
-            out(2,'-------------------------------------------------------------------------\n');
-            out(1,'Solving system\n');
-            [u,x] = solveSystem(A,b,grid,TI);
-
-            out(2,'-------------------------------------------------------------------------\n');
-            out(2,' Compute exact solution, error norms, plot results\n');
-            out(2,'-------------------------------------------------------------------------\n');
-            uExact      = exactSolutionAMR(grid,T,TI);
-            [y,err,tau]   = computeError(grid,A,b,T,TI,u,x,uExact);
-            % Save error norms to latex tables
-            if (param.saveResults)
-                errNorm = saveResults(grid,A,b,T,TI,'n','%4d',numCells,y,err,tau,errNorm);
-            end
-            % Plot grid
-            if (param.plotGrid & (grid.totalVars <= 200))
-                plotGrid(grid,sprintf('%s/grid%d.eps',param.outputDir,numCells),1,0,0,0);
-            end
-            % Plot errors, solutions and save them to eps files
-            if (param.plotResults)
-                plotResults(grid,u,uExact,tau,numCells);
-            end
-        end
-        success = 1;
-    catch;
-        out(1,'Failed in numCells = %d: %s\n',numCells,lasterr);
-        success = 0;
+    else
+        [errNorm,success] = testNumCells(numCells,errNorm);
     end
 end
 
-totalCPU        = cputime - totalStartCPU;
-totalElapsed    = etime(clock,totalStartElapsed);
-out(1,'CPU time     = %f\n',totalCPU);
-out(1,'Elapsed time = %f\n',totalElapsed);
+tCPU        = cputime - tStartCPU;
+tElapsed    = etime(clock,tStartElapsed);
+out(1,'CPU time     = %f\n',tCPU);
+out(1,'Elapsed time = %f\n',tElapsed);
 if (nargin < 1)
     if (param.profile)
         profile report;                             % Generate timing profile report
     end
 end
+
+%-----------------------------------------------------------------------
+function [errNorm,success] = testNumCells(numCells,errNorm)
+globalParams;
+pack;
+out(1,'#### nCells = %d ####\n',numCells);
+param.baseResolution = numCells;
+
+if (param.setupGrid)
+    out(2,'-------------------------------------------------------------------------\n');
+    out(2,' Set up grid & system\n');
+    out(2,'-------------------------------------------------------------------------\n');
+    out(1,'Setting up grid\n');
+    grid = [];
+    [grid,A,b,T,TI]     = setupGrid;
+end
+
+if (param.setupGrid & param.solveSystem)
+    out(2,'-------------------------------------------------------------------------\n');
+    out(2,' Solve the linear system\n');
+    out(2,'-------------------------------------------------------------------------\n');
+    out(1,'Solving system\n');
+    [u,x] = solveSystem(A,b,grid,TI);
+
+    out(2,'-------------------------------------------------------------------------\n');
+    out(2,' Compute exact solution, error norms, plot results\n');
+    out(2,'-------------------------------------------------------------------------\n');
+    uExact      = exactSolutionAMR(grid,T,TI);
+    [y,err,tau]   = computeError(grid,A,b,T,TI,u,x,uExact);
+    % Save error norms to latex tables
+    if (param.saveResults)
+        errNorm = saveResults(grid,A,b,T,TI,'n','%4d',numCells,y,err,tau,errNorm);
+    end
+    % Plot grid
+    if (param.plotGrid & (grid.tVars <= 200))
+        plotGrid(grid,sprintf('%s/grid%d.eps',param.outputDir,numCells),1,0,0,0);
+    end
+    % Plot errors, solutions and save them to eps files
+    if (param.plotResults)
+        plotResults(grid,u,uExact,tau,numCells);
+    end
+end
+success = 1;
