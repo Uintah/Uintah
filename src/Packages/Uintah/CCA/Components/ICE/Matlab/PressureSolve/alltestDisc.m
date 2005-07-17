@@ -18,8 +18,23 @@
 globalParams;
 
 initParam;                                                      % Initialize parameters structure
+if (param.profile)
+    profile on -detail builtin;                                 % Enable profiling
+end
 
-testCases = {...
+testCases{1} = {...
+    'sinsin', ...
+    'linear', ...
+    'quad1', ...
+    'quad2', ...
+    'GaussianSource', ...
+    'jump_linear', ...
+    'jump_quad', ...
+    'diffusion_quad_linear', ...
+    'diffusion_quad_quad', ...
+    };
+
+testCases{2} = {...
     'linear', ...
     'quad1', ...
     'quad2', ...
@@ -32,6 +47,8 @@ testCases = {...
     'diffusion_quad_quad', ...
     };
 
+testCases{3} = testCases{1};
+
 out(0,'=========================================================================\n');
 out(0,' Testing discretization accuracy on increasingly finer grids\n');
 out(0,' Testing a battery of test cases\n');
@@ -42,17 +59,24 @@ out(0,'=========================================================================
 %=========================================================================
 p               = param;
 p.verboseLevel  = 0;
-for dim = 1:3
+for dim = 2:3
     p.dim = dim;
-    out(0,'=========================================================================\n');
+    out(0,'############\n');
     out(0,' %d-D tests\n',p.dim);
-    out(0,'=========================================================================\n');
-    for count = 1:length(testCases),
-        title = testCases{count};
+    out(0,'############\n');
+    for count = 1:length(testCases{dim}),
+        title = testCases{dim}{count};
         p.problemType           = title;
-        p.outputDir             = sprintf('test_%s_%d',title,p.dim);
-        fprintf('Running test ''%s'' [%3d/%3d] ...',p.outputDir,count,length(testCases));
-        testDisc(p);
-        fprintf('\n');
+        p.outputDir             = sprintf('test_%s_%dD',title,p.dim);
+        out(0,'[%3d/%3d] Running test ''%s'' ...',count,length(testCases{dim}),p.outputDir);
+        [sucesss,errNorm] = testDisc(p);
+        if (success == 0)
+            out(0,' sucess\n');
+        else
+            out(0,' reached numCells = %d\n',sucess);
+        end            
     end
+end
+if (param.profile)
+    profile report;                             % Generate timing profile report
 end

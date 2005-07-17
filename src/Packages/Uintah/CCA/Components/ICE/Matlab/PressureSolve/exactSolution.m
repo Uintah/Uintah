@@ -5,46 +5,45 @@ function u = exactSolution(x)
 %   dimensions. The global struct entry param.problemType controls which
 %   solution is output. Options are:
 %       'linear'
-%           U = linear function with Dirichlet B.C. on the 2D unit
+%           U = linear function with Dirichlet B.C. on the d-D unit
 %           square. Diffusion a=1 (Laplace operator). U is smooth.
 %       'quad1'
-%           U = quadratic function with Dirichlet B.C. on the 2D unit
+%           U = quadratic function with Dirichlet B.C. on the d-D unit
 %           square. Diffusion a=1 (Laplace operator). U is smooth. U
 %           depends only on x1.
 %       'quad2'
-%           U = quadratic function with Dirichlet B.C. on the 2D unit
+%           U = quadratic function with Dirichlet B.C. on the d-D unit
 %           square. Diffusion a=1 (Laplace operator). U is smooth.
 %       'sinsin'
-%           U = sin(pi*x1)*sin(pi*x2) with Dirichlet B.C. on the 2D unit
+%           U = sin(pi*x1)*sin(pi*x2) with Dirichlet B.C. on the d-D unit
 %           square. Diffusion a=1 (Laplace operator). U is smooth.
 %       'GaussianSource'
-%           U = is the solution to Laplace's equation with Gaussian right
-%           hand side, centered at (0.5,0.5) with standard deviation of
-%           (0.05,0.05) on the 2D unit square. Diffusion a=1 (Laplace
-%           operator). U is smooth but localized around the source, so at
-%           coarse level it is beneficial to locally refine around the
-%           center of the domain.
-%       'Lshaped'
+%           U = is the solution to Laplace's equation on the d-D unit square
+%           with Gaussian right hand side, centered at (0.5,...,0.5) with
+%           standard deviation of (0.05,...,0.05) on the 2D unit square. 
+%           Diffusion a=1 (Laplace operator). U is smooth but localized 
+%           around the source, so at coarse level it is beneficial to locally
+%           refine around the center of the domain.
+%       'jump_linear'
+%           Piecewise constant diffusion coefficient a on the d-D unit
+%           square. a has a big jump at the hyperplane x1=0.5 (a,u depend only on
+%           x1; a = aLeft for x1 <= 0.5, a = aRight otherwise). Piecewise linear
+%           solution U that solves Laplace's equation with this a.
+%       'jump_quad'
+%           Like jump_linear, but with a piecewise quadratic solution U
+%           that solves Poisson's equation with RHS = -1, this a, and appropriate
+%           B.C.
+%       'diffusion_quad_quad'
+%           a = 1 + x{1} and u = x{1}^2 (d-D; linear diffusion and smooth
+%           quadratic solution). Appropriate RHS and Dirichlet BC.
+%       'diffusion_quad_quad'
+%           a = 1 + x{1}^2 and u = x{1}^2 (d-D; quadratic diffusion and smooth
+%           quadratic solution). Appropriate RHS and Dirichlet BC.
+%       'Lshaped' (2-D only)
 %           U = r^(2/3)*sin(2*theta/3) is the solution the Laplace's
 %           equation with Dirichlet B.C. on the L-shaped domain [0,1]^2 \
 %           [0.5,1]^2.Diffusion a=1 (Laplace operator). This is a
 %           re-entrant corner problem where U is singular.
-%       'jump_linear'
-%           Piecewise constant diffusion coefficient with a big jump at
-%           x1=0.5 (a,u depend only on x1; a = aLeft for x1 <= 0.5, a =
-%           aRight otherwise). Piecewise linear solution U that solves
-%           Laplace's equation with this a.
-%       'jump_quad'
-%           Piecewise constant diffusion coefficient with a big jump at
-%           x1=0.5 (a,u depend only on x1; a = aLeft for x1 <= 0.5, a =
-%           aRight otherwise). Piecewise quadratic solution U that solves
-%           Poisson's equation with RHS = -1, this a, and appropriate B.C.
-%       'diffusion_quad_quad'
-%           a = 1 + x{1} and u = x{1}^2 (linear diffusion and smooth
-%           quadratic solution). Appropriate RHS and Dirichlet BC.
-%       'diffusion_quad_quad'
-%           a = 1 + x{1}^2 and u = x{1}^2 (quadratic diffusion and smooth
-%           quadratic solution). Appropriate RHS and Dirichlet BC.
 %
 %   See also: TESTDISC, RHS, RHSBC, EXACTSOLUTIONAMR, DIFFUSION.
 
@@ -57,42 +56,40 @@ switch (param.problemType)
 
     case 'linear',
         % u is a linear function (d-D)        
-        u = x{1};
-        for d = 2:param.dim
+        u = ones(size(x{1}));
+        for d = 1:param.dim
             u = u + x{d};
         end
-        u = u + 1;
-
+        
     case 'quad1',
         % Smooth diffusion and smooth solution, depends only on x1 (d-D).
         u           = x{1}.^2;
 
     case 'quad2',
-        % u is a quadratic function in x1,x2 (2D)
-        u       = x{1}.*(1-x{1}).*x{2}.*(1-x{2});
+        % u is a quadratic function that satisfies zero Dirichlet B.C.
+        % (d-D).
+        u = ones(size(x{1}));
+        for d = 1:param.dim
+            u = u .* x{d}.*(1-x{d});
+        end
 
     case 'sinsin',
-        % u is a smooth function (2D)
-        u       = sin(pi*x{1}).*sin(pi*x{2});
+        % u is a smooth function (d-D).
+        u = ones(size(x{1}));
+        for d = 1:param.dim
+            u = u .* sin(pi*x{d});
+        end
 
     case 'GaussianSource',
-        % u is smooth, solves Laplace's equation with a Gaussian RHS (2D)
+        % u is smooth, solves Laplace's equation with a Gaussian RHS (d-D).
         K       = 1;
-        x0      = [0.5 0.5];
-        sigma   = [0.05 0.05];
-        u       = exp(-((x{1}-x0(1)).^2/sigma(1)^2 + (x{2}-x0(2)).^2/sigma(2)^2));
-        
-    case 'Lshaped',
-        % L-shaped domain, u has a singularity due to the re-entrant corner
-        % at x0 (2D).
-        x0          = [0.5 0.5];
-        r           = sqrt((x{1}-x0(1)).^2+(x{2}-x0(2)).^2);
-        t           = atan2(x{2}-x0(2),x{1}-x0(1));
-        t           = mod(-t+2*pi,2*pi);
-        alpha       = 2/3;
-        u           = r.^(alpha).*sin(alpha*t);
-        u(find(min(x{1}-x0(1),x{2}-x0(2)) >= 0)) = 0.0;
-        
+        x0      = repmat(0.5,[1 param.dim]);
+        sigma   = repmat(0.05,[1 param.dim]);
+        u       = K * ones(size(x{1}));
+        for d = 1:param.dim
+            u = u .* exp(-((x{d}-x0(d)).^2/sigma(d)^2));
+        end
+                
     case 'jump_linear',
         % Piecewise constant diffusion coefficient with a big jump at
         % x{1}=x0. Piecewise linear solution (d-D).
@@ -124,6 +121,17 @@ switch (param.problemType)
     case 'diffusion_quad_quad',
         % Quadratic diffusion and quadratic solution (d-D).
         u           = x{1}.^2;
+
+    case 'Lshaped',
+        % L-shaped domain, u has a singularity due to the re-entrant corner
+        % at x0 (2-D).
+        x0          = [0.5 0.5];
+        r           = sqrt((x{1}-x0(1)).^2+(x{2}-x0(2)).^2);
+        t           = atan2(x{2}-x0(2),x{1}-x0(1));
+        t           = mod(-t+2*pi,2*pi);
+        alpha       = 2/3;
+        u           = r.^(alpha).*sin(alpha*t);
+        u(find(min(x{1}-x0(1),x{2}-x0(2)) >= 0)) = 0.0;
 
     otherwise,
         error('Unknown problem type');
