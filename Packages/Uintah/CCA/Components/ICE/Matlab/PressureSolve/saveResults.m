@@ -66,7 +66,7 @@ for i = 1:size(e,2)
 end
 
 fileName            = sprintf('%s/DiscError',param.outputDir);
-Caption             = sprintf('Discretization error versus base resolution $n$, for problem %s ($h = 1/n$). The ``fac.'''' columns contain ratios of error norms on grids $h$ and $h/2$. The ``order'''' row is the estimated convergence order of errors as $h \\rightarrow 0$.',...
+Caption             = sprintf('Discretization error versus base resolution $n$ for problem $%s$ ($h = 1/n$). The ``fac.'''' columns contain ratios of error norms on grids $h$ and $h/2$. The ``order'''' row is the estimated convergence order of errors as $h \\rightarrow 0$.',...
     param.problemType);
 latexTableFactors(data,orders,Labels,fileName,Caption,fmt{:});
 
