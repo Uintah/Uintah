@@ -17,6 +17,9 @@
 
 globalParams;
 
+tStartCPU           = cputime;
+tStartElapsed       = clock;
+
 initParam;                                                      % Initialize parameters structure
 if (param.profile)
     profile on -detail builtin;                                 % Enable profiling
@@ -57,10 +60,13 @@ out(0,'=========================================================================
 %=========================================================================
 % Loop over test cases
 %=========================================================================
-p               = param;
-p.verboseLevel  = 0;
+p                           = param;
+p.verboseLevel              = 0;
+param.catchException        = 1;
+
 for dim = 2:3
-    p.dim = dim;
+    p.dim           = dim;
+    p.domainSize    = repmat(1.0,[1 p.dim]);        % Domain is from [0.,0.] to [1.,1.]
     out(0,'############\n');
     out(0,' %d-D tests\n',p.dim);
     out(0,'############\n');
@@ -68,15 +74,22 @@ for dim = 2:3
         title = testCases{dim}{count};
         p.problemType           = title;
         p.outputDir             = sprintf('test_%s_%dD',title,p.dim);
-        out(0,'[%3d/%3d] Running test ''%s'' ...',count,length(testCases{dim}),p.outputDir);
-        [success,errNorm] = testDisc(p);
+        out(0,'[%3d/%3d] Running %-25s ',count,length(testCases{dim}),title);
+        [success,errNorm,testCPU,testElapsed] = testDisc(p);
         if (success)
-            out(0,' sucess\n');
+            out(0,'success');
         else
-            out(0,' failed\n');
+            out(0,'failure');
         end            
+        out(0,'  cpu=%10.2f  elapsed=%10.2f',testCPU,testElapsed);
+        out(0,'\n');
     end
 end
 if (param.profile)
     profile report;                             % Generate timing profile report
 end
+
+tCPU        = cputime - tStartCPU;
+tElapsed    = etime(clock,tStartElapsed);
+out(0,'CPU time     = %f\n',tCPU);
+out(0,'Elapsed time = %f\n',tElapsed);
