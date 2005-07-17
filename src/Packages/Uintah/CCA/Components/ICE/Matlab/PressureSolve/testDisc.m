@@ -81,7 +81,7 @@ for numCells = param.numCellsRange
         success = 1;
     catch;
         out(1,'Failed in numCells = %d: %s\n',numCells,lasterr);
-        success = numCells;
+        success = 0;
     end
 end
 
