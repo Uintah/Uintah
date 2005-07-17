@@ -69,11 +69,11 @@ for dim = 2:3
         p.problemType           = title;
         p.outputDir             = sprintf('test_%s_%dD',title,p.dim);
         out(0,'[%3d/%3d] Running test ''%s'' ...',count,length(testCases{dim}),p.outputDir);
-        [sucesss,errNorm] = testDisc(p);
-        if (success == 0)
+        [success,errNorm] = testDisc(p);
+        if (success)
             out(0,' sucess\n');
         else
-            out(0,' reached numCells = %d\n',sucess);
+            out(0,' failed\n');
         end            
     end
 end
