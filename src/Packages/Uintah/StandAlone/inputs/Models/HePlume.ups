@@ -158,9 +158,32 @@
         </BCType>
       </Face>
 <!--      
-      <Face side = "z+">    3D
-        <BCType id = "0" label = "Pressure"       var = "Neumann">
-                              <value> 0.0   </value>
+      <Face side = "z-">
+        <BCType id = "0" label = "Pressure"       var = "Dirichlet">
+                              <value> 101325   </value>
+        </BCType>
+        <BCType id = "0" label = "Velocity"    var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0" label = "Temperature" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "0" label = "Density"     var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "0" label = "scalar-f"    var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0" label = "cumulativeEnergyReleased" var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>  
+      <Face side = "z+">
+        <BCType id = "0" label = "Pressure"       var = "Dirichlet">
+                              <value> 101325   </value>
         </BCType>
         <BCType id = "0" label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
@@ -169,6 +192,9 @@
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "scalar-f"     var = "Neumann">
@@ -290,7 +316,8 @@
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
     <!--____________________________________________________________________-->   
     <PhysicalConstants>
-       <gravity>            [0,-90.81,0]   </gravity>
+                  <!-- WARNING  ||||    WARNING  -->
+       <gravity>            [0,-90.81,0]   </gravity> 
        <reference_pressure> 101325.0  </reference_pressure>
     </PhysicalConstants>
     <!--____________________________________________________________________-->
