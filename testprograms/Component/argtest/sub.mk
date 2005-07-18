@@ -35,8 +35,8 @@ SRCDIR := testprograms/Component/argtest
 ifeq ($(LARGESOS),yes)
  PSELIBS := Core
 else
- PSELIBS := SCIRun Core/CCA/SSIDL Core/CCA/PIDL Core/Thread \
-             Core/Exceptions Core/CCA/Comm
+ PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/Thread \
+            Core/Exceptions Core/CCA/Comm
 endif
 
 ifeq ($(HAVE_GLOBUS),yes)
