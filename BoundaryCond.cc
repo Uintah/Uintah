@@ -326,13 +326,8 @@ void setBC(CCVariable<double>& press_CC,
         // separate task, therefore ignore it        
         // 
         // Hydrostatic pressure adjustment (HPA): 
-        //   gravity*rho_micro*distance_from_ref_point.
+        //   gravity*<rho_micro>*distance_from_ref_point.
         // R is BC location, L is adjacent to BC location
-        //
-        // Dirichlet BC: P_R= P_Dirichlet_R + HPA_R
-        // Neumann BC:   P_R = P_neumann_R + HPA_R - HPA_L,
-        // where HPA_R - HPA_L is zero if BC normal is orthogonal to gravity
-        // find the upper and lower point of the domain.
         // 
         // On Dirichlet side walls you still have to add HPA
         const Level* level = patch->getLevel();
@@ -351,34 +346,43 @@ void setBC(CCVariable<double>& press_CC,
         // Only apply this correction in case of Neumann or Dirichlet BC
         bool Neumann_BC = (bc_kind=="Neumann" || bc_kind=="zeroNeumann");
         if ( topLevelTimestep > 0 ){
-          if ((gravity[p_dir] != 0 && Neumann_BC) || 
-              (gravity.length() != 0 && bc_kind =="Dirichlet")){  
-            
-            double oneZero = 1;  
-            if (bc_kind=="Dirichlet") {
-              oneZero = 0.0;
-            }    
-
+          IntVector oneCell = patch->faceDirection(face);
+          //__________________________________
+          //Neumann
+          if ((gravity[p_dir] != 0 && Neumann_BC) ){
+          
+            Vector faceDir = patch->faceDirection(face).asVector();
+            double grav = gravity[p_dir] * (double)faceDir[p_dir]; 
             IntVector oneCell = patch->faceDirection(face);
+            vector<IntVector>::const_iterator iter;
 
+            for (iter=bound.begin();iter != bound.end(); iter++) { 
+              IntVector L = *iter - oneCell;
+              IntVector R = *iter;
+              double rho_R = rho_micro[surroundingMatl_indx][R];
+              double rho_L = rho_micro[surroundingMatl_indx][L];
+              double rho_micro_brack = (rho_L + rho_R)/2.0;
+              press_CC[R] += grav * cell_dx[p_dir] * rho_micro_brack; 
+            }
+            IveSetBC = true;      
+          }
+          //__________________________________
+          //  Dirichlet
+          if(gravity.length() != 0 && bc_kind =="Dirichlet"){  
+          
             vector<IntVector>::const_iterator iter;
             for (iter=bound.begin();iter != bound.end(); iter++) {
               IntVector R = *iter;
-              IntVector L = *iter - oneCell;
-              Point here_L = level->getCellPosition(L);
               Point here_R = level->getCellPosition(R);
-              Vector dist_L = (here_L.asVector() - press_ref_pt);
               Vector dist_R = (here_R.asVector() - press_ref_pt);
-              double rho_L = rho_micro[surroundingMatl_indx][L];
               double rho_R = rho_micro[surroundingMatl_indx][R];
-              // Need the dot product to get the sideWall dirichlet BC's right 
-              double correction_L = Dot(gravity,dist_L) * rho_L;
+              // Need the dot product to get the sideWall dirichlet BC's right
               double correction_R = Dot(gravity,dist_R) * rho_R;
 
-              press_CC[R] += correction_R - oneZero * correction_L;
+              press_CC[R] += correction_R;
             }
             IveSetBC = true;    
-          } // Dirichlet || Neumann
+          } //
         } // // not initialization step 
 
         //__________________________________
@@ -639,7 +643,89 @@ void setBC(CCVariable<Vector>& var_CC,
     }  // child loop
   }  // faces loop
 }
+/* --------------------------------------------------------------------- 
+ Function~  setSpecificVolBC-- 
+ ---------------------------------------------------------------------  */
+void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
+                      const string& kind,
+                      const bool isMassSp_vol,
+                      constCCVariable<double> rho_CC,
+                      constCCVariable<double> vol_frac,
+                      const Patch* patch,
+                      SimulationStateP& sharedState,
+                      const int mat_id)
+{
+  BC_doing << "setSpecificVolBC "<< kind <<" "
+           << " mat_id = " << mat_id << endl;
+                
+  Vector dx = patch->dCell();
+  double cellVol = dx.x() * dx.y() * dx.z();
+                
+  // Iterate over the faces encompassing the domain
+  vector<Patch::FaceType>::const_iterator iter;
+  
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
+    Patch::FaceType face = *iter;
+    bool IveSetBC = false;
+       
+    IntVector dir= patch->faceAxes(face);
+    Vector cell_dx = patch->dCell();
+    int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
+    
+    // iterate over each geometry object along that face
+    for (int child = 0;  child < numChildren; child++) {
+      double bc_value = -9;
+      string bc_kind = "NotSet";
+      vector<IntVector> bound;
+      
+      bool foundIterator = 
+        getIteratorBCValueBCKind<double>( patch, face, child, kind, mat_id,
+					       bc_value, bound,bc_kind); 
+                                   
+      if(foundIterator) {
+        if( bc_kind == "symmetric"){
+          bc_kind = "zeroNeumann";
+        }
+        
+        IveSetBC = setNeumanDirichletBC<double>(patch, face, sp_vol_CC,bound, 
+						  bc_kind, bc_value, cell_dx,
+						  mat_id,child);
+        if(bc_kind == "computeFromDensity"){
+        
+          vector<IntVector>::const_iterator iter;
+          for (iter=bound.begin(); iter != bound.end(); iter++) {
+            IntVector c = *iter;
+            sp_vol_CC[c] = vol_frac[c]/rho_CC[c];
+          }
+          
+          if(isMassSp_vol){  // convert to mass * sp_vol
+            for (iter=bound.begin(); iter != bound.end(); iter++) { 
+              IntVector c = *iter;
+              sp_vol_CC[c] = sp_vol_CC[c]*(rho_CC[c]*cellVol);
+            }
+          }
+          IveSetBC = true;
+        }
 
+        //__________________________________
+        //  debugging
+        if( BC_dbg.active() ) {
+          BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
+               <<"\t child " << child  <<" NumChildren "<<numChildren 
+               <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
+               <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)
+	        << endl;
+        }
+      }  // if iterator found
+    }  // child loop
+    
+    
+    //__________________________________
+    //  conversion back
+ 
+  }  // faces loop
+}
 /* --------------------------------------------------------------------- 
  Function~  is_BC_specified--
  Purpose~   examines the each face in the boundary condition section

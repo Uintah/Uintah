@@ -810,7 +810,9 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   // get the init delt when it didn't compute delt on L0.
   if (d_sharedState->getCurrentTopLevelTimeStep() > 1)
     d_initialDt = 10000.0;
-    
+  
+  cout_doing << "---------------------------------------------------------Level " 
+             <<level->getIndex()<< "  step " << step << endl;  
   cout_doing << "ICE::scheduleTimeAdvance\t\t\t\tL-" <<level->getIndex()<< endl;
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
@@ -936,7 +938,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
     //  time to add a new material
     scheduleSetNeedAddMaterialFlag(         sched, level,   all_matls);
   }
-
+  cout_doing << "---------------------------------------------------------"<<endl;
 }
 
 /* _____________________________________________________________________
@@ -1728,6 +1730,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   task->requires(Task::NewDW, lb->sp_vol_L_CCLabel,    gac,2);
   task->requires(Task::NewDW, lb->specific_heatLabel,  gac,2);  
   task->requires(Task::NewDW, lb->speedSound_CCLabel,  gn, 0);
+  task->requires(Task::NewDW, lb->vol_frac_CCLabel,    gn, 0);
   
   computesRequires_CustomBCs(task, "Advection", lb, ice_matlsub, 
                              d_customBC_var_basket);
@@ -2533,35 +2536,15 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     // - Set BCs on rhoMicro. using press_CC 
     // - backout sp_vol_new 
     for (int m = 0; m < numMatls; m++)   {
-/*`==========TESTING==========*/
-// This needs to be rethought.
-// With a jet inlet, rho_CC is fixed and the pressure is allowed to 
-// float.   Backing out rho_micro at the new pressure will eventually
-// cause vol_frac to != 1.0.
-// 
-#if 0
-      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-      
-      // only hit boundary faces  
-      vector<Patch::FaceType>::const_iterator f;
-      for (f  = patch->getBoundaryFaces()->begin(); 
-           f != patch->getBoundaryFaces()->end(); ++f){
-        Patch::FaceType face = *f;
-        
-        CellIterator iterLim = patch->getFaceCellIterator(face,"plusEdgeCells");
-        for(CellIterator iter=iterLim; !iter.done();iter++) {
-          IntVector c = *iter;
-          rho_micro[m][c] = 
-            ice_matl->getEOS()->computeRhoMicro(press_new[c],gamma[m][c],
-                                           cv[m][c],Temp[m][c],rho_micro[m][c]);
-        }
-      } // face loop
-#endif 
-/*===========TESTING==========`*/
       for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
         sp_vol_new[m][c] = 1.0/rho_micro[m][c]; 
       }
+      
+      ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+      int indx = matl->getDWIndex();
+      setSpecificVolBC(sp_vol_new[m], "SpecificVol", false, rho_CC[m], vol_frac[m],
+                       patch,d_sharedState, indx);
     }
     
     //__________________________________
@@ -4142,9 +4125,11 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
 /*==========TESTING==========`*/
      }
 
-      //  Set Neumann = 0 if symmetric Boundary conditions
-      setBC(sp_vol_L, "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
-
+      //__________________________________
+      // Apply boundary conditions
+      setSpecificVolBC(sp_vol_L, "SpecificVol", true ,rho_CC,vol_frac[m],
+                       patch,d_sharedState, indx);
+      
       //---- P R I N T   D A T A ------ 
       if (switchDebugLagrangianSpecificVol ) {
         ostringstream desc;
@@ -4800,7 +4785,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       CCVariable<double> rho_CC, temp, sp_vol_CC,mach;
       CCVariable<Vector> vel_CC;
       constCCVariable<double> int_eng_L_ME, mass_L,sp_vol_L,speedSound, cv;
-      constCCVariable<double> gamma, placeHolder;
+      constCCVariable<double> gamma, placeHolder, vol_frac;
       constCCVariable<Vector> mom_L_ME;
       constSFCXVariable<double > uvel_FC;
       constSFCYVariable<double > vvel_FC;
@@ -4808,6 +4793,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
 
       new_dw->get(gamma,       lb->gammaLabel,            indx,patch,gn,0);
       new_dw->get(speedSound,  lb->speedSound_CCLabel,    indx,patch,gn,0);
+      new_dw->get(vol_frac,    lb->vol_frac_CCLabel,      indx,patch,gn,0);
       new_dw->get(uvel_FC,     lb->uvel_FCMELabel,        indx,patch,gac,2);  
       new_dw->get(vvel_FC,     lb->vvel_FCMELabel,        indx,patch,gac,2);  
       new_dw->get(wvel_FC,     lb->wvel_FCMELabel,        indx,patch,gac,2);  
@@ -4888,10 +4874,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       advector->advectQ(sp_vol_L,mass_L, q_advected, varBasket); 
 
       update_q_CC<constCCVariable<double>, double>
-             ("sp_vol",sp_vol_CC, sp_vol_L, q_advected, mass_new, cv,patch);
-
-      //  Set Neumann = 0 if symmetric Boundary conditions
-      setBC(sp_vol_CC, "set_if_sym_BC",patch, d_sharedState, indx, new_dw); 
+             ("sp_vol",sp_vol_CC, sp_vol_L, q_advected, mass_new, cv,patch);       
 
       //__________________________________
       // Advect model variables 
@@ -4968,7 +4951,9 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
             patch,d_sharedState, indx, new_dw, d_customBC_var_basket);       
       setBC(temp,"Temperature",gamma, cv,
             patch,d_sharedState, indx, new_dw, d_customBC_var_basket);
-      
+            
+      setSpecificVolBC(sp_vol_CC, "SpecificVol", false,rho_CC,vol_frac,
+                       patch,d_sharedState, indx);     
       delete_CustomBCs(d_customBC_var_basket);
                                
       //__________________________________

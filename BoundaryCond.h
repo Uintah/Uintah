@@ -93,6 +93,17 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
              const int mat_id,
              DataWarehouse* new_dw);
 
+  //__________________________________
+  //    SPECIFC VOLUME
+  void setSpecificVolBC(CCVariable<double>& sp_vol,
+                        const string& kind,
+                        const bool isMassSp_vol,
+                        constCCVariable<double> rho_CC,
+                        constCCVariable<double> vol_frac,
+                        const Patch* patch,
+                        SimulationStateP& sharedState,
+                        const int mat_id);
+
 template<class T> 
   void setBC(T& variable, 
              const  string& kind,
