@@ -22,7 +22,7 @@
        <delt_min>           0.0       </delt_min>
        <delt_max>           0.1     </delt_max>
        <delt_init>          1.0e-6    </delt_init>
-       <max_delt_increase>  0.15      </max_delt_increase>
+       <max_delt_increase>  0.5      </max_delt_increase>
        <max_Timesteps>     100      </max_Timesteps>
        <timestep_multiplier> 1        </timestep_multiplier>
    </Time>
@@ -32,8 +32,8 @@
     <Grid>
     <BoundaryConditions>
       <Face side = "x-">
-        <BCType id = "0" label = "Pressure"      var = "Neumann">
-                              <value> 0.0   </value>
+        <BCType id = "0" label = "Pressure"       var = "Dirichlet">
+                              <value> 101325   </value>
         </BCType>
         <BCType id = "0" label = "Velocity"    var = "Neumann">
                               <value> [0.,0.,0.] </value>
@@ -44,6 +44,9 @@
         <BCType id = "0" label = "Density"     var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
         <BCType id = "0" label = "scalar-f"    var = "Neumann">
                               <value> 0.0</value>
         </BCType>
@@ -52,8 +55,8 @@
         </BCType>
       </Face>  
       <Face side = "x+">
-        <BCType id = "0" label = "Pressure"       var = "Neumann">
-                              <value> 0.0   </value>
+        <BCType id = "0" label = "Pressure"       var = "Dirichlet">
+                              <value> 101325   </value>
         </BCType>
         <BCType id = "0" label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
@@ -64,6 +67,9 @@
         <BCType id = "0" label = "Density"      var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
         <BCType id = "0" label = "scalar-f"     var = "Neumann">
                               <value> 0.0</value>
         </BCType>
@@ -72,7 +78,7 @@
         </BCType>
       </Face>
     <!--__________________________________-->
-      <Face circle = "y-" origin = "0.0 0.0 0.0" radius = "0.25">
+      <Face circle = "y-" origin = "0.0 0.0 0.0" radius = "0.5">
         <BCType id = "0" label = "Pressure"       var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
@@ -84,6 +90,9 @@
         </BCType>
         <BCType id = "0" label = "Density"      var = "Dirichlet">
                               <value>  0.1626119988637622 </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "scalar-f"     var = "Dirichlet">
                               <value> 1.0</value>
@@ -105,6 +114,9 @@
         <BCType id = "0" label = "Density"      var = "Dirichlet">
                               <value> 1.176829268292683  </value>
         </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
         <BCType id = "0" label = "scalar-f"     var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
@@ -123,6 +135,9 @@
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "scalar-f"     var = "Neumann">
@@ -169,19 +184,19 @@
        <Level>
 <!-- -->
            <Box label = "2D">
-              <lower>        [-2,0.00,0]     </lower>
-              <upper>        [ 2,4,0.04]     </upper>         
+              <lower>        [-3,0,-0.03]     </lower>
+              <upper>        [ 3,6, 0.03]     </upper>         
               <extraCells>   [1,1,1]         </extraCells>
               <patches>      [1,1,1]         </patches>    
               <resolution>   [100,100,1]     </resolution>
            </Box>
 <!--
             <Box label = "3D"> 
-              <lower>        [-2,0,-2]     </lower>
-              <upper>        [ 2,4, 2]     </upper>         
-              <extraCells>   [1,1,1]       </extraCells>
-              <patches>      [1,1,1]       </patches>    
-              <resolution>   [136,136,136] </resolution>
+          <lower>         [-3, 0, -3]   </lower>
+          <upper>         [ 3, 6,  3]   </upper>
+          <extraCells>    [1,1,1]         </extraCells>
+          <patches>       [5,4,5]       </patches>
+          <resolution>    [100,100,100] </resolution>
            </Box>
 --> 
        </Level>
@@ -203,6 +218,9 @@
       <save label = "modelEng_src"/>
       <save label = "cumulativeEnergyReleased"/>
       <save label= "rhs"/>
+      <save label="sum_scalar_f"/>
+      <save label="TotalIntEng"/>
+      <save label="TotalMass"/>
       <compression>gzip</compression>
       <checkpoint cycle = "2" interval = "0.01"/>
    </DataArchiver>
@@ -272,7 +290,7 @@
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
     <!--____________________________________________________________________-->   
     <PhysicalConstants>
-       <gravity>            [0,-9.81,0]   </gravity>
+       <gravity>            [0,-90.81,0]   </gravity>
        <reference_pressure> 101325.0  </reference_pressure>
     </PhysicalConstants>
     <!--____________________________________________________________________-->
@@ -292,7 +310,7 @@
            <geom_object>
               <box label = "world">
                 <min>       [ -5, -5, -5 ]    </min>
-                <max>       [  5,  5,  5 ]   </max>
+                <max>       [  5,  8,  5 ]   </max>
               </box>
               <res>                [2,2,2]             </res>
               <velocity>           [.0,0.01,.0]          </velocity>
@@ -323,13 +341,14 @@
 	</table>
         <material>BackgroundGas</material>
         <scalar name="f">
+        <test_conservation>  true  </test_conservation>
         <constants>
         </constants>       
         
           <geom_object>
              <box label = "world">
                <min>       [ -5, -5, -5 ]    </min>
-               <max>       [  5,  5,  5 ]   </max>
+               <max>       [  5,  8,  5 ]   </max>
              </box>
              <scalar>    0.00   </scalar>
           </geom_object>
