@@ -10,10 +10,11 @@ Oren 18-JUL-2005
 
 Description of current directories:
 
-HypreStandAlone - stand-alone C interface to Hypre 1.9.0 (FAC or 
+HypreStandAlone - stand-alone C interface to Hypre 1.9.0b (FAC or 
           AMG solvers).
           July 2005.
 Matlab -  matlab simulation of the pressure discretization & solver for
           AMR-ICE-implicit (modified Ewing-Lazarov-Vasilevski).
-          Accuracy test cases.
+          Accuracy test cases. Needs to be compiled against a Hypre 1.9.0b
+          source code / already-built libraries.
           July 2005.
