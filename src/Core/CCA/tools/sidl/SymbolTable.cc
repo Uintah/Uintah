@@ -28,8 +28,8 @@
 
 
 
-#include "SymbolTable.h"
-#include "Spec.h"
+#include <Core/CCA/tools/sidl/Spec.h>
+#include <Core/CCA/tools/sidl/SymbolTable.h>
 #include <iostream>
 
 using std::string;
@@ -75,6 +75,10 @@ Symbol::Symbol(const string& name)
   definition=0;
   method=0;
   emitted_forward=false;
+}
+
+Symbol::~Symbol()
+{
 }
 
 const string& Symbol::getName() const
