@@ -66,7 +66,7 @@ Please remove the following directories in order to clean out the regression tes
 Under `pwd` on `hostname`:
 
 EOF
-     find trash -user $username -prune -exec echo "rm -rf" {} \; >> trash/userRemoval    
+     find trash -user $username -prune -exec echo "rm -rf `pwd`/{}" \; >> trash/userRemoval    
     sendmail $sendto < trash/userRemoval
     rm trash/userRemoval
 done
