@@ -14,6 +14,7 @@ user=`whoami`
 do_uda="false"
 do_mem="false"
 do_perf="false"
+do_input="false"
 
 # prompt for and replace udas
 if [ $# -ne 3 -a $# -ne 4 ]; then
@@ -24,7 +25,8 @@ if [ ! -d $gold_standard_dir/$testname ]; then
   echo "$gold_standard_dir/$testname does not exist!"
   exit 1
 fi
-
+#__________________________________
+# replace UDA
 if [ ! -d $replacement_dir/$testname/*.uda -o "$force" = "-m" ]; then
   echo "No udas to replace, or not replacing them"
 else
@@ -68,7 +70,8 @@ else
     echo "udas not replaced"
   fi
 fi
-
+#__________________________________
+# replace memory usage stats
 if [ ! -f $gold_standard_dir/$testname/malloc_stats ]; then
   echo "No memory stats to replace"
 else
@@ -95,7 +98,8 @@ else
     echo "No memory usage results replaced"
   fi
 fi
-
+#__________________________________
+# replace performance stats
 if [ ! -f $gold_standard_dir/$testname/timestamp ]; then
   echo "No performance stats to replace"
 else
@@ -122,8 +126,24 @@ else
     echo "No performance results replaced"
   fi
 fi
+#__________________________________
+# replace input file
+if [ "$force" != "-f" ]; then
+  echo "Replace $testname input file? (Enter 'yes' or 'y' to continue.)"
+  read yesno
+  
+  if [ $yesno = "y" -o $yesno = "yes" ]; then
+    do_input="true"
+    echo "Replacing $testname input file"
+    cp $replacement_dir/$testname/*.uda/input.xml $gold_standard_dir/$testname/*.uda/. > /dev/null 2>&1
+  fi
+fi
 
-if [ "$do_uda" = "true" -o "$do_mem" = "true" -o "$do_perf" = "true" ]; then
+
+
+#__________________________________
+# LOG FILE
+if [ "$do_uda" = "true" -o "$do_mem" = "true" -o "$do_perf" = "true" -o "$do_input" = "true" ]; then
   # make a log
   if [ ! -f $logfile ]; then
     echo "Replacement log for $gold_standard_dir/$testname" >> $logfile
@@ -148,6 +168,9 @@ if [ "$do_uda" = "true" -o "$do_mem" = "true" -o "$do_perf" = "true" ]; then
       echo -n "replaced performance results" >> $logfile
     fi
   fi
+  if [ "$do_input" = "true" ]; then
+    echo -n "replaced input file" >> $logfile
+  fi  
   echo >> $logfile
 
 # change groups and permissions so (hopefully) anybody can replace them later
