@@ -5,7 +5,7 @@ Please keep some log messages here describing the contents of
 the directories. Add a date and name.
 --------------------------------------------------------------
 
-Oren 05-JUL-2005
+Oren 18-JUL-2005
 
 Description of current directories:
 ICETodd - Todd's original (~2004) matlab simulation of ICE for
@@ -15,10 +15,6 @@ ShockTube1D - Oren's modified 1D shock tube simulation of ICE,
           building on Todd's code and adding some printouts, bug
           corrections, etc,
           October 2004 - May 2005.
-PressureSolve - pressure solver & discretization for AMR-ICE-implicit.
-          Matlab simulations of different discretization schemes
-          (DFM, modified Ewing-Lazarov-Vasilevski), accuracy studies,
-          June 2005.
 SolverBug - matlab scripts and data files comparing the Uintah and
           Hypre matrices in implicit ICE (one level, not AMR),
           July 2005.
