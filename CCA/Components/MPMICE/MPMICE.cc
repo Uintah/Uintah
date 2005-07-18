@@ -447,6 +447,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched,
       }
     }
   }
+  cout_doing << "---------------------------------------------------------"<<endl;
 } // end scheduleTimeAdvance()
 
 
@@ -1857,23 +1858,17 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
      
     //__________________________________
     // compute sp_vol_CC
-    for (int m = 0; m < numALLMatls; m++)   {
-    
-/*`==========TESTING==========*/
-#if 0
-      Material* matl = d_sharedState->getMaterial( m );
-      int indx = matl->getDWIndex();
-      setBC_rho_micro( patch,mpm_matl[m], ice_matl[m], indx,
-                       cv[m], gamma[m],  press_new, Temp[m],  
-                       press_ref, rho_micro[m]);
-#endif   
-/*===========TESTING==========`*/
-      
+    for (int m = 0; m < numALLMatls; m++)   {  
       for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
         const IntVector& c = *iter;
         sp_vol_new[m][c] = 1.0/rho_micro[m][c];
       }
-    }   
+      
+      Material* matl = d_sharedState->getMaterial( m );
+      int indx = matl->getDWIndex();
+      setSpecificVolBC(sp_vol_new[m], "SpecificVol", false,rho_CC_new[m],vol_frac[m],
+                       patch,d_sharedState, indx);
+    } 
     //__________________________________
     //  compute f_theta  
     for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
