@@ -756,6 +756,11 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       pDeformGrad_new[idx] = tensorF_new;
       double J = tensorF_new.Determinant();
 
+      if(d_setStressToZero && pLocalized[idx]){
+        pDeformGrad_new[idx] = pDeformGrad[idx];
+        J = pDeformGrad[idx].Determinant();
+      }
+
       // Check 1: Look at Jacobian
       if (!(J > 0.0)) {
         cerr << getpid() 
@@ -1266,8 +1271,10 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       delete state;
     }
+
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
+
     new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
                 lb->delTLabel);
     new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
