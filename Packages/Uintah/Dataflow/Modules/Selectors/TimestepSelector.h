@@ -58,6 +58,16 @@ public:
   ////////// 
   virtual void execute(); 
 
+  // This is a callback made by the scheduler when the network
+  // finishes.  It should ask for a reexecute if the module and
+  // increment the timestep if animate is on.
+  static bool network_finished(void* ts_);
+
+  void update_animate();
+
+  // Inherited from Module.  I need this to setup the callback
+  // function for the scheduler.
+  virtual void set_context(Network* network);
 protected:
   
 private:
