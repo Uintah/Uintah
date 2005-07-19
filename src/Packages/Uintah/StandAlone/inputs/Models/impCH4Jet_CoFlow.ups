@@ -23,8 +23,8 @@
     <Grid>
     <BoundaryConditions>
       <Face side = "x-">
-        <BCType id = "0" label = "Pressure"      var = "Neumann">
-                              <value> 0.0   </value>
+        <BCType id = "0" label = "Pressure"    var = "Dirichlet">
+                              <value> 101325   </value>
         </BCType>
         <BCType id = "0" label = "Velocity"    var = "Neumann">
                               <value> [0.,0.,0.] </value>
@@ -35,6 +35,9 @@
         <BCType id = "0" label = "Density"     var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
         <BCType id = "0" label = "scalar-f"    var = "Neumann">
                               <value> 0.0</value>
         </BCType>
@@ -43,8 +46,8 @@
         </BCType>
       </Face>  
       <Face side = "x+">
-        <BCType id = "0" label = "Pressure"       var = "Neumann">
-                              <value> 0.0   </value>
+        <BCType id = "0" label = "Pressure"     var = "Dirichlet">
+                              <value> 101325   </value>
         </BCType>
         <BCType id = "0" label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
@@ -55,6 +58,9 @@
         <BCType id = "0" label = "Density"      var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
         <BCType id = "0" label = "scalar-f"     var = "Neumann">
                               <value> 0.0</value>
         </BCType>
@@ -63,7 +69,7 @@
         </BCType>
       </Face>
       <Face circle = "y-" origin = "0.0 0.0 0.0" radius = "0.5">
-        <BCType id = "0" label = "Pressure"       var = "Neumann">
+        <BCType id = "0" label = "Pressure"     var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "Velocity"     var = "Dirichlet">
@@ -75,6 +81,9 @@
         <BCType id = "0" label = "Density"      var = "Dirichlet">
                               <value>  0.6560618010 </value>
         </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
         <BCType id = "0" label = "scalar-f"     var = "Dirichlet">
                               <value> 1.0</value>
         </BCType>
@@ -83,7 +92,7 @@
         </BCType>
       </Face>
       <Face side = "y-">
-        <BCType id = "0" label = "Pressure"       var = "Neumann">
+        <BCType id = "0" label = "Pressure"     var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "Velocity"     var = "Dirichlet">
@@ -94,6 +103,9 @@
         </BCType>
         <BCType id = "0" label = "Density"      var = "Dirichlet">
                               <value>1.179383368997318   </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "scalar-f"     var = "Dirichlet">
                               <value> 0.0</value>
@@ -113,6 +125,9 @@
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "scalar-f"     var = "Neumann">
