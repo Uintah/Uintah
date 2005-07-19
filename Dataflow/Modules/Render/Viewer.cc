@@ -879,7 +879,6 @@ Viewer::finishPort(int portid)
       
       sched->report_execution_finished(serial);
 
-#if 0
       // This turns on synchronous movie making.  It's very useful for
       // making movies that are driven by an event loop (such as
       // send-intermediate).  The movie frames are not taken during
@@ -887,13 +886,9 @@ Viewer::finishPort(int portid)
       // synchronous in one direction.  If a module executes too fast
       // then the latest one is used.  That is, it waits for the slow
       // modules but does not throttle the fast ones.
-      char buff[1024];
-      static int moviecounter = 0;
-      sprintf(buff, "movie%04d.ppm", moviecounter++);
-      view_window_[0]->redraw_if_needed();
-      view_window_[0]->renderer_->saveImage(buff, "ppm", 640, 480);
-      view_window_[0]->redraw();
-#endif
+      for(size_t window = 0; window < view_window_.size(); window++) {
+        view_window_[window]->maybeSaveMovieFrame();
+      }
 
     }
     else

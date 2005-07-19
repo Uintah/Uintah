@@ -152,6 +152,10 @@ public:
   void			saveImage(const string& fname,
 				  const string& type = "ppm",
 				  int x=640, int y=512);
+
+  // Adds a DO_SYNC_FRAME to the send_mailbox_.
+  void                  scheduleSyncFrame();
+  
   // Compute world space point under cursor (x,y).  If successful,
   // set 'p' to that value & return true.  Otherwise, return false.
   bool			pick_scene(int x, int y, Point *p);
@@ -164,6 +168,13 @@ public:
   bool			make_MPEG_p_;
   int			current_movie_frame_;
   string		movie_name_;
+  // True if we want only to dump a movie frame when a DO_SYNC_FRAME
+  // message is received.
+  bool                  doing_sync_frame_;
+  // If doing_sync_frame_ is set, only write a frame if
+  // dump_sync_frame_ is true.  This will prevent dumping frames on
+  // regular redraws.
+  bool                  dump_sync_frame_;
 
   TkOpenGLContext *	tk_gl_context_;
   TkOpenGLContext *	old_tk_gl_context_;
