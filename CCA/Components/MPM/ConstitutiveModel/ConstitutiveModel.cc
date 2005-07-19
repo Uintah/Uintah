@@ -129,7 +129,8 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
   task->requires(Task::OldDW, lb->pVelocityLabel,           matlset, gnone);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel, matlset, gnone);
   task->requires(Task::NewDW, lb->gVelocityLabel,           matlset, gac, NGN);
-  task->requires(Task::OldDW, lb->pSizeLabel,             matlset, gnone);
+  task->requires(Task::OldDW, lb->pSizeLabel,               matlset, gnone);
+  task->requires(Task::OldDW, lb->pTempPreviousLabel,       matlset, gnone);
   if (flag->d_fracture) {
     task->requires(Task::NewDW, lb->pgCodeLabel,            matlset, gnone); 
     task->requires(Task::NewDW, lb->GVelocityLabel,         matlset, gac, NGN);
