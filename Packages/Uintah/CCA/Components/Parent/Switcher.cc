@@ -7,6 +7,8 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
@@ -31,7 +33,8 @@ Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups, bool doAMR)
   for (ProblemSpecP child = sim_block->findBlock("subcomponent"); child != 0; 
        child = child->findNextBlock("subcomponent")) {
 
-    num_components++;
+    vector<string> init_vars;
+    vector<string> init_matls;
     string in("");
     if (!child->get("input_file",in))
       throw ProblemSetupException("Need input file for subcomponent", __FILE__, __LINE__);
@@ -42,8 +45,33 @@ Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups, bool doAMR)
     attachPort("problem spec", scinew ProblemSpecReader(in));
     comp->attachPort("solver", solver);
 
+    // get the vars that will need to be initialized by this component
+    for (ProblemSpecP var=child->findBlock("init"); var != 0; var = var->findNextBlock("init")) {
+      map<string,string> attributes;
+      var->getAttributes(attributes);
+      string name = attributes["var"];
+      string matls = attributes["matls"];
+      if (name != "") 
+        init_vars.push_back(name);
+      else
+        continue;
+      if (matls != "")
+        init_matls.push_back(matls);
+              
+    }
+    d_initVars.push_back(init_vars);
+    d_initMatls.push_back(init_matls);
+    num_components++;
   }
   
+  // get the vars that will need to be initialized by this component
+  for (ProblemSpecP var=sim_block->findBlock("carry_over"); var != 0; var = var->findNextBlock("init")) {
+    map<string,string> attributes;
+    var->getAttributes(attributes);
+    string name = attributes["var"];
+    if (name != "") 
+      d_carryOverVars.push_back(name);
+  }
   d_numComponents = num_components;
 
   switchLabel = VarLabel::create("switch.bool",
@@ -60,6 +88,23 @@ void Switcher::problemSetup(const ProblemSpecP& params, GridP& grid,
 {
   d_sim = dynamic_cast<SimulationInterface*>(getPort("sim",d_componentIndex));
 
+  // maybe not the best way to do this right now, but we need to do this to get 
+  // all the VarLabels created, so we don't have to do intermediate timesteps.
+  // also, this will enable us to automatically init_vars and carry_over_vars.
+
+  for (unsigned i = 0; i < d_numComponents; i++) {
+    ProblemSpecInterface* psi = 
+      dynamic_cast<ProblemSpecInterface*>(getPort("problem spec",i));
+    if (psi) {
+      ProblemSpecP ups = psi->readInputFile();
+      dynamic_cast<SimulationInterface*>(getPort("sim",i))->problemSetup(ups,grid,sharedState);
+    } else {
+      throw InternalError("psi dynamic_cast failed", __FILE__, __LINE__);
+    }
+  }
+
+  // clear it out and do the first one again
+  sharedState->clearMaterials();
   ProblemSpecInterface* psi = 
     dynamic_cast<ProblemSpecInterface*>(getPort("problem spec",d_componentIndex));
   if (psi) {
@@ -68,7 +113,29 @@ void Switcher::problemSetup(const ProblemSpecP& params, GridP& grid,
   } else {
     throw InternalError("psi dynamic_cast failed", __FILE__, __LINE__);
   }
-    
+
+  // get the varLabels from the strings we found above
+  for (unsigned i = 0; i < d_initVars.size(); i++) {
+    vector<string>& names = d_initVars[i];
+    vector<VarLabel*> labels;
+    for (unsigned j = 0; j < names.size(); j++) {
+      VarLabel* label = VarLabel::find(names[j]);
+      if (label)
+        labels.push_back(label);
+      else
+        throw ProblemSetupException("Cannot find VarLabel", __FILE__, __LINE__);
+    }
+    d_initVarLabels.push_back(labels);
+  }
+
+  for (unsigned i = 0; i < d_carryOverVars.size(); i++) {
+    VarLabel* label = VarLabel::find(d_carryOverVars[i]);
+    if (label)
+      d_carryOverVarLabels.push_back(label);
+    else
+      throw ProblemSetupException("Cannot find VarLabel", __FILE__, __LINE__);
+  }
+
   d_sharedState = sharedState;
 }
  
@@ -123,10 +190,6 @@ void Switcher::scheduleInitNewVars(const LevelP& level, SchedulerP& sched)
                         this, & Switcher::initNewVars);
   sched->addTask(t,level->eachPatch(),d_sharedState->allMaterials());
   t->requires(Task::NewDW, switchLabel);
-  
-  VarLabel* px = VarLabel::find("p.x");
-  if (px)
-    t->requires(Task::NewDW, px, Ghost::None, 0);
 }
 
 void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
@@ -160,14 +223,84 @@ void Switcher::initNewVars(const ProcessorGroup*,
 {
   if (d_switchState != switching)
     return;
+
+  for (unsigned i = 0; i < d_initVarLabels[d_componentIndex+1].size(); i++) {
+    VarLabel* l = d_initVarLabels[d_componentIndex+1][i];
+
+    const MaterialSubset* matls;
+    if (d_initMatls[d_componentIndex+1][i] == "ice_matls")
+      matls = d_sharedState->allICEMaterials()->getSubset(0);
+    else if (d_initMatls[d_componentIndex+1][i] == "mpm_matls")
+      matls = d_sharedState->allMPMMaterials()->getSubset(0);
+    else if (d_initMatls[d_componentIndex+1][i] == "all_matls")
+      matls = d_sharedState->allMaterials()->getSubset(0);
+    else 
+      throw ProblemSetupException("Bad material set", __FILE__, __LINE__);
   
-  // loop over certain vars and init them into the DW
-#if 0
-  SoleVariable<double> svi(0);
-  VarLabel* sv = VarLabel::find("sole.int");
-  new_dw->put(svi, sv, getLevel(patches));
-  cout << "  Put sv.int ("<< (double) svi << ") into DW\n";
-#endif
+    for (int m = 0; m < matls->size(); m++) {
+      const int indx = matls->get(m);
+      for (int p = 0; p < patches->size(); p++) {
+        const Patch* patch = patches->get(p);
+        // loop over certain vars and init them into the DW
+        switch(l->typeDescription()->getType()) {
+        case TypeDescription::CCVariable:
+          switch(l->typeDescription()->getSubType()->getType()) {
+          case TypeDescription::double_type:
+            {
+            CCVariable<double> q;
+            new_dw->allocateAndPut(q, l, indx,patch);
+            q.initialize(0);
+            break;
+            }
+          case TypeDescription::Vector:
+            {
+            CCVariable<Vector> q;
+            new_dw->allocateAndPut(q, l, indx,patch);
+            q.initialize(Vector(0,0,0));
+            break;
+            }
+          default:
+            throw ProblemSetupException("Unknown type", __FILE__, __LINE__);
+          }
+        case TypeDescription::ParticleVariable:
+          {
+          ParticleSubset* pset = new_dw->getParticleSubset(indx, patch);
+          switch(l->typeDescription()->getSubType()->getType()) {
+          case TypeDescription::double_type:
+            {
+            ParticleVariable<double> q;
+            new_dw->allocateAndPut(q, l, pset);
+            for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
+              q[*iter] = 0;
+            break;
+            }
+          case TypeDescription::Vector:
+            {
+            ParticleVariable<Vector> q;
+            new_dw->allocateAndPut(q, l, pset);
+            for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
+              q[*iter] = Vector(0,0,0);
+            break;
+            }
+          case TypeDescription::Matrix3:
+            {
+            ParticleVariable<Matrix3> q;
+            new_dw->allocateAndPut(q, l, pset);
+            for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
+              q[*iter].Identity();
+            break;
+            }
+          default:
+            throw ProblemSetupException("Unknown type", __FILE__, __LINE__);
+          }          
+          break;
+          }
+        default:
+          throw ProblemSetupException("Unknown type", __FILE__, __LINE__);
+        }
+      }
+    }
+  }
 }
 
 void Switcher::carryOverVars(const ProcessorGroup*,
