@@ -1,20 +1,24 @@
 
 
+#include <Packages/Uintah/Dataflow/Modules/Selectors/TimestepSelector.h>
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
+
 #include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Containers/StringUtil.h>
+#include <Core/Datatypes/Color.h>
 #include <Core/Geom/GeomText.h>
 #include <Core/Geom/GeomSticky.h>
-#include <Core/Datatypes/Color.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/GeomGroup.h>
+#include <Dataflow/Network/Scheduler.h>
 
-#include "TimestepSelector.h"
+
+#include <sgi_stl_warnings_off.h>
 #include <iostream> 
 #include <sstream>
 #include <string>
-#include <unistd.h>
+#include <sgi_stl_warnings_on.h>
 
 using std::cerr;
 using std::endl;
@@ -47,7 +51,10 @@ TimestepSelector::TimestepSelector(GuiContext* ctx) :
 { 
 } 
 
-TimestepSelector::~TimestepSelector(){} 
+TimestepSelector::~TimestepSelector() {
+  // Remove the callback
+  sched->add_callback(network_finished, this);
+} 
 
 //------------------------------------------------------------ 
 
@@ -91,19 +98,13 @@ TimestepSelector::execute()
     def_mat_handle_ = m;
   }
 
-  // what time is it?
-   
-  unsigned int t = time.get();
-
   // set the index for the correct timestep.
-  unsigned int idx = 0;
-  if(t < times.size())
-    idx = t;
+  unsigned int idx = time.get();
   // Do a bounds check
-  if(t >= times.size())
+  if(idx >= times.size()) {
     idx = times.size()-1;
-
-  timeval.set(times[idx]);
+    time.set( idx );
+  }
 
   // now set up time for dumping to vis
 
@@ -112,65 +113,43 @@ TimestepSelector::execute()
   Vector along(-0.5, -1.0, 0.0);
   double v, hour, min, sec, microseconds;
 
-  if( animate.get() ){
-    while( animate.get() ) { // && idx < (int)times.size() - 1){
-      archive->turnOffXMLCaching();
-      // Get tinc and make sure it is a good value.
-      int tinc_val = tinc.get();
-      if (tinc_val < 0) {
-        error("Time Step Increment is less than 0.");
-        break;
-      } else if (tinc_val == 0) {
+  if( animate.get() ) {
+    // Make sure the caching is off
+    archive->turnOffXMLCaching();
+
+    // Get tinc and make sure it is a good value.
+    int tinc_val = tinc.get();
+    if (tinc_val < 0) {
+      error("Time Step Increment is less than 0.");
+      animate.set(0);
+    } else {
+      if (tinc_val == 0) {
         warning("Time Step Increment is equal to 0.  The time step will not increment.");
       }
-      // See if incrementing idx will go out of bounds.  If it will
+      // See if incrementing idx will go out of bounds.  If it will,
       // don't change it.
-      if (idx + tinc_val < times.size() )
+      if (idx + tinc_val < times.size() ) {
         idx+=tinc_val;
-      else
-        break;
-      tcl_status.set( to_string( times[idx] ));
-      time.set( idx );
-      handle->SetTimestep( idx );
-      out->send_intermediate( handle );
-      reset_vars();
-      v =  times[idx];
-      hour = trunc( v/3600.0);
-      min = trunc( v/60.0 - (hour * 60));
-      sec = trunc( v - (hour * 3600) - (min * 60));
-      microseconds = (v - sec - (hour * 3600) - (min * 60))*(1e3);
-      ostringstream oss;
-      if(hour > 0 || min > 0 || sec > 0 ){
-        oss.width(2);
-        oss.fill('0');
-        oss<<hour<<":";
-        oss.width(2);
-        oss.fill('0');
-        oss<<min<<":";
-        oss.width(2);
-        oss.fill('0');
-        oss<<sec<<" + ";
+        time.set( idx );
+      } else {
+        // Turn off animation
+        animate.set(0);
+        archive->turnOnXMLCaching();
       }
-      oss<<microseconds<<"ms";
-      all = scinew GeomGroup();
-      all->add(scinew GeomText(oss.str(), ref + along,
-                               def_mat_handle_->diffuse, 
-                               font_size_.get()));
-      GeomSticky *sticky = scinew GeomSticky(all);
-      ogeom->delAll();
-      ogeom->addObj(sticky, "TimeStamp");
-      ogeom->flushViews();
-      sleep(unsigned( anisleep.get()));
     }
-    animate.set(0);
+  } else {
     archive->turnOnXMLCaching();
   }
-  time.set( idx );
-  reset_vars();
+
+  // Update the time in the display
+  timeval.set(times[idx]);
+
+  // Set the timestep in the archive and send it down
   handle->SetTimestep( idx );
   out->send(handle);
 
 
+  // Generate the timestep geometry for the viewer
   v =  times[idx];
   hour = trunc( v/3600.0);
   min = trunc( v/60.0 - (hour * 60));
@@ -202,3 +181,23 @@ TimestepSelector::execute()
 
 } // end execute()
 
+// This is a callback made by the scheduler when the network finishes.
+// It should ask for a reexecute if the module and increment the
+// timestep if animate is on.
+bool TimestepSelector::network_finished(void* ts_) {
+  TimestepSelector* ts = (TimestepSelector*)ts_;
+  ts->update_animate();
+  return true;
+}
+
+void TimestepSelector::update_animate() {
+  if( animate.get() ) {
+    want_to_execute();
+  }    
+}
+
+void TimestepSelector::set_context(Network* network) {
+  Module::set_context(network);
+  // Set up a callback to call after we finish
+  sched->add_callback(network_finished, this);
+}

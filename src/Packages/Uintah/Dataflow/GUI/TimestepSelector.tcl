@@ -103,7 +103,7 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	frame $w.aframe -relief groove -borderwidth 2
 	pack $w.aframe -side top -fill x -padx 2 -pady 2
 	checkbutton $w.aframe.abutton -text Animate \
-	    -variable $this-animate -command $n
+	    -variable $this-animate
 	entry $w.aframe.status  -width 15  -relief sunken -bd 2 \
 	    -textvariable $this-tcl_status 
 	pack $w.aframe.abutton -side left
