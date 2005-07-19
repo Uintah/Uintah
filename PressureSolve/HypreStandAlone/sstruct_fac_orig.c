@@ -110,7 +110,6 @@ typedef struct
 /*--------------------------------------------------------------------------
  * Compute new box based on variable type
  *--------------------------------------------------------------------------*/
-                                                                                                                                                    
 int
 GetVariableBox( Index  cell_ilower,
                 Index  cell_iupper,
@@ -120,14 +119,13 @@ GetVariableBox( Index  cell_ilower,
 {
    int ierr = 0;
    HYPRE_SStructVariable  vartype = (HYPRE_SStructVariable) int_vartype;
-                                                                                                                                                    
    var_ilower[0] = cell_ilower[0];
    var_ilower[1] = cell_ilower[1];
    var_ilower[2] = cell_ilower[2];
    var_iupper[0] = cell_iupper[0];
    var_iupper[1] = cell_iupper[1];
    var_iupper[2] = cell_iupper[2];
-                                                                                                                                                    
+ 
    switch(vartype)
    {
       case HYPRE_SSTRUCT_VARIABLE_CELL:
@@ -157,7 +155,6 @@ GetVariableBox( Index  cell_ilower,
       case HYPRE_SSTRUCT_VARIABLE_UNDEFINED:
       break;
    }
-                                                                                                                                                    
    return ierr;
 }
 
@@ -2274,5 +2271,5 @@ main( int   argc,
    /* Finalize MPI */
    MPI_Finalize();
 
-   return (0);
+   return 0;
 }
