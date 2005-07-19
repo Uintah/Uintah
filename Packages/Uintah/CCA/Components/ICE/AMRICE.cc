@@ -96,18 +96,15 @@ void AMRICE::addRefineDependencies(Task* task,
            << ") \t step " << step << " nsteps " << nsteps << endl;
   ASSERTRANGE(step, 0, nsteps+1);
   
-  Task::WhichDW whichDW;
+  Ghost::GhostType  gac = Ghost::AroundCells;
   if(step != nsteps) {
     cout_dbg << " requires from CoarseOldDW ";
-    whichDW = Task::CoarseOldDW;
+    task->requires(Task::CoarseOldDW, var, 0, Task::CoarseLevel, matls, DS, gac, 1);
   }
   if(step != 0) {
     cout_dbg << " requires from CoarseNewDW ";
-    whichDW = Task::CoarseNewDW;
+    task->requires(Task::CoarseNewDW, var, 0, Task::CoarseLevel, matls, DS, gac, 1);
   }
-  
-  Ghost::GhostType  gac = Ghost::AroundCells;
-  task->requires(whichDW, var, 0, Task::CoarseLevel, matls, DS, gac, 1);
   cout_dbg <<""<<endl;
 }
 /*___________________________________________________________________
@@ -541,7 +538,7 @@ _____________________________________________________________________*/
 void AMRICE::scheduleRefine(const PatchSet* patches,
                                SchedulerP& sched)
 {
-  cout_dbg << "AMRICE::scheduleRefine\t\t\t\tP-" << *patches << '\n';
+  cout_doing << "AMRICE::scheduleRefine\t\t\t\tP-" << *patches << '\n';
   Task* task = scinew Task("refine",this, &AMRICE::refine);
 
   MaterialSubset* subset = scinew MaterialSubset;
