@@ -3463,8 +3463,8 @@ void SerialMPM::switchTest(const ProcessorGroup* group,
   cout << "time_step = " << time_step << endl;
 
   bool sw = false;
-#if 0
-  if (delT > 1.5e-6)
+#if 1
+  if (time_step == 3)
     sw = true;
   else
     sw = false;

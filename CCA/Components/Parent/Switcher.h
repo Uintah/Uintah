@@ -56,6 +56,11 @@ namespace Uintah {
     switchState d_switchState;
     
     const VarLabel* switchLabel;
+    vector<string> d_carryOverVars;
+    vector<vector<string> > d_initVars;
+    vector<vector<string> > d_initMatls;
+    vector<VarLabel*> d_carryOverVarLabels;
+    vector<vector<VarLabel*> > d_initVarLabels;
 
     Switcher(const Switcher&);
     Switcher& operator=(const Switcher&);

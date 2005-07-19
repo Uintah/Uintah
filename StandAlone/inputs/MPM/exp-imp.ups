@@ -11,18 +11,20 @@
        <type>switcher</type>
        <subcomponent>
            <SimulationComponent>
-               <type> impm </type>
-           </SimulationComponent>
-           <input_file> inputs/IMPM/4disks_2d.1mat.ups</input_file>
-           <init var = "g.mass" />
-       </subcomponent>
-       <subcomponent>
-           <SimulationComponent>
                <type> mpm </type>
            </SimulationComponent>
            <input_file> inputs/MPM/4disks_2d.1mat.ups</input_file>
        </subcomponent>
-       <carry_over var = "p.x"/>
+       <subcomponent>
+           <SimulationComponent>
+               <type> impm </type>
+           </SimulationComponent>
+           <input_file> inputs/IMPM/4disks_2d.1mat.ups</input_file>
+           <init var = "p.VolumeOld" matls="mpm_matls"/>
+           <init var = "p.acceleration" matls="mpm_matls"/>
+           <init var = "bElBar" matls="mpm_matls"/>
+           <init var = "p.tempPrevious" matls="mpm_matls"/>
+       </subcomponent>
    </SimulationComponent>
 
   <Time>
