@@ -1,40 +1,50 @@
 #*****************************************************************************
 # Makefile for stand-alone C interface to Hypre 1.9.0b FAC/AMG to solve the
-# pressure equation in implicit AMR-ICE. Taken from HYPRE_src/test/Makefile.
+# pressure equation in implicit AMR-ICE.
+#
+# Revision history:
+# Oren Livne    19-JUL-2005       Created.
 #*****************************************************************************
 
 ##################################################################
 # General compilation and linking flag definitions
 ##################################################################
 
-HYPRE_SRC                = ../hypre-1.9.0b/src
+PACKAGE    = HypreStandAlone
+HYPRE_SRC  = ../hypre-1.9.0b/src
+CC         = g++
+HYPRE_DEFS = -DHYPRE_TIMING -DHAVE_CONFIG_H
+HYPRE_INC  = -I$(HYPRE_SRC)/hypre/include $(HYPRE_DEFS)
+HYPRE_LIB  = -L$(HYPRE_SRC)/hypre/lib -lHYPRE_sstruct_ls -lHYPRE_sstruct_mv -lHYPRE_struct_ls -lHYPRE_struct_mv -lHYPRE_parcsr_ls -lHYPRE_DistributedMatrixPilutSolver -lHYPRE_ParaSails -lHYPRE_Euclid -lHYPRE_MatrixMatrix -lHYPRE_DistributedMatrix -lHYPRE_IJ_mv -lHYPRE_parcsr_mv -lHYPRE_seq_mv -lHYPRE_krylov -lHYPRE_utilities -llapack -lg2c
+MPI_LIBS   = -lmpi -llam -lutil -lpthread -ldl
 
 ##################################################################
-HYPRE_DRIVERS            = sstruct_fac_oren.c
+# Targets
+##################################################################
+HYPRE_DRIVERS            = mydriver.c
 
 HYPRE_DRIVER_OBJS        = ${HYPRE_DRIVERS:.c=.o}
 HYPRE_DRIVER_EXECS       = ${HYPRE_DRIVERS:.c=}
 
-all: sstruct_fac_oren test
+all: $(HYPRE_DRIVER_EXECS)
+
+install:
 
 clean:
-	rm -f *.o *~
+	rm -f *~
+	rm -f #*# 
+	rm -f *.o 
+	rm -f *.d 
+	rm -f so_locations 
 	rm -f ${HYPRE_DRIVER_EXECS}
+	@ echo "Project cleaned."
+
+distrib:
+	tar zcvf $(PACKAGE).tar.gz Makefile *.c* *.h
 
 ##################################################################
 # Rules
 ##################################################################
-
-CC = g++
-MPI_LIBS = -lmpi -llam -lutil -lpthread -ldl
-
-HYPRE_INC = -I/scratch/SCIRun/src/Packages/Uintah/CCA/Components/ICE/PressureSolve/hypre-1.9.0b/src/hypre/include
-HYPRE_LIB = -L/scratch/SCIRun/src/Packages/Uintah/CCA/Components/ICE/PressureSolve/hypre-1.9.0b/src/hypre/lib -lHYPRE
-
-#sstruct_fac_orig: sstruct_fac_orig.o
-#	@echo  "Building" $@ "... "
-#	${CC} -o $@ $@.o ${SSTRUCT_LFLAGS} ${MPI_LIBS}
-
 
 .c.o: $<
 	${CC} -c $< ${HYPRE_INC}
@@ -42,8 +52,12 @@ HYPRE_LIB = -L/scratch/SCIRun/src/Packages/Uintah/CCA/Components/ICE/PressureSol
 .cc.o: $<
 	${CC} -c $< ${HYPRE_INC}
 
-sstruct_fac_oren: sstruct_fac_oren.o
+mydriver: mydriver.o
+	@echo  "Building" $@ "... "
 	${CC} -o $@ $@.o ${HYPRE_LIB} ${MPI_LIBS} 
 
-test : test.o
+mpitest : mpitest.o
+	@echo  "Building" $@ "... "
 	${CC} -o $@ $@.o ${HYPRE_LI} ${MPI_LIBS}
+
+-include $(patsubst %.o,%.d, $(HYPRE_DRIVER_OBJS))
