@@ -1382,25 +1382,29 @@ proc showProgress { { show_image 0 } { steps none } { okbutton 0 } } {
 	button $w.ok -text Dismiss -width 10 -command hideProgress
     }
 
-    global splashImageFile
-    if { [string length [info commands ::img::splash]] && \
-	     ![string equal $splashImageFile [::img::splash cget -file]] } {
-	image delete ::img::splash
-    }
+    if { $show_image } {
+        global splashImageFile
+        if { [string length [info commands ::img::splash]] && \
+                 ![string equal $splashImageFile [::img::splash cget -file]] } {
+            image delete ::img::splash
+        }
 
-    if { [file isfile $splashImageFile] && \
-	     [file readable $splashImageFile] && \
-	     ![string length [info commands ::img::splash]] } {
-	image create photo ::img::splash -file $splashImageFile
-    }
+        if { [file isfile $splashImageFile] && \
+                 [file readable $splashImageFile] && \
+                 ![string length [info commands ::img::splash]] } {
+            image create photo ::img::splash -file $splashImageFile
+        }
 
-    if { ![winfo exists $w.splash] } {
-	label $w.splash
-    }
+        if { ![winfo exists $w.splash] } {
+            label $w.splash
+        }
     
-    if { $show_image && [string length [info command ::img::splash]] } {
-	$w.splash configure -image ::img::splash
-	pack $w.splash
+        if { [string length [info command ::img::splash]] } {
+            $w.splash configure -image ::img::splash
+            pack $w.splash
+        } else {
+            pack forget $w.splash
+        }
     } else {
 	pack forget $w.splash
     }
