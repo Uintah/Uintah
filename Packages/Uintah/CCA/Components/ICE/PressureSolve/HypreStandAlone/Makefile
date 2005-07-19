@@ -21,10 +21,10 @@ MPI_LIBS   = -lmpi -llam -lutil -lpthread -ldl
 ##################################################################
 # Targets
 ##################################################################
-HYPRE_DRIVERS            = mydriver.c
+HYPRE_DRIVERS            = mydriver.cc
 
-HYPRE_DRIVER_OBJS        = ${HYPRE_DRIVERS:.c=.o}
-HYPRE_DRIVER_EXECS       = ${HYPRE_DRIVERS:.c=}
+HYPRE_DRIVER_OBJS        = ${HYPRE_DRIVERS:.cc=.o}
+HYPRE_DRIVER_EXECS       = ${HYPRE_DRIVERS:.cc=}
 
 all: $(HYPRE_DRIVER_EXECS)
 
@@ -45,9 +45,6 @@ distrib:
 ##################################################################
 # Rules
 ##################################################################
-
-.c.o: $<
-	${CC} -c $< ${HYPRE_INC}
 
 .cc.o: $<
 	${CC} -c $< ${HYPRE_INC}
