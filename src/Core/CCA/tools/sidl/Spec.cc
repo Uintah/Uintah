@@ -28,8 +28,8 @@
 
 
 
-#include "Spec.h"
-#include "SymbolTable.h"
+#include <Core/CCA/tools/sidl/Spec.h>
+#include <Core/CCA/tools/sidl/SymbolTable.h>
 #include <map>
 #include <algorithm>
 #include <iostream>
@@ -73,11 +73,11 @@ string Definition::fullname() const
 
 string CI::cppfullname(SymbolTable* forpackage) const
 {
-  if(!symbols){
+  if (!symbols){
     cerr << "ERROR: Definition symboltable not set!\n";
     exit(1);
   }
-  if(forpackage == symbols->getParent())
+  if (forpackage == symbols->getParent())
     return name;
   else
     return symbols->cppfullname();
@@ -165,7 +165,7 @@ std::vector<Argument*>& ArgumentList::getList()
 
 string ArgumentList::fullsignature() const
 {
-  std::string s="";
+  std::string s;
   int c=0;
   for(vector<Argument*>::const_iterator iter=list.begin(); iter != list.end(); iter++){
     if(c++ > 0)
@@ -187,16 +187,20 @@ CI::CI(const string& curfile, int lineno, const string& name,
 
 CI::~CI()
 {
-  if(mymethods)
-    delete mymethods;
+    if (mymethods) {
+        delete mymethods;
+    }
+    if (mydistarrays) {
+        delete mydistarrays;
+    }
 }
 
 Class::Class(const string& curfile, int lineno, Modifier modifier,
-	     const string& name,  ScopedName* class_extends,
-	     ScopedNameList* class_implementsall,
-	     ScopedNameList* class_implements,
-	     MethodList* methods,
-	     DistributionArrayList* arrays)
+         const string& name,  ScopedName* class_extends,
+         ScopedNameList* class_implementsall,
+         ScopedNameList* class_implements,
+         MethodList* methods,
+         DistributionArrayList* arrays)
   : CI(curfile, lineno, name, methods,arrays),
     modifier(modifier),
     class_extends(class_extends), class_implementsall(class_implementsall),
@@ -206,16 +210,22 @@ Class::Class(const string& curfile, int lineno, Modifier modifier,
 
 Class::~Class()
 {
-  if(class_extends)
-    delete class_extends;
-  if(class_implements)
-    delete class_implements;
+    if (class_extends) {
+        delete class_extends;
+    }
+    if (class_implements) {
+        delete class_implements;
+    }
+    if (class_implementsall) {
+        delete class_implementsall;
+    }
 }
 
 void CI::gatherMethods(vector<Method*>& allmethods) const
 {
-  if(parentclass)
+  if (parentclass) {
     parentclass->gatherMethods(allmethods);
+  }
   for(vector<BaseInterface*>::const_iterator iter=parent_ifaces.begin();
       iter != parent_ifaces.end(); iter++){
     (*iter)->gatherMethods(allmethods);
@@ -225,8 +235,9 @@ void CI::gatherMethods(vector<Method*>& allmethods) const
 
 void CI::gatherVtable(vector<Method*>& uniquemethods, bool onlyNewMethods) const
 {
-  if(parentclass)
+  if (parentclass) {
     parentclass->gatherVtable(uniquemethods, false);
+  }
   for(vector<BaseInterface*>::const_iterator iter=parent_ifaces.begin();
       iter != parent_ifaces.end(); iter++){
     (*iter)->gatherVtable(uniquemethods, false);
@@ -316,8 +327,8 @@ void DefinitionList::processImports()
 }
 
 BaseInterface::BaseInterface(const string& curfile, int lineno, const string& id,
-		     ScopedNameList* interface_extends, MethodList* methods,
-		     DistributionArrayList* arrays)
+             ScopedNameList* interface_extends, MethodList* methods,
+             DistributionArrayList* arrays)
   : CI(curfile, lineno, id, methods,arrays),
     interface_extends(interface_extends)
 {
@@ -326,13 +337,14 @@ BaseInterface::BaseInterface(const string& curfile, int lineno, const string& id
 
 BaseInterface::~BaseInterface()
 {
-  if(interface_extends)
-    delete interface_extends;
+    if (interface_extends) {
+        delete interface_extends;
+    }
 }
 
 Method::Method(const string& curfile, int lineno, bool copy_return,
-	       Type* return_type, const string& name, ArgumentList* args,
-	       Modifier2 modifier2, ScopedNameList* throws_clause)
+           Type* return_type, const string& name, ArgumentList* args,
+           Modifier2 modifier2, ScopedNameList* throws_clause)
   : curfile(curfile), lineno(lineno), copy_return(copy_return),
     return_type(return_type), name(name), args(args),
     modifier2(modifier2), throws_clause(throws_clause), modifier(Unknown)
@@ -346,8 +358,12 @@ Method::Method(const string& curfile, int lineno, bool copy_return,
 
 Method::~Method()
 {
-  delete args;
-  delete throws_clause;
+    if (args) {
+        delete args;
+    }
+    if (throws_clause) {
+        delete throws_clause;
+    }
 }
 
 void Method::setModifier(Method::Modifier newmodifier)
@@ -465,25 +481,29 @@ void MethodList::gatherVtable(vector<Method*>& uniquemethods) const
 {
   // Yuck - O(N^2)
   for(vector<Method*>::const_iterator iter1=list.begin();iter1 != list.end();iter1++){
-    vector<Method*>::iterator iter2=uniquemethods.begin();;
+    vector<Method*>::iterator iter2=uniquemethods.begin();
     for(;iter2 != uniquemethods.end(); iter2++){
-      if((*iter1)->matches(*iter2, Method::TypesOnly))
-	break;
+      if((*iter1)->matches(*iter2, Method::TypesOnly)) {
+        break;
+      }
     }
-    if(iter2 == uniquemethods.end())
+    if(iter2 == uniquemethods.end()) {
       uniquemethods.push_back(*iter1);
+    }
   }
 }
 
 Package::Package(const string& fileno, int lineno, const std::string& name,
-		 DefinitionList* definition)
+         DefinitionList* definition)
   : Definition(fileno, lineno, name), definition(definition)
 {
 }
 
 Package::~Package()
 {
-  delete definition;
+    if (definition) {
+        delete definition;
+    }
 }
 
 ScopedName::ScopedName()
@@ -529,8 +549,9 @@ void ScopedName::set_leading_dot(bool dot)
 string ScopedName::getName() const
 {
   string n;
-  if(leading_dot)
+  if (leading_dot) {
     n+=".";
+  }
   bool first=true;
   for(vector<string>::const_iterator iter=names.begin();iter != names.end();iter++){
     if(!first)
@@ -606,7 +627,7 @@ vector<ScopedName*> const& ScopedNameList::getList() const
 
 std::string ScopedNameList::fullsignature() const
 {
-  string s="";
+  string s;
   int c=0;
   for(vector<ScopedName*>::const_iterator iter=list.begin(); iter != list.end(); iter++){
     if(c++ > 0)
@@ -617,7 +638,7 @@ std::string ScopedNameList::fullsignature() const
 }
 
 Specification::Specification(VersionList* versions, ScopedNameList* imports,
-			     DefinitionList* packages)
+                 DefinitionList* packages)
   : versions(versions), imports(imports), packages(packages)
 {
   isImport=false;
@@ -626,12 +647,15 @@ Specification::Specification(VersionList* versions, ScopedNameList* imports,
 
 Specification::~Specification()
 {
-  if(versions)
-    delete versions;
-  if(imports)
-    delete imports;
-  if(packages)
-    delete packages;
+    if (versions) {
+        delete versions;
+    }
+    if (imports) {
+        delete imports;
+    }
+    if (packages) {
+        delete packages;
+    }
 }
 
 void Specification::setTopLevel()
@@ -842,16 +866,16 @@ bool ArrayType::isvoid() const
 }
 
 Enum::Enum(const std::string& curfile, int lineno,
-	   const std::string& name)
+       const std::string& name)
   : Definition(curfile, lineno, name)
 {
 }
 
 Enum::~Enum()
 {
-  for(vector<Enumerator*>::iterator iter = list.begin();
-      iter != list.end(); iter++)
-    delete *iter;
+    for (vector<Enumerator*>::iterator iter = list.begin(); iter != list.end(); iter++) {
+        delete *iter;
+    }
 }
 
 void Enum::add(Enumerator* e)
@@ -860,13 +884,13 @@ void Enum::add(Enumerator* e)
 }
 
 Enumerator::Enumerator(const std::string& curfile, int lineno,
-		       const std::string& name)
+               const std::string& name)
   : curfile(curfile), lineno(lineno), name(name), have_value(false)
 {
 }
 
 Enumerator::Enumerator(const std::string& curfile, int lineno,
-		       const std::string& name, int value)
+               const std::string& name, int value)
   : curfile(curfile), lineno(lineno), name(name), have_value(true),
     value(value)
 {
@@ -915,10 +939,13 @@ SpecificationList::SpecificationList()
 
 SpecificationList::~SpecificationList()
 {
-  for(vector<Specification*>::iterator iter = specs.begin();
-      iter != specs.end(); iter++){
-    delete *iter;
-  }
+    for(vector<Specification*>::iterator iter = specs.begin();
+        iter != specs.end(); iter++){
+        delete *iter;
+    }
+    if (globals) {
+        delete globals;
+    }
 }
 
 void SpecificationList::add(Specification* spec)
@@ -934,21 +961,23 @@ void SpecificationList::processImports()
       (*iter)->packages->processImports();
     }
   }
-	        
+            
   // "processImports not finished!\n" -- Might want to remove unnecessary packages here;
 }
 
 
 
 DistributionArray::DistributionArray(const std::string& curfile, int lineno, const std::string& name,
-				     ArrayType* arr_t)
+                     ArrayType* arr_t)
   : Definition(curfile,lineno,name), array_t(arr_t), name(name)
 {
 }
 
 DistributionArray::~DistributionArray() 
-{ 
-  delete array_t;
+{
+    if (array_t) {
+        delete array_t;
+    }
 }
 
 ArrayType* DistributionArray::getArrayType() 
