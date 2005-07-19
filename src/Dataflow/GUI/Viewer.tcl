@@ -247,6 +247,7 @@ itcl_class BaseViewWindow {
 	setGlobal $this-global-movieFrame 0
 	setGlobal $this-global-resize 0
 	setGlobal $this-global-message "Waiting ..."
+	setGlobal $this-global-sync_with_execute 0
 	setGlobal $this-x-resize 700
 	setGlobal $this-y-resize 512
 	setGlobal $this-do_bawgl 0
@@ -1478,6 +1479,14 @@ itcl_class ViewWindow {
 	    $w.mpeg configure -state disabled -disabledforeground ""
 	} 
 
+        checkbutton $w.sync -text "Sync with Execute" \
+            -variable $this-global-sync_with_execute
+
+        Tooltip $w.sync \
+            "Synchronizes movie frame output with the execution of the\n"\
+            "module.  Mouse events and other viewer interaction will\n"\
+            "not be recorded."
+
 	frame $w.moviebase
 	label $w.moviebase.label -text "Name:" -width 6
         entry $w.moviebase.entry -relief sunken -width 15 \
@@ -1514,7 +1523,7 @@ itcl_class ViewWindow {
 	  -command "wm withdraw $w"
 
         pack $w.l -padx 4 -anchor w
-        pack $w.none $w.raw $w.mpeg -padx 4 -anchor w
+        pack $w.none $w.raw $w.mpeg $w.sync -padx 4 -anchor w
 
         pack $w.moviebase.label $w.moviebase.entry -side left -padx 4
         pack $w.moviebase -pady 5 -padx 4 -anchor w

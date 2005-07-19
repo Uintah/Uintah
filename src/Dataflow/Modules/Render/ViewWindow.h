@@ -134,6 +134,11 @@ public:
   void                  setMovieFrame( int movieframe );
   void                  setMessage( string message );
 
+  // This is called by the Viewer when the module has executed.  If a
+  // movie is being recorded, then a frame is created based on the
+  // parameters of the movie GUI.
+  void                  maybeSaveMovieFrame();
+
   // UNICAM START
   void			unicam_choose(int X, int Y);
   void			unicam_rot(int X, int Y);

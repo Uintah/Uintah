@@ -81,6 +81,7 @@ namespace SCIRun {
 #define PICK_DONE 5
 #define DO_IMAGE 6
 #define IMAGE_DONE 7
+#define DO_SYNC_FRAME 8
 
 
 int CAPTURE_Z_DATA_HACK = 0;
@@ -131,6 +132,8 @@ OpenGL::OpenGL(GuiInterface* gui, Viewer *viewer, ViewWindow *vw) :
   make_MPEG_p_(false),
   current_movie_frame_(0),
   movie_name_("./movie.%04d"),
+  doing_sync_frame_(false),
+  dump_sync_frame_(false),
   tk_gl_context_(0),
   old_tk_gl_context_(0),
   myname_("Not Intialized"),
@@ -301,6 +304,7 @@ OpenGL::redraw_loop()
   TimeThrottle throttle;
   throttle.start();
   double newtime = 0;
+  bool do_sync_frame = false;
   for (;;)
   {
     int nreply = 0;
@@ -363,6 +367,10 @@ OpenGL::redraw_loop()
           ftype = req.type;
           resx = req.resx;
           resy = req.resy;
+        }
+        else if (r == DO_SYNC_FRAME)
+        {
+          do_sync_frame = true;
         }
         else
         {
@@ -431,6 +439,10 @@ OpenGL::redraw_loop()
           resx = req.resx;
           resy = req.resy;
         }
+        else if (r == DO_SYNC_FRAME)
+        {
+          do_sync_frame = true;
+        }
         else
         {
           nreply++;
@@ -455,7 +467,13 @@ OpenGL::redraw_loop()
       sleep(1);
     }
 #endif
+    if (do_sync_frame) {
+      dump_sync_frame_ = true;
+      // Prevent dumping a frame on the next loop iteration.
+      do_sync_frame = false;
+    }
     redraw_frame();
+    dump_sync_frame_ = false;
     for (int i=0; i<nreply; i++)
     {
       recv_mailbox_.send(REDRAW_DONE);
@@ -732,9 +750,17 @@ OpenGL::redraw_frame()
 
   gui_->lock();
 
+  const bool dump_frame =
+    // Saving an image
+    doing_image_p_
+    // Recording a movie, but we don't care about synchronized frames
+    || (doing_movie_p_ && !doing_sync_frame_)
+    // Recording a movie, but we care about synchronized frames
+    || (doing_movie_p_ && doing_sync_frame_ && dump_sync_frame_);
+
 #if defined(HAVE_PBUFFER)
   // Set up a pbuffer associated with tk_gl_context_ for image or movie making.
-  if (doing_movie_p_ || doing_image_p_)
+  if (dump_frame)
   {
     if (pbuffer_ &&
         (xres_ != pbuffer_->width() || yres_ != pbuffer_->height()))
@@ -757,7 +783,7 @@ OpenGL::redraw_frame()
   }
 #endif
 
-  if (pbuffer_ && (doing_movie_p_ || doing_image_p_))
+  if (pbuffer_ && dump_frame)
   {
     pbuffer_->makeCurrent();
     glDrawBuffer( GL_FRONT );
@@ -853,7 +879,7 @@ OpenGL::redraw_frame()
         }
         else
         {
-          if (pbuffer_ && (doing_movie_p_ || doing_image_p_))
+          if (pbuffer_ && dump_frame)
           {
             //ASSERT(pbuffer_->is_current());
             glDrawBuffer(GL_FRONT);
@@ -1023,7 +1049,7 @@ OpenGL::redraw_frame()
       view_window_->gui_total_frames_.set(view_window_->gui_total_frames_.get()+1);
 
       // Show the pretty picture.
-      if (!(pbuffer_ && (doing_movie_p_ || doing_image_p_)))
+      if (!(pbuffer_ && dump_frame))
       {
         tk_gl_context_->swap();
       }
@@ -1047,7 +1073,7 @@ OpenGL::redraw_frame()
         
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if (!(pbuffer_ && (doing_movie_p_ || doing_image_p_)))
+    if (!(pbuffer_ && dump_frame))
     {
       tk_gl_context_->swap();
     }
@@ -1106,8 +1132,11 @@ OpenGL::redraw_frame()
 
   /*****************************************/
   /* movie-movie makin' movie-movie makin' */
+  /*                                       */
+  /* Only do this if we are making a movie */
+  /* and we are dumping a frame.           */
   /*****************************************/
-  if (doing_movie_p_)
+  if (dump_frame && doing_movie_p_)
   {
     if (make_MPEG_p_ )
     {
@@ -1173,6 +1202,7 @@ OpenGL::redraw_frame()
       {
         // Finish up mpeg that was in progress.
         encoding_mpeg_ = false;
+
         EndMpeg();
       }
 
@@ -1213,7 +1243,9 @@ OpenGL::redraw_frame()
       }
     }
   }
-  else
+
+  // End the mpeg if we are no longer recording a movie
+  if (!doing_movie_p_)
   {
     if (encoding_mpeg_)
     { // Finish up mpeg that was in progress.
@@ -1617,6 +1649,11 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
   if (movieName.valid())
     renderer_->movie_name_ = movieName.get();
 
+  GuiInt sync(ctx_->subVar(tclID+"-sync_with_execute", false));
+  if (sync.valid()) {
+    renderer_->doing_sync_frame_ = sync.get();
+  }
+
   GuiInt movie(ctx_->subVar(tclID+"-movie", false));
   if (movie.valid())
   {
@@ -1799,6 +1836,19 @@ ViewWindow::setMouse(DrawInfoOpenGL* drawinfo)
   drawinfo->mouse_action = mouse_action_;
 }
 
+void
+ViewWindow::maybeSaveMovieFrame() {
+  // Check to see if we are doing synchronized movie frames
+  GuiInt sync(ctx_->subVar("global-sync_with_execute", false));
+  if (sync.valid()) {
+    if (sync.get()) {
+      // This doesn't actually cause a redraw, so call redraw after we
+      // tell it that the next frame is synchronized.
+      renderer_->scheduleSyncFrame();
+      redraw();
+    }
+  }
+}
 
 void
 GeomViewerItem::draw(DrawInfoOpenGL* di, Material *m, double time)
@@ -1945,6 +1995,11 @@ OpenGL::saveImage(const string& fname,
   img_mailbox_.send(ImgReq(fname,type,x,y));
 }
 
+void
+OpenGL::scheduleSyncFrame()
+{
+  send_mailbox_.send(DO_SYNC_FRAME);
+}
 
 void
 OpenGL::getData(int datamask, FutureValue<GeometryData*>* result)
