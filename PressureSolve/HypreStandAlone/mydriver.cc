@@ -18,31 +18,66 @@ using namespace std;
  
 #define DEBUG    1
 #define MAX_DIMS 3
-
+#define NUM_VARS 1
+int     numDims = 2;
 int     MYID;  /* The same as myid, but global */
 typedef int Index[MAX_DIMS];
 
-class Patch {
+class Part {
  public:
-  int   _procID;
+  int         _procID;
+  int         _levelID;
+  int         _partID;
   vector<int> _ilower;
   vector<int> _iupper;
   
-  Patch(int procID) { _prodID = procID; }
-  Patch(int procID, const vector<int>& ilower, const vector<int>& iupper)
-    { _prodID = procID; _ilower = ilower; _iupper = iupper; }
+  Part(const int procID, 
+       const int levelID,
+       const int partID) 
+  { _procID = procID; _levelID = levelID; _partID = partID; }
+  Part(const int procID, 
+       const int levelID,
+       const int partID,
+       const vector<int>& ilower, const vector<int>& iupper)
+  { _procID = procID; _levelID = levelID; _partID = partID;
+  _ilower = ilower; _iupper = iupper; }
 
  private:
 };
 
-class Parts {
- public:
-  vector<Patch> _partList;
- private:
+class Level {
+public:
+  vector<double> _meshSize;
+  vector<Part*>  _partList;
+ 
+  Level(const double h) {
+    _meshSize.resize(numDims);
+    for (int d = 0; d < numDims; d++) {
+      _meshSize[d] = h;
+    }
+  }
+
+private:
 };
 
+class Hierarchy {
+public:
+  vector<Level*> _levels;
+  unsigned int   _numParts;
+  Hierarchy(void) { _numParts = 0; }
+};
 
-void Print(char *fmt, ...) {
+void 
+ToIndex(const vector<int>& from,
+        Index* to)
+{
+  assert(from.size() == numDims);
+  for (int d = 0; d < numDims; d++) (*to)[d] = from[d];
+}
+
+void 
+Print(char *fmt, ...)
+{
   /*_____________________________________________________________________
     Function Print:
     Print an output line on the current processor. Useful to parse MPI output.
@@ -65,7 +100,9 @@ void Print(char *fmt, ...) {
   va_end(ap);
 }
 
-void printIndex(const vector<int>& a) {
+void 
+printIndex(const vector<int>& a) 
+{
   /*_____________________________________________________________________
     Function printIndex:
     Print numDims-dimensional index a
@@ -78,9 +115,14 @@ void printIndex(const vector<int>& a) {
   printf("]");
 }
 
-void faceExtents(int numDims, const vector<int>& ilower, const vector<int>& iupper,
-                 int dim, int side,
-                 vector<int>& faceLower, vector<int>& faceUpper) {
+void
+faceExtents(const vector<int>& ilower,
+            const vector<int>& iupper,
+            const int dim,
+            const int side,
+            vector<int>& faceLower,
+            vector<int>& faceUpper)
+{
   /*_____________________________________________________________________
     Function faceExtents:
     Compute face box extents of a numDims-dimensional patch whos extents
@@ -103,7 +145,7 @@ void faceExtents(int numDims, const vector<int>& ilower, const vector<int>& iupp
 }
 
 #if 0
-void loopHypercube(int numDims, vector<int> ilower, vector<int> iupper,
+void loopHypercube(vector<int> ilower, vector<int> iupper,
                    vector<int> step, vector<int>* list) {
   /*_____________________________________________________________________
     Function loopHypercube:
@@ -117,7 +159,7 @@ void loopHypercube(int numDims, vector<int> ilower, vector<int> iupper,
   for (d = 0; d < numDims; d++) cellIndex[d] = ilower[d];
   while (!done) {
     Print("  count = %2d  cellIndex = ",count);
-    printIndex(cellIndex,numDims);
+    printIndex(cellIndex);
     for (d = 0; d < numDims; d++) list[count][d] = cellIndex[d];
     count++;
     printf("\n");
@@ -151,32 +193,88 @@ int clean(void) {
   MPI_Finalize();    // Quit MPI
 }
 
+void
+synchronizePartIDs(const int numProcs,
+                   const Hierarchy& hier,
+                   HYPRE_SStructGrid& grid,
+                   HYPRE_SStructVariable* vars)
+{
+  Print("numProcs = %d\n",numProcs);
+  int* numPartsIn = new int[numProcs];
+  int* numPartsOut = new int[numProcs];
+
+  for (int index = 0; index < numProcs; index++) {
+    numPartsIn[index] = 0;
+    numPartsOut[index] = 0;
+  }
+  numPartsIn[MYID] = hier._numParts;
+  MPI_Allreduce(numPartsIn, numPartsOut, numProcs, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+  if (MYID == 0) {
+    for (int index = 0; index < numProcs; index++) {
+      Print("numPartsIn[%d] = %d     numPartsOut[%d] = %d\n",
+            index,numPartsIn[index],index,numPartsOut[index]);
+    }
+    Print("\n");
+  }
+ 
+  int sumParts = 0;
+  for (int index = 0; index < MYID; index++) {
+    sumParts += numPartsOut[index];
+  }
+  /* Update partIDs so that they are globally consecutive */
+  int numLevels = hier._levels.size();
+  Print("Number of levels = %d\n",numLevels);
+  for (int level = 0; level < numLevels; level++) {
+    Level* lev = hier._levels[level];
+    Print("Level %d, meshSize = %lf\n",level,lev->_meshSize[0]);
+    for (int i = 0; i < lev->_partList.size(); i++) {
+      Part* part = lev->_partList[i];
+      int& partID = part->_partID;
+      partID += sumParts;
+      /* Add this patch to the grid */
+      Index hypreilower, hypreiupper;
+      ToIndex(part->_ilower,&hypreilower);
+      ToIndex(part->_iupper,&hypreiupper);
+      HYPRE_SStructGridSetExtents( grid, partID, hypreilower, hypreiupper );
+      HYPRE_SStructGridSetVariables(grid, partID, NUM_VARS, vars);
+      Print("  Part %d Extents = ",partID);
+      printIndex(part->_ilower);
+      printf(" to ");
+      printIndex(part->_iupper);
+      printf("\n");
+      fflush(stdout);
+    }
+  }
+
+  delete numPartsIn;
+  delete numPartsOut;
+}
+
 int main(int argc, char *argv[]) {
   /*-----------------------------------------------------------
    * Variable definition, parameter init, arguments verification
    *-----------------------------------------------------------*/
   /* Counters, specific sizes of this problem */
-  int numProcs, myid, level, entry, dim, d, cell, side;
+  int numProcs, myid;
   int solver_id = 30; // solver ID. 30 = AMG, 99 = FAC
-  int numDims   = 2;  // 2D problem
   int numLevels = 2;  // Number of AMR levels
   int n         = 16; // Level 0 grid size in every direction
 
   /* Grid data structures */
-  HYPRE_SStructGrid grid;
-  Parts         parts;
-  int               *levelID;
-  Index             *refinementRatio;
-  Index             faceLower, faceUpper;
-  vector<double>    meshSize;   // meshsize at all levels
+  HYPRE_SStructGrid   grid;
+  Hierarchy           hier;
+  Index               faceLower, faceUpper;
+  int                 *levelID;  // Needed by Hypre FAC 
+  Index               *refinementRatio; // Needed by Hypre FAC 
   
-  /* Stencil data structures. We use the same stencil all all levels and all parts. */
+  /* Stencil data structures.
+     We use the same stencil all all levels and all parts. */
   HYPRE_SStructStencil stencil;
-  int                  stencil_size;
-  Index                *stencil_offsets;
+  int                 stencil_size;
+  vector< vector<int> > stencil_offsets;
   
   /* Graph data structures */
-  HYPRE_SStructGraph   graph, fac_graph;
+  HYPRE_SStructGraph  graph, fac_graph;
   
   /* For matrix setup */
   //  Index index, to_index;
@@ -184,20 +282,20 @@ int main(int argc, char *argv[]) {
 
   /* Sparse matrix data structures for various solvers (FAC, ParCSR),
      right-hand-side b and solution x */
-  HYPRE_SStructMatrix   A, fac_A;
-  HYPRE_SStructVector   b;
-  HYPRE_SStructVector   x;
-  HYPRE_SStructSolver   solver;
-  HYPRE_ParCSRMatrix    par_A;
-  HYPRE_ParVector       par_b;
-  HYPRE_ParVector       par_x;
-  HYPRE_Solver          par_solver;
-  int                   num_iterations, n_pre, n_post;
-  double                final_res_norm;
+  HYPRE_SStructMatrix A, fac_A;
+  HYPRE_SStructVector b;
+  HYPRE_SStructVector x;
+  HYPRE_SStructSolver solver;
+  HYPRE_ParCSRMatrix  par_A;
+  HYPRE_ParVector     par_b;
+  HYPRE_ParVector     par_x;
+  HYPRE_Solver        par_solver;
+  int                 num_iterations, n_pre, n_post;
+  double              final_res_norm;
   
   /* Timers, debugging flags */
-  int                   time_index, time_fac_rap;
-  int                   print_system = 1;
+  int                 time_index, time_fac_rap;
+  int                 print_system = 1;
   
   /* Initialize MPI */
   MPI_Init(&argc, &argv);
@@ -238,7 +336,8 @@ int main(int argc, char *argv[]) {
     //    int correct = mypow(2,numDims);
     int correct = int(pow(2.0,numDims));
     if (numProcs != correct) {
-      Print("\n\nError, hard coded to %d processors in %d-D for now.\n",correct,numDims);
+      Print("\n\nError, hard coded to %d processors in %d-D for now.\n",
+            correct,numDims);
       clean();
       exit(1);
     }
@@ -268,105 +367,105 @@ int main(int argc, char *argv[]) {
     Print("----------------------------------------------------\n");
   }
 
-  /* Create an empty grid in numDims dimensions with numParts parts (=patches) */
+  /* Create an empty grid in numDims dimensions with numParts parts
+     (=patches) */
   int numParts    = numLevels*numProcs;
+  if (myid == 0) {
+    Print("Total number of parts = %d\n",numParts);
+  }
   HYPRE_SStructGridCreate(MPI_COMM_WORLD, numDims, numParts, &grid);
-  HYPRE_SStructVariable vars[1] = {HYPRE_SSTRUCT_VARIABLE_CELL}; // We use cell centered vars
+  HYPRE_SStructVariable vars[NUM_VARS] =
+    {HYPRE_SSTRUCT_VARIABLE_CELL}; // We use cell centered vars
 
   /* Initialize arrays holding level and parts info */
 
   levelID         = hypre_TAlloc(int, numLevels);    
   refinementRatio = hypre_TAlloc(Index, numParts);
-  meshSize.resize(numLevels);
 
   int part = myid;
-  int procMap[4][2] = { {0,0}, {0,1}, {1,0}, {1,1} }; // Works for 2D; write general gray code
+  int procMap[4][2] = { 
+    {0,0}, {0,1}, {1,0}, {1,1} 
+  }; // Works for 2D; write general gray code
 
   /* Initialize the parts at all levels that this proc owns */
-  Print("Number of levels = %d\n",numLevels);
-  for (level = 0; level < numLevels; level++) {
-    Print("  Initializing level %d\n",level);
+  for (int level = 0; level < numLevels; level++) {
     levelID[level] = level;   /* Level ID */
-
+    
     /* Refinement ratio w.r.t. parent level. Assumed to be constant
        (1:2) in all dimensions and all levels for now. */
     if (level == 0) {
       /* Dummy value */
-      for (dim = 0; dim < numDims; dim++) {
+      for (int dim = 0; dim < numDims; dim++) {
         refinementRatio[level][dim] = 0;
       }
     } else {
-      for (dim = 0; dim < numDims; dim++) {
+      for (int dim = 0; dim < numDims; dim++) {
         refinementRatio[level][dim] = 2;
       }
     }
     
+    double h;
     /* Compute meshsize, assumed the same in all directions at each level */
     if (level == 0) {
-      h[level] = 1.0/n;   // Size of domain divided by # of gridpoints
+      h = 1.0/n;   // Size of domain divided by # of gridpoints
     } else {
-      h[level] = h[level-1] / refinementRatio[level][0]; // ref. ratio constant for all dims
+      h = hier._levels[level-1]->_meshSize[0] / 
+        refinementRatio[level][0]; // ref. ratio constant for all dims
     }
     
+    hier._levels.push_back(new Level(h));
+    Level* lev = hier._levels[level];
+
     /* Mesh box extents (lower left corner, upper right corner) */
-    switch (level) {
-    case 0:
-      /* Level 0 extends over the entire domain. */
+    switch (level)
       {
-        Patch patch;
-        patch._procID = myid;
-        parts._partList.push_back(patch);
-
-        part = myid;   // Part number on level 0 for this proc
-        for (dim = 0; dim < numDims; dim++) {
-          ilower[level][dim] = procMap[myid][dim] * n;
-          iupper[level][dim] = ilower[level][dim] + n - 1;
+      case 0:
+        /* Level 0 extends over the entire domain. */
+        {
+          vector<int> ilower(numDims);
+          vector<int> iupper(numDims);
+          for (int dim = 0; dim < numDims; dim++) {
+            ilower[dim] = procMap[myid][dim] * n;
+            iupper[dim] = ilower[dim] + n - 1;
+          }
+          int partID = hier._numParts;
+          hier._numParts++;
+          Part* part = new Part(myid,level,partID,ilower,iupper);
+          lev->_partList.push_back(part);
+          break;
         }
-        /* Add this patch to the grid */
-        HYPRE_SStructGridSetExtents( grid, part, ilower[part], iupper[part] );
-        HYPRE_SStructGridSetVariables(grid, part, 1, vars);
-        Print("  Part %d Extents = ",part);
-        printIndex(ilower[level],numDims);
-        printf(" to ");
-        printIndex(iupper[level],numDims);
-        printf("\n");
-        fflush(stdout);
-        break;
-      }
-    case 1:
-      /* Level 1 extends over central square of physical size 1/2x1/2. */
-      {
-        part = myid + numParts/2;   // Part number on level 0 for this proc
-        for (dim = 0; dim < numDims; dim++) {
-          ilower[level][dim] = n + procMap[myid][dim] * n;
-          iupper[level][dim] = ilower[level][dim] + n - 1;
+      case 1:
+        /* Level 1 extends over central square of physical size 1/2x1/2. */
+        {
+          vector<int> ilower(numDims);
+          vector<int> iupper(numDims);
+          for (int dim = 0; dim < numDims; dim++) {
+            ilower[dim] = n + procMap[myid][dim] * n;
+            iupper[dim] = ilower[dim] + n - 1;
+          }
+          int partID = hier._numParts;
+          hier._numParts++;
+          Part* part = new Part(myid,level,partID,ilower,iupper);
+          lev->_partList.push_back(part);
+          break;
         }
-        /* Add this patch to the grid */
-        HYPRE_SStructGridSetExtents( grid, part, ilower[part], iupper[part] );
-        HYPRE_SStructGridSetVariables(grid, part, 1, vars);
-        Print("  Part %d Extents = ",part);
-        printIndex(ilower[level],numDims);
-        printf(" to ");
-        printIndex(iupper[level],numDims);
-        printf("\n");
-        fflush(stdout);
-
-        break;
+      default:
+        {
+          Print("Unknown level - cannot set grid extents\n");
+          clean();
+          exit(1);
+        }
       }
-    default: {
-      Print("Unknown level - cannot set grid extents\n");
-      clean();
-      exit(1);
-    }
-    }
   }
   
   /* Assemble the grid; this is a collective call that synchronizes
      data from all processors. */
   for (int i = numProcs-1; i >= myid; i--) {
-    //    Print("End of Grid Barrier # %d\n",i);
+    Print("End of Grid Barrier # %d\n",i);
     MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
   }
+
+  synchronizePartIDs(numProcs,hier,grid,vars);
   HYPRE_SStructGridAssemble(grid);
   if (myid == 0) {
     Print("\n");
@@ -394,21 +493,28 @@ int main(int argc, char *argv[]) {
      structured mesh. If not, define it later during matrix setup.
   */
   stencil_size = 2*numDims+1;
-  stencil_offsets = hypre_CTAlloc(Index, stencil_size);
-  entry = 0;
+  //  Print("stencil_size = %d   numDims = %d\n",stencil_size,numDims);
+  stencil_offsets.resize(stencil_size);
+  int entry;
   /* Order them as follows: center, xminus, xplus, yminus, yplus, etc. */
   /* Central coeffcient */
-  for (d = 0; d < numDims; d++) {
-    stencil_offsets[entry][d] = 0;
+  entry = 0;
+  stencil_offsets[entry].resize(numDims);
+  for (int dim = 0; dim < numDims; dim++) {
+    //    Print("Init entry = %d, dim = %d\n",entry,dim);
+    stencil_offsets[entry][dim] = 0;
   }
-  entry++;
-  for (dim = 0; dim < numDims; dim++) {
-    for (side = -1; side <= 1; side += 2) {
-      for (d = 0; d < numDims; d++) {
-        stencil_offsets[entry][d] =  0;
-      }
-      stencil_offsets[entry][dim] = side;
+  for (int dim = 0; dim < numDims; dim++) {
+    for (int side = -1; side <= 1; side += 2) {
       entry++;
+      stencil_offsets[entry].resize(numDims);
+      //      Print("entry = %d, dim = %d\n",entry,dim);
+      for (int d = 0; d < numDims; d++) {
+        //        Print("d = %d  size = %d\n",d,stencil_offsets[entry].size());
+        stencil_offsets[entry][d] = 0;
+      }
+      //      Print("Setting entry = %d, dim = %d\n",entry,dim);
+      stencil_offsets[entry][dim] = side;
     }
   }
   
@@ -421,12 +527,13 @@ int main(int argc, char *argv[]) {
   if (myid == 0) {
     Print("Stencil offsets:\n");
   }
+  Index hypreOffset;
   for (entry = 0; entry < stencil_size; entry++) {
-    HYPRE_SStructStencilSetEntry(stencil, entry,
-                                 stencil_offsets[entry], 0);
+    ToIndex(stencil_offsets[entry],&hypreOffset);
+    HYPRE_SStructStencilSetEntry(stencil, entry, hypreOffset, 0);
     if (myid == 0) {
       Print("    entry = %d,  stencil_offsets = ",entry);
-      printIndex(stencil_offsets[entry],numDims);
+      printIndex(stencil_offsets[entry]);
       printf("\n");
       fflush(stdout);
     }
@@ -450,11 +557,12 @@ int main(int argc, char *argv[]) {
   }
 
   // Graph stuff to be added
-  for (level = 0; level < numLevels; level++) {
-    Print("  Initializing gra[h stencil at level %d\n",level);
-    for (i = 0; i < 2; i++) {
-      part = procParts[level][i];
-      HYPRE_SStructGraphSetStencil(graph, part, 0, stencil);
+  for (int level = 0; level < numLevels; level++) {
+    Print("  Initializing graph stencil at level %d\n",level);
+    Level* lev = hier._levels[level];
+    for (int i = 0; i < lev->_partList.size(); i++) {
+      int partID = lev->_partList[i]->_partID;
+      HYPRE_SStructGraphSetStencil(graph, partID, 0, stencil);
     }
   }
 
@@ -592,6 +700,7 @@ int main(int argc, char *argv[]) {
   hypre_PrintTiming("SStruct Interface", MPI_COMM_WORLD);
   hypre_FinalizeTiming(time_index);
   hypre_ClearTiming();
+  Print("End timing\n");
 
 #if 0
   /*-----------------------------------------------------------
@@ -784,18 +893,17 @@ int main(int argc, char *argv[]) {
    }
 
    /* Destroy grid objects */
+   Print("Destroying grid objects\n");
    HYPRE_SStructGridDestroy(grid);
    hypre_TFree(levelID);
    hypre_TFree(refinementRatio);
-   hypre_TFree(ilower);
-   hypre_TFree(iupper);
-   hypre_TFree(h);
    
    /* Destroy stencil objects */
+   Print("Destroying stencil objects\n");
    HYPRE_SStructStencilDestroy(stencil);
-   hypre_TFree(stencil_offsets);
    
    /* Destroy graph objects */
+   Print("Destroying graph objects\n");
    if (solver_id > 90) {
      fac_graph = hypre_SStructMatrixGraph(fac_A);
      HYPRE_SStructGraphDestroy(fac_graph);
@@ -803,13 +911,15 @@ int main(int argc, char *argv[]) {
    HYPRE_SStructGraphDestroy(graph);
    
    /* Destroy matrix, RHS, solution objects */
+   Print("Destroying matrix, RHS, solution objects\n");
    if (solver_id > 90) {
      HYPRE_SStructMatrixDestroy(fac_A);
    }
    HYPRE_SStructMatrixDestroy(A);
-   HYPRE_SStructVectorDestroy(b);
-   HYPRE_SStructVectorDestroy(x);
+   //   HYPRE_SStructVectorDestroy(b);
+   //   HYPRE_SStructVectorDestroy(x);
    
+   Print("Cleaning\n");
    clean();
    return 0;
 } // end main()
