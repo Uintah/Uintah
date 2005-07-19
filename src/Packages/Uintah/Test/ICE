@@ -9,6 +9,7 @@ TESTS = [   ("advect", "advect.ups", "", 1, "ALL"),	\
             ("hotBlob2mat_sym", "hotBlob2mat_sym.ups", "", 1, "ALL"),     \
             ("impHotBlob", "impHotBlob.ups", "", 1, "ALL"),     \
             ("hotBlob8patch", "hotBlob2mat8patch.ups", "", 8, "ALL"),     \
+            ("hotBlob_AMR", "hotBlob_AMR.ups", "-amr", 4, "ALL"),     \
     	]
 
 exit(runSusTests(argv, TESTS, "ice"))

@@ -12,13 +12,13 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.5e-2        </maxTime>
+       <maxTime>            0.5e-2      </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-7      </delt_init>
-       <max_delt_increase>  2.0        </max_delt_increase>
-       <!--<max_iterations>     2         </max_iterations> -->
+       <max_delt_increase>  2.0         </max_delt_increase>
+       <max_iterations>     100       </max_iterations>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
     <!--____________________________________________________________________-->
@@ -130,7 +130,7 @@
               <lower>        [-0.5,-0.5,-0.025]    </lower>
               <upper>        [0.5,  0.5, 0.025]    </upper>
               <extraCells>   [1,1,1]               </extraCells>
-              <patches>      [1,1,1]               </patches>
+              <patches>      [2,2,1]               </patches>
               <resolution>   [50,50,1]             </resolution>
            </Box>
        </Level>
@@ -140,7 +140,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>AMR_HotBlob.uda</filebase>
-      <outputTimestepInterval>1</outputTimestepInterval>
+      <outputTimestepInterval>10</outputTimestepInterval>
       <save label="press_equil_CC"/>
       <save label="rho_CC"/>
       <save label="vel_CC"/>
@@ -202,7 +202,7 @@
           <Refinement_Criteria_Thresholds>
             <Density>     1e100    </Density>
             <Temperature> 1e100    </Temperature>
-            <Pressure>    1e5    </Pressure>
+            <Pressure>    1e6    </Pressure>
             <VolumeFrac>  1e100    </VolumeFrac>
             <Velocity>    1e100    </Velocity>
           </Refinement_Criteria_Thresholds>
@@ -252,9 +252,9 @@
            
            <dynamic_viscosity>      0.0                   </dynamic_viscosity>
            <thermal_conductivity>   0.0                   </thermal_conductivity>
-           <specific_heat>          652.9                 </specific_heat>
+           <specific_heat>          716                </specific_heat>
            <speed_of_sound>         270.287               </speed_of_sound>
-           <gamma>                  1.289                 </gamma>
+           <gamma>                  1.4                 </gamma>
            <!--____________________________________ -->
            <!-- How domain gets initialized         -->
            <!--____________________________________ -->
@@ -272,21 +272,21 @@
              </difference>
                <res>           [2,2,2]                  </res>
                <velocity>      [0.0,0.0,0.0]            </velocity>
-               <density>       1.7899909957225715000    </density>
+               <density>       1.1792946927374306000    </density>
                <pressure>      101325.0                 </pressure>
                <temperature>   300.0                    </temperature>
            </geom_object>
            
            <geom_object>
                 <box label="hot_spot">
-                    <min>[ -0.05, -0.05, -0.05 ]              </min>
-                    <max>[  0.05,  0.05,  0.05 ]              </max>
+                    <min>[ -0.05, -0.05, -0.05 ]        </min>
+                    <max>[  0.05,  0.05,  0.05 ]        </max>
                 </box>
                <res>           [2,2,2]                  </res>
                <velocity>      [0.0,0.0,0.0]            </velocity>
-               <density>       1.7899909957225715000     </density>
-               <pressure>      135266.039564763254020363 </pressure>
-               <temperature>   400.0                    </temperature>
+               <density>       1.1792946927374306000    </density>
+               <pressure>      1013250.0                </pressure>
+               <temperature>   3000.0                   </temperature>
            </geom_object>
          </material>
       </ICE>       
