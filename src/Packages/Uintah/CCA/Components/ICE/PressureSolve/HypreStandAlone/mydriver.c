@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdarg.h>
+#include <vector>
+using namespace std;
 
 #include "utilities.h"
 #include "HYPRE_sstruct_ls.h"
@@ -17,18 +19,28 @@
 #define DEBUG    1
 #define MAX_DIMS 3
 
-typedef int Index[MAX_DIMS];
 int     MYID;  /* The same as myid, but global */
+typedef int Index[MAX_DIMS];
 
-int mypow(int x, int y) {
-  /*_____________________________________________________________________
-    Function mypow:
-    Compute x^y
-    _____________________________________________________________________*/
-  int i,result = 1;
-  for (i = 1; i <= y; i++) result *= x;
-  return result;
-}
+class Patch {
+ public:
+  int   _procID;
+  vector<int> _ilower;
+  vector<int> _iupper;
+  
+  Patch(int procID) { _prodID = procID; }
+  Patch(int procID, const vector<int>& ilower, const vector<int>& iupper)
+    { _prodID = procID; _ilower = ilower; _iupper = iupper; }
+
+ private:
+};
+
+class Parts {
+ public:
+  vector<Patch> _partList;
+ private:
+};
+
 
 void Print(char *fmt, ...) {
   /*_____________________________________________________________________
@@ -53,23 +65,22 @@ void Print(char *fmt, ...) {
   va_end(ap);
 }
 
-void printIndex(Index a, int numDims) {
+void printIndex(const vector<int>& a) {
   /*_____________________________________________________________________
     Function printIndex:
     Print numDims-dimensional index a
     _____________________________________________________________________*/
-  int d;
   printf("[");
-  for (d = 0; d < numDims; d++) {
+  for (int d = 0; d < a.size(); d++) {
     printf("%d",a[d]);
-    if (d < numDims-1) printf(",");
+    if (d < a.size()-1) printf(",");
   }
   printf("]");
 }
 
-void faceExtents(int numDims, Index ilower, Index iupper,
+void faceExtents(int numDims, const vector<int>& ilower, const vector<int>& iupper,
                  int dim, int side,
-                 Index* faceLower, Index* faceUpper) {
+                 vector<int>& faceLower, vector<int>& faceUpper) {
   /*_____________________________________________________________________
     Function faceExtents:
     Compute face box extents of a numDims-dimensional patch whos extents
@@ -77,25 +88,23 @@ void faceExtents(int numDims, Index ilower, Index iupper,
     means the left face, side = 1 the right face (so dim=1, side=-1 is the
     x-left face). Face extents are returned in faceLower, faceUpper
     _____________________________________________________________________*/
-  int d;
-  for (d = 0; d < numDims; d++) {
-    (*faceLower)[d] = ilower[d];
-    (*faceUpper)[d] = iupper[d];
-  }
+  faceLower = ilower;
+  faceUpper = iupper;
   if (side < 0) {
-    (*faceUpper)[dim] = (*faceLower)[dim];
+    faceUpper[dim] = faceLower[dim];
   } else {
-    (*faceLower)[dim] = (*faceUpper)[dim];
+    faceLower[dim] = faceUpper[dim];
   }
   Print("Face(dim = %c, side = %d) box extents: ",dim+'x',side);
-  printIndex(*faceLower,numDims);
+  printIndex(faceLower);
   printf(" to ");
-  printIndex(*faceUpper,numDims);
+  printIndex(faceUpper);
   printf("\n");
 }
 
-void loopHypercube(int numDims, Index ilower, Index iupper,
-                   Index step, Index* list) {
+#if 0
+void loopHypercube(int numDims, vector<int> ilower, vector<int> iupper,
+                   vector<int> step, vector<int>* list) {
   /*_____________________________________________________________________
     Function loopHypercube:
     Prepare a list of all cell indices in the hypercube specified by
@@ -104,7 +113,7 @@ void loopHypercube(int numDims, Index ilower, Index iupper,
     list has to be allocated outside this function.
     _____________________________________________________________________*/
   int done = 0, currentDim = 0, count = 0, d;
-  Index cellIndex;
+  vector<int> cellIndex;
   for (d = 0; d < numDims; d++) cellIndex[d] = ilower[d];
   while (!done) {
     Print("  count = %2d  cellIndex = ",count);
@@ -128,6 +137,7 @@ void loopHypercube(int numDims, Index ilower, Index iupper,
     currentDim = 0;
   }
 }
+#endif
 
 int clean(void) {
   /*_____________________________________________________________________
@@ -150,15 +160,15 @@ int main(int argc, char *argv[]) {
   int solver_id = 30; // solver ID. 30 = AMG, 99 = FAC
   int numDims   = 2;  // 2D problem
   int numLevels = 2;  // Number of AMR levels
-  int n         = 8;  // Level 0 grid size in every direction
-  
+  int n         = 16; // Level 0 grid size in every direction
+
   /* Grid data structures */
   HYPRE_SStructGrid grid;
+  Parts         parts;
   int               *levelID;
-  Index             *ilower,*iupper,*refinementRatio;
+  Index             *refinementRatio;
   Index             faceLower, faceUpper;
-  double            *h; // meshsize at all levels
-  double            meshSize;
+  vector<double>    meshSize;   // meshsize at all levels
   
   /* Stencil data structures. We use the same stencil all all levels and all parts. */
   HYPRE_SStructStencil stencil;
@@ -197,6 +207,10 @@ int main(int argc, char *argv[]) {
 #if DEBUG
   hypre_InitMemoryDebug(myid);
 #endif
+  for (int i = 0; i < myid; i++) {
+    //    Print("Beginning Barrier # %d\n",i);
+    MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
+  }
   Print("<<<############# I am proc %d #############>>>\n", myid);
   
   /*-----------------------------------------------------------
@@ -221,7 +235,8 @@ int main(int argc, char *argv[]) {
     printf("done\n");
 
     Print("Checking # procs ... ");
-    int correct = mypow(2,numDims);
+    //    int correct = mypow(2,numDims);
+    int correct = int(pow(2.0,numDims));
     if (numProcs != correct) {
       Print("\n\nError, hard coded to %d processors in %d-D for now.\n",correct,numDims);
       clean();
@@ -259,11 +274,10 @@ int main(int argc, char *argv[]) {
   HYPRE_SStructVariable vars[1] = {HYPRE_SSTRUCT_VARIABLE_CELL}; // We use cell centered vars
 
   /* Initialize arrays holding level and parts info */
+
   levelID         = hypre_TAlloc(int, numLevels);    
   refinementRatio = hypre_TAlloc(Index, numParts);
-  ilower          = hypre_CTAlloc(Index, numParts);
-  iupper          = hypre_CTAlloc(Index, numParts);
-  h               = hypre_CTAlloc(double, numParts);
+  meshSize.resize(numLevels);
 
   int part = myid;
   int procMap[4][2] = { {0,0}, {0,1}, {1,0}, {1,1} }; // Works for 2D; write general gray code
@@ -299,6 +313,10 @@ int main(int argc, char *argv[]) {
     case 0:
       /* Level 0 extends over the entire domain. */
       {
+        Patch patch;
+        patch._procID = myid;
+        parts._partList.push_back(patch);
+
         part = myid;   // Part number on level 0 for this proc
         for (dim = 0; dim < numDims; dim++) {
           ilower[level][dim] = procMap[myid][dim] * n;
@@ -345,12 +363,19 @@ int main(int argc, char *argv[]) {
   
   /* Assemble the grid; this is a collective call that synchronizes
      data from all processors. */
+  for (int i = numProcs-1; i >= myid; i--) {
+    //    Print("End of Grid Barrier # %d\n",i);
+    MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
+  }
   HYPRE_SStructGridAssemble(grid);
-  Print("\n");
-  Print("Assembled grid num parts %d\n", hypre_SStructGridNParts(grid));
-  //  MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
   if (myid == 0) {
     Print("\n");
+    Print("Assembled grid num parts %d\n", hypre_SStructGridNParts(grid));
+    Print("\n");
+  }
+  for (int i = 0; i < myid; i++) {
+    //    Print("Beginning Barrier # %d\n",i);
+    MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
   }
 
   /*-----------------------------------------------------------
@@ -425,8 +450,19 @@ int main(int argc, char *argv[]) {
   }
 
   // Graph stuff to be added
+  for (level = 0; level < numLevels; level++) {
+    Print("  Initializing gra[h stencil at level %d\n",level);
+    for (i = 0; i < 2; i++) {
+      part = procParts[level][i];
+      HYPRE_SStructGraphSetStencil(graph, part, 0, stencil);
+    }
+  }
 
   /* Assemble the graph */
+  for (int i = numProcs-1; i >= myid; i--) {
+    //    Print("End of Grid Barrier # %d\n",i);
+    MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
+  }
   HYPRE_SStructGraphAssemble(graph);
   Print("Assembled graph, nUVentries = %d\n",hypre_SStructGraphNUVEntries(graph));
   
@@ -448,6 +484,7 @@ int main(int argc, char *argv[]) {
   
   /* Create an empty matrix with the graph non-zero pattern */
   HYPRE_SStructMatrixCreate(MPI_COMM_WORLD, graph, &A);
+  Print("Created empty SStructMatrix\n");
   /* If using AMG, set A's object type to ParCSR now */
   if ( ((solver_id >= 20) && (solver_id <= 30)) ||
        ((solver_id >= 40) && (solver_id < 60)) ) {
@@ -456,7 +493,7 @@ int main(int argc, char *argv[]) {
   HYPRE_SStructMatrixInitialize(A);
   
   // Add here interior equations of each part to A
-  
+#if 0
   /* 
      Zero out all the connections from fine point stencils to outside the
      fine patch. These are replaced by the graph connections between the fine
@@ -473,7 +510,7 @@ int main(int argc, char *argv[]) {
                         level);
     hypre_ZeroAMRMatrixData(A, level-1, refinementRatio[level]);
   }
-  
+#endif
   /* Assemble the matrix */
   HYPRE_SStructMatrixAssemble(A);
   
@@ -482,7 +519,7 @@ int main(int argc, char *argv[]) {
        ((solver_id >= 40) && (solver_id < 60)) ) {
     HYPRE_SStructMatrixGetObject(A, (void **) &par_A);
   }
-  
+#if 0
   /*-----------------------------------------------------------
    * Set up the RHS (b) and LHS (x) vectors
    *-----------------------------------------------------------*/
@@ -549,13 +586,14 @@ int main(int argc, char *argv[]) {
     HYPRE_SStructVectorGetObject(b, (void **) &par_b);
     HYPRE_SStructVectorGetObject(x, (void **) &par_x);
   }
-  
+#endif
   /* Print total time for setting up the linear system */
   hypre_EndTiming(time_index);
   hypre_PrintTiming("SStruct Interface", MPI_COMM_WORLD);
   hypre_FinalizeTiming(time_index);
   hypre_ClearTiming();
-  
+
+#if 0
   /*-----------------------------------------------------------
    * Solver setup phase
    *-----------------------------------------------------------*/
@@ -735,7 +773,7 @@ int main(int argc, char *argv[]) {
      Print("Final Relative Residual Norm = %e\n", final_res_norm);
      Print("\n");
    }
-
+#endif
   /*-----------------------------------------------------------
    * Finalize things
    *-----------------------------------------------------------*/
