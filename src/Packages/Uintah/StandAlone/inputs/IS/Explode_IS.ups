@@ -121,19 +121,19 @@
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0   </value>
         </BCType>
-        <BCType id = "3" label = "Velocity"     var = "Dirichlet">
+        <BCType id = "2" label = "Velocity"     var = "Dirichlet">
                               <value> [0.,10.,0.] </value>
         </BCType>
-        <BCType id = "3" label = "Temperature"  var = "Dirichlet">
+        <BCType id = "2" label = "Temperature"  var = "Dirichlet">
                               <value> 627.46570  </value>
         </BCType>
-        <BCType id = "3" label = "Density"      var = "Dirichlet">
+        <BCType id = "2" label = "Density"      var = "Dirichlet">
                               <value> 0.23861344  </value>
         </BCType>
-        <BCType id = "3" label = "scalar-f"     var = "Dirichlet">
+        <BCType id = "2" label = "scalar-f"     var = "Dirichlet">
                               <value> 1.0</value>
         </BCType>
-        <BCType id = "3" label = "cumulativeEnergyReleased" var = "Dirichlet">
+        <BCType id = "2" label = "cumulativeEnergyReleased" var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
       </Face>
@@ -142,19 +142,19 @@
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0   </value>
         </BCType>
-        <BCType id = "3" label = "Velocity"     var = "Dirichlet">
+        <BCType id = "2" label = "Velocity"     var = "Dirichlet">
                               <value> [0.,2.0,0.] </value>
         </BCType>
-        <BCType id = "3" label = "Temperature"  var = "Dirichlet">
+        <BCType id = "2" label = "Temperature"  var = "Dirichlet">
                               <value> 298.0  </value>
         </BCType>
-        <BCType id = "3" label = "Density"      var = "Dirichlet">
+        <BCType id = "2" label = "Density"      var = "Dirichlet">
                               <value> 1.1792946927374306  </value>
         </BCType>
-        <BCType id = "3" label = "scalar-f"     var = "Dirichlet">
+        <BCType id = "2" label = "scalar-f"     var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
-        <BCType id = "3" label = "cumulativeEnergyReleased" var = "Dirichlet">
+        <BCType id = "2" label = "cumulativeEnergyReleased" var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
       </Face>
@@ -234,20 +234,20 @@
        <Level>
  <!-- 
            <Box label="2D">
-              <lower>        [-0.1,-0.1,0.0]     </lower>
-              <upper>        [ 0.1, 0.3,0.00125] </upper>
-              <extraCells>   [1,1,1]            </extraCells>
+              <lower>        [-0.1,-0.1,0.0]      </lower>
+              <upper>        [ 0.1, 0.1,0.000667] </upper>
+              <extraCells>   [1,1,1]              </extraCells>
               <patches>      [10,20,1]            </patches>
-              <resolution>   [320,640,1]         </resolution>
+              <resolution>   [300,300,1]          </resolution>
            </Box>
 -->
 <!--      UNCOMMENT THIS FOR 3D AND COMMENT OUT THE ABOVE -->
            <Box label = "3D">      
               <lower>        [0.0,-0.1,0.0]     </lower>
-              <upper>        [0.1, 0.3,0.1]     </upper>
+              <upper>        [0.1, 0.1,0.1]     </upper>
               <extraCells>   [1,1,1]            </extraCells>
               <patches>      [4,8,4]            </patches>
-              <resolution>   [100,400,100]        </resolution>
+              <resolution>   [150,300,150]      </resolution>
            </Box> 
        </Level>
   </Grid>
@@ -270,8 +270,10 @@
     <save label="sp_vol_CC"/>
     <save label="delP_Dilatate"/>
     <save label="vel_CC"/>
+<!--
     <save label="scalar-f"/> 
     <save label="cumulativeEnergyReleased"/>
+-->
 
     <save label="p.x"/>
     <save label="p.particleID"/>
@@ -319,8 +321,7 @@
         <solution technique = "EqForm" />
 
 
-<!-- (A)  DELETE THIS TO RUN EXPLICIT
--->
+<!-- (A)  DELETE THIS TO RUN EXPLICIT -->
         <TimeStepControl>
           <Scheme_for_delT_calc> conservative </Scheme_for_delT_calc>  
           <knob_for_speedSound>  0.000        </knob_for_speedSound>   
@@ -350,8 +351,8 @@
   <MPM>
     <time_integrator>                explicit   </time_integrator>
     <nodes8or27>                     27         </nodes8or27>
-    <minimum_particle_mass>          3.e-15     </minimum_particle_mass>
-    <maximum_particle_velocity>      5.e3       </maximum_particle_velocity>
+    <minimum_particle_mass>          3.e-12     </minimum_particle_mass>
+    <maximum_particle_velocity>      1.e3       </maximum_particle_velocity>
     <artificial_damping_coeff>       0.0        </artificial_damping_coeff>
     <artificial_viscosity>           true       </artificial_viscosity>
     <artificial_viscosity_coeff1>    0.07       </artificial_viscosity_coeff1>
@@ -359,8 +360,8 @@
     <turn_on_adiabatic_heating>      false      </turn_on_adiabatic_heating>
     <accumulate_strain_energy>       false      </accumulate_strain_energy>
     <use_load_curves>                false      </use_load_curves>
-    <create_new_particles>           false       </create_new_particles>
-    <manual_new_material>            true       </manual_new_material>
+    <create_new_particles>           false      </create_new_particles>
+    <manual_new_material>            false      </manual_new_material>
     <DoThermalExpansion>             false      </DoThermalExpansion>
     <testForNegTemps_mpm>            false      </testForNegTemps_mpm>
     <erosion algorithm = "ZeroStress"/>
@@ -436,7 +437,8 @@
         </geom_object>
       </material>
 
-      <material name = "Steel Ring">    <!-- MATL 1 -->
+<!--  Currently disabling the manual creation of new particles
+      <material name = "Steel Ring">
         <include href="inputs/MPM/MaterialData/MatConst4340St.xml"/>
         <constitutive_model type="elastic_plastic">
           <isothermal>                    false </isothermal>
@@ -449,9 +451,6 @@
           <check_TEPLA_failure_criterion> true  </check_TEPLA_failure_criterion>
           <initial_material_temperature>  300.0 </initial_material_temperature>
        
-          <!-- Warning: you must copy link this input file into your -->
-          <!-- sus directory or these paths won't work.              -->
-
           <include href="inputs/MPM/MaterialData/IsoElastic4340St.xml"/>
           <include href="inputs/MPM/MaterialData/MieGrunEOS4340St.xml"/>
           <include href="inputs/MPM/MaterialData/ConstantShear.xml"/>
@@ -481,8 +480,9 @@
           <temperature>        300.0            </temperature>
         </geom_object>
       </material>
+-->
          
-      <material  name = "reactant">    <!-- MATL 2 -->
+      <material  name = "reactant">    <!-- MATL 1 -->
         <include href="inputs/MPM/MaterialData/MatConstPBX9501.xml"/>
         <constitutive_model type = "visco_scram">
           <include href="inputs/MPM/MaterialData/ViscoSCRAMPBX9501.xml"/>
@@ -514,7 +514,7 @@
 
       <!--__________________________________-->
        <ICE>
-         <material name = "Atmosphere">       <!-- MATL 3 -->   
+         <material name = "Atmosphere">       <!-- MATL 2 -->   
            <EOS type = "ideal_gas"> </EOS>
            <isSurroundingMatl>          true            </isSurroundingMatl>
            <dynamic_viscosity>          0            </dynamic_viscosity>
@@ -545,23 +545,21 @@
 
       <exchange_properties> 
          <exchange_coefficients>
-              <momentum>  [ 0, 0, 1e15,
-                               0, 1e15,
-                                  1e15]     </momentum>
+              <momentum>  [ 0, 1e15,
+                               1e15]     </momentum>
 
-              <heat>      [ 0, 0, 1e10,
-                               0, 1e10,
-                                  1e10]     </heat>
+              <heat>      [ 0, 1e10,
+                               1e10]     </heat>
         </exchange_coefficients>
         <do_convective_heat_transfer> true </do_convective_heat_transfer>
-        <convective_fluid>3</convective_fluid>
+        <convective_fluid>2</convective_fluid>
         <convective_solid>0</convective_solid>
       </exchange_properties> 
   </MaterialProperties>
 
     <AddMaterialProperties>  
       <ICE>
-         <material name = "PBXproductGases">  <!-- MATL 4 -->
+         <material name = "PBXproductGases">  <!-- MATL 3 -->
            <EOS type = "JWLC">
              <A>  8.580805e11</A>
              <B>  7.546e9    </B>
@@ -592,21 +590,20 @@
       </ICE>
       <exchange_properties> 
          <exchange_coefficients>
-              <momentum>  [ 0, 0, 1e15, 1e15,
-                               0, 1e15, 1e15,
-                                  1e15, 1e15,
-                                        1e15]     </momentum>
+              <momentum>  [ 0, 1e15, 1e15,
+                               1e15, 1e15,
+                                     1e15]     </momentum>
 
-              <heat>      [ 0, 0, 1e10, 1e10,
-                               0, 1e10, 1e10,
-                                  1e10, 1e10,
-                                        1e10]     </heat>
+              <heat>      [ 0, 1e10, 1e10,
+                               1e10, 1e10,
+                                     1e10]     </heat>
         </exchange_coefficients>
         <do_convective_heat_transfer> true </do_convective_heat_transfer>
-        <convective_fluid>3</convective_fluid>
+        <convective_fluid>2</convective_fluid>
         <convective_solid>0</convective_solid>
       </exchange_properties> 
     </AddMaterialProperties>
+
     <!--____________________________________________________________________-->
     <!--      M O D E L S                                                   -->
     <!--____________________________________________________________________-->
@@ -621,15 +618,15 @@
         <BurnCoeff>            7.53 </BurnCoeff>
         <refPressure>      101325.0 </refPressure>
       </Model>
-<!-- 
- -->
-       <Model type="AdiabaticTable">
+
         <!--_______________________________________________________________-->
         <!--_______________________________________________________________-->
         <!-- Arches JP8 Table.  Note - if you use this, you must also      -->
         <!-- use the corresponding density AND temperature at the inlet    -->
         <!-- Also, if you use a co-flow, you muse set the coflow           -->
         <!-- temperature to 298.0 and the co-flow density to 1.1798322     -->
+<!-- 
+       <Model type="AdiabaticTable">
         <table name="adiabatic" type="Arches">
           <defaultValue name="Hl">0.0</defaultValue>
           <defaultValue name="Fvar">0.0</defaultValue>
@@ -667,6 +664,7 @@
           </geom_object>
         </scalar>
       </Model>
+-->
      
     </Models>            
    
