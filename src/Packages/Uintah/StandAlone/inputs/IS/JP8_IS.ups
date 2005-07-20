@@ -129,10 +129,10 @@
                               <value> [0.,10.,0.] </value>
         </BCType>
         <BCType id = "3" label = "Temperature"  var = "Dirichlet">
-                              <value> 627.46570  </value>
+                              <value> 419.4444  </value>
         </BCType>
         <BCType id = "3" label = "Density"      var = "Dirichlet">
-                              <value> 0.23861344  </value>
+                              <value> 0.930025  </value>
         </BCType>
         <BCType id = "3" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>

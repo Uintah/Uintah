@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
-<!-- OLD JP8 constants 
+<!-- OLD JP8 constants, inlet fuel temperature = 627.46570, density = 0.23861344
 <Uintah_Include>
   <defaultValue name="Hl">0.0</defaultValue>
   <defaultValue name="Fvar">0.0</defaultValue>
@@ -16,6 +16,8 @@
 </Uintah_Include>
 -->
 
+
+<!-- New JP8 constants, inlet fuel temperature = 419.4444 density = 0.930025 -->
 <Uintah_Include>
   <defaultValue name="Hl">0.0</defaultValue>
   <defaultValue name="Fvar">0.0</defaultValue>
