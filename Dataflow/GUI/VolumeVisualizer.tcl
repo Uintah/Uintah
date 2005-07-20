@@ -59,6 +59,7 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
         setGlobal $this-light 0
 	setGlobal $this-num_slices -1
         setGlobal $this-shading-button-state 1
+        setGlobal $this-show_level_flag 1
     }
 
 
@@ -402,13 +403,14 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
     method add_multires_tab { dof } {
 	set $this-multires_tab [$dof.tabs add -label "Multires"]
 	set tab [set $this-multires_tab]
+        set n "$this-c needexecute"
 
 	frame $tab.f -relief groove -borderwidth 2
 	pack $tab.f -padx 2 -pady 2 -fill x -expand yes	
 	frame $tab.f.f1 -relief flat -borderwidth 2
 	pack $tab.f.f1 -padx 2 -pady 2 -fill x -expand yes
 	checkbutton $tab.f.f1.stencil -text "Use Stencil" \
-	    -variable $this-use_stencil -command "$this-c needexecute"
+	    -variable $this-use_stencil -command $n
 	checkbutton $tab.f.f1.opacity -text "Highlight Levels" \
 	    -variable $this-invert_opacity -command "$this highlight"
 	pack $tab.f.f1.stencil $tab.f.f1.opacity -side left
@@ -435,7 +437,7 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 #	    scale $tab.f.f2.f.f$i.s -variable $this-s$i \
 #		-from -1.0 -to 1.0 -orient horizontal -resolution 0.01
 	    checkbutton $tab.f.f2.f1.f1.b$i -text $i -pady 9 \
-		-variable $this-l$i -command "$this-c needexecute" 
+		-variable $this-l$i -command "$this change_flag" 
 	    scale $tab.f.f2.f1.f2.s$i -variable $this-s$i \
 		-from -1.0 -to 1.0 -orient horizontal -resolution 0.01
 	    if { [set $this-invert_opacity] } {
@@ -448,13 +450,21 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
 	    if { [isOn l$i] } {
 		set selected 1
 	    }
-	    bind $tab.f.f2.f1.f2.s$i <ButtonRelease> "$this-c needexecute" 
+	    bind $tab.f.f2.f1.f2.s$i <ButtonRelease> $n
 	}
 	if { !$selected && [winfo exists $tab.f.f2.f1.f1.b0] } {  
 	    $tab.f.f2.f1.f1.b0 select 
 	}
     }
 
+    method change_flag { } {
+        if { [set $this-show_level_flag] == 0 } {
+            set $this-show_level_flag 1
+        } else {
+            set $this-show_level_flag 0
+        }
+        $this-c needexecute
+    }
     method build_multi_level { } {
 	set w .ui[modname]
 	if {[winfo exists $w]} {
