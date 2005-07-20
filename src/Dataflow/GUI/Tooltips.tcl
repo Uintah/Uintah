@@ -101,6 +101,17 @@ proc Tooltip {w args} {
                      \}"
 }
 
+proc TooltipDisabled {w args} {
+    set msg [join $args ""]
+    set msg [join [split $msg \"] \\\"]
+    global tooltipDelayMS tooltipID tooltipsOn
+    bind $w <Enter> "+;global tooltipID tooltipsOn
+                     if \{ \[set tooltipsOn\] && \[%W cget -state\] == \"disabled\"\} \{
+		        after cancel \[set tooltipID\]
+                        set tooltipID \[after $tooltipDelayMS \"balloon_aux %W %X %Y [list $msg]\"\]
+                     \}"
+}
+
 proc canvasTooltip {canvas w msg} {       
     global tooltipDelayMS tooltipID tooltipsOff
     $canvas bind $w <Enter> "global tooltipID tooltipsOn

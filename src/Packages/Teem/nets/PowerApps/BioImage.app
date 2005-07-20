@@ -138,8 +138,8 @@ class BioImageApp {
 
 	set loading_ui 0
 
+	set vis_frame_tab0 ""
 	set vis_frame_tab1 ""
-	set vis_frame_tab2 ""
 
 	set history0 ""
 	set history1 ""
@@ -714,8 +714,8 @@ class BioImageApp {
 	set detachedVFr $win.detachedV
 	set attachedVFr $win.attachedV
 	
-	init_Vframe $detachedVFr.f 1
-	init_Vframe $attachedVFr.f 2
+	init_Vframe $detachedVFr.f 0
+	init_Vframe $attachedVFr.f 1
 
 	incrProgress 5
 	### pack 3 frames in proper order so that viewer
@@ -2472,8 +2472,8 @@ class BioImageApp {
     method change_vis_frame { which } {
 	if {!$initialized} return
 	# change tabs for attached and detached
+	$vis_frame_tab0 view $which
 	$vis_frame_tab1 view $which
-	$vis_frame_tab2 view $which
 	set c_vis_tab $which
     }
 
@@ -4395,6 +4395,10 @@ class BioImageApp {
     method disable_widget { w } {
 	if { [winfo exists $w] } {
 	    $w configure -state disabled
+	    TooltipDisabled $w \
+		"Please load dataset and \n" \
+		"press 'Update' button\n"\
+		"to enable this feature."
 	}
     }
 
@@ -4407,8 +4411,8 @@ class BioImageApp {
 
 
     # Data Selection
+    variable vis_frame_tab0
     variable vis_frame_tab1
-    variable vis_frame_tab2
 
     variable filters
     variable num_filters
