@@ -30,9 +30,9 @@
 
 #include <sci_defs/config_defs.h>
 #include <sci_defs/mpi_defs.h>
-#include "Spec.h"
-#include "SymbolTable.h"
-#include "uuid_wrapper.h"
+#include <Core/CCA/tools/sidl/Spec.h>
+#include <Core/CCA/tools/sidl/SymbolTable.h>
+#include <Core/CCA/tools/sidl/uuid_wrapper.h>
 
 #include <algorithm>
 #include <iostream>
@@ -232,7 +232,7 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
       int end_pos = fname.find(".sidl");
       hdr << "#include <" << fname.substr(start_pos,end_pos-start_pos) << "_sidl.h>\n";
     }
-  }  
+  }
   
   hdr << "\n";
   hdr << e.fwd.str();
@@ -266,8 +266,9 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   out << "#include <iostream>\n";
   out << "#include <vector>\n"; 
   out << "#include <sci_defs/config_defs.h>\n";
-#ifdef MxNDEBUG 
-  out << "#include <mpi.h> //Debugging purposes\n";
+#ifdef MxNDEBUG
+  out << "#include <sci_defs/mpi_defs.h>\n";
+  out << "#include <sci_mpi.h> //Debugging purposes\n";
 #endif
   out << "using namespace std;\n";
   out << "\n"; 
@@ -295,11 +296,11 @@ void Symbol::emit(EmitState& e)
   case InterfaceType:
   case ClassType:
   case EnumType:
-    if(definition->isImport) {
+    if (definition->isImport) {
       CI* importCI = dynamic_cast<CI* >(definition);
-      if(importCI) importCI->emit_proxyclass(e);
+      if (importCI) importCI->emit_proxyclass(e);
       return;
-    }      
+    }
     definition->emit(e);
     break;
   case MethodType:
@@ -315,11 +316,12 @@ void Symbol::emit(EmitState& e)
 
 void Symbol::emit_forward(EmitState& e)
 {
-  if(definition->isImport) {
-    return;
+  if (definition->isImport) {
+      return;
   }
-  if(emitted_forward)
-    return;
+  if (emitted_forward) {
+      return;
+  }
   switch(type){
   case PackageType:
     cerr << "Why is emit forward being called for a package?\n";
@@ -334,7 +336,8 @@ void Symbol::emit_forward(EmitState& e)
     e.fwd << leader2 << "class " << name << ";\n";
     break;
   case EnumType:
-    if(definition->emitted_declaration){
+    if (definition->emitted_declaration) {
+std::cerr << "Symbol::emit_forward: emitted forward true" << std::endl;
       emitted_forward=true;
       return;
     }
@@ -361,8 +364,9 @@ void Package::emit(EmitState&)
 
 void SState::begin_namespace(SymbolTable* stab)
 {
-  if(currentPackage == stab)
-    return;
+  if (currentPackage == stab) {
+      return;
+  }
   // Close off previous namespace...
   close_namespace();
 
@@ -373,12 +377,9 @@ void SState::begin_namespace(SymbolTable* stab)
 
 void SState::close_namespace()
 {
-  if(currentPackage){
-    while(currentPackage->getParent()){
-      for(SymbolTable* p=currentPackage->getParent();
-	  p->getParent()!=0;
-	  p=p->getParent())
-	{
+  if (currentPackage) {
+    while (currentPackage->getParent()) {
+      for (SymbolTable* p=currentPackage->getParent(); p->getParent()!=0; p=p->getParent()) {
 	  *this << "  ";
 	}
       *this << "} // End namespace " << currentPackage->getName() <<'\n';
@@ -392,38 +393,44 @@ void SState::close_namespace()
 void SState::recursive_begin_namespace(SymbolTable* stab)
 {
   SymbolTable* parent=stab->getParent();
-  if(parent){
+  if (parent) {
     recursive_begin_namespace(parent);
     *this << leader << "namespace " << stab->getName() << " {\n";
+std::cerr << "SState::recursive_begin_namespace " << leader << " namespace " << stab->getName() << std::endl;
     push_leader();
   }
 }
 
 bool CI::iam_class()
 {
-  bool iam=false;
-  if(dynamic_cast<Class*>(this))
-    iam=true;
+  bool iam = false;
+  if (dynamic_cast<Class*>(this)) {
+    iam = true;
+  }
   return iam;
 }
 
 void CI::emit(EmitState& e)
 {
-  if(emitted_declaration)
+  if (emitted_declaration) {
     return;
+  }
   // Emit parent classes...
-  if(parentclass)
+  if(parentclass) {
     parentclass->emit(e);
+  }
   for(std::vector<BaseInterface*>::iterator iter=parent_ifaces.begin();
-      iter != parent_ifaces.end(); iter++){
+      iter != parent_ifaces.end(); iter++) {
     (*iter)->emit(e);
   }
   
   emitted_declaration=true;
-  if(!isImport)
+  if (!isImport) {
     emit_proxyclass(e);
-  if(!do_emit)
+  }
+  if (!do_emit) {
     return;
+  }
 
   emit_header(e);
 
@@ -3050,8 +3057,14 @@ bool NamedType::uniformsize() const
 
 void Enum::emit(EmitState& e)
 {
-  if(emitted_declaration)
+  if (emitted_declaration) {
     return;
+  }
+
+  // don't emit enumerations more than once in the set of generated headers
+  if (isBuiltin) {
+    return;
+  }
 
   e.fwd.begin_namespace(symbols->getParent());
   e.fwd << leader2 << "enum " << name << " {";

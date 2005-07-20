@@ -67,10 +67,12 @@ enum storageT {
   doRetreive
 };
 
+/** Base class for SIDL interface definitions. */
 class Definition {
 public:
   virtual ~Definition();
   virtual void staticCheck(SymbolTable*)=0;
+  /** Fill in symbol tables. */
   virtual void gatherSymbols(SymbolTable*)=0;
   SymbolTable* getSymbolTable() const;
   std::string fullname() const;
@@ -78,6 +80,7 @@ public:
   void setName(const std::string& name);
   bool isEmitted() { return emitted_declaration; }
   bool isImport;
+  bool isBuiltin;
   std::string curfile;
 
   // temporary!!!
@@ -99,8 +102,7 @@ protected:
 
 class DistributionArray : public Definition {
 public:
-  DistributionArray(const std::string& curfile, int lineno, const std::string& name, 
-		    ArrayType* arr_t);
+  DistributionArray(const std::string& curfile, int lineno, const std::string& name, ArrayType* arr_t);
   virtual ~DistributionArray();
   ArrayType* getArrayType();
   std::string getName();
@@ -133,7 +135,6 @@ public:
   void detectRedistribution();
   void gatherParents(std::vector<CI*>& parents) const;
   void gatherParentInterfaces(std::vector<BaseInterface*>& parents) const;
-  //void gatherParentInterfaces(std::vector<CI*>& parents) const;
   void gatherMethods(std::vector<Method*>&) const;
   void gatherVtable(std::vector<Method*>&, bool onlyNewMethods) const;
   std::vector<Method*>& myMethods();
@@ -258,6 +259,7 @@ public:
   void emit(EmitState& out);
   void processImports();
   std::vector<Definition*> list;
+  bool isBuiltin;
 };
 
 
@@ -331,6 +333,11 @@ public:
   std::string get_classname() const;
   bool isCollective;
   int numRedisMessages;
+
+  // temporary!!!
+  std::string getName() const { return name; }
+  // temporary!!!
+
 protected:
   friend class CI;
   int handlerNum;
@@ -487,6 +494,7 @@ public:
   void gatherSymbols(SymbolTable* globals);
   void processImports();
   bool isImport;
+  bool isBuiltin;
   VersionList* versions;
   ScopedNameList* imports;
   DefinitionList* packages;
@@ -499,10 +507,15 @@ public:
   ~SpecificationList();
   void add(Specification* spec);
   void processImports();
+
+  /** Iterates over stored Specifications to fill in the global SymbolTable (globals) and checks the validity of SymbolTable contents.*/
   void staticCheck();
+
+  /** Generate header and implementation files. */
   void emit(std::ostream& out, std::ostream& headerout,
 	    const std::string& hname) const;
-public:
+private:
+  // initialized during staticCheck(..)
   SymbolTable* globals;
   std::vector<Specification*> specs;
 };

@@ -51,6 +51,7 @@ Definition::Definition(const string& curfile, int lineno, const string& name)
   emitted_declaration=false;
   do_emit=::foremit;
   isImport=false;
+  isBuiltin = false;
 }
 
 void Definition::setName(const std::string& n)
@@ -64,31 +65,24 @@ Definition::~Definition()
 
 string Definition::fullname() const
 {
-  string n;
   if (!symbols) {
-    cerr << "ERROR: Definition symboltable not set!\n";
-    //exit(1);
-  } else {
-    n = symbols->fullname();
+    cerr << "ERROR: Definition SymbolTable not set!\n";
+    exit(1);
   }
-  return n;
+  return symbols->fullname();
 }
 
 string CI::cppfullname(SymbolTable* forpackage) const
 {
-//std::cerr << "CI::cppfullname()" << std::endl;
-  string n;
-  if (!symbols) {
-    cerr << "ERROR: CI symboltable not set!\n";
-    //exit(1);
-  } else {
-    if (forpackage == symbols->getParent()) {
-       n = name;
-    } else {
-       n = symbols->cppfullname();
-    }
+  if (!symbols){
+    cerr << "ERROR: Definition SymbolTable not set!\n";
+    exit(1);
   }
-  return n;
+  if (forpackage == symbols->getParent()) {
+    return name;
+  } else {
+    return symbols->cppfullname();
+  }
 }
 
 string CI::cppclassname() const
@@ -200,8 +194,12 @@ CI::CI(const string& curfile, int lineno, const string& name,
 
 CI::~CI()
 {
-  if (mymethods)
+  if (mymethods) {
     delete mymethods;
+  }
+  if (mydistarrays) {
+    delete mydistarrays;
+  }
 }
 
 Class::Class(const string& curfile, int lineno, Modifier modifier,
@@ -242,10 +240,15 @@ for (vector<ScopedName*>::const_iterator iter=list.begin(); iter != list.end(); 
 
 Class::~Class()
 {
-  if(class_extends)
+  if (class_extends) {
     delete class_extends;
-  if(class_implements)
+  }
+  if (class_implements) {
     delete class_implements;
+  }
+  if (class_implementsall) {
+    delete class_implementsall;
+  }
 }
 
 void CI::gatherMethods(vector<Method*>& allmethods) const
@@ -253,8 +256,8 @@ void CI::gatherMethods(vector<Method*>& allmethods) const
   if (parentclass) {
     parentclass->gatherMethods(allmethods);
   }
-  for(vector<BaseInterface*>::const_iterator iter=parent_ifaces.begin(); iter != parent_ifaces.end(); iter++){
-  //for (vector<CI*>::const_iterator iter=parent_ifaces.begin(); iter != parent_ifaces.end(); iter++) {
+  for (vector<BaseInterface*>::const_iterator iter = parent_ifaces.begin();
+       iter != parent_ifaces.end(); iter++) {
 std::cerr << "CI::gatherMethods: parent_ifaces " << (*iter)->cppclassname() << std::endl;
     (*iter)->gatherMethods(allmethods);
   }
@@ -266,8 +269,8 @@ void CI::gatherVtable(vector<Method*>& uniquemethods, bool onlyNewMethods) const
   if (parentclass) {
     parentclass->gatherVtable(uniquemethods, false);
   }
-  for(vector<BaseInterface*>::const_iterator iter=parent_ifaces.begin(); iter != parent_ifaces.end(); iter++){
-  //for (vector<CI*>::const_iterator iter=parent_ifaces.begin(); iter != parent_ifaces.end(); iter++) {
+  for (vector<BaseInterface*>::const_iterator iter = parent_ifaces.begin();
+       iter != parent_ifaces.end(); iter++) {
 std::cerr << "CI::gatherVtable: parent_ifaces " << (*iter)->cppclassname() << std::endl;
     (*iter)->gatherVtable(uniquemethods, false);
   }
@@ -288,8 +291,8 @@ void CI::gatherParents(std::vector<CI*>& folks) const
   if (parentclass) {
     parentclass->gatherParents(folks);
   }
-  for(vector<BaseInterface*>::const_iterator iter=parent_ifaces.begin(); iter != parent_ifaces.end(); iter++){
-  //for (vector<CI*>::const_iterator iter=parent_ifaces.begin(); iter != parent_ifaces.end(); iter++) {
+  for (vector<BaseInterface*>::const_iterator iter = parent_ifaces.begin();
+       iter != parent_ifaces.end(); iter++) {
 std::cerr << "CI::gatherParents: parent_ifaces " << (*iter)->cppclassname() << std::endl;
     (*iter)->gatherParents(folks);
   }
@@ -300,19 +303,17 @@ std::cerr << "CI::gatherParents: folks " << this->cppclassname() << std::endl;
 }
 
 void CI::gatherParentInterfaces(std::vector<BaseInterface*>& folks) const
-//void CI::gatherParentInterfaces(std::vector<CI*>& folks) const
 {
   if (parentclass) {
     parentclass->gatherParentInterfaces(folks);
   }
-  for(vector<BaseInterface*>::const_iterator iter=parent_ifaces.begin(); iter != parent_ifaces.end(); iter++){
-  //for (vector<CI*>::const_iterator iter=parent_ifaces.begin(); iter != parent_ifaces.end(); iter++) {
+  for (vector<BaseInterface*>::const_iterator iter = parent_ifaces.begin();
+       iter != parent_ifaces.end(); iter++){
 std::cerr << "CI::gatherParentInterfaces: parent_ifaces " << (*iter)->cppclassname() << std::endl;
     (*iter)->gatherParentInterfaces(folks);
     if (find(folks.begin(), folks.end(), *iter) == folks.end()) {
 std::cerr << "CI::gatherParentInterfaces: folks " << (*iter)->cppclassname() << std::endl;
       folks.push_back(const_cast<BaseInterface*>(*iter));
-      //folks.push_back(const_cast<CI*>(*iter));
     }
   }
 }
@@ -357,6 +358,7 @@ std::cerr << "Class::findParent: null parent" << std::endl;
 
 DefinitionList::DefinitionList()
 {
+  isBuiltin = false;
 }
 
 DefinitionList::~DefinitionList()
@@ -377,7 +379,7 @@ void DefinitionList::processImports()
     (*iter)->isImport = true;
     Package* pkg;
     if ((pkg = dynamic_cast<Package*>(*iter))) {
-std::cerr << "DefinitionList::processImports: " << pkg->fullname() << std::endl;
+std::cerr << "DefinitionList::processImports: " << pkg->getName() << std::endl;
         pkg->definition->processImports();
     }
   }
@@ -402,8 +404,9 @@ for (vector<ScopedName*>::const_iterator iter=list.begin(); iter != list.end(); 
 
 BaseInterface::~BaseInterface()
 {
-  if (interface_extends)
-    delete interface_extends;
+    if (interface_extends) {
+        delete interface_extends;
+    }
 }
 
 Method::Method(const string& curfile, int lineno, bool copy_return,
@@ -488,7 +491,7 @@ string Method::fullname() const
     n = myinterface->fullname();
   } else {
     cerr << "ERROR: Method does not have an associated class or interface\n";
-    //exit(1);
+    exit(1);
   }
   return n+"."+name;
 }
@@ -523,19 +526,20 @@ MethodList::MethodList()
 
 MethodList::~MethodList()
 {
-  for(vector<Method*>::iterator iter=list.begin(); iter != list.end(); iter++)
-    delete *iter;
+    for (vector<Method*>::iterator iter=list.begin(); iter != list.end(); iter++) {
+        delete *iter;
+    }
 }
 
 void MethodList::add(Method* method)
 {
-std::cerr <<  "MethodList::add " << method->fullname() << std::endl;
+//std::cerr <<  "MethodList::add " << method->getName() << std::endl;
   list.push_back(method);
 }
 
 void MethodList::setClass(Class* c)
 {
-std::cerr <<  "MethodList::setClass " << c->fullname() << std::endl;
+//std::cerr <<  "MethodList::setClass " << c->getName() << std::endl;
     for (vector<Method*>::iterator iter = list.begin(); iter != list.end(); iter++) {
         (*iter)->setClass(c);
     }
@@ -543,10 +547,10 @@ std::cerr <<  "MethodList::setClass " << c->fullname() << std::endl;
 
 void MethodList::setInterface(BaseInterface* c)
 {
-std::cerr <<  "MethodList::setInterface " << c->fullname() << std::endl;
+std::cerr <<  "MethodList::setInterface " << c->getName() << std::endl;
   for(vector<Method*>::iterator iter=list.begin();iter != list.end();iter++) {
     (*iter)->setInterface(c);
-std::cerr << "MethodList::setInterface: BaseInterface " << (*iter)->fullname() << std::endl;
+std::cerr << "MethodList::setInterface: BaseInterface " << (*iter)->getName() << std::endl;
   }
 }
 
@@ -559,7 +563,7 @@ void MethodList::gatherMethods(vector<Method*>& allmethods) const
 {
   for (vector<Method*>::const_iterator iter=list.begin();iter != list.end();iter++) {
     allmethods.push_back(*iter);
-std::cerr << "MethodList::gatherMethods: all methods " << (*iter)->fullname() << std::endl;
+//std::cerr << "MethodList::gatherMethods: all methods " << (*iter)->fullname() << std::endl;
   }
 }
 
@@ -573,8 +577,9 @@ void MethodList::gatherVtable(vector<Method*>& uniquemethods) const
           break;
       }
     }
-    if(iter2 == uniquemethods.end())
+    if (iter2 == uniquemethods.end()) {
       uniquemethods.push_back(*iter1);
+    }
   }
 }
 
@@ -586,19 +591,21 @@ Package::Package(const string& fileno, int lineno, const std::string& name,
 
 Package::~Package()
 {
-  delete definition;
+    if (definition) {
+        delete definition;
+    }
 }
 
 ScopedName::ScopedName()
   : leading_dot(false)
 {
-std::cerr << "ScopedName::ScopedName" << std::endl;
+//std::cerr << "ScopedName::ScopedName" << std::endl;
   sym=0;
 }
 
 ScopedName::ScopedName(const string& s1, const string& s2)
 {
-std::cerr << "ScopedName::ScopedName s1=" << s1 << " s2=" << s2 << std::endl;
+//std::cerr << "ScopedName::ScopedName s1=" << s1 << " s2=" << s2 << std::endl;
   leading_dot=true;
   add(s1);
   add(s2);
@@ -607,7 +614,7 @@ std::cerr << "ScopedName::ScopedName s1=" << s1 << " s2=" << s2 << std::endl;
 
 ScopedName::ScopedName(const string& s1)
 {
-std::cerr << "ScopedName::ScopedName s1=" << s1 << std::endl;
+//std::cerr << "ScopedName::ScopedName s1=" << s1 << std::endl;
   leading_dot=false;
   add(s1);
   sym=0;
@@ -635,12 +642,14 @@ void ScopedName::set_leading_dot(bool dot)
 string ScopedName::getName() const
 {
   string n;
-  if(leading_dot)
+  if (leading_dot) {
     n+=".";
+  }
   bool first=true;
-  for(vector<string>::const_iterator iter=names.begin();iter != names.end();iter++){
-    if(!first)
+  for(vector<string>::const_iterator iter=names.begin();iter != names.end();iter++) {
+    if (!first) {
       n+=".";
+    }
     n+=*iter;
     first=false;
   }
@@ -672,7 +681,7 @@ string ScopedName::fullname() const
   string n;
   if (!sym) {
     cerr << "ERROR: Symbol not bound: " << getName() << " - " << this << "(ScopedName::fullname)\n";
-    //exit(1);
+    exit(1);
   } else {
     n = sym->fullname();
   }
@@ -684,7 +693,7 @@ string ScopedName::cppfullname(SymbolTable* forstab) const
   string n;
   if (!sym) {
     cerr << "ERROR: Symbol not bound: " << getName() << " - " << this << " (ScopedName::cppfullname)\n";
-    //exit(1);
+    exit(1);
   } else {
     n = sym->cppfullname(forstab);
   }
@@ -697,8 +706,10 @@ ScopedNameList::ScopedNameList()
 
 ScopedNameList::~ScopedNameList()
 {
-  for(vector<ScopedName*>::iterator iter=list.begin(); iter != list.end(); iter++)
-    delete *iter;
+    for (vector<ScopedName*>::iterator iter = list.begin();
+        iter != list.end(); iter++) {
+        delete *iter;
+    }
 }
 
 void ScopedNameList::prepend(ScopedName* name)
@@ -709,7 +720,7 @@ std::cerr << "ScopedNameList::prepend: " << name->getName() << std::endl;
 
 void ScopedNameList::add(ScopedName* name)
 {
-std::cerr << "ScopedNameList::add: " << name->getName() << std::endl;
+//std::cerr << "ScopedNameList::add: " << name->getName() << std::endl;
   list.push_back(name);
 }
 
@@ -739,110 +750,125 @@ Specification::Specification(VersionList* versions, ScopedNameList* imports,
 			     DefinitionList* packages)
   : versions(versions), imports(imports), packages(packages)
 {
-  isImport=false;
-  toplevel=false;
+  isImport = false;
+  isBuiltin = false;
+  toplevel = false;
 }
 
 Specification::~Specification()
 {
-  if(versions)
+  if (versions) {
     delete versions;
-  if(imports)
+  }
+  if (imports) {
     delete imports;
-  if(packages)
+  }
+  if (packages) {
     delete packages;
+  }
 }
 
 void Specification::setTopLevel()
 {
-  toplevel=true;
+  toplevel = true;
 }
 
 Type* Type::voidtype()
 {
   static Type* t;
-  if(!t)
-    t=new BuiltinType("void", "error");
+  if (!t) {
+    t = new BuiltinType("void", "error");
+  }
   return t;
 }
 
 Type* Type::booltype()
 {
   static Type* t;
-  if(!t)
-    t=new BuiltinType("bool", "byte");
+  if (!t) {
+    t = new BuiltinType("bool", "byte");
+  }
   return t;
 }
 
 Type* Type::chartype()
 {
   static Type* t;
-  if(!t)
-    t=new BuiltinType("char", "char");
+  if (!t) {
+    t = new BuiltinType("char", "char");
+  }
   return t;
 }
 
 Type* Type::dcomplextype()
 {
   static Type* t;
-  if(!t)
-    t=new BuiltinType("::std::complex<double> ", "special");
+  if (!t) {
+    t = new BuiltinType("::std::complex<double> ", "special");
+  }
   return t;
 }
 
 Type* Type::doubletype()
 {
   static Type* t;
-  if(!t)
-    t=new BuiltinType("double", "double");
+  if (!t) {
+    t = new BuiltinType("double", "double");
+  }
   return t;
 }
 
 Type* Type::fcomplextype()
 {
   static Type* t;
-  if(!t)
-    t=new BuiltinType("::std::complex<float> ", "special");
+  if (!t) {
+    t = new BuiltinType("::std::complex<float> ", "special");
+  }
   return t;
 }
 
 Type* Type::floattype()
 {
   static Type* t;
-  if(!t)
-    t=new BuiltinType("float", "float");
+  if (!t) {
+    t = new BuiltinType("float", "float");
+  }
   return t;
 }
 
 Type* Type::inttype()
 {
   static Type* t;
-  if(!t)
-    t=new BuiltinType("int", "int");
+  if (!t) {
+    t = new BuiltinType("int", "int");
+  }
   return t;
 }
 
 Type* Type::longtype()
 {
   static Type* t;
-  if(!t)
-    t=new BuiltinType("long", "long");
+  if (!t) {
+    t = new BuiltinType("long", "long");
+  }
   return t;
 }
 
 Type* Type::opaquetype()
 {
   static Type* t;
-  if(!t)
-    t=new BuiltinType("void*", "opaque");
+  if (!t) {
+    t = new BuiltinType("void*", "opaque");
+  }
   return t;
 }
 
 Type* Type::stringtype()
 {
   static Type* t;
-  if(!t)
-    t=new BuiltinType("string", "special");
+  if (!t) {
+    t = new BuiltinType("string", "special");
+  }
   return t;
 }
 
@@ -850,10 +876,11 @@ static map<pair<Type*, int>, Type*> arrays;
 
 Type* Type::arraytype(Type* t, int dim)
 {
-  if(dim == 0)
-    dim=1;
+  if (dim == 0) {
+    dim = 1;
+  }
   map<pair<Type*, int>, Type*>::iterator iter=arrays.find(pair<Type*, int>(t, dim));
-  if(iter == arrays.end()){
+  if (iter == arrays.end()) {
     return (arrays[pair<Type*, int>(t, dim)]=new ArrayType(t, dim));
   } else {
     return iter->second;
@@ -884,7 +911,7 @@ std::string BuiltinType::fullname() const
 
 std::string BuiltinType::cppfullname(SymbolTable*) const
 {
-  if(cname == "string"){
+  if(cname == "string") {
     return "::std::string";
   } else {
     return cname;
@@ -893,10 +920,11 @@ std::string BuiltinType::cppfullname(SymbolTable*) const
 
 bool BuiltinType::isvoid() const
 {
-  if(cname == "void")
+  if(cname == "void") {
     return true;
-  else
+  } else {
     return false;
+  }
 }
 
 NamedType::NamedType(const string& curfile, int lineno, ScopedName* name)
@@ -921,12 +949,13 @@ bool NamedType::isvoid() const
 std::string NamedType::cppfullname(SymbolTable* localScope) const
 {
   Symbol::Type symtype = name->getSymbol()->getType();
-  if(symtype == Symbol::EnumType)
+  if (symtype == Symbol::EnumType) {
     return name->cppfullname(localScope);
-  else if(name->getSymbol()->getDefinition()->isEmitted())
+  } else if(name->getSymbol()->getDefinition()->isEmitted()) {
     return name->cppfullname(localScope)+"::pointer";
-  else
+  } else {
     return "CCALib::SmartPointer<"+name->cppfullname(localScope)+" >";
+  }
 }
 
 ArrayType::ArrayType(Type* t, int dim)
@@ -949,8 +978,9 @@ std::string ArrayType::cppfullname(SymbolTable* localScope) const
 {
   std::ostringstream o;
   o << "::SSIDL::array" << dim << "< " << subtype->cppfullname(localScope);
-  if(dynamic_cast<ArrayType*>(subtype) || dynamic_cast<NamedType*>(subtype))
+  if (dynamic_cast<ArrayType*>(subtype) || dynamic_cast<NamedType*>(subtype)) {
     o << " "; // Keep > > from being >>
+  }
   o << ">";
   return o.str();
 }
@@ -964,6 +994,7 @@ Enum::Enum(const std::string& curfile, int lineno,
 	   const std::string& name)
   : Definition(curfile, lineno, name)
 {
+std::cerr << "Enum::Enum: " << name << std::endl;
 }
 
 Enum::~Enum()
@@ -982,6 +1013,7 @@ Enumerator::Enumerator(const std::string& curfile, int lineno,
 		       const std::string& name)
   : curfile(curfile), lineno(lineno), name(name), have_value(false)
 {
+std::cerr << "Enumerator::Enumerator: " << name << std::endl;
 }
 
 Enumerator::Enumerator(const std::string& curfile, int lineno,
@@ -989,6 +1021,7 @@ Enumerator::Enumerator(const std::string& curfile, int lineno,
   : curfile(curfile), lineno(lineno), name(name), have_value(true),
     value(value)
 {
+std::cerr << "Enumerator::Enumerator: have value, " << name << std::endl;
 }
 
 Enumerator::~Enumerator()
@@ -1014,6 +1047,7 @@ void VersionList::add(Version* v)
 Version::Version(const std::string& id, int v)
   : id(id)
 {
+std::cerr << "Version::Version(string, int): " << id << ", " << v << std::endl;
   std::ostringstream o;
   o << v;
   version=o.str();
@@ -1022,6 +1056,7 @@ Version::Version(const std::string& id, int v)
 Version::Version(const std::string& id, const std::string& version)
   : id(id), version(version)
 {
+std::cerr << "Version::Version(string, string): " << id << ", " << version << std::endl;
 }
 
 Version::~Version()
@@ -1067,7 +1102,9 @@ DistributionArray::DistributionArray(const std::string& curfile, int lineno, con
 
 DistributionArray::~DistributionArray() 
 { 
-  delete array_t;
+    if (array_t) {
+        delete array_t;
+    }
 }
 
 ArrayType* DistributionArray::getArrayType() 
