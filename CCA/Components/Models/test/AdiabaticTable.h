@@ -174,11 +174,12 @@ WARNING
     int d_viscosity_index;
     int d_thermalcond_index;
     int d_temp_index;
+    int d_MW_index;
     int d_ref_cv_index;
     int d_ref_gamma_index;
     int d_ref_temp_index;
     bool d_test_conservation;
-    bool  d_doTableTest;
+    bool d_doTableTest;
     bool d_useVariance;
     double varianceScale;
     double varianceMax;
