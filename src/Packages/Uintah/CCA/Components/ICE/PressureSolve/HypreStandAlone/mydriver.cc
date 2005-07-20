@@ -1,17 +1,17 @@
 /*--------------------------------------------------------------------------
+ * File: mydriver.cc
+ *
  * Test driver for semi-structured matrix interface.
  * This is a stand-alone hypre interface that uses FAC / AMG solvers to solve
  * the pressure equation in implicit AMR-ICE.
+ *
+ * Revision history:
+ * 19-JUL-2005   Dav & Oren   Works (empty though) for 4 procs, does not crash.
  *--------------------------------------------------------------------------*/
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include <stdarg.h>
+#include "mydriver.h"
 #include <vector>
 using namespace std;
 
-#include "utilities.h"
-#include "HYPRE_sstruct_ls.h"
 #include "krylov.h"
 #include "sstruct_mv.h"
 #include "sstruct_ls.h"
@@ -19,7 +19,7 @@ using namespace std;
 #define DEBUG    1
 #define MAX_DIMS 3
 #define NUM_VARS 1
-int     numDims = 2;
+int     numDims;
 int     MYID;  /* The same as myid, but global */
 typedef int Index[MAX_DIMS];
 
@@ -67,83 +67,6 @@ public:
   Hierarchy(void) { _numParts = 0; }
 };
 
-void 
-ToIndex(const vector<int>& from,
-        Index* to)
-{
-  assert(from.size() == numDims);
-  for (int d = 0; d < numDims; d++) (*to)[d] = from[d];
-}
-
-void 
-Print(char *fmt, ...)
-{
-  /*_____________________________________________________________________
-    Function Print:
-    Print an output line on the current processor. Useful to parse MPI output.
-    _____________________________________________________________________*/
-  int vb = 1; /* Verbose level */
-  va_list ap;
-  va_start(ap, fmt);
-  if (vb) {
-    printf("PROC %2d: ",MYID);
-    vprintf(fmt, ap);
-  }
-  fflush(stdout);
-  if (vb) {
-    va_start(ap, fmt);
-    //    if (log_file)
-    //      vfprintf(log_file, fmt, ap);
-    //    if (log_file)
-    //      fflush(log_file);
-  }
-  va_end(ap);
-}
-
-void 
-printIndex(const vector<int>& a) 
-{
-  /*_____________________________________________________________________
-    Function printIndex:
-    Print numDims-dimensional index a
-    _____________________________________________________________________*/
-  printf("[");
-  for (int d = 0; d < a.size(); d++) {
-    printf("%d",a[d]);
-    if (d < a.size()-1) printf(",");
-  }
-  printf("]");
-}
-
-void
-faceExtents(const vector<int>& ilower,
-            const vector<int>& iupper,
-            const int dim,
-            const int side,
-            vector<int>& faceLower,
-            vector<int>& faceUpper)
-{
-  /*_____________________________________________________________________
-    Function faceExtents:
-    Compute face box extents of a numDims-dimensional patch whos extents
-    are ilower,iupper. This is the face in the dim-dimension; side = -1
-    means the left face, side = 1 the right face (so dim=1, side=-1 is the
-    x-left face). Face extents are returned in faceLower, faceUpper
-    _____________________________________________________________________*/
-  faceLower = ilower;
-  faceUpper = iupper;
-  if (side < 0) {
-    faceUpper[dim] = faceLower[dim];
-  } else {
-    faceLower[dim] = faceUpper[dim];
-  }
-  Print("Face(dim = %c, side = %d) box extents: ",dim+'x',side);
-  printIndex(faceLower);
-  printf(" to ");
-  printIndex(faceUpper);
-  printf("\n");
-}
-
 #if 0
 void loopHypercube(vector<int> ilower, vector<int> iupper,
                    vector<int> step, vector<int>* list) {
@@ -181,23 +104,18 @@ void loopHypercube(vector<int> ilower, vector<int> iupper,
 }
 #endif
 
-int clean(void) {
-  /*_____________________________________________________________________
-    Function clean:
-    Exit MPI, debug modes. Call before each exit() call and in the end
-    of the program.
-    _____________________________________________________________________*/
-#if DEBUG
-  hypre_FinalizeMemoryDebug();
-#endif
-  MPI_Finalize();    // Quit MPI
-}
-
 void
-synchronizePartIDs(const int numProcs,
-                   const Hierarchy& hier,
-                   HYPRE_SStructGrid& grid,
-                   HYPRE_SStructVariable* vars)
+makeGrid(const int numProcs,
+         const Hierarchy& hier,
+         HYPRE_SStructGrid& grid,
+         HYPRE_SStructVariable* vars)
+  /*_____________________________________________________________________
+    Function makeGrid:
+    Synchronize processors and update the part IDs so that they are
+    consecutive (across processors as well as within processor and level).
+    Create an empty grid object "grid" and put all parts from all procs
+    in it.
+    _____________________________________________________________________*/
 {
   Print("numProcs = %d\n",numProcs);
   int* numPartsIn = new int[numProcs];
@@ -208,7 +126,8 @@ synchronizePartIDs(const int numProcs,
     numPartsOut[index] = 0;
   }
   numPartsIn[MYID] = hier._numParts;
-  MPI_Allreduce(numPartsIn, numPartsOut, numProcs, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+  MPI_Allreduce(numPartsIn, numPartsOut, numProcs,
+                MPI_INT, MPI_MAX, MPI_COMM_WORLD);
   if (MYID == 0) {
     for (int index = 0; index < numProcs; index++) {
       Print("numPartsIn[%d] = %d     numPartsOut[%d] = %d\n",
@@ -217,11 +136,23 @@ synchronizePartIDs(const int numProcs,
     Print("\n");
   }
  
-  int sumParts = 0;
+  int sumParts = 0;  // Number of parts of all procs with id < this proc's id
   for (int index = 0; index < MYID; index++) {
     sumParts += numPartsOut[index];
   }
-  /* Update partIDs so that they are globally consecutive */
+  int totParts = 0;  // Total number of parts
+  for (int index = 0; index < numProcs; index++) {
+    totParts += numPartsOut[index];
+  }
+
+  /* Create an empty grid in numDims dimensions with numParts parts
+     (=patches). */
+  HYPRE_SStructGridCreate(MPI_COMM_WORLD, numDims, totParts, &grid);
+
+  /* 
+     Update partIDs so that they are globally consecutive, 
+     and add them to grid.
+  */
   int numLevels = hier._levels.size();
   Print("Number of levels = %d\n",numLevels);
   for (int level = 0; level < numLevels; level++) {
@@ -235,7 +166,7 @@ synchronizePartIDs(const int numProcs,
       Index hypreilower, hypreiupper;
       ToIndex(part->_ilower,&hypreilower);
       ToIndex(part->_iupper,&hypreiupper);
-      HYPRE_SStructGridSetExtents( grid, partID, hypreilower, hypreiupper );
+      HYPRE_SStructGridSetExtents(grid, partID, hypreilower, hypreiupper);
       HYPRE_SStructGridSetVariables(grid, partID, NUM_VARS, vars);
       Print("  Part %d Extents = ",partID);
       printIndex(part->_ilower);
@@ -244,6 +175,18 @@ synchronizePartIDs(const int numProcs,
       printf("\n");
       fflush(stdout);
     }
+  }
+
+  /*
+    Assemble the grid; this is a collective call that synchronizes
+    data from all processors. On exit from this function, the grid is
+    ready.
+  */
+  HYPRE_SStructGridAssemble(grid);
+  if (MYID == 0) {
+    Print("\n");
+    Print("Assembled grid num parts %d\n", hypre_SStructGridNParts(grid));
+    Print("\n");
   }
 
   delete numPartsIn;
@@ -258,7 +201,8 @@ int main(int argc, char *argv[]) {
   int numProcs, myid;
   int solver_id = 30; // solver ID. 30 = AMG, 99 = FAC
   int numLevels = 2;  // Number of AMR levels
-  int n         = 16; // Level 0 grid size in every direction
+  int n         = 4;  // Level 0 grid size in every direction
+   numDims = 3;
 
   /* Grid data structures */
   HYPRE_SStructGrid   grid;
@@ -305,15 +249,14 @@ int main(int argc, char *argv[]) {
 #if DEBUG
   hypre_InitMemoryDebug(myid);
 #endif
+
+  /*-----------------------------------------------------------
+   * Initialize some stuff
+   *-----------------------------------------------------------*/
   for (int i = 0; i < myid; i++) {
     //    Print("Beginning Barrier # %d\n",i);
     MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
   }
-  Print("<<<############# I am proc %d #############>>>\n", myid);
-  
-  /*-----------------------------------------------------------
-   * Initialize some stuff
-   *-----------------------------------------------------------*/
   if (myid == 0) {
     Print("========================================================\n");
     Print("%s : FAC Hypre solver interface test program\n",argv[0]);
@@ -367,25 +310,24 @@ int main(int argc, char *argv[]) {
     Print("----------------------------------------------------\n");
   }
 
-  /* Create an empty grid in numDims dimensions with numParts parts
-     (=patches) */
-  int numParts    = numLevels*numProcs;
-  if (myid == 0) {
-    Print("Total number of parts = %d\n",numParts);
-  }
-  HYPRE_SStructGridCreate(MPI_COMM_WORLD, numDims, numParts, &grid);
   HYPRE_SStructVariable vars[NUM_VARS] =
     {HYPRE_SSTRUCT_VARIABLE_CELL}; // We use cell centered vars
 
   /* Initialize arrays holding level and parts info */
-
   levelID         = hypre_TAlloc(int, numLevels);    
-  refinementRatio = hypre_TAlloc(Index, numParts);
+  refinementRatio = hypre_TAlloc(Index, numLevels);
 
-  int part = myid;
+#if 0
   int procMap[4][2] = { 
     {0,0}, {0,1}, {1,0}, {1,1} 
   }; // Works for 2D; write general gray code
+#endif
+#if 1
+  int procMap[8][3] = { 
+    {0,0,0}, {0,1,0}, {1,0,0}, {1,1,0} ,
+    {0,0,1}, {0,1,1}, {1,0,1}, {1,1,1} 
+  }; // Works for 3D; write general gray code
+#endif
 
   /* Initialize the parts at all levels that this proc owns */
   for (int level = 0; level < numLevels; level++) {
@@ -458,28 +400,19 @@ int main(int argc, char *argv[]) {
       }
   }
   
-  /* Assemble the grid; this is a collective call that synchronizes
-     data from all processors. */
   for (int i = numProcs-1; i >= myid; i--) {
     Print("End of Grid Barrier # %d\n",i);
     MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
   }
-
-  synchronizePartIDs(numProcs,hier,grid,vars);
-  HYPRE_SStructGridAssemble(grid);
-  if (myid == 0) {
-    Print("\n");
-    Print("Assembled grid num parts %d\n", hypre_SStructGridNParts(grid));
-    Print("\n");
-  }
-  for (int i = 0; i < myid; i++) {
-    //    Print("Beginning Barrier # %d\n",i);
-    MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
-  }
+  makeGrid(numProcs, hier, grid, vars);
 
   /*-----------------------------------------------------------
    * Set up the stencils
    *-----------------------------------------------------------*/
+  for (int i = 0; i < myid; i++) {
+    //    Print("Beginning Barrier # %d\n",i);
+    MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
+  }
   if (myid == 0) {
     Print("----------------------------------------------------\n");
     Print("Set up the stencils on all the parts\n");
@@ -572,7 +505,8 @@ int main(int argc, char *argv[]) {
     MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
   }
   HYPRE_SStructGraphAssemble(graph);
-  Print("Assembled graph, nUVentries = %d\n",hypre_SStructGraphNUVEntries(graph));
+  Print("Assembled graph, nUVentries = %d\n",
+        hypre_SStructGraphNUVEntries(graph));
   
   /*-----------------------------------------------------------
    * Set up the SStruct matrix
@@ -599,7 +533,45 @@ int main(int argc, char *argv[]) {
     HYPRE_SStructMatrixSetObjectType(A, HYPRE_PARCSR);
   }
   HYPRE_SStructMatrixInitialize(A);
-  
+
+  /*=== TESTING BEGIN ===*/
+  if (myid == 0) {
+    for (int level = 0; level < numLevels; level++) {
+      Level* lev = hier._levels[level];
+      for (int i = 0; i < lev->_partList.size(); i++) {
+        Part* part = lev->_partList[i];
+        int& partID = part->_partID;
+        //      Index hypreilower, hypreiupper;
+        //      ToIndex(part->_ilower,&hypreilower);
+        //      ToIndex(part->_iupper,&hypreiupper);
+        Print("  Part %d Extents = ",partID);
+        printIndex(part->_ilower);
+        printf(" to ");
+        printIndex(part->_iupper);
+        printf("\n");
+        fflush(stdout);
+        Print("Looping over cells in this patch:\n");
+        vector<int> sub = part->_ilower;
+        vector<bool> active(numDims);
+        for (int d = 0; d < numDims; d++) active[d] = true;
+        active[1] = false;
+        bool eof = false;
+        for (int cell = 0; !eof;
+             cell++,
+               IndexPlusPlus(part->_ilower,part->_iupper,active,sub,eof)) {
+          Print("cell = %4d",cell);
+          printf("  sub = ");
+          printIndex(sub);
+          printf("  eof = %d\n",eof);
+        }
+      }
+    }
+  }
+    /*=== TESTING END ===*/
+
+
+
+
   // Add here interior equations of each part to A
 #if 0
   /* 
@@ -921,5 +893,7 @@ int main(int argc, char *argv[]) {
    
    Print("Cleaning\n");
    clean();
+
+   Print("%s: Going down successfully\n",argv[0]);
    return 0;
 } // end main()
