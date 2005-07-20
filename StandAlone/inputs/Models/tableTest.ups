@@ -83,8 +83,8 @@
 
        <Level>
            <Box label = "2">
-              <lower>        [0.0,-0.1,-0.1]     </lower>
-              <upper>        [1.0, 0.1, 0.1]    </upper>         
+              <lower>        [-0.000,-0.1,-0.1]     </lower>
+              <upper>        [ 1.000, 0.1, 0.1]    </upper>         
               <extraCells>   [1,1,1]         </extraCells>
               <patches>      [1,1,1]         </patches>    
               <resolution>   [1000,1,1]     </resolution>
@@ -226,21 +226,8 @@
           <constantValue name="reference_Temp">298</constantValue>
 	   <filename>inputs/Models/he.rxn</filename> -->   
           
-          
-           
           <!--____________JP8______________________-->
-          <defaultValue name="Hl">0.0</defaultValue>
-          <defaultValue name="Fvar">0.0</defaultValue>
-          <derivedValue name="heat_capac_Cv">[heat_capac]-8314*[mix_mol_wt]</derivedValue>
-          <derivedValue name="gamma">[heat_capac]/[heat_capac_Cv]</derivedValue>
-          <constantValue name="viscosity">0.000020</constantValue>
-          <constantValue name="thermal_conductivity">0.1</constantValue>
-          <derivedValue name="reference_Temp">298*(1-{F})+627.46570*{F}</derivedValue>
-          <derivedValue name="reference_heat_capac_Cp">1011.3630*(1-{F}) + 7973.8389*{F}</derivedValue>
-          <derivedValue name="reference_mix_mol_wt">0.034661818*(1-{F}) + 0.081395872*{F}</derivedValue>
-          <derivedValue name="reference_heat_capac_Cv">[reference_heat_capac_Cp]-8314*[reference_mix_mol_wt]</derivedValue>
-          <derivedValue name="reference_gamma">[reference_heat_capac_Cp]/[reference_heat_capac_Cv]</derivedValue>
-	   <filename>inputs/ARCHES/NewStaticMixingTables/JP8_reaction.tbl</filename>
+          <include href="inputs/Models/JP8.xml"/>
        </table>
        
        <material>BackgroundGas</material>

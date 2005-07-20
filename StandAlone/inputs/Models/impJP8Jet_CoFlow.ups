@@ -81,6 +81,9 @@
         <BCType id = "0" label = "Density"      var = "Dirichlet">
                               <value>  0.23861344 </value>
         </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
         <BCType id = "0" label = "scalar-f"     var = "Dirichlet">
                               <value> 1.0</value>
         </BCType>
@@ -147,6 +150,9 @@
         <BCType id = "0" label = "Density"     var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
         <BCType id = "0" label = "scalar-f"    var = "Neumann">
                               <value> 0.0</value>
         </BCType>
@@ -166,6 +172,9 @@
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "scalar-f"     var = "Neumann">
@@ -341,19 +350,8 @@
     <Models>
        <Model type="AdiabaticTable">
         <table name="adiabatic" type="Arches">
-          <defaultValue name="Hl">0.0</defaultValue>
-          <defaultValue name="Fvar">0.0</defaultValue>
-          <derivedValue name="heat_capac_Cv">[heat_capac]-8314*[mix_mol_wt]</derivedValue>
-          <derivedValue name="gamma">[heat_capac]/[heat_capac_Cv]</derivedValue>
-          <constantValue name="viscosity">0.000020</constantValue>
-          <constantValue name="thermal_conductivity">0.1</constantValue>
-          <derivedValue name="reference_Temp">298*(1-{F})+627.46570*{F}</derivedValue>
-          <derivedValue name="reference_heat_capac_Cp">1011.3630*(1-{F}) + 7973.8389*{F}</derivedValue>
-          <derivedValue name="reference_mix_mol_wt">0.034661818*(1-{F}) + 0.081395872*{F}</derivedValue>
-          <derivedValue name="reference_heat_capac_Cv">[reference_heat_capac_Cp]-8314*[reference_mix_mol_wt]</derivedValue>
-          <derivedValue name="reference_gamma">[reference_heat_capac_Cp]/[reference_heat_capac_Cv]</derivedValue>
-	   <filename>inputs/ARCHES/NewStaticMixingTables/JP8_reaction.tbl</filename>
-	</table>
+          <include href="inputs/Models/JP8.xml"/>
+	 </table>
         <material>BackgroundGas</material>
        <scalar name="f">
         <constants>
