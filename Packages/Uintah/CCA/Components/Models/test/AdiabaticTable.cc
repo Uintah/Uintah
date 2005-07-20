@@ -141,6 +141,7 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   d_ref_cv_index    = table->addDependentVariable("reference_heat_capac_Cv");
   d_ref_gamma_index = table->addDependentVariable("reference_gamma");
   d_ref_temp_index  = table->addDependentVariable("reference_Temp");
+//  d_MW_index        = table->addDependentVariable("mix_mol_wt");
   table->setup();
 
 #if 0
@@ -659,17 +660,26 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
       //__________________________________
       //  table sanity test
       if(d_doTableTest){
-        CCVariable<double> rho_table;
-        new_dw->allocateTemporary(rho_table, patch);
-        table->interpolate(d_density_index, rho_table,   iter, ind_vars);
+        CCVariable<double> rho_table, mix_mol_weight;
         
+        
+        new_dw->allocateTemporary(rho_table, patch);
+        new_dw->allocateTemporary(mix_mol_weight, patch);
+        table->interpolate(d_density_index, rho_table,     iter, ind_vars);
+//      table->interpolate(d_MW_index,      mix_mol_weight,iter, ind_vars);
+        
+        cout.setf(ios::scientific,ios::floatfield);
+        cout.precision(10);
+    
+        cout << "                MixtureFraction,                          temp_table,       gamma,             cv,          MW_mix           rho_table,      press_thermo,   (gamma-1)cv,      rho_table*temp_table"<< endl;
         for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
           IntVector c = *iter;
           double press = (rho_table[c] * cv[c] * (gamma[c]-1) * flameTemp[c]);
           double thermo = cv[c] * (gamma[c]-1);
           double physical = rho_table[c] * flameTemp[c];
-          cout << level->getCellPosition(c) << " " << flameTemp[c] <<  " " << gamma[c] << " " << cv[c] << " " << rho_table[c] << " " << press << " " <<thermo << " " <<physical <<endl;
+          cout << level->getCellPosition(c) << " " << flameTemp[c] <<  " " << gamma[c] << " " << cv[c] << " " << mix_mol_weight[c] << " " << rho_table[c] << " " << press << " " <<thermo << " " <<physical <<endl;
         }
+        cout.setf(ios::scientific ,ios::floatfield);
       }
 
       //__________________________________
