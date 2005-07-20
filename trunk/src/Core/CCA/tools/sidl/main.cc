@@ -45,10 +45,6 @@ extern FILE* yyin;
 extern Specification* parse_spec;
 
 
-using std::cerr;
-using std::endl;
-using std::string;
-
 bool doing_cia = false;
 bool foremit;
 
@@ -145,13 +141,14 @@ std::cerr <<  "sidl: main fxn\n" << std::endl;
         specs.add(parse_spec);
         parse_spec = 0;
       } else {
-        std::cerr << "Unknown option: " << argv[i] << endl;
+        std::cerr << "Unknown option: " << argv[i] << std::endl;
         exit(1);
       }
     } else {
       if (!done_builtin && !doing_cia) {
         foremit = false;
         char* builtin = find_builtin();
+std::cerr << "SIDL builtin=" << builtin << std::endl;
         char* buf = new char[strlen(cpp) + strlen(builtin) + 10];
         sprintf(buf, "%s %s", cpp, builtin);
         yyin = popen(buf, "r");
@@ -168,6 +165,7 @@ std::cerr <<  "sidl: main fxn\n" << std::endl;
           perror("pclose");
           failed = true;
         }
+        parse_spec->isBuiltin = true;
         specs.add(parse_spec);
         parse_spec = 0;
         done_builtin = true;

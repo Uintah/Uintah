@@ -38,8 +38,7 @@ char* curfile;
 
 integer [0-9]+
 
-/* Babel extension for overloading methods in languages that do not support method overloading. Ignore for now.  */
-/* babel_ext [\[][A-Za-z][A-Za-z0-9_]*[\[] */
+/* Babel extension for overloading methods in languages that do not support method overloading.  */
 babel_ext [A-Za-z][A-Za-z0-9_]*
 
 %%
