@@ -21,12 +21,16 @@ MPI_LIBS   = -lmpi -llam -lutil -lpthread -ldl
 ##################################################################
 # Targets
 ##################################################################
-HYPRE_DRIVERS            = mydriver.cc
+TARGET1                  = mydriver
+TARGET1_OBJS     = \
+mydriver.o \
+util.o \
 
-HYPRE_DRIVER_OBJS        = ${HYPRE_DRIVERS:.cc=.o}
-HYPRE_DRIVER_EXECS       = ${HYPRE_DRIVERS:.cc=}
+TARGET2                  = mpitest
+TARGET2_OBJS     = \
+mpitest.o \
 
-all: $(HYPRE_DRIVER_EXECS)
+all: $(TARGET1)
 
 install:
 
@@ -36,7 +40,8 @@ clean:
 	rm -f *.o 
 	rm -f *.d 
 	rm -f so_locations 
-	rm -f ${HYPRE_DRIVER_EXECS}
+	rm -f $(TARGET1)
+	rm -f $(TARGET2)
 	@ echo "Project cleaned."
 
 distrib:
@@ -47,14 +52,14 @@ distrib:
 ##################################################################
 
 .cc.o: $<
-	${CC} -c $< ${HYPRE_INC}
+	${CC} ${HYPRE_INC} -c $<
 
-mydriver: mydriver.o
+$(TARGET1) : $(TARGET1_OBJS)
 	@echo  "Building" $@ "... "
-	${CC} -o $@ $@.o ${HYPRE_LIB} ${MPI_LIBS} 
+	${CC} -o $@ $(TARGET1_OBJS) ${HYPRE_LIB} ${MPI_LIBS} 
 
-mpitest : mpitest.o
+$(TARGET2) : $(TARGET2_OBJS)
 	@echo  "Building" $@ "... "
-	${CC} -o $@ $@.o ${HYPRE_LI} ${MPI_LIBS}
+	${CC} -o $@ $(TARGET2_OBJS) ${HYPRE_LI} ${MPI_LIBS}
 
--include $(patsubst %.o,%.d, $(HYPRE_DRIVER_OBJS))
+-include $(patsubst %.o,%.d, $(TARGET1_OBJS) $(TARGET2_OBJS))
