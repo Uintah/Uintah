@@ -10,10 +10,12 @@ SRCS    := $(SRCDIR)/Switcher.cc \
 PSELIBS := \
 	Core/Exceptions \
 	Core/Util \
+	Core/Geometry \
         Packages/Uintah/CCA/Ports        \
 	Packages/Uintah/Core/Disclosure  \
         Packages/Uintah/Core/Exceptions  \
 	Packages/Uintah/Core/Grid        \
+	Packages/Uintah/Core/Math	 \
         Packages/Uintah/Core/Parallel    \
         Packages/Uintah/Core/ProblemSpec \
         Packages/Uintah/Core/Util        \
@@ -22,7 +24,8 @@ PSELIBS := \
         Packages/Uintah/CCA/Components/Examples  \
         Packages/Uintah/CCA/Components/ICE       \
         Packages/Uintah/CCA/Components/MPM       \
-        Packages/Uintah/CCA/Components/MPMICE  
+        Packages/Uintah/CCA/Components/MPMICE  	 \
+	Packages/Uintah/CCA/Components/ProblemSpecification
 
 LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY)
 
