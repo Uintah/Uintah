@@ -66,18 +66,16 @@ void CompNeoHookImplicit::initializeCMData(const Patch* patch,
    Identity.Identity();
 
    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
-   ParticleVariable<Matrix3> deformationGradient, pstress, bElBar;
+   ParticleVariable<Matrix3> deformationGradient, pstress;
 
    new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,
                                                                         pset);
    new_dw->allocateAndPut(pstress,lb->pStressLabel,                     pset);
-   new_dw->allocateAndPut(bElBar,lb->bElBarLabel,                       pset);
 
    for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++) {
           deformationGradient[*iter] = Identity;
           pstress[*iter] = zero;
-          bElBar[*iter] = Identity;
    }
 
 }
@@ -89,57 +87,47 @@ void CompNeoHookImplicit::allocateCMDataAddRequires(Task* task,
 {
 
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, 
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,lb->pStressLabel_preReloc, 
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,bElBarLabel_preReloc, 
-                 matlset, Ghost::None);
+  Ghost::GhostType  gnone = Ghost::None;
 
+  task->requires(Task::NewDW,lb->pStressLabel_preReloc, matlset, gnone);
   task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc,
-                 matlset,Ghost::None);
+                                                        matlset, gnone);
 }
 
 
 void CompNeoHookImplicit::allocateCMDataAdd(DataWarehouse* new_dw,
                                             ParticleSubset* addset,
-                                            map<const VarLabel*, ParticleVariableBase*>* newState,
+                                            map<const VarLabel*,
+                                            ParticleVariableBase*>* newState,
                                             ParticleSubset* delset,
                                             DataWarehouse* )
 {
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
   
-  ParticleVariable<Matrix3> deformationGradient, pstress, bElBar;
-  constParticleVariable<Matrix3> o_deformationGradient, o_stress, o_bElBar;
+  ParticleVariable<Matrix3> deformationGradient, pstress;
+  constParticleVariable<Matrix3> o_deformationGradient, o_stress;
   
   new_dw->allocateTemporary(deformationGradient,addset);
   new_dw->allocateTemporary(pstress,            addset);
-  new_dw->allocateTemporary(bElBar,             addset);
   
   new_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel_preReloc,
                                                                  delset);
   new_dw->get(o_stress,lb->pStressLabel_preReloc,                delset);
-  new_dw->get(o_bElBar,bElBarLabel_preReloc,                     delset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
     deformationGradient[*n] = o_deformationGradient[*o];
-    bElBar[*n] = o_bElBar[*o];
     pstress[*n] = o_stress[*o];
   }
   
   (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
   (*newState)[lb->pStressLabel]=pstress.clone();
-  (*newState)[lb->bElBarLabel]=bElBar.clone();
 }
 
 void CompNeoHookImplicit::addParticleState(std::vector<const VarLabel*>& from,
                                    std::vector<const VarLabel*>& to)
 {
-   from.push_back(lb->bElBarLabel);
-
-   to.push_back(lb->bElBarLabel_preReloc);
 }
 
 void CompNeoHookImplicit::computeStableTimestep(const Patch*,
@@ -172,7 +160,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
     Array3<int> l2g(lowIndex,highIndex);
     solver->copyL2G(l2g,patch);
 
-    Matrix3 Shear,deformationGradientInc,dispGrad,fbar;
+    Matrix3 Shear,deformationGradientInc,dispGrad;//fbar;
 
     Matrix3 Identity;
 
@@ -192,11 +180,9 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 
     ParticleSubset* pset;
     constParticleVariable<Point> px;
-    ParticleVariable<Matrix3> deformationGradient_new,bElBar_new;
-    constParticleVariable<Matrix3> deformationGradient,bElBar_old;
-    ParticleVariable<Matrix3> pstress;
-    constParticleVariable<double> pvolumeold;
-    constParticleVariable<double> ptemperature;
+    ParticleVariable<Matrix3> deformationGradient_new, pstress;
+    constParticleVariable<Matrix3> deformationGradient;
+    constParticleVariable<double> pvolumeold, ptemperature;
     ParticleVariable<double> pvolume_deformed;
     constNCVariable<Vector> dispNew;
     delt_vartype delT;
@@ -209,7 +195,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
     parent_old_dw->get(ptemperature,   lb->pTemperatureLabel,        pset);
     parent_old_dw->get(deformationGradient,
                                        lb->pDeformationMeasureLabel, pset);
-    parent_old_dw->get(bElBar_old,     lb->bElBarLabel,              pset);
 
     old_dw->get(dispNew,lb->dispNewLabel,dwi,patch, Ghost::AroundCells,1);
   
@@ -217,7 +202,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,  pset);
 
     new_dw->allocateTemporary(deformationGradient_new,pset);
-    new_dw->allocateTemporary(bElBar_new,             pset);
 
     double shear = d_initialData.Shear;
     double bulk  = d_initialData.Bulk;
@@ -235,7 +219,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
         pstress[idx] = Matrix3(0.0);
-        bElBar_new[idx] = Identity;
         pvolume_deformed[idx] = pvolumeold[idx];
       }
     }
@@ -320,14 +303,13 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
         // get the volumetric part of the deformation
         double J = deformationGradient_new[idx].Determinant();
 
-        fbar = deformationGradientInc * 
-           pow(deformationGradientInc.Determinant(),-1./3.);
-
-        bElBar_new[idx] = fbar*bElBar_old[idx]*fbar.Transpose();
+        Matrix3 bElBar_new = deformationGradient_new[idx]
+                           * deformationGradient_new[idx].Transpose()
+                           * pow(J,-(2./3.));
 
         // Shear is equal to the shear modulus times dev(bElBar)
-        double mubar = 1./3. * bElBar_new[idx].Trace()*shear;
-        Matrix3 shrTrl = (bElBar_new[idx]*shear - Identity*mubar);
+        double mubar = 1./3. * bElBar_new.Trace()*shear;
+        Matrix3 shrTrl = (bElBar_new*shear - Identity*mubar);
 
         // get the hydrostatic part of the stress
         double p = bulk*log(J)/J;
@@ -466,7 +448,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 {
    for(int pp=0;pp<patches->size();pp++){
      const Patch* patch = patches->get(pp);
-     Matrix3 Shear,deformationGradientInc,dispGrad,fbar;
+     Matrix3 Shear,deformationGradientInc,dispGrad;//fbar;
 
      Matrix3 Identity;
 
@@ -484,8 +466,8 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
      int dwi = matl->getDWIndex();
      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
      constParticleVariable<Point> px;
-     ParticleVariable<Matrix3> deformationGradient_new,bElBar_new;
-     constParticleVariable<Matrix3> deformationGradient,bElBar_old;
+     ParticleVariable<Matrix3> deformationGradient_new;
+     constParticleVariable<Matrix3> deformationGradient;
      ParticleVariable<Matrix3> pstress;
      constParticleVariable<double> pvolumeold;
      constParticleVariable<double> ptemperature;
@@ -502,10 +484,8 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
      new_dw->allocateAndPut(pstress,         lb->pStressLabel_preReloc,   pset);
      new_dw->allocateAndPut(pvolume_deformed,lb->pVolumeDeformedLabel,    pset);
      old_dw->get(deformationGradient,        lb->pDeformationMeasureLabel,pset);
-     old_dw->get(bElBar_old,                 lb->bElBarLabel,             pset);
      new_dw->allocateAndPut(deformationGradient_new,
                             lb->pDeformationMeasureLabel_preReloc, pset);
-     new_dw->allocateAndPut(bElBar_new,lb->bElBarLabel_preReloc,   pset);
 
      double shear = d_initialData.Shear;
      double bulk  = d_initialData.Bulk;
@@ -515,7 +495,6 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
         pstress[idx] = Matrix3(0.0);
-        bElBar_new[idx] = Identity;
         deformationGradient_new[idx] = Identity;
         pvolume_deformed[idx] = pvolumeold[idx];
       }
@@ -553,21 +532,19 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
         // get the volumetric part of the deformation
         double J = deformationGradient_new[idx].Determinant();
 
-        fbar = deformationGradientInc * 
-         pow(deformationGradientInc.Determinant(),-1./3.);
-
-        bElBar_new[idx] = fbar*bElBar_old[idx]*fbar.Transpose();
+        Matrix3 bElBar_new = deformationGradient_new[idx]
+                           * deformationGradient_new[idx].Transpose()
+                           * pow(J,-(2./3.));
 
         // Shear is equal to the shear modulus times dev(bElBar)
-        double mubar = 1./3. * bElBar_new[idx].Trace()*shear;
-        Matrix3 shrTrl = (bElBar_new[idx]*shear - Identity*mubar);
+        double mubar = 1./3. * bElBar_new.Trace()*shear;
+        Matrix3 shrTrl = (bElBar_new*shear - Identity*mubar);
 
         // get the hydrostatic part of the stress
         double p = bulk*log(J)/J;
 
         // compute the total stress (volumetric + deviatoric)
         pstress[idx] = Identity*p + shrTrl/J;
-        //cout << "Last:p = " << p << " J = " << J << " tdev = " << shrTrl << endl;
 
         pvolume_deformed[idx] = pvolumeold[idx]*J;
       }
@@ -590,7 +567,6 @@ void CompNeoHookImplicit::addComputesAndRequires(Task* task,
   task->requires(Task::ParentOldDW, lb->pVolumeOldLabel, matlset,Ghost::None);
   task->requires(Task::ParentOldDW, lb->pDeformationMeasureLabel,
                                                          matlset,Ghost::None);
-  task->requires(Task::ParentOldDW,lb->bElBarLabel,      matlset,Ghost::None);
   task->requires(Task::ParentOldDW,lb->pTemperatureLabel,matlset,Ghost::None);
   task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
 
@@ -607,12 +583,10 @@ void CompNeoHookImplicit::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pVolumeOldLabel,         matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->bElBarLabel,             matlset,Ghost::None);
   task->requires(Task::NewDW, lb->dispNewLabel,matlset,Ghost::AroundCells,1);
   task->requires(Task::OldDW, lb->delTLabel);
 
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
-  task->computes(lb->bElBarLabel_preReloc,              matlset);
   task->computes(lb->pVolumeDeformedLabel,              matlset);
   task->computes(lb->pStressLabel_preReloc,             matlset);
 }
