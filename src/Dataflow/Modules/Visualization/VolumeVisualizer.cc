@@ -102,6 +102,7 @@ private:
   GuiInt gui_multi_level_;
   GuiInt gui_use_stencil_;
   GuiInt gui_invert_opacity_;
+  GuiInt gui_level_flag_;
   GuiInt gui_num_slices_;  // unused except for backwards compatability
 
   VolumeRenderer* volren_;
@@ -139,6 +140,7 @@ VolumeVisualizer::VolumeVisualizer(GuiContext* ctx)
     gui_multi_level_(ctx->subVar("multi_level")),
     gui_use_stencil_(ctx->subVar("use_stencil")),
     gui_invert_opacity_(ctx->subVar("invert_opacity")),
+    gui_level_flag_(ctx->subVar("show_level_flag", false)),
     gui_num_slices_(ctx->subVar("num_slices", false)), // don't save
     volren_(0)
 {}
@@ -234,7 +236,7 @@ VolumeVisualizer::execute()
       !gui_shine_.changed() && !gui_light_.changed() &&
       !gui_blend_res_.changed() && !gui_multi_level_.changed() &&
       !gui_use_stencil_.changed() && !gui_invert_opacity_.changed() &&
-      !gui_num_slices_.changed())
+      !gui_num_slices_.changed() && !gui_level_flag_.changed())
   {
     if (tex.get_rep())
     {
