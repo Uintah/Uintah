@@ -48,7 +48,6 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	set $this-max_time 100
 	set $this-timeval 0
 	set $this-animate 0
-	set $this-anisleep 0
 	set $this-tinc 1
 	set $this-def-color-r 1.0
 	set $this-def-color-g 1.0
@@ -115,11 +114,6 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	pack $w.tincf.l -side left
 	entry $w.tincf.e -textvariable $this-tinc
 	pack $w.tincf.e -side right
-
-	label $w.l -text "Animation Sleep (seconds)" 
-	scale $w.s  -variable $this-anisleep  \
-	    -orient horizontal -from 0 -to 600 -resolution 1
-	pack $w.l $w.s -side top -fill x
 
 	frame $w.cs -relief groove -borderwidth 2
 	addColorSelection $w.cs
