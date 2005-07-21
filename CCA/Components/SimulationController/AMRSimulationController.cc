@@ -83,7 +83,7 @@ void AMRSimulationController::run()
 
    d_scheduler->initialize(1, 1);
    d_scheduler->advanceDataWarehouse(currentGrid);
-
+    
    double t;
 
    // Parse time struct
@@ -320,6 +320,10 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
   }
  
   double start = Time::currentSeconds();
+  d_scheduler->mapDataWarehouse(Task::OldDW, 0);
+  d_scheduler->mapDataWarehouse(Task::NewDW, 1);
+  d_scheduler->mapDataWarehouse(Task::CoarseOldDW, 0);
+  d_scheduler->mapDataWarehouse(Task::CoarseNewDW, 1);
   
   if(d_restarting){
     d_sim->restartInitialize();
