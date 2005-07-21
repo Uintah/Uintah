@@ -280,6 +280,7 @@ VolumeRenderer::draw_volume()
   
   if(blend_num_bits_ == 8) {
     glEnable(GL_BLEND);
+#ifndef _WIN32
     switch(mode_) {
     case MODE_OVER:
       if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS))) 
@@ -296,6 +297,7 @@ VolumeRenderer::draw_volume()
     default:
       break;
     }
+#endif
   } else {
     double mv[16], pr[16];
     glGetDoublev(GL_MODELVIEW_MATRIX, mv);
@@ -634,6 +636,7 @@ VolumeRenderer::multi_level_draw()
   
   if(blend_num_bits_ == 8) {
     glEnable(GL_BLEND);
+#ifndef _WIN32
     switch(mode_) {
     case MODE_OVER:
       if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS)))       
@@ -650,6 +653,7 @@ VolumeRenderer::multi_level_draw()
     default:
       break;
     }
+#endif
   } else {
     double mv[16], pr[16];
     glGetDoublev(GL_MODELVIEW_MATRIX, mv);

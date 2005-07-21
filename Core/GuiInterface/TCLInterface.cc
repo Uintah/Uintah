@@ -49,6 +49,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/Environment.h>
+#include <Core/Thread/Thread.h>
 #include <Core/Exceptions/GuiException.h>
 #include <tcl.h>
 #include <tk.h>
@@ -62,6 +63,33 @@ namespace SCIRun {
     void* userdata;
   };
 }
+
+#ifdef EXPERIMENTAL_TCL_THREAD
+// in windows, we will use a different interface (since it hangs in many
+// places the non-windows ones do not).  Instead of each thread potentially
+// calling TCL code, and have the GUI lock, we will send the TCL commands
+// to the tcl thread via a mailbox, and TCL will get the data via an event 
+// callback
+#include <Core/Thread/Mailbox.h>
+#include <Core/Thread/Semaphore.h>
+#include <string>
+using std::string;
+
+struct EventMessage {
+  EventMessage(string command, Semaphore* sem) : command(command), sem(sem) {};
+  string command;
+  Semaphore* sem;
+  int code;
+  string result;
+};
+
+static Mailbox<EventMessage*> tclQueue("TCL command mailbox", 50);
+static Tcl_Time tcl_time;
+
+int eventCallback(Tcl_Event* event, int flags);
+
+
+#endif
 
 extern "C" Tcl_Interp* the_interp;
 
@@ -85,6 +113,7 @@ TCLInterface::~TCLInterface()
 {
 }
 
+#ifndef EXPERIMENTAL_TCL_THREAD
 void TCLInterface::execute(const string& str)
 {
   TCLTask::lock();
@@ -97,6 +126,7 @@ void TCLInterface::execute(const string& str)
 int TCLInterface::eval(const string& str, string& result)
 {
   TCLTask::lock();
+  cerr << " Evaling cmd: " << str << " from thread " << Thread::self()->getThreadName() << "\n";
   int code = Tcl_Eval(the_interp, ccast_unsafe(str));
   if(code != TCL_OK){
     Tk_BackgroundError(the_interp);
@@ -104,6 +134,7 @@ int TCLInterface::eval(const string& str, string& result)
   } else {
     result=string(the_interp->result);
   }
+  cerr << " Done evaling cmd: " << str << " from thread " << Thread::self()->getThreadName() << "\n";
   TCLTask::unlock();
   return code == TCL_OK;
 }
@@ -122,6 +153,82 @@ string TCLInterface::eval(const string& str)
   TCLTask::unlock();
   return result;
 }
+#else
+    
+void TCLInterface::execute(const string& str)
+{
+  string result("");
+  eval(str, result);
+}
+
+int TCLInterface::eval(const string& str, string& result)
+{
+  // if we are the TCL Thread, go ahead and execute the command, otherwise
+  // add it to the queue so the tcl thread can get it later
+  if (strcmp(Thread::self()->getThreadName(), "TCL main event loop") == 0 ) {
+    int code = Tcl_Eval(the_interp, ccast_unsafe(str));
+    if(code != TCL_OK){
+      Tk_BackgroundError(the_interp);
+    } else {
+      result=string(the_interp->result);
+    }
+    return code == TCL_OK;
+  }
+  else {
+    Semaphore sem("wait for tcl", 0);
+    EventMessage em(str, &sem);
+
+    tclQueue.send(&em);
+
+    sem.down();
+    result = em.result;
+    return em.code == TCL_OK;
+  }
+}
+
+
+string TCLInterface::eval(const string& str)
+{
+  string result("");
+  eval(str, result);
+  return result;
+}
+
+int eventCallback(Tcl_Event* event, int flags)
+{
+   EventMessage* em;
+   while (tclQueue.tryReceive(em)) {
+     int code = Tcl_Eval(the_interp, ccast_unsafe(em->command));
+     if(code != TCL_OK){
+       Tk_BackgroundError(the_interp);
+     } else {
+       em->result = string(the_interp->result);
+     }
+     em->code = code;
+     em->sem->up();
+   }
+   return 1;
+}
+
+namespace SCIRun {
+void eventSetup(ClientData cd, int flags)
+{
+  if (tclQueue.numItems() > 0) {
+    tcl_time.sec = 0;
+    tcl_time.usec = 0;
+    Tcl_SetMaxBlockTime(&tcl_time);
+  }
+}
+void eventCheck(ClientData cd, int flags)
+{
+  if (tclQueue.numItems() > 0) {
+    Tcl_Event* event = scinew Tcl_Event;
+    event->proc = eventCallback;
+    Tcl_QueueEvent(event, TCL_QUEUE_TAIL);
+  }
+}
+} // end namespace SCIRun
+#endif
 
 
 void TCLInterface::source_once(const string& filename)

@@ -58,6 +58,7 @@
 #include <tkIntPlatDecls.h>
 #include <windows.h>
 #include <sstream>
+#include <process.h>
 #endif
 
 using namespace SCIRun;
@@ -167,6 +168,74 @@ const char* TkOpenGLContext::ReportCapabilities()
   
   return strm.str().c_str();
 }
+
+char *tkGlClassName = "TkGL";
+bool tkGlClassInitialized = false;
+WNDCLASS tkGlClass;
+
+Window
+TkGLMakeWindow(Tk_Window tkwin, Window parent, ClientData data)
+{
+  HWND parentWin;
+  int style;
+  HWND hwnd;
+  
+  if (parent != None) {
+    parentWin = Tk_GetHWND(parent);
+    style = WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+  } else {
+    parentWin = NULL;
+    style = WS_POPUP | WS_CLIPCHILDREN;
+  }
+
+  // next register our own window class.... 
+  
+  if (!tkGlClassInitialized) {
+    tkGlClassInitialized = true;
+    tkGlClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+    tkGlClass.cbClsExtra = 0;
+    tkGlClass.cbWndExtra = 0;
+    tkGlClass.hInstance = Tk_GetHINSTANCE();
+    tkGlClass.hbrBackground = NULL;
+    tkGlClass.lpszMenuName = NULL;
+
+    /*
+     * Register the TkGL window class.
+     */
+
+    tkGlClass.lpszClassName = tkGlClassName;
+
+    // lookup the TkChildClass so we can use its callbacks.
+    WNDCLASS childClass;
+    GetClassInfo(Tk_GetHINSTANCE(),TK_WIN_CHILD_CLASS_NAME,
+		 &childClass);
+
+    tkGlClass.lpfnWndProc = childClass.lpfnWndProc;
+    tkGlClass.hIcon = NULL;
+    tkGlClass.hCursor = NULL;
+
+    if (!RegisterClass(&tkGlClass)) {
+	panic("Unable to register TkChild class");
+    }
+    PrintErr("MakeWindow RegisterClass");
+
+  }
+  /*
+   * Create the window, then ensure that it is at the top of the
+   * stacking order.
+   */
+  
+  hwnd = CreateWindowEx(WS_EX_NOPARENTNOTIFY, tkGlClassName, NULL,
+			style, Tk_X(&tkwin), Tk_Y(&tkwin), Tk_Width(&tkwin),
+			Tk_Height(&tkwin), parentWin, NULL, Tk_GetHINSTANCE(), 
+			NULL);
+  PrintErr("MakeWindow createWindow");
+  SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0,
+	       SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+  PrintErr("MakeWindow setwindowpos");
+  return Tk_AttachHWND(tkwin, hwnd);
+}
+
 #endif
 
 
@@ -294,6 +363,7 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
       // advantage that we don't have to use the wglGetProc to get
       // the procedure address, or test to see if the applicable extension
       // is supported.  WM:VI
+    PrintErr("TkOpenGLContext::TKCopenGLContext");
 
     DWORD dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
 //       if (doublebuffer_)
@@ -307,10 +377,17 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
 	dwFlags,
 	PFD_TYPE_RGBA,         // RGBA type 
 	24, // color depth
-	0, 0, 0, 0, 0, 0,  // color bits 
-	0, 0,  // alpha buffer 
+	8, 0, 
+	8, 0, 
+	8, 0,  // color bits  
+	8, 0,  // alpha buffer 
+	0+
+	0+
 	0,// accumulation buffer 
-	0, 0, 0, 0,// accum bits 
+	0, 
+	0, 
+	0, 
+	0,// accum bits 
 	32,  // 32-bit z-buffer 
 	0,// no stencil buffer 
 	0, // no auxiliary buffer 
@@ -320,21 +397,6 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
       }; 
 
       pfd = npfd;
-      
-//      if (!first_context) {
-//        SetPixelFormat(hDC_, visualid_, &pfd);
-//        PrintErr("TkOpenGLContext::TKCopenGLContext: SetPixelFormat");
-//      }
-
-
-//       XVisualInfo xvi;
-//       xvi.screen = screen_number_;
-//       int n_ret=0;
-//       vi_ = XGetVisualInfo(display_,
-// 			   VisualScreenMask,
-// 			   &xvi,
-// 			   &n_ret
-// 			   );
 
     vi_ = &visinfo;
     vi_->visual = DefaultVisual(display_,DefaultScreen(display_));
@@ -358,28 +420,35 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
   int result = Tk_SetWindowVisual(tkwin_, vi_->visual, vi_->depth, colormap_);
   if (result != 1) throw scinew InternalError("Cannot set Tk Window Visual", __FILE__, __LINE__);
 
+#ifdef _WIN32
+  TkClassProcs *procsPtr;
+  Tk_FakeWin *winPtr = (Tk_FakeWin*)(tkwin_);
+    
+  procsPtr = (TkClassProcs*)Tcl_Alloc(sizeof(TkClassProcs));
+  procsPtr->createProc     = TkGLMakeWindow;
+  procsPtr->geometryProc   = NULL;
+  procsPtr->modalProc      = NULL;
+  winPtr->dummy17 = (char*)procsPtr;
+  winPtr->dummy18 = (ClientData)this;
+#endif
+
   Tk_MakeWindowExist(tkwin_);
 
 #ifdef _WIN32
-   {
-     fprintf(stderr,"Before TkWinGet...\n");
-     HWND hWND = Tk_GetHWND(Tk_WindowId(tkwin_));
-     PrintErr("Tk_GetHWND");
-   
-     fprintf(stderr,"After TkWinGet...\n");
-     hDC_ = GetDC(hWND);
-     PrintErr("GetDC");
-   }
+  hWND_ = Tk_GetHWND( Tk_WindowId(tkwin_) );
+  hDC_ = GetDC(hWND_);
+      
+  int iPixelFormat;
+  iPixelFormat = ChoosePixelFormat(hDC_, &pfd);
+  PrintErr("ChoosePixelFormat");
+  
+  SetPixelFormat(hDC_, iPixelFormat, &pfd);
+  PrintErr("SetPixelFormat");
 
-   visualid_ = ChoosePixelFormat(hDC_, &pfd);
-   fprintf(stderr, "Visid %d\n", visualid_);
-   PrintErr("TkOpenGLContext:: ChoosePixelFormat");
-
-
-  int code = SetPixelFormat(hDC_, visualid_, &pfd);
-  if (code == 0)
-    fprintf(stderr, "spf == 0\n");
-  PrintErr("TkOpenGLContext::TKCopenGLContext: SetPixelFormat");
+  char x[50];
+  sprintf(x,"PixelFormat in constructor: %d\n",GetPixelFormat(hDC_));
+	  
+  visualid_ = iPixelFormat;
 
 #endif
 
@@ -396,23 +465,18 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
   context_ = glXCreateContext(display_, vi_, first_context, 1);
   if (!context_) throw scinew InternalError("Cannot create GLX Context", __FILE__, __LINE__);
 #else // _WIN32
-
-  PrintErr("TkOpenGLContext::TKCopenGLContext: Tk calls (up to MakeWindowExist)");
-
-  context_ = wglCreateContext(hDC_);
-  PrintErr("TkOpenGLContext::TKOpenGLContext: wglCreateContext");
-
-  if (first_context == NULL) {
-    first_context = context_;
-  } else {
-    //wglShareLists(first_context,context_);
-    PrintErr("TkOpenGLContext::TKCopenGLContext: wglShareLists");
+  if (!first_context) {
+    first_context = wglCreateContext(hDC_);
   }
+  context_ = wglCreateContext(hDC_);
+  PrintErr("wglCreateContext");
 
+  wglShareLists(first_context,context_);
+  PrintErr("wglShareLists");
 
   if (!context_) throw scinew InternalError("Cannot create WGL Context", __FILE__, __LINE__);
 
-  fprintf(stderr,"%s\n",ReportCapabilities());
+  release();
 
 #endif
 }
@@ -445,12 +509,11 @@ TkOpenGLContext::make_current()
   result = glXMakeCurrent(display_, x11_win_, context_);
 #else  // _WIN32
   HGLRC current = wglGetCurrentContext();
+  PrintErr("wglGetCurrentContext");
 
   if (current != context_) {
-    
     result = wglMakeCurrent(hDC_,context_);
-    
-    PrintErr("TkOpenGLContext::make_current");
+    PrintErr("wglMakeCurrent");
   }
 
 #endif
@@ -663,7 +726,7 @@ TkOpenGLContext::listvisuals()
   vector<string> visualtags;
   vector<int> scores;
 
-  int  id, level, db, stereo, r,g,b,a, depth, stencil, ar, ag, ab, aa;
+  //int  id, level, db, stereo, r,g,b,a, depth, stencil, ar, ag, ab, aa;
 
   PrintErr("TkOpenGLContext::listvisuals");
 

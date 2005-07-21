@@ -46,7 +46,9 @@ using namespace SCIRun;
 #  ifdef __cplusplus
      extern "C" {
 #  endif // __cplusplus
-       __declspec(dllimport) void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
+#ifndef EXPERIMENTAL_TCL_THREAD
+  __declspec(dllimport) void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
+#endif
        int tkMain(int argc, char** argv, 
 		  void (*nwait_func)(void*), void* nwait_func_data);
 #  ifdef __cplusplus
@@ -54,7 +56,9 @@ using namespace SCIRun;
 #  endif // __cplusplus
 
 #else // _WIN32
-  extern "C" void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
+#ifndef EXPERIMENTAL_TCL_THREAD
+  __declspec(dllimport) void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
+#endif
   extern "C" int tkMain(int argc, char** argv,
 			void (*nwait_func)(void*), void* nwait_func_data);
 
@@ -102,14 +106,17 @@ TCLThread::TCLThread(int argc, char* argv[], Network* net, int startnetno) :
   // The default one exits, and makes it very hard to 
   // track down errors.  We need core dumps!
   XSetErrorHandler(x_error_handler2);
-
+#ifndef EXPERIMENTAL_TCL_THREAD
   Tcl_SetLock(do_lock2, do_unlock2);
+#endif
 }
 
 void
 TCLThread::run()
 {
+#ifndef EXPERIMENTAL_TCL_THREAD
   do_lock2();
+#endif
   tkMain(1, argv, wait, this);
 }
 
@@ -262,7 +269,9 @@ void
 TCLThread::mainloop_wait()
 {
   Tcl_CreateCommand(the_interp, "exit", exitproc, 0, 0);
+#ifndef EXPERIMENTAL_TCL_THREAD
   do_unlock2();
+#endif
 
   // The main program will want to know that we are started...
   start.up();
@@ -270,7 +279,14 @@ TCLThread::mainloop_wait()
   // Wait for the main program to tell us that all initialization
   // has occurred...
   cont.down();
+
+#ifdef EXPERIMENTAL_TCL_THREAD
+  // windows doesn't communicate TCL with threads like other OSes do.
+  // do instead of direct TCL communication, setup tcl callbacks
+  TCLTask::setTCLEventCallback();
+#else
   do_lock2();
+#endif
 }
 
 void
