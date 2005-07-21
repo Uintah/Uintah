@@ -36,7 +36,7 @@ Print(char *fmt, ...)
   va_list ap;
   va_start(ap, fmt);
   if (vb) {
-    printf("PROC %2d: ",MYID);
+    printf("P%2d: ",MYID);
     vprintf(fmt, ap);
   }
   fflush(stdout);
@@ -61,6 +61,21 @@ printIndex(const vector<int>& sub)
   for (int d = 0; d < sub.size(); d++) {
     printf("%d",sub[d]);
     if (d < sub.size()-1) printf(",");
+  }
+  printf("]");
+}
+
+void 
+printIndex(const vector<double>& x) 
+{
+  /*_____________________________________________________________________
+    Function printIndex:
+    Print vector-type numDims-dimensional location x
+    _____________________________________________________________________*/
+  printf("[");
+  for (int d = 0; d < x.size(); d++) {
+    printf("%+.3lf",x[d]);
+    if (d < x.size()-1) printf(",");
   }
   printf("]");
 }
@@ -113,12 +128,9 @@ void IndexPlusPlus(const vector<int>& ilower,
     (2,0,2) then sub=(0,0,0) and eof=1.
     _____________________________________________________________________*/
 {
-  assert(iupper.size() == ilower.size());
-  assert(sub.size()    == ilower.size());
-  assert(sub.size()    == iupper.size());
-  assert(active.size() == sub.size());
-  assert(active.size() == ilower.size());
-  assert(active.size() == iupper.size());
+  assert((iupper.size() == ilower.size()) &&
+         (sub.size()    == iupper.size()) &&
+         (active.size() == sub.size()));
 
   int numDims = sub.size(), numDimsActive = 0, count = 0;
   for (int d = 0; d < numDims; d++) {
@@ -169,4 +181,49 @@ clean(void)
   hypre_FinalizeMemoryDebug();
 #endif
   MPI_Finalize();    // Quit MPI
+}
+
+void
+pointwiseAdd(const vector<double>& x,
+             const vector<double>& y,
+             vector<double>& result)
+{
+  assert((x.size() == y.size()) &&
+         (result.size() == y.size()));
+  for (int d = 0; d < x.size(); d++) result[d] = x[d] + y[d];
+}
+
+void
+scalarMult(const vector<double>& x,
+           const double h,
+           vector<double>& result)
+{
+  assert(result.size() == x.size());
+  for (int d = 0; d < x.size(); d++) result[d] = h * x[d];
+}
+
+void
+pointwiseMult(const vector<int>& i,
+              const vector<double>& h,
+              vector<double>& result)
+{
+  assert((i.size() == h.size()) &&
+         (result.size() == h.size()));
+  for (int d = 0; d < i.size(); d++) result[d] = i[d] * h[d];
+}
+
+int
+prod(const vector<int>& x)
+{
+  int result = 1;
+  for (int d = 0; d < x.size(); d++) result *= x[d];
+  return result;
+}
+
+double
+prod(const vector<double>& x)
+{
+  double result = 1.0;
+  for (int d = 0; d < x.size(); d++) result *= x[d];
+  return result;
 }
