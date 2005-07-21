@@ -70,19 +70,19 @@
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0   </value>
         </BCType>
-        <BCType id = "3" label = "Velocity"     var = "Dirichlet">
+        <BCType id = "2" label = "Velocity"     var = "Dirichlet">
                               <value> [0.,10.,0.] </value>
         </BCType>
-        <BCType id = "3" label = "Temperature"  var = "Dirichlet">
+        <BCType id = "2" label = "Temperature"  var = "Dirichlet">
                               <value> 419.4444  </value>
         </BCType>
-        <BCType id = "3" label = "Density"      var = "Dirichlet">
+        <BCType id = "2" label = "Density"      var = "Dirichlet">
                               <value> 0.930025  </value>
         </BCType>
-        <BCType id = "3" label = "scalar-f"     var = "Dirichlet">
+        <BCType id = "2" label = "scalar-f"     var = "Dirichlet">
                               <value> 1.0</value>
         </BCType>
-        <BCType id = "3" label = "cumulativeEnergyReleased" var = "Dirichlet">
+        <BCType id = "2" label = "cumulativeEnergyReleased" var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
       </Face>
@@ -91,19 +91,19 @@
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0   </value>
         </BCType>
-        <BCType id = "3" label = "Velocity"     var = "Dirichlet">
+        <BCType id = "2" label = "Velocity"     var = "Dirichlet">
                               <value> [0.,2.0,0.] </value>
         </BCType>
-        <BCType id = "3" label = "Temperature"  var = "Dirichlet">
+        <BCType id = "2" label = "Temperature"  var = "Dirichlet">
                               <value> 298.0  </value>
         </BCType>
-        <BCType id = "3" label = "Density"      var = "Dirichlet">
+        <BCType id = "2" label = "Density"      var = "Dirichlet">
                               <value> 1.1792946927374306  </value>
         </BCType>
-        <BCType id = "3" label = "scalar-f"     var = "Dirichlet">
+        <BCType id = "2" label = "scalar-f"     var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
-        <BCType id = "3" label = "cumulativeEnergyReleased" var = "Dirichlet">
+        <BCType id = "2" label = "cumulativeEnergyReleased" var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
       </Face>
@@ -191,7 +191,7 @@
     </BoundaryConditions>
     <!--____________________________________________________________________-->
     <Level>
-           <Box label="2D">
+           <Box label="3D">
               <lower>        [-0.1,-0.1,-0.1]   </lower>
               <upper>        [ 0.1, 0.1, 0.1]   </upper>
               <extraCells>   [0,0,0]            </extraCells>
@@ -199,13 +199,13 @@
               <resolution>   [200,400,200]      </resolution>
            </Box>
 
-<!--      UNCOMMENT THIS FOR 3D AND COMMENT OUT THE ABOVE
-           <Box label = "3D">      
-              <lower>        [0.0,-0.1,0.0]     </lower>
-              <upper>        [0.1, 0.3,0.1]     </upper>
-              <extraCells>   [1,1,1]            </extraCells>
-              <patches>      [4,8,4]            </patches>
-              <resolution>   [100,400,100]      </resolution>
+<!--      UNCOMMENT THIS FOR 2D AND COMMENT OUT THE ABOVE
+           <Box label = "2D">      
+              <lower>        [-0.1,-0.1, 0.0]   </lower>
+              <upper>        [ 0.1, 0.1, 0.0005]</upper>
+              <extraCells>   [0,0,0]            </extraCells>
+              <patches>      [2,2,2]            </patches>
+              <resolution>   [200,400,1]        </resolution>
            </Box> 
 -->       
     </Level>
@@ -305,8 +305,8 @@
   <MPM>
     <time_integrator>                explicit </time_integrator>
     <nodes8or27>                     8        </nodes8or27>
-    <minimum_particle_mass>          3.e-15   </minimum_particle_mass>
-    <maximum_particle_velocity>      5.e3     </maximum_particle_velocity>
+    <minimum_particle_mass>          3.e-12   </minimum_particle_mass>
+    <maximum_particle_velocity>      1.e3     </maximum_particle_velocity>
     <artificial_damping_coeff>       0.0      </artificial_damping_coeff>
     <artificial_viscosity>           true     </artificial_viscosity>
     <artificial_viscosity_coeff1>    0.07     </artificial_viscosity_coeff1>
@@ -315,7 +315,7 @@
     <accumulate_strain_energy>       false    </accumulate_strain_energy>
     <use_load_curves>                false    </use_load_curves>
     <create_new_particles>           false    </create_new_particles>
-    <manual_new_material>            true     </manual_new_material>
+    <manual_new_material>            false    </manual_new_material>
     <do_contact_friction_heating>    false    </do_contact_friction_heating>    
     <erosion algorithm = "ZeroStress"/>
   </MPM>
@@ -433,7 +433,7 @@
       </material>
 -->
          
-      <material  name = "reactant">    <!-- MATL 2 -->
+      <material  name = "reactant">    <!-- MATL 1 -->
         <include href="inputs/MPM/MaterialData/MatConstPBX9501.xml"/>
         <constitutive_model type = "visco_scram">
           <include href="inputs/MPM/MaterialData/ViscoSCRAMPBX9501.xml"/>
