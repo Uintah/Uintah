@@ -17,6 +17,7 @@
 #include <vector>
 #include "utilities.h"
 #include "HYPRE_sstruct_ls.h"
+using std::vector;
 
 /*================== Macros ==================*/
 
@@ -39,29 +40,38 @@ typedef double Location[MAX_DIMS]; // Data node location in d-dim. space
 /* mydriver.cc */
 
 /* util.cc */
-void 
-ToIndex(const std::vector<int>& from,
-        Index* to);
+void ToIndex(const vector<int>& from,
+             Index* to);
 
-void 
-Print(char *fmt, ...);
+void Print(char *fmt, ...);
 
-void 
-printIndex(const std::vector<int>& a);
+void printIndex(const vector<int>& a);
 
-void
-faceExtents(const std::vector<int>& ilower,
-            const std::vector<int>& iupper,
-            const int dim,
-            const int side,
-            std::vector<int>& faceLower,
-            std::vector<int>& faceUpper);
+void printIndex(const vector<double>& x); 
 
-void IndexPlusPlus(const std::vector<int>& ilower,
-                   const std::vector<int>& iupper,
-                   const std::vector<bool>& active,
-                   std::vector<int>& sub,
+void faceExtents(const vector<int>& ilower,
+                 const vector<int>& iupper,
+                 const int dim,
+                 const int side,
+                 vector<int>& faceLower,
+                 vector<int>& faceUpper);
+
+void IndexPlusPlus(const vector<int>& ilower,
+                   const vector<int>& iupper,
+                   const vector<bool>& active,
+                   vector<int>& sub,
                    bool& eof);
 
-int
-clean(void);
+int clean(void);
+
+void pointwiseAdd(const vector<double>& x,
+                  const vector<double>& y,
+                  vector<double>& result);
+void scalarMult(const vector<double>& x,
+                const double h,
+                vector<double>& result);
+void pointwiseMult(const vector<int>& i,
+                   const vector<double>& h,
+                   vector<double>& result);
+int prod(const vector<int>& x);
+double prod(const vector<double>& x);
