@@ -113,15 +113,23 @@ TCLInterface::~TCLInterface()
 {
 }
 
-#ifndef EXPERIMENTAL_TCL_THREAD
+
 void TCLInterface::execute(const string& str)
 {
-  TCLTask::lock();
-  int code = Tcl_Eval(the_interp, ccast_unsafe(str));
-  if(code != TCL_OK)
-    Tk_BackgroundError(the_interp);
-  TCLTask::unlock();
+  string result("");
+  eval(str, result);
 }
+
+
+string TCLInterface::eval(const string& str)
+{
+  string result("");
+  eval(str, result);
+  return result;
+}
+
+
+#ifndef EXPERIMENTAL_TCL_THREAD
 
 int TCLInterface::eval(const string& str, string& result)
 {
@@ -139,28 +147,8 @@ int TCLInterface::eval(const string& str, string& result)
   return code == TCL_OK;
 }
 
-
-string TCLInterface::eval(const string& str)
-{
-  string result("");
-  TCLTask::lock();
-  int code = Tcl_Eval(the_interp, ccast_unsafe(str));
-  if(code != TCL_OK){
-    Tk_BackgroundError(the_interp);
-  } else {
-    result=string(the_interp->result);
-  }
-  TCLTask::unlock();
-  return result;
-}
 #else
     
-void TCLInterface::execute(const string& str)
-{
-  string result("");
-  eval(str, result);
-}
-
 int TCLInterface::eval(const string& str, string& result)
 {
   // if we are the TCL Thread, go ahead and execute the command, otherwise
@@ -170,7 +158,7 @@ int TCLInterface::eval(const string& str, string& result)
     if(code != TCL_OK){
       Tk_BackgroundError(the_interp);
     } else {
-      result=string(the_interp->result);
+      result = string(the_interp->result);
     }
     return code == TCL_OK;
   }
@@ -186,13 +174,6 @@ int TCLInterface::eval(const string& str, string& result)
   }
 }
 
-
-string TCLInterface::eval(const string& str)
-{
-  string result("");
-  eval(str, result);
-  return result;
-}
 
 int eventCallback(Tcl_Event* event, int flags)
 {
