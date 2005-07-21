@@ -128,7 +128,7 @@ else
 fi
 #__________________________________
 # replace input file
-if [ "$force" != "-f" ]; then
+if [ "$force" != "-f" -a "$do_uda" = "false" ]; then
   echo "Replace $testname input file? (Enter 'yes' or 'y' to continue.)"
   read yesno
   
@@ -162,7 +162,7 @@ if [ "$do_uda" = "true" -o "$do_mem" = "true" -o "$do_perf" = "true" -o "$do_inp
     fi
   fi
   if [ "$do_perf" = "true" ]; then
-    if [ "$do_mem" = "true" -o "do_uda" = "true" ]; then
+    if [ "$do_mem" = "true" -o "$do_uda" = "true" ]; then
       echo -n ", performance results" >> $logfile
     else
       echo -n "replaced performance results" >> $logfile
