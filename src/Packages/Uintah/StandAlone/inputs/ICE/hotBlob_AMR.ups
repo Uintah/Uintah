@@ -149,9 +149,6 @@
       <save label="press_CC"/>
       <save label="vol_frac_CC"/>
       <save label="delP_Dilatate"/>
-      <save label="uvel_FCME"/>
-      <save label="vvel_FCME"/>
-      <save label="wvel_FCME"/>
       <save label="vel_CC_mag_grad"/>
       <save label="rho_CC_grad"/>
       <save label="temp_CC_grad"/>
