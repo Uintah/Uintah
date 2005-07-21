@@ -60,7 +60,9 @@ typedef void (Tcl_LockProc)();
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
-__declspec(dllimport) void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
+#ifndef EXPERIMENTAL_TCL_THREAD
+  __declspec(dllimport) void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
+#endif
 int tkMain(int argc, char** argv, void (*nwait_func)(void*), void* nwait_func_data);
 #ifdef __cplusplus
 }
@@ -68,8 +70,11 @@ int tkMain(int argc, char** argv, void (*nwait_func)(void*), void* nwait_func_da
 
 #else // _WIN32
 
+#ifndef EXPERIMENTAL_TCL_THREAD
+  extern "C" void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
+#endif
 extern "C" int tkMain(int argc, char** argv, void (*nwait_func)(void*), void* nwait_func_data);
-extern "C" void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
+
 
 #endif // _WIN32
 
@@ -89,9 +94,19 @@ static void do_lock()
       lock_count++;
       return;
     }
+    bool blah = false;
+    if (strcmp(Thread::self()->getThreadName(), "TCL main event loop") != 0 && owner) {
+      blah = true;
+      //cerr << " Bef lock " << Thread::self()->getThreadName() << ": owned by " << owner->getThreadName() << endl;
+    }
     tlock.lock();
+    if (blah) {
+      //cerr << " Got lock " << Thread::self()->getThreadName() << endl;
+    }
     lock_count=1;
     owner=Thread::self();
+    //if (strcmp(Thread::self()->getThreadName(), "TCL main event loop") != 0)
+      //cerr << "Locked by " << owner->getThreadName() << endl;
 }
 
 static void do_unlock()
@@ -101,6 +116,8 @@ static void do_unlock()
     if(--lock_count == 0){
 	owner=0;
 	tlock.unlock();
+    //if (strcmp(Thread::self()->getThreadName(), "TCL main event loop") != 0)
+          //cerr << "UnLocked by " << Thread::self()->getThreadName() << endl;
     } else {
     }
 }
@@ -133,7 +150,9 @@ TCLTask::TCLTask(int argc, char* argv[])
     // track down errors.  We need core dumps!
     XSetErrorHandler(x_error_handler);
 
+#ifndef EXPERIMENTAL_TCL_THREAD
     Tcl_SetLock(do_lock, do_unlock);
+#endif
 }
 
 TCLTask::~TCLTask()
@@ -204,6 +223,17 @@ int TCLTask::try_lock()
 	return 0;
     }
 }
+
+#ifdef EXPERIMENTAL_TCL_THREAD
+// these two defined in TCLInterface.cc
+void eventCheck(ClientData cd, int flags);
+void eventSetup(ClientData cd, int flags);
+// defined here so we can define EXPERIMENTAL_TCL_THREAD in only one place
+void TCLTask::setTCLEventCallback()
+{
+  Tcl_CreateEventSource(eventSetup, eventCheck, 0);
+}
+#endif
 
 Thread* TCLTask::get_owner()
 {

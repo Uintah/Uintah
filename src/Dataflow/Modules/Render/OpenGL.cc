@@ -63,6 +63,7 @@ namespace C_Magick {
 #include <sgi_stl_warnings_on.h>
 
 #ifdef _WIN32
+#include <Core/Thread/Time.h>
 #undef near
 #undef far
 #define SHARE __declspec(dllimport)
@@ -341,6 +342,7 @@ OpenGL::redraw_loop()
       }
       newtime += frametime;
       throttle.wait_for_time(newtime);
+
       while (send_mailbox_.tryReceive(r))
       {
         if (r == 86)
@@ -1221,15 +1223,19 @@ OpenGL::redraw_frame()
       {
         char fname[256];
         sprintf(fname, movie_name_.c_str(), current_movie_frame_);
-
-	timeval tv;
-
-	gettimeofday(&tv, 0);
 	ostringstream timestr;
+
+#ifndef _WIN32
+	timeval tv;
+	gettimeofday(&tv, 0);
 	timestr << "." << tv.tv_sec << ".";
 	timestr.fill('0');
 	timestr.width(6);
 	timestr << tv.tv_usec;
+#else
+        timestr.precision(6);
+        timestr << Time::currentSeconds();
+#endif
 
         string fullpath = string(fname) + string(timestr.str()) + 
 	                  string(".ppm");

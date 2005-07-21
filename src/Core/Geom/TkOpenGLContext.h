@@ -110,6 +110,7 @@ public:
 #else
   HDC                   hDC_;
   HGLRC                 context_;
+  HWND                  hWND_;
 #endif
   XVisualInfo*		vi_;
   Colormap		colormap_;

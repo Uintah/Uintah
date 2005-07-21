@@ -133,26 +133,11 @@ itcl_class Module {
 	set time $t
 	update_state
 	update_time
-	
-	# on windows, an update idletasks here causes hangs.  Ignoring
-	# it, however, causes subtle display inconsistencies, so do 
-	# everywhere but on windows
-        set ostype [netedit getenv OS]
-        if { ![string equal $ostype "Windows_NT"] } {
-	    update idletasks
-	}
     }
 
     method set_msg_state {st} {
 	set msg_state $st
 	update_msg_state
-	# on windows, an update idletasks here causes hangs.  Ignoring
-	# it, however, causes subtle display inconsistencies, so do 
-	# everywhere but on windows
-        set ostype [netedit getenv OS]
-        if { ![string equal $ostype "Windows_NT"] } {
-	    update idletasks
-	}
     }
 
     method set_progress {p t} {
