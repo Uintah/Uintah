@@ -39,7 +39,6 @@ TimestepSelector::TimestepSelector(GuiContext* ctx) :
   max_time(ctx->subVar("max_time")),
   timeval(ctx->subVar("timeval")),
   animate(ctx->subVar("animate")),
-  anisleep(ctx->subVar("anisleep")),
   tinc(ctx->subVar("tinc")),
   archiveH(0),
   def_color_r_(ctx->subVar("def-color-r")),
