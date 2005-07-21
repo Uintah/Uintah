@@ -3046,26 +3046,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       }    
     }
 
-    if(combustion_problem){  // Adjust the min. part. mass if dt gets small
-      if(delT < 5.e-9){
-        if(delT < 1.e-10){
-          d_min_part_mass = min(d_min_part_mass*2.0,5.e-9);
-          if(d_myworld->myrank() == 0){
-            cout << "New d_min_part_mass = " << d_min_part_mass << endl;
-          }
-        }
-        else{
-          d_min_part_mass = min(d_min_part_mass*2.0,5.e-12);
-          if(d_myworld->myrank() == 0){
-            cout << "New d_min_part_mass = " << d_min_part_mass << endl;
-          }
-        }
-      }
-      else if(delT > 2.e-8){
-        d_min_part_mass = max(d_min_part_mass/2.0,3.e-15);
-      }
-    }
-
     // DON'T MOVE THESE!!!
     new_dw->put(sum_vartype(ke),     lb->KineticEnergyLabel);
     new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
