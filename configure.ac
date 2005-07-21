@@ -2621,14 +2621,15 @@ EOF
     if test "$?" != "0"; then
        AC_MSG_RESULT(not found)
        enable_exceptions_crash=1
+       EXCEPTIONS_CRASH_DEF="#define EXCEPTIONS_CRASH 1"
     else
        AC_MSG_RESULT(yes)
        enable_exceptions_crash=0
+       EXCEPTIONS_CRASH_DEF=""
     fi
 
     rm -r conftest-exc.cc conftest-exc the_void
-EXCEPTIONS_CRASH="$enable_exceptions_crash"
-AC_SUBST(EXCEPTIONS_CRASH)
+AC_SUBST(EXCEPTIONS_CRASH_DEF)
 
 ##  --  search for mpeg  -------------------------------------------------
 
