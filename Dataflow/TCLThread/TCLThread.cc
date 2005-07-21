@@ -57,7 +57,7 @@ using namespace SCIRun;
 
 #else // _WIN32
 #ifndef EXPERIMENTAL_TCL_THREAD
-  __declspec(dllimport) void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
+  extern "C" void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
 #endif
   extern "C" int tkMain(int argc, char** argv,
 			void (*nwait_func)(void*), void* nwait_func_data);
