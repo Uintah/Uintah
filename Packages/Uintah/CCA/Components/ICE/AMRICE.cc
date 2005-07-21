@@ -497,10 +497,12 @@ void AMRICE::refineCoarseFineBoundaries(const Patch* patch,
   cout_dbg << "\t refineCoarseFineBoundaries ("<<label->getName() << ") \t" 
            << " subCycleProgress_var " << subCycleProgress_var
            << " Level-" << level->getIndex()<< '\n';
-  DataWarehouse* coarse_old_dw = 
-                 fine_new_dw->getOtherDataWarehouse(Task::CoarseOldDW);
-  DataWarehouse* coarse_new_dw = 
-                 fine_new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
+  DataWarehouse* coarse_old_dw = 0;
+  DataWarehouse* coarse_new_dw = 0;
+  if (subCycleProgress_var != 1.0)
+    coarse_old_dw = fine_new_dw->getOtherDataWarehouse(Task::CoarseOldDW);
+  if (subCycleProgress_var != 0.0)
+    coarse_new_dw = fine_new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
   
   refine_CF_interfaceOperator<double>
     (patch, level, coarseLevel, val, label, subCycleProgress_var, matl,
@@ -522,10 +524,12 @@ void AMRICE::refineCoarseFineBoundaries(const Patch* patch,
   cout_dbg << "\t refineCoarseFineBoundaries ("<<label->getName() << ") \t" 
            << " subCycleProgress_var " << subCycleProgress_var
            << " Level-" << level->getIndex()<< '\n';
-  DataWarehouse* coarse_old_dw = 
-                 fine_new_dw->getOtherDataWarehouse(Task::CoarseOldDW);
-  DataWarehouse* coarse_new_dw = 
-                 fine_new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
+  DataWarehouse* coarse_old_dw = 0;
+  DataWarehouse* coarse_new_dw = 0;
+  if (subCycleProgress_var != 1.0)
+    coarse_old_dw = fine_new_dw->getOtherDataWarehouse(Task::CoarseOldDW);
+  if (subCycleProgress_var != 0.0)
+    coarse_new_dw = fine_new_dw->getOtherDataWarehouse(Task::CoarseNewDW);
 
   refine_CF_interfaceOperator<Vector>
     (patch, level, coarseLevel, val, label, subCycleProgress_var, matl,
