@@ -126,7 +126,7 @@ void TCLInterface::execute(const string& str)
 int TCLInterface::eval(const string& str, string& result)
 {
   TCLTask::lock();
-  cerr << " Evaling cmd: " << str << " from thread " << Thread::self()->getThreadName() << "\n";
+  //cerr << " Evaling cmd: " << str << " from thread " << Thread::self()->getThreadName() << "\n";
   int code = Tcl_Eval(the_interp, ccast_unsafe(str));
   if(code != TCL_OK){
     Tk_BackgroundError(the_interp);
@@ -134,7 +134,7 @@ int TCLInterface::eval(const string& str, string& result)
   } else {
     result=string(the_interp->result);
   }
-  cerr << " Done evaling cmd: " << str << " from thread " << Thread::self()->getThreadName() << "\n";
+  //cerr << " Done evaling cmd: " << str << " from thread " << Thread::self()->getThreadName() << "\n";
   TCLTask::unlock();
   return code == TCL_OK;
 }
