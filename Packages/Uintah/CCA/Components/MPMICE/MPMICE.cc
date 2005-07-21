@@ -72,10 +72,8 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
     d_mpm = scinew SerialMPM(myworld);
   }
 
-  if(doAMR)
-    d_ice      = scinew AMRICE(myworld);
-  else
-    d_ice      = scinew ICE(myworld, doAMR);
+  // Don't do AMRICE with MPMICE for now...
+  d_ice      = scinew ICE(myworld, false);
 
   d_SMALL_NUM = d_ice->d_SMALL_NUM;
   d_TINY_RHO  = d_ice->d_TINY_RHO;
@@ -2292,33 +2290,33 @@ void MPMICE::scheduleRefineInterface(const LevelP& fineLevel,
                                      int step, 
                                      int nsteps)
 {
-  d_ice->scheduleRefineInterface(fineLevel, scheduler, step, nsteps);
+  //d_ice->scheduleRefineInterface(fineLevel, scheduler, step, nsteps);
   d_mpm->scheduleRefineInterface(fineLevel, scheduler, step, nsteps);
 }
   
 void MPMICE::scheduleRefine (const PatchSet* patches, 
                               SchedulerP& sched)
 {
-  d_ice->scheduleRefine(patches, sched);
+  //d_ice->scheduleRefine(patches, sched);
   d_mpm->scheduleRefine(patches, sched);
 }
     
 void MPMICE::scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched)
 {
-  d_ice->scheduleCoarsen(coarseLevel, sched);
+  //d_ice->scheduleCoarsen(coarseLevel, sched);
   d_mpm->scheduleCoarsen(coarseLevel, sched);
 }
 
 void MPMICE::scheduleInitialErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched)
 {
-  d_ice->scheduleInitialErrorEstimate(coarseLevel, sched);
+  //d_ice->scheduleInitialErrorEstimate(coarseLevel, sched);
   d_mpm->scheduleInitialErrorEstimate(coarseLevel, sched);
 }
                                                
 void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
                                    SchedulerP& sched)
 {
-  d_ice->scheduleErrorEstimate(coarseLevel, sched);
+  //d_ice->scheduleErrorEstimate(coarseLevel, sched);
   d_mpm->scheduleErrorEstimate(coarseLevel, sched);
 }
 
