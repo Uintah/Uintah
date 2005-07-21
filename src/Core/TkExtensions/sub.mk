@@ -37,9 +37,7 @@ SRCS     += $(SRCDIR)/tk3d2.c $(SRCDIR)/tkAppInit.c $(SRCDIR)/tkBevel.c \
 	$(SRCDIR)/tkCanvBLine.c $(SRCDIR)/tkCursor.c $(SRCDIR)/tkOpenGL.c \
 	$(SRCDIR)/tk3daux.c $(SRCDIR)/tkRange.c $(SRCDIR)/tkUnixRange.c \
 
-ifneq ($(IS_WIN),yes) 
-SRCS += $(SRCDIR)/tclUnixNotify-$(TK_VERSION).c
-endif
+# SRCS += $(SRCDIR)/tclUnixNotify-$(TK_VERSION).c
 
 #	$(SRCDIR)/tclTimer.c \
 
