@@ -42,7 +42,7 @@ UintahParallelPort* UintahParallelComponent::getPort(const std::string& name)
     if(iter == portmap.end())
 	return 0;
     else if(iter->second->connections.size()> 1)
-	return 0;
+	return iter->second->connections.back();
     else
 	return iter->second->connections[0];
 }
