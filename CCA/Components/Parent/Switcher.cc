@@ -12,6 +12,9 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
+#include <Packages/Uintah/CCA/Ports/ModelMaker.h>
+#include <Packages/Uintah/CCA/Components/Solvers/SolverFactory.h>
+#include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -21,14 +24,13 @@
 
 using namespace Uintah;
 
-Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups, bool doAMR)
-  : UintahParallelComponent(myworld)
+Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups, 
+                   bool doAMR) : UintahParallelComponent(myworld)
 {
   int num_components = 0;
   d_componentIndex = 0;
   d_switchState = idle;
 
-  SolverInterface* solver = dynamic_cast<SolverInterface*>(getPort("solver"));
   ProblemSpecP sim_block = ups->findBlock("SimulationComponent");
   for (ProblemSpecP child = sim_block->findBlock("subcomponent"); child != 0; 
        child = child->findNextBlock("subcomponent")) {
@@ -43,7 +45,11 @@ Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups, bool doAMR)
     SimulationInterface* sim = dynamic_cast<SimulationInterface*>(comp);
     attachPort("sim", sim);
     attachPort("problem spec", scinew ProblemSpecReader(in));
+    string no_solver_specified("");
+    SolverInterface* solver = SolverFactory::create(child,myworld,
+                                                    no_solver_specified);
     comp->attachPort("solver", solver);
+
 
     // get the vars that will need to be initialized by this component
     for (ProblemSpecP var=child->findBlock("init"); var != 0; var = var->findNextBlock("init")) {
@@ -87,6 +93,19 @@ void Switcher::problemSetup(const ProblemSpecP& params, GridP& grid,
                             SimulationStateP& sharedState)
 {
   d_sim = dynamic_cast<SimulationInterface*>(getPort("sim",d_componentIndex));
+  
+  // Some components need the output port attached to each individual component
+  // At the time of Switcher constructor, the data archiver is not available.
+  Output* output = dynamic_cast<Output*>(getPort("output"));
+
+  ModelMaker* modelmaker = dynamic_cast<ModelMaker*>(getPort("modelmaker"));
+
+  for (unsigned int i = 0; i < d_numComponents; i++) {
+    UintahParallelComponent* comp = 
+      dynamic_cast<UintahParallelComponent*>(getPort("sim",i));
+    comp->attachPort("output",output);
+    comp->attachPort("modelmaker",modelmaker);
+  }
 
   // maybe not the best way to do this right now, but we need to do this to get 
   // all the VarLabels created, so we don't have to do intermediate timesteps.
