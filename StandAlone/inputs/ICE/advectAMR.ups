@@ -220,6 +220,7 @@
         <solution technique = "EqForm" />
         <!--if gradient is > knob then refine -->
         <AMR>
+          <orderOfInterpolation>1  </orderOfInterpolation>
           <Refinement_Criteria_Thresholds>
             <Density>     1e100    </Density>
             <Temperature> 1e100    </Temperature>

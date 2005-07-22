@@ -195,11 +195,12 @@
         <advection type = "FirstOrder" />
         <solution technique = "EqForm" />
         <AMR>
-          <do_Refluxing>  true    </do_Refluxing>
+          <orderOfInterpolation>1  </orderOfInterpolation>
+          <do_Refluxing>  true     </do_Refluxing>
           <Refinement_Criteria_Thresholds>
             <Density>     1e100    </Density>
             <Temperature> 1e100    </Temperature>
-            <Pressure>    1e6    </Pressure>
+            <Pressure>    1e6      </Pressure>
             <VolumeFrac>  1e100    </VolumeFrac>
             <Velocity>    1e100    </Velocity>
           </Refinement_Criteria_Thresholds>
