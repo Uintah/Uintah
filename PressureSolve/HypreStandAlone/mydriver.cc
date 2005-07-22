@@ -159,7 +159,7 @@ main(int argc, char *argv[]) {
   int numLevels     = 2; // Number of AMR levels
   int n             = 8; // Level 0 grid size in every direction
   bool print_system = true;
-  numDims           = 3;
+  numDims           = 2;
 
   /* Grid data structures */
   HYPRE_SStructGrid   grid;
@@ -269,16 +269,28 @@ main(int argc, char *argv[]) {
   plevel          = hypre_TAlloc(int  , numLevels);    
   refinementRatio = hypre_TAlloc(Index, numLevels);
 
-#if 0
-  int procMap[4][2] = { 
-    {0,0}, {0,1}, {1,0}, {1,1} 
-  }; // Works for 2D; write general gray code
-#else
-  int procMap[8][3] = { 
-    {0,0,0}, {0,1,0}, {1,0,0}, {1,1,0} ,
-    {0,0,1}, {0,1,1}, {1,0,1}, {1,1,1} 
-  }; // Works for 3D; write general gray code
-#endif
+  int** procMap = new int*[numProcs];
+  for (int p = 0; p < numProcs; p++) procMap[p] = new int[numDims];
+  switch (numDims)
+    {
+    case 2:
+      procMap[0][0] = 0;  procMap[0][1] = 0;
+      procMap[1][0] = 0;  procMap[1][1] = 1;
+      procMap[2][0] = 1;  procMap[2][1] = 1;
+      procMap[3][0] = 1;  procMap[3][1] = 0;
+      break;
+    case 3:
+      procMap[0][0] = 0;  procMap[0][1] = 0;  procMap[0][2] = 0;
+      procMap[1][0] = 0;  procMap[1][1] = 1;  procMap[1][2] = 0;
+      procMap[2][0] = 1;  procMap[2][1] = 1;  procMap[2][2] = 0;
+      procMap[3][0] = 1;  procMap[3][1] = 0;  procMap[3][2] = 0;
+      procMap[4][0] = 0;  procMap[4][1] = 0;  procMap[4][2] = 1;
+      procMap[5][0] = 0;  procMap[5][1] = 1;  procMap[5][2] = 1;
+      procMap[6][0] = 1;  procMap[6][1] = 1;  procMap[6][2] = 1;
+      procMap[7][0] = 1;  procMap[7][1] = 0;  procMap[7][2] = 1;
+      break;
+    }
+  // procMap Works for 2D, 3D; write general gray code
 
   /* Initialize the patches that THIS proc owns at all levels */
   for (int level = 0; level < numLevels; level++) {
@@ -329,6 +341,9 @@ main(int argc, char *argv[]) {
 
   } // end for level
   
+  for (int p = 0; p < numProcs; p++) delete[] procMap[p];
+  delete[] procMap;
+
   makeGrid(hier, grid, vars);
 
   /*-----------------------------------------------------------
@@ -565,8 +580,8 @@ main(int argc, char *argv[]) {
         /*======== END GOOD DEBUGGING CHECK =========*/
 
       } // end for cell
-
-        /* Print values, rhsValues vectors */
+      
+      /* Print values, rhsValues vectors */
       for (int cell = 0; cell < patch->_numCells; cell++) {
         int offsetValues    = stencilSize * cell;
         int offsetRhsValues = cell;
@@ -592,7 +607,10 @@ main(int argc, char *argv[]) {
   delete entries;
   
   Print("Done adding interior equations\n");
-#if 1
+#if 0
+  /* We will implement the following ourselves, because it does not work
+     in problems that are not in 3-D.
+  */
   /* 
      Zero out all the connections from fine point stencils to outside the
      fine patch. These are replaced by the graph connections between the fine
