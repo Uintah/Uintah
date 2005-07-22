@@ -14,13 +14,13 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            10.0         </maxTime>
+       <maxTime>            10.0        </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
-       <max_delt_increase>  2.0        </max_delt_increase>
-       <max_iterations>     100         </max_iterations>
+       <max_delt_increase>  2.0         </max_delt_increase>
+       <max_iterations>     100000      </max_iterations>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
    
@@ -30,20 +30,36 @@
     <Grid>
     <BoundaryConditions>
       <Face side = "x-">
-         <BCType id = "0" var = "symmetry" label = "Symmetric">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101325.0   </value>
         </BCType>
-      </Face>
-      <Face side = "x+">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0.0   </value>
-        </BCType>
-        <BCType id = "0" label = "Velocity"     var = "Dirichlet">
+        <BCType id = "0" label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "0" label = "Temperature"  var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101325.0   </value>
+        </BCType>
+        <BCType id = "0" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "0" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
       </Face>
@@ -61,6 +77,9 @@
         <BCType id = "0" label = "Density" var = "Dirichlet">
                               <value> .35379  </value>
         </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
       </Face>
       <Face side = "y-">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
@@ -73,6 +92,9 @@
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
       </Face>                  
@@ -89,33 +111,24 @@
         <BCType id = "0" label = "Density"      var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
       </Face>
       <Face side = "z-">
-        <BCType id = "0" var = "symmetry" label = "Symmetric">
-        </BCType>
+        <BCType id = "0" var = "symmetry" label = "Symmetric"> </BCType>
       </Face>                  
       <Face side = "z+">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0.0   </value>
-        </BCType>
-        <BCType id = "0" label = "Velocity"     var = "Dirichlet">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "0" label = "Temperature"  var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "0" label = "Density"      var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
+        <BCType id = "0" var = "symmetry" label = "Symmetric"> </BCType>
       </Face>
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [0.0,  0.0,0.0]      </lower>
-              <upper>        [2,    2,  0.0033]   </upper>
+              <lower>        [-2.0, 0.0, 0.0]      </lower>
+              <upper>        [ 2.0, 2.0, 0.04]   </upper>
               <extraCells>   [1,1,1]              </extraCells>
               <patches>      [1,1,1]              </patches>
-              <resolution>   [50, 50, 1]          </resolution>
+              <resolution>   [100, 50, 1]          </resolution>
            </Box>
            
        </Level>
@@ -126,7 +139,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>hotJet_2D.uda</filebase>
-       <outputInterval> 0.0  </outputInterval>
+      <outputInterval> 0.1  </outputInterval>
       <save label="press_equil_CC"/>
       <save label="vol_frac_CC"/>
       <save label="delP_Dilatate"/>
@@ -153,39 +166,35 @@
        <cfl>0.2</cfl>
        <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
-        <advection type = "FirstOrderCE" />
+        <advection type = "SecondOrder"  useCompatibleFluxes = "true"/>
         <solution technique = "EqForm" />
        
         <TimeStepControl>
           <Scheme_for_delT_calc> conservative   </Scheme_for_delT_calc>
-          <knob_for_speedSound>  0.001            </knob_for_speedSound>
+          <knob_for_speedSound>  0.000            </knob_for_speedSound>
         </TimeStepControl>
         
         <ImplicitSolver>
-           <max_outer_iterations>      20    </max_outer_iterations>
-           <outer_iteration_tolerance> 1e-8 </outer_iteration_tolerance>
-           <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
-           <Parameters variable="implicitPressure">
-	     <!-- Common options -->
+           <max_outer_iterations>      20       </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-6     </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 15   </iters_before_timestep_restart>           <Parameters variable="implicitPressure">
+             <!-- Common options -->
               <tolerance>1.e-8    </tolerance>
-
-	     <!-- CGSolver options -->
+                                                                                
+             <!-- CGSolver options -->
               <norm>     LInfinity  </norm>
               <criteria> Absolute   </criteria>
-
-	     <!-- Hypre options -->
-	     <solver>         hybrid  </solver>
-	     <preconditioner> pfmg    </preconditioner>
-	     <tolerance>      1.e-10  </tolerance>
-	     <maxiterations>  7500    </maxiterations>
-	     <npre>           1       </npre>
-	     <npost>          1       </npost>
-	     <skip>           0       </skip>
-	     <jump>           0       </jump>
+                                                                                
+             <!-- Hypre options -->
+             <solver>         hybrid  </solver>
+             <preconditioner> pfmg    </preconditioner>
+             <maxiterations>  500    </maxiterations>
+             <npre>           1       </npre>
+             <npost>          1       </npost>
+             <skip>           0       </skip>
+             <jump>           0       </jump>
            </Parameters>
         </ImplicitSolver>
-        
-
       </ICE>        
     </CFD>
     <MPM>
@@ -197,7 +206,7 @@
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
     <!--____________________________________________________________________-->   
     <PhysicalConstants>
-       <gravity>            [0,0,0]   </gravity>
+       <gravity>            [0,-9.81,0]   </gravity>
        <reference_pressure> 101325.0  </reference_pressure>
     </PhysicalConstants>
 
@@ -210,6 +219,7 @@
          <material>
             <burn type = "null" />       
            <EOS type = "ideal_gas">                     </EOS>
+           <isSurroundingMatl>          true            </isSurroundingMatl>
            <dynamic_viscosity>          15.89e-6        </dynamic_viscosity>
            <thermal_conductivity>       23.6e-3         </thermal_conductivity>
            <specific_heat>              716.0           </specific_heat>
@@ -217,24 +227,24 @@
            <gamma>                      1.4             </gamma>           
            <geom_object>
                   <box label="domain">
-                      <min>           [-1.1,-1.1,-1.1]    </min>
+                      <min>           [-2.1,-2.1,-2.1]    </min>
                       <max>           [ 2.1, 2.1, 2.1 ]   </max>
                   </box>
-            <res>                      [2,2,2]        </res>
+            <res>                      [2,2,2]       </res>
             <velocity>           [0.0,0.0,0.0]       </velocity>
             <temperature>        300.0               </temperature>
-            <density>    1.1792946927374306000e+00   </density>
+            <density>    1.1792946927374306e+00      </density>
             <pressure>           101325.0            </pressure>
            </geom_object>
          </material>
       </ICE>       
        
-            <exchange_properties> 
+       <exchange_properties> 
          <exchange_coefficients>
               <momentum>               []          </momentum>
               <heat>                   []          </heat>
         </exchange_coefficients>
-            </exchange_properties> 
+      </exchange_properties> 
     </MaterialProperties>
             
 
@@ -242,5 +252,4 @@
        <MPM>
       </MPM>
     </PhysicalBC>
-       
 </Uintah_specification>
