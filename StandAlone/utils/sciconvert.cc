@@ -151,6 +151,19 @@ main(int argc, char **argv)
     exit(0);
   }
 
+  Handle<PropertyManager> handle;
+  Pio(*in_stream, handle);
+  if (in_stream->error())
+  {
+    cerr << "Unable to read input file.\n";
+    return 2;
+  }
+  if (!handle.get_rep())
+  {
+    cerr << "Read empty object from input file.\n";
+    return 2;
+  }
+
   // Fixme, use version numbers here.
   Piostream *out_stream = 0;
   if (output_format == "Binary")
@@ -169,17 +182,13 @@ main(int argc, char **argv)
 
   if (!out_stream)
   {
-    cerr << "Unable to open output stream, exiting.\n";
-    exit(0);
+    cerr << "Unable to open output stream '" << argv[2] << "', exiting.\n";
+    exit(2);
   }
 
-  while (1)
-  {
-    Handle<PropertyManager> handle;
-    Pio(*in_stream, handle);
-    if (in_stream->error()) { break; }
-    Pio(*out_stream, handle);
-  }
+  Pio(*out_stream, handle);
 
-  return -1;
+  delete out_stream;
+
+  return 0;
 }    
