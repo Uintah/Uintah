@@ -266,6 +266,14 @@ public:
                            GridP& grid,
                            SimulationStateP&);
 
+  void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
+
+  void switchTest(const ProcessorGroup*,
+                  const PatchSubset* patches,
+                  const MaterialSubset* matls,
+                  DataWarehouse*,
+                  DataWarehouse*);
+
   // AMR
   virtual void scheduleRefineInterface(const LevelP& fineLevel,
                                        SchedulerP& scheduler,

@@ -20,6 +20,7 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/TemperatureBoundCond.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Math/MiscMath.h>
@@ -112,7 +113,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 
   //__________________________________
   //  M P M
-  d_mpm->setMPMLabel(Mlb);
+  //  d_mpm->setMPMLabel(Mlb);
   d_mpm->setWithICE();
   d_mpm->attachPort("output",dataArchiver);
   d_mpm->problemSetup(prob_spec, grid, d_sharedState);
@@ -127,7 +128,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   //  I C E
 
   if(!dataArchiver){
-    throw InternalError("MPMICE needs a dataArchiever component to work", __FILE__, __LINE__);
+    throw InternalError("MPMICE needs a dataArchiver component to work", __FILE__, __LINE__);
   }
   d_ice->attachPort("output", dataArchiver);
   
@@ -781,6 +782,18 @@ void MPMICE::scheduleSolveEquationsMotion(SchedulerP& sched,
     sched->addTask(t,patches,matls);
   }
 }
+
+void MPMICE::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
+{
+  Task* task = scinew Task("switchTest",this, &MPMICE::switchTest);
+
+  task->requires(Task::OldDW, d_sharedState->get_delt_label() );
+  task->computes(Mlb->switchLabel);
+  sched->addTask(task, level->eachPatch(),d_sharedState->allMaterials());
+
+}
+
+
 //______________________________________________________________________
 void MPMICE::solveEquationsMotion(const ProcessorGroup* pg,
                                   const PatchSubset* patches,
@@ -2498,4 +2511,27 @@ void MPMICE::coarsenVariableCC(const ProcessorGroup*,
       }
     }
   }
+}
+
+
+void MPMICE::switchTest(const ProcessorGroup* group,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw)
+{
+  int time_step = d_sharedState->getCurrentTopLevelTimeStep();
+  cout << "time_step = " << time_step << endl;
+
+  bool sw = false;
+#if 1
+  if (time_step == 3)
+    sw = true;
+  else
+    sw = false;
+
+#endif
+
+  SoleVariable<bool> switch_condition(sw);
+  new_dw->put(switch_condition,Mlb->switchLabel,getLevel(patches));
 }
