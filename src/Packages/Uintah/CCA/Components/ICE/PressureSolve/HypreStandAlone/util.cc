@@ -6,8 +6,14 @@
  * Revision history:
  * 20-JUL-2005   Oren   Created.
  *--------------------------------------------------------------------------*/
+
 #include "mydriver.h"
+#include "util.h"
+
+#include <utilities.h>
+
 #include <vector>
+
 using namespace std;
 
 void 
@@ -23,6 +29,30 @@ ToIndex(const vector<int>& subFrom,
 {
   assert(subFrom.size() == numDims);
   for (int d = 0; d < numDims; d++) (*subTo)[d] = subFrom[d];
+}
+
+void 
+Proc0Print(char *fmt, ...)
+{
+  if( MYID == 0 ) 
+    {
+      int vb = 1; /* Verbose level */
+      va_list ap;
+      va_start(ap, fmt);
+      if (vb) {
+        printf("P%2d: ",MYID);
+        vprintf(fmt, ap);
+      }
+      fflush(stdout);
+      if (vb) {
+        va_start(ap, fmt);
+        //    if (log_file)
+        //      vfprintf(log_file, fmt, ap);
+        //    if (log_file)
+        //      fflush(log_file);
+      }
+      va_end(ap);
+    }
 }
 
 void 

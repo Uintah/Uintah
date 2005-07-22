@@ -12,16 +12,153 @@
 /*================== Library includes ==================*/
 
 #include "mydriver.h"
+#include "Param.h"
+#include "Hierarchy.h"
+#include "Level.h"
+#include "Patch.h"
+#include "util.h"
+
 #include <vector>
+
+#include <HYPRE_sstruct_ls.h>
+#include <utilities.h>
+#include <krylov.h>
+#include <sstruct_mv.h>
+#include <sstruct_ls.h>
+ 
 using namespace std;
 
-#include "krylov.h"
-#include "sstruct_mv.h"
-#include "sstruct_ls.h"
- 
 /*================== Global variables ==================*/
 
 int     MYID;     /* The same as this proc's myid, but global */
+
+void
+getPatchesFromOtherProcs( const Param & param, const Hierarchy & hier )
+{
+  int sendbuf[param.numProcs]; // I have 5, don't know what everyone else has: 5 0 0 0 0 
+  int numPatches[param.numProcs];
+  
+  for( int level = 0; level < hier._levels.size(); level++ ) {
+    Level* lev = hier._levels[level];
+    // clear sendbuf
+    for( int index = 0; index < param.numProcs; index++ ) {
+      if( index == MYID ) {
+        sendbuf[index] = lev->_patchList.size();
+      } else {
+        sendbuf[index] = 0;
+      }
+    }
+    // Talk to all procs to find out how many patches they have on
+    // this level.
+    MPI_Allreduce(sendbuf, numPatches, param.numProcs,
+                  MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    
+    int totalPatches = 0;
+    int startPosition = 0;
+    for(int index = 0; index < param.numProcs; index++ ) {
+      Proc0Print("has %d patches on level %d\n", numPatches[index], level);
+      totalPatches += numPatches[index];
+      if( index < MYID )
+        startPosition += numPatches[index];
+    }
+
+    Proc0Print("got totalPatches of %d\n", totalPatches);
+
+    // Put our patch information into a big vector, share it with
+    // all other procs
+    int recordSize = 2*param.numDims+1;
+    int * patchInfo = new int[ recordSize * totalPatches ];
+    int * patchInfoRecv = new int[ recordSize * totalPatches ];
+    for( int index = 0; index < recordSize*totalPatches; index++ ) {
+      patchInfo[index] = 0;
+      patchInfoRecv[index] = -1;
+    }
+    int count = startPosition * recordSize;
+    Print("begin count = %d\n",count);
+    for(int index = 0; index < lev->_patchList.size(); index++ ) {
+      Patch* patch = lev->_patchList[index];
+      patchInfo[count++] = patch->_procID;
+      for (int d = 0; d < param.numDims; d++)
+        patchInfo[count++] = patch->_ilower[d];
+      for (int d = 0; d < param.numDims; d++)
+        patchInfo[count++] = patch->_iupper[d];
+    }
+    Print("end  count = %d\n",count);
+    
+    MPI_Allreduce(patchInfo, patchInfoRecv, totalPatches*recordSize,
+                  MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    
+    for(int index = 0; index < recordSize*totalPatches; index++ ) {
+      Proc0Print("%3d: %3d %3d\n", index,patchInfo[index],patchInfoRecv[index]);
+    }
+
+    vector<int> ilower(param.numDims);
+    vector<int> iupper(param.numDims);
+    vector<int> otherilower(param.numDims);
+    vector<int> otheriupper(param.numDims);
+
+    for (int index = 0; index < totalPatches; index++ ) {
+      int owner = patchInfo[recordSize*index];
+      if (MYID != owner) {   // This patch is processed only on its owning proc
+        continue;
+      }
+      for (int d = 0; d < param.numDims; d++) {
+        ilower[d] = patchInfo[recordSize*index + d + 1];
+        iupper[d] = patchInfo[recordSize*index + param.numDims + d + 1];
+      }
+      Patch* patch = lev->_patchList[index];
+      for (int other = 0; other < totalPatches; other++) {
+        if (other == index)
+          continue;
+        for (int d = 0; d < param.numDims; d++) {
+          otherilower[d] = patchInfo[recordSize*other + d + 1];
+          otheriupper[d] = patchInfo[recordSize*other + param.numDims + d + 1];
+        }
+        for (int d = 0; d < param.numDims; d++) {
+          /* Default: boundary is a C/F boundary */
+          patch->setBoundary(d,1,Patch::CoarseFine);
+
+          /* Check if patch has a nbhring patch on its left */
+          if (ilower[d] == otheriupper[d]+1) {
+            for (int d2 = 0; d2 < param.numDims; d2++) {
+              if (d2 == d) continue;
+              if (max(ilower[d2],otherilower[d2]) <=
+                  min(iupper[d2],otheriupper[d2])) {
+                patch->setBoundary(d,-1,Patch::Neighbor);
+              }
+            }
+          }
+
+          /* Check if patch has a nbhring patch on its right */
+          if (iupper[d] == otherilower[d]-1) {
+            for (int d2 = 0; d2 < param.numDims; d2++) {
+              if (d2 == d) continue;
+              if (max(ilower[d2],otherilower[d2]) <=
+                  min(iupper[d2],otheriupper[d2])) {
+                patch->setBoundary(d,1,Patch::Neighbor);
+              }
+            }
+          }
+
+          /* Check if patch is near a domain boundary */
+          if ((ilower[d] == 0) || (iupper[d] == resolution[d]-1)) {
+            patch->setBoundary(d,1,Patch::Domain);
+          }
+        }
+
+        /* Print boundary types */
+        for (int d = 0; d < param.numDims; d++) {
+          for (int s = -1; s <= 1; s += 2) {
+            Print("  boundary( d = %d , s = %d ) = %s\n",
+                  d,s,Patch::BoundaryTypeString[patch->getBoundary(d,s)]);
+          }
+        }
+      }
+
+    delete [] patchInfo;
+    delete [] patchInfoRecv;
+  }
+} // end getPatchesFromOtherProcs()
 
 void
 makeHierarchy(const Param& param,
@@ -41,10 +178,10 @@ makeHierarchy(const Param& param,
   const int numLevels = param.numLevels;
   const int n         = param.n;
 
-  Print("1 numProcs=%d, numDims=%d, numLevels=%d\n", numProcs, numDims, numLevels);
+  // patch->setBoundary(0,0,Patch::CoarseFine);
+
   int** procMap = new int*[numProcs];
   for (int p = 0; p < numProcs; p++) procMap[p] = new int[numDims];
-  Print("2");
   switch (numDims)
     {
     case 2:
@@ -67,9 +204,7 @@ makeHierarchy(const Param& param,
   // procMap Works for 2D, 3D; write general gray code
 
   /* Initialize the patches that THIS proc owns at all levels */
-  Print("3");
   for (int level = 0; level < numLevels; level++) {
-    Print("4");
     plevel[level] = level;   // part ID of this level
     
     /* Refinement ratio w.r.t. parent level. Assumed to be constant
@@ -93,7 +228,6 @@ makeHierarchy(const Param& param,
         refinementRatio[level][0]; // ref. ratio constant for all dims
     }
     
-    Print("5");
     hier._levels.push_back(new Level(numDims,h));
     Level* lev = hier._levels[level];
     vector<int> ilower(numDims);
@@ -114,15 +248,12 @@ makeHierarchy(const Param& param,
       }
     }
     Patch* patch = new Patch(MYID,level,ilower,iupper);
-    patch->setBoundaries...();
     lev->_patchList.push_back(patch);
 
   } // end for level
   
-  Print("6");
   for (int p = 0; p < numProcs; p++) delete[] procMap[p];
   delete[] procMap;
-  Print("7");
 }
 
 void
@@ -304,6 +435,9 @@ main(int argc, char *argv[]) {
   refinementRatio = hypre_TAlloc(Index, numLevels);
 
   makeHierarchy(param, hier, plevel, refinementRatio); // Define our MR hierarchy
+
+  getPatchesFromOtherProcs( param, hier );
+
   Print("makeHierarchy done\n");
   HYPRE_SStructVariable vars[NUM_VARS] =
     {HYPRE_SSTRUCT_VARIABLE_CELL}; // We use cell centered vars
@@ -399,10 +533,10 @@ main(int argc, char *argv[]) {
   }
   for (int level = 1; level < numLevels; level++) {
     Print("  Updating coarse-fine boundaries at level %d\n",level);
+    const Level* lev = hier._levels[level];
     for (int i = 0; i < lev->_patchList.size(); i++) {
       Patch* patch = lev->_patchList[i];
       for (int d = 0; d < numDims; d++) {
-        double faceArea = cellVolume / h[d];
         for (int s = -1; s <= 1; s += 2) {
           Print("--- d = %d , s = %d ---\n",d,s);
           if(patch->getBoundary(d, s) == Patch::CoarseFine){
@@ -419,9 +553,9 @@ main(int argc, char *argv[]) {
             for (int cell = 0; !eoc;
                  cell++,
                    IndexPlusPlus(patch->_ilower,patch->_iupper,active,sub,eoc)) {
-              HYPRE_SStructGraphAddEntries(graph,
-                                           level,   index...,    0,
-                                           level-1, to_index..., 0); 
+              //              HYPRE_SStructGraphAddEntries(graph,
+              //                                           level,   index...,    0,
+              //                                           level-1, to_index..., 0); 
             }
           }
         }
