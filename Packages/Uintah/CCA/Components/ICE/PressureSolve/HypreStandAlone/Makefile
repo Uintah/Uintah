@@ -21,12 +21,14 @@ MPI_LIBS   = -lmpi -llam -lutil -lpthread -ldl
 ##################################################################
 # Targets
 ##################################################################
-TARGET1                  = mydriver
+TARGET1          = mydriver
 TARGET1_OBJS     = \
-mydriver.o \
-util.o \
+			mydriver.o \
+			util.o     \
+			Level.o    \
+			Patch.o   
 
-TARGET2                  = mpitest
+TARGET2          = mpitest
 TARGET2_OBJS     = \
 mpitest.o \
 
