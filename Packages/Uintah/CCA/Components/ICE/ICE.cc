@@ -168,16 +168,14 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
                         SimulationStateP&   sharedState)
 {
   d_sharedState = sharedState;
-  lb->delTLabel = sharedState->get_delt_label();
   d_press_matl = scinew MaterialSubset();
   d_press_matl->add(0);
   d_press_matl->addReference();
 
   cout_norm << "In the preprocessor . . ." << endl;
   dataArchiver = dynamic_cast<Output*>(getPort("output"));
-  if(dataArchiver == 0){
-    cout<<"dataArchiver in ICE is null now exiting; "<<endl;
-    exit(1);
+  if(!dataArchiver){
+    throw InternalError("ICE:couldn't get output port", __FILE__, __LINE__);
   }
   solver = dynamic_cast<SolverInterface*>(getPort("solver"));
   if(!solver) {
