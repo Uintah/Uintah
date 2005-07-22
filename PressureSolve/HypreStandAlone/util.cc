@@ -12,7 +12,8 @@ using namespace std;
 
 void 
 ToIndex(const vector<int>& subFrom,
-        Index* subTo)
+        Index* subTo,
+        const int numDims)
   /*_____________________________________________________________________
     Function ToIndex:
     Convert a vector-type subscript "subFrom" to Index-type "subTo",
@@ -181,6 +182,49 @@ clean(void)
   hypre_FinalizeMemoryDebug();
 #endif
   MPI_Finalize();    // Quit MPI
+}
+
+
+void
+serializeProcsBegin(void)
+  /*_____________________________________________________________________
+    Function serializeProcsBegin:
+    Create a sequence of barriers to make sure that each proc separately
+    goes thru the section following a call to serializeProcsBegin() 
+    to it. I.e. that section of code is sequential - done first by proc 0,
+    then proc 1, and so on. This is for better printout debugging with
+    MPI.
+    _____________________________________________________________________*/
+{
+#if DEBUG
+  for (int i = 0; i < MYID; i++) {
+    //    Print("serializeProcsBegin Proc # %d\n",i);
+    MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
+  }
+#endif
+}
+
+void
+serializeProcsEnd(void)
+  /*_____________________________________________________________________
+    Function serializeProcsEnd:
+    Create a sequence of barriers to make sure that each proc separately
+    goes thru the section before a call to serializeProcsEnd() 
+    to it. I.e. that section of code is sequential - done first by proc 0,
+    then proc 1, and so on. This is for better printout debugging with
+    MPI.
+    _____________________________________________________________________*/
+{
+  static int numProcs = -1;
+  if (numProcs == -1) {
+    MPI_Comm_size(MPI_COMM_WORLD, &numProcs);
+  }
+#if DEBUG
+  for (int i = numProcs-1; i >= MYID; i--) {
+    //    Print("serializeProcsEnd Proc # %d\n",i);
+    MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
+  }
+#endif
 }
 
 void
