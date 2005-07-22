@@ -59,7 +59,7 @@ void AMRICE::problemSetup(const ProblemSpecP& params, GridP& grid,
          " block not found inside of <ICE> block \n";
     throw ProblemSetupException(warn, __FILE__, __LINE__);
   }
-  
+  amr_ps->require( "orderOfInterpolation", d_orderOfInterpolation);
   amr_ps->getWithDefault( "regridderTest", d_regridderTest,     false);
   amr_ps->getWithDefault( "do_Refluxing",  d_doRefluxing,       true);
   refine_ps->getWithDefault("Density",     d_rho_threshold,     1e100);
@@ -275,61 +275,6 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
 }
 
 /*___________________________________________________________________
- Function~  AMRICE::interpolationInterface--
- Purpose:    depending on which 
-_____________________________________________________________________*/
-#if 0
-template<class T>
-  void interpolationInterface(constCCVariable<T>& q_CL,// course level
-                              DataWarehouse* coarse_new_dw,
-                              const Level* coarseLevel,
-                              const Level* fineLevel,
-                              const IntVector& refineRatio,
-                              const IntVector& fl,
-                              const IntVector& fh,
-                              CCVariable<T>& q_FineLevel)
-{
-
-
-  //__________________________________
-  //  Initialize test data
-  cout.setf(ios::scientific,ios::floatfield);
-  cout.precision(16);
-
-  CCVariable<T> tmp;
-  constCCVariable<T> testData;
-  
-  Vector c_dx = coarseLevel->dCell();
-  for(Level::const_patchIterator iter = coarseLevel->patchesBegin();
-                                iter != coarseLevel->patchesEnd(); iter++){
-    const Patch* patch2 = *iter;
-    coarse_new_dw->allocateTemporary(tmp,patch2);
-    for(CellIterator iter = patch2->getExtraCellIterator(); !iter.done();iter++){
-      IntVector c = *iter; 
-      double X = ((c.x() * c_dx.x()) + c_dx.x()/2);
-      double Y = ((c.y() * c_dx.y()) + c_dx.y()/2);
-      double Z = ((c.z() * c_dx.z()) + c_dx.z()/2);
-      //tmp[c] = varType(5.0);
-      //tmp[c] = varType( X );
-      //tmp[c] = varType( Y );
-      //tmp[c] = varType( Z );
-      tmp[c] = T( X * Y* Z  );
-      //tmp[c] = varType( X * X * Y * Y * Z * Z);
-      //tmp[c] = varType( X * X * X * Y* Y * Y  * Z * Z *Z );
-    }
-    testData = tmp;
-  }
-
-  
-  linearInterpolation<T>(testData, coarseLevel, fineLevel,
-                          refineRatio, fl,fh, q_FineLevel); 
-                                     
-  quadraticInterpolation<T>(testData, coarseLevel, fineLevel,
-                            refineRatio, fl,fh, q_FineLevel);
-}
-#endif
-
-/*___________________________________________________________________
  Function~  AMRICE::refine_CF_interfaceOperator-- 
 _____________________________________________________________________*/
 template<class varType>
@@ -401,33 +346,18 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
               << " expandCellsHi " << expandCellsHi
               << " expandCellsLo " << expandCellsLo
               << " \t coarseLevel iterator " << coarseLow << " " << coarseHigh<<endl;
-               
-      //__________________________________
-      //   subCycleProgress_var  = 0
-      //  interpolation using the coarse_old_dw data
-      if(subCycleProgress_var < 1.e-10){
-        constCCVariable<varType> q_OldDW;
-        coarse_old_dw->getRegion(q_OldDW, label, matl, coarseLevel,
-                                 coarseLow, coarseHigh);
 
-        linearInterpolation<varType>(q_OldDW, coarseLevel, fineLevel,
-                                     refineRatio, fl,fh, Q);      
-                                    
-                                    
-     //  interpolationInterface<varType>(q_OldDW,coarse_new_dw, coarseLevel, fineLevel,
-     //                                  refineRatio, fl,fh, Q);  
-      } 
        
        //__________________________________
-       // subCycleProgress_var near 1.0
+       // subCycleProgress_var near 1.0 
        //  interpolation using the coarse_new_dw data
-      else if(subCycleProgress_var > 1-1.e-10){ 
+      if(subCycleProgress_var > 1-1.e-10){ 
        constCCVariable<varType> q_NewDW;
        coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel,
                              coarseLow, coarseHigh);
-
-       linearInterpolation<varType>(q_NewDW, coarseLevel, fineLevel,
-                                    refineRatio, fl,fh, Q); 
+                             
+       selectInterpolator(q_NewDW, d_orderOfInterpolation, coarseLevel, 
+                          fineLevel, refineRatio, fl,fh, Q);
       } else {    
                       
       //__________________________________
@@ -445,12 +375,13 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
         
         Q_old.initialize(varType(d_EVIL_NUM));
         Q_new.initialize(varType(d_EVIL_NUM));
-                             
-        linearInterpolation<varType>(q_OldDW, coarseLevel, fineLevel,
-                                     refineRatio, fl,fh, Q_old);
-                                      
-        linearInterpolation<varType>(q_NewDW, coarseLevel, fineLevel,
-                                     refineRatio, fl,fh, Q_new);
+
+        selectInterpolator(q_OldDW, d_orderOfInterpolation, coarseLevel, 
+                          fineLevel,refineRatio, fl,fh, Q_old);
+                          
+        selectInterpolator(q_NewDW, d_orderOfInterpolation, coarseLevel, 
+                          fineLevel,refineRatio, fl,fh, Q_new);
+
         // Linear interpolation in time
         for(CellIterator iter(fl,fh); !iter.done(); iter++){
           IntVector f_cell = *iter;
@@ -463,7 +394,7 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
    
   //____ B U L L E T   P R O O F I N G_______ 
   // All values must be initialized at this point
-  if(subCycleProgress_var < 1.e-10){  
+  if(subCycleProgress_var > 1-1.e-10){  
     IntVector badCell;
     if( isEqual<varType>(varType(d_EVIL_NUM),patch,Q, badCell) ){
       ostringstream warn;
@@ -784,7 +715,7 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
   // coarse region we need to get from the dw
   IntVector cl = finePatch->getLevel()->mapCellToCoarser(fl);
   IntVector ch = finePatch->getLevel()->mapCellToCoarser(fh) + 
-    finePatch->getLevel()->getRefinementRatio() - IntVector(1,1,1);
+  finePatch->getLevel()->getRefinementRatio() - IntVector(1,1,1);
 
   // fine region to work over
   IntVector lo = finePatch->getLowIndex();
@@ -803,10 +734,8 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
   new_dw->getRegion(coarse_q_CC, varLabel, indx, coarseLevel, cl, ch);
     
     
-/*`==========TESTING==========*/
-      linearInterpolation<T>(coarse_q_CC, coarseLevel, fineLevel,
-                            refineRatio, lo,hi,q_CC);
-/*===========TESTING==========`*/
+  selectInterpolator(coarse_q_CC, d_orderOfInterpolation, coarseLevel, fineLevel,
+                      refineRatio, lo,hi,q_CC);
   
   //____ B U L L E T   P R O O F I N G_______ 
   // All values must be initialized at this point
