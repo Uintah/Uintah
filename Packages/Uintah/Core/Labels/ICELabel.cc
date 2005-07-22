@@ -11,7 +11,7 @@ using namespace Uintah;
 
 ICELabel::ICELabel()
 {
-  delTLabel = 0; // Placed in later, in problemSetup
+  delTLabel = VarLabel::create( "delT", delt_vartype::getTypeDescription() );
   doMechLabel
     = VarLabel::create("doMech",    delt_vartype::getTypeDescription());
   NeedAddIceMaterialLabel
@@ -265,6 +265,7 @@ ICELabel::ICELabel()
 ICELabel::~ICELabel()
 {
     // Cell centered variables
+    VarLabel::destroy(delTLabel);
     VarLabel::destroy(press_CCLabel);
     VarLabel::destroy(press_equil_CCLabel);
     VarLabel::destroy(matl_press_CCLabel);
