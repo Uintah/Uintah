@@ -25,7 +25,8 @@ PSELIBS := \
         Packages/Uintah/CCA/Components/ICE       \
         Packages/Uintah/CCA/Components/MPM       \
         Packages/Uintah/CCA/Components/MPMICE  	 \
-	Packages/Uintah/CCA/Components/ProblemSpecification
+	Packages/Uintah/CCA/Components/ProblemSpecification \
+	Packages/Uintah/CCA/Components/Solvers
 
 LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY)
 
