@@ -217,6 +217,7 @@
         <advection type = "FirstOrder" />
         <solution technique = "EqForm" />
         <AMR>
+          <orderOfInterpolation>1 </orderOfInterpolation>
           <!--if gradient is > knob then refine -->
           <Refinement_Criteria_Thresholds>
             <Density>     1e100    </Density>

@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Math/MiscMath.h>
 
 namespace Uintah {
@@ -181,7 +182,7 @@ __|__|__|__|__|__|__|__|__|
            |           |
            |           |
      o     |     o    2|       o          Q_2 = (w0_x)Q(i-1)  + (w1_x)Q(i) + (w2_x)Q(i+1)
-           |           |                    (j+1)
+           |           |                    (j-1)
            |           |
 ___________|___________|_______________
 
@@ -247,23 +248,7 @@ template<class T>
     w(0,1) = w0_x * w1_y; w(1,1) = w1_x * w1_y; w(2,1) = w2_x * w1_y;
     w(0,2) = w0_x * w2_y; w(1,2) = w1_x * w2_y; w(2,2) = w2_x * w2_y;  
     //  Q_CL(-1, 1,k)      Q_CL(0, 1,k)          Q_CL(1, 1,k)      
-    
-    
-#if 0    
-    // Maybe use this when the patch is on the fine level.
-  bool onBoundary = true;
-    int x_m = onBoundary?Sign(dist.x()):-1;
-    int y_m = onBoundary?Sign(dist.y()):-1;
-    int z_m = onBoundary?Sign(dist.z()):-1;
-    int x_p = onBoundary?2*Sign(dist.x()):1;
-    int y_p = onBoundary?2*Sign(dist.y()):1;
-    int z_p = onBoundary?2*Sign(dist.z()):1;
-    
-    cout << f_cell << endl;
-    cout << " x_p " << x_p << " y_p " << y_p << " z_p " << z_p<< endl; 
-    cout << " x_m " << x_m << " y_m " << y_m << " z_m " << z_m<< endl;    
-#endif    
-    
+        
     vector<T> q_XY_Plane(3);
      
     int k = -2; 
@@ -298,5 +283,32 @@ template<class T>
 }
 
 }
-
+/*___________________________________________________________________
+ Function~  selectInterpolator--
+_____________________________________________________________________*/
+template<class T>
+  void selectInterpolator(constCCVariable<T>& q_CL,
+                          const int orderOfInterpolation,
+                          const Level* coarseLevel,
+                          const Level* fineLevel,
+                          const IntVector& refineRatio,
+                          const IntVector& fl,
+                          const IntVector& fh,
+                          CCVariable<T>& q_FineLevel)
+{
+  switch(orderOfInterpolation){
+  case 1:
+    linearInterpolation<T>(q_CL, coarseLevel, fineLevel,
+                          refineRatio, fl,fh, q_FineLevel); 
+    break;
+  case 2:                             
+    quadraticInterpolation<T>(q_CL, coarseLevel, fineLevel,
+                              refineRatio, fl,fh, q_FineLevel);
+    break;
+  default:
+    throw InternalError("ERROR:AMR: You're trying to use an interpolator"
+                        " that doesn't exist.  <orderOfInterpolation> must be 1 or 2",__FILE__,__LINE__);
+  break;
+  }
+}
 #endif
