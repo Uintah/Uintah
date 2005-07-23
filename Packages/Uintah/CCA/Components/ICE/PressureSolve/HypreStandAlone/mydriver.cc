@@ -31,15 +31,17 @@ using namespace std;
 /*================== Global variables ==================*/
 
 int     MYID;     /* The same as this proc's myid, but global */
+char boundaryTypeString[3][256] = {"Domain","CoarseFine","Neighbor"};
 
 void
 getPatchesFromOtherProcs( const Param & param, const Hierarchy & hier )
 {
   int sendbuf[param.numProcs]; // I have 5, don't know what everyone else has: 5 0 0 0 0 
   int numPatches[param.numProcs];
-  
+
   for( int level = 0; level < hier._levels.size(); level++ ) {
     Level* lev = hier._levels[level];
+    const vector<int>& resolution = lev->_resolution;
     // clear sendbuf
     for( int index = 0; index < param.numProcs; index++ ) {
       if( index == MYID ) {
@@ -48,65 +50,81 @@ getPatchesFromOtherProcs( const Param & param, const Hierarchy & hier )
         sendbuf[index] = 0;
       }
     }
+
     // Talk to all procs to find out how many patches they have on
     // this level.
     MPI_Allreduce(sendbuf, numPatches, param.numProcs,
                   MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    
+
     int totalPatches = 0;
     int startPosition = 0;
     for(int index = 0; index < param.numProcs; index++ ) {
-      Proc0Print("has %d patches on level %d\n", numPatches[index], level);
+      //      Proc0Print("has %d patches on level %d\n", numPatches[index], level);
       totalPatches += numPatches[index];
       if( index < MYID )
         startPosition += numPatches[index];
     }
 
-    Proc0Print("got totalPatches of %d\n", totalPatches);
+    //    Proc0Print("got totalPatches of %d\n", totalPatches);
 
     // Put our patch information into a big vector, share it with
     // all other procs
     int recordSize = 2*param.numDims+1;
-    int * patchInfo = new int[ recordSize * totalPatches ];
-    int * patchInfoRecv = new int[ recordSize * totalPatches ];
+    int * sendPatchInfo = new int[ recordSize * totalPatches ];
+    int * patchInfo     = new int[ recordSize * totalPatches ];
     for( int index = 0; index < recordSize*totalPatches; index++ ) {
-      patchInfo[index] = 0;
-      patchInfoRecv[index] = -1;
+      sendPatchInfo[index] = 0;
+      patchInfo[index] = -1;
     }
     int count = startPosition * recordSize;
-    Print("begin count = %d\n",count);
     for(int index = 0; index < lev->_patchList.size(); index++ ) {
       Patch* patch = lev->_patchList[index];
-      patchInfo[count++] = patch->_procID;
+      sendPatchInfo[count++] = patch->_procID;
       for (int d = 0; d < param.numDims; d++)
-        patchInfo[count++] = patch->_ilower[d];
+        sendPatchInfo[count++] = patch->_ilower[d];
       for (int d = 0; d < param.numDims; d++)
-        patchInfo[count++] = patch->_iupper[d];
-    }
-    Print("end  count = %d\n",count);
-    
-    MPI_Allreduce(patchInfo, patchInfoRecv, totalPatches*recordSize,
-                  MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    
-    for(int index = 0; index < recordSize*totalPatches; index++ ) {
-      Proc0Print("%3d: %3d %3d\n", index,patchInfo[index],patchInfoRecv[index]);
+        sendPatchInfo[count++] = patch->_iupper[d];
     }
 
+    MPI_Allreduce(sendPatchInfo, patchInfo, totalPatches*recordSize,
+                  MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    
+    //    for(int index = 0; index < recordSize*totalPatches; index++ ) {
+    // Proc0Print("%3d: %3d %3d\n", index,sendPatchInfo[index],patchInfo[index]);
+    //}
+    //    Print("Looping over patches and setting their boundary types\n");
     vector<int> ilower(param.numDims);
     vector<int> iupper(param.numDims);
     vector<int> otherilower(param.numDims);
     vector<int> otheriupper(param.numDims);
+    int patchIndex = 0;
 
     for (int index = 0; index < totalPatches; index++ ) {
       int owner = patchInfo[recordSize*index];
       if (MYID != owner) {   // This patch is processed only on its owning proc
         continue;
       }
+      Patch* patch = lev->_patchList[patchIndex];
+      patchIndex++;
       for (int d = 0; d < param.numDims; d++) {
         ilower[d] = patchInfo[recordSize*index + d + 1];
         iupper[d] = patchInfo[recordSize*index + param.numDims + d + 1];
+
+        /* Default: boundary is a C/F boundary */
+        for (int s = -1; s <= 1; s += 2) {
+          patch->setBoundary(d,s,Patch::CoarseFine);
+        }
+        
+        /* Check if patch is near a domain boundary */
+        if (ilower[d] == 0) {
+          patch->setBoundary(d,-1,Patch::Domain);
+        }
+
+        if (iupper[d] == resolution[d]-1) {
+          patch->setBoundary(d,1,Patch::Domain);
+        }
       }
-      Patch* patch = lev->_patchList[index];
+
       for (int other = 0; other < totalPatches; other++) {
         if (other == index)
           continue;
@@ -114,10 +132,21 @@ getPatchesFromOtherProcs( const Param & param, const Hierarchy & hier )
           otherilower[d] = patchInfo[recordSize*other + d + 1];
           otheriupper[d] = patchInfo[recordSize*other + param.numDims + d + 1];
         }
+        /*
+        Print("Comparing patch index=%d: from ",index);
+        printIndex(ilower);
+        printf(" to ");
+        printIndex(iupper);
+        printf("  owned by proc %d",patchInfo[recordSize*index]);
+        printf("\n");
+        Print("To patch other=%d: from ",other);
+        printIndex(otherilower);
+        printf(" to ");
+        printIndex(otheriupper);
+        printf("  owned by proc %d",patchInfo[recordSize*other]);
+        printf("\n");
+        */
         for (int d = 0; d < param.numDims; d++) {
-          /* Default: boundary is a C/F boundary */
-          patch->setBoundary(d,1,Patch::CoarseFine);
-
           /* Check if patch has a nbhring patch on its left */
           if (ilower[d] == otheriupper[d]+1) {
             for (int d2 = 0; d2 < param.numDims; d2++) {
@@ -139,25 +168,39 @@ getPatchesFromOtherProcs( const Param & param, const Hierarchy & hier )
               }
             }
           }
-
-          /* Check if patch is near a domain boundary */
-          if ((ilower[d] == 0) || (iupper[d] == resolution[d]-1)) {
-            patch->setBoundary(d,1,Patch::Domain);
-          }
         }
+      } // end for other
+    } // end for index
+    delete [] sendPatchInfo;
+    delete [] patchInfo;
+  } // end for level
+}
 
-        /* Print boundary types */
-        for (int d = 0; d < param.numDims; d++) {
-          for (int s = -1; s <= 1; s += 2) {
-            Print("  boundary( d = %d , s = %d ) = %s\n",
-                  d,s,Patch::BoundaryTypeString[patch->getBoundary(d,s)]);
-          }
+void
+printPatchBoundaries( const Param & param, const Hierarchy & hier )
+{
+  serializeProcsBegin();
+  /* Print boundary types */
+  for( int level = 0; level < hier._levels.size(); level++ ) {
+    Print("---- Patch boundaries at level %d ----\n",level);
+    Level* lev = hier._levels[level];
+    for (int index = 0; index < lev->_patchList.size(); index++ ) {
+      Patch* patch = lev->_patchList[index];
+      Print("Patch # %d: from ",index);                                                                    
+      printIndex(patch->_ilower);
+      printf(" to ");                                                                                                    
+      printIndex(patch->_iupper);
+      printf("\n");
+      for (int d = 0; d < param.numDims; d++) {
+        for (int s = -1; s <= 1; s += 2) {
+          Print("  boundary( d = %d , s = %+d ) = %s\n",
+                d,s,boundaryTypeString[patch->getBoundary(d,s)]);
         }
       }
-
-    delete [] patchInfo;
-    delete [] patchInfoRecv;
-  }
+    }
+  } // end for level
+  Print("\n");
+  serializeProcsEnd();
 } // end getPatchesFromOtherProcs()
 
 void
@@ -273,6 +316,7 @@ makeGrid(const Param& param,
   /* Create an empty grid in numDims dimensions with # parts = numLevels. */
   HYPRE_SStructGridCreate(MPI_COMM_WORLD, numDims, numLevels, &grid);
   serializeProcsBegin();
+  Print("Making grid\n");
 
   /* Add the patches that this proc owns at all levels to grid */
   for (int level = 0; level < numLevels; level++) {
@@ -303,6 +347,7 @@ makeGrid(const Param& param,
     data from all processors. On exit from this function, the grid is
     ready.
   */
+  //  Print("Before the end of makeGrid()\n");
   serializeProcsEnd();
   HYPRE_SStructGridAssemble(grid);
   if (MYID == 0) {
@@ -317,6 +362,8 @@ main(int argc, char *argv[]) {
   /*-----------------------------------------------------------
    * Variable definition, parameter init, arguments verification
    *-----------------------------------------------------------*/
+  //  Patch::init();
+
   /* Counters, parameters and specific sizes of this problem */
   int numProcs, myid;
   Param param;
@@ -435,13 +482,11 @@ main(int argc, char *argv[]) {
   refinementRatio = hypre_TAlloc(Index, numLevels);
 
   makeHierarchy(param, hier, plevel, refinementRatio); // Define our MR hierarchy
-
   getPatchesFromOtherProcs( param, hier );
-
-  Print("makeHierarchy done\n");
   HYPRE_SStructVariable vars[NUM_VARS] =
     {HYPRE_SSTRUCT_VARIABLE_CELL}; // We use cell centered vars
   makeGrid(param, hier, grid, vars);             // Make Hypre grid from hier
+  printPatchBoundaries(param, hier);
 
   /*-----------------------------------------------------------
    * Set up the stencils
@@ -485,15 +530,11 @@ main(int argc, char *argv[]) {
     }
   }
   
-  Print("Creating stencil ... ");
   /* Create an empty stencil */
   HYPRE_SStructStencilCreate(numDims, stencilSize, &stencil);
-  printf("done\n");
   
   /* Add stencil entries */
-  if (myid == 0) {
-    Print("Stencil offsets:\n");
-  }
+  Proc0Print("Stencil offsets:\n");
   Index hypreOffset;
   for (entry = 0; entry < stencilSize; entry++) {
     ToIndex(stencil_offsets[entry],&hypreOffset,numDims);
@@ -534,28 +575,44 @@ main(int argc, char *argv[]) {
   for (int level = 1; level < numLevels; level++) {
     Print("  Updating coarse-fine boundaries at level %d\n",level);
     const Level* lev = hier._levels[level];
+    //    const Level* coarseLev = hier._levels[level-1];
     for (int i = 0; i < lev->_patchList.size(); i++) {
       Patch* patch = lev->_patchList[i];
       for (int d = 0; d < numDims; d++) {
         for (int s = -1; s <= 1; s += 2) {
-          Print("--- d = %d , s = %d ---\n",d,s);
-          if(patch->getBoundary(d, s) == Patch::CoarseFine){
+          if (patch->getBoundary(d, s) == Patch::CoarseFine) {
+            Print("--- Processing C/F face d = %d , s = %d ---\n",d,s);
             vector<int> faceLower(numDims);
-            vector<int> faceUpper(numDims);
+            vector<int> faceUpper(numDims);            
             faceExtents(patch->_ilower, patch->_iupper, d, s,
                       faceLower, faceUpper);
-            vector<int> sub;
+            vector<int> coarseFaceLower(numDims);
+            vector<int> coarseFaceUpper(numDims);
+            for (int dd = 0; dd < numDims; dd++) {
+              coarseFaceLower[dd] =
+                faceLower[dd] / refinementRatio[level][dd];
+              coarseFaceUpper[dd] =
+                faceUpper[dd]/ refinementRatio[level][dd];
+            }
+            coarseFaceLower[d] += s;
+            coarseFaceUpper[d] += s;
             vector<bool> active(numDims);
-            sub = patch->_ilower;        
             for (int dd = 0; dd < numDims; dd++) active[dd] = true;
-            active[d] = false;
+            //            active[d] = false;
             bool eoc = false;
+            vector<int> sub = coarseFaceLower;
             for (int cell = 0; !eoc;
                  cell++,
-                   IndexPlusPlus(patch->_ilower,patch->_iupper,active,sub,eoc)) {
-              //              HYPRE_SStructGraphAddEntries(graph,
-              //                                           level,   index...,    0,
-              //                                           level-1, to_index..., 0); 
+                   IndexPlusPlus(coarseFaceLower,coarseFaceUpper,active,sub,eoc)) {
+              Print("cell = %4d",cell);
+              printf("  sub = ");
+              printIndex(sub);
+              printf("\n");
+              /*
+              HYPRE_SStructGraphAddEntries(graph,
+                                           level,   fineIndex,   0,
+                                           level-1, coarseIndex, 0); 
+              */
             }
           }
         }
