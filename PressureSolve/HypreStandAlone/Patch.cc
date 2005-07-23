@@ -1,6 +1,10 @@
 #include "Patch.h"
 
 #include "util.h"
+#include <string>
+//#include <map>
+
+//char boundaryTypeString[3][256] = {"Domain","CoarseFine","Neighbor"};
 
 Patch::Patch(const int procID, 
              const int levelID,
