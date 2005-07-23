@@ -2,7 +2,9 @@
 #define __PATCH_H__
 
 #include "mydriver.h"
+#include <vector>
 #include <string>
+//#include <map>
 
 class Patch {
   /*_____________________________________________________________________
@@ -12,7 +14,7 @@ class Patch {
     _____________________________________________________________________*/
 public:
   enum BoundaryType {
-    Domain, CoarseFine, Neighbor
+    Domain = 0, CoarseFine, Neighbor
   };
   
   int         _procID;    // Owning processor's ID
@@ -27,7 +29,7 @@ public:
         const vector<int>& ilower,
         const vector<int>& iupper);
 
-  BoundaryType& getBoundary(int d, int s) 
+  BoundaryType getBoundary(int d, int s) 
     {
       return _boundaries[2*d + ((s+1)/2)];
     }
@@ -36,25 +38,20 @@ public:
                    const int s,
                    const BoundaryType& bt ) 
     {
+      //      printf("MYID = %d: size(_boundaries) = %d   d=%d  s=%d  ind=%d\n",MYID,_boundaries.size(),d,s,2*d+((s+1)/2));
+      //      fflush(stdout);
       _boundaries[2*d+((s+1)/2)] = bt;
     }
 
-  String boundaryTypeString(const BoundaryType& bt)
-    {
-      switch (bt)
-        {
-        case Domain:
-          return "Domain";
-          break;
-        case CoarseFine:
-          return "CoarseFine";
-          break;
-        case Neighbor:
-          return "Neighbor";
-          break;
-        }
-      return "???";
-    }
+  //  /* Static members & functions */
+  //  static std::map<BoundaryType, std::string> boundaryTypeString; 
+  
+  //  static void init(void)
+  //    {
+  //      boundaryTypeString[Domain    ] = "Domain";
+  //      boundaryTypeString[CoarseFine] = "CoarseFine";
+  //      boundaryTypeString[Neighbor  ] = "Neighbor";
+  //    }
 
 private:
 };

@@ -30,6 +30,7 @@ using std::vector;
 
 extern int         numDims;  // Actual number of dimensions
 extern int         MYID;     // The same as myid (this proc's id)
+//extern char boundaryTypeString[3][256];
 
 /*================== Type definitions ==================*/
 

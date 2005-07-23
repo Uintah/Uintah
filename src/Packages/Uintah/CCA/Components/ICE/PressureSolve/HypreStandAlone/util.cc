@@ -228,7 +228,7 @@ serializeProcsBegin(void)
 {
 #if DEBUG
   for (int i = 0; i < MYID; i++) {
-    //    Print("serializeProcsBegin Proc # %d\n",i);
+    //    Print("serializeProcsBegin Barrier #%d\n",i);
     MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
   }
 #endif
@@ -251,7 +251,7 @@ serializeProcsEnd(void)
   }
 #if DEBUG
   for (int i = numProcs-1; i >= MYID; i--) {
-    //    Print("serializeProcsEnd Proc # %d\n",i);
+    //    Print("serializeProcsEnd Barrier # %d\n",i);
     MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
   }
 #endif
