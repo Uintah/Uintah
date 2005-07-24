@@ -258,6 +258,15 @@ serializeProcsEnd(void)
 }
 
 void
+pointwiseAdd(const vector<int>& x,
+             const vector<int>& y,
+             vector<int>& result)
+{
+  assert((x.size() == y.size()) &&
+         (result.size() == y.size()));
+  for (int d = 0; d < x.size(); d++) result[d] = x[d] + y[d];
+}
+void
 pointwiseAdd(const vector<double>& x,
              const vector<double>& y,
              vector<double>& result)
@@ -276,6 +285,15 @@ scalarMult(const vector<double>& x,
   for (int d = 0; d < x.size(); d++) result[d] = h * x[d];
 }
 
+void
+pointwiseMult(const vector<int>& i,
+              const vector<int>& h,
+              vector<int>& result)
+{
+  assert((i.size() == h.size()) &&
+         (result.size() == h.size()));
+  for (int d = 0; d < i.size(); d++) result[d] = i[d] * h[d];
+}
 void
 pointwiseMult(const vector<int>& i,
               const vector<double>& h,

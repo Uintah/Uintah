@@ -249,30 +249,32 @@ makeHierarchy(const Param& param,
   /* Initialize the patches that THIS proc owns at all levels */
   for (int level = 0; level < numLevels; level++) {
     plevel[level] = level;   // part ID of this level
-    
+    vector<int> refRat(numDims);
     /* Refinement ratio w.r.t. parent level. Assumed to be constant
        (1:2) in all dimensions and all levels for now. */
     if (level == 0) {        // Dummy ref. ratio value */
       for (int dim = 0; dim < numDims; dim++) {
-        refinementRatio[level][dim] = 1;
+        refRat[dim] = 1;
       }
     } else {
       for (int dim = 0; dim < numDims; dim++) {
-        refinementRatio[level][dim] = 2;
+        refRat[dim] = 2;
       }
     }
-    
+    ToIndex(refRat,&refinementRatio[level],numDims);
+
     double h;
     /* Compute meshsize, assumed the same in all directions at each level */
     if (level == 0) {
       h = 1.0/n;   // Size of domain divided by # of gridpoints
     } else {
       h = hier._levels[level-1]->_meshSize[0] / 
-        refinementRatio[level][0]; // ref. ratio constant for all dims
+        refRat[0]; // ref. ratio constant for all dims
     }
     
     hier._levels.push_back(new Level(numDims,h));
     Level* lev = hier._levels[level];
+    lev->_refRat = refRat;
     vector<int> ilower(numDims);
     vector<int> iupper(numDims);
 
@@ -371,7 +373,7 @@ main(int argc, char *argv[]) {
   param.solverID      = 30;    // solver ID. 30 = AMG, 99 = FAC
   param.numLevels     = 2;     // Number of AMR levels
   param.n             = 8;     // Level 0 grid size in every direction
-  param.printSystem   = true;
+  param.printSystem   = false; //true;
 
   /* Grid data structures */
   HYPRE_SStructGrid     grid;
@@ -576,6 +578,8 @@ main(int argc, char *argv[]) {
     Print("  Updating coarse-fine boundaries at level %d\n",level);
     const Level* lev = hier._levels[level];
     //    const Level* coarseLev = hier._levels[level-1];
+    const vector<int>& refRat = lev->_refRat;
+
     for (int i = 0; i < lev->_patchList.size(); i++) {
       Patch* patch = lev->_patchList[i];
       for (int d = 0; d < numDims; d++) {
@@ -588,30 +592,67 @@ main(int argc, char *argv[]) {
                       faceLower, faceUpper);
             vector<int> coarseFaceLower(numDims);
             vector<int> coarseFaceUpper(numDims);
+            int numFaceCells = 1;
+            int numCoarseFaceCells = 1;
             for (int dd = 0; dd < numDims; dd++) {
+              Print("dd = %d\n",dd);
+              Print("refRat = %d\n",refRat[dd]);
               coarseFaceLower[dd] =
-                faceLower[dd] / refinementRatio[level][dd];
+                faceLower[dd] / refRat[dd];
               coarseFaceUpper[dd] =
-                faceUpper[dd]/ refinementRatio[level][dd];
+                faceUpper[dd]/ refRat[dd];
+              numFaceCells       *= (faceUpper[dd] - faceLower[dd] + 1);
+              numCoarseFaceCells *= (coarseFaceUpper[dd] - coarseFaceLower[dd] + 1);
             }
-            coarseFaceLower[d] += s;
-            coarseFaceUpper[d] += s;
-            vector<bool> active(numDims);
-            for (int dd = 0; dd < numDims; dd++) active[dd] = true;
-            //            active[d] = false;
-            bool eoc = false;
-            vector<int> sub = coarseFaceLower;
-            for (int cell = 0; !eoc;
-                 cell++,
-                   IndexPlusPlus(coarseFaceLower,coarseFaceUpper,active,sub,eoc)) {
-              Print("cell = %4d",cell);
-              printf("  sub = ");
-              printIndex(sub);
+            Print("# fine   cell faces = %d\n",numFaceCells);
+            Print("# coarse cell faces = %d\n",numCoarseFaceCells);
+            vector<int> coarseNbhrLower = coarseFaceLower;
+            vector<int> coarseNbhrUpper = coarseFaceUpper;
+            coarseNbhrLower[d] += s;
+            coarseNbhrUpper[d] += s;
+
+            /*
+              Loop over different types of fine cell "children" of a coarse cell
+               at the C/F interface. 
+            */
+            vector<int> zero(numDims,0);
+            vector<int> ref1(numDims,0);
+            for (int dd = 0; dd < numDims; dd++) {
+              ref1[dd] = refRat[dd] - 1;
+            }
+            ref1[d] = 0;
+            vector<bool> activeChild(numDims,true);
+            bool eocChild = false;
+            vector<int> subChild = zero;
+            for (int child = 0; !eocChild;
+                 child++,
+                   IndexPlusPlus(zero,ref1,activeChild,subChild,eocChild)) {
+              Print("child = %4d",child);
+              printf("  subChild = ");
+              printIndex(subChild);
               printf("\n");
+              vector<bool> active(numDims,true);
+              bool eoc = false;
+              vector<int> sub = coarseNbhrLower;
+              for (int cell = 0; !eoc;
+                   cell++,
+                     IndexPlusPlus(coarseNbhrLower,coarseNbhrUpper,active,sub,eoc)) {
+                Print("  cell = %4d",cell);
+                printf("  sub = ");
+                printIndex(sub);
+                vector<int> subFine(numDims);
+                subFine = sub;
+                subFine[d] -= s;
+                pointwiseMult(subFine,refRat,subFine);
+                pointwiseAdd(subFine,subChild,subFine);
+                printf("  subFine = ");
+                printIndex(subFine);
+                printf("\n");
+              }
               /*
-              HYPRE_SStructGraphAddEntries(graph,
-                                           level,   fineIndex,   0,
-                                           level-1, coarseIndex, 0); 
+                HYPRE_SStructGraphAddEntries(graph,
+                level,   fineIndex,   0,
+                level-1, coarseIndex, 0); 
               */
             }
           }
