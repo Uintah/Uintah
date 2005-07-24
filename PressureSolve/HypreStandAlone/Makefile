@@ -25,6 +25,7 @@ TARGET1          = mydriver
 TARGET1_OBJS     = \
 			mydriver.o \
 			util.o     \
+			inputs.o   \
 			Level.o    \
 			Patch.o   
 
