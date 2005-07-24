@@ -40,9 +40,18 @@ void serializeProcsBegin(void);
 
 void serializeProcsEnd(void);
 
+void pointwiseAdd(const vector<int>& x,
+                  const vector<int>& y,
+                  vector<int>& result);
+
 void pointwiseAdd(const vector<double>& x,
                   const vector<double>& y,
                   vector<double>& result);
+
+void
+pointwiseMult(const vector<int>& i,
+              const vector<int>& h,
+              vector<int>& result);
 
 void scalarMult(const vector<double>& x,
                 const double h,
