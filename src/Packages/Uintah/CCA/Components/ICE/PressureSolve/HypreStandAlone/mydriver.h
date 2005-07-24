@@ -35,7 +35,7 @@ extern int         MYID;     // The same as myid (this proc's id)
 /*================== Type definitions ==================*/
 
 typedef int    Index[MAX_DIMS];    // Subscript in d-dimensional space
-typedef double Location[MAX_DIMS]; // Data node location in d-dim. space
+typedef vector<double> Location;   // Data node location in d-dim. space
 
 /*================== Function delcarations ==================*/
 

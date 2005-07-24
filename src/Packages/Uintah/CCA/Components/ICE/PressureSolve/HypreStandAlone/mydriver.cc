@@ -569,22 +569,35 @@ main(int argc, char *argv[]) {
   }
   serializeProcsBegin();
 
-  // Graph stuff to be added
+  /*
+    Add structured equations (stencil-based) at the interior of
+    each patch at every level to the graph.
+   */
   for (int level = 0; level < numLevels; level++) {
     Print("  Initializing graph stencil at level %d\n",level);
     HYPRE_SStructGraphSetStencil(graph, level, 0, stencil);
   }
+  
+  /* 
+     Add the unstructured part of the stencil connecting the
+     coarse and fine level at every C/F boundary.
+  */
+
   for (int level = 1; level < numLevels; level++) {
     Print("  Updating coarse-fine boundaries at level %d\n",level);
     const Level* lev = hier._levels[level];
     //    const Level* coarseLev = hier._levels[level-1];
     const vector<int>& refRat = lev->_refRat;
 
+    /* Loop over patches of this proc */
     for (int i = 0; i < lev->_patchList.size(); i++) {
       Patch* patch = lev->_patchList[i];
+
+      /* Loop over C/F boundaries of this patch */
       for (int d = 0; d < numDims; d++) {
         for (int s = -1; s <= 1; s += 2) {
           if (patch->getBoundary(d, s) == Patch::CoarseFine) {
+
             Print("--- Processing C/F face d = %d , s = %d ---\n",d,s);
             vector<int> faceLower(numDims);
             vector<int> faceUpper(numDims);            
@@ -606,6 +619,8 @@ main(int argc, char *argv[]) {
             }
             Print("# fine   cell faces = %d\n",numFaceCells);
             Print("# coarse cell faces = %d\n",numCoarseFaceCells);
+            Index* fineIndex   = new Index[numFaceCells];
+            Index* coarseIndex = new Index[numFaceCells];
             vector<int> coarseNbhrLower = coarseFaceLower;
             vector<int> coarseNbhrUpper = coarseFaceUpper;
             coarseNbhrLower[d] += s;
@@ -648,18 +663,20 @@ main(int argc, char *argv[]) {
                 printf("  subFine = ");
                 printIndex(subFine);
                 printf("\n");
-              }
+              } // end for cell
               /*
                 HYPRE_SStructGraphAddEntries(graph,
                 level,   fineIndex,   0,
                 level-1, coarseIndex, 0); 
               */
-            }
-          }
-        }
-      }
-    }
-  }
+            } // end for child
+            delete[] fineIndex;
+            delete[] coarseIndex;
+          } // end if boundary is CF interface
+        } // end for s
+      } // end for d
+    } // end for i (patches)
+  } // end for level
 
 
   serializeProcsEnd();
