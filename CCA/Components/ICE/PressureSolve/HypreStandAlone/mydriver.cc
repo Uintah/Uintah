@@ -619,8 +619,8 @@ main(int argc, char *argv[]) {
             }
             Print("# fine   cell faces = %d\n",numFaceCells);
             Print("# coarse cell faces = %d\n",numCoarseFaceCells);
-            Index* fineIndex   = new Index[numFaceCells];
-            Index* coarseIndex = new Index[numFaceCells];
+            //            Index* fineIndex   = new Index[numFaceCells];
+            //            Index* coarseIndex = new Index[numFaceCells];
             vector<int> coarseNbhrLower = coarseFaceLower;
             vector<int> coarseNbhrUpper = coarseFaceUpper;
             coarseNbhrLower[d] += s;
@@ -648,30 +648,35 @@ main(int argc, char *argv[]) {
               printf("\n");
               vector<bool> active(numDims,true);
               bool eoc = false;
-              vector<int> sub = coarseNbhrLower;
+              vector<int> subCoarse = coarseNbhrLower;
               for (int cell = 0; !eoc;
                    cell++,
-                     IndexPlusPlus(coarseNbhrLower,coarseNbhrUpper,active,sub,eoc)) {
+                     IndexPlusPlus(coarseNbhrLower,coarseNbhrUpper,active,subCoarse,eoc)) {
                 Print("  cell = %4d",cell);
-                printf("  sub = ");
-                printIndex(sub);
+                printf("  subCoarse = ");
+                printIndex(subCoarse);
                 vector<int> subFine(numDims);
-                subFine = sub;
+                subFine = subCoarse;
                 subFine[d] -= s;
                 pointwiseMult(subFine,refRat,subFine);
                 pointwiseAdd(subFine,subChild,subFine);
                 printf("  subFine = ");
                 printIndex(subFine);
                 printf("\n");
-              } // end for cell
-              /*
+                Index hypreSubFine, hypreSubCoarse;
+                ToIndex(subFine,&hypreSubFine,numDims);
+                ToIndex(subCoarse,&hypreSubCoarse,numDims);
+              
+                /* Add the connections between the fine and coarse nodes to the graph */
+                Print("  Adding connection to graph\n");
                 HYPRE_SStructGraphAddEntries(graph,
-                level,   fineIndex,   0,
-                level-1, coarseIndex, 0); 
-              */
+                                             level,   hypreSubFine,   0,
+                                             level-1, hypreSubCoarse, 0); 
+              } // end for cell
+
             } // end for child
-            delete[] fineIndex;
-            delete[] coarseIndex;
+            //            delete[] fineIndex;
+            //            delete[] coarseIndex;
           } // end if boundary is CF interface
         } // end for s
       } // end for d
