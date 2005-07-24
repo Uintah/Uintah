@@ -10,6 +10,9 @@
 
 using std::vector;
 
+void copyIndex(const Index& subFrom,
+               Index* subTo,
+               const int numDims);
 void ToIndex(const vector<int>& from,
              Index* to,
              const int numDims);

@@ -17,6 +17,18 @@
 using namespace std;
 
 void 
+copyIndex(const Index& subFrom,
+          Index* subTo,
+          const int numDims)
+  /*_____________________________________________________________________
+    Function copyIndex:
+    Copy an index subFrom to index subTo in numDims-dimensions.
+    _____________________________________________________________________*/
+{
+  for (int d = 0; d < numDims; d++) (*subTo)[d] = subFrom[d];
+}
+
+void 
 ToIndex(const vector<int>& subFrom,
         Index* subTo,
         const int numDims)
