@@ -149,9 +149,14 @@ class RadiationDriver : public ModelInterface {
 
   VarLabel* co2_CCLabel;
   VarLabel* h2o_CCLabel;
+  VarLabel* radCO2_CCLabel;
+  VarLabel* radH2O_CCLabel;
   VarLabel* mixfrac_CCLabel;
+  VarLabel* mixfracCopy_CCLabel;
   VarLabel* density_CCLabel;
+  VarLabel* iceDensity_CCLabel;
   VarLabel* temp_CCLabel;
+  VarLabel* iceTemp_CCLabel;
   VarLabel* tempCopy_CCLabel;
   VarLabel* sootVF_CCLabel;
   VarLabel* sootVFCopy_CCLabel;
@@ -165,6 +170,8 @@ class RadiationDriver : public ModelInterface {
   Models_RadiationModel* d_DORadiation;
   int d_radCounter; //to decide how often radiation calc is done
   int d_radCalcFreq;
+  bool d_useIceTemp;
+  bool d_useTableValues;
   const PatchSet* d_perproc_patches;
 
   ProblemSpecP params;

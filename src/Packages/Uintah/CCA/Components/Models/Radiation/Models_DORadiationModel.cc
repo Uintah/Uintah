@@ -199,11 +199,13 @@ Models_DORadiationModel::computeRadiationProps(const ProcessorGroup*,
 					RadiationConstVariables* constvars)
 
 {
-
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
   IntVector domLo = patch->getCellLowIndex();
   IntVector domHi = patch->getCellHighIndex();
+
+  // Hottel and Sarofim's empirical soot model.  Soot is
+  // only a function of stoichiometry and temperature
 
   for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
     for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
@@ -211,13 +213,13 @@ Models_DORadiationModel::computeRadiationProps(const ProcessorGroup*,
 
 	IntVector currCell(ii,jj,kk);
 	if (constvars->temperature[currCell] > 1000.0) {
-	  double bc = constvars->mixfrac[currCell]*(84.0/100.0)*constvars->density[currCell];
+	  double bc = vars->mixfrac[currCell]*(84.0/100.0)*constvars->density[currCell];
 	  double c3 = 0.1;
 	  double rhosoot = 1950.0;
 	  double cmw = 12.0;
 	  double sootFactor = 0.01;
 
-	  if (constvars->mixfrac[currCell] > 0.1)
+	  if (vars->mixfrac[currCell] > 0.1)
 	    vars->sootVF[currCell] = c3*bc*cmw/rhosoot*sootFactor;
 	  else
 	    vars->sootVF[currCell] = 0.0;
@@ -227,9 +229,9 @@ Models_DORadiationModel::computeRadiationProps(const ProcessorGroup*,
   }
 
   fort_m_radcoef(idxLo, idxHi, 
-	       vars->temperature, 
-	       constvars->co2, 
-	       constvars->h2o,
+		 vars->temperature, 
+		 vars->co2,
+		 vars->h2o,
 	       d_opl, 
                vars->sootVF, // Soot volume fraction
                vars->ABSKG,  // Absorption coefficent
