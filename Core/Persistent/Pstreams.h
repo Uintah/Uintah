@@ -65,8 +65,8 @@ private:
 
 public:
   BinaryPiostream(const string& filename, Direction dir,
-                  const int& v = -1, ProgressReporter *pr = 0);
-  BinaryPiostream(int fd, Direction dir, const int& v = -1,
+                  int version = -1, ProgressReporter *pr = 0);
+  BinaryPiostream(int fd, Direction dir, int version = -1,
                   ProgressReporter *pr = 0);
   virtual ~BinaryPiostream();
 
@@ -99,8 +99,8 @@ private:
 
 public:
   BinarySwapPiostream(const string& filename, Direction d,
-                      const int& v = -1, ProgressReporter *pr = 0);
-  BinarySwapPiostream(int fd, Direction dir, const int& v = -1,
+                      int version = -1, ProgressReporter *pr = 0);
+  BinarySwapPiostream(int fd, Direction dir, int version = -1,
                       ProgressReporter *pr = 0);
   virtual ~BinarySwapPiostream();
 
