@@ -77,7 +77,7 @@
 
 <UL>
   <LI> 3-1: <A href="#section-1">FieldBoundary</A>
-  <LI> 3-2: <A href="#section-2">DirectInterpolate</A>
+  <LI> 3-2: <A href="#section-2">DirectMapping</A>
   <LI> 3-3: <A href="#section-3">StreamLines</A>
   <LI> 3-4: <A href="#section-4">Controlling Widgets</A>
   <LI> 3-5: <A href="#section-5">Network Execution And Data Dependence</A>
@@ -138,7 +138,7 @@ together.</b></A>.
 <b>Figure 3.2, Field Boundary Of The Utah Torso Voltage Field</b>
 </center>
 <P>
-<H2><A name="section-2">DirectInterpolate</A></H2>
+<H2><A name="section-2">DirectMapping</A></H2>
 <p>
 Next, interpolate data values from one Field to another Field.
 This section, demonstrates how to load two datasets.  The first
@@ -154,8 +154,8 @@ certain point, by using the known values at surrounding points. For
 each electrode, the corresponding voltage value must be found from the
 volume Field.
 <p>
-The DirectInterpolate module implements this algorithm. Follow these
-steps to create the DirectInterpolate net:
+The DirectMapping module implements this algorithm. Follow these
+steps to create the DirectMapping net:
 <ul>
   <li> Create a FieldReader module and load the
         utahtorso-lowres-voltage.tvd.fld file.
@@ -163,7 +163,7 @@ steps to create the DirectInterpolate net:
   <li> Create a second FieldReader module and load the
         utahtorso-lowres-electrodes.pcd.fld file.
   <P>
-  <li> Create a (SCIRun-&gt;FieldsData) DirectInterpolate module 
+  <li> Create a (SCIRun-&gt;FieldsData) DirectMapping module 
   <P>
   <li> Create a (SCIRun-&gt;Visualization) ShowField module
   <P>
@@ -193,12 +193,12 @@ steps to create the DirectInterpolate net:
 <P>
 <center>
 <img width="450" height="622" src="images/figures/3_3.gif"><br>
-<b>Figure 3.3: DirectInterpolate net</b>
+<b>Figure 3.3: DirectMapping net</b>
 </center>
 <p>
 <center>
 <img width="500" height="529" src="images/figures/3_4.gif"><BR>
-<b>Figure 3.4: DirectInterpolate Visualization</b>
+<b>Figure 3.4: DirectMapping Visualization</b>
 </center>
 <P>
 Save this net as <i>3B.net</i>. It will be used in Chapter 4 of this
@@ -226,7 +226,7 @@ StreamLines net:
 	<li> One (SCIRun-&gt;FieldsData) Gradient module 
 	<li> One (SCIRun-&gt;FieldsCreate) SampleField module
 	<li> Two ShowField modules 
-	<li> One (SCIRun-&gt;FieldsData) DirectInterpolate module
+	<li> One (SCIRun-&gt;FieldsData) DirectMapping module
 	<li> One GenStandardColorMaps module
 	<li> One RescaleColorMap module 
 	<li> One Viewer module
