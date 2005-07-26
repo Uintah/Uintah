@@ -1433,14 +1433,14 @@ OnDemandDataWarehouse::getRegion(constSFCXVariableBase& constVar,
   var->allocate(low, high);
 
   Patch::selectType patches;
-  level->selectPatches(low, high, patches);
+  level->selectPatches(low - IntVector(1,0,0), high + IntVector(1,0,0), patches);
   
   d_lock.readLock();
   int totalCells=0;
   for(int i=0;i<patches.size();i++){
     const Patch* patch = patches[i];
     if(!d_sfcxDB.exists(label, matlIndex, patch->getRealPatch()))
-      SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__));
+      continue;
     SFCXVariableBase* tmpVar = constVar.cloneType();
     d_sfcxDB.get(label, matlIndex, patch, *tmpVar);
     IntVector l(Max(patch->getLowIndex(Patch::XFaceBased, label->getBoundaryLayer()), low));
@@ -1473,14 +1473,14 @@ OnDemandDataWarehouse::getRegion(constSFCYVariableBase& constVar,
   var->allocate(low, high);
 
   Patch::selectType patches;
-  level->selectPatches(low, high, patches);
+  level->selectPatches(low - IntVector(0,1,0), high + IntVector(0,1,0), patches);
   
   d_lock.readLock();
   int totalCells=0;
   for(int i=0;i<patches.size();i++){
     const Patch* patch = patches[i];
     if(!d_sfcyDB.exists(label, matlIndex, patch->getRealPatch()))
-      SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__));
+      continue;
     SFCYVariableBase* tmpVar = constVar.cloneType();
     d_sfcyDB.get(label, matlIndex, patch, *tmpVar);
     IntVector l(Max(patch->getLowIndex(Patch::YFaceBased, label->getBoundaryLayer()), low));
@@ -1513,14 +1513,14 @@ OnDemandDataWarehouse::getRegion(constSFCZVariableBase& constVar,
   var->allocate(low, high);
 
   Patch::selectType patches;
-  level->selectPatches(low, high, patches);
+  level->selectPatches(low - IntVector(0,0,1), high + IntVector(0,0,1), patches);
   
   d_lock.readLock();
   int totalCells=0;
   for(int i=0;i<patches.size();i++){
     const Patch* patch = patches[i];
     if(!d_sfczDB.exists(label, matlIndex, patch->getRealPatch()))
-      SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__));
+      continue;
     SFCZVariableBase* tmpVar = constVar.cloneType();
     d_sfczDB.get(label, matlIndex, patch, *tmpVar);
     IntVector l(Max(patch->getLowIndex(Patch::YFaceBased, label->getBoundaryLayer()), low));

@@ -917,6 +917,11 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt,
           // also limit to current patch, as patches already loops over all patches
           IntVector origlow = low, orighigh = high;
           low = Max(low, otherLevelLow);
+          if (req->patches_dom == Task::FineLevel) {
+            // by itself this won't grab the nodes or extra cells of a finer patch
+            // whose boundary is shared with the current patch
+            low = low - IntVector(1,1,1);
+          }
           high = Min(high, otherLevelHigh);
 
           if (high.x() <= low.x() || high.y() <= low.y() || high.z() <= low.z())

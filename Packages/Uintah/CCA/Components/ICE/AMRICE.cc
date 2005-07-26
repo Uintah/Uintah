@@ -41,7 +41,7 @@ AMRICE::~AMRICE()
 void AMRICE::problemSetup(const ProblemSpecP& params, GridP& grid,
                             SimulationStateP& sharedState)
 {
-  cout_doing << "Doing problemSetup  \t\t\t AMRICE" << '\n';
+  cout_doing << d_myworld->myrank() << " Doing problemSetup  \t\t\t AMRICE" << '\n';
   ICE::problemSetup(params, grid, sharedState);
   ProblemSpecP cfd_ps = params->findBlock("CFD");
   ProblemSpecP ice_ps = cfd_ps->findBlock("ICE");
@@ -72,7 +72,7 @@ void AMRICE::problemSetup(const ProblemSpecP& params, GridP& grid,
 void AMRICE::scheduleInitialize(const LevelP& level,
                                   SchedulerP& sched)
 {
-  cout_doing << "AMRICE::scheduleInitialize \t\tL-"<<level->getIndex()<< '\n';
+  cout_doing << d_myworld->myrank() << " AMRICE::scheduleInitialize \t\tL-"<<level->getIndex()<< '\n';
   ICE::scheduleInitialize(level, sched);
 }
 //___________________________________________________________________
@@ -92,7 +92,7 @@ void AMRICE::addRefineDependencies(Task* task,
                                    int step, 
                                    int nsteps)
 {
-  cout_doing << "\t addRefineDependencies (" << var->getName()
+  cout_doing << d_myworld->myrank() << " \t addRefineDependencies (" << var->getName()
            << ") \t step " << step << " nsteps " << nsteps << endl;
   ASSERTRANGE(step, 0, nsteps+1);
   
@@ -117,7 +117,7 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
                                      int nsteps)
 {
   if(fineLevel->getIndex() > 0  && doICEOnLevel(fineLevel->getIndex())){
-    cout_doing << "AMRICE::scheduleRefineInterface \t\tL-" 
+    cout_doing << d_myworld->myrank() << " AMRICE::scheduleRefineInterface \t\tL-" 
                << fineLevel->getIndex() << " step "<< step <<'\n';
                
     double subCycleProgress = double(step)/double(nsteps);
@@ -175,7 +175,7 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
 {
   const Level* level = getLevel(patches);
   if(level->getIndex() > 0){     
-    cout_doing << "Doing refineCoarseFineInterface"<< "\t\t\t\t AMRICE L-" 
+    cout_doing << d_myworld->myrank() << " Doing refineCoarseFineInterface"<< "\t\t\t\t AMRICE L-" 
                << level->getIndex() << " step " << subCycleProgress<<endl;
     int  numMatls = d_sharedState->getNumICEMatls();
     bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
@@ -473,7 +473,7 @@ _____________________________________________________________________*/
 void AMRICE::scheduleRefine(const PatchSet* patches,
                                SchedulerP& sched)
 {
-  cout_doing << "AMRICE::scheduleRefine\t\t\t\tP-" << *patches << '\n';
+  cout_doing << d_myworld->myrank() << " AMRICE::scheduleRefine\t\t\t\tP-" << *patches << '\n';
   Task* task = scinew Task("refine",this, &AMRICE::refine);
 
   MaterialSubset* subset = scinew MaterialSubset;
@@ -534,13 +534,13 @@ void AMRICE::refine(const ProcessorGroup*,
   const Level* fineLevel = getLevel(patches);
   const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
   
-  cout_doing << "Doing refine \t\t\t\t\t\t AMRICE L-"<< fineLevel->getIndex();
+  cout_doing << d_myworld->myrank() << " Doing refine \t\t\t\t\t\t AMRICE L-"<< fineLevel->getIndex();
   IntVector rr(fineLevel->getRefinementRatio());
   double invRefineRatio = 1./(rr.x()*rr.y()*rr.z());
   
   for(int p=0;p<patches->size();p++){  
     const Patch* finePatch = patches->get(p);
-    cout_doing << " patch " << finePatch->getID()<< endl;
+    cout_doing << d_myworld->myrank() << "  patch " << finePatch->getID()<< endl;
     
     Level::selectType coarsePatches;
     finePatch->getCoarseLevelPatches(coarsePatches);
@@ -701,8 +701,6 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
                                   const Level* fineLevel,
                                   const Level* coarseLevel)
 {
-  Level::selectType coarsePatches;
-  finePatch->getCoarseLevelPatches(coarsePatches); 
   IntVector refineRatio = coarseLevel->getRefinementRatio();
                        
   // region of fine space that will correspond to the coarse we need to get
@@ -726,11 +724,6 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
            << fl<<" "<< fh<<endl;
   
   constCCVariable<T> coarse_q_CC;
-
-  // coarsePatches gives us the patches we need.  Don't use get with
-  // ghost cells because you might get more patches that we don't have.
-  // so here we calculate the range for this patch.
-
   new_dw->getRegion(coarse_q_CC, varLabel, indx, coarseLevel, cl, ch);
     
     
@@ -762,7 +755,7 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
     return;
     
   Ghost::GhostType  gn = Ghost::None; 
-  cout_doing << "AMRICE::scheduleCoarsen\t\t\t\tL-" << coarseLevel->getIndex() 
+  cout_doing << d_myworld->myrank() << " AMRICE::scheduleCoarsen\t\t\t\tL-" << coarseLevel->getIndex() 
              << '\n';
   Task* task = scinew Task("coarsen",this, &AMRICE::coarsen);
 
@@ -828,7 +821,7 @@ void AMRICE::coarsen(const ProcessorGroup*,
   
   const Level* coarseLevel = getLevel(patches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
-  cout_doing << "Doing coarsen \t\t\t\t\t\t AMRICE L-" <<fineLevel->getIndex();
+  cout_doing << d_myworld->myrank() << " Doing coarsen \t\t\t\t\t\t AMRICE L-" <<fineLevel->getIndex();
   
   IntVector rr(fineLevel->getRefinementRatio());
   double invRefineRatio = 1./(rr.x()*rr.y()*rr.z());
@@ -837,7 +830,7 @@ void AMRICE::coarsen(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){  
     const Patch* coarsePatch = patches->get(p);
-    cout_doing << " patch " << coarsePatch->getID()<< endl;
+    cout_doing << d_myworld->myrank() << "  patch " << coarsePatch->getID()<< endl;
 
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
@@ -923,7 +916,6 @@ void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
     const Patch* finePatch = finePatches[i];
     
     constCCVariable<T> fine_q_CC;
-    new_dw->get(fine_q_CC, varLabel, indx, finePatch,Ghost::None, 0);
 
     IntVector fl(finePatch->getInteriorCellLowIndex());
     IntVector fh(finePatch->getInteriorCellHighIndex());
@@ -932,7 +924,16 @@ void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
     
     cl = Max(cl, coarsePatch->getCellLowIndex());
     ch = Min(ch, coarsePatch->getCellHighIndex());
-    
+
+    // get the region of the fine patch that overlaps the coarse patch
+    // we might not have the entire patch in this proc's DW
+    fl = coarseLevel->mapCellToFiner(cl);
+    fh = coarseLevel->mapCellToFiner(ch);
+    if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
+      continue;
+    }
+
+    new_dw->getRegion(fine_q_CC, varLabel, indx, fineLevel, fl, fh);
     cout_dbg << " fineToCoarseOperator: finePatch "<< fl << " " << fh 
              << " coarsePatch "<< cl << " " << ch << endl;
              
@@ -964,7 +965,7 @@ void AMRICE::scheduleReflux_computeCorrectionFluxes(const LevelP& coarseLevel,
                                                     SchedulerP& sched)
 {
  
-  cout_doing << "AMRICE::scheduleReflux_computeCorrectionFluxes\tL-" 
+  cout_doing << d_myworld->myrank() << " AMRICE::scheduleReflux_computeCorrectionFluxes\tL-" 
              << coarseLevel->getIndex() << '\n';
              
   Task* task = scinew Task("reflux_computeCorrectionFluxes",
@@ -1057,7 +1058,7 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
   const Level* coarseLevel = getLevel(coarsePatches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
   
-  cout_doing << "Doing reflux_computeCorrectionFluxes \t\t\t AMRICE L-"
+  cout_doing << d_myworld->myrank() << " Doing reflux_computeCorrectionFluxes \t\t\t AMRICE L-"
              <<coarseLevel->getIndex();
   
   bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
@@ -1065,7 +1066,7 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
   for(int c_p=0;c_p<coarsePatches->size();c_p++){  
     const Patch* coarsePatch = coarsePatches->get(c_p);
     
-    cout_doing << " patch " << coarsePatch->getID()<< endl;
+    cout_doing << d_myworld->myrank() << "  patch " << coarsePatch->getID()<< endl;
 
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
@@ -1176,19 +1177,25 @@ void AMRICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
     l += offset;
     h += offset;
   }
-  iter=CellIterator(l,h);
+
+  l = Max(l, coarsePatch->getLowIndex());
+  h = Min(h, coarsePatch->getHighIndex());
   
+  iter=CellIterator(l,h);
   isRight_CP_FP_pair = false;
   if ( coarsePatch->containsCell(l + coarse_FC_offset) ){
     isRight_CP_FP_pair = true;
   }
   
-  cout_dbg << "refluxCoarseLevelIterator: face "<< patchFace
-           << " finePatch " << finePatch->getID()
-           << " coarsePatch " << coarsePatch->getID()
-           << " " << iter << " coarse_FC_offset " << coarse_FC_offset 
-           << " does this coarse patch own the face centered variable " 
-           << isRight_CP_FP_pair<<  endl; 
+  if (cout_dbg.active()) {
+    cout_dbg << "refluxCoarseLevelIterator: face "<< patchFace
+             << " finePatch " << finePatch->getID()
+             << " coarsePatch " << coarsePatch->getID()
+             << " [CellIterator at " << iter.begin() << " of " << iter.end() 
+             << "] coarse_FC_offset " << coarse_FC_offset 
+             << " does this coarse patch own the face centered variable " 
+             << isRight_CP_FP_pair << endl; 
+  }
 }
 
 
@@ -1231,23 +1238,68 @@ void AMRICE::refluxOperator_computeCorrectionFluxes(
   SFCYVariable<T>  Q_Y_coarse_flux, Q_Y_coarse_flux_org;
   SFCZVariable<T>  Q_Z_coarse_flux, Q_Z_coarse_flux_org;
   
-  Ghost::GhostType  gn = Ghost::None;
-  new_dw->get(Q_X_fine_flux,    xlabel,indx, finePatch,   gn,0);
-  new_dw->get(Q_Y_fine_flux,    ylabel,indx, finePatch,   gn,0);
-  new_dw->get(Q_Z_fine_flux,    zlabel,indx, finePatch,   gn,0);
-  
-  new_dw->allocateTemporary(Q_X_coarse_flux_org, coarsePatch);
-  new_dw->allocateTemporary(Q_Y_coarse_flux_org, coarsePatch);
-  new_dw->allocateTemporary(Q_Z_coarse_flux_org, coarsePatch);
-  
-  new_dw->getModifiable(Q_X_coarse_flux,  xlabel,indx, coarsePatch);
-  new_dw->getModifiable(Q_Y_coarse_flux,  ylabel,indx, coarsePatch);
-  new_dw->getModifiable(Q_Z_coarse_flux,  zlabel,indx, coarsePatch);
-  
-  Q_X_coarse_flux_org.copyData(Q_X_coarse_flux);
-  Q_Y_coarse_flux_org.copyData(Q_Y_coarse_flux);
-  Q_Z_coarse_flux_org.copyData(Q_Z_coarse_flux);
-  
+  // find the exact range of fine data (so we don't mess up mpi)
+  IntVector xfl, xfh, yfl, yfh, zfl, zfh, ch;
+  IntVector xcl, xch, ycl, ych, zcl, zch, fh;
+
+  xfl = yfl = zfl = finePatch->getInteriorCellLowIndex();
+  fh = finePatch->getInteriorCellHighIndex();
+  xcl = ycl = zcl = coarsePatch->getInteriorCellLowIndex();
+  ch = coarsePatch->getInteriorCellHighIndex();
+
+  // get the highs to the right values... 
+  // (find the correct x-face-centered high value, etc.)
+  IntVector fineNeighbors(finePatch->neighborsHigh());
+  IntVector coarseNeighbors(coarsePatch->neighborsHigh());
+  xfh = fh + IntVector(fineNeighbors.x(), 0, 0);
+  yfh = fh + IntVector(0, fineNeighbors.y(), 0);
+  zfh = fh + IntVector(0, 0, fineNeighbors.z());
+  xch = ch + IntVector(coarseNeighbors.x(), 0, 0);
+  ych = ch + IntVector(0, coarseNeighbors.y(), 0);
+  zch = ch + IntVector(0, 0, coarseNeighbors.z());
+
+  // this will be the final range to get - intersection of coarse and fine patches
+  xfl = Max(coarseLevel->mapCellToFiner(xcl), xfl);
+  yfl = Max(coarseLevel->mapCellToFiner(ycl), yfl);
+  zfl = Max(coarseLevel->mapCellToFiner(zcl), zfl);
+  xfh = Min(coarseLevel->mapCellToFiner(xch), xfh);
+  yfh = Min(coarseLevel->mapCellToFiner(ych), yfh);
+  zfh = Min(coarseLevel->mapCellToFiner(zch), zfh);
+
+  // if high == low, then don't bother (there are cases that it will, trust me)
+  bool do_x = true;
+  bool do_y = true;
+  bool do_z = true;
+
+  if (xfl.x() >= xfh.x() || xfl.y() >= xfh.y() || xfl.z() >= xfh.z()) {
+    do_x = false;
+  }
+  if (yfl.x() >= zfh.x() || yfl.y() >= yfh.y() || yfl.z() >= yfh.z()) {
+    do_y = false;
+  }
+  if (zfl.x() >= zfh.x() || zfl.y() >= zfh.y() || zfl.z() >= zfh.z()) {
+    do_z = false;
+  }
+
+  if (do_x) {
+    new_dw->getRegion(Q_X_fine_flux,    xlabel,indx, fineLevel,   xfl,xfh);
+    new_dw->allocateTemporary(Q_X_coarse_flux_org, coarsePatch);
+    new_dw->getModifiable(Q_X_coarse_flux,  xlabel,indx, coarsePatch);
+    Q_X_coarse_flux_org.copyData(Q_X_coarse_flux);
+  }
+  if (do_y) {
+    new_dw->getRegion(Q_Y_fine_flux,    ylabel,indx, fineLevel,   yfl,yfh);
+    new_dw->allocateTemporary(Q_Y_coarse_flux_org, coarsePatch);
+    new_dw->getModifiable(Q_Y_coarse_flux,  ylabel,indx, coarsePatch);
+    Q_Y_coarse_flux_org.copyData(Q_Y_coarse_flux);
+  }
+  if (do_z) {
+    new_dw->getRegion(Q_Z_fine_flux,    zlabel,indx, fineLevel,   zfl,zfh);
+    new_dw->allocateTemporary(Q_Z_coarse_flux_org, coarsePatch);
+    new_dw->getModifiable(Q_Z_coarse_flux,  zlabel,indx, coarsePatch);
+    Q_Z_coarse_flux_org.copyData(Q_Z_coarse_flux);
+  }
+
   Vector dx = coarsePatch->dCell();
   double coarseCellVol = dx.x()*dx.y()*dx.z();
 
@@ -1275,6 +1327,13 @@ void AMRICE::refluxOperator_computeCorrectionFluxes(
   for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
        iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
     Patch::FaceType patchFace = *iter;   
+    
+    if (!do_x && (patchFace == Patch::xminus || patchFace == Patch::xplus))
+      continue;
+    if (!do_y && (patchFace == Patch::yminus || patchFace == Patch::yplus))
+      continue;
+    if (!do_z && (patchFace == Patch::zminus || patchFace == Patch::zplus))
+      continue;
     
     // find the coarse level iterator along the interface
     IntVector c_FC_offset;
@@ -1447,7 +1506,7 @@ void AMRICE::scheduleReflux_applyCorrection(const LevelP& coarseLevel,
                                             SchedulerP& sched)
 {
  
-  cout_doing << "AMRICE::scheduleReflux_applyCorrectionFluxes\tL-" 
+  cout_doing << d_myworld->myrank() << " AMRICE::scheduleReflux_applyCorrectionFluxes\tL-" 
              << coarseLevel->getIndex() <<endl;
   Task* task = scinew Task("reflux_applyCorrectionFluxes",
                           this, &AMRICE::reflux_applyCorrectionFluxes);
@@ -1516,14 +1575,14 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
   const Level* coarseLevel = getLevel(coarsePatches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
   
-  cout_doing << "Doing reflux_applyCorrectionFluxes \t\t\t AMRICE L-"
+  cout_doing << d_myworld->myrank() << " Doing reflux_applyCorrectionFluxes \t\t\t AMRICE L-"
              <<coarseLevel->getIndex();
   
   bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
   
   for(int c_p=0;c_p<coarsePatches->size();c_p++){  
     const Patch* coarsePatch = coarsePatches->get(c_p);
-    cout_doing << " patch " << coarsePatch->getID()<< endl;
+    cout_doing << d_myworld->myrank() << "  patch " << coarsePatch->getID()<< endl;
     
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);     
@@ -1543,7 +1602,7 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
       
       for(int i=0; i < finePatches.size();i++){  
         const Patch* finePatch = finePatches[i];        
-//      cout_doing << " coarsePatch " << coarsePatch->getID() <<" finepatch " << finePatch->getID()<< endl;
+//      cout_doing << d_myworld->myrank() << "  coarsePatch " << coarsePatch->getID() <<" finepatch " << finePatch->getID()<< endl;
 
         //__________________________________
         // Apply the correction
@@ -1670,9 +1729,9 @@ void AMRICE::refluxOperator_applyCorrectionFluxes(
     // c_FC:    coarse level face center index
     if(patchFace == Patch::xminus || patchFace == Patch::xplus){
       for(; !c_iter.done(); c_iter++){
-         IntVector c_CC = *c_iter;
-         IntVector c_FC = c_CC + c_FC_offset;                
-         q_CC_coarse[c_CC] += Q_X_coarse_flux[c_FC];
+        IntVector c_CC = *c_iter;
+        IntVector c_FC = c_CC + c_FC_offset;                
+        q_CC_coarse[c_CC] += Q_X_coarse_flux[c_FC];
       }
     }
     if(patchFace == Patch::yminus || patchFace == Patch::yplus){
@@ -1717,7 +1776,7 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
 {
   if(!doICEOnLevel(coarseLevel->getIndex()+1))
     return;
-  cout_doing << "AMRICE::scheduleErrorEstimate \t\t\t\tL-" 
+  cout_doing << d_myworld->myrank() << " AMRICE::scheduleErrorEstimate \t\t\t\tL-" 
              << coarseLevel->getIndex() << '\n';
   
   Task* t = scinew Task("AMRICE::errorEstimate", 
@@ -1825,7 +1884,7 @@ AMRICE::errorEstimate(const ProcessorGroup*,
                       bool /*initial*/)
 {
   const Level* level = getLevel(patches);
-  cout_doing << "Doing errorEstimate \t\t\t\t\t AMRICE L-"<< level->getIndex();
+  cout_doing << d_myworld->myrank() << " Doing errorEstimate \t\t\t\t\t AMRICE L-"<< level->getIndex();
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     
