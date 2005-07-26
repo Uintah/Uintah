@@ -42,14 +42,13 @@ namespace Uintah {
       ~RadiationVariables();
 
       CCVariable<double> ABSKG;
-      CCVariable<double> absorption;
-      CCVariable<double> c2h2;
       CCVariable<int> cellType;
       CCVariable<double> cenint;
       CCVariable<double> co2;
+      CCVariable<double> h2o;
+      CCVariable<double> mixfrac;
       CCVariable<double> cp;
       CCVariable<double> ESRCG;
-      CCVariable<double> h2o;
       CCVariable<double> qfluxe;
       CCVariable<double> qfluxw;
       CCVariable<double> qfluxn;

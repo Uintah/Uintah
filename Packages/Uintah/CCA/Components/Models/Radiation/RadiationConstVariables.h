@@ -41,15 +41,20 @@ namespace Uintah {
     public:
       RadiationConstVariables();
       ~RadiationConstVariables();
-      constCCVariable<double> absorption;
+      constCCVariable<double> ABSKG;
+      constCCVariable<double> ESRCG;
+      constCCVariable<double> shgamma;
       constCCVariable<double> co2;
-      constCCVariable<double> c2h2;
+      constCCVariable<double> oldCO2;
       constCCVariable<int> cellType;
       constCCVariable<double> density;
+      constCCVariable<double> iceDensity;
       constCCVariable<double> h2o;
+      constCCVariable<double> oldH2O;
       constCCVariable<double> mixfrac;
       constCCVariable<double> sootVF;
       constCCVariable<double> temperature;
+      constCCVariable<double> iceTemp;
 
     }; // End class RadiationConstVariables
 } // End namespace Uintah
