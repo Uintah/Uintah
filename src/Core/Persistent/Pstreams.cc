@@ -69,7 +69,7 @@ namespace SCIRun {
 
 // BinaryPiostream -- portable
 BinaryPiostream::BinaryPiostream(const string& filename, Direction dir,
-                                 const int& v, ProgressReporter *pr)
+                                 int v, ProgressReporter *pr)
   : Piostream(dir, v, filename, pr),
     fp_(0)
 {
@@ -149,7 +149,7 @@ BinaryPiostream::BinaryPiostream(const string& filename, Direction dir,
 }
 
 
-BinaryPiostream::BinaryPiostream(int fd, Direction dir, const int& v,
+BinaryPiostream::BinaryPiostream(int fd, Direction dir, int v,
                                  ProgressReporter *pr)
   : Piostream(dir, v, "", pr),
     fp_(0)
@@ -551,13 +551,13 @@ BinaryPiostream::block_io(void *data, size_t s, size_t nmemb)
 // BinarySwapPiostream -- portable
 // Piostream used when endianness of machine and file don't match
 BinarySwapPiostream::BinarySwapPiostream(const string& filename, Direction dir,
-                                         const int& v, ProgressReporter *pr)
+                                         int v, ProgressReporter *pr)
   : BinaryPiostream(filename, dir, v, pr)
 {
 }
 
 
-BinarySwapPiostream::BinarySwapPiostream(int fd, Direction dir, const int& v,
+BinarySwapPiostream::BinarySwapPiostream(int fd, Direction dir, int v,
                                          ProgressReporter *pr)
   : BinaryPiostream(fd, dir, v, pr)
 {
