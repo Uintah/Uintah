@@ -12,6 +12,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h> 
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 
 using namespace SCIRun;
 using namespace Uintah;
