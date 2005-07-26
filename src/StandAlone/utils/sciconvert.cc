@@ -173,11 +173,13 @@ main(int argc, char **argv)
   }
   else if (output_format == "Text")
   {
-    out_stream = scinew TextPiostream(argv[2], Piostream::Write);
+    out_stream =
+      scinew TextPiostream(argv[2], Piostream::Write, output_version);
   }
   else if (output_format == "Fast")
   {
-    out_stream = scinew FastPiostream(argv[2], Piostream::Write);
+    out_stream =
+      scinew FastPiostream(argv[2], Piostream::Write, output_version);
   }
 
   if (!out_stream)
