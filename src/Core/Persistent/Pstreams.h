@@ -131,10 +131,10 @@ private:
   void io(int, string& str);
 
 public:
-  TextPiostream(const string& filename, Direction dir,
+  TextPiostream(const string& filename, Direction dir, int version = -1,
                 ProgressReporter *pr = 0);
-  TextPiostream(std::istream *strm, ProgressReporter *pr = 0);
-  TextPiostream(std::ostream *strm, ProgressReporter *pr = 0);
+  TextPiostream(std::istream *strm, int v = -1, ProgressReporter *pr = 0);
+  TextPiostream(std::ostream *strm, int v = -1, ProgressReporter *pr = 0);
   virtual ~TextPiostream();
 
   virtual string peek_class();
@@ -171,9 +171,9 @@ private:
   template <class T> void gen_io(T&, const char *);
 
 public:
-  FastPiostream(const string& filename, Direction dir,
+  FastPiostream(const string& filename, Direction dir, int version = -1,
                 ProgressReporter *pr = 0);
-  FastPiostream(int fd, Direction dir,
+  FastPiostream(int fd, Direction dir, int version = -1,
                 ProgressReporter *pr = 0);
   virtual ~FastPiostream();
 

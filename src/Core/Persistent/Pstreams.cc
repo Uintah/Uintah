@@ -73,11 +73,6 @@ BinaryPiostream::BinaryPiostream(const string& filename, Direction dir,
   : Piostream(dir, v, filename, pr),
     fp_(0)
 {
-  if (v == -1) // no version given so use PERSISTENT_VERSION
-    version_ = PERSISTENT_VERSION;
-  else
-    version_ = v;
-
   if (dir==Read)
   {
     fp_ = fopen (filename.c_str(), "rb");
@@ -154,11 +149,6 @@ BinaryPiostream::BinaryPiostream(int fd, Direction dir, int v,
   : Piostream(dir, v, "", pr),
     fp_(0)
 {
-  if (v == -1) // No version given so use PERSISTENT_VERSION.
-    version_ = PERSISTENT_VERSION;
-  else
-    version_ = v;
-
   if (dir == Read)
   {
     fp_ = fdopen (fd, "rb");
@@ -744,9 +734,9 @@ BinarySwapPiostream::io(float& data)
 
 
 
-TextPiostream::TextPiostream(const string& filename, Direction dir,
+TextPiostream::TextPiostream(const string& filename, Direction dir, int v,
                              ProgressReporter *pr)
-  : Piostream(dir, -1, filename, pr),
+  : Piostream(dir, v, filename, pr),
     ownstreams_p_(true)
 {
   if (dir==Read)
@@ -793,14 +783,13 @@ TextPiostream::TextPiostream(const string& filename, Direction dir,
       err = true;
       return;
     }
-    out << "SCI\nASC\n" << PERSISTENT_VERSION << "\n";
-    version_ = PERSISTENT_VERSION;
+    out << "SCI\nASC\n" << version_ << "\n";
   }
 }
 
 
-TextPiostream::TextPiostream(istream *strm, ProgressReporter *pr)
-  : Piostream(Read, -1, "", pr),
+TextPiostream::TextPiostream(istream *strm, int v, ProgressReporter *pr)
+  : Piostream(Read, v, "", pr),
     istr(strm),
     ostr(0),
     ownstreams_p_(false)
@@ -830,15 +819,14 @@ TextPiostream::TextPiostream(istream *strm, ProgressReporter *pr)
 }
 
 
-TextPiostream::TextPiostream(ostream *strm, ProgressReporter *pr)
-  : Piostream(Write, -1, "", pr),
+TextPiostream::TextPiostream(ostream *strm, int v, ProgressReporter *pr)
+  : Piostream(Write, v, "", pr),
     istr(0),
     ostr(strm),
     ownstreams_p_(false)
 {
   ostream& out=*ostr;
-  out << "SCI\nASC\n" << PERSISTENT_VERSION << "\n";
-  version_ = PERSISTENT_VERSION;
+  out << "SCI\nASC\n" << version_ << "\n";
 }
 
 
@@ -1612,9 +1600,9 @@ TextPiostream::emit_pointer(int& have_data, int& pointer_id)
 
 
 // FastPiostream is a non portable binary output.
-FastPiostream::FastPiostream(const string& filename, Direction dir,
+FastPiostream::FastPiostream(const string& filename, Direction dir, int v,
                              ProgressReporter *pr)
-  : Piostream(dir, -1, filename, pr),
+  : Piostream(dir, v, filename, pr),
     fp_(0)
 {
   if (dir==Read)
@@ -1645,7 +1633,6 @@ FastPiostream::FastPiostream(const string& filename, Direction dir,
       err = true;
       return;
     }
-    version_ = PERSISTENT_VERSION;
     if (version() > 1)
     {
       char hdr[16];
@@ -1679,8 +1666,9 @@ FastPiostream::FastPiostream(const string& filename, Direction dir,
 }
 
 
-FastPiostream::FastPiostream(int fd, Direction dir, ProgressReporter *pr)
-  : Piostream(dir, -1, "", pr),
+FastPiostream::FastPiostream(int fd, Direction dir, int v,
+                             ProgressReporter *pr)
+  : Piostream(dir, v, "", pr),
     fp_(0)
 {
   if (dir==Read)
@@ -1714,7 +1702,6 @@ FastPiostream::FastPiostream(int fd, Direction dir, ProgressReporter *pr)
       err = true;
       return;
     }
-    version_ = PERSISTENT_VERSION;
     if (version() > 1)
     {
       char hdr[16];

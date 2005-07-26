@@ -58,8 +58,9 @@ using namespace std;
 
 namespace SCIRun {
 
+#define PERSISTENT_VERSION 2
+
 static Piostream::MapStringPersistentTypeID* table = 0;  
-const int Piostream::PERSISTENT_VERSION = 2;
 
 #ifdef __APPLE__
   // On the Mac, this comes from Core/Util/DynamicLoader.cc because
@@ -186,6 +187,13 @@ Piostream::Piostream(Direction dir, int version, const string &name,
   {
     reporter_ = scinew ProgressReporter();
     own_reporter_ = true;
+  }
+  if (version_ == -1) version_ = PERSISTENT_VERSION;
+  if (version_ <= 0 || version_ > PERSISTENT_VERSION)
+  {
+    pr->error("Tried to open file with unsupported version " +
+              to_string(version_) + ".");
+    err = true;
   }
 }
 
@@ -504,11 +512,11 @@ auto_istream(const string& filename, ProgressReporter *pr)
     else cerr << "ERROR - Cannot parse header of file: " << filename << endl;
     return 0;
   }
-  if (version > Piostream::PERSISTENT_VERSION)
+  if (version > PERSISTENT_VERSION)
   {
     const string errmsg = "File '" + filename + "' has version " +
       to_string(version) + ", this build only supports up to version " +
-      to_string(Piostream::PERSISTENT_VERSION) + ".";
+      to_string(PERSISTENT_VERSION) + ".";
     if (pr) pr->error(errmsg);
     else cerr << "ERROR - " + errmsg;
     return 0;
@@ -533,7 +541,7 @@ auto_istream(const string& filename, ProgressReporter *pr)
   }
   else if (m1 == 'A' && m2 == 'S' && m3 == 'C')
   {
-    return scinew TextPiostream(filename, Piostream::Read, pr);
+    return scinew TextPiostream(filename, Piostream::Read, version, pr);
   }
 
   if (pr) pr->error(filename + " is an unknown type!");
@@ -560,11 +568,11 @@ auto_ostream(const string& filename, const string& type, ProgressReporter *pr)
   }
   else if (type == "Text")
   {
-    stream = scinew TextPiostream(filename, Piostream::Write, pr);
+    stream = scinew TextPiostream(filename, Piostream::Write, -1, pr);
   }
   else if (type == "Fast")
   {
-    stream = scinew FastPiostream(filename, Piostream::Write, pr);
+    stream = scinew FastPiostream(filename, Piostream::Write, -1, pr);
   }
   else
   {
