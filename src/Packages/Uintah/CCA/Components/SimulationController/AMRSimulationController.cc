@@ -283,8 +283,15 @@ void AMRSimulationController::subCycle(GridP& grid, int startDW, int dwStride, i
     }
     // do refineInterface after the freshest data we can get; after the finer
     // level's coarsen completes
-    if (d_doAMR)
+    if (d_doAMR) {
+      d_scheduler->clearMappings();
+      d_scheduler->mapDataWarehouse(Task::OldDW, curDW);
+      d_scheduler->mapDataWarehouse(Task::NewDW, curDW+newDWStride);
+      d_scheduler->mapDataWarehouse(Task::CoarseOldDW, startDW);
+      d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
+    
       d_sim->scheduleRefineInterface(fineLevel, d_scheduler, step+1, numSteps);
+    }
 
     curDW += newDWStride;
   }
