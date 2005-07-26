@@ -75,6 +75,7 @@ SRCS     += \
 	$(SRCDIR)/UnuResample.cc\
 	$(SRCDIR)/UnuReshape.cc\
 	$(SRCDIR)/UnuRmap.cc\
+	$(SRCDIR)/UnuRmapN.cc\
 	$(SRCDIR)/UnuSave.cc\
 	$(SRCDIR)/UnuSlice.cc\
 	$(SRCDIR)/UnuSplice.cc\
