@@ -121,8 +121,8 @@ void UnuAxinfo::execute()
   
   
   if (strlen(label_.get().c_str())) {
-    nout->axis[axis].label = (char*)airFree(nout->axis[axis].label);
-    nout->axis[axis].label = airStrdup(const_cast<char*>(label_.get().c_str()));
+    if (nout->axis[axis].label) { airFree(nout->axis[axis].label); }
+    nout->axis[axis].label = airStrdup(label_.get().c_str());
     
     string kind = kind_.get();
     if (kind == "nrrdKindDomain") {
