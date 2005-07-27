@@ -19,28 +19,44 @@ using namespace std;
 void 
 copyIndex(const Index& subFrom,
           Index* subTo,
-          const int numDims)
+          const Counter numDims)
   /*_____________________________________________________________________
     Function copyIndex:
     Copy an index subFrom to index subTo in numDims-dimensions.
     _____________________________________________________________________*/
 {
-  for (int d = 0; d < numDims; d++) (*subTo)[d] = subFrom[d];
+  for (Counter d = 0; d < numDims; d++) (*subTo)[d] = subFrom[d];
+}
+
+void 
+ToIndex(const vector<Counter>& subFrom,
+        Index* subTo,
+        const Counter numDims)
+  /*_____________________________________________________________________
+    Function ToIndex:
+    Convert a vector<Counter>-type subscript "subFrom" to Index-type "subTo",
+    so that we can enjoy the flexibility of vector, but interface to
+    Hypre with the correct type (Index). Note that Index is an int so we
+    can make the conversion.
+    _____________________________________________________________________*/
+{
+  assert(subFrom.size() == numDims);
+  for (Counter d = 0; d < numDims; d++) (*subTo)[d] = int(subFrom[d]);
 }
 
 void 
 ToIndex(const vector<int>& subFrom,
         Index* subTo,
-        const int numDims)
+        const Counter numDims)
   /*_____________________________________________________________________
     Function ToIndex:
-    Convert a vector-type subscript "subFrom" to Index-type "subTo",
+    Convert a vector<int>-type subscript "subFrom" to Index-type "subTo",
     so that we can enjoy the flexibility of vector, but interface to
     Hypre with the correct type (Index).
     _____________________________________________________________________*/
 {
   assert(subFrom.size() == numDims);
-  for (int d = 0; d < numDims; d++) (*subTo)[d] = subFrom[d];
+  for (Counter d = 0; d < numDims; d++) (*subTo)[d] = subFrom[d];
 }
 
 void 
@@ -99,32 +115,34 @@ Print(char *fmt, ...)
   va_end(ap);
 }
 
+template<class T>
 void 
-printIndex(const vector<int>& sub) 
+printIndex(const vector<T>& sub) 
 {
   /*_____________________________________________________________________
     Function printIndex:
     Print vector-type numDims-dimensional index sub
     _____________________________________________________________________*/
   fprintf(stderr,"[");
-  for (int d = 0; d < sub.size(); d++) {
+  for (Counter d = 0; d < sub.size(); d++) {
     fprintf(stderr,"%d",sub[d]);
     if (d < sub.size()-1) fprintf(stderr,",");
   }
   fprintf(stderr,"]");
 }
 
+template<>
 void 
-printIndex(const vector<double>& x) 
+printIndex<double>(const vector<double>& sub) 
 {
   /*_____________________________________________________________________
     Function printIndex:
-    Print vector-type numDims-dimensional location x
+    Print vector<double>-type numDims-dimensional index sub
     _____________________________________________________________________*/
   fprintf(stderr,"[");
-  for (int d = 0; d < x.size(); d++) {
-    fprintf(stderr,"%+.3lf",x[d]);
-    if (d < x.size()-1) fprintf(stderr,",");
+  for (Counter d = 0; d < sub.size(); d++) {
+    fprintf(stderr,"%.3f",sub[d]);
+    if (d < sub.size()-1) fprintf(stderr,",");
   }
   fprintf(stderr,"]");
 }
@@ -132,7 +150,7 @@ printIndex(const vector<double>& x)
 void
 faceExtents(const vector<int>& ilower,
             const vector<int>& iupper,
-            const int dim,
+            const Counter dim,
             const int side,
             vector<int>& faceLower,
             vector<int>& faceUpper)
@@ -158,6 +176,26 @@ faceExtents(const vector<int>& ilower,
   fprintf(stderr,"\n");
 }
 
+Counter
+numCellsInBox(const vector<int>& x,
+              const vector<int>& y)
+  /*_____________________________________________________________________
+    Function numCellsInBox:
+    Computes the total number of cells in the box [x,y]. x is the lower
+    left corner and y is the upper right corner (in d-dimensions). This
+    includes x and y (so like: prod(y-x+1)).
+     _____________________________________________________________________*/
+{
+  Counter result = 1;
+  for (Counter d = 0; d < x.size(); d++) {
+    int temp = y[d] - x[d] + 1;
+    if (temp < 0)
+      return 0;
+    result *= Counter(temp);
+  }
+  return result;
+}
+
 void IndexPlusPlus(const vector<int>& ilower,
                    const vector<int>& iupper,
                    const vector<bool>& active,
@@ -181,19 +219,15 @@ void IndexPlusPlus(const vector<int>& ilower,
          (sub.size()    == iupper.size()) &&
          (active.size() == sub.size()));
 
-  int numDims = sub.size(), numDimsActive = 0, count = 0;
-  for (int d = 0; d < numDims; d++) {
+  Counter numDims = sub.size(), numDimsActive = 0;
+  for (Counter d = 0; d < numDims; d++) {
     if (active[d]) {
       numDimsActive++;
     }
   }
   eof = false;
 
-  //  Print("BEFORE sub = ");
-  //  printIndex(sub);
-  //  fprintf(stderr,"\n");
-
-  int d = 0;
+  Counter d = 0;
   while ((!active[d]) && (d < numDims)) d++;
   if (d == numDims) {
     eof = true;
@@ -212,10 +246,6 @@ void IndexPlusPlus(const vector<int>& ilower,
       if (active[d]) sub[d]++;
     }
   }
-
-  //  Print("AFTER  sub = ");
-  //  printIndex(sub);
-  //  fprintf(stderr,"\n");
 }
 
 int
@@ -226,10 +256,12 @@ clean(void)
     of the program.
     _____________________________________________________________________*/
 {
+  Print("Cleaning\n");
 #if DEBUG
   hypre_FinalizeMemoryDebug();
 #endif
   MPI_Finalize();    // Quit MPI
+  return 0;
 }
 
 static bool serializing = false;
@@ -290,83 +322,61 @@ serializeProcsEnd(void)
   serializing = false;
 }
 
+template<class T, class S>
 void
-pointwiseAdd(const vector<int>& x,
-             const vector<int>& y,
-             vector<int>& result)
+pointwiseAdd(const vector<T>& x,
+             const vector<S>& y,
+             vector<S>& result)
 {
   assert((x.size() == y.size()) &&
          (result.size() == y.size()));
-  for (int d = 0; d < x.size(); d++) result[d] = x[d] + y[d];
-}
-void
-pointwiseAdd(const vector<double>& x,
-             const vector<double>& y,
-             vector<double>& result)
-{
-  assert((x.size() == y.size()) &&
-         (result.size() == y.size()));
-  for (int d = 0; d < x.size(); d++) result[d] = x[d] + y[d];
+  for (Counter d = 0; d < x.size(); d++) result[d] = x[d] + y[d];
 }
 
+template<class T>
 void
-scalarMult(const vector<double>& x,
-           const double h,
-           vector<double>& result)
+scalarMult(const vector<T>& x,
+           const T& h,
+           vector<T>& result)
 {
   assert(result.size() == x.size());
-  for (int d = 0; d < x.size(); d++) result[d] = h * x[d];
+  for (Counter d = 0; d < x.size(); d++) result[d] = h * x[d];
 }
 
+template<class T, class S>
 void
-pointwiseMult(const vector<int>& i,
-              const vector<int>& h,
-              vector<int>& result)
+pointwiseMult(const vector<T>& i,
+              const vector<S>& h,
+              vector<S>& result)
 {
   assert((i.size() == h.size()) &&
          (result.size() == h.size()));
-  for (int d = 0; d < i.size(); d++) result[d] = i[d] * h[d];
+  for (Counter d = 0; d < i.size(); d++) result[d] = i[d] * h[d];
 }
 
+template<class T, class S>
 void
-pointwiseMult(const vector<int>& i,
-              const vector<double>& h,
-              vector<double>& result)
-{
-  assert((i.size() == h.size()) &&
-         (result.size() == h.size()));
-  for (int d = 0; d < i.size(); d++) result[d] = i[d] * h[d];
-}
-
-void
-pointwiseDivide(const vector<int>& x,
-                const vector<int>& y,
-                vector<int>& result)
+pointwiseDivide(const vector<S>& x,
+                const vector<T>& y,
+                vector<S>& result)
 {
   assert((x.size() == y.size()) &&
          (result.size() == y.size()));
-  for (int d = 0; d < x.size(); d++) result[d] = x[d] / y[d];
+  for (Counter d = 0; d < x.size(); d++) result[d] = x[d] / y[d];
 }
 
-int
-prod(const vector<int>& x)
+template<class T>
+T
+prod(const vector<T>& x)
 {
-  int result = 1;
-  for (int d = 0; d < x.size(); d++) result *= x[d];
-  return result;
-}
-
-double
-prod(const vector<double>& x)
-{
-  double result = 1.0;
-  for (int d = 0; d < x.size(); d++) result *= x[d];
+  T result = 1;
+  for (Counter d = 0; d < x.size(); d++) result *= x[d];
   return result;
 }
 
 double
 roundDigit(const double& x,
-           const int d = 0)
+           const Counter d = 0)
   /*_____________________________________________________________________
     Function roundDigit:
     Round towards nearest rational (to certain # of digits).
@@ -377,13 +387,13 @@ roundDigit(const double& x,
      _____________________________________________________________________*/
 {
 
-  double f = pow(10.0,d);
+  double f = pow(10.0,1.0*d);
   return round(x*f)/f;
 }
 
 IntMatrix
-grayCode(const int n,
-         const vector<int> k)
+grayCode(const Counter n,
+         const vector<Counter>& k)
   /*_____________________________________________________________________
     Function grayCode:
     This function returns a variable-base multiple-digit gray code.
@@ -400,13 +410,13 @@ grayCode(const int n,
   assert(k.size() == n);
   int verbose = 0;
   
-  int numRows = 1;
-  int numCols = 0;
-  int m = 0;
+  Counter numRows = 1;
+  Counter numCols = 0;
+  Counter m = 0;
   numRows *= k[m];
   numCols++;
   IntMatrix G(numRows,numCols);
-  for (int i = 0; i < k[0]; i++) {
+  for (Counter i = 0; i < k[0]; i++) {
     G(i,m) = i;
   }
   if (verbose >= 1) {
@@ -415,23 +425,23 @@ grayCode(const int n,
   }
 
   /* Generate G recursively */
-  for (int m = 1; m < n; m++) {
-    int b = k[m];
+  for (Counter m = 1; m < n; m++) {
+    Counter b = k[m];
     numRows *= b;
     numCols++;
     IntMatrix Gnew(numRows,numCols);
-    int startRow = 0;
+    Counter startRow = 0;
     if (verbose >= 1) {
       Print("m = %d, b = %d\n",m,b);
     }
-    for (int d = 0; d < b; d++) {
+    for (Counter d = 0; d < b; d++) {
       if (d % 2) {           // d odd
         if (verbose >= 1) {
           Print("  (G*)^(%d)\n",d);
         }
         
-        for (int i = 0; i < G.numRows(); i++) {
-          for (int j = 0; j < G.numCols(); j++) {
+        for (Counter i = 0; i < G.numRows(); i++) {
+          for (Counter j = 0; j < G.numCols(); j++) {
             Gnew(startRow+G.numRows()-1-i,j) = G(i,j);
           }
           Gnew(startRow+G.numRows()-1-i,m) = d;
@@ -442,8 +452,8 @@ grayCode(const int n,
           Print("  G^(%d)\n",d);
         }
 
-        for (int i = 0; i < G.numRows(); i++) {
-          for (int j = 0; j < G.numCols(); j++) {
+        for (Counter i = 0; i < G.numRows(); i++) {
+          for (Counter j = 0; j < G.numCols(); j++) {
             Gnew(startRow+i,j) = G(i,j);
           }
           Gnew(startRow+i,m) = d;
@@ -461,10 +471,10 @@ grayCode(const int n,
   
   /* Check result */
   bool fail = false;
-  for (int i = 0; i < G.numRows()-1; i++) {
-    int diff = 0;
-    for (int j = 0; j < G.numCols(); j++) {
-      diff += int(abs(G(i,j) - G(i+1,j)));
+  for (Counter i = 0; i < G.numRows()-1; i++) {
+    Counter diff = 0;
+    for (Counter j = 0; j < G.numCols(); j++) {
+      diff += Counter(abs(G(i,j) - G(i+1,j)));
     }
     if (diff != 1) {
       fail = true;
@@ -473,12 +483,12 @@ grayCode(const int n,
     }
   } // end for i
 
-  for (int i = 0; (i < G.numRows()) && (!fail); i++) {
-    for (int i2 = 0; i2 < G.numRows(); i2++) {
+  for (Counter i = 0; (i < G.numRows()) && (!fail); i++) {
+    for (Counter i2 = 0; i2 < G.numRows(); i2++) {
       if (i != i2) {
-        int diff = 0;
-        for (int j = 0; j < G.numCols(); j++) {
-          diff += int(abs(G(i,j) - G(i2,j)));
+        Counter diff = 0;
+        for (Counter j = 0; j < G.numCols(); j++) {
+          diff += Counter(abs(G(i,j) - G(i2,j)));
         }
         if (diff == 0) {
           fail = true;
@@ -499,3 +509,26 @@ grayCode(const int n,
 
   return G;
 } // end graycode
+
+// The compiler was not instantiating these templated functions, so
+// this forces it to do so.
+void
+forceInstantiation()
+{
+  vector<Counter> c;
+  vector<double>  d;
+  vector<int>     i;
+
+  pointwiseMult( c, i, i );
+  pointwiseMult( i, d, d );
+  pointwiseAdd( i, i, i );
+  pointwiseAdd( d, d, d );
+  pointwiseDivide( c, i, c );
+  pointwiseDivide( i, c, i );
+  scalarMult( d, 1.0, d );
+  prod( d );
+  prod( i );
+  printIndex( c );
+  printIndex( d );
+  printIndex( i );
+}

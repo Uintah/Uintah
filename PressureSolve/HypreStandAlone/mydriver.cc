@@ -12,11 +12,12 @@
 /*================== Library includes ==================*/
 
 #include "mydriver.h"
+#include "util.h"
 #include "Param.h"
 #include "Hierarchy.h"
 #include "Level.h"
 #include "Patch.h"
-#include "util.h"
+#include "Solver.h"
 #include <vector>
 #include <HYPRE_sstruct_ls.h>
 #include <utilities.h>
@@ -32,16 +33,20 @@ using namespace std;
 int     MYID;     /* The same as this proc's myid, but global */
 
 void
-getPatchesFromOtherProcs( const Param & param, const Hierarchy & hier )
+getPatchesFromOtherProcs(const Param & param,
+                         const Hierarchy & hier)
 {
+  /* Types for arrays that are sent/received through MPI are int;
+   convert to Counter later on, but don't risk having MPI_INT and
+   Counter mixed up in the same call. */
   int sendbuf[param.numProcs];  /* Suppose this proc is #0 has 5 patches,
                                    don't know what everyone else has.
                                    So this array will look like : 5 0 0 0 0. */
   int numPatches[param.numProcs];  // After assembling sendbuf from all procs
 
-  for( int level = 0; level < hier._levels.size(); level++ ) {
+  for(Counter level = 0; level < hier._levels.size(); level++ ) {
     Level* lev = hier._levels[level];
-    const vector<int>& resolution = lev->_resolution;
+    const vector<Counter>& resolution = lev->_resolution;
     // clear sendbuf
     for( int index = 0; index < param.numProcs; index++ ) {
       if( index == MYID ) {
@@ -78,7 +83,7 @@ getPatchesFromOtherProcs( const Param & param, const Hierarchy & hier )
       patchInfo[index] = -1;
     }
     int count = startPosition * recordSize;
-    for(int index = 0; index < lev->_patchList.size(); index++ ) {
+    for(Counter index = 0; index < lev->_patchList.size(); index++ ) {
       Patch* patch = lev->_patchList[index];
       sendPatchInfo[count++] = patch->_procID;
       for (int d = 0; d < param.numDims; d++)
@@ -182,10 +187,10 @@ printPatchBoundaries( const Param & param, const Hierarchy & hier )
 {
   serializeProcsBegin();
   /* Print boundary types */
-  for( int level = 0; level < hier._levels.size(); level++ ) {
+  for(Counter level = 0; level < hier._levels.size(); level++ ) {
     Print("---- Patch boundaries at level %d ----\n",level);
     Level* lev = hier._levels[level];
-    for (int index = 0; index < lev->_patchList.size(); index++ ) {
+    for (Counter index = 0; index < lev->_patchList.size(); index++ ) {
       Patch* patch = lev->_patchList[index];
       Print("Patch # %d: from ",index);
       printIndex(patch->_ilower);
@@ -219,16 +224,15 @@ makeHierarchy(const Param& param,
     needed by Hypre FAC. p = strcture of input parameters.
     _____________________________________________________________________*/
 {
-  const int numProcs  = param.numProcs;
-  const int numDims   = param.numDims;
-  const int numLevels = param.numLevels;
-  const int n         = param.baseResolution;
+  const Counter numDims   = param.numDims;
+  const Counter numLevels = param.numLevels;
+  const Counter n         = param.baseResolution;
 
-  vector<int> k(numDims,2);
+  vector<Counter> k(numDims,2);
   IntMatrix procMap = grayCode(numDims,k);
   /* Print procMap */
-  for(int i = 0;i < procMap.numRows();i++){
-    for(int j = 0; j < procMap.numCols(); j++){
+  for (Counter i = 0;i < procMap.numRows();i++){
+    for(Counter j = 0; j < procMap.numCols(); j++){
       if (j == 0) {
         Proc0Print("\t%d",procMap(i,j));
       } else {
@@ -243,9 +247,9 @@ makeHierarchy(const Param& param,
   }
 
   /* Initialize the patches that THIS proc owns at all levels */
-  for (int level = 0; level < numLevels; level++) {
+  for (Counter level = 0; level < numLevels; level++) {
     plevel[level] = level;   // part ID of this level
-    vector<int> refRat(numDims);
+    vector<Counter> refRat(numDims);
     /* Refinement ratio w.r.t. parent level. Assumed to be constant
        (1:2) in all dimensions and all levels for now. */
     if (level == 0) {        // Dummy ref. ratio value */
@@ -305,19 +309,19 @@ makeGrid(const Param& param,
     and add all patches from this proc to it.
     _____________________________________________________________________*/
 {
-  const int numDims   = param.numDims;
-  const int numLevels = hier._levels.size();
+  const Counter numDims   = param.numDims;
+  const Counter numLevels = hier._levels.size();
   serializeProcsBegin();
   Print("Making grid\n");
 
   /* Add the patches that this proc owns at all levels to grid */
-  for (int level = 0; level < numLevels; level++) {
+  for (Counter level = 0; level < numLevels; level++) {
     Level* lev = hier._levels[level];
     Print("Level %d, meshSize = %lf, resolution = ",
           level,lev->_meshSize[0]);
     printIndex(lev->_resolution);
     fprintf(stderr,"\n");
-    for (int i = 0; i < lev->_patchList.size(); i++) {
+    for (Counter i = 0; i < lev->_patchList.size(); i++) {
       Patch* patch = lev->_patchList[i];
       /* Add this patch to the grid */
       Index hypreilower, hypreiupper;
@@ -359,9 +363,8 @@ makeStencil(const Param& param,
     Create Hypre stencil object "stencil" on output.
     _____________________________________________________________________*/
 {
-  const int numDims   = param.numDims;
-  const int numLevels = hier._levels.size();
-  int                   stencilSize = 2*numDims+1;
+  const Counter numDims   = param.numDims;
+  Counter               stencilSize = 2*numDims+1;
   vector< vector<int> > stencil_offsets;
 
   /* Create an empty stencil */
@@ -382,16 +385,16 @@ makeStencil(const Param& param,
   /* Central coeffcient */
   entry = 0;
   stencil_offsets[entry].resize(numDims);
-  for (int dim = 0; dim < numDims; dim++) {
+  for (Counter dim = 0; dim < numDims; dim++) {
     //    Print("Init entry = %d, dim = %d\n",entry,dim);
     stencil_offsets[entry][dim] = 0;
   }
-  for (int dim = 0; dim < numDims; dim++) {
+  for (Counter dim = 0; dim < numDims; dim++) {
     for (int side = -1; side <= 1; side += 2) {
       entry++;
       stencil_offsets[entry].resize(numDims);
       //      Print("entry = %d, dim = %d\n",entry,dim);
-      for (int d = 0; d < numDims; d++) {
+      for (Counter d = 0; d < numDims; d++) {
         //        Print("d = %d  size = %d\n",d,stencil_offsets[entry].size());
         stencil_offsets[entry][d] = 0;
       }
@@ -435,7 +438,7 @@ makeGraph(const Param& param,
     Add structured equations (stencil-based) at the interior of
     each patch at every level to the graph.
   */
-  for (int level = 0; level < numLevels; level++) {
+  for (Counter level = 0; level < numLevels; level++) {
     Print("  Initializing graph stencil at level %d\n",level);
     HYPRE_SStructGraphSetStencil(graph, level, 0, stencil);
   }
@@ -445,18 +448,18 @@ makeGraph(const Param& param,
      coarse and fine level at every C/F boundary.
   */
 
-  for (int level = 1; level < numLevels; level++) {
+  for (Counter level = 1; level < numLevels; level++) {
     Print("  Updating coarse-fine boundaries at level %d\n",level);
     const Level* lev = hier._levels[level];
     //    const Level* coarseLev = hier._levels[level-1];
-    const vector<int>& refRat = lev->_refRat;
+    const vector<Counter>& refRat = lev->_refRat;
 
     /* Loop over patches of this proc */
-    for (int i = 0; i < lev->_patchList.size(); i++) {
+    for (Counter i = 0; i < lev->_patchList.size(); i++) {
       Patch* patch = lev->_patchList[i];
 
       /* Loop over C/F boundaries of this patch */
-      for (int d = 0; d < numDims; d++) {
+      for (Counter d = 0; d < numDims; d++) {
         for (int s = -1; s <= 1; s += 2) {
           if (patch->getBoundary(d, s) == Patch::CoarseFine) {
 
@@ -469,7 +472,7 @@ makeGraph(const Param& param,
             vector<int> coarseFaceUpper(numDims);
             int numFaceCells = 1;
             int numCoarseFaceCells = 1;
-            for (int dd = 0; dd < numDims; dd++) {
+            for (Counter dd = 0; dd < numDims; dd++) {
               Print("dd = %d\n",dd);
               Print("refRat = %d\n",refRat[dd]);
               coarseFaceLower[dd] =
@@ -494,14 +497,14 @@ makeGraph(const Param& param,
             */
             vector<int> zero(numDims,0);
             vector<int> ref1(numDims,0);
-            for (int dd = 0; dd < numDims; dd++) {
+            for (Counter dd = 0; dd < numDims; dd++) {
               ref1[dd] = refRat[dd] - 1;
             }
             ref1[d] = 0;
             vector<bool> activeChild(numDims,true);
             bool eocChild = false;
             vector<int> subChild = zero;
-            for (int child = 0; !eocChild;
+            for (Counter child = 0; !eocChild;
                  child++,
                    IndexPlusPlus(zero,ref1,activeChild,subChild,eocChild)) {
               Print("child = %4d",child);
@@ -511,7 +514,7 @@ makeGraph(const Param& param,
               vector<bool> active(numDims,true);
               bool eoc = false;
               vector<int> subCoarse = coarseNbhrLower;
-              for (int cell = 0; !eoc;
+              for (Counter cell = 0; !eoc;
                    cell++,
                      IndexPlusPlus(coarseNbhrLower,coarseNbhrUpper,
                                    active,subCoarse,eoc)) {
@@ -519,9 +522,23 @@ makeGraph(const Param& param,
                 fprintf(stderr,"  subCoarse = ");
                 printIndex(subCoarse);
                 vector<int> subFine(numDims);
+                /* Compute fine cell inside the fine patch from coarse
+                   cell outside the fine patch */
                 subFine = subCoarse;
-                subFine[d] -= s;
-                pointwiseMult(subFine,refRat,subFine);
+                if (s < 0) {
+                  /* Left boundary: go from coarse outside to coarse
+                     inside the patch, then find its lower left corner
+                     and that's fine child 0. */
+                  subFine[d] -= s;
+                  pointwiseMult(refRat,subFine,subFine);
+                } else {
+                  /* Right boundary: start from the coarse outside the
+                     fine patch, find its lower left corner, then find
+                     its fine nbhr inside the fine patch. This is fine
+                     child 0. */
+                  pointwiseMult(refRat,subFine,subFine);
+                  subFine[d] -= s;
+                }
                 pointwiseAdd(subFine,subChild,subFine);
                 fprintf(stderr,"  subFine = ");
                 printIndex(subFine);
@@ -562,7 +579,6 @@ makeLinearSystem(const Param& param,
                  const Hierarchy& hier,
                  const HYPRE_SStructGrid& grid,
                  const HYPRE_SStructStencil& stencil,
-                 const HYPRE_SStructGraph& graph,
                  HYPRE_SStructMatrix& A,
                  HYPRE_SStructVector& b)
   /*_____________________________________________________________________
@@ -589,14 +605,14 @@ makeLinearSystem(const Param& param,
   vector<bool> active(numDims);
   int stencilSize = hypre_SStructStencilSize(stencil);
   int* entries = new int[stencilSize];
-  for (int entry = 0; entry < stencilSize; entry++) entries[entry] = entry;
-  for (int level = 0; level < numLevels; level++) {
+  for (Counter entry = 0; entry < stencilSize; entry++) entries[entry] = entry;
+  for (Counter level = 0; level < numLevels; level++) {
     const Level* lev = hier._levels[level];
     const vector<double>& h = lev->_meshSize;
-    const vector<int>& resolution = lev->_resolution;
+    const vector<Counter>& resolution = lev->_resolution;
     scalarMult(h,0.5,offset);
     double cellVolume = prod(h);
-    for (int i = 0; i < lev->_patchList.size(); i++) {
+    for (Counter i = 0; i < lev->_patchList.size(); i++) {
       /* Add equations of interior cells of this patch to A */
       Patch* patch = lev->_patchList[i];
       double* values    = new double[stencilSize * patch->_numCells];
@@ -612,9 +628,9 @@ makeLinearSystem(const Param& param,
       fflush(stderr);
       Print("Looping over cells in this patch:\n");
       sub = patch->_ilower;        
-      for (int d = 0; d < numDims; d++) active[d] = true;
+      for (Counter d = 0; d < numDims; d++) active[d] = true;
       bool eoc = false;
-      for (int cell = 0; !eoc;
+      for (Counter cell = 0; !eoc;
            cell++,
              IndexPlusPlus(patch->_ilower,patch->_iupper,active,sub,eoc)) {
         Print("cell = %4d",cell);
@@ -624,14 +640,14 @@ makeLinearSystem(const Param& param,
         int offsetValues    = stencilSize * cell;
         int offsetRhsValues = cell;
         /* Initialize the stencil values of this cell's equation to 0 */
-        for (int entry = 0; entry < stencilSize; entry++) {
+        for (Counter entry = 0; entry < stencilSize; entry++) {
           values[offsetValues + entry] = 0.0;
         }
         rhsValues[offsetRhsValues] = 0.0;
         
         /* Loop over directions */
         int entry = 1;
-        for (int d = 0; d < numDims; d++) {
+        for (Counter d = 0; d < numDims; d++) {
           double faceArea = cellVolume / h[d];
           for (int s = -1; s <= 1; s += 2) {
             Print("--- d = %d , s = %d, entry = %d ---\n",d,s,entry);
@@ -704,11 +720,11 @@ makeLinearSystem(const Param& param,
       } // end for cell
       
       /* Print values, rhsValues vectors */
-      for (int cell = 0; cell < patch->_numCells; cell++) {
+      for (Counter cell = 0; cell < patch->_numCells; cell++) {
         int offsetValues    = stencilSize * cell;
         int offsetRhsValues = cell;
         Print("cell = %4d\n",cell);
-        for (int entry = 0; entry < stencilSize; entry++) {
+        for (Counter entry = 0; entry < stencilSize; entry++) {
           Print("values   [%5d] = %+.3f\n",
                 offsetValues + entry,values[offsetValues + entry]);
         }
@@ -735,10 +751,10 @@ makeLinearSystem(const Param& param,
      connecting the coarse and fine level at every C/F boundary.
   */
 
-  for (int level = 1; level < numLevels; level++) {
+  for (Counter level = 1; level < numLevels; level++) {
     Print("  Updating coarse-fine boundaries at level %d\n",level);
     const Level* lev = hier._levels[level];
-    const vector<int>& refRat = lev->_refRat;
+    const vector<Counter>& refRat = lev->_refRat;
     const vector<double>& h = lev->_meshSize;
     scalarMult(h,0.5,offset);
     double cellVolume = prod(h);
@@ -749,7 +765,7 @@ makeLinearSystem(const Param& param,
     double coarseCellVolume = prod(coarseH);
 
     /* Loop over patches of this proc */
-    for (int i = 0; i < lev->_patchList.size(); i++) {
+    for (Counter i = 0; i < lev->_patchList.size(); i++) {
       Patch* patch = lev->_patchList[i];
     
       Print("Patch i = %2d:           extends from ",i);
@@ -772,34 +788,72 @@ makeLinearSystem(const Param& param,
 
       /* Replace the matrix equations for the underlying coarse box
          with the identity matrix. */
-      Print("Looping over cells in coarse underlying box:\n");
-      vector<int> sub = coarseilower;
-      vector<bool> active(numDims);
-      for (int d = 0; d < numDims; d++) active[d] = true;
-      bool eoc = false;
-      for (int cell = 0; !eoc;
-           cell++,
-             IndexPlusPlus(coarseilower,coarseiupper,active,sub,eoc)) {
-        Print("cell = %4d",cell);
-        fprintf(stderr,"  sub = ");
-        printIndex(sub);
-        fprintf(stderr,"\n");
-
-        int offsetValues    = stencilSize * cell;
-        int offsetRhsValues = cell;
-        /* Initialize the stencil values of this cell's equation to 0 */
-        for (int entry = 0; entry < stencilSize; entry++) {
-          values[offsetValues + entry] = 0.0;
+      {
+        int stencilSize = hypre_SStructStencilSize(stencil);
+        int* entries = new int[stencilSize];
+        for (Counter entry = 0; entry < stencilSize; entry++) entries[entry] = entry;
+        Index hyprecoarseilower, hyprecoarseiupper;
+        ToIndex(coarseilower,&hyprecoarseilower,numDims);
+        ToIndex(coarseiupper,&hyprecoarseiupper,numDims);
+        int numCoarseCells = 1;
+        for (Counter dd = 0; dd < numDims; dd++) {
+          numCoarseCells *= (coarseiupper[dd] - coarseilower[dd] + 1);
         }
-        // TODO: set the corresponding RHS entry to 0.0
-        //        rhsValues[offsetRhsValues] = 0.0;
+        Print("# coarse cells in box = %d\n",numCoarseCells);
+        double* values    = new double[stencilSize * numCoarseCells];
+        double* rhsValues = new double[numCoarseCells];
         
-      } // end for cell
-      SetBoxValues();
-
+        Print("Looping over cells in coarse underlying box:\n");
+        vector<int> sub = coarseilower;
+        vector<bool> active(numDims);
+        for (Counter d = 0; d < numDims; d++) active[d] = true;
+        bool eoc = false;
+        for (Counter cell = 0; !eoc;
+             cell++,
+               IndexPlusPlus(coarseilower,coarseiupper,active,sub,eoc)) {
+          Print("cell = %4d",cell);
+          fprintf(stderr,"  sub = ");
+          printIndex(sub);
+          fprintf(stderr,"\n");
+          
+          int offsetValues    = stencilSize * cell;
+          int offsetRhsValues = cell;
+          /* Initialize the stencil values of this cell's equation to 0
+             except the central coefficient that is 1 */
+          values[offsetValues] = 1.0;
+          for (Counter entry = 1; entry < stencilSize; entry++) {
+            values[offsetValues + entry] = 0.0;
+          }
+          // Set the corresponding RHS entry to 0.0
+          rhsValues[offsetRhsValues] = 0.0;
+        } // end for cell
+        
+        /* Print values, rhsValues vectors */
+        for (Counter cell = 0; cell < numCoarseCells; cell++) {
+          int offsetValues    = stencilSize * cell;
+          int offsetRhsValues = cell;
+          Print("cell = %4d\n",cell);
+          for (Counter entry = 0; entry < stencilSize; entry++) {
+            Print("values   [%5d] = %+.3f\n",
+                  offsetValues + entry,values[offsetValues + entry]);
+          }
+          Print("rhsValues[%5d] = %+.3f\n",
+                offsetRhsValues,rhsValues[offsetRhsValues]);
+          Print("-------------------------------\n");
+        } // end for cell
+        
+        /* Effect the identity operator change in the Hypre structure
+           for A */
+        HYPRE_SStructMatrixSetBoxValues(A, level-1, 
+                                        hyprecoarseilower, hyprecoarseiupper, 0,
+                                        stencilSize, entries, values);
+        delete[] values;
+        delete[] rhsValues;
+        delete[] entries;
+      } // end identity matrix setting
 
       /* Loop over C/F boundaries of this patch */
-      for (int d = 0; d < numDims; d++) {
+      for (Counter d = 0; d < numDims; d++) {
         double faceArea = cellVolume / h[d];
         double coarseFaceArea = coarseCellVolume / coarseH[d];
         for (int s = -1; s <= 1; s += 2) {
@@ -814,7 +868,7 @@ makeLinearSystem(const Param& param,
             vector<int> coarseFaceUpper(numDims);
             int numFaceCells = 1;
             int numCoarseFaceCells = 1;
-            for (int dd = 0; dd < numDims; dd++) {
+            for (Counter dd = 0; dd < numDims; dd++) {
               Print("dd = %d\n",dd);
               Print("refRat = %d\n",refRat[dd]);
               coarseFaceLower[dd] =
@@ -839,14 +893,14 @@ makeLinearSystem(const Param& param,
             */
             vector<int> zero(numDims,0);
             vector<int> ref1(numDims,0);
-            for (int dd = 0; dd < numDims; dd++) {
+            for (Counter dd = 0; dd < numDims; dd++) {
               ref1[dd] = refRat[dd] - 1;
             }
             ref1[d] = 0;
             vector<bool> activeChild(numDims,true);
             bool eocChild = false;
             vector<int> subChild = zero;
-            for (int child = 0; !eocChild;
+            for (Counter child = 0; !eocChild;
                  child++,
                    IndexPlusPlus(zero,ref1,activeChild,subChild,eocChild)) {
               Print("child = %4d",child);
@@ -856,7 +910,7 @@ makeLinearSystem(const Param& param,
               vector<bool> active(numDims,true);
               bool eoc = false;
               vector<int> subCoarse = coarseNbhrLower;
-              for (int cell = 0; !eoc;
+              for (Counter cell = 0; !eoc;
                    cell++,
                      IndexPlusPlus(coarseNbhrLower,coarseNbhrUpper,active,
                                    subCoarse,eoc)) {
@@ -864,9 +918,23 @@ makeLinearSystem(const Param& param,
                 fprintf(stderr,"  subCoarse = ");
                 printIndex(subCoarse);
                 vector<int> subFine(numDims);
+                /* Compute fine cell inside the fine patch from coarse
+                   cell outside the fine patch */
                 subFine = subCoarse;
-                subFine[d] -= s;
-                pointwiseMult(subFine,refRat,subFine);
+                if (s < 0) {
+                  /* Left boundary: go from coarse outside to coarse
+                     inside the patch, then find its lower left corner
+                     and that's fine child 0. */
+                  subFine[d] -= s;
+                  pointwiseMult(refRat,subFine,subFine);
+                } else {
+                  /* Right boundary: start from the coarse outside the
+                     fine patch, find its lower left corner, then find
+                     its fine nbhr inside the fine patch. This is fine
+                     child 0. */
+                  pointwiseMult(refRat,subFine,subFine);
+                  subFine[d] -= s;
+                }
                 pointwiseAdd(subFine,subChild,subFine);
                 fprintf(stderr,"  subFine = ");
                 printIndex(subFine);
@@ -888,7 +956,6 @@ makeLinearSystem(const Param& param,
                    The neighboring's cell data point: xNbhr
                    The face crossing between xCell and xNbhr: xFace
                 */
-                int side = -s;
                 pointwiseMult(subFine,h,xCell);
                 pointwiseAdd(xCell,offset,xCell);   
                 
@@ -899,7 +966,7 @@ makeLinearSystem(const Param& param,
                    and fine meshsizes, i.e., their distances in the d
                    dimension from the C/F boundary. */
                 double alpha = coarseH[d] / (coarseH[d] + h[d]);
-                for (int dd = 0; dd < numDims; dd++) {
+                for (Counter dd = 0; dd < numDims; dd++) {
                   xFace[dd] = alpha*xCell[dd] + (1-alpha)*xNbhr[dd];
                 }
                 Print("      xCell = ");
@@ -914,7 +981,7 @@ makeLinearSystem(const Param& param,
                    coefficient */
                 double a    = 1.0; // Assumed constant a for now
                 double diff = 0;
-                for (int dd = 0; dd < numDims; dd++) {
+                for (Counter dd = 0; dd < numDims; dd++) {
                   diff += pow(xNbhr[dd] - xCell[dd],2);
                 }
                 diff = sqrt(diff);
@@ -932,6 +999,7 @@ makeLinearSystem(const Param& param,
                                                numStencilEntries,
                                                stencilEntries,
                                                stencilValues);
+                Print("      Done HYPRE_SStructMatrixAddToValues 1\n");
 
                 /* Add the C-F flux to the fine cell equation - graph
                    part */
@@ -939,7 +1007,7 @@ makeLinearSystem(const Param& param,
                 int entry = stencilSize;
                 /* Find the correct graph entry corresponding to this coarse
                    nbhr (subCoarse) of the fine cell subFine */
-                for (int dd = 0; dd < d; dd++) {
+                for (Counter dd = 0; dd < d; dd++) {
                   /* Are we near the left boundary and is it a C/F interface? */
                   int side = -1;
                   if ((patch->getBoundary(dd,side) == Patch::CoarseFine) &&
@@ -966,6 +1034,7 @@ makeLinearSystem(const Param& param,
                                                numGraphEntries,
                                                graphEntries,
                                                graphValues);
+                Print("      Done HYPRE_SStructMatrixAddToValues 2\n");
 
                 /* Subtract the C-F flux from the coarse cell equation
                    - stencil part */
@@ -977,6 +1046,7 @@ makeLinearSystem(const Param& param,
                                                numCoarseStencilEntries,
                                                coarseStencilEntries,
                                                coarseStencilValues);
+                Print("      Done HYPRE_SStructMatrixAddToValues 3\n");
 
                 /* Subtract the C-F flux from the coarse cell equation
                    - graph part */
@@ -990,6 +1060,7 @@ makeLinearSystem(const Param& param,
                                                numCoarseGraphEntries,
                                                coarseGraphEntries,
                                                coarseGraphValues);
+                Print("      Done HYPRE_SStructMatrixAddToValues 4\n");
 
                 if (child == 0) { /* Potential source for bugs: remove
                                      coarse-coarse flux only ONCE in the
@@ -1048,34 +1119,8 @@ makeLinearSystem(const Param& param,
     } // end for i (patches)
   } // end for level
 
-
-
-
-
-#if 0
-  /* We will implement the following ourselves, because it does not work
-     in problems that are not in 3-D.
-  */
-  /* 
-     Zero out all the connections from fine point stencils to outside the
-     fine patch. These are replaced by the graph connections between the fine
-     patch and its parent coarse patch.
-  */
-  for (int level = numLevels-1; level > 0; level--) {
-    hypre_FacZeroCFSten(hypre_SStructMatrixPMatrix(A, level),
-                        hypre_SStructMatrixPMatrix(A, level-1),
-                        grid,
-                        level,
-                        refinementRatio[level]);
-    hypre_FacZeroFCSten(hypre_SStructMatrixPMatrix(A, level),
-                        grid,
-                        level);
-    hypre_ZeroAMRMatrixData(A, level-1, refinementRatio[level]);
-  }
-#endif  
   Print("End C/F interface equation construction\n");
   serializeProcsEnd();
-
 
 #if 0
   /*-----------------------------------------------------------
@@ -1090,7 +1135,7 @@ makeLinearSystem(const Param& param,
   /* Initialize b at all levels */
   serializeProcsBegin();
   fprintf(stderr,"Adding structured equations to b and x\n");
-  for (int level = 0; level < numLevels; level++) {
+  for (Counter level = 0; level < numLevels; level++) {
     fprintf(stderr,"At level = %d\n",level);
     /* May later need to loop over patches at this level here. */
     /* b is defined only over interior structured equations.
@@ -1099,7 +1144,7 @@ makeLinearSystem(const Param& param,
     
     /* Init values to vector of size = number of cells in the mesh */
     int numCells = 1;
-    for (int dim = 0; dim < numDims; dim++) {
+    for (Counter dim = 0; dim < numDims; dim++) {
       numCells *= (iupper[level][dim] - ilower[level][dim] + 1);
     }
     values = hypre_TAlloc(double, numCells);
@@ -1136,8 +1181,8 @@ solveLinearSystem(const Param& param,
                   HYPRE_SStructVector& x,
                   const HYPRE_ParCSRMatrix& par_A,
                   const HYPRE_ParVector& par_b,
-                  HYPRE_SStructMatrix& fac_A,
-                  HYPRE_ParVector& par_x)
+                  HYPRE_ParVector& par_x,
+                  HYPRE_SStructMatrix& fac_A)
   /*_____________________________________________________________________
     Function solveLinearSystem:
     Solve the linear system A*x = b. The result is returned into x.
@@ -1151,42 +1196,11 @@ solveLinearSystem(const Param& param,
      right-hand-side b and solution x */
   HYPRE_SStructSolver   solver;
   HYPRE_Solver          par_solver;
-  int                   num_iterations, n_pre, n_post;
-  double                finalResNorm;
+  int                   n_pre, n_post;
 
   /* Timers, debugging flags */
-  int                   time_index, time_fac_rap;
+  int                   time_index;
 
-  /*-----------------------------------------------------------
-   * Solver setup phase
-   *-----------------------------------------------------------*/
-  if (MYID == 0) {
-    Print("----------------------------------------------------\n");
-    Print("Solver setup phase\n");
-    Print("----------------------------------------------------\n");
-  }
-  if (param.solverID > 90) {
-    /* FAC Solver. Prepare FAC operator hierarchy using Galerkin coarsening
-       with black-box interpolation, on the original meshes */
-    time_fac_rap = hypre_InitializeTiming("fac rap");
-    hypre_BeginTiming(time_fac_rap);
-    hypre_AMR_RAP(A, refinementRatio, &fac_A);
-    hypre_ZeroAMRVectorData(b, plevel, refinementRatio);
-    hypre_ZeroAMRVectorData(x, plevel, refinementRatio);
-    hypre_EndTiming(time_fac_rap);
-    hypre_PrintTiming("fac rap", MPI_COMM_WORLD);
-    hypre_FinalizeTiming(time_fac_rap);
-    hypre_ClearTiming();
-  }
-
-  /*-----------------------------------------------------------
-   * Solver actual solution phase
-   *-----------------------------------------------------------*/
-  if (MYID == 0) {
-    Print("----------------------------------------------------\n");
-    Print("Solver solution phase\n");
-    Print("----------------------------------------------------\n");
-  }
   /*-------------- FAC Solver -----------------*/
   if (param.solverID > 90) {
     n_pre  = refinementRatio[numLevels-1][0]-1;
@@ -1243,7 +1257,7 @@ solveLinearSystem(const Param& param,
     hypre_FinalizeTiming(time_index);
     hypre_ClearTiming();
 
-    HYPRE_SStructFACGetNumIterations(solver, &num_iterations);
+    HYPRE_SStructFACGetNumIterations(solver, &numIterations);
     HYPRE_SStructFACGetFinalRelativeResidualNorm(
                                                  solver, &finalResNorm);
     HYPRE_SStructFACDestroy2(solver);
@@ -1281,15 +1295,13 @@ solveLinearSystem(const Param& param,
       hypre_FinalizeTiming(time_index);
       hypre_ClearTiming();
 
-      HYPRE_BoomerAMGGetNumIterations(par_solver, &num_iterations);
+      HYPRE_BoomerAMGGetNumIterations(par_solver, &numIterations);
       HYPRE_BoomerAMGGetFinalRelativeResidualNorm(par_solver,
                                                   &finalResNorm);
 
       HYPRE_BoomerAMGDestroy(par_solver);
     } // if solverID == 30
 #endif
-
-  return finalResNorm;
 }
 
 int
@@ -1297,9 +1309,7 @@ main(int argc, char *argv[]) {
   /*-----------------------------------------------------------
    * Variable definition, parameter init, arguments verification
    *-----------------------------------------------------------*/
-  /* Counters, timers, parameters and specific sizes of this problem */
-  int                 numProcs, myid;
-  int                 time_index;
+  /* Initialize parameters */
   Param               param;
   param.numDims       = 2;
   param.solverID      = 30;    // solver ID. 30 = AMG, 99 = FAC
@@ -1307,27 +1317,28 @@ main(int argc, char *argv[]) {
   param.baseResolution= 8;     // Level 0 grid size in every direction
   param.printSystem   = true;
 
+  int                   numProcs, myid;
+  int                   time_index;
+
   /* Grid data structures */
   HYPRE_SStructGrid     grid;
   Hierarchy             hier;
-  Index                 faceLower, faceUpper;
   int                   *plevel;          // Needed by FAC: part # of level
   Index                 *refinementRatio; // Needed by FAC
   
-  /* Stencil data structures.
-     We use the same stencil all all levels and all parts. */
+  /* Stencil data structures. We use the same stencil all all levels
+     and all parts. */
   HYPRE_SStructStencil  stencil;
 
   /* Graph data structures */
-  HYPRE_SStructGraph    graph, fac_graph;
+  HYPRE_SStructGraph    graph;
+  
+  /* Solver data structures */
+  Solver                solver(param);
   
   /* Sparse matrix data structures for various solvers (FAC, ParCSR),
      right-hand-side b and solution x */
-  HYPRE_SStructMatrix   A;
-  HYPRE_SStructVector   b, x;
-  HYPRE_ParCSRMatrix    par_A;
-  HYPRE_ParVector       par_b, par_x;
-  HYPRE_SStructMatrix   fac_A;
+  int                   numIterations;
 
   /*-----------------------------------------------------------
    * Initialize some stuff
@@ -1397,10 +1408,6 @@ main(int argc, char *argv[]) {
     Print("----------------------------------------------------\n");
   }
 
-  /* Initialize arrays needed by Hypre FAC */
-  plevel          = hypre_TAlloc(int  , numLevels);    
-  refinementRatio = hypre_TAlloc(Index, numLevels);
-
   makeHierarchy(param, hier, plevel, refinementRatio);// Set our MR hierarchy
   getPatchesFromOtherProcs(param, hier);  // Compute global patch IDs
   HYPRE_SStructVariable vars[NUM_VARS] =
@@ -1454,53 +1461,12 @@ main(int argc, char *argv[]) {
     Print("Set up the SStruct matrix\n");
     Print("----------------------------------------------------\n");
   }
-  
-  /* Create an empty matrix with the graph non-zero pattern */
-  HYPRE_SStructMatrixCreate(MPI_COMM_WORLD, graph, &A);
-  Print("Created empty SStructMatrix\n");
-  /* If using AMG, set A's object type to ParCSR now */
-  if ( ((param.solverID >= 20) && (param.solverID <= 30)) ||
-       ((param.solverID >= 40) && (param.solverID < 60)) ) {
-    HYPRE_SStructMatrixSetObjectType(A, HYPRE_PARCSR);
-  }
-  HYPRE_SStructMatrixInitialize(A);
 
-  /* Initialize RHS vector b and solution vector x */
-  HYPRE_SStructVectorCreate(MPI_COMM_WORLD, grid, &b);
-  HYPRE_SStructVectorCreate(MPI_COMM_WORLD, grid, &x);
-  /* If AMG is used, set b and x type to ParCSR */
-  if ( ((param.solverID >= 20) && (param.solverID <= 30)) ||
-       ((param.solverID >= 40) && (param.solverID < 60)) ) {
-    HYPRE_SStructVectorSetObjectType(b, HYPRE_PARCSR);
-    HYPRE_SStructVectorSetObjectType(x, HYPRE_PARCSR);
-  }
-  HYPRE_SStructVectorInitialize(b);
-  HYPRE_SStructVectorInitialize(x);
+  solver.initialize(hier, grid, graph);
+  solver.makeLinearSystem(param, hier, grid, stencil, graph);
+  solver.setup();
+  solver.assemble();
 
-  makeLinearSystem(param, hier, grid, stencil, graph, A, b);
-  
-  /* Assemble the matrix - a collective call */
-  HYPRE_SStructMatrixAssemble(A); 
-  /* For BoomerAMG solver: set up the linear system in ParCSR format */
-  if ( ((param.solverID >= 20) && (param.solverID <= 30)) ||
-       ((param.solverID >= 40) && (param.solverID < 60)) ) {
-    HYPRE_SStructMatrixGetObject(A, (void **) &par_A);
-  }
-
-#if 0
-
-  hypre_ZeroAMRVectorData(b, plevel, refinementRatio);  // Implement ourselves?
-  HYPRE_SStructVectorAssemble(b);
-  hypre_ZeroAMRVectorData(x, plevel, refinementRatio);
-  HYPRE_SStructVectorAssemble(x);  // See above
- 
-  /* For BoomerAMG solver: set up the linear system (b,x) in ParCSR format */
-  if ( ((param.solverID >= 20) && (param.solverID <= 30)) ||
-       ((param.solverID >= 40) && (param.solverID < 60)) ) {
-    HYPRE_SStructVectorGetObject(b, (void **) &par_b);
-    HYPRE_SStructVectorGetObject(x, (void **) &par_x);
-  }
-#endif
   /* Print total time for setting up the linear system */
   hypre_EndTiming(time_index);
   hypre_PrintTiming("SStruct Interface", MPI_COMM_WORLD);
@@ -1530,7 +1496,6 @@ main(int argc, char *argv[]) {
     //    HYPRE_SStructVectorPrint("sstruct.out.x0", x, 0);
   }
 
-#if 0
   /*-----------------------------------------------------------
    * Solve the linear system A*x=b
    *-----------------------------------------------------------*/
@@ -1554,7 +1519,7 @@ main(int argc, char *argv[]) {
   }
 
   HYPRE_SStructVectorGather(x);
-  if ((param.printSystem) {
+  if (param.printSystem) {
     HYPRE_SStructVectorPrint("sstruct.out.x1", x, 0);
   }
    
@@ -1565,11 +1530,10 @@ main(int argc, char *argv[]) {
     Print("----------------------------------------------------\n");
     Print("Print the solution vector\n");
     Print("----------------------------------------------------\n");
-    Print("Iterations = %d\n", num_iterations);
+    Print("Iterations = %d\n", numIterations);
     Print("Final Relative Residual Norm = %e\n", finalResNorm);
     Print("\n");
   }
-#endif
 
   /*-----------------------------------------------------------
    * Finalize things
@@ -1583,8 +1547,6 @@ main(int argc, char *argv[]) {
   /* Destroy grid objects */
   Print("Destroying grid objects\n");
   HYPRE_SStructGridDestroy(grid);
-  hypre_TFree(plevel);
-  hypre_TFree(refinementRatio);
    
   /* Destroy stencil objects */
   Print("Destroying stencil objects\n");
@@ -1592,24 +1554,9 @@ main(int argc, char *argv[]) {
    
   /* Destroy graph objects */
   Print("Destroying graph objects\n");
-  if (param.solverID > 90) {
-    fac_graph = hypre_SStructMatrixGraph(fac_A);
-    HYPRE_SStructGraphDestroy(fac_graph);
-  }
   HYPRE_SStructGraphDestroy(graph);
    
-  /* Destroy matrix, RHS, solution objects */
-  Print("Destroying matrix, RHS, solution objects\n");
-  if (param.solverID > 90) {
-    HYPRE_SStructMatrixDestroy(fac_A);
-  }
-  HYPRE_SStructMatrixDestroy(A);
-  //   HYPRE_SStructVectorDestroy(b);
-  //   HYPRE_SStructVectorDestroy(x);
-   
-  Print("Cleaning\n");
   clean();
-
   Print("%s: Going down successfully\n",argv[0]);
   return 0;
 } // end main()
