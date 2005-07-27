@@ -76,35 +76,35 @@ initTest(Param& param)
     /* u is a linear function (d-D) */
     {
       param.longTitle     = "Linear Solution";
-      param.supportedDims.push_back(-1); // Works in any dimension
+      param.supportedDims.push_back(0); // Works in any dimension
       break;
     }
 
   case Param::Quad1:
     {
       param.longTitle     = "Quadratic Solution $u=u(x_1)$";
-      param.supportedDims.push_back(-1); // Works in any dimension
+      param.supportedDims.push_back(0); // Works in any dimension
       break;
     }
     
   case Param::Quad2:
     {
       param.longTitle     = "Quadratic Solution";
-      param.supportedDims.push_back(-1); // Works in any dimension
+      param.supportedDims.push_back(0); // Works in any dimension
       break;
     }
     
   case Param::SinSin:
     {
       param.longTitle     = "Smooth Solution";
-      param.supportedDims.push_back(-1); // Works in any dimension
+      param.supportedDims.push_back(0); // Works in any dimension
       break;
     }
     
   case Param::GaussianSource:
     {
       param.longTitle     = "Localized Gaussian Source";
-      param.supportedDims.push_back(-1); // Works in any dimension
+      param.supportedDims.push_back(0); // Works in any dimension
       break;
     }
           
@@ -113,7 +113,7 @@ initTest(Param& param)
       param.longTitle     =
         "Piecewise Constant Diffusion, " \
         "Piecewise Linear Solution";
-      param.supportedDims.push_back(-1); // Works in any dimension
+      param.supportedDims.push_back(0); // Works in any dimension
       break;
     }
     
@@ -122,21 +122,21 @@ initTest(Param& param)
         param.longTitle     = 
           "Piecewise Constant Diffusion, " \
           "Piecewise Quadratic Solution";
-        param.supportedDims.push_back(-1); // Works in any dimension
+        param.supportedDims.push_back(0); // Works in any dimension
         break;
       }
       
   case Param::DiffusionQuadLinear:
     {
       param.longTitle     = "Linear Diffusion, Quadratic Solution";
-      param.supportedDims.push_back(-1); // Works in any dimension
+      param.supportedDims.push_back(0); // Works in any dimension
         break;
       }
     
   case Param::DiffusionQuadQuad:
     {
       param.longTitle     = "Quadratic Diffusion, Quadratic Solution";
-      param.supportedDims.push_back(-1); // Works in any dimension
+      param.supportedDims.push_back(0); // Works in any dimension
       break;
     }
     
