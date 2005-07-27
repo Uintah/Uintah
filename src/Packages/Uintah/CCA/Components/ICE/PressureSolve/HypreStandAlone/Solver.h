@@ -67,8 +67,8 @@ public:
 
   /* Utilities */
   void printMatrix(const string& fileName = "output");
-  void printRHS(const string& fileName = "output");
-  void printSolution(const string& fileName = "output");
+  void printRHS(const string& fileName = "output_b");
+  void printSolution(const string& fileName = "output_x");
 
   /* Data for solver */
   const Param&          _param;

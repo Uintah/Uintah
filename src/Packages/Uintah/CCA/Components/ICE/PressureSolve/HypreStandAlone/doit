@@ -1,20 +1,33 @@
 #!/bin/csh
 
-echo "gmake"
+set NUM_PROCS=4
 
-gmake
+if ( $# > 1) then
+    echo
+    echo "Error"
+    echo "Usage: $0 [num procs]"
+    echo
+    exit
+else
+  if ( $# == 1 ) then
+    set NUM_PROCS=$1
+  endif
+endif
+
+echo "Making... ($NUM_PROCS)"
+
+gmake -j2
 
 if ($?) then
    exit
 endif
 
-echo "mpirun"
+echo "Running..."
 rm -f log
-mpirun -np 4 ./mydriver > & log
+mpirun -np $NUM_PROCS ./mydriver > & log
 
 if ($?) then
    exit
 endif
 
-echo "less"
 less log
