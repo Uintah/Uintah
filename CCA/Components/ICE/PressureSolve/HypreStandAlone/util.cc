@@ -327,6 +327,7 @@ pointwiseMult(const vector<int>& i,
          (result.size() == h.size()));
   for (int d = 0; d < i.size(); d++) result[d] = i[d] * h[d];
 }
+
 void
 pointwiseMult(const vector<int>& i,
               const vector<double>& h,
@@ -335,6 +336,16 @@ pointwiseMult(const vector<int>& i,
   assert((i.size() == h.size()) &&
          (result.size() == h.size()));
   for (int d = 0; d < i.size(); d++) result[d] = i[d] * h[d];
+}
+
+void
+pointwiseDivide(const vector<int>& x,
+                const vector<int>& y,
+                vector<int>& result)
+{
+  assert((x.size() == y.size()) &&
+         (result.size() == y.size()));
+  for (int d = 0; d < x.size(); d++) result[d] = x[d] / y[d];
 }
 
 int

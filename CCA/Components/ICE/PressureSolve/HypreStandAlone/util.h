@@ -64,6 +64,11 @@ void scalarMult(const vector<double>& x,
 void pointwiseMult(const vector<int>& i,
                    const vector<double>& h,
                    vector<double>& result);
+
+void pointwiseDivide(const vector<int>& x,
+                     const vector<int>& y,
+                     vector<int>& result);
+
 int prod(const vector<int>& x);
 
 double prod(const vector<double>& x);
