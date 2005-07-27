@@ -3,6 +3,8 @@
 
 #include <vector>
 
+#include "Param.h"
+
 class Level;
 
 class Hierarchy {
@@ -12,7 +14,18 @@ class Hierarchy {
     finer level, and so on. Hierarchy is the same for all procs.
     _____________________________________________________________________*/
 public:
+
+  Hierarchy( const Param & param ) : _param(param) {}
+
+  void make();
+  void printPatchBoundaries();
+
   std::vector<Level*> _levels;
+  const Param & _param;
+
+ private:
+  void getPatchesFromOtherProcs();
+
 };
 
 #endif // __HIERARCHY_H__

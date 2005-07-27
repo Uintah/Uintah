@@ -24,13 +24,14 @@ MPI_LIBS   = -lmpi -llam -lutil -lpthread -ldl
 ##################################################################
 TARGET1          = mydriver
 TARGET1_OBJS     = \
-			mydriver.o \
-			util.o     \
-			inputs.o   \
-			Level.o    \
-			Patch.o    \
-			IntMatrix.o\
-			Solver.o   \
+			mydriver.o  \
+			util.o      \
+			inputs.o    \
+			Level.o     \
+			Hierarchy.o \
+			Patch.o     \
+			IntMatrix.o \
+			Solver.o    \
 
 TARGET2          = mpitest
 TARGET2_OBJS     = \
