@@ -11,8 +11,8 @@
 #include "util.h"
 
 #include <utilities.h>
-
 #include <vector>
+#include <iostream>
 
 using namespace std;
 
@@ -52,17 +52,20 @@ Proc0Print(char *fmt, ...)
       va_list ap;
       va_start(ap, fmt);
       if (vb) {
-        printf("P%2d: ",MYID);
-        vprintf(fmt, ap);
+        //        printf("P%2d: ",MYID);
+        fprintf(stderr,"P%2d: ",MYID);
+        //        vprintf(fmt, ap);
+        vfprintf(stderr, fmt, ap);
       }
-      fflush(stdout);
-      if (vb) {
-        va_start(ap, fmt);
+      //      fflush(stdout);
+      fflush(stderr);
+      //      if (vb) {
+        //        va_start(ap, fmt);
         //    if (log_file)
         //      vfprintf(log_file, fmt, ap);
         //    if (log_file)
         //      fflush(log_file);
-      }
+      //      }
       va_end(ap);
     }
 }
@@ -79,17 +82,20 @@ Print(char *fmt, ...)
   va_list ap;
   va_start(ap, fmt);
   if (vb) {
-    printf("P%2d: ",MYID);
-    vprintf(fmt, ap);
+    //    printf("P%2d: ",MYID);
+    fprintf(stderr,"P%2d: ",MYID);
+    //    vprintf(fmt, ap);
+    vfprintf(stderr, fmt, ap);
   }
-  fflush(stdout);
-  if (vb) {
-    va_start(ap, fmt);
+  //  fflush(stdout);
+  fflush(stderr);
+  //  if (vb) {
+  //    va_start(ap, fmt);
     //    if (log_file)
     //      vfprintf(log_file, fmt, ap);
     //    if (log_file)
     //      fflush(log_file);
-  }
+  //  }
   va_end(ap);
 }
 
@@ -100,12 +106,12 @@ printIndex(const vector<int>& sub)
     Function printIndex:
     Print vector-type numDims-dimensional index sub
     _____________________________________________________________________*/
-  printf("[");
+  fprintf(stderr,"[");
   for (int d = 0; d < sub.size(); d++) {
-    printf("%d",sub[d]);
-    if (d < sub.size()-1) printf(",");
+    fprintf(stderr,"%d",sub[d]);
+    if (d < sub.size()-1) fprintf(stderr,",");
   }
-  printf("]");
+  fprintf(stderr,"]");
 }
 
 void 
@@ -115,12 +121,12 @@ printIndex(const vector<double>& x)
     Function printIndex:
     Print vector-type numDims-dimensional location x
     _____________________________________________________________________*/
-  printf("[");
+  fprintf(stderr,"[");
   for (int d = 0; d < x.size(); d++) {
-    printf("%+.3lf",x[d]);
-    if (d < x.size()-1) printf(",");
+    fprintf(stderr,"%+.3lf",x[d]);
+    if (d < x.size()-1) fprintf(stderr,",");
   }
-  printf("]");
+  fprintf(stderr,"]");
 }
 
 void
@@ -147,9 +153,9 @@ faceExtents(const vector<int>& ilower,
   }
   Print("Face(dim = %c, side = %d) box extents: ",dim+'x',side);
   printIndex(faceLower);
-  printf(" to ");
+  fprintf(stderr," to ");
   printIndex(faceUpper);
-  printf("\n");
+  fprintf(stderr,"\n");
 }
 
 void IndexPlusPlus(const vector<int>& ilower,
@@ -185,7 +191,7 @@ void IndexPlusPlus(const vector<int>& ilower,
 
   //  Print("BEFORE sub = ");
   //  printIndex(sub);
-  //  printf("\n");
+  //  fprintf(stderr,"\n");
 
   int d = 0;
   while ((!active[d]) && (d < numDims)) d++;
@@ -209,7 +215,7 @@ void IndexPlusPlus(const vector<int>& ilower,
 
   //  Print("AFTER  sub = ");
   //  printIndex(sub);
-  //  printf("\n");
+  //  fprintf(stderr,"\n");
 }
 
 int
@@ -226,6 +232,7 @@ clean(void)
   MPI_Finalize();    // Quit MPI
 }
 
+static bool serializing = false;
 
 void
 serializeProcsBegin(void)
@@ -238,6 +245,13 @@ serializeProcsBegin(void)
     MPI.
     _____________________________________________________________________*/
 {
+  if (serializing) {
+    fprintf(stderr,"\n\nError: serializeProcsBegin() called before "
+            "serializeProcsEnd() done\n");
+    clean();
+    exit(1);
+  }
+  serializing = true;
 #if DEBUG
   for (int i = 0; i < MYID; i++) {
     //    Print("serializeProcsBegin Barrier #%d\n",i);
@@ -267,6 +281,13 @@ serializeProcsEnd(void)
     MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
   }
 #endif
+  if (!serializing) {
+    fprintf(stderr,"\n\nError: serializeProcsEnd() called before "
+            "serializeProcsBegin() done\n");
+    clean();
+    exit(1);
+  }
+  serializing = false;
 }
 
 void
@@ -331,3 +352,139 @@ prod(const vector<double>& x)
   for (int d = 0; d < x.size(); d++) result *= x[d];
   return result;
 }
+
+double
+roundDigit(const double& x,
+           const int d = 0)
+  /*_____________________________________________________________________
+    Function roundDigit:
+    Round towards nearest rational (to certain # of digits).
+    roundDigit(x,d) rounds the elements of x to the nearest rational
+    a/(10^d * b), where a and b are integers.
+    Alternatively, roundd(x,d) = 10^(-d) * round(10^d * x).
+    roundDigit(x) is the same as roundDigit(x,0).
+     _____________________________________________________________________*/
+{
+
+  double f = pow(10.0,d);
+  return round(x*f)/f;
+}
+
+IntMatrix
+grayCode(const int n,
+         const vector<int> k)
+  /*_____________________________________________________________________
+    Function grayCode:
+    This function returns a variable-base multiple-digit gray code.
+    G = grayCode(N,K) returns the gray code permutation of the integers
+    from 0 to prod(K)-1. N bust be a non-negative integer and K must be an
+    N-vector of non-negative integers of bases. K[0] is the base of the
+    right-most digit (LSB) in the N-digit string space, K[1] the base of
+    the next right digit, and so on.
+    The generated gray code is not necssarily cyclic. G is an array of size
+    prod(K)xN, whose rows are the gray-code-ordered N-digit strings.
+    _____________________________________________________________________*/
+{
+  assert(n > 0);
+  assert(k.size() == n);
+  int verbose = 0;
+  
+  int numRows = 1;
+  int numCols = 0;
+  int m = 0;
+  numRows *= k[m];
+  numCols++;
+  IntMatrix G(numRows,numCols);
+  for (int i = 0; i < k[0]; i++) {
+    G(i,m) = i;
+  }
+  if (verbose >= 1) {
+    Print("G for %d digits = \n",m);
+    G.print(cout);
+  }
+
+  /* Generate G recursively */
+  for (int m = 1; m < n; m++) {
+    int b = k[m];
+    numRows *= b;
+    numCols++;
+    IntMatrix Gnew(numRows,numCols);
+    int startRow = 0;
+    if (verbose >= 1) {
+      Print("m = %d, b = %d\n",m,b);
+    }
+    for (int d = 0; d < b; d++) {
+      if (d % 2) {           // d odd
+        if (verbose >= 1) {
+          Print("  (G*)^(%d)\n",d);
+        }
+        
+        for (int i = 0; i < G.numRows(); i++) {
+          for (int j = 0; j < G.numCols(); j++) {
+            Gnew(startRow+G.numRows()-1-i,j) = G(i,j);
+          }
+          Gnew(startRow+G.numRows()-1-i,m) = d;
+        }
+        
+      } else {               // d even
+        if (verbose >= 1) {
+          Print("  G^(%d)\n",d);
+        }
+
+        for (int i = 0; i < G.numRows(); i++) {
+          for (int j = 0; j < G.numCols(); j++) {
+            Gnew(startRow+i,j) = G(i,j);
+          }
+          Gnew(startRow+i,m) = d;
+        }
+      } // end d even
+      startRow += G.numRows();
+    } // end for d
+
+    G = Gnew;
+    if (verbose >= 1) {
+      Print("G for %d digits = \n",m);
+      G.print(cout);
+    }
+  } // end for m
+  
+  /* Check result */
+  bool fail = false;
+  for (int i = 0; i < G.numRows()-1; i++) {
+    int diff = 0;
+    for (int j = 0; j < G.numCols(); j++) {
+      diff += int(abs(G(i,j) - G(i+1,j)));
+    }
+    if (diff != 1) {
+      fail = true;
+      Print("failed in difference between rows %d and %d\n",i,i+1);
+      break;
+    }
+  } // end for i
+
+  for (int i = 0; (i < G.numRows()) && (!fail); i++) {
+    for (int i2 = 0; i2 < G.numRows(); i2++) {
+      if (i != i2) {
+        int diff = 0;
+        for (int j = 0; j < G.numCols(); j++) {
+          diff += int(abs(G(i,j) - G(i2,j)));
+        }
+        if (diff == 0) {
+          fail = true;
+          Print("failed in equality of rows %d and %d\n",i,i2);
+          break;
+        }
+      }
+    } // end for i2
+  } // end for i
+
+  if (fail) {
+    Print("Gray code is incorrect!!!\n");
+  } else {
+    if (verbose >= 1) {
+      Print("Gray code is correct.\n");
+    }
+  }
+
+  return G;
+} // end graycode
