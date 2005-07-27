@@ -315,7 +315,7 @@ main(int argc, char *argv[]) {
    *-----------------------------------------------------------*/
   /* Initialize parameters */
   Param               param;
-  param.numDims       = 2;
+  param.numDims       = 3;
   param.solverID      = 30;    // solver ID. 30 = AMG, 99 = FAC
   param.numLevels     = 2;     // Number of AMR levels
   param.baseResolution= 8;     // Level 0 grid size in every direction
@@ -466,9 +466,9 @@ main(int argc, char *argv[]) {
   Proc0Print("----------------------------------------------------\n");
   Proc0Print("Print out the system and initial guess\n");
   Proc0Print("----------------------------------------------------\n"); 
-  solver.printMatrix();
-  solver.printRHS();
-  solver.printSolution("solver_x0");
+  solver.printMatrix("output_A");
+  solver.printRHS("output_b");
+  solver.printSolution("output_x0");
 
   /*-----------------------------------------------------------
    * Solve the linear system A*x=b
@@ -484,9 +484,10 @@ main(int argc, char *argv[]) {
   Proc0Print("----------------------------------------------------\n");
   Proc0Print("Print the solution vector\n");
   Proc0Print("----------------------------------------------------\n");
-  solver.printSolution("solver_x1");
+  solver.printSolution("output_x1");
   Proc0Print("Iterations = %d\n", solver._results.numIterations);
-  Proc0Print("Final Relative Residual Norm = %e\n", solver._results.finalResNorm);
+  Proc0Print("Final Relative Residual Norm = %e\n",
+             solver._results.finalResNorm);
   Proc0Print("\n");
 
   /*-----------------------------------------------------------
