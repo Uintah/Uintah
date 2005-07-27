@@ -69,11 +69,8 @@ Solver::assemble(void)
        ((_param.solverID >= 40) && (_param.solverID < 60)) ) {
     HYPRE_SStructMatrixGetObject(_A, (void **) &_parA);
   }
-
-  hypre_ZeroAMRVectorData(_b, _pLevel, _refinementRatio);  // Implement ourselves?
   HYPRE_SStructVectorAssemble(_b);
-  hypre_ZeroAMRVectorData(_x, _pLevel, _refinementRatio);
-  HYPRE_SStructVectorAssemble(_x);  // See above
+  HYPRE_SStructVectorAssemble(_x);
  
   /* For BoomerAMG solver: set up the linear system (b,x) in ParCSR format */
   if ( ((_param.solverID >= 20) && (_param.solverID <= 30)) ||
@@ -100,8 +97,6 @@ Solver::setup(void)
     int time_fac_rap = hypre_InitializeTiming("fac rap");
     hypre_BeginTiming(time_fac_rap);
     hypre_AMR_RAP(_A, _refinementRatio, &_facA);
-    hypre_ZeroAMRVectorData(_b, _pLevel, _refinementRatio);
-    hypre_ZeroAMRVectorData(_x, _pLevel, _refinementRatio);
     hypre_EndTiming(time_fac_rap);
     hypre_PrintTiming("fac rap", MPI_COMM_WORLD);
     hypre_FinalizeTiming(time_fac_rap);
@@ -279,6 +274,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
       Patch* patch = lev->_patchList[i];
       double* values    = new double[stencilSize * patch->_numCells];
       double* rhsValues = new double[patch->_numCells];
+      double* solutionValues = new double[patch->_numCells];
       Index hypreilower, hypreiupper;
       ToIndex(patch->_ilower,&hypreilower,numDims);
       ToIndex(patch->_iupper,&hypreiupper,numDims);
@@ -305,7 +301,10 @@ Solver::makeLinearSystem(const Hierarchy& hier,
         for (Counter entry = 0; entry < stencilSize; entry++) {
           values[offsetValues + entry] = 0.0;
         }
-        rhsValues[offsetRhsValues] = 0.0;
+        // TODO: Assuming a constant source term
+        rhsValues[offsetRhsValues] = 1.0; //0.0;
+        // TODO: constant initial guess
+        solutionValues[offsetRhsValues] = 1234.5678;
         
         /* Loop over directions */
         int entry = 1;
@@ -359,13 +358,10 @@ Solver::makeLinearSystem(const Hierarchy& hier,
             if (((s == -1) && (sub[d] == 0              )) ||
                 ((s ==  1) && (sub[d] == resolution[d]-1))) {
               /* Nbhr is at the boundary, eliminate it from values */
-              values[offsetValues + entry] = 0.0; // Eliminate connection to BC var
+              values[offsetValues + entry] = 0.0; // Eliminate connection
               // TODO:
               // Add to rhsValues if this is a non-zero Dirichlet B.C. !!
             }
-
-            // TODO:
-            rhsValues[offsetRhsValues] = 0.0;  // Assuming 0 source term
             entry++;
           } // end for s
         } // end for d
@@ -392,6 +388,8 @@ Solver::makeLinearSystem(const Hierarchy& hier,
         }
         Print("rhsValues[%5d] = %+.3f\n",
               offsetRhsValues,rhsValues[offsetRhsValues]);
+        Print("solutionValues[%5d] = %+.3f\n",
+              offsetRhsValues,solutionValues[offsetRhsValues]);
         Print("-------------------------------\n");
       } // end for cell
 
@@ -399,17 +397,20 @@ Solver::makeLinearSystem(const Hierarchy& hier,
       HYPRE_SStructMatrixSetBoxValues(_A, level, 
                                       hypreilower, hypreiupper, 0,
                                       stencilSize, entries, values);
+
       /* Add this patch's interior RHS to the RHS vector b */
-      HYPRE_SStructVectorSetBoxValues(b, level,
+      HYPRE_SStructVectorSetBoxValues(_b, level,
                                       hypreilower, hypreiupper, 0, 
                                       rhsValues);
-                                      0, values);
+
       /* Add this patch's interior initial guess to the solution vector x */
-      HYPRE_SStructVectorSetBoxValues(x, level, ilower[level], iupper[level],
-                                      0, values);
+      HYPRE_SStructVectorSetBoxValues(_x, level,
+                                      hypreilower, hypreiupper, 0, 
+                                      solutionValues);
 
       delete[] values;
       delete[] rhsValues;
+      delete[] solutionValues;
     } // end for patch
   } // end for level
 
@@ -462,7 +463,8 @@ Solver::makeLinearSystem(const Hierarchy& hier,
       {
         int stencilSize = hypre_SStructStencilSize(stencil);
         int* entries = new int[stencilSize];
-        for (Counter entry = 0; entry < stencilSize; entry++) entries[entry] = entry;
+        for (Counter entry = 0; entry < stencilSize; entry++)
+          entries[entry] = entry;
         Index hyprecoarseilower, hyprecoarseiupper;
         ToIndex(coarseilower,&hyprecoarseilower,numDims);
         ToIndex(coarseiupper,&hyprecoarseiupper,numDims);
@@ -516,8 +518,12 @@ Solver::makeLinearSystem(const Hierarchy& hier,
         /* Effect the identity operator change in the Hypre structure
            for A */
         HYPRE_SStructMatrixSetBoxValues(_A, level-1, 
-                                        hyprecoarseilower, hyprecoarseiupper, 0,
+                                        hyprecoarseilower, hyprecoarseiupper,
+                                        0,
                                         stencilSize, entries, values);
+        HYPRE_SStructVectorSetBoxValues(_b, level-1, 
+                                        hyprecoarseilower, hyprecoarseiupper,
+                                        0, rhsValues);
         delete[] values;
         delete[] rhsValues;
         delete[] entries;
