@@ -740,11 +740,13 @@ makeLinearSystem(const Param& param,
       Patch* patch = lev->_patchList[i];
 
       /* Loop over C/F boundaries of this patch */
-      for (int d = 0; d < numDims; d++) {
+      //      for (int d = 0; d < numDims; d++) {
+      for (int d = 1; d <= 1; d++) { // TESTING
         double faceArea = cellVolume / h[d];
         double coarseFaceArea = coarseCellVolume / coarseH[d];
 
-        for (int s = -1; s <= 1; s += 2) {
+        //        for (int s = -1; s <= 1; s += 2) {
+        for (int s = -1; s <= -1; s++) { // TESTING
           if (patch->getBoundary(d, s) == Patch::CoarseFine) {
 
             Print("--- Processing C/F face d = %d , s = %d ---\n",d,s);
@@ -819,9 +821,7 @@ makeLinearSystem(const Param& param,
               
                 /* Set the weights on the connections between the fine
                    and coarse nodes in A */
-                Print("  Setting connection in matrix\n");
-                int graphEntries[1] = {stencilSize};
-                double graphValues[1] = {-1.0};
+                Print("    Adding C/F flux to matrix\n");
 
                 /*====================================================
                   Add the flux from the fine child cell to the
@@ -835,7 +835,7 @@ makeLinearSystem(const Param& param,
                 int side = -s;
                 pointwiseMult(subFine,h,xCell);
                 pointwiseAdd(xCell,offset,xCell);   
-
+                
                 pointwiseMult(subCoarse,coarseH,xNbhr);
                 pointwiseAdd(xNbhr,coarseOffset,xNbhr);    
                 /* xFace is a convex combination of xCell, xNbhr with
@@ -846,7 +846,7 @@ makeLinearSystem(const Param& param,
                 for (int dd = 0; dd < numDims; dd++) {
                   xFace[dd] = alpha*xCell[dd] + (1-alpha)*xNbhr[dd];
                 }
-                Print("xCell = ");
+                Print("    xCell = ");
                 printIndex(xCell);
                 fprintf(stderr," xNbhr = ");
                 printIndex(xNbhr);
@@ -859,19 +859,55 @@ makeLinearSystem(const Param& param,
                 double a    = 1.0; // Assumed constant a for now
                 double diff = 0;
                 for (int dd = 0; dd < numDims; dd++) {
-                  dd += pow(xNbhr[dd] - xCell[dd],2);
+                  diff += pow(xNbhr[dd] - xCell[dd],2);
                 }
-                dd = sqrt(dd);
-                double flux = a * coarseFaceArea / diff;
-                int coarseNumStencilEntries = 2;
-                int coarseStencilEntries[coarseNumStencilEntries] =
-                  {0, 2*d + ((-s+1)/2) + 1};
-                double coarseStencilValues[coarseNumStencilEntries] =
-                  {-flux, flux};
+                diff = sqrt(diff);
+                double flux = a * faceArea / diff;
+                Print("    C/F flux = %f   a = %f  face = %f  diff = %f\n",
+                      flux,a,faceArea,diff);
+                
+                /* Add the C-F flux to the fine cell equation - stencil part */
+                const int numStencilEntries = 1;
+                int stencilEntries[numStencilEntries] = {0};
+                double stencilValues[numStencilEntries] = {flux};
+                HYPRE_SStructMatrixAddToValues(A,
+                                               level, hypreSubFine,     0,
+                                               numStencilEntries,
+                                               stencilEntries,
+                                               stencilValues);
 
-                HYPRE_SStructMatrixSetValues(A,
-                                             level, hypreSubFine,     0,
-                                             1, graphEntries, graphValues);
+                /* Add the C-F flux to the fine cell equation - graph part */
+                const int numGraphEntries = 1;
+                int graphEntries[numGraphEntries] = {stencilSize};
+                double graphValues[numGraphEntries] = {-flux};
+                HYPRE_SStructMatrixAddToValues(A,
+                                               level, hypreSubFine,     0,
+                                               numGraphEntries,
+                                               graphEntries,
+                                               graphValues);
+
+                /* Subtract the C-F flux from the coarse cell equation -
+                   stencil part */
+                const int numCoarseStencilEntries = 1;
+                int coarseStencilEntries[numCoarseStencilEntries] = {0};
+                double coarseStencilValues[numCoarseStencilEntries] = {flux};
+                HYPRE_SStructMatrixAddToValues(A,
+                                               level-1, hypreSubCoarse,  0,
+                                               numCoarseStencilEntries,
+                                               coarseStencilEntries,
+                                               coarseStencilValues);
+
+                /* Subtract the C-F flux from the coarse cell equation -
+                   graph part */
+                const int numCoarseGraphEntries = 1;
+                int coarseGraphEntries[numCoarseGraphEntries] = {stencilSize};
+                double coarseGraphValues[numCoarseGraphEntries] = {-flux};
+                HYPRE_SStructMatrixAddToValues(A,
+                                               level-1, hypreSubCoarse,     0,
+                                               numCoarseGraphEntries,
+                                               coarseGraphEntries,
+                                               coarseGraphValues);
+
                 /*
                   Set the reverse connection; coincidentally, it uses
                   the same graphEntries value as in the previous
@@ -885,7 +921,8 @@ makeLinearSystem(const Param& param,
                 if (child == 0) { /* Potential source for bugs: remove
                                      coarse-coarse flux only ONCE in the
                                      child loop. */
-                  /*====================================================
+                 Print("  Removing C/C flux connections from matrix\n");
+                 /*====================================================
                     Remove the flux from the coarse nbhr to its coarse
                     stencil nbhr that underlies the fine patch.
                     ====================================================*/
@@ -914,7 +951,10 @@ makeLinearSystem(const Param& param,
                   double a    = 1.0; // Assumed constant a for now
                   double diff = fabs(xNbhr[d] - xCell[d]);
                   double flux = a * coarseFaceArea / diff;
-                  int coarseNumStencilEntries = 2;
+                  Print("C/C flux = %f   a = %f  face = %f  diff = %f\n",
+                        flux,a,coarseFaceArea,diff);
+
+                  const int coarseNumStencilEntries = 2;
                   int coarseStencilEntries[coarseNumStencilEntries] =
                     {0, 2*d + ((-s+1)/2) + 1};
                   double coarseStencilValues[coarseNumStencilEntries] =
@@ -977,7 +1017,7 @@ main(int argc, char *argv[]) {
   param.solverID      = 30;    // solver ID. 30 = AMG, 99 = FAC
   param.numLevels     = 2;     // Number of AMR levels
   param.baseResolution= 8;     // Level 0 grid size in every direction
-  param.printSystem   = false; //true;
+  param.printSystem   = true;
 
   /* Grid data structures */
   HYPRE_SStructGrid     grid;
