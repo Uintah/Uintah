@@ -239,7 +239,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 //___________________________________COMPUTES THE STRESS ON ALL THE PARTICLES IN A GIVEN PATCH FOR A GIVEN MATERIAL
 //___________________________________CALLED ONCE PER TIME STEP
 //___________________________________CONTAINS A COPY OF computeStableTimestep
-{cout << "two";
+{
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
 //    cerr <<"Doing computeStressTensor on " << patch->getID()
@@ -393,7 +393,6 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
           Bnl[1][3*k+2] = 0.;
           Bnl[2][3*k+2] = d_S[k][2]*oodx[2];
         }
-	cout << "one";
         // Find the stressTensor using the displacement gradient
         deformationGradientInc = dispGrad + Identity;
         // Update the deformation gradient tensor to its time n+1 value.
@@ -511,7 +510,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
           }
         //________________________________fiber stress term + failure of fibers
-        if (stretch[idx] <= crit_stretch || fail_old[idx] == 2. || fail_old[idx] == 3.)
+        if (stretch[idx] > crit_stretch || fail_old[idx] == 2. || fail_old[idx] == 3.)
           {fiber_stress = Identity*0.;
           fail[idx] = 2.;
           fiber_failed =1.;
