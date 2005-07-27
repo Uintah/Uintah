@@ -29,28 +29,6 @@ public:
     double     finalResNorm;    // Final residual norm ||A*x-b||_2
   };
 
-  /* Data for solver */
-  const Param&          _param;
-  Counter               _solverID;  // Type of Hypre solver
-
-  /* SStruct objects */
-  HYPRE_SStructMatrix   _A;
-  HYPRE_SStructVector   _b;
-  HYPRE_SStructVector   _x;
-
-  /* ParCSR objects */
-  HYPRE_ParCSRMatrix    _parA;
-  HYPRE_ParVector       _parB;
-  HYPRE_ParVector       _parX;
-
-  /* FAC objects */
-  HYPRE_SStructMatrix   _facA;
-  int*                  _pLevel;          // Needed by FAC: part # of level
-  Index*                _refinementRatio; // Needed by FAC
-
-  Results               _results;   // Solver results are outputted to here
-
-
   Solver(const Param& param)
     : _param(param)
     {
@@ -82,10 +60,46 @@ public:
 
   void initialize(const Hierarchy& hier,
                   const HYPRE_SStructGrid& grid,
+                  const HYPRE_SStructStencil& stencil,
                   const HYPRE_SStructGraph& graph);
+
+  void solve();
+
+  /* Utilities */
+  void printMatrix(const string& fileName = "solver");
+  void printRHS(const string& fileName = "solver");
+  void printSolution(const string& fileName = "solver");
+
+  /* Data for solver */
+  const Param&          _param;
+  Counter               _solverID;  // Type of Hypre solver
+
+  /* SStruct objects */
+  HYPRE_SStructMatrix   _A;
+  HYPRE_SStructVector   _b;
+  HYPRE_SStructVector   _x;
+
+  /* ParCSR objects */
+  HYPRE_ParCSRMatrix    _parA;
+  HYPRE_ParVector       _parB;
+  HYPRE_ParVector       _parX;
+
+  /* FAC objects */
+  HYPRE_SStructMatrix   _facA;
+  int*                  _pLevel;          // Needed by FAC: part # of level
+  Index*                _refinementRatio; // Needed by FAC
+
+  Results               _results;   // Solver results are outputted to here
+
+private:
+  void initializeData(const Hierarchy& hier,
+                      const HYPRE_SStructGrid& grid,
+                      const HYPRE_SStructGraph& graph);
+  void makeLinearSystem(const Hierarchy& hier,
+                        const HYPRE_SStructGrid& grid,
+                        const HYPRE_SStructStencil& stencil);
   void assemble(void);
   void setup(void);
-private:
 };
 
 #endif // __SOLVER_H__
