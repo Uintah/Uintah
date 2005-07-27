@@ -376,7 +376,7 @@ prod(const vector<T>& x)
 
 double
 roundDigit(const double& x,
-           const Counter d = 0)
+           const Counter d /* = 0 */)
   /*_____________________________________________________________________
     Function roundDigit:
     Round towards nearest rational (to certain # of digits).

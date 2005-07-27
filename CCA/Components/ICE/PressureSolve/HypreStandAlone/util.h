@@ -69,7 +69,7 @@ template<class T> T prod(const vector<T>& x);
 
 /* Miscellaneous utilities */
 double roundDigit(const double& x,
-                  const Counter d /* = 0 */);
+                  const Counter d = 0);
 IntMatrix grayCode(const Counter n,
                    const vector<Counter>& k);
 
