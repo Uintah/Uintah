@@ -121,18 +121,13 @@ void TransIsoHyper::initializeCMData(const Patch* patch,
   Identity.Identity();
 
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
-  //ParticleVariable<Matrix3> deformationGradient, pstress;
   ParticleVariable<double> stretch,fail;//fail_label
-  //new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,pset);
-  //new_dw->allocateAndPut(pstress,            lb->pStressLabel,            pset);
   new_dw->allocateAndPut(fail,               pFailureLabel,               pset);
   new_dw->allocateAndPut(stretch,            pStretchLabel,               pset);
 
   ParticleSubset::iterator iter = pset->begin();
   for(;iter != pset->end(); iter++){
-    //deformationGradient[*iter] = Identity;
-    //pstress[*iter] = zero;
-    fail[*iter] = 1.0 ;
+    fail[*iter] = 0.0 ;
     stretch[*iter] = 1.0;
   }
   computeStableTimestep(patch, matl, new_dw);
@@ -508,7 +503,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
                - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
           }
         //________________________________fiber stress term + failure of fibers
-        if (stretch[idx] <= crit_stretch || fail_old[idx] == 2. || fail_old[idx] == 3.)
+        if (stretch[idx] > crit_stretch || fail_old[idx] == 2. || fail_old[idx] == 3.)
           {fiber_stress = Identity*0.;
           fail[idx] = 2.;
           fiber_failed =1.;
