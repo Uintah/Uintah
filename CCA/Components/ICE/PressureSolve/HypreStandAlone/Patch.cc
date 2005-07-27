@@ -2,15 +2,22 @@
 
 #include "util.h"
 #include <string>
-//#include <map>
+#include <map>
 
-//char boundaryTypeString[3][256] = {"Domain","CoarseFine","Neighbor"};
+using namespace std;
+
+map<Patch::BoundaryType, string> Patch::boundaryTypeString; 
+bool Patch::initialized = false;
 
 Patch::Patch(const int procID, 
              const int levelID,
              const vector<int>& ilower,
              const vector<int>& iupper)
 {
+  if (!initialized) {
+    init();
+    initialized = true;
+  }
   _procID = procID;
   _levelID = levelID; 
   _ilower = ilower; 
