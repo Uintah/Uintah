@@ -2,8 +2,8 @@
 #include <iostream>
 using namespace std;
 
-IntMatrix::IntMatrix(const int rows, 
-                     const int cols)
+IntMatrix::IntMatrix(const Counter rows, 
+                     const Counter cols)
   : rows(rows), cols(cols)
 {
   assert(rows>0);
@@ -24,8 +24,8 @@ IntMatrix::transpose(const IntMatrix& a)
   // Cache-coherent on writes.  We could do better by blocking, but
   // This should be good enough for small matrices, which is what this
   // class is intended for
-  for(int row=0;row<rows; row++){
-    for(int col=0;col<cols; col++){
+  for(Counter row=0;row<rows; row++){
+    for(Counter col=0;col<cols; col++){
       this->operator()(row,col) = a(col,row);
     }
   }
@@ -39,11 +39,11 @@ void
 IntMatrix::multiply(const vector<int>& b,
                     vector<int>& X) const
 {
-  assert(cols == (int)b.size());
-  assert(rows == (int)X.size());
-  for (int row=0; row<rows; row++) {
+  assert(cols == b.size());
+  assert(rows == X.size());
+  for (Counter row=0; row<rows; row++) {
     int sum=0;
-    for (int col=0; col<cols; col++) {
+    for (Counter col=0; col<cols; col++) {
       sum += this->operator()(row,col) * b[col];
     }
     X[row]=sum;
@@ -54,9 +54,9 @@ void
 IntMatrix::multiply(const int* b,
                     int* X) const
 {
-  for (int row=0; row<rows; row++) {
+  for (Counter row=0; row<rows; row++) {
     int sum=0;
-    for (int col=0; col<cols; col++) {
+    for (Counter col=0; col<cols; col++) {
       sum += this->operator()(row,col) * b[col];
     }
     X[row]=sum;
@@ -71,11 +71,11 @@ IntMatrix::multiply(const IntMatrix& a,
   assert(rows == a.rows);
   assert(cols == b.cols);
   assert(a.cols == b.rows);
-  int s=a.cols;
-  for(int i=0;i<rows;i++){
-    for(int j=0;j<cols;j++){
+  Counter s=a.cols;
+  for(Counter i=0;i<rows;i++){
+    for(Counter j=0;j<cols;j++){
       int sum=0;
-      for(int k=0;k<s;k++){
+      for(Counter k=0;k<s;k++){
 	sum+=a(i,k)*b(k,j);
       }
       this->operator()(i,j)=sum;
@@ -86,7 +86,7 @@ IntMatrix::multiply(const IntMatrix& a,
 void
 IntMatrix::multiply(const int s)
 {
-  for(int i = 0; i < rows*cols; i++) {
+  for(Counter i = 0; i < rows*cols; i++) {
     mat[i] *= s;
   }
 }
@@ -96,14 +96,14 @@ IntMatrix::identity(void)
 {
   assert(rows == cols);
   zero();
-  for(int i=0;i<rows;i++)
+  for(Counter i=0;i<rows;i++)
     this->operator()(i,i) = 1;
 }
 
 void
 IntMatrix::zero(void)
 {
-  for(int i = 0; i < rows*cols; i++) {
+  for(Counter i = 0; i < rows*cols; i++) {
     mat[i] = 0;
   }
 }
@@ -113,9 +113,9 @@ IntMatrix::copy(const IntMatrix& a)
 {
   assert(rows == a.rows);
   assert(cols == a.cols);
-  //int size=rows*cols;
-  for(int i=0;i<rows;i++){
-    for(int j=0;j<cols;j++)
+  //Counter size=rows*cols;
+  for(Counter i=0;i<rows;i++){
+    for(Counter j=0;j<cols;j++)
       this->operator()(i,j) = a(i,j);
   }
 }
@@ -123,9 +123,9 @@ IntMatrix::copy(const IntMatrix& a)
 void
 IntMatrix::print(ostream& out)
 {
-  for(int i=0;i<rows;i++){
+  for(Counter i=0;i<rows;i++){
     out << i << ":";
-    for(int j=0;j<cols;j++){
+    for(Counter j=0;j<cols;j++){
       out << '\t' << this->operator()(i,j);
     }
     out << '\n';
@@ -137,12 +137,12 @@ IntMatrix::operator = (const IntMatrix& other)
 {
   rows = other.rows;
   cols = other.cols;
-  //int size=rows*cols;
+  //Counter size=rows*cols;
   if (mat) {
     delete[] mat;
     mat = new int[rows*cols];
   }
-  for(int i = 0; i < rows*cols; i++) {
+  for(Counter i = 0; i < rows*cols; i++) {
     mat[i] = other.mat[i];
   }
   return *this;
@@ -152,12 +152,12 @@ IntMatrix::IntMatrix(const IntMatrix& other)
 {
   rows = other.rows;
   cols = other.cols;
-  //int size=rows*cols;
+  //Counter size=rows*cols;
   if (mat) {
     delete[] mat;
     mat = new int[rows*cols];
   }
-  for(int i = 0; i < rows*cols; i++) {
+  for(Counter i = 0; i < rows*cols; i++) {
     mat[i] = other.mat[i];
   }
 }
