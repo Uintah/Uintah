@@ -38,11 +38,11 @@ public:
   };
 
   /* Problem parameters */
-  ProblemType problemType;    // Type of problem
-  int         numDims;        // # dimensions
-  int         numProcs;       // # of processors
-  string      longTitle;      // Title of this test case
-  vector<int> supportedDims;  // Which dims this test case is designed for
+  ProblemType     problemType;    // Type of problem
+  Counter         numDims;        // # dimensions
+  int             numProcs;       // # of processors
+  string          longTitle;      // Title of this test case
+  vector<Counter> supportedDims;  // Which dims this test case is designed for
 
   /* log files, output types */
   string      outputDir;      // Directory of output files

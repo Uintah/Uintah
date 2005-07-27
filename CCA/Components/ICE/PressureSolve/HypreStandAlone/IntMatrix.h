@@ -5,25 +5,26 @@
 #include <vector>
 
 using namespace std;
+
 class IntMatrix {
  public:
-  IntMatrix(int rows, int cols);
+  IntMatrix(const Counter rows, const Counter cols);
   ~IntMatrix(void);
   
-  int numRows(void) const {
+  Counter numRows(void) const {
     return rows;
   }
-  int numCols(void) const {
+  Counter numCols(void) const {
     return cols;
   }
-  int& operator()(int r, int c) {
+  int& operator()(const Counter r, const Counter c) {
     return mat[r*cols + c];
   }
-  int operator()(int r, int c) const {
+  Counter operator()(const Counter r, const Counter c) const {
     return mat[r*cols + c];
   }
 
-  void resize(int r, int c) {
+  void resize(const Counter r, const Counter c) {
     if (mat) delete[] mat;
     rows = r;
     cols = c;
@@ -35,7 +36,7 @@ class IntMatrix {
   void multiply(const vector<int>& b, vector<int>& X) const;
   void multiply(const int* b, int* X) const;
   void multiply(const IntMatrix& a, const IntMatrix& b);
-  void multiply(int s);
+  void multiply(const int s);
   void identity(void);
   void zero(void);
   void copy(const IntMatrix& copy);
@@ -44,8 +45,9 @@ class IntMatrix {
   IntMatrix(const IntMatrix&);
 
  private:    
-  int* mat;
-  int  rows, cols;
+  int*    mat;
+  Counter rows;
+  Counter cols;
 };
 
 #endif // __INTMATRIX_H__

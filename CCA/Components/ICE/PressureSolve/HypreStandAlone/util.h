@@ -7,77 +7,70 @@
 #include <stdarg.h>
 
 #include "mydriver.h"
-#include "IntMatrix.h"
 
 using std::vector;
 
+/* Converting to/from our C++ data structures to Hypre-required
+   structures */
 void copyIndex(const Index& subFrom,
                Index* subTo,
-               const int numDims);
+               const Counter numDims);
+void ToIndex(const vector<Counter>& from,
+             Index* to,
+             const Counter numDims);
 void ToIndex(const vector<int>& from,
              Index* to,
-             const int numDims);
+             const Counter numDims);
 
+/* Printouts */
 void Print(char *fmt, ...);
 void Proc0Print(char *fmt, ...);
+template<class T>
+void printIndex(const vector<T>& a);
 
-void printIndex(const vector<int>& a);
-
-void printIndex(const vector<double>& x); 
-
+/* Faces, boxes, extents */
 void faceExtents(const vector<int>& ilower,
                  const vector<int>& iupper,
-                 const int dim,
+                 const Counter dim,
                  const int side,
                  vector<int>& faceLower,
                  vector<int>& faceUpper);
-
+Counter numCellsInBox(const vector<int>& x,
+                  const vector<int>& y);
 void IndexPlusPlus(const vector<int>& ilower,
                    const vector<int>& iupper,
                    const vector<bool>& active,
                    vector<int>& sub,
                    bool& eof);
 
+/* I/O, MPI */
 int clean(void);
-
 void serializeProcsBegin(void);
-
 void serializeProcsEnd(void);
 
-void pointwiseAdd(const vector<int>& x,
-                  const vector<int>& y,
-                  vector<int>& result);
+/* vector<int>, vector<double> useful operations */
+template<class T, class S>
+void pointwiseAdd(const vector<T>& x,
+                  const vector<S>& y,
+                  vector<S>& result);
+template<class T, class S>
+void pointwiseMult(const vector<T>& i,
+                   const vector<S>& h,
+                   vector<S>& result);
+template<class T>
+void scalarMult(const vector<T>& x,
+                const T& h,
+                vector<T>& result);
+template<class T, class S>
+void pointwiseDivide(const vector<S>& x,
+                     const vector<T>& y,
+                     vector<S>& result);
+template<class T> T prod(const vector<T>& x);
 
-void pointwiseAdd(const vector<double>& x,
-                  const vector<double>& y,
-                  vector<double>& result);
-
-void
-pointwiseMult(const vector<int>& i,
-              const vector<int>& h,
-              vector<int>& result);
-
-void scalarMult(const vector<double>& x,
-                const double h,
-                vector<double>& result);
-
-void pointwiseMult(const vector<int>& i,
-                   const vector<double>& h,
-                   vector<double>& result);
-
-void pointwiseDivide(const vector<int>& x,
-                     const vector<int>& y,
-                     vector<int>& result);
-
-int prod(const vector<int>& x);
-
-double prod(const vector<double>& x);
-
+/* Miscellaneous utilities */
 double roundDigit(const double& x,
-                  const int d /* = 0 */);
-
-IntMatrix
-grayCode(const int n,
-         const vector<int> k);
+                  const Counter d /* = 0 */);
+IntMatrix grayCode(const Counter n,
+                   const vector<Counter>& k);
 
 #endif // __UTIL_H__
