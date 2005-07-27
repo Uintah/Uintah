@@ -13,6 +13,7 @@
 PACKAGE    = HypreStandAlone
 HYPRE_SRC  = ../hypre-1.9.0b/src
 CC         = g++
+CCFLAGS    = -MD
 HYPRE_DEFS = -DHYPRE_TIMING -DHAVE_CONFIG_H
 HYPRE_INC  = -I$(HYPRE_SRC)/hypre/include $(HYPRE_DEFS)
 HYPRE_LIB  = -L$(HYPRE_SRC)/hypre/lib -lHYPRE_sstruct_ls -lHYPRE_sstruct_mv -lHYPRE_struct_ls -lHYPRE_struct_mv -lHYPRE_parcsr_ls -lHYPRE_DistributedMatrixPilutSolver -lHYPRE_ParaSails -lHYPRE_Euclid -lHYPRE_MatrixMatrix -lHYPRE_DistributedMatrix -lHYPRE_IJ_mv -lHYPRE_parcsr_mv -lHYPRE_seq_mv -lHYPRE_krylov -lHYPRE_utilities -llapack -lg2c
@@ -27,7 +28,8 @@ TARGET1_OBJS     = \
 			util.o     \
 			inputs.o   \
 			Level.o    \
-			Patch.o   
+			Patch.o    \
+			IntMatrix.o\
 
 TARGET2          = mpitest
 TARGET2_OBJS     = \
@@ -55,7 +57,7 @@ distrib:
 ##################################################################
 
 .cc.o: $<
-	${CC} ${HYPRE_INC} -c $<
+	${CC} ${CCFLAGS} ${HYPRE_INC} -c $<
 
 $(TARGET1) : $(TARGET1_OBJS)
 	@echo  "Building" $@ "... "

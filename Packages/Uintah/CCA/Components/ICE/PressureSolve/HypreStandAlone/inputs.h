@@ -8,6 +8,9 @@
 
 using std::vector;
 
-double diffusion(const Location& x);
+void initTest(Param& param);
+
+double diffusion(const int problemType,
+                 const Location& x);
 
 #endif // __INPUTS_H__

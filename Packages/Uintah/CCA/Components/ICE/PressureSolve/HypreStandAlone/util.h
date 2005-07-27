@@ -7,6 +7,7 @@
 #include <stdarg.h>
 
 #include "mydriver.h"
+#include "IntMatrix.h"
 
 using std::vector;
 
@@ -66,5 +67,12 @@ void pointwiseMult(const vector<int>& i,
 int prod(const vector<int>& x);
 
 double prod(const vector<double>& x);
+
+double roundDigit(const double& x,
+                  const int d /* = 0 */);
+
+IntMatrix
+grayCode(const int n,
+         const vector<int> k);
 
 #endif // __UTIL_H__
