@@ -79,16 +79,17 @@ NrrdToColorMap2::execute()
       ocmap_h_ = 0;
       in_nrrd_gen_ = h->generation;
       if(h->nrrd->dim != 3) {
-        error("Invalid input dimension. Must be 3d");
+        error("Invalid input dimension.  Must be 3D.");
 	return;
       }
+
       if (h->nrrd->dim != 3 || h->nrrd->axis[0].size != 4) {
-        error("Invalid input size. Must be 4xWidthxHeigh");
+        error("Invalid input size. Must be 4*Width*Height.");
 	return;
       }
 
       if (h->nrrd->type != nrrdTypeFloat) {
-	error("input nrrd must be of type float: use UnuConvert");
+	error("Input nrrd must be of type float: use UnuConvert.");
 	return;
       }
 
@@ -104,7 +105,7 @@ NrrdToColorMap2::execute()
       return;
     }
   } else {
-    error("Could not get input port");
+    error("Could not get input port.");
     return;
   }
 
