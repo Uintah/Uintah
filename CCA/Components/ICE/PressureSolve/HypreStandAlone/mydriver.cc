@@ -315,7 +315,7 @@ main(int argc, char *argv[]) {
    *-----------------------------------------------------------*/
   /* Initialize parameters */
   Param               param;
-  param.numDims       = 3;
+  param.numDims       = 2; //3;
   param.solverID      = 30;    // solver ID. 30 = AMG, 99 = FAC
   param.numLevels     = 2;     // Number of AMR levels
   param.baseResolution= 8;     // Level 0 grid size in every direction
