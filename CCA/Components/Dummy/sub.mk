@@ -21,7 +21,11 @@ SRCS += $(SRCDIR)/FakeArches.cc    \
 #	$(SRCDIR)/FakeMPM.cc       \
 #	$(SRCDIR)/FakeMPMICE.cc 
 
-PSELIBS := 
+PSELIBS := \
+	Packages/Uintah/Core/Parallel \
+	Packages/Uintah/CCA/Ports     \
+	Packages/Uintah/CCA/Components/Solvers 
+
 
 LIBS := 
 
