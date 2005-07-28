@@ -32,6 +32,10 @@ using std::vector;
 typedef unsigned short Counter;   // Non-negative integer/counter
 typedef int Index[MAX_DIMS];      // Subscript in d-dimensional space
 typedef vector<double> Location;  // Data node location in d-dim. space
+enum Side {                       // Left or right boundary in each dimension
+  Left = -1,
+  Right = 1
+};
 
 /*================== Our Library includes ==================*/
 

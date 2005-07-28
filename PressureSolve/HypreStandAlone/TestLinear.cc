@@ -26,7 +26,7 @@ double TestLinear::exactSolution(const Location& x)
   // U is a linear function (d-D)
 {
   double u = 1.0;
-  for (int d = 0; d < numDims; d++) {
+  for (Counter d = 0; d < numDims; d++) {
     u += x[d];
   }
   return u;
