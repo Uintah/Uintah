@@ -17,7 +17,9 @@ function [x,ierr] = loadHypreParVector(filename,numProcs)
 % 27-JUL-2005   Oren      Created
 
 
-% Based on the Hypre function parcsr_mv/par_vector.c:hypre_ParVectorRead()
+% Based on the Hypre functions
+%   parcsr_mv/par_vector.c:hypre_ParVectorRead()
+%   seq_mv/vector.c:hypre_SeqVectorRead()
 
 o       = 1;
 base_i  = 1;
@@ -25,57 +27,43 @@ base_j  = 1;
 ierr    = 0;
 parAlist = zeros(0,3);
 
+% Read partition of vector from info file into the array partitioning
+% All info files are the same, it seems. So use only the one for myid = 0.
+my_id = 0;
+new_filename = sprintf('%s.INFO.%d',file_name,my_id);
+file = fopen(new_filename, 'r');
+if (file < 0)
+    fprintf('Error: can''t open output info file %s\n', new_filename);
+    x = [];
+    ierr = 1;
+    return;
+end
+partitioning = zeros(num_procs+1,1);
+global_size = fscanf(file, '%d\n', 1);
+for i = 0:numProcs-1
+    partitioning(i+o) = fscanf(file, '%d\n', 1);
+end
+partitioning(num_procs+o) = global_size;
+fclose(file);
+fprintf('Loaded vector info\n');
+
+x = zeros(global_size,1);
+% Read data from data files into the vector x
 for myid = 0:numProcs-1
-    new_filename = sprintf('%s.INFO.%d',file_name,my_id);
+    new_filename = sprintf('%s.%d',file_name,my_id);
     file = fopen(new_filename, 'r');
     if (file < 0)
-        fprintf('Error: can''t open output info file %s\n', new_filename);
-        A = [];
+        fprintf('Error: can''t open output data file %s\n', new_filename);
+        x = [];
+        ierr = 2;
         return;
     end
+   sz = fscanf(file, '%d', 1);
+   xPart = fscanf(file, '%e', sz);
+   fclose(file);
 
-    partitioning = hypre_CTAlloc(int,num_procs+1);
-
-sprintf(new_file_namew,"%s.INFO.%d",file_name,my_id); 
-fp = fopen(new_file_name, "r");
-fscanf(fp, "%d\n", &global_size);
-for (i=0; i < num_procs; i++)
-     fscanf(fp, "%d\n", &partitioning[i]);
-     fclose (fp);
-     partitioning[num_procs] = global_size; 
-
-     par_vector = hypre_CTAlloc(hypre_ParVector, 1);
-        
-     hypre_ParVectorGlobalSize(par_vector) = global_size;
-     hypre_ParVectorFirstIndex(par_vector) = partitioning[my_id];
-     hypre_ParVectorPartitioning(par_vector) = partitioning;
-
-     sprintf(new_file_name,"%s.%d",file_name,my_id); 
-     hypre_ParVectorLocalVector(par_vector) = hypre_SeqVectorRead(new_file_name);
-
-
-
-
-    global_num_rows     = fscanf(file, '%d',1);
-    global_num_cols     = fscanf(file, '%d',1);
-    num_rows            = fscanf(file, '%d',1);
-    num_cols            = fscanf(file, '%d',1);
-    num_cols_offd       = fscanf(file, '%d',1);
-    num_nonzeros_diag   = fscanf(file, '%d',1);
-    num_nonzeros_offd   = fscanf(file, '%d',1);
-
-    row_starts          = zeros(numProcs+1,1);
-    col_starts          = zeros(numProcs+1,1);
-
-    for i = 0:numProcs
-        row_starts(i+o) = fscanf(file, '%d',1);
-        col_starts(i+o) = fscanf(file, '%d',1);
-    end
-
-    data = fscanf(file, '%d %d %e');
-    Alist = reshape(data,[3 length(data)/3])';
-    parAlist = [parAlist; Alist];
-    fprintf('Loaded matrix from proc = %d\n',myid);
+   % Add the part of this processor to the global x
+   firstIndex = partitioning(my_id+o);
+   x(firstIndex:firstIndex+sz-1) = xPart;
+   fprintf('Loaded vector from proc = %d\n',myid);
 end  % for myid
-
-A = sparse(parAlist(:,1),parAlist(:,2),parAlist(:,3));
