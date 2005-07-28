@@ -23,6 +23,8 @@ class Solver {
     solver (implemented in derived classes from Solver),
     and returns some output statistics and the solution vector.
     _____________________________________________________________________*/
+
+  /*========================== PUBLIC SECTION ==========================*/
  public:
   
   struct Results {
@@ -40,6 +42,10 @@ class Solver {
   virtual ~Solver(void) {
     Print("Destroying Solver object\n");
     
+    /* Destroy graph objects */
+    Print("Destroying graph objects\n");
+    HYPRE_SStructGraphDestroy(_graph);
+    
     /* Destroy matrix, RHS, solution objects */
     Print("Destroying matrix, RHS, solution objects\n");
     HYPRE_SStructMatrixDestroy(_A);
@@ -50,8 +56,7 @@ class Solver {
 
   void initialize(const Hierarchy& hier,
                   const HYPRE_SStructGrid& grid,
-                  const HYPRE_SStructStencil& stencil,
-                  const HYPRE_SStructGraph& graph);
+                  const HYPRE_SStructStencil& stencil);
 
   virtual void setup(void) = 0;
   virtual void solve(void) = 0;
@@ -61,34 +66,41 @@ class Solver {
   virtual void printRHS(const string& fileName = "output_b");
   virtual void printSolution(const string& fileName = "output_x");
 
-  /*======================= Data Members =============================*/
+  /*----- Data Members -----*/
   const Param*          _param;
-  Counter               _solverID;      // Hypre solver ID
   bool                  _requiresPar;   // Does solver require Par input?
+  Counter               _solverID;      // Hypre solver ID
+  Results               _results;       // Solver results are outputted to here
 
-  /* SStruct objects */
+  /*========================== PROTECTED SECTION ==========================*/
+ protected:
+
+  virtual void initializeData(const Hierarchy& hier,
+                              const HYPRE_SStructGrid& grid);
+  virtual void assemble(void);
+  
+  /*===== Data Members =====*/
+
+  /* SStruct objects */ // We assume Solver is an SStruct solver
   HYPRE_SStructMatrix   _A;
   HYPRE_SStructVector   _b;
   HYPRE_SStructVector   _x;
+  HYPRE_SStructGraph    _graph; // Graph needed for all SStruct Solvers
 
   /* ParCSR objects */
   HYPRE_ParCSRMatrix    _parA;
   HYPRE_ParVector       _parB;
   HYPRE_ParVector       _parX;
 
-  /* Solver results */
-  Results               _results;   // Solver results are outputted to here
-
- protected:
-  virtual void initializeData(const Hierarchy& hier,
-                              const HYPRE_SStructGrid& grid,
-                              const HYPRE_SStructGraph& graph);
+  /*========================== PRIVATE SECTION ==========================*/
+ private:
+  void makeGraph(const Hierarchy& hier,
+                 const HYPRE_SStructGrid& grid,
+                 const HYPRE_SStructStencil& stencil);
   void makeLinearSystem(const Hierarchy& hier,
                         const HYPRE_SStructGrid& grid,
                         const HYPRE_SStructStencil& stencil);
-  virtual void assemble(void);
 
- private:
 };
 
 #endif // __SOLVER_H__
