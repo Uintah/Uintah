@@ -2,6 +2,8 @@
 #define __PARAM_H__
 
 #include "mydriver.h"
+#include "Level.h"
+#include "Patch.h"
 #include <vector>
 #include <string>
 using std::string;
@@ -31,18 +33,7 @@ public:
   Param(void)
     /* Constructor: initialize default parameters for all test cases */
     {
-      outputType = Screen;     // Output to log file/screen/both
-
-      domainSize.resize(numDims);
-      for (Counter d = 0; d < numDims; d++)
-        domainSize[d] = 1.0;
-
-      baseResolution = 8;
-
-      numLevels = 2;
-      twoLevelType = CentralHalf;
-      threeLevelType = CentralHalf;
-      
+      outputType = Screen;     // Output to log file/screen/both     
       solverType = AMG;
       printSystem = 1;
       timing = true;
@@ -65,13 +56,13 @@ public:
   OutputType      outputType;     // Output to log file/screen/both
   
   /* Domain geometry & coarsest grid */
-  Location        domainSize;     // Size of domain in all dimensions
+  Level*          domain;         // Domain as a union of boxes
+
   // TODO: replace with Level 0, including boundary conditions (Dirichlet/N)
   // types for all boundaries
   // TODO: multiple boxes define domain (e.g. for L-shaped)
   
   /* AMR hierarchy */
-  int             baseResolution; // Resolution of Level 0 in all dimensions
 
   int             numLevels;      // # of levels in a static MR hierarchy
   RefPattern      twoLevelType;   // Refinement pattern for refining level 0 -> 1
@@ -88,11 +79,16 @@ public:
 
   virtual double harmonicAvg(const Location& x,
                              const Location& y,
-                             const Location& z);
-  virtual double diffusion(const Location& x) = 0;  // Diffusion coefficient
-  virtual double rhs(const Location& x) = 0;        // Right-hand-side of PDE
-  virtual double rhsBC(const Location& x) = 0;      // RHS of B.C.
-  virtual double exactSolution(const Location& x) = 0; // Exact solution
+                             const Location& z) const;
+  virtual double diffusion(const Location& x) const = 0;// Diffusion coef
+  virtual double rhs(const Location& x) const = 0;   // Right-hand-side of PDE
+  virtual double rhsBC(const Location& x) const = 0;      // RHS of B.C.
+  virtual double exactSolution(const Location& x) const = 0; // Exact solution
+
+ protected:
+  void setNumDims(const Counter d);
+  virtual void setDomain(const Counter baseResolution,
+                         const vector<Patch::BoundaryCondition>& bc);
 };
 
 #endif // __PARAM_H__

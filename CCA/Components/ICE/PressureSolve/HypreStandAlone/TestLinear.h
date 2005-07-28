@@ -2,6 +2,7 @@
 #define __TESTLINEAR_H__
 
 #include "Param.h"
+#include "util.h"
 
 class TestLinear : public Param {
   /*_____________________________________________________________________
@@ -13,18 +14,33 @@ class TestLinear : public Param {
     _____________________________________________________________________*/
 public:
   
-  TestLinear(void) : Param()
+  TestLinear(const Counter d,
+             const Counter baseResolution) : Param()
     /* Constructor: initialize this test case's default parameters */
     {
       /* Problem parameters */
-      numDims  = 2;        // # dimensions
-      longTitle = "TestLinear";      // Title of this test case
+      setNumDims(d);
+
+      /* Boundary conditions for a rectangular domain */
+      // All Dirichlet in this case
+      vector<Patch::BoundaryCondition> bc(2*numDims);
+      for (int d = 0; d < numDims; d++) {
+        bc[2*d  ] = Patch::Dirichlet;
+        bc[2*d+1] = Patch::Dirichlet;
+      }
+     
+      setDomain(baseResolution,bc); // Set rectangular domain with BC = bc
+
 
       /* log files, output types */
+      longTitle = "TestLinear";      // Title of this test case
       outputDir  = longTitle;      // Directory of output files
       logFile    = longTitle + ".log";        // File logging run flow
 
-      /* Domain geometry & coarsest grid */
+      /* Grid hierarchy */
+      numLevels = 2;
+      twoLevelType = CentralHalf;
+      threeLevelType = CentralHalf;
 
       /* Debugging and control flags */
     }
@@ -34,10 +50,10 @@ public:
 
   /* Input functions */
   
-  virtual double diffusion(const Location& x);     // Diffusion coefficient
-  virtual double rhs(const Location& x);           // Right-hand-side of PDE
-  virtual double rhsBC(const Location& x);         // RHS of B.C.
-  virtual double exactSolution(const Location& x); // Exact solution
+  virtual double diffusion(const Location& x) const;     // Diffusion coefficient
+  virtual double rhs(const Location& x) const;           // Right-hand-side of PDE
+  virtual double rhsBC(const Location& x) const;         // RHS of B.C.
+  virtual double exactSolution(const Location& x) const; // Exact solution
 
 };
 

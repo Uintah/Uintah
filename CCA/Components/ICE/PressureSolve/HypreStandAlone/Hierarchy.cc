@@ -18,7 +18,7 @@ Hierarchy::make()
 {
   const Counter numDims   = _param->numDims;
   const Counter numLevels = _param->numLevels;
-  const Counter n         = _param->baseResolution;
+  const Counter n         = _param->domain->_resolution[0]; // Assumed uniform in all dimensions
 
   vector<Counter> k(numDims,2);
   IntMatrix procMap = grayCode(numDims,k);

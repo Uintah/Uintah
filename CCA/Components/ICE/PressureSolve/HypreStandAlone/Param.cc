@@ -1,12 +1,36 @@
 #include "Param.h"
+#include "util.h"
 
 using namespace std;
 
+void Param::setNumDims(const Counter d)
+{
+  if (numDims) {
+    Print("\n\nError: numDims already initialized and cannot be re-set.\n");
+    clean();
+    exit(1);
+  }
+  numDims = d;
+}
+
+void Param::setDomain(const Counter baseResolution,
+                      const vector<Patch::BoundaryCondition>& bc)
+  /* Domain of physical size [0,1]x[0,1] with coarsest meshsize h
+     = 1/baseResolution. */
+{
+  if (domain) delete domain;
+  domain = new Level(numDims,1.0/baseResolution);
+  vector<int> ilower(numDims,0), iupper(numDims,baseResolution);
+  Patch* box = new Patch(-1,-1,ilower,iupper);
+  box->_bc = bc;
+  domain->_patchList.push_back(box);
+}
+
 double Param::harmonicAvg(const Location& x,
                           const Location& y,
-                          const Location& z)
+                          const Location& z) const
   /*_____________________________________________________________________
-    Function makeGrid:
+    Function makeGrid: 
     Harmonic average of the diffusion coefficient.
     A = harmonicAvg(X,Y,Z) returns the harmonic average of the
     diffusion coefficient a(T) (T in R^D) along the line connecting
@@ -15,12 +39,11 @@ double Param::harmonicAvg(const Location& x,
     x{d})/norm(y-x) is the arclength parameterization of the
     d-coordinate of the line x-y, d = 1...D.  We assume that A is
     piecewise constant with jump at Z (X,Y are normally cell centers
-    and Z at the cell face). X,Y,Z are Dx1 cell arrays, we treat every
-    element of X{d},Y{d},Z{d} separately and output A as an array of
-    size size(X{1}).  In general, A can be analytically computedfor
-    the specific cases we consider; in general, use some simple
-    quadrature formula for A from discrete a-values. This can be
-    implemented by the derived test cases from Param.
+    and Z at the cell face). X,Y,Z are Dx1 location arrays.  In
+    general, A can be analytically computed for the specific cases we
+    consider; in general, use some simple quadrature formula for A
+    from discrete a-values. This can be implemented by the derived
+    test cases from Param.
 
     ### NOTE: ### If we use a different
     refinement ratio in different dimensions, near the interface we
