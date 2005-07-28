@@ -12,47 +12,62 @@ using namespace std;
 void
 Solver::initialize(const Hierarchy& hier,
                    const HYPRE_SStructGrid& grid,
-                   const HYPRE_SStructStencil& stencil,
-                   const HYPRE_SStructGraph& graph)
+                   const HYPRE_SStructStencil& stencil)
 {
-  initializeData(hier, grid, graph);
+  Print("Solver::initialize() begin\n");
+  _requiresPar =
+    (((_solverID >= 20) && (_solverID <= 30)) ||
+     ((_solverID >= 40) && (_solverID < 60)));
+  Proc0Print("requiresPar = %d\n",_requiresPar);
+
+  makeGraph(hier, grid, stencil);
+  initializeData(hier, grid);
   makeLinearSystem(hier, grid, stencil);
   assemble();
+  Print("Solver::initialize() end\n");
 }
 
 void
 Solver::initializeData(const Hierarchy& hier,
-                       const HYPRE_SStructGrid& grid,
-                       const HYPRE_SStructGraph& graph)
+                       const HYPRE_SStructGrid& grid)
 {
-  _requiresPar =
-    (((_solverID >= 20) && (_solverID <= 30)) ||
-     ((_solverID >= 40) && (_solverID < 60)));
+  Print("Solver::initializeData() begin\n");
 
   /* Create an empty matrix with the graph non-zero pattern */
-  HYPRE_SStructMatrixCreate(MPI_COMM_WORLD, graph, &_A);
-  Print("Created empty SStructMatrix\n");
-  /* If using AMG, set A's object type to ParCSR now */
-  if (_requiresPar) {
-    HYPRE_SStructMatrixSetObjectType(_A, HYPRE_PARCSR);
-  }
-  HYPRE_SStructMatrixInitialize(_A);
-
+  HYPRE_SStructMatrixCreate(MPI_COMM_WORLD, _graph, &_A);
+  Proc0Print("Created empty SStructMatrix\n");
   /* Initialize RHS vector b and solution vector x */
+  Print("Create empty b,x\n");
   HYPRE_SStructVectorCreate(MPI_COMM_WORLD, grid, &_b);
+  Print("Done b\n");
   HYPRE_SStructVectorCreate(MPI_COMM_WORLD, grid, &_x);
-  /* If AMG is used, set b and x type to ParCSR */
+  Print("Done x\n");
+
+  /* If using AMG, set (A,b,x)'s object type to ParCSR now */
   if (_requiresPar) {
+    Proc0Print("Matrix object type set to HYPRE_PARCSR\n");
+    HYPRE_SStructMatrixSetObjectType(_A, HYPRE_PARCSR);
+    Print("Vector object type set to HYPRE_PARCSR\n");
     HYPRE_SStructVectorSetObjectType(_b, HYPRE_PARCSR);
+    Print("Done b\n");
     HYPRE_SStructVectorSetObjectType(_x, HYPRE_PARCSR);
+    Print("Done x\n");
   }
+  Print("Init A\n");
+  HYPRE_SStructMatrixInitialize(_A);
+  Print("Init b,x\n");
   HYPRE_SStructVectorInitialize(_b);
+  Print("Done b\n");
   HYPRE_SStructVectorInitialize(_x);
+  Print("Done x\n");
+
+  Print("Solver::initializeData() end\n");
 }
 
 void
 Solver::assemble(void)
 {
+  Print("Solver::assemble() begin\n");
   /* Assemble the matrix - a collective call */
   HYPRE_SStructMatrixAssemble(_A); 
   /* For BoomerAMG solver: set up the linear system in ParCSR format */
@@ -78,7 +93,15 @@ Solver::setup(void)
   Proc0Print("----------------------------------------------------\n");
   Proc0Print("Solver setup phase\n");
   Proc0Print("----------------------------------------------------\n");
-  //  this->setup(); // which setup will this be? The derived class's?
+  int time_index = hypre_InitializeTiming("AMG Setup");
+  hypre_BeginTiming(time_index);
+  
+  this->setup(); // which setup will this be? The derived class's?
+  
+  hypre_EndTiming(time_index);
+  hypre_PrintTiming("Setup phase times", MPI_COMM_WORLD);
+  hypre_FinalizeTiming(time_index);
+  hypre_ClearTiming();
 }
 
 void
@@ -106,6 +129,175 @@ Solver::solve(void)
 } //end solve()
 
 void
+Solver::makeGraph(const Hierarchy& hier,
+                  const HYPRE_SStructGrid& grid,
+                  const HYPRE_SStructStencil& stencil)
+  /*_____________________________________________________________________
+    Function makeGraph:
+    Initialize the graph from stencils (interior equations) and C/F
+    interface connections. Create Hypre graph object "_graph" on output.
+    _____________________________________________________________________*/
+{
+  Print("Solver::makeGraph() begin\n");
+  /*-----------------------------------------------------------
+   * Set up the graph
+   *-----------------------------------------------------------*/
+  Proc0Print("----------------------------------------------------\n");
+  Proc0Print("Set up the graph\n");
+  Proc0Print("----------------------------------------------------\n");
+  /* Create an empty graph */
+  HYPRE_SStructGraphCreate(MPI_COMM_WORLD, grid, &_graph);
+  /* If using AMG, set graph's object type to ParCSR now */
+  if (_requiresPar) {
+    Proc0Print("graph object type set to HYPRE_PARCSR\n");
+    HYPRE_SStructGraphSetObjectType(_graph, HYPRE_PARCSR);
+  }
+
+  const int numDims   = _param->numDims;
+  const int numLevels = hier._levels.size();
+  serializeProcsBegin();
+  /*
+    Add structured equations (stencil-based) at the interior of
+    each patch at every level to the graph.
+  */
+  for (Counter level = 0; level < numLevels; level++) {
+    Print("  Initializing graph stencil at level %d of %d\n",level,numLevels);
+    HYPRE_SStructGraphSetStencil(_graph, level, 0, stencil);
+  }
+  
+  /* 
+     Add the unstructured part of the stencil connecting the
+     coarse and fine level at every C/F boundary.
+  */
+
+  for (Counter level = 1; level < numLevels; level++) {
+    Print("  Updating coarse-fine boundaries at level %d\n",level);
+    const Level* lev = hier._levels[level];
+    //    const Level* coarseLev = hier._levels[level-1];
+    const vector<Counter>& refRat = lev->_refRat;
+
+    /* Loop over patches of this proc */
+    for (Counter i = 0; i < lev->_patchList.size(); i++) {
+      Patch* patch = lev->_patchList[i];
+
+      /* Loop over C/F boundaries of this patch */
+      for (Counter d = 0; d < numDims; d++) {
+        for (int s = -1; s <= 1; s += 2) {
+          if (patch->getBoundary(d, s) == Patch::CoarseFine) {
+
+            Print("--- Processing C/F face d = %d , s = %d ---\n",d,s);
+            vector<int> faceLower(numDims);
+            vector<int> faceUpper(numDims);            
+            faceExtents(patch->_ilower, patch->_iupper, d, s,
+                        faceLower, faceUpper);
+            vector<int> coarseFaceLower(numDims);
+            vector<int> coarseFaceUpper(numDims);
+            int numFaceCells = 1;
+            int numCoarseFaceCells = 1;
+            for (Counter dd = 0; dd < numDims; dd++) {
+              Print("dd = %d\n",dd);
+              Print("refRat = %d\n",refRat[dd]);
+              coarseFaceLower[dd] =
+                faceLower[dd] / refRat[dd];
+              coarseFaceUpper[dd] =
+                faceUpper[dd]/ refRat[dd];
+              numFaceCells       *= (faceUpper[dd] - faceLower[dd] + 1);
+              numCoarseFaceCells *= (coarseFaceUpper[dd] - coarseFaceLower[dd] + 1);
+            }
+            Print("# fine   cell faces = %d\n",numFaceCells);
+            Print("# coarse cell faces = %d\n",numCoarseFaceCells);
+            //            Index* fineIndex   = new Index[numFaceCells];
+            //            Index* coarseIndex = new Index[numFaceCells];
+            vector<int> coarseNbhrLower = coarseFaceLower;
+            vector<int> coarseNbhrUpper = coarseFaceUpper;
+            coarseNbhrLower[d] += s;
+            coarseNbhrUpper[d] += s;
+
+            /*
+              Loop over different types of fine cell "children" of a coarse cell
+              at the C/F interface. 
+            */
+            vector<int> zero(numDims,0);
+            vector<int> ref1(numDims,0);
+            for (Counter dd = 0; dd < numDims; dd++) {
+              ref1[dd] = refRat[dd] - 1;
+            }
+            ref1[d] = 0;
+            vector<bool> activeChild(numDims,true);
+            bool eocChild = false;
+            vector<int> subChild = zero;
+            for (Counter child = 0; !eocChild;
+                 child++,
+                   IndexPlusPlus(zero,ref1,activeChild,subChild,eocChild)) {
+              Print("child = %4d",child);
+              fprintf(stderr,"  subChild = ");
+              printIndex(subChild);
+              fprintf(stderr,"\n");
+              vector<bool> active(numDims,true);
+              bool eoc = false;
+              vector<int> subCoarse = coarseNbhrLower;
+              for (Counter cell = 0; !eoc;
+                   cell++,
+                     IndexPlusPlus(coarseNbhrLower,coarseNbhrUpper,
+                                   active,subCoarse,eoc)) {
+                Print("  cell = %4d",cell);
+                fprintf(stderr,"  subCoarse = ");
+                printIndex(subCoarse);
+                vector<int> subFine(numDims);
+                /* Compute fine cell inside the fine patch from coarse
+                   cell outside the fine patch */
+                subFine = subCoarse;
+                if (s < 0) {
+                  /* Left boundary: go from coarse outside to coarse
+                     inside the patch, then find its lower left corner
+                     and that's fine child 0. */
+                  subFine[d] -= s;
+                  pointwiseMult(refRat,subFine,subFine);
+                } else {
+                  /* Right boundary: start from the coarse outside the
+                     fine patch, find its lower left corner, then find
+                     its fine nbhr inside the fine patch. This is fine
+                     child 0. */
+                  pointwiseMult(refRat,subFine,subFine);
+                  subFine[d] -= s;
+                }
+                pointwiseAdd(subFine,subChild,subFine);
+                fprintf(stderr,"  subFine = ");
+                printIndex(subFine);
+                fprintf(stderr,"\n");
+                Index hypreSubFine, hypreSubCoarse;
+                ToIndex(subFine,&hypreSubFine,numDims);
+                ToIndex(subCoarse,&hypreSubCoarse,numDims);
+              
+                /* Add the connections between the fine and coarse nodes
+                   to the graph */
+                Print("  Adding connection to graph\n");
+                HYPRE_SStructGraphAddEntries(_graph,
+                                             level,   hypreSubFine,   0,
+                                             level-1, hypreSubCoarse, 0); 
+                HYPRE_SStructGraphAddEntries(_graph,
+                                             level-1, hypreSubCoarse, 0,
+                                             level,   hypreSubFine,   0);
+              } // end for cell
+
+            } // end for child
+            //            delete[] fineIndex;
+            //            delete[] coarseIndex;
+          } // end if boundary is CF interface
+        } // end for s
+      } // end for d
+    } // end for i (patches)
+  } // end for level
+  serializeProcsEnd();
+
+  /* Assemble the graph */
+  HYPRE_SStructGraphAssemble(_graph);
+  Print("Assembled graph, nUVentries = %d\n",
+        hypre_SStructGraphNUVEntries(_graph));
+  Print("Solver::makeGraph() end\n");
+} // end makeGraph()
+
+void
 Solver::makeLinearSystem(const Hierarchy& hier,
                          const HYPRE_SStructGrid& grid,
                          const HYPRE_SStructStencil& stencil)
@@ -116,6 +308,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
     patches of all levels. Delete coarse data underlying fine patches.
     _____________________________________________________________________*/
 {
+  Print("Solver::makeLinearSystem() begin\n");
   serializeProcsBegin();
   const int numDims   = _param->numDims;
   const int numLevels = hier._levels.size();
@@ -717,6 +910,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
   } // for level
   serializeProcsEnd();
 #endif
+  Print("Solver::makeLinearSystem() end\n");
 } // end makeLinearSystem()
 
 void

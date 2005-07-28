@@ -5,17 +5,8 @@
 #include "Patch.h"
 
 #include <string>
-#include <map>
 
 using namespace std;
-
-void
-SolverAMG::initializeData(const Hierarchy& hier,
-                       const HYPRE_SStructGrid& grid,
-                       const HYPRE_SStructGraph& graph)
-{
-  initializeData(hier, grid, graph);   // Generic Solver A,b,x initialization
-}
 
 void
 SolverAMG::setup(void)
@@ -26,9 +17,6 @@ SolverAMG::setup(void)
   Proc0Print("----------------------------------------------------\n");
   Proc0Print("AMG setup phase\n");
   Proc0Print("----------------------------------------------------\n");
-  int time_index;
-  time_index = hypre_InitializeTiming("AMG Setup");
-  hypre_BeginTiming(time_index);
   HYPRE_BoomerAMGCreate(&_parSolver);
   HYPRE_BoomerAMGSetCoarsenType(_parSolver, 6);
   HYPRE_BoomerAMGSetStrongThreshold(_parSolver, 0.);
@@ -39,10 +27,6 @@ SolverAMG::setup(void)
   HYPRE_BoomerAMGSetPrintFileName(_parSolver, "sstruct.out.log");
   HYPRE_BoomerAMGSetMaxIter(_parSolver, 200);
   HYPRE_BoomerAMGSetup(_parSolver, _parA, _parB, _parX);
-  hypre_EndTiming(time_index);
-  hypre_PrintTiming("Setup phase times", MPI_COMM_WORLD);
-  hypre_FinalizeTiming(time_index);
-  hypre_ClearTiming();
 }
 
 void
