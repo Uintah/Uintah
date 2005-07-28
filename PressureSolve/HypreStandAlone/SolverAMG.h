@@ -20,11 +20,11 @@ public:
     Print("Destroying SolverAMG object\n");
   }
 
-  void solve(void);
+  virtual void setup(void);
+  virtual void solve(void);
 
 private:
   //  virtual void assemble(void);
-  void setup(void);
 
   HYPRE_Solver  _parSolver;
 };
