@@ -41,19 +41,23 @@ int     MYID;     /* The same as this proc's myid, but global */
 void
 makeGrid(const Param* param,
          const Hierarchy& hier,
-         HYPRE_SStructGrid& grid,
-         HYPRE_SStructVariable* vars)
+         HYPRE_SStructGrid& grid)
   /*_____________________________________________________________________
     Function makeGrid:
     Create an empty Hypre grid object "grid" from our hierarchy hier,
     and add all patches from this proc to it.
     _____________________________________________________________________*/
 {
+  Print("makeGrid() begin\n");
+  HYPRE_SStructVariable vars[NUM_VARS] =
+    {HYPRE_SSTRUCT_VARIABLE_CELL}; // We use cell centered vars
   const Counter numDims   = param->numDims;
   const Counter numLevels = hier._levels.size();
-  serializeProcsBegin();
-  Print("Making grid\n");
 
+  /* Create an empty grid in numDims dimensions with # parts = numLevels. */
+  HYPRE_SStructGridCreate(MPI_COMM_WORLD, numDims, numLevels, &grid);
+
+  serializeProcsBegin();
   /* Add the patches that this proc owns at all levels to grid */
   for (Counter level = 0; level < numLevels; level++) {
     Level* lev = hier._levels[level];
@@ -130,7 +134,7 @@ makeStencil(const Param* param,
     stencil_offsets[entry][dim] = 0;
   }
   for (Counter dim = 0; dim < numDims; dim++) {
-    for (int side = -1; side <= 1; side += 2) {
+    for (int s = Left; s <= Right; s += 2) {
       entry++;
       stencil_offsets[entry].resize(numDims);
       //      Print("entry = %d, dim = %d\n",entry,dim);
@@ -139,7 +143,7 @@ makeStencil(const Param* param,
         stencil_offsets[entry][d] = 0;
       }
       //      Print("Setting entry = %d, dim = %d\n",entry,dim);
-      stencil_offsets[entry][dim] = side;
+      stencil_offsets[entry][dim] = s;
     }
   }
   
@@ -162,31 +166,24 @@ makeStencil(const Param* param,
 int
 main(int argc, char *argv[]) {
   /*-----------------------------------------------------------
-   * Variable definition, parameter init, arguments verification
+   * Parameter initialization
    *-----------------------------------------------------------*/
-  /* Initialize parameters */
-  Param* param = new TestLinear;
-
   /* Set test cast parameters */
-  param->numDims       = 3; //3;
-  param->solverType    = Param::AMG;   // Hypre solver
-  param->numLevels     = 2;     // Number of AMR levels
-  param->baseResolution= 8;     // Level 0 grid size in every direction
+  Param*                param;
+  param = new TestLinear;
+  param->numDims       = 2;
+  param->solverType    = Param::AMG; // Hypre solver
+  param->numLevels     = 2;          // # AMR levels
+  param->baseResolution= 8;          // Level 0 grid size in all dimensions
   param->printSystem   = true;
 
-  int                   numProcs, myid;
-  int                   time_index;
-
-  /* Grid data structures */
-  HYPRE_SStructGrid     grid;
+  /* Grid hierarchy & stencil objects */
   Hierarchy             hier(param);
-  
-  /* Stencil data structures. We use the same stencil all all levels
-     and all parts. */
-  HYPRE_SStructStencil  stencil;
+  HYPRE_SStructGrid     grid;
+  HYPRE_SStructStencil  stencil;     // Same stencil at all levels & patches
 
-  /* Solver data structures */
-  Solver*               solver;
+  /* Set up Solver object */
+  Solver*               solver;      // Solver data structure
   switch (param->solverType) {
   case Param::AMG:
     solver = new SolverAMG(param);
@@ -197,9 +194,10 @@ main(int argc, char *argv[]) {
   }
   
   /*-----------------------------------------------------------
-   * Initialize some stuff
+   * Initialize some stuff, check arguments
    *-----------------------------------------------------------*/
   /* Initialize MPI */
+  int numProcs, myid;
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &numProcs);
   param->numProcs = numProcs;
@@ -244,7 +242,7 @@ main(int argc, char *argv[]) {
     Print("\n");
   }
 
-  time_index = hypre_InitializeTiming("SStruct Interface");
+  int time_index = hypre_InitializeTiming("SStruct Interface");
   hypre_BeginTiming(time_index);
 
   /*----------------------------------------------------------------------
@@ -265,12 +263,7 @@ main(int argc, char *argv[]) {
   Proc0Print("----------------------------------------------------\n");
 
   hier.make();
-
-  HYPRE_SStructVariable vars[NUM_VARS] =
-    {HYPRE_SSTRUCT_VARIABLE_CELL}; // We use cell centered vars
-  /* Create an empty grid in numDims dimensions with # parts = numLevels. */
-  HYPRE_SStructGridCreate(MPI_COMM_WORLD, numDims, numLevels, &grid);
-  makeGrid(param, hier, grid, vars);             // Make Hypre grid from hier
+  makeGrid(param, hier, grid);             // Make Hypre grid from hier
   hier.printPatchBoundaries();
 
   /*-----------------------------------------------------------

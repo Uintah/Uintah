@@ -180,7 +180,7 @@ Solver::makeGraph(const Hierarchy& hier,
 
       /* Loop over C/F boundaries of this patch */
       for (Counter d = 0; d < numDims; d++) {
-        for (int s = -1; s <= 1; s += 2) {
+        for (int s = Left; s <= Right; s += 2) {
           if (patch->getBoundary(d, s) == Patch::CoarseFine) {
 
             Print("--- Processing C/F face d = %d , s = %d ---\n",d,s);
@@ -245,7 +245,7 @@ Solver::makeGraph(const Hierarchy& hier,
                 /* Compute fine cell inside the fine patch from coarse
                    cell outside the fine patch */
                 subFine = subCoarse;
-                if (s < 0) {
+                if (s == Left) {
                   /* Left boundary: go from coarse outside to coarse
                      inside the patch, then find its lower left corner
                      and that's fine child 0. */
@@ -372,7 +372,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
         int entry = 1;
         for (Counter d = 0; d < numDims; d++) {
           double faceArea = cellVolume / h[d];
-          for (int s = -1; s <= 1; s += 2) {
+          for (int s = Left; s <= Right; s += 2) {
             Print("--- d = %d , s = %d, entry = %d ---\n",d,s,entry);
             /* Compute coordinates of:
                This cell's center: xCell
@@ -384,8 +384,8 @@ Solver::makeLinearSystem(const Hierarchy& hier,
             
             xNbhr    = xCell;
             xNbhr[d] += s*h[d];
-            if ((sub[d] == 0) && (s == -1) ||
-                (sub[d] == resolution[d]-1) && (s ==  1)) {
+            if ((sub[d] == 0              ) && (s == Left ) ||
+                (sub[d] == resolution[d]-1) && (s == Right)) {
               xNbhr[d] = xCell[d] + 0.5*s*h[d];
             }
             xFace    = xCell;
@@ -409,16 +409,16 @@ Solver::makeLinearSystem(const Hierarchy& hier,
             /* Accumulate this flux's contribution to values
                if we are not near a C/F boundary. */
             if (!(((patch->getBoundary(d,s) == Patch::CoarseFine) &&
-                   (((s == -1) && (sub[d] == patch->_ilower[d])) ||
-                    ((s ==  1) && (sub[d] == patch->_iupper[d])))))) {
+                   (((s == Left ) && (sub[d] == patch->_ilower[d])) ||
+                    ((s == Right) && (sub[d] == patch->_iupper[d])))))) {
               values[offsetValues        ] += flux;
               values[offsetValues + entry] -= flux;
             }
 
             /* If we are next to a domain boundary, eliminate boundary variable
                from the linear system. */
-            if (((s == -1) && (sub[d] == 0              )) ||
-                ((s ==  1) && (sub[d] == resolution[d]-1))) {
+            if (((s == Left ) && (sub[d] == 0              )) ||
+                ((s == Right) && (sub[d] == resolution[d]-1))) {
               /* Nbhr is at the boundary, eliminate it from values */
               values[offsetValues + entry] = 0.0; // Eliminate connection
               // TODO:
@@ -595,7 +595,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
       for (Counter d = 0; d < numDims; d++) {
         double faceArea = cellVolume / h[d];
         double coarseFaceArea = coarseCellVolume / coarseH[d];
-        for (int s = -1; s <= 1; s += 2) {
+        for (int s = Left; s <= Right; s += 2) {
           if (patch->getBoundary(d,s) == Patch::CoarseFine) {
 
             Print("--- Processing C/F face d = %d , s = %d ---\n",d,s);
@@ -660,7 +660,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                 /* Compute fine cell inside the fine patch from coarse
                    cell outside the fine patch */
                 subFine = subCoarse;
-                if (s < 0) {
+                if (s == Left) {
                   /* Left boundary: go from coarse outside to coarse
                      inside the patch, then find its lower left corner
                      and that's fine child 0. */
@@ -760,7 +760,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                     entry++;
                   }
                 }
-                if ((s == 1) &&
+                if ((s == Right) &&
                     (patch->getBoundary(d,s) == Patch::CoarseFine) &&
                     (subFine[d] == patch->_ilower[d])) {
                   entry++;
