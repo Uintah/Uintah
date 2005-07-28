@@ -34,7 +34,7 @@ public:
       outputType = Screen;     // Output to log file/screen/both
 
       domainSize.resize(numDims);
-      for (int d = 0; d < numDims; d++)
+      for (Counter d = 0; d < numDims; d++)
         domainSize[d] = 1.0;
 
       baseResolution = 8;
@@ -86,6 +86,9 @@ public:
 
   /* Input functions to be defined in derived test cases */
 
+  virtual double harmonicAvg(const Location& x,
+                             const Location& y,
+                             const Location& z);
   virtual double diffusion(const Location& x) = 0;  // Diffusion coefficient
   virtual double rhs(const Location& x) = 0;        // Right-hand-side of PDE
   virtual double rhsBC(const Location& x) = 0;      // RHS of B.C.

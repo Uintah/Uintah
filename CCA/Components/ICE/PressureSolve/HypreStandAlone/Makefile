@@ -30,6 +30,7 @@ Hierarchy.o \
 IntMatrix.o \
 Level.o \
 mydriver.o \
+Param.o \
 Patch.o \
 SolverAMG.o \
 Solver.o \
