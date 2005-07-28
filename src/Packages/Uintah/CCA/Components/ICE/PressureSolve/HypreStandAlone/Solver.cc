@@ -851,31 +851,34 @@ Solver::makeLinearSystem(const Hierarchy& hier,
 void
 Solver::printMatrix(const string& fileName /* = "solver" */)
 {
-  if (_param.printSystem) {
-    HYPRE_SStructMatrixPrint((fileName + ".A").c_str(), _A, 0);
-    if (_param.solverID > 90) {
-      HYPRE_SStructMatrixPrint((fileName + ".facA").c_str(), _facA, 0);
-    }
-    if (_param.solverID == 30) {
-      HYPRE_ParCSRMatrixPrint(_parA, (fileName + ".parA").c_str());
-      /* Print CSR matrix in IJ format, base 1 for rows and cols */
-      HYPRE_ParCSRMatrixPrintIJ(_parA, 1, 1, (fileName + ".ijA").c_str());
-    }
+  if (!_param.printSystem) return;
+  HYPRE_SStructMatrixPrint((fileName + ".sstruct").c_str(), _A, 0);
+  if (_param.solverID > 90) {
+    HYPRE_SStructMatrixPrint((fileName + ".fac").c_str(), _facA, 0);
+  }
+  if (_param.solverID == 30) {
+    HYPRE_ParCSRMatrixPrint(_parA, (fileName + ".par").c_str());
+    /* Print CSR matrix in IJ format, base 1 for rows and cols */
+    HYPRE_ParCSRMatrixPrintIJ(_parA, 1, 1, (fileName + ".ij").c_str());
   }
 }
 
 void
 Solver::printRHS(const string& fileName /* = "solver" */)
 {
-  if (_param.printSystem) {
-    HYPRE_SStructVectorPrint(fileName.c_str(), _b, 0);
+  if (!_param.printSystem) return;
+  HYPRE_SStructVectorPrint(fileName.c_str(), _b, 0);
+  if (_param.solverID == 30) {
+    HYPRE_ParVectorPrint(_parB, (fileName + ".par").c_str());
   }
 }
 
 void
 Solver::printSolution(const string& fileName /* = "solver" */)
 {
-  if (_param.printSystem) {
-    HYPRE_SStructVectorPrint(fileName.c_str(), _x, 0);
+  if (!_param.printSystem) return;
+  HYPRE_SStructVectorPrint(fileName.c_str(), _x, 0);
+  if (_param.solverID == 30) {
+    HYPRE_ParVectorPrint(_parX, (fileName + ".par").c_str());
   }
 }
