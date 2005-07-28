@@ -18,11 +18,12 @@
 class Solver {
   /*_____________________________________________________________________
     class Solver:
-    A solver handler that gets all the necessary data pointers (A,b,x,...),
-    solves the linear system by calling Hypre, and returns some output 
-    statistics and the solution vector.
+    A base (generic) solver handler that gets all the necessary data
+    pointers (A,b,x,...), solves the linear system by calling some Hypre
+    solver (implemented in derived classes from Solver),
+    and returns some output statistics and the solution vector.
     _____________________________________________________________________*/
-public:
+ public:
   
   struct Results {
     Counter    numIterations;   // Number of solver iterations performed
@@ -36,22 +37,11 @@ public:
       _results.finalResNorm  = DBL_MAX;
     }
 
-  ~Solver(void) {
+  virtual ~Solver(void) {
     Print("Destroying Solver object\n");
-    hypre_TFree(_pLevel);
-    hypre_TFree(_refinementRatio);
-
-    Print("Destroying graph objects\n");
-    if (_param->solverID > 90) {
-      HYPRE_SStructGraph facGraph = hypre_SStructMatrixGraph(_facA);
-      HYPRE_SStructGraphDestroy(facGraph);
-    }
     
     /* Destroy matrix, RHS, solution objects */
     Print("Destroying matrix, RHS, solution objects\n");
-    if (_param->solverID > 90) {
-      HYPRE_SStructMatrixDestroy(_facA);
-    }
     HYPRE_SStructMatrixDestroy(_A);
     HYPRE_SStructVectorDestroy(_b);
     HYPRE_SStructVectorDestroy(_x);
@@ -63,16 +53,18 @@ public:
                   const HYPRE_SStructStencil& stencil,
                   const HYPRE_SStructGraph& graph);
 
-  void solve();
+  virtual void setup(void) = 0;
+  virtual void solve(void) = 0;
 
   /* Utilities */
-  void printMatrix(const string& fileName = "output");
-  void printRHS(const string& fileName = "output_b");
-  void printSolution(const string& fileName = "output_x");
+  virtual void printMatrix(const string& fileName = "output");
+  virtual void printRHS(const string& fileName = "output_b");
+  virtual void printSolution(const string& fileName = "output_x");
 
-  /* Data for solver */
+  /*======================= Data Members =============================*/
   const Param*          _param;
-  Counter               _solverID;  // Type of Hypre solver
+  Counter               _solverID;      // Hypre solver ID
+  bool                  _requiresPar;   // Does solver require Par input?
 
   /* SStruct objects */
   HYPRE_SStructMatrix   _A;
@@ -84,22 +76,19 @@ public:
   HYPRE_ParVector       _parB;
   HYPRE_ParVector       _parX;
 
-  /* FAC objects */
-  HYPRE_SStructMatrix   _facA;
-  int*                  _pLevel;          // Needed by FAC: part # of level
-  Index*                _refinementRatio; // Needed by FAC
-
+  /* Solver results */
   Results               _results;   // Solver results are outputted to here
 
-private:
-  void initializeData(const Hierarchy& hier,
-                      const HYPRE_SStructGrid& grid,
-                      const HYPRE_SStructGraph& graph);
+ protected:
+  virtual void initializeData(const Hierarchy& hier,
+                              const HYPRE_SStructGrid& grid,
+                              const HYPRE_SStructGraph& graph);
   void makeLinearSystem(const Hierarchy& hier,
                         const HYPRE_SStructGrid& grid,
                         const HYPRE_SStructStencil& stencil);
-  void assemble(void);
-  void setup(void);
+  virtual void assemble(void);
+
+ private:
 };
 
 #endif // __SOLVER_H__
