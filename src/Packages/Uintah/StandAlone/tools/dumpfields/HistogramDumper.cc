@@ -241,7 +241,7 @@ namespace Uintah {
         }
         
         if(!os)
-          throw InternalError("Failed to write histogram file '"+fname+"'");
+          throw InternalError("Failed to write histogram file '"+fname+"'",__FILE__,__LINE__);
         
       } // diag
   }

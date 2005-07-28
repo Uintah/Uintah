@@ -22,7 +22,7 @@ namespace SCIRun {
       for(vector<string>::const_iterator fit(requested_fields.begin());
           fit!=requested_fields.end();fit++) {
         if(!count(allfields.begin(), allfields.end(), *fit))
-          throw ProblemSetupException("Failed to find field called "+*fit);
+          throw ProblemSetupException("Failed to find field called "+*fit,__FILE__,__LINE__);
         this->fieldnames.push_back(*fit);
       }
     }

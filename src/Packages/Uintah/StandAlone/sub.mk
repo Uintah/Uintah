@@ -22,11 +22,7 @@ ifeq ($(CC),newmpxlc)
         Core/Containers   \
 	Core/Persistent   \
 	Core/OS		  \
-        Packages/Uintah/Core/GeometryPiece              \
-        Packages/Uintah/CCA/Components/Arches/Mixing    \
-        Packages/Uintah/CCA/Components/Arches/fortran   \
-        Packages/Uintah/CCA/Components/Arches/Radiation \
-        Packages/Uintah/CCA/Components/Arches/Radiation/fortran
+        Packages/Uintah/Core/GeometryPiece              
 endif
 
 PROGRAM := Packages/Uintah/StandAlone/sus
@@ -64,8 +60,7 @@ else
         Packages/Uintah/CCA/Components/Solvers              \
         Packages/Uintah/CCA/Components/ICE           \
         Packages/Uintah/CCA/Components/Examples      \
-        Packages/Uintah/CCA/Components/Arches        \
-        Packages/Uintah/CCA/Components/MPMArches     \
+        Packages/Uintah/CCA/Components/Dummy         \
         Packages/Uintah/CCA/Components/PatchCombiner \
         $(AIX_LIBRARY)
 endif
@@ -398,12 +393,18 @@ LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ###############################################
-            
+
 link_inputs: 
-	@( ln -sf $(SRCTOP_ABS)/Packages/Uintah/StandAlone/inputs Packages/Uintah/StandAlone/inputs )
-        
+	@( if ! test -L Packages/Uintah/StandAlone/inputs; then \
+               echo "Creating link to inputs directory." ; \
+	       ln -sf $(SRCTOP_ABS)/Packages/Uintah/StandAlone/inputs Packages/Uintah/StandAlone/inputs; \
+	   fi )
+
 link_regression_tester: 
-	@( ln -sf $(SRCTOP_ABS)/Packages/Uintah/scripts/regression_tester Packages/Uintah/StandAlone/run_RT )
+	@( if ! test -L Packages/Uintah/StandAlone/run_RT; then \
+               echo "Creating link to regression_tester script." ; \
+	       ln -sf $(SRCTOP_ABS)/Packages/Uintah/scripts/regression_tester Packages/Uintah/StandAlone/run_RT; \
+	   fi )
 
 TOP_ABS:= $(SRCTOP_ABS)/..
 faster_gmake: 
@@ -415,7 +416,7 @@ sus: prereqs Packages/Uintah/StandAlone/sus
 
 puda: prereqs Packages/Uintah/StandAlone/puda
 
-dumpfields: prereqs Packages/Uintah/StandAlone/dumpfields
+dumpfields: prereqs Packages/Uintah/StandAlone/tools/dumpfields/dumpfields
 
 compare_uda: prereqs Packages/Uintah/StandAlone/compare_uda
 
