@@ -23,9 +23,6 @@ public:
   void solve(void);
 
 private:
-  virtual void initializeData(const Hierarchy& hier,
-                              const HYPRE_SStructGrid& grid,
-                              const HYPRE_SStructGraph& graph);
   //  virtual void assemble(void);
   void setup(void);
 
