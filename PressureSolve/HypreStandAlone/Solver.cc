@@ -180,8 +180,8 @@ Solver::makeGraph(const Hierarchy& hier,
 
       /* Loop over C/F boundaries of this patch */
       for (Counter d = 0; d < numDims; d++) {
-        for (int s = Left; s <= Right; s += 2) {
-          if (patch->getBoundary(d, s) == Patch::CoarseFine) {
+        for (Side s = Left; s <= Right; ++s) {
+          if (patch->getBoundaryType(d,s) == Patch::CoarseFine) {
 
             Print("--- Processing C/F face d = %d , s = %d ---\n",d,s);
             vector<int> faceLower(numDims);
@@ -328,7 +328,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
   for (Counter level = 0; level < numLevels; level++) {
     const Level* lev = hier._levels[level];
     const vector<double>& h = lev->_meshSize;
-    const vector<Counter>& resolution = lev->_resolution;
+    //const vector<Counter>& resolution = lev->_resolution;
     scalarMult(h,0.5,offset);
     double cellVolume = prod(h);
     for (Counter i = 0; i < lev->_patchList.size(); i++) {
@@ -377,7 +377,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
         int entry = 1;
         for (Counter d = 0; d < numDims; d++) {
           double faceArea = cellVolume / h[d];
-          for (int s = Left; s <= Right; s += 2) {
+          for (Side s = Left; s <= Right; ++s) {
             Print("--- d = %d , s = %d, entry = %d ---\n",d,s,entry);
             /* Compute coordinates of:
                This cell's center: xCell
@@ -389,10 +389,30 @@ Solver::makeLinearSystem(const Hierarchy& hier,
             
             xNbhr    = xCell;
             xNbhr[d] += s*h[d];
-            if ((sub[d] == 0              ) && (s == Left ) ||
-                (sub[d] == resolution[d]-1) && (s == Right)) {
-              xNbhr[d] = xCell[d] + 0.5*s*h[d];
-            }
+
+            if ((patch->getBoundaryType(d,s) == Patch::Domain) && 
+                ((s == Left ) && (sub[d] == patch->_ilower[d]) ||
+                ((s == Right) && (sub[d] == patch->_iupper[d])))) {
+              /* Cell near a domain boundary */
+              
+              if (patch->getBC(d,s) == Patch::Dirichlet) {
+                Print("Near Dirichlet boundary, update xNbhr\n");
+                xNbhr[d] = xCell[d] + 0.5*s*h[d];
+              } else {
+                /* Neumann B.C., xNbhr is outside the domain. We
+                assume that a, du/dn can be continously extended
+                outside the domain to make the B.C. a du/dn = rhsBC
+                meaningful using a central difference and a harmonic
+                avg of a over the line of that central
+                difference. Otherwise, go back to the Dirichlet code
+                at the expense of larger truncation errors near these
+                boundaries, that should not matter, as in the
+                Dirichlet case.
+                */
+              }
+                            
+            } // end cell near domain boundary
+
             xFace    = xCell;
             xFace[d] = 0.5*(xCell[d] + xNbhr[d]);
 
@@ -412,7 +432,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
 
             /* Accumulate this flux's contribution to values
                if we are not near a C/F boundary. */
-            if (!(((patch->getBoundary(d,s) == Patch::CoarseFine) &&
+            if (!(((patch->getBoundaryType(d,s) == Patch::CoarseFine) &&
                    (((s == Left ) && (sub[d] == patch->_ilower[d])) ||
                     ((s == Right) && (sub[d] == patch->_iupper[d])))))) {
               values[offsetValues        ] += flux;
@@ -421,12 +441,23 @@ Solver::makeLinearSystem(const Hierarchy& hier,
 
             /* If we are next to a domain boundary, eliminate boundary variable
                from the linear system. */
-            if (((s == Left ) && (sub[d] == 0              )) ||
-                ((s == Right) && (sub[d] == resolution[d]-1))) {
+            if ((patch->getBoundaryType(d,s) == Patch::Domain) && 
+                ((s == Left ) && (sub[d] == patch->_ilower[d]) ||
+                ((s == Right) && (sub[d] == patch->_iupper[d])))) {
+              /* Cell near a domain boundary */
               /* Nbhr is at the boundary, eliminate it from values */
-              values[offsetValues + entry] = 0.0; // Eliminate connection
-              // TODO:
-              // Add to rhsValues if this is a non-zero Dirichlet B.C. !!
+
+              if (patch->getBC(d,s) == Patch::Dirichlet) {
+                Print("Near Dirichlet boundary, eliminate nbhr\n");
+                values[offsetValues + entry] = 0.0; // Eliminate connection
+                // TODO:
+                // Add to rhsValues if this is a non-zero Dirichlet B.C. !!
+              } else { // Neumann B.C.
+                Print("Near Neumann boundary, eliminate nbhr\n");
+                // TODO:
+                // DO NOT ADD FLUX ABOVE, and add to rhsValues appropriately,
+                // if this is a non-zero Neumann B.C.
+              }
             }
             entry++;
           } // end for s
@@ -573,8 +604,8 @@ Solver::makeLinearSystem(const Hierarchy& hier,
       for (Counter d = 0; d < numDims; d++) {
         double faceArea = cellVolume / h[d];
         double coarseFaceArea = coarseCellVolume / coarseH[d];
-        for (int s = Left; s <= Right; s += 2) {
-          if (patch->getBoundary(d,s) == Patch::CoarseFine) {
+        for (Side s = Left; s <= Right; ++s) {
+          if (patch->getBoundaryType(d,s) == Patch::CoarseFine) {
 
             Print("--- Processing C/F face d = %d , s = %d ---\n",d,s);
             vector<int> faceLower(numDims);
@@ -726,25 +757,26 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                 /* Find the correct graph entry corresponding to this coarse
                    nbhr (subCoarse) of the fine cell subFine */
                 for (Counter dd = 0; dd < d; dd++) {
-                  /* Are we near the left boundary and is it a C/F interface? */
-                  int side = -1;
-                  if ((patch->getBoundary(dd,side) == Patch::CoarseFine) &&
+                  /* Are we near the left boundary and is it a C/F bdry? */
+                  Side ss = Left;
+                  if ((patch->getBoundaryType(dd,ss) == Patch::CoarseFine) &&
                       (subFine[dd] == patch->_ilower[dd])) {
                     entry++;
                   }
-                  /* Are we near the right boundary and is it a C/F interface? */
-                  side = 1;
-                  if ((patch->getBoundary(dd,side) == Patch::CoarseFine) &&
+                  /* Are we near the right boundary and is it a C/F bdry? */
+                  ss = Right;
+                  if ((patch->getBoundaryType(dd,ss) == Patch::CoarseFine) &&
                       (subFine[dd] == patch->_iupper[dd])) {
                     entry++;
                   }
                 }
                 if ((s == Right) &&
-                    (patch->getBoundary(d,s) == Patch::CoarseFine) &&
+                    (patch->getBoundaryType(d,s) == Patch::CoarseFine) &&
                     (subFine[d] == patch->_ilower[d])) {
                   entry++;
                 }
-                Print("      fine equation, entry of coarse cell = %d\n",entry);
+                Print("      fine equation, entry of coarse cell = %d\n",
+                      entry);
                 int graphEntries[numGraphEntries] = {entry};
                 double graphValues[numGraphEntries] = {-flux};
                 HYPRE_SStructMatrixAddToValues(_A,
@@ -769,7 +801,8 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                 /* Subtract the C-F flux from the coarse cell equation
                    - graph part */
                 const int numCoarseGraphEntries = 1;
-                int coarseGraphEntries[numCoarseGraphEntries] = {stencilSize+child};
+                int coarseGraphEntries[numCoarseGraphEntries] =
+                  {stencilSize+child};
                 Print("      coarse equation, entry of fine cell = %d\n",
                       stencilSize+child);
                 double coarseGraphValues[numCoarseGraphEntries] = {-flux};
@@ -792,11 +825,12 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                      The neighboring's cell data point: xNbhr The face
                      crossing between xCell and xNbhr: xFace
                   */
-                  int side = -s;
+                  Side s2 = Side(-s);
+                  Print("      s = %d , s2 = %d\n",s,s2);
                   pointwiseMult(subCoarse,coarseH,xCell);
                   pointwiseAdd(xCell,coarseOffset,xCell);               
                   xNbhr    = xCell;
-                  xNbhr[d] += side*coarseH[d];
+                  xNbhr[d] += s2*coarseH[d];
                   xFace    = xCell;
                   xFace[d] = 0.5*(xCell[d] + xNbhr[d]);
                   Print("      xCell = ");
