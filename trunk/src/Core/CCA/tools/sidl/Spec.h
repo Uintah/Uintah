@@ -80,12 +80,7 @@ public:
   void setName(const std::string& name);
   bool isEmitted() { return emitted_declaration; }
   bool isImport;
-  bool isBuiltin;
   std::string curfile;
-
-  // temporary!!!
-  std::string getName() const { return name; }
-  // temporary!!!
 
 protected:
   Definition(const std::string& curfile, int lineno,
@@ -237,7 +232,6 @@ public:
   virtual ~Class();
   virtual void staticCheck(SymbolTable*);
   virtual void gatherSymbols(SymbolTable*);
-  BaseInterface* findParentInterface(const std::string&);
   Class* getParentClass() const;
   Class* findParent(const std::string&);
   Method* findMethod(const Method*, bool recurse) const;
@@ -259,7 +253,6 @@ public:
   void emit(EmitState& out);
   void processImports();
   std::vector<Definition*> list;
-  bool isBuiltin;
 };
 
 
@@ -271,6 +264,7 @@ public:
   virtual void staticCheck(SymbolTable*);
   virtual void gatherSymbols(SymbolTable*);
   Method* findMethod(const Method*) const;
+  BaseInterface* findParent(const std::string&);
 private:
   ScopedNameList* interface_extends;
 };
@@ -334,10 +328,6 @@ public:
   bool isCollective;
   int numRedisMessages;
 
-  // temporary!!!
-  std::string getName() const { return name; }
-  // temporary!!!
-
 protected:
   friend class CI;
   int handlerNum;
@@ -368,7 +358,6 @@ public:
   void staticCheck(SymbolTable*) const;
   void setClass(Class* c);
   void setInterface(BaseInterface* c);
-//   void setInterface(BaseException* c);
   Method* findMethod(const Method* match) const;
   void gatherMethods(std::vector<Method*>&) const;
   void gatherVtable(std::vector<Method*>&) const;
@@ -494,7 +483,6 @@ public:
   void gatherSymbols(SymbolTable* globals);
   void processImports();
   bool isImport;
-  bool isBuiltin;
   VersionList* versions;
   ScopedNameList* imports;
   DefinitionList* packages;

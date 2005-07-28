@@ -78,7 +78,6 @@ babel_ext [A-Za-z][A-Za-z0-9_]*
 "void"		return VOID;
 
 ("["){babel_ext}("]") {
-                    fprintf(stderr, "Match %s\n", yytext);
                     return BABEL_EXT;
                   }
 
