@@ -170,11 +170,9 @@ main(int argc, char *argv[]) {
    *-----------------------------------------------------------*/
   /* Set test cast parameters */
   Param*                param;
-  param = new TestLinear;
-  param->numDims       = 2;
+  param = new TestLinear(2,8); // numDims, baseResolution
   param->solverType    = Param::AMG; // Hypre solver
   param->numLevels     = 2;          // # AMR levels
-  param->baseResolution= 8;          // Level 0 grid size in all dimensions
   param->printSystem   = true;
 
   /* Grid hierarchy & stencil objects */
