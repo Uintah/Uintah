@@ -15,9 +15,11 @@ HYPRE_SRC  = ../hypre-1.9.0b/src
 CC         = g++
 CCFLAGS    = -MD -Wall # Allow .d files, output all warnings
 HYPRE_DEFS = -DHYPRE_TIMING -DHAVE_CONFIG_H
+MPI_INC    = -I/usr/local/lam-mpi/include
+MPI_LIB    = -L/usr/local/lam-mpi/lib -lmpi -llam -lutil -lpthread -ldl
+
 HYPRE_INC  = -I$(HYPRE_SRC)/hypre/include $(HYPRE_DEFS)
 HYPRE_LIB  = -L$(HYPRE_SRC)/hypre/lib -lHYPRE_sstruct_ls -lHYPRE_sstruct_mv -lHYPRE_struct_ls -lHYPRE_struct_mv -lHYPRE_parcsr_ls -lHYPRE_DistributedMatrixPilutSolver -lHYPRE_ParaSails -lHYPRE_Euclid -lHYPRE_MatrixMatrix -lHYPRE_DistributedMatrix -lHYPRE_IJ_mv -lHYPRE_parcsr_mv -lHYPRE_seq_mv -lHYPRE_krylov -lHYPRE_utilities -llapack -lg2c
-MPI_LIBS   = -lmpi -llam -lutil -lpthread -ldl
 
 ##################################################################
 # Targets
@@ -59,14 +61,14 @@ distrib:
 ##################################################################
 
 .cc.o: $<
-	${CC} ${CCFLAGS} ${HYPRE_INC} -c $<
+	${CC} ${CCFLAGS} ${MPI_INC} ${HYPRE_INC} -c $<
 
 $(TARGET1) : $(TARGET1_OBJS)
 	@echo  "Building" $@ "... "
-	${CC} -o $@ $(TARGET1_OBJS) ${HYPRE_LIB} ${MPI_LIBS} 
+	${CC} -o $@ $(TARGET1_OBJS) ${HYPRE_LIB} ${MPI_LIB} 
 
 $(TARGET2) : $(TARGET2_OBJS)
 	@echo  "Building" $@ "... "
-	${CC} -o $@ $(TARGET2_OBJS) ${HYPRE_LI} ${MPI_LIBS}
+	${CC} -o $@ $(TARGET2_OBJS) ${HYPRE_LIB} ${MPI_LIB}
 
 -include $(patsubst %.o,%.d, $(TARGET1_OBJS) $(TARGET2_OBJS))
