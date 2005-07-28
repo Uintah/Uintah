@@ -15,12 +15,12 @@ class TestLinear : public Param {
 public:
   
   TestLinear(const Counter d,
-             const Counter baseResolution) : Param()
+             const Counter base) : Param()
     /* Constructor: initialize this test case's default parameters */
     {
       /* Problem parameters */
       setNumDims(d);
-
+#if 0
       /* Boundary conditions for a rectangular domain */
       // All Dirichlet in this case
       vector<Patch::BoundaryCondition> bc(2*numDims);
@@ -29,8 +29,9 @@ public:
         bc[2*d+1] = Patch::Dirichlet;
       }
      
-      setDomain(baseResolution,bc); // Set rectangular domain with BC = bc
-
+      setDomain(base,bc); // Set rectangular domain with BC = bc
+#endif
+      baseResolution = base;
 
       /* log files, output types */
       longTitle = "TestLinear";      // Title of this test case
