@@ -3,6 +3,7 @@
 
 #include "mydriver.h"
 #include "Param.h"
+#include "Patch.h"
 #include "Hierarchy.h"
 #include "util.h"
 #include <values.h>
@@ -79,6 +80,12 @@ class Solver {
                               const HYPRE_SStructGrid& grid);
   virtual void assemble(void);
   
+  void printValues(const Patch* patch,
+                   const int stencilSize,
+                   const double* values = 0,
+                   const double* rhsValues = 0,
+                   const double* solutionValues = 0);
+
   /*===== Data Members =====*/
 
   /* SStruct objects */ // We assume Solver is an SStruct solver
