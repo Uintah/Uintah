@@ -70,18 +70,16 @@ Solver::assemble(void)
   Print("Solver::assemble() begin\n");
   /* Assemble the matrix - a collective call */
   HYPRE_SStructMatrixAssemble(_A); 
+  HYPRE_SStructVectorAssemble(_b);
+  HYPRE_SStructVectorAssemble(_x);
+
   /* For BoomerAMG solver: set up the linear system in ParCSR format */
   if (_requiresPar) {
     HYPRE_SStructMatrixGetObject(_A, (void **) &_parA);
-  }
-  HYPRE_SStructVectorAssemble(_b);
-  HYPRE_SStructVectorAssemble(_x);
- 
-  /* For BoomerAMG solver: set up the linear system (b,x) in ParCSR format */
-  if (_requiresPar) {
     HYPRE_SStructVectorGetObject(_b, (void **) &_parB);
     HYPRE_SStructVectorGetObject(_x, (void **) &_parX);
   }
+  Print("Solver::assemble() end\n");
 }
 
 void
@@ -114,7 +112,7 @@ Solver::solve(void)
   Proc0Print("Solver solve phase\n");
   Proc0Print("----------------------------------------------------\n");
 
-  //  this->solve(); // which setup will this be? The derived class's?
+  this->solve(); // which setup will this be? The derived class's?
 
   /*-----------------------------------------------------------
    * Gather the solution vector
@@ -916,6 +914,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
 void
 Solver::printMatrix(const string& fileName /* = "solver" */)
 {
+  Print("Solver::printMatrix() begin\n");
   if (!_param->printSystem) return;
   HYPRE_SStructMatrixPrint((fileName + ".sstruct").c_str(), _A, 0);
   if (_requiresPar) {
@@ -923,6 +922,7 @@ Solver::printMatrix(const string& fileName /* = "solver" */)
     /* Print CSR matrix in IJ format, base 1 for rows and cols */
     HYPRE_ParCSRMatrixPrintIJ(_parA, 1, 1, (fileName + ".ij").c_str());
   }
+  Print("Solver::printMatrix() end\n");
 }
 
 void
