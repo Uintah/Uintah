@@ -30,26 +30,48 @@ public:
   vector<int> _ilower;    // Lower left corner subscript
   vector<int> _iupper;    // Upper right corner subscript
   int         _numCells;  // Total # cells
-  vector<BoundaryType> _boundaries;
-  vector<BoundaryCondition> _bc;
-  
+
   Patch(const int procID, 
         const int levelID,
         const vector<int>& ilower,
         const vector<int>& iupper);
 
-  BoundaryType getBoundary(int d, int s) 
+  BoundaryType getBoundaryType(const Counter d,
+                           const Side s) const
     {
       return _boundaries[2*d + ((s+1)/2)];
     }
 
-  void setBoundary(const int d, 
-                   const int s,
-                   const BoundaryType& bt ) 
+  BoundaryCondition getBC(const Counter d,
+                          const Side s) const
     {
-      //      printf("MYID = %d: size(_boundaries) = %d   d=%d  s=%d  ind=%d\n",MYID,_boundaries.size(),d,s,2*d+((s+1)/2));
-      //      fflush(stdout);
+      return _bc[2*d + ((s+1)/2)];
+    }
+
+  void setAllBoundaries(const vector<BoundaryType>& boundaries)
+    {
+      _boundaries = boundaries;
+    }
+
+  void setBoundaryType(const Counter d,
+                   const Side s,
+                   const BoundaryType& bt) 
+    {
       _boundaries[2*d+((s+1)/2)] = bt;
+    }
+
+  void setAllBC(const vector<BoundaryCondition>& bc)
+    {
+      _bc = bc;
+    }
+
+  void setBC(const Counter d,
+             const Side s,
+             const BoundaryCondition& bc) 
+    {
+      //      fprintf(stderr,"size(_bc) = %d, d = %d, s = %d, accessing %d\n",
+      //            _bc.size(),d,s,2*d+((s+1)/2));
+      _bc[2*d+((s+1)/2)] = bc;
     }
 
   /* Static members & functions */
@@ -62,8 +84,11 @@ public:
       boundaryTypeString[CoarseFine] = "CoarseFine";
       boundaryTypeString[Neighbor  ] = "Neighbor";
     }
-
-private:
+ protected:
+  vector<BoundaryType> _boundaries;
+  vector<BoundaryCondition> _bc;
+  
+ private:
 };
 
 #endif // __PATCH_H__
