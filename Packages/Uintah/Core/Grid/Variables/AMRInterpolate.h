@@ -1,7 +1,7 @@
 
 #ifndef Uintah_AMRInterpolate_h
 #define Uintah_AMRInterpolate_h
-
+#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
@@ -9,39 +9,7 @@
 #include <Core/Math/MiscMath.h>
 
 namespace Uintah {
-/*___________________________________________________________________
- Function~  AMRICE::interpolationTest--
-_____________________________________________________________________*/
-template<class T>
-  void interpolationTest(const Level* fineLevel,
-                         const IntVector& f_cell,
-                         int& ncell,
-                         T& error,
-                         T& q_FineLevel)
-{
-                      
-  Vector f_dx = fineLevel->dCell();
-  double X = ((f_cell.x() * f_dx.x()) + f_dx.x()/2);
-  double Y = ((f_cell.y() * f_dx.y()) + f_dx.y()/2);
-  double Z = ((f_cell.z() * f_dx.z()) + f_dx.z()/2);
 
-  //T exact(5.0);
-  //T exact( X );
-  //T exact( Y );
-  //T exact( Z );
-  T exact( X * Y* Z  );
-  //T exact( X * X * Y * Y * Z * Z);
-  //T exact( X * X * X * Y* Y * Y  * Z * Z *Z );
-
-  error = error + (q_FineLevel - exact) * (q_FineLevel - exact);
-  ncell += 1;
-
-#if 0  
-  cout  << "f_cell \t" << f_cell 
-        << " q_FineLevel[f_cell] " << q_FineLevel
-        <<  " error " << error <<  endl;
-#endif
-}
 
 /*___________________________________________________________________
  Function~  AMRICE::linearInterpolation--
@@ -100,8 +68,6 @@ template<class T>
     IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
     //__________________________________
     // Offset for coarse level surrounding cells:
-    //  -find the distance between the center of the patch and fine level cell centers
-    //   This tells which direction the offset should be  
     Point coarse_cell_pos = coarseLevel->getCellPosition(c_cell);
     Point fine_cell_pos   = fineLevel->getCellPosition(f_cell);
     Vector dist = (fine_cell_pos.asVector() - coarse_cell_pos.asVector()) * inv_c_dx;
@@ -146,14 +112,8 @@ template<class T>
 
     // interpolate the two X-Y planes in the k direction
     q_FineLevel[f_cell] = (1.0 - dist.z()) * q_XY_Plane_1 
-                        + dist.z() * q_XY_Plane_2;
-    
-    //interpolationTest(fineLevel,f_cell, ncell, error, q_FineLevel[f_cell]);  
+                        + dist.z() * q_XY_Plane_2;                        
   }
-  
-  //interpolation test
-  //error = error/(double)ncell;
-  //cout << "Linear interpolation    error^2/ncell " << error << " Ncells " << ncell<< endl;
 }
 
 /*___________________________________________________________________
@@ -206,9 +166,6 @@ template<class T>
                              const IntVector& fh,
                              CCVariable<T>& q_FineLevel)
 {
-  //int ncell = 0;  // needed by interpolation test
-  //T error(0);
-  
   Vector c_dx = coarseLevel->dCell();
   Vector inv_c_dx = Vector(1.0)/c_dx;
   
@@ -273,16 +230,34 @@ template<class T>
                         + w1_z * q_XY_Plane[1] 
                         + w2_z * q_XY_Plane[2];
 
-   //interpolationTest(fineLevel,f_cell, ncell, error, q_FineLevel[f_cell]); 
-   // cout  << " plane 1 " << q_XY_Plane[0] << " plane2 " << q_XY_Plane[1] << " plane3 "<< q_XY_Plane[3]<< endl;
+    //__________________________________
+    //  debugging
+#if 0
+    if(f_cell == IntVector(2, 5, 4)){
+      for (k = -1; k< 2; k++){
+        cout << " c_cell " << c_cell << " f_cell " << f_cell << " x " << x << " y " << y << " z " << z <<endl;
+        cout << " q_CL[c_cell + IntVector( -1, -1, k)] " << q_CL[c_cell + IntVector( -1, -1, k)]<< " w(0,0) " << w(0,0)<< endl;
+        cout << " q_CL[c_cell + IntVector(  0, -1, k)] " << q_CL[c_cell + IntVector(  0, -1, k)]<< " w(1,0) " << w(1,0)<< endl;
+        cout << " q_CL[c_cell + IntVector(  1, -1, k)] " << q_CL[c_cell + IntVector(  1, -1, k)]<< " w(2,0) " << w(2,0)<< endl;
+        cout << " q_CL[c_cell + IntVector( -1,  0, k)] " << q_CL[c_cell + IntVector(  1, -1, k)]<< " w(0,1) " << w(0,1)<< endl;
+        cout << " q_CL[c_cell + IntVector(  0,  0, k)] " << q_CL[c_cell + IntVector(  0,  0, k)]<< " w(1,1) " << w(1,1)<< endl;
+        cout << " q_CL[c_cell + IntVector(  1,  0, k)] " << q_CL[c_cell + IntVector(  1,  0, k)]<< " w(2,1) " << w(2,1)<< endl;
+        cout << " q_CL[c_cell + IntVector( -1,  1, k)] " << q_CL[c_cell + IntVector( -1,  1, k)]<< " w(0,2) " << w(0,2)<< endl;
+        cout << " q_CL[c_cell + IntVector(  0,  1, k)] " << q_CL[c_cell + IntVector(  0,  1, k)]<< " w(1,2) " << w(1,2)<< endl;
+        cout << " q_CL[c_cell + IntVector(  1,  1, k)] " << q_CL[c_cell + IntVector(  1,  1, k)]<< " w(2,2) " << w(2,2)<< endl;
+        cout << " q_XY_Plane " << q_XY_Plane[k+1] << endl;
+      }
+      cout  << " plane 1 " << q_XY_Plane[0] << " plane2 " << q_XY_Plane[1] << " plane3 "<< q_XY_Plane[2]<< endl;
+      cout  << " w0_x " << w0_x << " w1_x " << w1_x << " w2_x "<< w2_x<< endl;
+      cout  << " w0_y " << w0_y << " w1_y " << w1_y << " w2_y "<< w2_y<< endl;
+      cout  << " w0_z " << w0_z << " w1_z " << w1_z << " w2_z "<< w2_z<< endl;
+      cout << " Q " << q_FineLevel[f_cell] << endl;
+   }
+#endif   
+   
   } 
-  
-  // interpolation test
-  //error = error/(double)ncell;
-  //cout << "Quadratic interpolation error^2/ncell " << error << " ncells " << ncell<< endl;
 }
 
-}
 /*___________________________________________________________________
  Function~  selectInterpolator--
 _____________________________________________________________________*/
@@ -310,5 +285,135 @@ template<class T>
                         " that doesn't exist.  <orderOfInterpolation> must be 1 or 2",__FILE__,__LINE__);
   break;
   }
+}
+/*___________________________________________________________________
+ Function~  AMRICE::interpolationTest_helper--
+_____________________________________________________________________*/
+template<class T>
+  void interpolationTest_helper( CCVariable<T>& q_FineLevel,
+                                 CCVariable<T>& q_CL,
+                                 const string& desc,
+                                 const int test,
+                                 const Level* level,
+                                 const IntVector& l,
+                                 const IntVector& h)
+{
+  int ncell = 0;
+  T error(0);
+  for(CellIterator iter(l,h); !iter.done(); iter++){
+    IntVector c = *iter;
+    
+    Point cell_pos = level->getCellPosition(c);
+    
+    double X = cell_pos.x();
+    double Y = cell_pos.y();
+    double Z = cell_pos.z();
+    T exact(0);
+    
+    switch(test){
+    case 0:
+      exact = T(5.0);
+      break;
+    case 1:
+      exact = T( X );
+      break;
+    case 2:
+      exact = T( Y );
+      break;
+    case 3:
+      exact = T( Z );
+      break;
+    case 4:
+      exact = T( X * Y* Z  );
+      break;
+    case 5:
+      exact = T( X * X * Y * Y * Z * Z);
+      break;
+    case 6:
+      exact = T( X * X * X * Y* Y * Y  * Z * Z *Z );
+      break;
+    default:
+    break;
+    }
+
+    if(desc == "initialize"){
+      q_CL[c] = exact;
+    }else{
+      T diff(q_FineLevel[c] - exact);
+      error = error + diff * diff;
+      ncell += 1; 
+    }
+  } 
+  
+  if(desc == "checkError"){
+    cout  << "test " << test <<" interpolation error^2/ncell " << error/ncell << " ncells " << ncell<< endl;
+  }
+}
+/*___________________________________________________________________
+ Function~  testInterpolators--
+_____________________________________________________________________*/
+template<class T>
+  void testInterpolators(DataWarehouse* new_dw,
+                         const int orderOfInterpolation,
+                         const Level* coarseLevel,
+                         const Level* fineLevel,
+                         const Patch* finePatch)
+{
+
+  IntVector fl = finePatch->getCellLowIndex();
+  IntVector fh = finePatch->getCellHighIndex();
+  
+  if (orderOfInterpolation == 2){  // keep away from the edge of the domain
+    fl += IntVector(2,2,2);
+    fh -= IntVector(2,2,2);
+  }
+  
+  IntVector refineRatio(fineLevel->getRefinementRatio());
+  
+  for(int t=0; t<= 6; t++){
+    CCVariable<T> q_CoarseLevel, q_FineLevel;
+    new_dw->allocateTemporary(q_FineLevel,finePatch);
+    q_FineLevel.initialize(T(-9));
+    
+    Level::selectType coarsePatches;
+    finePatch->getCoarseLevelPatches(coarsePatches);
+    
+    if(coarsePatches.size() > 1){
+      throw InternalError("ERROR:AMR: testInterpolators: this only works for 1 coarse level patch",__FILE__,__LINE__);
+    }
+ 
+    //__________________________________
+    //  initialize the coarse level data
+    for(int i=0;i<coarsePatches.size();i++){
+      const Patch* coarsePatch = coarsePatches[i];    
+      new_dw->allocateTemporary(q_CoarseLevel, coarsePatch);
+      IntVector cl = coarsePatch->getCellLowIndex();
+      IntVector ch = coarsePatch->getCellHighIndex();
+      interpolationTest_helper( q_FineLevel, q_CoarseLevel, 
+                                "initialize", t, coarseLevel,cl,ch);  
+    }
+
+    constCCVariable<T> q_CL_const(q_CoarseLevel);
+    
+    switch(orderOfInterpolation){
+    case 1:
+      linearInterpolation<T>(q_CL_const, coarseLevel, fineLevel,
+                            refineRatio, fl,fh, q_FineLevel); 
+      break;
+    case 2:                             
+      quadraticInterpolation<T>(q_CL_const, coarseLevel, fineLevel,
+                                refineRatio, fl,fh, q_FineLevel);
+      break;
+    default:
+      throw InternalError("ERROR:AMR: You're trying to use an interpolator"
+                          " that doesn't exist.  <orderOfInterpolation> must be 1 or 2",__FILE__,__LINE__);
+    break;
+    }
+    //__________________________________
+    //  compute the interpolation error
+    interpolationTest_helper( q_FineLevel,q_CoarseLevel, 
+                              "checkError", t, fineLevel,fl,fh);
+  }
+}
 }
 #endif
