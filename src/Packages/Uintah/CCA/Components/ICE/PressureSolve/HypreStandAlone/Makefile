@@ -26,14 +26,14 @@ HYPRE_LIB  = -L$(HYPRE_SRC)/hypre/lib -lHYPRE_sstruct_ls -lHYPRE_sstruct_mv -lHY
 ##################################################################
 TARGET1          = mydriver
 TARGET1_OBJS     = \
-			mydriver.o  \
-			util.o      \
-			inputs.o    \
-			Level.o     \
-			Hierarchy.o \
-			Patch.o     \
-			IntMatrix.o \
-			Solver.o    \
+			mydriver.o   \
+			util.o       \
+			Level.o      \
+			Hierarchy.o  \
+			Patch.o      \
+			IntMatrix.o  \
+			Solver.o     \
+			TestLinear.o \
 
 TARGET2          = mpitest
 TARGET2_OBJS     = \

@@ -10,60 +10,83 @@ using std::vector;
 class Param {
   /*_____________________________________________________________________
     class Param:
-    a structure of input parameters.
+    a base struct of input parameters for a test case.
     _____________________________________________________________________*/
 public:
-
+  
   /* Types */
 
-  enum ProblemType {
-    Linear = 0,
-    Quad1,
-    Quad2,
-    SinSin,
-    GaussianSource,
-    JumpLinear,
-    JumpQuad,
-    DiffusionQuadLinear,
-    DiffusionQuadQuad,
-    LShaped
-  };
-  
   enum OutputType {
     Screen, File, Both
   };
 
   enum RefPattern {
-    centralHalf
+    CentralHalf
   };
 
+
+  Param(void)
+    /* Constructor: initialize default parameters for all test cases */
+    {
+      outputType = Screen;     // Output to log file/screen/both
+
+      domainSize.resize(numDims);
+      for (int d = 0; d < numDims; d++)
+        domainSize[d] = 1.0;
+
+      baseResolution = 8;
+
+      numLevels = 2;
+      twoLevelType = CentralHalf;
+      threeLevelType = CentralHalf;
+      
+      solverID = 30;
+      printSystem = 1;
+      timing = true;
+      saveResults = true;
+      verboseLevel = 1;
+    }
+
+  virtual ~Param(void) {}
+
+  /*======================= Data Members =============================*/
+
   /* Problem parameters */
-  ProblemType     problemType;    // Type of problem
+  int             numProcs;       // # of processors, from argv/mpirun
   Counter         numDims;        // # dimensions
-  int             numProcs;       // # of processors
   string          longTitle;      // Title of this test case
-  vector<Counter> supportedDims;  // Which dims this test case is designed for
 
   /* log files, output types */
-  string      outputDir;      // Directory of output files
-  string      logFile;        // File logging run flow
-  OutputType  outputType;     // Output to log file/screen/both
+  string          outputDir;      // Directory of output files
+  string          logFile;        // File logging run flow
+  OutputType      outputType;     // Output to log file/screen/both
   
-  /* Domain geometry */
-  Location    domainSize;     // Size of domain in all dimensions
+  /* Domain geometry & coarsest grid */
+  Location        domainSize;     // Size of domain in all dimensions
+  // TODO: replace with Level 0, including boundary conditions (Dirichlet/N)
+  // types for all boundaries
+  // TODO: multiple boxes define domain (e.g. for L-shaped)
   
   /* AMR hierarchy */
-  int         numLevels;      // # of levels in a static MR hierarchy
-  int         baseResolution; // Resolution of Level 0 in all dimensions
-  RefPattern  twoLevelType;   // Refinement pattern for refining level 0 -> 1
-  RefPattern  threeLevelType; // Refinement pattern for refining level 1 -> 2
+  int             baseResolution; // Resolution of Level 0 in all dimensions
+
+  int             numLevels;      // # of levels in a static MR hierarchy
+  RefPattern      twoLevelType;   // Refinement pattern for refining level 0 -> 1
+  RefPattern      threeLevelType; // Refinement pattern for refining level 1 -> 2
   
   /* Debugging and control flags */
-  int         solverID;       // Solver ID, 30 = AMG, 99 = FAC
-  bool        printSystem;    // Linear system dump to file
-  bool        timing;         // Time results
-  bool        saveResults;    // Dump the solution, error to files
-  int         verboseLevel;   // Verbosity level of debug printouts
+  int             solverID;       // Solver ID, 30 = AMG, 99 = FAC
+  bool            printSystem;    // Linear system dump to file
+  bool            timing;         // Time results
+  bool            saveResults;    // Dump the solution, error to files
+  int             verboseLevel;   // Verbosity level of debug printouts
+
+  /* Input functions to be defined in derived test cases */
+
+  virtual double diffusion(const Location& x) = 0;  // Diffusion coefficient
+  virtual double rhs(const Location& x) = 0;        // Right-hand-side of PDE
+  virtual double rhsBC(const Location& x) = 0;      // RHS of B.C.
+  virtual double exactSolution(const Location& x) = 0; // Exact solution
 };
 
 #endif // __PARAM_H__

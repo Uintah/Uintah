@@ -15,13 +15,13 @@ class Hierarchy {
     _____________________________________________________________________*/
 public:
 
-  Hierarchy( const Param & param ) : _param(param) {}
+  Hierarchy( const Param* param ) : _param(param) {}
 
   void make();
   void printPatchBoundaries();
 
   std::vector<Level*> _levels;
-  const Param & _param;
+  const Param*        _param;
 
  private:
   void getPatchesFromOtherProcs();
