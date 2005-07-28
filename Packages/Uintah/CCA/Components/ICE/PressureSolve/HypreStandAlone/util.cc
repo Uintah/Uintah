@@ -150,26 +150,27 @@ printIndex<double>(const vector<double>& sub)
 void
 faceExtents(const vector<int>& ilower,
             const vector<int>& iupper,
-            const Counter dim,
-            const int side,
+            const Counter d,
+            const int s,
             vector<int>& faceLower,
             vector<int>& faceUpper)
   /*_____________________________________________________________________
     Function faceExtents:
     Compute face box extents of a numDims-dimensional patch whos extents
-    are ilower,iupper. This is the face in the dim-dimension; side = -1
-    means the left face, side = 1 the right face (so dim=1, side=-1 is the
+    are ilower,iupper. This is the face in the d-dimension; s = Left
+    means the left face, s = Right the right face (so d=1, s=Left is the
     x-left face). Face extents are returned in faceLower, faceUpper
     _____________________________________________________________________*/
 {
   faceLower = ilower;
   faceUpper = iupper;
-  if (side < 0) {
-    faceUpper[dim] = faceLower[dim];
+  if (s == Left) {
+    faceUpper[d] = faceLower[d];
   } else {
-    faceLower[dim] = faceUpper[dim];
+    faceLower[d] = faceUpper[d];
   }
-  Print("Face(dim = %c, side = %d) box extents: ",dim+'x',side);
+  Print("Face(d = %c, s = %s) box extents: ",
+        d+'x',(s == Left) ? "Left" : "Right");
   printIndex(faceLower);
   fprintf(stderr," to ");
   printIndex(faceUpper);

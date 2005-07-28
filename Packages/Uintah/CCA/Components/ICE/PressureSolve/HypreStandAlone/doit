@@ -14,7 +14,7 @@ else
   endif
 endif
 
-echo "Making... ($NUM_PROCS)"
+echo "Making..."
 
 gmake -j2
 
@@ -22,7 +22,7 @@ if ($?) then
    exit
 endif
 
-echo "Running..."
+echo "Running... ($NUM_PROCS procs)"
 rm -f log
 mpirun -np $NUM_PROCS ./mydriver > & log
 
