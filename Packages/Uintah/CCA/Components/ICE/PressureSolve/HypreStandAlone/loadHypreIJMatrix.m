@@ -11,7 +11,7 @@ function [A,ierr] = loadHypreIJMatrix(filename,numProcs)
 %   function. A is returned as a sparse MATLAB matrix. NUMPROCS is the
 %   number of processors used to generate the Hypre output files.
 %
-%   See also: LOAD.
+%   See also: LOAD, LOADHYPREPARVECTOR.
 
 % Revision history:
 % 21-JUL-2005   Oren      Created
