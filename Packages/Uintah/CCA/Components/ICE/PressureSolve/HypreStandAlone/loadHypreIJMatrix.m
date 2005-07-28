@@ -31,6 +31,7 @@ for myid = 0:numProcs-1
     if (file < 0)
         fprintf('Error: can''t open output file %s\n', new_filename);
         A = [];
+        ierr = 1;
         return;
     end
 
