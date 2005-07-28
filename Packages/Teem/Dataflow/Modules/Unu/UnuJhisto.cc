@@ -155,8 +155,8 @@ void
 	max_dim = nrrd->nrrd->dim;
       
       nrrds.push_back(nrrd->nrrd);
-      if (nrrd->generation_ != gen) {
-	inrrd_generation_[inrrd] = nrrd->generation_;
+      if (nrrd->generation != gen) {
+	inrrd_generation_[inrrd] = nrrd->generation;
 	need_execute = true;
       }
     }

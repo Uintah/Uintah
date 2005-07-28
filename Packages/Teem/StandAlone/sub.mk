@@ -31,6 +31,6 @@
 
 SRCDIR := Packages/Teem/StandAlone
 SUBDIRS := \
-#	$(SRCDIR)/convert \
+	$(SRCDIR)/convert \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
