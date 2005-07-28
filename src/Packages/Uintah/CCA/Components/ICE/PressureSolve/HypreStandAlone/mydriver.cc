@@ -16,9 +16,12 @@
 #include "Hierarchy.h"
 #include "Level.h"
 #include "Patch.h"
-#include "Solver.h"
+
 #include "Param.h"
 #include "TestLinear.h"
+
+#include "Solver.h"
+#include "SolverAMG.h"
 
 #include <vector>
 #include <HYPRE_sstruct_ls.h>
@@ -320,7 +323,7 @@ main(int argc, char *argv[]) {
 
   /* Set test cast parameters */
   param->numDims       = 2; //3;
-  param->solverID      = 30;    // solver ID. 30 = AMG, 99 = FAC
+  param->solverType    = Param::AMG;   // Hypre solver
   param->numLevels     = 2;     // Number of AMR levels
   param->baseResolution= 8;     // Level 0 grid size in every direction
   param->printSystem   = true;
@@ -340,7 +343,9 @@ main(int argc, char *argv[]) {
   HYPRE_SStructGraph    graph;
   
   /* Solver data structures */
-  Solver                solver(param);
+  Solver*               solver = new SolverAMG(param);
+  // TODO: move to after graph creation and
+  // move graph creation to Solver
   
   /*-----------------------------------------------------------
    * Initialize some stuff
@@ -368,7 +373,8 @@ main(int argc, char *argv[]) {
   if (myid == 0) {
     /* Read and check arguments, parameters */
     Print("Checking arguments and parameters ... ");
-    if ((param->solverID > 90) && ((numLevels < 2) || (numDims != 3))) {
+    if ((param->solverType == Param::FAC) &&
+        ((numLevels < 2) || (numDims != 3))) {
       fprintf(stderr,"FAC solver needs a 3D problem and at least 2 levels.");
       clean();
       exit(1);
@@ -435,8 +441,7 @@ main(int argc, char *argv[]) {
   /* Create an empty graph */
   HYPRE_SStructGraphCreate(MPI_COMM_WORLD, grid, &graph);
   /* If using AMG, set graph's object type to ParCSR now */
-  if ( ((param->solverID >= 20) && (param->solverID <= 30)) ||
-       ((param->solverID >= 40) && (param->solverID < 60)) ) {
+  if (solver->_requiresPar) {
     HYPRE_SStructGraphSetObjectType(graph, HYPRE_PARCSR);
   }
 
@@ -455,7 +460,7 @@ main(int argc, char *argv[]) {
   Proc0Print("----------------------------------------------------\n");
   Proc0Print("Set up the SStruct matrix\n");
   Proc0Print("----------------------------------------------------\n");
-  solver.initialize(hier, grid, stencil, graph);
+  solver->initialize(hier, grid, stencil, graph);
 
   /* Print total time for setting up the grid, stencil, graph, solver */
   hypre_EndTiming(time_index);
@@ -470,9 +475,9 @@ main(int argc, char *argv[]) {
   Proc0Print("----------------------------------------------------\n");
   Proc0Print("Print out the system and initial guess\n");
   Proc0Print("----------------------------------------------------\n"); 
-  solver.printMatrix("output_A");
-  solver.printRHS("output_b");
-  solver.printSolution("output_x0");
+  solver->printMatrix("output_A");
+  solver->printRHS("output_b");
+  solver->printSolution("output_x0");
 
   /*-----------------------------------------------------------
    * Solve the linear system A*x=b
@@ -480,7 +485,8 @@ main(int argc, char *argv[]) {
   Proc0Print("----------------------------------------------------\n");
   Proc0Print("Solve the linear system A*x=b\n");
   Proc0Print("----------------------------------------------------\n");
-  solver.solve();
+  solver->setup();  // Depends only on A
+  solver->solve();  // Depends on A and b
 
   /*-----------------------------------------------------------
    * Print the solution and other info
@@ -488,10 +494,10 @@ main(int argc, char *argv[]) {
   Proc0Print("----------------------------------------------------\n");
   Proc0Print("Print the solution vector\n");
   Proc0Print("----------------------------------------------------\n");
-  solver.printSolution("output_x1");
-  Proc0Print("Iterations = %d\n", solver._results.numIterations);
+  solver->printSolution("output_x1");
+  Proc0Print("Iterations = %d\n", solver->_results.numIterations);
   Proc0Print("Final Relative Residual Norm = %e\n",
-             solver._results.finalResNorm);
+             solver->_results.finalResNorm);
   Proc0Print("\n");
 
   /*-----------------------------------------------------------
@@ -512,6 +518,9 @@ main(int argc, char *argv[]) {
   /* Destroy graph objects */
   Print("Destroying graph objects\n");
   HYPRE_SStructGraphDestroy(graph);
+
+  delete param;
+  delete solver;
    
   clean();
 
