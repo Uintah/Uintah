@@ -115,6 +115,7 @@ SRCS := \
 	$(SRCDIR)/TendSlice.tcl\
 	$(SRCDIR)/TendEvalAdd.tcl\
 	$(SRCDIR)/TendEvq.tcl\
+	$(SRCDIR)/GageProbe.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk

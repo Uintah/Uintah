@@ -43,6 +43,7 @@ SUBDIRS := \
 	$(SRCDIR)/Segmentation\
 	$(SRCDIR)/Tend\
 	$(SRCDIR)/Unu\
+	$(SRCDIR)/Gage\
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

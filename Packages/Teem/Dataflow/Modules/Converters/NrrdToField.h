@@ -108,32 +108,32 @@ RegularNrrdToFieldMeshAlgoT< MESH, DNTYPE, CNTYPE>::
 execute(MeshHandle& mHandle, NrrdDataHandle dataH, int data_size)
 {
   Point minpt, maxpt;
-
+  
   DNTYPE *ptr = (DNTYPE *)(dataH->nrrd->data);
-
+  
   int rank = data_size;
-
+  
   float xVal = 0, yVal = 0, zVal = 0;
-
+  
   if( rank >= 1 ) xVal = ptr[0];
   if( rank >= 2 ) yVal = ptr[1];
   if( rank >= 3 ) zVal = ptr[2];
-
+  
   minpt = Point( xVal, yVal, zVal );
-
+  
   xVal = 0; yVal = 0; zVal = 0;
-
+  
   if( rank >= 1 ) xVal = ptr[rank + 0];
   if( rank >= 2 ) yVal = ptr[rank + 1];
   if( rank >= 3 ) zVal = ptr[rank + 2];
-
+  
   maxpt = Point( xVal, yVal, zVal );
-
+  
   MESH *imesh = (MESH *) mHandle.get_rep();
-
+  
   vector<unsigned int> array;
   imesh->get_dim(array);
-
+  
   Transform trans;
 
   if( array.size() == 1 )
