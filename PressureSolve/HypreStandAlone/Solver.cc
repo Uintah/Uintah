@@ -363,10 +363,15 @@ Solver::makeLinearSystem(const Hierarchy& hier,
         for (Counter entry = 0; entry < stencilSize; entry++) {
           values[offsetValues + entry] = 0.0;
         }
-        // TODO: Assuming a constant source term
-        rhsValues[offsetRhsValues] = 1.0; //0.0;
-        // TODO: constant initial guess
-        solutionValues[offsetRhsValues] = 1234.5678;
+
+        /* Compute RHS integral over the cell. Using the mid-point
+           rule, and assuming that xCell is also the centroid of the
+           cell.
+        */
+        rhsValues[offsetRhsValues] = cellVolume * _param->rhs(xCell);
+
+        /* Assuming a constant initial guess */
+        solutionValues[offsetRhsValues] = 1234.56;
         
         /* Loop over directions */
         int entry = 1;
@@ -399,12 +404,11 @@ Solver::makeLinearSystem(const Hierarchy& hier,
             printIndex(xFace);
             fprintf(stderr,"\n");
 
-            /* Compute the harmonic average of the diffusion
-               coefficient */
-            // TODO: non-constant density, harmonic average needed
-            double a    = 1.0; // Assumed constant a for now
-            double diff = fabs(xNbhr[d] - xCell[d]);
-            double flux = a * faceArea / diff;
+            /*--- Compute flux ---*/
+            /* Harmonic average of diffusion for this face */
+            double a    = _param->harmonicAvg(xCell,xNbhr,xFace); 
+            double diff = fabs(xNbhr[d] - xCell[d]);  // for FD approx of flux
+            double flux = a * faceArea / diff;        // total flux thru face
 
             /* Accumulate this flux's contribution to values
                if we are not near a C/F boundary. */
@@ -439,21 +443,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
 
       } // end for cell
       
-      /* Print values, rhsValues vectors */
-      for (Counter cell = 0; cell < patch->_numCells; cell++) {
-        int offsetValues    = stencilSize * cell;
-        int offsetRhsValues = cell;
-        Print("cell = %4d\n",cell);
-        for (Counter entry = 0; entry < stencilSize; entry++) {
-          Print("values   [%5d] = %+.3f\n",
-                offsetValues + entry,values[offsetValues + entry]);
-        }
-        Print("rhsValues[%5d] = %+.3f\n",
-              offsetRhsValues,rhsValues[offsetRhsValues]);
-        Print("solutionValues[%5d] = %+.3f\n",
-              offsetRhsValues,solutionValues[offsetRhsValues]);
-        Print("-------------------------------\n");
-      } // end for cell
+      printValues(patch,stencilSize,values,rhsValues,solutionValues);
 
       /* Add this patch's interior equations to the LHS matrix A */
       HYPRE_SStructMatrixSetBoxValues(_A, level, 
@@ -522,8 +512,8 @@ Solver::makeLinearSystem(const Hierarchy& hier,
 
       /* Replace the matrix equations for the underlying coarse box
          with the identity matrix. */
+      int stencilSize = hypre_SStructStencilSize(stencil);
       {
-        int stencilSize = hypre_SStructStencilSize(stencil);
         int* entries = new int[stencilSize];
         for (Counter entry = 0; entry < stencilSize; entry++)
           entries[entry] = entry;
@@ -563,20 +553,8 @@ Solver::makeLinearSystem(const Hierarchy& hier,
           rhsValues[offsetRhsValues] = 0.0;
         } // end for cell
         
-        /* Print values, rhsValues vectors */
-        for (Counter cell = 0; cell < numCoarseCells; cell++) {
-          int offsetValues    = stencilSize * cell;
-          int offsetRhsValues = cell;
-          Print("cell = %4d\n",cell);
-          for (Counter entry = 0; entry < stencilSize; entry++) {
-            Print("values   [%5d] = %+.3f\n",
-                  offsetValues + entry,values[offsetValues + entry]);
-          }
-          Print("rhsValues[%5d] = %+.3f\n",
-                offsetRhsValues,rhsValues[offsetRhsValues]);
-          Print("-------------------------------\n");
-        } // end for cell
-        
+        printValues(patch,stencilSize,values,rhsValues);
+
         /* Effect the identity operator change in the Hypre structure
            for A */
         HYPRE_SStructMatrixSetBoxValues(_A, level-1, 
@@ -705,6 +683,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                    and fine meshsizes, i.e., their distances in the d
                    dimension from the C/F boundary. */
                 double alpha = coarseH[d] / (coarseH[d] + h[d]);
+                Print("      alpha = %lf\n",alpha);
                 for (Counter dd = 0; dd < numDims; dd++) {
                   xFace[dd] = alpha*xCell[dd] + (1-alpha)*xNbhr[dd];
                 }
@@ -944,3 +923,34 @@ Solver::printSolution(const string& fileName /* = "solver" */)
     HYPRE_ParVectorPrint(_parX, (fileName + ".par").c_str());
   }
 }
+
+void
+Solver::printValues(const Patch* patch,
+                    const int stencilSize,
+                    const double* values /* = 0 */,
+                    const double* rhsValues /* = 0 */,
+                    const double* solutionValues /* = 0 */)
+  /* Print values, rhsValues vectors */
+{
+  Print("--- Printing values,rhsValues,solutionValues arrays ---\n");
+  for (Counter cell = 0; cell < patch->_numCells; cell++) {
+    int offsetValues    = stencilSize * cell;
+    int offsetRhsValues = cell;
+    Print("cell = %4d\n",cell);
+    if (values) {
+      for (Counter entry = 0; entry < stencilSize; entry++) {
+        Print("values   [%5d] = %+.3f\n",
+              offsetValues + entry,values[offsetValues + entry]);
+      }
+    }
+    if (rhsValues) {
+      Print("rhsValues[%5d] = %+.3f\n",
+            offsetRhsValues,rhsValues[offsetRhsValues]);
+    }
+    if (solutionValues) {
+      Print("solutionValues[%5d] = %+.3f\n",
+            offsetRhsValues,solutionValues[offsetRhsValues]);
+    }
+    Print("-------------------------------\n");
+  } // end for cell
+} // end printValues()

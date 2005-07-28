@@ -14,7 +14,15 @@ class Patch {
     _____________________________________________________________________*/
 public:
   enum BoundaryType {
-    Domain = 0, CoarseFine, Neighbor
+    Domain = 0, 
+    CoarseFine, 
+    Neighbor
+  };
+  
+  enum BoundaryCondition {
+    NA = -1,  // Not applicable
+    Dirichlet = 0,
+    Neumann
   };
   
   int         _procID;    // Owning processor's ID
@@ -23,6 +31,7 @@ public:
   vector<int> _iupper;    // Upper right corner subscript
   int         _numCells;  // Total # cells
   vector<BoundaryType> _boundaries;
+  vector<BoundaryCondition> _bc;
   
   Patch(const int procID, 
         const int levelID,
