@@ -13,11 +13,13 @@
 
 #include "mydriver.h"
 #include "util.h"
-#include "Param.h"
 #include "Hierarchy.h"
 #include "Level.h"
 #include "Patch.h"
 #include "Solver.h"
+#include "Param.h"
+#include "TestLinear.h"
+
 #include <vector>
 #include <HYPRE_sstruct_ls.h>
 #include <utilities.h>
@@ -33,7 +35,7 @@ using namespace std;
 int     MYID;     /* The same as this proc's myid, but global */
 
 void
-makeGrid(const Param& param,
+makeGrid(const Param* param,
          const Hierarchy& hier,
          HYPRE_SStructGrid& grid,
          HYPRE_SStructVariable* vars)
@@ -43,7 +45,7 @@ makeGrid(const Param& param,
     and add all patches from this proc to it.
     _____________________________________________________________________*/
 {
-  const Counter numDims   = param.numDims;
+  const Counter numDims   = param->numDims;
   const Counter numLevels = hier._levels.size();
   serializeProcsBegin();
   Print("Making grid\n");
@@ -88,7 +90,7 @@ makeGrid(const Param& param,
 }
 
 void
-makeStencil(const Param& param,
+makeStencil(const Param* param,
             const Hierarchy& hier,
             HYPRE_SStructStencil& stencil)
   /*_____________________________________________________________________
@@ -97,7 +99,7 @@ makeStencil(const Param& param,
     Create Hypre stencil object "stencil" on output.
     _____________________________________________________________________*/
 {
-  const Counter numDims   = param.numDims;
+  const Counter numDims   = param->numDims;
   Counter               stencilSize = 2*numDims+1;
   vector< vector<int> > stencil_offsets;
 
@@ -154,7 +156,7 @@ makeStencil(const Param& param,
 }
 
 void
-makeGraph(const Param& param,
+makeGraph(const Param* param,
           const Hierarchy& hier,
           const HYPRE_SStructGrid& grid,
           const HYPRE_SStructStencil& stencil,
@@ -165,7 +167,7 @@ makeGraph(const Param& param,
     interface connections. Create Hypre graph object "graph" on output.
     _____________________________________________________________________*/
 {
-  const int numDims   = param.numDims;
+  const int numDims   = param->numDims;
   const int numLevels = hier._levels.size();
   serializeProcsBegin();
   /*
@@ -314,12 +316,14 @@ main(int argc, char *argv[]) {
    * Variable definition, parameter init, arguments verification
    *-----------------------------------------------------------*/
   /* Initialize parameters */
-  Param               param;
-  param.numDims       = 2; //3;
-  param.solverID      = 30;    // solver ID. 30 = AMG, 99 = FAC
-  param.numLevels     = 2;     // Number of AMR levels
-  param.baseResolution= 8;     // Level 0 grid size in every direction
-  param.printSystem   = true;
+  Param* param = new TestLinear;
+
+  /* Set test cast parameters */
+  param->numDims       = 2; //3;
+  param->solverID      = 30;    // solver ID. 30 = AMG, 99 = FAC
+  param->numLevels     = 2;     // Number of AMR levels
+  param->baseResolution= 8;     // Level 0 grid size in every direction
+  param->printSystem   = true;
 
   int                   numProcs, myid;
   int                   time_index;
@@ -344,27 +348,27 @@ main(int argc, char *argv[]) {
   /* Initialize MPI */
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &numProcs);
-  param.numProcs = numProcs;
+  param->numProcs = numProcs;
   MPI_Comm_rank(MPI_COMM_WORLD, &myid);
   MYID = myid;
 #if DEBUG
   hypre_InitMemoryDebug(myid);
 #endif
-  const int numLevels = param.numLevels;
-  const int numDims   = param.numDims;
+  const int numLevels = param->numLevels;
+  const int numDims   = param->numDims;
+
+  Proc0Print("========================================================\n");
+  Proc0Print("%s : FAC Hypre solver interface test program\n",argv[0]);
+  Proc0Print("========================================================\n");
+  Proc0Print("\n");
+  Proc0Print("----------------------------------------------------\n");
+  Proc0Print("Initialize some stuff\n");
+  Proc0Print("----------------------------------------------------\n");
 
   if (myid == 0) {
-    Print("========================================================\n");
-    Print("%s : FAC Hypre solver interface test program\n",argv[0]);
-    Print("========================================================\n");
-    Print("\n");
-    Print("----------------------------------------------------\n");
-    Print("Initialize some stuff\n");
-    Print("----------------------------------------------------\n");
-
     /* Read and check arguments, parameters */
     Print("Checking arguments and parameters ... ");
-    if ((param.solverID > 90) && ((numLevels < 2) || (numDims != 3))) {
+    if ((param->solverID > 90) && ((numLevels < 2) || (numDims != 3))) {
       fprintf(stderr,"FAC solver needs a 3D problem and at least 2 levels.");
       clean();
       exit(1);
@@ -431,8 +435,8 @@ main(int argc, char *argv[]) {
   /* Create an empty graph */
   HYPRE_SStructGraphCreate(MPI_COMM_WORLD, grid, &graph);
   /* If using AMG, set graph's object type to ParCSR now */
-  if ( ((param.solverID >= 20) && (param.solverID <= 30)) ||
-       ((param.solverID >= 40) && (param.solverID < 60)) ) {
+  if ( ((param->solverID >= 20) && (param->solverID <= 30)) ||
+       ((param->solverID >= 40) && (param->solverID < 60)) ) {
     HYPRE_SStructGraphSetObjectType(graph, HYPRE_PARCSR);
   }
 

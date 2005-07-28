@@ -33,15 +33,15 @@ Solver::initializeData(const Hierarchy& hier,
   for (Counter level = 0; level < numLevels; level++) {
     _pLevel[level] = level;   // part ID of this level
     ToIndex(hier._levels[level]->_refRat, &_refinementRatio[level],
-            _param.numDims);
+            _param->numDims);
   }
 
   /* Create an empty matrix with the graph non-zero pattern */
   HYPRE_SStructMatrixCreate(MPI_COMM_WORLD, graph, &_A);
   Print("Created empty SStructMatrix\n");
   /* If using AMG, set A's object type to ParCSR now */
-  if ( ((_param.solverID >= 20) && (_param.solverID <= 30)) ||
-       ((_param.solverID >= 40) && (_param.solverID < 60)) ) {
+  if ( ((_param->solverID >= 20) && (_param->solverID <= 30)) ||
+       ((_param->solverID >= 40) && (_param->solverID < 60)) ) {
     HYPRE_SStructMatrixSetObjectType(_A, HYPRE_PARCSR);
   }
   HYPRE_SStructMatrixInitialize(_A);
@@ -50,8 +50,8 @@ Solver::initializeData(const Hierarchy& hier,
   HYPRE_SStructVectorCreate(MPI_COMM_WORLD, grid, &_b);
   HYPRE_SStructVectorCreate(MPI_COMM_WORLD, grid, &_x);
   /* If AMG is used, set b and x type to ParCSR */
-  if ( ((_param.solverID >= 20) && (_param.solverID <= 30)) ||
-       ((_param.solverID >= 40) && (_param.solverID < 60)) ) {
+  if ( ((_param->solverID >= 20) && (_param->solverID <= 30)) ||
+       ((_param->solverID >= 40) && (_param->solverID < 60)) ) {
     HYPRE_SStructVectorSetObjectType(_b, HYPRE_PARCSR);
     HYPRE_SStructVectorSetObjectType(_x, HYPRE_PARCSR);
   }
@@ -65,16 +65,16 @@ Solver::assemble(void)
   /* Assemble the matrix - a collective call */
   HYPRE_SStructMatrixAssemble(_A); 
   /* For BoomerAMG solver: set up the linear system in ParCSR format */
-  if ( ((_param.solverID >= 20) && (_param.solverID <= 30)) ||
-       ((_param.solverID >= 40) && (_param.solverID < 60)) ) {
+  if ( ((_param->solverID >= 20) && (_param->solverID <= 30)) ||
+       ((_param->solverID >= 40) && (_param->solverID < 60)) ) {
     HYPRE_SStructMatrixGetObject(_A, (void **) &_parA);
   }
   HYPRE_SStructVectorAssemble(_b);
   HYPRE_SStructVectorAssemble(_x);
  
   /* For BoomerAMG solver: set up the linear system (b,x) in ParCSR format */
-  if ( ((_param.solverID >= 20) && (_param.solverID <= 30)) ||
-       ((_param.solverID >= 40) && (_param.solverID < 60)) ) {
+  if ( ((_param->solverID >= 20) && (_param->solverID <= 30)) ||
+       ((_param->solverID >= 40) && (_param->solverID < 60)) ) {
     HYPRE_SStructVectorGetObject(_b, (void **) &_parB);
     HYPRE_SStructVectorGetObject(_x, (void **) &_parX);
   }
@@ -91,7 +91,7 @@ Solver::setup(void)
     Print("Solver setup phase\n");
     Print("----------------------------------------------------\n");
   }
-  if (_param.solverID > 90) {
+  if (_param->solverID > 90) {
     /* FAC Solver. Prepare FAC operator hierarchy using Galerkin coarsening
        with black-box interpolation, on the original meshes */
     int time_fac_rap = hypre_InitializeTiming("fac rap");
@@ -114,7 +114,7 @@ Solver::solve(void)
     Solve the linear system A*x = b. The result is returned into x.
     Solvers include FAC and AMG.
     _____________________________________________________________________*/
-  const int numLevels = _param.numLevels;
+  const int numLevels = _param->numLevels;
 
   /* Sparse matrix data structures for various solvers (FAC, ParCSR),
      right-hand-side b and solution x */
@@ -126,7 +126,7 @@ Solver::solve(void)
   int                   time_index;
 
   /*-------------- FAC Solver -----------------*/
-  if (_param.solverID > 90) {
+  if (_param->solverID > 90) {
     n_pre  = _refinementRatio[numLevels-1][0]-1;
     n_post = _refinementRatio[numLevels-1][0]-1;
 
@@ -143,7 +143,7 @@ Solver::solve(void)
     HYPRE_SStructFACSetPLevels(solver, numLevels, _pLevel);
     HYPRE_SStructFACSetPRefinements(solver, numLevels, _refinementRatio);
     HYPRE_SStructFACSetRelChange(solver, 0);
-    if (_param.solverID > 90) {
+    if (_param->solverID > 90) {
       HYPRE_SStructFACSetRelaxType(solver, 2);
     } else {
       HYPRE_SStructFACSetRelaxType(solver, 1);
@@ -164,7 +164,7 @@ Solver::solve(void)
     time_index = hypre_InitializeTiming("FAC Solve");
     hypre_BeginTiming(time_index);
 
-    if (_param.solverID > 90)      {
+    if (_param->solverID > 90)      {
       HYPRE_SStructFACSolve3(solver, _facA, _b, _x);
     } else {
       HYPRE_SStructFACSolve3(solver, _facA, _b, _x);
@@ -185,7 +185,7 @@ Solver::solve(void)
   }
 
   /*-------------- AMG Solver -----------------*/
-  if (_param.solverID == 30) {
+  if (_param->solverID == 30) {
     time_index = hypre_InitializeTiming("AMG Setup");
     hypre_BeginTiming(time_index);
 
@@ -246,7 +246,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
     _____________________________________________________________________*/
 {
   serializeProcsBegin();
-  const int numDims   = _param.numDims;
+  const int numDims   = _param->numDims;
   const int numLevels = hier._levels.size();
   /*
     Add equations at all interior cells of every patch owned by this proc
@@ -851,12 +851,12 @@ Solver::makeLinearSystem(const Hierarchy& hier,
 void
 Solver::printMatrix(const string& fileName /* = "solver" */)
 {
-  if (!_param.printSystem) return;
+  if (!_param->printSystem) return;
   HYPRE_SStructMatrixPrint((fileName + ".sstruct").c_str(), _A, 0);
-  if (_param.solverID > 90) {
+  if (_param->solverID > 90) {
     HYPRE_SStructMatrixPrint((fileName + ".fac").c_str(), _facA, 0);
   }
-  if (_param.solverID == 30) {
+  if (_param->solverID == 30) {
     HYPRE_ParCSRMatrixPrint(_parA, (fileName + ".par").c_str());
     /* Print CSR matrix in IJ format, base 1 for rows and cols */
     HYPRE_ParCSRMatrixPrintIJ(_parA, 1, 1, (fileName + ".ij").c_str());
@@ -866,9 +866,9 @@ Solver::printMatrix(const string& fileName /* = "solver" */)
 void
 Solver::printRHS(const string& fileName /* = "solver" */)
 {
-  if (!_param.printSystem) return;
+  if (!_param->printSystem) return;
   HYPRE_SStructVectorPrint(fileName.c_str(), _b, 0);
-  if (_param.solverID == 30) {
+  if (_param->solverID == 30) {
     HYPRE_ParVectorPrint(_parB, (fileName + ".par").c_str());
   }
 }
@@ -876,9 +876,9 @@ Solver::printRHS(const string& fileName /* = "solver" */)
 void
 Solver::printSolution(const string& fileName /* = "solver" */)
 {
-  if (!_param.printSystem) return;
+  if (!_param->printSystem) return;
   HYPRE_SStructVectorPrint(fileName.c_str(), _x, 0);
-  if (_param.solverID == 30) {
+  if (_param->solverID == 30) {
     HYPRE_ParVectorPrint(_parX, (fileName + ".par").c_str());
   }
 }
