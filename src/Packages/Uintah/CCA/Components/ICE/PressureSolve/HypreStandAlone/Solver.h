@@ -32,13 +32,6 @@ class Solver {
     double     finalResNorm;    // Final residual norm ||A*x-b||_2
   };
 
-  Solver(const Param* param)
-    : _param(param)
-    {
-      _results.numIterations = 0;
-      _results.finalResNorm  = DBL_MAX;
-    }
-
   virtual ~Solver(void) {
     Print("Destroying Solver object\n");
     
@@ -58,8 +51,8 @@ class Solver {
                   const HYPRE_SStructGrid& grid,
                   const HYPRE_SStructStencil& stencil);
 
-  virtual void setup(void) = 0;
-  virtual void solve(void) = 0;
+  virtual void setup(void);
+  virtual void solve(void);
 
   /* Utilities */
   virtual void printMatrix(const string& fileName = "output");
@@ -74,6 +67,13 @@ class Solver {
 
   /*========================== PROTECTED SECTION ==========================*/
  protected:
+
+  Solver(const Param* param)
+    : _param(param)
+    {
+      _results.numIterations = 0;
+      _results.finalResNorm  = DBL_MAX;
+    }
 
   virtual void initializeData(const Hierarchy& hier,
                               const HYPRE_SStructGrid& grid);
