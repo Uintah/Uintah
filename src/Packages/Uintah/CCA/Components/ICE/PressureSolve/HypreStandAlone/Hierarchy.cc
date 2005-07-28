@@ -16,9 +16,18 @@
 void
 Hierarchy::make()
 {
+  // Hardcoded for a rectangular domain consisting of one box.
+  // Dirichlet B.C. on the boundaries of the box
+  // 2 levels, level 1 is twice finer and extends over the central half
+  // of the domain.
+  // TODO: restore domain as a union of boxes and add code to generally 
+  // parse it and assign them to processors bla bla bla
+  //  assert(_param->domain->patchList.size() == 1);
+
   const Counter numDims   = _param->numDims;
   const Counter numLevels = _param->numLevels;
-  const Counter n         = _param->domain->_resolution[0]; // Assumed uniform in all dimensions
+  const Counter n         = _param->baseResolution;
+//_param->domain->_resolution[0]; // Assumed uniform in all dimensions
 
   vector<Counter> k(numDims,2);
   IntMatrix procMap = grayCode(numDims,k);
@@ -83,6 +92,19 @@ Hierarchy::make()
       }
     }
     Patch* patch = new Patch(MYID,level,ilower,iupper);
+    /* Figure out whether you are next to the domain boundary and set
+       boundary condition there. */
+    for (Counter d = 0; d < numDims; d++) {
+      if (ilower[d] == 0) {
+        patch->setBoundaryType(d,Left,Patch::Domain);
+        patch->setBC(d,Left,Patch::Dirichlet); // Hard coded to Dirichlet B.C.
+      }
+      if (iupper[d] == lev->_resolution[d]-1) {
+        patch->setBoundaryType(d,Right,Patch::Domain);
+        patch->setBC(d,Right,Patch::Dirichlet); // Hard coded to Dirichlet B.C.
+      }
+    }
+
     lev->_patchList.push_back(patch);
 
   } // end for level
@@ -104,7 +126,7 @@ Hierarchy::getPatchesFromOtherProcs()
 
   for(Counter level = 0; level < _levels.size(); level++ ) {
     Level* lev = _levels[level];
-    const vector<Counter>& resolution = lev->_resolution;
+    //    const vector<Counter>& resolution = lev->_resolution;
     // clear sendbuf
     for( int index = 0; index < _param->numProcs; index++ ) {
       if( index == MYID ) {
@@ -174,19 +196,18 @@ Hierarchy::getPatchesFromOtherProcs()
         ilower[d] = patchInfo[recordSize*index + d + 1];
         iupper[d] = patchInfo[recordSize*index + _param->numDims + d + 1];
 
-        /* Default: boundary is a C/F boundary */
-        for (int s = Left; s <= Right; s += 2) {
-          patch->setBoundary(d,s,Patch::CoarseFine);
-        }
-        
-        /* Check if patch is near a domain boundary */
-        if (ilower[d] == 0) {
-          patch->setBoundary(d,-1,Patch::Domain);
+        /* Defaults: boundary is a C/F boundary; boundary condition is
+           not applicable. */
+        for (Side s = Left; s <= Right; ++s) {
+          if (patch->getBoundaryType(d,Left) == Patch::Domain) continue;
+          patch->setBoundaryType(d,s,Patch::CoarseFine);
+          patch->setBC(d,s,Patch::NA);
         }
 
-        if (iupper[d] == resolution[d]-1) {
-          patch->setBoundary(d,1,Patch::Domain);
-        }
+        /* Check if patch is near a domain boundary */
+        // Hardcoded to one domain box of size [0,0] to [resolution].
+        // TODO: L-shaped domain with its own makeHierarchy() function of
+        // patches. Right now hard-coded to two levels and 2^d processors.
       }
 
       for (Counter other = 0; other < totalPatches; other++) {
@@ -217,7 +238,7 @@ Hierarchy::getPatchesFromOtherProcs()
               if (d2 == d) continue;
               if (max(ilower[d2],otherilower[d2]) <=
                   min(iupper[d2],otheriupper[d2])) {
-                patch->setBoundary(d,-1,Patch::Neighbor);
+                patch->setBoundaryType(d,Left,Patch::Neighbor);
               }
             }
           }
@@ -228,7 +249,7 @@ Hierarchy::getPatchesFromOtherProcs()
               if (d2 == d) continue;
               if (max(ilower[d2],otherilower[d2]) <=
                   min(iupper[d2],otheriupper[d2])) {
-                patch->setBoundary(d,1,Patch::Neighbor);
+                patch->setBoundaryType(d,Right,Patch::Neighbor);
               }
             }
           }
@@ -256,11 +277,12 @@ Hierarchy::printPatchBoundaries()
       printIndex(patch->_iupper);
       fprintf(stderr,"\n");
       for (Counter d = 0; d < _param->numDims; d++) {
-        for (int s = Left; s <= Right; s += 2) {
+        for (Side s = Left; s <= Right; ++s) {
           //          Print("  boundary( d = %d , s = %+d ) = %s\n",
           //                d,s,boundaryTypeString[patch->getBoundary(d,s)].c_str());
           Print("  boundary( d = %d , s = %+d ) = %s\n",
-                d,s,Patch::boundaryTypeString[patch->getBoundary(d,s)].c_str());
+                d,s,
+                Patch::boundaryTypeString[patch->getBoundaryType(d,s)].c_str());
         }
       }
     }

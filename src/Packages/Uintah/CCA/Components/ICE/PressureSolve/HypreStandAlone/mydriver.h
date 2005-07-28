@@ -34,8 +34,15 @@ typedef int Index[MAX_DIMS];      // Subscript in d-dimensional space
 typedef vector<double> Location;  // Data node location in d-dim. space
 enum Side {                       // Left or right boundary in each dimension
   Left = -1,
-  Right = 1
+  Right = 1,
+  NA = 3
 };
+
+inline Side &operator++(Side &s)
+{
+  return s = Side(s+2);
+}
+
 
 /*================== Our Library includes ==================*/
 

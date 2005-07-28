@@ -56,8 +56,8 @@ public:
   OutputType      outputType;     // Output to log file/screen/both
   
   /* Domain geometry & coarsest grid */
-  Level*          domain;         // Domain as a union of boxes
-
+  //  Level*          domain;         // Domain as a union of boxes
+  Counter         baseResolution;
   // TODO: replace with Level 0, including boundary conditions (Dirichlet/N)
   // types for all boundaries
   // TODO: multiple boxes define domain (e.g. for L-shaped)
@@ -87,8 +87,8 @@ public:
 
  protected:
   void setNumDims(const Counter d);
-  virtual void setDomain(const Counter baseResolution,
-                         const vector<Patch::BoundaryCondition>& bc);
+  //  virtual void setDomain(const Counter baseResolution,
+  //                         const vector<Patch::BoundaryCondition>& bc);
 };
 
 #endif // __PARAM_H__

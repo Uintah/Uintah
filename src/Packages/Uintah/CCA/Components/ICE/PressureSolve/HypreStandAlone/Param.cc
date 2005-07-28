@@ -13,6 +13,7 @@ void Param::setNumDims(const Counter d)
   numDims = d;
 }
 
+#if 0
 void Param::setDomain(const Counter baseResolution,
                       const vector<Patch::BoundaryCondition>& bc)
   /* Domain of physical size [0,1]x[0,1] with coarsest meshsize h
@@ -22,9 +23,10 @@ void Param::setDomain(const Counter baseResolution,
   domain = new Level(numDims,1.0/baseResolution);
   vector<int> ilower(numDims,0), iupper(numDims,baseResolution);
   Patch* box = new Patch(-1,-1,ilower,iupper);
-  box->_bc = bc;
+  box->setAllBC(bc);
   domain->_patchList.push_back(box);
 }
+#endif
 
 double Param::harmonicAvg(const Location& x,
                           const Location& y,
