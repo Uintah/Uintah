@@ -37,6 +37,7 @@
 #include <sstream>
 
 using std::cerr;
+using std::endl;
 using std::find;
 using std::map;
 using std::string;
@@ -47,16 +48,15 @@ extern bool foremit;
 Definition::Definition(const string& curfile, int lineno, const string& name)
   : curfile(curfile), lineno(lineno), name(name)
 {
-  symbols=0;
-  emitted_declaration=false;
-  do_emit=::foremit;
-  isImport=false;
-  isBuiltin = false;
+  symbols = 0;
+  emitted_declaration = false;
+  do_emit = ::foremit;
+  isImport = false;
 }
 
 void Definition::setName(const std::string& n)
 {
-  name=n;
+  name = n;
 }
 
 Definition::~Definition()
@@ -66,7 +66,7 @@ Definition::~Definition()
 string Definition::fullname() const
 {
   if (!symbols) {
-    cerr << "ERROR: Definition SymbolTable not set!\n";
+    cerr << "ERROR: Definition SymbolTable not set!" << endl;
     exit(1);
   }
   return symbols->fullname();
@@ -75,7 +75,7 @@ string Definition::fullname() const
 string CI::cppfullname(SymbolTable* forpackage) const
 {
   if (!symbols){
-    cerr << "ERROR: Definition SymbolTable not set!\n";
+    cerr << "ERROR: Definition SymbolTable not set!" << endl;
     exit(1);
   }
   if (forpackage == symbols->getParent()) {
@@ -174,10 +174,10 @@ string ArgumentList::fullsignature() const
     int c = 0;
     for (vector<Argument*>::const_iterator iter = list.begin();
             iter != list.end(); iter++) {
-        if(c++ > 0) {
-            s+=", ";
+        if (c++ > 0) {
+            s += ", ";
         }
-        s+=(*iter)->fullsignature();
+        s += (*iter)->fullsignature();
     }
     return s;
 }
@@ -213,29 +213,6 @@ Class::Class(const string& curfile, int lineno, Modifier modifier,
     class_extends(class_extends), class_implementsall(class_implementsall),
     class_implements(class_implements)
 {
-  std::cerr << "Class::Class: curfile=" << curfile << " name=" << name << std::endl;
-if (class_extends) {
-    // hack to support CCAException extends SSIDL.BaseException
-    std::cerr << " class extends=" << class_extends->getName() << std::endl;
-    if (name == "CCAException" && class_extends->getName() == "SSIDL.BaseException") {
-        std::cerr << "\tHave CCAException extends SSIDL.BaseException" << std::endl;
-        delete class_extends;
-        class_extends = 0;
-        class_extends = new ScopedName("SSIDL", "SIDLException");
-    }
-}
-if (class_implements) {
-std::vector<ScopedName*> list = class_implements->getList();
-for (vector<ScopedName*>::const_iterator iter=list.begin(); iter != list.end(); iter++) {
-  std::cerr << "  class implements=" << (*iter)->getName() << std::endl;
-}
-}
-if (class_implementsall) {
-std::vector<ScopedName*> list = class_implementsall->getList();
-for (vector<ScopedName*>::const_iterator iter=list.begin(); iter != list.end(); iter++) {
-  std::cerr << "  class implementsall=" << (*iter)->getName() << std::endl;
-}
-}
 }
 
 Class::~Class()
@@ -258,7 +235,6 @@ void CI::gatherMethods(vector<Method*>& allmethods) const
   }
   for (vector<BaseInterface*>::const_iterator iter = parent_ifaces.begin();
        iter != parent_ifaces.end(); iter++) {
-std::cerr << "CI::gatherMethods: parent_ifaces " << (*iter)->cppclassname() << std::endl;
     (*iter)->gatherMethods(allmethods);
   }
   mymethods->gatherMethods(allmethods);
@@ -271,7 +247,6 @@ void CI::gatherVtable(vector<Method*>& uniquemethods, bool onlyNewMethods) const
   }
   for (vector<BaseInterface*>::const_iterator iter = parent_ifaces.begin();
        iter != parent_ifaces.end(); iter++) {
-std::cerr << "CI::gatherVtable: parent_ifaces " << (*iter)->cppclassname() << std::endl;
     (*iter)->gatherVtable(uniquemethods, false);
   }
   int s = uniquemethods.size();
@@ -293,11 +268,9 @@ void CI::gatherParents(std::vector<CI*>& folks) const
   }
   for (vector<BaseInterface*>::const_iterator iter = parent_ifaces.begin();
        iter != parent_ifaces.end(); iter++) {
-std::cerr << "CI::gatherParents: parent_ifaces " << (*iter)->cppclassname() << std::endl;
     (*iter)->gatherParents(folks);
   }
   if (find(folks.begin(), folks.end(), this) == folks.end()) {
-std::cerr << "CI::gatherParents: folks " << this->cppclassname() << std::endl;
     folks.push_back(const_cast<CI*>(this));
   }
 }
@@ -309,10 +282,8 @@ void CI::gatherParentInterfaces(std::vector<BaseInterface*>& folks) const
   }
   for (vector<BaseInterface*>::const_iterator iter = parent_ifaces.begin();
        iter != parent_ifaces.end(); iter++){
-std::cerr << "CI::gatherParentInterfaces: parent_ifaces " << (*iter)->cppclassname() << std::endl;
     (*iter)->gatherParentInterfaces(folks);
     if (find(folks.begin(), folks.end(), *iter) == folks.end()) {
-std::cerr << "CI::gatherParentInterfaces: folks " << (*iter)->cppclassname() << std::endl;
       folks.push_back(const_cast<BaseInterface*>(*iter));
     }
   }
@@ -328,37 +299,20 @@ Class* Class::getParentClass() const
   return parentclass;
 }
 
-BaseInterface* Class::findParentInterface(const string& str)
-{
-std::cerr << "Class::findParentInterface: " << str << std::endl;
-if (class_implements) {
-std::cerr << "Class::findParentInterface: class_implements fullsignature=" << class_implements->fullsignature()  << std::endl;
-}
-if (class_implementsall) {
-std::cerr << "Class::findParentInterface: class_implementsall fullsignature=" << class_implementsall->fullsignature()  << std::endl;
-}
-    return 0;
-}
-
 Class* Class::findParent(const string& str)
 {
-  Class* p=this;
-  while(p){
-    if(p->fullname() == str)
+  Class* p = this;
+  while(p) {
+    if (p->fullname() == str) {
       return p;
-    p=p->parentclass;
-if (p) {
-std::cerr << "Class::findParent: parent=" << p->getName() << std::endl;
-} else {
-std::cerr << "Class::findParent: null parent" << std::endl;
-}
+    }
+    p = p->parentclass;
   }
   return 0;
 }
 
 DefinitionList::DefinitionList()
 {
-  isBuiltin = false;
 }
 
 DefinitionList::~DefinitionList()
@@ -379,7 +333,6 @@ void DefinitionList::processImports()
     (*iter)->isImport = true;
     Package* pkg;
     if ((pkg = dynamic_cast<Package*>(*iter))) {
-std::cerr << "DefinitionList::processImports: " << pkg->getName() << std::endl;
         pkg->definition->processImports();
     }
   }
@@ -389,16 +342,9 @@ std::cerr << "DefinitionList::processImports: " << pkg->getName() << std::endl;
 BaseInterface::BaseInterface(const string& curfile, int lineno, const string& id,
 		     ScopedNameList* interface_extends, MethodList* methods,
 		     DistributionArrayList* arrays)
-  : CI(curfile, lineno, id, methods,arrays),
+  : CI(curfile, lineno, id, methods, arrays),
     interface_extends(interface_extends)
 {
-std::cerr << "BaseInterface::BaseInterface: " << curfile << " " << lineno << " " << id << std::endl;
-if (interface_extends) {
-std::vector<ScopedName*> list = interface_extends->getList();
-for (vector<ScopedName*>::const_iterator iter=list.begin(); iter != list.end(); iter++) {
-  std::cerr << "  interface extends=" << (*iter)->getName() << std::endl;
-}
-}
 }
 
 
@@ -407,6 +353,22 @@ BaseInterface::~BaseInterface()
     if (interface_extends) {
         delete interface_extends;
     }
+}
+
+BaseInterface* BaseInterface::findParent(const string& str)
+{
+    for (std::vector<BaseInterface*>::iterator iter = parent_ifaces.begin();
+            iter != parent_ifaces.end(); iter++) {
+        if ((*iter)->fullname() == str) {
+            return *iter;
+        } else {
+            BaseInterface *bi = (*iter)->findParent(str);
+            if (bi) {
+                return bi;
+            }
+        }
+    }
+    return 0;
 }
 
 Method::Method(const string& curfile, int lineno, bool copy_return,
@@ -421,7 +383,6 @@ Method::Method(const string& curfile, int lineno, bool copy_return,
   myinterface = 0;
   checked = false;
   handlerNum =- 1;
-  std::cerr << "Method::Method: " << curfile << " " << lineno << " " << name << " " << babel_ext << std::endl;
 }
 
 Method::Method(const string& curfile, int lineno, bool copy_return,
@@ -436,13 +397,17 @@ Method::Method(const string& curfile, int lineno, bool copy_return,
   myinterface = 0;
   checked = false;
   handlerNum =- 1;
-  std::cerr << "Method::Method: " << curfile << " " << lineno << " " << name << std::endl;
 }
+
 
 Method::~Method()
 {
-  delete args;
-  delete throws_clause;
+    if (args) {
+        delete args;
+    }
+    if (throws_clause) {
+        delete throws_clause;
+    }
 }
 
 void Method::setModifier(Method::Modifier newmodifier)
@@ -457,14 +422,12 @@ Method::Modifier Method::getModifier() const
 
 void Method::setClass(Class *c)
 {
-std::cerr << "Method::setClass: " << c->getName() << std::endl;
-  myclass=c;
+  myclass = c;
 }
 
 void Method::setInterface(BaseInterface *c)
 {
-std::cerr << "Method::setInterface: " << c->getName() << std::endl;
-  myinterface=c;
+  myinterface = c;
 }
 
 bool Method::getChecked() const
@@ -487,13 +450,13 @@ string Method::fullname() const
   string n;
   if (myclass) {
     n = myclass->fullname();
-  } else if(myinterface) {
+  } else if (myinterface) {
     n = myinterface->fullname();
   } else {
-    cerr << "ERROR: Method does not have an associated class or interface\n";
+    cerr << "ERROR: Method does not have an associated class or interface" << endl;
     exit(1);
   }
-  return n+"."+name;
+  return n + "." + name;
 }
 
 string Method::fullsignature() const
@@ -514,9 +477,9 @@ string Method::fullsignature() const
     s="";
     break;
   }
-  s+=return_type->fullname()+" "+fullname()+"("+args->fullsignature()+")";
-  if(throws_clause)
-    s+="throws "+throws_clause->fullsignature();
+  s += return_type->fullname() + " " + fullname() + "(" + args->fullsignature() + ")";
+  if (throws_clause)
+    s += "throws " + throws_clause->fullsignature();
   return s;
 }
 
@@ -533,13 +496,11 @@ MethodList::~MethodList()
 
 void MethodList::add(Method* method)
 {
-//std::cerr <<  "MethodList::add " << method->getName() << std::endl;
   list.push_back(method);
 }
 
 void MethodList::setClass(Class* c)
 {
-//std::cerr <<  "MethodList::setClass " << c->getName() << std::endl;
     for (vector<Method*>::iterator iter = list.begin(); iter != list.end(); iter++) {
         (*iter)->setClass(c);
     }
@@ -547,10 +508,8 @@ void MethodList::setClass(Class* c)
 
 void MethodList::setInterface(BaseInterface* c)
 {
-std::cerr <<  "MethodList::setInterface " << c->getName() << std::endl;
   for(vector<Method*>::iterator iter=list.begin();iter != list.end();iter++) {
     (*iter)->setInterface(c);
-std::cerr << "MethodList::setInterface: BaseInterface " << (*iter)->getName() << std::endl;
   }
 }
 
@@ -563,17 +522,16 @@ void MethodList::gatherMethods(vector<Method*>& allmethods) const
 {
   for (vector<Method*>::const_iterator iter=list.begin();iter != list.end();iter++) {
     allmethods.push_back(*iter);
-//std::cerr << "MethodList::gatherMethods: all methods " << (*iter)->fullname() << std::endl;
   }
 }
 
 void MethodList::gatherVtable(vector<Method*>& uniquemethods) const
 {
   // Yuck - O(N^2)
-  for(vector<Method*>::const_iterator iter1=list.begin();iter1 != list.end();iter1++){
-    vector<Method*>::iterator iter2=uniquemethods.begin();
-    for(;iter2 != uniquemethods.end(); iter2++) {
-      if((*iter1)->matches(*iter2, Method::TypesOnly)) {
+  for (vector<Method*>::const_iterator iter1 = list.begin(); iter1 != list.end(); iter1++) {
+    vector<Method*>::iterator iter2 = uniquemethods.begin();
+    for (; iter2 != uniquemethods.end(); iter2++) {
+      if ((*iter1)->matches(*iter2, Method::TypesOnly)) {
           break;
       }
     }
@@ -599,25 +557,22 @@ Package::~Package()
 ScopedName::ScopedName()
   : leading_dot(false)
 {
-//std::cerr << "ScopedName::ScopedName" << std::endl;
-  sym=0;
+  sym = 0;
 }
 
 ScopedName::ScopedName(const string& s1, const string& s2)
 {
-//std::cerr << "ScopedName::ScopedName s1=" << s1 << " s2=" << s2 << std::endl;
-  leading_dot=true;
+  leading_dot = true;
   add(s1);
   add(s2);
-  sym=0;
+  sym = 0;
 }
 
 ScopedName::ScopedName(const string& s1)
 {
-//std::cerr << "ScopedName::ScopedName s1=" << s1 << std::endl;
-  leading_dot=false;
+  leading_dot = false;
   add(s1);
-  sym=0;
+  sym = 0;
 }
 
 ScopedName::~ScopedName()
@@ -643,15 +598,15 @@ string ScopedName::getName() const
 {
   string n;
   if (leading_dot) {
-    n+=".";
+    n += ".";
   }
   bool first=true;
-  for(vector<string>::const_iterator iter=names.begin();iter != names.end();iter++) {
+  for (vector<string>::const_iterator iter = names.begin(); iter != names.end(); iter++) {
     if (!first) {
-      n+=".";
+      n += ".";
     }
-    n+=*iter;
-    first=false;
+    n += *iter;
+    first = false;
   }
   return n;
 }
@@ -678,26 +633,20 @@ int ScopedName::nnames() const
 
 string ScopedName::fullname() const
 {
-  string n;
   if (!sym) {
-    cerr << "ERROR: Symbol not bound: " << getName() << " - " << this << "(ScopedName::fullname)\n";
+    cerr << "ERROR: Symbol not bound: " << getName() << " - " << this << endl;
     exit(1);
-  } else {
-    n = sym->fullname();
   }
-  return n;
+  return sym->fullname();
 }
 
 string ScopedName::cppfullname(SymbolTable* forstab) const
 {
-  string n;
   if (!sym) {
-    cerr << "ERROR: Symbol not bound: " << getName() << " - " << this << " (ScopedName::cppfullname)\n";
+    cerr << "ERROR: Symbol not bound: " << getName() << " - " << this << endl;
     exit(1);
-  } else {
-    n = sym->cppfullname(forstab);
   }
-  return n;
+  return sym->cppfullname(forstab);
 }
 
 ScopedNameList::ScopedNameList()
@@ -714,13 +663,11 @@ ScopedNameList::~ScopedNameList()
 
 void ScopedNameList::prepend(ScopedName* name)
 {
-std::cerr << "ScopedNameList::prepend: " << name->getName() << std::endl;
     list.insert(list.begin(), name);
 }
 
 void ScopedNameList::add(ScopedName* name)
 {
-//std::cerr << "ScopedNameList::add: " << name->getName() << std::endl;
   list.push_back(name);
 }
 
@@ -751,7 +698,6 @@ Specification::Specification(VersionList* versions, ScopedNameList* imports,
   : versions(versions), imports(imports), packages(packages)
 {
   isImport = false;
-  isBuiltin = false;
   toplevel = false;
 }
 
@@ -949,12 +895,13 @@ bool NamedType::isvoid() const
 std::string NamedType::cppfullname(SymbolTable* localScope) const
 {
   Symbol::Type symtype = name->getSymbol()->getType();
+
   if (symtype == Symbol::EnumType) {
     return name->cppfullname(localScope);
   } else if(name->getSymbol()->getDefinition()->isEmitted()) {
-    return name->cppfullname(localScope)+"::pointer";
+    return name->cppfullname(localScope) + "::pointer";
   } else {
-    return "CCALib::SmartPointer<"+name->cppfullname(localScope)+" >";
+    return "CCALib::SmartPointer< " + name->cppfullname(localScope) + " >";
   }
 }
 
@@ -994,7 +941,6 @@ Enum::Enum(const std::string& curfile, int lineno,
 	   const std::string& name)
   : Definition(curfile, lineno, name)
 {
-std::cerr << "Enum::Enum: " << name << std::endl;
 }
 
 Enum::~Enum()
@@ -1013,7 +959,6 @@ Enumerator::Enumerator(const std::string& curfile, int lineno,
 		       const std::string& name)
   : curfile(curfile), lineno(lineno), name(name), have_value(false)
 {
-std::cerr << "Enumerator::Enumerator: " << name << std::endl;
 }
 
 Enumerator::Enumerator(const std::string& curfile, int lineno,
@@ -1021,7 +966,6 @@ Enumerator::Enumerator(const std::string& curfile, int lineno,
   : curfile(curfile), lineno(lineno), name(name), have_value(true),
     value(value)
 {
-std::cerr << "Enumerator::Enumerator: have value, " << name << std::endl;
 }
 
 Enumerator::~Enumerator()
@@ -1047,16 +991,14 @@ void VersionList::add(Version* v)
 Version::Version(const std::string& id, int v)
   : id(id)
 {
-std::cerr << "Version::Version(string, int): " << id << ", " << v << std::endl;
   std::ostringstream o;
   o << v;
-  version=o.str();
+  version = o.str();
 }
 
 Version::Version(const std::string& id, const std::string& version)
   : id(id), version(version)
 {
-std::cerr << "Version::Version(string, string): " << id << ", " << version << std::endl;
 }
 
 Version::~Version()
@@ -1082,7 +1024,6 @@ void SpecificationList::add(Specification* spec)
 
 void SpecificationList::processImports()
 {
-std::cerr << "SpecificationList::processImports" << std::endl;
   for(vector<Specification*>::iterator iter = specs.begin();
       iter != specs.end(); iter++){
     if ((*iter)->isImport) {
@@ -1090,7 +1031,7 @@ std::cerr << "SpecificationList::processImports" << std::endl;
     }
   }
 	        
-  // "processImports not finished!\n" -- Might want to remove unnecessary packages here;
+  // "processImports not finished!" -- Might want to remove unnecessary packages here;
 }
 
 

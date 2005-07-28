@@ -95,9 +95,11 @@ package cca {
 
 
    
+    // Change CCAException from abstract class to interface -
+    // see CCA Quorum Motion 45 and cca.sidl, cca version > 0.6.
     /** Most CCA interfaces throw this exception */
-    abstract class CCAException extends SSIDL.BaseException {
-	abstract CCAExceptionType getCCAExceptionType();
+    interface CCAException extends SSIDL.BaseException {
+        CCAExceptionType getCCAExceptionType();
     } // end class CCAException
 
 
@@ -337,11 +339,13 @@ package cca {
     }
 
     
-    abstract class TypeMismatchException extends CCAException {
-	/** @return the enumerated value Type sought */
-        abstract Type getRequestedType();
-	/** @return the enumerated value Type sought */
-	abstract Type getActualType();        
+    // Change CCAException from abstract class to interface -
+    // see CCA Quorum Motion 45 and cca.sidl, cca version > 0.6.
+    interface TypeMismatchException extends CCAException {
+        /** @return the enumerated value Type sought */
+        Type getRequestedType();
+        /** @return the enumerated value Type sought */
+        Type getActualType();        
     }
     
     /** 

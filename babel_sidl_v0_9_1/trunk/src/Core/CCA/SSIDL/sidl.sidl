@@ -60,6 +60,7 @@ package SSIDL {
      * class.
      * </p>
      */
+    // added collective
     collective void addRef();
 
     /**
@@ -69,6 +70,7 @@ package SSIDL {
      * Clients should call this method whenever they remove a
      * reference to an object or interface.
      */
+    // added collective
     collective void deleteRef();
 
     /**
@@ -413,7 +415,7 @@ package SSIDL {
 //    * in the main program.
 //    * 
 //    * Unless explicitly set, the <code>Loader</code> uses the default
-//    * <code>sidl.Finder</code> implemented in <code>sidl.DFinder</code>.
+//    * <code>SSIDL.Finder</code> implemented in <code>SSIDL.DFinder</code>.
 //    * This class searches the filesystem for <code>.scl</code> files when
 //    * trying to find a class. The initial path is taken from the
 //    * environment variable SIDL_DLL_PATH, which is a semi-colon
@@ -577,104 +579,104 @@ package SSIDL {
      final void setIORVersion(in int major, in int minor);
   }
 
-//   /** 
-//    * This package has some I/O capability that's not core to the 
-//    * SIDL object model, but still needed by parts of the generated code
-//    */
-//   package io { 
+  /** 
+   * This package has some I/O capability that's not core to the 
+   * SIDL object model, but still needed by parts of the generated code
+   */
+  package io { 
       
-//       /** generic exception for I/O issues */
-//       class IOException extends sidl.SIDLException {
-//       }
+      /** generic exception for I/O issues */
+      class IOException extends SSIDL.SIDLException {
+      }
       
-//       /**
-//        * Standard interface for packing Babel types
-//        */
-//       interface Serializer { 
-// 	  void packBool( in string key, in bool value ) throws IOException ;
-// 	  void packChar( in string key, in char value ) throws IOException ;
-// 	  void packInt( in string key, in int value ) throws IOException ;
-// 	  void packLong( in string key, in long value ) throws IOException ;
-// 	  void packFloat( in string key, in float value ) throws IOException ;
-// 	  void packDouble( in string key, in double value ) throws IOException ;
-// 	  void packFcomplex( in string key, in fcomplex value ) throws IOException ;
-// 	  void packDcomplex( in string key, in dcomplex value ) throws IOException ;
-// 	  void packString( in string key, in string value ) throws IOException ;
-// 	  //void pack[Serializable]( in string key, in Serializable value ) throws IOException;
+      /**
+       * Standard interface for packing Babel types
+       */
+      interface Serializer { 
+	  void packBool( in string key, in bool value ) throws IOException ;
+	  void packChar( in string key, in char value ) throws IOException ;
+	  void packInt( in string key, in int value ) throws IOException ;
+	  void packLong( in string key, in long value ) throws IOException ;
+	  void packFloat( in string key, in float value ) throws IOException ;
+	  void packDouble( in string key, in double value ) throws IOException ;
+	  void packFcomplex( in string key, in fcomplex value ) throws IOException ;
+	  void packDcomplex( in string key, in dcomplex value ) throws IOException ;
+	  void packString( in string key, in string value ) throws IOException ;
+	  //void pack[Serializable]( in string key, in Serializable value ) throws IOException;
 	  
-// 	  /* pack arrays of values */
-// 	  // void pack[BoolArray]( in string key, in array<bool> value ) throws IOException ;
-// 	  // void pack[CharArray]( in string key, in array<char> value ) throws IOException ;
-// 	  // void pack[IntArray]( in string key, in array<int> value ) throws IOException ;
-// 	  // void pack[LongArray]( in string key, in array<long> value ) throws IOException ;
-// 	  // void pack[FloatArray]( in string key, in array<float> value ) throws IOException ;
-// 	  // void pack[DoubleArray]( in string key, in array<double> value ) throws IOException ;
-// 	  // void pack[FcomplexArray]( in string key, in array<fcomplex> value ) throws IOException ;
-// 	  // void pack[DcomplexArray]( in string key, in array<dcomplex> value ) throws IOException ;
-// 	  // void pack[StringArray]( in string key, in array<string> value ) throws IOException ;
-// 	  // void pack[SerializableArray]( in string key, in array<Serializable> value ) throws IOException;
-//       }
+	  /* pack arrays of values */
+	  // void pack[BoolArray]( in string key, in array<bool> value ) throws IOException ;
+	  // void pack[CharArray]( in string key, in array<char> value ) throws IOException ;
+	  // void pack[IntArray]( in string key, in array<int> value ) throws IOException ;
+	  // void pack[LongArray]( in string key, in array<long> value ) throws IOException ;
+	  // void pack[FloatArray]( in string key, in array<float> value ) throws IOException ;
+	  // void pack[DoubleArray]( in string key, in array<double> value ) throws IOException ;
+	  // void pack[FcomplexArray]( in string key, in array<fcomplex> value ) throws IOException ;
+	  // void pack[DcomplexArray]( in string key, in array<dcomplex> value ) throws IOException ;
+	  // void pack[StringArray]( in string key, in array<string> value ) throws IOException ;
+	  // void pack[SerializableArray]( in string key, in array<Serializable> value ) throws IOException;
+      }
 
-//       /**
-//        * Standard interface for unpacking Babel types
-//        */
-//       interface Deserializer { 
-// 	  /* unpack values */
-// 	  void unpackBool( in string key, out bool value ) throws IOException ;
-// 	  void unpackChar( in string key, out char value ) throws IOException ;
-// 	  void unpackInt( in string key, out int value ) throws IOException ;
-// 	  void unpackLong( in string key, out long value ) throws IOException ;
-// 	  void unpackFloat( in string key, out float value ) throws IOException ;
-// 	  void unpackDouble( in string key, out double value ) throws IOException ;
-// 	  void unpackFcomplex( in string key, out fcomplex value ) throws IOException ;
-// 	  void unpackDcomplex( in string key, out dcomplex value ) throws IOException ;
-// 	  void unpackString( in string key, out string value ) throws IOException ;
-// 	  // void unpack[Serializable]( in string key, out Serializable value ) throws IOException;
+      /**
+       * Standard interface for unpacking Babel types
+       */
+      interface Deserializer { 
+	  /* unpack values */
+	  void unpackBool( in string key, out bool value ) throws IOException ;
+	  void unpackChar( in string key, out char value ) throws IOException ;
+	  void unpackInt( in string key, out int value ) throws IOException ;
+	  void unpackLong( in string key, out long value ) throws IOException ;
+	  void unpackFloat( in string key, out float value ) throws IOException ;
+	  void unpackDouble( in string key, out double value ) throws IOException ;
+	  void unpackFcomplex( in string key, out fcomplex value ) throws IOException ;
+	  void unpackDcomplex( in string key, out dcomplex value ) throws IOException ;
+	  void unpackString( in string key, out string value ) throws IOException ;
+	  // void unpack[Serializable]( in string key, out Serializable value ) throws IOException;
 	  
-// 	  /* unpack arrays of values */
-// 	  // void unpack[BoolArray]( in string key, out array<bool> value ) throws IOException ;
-// 	  // void unpack[CharArray]( in string key, out array<char> value ) throws IOException ;
-// 	  // void unpack[IntArray]( in string key, out array<int> value ) throws IOException ;
-// 	  // void unpack[LongArray]( in string key, out array<long> value ) throws IOException ;
-// 	  // void unpack[FloatArray]( in string key, out array<float> value ) throws IOException ;
-// 	  // void unpack[DoubleArray]( in string key, out array<double> value ) throws IOException ;
-// 	  // void unpack[FcomplexArray]( in string key, out array<fcomplex> value ) throws IOException ;
-// 	  // void unpack[DcomplexArray]( in string key, out array<dcomplex> value ) throws IOException ;
-// 	  // void unpack[StringArray]( in string key, out array<string> value ) throws IOException ;
-// 	  // void unpack[SerializableArray]( in string key, out array<Serializable> value ) throws IOException ;
-//       }
+	  /* unpack arrays of values */
+	  // void unpack[BoolArray]( in string key, out array<bool> value ) throws IOException ;
+	  // void unpack[CharArray]( in string key, out array<char> value ) throws IOException ;
+	  // void unpack[IntArray]( in string key, out array<int> value ) throws IOException ;
+	  // void unpack[LongArray]( in string key, out array<long> value ) throws IOException ;
+	  // void unpack[FloatArray]( in string key, out array<float> value ) throws IOException ;
+	  // void unpack[DoubleArray]( in string key, out array<double> value ) throws IOException ;
+	  // void unpack[FcomplexArray]( in string key, out array<fcomplex> value ) throws IOException ;
+	  // void unpack[DcomplexArray]( in string key, out array<dcomplex> value ) throws IOException ;
+	  // void unpack[StringArray]( in string key, out array<string> value ) throws IOException ;
+	  // void unpack[SerializableArray]( in string key, out array<Serializable> value ) throws IOException ;
+      }
       
-//       /** Classes that can pack or unpack themselves should implement this interface */
-//       interface Serializeable { 
-// 	  void packObj( in Serializer ser );
-// 	  void unpackObj( in Deserializer des );
-//       } 
-//   }
+      /** Classes that can pack or unpack themselves should implement this interface */
+      interface Serializeable { 
+	  void packObj( in Serializer ser );
+	  void unpackObj( in Deserializer des );
+      } 
+  }
 
-//   /**
-//    * This package contains necessary interfaces for RMI protocols to 
-//    * hook into Babel, plus a Protocol Factory class.  The intention is 
-//    * that authors of new protocols will create classes that implement
-//    * InstanceHandle, Invocation and Response (they could even have one object
-//    * that implements all three interfaces).
-//    */
-//   package rmi { 
+  /**
+   * This package contains necessary interfaces for RMI protocols to 
+   * hook into Babel, plus a Protocol Factory class.  The intention is 
+   * that authors of new protocols will create classes that implement
+   * InstanceHandle, Invocation and Response (they could even have one object
+   * that implements all three interfaces).
+   */
+  package rmi { 
 
 //       /**
 //        * Generic Network Exception
 //        */
-//       class NetworkException extends sidl.io.IOException {
+//       class NetworkException extends SSIDL.io.IOException {
 //       }	
 
 //       /** 
 //        * This singleton class keeps a table of string prefixes (e.g. "babel" or "proteus")
 //        * to protocol implementations.  The intent is to parse a URL (e.g. "babel://server:port/class")
-//        * and create classes that implement <code>sidl.rmi.InstanceHandle</code>.
+//        * and create classes that implement <code>SSIDL.rmi.InstanceHandle</code>.
 //        */
 //       class ProtocolFactory { 
 // 	  /** 
-// 	   * Associate a particular prefix in the URL to a typeName <code>sidl.Loader</code> can find.
-// 	   * The actual type is expected to implement <code>sidl.rmi.InstanceHandle</code>
+// 	   * Associate a particular prefix in the URL to a typeName <code>SSIDL.Loader</code> can find.
+// 	   * The actual type is expected to implement <code>SSIDL.rmi.InstanceHandle</code>
 // 	   * Return true iff the addition is successful.  (no collisions allowed)
 // 	   */
 // 	  static bool addProtocol( in string prefix, in string typeName ) throws NetworkException;
@@ -709,8 +711,8 @@ package SSIDL {
       /**
        * This interface holds the state information for handles to remote
        * objects.  Client-side messaging libraries are expected to implement
-       * <code>sidl.rmi.InstanceHandle</code>, <code>sidl.rmi.Invocation</code>
-       * and <code>sidl.rmi.Response</code>.
+       * <code>SSIDL.rmi.InstanceHandle</code>, <code>SSIDL.rmi.Invocation</code>
+       * and <code>SSIDL.rmi.Response</code>.
        * 
        *  When a connection is created between a stub and a real object:
        *       sidl_rmi_InstanceHandle c = sidl_rmi_ProtocolFactory_createInstance( url, typeName );
@@ -754,83 +756,83 @@ package SSIDL {
 // 	  bool close() throws NetworkException;
 //       }
 
-//       /**
-//        * This type is used to pack arguments and make the actual 
-//        * method invocation.
-//        */	 
-//       interface Invocation extends sidl.io.Serializer {
+      /**
+       * This type is used to pack arguments and make the actual 
+       * method invocation.
+       */	 
+//       interface Invocation extends SSIDL.io.Serializer {
 
 // 	  /** this method may be called only once at the end of the object's lifetime */
 // 	  Response invokeMethod() throws NetworkException;
 //       }
 
-//       /**
-//        * This type is created when an InvocationHandle actually invokes its method.
-//         * It encapsulates all the results that users will want to pull out of a
-//        * remote method invocation.
-//        */
-//       interface Response extends sidl.io.Deserializer { 
+      /**
+       * This type is created when an InvocationHandle actually invokes its method.
+        * It encapsulates all the results that users will want to pull out of a
+       * remote method invocation.
+       */
+//       interface Response extends SSIDL.io.Deserializer { 
 
 // 	  /** returns true iff RMI hasn't timed out */
 // 	  bool timedOut() throws NetworkException;
 
 // 	  /** if returns null, then safe to unpack arguments */
-// 	  sidl.BaseException getExceptionThrown() throws NetworkException;
+// 	  SSIDL.BaseException getExceptionThrown() throws NetworkException;
 	  
 // 	  /** signal that all is complete */
 // 	  bool done() throws NetworkException;
 //       }
   
-//       /**
-//        * This singleton class is implemented by Babel's runtime for RMI libraries to 
-//        * invoke methods on server objects.  It is assumed that the RMI library
-//        * has a self-describing stream of data, but the data may be reordered
-//        * from the natural argument list.
-//        * 
-//        * 
-//        * In the case of the RMI library receiving a self-describing stream
-//        * and wishing to invoke a method on a class... the RMI library would 
-//        * make a sequence of calls like:
-//        * 
-//        *       sidl_BaseClass bc = sidl_rmi_InstanceRegistry_getInstance( "instanceID" );
-//        *       sidl_rmi_TypeMap inArgs = sidl_rmi_TypeMap__create();
-//        *       
-//        *       sidl_rmi_TypeMap_putDouble( inArgs, "input_val" , 2.0 );
-//        *       sidl_rmi_TypeMap_putString( inArgs, "input_str", "Hello" );
-//        *       ...
-//        *       sidl_rmi_TypeMap ourArgs = sidl_BaseClass_execMethod( bc, "methodName" , t );
-//        * 
-//        *       sidl_rmi_Response_unpackBool( i, "_retval", &succeeded );
-//        *       sidl_rmi_Response_unpackFloat( i, "output_val", &f );
-//        */
+      /**
+       * This singleton class is implemented by Babel's runtime for RMI libraries to 
+       * invoke methods on server objects.  It is assumed that the RMI library
+       * has a self-describing stream of data, but the data may be reordered
+       * from the natural argument list.
+       * 
+       * 
+       * In the case of the RMI library receiving a self-describing stream
+       * and wishing to invoke a method on a class... the RMI library would 
+       * make a sequence of calls like:
+       * 
+       *       sidl_BaseClass bc = sidl_rmi_InstanceRegistry_getInstance( "instanceID" );
+       *       sidl_rmi_TypeMap inArgs = sidl_rmi_TypeMap__create();
+       *       
+       *       sidl_rmi_TypeMap_putDouble( inArgs, "input_val" , 2.0 );
+       *       sidl_rmi_TypeMap_putString( inArgs, "input_str", "Hello" );
+       *       ...
+       *       sidl_rmi_TypeMap ourArgs = sidl_BaseClass_execMethod( bc, "methodName" , t );
+       * 
+       *       sidl_rmi_Response_unpackBool( i, "_retval", &succeeded );
+       *       sidl_rmi_Response_unpackFloat( i, "output_val", &f );
+       */
 //       class InstanceRegistry { 
 
 // 	  /** register an instance of a class
 // 	   *  the registry will return a string guaranteed to be unique for
 // 	   *  the lifetime of the process
 // 	   */	      
-// 	  static string registerInstance( in sidl.BaseClass instance ) throws NetworkException;
+// 	  static string registerInstance( in SSIDL.BaseClass instance ) throws NetworkException;
 
 // 	  /** 
 // 	   * returns a handle to the class based on the unique string
 // 	   */
-// 	  static sidl.BaseClass getInstance( in string instanceID ) throws NetworkException;
+// 	  static SSIDL.BaseClass getInstance( in string instanceID ) throws NetworkException;
 
 // 	  /** 	
 // 	   * returns a handle to the class based on the unique string
 // 	   * and removes the instance from the table.  
 // 	   */
-// 	  static sidl.BaseClass removeInstance( in string instanceID ) throws NetworkException;
+// 	  static SSIDL.BaseClass removeInstance( in string instanceID ) throws NetworkException;
 //       }
 
-//       interface InArgs extends  sidl.io.Deserializer { 
+      interface InArgs extends  SSIDL.io.Deserializer { 
 	  
-//       }
+      }
       
-//       interface OutArgs extends sidl.io.Serializer { 
+      interface OutArgs extends SSIDL.io.Serializer { 
 	  
-//       }
+      }
 
-//  }
+ }
 }
 

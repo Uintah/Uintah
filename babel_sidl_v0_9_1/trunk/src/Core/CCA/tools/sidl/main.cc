@@ -66,8 +66,8 @@ const char* find_cpp()
     }
   }
 
-  std::cerr << "ERROR in: ./SCIRun/src/Core/CCA/tools/sidl/main.cc:\n";
-  std::cerr << "Cpp: doesn't seem to exist... bye.\n";
+  std::cerr << "ERROR in: ./SCIRun/src/Core/CCA/tools/sidl/main.cc:" << std::endl;
+  std::cerr << "Cpp: doesn't seem to exist... bye." << std::endl;
 
   exit( 1 );
   return 0;
@@ -96,8 +96,6 @@ int main(int argc, char* argv[])
 
   SpecificationList specs;
 
-std::cerr <<  "sidl: main fxn\n" << std::endl;
-
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-yydebug") == 0) {
       yydebug = 1;
@@ -106,7 +104,7 @@ std::cerr <<  "sidl: main fxn\n" << std::endl;
       if (arg == "-o") {
         i++;
         if (i >= argc) {
-          std::cerr << "No file specified for -o\n";
+          std::cerr << "No file specified for -o" << std::endl;
           exit(1);
         }
         outfile = argv[i];
@@ -117,7 +115,7 @@ std::cerr <<  "sidl: main fxn\n" << std::endl;
       } else if (arg == "-I") {
         i++;
         if (i >= argc) {
-          std::cerr << "No file specified for -I\n";
+          std::cerr << "No file specified for -I" << std::endl;
           exit(1);
         }
         foremit = false;
@@ -126,11 +124,11 @@ std::cerr <<  "sidl: main fxn\n" << std::endl;
         yyin = popen(ccabuf, "r");
         delete[] ccabuf;
         if (!yyin) {
-          std::cerr << "Error opening file: " << argv[i] << '\n';
+          std::cerr << "Error opening file: " << argv[i] << std::endl;
           failed = true;
         }
         if (yyparse()) {
-          std::cerr << "Error parsing file: " << argv[i] << '\n';
+          std::cerr << "Error parsing file: " << argv[i] << std::endl;
           failed = true;
         }
         if (pclose(yyin) == -1) {
@@ -148,24 +146,22 @@ std::cerr <<  "sidl: main fxn\n" << std::endl;
       if (!done_builtin && !doing_cia) {
         foremit = false;
         char* builtin = find_builtin();
-std::cerr << "SIDL builtin=" << builtin << std::endl;
         char* buf = new char[strlen(cpp) + strlen(builtin) + 10];
         sprintf(buf, "%s %s", cpp, builtin);
         yyin = popen(buf, "r");
         delete[] buf;
         if (!yyin) {
-          std::cerr << "Error opening file: " << builtin << '\n';
+          std::cerr << "Error opening file: " << builtin << std::endl;
           failed = true;
         }
         if (yyparse()) {
-          std::cerr << "Error parsing file: " << builtin << '\n';
+          std::cerr << "Error parsing file: " << builtin << std::endl;
           failed = true;
         }
         if (pclose(yyin) == -1) {
           perror("pclose");
           failed = true;
         }
-        parse_spec->isBuiltin = true;
         specs.add(parse_spec);
         parse_spec = 0;
         done_builtin = true;
@@ -178,11 +174,11 @@ std::cerr << "SIDL builtin=" << builtin << std::endl;
       yyin = popen(buf, "r");
       delete[] buf;
       if (!yyin) {
-        std::cerr << "Error opening file: " << argv[i] << '\n';
+        std::cerr << "Error opening file: " << argv[i] << std::endl;
         failed = true;
       }
       if (yyparse()) {
-        std::cerr << "Error parsing file: " << argv[i] << '\n';
+        std::cerr << "Error parsing file: " << argv[i] << std::endl;
         failed = true;
       }
       if (pclose(yyin) == -1) {
@@ -198,7 +194,7 @@ std::cerr << "SIDL builtin=" << builtin << std::endl;
     exit(1);
   }
   if (nfiles == 0) {
-    std::cerr << "Must specify a file to parse\n";
+    std::cerr << "Must specify a file to parse" << std::endl;
   }
 
   /*
@@ -219,7 +215,7 @@ std::cerr << "SIDL builtin=" << builtin << std::endl;
   if (outfile != "") {
     std::ofstream out(outfile.c_str());
     if (!out) {
-      std::cerr << "Error opening output file: " << outfile << '\n';
+      std::cerr << "Error opening output file: " << outfile << std::endl;
       exit(1);
     }
     std::string hname = outfile;

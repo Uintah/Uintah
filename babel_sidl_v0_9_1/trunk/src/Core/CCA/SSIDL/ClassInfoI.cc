@@ -43,42 +43,17 @@
 #include <Core/CCA/SSIDL/sidl_sidl.h>
 #include <Core/Util/NotFinished.h>
 
-using SSIDL::BaseInterface;
-//using SSIDL::BaseClass;
-using SSIDL::ClassInfo;
+//using SSIDL::ClassInfo;
+using SSIDL::ClassInfoI;
 
-
-void BaseInterface::addRef()
+// final void .SSIDL.ClassInfoI.setName(in string name)
+void ClassInfoI::setName(const std::string& name)
 {
-    SCIRun::Object::addReference();
+    NOT_FINISHED("final void .SSIDL.ClassInfoI.setName(in string name)");
 }
 
-void BaseInterface::deleteRef()
+// final void .SSIDL.ClassInfoI.setIORVersion(in int major, in int minor)
+void ClassInfoI::setIORVersion(int major, int minor)
 {
-    SCIRun::Object::deleteReference();
-}
-
-bool BaseInterface::isSame(const BaseInterface::pointer& /*object*/)
-{
-    NOT_FINISHED("bool .SSIDL.BaseInterface.isSame(in .SSIDL.BaseInterface object)");
-    return false;
-}
-
-BaseInterface::pointer BaseInterface::queryInt(const std::string& /*name*/)
-{
-    NOT_FINISHED(".SSIDL.BaseInterface .SSIDL.BaseInterface.queryInt(in .SSIDL.string name)");
-    return BaseInterface::pointer(0);
-}
-
-bool BaseInterface::isType(const std::string& /*name*/)
-{
-    NOT_FINISHED("bool .SSIDL.BaseInterface.isType(in .SSIDL.string name)");
-    return false;
-}
-
-// SSIDL::ClassInfo BaseInterface::getClassInfo()
-ClassInfo::pointer BaseInterface::getClassInfo()
-{
-    NOT_FINISHED("ClassInfo .SSIDL.getClassInfo()");
-    return ClassInfo::pointer(0);
+    NOT_FINISHED("final void .SSIDL.ClassInfoI.setIORVersion(in int major, in int minor)");
 }
