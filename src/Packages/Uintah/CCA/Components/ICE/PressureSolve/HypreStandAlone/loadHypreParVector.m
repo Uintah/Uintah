@@ -30,7 +30,7 @@ parAlist = zeros(0,3);
 % Read partition of vector from info file into the array partitioning
 % All info files are the same, it seems. So use only the one for myid = 0.
 my_id = 0;
-new_filename = sprintf('%s.INFO.%d',file_name,my_id);
+new_filename = sprintf('%s.INFO.%d',filename,my_id);
 file = fopen(new_filename, 'r');
 if (file < 0)
     fprintf('Error: can''t open output info file %s\n', new_filename);
@@ -38,19 +38,19 @@ if (file < 0)
     ierr = 1;
     return;
 end
-partitioning = zeros(num_procs+1,1);
+partitioning = zeros(numProcs+1,1);
 global_size = fscanf(file, '%d\n', 1);
 for i = 0:numProcs-1
     partitioning(i+o) = fscanf(file, '%d\n', 1);
 end
-partitioning(num_procs+o) = global_size;
+partitioning(numProcs+o) = global_size;
 fclose(file);
 fprintf('Loaded vector info\n');
 
 x = zeros(global_size,1);
 % Read data from data files into the vector x
-for myid = 0:numProcs-1
-    new_filename = sprintf('%s.%d',file_name,my_id);
+for my_id = 0:numProcs-1
+    new_filename = sprintf('%s.%d',filename,my_id);
     file = fopen(new_filename, 'r');
     if (file < 0)
         fprintf('Error: can''t open output data file %s\n', new_filename);
@@ -64,6 +64,6 @@ for myid = 0:numProcs-1
 
    % Add the part of this processor to the global x
    firstIndex = partitioning(my_id+o);
-   x(firstIndex:firstIndex+sz-1) = xPart;
-   fprintf('Loaded vector from proc = %d\n',myid);
+   x(firstIndex+o:firstIndex+sz-1+o) = xPart;
+   fprintf('Loaded vector from proc = %d\n',my_id);
 end  % for myid
