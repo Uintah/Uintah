@@ -32,11 +32,7 @@ public:
     HYPRE_SStructMatrixDestroy(_facA);
   }
 
-  void initialize(const Hierarchy& hier,
-                  const HYPRE_SStructGrid& grid,
-                  const HYPRE_SStructStencil& stencil,
-                  const HYPRE_SStructGraph& graph);
-
+  void setup(void);
   void solve(void);
   
   /* Utilities */
@@ -44,11 +40,9 @@ public:
 
 private:
   void initializeData(const Hierarchy& hier,
-                      const HYPRE_SStructGrid& grid,
-                      const HYPRE_SStructGraph& graph);
+                      const HYPRE_SStructGrid& grid);
 
-  void assemble(void);
-  void setup(void);
+  //  void assemble(void);
 
   /* FAC objects */
   HYPRE_SStructMatrix   _facA;

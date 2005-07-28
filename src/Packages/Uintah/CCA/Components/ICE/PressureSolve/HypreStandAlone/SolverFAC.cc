@@ -9,22 +9,9 @@
 using namespace std;
 
 void
-SolverFAC::initialize(const Hierarchy& hier,
-                      const HYPRE_SStructGrid& grid,
-                      const HYPRE_SStructStencil& stencil,
-                      const HYPRE_SStructGraph& graph)
-{
-  initializeData(hier, grid, graph);
-  makeLinearSystem(hier, grid, stencil);
-  assemble();
-}
-
-void
 SolverFAC::initializeData(const Hierarchy& hier,
-                          const HYPRE_SStructGrid& grid,
-                          const HYPRE_SStructGraph& graph)
+                          const HYPRE_SStructGrid& grid)
 {
-#if FAC
   /* Initialize arrays needed by Hypre FAC */
   const Counter numLevels = hier._levels.size();
   _pLevel          = hypre_TAlloc(int  , numLevels);    
@@ -34,50 +21,8 @@ SolverFAC::initializeData(const Hierarchy& hier,
     ToIndex(hier._levels[level]->_refRat, &_refinementRatio[level],
             _param->numDims);
   }
-#endif
-  
-  _requiresPar =
-    (((_solverID >= 20) && (_solverID <= 30)) ||
-     ((_solverID >= 40) && (_solverID < 60)));
 
-  /* Create an empty matrix with the graph non-zero pattern */
-  HYPRE_SStructMatrixCreate(MPI_COMM_WORLD, graph, &_A);
-  Print("Created empty SStructMatrix\n");
-  /* If using AMG, set A's object type to ParCSR now */
-  if (_requiresPar) {
-    HYPRE_SStructMatrixSetObjectType(_A, HYPRE_PARCSR);
-  }
-  HYPRE_SStructMatrixInitialize(_A);
-
-  /* Initialize RHS vector b and solution vector x */
-  HYPRE_SStructVectorCreate(MPI_COMM_WORLD, grid, &_b);
-  HYPRE_SStructVectorCreate(MPI_COMM_WORLD, grid, &_x);
-  /* If AMG is used, set b and x type to ParCSR */
-  if (_requiresPar) {
-    HYPRE_SStructVectorSetObjectType(_b, HYPRE_PARCSR);
-    HYPRE_SStructVectorSetObjectType(_x, HYPRE_PARCSR);
-  }
-  HYPRE_SStructVectorInitialize(_b);
-  HYPRE_SStructVectorInitialize(_x);
-}
-
-void
-SolverFAC::assemble(void)
-{
-  /* Assemble the matrix - a collective call */
-  HYPRE_SStructMatrixAssemble(_A); 
-  /* For BoomerAMG solver: set up the linear system in ParCSR format */
-  if (_requiresPar) {
-    HYPRE_SStructMatrixGetObject(_A, (void **) &_parA);
-  }
-  HYPRE_SStructVectorAssemble(_b);
-  HYPRE_SStructVectorAssemble(_x);
- 
-  /* For BoomerAMG solver: set up the linear system (b,x) in ParCSR format */
-  if (_requiresPar) {
-    HYPRE_SStructVectorGetObject(_b, (void **) &_parB);
-    HYPRE_SStructVectorGetObject(_x, (void **) &_parX);
-  }
+  Solver::initializeData(hier, grid); // Do the rest of the generic inits
 }
 
 void
