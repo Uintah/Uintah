@@ -1,5 +1,4 @@
 #include "Hierarchy.h"
-
 #include "util.h"
 #include "Level.h"
 #include "Patch.h"

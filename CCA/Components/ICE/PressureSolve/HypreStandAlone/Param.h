@@ -24,6 +24,9 @@ public:
     CentralHalf
   };
 
+  enum SolverType {
+    AMG, FAC
+  };
 
   Param(void)
     /* Constructor: initialize default parameters for all test cases */
@@ -40,7 +43,7 @@ public:
       twoLevelType = CentralHalf;
       threeLevelType = CentralHalf;
       
-      solverID = 30;
+      solverType = AMG;
       printSystem = 1;
       timing = true;
       saveResults = true;
@@ -75,7 +78,7 @@ public:
   RefPattern      threeLevelType; // Refinement pattern for refining level 1 -> 2
   
   /* Debugging and control flags */
-  int             solverID;       // Solver ID, 30 = AMG, 99 = FAC
+  SolverType      solverType;     // Hypre Solver Type
   bool            printSystem;    // Linear system dump to file
   bool            timing;         // Time results
   bool            saveResults;    // Dump the solution, error to files
