@@ -15,7 +15,7 @@ namespace SCIRun {
     std::string              trailing();
     std::vector<std::string> trailing(int number);
     
-    std::vector<std::string> allTrailing(int minnumber=1);
+    std::vector<std::string> allTrailing(unsigned int minnumber=1);
     
     // is this option present
     bool        getLogical(std::string name);
