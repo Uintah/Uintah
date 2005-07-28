@@ -32,11 +32,11 @@ public:
     HYPRE_SStructMatrixDestroy(_facA);
   }
 
-  void setup(void);
-  void solve(void);
+  virtual void setup(void);
+  virtual void solve(void);
   
   /* Utilities */
-  void printMatrix(const string& fileName = "output");
+  virtual void printMatrix(const string& fileName = "output");
 
 private:
   void initializeData(const Hierarchy& hier,

@@ -100,6 +100,9 @@ SolverFAC::solve(void)
   time_index = hypre_InitializeTiming("FAC Solve");
   hypre_BeginTiming(time_index);
 
+  Proc0Print("----------------------------------------------------\n");
+  Proc0Print("calling FAC\n");
+  Proc0Print("----------------------------------------------------\n");
   HYPRE_SStructFACSolve3(solver, _facA, _b, _x);
 
   hypre_EndTiming(time_index);
@@ -129,6 +132,7 @@ SolverFAC::solve(void)
 void
 SolverFAC::printMatrix(const string& fileName /* = "solver" */)
 {
+  Print("SolverFAC::printMatrix() begin\n");
   if (!_param->printSystem) return;
   HYPRE_SStructMatrixPrint((fileName + ".sstruct").c_str(), _A, 0);
 
@@ -141,4 +145,5 @@ SolverFAC::printMatrix(const string& fileName /* = "solver" */)
     /* Print CSR matrix in IJ format, base 1 for rows and cols */
     HYPRE_ParCSRMatrixPrintIJ(_parA, 1, 1, (fileName + ".ij").c_str());
   }
+  Print("SolverFAC::printMatrix() end\n");
 }

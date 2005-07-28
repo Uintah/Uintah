@@ -22,6 +22,7 @@
 
 #include "Solver.h"
 #include "SolverAMG.h"
+#include "SolverFAC.h"
 
 #include <vector>
 #include <HYPRE_sstruct_ls.h>
@@ -167,7 +168,7 @@ main(int argc, char *argv[]) {
   Param* param = new TestLinear;
 
   /* Set test cast parameters */
-  param->numDims       = 2; //3;
+  param->numDims       = 3; //3;
   param->solverType    = Param::AMG;   // Hypre solver
   param->numLevels     = 2;     // Number of AMR levels
   param->baseResolution= 8;     // Level 0 grid size in every direction
@@ -185,7 +186,15 @@ main(int argc, char *argv[]) {
   HYPRE_SStructStencil  stencil;
 
   /* Solver data structures */
-  Solver*               solver = new SolverAMG(param);
+  Solver*               solver;
+  switch (param->solverType) {
+  case Param::AMG:
+    solver = new SolverAMG(param);
+    break;
+  case Param::FAC:
+    solver = new SolverFAC(param);
+    break;
+  }
   
   /*-----------------------------------------------------------
    * Initialize some stuff
@@ -295,6 +304,14 @@ main(int argc, char *argv[]) {
   Print("End timing\n");
 
   /*-----------------------------------------------------------
+   * Solver setup phase
+   *-----------------------------------------------------------*/
+  Proc0Print("----------------------------------------------------\n");
+  Proc0Print("Solver setup phase\n");
+  Proc0Print("----------------------------------------------------\n");
+  solver->setup();  // Depends only on A
+
+  /*-----------------------------------------------------------
    * Print out the system and initial guess
    *-----------------------------------------------------------*/
   Proc0Print("----------------------------------------------------\n");
@@ -310,7 +327,6 @@ main(int argc, char *argv[]) {
   Proc0Print("----------------------------------------------------\n");
   Proc0Print("Solve the linear system A*x=b\n");
   Proc0Print("----------------------------------------------------\n");
-  solver->setup();  // Depends only on A
   solver->solve();  // Depends on A and b
 
   /*-----------------------------------------------------------
