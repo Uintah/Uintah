@@ -29,7 +29,7 @@ public:
     double     finalResNorm;    // Final residual norm ||A*x-b||_2
   };
 
-  Solver(const Param& param)
+  Solver(const Param* param)
     : _param(param)
     {
       _results.numIterations = 0;
@@ -42,14 +42,14 @@ public:
     hypre_TFree(_refinementRatio);
 
     Print("Destroying graph objects\n");
-    if (_param.solverID > 90) {
+    if (_param->solverID > 90) {
       HYPRE_SStructGraph facGraph = hypre_SStructMatrixGraph(_facA);
       HYPRE_SStructGraphDestroy(facGraph);
     }
     
     /* Destroy matrix, RHS, solution objects */
     Print("Destroying matrix, RHS, solution objects\n");
-    if (_param.solverID > 90) {
+    if (_param->solverID > 90) {
       HYPRE_SStructMatrixDestroy(_facA);
     }
     HYPRE_SStructMatrixDestroy(_A);
@@ -71,7 +71,7 @@ public:
   void printSolution(const string& fileName = "output_x");
 
   /* Data for solver */
-  const Param&          _param;
+  const Param*          _param;
   Counter               _solverID;  // Type of Hypre solver
 
   /* SStruct objects */

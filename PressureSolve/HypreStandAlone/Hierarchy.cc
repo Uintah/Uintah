@@ -17,9 +17,9 @@
 void
 Hierarchy::make()
 {
-  const Counter numDims   = _param.numDims;
-  const Counter numLevels = _param.numLevels;
-  const Counter n         = _param.baseResolution;
+  const Counter numDims   = _param->numDims;
+  const Counter numLevels = _param->numLevels;
+  const Counter n         = _param->baseResolution;
 
   vector<Counter> k(numDims,2);
   IntMatrix procMap = grayCode(numDims,k);
@@ -98,16 +98,16 @@ Hierarchy::getPatchesFromOtherProcs()
   /* Types for arrays that are sent/received through MPI are int;
      convert to Counter later on, but don't risk having MPI_INT and
      Counter mixed up in the same call. */
-  int sendbuf[_param.numProcs];  /* Suppose this proc is #0 has 5 patches,
+  int sendbuf[_param->numProcs];  /* Suppose this proc is #0 has 5 patches,
                                    don't know what everyone else has.
                                    So this array will look like : 5 0 0 0 0. */
-  int numPatches[_param.numProcs];  // After assembling sendbuf from all procs
+  int numPatches[_param->numProcs];  // After assembling sendbuf from all procs
 
   for(Counter level = 0; level < _levels.size(); level++ ) {
     Level* lev = _levels[level];
     const vector<Counter>& resolution = lev->_resolution;
     // clear sendbuf
-    for( int index = 0; index < _param.numProcs; index++ ) {
+    for( int index = 0; index < _param->numProcs; index++ ) {
       if( index == MYID ) {
         sendbuf[index] = lev->_patchList.size();
       } else {
@@ -117,12 +117,12 @@ Hierarchy::getPatchesFromOtherProcs()
 
     // Talk to all procs to find out how many patches they have on
     // this level.
-    MPI_Allreduce(sendbuf, numPatches, _param.numProcs,
+    MPI_Allreduce(sendbuf, numPatches, _param->numProcs,
                   MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
     int totalPatches = 0;
     int startPosition = 0;
-    for(int index = 0; index < _param.numProcs; index++ ) {
+    for(int index = 0; index < _param->numProcs; index++ ) {
       //      Proc0Print("has %d patches on level %d\n",
       // numPatches[index], level);
       totalPatches += numPatches[index];
@@ -134,7 +134,7 @@ Hierarchy::getPatchesFromOtherProcs()
 
     // Put our patch information into a big vector, share it with
     // all other procs
-    int recordSize = 2*_param.numDims+1;
+    int recordSize = 2*_param->numDims+1;
     int * sendPatchInfo = new int[ recordSize * totalPatches ];
     int * patchInfo     = new int[ recordSize * totalPatches ];
     for( int index = 0; index < recordSize*totalPatches; index++ ) {
@@ -145,9 +145,9 @@ Hierarchy::getPatchesFromOtherProcs()
     for(Counter index = 0; index < lev->_patchList.size(); index++ ) {
       Patch* patch = lev->_patchList[index];
       sendPatchInfo[count++] = patch->_procID;
-      for (int d = 0; d < _param.numDims; d++)
+      for (int d = 0; d < _param->numDims; d++)
         sendPatchInfo[count++] = patch->_ilower[d];
-      for (int d = 0; d < _param.numDims; d++)
+      for (int d = 0; d < _param->numDims; d++)
         sendPatchInfo[count++] = patch->_iupper[d];
     }
 
@@ -158,10 +158,10 @@ Hierarchy::getPatchesFromOtherProcs()
     //Proc0Print("%3d: %3d %3d\n",index,sendPatchInfo[index],patchInfo[index]);
     //}
     //    Print("Looping over patches and setting their boundary types\n");
-    vector<int> ilower(_param.numDims);
-    vector<int> iupper(_param.numDims);
-    vector<int> otherilower(_param.numDims);
-    vector<int> otheriupper(_param.numDims);
+    vector<int> ilower(_param->numDims);
+    vector<int> iupper(_param->numDims);
+    vector<int> otherilower(_param->numDims);
+    vector<int> otheriupper(_param->numDims);
     int patchIndex = 0;
 
     for (int index = 0; index < totalPatches; index++ ) {
@@ -171,9 +171,9 @@ Hierarchy::getPatchesFromOtherProcs()
       }
       Patch* patch = lev->_patchList[patchIndex];
       patchIndex++;
-      for (int d = 0; d < _param.numDims; d++) {
+      for (int d = 0; d < _param->numDims; d++) {
         ilower[d] = patchInfo[recordSize*index + d + 1];
-        iupper[d] = patchInfo[recordSize*index + _param.numDims + d + 1];
+        iupper[d] = patchInfo[recordSize*index + _param->numDims + d + 1];
 
         /* Default: boundary is a C/F boundary */
         for (int s = -1; s <= 1; s += 2) {
@@ -193,9 +193,9 @@ Hierarchy::getPatchesFromOtherProcs()
       for (int other = 0; other < totalPatches; other++) {
         if (other == index)
           continue;
-        for (int d = 0; d < _param.numDims; d++) {
+        for (int d = 0; d < _param->numDims; d++) {
           otherilower[d] = patchInfo[recordSize*other + d + 1];
-          otheriupper[d] = patchInfo[recordSize*other + _param.numDims + d + 1];
+          otheriupper[d] = patchInfo[recordSize*other + _param->numDims + d + 1];
         }
         /*
           Print("Comparing patch index=%d: from ",index);
@@ -211,10 +211,10 @@ Hierarchy::getPatchesFromOtherProcs()
           fprintf(stderr,"  owned by proc %d",patchInfo[recordSize*other]);
           fprintf(stderr,"\n");
         */
-        for (int d = 0; d < _param.numDims; d++) {
+        for (int d = 0; d < _param->numDims; d++) {
           /* Check if patch has a nbhring patch on its left */
           if (ilower[d] == otheriupper[d]+1) {
-            for (int d2 = 0; d2 < _param.numDims; d2++) {
+            for (int d2 = 0; d2 < _param->numDims; d2++) {
               if (d2 == d) continue;
               if (max(ilower[d2],otherilower[d2]) <=
                   min(iupper[d2],otheriupper[d2])) {
@@ -225,7 +225,7 @@ Hierarchy::getPatchesFromOtherProcs()
 
           /* Check if patch has a nbhring patch on its right */
           if (iupper[d] == otherilower[d]-1) {
-            for (int d2 = 0; d2 < _param.numDims; d2++) {
+            for (int d2 = 0; d2 < _param->numDims; d2++) {
               if (d2 == d) continue;
               if (max(ilower[d2],otherilower[d2]) <=
                   min(iupper[d2],otheriupper[d2])) {
@@ -256,7 +256,7 @@ Hierarchy::printPatchBoundaries()
       fprintf(stderr," to ");
       printIndex(patch->_iupper);
       fprintf(stderr,"\n");
-      for (int d = 0; d < _param.numDims; d++) {
+      for (int d = 0; d < _param->numDims; d++) {
         for (int s = -1; s <= 1; s += 2) {
           //          Print("  boundary( d = %d , s = %+d ) = %s\n",
           //                d,s,boundaryTypeString[patch->getBoundary(d,s)].c_str());
