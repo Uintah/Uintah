@@ -8,10 +8,10 @@
       integer flength
       open(linc, FORM='UNFORMATTED', FILE=fname(1:flength))
       write(*,*) leniwk, lenrwk, lencwk, linc, lout
-      call flush(lout)
+C      call flush(lout)
       call cklen(linc,lout,leniwk,lenrwk,lencwk)
       write(*,*) 'CK requirements are (R,I,C): ',lenrwk,leniwk,lencwk
-      call flush(lout)
+C      call flush(lout)
       end
  
       subroutine mrhinit(leniwk, lenrwk, lencwk, linc, lout,
@@ -23,7 +23,7 @@
      1            rckwrk, cckwrk)
       write(*,*) 'Initialized Chemkin with linkfile: ',
      1fname(1:flength),'.'
-      call flush(lout)
+C      call flush(lout)
       end
  
       subroutine mrhsyms(cckwrk, lout, kname, kerr)
