@@ -1,7 +1,7 @@
 #ifndef include_sci_mpi_h 
 #define include_sci_mpi_h 
 
-#ifdef HAVE_MPI
+#if defined (HAVE_MPI) || defined (HAVE_MPICH)
 
 #include <mpi.h>
 
@@ -17,7 +17,7 @@
 #define MPI_Finalize( ) MPI_SUCCESS
 
 
-#endif //HAVE_MPI
+#endif //HAVE_MPI || HAVE_MPICH
 
 
 #endif //include_sci_mpi_h 
