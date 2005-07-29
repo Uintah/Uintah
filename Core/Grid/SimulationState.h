@@ -74,6 +74,9 @@ public:
   const VarLabel* get_refinePatchFlag_label() const {
     return refinePatchFlag_label;
   }
+  const VarLabel* get_switch_label() const {
+    return switch_label;
+  }
 
   void registerSimpleMaterial(SimpleMaterial*);
   void registerMPMMaterial(MPMMaterial*);
@@ -152,6 +155,8 @@ public:
 				   const std::string& name) const;
   Material* getMaterialByName(const std::string& name) const;
 
+  inline int getMaxMatlIndex() { return max_matl_index; }
+
   bool isCopyDataTimestep() { return d_isCopyDataTimestep; }
   void setCopyDataTimestep(bool is_cdt) { d_isCopyDataTimestep = is_cdt; }
 
@@ -171,12 +176,21 @@ private:
   const VarLabel* refineFlag_label;
   const VarLabel* oldRefineFlag_label;
   const VarLabel* refinePatchFlag_label;
+  const VarLabel* switch_label;
 
   std::vector<Material*>       matls;
   std::vector<MPMMaterial*>    mpm_matls;
   std::vector<ArchesMaterial*> arches_matls;
   std::vector<ICEMaterial*>    ice_matls;
   std::vector<SimpleMaterial*> simple_matls;
+
+  //! for carry over vars in Switcher
+  int max_matl_index;
+
+  //! in switcher we need to clear the materials, but don't 
+  //! delete them yet or we might have VarLabel problems when 
+  //! CMs are destroyed.  Store them here until the end
+  std::vector<Material*> old_matls;
 
   std::map<std::string, Material*> named_matls;
 

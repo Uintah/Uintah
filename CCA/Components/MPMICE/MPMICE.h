@@ -266,9 +266,9 @@ public:
                            GridP& grid,
                            SimulationStateP&);
 
-  void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
+  virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
 
-  void switchTest(const ProcessorGroup*,
+  virtual void switchTest(const ProcessorGroup*,
                   const PatchSubset* patches,
                   const MaterialSubset* matls,
                   DataWarehouse*,
@@ -338,7 +338,6 @@ private:
                 FIXED,
                 SYMMETRY,
                 NEIGHBOR };
-
 
 protected:
   MPMICE(const MPMICE&);

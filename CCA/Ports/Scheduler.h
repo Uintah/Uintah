@@ -89,9 +89,16 @@ WARNING
     
     virtual LoadBalancer* getLoadBalancer() = 0;
     virtual void releaseLoadBalancer() = 0;
+
+    // get information about the taskgraph
+    virtual int getNumTasks() const = 0;
+    virtual Task* getTask(int i) = 0;
     
     virtual DataWarehouse* get_dw(int idx) = 0;
     virtual DataWarehouse* getLastDW(void) = 0;
+
+    virtual bool isOldDW(int idx) const = 0;
+    virtual bool isNewDW(int idx) const = 0;
 
     virtual void logMemoryUse() = 0;
       

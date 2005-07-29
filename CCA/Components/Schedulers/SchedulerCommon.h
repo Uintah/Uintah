@@ -74,6 +74,10 @@ WARNING
     // Insert Documentation Here:
     virtual void addTask(Task* t, const PatchSet*, const MaterialSet*);
 
+    // get information about the taskgraph
+    virtual int getNumTasks() const { return graph.getNumTasks();}
+    virtual Task* getTask(int i) {return graph.getTask(i);}
+
     virtual const vector<const Task::Dependency*>& getInitialRequires();
 
     virtual LoadBalancer* getLoadBalancer();
@@ -116,8 +120,8 @@ WARNING
     typedef map< string, list<int> > VarLabelMaterialMap;
     virtual VarLabelMaterialMap* makeVarLabelMaterialMap();
 
-    bool isOldDW(int idx) const;
-    bool isNewDW(int idx) const;
+    virtual bool isOldDW(int idx) const;
+    virtual bool isNewDW(int idx) const;
 
     // Only called by the SimulationController, and only once, and only
     // if the simulation has been "restarted."
