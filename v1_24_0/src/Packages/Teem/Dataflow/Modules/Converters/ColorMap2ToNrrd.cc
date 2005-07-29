@@ -112,7 +112,9 @@ ColorMap2ToNrrd::execute()
     NrrdData *nd = scinew NrrdData();
     nrrdAlloc(nd->nrrd, nrrdTypeFloat, 3, 4, 512, 256);
     nd->nrrd->axis[2].kind = nrrdKindDomain;
+    nd->nrrd->axis[2].label = airStrdup("Gradient Magnitude");
     nd->nrrd->axis[1].kind = nrrdKindDomain;
+    nd->nrrd->axis[1].label = airStrdup("Data Value");
     nd->nrrd->axis[0].kind = nrrdKind4Color;
     nd->nrrd->axis[0].label = airStrdup("Colors");
 
