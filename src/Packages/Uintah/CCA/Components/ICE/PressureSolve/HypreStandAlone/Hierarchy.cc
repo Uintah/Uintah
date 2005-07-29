@@ -95,13 +95,22 @@ Hierarchy::make()
     /* Figure out whether you are next to the domain boundary and set
        boundary condition there. */
     for (Counter d = 0; d < numDims; d++) {
+      Side s = Left;
       if (ilower[d] == 0) {
-        patch->setBoundaryType(d,Left,Patch::Domain);
-        patch->setBC(d,Left,Patch::Dirichlet); // Hard coded to Dirichlet B.C.
+        patch->setBoundaryType(d,s,Patch::Domain);
+        patch->setBC(d,s,Patch::Dirichlet); // Hard coded to Dirichlet B.C.
+      } else {
+        patch->setBoundaryType(d,s,Patch::CoarseFine);
+        patch->setBC(d,s,Patch::NA);
       }
+      
+      s = Right;
       if (iupper[d] == lev->_resolution[d]-1) {
-        patch->setBoundaryType(d,Right,Patch::Domain);
-        patch->setBC(d,Right,Patch::Dirichlet); // Hard coded to Dirichlet B.C.
+        patch->setBoundaryType(d,s,Patch::Domain);
+        patch->setBC(d,s,Patch::Dirichlet); // Hard coded to Dirichlet B.C.
+      } else {
+        patch->setBoundaryType(d,s,Patch::CoarseFine);
+        patch->setBC(d,s,Patch::NA);
       }
     }
 
@@ -199,9 +208,10 @@ Hierarchy::getPatchesFromOtherProcs()
         /* Defaults: boundary is a C/F boundary; boundary condition is
            not applicable. */
         for (Side s = Left; s <= Right; ++s) {
-          if (patch->getBoundaryType(d,Left) == Patch::Domain) continue;
-          patch->setBoundaryType(d,s,Patch::CoarseFine);
-          patch->setBC(d,s,Patch::NA);
+          if (patch->getBoundaryType(d,s) != Patch::Domain) {
+            patch->setBoundaryType(d,s,Patch::CoarseFine);
+            patch->setBC(d,s,Patch::NA);
+          }
         }
 
         /* Check if patch is near a domain boundary */
@@ -278,8 +288,6 @@ Hierarchy::printPatchBoundaries()
       fprintf(stderr,"\n");
       for (Counter d = 0; d < _param->numDims; d++) {
         for (Side s = Left; s <= Right; ++s) {
-          //          Print("  boundary( d = %d , s = %+d ) = %s\n",
-          //                d,s,boundaryTypeString[patch->getBoundary(d,s)].c_str());
           Print("  boundary( d = %d , s = %+d ) = %s\n",
                 d,s,
                 Patch::boundaryTypeString[patch->getBoundaryType(d,s)].c_str());
