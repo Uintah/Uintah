@@ -142,7 +142,7 @@ UnuPad::execute()
 
   dim_.reset();
 
-  // test for new input
+  // Test for new input
   if (last_generation_ != nrrdH->generation)
   {
     if (last_generation_ != -1)
@@ -248,7 +248,7 @@ UnuPad::execute()
     for( int i=0; i<nin->dim; i++ )
     {
       nout->axis[i].kind  = nin->axis[i].kind;
-      nout->axis[i].label = nin->axis[i].label;
+      nout->axis[i].label = airStrdup(nin->axis[i].label);
     }
 
     if( nout->axis[0].size == 3)
