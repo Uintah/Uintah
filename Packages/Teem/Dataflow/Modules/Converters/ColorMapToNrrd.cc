@@ -103,7 +103,7 @@ ColorMapToNrrd::execute()
     nd->nrrd->axis[0].min = 0.0;
     nd->nrrd->axis[0].max = 1.0;
     nd->nrrd->axis[1].kind = nrrdKindDomain;
-    nd->nrrd->axis[1].label = airStrdup("Palette");
+    nd->nrrd->axis[1].label = airStrdup("Data Value");
     nd->nrrd->axis[1].center = nrrdCenterUnknown;
     nd->nrrd->axis[1].spacing = AIR_NAN;
     nd->nrrd->axis[1].min = AIR_NAN;
