@@ -30,8 +30,8 @@ init_DATADIR_and_DATASET
 addSubnetToDatabase {
    set name {TransferFuncHisto}
    set bbox {740 19 923 387}
-   set creationDate {Tue Jul 26 2005}
-   set creationTime {10:59:55}
+   set creationDate {Fri Jul 29 2005}
+   set creationTime {15:05:50}
    set runDate {}
    set runTime {}
    set notes {}
@@ -94,13 +94,13 @@ addSubnetToDatabase {
 
 
 set name {Main}
-set bbox {5 10 713 1078}
-set creationDate {Tue Jul 26 2005}
-set creationTime {10:59:52}
-set runDate {}
-set runTime {}
+set bbox {5 0 1273 1078}
+set creationDate {Fri Jul 29 2005}
+set creationTime {15:05:47}
+set runDate {Fri Jul 29 2005}
+set runTime {15:07:00}
 set notes {}
-set geometry {899x971+0+0}
+set geometry {800x800+53+97}
 
 # Create a Teem->DataIO->NrrdReader Module
 set m1 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 12 10]
@@ -179,43 +179,84 @@ set m19 [addModuleAtPosition "SCIRun" "Visualization" "NrrdTextureBuilder" 126 8
 # Create a Teem->UnuNtoZ->UnuQuantize Module
 set m20 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuQuantize" 421 647]
 
-# Create a Teem->DataIO->NrrdReader Module
-set m21 [addModuleAtPosition "Teem" "DataIO" "NrrdReader" 548 727]
-
 # Create a Teem->Converters->NrrdToColorMap2 Module
-set m22 [addModuleAtPosition "Teem" "Converters" "NrrdToColorMap2" 415 879]
+set m21 [addModuleAtPosition "Teem" "Converters" "NrrdToColorMap2" 415 879]
+
+# Create a Teem->UnuAtoM->UnuAxinsert Module
+set m22 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxinsert" 865 235]
+
+# Create a Teem->UnuNtoZ->UnuPad Module
+set m23 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuPad" 848 307]
+
+# Create a Teem->UnuNtoZ->UnuReshape Module
+set m24 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuReshape" 1086 291]
+
+# Create a Teem->UnuAtoM->UnuAxinsert Module
+set m25 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxinsert" 1099 224]
+
+# Create a Teem->UnuNtoZ->UnuPad Module
+set m26 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuPad" 1073 363]
+
+# Create a Teem->UnuAtoM->UnuJoin Module
+set m27 [addModuleAtPosition "Teem" "UnuAtoM" "UnuJoin" 929 442]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m28 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 873 0]
+
+# Create a Teem->Converters->ColorMapToNrrd Module
+set m29 [addModuleAtPosition "Teem" "Converters" "ColorMapToNrrd" 893 68]
+
+# Create a Teem->UnuAtoM->UnuCrop Module
+set m30 [addModuleAtPosition "Teem" "UnuAtoM" "UnuCrop" 898 159]
+
+# Create a Teem->UnuAtoM->UnuCrop Module
+set m31 [addModuleAtPosition "Teem" "UnuAtoM" "UnuCrop" 1108 149]
+
+# Create a Teem->UnuAtoM->Unu2op Module
+set m32 [addModuleAtPosition "Teem" "UnuAtoM" "Unu2op" 960 509]
 
 # Create a Teem->UnuAtoM->UnuFlip Module
-set m23 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 503 799]
+set m33 [addModuleAtPosition "Teem" "UnuAtoM" "UnuFlip" 886 592]
 
 # Create the Connections between Modules
 set c1 [addConnection $m7 0 $m15 0]
-set c2 [addConnection $m19 0 $m8 0]
-set c3 [addConnection $m8 0 $m9 0]
-set c4 [addConnection $m15 0 $m20 0]
-set c5 [addConnection $m1 0 $m10 0]
-set c6 [addConnection $m21 0 $m23 0]
-set c7 [addConnection $m12 0 $m6 0]
-set c8 [addConnection $m12 0 $m4 0]
-set c9 [addConnection $m10 0 $m11 0]
-set c10 [addConnection $m23 0 $m22 0]
-set c11 [addConnection $m13 0 $m16 0]
-set c12 [addConnection $m13 0 $m14 0]
-set c13 [addConnection $m18 0 $m19 0]
-set c14 [addConnection $m6 0 $m3 0]
-set c15 [addConnection $m2 0 $m13 0]
-set c16 [addConnection $m4 0 $m18 0]
-set c17 [addConnection $m11 0 $m5 0]
-set c18 [addConnection $m11 0 $m12 0]
-set c19 [addConnection $m11 0 $m2 0]
-set c20 [addConnection $m14 0 $m17 0]
-set c21 [addConnection $m5 0 $m7 1]
-set c22 [addConnection $m6 0 $m5 1]
-set c23 [addConnection $m2 0 $m18 1]
-set c24 [addConnection $m3 0 $m13 1]
-set c25 [addConnection $m20 0 $m14 1]
-set c26 [addConnection $m17 0 $m19 1]
-set c27 [addConnection $m22 0 $m8 2]
+set c2 [addConnection $m28 0 $m29 0]
+set c3 [addConnection $m19 0 $m8 0]
+set c4 [addConnection $m8 0 $m9 0]
+set c5 [addConnection $m15 0 $m20 0]
+set c6 [addConnection $m29 0 $m30 0]
+set c7 [addConnection $m29 0 $m31 0]
+set c8 [addConnection $m1 0 $m10 0]
+set c9 [addConnection $m12 0 $m6 0]
+set c10 [addConnection $m12 0 $m4 0]
+set c11 [addConnection $m32 0 $m33 0]
+set c12 [addConnection $m22 0 $m23 0]
+set c13 [addConnection $m25 0 $m24 0]
+set c14 [addConnection $m10 0 $m11 0]
+set c15 [addConnection $m30 0 $m22 0]
+set c16 [addConnection $m31 0 $m25 0]
+set c17 [addConnection $m33 0 $m21 0]
+set c18 [addConnection $m13 0 $m16 0]
+set c19 [addConnection $m13 0 $m14 0]
+set c20 [addConnection $m18 0 $m19 0]
+set c21 [addConnection $m27 0 $m32 0]
+set c22 [addConnection $m23 0 $m27 0]
+set c23 [addConnection $m6 0 $m3 0]
+set c24 [addConnection $m2 0 $m13 0]
+set c25 [addConnection $m4 0 $m18 0]
+set c26 [addConnection $m11 0 $m5 0]
+set c27 [addConnection $m11 0 $m12 0]
+set c28 [addConnection $m11 0 $m2 0]
+set c29 [addConnection $m24 0 $m26 0]
+set c30 [addConnection $m14 0 $m17 0]
+set c31 [addConnection $m5 0 $m7 1]
+set c32 [addConnection $m26 0 $m27 1]
+set c33 [addConnection $m6 0 $m5 1]
+set c34 [addConnection $m2 0 $m18 1]
+set c35 [addConnection $m3 0 $m13 1]
+set c36 [addConnection $m20 0 $m14 1]
+set c37 [addConnection $m17 0 $m19 1]
+set c38 [addConnection $m21 0 $m8 2]
 
 # Set GUI variables for the Teem->DataIO->NrrdReader Module
 set $m1-filename "$DATADIR/volume/tooth.nhdr"
@@ -295,7 +336,7 @@ set $m8-specular {0.388}
 set $m8-shine {24}
 
 $m9 addViewer
-set $m9-ViewWindow_0-geometry 654x574+684+232
+set $m9-ViewWindow_0-geometry 654x573+689+255
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
 set $m9-ViewWindow_0-view-eyep-x {-215.845142196}
@@ -386,12 +427,67 @@ set $m20-realmin {0.0}
 set $m20-realmax {1.0}
 set $m20-nbits {8}
 
-# Set GUI variables for the Teem->DataIO->NrrdReader Module
-set $m21-filename "/home/callahan/Evans/rainbow-cm2.nrrd"
-set $m21-filetype {Nrrd Files (*.nhdr,*.nrrd,*.nd,*.vff,*.pic,*.pict,*.vol,*.v)}
+# Set GUI variables for the Teem->UnuAtoM->UnuAxinsert Module
+set $m22-axis {2}
+
+# Set GUI variables for the Teem->UnuNtoZ->UnuPad Module
+set $m23-dim {3}
+set $m23-minAxis0 {0}
+set $m23-maxAxis0 {0}
+set $m23-minAxis1 {0}
+set $m23-maxAxis1 {0}
+set $m23-minAxis2 {0}
+set $m23-maxAxis2 {255}
+
+# Set GUI variables for the Teem->UnuNtoZ->UnuReshape Module
+set $m24-sz {1 1 256}
+
+# Set GUI variables for the Teem->UnuAtoM->UnuAxinsert Module
+set $m25-axis {2}
+
+# Set GUI variables for the Teem->UnuNtoZ->UnuPad Module
+set $m26-dim {3}
+set $m26-minAxis0 {0}
+set $m26-maxAxis0 {0}
+set $m26-minAxis1 {0}
+set $m26-maxAxis1 {255}
+set $m26-minAxis2 {0}
+set $m26-maxAxis2 {0}
+
+# Set GUI variables for the Teem->UnuAtoM->UnuJoin Module
+set $m27-dim {3}
+
+# Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
+set $m28-positionList {{0 37} {302 0}}
+set $m28-nodeList {257 258}
+set $m28-width {302}
+set $m28-height {40}
+
+# Open the SCIRun->Visualization->GenStandardColorMaps UI
+$m28 initialize_ui
+
+# Set GUI variables for the Teem->UnuAtoM->UnuCrop Module
+set $m30-num-axes {2}
+set $m30-uis {2}
+set $m30-reset_data {0}
+set $m30-maxAxis0 {2}
+set $m30-absmaxAxis0 {3}
+set $m30-absmaxAxis1 {255}
+
+# Set GUI variables for the Teem->UnuAtoM->UnuCrop Module
+set $m31-num-axes {2}
+set $m31-uis {2}
+set $m31-reset_data {0}
+set $m31-minAxis0 {3}
+set $m31-absmaxAxis0 {3}
+set $m31-absmaxAxis1 {255}
+
+# Set GUI variables for the Teem->UnuAtoM->Unu2op Module
+set $m32-operator {x}
+set $m32-float_input {256.0}
 
 # Set GUI variables for the Teem->UnuAtoM->UnuFlip Module
-set $m23-axis {2}
+set $m33-axis {2}
 
 
 ::netedit scheduleok
