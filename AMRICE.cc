@@ -561,7 +561,7 @@ void AMRICE::refine(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){  
     const Patch* finePatch = patches->get(p);
-    cout_doing << d_myworld->myrank() << "  patch " << finePatch->getID()<< endl;
+    cout_doing << "  patch " << finePatch->getID()<< endl;
     
     Level::selectType coarsePatches;
     finePatch->getCoarseLevelPatches(coarsePatches);
