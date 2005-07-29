@@ -6,11 +6,13 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
 #include <Packages/Uintah/CCA/Ports/ModelMaker.h>
 #include <Packages/Uintah/CCA/Components/Solvers/SolverFactory.h>
@@ -21,6 +23,12 @@
 #include <Packages/Uintah/Core/Grid/SimpleMaterial.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
+
+
+// TODO - fix VolumeOld
+// TODO - fix PETSC problem transitioning from rmpmice to impm
+// TODO - get DataArchiver to change output frequencies
+// TODO - make sure data carry-over is correct
 
 using namespace Uintah;
 
@@ -61,9 +69,7 @@ Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups,
         init_vars.push_back(name);
       else
         continue;
-      if (matls != "")
-        init_matls.push_back(matls);
-              
+      init_matls.push_back(matls);
     }
     d_initVars.push_back(init_vars);
     d_initMatls.push_back(init_matls);
@@ -71,22 +77,26 @@ Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups,
   }
   
   // get the vars that will need to be initialized by this component
-  for (ProblemSpecP var=sim_block->findBlock("carry_over"); var != 0; var = var->findNextBlock("init")) {
+  for (ProblemSpecP var=sim_block->findBlock("carry_over"); var != 0; var = var->findNextBlock("carry_over")) {
     map<string,string> attributes;
     var->getAttributes(attributes);
     string name = attributes["var"];
-    if (name != "") 
+    if (name != "") {
       d_carryOverVars.push_back(name);
+    }
   }
   d_numComponents = num_components;
 
-  switchLabel = VarLabel::create("switch.bool",
-                                 SoleVariable<bool>::getTypeDescription());
+  //d_switchLabel = VarLabel::create("postSwitchTest", max_vartype::getTypeDescription());
 }
 
 Switcher::~Switcher()
 {
-  VarLabel::destroy(switchLabel);
+  for (unsigned i = 0; i < d_carryOverVarMatls.size(); i++)
+    if (d_carryOverVarMatls[i] && d_carryOverVarMatls[i]->removeReference())
+      delete d_carryOverVarMatls[i];
+  d_carryOverVarMatls.clear();
+  //VarLabel::destroy(d_switchLabel);
 }
 
 void Switcher::problemSetup(const ProblemSpecP& params, GridP& grid,
@@ -107,21 +117,6 @@ void Switcher::problemSetup(const ProblemSpecP& params, GridP& grid,
     comp->attachPort("modelmaker",modelmaker);
   }
 
-  // maybe not the best way to do this right now, but we need to do this to get 
-  // all the VarLabels created, so we don't have to do intermediate timesteps.
-  // also, this will enable us to automatically init_vars and carry_over_vars.
-
-  for (unsigned i = 0; i < d_numComponents; i++) {
-    ProblemSpecInterface* psi = 
-      dynamic_cast<ProblemSpecInterface*>(getPort("problem spec",i));
-    if (psi) {
-      ProblemSpecP ups = psi->readInputFile();
-      dynamic_cast<SimulationInterface*>(getPort("sim",i))->problemSetup(ups,grid,sharedState);
-    } else {
-      throw InternalError("psi dynamic_cast failed", __FILE__, __LINE__);
-    }
-  }
-
   // clear it out and do the first one again
   sharedState->clearMaterials();
   ProblemSpecInterface* psi = 
@@ -139,8 +134,9 @@ void Switcher::problemSetup(const ProblemSpecP& params, GridP& grid,
     vector<VarLabel*> labels;
     for (unsigned j = 0; j < names.size(); j++) {
       VarLabel* label = VarLabel::find(names[j]);
-      if (label)
+      if (label) {
         labels.push_back(label);
+      }
       else
         throw ProblemSetupException("Cannot find VarLabel", __FILE__, __LINE__);
     }
@@ -149,8 +145,9 @@ void Switcher::problemSetup(const ProblemSpecP& params, GridP& grid,
 
   for (unsigned i = 0; i < d_carryOverVars.size(); i++) {
     VarLabel* label = VarLabel::find(d_carryOverVars[i]);
-    if (label)
+    if (label) {
       d_carryOverVarLabels.push_back(label);
+    }
     else
       throw ProblemSetupException("Cannot find VarLabel", __FILE__, __LINE__);
   }
@@ -167,7 +164,6 @@ void Switcher::scheduleInitialize(const LevelP& level,
 void Switcher::scheduleComputeStableTimestep(const LevelP& level,
                                              SchedulerP& sched)
 {
-  cout << "Switcher::scheduleComputeStableTimestep" << endl;
   d_sim->scheduleComputeStableTimestep(level,sched);
 }
 
@@ -175,7 +171,6 @@ void
 Switcher::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched,
                               int a, int b )
 {
-  cout << "d_sim = " << d_sim << endl;
   d_sim->scheduleTimeAdvance(level,sched,a,b);
   scheduleSwitchTest(level,sched);
 
@@ -188,34 +183,90 @@ Switcher::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched,
 
 void Switcher::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
-
   d_sim->scheduleSwitchTest(level,sched); // generates switch test data;
 
   Task* t = scinew Task("Switcher::switchTest",
                         this, & Switcher::switchTest);
 
-  // requires switch_test data;
-  t->requires(Task::NewDW,switchLabel);
+  // the component is responsible to determine when it is to switch.
+  t->requires(Task::NewDW,d_sharedState->get_switch_label(), level.get_rep());
+  //t->computes(d_switchLabel, level.get_rep(), d_sharedState->refineFlagMaterials());
   sched->addTask(t,level->eachPatch(),d_sharedState->allMaterials());
-  if (d_switchState == switching) {
-    cout << "RUNNING computeStableTimestep" << endl;
-    //d_sim->scheduleComputeStableTimestep(level,sched);
-  }
 }
 
 void Switcher::scheduleInitNewVars(const LevelP& level, SchedulerP& sched)
 {
   Task* t = scinew Task("Switcher::initNewVars",
                         this, & Switcher::initNewVars);
+  t->requires(Task::NewDW,d_sharedState->get_switch_label(), level.get_rep());
   sched->addTask(t,level->eachPatch(),d_sharedState->allMaterials());
-  t->requires(Task::NewDW, switchLabel);
 }
 
+// note - won't work if number of levels changes
 void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
 {
   Task* t = scinew Task("Switcher::carryOverVars",
                         this, & Switcher::carryOverVars);
+  if (d_switchState == switching) {
+    // clear carry-over db
+    if (level->getIndex() >= (int) d_matlVarsDB.size()) {
+      d_matlVarsDB.resize(level->getIndex()+1);
+    }
+    for (matlVarsType::iterator iter = d_matlVarsDB[level->getIndex()].begin(); iter != d_matlVarsDB[level->getIndex()].end(); iter++) {
+      if (iter->second && iter->second->removeReference()) {
+        delete iter->second;
+      }
+    }
+    d_matlVarsDB[level->getIndex()].clear();
+    const PatchSet* procset = sched->getLoadBalancer()->createPerProcessorPatchSet(level);
+    // rebuild carry-over db
+    for (unsigned i = 0; i < d_carryOverVarLabels.size(); i++) {
+      if (!d_carryOverVarLabels[i])
+        continue;
+      bool found = false;
+      for (int j = 0; j < sched->getNumTasks(); j++) {
+        for(Task::Dependency* dep = sched->getTask(j)->getComputes(); dep != 0; dep=dep->next){
+          //if(!sched->isOldDW(dep->mapDataWarehouse()))
+          //continue;
+          if (dep->var == d_carryOverVarLabels[i]) {
+            found = true;
+            break;
+          }
+          // it's already being required by somebody else, so ignore it
+          if (found)
+            continue;
+        }
+      }
+      if (found) {
+        cout << "  Not carrying over " << *d_carryOverVarLabels[i] << endl;
+        continue;
+      }
+      MaterialSubset* matls = scinew MaterialSubset;
+      matls->addReference();
+      for (int j = 0; j < d_sharedState->getMaxMatlIndex(); j++) {
+        // if it exists in the old DW for this level (iff it is 
+        // on the level, it will be in the procSet's patches)
+        if (sched->get_dw(0)->exists(d_carryOverVarLabels[i], j, procset->getSubset(0)->get(0))) {
+          matls->add(j);
+        }
+      }
+      d_matlVarsDB[level->getIndex()][d_carryOverVarLabels[i]] = matls;
+    }
+  }
+
+  // schedule the vars for carrying over (if this happens before a switch, don't do it)
+  if (level->getIndex() < (int) d_matlVarsDB.size()) {
+    for (matlVarsType::iterator iter = d_matlVarsDB[level->getIndex()].begin(); 
+         iter != d_matlVarsDB[level->getIndex()].end();
+         iter++) {
+      t->requires(Task::OldDW, iter->first, iter->second, Task::OutOfDomain, Ghost::None, 0);
+      t->computes(iter->first, iter->second, Task::OutOfDomain);
+      cout << "  Carry over " << *iter->first << " matl " << *iter->second << endl;
+    }  
+  }
   sched->addTask(t,level->eachPatch(),d_sharedState->allMaterials());
+  
+  d_switchState = idle;
 }
 
 void Switcher::switchTest(const ProcessorGroup*,
@@ -223,16 +274,15 @@ void Switcher::switchTest(const ProcessorGroup*,
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
-
-  SoleVariable<bool> switch_condition;
-  new_dw->get(switch_condition,switchLabel,getLevel(patches));
-  cout << "switch_condition = " << switch_condition << endl;
+  max_vartype switch_condition;
+  new_dw->get(switch_condition,d_sharedState->get_switch_label(),getLevel(patches));
 
   if (switch_condition) {
+    // we'll set it back to idle at the bottom of the next timestep's scheduleCarryOverVars
     d_switchState = switching;
-  } else
+  } else {
     d_switchState = idle;
-
+  }
 }
 
 void Switcher::initNewVars(const ProcessorGroup*,
@@ -240,7 +290,10 @@ void Switcher::initNewVars(const ProcessorGroup*,
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
-  if (d_switchState != switching)
+  max_vartype switch_condition;
+  new_dw->get(switch_condition,d_sharedState->get_switch_label(),getLevel(patches));
+
+  if (!switch_condition)
     return;
 
   for (unsigned i = 0; i < d_initVarLabels[d_componentIndex+1].size(); i++) {
@@ -288,6 +341,7 @@ void Switcher::initNewVars(const ProcessorGroup*,
           case TypeDescription::double_type:
             {
             ParticleVariable<double> q;
+            constParticleVariable<double> qcopy;
             new_dw->allocateAndPut(q, l, pset);
             for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
               q[*iter] = 0;
@@ -327,13 +381,21 @@ void Switcher::carryOverVars(const ProcessorGroup*,
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
-
+  const Level* level = getLevel(patches);
+  if (level->getIndex() < (int) d_matlVarsDB.size()) {
+    for (matlVarsType::iterator iter = d_matlVarsDB[level->getIndex()].begin(); 
+         iter != d_matlVarsDB[level->getIndex()].end();
+         iter++) {
+      new_dw->transferFrom(old_dw, iter->first, patches, iter->second);
+    }  
+  }
 }
 bool Switcher::needRecompile(double time, double delt, const GridP& grid)
 {
-  cout << "In needRecompile, returning " << (d_switchState == switching) << endl;
   bool retval = false;
   if (d_switchState == switching) {
+    if (d_myworld->myrank() == 0)
+      cout << "   Switching components!\n";
     d_componentIndex++;
     d_sharedState->clearMaterials();
     d_sharedState->d_switchState = true;

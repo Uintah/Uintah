@@ -22,7 +22,6 @@
            </SimulationComponent>
            <input_file> inputs/MPM/4disks_2d.1mat.ups</input_file>
        </subcomponent>
-       <carry_over var = "p.x"/>
    </SimulationComponent>
 
   <Time>

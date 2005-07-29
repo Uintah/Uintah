@@ -813,8 +813,10 @@ void ImpMPM::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
   Task* task = scinew Task("switchTest",this, &ImpMPM::switchTest);
 
-  task->computes(lb->switchLabel);
-  sched->addTask(task, level->eachPatch(),d_sharedState->allMaterials());
+  // make sure this is done after relocation (non-data)
+  task->requires(Task::NewDW, lb->pXLabel, Ghost::None );
+  task->computes(d_sharedState->get_switch_label(), level.get_rep());
+  sched->addTask(task, level->eachPatch(),d_sharedState->allMPMMaterials());
 
 }
 
@@ -2581,15 +2583,14 @@ void ImpMPM::switchTest(const ProcessorGroup* group,
                         DataWarehouse* new_dw)
 {
   int time_step = d_sharedState->getCurrentTopLevelTimeStep();
-  cout << "time_step = " << time_step << endl;
-  bool sw = false;
+  double sw = 0;
 #if 1
-  if (time_step == 3 )
-    sw = true;
+  if (time_step == 6+d_myworld->myrank() )
+    sw = 1;
   else
-    sw = false;
+    sw = 0;
 #endif
 
-  SoleVariable<bool> switch_condition(sw);
-  new_dw->put(switch_condition,lb->switchLabel,getLevel(patches));
+  max_vartype switch_condition(sw);
+  new_dw->put(switch_condition,d_sharedState->get_switch_label(),getLevel(patches));
 }

@@ -17,8 +17,6 @@ using std::vector;
       MPMLabel();
       ~MPMLabel();
 
-      const VarLabel* switchLabel;
-
       const VarLabel* delTLabel;
       const VarLabel* doMechLabel;
 
