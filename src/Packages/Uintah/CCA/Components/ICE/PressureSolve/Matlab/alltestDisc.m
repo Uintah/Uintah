@@ -105,7 +105,7 @@ for dim = 1:2
         p.problemType           = title;
         p.outputDir             = sprintf('test_%s_%dD',title,p.dim);
         out(0,'[%3d/%3d] %-25s ',count,length(testCases{dim}),title);
-        [errNorm,success,testCPU,testElapsed] = testDisc(p);
+        [errNorm,orders,success,testCPU,testElapsed] = testDisc(p);
         switch (success)
             case 0,
                 result = 'failure';
@@ -122,7 +122,8 @@ for dim = 1:2
             fprintf(fout,'\\input %s/Results\n\n',param.outputDir);
             fclose(fout);
         end
-        out(0,'%-12s  cpu=%10.2f  elapsed=%10.2f',result,testCPU,testElapsed);
+%        out(0,'%-12s  cpu=%10.2f  elapsed=%10.2f',result,testCPU,testElapsed);
+        out(0,'%-12s  cpu=%10.2f  order=%4.2f',result,testCPU,orders(1));
         out(0,'\n');
     end
 end
