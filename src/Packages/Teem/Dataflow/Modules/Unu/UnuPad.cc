@@ -213,7 +213,7 @@ UnuPad::execute()
 
     for( int i=0; i<nin->dim; i++ ) {
       nout->axis[i].kind  = nin->axis[i].kind;
-      nout->axis[i].label = nin->axis[i].label;
+      nout->axis[i].label = airStrdup(nin->axis[i].label);
     }
 
     if( nout->axis[0].size == 3)
