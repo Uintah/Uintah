@@ -133,6 +133,7 @@ UnuAxinsert::execute()
       nout->axis[i].kind = nrrdKindStub;
     }
     nout->axis[i+offset].kind = nin->axis[i].kind;
+    nout->axis[i+offset].label = 0;
   }
   if (axis == nin->dim)
   {
