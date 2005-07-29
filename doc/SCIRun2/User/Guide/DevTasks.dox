@@ -5,12 +5,10 @@
 
 \subsection ayla Ayla
 
-\li Test SCIRun2 with MPI distributions: Aug 5 
 \li Bug #2731: TBD
 \li Replace Qt GUI toolkit: TBD
 \li Migrate loading/saving network files to a Framework service: TBD
-
-<!-- Test MPI implementations with SCIRun2: TDB -->
+<!-- MPICH done, others? -->
 
 \subsection keming Keming
 
@@ -32,7 +30,7 @@
 
 \li New name for SCIRun2
 \li Test Dataflow component model
-\li Incorporate SCIRun GUI features to SCIRun2 GUI
+\li Incorporate %SCIRun GUI features to SCIRun2 GUI
 \li Tests: framework, components, interfaces
 \li Standardize addition of a component model and individual components
 \li Tutorial for component authors

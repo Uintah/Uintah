@@ -10,9 +10,9 @@ experimental component models.
 SCIRun2 is not
 <a href="http://software.sci.utah.edu/scirun.html">SCIRun</a>.
 SCIRun2, however, does currently have dependencies on many of the original
-\ref whatis "SCIRun" dataflow classes.
+%SCIRun dataflow classes.
 Because of these dependencies (and for other historical reasons) building
-SCIRun2 also requires building \ref whatis "SCIRun".
+SCIRun2 also requires building %SCIRun.
 Eventually, the original dataflow classes will be isolated from
 SCIRun2 and built only as an optional component.
 
@@ -40,8 +40,7 @@ Be sure to carefully check the build instructions for each thirdparty dependency
     <tr>
      <td>SCIRun2 framework</td>
      <td>
-         \ref whatis "SCIRun"
-         Thirdparty, Babel, Flex, Bison, Gawk
+         %SCIRun Thirdparty, Babel, Flex, Bison, Gawk
      </td>
      <td>--with-thirdparty=/path/to/thirdparty --with-babel=/path/to/babel</td>
     </tr>
@@ -53,8 +52,7 @@ Be sure to carefully check the build instructions for each thirdparty dependency
     <tr>
      <td>Dataflow components</td>
      <td>
-         \ref whatis "SCIRun"
-         Thirdparty
+         %SCIRun Thirdparty
      </td>
      <td>--with-thirdparty=/path/to/thirdparty</td>
     </tr>
@@ -88,7 +86,7 @@ Be sure to carefully check the build instructions for each thirdparty dependency
 \subsection depend_scirun SCIRun    
 
 SCIRun2 software is distributed with
-<a href="http://software.sci.utah.edu/scirun.html">SCIRun</a>.
+\ref whatis "SCIRun".
 All required classes build automatically.
 
 \subsubsection depend_scirun_1 SCIRun Thirdparty
@@ -96,8 +94,8 @@ All required classes build automatically.
 This package consists of bundled third-party libraries.
 It is freely available (<b>registration required</b>)
 <a href="http://software.sci.utah.edu/scirun.html">here</a>.
-Select the Linux/SGI source download and look for the tarball
-called \b Thirdparty_install.<latest-version>.tar.gz.
+Select the Linux/SGI source download and look for the tarball called
+<b>Thirdparty_install.<em>\<latest-version\></em>.tar.gz</b>.
 
 Estimated time to build: 1 hour
 
@@ -286,7 +284,7 @@ to learn how to run the software.
 \section reporting Reporting bugs
 
 <a href="http://software.sci.utah.edu/bugzilla">Report</a>
-SCIRun2 bugs under the CCA product category.
+SCIRun2 bugs under the %CCA product category.
 
 */
 

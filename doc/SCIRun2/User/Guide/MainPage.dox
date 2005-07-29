@@ -1,6 +1,6 @@
 /*!
 
-\mainpage \b CCA Software at SCI
+\mainpage %CCA Software at SCI
 
 \htmlonly
 <center>
@@ -15,8 +15,9 @@
 
 \section intro SCIRun2 Framework and Meta Component Model
 
-Here is the introduction and overview of 
-<a href="http://www.cca-forum.org">CCA</a> activities at SCI.
+Here is the introduction and overview of the 
+<a href="http://www.cca-forum.org">Common Component Architecture</a>
+(%CCA) activities at SCI.
 
 \section howto How to Use this Documentation
 
