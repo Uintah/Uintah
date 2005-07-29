@@ -194,13 +194,14 @@ libxml2 2.4.0.
 
 \subsection depend_mpi MPI
 
-The SCIRun2 software has only been tested with the LAM/MPI implementation.
+The SCIRun2 software has been used most frequently with the
+LAM/MPI implementation.
 The LAM/MPI software can be freely downloaded from
 <a href="http://www.lam-mpi.org">www.lam-mpi.org</a>.
-SCIRun2 supports LAM/MPI version 7.0.6.
+SCIRun2 should support LAM/MPI version 7.0.6 and higher.
 
-<!-- Check this!!! -->
-SCIRun2 will \em not build correctly with MPICH.
+SCIRun2 has also been built with
+<a href="http://www-unix.mcs.anl.gov/mpi/mpich">MPICH</a> version 1.2.7.
 
 Estimated time to build: 2-3 hours
 
@@ -209,6 +210,17 @@ Estimated time to build: 2-3 hours
 Ruby is an interpreter for the Ruby scripting language.
 Ruby can be freely downloaded from
 <a href="http://www.ruby-lang.org/en/">www.ruby-lang.org</a>.
+
+\subsubsection depend_ruby_1 ERB
+
+<!-- approx. version number? -->
+Older Ruby distributions may not include the
+<a href="http://www.ruby-doc.org/stdlib/libdoc/erb/rdoc/classes/ERB.html">
+ERB</a> package, which is required for SCIRun2 component model bridging.
+Download ERB from
+<a href="http://raa.ruby-lang.org/project/erb">here</a>.
+
+<!-- other Ruby packages for SCIM? -->
 
 Estimated time to build: 1 hour
 
