@@ -25,7 +25,7 @@ switch (param.problemType)
         f       = zeros(size(x{1}));
         for d = 1:param.dim,
             g   = 2*ones(size(x{1}));
-            for m = 2:param.dim
+            for m = 1:param.dim
                 if (m ~= d)
                     g = g .* x{m}.*(1-x{m});
                 end
@@ -49,7 +49,7 @@ switch (param.problemType)
         end
         g       = zeros(size(x{1}));
         for d = 1:param.dim
-            g = g + (4*((x{d}-x0(d))/sigma(d)).^2 - 2)/sigma(d)^2;
+            g = g + (-4*((x{d}-x0(d))/sigma(d)).^2 + 2)/sigma(d)^2;
         end
         f       = f .* g;
 
