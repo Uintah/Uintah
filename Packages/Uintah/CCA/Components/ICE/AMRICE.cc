@@ -739,12 +739,30 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
   IntVector cl = finePatch->getLevel()->mapCellToCoarser(fl);
   IntVector ch = finePatch->getLevel()->mapCellToCoarser(fh) + 
   finePatch->getLevel()->getRefinementRatio() - IntVector(1,1,1);
+  
+  //__________________________________
+  // for higher order interpolation increase the coarse level foot print
+  // by the order of interpolation - 1
+  if(d_orderOfInterpolation >= 2){
+    IntVector one(1,1,1);
+    IntVector interOrder(d_orderOfInterpolation,d_orderOfInterpolation,d_orderOfInterpolation);
+    cl  -= interOrder - one;
+    ch += interOrder - one;
+  }
+
+  //__________________________________
+  // coarseHigh and coarseLow cannot lie outside
+  // of the coarselevel index range
+  IntVector cl_tmp, ch_tmp;
+  coarseLevel->findCellIndexRange(cl_tmp,ch_tmp);
+  cl = Max(cl_tmp, cl);
+  ch = Min(ch_tmp, ch);
 
   // fine region to work over
   IntVector lo = finePatch->getInteriorCellLowIndex();
   IntVector hi = finePatch->getInteriorCellHighIndex();
 
-  cout_doing <<" coarseToFineOperator: " << varLabel->getName()
+  cout_dbg <<" coarseToFineOperator: " << varLabel->getName()
            <<" finePatch  "<< finePatch->getID() << " " 
            << lo<<" "<< hi<< " fl " << fl << " fh " << fh 
            <<" coarseRegion " << cl << " " << ch <<endl;
