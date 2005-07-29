@@ -32,7 +32,7 @@ function initTest
 %           Like jump_linear, but with a piecewise quadratic solution U
 %           that solves Poisson's equation with RHS = -1, this a, and appropriate
 %           B.C.
-%       'diffusion_quad_quad'
+%       'diffusion_linear_quad'
 %           a = 1 + x{1} and u = x{1}^2 (d-D; linear diffusion and smooth
 %           quadratic solution). Appropriate RHS and Dirichlet BC.
 %       'diffusion_quad_quad'
