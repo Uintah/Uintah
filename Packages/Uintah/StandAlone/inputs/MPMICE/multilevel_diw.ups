@@ -89,9 +89,9 @@
     </BoundaryConditions>
        <Level>
            <Box label = "1">
-              <lower>        [0,0,1.1250]    </lower>
-              <upper>        [4.5,2.5,1.375]    </upper>
-                <extraCells>   [1,1,1]    </extraCells>
+              <lower>        [0.0,0.0,1.125]    </lower>
+              <upper>        [3.0,2.5,1.375]    </upper>
+              <extraCells>   [1,1,1]    </extraCells>
               <patches>      [1,1,1]    </patches>
            </Box>
            <spacing>        [0.25,0.25,0.25]  </spacing>
@@ -104,7 +104,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>2ddiw.uda</filebase>
-      <outputInterval>.01</outputInterval>
+      <outputTimestepInterval>1</outputTimestepInterval>
 <!--
       <save label = "mom_L_ME_CC"/>
       <save label = "vel_CC"/>
@@ -216,7 +216,7 @@
                     </box>
                     <res>               [2,2,2]         </res>
                     <velocity>          [0.0,0.0,0.0]   </velocity>
-                    <temperature>       300             </temperature>
+                    <temperature>       400             </temperature>
                 </geom_object>
          </material>
 
@@ -257,7 +257,7 @@
         <exchange_properties>
          <exchange_coefficients>
                <momentum>               [1e15]         </momentum>
-               <heat>                  [1e4]           </heat>
+               <heat>                    [1e4]           </heat>
          </exchange_coefficients>
         </exchange_properties>
     </MaterialProperties>
