@@ -94,21 +94,24 @@ UnuPad::UnuPad(GuiContext *ctx) :
 {
   // value will be overwritten at gui side initialization.
   dim_.set(0);
-
-  
 }
 
-UnuPad::~UnuPad() {
+
+UnuPad::~UnuPad()
+{
 }
+
 
 void
-UnuPad::load_gui() {
+UnuPad::load_gui()
+{
   dim_.reset();
   if (dim_.get() == 0) { return; }
 
   last_mins_.resize(dim_.get(), -1);
   last_maxs_.resize(dim_.get(), -1);  
-  for (int a = 0; a < dim_.get(); a++) {
+  for (int a = 0; a < dim_.get(); a++)
+  {
     ostringstream str;
     str << "minAxis" << a;
     mins_.push_back(new GuiInt(ctx->subVar(str.str())));
@@ -117,6 +120,7 @@ UnuPad::load_gui() {
     maxs_.push_back(new GuiInt(ctx->subVar(str1.str())));
   }
 }
+
 
 void 
 UnuPad::execute()
@@ -139,19 +143,22 @@ UnuPad::execute()
   dim_.reset();
 
   // test for new input
-  if (last_generation_ != nrrdH->generation) {
-
-    if (last_generation_ != -1) {
+  if (last_generation_ != nrrdH->generation)
+  {
+    if (last_generation_ != -1)
+    {
       last_mins_.clear();
       last_maxs_.clear();
       vector<GuiInt*>::iterator iter = mins_.begin();
-      while(iter != mins_.end()) {
+      while(iter != mins_.end())
+      {
 	delete *iter;
 	++iter;
       }
       mins_.clear();
       iter = maxs_.begin();
-      while(iter != maxs_.end()) {
+      while(iter != maxs_.end())
+      {
 	delete *iter;
 	++iter;
       }
@@ -164,13 +171,13 @@ UnuPad::execute()
     dim_.reset();
     load_gui();
     gui->execute(id.c_str() + string(" init_axes"));
-
   }
 
   dim_.reset();
   if (dim_.get() == 0) { return; }
 
-  for (int a = 0; a < dim_.get(); a++) {
+  for (int a = 0; a < dim_.get(); a++)
+  {
     mins_[a]->reset();
     maxs_[a]->reset();
   }
@@ -180,7 +187,8 @@ UnuPad::execute()
   bool changed = false;
 
   if( last_pad_style_ != pad_style_.get() ||
-      last_pad_value_ != pad_value_.get() ) {
+      last_pad_value_ != pad_value_.get() )
+  {
     last_pad_style_ = pad_style_.get();
     last_pad_value_ = pad_value_.get();
 
@@ -188,25 +196,30 @@ UnuPad::execute()
   }
 
   vector<int> min(dim_.get()), max(dim_.get());
-  for (int a = 0; a < dim_.get(); a++) {
-    if (last_mins_[a] != mins_[a]->get()) {
+  for (int a = 0; a < dim_.get(); a++)
+  {
+    if (last_mins_[a] != mins_[a]->get())
+    {
       changed = true;
       last_mins_[a] = mins_[a]->get();
     }
-    if (last_maxs_[a] != maxs_[a]->get()) {
+    if (last_maxs_[a] != maxs_[a]->get())
+    {
       changed = true;
       last_maxs_[a] = maxs_[a]->get();
     }
     min[a] = 0 - mins_[a]->get();
     max[a] = (nrrdH->nrrd->axis[a].size - 1) + maxs_[a]->get();  
 
-    if (nrrdKindSize(nrrdH->nrrd->axis[a].kind) > 1 && (min[a] !=0 || max[a] != 0)) {
+    if (nrrdKindSize(nrrdH->nrrd->axis[a].kind) > 1 &&
+        (min[a] !=0 || max[a] != 0))
+    {
       warning("Trying to pad axis " + to_string(a) + " which does not have a kind of nrrdKindDomain or nrrdKindUnknown");
     }
   }
 
-  if ( changed) { 
-
+  if ( changed)
+  { 
     Nrrd *nin = nrrdH->nrrd;
     Nrrd *nout = nrrdNew();
     int *minp = &(min[0]);
@@ -217,23 +230,23 @@ UnuPad::execute()
 	(last_pad_style_ == "Wrap" &&
 	 nrrdPad(nout, nin, minp, maxp, nrrdBoundaryWrap)) ||
 	(last_pad_style_ == "Pad" &&
-	 nrrdPad(nout, nin, minp, maxp, nrrdBoundaryPad, last_pad_value_)) ) {
-
-	char *err = biffGetDone(NRRD);
-	error(string("Trouble resampling: ") + err);
-	msgStream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
-	free(err);
-      }
+	 nrrdPad(nout, nin, minp, maxp, nrrdBoundaryPad, last_pad_value_)) )
+    {
+      char *err = biffGetDone(NRRD);
+      error(string("Trouble resampling: ") + err);
+      msgStream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
+      free(err);
+    }
 
     NrrdData *nrrd = scinew NrrdData;
     nrrd->nrrd = nout;
-    //nrrd->copy_sci_data(*nrrdH.get_rep());
     last_nrrdH_ = nrrd;
 
     // Copy the properies, kinds, and labels.
     nrrd->copy_properties(nrrdH.get_rep());
 
-    for( int i=0; i<nin->dim; i++ ) {
+    for( int i=0; i<nin->dim; i++ )
+    {
       nout->axis[i].kind  = nin->axis[i].kind;
       nout->axis[i].label = nin->axis[i].label;
     }
@@ -245,7 +258,6 @@ UnuPad::execute()
     else
       nout->axis[0].kind = nrrdKindDomain;
   }
-
 
   if (last_nrrdH_.get_rep())
   {

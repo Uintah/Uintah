@@ -96,7 +96,7 @@ ColorMapToNrrd::execute()
   
     NrrdData *nd = scinew NrrdData();
     nrrdAlloc(nd->nrrd, nrrdTypeFloat, 2, 4, size);
-    nd->nrrd->axis[0].kind = nrrdKind4Color;
+    nd->nrrd->axis[0].kind = nrrdKindDomain;
     nd->nrrd->axis[0].label = airStrdup("Colors");
     nd->nrrd->axis[0].center = nrrdCenterNode;
     nd->nrrd->axis[0].spacing = AIR_NAN;
@@ -111,11 +111,7 @@ ColorMapToNrrd::execute()
 
     float *val = (float *)nd->nrrd->data;
     const float *data = cmapH->get_rgba();
-
-    const int range = size*4;
-    for(unsigned int start=0; start<size; start++) 
-      for(int cur=0; cur<range; cur+=size, ++data) 
-	val[start+cur] = *data;
+    memcpy(val, data, sizeof(float) * 4 * size);
 
     // Send the data nrrd.
     NrrdDataHandle dataH(nd);
