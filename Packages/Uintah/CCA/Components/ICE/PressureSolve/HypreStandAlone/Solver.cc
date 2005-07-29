@@ -448,7 +448,12 @@ Solver::makeLinearSystem(const Hierarchy& hier,
               /* Nbhr is at the boundary, eliminate it from values */
 
               if (patch->getBC(d,s) == Patch::Dirichlet) {
-                Print("Near Dirichlet boundary, eliminate nbhr\n");
+                Print("Near Dirichlet boundary, eliminate nbhr, coef = %f, rhsBC = %f\n",
+                      values[offsetValues + entry],_param->rhsBC(xNbhr));
+                /* Pass boundary value to RHS */
+                rhsValues[offsetRhsValues] -= 
+                  values[offsetValues + entry] * _param->rhsBC(xNbhr);
+
                 values[offsetValues + entry] = 0.0; // Eliminate connection
                 // TODO:
                 // Add to rhsValues if this is a non-zero Dirichlet B.C. !!
@@ -474,7 +479,8 @@ Solver::makeLinearSystem(const Hierarchy& hier,
 
       } // end for cell
       
-      printValues(patch,stencilSize,values,rhsValues,solutionValues);
+      printValues(patch,stencilSize,patch->_numCells,
+                  values,rhsValues,solutionValues);
 
       /* Add this patch's interior equations to the LHS matrix A */
       HYPRE_SStructMatrixSetBoxValues(_A, level, 
@@ -535,7 +541,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
       vector<int> coarseiupper(numDims);
       pointwiseDivide(patch->_ilower,refRat,coarseilower);
       pointwiseDivide(patch->_iupper,refRat,coarseiupper);
-      Print("Underlying coarse date: extends from ");
+      Print("Underlying coarse data: extends from ");
       printIndex(coarseilower);
       fprintf(stderr," to ");
       printIndex(coarseiupper);
@@ -584,7 +590,8 @@ Solver::makeLinearSystem(const Hierarchy& hier,
           rhsValues[offsetRhsValues] = 0.0;
         } // end for cell
         
-        printValues(patch,stencilSize,values,rhsValues);
+        printValues(patch,stencilSize,numCoarseCells,
+                    values,rhsValues);
 
         /* Effect the identity operator change in the Hypre structure
            for A */
@@ -599,12 +606,18 @@ Solver::makeLinearSystem(const Hierarchy& hier,
         delete[] rhsValues;
         delete[] entries;
       } // end identity matrix setting
+      Print("Finished deleting underlying coarse data\n");
 
+      Print("Looping over C/F boundaries of Patch %d, Level %d\n",
+            i,patch->_levelID);
       /* Loop over C/F boundaries of this patch */
       for (Counter d = 0; d < numDims; d++) {
         double faceArea = cellVolume / h[d];
         double coarseFaceArea = coarseCellVolume / coarseH[d];
         for (Side s = Left; s <= Right; ++s) {
+          Print("  boundary( d = %d , s = %+d ) = %s\n",
+                d,s,
+                Patch::boundaryTypeString[patch->getBoundaryType(d,s)].c_str());
           if (patch->getBoundaryType(d,s) == Patch::CoarseFine) {
 
             Print("--- Processing C/F face d = %d , s = %d ---\n",d,s);
@@ -873,55 +886,6 @@ Solver::makeLinearSystem(const Hierarchy& hier,
 
   Print("End C/F interface equation construction\n");
   serializeProcsEnd();
-
-#if 0
-  /*-----------------------------------------------------------
-   * Set up the RHS (b) and LHS (x) vectors
-   *-----------------------------------------------------------*/
-  if (MYID == 0) {
-    Print("----------------------------------------------------\n");
-    Print("Set up the RHS (b), LHS (x) vectors\n");
-    Print("----------------------------------------------------\n");
-  }
-  
-  /* Initialize b at all levels */
-  serializeProcsBegin();
-  fprintf(stderr,"Adding structured equations to b and x\n");
-  for (Counter level = 0; level < numLevels; level++) {
-    fprintf(stderr,"At level = %d\n",level);
-    /* May later need to loop over patches at this level here. */
-    /* b is defined only over interior structured equations.
-       Graph not involved. B.C. are assumed to be eliminated.
-    */
-    
-    /* Init values to vector of size = number of cells in the mesh */
-    int numCells = 1;
-    for (Counter dim = 0; dim < numDims; dim++) {
-      numCells *= (iupper[level][dim] - ilower[level][dim] + 1);
-    }
-    values = hypre_TAlloc(double, numCells);
-    fprintf(stderr,"numCells = %d\n",numCells);
-
-    fprintf(stderr,"-- Initializing b\n");
-    for (cell = 0; cell < numCells; cell++) {
-      values[cell] = 1.0;   /* RHS value at cell */
-    } // for cell
-    HYPRE_SStructVectorSetBoxValues(b, level, ilower[level], iupper[level],
-                                    0, values);
-
-    fprintf(stderr,"-- Initializing x\n");
-    for (cell = 0; cell < numCells; cell++) {
-      values[cell] = 1.0;   /* Initial guess for LHS - value at cell */
-    } // for cell
-    HYPRE_SStructVectorSetBoxValues(x, level, ilower[level], iupper[level],
-                                    0, values);
-    
-    hypre_TFree(values);
-    
-  } // for level
-  serializeProcsEnd();
-#endif
-  Print("Solver::makeLinearSystem() end\n");
 } // end makeLinearSystem()
 
 void
@@ -961,13 +925,14 @@ Solver::printSolution(const string& fileName /* = "solver" */)
 void
 Solver::printValues(const Patch* patch,
                     const int stencilSize,
+                    const int numCells,
                     const double* values /* = 0 */,
                     const double* rhsValues /* = 0 */,
                     const double* solutionValues /* = 0 */)
   /* Print values, rhsValues vectors */
 {
   Print("--- Printing values,rhsValues,solutionValues arrays ---\n");
-  for (Counter cell = 0; cell < patch->_numCells; cell++) {
+  for (Counter cell = 0; cell < numCells; cell++) {
     int offsetValues    = stencilSize * cell;
     int offsetRhsValues = cell;
     Print("cell = %4d\n",cell);

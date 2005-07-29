@@ -82,6 +82,7 @@ class Solver {
   
   void printValues(const Patch* patch,
                    const int stencilSize,
+                   const int numCells,
                    const double* values = 0,
                    const double* rhsValues = 0,
                    const double* solutionValues = 0);
