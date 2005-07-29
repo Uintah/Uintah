@@ -197,6 +197,12 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
   LoadBalancer* lb =  dynamic_cast<LoadBalancer*>(getPort("load balancer"));
   for (int i = 0; i < (int) trackingVars_.size(); i++) {
     bool printedVarName = false;
+
+    // that DW may not have been mapped....
+    if (dt->getTask()->mapDataWarehouse(trackingDWs_[i]) < 0 || 
+        dt->getTask()->mapDataWarehouse(trackingDWs_[i]) >= dws.size())
+      continue;
+
     OnDemandDataWarehouseP dw = dws[dt->getTask()->mapDataWarehouse(trackingDWs_[i])];
     
     if (dw == 0) // old on initialization timestep
