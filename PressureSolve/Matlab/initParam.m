@@ -32,6 +32,7 @@ param.threeLevel            = 0;
 param.threeLevelType        = 'leftHalf';
 
 % Modules activation flags
+param.fluxInterpOrder       = 1; % 1;
 param.profile               = 0;
 param.setupGrid             = 1;
 param.solveSystem           = 1;
@@ -40,4 +41,4 @@ param.verboseLevel          = 1;
 param.catchException        = 0;
 
 % For testDisc: experiments are parameterized by the resolution.
-param.numCellsRange         = 2.^[2:1:4]; %2.^[2:1:12];
+param.numCellsRange         = 8;%2.^[2:1:4]; %2.^[2:1:12];

@@ -89,7 +89,7 @@ end
 
 A(indUnused,:)          = 0.0;
 A(:,indUnused)          = 0.0;
-A(indUnused,indUnused)  = eye(length(indUnused));
+A(indUnused,indUnused)  = -eye(length(indUnused));
 b(indUnused)            = 0.0;
 T(indUnused,:)          = 0.0;
 T(:,indUnused)          = 0.0;
