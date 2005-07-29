@@ -241,18 +241,27 @@ for d = 1:grid.dim,
         % Summing by parts and using sum(b) = 0, we obtain
         % u_g - u_i ~ c1 (u1-uc) + c2 (u2-u1) + ... c_{n-1} (u_{n} -
         % u_{n-1}) as the interpolation stencil.
-        if (param.fluxInterpOrder == 1)
-            a = 0;
-        end
-        % else: fluxInterpOrder = 2, use the normal a
-        if (D == 0)
-            cc = 1-a;
+        if (param.fluxInterpOrder == 1)            
+            aa = 1 / (sqrt(sum((r-1).^2) - (r(d)-1).^2 + (r(d)+1).^2)/2);
+            if (D == 0)
+                cc = aa;
+            else
+                bb = [1-a ; [wInterp(1)*a-1; wInterp(2:end)*a]];
+                cc       = cumsum(bb);
+                cc(1) = aa;
+                cc(2:end) = 0;
+                cc(end)  = [];
+            end
         else
-            bb = [1-a ; [wInterp(1)*a-1; wInterp(2:end)*a]];
-            cc       = cumsum(bb);
-            cc(end)  = [];
+            % else: fluxInterpOrder = 2, use the normal a
+            if (D == 0)
+                cc = 1-a;
+            else
+                bb = [1-a ; [wInterp(1)*a-1; wInterp(2:end)*a]];
+                cc       = cumsum(bb);
+                cc(end)  = [];
+            end
         end
-
         % Loop over different types of fine cells with respect to a coarse
         % cell (there are 2^D types) and add connections to Alist.
         if (D == 0)
