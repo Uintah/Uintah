@@ -1,4 +1,5 @@
 function [errNorm,success,tCPU,tElapsed] = testDisc(p)
+global grid
 %TESTDISC  Test pressure equation discretization.
 %   We test pressure equation discretization error for a
 %   simple 2D Poisson problem with a known solution.
