@@ -3,12 +3,7 @@ function testMTSSt
   %
   % Compare experimental stress-strain data with MTS model
   %
-  %plotStressStrain
-
-  %
-  % Plot the tangent modulus vs sigma_e to find sigma_es
-  %
-  plotTangentModulus
+  plotStressStrain
 
 %
 % Compare experimental stress-strain data with MTS model
@@ -40,757 +35,10 @@ function plotStressStrain
   plotChiRc49_1000(fid);
   fclose(fid);
 
-%
-% Plot the tangent modulus vs sigma_e to find sigma_es
-%
-function plotTangentModulus
-
-  %plotTangJCRc30;
-
-  %plotTangASMHRc32;
-
-  %plotTangLarsonRc38;
-  %plotTangLYRc38500;
-  %plotTangLYRc381500;
-  %plotTangLYRc382500;
-
-  %plotTangChiRc45_0001;
-  %plotTangChiRc45_1000;
-
-  plotTangChiRc49_0001;
-  %plotTangChiRc49_1000;
-
-
-function plotChiRc49_0001(fid)
-
-  E = 213.0e9;
-  fig00 = figure;
-
-  %
-  % Plot experimental data for 4340 steel Rc 49 (Chi2 et al)
-  % (data in the form of shear stress vs shear strain)
-  % (quasistatic)
-  %
-  load FlowSt0001173KChi2.dat
-  epsEx = FlowSt0001173KChi2(:,1)/sqrt(3)*1.0e-2;
-  seqEx = FlowSt0001173KChi2(:,2)*sqrt(3);
-  seqEx = seqEx.*(1.0 + epsEx);
-  epsEx = log(1.0 + epsEx);
-  epEx = epsEx - seqEx*1.0e6/E - 0.004;
-  pexp00001173 = plot(epEx, seqEx, 'r.-', 'LineWidth', 2); hold on;
-  set(pexp00001173,'LineWidth',2,'MarkerSize',9,'Color',[1.0 0.0 0.0]);
-
-  delT = 10.0;
-  epdot = 0.0001;
-  T = 173.0;
-  rhomax = 7831.0;
-  epmax = max(epsEx);
-  Rc = 49.0;
-  [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[1.0 0.0 0.0]);
-  %[s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[1.0 0.0 0.0]);
-
-  ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
-  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.05;
-  %[p1] = intersectPoly(seqEx, epEx, ep);
-  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.1;
-  %[p1] = intersectPoly(seqEx, epEx, ep);
-  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.2;
-  %[p2] = intersectPoly(seqEx, epEx, ep);
-  %plot(p2(1),p2(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p2(1), p2(2));
-  
-  load FlowSt0001298KChi2.dat
-  epsEx = FlowSt0001298KChi2(:,1)/sqrt(3)*1.0e-2;
-  seqEx = FlowSt0001298KChi2(:,2)*sqrt(3);
-  seqEx = seqEx.*(1.0 + epsEx);
-  epsEx = log(1.0 + epsEx);
-  epEx = epsEx - seqEx*1.0e6/E - 0.004;
-  pexp00001298 = plot(epEx, seqEx, 'g.-', 'LineWidth', 2); hold on;
-  set(pexp00001298,'LineWidth',2,'MarkerSize',9,'Color',[0.0 1.0 0.0]);
-
-  delT = 10.0;
-  epdot = 0.0001;
-  T = 298.0;
-  rhomax = 7831.0;
-  epmax = max(epsEx);
-  Rc = 49.0;
-  [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 1.0 0.0]);
-  %[s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 1.0 0.0]);
-
-  ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
-  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.05;
-  %[p1] = intersectPoly(seqEx, epEx, ep);
-  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.1;
-  %[p1] = intersectPoly(seqEx, epEx, ep);
-  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.2;
-  %[p2] = intersectPoly(seqEx, epEx, ep);
-  %plot(p2(1),p2(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p2(1), p2(2));
-  
-  load FlowSt0001373KChi2.dat
-  epsEx = FlowSt0001373KChi2(:,1)/sqrt(3)*1.0e-2;
-  seqEx = FlowSt0001373KChi2(:,2)*sqrt(3);
-  seqEx = seqEx.*(1.0 + epsEx);
-  epsEx = log(1.0 + epsEx);
-  epEx = epsEx - seqEx*1.0e6/E - 0.004;
-  pexp00001373 = plot(epEx, seqEx, 'b.-', 'LineWidth', 2); hold on;
-  set(pexp00001373,'LineWidth',2,'MarkerSize',9,'Color',[0.0 0.0 1.0]);
-
-  delT = 10.0;
-  epdot = 0.0001;
-  T = 373.0;
-  rhomax = 7831.0;
-  epmax = max(epsEx);
-  Rc = 49.0;
-  [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.0 1.0]);
-  %[s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.0 1.0]);
-
-  ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
-  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.05;
-  %[p1] = intersectPoly(seqEx, epEx, ep);
-  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.1;
-  %[p1] = intersectPoly(seqEx, epEx, ep);
-  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.2;
-  %[p2] = intersectPoly(seqEx, epEx, ep);
-  %plot(p2(1),p2(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p2(1), p2(2));
-  
-  set(gca, 'XLim', [0 0.25], 'YLim', [0 2500] );
-  set(gca, 'LineWidth', 3, 'FontName', 'bookman', 'FontSize', 14);
-  xlabel('Plastic Strain', 'FontName', 'bookman', 'FontSize', 16);
-  ylabel('True Stress (MPa) ', 'FontName', 'bookman', 'FontSize', 16);
-  title('4340 Steel Rc 49', 'FontName', 'bookman', 'FontSize', 16);
-  legend([pexp00001173 pexp00001298 pexp00001373], ...
-         '0.0001/s 173 K Chi(1989)', ...
-         '0.0001/s 298 K Chi(1989)', ...
-         '0.0001/s 373 K Chi(1989)');
-  axis square;
-
-  %====================================================================
-
-function plotTangChiRc49_0001
-
-  E = 213.0e9;
-
-  %
-  % Plot experimental data for 4340 steel Rc 49 (Chi2 et al)
-  % (data in the form of shear stress vs shear strain)
-  % (quasistatic)
-  %
-  load FlowSt0001173KChi2.dat
-  epsEx = FlowSt0001173KChi2(:,1)/sqrt(3)*1.0e-2;
-  seqEx = FlowSt0001173KChi2(:,2)*sqrt(3);
-  %seqEx = seqEx.*(1.0 + epsEx);
-  %epsEx = log(1.0 + epsEx);
-  epEx = epsEx - seqEx*1.0e6/E - 0.004;
-
-  delT = 10.0;
-  epdot = 0.0001;
-  T = 173.0;
-  rhomax = 7831.0;
-  epmax = max(epsEx);
-  Rc = 49.0;
-  seqEx = seqEx*1.0e6;
-  [theta, sig_e] = computeTangentModulusIso(delT, epEx, seqEx, epdot, T, Rc);
-  fig00 = figure;
-  ptangiso = plot(sig_e/1.0e6, theta/1.0e6, 'r-'); hold on;
-
-  load FlowSt0001298KChi2.dat
-  epsEx = FlowSt0001298KChi2(:,1)/sqrt(3)*1.0e-2;
-  seqEx = FlowSt0001298KChi2(:,2)*sqrt(3);
-  %seqEx = seqEx.*(1.0 + epsEx);
-  %epsEx = log(1.0 + epsEx);
-  epEx = epsEx - seqEx*1.0e6/E - 0.004;
-
-  delT = 10.0;
-  epdot = 0.0001;
-  T = 298.0;
-  rhomax = 7831.0;
-  epmax = max(epsEx);
-  Rc = 49.0;
-  seqEx = seqEx*1.0e6;
-  [theta, sig_e] = computeTangentModulusIso(delT, epEx, seqEx, epdot, T, Rc);
-  fig00 = figure;
-  ptangiso = plot(sig_e/1.0e6, theta/1.0e6, 'g-'); hold on;
-  
-  load FlowSt0001373KChi2.dat
-  epsEx = FlowSt0001373KChi2(:,1)/sqrt(3)*1.0e-2;
-  seqEx = FlowSt0001373KChi2(:,2)*sqrt(3);
-  %seqEx = seqEx.*(1.0 + epsEx);
-  %epsEx = log(1.0 + epsEx);
-  epEx = epsEx - seqEx*1.0e6/E - 0.004;
-
-  delT = 10.0;
-  epdot = 0.0001;
-  T = 373.0;
-  rhomax = 7831.0;
-  epmax = max(epsEx);
-  Rc = 49.0;
-  seqEx = seqEx*1.0e6;
-  [theta, sig_e] = computeTangentModulusIso(delT, epEx, seqEx, epdot, T, Rc);
-  fig00 = figure;
-  ptangiso = plot(sig_e/1.0e6, theta/1.0e6, 'b-'); hold on;
-  
-  %set(gca, 'XLim', [0 0.25], 'YLim', [0 2500] );
-  set(gca, 'LineWidth', 3, 'FontName', 'bookman', 'FontSize', 14);
-  xlabel('\sigma_e (MPa)', 'FontName', 'bookman', 'FontSize', 16);
-  ylabel('\theta (MPa) ', 'FontName', 'bookman', 'FontSize', 16);
-  title('4340 Steel Rc 49', 'FontName', 'bookman', 'FontSize', 16);
-  axis square;
-
-  %====================================================================
-
-function plotChiRc45_0001(fid)
-
-  E = 213.0e9;
-  fig01 = figure;
-
-  %
-  % Plot experimental data for 4340 steel Rc 45 (Chi et al)
-  % (data in the form of shear stress vs shear strain)
-  % (quasistatic)
-  %
-  load FlowSt0001173KChi.dat
-  epsEx = FlowSt0001173KChi(:,1)/sqrt(3)*1.0e-2;
-  seqEx = FlowSt0001173KChi(:,2)*sqrt(3);
-  seqEx = seqEx.*(1.0 + epsEx);
-  epsEx = log(1.0 + epsEx);
-  epEx = epsEx - seqEx*1.0e6/E - 0.004;
-  pexp00001173 = plot(epEx, seqEx, 'r.-', 'LineWidth', 2); hold on;
-  set(pexp00001173,'LineWidth',2,'MarkerSize',9,'Color',[1.0 0.0 0.0]);
-
-  delT = 10.0;
-  epdot = 0.0001;
-  T = 173.0;
-  rhomax = 7831.0;
-  epmax = max(epsEx);
-  Rc = 45.0;
-  [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[1.0 0.0 0.0]);
-  %[s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[1.0 0.0 0.0]);
-
-  ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
-  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.05;
-  %[p1] = intersectPoly(seqEx, epEx, ep);
-  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.1;
-  %[p1] = intersectPoly(seqEx, epEx, ep);
-  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.2;
-  %[p2] = intersectPoly(seqEx, epEx, ep);
-  %plot(p2(1),p2(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p2(1), p2(2));
-  
-  load FlowSt0001298KChi.dat
-  epsEx = FlowSt0001298KChi(:,1)/sqrt(3)*1.0e-2;
-  seqEx = FlowSt0001298KChi(:,2)*sqrt(3);
-  seqEx = seqEx.*(1.0 + epsEx);
-  epsEx = log(1.0 + epsEx);
-  epEx = epsEx - seqEx*1.0e6/E - 0.004;
-  pexp00001298 = plot(epEx, seqEx, 'g.-', 'LineWidth', 2); hold on;
-  set(pexp00001298,'LineWidth',2,'MarkerSize',9,'Color',[0.0 1.0 0.0]);
-
-  delT = 10.0;
-  epdot = 0.0001;
-  T = 298.0;
-  rhomax = 7831.0;
-  epmax = max(epsEx);
-  Rc = 45.0;
-  [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 1.0 0.0]);
-  %[s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 1.0 0.0]);
-
-  ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
-  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.05;
-  %[p1] = intersectPoly(seqEx, epEx, ep);
-  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.1;
-  %[p1] = intersectPoly(seqEx, epEx, ep);
-  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.2;
-  %[p2] = intersectPoly(seqEx, epEx, ep);
-  %plot(p2(1),p2(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p2(1), p2(2));
-  
-  load FlowSt0001373KChi.dat
-  epsEx = FlowSt0001373KChi(:,1)/sqrt(3)*1.0e-2;
-  seqEx = FlowSt0001373KChi(:,2)*sqrt(3);
-  seqEx = seqEx.*(1.0 + epsEx);
-  epsEx = log(1.0 + epsEx);
-  epEx = epsEx - seqEx*1.0e6/E - 0.004;
-  pexp00001373 = plot(epEx, seqEx, 'b.-', 'LineWidth', 2); hold on;
-  set(pexp00001373,'LineWidth',2,'MarkerSize',9,'Color',[0.0 0.0 1.0]);
-
-  delT = 10.0;
-  epdot = 0.0001;
-  T = 373.0;
-  rhomax = 7831.0;
-  epmax = max(epsEx);
-  Rc = 45.0;
-  [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.0 1.0]);
-  %[s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.0 1.0]);
-
-  ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
-  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.05;
-  %[p1] = intersectPoly(seqEx, epEx, ep);
-  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.1;
-  %[p1] = intersectPoly(seqEx, epEx, ep);
-  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.2;
-  %[p2] = intersectPoly(seqEx, epEx, ep);
-  %plot(p2(1),p2(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p2(1), p2(2));
-  
-  set(gca, 'XLim', [0 0.3], 'YLim', [0 2500] );
-  set(gca, 'LineWidth', 3, 'FontName', 'bookman', 'FontSize', 14);
-  xlabel('Plastic Strain', 'FontName', 'bookman', 'FontSize', 16);
-  ylabel('True Stress (MPa) ', 'FontName', 'bookman', 'FontSize', 16);
-  title('4340 Steel Rc 45', 'FontName', 'bookman', 'FontSize', 16);
-  legend([pexp00001173 pexp00001298 pexp00001373], ...
-         '0.0001/s 173 K Chi(1989)', ...
-         '0.0001/s 298 K Chi(1989)', ...
-         '0.0001/s 373 K Chi(1989)');
-  axis square;
-
-  %====================================================================
-
-function plotChiRc49_1000(fid)
-
-  E = 213.0e9;
-  fig10 = figure;
-
-  %
-  % Plot experimental data for 4340 steel Rc 49 (Chi2 et al)
-  % (data in the form of shear stress vs shear strain)
-  % (dynamic)
-  %
-  load FlowSt1000173KChi2.dat
-  epsEx = FlowSt1000173KChi2(:,1)/sqrt(3)*1.0e-2;
-  seqEx = FlowSt1000173KChi2(:,2)*sqrt(3);
-  seqEx = seqEx.*(1.0 + epsEx);
-  epsEx = log(1.0 + epsEx);
-  epEx = epsEx - seqEx*1.0e6/E - 0.003;
-  pexp1000173 = plot(epEx, seqEx, 'r.-', 'LineWidth', 2); hold on;
-  set(pexp1000173,'LineWidth',2,'MarkerSize',9,'Color',[1.0 0.0 0.0]);
-
-  delT = 1.0e-6;
-  epdot = 1000.0;
-  T = 173.0;
-  rhomax = 7831.0;
-  epmax = max(epsEx);
-  Rc = 49.0;
-  %[s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[1.0 0.0 0.0]);
-  [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
-  pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[1.0 0.0 0.0]);
-
-  ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
-  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.05;
-  %[p1] = intersectPoly(seqEx, epEx, ep);
-  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  
-  load FlowSt1000298KChi2.dat
-  epsEx = FlowSt1000298KChi2(:,1)/sqrt(3)*1.0e-2;
-  seqEx = FlowSt1000298KChi2(:,2)*sqrt(3);
-  seqEx = seqEx.*(1.0 + epsEx);
-  epsEx = log(1.0 + epsEx);
-  epEx = epsEx - seqEx*1.0e6/E - 0.003;
-  pexp1000298 = plot(epEx, seqEx, 'g.-', 'LineWidth', 2); hold on;
-  set(pexp1000298,'LineWidth',2,'MarkerSize',9,'Color',[0.0 1.0 0.0]);
-
-  delT = 1.0e-6;
-  epdot = 1000.0;
-  T = 298.0;
-  rhomax = 7831.0;
-  epmax = max(epsEx);
-  Rc = 49.0;
-  %[s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 1.0 0.0]);
-  [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
-  pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 1.0 0.0]);
-
-  ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
-  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.05;
-  %[p1] = intersectPoly(seqEx, epEx, ep);
-  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  
-  load FlowSt1000373KChi2.dat
-  epsEx = FlowSt1000373KChi2(:,1)/sqrt(3)*1.0e-2;
-  seqEx = FlowSt1000373KChi2(:,2)*sqrt(3);
-  seqEx = seqEx.*(1.0 + epsEx);
-  epsEx = log(1.0 + epsEx);
-  epEx = epsEx - seqEx*1.0e6/E - 0.003;
-  pexp1000373 = plot(epEx, seqEx, 'b.-', 'LineWidth', 2); hold on;
-  set(pexp1000373,'LineWidth',2,'MarkerSize',9,'Color',[0.0 0.0 1.0]);
-
-  delT = 1.0e-6;
-  epdot = 1000.0;
-  T = 373.0;
-  rhomax = 7831.0;
-  epmax = max(epsEx);
-  Rc = 49.0;
-  %[s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.0 1.0]);
-  [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
-  pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.0 1.0]);
-
-  ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
-  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.05;
-  %[p1] = intersectPoly(seqEx, epEx, ep);
-  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  
-  set(gca, 'XLim', [0 0.1], 'YLim', [0 2500] );
-  set(gca, 'LineWidth', 3, 'FontName', 'bookman', 'FontSize', 14);
-  xlabel('Plastic Strain', 'FontName', 'bookman', 'FontSize', 16);
-  ylabel('True Stress (MPa) ', 'FontName', 'bookman', 'FontSize', 16);
-  title('4340 Steel Rc 49', 'FontName', 'bookman', 'FontSize', 16);
-  legend([pexp1000173 pexp1000298 pexp1000373], ...
-         '1000/s 173 K Chi(1989)', ...
-         '1000/s 298 K Chi(1989)', ...
-         '1000/s 373 K Chi(1989)');
-  axis square;
-
-  %====================================================================
-
-function plotChiRc45_1000(fid)
-
-  E = 213.0e9;
-  fig11 = figure;
-
-  %
-  % Plot experimental data for 4340 steel Rc 45 (Chi et al)
-  % (data in the form of shear stress vs shear strain)
-  % (dynamic)
-  %
-  load FlowSt1000173KChi.dat
-  epsEx = FlowSt1000173KChi(:,1)/sqrt(3)*1.0e-2;
-  seqEx = FlowSt1000173KChi(:,2)*sqrt(3);
-  seqEx = seqEx.*(1.0 + epsEx);
-  epsEx = log(1.0 + epsEx);
-  epEx = epsEx - seqEx*1.0e6/E - 0.003;
-  pexp1000173 = plot(epEx, seqEx, 'r.-', 'LineWidth', 2); hold on;
-  set(pexp1000173,'LineWidth',2,'MarkerSize',9,'Color',[1.0 0.0 0.0]);
-
-  delT = 1.0e-6;
-  epdot = 1000.0;
-  T = 173.0;
-  rhomax = 7831.0;
-  epmax = max(epsEx);
-  Rc = 45.0;
-  %[s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[1.0 0.0 0.0]);
-  [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
-  pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[1.0 0.0 0.0]);
-
-  ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
-  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.05;
-  %[p1] = intersectPoly(seqEx, epEx, ep);
-  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  
-  load FlowSt1000298KChi.dat
-  epsEx = FlowSt1000298KChi(:,1)/sqrt(3)*1.0e-2;
-  seqEx = FlowSt1000298KChi(:,2)*sqrt(3);
-  seqEx = seqEx.*(1.0 + epsEx);
-  epsEx = log(1.0 + epsEx);
-  epEx = epsEx - seqEx*1.0e6/E - 0.003;
-  pexp1000298 = plot(epEx, seqEx, 'g.-', 'LineWidth', 2); hold on;
-  set(pexp1000298,'LineWidth',2,'MarkerSize',9,'Color',[0.0 1.0 0.0]);
-
-  delT = 1.0e-6;
-  epdot = 1000.0;
-  T = 298.0;
-  rhomax = 7831.0;
-  epmax = max(epsEx);
-  Rc = 45.0;
-  %[s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 1.0 0.0]);
-  [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
-  pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 1.0 0.0]);
-
-  ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
-  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.05;
-  %[p1] = intersectPoly(seqEx, epEx, ep);
-  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  
-  load FlowSt1000373KChi.dat
-  epsEx = FlowSt1000373KChi(:,1)/sqrt(3)*1.0e-2;
-  seqEx = FlowSt1000373KChi(:,2)*sqrt(3);
-  seqEx = seqEx.*(1.0 + epsEx);
-  epsEx = log(1.0 + epsEx);
-  epEx = epsEx - seqEx*1.0e6/E - 0.003;
-  pexp1000373 = plot(epEx, seqEx, 'b.-', 'LineWidth', 2); hold on;
-  set(pexp1000373,'LineWidth',2,'MarkerSize',9,'Color',[0.0 0.0 1.0]);
-
-  delT = 1.0e-6;
-  epdot = 1000.0;
-  T = 373.0;
-  rhomax = 7831.0;
-  epmax = max(epsEx);
-  Rc = 45.0;
-  %[s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.0 1.0]);
-  [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
-  pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.0 1.0]);
-
-  ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
-  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.05;
-  %[p1] = intersectPoly(seqEx, epEx, ep);
-  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  
-  set(gca, 'XLim', [0 0.1], 'YLim', [0 2500] );
-  set(gca, 'LineWidth', 3, 'FontName', 'bookman', 'FontSize', 14);
-  xlabel('Plastic Strain', 'FontName', 'bookman', 'FontSize', 16);
-  ylabel('True Stress (MPa) ', 'FontName', 'bookman', 'FontSize', 16);
-  title('4340 Steel Rc 45', 'FontName', 'bookman', 'FontSize', 16);
-  legend([pexp1000173 pexp1000298 pexp1000373], ...
-         '1000/s 173 K Chi(1989)', ...
-         '1000/s 298 K Chi(1989)', ...
-         '1000/s 373 K Chi(1989)');
-  axis square;
-
-  %====================================================================
-
-function plotLarsonRc38(fid)
-
-  E = 213.0e9;
-  fig20 = figure;
-  %set(fig1, 'Position', [378 479 1147 537]);
-
-  %
-  % Load experimental data from Larson (Rc = 38)
-  %
-  %
-  % 0.0002/s 258 K
-  %
-  load FlowSt0001258KLarson.dat;
-  St258K00002 = FlowSt0001258KLarson;
-  epsEx = St258K00002(:,1);
-  seqEx = St258K00002(:,2)*6.894657;
-  epEx = epsEx - seqEx*1.0e6/E - 0.011;
-  pexp00002258 = plot(epEx, seqEx, 'p-', 'LineWidth', 2); hold on;
-  set(pexp00002258,'LineWidth',2,'MarkerSize',6,'Color',[0.0 0.0 1.0]);
-
-  delT = 10.0;
-  epdot = 0.0002;
-  T = 258.0;
-  rhomax = 7831.0;
-  epmax = max(epsEx);
-  Rc = 38.0;
-  [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.0 1.0]);
-  %[s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.0 1.0]);
-
-  ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
-  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.05;
-  %[p1] = intersectPoly(seqEx, epEx, ep);
-  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.1;
-  %[p1] = intersectPoly(seqEx, epEx, ep);
-  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.2;
-  %[p2] = intersectPoly(seqEx, epEx, ep);
-  %plot(p2(1),p2(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p2(1), p2(2));
-  
-  %
-  % 0.0002/s 298 K
-  %
-  load FlowSt0001298KLarson.dat;
-  St298K00002 = FlowSt0001298KLarson;
-  epsEx = St298K00002(:,1);
-  seqEx = St298K00002(:,2)*6.894657;
-  epEx = epsEx - seqEx*1.0e6/E - 0.011;
-  pexp00002298 = plot(epEx, seqEx, 'd-', 'LineWidth', 2); hold on;
-  set(pexp00002298,'LineWidth',2,'MarkerSize',6,'Color',[0.0 1.0 0.2]);
-
-  delT = 10.0;
-  epdot = 0.0002;
-  T = 298.0;
-  rhomax = 7831.0;
-  epmax = max(epsEx);
-  Rc = 38.0;
-  [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 1.0 0.2]);
-  %[s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 1.0 0.2]);
-
-  ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
-  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.05;
-  %[p1] = intersectPoly(seqEx, epEx, ep);
-  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.1;
-  %[p1] = intersectPoly(seqEx, epEx, ep);
-  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.2;
-  %[p2] = intersectPoly(seqEx, epEx, ep);
-  %plot(p2(1),p2(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p2(1), p2(2));
-  
-  %
-  % 0.0002/s 373 K
-  %
-  load FlowSt0001373KLarson.dat;
-  St373K00002 = FlowSt0001373KLarson;
-  epsEx = St373K00002(:,1);
-  seqEx = St373K00002(:,2)*6.894657;
-  epEx = epsEx - seqEx*1.0e6/E - 0.011;
-  pexp00002373 = plot(epEx, seqEx, 's-', 'LineWidth', 2); hold on;
-  set(pexp00002373,'LineWidth',2,'MarkerSize',6,'Color',[1.0 0.1 0.1]);
-
-  delT = 10.0;
-  epdot = 0.0002;
-  T = 373.0;
-  rhomax = 7831.0;
-  epmax = max(epsEx);
-  Rc = 38.0;
-  [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[1.0 0.1 0.1]);
-  %[s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[1.0 0.1 0.1]);
-
-  ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
-  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.05;
-  %[p1] = intersectPoly(seqEx, epEx, ep);
-  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.1;
-  %[p1] = intersectPoly(seqEx, epEx, ep);
-  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-  %ep = 0.2;
-  %[p2] = intersectPoly(seqEx, epEx, ep);
-  %plot(p2(1),p2(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p2(1), p2(2));
-  
-  set(gca, 'XLim', [0 0.8], 'YLim', [0 2000] );
-  set(gca, 'LineWidth', 3, 'FontName', 'bookman', 'FontSize', 14);
-  xlabel('Plastic Strain', 'FontName', 'bookman', 'FontSize', 16);
-  ylabel('True Stress (MPa) ', 'FontName', 'bookman', 'FontSize', 16);
-  legend([pexp00002258 pexp00002298 pexp00002373], ...
-         '0.0002/s 258 K Larson(1961)', ...
-         '0.0002/s 298 K Larson(1961)', ...
-         '0.0002/s 373 K Larson(1961)');
-  axis square;
 
 function plotJCRc30(fid)
 
   E = 213.0e9;
-  %====================================================================
 
   fig30 = figure;
   %
@@ -804,7 +52,8 @@ function plotJCRc30(fid)
   St298K0002 = FlowSt0001298KJCTen;
   epsEx = St298K0002(:,1);
   seqEx = St298K0002(:,2);
-  epEx = epsEx - seqEx*1.0e6/E - 0.003;
+  epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
   pexp0002298 = plot(epEx, seqEx, '^-', 'LineWidth', 2); hold on;
   set(pexp0002298,'LineWidth',2,'MarkerSize',6,'Color',[0.2 0.5 1.0]);
 
@@ -817,12 +66,10 @@ function plotJCRc30(fid)
   [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
   pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
   set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.2 0.5 1.0]);
-  %[s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.2 0.5 1.0]);
 
   ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
   plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
   fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
   %ep = 0.05;
@@ -841,140 +88,131 @@ function plotJCRc30(fid)
   %
   % 0.009/s 298K
   %
-%  load FlowSt0009298KJCShear.dat;
-%  St298K0009 = FlowSt0009298KJCShear;
-%  epsEx = St298K0009(:,1)/sqrt(3.0);
-%  seqEx = St298K0009(:,2)*sqrt(3.0);
-%  %seqEx = seqEx.*(1.0 + epsEx);
-%  %epsEx = log(1.0 + epsEx);
-%  epEx = epsEx - seqEx*1.0e6/E - 0.003;
-%  pexp0009298 = plot(epEx, seqEx, 'v-', 'LineWidth', 3); hold on;
-%  set(pexp0009298,'LineWidth',3,'MarkerSize',6,'Color',[0.1 0.75 1.0]);
-%
-%  delT = 1.0;
-%  epdot = 0.009;
-%  T = 298.0;
-%  rhomax = 7831.0;
-%  epmax = max(epsEx);
-%  Rc = 30.0;
-%  [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-%  pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-%  set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.1 0.75 1.0]);
-%  %[s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
-%  %pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-%  %set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.1 0.75 1.0]);
-%
-%  ep = 0.0;
-%  [p1] = intersectPoly(seqEx, epEx, ep);
-%  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-%  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-%  %ep = 0.05;
-%  %[p1] = intersectPoly(seqEx, epEx, ep);
-%  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-%  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-%  %ep = 0.1;
-%  %[p1] = intersectPoly(seqEx, epEx, ep);
-%  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-%  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-%  %ep = 0.2;
-%  %[p2] = intersectPoly(seqEx, epEx, ep);
-%  %plot(p2(1),p2(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-%  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p2(1), p2(2));
-%  
-%  %
-%  % 0.10/s 298K
-%  %
-%  load FlowSt010298KJCShear.dat;
-%  St298K01 = FlowSt010298KJCShear;
-%  epsEx = St298K01(:,1)/sqrt(3.0);
-%  seqEx = St298K01(:,2)*sqrt(3.0);
-%  %seqEx = seqEx.*(1.0 + epsEx);
-%  %epsEx = log(1.0 + epsEx);
-%  epEx = epsEx - seqEx*1.0e6/E - 0.003;
-%  pexp01298 = plot(epEx, seqEx, '<-', 'LineWidth', 3); hold on;
-%  set(pexp01298,'LineWidth',3,'MarkerSize',6,'Color',[0.2 0.8 0.2]);
-%
-%  delT = 0.1;
-%  epdot = 0.1;
-%  T = 298.0;
-%  rhomax = 7831.0;
-%  epmax = max(epsEx);
-%  [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-%  pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-%  set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.2 0.8 0.2]);
-%  %[s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
-%  %pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-%  %set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.2 0.8 0.2]);
-%
-%  ep = 0.0;
-%  [p1] = intersectPoly(seqEx, epEx, ep);
-%  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-%  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-%  %ep = 0.05;
-%  %[p1] = intersectPoly(seqEx, epEx, ep);
-%  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-%  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-%  %ep = 0.1;
-%  %[p1] = intersectPoly(seqEx, epEx, ep);
-%  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-%  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-%  %ep = 0.2;
-%  %[p2] = intersectPoly(seqEx, epEx, ep);
-%  %plot(p2(1),p2(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-%  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p2(1), p2(2));
-%  
-%  %
-%  % 1.1/s 298K
-%  %
-%  load FlowSt1_1298KJCShear.dat;
-%  St298K1 = FlowSt1_1298KJCShear;
-%  epsEx = St298K1(:,1)/sqrt(3.0);
-%  seqEx = St298K1(:,2)*sqrt(3.0);
-%  %seqEx = seqEx.*(1.0 + epsEx);
-%  %epsEx = log(1.0 + epsEx);
-%  epEx = epsEx - seqEx*1.0e6/E - 0.003;
-%  pexp1298 = plot(epEx, seqEx, '>-', 'LineWidth', 3); hold on;
-%  set(pexp1298,'LineWidth',3,'MarkerSize',6,'Color',[0.8 0.4 0.1]);
-%
-%  delT = 0.01;
-%  epdot = 1.1;
-%  T = 298.0;
-%  rhomax = 7831.0;
-%  epmax = max(epsEx);
-%  [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-%  pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-%  set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.8 0.4 0.1]);
-%  %[s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
-%  %pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-%  %set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.8 0.4 0.1]);
-%
-%  ep = 0.0;
-%  [p1] = intersectPoly(seqEx, epEx, ep);
-%  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-%  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-%  %ep = 0.05;
-%  %[p1] = intersectPoly(seqEx, epEx, ep);
-%  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-%  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-%  %ep = 0.1;
-%  %[p1] = intersectPoly(seqEx, epEx, ep);
-%  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-%  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
-%  %ep = 0.2;
-%  %[p2] = intersectPoly(seqEx, epEx, ep);
-%  %plot(p2(1),p2(2),'kx','MarkerSize', 10, 'LineWidth', 3);
-%  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p2(1), p2(2));
-% 
+  load FlowSt0009298KJCShear.dat;
+  St298K0009 = FlowSt0009298KJCShear;
+  epsEx = St298K0009(:,1)/sqrt(3.0);
+  seqEx = St298K0009(:,2)*sqrt(3.0);
+  epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
+  pexp0009298 = plot(epEx, seqEx, 'v-', 'LineWidth', 3); hold on;
+  set(pexp0009298,'LineWidth',3,'MarkerSize',6,'Color',[0.1 0.75 1.0]);
+
+  delT = 1.0;
+  epdot = 0.009;
+  T = 298.0;
+  rhomax = 7831.0;
+  epmax = max(epsEx);
+  Rc = 30.0;
+  [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
+  pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
+  set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.1 0.75 1.0]);
+
+  ep = 0.0;
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
+  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.05;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.1;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.2;
+  %[p2] = intersectPoly(seqEx, epEx, ep);
+  %plot(p2(1),p2(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p2(1), p2(2));
+  
+  %
+  % 0.10/s 298K
+  %
+  load FlowSt010298KJCShear.dat;
+  St298K01 = FlowSt010298KJCShear;
+  epsEx = St298K01(:,1)/sqrt(3.0);
+  seqEx = St298K01(:,2)*sqrt(3.0);
+  epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
+  pexp01298 = plot(epEx, seqEx, '<-', 'LineWidth', 3); hold on;
+  set(pexp01298,'LineWidth',3,'MarkerSize',6,'Color',[0.2 0.8 0.2]);
+
+  delT = 0.1;
+  epdot = 0.1;
+  T = 298.0;
+  rhomax = 7831.0;
+  epmax = max(epsEx);
+  [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
+  pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
+  set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.2 0.8 0.2]);
+
+  ep = 0.0;
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
+  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.05;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.1;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.2;
+  %[p2] = intersectPoly(seqEx, epEx, ep);
+  %plot(p2(1),p2(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p2(1), p2(2));
+  
+  %
+  % 1.1/s 298K
+  %
+  load FlowSt1_1298KJCShear.dat;
+  St298K1 = FlowSt1_1298KJCShear;
+  epsEx = St298K1(:,1)/sqrt(3.0);
+  seqEx = St298K1(:,2)*sqrt(3.0);
+  epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(2);
+  pexp1298 = plot(epEx, seqEx, '>-', 'LineWidth', 3); hold on;
+  set(pexp1298,'LineWidth',3,'MarkerSize',6,'Color',[0.8 0.4 0.1]);
+
+  delT = 0.01;
+  epdot = 1.1;
+  T = 298.0;
+  rhomax = 7831.0;
+  epmax = max(epsEx);
+  [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
+  pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
+  set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.8 0.4 0.1]);
+
+  ep = 0.0;
+  p1(1) = 0.0;
+  p1(2) = seqEx(2);
+  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.05;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.1;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.2;
+  %[p2] = intersectPoly(seqEx, epEx, ep);
+  %plot(p2(1),p2(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p2(1), p2(2));
+ 
 %  set(gca, 'XLim', [0 1.0], 'YLim', [0 1800] );
 %  set(gca, 'LineWidth', 3, 'FontName', 'bookman', 'FontSize', 14);
 %  xlabel('Plastic Strain', 'FontName', 'bookman', 'FontSize', 16);
 %  ylabel('True Stress (MPa) ', 'FontName', 'bookman', 'FontSize', 16);
 %  legend([pexp0002298], '0.002/s 298 K (Tension) JC(1985)');
-%%  legend([pexp0002298 pexp0009298 pexp01298 pexp1298], ...
-%%         '0.002/s 298 K (Tension) JC(1985)', ...
-%%         '0.009/s 298 K (Shear) JC(1985)', ...
-%%         '0.1/s 298 K (Shear) JC(1995)', ...
-%%         '1.1/s 298 K (Shear) JC(1995)');
+%  legend([pexp0002298 pexp0009298 pexp01298 pexp1298], ...
+%         '0.002/s 298 K (Tension) JC(1985)', ...
+%         '0.009/s 298 K (Shear) JC(1985)', ...
+%         '0.1/s 298 K (Shear) JC(1995)', ...
+%         '1.1/s 298 K (Shear) JC(1995)');
 %  axis square;
 
   %
@@ -984,6 +222,7 @@ function plotJCRc30(fid)
   epsEx = FlowSt570298KJCTen(:,1);
   seqEx = FlowSt570298KJCTen(:,2);
   epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
   pexp570298 = plot(epEx, seqEx, 'p-', 'LineWidth', 2); hold on;
   set(pexp570298,'LineWidth',2,'MarkerSize',6,'Color',[0.3 0.3 0.6]);
 
@@ -993,15 +232,13 @@ function plotJCRc30(fid)
   rhomax = 7850.0;
   epmax = max(epsEx);
   Rc = 30;
-  %[s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.3 0.3 0.6]);
   [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
   pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
   set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.3 0.3 0.6]);
 
   ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
   plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
   fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
   %ep = 0.05;
@@ -1020,6 +257,7 @@ function plotJCRc30(fid)
   epsEx = FlowSt604500KJCTen(:,1);
   seqEx = FlowSt604500KJCTen(:,2);
   epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
   pexp604500 = plot(epEx, seqEx, 's-', 'LineWidth', 2); hold on;
   set(pexp604500,'LineWidth',2,'MarkerSize',6,'Color',[0.6 0.3 0.3]);
 
@@ -1029,15 +267,13 @@ function plotJCRc30(fid)
   rhomax = 7850.0;
   epmax = max(epsEx);
   Rc = 30;
-  %[s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.6 0.3 0.3]);
   [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
   pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
   set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.6 0.3 0.3]);
 
   ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
   plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
   fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
   %ep = 0.05;
@@ -1056,6 +292,7 @@ function plotJCRc30(fid)
   epsEx = FlowSt650735KJCTen(:,1);
   seqEx = FlowSt650735KJCTen(:,2);
   epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
   pexp650735 = plot(epEx, seqEx, 'v-', 'LineWidth', 2); hold on;
   set(pexp650735,'LineWidth',2,'MarkerSize',6,'Color',[0.75 0.25 1.0]);
 
@@ -1065,15 +302,13 @@ function plotJCRc30(fid)
   rhomax = 7850.0;
   epmax = max(epsEx);
   Rc = 30;
-  %[s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.75 0.25 1.0]);
   [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
   pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
   set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.75 0.25 1.0]);
 
   ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
   plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
   fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
   %ep = 0.05;
@@ -1169,7 +404,8 @@ function plotASMHRc32(fid)
   StAero298K0002(2,2) = sigY2*(1.0+eps2);
   epsEx = StAero298K0002(:,1);
   seqEx = StAero298K0002(:,2);
-  epEx = epsEx - seqEx*1.0e6/E - 0.002;
+  epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
   pexp0002298 = plot(epEx, seqEx, 'o-', 'LineWidth', 2); hold on;
   set(pexp0002298,'LineWidth',2,'MarkerSize',6,'Color',[0.0 0.0 1.0]);
 
@@ -1182,12 +418,10 @@ function plotASMHRc32(fid)
   [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
   pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
   set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.0 1.0]);
-  %[s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.0 1.0]);
 
   ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
   plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
   fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
   %ep = 0.05;
@@ -1211,7 +445,8 @@ function plotASMHRc32(fid)
   StAero422K0002(2,2) = sigY2*(1.0+eps2);
   epsEx = StAero422K0002(:,1);
   seqEx = StAero422K0002(:,2);
-  epEx = epsEx - seqEx*1.0e6/E - 0.002;
+  epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
   pexp0002422 = plot(epEx, seqEx, 'o-', 'LineWidth', 2); hold on;
   set(pexp0002422,'LineWidth',2,'MarkerSize',6,'Color',[0.0 0.9 0.2]);
 
@@ -1223,12 +458,10 @@ function plotASMHRc32(fid)
   [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
   pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
   set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.9 0.2]);
-  %[s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.9 0.2]);
 
   ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
   plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
   fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
   %ep = 0.05;
@@ -1288,7 +521,8 @@ function plotASMHRc32(fid)
   StAero589K0002(2,2) = sigY2*(1.0+eps2);
   epsEx = StAero589K0002(:,1);
   seqEx = StAero589K0002(:,2);
-  epEx = epsEx - seqEx*1.0e6/E - 0.002;
+  epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
   pexp0002589 = plot(epEx, seqEx, 'o-', 'LineWidth', 2); hold on;
   set(pexp0002589,'LineWidth',2,'MarkerSize',6,'Color',[1.0 0.0 0.0]);
 
@@ -1301,12 +535,10 @@ function plotASMHRc32(fid)
   [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
   pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
   set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[1.0 0.0 0.0]);
-  %[s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[1.0 0.0 0.0]);
 
   ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
   plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
   fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
   %ep = 0.05;
@@ -1330,7 +562,8 @@ function plotASMHRc32(fid)
   StAero644K0002(2,2) = sigY2*(1.0+eps2);
   epsEx = StAero644K0002(:,1);
   seqEx = StAero644K0002(:,2);
-  epEx = epsEx - seqEx*1.0e6/E - 0.002;
+  epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
   pexp0002644 = plot(epEx, seqEx, 'o-', 'LineWidth', 2); hold on;
   set(pexp0002644,'LineWidth',2,'MarkerSize',6,'Color',[0.2 0.6 0.0]);
 
@@ -1338,17 +571,15 @@ function plotASMHRc32(fid)
   epdot = 0.002;
   T = 644.0;
   rhomax = 7831.0;
-  epmax = max(epsEx);
+  epmax = max(epEx);
   Rc = 32;
   [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
   pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
   set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.2 0.6 0.0]);
-  %[s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.2 0.6 0.0]);
 
   ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
   plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
   fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
   %ep = 0.05;
@@ -1369,6 +600,148 @@ function plotASMHRc32(fid)
          
   %====================================================================
 
+function plotLarsonRc38(fid)
+
+  E = 213.0e9;
+  fig20 = figure;
+  %set(fig1, 'Position', [378 479 1147 537]);
+
+  %
+  % Load experimental data from Larson (Rc = 38)
+  %
+  %
+  % 0.0002/s 258 K
+  %
+  load FlowSt0001258KLarson.dat;
+  St258K00002 = FlowSt0001258KLarson;
+  epsEx = St258K00002(:,1);
+  seqEx = St258K00002(:,2)*6.894657;
+  epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
+  pexp00002258 = plot(epEx, seqEx, 'p-', 'LineWidth', 2); hold on;
+  set(pexp00002258,'LineWidth',2,'MarkerSize',6,'Color',[0.0 0.0 1.0]);
+
+  delT = 10.0;
+  epdot = 0.0002;
+  T = 258.0;
+  rhomax = 7831.0;
+  epmax = max(epsEx);
+  Rc = 38.0;
+  [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
+  pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
+  set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.0 1.0]);
+
+  ep = 0.0;
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
+  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.05;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.1;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.2;
+  %[p2] = intersectPoly(seqEx, epEx, ep);
+  %plot(p2(1),p2(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p2(1), p2(2));
+  
+  %
+  % 0.0002/s 298 K
+  %
+  load FlowSt0001298KLarson.dat;
+  St298K00002 = FlowSt0001298KLarson;
+  epsEx = St298K00002(:,1);
+  seqEx = St298K00002(:,2)*6.894657;
+  epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
+  pexp00002298 = plot(epEx, seqEx, 'd-', 'LineWidth', 2); hold on;
+  set(pexp00002298,'LineWidth',2,'MarkerSize',6,'Color',[0.0 1.0 0.2]);
+
+  delT = 10.0;
+  epdot = 0.0002;
+  T = 298.0;
+  rhomax = 7831.0;
+  epmax = max(epsEx);
+  Rc = 38.0;
+  [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
+  pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
+  set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 1.0 0.2]);
+
+  ep = 0.0;
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
+  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.05;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.1;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.2;
+  %[p2] = intersectPoly(seqEx, epEx, ep);
+  %plot(p2(1),p2(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p2(1), p2(2));
+  
+  %
+  % 0.0002/s 373 K
+  %
+  load FlowSt0001373KLarson.dat;
+  St373K00002 = FlowSt0001373KLarson;
+  epsEx = St373K00002(:,1);
+  seqEx = St373K00002(:,2)*6.894657;
+  epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
+  pexp00002373 = plot(epEx, seqEx, 's-', 'LineWidth', 2); hold on;
+  set(pexp00002373,'LineWidth',2,'MarkerSize',6,'Color',[1.0 0.1 0.1]);
+
+  delT = 10.0;
+  epdot = 0.0002;
+  T = 373.0;
+  rhomax = 7831.0;
+  epmax = max(epsEx);
+  Rc = 38.0;
+  [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
+  pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
+  set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[1.0 0.1 0.1]);
+
+  ep = 0.0;
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
+  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.05;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.1;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.2;
+  %[p2] = intersectPoly(seqEx, epEx, ep);
+  %plot(p2(1),p2(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p2(1), p2(2));
+  
+  set(gca, 'XLim', [0 0.8], 'YLim', [0 2000] );
+  set(gca, 'LineWidth', 3, 'FontName', 'bookman', 'FontSize', 14);
+  xlabel('Plastic Strain', 'FontName', 'bookman', 'FontSize', 16);
+  ylabel('True Stress (MPa) ', 'FontName', 'bookman', 'FontSize', 16);
+  legend([pexp00002258 pexp00002298 pexp00002373], ...
+         '0.0002/s 258 K Larson(1961)', ...
+         '0.0002/s 298 K Larson(1961)', ...
+         '0.0002/s 373 K Larson(1961)');
+  axis square;
+
+  %====================================================================
+
+
 function plotLYRc38500(fid)
 
   E = 213.0e9;
@@ -1380,9 +753,8 @@ function plotLYRc38500(fid)
   load FlowSt500298KLY.dat
   epsEx = FlowSt500298KLY(:,1)*1.0e-2;
   seqEx = FlowSt500298KLY(:,2);
-  %seqEx = seqEx.*(1.0 + epsEx);
-  %epsEx = log(1.0 + epsEx);
   epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
   pexp500298 = plot(epEx, seqEx, 'o-', 'LineWidth', 2); hold on;
   set(pexp500298,'LineWidth',2,'MarkerSize',6,'Color',[0.0 0.0 1.0]);
 
@@ -1392,15 +764,13 @@ function plotLYRc38500(fid)
   rhomax = 7850.0;
   epmax = max(epsEx);
   Rc = 38;
-  %[s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.0 1.0]);
   [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
   pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
   set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.0 1.0]);
 
   ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
   plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
   fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
   %ep = 0.05;
@@ -1414,9 +784,8 @@ function plotLYRc38500(fid)
   load FlowSt500573KLY.dat
   epsEx = FlowSt500573KLY(:,1)*1.0e-2;
   seqEx = FlowSt500573KLY(:,2);
-  %seqEx = seqEx.*(1.0 + epsEx);
-  %epsEx = log(1.0 + epsEx);
   epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
   pexp500573 = plot(epEx, seqEx, 'd-', 'LineWidth', 2); hold on;
   set(pexp500573,'LineWidth',2,'MarkerSize',6,'Color',[0.0 0.9 0.2]);
 
@@ -1426,15 +795,13 @@ function plotLYRc38500(fid)
   rhomax = 7850.0;
   epmax = max(epsEx);
   Rc = 38;
-  %[s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.9 0.2]);
   [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
   pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
   set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.9 0.2]);
 
   ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
   plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
   fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
   %ep = 0.05;
@@ -1448,9 +815,8 @@ function plotLYRc38500(fid)
   load FlowSt500773KLY.dat
   epsEx = FlowSt500773KLY(:,1)*1.0e-2;
   seqEx = FlowSt500773KLY(:,2);
-  %seqEx = seqEx.*(1.0 + epsEx);
-  %epsEx = log(1.0 + epsEx);
   epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
   pexp500773 = plot(epEx, seqEx, '^-', 'LineWidth', 2); hold on;
   set(pexp500773,'LineWidth',2,'MarkerSize',6,'Color',[0.75 0.25 0.5]);
 
@@ -1460,15 +826,13 @@ function plotLYRc38500(fid)
   rhomax = 7850.0;
   epmax = max(epsEx);
   Rc = 38;
-  %[s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.75 0.25 0.5]);
   [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
   pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
   set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.75 0.25 0.5]);
 
   ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
   plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
   fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
   %ep = 0.05;
@@ -1488,6 +852,7 @@ function plotLYRc38500(fid)
          
   %====================================================================
 
+
 function plotLYRc381500(fid)
 
   E = 213.0e9;
@@ -1499,9 +864,8 @@ function plotLYRc381500(fid)
   load FlowSt1500298KLY.dat
   epsEx = FlowSt1500298KLY(:,1)*1.0e-2;
   seqEx = FlowSt1500298KLY(:,2);
-  %seqEx = seqEx.*(1.0 + epsEx);
-  %epsEx = log(1.0 + epsEx);
   epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
   pexp1500298 = plot(epEx, seqEx, 'o-', 'LineWidth', 2); hold on;
   set(pexp1500298,'LineWidth',2,'MarkerSize',6,'Color',[0.0 0.0 1.0]);
 
@@ -1511,15 +875,13 @@ function plotLYRc381500(fid)
   rhomax = 7850.0;
   epmax = max(epsEx);
   Rc = 38;
-  %[s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.0 1.0]);
   [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
   pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
   set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.0 1.0]);
 
   ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
   plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
   fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
   %ep = 0.05;
@@ -1537,9 +899,8 @@ function plotLYRc381500(fid)
   load FlowSt1500573KLY.dat
   epsEx = FlowSt1500573KLY(:,1)*1.0e-2;
   seqEx = FlowSt1500573KLY(:,2);
-  %seqEx = seqEx.*(1.0 + epsEx);
-  %epsEx = log(1.0 + epsEx);
   epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
   pexp1500573 = plot(epEx, seqEx, 's-', 'LineWidth', 2); hold on;
   set(pexp1500573,'LineWidth',2,'MarkerSize',6,'Color',[0.0 0.9 0.2]);
 
@@ -1549,15 +910,13 @@ function plotLYRc381500(fid)
   rhomax = 7850.0;
   epmax = max(epsEx);
   Rc = 38;
-  %[s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.9 0.2]);
   [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
   pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
   set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.9 0.2]);
 
   ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
   plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
   fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
   %ep = 0.05;
@@ -1575,9 +934,8 @@ function plotLYRc381500(fid)
   load FlowSt1500973KLY.dat
   epsEx = FlowSt1500973KLY(:,1)*1.0e-2;
   seqEx = FlowSt1500973KLY(:,2);
-  %seqEx = seqEx.*(1.0 + epsEx);
-  %epsEx = log(1.0 + epsEx);
   epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
   pexp1500973 = plot(epEx, seqEx, 'd-', 'LineWidth', 2); hold on;
   set(pexp1500973,'LineWidth',2,'MarkerSize',6,'Color',[1.0 0.0 0.0]);
 
@@ -1587,15 +945,13 @@ function plotLYRc381500(fid)
   rhomax = 7850.0;
   epmax = max(epsEx);
   Rc = 38;
-  %[s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[1.0 0.0 0.0]);
   [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
   pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
   set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[1.0 0.0 0.0]);
 
   ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
   plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
   fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
   %ep = 0.05;
@@ -1613,9 +969,8 @@ function plotLYRc381500(fid)
   load FlowSt15001173KLY.dat
   epsEx = FlowSt15001173KLY(:,1)*1.0e-2;
   seqEx = FlowSt15001173KLY(:,2);
-  %seqEx = seqEx.*(1.0 + epsEx);
-  %epsEx = log(1.0 + epsEx);
   epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
   pexp15001173 = plot(epEx, seqEx, 'v-', 'LineWidth', 2); hold on;
   set(pexp15001173,'LineWidth',2,'MarkerSize',6,'Color',[0.8 0.3 0.0]);
 
@@ -1625,15 +980,13 @@ function plotLYRc381500(fid)
   rhomax = 7850.0;
   epmax = max(epsEx);
   Rc = 38;
-  %[s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.8 0.3 0.0]);
   [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
   pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
   set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.8 0.3 0.0]);
 
   ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
   plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
   fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
   %ep = 0.05;
@@ -1651,9 +1004,8 @@ function plotLYRc381500(fid)
   load FlowSt15001373KLY.dat
   epsEx = FlowSt15001373KLY(:,1)*1.0e-2;
   seqEx = FlowSt15001373KLY(:,2);
-  %seqEx = seqEx.*(1.0 + epsEx);
-  %epsEx = log(1.0 + epsEx);
   epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
   pexp15001373 = plot(epEx, seqEx, 'p-', 'LineWidth', 2); hold on;
   set(pexp15001373,'LineWidth',2,'MarkerSize',6,'Color',[0.5 0.3 0.0]);
 
@@ -1663,15 +1015,13 @@ function plotLYRc381500(fid)
   rhomax = 7850.0;
   epmax = max(epsEx);
   Rc = 38;
-  %[s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.5 0.3 0.0]);
   [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
   pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
   set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.5 0.3 0.0]);
 
   ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
   plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
   fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
   %ep = 0.05;
@@ -1708,9 +1058,8 @@ function plotLYRc382500(fid)
   load FlowSt2500773KLY.dat
   epsEx = FlowSt2500773KLY(:,1)*1.0e-2;
   seqEx = FlowSt2500773KLY(:,2);
-  %seqEx = seqEx.*(1.0 + epsEx);
-  %epsEx = log(1.0 + epsEx);
   epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
   pexp2500773 = plot(epEx, seqEx, 'o-', 'LineWidth', 2); hold on;
   set(pexp2500773,'LineWidth',2,'MarkerSize',6,'Color',[0.75 0.25 1.0]);
 
@@ -1720,15 +1069,13 @@ function plotLYRc382500(fid)
   rhomax = 7850.0;
   epmax = max(epsEx);
   Rc = 38;
-  %[s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.75 0.25 1.0]);
   [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
   pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
   set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.75 0.25 1.0]);
 
   ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
   plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
   fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
   %ep = 0.05;
@@ -1750,9 +1097,8 @@ function plotLYRc382500(fid)
   load FlowSt2500973KLY.dat
   epsEx = FlowSt2500973KLY(:,1)*1.0e-2;
   seqEx = FlowSt2500973KLY(:,2);
-  %seqEx = seqEx.*(1.0 + epsEx);
-  %epsEx = log(1.0 + epsEx);
   epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
   pexp2500973 = plot(epEx, seqEx, 's-', 'LineWidth', 2); hold on;
   set(pexp2500973,'LineWidth',2,'MarkerSize',6,'Color',[1.0 0.0 0.0]);
 
@@ -1762,15 +1108,13 @@ function plotLYRc382500(fid)
   rhomax = 7850.0;
   epmax = max(epsEx);
   Rc = 38;
-  %[s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[1.0 0.0 0.0]);
   [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
   pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
   set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[1.0 0.0 0.0]);
 
   ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
   plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
   fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
   %ep = 0.05;
@@ -1792,9 +1136,8 @@ function plotLYRc382500(fid)
   load FlowSt25001173KLY.dat
   epsEx = FlowSt25001173KLY(:,1)*1.0e-2;
   seqEx = FlowSt25001173KLY(:,2);
-  %seqEx = seqEx.*(1.0 + epsEx);
-  %epsEx = log(1.0 + epsEx);
   epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
   pexp25001173 = plot(epEx, seqEx, 'd-', 'LineWidth', 2); hold on;
   set(pexp25001173,'LineWidth',2,'MarkerSize',6,'Color',[0.8 0.3 0.0]);
 
@@ -1804,15 +1147,13 @@ function plotLYRc382500(fid)
   rhomax = 7850.0;
   epmax = max(epsEx);
   Rc = 38;
-  %[s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.8 0.3 0.0]);
   [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
   pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
   set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.8 0.3 0.0]);
 
   ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
   plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
   fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
   %ep = 0.05;
@@ -1834,9 +1175,8 @@ function plotLYRc382500(fid)
   load FlowSt25001373KLY.dat
   epsEx = FlowSt25001373KLY(:,1)*1.0e-2;
   seqEx = FlowSt25001373KLY(:,2);
-  %seqEx = seqEx.*(1.0 + epsEx);
-  %epsEx = log(1.0 + epsEx);
   epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(1);
   pexp25001373 = plot(epEx, seqEx, 'v-', 'LineWidth', 2); hold on;
   set(pexp25001373,'LineWidth',2,'MarkerSize',6,'Color',[0.5 0.3 0.0]);
 
@@ -1846,15 +1186,13 @@ function plotLYRc382500(fid)
   rhomax = 7850.0;
   epmax = max(epsEx);
   Rc = 38;
-  %[s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
-  %pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
-  %set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.5 0.3 0.0]);
   [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
   pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
   set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.5 0.3 0.0]);
 
   ep = 0.0;
-  [p1] = intersectPoly(seqEx, epEx, ep);
+  p1(1) = 0.0;
+  p1(2) = seqEx(1);
   plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
   fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
   %ep = 0.05;
@@ -1881,7 +1219,485 @@ function plotLYRc382500(fid)
          '2500/s 1373 K LY(1997)');
   axis square;
 
+  %====================================================================
          
+function plotChiRc45_0001(fid)
+
+  E = 213.0e9;
+  fig01 = figure;
+
+  %
+  % Plot experimental data for 4340 steel Rc 45 (Chi et al)
+  % (data in the form of shear stress vs shear strain)
+  % (quasistatic)
+  %
+  load FlowSt0001173KChi.dat
+  epsEx = FlowSt0001173KChi(:,1)/sqrt(3)*1.0e-2;
+  seqEx = FlowSt0001173KChi(:,2)*sqrt(3);
+  epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(2);
+  pexp00001173 = plot(epEx, seqEx, 'r.-', 'LineWidth', 2); hold on;
+  set(pexp00001173,'LineWidth',2,'MarkerSize',9,'Color',[1.0 0.0 0.0]);
+
+  delT = 10.0;
+  epdot = 0.0001;
+  T = 173.0;
+  rhomax = 7831.0;
+  epmax = max(epsEx);
+  Rc = 45.0;
+  [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
+  pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
+  set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[1.0 0.0 0.0]);
+
+  ep = 0.0;
+  p1(1) = 0.0;
+  p1(2) = seqEx(2);
+  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.05;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.1;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.2;
+  %[p2] = intersectPoly(seqEx, epEx, ep);
+  %plot(p2(1),p2(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p2(1), p2(2));
+  
+  load FlowSt0001298KChi.dat
+  epsEx = FlowSt0001298KChi(:,1)/sqrt(3)*1.0e-2;
+  seqEx = FlowSt0001298KChi(:,2)*sqrt(3);
+  epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(2);
+  pexp00001298 = plot(epEx, seqEx, 'g.-', 'LineWidth', 2); hold on;
+  set(pexp00001298,'LineWidth',2,'MarkerSize',9,'Color',[0.0 1.0 0.0]);
+
+  delT = 10.0;
+  epdot = 0.0001;
+  T = 298.0;
+  rhomax = 7831.0;
+  epmax = max(epsEx);
+  Rc = 45.0;
+  [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
+  pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
+  set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 1.0 0.0]);
+
+  ep = 0.0;
+  p1(1) = 0.0;
+  p1(2) = seqEx(2);
+  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.05;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.1;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.2;
+  %[p2] = intersectPoly(seqEx, epEx, ep);
+  %plot(p2(1),p2(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p2(1), p2(2));
+  
+  load FlowSt0001373KChi.dat
+  epsEx = FlowSt0001373KChi(:,1)/sqrt(3)*1.0e-2;
+  seqEx = FlowSt0001373KChi(:,2)*sqrt(3);
+  epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(2);
+  pexp00001373 = plot(epEx, seqEx, 'b.-', 'LineWidth', 2); hold on;
+  set(pexp00001373,'LineWidth',2,'MarkerSize',9,'Color',[0.0 0.0 1.0]);
+
+  delT = 10.0;
+  epdot = 0.0001;
+  T = 373.0;
+  rhomax = 7831.0;
+  epmax = max(epsEx);
+  Rc = 45.0;
+  [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
+  pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
+  set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.0 1.0]);
+
+  ep = 0.0;
+  p1(1) = 0.0;
+  p1(2) = seqEx(2);
+  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.05;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.1;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.2;
+  %[p2] = intersectPoly(seqEx, epEx, ep);
+  %plot(p2(1),p2(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p2(1), p2(2));
+  
+  set(gca, 'XLim', [0 0.3], 'YLim', [0 2500] );
+  set(gca, 'LineWidth', 3, 'FontName', 'bookman', 'FontSize', 14);
+  xlabel('Plastic Strain', 'FontName', 'bookman', 'FontSize', 16);
+  ylabel('True Stress (MPa) ', 'FontName', 'bookman', 'FontSize', 16);
+  title('4340 Steel Rc 45', 'FontName', 'bookman', 'FontSize', 16);
+  legend([pexp00001173 pexp00001298 pexp00001373], ...
+         '0.0001/s 173 K Chi(1989)', ...
+         '0.0001/s 298 K Chi(1989)', ...
+         '0.0001/s 373 K Chi(1989)');
+  axis square;
+
+  %====================================================================
+
+
+function plotChiRc45_1000(fid)
+
+  E = 213.0e9;
+  fig11 = figure;
+
+  %
+  % Plot experimental data for 4340 steel Rc 45 (Chi et al)
+  % (data in the form of shear stress vs shear strain)
+  % (dynamic)
+  %
+  load FlowSt1000173KChi.dat
+  epsEx = FlowSt1000173KChi(:,1)/sqrt(3)*1.0e-2;
+  seqEx = FlowSt1000173KChi(:,2)*sqrt(3);
+  epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(2);
+  pexp1000173 = plot(epEx, seqEx, 'r.-', 'LineWidth', 2); hold on;
+  set(pexp1000173,'LineWidth',2,'MarkerSize',9,'Color',[1.0 0.0 0.0]);
+
+  delT = 1.0e-6;
+  epdot = 1000.0;
+  T = 173.0;
+  rhomax = 7831.0;
+  epmax = max(epsEx);
+  Rc = 45.0;
+  [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
+  pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
+  set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[1.0 0.0 0.0]);
+
+  ep = 0.0;
+  p1(1) = 0.0;
+  p1(2) = seqEx(2);
+  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.05;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  
+  load FlowSt1000298KChi.dat
+  epsEx = FlowSt1000298KChi(:,1)/sqrt(3)*1.0e-2;
+  seqEx = FlowSt1000298KChi(:,2)*sqrt(3);
+  epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(2);
+  pexp1000298 = plot(epEx, seqEx, 'g.-', 'LineWidth', 2); hold on;
+  set(pexp1000298,'LineWidth',2,'MarkerSize',9,'Color',[0.0 1.0 0.0]);
+
+  delT = 1.0e-6;
+  epdot = 1000.0;
+  T = 298.0;
+  rhomax = 7831.0;
+  epmax = max(epsEx);
+  Rc = 45.0;
+  [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
+  pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
+  set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 1.0 0.0]);
+
+  ep = 0.0;
+  p1(1) = 0.0;
+  p1(2) = seqEx(2);
+  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.05;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  
+  load FlowSt1000373KChi.dat
+  epsEx = FlowSt1000373KChi(:,1)/sqrt(3)*1.0e-2;
+  seqEx = FlowSt1000373KChi(:,2)*sqrt(3);
+  epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(2);
+  pexp1000373 = plot(epEx, seqEx, 'b.-', 'LineWidth', 2); hold on;
+  set(pexp1000373,'LineWidth',2,'MarkerSize',9,'Color',[0.0 0.0 1.0]);
+
+  delT = 1.0e-6;
+  epdot = 1000.0;
+  T = 373.0;
+  rhomax = 7831.0;
+  epmax = max(epsEx);
+  Rc = 45.0;
+  [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
+  pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
+  set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.0 1.0]);
+
+  ep = 0.0;
+  p1(1) = 0.0;
+  p1(2) = seqEx(2);
+  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.05;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  
+  set(gca, 'XLim', [0 0.1], 'YLim', [0 2500] );
+  set(gca, 'LineWidth', 3, 'FontName', 'bookman', 'FontSize', 14);
+  xlabel('Plastic Strain', 'FontName', 'bookman', 'FontSize', 16);
+  ylabel('True Stress (MPa) ', 'FontName', 'bookman', 'FontSize', 16);
+  title('4340 Steel Rc 45', 'FontName', 'bookman', 'FontSize', 16);
+  legend([pexp1000173 pexp1000298 pexp1000373], ...
+         '1000/s 173 K Chi(1989)', ...
+         '1000/s 298 K Chi(1989)', ...
+         '1000/s 373 K Chi(1989)');
+  axis square;
+
+  %====================================================================
+
+function plotChiRc49_0001(fid)
+
+  E = 213.0e9;
+  fig00 = figure;
+
+  %
+  % Plot experimental data for 4340 steel Rc 49 (Chi2 et al)
+  % (data in the form of shear stress vs shear strain)
+  % (quasistatic)
+  %
+  load FlowSt0001173KChi2.dat
+  epsEx = FlowSt0001173KChi2(:,1)/sqrt(3)*1.0e-2;
+  seqEx = FlowSt0001173KChi2(:,2)*sqrt(3);
+  epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(2);
+  pexp00001173 = plot(epEx, seqEx, 'r.-', 'LineWidth', 2); hold on;
+  set(pexp00001173,'LineWidth',2,'MarkerSize',9,'Color',[1.0 0.0 0.0]);
+
+  delT = 10.0;
+  epdot = 0.0001;
+  T = 173.0;
+  rhomax = 7831.0;
+  epmax = max(epsEx);
+  Rc = 49.0;
+  [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
+  pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
+  set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[1.0 0.0 0.0]);
+
+  ep = 0.0;
+  p1(1) = 0.0;
+  p1(2) = seqEx(2);
+  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.05;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.1;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.2;
+  %[p2] = intersectPoly(seqEx, epEx, ep);
+  %plot(p2(1),p2(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p2(1), p2(2));
+  
+  load FlowSt0001298KChi2.dat
+  epsEx = FlowSt0001298KChi2(:,1)/sqrt(3)*1.0e-2;
+  seqEx = FlowSt0001298KChi2(:,2)*sqrt(3);
+  epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(2);
+  pexp00001298 = plot(epEx, seqEx, 'g.-', 'LineWidth', 2); hold on;
+  set(pexp00001298,'LineWidth',2,'MarkerSize',9,'Color',[0.0 1.0 0.0]);
+
+  delT = 10.0;
+  epdot = 0.0001;
+  T = 298.0;
+  rhomax = 7831.0;
+  epmax = max(epsEx);
+  Rc = 49.0;
+  [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
+  pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
+  set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 1.0 0.0]);
+
+  ep = 0.0;
+  p1(1) = 0.0;
+  p1(2) = seqEx(2);
+  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.05;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.1;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.2;
+  %[p2] = intersectPoly(seqEx, epEx, ep);
+  %plot(p2(1),p2(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p2(1), p2(2));
+  
+  load FlowSt0001373KChi2.dat
+  epsEx = FlowSt0001373KChi2(:,1)/sqrt(3)*1.0e-2;
+  seqEx = FlowSt0001373KChi2(:,2)*sqrt(3);
+  epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(2);
+  pexp00001373 = plot(epEx, seqEx, 'b.-', 'LineWidth', 2); hold on;
+  set(pexp00001373,'LineWidth',2,'MarkerSize',9,'Color',[0.0 0.0 1.0]);
+
+  delT = 10.0;
+  epdot = 0.0001;
+  T = 373.0;
+  rhomax = 7831.0;
+  epmax = max(epsEx);
+  Rc = 49.0;
+  [s1, e1] = isoMTS(epdot, T, delT, rhomax, epmax, Rc);
+  pmatiso  = plot(e1, s1*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
+  set(pmatiso,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.0 1.0]);
+
+  ep = 0.0;
+  p1(1) = 0.0;
+  p1(2) = seqEx(2);
+  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.05;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.1;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.2;
+  %[p2] = intersectPoly(seqEx, epEx, ep);
+  %plot(p2(1),p2(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p2(1), p2(2));
+  
+  set(gca, 'XLim', [0 0.25], 'YLim', [0 2500] );
+  set(gca, 'LineWidth', 3, 'FontName', 'bookman', 'FontSize', 14);
+  xlabel('Plastic Strain', 'FontName', 'bookman', 'FontSize', 16);
+  ylabel('True Stress (MPa) ', 'FontName', 'bookman', 'FontSize', 16);
+  title('4340 Steel Rc 49', 'FontName', 'bookman', 'FontSize', 16);
+  legend([pexp00001173 pexp00001298 pexp00001373], ...
+         '0.0001/s 173 K Chi(1989)', ...
+         '0.0001/s 298 K Chi(1989)', ...
+         '0.0001/s 373 K Chi(1989)');
+  axis square;
+
+  %====================================================================
+
+function plotChiRc49_1000(fid)
+
+  E = 213.0e9;
+  fig10 = figure;
+
+  %
+  % Plot experimental data for 4340 steel Rc 49 (Chi2 et al)
+  % (data in the form of shear stress vs shear strain)
+  % (dynamic)
+  %
+  load FlowSt1000173KChi2.dat
+  epsEx = FlowSt1000173KChi2(:,1)/sqrt(3)*1.0e-2;
+  seqEx = FlowSt1000173KChi2(:,2)*sqrt(3);
+  epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(2);
+  pexp1000173 = plot(epEx, seqEx, 'r.-', 'LineWidth', 2); hold on;
+  set(pexp1000173,'LineWidth',2,'MarkerSize',9,'Color',[1.0 0.0 0.0]);
+
+  delT = 1.0e-6;
+  epdot = 1000.0;
+  T = 173.0;
+  rhomax = 7831.0;
+  epmax = max(epsEx);
+  Rc = 49.0;
+  [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
+  pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
+  set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[1.0 0.0 0.0]);
+
+  ep = 0.0;
+  p1(1) = 0.0;
+  p1(2) = seqEx(2);
+  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.05;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  
+  load FlowSt1000298KChi2.dat
+  epsEx = FlowSt1000298KChi2(:,1)/sqrt(3)*1.0e-2;
+  seqEx = FlowSt1000298KChi2(:,2)*sqrt(3);
+  epEx = epsEx - seqEx*1.0e6/E;
+  epEx = epEx - epEx(2);
+  pexp1000298 = plot(epEx, seqEx, 'g.-', 'LineWidth', 2); hold on;
+  set(pexp1000298,'LineWidth',2,'MarkerSize',9,'Color',[0.0 1.0 0.0]);
+
+  delT = 1.0e-6;
+  epdot = 1000.0;
+  T = 298.0;
+  rhomax = 7831.0;
+  epmax = max(epsEx);
+  Rc = 49.0;
+  [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
+  pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
+  set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 1.0 0.0]);
+
+  ep = 0.0;
+  p1(1) = 0.0;
+  p1(2) = seqEx(2);
+  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.05;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  
+  load FlowSt1000373KChi2.dat
+  epsEx = FlowSt1000373KChi2(:,1)/sqrt(3)*1.0e-2;
+  seqEx = FlowSt1000373KChi2(:,2)*sqrt(3);
+  epEx = epsEx - seqEx*1.0e6/E - 0.003;
+  epEx = epEx - epEx(2);
+  pexp1000373 = plot(epEx, seqEx, 'b.-', 'LineWidth', 2); hold on;
+  set(pexp1000373,'LineWidth',2,'MarkerSize',9,'Color',[0.0 0.0 1.0]);
+
+  delT = 1.0e-6;
+  epdot = 1000.0;
+  T = 373.0;
+  rhomax = 7831.0;
+  epmax = max(epsEx);
+  Rc = 49.0;
+  [s2, e2] = adiMTS(epdot, T, delT, rhomax, epmax, Rc);
+  pmatadi  = plot(e2, s2*1.0e-6, 'k-.', 'LineWidth', 2); hold on;
+  set(pmatadi,'LineWidth',2,'MarkerSize',6, 'Color',[0.0 0.0 1.0]);
+
+  ep = 0.0;
+  p1(1) = 0.0;
+  p1(2) = seqEx(2);
+  plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  %ep = 0.05;
+  %[p1] = intersectPoly(seqEx, epEx, ep);
+  %plot(p1(1),p1(2),'kx','MarkerSize', 10, 'LineWidth', 3);
+  %fprintf(fid, '%g %g %g %g %g %g\n', ep, epdot, T, Rc, p1(1), p1(2));
+  
+  set(gca, 'XLim', [0 0.1], 'YLim', [0 2500] );
+  set(gca, 'LineWidth', 3, 'FontName', 'bookman', 'FontSize', 14);
+  xlabel('Plastic Strain', 'FontName', 'bookman', 'FontSize', 16);
+  ylabel('True Stress (MPa) ', 'FontName', 'bookman', 'FontSize', 16);
+  title('4340 Steel Rc 49', 'FontName', 'bookman', 'FontSize', 16);
+  legend([pexp1000173 pexp1000298 pexp1000373], ...
+         '1000/s 173 K Chi(1989)', ...
+         '1000/s 298 K Chi(1989)', ...
+         '1000/s 373 K Chi(1989)');
+  axis square;
+
+  %====================================================================
+
 function [p] = calcP(rho, rho0, T, T0)
 
   % Data from Brown and Gust 79
@@ -2036,47 +1852,61 @@ function [sig, eps] = adiMTS(epdot, T0, delT, rhomax, epmax, Rc)
 %
 function [sigy] = MTS(epdot, ep, T, T0, rho, rho0, Rc)
 
-  %
-  % Get P and Tm (these are calculated outside the flow model)
-  %
-  P = calcP(rho, rho0, T, T0);
-  Tm = calcTm(rho, rho0);
 
   %
-  % Compute mu_0 (value of mu at T = 300)
+  % Compute mu_0 (value of mu at T = 0)
   %
-  %mu_0 = calcmu(rho, rho0, Tm, P, 300);
-  mu_0 = 90.0e9;
+  P = calcP(rho, rho0, 0, 0);
+  Tm = calcTm(rho, rho0);
+  mu_0 = calcmu(rho, rho0, Tm, P, 0);
 
   %
   % Compute mu
   %
-  %mu_0 = 85.0e9;
+  P = calcP(rho, rho0, T, T0);
+  Tm = calcTm(rho, rho0);
   mu = calcmu(rho, rho0, Tm, P, T);
 
   %
   % Compute sigma_es
   %
-  sigma_es0 = 790e6;
+  %sigma_es0 = 790e6;
+  %g_0es = 0.112;
+  %g_0es = 5.85e-3*Rc - 8.92e-3;
+  %sigma_es0 = -28.1*Rc + 1688.0;
+  g_0es = 5.031e-4*Rc^3 - 5.74e-2*Rc^2 + 2.1451*Rc - 26.054;
+  sigma_es0 = 0.70417*Rc^3  - 85.561*Rc^2 + 3377.3*Rc - 42583.0;
+  sigma_es0 = sigma_es0*1.0e6;
   edot_0es = 1.0e7;
   kappa = 1.38e-23;
   b = 2.48e-10;
-  g_0es = 0.112;
   sigma_es = sigma_es0*(epdot/edot_0es)^(kappa*T/(mu*b^3*g_0es)); 
 
   %
   % Compute theta_0
   %
-  a_0 = 5102.4e6;
-  a_1 = 0.0;
-  a_2 = 0.0;
-  a_3 = 2.0758e6;
-  theta_0 = a_0 + a_1*log(epdot) + a_2*sqrt(epdot) - a_3*T;
+  %a_0 = 5102.4e6;
+  %a_1 = 0.0;
+  %a_2 = 0.0;
+  %a_3 = 2.0758e6;
+  a_0 = -7.1011e+01*Rc^3 + 8.1373e+03*Rc^2 - 3.0405e+05*Rc + 3.7107e+06;
+  a_1 =  8.0079e-02*Rc^3 - 1.0126e+01*Rc^2 + 4.2081e+02*Rc - 5.7290e+03;
+  a_2 = -5.0786e-01*Rc^3 + 6.1808e+01*Rc^2 - 2.4713e+03*Rc + 3.2441e+04;
+  a_3 =  2.8783e-01*Rc^3 - 3.3058e+01*Rc^2 + 1.2407e+03*Rc - 1.5209e+04;
+  theta_0 = a_0 + a_1*log(epdot) + a_2*sqrt(epdot) + a_3*T;
+  theta_0 = theta_0*1.0e6;
+
+  aIV_0 =  8.7787e+00*Rc^3 - 1.0376e+03*Rc^2 + 3.9919e+04*Rc - 4.9911e+05;
+  aIV_1 =  1.5622e-02*Rc^3 - 2.0127e+00*Rc^2 + 8.5606e+01*Rc - 1.2001e+03;
+  aIV_2 =  1.6347e-01*Rc^3 - 1.8436e+01*Rc^2 + 6.7415e+02*Rc - 7.9722e+03;
+  aIV_3 = -2.8602e-02*Rc^3 + 3.3571e+00*Rc^2 - 1.2801e+02*Rc + 1.5858e+03;
+  theta_IV = aIV_0 + aIV_1*log(epdot) + aIV_2*sqrt(epdot) + aIV_3*T;
+  theta_IV = theta_IV*1.0e6;
 
   %
   % Compute sigma_e
   %
-  sigma_e = computeSigma_e(theta_0, sigma_es, ep);
+  sigma_e = computeSigma_e(theta_0, theta_IV, sigma_es, ep);
 
   %
   % Compute s_e
@@ -2090,7 +1920,7 @@ function [sigy] = MTS(epdot, ep, T, T0, rho, rho0, Rc)
   %
   % Compute s_i
   %
-  g_0i = -0.0016694*Rc^3 + 0.22814*Rc^2 - 10.220*Rc + 150.8908;
+  g_0i = -1.5425e-3*Rc^3 + 2.0396e-1*Rc^2 - 8.8536*Rc + 1.27e2;
   epdot_0i = 1.0e8;
   p_i = 2.0/3.0;
   q_i = 1.0;
@@ -2099,12 +1929,12 @@ function [sigy] = MTS(epdot, ep, T, T0, rho, rho0, Rc)
   %
   % Compute sigma/mu
   %
-  sigma_a = 150.0e6;
+  sigma_a = 50.0e6;
 
   %
-  % Compute sigma_i and g0_i
+  % Compute sigma_i
   %
-  sigma_i = 0.243645*Rc^3 - 32.518*Rc^2 + 1452.456*Rc - 20121.018;
+  sigma_i = 0.18162*Rc^3 - 24.029*Rc^2 + 1077.1*Rc - 14721;
   sigma_i = sigma_i*1.0e6;
 
   sigma_mu = sigma_a/mu + s_i*sigma_i/mu_0 + s_e*sigma_e/mu_0;
@@ -2117,7 +1947,7 @@ function [sigy] = MTS(epdot, ep, T, T0, rho, rho0, Rc)
 %
 % Integrate dsigma_e/dep
 %
-function [sigma_e] = computeSigma_e(theta_0, sigma_es, ep)
+function [sigma_e] = computeSigma_e(theta_0, theta_IV, sigma_es, ep)
 
   if (ep == 0)
     sigma_e = 0.0;
@@ -2128,7 +1958,8 @@ function [sigma_e] = computeSigma_e(theta_0, sigma_es, ep)
   sigma_e = 0;
   dep = ep/100;
   for i=1:101
-    sigma_e = sigma_e + dep*theta_0*(1.0 - tanh(alpha*sigma_e/sigma_es)/tanh(alpha));
+    FX = tanh(alpha*sigma_e/sigma_es)/tanh(alpha);
+    sigma_e = sigma_e + dep*(theta_0*(1-FX) + theta_IV*FX);
     if (sigma_e > sigma_es)
       sigma_e = sigma_es;
       break;
@@ -2210,35 +2041,56 @@ function [p, t1, t2] = intersect(p1,p2,p3,p4)
 %
 % Compute the tangent modulus and sigma_e (isothermal)
 %
-function [theta, sig_e] = computeTangentModulusIso(delT, ep, sig, epdot, T0, Rc)
+function [theta, sigma_e, eplas, sig_e] = ...
+          computeTangentModulusIso(delT, ep, sig, epdot, T0, Rc)
 
   [n, m] = size(ep);
   count = 1;
-  for i=1:n-1
-    if (ep(i) > 0.0)
-      dep = ep(i+1) - ep(i);
-      dsig = sig(i+1) - sig(i);
-      theta(count) = dsig/dep;
-      sig_e(count) = computeSige(sig(i), epdot, T0, T0, Rc);
+  for i=1:n
+    if ~(ep(i) < 0.0)
+      sig_m = sig(i);
+      sig_e(count) = computeSige(sig_m, epdot, T0, T0, Rc);
+      eplas(count) = ep(i);
       count = count+1;
     end
+  end
+  n = length(eplas);
+  count = 1;
+  for i=1:n-1
+    dep = eplas(i+1) - eplas(i);
+    dsig = sig_e(i+1) - sig_e(i);
+    theta(count) = dsig/dep;
+    sigma_e(count) = 0.5*(sig_e(i+1) + sig_e(i));
+    count = count + 1;
   end
 
 %
 % Compute the tangent modulus and sigma_e (adiabatic)
 %
-function [theta, sig_e] = computeTangentModulusAdi(delT, ep, sig, epdot, T0, Rc)
+function [theta, sigma_e, eplas, sig_e] = ...
+          computeTangentModulusAdi(delT, ep, sig, epdot, T0, Rc)
 
   [n, m] = size(ep);
   count = 1;
-  for i=1:n-1
-    if (ep(i) > 0.0)
-      dep = ep(i+1) - ep(i);
-      dsig = sig(i+1) - sig(i);
-      theta(i) = dsig/dep;
-      T = computeTemp(delT, sig(i), ep(i), epdot, T0);
-      sig_e(i) = computeSige(sig(i), epdot, T, T0, Rc);
+  for i=1:n
+    if ~(ep(i) < 0.0)
+      sig_m = sig(i);
+      ep_m =  ep(i);
+      T = computeTemp(delT, sig_m, ep_m, epdot, T0);
+      sig_e(count) = computeSige(sig_m, epdot, T0, T0, Rc);
+      eplas(count) = ep(i);
       count = count+1;
+    end
+  end
+  n = length(eplas);
+  count = 1;
+  for i=1:n-1
+    dep = eplas(i+1) - eplas(i);
+    dsig = sig_e(i+1) - sig_e(i);
+    if (dep ~= 0.0)
+      theta(count) = dsig/dep;
+      sigma_e(count) = 0.5*(sig_e(i+1) + sig_e(i));
+      count = count + 1;
     end
   end
 
@@ -2250,7 +2102,6 @@ function [T] = computeTemp(delT, sig, ep, epdot, T0)
   rho0 = 7830.0;
   tmax = ep/epdot;
   m = tmax/delT;
-  delrho = (rhomax - rho0)/m;
   rho = rho0;
   T = T0;
   ep = 0.0;
@@ -2286,16 +2137,29 @@ function [sigma_e] = computeSige(sig_y, epdot, T, T0, Rc)
   %
   kappa = 1.3806503e-23;
   b = 2.48e-10;
-  sig_a = 150.0e6;
+  sig_a = 50.0e6;
   edot_0i = 1.0e8;
   p_i = 2.0/3.0;
   q_i = 1.0;
-  g_0i = -0.0016694*Rc^3 + 0.22814*Rc^2 - 10.220*Rc + 150.8908;
-  sigma_i = 0.243645*Rc^3 - 32.518*Rc^2 + 1452.456*Rc - 20121.018;
+  g_0i = -1.5425e-3*Rc^3 + 2.0396e-1*Rc^2 - 8.8536*Rc + 1.27e2;
+  sigma_i = 0.18162*Rc^3 - 24.029*Rc^2 + 1077.1*Rc - 14721;
   sigma_i = sigma_i*1.0e6;
   S_i = (1.0 - (kappa*T/(mu*b^3*g_0i)*log(edot_0i/epdot))^(1/q_i))^(1/p_i);
 
   %
+  % Compute S_e
+  %
+  kappa = 1.3806503e-23;
+  b = 2.48e-10;
+  edot_0e = 1.0e7;
+  p_e = 2.0/3.0;
+  q_e = 1.0;
+  g_0e = 1.6;
+  S_e = (1.0 - (kappa*T/(mu*b^3*g_0e)*log(edot_0e/epdot))^(1/q_e))^(1/p_e);
+
+  %
   % Compute sig_e
   %
-  sigma_e = mu_0/mu*(sig_y - sig_a) - S_i*sigma_i;
+  sigma_e = 1.0/S_e*(mu_0/mu*(sig_y - sig_a) - S_i*sigma_i);
+  
+  %[sigma_e mu_0 mu sig_y sig_a S_i sigma_i]
