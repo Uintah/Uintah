@@ -71,13 +71,13 @@ Caption             = sprintf('Discretization error versus base resolution $n$ f
 latexTableFactors(data,orders,Labels,fileName,Caption,fmt{:});
 
 % Plot grid
-if (grid.totalVars <= 200)
-    plotGrid(grid,sprintf('%s/grid%d.eps',param.outputDir,param.baseResolution),1,0,0,0);
-end
-% Plot errors, solutions and save them to eps files
-if (ismember(grid.dim,[2]))
-    plotResults(grid,u,uExact,tau,param.baseResolution);
-end
+%if (grid.totalVars <= 200)
+%    plotGrid(grid,sprintf('%s/grid%d.eps',param.outputDir,param.baseResolution),1,0,0,0);
+%end
+% % Plot errors, solutions and save them to eps files
+%if (ismember(grid.dim,[2]))
+%    plotResults(grid,u,uExact,tau,param.baseResolution);
+%end
 
 % Generate report page
 fileName            = sprintf('%s/Results',param.outputDir);

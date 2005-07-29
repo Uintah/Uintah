@@ -11,6 +11,9 @@ function [grid,A,b,T,TI] = setupGrid
 
 globalParams;
 
+distrib = 1; % Make that 1 to match distributed patches to multiple procs in C++
+
+
 out(2,'--- setupGrid() BEGIN ---\n');
 tStartCPU       = cputime;
 tStartElapsed   = clock;
@@ -33,7 +36,21 @@ grid.level          = cell(grid.maxLevels,1);
 
 resolution          = repmat(param.baseResolution,[1 grid.dim]);
 [grid,k]            = addGridLevel(grid,'meshsize',grid.domainSize./resolution);
-[grid,q1]           = addGridPatch(grid,k,ones(1,grid.dim),resolution,-1);     % One global patch
+
+if (~distrib)
+    % 1 Patch
+    [grid,q1]           = addGridPatch(grid,k,ones(1,grid.dim),resolution,-1);     % One global patch
+else
+    % 2^d Patches over same domain
+    offset              = fliplr(graycode(grid.dim,repmat(2,[grid.dim 1])));
+    q1                  = zeros(size(offset,1),1);
+    for i = 1:size(offset,1)
+        ilower  = ones(1,grid.dim) + offset(i,:).*resolution/2;
+        iupper  = ilower + resolution/2 - 1;
+        [grid,q1(i)]     = addGridPatch(grid,k,ilower,iupper,-1);
+    end
+end
+
 for q = 1:grid.level{k}.numPatches,
     [grid,A,b,T,TI]      = updateSystem(grid,k,q,A,b,T,TI);
 end
@@ -47,8 +64,23 @@ if (param.twoLevel)
             % Cover the entire domain
             [grid,q2]  = addGridPatch(grid,k,ones(1,grid.dim),2*resolution,q1);              % Local patch around the domain center
         case 'centralHalf',
-            % Cover central half of the domain
-            [grid,q2]  = addGridPatch(grid,k,resolution/2 + 1,3*resolution/2,q1);              % Local patch around the domain center
+
+            if (~distrib)
+                % Cover central half of the domain
+                [grid,q2]  = addGridPatch(grid,k,resolution/2 + 1,3*resolution/2,q1);              % Local patch around the domain center
+            else
+                % 2^d Patches over same domain
+                offset              = fliplr(graycode(grid.dim,repmat(2,[grid.dim 1])));
+                q2                  = zeros(size(offset,1),1);
+                for i = 1:size(offset,1)
+                    ilower  = resolution/2 + 1 + offset(i,:).*resolution/2;
+                    iupper  = ilower + resolution/2 - 1;
+                    [grid,q2(i)]     = addGridPatch(grid,k,ilower,iupper,q1(i));
+%                    [grid,q2(i)]     = addGridPatch(grid,k,ilower,iupper,q1);
+                end
+            end
+            
+            
         case 'centralQuarter',
             % Cover central quarter of the domain
             [grid,q2]  = addGridPatch(grid,k,3*resolution/4 + 1,5*resolution/4,q1);              % Local patch around the domain center
