@@ -30,6 +30,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
 				       CCVariable<int>::getTypeDescription());
    refinePatchFlag_label = VarLabel::create("refinePatchFlag",
 				       PerPatch<int>::getTypeDescription());
+   switch_label = VarLabel::create("switchFlag", max_vartype::getTypeDescription());
    d_ref_press = 0.0;
    d_elapsed_time = 0.0;
    d_needAddMaterial = 0;
@@ -64,6 +65,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   all_arches_matls = 0;
   all_matls = 0;
   allInOneMatl = 0;
+  max_matl_index = 0;
   refine_flag_matls = 0;
   d_isCopyDataTimestep = 0;
 
@@ -74,6 +76,9 @@ void SimulationState::registerMaterial(Material* matl)
 {
    matl->setDWIndex((int)matls.size());
    matls.push_back(matl);
+   if (matls.size() > max_matl_index) {
+     max_matl_index = matls.size();
+   }
 
    if(matl->hasName())
      named_matls[matl->getName()] = matl;
@@ -168,7 +173,7 @@ int SimulationState::getNumVelFields() const {
 void SimulationState::clearMaterials()
 {
   for (int i = 0; i < (int)matls.size(); i++)
-    delete matls[i];
+    old_matls.push_back(matls[i]);
 
   if(all_matls && all_matls->removeReference())
     delete all_matls;
@@ -208,7 +213,11 @@ SimulationState::~SimulationState()
   VarLabel::destroy(refineFlag_label);
   VarLabel::destroy(oldRefineFlag_label);
   VarLabel::destroy(refinePatchFlag_label);
+  VarLabel::destroy(switch_label);
   clearMaterials();
+
+  for (unsigned i = 0; i < old_matls.size(); i++)
+    delete old_matls[i];
 
   if(refine_flag_matls && refine_flag_matls->removeReference())
     delete refine_flag_matls;

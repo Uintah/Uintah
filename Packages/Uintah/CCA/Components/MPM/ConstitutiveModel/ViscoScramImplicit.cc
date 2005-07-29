@@ -82,7 +82,7 @@ ViscoScramImplicit::ViscoScramImplicit(ProblemSpecP& ps,  MPMLabel* Mlb,
       ParticleVariable<double>::getTypeDescription());
   pCrackRadiusLabel       = VarLabel::create("p.crackRad",
       ParticleVariable<double>::getTypeDescription());
-  pStatedataLabel         = VarLabel::create("p.pStatedata_vs",
+  pStatedataLabel         = VarLabel::create("p.pStatedata_vs_implicit",
       ParticleVariable<StateData>::getTypeDescription());
   pRandLabel              = VarLabel::create("p.rand",
       ParticleVariable<double>::getTypeDescription() );
@@ -97,7 +97,7 @@ ViscoScramImplicit::ViscoScramImplicit(ProblemSpecP& ps,  MPMLabel* Mlb,
       ParticleVariable<double>::getTypeDescription());
   pCrackRadiusLabel_preReloc       = VarLabel::create("p.crackRad+",
       ParticleVariable<double>::getTypeDescription());
-  pStatedataLabel_preReloc         = VarLabel::create("p.pStatedata_vs+",
+  pStatedataLabel_preReloc         = VarLabel::create("p.pStatedata_vs_implicit+",
       ParticleVariable<StateData>::getTypeDescription());
   pRandLabel_preReloc              = VarLabel::create("p.rand+",
       ParticleVariable<double>::getTypeDescription());
@@ -157,7 +157,7 @@ ViscoScramImplicit::ViscoScramImplicit(const ViscoScramImplicit* cm)
       ParticleVariable<double>::getTypeDescription());
   pCrackRadiusLabel       = VarLabel::create("p.crackRad",
       ParticleVariable<double>::getTypeDescription());
-  pStatedataLabel         = VarLabel::create("p.pStatedata_vs",
+  pStatedataLabel         = VarLabel::create("p.pStatedata_vs_implicit",
       ParticleVariable<StateData>::getTypeDescription());
   pRandLabel              = VarLabel::create("p.rand",
       ParticleVariable<double>::getTypeDescription() );
@@ -172,7 +172,7 @@ ViscoScramImplicit::ViscoScramImplicit(const ViscoScramImplicit* cm)
       ParticleVariable<double>::getTypeDescription());
   pCrackRadiusLabel_preReloc       = VarLabel::create("p.crackRad+",
       ParticleVariable<double>::getTypeDescription());
-  pStatedataLabel_preReloc         = VarLabel::create("p.pStatedata_vs+",
+  pStatedataLabel_preReloc         = VarLabel::create("p.pStatedata_vs_implicit+",
       ParticleVariable<StateData>::getTypeDescription());
   pRandLabel_preReloc              = VarLabel::create("p.rand+",
       ParticleVariable<double>::getTypeDescription() );

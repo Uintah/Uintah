@@ -788,9 +788,10 @@ void MPMICE::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
   Task* task = scinew Task("switchTest",this, &MPMICE::switchTest);
 
-  task->requires(Task::OldDW, d_sharedState->get_delt_label() );
-  task->computes(Mlb->switchLabel);
-  sched->addTask(task, level->eachPatch(),d_sharedState->allMaterials());
+  // make sure this is done after relocation
+  task->requires(Task::NewDW, Mlb->pXLabel, Ghost::None );
+  task->computes(d_sharedState->get_switch_label(), level.get_rep());
+  sched->addTask(task, level->eachPatch(),d_sharedState->allMPMMaterials());
 
 }
 
@@ -2522,17 +2523,14 @@ void MPMICE::switchTest(const ProcessorGroup* group,
                         DataWarehouse* new_dw)
 {
   int time_step = d_sharedState->getCurrentTopLevelTimeStep();
-  cout << "time_step = " << time_step << endl;
-
-  bool sw = false;
+  double sw = 0;
 #if 1
-  if (time_step == 3)
-    sw = true;
+  if (time_step == 3 )
+    sw = 1;
   else
-    sw = false;
-
+    sw = 0;
 #endif
 
-  SoleVariable<bool> switch_condition(sw);
-  new_dw->put(switch_condition,Mlb->switchLabel,getLevel(patches));
+  max_vartype switch_condition(sw);
+  new_dw->put(switch_condition,d_sharedState->get_switch_label(),getLevel(patches));
 }
