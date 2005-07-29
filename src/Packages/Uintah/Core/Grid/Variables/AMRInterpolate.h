@@ -168,19 +168,37 @@ template<class T>
 {
   Vector c_dx = coarseLevel->dCell();
   Vector inv_c_dx = Vector(1.0)/c_dx;
+  GridP grid = coarseLevel->getGrid();
+  IntVector gridLo, gridHi;
+  grid->getLevel(0)->findCellIndexRange(gridLo,gridHi);
+  gridHi -= IntVector(1,1,1);
   
   for(CellIterator iter(fl,fh); !iter.done(); iter++){
     IntVector f_cell = *iter;
     IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
+    IntVector baseCell = c_cell;
     
     //__________________________________
-    // Offset for coarse level surrounding cells:
-    //  -find the normalized distance between the coarse and fine level cell centers  
-    Point coarse_cell_pos = coarseLevel->getCellPosition(c_cell);
-    Point fine_cell_pos   = fineLevel->getCellPosition(f_cell);
-    Vector dist = (fine_cell_pos.asVector() - coarse_cell_pos.asVector()) * inv_c_dx;
+    // At the edge of the computational Domain
+    // shift base/origin coarse cell inward one cell
+    IntVector shift(0,0,0);
     
-    //dist = Abs(dist); 
+    for (int d =0; d<3; d++){
+      if( (c_cell[d] - gridLo[d]) == 0 ) {  // (x,y,z)minus
+        shift[d] = 1;
+      } 
+      if( (gridHi[d]-c_cell[d] ) == 0) {    // (x,y,z)plus
+        shift[d] = -1;
+      }
+    }    
+    baseCell = c_cell + shift;
+   
+    //__________________________________
+    //  Find the distance from the baseCell to fineCell 
+    Point coarse_cell_pos = coarseLevel->getCellPosition(baseCell);
+    Point fine_cell_pos   = fineLevel->getCellPosition(f_cell);
+    Vector dist = (fine_cell_pos.asVector() - coarse_cell_pos.asVector()) * inv_c_dx; 
+    
     //__________________________________
     //  Find the weights 
     double x = dist.x();
@@ -214,15 +232,15 @@ template<class T>
       k += 1;
 
       q_XY_Plane[p]   // X-Y plane
-        = w(0,0) * q_CL[c_cell + IntVector( -1, -1, k)]   
-        + w(1,0) * q_CL[c_cell + IntVector(  0, -1, k)]           
-        + w(2,0) * q_CL[c_cell + IntVector(  1, -1, k)]           
-        + w(0,1) * q_CL[c_cell + IntVector( -1,  0, k)]            
-        + w(1,1) * q_CL[c_cell + IntVector(  0,  0, k)]    
-        + w(2,1) * q_CL[c_cell + IntVector(  1,  0, k)]     
-        + w(0,2) * q_CL[c_cell + IntVector( -1,  1, k)]   
-        + w(1,2) * q_CL[c_cell + IntVector(  0,  1, k)]     
-        + w(2,2) * q_CL[c_cell + IntVector(  1,  1, k)]; 
+        = w(0,0) * q_CL[baseCell + IntVector( -1, -1, k)]   
+        + w(1,0) * q_CL[baseCell + IntVector(  0, -1, k)]           
+        + w(2,0) * q_CL[baseCell + IntVector(  1, -1, k)]           
+        + w(0,1) * q_CL[baseCell + IntVector( -1,  0, k)]            
+        + w(1,1) * q_CL[baseCell + IntVector(  0,  0, k)]    
+        + w(2,1) * q_CL[baseCell + IntVector(  1,  0, k)]     
+        + w(0,2) * q_CL[baseCell + IntVector( -1,  1, k)]   
+        + w(1,2) * q_CL[baseCell + IntVector(  0,  1, k)]     
+        + w(2,2) * q_CL[baseCell + IntVector(  1,  1, k)]; 
     }
     
     // interpolate the 3 X-Y planes 
@@ -235,16 +253,16 @@ template<class T>
 #if 0
     if(f_cell == IntVector(2, 5, 4)){
       for (k = -1; k< 2; k++){
-        cout << " c_cell " << c_cell << " f_cell " << f_cell << " x " << x << " y " << y << " z " << z <<endl;
-        cout << " q_CL[c_cell + IntVector( -1, -1, k)] " << q_CL[c_cell + IntVector( -1, -1, k)]<< " w(0,0) " << w(0,0)<< endl;
-        cout << " q_CL[c_cell + IntVector(  0, -1, k)] " << q_CL[c_cell + IntVector(  0, -1, k)]<< " w(1,0) " << w(1,0)<< endl;
-        cout << " q_CL[c_cell + IntVector(  1, -1, k)] " << q_CL[c_cell + IntVector(  1, -1, k)]<< " w(2,0) " << w(2,0)<< endl;
-        cout << " q_CL[c_cell + IntVector( -1,  0, k)] " << q_CL[c_cell + IntVector(  1, -1, k)]<< " w(0,1) " << w(0,1)<< endl;
-        cout << " q_CL[c_cell + IntVector(  0,  0, k)] " << q_CL[c_cell + IntVector(  0,  0, k)]<< " w(1,1) " << w(1,1)<< endl;
-        cout << " q_CL[c_cell + IntVector(  1,  0, k)] " << q_CL[c_cell + IntVector(  1,  0, k)]<< " w(2,1) " << w(2,1)<< endl;
-        cout << " q_CL[c_cell + IntVector( -1,  1, k)] " << q_CL[c_cell + IntVector( -1,  1, k)]<< " w(0,2) " << w(0,2)<< endl;
-        cout << " q_CL[c_cell + IntVector(  0,  1, k)] " << q_CL[c_cell + IntVector(  0,  1, k)]<< " w(1,2) " << w(1,2)<< endl;
-        cout << " q_CL[c_cell + IntVector(  1,  1, k)] " << q_CL[c_cell + IntVector(  1,  1, k)]<< " w(2,2) " << w(2,2)<< endl;
+        cout << " baseCell " << baseCell << " f_cell " << f_cell << " x " << x << " y " << y << " z " << z <<endl;
+        cout << " q_CL[baseCell + IntVector( -1, -1, k)] " << q_CL[baseCell + IntVector( -1, -1, k)]<< " w(0,0) " << w(0,0)<< endl;
+        cout << " q_CL[baseCell + IntVector(  0, -1, k)] " << q_CL[baseCell + IntVector(  0, -1, k)]<< " w(1,0) " << w(1,0)<< endl;
+        cout << " q_CL[baseCell + IntVector(  1, -1, k)] " << q_CL[baseCell + IntVector(  1, -1, k)]<< " w(2,0) " << w(2,0)<< endl;
+        cout << " q_CL[baseCell + IntVector( -1,  0, k)] " << q_CL[baseCell + IntVector(  1, -1, k)]<< " w(0,1) " << w(0,1)<< endl;
+        cout << " q_CL[baseCell + IntVector(  0,  0, k)] " << q_CL[baseCell + IntVector(  0,  0, k)]<< " w(1,1) " << w(1,1)<< endl;
+        cout << " q_CL[baseCell + IntVector(  1,  0, k)] " << q_CL[baseCell + IntVector(  1,  0, k)]<< " w(2,1) " << w(2,1)<< endl;
+        cout << " q_CL[baseCell + IntVector( -1,  1, k)] " << q_CL[baseCell + IntVector( -1,  1, k)]<< " w(0,2) " << w(0,2)<< endl;
+        cout << " q_CL[baseCell + IntVector(  0,  1, k)] " << q_CL[baseCell + IntVector(  0,  1, k)]<< " w(1,2) " << w(1,2)<< endl;
+        cout << " q_CL[baseCell + IntVector(  1,  1, k)] " << q_CL[baseCell + IntVector(  1,  1, k)]<< " w(2,2) " << w(2,2)<< endl;
         cout << " q_XY_Plane " << q_XY_Plane[k+1] << endl;
       }
       cout  << " plane 1 " << q_XY_Plane[0] << " plane2 " << q_XY_Plane[1] << " plane3 "<< q_XY_Plane[2]<< endl;
@@ -257,7 +275,6 @@ template<class T>
    
   } 
 }
-
 /*___________________________________________________________________
  Function~  selectInterpolator--
 _____________________________________________________________________*/
@@ -363,10 +380,12 @@ template<class T>
   IntVector fl = finePatch->getCellLowIndex();
   IntVector fh = finePatch->getCellHighIndex();
   
+#if 0
   if (orderOfInterpolation == 2){  // keep away from the edge of the domain
     fl += IntVector(2,2,2);
     fh -= IntVector(2,2,2);
   }
+#endif
   
   IntVector refineRatio(fineLevel->getRefinementRatio());
   

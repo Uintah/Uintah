@@ -41,7 +41,9 @@ AMRICE::~AMRICE()
 void AMRICE::problemSetup(const ProblemSpecP& params, GridP& grid,
                             SimulationStateP& sharedState)
 {
-  cout_doing << d_myworld->myrank() << " Doing problemSetup  \t\t\t AMRICE" << '\n';
+  cout_doing << d_myworld->myrank() 
+             << " Doing problemSetup  \t\t\t AMRICE" << '\n';
+             
   ICE::problemSetup(params, grid, sharedState);
   ProblemSpecP cfd_ps = params->findBlock("CFD");
   ProblemSpecP ice_ps = cfd_ps->findBlock("ICE");
@@ -72,7 +74,8 @@ void AMRICE::problemSetup(const ProblemSpecP& params, GridP& grid,
 void AMRICE::scheduleInitialize(const LevelP& level,
                                   SchedulerP& sched)
 {
-  cout_doing << d_myworld->myrank() << " AMRICE::scheduleInitialize \t\tL-"<<level->getIndex()<< '\n';
+  cout_doing << d_myworld->myrank() 
+             << " AMRICE::scheduleInitialize \t\tL-"<<level->getIndex()<< '\n';
   ICE::scheduleInitialize(level, sched);
 }
 //___________________________________________________________________
@@ -175,7 +178,8 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
 {
   const Level* level = getLevel(patches);
   if(level->getIndex() > 0){     
-    cout_doing << d_myworld->myrank() << " Doing refineCoarseFineInterface"<< "\t\t\t\t AMRICE L-" 
+    cout_doing << d_myworld->myrank() 
+               << " Doing refineCoarseFineInterface"<< "\t\t\t\t AMRICE L-" 
                << level->getIndex() << " step " << subCycleProgress<<endl;
     int  numMatls = d_sharedState->getNumICEMatls();
     bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
@@ -306,6 +310,10 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
       IntVector coarseLow  = fineLevel->mapCellToCoarser(fl);
       IntVector coarseHigh = fineLevel->mapCellToCoarser(fh+refineRatio - IntVector(1,1,1));
 
+
+      IntVector axes = patch->faceAxes(face);
+      int P_dir = axes[0];  // principal direction      
+        
       //__________________________________
       // enlarge the coarselevel foot print by oneCell
       // x-           x+        y-       y+       z-        z+
@@ -317,28 +325,39 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
       }
       if( face == Patch::xplus || face == Patch::yplus 
                                || face == Patch::zplus) {
-        coarseLow -= oneCell;
+        coarseLow  -= oneCell;
       }
+      
+      //__________________________________
+      // for higher order interpolation increase the coarse level foot print
+      // by the order of interpolation - 1
+      if(d_orderOfInterpolation >= 2){
+        IntVector one(1,1,1);
+        IntVector interOrder(d_orderOfInterpolation,d_orderOfInterpolation,d_orderOfInterpolation);
+        coarseLow  -= interOrder - one;
+        coarseHigh += interOrder - one;
+      } 
       
       //__________________________________
       // If the face is orthogonal to a neighboring
       // patch face increase the coarse level foot print
-      // Linear interpolation:    1
-      // Quadratic interpolation: 3     ??????
-      
       IntVector expandCellsLo = IntVector(1,1,1) - patch->neighborsLow();
       IntVector expandCellsHi = IntVector(1,1,1) - patch->neighborsHigh();
-      
-      IntVector plusMinus_face = patch->faceDirection(face);
-      IntVector axes = patch->faceAxes(face);
-      int P_dir   = axes[0];  // principal direction
-      
-      // in the face direction ignore the cell expansion
+         
+      // in the face normal direction ignore the cell expansion
       expandCellsLo[P_dir] = 0;
       expandCellsHi[P_dir] = 0;
       
       coarseHigh += expandCellsHi;
       coarseLow  -= expandCellsLo;
+      
+      //__________________________________
+      // coarseHigh and coarseLow cannot lie outside
+      // of the coarselevel index range
+      IntVector cl, ch;
+      coarseLevel->findCellIndexRange(cl,ch);
+      coarseLow   = Max(coarseLow, cl);
+      coarseHigh  = Min(coarseHigh, ch); 
     
       cout_dbg<< " face " << face << " refineRatio "<< refineRatio
               << " BC type " << patch->getBCType(face)
@@ -348,9 +367,9 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
               << " \t coarseLevel iterator " << coarseLow << " " << coarseHigh<<endl;
 
        
-       //__________________________________
-       // subCycleProgress_var near 1.0 
-       //  interpolation using the coarse_new_dw data
+      //__________________________________
+      // subCycleProgress_var near 1.0 
+      //  interpolation using the coarse_new_dw data
       if(subCycleProgress_var > 1-1.e-10){ 
        constCCVariable<varType> q_NewDW;
        coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel,
@@ -389,14 +408,15 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
                           + subCycleProgress_var *Q_new[f_cell];
         }
       }
-    }
-  }  // face
-   
+
+    }  // valid face
+  }  // face loop
   //____ B U L L E T   P R O O F I N G_______ 
   // All values must be initialized at this point
   if(subCycleProgress_var > 1-1.e-10){  
     IntVector badCell;
-    if( isEqual<varType>(varType(d_EVIL_NUM),patch,Q, badCell) ){
+    CellIterator iter = patch->getExtraCellIterator();
+    if( isEqual<varType>(varType(d_EVIL_NUM),iter,Q, badCell) ){
       ostringstream warn;
       warn <<"ERROR AMRICE::refine_CF_interfaceOperator "
            << "detected an uninitialized variable: "
@@ -406,8 +426,7 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
            <<fineLevel->getIndex()<<"\n ";
       throw InvalidValue(warn.str(), __FILE__, __LINE__);
     }
-  }
- 
+  }  
   cout_dbg.setActive(false);// turn off the switch for cout_dbg
 }
 
@@ -473,7 +492,8 @@ _____________________________________________________________________*/
 void AMRICE::scheduleRefine(const PatchSet* patches,
                                SchedulerP& sched)
 {
-  cout_doing << d_myworld->myrank() << " AMRICE::scheduleRefine\t\t\t\tP-" << *patches << '\n';
+  cout_doing << d_myworld->myrank() 
+             << " AMRICE::scheduleRefine\t\t\t\tP-" << *patches << '\n';
   Task* task = scinew Task("refine",this, &AMRICE::refine);
 
   MaterialSubset* subset = scinew MaterialSubset;
@@ -534,7 +554,8 @@ void AMRICE::refine(const ProcessorGroup*,
   const Level* fineLevel = getLevel(patches);
   const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
   
-  cout_doing << d_myworld->myrank() << " Doing refine \t\t\t\t\t\t AMRICE L-"<< fineLevel->getIndex();
+  cout_doing << d_myworld->myrank() 
+             << " Doing refine \t\t\t\t\t\t AMRICE L-"<< fineLevel->getIndex();
   IntVector rr(fineLevel->getRefinementRatio());
   double invRefineRatio = 1./(rr.x()*rr.y()*rr.z());
   
@@ -547,6 +568,8 @@ void AMRICE::refine(const ProcessorGroup*,
     
     // bullet proofing
     iteratorTest(finePatch, fineLevel, coarseLevel, new_dw);
+
+    //testInterpolators<double>(new_dw,d_orderOfInterpolation,coarseLevel,fineLevel,finePatch);
 
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
@@ -638,6 +661,9 @@ void AMRICE::iteratorTest(const Patch* finePatch,
   CCVariable<double> hitCells;
   new_dw->allocateTemporary(hitCells, finePatch);
   hitCells.initialize(d_EVIL_NUM);
+  IntVector lo(0,0,0);
+  IntVector hi(0,0,0);
+  
   
   for(int i=0;i<coarsePatches.size();i++){
     const Patch* coarsePatch = coarsePatches[i];
@@ -649,8 +675,8 @@ void AMRICE::iteratorTest(const Patch* finePatch,
     IntVector fl_tmp = coarseLevel->mapCellToFiner(cl);
     IntVector fh_tmp = coarseLevel->mapCellToFiner(ch);
     
-    IntVector lo = Max(fl, fl_tmp);
-    IntVector hi = Min(fh, fh_tmp);
+    lo = Max(fl, fl_tmp);
+    hi = Min(fh, fh_tmp);
     
     for(CellIterator iter(lo,hi); !iter.done(); iter++){
       IntVector c = *iter;
@@ -667,11 +693,11 @@ void AMRICE::iteratorTest(const Patch* finePatch,
     
   }
   
- //____ B U L L E T   P R O O F I N G_______ 
+  //____ B U L L E T   P R O O F I N G_______ 
   // All cells must be initialized at this point
-  // even in the extra cells 
   IntVector badCell;
-  if( isEqual<double>(d_EVIL_NUM,finePatch,hitCells, badCell) ){
+  CellIterator iter(lo,hi);
+  if( isEqual<double>(d_EVIL_NUM,iter,hitCells, badCell) ){
   
     IntVector c_badCell = fineLevel->mapCellToCoarser(badCell);
     const Patch* patch = coarseLevel->selectPatchForCellIndex(c_badCell);
@@ -707,21 +733,21 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
   IntVector fl, fh;
   Ghost::GhostType  gac = Ghost::AroundCells;
   finePatch->computeVariableExtents(varLabel->typeDescription()->getType(),
-                                    IntVector(0,0,0), gac, 1,
-                                    fl, fh);
-
+                                    IntVector(0,0,0), gac,1, fl, fh); 
+  
   // coarse region we need to get from the dw
   IntVector cl = finePatch->getLevel()->mapCellToCoarser(fl);
   IntVector ch = finePatch->getLevel()->mapCellToCoarser(fh) + 
   finePatch->getLevel()->getRefinementRatio() - IntVector(1,1,1);
 
   // fine region to work over
-  IntVector lo = finePatch->getLowIndex();
-  IntVector hi = finePatch->getHighIndex();
+  IntVector lo = finePatch->getInteriorCellLowIndex();
+  IntVector hi = finePatch->getInteriorCellHighIndex();
 
-  cout_dbg <<" coarseToFineOperator: " << varLabel->getName()
+  cout_doing <<" coarseToFineOperator: " << varLabel->getName()
            <<" finePatch  "<< finePatch->getID() << " " 
-           << fl<<" "<< fh<<endl;
+           << lo<<" "<< hi<< " fl " << fl << " fh " << fh 
+           <<" coarseRegion " << cl << " " << ch <<endl;
   
   constCCVariable<T> coarse_q_CC;
   new_dw->getRegion(coarse_q_CC, varLabel, indx, coarseLevel, cl, ch);
@@ -731,10 +757,10 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
                       refineRatio, lo,hi,q_CC);
   
   //____ B U L L E T   P R O O F I N G_______ 
-  // All values must be initialized at this point
-  // even in the extra cells 
+  // All fine patch interior values must be initialized at this point
   IntVector badCell;
-  if( isEqual<T>(T(d_EVIL_NUM),finePatch,q_CC, badCell) ){
+  CellIterator iter=finePatch->getCellIterator();
+  if( isEqual<T>(T(d_EVIL_NUM),iter,q_CC, badCell) ){
     ostringstream warn;
     warn <<"ERROR AMRICE::Refine Task:CoarseToFineOperator "
          << "detected an uninitialized variable "<< varLabel->getName()
@@ -755,8 +781,10 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
     return;
     
   Ghost::GhostType  gn = Ghost::None; 
-  cout_doing << d_myworld->myrank() << " AMRICE::scheduleCoarsen\t\t\t\tL-" << coarseLevel->getIndex() 
+  cout_doing << d_myworld->myrank() 
+             << " AMRICE::scheduleCoarsen\t\t\t\tL-" << coarseLevel->getIndex() 
              << '\n';
+             
   Task* task = scinew Task("coarsen",this, &AMRICE::coarsen);
 
   Task::DomainSpec ND   = Task::NormalDomain;                            
@@ -821,7 +849,8 @@ void AMRICE::coarsen(const ProcessorGroup*,
   
   const Level* coarseLevel = getLevel(patches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
-  cout_doing << d_myworld->myrank() << " Doing coarsen \t\t\t\t\t\t AMRICE L-" <<fineLevel->getIndex();
+  cout_doing << d_myworld->myrank()
+             << " Doing coarsen \t\t\t\t\t\t AMRICE L-" <<fineLevel->getIndex();
   
   IntVector rr(fineLevel->getRefinementRatio());
   double invRefineRatio = 1./(rr.x()*rr.y()*rr.z());
@@ -965,7 +994,8 @@ void AMRICE::scheduleReflux_computeCorrectionFluxes(const LevelP& coarseLevel,
                                                     SchedulerP& sched)
 {
  
-  cout_doing << d_myworld->myrank() << " AMRICE::scheduleReflux_computeCorrectionFluxes\tL-" 
+  cout_doing << d_myworld->myrank() 
+             << " AMRICE::scheduleReflux_computeCorrectionFluxes\tL-" 
              << coarseLevel->getIndex() << '\n';
              
   Task* task = scinew Task("reflux_computeCorrectionFluxes",
@@ -1058,7 +1088,8 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
   const Level* coarseLevel = getLevel(coarsePatches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
   
-  cout_doing << d_myworld->myrank() << " Doing reflux_computeCorrectionFluxes \t\t\t AMRICE L-"
+  cout_doing << d_myworld->myrank() 
+             << " Doing reflux_computeCorrectionFluxes \t\t\t AMRICE L-"
              <<coarseLevel->getIndex();
   
   bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
@@ -1243,22 +1274,24 @@ void AMRICE::refluxOperator_computeCorrectionFluxes(
   IntVector xcl, xch, ycl, ych, zcl, zch, fh;
 
   xfl = yfl = zfl = finePatch->getInteriorCellLowIndex();
-  fh = finePatch->getInteriorCellHighIndex();
   xcl = ycl = zcl = coarsePatch->getInteriorCellLowIndex();
+  
+  fh = finePatch->getInteriorCellHighIndex();
   ch = coarsePatch->getInteriorCellHighIndex();
 
   // get the highs to the right values... 
   // (find the correct x-face-centered high value, etc.)
   IntVector fineNeighbors(finePatch->neighborsHigh());
   IntVector coarseNeighbors(coarsePatch->neighborsHigh());
-  xfh = fh + IntVector(fineNeighbors.x(), 0, 0);
-  yfh = fh + IntVector(0, fineNeighbors.y(), 0);
-  zfh = fh + IntVector(0, 0, fineNeighbors.z());
-  xch = ch + IntVector(coarseNeighbors.x(), 0, 0);
-  ych = ch + IntVector(0, coarseNeighbors.y(), 0);
-  zch = ch + IntVector(0, 0, coarseNeighbors.z());
+  xfh = fh + IntVector(fineNeighbors.x(),       0,                0);
+  yfh = fh + IntVector(     0,            fineNeighbors.y(),      0);
+  zfh = fh + IntVector(     0,                  0,            fineNeighbors.z());
+  
+  xch = ch + IntVector(coarseNeighbors.x(),     0,                0);
+  ych = ch + IntVector(     0,            coarseNeighbors.y(),    0);
+  zch = ch + IntVector(     0,                  0,            coarseNeighbors.z());
 
-  // this will be the final range to get - intersection of coarse and fine patches
+  // Intersection of coarse and fine patches
   xfl = Max(coarseLevel->mapCellToFiner(xcl), xfl);
   yfl = Max(coarseLevel->mapCellToFiner(ycl), yfl);
   zfl = Max(coarseLevel->mapCellToFiner(zcl), zfl);
@@ -1506,8 +1539,10 @@ void AMRICE::scheduleReflux_applyCorrection(const LevelP& coarseLevel,
                                             SchedulerP& sched)
 {
  
-  cout_doing << d_myworld->myrank() << " AMRICE::scheduleReflux_applyCorrectionFluxes\tL-" 
+  cout_doing << d_myworld->myrank() 
+             << " AMRICE::scheduleReflux_applyCorrectionFluxes\tL-" 
              << coarseLevel->getIndex() <<endl;
+             
   Task* task = scinew Task("reflux_applyCorrectionFluxes",
                           this, &AMRICE::reflux_applyCorrectionFluxes);
   
@@ -1575,7 +1610,8 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
   const Level* coarseLevel = getLevel(coarsePatches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
   
-  cout_doing << d_myworld->myrank() << " Doing reflux_applyCorrectionFluxes \t\t\t AMRICE L-"
+  cout_doing << d_myworld->myrank() 
+             << " Doing reflux_applyCorrectionFluxes \t\t\t AMRICE L-"
              <<coarseLevel->getIndex();
   
   bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
@@ -1776,7 +1812,8 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
 {
   if(!doICEOnLevel(coarseLevel->getIndex()+1))
     return;
-  cout_doing << d_myworld->myrank() << " AMRICE::scheduleErrorEstimate \t\t\t\tL-" 
+  cout_doing << d_myworld->myrank() 
+             << " AMRICE::scheduleErrorEstimate \t\t\t\tL-" 
              << coarseLevel->getIndex() << '\n';
   
   Task* t = scinew Task("AMRICE::errorEstimate", 
@@ -1884,7 +1921,9 @@ AMRICE::errorEstimate(const ProcessorGroup*,
                       bool /*initial*/)
 {
   const Level* level = getLevel(patches);
-  cout_doing << d_myworld->myrank() << " Doing errorEstimate \t\t\t\t\t AMRICE L-"<< level->getIndex();
+  cout_doing << d_myworld->myrank() 
+             << " Doing errorEstimate \t\t\t\t\t AMRICE L-"<< level->getIndex();
+             
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     

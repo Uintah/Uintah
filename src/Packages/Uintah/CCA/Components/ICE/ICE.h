@@ -886,12 +886,11 @@ namespace Uintah {
        _____________________________________________________________________  */
       template<class T>
         bool isEqual(T value,
-                     const Patch* patch,
+                     CellIterator &iter,
                      CCVariable<T>& q_CC, 
                      IntVector& cell )
       {   
-        for (CellIterator iter = patch->getExtraCellIterator(); 
-                         !iter.done(); iter++) {
+        for(; !iter.done(); iter++){
           IntVector c = *iter;
           if (isEqual(q_CC[c],value)){
             cell = c;
