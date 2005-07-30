@@ -228,9 +228,9 @@ Solver::makeGraph(const Hierarchy& hier,
                  child++,
                    IndexPlusPlus(zero,ref1,activeChild,subChild,eocChild)) {
               Print("child = %4d",child);
-              fprintf(stderr,"  subChild = ");
+              PrintNP("  subChild = ");
               printIndex(subChild);
-              fprintf(stderr,"\n");
+              PrintNP("\n");
               vector<bool> active(numDims,true);
               bool eoc = false;
               vector<int> subCoarse = coarseNbhrLower;
@@ -239,7 +239,7 @@ Solver::makeGraph(const Hierarchy& hier,
                      IndexPlusPlus(coarseNbhrLower,coarseNbhrUpper,
                                    active,subCoarse,eoc)) {
                 Print("  cell = %4d",cell);
-                fprintf(stderr,"  subCoarse = ");
+                PrintNP("  subCoarse = ");
                 printIndex(subCoarse);
                 vector<int> subFine(numDims);
                 /* Compute fine cell inside the fine patch from coarse
@@ -260,9 +260,9 @@ Solver::makeGraph(const Hierarchy& hier,
                   subFine[d] -= s;
                 }
                 pointwiseAdd(subFine,subChild,subFine);
-                fprintf(stderr,"  subFine = ");
+                PrintNP("  subFine = ");
                 printIndex(subFine);
-                fprintf(stderr,"\n");
+                PrintNP("\n");
                 Index hypreSubFine, hypreSubCoarse;
                 ToIndex(subFine,&hypreSubFine,numDims);
                 ToIndex(subCoarse,&hypreSubCoarse,numDims);
@@ -306,7 +306,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
     patches of all levels. Delete coarse data underlying fine patches.
     _____________________________________________________________________*/
 {
-  Print("Solver::makeLinearSystem() begin\n");
+  Proc0Print("Solver::makeLinearSystem() begin\n");
   serializeProcsBegin();
   const int numDims   = _param->numDims;
   const int numLevels = hier._levels.size();
@@ -314,7 +314,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
     Add equations at all interior cells of every patch owned by this proc
     to A. Eliminate boundary conditions at domain boundaries.
   */
-  Print("Adding interior equations to A\n");
+  Proc0Print("Adding interior equations to A\n");
   vector<double> xCell(numDims);
   vector<double> xNbhr(numDims);
   vector<double> xFace(numDims);
@@ -326,12 +326,14 @@ Solver::makeLinearSystem(const Hierarchy& hier,
   int* entries = new int[stencilSize];
   for (Counter entry = 0; entry < stencilSize; entry++) entries[entry] = entry;
   for (Counter level = 0; level < numLevels; level++) {
+    Proc0Print("At level = %d\n",level);
     const Level* lev = hier._levels[level];
     const vector<double>& h = lev->_meshSize;
     //const vector<Counter>& resolution = lev->_resolution;
     scalarMult(h,0.5,offset);
     double cellVolume = prod(h);
     for (Counter i = 0; i < lev->_patchList.size(); i++) {
+      Proc0Print("At patch = %d\n",i);
       /* Add equations of interior cells of this patch to A */
       Patch* patch = lev->_patchList[i];
       double* values    = new double[stencilSize * patch->_numCells];
@@ -342,10 +344,9 @@ Solver::makeLinearSystem(const Hierarchy& hier,
       ToIndex(patch->_iupper,&hypreiupper,numDims);
       Print("  Adding interior equations at Patch %d, Extents = ",i);
       printIndex(patch->_ilower);
-      fprintf(stderr," to ");
+      PrintNP(" to ");
       printIndex(patch->_iupper);
-      fprintf(stderr,"\n");
-      fflush(stderr);
+      PrintNP("\n");
       Print("Looping over cells in this patch:\n");
       sub = patch->_ilower;        
       for (Counter d = 0; d < numDims; d++) active[d] = true;
@@ -354,9 +355,9 @@ Solver::makeLinearSystem(const Hierarchy& hier,
            cell++,
              IndexPlusPlus(patch->_ilower,patch->_iupper,active,sub,eoc)) {
         Print("cell = %4d",cell);
-        fprintf(stderr,"  sub = ");
+        PrintNP("  sub = ");
         printIndex(sub);
-        fprintf(stderr,"\n");
+        PrintNP("\n");
         int offsetValues    = stencilSize * cell;
         int offsetRhsValues = cell;
         /* Initialize the stencil values of this cell's equation to 0 */
@@ -418,11 +419,11 @@ Solver::makeLinearSystem(const Hierarchy& hier,
 
             Print("xCell = ");
             printIndex(xCell);
-            fprintf(stderr," xNbhr = ");
+            PrintNP(" xNbhr = ");
             printIndex(xNbhr);
-            fprintf(stderr," xFace = ");
+            PrintNP(" xFace = ");
             printIndex(xFace);
-            fprintf(stderr,"\n");
+            PrintNP("\n");
 
             /*--- Compute flux ---*/
             /* Harmonic average of diffusion for this face */
@@ -479,20 +480,24 @@ Solver::makeLinearSystem(const Hierarchy& hier,
 
       } // end for cell
       
+      Proc0Print("Calling HYPRE SetBoxValues()\n");
       printValues(patch,stencilSize,patch->_numCells,
                   values,rhsValues,solutionValues);
 
       /* Add this patch's interior equations to the LHS matrix A */
+      Proc0Print("Calling HYPRE_SStructMatrixSetBoxValues A\n");
       HYPRE_SStructMatrixSetBoxValues(_A, level, 
                                       hypreilower, hypreiupper, 0,
                                       stencilSize, entries, values);
 
       /* Add this patch's interior RHS to the RHS vector b */
+      Proc0Print("Calling HYPRE_SStructVectorSetBoxValues b\n");
       HYPRE_SStructVectorSetBoxValues(_b, level,
                                       hypreilower, hypreiupper, 0, 
                                       rhsValues);
 
       /* Add this patch's interior initial guess to the solution vector x */
+      Proc0Print("Calling HYPRE_SStructVectorSetBoxValues x\n");
       HYPRE_SStructVectorSetBoxValues(_x, level,
                                       hypreilower, hypreiupper, 0, 
                                       solutionValues);
@@ -504,16 +509,16 @@ Solver::makeLinearSystem(const Hierarchy& hier,
   } // end for level
 
   delete entries;
-  Print("Done adding interior equations\n");
+  Proc0Print("Done adding interior equations\n");
 
-  Print("Begin C/F interface equation construction\n");
+  Proc0Print("Begin C/F interface equation construction\n");
   /* 
      Set the values on the graph links of the unstructured part
      connecting the coarse and fine level at every C/F boundary.
   */
 
   for (Counter level = 1; level < numLevels; level++) {
-    Print("  Updating coarse-fine boundaries at level %d\n",level);
+    Proc0Print("  Updating coarse-fine boundaries at level %d\n",level);
     const Level* lev = hier._levels[level];
     const vector<Counter>& refRat = lev->_refRat;
     const vector<double>& h = lev->_meshSize;
@@ -531,9 +536,9 @@ Solver::makeLinearSystem(const Hierarchy& hier,
     
       Print("Patch i = %2d:           extends from ",i);
       printIndex(patch->_ilower);
-      fprintf(stderr," to ");
+      PrintNP(" to ");
       printIndex(patch->_iupper);
-      fprintf(stderr,"\n");
+      PrintNP("\n");
       
       /* Compute the extents of the box [coarseilower,coarseiupper] at
          the coarse patch that underlies fine patch i */
@@ -543,9 +548,9 @@ Solver::makeLinearSystem(const Hierarchy& hier,
       pointwiseDivide(patch->_iupper,refRat,coarseiupper);
       Print("Underlying coarse data: extends from ");
       printIndex(coarseilower);
-      fprintf(stderr," to ");
+      PrintNP(" to ");
       printIndex(coarseiupper);
-      fprintf(stderr,"\n");
+      PrintNP("\n");
 
       /* Replace the matrix equations for the underlying coarse box
          with the identity matrix. */
@@ -574,9 +579,9 @@ Solver::makeLinearSystem(const Hierarchy& hier,
              cell++,
                IndexPlusPlus(coarseilower,coarseiupper,active,sub,eoc)) {
           Print("cell = %4d",cell);
-          fprintf(stderr,"  sub = ");
+          PrintNP("  sub = ");
           printIndex(sub);
-          fprintf(stderr,"\n");
+          PrintNP("\n");
           
           int offsetValues    = stencilSize * cell;
           int offsetRhsValues = cell;
@@ -665,9 +670,9 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                  child++,
                    IndexPlusPlus(zero,ref1,activeChild,subChild,eocChild)) {
               Print("child = %4d",child);
-              fprintf(stderr,"  subChild = ");
+              PrintNP("  subChild = ");
               printIndex(subChild);
-              fprintf(stderr,"\n");
+              PrintNP("\n");
               vector<bool> active(numDims,true);
               bool eoc = false;
               vector<int> subCoarse = coarseNbhrLower;
@@ -676,7 +681,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                      IndexPlusPlus(coarseNbhrLower,coarseNbhrUpper,active,
                                    subCoarse,eoc)) {
                 Print("  cell = %4d",cell);
-                fprintf(stderr,"  subCoarse = ");
+                PrintNP("  subCoarse = ");
                 printIndex(subCoarse);
                 vector<int> subFine(numDims);
                 /* Compute fine cell inside the fine patch from coarse
@@ -697,9 +702,9 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                   subFine[d] -= s;
                 }
                 pointwiseAdd(subFine,subChild,subFine);
-                fprintf(stderr,"  subFine = ");
+                PrintNP("  subFine = ");
                 printIndex(subFine);
-                fprintf(stderr,"\n");
+                PrintNP("\n");
                 Index hypreSubFine, hypreSubCoarse;
                 ToIndex(subFine,&hypreSubFine,numDims);
                 ToIndex(subCoarse,&hypreSubCoarse,numDims);
@@ -733,11 +738,11 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                 }
                 Print("      xCell = ");
                 printIndex(xCell);
-                fprintf(stderr," xNbhr = ");
+                PrintNP(" xNbhr = ");
                 printIndex(xNbhr);
-                fprintf(stderr," xFace = ");
+                PrintNP(" xFace = ");
                 printIndex(xFace);
-                fprintf(stderr,"\n");
+                PrintNP("\n");
 
                 /* Compute the harmonic average of the diffusion
                    coefficient */
@@ -848,11 +853,11 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                   xFace[d] = 0.5*(xCell[d] + xNbhr[d]);
                   Print("      xCell = ");
                   printIndex(xCell);
-                  fprintf(stderr," xNbhr = ");
+                  PrintNP(" xNbhr = ");
                   printIndex(xNbhr);
-                  fprintf(stderr," xFace = ");
+                  PrintNP(" xFace = ");
                   printIndex(xFace);
-                  fprintf(stderr,"\n");
+                  PrintNP("\n");
 
                   /* Compute the harmonic average of the diffusion
                      coefficient */
@@ -886,6 +891,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
 
   Print("End C/F interface equation construction\n");
   serializeProcsEnd();
+  Proc0Print("Solver::makeLinearSystem() end\n");
 } // end makeLinearSystem()
 
 void
@@ -931,6 +937,7 @@ Solver::printValues(const Patch* patch,
                     const double* solutionValues /* = 0 */)
   /* Print values, rhsValues vectors */
 {
+#if DRIVER_DEBUG
   Print("--- Printing values,rhsValues,solutionValues arrays ---\n");
   for (Counter cell = 0; cell < numCells; cell++) {
     int offsetValues    = stencilSize * cell;
@@ -952,4 +959,5 @@ Solver::printValues(const Patch* patch,
     }
     Print("-------------------------------\n");
   } // end for cell
+#endif
 } // end printValues()

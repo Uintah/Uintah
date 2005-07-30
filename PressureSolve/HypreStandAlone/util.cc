@@ -62,6 +62,7 @@ ToIndex(const vector<int>& subFrom,
 void 
 Proc0Print(char *fmt, ...)
 {
+  //#if DRIVER_DEBUG
   if( MYID == 0 ) 
     {
       int vb = 1; /* Verbose level */
@@ -84,6 +85,7 @@ Proc0Print(char *fmt, ...)
       //      }
       va_end(ap);
     }
+  //#endif
 }
 
 void 
@@ -94,6 +96,7 @@ Print(char *fmt, ...)
     output.
     _____________________________________________________________________*/
 {
+#if DRIVER_DEBUG
   int vb = 1; /* Verbose level */
   va_list ap;
   va_start(ap, fmt);
@@ -113,6 +116,36 @@ Print(char *fmt, ...)
     //      fflush(log_file);
   //  }
   va_end(ap);
+#endif
+}
+
+void 
+PrintNP(char *fmt, ...)
+  /*_____________________________________________________________________
+    Function Print:
+    Print an output line on the current processor. Useful to parse MPI
+    output.
+    _____________________________________________________________________*/
+{
+#if DRIVER_DEBUG
+  int vb = 1; /* Verbose level */
+  va_list ap;
+  va_start(ap, fmt);
+  if (vb) {
+    //    vprintf(fmt, ap);
+    vfprintf(stderr, fmt, ap);
+  }
+  //  fflush(stdout);
+  fflush(stderr);
+  //  if (vb) {
+  //    va_start(ap, fmt);
+    //    if (log_file)
+    //      vfprintf(log_file, fmt, ap);
+    //    if (log_file)
+    //      fflush(log_file);
+  //  }
+  va_end(ap);
+#endif
 }
 
 template<class T>
@@ -123,12 +156,14 @@ printIndex(const vector<T>& sub)
     Function printIndex:
     Print vector-type numDims-dimensional index sub
     _____________________________________________________________________*/
-  fprintf(stderr,"[");
+#if DRIVER_DEBUG
+  PrintNP("[");
   for (Counter d = 0; d < sub.size(); d++) {
-    fprintf(stderr,"%d",sub[d]);
-    if (d < sub.size()-1) fprintf(stderr,",");
+    PrintNP("%d",sub[d]);
+    if (d < sub.size()-1) PrintNP(",");
   }
-  fprintf(stderr,"]");
+  PrintNP("]");
+#endif
 }
 
 template<>
@@ -139,12 +174,14 @@ printIndex<double>(const vector<double>& sub)
     Function printIndex:
     Print vector<double>-type numDims-dimensional index sub
     _____________________________________________________________________*/
-  fprintf(stderr,"[");
+#if DRIVER_DEBUG
+  PrintNP("[");
   for (Counter d = 0; d < sub.size(); d++) {
-    fprintf(stderr,"%.3f",sub[d]);
-    if (d < sub.size()-1) fprintf(stderr,",");
+    PrintNP("%.3f",sub[d]);
+    if (d < sub.size()-1) PrintNP(",");
   }
-  fprintf(stderr,"]");
+  PrintNP("]");
+#endif
 }
 
 void
@@ -169,12 +206,14 @@ faceExtents(const vector<int>& ilower,
   } else {
     faceLower[d] = faceUpper[d];
   }
+#if DRIVER_DEBUG
   Print("Face(d = %c, s = %s) box extents: ",
         d+'x',(s == Left) ? "Left" : "Right");
   printIndex(faceLower);
-  fprintf(stderr," to ");
+  PrintNP(" to ");
   printIndex(faceUpper);
-  fprintf(stderr,"\n");
+  PrintNP("\n");
+#endif
 }
 
 Counter
@@ -258,7 +297,7 @@ clean(void)
     _____________________________________________________________________*/
 {
   Print("Cleaning\n");
-#if DEBUG
+#if DRIVER_DEBUG
   hypre_FinalizeMemoryDebug();
 #endif
   MPI_Finalize();    // Quit MPI
@@ -285,7 +324,7 @@ serializeProcsBegin(void)
     exit(1);
   }
   serializing = true;
-#if DEBUG
+#if DRIVER_DEBUG
   for (int i = 0; i < MYID; i++) {
     //    Print("serializeProcsBegin Barrier #%d\n",i);
     MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
@@ -308,7 +347,7 @@ serializeProcsEnd(void)
   if (numProcs == -1) {
     MPI_Comm_size(MPI_COMM_WORLD, &numProcs);
   }
-#if DEBUG
+#if DRIVER_DEBUG
   for (int i = numProcs-1; i >= MYID; i--) {
     //    Print("serializeProcsEnd Barrier # %d\n",i);
     MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point

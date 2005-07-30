@@ -64,7 +64,7 @@ makeGrid(const Param* param,
     Print("Level %d, meshSize = %lf, resolution = ",
           level,lev->_meshSize[0]);
     printIndex(lev->_resolution);
-    fprintf(stderr,"\n");
+    PrintNP("\n");
     for (Counter i = 0; i < lev->_patchList.size(); i++) {
       Patch* patch = lev->_patchList[i];
       /* Add this patch to the grid */
@@ -75,10 +75,9 @@ makeGrid(const Param* param,
       HYPRE_SStructGridSetVariables(grid, level, NUM_VARS, vars);
       Print("  Patch %d Extents = ",i);
       printIndex(patch->_ilower);
-      fprintf(stderr," to ");
+      PrintNP(" to ");
       printIndex(patch->_iupper);
-      fprintf(stderr,"\n");
-      fflush(stderr);
+      PrintNP("\n");
     }
   }
 
@@ -156,8 +155,7 @@ makeStencil(const Param* param,
     if (MYID == 0) {
       Print("    entry = %d,  stencil_offsets = ",entry);
       printIndex(stencil_offsets[entry]);
-      fprintf(stderr,"\n");
-      fflush(stderr);
+      PrintNP("\n");
     }
   }
   serializeProcsEnd();
@@ -170,10 +168,10 @@ main(int argc, char *argv[]) {
    *-----------------------------------------------------------*/
   /* Set test cast parameters */
   Param*                param;
-  param = new TestLinear(2,8); // numDims, baseResolution
-  param->solverType    = Param::AMG; // Hypre solver
+  param = new TestLinear(3,256); // numDims, baseResolution
+  param->solverType    = Param::FAC; // Hypre solver
   param->numLevels     = 2;          // # AMR levels
-  param->printSystem   = true;
+  param->printSystem   = false; //true;
 
   /* Grid hierarchy & stencil objects */
   Hierarchy             hier(param);
@@ -181,7 +179,7 @@ main(int argc, char *argv[]) {
   HYPRE_SStructStencil  stencil;     // Same stencil at all levels & patches
 
   /* Set up Solver object */
-  Solver*               solver;      // Solver data structure
+  Solver*               solver = 0;      // Solver data structure
   switch (param->solverType) {
   case Param::AMG:
     solver = new SolverAMG(param);
@@ -189,6 +187,10 @@ main(int argc, char *argv[]) {
   case Param::FAC:
     solver = new SolverFAC(param);
     break;
+  default:
+    fprintf(stderr,"\n\nError: unknown solver type\n");
+    clean();
+    exit(1);
   }
   
   /*-----------------------------------------------------------
@@ -201,7 +203,7 @@ main(int argc, char *argv[]) {
   param->numProcs = numProcs;
   MPI_Comm_rank(MPI_COMM_WORLD, &myid);
   MYID = myid;
-#if DEBUG
+#if DRIVER_DEBUG
   hypre_InitMemoryDebug(myid);
 #endif
   const int numLevels = param->numLevels;
@@ -220,11 +222,11 @@ main(int argc, char *argv[]) {
     Print("Checking arguments and parameters ... ");
     if ((param->solverType == Param::FAC) &&
         ((numLevels < 2) || (numDims != 3))) {
-      fprintf(stderr,"FAC solver needs a 3D problem and at least 2 levels.");
+      PrintNP("FAC solver needs a 3D problem and at least 2 levels.");
       clean();
       exit(1);
     }
-    fprintf(stderr,"done\n");
+    PrintNP("done\n");
 
     Print("Checking # procs ... ");
     //    int correct = mypow(2,numDims);
@@ -235,7 +237,7 @@ main(int argc, char *argv[]) {
       clean();
       exit(1);
     }
-    fprintf(stderr,"numProcs = %d, done\n",numProcs);
+    PrintNP("numProcs = %d, done\n",numProcs);
 
     Print("\n");
   }
