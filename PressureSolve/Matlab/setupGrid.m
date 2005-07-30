@@ -11,7 +11,7 @@ function [grid,A,b,T,TI] = setupGrid
 
 globalParams;
 
-distrib = 1; % Make that 1 to match distributed patches to multiple procs in C++
+distrib = 0; % Make that 1 to match distributed patches to multiple procs in C++
 
 
 out(2,'--- setupGrid() BEGIN ---\n');
