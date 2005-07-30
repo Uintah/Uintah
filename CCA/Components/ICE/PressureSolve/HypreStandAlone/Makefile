@@ -11,7 +11,7 @@
 ##################################################################
 
 PACKAGE    = HypreStandAlone
-HYPRE_SRC  = ../hypre-1.9.0b/src
+HYPRE_SRC  = /home/csafe/livne/hypre-1.9.0b/src
 CC         = g++
 CCFLAGS    = -O2 -MD -Wall # Allow .d files, output all warnings
 HYPRE_DEFS = -DHYPRE_TIMING -DHAVE_CONFIG_H
