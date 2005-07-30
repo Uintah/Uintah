@@ -69,8 +69,6 @@ public:
              const Side s,
              const BoundaryCondition& bc) 
     {
-      //      fprintf(stderr,"size(_bc) = %d, d = %d, s = %d, accessing %d\n",
-      //            _bc.size(),d,s,2*d+((s+1)/2));
       _bc[2*d+((s+1)/2)] = bc;
     }
 

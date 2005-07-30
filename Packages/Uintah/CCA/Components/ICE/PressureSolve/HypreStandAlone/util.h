@@ -24,6 +24,7 @@ void ToIndex(const vector<int>& from,
 
 /* Printouts */
 void Print(char *fmt, ...);
+void PrintNP(char *fmt, ...); // No processor printed at the beginning of line
 void Proc0Print(char *fmt, ...);
 template<class T>
 void printIndex(const vector<T>& a);
