@@ -13,7 +13,7 @@
 PACKAGE    = HypreStandAlone
 HYPRE_SRC  = ../hypre-1.9.0b/src
 CC         = g++
-CCFLAGS    = -MD -Wall # Allow .d files, output all warnings
+CCFLAGS    = -O2 -MD -Wall # Allow .d files, output all warnings
 HYPRE_DEFS = -DHYPRE_TIMING -DHAVE_CONFIG_H
 MPI_INC    = -I/usr/local/lam-mpi/include
 MPI_LIB    = -L/usr/local/lam-mpi/lib -lmpi -llam -lutil -lpthread -ldl

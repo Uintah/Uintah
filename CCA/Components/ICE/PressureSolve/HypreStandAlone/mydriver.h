@@ -23,7 +23,7 @@ using std::vector;
 
 /*================== Macros ==================*/
 
-#define DEBUG      1              // Debug flag
+#define DRIVER_DEBUG      0              // Debug flag
 #define MAX_DIMS   3              // Maximum number of dimensions
 #define NUM_VARS   1              // # variable types; we use only cell-centered
 

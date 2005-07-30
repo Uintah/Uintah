@@ -38,12 +38,12 @@ Hierarchy::make()
         Proc0Print("\t%d",procMap(i,j));
       } else {
         if (MYID == 0) {
-          fprintf(stderr,"\t%d",procMap(i,j));
+          PrintNP("\t%d",procMap(i,j));
         }
       }
     }
     if (MYID == 0) {
-      fprintf(stderr,"\n");
+      PrintNP("\n");
     }
   }
 
@@ -86,7 +86,7 @@ Hierarchy::make()
         ilower[dim] = n/2 + procMap(MYID,dim) * n/2;
         iupper[dim] = ilower[dim] + n/2 - 1;
       } else {
-        fprintf(stderr,"Unknown level\n");
+        PrintNP("Unknown level\n");
         clean();
         exit(1);
       }
@@ -230,16 +230,16 @@ Hierarchy::getPatchesFromOtherProcs()
         /*
           Print("Comparing patch index=%d: from ",index);
           printIndex(ilower);
-          fprintf(stderr," to ");
+          PrintNP(" to ");
           printIndex(iupper);
-          fprintf(stderr,"  owned by proc %d",patchInfo[recordSize*index]);
-          fprintf(stderr,"\n");
+          PrintNP("  owned by proc %d",patchInfo[recordSize*index]);
+          PrintNP("\n");
           Print("To patch other=%d: from ",other);
           printIndex(otherilower);
-          fprintf(stderr," to ");
+          PrintNP(" to ");
           printIndex(otheriupper);
-          fprintf(stderr,"  owned by proc %d",patchInfo[recordSize*other]);
-          fprintf(stderr,"\n");
+          PrintNP("  owned by proc %d",patchInfo[recordSize*other]);
+          PrintNP("\n");
         */
         for (Counter d = 0; d < _param->numDims; d++) {
           /* Check if patch has a nbhring patch on its left */
@@ -283,9 +283,9 @@ Hierarchy::printPatchBoundaries()
       Patch* patch = lev->_patchList[index];
       Print("Patch # %d: from ",index);
       printIndex(patch->_ilower);
-      fprintf(stderr," to ");
+      PrintNP(" to ");
       printIndex(patch->_iupper);
-      fprintf(stderr,"\n");
+      PrintNP("\n");
       for (Counter d = 0; d < _param->numDims; d++) {
         for (Side s = Left; s <= Right; ++s) {
           Print("  boundary( d = %d , s = %+d ) = %s\n",
