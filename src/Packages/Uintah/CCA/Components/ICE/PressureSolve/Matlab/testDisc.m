@@ -1,4 +1,4 @@
-function [errNorm,orders,success,tCPU,tElapsed,grid,A,b,x] = testDisc(p)
+function [errNorm,orders,success,tCPU,tElapsed,grid,A,b,x,TI] = testDisc(p)
 global grid
 %TESTDISC  Test pressure equation discretization.
 %   We test pressure equation discretization error for a
@@ -43,7 +43,7 @@ errNorm                     = [];
 for numCells = param.numCellsRange
     if (param.catchException)
         try;
-            [errNorm,orders,grid,A,b,x] = testNumCells(numCells,errNorm);
+            [errNorm,orders,grid,A,b,x,TI] = testNumCells(numCells,errNorm);
             success = 2;
         catch;
             out(1,'Failed in numCells = %d: %s\n',numCells,lasterr);
@@ -56,7 +56,7 @@ for numCells = param.numCellsRange
             break;
         end
     else
-        [errNorm,orders,grid,A,b,x] = testNumCells(numCells,errNorm);
+        [errNorm,orders,grid,A,b,x,TI] = testNumCells(numCells,errNorm);
         success = 2;
     end
 end
@@ -72,7 +72,7 @@ if (nargin < 1)
 end
 
 %-----------------------------------------------------------------------
-function [errNorm,orders,grid,A,b,x] = testNumCells(numCells,errNorm)
+function [errNorm,orders,grid,A,b,x,TI] = testNumCells(numCells,errNorm)
 globalParams;
 pack;
 out(1,'#### nCells = %d ####\n',numCells);
