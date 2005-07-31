@@ -8,6 +8,9 @@
  * and returning the pressure results into Uintah. HypreSolverAMG schedules
  * a task in sus called scheduleSolve() that carries out these operations.
  * It is based on the one-level solver class HypreSolver2.
+ *
+ * Note: This interface is written for Hypre version 1.9.0b (released 2005)
+ * or later.
  *--------------------------------------------------------------------------*/
 #ifndef Packages_Uintah_CCA_Components_Solvers_HypreSolverAMR_h
 #define Packages_Uintah_CCA_Components_Solvers_HypreSolverAMR_h
