@@ -1,11 +1,11 @@
 /*--------------------------------------------------------------------------
  * File: HypreSolverAMR.h
  *
- * Header file for the interface to Hyupre's semi-structured matrix interface
+ * Header file for the interface to Hypre's semi-structured matrix interface
  * and corresponding solvers.
- * class HypreSolverAMG is a wrapper, receiving Uintah data for the elliptic
+ * class HypreSolverAMR is a wrapper, receiving Uintah data for the elliptic
  * pressure equation in implicit ICE AMR mode, calling a Hypre solver,
- * and returning the pressure results into Uintah. HypreSolverAMG schedules
+ * and returning the pressure results into Uintah. HypreSolverAMR schedules
  * a task in sus called scheduleSolve() that carries out these operations.
  * It is based on the one-level solver class HypreSolver2.
  *
@@ -19,17 +19,18 @@
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 
 namespace Uintah {
-  class HypreSolverAMG : public SolverInterface, public UintahParallelComponent { 
+  class HypreSolverAMR :
+    public SolverInterface, public UintahParallelComponent { 
   public:
-    HypreSolverAMG(const ProcessorGroup* myworld);
-    virtual ~HypreSolverAMG();
+    HypreSolverAMR(const ProcessorGroup* myworld);
+    virtual ~HypreSolverAMR();
 
     /* Load solver parameters from input struct */
     virtual SolverParameters* readParameters(ProblemSpecP& params,
                                              const std::string& name);
 
     /* Main task that solves the pressure equation and returns
-       cell-centered pressure. In the future we can also add here
+       cell-centered pressure. In the future we can also implement here
        solutions of other variable types, like node-centered. */
     virtual void scheduleSolve(const LevelP& level, SchedulerP& sched,
                                const MaterialSet* matls,
