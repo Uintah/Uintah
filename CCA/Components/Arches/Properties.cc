@@ -751,10 +751,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 		  double c3 = 0.1;
 		  double rhosoot = 1950.0;
 		  double cmw = 12.0;
-		  double factor = 0.01;
 
 		  if (inStream.d_mixVars[0] > 0.1)
-		    //		    sootFV[currCell] = c3*bc*cmw/rhosoot*factor;
 		    sootFV[currCell] = c3*bc*cmw/rhosoot*d_sootFactor;
 		  else
 		    sootFV[currCell] = 0.0;
@@ -1475,6 +1473,7 @@ Properties::averageRKProps(const ProcessorGroup*,
     factor_old = timelabels->factor_old;
     factor_new = timelabels->factor_new;
     factor_divide = timelabels->factor_divide;
+    double epsilon = 1.0e-15;
 
     IntVector indexLow = patch->getCellLowIndex();
     IntVector indexHigh = patch->getCellHighIndex();
@@ -1507,17 +1506,28 @@ Properties::averageRKProps(const ProcessorGroup*,
 	      (new_scalar[ii])[currCell] = (factor_old*old_density[currCell]*
 		  (old_scalar[ii])[currCell] + factor_new*new_density[currCell]*
 		  (new_scalar[ii])[currCell])/(factor_divide*predicted_density);
+// Following lines to fix density delay problem for helium.
+// One would also need to edit fortran/explicit.F to use it.
+//            (new_scalar[ii])[currCell] = (new_scalar[ii])[currCell]*predicted_density;
+//            (new_scalar[ii])[currCell] = (new_scalar[ii])[currCell]*0.133/(
+//              0.133*1.184344+(new_scalar[ii])[currCell]*(0.133-1.184344));
             if ((new_scalar[ii])[currCell] > 1.0) {
-//		(new_scalar[ii])[currCell] = 1.0;
-	      cout << "average failed with scalar > 1 at " << currCell << endl;
-	      (new_scalar[ii])[currCell] = (fe_scalar[ii])[currCell];
-	      average_failed = true;
+              if ((new_scalar[ii])[currCell] < 1.0 + epsilon)
+		(new_scalar[ii])[currCell] = 1.0;
+              else {
+	        cout << "average failed with scalar > 1 at " << currCell << " , average value was " << (new_scalar[ii])[currCell] << endl;
+	        (new_scalar[ii])[currCell] = (fe_scalar[ii])[currCell];
+	        average_failed = true;
+              }
 	    }
             else if ((new_scalar[ii])[currCell] < 0.0) {
-//            	(new_scalar[ii])[currCell] = 0.0;
-	      cout << "average failed with scalar < 0 at " << currCell << endl;
-	      (new_scalar[ii])[currCell] = (fe_scalar[ii])[currCell];
-	      average_failed = true;
+              if ((new_scalar[ii])[currCell] > - epsilon)
+            	(new_scalar[ii])[currCell] = 0.0;
+              else {
+	        cout << "average failed with scalar < 0 at " << currCell << " , average value was " << (new_scalar[ii])[currCell] << endl;
+	        (new_scalar[ii])[currCell] = (fe_scalar[ii])[currCell];
+	        average_failed = true;
+              }
             }
           }
 

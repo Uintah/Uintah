@@ -53,6 +53,8 @@ c*********************************************************************
      $              ab(i,j,k)*old_phi(i,j,k-1) +
      &              su(i,j,k) -ap(i,j,k)*old_phi(i,j,k)
                phi(i,j,k) = rhs/apo
+c Following lines to fix density delay problem for helium.
+c One would also need to edit Properties.cc to use it.
 c               phi(i,j,k) = phi(i,j,k)*old_den(i,j,k)
 c               phi(i,j,k) = phi(i,j,k) * 0.133D0/
 c     /(0.133D0*1.184344D0+phi(i,j,k)*(0.133D0-1.184344D0))
