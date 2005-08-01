@@ -65,7 +65,6 @@ ImplicitParticleCreator::initializeParticle(const Patch* patch,
   ParticleCreator::initializeParticle(patch,obj,matl,p,cell_idx,i,cellNAPI);
 
   pacceleration[i] = Vector(0.,0.,0.);
-  pvolumeold[i] = pvolume[i];
 }
 
 particleIndex 
@@ -95,7 +94,6 @@ ImplicitParticleCreator::allocateVariables(particleIndex numParticles,
 							      dwi,lb,patch,
 							      new_dw);
 
-  new_dw->allocateAndPut(pvolumeold,    lb->pVolumeOldLabel,    subset);
   new_dw->allocateAndPut(pacceleration, lb->pAccelerationLabel, subset);
 
   return subset;
@@ -106,9 +104,6 @@ void
 ImplicitParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
 							MPMLabel* lb)
 {
-  particle_state.push_back(lb->pVolumeOldLabel);
-  particle_state_preReloc.push_back(lb->pVolumeOldLabel_preReloc);
-
   particle_state.push_back(lb->pAccelerationLabel);
   particle_state_preReloc.push_back(lb->pAccelerationLabel_preReloc);
 
