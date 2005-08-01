@@ -683,6 +683,7 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 				    cellinfo);
 
   double scalar_clipped = 0.0;
+  double epsilon = 1.0e-15;
   // Get the patch bounds and the variable bounds
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
@@ -691,14 +692,18 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
       for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
 	IntVector currCell(ii,jj,kk);
 	if (scalarVars.scalar[currCell] > 1.0) {
+          if (scalarVars.scalar[currCell] > 1.0 + epsilon) {
+	    scalar_clipped = 1.0;
+	    cout << "scalar got clipped to 1 at " << currCell << " , scalar value was " << scalarVars.scalar[currCell] << endl;
+          }
 	  scalarVars.scalar[currCell] = 1.0;
-	  scalar_clipped = 1.0;
-	  cout << "scalar got clipped to 1 at " << currCell << endl;
 	}  
 	else if (scalarVars.scalar[currCell] < 0.0) {
+          if (scalarVars.scalar[currCell] < - epsilon) {
+	    scalar_clipped = 1.0;
+	    cout << "scalar got clipped to 0 at " << currCell << " , scalar value was " << scalarVars.scalar[currCell] << endl;
+          }
 	  scalarVars.scalar[currCell] = 0.0;
-	  scalar_clipped = 1.0;
-	  cout << "scalar got clipped to 0 at " << currCell << endl;
 	}
       }
     }
