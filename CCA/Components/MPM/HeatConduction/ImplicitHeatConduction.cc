@@ -444,11 +444,11 @@ void ImplicitHeatConduction::formHCStiffnessMatrix(const ProcessorGroup*,
       ParticleSubset* pset;
       pset = old_dw->getParticleSubset(matlindex, patch);
       constParticleVariable<Point> px;
-      constParticleVariable<double> pvolumeold;
+      constParticleVariable<double> pvolume;
       constParticleVariable<double> ptemperature;
                                                                                 
       old_dw->get(px,             lb->pXLabel,                  pset);
-      old_dw->get(pvolumeold,     lb->pVolumeOldLabel,          pset);
+      old_dw->get(pvolume,        lb->pVolumeLabel,             pset);
       old_dw->get(ptemperature,   lb->pTemperatureLabel,        pset);
                                                                                 
 #ifdef HAVE_PETSC
@@ -484,7 +484,7 @@ void ImplicitHeatConduction::formHCStiffnessMatrix(const ProcessorGroup*,
           for(int jj = 0;jj<8;jj++){
             for(int dir=0;dir<3;dir++){
               kHC[ii][jj]+=d_S[jj][dir]*d_S[ii][dir]*(K/(dx[dir]*dx[dir]))
-                                                    *pvolumeold[idx];
+                                                    *pvolume[idx];
             }
           }
         }

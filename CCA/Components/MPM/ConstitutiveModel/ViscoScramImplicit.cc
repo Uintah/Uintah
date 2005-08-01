@@ -379,7 +379,7 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Matrix3> deformationGradient;
     ParticleVariable<Matrix3> pstress_new;
     constParticleVariable<Matrix3> pstress;
-    constParticleVariable<double> pvolumeold;
+    constParticleVariable<double> pvolumeold,pmass;
     ParticleVariable<double> pvolume_deformed;
     constNCVariable<Vector> dispNew;
     
@@ -388,7 +388,8 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
     pset = parent_old_dw->getParticleSubset(dwi, patch);
     parent_old_dw->get(px,                  lb->pXLabel,                  pset);
     parent_old_dw->get(pstress,             lb->pStressLabel,             pset);
-    parent_old_dw->get(pvolumeold,          lb->pVolumeOldLabel,          pset);
+    parent_old_dw->get(pmass,               lb->pMassLabel,               pset);
+    parent_old_dw->get(pvolumeold,          lb->pVolumeLabel,             pset);
     parent_old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(dispNew,lb->dispNewLabel,dwi,patch, Ghost::AroundCells,1);
   
@@ -398,7 +399,9 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
 
     double G = d_G;
     double K  = d_bulk;
-    
+
+    double rho_orig = matl->getInitialDensity();
+
     double B[6][24];
     double Bnl[3][24];
 #ifdef HAVE_PETSC
@@ -552,8 +555,8 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
         double kgeo[24][24];
         BnltDBnl(Bnl,sig,kgeo);
 
-        double volold = pvolumeold[idx];
-        double volnew = pvolumeold[idx]*J;
+        double volold = (pmass[idx]/rho_orig);
+        double volnew = volold*J;
 
         pvolume_deformed[idx] = volnew;
 
@@ -645,7 +648,7 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Matrix3> deformationGradient, pstress;
     ParticleVariable<Matrix3> pstress_new;
     ParticleVariable<Matrix3> deformationGradient_new;
-    constParticleVariable<double> pmass, pvolume,pvolumeold;
+    constParticleVariable<double> pvolume;
     ParticleVariable<double> pvolume_deformed;
     constParticleVariable<Vector> pvelocity;
     constNCVariable<Vector> dispNew;
@@ -653,9 +656,7 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
 
     old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pstress,             lb->pStressLabel,             pset);
-    old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
-    old_dw->get(pvolumeold,          lb->pVolumeOldLabel,          pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
@@ -686,7 +687,7 @@ ViscoScramImplicit::computeStressTensor(const PatchSubset* patches,
         particleIndex idx = *iter;
         pstress_new[idx] = Matrix3(0.0);
         deformationGradient_new[idx] = Identity;
-        pvolume_deformed[idx] = pvolumeold[idx];
+        pvolume_deformed[idx] = pvolume[idx];
       }
     }
     else{
@@ -756,8 +757,8 @@ void ViscoScramImplicit::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
 
   task->requires(Task::ParentOldDW, lb->pXLabel,         matlset,Ghost::None);
+  task->requires(Task::ParentOldDW, lb->pMassLabel,      matlset,Ghost::None);
   task->requires(Task::ParentOldDW, lb->pVolumeLabel,    matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->pVolumeOldLabel, matlset,Ghost::None);
   task->requires(Task::ParentOldDW, lb->pDeformationMeasureLabel,
                                                          matlset,Ghost::None);
   task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
@@ -778,7 +779,6 @@ void ViscoScramImplicit::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, lb->pXLabel,                 matlset,gnone);
   task->requires(Task::OldDW, lb->pMassLabel,              matlset,gnone);
   task->requires(Task::OldDW, lb->pVolumeLabel,            matlset,gnone);
-  task->requires(Task::OldDW, lb->pVolumeOldLabel,         matlset,gnone);
   task->requires(Task::OldDW, lb->pStressLabel,            matlset,gnone);
   task->requires(Task::OldDW, lb->pVelocityLabel,          matlset,gnone);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,gnone);

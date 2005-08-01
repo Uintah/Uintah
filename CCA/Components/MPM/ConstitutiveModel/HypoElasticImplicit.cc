@@ -175,7 +175,7 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Matrix3> deformationGradient;
     ParticleVariable<Matrix3> pstress_new;
     constParticleVariable<Matrix3> pstress;
-    constParticleVariable<double> pvolumeold;
+    constParticleVariable<double> pmass;
     ParticleVariable<double> pvolume_deformed;
     constNCVariable<Vector> dispNew;
     
@@ -183,8 +183,8 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
       new_dw->getOtherDataWarehouse(Task::ParentOldDW);
     pset = parent_old_dw->getParticleSubset(dwi, patch);
     parent_old_dw->get(px,                  lb->pXLabel,                  pset);
+    parent_old_dw->get(pmass,               lb->pMassLabel,               pset);
     parent_old_dw->get(pstress,             lb->pStressLabel,             pset);
-    parent_old_dw->get(pvolumeold,          lb->pVolumeOldLabel,          pset);
     parent_old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(dispNew,lb->dispNewLabel,dwi,patch, Ghost::AroundCells,1);
   
@@ -194,7 +194,9 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 
     double G = d_initialData.G;
     double K  = d_initialData.K;
-    
+
+    double rho_orig = matl->getInitialDensity();
+
     double B[6][24];
     double Bnl[3][24];
 #ifdef HAVE_PETSC
@@ -208,7 +210,7 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
         pstress_new[idx] = Matrix3(0.0);
-        pvolume_deformed[idx] = pvolumeold[idx];
+        pvolume_deformed[idx] = pmass[idx]/rho_orig;
       }
     }
     else{
@@ -351,8 +353,8 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
         double kgeo[24][24];
         BnltDBnl(Bnl,sig,kgeo);
 
-        double volold = pvolumeold[idx];
-        double volnew = pvolumeold[idx]*J;
+        double volold = (pmass[idx]/rho_orig);
+        double volnew = volold*J;
 
         pvolume_deformed[idx] = volnew;
 
@@ -411,7 +413,7 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Matrix3> deformationGradient, pstress;
     ParticleVariable<Matrix3> pstress_new;
     ParticleVariable<Matrix3> deformationGradient_new;
-    constParticleVariable<double> pmass, pvolume,pvolumeold;
+    constParticleVariable<double> pvolume;
     ParticleVariable<double> pvolume_deformed;
     constParticleVariable<Vector> pvelocity;
     constNCVariable<Vector> dispNew;
@@ -419,9 +421,7 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 
     old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pstress,             lb->pStressLabel,             pset);
-    old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
-    old_dw->get(pvolumeold,          lb->pVolumeOldLabel,          pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
@@ -443,7 +443,7 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
         particleIndex idx = *iter;
         pstress_new[idx] = Matrix3(0.0);
         deformationGradient_new[idx] = Identity;
-        pvolume_deformed[idx] = pvolumeold[idx];
+        pvolume_deformed[idx] = pvolume[idx];
       }
     }
     else{
@@ -519,15 +519,13 @@ void HypoElasticImplicit::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
 
   task->requires(Task::ParentOldDW, lb->pXLabel,         matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->pVolumeLabel,    matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->pVolumeOldLabel, matlset,Ghost::None);
+  task->requires(Task::ParentOldDW, lb->pMassLabel,      matlset,Ghost::None);
   task->requires(Task::ParentOldDW, lb->pDeformationMeasureLabel,
                                                          matlset,Ghost::None);
   task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
 
   task->computes(lb->pStressLabel_preReloc,matlset);  
   task->computes(lb->pVolumeDeformedLabel, matlset);
-
 }
 
 void HypoElasticImplicit::addComputesAndRequires(Task* task,
@@ -537,14 +535,11 @@ void HypoElasticImplicit::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, lb->delTLabel);
   task->requires(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pMassLabel,              matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pStressLabel,            matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pVolumeLabel,            matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pVolumeOldLabel,         matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pVelocityLabel,          matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
   task->requires(Task::NewDW, lb->dispNewLabel,   matlset,Ghost::AroundCells,1);
-
 
   task->computes(lb->pStressLabel_preReloc,                matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc,    matlset);

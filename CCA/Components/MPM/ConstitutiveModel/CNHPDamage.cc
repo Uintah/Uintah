@@ -567,13 +567,14 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
   double bulk  = d_initialData.Bulk;
   double flowStress  = d_plastic.FlowStress;
   double hardModulus = d_plastic.K;
+  double rho_orig = matl->getInitialDensity();
 
   int dwi = matl->getDWIndex();
   DataWarehouse* parent_old_dw = 
     new_dw->getOtherDataWarehouse(Task::ParentOldDW);
 
   // Particle and grid data
-  constParticleVariable<double>  pVol, pPlasticStrain;
+  constParticleVariable<double>  pVol, pPlasticStrain, pmass;
   constParticleVariable<Point>   pX;
   constParticleVariable<Matrix3> pDefGrad, pBeBar;
   constNCVariable<Vector>        gDisp;
@@ -617,8 +618,8 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
     
     ParticleSubset* pset = parent_old_dw->getParticleSubset(dwi, patch);
-    parent_old_dw->get(pVol,           lb->pVolumeOldLabel,          pset);
     parent_old_dw->get(pX,             lb->pXLabel,                  pset);
+    parent_old_dw->get(pmass,          lb->pMassLabel,               pset);
     parent_old_dw->get(pDefGrad,       lb->pDeformationMeasureLabel, pset);
     parent_old_dw->get(pPlasticStrain, pPlasticStrainLabel,          pset);
     parent_old_dw->get(pBeBar,         bElBarLabel,                  pset);
@@ -649,8 +650,8 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
       pDefGrad_new[idx] = defGradInc*pDefGrad[idx];
       double J = pDefGrad_new[idx].Determinant();
 
-      // Updat the particle volume
-      double volold = pVol[idx];
+      // Update the particle volume
+      double volold = (pmass[idx]/rho_orig);
       double volnew = volold*J;
       pVol_new[idx] = volnew;
 

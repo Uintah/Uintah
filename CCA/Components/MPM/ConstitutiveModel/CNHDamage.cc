@@ -643,13 +643,15 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
   double onethird = (1.0/3.0);
   double shear = d_initialData.Shear;
   double bulk  = d_initialData.Bulk;
+  double rho_orig = matl->getInitialDensity();
+
   Ghost::GhostType gac = Ghost::AroundCells;
   Matrix3 Identity; Identity.Identity();
   DataWarehouse* parent_old_dw = 
     new_dw->getOtherDataWarehouse(Task::ParentOldDW);
 
   // Particle and grid variables
-  constParticleVariable<double>  pVol;
+  constParticleVariable<double>  pVol,pmass;
   constParticleVariable<Point>   pX;
   constParticleVariable<Matrix3> pDefGrad, pBeBar;
   constNCVariable<Vector>        gDisp;
@@ -689,7 +691,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
     
     ParticleSubset* pset = parent_old_dw->getParticleSubset(dwi, patch);
     parent_old_dw->get(pX,       lb->pXLabel,                  pset);
-    parent_old_dw->get(pVol,     lb->pVolumeOldLabel,          pset);
+    parent_old_dw->get(pmass,    lb->pMassLabel,               pset);
     parent_old_dw->get(pDefGrad, lb->pDeformationMeasureLabel, pset);
     parent_old_dw->get(pBeBar,   bElBarLabel,                  pset);
     old_dw->get(gDisp,           lb->dispNewLabel, dwi, patch, gac, 1);
@@ -717,7 +719,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
       double J = pDefGrad_new[idx].Determinant();
 
       // Updat the particle volume
-      double volold = pVol[idx];
+      double volold = (pmass[idx]/rho_orig);
       double volnew = volold*J;
       pVol_new[idx] = volnew;
 

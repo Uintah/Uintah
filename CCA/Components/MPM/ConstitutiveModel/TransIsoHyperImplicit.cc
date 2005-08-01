@@ -252,7 +252,6 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 
     Matrix3 dispGrad,deformationGradientInc;
     Matrix3 Shear,fbar;
-    double J,p;
     Matrix3 rightCauchyGreentilde_new, leftCauchyGreentilde_new;
     Matrix3 pressure, deviatoric_stress, fiber_stress;
     double I1tilde,I2tilde,I4tilde,lambda_tilde;
@@ -278,8 +277,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<Matrix3> deformationGradient;
     ParticleVariable<Matrix3> pstress;
-    constParticleVariable<double> pvolumeold;
-    constParticleVariable<double> ptemperature;
+    constParticleVariable<double> pvolumeold,pmass;
     ParticleVariable<double> pvolume_deformed;
     ParticleVariable<double> stretch;
     ParticleVariable<double> fail;
@@ -294,8 +292,8 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 
     pset = parent_old_dw->getParticleSubset(dwi, patch);
     parent_old_dw->get(px,                 lb->pXLabel,                  pset);
-    parent_old_dw->get(pvolumeold,         lb->pVolumeOldLabel,          pset);
-    parent_old_dw->get(ptemperature,       lb->pTemperatureLabel,        pset);
+    parent_old_dw->get(pmass,              lb->pMassLabel,               pset);
+    parent_old_dw->get(pvolumeold,         lb->pVolumeLabel,             pset);
     parent_old_dw->get(deformationGradient,lb->pDeformationMeasureLabel, pset);
     parent_old_dw->get(pfiberdir,          lb->pFiberDirLabel,           pset);
     parent_old_dw->get(fail_old,           pFailureLabel,                pset);
@@ -320,6 +318,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
     double failure = d_initialData.failure;
     double crit_shear = d_initialData.crit_shear;
     double crit_stretch = d_initialData.crit_stretch;
+    double rho_orig = matl->getInitialDensity();
 
     double B[6][24];
     double Bnl[3][24];
@@ -399,7 +398,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         deformationGradient_new[idx] = deformationGradientInc *
                                        deformationGradient[idx];
         // get the volumetric part of the deformation
-        J = deformationGradient_new[idx].Determinant();
+        double J = deformationGradient_new[idx].Determinant();
         deformed_fiber_vector =pfiberdir[idx]; // not actually deformed yet
         //_______________________UNCOUPLE DEVIATORIC AND DILATIONAL PARTS of DEF GRAD
         //_______________________Ftilde=J^(-1/3)*F and Fvol=J^1/3*Identity
@@ -522,15 +521,17 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         if ( (matrix_failed + fiber_failed) == 2. || fail_old[idx] == 3.)
           fail[idx] = 3.;
         //________________________________hydrostatic pressure term
-        if (fail[idx] == 1.0 ||fail[idx] == 3.0)
+        double p=0;
+        if (fail[idx] == 1.0 ||fail[idx] == 3.0){
           pressure = Identity*0.;
-        else
-          {
+          p=0;
+        }
+        else {
             p = Bulk*log(J)/J; // p -= qVisco;
             if (p >= -1.e-5 && p <= 1.e-5)
               p = 0.;
             pressure = Identity*p;
-          }
+        }
         //_______________________________Cauchy stress
         pstress[idx] = pressure + deviatoric_stress + fiber_stress;
 	
@@ -726,7 +727,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
           fiber_stress = (DY*dWdI4tilde*I4tilde
                           - Identity*(1./3.)*dWdI4tilde*I4tilde)*2./J;
-          p = Bulk*log(J)/J; // p -= qVisco;
+          double p = Bulk*log(J)/J; // p -= qVisco;
           if (p >= -1.e-5 && p <= 1.e-5)
             p = 0.;
           pressure = Identity*p;
@@ -874,8 +875,8 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         }
         double kgeo[24][24];
         BnltDBnl(Bnl,sig,kgeo);
-        double volold = pvolumeold[idx];
-        double volnew = pvolumeold[idx]*J;
+        double volold = (pmass[idx]/rho_orig);
+        double volnew = volold*J;
         pvolume_deformed[idx] = volnew;
         for(int ii = 0;ii<24;ii++){
           for(int jj = 0;jj<24;jj++){
@@ -934,7 +935,6 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
      constParticleVariable<Matrix3> deformationGradient;
      ParticleVariable<Matrix3> pstress;
      constParticleVariable<double> pvolumeold;
-     constParticleVariable<double> ptemperature;
      ParticleVariable<double> pvolume_deformed;
 //
      ParticleVariable<double> stretch;
@@ -949,8 +949,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 
      old_dw->get(delT,lb->delTLabel, getLevel(patches));
      old_dw->get(px,                  lb->pXLabel,                  pset);
-     old_dw->get(pvolumeold,          lb->pVolumeOldLabel,          pset);
-     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
+     old_dw->get(pvolumeold,          lb->pVolumeLabel,             pset);
      old_dw->get(pfiberdir,           lb->pFiberDirLabel,           pset);//fiber dir the initial one gets passed on
      old_dw->get(fail_old,            pFailureLabel,                pset);
 
@@ -993,16 +992,6 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         dispGrad.set(0.0);
         // Get the node indices that surround the cell
 
-#if 0
-        if(ptemperature[idx] < 300.0){
-          //shear = d_initialData.Shear*2.0;
-          bulk  = d_initialData.Bulk *2.0;
-        }
-        else{
-           //shear = d_initialData.Shear;
-           bulk  = d_initialData.Bulk ;
-        }
-#endif
         interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S);
 
         for(int k = 0; k < 8; k++) {
@@ -1020,6 +1009,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
                                        deformationGradient[idx];
         // get the volumetric part of the deformation
         J = deformationGradient_new[idx].Determinant();
+        double Jinc = deformationGradientInc.Determinant();
         // carry forward fiber direction
         pfiberdir_carry[idx] = pfiberdir[idx];
         deformed_fiber_vector =pfiberdir[idx]; // not actually deformed yet
@@ -1146,7 +1136,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
           //Cauchy stress
           pstress[idx] = pressure + deviatoric_stress + fiber_stress;
         }
-        pvolume_deformed[idx] = pvolumeold[idx]*J;
+        pvolume_deformed[idx] = pvolumeold[idx]*Jinc;
       }
      }
     delete interpolator;
@@ -1161,11 +1151,11 @@ void TransIsoHyperImplicit::addComputesAndRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
-  task->requires(Task::ParentOldDW, lb->pXLabel,         matlset,Ghost::None);
-  task->requires(Task::ParentOldDW, lb->pVolumeOldLabel, matlset,Ghost::None);
+  task->requires(Task::ParentOldDW, lb->pXLabel,      matlset,Ghost::None);
+  task->requires(Task::ParentOldDW, lb->pMassLabel,   matlset,Ghost::None);
+  task->requires(Task::ParentOldDW, lb->pVolumeLabel, matlset,Ghost::None);
   task->requires(Task::ParentOldDW, lb->pDeformationMeasureLabel,
                                                          matlset,Ghost::None);
-  task->requires(Task::ParentOldDW,lb->pTemperatureLabel,matlset,Ghost::None);
   task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
   task->requires(Task::ParentOldDW, lb->pFiberDirLabel, matlset, Ghost::None);
   task->requires(Task::ParentOldDW, pFailureLabel,      matlset, Ghost::None);
@@ -1183,7 +1173,7 @@ void TransIsoHyperImplicit::addComputesAndRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pVolumeOldLabel,         matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pVolumeLabel,            matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
   task->requires(Task::NewDW, lb->dispNewLabel,            matlset,Ghost::AroundCells,1);
   task->requires(Task::OldDW, lb->delTLabel);
