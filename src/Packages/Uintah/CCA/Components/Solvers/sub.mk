@@ -11,7 +11,8 @@ SRCS     += \
 
 ifeq ($(HAVE_HYPRE),yes)
 SRCS += $(SRCDIR)/HypreSolver.cc \
-	$(SRCDIR)/HypreSolverAMR.cc
+	$(SRCDIR)/HypreSolverAMR.cc \
+	$(SRCDIR)/HypreSolverWrap.cc
 endif
 
 PSELIBS := \

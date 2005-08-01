@@ -1,13 +1,13 @@
 /*--------------------------------------------------------------------------
  * File: HypreSolverAMR.h
  *
- * Header file for the interface to Hypre's semi-structured matrix interface
- * and corresponding solvers.
- * class HypreSolverAMR is a wrapper, receiving Uintah data for the elliptic
- * pressure equation in implicit ICE AMR mode, calling a Hypre solver,
- * and returning the pressure results into Uintah. HypreSolverAMR schedules
- * a task in sus called scheduleSolve() that carries out these operations.
- * It is based on the one-level solver class HypreSolver2.
+ * Header file for the interface to Hypre's semi-structured matrix
+ * interface and corresponding solvers.  class receives Uintah data
+ * for the elliptic pressure equation in implicit ICE AMR mode, calls
+ * a Hypre solver using HypreSolverWrap, and returns the pressure
+ * results into Uintah. HypreSolverAMR schedules a task in sus called
+ * scheduleSolve() that carries out these operations. It is based on
+ * the one-level solver class HypreSolver2.
  *
  * Note: This interface is written for Hypre version 1.9.0b (released 2005)
  * or later.
@@ -48,4 +48,3 @@ namespace Uintah {
 }
 
 #endif // Packages_Uintah_CCA_Components_Solvers_HypreSolverAMR_h
-
