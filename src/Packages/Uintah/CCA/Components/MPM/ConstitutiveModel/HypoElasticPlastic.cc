@@ -1241,7 +1241,7 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
   // Particle and Grid data
   delt_vartype delT;
   constParticleVariable<int>     pLocalized;
-  constParticleVariable<double>  pMass, pVolume, pVolumeOld, 
+  constParticleVariable<double>  pMass, pVolume,
                                  pTempPrev, pTemperature,
                                  pPlasticTemp, pPlasticTempInc,
                                  pPlasticStrain, pDamage, pPorosity, 
@@ -1297,7 +1297,6 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
 
     old_dw->get(pMass,        lb->pMassLabel,               pset);
     old_dw->get(pVolume,      lb->pVolumeLabel,             pset);
-    old_dw->get(pVolumeOld,   lb->pVolumeOldLabel,          pset);
     old_dw->get(pTemperature, lb->pTemperatureLabel,        pset);
     old_dw->get(pTempPrev,    lb->pTempPreviousLabel,       pset); 
     old_dw->get(px,           lb->pXLabel,                  pset);
@@ -1368,7 +1367,7 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
 
         pStress_new[idx] = Zero;
         pDeformGrad_new[idx] = One; 
-        pVolume_deformed[idx] = pVolumeOld[idx];
+        pVolume_deformed[idx] = pMass[idx]/rho_0;
         pIntHeatRate[idx] = 0.0;
       }
       new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
@@ -1407,7 +1406,8 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
 
       // Calculate the current density and deformed volume
       double rho_cur = rho_0/J;
-      pVolume_deformed[idx]=pVolumeOld[idx]*J;
+      double volold = (pMass[idx]/rho_0);
+      pVolume_deformed[idx]=volold*J;
 
       // Compute polar decomposition of F (F = VR)
       // (**NOTE** This is being done to provide reasonable starting 
@@ -1445,7 +1445,7 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       state->density = rho_cur;
       state->initialDensity = rho_0;
       state->volume = pVolume_deformed[idx];
-      state->initialVolume = pVolumeOld[idx];
+      state->initialVolume = volold;
       state->bulkModulus = bulk ;
       state->initialBulkModulus = bulk;
       state->shearModulus = shear ;
@@ -1619,7 +1619,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
   // Particle and Grid data
   delt_vartype delT;
-  constParticleVariable<double>  pMass, pVolumeOld, 
+  constParticleVariable<double>  pMass,
                                  pTempPrev, pTemperature,
                                  pPlasticStrain, pPorosity;
 
@@ -1683,7 +1683,6 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
     // GET GLOBAL DATA 
     old_dw->get(gDisp,        lb->dispNewLabel, dwi, patch, gac, 1);
 
-    parent_old_dw->get(pVolumeOld,   lb->pVolumeOldLabel,          pset);
     parent_old_dw->get(pTempPrev,    lb->pTempPreviousLabel,       pset); 
     parent_old_dw->get(pTemperature, lb->pTemperatureLabel,        pset);
     parent_old_dw->get(px,           lb->pXLabel,                  pset);
@@ -1716,7 +1715,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
         pStress_new[idx] = Zero;
         pDeformGrad_new[idx] = One; 
-        pVolume_deformed[idx] = pVolumeOld[idx];
+        pVolume_deformed[idx] = pMass[idx]/rho_0;
       }
       delete interpolator;
       continue;
@@ -1756,7 +1755,8 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       // Calculate the current density and deformed volume
       double rho_cur = rho_0/J;
-      pVolume_deformed[idx] = pVolumeOld[idx]*J;
+      double volold = (pMass[idx]/rho_0);
+      pVolume_deformed[idx] = volold*J;
 
       //CSTir << " particle = " << idx << " rho = " << rho_cur 
       //      << " vol_new = " << pVolume_deformed[idx] << endl;
@@ -1789,7 +1789,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       state->density = rho_cur;
       state->initialDensity = rho_0;
       state->volume = pVolume_deformed[idx];
-      state->initialVolume = pVolumeOld[idx];
+      state->initialVolume = volold;
       state->bulkModulus = bulk ;
       state->initialBulkModulus = bulk;
       state->shearModulus = shear ;
@@ -1861,7 +1861,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       }
 
       // Compute K matrix = Kmat + Kgeo
-      computeStiffnessMatrix(B, Bnl, D, pStress[idx], pVolumeOld[idx], 
+      computeStiffnessMatrix(B, Bnl, D, pStress[idx], volold, 
                              pVolume_deformed[idx], Kmatrix);
 
       //CSTir << " particle = " << idx << " Computed K matrix " << endl;

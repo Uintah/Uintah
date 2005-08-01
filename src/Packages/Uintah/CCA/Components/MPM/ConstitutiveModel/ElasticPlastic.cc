@@ -1429,7 +1429,7 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
   // Particle and Grid data
   delt_vartype delT;
   constParticleVariable<int>     pLocalized;
-  constParticleVariable<double>  pMass, pVolume, pVolumeOld, 
+  constParticleVariable<double>  pMass, pVolume,
                                  pTempPrev, pTemperature,
                                  pPlasticStrain, pDamage, pPorosity, 
                                  pStrainRate, pPlasticStrainRate;
@@ -1480,7 +1480,6 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
 
     old_dw->get(pMass,        lb->pMassLabel,               pset);
     old_dw->get(pVolume,      lb->pVolumeLabel,             pset);
-    old_dw->get(pVolumeOld,   lb->pVolumeOldLabel,          pset);
     old_dw->get(pTemperature, lb->pTemperatureLabel,        pset);
     old_dw->get(pTempPrev,    lb->pTempPreviousLabel,       pset); 
     old_dw->get(px,           lb->pXLabel,                  pset);
@@ -1543,7 +1542,7 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
 
         pStress_new[idx] = Zero;
         pDeformGrad_new[idx] = One; 
-        pVolume_deformed[idx] = pVolumeOld[idx];
+        pVolume_deformed[idx] = pVolume[idx];
         pIntHeatRate[idx] = 0.0;
       }
       new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
@@ -1582,7 +1581,9 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
 
       // Calculate the current density and deformed volume
       double rho_cur = rho_0/J;
-      pVolume_deformed[idx]=pVolumeOld[idx]*J;
+      double volold = (pMass[idx]/rho_0);
+
+      pVolume_deformed[idx]=volold*J;
 
       // Compute polar decomposition of F (F = VR)
       // (**NOTE** This is being done to provide reasonable starting 
@@ -1625,7 +1626,7 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       state->density = rho_cur;
       state->initialDensity = rho_0;
       state->volume = pVolume_deformed[idx];
-      state->initialVolume = pVolumeOld[idx];
+      state->initialVolume = volold;
       state->bulkModulus = bulk ;
       state->initialBulkModulus = bulk;
       state->shearModulus = shear ;
@@ -1801,7 +1802,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
   // Particle and Grid data
   delt_vartype delT;
-  constParticleVariable<double>  pMass, pVolumeOld, 
+  constParticleVariable<double>  pMass,
                                  pTempPrev, pTemperature,
                                  pPlasticStrain, pPlasticStrainRate,
                                  pPorosity;
@@ -1862,10 +1863,10 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     old_dw->get(gDisp,        lb->dispNewLabel, dwi, patch, gac, 1);
 
     parent_old_dw->get(delT,         lb->delTLabel, getLevel(patches));
-    parent_old_dw->get(pVolumeOld,   lb->pVolumeOldLabel,          pset);
     parent_old_dw->get(pTempPrev,    lb->pTempPreviousLabel,       pset); 
     parent_old_dw->get(pTemperature, lb->pTemperatureLabel,        pset);
     parent_old_dw->get(px,           lb->pXLabel,                  pset);
+    parent_old_dw->get(pMass,        lb->pMassLabel,               pset);
     parent_old_dw->get(pDeformGrad,  lb->pDeformationMeasureLabel, pset);
     parent_old_dw->get(pStress,      lb->pStressLabel,             pset);
 
@@ -1899,7 +1900,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
         pStress_new[idx] = Zero;
         pDeformGrad_new[idx] = One; 
-        pVolume_deformed[idx] = pVolumeOld[idx];
+        pVolume_deformed[idx] = pMass[idx]/rho_0;
       }
       delete interpolator;
       continue;
@@ -1932,7 +1933,8 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       // Calculate the current density and deformed volume
       double rho_cur = rho_0/J;
-      pVolume_deformed[idx] = pVolumeOld[idx]*J;
+      double volold = (pMass[idx]/rho_0);
+      pVolume_deformed[idx] = volold*J;
 
       // Compute the current strain and strain rate
       incFFt = incDefGrad*incDefGrad.Transpose(); 
@@ -1961,7 +1963,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       state->density = rho_cur;
       state->initialDensity = rho_0;
       state->volume = pVolume_deformed[idx];
-      state->initialVolume = pVolumeOld[idx];
+      state->initialVolume = volold;
       state->bulkModulus = bulk ;
       state->initialBulkModulus = bulk;
       state->shearModulus = shear ;
@@ -2026,7 +2028,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       }
 
       // Compute K matrix = Kmat + Kgeo
-      computeStiffnessMatrix(B, Bnl, D, pStress[idx], pVolumeOld[idx], 
+      computeStiffnessMatrix(B, Bnl, D, pStress[idx], volold,
                              pVolume_deformed[idx], Kmatrix);
 
       // Assemble into global K matrix

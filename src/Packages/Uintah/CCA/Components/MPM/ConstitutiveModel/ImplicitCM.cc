@@ -84,7 +84,6 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
   task->requires(Task::OldDW, d_lb->pXLabel,           matlset, gnone);
   task->requires(Task::OldDW, d_lb->pMassLabel,        matlset, gnone);
   task->requires(Task::OldDW, d_lb->pVolumeLabel,      matlset, gnone);
-  task->requires(Task::OldDW, d_lb->pVolumeOldLabel,   matlset, gnone);
   task->requires(Task::OldDW, d_lb->pTemperatureLabel, matlset, gnone);
   task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,
                                                        matlset, gnone);
