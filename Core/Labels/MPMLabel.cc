@@ -347,9 +347,6 @@ MPMLabel::MPMLabel()
   gVelocityOldLabel = VarLabel::create("g.VelocityOld",
 				    NCVariable<Vector>::getTypeDescription()); 
 
-  pVolumeOldLabel = VarLabel::create("p.VolumeOld",
-			       ParticleVariable<double>::getTypeDescription()); 
-
   dispNewLabel = VarLabel::create("dispNew",
 				  NCVariable<Vector>::getTypeDescription()); 
 
@@ -497,9 +494,6 @@ MPMLabel::MPMLabel()
   GSp_vol_srcLabel =  VarLabel::create("G.sp_vol_src",
                   NCVariable<double>::getTypeDescription()); 
   // ------------------------------------------------------
-
-  pVolumeOldLabel_preReloc = VarLabel::create("pVolumeOld+",
-			       ParticleVariable<double>::getTypeDescription()); 
 
   // Material point erosion algorithms
   pErosionLabel = VarLabel::create("p.erosion",
@@ -675,7 +669,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pCellNAPIDLabel);
 
   VarLabel::destroy(gVelocityOldLabel);
-  VarLabel::destroy(pVolumeOldLabel);
   VarLabel::destroy(dispNewLabel);
   VarLabel::destroy(dispIncLabel);
   VarLabel::destroy(pAccelerationLabel);
@@ -686,7 +679,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pAccelerationLabel_preReloc);
   VarLabel::destroy(bElBarLabel);
   VarLabel::destroy(bElBarLabel_preReloc);
-  VarLabel::destroy(pVolumeOldLabel_preReloc);
 
  // for Fracture --------------
   VarLabel::destroy(pDispLabel);
