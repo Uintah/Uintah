@@ -1361,7 +1361,7 @@ case $host in
        CXXFLAGS="-m32 $CXXFLAGS"
        AC_MSG_RESULT(-m32)
     else 
-      if test "$enable_64bit" = "yes" -a $NBITS=32; then
+      if test "$enable_64bit" = "yes" -a $NBITS=32 -a "$CC" != "icc"; then
         NBITS=64
         CFLAGS="-m64 $CFLAGS"
         CXXFLAGS="-m64 $CXXFLAGS"
@@ -3162,9 +3162,7 @@ if test "$sci_required_mpi" = "yes"; then
           fi
 
           if test "$HAVE_MPI" != "yes"; then
-             # If building with newer LAM on OSX, pthreads and util need not be included.
-             echo "mpi lib path: " $_sci_lib
-             echo "mpi inc path: " $sci_inc
+             # If building with newer LAM on OSX, pthreads and util not needed.
              SCI_TRY_LINK(MPI,mpi library and header-3,mpi.h,
              $_sci_inc /usr/include/mpi,lam mpi,$_sci_lib,-DMPIPP_H,,optional)
 
