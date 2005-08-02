@@ -3162,24 +3162,41 @@ if test "$sci_required_mpi" = "yes"; then
           fi
 
           if test "$HAVE_MPI" != "yes"; then
+             # If building with newer LAM on OSX, pthreads and util need not be included.
+             echo "mpi lib path: " $_sci_lib
+             echo "mpi inc path: " $sci_inc
              SCI_TRY_LINK(MPI,mpi library and header-3,mpi.h,
-             $_sci_inc /usr/include/mpi,mpi,$_sci_lib,-DMPIPP_H,,optional)
+             $_sci_inc /usr/include/mpi,lam mpi,$_sci_lib,-DMPIPP_H,,optional)
 
-             # verify that it was found in the location requested.
+             # verify that it was found in the location requested
              if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
                 test ! -e $with_mpi/lib/$the_file.so &&
                 test ! -e $with_mpi/lib/$the_file.a &&
                 test ! -e $with_mpi/lib/$the_file.dylib; then
-                AC_MSG_WARN(Found libmpi but not in requested directory: $with_mpi/lib)
-	        HAVE_MPI="no"
-             fi
+                AC_MSG_WARN(Found libmpi but not in the requested directory: $with_mpi/lib)
+                HAVE_MPI="no"
+             fi                        
 
              if test "$HAVE_MPI" != "yes"; then
-                SCI_TRY_LINK(MPI,mpich library and header,mpi.h,
-                $_sci_inc /usr/include/mpi,mpich pmpich,$_sci_lib,,,optional)
+                SCI_TRY_LINK(MPI,mpi library and header-4,mpi.h,
+                $_sci_inc /usr/include/mpi,mpi,$_sci_lib,-DMPIPP_H,,optional)
 
-                if test "$HAVE_MPI" = "yes"; then
-                  HAVE_MPICH="yes"
+                # verify that it was found in the location requested.
+                if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
+                   test ! -e $with_mpi/lib/$the_file.so &&
+                   test ! -e $with_mpi/lib/$the_file.a &&
+                   test ! -e $with_mpi/lib/$the_file.dylib; then
+                   AC_MSG_WARN(Found libmpi but not in requested directory: $with_mpi/lib)
+                   HAVE_MPI="no"
+                fi
+
+                if test "$HAVE_MPI" != "yes"; then
+                   SCI_TRY_LINK(MPI,mpich library and header,mpi.h,
+                   $_sci_inc /usr/include/mpi,mpich pmpich,$_sci_lib,,,optional)
+
+                   if test "$HAVE_MPI" = "yes"; then
+                      HAVE_MPICH="yes"
+                   fi
                 fi
              fi
           fi
