@@ -4338,10 +4338,11 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       new_dw->allocateTemporary(cv[m], patch);
       
       if(mpm_matl){                 // M P M
-        new_dw->get(old_temp[m],     lb->temp_CCLabel,   indx, patch,gn,0);
-        new_dw->getModifiable(vel_CC[m],  lb->vel_CCLabel,indx,patch);
+        CCVariable<double> oldTemp;
+        new_dw->getCopy(oldTemp,          lb->temp_CCLabel,indx,patch,gn,0);
+        new_dw->getModifiable(vel_CC[m],  lb->vel_CCLabel, indx,patch);
         new_dw->getModifiable(Temp_CC[m], lb->temp_CCLabel,indx,patch);
-        
+        old_temp[m] = oldTemp;
         cv[m].initialize(mpm_matl->getSpecificHeat());
       }
       if(ice_matl){                 // I C E
