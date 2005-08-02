@@ -961,3 +961,118 @@ Solver::printValues(const Patch* patch,
   } // end for cell
 #endif
 } // end printValues()
+
+
+HypreGenericSolver::SolverType
+HypreGenericSolver::solverFromTitle(const string& solverTitle)
+{
+  /* Determine solver type from title */
+  if ((solverTitle == "SMG") ||
+      (solverTitle == "smg")) {
+    return SMG;
+  } else if ((solverTitle == "PFMG") ||
+             (solverTitle == "pfmg")) {
+    return PFMG;
+  } else if ((solverTitle == "SparseMSG") ||
+             (solverTitle == "sparsemsg")) {
+    return SparseMSG;
+  } else if ((solverTitle == "CG") ||
+             (solverTitle == "cg") ||
+             (solverTitle == "PCG") ||
+             (solverTitle == "conjugategradient")) {
+    return CG;
+  } else if ((solverTitle == "Hybrid") ||
+             (solverTitle == "hybrid")) {
+    return Hybrid;
+  } else if ((solverTitle == "GMRES") ||
+             (solverTitle == "gmres")) {
+    return GMRES;
+  } else if ((solverTitle == "AMG") ||
+             (solverTitle == "amg") ||
+             (solverTitle == "BoomerAMG") ||
+             (solverTitle == "boomeramg")) {
+    return AMG;
+  } else if ((solverTitle == "FAC") ||
+             (solverTitle == "fac")) {
+    return FAC;
+  } else {
+    throw InternalError("Unknown solver type: "+solverTitle,
+                        __FILE__, __LINE__);
+  } // end "switch" (solverTitle)
+} // end solverFromTitle()
+
+HypreGenericSolver::precondType
+HypreGenericSolver::precondFromTitle(const string& precondTitle)
+{
+  /* Determine preconditioner type from title */
+  if ((precondTitle == "SMG") ||
+      (precondTitle == "smg")) {
+    return PrecondSMG;
+  } else if ((precondTitle == "PFMG") ||
+             (precondTitle == "pfmg")) {
+    return PrecondPFMG;
+  } else if ((precondTitle == "SparseMSG") ||
+             (precondTitle == "sparsemsg")) {
+    return PrecondSparseMSG;
+  } else if ((precondTitle == "Jacobi") ||
+             (precondTitle == "jacobi")) {
+    return PrecondJacobi;
+  } else if ((precondTitle == "Diagonal") ||
+             (precondTitle == "diagonal")) {
+    return PrecondDiagonal;
+  } else if ((precondTitle == "AMG") ||
+             (precondTitle == "amg") ||
+             (precondTitle == "BoomerAMG") ||
+             (precondTitle == "boomeramg")) {
+    return PrecondAMG;
+  } else if ((precondTitle == "FAC") ||
+             (precondTitle == "fac")) {
+    return PrecondFAC;
+  } else {
+    throw InternalError("Unknown preconditionertype: "+precondTitle,
+                        __FILE__, __LINE__);
+  } // end "switch" (precondTitle)
+} // end precondFromTitle()
+
+HypreDriver::Interface
+HypreGenericSolver::solverInterface(const SolverType& solverType)
+  /* Determine the Hypre interface this solver uses */
+{
+  switch (solverType) {
+  case SMG:
+    {
+      return HypreDriver::Struct;
+    }
+  case PFMG:
+    {
+      return HypreDriver::Struct;
+    }
+  case SparseMSG:
+    {
+      return HypreDriver::Struct;
+    }
+  case CG:
+    {
+      return HypreDriver::Struct;
+    }
+  case Hybrid: 
+    {
+      return HypreDriver::Struct;
+    }
+  case GMRES:
+    {
+      return HypreDriver::Struct;
+    }
+  case FAC:
+    {
+      return HypreDriver::SStruct;
+    }
+  case AMG:
+    {
+      return HypreDriver::ParCSR;
+    }
+  default:
+    throw InternalError("Unsupported solver type: "+solverType,
+                        __FILE__, __LINE__);
+  } // switch (solverType)
+} // end solverInterface()

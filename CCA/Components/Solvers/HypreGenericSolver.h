@@ -1,36 +1,48 @@
 /*--------------------------------------------------------------------------
- * File: HypreSolverGeneric.h
+ * File: HypreGenericSolver.h
  *
- * class HypreSolverGeneric is a generic Hypre solver that takes data from
+ * class HypreGenericSolver is a generic Hypre solver that takes data from
  * HypreDriver according to what the specific solver can work with, and outputs
  * results back into the appropriate data structures in HypreDriver.
  * Preconditioners are also a type of solver.
  *--------------------------------------------------------------------------*/
-#ifndef Packages_Uintah_CCA_Components_Solvers_HypreSolverGeneric_h
-#define Packages_Uintah_CCA_Components_Solvers_HypreSolverGeneric_h
+#ifndef Packages_Uintah_CCA_Components_Solvers_HypreGenericSolver_h
+#define Packages_Uintah_CCA_Components_Solvers_HypreGenericSolver_h
 
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDrive.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
 
-class HypreSolverGeneric {
+class HypreGenericSolver {
   /*_____________________________________________________________________
-    class HypreSolverGeneric:
+    class HypreGenericSolver:
     A base (generic) solver handler that gets all the necessary data
     pointers (A,b,x,...), solves the linear system by calling some Hypre
-    solver (implemented in derived classes from HypreSolverGeneric),
+    solver (implemented in derived classes from HypreGenericSolver),
     and returns some output statistics and the solution vector.
     _____________________________________________________________________*/
 
   /*========================== PUBLIC SECTION ==========================*/
  public:
   
+    /*---------- Types ----------*/
+
+    enum SolverType {
+      SMG, PFMG, SparseMSG, CG, Hybrid, GMRES, AMG, FAC
+    };
+
+    enum PrecondType {
+      PrecondNA, // No preconditioner, use solver directly
+      PrecondSMG, PrecondPFMG, PrecondSparseMSG, PrecondJacobi,
+      PrecondDiagonal, PrecondAMG, PrecondFAC
+    };
+
   /* Solver results are output to this struct */
   struct Results {
     Counter    numIterations;   // Number of solver iterations performed
     double     finalResNorm;    // Final residual norm ||A*x-b||_2
   };
 
-  virtual ~HypreSolverGeneric(void) {
-    Print("Destroying HypreSolverGeneric object\n");
+  virtual ~HypreGenericSolver(void) {
+    Print("Destroying HypreGenericSolver object\n");
     
     /* Destroy graph objects */
     Print("Destroying graph objects\n");
@@ -60,12 +72,12 @@ class HypreSolverGeneric {
   const Param*          _param;
   bool                  _requiresPar;   // Does solver require Par input?
   Counter               _solverID;      // Hypre solver ID
-  Results               _results;       // HypreSolverGeneric results are outputted to here
+  Results               _results;       // HypreGenericSolver results are outputted to here
 
   /*========================== PROTECTED SECTION ==========================*/
  protected:
 
-  HypreSolverGeneric(const Param* param)
+  HypreGenericSolver(const Param* param)
     : _param(param)
     {
       _results.numIterations = 0;
@@ -83,6 +95,12 @@ class HypreSolverGeneric {
                    const double* rhsValues = 0,
                    const double* solutionValues = 0);
 
+  /* Utilities */
+
+  static SolverType solverFromTitle(const string& solverTitle);
+  static PrecondType precondFromTitle(const string& precondTitle);
+  static HypreDriver::Interface solverInterface(const SolverType& solverType);
+
   /*========================== PRIVATE SECTION ==========================*/
  private:
 
@@ -90,7 +108,7 @@ class HypreSolverGeneric {
   const Param*          _param;
   bool                  _requiresPar;   // Does solver require Par input?
   Counter               _solverID;      // Hypre solver ID
-  Results               _results;       // HypreSolverGeneric results are outputted to here
+  Results               _results;       // HypreGenericSolver results are outputted to here
 
   void makeGraph(const Hierarchy& hier,
                  const HYPRE_SStructGrid& grid,
@@ -101,4 +119,4 @@ class HypreSolverGeneric {
 
 };
 
-#endif // Packages_Uintah_CCA_Components_Solvers_HypreSolverGeneric_h
+#endif // Packages_Uintah_CCA_Components_Solvers_HypreGenericSolver_h
