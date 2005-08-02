@@ -1,17 +1,37 @@
 /*--------------------------------------------------------------------------
- * File: HypreSolverAMR.h
- *
- * Header file for the interface to Hypre's semi-structured matrix
- * interface and corresponding solvers.  class receives Uintah data
- * for the elliptic pressure equation in implicit ICE AMR mode, calls
- * a Hypre solver using HypreSolverWrap, and returns the pressure
- * results into Uintah. HypreSolverAMR schedules a task in sus called
- * scheduleSolve() that carries out these operations. It is based on
- * the one-level solver class HypreSolver2.
- *
- * Note: This interface is written for Hypre version 1.9.0b (released 2005)
- * or later.
- *--------------------------------------------------------------------------*/
+CLASS
+   HypreSolverAMR
+   
+   A Hypre solver component for AMR grids.
+
+GENERAL INFORMATION
+
+   File: HypreSolverAMR.h
+
+   Oren E. Livne
+   Department of Computer Science
+   University of Utah
+
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+  
+   Copyright (C) 2005 SCI Group
+
+KEYWORDS
+   HypreSolverAMR, HypreInterface, HypreSolverParams, HypreGenericSolver.
+
+DESCRIPTION
+   Class HypreSolverAMR is the main solver component that interfaces to Hypre's
+   structured and semi-structured system interfaces. It requires Uintah data from the
+   ICE component (currently implemented for the elliptic pressure equation in implicit
+   ICE AMR mode. HypreSolverAMR schedules a task in sus called
+   scheduleSolve() that carries out the solve operation. It is based on
+   the one-level solver class HypreSolver2.
+  
+WARNING
+   * This interface is written for Hypre 1.9.0b (released 2005). However,
+   it may still work with the Struct solvers in earlier Hypre versions (e.g., 
+   1.7.7).
+   --------------------------------------------------------------------------*/
 #ifndef Packages_Uintah_CCA_Components_Solvers_HypreSolverAMR_h
 #define Packages_Uintah_CCA_Components_Solvers_HypreSolverAMR_h
 
@@ -21,7 +41,10 @@
 namespace Uintah {
   class HypreSolverAMR :
     public SolverInterface, public UintahParallelComponent { 
+
+    /*========================== PUBLIC SECTION ==========================*/
   public:
+
     HypreSolverAMR(const ProcessorGroup* myworld);
     virtual ~HypreSolverAMR();
 
@@ -43,6 +66,8 @@ namespace Uintah {
                                const VarLabel* guess,
                                Task::WhichDW guess_dw,
                                const SolverParameters* params);
+    
+    /*========================== PRIVATE SECTION ==========================*/
   private:
   };
 }

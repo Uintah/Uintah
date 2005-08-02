@@ -1076,3 +1076,42 @@ HypreGenericSolver::solverInterface(const SolverType& solverType)
                         __FILE__, __LINE__);
   } // switch (solverType)
 } // end solverInterface()
+
+
+// TODO: include all derived classes here.
+HypreGenericSolver*
+HypreGenericSolver::newSolver(const SolverType& solverType)
+  /* Create a new solver object of specific solverType solver type
+     but a generic solver pointer type. */
+{
+  HypreGenericSolver* hypreSolver;
+  switch (solverType) {
+  case HypreSolverParams::SMG:
+    {
+      hypreSolver = new HypreSolverSMG(hypreData);
+    }
+  case HypreSolverParams::PFMG:
+    {
+      hypreSolver = new HypreSolverPFMG(hypreData);
+    }
+  case HypreSolverParams::SparseMSG:
+    {
+      hypreSolver = new HypreSolverSparseMSG(hypreData);
+    }
+  case HypreSolverParams::CG:
+    {
+      hypreSolver = new HypreSolverCG(hypreData);
+    }
+  case HypreSolverParams::Hybrid: 
+    {
+      hypreSolver = new HypreSolverHybrid(hypreData);
+    }
+  case HypreSolverParams::GMRES:
+    {
+      hypreSolver = new HypreSolverGMRES(hypreData);
+    }
+  default:
+    throw InternalError("Unsupported solver type: "+params->solverTitle,
+                            __FILE__, __LINE__);
+  } // switch (solverType)
+}

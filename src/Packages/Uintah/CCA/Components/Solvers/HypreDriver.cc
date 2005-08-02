@@ -16,6 +16,8 @@
 
 #include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolverParams.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreInterface.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreGenericSolver.h>
 #include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
@@ -82,71 +84,32 @@ namespace Uintah {
     DataWarehouse* b_dw = new_dw->getOtherDataWarehouse(which_b_dw);
     DataWarehouse* guess_dw = new_dw->getOtherDataWarehouse(which_guess_dw);
     
-    /* Decide which Hypre interface to use */
-    const int numLevels = new_dw->getGrid()->numLevels();
-    if (numLevels == 1) {
-      /* A uniform grid */
-      _hypreInterface = HypreSolverParams::Struct;
-    } else {
-      /* Composite grid of uniform patches */
-      _hypreInterface = HypreSolverParams::SStruct;
-    }
-    
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
 
+      /* Decide which Hypre interface to use */
+      const int numLevels = new_dw->getGrid()->numLevels();
+      HypreInterface::InterfaceType interfaceType;
+      if (numLevels == 1) {
+        /* A uniform grid */
+        interfaceType = HypreInterface::Struct;
+      } else {
+        /* Composite grid of uniform patches */
+        interfaceType = HypreInterface::SStruct;
+      }
+
       /* Construct Hypre linear system for the specific variable type
          and Hypre interface */
-      switch (_hypreInterface) {
-      case HypreSolverParams::Struct:
-        {
-          makeLinearSystemStruct(matl);
-          break;
-        }
-      case HypreSolverParams::SStruct:
-        {
-          makeLinearSystemSStruct(matl);
-          break;
-        }
-      default:
-        {
-          throw InternalError("Unknown Hypre interface for makeLinearSystem: "
-                              +hypreInterface,__FILE__, __LINE__);
-        }
-      } // end switch (_hypreInterface)
-
+      HypreInterface hypreInterface(params);
+      hypreInterface.makeLinearSystemStruct<Types>(interfaceType);
+    
       /* Construct Hypre solver object that uses the hypreInterface we
-         chose. */
-      HypreSolverGeneric* _hypreSolver = 0;
-      switch (params->solverType) {
-      case HypreSolverParams::SMG:
-        {
-          _hypreSolver = new HypreSolverSMG(_hypreData);
-        }
-      case HypreSolverParams::PFMG:
-        {
-          _hypreSolver = new HypreSolverPFMG(_hypreData);
-        }
-      case HypreSolverParams::SparseMSG:
-        {
-          _hypreSolver = new HypreSolverSparseMSG(_hypreData);
-        }
-      case HypreSolverParams::CG:
-        {
-          _hypreSolver = new HypreSolverCG(_hypreData);
-        }
-      case HypreSolverParams::Hybrid: 
-        {
-          _hypreSolver = new HypreSolverHybrid(_hypreData);
-        }
-      case HypreSolverParams::GMRES:
-        {
-          _hypreSolver = new HypreSolverGMRES(_hypreData);
-        }
-      default:
-        throw InternalError("Unsupported solver type: "+params->solverTitle,
-                            __FILE__, __LINE__);
-      } // switch (params->solverType)
+         chose. Specific solver object is arbitrated in HypreGenericSolver
+         according to param->solverType. */
+      HypreGenericSolver::SolveType solverType =
+        HypreGenericSolver::solverFromTitle(params->solverTitle);
+      HypreGenericSolver* _hypreSolver =
+        HypreGenericSolver::newSolver(solverType,_hypreInterface);
 
       /* Solve the linear system */
       double solve_start = Time::currentSeconds();
@@ -154,7 +117,7 @@ namespace Uintah {
       double solve_dt = Time::currentSeconds()-solve_start;
 
       /* Check if converged, print solve statistics */
-      const HypreSolverGeneric::Results& results = _hypreSolver->getResults();
+      const HypreGenericSolver::Results& results = _hypreSolver->getResults();
       const double& finalResNorm = results->finalResNorm;
       if ((finalResNorm > params->tolerance) ||
           (finite(finalResNorm) == 0)) {
@@ -189,7 +152,7 @@ namespace Uintah {
         }
       default:
         {
-          throw InternalError("Unknown Hypre interface for makeLinearSystem: "
+          throw InternalError("Unknown Hypre interface for getSolution: "
                               +hypreInterface,__FILE__, __LINE__);
         }
       } // end switch (_hypreInterface)
@@ -347,7 +310,7 @@ namespace Uintah {
         HYPRE_StructSparseMSGDestroy(precond_solver);
         break;
       } // case HypreSolverParams::PrecondSparseMSG
-
+      
     case HypreSolverParams::PrecondJacobi:
       {
         HYPRE_StructJacobiDestroy(precond_solver);
