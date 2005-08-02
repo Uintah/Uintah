@@ -10,9 +10,7 @@ SRCS     += \
 	$(SRCDIR)/SolverFactory.cc
 
 ifeq ($(HAVE_HYPRE),yes)
-SRCS += $(SRCDIR)/HypreSolver.cc \
-	$(SRCDIR)/HypreSolverAMR.cc \
-	$(SRCDIR)/HypreSolverWrap.cc
+SRCS += $(SRCDIR)/HypreSolver.cc
 endif
 
 PSELIBS := \
