@@ -380,7 +380,6 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
     DataWarehouse* new_dw = vb->new_dw;
     DataWarehouse* old_dw = vb->old_dw;
     const double AMR_subCycleProgressVar = vb->AMR_subCycleProgressVar;
-    //const Level* level = vb->level;
 
     // form the label names
     string x_name = desc + "_X_FC_flux";
@@ -404,8 +403,8 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
     new_dw->allocateAndPut(q_Z_FC_flux, zlabel,indx, patch); 
 
     if(AMR_subCycleProgressVar == 0){
-      q_X_FC_flux.initialize(T(0.0));
-      q_Y_FC_flux.initialize(T(0.0));
+      q_X_FC_flux.initialize(T(0.0));   // at the beginning of the cycle 
+      q_Y_FC_flux.initialize(T(0.0));   // initialize the fluxes
       q_Z_FC_flux.initialize(T(0.0));
     }else{
       constSFCXVariable<T> q_X_FC_flux_old;
@@ -431,7 +430,6 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
     CellIterator XFC_iter = patch->getSFCXIterator(offset);
     CellIterator YFC_iter = patch->getSFCYIterator(offset);
     CellIterator ZFC_iter = patch->getSFCZIterator(offset);
-    //cout << " XFC_iter" << XFC_iter << " YFC_iter " << YFC_iter << " ZFC_iter " << ZFC_iter << endl;
     
     q_FC_flux_operator<SFCXVariable<T>, T>(XFC_iter, adj_offset[0],LEFT,
                                            q_CC,q_X_FC_flux); 
