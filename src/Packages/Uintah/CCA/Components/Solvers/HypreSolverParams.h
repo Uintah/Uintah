@@ -23,18 +23,6 @@ namespace Uintah {
       _____________________________________________________________________*/
   public:
 
-    /*---------- Types ----------*/
-
-    enum SolverType {
-      SMG, PFMG, SparseMSG, CG, Hybrid, GMRES, AMG, FAC
-    };
-
-    enum PrecondType {
-      PrecondNA, // No preconditioner, use solver directly
-      PrecondSMG, PrecondPFMG, PrecondSparseMSG, PrecondJacobi,
-      PrecondDiagonal, PrecondAMG, PrecondFAC
-    };
-
     HypreSolverParams() {}
     ~HypreSolverParams() {}
 
