@@ -998,6 +998,7 @@ Pbuffer::create ()
                      (unsigned int*)&width_);
     glXQueryDrawable(impl_->display_, impl_->pbuffer_, GLX_HEIGHT,
                      (unsigned int*)&height_);
+
     // ...
     if (render_tex_)
     {
