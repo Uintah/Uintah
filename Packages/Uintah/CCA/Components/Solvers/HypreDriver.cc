@@ -1,21 +1,20 @@
 /*--------------------------------------------------------------------------
- * File: HypreSolverWrap.cc
+ * File: HypreDriver.cc
  *
- * Generic interface to Hypre's structured- and semi-structured matrix
- * interface and corresponding solvers. This is a template-"switch" on
- * different variable types (CC, NC, etc.).
+ * Implementation of a wrapper of a Hypre solver for a particular variable
+ * type. 
  *--------------------------------------------------------------------------*/
-// TODO (taken from HypreSolver.cc):
+// TODO: (taken from HypreSolver.cc)
 // Matrix file - why are ghosts there?
 // Read hypre options from input file
 // 3D performance
 // Logging?
 // Report mflops
-// Use a symmetric matrix
+// Use a symmetric matrix whenever possible
 // More efficient set?
 // Reuse some data between solves?
 
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverWrap.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolverParams.h>
 #include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -61,29 +60,29 @@ static DebugStream cout_doing("HYPRE_DOING_COUT", false);
 namespace Uintah {
 
   /*_____________________________________________________________________
-    class HypreSolverWrap implementation for CC variables
+    class HypreDriver implementation for CC variables
     _____________________________________________________________________*/
 
-  template<>
-  void HypreSolverWrap<CCTypes>::solve(const ProcessorGroup* pg,
-                                       const PatchSubset* patches,
-                                       const MaterialSubset* matls,
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw,
-                                       Handle<HypreSolverWrap<CCTypes> >)
+  template<class Types>
+  void HypreDriver<Types>::solve(const ProcessorGroup* pg,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw,
+                                 Handle<HypreDriver<Types> >)
     /*_____________________________________________________________________
-      Function HypreSolverWrap::solve
+      Function HypreDriver::solve
       Main solve function.
       _____________________________________________________________________*/
   {
-    typedef CCTypes::sol_type sol_type;
+    typedef typename Types::sol_type sol_type;
     cout_doing << "HypreSolverAMR<CCTypes>::solve" << endl;
 
     DataWarehouse* A_dw = new_dw->getOtherDataWarehouse(which_A_dw);
     DataWarehouse* b_dw = new_dw->getOtherDataWarehouse(which_b_dw);
     DataWarehouse* guess_dw = new_dw->getOtherDataWarehouse(which_guess_dw);
     
-    /* Decide which Hypre data type to use */
+    /* Decide which Hypre interface to use */
     const int numLevels = new_dw->getGrid()->numLevels();
     if (numLevels == 1) {
       /* A uniform grid */
@@ -93,14 +92,8 @@ namespace Uintah {
       _hypreInterface = HypreSolverParams::SStruct;
     }
     
-    /* Construct linear system in the format chosen */
-    _hypreData = new HypreData(_hypreInterface);
-
-    /* Construct empty Hypre solver object */
-    _hypreSolver = new Solver(_hypreData);
-    
-#if 0
-    /* Construct Hypre linear system */
+    /* Construct Hypre linear system for the specific variable type
+       and Hypre interface */
     switch (_hypreInterface) {
     case HypreSolverParams::Struct:
       {
@@ -114,11 +107,18 @@ namespace Uintah {
       }
     default:
       {
-        throw InternalError("Unknown Hypre interface type: "
+        throw InternalError("Unknown Hypre interface for makeLinearSystem: "
                             +hypreInterface,__FILE__, __LINE__);
       }
     }
-#endif
+
+    /* Construct Hypre solver object that uses the hypreInterface we
+       chose. */ 
+    HypreGenericSolver* _hypreSolver = 0;
+    switch () {
+      new HypreGenericSolver(*this);
+    }
+   
 
     // Solve the system
     double solve_start = Time::currentSeconds();
@@ -456,15 +456,15 @@ namespace Uintah {
     }
     tstart = Time::currentSeconds();
   } // for m (matls loop)
-} // end solve() for <CCTypes>
+} // end solve() for
 
 template<class Types>
-void HypreSolverWrap<Types>::setupPrecond(const ProcessorGroup* pg,
+void HypreDriver<Types>::setupPrecond(const ProcessorGroup* pg,
                                           HYPRE_PtrToSolverFcn& precond,
                                           HYPRE_PtrToSolverFcn& pcsetup,
                                           HYPRE_StructSolver& precond_solver)
   /*_____________________________________________________________________
-    Function HypreSolverWrap::setupPrecond
+    Function HypreDriver::setupPrecond
     Set up and initialize the Hypre preconditioner, if we use one.
     _____________________________________________________________________*/
 {
@@ -562,10 +562,10 @@ void HypreSolverWrap<Types>::setupPrecond(const ProcessorGroup* pg,
 } // end setupPrecond()
 
 template<class Types>
-void HypreSolverWrap<Types>::destroyPrecond
+void HypreDriver<Types>::destroyPrecond
 (HYPRE_StructSolver& precond_solver)
   /*_____________________________________________________________________
-    Function HypreSolverWrap::destroyPrecond
+    Function HypreDriver::destroyPrecond
     Destroy (+free) the Hypre preconditioner.
     _____________________________________________________________________*/
 {
@@ -612,7 +612,7 @@ void HypreSolverWrap<Types>::destroyPrecond
   } // end switch (param->precondType)
 } // end destroyPrecond()
 
-void HypreSolverWrap::makeLinearSystemStruct(void)
+void HypreDriver::makeLinearSystemStruct(void)
 {
   ASSERTEQ(sizeof(Stencil7), 7*sizeof(double));
   double tstart = Time::currentSeconds();
@@ -794,6 +794,6 @@ void HypreSolverWrap::makeLinearSystemStruct(void)
       }  // initialGuess
     } // patch loop
     HYPRE_StructVectorAssemble(HX);
-  } // end HypreSolverWrap::makeLinearSystemStruct()
+  } // end HypreDriver::makeLinearSystemStruct()
 
 } // end namespace Uintah

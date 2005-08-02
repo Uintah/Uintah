@@ -1,7 +1,7 @@
 /*--------------------------------------------------------------------------
  * File: HypreSolverAMR.cc
  *
- * Uintah wrap around HypreSolverWrap class that schedules the solver call.
+ * Uintah wrap around HypreDriver class that schedules the solver call.
  * Here we read the solver parameters, so we when adding a new solver
  * or new variable type (NC, FC), remember to update the relevant functions
  * here.
@@ -19,7 +19,7 @@
 
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolverAMR.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolverParams.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverWrap.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
 #include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
@@ -215,13 +215,13 @@ namespace Uintah {
       
     case TypeDescription::CCVariable:
       {
-        HypreSolverWrap<CCTypes>* that = 
-          new HypreSolverWrap<CCTypes>(level.get_rep(), matls, A, which_A_dw,
+        HypreDriver<CCTypes>* that = 
+          new HypreDriver<CCTypes>(level.get_rep(), matls, A, which_A_dw,
                                      x, modifies_x, b, which_b_dw, guess, 
                                      which_guess_dw, dparams);
-        Handle<HypreSolverWrap<CCTypes> > handle = that;
+        Handle<HypreDriver<CCTypes> > handle = that;
         task = scinew Task("Matrix solve", that,
-                           &HypreSolverWrap<CCTypes>::solve, handle);
+                           &HypreDriver<CCTypes>::solve, handle);
         break;
       } // case CCVariable
 
