@@ -154,13 +154,25 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   quadN12.resize(numMPMMatls);
   quadN23.resize(numMPMMatls);
   quadCrackSidesAtFront.resize(numMPMMatls);
-
+  quadRepetition.resize(numMPMMatls);
+  quadOffset.resize(numMPMMatls);
+    
   // Curved quad crack segments
   cquads.resize(numMPMMatls);
   cquadNStraightSides.resize(numMPMMatls);
   cquadPtsSide2.resize(numMPMMatls);
   cquadPtsSide4.resize(numMPMMatls);
   cquadCrackSidesAtFront.resize(numMPMMatls);
+  cquadRepetition.resize(numMPMMatls);
+  cquadOffset.resize(numMPMMatls);
+
+  // general quad crack segments
+  gquads.resize(numMPMMatls);  
+  gquadN12.resize(numMPMMatls);
+  gquadN23.resize(numMPMMatls);
+  gquadCrackSidesAtFront.resize(numMPMMatls);  
+  gquadRepetition.resize(numMPMMatls);
+  gquadOffset.resize(numMPMMatls);
   
   // Rriangular crack segments
   triangles.resize(numMPMMatls);
@@ -210,6 +222,7 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
        ProblemSpecP geom_ps=crk_ps->findBlock("crack_segments");
        ReadQuadCracks(m,geom_ps);
        ReadCurvedQuadCracks(m,geom_ps); 
+       ReadGeneralQuadCracks(m,geom_ps);
        ReadTriangularCracks(m,geom_ps);
        ReadArcCracks(m,geom_ps);
        ReadEllipticCracks(m,geom_ps);
@@ -261,6 +274,15 @@ void Crack::ReadQuadCracks(const int& m,const ProblemSpecP& geom_ps)
     }
     quadCrackSidesAtFront[m].push_back(crackSidesAtFront);
     crackSidesAtFront.clear();
+
+    // Repetition information
+    int n=1; 
+    quad_ps->get("repetition",n);
+    quadRepetition[m].push_back(n);
+    
+    Vector offset=Vector(0.,0.,0.);
+    if(n>1) quad_ps->require("offset",offset);
+    quadOffset[m].push_back(offset);    
   } 
 }
 
@@ -327,9 +349,74 @@ void Crack::ReadCurvedQuadCracks(const int& m,const ProblemSpecP& geom_ps)
     }
     cquadCrackSidesAtFront[m].push_back(crackSidesAtFront);
     crackSidesAtFront.clear();
+
+    // Repetition information
+    n=1; 
+    cquad_ps->get("repetition",n);
+    cquadRepetition[m].push_back(n);
+
+    Vector offset=Vector(0.,0.,0.);
+    if(n>1) cquad_ps->require("offset",offset);
+    cquadOffset[m].push_back(offset);
   }
 }
 
+void Crack::ReadGeneralQuadCracks(const int& m,const ProblemSpecP& geom_ps)
+{
+  for(ProblemSpecP gquad_ps=geom_ps->findBlock("general_quad");
+      gquad_ps!=0; gquad_ps=gquad_ps->findNextBlock("general_quad")) {
+
+    // Four vertices (p1-p4) and four middle points (p5-p8) of the general quad
+    Point p;
+    vector<Point> vertices;
+    gquad_ps->require("p1",p);  vertices.push_back(p);
+    gquad_ps->require("p2",p);  vertices.push_back(p);
+    gquad_ps->require("p3",p);  vertices.push_back(p);
+    gquad_ps->require("p4",p);  vertices.push_back(p);
+    gquad_ps->require("p5",p);  vertices.push_back(p);
+    gquad_ps->require("p6",p);  vertices.push_back(p);
+    gquad_ps->require("p7",p);  vertices.push_back(p);
+    gquad_ps->require("p8",p);  vertices.push_back(p);
+    gquads[m].push_back(vertices);
+    vertices.clear();
+		  
+    // Mesh resolutions 
+    int n12=1,n23=1;
+    gquad_ps->get("resolution_p1_p2",n12);
+    gquadN12[m].push_back(n12);
+    gquad_ps->get("resolution_p2_p3",n23);
+    gquadN23[m].push_back(n23);
+		  
+    // Crack front
+    vector<short> crackSidesAtFront;
+    string cfsides("");
+    gquad_ps->get("crack_front_sides",cfsides);
+    if(cfsides.length()==4) {
+      for(string::const_iterator iter=cfsides.begin();
+        iter!=cfsides.end(); iter++) {
+        short atFront=NO;
+        if(*iter=='Y' || *iter=='y') atFront=YES;
+        crackSidesAtFront.push_back(atFront);
+      }
+    }
+    else if(cfsides.length()==0) {
+      for(int i=0; i<4; i++)
+      crackSidesAtFront.push_back(NO);
+    }
+    gquadCrackSidesAtFront[m].push_back(crackSidesAtFront);
+    crackSidesAtFront.clear();
+
+    // Repetition information
+    int n=1; 
+    gquad_ps->get("repetition",n);
+    gquadRepetition[m].push_back(n);
+    
+    Vector offset=Vector(0.,0.,0.);
+    if(n>1) gquad_ps->require("offset",offset);
+    gquadOffset[m].push_back(offset);    
+  }
+}  
+		  
 void Crack::ReadTriangularCracks(const int& m,const ProblemSpecP& geom_ps)
 {
   for(ProblemSpecP tri_ps=geom_ps->findBlock("triangle");
@@ -483,6 +570,11 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
                    << ") is a crack front." << endl;
             }
           }
+          // repetition information
+	  if(quadRepetition[m][i]>1) {
+	    cout << "    The quad is repeated by " << quadRepetition[m][i]
+	         << " times with the offset " << quadOffset[m][i] << "." << endl;
+	  }	  
         }
 
         // curved quad cracks
@@ -511,8 +603,44 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
 	           << ") is a crack front." << endl;
 	    }
 	  }
+	  // repetition information
+	  if(cquadRepetition[m][i]>1) {
+  	    cout << "    The quad is repeated by " << cquadRepetition[m][i]
+		 << " times with the offset " << cquadOffset[m][i] << "." << endl;
+	  }   
 	}	
 
+        // General quad cracks
+	for(int i=0;i<(int)gquads[m].size();i++) { 
+	  cout << "  * Genral quad " << i+1 << ":" << endl;
+	  // Four vertices
+	  cout << "    Four vertices:" << endl;
+	  for(int j=0;j<4;j++) 
+	    cout << "      p" << j+1 << ": " << gquads[m][i][j] << endl;
+	  // Four middle nodes
+	  cout << "    Four middle nodes: " << endl;
+          for(int j=0;j<4;j++)  
+	    cout << "      p" << j+5 << ": " << gquads[m][i][j+4] << endl;
+	  // resolution on straight sides 1 & 3
+	  cout << "    Resolution on sides p1-p2 & p3-p4: "
+	       << gquadN12[m][i] << endl;
+	  cout << "    Resolution on sides p2-p3 & p1-p4: "
+   	       << gquadN23[m][i] << endl;
+	  // crack-front sides 
+	  for(int j=0;j<4;j++) {
+	    if(gquadCrackSidesAtFront[m][i][j]) {
+	      int j2=(j+2<5 ? j+2 : 1);
+	      cout << "    Side " << j+1 << " (p" << j+1 << "-" << "p" << j2
+	      << ") is a crack front." << endl;
+	    }
+	  }
+          // repetition information
+	  if(gquadRepetition[m][i]>1) {
+	    cout << "    The quad is repeated by " << gquadRepetition[m][i]
+	    << " times with the offset " << gquadOffset[m][i] << "." << endl;
+	  }	  
+	}	
+	
         // Triangular cracks
         for(int i=0;i<(int)triangles[m].size();i++) {
           cout << "  * Triangle " << i+1 << ": meshed by [" << triNCells[m][i]
@@ -576,7 +704,7 @@ void Crack::OutputInitialCrackPlane(const int& numMatls)
 
     // Ratio of crack propagation incremental to cell-size
     if(d_doCrackPropagation!="false") {
-      cout << "  Ratio of crack increment to the cell size (dadx) = "
+      cout << "  Ratio of crack increment to cell size (dadx) = "
            << rdadx << "." << endl << endl;
     }
   }
@@ -647,13 +775,14 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
 
       if(crackType[m]!="NO_CRACK") {
         // Discretize crack segments
-        int nstart0=0;  
-        DiscretizeQuadCracks(m,nstart0);
-	DiscretizeCurvedQuadCracks(m,nstart0);
-        DiscretizeTriangularCracks(m,nstart0);
-        DiscretizeArcCracks(m,nstart0);
-        DiscretizeEllipticCracks(m,nstart0);
-        DiscretizePartialEllipticCracks(m,nstart0); 
+        int nnode0=0;  
+        DiscretizeQuadCracks(m,nnode0);
+	DiscretizeCurvedQuadCracks(m,nnode0);
+	DiscretizeGeneralQuadCracks(m,nnode0);
+        DiscretizeTriangularCracks(m,nnode0);
+        DiscretizeArcCracks(m,nnode0);
+        DiscretizeEllipticCracks(m,nnode0);
+        DiscretizePartialEllipticCracks(m,nnode0); 
 
 	// Combine crack segments 
 	CombineCrackSegments(m);
@@ -728,211 +857,360 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
   } 
 }
 
-void Crack::DiscretizeQuadCracks(const int& m,int& nstart0)
+void Crack::DiscretizeQuadCracks(const int& m,int& nnode0)
 {
-  int k,i,j,ni,nj,n1,n2,n3;
+  int k,l,i,j,ni,nj,n1,n2,n3,num;
   int nstart1,nstart2,nstart3;
   Point p1,p2,p3,p4,pt;
 
   for(k=0; k<(int)quads[m].size(); k++) { 
-    // Mesh resolutions of the quad
-    ni=quadN12[m][k];
-    nj=quadN23[m][k];
+    Vector offset=quadOffset[m][k];
+    for(l=0; l<(int)quadRepetition[m][k]; l++) {    
+      // Mesh resolutions of the quad
+      ni=quadN12[m][k];
+      nj=quadN23[m][k];
     
-    // Four vertices of the quad
-    p1=quads[m][k][0];
-    p2=quads[m][k][1];
-    p3=quads[m][k][2];
-    p4=quads[m][k][3];
+      // total number of nodes of the quad
+      num=(ni+1)*(nj+1)+ni*nj; 
+    
+      // Flag if node i is on edge j, initialized by NO 
+      short** nodeOnEdge = new short*[num];
+      for(i=0; i<num; i++) nodeOnEdge[i] = new short[4];
+      for(i=0; i<num; i++) {
+        for(j=0; j<4; j++) nodeOnEdge[i][j]=NO;
+      }       
+    
+      // Four vertices of the quad
+      p1=quads[m][k][0]+l*offset;
+      p2=quads[m][k][1]+l*offset;
+      p3=quads[m][k][2]+l*offset;
+      p4=quads[m][k][3]+l*offset;
 
-    // Nodes on sides 2 (p2-p3) and 4 (p1-p4)
-    Point* p_s2=new Point[2*nj+1];
-    Point* p_s4=new Point[2*nj+1];
-    for(j=0; j<=2*nj; j++) {
-      p_s2[j]=p2+(p3-p2)*(float)j/(2*nj);
-      p_s4[j]=p1+(p4-p1)*(float)j/(2*nj);
-    }
-
-    // Generate crack nodes
-    for(j=0; j<=nj; j++) {
-      for(i=0; i<=ni; i++) {
-        pt=p_s4[2*j]+(p_s2[2*j]-p_s4[2*j])*(float)i/ni;
-        cx[m].push_back(pt);
+      // Nodes on sides 2 (p2-p3) and 4 (p1-p4)
+      Point* p_s2=new Point[2*nj+1];
+      Point* p_s4=new Point[2*nj+1];
+      for(j=0; j<=2*nj; j++) {
+        p_s2[j]=p2+(p3-p2)*(float)j/(2*nj);
+        p_s4[j]=p1+(p4-p1)*(float)j/(2*nj);
       }
-      if(j!=nj) {
-        for(i=0; i<ni; i++) {
-          int jj=2*j+1;
-          pt=p_s4[jj]+(p_s2[jj]-p_s4[jj])*(float)(2*i+1)/(2*ni);
+
+      // Generate crack nodes
+      int count=-1; 
+      for(j=0; j<=nj; j++) {
+        for(i=0; i<=ni; i++) {
+          // Detect edge nodes      
+  	  count++;
+	  if(j==0)  nodeOnEdge[count][0]=YES;
+	  if(i==ni) nodeOnEdge[count][1]=YES;
+	  if(j==nj) nodeOnEdge[count][2]=YES;
+	  if(i==0)  nodeOnEdge[count][3]=YES;	      
+          pt=p_s4[2*j]+(p_s2[2*j]-p_s4[2*j])*(float)i/ni;
           cx[m].push_back(pt);
         }
-      } 
-    } 
-    delete [] p_s2;
-    delete [] p_s4;    
-
-    // Generate crack elements
-    for(j=0; j<nj; j++) {
-      nstart1=nstart0+(2*ni+1)*j;
-      nstart2=nstart1+(ni+1);
-      nstart3=nstart2+ni;
-      for(i=0; i<ni; i++) {
-        // the 1st element
-        n1=nstart2+i;  n2=nstart1+i;  n3=nstart1+(i+1);
-        ce[m].push_back(IntVector(n1,n2,n3));
-        // the 2nd element
-        n1=nstart2+i;  n2=nstart3+i;  n3=nstart1+i;
-        ce[m].push_back(IntVector(n1,n2,n3));
-        // the 3rd element
-        n1=nstart2+i;  n2=nstart1+(i+1);  n3=nstart3+(i+1);
-        ce[m].push_back(IntVector(n1,n2,n3));
-        // the 4th element
-        n1=nstart2+i;  n2=nstart3+(i+1);  n3=nstart3+i;
-        ce[m].push_back(IntVector(n1,n2,n3));
-      } 
-    }  
-    nstart0+=((2*ni+1)*nj+ni+1);
-
-    // Collect crack-front nodes
-    int seg0=0;
-    for(j=0; j<4; j++) {
-      if(!quadCrackSidesAtFront[m][k][j]) { seg0=j+1; break; }
-    }
-
-    for(int l=0; l<4; l++) { // Loop over sides of the quad
-      j=seg0+l;
-      if(j>3) j-=4;
-      if(quadCrackSidesAtFront[m][k][j]) {
-        int j1 = (j!=3 ? j+1 : 0);
-        Point pt1=quads[m][k][j];
-        Point pt2=quads[m][k][j1];
-        for(i=0; i<(int)ce[m].size(); i++) {
-          int ii=i;
-          if(j>1) ii= (int) ce[m].size()-(i+1);
-          n1=ce[m][ii].x();
-          n2=ce[m][ii].y();
-          n3=ce[m][ii].z();
-          for(int s=0; s<3; s++) { // Loop over sides of the element
-            int sn=n1,en=n2;
-            if(s==1) {sn=n2; en=n3;}
-            if(s==2) {sn=n3; en=n1;}
-            if(TwoLinesCoincide(pt1,pt2,cx[m][sn],cx[m][en])) {
-              cfSegNodes[m].push_back(sn);
-              cfSegNodes[m].push_back(en);
-            }
+        if(j!=nj) {
+          for(i=0; i<ni; i++) {
+ 	    count++;	
+            int jj=2*j+1;
+            pt=p_s4[jj]+(p_s2[jj]-p_s4[jj])*(float)(2*i+1)/(2*ni);
+            cx[m].push_back(pt);
           }
-        } // End of loop over i
-      }
-    } // End of loop over l
+        } 
+      } 
+      delete [] p_s2;
+      delete [] p_s4;    
+
+      // Generate crack elements
+      for(j=0; j<nj; j++) {
+        nstart1=nnode0+(2*ni+1)*j;
+        nstart2=nstart1+(ni+1);
+        nstart3=nstart2+ni;
+        for(i=0; i<ni; i++) {
+          // the 1st element
+          n1=nstart2+i;  n2=nstart1+i;  n3=nstart1+(i+1);
+          ce[m].push_back(IntVector(n1,n2,n3));
+          // the 2nd element
+          n1=nstart2+i;  n2=nstart3+i;  n3=nstart1+i;
+          ce[m].push_back(IntVector(n1,n2,n3));
+          // the 3rd element
+          n1=nstart2+i;  n2=nstart1+(i+1);  n3=nstart3+(i+1);
+          ce[m].push_back(IntVector(n1,n2,n3));
+          // the 4th element
+          n1=nstart2+i;  n2=nstart3+(i+1);  n3=nstart3+i;
+          ce[m].push_back(IntVector(n1,n2,n3));
+        } 
+      }  
+
+      // Collect crack-front nodes
+      for(int j=0; j<4; j++) { // Loop over sides of the quad
+        if(quadCrackSidesAtFront[m][k][j]) {
+          for(i=0; i<(int)ce[m].size(); i++) {
+	    // three element nodes	
+            n1=ce[m][i].x();
+            n2=ce[m][i].y();
+            n3=ce[m][i].z();
+            if(n1<nnode0 || n2<nnode0 || n3<nnode0) continue;
+            for(int s=0; s<3; s++) { // Loop over sides of the element
+              int sn=n1,en=n2;
+              if(s==1) {sn=n2; en=n3;}
+              if(s==2) {sn=n3; en=n1;}
+	      if(nodeOnEdge[sn-nnode0][j] && nodeOnEdge[en-nnode0][j]) {
+                cfSegNodes[m].push_back(sn);
+                cfSegNodes[m].push_back(en);
+              }
+            }
+          } // End of loop over i
+        }
+      } // End of loop over j
+      nnode0+=num;
+      delete [] nodeOnEdge;
+    }   
   } // End of loop over quads
 }
 
-void Crack::DiscretizeCurvedQuadCracks(const int& m,int& nstart0)
+void Crack::DiscretizeCurvedQuadCracks(const int& m,int& nnode0)
 {
-  int k,i,j,ni,nj,n1,n2,n3;
+  int k,k1,i,j,ni,nj,n1,n2,n3,num;
   int nstart1,nstart2,nstart3;
   Point p1,p2,p3,p4,pt;
 
-  for(k=0; k<(int)cquads[m].size(); k++) { 
-    // Four vertices of the curved quad
-    p1=cquads[m][k][0];
-    p2=cquads[m][k][1];
-    p3=cquads[m][k][2];
-    p4=cquads[m][k][3];
+  for(k=0; k<(int)cquads[m].size(); k++) {
+    Vector offset=cquadOffset[m][k];	  
+    for(k1=0; k1<(int)cquadRepetition[m][k]; k1++) { 	   
+      // Four vertices of the curved quad
+      p1=cquads[m][k][0]+k1*offset;
+      p2=cquads[m][k][1]+k1*offset;
+      p3=cquads[m][k][2]+k1*offset;
+      p4=cquads[m][k][3]+k1*offset;
 			
-    // Mesh resolutions on curved sides (ni) & straight sides (nj)
-    ni=cquadNStraightSides[m][k];
-    nj=cquadPtsSide2[m][k].size()+1;
+      // Mesh resolutions on curved sides (ni) & straight sides (nj)
+      ni=cquadNStraightSides[m][k];
+      nj=cquadPtsSide2[m][k].size()+1;
     
-    // Nodes on curved sides 2 (p2-p3) & 4 (p1-p4) - "j" direction
-    Point* p_s2=new Point[2*nj+1];
-    Point* p_s4=new Point[2*nj+1];
-    p_s2[0]=p2;   p_s2[2*nj]=p3;
-    p_s4[0]=p1;   p_s4[2*nj]=p4;
-    for(int l=2; l<2*nj; l+=2) {
-      p_s2[l]=cquadPtsSide2[m][k][l/2-1];
-      p_s4[l]=cquadPtsSide4[m][k][l/2-1];
-    } 	
-    for(int l=1; l<2*nj; l+=2) {
-      p_s2[l]=p_s2[l-1]+(p_s2[l+1]-p_s2[l-1])/2.;
-      p_s4[l]=p_s4[l-1]+(p_s4[l+1]-p_s4[l-1])/2.; 
-    }	
-    
-    // Generate crack nodes
-    for(j=0; j<=nj; j++) {
-      for(i=0; i<=ni; i++) { 
-        pt=p_s4[2*j]+(p_s2[2*j]-p_s4[2*j])*(float)i/ni;
-        cx[m].push_back(pt);
-      }     
-      if(j!=nj) {
-        for(i=0; i<ni; i++) { 
-          int jj=2*j+1;
-          pt=p_s4[jj]+(p_s2[jj]-p_s4[jj])*(float)(2*i+1)/(2*ni);
-          cx[m].push_back(pt);
-        }
-      }  
-    } 
-    delete [] p_s2;
-    delete [] p_s4;
+      // total number of nodes of the quad
+      num=(ni+1)*(nj+1)+ni*nj;
 
-    // Generate crack elements
-    for(j=0; j<nj; j++) {
-      nstart1=nstart0+(2*ni+1)*j;
-      nstart2=nstart1+(ni+1);
-      nstart3=nstart2+ni;
-      for(i=0; i<ni; i++) {
-        // the 1st element
-        n1=nstart2+i;  n2=nstart1+i;  n3=nstart1+(i+1);
-        ce[m].push_back(IntVector(n1,n2,n3));
-        // the 2nd element
-        n1=nstart2+i;  n2=nstart3+i;  n3=nstart1+i;
-        ce[m].push_back(IntVector(n1,n2,n3));
-        // the 3rd element
-        n1=nstart2+i;  n2=nstart1+(i+1);  n3=nstart3+(i+1);
-        ce[m].push_back(IntVector(n1,n2,n3));
-        // the 4th element
-        n1=nstart2+i;  n2=nstart3+(i+1);  n3=nstart3+i;
-        ce[m].push_back(IntVector(n1,n2,n3));
-      }  // End of loop over j
-    }  // End of loop over i
-    nstart0+=((2*ni+1)*nj+ni+1);
-
-    // Collect crack-front nodes
-    int seg0=0; 
-    for(j=0; j<4; j++) {
-      if(!cquadCrackSidesAtFront[m][k][j]) { seg0=j+1;  break; }
-    }
-    
-    for(int l=0; l<4; l++) { // Loop over sides of the quad
-      // Find the side index of the crack front "j"	    
-      j=seg0+l;   
-      if(j>3) j-=4;
-      if(cquadCrackSidesAtFront[m][k][j]) { 
-	// pt1-pt2 is crack-front      
-        int j1 = (j!=3 ? j+1 : 0);
-        Point pt1=cquads[m][k][j];
-        Point pt2=cquads[m][k][j1];
-        for(i=0; i<(int)ce[m].size(); i++) {
-          int ii=i;
-          if(j>1) ii= (int) ce[m].size()-(i+1);
-          n1=ce[m][ii].x();
-          n2=ce[m][ii].y();
-          n3=ce[m][ii].z();
-          for(int s=0; s<3; s++) { // Loop over sides of the element
-            int sn=n1,en=n2; 
-            if(s==1) {sn=n2; en=n3;}
-            if(s==2) {sn=n3; en=n1;}
-            if(TwoLinesCoincide(pt1,pt2,cx[m][sn],cx[m][en])) {
-              cfSegNodes[m].push_back(sn);
-              cfSegNodes[m].push_back(en);
-            }
-          }
-        } // End of loop over i
+      // Flag if node i is on edge j, initialized by NO 
+      short** nodeOnEdge = new short*[num];
+      for(i=0; i<num; i++) nodeOnEdge[i] = new short[4];
+      for(i=0; i<num; i++) {
+        for(j=0; j<4; j++) nodeOnEdge[i][j]=NO;
       }
-    } // End of loop over l		  
-  } 
+    
+      // Nodes on curved sides 2 (p2-p3) & 4 (p1-p4) - "j" direction
+      Point* p_s2=new Point[2*nj+1];
+      Point* p_s4=new Point[2*nj+1];
+      p_s2[0]=p2;   p_s2[2*nj]=p3;
+      p_s4[0]=p1;   p_s4[2*nj]=p4;
+      for(int l=2; l<2*nj; l+=2) {
+        p_s2[l]=cquadPtsSide2[m][k][l/2-1]+k1*offset;
+        p_s4[l]=cquadPtsSide4[m][k][l/2-1]+k1*offset;
+      } 	
+      for(int l=1; l<2*nj; l+=2) {
+        p_s2[l]=p_s2[l-1]+(p_s2[l+1]-p_s2[l-1])/2.;
+        p_s4[l]=p_s4[l-1]+(p_s4[l+1]-p_s4[l-1])/2.; 
+      }	
+    
+      // Generate crack nodes
+      int count=-1; 
+      for(j=0; j<=nj; j++) {
+        for(i=0; i<=ni; i++) { 
+          // Detect edge nodes      
+  	  count++;
+	  if(j==0)  nodeOnEdge[count][0]=YES;
+	  if(i==ni) nodeOnEdge[count][1]=YES;
+	  if(j==nj) nodeOnEdge[count][2]=YES;
+	  if(i==0)  nodeOnEdge[count][3]=YES;	      
+          pt=p_s4[2*j]+(p_s2[2*j]-p_s4[2*j])*(float)i/ni;
+          cx[m].push_back(pt);
+        }     
+        if(j!=nj) {
+          for(i=0; i<ni; i++) { 
+	    count++;	
+            int jj=2*j+1;
+            pt=p_s4[jj]+(p_s2[jj]-p_s4[jj])*(float)(2*i+1)/(2*ni);
+            cx[m].push_back(pt);
+          }
+        }  
+      } 
+      delete [] p_s2;
+      delete [] p_s4;
+
+      // Generate crack elements
+      for(j=0; j<nj; j++) {
+        nstart1=nnode0+(2*ni+1)*j;
+        nstart2=nstart1+(ni+1);
+        nstart3=nstart2+ni;
+        for(i=0; i<ni; i++) {
+          // the 1st element
+          n1=nstart2+i;  n2=nstart1+i;  n3=nstart1+(i+1);
+          ce[m].push_back(IntVector(n1,n2,n3));
+          // the 2nd element
+          n1=nstart2+i;  n2=nstart3+i;  n3=nstart1+i;
+          ce[m].push_back(IntVector(n1,n2,n3));
+          // the 3rd element
+          n1=nstart2+i;  n2=nstart1+(i+1);  n3=nstart3+(i+1);
+          ce[m].push_back(IntVector(n1,n2,n3));
+          // the 4th element
+          n1=nstart2+i;  n2=nstart3+(i+1);  n3=nstart3+i;
+          ce[m].push_back(IntVector(n1,n2,n3));
+        }  // End of loop over j
+      }  // End of loop over i
+
+      // Collect crack-front nodes
+      for(int j=0; j<4; j++) { // Loop over sides of the quad
+        if(cquadCrackSidesAtFront[m][k][j]) { 
+          for(i=0; i<(int)ce[m].size(); i++) {
+            // three element nodes        
+            n1=ce[m][i].x();
+            n2=ce[m][i].y();
+            n3=ce[m][i].z();
+  	    if(n1<nnode0 || n2<nnode0 || n3<nnode0) continue;
+            for(int s=0; s<3; s++) { // Loop over sides of the element
+              int sn=n1,en=n2; 
+              if(s==1) {sn=n2; en=n3;}
+              if(s==2) {sn=n3; en=n1;}
+	      if(nodeOnEdge[sn-nnode0][j] && nodeOnEdge[en-nnode0][j]) {
+                cfSegNodes[m].push_back(sn);
+                cfSegNodes[m].push_back(en);
+              }
+            }
+          } // End of loop over i
+        }
+      } // End of loop over j		  
+      nnode0+=num;
+      delete [] nodeOnEdge;
+    }  
+  } // End of loop over k
 }  
     
-void Crack::DiscretizeTriangularCracks(const int&m, int& nstart0)
+void Crack::DiscretizeGeneralQuadCracks(const int& m,int& nnode0)
+{
+  int k,l,i,j,ni,nj,n1,n2,n3,num;
+  int nstart1,nstart2,nstart3;
+  double ksi,eta;
+  Point pt;
+
+  for(k=0; k<(int)gquads[m].size(); k++) {
+    Vector offset=gquadOffset[m][k];
+    for(l=0; l<(int)gquadRepetition[m][k]; l++) {    
+      // Mesh resolutions of the quad
+      ni=gquadN12[m][k];
+      nj=gquadN23[m][k];
+    
+      // total number of nodes of the quad
+      num=(ni+1)*(nj+1)+ni*nj; 
+
+      // Flag if node i is on edge j, initialized by NO 
+      short** nodeOnEdge = new short*[num];
+      for(i=0; i<num; i++) nodeOnEdge[i] = new short[4];  
+      for(i=0; i<num; i++) {
+        for(j=0; j<4; j++) nodeOnEdge[i][j]=NO;
+      }	    
+    
+      // Generate crack nodes
+      int count=-1; 
+      for(j=0; j<=nj; j++) {
+        for(i=0; i<=ni; i++) {
+	  // Detect edge nodes      
+	  count++;
+          if(j==0)  nodeOnEdge[count][0]=YES;
+          if(i==ni) nodeOnEdge[count][1]=YES;
+          if(j==nj) nodeOnEdge[count][2]=YES;
+          if(i==0)  nodeOnEdge[count][3]=YES;
+	  // Intrinsic coordinates
+	  ksi=-1.0+(float)(2*i)/ni;
+          eta=-1.0+(float)(2*j)/nj;	
+	  // Global coordinates by shape function      
+	  GetGlobalCoordinates(m,k,ksi,eta,pt);       
+          cx[m].push_back(pt);
+        }
+        if(j!=nj) {
+          for(i=0; i<ni; i++) {
+            count++;		
+            // intrinsic coordinates
+	    ksi=-1.0+(float)(2*i+1)/ni;
+	    eta=-1.0+(float)(2*j+1)/nj;	  
+            // Global coordinates		 
+	    GetGlobalCoordinates(m,k,ksi,eta,pt);
+            cx[m].push_back(pt);
+          }
+        }
+      }
+  
+      // Generate crack elements
+      for(j=0; j<nj; j++) {
+        nstart1=nnode0+(2*ni+1)*j;
+        nstart2=nstart1+(ni+1);
+        nstart3=nstart2+ni;
+        for(i=0; i<ni; i++) {
+          // the 1st element
+          n1=nstart2+i;  n2=nstart1+i;  n3=nstart1+(i+1);
+          ce[m].push_back(IntVector(n1,n2,n3));
+          // the 2nd element
+          n1=nstart2+i;  n2=nstart3+i;  n3=nstart1+i;
+          ce[m].push_back(IntVector(n1,n2,n3));
+          // the 3rd element
+          n1=nstart2+i;  n2=nstart1+(i+1);  n3=nstart3+(i+1);
+          ce[m].push_back(IntVector(n1,n2,n3));
+          // the 4th element
+          n1=nstart2+i;  n2=nstart3+(i+1);  n3=nstart3+i;
+          ce[m].push_back(IntVector(n1,n2,n3));
+        }
+      }
+  
+      // Collect crack-front nodes
+      for(int j=0; j<4; j++) { // Loop over sides of the quad
+        if(gquadCrackSidesAtFront[m][k][j]) {
+          for(i=0; i<(int)ce[m].size(); i++) {
+            // three element nodes        
+            n1=ce[m][i].x();
+            n2=ce[m][i].y();
+            n3=ce[m][i].z();
+	    if(n1<nnode0 || n2<nnode0 || n3<nnode0) continue;
+            for(int s=0; s<3; s++) { // Loop over sides of the element
+              int sn=n1,en=n2;
+              if(s==1) {sn=n2; en=n3;}
+              if(s==2) {sn=n3; en=n1;}
+	      if(nodeOnEdge[sn-nnode0][j] && nodeOnEdge[en-nnode0][j]) {
+                cfSegNodes[m].push_back(sn);
+                cfSegNodes[m].push_back(en);
+              }
+            }
+          } // End of loop over i
+        }
+      } // End of loop over j
+      nnode0+=num;
+      delete [] nodeOnEdge;
+    }  
+  } // End of loop over quads
+}     
+
+void Crack::GetGlobalCoordinates(const int& m, const int& k, 
+		const double& x, const double& y, Point& pt)
+{
+  // (x,y) intrinsic coordinate of the points	 
+  // Shape functions of the serendipity eight-noded element
+  double sf[8]; 	 
+  sf[0]=(1.-x)*(1.-y)*(-1.-x-y)/4.;
+  sf[1]=(1.+x)*(1.-y)*(-1.+x-y)/4.;
+  sf[2]=(1.+x)*(1.+y)*(-1.+x+y)/4.;
+  sf[3]=(1.-x)*(1.+y)*(-1.-x+y)/4.;
+  sf[4]=(1.-x*x)*(1.-y)/2.;
+  sf[5]=(1.+x)*(1.-y*y)/2.;
+  sf[6]=(1.-x*x)*(1.+y)/2.;
+  sf[7]=(1.-x)*(1.-y*y)/2.;
+
+  // Global coordinates of (x,y)
+  double px=0., py=0., pz=0.; 
+  for(int j=0; j<8; j++) {
+    px+=sf[j]*gquads[m][k][j].x();
+    py+=sf[j]*gquads[m][k][j].y();
+    pz+=sf[j]*gquads[m][k][j].z();
+  }  
+  pt=Point(px,py,pz);
+}
+
+void Crack::DiscretizeTriangularCracks(const int&m, int& nnode0)
 {
   int k,i,j;
   int nstart1,nstart2,n1,n2,n3;
@@ -969,8 +1247,8 @@ void Crack::DiscretizeTriangularCracks(const int&m, int& nstart0)
 
     // Generate crack elements 
     for(j=0; j<neq; j++) {
-      nstart1=nstart0+j*(j+1)/2;
-      nstart2=nstart0+(j+1)*(j+2)/2;
+      nstart1=nnode0+j*(j+1)/2;
+      nstart2=nnode0+(j+1)*(j+2)/2;
       for(i=0; i<j; i++) {
         // left element
         n1=nstart1+i;  n2=nstart2+i;  n3=nstart2+(i+1);
@@ -979,12 +1257,12 @@ void Crack::DiscretizeTriangularCracks(const int&m, int& nstart0)
         n1=nstart1+i;  n2=nstart2+(i+1);  n3=nstart1+(i+1);
         ce[m].push_back(IntVector(n1,n2,n3));
       } 
-      n1=nstart0+(j+1)*(j+2)/2-1;
-      n2=nstart0+(j+2)*(j+3)/2-2;
-      n3=nstart0+(j+2)*(j+3)/2-1;
+      n1=nnode0+(j+1)*(j+2)/2-1;
+      n2=nnode0+(j+2)*(j+3)/2-2;
+      n3=nnode0+(j+2)*(j+3)/2-1;
       ce[m].push_back(IntVector(n1,n2,n3));
     } 
-    nstart0+=(neq+1)*(neq+2)/2;
+    nnode0+=(neq+1)*(neq+2)/2;
 
     // Collect crack-front nodes
     int seg0=0;
@@ -1020,7 +1298,7 @@ void Crack::DiscretizeTriangularCracks(const int&m, int& nstart0)
   }
 }
 
-void Crack::DiscretizeArcCracks(const int& m, int& nstart0)
+void Crack::DiscretizeArcCracks(const int& m, int& nnode0)
 {
   for(int k=0; k<(int)arcs[m].size(); k++) { 
     // Three points of the arc
@@ -1093,9 +1371,9 @@ void Crack::DiscretizeArcCracks(const int& m, int& nstart0)
 
     // Generate crack elements
     for(int j=1;j<=arcNCells[m][k];j++) {
-      int n1=nstart0;
-      int n2=nstart0+j;
-      int n3=nstart0+(j+1);
+      int n1=nnode0;
+      int n2=nnode0+j;
+      int n3=nnode0+(j+1);
       ce[m].push_back(IntVector(n1,n2,n3));
       // Crack front nodes
       if(arcCrkFrtSegID[m][k]==-1 || arcCrkFrtSegID[m][k]==j) {
@@ -1103,11 +1381,11 @@ void Crack::DiscretizeArcCracks(const int& m, int& nstart0)
         cfSegNodes[m].push_back(n3);
       }
     }
-    nstart0+=arcNCells[m][k]+2;
+    nnode0+=arcNCells[m][k]+2;
   }
 }
 
-void Crack::DiscretizeEllipticCracks(const int& m, int& nstart0)
+void Crack::DiscretizeEllipticCracks(const int& m, int& nnode0)
 {
   for(int k=0; k<(int)ellipses[m].size(); k++) {
     // Three points of the ellipse
@@ -1150,9 +1428,9 @@ void Crack::DiscretizeEllipticCracks(const int& m, int& nstart0)
     // Generate crack elements
     for(int j=1;j<=ellipseNCells[m][k];j++) { 
       int j1 = (j==ellipseNCells[m][k]? 1 : j+1);
-      int n1=nstart0;
-      int n2=nstart0+j;
-      int n3=nstart0+j1;
+      int n1=nnode0;
+      int n2=nnode0+j;
+      int n3=nnode0+j1;
       ce[m].push_back(IntVector(n1,n2,n3));
       // Collect crack-front nodes
       if(ellipseCrkFrtSegID[m][k]==-1 || 
@@ -1161,11 +1439,11 @@ void Crack::DiscretizeEllipticCracks(const int& m, int& nstart0)
         cfSegNodes[m].push_back(n3);
       }
     }
-    nstart0+=ellipseNCells[m][k]+1;
+    nnode0+=ellipseNCells[m][k]+1;
   } 
 }
 
-void Crack::DiscretizePartialEllipticCracks(const int& m, int& nstart0)
+void Crack::DiscretizePartialEllipticCracks(const int& m, int& nnode0)
 {
   for(int k=0; k<(int)pellipses[m].size(); k++) {
     double extent=0.0;
@@ -1208,9 +1486,9 @@ void Crack::DiscretizePartialEllipticCracks(const int& m, int& nstart0)
 
     // Generate crack elements
     for(int j=1;j<=pellipseNCells[m][k];j++) {
-      int n1=nstart0;
-      int n2=nstart0+j;
-      int n3=nstart0+j+1;
+      int n1=nnode0;
+      int n2=nnode0+j;
+      int n3=nnode0+j+1;
       ce[m].push_back(IntVector(n1,n2,n3));
       // Collect crack-front nodes
       if(pellipseCrkFrtSegID[m][k]==-1 ||
@@ -1219,7 +1497,7 @@ void Crack::DiscretizePartialEllipticCracks(const int& m, int& nstart0)
         cfSegNodes[m].push_back(n3);
       }
     }
-    nstart0+=pellipseNCells[m][k]+2;
+    nnode0+=pellipseNCells[m][k]+2;
   } 
 }
 
