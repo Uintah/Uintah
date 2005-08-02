@@ -33,6 +33,7 @@ WARNING
 namespace Uintah {
 
   class HypreSolverParams : public SolverParameters {
+
     /*========================== PUBLIC SECTION ==========================*/
   public:
 

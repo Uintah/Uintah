@@ -76,18 +76,14 @@ namespace Uintah {
       }
   
     virtual ~HypreGenericSolver(void) {
-      Print("Destroying HypreGenericSolver object\n");
-    
+      // TODO: move to HypreInterface
       /* Destroy graph objects */
-      Print("Destroying graph objects\n");
-      HYPRE_SStructGraphDestroy(_graph);
-    
+      //      HYPRE_SStructGraphDestroy(_graph);
+
       /* Destroy matrix, RHS, solution objects */
-      Print("Destroying matrix, RHS, solution objects\n");
-      HYPRE_SStructMatrixDestroy(_A);
-      HYPRE_SStructVectorDestroy(_b);
-      HYPRE_SStructVectorDestroy(_x);
-   
+      //      HYPRE_SStructMatrixDestroy(_A);
+      //      HYPRE_SStructVectorDestroy(_b);
+      //      HYPRE_SStructVectorDestroy(_x);
     }
 
     virtual void setup(void);
@@ -107,7 +103,7 @@ namespace Uintah {
     /* Utilities */
     static SolverType solverFromTitle(const string& solverTitle);
     static PrecondType precondFromTitle(const string& precondTitle);
-    static solverInterface(const SolverType& solverType);
+    static HypreInterface::InterfaceType solverInterface(const SolverType& solverType);
     void printValues(const Patch* patch,
                      const int stencilSize,
                      const int numCells,

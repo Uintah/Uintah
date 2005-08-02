@@ -14,8 +14,7 @@
 // More efficient set?
 // Reuse some data between solves?
 
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverParams.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreInterface.h>
 #include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
@@ -63,26 +62,25 @@ namespace Uintah {
     class HypreInterface implementation common to all Types
     _____________________________________________________________________*/
 
-    template<class Types>
-      void HypreInterface::makeLinearSystem(const HypreInterface& interface)
-    {
-      switch (interface) {
-      case Struct:
-        {
-          makeLinearSystemStruct();
-        }
-      case SStruct:
-        {
-          makeLinearSystemStruct();
-        }
-      default:
-        {
-          throw InternalError("Unsupported Hypre interface for makeLinearSystem: "
-                              +hypreInterface,__FILE__, __LINE__);
-        }
-      } // end switch (interface)
-    }
-
+  template<class Types>
+  void HypreInterface::makeLinearSystem(const HypreInterface& interface)
+  {
+    switch (interface) {
+    case Struct:
+      {
+        makeLinearSystemStruct();
+      }
+    case SStruct:
+      {
+        makeLinearSystemStruct();
+      }
+    default:
+      {
+        throw InternalError("Unsupported Hypre interface for makeLinearSystem: "
+                            +hypreInterface,__FILE__, __LINE__);
+      }
+    } // end switch (interface)
+  }
 
     template<class Types>
       void HypreInterface::getSolution(const HypreInterface& interface)
