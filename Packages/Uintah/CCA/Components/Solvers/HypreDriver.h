@@ -48,12 +48,7 @@ WARNING
 
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-
-// hypre includes
-#include <utilities.h>
-#include <HYPRE_struct_ls.h>
-#include <HYPRE_sstruct_ls.h>
-#include <krylov.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreUnions.h>
 
 namespace Uintah {
 
@@ -88,6 +83,7 @@ namespace Uintah {
     
     virtual ~HypreDriver(void) {}
 
+    template<class Types>
     void solve(const ProcessorGroup* pg,
                const PatchSubset* patches,
                const MaterialSubset* matls,
@@ -103,39 +99,27 @@ namespace Uintah {
     /*---------- Data members ----------*/
 
     /* Uintah input data */
-    const Level* level;
-    const MaterialSet* matlset;
-    const VarLabel* A_label;
-    Task::WhichDW which_A_dw;
-    const VarLabel* X_label;
-    const VarLabel* B_label;
-    Task::WhichDW which_b_dw;
-    bool modifies_x;
-    const VarLabel* guess_label;
-    Task::WhichDW which_guess_dw;
+    const Level*             level;
+    const MaterialSet*       matlset;
+    const VarLabel*          A_label;
+    Task::WhichDW            which_A_dw;
+    const VarLabel*          X_label;
+    const VarLabel*          B_label;
+    Task::WhichDW            which_b_dw;
+    bool                     modifies_x;
+    const VarLabel*          guess_label;
+    Task::WhichDW            which_guess_dw;
     const HypreSolverParams* params;
 
-    HypreInterface        _hypreInterface; // Currently active type
+    /* Generic Hypre interface objects */
+    HypreGenericMatrix       _A;               // Left-hand-side matrix
+    HypreGenericVector       _b;               // Right-hand-side vector
+    HypreGenericVector       _x;               // Solution vector
+    HYPRE_SStructGraph       _SStructGraph;    // Needed only by SStruct solvers
 
-    /* Hypre Struct interface objects */
-    HYPRE_StructMatrix    _StructA;
-    HYPRE_StructVector    _StructB;
-    HYPRE_StructVector    _StructX;
-
-    /* Hypre SStruct interface objects */
-    HYPRE_SStructMatrix   _SStructA;
-    HYPRE_SStructVector   _SStructB;
-    HYPRE_SStructVector   _SStructX;
-    HYPRE_SStructGraph    _SStructGraph;
-    
-    /* Hypre ParCSR interface objects */
-    HYPRE_ParCSRMatrix    _ParA;
-    HYPRE_ParVector       _ParB;
-    HYPRE_ParVector       _ParX;
-
-    /* Generating A,b,x; depends on Types */
-    void makeLinearSystemStruct(void);
-    void makeLinearSystemSStruct(void);
+    /* Generate A,b,x */
+    virtual template<class Types>
+      void makeLinearSystem(void) = 0;
 
     /* Make these functions virtual or incorporate them into a generic
        solver setup function? */

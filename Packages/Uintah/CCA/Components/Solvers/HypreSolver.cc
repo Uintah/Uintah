@@ -153,7 +153,7 @@ public:
       } else {
 	HYPRE_StructStencilCreate(3, 7, &stencil);
 	int offsets[7][3] = {{0,0,0},
-			     {1,0,0}, {-1,0,0},
+			     {-1,0,0}, {1,0,0},
 			     {0,1,0}, {0,-1,0},
 			     {0,0,1}, {0,0,-1}};
 	for(int i=0;i<7;i++)
@@ -291,6 +291,16 @@ public:
       double solve_start = Time::currentSeconds();
       int num_iterations;
       double final_res_norm;
+
+/*`==========TESTING==========*/
+#if 1 
+      cout << " I'm about to print the matrix " << endl;
+      HYPRE_StructMatrixPrint ("hypre.HA",HA, 0);
+      //HYPRE_StructMatrixPrint ("hypre.HB",HB, 0); 
+#endif
+/*===========TESTING==========`*/
+
+
       // Solve the system
       if (params->solvertype == "SMG" || params->solvertype == "smg"){
 	int time_index = hypre_InitializeTiming("SMG Setup");

@@ -105,69 +105,6 @@ namespace Uintah {
                           support symmetric SStruct in the interface */
     p->restart=true;
 
-    /* Determine solver type from title */
-    if ((p->solverTitle == "SMG") ||
-        (p->solverTitle == "smg")) {
-      p->solverType = HypreSolverParams::SMG;
-    } else if ((p->solverTitle == "PFMG") ||
-               (p->solverTitle == "pfmg")) {
-      p->solverType = HypreSolverParams::PFMG;
-    } else if ((p->solverTitle == "SparseMSG") ||
-               (p->solverTitle == "sparsemsg")) {
-      p->solverType = HypreSolverParams::SparseMSG;
-    } else if ((p->solverTitle == "CG") ||
-               (p->solverTitle == "cg") ||
-               (p->solverTitle == "PCG") ||
-               (p->solverTitle == "conjugategradient")) {
-      p->solverType = HypreSolverParams::CG;
-    } else if ((p->solverTitle == "Hybrid") ||
-               (p->solverTitle == "hybrid")) {
-      p->solverType = HypreSolverParams::Hybrid;
-    } else if ((p->solverTitle == "GMRES") ||
-               (p->solverTitle == "gmres")) {
-      p->solverType = HypreSolverParams::GMRES;
-    } else if ((p->solverTitle == "AMG") ||
-               (p->solverTitle == "amg") ||
-               (p->solverTitle == "BoomerAMG") ||
-               (p->solverTitle == "boomeramg")) {
-      p->solverType = HypreSolverParams::AMG;
-    } else if ((p->solverTitle == "FAC") ||
-               (p->solverTitle == "fac")) {
-      p->solverType = HypreSolverParams::FAC;
-    } else {
-      throw InternalError("Unknown solver type: "+p->solverTitle,
-                          __FILE__, __LINE__);
-    } // end "switch" (param->solverTitle)
-
-    /* Determine preconditioner type from title */
-    if ((p->precondTitle == "SMG") ||
-        (p->precondTitle == "smg")) {
-      p->precondType = HypreSolverParams::PrecondSMG;
-    } else if ((p->precondTitle == "PFMG") ||
-               (p->precondTitle == "pfmg")) {
-      p->precondType = HypreSolverParams::PrecondPFMG;
-    } else if ((p->precondTitle == "SparseMSG") ||
-               (p->precondTitle == "sparsemsg")) {
-      p->precondType = HypreSolverParams::PrecondSparseMSG;
-    } else if ((p->precondTitle == "Jacobi") ||
-               (p->precondTitle == "jacobi")) {
-      p->precondType = HypreSolverParams::PrecondJacobi;
-    } else if ((p->precondTitle == "Diagonal") ||
-               (p->precondTitle == "diagonal")) {
-      p->precondType = HypreSolverParams::PrecondDiagonal;
-    } else if ((p->precondTitle == "AMG") ||
-               (p->precondTitle == "amg") ||
-               (p->precondTitle == "BoomerAMG") ||
-               (p->precondTitle == "boomeramg")) {
-      p->precondType = HypreSolverParams::PrecondAMG;
-    } else if ((p->precondTitle == "FAC") ||
-               (p->precondTitle == "fac")) {
-      p->precondType = HypreSolverParams::PrecondFAC;
-    } else {
-      throw InternalError("Unknown preconditionertype: "+p->precondTitle,
-                          __FILE__, __LINE__);
-    } // end "switch" (param->precondTitle)
-
     return p;
   } // end readParameters()
 
@@ -203,6 +140,12 @@ namespace Uintah {
       throw InternalError("Wrong type of params passed to hypre solver!",
                           __FILE__, __LINE__);
 
+    HypreDriver* that = 
+      new HypreDriver(level.get_rep(), matls, A, which_A_dw,
+                      x, modifies_x, b, which_b_dw, guess, 
+                      which_guess_dw, dparams);
+    Handle<HypreDriver> handle = that;
+
     switch (domtype) {
     case TypeDescription::SFCXVariable:
     case TypeDescription::SFCYVariable:
@@ -215,13 +158,8 @@ namespace Uintah {
       
     case TypeDescription::CCVariable:
       {
-        HypreDriver<CCTypes>* that = 
-          new HypreDriver<CCTypes>(level.get_rep(), matls, A, which_A_dw,
-                                     x, modifies_x, b, which_b_dw, guess, 
-                                     which_guess_dw, dparams);
-        Handle<HypreDriver<CCTypes> > handle = that;
         task = scinew Task("Matrix solve", that,
-                           &HypreDriver<CCTypes>::solve, handle);
+                           &HypreDriver::solve<CCTypes>, handle);
         break;
       } // case CCVariable
 
