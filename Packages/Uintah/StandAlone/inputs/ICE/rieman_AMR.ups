@@ -113,81 +113,34 @@
 
        <Level>
            <Box label="1">
-              <lower>        [0.0,0.0,0.0]    </lower>
-              <upper>        [1.0,0.03,0.03]  </upper>
+              <lower>        [0.0,-0.05,-0.05]    </lower>
+              <upper>        [1.0,0.05,  0.05]  </upper>
               <extraCells>   [1,1,1]          </extraCells>
-              <patches>      [1,1,1]          </patches>
+              <patches>      [2,1,1]          </patches>
            </Box>
-           <spacing>        [0.01,0.01,0.01]  </spacing>
-       </Level>
-       <Level>
-           <Box label="2">
-              <lower>        [0.4,0.01, 0.01]   </lower>
-              <upper>        [0.9,0.02, 0.02]   </upper>
-              <extraCells>   [1,1,1]            </extraCells>
-              <patches>      [1,1,1]            </patches>
-           </Box>
-           <spacing>         [0.005,0.005,0.005]    </spacing>
-       </Level>
- 
-    <!--       
-      <Level>        
-           <Box label="1">
-              <lower>        [0.0,0.0,0.0]       </lower>
-              <upper>        [1.0,0.05,0.05]     </upper>
-              <extraCells>   [1,1,1]             </extraCells>
-              <patches>      [1,1,1]             </patches>
-           </Box>
-           <spacing>        [0.01,0.01,0.01]     </spacing>
-       </Level>
-        <Level>
-           <Box label="2">
-              <lower>        [0.4,0.01, 0.01]    </lower>
-              <upper>        [0.9,0.04, 0.04]    </upper>
-              <extraCells>   [1,1,1]             </extraCells>
-              <patches>      [1,1,1]             </patches>
-           </Box>
-           <spacing>         [0.005,0.005,0.005]  </spacing>
-        </Level>
-        <Level>
-           <Box label="3">
-              <lower>        [0.5,0.015,0.015]    </lower>
-              <upper>        [0.8,0.035,0.035]    </upper>
-              <extraCells>   [1,1,1]              </extraCells>
-              <patches>      [1,1,1]              </patches>
-           </Box>
-           <spacing>         [0.0025,0.0025,0.0025]    </spacing>
-       </Level>
-     -->     
-     
+           <spacing>        [0.05,0.1,0.1]  </spacing>
+       </Level>    
     </Grid>    
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>shockTubeSO_L2.uda</filebase>
-      <outputTimestepInterval>100</outputTimestepInterval>
-      <save label="press_equil_CC"/>
-      <save label="uvel_FCME"/>
-      <save label="vvel_FCME"/>
-      <save label="wvel_FCME"/>
+      <filebase>shockTube_AMR.uda</filebase>
+      <outputTimestepInterval>2</outputTimestepInterval>
       <save label="delP_Dilatate"/>
       <save label="press_CC"/>
-      <save label="mom_L_ME_CC"/>                         
-      <save label="mom_source_CC"/>
       <save label="rho_CC"/>
       <save label="vel_CC"/>
       <save label="temp_CC"/>
       <save label="sp_vol_CC"/>
       <save label="rho_CC_grad"/>
       <save label="temp_CC_grad"/>
-      <save label="vol_frac_CC_grad"/>
       <save label="vel_CC_mag_grad"/>
       <save label="refineFlag"/>
    </DataArchiver>
 
    <Debug>
-       <dbg_timeStart>       0.000499  </dbg_timeStart>
+       <dbg_timeStart>       1 </dbg_timeStart>
        <dbg_timeStop>        0.0005   </dbg_timeStop>  
        <dbg_outputInterval>  1e-7     </dbg_outputInterval>
        <dbg_GnuPlot>        true      </dbg_GnuPlot>
@@ -204,27 +157,36 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-       <cfl>0.15</cfl>
+       <cfl>0.25</cfl>
       <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
-        <advection type = "FirstOrder" />
+        <advection type = "SecondOrder" useCompatibleFluxes = "true"/>
         <solution technique = "EqForm" />
         
-        <TimeStepControl>
-          <Scheme_for_delT_calc> conservative     </Scheme_for_delT_calc>
-          <knob_for_speedSound>  1.0            </knob_for_speedSound>
-        </TimeStepControl>
-        
-        <!--if gradient is > knob then refine -->
-        <AMR_Refinement_Criteria_Thresholds>
-          <Density>     1e100    </Density>
-          <Temperature> 1e100    </Temperature>
-          <Pressure>    1e100    </Pressure>
-          <VolumeFrac>  1e100    </VolumeFrac>
-          <Velocity>    1e100    </Velocity>
-        </AMR_Refinement_Criteria_Thresholds>
+        <AMR>
+          <orderOfInterpolation>1  </orderOfInterpolation>
+          <do_Refluxing>  true     </do_Refluxing>
+          <Refinement_Criteria_Thresholds>
+            <Density>     1e3      </Density>
+            <Temperature> 1e3      </Temperature>
+            <Pressure>    1e3      </Pressure>
+            <Velocity>    1e100    </Velocity>
+          </Refinement_Criteria_Thresholds>
+        </AMR>
       </ICE>        
     </CFD>
+    <!--____________________________________________________________________-->
+    <!--    A M R   G R I D                                                 -->
+    <!--____________________________________________________________________--> 
+    
+    <Regridder>
+      <max_levels>1</max_levels>
+      <cell_refinement_ratio>    [[2,1,1]]  </cell_refinement_ratio>
+      <lattice_refinement_ratio> [[5,1,1],[2,1,1]]  </lattice_refinement_ratio>
+      <cell_creation_dilation>   [2,0,0]   </cell_creation_dilation>   
+      <cell_deletion_dilation>   [1,1,0]   </cell_deletion_dilation>   
+      <min_boundary_cells>       [1,1,0]   </min_boundary_cells>
+    </Regridder>
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
     <!--____________________________________________________________________-->   
