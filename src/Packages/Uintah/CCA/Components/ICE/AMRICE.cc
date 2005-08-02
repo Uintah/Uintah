@@ -572,28 +572,30 @@ void AMRICE::refine(const ProcessorGroup*,
     iteratorTest(finePatch, fineLevel, coarseLevel, new_dw);
 
     //testInterpolators<double>(new_dw,d_orderOfInterpolation,coarseLevel,fineLevel,finePatch);
+    
+    // refine pressure
+    CCVariable<double> press_CC;
+    new_dw->allocateAndPut(press_CC, lb->press_CCLabel, 0, finePatch);
+    press_CC.initialize(d_EVIL_NUM);
+    CoarseToFineOperator<double>(press_CC,  lb->press_CCLabel,0, new_dw, 
+                         invRefineRatio, finePatch, fineLevel, coarseLevel);   
 
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
-
-      CCVariable<double> rho_CC, press_CC, temp, sp_vol_CC;
+      CCVariable<double> rho_CC, temp, sp_vol_CC;
       CCVariable<Vector> vel_CC;
-      new_dw->allocateAndPut(press_CC, lb->press_CCLabel,  indx, finePatch);
+      
       new_dw->allocateAndPut(rho_CC,   lb->rho_CCLabel,    indx, finePatch);
       new_dw->allocateAndPut(sp_vol_CC,lb->sp_vol_CCLabel, indx, finePatch);
       new_dw->allocateAndPut(temp,     lb->temp_CCLabel,   indx, finePatch);
       new_dw->allocateAndPut(vel_CC,   lb->vel_CCLabel,    indx, finePatch);  
- 
-      press_CC.initialize(d_EVIL_NUM);
+      
       rho_CC.initialize(d_EVIL_NUM);
       sp_vol_CC.initialize(d_EVIL_NUM);
       temp.initialize(d_EVIL_NUM);
       vel_CC.initialize(Vector(d_EVIL_NUM));
 
-      // refine data
-      CoarseToFineOperator<double>(press_CC,  lb->press_CCLabel,indx, new_dw, 
-                         invRefineRatio, finePatch, fineLevel, coarseLevel);
-                         
+      // refine  
       CoarseToFineOperator<double>(rho_CC,    lb->rho_CCLabel,  indx, new_dw, 
                          invRefineRatio, finePatch, fineLevel, coarseLevel);      
 
@@ -879,23 +881,26 @@ void AMRICE::coarsen(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){  
     const Patch* coarsePatch = patches->get(p);
-    cout_doing << d_myworld->myrank() << "  patch " << coarsePatch->getID()<< endl;
+    cout_doing <<"  patch " << coarsePatch->getID()<< endl;
+    
+    // pressure
+    CCVariable<double> press_CC;
+    new_dw->getModifiable(press_CC, lb->press_CCLabel,  0,    coarsePatch);
+    fineToCoarseOperator<double>(press_CC,  lb->press_CCLabel, 0,   new_dw, 
+                         invRefineRatio, coarsePatch, coarseLevel, fineLevel);
 
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
 
-      CCVariable<double> rho_CC, press_CC, temp, sp_vol_CC;
+      CCVariable<double> rho_CC, temp, sp_vol_CC;
       CCVariable<Vector> vel_CC;
-      new_dw->getModifiable(press_CC, lb->press_CCLabel,  0,    coarsePatch);
+      
       new_dw->getModifiable(rho_CC,   lb->rho_CCLabel,    indx, coarsePatch);
       new_dw->getModifiable(sp_vol_CC,lb->sp_vol_CCLabel, indx, coarsePatch);
       new_dw->getModifiable(temp,     lb->temp_CCLabel,   indx, coarsePatch);
       new_dw->getModifiable(vel_CC,   lb->vel_CCLabel,    indx, coarsePatch);  
       
-      // coarsen
-      fineToCoarseOperator<double>(press_CC,  lb->press_CCLabel, 0,   new_dw, 
-                         invRefineRatio, coarsePatch, coarseLevel, fineLevel);
-                         
+      // coarsen         
       fineToCoarseOperator<double>(rho_CC,    lb->rho_CCLabel,  indx, new_dw, 
                          invRefineRatio, coarsePatch, coarseLevel, fineLevel);      
 
