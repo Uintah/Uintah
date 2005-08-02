@@ -83,7 +83,7 @@ png_cexcept_error(png_structp png_ptr, png_const_charp msg)
   fprintf(stderr, "libpng error: %s\n", msg);
 #endif
   {
-    throw SCIRun::InternalError(msg);
+    throw SCIRun::InternalError(msg, __FILE__, __LINE__);
   }
 }
 
