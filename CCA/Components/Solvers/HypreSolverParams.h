@@ -1,11 +1,30 @@
 /*--------------------------------------------------------------------------
- * File: HypreSolverParams.h
- *
- * Parameters struct for HypreSolverAMR and HypreSolverWrap.
- * and corresponding solvers. When adding a new Hypre solver, remember to
- * update this class and the functions involving solverType in HypreSolverAMR
- * and HypreSolverWrap.
- *--------------------------------------------------------------------------*/
+CLASS
+   HypreSolverParams
+   
+   Parameters struct for HypreSolverAMR and HypreInterface.
+
+GENERAL INFORMATION
+
+   File: HypreSolverParams.h
+
+   Oren E. Livne
+   Department of Computer Science
+   University of Utah
+
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+  
+   Copyright (C) 2005 SCI Group
+
+KEYWORDS
+   HypreSolverAMR, HypreInterface, HypreSolverParams, HypreGenericSolver.
+
+DESCRIPTION
+   Parameters struct for HypreSolverAMR and HypreInterface.
+ 
+WARNING
+
+   --------------------------------------------------------------------------*/
 #ifndef Packages_Uintah_CCA_Components_Solvers_HypreSolverParams_h
 #define Packages_Uintah_CCA_Components_Solvers_HypreSolverParams_h
 
@@ -14,13 +33,7 @@
 namespace Uintah {
 
   class HypreSolverParams : public SolverParameters {
-    /*_____________________________________________________________________
-      class HypreSolverParams:
-      Input parameters struct.
-      Add to this struct all parameters of all Hypre solvers to be used
-      so that we can control them from the same section of the sus input
-      file.
-      _____________________________________________________________________*/
+    /*========================== PUBLIC SECTION ==========================*/
   public:
 
     HypreSolverParams() {}
@@ -34,8 +47,10 @@ namespace Uintah {
     int logging;             // Log Hypre solver (using Hypre options)
     bool symmetric;          // Is LHS matrix symmetric
     bool restart;            // Allow solver to restart if not converged
-    SolverType solverType;   // Hypre Solver type
-    PrecondType precondType; // Hypre Preconditioner type
+    //    SolverType solverType;   // Hypre Solver type
+    //    PrecondType precondType; // Hypre Preconditioner type
+
+    /* TODO: Move/copy these parameters to each specific solver? */
 
     /* SMG parameters */
     int nPre;                // # pre relaxations for Hypre SMG solver

@@ -101,7 +101,7 @@ namespace Uintah {
       p->jump = 0;
       p->logging = 0;
     }
-    p->symmetric=true; /* TODO: turn this off in AMR mode until we can
+    p->symmetric=true; /* TODO: this is currently turned off in AMR mode until we can
                           support symmetric SStruct in the interface */
     p->restart=true;
 
@@ -140,12 +140,6 @@ namespace Uintah {
       throw InternalError("Wrong type of params passed to hypre solver!",
                           __FILE__, __LINE__);
 
-    HypreDriver* that = 
-      new HypreDriver(level.get_rep(), matls, A, which_A_dw,
-                      x, modifies_x, b, which_b_dw, guess, 
-                      which_guess_dw, dparams);
-    Handle<HypreDriver> handle = that;
-
     switch (domtype) {
     case TypeDescription::SFCXVariable:
     case TypeDescription::SFCYVariable:
@@ -158,8 +152,13 @@ namespace Uintah {
       
     case TypeDescription::CCVariable:
       {
+        HypreDriver<CCTypes>* that = 
+          new HypreDriver<CCTypes>(level.get_rep(), matls, A, which_A_dw,
+                                     x, modifies_x, b, which_b_dw, guess, 
+                                     which_guess_dw, dparams);
+        Handle<HypreDriver<CCTypes> > handle = that;
         task = scinew Task("Matrix solve", that,
-                           &HypreDriver::solve<CCTypes>, handle);
+                           &HypreDriver<CCTypes>::solve, handle);
         break;
       } // case CCVariable
 
