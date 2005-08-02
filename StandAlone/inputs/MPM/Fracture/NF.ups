@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
-<!-- @version: Updated 8/1/2005-->
+<!-- @version: Updated 8/2/2005-->
 <!-- Units: length in um; time in us; weight in ug-->
 
 <Uintah_specification>
@@ -17,7 +17,7 @@
 	<timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
-        <filebase>NFJK.uda</filebase>
+        <filebase>NF.uda</filebase>
 	<outputInterval>8.0e-3</outputInterval>
         <save label = "p.x"/>
         <save label = "p.volume"/>
@@ -132,110 +132,8 @@
                            <point><val>[11.84, 19.6,  -.25]</val></point>
                         </points_curved_side4>
                         <crack_front_sides>YNNN</crack_front_sides>
-                      </curved_quad>
-                      <curved_quad>
-                        <p1> [15.1, 17.1, -0.25]  </p1>
-                        <p2> [15.1, 17.1,  1.25]  </p2>
-                        <p3> [18.1, 20.1,  1.25] </p3>
-                        <p4> [18.1, 20.1, -0.25] </p4>
-                        <resolution_straight_sides>1</resolution_straight_sides>
-                        <points_curved_side2>
-                           <point><val>[15.6,  17.33, 1.25]</val></point>
-                           <point><val>[16.1,  17.66, 1.25]</val></point>
-                           <point><val>[16.6,  18.05, 1.25]</val></point>
-                           <point><val>[17.05, 18.465,1.25]</val></point>
-                           <point><val>[17.287,18.78, 1.25]</val></point>
-                           <point><val>[17.6,  19.19, 1.25]</val></point>
-                           <point><val>[17.84, 19.6,  1.25]</val></point>
-                        </points_curved_side2>
-                        <points_curved_side4>
-                           <point><val>[15.6,  17.33, -.25]</val></point>
-                           <point><val>[16.1,  17.66, -.25]</val></point>
-                           <point><val>[16.6,  18.05, -.25]</val></point>
-                           <point><val>[17.05, 18.465,-.25]</val></point>
-                           <point><val>[17.287,18.78, -.25]</val></point>
-                           <point><val>[17.6,  19.19, -.25]</val></point>
-                           <point><val>[17.84, 19.6,  -.25]</val></point>
-                        </points_curved_side4>
-                        <crack_front_sides>YNNN</crack_front_sides>
-                      </curved_quad>
-                      <curved_quad>
-                        <p1> [21.1, 17.1, -0.25]  </p1>
-                        <p2> [21.1, 17.1,  1.25]  </p2>
-                        <p3> [24.1, 20.1,  1.25] </p3>
-                        <p4> [24.1, 20.1, -0.25] </p4>
-                        <resolution_straight_sides>1</resolution_straight_sides>
-                        <points_curved_side2>
-                           <point><val>[21.6,  17.33, 1.25]</val></point>
-                           <point><val>[22.1,  17.66, 1.25]</val></point>
-                           <point><val>[22.6,  18.05, 1.25]</val></point>
-                           <point><val>[23.05, 18.465,1.25]</val></point>
-                           <point><val>[23.287,18.78, 1.25]</val></point>
-                           <point><val>[23.6,  19.19, 1.25]</val></point>
-                           <point><val>[23.84, 19.6,  1.25]</val></point>
-                        </points_curved_side2>
-                        <points_curved_side4>
-                           <point><val>[21.6,  17.33, -.25]</val></point>
-                           <point><val>[22.1,  17.66, -.25]</val></point>
-                           <point><val>[22.6,  18.05, -.25]</val></point>
-                           <point><val>[23.05, 18.465,-.25]</val></point>
-                           <point><val>[23.287,18.78, -.25]</val></point>
-                           <point><val>[23.6,  19.19, -.25]</val></point>
-                           <point><val>[23.84, 19.6,  -.25]</val></point>
-                        </points_curved_side4>
-                        <crack_front_sides>YNNN</crack_front_sides>
-                      </curved_quad>
-                      <curved_quad>
-                        <p1> [27.1, 17.1, -0.25]  </p1>
-                        <p2> [27.1, 17.1,  1.25]  </p2>
-                        <p3> [30.1, 20.1,  1.25] </p3>
-                        <p4> [30.1, 20.1, -0.25] </p4>
-                        <resolution_straight_sides>1</resolution_straight_sides>
-                        <points_curved_side2>
-                           <point><val>[27.6,  17.33, 1.25]</val></point>
-                           <point><val>[28.1,  17.66, 1.25]</val></point>
-                           <point><val>[28.6,  18.05, 1.25]</val></point>
-                           <point><val>[29.05, 18.465,1.25]</val></point>
-                           <point><val>[29.287,18.78, 1.25]</val></point>
-                           <point><val>[29.6,  19.19, 1.25]</val></point>
-                           <point><val>[29.84, 19.6,  1.25]</val></point>
-                        </points_curved_side2>
-                        <points_curved_side4>
-                           <point><val>[27.6,  17.33, -.25]</val></point>
-                           <point><val>[28.1,  17.66, -.25]</val></point>
-                           <point><val>[28.6,  18.05, -.25]</val></point>
-                           <point><val>[29.05, 18.465,-.25]</val></point>
-                           <point><val>[29.287,18.78, -.25]</val></point>
-                           <point><val>[29.6,  19.19, -.25]</val></point>
-                           <point><val>[29.84, 19.6,  -.25]</val></point>
-                        </points_curved_side4>
-                        <crack_front_sides>YNNN</crack_front_sides>
-                      </curved_quad>
-                      <curved_quad>
-                        <p1> [33.1, 17.1, -0.25]  </p1>
-                        <p2> [33.1, 17.1,  1.25]  </p2>
-                        <p3> [36.1, 20.1,  1.25] </p3>
-                        <p4> [36.1, 20.1, -0.25] </p4>
-                        <resolution_straight_sides>1</resolution_straight_sides>
-                        <points_curved_side2>
-                           <point><val>[33.6,  17.33, 1.25]</val></point>
-                           <point><val>[34.1,  17.66, 1.25]</val></point>
-                           <point><val>[34.6,  18.05, 1.25]</val></point>
-                           <point><val>[35.05, 18.465,1.25]</val></point>
-                           <point><val>[35.287,18.78, 1.25]</val></point>
-                           <point><val>[35.6,  19.19, 1.25]</val></point>
-                           <point><val>[35.84, 19.6,  1.25]</val></point>
-                        </points_curved_side2>
-                        <points_curved_side4>
-                           <point><val>[33.6,  17.33, -.25]</val></point>
-                           <point><val>[34.1,  17.66, -.25]</val></point>
-                           <point><val>[34.6,  18.05, -.25]</val></point>
-                           <point><val>[35.05, 18.465,-.25]</val></point>
-                           <point><val>[35.287,18.78, -.25]</val></point>
-                           <point><val>[35.6,  19.19, -.25]</val></point>
-                           <point><val>[35.84, 19.6,  -.25]</val></point>
-                        </points_curved_side4>
-                        <crack_front_sides>YNNN</crack_front_sides>
+                        <repetition>5</repetition>
+                        <offset>[6.0, 0.0, 0.0]</offset>
                       </curved_quad>
                    </crack_segments>
                 </crack>
