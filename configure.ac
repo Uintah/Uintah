@@ -1361,10 +1361,13 @@ case $host in
        CXXFLAGS="-m32 $CXXFLAGS"
        AC_MSG_RESULT(-m32)
     else 
-      if test "$enable_64bit" = "yes" -a $NBITS=32 -a "$CC" != "icc"; then
+      if test "$enable_64bit" = "yes" -a $NBITS=32; then
         NBITS=64
-        CFLAGS="-m64 $CFLAGS"
-        CXXFLAGS="-m64 $CXXFLAGS"
+        # Do not set this flag when using intel compilers
+        if test "$CC" != "icc"; then
+           CFLAGS="-m64 $CFLAGS"
+           CXXFLAGS="-m64 $CXXFLAGS"
+        fi         
         AC_MSG_RESULT(-m64)
       else 
         AC_MSG_RESULT(no)
