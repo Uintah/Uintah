@@ -239,6 +239,25 @@ static const string DrawNoise =
 "MOV result.color, C; \n"
 "END";
 
+static const string DrawNoise_NV =
+"!!ARBfp1.0 \n"
+"TEMP X; \n"
+"TEMP C; \n"
+"TEX X, fragment.texcoord[1], texture[1], RECT; \n"
+"TEX C, X.z, texture[3], 1D; \n"
+"MOV result.color, C; \n"
+"END";
+
+static const string default_shader =
+"!!ARBfp1.0 \n"
+"TEX result.color, fragment.texcoord[0], texture[0], 2D; \n"
+"END";
+
+static const string default_shader_rect =
+"!!ARBfp1.0 \n"
+"TEX result.color, fragment.texcoord[0], texture[0], 2D; \n"
+"END";
+
 
 } // end namespace SCIRun
 

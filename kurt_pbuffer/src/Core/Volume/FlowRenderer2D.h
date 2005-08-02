@@ -94,15 +94,19 @@ protected:
   Array2<float> cmap_array_;
   unsigned int cmap_tex_;
   bool cmap_dirty_;
+  bool cmap_size_dirty_;
 
   Array3<float> adv_array_;
   unsigned int adv_tex_;
   bool adv_dirty_;
   bool adv_is_initialized_;
+  int adv_accums_;
+  
   Array3<float> conv_array_;
   unsigned int conv_tex_;
   bool conv_dirty_;
   bool conv_is_initialized_;
+  int conv_accums_;
 
   Array3<float> flow_array_;
   unsigned int flow_tex_;
@@ -112,6 +116,7 @@ protected:
   Array3<float> noise_array_;
   unsigned int noise_tex_;
   bool build_noise_;
+  bool reload_noise_;
   
   bool use_pbuffer_;
   int buffer_width_;
@@ -151,28 +156,30 @@ protected:
   Ray compute_view();
   void create_pbuffers(int w, int h);
 
+  // bind and release
+  void bind_2d_texture( unsigned int tex, int reg = 0 );
+  void release_2d_texture( int reg = 0 );
+  void bind_rectangle_texture( unsigned int tex, int reg = 0 );
+  void release_rectangle_texture( int reg = 0 );
+
+  void build_colormap();
   void load_colormap();
   void bind_colormap( int reg = 0);
   void release_colormap( int reg = 0);
 
-  void load_flow_tex();
-  void bind_flow_tex( int reg = 0 );
-  void release_flow_tex( int reg = 0);
+  void build_flow_tex();
+  void load_flow_tex(unsigned int tex_target = GL_TEXTURE_2D);
 
-  void load_noise(float scale = 1.0, float shftx = 0, float shfty = 0);
-  void rebuild_noise(){ build_noise_ = true; }
-  void bind_noise( int reg = 0 );
-  void release_noise( int reg = 0 );
+  void build_noise(int seed = 1);
+  void load_noise(unsigned int tex_target = GL_TEXTURE_2D, float scale = 1.0,
+                  float shftx = 0, float shfty = 0);
+  void rebuild_noise(){ build_noise_ = true; reload_noise_ = true; }
 
   void build_adv(float scale,pair<float, float>& shift);
   void load_adv();
-  void bind_adv( int reg = 0 );
-  void release_adv( int reg = 0 );
 
   void build_conv(float scale);
   void load_conv();
-  void bind_conv( int reg = 0 );
-  void release_conv( int reg = 0 );
 
   void next_shift(int *shft);
 
@@ -189,10 +196,13 @@ protected:
   void conv_rewire();
   float get_interpolated_value( Array3<float>& array, float x, float y );
 
+  void draw_noise_in_pbuffer(Pbuffer*& pb);
 #endif
   
 public:
   void reset();
+  void set_adv_accums( int i ){ adv_accums_ = i; }
+  void set_conv_accums( int i ){ conv_accums_ = i; }
 
 };
 

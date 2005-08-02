@@ -38,8 +38,12 @@ itcl_class SCIRun_Visualization_FlowVis2D {
     method set_defaults {} {
 	global $this-vis_type
         global $this-clear
+        global $this-adv_accums
+        global $this-conv_accums
         set $this-vis_type 0
         set $this-clear 1
+        set $this-adv_accums 10
+        set $this-conv_accums 10
     }
 
     method ui {} {
@@ -60,10 +64,17 @@ itcl_class SCIRun_Visualization_FlowVis2D {
             -variable $this-vis_type
         radiobutton $w.f.lea -text LEA -value 2 \
             -variable $this-vis_type
+        label $w.f.advl -text "advections per frame"
+        scale $w.f.adv -variable $this-adv_accums -from 0 -to 20 \
+            -orient horizontal
+        label $w.f.convl -text "convolutions per frame"
+        scale $w.f.conv -variable $this-conv_accums -from 0 -to 20 \
+            -orient horizontal
         button $w.f.clear -text "Clear buffers" \
             -command "$this clear"
     
-        pack  $w.f.lic $w.f.ibfv $w.f.lea $w.f.clear -side top
+        pack  $w.f.lic $w.f.ibfv $w.f.lea $w.f.clear \
+            $w.f.advl $w.f.adv $w.f.convl $w.f.conv -side top
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
