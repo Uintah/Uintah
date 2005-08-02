@@ -809,8 +809,10 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   if (d_sharedState->getCurrentTopLevelTimeStep() > 1)
     d_initialDt = 10000.0;
   
-  cout_doing << "---------------------------------------------------------Level " 
-             <<level->getIndex()<< "  step " << step << endl;  
+  double AMR_subCycleProgressVar = double(step)/double(nsteps);  
+  
+  cout_doing << "--------------------------------------------------------L-" 
+             <<level->getIndex()<< "  progressVar " << AMR_subCycleProgressVar << endl;  
   cout_doing << "ICE::scheduleTimeAdvance\t\t\t\tL-" <<level->getIndex()<< endl;
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
@@ -821,7 +823,7 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
 
-  double AMR_subCycleProgressVar = double(step)/double(nsteps);
+
   
   if(d_turbulence){
     // The turblence model is also called directly from
@@ -1641,7 +1643,8 @@ void ICE::computesRequires_AMR_Refluxing(Task* task,
                                     const double AMR_subCycleProgressVar,
                                     const MaterialSet* ice_matls)
 {
-  cout_doing << "     computesRequires_AMR_Refluxing" << endl;
+  cout_doing << "     computesRequires_AMR_Refluxing  progressVar " 
+             << AMR_subCycleProgressVar << endl;
   Ghost::GhostType  gn   = Ghost::None;
   task->computes(lb->mass_X_FC_fluxLabel);
   task->computes(lb->mass_Y_FC_fluxLabel);
@@ -1660,7 +1663,7 @@ void ICE::computesRequires_AMR_Refluxing(Task* task,
   task->computes(lb->int_eng_Z_FC_fluxLabel);  
   
   
-  if(AMR_subCycleProgressVar> 0){
+  if(AMR_subCycleProgressVar < 1.0 && AMR_subCycleProgressVar > 0.0){
     task->requires(Task::OldDW, lb->mass_X_FC_fluxLabel, gn, 0);
     task->requires(Task::OldDW, lb->mass_Y_FC_fluxLabel, gn, 0);
     task->requires(Task::OldDW, lb->mass_Z_FC_fluxLabel, gn, 0);
@@ -1690,7 +1693,7 @@ void ICE::computesRequires_AMR_Refluxing(Task* task,
     task->computes(rvar->var_Y_FC_flux);
     task->computes(rvar->var_Z_FC_flux);
     
-    if(AMR_subCycleProgressVar> 0){
+    if(AMR_subCycleProgressVar < 1.0 && AMR_subCycleProgressVar > 0.0){
       task->requires(Task::OldDW, rvar->var_X_FC_flux, gn, 0);
       task->requires(Task::OldDW, rvar->var_Y_FC_flux, gn, 0);
       task->requires(Task::OldDW, rvar->var_Z_FC_flux, gn, 0);
@@ -4750,7 +4753,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
     const Patch* patch = patches->get(p);
  
     cout_doing << "Doing Advect and Advance in Time on patch " 
-               << patch->getID() << "\t\t ICE \tL-" <<L_indx<< endl;
+               << patch->getID() << "\t\t ICE \tL-" <<L_indx
+               << " progressVar " << AMR_subCycleProgressVar << endl;
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(),level);

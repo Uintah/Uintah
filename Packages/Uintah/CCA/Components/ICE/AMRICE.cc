@@ -95,8 +95,8 @@ void AMRICE::addRefineDependencies(Task* task,
                                    int step, 
                                    int nsteps)
 {
-  cout_doing << d_myworld->myrank() << " \t addRefineDependencies (" << var->getName()
-           << ") \t step " << step << " nsteps " << nsteps << endl;
+  cout_dbg << d_myworld->myrank() << " \t addRefineDependencies (" << var->getName()
+           << ")"<< endl;
   ASSERTRANGE(step, 0, nsteps+1);
   
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -120,8 +120,8 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
                                      int nsteps)
 {
   if(fineLevel->getIndex() > 0  && doICEOnLevel(fineLevel->getIndex())){
-    cout_doing << d_myworld->myrank() << " AMRICE::scheduleRefineInterface \t\tL-" 
-               << fineLevel->getIndex() << " step "<< step <<'\n';
+    cout_doing << d_myworld->myrank() << " AMRICE::scheduleRefineInterface \t\t\tL-" 
+               << fineLevel->getIndex() << " progressVar "<< (double)step/(double)nsteps <<'\n';
                
     double subCycleProgress = double(step)/double(nsteps);
     
@@ -179,8 +179,8 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
   const Level* level = getLevel(patches);
   if(level->getIndex() > 0){     
     cout_doing << d_myworld->myrank() 
-               << " Doing refineCoarseFineInterface"<< "\t\t\t\t AMRICE L-" 
-               << level->getIndex() << " step " << subCycleProgress<<endl;
+               << " Doing refineCoarseFineInterface"<< "\t\t\t AMRICE L-" 
+               << level->getIndex() << " progressVar " << subCycleProgress<<endl;
     int  numMatls = d_sharedState->getNumICEMatls();
     bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
       
@@ -492,8 +492,10 @@ _____________________________________________________________________*/
 void AMRICE::scheduleRefine(const PatchSet* patches,
                                SchedulerP& sched)
 {
+  const Level* fineLevel = getLevel(patches);
   cout_doing << d_myworld->myrank() 
-             << " AMRICE::scheduleRefine\t\t\t\tP-" << *patches << '\n';
+             << " AMRICE::scheduleRefine\t\t\t\tL-" 
+             <<  fineLevel->getIndex() << " P-" << *patches << '\n';
   Task* task = scinew Task("refine",this, &AMRICE::refine);
 
   MaterialSubset* subset = scinew MaterialSubset;
@@ -868,7 +870,7 @@ void AMRICE::coarsen(const ProcessorGroup*,
   const Level* coarseLevel = getLevel(patches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
   cout_doing << d_myworld->myrank()
-             << " Doing coarsen \t\t\t\t\t\t AMRICE L-" <<fineLevel->getIndex();
+             << " Doing coarsen \t\t\t\t\t AMRICE L-" <<fineLevel->getIndex();
   
   IntVector rr(fineLevel->getRefinementRatio());
   double invRefineRatio = 1./(rr.x()*rr.y()*rr.z());
@@ -1115,7 +1117,7 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
   for(int c_p=0;c_p<coarsePatches->size();c_p++){  
     const Patch* coarsePatch = coarsePatches->get(c_p);
     
-    cout_doing << d_myworld->myrank() << "  patch " << coarsePatch->getID()<< endl;
+    cout_doing <<"  patch " << coarsePatch->getID()<< endl;
 
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
@@ -1558,7 +1560,7 @@ void AMRICE::scheduleReflux_applyCorrection(const LevelP& coarseLevel,
 {
  
   cout_doing << d_myworld->myrank() 
-             << " AMRICE::scheduleReflux_applyCorrectionFluxes\tL-" 
+             << " AMRICE::scheduleReflux_applyCorrectionFluxes\t\tL-" 
              << coarseLevel->getIndex() <<endl;
              
   Task* task = scinew Task("reflux_applyCorrectionFluxes",
@@ -1636,7 +1638,7 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
   
   for(int c_p=0;c_p<coarsePatches->size();c_p++){  
     const Patch* coarsePatch = coarsePatches->get(c_p);
-    cout_doing << d_myworld->myrank() << "  patch " << coarsePatch->getID()<< endl;
+    cout_doing << "  patch " << coarsePatch->getID()<< endl;
     
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);     
@@ -1831,7 +1833,7 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   if(!doICEOnLevel(coarseLevel->getIndex()+1))
     return;
   cout_doing << d_myworld->myrank() 
-             << " AMRICE::scheduleErrorEstimate \t\t\t\tL-" 
+             << " AMRICE::scheduleErrorEstimate \t\t\tL-" 
              << coarseLevel->getIndex() << '\n';
   
   Task* t = scinew Task("AMRICE::errorEstimate", 

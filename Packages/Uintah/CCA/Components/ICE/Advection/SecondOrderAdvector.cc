@@ -613,7 +613,8 @@ void SecondOrderAdvector::q_FC_PlusFaces(
 
 /*_____________________________________________________________________
  Function~ q_FC_flux_operator
-  Compute q at the face center of each cell
+ Compute the flux of q across a face.  The flux is need by the AMR 
+ refluxing operation
 _____________________________________________________________________*/
 template<class T, class V>
 void SecondOrderAdvector::q_FC_flux_operator(CellIterator iter, 
@@ -680,8 +681,8 @@ void SecondOrderAdvector::q_FC_fluxes(const CCVariable<T>& /*q_CC*/,
     new_dw->allocateAndPut(q_Y_FC_flux, ylabel,indx, patch);
     new_dw->allocateAndPut(q_Z_FC_flux, zlabel,indx, patch); 
 
-    if(AMR_subCycleProgressVar == 0){
-      q_X_FC_flux.initialize(T(0.0));
+    if(AMR_subCycleProgressVar == 0){   // at the beginning of the cycle 
+      q_X_FC_flux.initialize(T(0.0));   // initialize the fluxes
       q_Y_FC_flux.initialize(T(0.0));
       q_Z_FC_flux.initialize(T(0.0));
     }else{
@@ -706,7 +707,6 @@ void SecondOrderAdvector::q_FC_fluxes(const CCVariable<T>& /*q_CC*/,
     CellIterator XFC_iter = patch->getSFCXIterator(offset);
     CellIterator YFC_iter = patch->getSFCYIterator(offset);
     CellIterator ZFC_iter = patch->getSFCZIterator(offset);
-    cout << " XFC_iter" << XFC_iter << " YFC_iter " << YFC_iter << " ZFC_iter " << ZFC_iter << endl;
     
     q_FC_flux_operator<SFCXVariable<T>, T>(XFC_iter, adj_offset[0],LEFT,
                                            q_OAFS,q_X_FC_flux); 
@@ -717,7 +717,8 @@ void SecondOrderAdvector::q_FC_fluxes(const CCVariable<T>& /*q_CC*/,
     q_FC_flux_operator<SFCZVariable<T>, T>(ZFC_iter, adj_offset[2],BACK,
                                            q_OAFS,q_Z_FC_flux);
                                            
- /*`==========TESTING==========*/                                           
+ /*`==========TESTING==========*/ 
+#ifdef SPEW                                           
     vector<Patch::FaceType>::const_iterator itr;  
     for (itr  = patch->getCoarseFineInterfaceFaces()->begin(); 
          itr != patch->getCoarseFineInterfaceFaces()->end(); ++itr){
@@ -742,7 +743,8 @@ void SecondOrderAdvector::q_FC_fluxes(const CCVariable<T>& /*q_CC*/,
       if(patchFace == Patch::zminus || patchFace == Patch::zplus){
         cout << half << " \t difference: q " << q_Z_FC_flux[half] <<  endl;
       } 
-    } 
+    }
+#endif 
   /*===========TESTING==========`*/ 
   }   
 }
