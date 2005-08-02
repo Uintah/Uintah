@@ -183,16 +183,28 @@ SCIRunFramework::createComponentInstance(const std::string& name,
 #if HAVE_BABEL 
     if (mod->getName() == "babel") {
         ci = ((BabelComponentModel*) mod)->createInstance(name, type);
-        ci->setComponentProperties(properties);
-    } else 
-#endif 
-    {
+        if (ci) {
+             ci->setComponentProperties(properties);
+        } else {
+            std::cerr << "Error: failed to create BabelComponentInstance"
+                      << std::endl;
+            return ComponentID::pointer(0);
+	}
+    } else {
         ci = mod->createInstance(name, type, properties);
+        if (! ci) {
+            std::cerr << "Error: failed to create ComponentInstance"
+                      << std::endl;
+            return ComponentID::pointer(0);
+        }
     }
-    if (!ci) {
+#else
+    ci = mod->createInstance(name, type, properties);
+    if (! ci) {
         std::cerr << "Error: failed to create ComponentInstance" << std::endl;
         return ComponentID::pointer(0);
     }
+#endif 
 
     sci::cca::ComponentID::pointer cid = registerComponent(ci, name);
 
@@ -419,7 +431,6 @@ SCIRunFramework::createEmptyFramework()
 int
 SCIRunFramework::registerLoader(const ::std::string& loaderName, const SSIDL::array1<std::string>& slaveURLs)
 {
-std::cerr << "SCIRunFramework::registerLoader" << std::endl;
   resourceReference* rr = new resourceReference(loaderName, slaveURLs);
   rr->print();
   cca->addLoader(rr);
