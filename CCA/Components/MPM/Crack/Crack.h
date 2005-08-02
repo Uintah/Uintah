@@ -195,11 +195,20 @@ class Crack
     vector<vector<vector<Point> > > quads;
     vector<vector<int> >            quadN12,quadN23;       
     vector<vector<vector<short> > > quadCrackSidesAtFront;
+    vector<vector<int> >            quadRepetition;
+    vector<vector<Vector> >         quadOffset;    
     vector<vector<vector<Point> > > cquads;
     vector<vector<int> >            cquadNStraightSides;
     vector<vector<vector<Point> > > cquadPtsSide2;
     vector<vector<vector<Point> > > cquadPtsSide4;
     vector<vector<vector<short> > > cquadCrackSidesAtFront;
+    vector<vector<int> >            cquadRepetition;
+    vector<vector<Vector> >         cquadOffset;
+    vector<vector<vector<Point> > > gquads;
+    vector<vector<int> >            gquadN12,gquadN23;
+    vector<vector<vector<short> > > gquadCrackSidesAtFront;
+    vector<vector<int> >            gquadRepetition;
+    vector<vector<Vector> >         gquadOffset;    
     vector<vector<vector<Point> > > triangles;
     vector<vector<int> >            triNCells;
     vector<vector<vector<short> > > triCrackSidesAtFront;
@@ -242,6 +251,7 @@ class Crack
            // Private methods in ReadAndDiscretizeCracks.cc
     void   ReadQuadCracks(const int&,const ProblemSpecP&);
     void   ReadCurvedQuadCracks(const int&,const ProblemSpecP&);
+    void   ReadGeneralQuadCracks(const int&,const ProblemSpecP&);
     void   ReadTriangularCracks(const int&,const ProblemSpecP&);
     void   ReadArcCracks(const int&,const ProblemSpecP&);
     void   ReadEllipticCracks(const int&,const ProblemSpecP&);
@@ -249,6 +259,9 @@ class Crack
     void   OutputInitialCrackPlane(const int&);
     void   DiscretizeQuadCracks(const int&,int&);
     void   DiscretizeCurvedQuadCracks(const int&,int&);
+    void   DiscretizeGeneralQuadCracks(const int&,int&);
+    void   GetGlobalCoordinates(const int&, const int&, 
+	                const double&, const double&, Point&);
     void   DiscretizeTriangularCracks(const int&,int&);
     void   DiscretizeArcCracks(const int&,int&);
     void   DiscretizeEllipticCracks(const int&,int&);
