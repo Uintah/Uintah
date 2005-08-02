@@ -450,7 +450,15 @@ Stealth::getNextLocation( Camera* new_camera )
     return;
   }
 
-  segment_percentage_ += accel_cnt_;
+  // This used to use the accel_cnt_ for stepping segment_percentage_.
+  // However, this value was an integer the counted the number of
+  // times you pressed accelerate.  If you wanted to set the speed
+  // between these intervals you were out of luck.  Now, since using
+  // the actuall speed_ variable (which is scaled by
+  // translate_scale_), you can get slow and really fast speeds.  I'm
+  // multiplying by 100 to make the default close to what it was with
+  // the old method.
+  segment_percentage_ += speed_*100.0;
 
   if( segment_percentage_ < 0 ) // Moving backward
     {
