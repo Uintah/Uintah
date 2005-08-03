@@ -39,31 +39,50 @@
  */
 
 #include <SCIRun/CCA/CCAException.h>
+#include <Core/Util/NotFinished.h>
+//#include <iostream>
 
 namespace SCIRun {
 
-CCAException::CCAException(const std::string& description)
-  : description(description)
+CCAException::CCAException() : type(sci::cca::Nonstandard)
 {
+    addReference();
 }
 
-CCAException::CCAException(const CCAException& copy)
-  : description(copy.description)
+CCAException::CCAException(const std::string &msg)
+  : type(sci::cca::Nonstandard), message(msg)
 {
+    addReference();
+}
+
+CCAException::CCAException(sci::cca::CCAExceptionType type, const std::string &msg)
+  : type(type), message(msg)
+{
+    addReference();
 }
 
 CCAException::~CCAException()
 {
+std::cerr << "CCAException::~CCAException" << std::endl;
+    deleteReference();
 }
 
-const char* CCAException::message() const
+// TODO: implement stack trace
+std::string CCAException::getTrace()
 {
-  return description.c_str();
+    NOT_FINISHED("string .SSIDL.BaseException.getTrace()");
+    return std::string(0);
 }
 
-const char* CCAException::type() const
+// TODO: implement add functions
+void CCAException::add(const std::string &traceline)
 {
-  return "CCAException";
+    NOT_FINISHED("void .SSIDL.BaseException.add(in string traceline)");
+}
+
+void CCAException::add(const std::string &filename, int lineno, const std::string &methodname)
+{
+    NOT_FINISHED("void .SSIDL.BaseException.add(in string filename, in int lineno, in string methodname)");
 }
 
 } // end namespace SCIRun
