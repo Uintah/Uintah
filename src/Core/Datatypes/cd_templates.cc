@@ -122,6 +122,7 @@ template class Property<pair<unsigned char,unsigned char> >;
 template class Property<pair<char,char> >;
 template class Property<vector<pair<string,Tensor> > >;
 template class Property<vector<pair<int,double> > >;
+template class Property<vector<string> >;
 template class Property<LockingHandle<Matrix> >;
 template class Property<LockingHandle<NrrdData> >;
 
