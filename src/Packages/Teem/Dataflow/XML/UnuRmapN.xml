@@ -34,41 +34,38 @@
   <overview>
     <author>Michael Callahan
     </author>
-    <summary>Map nrrd through *regular* univariate map (colormap). A map is
-regular if the control points are evenly spaced along the domain, and hence
-their position isn't explicitly represented in the map; the axis min, axis
-max, and number of points determine their location. The map can be a 1D nrrd
-(for grayscale), in which case the output has the same dimension as the
-input, or a 2D nrrd (for color), in which case the output has one more
-dimension than the input. In either case, the output is the result of linearly
-interpolating between map points, either scalar values (grayscale), or
-scanlines along axis 0 (color).
+    <summary>
+      Map nrrd through *regular* univariate map (colormap). A map is
+      regular if the control points are evenly spaced along the domain, and
+      hence their position isn't explicitly represented in the map; the axis
+      min, axis max, and number of points determine their location.  This is
+      an N dimensional mapping in that the fast axis of the nrrd is used to
+      look up coordinates in the N or N+1 map.  If the map is of dimension N
+      then it is assumed to be grayscale, otherwise all of the fast axis is
+      treated as a 'color'.  This module does no interpolation, rather the
+      nrrd coordinates should exactly match the range of the colormap nrrd
+      dimensions, ie 0-255 for a 1D map of size 256.
     </summary>
     <description>
-    <p>Map nrrd through *regular* univariate map (colormap). A map is
-regular if the control points are evenly spaced along the domain, and hence
-their position isn't explicitly represented in the map; the axis min, axis
-max, and number of points determine their location. The map can be a 1D nrrd
-(for grayscale), in which case the output has the same dimension as the
-input, or a 2D nrrd (for color), in which case the output has one more
-dimension than the input. In either case, the output is the result of linearly
-interpolating between map points, either scalar values (grayscale), or
-scanlines along axis 0 (color).</p>
-    <p>Rescale to the Map Domain : rescale the input values from the input
-     range to the map domain. The map domain is either explicitly defined 
-     by the axis min,max along axis 0 or 1, or, it is implicitly defined 
-     as zero to one minus the length of that axis.</p>
-    <p>Min : Only used when rescaling to the Map Domain. Indicates the low 
-    end of input range. Should be a double. To disregard
-    this value and use the lowest value of the input nrrd, check Use
-    lowest value of input nrrd as min.</p>
-    <p>Max : Only used when rescaling to the Map Domain. Indicates the high 
-    end of input range. Should be a double.To 
-    disregard this value and use the highest value of the input nrrd, check Use
-    highest value of input nrrd as max. </p>
-    <p>Type: Specify the type of the output nrrd.  If Use map's type as
-    output type is checked, this value will be disregarded and the map
-    type will be used.</p>
+      <p>Map nrrd through *regular* univariate map of N dimension (colormap). A
+      map is regular if the control points are evenly spaced along the
+      domain, and hence their position isn't explicitly represented in
+      the map; the axis min, axis max, and number of points determine
+      their location.</p>
+
+      <p>This is an N dimensional mapping in that the fast axis of the
+      nrrd is used to look up coordinates in the N or N+1 map.  For instance
+      if the fast axis is size three, then the map should contain 3
+      dimensions for grayscale or 4 dimensions where the fast dimension is
+      the 'color'.  It is byte copied so the 'color' can really be any
+      opaque data type.</p>
+
+      <p>No interpolation is done by this module.  Instead the mapping
+      coordinates should be the exact zero based index into the mapping
+      index that is to be used.  For example, given a 1D colormap of size
+      256, the input nrrd should contain values between 0 and 255.  The
+      output nrrd will have the same dimensionality as the input but the
+      data will be replaced with the fast axis data from the input nrrd.</p>
     </description>
   </overview>
   <implementation>
