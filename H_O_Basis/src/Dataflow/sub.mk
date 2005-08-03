@@ -40,8 +40,9 @@ SUBDIRS := \
 	$(SRCDIR)/Modules \
 	$(SRCDIR)/Network \
 	$(SRCDIR)/Ports \
+	$(SRCDIR)/TCLThread \
 	$(SRCDIR)/Widgets \
-	$(SRCDIR)/XMLUtil \
+#	$(SRCDIR)/XMLUtil \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

@@ -42,6 +42,7 @@ itcl_class SCIRun_Math_SolveMatrix {
 	global $this-use_previous_so
 	global $this-np
 	global $this-emit_partial $this-emit_iter
+        global $this-graphs
 	
         set $this-target_error 0.001
 	set $this-method "Conjugate Gradient & Precond. (SCI)"
@@ -58,6 +59,7 @@ itcl_class SCIRun_Math_SolveMatrix {
 	set $this-emit_partial 1
 	set $this-emit_iter 50
 	set $this-np 4
+        set $this-graphs {}
     }
     
     
@@ -298,17 +300,19 @@ itcl_class SCIRun_Math_SolveMatrix {
 	
 	blt::graph $w.graph -title "Convergence" -height 250 \
 		-plotbackground gray99
-	$w.graph yaxis configure -logscale true -title "error (RMS)"  -min [expr $err/10] -max 1 -loose true
+	$w.graph yaxis configure -logscale true -title "Error (RMS)"  -min [expr $err/10] -max 1 -loose true
 	$w.graph xaxis configure -title "Iteration" \
 		-loose true
-	bind $w.graph <ButtonPress-1> "$this select_error %x %y"
-	bind $w.graph <Button1-Motion> "$this move_error %x %y"
-	bind $w.graph <ButtonRelease-1> "$this deselect_error %x %y"
+	bind $w.graph <ButtonPress-1> "$this select_error $w.graph %x %y"
+	bind $w.graph <Button1-Motion> "$this move_error $w.graph %x %y"
+	bind $w.graph <ButtonRelease-1> "$this deselect_error $w.graph %x %y"
 	set iter 1
 	$w.graph element create "Current Target" -linewidth 0
 	$w.graph element configure "Current Target" -data "0 $err" \
 		-symbol diamond
 	pack $w.graph -fill x
+        add_graph $w.graph
+
 	reset_graph
 	switchmethod
 
@@ -319,120 +323,127 @@ itcl_class SCIRun_Math_SolveMatrix {
     protected error_selected false
     protected tmp_error
     
-    method select_error {wx wy} {
+    method select_error {graph wx wy} {
 	global $this-target_error $this-iteration
-	set w .ui[modname]
 	set err [set $this-target_error]
 	set iter [set $this-iteration]
-	set errpos [$w.graph transform $iter $err]
+	set errpos [$graph transform $iter $err]
 	set erry [lindex $errpos 1]
 	set errx [lindex $errpos 0]
-	puts "wx=$wx errx=$errx   wy=$wy erry=$erry"
 	if {abs($wy-$erry) < 5} {
-	    $w.graph element configure "Current Target" -color yellow
+            foreach g [set $this-graphs] {
+                $g element configure "Current Target" -color yellow
+            }
 	    set error_selected true
-	    puts "got it"
-	} else {
-	    puts "missed it"
 	}
     }
     
-    method move_error {wx wy} {
+    method move_error {graph wx wy} {
 	global $this-target_error
-	puts $error_selected
 	if {$error_selected == "true"} {
-	    puts "moving"
-	    set w .ui[modname]
-	    set newerror [lindex [$w.graph invtransform $wx $wy] 1]
-	    $w.graph element configure "Current Target" -ydata $newerror
-	} else {
-	    puts "not moving"
+	    set newerror [lindex [$graph invtransform $wx $wy] 1]
+            foreach g [set $this-graphs] {
+                $g element configure "Current Target" -ydata $newerror
+            }
 	}
     }
     
-    method deselect_error {wx wy} {
+    method deselect_error {graph wx wy} {
 	if {$error_selected == "true"} {
-	    set w .ui[modname]
-	    $w.graph element configure "Current Target" -color blue
+            foreach g [set $this-graphs] {
+                $g element configure "Current Target" -color blue
+            }
 	    set error_selected false
-	    set newerror [lindex [$w.graph invtransform $wx $wy] 1]
+	    set newerror [lindex [$graph invtransform $wx $wy] 1]
 	    global $this-target_error
 	    set $this-target_error $newerror
 	}
     }
     
     protected min_error
-    
-    method reset_graph {} {
-#	puts "resetting graph!"
-	set w .ui[modname]
-	if {![winfo exists $w]} {
+
+    method add_graph {graph} {
+        global $this-graphs
+        set $this-graphs [concat [set $this-graphs] $graph]
+    }
+
+    method reset_graph_once {graph} {
+	if {![winfo exists $graph]} {
 	    return
 	}
-	catch "$w.graph element delete {Target Error}"
-	catch "$w.graph element delete {Current Error}"
-#	puts "$w.graph"
-	$w.graph element create "Target Error" -linewidth 2 -color blue -symbol ""
-	$w.graph element create "Current Error" -linewidth 2 -color red -symbol ""
+	catch "$graph element delete {Target Error}"
+	catch "$graph element delete {Current Error}"
+
+	$graph element create "Target Error" -linewidth 2 -color blue -symbol ""
+	$graph element create "Current Error" -linewidth 2 -color red -symbol ""
 	global $this-target_error
 	set err [set $this-target_error]
 	set iter 1
-	$w.graph element configure "Target Error" -data "0 $err $iter $err"
+	$graph element configure "Target Error" -data "0 $err $iter $err"
 	set min_error $err
-	$w.graph yaxis configure -min [expr $err/10] -max 1
-	$w.graph element configure "Current Target" -data "0 $err"
+	$graph yaxis configure -min [expr $err/10] -max 1
+	$graph element configure "Current Target" -data "0 $err"
     }
     
-    method append_graph {iter values errvalues} {
-#	puts "append_graph $iter $values $errvalues"
-	set w .ui[modname]
-	if {![winfo exists $w]} {
+    method reset_graph {} {
+        foreach graph [set $this-graphs] {
+            reset_graph_once $graph
+        }
+    }
+
+    method append_graph_once {graph iter values errvalues} {
+	if {![winfo exists $graph]} {
 	    return
 	}
 	if {$values != ""} {
-	    set xvals [$w.graph element cget "Current Error" -xdata]
-	    set yvals [$w.graph element cget "Current Error" -ydata]
+	    set xvals [$graph element cget "Current Error" -xdata]
+	    set yvals [$graph element cget "Current Error" -ydata]
 	    
 	    for {set i 0} {$i<[llength $values]} {incr i} {
 		lappend xvals [lindex $values $i]
 		incr i
 		lappend yvals [lindex $values $i]
 	    }
-#	    puts "xevals=$xvals"
-#	    puts "yevals=$yvals"
-	    $w.graph element configure "Current Error" -xdata $xvals
-	    $w.graph element configure "Current Error" -ydata $yvals
+	    $graph element configure "Current Error" -xdata $xvals
+	    $graph element configure "Current Error" -ydata $yvals
 	}
 	if {$errvalues != ""} {
-	    set xvals [$w.graph element cget "Target Error" -xdata]
-	    set yvals [$w.graph element cget "Target Error" -ydata]
+	    set xvals [$graph element cget "Target Error" -xdata]
+	    set yvals [$graph element cget "Target Error" -ydata]
 	    
 	    for {set i 0} {$i<[llength $errvalues]} {incr i} {
 		lappend xvals [lindex $errvalues $i]
 		incr i
 		lappend yvals [lindex $errvalues $i]
 	    }
-#	    puts "xtvals=$xvals"
-#	    puts "ytvals=$yvals"
-	    $w.graph element configure "Target Error" -xdata $xvals
-	    $w.graph element configure "Target Error" -ydata $yvals
+	    $graph element configure "Target Error" -xdata $xvals
+	    $graph element configure "Target Error" -ydata $yvals
 	}
 	global $this-target_error
 	set err [set $this-target_error]
 	if {$err < $min_error} {
 	    set min_error $err
 	}
-	$w.graph yaxis configure -min [expr $min_error/10]
-	$w.graph element configure "Current Target" -xdata [expr $iter - 1]
+	$graph yaxis configure -min [expr $min_error/10]
+	$graph element configure "Current Target" -xdata [expr $iter - 1]
     }
-    
-    method finish_graph {} {
-#	puts "finishing graph!"
-	set w .ui[modname]
-#	puts "$w.graph"
-	if {![winfo exists $w]} {
+
+    method append_graph {iter values errvalues} {
+        foreach graph [set $this-graphs] {
+            append_graph_once $graph $iter $values $errvalues
+        }
+    }
+
+    method finish_graph_once {graph} {
+	if {![winfo exists $graph]} {
 	    return
 	}
-	$w.graph element configure "Current Error" -color green
+	$graph element configure "Current Error" -color green
+    }        
+
+    method finish_graph {} {
+        foreach graph [set $this-graphs] {
+            finish_graph_once $graph
+        }
     }
 }

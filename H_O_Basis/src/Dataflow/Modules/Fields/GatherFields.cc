@@ -39,6 +39,7 @@
  *  Copyright (C) 2004 SCI Group
  */
 #include <Core/Basis/Constant.h>
+#include <Core/Basis/NoData.h>
 #include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Dataflow/Modules/Fields/GatherFields.h>
@@ -59,7 +60,13 @@ public:
 private:
   GuiInt gui_force_pointcloud_;
 
+  // Turn on across-execution accumulation of fields.
+  GuiInt gui_accumulating_;
+  GuiInt gui_clear_;
+  GuiInt gui_precision_;
+
   int force_pointcloud_;
+  int precision_;
 
   FieldHandle fHandle_;
   vector< int > fGeneration_;
@@ -70,7 +77,11 @@ DECLARE_MAKER(GatherFields)
 GatherFields::GatherFields(GuiContext* ctx)
   : Module("GatherFields", ctx, Filter, "FieldsCreate", "SCIRun"),
     gui_force_pointcloud_(ctx->subVar("force-pointcloud")),
+    gui_accumulating_(ctx->subVar("accumulating")),
+    gui_clear_(ctx->subVar("clear", false)),
+    gui_precision_(ctx->subVar("precision")),
     force_pointcloud_(0),
+    precision_(0),
     error_(0)
 {
 }
@@ -92,7 +103,33 @@ GatherFields::execute()
   if (range.first == range.second)
     return;
 
-  //port_map_type::iterator pi = range.first;
+  if (gui_clear_.get())
+  {
+    gui_clear_.set(0);
+    remark("Clearing accumulated fields.");
+    fHandle_ = 0;
+
+    // Send something.
+    FieldOPort *ofield_port = (FieldOPort *) get_oport("Output Field");
+#if 1
+    // Sending 0 does not clear caches.
+    typedef PointCloudMesh<ConstantBasis<double> > PCMesh; 
+    typedef NoDataBasis<double> NDBasis;
+    typedef GenericField<PCMesh, NDBasis, vector<double> > PCField;
+    FieldHandle empty = scinew PCField(scinew PCMesh());
+
+    ofield_port->send(empty);
+#else
+    ofield_port->send( fHandle_ );
+#endif
+    return;
+  }
+
+  if (gui_accumulating_.get() && fHandle_.get_rep()) // appending fields
+  {
+    fHandles.push_back(fHandle_);
+    nFields++;
+  }
 
   // Gather up all of the field handles.
   if (range.first != range.second)
@@ -128,10 +165,7 @@ GatherFields::execute()
       }
       else if (pi != range.second)
       {
-	//error("Input port " + to_string(nFields) + " contained no data.");
-	//return;
-
-	// changed this to a warning because in the case of BioTensor, some
+	// Changed this to a warning because in the case of BioTensor, some
 	// of the input connections get disabled based on what the user wants
 	// to see
 	warning("Input port " + to_string(nFields) + " contained no data.");
@@ -144,7 +178,13 @@ GatherFields::execute()
     remark("No non-empty input fields.");
     return;
   }
-
+  
+  gui_precision_.reset();
+  if(precision_ != gui_precision_.get())
+  {
+    precision_ = gui_precision_.get();
+    update = true;
+  }
   while( fGeneration_.size() > nFields )
   {
     update = true;
@@ -210,7 +250,8 @@ GatherFields::execute()
 	CompileInfoHandle ci = GatherFieldsAlgo::get_compile_info(ftd0);
 	Handle<GatherFieldsAlgo> algo;
 	if (!module_dynamic_compile(ci, algo)) return;
-	fHandle_ = algo->execute(fHandles, new_basis, copy_data);
+	fHandle_ = algo->execute(fHandles, new_basis, copy_data, 
+				 precision_);
 	
       } else 
       {

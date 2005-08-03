@@ -52,8 +52,8 @@ class ComponentEvent : public sci::cca::ports::ComponentEvent
 {
 public:
     ComponentEvent(sci::cca::ports::ComponentEventType type,
-		    sci::cca::ComponentID::pointer compID,
-		    sci::cca::TypeMap::pointer tm);
+		    const sci::cca::ComponentID::pointer& compID,
+		    const sci::cca::TypeMap::pointer& tm);
     virtual ~ComponentEvent();
 
     /** ? */

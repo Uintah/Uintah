@@ -58,6 +58,11 @@ public:
 
   virtual GeomObj* clone();
 
+    // For OpenGL
+#ifdef SCI_OPENGL
+    virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 };

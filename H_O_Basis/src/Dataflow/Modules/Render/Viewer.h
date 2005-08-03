@@ -92,7 +92,7 @@ private:
   void				flushViews();
   int				process_event();
 
-  virtual void set_context(Scheduler* sched, Network* network);
+  virtual void set_context(Network* network);
 
   map<int, map<LightID, int> >	pli_;  // port->light->index
   Mutex				view_window_lock_;
@@ -105,7 +105,7 @@ private:
   int                           synchronized_debt_;
 
 
-  static void regression_callback(void *ths);
+  static bool save_image_callback(void *stuff);
 };
 
 

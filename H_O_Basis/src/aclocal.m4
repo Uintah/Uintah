@@ -47,12 +47,12 @@ if test -z "$debugging"; then
   AC_MSG_WARN([
     Adding '--enable-verbosity' to configure line
     _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
     Digging through the config.log file is your best option
     for determining what went wrong.  Search for the specific lib/file
     that configured failed to find.  There should be a compile line
     and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
+    a test.cc and then use the compile line to compile it - the true
     error most likely will show up.
   ])
 fi
@@ -1052,6 +1052,7 @@ AC_DEFUN([INIT_PACKAGE_CHECK_VARS], [
   sci_required_babel=no
   sci_required_blas=no
   sci_required_crypto=no
+  sci_required_dataflow=yes
   sci_required_etags=no
   sci_required_exc=no 
   sci_required_fortran=no
@@ -1086,6 +1087,8 @@ AC_DEFUN([INIT_PACKAGE_CHECK_VARS], [
   sci_required_uuid=no
   sci_required_vdt=no
   sci_required_vtk=no 
+
+  plume_checked=no
 
 ])
 ##
@@ -1128,7 +1131,20 @@ case $1 in
   SCIRun2)
     sci_required_babel=yes
     sci_required_uuid=yes
-    sci_required_ruby=yes
+  ;;
+  Plume)
+    if test "$plume_checked" = "no"; then
+      plume_checked=yes
+      sci_required_loki=yes
+      sci_required_boost=yes
+      sci_required_qt=no
+      enable_scirun2=yes
+      sci_required_uuid=yes
+	    
+      if test "$package" != "all"; then
+        package="$package Plume"
+      fi
+   fi
   ;;
   Remote)
     sci_required_jpeg=yes

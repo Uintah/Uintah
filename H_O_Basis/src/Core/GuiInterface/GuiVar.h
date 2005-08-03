@@ -154,12 +154,12 @@ class GuiFilename : public GuiString
 public:
   GuiFilename(GuiContext* ctx) : GuiString(ctx)
   {
-    ctx->setUseDatadir(true);
+    ctx->doSubstituteDatadir();
   }
 
   GuiFilename(GuiContext* ctx, const string &val) : GuiString(ctx, val)
   {
-    ctx->setUseDatadir(true);
+    ctx->doSubstituteDatadir();
   }
 
   virtual ~GuiFilename() {}

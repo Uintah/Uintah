@@ -224,6 +224,113 @@ texture_build_bricks(vector<TextureBrickHandle>& bricks,
 
 
 
+void
+nrrd_build_bricks(vector<TextureBrickHandle>& bricks,
+		  int nx, int ny, int nz,
+		  int nc, int* nb,
+		  const BBox& ignored, int card_mem)
+{
+  const int brick_mem = card_mem*1024*1024/2;
+  
+  const unsigned int max_texture_size =
+    (nb[0] == 1)?
+    ShaderProgramARB::max_texture_size_1() :
+    ShaderProgramARB::max_texture_size_4();
+
+  // Initial brick size
+  int bsize[3];
+  bsize[0] = Min(NextPowerOf2(nx), max_texture_size);
+  bsize[1] = Min(NextPowerOf2(ny), max_texture_size);
+  bsize[2] = Min(NextPowerOf2(nz), max_texture_size);
+  
+  // Determine brick size here.
+
+  // Slice largest axis, weighted by fastest/slowest memory access
+  // axis so that our cuts leave us with contiguous blocks of data.
+  // Currently set at 4x2x1 blocks.
+  while (bsize[0] * bsize[1] * bsize[2] * nb[0] > brick_mem)
+  {
+    if (bsize[1] / bsize[2] >= 4 || bsize[2] < 4)
+    {
+      if (bsize[0] / bsize[1] >= 2 || bsize[1] < 4)
+      {
+	bsize[0] /= 2;
+      }
+      else
+      {
+	bsize[1] /= 2;
+      }
+    }
+    else
+    {
+      bsize[2] /= 2;
+    }
+  }
+
+  bricks.clear();
+
+  for (int k = 0; k < nz; k += bsize[2])
+  {
+    if (k) k--;
+    for (int j = 0; j < ny; j += bsize[1])
+    {
+      if (j) j--;
+      for (int i = 0; i < nx; i += bsize[0])
+      {
+	if (i) i--;
+	const int mx = Min(bsize[0], nx - i);
+	const int my = Min(bsize[1], ny - j);
+	const int mz = Min(bsize[2], nz - k);
+
+	// Compute Texture Box.
+	const double tx0 = i?(0.5 / bsize[0]): 0.0;
+	const double ty0 = j?(0.5 / bsize[1]): 0.0;
+	const double tz0 = k?(0.5 / bsize[2]): 0.0;
+	
+	double tx1 = 1.0 - 0.5 / bsize[0];
+	if (mx < bsize[0]) tx1 = 1.0; //(mx + 0.5) / (double)bsize[0];
+	if (nx - i == bsize[0]) tx1 = 1.0;
+
+	double ty1 = 1.0 - 0.5 / bsize[1];
+	if (my < bsize[1]) ty1 = 1.0; //(my + 0.5) / (double)bsize[1];
+	if (ny - j == bsize[1]) ty1 = 1.0;
+
+	double tz1 = 1.0 - 0.5 / bsize[2];
+	if (mz < bsize[2]) tz1 = 1.0; //(mz + 0.5) / (double)bsize[2];
+	if (nz - k == bsize[2]) tz1 = 1.0;
+
+	BBox tbox(Point(tx0, ty0, tz0), Point(tx1, ty1, tz1));
+
+	// Compute BBox.
+	double bx1 = Min((i + bsize[0] - 0.5) / (double)nx, 1.0);
+	if (nx - i == bsize[0]) bx1 = 1.0;
+
+	double by1 = Min((j + bsize[1] - 0.5) / (double)ny, 1.0);
+	if (ny - j == bsize[1]) by1 = 1.0;
+
+	double bz1 = Min((k + bsize[2] - 0.5) / (double)nz, 1.0);
+	if (nz - k == bsize[2]) bz1 = 1.0;
+
+	BBox bbox(Point(i==0?0:(i+0.5) / (double)nx,
+			j==0?0:(j+0.5) / (double)ny,
+			k==0?0:(k+0.5) / (double)nz),
+		  Point(bx1, by1, bz1));
+
+	NrrdTextureBrick *b =
+	  scinew NrrdTextureBrick(0, 0,
+				  mx, my, mz, //bsize[0], bsize[1], bsize[2],
+				  nc, nb,
+				  i, j, k,
+				  mx, my, mz,
+				  bbox, tbox);
+	bricks.push_back(b);
+      }
+    }
+  }
+}
+
+
+
 NrrdTextureBuilderAlgo::NrrdTextureBuilderAlgo()
 {}
 
@@ -327,7 +434,15 @@ NrrdTextureBuilderAlgo::build(ProgressReporter *report,
       bbox.min() != texture->bbox().min() ||
       bbox.max() != texture->bbox().max())
   {
-    texture_build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem, true);
+    if (ShaderProgramARB::shaders_supported() &&
+	ShaderProgramARB::texture_non_power_of_two())
+    {
+      nrrd_build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem);
+    }
+    else
+    {
+      texture_build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem, true);
+    }
     texture->set_size(nx, ny, nz, nc, nb);
     texture->set_card_mem(card_mem);
   }
@@ -374,7 +489,7 @@ NrrdTextureBuilderAlgo::fill_brick(TextureBrickHandle &brick,
   int x1 = x0+brick->mx();
   int y1 = y0+brick->my();
   int z1 = z0+brick->mz();
-  int i, j, k, ii, jj, kk;
+  int i, j, k, jj, kk;
   if (nv_nrrd && ((gm_nrrd && nc == 2) || nc == 1)) {
     if (!gm_nrrd) {
       int nb = brick->nb(0);
@@ -382,17 +497,14 @@ NrrdTextureBuilderAlgo::fill_brick(TextureBrickHandle &brick,
       unsigned char* data = (unsigned char*)nv_nrrd->data;
       for (k=0, kk=z0; kk<z1; kk++,k++) {
         for (j=0, jj=y0; jj<y1; jj++,j++) {
-          for (i=0, ii=x0; ii<x1; ii++,i++) {
-            for (int b=0; b<nb; b++) {
-              int tex_idx = (k*ny*nx+j*nx+i)*nb+b;
-              int data_idx = (kk*ni*nj+jj*ni+ii)*nb+b;
-              tex[tex_idx] = data[data_idx];
-            }
-          }
+	  const size_t tex_idx = (k*ny*nx+j*nx)*nb;
+	  const size_t data_idx = (kk*ni*nj+jj*ni+x0)*nb;
+	  memcpy(tex + tex_idx, data + data_idx, (x1 - x0)*nb);
+	  i = x1 - x0;
           if (nx != brick->mx()) {
             for (int b=0; b<nb; b++) {
-              int idx0 = (k*ny*nx+j*nx+i)*nb+b;
-              int idx1 = (k*ny*nx+j*nx+(brick->mx()-1))*nb+b;
+              const size_t idx0 = (k*ny*nx+j*nx+i)*nb+b;
+              const size_t idx1 = idx0-nb;
               tex[idx0] = tex[idx1];
             }
           }
@@ -400,8 +512,8 @@ NrrdTextureBuilderAlgo::fill_brick(TextureBrickHandle &brick,
         if (ny != brick->my()) {
           for (i=0; i<Min(nx, brick->mx()+1); i++) {
             for (int b=0; b<nb; b++) {
-              int idx0 = (k*ny*nx+j*nx+i)*nb+b;
-              int idx1 = (k*ny*nx+(brick->my()-1)*nx+i)*nb+b;
+              const size_t idx0 = (k*ny*nx+j*nx+i)*nb+b;
+              const size_t idx1 = (k*ny*nx+(brick->my()-1)*nx+i)*nb+b;
               tex[idx0] = tex[idx1];
             }
           }
@@ -411,8 +523,8 @@ NrrdTextureBuilderAlgo::fill_brick(TextureBrickHandle &brick,
         for (j=0; j<Min(ny, brick->my()+1); j++) {
           for (i=0; i<Min(nx, brick->mx()+1); i++) {
             for (int b=0; b<nb; b++) {
-              int idx0 = (k*ny*nx+j*nx+i)*nb+b;
-              int idx1 = ((brick->mz()-1)*ny*nx+j*nx+i)*nb+b;
+              const size_t idx0 = (k*ny*nx+j*nx+i)*nb+b;
+              const size_t idx1 = ((brick->mz()-1)*ny*nx+j*nx+i)*nb+b;
               tex[idx0] = tex[idx1];
             }
           }
@@ -427,27 +539,22 @@ NrrdTextureBuilderAlgo::fill_brick(TextureBrickHandle &brick,
       unsigned char* data1 = (unsigned char*)gm_nrrd->data;
       for (k=0, kk=z0; kk<z1; kk++, k++) {
         for (j=0, jj=y0; jj<y1; jj++,j++) {
-          for (i=0, ii=x0; ii<x1; ii++, i++) {
-            for (int b=0; b<nb0; b++) {
-              int tex_idx = (k*ny*nx+j*nx+i)*nb0+b;
-              int data_idx = (kk*ni*nj+jj*ni+ii)*nb0+b;
-              tex0[tex_idx] = data0[data_idx];
-            }
-            for (int b=0; b<nb1; b++) {
-              int tex_idx = (k*ny*nx+j*nx+i)*nb1+b;
-              int data_idx = (kk*ni*nj+jj*ni+ii)*nb1+b;
-              tex1[tex_idx] = data1[data_idx];
-            }
-          }
+	  const size_t tex_idx0 = (k*ny*nx+j*nx)*nb0;
+	  const size_t data_idx0 = (kk*ni*nj+jj*ni+x0)*nb0;
+	  memcpy(tex0 + tex_idx0, data0 + data_idx0, (x1 - x0)*nb0);
+	  const size_t tex_idx1 = (k*ny*nx+j*nx)*nb1;
+	  const size_t data_idx1 = (kk*ni*nj+jj*ni+x0)*nb1;
+	  memcpy(tex1 + tex_idx1, data1 + data_idx1, (x1 - x0)*nb1);
+	  i = x1 - x0;
           if (nx != brick->mx()) {
             for (int b=0; b<nb0; b++) {
-              int idx0 = (k*ny*nx+j*nx+i)*nb0+b;
-              int idx1 = (k*ny*nx+j*nx+(brick->mx()-1))*nb0+b;
+              const size_t idx0 = (k*ny*nx+j*nx+i)*nb0+b;
+              const size_t idx1 = idx0-nb0;
               tex0[idx0] = tex0[idx1];
             }
             for (int b=0; b<nb1; b++) {
-              int idx0 = (k*ny*nx+j*nx+i)*nb1+b;
-              int idx1 = (k*ny*nx+j*nx+(brick->mx()-1))*nb1+b;
+              const size_t idx0 = (k*ny*nx+j*nx+i)*nb1+b;
+              const size_t idx1 = idx0-nb1;
               tex1[idx0] = tex1[idx1];
             }
           }
@@ -455,13 +562,13 @@ NrrdTextureBuilderAlgo::fill_brick(TextureBrickHandle &brick,
         if (ny != brick->my()) {
           for (i=0; i<Min(nx, brick->mx()+1); i++) {
             for (int b=0; b<nb0; b++) {
-              int idx0 = (k*ny*nx+j*nx+i)*nb0+b;
-              int idx1 = (k*ny*nx+(brick->my()-1)*nx+i)*nb0+b;
+              const size_t idx0 = (k*ny*nx+j*nx+i)*nb0+b;
+              const size_t idx1 = (k*ny*nx+(brick->my()-1)*nx+i)*nb0+b;
               tex0[idx0] = tex0[idx1];
             }
             for (int b=0; b<nb1; b++) {
-              int idx0 = (k*ny*nx+j*nx+i)*nb1+b;
-              int idx1 = (k*ny*nx+(brick->my()-1)*nx+i)*nb1+b;
+              const size_t idx0 = (k*ny*nx+j*nx+i)*nb1+b;
+              const size_t idx1 = (k*ny*nx+(brick->my()-1)*nx+i)*nb1+b;
               tex1[idx0] = tex1[idx1];
             }
           }
@@ -471,13 +578,13 @@ NrrdTextureBuilderAlgo::fill_brick(TextureBrickHandle &brick,
         for (j=0; j<Min(ny, brick->my()+1); j++) {
           for (i=0; i<Min(nx, brick->mx()+1); i++) {
             for (int b=0; b<nb0; b++) {
-              int idx0 = (k*ny*nx+j*nx+i)*nb0+b;
-              int idx1 = ((brick->mz()-1)*ny*nx+j*nx+i)*nb0+b;
+              const size_t idx0 = (k*ny*nx+j*nx+i)*nb0+b;
+              const size_t idx1 = ((brick->mz()-1)*ny*nx+j*nx+i)*nb0+b;
               tex0[idx0] = tex0[idx1];
             }
             for (int b=0; b<nb1; b++) {
-              int idx0 = (k*ny*nx+j*nx+i)*nb1+b;
-              int idx1 = ((brick->mz()-1)*ny*nx+j*nx+i)*nb1+b;
+              const size_t idx0 = (k*ny*nx+j*nx+i)*nb1+b;
+              const size_t idx1 = ((brick->mz()-1)*ny*nx+j*nx+i)*nb1+b;
               tex1[idx0] = tex1[idx1];
             }
           }

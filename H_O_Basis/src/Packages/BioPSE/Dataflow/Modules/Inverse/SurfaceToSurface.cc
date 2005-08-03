@@ -83,7 +83,6 @@
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/SurfTree.h>
-#include <Core/Persistent/Pstreams.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Parallel.h>

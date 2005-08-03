@@ -48,6 +48,7 @@
 #include <Dataflow/Network/ModuleHelper.h>
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Scheduler.h>
+#include <Dataflow/Network/Network.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/GuiContext.h>
 #include <Core/GuiInterface/GuiInterface.h>
@@ -145,7 +146,6 @@ Module::Module(const string& name, GuiContext* ctx,
     have_own_dispatch(0),
     id(ctx->getfullname()), 
     abort_flag(0),
-    msgStream_(ctx->subVar("msgStream")),
     need_execute(0),
     sched_class(sched_class),
     state(NeedData),
@@ -154,7 +154,8 @@ Module::Module(const string& name, GuiContext* ctx,
     helper(0),
     helper_thread(0),
     network(0), 
-    show_stats_(true)
+    show_stats_(true),
+    log_string_(ctx->subVar("log_string", false))
 {
   stacksize=0;
 
@@ -329,7 +330,6 @@ void Module::report_progress( ProgressState state )
     remark("Dynamically compiling some code.");
     break;
   case ProgressReporter::CompilationDone:
-    msgStream_flush();
     gui->execute(id+" set_compiling_p 0");
     remark("Dynamic compilation completed.");
     break;
@@ -524,10 +524,10 @@ void Module::connection(Port::ConnectionState mode, int which_port, bool is_opor
   // do nothing by default
 }
 
-void Module::set_context(Scheduler* sched, Network* network)
+void Module::set_context(Network* network)
 {
   this->network=network;
-  this->sched=sched;
+  this->sched=network->get_scheduler();
   ASSERT(helper == 0);
   // Start up the event loop
   helper=scinew ModuleHelper(this);
@@ -773,8 +773,10 @@ void Module::error(const string& str)
   {
     cout << id << ":ERROR: " << str << "\n";
   }
+  msgStream_flush();
   msgStream_ << "ERROR: " << str << '\n';
-  msgStream_.flush();
+  gui->execute(id + " append_log_msg {" + msgStream_.str() + "} red");
+  msgStream_.str("");
   update_msg_state(Error); 
 }
 
@@ -784,8 +786,10 @@ void Module::warning(const string& str)
   {
     cout << id << ":WARNING: " << str << "\n";
   }
+  msgStream_flush();
   msgStream_ << "WARNING: " << str << '\n';
-  msgStream_.flush();
+  gui->execute(id + " append_log_msg {" + msgStream_.str() + "} yellow");
+  msgStream_.str("");
   update_msg_state(Warning); 
 }
 
@@ -795,9 +799,26 @@ void Module::remark(const string& str)
   {
     cout << id << ":REMARK: " << str << "\n";
   }
+  msgStream_flush();
   msgStream_ << "REMARK: " << str << '\n';
-  msgStream_.flush();
+  gui->execute(id + " append_log_msg {" + msgStream_.str() + "} blue");
+  msgStream_.str("");
   update_msg_state(Remark); 
+}
+
+
+void Module::msgStream_flush()
+{
+  if (msgStream_.str() != "")
+  {
+    gui->execute(id + " append_log_msg {" + msgStream_.str() + "} black");
+    msgStream_.str("");
+  }
+}
+
+bool Module::in_power_app()
+{
+  return (gui->eval("in_power_app") == "1");
 }
 
 void Module::postMessage(const string& str)

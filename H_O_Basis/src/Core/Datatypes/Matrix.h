@@ -59,6 +59,7 @@ using namespace std;
 class SparseRowMatrix;
 class DenseMatrix;
 class ColumnMatrix;
+class DenseColMajMatrix;
 class Matrix;
 typedef LockingHandle<Matrix> MatrixHandle;
 
@@ -76,17 +77,20 @@ public:
   virtual DenseMatrix* dense() = 0;
   virtual SparseRowMatrix* sparse() = 0;
   virtual ColumnMatrix* column() = 0;
+  virtual DenseColMajMatrix *dense_col_maj() = 0;
 
   // No conversion is done.
   // NULL is returned if the matrix is not of the appropriate type.
   DenseMatrix *as_dense();
   SparseRowMatrix *as_sparse();
   ColumnMatrix *as_column();
+  DenseColMajMatrix *as_dense_col_maj();
 
   // Test to see if the matrix is this subtype.
   inline bool is_dense() { return as_dense() != NULL; }
   inline bool is_sparse() { return as_sparse() != NULL; }
   inline bool is_column() { return as_column() != NULL; }
+  inline bool is_dense_col_maj() { return as_dense_col_maj() != NULL; }
 
   inline int nrows() const { return nrows_; }
   inline int ncols() const { return ncols_; }
@@ -103,8 +107,6 @@ public:
   virtual void    put(int r, int c, double val) = 0;
   virtual void    add(int r, int c, double val) = 0;
 
-  // getRowNonzeros is deprecated.  Use getRowNonzerosNoCopy instead.
-  virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& v) = 0;
   // getRowNonzerosNocopy returns:
   //   vals = The values.  They are not guaranteed 
   //     to be nonzero, but some of the zeros may be missing.
@@ -126,9 +128,9 @@ public:
   virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 			      int& flops, int& memrefs,
 			      int beg=-1, int end=-1, int spVec=0) const=0;
-  virtual void scalar_multiply(double s) = 0;
   virtual MatrixHandle submatrix(int r1, int c1, int r2, int c2) = 0;
 
+  void scalar_multiply(double s);
   Transform toTransform();
   DenseMatrix *direct_inverse();
   DenseMatrix *iterative_inverse();
@@ -176,7 +178,7 @@ public:
 protected:
   int      nrows_;
   int      ncols_;
-  bool     separate_raw_;
+  int      separate_raw_;
   string   raw_filename_;
 };
 

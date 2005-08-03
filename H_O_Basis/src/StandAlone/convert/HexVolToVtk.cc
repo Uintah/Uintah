@@ -33,7 +33,9 @@
 
 
 
-#include <Core/Datatypes/HexVolField.h>
+#include <Core/Datatypes/HexVolMesh.h>
+#include <Core/Basis/HexTricubicHmt.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <iostream>
 #include <iomanip>
@@ -45,6 +47,8 @@ using std::ifstream;
 using std::endl;
 
 using namespace SCIRun;
+
+typedef HexVolMesh<HexTrilinearLgn<Point> > HVMesh;
 
 int
 main(int argc, char **argv) {
@@ -73,7 +77,7 @@ main(int argc, char **argv) {
   }
 
   MeshHandle mb = handle->mesh();
-  HexVolMesh *hvm = dynamic_cast<HexVolMesh *>(mb.get_rep());
+  HVMesh *hvm = dynamic_cast<HVMesh *>(mb.get_rep());
 
   ofstream fostr(argv[2]);
   if (!fostr) {
@@ -87,9 +91,9 @@ main(int argc, char **argv) {
 	<< "DATASET UNSTRUCTURED_GRID" 
 	<< endl << endl;
   
-  HexVolMesh::Node::iterator niter; hvm->begin(niter);
-  HexVolMesh::Node::iterator niter_end; hvm->end(niter_end);
-  HexVolMesh::Node::size_type nsize; hvm->size(nsize);
+  HVMesh::Node::iterator niter; hvm->begin(niter);
+  HVMesh::Node::iterator niter_end; hvm->end(niter_end);
+  HVMesh::Node::size_type nsize; hvm->size(nsize);
 
   cerr << "Writing "<< nsize << " points to " << argv[2] 
        << "..." << endl;
@@ -103,10 +107,10 @@ main(int argc, char **argv) {
     ++niter;
   }
 
-  HexVolMesh::Cell::size_type csize; hvm->size(csize);
-  HexVolMesh::Cell::iterator citer; hvm->begin(citer);
-  HexVolMesh::Cell::iterator citer_end; hvm->end(citer_end);
-  HexVolMesh::Node::array_type cnodes(8);
+  HVMesh::Cell::size_type csize; hvm->size(csize);
+  HVMesh::Cell::iterator citer; hvm->begin(citer);
+  HVMesh::Cell::iterator citer_end; hvm->end(citer_end);
+  HVMesh::Node::array_type cnodes(8);
   cerr << "     and "<< csize << " cells." << endl; 
   fostr << endl << "CELLS " << csize <<  " " << csize * (8+1) << endl;
   while(citer != citer_end)

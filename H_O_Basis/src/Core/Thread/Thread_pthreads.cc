@@ -82,6 +82,9 @@ extern "C" {
 
 //#define __ia64__
 #ifdef __ia64__
+#  ifndef __int64
+#    define __int64 long
+#  endif
 #  include <ia64intrin.h>
 #endif
 
@@ -576,12 +579,12 @@ Thread::exitAll(int code)
  */
 static
 void
-handle_abort_signals(int sig,
 #if defined(__sgi)
-		     int,
-		     struct sigcontext* ctx)
+handle_abort_signals(int sig, int, struct sigcontext* ctx)
+#elif defined (__CYGWIN__)
+handle_abort_signals(int sig)
 #else
-  struct sigcontext ctx)
+handle_abort_signals(int sig, struct sigcontext ctx)
 #endif
 {
 struct sigaction action;
@@ -661,7 +664,12 @@ Thread::print_threads()
  */
 static
 void
+#ifdef __CYGWIN__
+// Cygwin's version doesn't take a sigcontext
+handle_quit(int sig)
+#else
 handle_quit(int sig, struct sigcontext /*ctx*/)
+#endif
 {
   // Try to acquire a lock.  If we can't, then assume that somebody
   // else already caught the signal...
@@ -1324,7 +1332,7 @@ struct Barrier_private {
 
   //  long long amo_val;
   char pad0[128];
-  unsigned __int64 amo_val;
+  __int64 amo_val;
   char pad1[128];
   volatile int flag;
   char pad2[128];
@@ -1368,7 +1376,7 @@ Barrier::wait(int n)
   Thread_private* p = Thread::self()->priv_;
   int oldstate = Thread::push_bstack(p, Thread::BLOCK_BARRIER, name_);
   int gen = priv_->flag;
-  unsigned __int64 val = __fetchadd8_acq(&(priv_->amo_val),1);
+  __int64 val = __sync_fetch_and_add_di(&(priv_->amo_val),1);
   if (val == n-1){
     priv_->amo_val = 0;
     priv_->flag++;
@@ -1389,7 +1397,7 @@ struct AtomicCounter_private {
   // These variables used only for non fectchop implementation
   //  long long amo_val;
   char pad0[128];
-  unsigned __int64 amo_val;
+  __int64 amo_val;
   char pad1[128];
 };
 } // namespace SCIRun
@@ -1442,36 +1450,37 @@ AtomicCounter::operator int() const
   return priv_->amo_val;
 }
 
-
+// Preincrement
 int
 AtomicCounter::operator++()
 {
-  unsigned __int64 val = __fetchadd8_acq(&(priv_->amo_val),1);
-  return (int)val;
+  __int64 val = __sync_fetch_and_add_di(&(priv_->amo_val),1);
+  return (int)val+1;
 }
 
 
+// Postincrement
 int
 AtomicCounter::operator++(int)
 {
-  unsigned __int64 val = __fetchadd8_acq(&(priv_->amo_val),1);
-  return (int)val-1;
-}
-
-
-int
-AtomicCounter::operator--()
-{
-  unsigned __int64 val = __fetchadd8_acq(&(priv_->amo_val),-1);
+  __int64 val = __sync_fetch_and_add_di(&(priv_->amo_val),1);
   return (int)val;
 }
 
+// Predecrement
+int
+AtomicCounter::operator--()
+{
+  __int64 val = __sync_fetch_and_add_di(&(priv_->amo_val),-1);
+  return (int)val-1;
+}
 
+// Postdecrement
 int
 AtomicCounter::operator--(int)
 {
-  unsigned __int64 val = __fetchadd8_acq(&(priv_->amo_val),-1);
-  return (int)val+1;
+  __int64 val = __sync_fetch_and_add_di(&(priv_->amo_val),-1);
+  return (int)val;
 }
 
 

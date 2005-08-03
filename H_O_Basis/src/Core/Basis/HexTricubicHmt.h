@@ -128,7 +128,7 @@ public:
   //! First derivative at coord.
   template <class CellData>
   void derivate(const vector<double> &coords, const CellData &cd,
-		vector<double> &derivs) const
+		vector<T> &derivs) const
   {
     const double x=coords[0], y=coords[1], z=coords[2];  
     const double x2=x*x;
@@ -138,7 +138,8 @@ public:
     const double y12=(y-1)*(y-1);
     const double z12=(z-1)*(z-1);
 
-    derivs.size(3);
+    derivs.resize(3);
+    derivs.clear();
 
     derivs[0]=6*(-1 + x)*x*y12*(1 + 2*y)*z12*(1 + 2*z)*cd.node0()
       +(1 - 4*x + 3*x2)*y12*(1 + 2*y)*z12*(1 + 2*z)*derivs_[cd.node0_index()][0]

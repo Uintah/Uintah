@@ -100,7 +100,10 @@ static inline
 unsigned char
 VtoUC(double v, double dmin, double dmaxplus)
 {
-  return (unsigned char)((v - dmin) * dmaxplus);
+  v = (v - dmin) * dmaxplus;
+  if (v > 255.0) return 255;
+  if (v < 0.0) return 0;
+  return (unsigned char)(v);
 }
 
 
@@ -109,7 +112,7 @@ void
 compute_data(T *nindata, unsigned char *nvoutdata, float *gmoutdata,
              const int ni, const int nj, const int nk, Transform &transform,
              double dmin, double dmax, bool valuesonly, bool justvalues)
-{    
+{
   // Compute the data.
   int i, j, k;
   //const unsigned int nk = nin->axis[0].size;
@@ -215,9 +218,9 @@ NrrdSetupTexture::execute()
 
   Nrrd *nin = nin_handle->nrrd;
 
-  if (nin->dim != 3)
+  if (!(nin->dim == 3 || nin->dim == 4))
   {
-    error("Input nrrd must be three dimensional.");
+    error("Input nrrd must be three or four dimensional.");
     return;
   }
 
@@ -285,7 +288,7 @@ NrrdSetupTexture::execute()
   int dim;
 
   // Create a local array of axis sizes, so we can allocate the output Nrrd
-  for (dim=0; dim<nin->dim; dim++)
+  for (dim=0; dim < nin->dim; dim++)
   {
     gmsize[dim] = nin->axis[dim].size;
     nvsize[dim+1]=nin->axis[dim].size;
@@ -401,69 +404,82 @@ NrrdSetupTexture::execute()
                               1.0 / (nin->axis[2].size - 1.0)));
   
 
-  void *gmoutdata = gmout?gmout->data:0;
-  if (nin->type == nrrdTypeChar)
-  {
-    compute_data((char *)nin->data,
-                 (unsigned char *)nvout->data, (float *)gmoutdata,
-                 nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
-                 transform, minf, maxf, valuesonly, compute_justvalue);
-  }
-  else if (nin->type == nrrdTypeUChar)
-  {
-    compute_data((unsigned char *)nin->data,
-                 (unsigned char *)nvout->data, (float *)gmoutdata,
-                 nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
-                 transform, minf, maxf, valuesonly, compute_justvalue);
-  }
-  else if (nin->type == nrrdTypeShort)
-  {
-    compute_data((short *)nin->data,
-                 (unsigned char *)nvout->data, (float *)gmoutdata,
-                 nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
-                 transform, minf, maxf, valuesonly, compute_justvalue);
-  }
-  else if (nin->type == nrrdTypeUShort)
-  {
-    compute_data((unsigned short *)nin->data,
-                 (unsigned char *)nvout->data, (float *)gmoutdata,
-                 nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
-                 transform, minf, maxf, valuesonly, compute_justvalue);
-  }
-  else if (nin->type == nrrdTypeInt)
-  {
-    compute_data((int *)nin->data,
-                 (unsigned char *)nvout->data, (float *)gmoutdata,
-                 nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
-                 transform, minf, maxf, valuesonly, compute_justvalue);
-  }
-  else if (nin->type == nrrdTypeUInt)
-  {
-    compute_data((unsigned int *)nin->data,
-                 (unsigned char *)nvout->data, (float *)gmoutdata,
-                 nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
-                 transform, minf, maxf, valuesonly, compute_justvalue);
-  }
-  else if (nin->type == nrrdTypeFloat)
-  {
-    compute_data((float *)nin->data,
-                 (unsigned char *)nvout->data, (float *)gmoutdata,
-                 nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
-                 transform, minf, maxf, valuesonly, compute_justvalue);
-  }
-  else if (nin->type == nrrdTypeDouble)
-  {
-    compute_data((double *)nin->data,
-                 (unsigned char *)nvout->data, (float *)gmoutdata,
-                 nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
-                 transform, minf, maxf, valuesonly, compute_justvalue);
-  }
-  else
-  {
-    error("Unsupported input type.");
-    return;
-  }
+  float *gmoutdata = (float *)(gmout?gmout->data:0);
+  unsigned char *nvoutdata = (unsigned char *)nvout->data;
+  unsigned char *nindata = (unsigned char *)nin->data;
+  const size_t timeoffset =
+    nin->axis[0].size * nin->axis[1].size * nin->axis[2].size;
+  const int timesteps = (nin->dim == 4)?nin->axis[3].size:1;
   
+  for (int j = 0; j < timesteps; j++)
+  {
+    if (nin->type == nrrdTypeChar)
+    {
+      compute_data((char *)nindata,
+		   nvoutdata, gmoutdata,
+		   nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
+		   transform, minf, maxf, valuesonly, compute_justvalue);
+    }
+    else if (nin->type == nrrdTypeUChar)
+    {
+      compute_data((unsigned char *)nindata,
+		   nvoutdata, gmoutdata,
+		   nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
+		   transform, minf, maxf, valuesonly, compute_justvalue);
+    }
+    else if (nin->type == nrrdTypeShort)
+    {
+      compute_data((short *)nindata,
+		   nvoutdata, gmoutdata,
+		   nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
+		   transform, minf, maxf, valuesonly, compute_justvalue);
+    }
+    else if (nin->type == nrrdTypeUShort)
+    {
+      compute_data((unsigned short *)nindata,
+		   nvoutdata, gmoutdata,
+		   nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
+		   transform, minf, maxf, valuesonly, compute_justvalue);
+    }
+    else if (nin->type == nrrdTypeInt)
+    {
+      compute_data((int *)nindata,
+		   nvoutdata, gmoutdata,
+		   nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
+		   transform, minf, maxf, valuesonly, compute_justvalue);
+    }
+    else if (nin->type == nrrdTypeUInt)
+    {
+      compute_data((unsigned int *)nindata,
+		   nvoutdata, gmoutdata,
+		   nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
+		   transform, minf, maxf, valuesonly, compute_justvalue);
+    }
+    else if (nin->type == nrrdTypeFloat)
+    {
+      compute_data((float *)nindata,
+		   nvoutdata, gmoutdata,
+		   nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
+		   transform, minf, maxf, valuesonly, compute_justvalue);
+    }
+    else if (nin->type == nrrdTypeDouble)
+    {
+      compute_data((double *)nindata,
+		   nvoutdata, gmoutdata,
+		   nin->axis[0].size, nin->axis[1].size, nin->axis[2].size,
+		   transform, minf, maxf, valuesonly, compute_justvalue);
+    }
+    else
+    {
+      error("Unsupported input type.");
+      return;
+    }
+    
+    if (gmoutdata) { gmoutdata += timeoffset; }
+    nvoutdata += timeoffset * 4;
+    nindata += timeoffset * nrrdTypeSize[nin->type];
+  }
+
   // Create SCIRun data structure wrapped around nvout
   if (compute_justvalue)
   {

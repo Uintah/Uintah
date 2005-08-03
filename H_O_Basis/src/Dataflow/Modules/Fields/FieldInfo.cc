@@ -31,16 +31,15 @@
 //    Author : McKay Davis
 //    Date   : July 2002
 
-#include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/FieldInterface.h>
-
+#include <Core/Algorithms/Fields/FieldCount.h>
 #include <Core/Containers/Handle.h>
-#include <Core/Geometry/BBox.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Modules/Fields/FieldInfo.h>
-#include <Dataflow/Network/NetworkEditor.h>
 #include <Core/Containers/StringUtil.h>
+#include <Core/Datatypes/FieldInterface.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Geometry/BBox.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Network/NetworkEditor.h>
+#include <Dataflow/Ports/FieldPort.h>
 #include <map>
 #include <iostream>
 
@@ -219,8 +218,8 @@ FieldInfo::update_input_attributes(FieldHandle f)
 
   // Do this last, sometimes takes a while.
   const TypeDescription *meshtd = f->mesh()->get_type_description();
-  CompileInfoHandle ci = FieldInfoAlgoCount::get_compile_info(meshtd);
-  Handle<FieldInfoAlgoCount> algo;
+  CompileInfoHandle ci = FieldCountAlgorithm::get_compile_info(meshtd);
+  Handle<FieldCountAlgorithm> algo;
   if (!module_dynamic_compile(ci, algo)) return;
 
   //string num_nodes, num_elems;
@@ -255,26 +254,6 @@ FieldInfo::execute()
 }
 
 
-CompileInfoHandle
-FieldInfoAlgoCount::get_compile_info(const TypeDescription *mesh_td)
-{
-  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
-  static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("FieldInfoAlgoCountT");
-  static const string base_class_name("FieldInfoAlgoCount");
-
-  CompileInfo *rval =
-    scinew CompileInfo(template_class_name + "." +
-		       mesh_td->get_filename() + ".",
-                       base_class_name,
-                       template_class_name,
-                       mesh_td->get_name());
-
-  // Add in the include path to compile this obj
-  rval->add_include(include_path);
-  mesh_td->fill_compile_info(rval);
-  return rval;
-}
 
 
 } // end SCIRun namespace

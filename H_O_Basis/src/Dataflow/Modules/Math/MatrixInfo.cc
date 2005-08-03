@@ -133,10 +133,20 @@ MatrixInfo::update_input_attributes(MatrixHandle m)
     gui_typename_.set("ColumnMatrix");
     gui_elements_.set(to_string(m->ncols() * m->nrows()));
   }
-  else
+  else if (m->is_dense_col_maj())
+  {
+    gui_typename_.set("DenseColMajMatrix");
+    gui_elements_.set(to_string(m->ncols() * m->nrows()));
+  }
+  else if (m->is_dense())
   {
     gui_typename_.set("DenseMatrix");
     gui_elements_.set(to_string(m->ncols() * m->nrows()));
+  }
+  else
+  {
+    gui_typename_.set("Unknown");
+    gui_elements_.set("*");
   }
 
   gui_rows_.set(to_string(m->nrows()));

@@ -41,6 +41,7 @@
 
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/DenseColMajMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Math/ssmult.h>
 #include <Core/Math/MiscMath.h>
@@ -175,6 +176,27 @@ SparseRowMatrix::dense()
     while (count<nextRow)
     {
       (*dm)[r][columns[count]]=a[count];
+      count++;
+    }
+  }
+  return dm;
+}
+
+
+DenseColMajMatrix *
+SparseRowMatrix::dense_col_maj()
+{
+  DenseColMajMatrix *dm = scinew DenseColMajMatrix(nrows_, ncols_);
+  if (nrows_ == 0) return dm;
+  dm->zero();
+  int count = 0;
+  int nextRow;
+  for (int r = 0; r<nrows_; r++)
+  {
+    nextRow = rows[r+1];
+    while (count<nextRow)
+    {
+      dm->iget(r, columns[count]) = a[count];
       count++;
     }
   }
@@ -511,6 +533,33 @@ SparseRowMatrix::sparse_mult(const DenseMatrix& x, DenseMatrix& b) const
 }
 
 
+
+void
+SparseRowMatrix::sparse_mult_transXB(const DenseMatrix& x,
+                                     DenseMatrix& b) const
+{
+  // Compute A*xT=bT
+  ASSERT(x.ncols() == ncols_);
+  ASSERT(b.ncols() == nrows_);
+  ASSERT(x.nrows() == b.nrows());
+  int i, j, k;
+
+  for (j = 0; j < b.nrows(); j++)
+  {
+    for (i = 0; i < b.ncols(); i++)
+    {
+      double sum = 0.0;
+      for (k = rows[i]; k < rows[i+1]; k++)
+      {
+       sum += a[k] * x.get(j, columns[k]);
+      }
+      b.put(j, i, sum);
+    }
+  }
+}
+
+
+
 MatrixHandle
 SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
 {
@@ -583,24 +632,33 @@ SparseRowMatrix::io(Piostream& stream)
   stream.io(nnz);
   if (stream.reading())
   {
-    a=new double[nnz];
-    columns=new int[nnz];
-    rows=new int[nrows_+1];
+    a = scinew double[nnz];
+    columns = scinew int[nnz];
+    rows = scinew int[nrows_+1];
   }
   int i;
   stream.begin_cheap_delim();
-  for (i=0;i<=nrows_;i++)
-    stream.io(rows[i]);
+  if (!stream.block_io(rows, sizeof(int), nrows_+1))
+  {
+    for (i=0;i<=nrows_;i++)
+      stream.io(rows[i]);
+  }
   stream.end_cheap_delim();
 
   stream.begin_cheap_delim();
-  for (i=0;i<nnz;i++)
-    stream.io(columns[i]);
+  if (!stream.block_io(columns, sizeof(int), nnz))
+  {
+    for (i=0;i<nnz;i++)
+      stream.io(columns[i]);
+  }
   stream.end_cheap_delim();
 
   stream.begin_cheap_delim();
-  for (i=0;i<nnz;i++)
-    stream.io(a[i]);
+  if (!stream.block_io(a, sizeof(double), nnz))
+  {
+    for (i=0;i<nnz;i++)
+      stream.io(a[i]);
+  }
   stream.end_cheap_delim();
 
   stream.end_class();

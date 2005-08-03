@@ -35,7 +35,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Ports/NrrdPort.h>
 #include <Core/Containers/StringUtil.h>
-
+#include <Core/Math/MiscMath.h>
 namespace SCITeem {
 
 using namespace SCIRun;
@@ -50,7 +50,7 @@ private:
   NrrdIPort*      inrrd_;
   NrrdOPort*      onrrd_;
 
-  GuiInt          axis_;
+  GuiString       axis_;
   GuiString       label_;
 };
 
@@ -84,15 +84,23 @@ UnuAxinsert::execute()
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *nout = nrrdNew();
 
+
+  int axis; 
+  if (!string_to_int(axis_.get(), axis)) {
+    axis = nin->dim;
+    warning(axis_.get()+" is not a valid axis number.");
+    warning("Using axis number: "+to_string(axis));
+  }
+  axis = Clamp(axis, 0, nin->dim);
+  axis_.set(to_string(axis));
   
-  if (nrrdAxesInsert(nout, nin, axis_.get())) {
-   char *err = biffGetDone(NRRD);
+  if (nrrdAxesInsert(nout, nin, axis)) {
+    char *err = biffGetDone(NRRD);
     error(string("Error Axinserting nrrd: ") + err);
     free(err);
   }
-
+  
   if (strlen(label_.get().c_str())) {
-    int axis = axis_.get();
     nout->axis[axis].label = airStrdup(label_.get().c_str());
   }
 
@@ -108,14 +116,14 @@ UnuAxinsert::execute()
   // Copy the axis kinds
   int offset = 0;
   for (int i=0; i<nin->dim; i++) {
-    if (i == axis_.get()) {
+    if (i == axis) {
       offset = 1;
       nout->axis[i].kind = nrrdKindStub;
     }
     nout->axis[i+offset].kind = nin->axis[i].kind;
   }
-  if (axis_.get() == nin->dim) 
-    nout->axis[axis_.get()].kind = nrrdKindStub;
+  if (axis == nin->dim) 
+    nout->axis[axis].kind = nrrdKindStub;
 
   onrrd_->send(out);
 

@@ -48,6 +48,8 @@
 #define SCI_THROW(exc) throw exc
 #endif
 
+#include <sci_defs/error_defs.h>
+
 namespace SCIRun {
       class Exception {
       public:

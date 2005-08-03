@@ -43,23 +43,6 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Tensor.h>
 
-#include <Core/Datatypes/PointCloudField.h>
-#include <Core/Datatypes/CurveField.h>
-#include <Core/Datatypes/TriSurfField.h>
-#include <Core/Datatypes/QuadSurfField.h>
-
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/PrismVolField.h>
-#include <Core/Datatypes/HexVolField.h>
-
-#include <Core/Datatypes/LatVolField.h>
-#include <Core/Datatypes/ImageField.h>
-#include <Core/Datatypes/ScanlineField.h>
-
-#include <Core/Datatypes/StructHexVolField.h>
-#include <Core/Datatypes/StructQuadSurfField.h>
-#include <Core/Datatypes/StructCurveField.h>
-
 #include <Core/Containers/StringUtil.h>
 
 #include <Core/Datatypes/NrrdData.h>

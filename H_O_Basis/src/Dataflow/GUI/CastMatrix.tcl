@@ -82,7 +82,8 @@ itcl_class SCIRun_Math_CastMatrix {
 		{{"Same (pass-through)" Same} \
 		{ColumnMatrix ColumnMatrix} \
 		{DenseMatrix DenseMatrix} \
-		{SparseRowMatrix SparseRowMatrix}}
+		{SparseRowMatrix SparseRowMatrix} \
+                {DenseColMajMatrix DenseColMajMatrix}}
 	pack $w.otype.r -side top -expand 1 -fill x
 
 	makeSciButtonPanel $w $w $this

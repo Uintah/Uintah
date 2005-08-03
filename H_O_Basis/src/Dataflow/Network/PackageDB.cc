@@ -30,49 +30,54 @@
 // PackageDB.cc - Interface to module-finding and loading mechanisms
 
 #ifdef ASSERT
-#undef ASSERT
+#  undef ASSERT
 #endif
 
 #include <Dataflow/Network/PackageDB.h>
-#include <Dataflow/Network/FileUtils.h>
 #include <Dataflow/Network/ComponentNode.h>
 #include <Dataflow/Network/PackageDBHandler.h>
-#include <Dataflow/XMLUtil/StrX.h>
+#include <Core/XMLUtil/StrX.h>
 #include <Dataflow/Network/NetworkEditor.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/XMLUtil/XMLUtil.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/GuiInterface.h>
 #include <Core/Util/Environment.h>
+#include <Core/Util/soloader.h>
+#include <Core/Util/FileUtils.h>
 #include <Core/OS/Dir.h> // for LSTAT
+
 #include <stdio.h>
 #include <iostream>
 #include <ctype.h>
 #include <string>
 #include <vector>
+
 using namespace std;
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#define IRIX
-#pragma set woff 1375
+#  define IRIX
+#  pragma set woff 1375
 #endif
+
 #include <xercesc/util/PlatformUtils.hpp>
 #include <xercesc/sax/SAXException.hpp>
 #include <xercesc/sax/SAXParseException.hpp>
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/dom/DOMNamedNodeMap.hpp>
 #include <xercesc/sax/ErrorHandler.hpp>
+
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1375
+#  pragma reset woff 1375
 #endif
 
 #include <sys/stat.h>
 
 #ifdef __APPLE__
-static string lib_ext = ".dylib";
+  static string lib_ext = ".dylib";
 #elif defined(_WIN32)
-const string lib_ext = ".dll";
+  const string lib_ext = ".dll";
 #else
-static string lib_ext = ".so";
+  static string lib_ext = ".so";
 #endif
 
 namespace SCIRun {
@@ -115,40 +120,8 @@ PackageDB::~PackageDB()
 
 typedef void (*pkgInitter)(const string& tclPath);
 
-LIBRARY_HANDLE PackageDB::findLib(string lib)
-{
-  LIBRARY_HANDLE handle=0;
-  const char *env = sci_getenv("PACKAGE_LIB_PATH");
-  string tempPaths(env?env:"");
-  // try to find the library in the specified path
-  while (tempPaths!="") {
-    string dir;
-#ifdef _WIN32
-    // make sure we don't throw away the drive letter
-    const unsigned int firstColon = tempPaths.find(':',2);
-#else
-    const unsigned int firstColon = tempPaths.find(':');
-#endif
-    if(firstColon < tempPaths.size()) {
-      dir=tempPaths.substr(0,firstColon);
-      tempPaths=tempPaths.substr(firstColon+1);
-    } else {
-      dir=tempPaths;
-      tempPaths="";
-    }
-
-    handle = GetLibraryHandle((dir+"/"+lib).c_str());
-    if (handle)
-      return handle;
-  }
-
-  // if not yet found, try to find it in the rpath 
-  // or the LD_LIBRARY_PATH (last resort)
-  handle = GetLibraryHandle(lib.c_str());
-  return handle;
-}
-
-bool PackageDB::findMaker(ModuleInfo* moduleInfo)
+bool
+PackageDB::findMaker(ModuleInfo* moduleInfo)
 {
   string cat_bname, pak_bname;
   if(moduleInfo->packageName == "SCIRun") {
@@ -204,7 +177,8 @@ bool PackageDB::findMaker(ModuleInfo* moduleInfo)
 }
 
 
-void PackageDB::loadPackage(bool resolve)
+void
+PackageDB::loadPackage(bool resolve)
 {
   string loadPackage;
   string result;
@@ -434,7 +408,9 @@ void PackageDB::loadPackage(bool resolve)
   printMessage("\nFinished loading packages.");
 }
   
-void PackageDB::registerModule(ModuleInfo* info) {
+void
+PackageDB::registerModule(ModuleInfo* info) 
+{
   Package* package;
   if(!db_->lookup(info->packageName,package))
     {
@@ -455,10 +431,11 @@ void PackageDB::registerModule(ModuleInfo* info) {
 	      << info->moduleName << "\n";  
 }
  
-Module* PackageDB::instantiateModule(const string& packageName,
-				     const string& categoryName,
-				     const string& moduleName,
-				     const string& instanceName)
+Module*
+PackageDB::instantiateModule(const string& packageName,
+                             const string& categoryName,
+                             const string& moduleName,
+                             const string& instanceName)
 {
   Package* package;
   if(!db_->lookup(packageName,package)) {
@@ -550,9 +527,10 @@ Module* PackageDB::instantiateModule(const string& packageName,
   return module;
 }
  
-bool PackageDB::haveModule(const string& packageName,
-			   const string& categoryName,
-			   const string& moduleName) const
+bool
+PackageDB::haveModule(const string& packageName,
+                      const string& categoryName,
+                      const string& moduleName) const
 {
   Package* package;
   if(!db_->lookup(packageName,package))
@@ -656,7 +634,8 @@ PackageDB::moduleNames(const string& packageName,
   return result;
 }
 
-void PackageDB::setGui(GuiInterface* gui)
+void
+PackageDB::setGui(GuiInterface* gui)
 {
   gui_ = gui;
   if (gui_) {
@@ -668,7 +647,8 @@ void PackageDB::setGui(GuiInterface* gui)
   }
 }
 
-void PackageDB::gui_exec(const string& command)
+void
+PackageDB::gui_exec(const string& command)
 {
   if(gui_)
     gui_->execute(command);

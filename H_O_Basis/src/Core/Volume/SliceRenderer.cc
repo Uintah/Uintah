@@ -47,8 +47,16 @@ using std::string;
 
 namespace SCIRun {
 
+#ifndef GL_TEXTURE_3D
+#define GL_TEXTURE_3D 0x806F
+#endif
+
 #ifdef _WIN32
-#define GL_TEXTURE_3D 2
+#include <windows.h>
+#define GL_ARB_fragment_program 1
+typedef void (GLAPIENTRY * PFNGLACTIVETEXTUREPROC) (GLenum texture);
+static PFNGLACTIVETEXTUREPROC glActiveTexture = 0;
+#define GL_TEXTURE0_ARB 0x84C0
 #endif
 
 SliceRenderer::SliceRenderer(TextureHandle tex,
@@ -70,6 +78,9 @@ SliceRenderer::SliceRenderer(TextureHandle tex,
 {
   lighting_ = 1;
   mode_ = MODE_SLICE;
+#ifdef _WIN32
+  glActiveTexture = (PFNGLACTIVETEXTUREPROC)wglGetProcAddress("glActiveTexture");
+#endif
 }
 
 SliceRenderer::SliceRenderer(const SliceRenderer& copy)
@@ -163,6 +174,9 @@ SliceRenderer::draw_slice()
   //--------------------------------------------------------------------------
   // enable data texture unit 0
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#ifdef _WIN32
+  if (glActiveTexture)
+#endif
   glActiveTexture(GL_TEXTURE0_ARB);
 #endif
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -206,7 +220,7 @@ SliceRenderer::draw_slice()
   for(unsigned int i=0; i<bricks.size(); i++) {
     double t;
     TextureBrickHandle b = bricks[i];
-    load_brick(b, use_cmap2);
+    load_brick(bricks, i, use_cmap2);
     vertex.clear();
     texcoord.clear();
     size.clear();
@@ -315,6 +329,9 @@ SliceRenderer::draw_slice()
     release_colormap1();
   }
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#ifdef _WIN32
+  if (glActiveTexture)
+#endif
   glActiveTexture(GL_TEXTURE0_ARB);
 #endif
   glDisable(GL_TEXTURE_3D);
@@ -364,6 +381,9 @@ SliceRenderer::multi_level_draw()
   //--------------------------------------------------------------------------
   // enable data texture unit 0
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#ifdef _WIN32
+  if (glActiveTexture)
+#endif
   glActiveTexture(GL_TEXTURE0_ARB);
 #endif  
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -421,7 +441,7 @@ SliceRenderer::multi_level_draw()
     tex_->get_sorted_bricks(blevels[levels - (k + 1)], view_ray, k);
   }
   if( use_stencil_){
-    glStencilMask(~0);
+    glStencilMask(~(GLuint(0)));
     glClear(GL_STENCIL_BUFFER_BIT);
     glStencilMask(1);
   }
@@ -441,7 +461,7 @@ SliceRenderer::multi_level_draw()
       Ray r(cyl_mid, phi);
 
       if( use_stencil_){
-	glStencilMask(~0);
+	glStencilMask(~(GLuint(0)));
 	glClear(GL_STENCIL_BUFFER_BIT);
 	glStencilMask(1);
       }
@@ -453,7 +473,7 @@ SliceRenderer::multi_level_draw()
 	for(unsigned int i=0; i<bs.size(); i++) {
 	  double t;
 	  TextureBrickHandle b = bs[i];
-	  load_brick(b, use_cmap2);
+	  load_brick(bs, i, use_cmap2);
 	  vertex.resize(0);
 	  texcoord.resize(0);
 	  size.resize(0);
@@ -482,7 +502,7 @@ SliceRenderer::multi_level_draw()
       Ray r(cyl_mid, phi);
 
       if( use_stencil_){
-	glStencilMask(~0);
+	glStencilMask(~(GLuint(0)));
 	glClear(GL_STENCIL_BUFFER_BIT);
 	glStencilMask(1);
       }
@@ -494,7 +514,7 @@ SliceRenderer::multi_level_draw()
 	for(unsigned int i=0; i<bs.size(); i++) {
 	  double t;
 	  TextureBrickHandle b = bs[i];
-	  load_brick(b, use_cmap2);
+	  load_brick(bs, i, use_cmap2);
 	  vertex.resize(0);
 	  texcoord.resize(0);
 	  size.resize(0);
@@ -523,7 +543,7 @@ SliceRenderer::multi_level_draw()
   } else {
     if(draw_view_) {
       if( use_stencil_){
-	glStencilMask(~0);
+	glStencilMask(~(GLuint(0)));
 	glClear(GL_STENCIL_BUFFER_BIT);
 	glStencilMask(1);
       }
@@ -535,7 +555,7 @@ SliceRenderer::multi_level_draw()
 	for(unsigned int i=0; i<bs.size(); i++) {
 	  double t;
 	  TextureBrickHandle b = bs[i];
-	  load_brick(b, use_cmap2);
+	  load_brick(bs, i, use_cmap2);
 	  vertex.resize(0);
 	  texcoord.resize(0);
 	  size.resize(0);
@@ -560,7 +580,7 @@ SliceRenderer::multi_level_draw()
     } else {
       if(draw_x_) {
 	if( use_stencil_){
-	  glStencilMask(~0);
+	  glStencilMask(~(GLuint(0)));
 	  glClear(GL_STENCIL_BUFFER_BIT);
 	  glStencilMask(1);
 	}
@@ -572,7 +592,7 @@ SliceRenderer::multi_level_draw()
 	  for(unsigned int i=0; i<bs.size(); i++) {
 	    double t;
 	    TextureBrickHandle b = bs[i];
-	    load_brick(b, use_cmap2);
+	    load_brick(bs, i, use_cmap2);
 	    vertex.resize(0);
 	    texcoord.resize(0);
 	    size.resize(0);
@@ -610,7 +630,7 @@ SliceRenderer::multi_level_draw()
       }
       if(draw_y_) {
 	if( use_stencil_){
-	  glStencilMask(~0);
+	  glStencilMask(~(GLuint(0)));
 	  glClear(GL_STENCIL_BUFFER_BIT);
 	  glStencilMask(1);
 	}
@@ -622,7 +642,7 @@ SliceRenderer::multi_level_draw()
 	  for(unsigned int i=0; i<bs.size(); i++) {
 	    double t;
 	    TextureBrickHandle b = bs[i];
-	    load_brick(b, use_cmap2);
+	    load_brick(bs, i, use_cmap2);
 	    vertex.resize(0);
 	    texcoord.resize(0);
 	    size.resize(0);
@@ -665,7 +685,7 @@ SliceRenderer::multi_level_draw()
     
   if (draw_z) {
     if( use_stencil_){
-      glStencilMask(~0);
+      glStencilMask(~(GLuint(0)));
       glClear(GL_STENCIL_BUFFER_BIT);
       glStencilMask(1);
     }
@@ -677,7 +697,7 @@ SliceRenderer::multi_level_draw()
       for(unsigned int i=0; i<bs.size(); i++) {
 	double t;
 	TextureBrickHandle b = bs[i];
-	load_brick(b, use_cmap2);
+	load_brick(bs, i, use_cmap2);
 	vertex.resize(0);
 	texcoord.resize(0);
 	size.resize(0);
@@ -735,6 +755,9 @@ SliceRenderer::multi_level_draw()
     release_colormap1();
   }
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#ifdef _WIN32
+  if (glActiveTexture)
+#endif
   glActiveTexture(GL_TEXTURE0_ARB);
 #endif
   glDisable(GL_TEXTURE_3D);

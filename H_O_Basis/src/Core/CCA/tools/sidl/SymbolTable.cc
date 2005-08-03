@@ -28,8 +28,8 @@
 
 
 
-#include "SymbolTable.h"
-#include "Spec.h"
+#include <Core/CCA/tools/sidl/Spec.h>
+#include <Core/CCA/tools/sidl/SymbolTable.h>
 #include <iostream>
 
 using std::string;
@@ -43,16 +43,23 @@ SymbolTable::SymbolTable(SymbolTable* parent, const string& name)
 
 SymbolTable::~SymbolTable()
 {
+    map<string, Symbol*>::iterator iter = symbols.begin();
+    while (iter != symbols.end()) {
+        delete iter->second;
+        symbols.erase(iter);
+        iter = symbols.begin();
+    }
 }
 
 Symbol* SymbolTable::lookup(const string& name, bool recurse) const
 {
   map<string, Symbol*>::const_iterator iter=symbols.find(name);
-  if(iter == symbols.end()){
-    if(recurse && parent)
+  if(iter == symbols.end()) {
+    if(recurse && parent) {
       return parent->lookup(name, true);
-    else 
+    } else {
       return 0;
+    }
   } else {
     return iter->second;
   }
@@ -61,7 +68,7 @@ Symbol* SymbolTable::lookup(const string& name, bool recurse) const
 void SymbolTable::insert(Symbol* sym)
 {
   sym->setSymbolTable(this);
-  symbols[sym->getName()]=sym;
+  symbols[sym->getName()] = sym;
 }
 
 void Symbol::setType(Symbol::Type typ)
@@ -77,6 +84,10 @@ Symbol::Symbol(const string& name)
   emitted_forward=false;
 }
 
+Symbol::~Symbol()
+{
+}
+
 const string& Symbol::getName() const
 {
   return name;
@@ -84,42 +95,45 @@ const string& Symbol::getName() const
 
 Symbol* SymbolTable::lookup(ScopedName* name) const
 {
-  const SymbolTable* p;
-  if(name->getLeadingDot()){
-    p=this;
-    while(p->parent)
-      p=p->parent;
-  } else {
-    p=this;
-  }
-  while(p){
-    const SymbolTable* pp=p;
-    int i=0;
-    for(;;){
-      Symbol* s=pp->lookup(name->name(i), false);
-      if(!s)
-	break;
-      switch(s->getType()){
-      case Symbol::ClassType:
-      case Symbol::PackageType:
-      case Symbol::InterfaceType:
-      case Symbol::EnumType:
-      case Symbol::DistArrayType:
-	{
-	  Definition* d=s->getDefinition();
-	  pp=d->getSymbolTable();
-	}
-	break;
-      default:
-	return 0;
-      }
-      i++;
-      if(i == name->nnames())
-	return s;
+    const SymbolTable* p;
+    if (name->getLeadingDot()) {
+        p=this;
+        while(p->parent) {
+            p=p->parent;
+        }
+    } else {
+        p=this;
     }
-    p=p->parent;
-  }
-  return 0;
+    while(p) {
+        const SymbolTable* pp=p;
+        int i=0;
+        for(;;) {
+            Symbol* s=pp->lookup(name->name(i), false);
+            if (!s) {
+                break;
+            }
+            switch(s->getType()){
+                case Symbol::ClassType:
+                case Symbol::PackageType:
+                case Symbol::InterfaceType:
+                case Symbol::EnumType:
+                case Symbol::DistArrayType:
+                {
+                    Definition* d=s->getDefinition();
+                    pp=d->getSymbolTable();
+                }
+                break;
+                default:
+                    return 0;
+            }
+            i++;
+            if (i == name->nnames()) {
+                return s;
+            }
+        }
+        p=p->parent;
+    }
+    return 0;
 }
 
 void Symbol::setDefinition(Definition* def)
@@ -159,24 +173,25 @@ Enumerator* Symbol::getEnumerator() const
 
 string SymbolTable::fullname() const
 {
-  if(parent)
+  if (parent) {
     return parent->fullname()+"."+name;
-  else
+  } else {
     return "";
+  }
 }
 
 string SymbolTable::cppfullname() const
 {
-  if(parent)
-    {
-      string parent_name = parent->cppfullname();
-      if( parent_name == "" )
-	return name;
-      else
-	return parent_name + "::" + name;
+    if (parent) {
+        string parent_name = parent->cppfullname();
+        if ( parent_name == "" ) {
+            return name;
+        } else {
+            return parent_name + "::" + name;
+        }
+    } else {
+        return "";
     }
-  else
-    return "";
 }
 
 string Symbol::fullname() const
@@ -186,15 +201,16 @@ string Symbol::fullname() const
 
 string Symbol::cppfullname(SymbolTable* forstab) const
 {
-  if(forstab == symtab)
+  if (forstab == symtab) {
     return name;
-  else
+  } else {
     return symtab->cppfullname()+"::"+name;
+  }
 }
 
 void Symbol::setSymbolTable(SymbolTable* stab)
 {
-  if(symtab){
+  if (symtab) {
     cerr << "Error: SymbolTable set twice for symbol!\n";
     exit(1);
   }

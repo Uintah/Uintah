@@ -197,11 +197,10 @@ write_MPM(FieldHandle& field_h, const string &outdir)
 
   Fld *ifield = (Fld *) field_h.get_rep();
   typename Fld::mesh_handle_type mesh = ifield->get_typed_mesh();
-  bool have_files = false;
   vector<pair<string, Tensor> > field_tensors;
+  files = new vector<ofstream*>;
+  
   if (ifield->get_property("conductivity_table", field_tensors)) {
-    have_files = true;
-    files = new vector<ofstream*>;
     vector<pair<string, Tensor> >::iterator titer = field_tensors.begin();
     while (titer != field_tensors.end()) {
       fcount.push_back(0);
@@ -222,6 +221,24 @@ write_MPM(FieldHandle& field_h, const string &outdir)
       files->push_back(new ofstream(nm1.c_str(), ios::out));
 
     }    
+  } else {
+    // no properties..
+    fcount.push_back(0);
+    num_files.push_back(1);
+    stringstream fname(stringstream::in | stringstream::out);
+    string nm;
+    fname << outdir << "/unknown_material";
+    fname >> nm;
+    prename.push_back(nm);
+
+    fname.clear();
+    fname << nm << "-"; 
+    fname.fill('0');
+    fname.width(4);
+    fname << right << 1;
+    string nm1;
+    fname >> nm1;
+    files->push_back(new ofstream(nm1.c_str(), ios::out));
   }
 
   const double max_vol_s = 1.0L;
@@ -253,24 +270,27 @@ write_MPM(FieldHandle& field_h, const string &outdir)
     ++iter; count++;
     typename Fld::mesh_type::Cell::index_type ci;
     if (mesh->locate(ci, c)) {
-      int val = ifield->value(ci);
-      if (fcount[val] > max_lines) {
+      int file_index = 0;
+      if (ifield->basis_order() > 0) {
+        file_index = ifield->value(ci);
+      }
+      if (fcount[file_index] > max_lines) {
 	string nm;
 	stringstream fname(stringstream::in | stringstream::out);
-	fname << prename[val] << "-";
+	fname << prename[file_index] << "-";
 	fname.fill('0');
 	fname.width(4);
-	fname << right << ++num_files[val];
+	fname << right << ++num_files[file_index];
 	fname >> nm;
-	delete (*files)[val];
-	(*files)[val] = new ofstream(nm.c_str(), ios::out);
-	fcount[val] = 0;
+	delete (*files)[file_index];
+	(*files)[file_index] = new ofstream(nm.c_str(), ios::out);
+	fcount[file_index] = 0;
       }
 
-      ofstream* str = (*files)[val];
+      ofstream* str = (*files)[file_index];
       (*str) << setprecision (9) <<c.x() << " " << c.y() << " " << c.z() 
 	     << " " << vol << endl;
-       fcount[val]++;
+      fcount[file_index]++;
     }
     
     if (count % ((int)(sizex*sizey*sizez*0.01)) == 0) { cout << "."; }

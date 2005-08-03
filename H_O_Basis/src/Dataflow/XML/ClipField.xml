@@ -41,11 +41,14 @@
     <summary>Select a subset of a field.</summary>
     <description>
       <p>
-        This module clips out a subset of a field.  The new field
-        contains just the selected portion of the input field.
+        The ClipField module clips out a subset of a field.  It does so by
+        preserving all of the elements in the input field that match the
+        clipping criteria.  By default this is every element who's center is
+        within the clipping widget or clipping field.  As a side
+        effect of this algorithm any degenerate non-element items in the input
+        field are discarded by the clip.
       </p>
       <p>
-
         The module runs in one of two different modes.  If a field
 	is connected to the "Clip Field" port, the module will clip
 	the input field such that only those elements inside of the

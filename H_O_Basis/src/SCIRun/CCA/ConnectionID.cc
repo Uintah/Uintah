@@ -47,14 +47,11 @@
 namespace SCIRun {
 
 ConnectionID::ConnectionID(const sci::cca::ComponentID::pointer& user,
-                           const std::string& userPortName,
+                           const std::string& uPortName,
                            const sci::cca::ComponentID::pointer& provider,
-                           const std::string& providerPortName)
+                           const std::string& pPortName)
+    : userPortName(uPortName), providerPortName(pPortName), user(user), provider(provider)
 {
-  this->user=user;
-  this->userPortName=userPortName;
-  this->provider=provider;
-  this->providerPortName=providerPortName;
 }
 
 ConnectionID::~ConnectionID()

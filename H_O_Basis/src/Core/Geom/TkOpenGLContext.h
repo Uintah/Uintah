@@ -75,6 +75,10 @@ public:
   int			height();
   void			swap();
 
+  #ifdef _WIN32
+  const char*           ReportCapabilities();
+  #endif
+
   static vector<int>	valid_visuals_;
   int			direct_;
   int			buffersize_;
@@ -103,6 +107,9 @@ public:
   Tk_Window		mainwin_;
 #ifndef _WIN32
   GLXContext		context_;
+#else
+  HDC                   hDC_;
+  HGLRC                 context_;
 #endif
   XVisualInfo*		vi_;
   Colormap		colormap_;

@@ -100,7 +100,6 @@ public:
   int nmodules();
   Module* module(int);
 
-  int nconnections();
   Connection* connection(int);
   string connect(Module*, int, Module*, int);
   int disconnect(const string&);

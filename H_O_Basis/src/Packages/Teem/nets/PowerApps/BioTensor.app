@@ -2339,6 +2339,8 @@ class BioTensorApp {
 	pack $win.detachedP.f -side left -anchor n -fill both -expand 1
 	
 	wm title $win.detachedP "Processing Window"
+	wm protocol $win.detachedP WM_DELETE_WINDOW \
+	    { app hide_processing_window }
 	
 	wm sizefrom $win.detachedP user
 	wm positionfrom $win.detachedP user
@@ -2373,6 +2375,8 @@ class BioTensorApp {
 	pack $win.detachedV.f -side left -anchor n
 
 	wm title $win.detachedV "Visualization Window"
+	wm protocol $win.detachedV WM_DELETE_WINDOW \
+	    { app hide_visualization_window }
 
 	wm sizefrom $win.detachedV user
 	wm positionfrom $win.detachedV user
@@ -2394,15 +2398,14 @@ class BioTensorApp {
 	init_Vframe $attachedVFr.f 2
 
 
-	### pack 3 frames
-	#pack $attachedPFr $win.viewer $attachedVFr -side left \
-	#    -anchor n -fill both -expand 1
+	### pack 3 frames in proper order so that viewer
+	# is the last to be packed and will be the one to resize
+	pack $attachedVFr -side right -anchor n 
+
 	pack $attachedPFr -side left -anchor n
 
 	pack $win.viewer -side left -anchor n -fill both -expand 1
-	# pack $win.viewer.v -side top -anchor n -fill both -expand 1
 
-	pack $attachedVFr -side left -anchor n 
 
 	set total_width [expr $process_width + $viewer_width + $vis_width]
 
@@ -2543,7 +2546,7 @@ class BioTensorApp {
 	    
 	    
             ### Nrrd
-            set page [$step_tab.tnb add -label "Generic" -command {app configure_readers Nrrd}]
+            set page [$step_tab.tnb add -label "Generic" -command {app configure_readers Generic}]
 
 	    #Tooltip $page $tips(NrrdTab)
 
@@ -3268,7 +3271,20 @@ class BioTensorApp {
 
 	} else {
 	    wm withdraw $detachedPFr
-	    pack $attachedPFr -anchor n -side left -before $win.viewer
+
+	    # unpack everything and repack in the proper order
+	    # (viewer last) so that viewer is the one to resize
+	    pack forget $win.viewer
+
+	    if { $IsVAttached } {
+		pack forget $attachedVFr
+		pack $attachedVFr -side right -anchor n 
+	    }
+
+	    pack $attachedPFr -side left -anchor n
+
+	    pack $win.viewer -side left -anchor n -fill both -expand 1
+
 	    set new_width [expr $c_width + $process_width]
             append geom $new_width x $c_height + [expr $x - $process_width] + $y
 	    wm geometry $win $geom
@@ -3301,7 +3317,20 @@ class BioTensorApp {
 	    set IsVAttached 0
 	} else {
 	    wm withdraw $detachedVFr
-	    pack $attachedVFr -anchor n -side left -after $win.viewer 
+
+	    # unpack everything and repack in proper order
+	    # (viewer last) so that viewer is the one to resize
+	    pack forget $win.viewer
+
+	    pack $attachedVFr -anchor n -side right 
+
+	    if { $IsPAttached } {
+		pack forget $attachedPFr
+		pack $attachedPFr -side left -anchor n 
+	    }
+
+	    pack $win.viewer -side left -anchor n -fill both -expand 1
+
 	    set new_width [expr $c_width + $vis_width]
             append geom $new_width x $c_height
 	    wm geometry $win $geom

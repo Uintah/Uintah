@@ -43,7 +43,7 @@
 #ifndef CORE_CCA_COMM_PRMI_H
 #define CORE_CCA_COMM_PRMI_H
 
-
+#include <sci_defs/mpi_defs.h>
 #include <iostream>
 #include <vector>
 #include <deque>
@@ -54,7 +54,7 @@
 #include <Core/CCA/Comm/DT/DTAddress.h>
 #include <Core/CCA/Comm/DT/DTMessageTag.h>
 #include <Core/CCA/Comm/SocketEpChannel.h>
-#include <mpi.h>
+
 
 namespace SCIRun {
 
@@ -125,15 +125,17 @@ namespace SCIRun {
       //...
     };
 
-    static void init();
-    static inline void lock();
-    static inline void unlock();
+    static void init(int rank, int size);
+    static void lock();
+    static void unlock();
 
     static void internal_lock();
     static void internal_unlock();
 
+    //#ifdef HAVE_MPI
     //duplicate MPI_COMM_WORLD
-    static int getComm(MPI_Comm *);
+    //    static int getComm(MPI_Comm *);
+    //#endif
 
     static void order_service(DTMessage *dtmsg);
     static void lock_service(DTMessage *dtmsg);
@@ -163,7 +165,9 @@ namespace SCIRun {
     static DTPoint** lockSvc_ep_list;
     static DTAddress  * lockSvc_addr_list;
 
-    static MPI_Comm MPI_COMM_WORLD_Dup;
+    //#ifdef HAVE_MPI
+    //    static MPI_Comm MPI_COMM_WORLD_Dup;
+    //#endif
 
   private:
 

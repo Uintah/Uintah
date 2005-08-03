@@ -72,9 +72,8 @@
 #include <Core/CCA/Comm/SocketEpChannel.h>
 #include <Core/CCA/Comm/SocketSpChannel.h>
 #include <Core/CCA/PIDL/PIDL.h>
-#include <deque>
-#include <mpi.h>
 #include <Core/CCA/Comm/PRMI.h>
+#include <deque>
 
 using namespace SCIRun;
 using namespace std;
@@ -124,55 +123,15 @@ PRMI:: lock_req_map;
 PRMI::states 
 PRMI::fwkstate;
 
-MPI_Comm
-PRMI::MPI_COMM_WORLD_Dup;
+// #ifdef HAVE_MPI
+// MPI_Comm
+// PRMI::MPI_COMM_WORLD_Dup;
+// #endif
 
 void 
-PRMI::init(){
-  //set size, rank
-  MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
-  MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
-
-  MPI_Comm_dup(MPI_COMM_WORLD, &MPI_COMM_WORLD_Dup);
-
-
-  DTAddress dtAddr=PIDL::getDT()->getAddress();
-  if(mpi_rank==0){
-    orderSvc_ep=orderSvcEp.getEP();
-    orderSvc_addr.ip=dtAddr.ip;
-    orderSvc_addr.port=dtAddr.port;
-  }
-  //root broadcasts its orderSvc_ep and orderSvc_addr
-  int* int_buf;
-  short* short_buf;
-  if(mpi_rank==0){
-    lockSvc_ep_list=new DTPoint*[mpi_size];
-    lockSvc_addr_list=new DTAddress[mpi_size];
-    int_buf=new int[mpi_size];
-    short_buf=new short[mpi_size];
-  }
-  //root broadcast order service ep and DT address
-  MPI_Bcast(&orderSvc_ep, 1, MPI_INT,0,MPI_COMM_WORLD);
-  MPI_Bcast(&orderSvc_addr.ip, 1, MPI_INT,0,MPI_COMM_WORLD);
-  MPI_Bcast(&orderSvc_addr.port, 1, MPI_SHORT,0,MPI_COMM_WORLD);
-
-
-  //root gatheres lockSvc_ep and lockSvc_addr
-  DTPoint* lockSvc_ep=lockSvcEp.getEP();
-  MPI_Gather(&lockSvc_ep, 1, MPI_INT, lockSvc_ep_list, 1, MPI_INT,
-	     0, MPI_COMM_WORLD);
-  MPI_Gather(&dtAddr.ip, 1, MPI_INT, int_buf, 1, MPI_INT,
-	     0, MPI_COMM_WORLD);
-  MPI_Gather(&dtAddr.port, 1, MPI_SHORT, short_buf, 1, MPI_SHORT,
-	     0, MPI_COMM_WORLD);
-  if(mpi_rank==0){
-    for(int i=0; i<mpi_size; i++){
-      lockSvc_addr_list[i].ip=int_buf[i];
-      lockSvc_addr_list[i].port=short_buf[i];
-    }
-    delete []int_buf;
-    delete []short_buf;
-  }
+PRMI::init(int rank, int size){
+  mpi_rank=rank;
+  mpi_size=size;
 }
 
 void
@@ -244,28 +203,35 @@ PRMI::internal_unlock(){
   }
 }
 
-void inline
+void 
 PRMI::lock(){
+#ifdef HAVE_MPI
 #ifndef MPI_IS_THREADSAFE
   internal_lock();
 #endif
+#endif
 }
 
-void inline
+void 
 PRMI::unlock(){
+#ifdef HAVE_MPI
 #ifndef MPI_IS_THREADSAFE
   internal_unlock();
 #endif
+#endif
 }
 
-int 
-PRMI::getComm(MPI_Comm *newComm){
-  int retval;
-  internal_lock();
-  retval=MPI_Comm_dup(MPI_COMM_WORLD_Dup, newComm);
-  internal_unlock();
-  return retval;
-}
+
+// #ifdef HAVE_MPI
+// int 
+// PRMI::getComm(MPI_Comm *newComm){
+//   int retval;
+//   internal_lock();
+//   retval=MPI_Comm_dup(MPI_COMM_WORLD_Dup, newComm);
+//   internal_unlock();
+//   return retval;
+// }
+// #endif
 
 void
 PRMI::addStat(states *stat){

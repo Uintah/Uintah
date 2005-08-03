@@ -62,18 +62,26 @@ class ConnectionID : public sci::cca::ConnectionID
 {
 public:
   ConnectionID(const sci::cca::ComponentID::pointer& user,
-               const std::string& userPortName,
+               const std::string& uPortName,
                const sci::cca::ComponentID::pointer& provider,
-               const std::string& providerPortName);
+               const std::string& pPortName);
   virtual ~ConnectionID();
-  /** Returns a smart pointer to the component that is the port provider.*/
-  sci::cca::ComponentID::pointer getProvider();
-  /** Returns a smart pointer to the component that is the port user.    */
-  sci::cca::ComponentID::pointer getUser();
-  /** Returns the provides port name from the providing component.*/
-  std::string getProviderPortName();
-  /** Returns the uses port name from the using component.*/
-  std::string getUserPortName();
+
+  /** Returns a smart pointer to the component that is the port provider. */
+  virtual sci::cca::ComponentID::pointer getProvider();
+
+  /** Returns a smart pointer to the component that is the port user. */
+  virtual sci::cca::ComponentID::pointer getUser();
+
+  /** Returns the provides port name from the providing component. */
+  virtual std::string getProviderPortName();
+
+  /** Returns the uses port name from the using component. */
+  virtual std::string getUserPortName();
+
+  inline sci::cca::TypeMap::pointer getProperties() { return properties; }
+  inline void setProperties(const sci::cca::TypeMap::pointer &tm) { properties = tm; }
+
 private:
   ConnectionID(const ConnectionID&);
   ConnectionID& operator=(const ConnectionID&);
@@ -81,6 +89,7 @@ private:
   std::string providerPortName;
   sci::cca::ComponentID::pointer user;
   sci::cca::ComponentID::pointer provider;
+  sci::cca::TypeMap::pointer properties;
 };
 
 } // end namespace SCIRun

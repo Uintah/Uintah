@@ -34,10 +34,7 @@
 #define ConvertToNrrd_h
 
 #include <Core/Containers/StringUtil.h>
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/LatVolField.h>
-#include <Core/Datatypes/ImageField.h>
-#include <Core/Datatypes/QuadraticTetVolField.h>
+#include <Core/Containers/FData.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/NrrdData.h>
@@ -108,113 +105,113 @@ void fill_data<Vector>(Vector &v, double *p);
 template <class Fdata>
 void* get_raw_data_ptr(Fdata &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData2d<char> >(FData2d<char> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData2d<char> >(FData2d<char> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData2d<unsigned char> >(FData2d<unsigned char> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData2d<unsigned char> >(FData2d<unsigned char> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData2d<short> >(FData2d<short> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData2d<short> >(FData2d<short> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData2d<unsigned short> >(FData2d<unsigned short> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData2d<unsigned short> >(FData2d<unsigned short> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData2d<int> >(FData2d<int> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData2d<int> >(FData2d<int> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData2d<unsigned int> >(FData2d<unsigned int> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData2d<unsigned int> >(FData2d<unsigned int> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData2d<long long> >(FData2d<long long> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData2d<long long> >(FData2d<long long> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData2d<unsigned long long> >(FData2d<unsigned long long> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData2d<unsigned long long> >(FData2d<unsigned long long> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData2d<float> >(FData2d<float> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData2d<float> >(FData2d<float> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData2d<double> >(FData2d<double> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData2d<double> >(FData2d<double> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData2d<Vector> >(FData2d<Vector> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData2d<Vector> >(FData2d<Vector> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData2d<Tensor> >(FData2d<Tensor> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData2d<Tensor> >(FData2d<Tensor> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<char> >(FData3d<char> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<char> >(FData3d<char> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<unsigned char> >(FData3d<unsigned char> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<unsigned char> >(FData3d<unsigned char> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<short> >(FData3d<short> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<short> >(FData3d<short> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<unsigned short> >(FData3d<unsigned short> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<unsigned short> >(FData3d<unsigned short> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<int> >(FData3d<int> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<int> >(FData3d<int> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<unsigned int> >(FData3d<unsigned int> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<unsigned int> >(FData3d<unsigned int> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<long long> >(FData3d<long long> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<long long> >(FData3d<long long> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<unsigned long long> >(FData3d<unsigned long long> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<unsigned long long> >(FData3d<unsigned long long> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<float> >(FData3d<float> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<float> >(FData3d<float> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<double> >(FData3d<double> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<double> >(FData3d<double> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<double> >(FData3d<double> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<double> >(FData3d<double> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<Vector> >(FData3d<Vector> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<Vector> >(FData3d<Vector> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<FData3d<Tensor> >(FData3d<Tensor> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<FData3d<Tensor> >(FData3d<Tensor> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<vector<Vector> >(vector<Vector> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<vector<Vector> >(vector<Vector> &, int);
 
-template <>
-void* 
-get_raw_data_ptr<vector<Tensor> >(vector<Tensor> &, int);
+// template <>
+// void* 
+// get_raw_data_ptr<vector<Tensor> >(vector<Tensor> &, int);
 
 template <class Fdata>
 void* get_raw_data_ptr(Fdata &data, int pad) {

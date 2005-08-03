@@ -46,6 +46,7 @@
 
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/DenseColMajMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Util/Assert.h>
 #include <Core/Malloc/Allocator.h>
@@ -151,6 +152,21 @@ DenseMatrix *
 DenseMatrix::dense()
 {
   return this;
+}
+
+
+DenseColMajMatrix *
+DenseMatrix::dense_col_maj()
+{
+  DenseColMajMatrix *dm = scinew DenseColMajMatrix(nrows_, ncols_);
+  for (int i = 0; i < nrows_; i++)
+  {
+    for (int j = 0; j < ncols_; j++)
+    {
+      dm->iget(i, j) = (*this)[i][j];
+    }
+  }
+  return dm;
 }
 
 
@@ -715,7 +731,7 @@ DenseMatrix::io(Piostream& stream)
           const string errmsg = "Error reading separated file '" +
             raw_filename_ + "'";
           cerr << errmsg << "\n";
-          throw FileNotFound(errmsg);
+          throw FileNotFound(errmsg, __FILE__, __LINE__);
         }
       }
     }
@@ -755,10 +771,13 @@ DenseMatrix::io(Piostream& stream)
 
   if (!split)
   {
-    int idx=0;
-    for (int i=0; i<nrows_; i++)
-      for (int j=0; j<ncols_; j++, idx++)
-        stream.io(dataptr_[idx]);
+    if (!stream.block_io(dataptr_, sizeof(double), (size_t)(nrows_ * ncols_)))
+    {
+      for (size_t i = 0; i < (size_t)(nrows_ * ncols_); i++)
+      {
+        stream.io(dataptr_[i]);
+      }
+    }
   }
   stream.end_cheap_delim();
   stream.end_class();

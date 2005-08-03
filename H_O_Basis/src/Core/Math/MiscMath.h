@@ -81,8 +81,8 @@ inline int Clamp(int i, int min, int max)
 
 // Generate a step between min and max.
 // return:   min - if d<=min
-//	     max - if d>=max
-//	     hermite curve if d>min && d<max
+//           max - if d>=max
+//           hermite curve if d>min && d<max
 inline double SmoothStep(double d, double min, double max)
 {
   double ret;
@@ -134,12 +134,12 @@ inline int RoundDown(double d)
 inline int RoundUp(double d)
 {
     if(d>=0){
-	if((d-(int)d) == 0)
-	    return (int)d;
-	else 
-	    return (int)(d+1);
+        if((d-(int)d) == 0)
+            return (int)d;
+        else
+            return (int)(d+1);
     } else {
-	return (int)d;
+        return (int)d;
     }
 }
 
@@ -147,7 +147,6 @@ inline int Round(double d)
 {
   return (int)(d+0.5);
 }
-
 
 inline int Floor(double d)
 {
@@ -162,6 +161,16 @@ inline int Floor(double d)
   }
 }
 
+// this version is twice as fast for negative numbers
+// (on an available Pentium 4 machine, only about 25%
+// faster on Powerbook G4)
+// than the more robust version above, but will only
+//work for fabs(d) <= offset, use with caution
+inline int Floor(double d, int offset)
+{
+   return (int)(d + offset) - offset;
+}
+
 inline int Ceil(double d)
 {
   if(d<0){
@@ -174,6 +183,15 @@ inline int Ceil(double d)
     else
       return i+1;
   }
+}
+
+// using the same trick as above, this
+// version of Ceil is a bit faster for
+// the architectures it has been tested
+// on (Pentium4, Powerbook G4)
+inline int Ceil(double d, int offset)
+{
+   return (int)(d - offset) + offset;
 }
 
 inline int Tile(int tile, int tf)

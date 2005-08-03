@@ -52,16 +52,15 @@ itcl_class Module {
         set $this-gui-x -1
         set $this-gui-y -1
 
-	set msgLogStream "[SciTclStream msgLogStream#auto]"
+	
 	# these live in parallel temporarily
 	global $this-notes Notes
 	if ![info exists $this-notes] { set $this-notes "" }
 	trace variable $this-notes w "syncNotes [modname]"
 	
-	# messages should be accumulating
-	if {[info exists $this-msgStream]} {
-	    $msgLogStream registerVar $this-msgStream
-	}
+	
+	global $this-backlog
+	set $this-backlog {}
     }
     
     destructor {
@@ -69,7 +68,7 @@ itcl_class Module {
 	if [winfo exists $w] {
 	    destroy $w
 	}
-	$msgLogStream destructor
+
 	eval unset [info vars $this-*]
 	destroy $this
     }
@@ -77,7 +76,20 @@ itcl_class Module {
     method set_defaults {} { 
     }
 
-    public msgLogStream
+    method append_log_msg {msg tag} {
+        set $this-backlog [lappend $this-backlog [list "$msg" $tag]]
+        append_log_aux $msg $tag
+    }
+
+    method append_log_aux {msg tag} {
+ 	set ww .mLogWnd[modname]
+	if {[winfo exists $ww.log.txt]} {
+	    $ww.log.txt config -state normal
+	    $ww.log.txt insert end "$msg" $tag
+	    $ww.log.txt config -state disabled
+	}
+    }
+
     public name
     protected min_text_width 0
     protected make_progress_graph 1
@@ -268,7 +280,7 @@ itcl_class Module {
 	    -padx 2 -pady 2
 	frame $p.msg.indicator -relief raised -width 0 -height 0 \
 	    -borderwidth 2 -background blue
-	bind $p.msg.indicator <Button> "$this displayLog"
+	bind $p.msg.indicator <Button-1> "$this displayLog"
 	Tooltip $p.msg.indicator $ToolTipText(ModuleMessageBtn)
 
 	update_msg_state
@@ -302,6 +314,8 @@ itcl_class Module {
 
 	bindtags $p [linsert [bindtags $p] 1 $modframe]
 	bindtags $p.title [linsert [bindtags $p.title] 1 $modframe]
+	bindtags $p.msg [linsert [bindtags $p.msg] 1 $modframe]
+	bindtags $p.msg.indicator [linsert [bindtags $p.msg.indicator] 1 $modframe]
 	if {$make_time} {
 	    bindtags $p.time [linsert [bindtags $p.time] 1 $modframe]
 	}
@@ -325,6 +339,7 @@ itcl_class Module {
 	global Subnet Color Disabled
 	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
 	set m $canvas.module[modname]
+	if { ![winfo exists $m] } return
 	if ![string length $color] {
 	    set color $Color(Basecolor)
 	    if { [$this is_selected] } { set color $Color(Selected) }
@@ -379,7 +394,7 @@ itcl_class Module {
 	set graph $canvas.module[modname].ff.inset.graph
 	if {$width == 0} { 
 #	    place forget $graph
-	} else {
+	} elseif { [winfo exists $graph] } {
 	    $graph configure -width $width
 	    if {$old_width == 0} { place $graph -relheight 1 -anchor nw }
 	}
@@ -387,7 +402,10 @@ itcl_class Module {
     }
 	
     method update_time {} {
-	if {!$make_time} return
+	global Subnet
+	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
+	set timeframe $canvas.module[modname].ff.time
+	if { !$make_time || ![winfo exists $timeframe] } return
 
 	if {$state == "JustStarted"} {
 	    set tstr " ?.??"
@@ -406,9 +424,7 @@ itcl_class Module {
 		set tstr [format "%d::%02d" $hrs $mins]
 	    }
 	}
-	global Subnet
-	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
-	$canvas.module[modname].ff.time configure -text $tstr
+	$timeframe configure -text $tstr
     }
 
     method update_state {} {
@@ -431,13 +447,16 @@ itcl_class Module {
 	    set progress 0
 	}
 
-	if {[winfo exists .standalone]} {
+	if { [winfo exists .standalone] } {
 	    app update_progress [modname] $state
 	}
 	
 	global Subnet
 	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
-	$canvas.module[modname].ff.inset.graph configure -background $color
+	set graph $canvas.module[modname].ff.inset.graph
+	if { [winfo exists $graph] } {
+	    $canvas.module[modname].ff.inset.graph configure -background $color
+	}
 	update_progress
     }
 
@@ -462,9 +481,10 @@ itcl_class Module {
 	set number $Subnet([modname])
 	set canvas $Subnet(Subnet${number}_canvas)
 	set indicator $canvas.module[modname].ff.msg.indicator
-#	place forget $indicator
-	$indicator configure -width $indicator_width -background $color
-	place $indicator -relheight 1 -anchor nw 
+	if { [winfo exists $indicator] } {
+	    place $indicator -relheight 1 -anchor nw
+	    $indicator configure -width $indicator_width -background $color
+	}
 
 	if $number {
 	    SubnetIcon$number update_msg_state
@@ -502,7 +522,7 @@ itcl_class Module {
 	    return
 	}
 	
-	# create the window (immediately withdraw it to avoid flicker)
+	# Create the window (immediately withdraw it to avoid flicker).
 	toplevel $w; wm withdraw $w
 	update
 
@@ -518,12 +538,26 @@ itcl_class Module {
 	    -height 2 -width 10
 	scrollbar $w.log.sb -relief sunken -command "$w.log.txt yview"
 	pack $w.log.txt -side left -padx 5 -pady 2 -expand 1 -fill both
+
+        # Set up our color tags.
+	$w.log.txt config -state normal
+	$w.log.txt tag configure red -foreground red
+	$w.log.txt tag configure blue -foreground blue
+	$w.log.txt tag configure yellow -foreground yellow
+	$w.log.txt tag configure black -foreground "grey20"
+	$w.log.txt config -state disabled
+
+        foreach thingy [set $this-backlog] {
+            append_log_aux [lindex $thingy 0] [lindex $thingy 1]
+        }
+
 	pack $w.log.sb -side left -padx 0 -pady 2 -fill y
 
 	frame $w.fbuttons 
 	# TODO: unregister only for streams with the supplied output
 	button $w.fbuttons.clear -text "Clear" -command "$this clearStreamOutput"
 	button $w.fbuttons.ok    -text "Close" -command "wm withdraw $w"
+        bind $w <Escape> "wm withdraw $w"
 	
 	Tooltip $w.fbuttons.ok "Close this window.  The log is not effected."
 	TooltipMultiline $w.fbuttons.clear \
@@ -542,13 +576,21 @@ itcl_class Module {
 	# Move window to cursor after it has been created.
 	moveToCursor $w "leave_up"
 
-	$msgLogStream registerOutput $w.log.txt
     }
 
     method clearStreamOutput { } {
 	# Clear the text widget 
-	$msgLogStream clearTextWidget
+	set w .mLogWnd[modname]
 
+	if {! [winfo exists $w]} {
+	    return
+	}
+
+        $w.log.txt config -state normal
+	$w.log.txt delete 0.0 end
+        $w.log.txt config -state disabled
+
+        set $this-backlog {}
 	# Clear the module indicator color if
         # not in an error state
 	if {$msg_state != "Error"} {
@@ -557,8 +599,6 @@ itcl_class Module {
     }
     
     method destroyStreamOutput {w} {
-	# TODO: unregister only for streams with the supplied output
-	$msgLogStream unregisterOutput
 	destroy $w
     }
 
@@ -1975,7 +2015,6 @@ proc isaSubnetEditor { modid } {
 
 trace variable Notes wu notesTrace
 trace variable Disabled wu disabledTrace
-
 
 proc syncNotes { Modname VarName Index mode } {
     global Notes $VarName

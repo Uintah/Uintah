@@ -72,16 +72,16 @@ int BabelCCAUIPort::ui()
 BabelComponentInstance::BabelComponentInstance(SCIRunFramework* framework,
 					       const std::string& instanceName,
 					       const std::string& typeName,
-					       const gov::cca::TypeMap& properties  ,
+					       const gov::cca::TypeMap& properties,
 					       const gov::cca::Component& component,
 					       const framework::Services& svc)
-  : ComponentInstance(framework, instanceName, typeName)
+  : ComponentInstance(framework, instanceName, typeName, sci::cca::TypeMap::pointer(0))
 {
+  // Babel component properties are ignored for now.
   this->component=component;
   this->svc=svc;
   BabelPortInstance *go=dynamic_cast<BabelPortInstance*> (getPortInstance("go"));
-  if(go!=0)
-    {
+  if(go!=0) {
     std::map<std::string, PortInstance*> *pports=
       (std::map<std::string, PortInstance*>* ) (this->svc.getData());
     
@@ -95,8 +95,7 @@ BabelComponentInstance::BabelComponentInstance(SCIRunFramework* framework,
   }
   
   BabelPortInstance *ui=dynamic_cast<BabelPortInstance*> (getPortInstance("ui"));
-  if(ui!=0)
-    {
+  if(ui!=0) {
     std::map<std::string, PortInstance*> *pports=
       (std::map<std::string, PortInstance*>* ) (this->svc.getData());
     

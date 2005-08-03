@@ -34,8 +34,11 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Ports/NrrdPort.h>
+#include <Core/Basis/Constant.h>
 #include <Core/Datatypes/PointCloudMesh.h>
-#include <Core/Datatypes/CurveField.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Datatypes/CurveMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <teem/ten.h>
 
@@ -49,6 +52,12 @@ namespace SCITeem {
 using namespace SCIRun;
 
 class TendFiber : public Module {
+
+typedef CurveMesh<CrvLinearLgn<Point> >                   CMesh;
+typedef PointCloudMesh<ConstantBasis<Point> >             PCMesh;
+typedef CrvLinearLgn<double>                              CDBasis;
+typedef GenericField<CMesh, CDBasis, vector<double> >     CField;
+
 public:
   TendFiber(SCIRun::GuiContext *ctx);
   virtual ~TendFiber();
@@ -231,7 +240,7 @@ TendFiber::execute()
     error("Empty field.");
     return;
   }
-  PointCloudMesh *pcm = dynamic_cast<PointCloudMesh*>(fldH->mesh().get_rep());
+  PCMesh *pcm = dynamic_cast<PCMesh*>(fldH->mesh().get_rep());
   if (!pcm) {
     error("Input field wasn't a PointCloudField -- use GatherPoints");
     return;
@@ -320,7 +329,7 @@ TendFiber::execute()
 
   Nrrd *nout = nrrdNew();
 
-  PointCloudMesh::Node::iterator ib, ie;
+  PCMesh::Node::iterator ib, ie;
   pcm->begin(ib);
   pcm->end(ie);
 
@@ -362,8 +371,8 @@ TendFiber::execute()
   
   nrrdNuke(nout);
 
-  CurveMesh *cm = scinew CurveMesh;
-  CurveMesh::Node::array_type a;
+  CMesh *cm = scinew CMesh;
+  CMesh::Node::array_type a;
   a.resize(2);
 //  cerr << "got "<<fibers.size()<<" fibers.\n";
   for (int i=0; i<fibers.size(); i++) {
@@ -380,7 +389,7 @@ TendFiber::execute()
     }
   }
   
-  CurveField<double> *cf = scinew CurveField<double>(cm, 1);
+  CField *cf = scinew CField(cm);
   ofibers_->send(cf);
 }
 

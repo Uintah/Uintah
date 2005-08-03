@@ -83,15 +83,29 @@ VPATH := $(SRCTOP)
 
 PACKAGE_DIRS := @PACKAGE_DIRS@
 LOAD_PACKAGE := @LOAD_PACKAGE@
+BUILD_DATAFLOW := @BUILD_DATAFLOW@
 BUILD_SCIRUN2 := @BUILD_SCIRUN2@
+BUILD_PLUME := @BUILD_PLUME@
+
+#DEF_BUILD_DATAFLOW := @DEF_BUILD_DATAFLOW@
 
 # These cannot be :=
 THREAD_IMPL = $(SRCDIR)/@THREAD_IMPL@
 TIME_IMPL = $(SRCDIR)/@TIME_IMPL@
 
 # Subdirectories
-SUBDIRS := Core Dataflow StandAlone $(COMPONENT_DIRS) main \
-	testprograms $(PACKAGE_DIRS)
+SUBDIRS := Core 
+ifeq ($(BUILD_DATAFLOW),yes)
+  SUBDIRS += Dataflow
+endif
+
+SUBDIRS += StandAlone $(COMPONENT_DIRS)
+
+ifeq ($(BUILD_DATAFLOW),yes)
+  SUBDIRS += main 
+endif
+
+SUBDIRS += testprograms $(PACKAGE_DIRS)
 
 IS_OSX := @IS_OSX@
 IS_WIN := @IS_WIN@
@@ -137,6 +151,12 @@ SCISOCK_LIBRARY := @SCISOCK_LIB_DIR_FLAG@ @SCISOCK_LIB_FLAG@
 SCISOCK_INCLUDE := @INC_SCISOCK_H@
 
 MPEG_LIBRARY := @MPEGE_LIB_DIR_FLAG@ @MPEGE_LIB_FLAG@
+
+LOKI_LIBRARY := @LOKI_LIB_DIR_FLAG@ @LOKI_LIB_FLAG@
+LOKI_INCLUDE := @INC_LOKI_H@
+
+BOOST_LIBRARY := @BOOST_LIB_DIR_FLAG@ @BOOST_LIB_FLAG@
+BOOST_INCLUDE := @INC_BOOST_H@
 
 # Sandia library.
 HAVE_CAMAL    := @HAVE_CAMAL@
@@ -289,12 +309,18 @@ ifeq ($(BUILD_SCIRUN2),yes)
   RUBY_LIBRARY := @RUBY_LIB_DIR_FLAG@ @RUBY_LIB_FLAG@
   RUBY_INCLUDE := @INC_RUBY_H@
 
+  HAVE_TAO := @HAVE_TAO@
+  TAO_LIBRARY := @TAO_LIB_DIR_FLAG@ @TAO_LIB_FLAG@
+  TAO_INCLUDE := @INC_TAO_H@
+
   HAVE_VTK := @HAVE_VTK@
   VTK_LIBRARY := @VTK_LIB_DIR_FLAG@ @VTK_LIB_FLAG@
   VTK_INCLUDE := @INC_VTK_H@
 
 endif
 
+#ifeq ($(BUILD_PLUME),yes)
+#endif
 
 VDT_INCLUDE := @INC_VDT_H@
 VDT_LIBRARY := @VDT_LIB_DIR_FLAG@ @VDT_LIB_FLAG@
@@ -321,36 +347,6 @@ ifeq ($(SSTREAM_COMPAT),yes)
   INCLUDES := $(INCLUDES) -I$(SRCTOP)/include/compat
 endif
 
-## Remove duplicates from the final list of include paths.
-#    Also, split 'our' thirdparty includes off of the list so
-#    that they can be placed at the beginning of the includes.
-#    This (hopefully on all systems) will mean that our (thirdparty)
-#    include files will be used before any "system" include files.
-
-TP_INCLUDES := $(shell                                 \
-       uniques=;                                       \
-       for i in $(INCLUDES); do                        \
-          found=`echo \"$$uniques\" | grep -- "$$i "`; \
-          if test -z "$$found"; then                   \
-            echo $$i;                                  \
-            uniques="$$uniques$$i ";                   \
-          fi;                                          \
-       done                                            \
-       | grep Thirdparty; )
-
-OTHER_INCLUDES := $(shell                              \
-       uniques=;                                       \
-       for i in $(INCLUDES); do                        \
-          found=`echo \"$$uniques\" | grep -- "$$i "`; \
-          if test -z "$$found"; then                   \
-            echo $$i;                                  \
-            uniques="$$uniques$$i ";                   \
-          fi;                                          \
-       done                                            \
-       | grep -v Thirdparty; )
-
-INCLUDES := $(TP_INCLUDES) $(OTHER_INCLUDES)
-
 # variables and suffix rules for module transformation
 #------------------------------------------------------------------------------
 
@@ -365,7 +361,7 @@ LDFLAGS         := @LDFLAGS@ -L$(LIBDIR) $(CXXFLAGS)
 ASFLAGS         := @ASFLAGS@  $(ASFLAGS)
 F77		:= @F77@
 FFLAGS		:= @FFLAGS@ $(FFLAGS)
-F_LIBRARY	:= @F_LIB_FLAG@
+F_LIBRARY	:= @F_LIB_DIR_FLAG@ @F_LIB_FLAG@
 REPOSITORY_FLAGS := @REPOSITORY_FLAGS@
 
 ################################################################

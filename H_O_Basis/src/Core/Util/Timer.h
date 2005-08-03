@@ -44,22 +44,26 @@
 #define SCI_Containers_Timer_h 1
 
 class Timer {
-    double total_time;
-    double start_time;
-    enum State {
-	Stopped,
-	Running
-    };
-    State state;
-    virtual double get_time()=0;
 public:
-    Timer();
-    virtual ~Timer();
-    void start();
-    void stop();
-    void clear();
-    double time();
-    void add(double t);
+  enum timer_state_e {
+    Stopped,
+    Running
+  };
+
+  Timer();
+  virtual ~Timer();
+  void start();
+  void stop();
+  void clear();
+  double time();
+  void add(double t);
+  timer_state_e current_state() { return state; }
+private:
+  double total_time;
+  double start_time;
+  timer_state_e state;
+  virtual double get_time()=0;
+
 };
 
 class CPUTimer : public Timer {

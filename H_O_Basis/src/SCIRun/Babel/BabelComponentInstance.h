@@ -28,7 +28,7 @@
 
 
 /*
- *  CCAComponentInstance.h: 
+ *  BabelComponentInstance.h: 
  *
  *  Written by:
  *   Keming Zhang

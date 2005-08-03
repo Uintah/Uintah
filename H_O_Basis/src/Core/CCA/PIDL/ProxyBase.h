@@ -56,7 +56,7 @@
 
 namespace SCIRun {
 
-  class XceptionRelay;
+    class XceptionRelay;
 
 /**************************************
  

@@ -46,12 +46,13 @@ itcl_class SCIRun_Visualization_Isosurface {
 	global $this-isoval
 	global $this-isoval-typed
 	global $this-isoval-quantity
+	global $this-quantity-list
 	global $this-quantity-range
 	global $this-quantity-clusive
 	global $this-quantity-min
 	global $this-quantity-max
 	global $this-isoval-list
-	global $this-isoval-matrix
+	global $this-matrix-list
 	global $this-active-isoval-selection-tab
 	global $this-continuous
 	global $this-extract-from-new-field
@@ -74,8 +75,9 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-quantity-clusive "exclusive"
 	set $this-quantity-min 0
 	set $this-quantity-max 100
+	set $this-quantity-list ""
 	set $this-isoval-list "0.0 1.0 2.0 3.0"
-	set $this-isoval-matrix "No matrix present - execution needed."
+	set $this-matrix-list "No matrix present - execution needed."
 	set $this-active-isoval-selection-tab 0
 	set $this-continuous 0
 	set $this-extract-from-new-field 1
@@ -191,77 +193,85 @@ itcl_class SCIRun_Visualization_Isosurface {
 	iwidgets::labeledframe $w.f.iso -labelpos nw -labeltext "Isovalue Selection"
 	set isf [$w.f.iso childsite]
 	global Color
-	iwidgets::tabnotebook $isf.tabs -raiseselect true -height 160 \
+	iwidgets::tabnotebook $isf.tabs -raiseselect true -height 200 \
 	    -backdrop $Color(Basecolor)
 	pack $isf.tabs -side top -fill x -expand 1
 	pack $w.f.iso -side top -fill x -expand 1
 
-	# Iso Value using slider
 
-	set sel [$isf.tabs add -label "Slider" \
+	###### Iso Value using slider
+	set isoslider [$isf.tabs add -label "Slider" \
 		     -command "set $this-active-isoval-selection-tab 0"]
 
-	scaleEntry2 $sel.isoval \
+	scaleEntry2 $isoslider.isoval \
 	    [set $this-isoval-min] [set $this-isoval-max] \
 	     4c $this-isoval $this-isoval-typed
 
-	pack $sel.isoval  -fill x
+	pack $isoslider.isoval  -fill x
 
-	# Iso Value using quantity
-	
-	set sel [$isf.tabs add -label "Quantity" \
+
+	###### Iso Value using quantity	
+	set isoquant [$isf.tabs add -label "Quantity" \
 		     -command "set $this-active-isoval-selection-tab 1"]
 	
-	# Save the isoval-quantity since the iwidget resets it
+	###### Save the isoval-quantity since the iwidget resets it
 	global $this-isoval-quantity
 	set quantity [set $this-isoval-quantity]
-	iwidgets::spinint $sel.f -labeltext "Number of evenly-spaced isovals: " \
+	iwidgets::spinint $isoquant.q -labeltext "Number of evenly-spaced isovals: " \
 	    -range {0 100} -step 1 \
 	    -textvariable $this-isoval-quantity \
 	    -width 10 -fixed 10 -justify right
 	
-	$sel.f delete 0 end
-	$sel.f insert 0 $quantity
+	$isoquant.q delete 0 end
+	$isoquant.q insert 0 $quantity
 
-	frame $sel.m
-	radiobutton $sel.m.c -text "ColorMap MinMax" \
+	frame $isoquant.f
+	label $isoquant.f.l -text "List of Isovals:"
+	entry $isoquant.f.e -width 40 -text $this-quantity-list -state disabled
+	pack $isoquant.f.l $isoquant.f.e -side left -fill both -expand 1
+
+	frame $isoquant.m
+	radiobutton $isoquant.m.c -text "ColorMap MinMax" \
 		-variable $this-quantity-range -value "colormap" \
 		-command "$this-c needexecute"
-	radiobutton $sel.m.f -text "Field MinMax" \
+	radiobutton $isoquant.m.f -text "Field MinMax" \
 		-variable $this-quantity-range -value "field" \
 		-command "$this-c needexecute"
-	radiobutton $sel.m.m -text "Manual" \
+	radiobutton $isoquant.m.m -text "Manual" \
 		-variable $this-quantity-range -value "manual" \
 		-command "$this-c needexecute"
 
-	frame $sel.m.t 
-	label $sel.m.t.minl -text "Min"
-	entry $sel.m.t.mine -width 6 -text $this-quantity-min
-	label $sel.m.t.maxl -text "Max"
-	entry $sel.m.t.maxe -width 6 -text $this-quantity-max
-	bind $sel.m.t.mine <Return> "$this-c needexecute"
-	bind $sel.m.t.maxe <Return> "$this-c needexecute"
-	pack $sel.m.t.minl $sel.m.t.mine $sel.m.t.maxl $sel.m.t.maxe \
+	frame $isoquant.m.t 
+	label $isoquant.m.t.minl -text "Min"
+	entry $isoquant.m.t.mine -width 6 -text $this-quantity-min
+	label $isoquant.m.t.maxl -text "Max"
+	entry $isoquant.m.t.maxe -width 6 -text $this-quantity-max
+	bind $isoquant.m.t.mine <Return> "$this-c needexecute"
+	bind $isoquant.m.t.maxe <Return> "$this-c needexecute"
+	pack $isoquant.m.t.minl $isoquant.m.t.mine $isoquant.m.t.maxl $isoquant.m.t.maxe \
 		-side left -fill x -expand 1
 
-	pack $sel.m.c $sel.m.f -side top -anchor w
-	pack $sel.m.m $sel.m.t -side left -anchor w
+	pack $isoquant.m.c $isoquant.m.f -side top -anchor w
+	pack $isoquant.m.m $isoquant.m.t -side left -anchor w
 
-	frame $sel.t
-	radiobutton $sel.t.e -text "Exclusive" \
+	frame $isoquant.t
+	radiobutton $isoquant.t.e -text "Exclusive" \
 		-variable $this-quantity-clusive -value "exclusive" \
 		-command "$this-c needexecute"
-	radiobutton $sel.t.i -text "Inclusive" \
+	radiobutton $isoquant.t.i -text "Inclusive" \
 		-variable $this-quantity-clusive -value "inclusive" \
 		-command "$this-c needexecute"
 
-	pack $sel.t.e $sel.t.i -side left -anchor w
+	pack $isoquant.t.e $isoquant.t.i -side left -anchor w
 
-	pack $sel.f $sel.m $sel.t -side top -expand 1 -fill x -pady 5
+	pack $isoquant.q $isoquant.m $isoquant.t -side top -expand 1 -fill x -pady 5
 
-	# Iso Value using list
-	
-	set isolist [$isf.tabs add -label "List" -command "set $this-active-isoval-selection-tab 2"]
+	pack $isoquant.f -fill x
+
+	###### Iso Value using list
+	set isolist [$isf.tabs add -label "List" \
+			 -command "set $this-active-isoval-selection-tab 2"]
+
 	
 	frame $isolist.f
 	label $isolist.f.l -text "List of Isovals:"
@@ -271,16 +281,16 @@ itcl_class SCIRun_Visualization_Isosurface {
 	pack $isolist.f -fill x
 
 
-	# Iso Value using matrix
-
-	set isomatrix [$isf.tabs add -label "Matrix" -command "set $this-active-isoval-selection-tab 3"]
+	###### Iso Value using matrix
+	set isomatrix [$isf.tabs add -label "Matrix" \
+			   -command "set $this-active-isoval-selection-tab 3"]
 
 	frame $isomatrix.f
 	label $isomatrix.f.l -text "List of Isovals:"
-	entry $isomatrix.f.e -width 40 -text $this-isoval-matrix
-	bind $isomatrix.f.e <Return> "$this-c needexecute"
+	entry $isomatrix.f.e -width 40 -text $this-matrix-list -state disabled
 	pack $isomatrix.f.l $isomatrix.f.e -side left -fill both -expand 1
 	pack $isomatrix.f -fill x
+
 
 	# Pack the Iso Value Selection Tabs
 
@@ -360,10 +370,16 @@ itcl_class SCIRun_Visualization_Isosurface {
 	}
     }
     
-    method set-isomatrix { vals } {
-	global $this-isoval-matrix
+    method set-isoquant-list { vals } {
+	global $this-quantity-list
 	
-	set $this-isoval-matrix $vals
+	set $this-quantity-list $vals
+    }
+    
+    method set-isomatrix-list { vals } {
+	global $this-matrix-list
+	
+	set $this-matrix-list $vals
     }
     
     method orient { tab page { val 4 }} {
@@ -477,9 +493,10 @@ itcl_class SCIRun_Visualization_Isosurface {
     }
 
     method updateSliderEntry {var_slider var_typed someUknownVar} {
-	set $var_typed [set $var_slider]
-
 	global $this-continuous
+        global $var_slider
+        global $var_typed
+	set $var_typed [set $var_slider]
 
 	if { [set $this-continuous] == 1.0 } {
 	    eval "$this-c needexecute"

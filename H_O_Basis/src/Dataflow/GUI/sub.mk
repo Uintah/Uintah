@@ -87,12 +87,14 @@ SRCS := \
         $(SRCDIR)/CreateMesh.tcl \
         $(SRCDIR)/CriticalPointWidget.tcl \
         $(SRCDIR)/CrosshairWidget.tcl \
+        $(SRCDIR)/CubitInterface.tcl \
         $(SRCDIR)/DirectMapping.tcl \
         $(SRCDIR)/EditColorMap.tcl \
         $(SRCDIR)/EditPath.tcl \
         $(SRCDIR)/EditColorMap2D.tcl \
         $(SRCDIR)/ErrorMetric.tcl \
         $(SRCDIR)/FieldCage.tcl\
+        $(SRCDIR)/FieldFrenet.tcl\
         $(SRCDIR)/FieldInfo.tcl\
         $(SRCDIR)/FieldMeasures.tcl \
         $(SRCDIR)/FieldReader.tcl \
@@ -127,6 +129,7 @@ SRCS := \
         $(SRCDIR)/PathWidget.tcl \
         $(SRCDIR)/PathWriter.tcl \
         $(SRCDIR)/PlanarTransformField.tcl \
+        $(SRCDIR)/PointLatticeMap.tcl \
         $(SRCDIR)/PointWidget.tcl \
         $(SRCDIR)/Port.tcl \
         $(SRCDIR)/Probe.tcl \
@@ -154,8 +157,8 @@ SRCS := \
         $(SRCDIR)/Submatrix.tcl \
         $(SRCDIR)/Subnet.tcl \
         $(SRCDIR)/SynchronizeGeometry.tcl \
-        $(SRCDIR)/SciTclStream.tcl \
         $(SRCDIR)/TextureBuilder.tcl \
+        $(SRCDIR)/TimeControls.tcl \
         $(SRCDIR)/Tooltips.tcl \
         $(SRCDIR)/TransformData.tcl \
         $(SRCDIR)/TransformData2.tcl \

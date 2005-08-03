@@ -299,7 +299,6 @@ main(int argc, char **argv) {
   for (int i = 0; i < nhexes; i++) {
     int n1, n2, n3, n4, n5, n6, n7, n8;
     string label;
-    int e; 
     hexesstream >> n1 >> n2 >> n3 >> n4 >> n5 >> n6 >> n7 >> n8;
 
     int c;

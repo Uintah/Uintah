@@ -878,6 +878,18 @@ Viewer::finishPort(int portid)
 #endif
       
       sched->report_execution_finished(serial);
+
+      // This turns on synchronous movie making.  It's very useful for
+      // making movies that are driven by an event loop (such as
+      // send-intermediate).  The movie frames are not taken during
+      // user interaction but only on execute.  This is only
+      // synchronous in one direction.  If a module executes too fast
+      // then the latest one is used.  That is, it waits for the slow
+      // modules but does not throttle the fast ones.
+      for(size_t window = 0; window < view_window_.size(); window++) {
+        view_window_[window]->maybeSaveMovieFrame();
+      }
+
     }
     else
     {
@@ -889,20 +901,20 @@ Viewer::finishPort(int portid)
 
 
 void
-Viewer::set_context(Scheduler* sched, Network* network)
+Viewer::set_context(Network* network)
 {
-  Module::set_context(sched, network);
+  Module::set_context(network);
   if (sci_getenv("SCI_REGRESSION_TESTING"))
   {
-    sched->add_callback(regression_callback, this);
+    sched->add_callback(save_image_callback, this, -1);
   }
 }
 
 
-void
-Viewer::regression_callback(void *ths)
+bool
+Viewer::save_image_callback(void *voidstuff)
 {
-  Viewer *viewer = (Viewer *)ths;
+  Viewer *viewer = (Viewer *)voidstuff;
   for (unsigned int i = 0; i < viewer->view_window_.size(); i++)
   {
     const string name = string("snapshot") + to_string(i) + ".ppm";
@@ -911,6 +923,7 @@ Viewer::regression_callback(void *ths)
     viewer->view_window_[i]->renderer_->saveImage(name, "ppm", 640, 480);
     viewer->view_window_[i]->redraw(); // flushes saveImage.
   }
+  return true;
 }
 
 

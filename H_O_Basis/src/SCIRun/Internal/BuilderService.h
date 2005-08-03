@@ -41,10 +41,15 @@
 #ifndef SCIRun_BuilderService_h
 #define SCIRun_BuilderService_h
 
+#include <sci_defs/ruby_defs.h>
+
 #include <Core/CCA/spec/cca_sidl.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
 #include <SCIRun/Internal/InternalComponentInstance.h>
-#include <SCIRun/Bridge/AutoBridge.h>
+
+#ifdef HAVE_RUBY
+  #include <SCIRun/Bridge/AutoBridge.h>
+#endif
 
 namespace SCIRun {
 
@@ -63,8 +68,6 @@ class ConnectionEvent;
  * SCIRunFramework class and the various SCIRun component model classes.
  *
  *
- * \todo getComponentProperties is not finished?
- * \todo setComponentProperties is not finished?
  * \todo getDeserialization is not finished?
  * \todo addComponentClasses not implemented
  * \todo removeComponentClasses not implemented
@@ -99,12 +102,21 @@ class BuilderService : public sci::cca::ports::BuilderService,
   virtual SSIDL::array1<sci::cca::ComponentID::pointer> getComponentIDs();
 
   /** Returns a CCA TypeMap (i.e. a map) that represents any properties
-      associated with component \em cid */
+      associated with component \em cid.
+      key                    value          meaning
+      cca.className          string         component type (standard key)
+      x                      int            component x position
+      y                      int            component y position
+      LOADER NAME            string         loader name
+      np                     int            number of nodes
+      bridge                 bool           is a bridge
+    */
   virtual sci::cca::TypeMap::pointer
   getComponentProperties(const sci::cca::ComponentID::pointer &cid);
 
   /** Associates the properties specified in \em map with an existing framework
-      component \em cid.*/
+      component \em cid.
+      Null TypeMaps are not allowed. */
   virtual void
   setComponentProperties(const sci::cca::ComponentID::pointer &cid,
                          const sci::cca::TypeMap::pointer &map);
@@ -132,11 +144,11 @@ class BuilderService : public sci::cca::ports::BuilderService,
   virtual SSIDL::array1<std::string>
   getProvidedPortNames(const sci::cca::ComponentID::pointer &cid);
 
-  /** */
+  /** Returns a list of \em uses ports for the component instance \em cid */
   virtual SSIDL::array1<std::string>
   getUsedPortNames(const sci::cca::ComponentID::pointer &cid);
 
-  /** */
+  /** Returns a map of port properties exposed by the framework. */
   virtual sci::cca::TypeMap::pointer
   getPortProperties(const sci::cca::ComponentID::pointer &cid,
                     const std::string& portname);
@@ -150,16 +162,25 @@ class BuilderService : public sci::cca::ports::BuilderService,
   /** */
   virtual sci::cca::ConnectionID::pointer
   connect(const sci::cca::ComponentID::pointer &user,
-          const std::string &usingPortName,
+          const std::string &usesPortName,
           const sci::cca::ComponentID::pointer &provider,
-          const ::std::string &providingPortName);
+          const ::std::string &providesPortName);
 
   /** */
   virtual SSIDL::array1<sci::cca::ConnectionID::pointer>
   getConnectionIDs(const SSIDL::array1<sci::cca::ComponentID::pointer>
                        &componentList);
 
-  /** */
+
+  /** Returns a CCA TypeMap that represents any properties associated
+      with \em connID.
+      key                    value          meaning
+      user                   string         unique uses component name
+      provider               string         unique provides component name
+      uses port              string         uses port name
+      provides port          string         provides port name
+      bridge                 bool           is a bridge
+    */
   virtual sci::cca::TypeMap::pointer
   getConnectionProperties(const sci::cca::ConnectionID::pointer &connID);
 
@@ -180,9 +201,9 @@ class BuilderService : public sci::cca::ports::BuilderService,
 
   /** */
   virtual SSIDL::array1<std::string>
-  getCompatiblePortList(const sci::cca::ComponentID::pointer &c1,
-                        const std::string &port1,
-                        const sci::cca::ComponentID::pointer &c2);
+  getCompatiblePortList(const sci::cca::ComponentID::pointer &user,
+                        const std::string &usesPortName,
+                        const sci::cca::ComponentID::pointer &provider);
 
 
   // Bridge methods 
@@ -195,11 +216,10 @@ class BuilderService : public sci::cca::ports::BuilderService,
   /** */
   virtual std::string
   generateBridge(const sci::cca::ComponentID::pointer &c1,
-                 const string &port1,
+                 const std::string &port1,
                  const sci::cca::ComponentID::pointer &c2,
-                 const string &port2);
+                 const std::string &port2);
   // END Bridge methods
-
   
   /** */
   sci::cca::Port::pointer getService(const std::string &);
@@ -210,26 +230,17 @@ class BuilderService : public sci::cca::ports::BuilderService,
   /** */
   int removeComponentClasses(const std::string &loaderName);
 
-  /** */
-  int
-  addLoader(const std::string &loaderName, const std::string &user,
-            const std::string &domain, const std::string &loaderPath);
-
-  /** */
-  int removeLoader(const std::string &name);
-
-  //virtual void registerFramework(const std::string &frameworkURL); 
-  //virtual void registerServices(const sci::cca::Services::pointer &svc);
-
   private:
+    friend class ConnectionEventService;
     BuilderService(SCIRunFramework* fwk, const std::string& name);
     /** Returns the URL of this BuilderService component's framework. */
     std::string getFrameworkURL();
     /** ? */
     void emitConnectionEvent(ConnectionEvent* event);
 
-    std::vector<sci::cca::Services::pointer> servicesList;  
+#ifdef HAVE_RUBY
     AutoBridge autobr;
+#endif
   };
 }
 

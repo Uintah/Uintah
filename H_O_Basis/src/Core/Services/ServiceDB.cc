@@ -30,9 +30,9 @@
 
 #include <Core/Services/ServiceDB.h>
 
-#include <Dataflow/XMLUtil/StrX.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
-#include <Dataflow/Network/FileUtils.h>
+#include <Core/XMLUtil/StrX.h>
+#include <Core/XMLUtil/XMLUtil.h>
+#include <Core/Util/FileUtils.h>
 
 #include <Core/Services/ServiceNode.h>
 #include <Core/OS/Dir.h>

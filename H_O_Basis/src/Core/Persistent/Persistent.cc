@@ -43,12 +43,14 @@
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Mutex.h>
+#include <Core/Containers/StringUtil.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <sgi_stl_warnings_on.h>
+#include <teem/nrrd.h>
 
 using namespace std;
 
@@ -57,6 +59,7 @@ using namespace std;
 namespace SCIRun {
 
 static Piostream::MapStringPersistentTypeID* table = 0;  
+const int Piostream::PERSISTENT_VERSION = 2;
 
 #ifdef __APPLE__
   // On the Mac, this comes from Core/Util/DynamicLoader.cc because
@@ -78,7 +81,12 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
   :  type(typeName), parent(parentName), maker(maker)
 {
 #if DEBUG
-  cerr << "PersistentTypeID constructor: " << typeName << " " << parentName << ", maker: " << maker << "\n";
+  // Using printf as cerr causes a core dump (probably cerr has not
+  // been initialized as this runs before main...)
+  printf("PersistentTypeID constructor:\n");
+  printf("   typename:   %s\n", typeName.c_str() );
+  printf("   parentname: %s\n", parentName.c_str() );
+  printf("   maker:      %p\n\n", maker );
 #endif
 
   persistentTypeIDMutex.lock();
@@ -87,9 +95,13 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
     table = scinew Piostream::MapStringPersistentTypeID;
 
 #if DEBUG
-    cerr << "table " << &table << ", pointer is " << table << "\n";
+    printf( "created table:  %p\n", table);
 #endif
   }
+#if DEBUG
+  else
+    printf( "table is:  %p\n", table);
+#endif
   
   Piostream::MapStringPersistentTypeID::iterator dummy;
  
@@ -108,7 +120,7 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
   }
   
 #if DEBUG
-  cerr << "putting in table: PersistentTypeID: " << typeName << " " << parentName << endl;
+  printf("putting in table: PersistentTypeID: %s %s\n", typeName.c_str(), parentName.c_str() );
 #endif
 
   (*table)[type] = this;
@@ -157,36 +169,125 @@ Persistent::~Persistent()
 //
 
 //----------------------------------------------------------------------
-Piostream::Piostream(Direction dir, int version, const string &name)
-: dir(dir), version(version), err(0), outpointers(0), inpointers(0),
-  current_pointer_id(1), file_name(name)
+Piostream::Piostream(Direction dir, int version, const string &name,
+                     ProgressReporter *pr)
+  : dir(dir),
+    version_(version),
+    err(false),
+    outpointers(0),
+    inpointers(0),
+    current_pointer_id(1),
+    have_peekname_(false),
+    reporter_(pr),
+    own_reporter_(false),
+    file_name(name)
 {
+  if (reporter_ == NULL)
+  {
+    reporter_ = scinew ProgressReporter();
+    own_reporter_ = true;
+  }
 }
 
 //----------------------------------------------------------------------
 Piostream::~Piostream()
 {
+  if (own_reporter_) { delete reporter_; }
+}
+
+//----------------------------------------------------------------------
+void
+Piostream::emit_pointer(int& have_data, int& pointer_id)
+{
+  io(have_data);
+  io(pointer_id);
+}
+
+//----------------------------------------------------------------------
+string
+Piostream::peek_class()
+{
+  have_peekname_ = true;
+  io(peekname_);
+  return peekname_;
 }
 
 //----------------------------------------------------------------------
 int
-Piostream::reading()
+Piostream::begin_class(const string& classname, int current_version)
 {
-    return dir==Read;
+  if (err) return -1;
+  int version = current_version;
+  string gname;
+  if (dir == Write)
+  {
+    gname = classname;
+    io(gname);
+  }
+  else if (dir == Read && have_peekname_)
+  {
+    gname = peekname_;
+  }
+  else
+  {
+    io(gname);
+  }
+  have_peekname_ = false;
+
+  if (dir == Read)
+  {
+    if (classname != gname)
+    {
+      err = true;
+      reporter_->error(string("Expecting class: ") + classname +
+                       ", got class: " + gname + ".");
+      return 0;
+    }
+  }
+
+  io(version);
+
+  if (dir == Read && version > current_version)
+  {
+    err = true;
+    reporter_->error("File too new.  " + classname + " has version " +
+                     to_string(version) +
+                     ", but this scirun build is at version " +
+                     to_string(current_version) + ".");
+  }
+
+  return version;
 }
 
 //----------------------------------------------------------------------
-int
-Piostream::writing()
+void
+Piostream::end_class()
 {
-    return dir==Write;
 }
 
 //----------------------------------------------------------------------
-int
-Piostream::error()
+void
+Piostream::begin_cheap_delim()
 {
-    return err;
+}
+
+//----------------------------------------------------------------------
+void
+Piostream::end_cheap_delim()
+{
+}
+
+//----------------------------------------------------------------------
+void
+Piostream::io(bool& data)
+{
+  if (err) return;
+  unsigned char tmp = data;
+  io(tmp);
+  if (dir == Read)
+  {
+    data = tmp;
+  }
 }
 
 //----------------------------------------------------------------------
@@ -194,9 +295,12 @@ static
 PersistentTypeID*
 find_derived( const string& classname, const string& basename )
 {
+#if DEBUG
+  printf("looking for %s, %s\n", classname.c_str(), basename.c_str());
+#endif
   persistentTypeIDMutex.lock();
 #if DEBUG
-  cout << "table is: " << table << "\n";
+  printf("table is: %p\n", table);
 #endif
   if (!table) return 0;
   PersistentTypeID* pid;
@@ -206,7 +310,7 @@ find_derived( const string& classname, const string& basename )
   iter = table->find(classname);
   if(iter == table->end()) {
 #if DEBUG
-    cerr << "not found in table " << &table << ", pointer is " << table << "\n";
+    printf("not found in table %p\n",table );
 #endif
     persistentTypeIDMutex.unlock();
     return 0;
@@ -216,7 +320,7 @@ find_derived( const string& classname, const string& basename )
   pid = (*iter).second;
   if( pid->parent.size() == 0 ) {
 #if DEBUG
-    cout << "size is 0\n";
+    printf("size is 0\n");
 #endif
     return 0;
   }
@@ -233,161 +337,267 @@ find_derived( const string& classname, const string& basename )
 void
 Piostream::io(Persistent*& data, const PersistentTypeID& pid)
 {
-  if (err) {
-    return;
-  }
-  if (dir == Read) {
+#if DEBUG
+  printf("looking for pid: %s, %s\n", pid.type.c_str(), pid.parent.c_str() );
+#endif
+  if (err) return;
+  if (dir == Read)
+  {
     int have_data;
     int pointer_id;
-    data=0;			// In case anything goes wrong...
+    data = 0;
     emit_pointer(have_data, pointer_id);
-    if (have_data) {
+
+#if DEBUG
+    printf("after emit: %d, %d\n", have_data, pointer_id);
+#endif
+
+    if (have_data)
+    {
       // See what type comes next in the stream.  If it is a type
       // derived from pid->type, then read it in, otherwise it is an
-      // error...
-      string in_name(peek_class());
-      string want_name(pid.type);
+      // error.
+      const string in_name(peek_class());
+      const string want_name(pid.type);
       
+#if DERIVED
+      printf("in here: %s, %s\n", in_name.c_str(), want_name.c_str());
+#endif
+
       Persistent* (*maker)() = 0;
-      if (in_name == want_name) {
-	maker=pid.maker;
+      if (in_name == want_name)
+      {
+	maker = pid.maker;
       }
-      else {
+      else
+      {
 	PersistentTypeID* found_pid = find_derived(in_name, want_name);
 	
-	if (found_pid) {
-	  maker=found_pid->maker;
-	} else {
+	if (found_pid)
+        {
+	  maker = found_pid->maker;
+	}
+        else
+        {
 #if DEBUG
-	  cerr << "Did not find a pt_id.\n";
+	  reporter_->error("Did not find a pt_id.");
 #endif
 	}
       }
-      if (!maker) {
-	cerr << "Maker not found? (class=" << in_name << ")\n";
-	cerr << "want_name: " << want_name << "\n";
-	err=1;
+      if (!maker)
+      {
+	reporter_->error("Maker not found? (class=" + in_name + ").");
+	reporter_->error("want_name: " + want_name + ".");
+	err = true;
 	return;
       }
       
-				// Make it..
-      data=(*maker)();
-				// Read it in...
+      // Make it.
+      data = (*maker)();
+      // Read it in.
       data->io(*this);
-      
-				// Insert this pointer in the database
-      if (!inpointers) {
+
+      // Insert this pointer in the database.
+      if (!inpointers)
+      {
 	inpointers = scinew MapIntPersistent;
       }
       (*inpointers)[pointer_id] = data;
-    } else {
-				// Look it up...
-      if (pointer_id==0) {
-	data=0;
+    }
+    else
+    {
+      // Look it up.
+      if (pointer_id == 0)
+      {
+	data = 0;
       }
       else {
 	MapIntPersistent::iterator initer;
 	if (inpointers) initer = inpointers->find(pointer_id);
-	if (!inpointers || initer == inpointers->end()) {
-	  cerr << "Error - pointer not in file, but should be!\n";
-	  err=1;
+	if (!inpointers || initer == inpointers->end())
+        {
+	  reporter_->error("Pointer not in file, but should be!.");
+	  err = true;
 	  return;
 	}
 	data = (*initer).second;
       }
     }
   }
-  else {			// dir == Write
+  else // dir == Write
+  {		
     int have_data;
     int pointer_id;
     
     MapPersistentInt::iterator outiter;
-    if (outpointers) {
+    if (outpointers)
+    {
       outiter = outpointers->find(data);
       pointer_id = (*outiter).second;
     }
     
-    if (data==0) {
-      have_data=0;
-      pointer_id=0;
+    if (data == 0)
+    {
+      have_data = 0;
+      pointer_id = 0;
     }
-    else if (outpointers && outiter != outpointers->end()){
-				// Already emitted, pointer id fetched
-				// from hashtable
-      have_data=0;
+    else if (outpointers && outiter != outpointers->end())
+    {
+      // Already emitted, pointer id fetched from hashtable.
+      have_data = 0;
     }
-    else {
-				// Emit it..
-      have_data=1;
-      pointer_id=current_pointer_id++;
-      if (!outpointers) {
-				// scinew?
-	outpointers = new MapPersistentInt;
+    else
+    {
+      // Emit it.
+      have_data = 1;
+      pointer_id = current_pointer_id++;
+      if (!outpointers)
+      {
+	outpointers = scinew MapPersistentInt;
       }
       (*outpointers)[data] = pointer_id;
     }
     
     emit_pointer(have_data, pointer_id);
     
-    if(have_data) {
+    if (have_data)
+    {
       data->io(*this);
     }
-    
   }
 }
+
 
 //----------------------------------------------------------------------
-
 Piostream*
-auto_istream(const string& filename)
+auto_istream(const string& filename, ProgressReporter *pr)
 {
   std::ifstream in(filename.c_str());
-  if (!in) {
-    cerr << "file not found: " << filename << endl;
+  if (!in)
+  {
+    if (pr) pr->error("File not found: " + filename);
+    else cerr << "ERROR - File not found: " << filename << endl;
     return 0;
   }
-  char hdr[12];
-  in.read(hdr, 12);
-  if (!in) {
-    cerr << "Error reading header of file: " << filename << "\n";
+
+  // Create a header of size 16 to account for new endianness
+  // flag in binary headers when the version > 1.
+  char hdr[16]; 
+  in.read(hdr, 16);
+
+  if (!in)
+  {
+    if (pr) pr->error("Unable to open file: " + filename);
+    else cerr << "ERROR - Unable to open file: " << filename << endl;
     return 0;
   }
-  int version;
-  if (!Piostream::readHeader(filename, hdr, 0, version)) {
-    cerr << "Error parsing header of file: " << filename << "\n";
+
+  // Close the file.
+  in.close();
+
+  // Determine endianness of file.
+  int file_endian, version;
+
+  if (!Piostream::readHeader(pr, filename, hdr, 0, version, file_endian))
+  {
+    if (pr) pr->error("Cannot parse header of file: " + filename);
+    else cerr << "ERROR - Cannot parse header of file: " << filename << endl;
     return 0;
   }
-  if(version != 1){
-    cerr << "Unkown PIO version: " << version << ", found in file: " << filename << '\n';
+  if (version > Piostream::PERSISTENT_VERSION)
+  {
+    const string errmsg = "File '" + filename + "' has version " +
+      to_string(version) + ", this build only supports up to version " +
+      to_string(Piostream::PERSISTENT_VERSION) + ".";
+    if (pr) pr->error(errmsg);
+    else cerr << "ERROR - " + errmsg;
     return 0;
   }
-  char m1=hdr[4];
-  char m2=hdr[5];
-  char m3=hdr[6];
-  if(m1 == 'B' && m2 == 'I' && m3 == 'N'){
-    return scinew BinaryPiostream(filename, Piostream::Read);
-  } else if(m1 == 'A' && m2 == 'S' && m3 == 'C'){
-    return scinew TextPiostream(filename, Piostream::Read);
-  } else if(m1 == 'G' && m2 == 'Z' && m3 == 'P'){
-    return scinew GunzipPiostream(filename, Piostream::Read);
-  } else {
-    cerr << filename << " is an unknown type!\n";
-    return 0;
+
+  const char m1 = hdr[4];
+  const char m2 = hdr[5];
+  const char m3 = hdr[6];
+  if (m1 == 'B' && m2 == 'I' && m3 == 'N')
+  {
+    // Old versions of Pio used XDR which always wrote big endian so if
+    // the version = 1, readHeader would return BIG, otherwise it will
+    // read it from the header.
+    int machine_endian = Piostream::Big;
+    if (airMyEndian == airEndianLittle) 
+      machine_endian = Piostream::Little;
+
+    if (file_endian == machine_endian) 
+      return scinew BinaryPiostream(filename, Piostream::Read, version, pr);
+    else 
+      return scinew BinarySwapPiostream(filename, Piostream::Read, version,pr);
   }
+  else if (m1 == 'A' && m2 == 'S' && m3 == 'C')
+  {
+    return scinew TextPiostream(filename, Piostream::Read, pr);
+  }
+
+  if (pr) pr->error(filename + " is an unknown type!");
+  else cerr << filename << " is an unknown type!" << endl;
+  return 0;
 }
+
+
+//----------------------------------------------------------------------
+Piostream*
+auto_ostream(const string& filename, const string& type, ProgressReporter *pr)
+{
+  // Based on the type string do the following
+  //     Binary:  Return a BinaryPiostream 
+  //     Fast:    Return FastPiostream
+  //     Text:    Return a TextPiostream
+  //     Default: Return BinaryPiostream 
+  // NOTE: Binary will never return BinarySwap so we always write
+  //       out the endianness of the machine we are on
+  Piostream* stream;
+  if (type == "Binary")
+  {
+    stream = scinew BinaryPiostream(filename, Piostream::Write, -1, pr);
+  }
+  else if (type == "Text")
+  {
+    stream = scinew TextPiostream(filename, Piostream::Write, pr);
+  }
+  else if (type == "Fast")
+  {
+    stream = scinew FastPiostream(filename, Piostream::Write, pr);
+  }
+  else
+  {
+    stream = scinew BinaryPiostream(filename, Piostream::Write, -1, pr);
+  }
+  return stream;
+}
+
 
 //----------------------------------------------------------------------
 bool
-Piostream::readHeader( const string & filename, char * hdr,
-		       const char   * filetype, int  & version )
+Piostream::readHeader( ProgressReporter *pr,
+                       const string & filename, char * hdr,
+		       const char   * filetype, int  & version,
+		       int & endian)
 {
   char m1=hdr[0];
   char m2=hdr[1];
   char m3=hdr[2];
   char m4=hdr[3];
-  if(m1 != 'S' || m2 != 'C' || m3 != 'I' || m4 != '\n') {
-    cerr << filename << " is not a valid SCI file! (magic="
-	 << m1 << m2 << m3 << m4 << ")\n";
+
+  if (m1 != 'S' || m2 != 'C' || m3 != 'I' || m4 != '\n')
+  {
+    if (pr)
+    {
+      pr->error( filename + " is not a valid SCI file! (magic=" +
+                 m1 + m2 + m3 + m4 + ").");
+    }
+    else
+    {
+      cerr << filename << " is not a valid SCI file! (magic=" <<
+        m1 << m2 << m3 << m4 << ")." << endl;
+    }
     return false;
   }
   char v[5];
@@ -398,15 +608,57 @@ Piostream::readHeader( const string & filename, char * hdr,
   v[4]=0;
   istringstream in(v);
   in >> version;
-  if(!in){
-    cerr << "Error reading file: " << filename << " (while reading version)" << endl;
+  if (!in)
+  {
+    if (pr)
+    {
+      pr->error("Error reading file: " + filename +
+                " (while reading version).");
+    }
+    else
+    {
+      cerr << "Error reading file: " << filename <<
+        " (while reading version)." << endl;
+    }
     return false;
   }
-  if(filetype){
-    if(hdr[4] != filetype[0] || hdr[5] != filetype[1] || hdr[6] != filetype[2]){
-      cerr << "Wrong filetype: " << filename << endl;
+  if (filetype)
+  {
+    if (hdr[4] != filetype[0] || hdr[5] != filetype[1] ||
+        hdr[6] != filetype[2])
+    {
+      if (pr) pr->error("Wrong filetype: " + filename);
+      else cerr << "Wrong filetype: " << filename << endl;
       return false;
     }
+  }
+  
+  bool is_binary = false;
+  if (hdr[4] == 'B' && hdr[5] == 'I' && hdr[6] == 'N' && hdr[7] == '\n')
+    is_binary = true;
+  if(version > 1 && is_binary) {
+    // can only be BIG or LIT
+    if (hdr[12] == 'B' && hdr[13] == 'I' && 
+	hdr[14] == 'G' && hdr[15] == '\n') {
+      endian = Big;
+    } else if (hdr[12] == 'L' && hdr[13] == 'I' && 
+	       hdr[14] == 'T' && hdr[15] == '\n') {
+      endian = Little;
+    } else {
+      if (pr)
+      {
+        pr->error(string("Unknown endianness: ") +
+                  hdr[12] + hdr[13] + hdr[14]);
+      }
+      else
+      {
+        cerr << "Unknown endianness: " <<
+          hdr[12] << hdr[13] << hdr[14] << endl;
+      }
+      return false;
+    }
+  } else {
+    endian = Big; // old system using XDR always read/wrote big endian
   }
   return true;
 }

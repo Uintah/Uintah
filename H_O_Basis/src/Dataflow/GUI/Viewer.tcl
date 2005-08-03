@@ -247,6 +247,7 @@ itcl_class BaseViewWindow {
 	setGlobal $this-global-movieFrame 0
 	setGlobal $this-global-resize 0
 	setGlobal $this-global-message "Waiting ..."
+	setGlobal $this-global-sync_with_execute 0
 	setGlobal $this-x-resize 700
 	setGlobal $this-y-resize 512
 	setGlobal $this-do_bawgl 0
@@ -383,9 +384,77 @@ itcl_class BaseViewWindow {
 	global ModuleSavedVars
 	set vid [$viewer modname]
 	foreach state {type light fog debug clip cull dl} {
-	    listFindAndRemove ModuleSavedVars($vid) "$this-$objid-$state"
+	    listFindAndRemove ModuleSavedVars($vid) "ViewWindow[number]-$objid-$state"
 	}
     }
+
+    method makeClipPopup {} {
+	set w .clip[modname]
+	if {[winfo exists $w]} {
+	    SciRaise $w
+	    return
+	}
+	toplevel $w
+	wm title $w "Clipping Planes"
+	wm minsize $w 200 100 
+
+	initGlobal $this-clip-num 6
+	initGlobal $this-clip-selected 1
+	for {set i 1} {$i <= 6} {incr i 1} {
+	    initGlobal $this-clip-visible-$i 0
+	    initGlobal $this-clip-normal-d-$i 0.0
+	    initGlobal $this-clip-normal-x-$i 1.0
+	    initGlobal $this-clip-normal-y-$i 0.0
+	    initGlobal $this-clip-normal-z-$i 0.0
+	}
+
+	set menup [tk_optionMenu $w.which $this-clip-selected 1 2 3 4 5 6]
+	for {set i 0}  {$i < 6} {incr i} {
+	    $menup entryconfigure $i -command "$this useClip"
+	}
+	
+	pack $w.which
+	checkbutton $w.visibile -text "Visible" -variable $this-clip-visible \
+	    -relief flat -command "$this setClip;$this-c redraw"
+	pack $w.visibile
+
+	makePlane $w.normal "Plane Normal" $this-clip-normal \
+	    "$this setClip ; $this-c redraw"
+	pack $w.normal -side left -expand yes -fill x
+	frame $w.f -relief groove -borderwidth 2
+	pack $w.f -expand yes -fill x
+
+	useClip
+    }
+
+    method useClip {} {
+	upvar \#0 $this-clip-selected cs
+	upvar \#0 $this-clip-normal-x-$cs x $this-clip-normal-y-$cs y
+	upvar \#0 $this-clip-normal-z-$cs z $this-clip-normal-d-$cs d
+ 	upvar \#0 $this-clip-visible-$cs visible
+	
+	setGlobal $this-clip-normal-x $x
+	setGlobal $this-clip-normal-y $y
+	setGlobal $this-clip-normal-z $z
+	setGlobal $this-clip-visible  $visible
+	.clip[modname].normal.e newvalue $d
+    }
+
+    method setClip {} {
+	upvar \#0 $this-clip-selected cs
+	upvar \#0 $this-clip-normal-x x $this-clip-normal-y y
+	upvar \#0 $this-clip-normal-z z $this-clip-normal-d d
+ 	upvar \#0 $this-clip-visible visible
+
+	setGlobal $this-clip-normal-x-$cs $x
+	setGlobal $this-clip-normal-y-$cs $y
+	setGlobal $this-clip-normal-z-$cs $z
+	setGlobal $this-clip-normal-d-$cs $d
+	setGlobal $this-clip-visible-$cs  $visible
+    }
+
+
+
 }
 
 
@@ -849,20 +918,19 @@ itcl_class ViewWindow {
 	    pack configure $w.wframe -expand yes -fill both
 
 	    set color "#505050"
-            $wmovie.x configure -foreground $color
-            $wmovie.e1 configure -state disabled -foreground $color
-            $wmovie.e2 configure -state disabled -foreground $color
+            $wmovie.resize_f.x configure -foreground $color
+            $wmovie.resize_f.e1 configure -state disabled -foreground $color
+            $wmovie.resize_f.e2 configure -state disabled -foreground $color
 	} else {
 	    if { $IsAttached == 1 } { $this switch_frames }
 	    set xsize [set $this-x-resize]
 	    set ysize [set $this-y-resize]
 	    set size "$xsize\x$ysize"
 	    set xsize [expr $xsize + 14]
-	    set ysize [expr $ysize + 134]
+	    set ysize [expr $ysize + 133]
 	    set geomsize "$xsize\x$ysize"
 	    wm geometry $w "=$geomsize"
-	    pack configure $w.wframe -expand no -fill none
-	    $w.wframe.draw configure -geometry $size
+	    pack configure $w.wframe -expand yes -fill both
 	    $wmovie.resize_f.x configure -foreground black
 	    $wmovie.resize_f.e1 configure -state normal -foreground black
 	    $wmovie.resize_f.e2 configure -state normal -foreground black
@@ -1201,71 +1269,6 @@ itcl_class ViewWindow {
 	pack $w.f -fill x -expand 1
     }	
 
-    method makeClipPopup {} {
-	set w .clip[modname]
-	if {[winfo exists $w]} {
-	    SciRaise $w
-	    return
-	}
-	toplevel $w
-	wm title $w "Clipping Planes"
-	wm minsize $w 200 100 
-
-	initGlobal $this-clip-num 6
-	initGlobal $this-clip-selected 1
-	for {set i 1} {$i <= 6} {incr i 1} {
-	    initGlobal $this-clip-visible-$i 0
-	    initGlobal $this-clip-normal-d-$i 0.0
-	    initGlobal $this-clip-normal-x-$i 1.0
-	    initGlobal $this-clip-normal-y-$i 0.0
-	    initGlobal $this-clip-normal-z-$i 0.0
-	}
-
-	set menup [tk_optionMenu $w.which $this-clip-selected 1 2 3 4 5 6]
-	for {set i 0}  {$i < 6} {incr i} {
-	    $menup entryconfigure $i -command "$this useClip"
-	}
-	
-	pack $w.which
-	checkbutton $w.visibile -text "Visible" -variable $this-clip-visible \
-	    -relief flat -command "$this setClip;$this-c redraw"
-	pack $w.visibile
-
-	makePlane $w.normal "Plane Normal" $this-clip-normal \
-	    "$this setClip ; $this-c redraw"
-	pack $w.normal -side left -expand yes -fill x
-	frame $w.f -relief groove -borderwidth 2
-	pack $w.f -expand yes -fill x
-
-	useClip
-    }
-
-    method useClip {} {
-	upvar \#0 $this-clip-selected cs
-	upvar \#0 $this-clip-normal-x-$cs x $this-clip-normal-y-$cs y
-	upvar \#0 $this-clip-normal-z-$cs z $this-clip-normal-d-$cs d
- 	upvar \#0 $this-clip-visible-$cs visible
-	
-	setGlobal $this-clip-normal-x $x
-	setGlobal $this-clip-normal-y $y
-	setGlobal $this-clip-normal-z $z
-	setGlobal $this-clip-visible  $visible
-	.clip[modname].normal.e newvalue $d
-    }
-
-    method setClip {} {
-	upvar \#0 $this-clip-selected cs
-	upvar \#0 $this-clip-normal-x x $this-clip-normal-y y
-	upvar \#0 $this-clip-normal-z z $this-clip-normal-d d
- 	upvar \#0 $this-clip-visible visible
-
-	setGlobal $this-clip-normal-x-$cs $x
-	setGlobal $this-clip-normal-y-$cs $y
-	setGlobal $this-clip-normal-z-$cs $z
-	setGlobal $this-clip-normal-d-$cs $d
-	setGlobal $this-clip-visible-$cs  $visible
-    }
-
     method makeLightSources {} {
 	set w .ui[modname]-lightSources
 
@@ -1476,6 +1479,14 @@ itcl_class ViewWindow {
 	    $w.mpeg configure -state disabled -disabledforeground ""
 	} 
 
+        checkbutton $w.sync -text "Sync with Execute" \
+            -variable $this-global-sync_with_execute
+
+        Tooltip $w.sync \
+            "Synchronizes movie frame output with the execution of the\n"\
+            "module.  Mouse events and other viewer interaction will\n"\
+            "not be recorded."
+
 	frame $w.moviebase
 	label $w.moviebase.label -text "Name:" -width 6
         entry $w.moviebase.entry -relief sunken -width 15 \
@@ -1512,7 +1523,7 @@ itcl_class ViewWindow {
 	  -command "wm withdraw $w"
 
         pack $w.l -padx 4 -anchor w
-        pack $w.none $w.raw $w.mpeg -padx 4 -anchor w
+        pack $w.none $w.raw $w.mpeg $w.sync -padx 4 -anchor w
 
         pack $w.moviebase.label $w.moviebase.entry -side left -padx 4
         pack $w.moviebase -pady 5 -padx 4 -anchor w

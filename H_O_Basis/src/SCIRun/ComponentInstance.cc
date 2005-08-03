@@ -44,14 +44,25 @@
 namespace SCIRun {
 
 ComponentInstance::ComponentInstance(SCIRunFramework* framework,
-				     const std::string& instanceName,
-				     const std::string& className)
-  : framework(framework), instanceName(instanceName), className(className)
+                                     const std::string &instanceName,
+                                     const std::string &className,
+                                     const sci::cca::TypeMap::pointer &tm)
+    : framework(framework), instanceName(instanceName),
+      className(className), comProperties(tm)
 {
 }
 
 ComponentInstance::~ComponentInstance()
 {
 }
+
+void
+ComponentInstance::setComponentProperties(const sci::cca::TypeMap::pointer &tm)
+{
+    // TODO: check properties - do not allow cca.className to be removed
+    comProperties = tm;
+}
+
+
 
 } // end namespace SCIRun

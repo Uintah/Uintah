@@ -184,6 +184,28 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 	    [set $this-k-dim]
     }
 
+    method set_index { axis iindex jindex kindex } {
+	global $this-axis
+
+	global $this-i-index
+	global $this-j-index
+	global $this-k-index
+
+	global $this-i-index2
+	global $this-j-index2
+	global $this-k-index2
+
+	set $this-axis $axis
+
+	set $this-i-index $iindex
+	set $this-j-index $jindex
+	set $this-k-index $kindex
+
+	set $this-i-index2 $iindex
+	set $this-j-index2 $jindex
+	set $this-k-index2 $kindex
+    }
+
     method set_size { dims idim jdim kdim } {
 	global $this-dims
 	global $this-i-dim

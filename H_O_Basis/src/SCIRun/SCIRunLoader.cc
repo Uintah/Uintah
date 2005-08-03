@@ -38,8 +38,7 @@
  *
  */
 
-#include <sci_defs/config_defs.h> // For MPIPP_H on SGI
-#include <mpi.h>
+#include <sci_defs/mpi_defs.h> // For MPIPP_H 
 #include <SCIRun/SCIRunLoader.h>
 #include <SCIRun/CCA/CCAComponentModel.h>
 #include <SCIRun/CCA/CCAComponentDescription.h>
@@ -48,8 +47,8 @@
 #include <SCIRun/SCIRunErrorHandler.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/OS/Dir.h>
-#include <Dataflow/XMLUtil/StrX.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/XMLUtil/StrX.h>
+#include <Core/XMLUtil/XMLUtil.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/soloader.h>
 #include <Core/CCA/PIDL/PIDL.h>
@@ -71,6 +70,7 @@
 #include <iostream>
 #include <sstream>
 
+#include <sci_mpi.h>
 using namespace std;
 
 namespace SCIRun {

@@ -46,10 +46,9 @@
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
+#include <Core/Init/init.h>
 #include <StandAlone/convert/FileUtils.h>
-#if defined(__APPLE__)
-#  include <Core/Datatypes/MacForceLoad.h>
-#endif
+
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
@@ -121,7 +120,7 @@ parse_lin_strain_data25(ifstream &nodal_in, vector<double> &data_vals,
 }
 
 int
-parse_lin_strain_data5(ifstream &nodal_in, vector<double> &data_vals, 
+parse_lin_strain_data4(ifstream &nodal_in, vector<double> &data_vals, 
 		      HVMesh *hvm) 
 {
   int npts = 0;
@@ -134,9 +133,41 @@ parse_lin_strain_data5(ifstream &nodal_in, vector<double> &data_vals,
 
     if (nodal_in.eof()) break;
     // 2nd order tensor
-    double eff;
-    nodal_in >> eff;
+    double eff = 0.0;
     
+    int node_index;
+    nodal_in >> node_index;
+    //make a scalar field out of this.
+
+    data_vals.push_back(eff);
+    hvm->add_point(Point(x[0],x[1],x[2]));
+  }
+  cerr << "done adding " << npts - 1 << " points." << endl;
+  return npts;
+}
+
+int
+parse_lin_strain_data5(ifstream &nodal_in, vector<double> &data_vals, 
+		      HVMesh *hvm, bool data = true) 
+{
+  int npts = 0;
+  while (! nodal_in.eof()) {
+    ++npts;
+
+    double x[3];
+    for (int j=0; j<3; j++) 
+      nodal_in >> x[j];
+
+    if (nodal_in.eof()) break;
+    // 2nd order tensor
+    double eff;
+    string lab;
+    if (data) {
+      nodal_in >> eff;
+    } else {
+      nodal_in >> lab;
+      eff = 0.0;
+    }
     int node_index;
     nodal_in >> node_index;
     //make a scalar field out of this.
@@ -234,12 +265,11 @@ parse_ho_data(ifstream &nodal_in, vector<Vector> &data_vals, HVMesh *hvm)
 
 int
 main(int argc, char **argv) {
-#if defined(__APPLE__)  
-  macForceLoad(); // Attempting to force load (and thus instantiation of
-	          // static constructors) Core/Datatypes;
-#endif
 
+  SCIRunInit();
   HVMesh *hvm = new HVMesh();
+
+
   
   char *nodal_file = argv[1];
   char *elem_file = argv[2];
@@ -288,9 +318,8 @@ main(int argc, char **argv) {
   ifstream aux_nodal_in(aux_file);
 
   bool header = true;
-
+  vector<string> labels(cols);
   if (header) {
-    vector<string> labels(cols);
     cout << "Parsing labels:" << endl;
     for (int i = 0; i < cols; ++i) {
       string str;
@@ -333,7 +362,13 @@ main(int argc, char **argv) {
   } else if (cols == 13) {
     npts = parse_lin_strain_data(nodal_in, data_vals_scalar, hvm);
   } else if (cols == 5) {
-    npts = parse_lin_strain_data5(nodal_in, data_vals_scalar, hvm);
+    if (labels[3] == string("Label")) {
+      npts = parse_lin_strain_data5(nodal_in, data_vals_scalar, hvm, false);
+    } else {
+      npts = parse_lin_strain_data5(nodal_in, data_vals_scalar, hvm);
+    }
+  } else if (cols == 4) {
+    npts = parse_lin_strain_data4(nodal_in, data_vals_scalar, hvm);
   } else {
     cerr << "Dont know what to do with " << cols 
 	 << " columns of data" << endl;

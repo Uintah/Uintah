@@ -34,6 +34,7 @@
  *
  */
 
+
 #include <Core/TkExtensions/tkOpenGL.h>
 #include <string.h>
 
@@ -155,17 +156,19 @@ OpenGLCmd(clientData, interp, argc, argv)
     int argc;			/* Number of arguments. */
     TCLCONST char **argv;	/* Argument strings. */
 {
-#ifndef _WIN32
     Tk_Window mainwin = (Tk_Window) clientData;
     OpenGLClientData *OpenGLPtr;
     Colormap cmap;
     Tk_Window tkwin;
-    int attributes[50];
     XVisualInfo temp_vi;
     int tempid;
-    int n, i;
-    int idx = 0;
+    int n;
 
+#ifndef _WIN32
+    int attributes[50];
+    int idx = 0;
+    int i;
+#endif
 
 
     if (argc < 2) {
@@ -190,12 +193,17 @@ OpenGLCmd(clientData, interp, argc, argv)
     OpenGLPtr->display = Tk_Display(tkwin);
     OpenGLPtr->x11_win=0;
     OpenGLPtr->screen_number = Tk_ScreenNumber(tkwin);
+
+#ifndef _WIN32
     OpenGLPtr->glx_win=0;
-    OpenGLPtr->cx=0;
-    OpenGLPtr->vi=0;
     OpenGLPtr->fb_configs=glXGetFBConfigs(OpenGLPtr->display, 
 					  OpenGLPtr->screen_number, 
 					  &(OpenGLPtr->num_fb));
+#else
+    OpenGLPtr->hDC = 0;
+#endif
+    OpenGLPtr->vi=0;
+    OpenGLPtr->cx=0;
     
     Tk_CreateEventHandler(OpenGLPtr->tkwin, 
 			  StructureNotifyMask,
@@ -211,32 +219,28 @@ OpenGLCmd(clientData, interp, argc, argv)
 	return TCL_ERROR;
     }
 
-#if 0
-    OpenGLPtr->vi = 
-      glXGetVisualFromFBConfig(OpenGLPtr->display,
-			       OpenGLPtr->fb_configs[OpenGLPtr->visualid]);
+/* #if 0 */
+/*     OpenGLPtr->vi =  */
+/*       glXGetVisualFromFBConfig(OpenGLPtr->display, */
+/* 			       OpenGLPtr->fb_configs[OpenGLPtr->visualid]); */
     
-    cmap = XCreateColormap(OpenGLPtr->display,
-			   Tk_WindowId(Tk_MainWindow(OpenGLPtr->interp)),
-			   OpenGLPtr->vi->visual,
-			   AllocNone);
+/*     cmap = XCreateColormap(OpenGLPtr->display, */
+/* 			   Tk_WindowId(Tk_MainWindow(OpenGLPtr->interp)), */
+/* 			   OpenGLPtr->vi->visual, */
+/* 			   AllocNone); */
     
-    if (Tk_SetWindowVisual(OpenGLPtr->tkwin, 
-			   OpenGLPtr->vi->visual,
-			   OpenGLPtr->vi->depth, 
-			   cmap) != 1) {
-      Tcl_AppendResult(interp, "Error setting colormap for window", (char*)NULL);
-      return TCL_ERROR;
-    }
-    XSync(OpenGLPtr->display, False);
-#endif
+/*     if (Tk_SetWindowVisual(OpenGLPtr->tkwin,  */
+/* 			   OpenGLPtr->vi->visual, */
+/* 			   OpenGLPtr->vi->depth,  */
+/* 			   cmap) != 1) { */
+/*       Tcl_AppendResult(interp, "Error setting colormap for window", (char*)NULL); */
+/*       return TCL_ERROR; */
+/*     } */
+/*     XSync(OpenGLPtr->display, False); */
+/* #endif */
 
 
     tempid = OpenGLPtr->visualid;
-
-#ifdef _WIN32
-    OpenGLPtr->visualid = 0;
-#endif
 
     if (OpenGLPtr->visualid) {
       temp_vi.visualid = OpenGLPtr->visualid;
@@ -246,10 +250,12 @@ OpenGLCmd(clientData, interp, argc, argv)
 	    Tcl_AppendResult(interp, "Error finding visual", NULL);
 	    return TCL_ERROR;
       }
+
     } else {
       /*
        * Pick the right visual...
        */
+#ifndef _WIN32
       attributes[idx++]=GLX_BUFFER_SIZE;
       attributes[idx++]=OpenGLPtr->buffersize;
       attributes[idx++]=GLX_LEVEL;
@@ -287,32 +293,88 @@ OpenGLCmd(clientData, interp, argc, argv)
       attributes[idx++]=4;
 #endif
       attributes[idx++]=None;
-	  
+#else // WIN32
+
+      // I am using the *PixelFormat commands from win32 because according
+      // to the Windows page, we should prefer this to wgl*PixelFormatARB.
+      // Unfortunately, this means that the Windows code will differ
+      // substantially from that of other platforms.  However, it has the
+      // advantage that we don't have to use the wglGetProc to get
+      // the procedure address, or test to see if the applicable extension
+      // is supported.  WM:VI
+
+      HWND hWnd = TkWinGetHWND(Tk_WindowId(OpenGLPtr->tkwin));
+      OpenGLPtr->hDC = GetDC(hWnd);
+
+      DWORD dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
+      if (OpenGLPtr->doublebuffer)
+	dwFlags |= PFD_DOUBLEBUFFER;
+      if (OpenGLPtr->stereo)
+	dwFlags |= PFD_STEREO;
+
+      PIXELFORMATDESCRIPTOR pfd = { 
+	sizeof(PIXELFORMATDESCRIPTOR),   // size of this pfd 
+	1,                     // version number 
+	dwFlags,
+	PFD_TYPE_RGBA,         // RGBA type 
+	OpenGLPtr->buffersize, // color depth
+	OpenGLPtr->redsize, 0, 
+	OpenGLPtr->greensize, 0, 
+	OpenGLPtr->bluesize, 0,  // color bits  
+	OpenGLPtr->alphasize,0,  // alpha buffer 
+	OpenGLPtr->accumredsize+
+	OpenGLPtr->accumgreensize+
+	OpenGLPtr->accumbluesize,// accumulation buffer 
+	OpenGLPtr->accumredsize, 
+	OpenGLPtr->accumgreensize, 
+	OpenGLPtr->accumbluesize, 
+	OpenGLPtr->accumalphasize,// accum bits 
+	OpenGLPtr->depthsize,  // 32-bit z-buffer 
+	OpenGLPtr->stencilsize,// no stencil buffer 
+	OpenGLPtr->auxbuffers, // no auxiliary buffer 
+	PFD_MAIN_PLANE,        // main layer 
+	0,                     // reserved 
+	0, 0, 0                // layer masks ignored 
+      }; 
+
+#endif
+
 #ifndef _WIN32
       OpenGLPtr->vi = 
 	glXChooseVisual(OpenGLPtr->display, 
 			OpenGLPtr->screen_number,
 			attributes);
-#else
-      vi = (XVisualInfo*)malloc(sizeof(XVisxcreatecolormapualInfo));
-      vi->visualid=tempid;
-#endif
-    }
-
-    if (!OpenGLPtr->vi) {
-      Tcl_AppendResult(interp, "Error selecting visual", (char*)NULL);
-      return TCL_ERROR;
-    }
-    
     OpenGLPtr->visualid=tempid;
     
-#ifdef _WIN32
-    cmap = XCreateColormap(Tk_Display(tkwin),
-			   RootWindow(Tk_Display(tkwin), 0/*vi->screen*/),
-			   0/*vi->visual*/, AllocNone);
-
-    //if( Tk_SetWindowVisual(tkwin, 0/*vi->visual*/, vi->depth, cmap) != 1){
 #else
+      int iPixelFormat = ChoosePixelFormat(OpenGLPtr->hDC, &pfd); 
+      SetPixelFormat(OpenGLPtr->hDC, iPixelFormat, &pfd);
+      OpenGLPtr->visualid = iPixelFormat;
+
+      XVisualInfo xvi;
+      xvi.screen = OpenGLPtr->screen_number;
+      int n_ret=0;
+      OpenGLPtr->vi = XGetVisualInfo(OpenGLPtr->display,
+				     VisualScreenMask,
+				     &xvi,
+				     &n_ret
+				     );
+#endif
+
+      if (!OpenGLPtr->vi) {
+	
+	Tcl_AppendResult(interp, "Error selecting visual", (char*)NULL);
+	return TCL_ERROR;
+      }
+    }
+    
+/* #ifdef _WIN32 */
+/*     cmap = XCreateColormap(Tk_Display(tkwin), */
+/* 			   RootWindow(Tk_Display(tkwin), 0/\*vi->screen*\/), */
+/* 			   0/\*vi->visual*\/, AllocNone); */
+
+/*     if( Tk_SetWindowVisual(tkwin, 0/\*vi->visual*\/, vi->depth, cmap) != 1){ */
+/* #else */
       
     cmap = XCreateColormap(OpenGLPtr->display,
 			   Tk_WindowId(Tk_MainWindow(OpenGLPtr->interp)),
@@ -322,16 +384,16 @@ OpenGLCmd(clientData, interp, argc, argv)
     if( Tk_SetWindowVisual(OpenGLPtr->tkwin, 
 			   OpenGLPtr->vi->visual, 
 			   OpenGLPtr->vi->depth, cmap) != 1){
-#endif
+/* #endif */
       Tcl_AppendResult(interp, "Error setting visual for window", (char*)NULL);
 	return TCL_ERROR;
     }
     XSync(OpenGLPtr->display, False);
 
     interp->result = Tk_PathName(OpenGLPtr->tkwin);
-#endif
+/* #endif */
     return TCL_OK;
-}
+}    
 
 /*
  *--------------------------------------------------------------
@@ -358,6 +420,7 @@ OpenGLWidgetCmd(clientData, interp, argc, argv)
     int argc;				/* Number of arguments. */
     char **argv;			/* Argument strings. */
 {
+
   OpenGLClientData *OpenGLPtr = (OpenGLClientData *) clientData;
   int result = TCL_OK;
   int length;
@@ -385,7 +448,7 @@ OpenGLWidgetCmd(clientData, interp, argc, argv)
 			       TK_CONFIG_ARGV_ONLY);
     }
   } 
-#ifndef _WIN32
+
   else if ((c == 'c') && (strncmp(argv[1], "cget", length) == 0)) {
     if (argc == 3) {
       result = Tk_ConfigureValue(interp, OpenGLPtr->tkwin, configSpecs,
@@ -410,7 +473,7 @@ OpenGLWidgetCmd(clientData, interp, argc, argv)
   }
   
   Tk_Release((ClientData) OpenGLPtr);
-#endif
+
   return result;
 }
 
@@ -444,7 +507,7 @@ OpenGLConfigure(interp, OpenGLPtr, argc, argv, flags)
     int flags;				/* Flags to pass to
 					 * Tk_ConfigureWidget. */
 {
-#ifndef _WIN32
+
   int height, width;
 
     if (Tk_ConfigureWidget(interp, OpenGLPtr->tkwin, configSpecs,
@@ -460,7 +523,7 @@ OpenGLConfigure(interp, OpenGLPtr, argc, argv, flags)
 
     Tk_GeometryRequest(OpenGLPtr->tkwin, width, height);
     Tk_DefineCursor(OpenGLPtr->tkwin, OpenGLPtr->cursor);
-#endif
+
     return TCL_OK;
 }
 
@@ -487,21 +550,29 @@ OpenGLEventProc(clientData, eventPtr)
      ClientData clientData;	/* Information about window. */
      XEvent *eventPtr;		/* Information about event. */
 {
-#ifndef _WIN32
+
   OpenGLClientData *OpenGLPtr = (OpenGLClientData *) clientData;
   if (eventPtr->type == DestroyNotify) {
     
+#ifndef _WIN32
       glXMakeContextCurrent(OpenGLPtr->display, None, None, 0);
+#else
+      wglMakeCurrent(OpenGLPtr->hDC,0);
+#endif
       XSync(OpenGLPtr->display, False);
       //      glXDestroyWindow(OpenGLPtr->display, OpenGLPtr->glx_win);
+#ifndef _WIN32
       glXDestroyContext(OpenGLPtr->display, OpenGLPtr->cx);
+#else
+      wglDeleteContext( OpenGLPtr->cx ); 
+#endif
       XSync(OpenGLPtr->display, False);
 
       Tcl_DeleteCommand(OpenGLPtr->interp, Tk_PathName(OpenGLPtr->tkwin));
       OpenGLPtr->tkwin = NULL;
       Tk_EventuallyFree((ClientData) OpenGLPtr, (Tcl_FreeProc*)OpenGLDestroy);
+      
     }
-#endif
 }
 
 
@@ -527,15 +598,13 @@ static void
 OpenGLDestroy(clientData)
     ClientData clientData;	/* Info about OpenGL widget. */
 {
-#ifndef _WIN32
     OpenGLClientData *OpenGLPtr = (OpenGLClientData *) clientData;
-#ifdef _WIN32
-    /* this needs some additional checking first */
-    wglDeleteContext(OpenGLPtr->cx);
-#endif
+/* #ifdef _WIN32 */
+/*     /\* this needs some additional checking first *\/ */
+/*     wglDeleteContext(OpenGLPtr->cx); */
+/* #endif */
     Tk_FreeOptions(configSpecs, (char *) OpenGLPtr, OpenGLPtr->display, 0);
     ckfree((char *) OpenGLPtr);
-#endif
 }
 
 #ifndef _WIN32
@@ -543,14 +612,18 @@ static GLXContext first_context = 0;
 
 
 GLXContext OpenGLGetContext(interp, name)
+#else // WIN32
+
+static HGLRC first_context = 0;
+
+HGLRC OpenGLGetContext(interp,name)
+#endif
     Tcl_Interp* interp;
     char* name;
 {
     Tcl_CmdInfo info;
     OpenGLClientData* OpenGLPtr;
 #ifdef _WIN32
-    PIXELFORMATDESCRIPTOR pfd;
-    HDC hDC;
     HWND hWnd;
 #endif
     if(!Tcl_GetCommandInfo(interp, name, &info))
@@ -577,51 +650,36 @@ GLXContext OpenGLGetContext(interp, name)
     if (!OpenGLPtr->x11_win) 
       return 0;
 
-#if 0
-    if (!OpenGLPtr->glx_win) {
-      printf ("Making context w/ visual id#%d\n", OpenGLPtr->visualid);
-      OpenGLPtr->glx_win = 
-	glXCreateWindow(OpenGLPtr->display,
-			OpenGLPtr->fb_configs[OpenGLPtr->visualid],
-			OpenGLPtr->x11_win,
-			NULL);
-      XSync(OpenGLPtr->display, False);
-    }
-#endif
+/* #if 0 */
+/*     if (!OpenGLPtr->glx_win) { */
+/*       printf ("Making context w/ visual id#%d\n", OpenGLPtr->visualid); */
+/*       OpenGLPtr->glx_win =  */
+/* 	glXCreateWindow(OpenGLPtr->display, */
+/* 			OpenGLPtr->fb_configs[OpenGLPtr->visualid], */
+/* 			OpenGLPtr->x11_win, */
+/* 			NULL); */
+/*       XSync(OpenGLPtr->display, False); */
+/*     } */
+/* #endif */
+
+#ifndef _WIN32
     OpenGLPtr->glx_win = OpenGLPtr->x11_win;
 
     if (!OpenGLPtr->cx) {
-#ifdef _WIN32
-      hWnd = TkWinGetHWND(Tk_WindowId(tkwin));
-      hDC = GetDC(hWnd);
-      printf("Trying to SetPixelFormat to %d\n",OpenGLPtr->visualid);
-      if (!SetPixelFormat(hDC,OpenGLPtr->visualid,&pfd)) {
-	printf("SetPixelFormat() failed; Error code: %d\n",GetLastError());
-	return 0;
-      }
-      OpenGLPtr->cx = wglCreateContext(hDC);
-      if (!OpenGLPtr->cx)
-	printf("wglCreateContext() returned NULL; Error code: %d\n",
-	       GetLastError());
-#else
 
-#if 0
-      OpenGLPtr->cx = 
-	glXCreateNewContext(OpenGLPtr->display,
-			    OpenGLPtr->fb_configs[OpenGLPtr->visualid],
-			    GLX_RGBA_TYPE,
-			    NULL,
-			    OpenGLPtr->direct);
-#endif
+/* #if 0 */
+/*       OpenGLPtr->cx =  */
+/* 	glXCreateNewContext(OpenGLPtr->display, */
+/* 			    OpenGLPtr->fb_configs[OpenGLPtr->visualid], */
+/* 			    GLX_RGBA_TYPE, */
+/* 			    NULL, */
+/* 			    OpenGLPtr->direct); */
+/* #endif */
       OpenGLPtr->cx =
 	glXCreateContext(OpenGLPtr->display,
 			 OpenGLPtr->vi,
 			 first_context, OpenGLPtr->direct);
       if (!first_context) first_context = OpenGLPtr->cx;
-			 
-
-
-#endif
     }
 
     if (!OpenGLPtr->cx) {
@@ -631,32 +689,46 @@ GLXContext OpenGLGetContext(interp, name)
 
     if (!OpenGLPtr->glx_win)
       return 0;
+#else
+      hWnd = TkWinGetHWND(Tk_WindowId(OpenGLPtr->tkwin));
+      OpenGLPtr->hDC = GetDC(hWnd);
+      if (!OpenGLPtr->cx) {
+	OpenGLPtr->cx = wglCreateContext(OpenGLPtr->hDC);
+	wglShareLists(first_context,OpenGLPtr->cx);
+	if (!first_context) first_context = OpenGLPtr->cx;
 
+      }
+      if (!OpenGLPtr->cx) {
+	Tcl_AppendResult(interp, "Error making GL context", (char*)NULL);
+	printf("wglCreateContext() returned NULL; Error code: %d\n",
+	       (int)GetLastError());
+	return 0;
+      }
+#endif
     return OpenGLPtr->cx;
 }
-#endif
 
 void OpenGLSwapBuffers(interp, name)
     Tcl_Interp* interp;
     char* name;
 {
-#ifndef _WIN32
     Tcl_CmdInfo info;
     OpenGLClientData* OpenGLPtr;
     if(!Tcl_GetCommandInfo(interp, name, &info))
       return;
 
     OpenGLPtr=(OpenGLClientData*)info.clientData;
+#ifndef _WIN32
     glXSwapBuffers(OpenGLPtr->display, OpenGLPtr->glx_win);
+#else
+    SwapBuffers(OpenGLPtr->hDC);
 #endif
 }
-
 
 int OpenGLMakeCurrent(interp, name)
     Tcl_Interp* interp;
     char* name;
 {
-#ifndef _WIN32
     Tcl_CmdInfo info;
     OpenGLClientData* OpenGLPtr;
 
@@ -665,18 +737,19 @@ int OpenGLMakeCurrent(interp, name)
 
     OpenGLPtr=(OpenGLClientData*)info.clientData;
 
+#ifndef _WIN32
     if (!glXMakeContextCurrent(OpenGLPtr->display,
 			       OpenGLPtr->glx_win,
 			       OpenGLPtr->glx_win,
 			       OpenGLPtr->cx)) {
+#else
+      if (!wglMakeCurrent(OpenGLPtr->hDC,OpenGLPtr->cx)) {
+#endif
       printf("%s failed make current.\n", Tk_PathName(OpenGLPtr->tkwin));
       return 0;
     }
-#endif
     return 1;
 }
-
-
 
 
 #define GETCONFIG(attrib, value) \
@@ -757,6 +830,68 @@ OpenGLListVisuals(interp, OpenGLPtr)
 	     samples_string, score);
     Tcl_AppendResult(interp, buf, (char *)NULL);
   }
+#else // _WIN32
+  // I am using the *PixelFormat commands from win32 because according
+  // to the Windows page, we should prefer this to wgl*PixelFormatARB.
+  // Unfortunately, this means that the Windows code will differ
+  // substantially from that of other platforms.  However, it has the
+  // advantage that we don't have to use the wglGetProc to get
+  // the procedure address, or test to see if the applicable extension
+  // is supported.  WM:VI
+
+  int  id, level, db, stereo, r,g,b,a, depth, stencil, ar, ag, ab, aa;
+
+  int iPixelFormat = GetPixelFormat(OpenGLPtr->hDC);
+  PIXELFORMATDESCRIPTOR pfd;
+  DescribePixelFormat(OpenGLPtr->hDC,iPixelFormat,sizeof(pfd),&pfd);
+
+#ifndef _WIN32
+  int  i;
+  int nvis;
+#endif
+  int  score=0;
+  char buf[200];
+  //int able;
+  char samples_string[20] = "";
+
+  // I am assuming for the sake of simplicity that overlays are not being used.
+  // If that is not the case, then we will need to change this.
+/*   for(i=0;i<nvis;i++) */
+/*   { */
+  //    id = vinfo[i].visualid;
+  //    GETCONFIG(GLX_FBCONFIG_ID, id);
+  //    GETCONFIG(GLX_LEVEL, level);
+  id = 0;
+  level = 0;
+  db = ((pfd.dwFlags & PFD_DOUBLEBUFFER) == PFD_DOUBLEBUFFER);
+  stereo = ((pfd.dwFlags & PFD_STEREO) == PFD_STEREO);
+  r = pfd.cRedBits;
+  g = pfd.cGreenBits;
+  b = pfd.cBlueBits;
+  a = pfd.cAlphaBits;
+  depth = pfd.cDepthBits;
+  stencil = pfd.cStencilBits;
+  ar = pfd.cAccumRedBits;
+  ag = pfd.cAccumGreenBits;
+  ab = pfd.cAccumBlueBits;
+  aa = pfd.cAccumAlphaBits;
+  // GETCONFIG(GLX_RENDER_TYPE, rt);
+  // GETCONFIG(GLX_DRAWABLE_TYPE, dt);
+
+  //GETCONFIG(GLX_X_RENDERABLE, able);
+  //if (!able) continue;
+
+  score = db?200:0;
+  score += stereo?1:0;
+  score += r+g+b+a;
+  score += depth*5;
+
+  sprintf (buf, "{id=%02x, level=%d, %s%srgba=%d:%d:%d:%d, depth=%d, stencil=%d, accum=%d:%d:%d:%d, %sscore=%d} ",
+	   id, level, db?"double, ":"single, ", stereo?"stereo, ":"", 
+	   r, g, b, a, depth, stencil, ar, ag, ab, aa,
+	   samples_string, score);
+  Tcl_AppendResult(interp, buf, (char *)NULL);
+/*   } */
 #endif
   return TCL_OK;
 };

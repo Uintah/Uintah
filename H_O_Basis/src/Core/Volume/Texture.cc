@@ -73,9 +73,27 @@ Texture::get_sorted_bricks(vector<TextureBrickHandle> &bricks, const Ray& view,
   vector<double> dist;
   for (unsigned int i=0; i<brick_.size(); i++)
   {
+    Point minp(brick_[i]->bbox().min());
+    Point maxp(brick_[i]->bbox().max());
+    Vector diag(brick_[i]->bbox().diagonal());
+    minp+=diag/1000.;
+    maxp-=diag/1000.;
+    Point corner[8];
+    corner[0] = minp;
+    corner[1] = Point(minp.x(), minp.y(), maxp.z());
+    corner[2] = Point(minp.x(), maxp.y(), minp.z());
+    corner[3] = Point(minp.x(), maxp.y(), maxp.z());
+    corner[4] = Point(maxp.x(), minp.y(), minp.z());
+    corner[5] = Point(maxp.x(), minp.y(), maxp.z());
+    corner[6] = Point(maxp.x(), maxp.y(), minp.z());
+    corner[7] = maxp;
+    double d;
+    for (unsigned int c=0; c<8; c++) {
+      double dd=(corner[c]-view.origin()).length();
+      if (c==0 || dd<d) d=dd;
+    }
     bricks.push_back(brick_[i]);
-    dist.push_back(-Dot(brick_[i]->bbox().center()-view.origin(),
-                        view.direction()));
+    dist.push_back(-d);
   }
   Sort(dist, bricks);
 }

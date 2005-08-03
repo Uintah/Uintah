@@ -43,7 +43,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Containers/StringUtil.h>
 #include <Dataflow/Modules/Fields/TransformData2.h>
-#include <Dataflow/Modules/Fields/FieldInfo.h>
+#include <Core/Algorithms/Fields/FieldCount.h>
 #include <Core/Util/DynamicCompilation.h>
 #include <Core/Containers/HashTable.h>
 #include <iostream>
@@ -179,8 +179,8 @@ TransformData2::execute()
       // Do this last, sometimes takes a while.
       const TypeDescription *meshtd0 = fHandle0->mesh()->get_type_description();
 
-      CompileInfoHandle ci = FieldInfoAlgoCount::get_compile_info(meshtd0);
-      Handle<FieldInfoAlgoCount> algo;
+      CompileInfoHandle ci = FieldCountAlgorithm::get_compile_info(meshtd0);
+      Handle<FieldCountAlgorithm> algo;
       if (!module_dynamic_compile(ci, algo)) return;
 
       //string num_nodes, num_elems;

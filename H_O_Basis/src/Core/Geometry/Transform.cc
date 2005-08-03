@@ -45,7 +45,6 @@
 #include <Core/Geometry/Plane.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/Trig.h>
-#include <Core/Persistent/Pstreams.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
@@ -875,12 +874,6 @@ Transform::operator=(const Transform& copy)
   return *this;
 }
 
-const string& 
-Transform::get_h_file_path() {
-  static const string path(TypeDescription::cc_to_h(__FILE__));
-  return path;
-}
-
 const int TRANSFORM_VERSION = 1;
 
 void 
@@ -921,6 +914,12 @@ SCIRun::Pio(Piostream& stream, Transform*& obj)
   if(stream.reading()) {
     obj=(Transform*)pobj;
   }
+}
+
+const string& 
+Transform::get_h_file_path() {
+  static const string path(TypeDescription::cc_to_h(__FILE__));
+  return path;
 }
 
 const TypeDescription*
@@ -977,5 +976,3 @@ SCIRun::operator*(Transform &t, const Vector &d)
 
   return Vector(result[0], result[1], result[2]);
 }
-
-

@@ -48,8 +48,8 @@
 namespace SCIRun {
 
 ComponentEvent::ComponentEvent(sci::cca::ports::ComponentEventType type,
-			       sci::cca::ComponentID::pointer compID,
-			       sci::cca::TypeMap::pointer tm)
+			       const sci::cca::ComponentID::pointer& compID,
+			       const sci::cca::TypeMap::pointer& tm)
     : type(type), compID(compID), tm(tm)
 {
 }
@@ -58,17 +58,20 @@ ComponentEvent::~ComponentEvent()
 {
 }
 
-sci::cca::ports::ComponentEventType ComponentEvent::getEventType()
+sci::cca::ports::ComponentEventType
+ComponentEvent::getEventType()
 {
     return type;
 }
 
-sci::cca::ComponentID::pointer ComponentEvent::getComponentID()
+sci::cca::ComponentID::pointer
+ComponentEvent::getComponentID()
 {
     return compID;
 }
 
-sci::cca::TypeMap::pointer ComponentEvent::getComponentProperties()
+sci::cca::TypeMap::pointer
+ComponentEvent::getComponentProperties()
 {
     return tm;
 }

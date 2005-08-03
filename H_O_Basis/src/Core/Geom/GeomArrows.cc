@@ -78,9 +78,9 @@ GeomArrows::GeomArrows(const GeomArrows& copy)
 GeomArrows::~GeomArrows() {
 }
 
-void GeomArrows::set_matl(const MaterialHandle& shaft_matl,
-			  const MaterialHandle& back_matl,
-			  const MaterialHandle& head_matl)
+void GeomArrows::set_material(const MaterialHandle& shaft_matl,
+                              const MaterialHandle& back_matl,
+                              const MaterialHandle& head_matl)
 {
     shaft_matls.resize(1);
     back_matls.resize(1);

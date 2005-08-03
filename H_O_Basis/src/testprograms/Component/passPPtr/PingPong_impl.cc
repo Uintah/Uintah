@@ -40,6 +40,7 @@
  *  Copyright (C) 1999 SCI Group
  */
 
+#include <sci_defs/mpi_defs.h>
 #include <testprograms/Component/passPPtr/PingPong_impl.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/NotFinished.h>
@@ -49,7 +50,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <iostream>
-#include <mpi.h>
+#include <sci_mpi.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/PIDL/URL.h>
 using namespace PingPong_ns;

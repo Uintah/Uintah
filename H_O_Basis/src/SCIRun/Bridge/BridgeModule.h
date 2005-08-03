@@ -41,6 +41,7 @@
 #ifndef SCIRun_Framework_BridgeModule_h
 #define SCIRun_Framework_BridgeModule_h
 
+#include <Core/GuiInterface/TCLInterface.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Network.h>
 #include <SCIRun/Dataflow/SCIRunComponentModel.h>

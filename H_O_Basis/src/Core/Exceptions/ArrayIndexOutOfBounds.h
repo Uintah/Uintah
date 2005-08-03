@@ -48,7 +48,8 @@
 namespace SCIRun {
 	class ArrayIndexOutOfBounds : public Exception {
 	public:
-	    ArrayIndexOutOfBounds(long value, long lower, long upper);
+	    ArrayIndexOutOfBounds(long value, long lower, long upper, 
+                                  const char* file, int line);
 	    ArrayIndexOutOfBounds(const ArrayIndexOutOfBounds&);
 	    virtual ~ArrayIndexOutOfBounds();
 	    virtual const char* message() const;

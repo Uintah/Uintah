@@ -43,6 +43,11 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiInterface.h>
 
+#ifdef _WIN32
+#include <tkWinInt.h>
+#endif
+
+
 #include <iostream>
 using namespace SCIRun;
 using namespace std;
@@ -51,6 +56,8 @@ extern "C" Tcl_Interp* the_interp;
 
 #ifndef _WIN32
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
+#else
+extern "C" HGLRC OpenGLGetContext(Tcl_Interp*, char*);
 #endif
 
 OpenGLWindow::OpenGLWindow(GuiInterface* gui)
@@ -100,6 +107,14 @@ OpenGLWindow::init( const string &window_name)
     gui->unlock();
     return false;
   }
+#else
+  hdc = TkWinGetHDC(tkwin);
+  hglrc=OpenGLGetContext(the_interp, const_cast<char *>(window_name.c_str()));
+  if(!hglrc){
+    cerr << "Unable to create OpenGL Context!\n";
+    gui->unlock();
+    return false;
+  }
 #endif
   //    }
   
@@ -125,6 +140,10 @@ OpenGLWindow::pre()
 #ifndef _WIN32
   if (!glXMakeCurrent(dpy, win, cx))
     cerr << "*glXMakeCurrent failed.\n";
+#else
+    if (!wglMakeCurrent(hdc,hglrc))
+    cerr << "*wglMakeCurrent failed.\n";
+
 #endif
 
   glViewport(0, 0, xres_, yres_);
@@ -142,6 +161,11 @@ OpenGLWindow::post( bool swap)
     glXSwapBuffers( dpy, win);
 
   glXMakeCurrent(dpy, None, NULL);
+#else
+  if ( swap )
+    SwapBuffers( hdc );
+
+  wglMakeCurrent(hdc, NULL);
 #endif
 
   gui->unlock();
@@ -176,18 +200,16 @@ OpenGLWindow::make_raster_font()
 #ifndef _WIN32
   if (!cx)
     return;
-#endif
 
   XFontStruct *fontInfo;
   Font id;
   unsigned int first, last;
   Display *xdisplay;
   
-#ifndef _WIN32
   xdisplay = dpy;
   fontInfo = XLoadQueryFont(xdisplay, 
   		    "-*-helvetica-medium-r-normal--12-*-*-*-p-67-iso8859-1");
-#endif
+
   if (fontInfo == NULL) {
     printf ("no font found\n");
     exit (0);
@@ -202,11 +224,28 @@ OpenGLWindow::make_raster_font()
     printf ("out of display lists\n");
     exit (0);
   }
-#ifndef _WIN32
   glXUseXFont(id, first, last-first+1, base+first);
-#endif
   /*    *height = fontInfo->ascent + fontInfo->descent;
    *width = fontInfo->max_bounds.width;  */
+#else // WIN32
+  if (!hdc)
+    return;
+  DWORD first, count;
+
+  // for now, just use the system font
+  SelectObject(hdc,GetStockObject(SYSTEM_FONT));
+
+  // rasterize the standard character set.
+  first = 0;
+  count = 256;
+  base =  glGenLists((GLuint) 1);
+
+  if (base == 0) {
+    printf("out of display lists\n");
+    exit(0);
+  }
+  wglUseFontBitmaps( hdc, first, count, base );
+#endif
 }
 
 void 

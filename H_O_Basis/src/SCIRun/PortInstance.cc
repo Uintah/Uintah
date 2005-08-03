@@ -28,7 +28,7 @@
 
 
 /*
- *  PortRecord.cc:
+ *  PortInstance.cc:
  *
  *  Written by:
  *   Steven G. Parker

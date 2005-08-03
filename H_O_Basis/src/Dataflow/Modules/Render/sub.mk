@@ -47,7 +47,6 @@ SRCS     += \
 	$(SRCDIR)/Camera.cc\
 	$(SRCDIR)/EditPath.cc\
 	$(SRCDIR)/OpenGL.cc\
-	$(SRCDIR)/PBuffer.cc \
 	$(SRCDIR)/SharedMemory.cc\
 	$(SRCDIR)/SynchronizeGeometry.cc\
 	$(SRCDIR)/Tex.cc\
@@ -61,6 +60,7 @@ SRCS     += \
 
 PSELIBS := Dataflow/Widgets Dataflow/Network Dataflow/Ports Core/Datatypes \
 	Dataflow/Comm Core/Persistent Core/Exceptions Core/Geometry \
+	Core/Algorithms/Fields \
 	Core/Geom Core/Thread Core/Containers \
 	Core/GuiInterface Core/TkExtensions Core/Util \
 	Core/TkExtensions Core/Datatypes Core/GeomInterface \

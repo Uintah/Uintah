@@ -35,7 +35,6 @@ SRCDIR   := Core/Volume
 SRCS +=	$(SRCDIR)/CM2Shader.cc \
 	$(SRCDIR)/CM2Widget.cc \
 	$(SRCDIR)/Colormap2.cc \
-	$(SRCDIR)/Pbuffer.cc \
 	$(SRCDIR)/SliceRenderer.cc \
 	$(SRCDIR)/Texture.cc \
 	$(SRCDIR)/TextureBrick.cc \
@@ -55,7 +54,7 @@ PSELIBS := \
 	Core/Persistent \
 	Core/Thread \
 	Core/Util
-#	Dataflow/Network Dataflow/XMLUtil
+#	Dataflow/Network Core/XMLUtil
 
 ifeq ($(IS_WIN), yes)
   PSELIBS += Core/Math

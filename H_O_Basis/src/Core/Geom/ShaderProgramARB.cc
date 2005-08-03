@@ -44,6 +44,16 @@ using std::cerr;
 using std::endl;
 using std::string;
 
+#ifdef _WIN32
+#define GL_PROXY_TEXTURE_3D 0x8070
+typedef void (GLAPIENTRY * PFNGLTEXIMAGE3DPROC) (GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
+static PFNGLTEXIMAGE3DPROC glTexImage3D = 0;
+#define GL_ARB_fragment_program 1
+#define GL_FRAGMENT_PROGRAM_ARB 0x8804
+typedef unsigned int uint;
+#endif
+
+
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
 #  ifndef GL_ARB_vertex_program
 #     define GL_VERTEX_PROGRAM_ARB 0x8620
@@ -79,7 +89,11 @@ using std::string;
      }
 #    define getProcAddress(x) (NSGLGetProcAddress((const GLubyte*)x))
 #  else
-#    define getProcAddress(x) ((*glXGetProcAddressARB)((const GLubyte*)x))
+#    ifdef _WIN32
+#      define getProcAddress(x) (wglGetProcAddress((LPCSTR) x))
+#    else
+#      define getProcAddress(x) ((*glXGetProcAddressARB)((const GLubyte*)x))
+#    endif // _WIN32
 #  endif /* APPLE */
 
 
@@ -98,10 +112,93 @@ static SCIPFNGLISPROGRAMARBPROC glIsProgramARB_SCI = 0;
 static SCIPFNGLPROGRAMLOCALPARAMETER4FARBPROC glProgramLocalParameter4fARB_SCI = 0;
 #endif /* GL_ARB_fragment_program */
 
+
+#ifdef _WIN32
+/* ----------------------- WGL_ARB_extensions_string ----------------------- */
+
+#ifndef WGL_ARB_extensions_string
+#define WGL_ARB_extensions_string 1
+
+typedef const char* (WINAPI * PFNWGLGETEXTENSIONSSTRINGARBPROC) (HDC hdc);
+
+
+#endif /* WGL_ARB_extensions_string */
+
+static PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsStringARB = 0;
+
+bool WGLisExtensionSupported(const char *extension)
+{
+  const size_t extlen = strlen(extension);
+  const char *supported = NULL;
+  
+  // Try To Use wglGetExtensionStringARB On Current DC, If Possible
+  if (!wglGetExtensionsStringARB)
+    wglGetExtensionsStringARB = 
+      (PFNWGLGETEXTENSIONSSTRINGARBPROC)wglGetProcAddress("wglGetExtensionsStringARB");
+  
+  if (wglGetExtensionsStringARB)
+    supported = wglGetExtensionsStringARB(wglGetCurrentDC());
+  
+  if (supported) {
+
+    for (const char* p = supported; ; p++)
+      {
+	// Advance p Up To The Next Possible Match
+	p = strstr(p, extension);
+	
+	if (p == NULL) {
+	  break;
+	}
+	
+	// Make Sure That Match Is At The Start Of The String Or That
+	// The Previous Char Is A Space, Or Else We Could Accidentally
+	// Match "wglFunkywglExtension" With "wglExtension"
+	
+	// Also, Make Sure That The Following Character Is Space Or NULL
+	// Or Else "wglExtensionTwo" Might Match "wglExtension"
+	if ((p==supported || p[-1]==' ') && (p[extlen]=='\0' || p[extlen]==' '))
+	  {
+	    return true;  // Match
+	  }
+      }
+  }
+
+  // If That Failed, Try Standard Opengl Extensions String
+    supported = (char*)glGetString(GL_EXTENSIONS);
+  
+  // If That Failed Too, Must Be No Extensions Supported
+  if (supported == NULL)
+    return false;
+  
+  // Begin Examination At Start Of String, Increment By 1 On False Match
+  for (const char* p = supported; ; p++)
+    {
+      // Advance p Up To The Next Possible Match
+      p = strstr(p, extension);
+      
+      if (p == NULL) {
+	return false;						// No Match
+      }
+      
+      // Make Sure That Match Is At The Start Of The String Or That
+      // The Previous Char Is A Space, Or Else We Could Accidentally
+      // Match "wglFunkywglExtension" With "wglExtension"
+      
+      // Also, Make Sure That The Following Character Is Space Or NULL
+      // Or Else "wglExtensionTwo" Might Match "wglExtension"
+      if ((p==supported || p[-1]==' ') && (p[extlen]=='\0' || p[extlen]==' ')) {
+	return true;						// Match
+      }
+    }
+}
+#endif
+
+
 namespace SCIRun {
 
 bool ShaderProgramARB::mInit = false;
 bool ShaderProgramARB::mSupported = false;
+bool ShaderProgramARB::mNon2Textures = false;
 int ShaderProgramARB::max_texture_size_1_ = 64;
 int ShaderProgramARB::max_texture_size_4_ = 64;
 static Mutex ShaderProgramARB_mInitMutex("ShaderProgramARB Init Lock");  
@@ -132,13 +229,22 @@ ShaderProgramARB::init_shaders_supported()
     ShaderProgramARB_mInitMutex.lock();
     if (!mInit)
     {
-      if (sci_getenv_p("SCIRUN_DISABLE_SHADERS")) {
+      if (sci_getenv_p("SCIRUN_DISABLE_SHADERS") ||
+          sci_getenv_p("SCIRUN_NOGUI"))
+      {
 	mSupported = false;
-      } else {
+      }
+      else
+      {
 	// Create a test context.
+
 	TkOpenGLContext *context =
 	  new TkOpenGLContext(".testforshadersupport", 0, 0, 0);
+
 	context->make_current();
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR)
+	  fprintf(stderr,"GL error '%s'\n",gluErrorString(err));
 
 #if defined(__sgi)
         max_texture_size_1_ = 256; // TODO: Just a guess, should verify this.
@@ -146,20 +252,37 @@ ShaderProgramARB::init_shaders_supported()
 #else
         int i;
 
+#ifdef _WIN32
+	glTexImage3D = (PFNGLTEXIMAGE3DPROC)wglGetProcAddress("glTexImage3D");
+#endif
+	err = glGetError();
+	if (err != GL_NO_ERROR)
+	  fprintf(stderr,"GL error '%s'\n",gluErrorString(err));
         for (i = 128; i < 130000; i*=2)
         {
           glTexImage3D(GL_PROXY_TEXTURE_3D, 0, GL_LUMINANCE, i, i, i, 0,
                        GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
 
           GLint width;
+	  err = glGetError();
+	  if (err != GL_NO_ERROR)
+	    fprintf(stderr,"After Tex3D call GL error '%s'\n",gluErrorString(err));
+
           glGetTexLevelParameteriv(GL_PROXY_TEXTURE_3D, 0,
                                    GL_TEXTURE_WIDTH, &width);
+	  err = glGetError();
+	  if (err != GL_NO_ERROR)
+	    fprintf(stderr,"After TexLevelParam GL error '%s'\n",gluErrorString(err));
+
           if (width == 0)
           {
             i /= 2;
             break;
           }
         }
+	err = glGetError();
+	if (err != GL_NO_ERROR)
+	  fprintf(stderr,"GL error '%s'\n",gluErrorString(err));
         max_texture_size_1_ = i;
 
         for (i = 128; i < 130000; i*=2)
@@ -179,12 +302,30 @@ ShaderProgramARB::init_shaders_supported()
         max_texture_size_4_ = i;
 #endif
 
+	// Check for non-power-of-two texture support.
+#ifndef _WIN32
+  mNon2Textures = 
+    gluCheckExtension((const GLubyte*)"GL_ARB_texture_non_power_of_two", 
+			    glGetString(GL_EXTENSIONS));
+#else
+  mNon2Textures =
+    WGLisExtensionSupported("GL_ARB_texture_non_power_of_two");
+#endif
+
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+
 	mSupported =
+
+#ifndef _WIN32
 	  gluCheckExtension((const GLubyte*)"GL_ARB_vertex_program", 
 			    glGetString(GL_EXTENSIONS)) &&
 	  gluCheckExtension((const GLubyte*)"GL_ARB_fragment_program", 
 			    glGetString(GL_EXTENSIONS)) &&
+#else
+	  WGLisExtensionSupported("GL_ARB_vertex_program") &&
+	  WGLisExtensionSupported("GL_ARB_fragment_program") &&
+
+#endif
 	  (glGenProgramsARB_SCI = (SCIPFNGLGENPROGRAMSARBPROC)
 	   getProcAddress("glGenProgramsARB")) &&
 	  (glDeleteProgramsARB_SCI = (SCIPFNGLDELETEPROGRAMSARBPROC)
@@ -228,6 +369,12 @@ int
 ShaderProgramARB::max_texture_size_4()
 {
   return max_texture_size_4_;
+}
+
+bool
+ShaderProgramARB::texture_non_power_of_two()
+{
+  return mNon2Textures;
 }
 
 bool

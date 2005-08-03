@@ -71,10 +71,10 @@ namespace SCIRun {
     int getTableSize();
     DTPoint *getEP();
 
-    const static int ADD_REFERENCE=-101;
-    const static int DEL_REFERENCE=-102;
-    const static int MPI_LOCKSERVICE=-103;
-    const static int MPI_ORDERSERVICE=-104;
+    static const int ADD_REFERENCE=-101;
+    static const int DEL_REFERENCE=-102;
+    static const int MPI_LOCKSERVICE=-103;
+    static const int MPI_ORDERSERVICE=-104;
   private:
     DTPoint *ep;
 

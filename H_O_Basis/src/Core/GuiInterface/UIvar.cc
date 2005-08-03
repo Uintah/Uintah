@@ -42,41 +42,27 @@
 #include <Core/GuiInterface/UIvar.h>
 using namespace SCIRun;
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1468
-#endif
-
-//template class UiSingle<string>;
-template class UiSingle<double>;
-template class UiSingle<int>;
-
-
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1468
-#endif
-
-
 template<class T>
-inline UiSingle<T> & UiSingle<T>::operator=(GuiContext *new_context) {
+ UiSingle<T> & UiSingle<T>::operator=(GuiContext *new_context) {
   context_ = new_context;
   if (context_) context_->reset();
   return *this;
 }
 
 template<class T>
-inline GuiContext & UiSingle<T>::operator->() {
+ GuiContext & UiSingle<T>::operator->() {
   return *context_;
 }
 
 template<class T>
-inline bool UiSingle<T>::operator!() {
+ bool UiSingle<T>::operator!() {
   get();
   return !value_;
 }
 
 
 template<class T>
-inline UiSingle<T> & UiSingle<T>::operator()() {
+ UiSingle<T> & UiSingle<T>::operator()() {
   if (context_) context_->reset();
   return *this;
 }
@@ -149,7 +135,7 @@ T UiSingle<T>::operator/(const T & right) {
 
 
 template<class T>
-inline UiSingle<T> & UiSingle<T>::operator/=(const T & right) {
+ UiSingle<T> & UiSingle<T>::operator/=(const T & right) {
   get();
   set(value_ / right);
   return *this;
@@ -158,60 +144,60 @@ inline UiSingle<T> & UiSingle<T>::operator/=(const T & right) {
 
 
 template<class T>
-inline bool UiSingle<T>::operator&&(const T & right) {
+ bool UiSingle<T>::operator&&(const T & right) {
   get();
   return value_ && right;
 }
 
 template<class T>
-inline bool UiSingle<T>::operator||(const T & right) {
+ bool UiSingle<T>::operator||(const T & right) {
   get();
   return value_ || right;
 }
 
 
 template<class T>
-inline bool UiSingle<T>::operator==(const T & right) {
+ bool UiSingle<T>::operator==(const T & right) {
   get();
   return value_ == right;
 }
 
 template<class T>
-inline bool UiSingle<T>::operator!=(const T & right) {
+ bool UiSingle<T>::operator!=(const T & right) {
   get();
   return value_ != right;
 }
 
 template<class T>
-inline bool UiSingle<T>::operator<(const T & right) {
+ bool UiSingle<T>::operator<(const T & right) {
   get();
   return value_ < right;
 }
 
 
 template<class T>
-inline bool UiSingle<T>::operator>(const T & right) {
+ bool UiSingle<T>::operator>(const T & right) {
   get();
   return value_ > right;
 }
 
 
 template<class T>
-inline bool UiSingle<T>::operator<=(const T & right) {
+ bool UiSingle<T>::operator<=(const T & right) {
   get();
   return value_ < right;
 }
 
 
 template<class T>
-inline bool UiSingle<T>::operator>=(const T & right) {
+ bool UiSingle<T>::operator>=(const T & right) {
   get();
   return value_ > right;
 }
 
 
 template<class T>
-inline UiSingle<T> UiSingle<T>::operator--(int) {
+ UiSingle<T> UiSingle<T>::operator--(int) {
   get();
   UiSingle<T> rval(context_, value_);
   set(--value_);
@@ -220,9 +206,23 @@ inline UiSingle<T> UiSingle<T>::operator--(int) {
 
 
 template<class T>
-inline UiSingle<T> UiSingle<T>::operator++(int) {
+ UiSingle<T> UiSingle<T>::operator++(int) {
   get();
   UiSingle<T> rval(context_, value_);
   set(++value_);
   return rval;
 }
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1468
+#endif
+
+//template class UiSingle<string>;
+template class UiSingle<double>;
+template class UiSingle<int>;
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1468
+#endif
+
+

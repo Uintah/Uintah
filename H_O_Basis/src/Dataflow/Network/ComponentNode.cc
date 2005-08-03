@@ -38,8 +38,8 @@
 
 #include <Dataflow/Network/ComponentNode.h>
 
-#include <Dataflow/XMLUtil/XMLUtil.h>
-#include <Dataflow/XMLUtil/StrX.h>
+#include <Core/XMLUtil/XMLUtil.h>
+#include <Core/XMLUtil/StrX.h>
 #include <Dataflow/Network/PackageDBHandler.h>
 
 #include <Core/Util/RWS.h>

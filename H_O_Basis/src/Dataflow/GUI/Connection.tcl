@@ -431,12 +431,6 @@ proc destroyConnection { conn { record_undo 0 } { tell_SCIRun 1 } { dont_collaps
     networkHasChanged
     deleteTraces
 
-    set subnet $Subnet([oMod conn])
-    set canvas $Subnet(Subnet${subnet}_canvas)
-    set minicanvas $Subnet(Subnet${subnet}_minicanvas)
-    $canvas delete $connid $connid-notes $connid-notes-shadow
-    $minicanvas delete $connid $connid-notes $connid-notes-shadow
-
     listFindAndRemove Subnet([oMod conn]_connections) $conn
     listFindAndRemove Subnet([iMod conn]_connections) $conn 
 
@@ -445,6 +439,12 @@ proc destroyConnection { conn { record_undo 0 } { tell_SCIRun 1 } { dont_collaps
     array unset Disabled $connid
     array unset Color $connid
     array unset Notes $connid* ;# Delete Notes text, position, & color
+
+    set subnet $Subnet([oMod conn])
+    set canvas $Subnet(Subnet${subnet}_canvas)
+    set minicanvas $Subnet(Subnet${subnet}_minicanvas)
+    $canvas delete $connid $connid-notes $connid-notes-shadow
+    $minicanvas delete $connid $connid-notes $connid-notes-shadow
 
     if { $tell_SCIRun && !$disabled } {
 	foreach realConn [findRealConnections $conn] {

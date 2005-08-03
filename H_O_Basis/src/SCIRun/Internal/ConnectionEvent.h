@@ -55,10 +55,18 @@ public:
     ConnectionEvent(sci::cca::ports::EventType type, sci::cca::TypeMap::pointer tm);
     virtual ~ConnectionEvent();
 
-    /** ? */
+    /** Returns the event type from the EventType enumeration. */
     virtual sci::cca::ports::EventType getEventType();
 
-    /** ? */
+    /** Returns the property map for the connection, which should contain
+     * at least the following keys and values:
+     * UserName, string
+     * UsesPort, string
+     * ProviderName, string
+     * ProvidesPort, string
+     */
+    // type info???
+    // TODO: how to lay out keys and values in doxygen?
     virtual sci::cca::TypeMap::pointer getPortInfo();
 
 private:

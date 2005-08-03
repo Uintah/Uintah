@@ -1746,7 +1746,7 @@ proc biopseFDialog_ActivateEnt {w {whichBtn execute}} {
             } else {
                 biopseFDialog_SetPathSilently $w $path
                 set data(selectFile) $file
-                biopseFDialog_Done $w
+                biopseFDialog_Done $w "" $whichBtn
             }
         }
         PATH {

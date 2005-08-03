@@ -64,6 +64,9 @@ proc ComponentWizard { {window .componentWizard} } {
     wm title $w "Component Wizard"
     wm minsize .componentWizard 470 600
 
+    # Override the 'destroy' button on the window decoration to just close the window.
+    wm protocol $w WM_DELETE_WINDOW "wm withdraw $w"
+
     # Tab panel
     iwidgets::tabnotebook $w.tabs 
     pack $w.tabs -padx $PADi -pady $PADi -fill both -expand yes
@@ -279,11 +282,11 @@ proc make_description_pane {p d} {
 
     global uiinfo
     set uiinfo $p.uiinfo
-    create_text_entry $uiinfo "GUI Info:" $d uiinfo \
+    create_text_entry $uiinfo "GUI Information:" $d uiinfo \
         [join [concat {"This information will be stored in the GUI section of the module help."} \
                     {"It should include information about the various GUI elements for this module."}\
-                    {"If you do not have this information at this time, you can manually add it"}\
-                    {"later to the module's XML file."}] \n]
+                    {"If you do not have this information at this time, add a general description"}\
+                    {"and then later manually add the details to the module's XML file."}] \n]
     text_entry_set_state $uiinfo disable
 
     set descript $p.descript
@@ -702,18 +705,35 @@ proc remove_port {icon portnum type d} {
 proc generateXML { d } {
     global $d
     set id [open cwmmtemp.xml {WRONLY CREAT TRUNC}]
-    if { ![info exists ${d}(title)] || \
-             ![llength [set ${d}(title)]] || \
-             ![info exists ${d}(category)] || \
-             ![llength [set ${d}(category)]] || \
-             ![info exists ${d}(package)] || \
-             ![llength [set ${d}(package)]] } {
-                 
-      createSciDialog -title "Module Creation Error" \
-              -message [join [concat {"One or more of the following required fields is empty:"} \
-              {"Module Name, Package Name, Category Name"}] \n] -error
+
+    ######################################################################
+    # Make sure that the user has entered all the necessary data!
+    if { ![info exists ${d}(title)] || ![llength [set ${d}(title)]] } {
+      createSciDialog -title "Module Creation Error" -message "Please entery a 'Module Name'" -error
       return
-    } 
+    }
+    if { ![info exists ${d}(package)] || ![llength [set ${d}(package)]] } {
+      createSciDialog -title "Module Creation Error" -message "Please entery a 'Package'" -error
+      return
+    }
+    if { ![info exists ${d}(category)] || ![llength [set ${d}(category)]] } {
+      createSciDialog -title "Module Creation Error" -message "Please entery a 'Category'" -error
+      return
+    }
+    if { ![info exists ${d}(summary)] || ![llength [set ${d}(summary)]] } {
+      createSciDialog -title "Module Creation Error" -message "Please entery a 'Summary' (On the 'Description' tab)" -error
+      return
+    }
+    if { ![info exists ${d}(descript)] || ![llength [set ${d}(descript)]] } {
+      createSciDialog -title "Module Creation Error" -message "Please entery a 'Description' (On the 'Description' tab)" -error
+      return
+    }
+    if { [set ${d}(hasgui)] && (![info exists ${d}(uiinfo)] || ![llength [set ${d}(uiinfo)]]) } {
+      createSciDialog -title "Module Creation Error" -message "Please entery 'GUI Information' (On the 'Description' tab)" -error
+      return
+    }
+    #
+    ######################################################################
 
     # Make sure module name does not have spaces and starts with a Capital letter.
     set title [set ${d}(title)]
@@ -883,8 +903,6 @@ proc CreateNewModule { packname catname compname } {
     if {![expr \
            [file exists $basepath/Dataflow] &&\
 	   [file isdirectory $basepath/Dataflow] &&\
-	   [file exists $basepath/Core] &&\
-	   [file isdirectory $basepath/Core] &&\
            [file exists $basepath/Dataflow/Modules] && \
            [file isdirectory $basepath/Dataflow/Modules] && \
            [file exists $basepath/Dataflow/XML] && \

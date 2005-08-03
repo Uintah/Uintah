@@ -48,7 +48,8 @@ class TypeDescription;
 void Pio_old(Piostream&, Transform&);
 void Pio(Piostream&, Transform*&);
 
-class Transform : public Persistent {
+class Transform  : public Persistent
+{
   double mat[4][4];
   mutable double imat[4][4];
   mutable int inverse_valid;
@@ -152,4 +153,3 @@ const TypeDescription* get_type_description(Transform*);
 } // End namespace SCIRun
 
 #endif
-
