@@ -80,8 +80,8 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
     const PatchSubset* patchsub = perproc_patches->getSubset(p);
     for (int ps = 0; ps<patchsub->size(); ps++) {
       const Patch* patch = patchsub->get(ps);
-      IntVector plowIndex = patch->getNodeLowIndex();
-      IntVector phighIndex = patch->getNodeHighIndex();
+      IntVector plowIndex = patch->getInteriorNodeLowIndex();
+      IntVector phighIndex = patch->getInteriorNodeHighIndex();
 
       long nn = (phighIndex[0]-plowIndex[0])*
                 (phighIndex[1]-plowIndex[1])*
@@ -96,8 +96,8 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch=patches->get(p);
-    IntVector lowIndex = patch->getNodeLowIndex();
-    IntVector highIndex = patch->getNodeHighIndex() + IntVector(1,1,1);
+    IntVector lowIndex = patch->getInteriorNodeLowIndex();
+    IntVector highIndex = patch->getInteriorNodeHighIndex() + IntVector(1,1,1);
     Array3<int> l2g(lowIndex, highIndex);
     l2g.initialize(-1234);
     long totalNodes=0;
@@ -106,8 +106,8 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
     level->selectPatches(lowIndex, highIndex, neighbors);
     for(int i=0;i<neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
-      IntVector plow = neighbor->getNodeLowIndex();
-      IntVector phigh = neighbor->getNodeHighIndex();
+      IntVector plow = neighbor->getInteriorNodeLowIndex();
+      IntVector phigh = neighbor->getInteriorNodeHighIndex();
       IntVector low = Max(lowIndex, plow);
       IntVector high= Min(highIndex, phigh);
       if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 

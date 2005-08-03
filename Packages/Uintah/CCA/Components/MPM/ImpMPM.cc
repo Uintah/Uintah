@@ -1319,8 +1319,8 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
 
     d_solver->createLocalToGlobalMapping(d_myworld,d_perproc_patches,patches,3);
     
-    IntVector lowIndex = patch->getNodeLowIndex();
-    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex = patch->getInteriorNodeLowIndex();
+    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
 
     Array3<int> l2g(lowIndex,highIndex);
     d_solver->copyL2G(l2g,patch);
@@ -1339,7 +1339,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
       pset = old_dw->getParticleSubset(dwi,patch, Ghost::AroundNodes,1,
                                                           lb->pXLabel);
       old_dw->get(px,lb->pXLabel,pset);
-      
+
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
@@ -1383,8 +1383,8 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
       cout_doing <<"Doing applyBoundaryConditions " <<"\t\t\t\t IMPM"
 		 << "\n" << "\n";
     }
-    IntVector lowIndex = patch->getNodeLowIndex();
-    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex = patch->getInteriorNodeLowIndex();
+    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
     d_solver->copyL2G(l2g,patch);
 
@@ -1580,8 +1580,8 @@ void ImpMPM::findFixedDOF(const ProcessorGroup*,
 		 <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
-    IntVector lowIndex = patch->getNodeLowIndex();
-    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex = patch->getInteriorNodeLowIndex();
+    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
     d_solver->copyL2G(l2g,patch);
 
@@ -1661,8 +1661,8 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
 		 <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
-    IntVector lowIndex = patch->getNodeLowIndex();
-    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex = patch->getInteriorNodeLowIndex();
+    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
 
     bool firstTimeThrough=true;
@@ -1803,8 +1803,8 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
 		 <<"\t\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
-    IntVector lowIndex = patch->getNodeLowIndex();
-    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex = patch->getInteriorNodeLowIndex();
+    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
     d_solver->copyL2G(l2g,patch);
 
@@ -1885,8 +1885,8 @@ void ImpMPM::solveForDuCG(const ProcessorGroup* /*pg*/,
 		 <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
-    IntVector nodes = patch->getNNodes();
-    num_nodes += (nodes.x())*(nodes.y())*(nodes.z())*3;
+    IntVector nodes = patch->getNInteriorNodes();
+    num_nodes += (nodes.x()-2)*(nodes.y()-2)*(nodes.z()-2)*3;
   }
 
   d_solver->removeFixedDOF(num_nodes);
@@ -1907,8 +1907,8 @@ void ImpMPM::getDisplacementIncrement(const ProcessorGroup* /*pg*/,
 		 <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
-    IntVector lowIndex = patch->getNodeLowIndex();
-    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex = patch->getInteriorNodeLowIndex();
+    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
     d_solver->copyL2G(l2g,patch);
  
@@ -2038,8 +2038,8 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
 		<<"\t\t\t IMPM"<< "\n" << "\n";
    }
 
-   IntVector lowIndex = patch->getNodeLowIndex();
-   IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+   IntVector lowIndex = patch->getInteriorNodeLowIndex();
+   IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
    Array3<int> l2g(lowIndex,highIndex);
    d_solver->copyL2G(l2g,patch);
 

@@ -26,7 +26,6 @@ using namespace SCIRun;
 #undef EROSION
 
 static DebugStream cout_doing("ImplicitHeatConduction", false);
-static DebugStream cout_heat("MPMHeat", false);
 
 ImplicitHeatConduction::ImplicitHeatConduction(SimulationStateP& sS,
                                                MPMLabel* labels,MPMFlags* flags)
@@ -259,8 +258,8 @@ void ImplicitHeatConduction::createHCMatrix(const ProcessorGroup* pg,
       d_HC_solver[m]->createLocalToGlobalMapping(pg,d_perproc_patches,
                                                  patches,1);
                                                                                 
-      IntVector lowIndex = patch->getNodeLowIndex();
-      IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+      IntVector lowIndex = patch->getInteriorNodeLowIndex();
+      IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
                                                                                 
       Array3<int> l2g(lowIndex,highIndex);
       d_HC_solver[m]->copyL2G(l2g,patch);
@@ -319,8 +318,8 @@ void ImplicitHeatConduction::applyHCBoundaryConditions(const ProcessorGroup*,
       cout_doing <<"Doing applyHCBoundaryConditions " <<"\t\t\t\t IMPM"
                  << "\n" << "\n";
     }
-    IntVector lowIndex = patch->getNodeLowIndex();
-    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex = patch->getInteriorNodeLowIndex();
+    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
                                                                                 
     // Apply grid boundary conditions to the temperature before storing the data
@@ -385,8 +384,8 @@ void ImplicitHeatConduction::findFixedHCDOF(const ProcessorGroup*,
                  <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
                                                                                 
-    IntVector lowIndex = patch->getNodeLowIndex();
-    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex = patch->getInteriorNodeLowIndex();
+    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
                                                                                 
     int numMatls = d_sharedState->getNumMPMMatls();
@@ -422,8 +421,8 @@ void ImplicitHeatConduction::formHCStiffnessMatrix(const ProcessorGroup*,
                  <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
-    IntVector lowIndex = patch->getNodeLowIndex();
-    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex = patch->getInteriorNodeLowIndex();
+    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
 
     Vector dx = patch->dCell();
@@ -526,8 +525,8 @@ void ImplicitHeatConduction::formHCQ(const ProcessorGroup*,
                  <<"\t\t\t\t\t IMPM"<< "\n" << "\n";
     }
                                                                                 
-    IntVector lowIndex = patch->getNodeLowIndex();
-    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex = patch->getInteriorNodeLowIndex();
+    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
                                                                                 
     int numMatls = d_sharedState->getNumMPMMatls();
@@ -576,11 +575,11 @@ void ImplicitHeatConduction::adjustHCQAndHCKForBCs(const ProcessorGroup*,
       cout_doing <<"Doing adjustHCQAndHCKForBCs on patch " << patch->getID()
                  <<"\t\t\t\t\t IMPM"<< "\n" << "\n";
     }
-    IntVector nodes = patch->getNNodes();
+    IntVector nodes = patch->getNInteriorNodes();
     num_nodes += (nodes.x())*(nodes.y())*(nodes.z());
 
-    IntVector lowIndex = patch->getNodeLowIndex();
-    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex = patch->getInteriorNodeLowIndex();
+    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
 
     int numMatls = d_sharedState->getNumMPMMatls();
@@ -624,7 +623,7 @@ void ImplicitHeatConduction::solveForTemp(const ProcessorGroup*,
                  <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
                                                                                 
-    IntVector nodes = patch->getNNodes();
+    IntVector nodes = patch->getNInteriorNodes();
     num_nodes += (nodes.x())*(nodes.y())*(nodes.z());
   }
                                                                                 
@@ -652,8 +651,8 @@ void ImplicitHeatConduction::getTemperatureIncrement(const ProcessorGroup*,
     delt_vartype dt;
     old_dw->get(dt, d_sharedState->get_delt_label(),patch->getLevel());
                                                                                 
-    IntVector lowIndex = patch->getNodeLowIndex();
-    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex = patch->getInteriorNodeLowIndex();
+    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
                                                                                 
     int numMatls = d_sharedState->getNumMPMMatls();
