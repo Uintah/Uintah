@@ -1080,8 +1080,8 @@ void SerialMPM::scheduleCoarsen(const LevelP& /*coarseLevel*/,
 {
   // do nothing for now
 }
-
-/// Schedule to mark flags for AMR regridding
+//______________________________________________________________________
+// Schedule to mark flags for AMR regridding
 void SerialMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
                                       SchedulerP& sched)
 {
@@ -1089,45 +1089,41 @@ void SerialMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
   // the finest level.  Thus to schedule cells for regridding during the 
   // execution, we'll coarsen the flagged cells (see coarsen).
 
-  if (cout_doing.active())
-    cout_doing << "SerialMPM::scheduleErrorEstimate on level " << coarseLevel->getIndex() << '\n';
+  if (amr_doing.active())
+    amr_doing << "SerialMPM::scheduleErrorEstimate on level " << coarseLevel->getIndex() << '\n';
 
-
-  // Estimate error - this should probably be in it's own schedule,
-  // and the simulation controller should not schedule it every time step
-  Ghost::GhostType  gac = Ghost::AroundCells;
+  // The simulation controller should not schedule it every time step
   Task* task = scinew Task("errorEstimate", this, &SerialMPM::errorEstimate);
   
   // if the finest level, compute flagged cells
   if (coarseLevel->getIndex() == coarseLevel->getGrid()->numLevels()-1) {
-    task->requires(Task::NewDW, lb->pXLabel,     gac, 0);
+    task->requires(Task::NewDW, lb->pXLabel, Ghost::AroundCells, 0);
   }
   else {
     task->requires(Task::NewDW, d_sharedState->get_refineFlag_label(),
                    0, Task::FineLevel, d_sharedState->refineFlagMaterials(), 
                    Task::NormalDomain, Ghost::None, 0);
   }
-  task->modifies(d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials());
+  task->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials());
   task->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
   sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allMPMMaterials());
 
 }
-
-/// Schedule to mark initial flags for AMR regridding
+//______________________________________________________________________
+// Schedule to mark initial flags for AMR regridding
 void SerialMPM::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
                                              SchedulerP& sched)
 {
+  if (amr_doing.active())
+    amr_doing << "SerialMPM::scheduleInitialErrorEstimate on level " << coarseLevel->getIndex() << '\n';
+    
+  // The simulation controller should not schedule it every time step
+  Task* task = scinew Task("initialErrorEstimate", 
+          this, &SerialMPM::initialErrorEstimate);
+          
+  task->requires(Task::NewDW, lb->pXLabel,  Ghost::AroundCells, 0);
 
-  if (cout_doing.active())
-    cout_doing << "SerialMPM::scheduleErrorEstimate on level " << coarseLevel->getIndex() << '\n';
-
-  // Estimate error - this should probably be in it's own schedule,
-  // and the simulation controller should not schedule it every time step
-  Ghost::GhostType  gac = Ghost::AroundCells;
-  Task* task = scinew Task("errorEstimate", this, &SerialMPM::initialErrorEstimate);
-  task->requires(Task::NewDW, lb->pXLabel,     gac, 0);
-
-  task->modifies(d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials());
+  task->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials());
   task->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
   sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allMPMMaterials());
 }
@@ -3183,7 +3179,7 @@ SerialMPM::scheduleUpdateCrackFront(SchedulerP& /*sched*/,
                                     const MaterialSet* /*matls*/)
 {
 }
-
+//______________________________________________________________________
 void
 SerialMPM::initialErrorEstimate(const ProcessorGroup*,
                                 const PatchSubset* patches,
@@ -3223,7 +3219,7 @@ SerialMPM::initialErrorEstimate(const ProcessorGroup*,
     }
   }
 }
-
+//______________________________________________________________________
 void
 SerialMPM::errorEstimate(const ProcessorGroup* group,
                          const PatchSubset* patches,
@@ -3232,10 +3228,6 @@ SerialMPM::errorEstimate(const ProcessorGroup* group,
                          DataWarehouse* new_dw)
 {
   // coarsen the errorflag.
-
-  if (cout_doing.active())
-    cout_doing << "Doing Serial::errorEstimate" << '\n';
-
   const Level* level = getLevel(patches);
   if (level->getIndex() == level->getGrid()->numLevels()-1) {
     // on finest level, we do the same thing as initialErrorEstimate, so call it
@@ -3250,8 +3242,6 @@ SerialMPM::errorEstimate(const ProcessorGroup* group,
       if (amr_doing.active())
         amr_doing << "Doing SerialMPM::errorEstimate on patch " << coarsePatch->getID() << endl;
 
-      // Find the overlapping regions...
-
       CCVariable<int> refineFlag;
       PerPatch<PatchFlagP> refinePatchFlag;
       
@@ -3265,32 +3255,46 @@ SerialMPM::errorEstimate(const ProcessorGroup* group,
       Level::selectType finePatches;
       coarsePatch->getFineLevelPatches(finePatches);
       
+      // coarsen the fineLevel flag
       for(int i=0;i<finePatches.size();i++){
         const Patch* finePatch = finePatches[i];
+ 
+        IntVector fl(finePatch->getInteriorCellLowIndex());
+        IntVector fh(finePatch->getInteriorCellHighIndex());
+        IntVector cl(fineLevel->mapCellToCoarser(fl));
+        IntVector ch(fineLevel->mapCellToCoarser(fh));
         
-        // Get the particle data
+        cl = Max(cl, coarsePatch->getCellLowIndex());
+        ch = Min(ch, coarsePatch->getCellHighIndex());
+
+        // get the region of the fine patch that overlaps the coarse patch
+        // we might not have the entire patch in this proc's DW
+        fl = level->mapCellToFiner(cl);
+        fh = level->mapCellToFiner(ch);
+        if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
+          continue;
+        }
+        
         constCCVariable<int> fineErrorFlag;
-        new_dw->get(fineErrorFlag, d_sharedState->get_refineFlag_label(), 0, finePatch,
-                    Ghost::None, 0);
+        new_dw->getRegion(fineErrorFlag, 
+                          d_sharedState->get_refineFlag_label(), 0, 
+                          fineLevel,fl, fh);
         
-        IntVector fl(finePatch->getCellLowIndex());
-        IntVector fh(finePatch->getCellHighIndex());
-        IntVector l(fineLevel->mapCellToCoarser(fl));
-        IntVector h(fineLevel->mapCellToCoarser(fh));
-        l = Max(l, coarsePatch->getCellLowIndex());
-        h = Min(h, coarsePatch->getCellHighIndex());
-        
-        for(CellIterator iter(l, h); !iter.done(); iter++){
+        //__________________________________
+        //if the fine level flag has been set
+        // then set the corrsponding coarse level flag
+        for(CellIterator iter(cl, ch); !iter.done(); iter++){
           IntVector fineStart(level->mapCellToFiner(*iter));
           
-          for(CellIterator inside(IntVector(0,0,0), fineLevel->getRefinementRatio());
-              !inside.done(); inside++){
+          for(CellIterator inside(IntVector(0,0,0), 
+               fineLevel->getRefinementRatio()); !inside.done(); inside++){
+               
             if (fineErrorFlag[fineStart+*inside]) {
               refineFlag[*iter] = 1;
               refinePatch->set();
             }
           }
-        }
+        }  // coarse patch iterator
       }  // fine patch loop
     } // coarse patch loop 
   }
