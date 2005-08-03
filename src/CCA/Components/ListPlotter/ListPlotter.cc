@@ -100,7 +100,7 @@ int ImUIPort::ui()
   }
   w->setData(val, size);
   w->show();
-  delete val;
+  delete [] val;
   return 0;
 }
 
