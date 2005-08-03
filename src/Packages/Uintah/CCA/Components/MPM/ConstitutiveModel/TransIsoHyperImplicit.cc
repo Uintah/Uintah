@@ -245,8 +245,8 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 //    cerr <<"Doing computeStressTensor on " << patch->getID()
 //       <<"\t\t\t\t IMPM"<< "\n" << "\n";
 
-    IntVector lowIndex = patch->getNodeLowIndex();
-    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex = patch->getInteriorNodeLowIndex();
+    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
     solver->copyL2G(l2g,patch);
 
