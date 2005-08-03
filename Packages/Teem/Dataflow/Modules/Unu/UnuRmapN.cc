@@ -98,22 +98,16 @@ UnuRmapN::execute()
   int ninstart = 1;
   if (zerosize > 8) { zerosize = 1; ninstart = 0; }
   
-  cout << "zerosize = " << zerosize << "\n";
-  cout << "ninstart = " << ninstart << "\n";
-
   const int offset = nmap->dim - zerosize;
   int noutdim = nin->dim - ninstart + nmap->dim - zerosize;
   int nsize[NRRD_DIM_MAX];
   for (int i = 0; i < offset; i++)
   {
     nsize[i] = nmap->axis[i].size;
-    cout << "size1 " << i << " = " << nsize[i] << "\n";
   }
   for (int i = ninstart; i < nin->dim; i++)
   {
     nsize[offset + i - ninstart] = nin->axis[i].size;
-    cout << "size2 " << offset + i - ninstart << " = "
-         << nsize[offset + i - ninstart] << "\n";
   }
   Nrrd *nout = nrrdNew();
   nrrdAlloc_nva(nout, nmap->type, noutdim, nsize);
@@ -148,6 +142,7 @@ UnuRmapN::execute()
     pixelcount *= nin->axis[i].size;
   }
 
+  // Copy the data segments.
   unsigned char *nindata = (unsigned char *)nin->data;
   unsigned char *nmapdata = (unsigned char *)nmap->data;
   unsigned char *noutdata = (unsigned char *)nout->data;
