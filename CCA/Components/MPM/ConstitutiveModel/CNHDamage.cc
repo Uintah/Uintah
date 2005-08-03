@@ -681,8 +681,8 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
     vector<Vector> d_S;
     d_S.reserve(interpolator->size());
 
-    IntVector lowIndex = patch->getNodeLowIndex();
-    IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex = patch->getInteriorNodeLowIndex();
+    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
     solver->copyL2G(l2g,patch);
 
