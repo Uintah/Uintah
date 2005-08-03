@@ -78,43 +78,66 @@ BuilderService::createInstance(const std::string& instanceName,
 }
 
 sci::cca::ConnectionID::pointer
-BuilderService::connect(const sci::cca::ComponentID::pointer& c1,
-                        const string& port1,
-                        const sci::cca::ComponentID::pointer& c2,
-                        const string& port2)
+BuilderService::connect(const sci::cca::ComponentID::pointer &user,
+                        const std::string &usesPortName,
+                        const sci::cca::ComponentID::pointer &provider,
+                        const ::std::string &providesPortName)
 {
-    ComponentID* cid1 = dynamic_cast<ComponentID*>(c1.getPointer());
-    ComponentID* cid2 = dynamic_cast<ComponentID*>(c2.getPointer());
-    if (!cid1 || !cid2) {
-        throw CCAException("Cannot understand this ComponentID");
+    ComponentID* uCID = dynamic_cast<ComponentID*>(user.getPointer());
+    ComponentID* pCID = dynamic_cast<ComponentID*>(provider.getPointer());
+    if (! uCID) {
+        throw sci::cca::CCAException::pointer(new CCAException("Cannot connect: invalid user componentID"));
     }
-    if (cid1->framework != framework || cid2->framework != framework) {
-        throw CCAException("Cannot connect components from different frameworks");
+    if (! pCID) {
+        throw sci::cca::CCAException::pointer(new CCAException("Cannot connect: invalid provider componentID"));
     }
-    ComponentInstance* comp1 = framework->lookupComponent(cid1->name);
-    if (!comp1) {
-        throw CCAException("Unknown ComponentInstance " + cid1->name);
+    if (uCID->framework != framework || pCID->framework != framework) {
+        throw sci::cca::CCAException::pointer(new CCAException("Cannot connect components from different frameworks"));
     }
-    ComponentInstance* comp2 = framework->lookupComponent(cid2->name);
-    if (!comp2) {
-        throw CCAException("Unknown ComponentInstance " + cid2->name);
+    ComponentInstance* uCI =
+        framework->lookupComponent(user->getInstanceName());
+    if (! uCI) {
+        throw sci::cca::CCAException::pointer(new CCAException("Unknown ComponentInstance " + user->getInstanceName()));
     }
-    PortInstance* pr1 = comp1->getPortInstance(port1);
-    if (!pr1) {
-        throw CCAException("Unknown port " + port1);
+    sci::cca::TypeMap::pointer uProps = uCI->getComponentProperties();
+
+    PortInstance* usesPort = uCI->getPortInstance(usesPortName);
+    if (! usesPort) {
+      throw sci::cca::CCAException::pointer(new CCAException(sci::cca::BadPortName, "Unknown port " + usesPortName));
     }
-    PortInstance* pr2 = comp2->getPortInstance(port2);
-    if (!pr2) {
-        throw CCAException("Unknown port " + port2);
+
+    ComponentInstance* pCI =
+        framework->lookupComponent(provider->getInstanceName());
+    if (! pCI) {
+        throw sci::cca::CCAException::pointer(new CCAException("Unknown ComponentInstance " + provider->getInstanceName()));
     }
-    if (!pr1->connect(pr2)) {
-        throw CCAException("Cannot connect " + port1 + " with " + port2);
+    sci::cca::TypeMap::pointer pProps = pCI->getComponentProperties();
+    PortInstance* providesPort = pCI->getPortInstance(providesPortName);
+    if (! providesPort) {
+        throw sci::cca::CCAException::pointer(new CCAException("Unknown port " + providesPortName));
     }
-    sci::cca::ConnectionID::pointer conn(new ConnectionID(c1, port1, c2, port2));
+
+    if (! usesPort->connect(providesPort)) {
+std::cerr << "BuilderService::connect: attempt to connect " << usesPortName << " with " << providesPortName << " failed." << std::endl;
+        throw sci::cca::CCAException::pointer(new CCAException("Cannot connect " + usesPortName + " with " + providesPortName));
+    }
+
+    bool isBridge = uProps->getBool("bridge", false);
+    if (! isBridge) {
+        isBridge = pProps->getBool("bridge", false);
+    }
+
+    sci::cca::TypeMap::pointer properties = framework->createTypeMap();
+    properties->putString("user", uCID->getInstanceName());
+    properties->putString("provider", pCID->getInstanceName());
+    properties->putString("uses port", usesPortName);
+    properties->putString("provides port", providesPortName);
+    properties->putBool("bridge", isBridge);
+
+    sci::cca::ConnectionID::pointer conn(new ConnectionID(user, usesPortName, provider, providesPortName));
     framework->connIDs.push_back(conn);
     emitConnectionEvent(
-        new ConnectionEvent(sci::cca::ports::Connected, getConnectionProperties(conn))
-    );
+        new ConnectionEvent(sci::cca::ports::Connected, properties));
     return conn;
 }
 
@@ -139,21 +162,41 @@ BuilderService::getComponentIDs()
 }
 
 sci::cca::TypeMap::pointer
-BuilderService::getComponentProperties(const sci::cca::ComponentID::pointer& /*cid*/)
+BuilderService::getComponentProperties(const sci::cca::ComponentID::pointer &cid)
 {
-    std::cerr << "BuilderService::getComponentProperties not finished" << std::endl;
-    return sci::cca::TypeMap::pointer(0);
+    if (cid.isNull()) {
+        throw sci::cca::CCAException::pointer(new CCAException("Invalid ComponentID"));
+    }
+
+    ComponentInstance *ci = framework->lookupComponent(cid->getInstanceName());
+    if (! ci) {
+        throw sci::cca::CCAException::pointer(new CCAException("Framework could not locate component " + cid->getInstanceName()));
+    }
+    return ci->getComponentProperties();
 }
 
 void
-BuilderService::setComponentProperties(const sci::cca::ComponentID::pointer& /*cid*/, const sci::cca::TypeMap::pointer& /*map*/)
+BuilderService::setComponentProperties(const sci::cca::ComponentID::pointer &cid,
+                                       const sci::cca::TypeMap::pointer &map)
 {
-  std::cerr << "BuilderService::setComponentProperties not finished\n";
+    if (cid.isNull()) {
+        throw sci::cca::CCAException::pointer(new CCAException("Invalid ComponentID"));
+    }
+    if (map.isNull()) {
+        throw sci::cca::CCAException::pointer(new CCAException("Invalid TypeMap"));
+    }
+
+    ComponentInstance *ci = framework->lookupComponent(cid->getInstanceName());
+    if (! ci) {
+        throw sci::cca::CCAException::pointer(new CCAException("Framework could not locate component " + cid->getInstanceName()));
+    }
+    ci->setComponentProperties(map);
 }
 
 sci::cca::ComponentID::pointer
 BuilderService::getDeserialization(const std::string& /*s*/)
 {
+    // TODO: finish this!
   std::cerr << "BuilderService::getDeserialization not finished\n";
   return sci::cca::ComponentID::pointer(0);
 }
@@ -161,97 +204,137 @@ BuilderService::getDeserialization(const std::string& /*s*/)
 sci::cca::ComponentID::pointer
 BuilderService::getComponentID(const std::string &componentInstanceName)
 {
-  sci::cca::ComponentID::pointer cid=framework->lookupComponentID(componentInstanceName);
-  if (cid.isNull()) throw CCAException("ComponentID not found");
-  return cid;
+    sci::cca::ComponentID::pointer cid =
+        framework->lookupComponentID(componentInstanceName);
+    if (cid.isNull()) {
+        throw sci::cca::CCAException::pointer(new CCAException("ComponentID not found"));
+    }
+    return cid;
 }
 
 void
 BuilderService::destroyInstance(const sci::cca::ComponentID::pointer &toDie, float timeout)
 {
-  framework->destroyComponentInstance(toDie, timeout);
-  return;
+    framework->destroyComponentInstance(toDie, timeout);
+    return;
 }
 
 SSIDL::array1<std::string>
 BuilderService::getProvidedPortNames(const sci::cca::ComponentID::pointer &cid)
 {
-  SSIDL::array1<std::string> result;
-  ComponentInstance *ci=framework->lookupComponent(cid->getInstanceName());
-  //  std::cerr<<"Component: "<<cid->getInstanceName()<<std::endl;
-  for(PortInstanceIterator* iter = ci->getPorts(); !iter->done(); iter->next()) {
-    PortInstance* port = iter->get();
-    if (port->portType() == PortInstance::To)
-      result.push_back(port->getUniqueName());
-  }
-  return result;
+    SSIDL::array1<std::string> result;
+    ComponentInstance *ci =
+        framework->lookupComponent(cid->getInstanceName());
+    if (! ci) {
+        throw sci::cca::CCAException::pointer(new CCAException("Invalid component " + cid->getInstanceName()));
+    }
+
+    for (PortInstanceIterator* iter = ci->getPorts();
+            !iter->done(); iter->next()) {
+        PortInstance* port = iter->get();
+        if (port->portType() == PortInstance::To) {
+            result.push_back(port->getUniqueName());
+        }
+    }
+    return result;
 }
 
 SSIDL::array1<std::string>
 BuilderService::getUsedPortNames(const sci::cca::ComponentID::pointer &cid)
 {
-  SSIDL::array1<std::string> result;
-  ComponentInstance *ci=framework->lookupComponent(cid->getInstanceName());
-  for(PortInstanceIterator* iter = ci->getPorts(); !iter->done(); iter->next()) {
-    PortInstance* port = iter->get();
-    if (port->portType() == PortInstance::From)
-      result.push_back(port->getUniqueName());
-  }
-  return result;
+    SSIDL::array1<std::string> result;
+    ComponentInstance *ci =
+        framework->lookupComponent(cid->getInstanceName());
+    if (! ci) {
+        throw sci::cca::CCAException::pointer(new CCAException("Invalid component " + cid->getInstanceName()));
+    }
+
+    for (PortInstanceIterator* iter = ci->getPorts();
+            !iter->done(); iter->next()) {
+        PortInstance* port = iter->get();
+        if (port->portType() == PortInstance::From) {
+            result.push_back(port->getUniqueName());
+        }
+    }
+    return result;
 }
 
+// TODO: make sure that port properties are actually created
+// TODO: extend to other component models
 sci::cca::TypeMap::pointer
 BuilderService::getPortProperties(const sci::cca::ComponentID::pointer &cid, const std::string &portname)
 {
-  ComponentInstance* comp = framework->lookupComponent(cid->getInstanceName());
-  if (comp == NULL) {
-    return sci::cca::TypeMap::pointer(0);
-  }
-  CCAComponentInstance* ccacomp = dynamic_cast<CCAComponentInstance*>(comp);
-  if (ccacomp == NULL) {
-    return sci::cca::TypeMap::pointer(0);
-  }
-  return ccacomp->getPortProperties(portname);
+    ComponentInstance* comp = framework->lookupComponent(cid->getInstanceName());
+    if (! comp) {
+        return framework->createTypeMap();
+    }
+    CCAComponentInstance* ccaComp = dynamic_cast<CCAComponentInstance*>(comp);
+    if (! ccaComp) {
+        return framework->createTypeMap();
+    }
+    return ccaComp->getPortProperties(portname);
 }
 
 void BuilderService::setPortProperties(const sci::cca::ComponentID::pointer& /*cid*/,
                        const std::string& /*portname*/,
                        const sci::cca::TypeMap::pointer& /*map*/)
 {
-  std::cerr << "BuilderService::setPortProperties not finished\n";
+    // TODO: finish this!!!
+    std::cerr << "BuilderService::setPortProperties not finished\n";
 }
 
 SSIDL::array1<sci::cca::ConnectionID::pointer>
 BuilderService::getConnectionIDs(const SSIDL::array1<sci::cca::ComponentID::pointer> &componentList)
 {
-  SSIDL::array1<sci::cca::ConnectionID::pointer> conns;
-  for(unsigned i=0; i<framework->connIDs.size(); i++) {
-    for(unsigned j=0; j<componentList.size(); j++) {
-      sci::cca::ComponentID::pointer cid1=framework->connIDs[i]->getUser();
-      sci::cca::ComponentID::pointer cid2=framework->connIDs[i]->getProvider();
-      if (cid1==componentList[j]||cid2==componentList[j]) {
-        conns.push_back(framework->connIDs[i]);
-        break;
-      }
+    SSIDL::array1<sci::cca::ConnectionID::pointer> conns;
+    for (unsigned i = 0; i < framework->connIDs.size(); i++) {
+        for (unsigned j = 0; j < componentList.size(); j++) {
+            sci::cca::ComponentID::pointer userCID =
+                framework->connIDs[i]->getUser();
+            sci::cca::ComponentID::pointer provCID =
+                framework->connIDs[i]->getProvider();
+            if (userCID == componentList[j] || provCID == componentList[j]) {
+                conns.push_back(framework->connIDs[i]);
+                break;
+            }
+        }
     }
-  }
-  return conns;
+    return conns;
 }
 
 sci::cca::TypeMap::pointer
 BuilderService::getConnectionProperties(const sci::cca::ConnectionID::pointer& connID)
 {
-  std::cerr << "BuilderService::getConnectionProperties not finished\n";
-  return sci::cca::TypeMap::pointer(0);
+    for (unsigned i = 0; i < framework->connIDs.size(); i++) {
+        if (connID == framework->connIDs[i]) {
+            ConnectionID *connIDPtr = dynamic_cast<ConnectionID*>(connID.getPointer());
+            if (connIDPtr) {
+                return connIDPtr->getProperties();
+            }
+        }
+    }
+    return framework->createTypeMap();
 }
 
-void BuilderService::setConnectionProperties(const sci::cca::ConnectionID::pointer& /*connID*/, const sci::cca::TypeMap::pointer& /*map*/)
+void
+BuilderService::setConnectionProperties(const sci::cca::ConnectionID::pointer &connID,
+                                        const sci::cca::TypeMap::pointer &map)
 {
-  std::cerr << "BuilderService::setConnectionProperties not finished\n";
+    for (unsigned i = 0; i < framework->connIDs.size(); i++) {
+        if (connID == framework->connIDs[i]) {
+            ConnectionID *connIDPtr = dynamic_cast<ConnectionID*>(connID.getPointer());
+            if (connIDPtr) {
+                return connIDPtr->setProperties(map);
+            }
+        }
+    }
 }
 
-void BuilderService::disconnect(const sci::cca::ConnectionID::pointer& connID,
-                float /*timeout*/)
+// TODO: timeout never used
+// TODO: disconnect event
+void
+BuilderService::disconnect(const sci::cca::ConnectionID::pointer& connID,
+                           float /*timeout*/)
 {
   ComponentID* userID=dynamic_cast<ComponentID*>(connID->getUser().getPointer());
   ComponentID* providerID=dynamic_cast<ComponentID*>(connID->getProvider().getPointer());
@@ -271,72 +354,80 @@ void BuilderService::disconnect(const sci::cca::ConnectionID::pointer& connID,
   //std::cerr << "BuilderService::disconnect: timeout or safty check needed "<<std::endl;
 }
 
-void BuilderService::disconnectAll(const sci::cca::ComponentID::pointer& /*id1*/,
-                   const sci::cca::ComponentID::pointer& /*id2*/,
-                   float /*timeout*/)
+void
+BuilderService::disconnectAll(const sci::cca::ComponentID::pointer& /*id1*/,
+                              const sci::cca::ComponentID::pointer& /*id2*/,
+                              float /*timeout*/)
 {
   std::cerr << "BuilderService::disconnectAll not finished\n";
 }
 
 
-SSIDL::array1<std::string>  BuilderService::getCompatiblePortList(
-    const sci::cca::ComponentID::pointer& c1,
-    const std::string& port1,
-    const sci::cca::ComponentID::pointer& c2)
+// port properties useful here?
+SSIDL::array1<std::string>
+BuilderService::getCompatiblePortList(
+    const sci::cca::ComponentID::pointer &user,
+    const std::string &usesPortName,
+    const sci::cca::ComponentID::pointer &provider)
 {
-  ComponentID* cid1 = dynamic_cast<ComponentID*>(c1.getPointer());
-  ComponentID* cid2 = dynamic_cast<ComponentID*>(c2.getPointer());
-  if (!cid1 || !cid2) {
-    throw CCAException("Cannot understand this ComponentID");
-  }
-  if (cid1->framework != framework || cid2->framework != framework) {
-    throw CCAException("Cannot connect components from different frameworks");
-  }
-  ComponentInstance* comp1=framework->lookupComponent(cid1->name);
-  ComponentInstance* comp2=framework->lookupComponent(cid2->name);
+    ComponentID* uCID = dynamic_cast<ComponentID*>(user.getPointer());
+    ComponentID* pCID = dynamic_cast<ComponentID*>(provider.getPointer());
+    if (! uCID) {
+        throw sci::cca::CCAException::pointer(new CCAException("Cannot connect: invalid user componentID"));
+    }
+    if (! pCID) {
+        throw sci::cca::CCAException::pointer(new CCAException("Cannot connect: invalid provider componentID"));
+    }
 
-  //  std::cerr << "Component: "<<cid2->getInstanceName() << std::endl;
-  PortInstance* pr1=comp1->getPortInstance(port1);
-  if (!pr1) {
-    throw CCAException("Unknown port");
-  }
+    if (uCID->framework != framework || pCID->framework != framework) {
+        throw sci::cca::CCAException::pointer(new CCAException("Cannot connect components from different frameworks"));
+    }
+    ComponentInstance* uCI = framework->lookupComponent(uCID->name);
+    ComponentInstance* pCI = framework->lookupComponent(pCID->name);
 
-  SSIDL::array1<std::string> availablePorts;
-  if (cid1 == cid2) { // same component
+    PortInstance* usesPort = uCI->getPortInstance(usesPortName);
+    if (! usesPort) {
+        throw sci::cca::CCAException::pointer(new CCAException("Unknown uses port"));
+    }
+
+    SSIDL::array1<std::string> availablePorts;
+    if (uCID == pCID) { // same component
+        return availablePorts;
+    }
+    for (PortInstanceIterator* iter = pCI->getPorts();
+            !iter->done(); iter->next()) {
+        PortInstance* providesPort = iter->get();
+        if (usesPort->canConnectTo(providesPort)) {
+            availablePorts.push_back(providesPort->getUniqueName());
+        }
+    }  
+
     return availablePorts;
-  }
-  for(PortInstanceIterator* iter = comp2->getPorts(); !iter->done();
-      iter->next()) {
-    PortInstance* pr2 = iter->get();
-    if (pr1->canConnectTo(pr2))
-      availablePorts.push_back(pr2->getUniqueName());
-  }  
-
-  return availablePorts;
 }
 
-SSIDL::array1<std::string> BuilderService::getBridgablePortList(
+SSIDL::array1<std::string>
+BuilderService::getBridgablePortList(
      const sci::cca::ComponentID::pointer& c1,
      const std::string& port1,
      const sci::cca::ComponentID::pointer& c2)
 {
   SSIDL::array1<std::string> availablePorts;
 
-#if HAVE_RUBY
+#ifdef HAVE_RUBY
   ComponentID* cid1 = dynamic_cast<ComponentID*>(c1.getPointer());
   ComponentID* cid2 = dynamic_cast<ComponentID*>(c2.getPointer());
   if (!cid1 || !cid2)
-    throw CCAException("Cannot understand this ComponentID");
+    throw sci::cca::CCAException::pointer(new CCAException("Cannot understand this ComponentID"));
   if (cid1->framework != framework || cid2->framework != framework) {
-    throw CCAException("Cannot connect components from different frameworks");
+    throw sci::cca::CCAException::pointer(new CCAException("Cannot connect components from different frameworks"));
   }
   ComponentInstance* comp1=framework->lookupComponent(cid1->name);
   ComponentInstance* comp2=framework->lookupComponent(cid2->name);
 
-  //  std::cerr<<"Component: "<<cid2->getInstanceName()<<std::endl;
+  std::cerr<<"Component: "<<cid2->getInstanceName()<<std::endl;
   PortInstance* pr1=comp1->getPortInstance(port1);
   if (!pr1)
-    throw CCAException("Unknown port");
+    throw sci::cca::CCAException::pointer(new CCAException("Unknown port"));
 
   if (cid1 == cid2) { // same component
     return availablePorts;
@@ -358,26 +449,28 @@ BuilderService::generateBridge(const sci::cca::ComponentID::pointer& c1,
                                const sci::cca::ComponentID::pointer& c2,
                                const std::string& port2)
 {
-#if HAVE_RUBY
+#ifdef HAVE_RUBY
   ComponentID* cid1 = dynamic_cast<ComponentID*>(c1.getPointer());
   ComponentID* cid2 = dynamic_cast<ComponentID*>(c2.getPointer());
   if (!cid1 || !cid2) {
-    throw CCAException("Cannot understand this ComponentID");
+    throw sci::cca::CCAException::pointer(new CCAException("Cannot understand this ComponentID"));
   }
   if (cid1->framework != framework || cid2->framework != framework) {
-    throw CCAException("Cannot connect components from different frameworks");
+    throw sci::cca::CCAException::pointer(new CCAException("Cannot connect components from different frameworks"));
   }
   ComponentInstance* comp1=framework->lookupComponent(cid1->name);
   ComponentInstance* comp2=framework->lookupComponent(cid2->name);
   PortInstance* pr1=comp1->getPortInstance(port1);
   if (!pr1) {
-    throw CCAException("Unknown port");
+    throw sci::cca::CCAException::pointer(new CCAException("Unknown uses port"));
   }
   PortInstance* pr2=comp2->getPortInstance(port2);
   if (!pr2) {
-    throw CCAException("Unknown port");
+    throw sci::cca::CCAException::pointer(new CCAException("Unknown provides port"));
   }
   return (autobr.genBridge(pr1->getModel(),cid1->name,pr2->getModel(),cid2->name));
+#else
+  return std::string();
 #endif
 }
 
@@ -414,7 +507,7 @@ void BuilderService::emitConnectionEvent(ConnectionEvent* event)
             ConnectionEvent::pointer(event);
         ces->emitConnectionEvent(ce);
         framework->releaseFrameworkService("cca.ConnectionEventService", "");
-  }
+    }
 
 }
 
