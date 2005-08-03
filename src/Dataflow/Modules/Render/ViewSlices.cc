@@ -1161,14 +1161,41 @@ ViewSlices::draw_crop_bbox(SliceWindow &window, BBox &bbox) {
     glColor4dv(green);
   else
     glColor4dv(lt_green);
+  glColor4d(0.0, 0.0, 0.0, 0.75);
+
+
+  Point sll = screen_to_world(window, 0, 0);
+  Point slr = screen_to_world(window, window.viewport_->width(), 0);
+  Point sul = screen_to_world(window, 0, window.viewport_->height());
+  Point sur = screen_to_world(window, window.viewport_->width(), 
+				    window.viewport_->height());
 
   glBegin(GL_QUADS);
-  {
-    glVertex3dv(ll);
-    glVertex3dv(lr);
-    glVertex3dv(ur);
-    glVertex3dv(ul);
-  }
+  
+  glVertex3dv(&sll(0));
+  glVertex3dv(&slr(0));
+  glVertex3d(s==0?lr[0]:slr(0), s==1?lr[1]:slr(1), s==2?lr[2]:slr(2));
+  glVertex3d(s==0?lr[0]:sll(0), s==1?lr[1]:sll(1), s==2?lr[2]:sll(2));
+
+  glVertex3d(s==0?ur[0]:sul(0), s==1?ur[1]:sul(1), s==2?ur[2]:sul(2));
+  glVertex3d(s==0?ur[0]:sur(0), s==1?ur[1]:sur(1), s==2?ur[2]:sur(2));
+  glVertex3dv(&sur(0));
+  glVertex3dv(&sul(0));
+
+  glVertex3d(s==0?ll[0]:sll(0), s==1?ll[1]:sll(1), s==2?ll[2]:sll(2));
+  glVertex3dv(ll);
+  glVertex3dv(ul);
+  glVertex3d(s==0?ul[0]:sul(0), s==1?ul[1]:sul(1), s==2?ul[2]:sul(2));
+
+  glVertex3dv(lr);
+  glVertex3d(s==0?lr[0]:slr(0), s==1?lr[1]:slr(1), s==2?lr[2]:slr(2));
+  glVertex3d(s==0?ur[0]:sur(0), s==1?ur[1]:sur(1), s==2?ur[2]:sur(2));
+  glVertex3dv(ur);
+
+  //  glVertex3dv(ll);
+  //  glVertex3dv(lr);
+  //  glVertex3dv(ur);
+  //  glVertex3dv(ul);
   glEnd();
 
   glColor4dv(black);
@@ -1858,7 +1885,7 @@ ViewSlices::apply_colormap(NrrdSlice &slice, float *data)
 
 double
 ViewSlices::get_value(const Nrrd *nrrd, int x, int y, int z) {
-  ASSERT(nrrd->dim == 3);
+  ASSERT(nrrd->dim >= 3);
   const int position = nrrd->axis[0].size*(z*nrrd->axis[1].size+y)+x;
   switch (nrrd->type) {
   case nrrdTypeChar: {
@@ -1963,7 +1990,10 @@ ViewSlices::bind_slice(NrrdSlice &slice, float *tex, bool filter)
 
   if (!bound || slice.tex_dirty_) {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  
-#ifndef _WIN32
+#ifndef GL_CLAMP_TO_EDGE
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+#else
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 #endif
@@ -2064,7 +2094,8 @@ ViewSlices::draw_all_labels(SliceWindow &window) {
   draw_window_label(window);
 
 }
-  
+
+
 void
 ViewSlices::set_slice_coords(NrrdSlice &slice, bool origin) {
   slice.do_lock();
@@ -2089,18 +2120,49 @@ ViewSlices::set_slice_coords(NrrdSlice &slice, bool origin) {
   double x_wid=0,y_wid=0,z_wid=0;
   double x_hei=0,y_hei=0,z_hei=0;
   
-  if (axis == 0) {
-    x_pos = slice_num+0.5;
-    y_wid = slice.volume_->nrrd_->nrrd->axis[1].size;
-    z_hei = slice.volume_->nrrd_->nrrd->axis[2].size; 
-  } else if (axis == 1) {
-    y_pos = slice_num+0.5;
-    x_wid = slice.volume_->nrrd_->nrrd->axis[0].size;
-    z_hei = slice.volume_->nrrd_->nrrd->axis[2].size;
-  } else /*if (axis == 2)*/ {
-    z_pos = slice_num+0.5;
-    x_wid = slice.volume_->nrrd_->nrrd->axis[0].size;
-    y_hei = slice.volume_->nrrd_->nrrd->axis[1].size;
+
+  if (origin) {
+    if (axis == 0) {
+      x_pos = slice_num+0.5;
+      y_wid = slice.volume_->nrrd_->nrrd->axis[1].size;
+      z_hei = slice.volume_->nrrd_->nrrd->axis[2].size; 
+    } else if (axis == 1) {
+      y_pos = slice_num+0.5;
+      x_wid = slice.volume_->nrrd_->nrrd->axis[0].size;
+      z_hei = slice.volume_->nrrd_->nrrd->axis[2].size;
+    } else /*if (axis == 2)*/ {
+      z_pos = slice_num+0.5;
+      x_wid = slice.volume_->nrrd_->nrrd->axis[0].size;
+      y_hei = slice.volume_->nrrd_->nrrd->axis[1].size;
+    }
+  } else {
+    if (axis == 0) {
+      x_pos = (slice_num+0.5)*(slice.volume_->nrrd_->nrrd->axis[0].max - 
+			       slice.volume_->nrrd_->nrrd->axis[0].min)/
+	slice.volume_->nrrd_->nrrd->axis[0].size;
+      y_wid = slice.volume_->nrrd_->nrrd->axis[1].max - 
+	slice.volume_->nrrd_->nrrd->axis[1].min;
+      z_hei = slice.volume_->nrrd_->nrrd->axis[2].max - 
+	slice.volume_->nrrd_->nrrd->axis[2].min;
+    } else if (axis == 1) {
+      y_pos = (slice_num+0.5)*(slice.volume_->nrrd_->nrrd->axis[1].max - 
+			       slice.volume_->nrrd_->nrrd->axis[1].min)/
+	slice.volume_->nrrd_->nrrd->axis[1].size;
+
+      x_wid = slice.volume_->nrrd_->nrrd->axis[0].max - 
+	slice.volume_->nrrd_->nrrd->axis[0].min;
+      z_hei = slice.volume_->nrrd_->nrrd->axis[2].max - 
+	slice.volume_->nrrd_->nrrd->axis[2].min;
+    } else /*if (axis == 2)*/ {
+      z_pos = (slice_num+0.5)*(slice.volume_->nrrd_->nrrd->axis[2].max - 
+			       slice.volume_->nrrd_->nrrd->axis[2].min)/
+	slice.volume_->nrrd_->nrrd->axis[2].size;
+
+      x_wid = slice.volume_->nrrd_->nrrd->axis[0].max - 
+	slice.volume_->nrrd_->nrrd->axis[0].min;
+      y_hei = slice.volume_->nrrd_->nrrd->axis[1].max - 
+	slice.volume_->nrrd_->nrrd->axis[1].min;
+    }
   }
 
   if (*slice.volume_->flip_x_) {
@@ -2490,8 +2552,10 @@ ViewSlices::execute()
 
   double min_value = airNaN();
   double max_value = airNaN();
-
+  bool do_autoview = false;
   for (a = 0; a < 3; a++) {
+    if (max_slice_[a] == -1)
+      do_autoview = true;
     max_slice_[a] = -1;
     scale_[a] = airNaN();
   }
@@ -2544,8 +2608,8 @@ ViewSlices::execute()
       }
       volumes_[n] = scinew NrrdVolume(ctx->subVar("nrrd"+to_string(n), false));
       volumes_[n]->nrrd_ = nrrdH;
-      if (n == 0) 
-	extract_mip_slices(volumes_[n]);	
+      //      if (n == 0) 
+      //	extract_mip_slices(volumes_[n]);	
     }
   }
 
@@ -2567,8 +2631,9 @@ ViewSlices::execute()
     for (int n = 0; n < 3; ++n)
       if (mip_slices_[n])
 	rebind_slice(*mip_slices_[n]);
-    for_each(&ViewSlices::autoview);
   }
+  if (do_autoview)
+    for_each(&ViewSlices::autoview);
   redraw_all();
   TCLTask::unlock();
 
@@ -2734,16 +2799,14 @@ ViewSlices::handle_gui_button_release(GuiArgs &args) {
 
 void
 ViewSlices::handle_gui_button(GuiArgs &args) {
-  if (args.count() != 7)
+  if (args.count() != 9)
     SCI_THROW(GuiException(args[0]+" "+args[1]+
 			   " expects a window #, button #, and state"));
 
   int button = args.get_int(3);
   int state = args.get_int(4);
-  int x = args.get_int(5);
-  int y = args.get_int(6);
-  pick_x_ = x;
-  pick_y_ = y;
+  pick_x_ = args.get_int(5);
+  pick_y_ = args.get_int(6);
   
   ASSERT(layouts_.find(args[2]) != layouts_.end());
   WindowLayout &layout = *layouts_[args[2]];
@@ -2778,8 +2841,15 @@ ViewSlices::handle_gui_button(GuiArgs &args) {
     case 2:
       if (state & SHIFT_E == SHIFT_E)
 	autoview(window);
-      else
+      else {
 	probe_ = 1;
+	window.viewport_->make_current();
+	setup_gl_view(window);
+	const int y = layout.opengl_->height() - 1 - args.get_int(8);
+	cursor_ = screen_to_world(window, args.get_int(7), y);
+	window.viewport_->release();	
+	for_each(&ViewSlices::set_probe);
+      }
       break;
     case 3:
       if (state & SHIFT_E == SHIFT_E) {
@@ -2897,7 +2967,7 @@ ViewSlices::tcl_command(GuiArgs& args, void* userdata) {
     for_each(*layouts_[args[2]], &ViewSlices::redraw_window);
   } else if(args[1] == "resize") {
     ASSERT(layouts_.find(args[2]) != layouts_.end());
-    for_each(*layouts_[args[2]], &ViewSlices::autoview);
+    //    for_each(*layouts_[args[2]], &ViewSlices::autoview);
   } else if(args[1] == "redrawall") {
     redraw_all();
   } else if(args[1] == "rebind") {

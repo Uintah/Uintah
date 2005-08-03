@@ -87,8 +87,14 @@ WARNING
 class ConsecutiveRangeSetException : public Exception
 {
 public:
-  ConsecutiveRangeSetException(std::string msg)
-    : msg_(msg) { }
+  ConsecutiveRangeSetException(const std::string& msg, const char* file, int line)
+    : msg_(msg) {
+#ifdef EXCEPTIONS_CRASH
+    std::cout << "A ConsecutiveRangeSetException was thrown.\n";
+    std::cout << file << ":" << line << "\n";
+    std::cout << msg_;
+#endif
+ }
 
   ConsecutiveRangeSetException(const ConsecutiveRangeSetException& copy)
     : msg_(copy.msg_) { }
@@ -172,7 +178,7 @@ public:
   ConsecutiveRangeSet() : size_(0) {} // empty set
   
   // initialize a range set with a string formatted like: "1, 2-8, 10, 15-30"
-  ConsecutiveRangeSet(std::string setstr) throw(ConsecutiveRangeSetException);
+  ConsecutiveRangeSet(const std::string& setstr) throw(ConsecutiveRangeSetException);
 
   ConsecutiveRangeSet(const ConsecutiveRangeSet& set2)
     : rangeSet_(set2.rangeSet_), size_(set2.size_) { }

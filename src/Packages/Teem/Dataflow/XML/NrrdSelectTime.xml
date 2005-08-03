@@ -69,6 +69,8 @@ Send Amount entry to send more than one row/column at a time. For
 instance, if both entries are set to three, the module will send three
 rows/columns at a time, which can then be mapped onto a vector field
 by the <modref package="SCIRun" name="ManageFieldData"/> module. </p>
+
+      <p>This module is much more efficient if the Time axis is the last (slowest) axis in the input NRRD.  This is because the output of each timestep is a contiguous chunk of the input and can thus be sent as a pointer offset rather than an interleaved memory copy.</p>
     </description>
   </overview>
   <io>

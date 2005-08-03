@@ -26,21 +26,28 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-
-
 # Makefile fragment for this subdirectory
 
 SRCDIR   := main
-SRCS     := $(SRCDIR)/main.cc $(SRCDIR)/init.cc
 
+########################################################################
+#
+# scirun (aka PROGRAM_PSE)
+#
+
+SRCS    := $(SRCDIR)/main.cc
 
 ifeq ($(LARGESOS),yes)
   PSELIBS := Dataflow Core
 else
-  PSELIBS := Dataflow/Network Core/Containers Core/TCLThread \
+  PSELIBS := Dataflow/Network Core/Containers Dataflow/TCLThread \
 	Core/GuiInterface Core/Thread Core/Exceptions Core/Util \
-	Core/TkExtensions Core/Comm Core/ICom Core/Services \
-	Dataflow/XMLUtil Core/SystemCall Core/Basis Core/Geom
+	Core/TkExtensions Core/Comm Core/ICom Core/Services Core/XMLUtil \
+	Core/SystemCall Core/Geom Core/Init Core/Basis
+
+  ifeq ($(HAVE_PTOLEMY), yes)   
+        PSELIBS += Packages/Ptolemy/Core/Comm
+  endif
 
   ifeq ($(OS_NAME),Darwin)
     PSELIBS += Core/Datatypes Core/ImportExport Core/Persistent
@@ -60,69 +67,84 @@ endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
+########################################################################
+#
+# SCIRun2 Stuff:
+#
+
 ifeq ($(BUILD_SCIRUN2),yes)
 
-SRCS      := $(SRCDIR)/newmain.cc
+  ########################################################################
+  #
+  # sr
+  #
+  SRCS      := $(SRCDIR)/newmain.cc
 
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Core/CCA
-else
-ifeq ($(HAVE_GLOBUS),yes)	
-  PSELIBS := Core/Exceptions Core/CCA/Comm\
+  ifeq ($(LARGESOS),yes)
+    PSELIBS := Core/CCA
+  else
+    PSELIBS := Core/Exceptions Core/CCA/Comm    \
+        Core/CCA/PIDL Core/CCA/spec Core/Util \
+        SCIRun Core/CCA/SSIDL Core/Thread
+    ifeq ($(HAVE_GLOBUS),yes)   
+      PSELIBS += Core/globus_threads
+    endif
+  endif
+
+  LIBS := $(GLOBUS_LIBRARY)
+
+  ifeq ($(HAVE_MPI),yes)
+    LIBS += $(MPI_LIBRARY) 
+  endif
+
+  PROGRAM := sr
+
+  include $(SCIRUN_SCRIPTS)/program.mk
+
+  ########################################################################
+  #
+  # ploader
+  #
+
+  #build the SCIRun CCA Component Loader here
+  ifeq ($(LARGESOS),yes)
+    PSELIBS := Core/CCA/Component
+  else
+
+    ifeq ($(HAVE_GLOBUS),yes)
+      PSELIBS := Core/Exceptions Core/CCA/Comm Core/CCA/Comm/DT \
         Core/CCA/PIDL Core/globus_threads Core/CCA/spec \
-	SCIRun Core/CCA/SSIDL Core/Thread
-else
-  PSELIBS := Core/Exceptions Core/CCA/Comm\
+        SCIRun Core/CCA/SSIDL Core/Thread 
+    else
+      PSELIBS := Core/Exceptions Core/CCA/Comm\
         Core/CCA/PIDL Core/CCA/spec \
-	SCIRun Core/CCA/SSIDL Core/Thread
-endif
+        SCIRun Core/CCA/SSIDL Core/Thread 
+    endif
+  endif
 
-endif
+  ifeq ($(HAVE_MPI),yes)
+    LIBS := $(MPI_LIBRARY) 
+  endif
 
-LIBS := $(GLOBUS_LIBRARY)
+  PROGRAM := ploader
+  SRCS      := $(SRCDIR)/ploader.cc
+  include $(SCIRUN_SCRIPTS)/program.mk
 
-ifeq ($(HAVE_MPI),yes)
-LIBS += $(MPI_LIBRARY) 
-endif
-PROGRAM := sr
+endif # Build SCIRun2
 
-include $(SCIRUN_SCRIPTS)/program.mk
+########################################################################
+#
+# scirunremote
+#
 
-
-#build the SCIRun CCA Component Loader here
-ifeq ($(LARGESOS),yes)
-  PSELIBS := Core/CCA/Component
-else
-
-ifeq ($(HAVE_GLOBUS),yes)
-  PSELIBS := Core/Exceptions Core/CCA/Comm Core/CCA/Comm/DT \
-        Core/CCA/PIDL Core/globus_threads Core/CCA/spec \
-	SCIRun Core/CCA/SSIDL Core/Thread 
-else
-  PSELIBS := Core/Exceptions Core/CCA/Comm\
-        Core/CCA/PIDL Core/CCA/spec \
-	SCIRun Core/CCA/SSIDL Core/Thread 
-endif
-endif
-
-ifeq ($(HAVE_MPI),yes)
-LIBS := $(MPI_LIBRARY) 
-PROGRAM := ploader
-SRCS      := $(SRCDIR)/ploader.cc
-include $(SCIRUN_SCRIPTS)/program.mk
-endif
-
-endif #Build SCIRun2
-
-SRCDIR   := main
 SRCS     := $(SRCDIR)/scirunremote.cc
 
 ifeq ($(LARGESOS),yes)
   PSELIBS := Dataflow Core
 else
   PSELIBS := Dataflow/Network Core/Containers Core/GuiInterface \
-	Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
-	Core/ICom Core/Services Dataflow/XMLUtil Core/SystemCall
+        Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
+        Core/ICom Core/Services Core/XMLUtil Core/SystemCall Core/Init
   ifeq ($(OS_NAME),Darwin)
     PSELIBS += Core/Datatypes Core/ImportExport
   endif
@@ -138,4 +160,4 @@ endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
-
+########################################################################

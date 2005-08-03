@@ -57,12 +57,13 @@ SRCS     += \
 	$(SRCDIR)/Submatrix.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Dataflow/Network Dataflow/Ports Dataflow/XMLUtil \
+PSELIBS := Dataflow/Network Dataflow/Ports \
 	Core/Datatypes Core/Persistent Core/Math \
 	Core/Exceptions Core/Thread Core/Containers \
 	Core/GuiInterface Core/Geometry Core/Datatypes \
 	Core/Util Core/Geom Core/TkExtensions Core/GeomInterface \
-	Dataflow/Widgets
+	Dataflow/Widgets Core/XMLUtil
+
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(XML_LIBRARY) $(PETSC_UNI_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

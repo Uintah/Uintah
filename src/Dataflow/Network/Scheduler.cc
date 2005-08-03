@@ -45,11 +45,23 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Port.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/Environment.h>
 #include <iostream>
 #include <queue>
 
 using namespace SCIRun;
 using namespace std;
+
+
+
+static bool
+regression_quit_callback(void *)
+{
+  std::cout.flush();
+  std::cerr.flush();
+  Thread::exitAll(0);
+  return false;
+}
 
 
 Scheduler::Scheduler(Network* net)
@@ -60,6 +72,13 @@ Scheduler::Scheduler(Network* net)
     mailbox("NetworkEditor request FIFO", 100)
 {
   net->attach(this);
+
+  if (sci_getenv("SCI_REGRESSION_TESTING"))
+  {
+    // Arbitrary low regression quit callback priority.  Should
+    // probably be lower.
+    add_callback(regression_quit_callback, 0, -1000);
+  }
 }
 
 
@@ -269,10 +288,6 @@ Scheduler::do_scheduling_real(Module* exclude)
     serial_base = serial_id;
     serial_id += nmodules;
     serial_set.push_back(SerialSet(serial_base, nmodules));
-#if 0
-    cout << "EXECUTION START " << serial_base << "\n";
-    cout.flush();
-#endif
   }
 
   // Execute all the modules.
@@ -324,21 +339,11 @@ Scheduler::report_execution_finished_real(unsigned int serial)
   {
     if (serial >= itr->base && serial < itr->base + itr->size)
     {
-#if 0
-      cout << "  recieved " << serial << "  -  ";
-      cout << net->module(serial - itr->base)->id << "\n";
-      cout.flush();
-#endif
-      
       found++;
 
       itr->callback_count++;
       if (itr->callback_count == itr->size)
       {
-#if 0
-        cout << "EXECUTION DONE " << itr->base << "\n";
-        cout.flush();
-#endif
         serial_set.erase(itr);
         break;
       }
@@ -349,35 +354,62 @@ Scheduler::report_execution_finished_real(unsigned int serial)
 
   if (serial_set.size() == 0)
   {
-#if 0
-    cout << "CALLING SCHEDULER CALLBACKS\n";
-    cout.flush();
-#endif
-    // All execution done.
+    // All execution done.  Call the execution finished callbacks
+    // here.  The callbacks are called in priority order until one
+    // returns false.  Then all other callbacks with the same priority
+    // are called and we're done.  The priority level is finished off
+    // because this results in a deterministic result for the order in
+    // which callbacks are added to the queue.
+    bool done = false;
+    int priority = 0;
     for (unsigned int i = 0; i < callbacks_.size(); i++)
     {
-      callbacks_[i].first(callbacks_[i].second);
+      if (done && callbacks_[i].priority != priority)
+      {
+        break;
+      }
+
+      if (!callbacks_[i].callback(callbacks_[i].data))
+      {
+        priority = callbacks_[i].priority;
+        done = true;
+      }
     }
   }
 }
 
 
-typedef std::pair<SchedulerCallback, void *> SCPair;
-
-
 void
-Scheduler::add_callback(SchedulerCallback cb, void *data)
+Scheduler::add_callback(SchedulerCallback cb, void *data, int priority)
 {
-  callbacks_.push_back(SCPair(cb, data));
+  SCData sc;
+  sc.callback = cb;
+  sc.data = data;
+  sc.priority = priority;
+
+  // Insert the callback.  Preserve insertion order if priorities are
+  // the same.
+  callbacks_.push_back(sc);
+  for (size_t i = callbacks_.size()-1; i > 0; i--)
+  {
+    if (callbacks_[i-1].priority < callbacks_[i].priority)
+    {
+      const SCData tmp = callbacks_[i-1];
+      callbacks_[i-1] = callbacks_[i];
+      callbacks_[i] = tmp;
+    }
+  }
 }
 
 
 void
 Scheduler::remove_callback(SchedulerCallback cb, void *data)
 {
-  callbacks_.erase(std::remove(callbacks_.begin(), callbacks_.end(),
-                               SCPair(cb, data)),
-                    callbacks_.end());
+  SCData sc;
+  sc.callback = cb;
+  sc.data = data;
+  callbacks_.erase(std::remove_if(callbacks_.begin(), callbacks_.end(), sc),
+		   callbacks_.end());
 }
 
 

@@ -48,6 +48,8 @@
 
 namespace SCIRun {
   using namespace std;
+
+  //  template <class T> class list;
   
 /**************************************
 
@@ -162,7 +164,10 @@ private:
 
     // make a non-run group from the first n items of the list
     // popping items off the list as it goes.
-    Group(list<T>& itemList, unsigned long n)
+    ///// NOTE: Even with 'using namespace std' above, the icpc compiler
+    /////       on thunder doesn't like list... so we have to explicitly
+    /////       use the 'std::' on it...  *shrug*.  -Dd
+    Group(typename std::list<T>& itemList, unsigned long n)
       : data_(n), sequenceRule_(), length_(n)
     {
       for (unsigned long i = 0; i < n; i++) {
@@ -193,7 +198,7 @@ public:
   class iterator
   {
   private:
-    typedef typename list<Group>::const_iterator GroupListIterator;
+    typedef typename std::list<Group>::const_iterator GroupListIterator;
   public:
     iterator(GroupListIterator groupIter, unsigned long groupIndex = 0)
       : groupIter_(groupIter), groupIndex_(groupIndex) {}
@@ -287,7 +292,7 @@ public:
   iterator end() const throw(InternalError)
   {
     if (!isFinalized())
-      throw InternalError("You cannot iterate through RunLengthEncoder items until the RunLengthEncoder has been finalized.");
+      throw InternalError("You cannot iterate through RunLengthEncoder items until the RunLengthEncoder has been finalized.", __FILE__, __LINE__);
     return iterator(groups_.end(), 0);
   }
 
@@ -351,7 +356,7 @@ private:
   void write(int fd, void* data, ssize_t size) throw(ErrnoException)
   {
     if (::write(fd, data, size) != size)
-      throw ErrnoException("RunLengthEncoder::write", errno);
+      throw ErrnoException("RunLengthEncoder::write", errno, __FILE__, __LINE__);
   }
 
   inline static ssize_t pread(int fd, void* buf, size_t nbyte, off_t offset)
@@ -382,11 +387,10 @@ private:
 
   // Temporary place to put items until it figures out what kind
   // of group it belongs in.
-  list<T> considerationItems_;
+  std::list<T> considerationItems_;
 
   // This is where the data is permanently stored and grouped.
-  list<Group> groups_;
-
+  std::list<Group> groups_;
   unsigned long size_; // total number of items added
 
   Sequencer sequencer_;
@@ -795,16 +799,16 @@ long RunLengthEncoder<T, Sequencer>::readPriv(istream& in, bool swapBytes,
    
   ssize_t header_size;
   ssize_t start_data_pos;
-  ssize_t end_data_pos;
+  ssize_t end_data_pos = 0;
   unsigned long start_index;
-  unsigned long end_index;
+  unsigned long end_index=0;
   
   readSizeType(in, needConversion, swapBytes, nByteMode, start_data_pos);
   readSizeType(in, needConversion, swapBytes, nByteMode, start_index);
   header_size = start_data_pos;
 
   if (header_size % header_item_size != 0)
-    throw InternalError("Invalid RunLengthEncoded data");
+    throw InternalError("Invalid RunLengthEncoded data", __FILE__, __LINE__);
    
   unsigned long num_runs_left = header_size / header_item_size - 1;
   vector<bool> usesDefaultRule(num_runs_left, false);
@@ -891,7 +895,7 @@ T RunLengthEncoder<T, Sequencer>::seekPriv(int fd, unsigned long index,
   readSizeType(fd, needConversion, swapBytes, nByteMode, header_size);
 
   if (header_size % header_item_size != 0)
-    throw InternalError("Invalid RunLengthEncoded data");
+    throw InternalError("Invalid RunLengthEncoded data", __FILE__, __LINE__);
 
   // so it knows which swapbytes to call
   uint32_t group_start_index;
@@ -931,7 +935,8 @@ T RunLengthEncoder<T, Sequencer>::seekPriv(int fd, unsigned long index,
     ASSERT(low == num_runs - 1);
     ostringstream index_str;
     index_str << index << " >= " << group_end_index;
-    throw InternalError(string("RunLengthEncoder<T>::seek (index out of bounds, ") + index_str.str() + ")");
+    throw InternalError(string("RunLengthEncoder<T>::seek (index out of bounds, ") + index_str.str() + ")",
+                        __FILE__, __LINE__);
   }
 
   T item;

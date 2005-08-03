@@ -74,9 +74,9 @@ public:
 
     virtual GeomObj* clone();
 
-    void set_matl(const MaterialHandle& shaft_matl,
-		  const MaterialHandle& back_matl,
-		  const MaterialHandle& head_matl);
+    void set_material(const MaterialHandle& shaft_matl,
+                      const MaterialHandle& back_matl,
+                      const MaterialHandle& head_matl);
     void add(const Point& pos, const Vector& dir);
     void add(const Point& pos, const Vector& dir,
 	     const MaterialHandle& shaft, const MaterialHandle& back,

@@ -67,7 +67,6 @@ public:
     const double sdx5=derivs_[cd.node5_index()][0]*scalefactors_[cd.node5_index()][0];
     const double sdx6=derivs_[cd.node6_index()][0]*scalefactors_[cd.node6_index()][0];
     const double sdx7=derivs_[cd.node7_index()][0]*scalefactors_[cd.node7_index()][0];
-
     const double sdy0=derivs_[cd.node0_index()][1]*scalefactors_[cd.node0_index()][1];
     const double sdy1=derivs_[cd.node1_index()][1]*scalefactors_[cd.node1_index()][1];
     const double sdy2=derivs_[cd.node2_index()][1]*scalefactors_[cd.node2_index()][1];
@@ -76,7 +75,6 @@ public:
     const double sdy5=derivs_[cd.node5_index()][1]*scalefactors_[cd.node5_index()][1];
     const double sdy6=derivs_[cd.node6_index()][1]*scalefactors_[cd.node6_index()][1];
     const double sdy7=derivs_[cd.node7_index()][1]*scalefactors_[cd.node7_index()][1];
-
     const double sdz0=derivs_[cd.node0_index()][2]*scalefactors_[cd.node0_index()][2];
     const double sdz1=derivs_[cd.node1_index()][2]*scalefactors_[cd.node1_index()][2];
     const double sdz2=derivs_[cd.node2_index()][2]*scalefactors_[cd.node2_index()][2];
@@ -201,7 +199,8 @@ public:
     const double y12=(y-1)*(y-1);
     const double z12=(z-1)*(z-1);
 
-    derivs.size(3);
+    derivs.clear();
+    derivs.resize(3);
 
     const double sdx0=derivs_[cd.node0_index()][0]*scalefactors_[cd.node0_index()][0];
     const double sdx1=derivs_[cd.node1_index()][0]*scalefactors_[cd.node1_index()][0];
@@ -466,10 +465,10 @@ public:
   template <class CellData>
   void get_coords(vector<double> &coords, const T& value, 
 		  const CellData &cd) const  
-      {
-	HexLocate< HexTricubicHmtScaleFactors<T> > CL;
-	CL.get_coords(this, coords, value, cd);
-      };
+  {
+    HexLocate< HexTricubicHmtScaleFactors<T> > CL;
+    CL.get_coords(this, coords, value, cd);
+  };
 
   //! add derivative values (dx, dy, dz, dxy, dyz, dzx, dxyz) for nodes.
   void add_derivatives(const vector<T> &p) { derivs_.push_back(p); }

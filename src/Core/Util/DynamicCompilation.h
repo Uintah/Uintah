@@ -107,16 +107,16 @@ DynamicCompilation::compile(CompileInfoHandle cih, DC &result,
   {
     reporter->report_progress( ProgressReporter::Compiling);
 
-    status = DynamicLoader::scirun_loader().compile_and_store(ci, 
-							      ignore, 
-							      reporter->msgStream());
+    status =
+      DynamicLoader::scirun_loader().compile_and_store(ci, ignore, reporter);
 
     reporter->report_progress( ProgressReporter::CompilationDone );
 
     if (! (status && DynamicLoader::scirun_loader().fetch(ci, algo_handle)))
     {
       reporter->error("Could not compile algorithm for '" +
-	    ci.template_class_name_ + "<" + ci.template_arg_ + ">'.");
+                      ci.template_class_name_ + "<" +
+                      ci.template_arg_ + ">'.");
       return false;
     }
   }
@@ -124,12 +124,18 @@ DynamicCompilation::compile(CompileInfoHandle cih, DC &result,
   result = dynamic_cast<typename DC::pointer_type>(algo_handle.get_rep());
   if (result.get_rep() == 0) 
   {
-    if ( !ignore ) reporter->error("Could not get algorithm for '" +
-				   ci.template_class_name_ + "<" + ci.template_arg_ + ">'.");
+    if ( !ignore )
+    {
+      reporter->error("Could not get algorithm for '" +
+                      ci.template_class_name_ + "<" +
+                      ci.template_arg_ + ">'.");
+    }
     status = false;
   }
   else
+  {
     status = true;
+  }
 
   reporter->report_progress( ProgressReporter::Done );
 

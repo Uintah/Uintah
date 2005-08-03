@@ -46,8 +46,8 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/OS/Dir.h>
 #include <Dataflow/Network/Network.h>
-#include <Dataflow/XMLUtil/StrX.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/XMLUtil/StrX.h>
+#include <Core/XMLUtil/XMLUtil.h>
 #include <Core/Util/soloader.h>
 #include <Core/Util/Environment.h>
 #include <Core/CCA/PIDL/PIDL.h>
@@ -180,11 +180,10 @@ void BridgeComponentModel::readComponentDescription(const std::string& file)
 
 BridgeServices*
 BridgeComponentModel::createServices(const std::string& instanceName,
-				  const std::string& className)
+                                     const std::string& className,
+                                     const sci::cca::TypeMap::pointer& tm)
 {
-  BridgeComponentInstance* ci = new BridgeComponentInstance(framework,
-						      instanceName, className,
-						      NULL);
+  BridgeComponentInstance* ci = new BridgeComponentInstance(framework, instanceName, className, tm, NULL);
   framework->registerComponent(ci, instanceName);
   return ci;
 }
@@ -197,8 +196,10 @@ bool BridgeComponentModel::haveComponent(const std::string& type)
 
 
 
-ComponentInstance* BridgeComponentModel::createInstance(const std::string& name,
-						     const std::string& t)
+ComponentInstance*
+BridgeComponentModel::createInstance(const std::string& name,
+                                     const std::string& t,
+                                     const sci::cca::TypeMap::pointer &tm)
 
 {
   std::string type=t;
@@ -249,7 +250,7 @@ ComponentInstance* BridgeComponentModel::createInstance(const std::string& name,
     component=pidl_cast<sci::cca::Component::pointer>(comObj);
     */
   }
-  BridgeComponentInstance* ci = new BridgeComponentInstance(framework, name, type, component);
+  BridgeComponentInstance* ci = new BridgeComponentInstance(framework, name, type, tm, component);
   component->setServices(ci);
   return ci;
 }

@@ -52,7 +52,7 @@
 namespace SCIRun {
   class InternalError : public Exception {
   public:
-    InternalError(const std::string&);
+    InternalError(const std::string&, const char* file, int line);
     InternalError(const InternalError&);
     virtual ~InternalError();
     virtual const char* message() const;

@@ -144,6 +144,14 @@ static int do_command(ClientData cd, Tcl_Interp*, int argc, TCLCONST char* argv[
     args.string_ = exception.message();
     args.have_error_ = true;
     args.have_result_ = true;
+  } catch (const string &message) {
+    args.string_ = message;
+    args.have_error_ = true;
+    args.have_result_ = true;
+  } catch (const char *message) {
+    args.string_ = message;
+    args.have_error_ = true;
+    args.have_result_ = true;
   }
 
   if(args.have_result_) {

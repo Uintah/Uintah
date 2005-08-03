@@ -110,25 +110,60 @@ proc envBool { var } {
     return [string is true $val]
 }
 
+proc safeSetWindowGeometry { w geom } {
+    set realgeom [split [wm geometry $w] +]
+    set geom [split $geom +]
+    set sizepos [lsearch $geom *x*]
+    if { $sizepos == -1 } {
+	set width [winfo width $w]
+	set height [winfo height $w]
+    } else {
+	set size [split [lindex $geom $sizepos] x]
+	set geom [lreplace $geom $sizepos $sizepos]
+	set width [lindex $size 0]
+	set height [lindex $size 1]
+    }
+
+    set xoff [lindex $realgeom 1]
+    set yoff [lindex $realgeom 2]
+
+    if { [llength $geom] } {
+	set xoff [lindex $geom end-1]
+	set yoff [lindex $geom end]
+    }
+    
+    set xoff    [expr ($xoff < 0) ? 0 : $xoff]
+    set yoff    [expr ($yoff < 0) ? 0 : $yoff]
+
+    set swidth  [expr [winfo screenwidth .]  - $xoff]
+    set sheight [expr [winfo screenheight .] - $yoff]
+	
+    set width   [expr ($swidth  < $width)  ? $swidth  : $width]
+    set height  [expr ($sheight < $height) ? $sheight : $height]
+
+    wm geometry $w ${width}x${height}+${xoff}+${yoff}
+}
+
+proc geometryTrace { args } {
+    global geometry
+    if { [info exists geometry] } {
+	safeSetWindowGeometry . $geometry
+    }
+}
 
 proc makeNetworkEditor {} {
 
     wm protocol . WM_DELETE_WINDOW { NiceQuit }
     wm minsize . 100 100
 
+    global geometry
+    trace variable geometry w geometryTrace
 
-    if { [validFile ~/.scirun.geom] } {
-	set geomfile [open ~/.scirun.geom r]
-        wm geometry . [gets $geomfile]
-	close $geomfile
+    set geom [netedit getenv SCIRUN_GEOMETRY]
+    if { [string length $geom] } {
+	safeSetWindowGeometry . $geom
     } else {
-	# Check screen geometry before creating window.  
-	# To ensure window fits on screen.
-	set swidth [winfo screenwidth .]
-	set sheight [winfo screenheight .]
-	set neWidth  [expr ($swidth <  800) ? ($swidth-30) : 800]
-	set neHeight [expr ($sheight < 800) ? ($sheight-30) : 800]
-	wm geometry . ${neWidth}x${neHeight}
+	safeSetWindowGeometry . 800x800
     }
 
     wm title . "SCIRun v[netedit getenv SCIRUN_VERSION]"
@@ -644,6 +679,7 @@ proc addModuleAtPosition {package category module { xpos 10 } { ypos 10 } } {
 # as an instance of the SCIRunComponentModel.
 proc addModule2 {package category module modid} {  
     global Subnet
+
     set Subnet($modid) $Subnet(Loading)
     set Subnet(${modid}_connections) ""
     lappend Subnet(Subnet$Subnet(Loading)_Modules) $modid
@@ -657,10 +693,8 @@ proc addModule2 {package category module modid} {
         Module $modid -name "$module"
     }
 
-    # fix for bug 2441: since SCIRun2's builder GUI takes care of
-    # creating and displaying module icons, make_icon should not be
-    # necessary
-    #$modid make_icon 10 10 0
+    redrawMinicanvas
+    $modid make_icon 10 10 0
 
     return $modid
 }
@@ -1106,7 +1140,7 @@ proc loadnet { netedit_loadfile } {
 	return
     }
 
-    global netedit_savefile inserting PowerApp Subnet
+    global netedit_savefile inserting PowerApp Subnet geometry
     if { !$inserting || ![string length $netedit_savefile] } {
 	# Cut off the path from the net name and put in on the title bar:
 	wm title . "SCIRun ([lindex [file split $netedit_loadfile] end])"
@@ -1115,7 +1149,7 @@ proc loadnet { netedit_loadfile } {
     }
 
     renameSourceCommand
-
+    
     # if we are not loading a powerapp network, show loading progress
     if { !$PowerApp } {
 	showProgress 0 0 1 ;# -maybe- raise the progress meter
@@ -1348,25 +1382,29 @@ proc showProgress { { show_image 0 } { steps none } { okbutton 0 } } {
 	button $w.ok -text Dismiss -width 10 -command hideProgress
     }
 
-    global splashImageFile
-    if { [string length [info commands ::img::splash]] && \
-	     ![string equal $splashImageFile [::img::splash cget -file]] } {
-	image delete ::img::splash
-    }
+    if { $show_image } {
+        global splashImageFile
+        if { [string length [info commands ::img::splash]] && \
+                 ![string equal $splashImageFile [::img::splash cget -file]] } {
+            image delete ::img::splash
+        }
 
-    if { [file isfile $splashImageFile] && \
-	     [file readable $splashImageFile] && \
-	     ![string length [info commands ::img::splash]] } {
-	image create photo ::img::splash -file $splashImageFile
-    }
+        if { [file isfile $splashImageFile] && \
+                 [file readable $splashImageFile] && \
+                 ![string length [info commands ::img::splash]] } {
+            image create photo ::img::splash -file $splashImageFile
+        }
 
-    if { ![winfo exists $w.splash] } {
-	label $w.splash
-    }
+        if { ![winfo exists $w.splash] } {
+            label $w.splash
+        }
     
-    if { $show_image && [string length [info command ::img::splash]] } {
-	$w.splash configure -image ::img::splash
-	pack $w.splash
+        if { [string length [info command ::img::splash]] } {
+            $w.splash configure -image ::img::splash
+            pack $w.splash
+        } else {
+            pack forget $w.splash
+        }
     } else {
 	pack forget $w.splash
     }
@@ -1935,4 +1973,11 @@ proc compareVersions { ver1 ver2 } {
     }
     return 0
 }
-    
+
+proc txt { args } {
+    return [join $args \n]
+}
+
+proc in_power_app {} {
+    return [winfo exists .standalone]
+}

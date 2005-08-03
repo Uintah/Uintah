@@ -130,6 +130,25 @@ Pio(Piostream& stream, map<Key, Data>& data) {
 template <> 
 void Pio(Piostream& stream, vector<bool>& data);
 
+
+// Optimize these four, heavily used in the field classes.
+template <>
+void Pio(Piostream& stream, vector<char>& data);
+template <>
+void Pio(Piostream& stream, vector<unsigned char>& data);
+template <>
+void Pio(Piostream& stream, vector<short>& data);
+template <>
+void Pio(Piostream& stream, vector<unsigned short>& data);
+template <>
+void Pio(Piostream& stream, vector<int>& data);
+template <>
+void Pio(Piostream& stream, vector<unsigned int>& data);
+template <>
+void Pio(Piostream& stream, vector<float>& data);
+template <>
+void Pio(Piostream& stream, vector<double>& data);
+
 template <class T> 
 void Pio(Piostream& stream, vector<T>& data)
 { 

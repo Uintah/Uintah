@@ -71,6 +71,9 @@ public:
   inline int oy() { return oy_; }
   inline int oz() { return oz_; }
 
+  virtual int sx() { return 0; }
+  virtual int sy() { return 0; }
+
   virtual GLenum tex_type() = 0;
   virtual void* tex_data(int c) = 0;
 
@@ -119,6 +122,9 @@ public:
   
   virtual GLenum tex_type();
   virtual void *tex_data(int c);
+
+  virtual int sx();
+  virtual int sy();
 
   void set_nrrds(const NrrdDataHandle &n0, const NrrdDataHandle &n1)
   { data_[0] = n0; data_[1] = n1; }

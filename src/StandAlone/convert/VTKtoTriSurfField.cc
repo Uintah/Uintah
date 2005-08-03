@@ -40,11 +40,8 @@
 #include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
+#include <Core/Init/init.h>
 #include <StandAlone/convert/FileUtils.h>
-
-#if defined(__APPLE__)
-#  include <Core/Datatypes/MacForceLoad.h>
-#endif
 
 #include <iostream>
 #include <fstream>
@@ -211,11 +208,7 @@ main(int argc, char **argv) {
     return 2;
   }
 
-#if defined(__APPLE__)  
-  macForceLoad(); // Attempting to force load (and thus instantiation of
-	          // static constructors) Core/Datatypes;
-#endif
-
+  SCIRunInit();
   setDefaults();
 
   TSMesh *tsm = scinew TSMesh();

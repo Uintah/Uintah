@@ -42,7 +42,6 @@
  */
 
 //#include <Dataflow/Network/Module.h>
-#include <Core/GuiInterface/SciTCLstrbuff.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>

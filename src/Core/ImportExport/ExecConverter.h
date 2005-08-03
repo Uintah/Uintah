@@ -72,7 +72,7 @@ Exec_reader(ProgressReporter *pr, HType &handle,
 
   if (Exec_execute_command(pr, command, tmpfilename))
   {
-    Piostream *stream = auto_istream(tmpfilename);
+    Piostream *stream = auto_istream(tmpfilename, pr);
     if (!stream)
     {
       pr->error("ExecConverter - Error reading converted file '" +

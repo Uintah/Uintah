@@ -226,7 +226,7 @@ SCI_ARG_WITH(fortran,
   [with_fortran=""])
 SCI_ARG_WITH(ptolemyII,
   AC_HELP_STRING(--with-ptolemyII=DIR, 
-                 Use the Ptolemy II (eg: ptII4.0.1) installation in DIR (Ptolemy package only)),
+                 Use the Ptolemy II (eg: ptII4.0.1) installation in DIR (Ptolemypa ckage only)),
   [with_ptolemyII="$withval"
    sci_required_ptolemyII=yes],
   [with_ptolemyII=""])
@@ -336,10 +336,16 @@ SCI_ARG_WITH(qt,
   [with_qt=""])
 SCI_ARG_WITH(ruby,
   AC_HELP_STRING(--with-ruby=DIR,
-                 Use the ruby installation in DIR, where DIR points to the --prefix option specified when installing ruby.  A standard ruby install defaults to --prefix=/usr/local),
+                 Use the ruby installation in DIR where DIR points to the --prefix option specified when installing ruby.  A standard ruby install defaults to --prefix=/usr/local),
   [with_ruby="$withval"
    sci_required_ruby=yes],
   [with_ruby=""])
+SCI_ARG_WITH(tao,
+  AC_HELP_STRING(--with-tao=DIR,
+                 Use the tao corba installation in DIR where DIR points to the --prefix option specified when installing tao.),
+  [with_tao="$withval"
+   sci_required_tao=yes],
+  [with_tao=""])
 SCI_ARG_WITH(vtk,
   AC_HELP_STRING(--with-vtk=DIR,
                  Build the VTK components. Use VTK build in DIR.  DIR should be the directory specified in the VTK CMake variable CMAKE_INSTALL_PREFIX, which is /usr/local by default),
@@ -440,6 +446,18 @@ SCI_ARG_WITH(uuid,
                  Use UUID tools on IRIX or from ext2fs development tools on GNU/linux (SCIRun2 only, default).  Installing the ext2fs package on GNU/Linux is recommended.),
   [sci_required_uuid=yes],
   [with_uuid=""])
+SCI_ARG_WITH(boost,
+  AC_HELP_STRING(--with-boost=DIR,
+                 Use the Boost in DIR),
+  [with_boost="$withval"
+   sci_required_boost=yes],
+  [with_boost=""])
+SCI_ARG_WITH(loki,
+  AC_HELP_STRING(--with-loki=DIR,
+                 Use the Loki in DIR),
+  [with_loki="$withval"
+   sci_required_loki=yes],
+  [with_loki=""])
 
 
 
@@ -502,6 +520,11 @@ SCI_ARG_ENABLE(package,
                  example: --enable-package='BioPSE Teem'),
   [package="$enableval"],
   [package=""])
+SCI_ARG_ENABLE(dataflow,
+  AC_HELP_STRING(--disable-dataflow,
+                 do not build Dataflow),
+  [sci_required_dataflow=no],
+  [sci_required_dataflow=yes])
 SCI_ARG_ENABLE(exename,
   AC_HELP_STRING(--enable-exename=<name>,
                  Use name for executable name instead of the default: scirun),
@@ -522,6 +545,11 @@ SCI_ARG_ENABLE(assertion-level,
                  Use assertion level N (0-3)),
   [enable_assertion_level="$enableval"],
   [enable_assertion_level=${enable_assertion_level=3}])
+SCI_ARG_ENABLE(scinew-line-numbers,
+  AC_HELP_STRING(--enable-scinew-line-numbers,
+                 Have SCI malloc store the file and line that calls 'scinew'),
+  [enable_scinew_line_numbers="yes"],
+  [enable_scinew_line_numbers="no"])
 SCI_ARG_ENABLE(throw-level,
   AC_HELP_STRING(--enable-throw-level=N,
                  Use throw level N (0-3)),
@@ -534,6 +562,13 @@ SCI_ARG_ENABLE(scirun2,
    [SCI_SET_PACKAGE_CHECKS(SCIRun2, $host)]
   ],
   [enable_scirun2=${enable_scirun2='no'}])
+SCI_ARG_ENABLE(plume,
+  AC_HELP_STRING(--enable-plume,
+                 Build Plume (based on SCIRun 2)),
+  [enable_plume="$enableval"
+   [SCI_SET_PACKAGE_CHECKS(Plume, $host)]
+   ],
+  [enable_plume=${enable_plume='no'}])
 SCI_ARG_ENABLE(rath,
   AC_HELP_STRING(--enable-rpath,
                  Use the default runtime library search path),
@@ -595,13 +630,22 @@ myargs=`echo $args | sed 's%\^% %g'`
 ## Cut off the /configure from the configure command (eg: ../src/configure)
 path_to_src=`echo $0 | sed 's/\/configure//'`
 
+ 
+BUILD_DATAFLOW="$sci_required_dataflow"
+if test "$sci_required_dataflow"; then
+  DEF_BUILD_DATAFLOW="#define BUILD_DATAFLOW"
+fi
+AC_SUBST(DEF_BUILD_DATAFLOW)
+AC_SUBST(BUILD_DATAFLOW)
+sci_defs_files="$sci_defs_files include/sci_defs/dataflow_testdefs.h"
+
+
 if test "$package" = "all"; then
   AC_MSG_RESULT(Enabling all the packages in your SCIRun/src/Packages directory.)
   _sci_tmp=`ls $path_to_src/Packages`
   package=`echo $_sci_tmp | sed 's/CVS //g'`
   AC_MSG_RESULT(Packages include $package)
 fi
-
 PACKAGE_DIRS=""
 for i in $package; do
    PACKAGE_DIRS=$PACKAGE_DIRS" Packages/$i"
@@ -755,6 +799,41 @@ fi
 AC_MSG_RESULT($NUM_CPUS)
 
 
+##  ----------  determine if this is a 32 or 64 bit machine
+AC_LANG([C])
+
+MY_TEMP=$CPPFLAGS
+
+AC_CHECK_SIZEOF(void*)
+
+case $ac_cv_sizeof_voidp in
+ 8)
+  NBITS=64
+  ;;
+ 4)
+  NBITS=32
+  ;;
+ *)
+  SCI_MSG_ERROR([
+  This machine has some strange sizeof(void*): $ac_cv_sizeof_void_p.
+  Usually this means that your LD_LIBRARY_PATH is set incorrectly for the 
+  compiler you are using.  To verify that this is the problem you will need 
+  to copy the C++  program from the end of the config.log file and run the 
+  compile command which is just before it in config.log.  Run the executable 
+  and see what error message you get. You can also just fix your 
+  LD_LIBRARY_PATH if you know what is wrong with it.
+  Exiting due to size of void* problem! Read above warnings!])
+  ;;
+esac
+
+# the next two lines were moved to a later stage to allow us to change this default based on --enable-32/64bit
+#AC_SUBST(NBITS)
+#sci_defs_files="$sci_defs_files include/sci_defs/bits_testdefs.h"
+
+## --------------
+
+AC_LANG([C++])
+
 if test "$CC" = ""; then
   # Apparently AC_PROG_CC will set CFLAGS to "-O2 -g" if you don't specify
   # its value first, so...
@@ -839,13 +918,14 @@ else
   fi
 fi
 
-AC_MSG_CHECKING(host system word length)
+AC_MSG_CHECKING(target build word length)
 if test "$enable_64bit" = "yes"; then
   AC_MSG_RESULT(64 bits)
   if test "$enable_32bit" = "yes"; then
     SCI_MSG_ERROR(Both 64 and 32 bit compiles specified.)
   fi
 else
+  enable_32bit="yes"
   AC_MSG_RESULT(32 bits)
 fi
 
@@ -877,7 +957,7 @@ case $host in
 	;;
 	
      *-aix*)
-        # On AIX, don't automatically generate .so's.  Make .a's and then
+        # On AIX, doesn't automatically generate .so's.  Make .a's and then
         # later we will make .so's from them.
 	SO_OR_ARCHIVE_EXTENSION=a
 	;;
@@ -891,7 +971,6 @@ esac
 
 ASSERTION_LEVEL="$enable_assertion_level"
 THROW_LEVEL="$enable_throw_level"
-
 extra_cflags="";
 
 if test "$output_avg_walltime" != "no"; then
@@ -912,6 +991,13 @@ else
   DEF_MALLOC="#define DISABLE_SCI_MALLOC 1"
 fi
 
+if test "$enable_scinew_line_numbers" = "yes"; then
+  DEF_MALLOC_LINENUMBERS="#define USE_TAG_LINENUM 1"
+else
+  DEF_MALLOC_LINENUMBERS=""
+fi
+
+
 AC_SUBST(SO_OR_ARCHIVE_EXTENSION)
 AC_SUBST(NOPRINTDIR)
 AC_SUBST(PACKAGE_DIRS)
@@ -921,6 +1007,7 @@ AC_SUBST(LARGESOS)
 AC_SUBST(TIME_IMPL)
 
 AC_SUBST(DEF_MALLOC)
+AC_SUBST(DEF_MALLOC_LINENUMBERS)
 sci_defs_files="$sci_defs_files include/sci_defs/malloc_testdefs.h"
 
 AC_SUBST(ASSERTION_LEVEL)
@@ -1025,13 +1112,23 @@ case $host in
     CPP="$CC"
     CXXCPP="$CXX -c"
     ##  this WOFF is required for configure 
-    WOFF=" -woff 3625,3303,1047,1209,1110 -Wl,-woff,84 -woff 1342"
-    CPPFLAGS=" $WOFF -LANG:std"
-    if test "$enable_64bit" = "yes"; then
-      BINARYFLAGS="-64 -mips4"
+    if test "$USING_74" = "yes"; then
+        WOFF=" -woff 3625,3303,1047,1209,1110 -Wl,-woff,84 -woff 1342"
     else
+        WOFF=" -woff 3303,1047,1209,1110 -Wl,-woff,84 -woff 1342"
+    fi
+    CPPFLAGS=" $WOFF -LANG:std"
+
+    if test "$enable_64bit" = "yes"; then
+      if test $NBITS = "32"; then
+        BINARYFLAGS="-64 -mips4"
+      fi
+      NBITS=64
+    else
+      NBITS=32
       BINARYFLAGS="-n32 -mips4"
     fi
+
     FFLAGS="$BINARYFLAGS $extra_cflags"
     CFLAGS="-fullwarn -xansi -LANG:std $BINARYFLAGS $extra_cflags"
     CXXFLAGS="$CFLAGS"
@@ -1146,7 +1243,17 @@ case $host in
   *-darwin*)
     ac_objext=o
     LDRUN_PREFIX="-L"
-    CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -fcoalesce-templates -Wno-long-double "
+
+#####
+# GCC_TEST
+#####
+     SCI_CHECK_VERSION($CC,--version,4.0.0,GCC_VERSION=4.0,)
+
+    if test "$GCC_VERSION" = "4.0"; then
+       CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -Wno-long-double "
+    else
+       CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -Wno-long-double -fcoalesce-templates"
+    fi   
     CXXFLAGS="$CXXFLAGS $CFLAGS"
 
     if test $NEED_OSX_HACK = yes; then
@@ -1156,6 +1263,24 @@ case $host in
     else
 	SOFLAGS="-dynamiclib"
     fi
+    case $F77 in
+      *g77*)
+         # extra_fflags has array checking if in debug mode.
+         FFLAGS="$FFLAGS $extra_cflags $extra_fflags"
+
+         # put '_' at end and two '_'s if there is a '_' in name.
+         # This flag is used by the genfspec.pl script in Uintah (generated
+         # from fspec.pl.in).
+         FORTRAN_UNDERSCORE=linux
+         ;;
+      *gfortran*)
+         FFLAGS="$FFLAGS $extra_cflags"   
+         FORTRAN_UNDERSCORE=linux
+         ;;        
+      *)
+         FFLAGS="$FFLAGS $extra_cflags"
+         ;;
+    esac
     AC_SUBST(NEED_OSX_HACK)
     AC_SUBST(DEF_NEED_OSX_HACK)
     ;;
@@ -1191,6 +1316,10 @@ case $host in
          # from fspec.pl.in).
          FORTRAN_UNDERSCORE=linux
          ;;
+      *gfortran*)
+         FFLAGS="$FFLAGS $extra_cflags"   
+         FORTRAN_UNDERSCORE=linux
+         ;;        
       *)
          FFLAGS="$FFLAGS $extra_cflags"
          ;;
@@ -1212,16 +1341,40 @@ case $host in
       CXXFLAGS=" -Wall"
     fi
 
-    if test "$enable_64bit" = "yes"; then
-       FFLAGS="-fPIC $FFLAGS"
+    # fPIC option for ppc architecture
+    if test `uname -m` = "ppc"; then
        CFLAGS="-fPIC $CFLAGS"
        FFLAGS="-fPIC $FFLAGS"
        CXXFLAGS="-fPIC $CXXFLAGS"
     fi
 
+    if test "$enable_64bit" = "yes"; then
+       CFLAGS="-fPIC $CFLAGS"
+       FFLAGS="-fPIC $FFLAGS"
+       CXXFLAGS="-fPIC $CXXFLAGS"
+    fi
+
+    AC_MSG_CHECKING(if special 32/64 bits flags required)
+    if test "$enable_32bit" = "yes" -a $NBITS=64; then
+       NBITS=32
+       CFLAGS="-m32 $CFLAGS"
+       CXXFLAGS="-m32 $CXXFLAGS"
+       AC_MSG_RESULT(-m32)
+    else 
+      if test "$enable_64bit" = "yes" -a $NBITS=32; then
+        NBITS=64
+        CFLAGS="-m64 $CFLAGS"
+        CXXFLAGS="-m64 $CXXFLAGS"
+        AC_MSG_RESULT(-m64)
+      else 
+        AC_MSG_RESULT(no)
+      fi
+    fi
+
     if test "$CC" != "pgcc"; then
       SCI_CHECK_VERSION($CC,--version,2.95.3,,
         echo configure: error: wrong $CC version.; exit)
+
       if test $sci_required_fortran = "yes"; then
         SCI_CHECK_VERSION($F77,--version,0.5.25,,
           echo configure: error: wrong $F77 version.; exit)
@@ -1247,6 +1400,10 @@ case $host in
          # from fspec.pl.in).
 	 FORTRAN_UNDERSCORE=linux
          ;;
+      *gfortran*)
+         FFLAGS="$FFLAGS $extra_cflags" 
+         FORTRAN_UNDERSCORE=linux 
+         ;;       
       *)
          FFLAGS="$FFLAGS $extra_cflags"
          ;;
@@ -1257,6 +1414,12 @@ case $host in
     NEED_SONAME=yes
     ;;
 esac
+
+# now that we know which NBITS the user wants, we can save this info
+AC_SUBST(NBITS)
+sci_defs_files="$sci_defs_files include/sci_defs/bits_testdefs.h"
+
+###
 
 AC_SUBST(WIN_DLLFLAGS)
 
@@ -1386,9 +1549,19 @@ if test "$IS_WIN" = "yes"; then
   echo "skipping bison, lex, etags, perl tests"
 else
 
+##  --  Plume ----------------------
+
+if test "$enable_plume" = "yes"; then
+   BUILD_PLUME="yes"
+else
+   BUILD_PLUME="no"
+fi
+AC_SUBST(BUILD_PLUME)
+
 ## test for bison. yacc is not sufficient as it has no -o option.
+## Only need for SCIRun2 currently.
 AC_CHECK_PROG(YACC, bison, bison, nobison, $PATH /usr/bin)
-if test "$YACC" = "nobison"; then
+if test "$enable_scirun2" = "yes" -a "$YACC" = "nobison"; then
   echo "configure: error: bison is required, and was not found in your PATH."
   echo "                  Please add it to your PATH, or set the environment"
   echo "                  variable YACC to the appropriate bison executable,"
@@ -1400,7 +1573,7 @@ AC_PROG_LEX
 LEX_LIB_FLAG="$LEXLIB"
 AC_SUBST(LEX_LIB_FLAG)
 
-if test "$LEX" != "flex" -a "$LEX" != "lex"; then
+if test "$enable_scirun2" = "yes" -a "$LEX" != "flex" -a "$LEX" != "lex"; then
   echo "configure: error: flex or lex is required, and was not found in your PATH."
   echo "                  Please add it to your PATH, or set the environment"
   echo "                  variable LEX to the appropriate lex executable,"
@@ -1461,36 +1634,7 @@ sci_defs_files="$sci_defs_files include/sci_defs/template_testdefs.h"
 
 ##  set the default language after the build tools are found
 AC_LANG([C])
-##  ----------  See if this is a 64 bit machine --------------------------
 
-MY_TEMP=$CPPFLAGS
-
-AC_CHECK_SIZEOF(void*)
-
-case $ac_cv_sizeof_voidp in
- 8)
-  NBITS=64
-  ;;
- 4)
-  NBITS=32
-  ;;
- *)
-  SCI_MSG_ERROR([
-  This machine has some strange sizeof(void*): $ac_cv_sizeof_void_p.
-  Usually this means that your LD_LIBRARY_PATH is set incorrectly for the 
-  compiler you are using.  To verify that this is the problem you will need 
-  to copy the C++  program from the end of the config.log file and run the 
-  compile command which is just before it in config.log.  Run the executable 
-  and see what error message you get. You can also just fix your 
-  LD_LIBRARY_PATH if you know what is wrong with it.
-  Exiting due to size of void* problem! Read above warnings!])
-  ;;
-esac
-
-AC_SUBST(NBITS)
-sci_defs_files="$sci_defs_files include/sci_defs/bits_testdefs.h"
-
-AC_LANG([C++])
 #########################################################################
 ## Make sure number of bit build for Thirdparty and SCIRun compile match
 ##
@@ -1575,6 +1719,10 @@ if test -z "$thirdparty"; then
   rtrt_tp_version=1.0.0
   rtrt_tp_path=$_sci_tp_base/rtrt/Thirdparty/$rtrt_tp_version/$_sci_tp_subdir
 
+  # extra thirdparty code for plume
+  plume_tp_version=1.0.0
+  plume_tp_path=$_sci_tp_base/plume/Thirdparty/$plume_tp_version/$_sci_tp_subdir
+
   AC_MSG_RESULT(Using default thirdparty directory $sci_thirdparty_dir)
 fi
 
@@ -1649,6 +1797,7 @@ esac
 
 ##  ----------------------------------------------------------------------
 
+AC_LANG([C++])
 # Each of the HAVE_??? statements for these header files is found
 # in include/sci_defs/config_testedefs.h
 AC_CHECK_HEADERS(limits.h sys/select.h unistd.h sys/time.h ext/algorithm stdint.h inttypes.h)
@@ -1675,27 +1824,27 @@ AC_SUBST(M_LIB_DIR_FLAG)
 if test "$IS_WIN" = "yes"; then
   echo "skipping X test"
 else
-_sci_optional=required
-if test "$with_X11_lib"; then
-  _x_lib_dir="$with_X11_lib"
-  _x_inc_dir="$with_X11_lib/../include"
-  _sci_optional=specific
-else 
-  _x_lib_dir="/usr/X11R6"
-  BASE_LIB_PATH(_x_lib_dir,$_x_lib_dir)
-  _x_inc_dir="/usr/X11R6/include"
-fi
+  _sci_optional=required
+  if test "$with_X11_lib"; then
+    _x_lib_dir="$with_X11_lib"
+    _x_inc_dir="$with_X11_lib/../include"
+    _sci_optional=specific
+  else 
+    _x_lib_dir="/usr/X11R6"
+    BASE_LIB_PATH(_x_lib_dir,$_x_lib_dir)
+    _x_inc_dir="/usr/X11R6/include"
+  fi
 
 
-SCI_TRY_LINK(X,X libraries and headers,X11/Xlib.h,
-             $_x_inc_dir,X11 Xext Xaw Xi Xt Xmu,$_x_lib_dir,,,$_sci_optional)
+  SCI_TRY_LINK(X,X libraries and headers,X11/Xlib.h,
+               $_x_inc_dir,X11 Xext Xaw Xi Xt Xmu,$_x_lib_dir,,,$_sci_optional)
 
-if test "$X_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
-  AC_MSG_WARN("$X_LIB_DIR_FLAG")
-  AC_MSG_WARN("flag for X has been changed to")
-  X_LIB_DIR_FLAG="-L$LIB_DIR_X"
-  AC_MSG_WARN("$X_LIB_DIR_FLAG")
-fi
+  if test "$X_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
+    AC_MSG_WARN("$X_LIB_DIR_FLAG")
+    AC_MSG_WARN("flag for X has been changed to")
+    X_LIB_DIR_FLAG="-L$LIB_DIR_X"
+    AC_MSG_WARN("$X_LIB_DIR_FLAG")
+  fi
 
 fi # end "$IS_WIN" = "yes"
 
@@ -1852,7 +2001,7 @@ AC_LANG(C++)
 
 if test "$IS_WIN" = "yes"; then
   SCI_TRY_LINK(GL,OpenGL libraries and headers,windows.h GL/gl.h GL/glu.h,
-               $_sci_inc,glu32 opengl32 $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
+               $_sci_inc,glu32 opengl32 gdi32 $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
 else
   SCI_TRY_LINK(GL,OpenGL libraries and headers,GL/gl.h GL/glu.h GL/glx.h,
 	       $_sci_inc,GLU GL $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
@@ -2075,7 +2224,17 @@ fi
 
 if test -f "$_sci_lib/tclConfig.sh"; then 
   . $_sci_lib/tclConfig.sh; 
+  if test ! -d $TCL_SRC_DIR; then
+     # Catch the case of the SCIRun 3P being copied to a new location.
+     AC_MSG_WARN(The TCL src dir specified in the $sci_lib/tclConfig.sh file)
+     AC_MSG_WARN(is not valid.  This usually means that this SCIRun Thirdparty)
+     AC_MSG_WARN(was copied to and not built in its current location.)
+     AC_MSG_ERROR(This is not allowed.  Please rebuild the 3P or contact)
+     AC_MSG_ERROR(scirun-develop@sci.utah.edu for more help.)
+  fi
   _sci_tcl_inc="$_sci_inc $TCL_SRC_DIR/generic"
+else
+  _sci_tcl_inc="$_sci_inc"  
 fi
 
 SCI_TRY_LINK(TCL,tcl library and headers,tcl.h tclPort.h tclMath.h tclInt.h,
@@ -2099,6 +2258,8 @@ AC_SUBST(INC_TCL_H)
 if test -f "$_sci_lib/tkConfig.sh"; then 
   . $_sci_lib/tkConfig.sh; 
   _sci_tk_inc="$_sci_inc $TK_SRC_DIR/generic $TK_SRC_DIR/unix"
+else
+  _sci_tk_inc="$_sci_inc"  
 fi
 
 # Note: TK_DEFS (used below to help resolve tk issues) comes from tkConfig.sh
@@ -2159,6 +2320,18 @@ AC_SUBST(INC_BLT_H)
 CORRECT_TCL_VERSION=no
 CORRECT_TK_VERSION=no
 CORRECT_ITCL_VERSION=no
+
+# if we don't have the tcl/tkConfig.sh files, we can grab the version number from the header file
+if ! test -f "$_sci_lib/tclConfig.sh"; then 
+  TCL_VERSION=`grep TCL_VERSION $sci_thirdparty_include/tcl.h | head -n 1 | awk '{print $3}' | sed 's,\",,g'`
+  TCL_PATCH_LEVEL=".`grep TCL_RELEASE_SERIAL $sci_thirdparty_include/tcl.h | head -n 1 | awk '{print $3}'`"
+  TCL_PREFIX=$sci_thirdparty_dir
+fi
+
+if ! test -f "$_sci_lib/tkConfig.sh"; then 
+  TK_VERSION=`grep TK_VERSION $sci_thirdparty_include/tk.h | head -n 1 | awk '{print $3}' | sed 's,\",,g'`
+  TK_PATCH_LEVEL=".`grep TK_RELEASE_SERIAL $sci_thirdparty_include/tk.h | head -n 1 | awk '{print $3}'`"
+fi
 
 SCI_CHECK_VAR_VERSION(Tcl,$TCL_VERSION$TCL_PATCH_LEVEL,8.3.2,,continue)
 SCI_CHECK_VAR_VERSION(Tk,$TK_VERSION$TK_PATCH_LEVEL,8.3.2,,continue)
@@ -2426,6 +2599,37 @@ AC_SUBST(PNG_LIB_DIR_FLAG)
 AC_SUBST(INC_PNG_H)
 AC_SUBST(DEF_PNG)
 
+
+##  --  check if exceptions work properly --------------------------------
+
+AC_MSG_CHECKING(for working exceptions.)
+cat > conftest-exc.cc <<EOF
+
+    #include <stdio.h>
+
+    int main() {       
+      try {
+        throw "hello world";        
+      }
+      catch( const char* e ) {
+        printf("error is %s\n", e);
+      }
+    }
+EOF
+    $CXX -o conftest-exc conftest-exc.cc
+    exc_error=`./conftest-exc >& the_void`
+    if test "$?" != "0"; then
+       AC_MSG_RESULT(not found)
+       enable_exceptions_crash=1
+    else
+       AC_MSG_RESULT(yes)
+       enable_exceptions_crash=0
+    fi
+
+    rm -r conftest-exc.cc conftest-exc the_void
+EXCEPTIONS_CRASH="$enable_exceptions_crash"
+AC_SUBST(EXCEPTIONS_CRASH)
+
 ##  --  search for mpeg  -------------------------------------------------
 
 _sci_optional=optional
@@ -2459,7 +2663,6 @@ AC_SUBST(DEF_MPEG)
 # Default values:
 _sci_optional=optional
 _sci_lib="$sci_thirdparty_lib"
-_sci_inc="$sci_thirdparty_include"
 
 if test "$with_magick" = "yes"; then
   # If --with-magick is specified without a parameter, then it makes it required
@@ -2469,12 +2672,24 @@ else
     # If --with-magick has a parameter, then use it
     _sci_lib="$with_magick/lib"
     BASE_LIB_PATH(_sci_lib,$_sci_lib)
-    _sci_inc="$with_magick/include"
     _sci_optional=specific
   fi 
 fi
 
 AC_MSG_CHECKING(for $_sci_optional ImageMagick)
+
+if test ! -e $_sci_lib/../bin/Magick-config; then
+   AC_MSG_WARN(Magick-config on in SCIRun Thirdparty installation.  Going to)
+   AC_MSG_WARN(try to find it based on the location of the 'convert' program.)
+   # ImageMagick not in SCIRun Thirdparty... Therefore it probably is
+   # just in /usr/lib...
+   MAGICK_DIR=`which convert`
+   if test -z "$MAGICK_DIR"; then
+      _sci_lib=$MAGICK_DIR/../lib
+   else
+      AC_MSG_WARN('convert' program not found...)
+   fi
+fi
 
 found_magic_config="no"
 
@@ -2561,6 +2776,7 @@ AC_SUBST(INC_UNP_H)
 # Always check for fortran, since we now always try to enable blas
 
 F_LIB_FLAG=""
+F_LIB_DIR_FLAG=""
 
 _sci_lib=
 _sci_inc=
@@ -2590,6 +2806,10 @@ case $host in
     # Linux Library Check
     if test "$F77" = "pgf77"; then
       SCI_TRY_LINK(F,fortran libraries,,,pgftnrtl,$_sci_lib,,,$_sci_optional)
+    elif test "$F77" = "gfortran-4.0"; then
+      SCI_TRY_LINK(F,fortran libraries,,,gfortran,$_sci_lib,,,$_sci_optional)
+    elif test "$F77" = "ifort"; then
+      SCI_TRY_LINK(F,fortran libraries,,,ifcore,$_sci_lib,,,$_sci_optional)
     else
       SCI_TRY_LINK(F,fortran libraries,,,g2c,$_sci_lib,,,$_sci_optional)
     fi
@@ -2602,7 +2822,10 @@ case $host in
     if test "$F77" = "xlf"; then
       SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,xlf90,$_sci_lib,,,$_sci_optional)
     else
-      SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,g2c,$_sci_lib,,,$_sci_optional)
+      SCI_TRY_LINK(F,fotran libraries,,$_sci_inc,gfortran,$_sci_lib,,,optional)
+      if test "$HAVE_F" = "no"; then
+            SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,g2c,$_sci_lib,,,$_sci_optional)
+      fi
     fi
     ;;
   *-pc-mingw*)
@@ -2615,6 +2838,7 @@ case $host in
 esac
 
 AC_SUBST(F_LIB_FLAG)
+AC_SUBST(F_LIB_DIR_FLAG)
 
 ##  --  search for Camal (Sandia meshing library) ------------------------
 
@@ -2637,7 +2861,14 @@ if test "$_sci_optional" != "optional" && test "$HAVE_F" != "yes"; then
    AC_MSG_ERROR(Fortran library not found but is required for CAMAL!)
 fi
 
-SCI_TRY_LINK(CAMAL,CAMAL library,,$_sci_inc,CMLTet202,$_sci_lib,$F_LIB_FLAG,,$_sci_optional)
+if test "$IS_OSX" = "yes"; then
+  SCI_TRY_LINK(CAMAL,CAMAL library,,$_sci_inc,CMLTet210 CMLUtl210,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,$_sci_optional)
+  if test "$HAVE_CAMAL" = "yes"; then
+    CAMAL_LIB_DIR_FLAG="$CAMAL_LIB_DIR_FLAG -Wl,-read_only_relocs,warning -single_module"
+  fi
+else
+  SCI_TRY_LINK(CAMAL,CAMAL library,,$_sci_inc,CMLTet202,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,$_sci_optional)
+fi
 
 if test "$HAVE_CAMAL" = "yes"; then
   DEF_CAMAL="#define HAVE_CAMAL 1"
@@ -2732,25 +2963,32 @@ if test "$HAVE_BLAS" != "yes"; then
 	  DEF_CBLAS="#define HAVE_CBLAS 1"
 	  AC_SUBST(DEF_CBLAS)
        else
-          SCI_TRY_LINK(BLAS,blas and cblas libraries-2,cblas.h,
-             $_sci_inc,blas,$_sci_lib,$F_LIB_FLAG,,optional)
-          if test "$HAVE_BLAS" = "yes"; then
-             HAVE_CBLAS=yes
-	     AC_SUBST(HAVE_CBLAS)
-	     DEF_CBLAS="#define HAVE_CBLAS 1"
-	     AC_SUBST(DEF_CBLAS)
-          else
-             SCI_TRY_LINK(BLAS,blas library,,,blas,$_sci_lib,$F_LIB_FLAG,,optional)
-             if test "$HAVE_BLAS" = "no"; then
-	        SCI_TRY_LINK(BLAS,optional fblas library,,,
-			     fblas,$_sci_lib,$F_LIB_FLAG,,optional)
+          SCI_TRY_LINK(BLAS,blas and scs libraries-2,cblas.h,
+            $_sci_inc,blas scs_mp,$_sci_lib,$F_LIB_FLAG,,optional)
+          if test "$HAVE_BLAS" = "no"; then
+             #scs library should be used on the SGI altix
+             #SCI_TRY_LINK(BLAS,blas and scs libraries-2,cblas.h,
+             #   $_sci_inc,blas scs_mp,$_sci_lib,$F_LIB_FLAG,,optional)
+             SCI_TRY_LINK(BLAS,blas and cblas libraries-2,cblas.h,
+               $_sci_inc,blas,$_sci_lib,$F_LIB_FLAG,,optional)
+             if test "$HAVE_BLAS" = "yes"; then
+                HAVE_CBLAS=yes
+                AC_SUBST(HAVE_CBLAS)
+                DEF_CBLAS="#define HAVE_CBLAS 1"
+                AC_SUBST(DEF_CBLAS)
              else
-                # Verify it was in the right spot
-                if test "$_sci_specific" = "yes"; then
-                  SCI_TRY_LINK(BLAS,blas library,,,blas,$_sci_lib,$F_LIB_FLAG,,specific)
+                SCI_TRY_LINK(BLAS,blas library,,,blas,$_sci_lib,$F_LIB_FLAG,,optional)
+                if test "$HAVE_BLAS" = "no"; then
+	           SCI_TRY_LINK(BLAS,optional fblas library,,,
+		   	     fblas,$_sci_lib,$F_LIB_FLAG,,optional)
+                else
+                   # Verify it was in the right spot
+                   if test "$_sci_specific" = "yes"; then
+                     SCI_TRY_LINK(BLAS,blas library,,,blas,$_sci_lib,$F_LIB_FLAG,,specific)
+                   fi
                 fi
              fi
-	  fi
+          fi
        fi
        ;;
   esac
@@ -2908,7 +3146,7 @@ if test "$sci_required_mpi" = "yes"; then
         if test "$HAVE_MPI" != "yes"; then
           # Try without pmpi (and with pthreads) (for the newer version
           # of lam mpi.
-          # Use -DMPIPP_H soe we don't include mpi++.h where we don't want it.
+          # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
 
           SCI_TRY_LINK(MPI,mpi library and header-2,mpi.h,
           $_sci_inc /usr/include/mpi,mpi lam util pthread,$_sci_lib,-DMPIPP_H,,optional)
@@ -3195,7 +3433,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
     fi
 
 # For petsc 2.2 use this line below:  petsc petscvec petscmat petscdm petscsnes petscts petscksp,
-# Use -DMPIPP_H soe we don't include mpi++.h where we don't want it.
+# Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
     SCI_TRY_LINK(PETSC_UNI,
                  petsc-uni libraries and headers,
                  petsc.h,
@@ -3210,7 +3448,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
       DEF_PETSC_UNI="#define PETSC_UNI 1"
     else
     # Give it a shot on the old petsc-uni version
-      SCI_TRY_LINK(PETSC-UNI,
+      SCI_TRY_LINK(PETSC_UNI,
                    petsc libraries and headers (old),
                    petsc.h,
                    $_sci_inc /usr/include/petsc,
@@ -3272,25 +3510,60 @@ if test "$sci_required_insight" = "yes"; then
   fi
 
   if test -a "$dir/ITKConfig.cmake"; then
-    INC_INSIGHT_H="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/ -I/g' | sed 's/
-//'`"
-    insight_libs_dir="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS \"/;/' | sed 's/\")//' | sed 's/;//g' | sed 's/
-//'`"
+    INC_INSIGHT_H="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/ -I/g' | tr -d '\r'`"
+    insight_libs_dir="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS \"/;/' | sed 's/\")//' | sed 's/;//g' | tr -d '\r'`"
     INSIGHT_LIB_DIR_FLAG="$LDRUN_PREFIX$insight_libs_dir -L$insight_libs_dir"
-    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon  -litkvnl -litkvnl_algo -litknetlib -litksys -lITKDICOMParser -litkzlib"
+    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon  -litkvnl -litkvnl_algo -litknetlib -litksys -lITKDICOMParser"
 
-    INSIGHT_VERSION_MINOR="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_VERSION_MINOR' | sed 's/SET(ITK_VERSION_MINOR \"//' | sed 's/\")//' | sed 's/
-//'`"
-    INSIGHT_VERSION_MAJOR="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_VERSION_MAJOR' | sed 's/SET(ITK_VERSION_MAJOR \"//' | sed 's/\")//' | sed 's/
-//'`"
-    if test "$INSIGHT_VERSION_MAJOR" = "2"; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -lITKNrrdIO -litktiff -litkjpeg8 -litkjpeg12 -litkjpeg16"
-    elif test "$INSIGHT_VERSION_MINOR" = "9"; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff -litkjpeg8 -litkjpeg12 -litkjpeg16"
-    elif test "$INSIGHT_VERSION_MINOR" = "8" || test "$INSIGHT_VERSION_MINOR" = "6"; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff -litkjpeg"
-    elif test "$INSIGHT_VERSION_MINOR" = "4"; then
+    if test -a "$insight_libs_dir/libitkzlib.$SO_OR_ARCHIVE_EXTENSION"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkzlib"
+    elif test "$HAVE_Z" = "yes"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $Z_LIB_DIR_FLAG $Z_LIB_FLAG"
+    fi
+
+    if test -a "$insight_libs_dir/libitktiff.$SO_OR_ARCHIVE_EXTENSION"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff"
+    elif test "$HAVE_TIFF" = "yes"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $TIFF_LIB_DIR_FLAG $TIFF_LIB_FLAG"
+    fi
+
+
+    INSIGHT_JPEG_LINKED=no
+
+    if test -a "$insight_libs_dir/libitkjpeg8.$SO_OR_ARCHIVE_EXTENSION"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg8"
+       INSIGHT_JPEG_LINKED=yes
+    elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no" ; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
+       INSIGHT_JPEG_LINKED=yes
+    fi
+
+    if test -a "$insight_libs_dir/libitkjpeg12.$SO_OR_ARCHIVE_EXTENSION"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg12"
+       INSIGHT_JPEG_LINKED=yes
+    elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no" ; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
+       INSIGHT_JPEG_LINKED=yes
+    fi
+
+    if test -a "$insight_libs_dir/libitkjpeg16.$SO_OR_ARCHIVE_EXTENSION"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg16"
+       INSIGHT_JPEG_LINKED=yes
+    elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no" ; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
+       INSIGHT_JPEG_LINKED=yes
+    fi
+
+    if test -a "$insight_libs_dir/libitkjpeg.$SO_OR_ARCHIVE_EXTENSION" && test "$INSIGHT_JPEG_LINKED" = "no"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg"
+       INSIGHT_JPEG_LINKED=yes
+    elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
+       INSIGHT_JPEG_LINKED=yes
+    fi
+
+    if test -a "$insight_libs_dir/libITKNrrdIO.$SO_OR_ARCHIVE_EXTENSION"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -lITKNrrdIO"
     fi
 
     if ! test "$HAVE_PNG" = "yes"; then
@@ -3299,6 +3572,20 @@ if test "$sci_required_insight" = "yes"; then
     else
       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $PNG_LIB_DIR_FLAG $PNG_LIB_FLAG"
     fi
+
+
+#    INSIGHT_VERSION_MINOR="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_VERSION_MINOR' | sed 's/SET(ITK_VERSION_MINOR \"//' | sed 's/\")//' | tr -d '\r'`"
+#    INSIGHT_VERSION_MAJOR="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_VERSION_MAJOR' | sed 's/SET(ITK_VERSION_MAJOR \"//' | sed 's/\")//' | tr -d '\r'`"
+#    if test "$INSIGHT_VERSION_MAJOR" = "2"; then
+#       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -lITKNrrdIO -litktiff -litkjpeg8 -litkjpeg12 -litkjpeg16"
+#    elif test "$INSIGHT_VERSION_MINOR" = "9"; then
+#       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff -litkjpeg8 -litkjpeg12 -litkjpeg16"
+#    elif test "$INSIGHT_VERSION_MINOR" = "8" || test "$INSIGHT_VERSION_MINOR" = "6"; then
+#       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff -litkjpeg"
+#    elif test "$INSIGHT_VERSION_MINOR" = "4"; then
+#       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg"
+#    fi
+
 
 #    INSIGHT_LIB_FLAG="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARIES' | sed 's/SET(ITK_LIBRARIES//' | sed 's/)//' | sed 's/ / -l/g'`" 
 
@@ -3331,6 +3618,7 @@ if test "$sci_required_ptolemyII" = "yes"; then
   AC_MSG_CHECKING(for Java.)
 
   # check for Java
+  # Java version check should go here
   if test -z "$with_java"; then
 
     AC_MSG_WARN(Java is required by the Ptolemy package.)
@@ -3376,6 +3664,7 @@ if test "$sci_required_ptolemyII" = "yes"; then
     PTOLEMY_PATH="$pdir"
     PTOLEMY_CLASSPATH="$PTOLEMY_PATH:/lib/diva.jar:/lib/java_cup.jar:/lib/sootclasses.jar:/lib/jasminclasses.jar:/lib/ptCal.jar:/lib/ptjacl.jar:/lib/jython.jar:/lib/mapss.jar:/lib/saxon7.jar:/ptolemy/ptolemy.jar:/ptolemy/ptsupport.jar:/ptolemy/vergil/vergil.jar:$JAVA_PATH/jre:/lib/rt.jar"
     HAVE_PTOLEMY="yes"
+    DEF_PTOLEMY="#define HAVE_PTOLEMY 1"
   else
     AC_MSG_ERROR(Ptolemy II directory is missing.)
   fi
@@ -3383,6 +3672,7 @@ if test "$sci_required_ptolemyII" = "yes"; then
 fi
 
 AC_SUBST(HAVE_PTOLEMY)
+AC_SUBST(DEF_PTOLEMY)
 AC_SUBST(JAVA_PATH)
 AC_SUBST(PTOLEMY_PATH)
 AC_SUBST(PTOLEMY_CLASSPATH)
@@ -3849,7 +4139,7 @@ if test "$with_teem"; then
     AC_MSG_WARN(Teem is already required - you do not need to specify --with-teem.)
   else
     # If --with-teem has a parameter, then use it
-    _sci_lib="$with_teem"
+    _sci_lib="$with_teem/lib"
     _sci_inc="$with_teem/include"
     BASE_LIB_PATH(_sci_lib,$_sci_lib)
     _sci_optional=specific
@@ -4145,12 +4435,13 @@ sci_defs_files="$sci_defs_files include/sci_defs/qt_testdefs.h"
 
 ##  --  search for ruby  ----------------------------------------------------
 if test "$sci_required_ruby" = "yes"; then
-  _sci_optional=required
+  _sci_optional=optional
 
   if test "$with_ruby" = "yes"; then
     # --with-ruby has been specified without a parameter.
     _sci_lib="$sci_thirdparty_lib"
     _ruby_inc="$sci_thirdparty_include"
+    _sci_optional=required
   else 
    if test "$with_ruby"; then
      #if --with-ruby has been specified with a parameter, then use that parameter
@@ -4161,7 +4452,7 @@ if test "$sci_required_ruby" = "yes"; then
     # configure will also fail unless ruby.h is in a standard path.
     echo "Searching for ruby.h under $with_ruby"
     _ruby_inc=`find $with_ruby -name "ruby.h" -print | sed 's/ruby.h//'`
-    _sci_optional=specific;
+    _sci_optional=specific
    fi
   fi
   
@@ -4186,6 +4477,41 @@ AC_SUBST(INC_RUBY_H)
 AC_SUBST(RUBY_LIB_FLAG)
 AC_SUBST(RUBY_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/ruby_testdefs.h"
+
+##  --  search for tao corba ----------------------------------------------------
+if test "$sci_required_tao" = "yes"; then
+  if test "$with_tao" = "yes"; then
+    # --with-tao has been specified without a parameter.
+    _sci_lib="$sci_thirdparty_lib"
+    _tao_inc="$sci_thirdparty_include"
+  else
+   if test "$with_tao"; then
+    _sci_lib="$with_tao/ace"
+    _tao_inc="$with_tao $with_tao/ace $with_tao/TAO $with_tao/TAO/tao"
+   fi
+  fi
+                                                                                                                                                
+  # Only looking for one .h file... assuming all the rest are in the same place.
+  SCI_TRY_LINK(TAO,tao corba library,pre.h,$_tao_inc,TAO_IORTable TAO_PortableServer TAO_IORInterceptor TAO ACE,$_sci_lib,,,optional)
+                                                                                                                                                
+  if test "$HAVE_TAO" = "yes"; then
+     DEF_TAO="#define HAVE_TAO 1"
+     HAVE_TAO="yes"
+  fi
+                                                                                                                                                
+  if test "$with_tao" && test ! "$DEF_TAO"; then
+    echo
+    AC_MSG_ERROR(One or more of the Tao components are missing.)
+    echo
+  fi
+fi # end sci_required_tao
+                                                                                                                                                
+AC_SUBST(HAVE_TAO)
+AC_SUBST(DEF_TAO)
+AC_SUBST(INC_TAO_H)
+AC_SUBST(TAO_LIB_FLAG)
+AC_SUBST(TAO_LIB_DIR_FLAG)
+sci_defs_files="$sci_defs_files include/sci_defs/tao_testdefs.h"
 
 ##  --  search for vtk  ----------------------------------------------------
 if test "$sci_required_vtk" = "yes"; then
@@ -4308,7 +4634,111 @@ AC_SUBST(DEF_HYPRE)
 AC_SUBST(INC_HYPRE_H)
 AC_SUBST(HYPRE_LIB_FLAG)
 AC_SUBST(HYPRE_LIB_DIR_FLAG)
+
 sci_defs_files="$sci_defs_files include/sci_defs/hypre_testdefs.h"
+
+##  --  search for boost stuff  -------------------------------------------
+if test "$sci_required_boost" = "yes"; then
+  _sci_optional=required
+
+  if test "$with_boost" = ""; then
+    _sci_lib=/usr/local/lib/
+    _sci_inc="/usr/local/include"
+  else 
+  if test "$with_boost" = "yes"; then
+    # --with-boost has been specified without a parameter.
+    _sci_lib=/usr/local/lib/
+    _sci_inc=/usr/local/include
+  else 
+   if test "$with_boost"; then
+     #if --with-boost has been specified with a parameter, then use that parameter
+    _sci_lib="$with_boost/lib"
+    _sci_inc="$with_boost/include"
+    _sci_optional=specific
+   fi
+  fi
+  fi
+  
+  
+  case $host in
+    *linux*)
+       boost_ver=gcc_mt
+       ;;
+    *-darwin*)
+       boost_ver=1_32
+       ;;
+    *)
+       #assume there is no specific version
+       ;;
+  esac
+
+  # Only looking for one .h file... assuming all the rest are in the same place.
+  SCI_TRY_LINK(BOOST,boost library,boost/program_options.hpp,$_sci_inc,boost_program_options-$boost_ver,$_sci_lib,,,$_sci_optional)
+
+  if test "$HAVE_BOOST" = "yes"; then
+     DEF_BOOST="#define HAVE_BOOST"
+     HAVE_BOOST="yes"
+  fi
+  
+  if test "$with_boost" && test ! "$DEF_BOOST"; then
+    echo
+    AC_MSG_ERROR(One or more of the boost components are missing.)
+    echo
+  fi
+fi # end sci_required_boost
+
+
+AC_SUBST(BOOST_LIB_FLAG)
+AC_SUBST(BOOST_LIB_DIR_FLAG)
+AC_SUBST(DEF_BOOST)
+AC_SUBST(INC_BOOST_H)
+
+sci_defs_files="$sci_defs_files include/sci_defs/boost_testdefs.h"
+
+##  --  search for loki stuff  -------------------------------------------
+if test "$sci_required_loki" = "yes"; then
+  _sci_optional=required
+
+  if test "$with_loki" = ""; then
+    _sci_lib=/usr/local/lib/
+    _sci_inc="/usr/local/include"
+  else 
+  if test "$with_boost" = "yes"; then
+    # --with-boost has been specified without a parameter.
+    _sci_lib=/usr/local/lib/
+    _sci_inc=/usr/local/include
+  else 
+   if test "$with_boost"; then
+     #if --with-boost has been specified with a parameter, then use that parameter
+    _sci_lib="$with_loki"
+    _sci_inc="$with_loki"
+    _sci_optional=specific
+   fi
+  fi
+  fi
+  
+  # Only looking for one .h file... assuming all the rest are in the same place.
+   SCI_TRY_LINK(LOKI,loki library,loki/Singleton.h,$_sci_inc,loki,$_sci_lib,,,$_sci_optional)
+
+  if test "$HAVE_LOKI" = "yes"; then
+    DEF_LOKI="#define HAVE_LOKI"
+    HAVE_LOKI="yes"
+  fi
+
+  if test "$with_loki" && test ! "$DEF_LOKI"; then
+    echo
+    AC_MSG_ERROR(One or more of the loki components are missing.)
+    echo
+  fi
+fi # end sci_required_loki
+
+AC_SUBST(LOKI_LIB_FLAG)
+AC_SUBST(LOKI_LIB_DIR_FLAG)
+AC_SUBST(DEF_LOKI)
+AC_SUBST(INC_LOKI_H)
+
+sci_defs_files="$sci_defs_files include/sci_defs/loki_testdefs.h"
+
 
 ##  --  finis flags  ------------------------------------------------
 case $host in

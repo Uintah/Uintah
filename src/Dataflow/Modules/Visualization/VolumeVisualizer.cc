@@ -84,6 +84,8 @@ private:
 
   GuiDouble gui_sampling_rate_hi_;
   GuiDouble gui_sampling_rate_lo_;
+  GuiDouble gui_gradient_min_;
+  GuiDouble gui_gradient_max_;;
   GuiInt gui_adaptive_;
   GuiInt gui_cmap_size_;
   GuiInt gui_sw_raster_;
@@ -100,6 +102,7 @@ private:
   GuiInt gui_multi_level_;
   GuiInt gui_use_stencil_;
   GuiInt gui_invert_opacity_;
+  GuiInt gui_level_flag_;
   GuiInt gui_num_slices_;  // unused except for backwards compatability
 
   VolumeRenderer* volren_;
@@ -119,6 +122,8 @@ VolumeVisualizer::VolumeVisualizer(GuiContext* ctx)
     control_id(-1),
     gui_sampling_rate_hi_(ctx->subVar("sampling_rate_hi")),
     gui_sampling_rate_lo_(ctx->subVar("sampling_rate_lo")),
+    gui_gradient_min_(ctx->subVar("gradient_min")),
+    gui_gradient_max_(ctx->subVar("gradient_max")),
     gui_adaptive_(ctx->subVar("adaptive")),
     gui_cmap_size_(ctx->subVar("cmap_size")),
     gui_sw_raster_(ctx->subVar("sw_raster")),
@@ -135,6 +140,7 @@ VolumeVisualizer::VolumeVisualizer(GuiContext* ctx)
     gui_multi_level_(ctx->subVar("multi_level")),
     gui_use_stencil_(ctx->subVar("use_stencil")),
     gui_invert_opacity_(ctx->subVar("invert_opacity")),
+    gui_level_flag_(ctx->subVar("show_level_flag", false)),
     gui_num_slices_(ctx->subVar("num_slices", false)), // don't save
     volren_(0)
 {}
@@ -230,7 +236,21 @@ VolumeVisualizer::execute()
       !gui_shine_.changed() && !gui_light_.changed() &&
       !gui_blend_res_.changed() && !gui_multi_level_.changed() &&
       !gui_use_stencil_.changed() && !gui_invert_opacity_.changed() &&
-      !gui_num_slices_.changed()) return;
+      !gui_num_slices_.changed() && !gui_level_flag_.changed())
+  {
+    if (tex.get_rep())
+    {
+      for (unsigned int i = 0; i < tex->bricks().size(); i++)
+      {
+	if (tex->bricks()[i]->dirty())
+	{
+	  ogeom->flushViews();
+	  break;
+	}
+      }
+    }
+    return;
+  }
 
   string s;
   gui->eval(id + " hasUI", s);
@@ -300,6 +320,8 @@ VolumeVisualizer::execute()
     gui_num_slices_.set(-1);
   }
   
+  volren_->set_gradient_range(gui_gradient_min_.get(), 
+			      gui_gradient_max_.get());
   volren_->set_sampling_rate(gui_sampling_rate_hi_.get());
   volren_->set_interactive_rate(gui_sampling_rate_lo_.get());
   volren_->set_adaptive(gui_adaptive_.get());

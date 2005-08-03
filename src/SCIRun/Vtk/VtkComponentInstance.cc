@@ -46,11 +46,13 @@
 
 namespace SCIRun {
 
-VtkComponentInstance::VtkComponentInstance(SCIRunFramework* framework,
-                                           const std::string& instanceName,
-                                           const std::string& className,
-                                           vtk::Component* component)
-  : ComponentInstance(framework, instanceName, className), component(component)
+VtkComponentInstance::VtkComponentInstance(
+    SCIRunFramework* framework,
+    const std::string& instanceName,
+    const std::string& className,
+    const sci::cca::TypeMap::pointer &tm,
+    vtk::Component* component)
+  : ComponentInstance(framework, instanceName, className, tm), component(component)
 {
   // See if we have a user-interface...
   if(component->haveUI()){

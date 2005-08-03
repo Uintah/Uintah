@@ -83,6 +83,8 @@ itcl_class SCIRun_Visualization_NrrdTextureBuilder {
 	    -command $n -state disabled -foreground darkgrey
 	pack $bf.b0 $bf.b1 $bf.b2 $bf.b3 $bf.b4 $bf.b5 $bf.b6 $bf.b7 -side left -expand yes\
                 -fill x
+	
+	$this state
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w

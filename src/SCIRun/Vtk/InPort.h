@@ -59,11 +59,11 @@ public:
   virtual ~InPort();
   
   /** Creates a connection to an output port.  Must be defined by a subclass. */
-  virtual void connect(OutPort* port)=NULL;
+  virtual void connect(OutPort* port) = 0;
   
   /** Returns \em true if a connection can be made with the output port \em
       port.  Must be defined by a subclass. */
-  virtual bool accept(OutPort* port)=NULL;
+  virtual bool accept(OutPort* port) = 0;
 
   void update(int flag);  //virtual 
 };

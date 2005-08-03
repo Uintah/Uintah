@@ -49,3 +49,26 @@ interface Loader
 	int shutdown(in float timeout);
 
 }
+
+interface CorbaServices{
+	int registerUsesPort(in string portName, in string portType);
+	int unregisterUsesPort(in string portName);
+	int addProvidesPort(in	string portName, in string portType, in string ior);
+	int removeProvidesPort(in string portName);
+	int check();
+	int done();
+	bool go();
+	string getIOR(in string portName);
+}
+
+
+interface TaoServices {
+  void registerUsesPort(in string portName, 
+  	   	        in string type); 
+
+  void unregisterUsesPort(in string portName);
+  void addProvidesPort(in string portName,
+                       in string type);
+
+  void removeProvidesPort(in string portName);
+}

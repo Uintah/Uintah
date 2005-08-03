@@ -30,6 +30,7 @@
 //    Date   : Tue Jul 13 02:28:09 2004
 
 #include <sstream>
+#include <iostream>
 #include <Core/Volume/VolShader.h>
 #include <Core/Geom/ShaderProgramARB.h>
 
@@ -40,14 +41,14 @@ using std::ostringstream;
 namespace SCIRun {
 
 #define VOL_HEAD \
-"!!ARBfp1.0 \n"
+"!!ARBfp1.0 \n" \
+"ATTRIB t = fragment.texcoord[0]; \n" \
+"TEMP v; \n" \
+"TEMP c; \n"
 
 #define VOL_TAIL \
 "END"
 
-#define VOL_VLUP_HEAD \
-"ATTRIB t = fragment.texcoord[0]; \n" \
-"TEMP v; \n"
 #define VOL_VLUP_1_1 \
 "TEX v, t, texture[0], 3D; \n"
 #define VOL_VLUP_1_4 \
@@ -59,8 +60,7 @@ namespace SCIRun {
 #define VOL_GLUP_2_4 \
 "TEX v.x, t, texture[1], 3D; \n"
 
-#define VOL_TFLUP_HEAD \
-"TEMP c; \n"
+
 #define VOL_TFLUP_1_1 \
 "TEX c, v.x, texture[2], 1D; \n"
 #define VOL_TFLUP_1_4 \
@@ -89,17 +89,27 @@ namespace SCIRun {
 #define VOL_LIT_HEAD \
 "PARAM l = program.local[0]; # {lx, ly, lz, alpha} \n" \
 "PARAM k = program.local[1]; # {ka, kd, ks, ns} \n" \
-"TEMP n; \n"
+"PARAM g = program.local[2]; # {1/gradrange, -gradmin/gradrange, 0, 0} \n" \
+"TEMP n; \n" \
+"TEMP w; \n"
+
+
 #define VOL_LIT_BODY \
-"MAD n, v, 2.0, -1.0; \n" \
-"DP3 n.w, n, n; \n" \
-"RSQ n.w, n.w; \n" \
-"MUL n, n, n.w; \n" \
-"DP3 n.w, l, n; \n" \
-"ABS_SAT n.w, n.w; # two-sided lighting \n" \
-"POW n.z, n.w, k.w; \n" \
-"MAD n.w, n.w, k.y, k.x; \n" \
-"MUL n.z, k.z, n.z; \n"
+"MAD n, v, 2.0, -1.0;		# rescale from [0,1] to [-1, 1]  \n" \
+"DP3 n.w, n, n;			# n.w = x*x + y*y + z*z \n" \
+"RSQ n.w, n.w;			# n.w = 1 / sqrt(x*x+y*y+z*z) \n" \
+"MUL n, n, n.w;			# n = n / length(normal)\n" \
+"DP3 n.w, l, n;			# calculate angle between light and normal. \n" \
+"ABS_SAT n.w, n.w;		# two-sided lighting, n.w = abs(cos(angle))  \n" \
+"TEX w.x, t, texture[1], 3D;	# get the gradient magnitude \n" \
+"MAD_SAT w.xyzw, w.x, g.x, g.y;	# compute saturated weight based on current gradient \n" \
+"MUL w, w, k;       # w.x = weight*ka, w.y = weight*kd, w.z = weight*ks \n " \
+"SUB w.x, k.x, w.y; # w.x = ka - kd*weight \n " \
+"ADD w.x, w.x, k.y; # w.x = ka + kd - kd*weight \n " \
+"POW n.z, n.w, k.w;   # n.z = abs(cos(angle))^ns \n" \
+"MAD n.w, n.w, w.y, w.x; # n.w = abs(cos(angle))*kd+ka\n" \
+"MUL n.z, w.z, n.z; # n.z = weight*ks*abs(cos(angle))^ns \n"
+
 #define VOL_LIT_END \
 "MUL n.z, n.z, c.w;" \
 "MAD c.xyz, c.xyzz, n.w, n.z; \n"
@@ -161,8 +171,7 @@ VolShader::emit(string& s)
   if(blend_!=0 && blend_!=1 && blend_!=2) return true;
   ostringstream z;
   z << VOL_HEAD;
-  z << VOL_VLUP_HEAD;
-  z << VOL_TFLUP_HEAD;
+
   // dim, vsize, and shading
   if(shading_) {
     z << VOL_LIT_HEAD;

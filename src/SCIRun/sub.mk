@@ -34,55 +34,62 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := SCIRun
 
 SRCS     += \
-	$(SRCDIR)/SCIRunFramework.cc \
-	$(SRCDIR)/ComponentDescription.cc \
-	$(SRCDIR)/ComponentInstance.cc \
-	$(SRCDIR)/ComponentModel.cc \
-	$(SRCDIR)/PortDescription.cc \
-	$(SRCDIR)/SCIRunErrorHandler.cc \
-	$(SRCDIR)/PortInstance.cc \
-	$(SRCDIR)/PortInstanceIterator.cc\
-	$(SRCDIR)/CCACommunicator.cc \
-	$(SRCDIR)/resourceReference.cc \
-	$(SRCDIR)/TypeMap.cc
+            $(SRCDIR)/SCIRunFramework.cc \
+            $(SRCDIR)/ComponentDescription.cc \
+            $(SRCDIR)/ComponentInstance.cc \
+            $(SRCDIR)/ComponentModel.cc \
+            $(SRCDIR)/PortDescription.cc \
+            $(SRCDIR)/SCIRunErrorHandler.cc \
+            $(SRCDIR)/PortInstance.cc \
+            $(SRCDIR)/PortInstanceIterator.cc\
+            $(SRCDIR)/CCACommunicator.cc \
+            $(SRCDIR)/resourceReference.cc \
+            $(SRCDIR)/TypeMap.cc \
+            $(SRCDIR)/SCIRunLoader.cc
 
-ifeq ($(HAVE_MPI),yes)
-SRCS += $(SRCS) $(SRCDIR)/SCIRunLoader.cc
+
+SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Internal \
+           $(SRCDIR)/Corba $(SRCDIR)/Tao
+
+ifeq ($(BUILD_DATAFLOW),yes)
+  SUBDIRS += $(SRCDIR)/Dataflow 
 endif
 
+ifeq ($(HAVE_VTK),yes)
+ SUBDIRS += $(SRCDIR)/Vtk
+endif
 
-SUBDIRS := $(SRCDIR)/CCA $(SRCDIR)/Dataflow $(SRCDIR)/Internal $(SRCDIR)/Vtk
 ifeq ($(HAVE_BABEL),yes)
  ifeq ($(HAVE_RUBY),yes)
- SUBDIRS += $(SRCDIR)/Bridge
+  SUBDIRS += $(SRCDIR)/Bridge
  endif
  SUBDIRS += $(SRCDIR)/Babel
 endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 ifeq ($(HAVE_GLOBUS),yes)
-PSELIBS := Core/OS Core/Containers Core/Util Dataflow/XMLUtil \
-	Dataflow/Network Core/GuiInterface Core/CCA/spec \
-	Core/CCA/PIDL Core/CCA/SSIDL \
-	Core/Exceptions Core/TkExtensions Core/Thread \
-	Core/globus_threads Core/CCA/Comm
- ifeq ($(HAVE_RUBY,yes)
-   PSELIBS := $(PSELIBS) Core/CCA/tools/strauss
- endif
+  PSELIBS := Core/OS Core/Containers Core/Util Core/XMLUtil \
+            Core/GuiInterface Core/CCA/spec \
+            Core/CCA/PIDL Core/CCA/SSIDL \
+            Core/Exceptions Core/TkExtensions Core/Init Core/Thread \
+            Core/globus_threads Core/CCA/Comm
 else
-PSELIBS := Core/OS Core/Containers Core/Util Dataflow/XMLUtil \
-	Dataflow/Network Core/GuiInterface Core/CCA/spec \
-	Core/CCA/PIDL Core/CCA/SSIDL \
-	Core/Exceptions Core/TkExtensions Core/Thread Core/CCA/Comm
- ifeq ($(HAVE_RUBY),yes)
-   PSELIBS := $(PSELIBS) Core/CCA/tools/strauss
- endif	
+  PSELIBS := Core/OS Core/Containers Core/Util Core/XMLUtil \
+            Core/GuiInterface Core/CCA/spec \
+            Core/CCA/PIDL Core/CCA/SSIDL \
+            Core/Exceptions Core/Thread \
+            Core/TkExtensions Core/Init Core/CCA/Comm
 endif
 
-LIBS := $(XML_LIBRARY)  
+ifeq ($(BUILD_DATAFLOW),yes)
+ PSELIBS += Dataflow/Network
+endif
+
+LIBS := $(XML_LIBRARY)
 
 ifeq ($(HAVE_RUBY),yes)
- INCLUDES := $(RUBY_INCLUDE) $(INCLUDES)
+ PSELIBS := $(PSELIBS) Core/CCA/tools/strauss
+ INCLUDES := $(RUBY_INCLUDE) $(INCLUDES) 
  LIBS := $(RUBY_LIBRARY) $(LIBS)
 endif
 

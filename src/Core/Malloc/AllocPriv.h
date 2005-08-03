@@ -41,6 +41,7 @@
  */
 
 #include <sci_defs/thread_defs.h>
+#include <sci_defs/malloc_defs.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -56,11 +57,6 @@
 #endif
 #endif
 
-// This is designed to turn on storing of the line number with the
-// Tag struct.  Since it adds additional overhead, we don't want to
-// turn it on by default.
-
-//#define USE_TAG_LINENUM 1
 
 namespace SCIRun {
 

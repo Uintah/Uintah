@@ -53,7 +53,7 @@
 #include <Core/Basis/Constant.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/PointCloudMesh.h>
-#include <Core/Basis/HexTricubicHmtScaleFactors.h>
+#include <Core/Basis/HexTricubicHmt.h>
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
@@ -67,8 +67,8 @@
 
 using namespace SCIRun;
 
-typedef HexVolMesh<HexTricubicHmtScaleFactors<Point> > HVMesh;
-typedef HexTricubicHmtScaleFactors<double> DatBasis;
+typedef HexVolMesh<HexTricubicHmt<Point> > HVMesh;
+typedef HexTricubicHmt<double> DatBasis;
 typedef GenericField<HVMesh, DatBasis, vector<double> > HVField;
 
 using namespace SCIRun;

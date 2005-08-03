@@ -66,8 +66,4 @@ $(SRCDIR)/parser.h: $(SRCDIR)/parser.y
 $(SRCDIR)/parser.cc: $(SRCDIR)/parser.h
 
 SIDL_BUILTINS := $(SRCTOP_ABS)/Core/CCA/SSIDL/
-CFLAGS_SIDLMAIN   := $(CFLAGS) -DSIDL_BUILTINS=\"$(SIDL_BUILTINS)\"
-
-$(SRCDIR)/main.o:       $(SRCDIR)/main.cc
-	$(CXX) $(CFLAGS_SIDLMAIN) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
-
+CXXFLAGS += -DSIDL_BUILTINS=\"$(SIDL_BUILTINS)\"

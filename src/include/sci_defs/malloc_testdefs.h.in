@@ -31,6 +31,7 @@
 #define SCI_MALLOC_DEFS_H
 
 @DEF_MALLOC@
+@DEF_MALLOC_LINENUMBERS@
 
 #endif
 

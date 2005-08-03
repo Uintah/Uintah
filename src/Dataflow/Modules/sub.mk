@@ -44,6 +44,7 @@ SUBDIRS := \
 	$(SRCDIR)/Fields\
 	$(SRCDIR)/Math\
 	$(SRCDIR)/Render\
+	$(SRCDIR)/Time\
         $(SRCDIR)/Visualization\
 #[INSERT NEW CATEGORY DIR HERE]
 

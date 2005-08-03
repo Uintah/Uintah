@@ -188,6 +188,10 @@ DirectMapping::execute()
 			     map_source_to_single_dest_,
 			     exhaustive_search_,
 			     exhaustive_search_max_dist_, np_);
+
+    // Copy the properties from source field.
+    if (fHandle_.get_rep())
+      fHandle_->copy_properties(sfHandle.get_rep());
   }
 
   // Send the data downstream

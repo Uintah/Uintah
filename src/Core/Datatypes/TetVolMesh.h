@@ -891,7 +891,7 @@ TetVolMesh<Basis>::fill_points(Iter begin, Iter end, Functor fill_ftor) {
     ++piter; ++iter;
   }
   points_lock_.unlock();
-  dirty_ = true;
+  //dirty_ = true;
 }
 
 template <class Basis>
@@ -914,7 +914,7 @@ TetVolMesh<Basis>::fill_cells(Iter begin, Iter end, Functor fill_ftor) {
     ++citer; ++iter;
   }
   cells_lock_.unlock();
-  dirty_ = true;
+  //dirty_ = true;
 }
 
 template <class Basis>

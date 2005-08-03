@@ -40,6 +40,7 @@
  *  Copyright (C) 1999 U of U
  */
 
+#include <sci_defs/mpi_defs.h>
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
@@ -54,7 +55,7 @@
 #include <Core/Thread/Runnable.h>
 #include <stdlib.h>
 #include <time.h>
-#include <mpi.h>
+#include <sci_mpi.h>
 
 using namespace SCIRun;
 using namespace std;

@@ -84,8 +84,8 @@ void
 ServicesImpl::removeProvidesPort( const string & name )
 {
   cerr << "removeProvidesPort not implemented yet\n";
-  throw InternalError((string("removeProvidesPort for: ") + name
-		       + " is not implemented yet.").c_str());
+  throw InternalError((string("removeProvidesPort for: ") + name +
+    " is not implemented yet.").c_str(), __FILE__, __LINE__);
 }
 
 void
@@ -93,7 +93,7 @@ ServicesImpl::releasePort( const string & name )
 {
   cerr << "releasePort not implemented yet\n";
   throw InternalError( (string("releasePort for: ") + name
-			+ " is not implemented yet.").c_str() );
+    + " is not implemented yet.").c_str(), __FILE__, __LINE__ );
 }
  
 ComponentID

@@ -47,6 +47,7 @@ SUBDIRS := \
 	$(SRCDIR)/Geometry \
 	$(SRCDIR)/GuiInterface \
 	$(SRCDIR)/ImportExport \
+	$(SRCDIR)/Init \
 	$(SRCDIR)/Malloc \
 	$(SRCDIR)/Math \
 	$(SRCDIR)/OS \
@@ -55,12 +56,12 @@ SUBDIRS := \
 	$(SRCDIR)/Services \
 	$(SRCDIR)/SystemCall \
 	$(SRCDIR)/Thread \
-	$(SRCDIR)/TCLThread \
 	$(SRCDIR)/TkExtensions \
 	$(SRCDIR)/Util \
 	$(SRCDIR)/Volume \
 	$(SRCDIR)/2d \
 	$(SRCDIR)/ICom \
+	$(SRCDIR)/XMLUtil \
 #	$(SRCDIR)/Util/Comm \
 #	$(SRCDIR)/Parts \
 #	$(SRCDIR)/PartsGui \

@@ -35,7 +35,7 @@ ifeq ($(LARGESOS),yes)
 PSELIBS := Core
 else
 PSELIBS := Core/Datatypes Core/Util Core/Containers Core/Persistent Core/Util \
-           Core/Exceptions Core/Thread Core/Geometry Core/Math Core/Geom \
+           Core/Exceptions Core/Init Core/Thread Core/Geometry Core/Math Core/Geom \
 	   Core/ImportExport Core/Basis
 endif
 LIBS := $(XML_LIBRARY) $(M_LIBRARY)
@@ -48,6 +48,11 @@ include $(SCIRUN_SCRIPTS)/program.mk
 PROGRAM := $(SRCDIR)/HexVolFieldToText
 SRCS := $(SRCDIR)/HexVolFieldToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/HexVolToVtk
+SRCS := $(SRCDIR)/HexVolToVtk.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 
 PROGRAM := $(SRCDIR)/PointCloudFieldToText
 SRCS := $(SRCDIR)/PointCloudFieldToText.cc

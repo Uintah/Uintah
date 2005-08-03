@@ -43,9 +43,9 @@
 #include <SCIRun/TypeMap.h>
 #include <SCIRun/CCA/CCAException.h>
 #include <SCIRun/Dataflow/SCIRunComponentModel.h>
+#include <SCIRun/Tao/TaoPortInstance.h>
 #include <iostream>
 #include <Core/Thread/Mutex.h>
-#include <Core/Exceptions/InternalError.h>
 
 using namespace std;
 using namespace SCIRun;
@@ -53,14 +53,15 @@ using namespace SCIRun;
 BridgeComponentInstance::BridgeComponentInstance(SCIRunFramework* framework,
 					   const std::string& instanceName,
 					   const std::string& typeName,
-					   BridgeComponent* component
-)
-  : ComponentInstance(framework, instanceName, typeName), component(component)
+                       const sci::cca::TypeMap::pointer &tm,
+					   BridgeComponent* component)
+  : ComponentInstance(framework, instanceName, typeName, tm), component(component)
 {
-  mutex=new Mutex("getPort mutex");
-  if(!SCIRunComponentModel::gui) {
+  mutex = new Mutex("getPort mutex");
+  if (!SCIRunComponentModel::gui) {
     SCIRunComponentModel::initGuiInterface();
   }
+  comProperties->putBool("bridge", true);
   bmdl = new BridgeModule(component);
 }
 
@@ -106,7 +107,7 @@ sci::cca::Port::pointer BridgeComponentInstance::getCCAPort(const std::string& n
   CCAPortInstance* pr = dynamic_cast<CCAPortInstance*>(iter->second);
   if(pr == NULL)
     return sci::cca::Port::pointer(0);
-  if(pr->porttype != CCAPortInstance::Uses)
+  if(pr->porttype == CCAPortInstance::Provides)
     throw CCAException("Cannot call getPort on a Provides port");
   pr->incrementUseCount();
   if(pr->connections.size() != 1)
@@ -126,7 +127,7 @@ gov::cca::Port BridgeComponentInstance::getBabelPort(const std::string& name)
   if(pr == NULL)
     return 0;
   if(pr->porttype != BabelPortInstance::Uses) {
-    throw InternalError("Cannot call getPort on a Provides port");
+    throw CCAException("Cannot call getPort on a Provides port");
   }
   pr->incrementUseCount();
   if(pr->connections.size() != 1)
@@ -156,6 +157,7 @@ Port* BridgeComponentInstance::getDataflowOPort(const std::string& name)
    return static_cast<Port*>(op);
 }
 
+#if HAVE_VTK
 vtk::Port* BridgeComponentInstance::getVtkPort(const std::string& name)
 {
 
@@ -168,7 +170,6 @@ vtk::Port* BridgeComponentInstance::getVtkPort(const std::string& name)
     return 0;
   mutex->unlock();
   return pr->port;
-
 }
 
 void BridgeComponentInstance::addVtkPort(vtk::Port* vtkport, VtkPortInstance::PortType portT) 
@@ -178,11 +179,12 @@ void BridgeComponentInstance::addVtkPort(vtk::Port* vtkport, VtkPortInstance::Po
 
   iter = ports.find(portName);
   if(iter != ports.end()){
-    throw InternalError("port name conflicts with another one");
+    throw CCAException("port name conflicts with another one");
   }
                                                                                                       
   ports.insert(make_pair(portName, new VtkPortInstance(NULL, vtkport, portT)));
 }
+#endif
 
 void BridgeComponentInstance::releasePort(const std::string& name, const modelT model)
 {
@@ -197,7 +199,6 @@ void BridgeComponentInstance::releasePort(const std::string& name, const modelT 
     
     iter = ports.find(name);
     if(iter == ports.end()){
-      cerr << "Released an unknown port: " << name << '\n';
       throw CCAException("Released an unknown port: "+name);
     }
     cpr = dynamic_cast<CCAPortInstance*>(iter->second);
@@ -214,18 +215,17 @@ void BridgeComponentInstance::releasePort(const std::string& name, const modelT 
   case Babel:
     iter = ports.find(name);
     if(iter == ports.end()){
-      cerr << "Released an unknown port: " << name << '\n';
-      throw InternalError("Released an unknown port: "+name);
+      throw CCAException("Released an unknown port: "+name);
     }
     bpr = dynamic_cast<BabelPortInstance*>(iter->second);
     if(bpr == NULL)
-      throw InternalError("Trying to release a port of the wrong type");
+      throw CCAException("Trying to release a port of the wrong type");
     
     if(bpr->porttype != BabelPortInstance::Uses)
-      throw InternalError("Cannot call releasePort on a Provides port");
+      throw CCAException("Cannot call releasePort on a Provides port");
     
     if(!bpr->decrementUseCount())
-      throw InternalError("Port released without correspond get");
+      throw CCAException("Port released without correspond get");
     break;
 
   case Dataflow:
@@ -233,6 +233,7 @@ void BridgeComponentInstance::releasePort(const std::string& name, const modelT 
     break;
 
   case Vtk:
+  case Tao:
     //We aren't releasing Vtk ports at this point of time
     break;
 
@@ -246,6 +247,7 @@ void BridgeComponentInstance::registerUsesPort(const std::string& portName,
 {
   CCAPortInstance* cpr;
   BabelPortInstance* bpr;
+  TaoPortInstance* tpr;
   map<string, PortInstance*>::iterator iter;
 
   Port* dflowport;
@@ -261,8 +263,7 @@ void BridgeComponentInstance::registerUsesPort(const std::string& portName,
       if(cpr->porttype == CCAPortInstance::Provides)
 	throw CCAException("name conflict between uses and provides ports");
       else {
-	cerr << "registerUsesPort called twice, instance=" << instanceName << ", portName = " << portName << ", portType = " << portType << '\n';
-	throw CCAException("registerUsesPort called twice");
+        throw CCAException("registerUsesPort called twice for " + portName + " " + portType + " " + instanceName);
       } 
     }
     ports.insert(make_pair(portName, new CCAPortInstance(portName, portType, sci::cca::TypeMap::pointer(0), CCAPortInstance::Uses)));
@@ -273,12 +274,12 @@ void BridgeComponentInstance::registerUsesPort(const std::string& portName,
     if(iter != ports.end()){
       bpr = dynamic_cast<BabelPortInstance*>(iter->second);
       if(bpr == NULL)
-	throw InternalError("Trying to register a port of the wrong type");
+	throw CCAException("Trying to register a port of the wrong type");
       if(bpr->porttype == BabelPortInstance::Provides)
-	throw InternalError("name conflict between uses and provides ports");
+	throw CCAException("name conflict between uses and provides ports");
       else {
 	cerr << "registerUsesPort called twice, instance=" << instanceName << ", portName = " << portName << ", portType = " << portType << '\n';
-	throw InternalError("registerUsesPort called twice");
+	throw CCAException("registerUsesPort called twice for " + portName);
       }     
     }
     ports.insert(make_pair(portName, new BabelPortInstance(portName, portType, 0, BabelPortInstance::Uses)));
@@ -287,7 +288,7 @@ void BridgeComponentInstance::registerUsesPort(const std::string& portName,
   case Dataflow:
     iter = ports.find(portName);
     if(iter != ports.end()){
-      throw InternalError("port name conflicts with another one");
+      throw CCAException("port name conflicts with another one");
     }
 
     portT = SCIRunPortInstance::Output;
@@ -295,14 +296,31 @@ void BridgeComponentInstance::registerUsesPort(const std::string& portName,
     dflowport = bmdl->getOPort(portName);
     
     if(!dflowport)
-      throw InternalError("Wrong port model for addProvidesPort");
+      throw CCAException("Wrong port model for addProvidesPort");
 
     //NO SCIRunComponentInstance to pass into SCIRunPortInstance, hopefully NULL is okay
     ports.insert(make_pair(portName, new SCIRunPortInstance(NULL, dflowport, portT)));
     break;
 
+  case Tao:
+    iter = ports.find(portName);
+    if(iter != ports.end()){
+      tpr = dynamic_cast<TaoPortInstance*>(iter->second);
+      if(tpr == NULL)
+        throw CCAException("Trying to register a port of the wrong type");
+      if(tpr->porttype == TaoPortInstance::Provides)
+        throw CCAException("name conflict between uses and provides ports");
+      else {
+        cerr << "registerUsesPort called twice, instance=" << instanceName 
+             << ", portName = " << portName << ", portType = " << portType << '\n';
+        throw CCAException("registerUsesPort called twice for " + portName);
+      }
+    }
+    ports.insert(make_pair(portName, new TaoPortInstance(portName, portType, TaoPortInstance::Uses)));
+    break;
+
   case Vtk:
-    throw InternalError("Use addVtkPort for Vtk component model");
+    throw CCAException("Use addVtkPort for Vtk component model");
     break;
 
   }
@@ -329,8 +347,7 @@ void BridgeComponentInstance::unregisterUsesPort(const std::string& portName, co
       }
     }
     else{
-      cerr<<"port name not found, unregisterUsesPort not done\n";
-      throw CCAException("port name not found");
+      throw CCAException("port name " + portName +" not found, cannot unregister uses port");
     }
     break;
 
@@ -339,16 +356,15 @@ void BridgeComponentInstance::unregisterUsesPort(const std::string& portName, co
     if(iter != ports.end()){
       bpr = dynamic_cast<BabelPortInstance*>(iter->second);
       if(bpr == NULL)
-	throw InternalError("Trying to unregister a port of the wrong type");
+	throw CCAException("Trying to unregister a port of the wrong type");
       if(bpr->porttype == BabelPortInstance::Provides)
-	throw InternalError("name conflict between uses and provides ports");
+	throw CCAException("name conflict between uses and provides ports");
       else {
 	ports.erase(portName);
       }
     }
     else{
-      cerr<<"port name not found, unregisterUsesPort not done\n";
-      throw CCAException("port name not found");
+      throw CCAException("port name " + portName +" not found, cannot unregister uses port");
     }
     break;
 
@@ -357,6 +373,7 @@ void BridgeComponentInstance::unregisterUsesPort(const std::string& portName, co
     break;
 
   case Vtk:
+  case Tao:
     //Not implemented for now
     break;
   }
@@ -370,6 +387,7 @@ void BridgeComponentInstance::addProvidesPort(void* port,
 {
   CCAPortInstance* cpr;
   BabelPortInstance* bpr;
+  TaoPortInstance* tpr;
   map<string, PortInstance*>::iterator iter;
 
   sci::cca::Port::pointer* ccaport;
@@ -388,7 +406,7 @@ void BridgeComponentInstance::addProvidesPort(void* port,
       if(cpr->porttype == CCAPortInstance::Uses)
 	throw CCAException("name conflict between uses and provides ports");
       else
-	throw CCAException("addProvidesPort called twice");
+	throw CCAException("addProvidesPort called twice for " + portName);
     }
 
     ccaport = reinterpret_cast<sci::cca::Port::pointer*>(port);
@@ -402,15 +420,15 @@ void BridgeComponentInstance::addProvidesPort(void* port,
     if(iter != ports.end()){
       bpr = dynamic_cast<BabelPortInstance*>(iter->second);
       if(bpr == NULL)
-	throw InternalError("port name conflicts with another one of a different type");
+	throw CCAException("port name conflicts with another one of a different type");
       if(bpr->porttype == BabelPortInstance::Uses)
-	throw InternalError("name conflict between uses and provides ports");
+	throw CCAException("name conflict between uses and provides ports");
       else
-	throw InternalError("addProvidesPort called twice");
+	throw CCAException("addProvidesPort called twice for " + portName);
     }
     babelport = reinterpret_cast<gov::cca::Port*>(port);
     if(!babelport)
-      throw InternalError("Wrong port model for addProvidesPort");
+      throw CCAException("Wrong port model for addProvidesPort");
     ports.insert(make_pair(portName, new BabelPortInstance(portName, portType, 0, *babelport, BabelPortInstance::Provides)));
     break;
 
@@ -418,7 +436,7 @@ void BridgeComponentInstance::addProvidesPort(void* port,
     
     iter = ports.find(portName);
     if(iter != ports.end()){
-      throw InternalError("port name conflicts with another one");
+      throw CCAException("port name conflicts with another one");
     }
 
     portT = SCIRunPortInstance::Input;
@@ -426,7 +444,7 @@ void BridgeComponentInstance::addProvidesPort(void* port,
     dflowport = bmdl->getIPort(portName);
     
     if(!dflowport)
-      throw InternalError("Wrong port model for addProvidesPort");
+      throw CCAException("Wrong port model for addProvidesPort");
 
     //NO SCIRunComponentInstance to pass into SCIRunPortInstance, hopefully NULL is okay
     ports.insert(make_pair(portName, new SCIRunPortInstance(NULL, dflowport, portT)));
@@ -434,7 +452,24 @@ void BridgeComponentInstance::addProvidesPort(void* port,
     break;
 
   case Vtk:
-    throw InternalError("Use addVtkPort for Vtk component model");
+    throw CCAException("Use addVtkPort for Vtk component model");
+    break;
+
+  case Tao:
+    iter = ports.find(portName);
+    if(iter != ports.end()){
+      tpr = dynamic_cast<TaoPortInstance*>(iter->second);
+      if(tpr == NULL)
+        throw CCAException("Trying to register a port of the wrong type");
+      if(tpr->porttype == TaoPortInstance::Provides)
+        throw CCAException("name conflict between uses and provides ports");
+      else {
+        cerr << "registerUsesPort called twice, instance=" << instanceName
+             << ", portName = " << portName << ", portType = " << portType << '\n';
+        throw CCAException("registerUsesPort called twice for " + portName);
+      }
+    }
+    ports.insert(make_pair(portName, new TaoPortInstance(portName, portType, TaoPortInstance::Uses)));
     break;
 
   }
@@ -454,6 +489,7 @@ void BridgeComponentInstance::removeProvidesPort(const std::string& name, const 
     cerr << "removeProvidesPort not done, name=" << name << '\n';
     break;
   case Vtk:
+  case Tao:
     cerr << "removeProvidesPort not done, name=" << name << '\n';
     break;
 

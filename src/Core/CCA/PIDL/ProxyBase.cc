@@ -54,7 +54,7 @@ ProxyBase::ProxyBase()
   : proxy_uuid()
   //: proxy_uuid("NONENONENONENONENONENONENONENONENONE") 
 {
-  xr = new XceptionRelay(this);
+    xr = new XceptionRelay(this);
 }
 
 //remove it later
@@ -62,7 +62,7 @@ ProxyBase::ProxyBase(const Reference& ref)
   : proxy_uuid()
   //: proxy_uuid("NONENONENONENONENONENONENONENONENONE")
 { 
-  xr = new XceptionRelay(this);
+    xr = new XceptionRelay(this);
   rm.insertReference( ((Reference*)&ref)->clone());
 }
 
@@ -70,7 +70,7 @@ ProxyBase::ProxyBase(Reference *ref)
   : proxy_uuid()
   //: proxy_uuid("NONENONENONENONENONENONENONENONENONE")
 { 
-  xr = new XceptionRelay(this);
+    xr = new XceptionRelay(this);
   rm.insertReference(ref);
 }
 
@@ -78,7 +78,7 @@ ProxyBase::ProxyBase(const ReferenceMgr& refM)
 : rm(refM), proxy_uuid()
   //  proxy_uuid("NONENONENONENONENONENONENONENONENONE")
 { 
-  xr = new XceptionRelay(this);
+    xr = new XceptionRelay(this);
 }
 
 ProxyBase::~ProxyBase()
@@ -89,14 +89,15 @@ ProxyBase::~ProxyBase()
     (*iter)->chan->closeConnection();
   }
   /*Delete intercommunicator*/
-  if((rm.localSize > 1)&&(rm.intracomm != NULL)) {
-    delete (rm.intracomm);
-    rm.intracomm = NULL; 
-  }  
+//    if((rm.localSize > 1)&&(rm.intracomm != NULL)) {
+//      delete (rm.intracomm);
+//      rm.intracomm = NULL; 
+//    } 
+  
   /*Delete exception relay*/
-  if(xr) {
-    delete xr;
-  }
+   if(xr) {
+     delete xr;
+   }
 }
 
 void ProxyBase::_proxyGetReference(Reference& ref, bool copy) const
@@ -185,7 +186,7 @@ int ProxyBase::_proxygetException(int xid, int lineid)
     switch (role) {
     case (winner): {
       rloser = rank + (int)pow(2,round-1);
-      (rm.intracomm)->receive(rloser,recvb,20);
+      //      (rm.intracomm)->receive(rloser,recvb,20);
       recv_xid = *(int *)(recvb);
       recv_lineid = *(int *)(recvb+sizeof(int));
       //Compare exceptions and take preferred one
@@ -205,7 +206,7 @@ int ProxyBase::_proxygetException(int xid, int lineid)
       p_sendb += sizeof(int);
       memcpy(p_sendb,&lineid,sizeof(int));
       rwinner = rank - (int)pow(2,round-1);
-      (rm.intracomm)->send(rwinner,sendb,20);
+      //      (rm.intracomm)->send(rwinner,sendb,20);
       ::std::cout << "Round " << round << ", rank " << rank << " (xid=" << xid << ")(lineID=" << lineid << ") LOSES\n";
       break;
     } case (bye):
@@ -228,7 +229,7 @@ int ProxyBase::_proxygetException(int xid, int lineid)
 
   //Broadcast definitive exception
   int champ = 0;
-  (rm.intracomm)->broadcast(champ,(char *)&xid,(int)sizeof(int));
+  //  (rm.intracomm)->broadcast(champ,(char *)&xid,(int)sizeof(int));
   std::cout << "Rank " << rank << " will throw xid=" << xid << "\n";
   return xid;
 }

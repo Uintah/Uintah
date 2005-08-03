@@ -821,7 +821,8 @@ proc isaDefaultValue { module varname classname } {
     # If the default class has not already been instantced
     if { ![info exists DefaultClassInstances($classname)] } {
 	if { ![llength [info commands $classname]] } { 
-	    error "TCL Class not found while writing guiVar $var"	
+	    error "TCL Class not found while writing guiVar $module $varname $classname"
+	
 	    return 0 
 	}
 	eval $classname DEFAULT-$classname
@@ -1107,6 +1108,12 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
     append script "${tab}set runDate \{$Subnet(Subnet${subnet}_runDate)\}\n"
     append script "${tab}set runTime \{$Subnet(Subnet${subnet}_runTime)\}\n"
     append script "${tab}set notes \{$Subnet(Subnet${subnet}_notes)\}\n"
+    if { $subnet } {
+	append script "${tab}set geometry \{[wm geometry .subnet$subnet]\}\n"
+    } else {
+	append script "${tab}set geometry \{[wm geometry .]\}\n"
+    }
+    
     
     set i 0
     foreach module $Subnet(Subnet${subnet}_Modules) {

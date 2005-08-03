@@ -239,6 +239,8 @@ set mods(GenStandardColorMaps) $m8
 
 set mods(ShowDipole) $m6
 
+set mods(SolveMatrix) $m3
+
 #######################################################
 # Build up a simplistic standalone application.
 #######################################################
@@ -335,6 +337,8 @@ class BioFEMApp {
 	pack $win.detachedV.f -side left -anchor n
 
 	wm title $win.detachedV "Visualization Window"
+	wm protocol $win.detachedV WM_DELETE_WINDOW \
+	    { app hide_visualization_window }
 
 	wm sizefrom $win.detachedV user
 	wm positionfrom $win.detachedV user
@@ -360,8 +364,12 @@ class BioFEMApp {
 	trace variable $mods(Isosurface)-isoval-max w "$this set_minmax_callback"
 
 	### pack 3 frames
-	pack $win.viewer $attachedVFr -side left \
-	    -anchor n -fill both -expand 1
+ 	pack $attachedVFr -side right \
+ 	    -anchor n -fill both -expand 0
+
+ 	pack $win.viewer -side right \
+ 	    -anchor n -fill both -expand 1
+
 
 	set total_width [expr $viewer_width + $vis_width]
 
@@ -396,7 +404,6 @@ class BioFEMApp {
 	source $DATADIR/$DATASET/$DATASET.settings
 
 	#Fix up global scale.
-	global global_scale
 	global $mods(ShowDipole)-widgetSizeGui_
 	global $mods(ShowField-Electrodes)-node_scale
 	global $mods(ShowField-StreamLines)-node_scale
@@ -528,6 +535,29 @@ class BioFEMApp {
 	button $f.probe.b -text Browse -command "$mods(FieldReader-probe) initialize_ui"
 	pack $f.probe.l $f.probe.e $f.probe.b -side left
 	pack $f.probe -padx 5 -anchor w
+
+
+        global $mods(SolveMatrix)-target_error
+	set err [set $mods(SolveMatrix)-target_error]
+
+	iwidgets::labeledframe $f.graph -labelpos n -labeltext "Convergence" 
+	pack $f.graph -side bottom -anchor w -fill x
+
+	set g [$f.graph childsite]
+
+	blt::graph $g.graph -height 200 -plotbackground gray99
+	$g.graph yaxis configure -logscale true -title "Error (RMS)"  -min [expr $err/10] -max 1 -loose true
+	$g.graph xaxis configure -title "Iteration" \
+		-loose true
+	bind $g.graph <ButtonPress-1> "$mods(SolveMatrix) select_error $g.graph %x %y"
+	bind $g.graph <Button1-Motion> "$mods(SolveMatrix) move_error $g.graph %x %y"
+	bind $g.graph <ButtonRelease-1> "$mods(SolveMatrix) deselect_error $g.graph %x %y"
+	set iter 1
+	$g.graph element create "Current Target" -linewidth 0
+	$g.graph element configure "Current Target" -data "0 $err" \
+		-symbol diamond
+	pack $g.graph -fill x
+        $mods(SolveMatrix) add_graph $g.graph
     }
     
     
@@ -691,8 +721,8 @@ class BioFEMApp {
 	    set IsVAttached 0
 	} else {
 	    wm withdraw $detachedVFr
-	    pack $attachedVFr -anchor n -side left -after $win.viewer \
-	       -fill both -expand 1
+	    pack $attachedVFr -anchor n -side right -before $win.viewer \
+	       -fill both -expand 0
 	    set new_width [expr $c_width + $vis_width]
             append geom $new_width x $c_height
 	    wm geometry $win $geom
@@ -814,7 +844,7 @@ class BioFEMApp {
     }
     
     method show_about {} {
-	tk_messageBox -message "BioFEM About Box" -type ok -icon info -parent .standalone
+	tk_messageBox -message "BioFEM is a SCIRun PowerApp that computes the electric field in a volume produced by a set of dipoles. BioFEM computes a solution to the bioelectric field forward problem. BioFEM also computes voltage values at electrode positions, which can be compared with values recorded via ECG or EKG." -type ok -icon info -parent .standalone
     }
     
 
@@ -1024,7 +1054,8 @@ class BioFEMApp {
 		-resolution 0.0001 \
 		-variable $mods(Isosurface)-isoval \
 		-showvalue false \
-		-orient horizontal
+		-orient horizontal \
+                -command "$mods(Isosurface) updateSliderEntry $mods(Isosurface)-isoval $mods(Isosurface)-isoval-typed"
 
 	    bind $f.isoval.s <ButtonRelease> \
 		"$mods(Isosurface)-c needexecute"
@@ -1037,11 +1068,20 @@ class BioFEMApp {
 	    pack $f.isoval.l $f.isoval.s $f.isoval.val \
 		-side left -anchor nw -padx 3
 
-	    checkbutton $f.normals -text "Render Smooth Faces" \
+            frame $f.buttons
+            pack $f.buttons -side top -anchor w
+
+	    checkbutton $f.buttons.normals -text "Smooth Faces" \
 		    -variable $mods(ShowField-Isosurface)-use-normals \
 		    -command "$mods(ShowField-Isosurface)-c rerender_faces"
 
-	    pack $f.normals -side top -anchor w -padx 20
+	    pack $f.buttons.normals -side left -anchor n -padx 20
+
+	    checkbutton $f.buttons.update -text "Continuous Updates" \
+		    -variable $mods(Isosurface)-update_type \
+                    -offvalue "on release" -onvalue "Auto"
+
+	    pack $f.buttons.update -side left -anchor n -padx 20
 	}
     }	 
 

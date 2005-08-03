@@ -37,6 +37,7 @@ SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/Color.cc		    	\
 	$(SRCDIR)/ColumnMatrix.cc	    	\
 	$(SRCDIR)/Datatype.cc		    	\
+	$(SRCDIR)/DenseColMajMatrix.cc	    	\
 	$(SRCDIR)/DenseMatrix.cc	    	\
 	$(SRCDIR)/Field.cc		    	\
 	$(SRCDIR)/FieldInterfaceAux.cc	    	\
@@ -59,10 +60,6 @@ SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/cd_templates_fields_4.cc    	\
 	$(SRCDIR)/cd_templates_fields_5.cc	\
 	$(SRCDIR)/cd_templates_fields_6.cc	\
-
-ifeq ($(OS_NAME),Darwin)
-  SRCS += $(SRCDIR)/MacForceLoad.cc
-endif
 
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/GuiInterface \

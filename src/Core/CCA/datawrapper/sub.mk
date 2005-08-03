@@ -52,3 +52,8 @@ PSELIBS := Core/CCA/PIDL Core/Thread
 $(SRCDIR)/Matrix_sidl.o: Core/CCA/spec/cca_sidl.h
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+
+SUBDIRS := $(SRCDIR)/PDEtranslate
+
+include $(SCIRUN_SCRIPTS)/recurse.mk
+

@@ -33,7 +33,7 @@
 #include <Core/Volume/VolumeRenderer.h>
 #include <Core/Volume/VolShader.h>
 #include <Core/Geom/ShaderProgramARB.h>
-#include <Core/Volume/Pbuffer.h>
+#include <Core/Geom/Pbuffer.h>
 #include <Core/Volume/TextureBrick.h>
 #include <Core/Util/DebugStream.h>
 
@@ -49,10 +49,21 @@ using std::string;
 namespace SCIRun {
 
 #ifdef _WIN32
-#define GL_FUNC_ADD 2
-#define GL_MAX 2
-#define GL_TEXTURE_3D 2
-#define glBlendEquation(x)
+#include <windows.h>
+#define GL_FUNC_ADD 0x8006
+#define GL_MAX 0x8008
+#define GL_TEXTURE_3D 0x806F
+
+#define GL_TEXTURE0_ARB 0x84C0
+#define GL_TEXTURE0 0x84C0
+
+#define GL_ARB_fragment_program
+
+typedef void (GLAPIENTRY * PFNGLBLENDEQUATIONPROC) (GLenum mode);
+typedef void (GLAPIENTRY * PFNGLACTIVETEXTUREPROC) (GLenum texture);
+static PFNGLBLENDEQUATIONPROC glBlendEquation = 0;
+static PFNGLACTIVETEXTUREPROC glActiveTexture = 0;
+
 #endif
 
 //static SCIRun::DebugStream dbg("VolumeRenderer", false);
@@ -61,6 +72,8 @@ VolumeRenderer::VolumeRenderer(TextureHandle tex,
                                ColorMapHandle cmap1, ColorMap2Handle cmap2,
                                int tex_mem):
   TextureRenderer(tex, cmap1, cmap2, tex_mem),
+  grange_(1.0),
+  goffset_(0.0),
   shading_(false),
   ambient_(0.5),
   diffuse_(0.5),
@@ -80,6 +93,12 @@ VolumeRenderer::VolumeRenderer(TextureHandle tex,
   for(;it2 != level_alpha_.end(); ++it2){
     (*it2) = 0;
   }
+
+#ifdef _WIN32
+  glBlendEquation = (PFNGLBLENDEQUATIONPROC)wglGetProcAddress("glBlendEquation");
+  glActiveTexture = (PFNGLACTIVETEXTUREPROC)wglGetProcAddress("glActiveTexture");
+#endif
+
 }
 
 VolumeRenderer::VolumeRenderer(const VolumeRenderer& copy):
@@ -93,7 +112,13 @@ VolumeRenderer::VolumeRenderer(const VolumeRenderer& copy):
   adaptive_(copy.adaptive_),
   draw_level_(copy.draw_level_),
   level_alpha_(copy.level_alpha_)
-{}
+{
+#ifdef _WIN32
+  glBlendEquation = (PFNGLBLENDEQUATIONPROC)wglGetProcAddress("glBlendEquation");
+  glActiveTexture = (PFNGLACTIVETEXTUREPROC)wglGetProcAddress("glActiveTexture");
+#endif
+
+}
 
 VolumeRenderer::~VolumeRenderer()
 {}
@@ -101,7 +126,7 @@ VolumeRenderer::~VolumeRenderer()
 GeomObj*
 VolumeRenderer::clone()
 {
-  return scinew VolumeRenderer(*this);
+  return new VolumeRenderer(*this);
 }
 
 void
@@ -161,6 +186,7 @@ VolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
   di_ = 0;
   mutex_.unlock();
 }
+
 
 void
 VolumeRenderer::draw_volume()
@@ -227,19 +253,25 @@ VolumeRenderer::draw_volume()
   psize[0] = NextPowerOf2(vp[2]);
   psize[1] = NextPowerOf2(vp[3]);
     
-  if(blend_num_bits_ != 8) {
+  if(blend_num_bits_ != 8)
+  {
     if(!blend_buffer_ || blend_num_bits_ != blend_buffer_->num_color_bits()
        || psize[0] != blend_buffer_->width()
-       || psize[1] != blend_buffer_->height()) {
-      blend_buffer_ = new Pbuffer(psize[0], psize[1], GL_FLOAT, blend_num_bits_, true,
-                                  GL_FALSE, GL_DONT_CARE, 24);
-      if(blend_buffer_->create()) {
+       || psize[1] != blend_buffer_->height())
+    {
+      blend_buffer_ = new Pbuffer(psize[0], psize[1],
+				  GL_FLOAT, blend_num_bits_, true,
+				  GL_FALSE, GL_DONT_CARE, 24);
+      if (!blend_buffer_->create())
+      {
         blend_buffer_->destroy();
         delete blend_buffer_;
         blend_buffer_ = 0;
         blend_num_bits_ = 8;
         use_blend_buffer_ = false;
-      } else {
+      }
+      else
+      {
         blend_buffer_->set_use_default_shader(false);
         blend_buffer_->set_use_texture_matrix(false);
       }
@@ -250,15 +282,15 @@ VolumeRenderer::draw_volume()
     glEnable(GL_BLEND);
     switch(mode_) {
     case MODE_OVER:
-#ifdef GL_FUNC_ADD // Workaround for old bad nvidia headers.
-      glBlendEquation(GL_FUNC_ADD);
-#endif
+      if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS))) 
+	glBlendEquation(GL_FUNC_ADD);
+
       glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
       break;
     case MODE_MIP:
-#ifdef GL_MAX // Workaround for old bad nvidia headers.
-      glBlendEquation(GL_MAX);
-#endif
+      if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS)))       
+	glBlendEquation(GL_MAX);
+
       glBlendFunc(GL_ONE, GL_ONE);
       break;
     default:
@@ -335,7 +367,11 @@ VolumeRenderer::draw_volume()
   //--------------------------------------------------------------------------
   // enable data texture unit 0
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#ifdef _WIN32
+  if (glActiveTexture)
+#endif
   glActiveTexture(GL_TEXTURE0_ARB);
+  
 #endif
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   glEnable(GL_TEXTURE_3D);
@@ -368,7 +404,7 @@ VolumeRenderer::draw_volume()
     }
     shader->bind();
   }
-  
+
   if(use_shading) {
     // set shader parameters
     Vector l(light_pos[0], light_pos[1], light_pos[2]);
@@ -382,6 +418,7 @@ VolumeRenderer::draw_volume()
     l.safe_normalize();
     shader->setLocalParam(0, l.x(), l.y(), l.z(), 1.0);
     shader->setLocalParam(1, ambient_, diffuse_, specular_, shine_);
+    shader->setLocalParam(2, grange_, goffset_, 0.0, 0.0);
   }
   
   //--------------------------------------------------------------------------
@@ -396,7 +433,7 @@ VolumeRenderer::draw_volume()
   
   for(unsigned int i=0; i<bricks.size(); i++) {
     TextureBrickHandle b = bricks[i];
-    load_brick(b, use_cmap2);
+    load_brick(bricks, i, use_cmap2);
     vertex.clear();
     texcoord.clear();
     size.clear();
@@ -423,6 +460,9 @@ VolumeRenderer::draw_volume()
     release_colormap1();
   }
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#ifdef _WIN32
+  if (glActiveTexture)
+#endif
   glActiveTexture(GL_TEXTURE0_ARB);
 #endif
   glDisable(GL_TEXTURE_3D);
@@ -454,6 +494,9 @@ VolumeRenderer::draw_volume()
     glDisable(GL_CULL_FACE);
     
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#ifdef _WIN32
+  if (glActiveTexture)
+#endif
     glActiveTexture(GL_TEXTURE0);
 #endif
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -564,19 +607,25 @@ VolumeRenderer::multi_level_draw()
   psize[0] = NextPowerOf2(vp[2]);
   psize[1] = NextPowerOf2(vp[3]);
   
-  if(blend_num_bits_ != 8) {
+  if(blend_num_bits_ != 8)
+  {
     if(!blend_buffer_ || blend_num_bits_ != blend_buffer_->num_color_bits()
        || psize[0] != blend_buffer_->width()
-       || psize[1] != blend_buffer_->height()) {
-      blend_buffer_ = new Pbuffer(psize[0], psize[1], GL_FLOAT, blend_num_bits_, true,
+       || psize[1] != blend_buffer_->height())
+    {
+      blend_buffer_ = new Pbuffer(psize[0], psize[1],
+				  GL_FLOAT, blend_num_bits_, true,
 				  GL_FALSE, GL_DONT_CARE, 24);
-      if(blend_buffer_->create()) {
+      if (!blend_buffer_->create())
+      {
 	blend_buffer_->destroy();
 	delete blend_buffer_;
 	blend_buffer_ = 0;
 	blend_num_bits_ = 8;
 	use_blend_buffer_ = false;
-      } else {
+      }
+      else
+      {
 	blend_buffer_->set_use_default_shader(false);
 	blend_buffer_->set_use_texture_matrix(false);
       }
@@ -587,15 +636,15 @@ VolumeRenderer::multi_level_draw()
     glEnable(GL_BLEND);
     switch(mode_) {
     case MODE_OVER:
-#ifdef GL_FUNC_ADD // Workaround for old bad nvidia headers.
-      glBlendEquation(GL_FUNC_ADD);
-#endif
+      if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS)))       
+	glBlendEquation(GL_FUNC_ADD);
+
       glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
       break;
     case MODE_MIP:
-#ifdef GL_MAX // Workaround for old bad nvidia headers.
-      glBlendEquation(GL_MAX);
-#endif
+      if(gluCheckExtension((GLubyte*)"GL_ARB_imaging",glGetString(GL_EXTENSIONS)))       
+	glBlendEquation(GL_MAX);
+
       glBlendFunc(GL_ONE, GL_ONE);
       break;
     default:
@@ -664,6 +713,9 @@ VolumeRenderer::multi_level_draw()
   //--------------------------------------------------------------------------
   // enable data texture unit 0
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#ifdef _WIN32
+  if (glActiveTexture)
+#endif
   glActiveTexture(GL_TEXTURE0_ARB);
 #endif
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -688,7 +740,8 @@ VolumeRenderer::multi_level_draw()
       }
     }
   }
-  shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0, use_shading, false,
+  shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0,
+				       use_shading, false,
 				       use_fog, blend_mode);
   if(shader) {
     if(!shader->valid()) {
@@ -821,7 +874,7 @@ VolumeRenderer::multi_level_draw()
 	if( vertex.size() == 0 ) {
 	  continue;
 	}
-	load_brick(b, use_cmap2);
+	load_brick(bs, j, use_cmap2);
 	draw_polygons(vertex, texcoord, size, false, use_fog,
 		      blend_num_bits_ > 8 ? blend_buffer_ : 0);
       }
@@ -856,6 +909,9 @@ VolumeRenderer::multi_level_draw()
     release_colormap1();
   }
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#ifdef _WIN32
+  if (glActiveTexture)
+#endif
   glActiveTexture(GL_TEXTURE0_ARB);
 #endif
   glDisable(GL_TEXTURE_3D);
@@ -887,6 +943,9 @@ VolumeRenderer::multi_level_draw()
     glDisable(GL_CULL_FACE);
     
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#ifdef _WIN32
+  if (glActiveTexture)
+#endif
     glActiveTexture(GL_TEXTURE0);
 #endif
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -1035,6 +1094,21 @@ VolumeRenderer::num_slices_to_rate(int num_slices)
 
   return rate;
 }
+
+
+void
+VolumeRenderer::set_gradient_range(double min, double max)
+{ 
+  double range = max-min;
+  if (fabs(range) < 0.001) { 
+    grange_ = 1.0; 
+    goffset_ = 1.0;
+  } else {
+    grange_ = 1/(max-min);
+    goffset_ = -min/(max-min);
+  }
+}
+
 
 
 } // namespace SCIRun

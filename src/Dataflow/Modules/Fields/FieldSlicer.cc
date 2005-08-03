@@ -42,7 +42,9 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Datatypes/DenseMatrix.h>
 
 #include <Dataflow/Modules/Fields/FieldSlicer.h>
 #include <Core/Basis/HexTrilinearLgn.h>
@@ -81,8 +83,10 @@ private:
   int kindex_;
 
   FieldHandle fHandle_;
+  MatrixHandle mHandle_;
 
   int fGeneration_;
+  int mGeneration_;
 };
 
 
@@ -113,7 +117,8 @@ FieldSlicer::FieldSlicer(GuiContext *context)
     jindex_(-1),
     kindex_(-1),
 
-    fGeneration_(-1)
+    fGeneration_(-1),
+    mGeneration_(-1)
 {
 }
 
@@ -122,28 +127,50 @@ FieldSlicer::~FieldSlicer(){
 
 void FieldSlicer::execute(){
   update_state(NeedData);
+  reset_vars();
 
   bool updateAll    = false;
   bool updateField  = false;
+  bool updateMatrix = false;
 
-  FieldHandle fHandle;
+  FieldHandle  fHandle;
+  MatrixHandle mHandle;
 
   // Get a handle to the input field port.
   FieldIPort* ifield_port = (FieldIPort *) get_iport("Input Field");
 
   // The field input is required.
   if (!ifield_port->get(fHandle) || !(fHandle.get_rep()) ||
-      !(fHandle->mesh().get_rep()))
-  {
-    error( "No handle or representation" );
+      !(fHandle->mesh().get_rep())) {
+    error( "No field handle or representation" );
     return;
   }
 
   // Check to see if the input field has changed.
-  if( fGeneration_ != fHandle->generation )
-  {
+  if( fGeneration_ != fHandle->generation ) {
     fGeneration_ = fHandle->generation;
     updateField = true;
+  }
+
+  // Get a handle to the input matrix port.
+  MatrixIPort* imatrix_port = (MatrixIPort *) get_iport("Input Matrix");
+
+  // The matrix input is optional.
+  if (imatrix_port->get(mHandle) && mHandle.get_rep()) {
+    
+    // Check to see if the input matrix has changed.
+    if( mGeneration_ != mHandle->generation ) {
+      mGeneration_ = mHandle->generation;
+      updateMatrix = true;
+    }
+
+    if( mHandle->nrows() != 3 || mHandle->ncols() != 3 ) {
+      error( "Input matrix is not a 3x3 matrix" );
+      return;
+    }
+
+  } else {
+    mGeneration_ = -1;
   }
 
   int dims = 0;
@@ -211,6 +238,38 @@ void FieldSlicer::execute(){
     updateAll = true;
   }
 
+  if( mGeneration_ != -1 ) {
+
+    if( idim_ != mHandle->get(0, 2) ||
+	jdim_ != mHandle->get(1, 2) ||
+	kdim_ != mHandle->get(2, 2) ) {
+      ostringstream str;
+      str << "The dimensions of the matrix slicing do match the field. ";
+      str << " Expected  " << idim_ << " " << jdim_ << " " << kdim_;
+      str << " Got " <<  mHandle->get(0, 2) << " " <<  mHandle->get(1, 2) << " " <<  mHandle->get(2, 2);
+      
+      error( str.str() );
+      return;
+    }
+
+    int axis = -1;
+
+    for (int i=0; i < mHandle->nrows(); i++)
+      if( mHandle->get(i, 0) == 1 )
+	axis = i;
+
+    ostringstream str;
+    str << id << " set_index ";
+    str << axis <<
+      " " << (int) mHandle->get(0, 1) <<
+      " " << (int) mHandle->get(1, 1) <<
+      " " << (int) mHandle->get(2, 1);
+
+    gui->execute(str.str().c_str());
+
+    reset_vars();
+  }
+
   // Check to see if the user setable values have changed.
   if( iindex_ != iIndex_.get() ||
       jindex_ != jIndex_.get() ||
@@ -226,8 +285,25 @@ void FieldSlicer::execute(){
     updateAll = true;
   }
 
+  if( mGeneration_ == -1 ) {
+    DenseMatrix *selected = scinew DenseMatrix(3,3);
+
+    for (int i=0; i < 3; i++)
+      selected->put(i, 0, (double) (axis_ == i) );
+
+    selected->put(0, 1, iindex_ );
+    selected->put(1, 1, jindex_ );
+    selected->put(2, 1, kindex_ );
+
+    selected->put(0, 2, idim_ );
+    selected->put(1, 2, jdim_ );
+    selected->put(2, 2, kdim_ );
+
+    mHandle_ = MatrixHandle(selected);
+  }
+
   // If no data or a changed recreate the mesh.
-  if( !fHandle_.get_rep() || updateAll || updateField )
+  if( !fHandle_.get_rep() || updateAll || updateField || updateMatrix )
   {
     const TypeDescription *ftd = fHandle->get_type_description();
     const TypeDescription *ttd = fHandle->get_type_description(1);
@@ -262,10 +338,27 @@ void FieldSlicer::execute(){
   }
 
   // Send the data downstream
-  if( fHandle_.get_rep() )
-  {
+  if( fHandle_.get_rep() ) {
     FieldOPort *ofield_port = (FieldOPort *) get_oport("Output Field");
+
+    if (!ofield_port) {
+      error("Unable to initialize oport 'Output Field'.");
+      return;
+    }
+
     ofield_port->send( fHandle_ );
+  }
+
+  // Get a handle to the output double port.
+  if( mHandle_.get_rep() ) {
+    MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Output Matrix");
+
+    if (!omatrix_port) {
+      error("Unable to initialize oport 'Output Matrix'.");
+      return;
+    }
+
+    omatrix_port->send(mHandle_);
   }
 }
 

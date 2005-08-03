@@ -48,7 +48,7 @@ unsigned long convertSizeType(uint64_t* ssize, bool swapBytes, int nByteMode)
 #pragma set woff 1209 // constant controlling expressions (sizeof)
 #endif  
     if (sizeof(unsigned long) < 8 && size64 > 0xffffffff)
-	throw InternalError("Overflow on 64 to 32 bit conversion");
+	throw InternalError("Overflow on 64 to 32 bit conversion", __FILE__, __LINE__);
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1209 
 #endif  
@@ -56,7 +56,7 @@ unsigned long convertSizeType(uint64_t* ssize, bool swapBytes, int nByteMode)
     return (unsigned long)size64;
   }
   else {
-    throw InternalError("Must be 32 or 64 bits");
+    throw InternalError("Must be 32 or 64 bits", __FILE__, __LINE__);
   }
 }
 

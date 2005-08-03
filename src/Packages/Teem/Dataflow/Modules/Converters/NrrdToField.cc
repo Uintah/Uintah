@@ -49,6 +49,32 @@
 #include <Dataflow/Ports/NrrdPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/CurveMesh.h>
+#include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
+
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/PrismVolMesh.h>
+#include <Core/Datatypes/HexVolMesh.h>
+
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/ImageMesh.h>
+#include <Core/Datatypes/ScanlineMesh.h>
+
+#include <Core/Datatypes/StructHexVolMesh.h>
+#include <Core/Datatypes/StructQuadSurfMesh.h>
+#include <Core/Datatypes/StructCurveMesh.h>
+
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Basis/PrismLinearLgn.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+
 #include <iostream>
 
 #include <Teem/Dataflow/Modules/Converters/NrrdToField.h>
@@ -58,6 +84,21 @@ namespace SCITeem {
 using namespace SCIRun;
 
 class NrrdToField : public Module {
+
+typedef CurveMesh<CrvLinearLgn<Point> >             CMesh;
+typedef TriSurfMesh<TriLinearLgn<Point> >           TSMesh;
+typedef LatVolMesh<HexTrilinearLgn<Point> >         LVMesh;
+typedef ImageMesh<QuadBilinearLgn<Point> >          IMesh;
+typedef QuadSurfMesh<QuadBilinearLgn<Point> >       QSMesh;
+typedef ScanlineMesh<CrvLinearLgn<Point> >          SLMesh;
+typedef PointCloudMesh<ConstantBasis<Point> >       PCMesh;
+typedef PrismVolMesh<PrismLinearLgn<Point> >        PVMesh;
+typedef TetVolMesh<TetLinearLgn<Point> >            TVMesh;
+typedef HexVolMesh<HexTrilinearLgn<Point> >         HVMesh;
+typedef StructCurveMesh<CrvLinearLgn<Point> >       SCMesh;
+typedef StructQuadSurfMesh<QuadBilinearLgn<Point> > SQSMesh;
+typedef StructHexVolMesh<HexTrilinearLgn<Point> >   SHVMesh;
+
 public:
   enum {UNKNOWN=0,UNSTRUCTURED=1,STRUCTURED=2,IRREGULAR=4,REGULAR=8};
 
@@ -571,27 +612,27 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
     switch (pts) {
     case 2:
       // 2 -> curve
-      mHandle = scinew CurveMesh();
+      mHandle = scinew CMesh();
       connectivity = 2;
       break;
     case 3:
       // 3 -> tri
-      mHandle = scinew TriSurfMesh();
+      mHandle = scinew TSMesh();
       connectivity = 3;
       break;
     case 4:
       // 4 -> quad/tet (ask which if this case)
       if (quad_or_tet == "Quad") {
-	mHandle = scinew QuadSurfMesh();
+	mHandle = scinew QSMesh();
 	connectivity = 4;
       } else  if (quad_or_tet == "Tet") {
-	mHandle = scinew TetVolMesh();
+	mHandle = scinew TVMesh();
 	connectivity = 4;
       } else if (elem_type == "Tet") {
-	mHandle = scinew TetVolMesh();
+	mHandle = scinew TVMesh();
 	connectivity = 4;	    
       } else if (elem_type == "Quad") {
-	mHandle = scinew QuadSurfMesh();
+	mHandle = scinew QSMesh();
 	connectivity = 4;
       } else {
 	error("Auto detection of Elem Type using properties failed.");
@@ -602,12 +643,12 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
       break;
     case 6:
       // 6 -> prism
-      mHandle = scinew PrismVolMesh();
+      mHandle = scinew PVMesh();
       connectivity = 6;
       break;
     case 8:
       // 8 -> hex
-      mHandle = scinew HexVolMesh();
+      mHandle = scinew HVMesh();
       connectivity = 8;
       break;
     default:
@@ -645,28 +686,28 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 
     switch (pointsH->nrrd->dim) {
     case 1:
-      mHandle = scinew PointCloudMesh();
+      mHandle = scinew PCMesh();
       topology_ = UNSTRUCTURED;
       break;
 
     case 2:
       // data 1D ask if point cloud or structcurvemesh
       if (struct_unstruct == "PointCloud") {
-	mHandle = scinew PointCloudMesh();
+	mHandle = scinew PCMesh();
 	topology_ = UNSTRUCTURED;
       } else if (struct_unstruct == "StructCurve") {
 	topology_ = STRUCTURED;
-	mHandle = scinew StructCurveMesh( points->axis[1].size );
+	mHandle = scinew SCMesh( points->axis[1].size );
 	idim = points->axis[1].size;
       } else {
 	// Try to figure out based on properties of the points
 	if (pointsH->get_property( "Topology" , property)) {
 	  if( property.find( "Unstructured" ) != string::npos ) {
 	    topology_ = UNSTRUCTURED;
-	    mHandle = scinew PointCloudMesh();
+	    mHandle = scinew PCMesh();
 	  } else if( property.find( "Structured" ) != string::npos ) {
 	    topology_ = STRUCTURED;
-	    mHandle = scinew StructCurveMesh( points->axis[1].size );
+	    mHandle = scinew SCMesh( points->axis[1].size );
 	    idim = points->axis[1].size;
 	  }
 	}
@@ -675,10 +716,10 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 	  if (pointsH->get_property( "Elem Type", property)) { 
 	    if ( property.find( "Curve") != string::npos ) {
 	      topology_ = UNSTRUCTURED;
-	      mHandle = scinew PointCloudMesh();
+	      mHandle = scinew PCMesh();
 	    } else if ( property.find( "Curve") != string::npos ) {
 	      topology_ = STRUCTURED;
-	      mHandle = scinew StructCurveMesh( points->axis[1].size );
+	      mHandle = scinew SCMesh( points->axis[1].size );
 	      idim = points->axis[1].size;
 	    }
 	  }
@@ -689,10 +730,10 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 	  if (dataH->get_property( "Topology" , property)) {
 	    if( property.find( "Unstructured" ) != string::npos ) {
 	      topology_ = UNSTRUCTURED;
-	      mHandle = scinew PointCloudMesh();
+	      mHandle = scinew PCMesh();
 	    } else if( property.find( "Structured" ) != string::npos ) {
 	      topology_ = STRUCTURED;
-	      mHandle = scinew StructCurveMesh( points->axis[1].size );
+	      mHandle = scinew SCMesh( points->axis[1].size );
 	      idim = points->axis[1].size;
 	    }
 	  }
@@ -701,10 +742,10 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 	    if (dataH->get_property( "Elem Type", property)) { 
 	      if ( property.find( "Curve") != string::npos ) {
 		topology_ = UNSTRUCTURED;
-		mHandle = scinew PointCloudMesh();
+		mHandle = scinew PCMesh();
 	      } else if ( property.find( "Curve") != string::npos ) {
 		topology_ = STRUCTURED;
-		mHandle = scinew StructCurveMesh( points->axis[1].size );
+		mHandle = scinew SCMesh( points->axis[1].size );
 		idim = points->axis[1].size;
 	      }
 	    }
@@ -713,7 +754,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 
 	if( topology_ == UNKNOWN ) {
 	  warning("Unable to determine if creating Point Cloud or Struct Curve. Defaulting to Point Cloud");
-	  mHandle = scinew PointCloudMesh();
+	  mHandle = scinew PCMesh();
 	  topology_ = UNSTRUCTURED;
 	}
       }
@@ -722,8 +763,8 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
     case 3:
       topology_ = STRUCTURED;
       // data 2D -> structquad
-      mHandle = scinew StructQuadSurfMesh(points->axis[1].size,
-					  points->axis[2].size);
+      mHandle = scinew SQSMesh(points->axis[1].size,
+			       points->axis[2].size);
       idim = points->axis[1].size;
       jdim = points->axis[2].size;
       //kdim = 1
@@ -732,9 +773,9 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
     case 4:
       topology_ = STRUCTURED;
       // data 3D -> structhexvol
-      mHandle = scinew StructHexVolMesh(points->axis[1].size,
-					points->axis[2].size,
-					points->axis[3].size);
+      mHandle = scinew SHVMesh(points->axis[1].size,
+			       points->axis[2].size,
+			       points->axis[3].size);
       idim = points->axis[1].size;
       jdim = points->axis[2].size;
       kdim = points->axis[3].size;
@@ -852,8 +893,8 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
         }
         maxpt = Point ((data->axis[data_off].size - pt_off) * sp[0] + minpt.x(), 0, 0);
       }
-      mHandle = scinew ScanlineMesh( data->axis[data_off].size + mesh_off,
-				     minpt, maxpt );
+      mHandle = scinew SLMesh( data->axis[data_off].size + mesh_off,
+			       minpt, maxpt );
       break;
 
     case 2:
@@ -867,9 +908,9 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
         maxpt = Point( (data->axis[data_off  ].size - pt_off) * sp[0] + minpt.x(), 
                        (data->axis[data_off+1].size - pt_off) * sp[1] + minpt.y(), 0);
       }
-      mHandle = scinew ImageMesh( data->axis[data_off  ].size + mesh_off, 
-				  data->axis[data_off+1].size + mesh_off, 
-				  minpt, maxpt);
+      mHandle = scinew IMesh( data->axis[data_off  ].size + mesh_off, 
+			      data->axis[data_off+1].size + mesh_off, 
+			      minpt, maxpt);
       break;
 
     case 3:
@@ -887,10 +928,10 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
                        (data->axis[data_off+2].size - pt_off) * sp[2] + minpt.z());
       }
 
-      mHandle = scinew LatVolMesh( data->axis[data_off  ].size + mesh_off, 
-				   data->axis[data_off+1].size + mesh_off, 
-				   data->axis[data_off+2].size + mesh_off, 
-				   minpt, maxpt );
+      mHandle = scinew LVMesh( data->axis[data_off  ].size + mesh_off, 
+			       data->axis[data_off+1].size + mesh_off, 
+			       data->axis[data_off+2].size + mesh_off, 
+			       minpt, maxpt );
       break;
       
     default:

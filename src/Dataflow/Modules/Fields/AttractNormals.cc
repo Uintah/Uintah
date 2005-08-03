@@ -40,7 +40,6 @@
  *  Copyright (C) 2001 SCI Institute
  */
 
-#include <Core/Persistent/Pstreams.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Modules/Fields/AttractNormals.h>

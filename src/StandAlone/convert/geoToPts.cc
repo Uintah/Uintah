@@ -41,7 +41,7 @@ main(int argc, char* argv[])
   }
 
   char c;
-  int node, mesh,elem;
+  int node, mesh,elem=0;
   double x,y,z;
 
   geoFile >> tmp >> tmp >> tmp>> c >> node;

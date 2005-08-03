@@ -141,17 +141,20 @@ throw (
 ){
   // DO-NOT-DELETE splicer.begin(framework.Services.getPortNonblocking)
   map<string, PortInstance*>::iterator iter = ports.find(portName);
-  if(iter == ports.end())
+  if (iter == ports.end()) {
     return 0;
+  }
 
   BabelPortInstance* pr = dynamic_cast<BabelPortInstance*> (iter->second);
-  if(pr->porttype != BabelPortInstance::Uses)
+  if (pr->porttype == BabelPortInstance::Provides) {
     cerr<<"Cannot call getPort on a Provides port"<<endl;
     //throw CCAException("Cannot call getPort on a Provides port");
+  }
 
   pr->incrementUseCount();
-  if(pr->connections.size() != 1)
-    return 0;
+  if (pr->connections.size() != 1) {
+      return 0;
+  }
   BabelPortInstance *pi=dynamic_cast<BabelPortInstance*> (pr->getPeer());
   return pi->port;
   // DO-NOT-DELETE splicer.end(framework.Services.getPortNonblocking)
@@ -176,19 +179,21 @@ throw (
 ){
   // DO-NOT-DELETE splicer.begin(framework.Services.releasePort)
   map<string, PortInstance*>::iterator iter = ports.find(portName);
-  if(iter == ports.end()){
+  if(iter == ports.end()) {
     cerr << "Released an unknown port: " << portName << '\n';
     //throw CCAException("Released an unknown port: "+portName);
   }
 
   BabelPortInstance* pr = dynamic_cast<BabelPortInstance*> (iter->second);
-  if(pr->porttype != BabelPortInstance::Uses)
-    cerr<<"Cannot call releasePort on a Provides port"<<endl;
-  //throw CCAException("Cannot call releasePort on a Provides port");
+  if (pr->porttype == BabelPortInstance::Provides) {
+      cerr<<"Cannot call releasePort on a Provides port"<<endl;
+      //throw CCAException("Cannot call releasePort on a Provides port");
+  }
 
-  if(!pr->decrementUseCount())
-    cerr<<"Port released without correspond get"<<endl;
-    //throw CCAException("Port released without correspond get");
+  if (!pr->decrementUseCount()) {
+      cerr<<"Port released without correspond get"<<endl;
+      //throw CCAException("Port released without correspond get");
+  }
   // DO-NOT-DELETE splicer.end(framework.Services.releasePort)
 }
 
@@ -335,14 +340,15 @@ throw (
   // DO-NOT-DELETE splicer.begin(framework.Services.addProvidesPort)
   map<string, PortInstance*>::iterator iter = ports.find(portName);
 
-  if(iter != ports.end()){
-    BabelPortInstance *pr=dynamic_cast<BabelPortInstance*> (iter->second);
-    if(pr->porttype == BabelPortInstance::Provides)
-      cerr<<"portName conflict between uses and provides ports"<<endl;
+  if (iter != ports.end()) {
+    BabelPortInstance *pr = dynamic_cast<BabelPortInstance*> (iter->second);
+    if (pr->porttype == BabelPortInstance::Uses) {
+      cerr << "portName conflict between uses and provides ports" << endl;
     //throw CCAException("portName conflict between uses and provides ports");
-    else
-      cerr<<"addProvidesPort called twice"<<endl;
+    } else {
+      cerr << "addProvidesPort called twice for " << portName << endl;
     //throw CCAException("addProvidesPort called twice");
+    }
   }
   ports.insert(make_pair(portName, new BabelPortInstance(portName, type, properties, inPort, BabelPortInstance::Provides)));
   // DO-NOT-DELETE splicer.end(framework.Services.addProvidesPort)

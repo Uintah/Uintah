@@ -45,8 +45,8 @@
 #include <SCIRun/SCIRunErrorHandler.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/OS/Dir.h>
-#include <Dataflow/XMLUtil/StrX.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/XMLUtil/StrX.h>
+#include <Core/XMLUtil/XMLUtil.h>
 #include <Core/Util/soloader.h>
 #include <Core/Util/Environment.h>
 #include <Core/CCA/PIDL/PIDL.h>
@@ -78,7 +78,7 @@ namespace SCIRun {
 
 
 const std::string VtkComponentModel::DEFAULT_PATH =
-    std::string("/CCA/Components/VTK/xml");
+std::string("/CCA/Components/VTK/xml");
 
 
 VtkComponentModel::VtkComponentModel(SCIRunFramework* framework)
@@ -233,8 +233,10 @@ bool VtkComponentModel::haveComponent(const std::string& type)
   return components.find(type) != components.end();
 }
 
-ComponentInstance* VtkComponentModel::createInstance(const std::string& name,
-                             const std::string& type)
+ComponentInstance*
+VtkComponentModel::createInstance(const std::string& name,
+                                  const std::string& type,
+                                  const sci::cca::TypeMap::pointer& tm)
 {
   vtk::Component *component;
 
@@ -277,8 +279,8 @@ ComponentInstance* VtkComponentModel::createInstance(const std::string& name,
   //  std::cerr << "about to create Vtk component" << std::endl;
   component = (*maker)();
   
-  VtkComponentInstance* ci = new VtkComponentInstance(framework, name, type,
-                              component);
+  VtkComponentInstance* ci =
+      new VtkComponentInstance(framework, name, type, tm, component);
   return ci;
 }
 
@@ -294,8 +296,7 @@ std::string VtkComponentModel::getName() const
   return "Vtk";
 }
 
-void VtkComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list,
-                          bool /*listInternal*/)
+void VtkComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list, bool /*listInternal*/)
 {
   for(componentDB_type::iterator iter=components.begin();
       iter != components.end(); iter++){

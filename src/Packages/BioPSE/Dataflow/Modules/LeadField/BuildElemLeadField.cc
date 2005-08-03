@@ -38,15 +38,14 @@
  *  Copyright (C) 1999 SCI Group
  */
 
+#include <Core/Algorithms/Fields/FieldCount.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Basis/TetLinearLgn.h>
 #include <Core/Datatypes/TetVolMesh.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
-
-#include <Dataflow/Modules/Fields/FieldInfo.h>
+#include <Dataflow/Ports/MatrixPort.h>
 
 #include <iostream>
 #include <stdio.h>
@@ -117,8 +116,8 @@ void BuildElemLeadField::execute() {
     return;
   }
   const TypeDescription *meshtd = mesh_in->mesh()->get_type_description();
-  CompileInfoHandle ci = FieldInfoAlgoCount::get_compile_info(meshtd);
-  Handle<FieldInfoAlgoCount> algo;
+  CompileInfoHandle ci = FieldCountAlgorithm::get_compile_info(meshtd);
+  Handle<FieldCountAlgorithm> algo;
   if (!module_dynamic_compile(ci, algo)) return;
   algo->execute(mesh_in->mesh(), nnodes, nelems);
 

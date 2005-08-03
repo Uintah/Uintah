@@ -70,8 +70,9 @@ Isosurface::Isosurface(GuiContext* ctx) :
   gui_iso_quantity_clusive_(ctx->subVar("quantity-clusive")),
   gui_iso_quantity_min_(ctx->subVar("quantity-min")),
   gui_iso_quantity_max_(ctx->subVar("quantity-max")),
+  gui_iso_quantity_list_(ctx->subVar("quantity-list")),
   gui_iso_value_list_(ctx->subVar("isoval-list")),
-  gui_iso_value_matrix_(ctx->subVar("isoval-matrix")),
+  gui_iso_matrix_list_(ctx->subVar("matrix-list")),
   gui_extract_from_new_field_(ctx->subVar("extract-from-new-field")),
   gui_use_algorithm_(ctx->subVar("algorithm")),
   gui_build_field_(ctx->subVar("build_trisurf")),
@@ -259,23 +260,35 @@ Isosurface::execute()
 
     string clusive = gui_iso_quantity_clusive_.get();
 
+    ostringstream str;
+
+    str << id << " set-isoquant-list \"";
+
     if (clusive == "exclusive") {
       // if the min - max range is 2 - 4, and the user requests 3 isovals,
       // the code below generates 2.333, 3.0, and 3.666 -- which is nice
       // since it produces evenly spaced slices in torroidal data.
 	
       double di=(qmax - qmin)/(double)num;
-      for (int i=0; i<num; i++) 
+      for (int i=0; i<num; i++) {
 	isovals.push_back(qmin + ((double)i+0.5)*di);
-
+	str << " " << isovals[i];
+      }
     } else if (clusive == "inclusive") {
       // if the min - max range is 2 - 4, and the user requests 3 isovals,
       // the code below generates 2.0, 3.0, and 4.0.
 
       double di=(qmax - qmin)/(double)(num-1.0);
-      for (int i=0; i<num; i++) 
+      for (int i=0; i<num; i++) {
 	isovals.push_back(qmin + ((double)i*di));
+	str << " " << isovals[i];
+      }
     }
+
+    str << "\"";
+
+    gui->execute(str.str().c_str());
+
   } else if (gui_active_isoval_selection_tab_.get() == "2") { // list
     istringstream vlist(gui_iso_value_list_.get());
     double val;
@@ -302,11 +315,11 @@ Isosurface::execute()
     MatrixHandle mHandle;
 
     if (!imatrix_port->get(mHandle)) {
-      gui->execute("set-isomatrix \"No matrix present\"");
+      gui->execute(id + " set-isomatrix-list \"No matrix present\"");
       error("Matrix selected - but no matrix is present.");
       return;
     } else if(!mHandle.get_rep()) {
-      gui->execute("set-isomatrix \"No matrix representation\"");
+      gui->execute(id + " set-isomatrix-list \"No matrix representation\"");
       error( "No matrix representation." );
       return;
     }
@@ -316,7 +329,7 @@ Isosurface::execute()
     
     ostringstream str;
 
-    str << id << " set-isomatrix \"";
+    str << id << " set-isomatrix-list \"";
 
     for (int i=0; i < mHandle->nrows(); i++) {
       for (int j=0; j < mHandle->ncols(); j++) {

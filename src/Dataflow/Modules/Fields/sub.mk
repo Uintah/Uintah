@@ -58,9 +58,11 @@ SRCS     += \
 	$(SRCDIR)/ConvertTet.cc\
 	$(SRCDIR)/Coregister.cc\
 	$(SRCDIR)/CreateMesh.cc\
+	$(SRCDIR)/CubitInterface.cc\
 	$(SRCDIR)/DirectMapping.cc\
 	$(SRCDIR)/FieldBoundary.cc\
 	$(SRCDIR)/FieldCage.cc\
+	$(SRCDIR)/FieldFrenet.cc\
 	$(SRCDIR)/FieldInfo.cc\
 	$(SRCDIR)/FieldMeasures.cc\
 	$(SRCDIR)/FieldSlicer.cc\
@@ -79,6 +81,7 @@ SRCS     += \
 	$(SRCDIR)/NodeGradient.cc\
 	$(SRCDIR)/QuadToTri.cc\
 	$(SRCDIR)/PlanarTransformField.cc\
+	$(SRCDIR)/PointLatticeMap.cc\
 	$(SRCDIR)/Probe.cc\
 	$(SRCDIR)/RefineTetVol.cc\
 	$(SRCDIR)/ReplaceScalarDataValue.cc\
@@ -103,12 +106,14 @@ SRCS     += \
 #	$(SRCDIR)/Unstructure.cc\
 
 
-
-PSELIBS := Dataflow/Network Dataflow/Ports Dataflow/XMLUtil Dataflow/Widgets \
-	Core/Datatypes Core/Persistent Core/Exceptions \
+PSELIBS := Dataflow/Network Dataflow/Ports  Dataflow/Widgets \
+	Core/Algorithms/Fields \
+	Core/Datatypes Core/Persistent Core/Exceptions Core/ImportExport \
 	Core/Thread Core/Containers Core/GuiInterface Core/Geom \
-	Core/Datatypes Core/Basis Core/Geometry Core/TkExtensions \
-	Core/Math Core/Util Core/Algorithms/Geometry Core/GeomInterface
+	Core/Basis Core/Geometry Core/TkExtensions \
+	Core/Math Core/Util Core/Algorithms/Geometry Core/GeomInterface \
+	Core/XMLUtil
+
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(LEX_LIBRARY) $(M_LIBRARY) $(XML_LIBRARY) $(THREAD_LIBRARY)
 
 # Sandia Meshing Library

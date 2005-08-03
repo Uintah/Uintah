@@ -877,7 +877,7 @@ findNearOptimalSuperBoxSet(RangeQuerier& rangeQuerier, typename SBS::BoxHashMap&
     ostringstream msg_str;
     msg_str << "maxPossibleValue should increase: " << storeMaxPossibleValue
 	    << " to " << maxPossibleValue;
-    throw InternalError(msg_str.str());
+    throw InternalError(msg_str.str(), __FILE__, __LINE__);
   }
 #endif    
 

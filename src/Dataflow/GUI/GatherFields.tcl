@@ -33,9 +33,19 @@ itcl_class SCIRun_FieldsCreate_GatherFields {
         set name GatherFields
         set_defaults
     }
+
     method set_defaults {} {
         global $this-force-pointcloud
 	set $this-force-pointcloud 0
+
+        # Accumulate across executes.  No gui for this yet (PowerApp thing).
+        global $this-accumulating
+        global $this-clear
+	global $this-precision
+
+	set $this-accumulating 0
+	set $this-clear 0
+	set $this-precision 4
     }
 
     method ui {} {
@@ -50,6 +60,11 @@ itcl_class SCIRun_FieldsCreate_GatherFields {
 	    -variable $this-force-pointcloud
 
 	pack $w.fpc
+
+	iwidgets::entryfield $w.prec \
+	    -labeltext "Remove Duplicates\ndigits of precision" \
+	    -textvariable $this-precision
+        pack $w.prec -side top -expand yes -fill x
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w

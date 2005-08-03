@@ -69,7 +69,7 @@ FreeTypeLibrary::FreeTypeLibrary() {
 #ifdef HAVE_FREETYPE
   if (FT_Init_FreeType(&library_))
 #endif
-    throw InternalError("FreeType Unable to Initialize");
+    throw InternalError("FreeType Unable to Initialize", __FILE__, __LINE__);
 }
 
 
@@ -78,7 +78,7 @@ FreeTypeLibrary::~FreeTypeLibrary() {
 #ifdef HAVE_FREETYPE
   if (FT_Done_FreeType(library_))
 #endif
-    throw InternalError("FreeType did not close properly");
+    throw InternalError("FreeType did not close properly", __FILE__, __LINE__);
 }
 
 FreeTypeFace *
@@ -103,14 +103,14 @@ FreeTypeFace::FreeTypeFace(FreeTypeLibrary *lib, string filename)
 {
   struct stat buf;
   if (stat(filename.c_str(),&buf) < 0)
-    throw FileNotFound(filename);
+    throw FileNotFound(filename, __FILE__, __LINE__);
 #ifdef HAVE_FREETYPE
   FT_Error error = FT_New_Face(library_->library_, filename.c_str(), 0, &ft_face_);
   if (error == FT_Err_Unknown_File_Format)
-    throw InternalError("FreeType Unknown Face File Format "+filename);
+    throw InternalError("FreeType Unknown Face File Format "+filename, __FILE__, __LINE__);
   else if (error)
 #endif
-    throw InternalError("Freetype Cannot Initialize Face "+filename);
+    throw InternalError("Freetype Cannot Initialize Face "+filename, __FILE__, __LINE__);
 }
 
 
@@ -118,7 +118,7 @@ FreeTypeFace::~FreeTypeFace() {
 #ifdef HAVE_FREETYPE
   if (FT_Done_Face(ft_face_))
 #endif
-    throw InternalError("FreeType Face did not close properly");
+    throw InternalError("FreeType Face did not close properly", __FILE__, __LINE__);
 }
 
 
@@ -168,7 +168,7 @@ FreeTypeFace::set_dpi(unsigned int x_dpi, unsigned int y_dpi) {
   y_dpi_ = y_dpi;
 #ifdef HAVE_FREETYPE
   if (FT_Set_Char_Size(ft_face_, Round(points_*64.0), Round(points_*64.0), x_dpi_, y_dpi_)) {
-    throw InternalError("FreeType Cannot set_dpi.");
+    throw InternalError("FreeType Cannot set_dpi.", __FILE__, __LINE__);
   }
 #endif
 }
@@ -178,7 +178,7 @@ FreeTypeFace::set_points(double points) {
   points_ = points;
 #ifdef HAVE_FREETYPE
   if (FT_Set_Char_Size(ft_face_, Round(points_*64.0), Round(points_*64.0), x_dpi_, y_dpi_)) 
-    throw InternalError("FreeType Cannot set_points.");
+    throw InternalError("FreeType Cannot set_points.", __FILE__, __LINE__);
 #endif
 }
 
@@ -255,9 +255,9 @@ FreeTypeText::layout()
 
 
     if (FT_Load_Glyph(face_->ft_face_, glyph->index_, FT_LOAD_DEFAULT))
-      throw InternalError("FreeType Unable to Load Glyph: "+text_[i]);
+      throw InternalError("FreeType Unable to Load Glyph: "+text_[i], __FILE__, __LINE__);
     if (FT_Get_Glyph(face_->ft_face_->glyph, &glyph->glyph_))
-      throw InternalError("FreeType Unable to Get Glyph: "+text_[i]);
+      throw InternalError("FreeType Unable to Get Glyph: "+text_[i], __FILE__, __LINE__);
 
     glyph->position_ = position;
     FT_Vector delta;
@@ -314,6 +314,10 @@ void
 FreeTypeText::render(int width, int height, unsigned char *buffer)
 {
 #ifdef HAVE_FREETYPE
+#ifdef __ia64__
+  //freetype gives a SIGBUS on the SGI Prism
+  return;
+#endif
   //  BBox bbox;
   //get_bounds(bbox);
 
@@ -326,7 +330,7 @@ FreeTypeText::render(int width, int height, unsigned char *buffer)
   for (unsigned int i = 0; i < glyphs_.size(); ++i) {
     FT_Glyph temp_glyph;
     if (FT_Glyph_Copy(glyphs_[i]->glyph_, &temp_glyph))
-      throw InternalError("FreeType Unable to Copy Glyph: "+text_[i]);
+      throw InternalError("FreeType Unable to Copy Glyph: "+text_[i], __FILE__, __LINE__);
     
     FT_Glyph_Transform(temp_glyph, 0, &delta);
     FT_Glyph_Get_CBox(temp_glyph, ft_glyph_bbox_truncate, &glyph_bbox);
@@ -335,7 +339,7 @@ FreeTypeText::render(int width, int height, unsigned char *buffer)
       continue;
 
     if (FT_Glyph_To_Bitmap(&temp_glyph, FT_RENDER_MODE_NORMAL, 0, 1)) {
-      throw InternalError("FreeType Unable to Render Glyph: "+text_[i]);
+      throw InternalError("FreeType Unable to Render Glyph: "+text_[i], __FILE__, __LINE__);
     } else {
       FT_BitmapGlyph bitmap_glyph = FT_BitmapGlyph(temp_glyph);
       ASSERT(bitmap_glyph->bitmap.num_grays == 256);

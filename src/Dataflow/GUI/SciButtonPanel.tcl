@@ -144,6 +144,7 @@ proc makeSciButtonPanel { parent close_window this args } {
 	  -command "wm withdraw $close_window"
       pack   $parent.btnBox.close -padx $outside_pad -pady $outside_pad -side left
       Tooltip $parent.btnBox.close "Hides this GUI"
+      bind $close_window <Escape> "wm withdraw $close_window"
   }
 
   # Vertical separator

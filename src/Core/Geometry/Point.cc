@@ -193,7 +193,3 @@ const TypeDescription* get_type_description(Point*)
 }
 
 } // End namespace SCIRun
-
-
-
-

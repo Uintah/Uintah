@@ -36,6 +36,8 @@
 #include <Core/Util/soloader.h>
 #include <Core/Util/sci_system.h>
 #include <Core/Util/Environment.h>
+#include <Core/Containers/StringUtil.h>
+
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <string>
@@ -80,7 +82,7 @@ DynamicLoader *DynamicLoader::scirun_loader_ = 0;
 Mutex DynamicLoader::scirun_loader_init_lock_("SCIRun loader init lock");
 
 
-CompileInfo::CompileInfo(const string &fn, const string &bcn, 
+CompileInfo::CompileInfo(const string &fn, const string &bcn,
 			 const string &tcn, const string &tcdec) :
   filename_(fn),
   base_class_name_(bcn),
@@ -99,18 +101,20 @@ CompileInfo::add_include(const string &inc)
   includes_.push_front(inc);
 }
 
+
 void
 CompileInfo::add_post_include(const string &post)
 {
   post_include_extra_ = post_include_extra_ + post;
 }
 
+
 //! CompileInfo::create_cc
 //!
 //! Generate the code for a .cc file from the compile info.
-//! If boolean empty == true, It contains an empty maker function.  
+//! If boolean empty == true, It contains an empty maker function.
 //! Used if the actual compilation fails.
-void 
+void
 CompileInfo::create_cc(ostream &fstr, bool empty) const
 {
   const string STD_STR("std::");
@@ -119,7 +123,8 @@ CompileInfo::create_cc(ostream &fstr, bool empty) const
 
   // generate standard includes
   list<string>::const_iterator iter = includes_.begin();
-  while (iter != includes_.end()) { 
+  while (iter != includes_.end())
+  {
     const string &s = *iter;
     if (s.substr(0, 5) == STD_STR)
     {
@@ -131,26 +136,33 @@ CompileInfo::create_cc(ostream &fstr, bool empty) const
 
   ASSERT(sci_getenv("SCIRUN_SRCDIR"));
   const std::string srcdir(sci_getenv("SCIRUN_SRCDIR"));
-  // generate other includes
+  // Generate other includes.
   iter = includes_.begin();
-  while (iter != includes_.end()) { 
+  while (iter != includes_.end())
+  {
     const string &s = *iter;
 
     if (!((s.substr(0, 5) == STD_STR) || s == "builtin"))
     {
       string::size_type loc = s.find(srcdir);
-      if( loc != string::npos ) {
+      if( loc != string::npos )
+      {
 	string::size_type endloc = loc+srcdir.size()+1;
 	fstr << "#include <" << s.substr(endloc) << ">\n";
-      } else {
+      }
+      else
+      {
 	// when using TAU, we will have the prefix .inst.h instead of .h
         // we fix it here
-        if (s.find(".inst.") != string::npos) {
+        if (s.find(".inst.") != string::npos)
+        {
           int pos = s.find(".inst.");
           string newString = s;
           newString.replace(pos,6,".");
           fstr << "#include \"" << newString << "\"\n";
-        } else {
+        }
+        else
+        {
           fstr << "#include \"" << s << "\"\n";
         }
       }
@@ -160,9 +172,11 @@ CompileInfo::create_cc(ostream &fstr, bool empty) const
 
   // output namespaces
   ci_map_type::const_iterator nsiter = namespaces_.begin();
-  while (nsiter != namespaces_.end()) { 
+  while (nsiter != namespaces_.end())
+  {
     const string &s = (*nsiter).first;
-    if (s != "builtin") {
+    if (s != "builtin")
+    {
       fstr << "using namespace " << s << ";" << endl;
     }
     ++nsiter;
@@ -184,12 +198,11 @@ CompileInfo::create_cc(ostream &fstr, bool empty) const
   {
     fstr << "  return 0;" << endl << "//";
   }
-  
-  fstr << "  return scinew " << template_class_name_ << "<" 
+
+  fstr << "  return scinew " << template_class_name_ << "<"
        << template_arg_ << ">;" << endl
        << "}" << endl << "}" << endl;
 }
-
 
 
 DynamicAlgoBase::DynamicAlgoBase() :
@@ -197,6 +210,7 @@ DynamicAlgoBase::DynamicAlgoBase() :
   lock("DynamicAlgoBase ref_cnt lock")
 {
 }
+
 
 DynamicAlgoBase::~DynamicAlgoBase()
 {
@@ -228,7 +242,8 @@ DynamicLoader::DynamicLoader() :
   map_lock_.unlock();
 }
 
-DynamicLoader::~DynamicLoader() 
+
+DynamicLoader::~DynamicLoader()
 {
   map_lock_.lock();
   algo_map_.clear();
@@ -237,9 +252,9 @@ DynamicLoader::~DynamicLoader()
 
 
 //! DynamicLoader::scirun_loader
-//! 
+//!
 //! How to get at the global loader for scirun.
-DynamicLoader& 
+DynamicLoader&
 DynamicLoader::scirun_loader()
 {
   if (scirun_loader_)
@@ -258,10 +273,11 @@ DynamicLoader::scirun_loader()
   }
 }
 
+
 //! DynamicLoader::entry_exists
-//! 
+//!
 //! Convenience function to query the map, but thread safe.
-bool 
+bool
 DynamicLoader::entry_exists(const string &entry)
 {
   map_lock_.lock();
@@ -270,27 +286,30 @@ DynamicLoader::entry_exists(const string &entry)
   return rval;
 }
 
+
 //! DynamicLoader::entry_is_null
-//! 
+//!
 //! Convenience function to query the value in the map, but thread safe.
-bool 
+bool
 DynamicLoader::entry_is_null(const string &entry)
 {
   map_lock_.lock();
-  bool rval =  (algo_map_.find(entry) != algo_map_.end() && 
+  bool rval =  (algo_map_.find(entry) != algo_map_.end() &&
 		algo_map_[entry] == 0);
   map_lock_.unlock();
   return rval;
 }
 
+
 //! DynamicLoader::wait_for_current_compile
-//! 
+//!
 //! Block if the lib associated with entry is compiling now.
 //! The only way false is returned, is for the compile to fail.
 bool
 DynamicLoader::wait_for_current_compile(const string &entry)
 {
-  while (entry_is_null(entry)) {
+  while (entry_is_null(entry))
+  {
     // another thread is compiling this lib, so wait.
     map_lock_.lock();
     compilation_cond_.wait(map_lock_);
@@ -303,28 +322,31 @@ DynamicLoader::wait_for_current_compile(const string &entry)
   return true;
 }
 
+
 //! DynamicLoader::compile_and_store
-//! 
+//!
 //! Compile and store the maker function mapped to the lib name.
 //! The sychronization code allows multiple threads to compile different
 //! libs at the same time, but forces only one thread can compile any one
 //! lib.
 bool
 DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
-				 ostream &serr)
-{  
+				 ProgressReporter *pr)
+{
   bool do_compile = false;
-  
-  if (! entry_exists(info.filename_)) {
+
+  if (! entry_exists(info.filename_))
+  {
     // first attempt at creation of this lib
     map_crowd_.writeLock();
-    if (! entry_exists(info.filename_)) {
+    if (! entry_exists(info.filename_))
+    {
       // create an empty entry, to catch threads chasing this one.
       map_lock_.lock();
-      algo_map_[info.filename_] = 0; 
+      algo_map_[info.filename_] = 0;
       map_lock_.unlock();
       do_compile = true; // this thread is compiling.
-    } 
+    }
     map_crowd_.writeUnlock();
   }
 
@@ -335,25 +357,38 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
 
   LIBRARY_HANDLE so = 0;
   struct stat buf;
-  if (stat(full_so.c_str(), &buf) == 0) {
+  if (stat(full_so.c_str(), &buf) == 0)
+  {
     so = GetLibraryHandle(full_so.c_str());
-  } else {
-    // the lib does not exist.  
-    create_cc(info, false, serr);
-    if (compile_so(info, serr)) { 
+  }
+  else
+  {
+    // the lib does not exist.
+    create_cc(info, false, pr);
+    if (compile_so(info, pr))
+    {
       so = GetLibraryHandle(full_so.c_str());
     }
     if (maybe_compile_p && so == 0)
     {
-      create_cc(info, true, serr);
-      compile_so(info, serr);
+      create_cc(info, true, pr);
+      compile_so(info, pr);
       so = GetLibraryHandle(full_so.c_str());
     }
-     
-    if (so == 0) { // does not compile
-      serr << "DYNAMIC COMPILATION ERROR: " << full_so 
-	   << " does not compile!!" << endl;
-      serr << SOError() << endl;
+
+    if (so == 0)
+    { // does not compile
+      const string errmsg = "DYNAMIC COMPILATION ERROR: " + full_so +
+        " does not compile!!";
+      if (maybe_compile_p)
+      {
+        pr->remark(errmsg);
+      }
+      else
+      {
+        pr->error(errmsg);
+      }
+      pr->msgStream() << SOError() << endl;
       // Remove the null ref for this lib from the map.
       map_lock_.lock();
       algo_map_.erase(info.filename_);
@@ -366,11 +401,12 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
 
   maker_fun maker = 0;
   maker = (maker_fun)GetHandleSymbolAddress(so, "maker");
-  
-  if (maker == 0) {
-    serr << "DYNAMIC LIB ERROR: " << full_so 
-	 << " no maker function!!" << endl;
-    serr << SOError() << endl;
+
+  if (maker == 0)
+  {
+    pr->error("DYNAMIC LIB ERROR: " + full_so +
+              " no maker function!!");
+    pr->msgStream() << SOError() << endl;
     // Remove the null ref for this lib from the map.
     map_lock_.lock();
     algo_map_.erase(info.filename_);
@@ -381,7 +417,7 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
   }
   // store this so that we can get at it again.
   store(info.filename_, maker);
-  // wake up all sleepers. 
+  // wake up all sleepers.
   compilation_cond_.conditionBroadcast();
   return true;
 }
@@ -389,34 +425,30 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
 
 
 //! DynamicLoader::compile_so
-//! 
+//!
 //! Attempt to compile file into a dynamic library, return true if it succeeded
 //! false otherwise.
-bool 
-DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
+bool
+DynamicLoader::compile_so(const CompileInfo &info, ProgressReporter *pr)
 {
-  string command = ("cd " + otf_dir() + "; " + MAKE_COMMAND + " " + 
+  string command = ("cd " + otf_dir() + "; " + MAKE_COMMAND + " " +
 		    info.filename_ + ext);
 
-  serr << "DynamicLoader - Executing: " << command << endl;
+  pr->msgStream() << "DynamicLoader - Executing: " << command << endl;
 
   FILE *pipe = 0;
   bool result = true;
 #ifdef __sgi
-  //if (serr == cerr)
-  //{
-  //command += " >> " + info.filename_ + "log 2>&1";
-  //}
   command += " 2>&1";
   pipe = popen(command.c_str(), "r");
   if (pipe == NULL)
   {
-    serr << "DynamicLoader::compile_so() syscal error unable to make.\n";
+    pr->remark("DynamicLoader::compile_so() syscal error unable to make.");
     result = false;
   }
 #else
   command += " > " + info.filename_ + "log 2>&1";
-  
+
 #ifdef _WIN32
   // we need to create a separate process here, because TCL's interpreter is active.
   // For some reason, calling make in 'system' will hang until the interpreter closes.
@@ -427,9 +459,9 @@ DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
 
   memset(&si_, 0, sizeof(si_));
   memset(&pi_, 0, sizeof(pi_));
-  
+
   DWORD status = 1;
-  
+
   HANDLE logfile;
   char logfilename[256];
   char otfdir[256];
@@ -441,13 +473,19 @@ DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
   // give it \ instead of / so windows can read it correctly
   string command1 = command.substr(0, loc);
   for (unsigned i = 0; i < command1.length(); i++)
-    if (command1[i] == '/') {
+  {
+    if (command1[i] == '/')
+    {
       command1[i] = '\\';
     }
+  }
   for (unsigned i = 0; i < strlen(otfdir); i++)
-    if (otfdir[i] == '/') {
+  {
+    if (otfdir[i] == '/')
+    {
       otfdir[i] = '\\';
     }
+  }
   string command2 = command.substr(loc+1, command.length());
 
   string batch_filename = string(otfdir)+"\\" + info.filename_ + "bat";
@@ -455,17 +493,19 @@ DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
   fprintf(batch, "\n%s\n%s\n", command1.c_str(), command2.c_str());
   fclose(batch);
 
-  si_.cb = sizeof(STARTUPINFO); 
+  si_.cb = sizeof(STARTUPINFO);
 
   // the CREATE_NO_WINDOW is so the process will not run in the same shell.
-  // Otherwise it will get confused while trying to run in the same shell as the 
+  // Otherwise it will get confused while trying to run in the same shell as the
   // tcl interpreter.
-  bool retval = 
+  bool retval =
     CreateProcess(batch_filename.c_str(),0,0,0,0,CREATE_NO_WINDOW,0,0, &si_, &pi_);
-  if (!retval) {
+  if (!retval)
+  {
     cerr << SOError() << "\n";
   }
-  else {
+  else
+  {
     WaitForSingleObject(pi_.hProcess, INFINITE);
     GetExitCodeProcess(pi_.hProcess, &status);
     CloseHandle(pi_.hProcess);
@@ -474,9 +514,10 @@ DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
 #else
   const int status = sci_system(command.c_str());
 #endif // def _WIN32
-  if(status != 0) {
-    serr << "DynamicLoader::compile_so() syscal error " << status << ": "
-	 << "command was '" << command << "'\n";
+  if(status != 0)
+  {
+    pr->remark("DynamicLoader::compile_so() syscal error " +
+	       to_string(status) + ": command was '" + command + "'.");
     result = false;
   }
   pipe = fopen(string(otf_dir() + "/" + info.filename_ + "log").c_str(), "r");
@@ -485,7 +526,8 @@ DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
   char buffer[256];
   while (pipe && fgets(buffer, 256, pipe) != NULL)
   {
-    serr << buffer;
+    pr->msgStream() << buffer;
+    pr->msgStream_flush();
   }
 
 #ifdef __sgi
@@ -496,8 +538,8 @@ DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
 
   if (result)
   {
-    serr << "DynamicLoader - Successfully compiled " << info.filename_ + ext 
-	 << endl;
+    pr->msgStream() << "DynamicLoader - Successfully compiled " <<
+      info.filename_ << ext << endl;
   }
   return result;
 }
@@ -530,31 +572,32 @@ DynamicLoader::cleanup_failed_compile(CompileInfoHandle info)
 //! DynamicLoader::create_cc
 //!
 //! Write a .cc file, from the compile info.
-//! If boolean empty == true, It contains an empty maker function.  
+//! If boolean empty == true, It contains an empty maker function.
 //! Used if the actual compilation fails.
-bool 
-DynamicLoader::create_cc(const CompileInfo &info, bool empty, ostream &serr)
+bool
+DynamicLoader::create_cc(const CompileInfo &info, bool empty,
+                         ProgressReporter *pr)
 {
   // Try to open the file for writing.
   string full = otf_dir() + "/" + info.filename_ + "cc";
   ofstream fstr(full.c_str());
 
-  if (!fstr) {
-    serr << "DynamicLoader::create_cc(empty = " << (empty ? "true":"false") 
-	 << ") - Could not create file " << full << endl;
+  if (!fstr)
+  {
+    pr->error(string("DynamicLoader::create_cc(empty = ") +
+              (empty ? "true":"false")
+              + ") - Could not create file " + full + ".");
     return false;
   }
 
   info.create_cc(fstr, empty);
 
-  serr << "DynamicLoader - Successfully created " << full << endl;
+  pr->msgStream() << "DynamicLoader - Successfully created " << full << endl;
   return true;
 }
 
 
-
-
-void 
+void
 DynamicLoader::store(const string &name, maker_fun m)
 {
   map_lock_.lock();
@@ -562,7 +605,8 @@ DynamicLoader::store(const string &name, maker_fun m)
   map_lock_.unlock();
 }
 
-bool 
+
+bool
 DynamicLoader::fetch(const CompileInfo &ci, DynamicAlgoHandle &algo)
 {
   bool rval = false;
@@ -572,7 +616,8 @@ DynamicLoader::fetch(const CompileInfo &ci, DynamicAlgoHandle &algo)
   map_crowd_.readLock();
   map_lock_.lock();
   map_type::iterator loc = algo_map_.find(ci.filename_);
-  if (loc != algo_map_.end()) {
+  if (loc != algo_map_.end())
+  {
     maker_fun m = loc->second;
     algo = DynamicAlgoHandle(m());
     rval = true;
@@ -582,29 +627,30 @@ DynamicLoader::fetch(const CompileInfo &ci, DynamicAlgoHandle &algo)
   return rval;
 }
 
-bool 
+
+bool
 DynamicLoader::get(const CompileInfo &ci, DynamicAlgoHandle &algo)
 {
+  ProgressReporter pr;
   return (fetch(ci, algo) ||
-	  (compile_and_store(ci, false) && fetch(ci, algo)));
+	  (compile_and_store(ci, false, &pr) && fetch(ci, algo)));
 }
 
 
 bool
 DynamicLoader::maybe_get(const CompileInfo &ci, DynamicAlgoHandle &algo)
 {
-  // log discarded.
-  ostringstream log;
+  ProgressReporter pr;
   return (fetch(ci, algo) ||
-	  (compile_and_store(ci, true, log) && fetch(ci, algo)));
+	  (compile_and_store(ci, true, &pr) && fetch(ci, algo)));
 }
 
+
 string
-DynamicLoader::otf_dir() {
+DynamicLoader::otf_dir()
+{
   ASSERT(sci_getenv("SCIRUN_ON_THE_FLY_LIBS_DIR"));
   return string(sci_getenv("SCIRUN_ON_THE_FLY_LIBS_DIR"));
 }
-	 
-
 
 } // End namespace SCIRun

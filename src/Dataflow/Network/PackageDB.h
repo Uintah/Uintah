@@ -99,7 +99,6 @@ namespace SCIRun {
       string		getCategoryName(const string &packName,
 					const string &catName,
 					const string &modName);
-      static LIBRARY_HANDLE	findLib(string);
     private:
 
       bool		findMaker(ModuleInfo* info);

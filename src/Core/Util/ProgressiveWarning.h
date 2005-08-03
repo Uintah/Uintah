@@ -68,7 +68,8 @@ DESCRIPTION
     ProgressiveWarning(std::string message, int multiplier = -1, std::ostream& stream = std::cerr);
 
     //! Invoke the warning numTimes times.  If we've hit this enough times, output the warning message.
-    void invoke(int numTimes = 1);
+    //! Return true if we output the message.
+    bool invoke(int numTimes = 1);
     void changeMessage(std::string message);
     void showWarning();
   private:

@@ -48,6 +48,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <iostream>
+#include <sci_defs/mpi_defs.h> // For MPIPP_H
 #include <mpi.h>
 using namespace PingPong_ns;
 using namespace std;

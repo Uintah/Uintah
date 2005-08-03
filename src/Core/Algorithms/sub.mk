@@ -31,9 +31,10 @@
 SRCDIR := Core/Algorithms
 
 SUBDIRS := \
+        $(SRCDIR)/DataIO                \
+	$(SRCDIR)/Fields		\
 	$(SRCDIR)/Geometry		\
 	$(SRCDIR)/Visualization		\
-        $(SRCDIR)/DataIO                \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

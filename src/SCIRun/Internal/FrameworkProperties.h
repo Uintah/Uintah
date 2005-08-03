@@ -56,8 +56,10 @@ class SCIRunFramework;
  * An implementation of the sci::cca::ports::FrameworkProperties
  * interface.
  * Provides access to framework properties that need to be exposed to
- * components such as it's url.
- *
+ * components such as:
+ *    key                    value          meaning
+ *    url                    string         this framework's url
+ *    network file           string         network file to be loaded by a builder
  */
 class FrameworkProperties : public ::sci::cca::ports::FrameworkProperties,
 			    public InternalComponentInstance

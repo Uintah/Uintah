@@ -535,6 +535,10 @@ public:
   static const TypeDescription* face_type_description();
   static const TypeDescription* cell_type_description();
   static Persistent* maker() { return scinew HexVolMesh<Basis>; }
+
+  //! must detach, if altering points!
+  vector<Point>& get_points() { return points_; }
+
 private:
 
   void compute_edges();

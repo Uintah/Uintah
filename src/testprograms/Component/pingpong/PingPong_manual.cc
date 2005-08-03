@@ -57,7 +57,7 @@ static void fn1(globus_nexus_endpoint_t* ep, globus_nexus_buffer_t* buffer,
     void* v=globus_nexus_endpoint_get_user_pointer(ep);
     PingPong::PingPong_interface* obj=(PingPong::PingPong_interface*)v;
     if(!obj)
-	throw InternalError("wrong object?");
+	throw InternalError("wrong object?", __FILE__, __LINE__);
     int ret=obj->pingpong(arg1);
 
     int size=globus_nexus_sizeof_int(2); // one for flag, one for data

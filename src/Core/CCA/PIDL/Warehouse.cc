@@ -96,7 +96,7 @@ Object* Warehouse::unregisterObject(int id)
   mutex.lock();
   map<int, Object*>::iterator iter=objects.find(id);
   if(iter == objects.end())
-    throw SCIRun::InternalError("Object not in wharehouse");
+    throw SCIRun::InternalError("Object not in wharehouse", __FILE__, __LINE__);
   objects.erase(id);
   if(objects.size() == 0)
     condition.conditionSignal();

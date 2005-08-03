@@ -53,6 +53,7 @@
 
 #include <stdio.h>
 
+
 #ifdef _WIN32
 #define SHARE __declspec(dllexport)
 #else
@@ -159,7 +160,14 @@ tkMain(argc, argv, nwait_func, nwait_func_data)
   TkConsoleCreate();
   */
 #endif
-  Tk_Main(argc, argv, Tcl_AppInit);
+  if (!getenv("SCIRUN_NOGUI"))
+  {
+    Tk_Main(argc, argv, Tcl_AppInit);
+  }
+  else
+  {
+    Tcl_Main(argc, argv, Tcl_AppInit);
+  }
   return 0;			/* Needed only to prevent compiler warning. */
 }
 
@@ -186,7 +194,13 @@ SHARE int
 Tcl_AppInit(interp)
      Tcl_Interp *interp;		/* Interpreter for application. */
 {
+  int scirun_nogui = 0;
   the_interp=interp;
+
+  if (getenv("SCIRUN_NOGUI"))
+  {
+    scirun_nogui = 1;
+  }
 
   printf("Initializing the tcl packages: ");
   fflush(stdout);
@@ -197,14 +211,18 @@ Tcl_AppInit(interp)
     return TCL_ERROR;
   }
   fflush(stdout);
-  printf("tk, ");
-  if (Tk_Init(interp) == TCL_ERROR) {
-    printf("Tk_Init() failed.  Is the DISPLAY environment variable set properly?\n");
 
-    exit_all_threads(TCL_ERROR);
+  if (!scirun_nogui)
+  {
+    printf("tk, ");
+    if (Tk_Init(interp) == TCL_ERROR) {
+      printf("Tk_Init() failed.  Is the DISPLAY environment variable set properly?\n");
+
+      exit_all_threads(TCL_ERROR);
+    }
+    fflush(stdout);
+    Tcl_StaticPackage(interp, "Tk", Tk_Init, Tk_SafeInit);
   }
-  fflush(stdout);
-  Tcl_StaticPackage(interp, "Tk", Tk_Init, Tk_SafeInit);
 
 #ifdef _WIN32
   /*
@@ -245,22 +263,26 @@ Tcl_AppInit(interp)
     return TCL_ERROR;
   }
   fflush(stdout);
-  printf("itk, ");
-  if (Itk_Init(interp) == TCL_ERROR) {
-    printf("Itk_Init() failed\n");
-    return TCL_ERROR;
+  if (!scirun_nogui)
+  {
+    printf("itk, ");
+    if (Itk_Init(interp) == TCL_ERROR) {
+      printf("Itk_Init() failed\n");
+      return TCL_ERROR;
+    }
+    fflush(stdout);
+    printf("blt, ");
+    if (Blt_Init(interp) == TCL_ERROR) {
+      printf("Blt_Init() failed\n");
+      return TCL_ERROR;
+    }
   }
-  fflush(stdout);
-  printf("blt, ");
-  if (Blt_Init(interp) == TCL_ERROR) {
-    printf("Blt_Init() failed\n");
-    return TCL_ERROR;
-  }
-
   Tcl_StaticPackage(interp, "Itcl", Itcl_Init, Itcl_SafeInit);
-  Tcl_StaticPackage(interp, "Itk", Itk_Init, (Tcl_PackageInitProc *) NULL);
-  Tcl_StaticPackage(interp, "BLT", Blt_Init, Blt_SafeInit);
-
+  if (!scirun_nogui)
+  {
+    Tcl_StaticPackage(interp, "Itk", Itk_Init, (Tcl_PackageInitProc *) NULL);
+    Tcl_StaticPackage(interp, "BLT", Blt_Init, Blt_SafeInit);
+  }
   printf("Done.\n");
   fflush(stdout);
 
@@ -269,9 +291,12 @@ Tcl_AppInit(interp)
    *  default into the global namespace.  Fix up the autoloader
    *  to do the same.
    */
-  if (Tcl_Import(interp, Tcl_GetGlobalNamespace(interp),
-		 "::itk::*", /* allowOverwrite */ 1) != TCL_OK) {
-    return TCL_ERROR;
+  if (!scirun_nogui)
+  {
+    if (Tcl_Import(interp, Tcl_GetGlobalNamespace(interp),
+                   "::itk::*", /* allowOverwrite */ 1) != TCL_OK) {
+      return TCL_ERROR;
+    }
   }
 
   if (Tcl_Import(interp, Tcl_GetGlobalNamespace(interp),
@@ -279,9 +304,19 @@ Tcl_AppInit(interp)
     return TCL_ERROR;
   }
 
-  if (Tcl_Eval(interp, "auto_mkindex_parser::slavehook { _%@namespace import -force ::itcl::* ::itk::* }") != TCL_OK) {
-    return TCL_ERROR;
+  if (!scirun_nogui)
+  {
+    if (Tcl_Eval(interp, "auto_mkindex_parser::slavehook { _%@namespace import -force ::itcl::* ::itk::* }") != TCL_OK) {
+      return TCL_ERROR;
+    }
   }
+  else
+  {
+    if (Tcl_Eval(interp, "auto_mkindex_parser::slavehook { _%@namespace import -force ::itcl::* }") != TCL_OK) {
+      return TCL_ERROR;
+    }
+  }
+  
 
   /*
    * Call Tcl_CreateCommand for application-specific commands, if
@@ -299,35 +334,38 @@ Tcl_AppInit(interp)
 #define PARAMETERTYPE
 #endif
 
-  printf("Adding SCI extensions to tcl: ");
-  fflush(stdout);
+  if (!scirun_nogui)
+  {
+    printf("Adding SCI extensions to tcl: ");
+    fflush(stdout);
 
 #ifdef SCI_OPENGL
-  printf("OpenGL widget, ");
-  Tcl_CreateCommand(interp, "opengl", OpenGLCmd, (ClientData) Tk_MainWindow(interp),
-		    (void (*)(PARAMETERTYPE)) NULL);
+    printf("OpenGL widget, ");
+    Tcl_CreateCommand(interp, "opengl", OpenGLCmd, (ClientData) Tk_MainWindow(interp),
+                      (void (*)(PARAMETERTYPE)) NULL);
 #endif
-  fflush(stdout);
-  printf("bevel widget, ");
-  Tcl_CreateCommand(interp, "bevel", BevelCmd, (ClientData) Tk_MainWindow(interp),
-		    (void (*)(PARAMETERTYPE)) NULL);
-  fflush(stdout);
-  printf("range widget, ");
-  Tcl_CreateObjCommand(interp, "range", (Tcl_ObjCmdProc *)Tk_RangeObjCmd,
-            (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
-  fflush(stdout);
-  printf("cursor, ");
-  Tcl_CreateCommand(interp, "cursor", Tk_CursorCmd,
-		    (ClientData) Tk_MainWindow(interp), NULL);
+    fflush(stdout);
+    printf("bevel widget, ");
+    Tcl_CreateCommand(interp, "bevel", BevelCmd, (ClientData) Tk_MainWindow(interp),
+                      (void (*)(PARAMETERTYPE)) NULL);
+    fflush(stdout);
+    printf("range widget, ");
+    Tcl_CreateObjCommand(interp, "range", (Tcl_ObjCmdProc *)Tk_RangeObjCmd,
+                         (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    fflush(stdout);
+    printf("cursor, ");
+    Tcl_CreateCommand(interp, "cursor", Tk_CursorCmd,
+                      (ClientData) Tk_MainWindow(interp), NULL);
 
-  printf("Done.\n");
-  fflush(stdout);
+    printf("Done.\n");
+    fflush(stdout);
 
-  /*
-   * Initialize the BLine Canvas item
-   */
+    /*
+     * Initialize the BLine Canvas item
+     */
 
-  BLineInit();
+    BLineInit();
+  }
 
   /*
    * Specify a user-specific startup file to invoke if the application

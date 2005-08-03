@@ -33,8 +33,8 @@
 */
 
 #include <Core/Services/ServiceNode.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
-#include <Dataflow/XMLUtil/StrX.h>
+#include <Core/XMLUtil/XMLUtil.h>
+#include <Core/XMLUtil/StrX.h>
 #include <Core/Util/RWS.h>
 
 

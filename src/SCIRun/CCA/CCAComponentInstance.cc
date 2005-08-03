@@ -38,30 +38,26 @@
  *
  */
 
-#include <SCIRun/CCA/CCAComponentInstance.h>
-#include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/TypeMap.h>
+#include <SCIRun/SCIRunFramework.h>
+#include <SCIRun/CCA/CCAComponentInstance.h>
 #include <SCIRun/CCA/CCAPortInstance.h>
 #include <SCIRun/CCA/CCAException.h>
-#include <iostream>
 #include <Core/Thread/Mutex.h>
+#include <iostream>
 
 namespace SCIRun {
 
-CCAComponentInstance::CCAComponentInstance(SCIRunFramework* framework,
-                                           const std::string& instanceName,
-                                           const std::string& typeName,
-                            const sci::cca::TypeMap::pointer& com_properties,
-                     const sci::cca::Component::pointer& component)
-  : ComponentInstance(framework, instanceName, typeName), component(component)
+CCAComponentInstance::CCAComponentInstance(
+    SCIRunFramework* framework,
+    const std::string &instanceName,
+    const std::string &typeName,
+    const sci::cca::TypeMap::pointer &tm,
+    const sci::cca::Component::pointer &component)
+: ComponentInstance(framework, instanceName, typeName, tm),
+  component(component), size(0), rank(0)
 {
-  if (com_properties.isNull()) {
-    std::cerr << "### Null properties for cca comp" << std::endl;
-    this->com_properties=createTypeMap();
-  } else {
-    this->com_properties=com_properties;
-  }
-  mutex=new Mutex("getPort mutex");
+    mutex = new Mutex("getPort mutex");
 }
 
 CCAComponentInstance::~CCAComponentInstance()
@@ -91,7 +87,8 @@ sci::cca::Port::pointer CCAComponentInstance::getPort(const std::string& name)
 sci::cca::Port::pointer
 CCAComponentInstance::getPortNonblocking(const std::string& name)
 {
-    sci::cca::Port::pointer svc = framework->getFrameworkService(name, instanceName);
+    sci::cca::Port::pointer svc =
+        framework->getFrameworkService(name, instanceName);
     if (!svc.isNull()) {
         return svc;
     }
@@ -119,8 +116,7 @@ void CCAComponentInstance::releasePort(const std::string& name)
 
     std::map<std::string, CCAPortInstance*>::iterator iter = ports.find(name);
     if (iter == ports.end()) {
-        std::cerr << "Released an unknown port: " << name << std::endl;
-        throw CCAException("Released an unknown port: "+name);
+        throw CCAException("Released an unknown port: " + name);
     }
 
     CCAPortInstance* pr = iter->second;
@@ -149,13 +145,9 @@ void CCAComponentInstance::registerUsesPort(const std::string& portName,
     std::map<std::string, CCAPortInstance*>::iterator iter = ports.find(portName);
     if (iter != ports.end()) {
         if (iter->second->porttype == CCAPortInstance::Provides) {
-            throw CCAException("name conflict between uses and provides ports");
+            throw CCAException("name conflict between uses and provides ports for " + portName + " " + portType + " " + instanceName);
         } else {
-            std::cerr << "CCAComponentInstance::registerUsesPort called twice, instance="
-                      << instanceName
-                      << ", portName = " << portName << ", portType = " << portType
-                      << std::endl;
-            throw CCAException("registerUsesPort called twice");
+            throw CCAException("registerUsesPort called twice for " + portName + " " + portType + " " + instanceName);
         }
     }
     ports.insert(make_pair(portName, new CCAPortInstance(portName, portType, properties, CCAPortInstance::Uses)));
@@ -167,13 +159,12 @@ std::cerr << "CCAComponentInstance::unregisterUsesPort: " << portName << std::en
     std::map<std::string, CCAPortInstance*>::iterator iter = ports.find(portName);
     if (iter != ports.end()) {
         if (iter->second->porttype == CCAPortInstance::Provides) {
-            throw CCAException("name conflict between uses and provides ports");
+            throw CCAException("name conflict between uses and provides ports for " + portName);
         } else {
             ports.erase(portName);
         }
     } else {
-        std::cerr << "port name not found, unregisterUsesPort not done\n";
-        throw CCAException("port name not found");
+        throw CCAException("port name not found for " + portName);
     }
 }
 
@@ -185,15 +176,15 @@ void CCAComponentInstance::addProvidesPort(const sci::cca::Port::pointer& port,
   std::map<std::string, CCAPortInstance*>::iterator iter = ports.find(portName);
   if (iter != ports.end()) {
     if (iter->second->porttype == CCAPortInstance::Uses) {
-      throw CCAException("name conflict between uses and provides ports"); }
+      throw CCAException("name conflict between uses and provides ports for " + portName); }
     else {
-      throw CCAException("addProvidesPort called twice"); 
+      throw CCAException("addProvidesPort called twice for " + portName); 
     }
   }
-  if (!properties.isNull() &&  properties->getInt("size",1)>1){
+  if (!properties.isNull() && properties->getInt("size", 1) > 1) {
     //if port is collective.
-    int size=properties->getInt("size",1);
-    int rank=properties->getInt("rank",0);
+    size = properties->getInt("size", 1);
+    rank = properties->getInt("rank", 0);
     
     mutex->lock();
     
@@ -226,41 +217,52 @@ void CCAComponentInstance::addProvidesPort(const sci::cca::Port::pointer& port,
     } else {
       precond[portName]->wait(*mutex);
       if (--precnt[portName]==0){
-	precnt.erase(portName);
-	delete precond[portName];
-	precond.erase(portName);
+        precnt.erase(portName);
+        delete precond[portName];
+        precond.erase(portName);
       }
     }
     mutex->unlock();
     return;
-  }
-  else {
+  } else {
     ports.insert(make_pair(portName,
                          new CCAPortInstance(portName, portType, properties,
                                              port, CCAPortInstance::Provides)));
   }
 }
 
+// should throw CCAException of type 'PortNotDefined'
 void CCAComponentInstance::removeProvidesPort(const std::string& name)
 {
-  std::cerr << "removeProvidesPort not done, name=" << name << std::endl;
+    if (size < 1) {
+        std::cerr << "CCAComponentInstance::removeProvidesPort: name="
+                  << name << std::endl;
+        std::map<std::string, CCAPortInstance*>::iterator iter =
+            ports.find(name);
+        if (iter == ports.end()) { // port can't be found
+            throw CCAException("Port " + name + " is not defined.");
+        }
+
+        // check if port is in use???
+        delete iter->second;
+        ports.erase(iter);
+    } else { // don't handle parallel ports for now
+        std::cerr << "CCAComponentInstance::removeProvidesPort is not implemented: name="
+                  << name << std::endl;
+    }
 }
 
 sci::cca::TypeMap::pointer
 CCAComponentInstance::getPortProperties(const std::string& portName)
 { 
-  if (portName=="")
-    {
-    //return component property.
-    return com_properties;
-    }
   std::cerr << "getPortProperties not done, name=" << portName << std::endl;
   return sci::cca::TypeMap::pointer(0);
 }
 
-sci::cca::ComponentID::pointer CCAComponentInstance::getComponentID()
+sci::cca::ComponentID::pointer
+CCAComponentInstance::getComponentID()
 {
-  return sci::cca::ComponentID::pointer(new ComponentID(framework, instanceName));
+    return sci::cca::ComponentID::pointer(new ComponentID(framework, instanceName));
 }
 
 PortInstanceIterator* CCAComponentInstance::getPorts()
@@ -279,12 +281,12 @@ CCAComponentInstance::Iterator::~Iterator()
 
 PortInstance* CCAComponentInstance::Iterator::get()
 {
-  return iter->second;
+    return iter->second;
 }
 
 bool CCAComponentInstance::Iterator::done()
 {
-  return iter == comp->ports.end();
+    return iter == comp->ports.end();
 }
 
 void CCAComponentInstance::Iterator::next()

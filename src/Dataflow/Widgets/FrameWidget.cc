@@ -334,8 +334,8 @@ FrameWidget::redraw()
   ((DistanceConstraint*)constraints[ConstDC])->SetMinimum(1.6*widget_scale_);
   ((DistanceConstraint*)constraints[ConstRD])->SetMinimum(sqrt(2*1.6*1.6)*widget_scale_);
 
-  Right.normalize();
-  Down.normalize();
+  Right.safe_normalize();
+  Down.safe_normalize();
   Vector Norm(Cross(Right, Down));
   for (Index geom = 0; geom < NumPicks; geom++)
   {
@@ -434,12 +434,12 @@ FrameWidget::geom_moved( GeomPickHandle, int axis, double dist,
   case PickSphL: case PickSphR:
     {
       Vector rot_start_ray_norm = rot_start_ray_;
-      rot_start_ray_norm.normalize();
+      rot_start_ray_norm.safe_normalize();
       Vector rot_current_ray_norm = rot_start_ray_ + pick_offset;
-      rot_current_ray_norm.normalize();
+      rot_current_ray_norm.safe_normalize();
       rot_axis=Cross(rot_start_ray_norm, rot_current_ray_norm);
       if (rot_axis.length2()<1.e-16) { rot_axis=Vector(1,0,0); }
-      else { rot_axis.normalize(); }
+      else { rot_axis.safe_normalize(); }
 
       trans.post_translate(c.vector());
       const double amount = pick_offset.length() / rot_start_ray_.length();

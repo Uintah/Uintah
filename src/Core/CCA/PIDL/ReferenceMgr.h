@@ -48,7 +48,7 @@
 #define CCA_PIDL_ReferenceMgr_h
 
 #include <Core/CCA/PIDL/Reference.h>
-#include <Core/CCA/Comm/Intra/IntraComm.h>
+//#include <Core/CCA/Comm/Intra/IntraComm.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
@@ -153,7 +153,7 @@ DESCRIPTION
     /////////
     // An object used to facilitate intra-component communication
     // (parallel component case)
-    IntraComm* intracomm;
+    //    IntraComm* intracomm;
     
   protected:
     ///////

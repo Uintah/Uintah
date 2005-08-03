@@ -36,7 +36,7 @@
 #include <Dataflow/Network/ComponentNode.h>
 #include <Dataflow/Network/SkeletonFiles.h>
 #include <Dataflow/Network/GenFiles.h>
-#include <Dataflow/Network/FileUtils.h>
+#include <Core/Util/FileUtils.h>
 #include <Core/Util/Environment.h>
 #include <Core/OS/Dir.h> // for MKDIR
 

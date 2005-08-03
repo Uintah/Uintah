@@ -40,13 +40,14 @@
  */
 
 #include <main/sci_version.h>
-#include <main/init.h>
+
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Scheduler.h>
+#include <Dataflow/TCLThread/TCLThread.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/TCLThread/TCLThread.h>
 #include <Core/GuiInterface/TCLInterface.h>
+#include <Core/Init/init.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/sci_system.h>
 #include <Core/Comm/StringSocket.h>
@@ -60,6 +61,8 @@
 #include <Core/SystemCall/SystemCallManager.h>
 
 #include <TauProfilerForSCIRun.h>
+
+#include <sci_defs/ptolemy_defs.h>
 
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -77,6 +80,9 @@ using std::cout;
 #  pragma set woff 1424
 #endif
 
+#ifdef HAVE_PTOLEMY
+#  include <Packages/Ptolemy/Core/Comm/PtolemyServer.h>
+#endif
 
 using namespace SCIRun;
 
@@ -90,6 +96,9 @@ usage()
   cout << "    [-]-v[ersion]       : prints out version information\n";
   cout << "    [-]-h[elp]          : prints usage information\n";
   cout << "    [-]-p[ort] [PORT]   : start remote services port on port number PORT\n";
+#ifdef HAVE_PTOLEMY
+  cout << "    [-]-SPAs[erver]     : start the S.P.A. server thread\n";
+#endif
   //  cout << "    [-]-eai             : enable external applications interface\n";
   cout << "    [--nosplash]        : disable the splash screen\n";
   cout << "    net_file            : SCIRun Network Input File\n";
@@ -168,7 +177,14 @@ parse_args( int argc, char *argv[] )
           }
           sci_putenv("SCIRUN_SERVICE_PORT",to_string(port));
           sci_putenv("SCIRUN_EXTERNAL_APPLICATION_INTERFACE","1");
-        }   
+        }
+#ifdef HAVE_PTOLEMY
+      else if ( ( arg == "--SPAserver" ) || ( arg == "-SPAserver" ) ||
+                ( arg == "-SPAs" ) || ( arg == "--SPAs" ) || ( arg == "-spas" ) )
+        {
+          sci_putenv("PTOLEMY_CLIENT_PORT","1");
+        }
+#endif   
       else
         {
           struct stat buf;
@@ -339,11 +355,9 @@ main(int argc, char *argv[], char **environment) {
 
   SCIRunInit();
 
-  // Always switch on this option, Its needed for running external applications
-  const bool use_eai = true;
-  // bool use_eai = sci_getenv_p("SCIRUN_EXTERNAL_APPLICATION_INTERFACE");
-  // Now split of a process for running external processes
+  const bool use_eai = sci_getenv_p("SCIRUN_EXTERNAL_APPLICATION_INTERFACE");
   if (use_eai) {
+    // Now split off a process for running external processes
     systemcallmanager_ = scinew SystemCallManager();
     systemcallmanager_->create();
     start_eai();
@@ -401,6 +415,20 @@ main(int argc, char *argv[], char **environment) {
 
   // Now activate the TCL event loop
   tcl_task->release_mainloop();
+
+#ifdef HAVE_PTOLEMY
+  //start the Ptolemy/spa server socket
+  const char *pt_str = sci_getenv("PTOLEMY_CLIENT_PORT");
+  if (pt_str && string_to_int(pt_str, port)) {
+    cerr << "Starting SPA server thread" << std::endl;
+    PtolemyServer *ptserv = scinew PtolemyServer(gui, net);
+    Thread *pt = new Thread(ptserv, "Ptolemy/SPA Server",0, Thread::NotActivated);
+    pt->setStackSize(1024*1024);
+    pt->activate(false);
+    pt->detach();   
+    PtolemyServer::servSem().up();
+  }
+#endif
 
 #ifdef _WIN32
   // windows has a semantic problem with atexit(), so we wait here instead.

@@ -150,7 +150,7 @@ NrrdReader::read_nrrd()
 
     // check that the last 3 chars are .nd for us to pio
     if (fn.substr(len - ext.size(), ext.size()) == ext) {
-      Piostream *stream = auto_istream(fn);
+      Piostream *stream = auto_istream(fn, this);
       if (!stream)
       {
 	error("Error reading file '" + fn + "'.");
@@ -241,13 +241,16 @@ bool NrrdReader::write_tmpfile(string filename, string* tmpfilename, string conv
     string(sci_getenv("SCIRUN_OBJDIR")) + "/StandAlone/convert/" +
     conv_command;
   while ((loc = command.find("%f")) != string::npos){
-    command.replace(loc, 2, filename);
+    command.replace(loc, 2, "'"+filename+"'");
   }
   while ((loc = command.find("%t")) != string::npos){
-    command.replace(loc, 2, *tmpfilename);
+    command.replace(loc, 2, "'"+*tmpfilename+"'");
   }
   const int status = sci_system(command.c_str());
-  ASSERT(status == 0);
+  if (status)
+  {
+    remark("'" + command + "' failed.  Read may not work.");
+  }
   return true;
 }
 

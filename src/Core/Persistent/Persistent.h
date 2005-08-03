@@ -49,6 +49,7 @@
 #include <sgi_stl_warnings_on.h>
 
 #include <Core/Util/Assert.h>
+#include <Core/Util/ProgressReporter.h>
 namespace SCIRun {
 
 using std::string;
@@ -80,64 +81,86 @@ public:
     Read,
     Write
   };
+
+  enum Endian {
+    Big,
+    Little
+  };
+
+  static const int PERSISTENT_VERSION;
   
 protected:
-  Piostream(Direction, int, const string & =string(""));
+  Piostream(Direction, int, const string &, ProgressReporter *pr);
+
   Direction dir;
-  int version;
-  int err;
+  int version_;
+  bool err;
+  int file_endian;
   
   MapPersistentInt* outpointers;
   MapIntPersistent* inpointers;
   
   int current_pointer_id;
-  virtual void emit_pointer(int&, int&)=0;
-  static bool readHeader(const string& filename, char* hdr,
-			 const char* type, int& version);
+
+  bool have_peekname_;
+  string peekname_;
+
+  ProgressReporter *reporter_;
+  bool own_reporter_;
+
+  virtual void emit_pointer(int& have_data, int& pointer_id);
+  static bool readHeader(ProgressReporter *pr,
+                         const string& filename, char* hdr,
+			 const char* type, int& version, int& endian);
 public:
   string file_name;
 
   virtual ~Piostream();
-  virtual string peek_class()=0;
-  virtual int begin_class(const string& name, int current_version)=0;
-  virtual void end_class()=0;
+
+  virtual string peek_class();
+  virtual int begin_class(const string& name, int current_version);
+  virtual void end_class();
+  virtual void begin_cheap_delim();
+  virtual void end_cheap_delim();
+
+  virtual void io(bool&);
+  virtual void io(char&) = 0;
+  virtual void io(signed char&) = 0;
+  virtual void io(unsigned char&) = 0;
+  virtual void io(short&) = 0;
+  virtual void io(unsigned short&) = 0;
+  virtual void io(int&) = 0;
+  virtual void io(unsigned int&) = 0;
+  virtual void io(long&) = 0;
+  virtual void io(unsigned long&) = 0;
+  virtual void io(long long&) = 0;
+  virtual void io(unsigned long long&) = 0;
+  virtual void io(double&) = 0;
+  virtual void io(float&) = 0;
+  virtual void io(string& str) = 0;
 
   void io(Persistent*&, const PersistentTypeID&);
 
-  virtual void begin_cheap_delim()=0;
-  virtual void end_cheap_delim()=0;
+  bool reading() const { return dir == Read; }
+  bool writing() const { return dir == Write; }
+  bool error() const { return err; }
+  int version() const { return version_; }
 
-  virtual void io(bool&)=0;
-  virtual void io(char&)=0;
-  virtual void io(signed char&)=0;
-  virtual void io(unsigned char&)=0;
-  virtual void io(short&)=0;
-  virtual void io(unsigned short&)=0;
-  virtual void io(int&)=0;
-  virtual void io(unsigned int&)=0;
-  virtual void io(long&)=0;
-  virtual void io(unsigned long&)=0;
-  virtual void io(long long&)=0;
-  virtual void io(unsigned long long&)=0;
-  virtual void io(double&)=0;
-  virtual void io(float&)=0;
-  virtual void io(string& str)=0;
+  virtual bool supports_block_io() { return false; } // deprecated, redundant.
+  // Returns true if bkock_io was supported (even on error).
+  virtual bool block_io(void*, size_t, size_t) { return false; }
 
-  int reading();
-  int writing();
-  int error();
-
-  virtual bool supports_block_io() { return false; }
-  virtual void block_io(void*, size_t, size_t) { ASSERTFAIL("unsupported"); }
-
-  friend Piostream* auto_istream(const string& filename);
+  friend Piostream* auto_istream(const string& filename,
+                                 ProgressReporter *pr = 0);
+  friend Piostream* auto_ostream(const string& filename, const string& type,
+                                 ProgressReporter *pr = 0);
 };
 
 //----------------------------------------------------------------------
 class Persistent {
 public:
   virtual ~Persistent();
-  virtual void io(Piostream&)=0;
+  virtual void io(Piostream&) = 0;
 };
 
 //----------------------------------------------------------------------

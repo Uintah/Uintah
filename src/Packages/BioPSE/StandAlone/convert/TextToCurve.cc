@@ -40,7 +40,9 @@
  */
 
 #include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Basis/Constant.h>
 #include <Core/Datatypes/CurveMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/Pstreams.h>
 
 #include <iostream>
@@ -121,8 +123,11 @@ main(int argc, char **argv) {
     return 0;
   }
   setDefaults();
+  typedef CurveMesh<CrvLinearLgn<Point> > CMesh;
+  typedef ConstantBasis<double>                ConBasis;
+  typedef GenericField<CMesh, ConBasis, vector<double> > CField;  
 
-  CurveMesh *mesh = new CurveMesh();
+  CMesh *mesh = new CMesh();
 
   char *nodes_name = argv[1];
   char *edges_name = argv[2];
@@ -167,9 +172,11 @@ main(int argc, char **argv) {
     }
   }
 
-  CurveField<double> *field = scinew CurveField<double>(mesh, 0);
 
-  CurveMesh::Edge::iterator bi, ei;
+
+  CField *field = scinew CField(mesh);
+
+  CMesh::Edge::iterator bi, ei;
   mesh->begin(bi); mesh->end(ei);
 
   while (bi != ei)

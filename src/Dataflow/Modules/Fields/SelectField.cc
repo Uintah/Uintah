@@ -31,7 +31,6 @@
 //    Author : Michael Callahan
 //    Date   : August 2001
 
-#include <Core/Persistent/Pstreams.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/GeometryPort.h>

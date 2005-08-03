@@ -44,10 +44,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <iostream>
+
 
 namespace SCIRun {
 
-ArrayIndexOutOfBounds::ArrayIndexOutOfBounds(long value, long lower, long upper)
+ArrayIndexOutOfBounds::ArrayIndexOutOfBounds(long value, long lower, long upper,
+                                             const char* file, int line)
     : value(value), lower(lower), upper(upper)
 {
     // Format the message now...
@@ -55,6 +58,12 @@ ArrayIndexOutOfBounds::ArrayIndexOutOfBounds(long value, long lower, long upper)
     sprintf(buf, "Array index %ld out of range [%ld, %ld)",
 	    value, lower, upper);
     msg=strdup(buf);
+   
+#ifdef EXCEPTIONS_CRASH
+    std::cout << "An ArrayIndexOutOfBounds exception was thrown.\n";
+    std::cout << file << ":" << line << "\n";
+    std::cout << msg << "\n";
+#endif
 }
 
 ArrayIndexOutOfBounds::ArrayIndexOutOfBounds(const ArrayIndexOutOfBounds& copy)

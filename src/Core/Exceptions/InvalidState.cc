@@ -40,12 +40,19 @@
  */
 
 #include <Core/Exceptions/InvalidState.h>
+#include <iostream>
+
 namespace SCIRun {
 
 
-InvalidState::InvalidState(const std::string& message)
+InvalidState::InvalidState(const std::string& message, const char* file, int line)
     : message_(message)
 {
+#ifdef EXCEPTIONS_CRASH
+  std::cout << "An InvalidState exception was thrown.\n";
+  std::cout << file << ":" << line << "\n";
+  std::cout << message_ << "\n";
+#endif
 }
 
 InvalidState::InvalidState(const InvalidState& copy)

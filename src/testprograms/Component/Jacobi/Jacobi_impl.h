@@ -43,8 +43,8 @@
 #ifndef Jacobi_Jacobi_impl_h
 #define Jacobi_Jacobi_impl_h
 
-#include <sci_defs/config_defs.h> // For MPIPP_H on SGI
-#include <mpi.h>
+#include <sci_defs/mpi_defs.h>
+#include <sci_mpi.h>
 #include <testprograms/Component/Jacobi/Jacobi_sidl.h>
 
 namespace Jacobi_ns {
