@@ -312,6 +312,10 @@ WARNING
        return getNodeHighIndex()-getNodeLowIndex();
      }
      
+     inline IntVector getNInteriorNodes() const {
+       return getInteriorNodeHighIndex()-getInteriorNodeLowIndex();
+     }
+
      long totalCells() const;
      
      void performConsistencyCheck() const;
