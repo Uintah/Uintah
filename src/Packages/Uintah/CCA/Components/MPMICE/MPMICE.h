@@ -298,12 +298,31 @@ public:
                                 const MaterialSet* matls,
                                 const VarLabel* variable);
 
+  void scheduleRefineExtensiveVariableCC(SchedulerP& sched,
+                                         const PatchSet* patches,
+                                         const MaterialSet* matls,
+                                         const VarLabel* variable);
+
   template<typename T>
     void scheduleCoarsenVariableCC(SchedulerP& sched,
                                    const PatchSet* patches,
                                    const MaterialSet* matls,
                                    const VarLabel* variable,
                                    T defaultValue);
+
+  template<typename T>
+    void scheduleMassWeightedCoarsenVariableCC(SchedulerP& sched,
+                                               const PatchSet* patches,
+                                               const MaterialSet* matls,
+                                               const VarLabel* variable,
+                                               T defaultValue);
+
+  template<typename T>
+    void scheduleCoarsenAddVariableCC(SchedulerP& sched,
+                                      const PatchSet* patches,
+                                      const MaterialSet* matls,
+                                      const VarLabel* variable,
+                                      T defaultValue);
 
   template<typename T>
     void refineVariableCC(const ProcessorGroup*,
@@ -314,6 +333,14 @@ public:
                           const VarLabel* variable);
 
   template<typename T>
+    void refineExtensiveVariableCC(const ProcessorGroup*,
+                                   const PatchSubset* patch,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw,
+                                   const VarLabel* variable);
+
+  template<typename T>
     void coarsenVariableCC(const ProcessorGroup*,
                            const PatchSubset* patch,
                            const MaterialSubset* matls,
@@ -321,6 +348,24 @@ public:
                            DataWarehouse* new_dw,
                            const VarLabel* variable,
                            T defaultValue);
+
+  template<typename T>
+    void massWeightedCoarsenVariableCC(const ProcessorGroup*,
+                                       const PatchSubset* patch,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw,
+                                       const VarLabel* variable,
+                                       T defaultValue);
+
+  template<typename T>
+    void coarsenAddVariableCC(const ProcessorGroup*,
+                              const PatchSubset* patch,
+                              const MaterialSubset* matls,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw,
+                              const VarLabel* variable,
+                              T defaultValue);
 
 private:
   void setBC_rho_micro(const Patch* patch,
