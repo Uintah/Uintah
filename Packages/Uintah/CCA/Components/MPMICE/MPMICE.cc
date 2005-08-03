@@ -1220,20 +1220,21 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       //---- B U L L E T   P R O O F I N G------
       IntVector neg_cell;
       ostringstream warn;
+      int L = getLevel(patches)->getIndex();
       if(d_testForNegTemps_mpm){
         if (!d_ice->areAllValuesPositive(Temp_CC, neg_cell)) {
-          warn <<"ERROR MPMICE::interpolateNCToCC_0, mat "<< indx <<" cell "
+          warn <<"ERROR MPMICE:("<< L<<"):interpolateNCToCC_0, mat "<< indx <<" cell "
                << neg_cell << " Temp_CC " << Temp_CC[neg_cell] << "\n ";
           throw InvalidValue(warn.str(), __FILE__, __LINE__);
         }
       }
       if (!d_ice->areAllValuesPositive(rho_CC, neg_cell)) {
-        warn <<"ERROR MPMICE::interpolateNCToCC_0, mat "<< indx <<" cell "
+        warn <<"ERROR MPMICE:("<< L<<"):interpolateNCToCC_0, mat "<< indx <<" cell "
              << neg_cell << " rho_CC " << rho_CC[neg_cell]<< "\n ";
         throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
       if (!d_ice->areAllValuesPositive(sp_vol_CC, neg_cell)) {
-        warn <<"ERROR MPMICE::interpolateNCToCC_0, mat "<< indx <<" cell "
+        warn <<"ERROR MPMICE:("<< L<<"):interpolateNCToCC_0, mat "<< indx <<" cell "
              << neg_cell << " sp_vol_CC " << sp_vol_CC[neg_cell]<<"\n ";
         throw InvalidValue(warn.str(), __FILE__, __LINE__);
       } 
@@ -1418,13 +1419,15 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
       ostringstream warn;
       if(d_testForNegTemps_mpm){
         if (!d_ice->areAllValuesPositive(int_eng_L, neg_cell)) {
-          warn <<"ERROR MPMICE::computeLagrangianValuesMPM, mat "<< indx<<" cell "
+          int L = getLevel(patches)->getIndex();
+          warn <<"ERROR MPMICE:("<< L<<"):computeLagrangianValuesMPM, mat "<< indx<<" cell "
                << neg_cell << " int_eng_L " << int_eng_L[neg_cell] << "\n ";
           throw InvalidValue(warn.str(), __FILE__, __LINE__);
         }
       }
       if (!d_ice->areAllValuesPositive(rho_CC, neg_cell)) {
-        warn <<"ERROR MPMICE::computeLagrangianValuesMPM, mat "<<indx<<" cell "
+        int L = getLevel(patches)->getIndex();
+        warn <<"ERROR MPMICE:("<< L<<"):computeLagrangianValuesMPM, mat "<<indx<<" cell "
              << neg_cell << " rho_CC " << rho_CC[neg_cell]<< "\n ";
         throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
