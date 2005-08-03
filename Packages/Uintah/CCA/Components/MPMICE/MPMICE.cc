@@ -543,7 +543,7 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
     t->requires(Task::NewDW, Mlb->gTemperatureLabel,Ghost::AroundCells, 1);
     t->requires(Task::NewDW, Mlb->gSp_volLabel,     Ghost::AroundCells, 1);
     t->requires(Task::OldDW, MIlb->NC_CCweightLabel,one_matl,
-                                                   Ghost::AroundCells, 1);
+                                                    Ghost::AroundCells, 1);
     t->requires(Task::OldDW, Ilb->sp_vol_CCLabel,   Ghost::None, 0); 
     t->requires(Task::OldDW, MIlb->temp_CCLabel,    Ghost::None, 0);
     t->requires(Task::OldDW, MIlb->vel_CCLabel,     Ghost::None, 0);
@@ -567,16 +567,21 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
       cvolume.initialize( very_small_mass/rho_orig);
 #endif
 
-    scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->cMassLabel,
+    scheduleCoarsenAddVariableCC(sched, patches, mpm_matls, MIlb->cMassLabel,
                                                          1.9531e-15);
-    scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->cVolumeLabel,
+    scheduleCoarsenAddVariableCC(sched, patches, mpm_matls, MIlb->cVolumeLabel,
                                                          1.6562e-15);
-    scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->temp_CCLabel,0.);
-    scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->vel_CCLabel,
+    scheduleMassWeightedCoarsenVariableCC(
+                              sched, patches, mpm_matls, MIlb->temp_CCLabel,0.);
+
+    scheduleMassWeightedCoarsenVariableCC(
+                              sched, patches, mpm_matls, MIlb->vel_CCLabel,
                                                          Vector(0, 0, 0));
-    scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->sp_vol_CCLabel,
+    scheduleMassWeightedCoarsenVariableCC(
+                              sched, patches, mpm_matls, Ilb->sp_vol_CCLabel,
                                                          .8479864471);
-    scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->rho_CCLabel, 1.e-12);
+    scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->rho_CCLabel,
+                                                         1.e-12);
   }
 }
 
@@ -625,11 +630,16 @@ void MPMICE::scheduleComputeLagrangianValuesMPM(SchedulerP& sched,
     if (cout_doing.active())
       cout_doing << "MPMICE:scheduleCoarsenCC mpm_matls" << endl;
 
-    scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->rho_CCLabel, 1e-12); // modifies??
-    scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->mass_L_CCLabel,
+    scheduleMassWeightedCoarsenVariableCC(
+                              sched, patches, mpm_matls, Ilb->rho_CCLabel,
+                                                         1e-12); // modifies??
+    scheduleCoarsenAddVariableCC(sched, patches, mpm_matls, Ilb->mass_L_CCLabel,
                                                          1.9531e-15);
-    scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->mom_L_CCLabel, Vector(0, 0, 0));
-    scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->int_eng_L_CCLabel, 0.);
+    scheduleCoarsenAddVariableCC(sched, patches, mpm_matls, Ilb->mom_L_CCLabel,
+                                                         Vector(0, 0, 0));
+    scheduleCoarsenAddVariableCC(
+                             sched, patches, mpm_matls, Ilb->int_eng_L_CCLabel,
+                                                         0.);
   }
 }
 
@@ -646,10 +656,8 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
     cout_doing << "MPMICE::scheduleInterpolateCCToNC" << endl;
 
   if(d_doAMR){
-    cout_doing << "MPMICE::scheduleRefineVariableCC" << endl;
-    scheduleRefineVariableCC(sched, patches, mpm_matls, Ilb->mom_L_ME_CCLabel);
-    scheduleRefineVariableCC(sched, patches, mpm_matls, Ilb->eng_L_ME_CCLabel);
-    scheduleRefineVariableCC(sched, patches, mpm_matls, Ilb->sp_vol_src_CCLabel);
+    scheduleRefineExtensiveVariableCC(sched, patches, mpm_matls, Ilb->mom_L_ME_CCLabel);
+    scheduleRefineExtensiveVariableCC(sched, patches, mpm_matls, Ilb->eng_L_ME_CCLabel);
   }
 
 
@@ -664,7 +672,6 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
   t->requires(Task::NewDW, Ilb->int_eng_L_CCLabel,      gac,1);  
   t->requires(Task::NewDW, Ilb->mom_L_ME_CCLabel,       gac,1);
   t->requires(Task::NewDW, Ilb->eng_L_ME_CCLabel,       gac,1);
-  t->requires(Task::NewDW, Ilb->sp_vol_src_CCLabel,     gac,1); 
   
   t->modifies(Mlb->gVelocityStarLabel, mss);             
   t->modifies(Mlb->gAccelerationLabel, mss);             
@@ -1154,16 +1161,23 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         
         for (int in=0;in<8;in++){
           double NC_CCw_mass = NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
+//          if(c==IntVector(-1,9,-1)){
+//             cout << "NC_CCweight[nodeIdx[in]] = " << NC_CCweight[nodeIdx[in]] << " gmass[nodeIdx[in]] = " << gmass[nodeIdx[in]] << " nodeIdx[in] = " << nodeIdx[in] << endl;
+//          }
           cmass[c]    += NC_CCw_mass;
           cvolume[c]  += NC_CCweight[nodeIdx[in]]  * gvolume[nodeIdx[in]];
           sp_vol_mpm  += gSp_vol[nodeIdx[in]]      * NC_CCw_mass;
           vel_CC_mpm  += gvelocity[nodeIdx[in]]    * NC_CCw_mass;
           Temp_CC_mpm += gtemperature[nodeIdx[in]] * NC_CCw_mass;
-        } 
+        }
         double inv_cmass = 1.0/cmass[c];
         vel_CC_mpm  *= inv_cmass;    
         Temp_CC_mpm *= inv_cmass;
+//        if(c==IntVector(-1,9,-1)){
+//          cout << "sp_vol_mpm = " <<  sp_vol_mpm  << " inv_cmass = " << inv_cmass << " cmass = " << cmass[c] << endl;
+//        }
         sp_vol_mpm  *= inv_cmass;
+
         
         //__________________________________
         // set *_CC = to either vel/Temp_CC_ice or vel/Temp_CC_mpm
@@ -1181,6 +1195,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         sp_vol_CC[c]=(1.0-one_or_zero)*sp_vol_CC_ice[c]+one_or_zero*sp_vol_mpm;
         rho_CC[c]    = cmass[c]/cell_vol;
       }
+
       //  Set BC's
       setBC(Temp_CC, "Temperature",patch, d_sharedState, indx, new_dw);
       setBC(rho_CC,  "Density",    patch, d_sharedState, indx, new_dw);
@@ -2367,6 +2382,46 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
    t->computes(variable);
    sched->addTask(t, patches, matls);
  }
+
+ void MPMICE::scheduleRefineExtensiveVariableCC(SchedulerP& sched,
+                                                const PatchSet* patches,
+                                                const MaterialSet* matls,
+                                                const VarLabel* variable)
+ {
+   ostringstream taskName;
+   taskName << "MPMICE::refineExtensiveVariable(" << variable->getName() << ")";
+   Task* t;
+                                                                                
+   // the sgis don't like accepting a templated function over a function call for some reason...
+   void (MPMICE::*func)(const ProcessorGroup*, const PatchSubset*, const MaterialSubset*,
+                        DataWarehouse*, DataWarehouse*, const VarLabel*);
+   switch(variable->typeDescription()->getSubType()->getType()){
+   case TypeDescription::double_type:
+     func = &MPMICE::refineExtensiveVariableCC<double>;
+     t=scinew Task(taskName.str().c_str(),
+                   this, func, variable);
+     break;
+   case TypeDescription::Vector:
+     func = &MPMICE::refineExtensiveVariableCC<Vector>;
+     t=scinew Task(taskName.str().c_str(),
+                   this, func, variable);
+     break;
+   default:
+     throw InternalError("Unknown variable type for refine", __FILE__, __LINE__);
+   }
+   Ghost::GhostType  gac = Ghost::AroundCells;
+   t->requires(Task::NewDW, variable,       0, Task::CoarseLevel, 
+                                            0, Task::NormalDomain, gac, 1);
+   t->requires(Task::NewDW, Ilb->mass_L_CCLabel, 0, Task::CoarseLevel, 
+                                            0, Task::NormalDomain, gac, 1);
+//   t->requires(Task::NewDW, Ilb->mass_L_CCLabel, 0, Task::FineLevel,   
+//                                            0, Task::NormalDomain, gac, 1);
+   t->requires(Task::NewDW, Ilb->mass_L_CCLabel,                   gac, 1);
+
+   t->computes(variable);
+   sched->addTask(t, patches, matls);
+ }
+
  //______________________________________________________________________
   
  template<typename T>
@@ -2390,6 +2445,52 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
    t->computes(variable);
    sched->addTask(t, patches, matls);
  }
+
+ template<typename T>
+   void MPMICE::scheduleMassWeightedCoarsenVariableCC(SchedulerP& sched,
+                                                      const PatchSet* patches,
+                                                      const MaterialSet* matls,
+                                                      const VarLabel* variable,
+                                                      T defaultValue)
+ {
+   ostringstream taskName;
+   taskName << "MPMICE::massWeightedCoarsenVariable(" << variable->getName() << ")";
+                                                                                
+   // the sgis don't like accepting a templated function over a function call for some reason...
+   void (MPMICE::*func)(const ProcessorGroup*, const PatchSubset*, const MaterialSubset*,
+                        DataWarehouse*, DataWarehouse*, const VarLabel*, T);
+   func = &MPMICE::massWeightedCoarsenVariableCC<T>;
+                                                                                
+   Task* t=scinew Task(taskName.str().c_str(),
+                       this, func, variable, defaultValue);
+   t->requires(Task::NewDW, variable, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
+   t->requires(Task::NewDW, MIlb->cMassLabel, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
+   t->computes(variable);
+   sched->addTask(t, patches, matls);
+ }
+
+ template<typename T>
+   void MPMICE::scheduleCoarsenAddVariableCC(SchedulerP& sched,
+                                             const PatchSet* patches,
+                                             const MaterialSet* matls,
+                                             const VarLabel* variable,
+                                             T defaultValue)
+ {
+   ostringstream taskName;
+   taskName << "MPMICE::coarsenAddVariable(" << variable->getName() << ")";
+                                                                                
+   // the sgis don't like accepting a templated function over a function call for some reason...
+   void (MPMICE::*func)(const ProcessorGroup*, const PatchSubset*, const MaterialSubset*,
+                        DataWarehouse*, DataWarehouse*, const VarLabel*, T);
+   func = &MPMICE::coarsenAddVariableCC<T>;
+                                                                                
+   Task* t=scinew Task(taskName.str().c_str(),
+                       this, func, variable, defaultValue);
+   t->requires(Task::NewDW, variable, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
+   t->computes(variable);
+   sched->addTask(t, patches, matls);
+ }
+
 
 //______________________________________________________________________
 //
@@ -2444,6 +2545,113 @@ void MPMICE::refineVariableCC(const ProcessorGroup*,
         IntVector hi = Min(fh, fh_tmp);
         linearInterpolation<T>(coarse_q_CC, coarseLevel, fineLevel,
                                refineRatio, lo, hi, fine_q_CC);
+      }
+    }
+  }
+}
+
+//
+template<typename T>
+void MPMICE::refineExtensiveVariableCC(const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse*,
+                                       DataWarehouse* new_dw,
+                                       const VarLabel* variable)
+{
+  const Level* fineLevel = getLevel(patches);
+  const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
+  IntVector refineRatio(fineLevel->getRefinementRatio());
+                                                                                   for(int p=0;p<patches->size();p++){
+    const Patch* finePatch = patches->get(p);
+                                                                                
+    Level::selectType coarsePatches;
+    finePatch->getCoarseLevelPatches(coarsePatches);                                                                                 
+    if (cout_doing.active()) {
+      cout_doing<<"Doing refineExtensiveVariableCC (" << variable->getName()
+                << ") on patch "<<finePatch->getID()
+                <<"\t\t MPMICE L-" << fineLevel->getIndex()<<endl;
+    }
+                                                                                
+    for(int m = 0;m<matls->size();m++){
+      int indx = matls->get(m);
+                                                                                
+      CCVariable<T> fine_q_CC;
+      constCCVariable<double> mass_L_fine;
+      new_dw->allocateAndPut(fine_q_CC, variable,            indx, finePatch);
+      new_dw->get(mass_L_fine,          Ilb->mass_L_CCLabel, indx, finePatch,
+                    Ghost::AroundCells, 1);
+                                                                                
+      IntVector fl = finePatch->getCellLowIndex();
+      IntVector fh = finePatch->getCellHighIndex();
+                                                                                
+      for(int i=0;i<coarsePatches.size();i++){
+        const Patch* coarsePatch = coarsePatches[i];
+        constCCVariable<T> coarse_q_CC;
+        constCCVariable<double> mass_L_coarse;
+        new_dw->get(coarse_q_CC,   variable,            indx, coarsePatch,
+                    Ghost::AroundCells, 1);
+        new_dw->get(mass_L_coarse, Ilb->mass_L_CCLabel, indx, coarsePatch,
+                    Ghost::AroundCells, 1);
+                                                                                
+        // Only interpolate over the intersection of the fine and coarse patches        // coarse cell
+        IntVector cl = coarsePatch->getLowIndex();
+        IntVector ch = coarsePatch->getHighIndex();
+                                                                                
+        IntVector fl_tmp = coarseLevel->mapCellToFiner(cl);
+        IntVector fh_tmp = coarseLevel->mapCellToFiner(ch);
+                                                                                
+        IntVector lo = Max(fl, fl_tmp);
+        IntVector hi = Min(fh, fh_tmp);
+
+        for(CellIterator iter(fl,fh); !iter.done(); iter++){
+          IntVector f_cell = *iter;
+          IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
+
+          fine_q_CC[f_cell] = (coarse_q_CC[c_cell]/mass_L_coarse[c_cell])
+                            * mass_L_fine[f_cell];
+
+#if 0
+          //__________________________________
+          // Offset for coarse level surrounding cells:
+          Point coarse_cell_pos = coarseLevel->getCellPosition(c_cell);
+          Point fine_cell_pos   = fineLevel->getCellPosition(f_cell);
+          Vector dist = (fine_cell_pos.asVector() - coarse_cell_pos.asVector()) * inv_c_dx;
+          dist = Abs(dist);
+          Vector dir = (fine_cell_pos.asVector() - coarse_cell_pos.asVector());
+                                                                                
+          // determine the direction to the surrounding interpolation cells
+          int i = Sign(dir.x());
+          int j = Sign(dir.y());
+          int k = Sign(dir.z());
+                                                                                
+          i *=RoundUp(dist.x());  // if dist.x,y,z() = 0 then set (i,j,k) = 0
+          j *=RoundUp(dist.y());  // Only need surrounding coarse cell data if dist != 0
+          k *=RoundUp(dist.z());  // This is especially true for 1D and 2D problems
+          //__________________________________
+          //  Find the weights
+          double w0 = (1. - dist.x()) * (1. - dist.y());
+          double w1 = dist.x() * (1. - dist.y());
+          double w2 = dist.y() * (1. - dist.x());
+          double w3 = dist.x() * dist.y();
+                                                                                
+          T q_XY_Plane_1   // X-Y plane closest to the fine level cell
+              = w0 * q_CL[c_cell]
+              + w1 * q_CL[c_cell + IntVector( i, 0, 0)]
+              + w2 * q_CL[c_cell + IntVector( 0, j, 0)]
+              + w3 * q_CL[c_cell + IntVector( i, j, 0)];
+                                                                                
+          T q_XY_Plane_2   // X-Y plane furthest from the fine level cell
+              = w0 * q_CL[c_cell + IntVector( 0, 0, k)]
+              + w1 * q_CL[c_cell + IntVector( i, 0, k)]
+              + w2 * q_CL[c_cell + IntVector( 0, j, k)]
+              + w3 * q_CL[c_cell + IntVector( i, j, k)];
+                                                                                
+          // interpolate the two X-Y planes in the k direction
+          q_FineLevel[f_cell] = (1.0 - dist.z()) * q_XY_Plane_1
+                              + dist.z() * q_XY_Plane_2;
+#endif
+        }
       }
     }
   }
@@ -2515,7 +2723,137 @@ void MPMICE::coarsenVariableCC(const ProcessorGroup*,
   }
 }
 
+template<typename T>
+void MPMICE::massWeightedCoarsenVariableCC(const ProcessorGroup*,
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* matls,
+                                           DataWarehouse*,
+                                           DataWarehouse* new_dw,
+                                           const VarLabel* variable,
+                                           T defaultValue)
+{
+  const Level* coarseLevel = getLevel(patches);
+  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
+  cout_doing << "Doing massWeightedCoarsen on variable " << variable->getName() 
+             << "\t\t\t MPMICE L-" <<fineLevel->getIndex();
+  
+  IntVector refineRatio(fineLevel->getRefinementRatio());
+  
+  for(int p=0;p<patches->size();p++){  
+    const Patch* coarsePatch = patches->get(p);
+    cout_doing << " patch " << coarsePatch->getID()<< endl;
 
+    for(int m = 0;m<matls->size();m++){
+      int indx = matls->get(m);
+
+      CCVariable<T> coarse_q_CC;
+      new_dw->allocateAndPut(coarse_q_CC, variable, indx, coarsePatch);
+      coarse_q_CC.initialize(defaultValue);
+
+      Level::selectType finePatches;
+      coarsePatch->getFineLevelPatches(finePatches);
+      for(int i=0;i<finePatches.size();i++){
+        const Patch* finePatch = finePatches[i];
+        constCCVariable<T> fine_q_CC;
+        constCCVariable<double> cMass;
+        new_dw->get(fine_q_CC, variable,   indx, finePatch, Ghost::None, 0);
+        new_dw->get(cMass,     MIlb->cMassLabel,
+                                           indx, finePatch, Ghost::None, 0);
+
+        IntVector fl(finePatch->getInteriorCellLowIndex());
+        IntVector fh(finePatch->getInteriorCellHighIndex());
+        IntVector cl(fineLevel->mapCellToCoarser(fl));
+        IntVector ch(fineLevel->mapCellToCoarser(fh));
+    
+        cl = Max(cl, coarsePatch->getCellLowIndex());
+        ch = Min(ch, coarsePatch->getCellHighIndex());
+    
+        IntVector refinementRatio = fineLevel->getRefinementRatio();
+
+        T zero(0.0);
+        // iterate over coarse level cells
+        for(CellIterator iter(cl, ch); !iter.done(); iter++){
+          IntVector c = *iter;
+          T q_CC_tmp(zero);
+          double mass_CC_tmp=0.;
+          IntVector fineStart = coarseLevel->mapCellToFiner(c);
+    
+          // for each coarse level cell iterate over the fine level cells   
+          for(CellIterator inside(IntVector(0,0,0),refinementRatio );
+              !inside.done(); inside++){
+            IntVector fc = fineStart + *inside;
+            q_CC_tmp += fine_q_CC[fc]*cMass[fc];
+            mass_CC_tmp += cMass[fc];
+          }
+          coarse_q_CC[c] =q_CC_tmp/mass_CC_tmp;
+        }
+      }
+    }
+  }
+}
+
+template<typename T>
+void MPMICE::coarsenAddVariableCC(const ProcessorGroup*,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse*,
+                                  DataWarehouse* new_dw,
+                                  const VarLabel* variable,
+                                  T defaultValue)
+{
+  const Level* coarseLevel = getLevel(patches);
+  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
+  cout_doing << "Doing coarsenAdd on variable " << variable->getName() 
+             << "\t\t\t MPMICE L-" <<fineLevel->getIndex();
+  
+  IntVector refineRatio(fineLevel->getRefinementRatio());
+  
+  for(int p=0;p<patches->size();p++){  
+    const Patch* coarsePatch = patches->get(p);
+    cout_doing << " patch " << coarsePatch->getID()<< endl;
+
+    for(int m = 0;m<matls->size();m++){
+      int indx = matls->get(m);
+
+      CCVariable<T> coarse_q_CC;
+      new_dw->allocateAndPut(coarse_q_CC, variable, indx, coarsePatch);
+      coarse_q_CC.initialize(defaultValue);
+
+      Level::selectType finePatches;
+      coarsePatch->getFineLevelPatches(finePatches);
+      for(int i=0;i<finePatches.size();i++){
+        const Patch* finePatch = finePatches[i];
+        constCCVariable<T> fine_q_CC;
+        new_dw->get(fine_q_CC, variable, indx, finePatch, Ghost::None, 0);
+        IntVector fl(finePatch->getInteriorCellLowIndex());
+        IntVector fh(finePatch->getInteriorCellHighIndex());
+        IntVector cl(fineLevel->mapCellToCoarser(fl));
+        IntVector ch(fineLevel->mapCellToCoarser(fh));
+    
+        cl = Max(cl, coarsePatch->getCellLowIndex());
+        ch = Min(ch, coarsePatch->getCellHighIndex());
+    
+        IntVector refinementRatio = fineLevel->getRefinementRatio();
+        
+        T zero(0.0);
+        // iterate over coarse level cells
+        for(CellIterator iter(cl, ch); !iter.done(); iter++){
+          IntVector c = *iter;
+          T q_CC_tmp(zero);
+          IntVector fineStart = coarseLevel->mapCellToFiner(c);
+    
+          // for each coarse level cell iterate over the fine level cells   
+          for(CellIterator inside(IntVector(0,0,0),refinementRatio );
+              !inside.done(); inside++){
+            IntVector fc = fineStart + *inside;
+            q_CC_tmp += fine_q_CC[fc];
+          }
+          coarse_q_CC[c] =q_CC_tmp;
+        }
+      }
+    }
+  }
+}
 void MPMICE::switchTest(const ProcessorGroup* group,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
