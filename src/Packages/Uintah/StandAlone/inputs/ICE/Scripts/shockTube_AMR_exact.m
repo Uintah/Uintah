@@ -14,14 +14,14 @@ clear function;
 
 %________________________________
 % USER INPUTS
-uda = 'shockTube_AMR.uda.001'
+uda = 'shockTube_AMR.uda.000'
 
 
-desc = 'ShockTube: Linear interpolation, Second Order Advection, 3-Level,Refluxing';
-legendText = {'L-0','L-1', 'L-2'}
+desc = 'ShockTube: Linear interpolation, Second Order Advection, 3-Levels,Refluxing, Refinement ratio 2:1';
+legendText = {'Exact','L-0','L-1', 'L-2'}
 pDir = 1;                    
 symbol = {'+','*r','xg'}
-mat      = 0;
+mat    = 0;
 
 numPlotCols = 1;
 numPlotRows = 4;
@@ -29,8 +29,6 @@ numPlotRows = 4;
 plotRho   = true;
 plotTemp  = true;           
 plotPress      = true;
-plotVol_frac   = false;
-plotSp_vol     = false;
 plotVel        = true; 
 plotRefineFlag = false;
 % lineExtract start and stop
@@ -43,6 +41,11 @@ c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" >& tmp',uda)
 physicalTime  = importdata('tmp');
 nDumps = length(physicalTime) - 1;
 
+%_______________________________
+% Exact solution
+unix('grep -v # inputs/ICE/Scripts/riemann.dat > /tmp/exactSolution')
+exactSol = importdata('/tmp/exactSolution');
+x_exact = exactSol(:,1);
   
 %set(0,'DefaultFigurePosition',[0,0,640,480]);
 %_________________________________
@@ -83,13 +86,12 @@ for(ts = 1:nDumps )
         temp1{1,L} = importdata('temp');
         
         x = temp1{1,L}(:,pDir)
-        subplot(numPlotRows,numPlotCols,plotNum), plot(x,temp1{1,L}(:,4),symbol{L})
+        subplot(numPlotRows,numPlotCols,plotNum), plot(x_exact,exactSol(:,5),x,temp1{1,L}(:,4),symbol{L})
         xlim([0.3 0.9])
         ylim([200 450])
         legend(legendText);
         xlabel('x')
         ylabel('temp')
-        %title(time);
         title(desc);
         grid on;
         if (L == maxLevel)
@@ -106,10 +108,9 @@ for(ts = 1:nDumps )
         [s2, r2]    = unix(c2);
         press1{1,L} = importdata('press');
        
-        subplot(numPlotRows,numPlotCols,plotNum),plot(x,press1{1,L}(:,4),symbol{L})
+        subplot(numPlotRows,numPlotCols,plotNum),plot(x_exact,exactSol(:,4),x,press1{1,L}(:,4),symbol{L})
         xlim([0.3 0.9])
         ylim([10132.5 101325])
-        %axis([0 5 101000 109000])
         xlabel('x')
         ylabel('pressure')
         
@@ -129,31 +130,11 @@ for(ts = 1:nDumps )
         rho1{1,L} = importdata('rho');
         
         
-        subplot(numPlotRows,numPlotCols,plotNum), plot(x,rho1{1,L}(:,4),symbol{L})
+        subplot(numPlotRows,numPlotCols,plotNum), plot(x_exact,exactSol(:,2),x,rho1{1,L}(:,4),symbol{L})
         xlim([0.3 0.9])
         ylim([0 1.3])
         xlabel('x')
         ylabel('rho')
-        grid on;
-        if (L == maxLevel)
-         hold off;
-        else
-         hold on;
-        end
-        plotNum = plotNum+ 1;
-      end
-      %____________________________
-      %   sp_vol
-      if plotSp_vol
-        c4 = sprintf('lineextract -v sp_vol_CC -l %i -cellCoords -timestep %i %s -o sp_vol -m %i  -uda %s',level,ts,S_E,mat,uda);
-        [s4, r4] = unix(c4);
-        f1{1,L}  = importdata('sp_vol');
-        
-        
-        subplot(numPlotRows,numPlotCols,plotNum), plot(x,f1{1,L}(:,4),symbol{L})
-        xlim([0.3 0.9])
-        %axis([0 50 0 0.01])
-        ylabel('sp vol');
         grid on;
         if (L == maxLevel)
          hold off;
@@ -172,31 +153,11 @@ for(ts = 1:nDumps )
         [s6, r6]  = unix(c6);
         vel1{1,L} = importdata('vel');
         
-        subplot(numPlotRows,numPlotCols,plotNum), plot(x, vel1{1,L}(:,4),symbol{L})
+        subplot(numPlotRows,numPlotCols,plotNum), plot(x_exact,exactSol(:,3),x, vel1{1,L}(:,4),symbol{L})
         %legend('y');
         xlim([0.3 0.9])
         ylim([0.0 350])
         ylabel('vel CC');
-        grid on;
-        if (L == maxLevel)
-         hold off;
-        else
-         hold on;
-        end
-        plotNum = plotNum+ 1;
-      end
-      %____________________________
-      %   vol_frac
-      if plotVol_frac
-        c6 = sprintf('lineextract -v vol_frac_CC -l %i -cellCoords -timestep %i %s -o vol_frac -m %i  -uda %s',level,ts,S_E,mat,uda);
-        [s6, r6]=unix(c6);
-        vf{1,L} = importdata('vol_frac');
-        
-        
-        subplot(numPlotRows,numPlotCols,plotNum), plot(x,vf{1,L}(:,4),symbol{L})
-        %xlim([-0.15 0.15])
-        %axis([0 5 -10 10])
-        ylabel('vol frac');
         grid on;
         if (L == maxLevel)
          hold off;
