@@ -368,7 +368,7 @@ VolumeRenderer::draw_volume()
   
   //--------------------------------------------------------------------------
   // enable data texture unit 0
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
 #ifdef _WIN32
   if (glActiveTexture)
 #endif
@@ -461,7 +461,7 @@ VolumeRenderer::draw_volume()
   } else {
     release_colormap1();
   }
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
 #ifdef _WIN32
   if (glActiveTexture)
 #endif
@@ -495,7 +495,7 @@ VolumeRenderer::draw_volume()
     glDisable(GL_LIGHTING);
     glDisable(GL_CULL_FACE);
     
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
 #ifdef _WIN32
   if (glActiveTexture)
 #endif
@@ -716,7 +716,7 @@ VolumeRenderer::multi_level_draw()
   
   //--------------------------------------------------------------------------
   // enable data texture unit 0
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
 #ifdef _WIN32
   if (glActiveTexture)
 #endif
@@ -912,7 +912,7 @@ VolumeRenderer::multi_level_draw()
   } else {
     release_colormap1();
   }
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
 #ifdef _WIN32
   if (glActiveTexture)
 #endif
@@ -946,7 +946,7 @@ VolumeRenderer::multi_level_draw()
     glDisable(GL_LIGHTING);
     glDisable(GL_CULL_FACE);
     
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
 #ifdef _WIN32
   if (glActiveTexture)
 #endif
