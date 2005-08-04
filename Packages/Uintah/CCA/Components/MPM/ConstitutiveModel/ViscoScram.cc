@@ -1171,7 +1171,7 @@ static
 MPI_Datatype
 makeMPI_CMData()
 {
-   ASSERTEQ(sizeof(ViscoScram::StateData), sizeof(double)*45);
+   ASSERTEQ(sizeof(ViscoScramStateData), sizeof(double)*45);
    MPI_Datatype mpitype;
    MPI_Type_vector(1, 45, 45, MPI_DOUBLE, &mpitype);
    MPI_Type_commit(&mpitype);
@@ -1179,12 +1179,12 @@ makeMPI_CMData()
 }
 
 const Uintah::TypeDescription*
-fun_getTypeDescription(ViscoScram::StateData*)
+fun_getTypeDescription(ViscoScramStateData*)
 {
    static Uintah::TypeDescription* td = 0;
    if(!td){
       td = scinew Uintah::TypeDescription(TypeDescription::Other,
-                               "ViscoScram::StateData", true, &makeMPI_CMData);
+                               "ViscoScramStateData", true, &makeMPI_CMData);
    }
    return td;
 }
@@ -1192,7 +1192,7 @@ fun_getTypeDescription(ViscoScram::StateData*)
 } // End namespace Uintah
 
 namespace SCIRun {
-void swapbytes( Uintah::ViscoScram::StateData& d)
+void swapbytes( Uintah::ViscoScramStateData& d)
 {
   for (int i = 0; i < 5; i++) swapbytes(d.DevStress[i]);
 }

@@ -82,7 +82,7 @@ ViscoScramImplicit::ViscoScramImplicit(ProblemSpecP& ps,  MPMLabel* Mlb,
       ParticleVariable<double>::getTypeDescription());
   pCrackRadiusLabel       = VarLabel::create("p.crackRad",
       ParticleVariable<double>::getTypeDescription());
-  pStatedataLabel         = VarLabel::create("p.pStatedata_vs_implicit",
+  pStatedataLabel         = VarLabel::create("p.pStatedata_vs",
       ParticleVariable<StateData>::getTypeDescription());
   pRandLabel              = VarLabel::create("p.rand",
       ParticleVariable<double>::getTypeDescription() );
@@ -97,7 +97,7 @@ ViscoScramImplicit::ViscoScramImplicit(ProblemSpecP& ps,  MPMLabel* Mlb,
       ParticleVariable<double>::getTypeDescription());
   pCrackRadiusLabel_preReloc       = VarLabel::create("p.crackRad+",
       ParticleVariable<double>::getTypeDescription());
-  pStatedataLabel_preReloc         = VarLabel::create("p.pStatedata_vs_implicit+",
+  pStatedataLabel_preReloc         = VarLabel::create("p.pStatedata_vs+",
       ParticleVariable<StateData>::getTypeDescription());
   pRandLabel_preReloc              = VarLabel::create("p.rand+",
       ParticleVariable<double>::getTypeDescription());
@@ -833,45 +833,3 @@ double ViscoScramImplicit::getCompressibility()
 {
   return 1.0/d_bulk;
 }
-
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1209
-#endif
-
-namespace Uintah {
-
-static
-MPI_Datatype
-makeMPI_CMData()
-{
-   ASSERTEQ(sizeof(ViscoScramImplicit::StateData), sizeof(double)*45);
-   MPI_Datatype mpitype;
-   MPI_Type_vector(1, 45, 45, MPI_DOUBLE, &mpitype);
-   MPI_Type_commit(&mpitype);
-   return mpitype;
-}
-                                                                                
-#if 1
-const Uintah::TypeDescription*
-fun_getTypeDescription(ViscoScramImplicit::StateData*)
-{
-   static Uintah::TypeDescription* td = 0;
-   if(!td){
-      td = scinew Uintah::TypeDescription(TypeDescription::Other,
-                        "ViscoScramImplicit::StateData", true, &makeMPI_CMData);
-   }
-   return td;
-}
-#endif
-  
-} // End namespace Uintah
-
-#if 1
-namespace SCIRun {
-void swapbytes( Uintah::ViscoScramImplicitStateData& d)
-{
-  for (int i = 0; i < 5; i++) swapbytes(d.DevStress[i]);
-}
-                                                                                
-} // namespace SCIRun
-#endif

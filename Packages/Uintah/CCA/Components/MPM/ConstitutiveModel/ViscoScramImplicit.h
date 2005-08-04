@@ -14,19 +14,7 @@
 
 
 
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-
-namespace Uintah {
-  struct ViscoScramImplicitStateData {
-    Matrix3 DevStress[5];
-  };
-}
-#include <Core/Util/Endian.h>
-namespace SCIRun {
-  void swapbytes( Uintah::ViscoScramImplicitStateData& d);
-} // namespace SCIRun
-
-
+#include "ViscoScram.h"
 #include "ConstitutiveModel.h"        
 #include "ImplicitCM.h"
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
@@ -64,7 +52,7 @@ namespace Uintah {
            double C2_WLF;
          };
 
-         typedef ViscoScramImplicitStateData StateData;
+         typedef ViscoScramStateData StateData;
 
          const VarLabel* pVolChangeHeatRateLabel;
          const VarLabel* pViscousHeatRateLabel;
@@ -82,9 +70,6 @@ namespace Uintah {
          const VarLabel* pStrainRateLabel_preReloc;
 
          protected:
-                                                                                
-         friend const Uintah::TypeDescription*
-              fun_getTypeDescription(ViscoScramImplicit::StateData*);
                                                                                 
            // Create datatype for storing model parameters
            bool d_useModifiedEOS;
