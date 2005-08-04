@@ -404,10 +404,13 @@ bool Switcher::needRecompile(double time, double delt, const GridP& grid)
     ProblemSpecInterface* psi = 
       dynamic_cast<ProblemSpecInterface*>(getPort("problem spec",
                                                   d_componentIndex));
+
     if (psi) {
       ProblemSpecP ups = psi->readInputFile();
       d_sim->problemSetup(ups,const_cast<GridP&>(grid),d_sharedState);
     }
+    // we need this to get the "ICE surrounding matl"
+    d_sim->restartInitialize();
     d_sharedState->finalizeMaterials();
     retval = true;
   } else
@@ -433,3 +436,16 @@ void Switcher::readFromTimestepXML(const ProblemSpecP& spec)
   d_switchState = (switchState) tmp;
   cout << "  RESTART index = " << d_componentIndex << " STATE = " << d_switchState << endl;
 }
+
+void Switcher::addMaterial(const ProblemSpecP& params, GridP& grid,
+                           SimulationStateP& state)
+{
+  d_sim->addMaterial(params, grid, state);
+}
+
+void Switcher::scheduleInitializeAddedMaterial(const LevelP& level,
+                                               SchedulerP& sched)
+{
+  d_sim->scheduleInitializeAddedMaterial(level, sched);
+}
+
