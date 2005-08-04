@@ -108,10 +108,12 @@ namespace Uintah {
                          
     template<class T>
     void fineToCoarseOperator(CCVariable<T>& q_CC,
+                              const CCVariable<double>& rho_CC_coarse,
+                              constCCVariable<double>& cv_coarse,
+                              const string& quantity,
                               const VarLabel* varLabel,
-                              const int matl,
+                              const int indx,
                               DataWarehouse* new_dw,
-                              const double ratio,
                               const Patch* coarsePatch,
                               const Level* coarseLevel,
                               const Level* fineLevel);
