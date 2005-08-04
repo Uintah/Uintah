@@ -48,9 +48,6 @@ public:
 
   void bind();
   void release();
-  void enable();
-  void disable();
-  void makeCurrent();
 
   void setLocalParam(int, float, float, float, float);
 

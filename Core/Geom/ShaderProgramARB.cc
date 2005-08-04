@@ -462,36 +462,6 @@ ShaderProgramARB::release ()
 }
 
 void
-ShaderProgramARB::enable ()
-{
-#if defined(GL_ARB_fragment_program)
-  if(shaders_supported()) {
-    glEnable(type_);
-  }
-#endif
-}
-
-void
-ShaderProgramARB::disable ()
-{
-#if defined(GL_ARB_fragment_program)
-  if(shaders_supported()) {
-    glDisable(type_);
-  }
-#endif
-}
-
-void
-ShaderProgramARB::makeCurrent ()
-{
-#if defined(GL_ARB_fragment_program)
-  if(shaders_supported()) {
-    glBindProgramARB_SCI(type_, id_);
-  }
-#endif
-}
-
-void
 ShaderProgramARB::setLocalParam(int i, float x, float y, float z, float w)
 {
 #if defined(GL_ARB_fragment_program)
