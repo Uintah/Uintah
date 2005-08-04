@@ -114,19 +114,17 @@
    <DataArchiver>
       <filebase>2ddiw.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
-<!--
-      <save label = "mom_L_ME_CC"/>
-      <save label = "vel_CC"/>
-      <save label = "press_CC"/>
-      <save label = "press_equil_CC"/>
-      <save label = "rho_CC"/>
-      <save label = "vol_frac_CC"/>
-      <save label = "temp_CC"/>
-      <save label = "p.x"/>
-      <save label = "p.volume"/>
-      <save label = "p.velocity"/>
-      <save label = "p.temperature"/>
--->
+      <save label = "mom_L_ME_CC" levels = "0"/>
+      <save label = "vel_CC" levels = "0"/>
+      <save label = "press_CC" levels = "0"/>
+      <save label = "press_equil_CC" levels = "0"/>
+      <save label = "rho_CC" levels = "0"/>
+      <save label = "vol_frac_CC" levels = "0"/>
+      <save label = "temp_CC" levels = "0"/>
+      <save label = "p.x" levels = "1"/>
+      <save label = "p.volume" levels = "1"/>
+      <save label = "p.velocity" levels = "1"/>
+      <save label = "p.temperature" levels = "1"/>
    </DataArchiver>
 
    <Debug>
