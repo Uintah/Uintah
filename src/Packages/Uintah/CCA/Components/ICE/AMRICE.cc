@@ -874,44 +874,56 @@ void AMRICE::coarsen(const ProcessorGroup*,
   cout_doing << d_myworld->myrank()
              << " Doing coarsen \t\t\t\t\t AMRICE L-" <<fineLevel->getIndex();
   
-  IntVector rr(fineLevel->getRefinementRatio());
-  double invRefineRatio = 1./(rr.x()*rr.y()*rr.z());
-  
   bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
+  Ghost::GhostType  gn = Ghost::None;
+  
   
   for(int p=0;p<patches->size();p++){  
     const Patch* coarsePatch = patches->get(p);
     cout_doing <<"  patch " << coarsePatch->getID()<< endl;
     
-    // pressure
-    CCVariable<double> press_CC;
-    new_dw->getModifiable(press_CC, lb->press_CCLabel,  0,    coarsePatch);
-    fineToCoarseOperator<double>(press_CC,  lb->press_CCLabel, 0,   new_dw, 
-                         invRefineRatio, coarsePatch, coarseLevel, fineLevel);
-
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
 
+      constCCVariable<double> cv;
       CCVariable<double> rho_CC, temp, sp_vol_CC;
       CCVariable<Vector> vel_CC;
       
-      new_dw->getModifiable(rho_CC,   lb->rho_CCLabel,    indx, coarsePatch);
-      new_dw->getModifiable(sp_vol_CC,lb->sp_vol_CCLabel, indx, coarsePatch);
-      new_dw->getModifiable(temp,     lb->temp_CCLabel,   indx, coarsePatch);
-      new_dw->getModifiable(vel_CC,   lb->vel_CCLabel,    indx, coarsePatch);  
+      new_dw->get(cv,                 lb->specific_heatLabel, indx, coarsePatch, gn,0);
+      new_dw->getModifiable(rho_CC,   lb->rho_CCLabel,        indx, coarsePatch);
+      new_dw->getModifiable(sp_vol_CC,lb->sp_vol_CCLabel,     indx, coarsePatch);
+      new_dw->getModifiable(temp,     lb->temp_CCLabel,       indx, coarsePatch);
+      new_dw->getModifiable(vel_CC,   lb->vel_CCLabel,        indx, coarsePatch);  
       
       // coarsen         
-      fineToCoarseOperator<double>(rho_CC,    lb->rho_CCLabel,  indx, new_dw, 
-                         invRefineRatio, coarsePatch, coarseLevel, fineLevel);      
+      fineToCoarseOperator<double>(rho_CC,    rho_CC, cv, "mass", 
+                         lb->rho_CCLabel, indx, new_dw, 
+                         coarsePatch, coarseLevel, fineLevel);      
 
-      fineToCoarseOperator<double>(sp_vol_CC, lb->sp_vol_CCLabel,indx, new_dw, 
-                         invRefineRatio, coarsePatch, coarseLevel, fineLevel);
+      fineToCoarseOperator<double>(sp_vol_CC, rho_CC, cv, "sp_vol",
+                         lb->sp_vol_CCLabel,indx, new_dw, 
+                         coarsePatch, coarseLevel, fineLevel);
 
-      fineToCoarseOperator<double>(temp,      lb->temp_CCLabel, indx, new_dw, 
-                         invRefineRatio, coarsePatch, coarseLevel, fineLevel);
+      fineToCoarseOperator<double>(temp,      rho_CC, cv, "energy",   
+                         lb->temp_CCLabel, indx, new_dw, 
+                         coarsePatch, coarseLevel, fineLevel);
        
-      fineToCoarseOperator<Vector>( vel_CC,   lb->vel_CCLabel,  indx, new_dw, 
-                         invRefineRatio, coarsePatch, coarseLevel, fineLevel);
+      fineToCoarseOperator<Vector>( vel_CC,   rho_CC, cv, "momentum",   
+                         lb->vel_CCLabel,  indx, new_dw, 
+                         coarsePatch, coarseLevel, fineLevel);
+      
+      //__________________________________
+      // pressure
+      if( indx == 0){
+          // pressure
+        CCVariable<double> press_CC;                  
+        new_dw->getModifiable(press_CC, lb->press_CCLabel,  0,    coarsePatch);
+        fineToCoarseOperator<double>(press_CC,  rho_CC, cv, "pressure",
+                         lb->press_CCLabel, 0,   new_dw, 
+                         coarsePatch, coarseLevel, fineLevel);
+      }                   
+                         
+                         
       //__________________________________
       //    Model Variables                     
       if(d_modelSetup && d_modelSetup->tvars.size() > 0){
@@ -923,8 +935,9 @@ void AMRICE::coarsen(const ProcessorGroup*,
           if(tvar->matls->contains(indx)){
             CCVariable<double> q_CC;
             new_dw->getModifiable(q_CC, tvar->var, indx, coarsePatch);
-            fineToCoarseOperator<double>(q_CC, tvar->var, indx, new_dw, 
-                       invRefineRatio, coarsePatch, coarseLevel, fineLevel);
+            fineToCoarseOperator<double>(q_CC, rho_CC, cv, "scalar", 
+                       tvar->var, indx, new_dw, 
+                       coarsePatch, coarseLevel, fineLevel);
             
             if(switchDebug_AMR_refine){  
               string name = tvar->var->getName();
@@ -939,7 +952,7 @@ void AMRICE::coarsen(const ProcessorGroup*,
       if(switchDebug_AMR_refine){
         ostringstream desc;     
         desc << "coarsen_Mat_" << indx << "_patch_"<< coarsePatch->getID();
-        printData(indx, coarsePatch,   1, desc.str(), "press_CC",    press_CC);
+       // printData(indx, coarsePatch,   1, desc.str(), "press_CC",    press_CC);
         printData(indx, coarsePatch,   1, desc.str(), "rho_CC",      rho_CC);
         printData(indx, coarsePatch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC);
         printData(indx, coarsePatch,   1, desc.str(), "Temp_CC",     temp);
@@ -955,22 +968,27 @@ void AMRICE::coarsen(const ProcessorGroup*,
 _____________________________________________________________________*/
 template<class T>
 void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
+                                  const CCVariable<double>& rho_CC_coarse,
+                                  constCCVariable<double>& cv_coarse,
+                                  const string& quantity,
                                   const VarLabel* varLabel,
                                   const int indx,
                                   DataWarehouse* new_dw,
-                                  const double ratio,
                                   const Patch* coarsePatch,
                                   const Level* coarseLevel,
                                   const Level* fineLevel)
 {
   Level::selectType finePatches;
   coarsePatch->getFineLevelPatches(finePatches);
-                            
+   
+  Vector dx_c = coarseLevel->dCell();
+  Vector dx_f = fineLevel->dCell();
+  double coarseCellVol = dx_c.x()*dx_c.y()*dx_c.z();
+  double fineCellVol   = dx_f.x()*dx_f.y()*dx_f.z();
+                          
   for(int i=0;i<finePatches.size();i++){
     const Patch* finePatch = finePatches[i];
     
-    constCCVariable<T> fine_q_CC;
-
     IntVector fl(finePatch->getInteriorCellLowIndex());
     IntVector fh(finePatch->getInteriorCellHighIndex());
     IntVector cl(fineLevel->mapCellToCoarser(fl));
@@ -986,12 +1004,39 @@ void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
     if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
       continue;
     }
-
-    new_dw->getRegion(fine_q_CC, varLabel, indx, fineLevel, fl, fh);
+    
+    constCCVariable<T> fine_q_CC;
+    constCCVariable<double> cv_fine, rho_CC_fine;
+    new_dw->getRegion(fine_q_CC,  varLabel,               indx, fineLevel, fl, fh);
+    new_dw->getRegion(cv_fine,    lb->specific_heatLabel, indx, fineLevel, fl, fh);
+    new_dw->getRegion(rho_CC_fine,lb->rho_CCLabel,        indx, fineLevel, fl, fh);
+    
     cout_dbg << " fineToCoarseOperator: finePatch "<< fl << " " << fh 
              << " coarsePatch "<< cl << " " << ch << endl;
              
     IntVector refinementRatio = fineLevel->getRefinementRatio();
+    
+    //__________________________________
+    //  switches that modify the equation
+    //  depending on what quantity is being coarsened.
+    double switch1 = d_EVIL_NUM;    
+    double switch2 = d_EVIL_NUM;    
+    double switch3 = d_EVIL_NUM;    
+    if(quantity == "mass" || quantity == "pressure" || quantity == "sp_vol"){
+      switch1 = 1.0;
+      switch2 = 0.0;
+      switch3 = 0.0;         
+    }
+    if(quantity == "momentum", quantity == "scalar"){
+      switch1 = 0.0;
+      switch2 = 1.0;
+      switch3 = 0.0;         
+    }
+    if(quantity == "energy"){
+      switch1 = 0.0;
+      switch2 = 0.0;
+      switch3 = 1.0;
+    }
     
     T zero(0.0);
     // iterate over coarse level cells
@@ -1004,9 +1049,18 @@ void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
       for(CellIterator inside(IntVector(0,0,0),refinementRatio );
                                           !inside.done(); inside++){
         IntVector fc = fineStart + *inside;
-        q_CC_tmp += fine_q_CC[fc];
+        double mass_fineLevel = rho_CC_fine[fc] * fineCellVol;
+        
+        q_CC_tmp += fine_q_CC[fc] * switch1 * fineCellVol            
+                  + fine_q_CC[fc] * switch2 * mass_fineLevel         
+                  + fine_q_CC[fc] * switch3 * mass_fineLevel * cv_fine[fc];
       }
-      q_CC[c] =q_CC_tmp*ratio;
+      double mass_CC_coarse = rho_CC_coarse[c] * coarseCellVol;
+      double denominator = switch1 * coarseCellVol     
+                         + switch2 * mass_CC_coarse
+                         + switch3 * mass_CC_coarse * cv_coarse[c];
+                         
+      q_CC[c] =q_CC_tmp / denominator;
     }
   }
   cout_dbg.setActive(false);// turn off the switch for cout_dbg
