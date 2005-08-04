@@ -86,7 +86,7 @@ namespace Uintah {
   protected:
 
     friend const Uintah::TypeDescription* 
-       fun_getTypeDescription(ViscoScram::StateData*);
+       fun_getTypeDescription(ViscoScramStateData*);
 
     // Create datatype for storing model parameters
     bool d_useModifiedEOS;
@@ -192,7 +192,7 @@ namespace Uintah {
   };
 
   /*! Set up type for StateData */
-  const Uintah::TypeDescription* fun_getTypeDescription(ViscoScram::StateData*);
+  const Uintah::TypeDescription* fun_getTypeDescription(ViscoScramStateData*);
 
 } // End namespace Uintah
       
