@@ -320,7 +320,7 @@ FlowRenderer2D::draw()
   glBegin( GL_QUADS );
   {
     for (int i = 0; i < 4; i++) {
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
+#if defined(GL_ARB_fragment_program)
        glMultiTexCoord2fv(GL_TEXTURE0,tex_coords_+i*2);
        glMultiTexCoord2fv(GL_TEXTURE1,tex_coords_+i*2);
 //       if(use_fog) {
@@ -387,7 +387,7 @@ FlowRenderer2D::adv_init( Pbuffer*& pb, float scale,
 
   bind_noise();
   adv_init_->bind();
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
+#if defined(GL_ARB_fragment_program)
   glActiveTexture(GL_TEXTURE0);
 #endif
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -397,7 +397,7 @@ FlowRenderer2D::adv_init( Pbuffer*& pb, float scale,
   glBegin( GL_QUADS );
   {
     for (int i = 0; i < 4; i++) {
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
+#if defined(GL_ARB_fragment_program)
       glMultiTexCoord2fv(GL_TEXTURE0,tex_coords+i*2);
       CHECK_OPENGL_ERROR("adv_init()");
 
@@ -523,7 +523,7 @@ FlowRenderer2D::build_colormap()
       cmap_array_(j,3) = alpha;
     }
 
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
     // This texture is not used if there is no shaders.
     // glColorTable is used instead.
     if (ShaderProgramARB::shaders_supported())
@@ -567,7 +567,7 @@ FlowRenderer2D::bind_colormap( int reg )
                GL_RGBA,
                GL_FLOAT,
                &(cmap_array_(0, 0)));
-#elif defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#elif defined(GL_ARB_fragment_program)
   if (ShaderProgramARB::shaders_supported())
   {
     glActiveTexture(GL_TEXTURE0+reg);
@@ -612,7 +612,7 @@ FlowRenderer2D::release_colormap( int reg )
 {
 #if defined(GL_TEXTURE_COLOR_TABLE_SGI) && defined(__sgi)
   glDisable(GL_TEXTURE_COLOR_TABLE_SGI);
-#elif defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#elif defined(GL_ARB_fragment_program)
   if (ShaderProgramARB::shaders_supported())
   {
     // bind texture to unit 3
@@ -810,7 +810,7 @@ void
 FlowRenderer2D::load_flow_tex()
 {
 
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
       // This texture is not loaded if there are no shaders.
       if (ShaderProgramARB::shaders_supported())
       {
@@ -850,7 +850,7 @@ FlowRenderer2D::load_flow_tex()
 void
 FlowRenderer2D::bind_flow_tex( int reg )
 {
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
   if (ShaderProgramARB::shaders_supported())
   {
     glActiveTexture(GL_TEXTURE0+reg);
@@ -867,7 +867,7 @@ FlowRenderer2D::bind_flow_tex( int reg )
 void
 FlowRenderer2D::release_flow_tex( int reg )
 {
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
   if (ShaderProgramARB::shaders_supported())
   {
     // bind texture to unit 1
@@ -938,7 +938,7 @@ FlowRenderer2D::build_adv(float scale, pair<float, float>& shift)
 void
 FlowRenderer2D::load_adv()
 {
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
   // This texture is not loaded if there are no shaders.
   if (adv_dirty_)
   {
@@ -1074,7 +1074,7 @@ FlowRenderer2D::build_conv(float scale )
 void
 FlowRenderer2D::load_conv()
 {
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
   // This texture is not loaded if there are no shaders.
   if (conv_dirty_)
   {
@@ -1174,7 +1174,7 @@ void
 FlowRenderer2D::bind_adv( int reg )
 {
   NOT_FINISHED("FlowRenderer2D::bind_adv()");  
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
   if (ShaderProgramARB::shaders_supported())
   {
     glActiveTexture(GL_TEXTURE0+reg);
@@ -1192,7 +1192,7 @@ void
 FlowRenderer2D::release_adv( int reg )
 {
   NOT_FINISHED("FlowRenderer2D::release_adv()");  
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
   if (ShaderProgramARB::shaders_supported())
   {
     // bind texture to unit 2
@@ -1211,7 +1211,7 @@ void
 FlowRenderer2D::bind_conv( int reg )
 {
   NOT_FINISHED("FlowRenderer2D::bind_conv()");  
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
   if (ShaderProgramARB::shaders_supported())
   {
     glActiveTexture(GL_TEXTURE0+reg);
@@ -1229,7 +1229,7 @@ void
 FlowRenderer2D::release_conv( int reg )
 {
   NOT_FINISHED("FlowRenderer2D::release_conv()");  
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
   if (ShaderProgramARB::shaders_supported())
   {
     // bind texture to unit 2
@@ -1302,7 +1302,7 @@ FlowRenderer2D::build_noise( float scale, float shftx, float shfty )
       glBegin( GL_QUADS );
       {
         for (int i = 0; i < 4; i++) {
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
+#if defined(GL_ARB_fragment_program)
           glMultiTexCoord2fv(GL_TEXTURE1,tex_coords+i*2);
 #else
           glTexCoord2fv(tex_coords+i*2);
@@ -1320,7 +1320,7 @@ FlowRenderer2D::build_noise( float scale, float shftx, float shfty )
     } else {
       // software 
       //-------------------------------------------------------
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
       // This texture is not used if there is no shaders.
       // glColorTable is used instead.
       if (ShaderProgramARB::shaders_supported())
@@ -1363,7 +1363,7 @@ void
 FlowRenderer2D::bind_noise( int reg)
 {
   NOT_FINISHED("FlowRenderer2D::bind_noise()");  
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
   if (ShaderProgramARB::shaders_supported())
   {
     glActiveTexture(GL_TEXTURE0+reg);
@@ -1380,7 +1380,7 @@ void
 FlowRenderer2D::release_noise( int reg )
 {
   NOT_FINISHED("FlowRenderer2D::release_noise()");  
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
   if (ShaderProgramARB::shaders_supported())
   {
     // bind texture to unit 2

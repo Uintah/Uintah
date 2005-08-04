@@ -6536,7 +6536,7 @@ TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double)
 }
 
 
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
 #define FRAG \
 "!!ARBfp1.0 \n" \
 "ATTRIB t = fragment.texcoord[1]; \n" \
@@ -6582,7 +6582,7 @@ GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   if (!pre_draw(di, matl, 1)) return;
   GLboolean use_fog = glIsEnabled(GL_FOG);
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
   if ( !shader_ || !fog_shader_ )
   {
     shader_ = new FragmentProgramARB( FRAG );
@@ -6646,7 +6646,7 @@ GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double)
       glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     }
 
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
     if (use_fog)
     {
       fog_shader_->bind();
@@ -6664,7 +6664,7 @@ GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double)
 
     if (trans_)
     {
-#if !defined(GL_ARB_fragment_program) && !defined(GL_ATI_fragment_shader)
+#if !defined(GL_ARB_fragment_program)
       glAlphaFunc(GL_GREATER, alpha_cutoff_);
       glEnable(GL_ALPHA_TEST);
 #endif
@@ -6692,7 +6692,7 @@ GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double)
 
     for (int i = 0; i < 4; i++)
     {
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
 #  ifdef _WIN32
       if (glMultiTexCoord2fv && glMultiTexCoord3f)
       {
@@ -6729,7 +6729,7 @@ GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisable(GL_TEXTURE_2D);
 
     glBindTexture(GL_TEXTURE_2D, 0);
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
     if ( use_fog )
     {
       fog_shader_->release();
@@ -6751,7 +6751,7 @@ GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double)
     cerr<<"Some sort of texturing error\n";
   }
 
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
 #ifdef _WIN32
   if (glActiveTexture)
 #endif

@@ -173,7 +173,7 @@ SliceRenderer::draw_slice()
   
   //--------------------------------------------------------------------------
   // enable data texture unit 0
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
 #ifdef _WIN32
   if (glActiveTexture)
 #endif
@@ -328,7 +328,7 @@ SliceRenderer::draw_slice()
   } else {
     release_colormap1();
   }
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
 #ifdef _WIN32
   if (glActiveTexture)
 #endif
@@ -380,7 +380,7 @@ SliceRenderer::multi_level_draw()
   
   //--------------------------------------------------------------------------
   // enable data texture unit 0
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
 #ifdef _WIN32
   if (glActiveTexture)
 #endif
@@ -754,7 +754,7 @@ SliceRenderer::multi_level_draw()
   } else {
     release_colormap1();
   }
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
 #ifdef _WIN32
   if (glActiveTexture)
 #endif

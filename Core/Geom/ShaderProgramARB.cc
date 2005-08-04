@@ -54,7 +54,7 @@ typedef unsigned int uint;
 #endif
 
 
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
 #  ifndef GL_ARB_vertex_program
 #     define GL_VERTEX_PROGRAM_ARB 0x8620
 #     define GL_PROGRAM_ERROR_POSITION_ARB 0x864B
@@ -213,7 +213,7 @@ ShaderProgramARB::~ShaderProgramARB ()
 bool
 ShaderProgramARB::valid()
 {
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
   return shaders_supported() ? glIsProgramARB_SCI(mId) : false;
 #else
   return false;
@@ -312,7 +312,7 @@ ShaderProgramARB::init_shaders_supported()
     WGLisExtensionSupported("GL_ARB_texture_non_power_of_two");
 #endif
 
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
 
 	mSupported =
 
@@ -380,7 +380,7 @@ ShaderProgramARB::texture_non_power_of_two()
 bool
 ShaderProgramARB::create()
 {
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
   if(shaders_supported()) {
     glGenProgramsARB_SCI(1, &mId);
     glBindProgramARB_SCI(mType, mId);
@@ -431,7 +431,7 @@ ShaderProgramARB::create()
 void
 ShaderProgramARB::destroy ()
 {
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
   if(shaders_supported()) {
     glDeleteProgramsARB_SCI(1, &mId);
     mId = 0;
@@ -442,7 +442,7 @@ ShaderProgramARB::destroy ()
 void
 ShaderProgramARB::bind ()
 {
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
   if(shaders_supported()) {
     glEnable(mType);
     glBindProgramARB_SCI(mType, mId);
@@ -453,7 +453,7 @@ ShaderProgramARB::bind ()
 void
 ShaderProgramARB::release ()
 {
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
   if(shaders_supported()) {
     glBindProgramARB_SCI(mType, 0);
     glDisable(mType);
@@ -464,7 +464,7 @@ ShaderProgramARB::release ()
 void
 ShaderProgramARB::enable ()
 {
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
   if(shaders_supported()) {
     glEnable(mType);
   }
@@ -474,7 +474,7 @@ ShaderProgramARB::enable ()
 void
 ShaderProgramARB::disable ()
 {
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
   if(shaders_supported()) {
     glDisable(mType);
   }
@@ -484,7 +484,7 @@ ShaderProgramARB::disable ()
 void
 ShaderProgramARB::makeCurrent ()
 {
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
   if(shaders_supported()) {
     glBindProgramARB_SCI(mType, mId);
   }
@@ -494,7 +494,7 @@ ShaderProgramARB::makeCurrent ()
 void
 ShaderProgramARB::setLocalParam(int i, float x, float y, float z, float w)
 {
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
   if(shaders_supported()) {
     glProgramLocalParameter4fARB_SCI(mType, i, x, y, z, w);
   }
@@ -504,7 +504,7 @@ ShaderProgramARB::setLocalParam(int i, float x, float y, float z, float w)
 VertexProgramARB::VertexProgramARB(const string& program)
   : ShaderProgramARB(program)
 {
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
   mType = GL_VERTEX_PROGRAM_ARB;
 #endif
 }
@@ -515,7 +515,7 @@ VertexProgramARB::~VertexProgramARB()
 FragmentProgramARB::FragmentProgramARB(const string& program)
   : ShaderProgramARB(program)
 {
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
+#if defined(GL_ARB_fragment_program)
   mType = GL_FRAGMENT_PROGRAM_ARB;
 #endif
 }
