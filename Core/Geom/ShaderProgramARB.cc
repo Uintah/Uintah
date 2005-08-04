@@ -196,15 +196,15 @@ bool WGLisExtensionSupported(const char *extension)
 
 namespace SCIRun {
 
-bool ShaderProgramARB::mInit = false;
-bool ShaderProgramARB::mSupported = false;
-bool ShaderProgramARB::mNon2Textures = false;
+bool ShaderProgramARB::init_ = false;
+bool ShaderProgramARB::supported_ = false;
+bool ShaderProgramARB::non_2_textures_ = false;
 int ShaderProgramARB::max_texture_size_1_ = 64;
 int ShaderProgramARB::max_texture_size_4_ = 64;
-static Mutex ShaderProgramARB_mInitMutex("ShaderProgramARB Init Lock");  
+static Mutex ShaderProgramARB_init_Mutex("ShaderProgramARB Init Lock");  
 
 ShaderProgramARB::ShaderProgramARB(const string& program)
-  : mType(0), mId(0), mProgram(program)
+  : type_(0), id_(0), program_(program)
 {}
 
 ShaderProgramARB::~ShaderProgramARB ()
@@ -214,7 +214,7 @@ bool
 ShaderProgramARB::valid()
 {
 #if defined(GL_ARB_fragment_program)
-  return shaders_supported() ? glIsProgramARB_SCI(mId) : false;
+  return shaders_supported() ? glIsProgramARB_SCI(id_) : false;
 #else
   return false;
 #endif
@@ -224,15 +224,15 @@ ShaderProgramARB::valid()
 void
 ShaderProgramARB::init_shaders_supported()
 {
-  if(!mInit)
+  if(!init_)
   {
-    ShaderProgramARB_mInitMutex.lock();
-    if (!mInit)
+    ShaderProgramARB_init_Mutex.lock();
+    if (!init_)
     {
       if (sci_getenv_p("SCIRUN_DISABLE_SHADERS") ||
           sci_getenv_p("SCIRUN_NOGUI"))
       {
-	mSupported = false;
+	supported_ = false;
       }
       else
       {
@@ -304,17 +304,17 @@ ShaderProgramARB::init_shaders_supported()
 
 	// Check for non-power-of-two texture support.
 #ifndef _WIN32
-  mNon2Textures = 
+  non_2_textures_ = 
     gluCheckExtension((const GLubyte*)"GL_ARB_texture_non_power_of_two", 
 			    glGetString(GL_EXTENSIONS));
 #else
-  mNon2Textures =
+  non_2_textures_ =
     WGLisExtensionSupported("GL_ARB_texture_non_power_of_two");
 #endif
 
 #if defined(GL_ARB_fragment_program)
 
-	mSupported =
+	supported_ =
 
 #ifndef _WIN32
 	  gluCheckExtension((const GLubyte*)"GL_ARB_vertex_program", 
@@ -340,13 +340,13 @@ ShaderProgramARB::init_shaders_supported()
 	   (SCIPFNGLPROGRAMLOCALPARAMETER4FARBPROC)
 	   getProcAddress("glProgramLocalParameter4fARB"));
 #else
-	mSupported = false;
+	supported_ = false;
 #endif
 	delete context;
       }
-      mInit = true;
+      init_ = true;
     }
-    ShaderProgramARB_mInitMutex.unlock();
+    ShaderProgramARB_init_Mutex.unlock();
   }
 }
   
@@ -354,8 +354,8 @@ ShaderProgramARB::init_shaders_supported()
 bool
 ShaderProgramARB::shaders_supported()
 {
-  ASSERTMSG(mInit, "shaders_supported called before init_shaders_supported.");
-  return mSupported;
+  ASSERTMSG(init_, "shaders_supported called before init_shaders_supported.");
+  return supported_;
 }
 
 
@@ -374,7 +374,7 @@ ShaderProgramARB::max_texture_size_4()
 bool
 ShaderProgramARB::texture_non_power_of_two()
 {
-  return mNon2Textures;
+  return non_2_textures_;
 }
 
 bool
@@ -382,29 +382,29 @@ ShaderProgramARB::create()
 {
 #if defined(GL_ARB_fragment_program)
   if(shaders_supported()) {
-    glGenProgramsARB_SCI(1, &mId);
-    glBindProgramARB_SCI(mType, mId);
-    glProgramStringARB_SCI(mType, GL_PROGRAM_FORMAT_ASCII_ARB,
-                           mProgram.length(), mProgram.c_str());
+    glGenProgramsARB_SCI(1, &id_);
+    glBindProgramARB_SCI(type_, id_);
+    glProgramStringARB_SCI(type_, GL_PROGRAM_FORMAT_ASCII_ARB,
+                           program_.length(), program_.c_str());
     if (glGetError() != GL_NO_ERROR)
     {
       int position;
       glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &position);
       int start = position;
-      for (; start > 0 && mProgram[start] != '\n'; start--);
-      if (mProgram[start] == '\n') start++;
+      for (; start > 0 && program_[start] != '\n'; start--);
+      if (program_[start] == '\n') start++;
       uint end = position;
-      for (; end < mProgram.length()-1 && mProgram[end] != '\n'; end++);
-      if (mProgram[end] == '\n') end--;
+      for (; end < program_.length()-1 && program_[end] != '\n'; end++);
+      if (program_[end] == '\n') end--;
       int ss = start;
       int l = 1;
-      for (; ss >= 0; ss--) { if (mProgram[ss] == '\n') l++; }
-      string line((char*)(mProgram.c_str()+start), end-start+1);
+      for (; ss >= 0; ss--) { if (program_[ss] == '\n') l++; }
+      string line((char*)(program_.c_str()+start), end-start+1);
       string underline = line;
       for (uint i=0; i<end-start+1; i++) underline[i] = '-';
       underline[position-start] = '#';
-      glBindProgramARB_SCI(mType, 0);
-      switch(mType) {
+      glBindProgramARB_SCI(type_, 0);
+      switch(type_) {
       case GL_VERTEX_PROGRAM_ARB:
         cerr << "Vertex ";
         break;
@@ -417,7 +417,7 @@ ShaderProgramARB::create()
       cerr << "Program error at line " << l << ", character "
            << position-start << ":" << endl << line << endl
            << underline << endl << endl
-	   << "Entire Program Listing:\n" << mProgram << endl;
+	   << "Entire Program Listing:\n" << program_ << endl;
       return true;
     }
     return false;
@@ -433,8 +433,8 @@ ShaderProgramARB::destroy ()
 {
 #if defined(GL_ARB_fragment_program)
   if(shaders_supported()) {
-    glDeleteProgramsARB_SCI(1, &mId);
-    mId = 0;
+    glDeleteProgramsARB_SCI(1, &id_);
+    id_ = 0;
   }
 #endif
 }
@@ -444,8 +444,8 @@ ShaderProgramARB::bind ()
 {
 #if defined(GL_ARB_fragment_program)
   if(shaders_supported()) {
-    glEnable(mType);
-    glBindProgramARB_SCI(mType, mId);
+    glEnable(type_);
+    glBindProgramARB_SCI(type_, id_);
   }
 #endif
 }
@@ -455,8 +455,8 @@ ShaderProgramARB::release ()
 {
 #if defined(GL_ARB_fragment_program)
   if(shaders_supported()) {
-    glBindProgramARB_SCI(mType, 0);
-    glDisable(mType);
+    glBindProgramARB_SCI(type_, 0);
+    glDisable(type_);
   }
 #endif
 }
@@ -466,7 +466,7 @@ ShaderProgramARB::enable ()
 {
 #if defined(GL_ARB_fragment_program)
   if(shaders_supported()) {
-    glEnable(mType);
+    glEnable(type_);
   }
 #endif
 }
@@ -476,7 +476,7 @@ ShaderProgramARB::disable ()
 {
 #if defined(GL_ARB_fragment_program)
   if(shaders_supported()) {
-    glDisable(mType);
+    glDisable(type_);
   }
 #endif
 }
@@ -486,7 +486,7 @@ ShaderProgramARB::makeCurrent ()
 {
 #if defined(GL_ARB_fragment_program)
   if(shaders_supported()) {
-    glBindProgramARB_SCI(mType, mId);
+    glBindProgramARB_SCI(type_, id_);
   }
 #endif
 }
@@ -496,7 +496,7 @@ ShaderProgramARB::setLocalParam(int i, float x, float y, float z, float w)
 {
 #if defined(GL_ARB_fragment_program)
   if(shaders_supported()) {
-    glProgramLocalParameter4fARB_SCI(mType, i, x, y, z, w);
+    glProgramLocalParameter4fARB_SCI(type_, i, x, y, z, w);
   }
 #endif
 }
@@ -505,7 +505,7 @@ VertexProgramARB::VertexProgramARB(const string& program)
   : ShaderProgramARB(program)
 {
 #if defined(GL_ARB_fragment_program)
-  mType = GL_VERTEX_PROGRAM_ARB;
+  type_ = GL_VERTEX_PROGRAM_ARB;
 #endif
 }
 
@@ -516,7 +516,7 @@ FragmentProgramARB::FragmentProgramARB(const string& program)
   : ShaderProgramARB(program)
 {
 #if defined(GL_ARB_fragment_program)
-  mType = GL_FRAGMENT_PROGRAM_ARB;
+  type_ = GL_FRAGMENT_PROGRAM_ARB;
 #endif
 }
 
