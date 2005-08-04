@@ -62,15 +62,15 @@ public:
   static bool texture_non_power_of_two();
 
 protected:
-  unsigned int mType;
-  unsigned int mId;
-  std::string mProgram;
+  unsigned int type_;
+  unsigned int id_;
+  std::string  program_;
 
-  static bool mInit;
-  static bool mSupported;
-  static bool mNon2Textures;
-  static int max_texture_size_1_;
-  static int max_texture_size_4_;
+  static bool init_;
+  static bool supported_;
+  static bool non_2_textures_;
+  static int  max_texture_size_1_;
+  static int  max_texture_size_4_;
 };
 
 class VertexProgramARB : public ShaderProgramARB
