@@ -402,6 +402,9 @@ protected:
   bool             d_doAMR;
   bool             d_testForNegTemps_mpm;
 
+  int              pbx_matl_num;
+  MaterialSubset*  pbx_matl;
+
   vector<MPMPhysicalBC*> d_physicalBCs;
   double d_SMALL_NUM;
   double d_TINY_RHO;
