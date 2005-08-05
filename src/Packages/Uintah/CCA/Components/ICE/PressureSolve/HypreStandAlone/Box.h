@@ -5,6 +5,8 @@
 #include "Vector.h"
 #include "Side.h"
 
+typedef Vector<int> Point;
+
 class Box {
   /*_____________________________________________________________________
     class Box:
@@ -28,7 +30,7 @@ class Box {
     void operator ++ (void);
     //    inline void operator ++ (int);
     //    inline void operator -- (void);
-    inline Vector<int>& operator * (void)
+    inline Point& operator * (void)
       { return _sub; }
     inline int operator == 
       (const iterator& other) const 
@@ -39,14 +41,14 @@ class Box {
 
   protected:
     const Box&    _box;     // Reference to attached Box object
-    Vector<int>   _sub;     // Cell subscript that this iterator represents
+    Point   _sub;     // Cell subscript that this iterator represents
   };
 
   /*============= End class Box::iterator =============*/
 
   Box(const Counter numDims);
-  Box(const Vector<int>& lower,
-      const Vector<int>& upper);
+  Box(const Point& lower,
+      const Point& upper);
   Box(const Box& b);
   Box& operator = (const Box& b);
 
@@ -54,11 +56,10 @@ class Box {
     {
       return _lower.getLen();
     }
-
-  const Vector<int>&  get(const Side& s) const;
-  Vector<int>&        get(const Side& s);
+  const Point&  get(const Side& s) const;
+  Point&        get(const Side& s);
   void                set(const Side& s,
-                          const Vector<int>& value);
+                          const Point& value);
   void                set(const Counter d,
                           const Side& s,
                           const int& value);
@@ -79,19 +80,22 @@ class Box {
       return iter;
     }
 
-  Vector<int>         size(void) const;
+  Point         size(void) const;
   Counter             volume(void) const;
+  bool                overlaps(const Box&, double epsilon=1.e-6) const;
+  bool                contains(const Point& p) const;
+  Box                 intersect(const Box& b) const;
+  bool                degenerate(void) const;
   Box                 faceExtents(const Counter d,
                                   const Side& s); 
   Box                 coarseNbhrExtents(const Vector<Counter>& refRat,
                                         const Counter d,
                                         const Side& s) const;
-
   friend std::ostream& operator << (std::ostream& os, const Box& a);
 
  protected:
-  Vector<int>   _lower;   // Lower-left corner of box
-  Vector<int>   _upper;   // Upper-right corner of box
+  Point   _lower;   // Lower-left corner of box
+  Point   _upper;   // Upper-right corner of box
 };
 
 #endif // __BOX_H__

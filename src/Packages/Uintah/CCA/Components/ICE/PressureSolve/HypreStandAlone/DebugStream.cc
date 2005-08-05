@@ -26,7 +26,7 @@ DebugStream::DebugStream(const string& iname, bool active) :
   // set default values
   _isactive = active;
   if (_isactive){
-    outstream = &cout;
+    outstream = &cerr;
   } else {
     outstream = 0;
   }
@@ -34,7 +34,7 @@ DebugStream::DebugStream(const string& iname, bool active) :
 
 DebugStream::~DebugStream(void)
 {
-  if (outstream && outstream != &cout){
+  if (outstream && outstream != &cerr){
     delete(outstream);
   }
   delete _dbgbuf;
@@ -45,7 +45,7 @@ void DebugStream::setActive(const bool active)
   cerr << "setActive begin()\n";
   _isactive = active;
   if (_isactive){
-    outstream = &cout;
+    outstream = &cerr;
   } else {
     outstream = 0;
   }
