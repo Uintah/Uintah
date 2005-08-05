@@ -1027,7 +1027,7 @@ void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
       switch2 = 0.0;
       switch3 = 0.0;         
     }
-    if(quantity == "momentum", quantity == "scalar"){
+    if(quantity == "momentum" || quantity == "scalar"){
       switch1 = 0.0;
       switch2 = 1.0;
       switch3 = 0.0;         
