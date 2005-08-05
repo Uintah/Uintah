@@ -1,10 +1,11 @@
 #ifndef __PATCH_H__
 #define __PATCH_H__
 
-#include "mydriver.h"
-#include <vector>
-#include <string>
+#include "Box.h"
 #include <map>
+
+/* Forward declarations */
+class Level;
 
 class Patch {
   /*_____________________________________________________________________
@@ -12,7 +13,9 @@ class Patch {
     A box of data at a certain level. A processor may own more than one
     patch. A patch can be owned by one proc only.
     _____________________________________________________________________*/
+
 public:
+
   enum BoundaryType {
     Domain = 0, 
     CoarseFine, 
@@ -25,66 +28,38 @@ public:
     Neumann
   };
   
-  int         _procID;    // Owning processor's ID
-  int         _levelID;   // Which level this Patch belongs to
-  vector<int> _ilower;    // Lower left corner subscript
-  vector<int> _iupper;    // Upper right corner subscript
-  int         _numCells;  // Total # cells
-
   Patch(const int procID, 
-        const int levelID,
-        const vector<int>& ilower,
-        const vector<int>& iupper);
+        const Counter levelID,
+        const Box& box);
 
+  /* Boundary conditions get & set */
   BoundaryType getBoundaryType(const Counter d,
-                           const Side s) const
-    {
-      return _boundaries[2*d + ((s+1)/2)];
-    }
-
+                               const Side s) const;
   BoundaryCondition getBC(const Counter d,
-                          const Side s) const
-    {
-      return _bc[2*d + ((s+1)/2)];
-    }
-
-  void setAllBoundaries(const vector<BoundaryType>& boundaries)
-    {
-      _boundaries = boundaries;
-    }
-
+                          const Side s) const;
+  void setAllBoundaries(const Vector<BoundaryType>& boundaries);
   void setBoundaryType(const Counter d,
-                   const Side s,
-                   const BoundaryType& bt) 
-    {
-      _boundaries[2*d+((s+1)/2)] = bt;
-    }
-
-  void setAllBC(const vector<BoundaryCondition>& bc)
-    {
-      _bc = bc;
-    }
-
+                       const Side s,
+                       const BoundaryType& bt);
+  void setAllBC(const Vector<BoundaryCondition>& bc);
   void setBC(const Counter d,
              const Side s,
-             const BoundaryCondition& bc) 
-    {
-      _bc[2*d+((s+1)/2)] = bc;
-    }
+             const BoundaryCondition& bc);
+  void setDomainBoundaries(const Level& lev);
 
   /* Static members & functions */
   static bool initialized /* = false */;
-  static std::map<BoundaryType, std::string> boundaryTypeString; 
-  
-  static void init(void)
-    {
-      boundaryTypeString[Domain    ] = "Domain";
-      boundaryTypeString[CoarseFine] = "CoarseFine";
-      boundaryTypeString[Neighbor  ] = "Neighbor";
-    }
+  static std::map<BoundaryType, std::string> boundaryTypeString;  
+  static void init(void);
+
+  int         _procID;    // Owning processor's ID
+  Counter     _levelID;   // Which level this Patch belongs to
+  Box         _box;       // Patch box extents
+  Counter     _numCells;  // Total # cells
+  Counter     _patchID;   // Patch ID, unique across all levels & procs
  protected:
-  vector<BoundaryType> _boundaries;
-  vector<BoundaryCondition> _bc;
+  Vector<BoundaryType>      _boundaries;
+  Vector<BoundaryCondition> _bc;
   
  private:
 };

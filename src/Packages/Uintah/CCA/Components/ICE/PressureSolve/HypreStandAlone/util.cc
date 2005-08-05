@@ -7,57 +7,10 @@
  * 20-JUL-2005   Oren   Created.
  *--------------------------------------------------------------------------*/
 
-#include "mydriver.h"
 #include "util.h"
-
+#include "Vector.h"
 #include <utilities.h>
-#include <vector>
 #include <iostream>
-
-using namespace std;
-
-void 
-copyIndex(const Index& subFrom,
-          Index* subTo,
-          const Counter numDims)
-  /*_____________________________________________________________________
-    Function copyIndex:
-    Copy an index subFrom to index subTo in numDims-dimensions.
-    _____________________________________________________________________*/
-{
-  for (Counter d = 0; d < numDims; d++) (*subTo)[d] = subFrom[d];
-}
-
-void 
-ToIndex(const vector<Counter>& subFrom,
-        Index* subTo,
-        const Counter numDims)
-  /*_____________________________________________________________________
-    Function ToIndex:
-    Convert a vector<Counter>-type subscript "subFrom" to Index-type "subTo",
-    so that we can enjoy the flexibility of vector, but interface to
-    Hypre with the correct type (Index). Note that Index is an int so we
-    can make the conversion.
-    _____________________________________________________________________*/
-{
-  assert(subFrom.size() == numDims);
-  for (Counter d = 0; d < numDims; d++) (*subTo)[d] = int(subFrom[d]);
-}
-
-void 
-ToIndex(const vector<int>& subFrom,
-        Index* subTo,
-        const Counter numDims)
-  /*_____________________________________________________________________
-    Function ToIndex:
-    Convert a vector<int>-type subscript "subFrom" to Index-type "subTo",
-    so that we can enjoy the flexibility of vector, but interface to
-    Hypre with the correct type (Index).
-    _____________________________________________________________________*/
-{
-  assert(subFrom.size() == numDims);
-  for (Counter d = 0; d < numDims; d++) (*subTo)[d] = subFrom[d];
-}
 
 void 
 Proc0Print(char *fmt, ...)
@@ -148,146 +101,6 @@ PrintNP(char *fmt, ...)
 #endif
 }
 
-template<class T>
-void 
-printIndex(const vector<T>& sub) 
-{
-  /*_____________________________________________________________________
-    Function printIndex:
-    Print vector-type numDims-dimensional index sub
-    _____________________________________________________________________*/
-#if DRIVER_DEBUG
-  PrintNP("[");
-  for (Counter d = 0; d < sub.size(); d++) {
-    PrintNP("%d",sub[d]);
-    if (d < sub.size()-1) PrintNP(",");
-  }
-  PrintNP("]");
-#endif
-}
-
-template<>
-void 
-printIndex<double>(const vector<double>& sub) 
-{
-  /*_____________________________________________________________________
-    Function printIndex:
-    Print vector<double>-type numDims-dimensional index sub
-    _____________________________________________________________________*/
-#if DRIVER_DEBUG
-  PrintNP("[");
-  for (Counter d = 0; d < sub.size(); d++) {
-    PrintNP("%.3f",sub[d]);
-    if (d < sub.size()-1) PrintNP(",");
-  }
-  PrintNP("]");
-#endif
-}
-
-void
-faceExtents(const vector<int>& ilower,
-            const vector<int>& iupper,
-            const Counter d,
-            const int s,
-            vector<int>& faceLower,
-            vector<int>& faceUpper)
-  /*_____________________________________________________________________
-    Function faceExtents:
-    Compute face box extents of a numDims-dimensional patch whos extents
-    are ilower,iupper. This is the face in the d-dimension; s = Left
-    means the left face, s = Right the right face (so d=1, s=Left is the
-    x-left face). Face extents are returned in faceLower, faceUpper
-    _____________________________________________________________________*/
-{
-  faceLower = ilower;
-  faceUpper = iupper;
-  if (s == Left) {
-    faceUpper[d] = faceLower[d];
-  } else {
-    faceLower[d] = faceUpper[d];
-  }
-#if DRIVER_DEBUG
-  Print("Face(d = %c, s = %s) box extents: ",
-        d+'x',(s == Left) ? "Left" : "Right");
-  printIndex(faceLower);
-  PrintNP(" to ");
-  printIndex(faceUpper);
-  PrintNP("\n");
-#endif
-}
-
-Counter
-numCellsInBox(const vector<int>& x,
-              const vector<int>& y)
-  /*_____________________________________________________________________
-    Function numCellsInBox:
-    Computes the total number of cells in the box [x,y]. x is the lower
-    left corner and y is the upper right corner (in d-dimensions). This
-    includes x and y (so like: prod(y-x+1)).
-     _____________________________________________________________________*/
-{
-  Counter result = 1;
-  for (Counter d = 0; d < x.size(); d++) {
-    int temp = y[d] - x[d] + 1;
-    if (temp < 0)
-      return 0;
-    result *= Counter(temp);
-  }
-  return result;
-}
-
-void IndexPlusPlus(const vector<int>& ilower,
-                   const vector<int>& iupper,
-                   const vector<bool>& active,
-                   vector<int>& sub,
-                   bool& eof)
-  /*_____________________________________________________________________
-    Function IndexPlusPlus
-    Increment the d-dimensional subscript sub. This is useful when looping
-    over a volume or an area. active is a d- boolean array. Indices with
-    active=false are kept fixed, and those with active=true are updated.
-    ilower,iupper specify the extents of the hypercube we loop over.
-    eof is returned as 1 if we're at the end of the cube (the value of sub
-    is set to ilower for active=1 indices; i.e. we do a periodic looping)
-    and 0 otherwise.
-    E.g., incrementing sub=(2,0,1) with active=(0,1,0), ilower=(0,0,0)
-    and iupper=(2,2,2) results in sub=(0,0,2) and eof=1. If sub were
-    (2,0,2) then sub=(0,0,0) and eof=1.
-    _____________________________________________________________________*/
-{
-  assert((iupper.size() == ilower.size()) &&
-         (sub.size()    == iupper.size()) &&
-         (active.size() == sub.size()));
-
-  Counter numDims = sub.size(), numDimsActive = 0;
-  for (Counter d = 0; d < numDims; d++) {
-    if (active[d]) {
-      numDimsActive++;
-    }
-  }
-  eof = false;
-
-  Counter d = 0;
-  while ((!active[d]) && (d < numDims)) d++;
-  if (d == numDims) {
-    eof = true;
-    return;
-  }
-  
-  sub[d]++;
-  if (sub[d] > iupper[d]) {
-    while ((sub[d] > iupper[d]) || (!active[d])) {
-      if (active[d]) sub[d] = ilower[d];
-      d++;
-      if (d == numDims) {
-        eof = true;
-        break;
-      }
-      if (active[d]) sub[d]++;
-    }
-  }
-}
-
 int
 clean(void)
   /*_____________________________________________________________________
@@ -362,58 +175,6 @@ serializeProcsEnd(void)
   serializing = false;
 }
 
-template<class T, class S>
-void
-pointwiseAdd(const vector<T>& x,
-             const vector<S>& y,
-             vector<S>& result)
-{
-  assert((x.size() == y.size()) &&
-         (result.size() == y.size()));
-  for (Counter d = 0; d < x.size(); d++) result[d] = x[d] + y[d];
-}
-
-template<class T>
-void
-scalarMult(const vector<T>& x,
-           const T& h,
-           vector<T>& result)
-{
-  assert(result.size() == x.size());
-  for (Counter d = 0; d < x.size(); d++) result[d] = h * x[d];
-}
-
-template<class T, class S>
-void
-pointwiseMult(const vector<T>& i,
-              const vector<S>& h,
-              vector<S>& result)
-{
-  assert((i.size() == h.size()) &&
-         (result.size() == h.size()));
-  for (Counter d = 0; d < i.size(); d++) result[d] = i[d] * h[d];
-}
-
-template<class T, class S>
-void
-pointwiseDivide(const vector<S>& x,
-                const vector<T>& y,
-                vector<S>& result)
-{
-  assert((x.size() == y.size()) &&
-         (result.size() == y.size()));
-  for (Counter d = 0; d < x.size(); d++) result[d] = x[d] / y[d];
-}
-
-template<class T>
-T
-prod(const vector<T>& x)
-{
-  T result = 1;
-  for (Counter d = 0; d < x.size(); d++) result *= x[d];
-  return result;
-}
-
 double
 roundDigit(const double& x,
            const Counter d /* = 0 */)
@@ -433,7 +194,7 @@ roundDigit(const double& x,
 
 IntMatrix
 grayCode(const Counter n,
-         const vector<Counter>& k)
+         const Vector<Counter>& k)
   /*_____________________________________________________________________
     Function grayCode:
     This function returns a variable-base multiple-digit gray code.
@@ -447,7 +208,7 @@ grayCode(const Counter n,
     _____________________________________________________________________*/
 {
   assert(n > 0);
-  assert(k.size() == n);
+  assert(k.getLen() == n);
   int verbose = 0;
   
   Counter numRows = 1;
@@ -549,26 +310,3 @@ grayCode(const Counter n,
 
   return G;
 } // end graycode
-
-// The compiler was not instantiating these templated functions, so
-// this forces it to do so.
-void
-forceInstantiation()
-{
-  vector<Counter> c;
-  vector<double>  d;
-  vector<int>     i;
-
-  pointwiseMult( c, i, i );
-  pointwiseMult( i, d, d );
-  pointwiseAdd( i, i, i );
-  pointwiseAdd( d, d, d );
-  pointwiseDivide( c, i, c );
-  pointwiseDivide( i, c, i );
-  scalarMult( d, 1.0, d );
-  prod( d );
-  prod( i );
-  printIndex( c );
-  printIndex( d );
-  printIndex( i );
-}

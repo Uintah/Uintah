@@ -11,26 +11,21 @@
 
 /*================== Library includes ==================*/
 
-#include "mydriver.h"
 #include "util.h"
 #include "Hierarchy.h"
-#include "Level.h"
-#include "Patch.h"
 
-#include "Param.h"
 #include "TestLinear.h"
 
 #include "Solver.h"
 #include "SolverAMG.h"
 #include "SolverFAC.h"
 
-#include <vector>
+// Hypre includes
 #include <HYPRE_sstruct_ls.h>
 #include <utilities.h>
 #include <krylov.h>
 #include <sstruct_mv.h>
 #include <sstruct_ls.h>
-#include <string>
 
 using namespace std;
 
@@ -63,20 +58,16 @@ makeGrid(const Param* param,
     Level* lev = hier._levels[level];
     Print("Level %d, meshSize = %lf, resolution = ",
           level,lev->_meshSize[0]);
-    printIndex(lev->_resolution);
-    PrintNP("\n");
-    for (Counter i = 0; i < lev->_patchList.size(); i++) {
-      Patch* patch = lev->_patchList[i];
+    cout << lev->_resolution << "\n";
+    for (Counter i = 0; i < lev->_patchList[MYID].size(); i++) {
+      Patch* patch = lev->_patchList[MYID][i];
       /* Add this patch to the grid */
-      Index hypreilower, hypreiupper;
-      ToIndex(patch->_ilower,&hypreilower,numDims);
-      ToIndex(patch->_iupper,&hypreiupper,numDims);
-      HYPRE_SStructGridSetExtents(grid, level, hypreilower, hypreiupper);
+      HYPRE_SStructGridSetExtents(grid, level,
+                                  patch->_box.get(Left ).getData(),
+                                  patch->_box.get(Right).getData());
       HYPRE_SStructGridSetVariables(grid, level, NUM_VARS, vars);
-      Print("  Patch %d Extents = ",i);
-      printIndex(patch->_ilower);
-      PrintNP(" to ");
-      printIndex(patch->_iupper);
+      Print("  Patch %2d, ID %2d ",i,patch->_patchID);
+      cout << patch->_box;
       PrintNP("\n");
     }
   }
@@ -108,7 +99,7 @@ makeStencil(const Param* param,
 {
   const Counter numDims   = param->numDims;
   Counter               stencilSize = 2*numDims+1;
-  vector< vector<int> > stencil_offsets;
+  Vector< Vector<int> > stencil_offsets;
 
   /* Create an empty stencil */
   HYPRE_SStructStencilCreate(numDims, stencilSize, &stencil);
@@ -122,12 +113,12 @@ makeStencil(const Param* param,
     structured mesh. If not, define it later during matrix setup.
   */
   //  Print("stencilSize = %d   numDims = %d\n",stencilSize,numDims);
-  stencil_offsets.resize(stencilSize);
+  stencil_offsets.resize(0,stencilSize);
   int entry;
   /* Order them as follows: center, xminus, xplus, yminus, yplus, etc. */
   /* Central coeffcient */
   entry = 0;
-  stencil_offsets[entry].resize(numDims);
+  stencil_offsets[entry].resize(0,numDims);
   for (Counter dim = 0; dim < numDims; dim++) {
     //    Print("Init entry = %d, dim = %d\n",entry,dim);
     stencil_offsets[entry][dim] = 0;
@@ -135,7 +126,7 @@ makeStencil(const Param* param,
   for (Counter dim = 0; dim < numDims; dim++) {
     for (int s = Left; s <= Right; s += 2) {
       entry++;
-      stencil_offsets[entry].resize(numDims);
+      stencil_offsets[entry].resize(0,numDims);
       //      Print("entry = %d, dim = %d\n",entry,dim);
       for (Counter d = 0; d < numDims; d++) {
         //        Print("d = %d  size = %d\n",d,stencil_offsets[entry].size());
@@ -148,14 +139,12 @@ makeStencil(const Param* param,
   
   /* Add stencil entries */
   Proc0Print("Stencil offsets:\n");
-  Index hypreOffset;
   for (entry = 0; entry < stencilSize; entry++) {
-    ToIndex(stencil_offsets[entry],&hypreOffset,numDims);
-    HYPRE_SStructStencilSetEntry(stencil, entry, hypreOffset, 0);
+    HYPRE_SStructStencilSetEntry(stencil, entry,
+                                 stencil_offsets[entry].getData(), 0);
     if (MYID == 0) {
       Print("    entry = %d,  stencil_offsets = ",entry);
-      printIndex(stencil_offsets[entry]);
-      PrintNP("\n");
+      cout << stencil_offsets[entry] << "\n";
     }
   }
   serializeProcsEnd();
@@ -168,8 +157,8 @@ main(int argc, char *argv[]) {
    *-----------------------------------------------------------*/
   /* Set test cast parameters */
   Param*                param;
-  param = new TestLinear(3,256); // numDims, baseResolution
-  param->solverType    = Param::FAC; // Hypre solver
+  param = new TestLinear(2,8); // numDims, baseResolution
+  param->solverType    = Param::AMG; // Hypre solver
   param->numLevels     = 2;          // # AMR levels
   param->printSystem   = false; //true;
 

@@ -23,7 +23,7 @@ public:
 #if 0
       /* Boundary conditions for a rectangular domain */
       // All Dirichlet in this case
-      vector<Patch::BoundaryCondition> bc(2*numDims);
+      Vector<Patch::BoundaryCondition> bc(2*numDims);
       for (int d = 0; d < numDims; d++) {
         bc[2*d  ] = Patch::Dirichlet;
         bc[2*d+1] = Patch::Dirichlet;
