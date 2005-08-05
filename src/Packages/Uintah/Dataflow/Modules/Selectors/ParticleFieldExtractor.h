@@ -141,7 +141,7 @@ private:
   void add_type(string &type_list, const TypeDescription *subtype);
   bool setVars(DataArchiveHandle& archive, int timestep,
                bool archive_dirty = true);
-  void showVarsForMatls();
+  bool showVarsForMatls();
   std::string getVarsForMaterials(std::list<VarInfo>& vars,
 				  const ConsecutiveRangeSet& matls,
 				  bool& needToUpdate);
