@@ -95,7 +95,9 @@ Scene* make_scene(int argc, char* argv[])
     Scene* scene=new Scene(obj, cam,
 			   bgcolor, groundcolor*averagelight, bgcolor, groundplane, 
 			   ambient_scale);
-    scene->add_light(new Light(Point(5,-3,3), Color(1,1,.8)*2, 0));
+    Light* light = new Light(Point(5,-3,3), Color(1,1,.8)*2, 0);
+    light->name_ = "Main";
+    scene->add_light(light);
     scene->select_shadow_mode( No_Shadows );
     scene->maxdepth=0;
 
