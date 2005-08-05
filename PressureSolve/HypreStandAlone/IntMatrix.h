@@ -33,9 +33,10 @@ class IntMatrix {
   void identity(void);
   void zero(void);
   void copy(const IntMatrix& copy);
-  void print(std::ostream& out);
   IntMatrix& operator = (const IntMatrix&);
   IntMatrix(const IntMatrix&);
+
+  friend std::ostream& operator << (std::ostream& os, const IntMatrix& a);
 
  private:    
   int*    mat;

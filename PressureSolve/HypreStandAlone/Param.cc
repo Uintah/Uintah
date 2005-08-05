@@ -6,7 +6,8 @@ using namespace std;
 void Param::setNumDims(const Counter d)
 {
   if (numDims) {
-    Print("\n\nError: numDims already initialized and cannot be re-set.\n");
+    cerr << "\n\nError: numDims already initialized and cannot be re-set."
+         << "\n";
     clean();
     exit(1);
   }

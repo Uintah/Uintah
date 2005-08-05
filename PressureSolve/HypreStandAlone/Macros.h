@@ -16,18 +16,13 @@
 #define _MACROS_H
 
 /*================== Standard Library includes ==================*/
-#include <iostream>
-#include <iomanip>
-#include <sstream>
 #include <string>
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <values.h>
-using std::string;
-using std::cout;
-using std::setw;
+#include "DebugStream.h"
 
 /*------------- Useful constants -------------*/
 
@@ -42,16 +37,6 @@ using std::setw;
 template<class VAR> class Vector;
 typedef unsigned short Counter;            // Non-negative integer/counter
 typedef Vector<double> Location;           // Data node location in d-dim space
-enum Side {                                // Left/right boundary in each dim
-  Left = -1,
-  Right = 1,
-  NA = 3
-};
-
-inline Side& operator++(Side &s)
-{
-  return s = Side(s+2);
-}
 
 /*------------- Useful macros -------------*/
 
@@ -63,6 +48,8 @@ inline Side& operator++(Side &s)
 
 /*------------- Global variables, must be declared in main file -------------*/
 
-extern int     MYID;     /* The same as this proc's myid, but global */
+extern int MYID;     // The same as this proc's myid, but global
+extern DebugStream dbg;
+extern DebugStream dbg0;
 
 #endif /* _MACROS_H */

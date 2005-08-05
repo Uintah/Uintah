@@ -14,9 +14,9 @@ SolverAMG::setup(void)
   /*-----------------------------------------------------------
    * Solver setup phase
    *-----------------------------------------------------------*/
-  Proc0Print("----------------------------------------------------\n");
-  Proc0Print("AMG setup phase\n");
-  Proc0Print("----------------------------------------------------\n");
+  dbg0 << proc() << "----------------------------------------------------" << "\n";
+  dbg0 << proc() << "AMG setup phase" << "\n";
+  dbg0 << proc() << "----------------------------------------------------" << "\n";
   HYPRE_BoomerAMGCreate(&_parSolver);
   HYPRE_BoomerAMGSetCoarsenType(_parSolver, 6);
   HYPRE_BoomerAMGSetStrongThreshold(_parSolver, 0.);
@@ -63,9 +63,9 @@ SolverAMG::solve(void)
   /*-----------------------------------------------------------
    * Gather the solution vector
    *-----------------------------------------------------------*/
-  Proc0Print("----------------------------------------------------\n");
-  Proc0Print("Gather the solution vector\n");
-  Proc0Print("----------------------------------------------------\n");
+  dbg0 << proc() << "----------------------------------------------------" << "\n";
+  dbg0 << proc() << "Gather the solution vector" << "\n";
+  dbg0 << proc() << "----------------------------------------------------" << "\n";
 
   HYPRE_SStructVectorGather(_x);
 } //end solve()

@@ -60,16 +60,18 @@ IntMatrix::copy(const IntMatrix& a)
   }
 }
 
-void
-IntMatrix::print(ostream& out)
+std::ostream&
+operator << (std::ostream& os, const IntMatrix& a)
+  // Write the matrix to the stream os.
 {
-  for(Counter i=0;i<rows;i++){
-    out << i << ":";
-    for(Counter j=0;j<cols;j++){
-      out << '\t' << this->operator()(i,j);
+  for(Counter i=0;i<a.rows;i++){
+    os << i << ":";
+    for(Counter j=0;j<a.cols;j++){
+      os << '\t' << a(i,j);
     }
-    out << '\n';
+    os << '\n';
   }
+  return os;
 }
 
 IntMatrix&

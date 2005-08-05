@@ -2,9 +2,8 @@
 #include "util.h"
 #include "Level.h"
 #include "Patch.h"
-
 #include <mpi.h>
-
+using namespace std;
 
 void
 Hierarchy::make()
@@ -41,21 +40,10 @@ Hierarchy::make()
     const Counter& numPatches = procMap.numRows();
 
     /* Print procMap */
-    if (MYID == 0) {
-      Proc0Print("procMap at level %d\n",level);
-      for (Counter i = 0; i < numPatches; i++){
-        for(Counter d = 0; d < numDims; d++){
-          if (d == 0) {
-            Proc0Print("\t%d",procMap(i,d));
-          } else {
-            PrintNP("\t%d",procMap(i,d));
-          }
-        }
-        PrintNP("\n");
-      }
-    }
+    dbg0 << "procMap at level " << level << "\n";
+    dbg0 << procMap << "\n";
 
-    Print("Setting refinement ratio\n");
+    dbg << "Setting refinement ratio" << "\n";
     /* Set Refinement ratio w.r.t. parent level. Hard-coded to be
        constant (1:2) in all dimensions and all levels for now. */
     Vector<Counter> refRat(0,numDims);
@@ -69,7 +57,7 @@ Hierarchy::make()
       }
     }
 
-    Print("Setting meshsize\n");
+    dbg << "Setting meshsize" << "\n";
     double h;
     /* Compute meshsize, assumed the same in all directions at each level */
     if (level == 0) {
@@ -80,14 +68,10 @@ Hierarchy::make()
                                                           all dims */
     }
     
-    Print("Initializing Level object and adding it to hier:\n");
-    Print("  Empty level\n");
+    dbg << "Initializing Level object and adding it to hier:" << "\n";
     _levels.push_back(new Level(numDims,h));
-    Print("  Ptr to level\n");
     Level* lev = _levels[level];
-    Print("  Set ref ratio\n");
     lev->_refRat = refRat;
-    Print("  Init patch list\n");
     lev->_patchList.resize(numProcs);
     int offset = level; // For tests where the fine patch is owned by
     // one proc, and its parent patch is owned by another proc
@@ -95,10 +79,12 @@ Hierarchy::make()
     /* Mesh box extents (lower left corner, upper right corner) */
     /* This is where the specific geometry of the hierarchy is
        hard-coded. */
-    Print("numPatches = %d\n",numPatches);
+    dbg << proc() << "numPatches = " << numPatches << "\n";
     for (Counter i = 0; i < numPatches; i++) {
-      int proc = (i+offset) % numProcs; // Owner of patch i, hard-coded
-      Print("Creating Patch i = %2d   owned by proc %2d\n",i,proc);
+      int owner = (i+offset) % numProcs; // Owner of patch i, hard-coded
+      dbg << proc()
+          << "Creating Patch i = " << setw(2) << right << i
+          << " owned by proc " << setw(2) << right << owner;
       Vector<int> lower(0,numDims);
       Vector<int> upper(0,numDims);
       for (Counter dim = 0; dim < numDims; dim++) {
@@ -117,21 +103,27 @@ Hierarchy::make()
           }
         default:
           {
-            PrintNP("\n\nError, unsupported level=%d in "
-                    "Hierarchy::make()\n",level);
+            cerr << "\n\nError, unsupported level=" << level 
+                 << " in Hierarchy::make()" << "\n";
             clean();
             exit(1);
           }
         } // end switch (level)
       } // for dim
       
+      dbg << " lower = " << lower
+          << " upper = " << upper
+          << "\n";
       // Create patch object from the geometry parameters above and
       // add it to the level's appropriate list of patches.
-      Patch* patch = new Patch(proc,level,Box(lower,upper));
+      Patch* patch = new Patch(owner,level,Box(lower,upper));
+      dbg << proc() << "box = " << patch->_box << "\n";
+      dbg << proc() << "box.get(Left ) = " << patch->_box.get(Left) << "\n";
+      dbg << proc() << "box.get(Right) = " << patch->_box.get(Right) << "\n";
       //        Print("Doing setDomainBoundaries\n");
       patch->setDomainBoundaries(*lev);
       //        Print("Done setDomainBoundaries\n");
-      lev->_patchList[proc].push_back(patch);
+      lev->_patchList[owner].push_back(patch);
     } // end for i (patches)
   } // end for level
 
@@ -144,7 +136,7 @@ Hierarchy::make()
 void
 Hierarchy::getPatchesFromOtherProcs()
 {
-  Print("getPatchesFromOtherProcs() begin\n");
+  dbg << "Hierarchy::getPatchesFromOtherProcs() begin" << "\n";
   /* Types for arrays that are sent/received through MPI are int;
      convert to Counter later on, but don't risk having MPI_INT and
      Counter mixed up in the same call. */
@@ -181,7 +173,7 @@ Hierarchy::getPatchesFromOtherProcs()
         startPosition += numPatches[index];
     }
 
-    Proc0Print("got totalPatches of %d\n", totalPatches);
+    dbg0 << "Got totalPatches of " << totalPatches << "\n";
 
     // Put our patch information into a big Vector, share it with
     // all other procs
@@ -221,7 +213,7 @@ Hierarchy::getPatchesFromOtherProcs()
         globalPatchID++;
         continue;
       }
-      Print("Processing global ID for patch %d\n",globalPatchID);
+      dbg << "Processing global ID for patch " << globalPatchID << "\n";
       Patch* patch = lev->_patchList[MYID][patchIndex];
       patch->_patchID = globalPatchID; // Save the global patch index in _patchID
       patchIndex++;
@@ -295,7 +287,7 @@ Hierarchy::getPatchesFromOtherProcs()
     delete [] sendPatchInfo;
     delete [] patchInfo;
   } // end for level
-  Print("getPatchesFromOtherProcs() end\n");
+  dbg << "Hierarchy::getPatchesFromOtherProcs() end" << "\n";
 } // getPatchesFromOtherProcs()
 
 void
@@ -304,23 +296,24 @@ Hierarchy::printPatchBoundaries()
   serializeProcsBegin();
   /* Print boundary types */
   for(Counter level = 0; level < _levels.size(); level++ ) {
-    Print("---- Patch boundaries at level %d ----\n",level);
+    dbg << "---- Patch boundaries at level " << level << " ----" << "\n";
     Level* lev = _levels[level];
     for (Counter index = 0; index < lev->_patchList[MYID].size(); index++ ) {
       Patch* patch = lev->_patchList[MYID][index];
-      Print("Patch # %d, owned by proc %d: ",
-            patch->_patchID,patch->_procID);
-      cout << patch->_box;
-      PrintNP("\n");
+      dbg << "Patch #" << patch->_patchID
+          << ", owned by proc " << patch->_procID << ":" << "\n";
+      dbg << patch->_box;
+      dbg << "\n";
       for (Counter d = 0; d < _param->numDims; d++) {
         for (Side s = Left; s <= Right; ++s) {
-          Print("  boundary( d = %d , s = %+d ) = %s\n",
-                d,s,
-                Patch::boundaryTypeString[patch->getBoundaryType(d,s)].c_str());
+          dbg << "  boundary(d = " << d
+              << " , s = " << s << ") = "
+              << Patch::boundaryTypeString
+            [patch->getBoundaryType(d,s)].c_str() << "\n";
         }
       }
     }
   } // end for level
-  Print("\n");
+  dbg << "\n";
   serializeProcsEnd();
 } // end getPatchesFromOtherProcs()

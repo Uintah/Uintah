@@ -3,7 +3,6 @@
 
 #include "Param.h"
 #include <vector>
-using std::vector;
 
 class Level;
 
@@ -20,8 +19,8 @@ public:
   void make();
   void printPatchBoundaries();
 
-  vector<Level*>      _levels;
-  const Param*        _param;
+  std::vector<Level*>      _levels;
+  const Param*             _param;
 
  private:
   void getPatchesFromOtherProcs();

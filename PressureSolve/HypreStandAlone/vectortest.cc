@@ -2,6 +2,8 @@
 #include "Box.h"
 
 int MYID;
+DebugStream dbg("DEBUG",true);
+DebugStream dbg0("DEBUG",true);
 
 int main(int argc, char **argv)
 {
@@ -15,10 +17,10 @@ int main(int argc, char **argv)
   double b = 0.5;
   Vector<double> a(0,5,0,"a",0.3);
   Vector<double> c = b + a;
-  cout << a << "\n";
-  cout << b << "\n";
-  cout << c << "\n";
-  cout << a - b << "\n";
+  dbg0 << a << "\n";
+  dbg0 << b << "\n";
+  dbg0 << c << "\n";
+  dbg0 << a - b << "\n";
   
   Vector<int> lower(0,2,0,"",0);
   Vector<int> upper(0,2,0,"",3);
@@ -27,7 +29,7 @@ int main(int argc, char **argv)
 
   Box box(lower,upper);
   for (Box::iterator iter = box.begin(); iter != box.end(); ++iter) {
-    cout << "*iter = " << *iter << "\n";
+    dbg0 << "*iter = " << *iter << "\n";
   }
   return 0;
 }
