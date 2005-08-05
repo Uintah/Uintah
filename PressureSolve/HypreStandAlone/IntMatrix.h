@@ -1,10 +1,7 @@
 #ifndef __INTMATRIX_H__
 #define __INTMATRIX_H__
 
-#include "mydriver.h"
-#include <vector>
-
-using namespace std;
+#include "Macros.h"
 
 class IntMatrix {
  public:
@@ -33,10 +30,6 @@ class IntMatrix {
   }
 
   void transpose(const IntMatrix& transpose);
-  void multiply(const vector<int>& b, vector<int>& X) const;
-  void multiply(const int* b, int* X) const;
-  void multiply(const IntMatrix& a, const IntMatrix& b);
-  void multiply(const int s);
   void identity(void);
   void zero(void);
   void copy(const IntMatrix& copy);

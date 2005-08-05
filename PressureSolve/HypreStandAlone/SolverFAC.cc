@@ -3,7 +3,6 @@
 #include "util.h"
 #include "Level.h"
 #include "Patch.h"
-
 #include <string>
 
 using namespace std;
@@ -14,12 +13,14 @@ SolverFAC::initializeData(const Hierarchy& hier,
 {
   /* Initialize arrays needed by Hypre FAC */
   const Counter numLevels = hier._levels.size();
-  _pLevel          = hypre_TAlloc(int  , numLevels);    
-  _refinementRatio = hypre_TAlloc(Index, numLevels);
+  const Counter numDims = hier._param->numDims;
+  _pLevel          = hypre_TAlloc(int , numLevels);    
+  _refinementRatio = hypre_TAlloc(hypre_Index, numLevels);
   for (Counter level = 0; level < numLevels; level++) {
     _pLevel[level] = level;   // part ID of this level
-    ToIndex(hier._levels[level]->_refRat, &_refinementRatio[level],
-            _param->numDims);
+    for (Counter d = 0; d < numDims; d++) { // Assuming numDims = 3
+      _refinementRatio[level][d] = hier._levels[level]->_refRat.getData()[d];
+    }
   }
 
   Solver::initializeData(hier, grid); // Do the rest of the generic inits

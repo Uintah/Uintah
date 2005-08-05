@@ -1,13 +1,8 @@
 #ifndef __PARAM_H__
 #define __PARAM_H__
 
-#include "mydriver.h"
-#include "Level.h"
 #include "Patch.h"
-#include <vector>
-#include <string>
-using std::string;
-using std::vector;
+#include "Level.h"
 
 class Param {
   /*_____________________________________________________________________

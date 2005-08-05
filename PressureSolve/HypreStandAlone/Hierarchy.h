@@ -1,9 +1,9 @@
 #ifndef __HIERARCHY_H__
 #define __HIERARCHY_H__
 
-#include <vector>
-
 #include "Param.h"
+#include <vector>
+using std::vector;
 
 class Level;
 
@@ -20,7 +20,7 @@ public:
   void make();
   void printPatchBoundaries();
 
-  std::vector<Level*> _levels;
+  vector<Level*>      _levels;
   const Param*        _param;
 
  private:

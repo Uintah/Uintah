@@ -47,7 +47,7 @@ private:
   /* FAC objects */
   HYPRE_SStructMatrix   _facA;
   int*                  _pLevel;          // Needed by FAC: part # of level
-  Index*                _refinementRatio; // Needed by FAC
+  hypre_Index*          _refinementRatio; // Needed by FAC
 };
 
 #endif // __SOLVERFAC_H__

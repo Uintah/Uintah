@@ -1,8 +1,10 @@
 #ifndef __LEVEL_H__
 #define __LEVEL_H__
 
+#include "Macros.h"
+#include "Vector.h"
 #include <vector>
-#include "mydriver.h"
+using std::vector;
 
 class Patch;
 
@@ -13,14 +15,17 @@ class Level {
     proc owns several boxes of a level, not necessarily the entire level.
     _____________________________________________________________________*/
 public:
-  Counter              _numDims;    // # dimensions
-  std::vector<double>  _meshSize;   // Meshsize in all dimensions
-  std::vector<Counter> _resolution; // Size(level) if extends over the full domain
-  std::vector<Patch*>  _patchList;  // owned by this proc ONLY
-  std::vector<Counter> _refRat;     // Refinement ratio (h[coarser lev]./h[this lev])
+  Counter                  _numDims;    // # dimensions
+  Vector<double>           _meshSize;   // Meshsize in all dimensions
+  Vector<Counter>          _resolution; // Size(level) if extends over
+                                        // the full domain
+  vector< vector<Patch*> > _patchList;  // element i = patches owned by proc i
+  Vector<Counter>          _refRat;     // Refinement ratio (h[coarser
+                                        // lev]./h[this lev])
 
   Level(const Counter numDims,
         const double& h);
+
 private:
 }; 
 
