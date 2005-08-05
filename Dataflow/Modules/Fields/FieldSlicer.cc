@@ -70,6 +70,12 @@ private:
   GuiInt jIndex_;
   GuiInt kIndex_;
 
+  //updateType_ must be declared after all gui vars because some are
+  //traced in the tcl code. If updateType_ is set to Auto having it
+  //last will prevent the net from executing when it is instantiated.
+
+  GuiString  updateType_;
+
   int axis_;
 
   int idim_;
@@ -104,6 +110,8 @@ FieldSlicer::FieldSlicer(GuiContext *context)
     iIndex_(context->subVar("i-index")),
     jIndex_(context->subVar("j-index")),
     kIndex_(context->subVar("k-index")),
+
+    updateType_(ctx->subVar("update_type")),
 
     axis_(2),
 
