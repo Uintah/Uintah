@@ -18,7 +18,7 @@ void
 Error::error(const std::ostringstream& msg) const
   /* Print an error message and exit. */
 {
-  cout << summary() << " error : " << msg.str() << "\n";
+  std::cerr << summary() << " error : " << msg.str() << "\n";
   clean();
   exit(1);
 }
@@ -27,5 +27,5 @@ void
 Error::warning(const std::ostringstream& msg) const
   /* Print an warning message but continue running. */
 {
-  cout << summary() << " warning : " << msg.str() << "\n";
+  std::cerr << summary() << " warning : " << msg.str() << "\n";
 }

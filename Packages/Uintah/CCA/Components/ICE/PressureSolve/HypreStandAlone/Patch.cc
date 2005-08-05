@@ -22,6 +22,7 @@ Patch::Patch(const int procID,
              const Box& box) :
   _box(box)
 {
+  dbg << proc() << "Patch::Patch() begin" << "\n";
   if (!initialized) {
     init();
     initialized = true;
@@ -34,6 +35,11 @@ Patch::Patch(const int procID,
   Vector<int> sz(0,numDims);
   _numCells = box.volume();
   _patchID = 987654; // Dummy value to indicate something is wrong
+  dbg << proc() << "numDims  = " << numDims << "\n";
+  dbg << proc() << "numCells = " << _numCells << "\n";
+  dbg << proc() << "box      = " << box << "\n";
+  dbg << proc() << "box      = " << _box << "\n";
+  dbg << proc() << "Patch::Patch() end" << "\n";
 }
 
 Patch::BoundaryType

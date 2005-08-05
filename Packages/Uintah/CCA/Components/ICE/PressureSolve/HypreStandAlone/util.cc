@@ -11,94 +11,15 @@
 #include "Vector.h"
 #include <utilities.h>
 #include <iostream>
+using namespace std;
 
-void 
-Proc0Print(char *fmt, ...)
+string proc(void)
+  // Processor header for output lines
 {
-  //#if DRIVER_DEBUG
-  if( MYID == 0 ) 
-    {
-      int vb = 1; /* Verbose level */
-      va_list ap;
-      va_start(ap, fmt);
-      if (vb) {
-        //        printf("P%2d: ",MYID);
-        fprintf(stderr,"P%2d: ",MYID);
-        //        vprintf(fmt, ap);
-        vfprintf(stderr, fmt, ap);
-      }
-      //      fflush(stdout);
-      fflush(stderr);
-      //      if (vb) {
-        //        va_start(ap, fmt);
-        //    if (log_file)
-        //      vfprintf(log_file, fmt, ap);
-        //    if (log_file)
-        //      fflush(log_file);
-      //      }
-      va_end(ap);
-    }
-  //#endif
-}
-
-void 
-Print(char *fmt, ...)
-  /*_____________________________________________________________________
-    Function Print:
-    Print an output line on the current processor. Useful to parse MPI
-    output.
-    _____________________________________________________________________*/
-{
-#if DRIVER_DEBUG
-  int vb = 1; /* Verbose level */
-  va_list ap;
-  va_start(ap, fmt);
-  if (vb) {
-    //    printf("P%2d: ",MYID);
-    fprintf(stderr,"P%2d: ",MYID);
-    //    vprintf(fmt, ap);
-    vfprintf(stderr, fmt, ap);
-  }
-  //  fflush(stdout);
-  fflush(stderr);
-  //  if (vb) {
-  //    va_start(ap, fmt);
-    //    if (log_file)
-    //      vfprintf(log_file, fmt, ap);
-    //    if (log_file)
-    //      fflush(log_file);
-  //  }
-  va_end(ap);
-#endif
-}
-
-void 
-PrintNP(char *fmt, ...)
-  /*_____________________________________________________________________
-    Function Print:
-    Print an output line on the current processor. Useful to parse MPI
-    output.
-    _____________________________________________________________________*/
-{
-#if DRIVER_DEBUG
-  int vb = 1; /* Verbose level */
-  va_list ap;
-  va_start(ap, fmt);
-  if (vb) {
-    //    vprintf(fmt, ap);
-    vfprintf(stderr, fmt, ap);
-  }
-  //  fflush(stdout);
-  fflush(stderr);
-  //  if (vb) {
-  //    va_start(ap, fmt);
-    //    if (log_file)
-    //      vfprintf(log_file, fmt, ap);
-    //    if (log_file)
-    //      fflush(log_file);
-  //  }
-  va_end(ap);
-#endif
+  ostringstream os;
+  os << "P"
+     << setw(2) << left << MYID << ": ";
+  return os.str();
 }
 
 int
@@ -109,7 +30,7 @@ clean(void)
     of the program.
     _____________________________________________________________________*/
 {
-  Print("Cleaning\n");
+  dbg << proc() << "Cleaning" << "\n";
 #if DRIVER_DEBUG
   hypre_FinalizeMemoryDebug();
 #endif
@@ -131,15 +52,18 @@ serializeProcsBegin(void)
     _____________________________________________________________________*/
 {
   if (serializing) {
-    fprintf(stderr,"\n\nError: serializeProcsBegin() called before "
-            "serializeProcsEnd() done\n");
+    cerr << "\n\nError: serializeProcsBegin() called before "
+         << "serializeProcsEnd() done" << "\n";
     clean();
     exit(1);
   }
   serializing = true;
 #if DRIVER_DEBUG
   for (int i = 0; i < MYID; i++) {
-    //    Print("serializeProcsBegin Barrier #%d\n",i);
+    dbg << proc()
+        << "serializeProcsBegin Barrier "
+        << setw(2) << right << i
+        << "\n";
     MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
   }
 #endif
@@ -162,13 +86,16 @@ serializeProcsEnd(void)
   }
 #if DRIVER_DEBUG
   for (int i = numProcs-1; i >= MYID; i--) {
-    //    Print("serializeProcsEnd Barrier # %d\n",i);
+    dbg << proc()
+        << "serializeProcsEnd   Barrier "
+        << setw(2) << right << i
+        << "\n";
     MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
   }
 #endif
   if (!serializing) {
-    fprintf(stderr,"\n\nError: serializeProcsEnd() called before "
-            "serializeProcsBegin() done\n");
+    cerr << "\n\nError: serializeProcsEnd() called before "
+         << "serializeProcsBegin() done" << "\n";
     clean();
     exit(1);
   }
@@ -221,8 +148,8 @@ grayCode(const Counter n,
     G(i,m) = i;
   }
   if (verbose >= 1) {
-    Print("G for %d digits = \n",m);
-    G.print(cout);
+    dbg << "G for " << m << " digits =" << "\n";
+    dbg << G;
   }
 
   /* Generate G recursively */
@@ -233,12 +160,14 @@ grayCode(const Counter n,
     IntMatrix Gnew(numRows,numCols);
     Counter startRow = 0;
     if (verbose >= 1) {
-      Print("m = %d, b = %d\n",m,b);
+      dbg << "m = " << m << " "
+           << "b = " << b 
+           << "\n";
     }
     for (Counter d = 0; d < b; d++) {
       if (d % 2) {           // d odd
         if (verbose >= 1) {
-          Print("  (G*)^(%d)\n",d);
+          dbg << "  (G*)^(" << d << ")" << "\n";
         }
         
         for (Counter i = 0; i < G.numRows(); i++) {
@@ -250,7 +179,7 @@ grayCode(const Counter n,
         
       } else {               // d even
         if (verbose >= 1) {
-          Print("  G^(%d)\n",d);
+          dbg << "  G^(" << d << ")" << "\n";
         }
 
         for (Counter i = 0; i < G.numRows(); i++) {
@@ -265,8 +194,7 @@ grayCode(const Counter n,
 
     G = Gnew;
     if (verbose >= 1) {
-      Print("G for %d digits = \n",m);
-      G.print(cout);
+      dbg << "  G for " << m << " digits = " << G << "\n";
     }
   } // end for m
   
@@ -279,7 +207,8 @@ grayCode(const Counter n,
     }
     if (diff != 1) {
       fail = true;
-      Print("failed in difference between rows %d and %d\n",i,i+1);
+      dbg << "failed in difference between rows " << i
+          << " and " << i+1 << "\n";
       break;
     }
   } // end for i
@@ -293,7 +222,8 @@ grayCode(const Counter n,
         }
         if (diff == 0) {
           fail = true;
-          Print("failed in equality of rows %d and %d\n",i,i2);
+          dbg << "failed in equality of rows " << i
+              << " and " << i2 << "\n";
           break;
         }
       }
@@ -301,10 +231,10 @@ grayCode(const Counter n,
   } // end for i
 
   if (fail) {
-    Print("Gray code is incorrect!!!\n");
+    dbg << "Gray code is incorrect!!!" << "\n";
   } else {
     if (verbose >= 1) {
-      Print("Gray code is correct.\n");
+      dbg << "Gray code is correct." << "\n";
     }
   }
 

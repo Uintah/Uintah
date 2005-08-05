@@ -29,14 +29,14 @@ class Solver {
   };
 
   virtual ~Solver(void) {
-    Print("Destroying Solver object\n");
+    dbg << "Destroying Solver object" << "\n";
     
     /* Destroy graph objects */
-    Print("Destroying graph objects\n");
+    dbg << "Destroying graph objects" << "\n";
     HYPRE_SStructGraphDestroy(_graph);
     
     /* Destroy matrix, RHS, solution objects */
-    Print("Destroying matrix, RHS, solution objects\n");
+    dbg << "Destroying matrix, RHS, solution objects" << "\n";
     HYPRE_SStructMatrixDestroy(_A);
     HYPRE_SStructVectorDestroy(_b);
     HYPRE_SStructVectorDestroy(_x);

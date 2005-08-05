@@ -4,9 +4,7 @@
 #include "IntMatrix.h"
 
 /* Printouts */
-void Print(char *fmt, ...);
-void PrintNP(char *fmt, ...); // No processor printed at the beginning of line
-void Proc0Print(char *fmt, ...);
+string proc(void);
 
 /* I/O, MPI */
 int clean(void);
