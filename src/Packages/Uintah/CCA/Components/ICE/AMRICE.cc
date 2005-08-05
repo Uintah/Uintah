@@ -828,6 +828,9 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
   
   task->requires(Task::NewDW, lb->vel_CCLabel,
                0, Task::FineLevel,  all_matls_sub,ND, gn, 0);
+               
+  task->requires(Task::NewDW, lb->specific_heatLabel,
+               0, Task::FineLevel,  all_matls_sub,ND, gn, 0);
 
   //__________________________________
   // Model Variables.
