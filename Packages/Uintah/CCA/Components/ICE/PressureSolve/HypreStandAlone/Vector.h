@@ -265,6 +265,50 @@ class Vector : public Error {
       return !(*this == b); 
     }
   
+  int operator < (const Vector& b) const
+    /* Inequality operator (true if inequality holds for all entries). */
+    {
+      for (Counter i = 0; i < _len; i++) {
+        if (_data[i] >= b._data[i]) {
+          return 0;
+        }
+      }
+      return 1;
+    }
+
+  int operator <= (const Vector& b) const
+    /* Inequality operator (true if inequality holds for all entries). */
+    {
+      for (Counter i = 0; i < _len; i++) {
+        if (_data[i] > b._data[i]) {
+          return 0;
+        }
+      }
+      return 1;
+    }
+
+  int operator >= (const Vector& b) const
+    /* Inequality operator (true if inequality holds for all entries). */
+    {
+      for (Counter i = 0; i < _len; i++) {
+        if (_data[i] < b._data[i]) {
+          return 0;
+        }
+      }
+      return 1;
+    }
+
+  int operator > (const Vector& b) const
+    /* Inequality operator (true if inequality holds for all entries). */
+    {
+      for (Counter i = 0; i < _len; i++) {
+        if (_data[i] <= b._data[i]) {
+          return 0;
+        }
+      }
+      return 1;
+    }
+
    /*------------- Arithmetic operations: Vector/scalar -------------*/
   
   Vector operator + (const VAR& b) const
@@ -499,7 +543,7 @@ class Vector : public Error {
       }
     }
   
-  VAR Max(void) const
+  VAR max(void) const
     /* Maximum value among Vector elements. */
     {
       VAR res = _data[0];
@@ -508,7 +552,7 @@ class Vector : public Error {
       return res;
     }
   
-  VAR Min(void) const
+  VAR min(void) const
     /* Minimum value among Vector elements. */
     {
       VAR res = _data[0];
@@ -600,7 +644,7 @@ std::ostream& operator << (std::ostream& os, const Vector<VAR>& a)
   //  os << "(width=" << a.getWidth() << ")";
   os << "[";
   for (Counter i = 0; i < a.getLen(); i++) {
-    os << setw(a.getWidth()) << a[i];
+    os << std::setw(a.getWidth()) << a[i];
     if (i < a.getLen()-1) {
       os << ",";
     }
@@ -627,6 +671,38 @@ abs(const Vector<VAR>& a)/* Absolute value of a Vector. */
   for (Counter i = 0; i < a.getLen(); i++) news[i] = abs(_data[i]);
   return Vector<VAR>(a.getStart(), a.getSize(), news,
                      std::string("abs(" + a.getName() + ")"));
+}
+
+template<class T>
+Vector<T>
+min (const Vector<T>& a,
+     const Vector<T>& b)
+     // Pointwise min of two vectors
+{
+  assert( a.getLen() == b.getLen() );
+  T* news = new T [a.getLen()];
+  for (Counter i = 0; i < a.getLen(); i++) {
+    news[i] = min(a.getData()[i],b.getData()[i]);
+  }
+  std::ostringstream newName;
+  newName << "min(" << a.getName() << " , " << b.getName() << ")";
+  return Vector<T>(a.getStart(), a.getLen(), news, newName.str());
+}
+
+template<class T>
+Vector<T>
+max (const Vector<T>& a,
+     const Vector<T>& b)
+     // Pointwise max of two vectors
+{
+  assert( a.getLen() == b.getLen() );
+  T* news = new T [a.getLen()];
+  for (Counter i = 0; i < a.getLen(); i++) {
+    news[i] = max(a.getData()[i],b.getData()[i]);
+  }
+  std::ostringstream newName;
+  newName << "min(" << a.getName() << " , " << b.getName() << ")";
+  return Vector<T>(a.getStart(), a.getLen(), news, newName.str());
 }
 
 //--------------------------------------------------------------------

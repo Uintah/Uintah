@@ -5,6 +5,7 @@
 #include <vector>
 
 class Level;
+class Patch;
 
 class Hierarchy {
   /*_____________________________________________________________________
@@ -21,6 +22,8 @@ public:
 
   std::vector<Level*>      _levels;
   const Param*             _param;
+
+  std::vector<Patch*> finePatchesOverMe(const Patch& patch);
 
  private:
   void getPatchesFromOtherProcs();
