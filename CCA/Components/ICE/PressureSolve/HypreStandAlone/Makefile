@@ -26,6 +26,8 @@ HYPRE_LIB  = -L$(HYPRE_SRC)/hypre/lib -lHYPRE_sstruct_ls -lHYPRE_sstruct_mv -lHY
 ##################################################################
 TARGET1          = mydriver
 TARGET1_OBJS     = \
+Box.o \
+Error.o \
 Hierarchy.o \
 IntMatrix.o \
 Level.o \
@@ -42,6 +44,14 @@ TARGET2          = mpitest
 TARGET2_OBJS     = \
 mpitest.o \
 
+TARGET3          = vectortest
+TARGET3_OBJS     = \
+vectortest.o \
+Error.o \
+IntMatrix.o \
+util.o \
+Box.o 
+
 all: $(TARGET1)
 
 install:
@@ -54,6 +64,7 @@ clean:
 	rm -f so_locations 
 	rm -f $(TARGET1)
 	rm -f $(TARGET2)
+	rm -f $(TARGET3)
 	@ echo "Project cleaned."
 
 distrib:
@@ -74,4 +85,8 @@ $(TARGET2) : $(TARGET2_OBJS)
 	@echo  "Building" $@ "... "
 	${CC} -o $@ $(TARGET2_OBJS) ${HYPRE_LIB} ${MPI_LIB}
 
--include $(patsubst %.o,%.d, $(TARGET1_OBJS) $(TARGET2_OBJS))
+$(TARGET3) : $(TARGET3_OBJS)
+	@echo  "Building" $@ "... "
+	${CC} -o $@ $(TARGET3_OBJS) ${HYPRE_LIB} ${MPI_LIB}
+
+-include $(patsubst %.o,%.d, $(TARGET1_OBJS) $(TARGET2_OBJS) $(TARGET3_OBJS))

@@ -26,8 +26,8 @@ echo "Running... ($NUM_PROCS procs)"
 rm -f log
 mpirun -np $NUM_PROCS ./mydriver > & log
 
-if ($?) then
-   exit
-endif
+#if ($?) then
+#   exit
+#endif
 
 less log
