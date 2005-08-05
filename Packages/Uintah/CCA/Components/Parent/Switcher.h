@@ -30,6 +30,7 @@ namespace Uintah {
     virtual void scheduleCarryOverVars(const LevelP& level, SchedulerP& sched);
 
     virtual bool needRecompile(double time, double delt, const GridP& grid);
+    virtual void restartInitialize();
 
 
     // direct component to add a new material
