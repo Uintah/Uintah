@@ -659,6 +659,17 @@ void matlabconverter::sciMatrixTOmlMatrix(MatrixHandle &scimat,matlabarray &mlma
       mlmat.createdensearray(dims,dataformat);
       mlmat.setnumericarray(tmatrix->get_data_pointer(),mlmat.getnumelements());
     }
+ if (scimat->is_dense_col_maj())
+    {
+      DenseColMajMatrix* tmatrix;
+      tmatrix = scimat->as_dense_col_maj();
+                
+      vector<long> dims(2);
+      dims[0] = scimat->nrows();
+      dims[1] = scimat->ncols();
+      mlmat.createdensearray(dims,dataformat);
+      mlmat.setnumericarray(scimat->get_data_pointer(),mlmat.getnumelements());
+    }
   if (scimat->is_column())
     {
       ColumnMatrix* cmatrix;
@@ -1644,7 +1655,7 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
         }
     }
         
-  if (fs.scalarfield.isdense()) fieldtype = "SCALAR FIELD";
+  if (fs.scalarfield.isdense()) fieldtype = "FIELD";
   if (fs.vectorfield.isdense()) fieldtype = "VECTOR FIELD";
   if (fs.tensorfield.isdense()) fieldtype = "TENSOR FIELD";
         
@@ -1703,6 +1714,9 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
   // is of that dimension otherwise skip it and declare the data not usable
         
   // If it survived until here it should be translatable or not a regular mesh at all
+      
+  bool hasmask = false;        
+  if (!fs.mask.isempty()) hasmask = true;
         
   if (fs.dims.isdense())
     {
@@ -1744,8 +1758,12 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
             case 2:
               oss << "[IMAGE - " << fieldtype << "]";
               break;
-            case 3:   
-              oss << "[LATVOLMESH - " << fieldtype << "]";
+            case 3:
+              // The MaskedLatVolField class is a mess, hence we do not support it
+              //
+              //if (hasmask) oss << "[MASKEDLATVOL - " << fieldtype << "]";
+              // else oss << "[LATVOL - " << fieldtype << "]";
+              oss << "[LATVOL - " << fieldtype << "]";
               break;
             }
           infostring = oss.str();
@@ -1839,13 +1857,13 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
       switch (numdims)
         {
         case 1:
-          oss << "[STRUCTURED CURVEMESH (" << dimsx[0] << " nodes) - " << fieldtype << "]";
+          oss << "[STRUCTURED CURVEFIELD (" << dimsx[0] << " nodes) - " << fieldtype << "]";
           break;
         case 2:
-          oss << "[STRUCTURED QUADSURFMESH (" << dimsx[0] << "x" << dimsx[1] << " nodes) - " << fieldtype << "]";
+          oss << "[STRUCTURED QUADSURFFIELD (" << dimsx[0] << "x" << dimsx[1] << " nodes) - " << fieldtype << "]";
           break;
         case 3:
-          oss << "[STRUCTURED HEXVOLMESH (" << dimsx[0] << "x" << dimsx[1] << "x" << dimsx[2] << " nodes) - " << fieldtype << "]";
+          oss << "[STRUCTURED HEXVOLFIELD (" << dimsx[0] << "x" << dimsx[1] << "x" << dimsx[2] << " nodes) - " << fieldtype << "]";
           break;
         default:
           postmsg(pr,string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (invalid number of dimensions)"));
@@ -2036,7 +2054,8 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
           string name = mlarray.getname();
           oss << name << "  ";
           if (name.length() < 30) oss << string(30-(name.length()),' '); // add some form of spacing
-          oss << "[TRISURFFIELD (" << numpoints << " nodes, " << numel << " faces) - " << fieldtype << "]";
+          if (hasmask) oss << "[MASKEDTRISURFFIELD (" << numpoints << " nodes, " << numel << " faces) - " << fieldtype << "]";
+          else oss << "[TRISURFFIELD (" << numpoints << " nodes, " << numel << " faces) - " << fieldtype << "]";
           infostring = oss.str();           
           return(1+ret);
         }
@@ -2106,7 +2125,8 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
           string name = mlarray.getname();                  
           oss << name << "  ";
           if (name.length() < 30) oss << string(30-(name.length()),' '); // add some form of spacing
-          oss << "[TETVOLFIELD (" << numpoints << " nodes, " << numel << " cells) - " << fieldtype << "]";
+          if (hasmask) oss << "[MASKEDTETVOLFIELD (" << numpoints << " nodes, " << numel << " cells) - " << fieldtype << "]";
+          else oss << "[TETVOLFIELD (" << numpoints << " nodes, " << numel << " cells) - " << fieldtype << "]";
           infostring = oss.str();           
           return(1+ret);
         }
@@ -2129,7 +2149,8 @@ long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring,
           string name = mlarray.getname();          
           oss << name << "  ";
           if (name.length() < 30) oss << string(30-(name.length()),' '); // add some form of spacing
-          oss << "[HEXVOLFIELD (" << numpoints << " nodes, " << numel << " cells) - " << fieldtype << "]";
+          if (hasmask) oss << "[MASKEDHEXVOLFIELD (" << numpoints << " nodes, " << numel << " cells) - " << fieldtype << "]";
+          else oss << "[HEXVOLFIELD (" << numpoints << " nodes, " << numel << " cells) - " << fieldtype << "]";
           infostring = oss.str();           
           return(1+ret);            
         }
@@ -2551,14 +2572,23 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
         }
       if (fs.face.isdense())
         {
-          if (fs.face.getm() == 3) fieldtype = "TriSurfField";
+          if (fs.face.getm() == 3) 
+          {
+            if (fs.mask.isempty()) fieldtype = "TriSurfField"; else fieldtype = "MaskedTriSurfField";
+          }
           if (fs.face.getm() == 4) fieldtype = "QuadSurfField";
         }
       if (fs.cell.isdense())
         {
-          if (fs.cell.getm() == 4) fieldtype = "TetVolField";
+          if (fs.cell.getm() == 4) 
+          {
+            if (fs.mask.isempty()) fieldtype = "TetVolField"; else fieldtype = "MaskedTetVolField";
+          }
           if (fs.cell.getm() == 6) fieldtype = "PrismVolField";
-          if (fs.cell.getm() == 8) fieldtype = "HexVolField";
+          if (fs.cell.getm() == 8) 
+          {
+            if (fs.mask.isempty()) fieldtype = "HexVolField"; else fieldtype = "MaskedHexVolField";
+          }
         }           
     }
         
@@ -2584,6 +2614,9 @@ void matlabconverter::mlArrayTOsciField(matlabarray mlarray,FieldHandle &scifiel
         {
         case 1: fieldtype = "ScanlineField"; break;
         case 2: fieldtype = "ImageField"; break;
+        // The MaskedLatVolField is a disaster, which we do not support for the moment
+        // It would require a lot of adaptations in the converter code.
+        // case 3: { if (fs.mask.isempty()) fieldtype = "LatVolField"; else fieldtype = "MaskedLatVolField"; break; }
         case 3: fieldtype = "LatVolField"; break;
         default: throw matlabconverter_error();
         }
@@ -2784,7 +2817,9 @@ matlabconverter::fieldstruct matlabconverter::analyzefieldstruct(matlabarray &ma
   index = ma.getfieldnameindexCI("channels");        if (index > -1) fs.interp = ma.getfield(0,index);
   index = ma.getfieldnameindexCI("mapping");        if (index > -1) fs.interp = ma.getfield(0,index);
   index = ma.getfieldnameindexCI("interp");        if (index > -1) fs.interp = ma.getfield(0,index);
-                                                              
+  
+  index = ma.getfieldnameindexCI("mask");          if (index> -1) fs.mask = ma.getfield(0,index);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
   // SET DEFAULT TO NONE
   fs.basis_order = -1;
         
