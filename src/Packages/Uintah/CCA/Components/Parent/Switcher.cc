@@ -53,11 +53,12 @@ Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups,
     SimulationInterface* sim = dynamic_cast<SimulationInterface*>(comp);
     attachPort("sim", sim);
     attachPort("problem spec", scinew ProblemSpecReader(in));
+
     string no_solver_specified("");
     SolverInterface* solver = SolverFactory::create(child,myworld,
                                                     no_solver_specified);
-    comp->attachPort("solver", solver);
 
+    comp->attachPort("solver", solver);
 
     // get the vars that will need to be initialized by this component
     for (ProblemSpecP var=child->findBlock("init"); var != 0; var = var->findNextBlock("init")) {
@@ -103,20 +104,24 @@ void Switcher::problemSetup(const ProblemSpecP& params, GridP& grid,
                             SimulationStateP& sharedState)
 {
   d_sim = dynamic_cast<SimulationInterface*>(getPort("sim",d_componentIndex));
-  
+
   // Some components need the output port attached to each individual component
   // At the time of Switcher constructor, the data archiver is not available.
   Output* output = dynamic_cast<Output*>(getPort("output"));
-
   ModelMaker* modelmaker = dynamic_cast<ModelMaker*>(getPort("modelmaker"));
+  
 
-  for (unsigned int i = 0; i < d_numComponents; i++) {
-    UintahParallelComponent* comp = 
+  
+  for (unsigned i = 0; i < d_numComponents; i++) {
+    UintahParallelComponent* comp =
       dynamic_cast<UintahParallelComponent*>(getPort("sim",i));
+
     comp->attachPort("output",output);
     comp->attachPort("modelmaker",modelmaker);
   }
 
+
+  
   // clear it out and do the first one again
   sharedState->clearMaterials();
   ProblemSpecInterface* psi = 
@@ -128,7 +133,7 @@ void Switcher::problemSetup(const ProblemSpecP& params, GridP& grid,
     throw InternalError("psi dynamic_cast failed", __FILE__, __LINE__);
   }
 
-  // get the varLabels from the strings we found above
+  // get the varLabels for carryOver and init Vars from the strings we found above
   for (unsigned i = 0; i < d_initVars.size(); i++) {
     vector<string>& names = d_initVars[i];
     vector<VarLabel*> labels;
@@ -279,6 +284,7 @@ void Switcher::switchTest(const ProcessorGroup*,
 
   if (switch_condition) {
     // we'll set it back to idle at the bottom of the next timestep's scheduleCarryOverVars
+    // actually PERFORM the switch during the needRecompile
     d_switchState = switching;
   } else {
     d_switchState = idle;
@@ -405,13 +411,18 @@ bool Switcher::needRecompile(double time, double delt, const GridP& grid)
       dynamic_cast<ProblemSpecInterface*>(getPort("problem spec",
                                                   d_componentIndex));
 
+    ProblemSpecP ups;
     if (psi) {
-      ProblemSpecP ups = psi->readInputFile();
+      ups = psi->readInputFile();
       d_sim->problemSetup(ups,const_cast<GridP&>(grid),d_sharedState);
     }
     // we need this to get the "ICE surrounding matl"
     d_sim->restartInitialize();
     d_sharedState->finalizeMaterials();
+
+    // re-initialize the DataArchiver to output according the the new component's specs
+    dynamic_cast<Output*>(getPort("output"))->problemSetup(ups, d_sharedState.get_rep());
+
     retval = true;
   } else
     d_sharedState->d_switchState = false;
@@ -449,3 +460,6 @@ void Switcher::scheduleInitializeAddedMaterial(const LevelP& level,
   d_sim->scheduleInitializeAddedMaterial(level, sched);
 }
 
+void Switcher::restartInitialize() {
+  d_sim->restartInitialize();
+}
