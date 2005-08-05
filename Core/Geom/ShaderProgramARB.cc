@@ -382,6 +382,7 @@ ShaderProgramARB::create()
 {
 #if defined(GL_ARB_fragment_program)
   if(shaders_supported()) {
+    glEnable(type_);
     glGenProgramsARB_SCI(1, &id_);
     glBindProgramARB_SCI(type_, id_);
     glProgramStringARB_SCI(type_, GL_PROGRAM_FORMAT_ASCII_ARB,
