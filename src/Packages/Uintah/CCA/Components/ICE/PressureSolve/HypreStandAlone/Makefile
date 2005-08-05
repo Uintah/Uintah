@@ -40,6 +40,8 @@ Solver.o \
 SolverFAC.o \
 TestLinear.o \
 util.o \
+DebugStream.o \
+Side.o
 
 TARGET2          = mpitest
 TARGET2_OBJS     = \
@@ -51,7 +53,9 @@ vectortest.o \
 Error.o \
 IntMatrix.o \
 util.o \
-Box.o 
+Box.o \
+Side.o \
+DebugStream.o 
 
 all: $(TARGET1)
 

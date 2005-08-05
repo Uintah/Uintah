@@ -40,7 +40,7 @@ Box::get(const Side& s) const
   if      (s == Left ) return _lower;
   else if (s == Right) return _upper;
   else {
-    fprintf(stderr,"\n\nError: Box::get() with s == NA\n");
+    cerr << "\n\nError: Box::get() with s == NA" << "\n";
     clean();
     exit(1);
   }
@@ -52,7 +52,7 @@ Box::get(const Side& s)
   if      (s == Left ) return _lower;
   else if (s == Right) return _upper;
   else {
-    fprintf(stderr,"\n\nError: Box::get() with s == NA\n");
+    cerr << "\n\nError: Box::get() with s == NA" << "\n";
     clean();
     exit(1);
   }
@@ -65,7 +65,7 @@ Box::set(const Side& s,
   if      (s == Left ) _lower = value;
   else if (s == Right) _upper = value;
   else {
-    fprintf(stderr,"\n\nError: Box::set() with s == NA\n");
+    cerr << "\n\nError: Box::set() with s == NA" << "\n";
     clean();
     exit(1);
   }
@@ -79,7 +79,7 @@ Box::set(const Counter d,
   if      (s == Left ) _lower[d] = value;
   else if (s == Right) _upper[d] = value;
   else {
-    fprintf(stderr,"\n\nError: Box::set() with s == NA\n");
+    cerr << "\n\nError: Box::set() with s == NA" << "\n";
     clean();
     exit(1);
   }
@@ -115,7 +115,7 @@ Box::volume(void) const
 std::ostream&
 operator << (std::ostream& os,
              const Box& a)
-  /* Print the box to output stream os. */
+  // Print the box to output stream os.
 {
   os << "Box extents: from " 
      << a.get(Left)
@@ -138,9 +138,9 @@ Box::faceExtents(const Counter d,
   Box face = *this;
   face.set(Side(-s),face.get(s));
 #if DRIVER_DEBUG
-  Print("Face(d = %c, s = %s) ",
-        d+'x',(s == Left) ? "Left" : "Right");
-  cout << face << "\n";
+  dbg << "Face(d = " <<  d+'x' 
+       << ", s = " << s << " ";
+  dbg << face << "\n";
 #endif
   return face;
 }
@@ -159,14 +159,14 @@ Box::coarseNbhrExtents(const Vector<Counter>& refRat,
   const Counter numDims = getNumDims();
   Box coarseNbhr(numDims);
   for (Counter dim = 0; dim < numDims; dim++) {
-    Print("dim = %d\n",dim);
-    Print("refRat = %d\n",refRat[dim]);
+    dbg << "dim    = " << dim << "\n";
+    dbg << "refRat = " << refRat[dim] << "\n";
     for (Side s = Left; s <= Right; ++s) {
       coarseNbhr.set(dim,s,get(s)[dim]/refRat[dim]);
     }
   }
-  Print("# fine   cell faces = %d\n",volume());
-  Print("# coarse cell faces = %d\n",coarseNbhr.volume());
+  dbg << "# fine   cell faces = " << volume() << "\n";
+  dbg << "# coarse cell faces = " << coarseNbhr.volume() << "\n";
 
   coarseNbhr.get(Left)[d] += s;
   coarseNbhr.get(Right)[d] += s;

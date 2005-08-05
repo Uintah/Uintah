@@ -3,6 +3,7 @@
 
 #include "Macros.h"
 #include "Vector.h"
+#include "Side.h"
 
 class Box {
   /*_____________________________________________________________________

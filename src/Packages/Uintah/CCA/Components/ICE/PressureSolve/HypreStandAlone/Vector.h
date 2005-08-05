@@ -64,7 +64,7 @@ class Vector : public Error {
      const std::string& name = "",
      const VAR& fillValue = VAR(0))
     : _name(name), _start(start),
-    _len(len), _data(0), _width(0)
+    _len(len), _data(0), _width(3)
     /* Construction from a VectorSize */
     {
       if (_len > 0) {
@@ -97,8 +97,11 @@ class Vector : public Error {
 
     Vector(const Vector& other)
       /* Vector copy constructor. */
-      : _start(other._start),
-      _len(other._len), _data(0)
+      : _name(other._name),
+      _start(other._start),
+      _len(other._len),
+      _data(0),
+      _width(other._width)
     {
       _data = new VAR [_len];
       iterator otherIter = other.begin();
@@ -216,8 +219,6 @@ class Vector : public Error {
     (const Vector& other) 
     /* Assignment operator. */
     {
-      //cout << "Vector::operator = (), _len = " << _len
-      //     << ", other._len = " << other._len << "\n";
       _start  = other._start;
       if (_len != other._len) {
         _len  = other._len;
@@ -247,14 +248,14 @@ class Vector : public Error {
     /* Equality operator. */
     {
       if ((_start != b._start) ||
-          (_len    != b._len   )) return 0;
-      for (Counter i = 0; i < _len; i++)
+          (_len    != b._len   )) {
+        return 0;
+      }
+      for (Counter i = 0; i < _len; i++) {
         if (_data[i] != b._data[i]) {
-          //          cout << "Found difference at i = " << i << ", diff = "
-          //               << std::scientific << std::setprecision(20)
-          //               << _data[i] - b._data[i] << std::"\n";
           return 0;
         }
+      }
       return 1;
     }
   
@@ -311,63 +312,6 @@ class Vector : public Error {
       return Vector(_start, _len, news, newName.str());
      }
     
-#if 0
-  //--------------------------------------------------------------------
-  // Misc arithmetic operations. S is a field of values containing T.
-  //--------------------------------------------------------------------
-
-  //----- (Vector<T> , Vector<S>) -> Vector<S> operations
-
-  template<class T, class S> friend
-    Vector<S> operator + (const Vector<T>& a,
-                          const Vector<S>& b);
-
-  template<class T, class S> friend
-    Vector<S> operator - (const Vector<T>& a,
-                          const Vector<S>& b);
-
-  template<class T, class S> friend
-    Vector<S> operator * (const Vector<T>& a,
-                          const Vector<S>& b);
-
-  template<class T, class S> friend
-    Vector<S> operator / (const Vector<T>& a,
-                          const Vector<S>& b);
-  //----- (Vector<T> , Scalar<S>) -> Vector<S> operations
-
-  template<class T, class S> friend
-    Vector<S> operator + (const Vector<T>& a,
-                          const S& b);
-
-  template<class T, class S> friend
-    Vector<S> operator - (const Vector<T>& a,
-                          const S& b);
-
-  template<class T, class S> friend
-    Vector<S> operator * (const Vector<T>& a,
-                          const S& b);
-
-  template<class T, class S> friend
-    Vector<S> operator / (const Vector<T>& a,
-                          const S& b);
-  //----- (Scalar<S>, Vector<T>) -> Vector<S> operations
-
-  template<class T, class S> friend
-    Vector<S> operator + (const S& b,
-                          const Vector<T>& a);
-
-  template<class T, class S> friend
-    Vector<S> operator - (const S& b,
-                          const Vector<T>& a);
-
-  template<class T, class S> friend
-    Vector<S> operator * (const S& b,
-                          const Vector<T>& a);
-
-  template<class T, class S> friend
-    Vector<S> operator / (const S& b,
-                          const Vector<T>& a);
-#endif
    /*---------- Arithmetic operations: Vector/scalar, incremental ----------*/
   
   Vector& operator += (const VAR& b) 
@@ -653,6 +597,7 @@ template <class VAR>
 std::ostream& operator << (std::ostream& os, const Vector<VAR>& a)
      /* Write the Vector to the stream os. */
 {
+  //  os << "(width=" << a.getWidth() << ")";
   os << "[";
   for (Counter i = 0; i < a.getLen(); i++) {
     os << setw(a.getWidth()) << a[i];
@@ -683,6 +628,10 @@ abs(const Vector<VAR>& a)/* Absolute value of a Vector. */
   return Vector<VAR>(a.getStart(), a.getSize(), news,
                      std::string("abs(" + a.getName() + ")"));
 }
+
+//--------------------------------------------------------------------
+// Misc arithmetic operations. S is a field of values containing T.
+//--------------------------------------------------------------------
 
 //----- (Vector<T>, Vector<S>) operations
 
