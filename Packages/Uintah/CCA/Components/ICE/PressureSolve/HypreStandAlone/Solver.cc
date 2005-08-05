@@ -164,126 +164,105 @@ Solver::makeGraph(const Hierarchy& hier,
   }
   
   /* 
-     Add the unstructured part of the stencil connecting the
-     coarse and fine level at every C/F boundary.
+     Add the unstructured part of the stencil connecting the coarse
+     and fine level at every C/F boundary.
   */
 
   for (Counter level = 1; level < numLevels; level++) {
     Print("  Updating coarse-fine boundaries at level %d\n",level);
     const Level* lev = hier._levels[level];
     //    const Level* coarseLev = hier._levels[level-1];
-    const vector<Counter>& refRat = lev->_refRat;
+    const Vector<Counter>& refRat = lev->_refRat;
 
     /* Loop over patches of this proc */
-    for (Counter i = 0; i < lev->_patchList.size(); i++) {
-      Patch* patch = lev->_patchList[i];
+    for (Counter i = 0; i < lev->_patchList[MYID].size(); i++) {
+      Patch* patch = lev->_patchList[MYID][i];
 
-      /* Loop over C/F boundaries of this patch */
+      /* Loop over fine-to-coarse boundaries of this patch */
       for (Counter d = 0; d < numDims; d++) {
         for (Side s = Left; s <= Right; ++s) {
           if (patch->getBoundaryType(d,s) == Patch::CoarseFine) {
+            Print("--- Processing Fine-to-Coarse face d = %d , s = %d ---\n",d,s);
+            // Fine cells of this face
+            Box faceFineBox = patch->_box.faceExtents(d,s);
 
-            Print("--- Processing C/F face d = %d , s = %d ---\n",d,s);
-            vector<int> faceLower(numDims);
-            vector<int> faceUpper(numDims);            
-            faceExtents(patch->_ilower, patch->_iupper, d, s,
-                        faceLower, faceUpper);
-            vector<int> coarseFaceLower(numDims);
-            vector<int> coarseFaceUpper(numDims);
-            int numFaceCells = 1;
-            int numCoarseFaceCells = 1;
-            for (Counter dd = 0; dd < numDims; dd++) {
-              Print("dd = %d\n",dd);
-              Print("refRat = %d\n",refRat[dd]);
-              coarseFaceLower[dd] =
-                faceLower[dd] / refRat[dd];
-              coarseFaceUpper[dd] =
-                faceUpper[dd]/ refRat[dd];
-              numFaceCells       *= (faceUpper[dd] - faceLower[dd] + 1);
-              numCoarseFaceCells *= (coarseFaceUpper[dd] - coarseFaceLower[dd] + 1);
-            }
-            Print("# fine   cell faces = %d\n",numFaceCells);
-            Print("# coarse cell faces = %d\n",numCoarseFaceCells);
-            //            Index* fineIndex   = new Index[numFaceCells];
-            //            Index* coarseIndex = new Index[numFaceCells];
-            vector<int> coarseNbhrLower = coarseFaceLower;
-            vector<int> coarseNbhrUpper = coarseFaceUpper;
-            coarseNbhrLower[d] += s;
-            coarseNbhrUpper[d] += s;
+            Box faceCoarseBox = faceFineBox.coarseNbhrExtents( refRat, d, s );
 
-            /*
-              Loop over different types of fine cell "children" of a coarse cell
-              at the C/F interface. 
-            */
-            vector<int> zero(numDims,0);
-            vector<int> ref1(numDims,0);
-            for (Counter dd = 0; dd < numDims; dd++) {
-              ref1[dd] = refRat[dd] - 1;
-            }
-            ref1[d] = 0;
-            vector<bool> activeChild(numDims,true);
-            bool eocChild = false;
-            vector<int> subChild = zero;
-            for (Counter child = 0; !eocChild;
-                 child++,
-                   IndexPlusPlus(zero,ref1,activeChild,subChild,eocChild)) {
-              Print("child = %4d",child);
-              PrintNP("  subChild = ");
-              printIndex(subChild);
-              PrintNP("\n");
-              vector<bool> active(numDims,true);
-              bool eoc = false;
-              vector<int> subCoarse = coarseNbhrLower;
+            // Loop over the coarse cells that border the fine face.
+            for( Box::iterator coarse_iter = faceCoarseBox.begin();
+                 coarse_iter != faceCoarseBox.end(); ++coarse_iter ) {
+
+              // Fine cell 
+              Vector<int> cellFaceLower;
+              if (s == Left) {
+                Vector<int> coarseCellOverFineCells = *coarse_iter;
+                coarseCellOverFineCells[d] -= s;
+                cellFaceLower = coarseCellOverFineCells * refRat;
+              } else { // s == Right
+                Vector<int> coarseCellOverFineCells = *coarse_iter;
+                cellFaceLower = coarseCellOverFineCells * refRat;
+                cellFaceLower[d] -= s;
+              }
+              
+              Vector<int> offset = refRat - 1;
+              offset[d] = 0;
+              Vector<int> cellFaceUpper = cellFaceLower + offset;
+              
+              Box fineCellFace( cellFaceLower, cellFaceUpper );
+
+              // Loop over the fine cells that neighbor the coarse cell.
+              for( Box::iterator fine_iter = fineCellFace.begin();
+                   fine_iter != fineCellFace.end(); ++fine_iter ) {
+                cout << "Coarse cell: " << *coarse_iter << "\n";
+
+                /* Add the connections between the fine and coarse nodes
+                   to the graph */
+                Print("  Adding fine-to-coarse connection to graph\n");
+                HYPRE_SStructGraphAddEntries(_graph,
+                                             level,   (*fine_iter).getData(),   0,
+                                             level-1, (*coarse_iter).getData(), 0); 
+              } // end for fine_iter
+            } // end for coarse_iter
+          } // end if boundary is CF interface
+        } // end for s
+      } // end for d
+
+#if 0
+      /* Loop over coarse-to-fine internal boundaries of this patch */
+      for (all finePatch that patch intersects) {
+
+        for (Counter d = 0; d < numDims; d++) {
+          for (Side s = Left; s <= Right; ++s) {
+            if (finePatch->getBoundaryType(d,s) == Patch::CoarseFine) {
+
+              if (coarseNbhrExtents is outside patch extent) {
+                continue;
+              }
+              
+              /* Find all coarse cells that nbhr this finePatch boundary */
+              
+              /* Loop over the coarse nbhrs */
               for (Counter cell = 0; !eoc;
                    cell++,
                      IndexPlusPlus(coarseNbhrLower,coarseNbhrUpper,
                                    active,subCoarse,eoc)) {
-                Print("  cell = %4d",cell);
-                PrintNP("  subCoarse = ");
-                printIndex(subCoarse);
-                vector<int> subFine(numDims);
-                /* Compute fine cell inside the fine patch from coarse
-                   cell outside the fine patch */
-                subFine = subCoarse;
-                if (s == Left) {
-                  /* Left boundary: go from coarse outside to coarse
-                     inside the patch, then find its lower left corner
-                     and that's fine child 0. */
-                  subFine[d] -= s;
-                  pointwiseMult(refRat,subFine,subFine);
-                } else {
-                  /* Right boundary: start from the coarse outside the
-                     fine patch, find its lower left corner, then find
-                     its fine nbhr inside the fine patch. This is fine
-                     child 0. */
-                  pointwiseMult(refRat,subFine,subFine);
-                  subFine[d] -= s;
-                }
-                pointwiseAdd(subFine,subChild,subFine);
-                PrintNP("  subFine = ");
-                printIndex(subFine);
-                PrintNP("\n");
-                Index hypreSubFine, hypreSubCoarse;
-                ToIndex(subFine,&hypreSubFine,numDims);
-                ToIndex(subCoarse,&hypreSubCoarse,numDims);
-              
-                /* Add the connections between the fine and coarse nodes
-                   to the graph */
-                Print("  Adding connection to graph\n");
-                HYPRE_SStructGraphAddEntries(_graph,
-                                             level,   hypreSubFine,   0,
-                                             level-1, hypreSubCoarse, 0); 
-                HYPRE_SStructGraphAddEntries(_graph,
-                                             level-1, hypreSubCoarse, 0,
-                                             level,   hypreSubFine,   0);
-              } // end for cell
 
-            } // end for child
-            //            delete[] fineIndex;
-            //            delete[] coarseIndex;
-          } // end if boundary is CF interface
-        } // end for s
-      } // end for d
+                for (Counter child = 0; !eocChild;
+                     child++,
+                       IndexPlusPlus(zero,ref1,activeChild,subChild,eocChild)) {
+                  
+                  Print("  Adding coarse-to-fine connection to graph\n");
+                  HYPRE_SStructGraphAddEntries(_graph,
+                                               level-1, hypreSubCoarse, 0,
+                                               level,   hypreSubFine,   0);
+                } // end for fine cell children of the nbhr of the coarse cell
+              } // end for coarse cells
+            
+            }
+          }
+        }
+      }
+#endif 
     } // end for i (patches)
   } // end for level
   serializeProcsEnd();
@@ -315,49 +294,40 @@ Solver::makeLinearSystem(const Hierarchy& hier,
     to A. Eliminate boundary conditions at domain boundaries.
   */
   Proc0Print("Adding interior equations to A\n");
-  vector<double> xCell(numDims);
-  vector<double> xNbhr(numDims);
-  vector<double> xFace(numDims);
-  vector<double> offset(numDims);
-  vector<double> coarseOffset(numDims);
-  vector<int> sub;
-  vector<bool> active(numDims);
+  Vector<double> xCell(0,numDims);
+  Vector<double> xNbhr(0,numDims);
+  Vector<double> xFace(0,numDims);
+  Vector<int> sub;
+  Vector<bool> active(0,numDims);
   int stencilSize = hypre_SStructStencilSize(stencil);
   int* entries = new int[stencilSize];
   for (Counter entry = 0; entry < stencilSize; entry++) entries[entry] = entry;
   for (Counter level = 0; level < numLevels; level++) {
     Proc0Print("At level = %d\n",level);
     const Level* lev = hier._levels[level];
-    const vector<double>& h = lev->_meshSize;
-    //const vector<Counter>& resolution = lev->_resolution;
-    scalarMult(h,0.5,offset);
-    double cellVolume = prod(h);
-    for (Counter i = 0; i < lev->_patchList.size(); i++) {
+    const Vector<double>& h = lev->_meshSize;
+    //const Vector<Counter>& resolution = lev->_resolution;
+    Vector<double> offset = 0.5 * h;
+    double cellVolume = h.prod();
+    for (Counter i = 0; i < lev->_patchList[MYID].size(); i++) {
       Proc0Print("At patch = %d\n",i);
       /* Add equations of interior cells of this patch to A */
-      Patch* patch = lev->_patchList[i];
+      Patch* patch = lev->_patchList[MYID][i];
       double* values    = new double[stencilSize * patch->_numCells];
       double* rhsValues = new double[patch->_numCells];
       double* solutionValues = new double[patch->_numCells];
-      Index hypreilower, hypreiupper;
-      ToIndex(patch->_ilower,&hypreilower,numDims);
-      ToIndex(patch->_iupper,&hypreiupper,numDims);
+
       Print("  Adding interior equations at Patch %d, Extents = ",i);
-      printIndex(patch->_ilower);
-      PrintNP(" to ");
-      printIndex(patch->_iupper);
-      PrintNP("\n");
+      cout << patch->_box << "\n";
       Print("Looping over cells in this patch:\n");
-      sub = patch->_ilower;        
-      for (Counter d = 0; d < numDims; d++) active[d] = true;
-      bool eoc = false;
-      for (Counter cell = 0; !eoc;
-           cell++,
-             IndexPlusPlus(patch->_ilower,patch->_iupper,active,sub,eoc)) {
-        Print("cell = %4d",cell);
+
+      Counter cell = 0;
+      for( Box::iterator iter = patch->_box.begin();
+           iter != patch->_box.end(); ++iter, cell++ ) {
+
         PrintNP("  sub = ");
-        printIndex(sub);
-        PrintNP("\n");
+        cout << *iter << "\n";
+
         int offsetValues    = stencilSize * cell;
         int offsetRhsValues = cell;
         /* Initialize the stencil values of this cell's equation to 0 */
@@ -385,15 +355,12 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                The neighboring's cell data point: xNbhr
                The face crossing between xCell and xNbhr: xFace
             */
-            pointwiseMult(sub,h,xCell);
-            pointwiseAdd(xCell,offset,xCell);
-            
+            xCell    = offset + (h * (*iter));
             xNbhr    = xCell;
             xNbhr[d] += s*h[d];
 
-            if ((patch->getBoundaryType(d,s) == Patch::Domain) && 
-                ((s == Left ) && (sub[d] == patch->_ilower[d]) ||
-                ((s == Right) && (sub[d] == patch->_iupper[d])))) {
+            if( (patch->getBoundaryType(d,s) == Patch::Domain) && 
+                (sub[d] == patch->_box.get(s)[d]) ) {
               /* Cell near a domain boundary */
               
               if (patch->getBC(d,s) == Patch::Dirichlet) {
@@ -417,13 +384,9 @@ Solver::makeLinearSystem(const Hierarchy& hier,
             xFace    = xCell;
             xFace[d] = 0.5*(xCell[d] + xNbhr[d]);
 
-            Print("xCell = ");
-            printIndex(xCell);
-            PrintNP(" xNbhr = ");
-            printIndex(xNbhr);
-            PrintNP(" xFace = ");
-            printIndex(xFace);
-            PrintNP("\n");
+            cout << xCell << ", "
+                 << xNbhr << ", xFace = "
+                 << xFace << ", ";
 
             /*--- Compute flux ---*/
             /* Harmonic average of diffusion for this face */
@@ -433,18 +396,17 @@ Solver::makeLinearSystem(const Hierarchy& hier,
 
             /* Accumulate this flux's contribution to values
                if we are not near a C/F boundary. */
-            if (!(((patch->getBoundaryType(d,s) == Patch::CoarseFine) &&
-                   (((s == Left ) && (sub[d] == patch->_ilower[d])) ||
-                    ((s == Right) && (sub[d] == patch->_iupper[d])))))) {
+// CHECK THIS!!!
+            if (!((patch->getBoundaryType(d,s) == Patch::CoarseFine) &&
+                  (sub[d] == patch->_box.get(s)[d]))) {
               values[offsetValues        ] += flux;
               values[offsetValues + entry] -= flux;
             }
 
             /* If we are next to a domain boundary, eliminate boundary variable
                from the linear system. */
-            if ((patch->getBoundaryType(d,s) == Patch::Domain) && 
-                ((s == Left ) && (sub[d] == patch->_ilower[d]) ||
-                ((s == Right) && (sub[d] == patch->_iupper[d])))) {
+            if( (patch->getBoundaryType(d,s) == Patch::Domain) && 
+                (sub[d] == patch->_box.get(s)[d]) ) {
               /* Cell near a domain boundary */
               /* Nbhr is at the boundary, eliminate it from values */
 
@@ -481,26 +443,28 @@ Solver::makeLinearSystem(const Hierarchy& hier,
       } // end for cell
       
       Proc0Print("Calling HYPRE SetBoxValues()\n");
-      printValues(patch,stencilSize,patch->_numCells,
-                  values,rhsValues,solutionValues);
+      printValues(patch,stencilSize,values,rhsValues,solutionValues);
 
       /* Add this patch's interior equations to the LHS matrix A */
       Proc0Print("Calling HYPRE_SStructMatrixSetBoxValues A\n");
       HYPRE_SStructMatrixSetBoxValues(_A, level, 
-                                      hypreilower, hypreiupper, 0,
-                                      stencilSize, entries, values);
+                                      patch->_box.get(Left).getData(),
+                                      patch->_box.get(Right).getData(),
+                                      0, stencilSize, entries, values);
 
       /* Add this patch's interior RHS to the RHS vector b */
       Proc0Print("Calling HYPRE_SStructVectorSetBoxValues b\n");
       HYPRE_SStructVectorSetBoxValues(_b, level,
-                                      hypreilower, hypreiupper, 0, 
-                                      rhsValues);
+                                      patch->_box.get(Left).getData(),
+                                      patch->_box.get(Right).getData(),
+                                      0, rhsValues);
 
       /* Add this patch's interior initial guess to the solution vector x */
       Proc0Print("Calling HYPRE_SStructVectorSetBoxValues x\n");
       HYPRE_SStructVectorSetBoxValues(_x, level,
-                                      hypreilower, hypreiupper, 0, 
-                                      solutionValues);
+                                      patch->_box.get(Left).getData(),
+                                      patch->_box.get(Right).getData(),
+                                      0, solutionValues);
 
       delete[] values;
       delete[] rhsValues;
@@ -520,36 +484,33 @@ Solver::makeLinearSystem(const Hierarchy& hier,
   for (Counter level = 1; level < numLevels; level++) {
     Proc0Print("  Updating coarse-fine boundaries at level %d\n",level);
     const Level* lev = hier._levels[level];
-    const vector<Counter>& refRat = lev->_refRat;
-    const vector<double>& h = lev->_meshSize;
-    scalarMult(h,0.5,offset);
-    double cellVolume = prod(h);
+    const Vector<Counter>& refRat = lev->_refRat;
+    const Vector<double>& h = lev->_meshSize;
+    Vector<double> fineOffset = 0.5 * h;
+    double cellVolume = h.prod();
 
     const Level* coarseLev = hier._levels[level-1];
-    const vector<double>& coarseH = coarseLev->_meshSize;
-    scalarMult(coarseH,0.5,coarseOffset);
-    double coarseCellVolume = prod(coarseH);
+    const Vector<double>& coarseH = coarseLev->_meshSize;
+    Vector<double> coarseOffset = 0.5 * coarseH;
+    double coarseCellVolume = coarseH.prod();
 
     /* Loop over patches of this proc */
-    for (Counter i = 0; i < lev->_patchList.size(); i++) {
-      Patch* patch = lev->_patchList[i];
+    for (Counter i = 0; i < lev->_patchList[MYID].size(); i++) {
+      Patch* patch = lev->_patchList[MYID][i];
     
       Print("Patch i = %2d:           extends from ",i);
-      printIndex(patch->_ilower);
-      PrintNP(" to ");
-      printIndex(patch->_iupper);
-      PrintNP("\n");
+      cout << patch->_box << "\n";
       
       /* Compute the extents of the box [coarseilower,coarseiupper] at
          the coarse patch that underlies fine patch i */
-      vector<int> coarseilower(numDims);
-      vector<int> coarseiupper(numDims);
-      pointwiseDivide(patch->_ilower,refRat,coarseilower);
-      pointwiseDivide(patch->_iupper,refRat,coarseiupper);
+      Vector<int> coarseilower(0,numDims);
+      Vector<int> coarseiupper(0,numDims);
+
+      Box coarseUnderFine( patch->_box.get(Left) / refRat, 
+                           patch->_box.get(Right) / refRat );
+
       Print("Underlying coarse data: extends from ");
-      printIndex(coarseilower);
-      PrintNP(" to ");
-      printIndex(coarseiupper);
+      cout << coarseUnderFine << "\n";
       PrintNP("\n");
 
       /* Replace the matrix equations for the underlying coarse box
@@ -557,31 +518,23 @@ Solver::makeLinearSystem(const Hierarchy& hier,
       int stencilSize = hypre_SStructStencilSize(stencil);
       {
         int* entries = new int[stencilSize];
-        for (Counter entry = 0; entry < stencilSize; entry++)
+        for (Counter entry = 0; entry < stencilSize; entry++) {
           entries[entry] = entry;
-        Index hyprecoarseilower, hyprecoarseiupper;
-        ToIndex(coarseilower,&hyprecoarseilower,numDims);
-        ToIndex(coarseiupper,&hyprecoarseiupper,numDims);
-        int numCoarseCells = 1;
-        for (Counter dd = 0; dd < numDims; dd++) {
-          numCoarseCells *= (coarseiupper[dd] - coarseilower[dd] + 1);
         }
-        Print("# coarse cells in box = %d\n",numCoarseCells);
+
+        Counter numCoarseCells = coarseUnderFine.volume();
+        Print("# coarse cells in box = %d\n", numCoarseCells);
+
         double* values    = new double[stencilSize * numCoarseCells];
         double* rhsValues = new double[numCoarseCells];
         
         Print("Looping over cells in coarse underlying box:\n");
-        vector<int> sub = coarseilower;
-        vector<bool> active(numDims);
-        for (Counter d = 0; d < numDims; d++) active[d] = true;
-        bool eoc = false;
-        for (Counter cell = 0; !eoc;
-             cell++,
-               IndexPlusPlus(coarseilower,coarseiupper,active,sub,eoc)) {
+        Counter cell = 0;
+        for( Box::iterator coarse_iter = coarseUnderFine.begin();
+             coarse_iter != coarseUnderFine.end(); ++coarse_iter, cell++ ) {
+
           Print("cell = %4d",cell);
-          PrintNP("  sub = ");
-          printIndex(sub);
-          PrintNP("\n");
+          cout << *coarse_iter << "\n";
           
           int offsetValues    = stencilSize * cell;
           int offsetRhsValues = cell;
@@ -595,17 +548,18 @@ Solver::makeLinearSystem(const Hierarchy& hier,
           rhsValues[offsetRhsValues] = 0.0;
         } // end for cell
         
-        printValues(patch,stencilSize,numCoarseCells,
+        printValues(patch,stencilSize,
                     values,rhsValues);
 
         /* Effect the identity operator change in the Hypre structure
            for A */
         HYPRE_SStructMatrixSetBoxValues(_A, level-1, 
-                                        hyprecoarseilower, hyprecoarseiupper,
-                                        0,
-                                        stencilSize, entries, values);
+                                        coarseUnderFine.get(Left).getData(),
+                                        coarseUnderFine.get(Right).getData(),
+                                        0, stencilSize, entries, values);
         HYPRE_SStructVectorSetBoxValues(_b, level-1, 
-                                        hyprecoarseilower, hyprecoarseiupper,
+                                        coarseUnderFine.get(Left).getData(),
+                                        coarseUnderFine.get(Right).getData(),
                                         0, rhsValues);
         delete[] values;
         delete[] rhsValues;
@@ -624,91 +578,40 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                 d,s,
                 Patch::boundaryTypeString[patch->getBoundaryType(d,s)].c_str());
           if (patch->getBoundaryType(d,s) == Patch::CoarseFine) {
+            Print("--- Processing Fine-to-Coarse face d = %d , s = %d ---\n",d,s);
+            // Fine cells of this face
+            Box faceFineBox = patch->_box.faceExtents(d,s);
 
-            Print("--- Processing C/F face d = %d , s = %d ---\n",d,s);
-            vector<int> faceLower(numDims);
-            vector<int> faceUpper(numDims);            
-            faceExtents(patch->_ilower, patch->_iupper, d, s,
-                        faceLower, faceUpper);
-            vector<int> coarseFaceLower(numDims);
-            vector<int> coarseFaceUpper(numDims);
-            int numFaceCells = 1;
-            int numCoarseFaceCells = 1;
-            for (Counter dd = 0; dd < numDims; dd++) {
-              Print("dd = %d\n",dd);
-              Print("refRat = %d\n",refRat[dd]);
-              coarseFaceLower[dd] =
-                faceLower[dd] / refRat[dd];
-              coarseFaceUpper[dd] =
-                faceUpper[dd]/ refRat[dd];
-              numFaceCells       *= (faceUpper[dd] - faceLower[dd] + 1);
-              numCoarseFaceCells *= (coarseFaceUpper[dd] - coarseFaceLower[dd]
-                                     + 1);
-            }
-            Print("# fine   cell faces = %d\n",numFaceCells);
-            Print("# coarse cell faces = %d\n",numCoarseFaceCells);
-            //            Index* fineIndex   = new Index[numFaceCells];
-            //            Index* coarseIndex = new Index[numFaceCells];
-            vector<int> coarseNbhrLower = coarseFaceLower;
-            vector<int> coarseNbhrUpper = coarseFaceUpper;
-            coarseNbhrLower[d] += s;
-            coarseNbhrUpper[d] += s;
-            /*
-              Loop over different types of fine cell "children" of a
-              coarse cell at the C/F interface. 
-            */
-            vector<int> zero(numDims,0);
-            vector<int> ref1(numDims,0);
-            for (Counter dd = 0; dd < numDims; dd++) {
-              ref1[dd] = refRat[dd] - 1;
-            }
-            ref1[d] = 0;
-            vector<bool> activeChild(numDims,true);
-            bool eocChild = false;
-            vector<int> subChild = zero;
-            for (Counter child = 0; !eocChild;
-                 child++,
-                   IndexPlusPlus(zero,ref1,activeChild,subChild,eocChild)) {
-              Print("child = %4d",child);
-              PrintNP("  subChild = ");
-              printIndex(subChild);
-              PrintNP("\n");
-              vector<bool> active(numDims,true);
-              bool eoc = false;
-              vector<int> subCoarse = coarseNbhrLower;
-              for (Counter cell = 0; !eoc;
-                   cell++,
-                     IndexPlusPlus(coarseNbhrLower,coarseNbhrUpper,active,
-                                   subCoarse,eoc)) {
-                Print("  cell = %4d",cell);
-                PrintNP("  subCoarse = ");
-                printIndex(subCoarse);
-                vector<int> subFine(numDims);
-                /* Compute fine cell inside the fine patch from coarse
-                   cell outside the fine patch */
-                subFine = subCoarse;
-                if (s == Left) {
-                  /* Left boundary: go from coarse outside to coarse
-                     inside the patch, then find its lower left corner
-                     and that's fine child 0. */
-                  subFine[d] -= s;
-                  pointwiseMult(refRat,subFine,subFine);
-                } else {
-                  /* Right boundary: start from the coarse outside the
-                     fine patch, find its lower left corner, then find
-                     its fine nbhr inside the fine patch. This is fine
-                     child 0. */
-                  pointwiseMult(refRat,subFine,subFine);
-                  subFine[d] -= s;
-                }
-                pointwiseAdd(subFine,subChild,subFine);
-                PrintNP("  subFine = ");
-                printIndex(subFine);
-                PrintNP("\n");
-                Index hypreSubFine, hypreSubCoarse;
-                ToIndex(subFine,&hypreSubFine,numDims);
-                ToIndex(subCoarse,&hypreSubCoarse,numDims);
+            Box faceCoarseBox = faceFineBox.coarseNbhrExtents( refRat, d, s );
+
+            // Loop over the coarse cells that border the fine face.
+            for( Box::iterator coarse_iter = faceCoarseBox.begin();
+                 coarse_iter != faceCoarseBox.end(); ++coarse_iter ) {
+
+              // Fine cell 
+              Vector<int> cellFaceLower;
+              if (s == Left) {
+                Vector<int> coarseCellOverFineCells = *coarse_iter;
+                coarseCellOverFineCells[d] -= s;
+                cellFaceLower = coarseCellOverFineCells * refRat;
+              } else { // s == Right
+                Vector<int> coarseCellOverFineCells = *coarse_iter;
+                cellFaceLower = coarseCellOverFineCells * refRat;
+                cellFaceLower[d] -= s;
+              }
               
+              Vector<int> offset = refRat - 1;
+              offset[d] = 0;
+              Vector<int> cellFaceUpper = cellFaceLower + offset;
+              
+              Box fineCellFace( cellFaceLower, cellFaceUpper );
+
+              // Loop over the fine cells that neighbor the coarse cell.
+              Counter child = 0;
+              for( Box::iterator fine_iter = fineCellFace.begin();
+                   fine_iter != fineCellFace.end(); ++fine_iter, ++child) {
+                cout << "Coarse cell: " << *coarse_iter << "\n";
+
                 /* Set the weights on the connections between the fine
                    and coarse nodes in A */
                 Print("    Adding C/F flux to matrix\n");
@@ -722,11 +625,9 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                    The neighboring's cell data point: xNbhr
                    The face crossing between xCell and xNbhr: xFace
                 */
-                pointwiseMult(subFine,h,xCell);
-                pointwiseAdd(xCell,offset,xCell);   
-                
-                pointwiseMult(subCoarse,coarseH,xNbhr);
-                pointwiseAdd(xNbhr,coarseOffset,xNbhr);    
+                xCell = fineOffset + (h * (*fine_iter));
+                xNbhr = coarseOffset + (coarseH * (*coarse_iter));
+
                 /* xFace is a convex combination of xCell, xNbhr with
                    weights depending on the distances of the coarse
                    and fine meshsizes, i.e., their distances in the d
@@ -737,13 +638,10 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                   xFace[dd] = alpha*xCell[dd] + (1-alpha)*xNbhr[dd];
                 }
                 Print("      xCell = ");
-                printIndex(xCell);
-                PrintNP(" xNbhr = ");
-                printIndex(xNbhr);
-                PrintNP(" xFace = ");
-                printIndex(xFace);
-                PrintNP("\n");
-
+                cout << xCell << ", xFace = "
+                     << xFace << ", xNbhr = "
+                     << xNbhr << "\n";
+                
                 /* Compute the harmonic average of the diffusion
                    coefficient */
                 double a    = 1.0; // Assumed constant a for now
@@ -762,7 +660,8 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                 int stencilEntries[numStencilEntries] = {0};
                 double stencilValues[numStencilEntries] = {flux};
                 HYPRE_SStructMatrixAddToValues(_A,
-                                               level, hypreSubFine,     0,
+                                               level, (*fine_iter).getData(),
+                                               0,
                                                numStencilEntries,
                                                stencilEntries,
                                                stencilValues);
@@ -775,22 +674,17 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                 /* Find the correct graph entry corresponding to this coarse
                    nbhr (subCoarse) of the fine cell subFine */
                 for (Counter dd = 0; dd < d; dd++) {
-                  /* Are we near the left boundary and is it a C/F bdry? */
-                  Side ss = Left;
-                  if ((patch->getBoundaryType(dd,ss) == Patch::CoarseFine) &&
-                      (subFine[dd] == patch->_ilower[dd])) {
-                    entry++;
-                  }
-                  /* Are we near the right boundary and is it a C/F bdry? */
-                  ss = Right;
-                  if ((patch->getBoundaryType(dd,ss) == Patch::CoarseFine) &&
-                      (subFine[dd] == patch->_iupper[dd])) {
-                    entry++;
+                  /* Are we near the ss-side boundary and is it a C/F bdry? */
+                  for (Side ss = Left; ss <= Right; ++ss) {
+                    if ((patch->getBoundaryType(dd,ss) == Patch::CoarseFine) &&
+                        ((*fine_iter)[dd] == patch->_box.get(ss)[dd])) {
+                      entry++;
+                    }
                   }
                 }
                 if ((s == Right) &&
                     (patch->getBoundaryType(d,s) == Patch::CoarseFine) &&
-                    (subFine[d] == patch->_ilower[d])) {
+                    ((*fine_iter)[d] == patch->_box.get(Left)[d])) {
                   entry++;
                 }
                 Print("      fine equation, entry of coarse cell = %d\n",
@@ -798,7 +692,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                 int graphEntries[numGraphEntries] = {entry};
                 double graphValues[numGraphEntries] = {-flux};
                 HYPRE_SStructMatrixAddToValues(_A,
-                                               level, hypreSubFine,     0,
+                                               level, (*fine_iter).getData(),     0,
                                                numGraphEntries,
                                                graphEntries,
                                                graphValues);
@@ -810,7 +704,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                 int coarseStencilEntries[numCoarseStencilEntries] = {0};
                 double coarseStencilValues[numCoarseStencilEntries] = {flux};
                 HYPRE_SStructMatrixAddToValues(_A,
-                                               level-1, hypreSubCoarse,  0,
+                                               level-1, (*coarse_iter).getData(),  0,
                                                numCoarseStencilEntries,
                                                coarseStencilEntries,
                                                coarseStencilValues);
@@ -825,7 +719,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                       stencilSize+child);
                 double coarseGraphValues[numCoarseGraphEntries] = {-flux};
                 HYPRE_SStructMatrixAddToValues(_A,
-                                               level-1, hypreSubCoarse,     0,
+                                               level-1, (*coarse_iter).getData(), 0,
                                                numCoarseGraphEntries,
                                                coarseGraphEntries,
                                                coarseGraphValues);
@@ -845,19 +739,15 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                   */
                   Side s2 = Side(-s);
                   Print("      s = %d , s2 = %d\n",s,s2);
-                  pointwiseMult(subCoarse,coarseH,xCell);
-                  pointwiseAdd(xCell,coarseOffset,xCell);               
+                  xCell = coarseOffset + (coarseH * (*coarse_iter));
                   xNbhr    = xCell;
                   xNbhr[d] += s2*coarseH[d];
                   xFace    = xCell;
                   xFace[d] = 0.5*(xCell[d] + xNbhr[d]);
                   Print("      xCell = ");
-                  printIndex(xCell);
-                  PrintNP(" xNbhr = ");
-                  printIndex(xNbhr);
-                  PrintNP(" xFace = ");
-                  printIndex(xFace);
-                  PrintNP("\n");
+                  cout << xCell << ", xFace = "
+                       << xFace << ", xNbhr = "
+                       << xNbhr << "\n";
 
                   /* Compute the harmonic average of the diffusion
                      coefficient */
@@ -873,7 +763,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                   double coarseStencilValues[coarseNumStencilEntries] =
                     {-flux, flux};
                   HYPRE_SStructMatrixAddToValues(_A,
-                                                 level-1, hypreSubCoarse, 0,
+                                                 level-1, (*coarse_iter).getData(), 0,
                                                  coarseNumStencilEntries,
                                                  coarseStencilEntries,
                                                  coarseStencilValues);
@@ -931,13 +821,14 @@ Solver::printSolution(const string& fileName /* = "solver" */)
 void
 Solver::printValues(const Patch* patch,
                     const int stencilSize,
-                    const int numCells,
                     const double* values /* = 0 */,
                     const double* rhsValues /* = 0 */,
                     const double* solutionValues /* = 0 */)
   /* Print values, rhsValues vectors */
 {
 #if DRIVER_DEBUG
+  const Counter numCells = patch->_box.volume();
+
   Print("--- Printing values,rhsValues,solutionValues arrays ---\n");
   for (Counter cell = 0; cell < numCells; cell++) {
     int offsetValues    = stencilSize * cell;

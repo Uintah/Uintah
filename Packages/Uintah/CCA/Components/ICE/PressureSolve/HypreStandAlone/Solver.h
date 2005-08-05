@@ -1,15 +1,10 @@
 #ifndef __SOLVER_H__
 #define __SOLVER_H__
 
-#include "mydriver.h"
-#include "Param.h"
-#include "Patch.h"
 #include "Hierarchy.h"
 #include "util.h"
-#include <values.h>
-#include <vector>
-#include <string>
-#include <map>
+
+// Hypre libraries
 #include <HYPRE_sstruct_ls.h>
 #include <utilities.h>
 #include <krylov.h>
@@ -82,7 +77,6 @@ class Solver {
   
   void printValues(const Patch* patch,
                    const int stencilSize,
-                   const int numCells,
                    const double* values = 0,
                    const double* rhsValues = 0,
                    const double* solutionValues = 0);

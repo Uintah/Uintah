@@ -31,66 +31,6 @@ IntMatrix::transpose(const IntMatrix& a)
   }
 }
 
-/*---------------------------------------------------------------------
-  Function~  MatrixMultiplication--
-  Reference~  This multiplies matrix (this) and vector (b) and returns X
-  ---------------------------------------------------------------------  */
-void
-IntMatrix::multiply(const vector<int>& b,
-                    vector<int>& X) const
-{
-  assert(cols == b.size());
-  assert(rows == X.size());
-  for (Counter row=0; row<rows; row++) {
-    int sum=0;
-    for (Counter col=0; col<cols; col++) {
-      sum += this->operator()(row,col) * b[col];
-    }
-    X[row]=sum;
-  }
-}
-
-void
-IntMatrix::multiply(const int* b,
-                    int* X) const
-{
-  for (Counter row=0; row<rows; row++) {
-    int sum=0;
-    for (Counter col=0; col<cols; col++) {
-      sum += this->operator()(row,col) * b[col];
-    }
-    X[row]=sum;
-  }
-}
-
-// this = a*b;
-void
-IntMatrix::multiply(const IntMatrix& a,
-                    const IntMatrix& b)
-{
-  assert(rows == a.rows);
-  assert(cols == b.cols);
-  assert(a.cols == b.rows);
-  Counter s=a.cols;
-  for(Counter i=0;i<rows;i++){
-    for(Counter j=0;j<cols;j++){
-      int sum=0;
-      for(Counter k=0;k<s;k++){
-	sum+=a(i,k)*b(k,j);
-      }
-      this->operator()(i,j)=sum;
-    }
-  }
-}
-
-void
-IntMatrix::multiply(const int s)
-{
-  for(Counter i = 0; i < rows*cols; i++) {
-    mat[i] *= s;
-  }
-}
-
 void
 IntMatrix::identity(void)
 {
