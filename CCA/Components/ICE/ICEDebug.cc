@@ -41,6 +41,7 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
   d_dbgSym_relative_tol = 1e-6;
   d_dbgSym_absolute_tol = 1e-9;
   d_dbgSym_cutoff_value = 1e-12;
+  d_dbgTime_to_printData = false;
   
   // Turn off all the debuging switches
   switchDebugInitialize           = false;
@@ -154,7 +155,7 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
   if(switchDebugInitialize){ 
     d_dbgTime_to_printData = true;
   }
-  
+ 
   cout_norm << "Pulled out the debugging switches from input file" << endl;
   cout_norm<< "  debugging starting time   "<<d_dbgStartTime<<endl;
   cout_norm<< "  debugging stopping time   "<<d_dbgStopTime<<endl;
