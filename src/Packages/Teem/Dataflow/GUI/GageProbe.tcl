@@ -355,8 +355,6 @@ itcl_class Teem_Gage_GageProbe {
 	global $this-field_kind_list
 	set $this-field_kind_list $list
 	puts "got this: [set $this-field_kind_list]"
-
-	#return "this is the result"
     }
     
     #update the variable associated with the value of the measure(quantity) menu
@@ -560,7 +558,7 @@ itcl_class Teem_Gage_GageProbe {
 	-width 6 -textvariable $this-valuesNumParm3_
 	
 	grid $w.f.kernelsFrame.kernelsLabel -row 0 -sticky w
-	grid configure $w.f.kernelsFrame.valuesFrame -row 1
+	grid configure $w.f.kernelsFrame.valuesFrame -row 1 -sticky ew
 	grid $w.f.kernelsFrame.valuesFrame.valuesLabel -row 0 -column 0 \
 	-sticky w
 	grid $w.f.kernelsFrame.valuesFrame.valuesTypeLabel -row 1 -column 0 \
@@ -621,7 +619,7 @@ itcl_class Teem_Gage_GageProbe {
 	-width 6 -textvariable $this-dNumParm3_
 	
 	grid $w.f.kernelsFrame.kernelsLabel -row 0 -sticky w
-	grid configure $w.f.kernelsFrame.dFrame -row 2
+	grid configure $w.f.kernelsFrame.dFrame -row 2 -sticky ew
 	grid $w.f.kernelsFrame.dFrame.dLabel -row 0 -column 0 -sticky w
 	grid $w.f.kernelsFrame.dFrame.dTypeLabel -row 1 -column 0 -sticky w
 	grid $w.f.kernelsFrame.dFrame.dTypeMenu -row 1 -column 2
@@ -675,7 +673,7 @@ itcl_class Teem_Gage_GageProbe {
 	-width 6 -textvariable $this-ddNumParm3_
 	
 	grid $w.f.kernelsFrame.kernelsLabel -row 0 -sticky w
-	grid configure $w.f.kernelsFrame.ddFrame -row 3
+	grid configure $w.f.kernelsFrame.ddFrame -row 3 -sticky ew
 	grid $w.f.kernelsFrame.ddFrame.ddLabel -row 0 -column 0 -sticky w
 	grid $w.f.kernelsFrame.ddFrame.ddTypeLabel -row 1 -column 0 -sticky w
 	grid $w.f.kernelsFrame.ddFrame.ddTypeMenu -row 1 -column 2
@@ -686,7 +684,7 @@ itcl_class Teem_Gage_GageProbe {
 	grid $w.f.kernelsFrame.ddFrame.ddNumParm1Entry -row 3 -column 2
 	grid $w.f.kernelsFrame.ddFrame.ddNumParm2Entry -row 4 -column 2
 	grid $w.f.kernelsFrame.ddFrame.ddNumParm3Entry -row 5 -column 2
-	
+		
 	pack $w.f.fieldKindFrame -expand yes -fill both -padx 3 -pady 10
 	pack $w.f.quantityFrame -expand yes -fill both
 	pack $w.f.kernelsFrame -expand yes -fill both -pady 10
