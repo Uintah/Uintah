@@ -32,9 +32,9 @@ SolverFAC::setup(void)
   /*-----------------------------------------------------------
    * Solver setup phase
    *-----------------------------------------------------------*/
-  Print("----------------------------------------------------\n");
-  Print("FAC setup phase\n");
-  Print("----------------------------------------------------\n");
+  dbg << "----------------------------------------------------" << "\n";
+  dbg << "FAC setup phase" << "\n";
+  dbg << "----------------------------------------------------" << "\n";
 
   /* FAC Solver. Prepare FAC operator hierarchy using Galerkin coarsening
      with black-box interpolation, on the original meshes */
@@ -101,9 +101,9 @@ SolverFAC::solve(void)
   time_index = hypre_InitializeTiming("FAC Solve");
   hypre_BeginTiming(time_index);
 
-  Proc0Print("----------------------------------------------------\n");
-  Proc0Print("calling FAC\n");
-  Proc0Print("----------------------------------------------------\n");
+  dbg0 << proc() << "----------------------------------------------------" << "\n";
+  dbg0 << proc() << "calling FAC" << "\n";
+  dbg0 << proc() << "----------------------------------------------------" << "\n";
   HYPRE_SStructFACSolve3(solver, _facA, _b, _x);
 
   hypre_EndTiming(time_index);
@@ -123,9 +123,9 @@ SolverFAC::solve(void)
   /*-----------------------------------------------------------
    * Gather the solution vector
    *-----------------------------------------------------------*/
-  Proc0Print("----------------------------------------------------\n");
-  Proc0Print("Gather the solution vector\n");
-  Proc0Print("----------------------------------------------------\n");
+  dbg0 << proc() << "----------------------------------------------------" << "\n";
+  dbg0 << proc() << "Gather the solution vector" << "\n";
+  dbg0 << proc() << "----------------------------------------------------" << "\n";
 
   HYPRE_SStructVectorGather(_x);
 } //end solve()
@@ -133,7 +133,7 @@ SolverFAC::solve(void)
 void
 SolverFAC::printMatrix(const string& fileName /* = "solver" */)
 {
-  Print("SolverFAC::printMatrix() begin\n");
+  dbg << "SolverFAC::printMatrix() begin" << "\n";
   if (!_param->printSystem) return;
   HYPRE_SStructMatrixPrint((fileName + ".sstruct").c_str(), _A, 0);
 
@@ -146,5 +146,5 @@ SolverFAC::printMatrix(const string& fileName /* = "solver" */)
     /* Print CSR matrix in IJ format, base 1 for rows and cols */
     HYPRE_ParCSRMatrixPrintIJ(_parA, 1, 1, (fileName + ".ij").c_str());
   }
-  Print("SolverFAC::printMatrix() end\n");
+  dbg << "SolverFAC::printMatrix() end" << "\n";
 }

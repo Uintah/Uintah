@@ -17,7 +17,7 @@ public:
     }
 
   virtual ~SolverAMG(void) {
-    Print("Destroying SolverAMG object\n");
+    dbg << "Destroying SolverAMG object" << "\n";
   }
 
   virtual void setup(void);

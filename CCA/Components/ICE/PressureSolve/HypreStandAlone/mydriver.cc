@@ -11,11 +11,10 @@
 
 /*================== Library includes ==================*/
 
+#include "DebugStream.h"
 #include "util.h"
 #include "Hierarchy.h"
-
 #include "TestLinear.h"
-
 #include "Solver.h"
 #include "SolverAMG.h"
 #include "SolverFAC.h"
@@ -31,7 +30,9 @@ using namespace std;
 
 /*================== Global variables ==================*/
 
-int     MYID;     /* The same as this proc's myid, but global */
+int MYID;     // The same as this proc's myid, but global
+DebugStream dbg("DEBUG",true);
+DebugStream dbg0("DEBUG0",false);
 
 void
 makeGrid(const Param* param,
@@ -43,7 +44,7 @@ makeGrid(const Param* param,
     and add all patches from this proc to it.
     _____________________________________________________________________*/
 {
-  Print("makeGrid() begin\n");
+  dbg << proc() << "makeGrid() begin" << "\n";
   HYPRE_SStructVariable vars[NUM_VARS] =
     {HYPRE_SSTRUCT_VARIABLE_CELL}; // We use cell centered vars
   const Counter numDims   = param->numDims;
@@ -56,9 +57,10 @@ makeGrid(const Param* param,
   /* Add the patches that this proc owns at all levels to grid */
   for (Counter level = 0; level < numLevels; level++) {
     Level* lev = hier._levels[level];
-    Print("Level %d, meshSize = %lf, resolution = ",
-          level,lev->_meshSize[0]);
-    cout << lev->_resolution << "\n";
+    dbg << proc()
+        << "Level " << level 
+        << ", meshSize = " << lev->_meshSize[0]
+        << ", resolution = " << lev->_resolution << "\n";
     for (Counter i = 0; i < lev->_patchList[MYID].size(); i++) {
       Patch* patch = lev->_patchList[MYID][i];
       /* Add this patch to the grid */
@@ -66,9 +68,11 @@ makeGrid(const Param* param,
                                   patch->_box.get(Left ).getData(),
                                   patch->_box.get(Right).getData());
       HYPRE_SStructGridSetVariables(grid, level, NUM_VARS, vars);
-      Print("  Patch %2d, ID %2d ",i,patch->_patchID);
-      cout << patch->_box;
-      PrintNP("\n");
+      dbg << proc()
+          << "  Patch " << setw(2) << left << i
+          << ", ID "    << setw(2) << left << patch->_patchID << " ";
+      dbg << patch->_box;
+      dbg << "\n";
     }
   }
 
@@ -77,13 +81,14 @@ makeGrid(const Param* param,
     data from all processors. On exit from this function, the grid is
     ready.
   */
-  //  Print("Before the end of makeGrid()\n");
+  //  dbg << "Before the end of makeGrid()" << "\n";
   serializeProcsEnd();
   HYPRE_SStructGridAssemble(grid);
   if (MYID == 0) {
-    Print("\n");
-    Print("Assembled grid, num parts %d\n", hypre_SStructGridNParts(grid));
-    Print("\n");
+    dbg << proc() << "" << "\n";
+    dbg << proc() << "Assembled grid, "
+        << "num parts " << hypre_SStructGridNParts(grid) << "\n";
+    dbg << proc() << "\n";
   }
 }
 
@@ -112,7 +117,7 @@ makeStencil(const Param* param,
     Its entries are also defined here and assumed to be constant over the
     structured mesh. If not, define it later during matrix setup.
   */
-  //  Print("stencilSize = %d   numDims = %d\n",stencilSize,numDims);
+  //  dbg << "stencilSize = %d   numDims = %d\n",stencilSize,numDims);
   stencil_offsets.resize(0,stencilSize);
   int entry;
   /* Order them as follows: center, xminus, xplus, yminus, yplus, etc. */
@@ -120,32 +125,30 @@ makeStencil(const Param* param,
   entry = 0;
   stencil_offsets[entry].resize(0,numDims);
   for (Counter dim = 0; dim < numDims; dim++) {
-    //    Print("Init entry = %d, dim = %d\n",entry,dim);
+    //    dbg << "Init entry = %d, dim = %d\n",entry,dim);
     stencil_offsets[entry][dim] = 0;
   }
   for (Counter dim = 0; dim < numDims; dim++) {
     for (int s = Left; s <= Right; s += 2) {
       entry++;
       stencil_offsets[entry].resize(0,numDims);
-      //      Print("entry = %d, dim = %d\n",entry,dim);
+      //      dbg << "entry = %d, dim = %d\n",entry,dim);
       for (Counter d = 0; d < numDims; d++) {
-        //        Print("d = %d  size = %d\n",d,stencil_offsets[entry].size());
+        //        dbg << "d = %d  size = %d\n",d,stencil_offsets[entry].size());
         stencil_offsets[entry][d] = 0;
       }
-      //      Print("Setting entry = %d, dim = %d\n",entry,dim);
+      //      dbg << "Setting entry = %d, dim = %d\n",entry,dim);
       stencil_offsets[entry][dim] = s;
     }
   }
   
   /* Add stencil entries */
-  Proc0Print("Stencil offsets:\n");
+  dbg0 << "Stencil offsets:" << "\n";
   for (entry = 0; entry < stencilSize; entry++) {
     HYPRE_SStructStencilSetEntry(stencil, entry,
                                  stencil_offsets[entry].getData(), 0);
-    if (MYID == 0) {
-      Print("    entry = %d,  stencil_offsets = ",entry);
-      cout << stencil_offsets[entry] << "\n";
-    }
+    dbg0 << "    entry = " << entry
+         << ",  stencil_offsets = " << stencil_offsets[entry] << "\n";
   }
   serializeProcsEnd();
 }
@@ -177,7 +180,7 @@ main(int argc, char *argv[]) {
     solver = new SolverFAC(param);
     break;
   default:
-    fprintf(stderr,"\n\nError: unknown solver type\n");
+    cerr << "\n\nError: unknown solver type" << "\n";
     clean();
     exit(1);
   }
@@ -195,40 +198,50 @@ main(int argc, char *argv[]) {
 #if DRIVER_DEBUG
   hypre_InitMemoryDebug(myid);
 #endif
+  cerr << proc() << "here1\n";
+  if (MYID == 0) {
+    dbg0.setActive(true);
+    cerr << "after setActive()\n";
+    dbg0 << "TESTING dbg0\n";
+  }
+  cerr << proc() << "here2\n";
+
   const int numLevels = param->numLevels;
   const int numDims   = param->numDims;
 
-  Proc0Print("========================================================\n");
-  Proc0Print("%s : FAC Hypre solver interface test program\n",argv[0]);
-  Proc0Print("========================================================\n");
-  Proc0Print("\n");
-  Proc0Print("----------------------------------------------------\n");
-  Proc0Print("Initialize some stuff\n");
-  Proc0Print("----------------------------------------------------\n");
+  cerr << proc() << "here3\n";
+  dbg0 << proc() << "================================================" << "\n";
+  dbg0 << proc() << argv[0]
+       << ": Hypre solver interface test program for diffusion PDEs" << "\n";
+  dbg0 << proc() << "================================================" << "\n";
+  dbg0 << proc() << "" << "\n";
+  dbg0 << proc() << "-----------------------------------------------" << "\n";
+  dbg0 << proc() << "Initialize some stuff" << "\n";
+  dbg0 << proc() << "-----------------------------------------------" << "\n";
 
   if (myid == 0) {
     /* Read and check arguments, parameters */
-    Print("Checking arguments and parameters ... ");
+    dbg << proc() << "Checking arguments and parameters ... ";
     if ((param->solverType == Param::FAC) &&
         ((numLevels < 2) || (numDims != 3))) {
-      PrintNP("FAC solver needs a 3D problem and at least 2 levels.");
+      cerr << "\n\nFAC solver needs a 3D problem and at least 2 levels."
+           << "\n";
       clean();
       exit(1);
     }
-    PrintNP("done\n");
+    dbg << "done" << "\n";
 
-    Print("Checking # procs ... ");
+    dbg << proc() << "Checking # procs ... ";
     //    int correct = mypow(2,numDims);
     int correct = int(pow(2.0,numDims));
     if (numProcs != correct) {
-      Print("\n\nError, hard coded to %d processors in %d-D for now.\n",
-            correct,numDims);
+      cerr << "\n\nError, hard coded to " << correct
+           << " processors in " << numDims << "-D for now." << "\n";
       clean();
       exit(1);
     }
-    PrintNP("numProcs = %d, done\n",numProcs);
-
-    Print("\n");
+    dbg << "numProcs = " << numProcs << ", done" << "\n";
+    dbg << proc() << "\n";
   }
 
   int time_index = hypre_InitializeTiming("SStruct Interface");
@@ -247,9 +260,9 @@ main(int argc, char *argv[]) {
     0 and a quarter of level 1. Each processor gets the patches covering a
     quadrant of the physical domain.
     *----------------------------------------------------------------------*/
-  Proc0Print("----------------------------------------------------\n");
-  Proc0Print("Set up the grid (AMR levels, patches)\n");
-  Proc0Print("----------------------------------------------------\n");
+  dbg0 << proc() << "----------------------------------------------------" << "\n";
+  dbg0 << proc() << "Set up the grid (AMR levels, patches)" << "\n";
+  dbg0 << proc() << "----------------------------------------------------" << "\n";
 
   hier.make();
   makeGrid(param, hier, grid);             // Make Hypre grid from hier
@@ -258,9 +271,9 @@ main(int argc, char *argv[]) {
   /*-----------------------------------------------------------
    * Set up the stencils
    *-----------------------------------------------------------*/
-  Proc0Print("----------------------------------------------------\n");
-  Proc0Print("Set up the stencils on all the patchs\n");
-  Proc0Print("----------------------------------------------------\n");
+  dbg0 << proc() << "----------------------------------------------------" << "\n";
+  dbg0 << proc() << "Set up the stencils on all the patchs" << "\n";
+  dbg0 << proc() << "----------------------------------------------------" << "\n";
   makeStencil(param, hier, stencil);
 
   /*-----------------------------------------------------------
@@ -273,9 +286,9 @@ main(int argc, char *argv[]) {
     Galerkin coarsening to replace the equations in a coarse patch underlying
     a fine patch.
   */
-  Proc0Print("----------------------------------------------------\n");
-  Proc0Print("Set up the SStruct matrix\n");
-  Proc0Print("----------------------------------------------------\n");
+  dbg0 << proc() << "----------------------------------------------------" << "\n";
+  dbg0 << proc() << "Set up the SStruct matrix" << "\n";
+  dbg0 << proc() << "----------------------------------------------------" << "\n";
   solver->initialize(hier, grid, stencil);
 
   /* Print total time for setting up the grid, stencil, graph, solver */
@@ -283,14 +296,14 @@ main(int argc, char *argv[]) {
   hypre_PrintTiming("SStruct Interface", MPI_COMM_WORLD);
   hypre_FinalizeTiming(time_index);
   hypre_ClearTiming();
-  Print("End timing\n");
+  dbg << "End timing" << "\n";
 
   /*-----------------------------------------------------------
    * Print out the system and initial guess
    *-----------------------------------------------------------*/
-  Proc0Print("----------------------------------------------------\n");
-  Proc0Print("Print out the system and initial guess\n");
-  Proc0Print("----------------------------------------------------\n"); 
+  dbg0 << proc() << "----------------------------------------------------" << "\n";
+  dbg0 << proc() << "Print out the system and initial guess" << "\n";
+  dbg0 << proc() << "----------------------------------------------------" << "\n"; 
   solver->printMatrix("output_A");
   solver->printRHS("output_b");
   solver->printSolution("output_x0");
@@ -298,44 +311,44 @@ main(int argc, char *argv[]) {
   /*-----------------------------------------------------------
    * Solver setup phase
    *-----------------------------------------------------------*/
-  Proc0Print("----------------------------------------------------\n");
-  Proc0Print("Solver setup phase\n");
-  Proc0Print("----------------------------------------------------\n");
+  dbg0 << proc() << "----------------------------------------------------" << "\n";
+  dbg0 << proc() << "Solver setup phase" << "\n";
+  dbg0 << proc() << "----------------------------------------------------" << "\n";
   solver->setup();  // Depends only on A
 
   /*-----------------------------------------------------------
    * Solve the linear system A*x=b
    *-----------------------------------------------------------*/
-  Proc0Print("----------------------------------------------------\n");
-  Proc0Print("Solve the linear system A*x=b\n");
-  Proc0Print("----------------------------------------------------\n");
+  dbg0 << proc() << "----------------------------------------------------" << "\n";
+  dbg0 << proc() << "Solve the linear system A*x=b" << "\n";
+  dbg0 << proc() << "----------------------------------------------------" << "\n";
   solver->solve();  // Depends on A and b
 
   /*-----------------------------------------------------------
    * Print the solution and other info
    *-----------------------------------------------------------*/
-  Proc0Print("----------------------------------------------------\n");
-  Proc0Print("Print the solution vector\n");
-  Proc0Print("----------------------------------------------------\n");
+  dbg0 << proc() << "----------------------------------------------------" << "\n";
+  dbg0 << proc() << "Print the solution vector" << "\n";
+  dbg0 << proc() << "----------------------------------------------------" << "\n";
   solver->printSolution("output_x1");
-  Proc0Print("Iterations = %d\n", solver->_results.numIterations);
-  Proc0Print("Final Relative Residual Norm = %e\n",
-             solver->_results.finalResNorm);
-  Proc0Print("\n");
+  dbg0 << proc() << "Iterations = " << solver->_results.numIterations << "\n";
+  dbg0 << proc() << "Final Relative Residual Norm = "
+       << solver->_results.finalResNorm << "\n";
+  dbg0 << proc() << "" << "\n";
 
   /*-----------------------------------------------------------
    * Finalize things
    *-----------------------------------------------------------*/
-  Proc0Print("----------------------------------------------------\n");
-  Proc0Print("Finalize things\n");
-  Proc0Print("----------------------------------------------------\n");
+  dbg0 << proc() << "----------------------------------------------------" << "\n";
+  dbg0 << proc() << "Finalize things" << "\n";
+  dbg0 << proc() << "----------------------------------------------------" << "\n";
 
   /* Destroy grid objects */
-  Print("Destroying grid objects\n");
+  dbg << "Destroying grid objects" << "\n";
   HYPRE_SStructGridDestroy(grid);
    
   /* Destroy stencil objects */
-  Print("Destroying stencil objects\n");
+  dbg << "Destroying stencil objects" << "\n";
   HYPRE_SStructStencilDestroy(stencil);
    
   delete param;
@@ -343,7 +356,7 @@ main(int argc, char *argv[]) {
    
   clean();
 
-  Print("%s: Going down successfully\n",argv[0]);
+  dbg << argv[0] << ": Going down successfully" << "\n";
 
   return 0;
 } // end main()
