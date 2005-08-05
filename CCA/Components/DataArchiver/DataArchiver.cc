@@ -121,6 +121,8 @@ void DataArchiver::problemSetup(const ProblemSpecP& params,
    }
    
    // get the variables to save
+
+   d_saveLabelNames.clear(); // we can problemSetup multiple times on a component Switch, clear the old ones.
    map<string, string> attributes;
    SaveNameItem saveItem;
    ProblemSpecP save = p->findBlock("save");
@@ -247,12 +249,6 @@ void DataArchiver::problemSetup(const ProblemSpecP& params,
    d_lastTimestepLocation = "invalid";
    d_wasOutputTimestep = false;
 
-}
-
-void DataArchiver::initializeOutput(const ProblemSpecP& params) {
-   if (d_outputInterval == 0.0 && d_outputTimestepInterval == 0 && d_checkpointInterval == 0.0 && d_checkpointTimestepInterval == 0 && d_checkpointWalltimeInterval == 0) 
-	return;
-
    // set up the next output and checkpoint time
    d_nextOutputTime=0.0;
    d_nextOutputTimestep = d_outputInitTimestep?0:1;
@@ -270,6 +266,12 @@ void DataArchiver::initializeOutput(const ProblemSpecP& params) {
      }
    } else 
      d_nextCheckpointWalltime=0;
+}
+
+void DataArchiver::initializeOutput(const ProblemSpecP& params) 
+{
+   if (d_outputInterval == 0.0 && d_outputTimestepInterval == 0 && d_checkpointInterval == 0.0 && d_checkpointTimestepInterval == 0 && d_checkpointWalltimeInterval == 0) 
+	return;
 
    if(Parallel::usingMPI()){
      // See how many shared filesystems that we have
