@@ -245,12 +245,12 @@ bool ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
 
     // get the number of materials for the NC & particle Variables
     num_materials = nm;
-    //   cerr << "Number of Materials " << num_materials << endl;
+//   cerr << "Number of Materials " << num_materials << endl;
 
-    //   cerr<<"selected variables in setVar() are "<<
-    //     psVar.get()<<" (index "<<psIndex<<"), "<<
-    //     pvVar.get()<<" (index "<<pvIndex<<"), "<<
-    //     ptVar.get()<<" (index "<<ptIndex<<")\n";
+//   cerr<<"selected variables in setVar() are "<<
+//     psVar.get()<<" (index "<<psIndex<<"), "<<
+//     pvVar.get()<<" (index "<<pvIndex<<"), "<<
+//     ptVar.get()<<" (index "<<ptIndex<<")\n";
 
     string visible;
     gui->eval(id + " isVisible", visible);
@@ -270,7 +270,7 @@ bool ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
 }
 
 
-void ParticleFieldExtractor::showVarsForMatls()
+bool ParticleFieldExtractor::showVarsForMatls()
 {
   ConsecutiveRangeSet onMaterials;
   for (int matl = 0; matl < num_materials; matl++) {
@@ -305,6 +305,9 @@ void ParticleFieldExtractor::showVarsForMatls()
     }
   }
 
+  if( spNames.size() == 0 && vpNames.size() == 0 && tpNames.size() == 0 )
+    return false;
+
   list<VarInfo>::iterator iter;
   positionName = "";
   for (iter = pointVars.begin(); iter != pointVars.end(); iter++) {
@@ -318,6 +321,7 @@ void ParticleFieldExtractor::showVarsForMatls()
       == onMaterials.size()) {
      particleIDs = particleIDVar.name;
   }
+  return true;
 }
 
 string
@@ -488,7 +492,7 @@ void ParticleFieldExtractor::execute()
      return;
    }
 
-   showVarsForMatls();
+   if( !showVarsForMatls() ) return;
      
    ScalarParticles* sp = 0;
    VectorParticles* vp = 0;
