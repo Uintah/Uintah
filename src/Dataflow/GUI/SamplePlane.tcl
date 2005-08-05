@@ -56,7 +56,7 @@ itcl_class SCIRun_FieldsCreate_SamplePlane {
 	set $this-axis 0
 	set $this-padpercent 0
 	set $this-data-at Nodes
-	set $this-update_type "on release"
+	set $this-update_type "On Release"
 	set $this-pos 0
 
         set $this-corigin-x 0
@@ -76,7 +76,7 @@ itcl_class SCIRun_FieldsCreate_SamplePlane {
 	global $this-update_type
 
 	set type [set $this-update_type]
-	if { $type == "on release" } {
+	if { $type == "On Release" } {
 	    eval "$this-c needexecute"
 	}
     }
@@ -149,7 +149,7 @@ itcl_class SCIRun_FieldsCreate_SamplePlane {
 
 	iwidgets::optionmenu $w.row4.update -labeltext "Update:" \
 	    -labelpos w -command "$this update-type $w.row4.update"
-	$w.row4.update insert end "on release" Manual Auto
+	$w.row4.update insert end "On Release" Manual Auto
 	$w.row4.update select [set $this-update_type]
 
 	bind $w.row4.scale <ButtonRelease> "$this position_release"
