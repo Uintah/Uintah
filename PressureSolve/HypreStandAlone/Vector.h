@@ -138,8 +138,8 @@ class Vector : public Error {
       }
       Counter newLen  = len;
       if (newLen != _len) {
+        _len	= newLen;
         if (_data) {
-          _len	= newLen;
           DELETE_BRACKET(_data);
         }
         _data	= new VAR [_len];
@@ -158,13 +158,18 @@ class Vector : public Error {
       return out.str();
     }
   
-  void rangeError(const Counter& i) const
+  void rangeError(const int& i) const
     /* Print an error message for out-of-range access attempt. */
     {
       std::ostringstream msg;
-      Counter high = _len + _start- 1;
+      int high = _len + _start- 1;
       msg << "index out of range: i = " << i;
-      msg << ", range = [" << _start << ".." << high << "]";
+      msg << ", range = ";
+      if (high < _start) {
+        msg << "empty";
+      } else {
+        msg << "[" << _start << ".." << high << "]";
+      }
       error(msg);
     }
   

@@ -55,6 +55,7 @@ Hierarchy::make()
       }
     }
 
+    Print("Setting refinement ratio\n");
     /* Set Refinement ratio w.r.t. parent level. Hard-coded to be
        constant (1:2) in all dimensions and all levels for now. */
     Vector<Counter> refRat(0,numDims);
@@ -68,6 +69,7 @@ Hierarchy::make()
       }
     }
 
+    Print("Setting meshsize\n");
     double h;
     /* Compute meshsize, assumed the same in all directions at each level */
     if (level == 0) {
@@ -78,9 +80,14 @@ Hierarchy::make()
                                                           all dims */
     }
     
+    Print("Initializing Level object and adding it to hier:\n");
+    Print("  Empty level\n");
     _levels.push_back(new Level(numDims,h));
+    Print("  Ptr to level\n");
     Level* lev = _levels[level];
+    Print("  Set ref ratio\n");
     lev->_refRat = refRat;
+    Print("  Init patch list\n");
     lev->_patchList.resize(numProcs);
     int offset = level; // For tests where the fine patch is owned by
     // one proc, and its parent patch is owned by another proc
