@@ -75,12 +75,14 @@
 #include <Core/Datatypes/StructCurveField.h>
 #include <Core/Datatypes/StructCurveMesh.h>
 #include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/MaskedTriSurfField.h>
 #include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Datatypes/QuadSurfField.h>
 #include <Core/Datatypes/QuadSurfMesh.h>
 #include <Core/Datatypes/StructQuadSurfField.h>
 #include <Core/Datatypes/StructQuadSurfMesh.h>
 #include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/MaskedTetVolField.h>
 #include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/PrismVolField.h>
 #include <Core/Datatypes/PrismVolMesh.h>
@@ -88,7 +90,10 @@
 #include <Core/Datatypes/StructHexVolField.h>
 #include <Core/Datatypes/StructHexVolMesh.h>
 #include <Core/Datatypes/HexVolField.h>
+#include <Core/Datatypes/MaskedHexVolField.h>
 #include <Core/Datatypes/HexVolMesh.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/MaskedLatVolField.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geom/ColorMap.h>
@@ -226,12 +231,10 @@
    void mlArrayTOsciNrrdData(matlabarray &mlmat,SCIRun::NrrdDataHandle &scinrrd, SCIRun::ProgressReporter* pr);
    void sciNrrdDataTOmlArray(SCIRun::NrrdDataHandle &scinrrd, matlabarray &mlmat, SCIRun::ProgressReporter* pr);
 
-#ifdef HAVE_BUNDLE
    // SCIRun Bundles (Currently contained in the CardioWave Package)
    long sciBundleCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::ProgressReporter* pr);
    void mlArrayTOsciBundle(matlabarray &mlmat, SCIRun::BundleHandle &scibundle, SCIRun::ProgressReporter* pr);
    void sciBundleTOmlArray(SCIRun::BundleHandle &scibundle, matlabarray &mlmat,SCIRun::ProgressReporter* pr);
-#endif
 
     // Reading of Matlabn colormaps
    long sciColorMapCompatible(matlabarray &mlarray, std::string &infostring, SCIRun::ProgressReporter* pr);
@@ -327,6 +330,7 @@
 		
      // Interpolation matrices as used in CVRTI
      matlabarray interp;
+     matlabarray mask;
     
      int  basis_order;
    };
@@ -379,6 +383,12 @@
    bool addfield(SCIRun::FData2d<SCIRun::Tensor> &fdata,matlabarray mlarray);
    bool addfield(SCIRun::FData3d<SCIRun::Tensor> &fdata,matlabarray mlarray);
 
+   template <class FIELD>       bool addmask(FIELD* scifield,fieldstruct &fs);
+   template <class T>           bool addmask(SCIRun::MaskedHexVolField<T>* field, fieldstruct &fs);
+   template <class T>           bool addmask(SCIRun::MaskedTetVolField<T>* field, fieldstruct &fs);
+   template <class T>           bool addmask(SCIRun::MaskedLatVolField<T>* field, fieldstruct &fs);
+   template <class T>           bool addmask(SCIRun::MaskedTriSurfField<T>* field, fieldstruct &fs);
+
    template<class MESH>	bool createmesh(SCIRun::LockingHandle<MESH> &meshH,fieldstruct &fs);
    bool createmesh(SCIRun::LockingHandle<SCIRun::PointCloudMesh> &mesH, fieldstruct &fs);
    bool createmesh(SCIRun::LockingHandle<SCIRun::CurveMesh> &mesH, fieldstruct &fs);
@@ -394,13 +404,11 @@
    bool createmesh(SCIRun::LockingHandle<SCIRun::ImageMesh> &mesH, fieldstruct &fs);
    bool createmesh(SCIRun::LockingHandle<SCIRun::LatVolMesh> &mesH, fieldstruct &fs);
 
-
    template<class MESH>	void addnodes(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
    template<class MESH>	void addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
    template<class MESH>	void addfaces(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
    template<class MESH>	void addcells(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
-
-
+  
 							
 
    // Functions for dynamic translation on the WRITER
@@ -410,6 +418,12 @@
 	
    void mladdmeshclass(std::string meshclass,matlabarray mlarray);	
    template<class FIELD>	void mladdfieldat(FIELD *scifield,matlabarray mlarray);
+
+   template<class FIELD>        void mladdmask(FIELD *scifield, matlabarray mlarray);
+   template<class T>            void mladdmask(SCIRun::MaskedHexVolField<T>* scifield,  matlabarray mlarray);
+   template<class T>            void mladdmask(SCIRun::MaskedTetVolField<T>* scifield,  matlabarray mlarray);
+   template<class T>            void mladdmask(SCIRun::MaskedLatVolField<T>* scifield,  matlabarray mlarray);
+   template<class T>            void mladdmask(SCIRun::MaskedTriSurfField<T>* scifield, matlabarray mlarray);
 
    // Converters for each mesh class. These converters are precompiled as they all need different
    // functions for conversion. As soon as a function is not a template it will be precompiled
@@ -436,7 +450,7 @@
    template<class MESH>    void mladdedgesfield(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray,unsigned int num);
    template<class MESH>    void mladdfacesfield(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray,unsigned int num);
    template<class MESH>    void mladdcellsfield(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray,unsigned int num);
-   template<class MESH>	void mladdtransform(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
+   template<class MESH>    void mladdtransform(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray);
 	
    void mladdxyznodes(SCIRun::LockingHandle<SCIRun::StructCurveMesh> meshH,matlabarray mlarray);
    void mladdxyznodes(SCIRun::LockingHandle<SCIRun::StructQuadSurfMesh> meshH,matlabarray mlarray);
@@ -470,17 +484,60 @@ template<class MESH>   bool matlabconverter::mladdmesh(SCIRun::LockingHandle<MES
 // Check all possible positions of the field data
 template<class FIELD> void matlabconverter::mladdfieldat(FIELD *scifield,matlabarray mlarray)
 {
-	matlabarray fieldat;
+    matlabarray fieldat;
     if (scifield->basis_order() == 1) fieldat.createstringarray("node");
     if (scifield->basis_order() == 0) fieldat.createstringarray("cell");
     if (scifield->basis_order() == -1) fieldat.createstringarray("none");
     if (scifield->basis_order() > 1) fieldat.createstringarray("higher order");
-	mlarray.setfield(0,"fieldat",fieldat);
-	
-	matlabarray basisorder;
-	basisorder.createdoublescalar(static_cast<double>(scifield->basis_order()));
-	mlarray.setfield(0,"basisorder",basisorder);
+    mlarray.setfield(0,"fieldat",fieldat);
+    
+    matlabarray basisorder;
+    basisorder.createdoublescalar(static_cast<double>(scifield->basis_order()));
+    mlarray.setfield(0,"basisorder",basisorder);
 }
+
+template<class FIELD>        void matlabconverter::mladdmask(FIELD *scifield,matlabarray mlarray)
+{
+  // do nothing by default, i.e. when there is no mask
+}
+
+template<class T>            void matlabconverter::mladdmask(SCIRun::MaskedHexVolField<T>* scifield, matlabarray mlarray)
+{
+    matlabarray mask;
+    std::vector<char>& maskvec = scifield->mask();
+    mask.createdensearray(1,maskvec.size(),matlabarray::miDOUBLE);
+    mask.setnumericalarray(maskvec);
+    mlarray.setfield(0,"mask",mask);
+}
+
+template<class T>            void matlabconverter::mladdmask(SCIRun::MaskedTetVolField<T>* scifield, matlabarray mlarray)
+{
+    matlabarray mask;
+    std::vector<char>& maskvec = scifield->mask();
+    mask.createdensearray(1,maskvec.size(),matlabarray::miDOUBLE);
+    mask.setnumericalarray(maskvec);
+    mlarray.setfield(0,"mask",mask);
+}
+
+template<class T>            void matlabconverter::mladdmask(SCIRun::MaskedLatVolField<T>* scifield, matlabarray mlarray)
+{
+    matlabarray mask;
+    std::vector<char>& maskvec = scifield->mask();
+    mask.createdensearray(1,maskvec.size(),matlabarray::miDOUBLE);
+    mask.setnumericalarray(maskvec);
+    mlarray.setfield(0,"mask",mask);
+}
+
+template<class T>            void matlabconverter::mladdmask(SCIRun::MaskedTriSurfField<T>* scifield, matlabarray mlarray)
+{
+    matlabarray mask;
+    std::vector<char>& maskvec = scifield->mask();
+    mask.createdensearray(1,maskvec.size(),matlabarray::miDOUBLE);
+    mask.setnumericalarray(maskvec);
+    mlarray.setfield(0,"mask",mask);
+}
+
+
  
 template <class MESH> void matlabconverter::mladdtransform(SCIRun::LockingHandle<MESH> meshH,matlabarray mlarray)
 {
@@ -716,6 +773,53 @@ bool matlabconverter::mladdfield(SCIRun::FData3d<T> &fdata,matlabarray mlarray)
 
 //////// CLASSES FOR DYNAMIC READER ////////////////
 
+
+
+template <class FIELD>       bool matlabconverter::addmask(FIELD* scifield,fieldstruct &fs)
+{
+  return(true);
+}
+
+template <class T>           bool matlabconverter::addmask(SCIRun::MaskedHexVolField<T>* scifield,fieldstruct &fs)
+{
+  std::vector<char>& maskvec = field->mask();
+  if (!fs.mask.isempty())
+  {
+    fs.mask.getnumericalarray(maskvec);
+  }
+  return(true);
+}
+   
+template <class T>           bool matlabconverter::addmask(SCIRun::MaskedTetVolField<T>* scifield,fieldstruct &fs)
+{
+  std::vector<char>& maskvec = field->mask();
+  if (!fs.mask.isempty())
+  {
+    fs.mask.getnumericalarray(maskvec);
+  }
+  return(true);
+}
+   
+template <class T>           bool matlabconverter::addmask(SCIRun::MaskedLatVolField<T>* scifield,fieldstruct &fs)
+{
+  std::vector<char>& maskvec = field->mask();
+  if (!fs.mask.isempty())
+  {
+    fs.mask.getnumericalarray(maskvec);
+  }
+  return(true);
+}
+   
+template <class T>           bool matlabconverter::addmask(SCIRun::MaskedTriSurfField<T>* scifield,fieldstruct &fs)
+{
+  std::vector<char>& maskvec = field->mask();
+  if (!fs.mask.isempty())
+  {
+    fs.mask.getnumericalarray(maskvec);
+  }
+  return(true);
+}
+   
 
 
 
@@ -977,6 +1081,11 @@ void matlabconverter::addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
    {
      return(false);
    }
+   
+   if (!(translate.addmask(fieldptr,fs)))
+   {
+      return(false);
+   }
    // everything went ok, so report this to the function doing the actual implementation
    return(true);
  } 
@@ -1043,6 +1152,9 @@ void matlabconverter::addedges(SCIRun::LockingHandle<MESH> meshH,matlabarray mla
        // Could not translate field but continuing anyway
        return(false);
      }
+     // If needed add mask, this function is templated and overloaded as well, hence the dynamic
+     // compiler should find the proper function.
+     translate.mladdmask(field,mlarray);
    }
    // everything went ok, so report this to the function doing the actual implementation
    return(true);
