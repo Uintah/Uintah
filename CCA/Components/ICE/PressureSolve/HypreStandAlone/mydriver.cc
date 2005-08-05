@@ -44,7 +44,6 @@ makeGrid(const Param* param,
     and add all patches from this proc to it.
     _____________________________________________________________________*/
 {
-  dbg << proc() << "makeGrid() begin" << "\n";
   HYPRE_SStructVariable vars[NUM_VARS] =
     {HYPRE_SSTRUCT_VARIABLE_CELL}; // We use cell centered vars
   const Counter numDims   = param->numDims;
@@ -54,6 +53,7 @@ makeGrid(const Param* param,
   HYPRE_SStructGridCreate(MPI_COMM_WORLD, numDims, numLevels, &grid);
 
   serializeProcsBegin();
+  dbg << proc() << "makeGrid() begin" << "\n";
   /* Add the patches that this proc owns at all levels to grid */
   for (Counter level = 0; level < numLevels; level++) {
     Level* lev = hier._levels[level];
@@ -83,13 +83,12 @@ makeGrid(const Param* param,
   */
   //  dbg << "Before the end of makeGrid()" << "\n";
   serializeProcsEnd();
+
   HYPRE_SStructGridAssemble(grid);
-  if (MYID == 0) {
-    dbg << proc() << "" << "\n";
-    dbg << proc() << "Assembled grid, "
-        << "num parts " << hypre_SStructGridNParts(grid) << "\n";
-    dbg << proc() << "\n";
-  }
+  dbg0 << proc() << "" << "\n";
+  dbg0 << proc() << "Assembled grid, "
+       << "num parts " << hypre_SStructGridNParts(grid) << "\n";
+    dbg0 << proc() << "\n";
 }
 
 void
@@ -163,7 +162,7 @@ main(int argc, char *argv[]) {
   param = new TestLinear(2,8); // numDims, baseResolution
   param->solverType    = Param::AMG; // Hypre solver
   param->numLevels     = 2;          // # AMR levels
-  param->printSystem   = false; //true;
+  param->printSystem   = true;
 
   /* Grid hierarchy & stencil objects */
   Hierarchy             hier(param);

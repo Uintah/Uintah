@@ -11,14 +11,12 @@ Box::Box(const Counter numDims)
 }
 
 
-Box::Box(const Vector<int>& lower,
-         const Vector<int>& upper) :
+Box::Box(const Point& lower,
+         const Point& upper) :
   _lower(lower), _upper(upper)
 {
-  assert(_lower.getLen() == _upper.getLen());
-  for (Counter d = 0; d < getNumDims(); d++) {
-    assert(_lower[d] <= _upper[d]);
-  }
+  // Allow degenerate boxes to be constructed
+  //  assert(_lower.getLen() <= _upper.getLen());
 }
 
 Box::Box(const Box& other) :
@@ -34,7 +32,7 @@ Box::operator = (const Box& b)
   return *this;
 }
 
-const Vector<int>&
+const Point&
 Box::get(const Side& s) const
 {
   if      (s == Left ) return _lower;
@@ -46,7 +44,7 @@ Box::get(const Side& s) const
   }
 }
 
-Vector<int>&
+Point&
 Box::get(const Side& s)
 {
   if      (s == Left ) return _lower;
@@ -60,7 +58,7 @@ Box::get(const Side& s)
 
 void
 Box::set(const Side& s,
-         const Vector<int>& value)
+         const Point& value)
 {
   if      (s == Left ) _lower = value;
   else if (s == Right) _upper = value;
@@ -85,11 +83,11 @@ Box::set(const Counter d,
   }
 }
 
-Vector<int>
+Point
 Box::size(void) const
 {
   const Counter numDims = _lower.getLen();
-  Vector<int> sz(0,numDims);
+  Point sz(0,numDims);
   for (Counter d = 0; d < numDims; d++) {
     sz[d] = _upper[d] - _lower[d] + 1;
   }
@@ -136,12 +134,7 @@ Box::faceExtents(const Counter d,
     _____________________________________________________________________*/
 {
   Box face = *this;
-  face.set(Side(-s),face.get(s));
-#if DRIVER_DEBUG
-  dbg << "Face(d = " <<  d+'x' 
-       << ", s = " << s << " ";
-  dbg << face << "\n";
-#endif
+  face.set(d,Side(-s),face.get(s)[d]);
   return face;
 }
 
@@ -156,21 +149,21 @@ Box::coarseNbhrExtents(const Vector<Counter>& refRat,
     refRat is the refinement ratio at level k.
     _____________________________________________________________________*/
 {
+  dbg << proc() << "Box::coarseNbhrExtents() begin" << "\n";
   const Counter numDims = getNumDims();
   Box coarseNbhr(numDims);
   for (Counter dim = 0; dim < numDims; dim++) {
-    dbg << "dim    = " << dim << "\n";
-    dbg << "refRat = " << refRat[dim] << "\n";
     for (Side s = Left; s <= Right; ++s) {
       coarseNbhr.set(dim,s,get(s)[dim]/refRat[dim]);
     }
   }
-  dbg << "# fine   cell faces = " << volume() << "\n";
-  dbg << "# coarse cell faces = " << coarseNbhr.volume() << "\n";
+  dbg << proc() << "# fine   cell faces = " << volume() << "\n";
+  dbg << proc() << "# coarse cell faces = " << coarseNbhr.volume() << "\n";
 
   coarseNbhr.get(Left)[d] += s;
   coarseNbhr.get(Right)[d] += s;
 
+  dbg << proc() << "Box::coarseNbhrExtents() end" << "\n";
   return coarseNbhr;
 }
 
@@ -191,8 +184,8 @@ Box::iterator::operator ++ (void)
     _____________________________________________________________________*/
 {
   Counter numDims = _box.getNumDims();
-  const Vector<int>& lower = _box.get(Left);
-  const Vector<int>& upper = _box.get(Right);
+  const Point& lower = _box.get(Left);
+  const Point& upper = _box.get(Right);
   //  bool eof = false;
 
   Counter d = 0;
@@ -210,13 +203,43 @@ Box::iterator::operator ++ (void)
   }
 }
 
+bool 
+Box::overlaps(const Box& otherbox, double epsilon) const
+{
+  for (Counter d = 0; d < getNumDims(); d++) {
+    if((_lower[d]+epsilon > otherbox._upper[d]) ||
+       (_upper[d] < otherbox._lower[d]+epsilon)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool 
+Box::contains(const Point& p) const {
+  return ((_lower <= p) && (p <= _upper));
+}
+
+Box 
+Box::intersect(const Box& b) const {
+  return Box(max(_lower, b._lower),
+             min(_upper, b._upper));
+}
+ 
+bool
+Box::degenerate() const {
+  return (!(_lower <= _upper));
+}
+
+#if 0
 static void instantiate(void)
 {
-  Vector<int> lower(0,2,0,"",0);
-  Vector<int> upper(0,2,0,"",3);
+  Point lower(0,2,0,"",0);
+  Point upper(0,2,0,"",3);
   Box box(lower,upper);
   Box box2(box);
   Box::iterator iter = box.begin();
   ++iter;
   instantiate();
 }
+#endif
