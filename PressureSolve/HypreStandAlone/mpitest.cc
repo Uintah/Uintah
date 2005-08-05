@@ -1,20 +1,19 @@
-
 #include <mpi.h>
-#include <stdio.h>
+#include <iostream
 
 int
 main( int argc, char *argv[] )
 {
-  printf("hello\n");
+  cout << "hello\n";
 
   MPI_Init( &argc, &argv );
 
   int num_procs;
   MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
 
-  printf("goodbye\n");
-
+  cout << "goodbye\n";
 
   MPI_Finalize();
 
+  return 0;
 }

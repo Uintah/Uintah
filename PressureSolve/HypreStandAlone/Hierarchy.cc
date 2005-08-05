@@ -73,7 +73,7 @@ Hierarchy::make()
     Level* lev = _levels[level];
     lev->_refRat = refRat;
     lev->_patchList.resize(numProcs);
-    int offset = level; // For tests where the fine patch is owned by
+    int offset = 0; //level; // For tests where the fine patch is owned by
     // one proc, and its parent patch is owned by another proc
 
     /* Mesh box extents (lower left corner, upper right corner) */
@@ -264,8 +264,8 @@ Hierarchy::getPatchesFromOtherProcs()
             for (Counter d2 = 0; d2 < _param->numDims; d2++) {
               if (d2 == d) continue;
               // TODO: put that in Box::intersect()
-              if (MAX(ilower[d2],otherilower[d2]) <=
-                  MIN(iupper[d2],otheriupper[d2])) {
+              if (max(ilower[d2],otherilower[d2]) <=
+                  min(iupper[d2],otheriupper[d2])) {
                 patch->setBoundaryType(d,Left,Patch::Neighbor);
               }
             }
@@ -275,8 +275,8 @@ Hierarchy::getPatchesFromOtherProcs()
           if (iupper[d] == otherilower[d]-1) {
             for (Counter d2 = 0; d2 < _param->numDims; d2++) {
               if (d2 == d) continue;
-              if (MAX(ilower[d2],otherilower[d2]) <=
-                  MIN(iupper[d2],otheriupper[d2])) {
+              if (max(ilower[d2],otherilower[d2]) <=
+                  min(iupper[d2],otheriupper[d2])) {
                 patch->setBoundaryType(d,Right,Patch::Neighbor);
               }
             }
@@ -317,3 +317,30 @@ Hierarchy::printPatchBoundaries()
   dbg << "\n";
   serializeProcsEnd();
 } // end getPatchesFromOtherProcs()
+
+std::vector<Patch*>
+Hierarchy::finePatchesOverMe(const Patch& patch)
+{
+  std::vector<Patch*> finePatchList;
+  const Counter& level = patch._levelID;
+  const Counter& numLevels = _levels.size();
+  const int numProcs      = _param->numProcs;
+
+  if (level == numLevels) {
+    // Finest level, nothing on top of me, return empty list
+    return finePatchList;
+  }
+
+  const Counter fineLevel = level+1;
+  for (int owner = 0; owner < numProcs; owner++) {
+    vector<Patch*>& ownerList = _levels[fineLevel]->_patchList[owner];
+    for (vector<Patch*>::iterator iter = ownerList.begin();
+         iter != ownerList.end(); ++iter) {
+      Patch* patch = *iter;
+      
+    }
+  }
+  
+
+    return finePatchList;
+}

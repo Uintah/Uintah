@@ -40,9 +40,9 @@ typedef Vector<double> Location;           // Data node location in d-dim space
 
 /*------------- Useful macros -------------*/
 
-#define MIN(a,b) (((a) < (b)) ? (a) : (b))    // Minimum of two numbers
-#define MAX(a,b) (((a) > (b)) ? (a) : (b))    // Maximum of two numbers
-#define ABS(a)   (((a) > 0) ? (a) : (-(a)))   // Absolute value of a number
+//#define MIN(a,b) (((a) < (b)) ? (a) : (b))    // Minimum of two numbers
+//#define MAX(a,b) (((a) > (b)) ? (a) : (b))    // Maximum of two numbers
+//#define ABS(a)   (((a) > 0) ? (a) : (-(a)))   // Absolute value of a number
 #define DELETE_PTR(x) { if (x) delete x; x = 0; }
 #define DELETE_BRACKET(x) { if (x) delete [] x; x = 0; }
 
