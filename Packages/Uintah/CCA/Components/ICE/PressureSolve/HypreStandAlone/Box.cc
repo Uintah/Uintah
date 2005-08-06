@@ -149,7 +149,7 @@ Box::coarseNbhrExtents(const Vector<Counter>& refRat,
     refRat is the refinement ratio at level k.
     _____________________________________________________________________*/
 {
-  dbg << proc() << "Box::coarseNbhrExtents() begin" << "\n";
+  dbg << "Box::coarseNbhrExtents() begin" << "\n";
   const Counter numDims = getNumDims();
   Box coarseNbhr(numDims);
   for (Counter dim = 0; dim < numDims; dim++) {
@@ -157,13 +157,13 @@ Box::coarseNbhrExtents(const Vector<Counter>& refRat,
       coarseNbhr.set(dim,s,get(s)[dim]/refRat[dim]);
     }
   }
-  dbg << proc() << "# fine   cell faces = " << volume() << "\n";
-  dbg << proc() << "# coarse cell faces = " << coarseNbhr.volume() << "\n";
+  dbg << "# fine   cell faces = " << volume() << "\n";
+  dbg << "# coarse cell faces = " << coarseNbhr.volume() << "\n";
 
   coarseNbhr.get(Left)[d] += s;
   coarseNbhr.get(Right)[d] += s;
 
-  dbg << proc() << "Box::coarseNbhrExtents() end" << "\n";
+  dbg << "Box::coarseNbhrExtents() end" << "\n";
   return coarseNbhr;
 }
 

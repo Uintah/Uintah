@@ -18,7 +18,7 @@ Solver::initialize(const Hierarchy& hier,
   _requiresPar =
     (((_solverID >= 20) && (_solverID <= 30)) ||
      ((_solverID >= 40) && (_solverID < 60)));
-  dbg0 << proc() << "requiresPar = " << _requiresPar << "\n";
+  dbg0 << "requiresPar = " << _requiresPar << "\n";
 
   makeGraph(hier, grid, stencil);
   initializeData(hier, grid);
@@ -35,31 +35,31 @@ Solver::initializeData(const Hierarchy& hier,
 
   // Create an empty matrix with the graph non-zero pattern
   HYPRE_SStructMatrixCreate(MPI_COMM_WORLD, _graph, &_A);
-  dbg0 << proc() << "Created empty SStructMatrix" << "\n";
+  dbg0 << "Created empty SStructMatrix" << "\n";
   // Initialize RHS vector b and solution vector x
-  dbg << proc() << "Create empty b,x" << "\n";
+  dbg << "Create empty b,x" << "\n";
   HYPRE_SStructVectorCreate(MPI_COMM_WORLD, grid, &_b);
-  dbg << proc() << "Done b" << "\n";
+  dbg << "Done b" << "\n";
   HYPRE_SStructVectorCreate(MPI_COMM_WORLD, grid, &_x);
-  dbg << proc() << "Done x" << "\n";
+  dbg << "Done x" << "\n";
 
   // If using AMG, set (A,b,x)'s object type to ParCSR now
   if (_requiresPar) {
-    dbg0 << proc() << "Matrix object type set to HYPRE_PARCSR" << "\n";
+    dbg0 << "Matrix object type set to HYPRE_PARCSR" << "\n";
     HYPRE_SStructMatrixSetObjectType(_A, HYPRE_PARCSR);
-    dbg << proc() << "Vector object type set to HYPRE_PARCSR" << "\n";
+    dbg << "Vector object type set to HYPRE_PARCSR" << "\n";
     HYPRE_SStructVectorSetObjectType(_b, HYPRE_PARCSR);
-    dbg << proc() << "Done b" << "\n";
+    dbg << "Done b" << "\n";
     HYPRE_SStructVectorSetObjectType(_x, HYPRE_PARCSR);
-    dbg << proc() << "Done x" << "\n";
+    dbg << "Done x" << "\n";
   }
-  dbg << proc() << "Init A" << "\n";
+  dbg << "Init A" << "\n";
   HYPRE_SStructMatrixInitialize(_A);
-  dbg << proc() << "Init b,x" << "\n";
+  dbg << "Init b,x" << "\n";
   HYPRE_SStructVectorInitialize(_b);
-  dbg << proc() << "Done b" << "\n";
+  dbg << "Done b" << "\n";
   HYPRE_SStructVectorInitialize(_x);
-  dbg << proc() << "Done x" << "\n";
+  dbg << "Done x" << "\n";
 
   dbg << "Solver::initializeData() end" << "\n";
 }
@@ -88,9 +88,9 @@ Solver::setup(void)
   //-----------------------------------------------------------
   // Solver setup phase
   //-----------------------------------------------------------
-  dbg0 << proc() << "----------------------------------------------------" << "\n";
-  dbg0 << proc() << "Solver setup phase" << "\n";
-  dbg0 << proc() << "----------------------------------------------------" << "\n";
+  dbg0 << "----------------------------------------------------" << "\n";
+  dbg0 << "Solver setup phase" << "\n";
+  dbg0 << "----------------------------------------------------" << "\n";
   int time_index = hypre_InitializeTiming("AMG Setup");
   hypre_BeginTiming(time_index);
   
@@ -108,9 +108,9 @@ Solver::solve(void)
   //-----------------------------------------------------------
   // Solver solve phase
   //-----------------------------------------------------------
-  dbg0 << proc() << "----------------------------------------------------" << "\n";
-  dbg0 << proc() << "Solver solve phase" << "\n";
-  dbg0 << proc() << "----------------------------------------------------" << "\n";
+  dbg0 << "----------------------------------------------------" << "\n";
+  dbg0 << "Solver solve phase" << "\n";
+  dbg0 << "----------------------------------------------------" << "\n";
 
   this->solve(); // which setup will this be? The derived class's?
 
@@ -119,9 +119,9 @@ Solver::solve(void)
   //-----------------------------------------------------------
   // TODO: SolverSStruct is derived from Solver; implement the following
   // in SolverSStruct. For SolverStruct (PFMG), another gather vector required.
-  dbg0 << proc() << "----------------------------------------------------" << "\n";
-  dbg0 << proc() << "Gather the solution vector" << "\n";
-  dbg0 << proc() << "----------------------------------------------------" << "\n";
+  dbg0 << "----------------------------------------------------" << "\n";
+  dbg0 << "Gather the solution vector" << "\n";
+  dbg0 << "----------------------------------------------------" << "\n";
 
   HYPRE_SStructVectorGather(_x);
 } //end solve()
@@ -137,15 +137,15 @@ Solver::makeGraph(const Hierarchy& hier,
   //_____________________________________________________________________
 {
   serializeProcsBegin();
-  dbg << proc() << "Solver::makeGraph() begin" << "\n";
+  dbg << "Solver::makeGraph() begin" << "\n";
   //-----------------------------------------------------------
   // Set up the graph
   //-----------------------------------------------------------
-  dbg0 << proc()
+  dbg0
        << "----------------------------------------------------" << "\n";
-  dbg0 << proc()
+  dbg0
        << "Set up the graph" << "\n";
-  dbg0 << proc()
+  dbg0
        << "----------------------------------------------------" << "\n";
   serializeProcsEnd();
 
@@ -153,7 +153,7 @@ Solver::makeGraph(const Hierarchy& hier,
   HYPRE_SStructGraphCreate(MPI_COMM_WORLD, grid, &_graph);
   // If using AMG, set graph's object type to ParCSR now
   if (_requiresPar) {
-    dbg0 << proc() << "graph object type set to HYPRE_PARCSR" << "\n";
+    dbg0 << "graph object type set to HYPRE_PARCSR" << "\n";
     HYPRE_SStructGraphSetObjectType(_graph, HYPRE_PARCSR);
   }
 
@@ -168,7 +168,7 @@ Solver::makeGraph(const Hierarchy& hier,
   //======================================================================
 
   for (Counter level = 0; level < numLevels; level++) {
-    dbg << proc() << "  Initializing graph stencil at level " << level
+    dbg << "  Initializing graph stencil at level " << level
         << " of " << numLevels << "\n";
     HYPRE_SStructGraphSetStencil(_graph, level, 0, stencil);
   }
@@ -177,7 +177,7 @@ Solver::makeGraph(const Hierarchy& hier,
   // and fine level at every C/F boundary.
 
   for (Counter level = 1; level < numLevels; level++) {
-    dbg << proc() << "  Updating coarse-fine boundaries at level "
+    dbg << "  Updating coarse-fine boundaries at level "
         << level << "\n";
     const Level* lev = hier._levels[level];
     //    const Level* coarseLev = hier._levels[level-1];
@@ -186,18 +186,18 @@ Solver::makeGraph(const Hierarchy& hier,
     // Loop over patches of this proc
     for (Counter i = 0; i < lev->_patchList[MYID].size(); i++) {
       Patch* patch = lev->_patchList[MYID][i];
-      dbg << proc() << "Processing patch " << patch->_box << "\n";
+      dbg << "Processing patch " << patch->_box << "\n";
 
       // Loop over fine-to-coarse boundaries of this patch
       for (Counter d = 0; d < numDims; d++) {
         for (Side s = Left; s <= Right; ++s) {
           if (patch->getBoundaryType(d,s) == Patch::CoarseFine) {
-            dbg << proc()
+            dbg
                 << "\t--- Processing Fine-to-Coarse face d = " << d
                 << " , s = " << s << " ---" << "\n";
             // Fine cells of this face
             Box faceFineBox = patch->_box.faceExtents(d,s);
-            dbg << proc()
+            dbg
                 << "\tFace(d = " << char(d+'x')
                 << ", s = " << s << ") "
                 << faceFineBox << "\n";
@@ -233,7 +233,7 @@ Solver::makeGraph(const Hierarchy& hier,
 
                 // Add the connections between the fine and coarse nodes
                 // to the graph
-                dbg << proc() << "  Adding fine-to-coarse connection to graph" << "\n";
+                dbg << "  Adding fine-to-coarse connection to graph" << "\n";
                 HYPRE_SStructGraphAddEntries(_graph,
                                              level,(*fine_iter).getData(),
                                              0,
@@ -278,7 +278,7 @@ Solver::makeGraph(const Hierarchy& hier,
                      child++,
                        IndexPlusPlus(zero,ref1,activeChild,subChild,eocChild)) {
                   
-                  dbg << proc()
+                  dbg
                       << "  Adding coarse-to-fine connection to graph" << "\n";
                   HYPRE_SStructGraphAddEntries(_graph,
                                                level-1, hypreSubCoarse, 0,
@@ -297,9 +297,9 @@ Solver::makeGraph(const Hierarchy& hier,
 
   // Assemble the graph
   HYPRE_SStructGraphAssemble(_graph);
-  dbg << proc() << "Assembled graph, nUVentries = "
+  dbg << "Assembled graph, nUVentries = "
       << hypre_SStructGraphNUVEntries(_graph) << "\n";
-  dbg << proc() << "Solver::makeGraph() end" << "\n";
+  dbg << "Solver::makeGraph() end" << "\n";
 } // end makeGraph()
 
 void
@@ -313,7 +313,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
   // patches of all levels. Delete coarse data underlying fine patches.
   //_____________________________________________________________________
 {
-  dbg0 << proc() << "Solver::makeLinearSystem() begin" << "\n";
+  dbg0 << "Solver::makeLinearSystem() begin" << "\n";
   serializeProcsBegin();
   const int numDims   = _param->numDims;
   const int numLevels = hier._levels.size();
@@ -321,7 +321,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
   // Add equations at all interior cells of every patch owned by this proc
   // to A. Eliminate boundary conditions at domain boundaries.
 
-  dbg0 << proc() << "Adding interior equations to A" << "\n";
+  dbg0 << "Adding interior equations to A" << "\n";
 
   int stencilSize = hypre_SStructStencilSize(stencil);
   int* entries = new int[stencilSize];
@@ -329,24 +329,24 @@ Solver::makeLinearSystem(const Hierarchy& hier,
   for (Counter entry = 0; entry < stencilSize; entry++) entries[entry] = entry;
 
   for (Counter level = 0; level < numLevels; level++) {
-    dbg0 << proc() << "At level = level" << "\n";
+    dbg0 << "At level = level" << "\n";
     const Level* lev = hier._levels[level];
     const Vector<double>& h = lev->_meshSize;
     //const Vector<Counter>& resolution = lev->_resolution;
     Vector<double> offset = 0.5 * h;
     double cellVolume = h.prod();
     for (Counter i = 0; i < lev->_patchList[MYID].size(); i++) {
-      dbg0 << proc() << "At patch = " << i << "\n";
+      dbg0 << "At patch = " << i << "\n";
       // Add equations of interior cells of this patch to A
       Patch* patch = lev->_patchList[MYID][i];
       double* values    = new double[stencilSize * patch->_numCells];
       double* rhsValues = new double[patch->_numCells];
       double* solutionValues = new double[patch->_numCells];
 
-      dbg << proc() << "  Adding interior equations at Patch " << i
+      dbg << "  Adding interior equations at Patch " << i
           << ", Extents = ";
       dbg << patch->_box << "\n";
-      dbg << proc() << "Looping over cells in this patch:" << "\n";
+      dbg << "Looping over cells in this patch:" << "\n";
 
       Counter cell = 0;
       for( Box::iterator iter = patch->_box.begin();
@@ -377,7 +377,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
         for (Counter d = 0; d < numDims; d++) {
           double faceArea = cellVolume / h[d];
           for (Side s = Left; s <= Right; ++s) {
-            dbg << proc() << "--- d = " << d
+            dbg << "--- d = " << d
                 << " , s = " << s
                 << " , entry = " << entry
                 << " ---" << "\n";
@@ -397,7 +397,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
               // Cell near a domain boundary
               
               if (patch->getBC(d,s) == Patch::Dirichlet) {
-                dbg << proc() << "Near Dirichlet boundary, update xNbhr"
+                dbg << "Near Dirichlet boundary, update xNbhr"
                     << "\n";
                 xNbhr[d] = xCell[d] + 0.5*s*h[d];
               } else {
@@ -445,7 +445,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
               // Nbhr is at the boundary, eliminate it from values
 
               if (patch->getBC(d,s) == Patch::Dirichlet) {
-                dbg << proc() << "Near Dirichlet boundary, eliminate nbhr, "
+                dbg << "Near Dirichlet boundary, eliminate nbhr, "
                     << "coef = " << values[offsetValues + entry]
                     << ", rhsBC = " << _param->rhsBC(xNbhr) << "\n";
                 // Pass boundary value to RHS
@@ -456,7 +456,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                 // TODO:
                 // Add to rhsValues if this is a non-zero Dirichlet B.C. !!
               } else { // Neumann B.C.
-                dbg << proc() << "Near Neumann boundary, eliminate nbhr"
+                dbg << "Near Neumann boundary, eliminate nbhr"
                     << "\n";
                 // TODO:
                 // DO NOT ADD FLUX ABOVE, and add to rhsValues appropriately,
@@ -478,25 +478,25 @@ Solver::makeLinearSystem(const Hierarchy& hier,
 
       } // end for cell
       
-      dbg0 << proc() << "Calling HYPRE SetBoxValues()" << "\n";
+      dbg0 << "Calling HYPRE SetBoxValues()" << "\n";
       printValues(patch,stencilSize,values,rhsValues,solutionValues);
 
       // Add this patch's interior equations to the LHS matrix A 
-      dbg0 << proc() << "Calling HYPRE_SStructMatrixSetBoxValues A" << "\n";
+      dbg0 << "Calling HYPRE_SStructMatrixSetBoxValues A" << "\n";
       HYPRE_SStructMatrixSetBoxValues(_A, level, 
                                       patch->_box.get(Left).getData(),
                                       patch->_box.get(Right).getData(),
                                       0, stencilSize, entries, values);
 
       // Add this patch's interior RHS to the RHS vector b 
-      dbg0 << proc() << "Calling HYPRE_SStructVectorSetBoxValues b" << "\n";
+      dbg0 << "Calling HYPRE_SStructVectorSetBoxValues b" << "\n";
       HYPRE_SStructVectorSetBoxValues(_b, level,
                                       patch->_box.get(Left).getData(),
                                       patch->_box.get(Right).getData(),
                                       0, rhsValues);
 
       // Add this patch's interior initial guess to the solution vector x 
-      dbg0 << proc() << "Calling HYPRE_SStructVectorSetBoxValues x" << "\n";
+      dbg0 << "Calling HYPRE_SStructVectorSetBoxValues x" << "\n";
       HYPRE_SStructVectorSetBoxValues(_x, level,
                                       patch->_box.get(Left).getData(),
                                       patch->_box.get(Right).getData(),
@@ -509,16 +509,16 @@ Solver::makeLinearSystem(const Hierarchy& hier,
   } // end for level
 
   delete entries;
-  dbg0 << proc() << "Done adding interior equations" << "\n";
+  dbg0 << "Done adding interior equations" << "\n";
 
-  dbg0 << proc() << "Begin C/F interface equation construction" << "\n";
+  dbg0 << "Begin C/F interface equation construction" << "\n";
   // 
   // Set the values on the graph links of the unstructured part
   // connecting the coarse and fine level at every C/F boundary.
   //
 
   for (Counter level = 1; level < numLevels; level++) {
-    dbg0 << proc() << "  Updating coarse-fine boundaries at level "
+    dbg0 << "  Updating coarse-fine boundaries at level "
          << level << "\n";
     const Level* lev = hier._levels[level];
     const Vector<Counter>& refRat = lev->_refRat;
@@ -535,7 +535,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
     for (Counter i = 0; i < lev->_patchList[MYID].size(); i++) {
       Patch* patch = lev->_patchList[MYID][i];
     
-      dbg << proc() << "Patch i = " << setw(2) << left << i
+      dbg << "Patch i = " << setw(2) << left << i
           << "extends from " << patch->_box << "\n";
       
       // Compute the extents of the box [coarseilower,coarseiupper] at
@@ -546,9 +546,9 @@ Solver::makeLinearSystem(const Hierarchy& hier,
       Box coarseUnderFine( patch->_box.get(Left) / refRat, 
                            patch->_box.get(Right) / refRat );
 
-      dbg << proc() << "Underlying coarse data: extends from "
+      dbg << "Underlying coarse data: extends from "
           << coarseUnderFine << "\n";
-      dbg << proc() << "\n";
+      dbg << "\n";
 
       // Replace the matrix equations for the underlying coarse box
       // with the identity matrix.
@@ -560,18 +560,18 @@ Solver::makeLinearSystem(const Hierarchy& hier,
         }
 
         Counter numCoarseCells = coarseUnderFine.volume();
-        dbg << proc() << "# coarse cells in box = " << numCoarseCells << "\n";
+        dbg << "# coarse cells in box = " << numCoarseCells << "\n";
 
         double* values    = new double[stencilSize * numCoarseCells];
         double* rhsValues = new double[numCoarseCells];
         
-        dbg << proc() << "Looping over cells in coarse underlying box:" 
+        dbg << "Looping over cells in coarse underlying box:" 
             << "\n";
         Counter cell = 0;
         for( Box::iterator coarse_iter = coarseUnderFine.begin();
              coarse_iter != coarseUnderFine.end(); ++coarse_iter, cell++ ) {
 
-          dbg << proc() << "cell = " << cell
+          dbg << "cell = " << cell
               << *coarse_iter << "\n";
           
           int offsetValues    = stencilSize * cell;
@@ -603,22 +603,22 @@ Solver::makeLinearSystem(const Hierarchy& hier,
         delete[] rhsValues;
         delete[] entries;
       } // end identity matrix setting
-      dbg << proc() << "Finished deleting underlying coarse data" << "\n";
+      dbg << "Finished deleting underlying coarse data" << "\n";
 
-      dbg << proc() << "Looping over C/F boundaries of Patch " << i
+      dbg << "Looping over C/F boundaries of Patch " << i
           << ", Level " << patch->_levelID << "\n";
       // Loop over C/F boundaries of this patch
       for (Counter d = 0; d < numDims; d++) {
         double faceArea = cellVolume / h[d];
         double coarseFaceArea = coarseCellVolume / coarseH[d];
         for (Side s = Left; s <= Right; ++s) {
-          dbg << proc() << "  boundary( d = " << d
+          dbg << "  boundary( d = " << d
               << " , s = " << s 
               << " ) = " << Patch::boundaryTypeString
             [patch->getBoundaryType(d,s)].c_str()
               << "\n";
           if (patch->getBoundaryType(d,s) == Patch::CoarseFine) {
-            dbg << proc() << "--- Processing Fine-to-Coarse face d = " << d
+            dbg << "--- Processing Fine-to-Coarse face d = " << d
                 << " , s = " << s << " ---" << "\n";
             // Fine cells of this face
             Box faceFineBox = patch->_box.faceExtents(d,s);
@@ -657,7 +657,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
 
                 // Set the weights on the connections between the fine
                 // and coarse nodes in A
-                dbg << proc() << "    Adding C/F flux to matrix" << "\n";
+                dbg << "    Adding C/F flux to matrix" << "\n";
 
                 //====================================================
                 // Add the flux from the fine child cell to the
@@ -676,14 +676,14 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                 // and fine meshsizes, i.e., their distances in the d
                 // dimension from the C/F boundary.
                 double alpha = coarseH[d] / (coarseH[d] + h[d]);
-                dbg << proc() << "      alpha = " << alpha << "\n";
+                dbg << "      alpha = " << alpha << "\n";
 
                 Vector<double> xFace(0,numDims);
 
                 for (Counter dd = 0; dd < numDims; dd++) {
                   xFace[dd] = alpha*xCell[dd] + (1-alpha)*xNbhr[dd];
                 }
-                dbg << proc() << "      xCell = " << xCell
+                dbg << "      xCell = " << xCell
                     << ", xFace = " << xFace
                     << ", xNbhr = " << xNbhr << "\n";
                 
@@ -696,7 +696,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                 }
                 diff = sqrt(diff);
                 double flux = a * faceArea / diff;
-                dbg << proc() << "      C/F flux = " << flux
+                dbg << "      C/F flux = " << flux
                     << "   a = %f" << a
                     << " face = " << faceArea
                     << " diff = " << diff << "\n";
@@ -712,7 +712,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                                                numStencilEntries,
                                                stencilEntries,
                                                stencilValues);
-                dbg << proc() << "      Done HYPRE_SStructMatrixAddToValues 1" << "\n";
+                dbg << "      Done HYPRE_SStructMatrixAddToValues 1" << "\n";
 
                 // Add the C-F flux to the fine cell equation - graph
                 // part
@@ -734,7 +734,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                     ((*fine_iter)[d] == patch->_box.get(Left)[d])) {
                   entry++;
                 }
-                dbg << proc() << "      fine equation, entry of coarse cell = "
+                dbg << "      fine equation, entry of coarse cell = "
                     << "entry " << entry << "\n";
                 int graphEntries[numGraphEntries] = {entry};
                 double graphValues[numGraphEntries] = {-flux};
@@ -743,7 +743,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                                                numGraphEntries,
                                                graphEntries,
                                                graphValues);
-                dbg << proc() << "      Done HYPRE_SStructMatrixAddToValues 2"
+                dbg << "      Done HYPRE_SStructMatrixAddToValues 2"
 << "\n";
 
                 // Subtract the C-F flux from the coarse cell equation
@@ -756,14 +756,14 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                                                numCoarseStencilEntries,
                                                coarseStencilEntries,
                                                coarseStencilValues);
-                dbg << proc() << "      Done HYPRE_SStructMatrixAddToValues 3" << "\n";
+                dbg << "      Done HYPRE_SStructMatrixAddToValues 3" << "\n";
 
                 // Subtract the C-F flux from the coarse cell equation
                 // - graph part
                 const int numCoarseGraphEntries = 1;
                 int coarseGraphEntries[numCoarseGraphEntries] =
                   {stencilSize+child};
-                dbg << proc() << "      coarse equation, entry of fine cell = "
+                dbg << "      coarse equation, entry of fine cell = "
                     << stencilSize+child << "\n";
                 double coarseGraphValues[numCoarseGraphEntries] = {-flux};
                 HYPRE_SStructMatrixAddToValues(_A,
@@ -771,13 +771,13 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                                                numCoarseGraphEntries,
                                                coarseGraphEntries,
                                                coarseGraphValues);
-                dbg << proc() << "      Done HYPRE_SStructMatrixAddToValues 4"
+                dbg << "      Done HYPRE_SStructMatrixAddToValues 4"
                     << "\n";
 
                 if (child == 0) { // Potential source for bugs: remove
                                   // coarse-coarse flux only ONCE in the
                                   // child loop.
-                  dbg << proc()
+                  dbg
                       << "    Removing C/C flux connections from matrix"
                       << "\n";
                   //====================================================
@@ -789,7 +789,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                   // crossing between xCell and xNbhr: xFace
 
                   Side s2 = Side(-s);
-                  dbg << proc() << "      s = " << s
+                  dbg << "      s = " << s
                       << ", s2 = " << s2 << "\n";
                   xCell = coarseOffset + (coarseH * (*coarse_iter));
                   xNbhr    = xCell;
@@ -805,7 +805,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                   double a    = 1.0; // Assumed constant a for now
                   double diff = fabs(xNbhr[d] - xCell[d]);
                   double flux = a * coarseFaceArea / diff;
-                  dbg << proc() << "      C/F flux = " << flux
+                  dbg << "      C/F flux = " << flux
                       << "   a = %f" << a
                       << " face = " << faceArea
                       << " diff = " << diff << "\n";
@@ -832,15 +832,15 @@ Solver::makeLinearSystem(const Hierarchy& hier,
     } // end for i (patches)
   } // end for level
 
-  dbg << proc() << "End C/F interface equation construction" << "\n";
+  dbg << "End C/F interface equation construction" << "\n";
   serializeProcsEnd();
-  dbg0 << proc() << "Solver::makeLinearSystem() end" << "\n";
+  dbg0 << "Solver::makeLinearSystem() end" << "\n";
 } // end makeLinearSystem()
 
 void
 Solver::printMatrix(const string& fileName /* = "solver" */)
 {
-  dbg << proc() << "Solver::printMatrix() begin" << "\n";
+  dbg << "Solver::printMatrix() begin" << "\n";
   if (!_param->printSystem) return;
   HYPRE_SStructMatrixPrint((fileName + ".sstruct").c_str(), _A, 0);
   if (_requiresPar) {
@@ -848,7 +848,7 @@ Solver::printMatrix(const string& fileName /* = "solver" */)
     // Print CSR matrix in IJ format, base 1 for rows and cols
     HYPRE_ParCSRMatrixPrintIJ(_parA, 1, 1, (fileName + ".ij").c_str());
   }
-  dbg << proc() << "Solver::printMatrix() end" << "\n";
+  dbg << "Solver::printMatrix() end" << "\n";
 }
 
 void
@@ -881,29 +881,29 @@ Solver::printValues(const Patch* patch,
 {
   const Counter numCells = patch->_box.volume();
 
-  dbg << proc()
+  dbg
       << "--- Printing values,rhsValues,solutionValues arrays ---" << "\n";
   for (Counter cell = 0; cell < numCells; cell++) {
     int offsetValues    = stencilSize * cell;
     int offsetRhsValues = cell;
-    dbg << proc() << "cell = " << cell << "\n";
+    dbg << "cell = " << cell << "\n";
     if (values) {
       for (Counter entry = 0; entry < stencilSize; entry++) {
-        dbg << proc() << "values   ["
+        dbg << "values   ["
             << setw(5) << left << offsetValues + entry
             << " = " << values[offsetValues + entry] << "\n";
       }
     }
     if (rhsValues) {
-      dbg << proc() << "rhsValues["
+      dbg << "rhsValues["
           << setw(5) << left << offsetRhsValues
           << " = " << rhsValues[offsetRhsValues] << "\n";
     }
     if (solutionValues) {
-      dbg << proc() << "solutionValues["
+      dbg << "solutionValues["
           << setw(5) << left << offsetRhsValues
           << " = " << solutionValues[offsetRhsValues] << "\n";
     }
-    dbg << proc() << "-------------------------------" << "\n";
+    dbg << "-------------------------------" << "\n";
   } // end for cell
 } // end printValues()

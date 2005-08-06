@@ -13,10 +13,11 @@
 #include <iostream>
 using namespace std;
 
-string proc(void)
-  // Processor header for output lines
+string lineHeader(void)
+  // Print header for each output line printed using DebugStream
 {
   ostringstream os;
+  int MYID = 0;
   os << "P"
      << setw(2) << left << MYID << ": ";
   return os.str();
@@ -30,7 +31,7 @@ clean(void)
     of the program.
     _____________________________________________________________________*/
 {
-  dbg << proc() << "Cleaning" << "\n";
+  dbg << "Cleaning" << "\n";
 #if DRIVER_DEBUG
   hypre_FinalizeMemoryDebug();
 #endif
@@ -60,8 +61,7 @@ serializeProcsBegin(void)
   serializing = true;
 #if DRIVER_DEBUG
   for (int i = 0; i < MYID; i++) {
-    dbg << proc()
-        << "serializeProcsBegin Barrier "
+    dbg << "serializeProcsBegin Barrier "
         << setw(2) << right << i
         << "\n";
     MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
@@ -86,8 +86,7 @@ serializeProcsEnd(void)
   }
 #if DRIVER_DEBUG
   for (int i = numProcs-1; i >= MYID; i--) {
-    dbg << proc()
-        << "serializeProcsEnd   Barrier "
+    dbg << "serializeProcsEnd   Barrier "
         << setw(2) << right << i
         << "\n";
     MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point

@@ -79,10 +79,10 @@ Hierarchy::make()
     /* Mesh box extents (lower left corner, upper right corner) */
     /* This is where the specific geometry of the hierarchy is
        hard-coded. */
-    dbg << proc() << "numPatches = " << numPatches << "\n";
+    dbg << "numPatches = " << numPatches << "\n";
     for (Counter i = 0; i < numPatches; i++) {
       int owner = (i+offset) % numProcs; // Owner of patch i, hard-coded
-      dbg << proc()
+      dbg
           << "Creating Patch i = " << setw(2) << right << i
           << " owned by proc " << setw(2) << right << owner;
       Vector<int> lower(0,numDims);
@@ -117,9 +117,9 @@ Hierarchy::make()
       // Create patch object from the geometry parameters above and
       // add it to the level's appropriate list of patches.
       Patch* patch = new Patch(owner,level,Box(lower,upper));
-      dbg << proc() << "box = " << patch->_box << "\n";
-      dbg << proc() << "box.get(Left ) = " << patch->_box.get(Left) << "\n";
-      dbg << proc() << "box.get(Right) = " << patch->_box.get(Right) << "\n";
+      dbg << "box = " << patch->_box << "\n";
+      dbg << "box.get(Left ) = " << patch->_box.get(Left) << "\n";
+      dbg << "box.get(Right) = " << patch->_box.get(Right) << "\n";
       //        Print("Doing setDomainBoundaries\n");
       patch->setDomainBoundaries(*lev);
       //        Print("Done setDomainBoundaries\n");
