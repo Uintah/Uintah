@@ -101,9 +101,9 @@ SolverFAC::solve(void)
   time_index = hypre_InitializeTiming("FAC Solve");
   hypre_BeginTiming(time_index);
 
-  dbg0 << proc() << "----------------------------------------------------" << "\n";
-  dbg0 << proc() << "calling FAC" << "\n";
-  dbg0 << proc() << "----------------------------------------------------" << "\n";
+  dbg0 << "----------------------------------------------------" << "\n";
+  dbg0 << "calling FAC" << "\n";
+  dbg0 << "----------------------------------------------------" << "\n";
   HYPRE_SStructFACSolve3(solver, _facA, _b, _x);
 
   hypre_EndTiming(time_index);
@@ -123,9 +123,9 @@ SolverFAC::solve(void)
   /*-----------------------------------------------------------
    * Gather the solution vector
    *-----------------------------------------------------------*/
-  dbg0 << proc() << "----------------------------------------------------" << "\n";
-  dbg0 << proc() << "Gather the solution vector" << "\n";
-  dbg0 << proc() << "----------------------------------------------------" << "\n";
+  dbg0 << "----------------------------------------------------" << "\n";
+  dbg0 << "Gather the solution vector" << "\n";
+  dbg0 << "----------------------------------------------------" << "\n";
 
   HYPRE_SStructVectorGather(_x);
 } //end solve()
