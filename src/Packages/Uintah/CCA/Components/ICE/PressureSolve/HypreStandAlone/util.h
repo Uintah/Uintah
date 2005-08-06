@@ -4,7 +4,7 @@
 #include "IntMatrix.h"
 
 /* Printouts */
-string proc(void);
+string lineHeader(void);
 
 /* I/O, MPI */
 int clean(void);

@@ -21,7 +21,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include <values.h>
+//#include <values.h>
+#include <assert.h>
 #include "DebugStream.h"
 
 /*------------- Useful constants -------------*/
