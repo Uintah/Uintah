@@ -68,7 +68,7 @@ class Solver {
     : _param(param)
     {
       _results.numIterations = 0;
-      _results.finalResNorm  = DBL_MAX;
+      _results.finalResNorm  = 1234.5678; //DBL_MAX;
     }
 
   virtual void initializeData(const Hierarchy& hier,
