@@ -197,18 +197,14 @@ main(int argc, char *argv[]) {
 #if DRIVER_DEBUG
   hypre_InitMemoryDebug(myid);
 #endif
-  cerr << "here1\n";
   if (MYID == 0) {
     dbg0.setActive(true);
-    cerr << "after setActive()\n";
-    dbg0 << "TESTING dbg0\n";
   }
-  cerr << "here2\n";
 
+  serializeProcsBegin();
   const int numLevels = param->numLevels;
   const int numDims   = param->numDims;
 
-  cerr << "here3\n";
   dbg0 << "================================================" << "\n";
   dbg0 << argv[0]
        << ": Hypre solver interface test program for diffusion PDEs" << "\n";
@@ -263,6 +259,7 @@ main(int argc, char *argv[]) {
   dbg0 << "Set up the grid (AMR levels, patches)" << "\n";
   dbg0 << "----------------------------------------------------" << "\n";
 
+  serializeProcsEnd();
   hier.make();
   makeGrid(param, hier, grid);             // Make Hypre grid from hier
   hier.printPatchBoundaries();

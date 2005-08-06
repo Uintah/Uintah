@@ -17,7 +17,6 @@ string lineHeader(void)
   // Print header for each output line printed using DebugStream
 {
   ostringstream os;
-  int MYID = 0;
   os << "P"
      << setw(2) << left << MYID << ": ";
   return os.str();
@@ -61,9 +60,9 @@ serializeProcsBegin(void)
   serializing = true;
 #if DRIVER_DEBUG
   for (int i = 0; i < MYID; i++) {
-    dbg << "serializeProcsBegin Barrier "
-        << setw(2) << right << i
-        << "\n";
+    //    dbg << "serializeProcsBegin Barrier "
+    //        << setw(2) << right << i
+    //        << "\n";
     MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
   }
 #endif
@@ -86,9 +85,9 @@ serializeProcsEnd(void)
   }
 #if DRIVER_DEBUG
   for (int i = numProcs-1; i >= MYID; i--) {
-    dbg << "serializeProcsEnd   Barrier "
-        << setw(2) << right << i
-        << "\n";
+    //    dbg << "serializeProcsEnd   Barrier "
+    //        << setw(2) << right << i
+    //        << "\n";
     MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
   }
 #endif
