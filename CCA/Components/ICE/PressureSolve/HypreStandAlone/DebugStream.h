@@ -18,7 +18,7 @@ class DebugBuf: public std::streambuf {
   ~DebugBuf(void);
   int overflow(int ch);
   std::streamsize xsputn (const char* s,
-    std::streamsize num);
+                          std::streamsize num);
  private:
    bool _lineBegin;
 };

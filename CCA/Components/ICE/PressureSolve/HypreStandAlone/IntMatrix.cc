@@ -67,9 +67,9 @@ operator << (std::ostream& os, const IntMatrix& a)
   for(Counter i=0;i<a.rows;i++){
     os << i << ":";
     for(Counter j=0;j<a.cols;j++){
-      os << '\t' << a(i,j);
+      os << "\t" << a(i,j);
     }
-    os << '\n';
+    os << "\n";
   }
   return os;
 }
