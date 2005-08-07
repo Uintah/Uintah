@@ -10,30 +10,22 @@ DebugBuf::~DebugBuf(void)
 {}
 
 int DebugBuf::overflow(int ch)
+  // Writing one character: our implementation of the streambuf virtual
+  // overflow(). Not sure that it properly works yet.
 {
-  //  cerr << " (overflow begin) ";
-  //  cerr << "*owner = " << *owner << "\n";
   if ((owner->getLevel() < owner->getVerboseLevel())
       || (!owner->active())) {
     if (ch == '\n') {
-      //      cerr << "HERE1\n";
       _lineBegin = true;
       // Set back level to verboseLevel so that stream will
       // print everything until the next explicit setLevel() call.
-      //      cerr << "HERE2\n";
       owner->setLevel(owner->getVerboseLevel());
       owner->flush();
-      //      cerr << "HERE3\n";
     }
-    //    cerr << "(overflow end1) ";
     return 0;
   }
-  //  cerr << "HERE4\n";
   if (_lineBegin) {
-    //    cerr << "HERE5\n";
-    //    cerr << "lineHeader = " <<lineHeader()<<"\n";
-    *(owner->outstream) << lineHeader();
-    //    cerr << "HERE6\n";
+    *(owner->outstream) << lineHeader(_indent);
     _lineBegin = false;
   }
   if (ch == '\n') {
@@ -42,58 +34,45 @@ int DebugBuf::overflow(int ch)
     // print everything until the next explicit setLevel() call.
     owner->setLevel(owner->getVerboseLevel());
     owner->flush();
-    //    cerr << "HERE9\n";
   }
-  //  cerr << " (overflow end2)\n";
   return(*(owner->outstream) << (char)ch ? 0 : EOF);
-  //  return 0;
 }
 
-streamsize DebugBuf::xsputn (const char* s,
-                             streamsize num) {
-  //  cerr << " (xsputn begin) ";
-  //  cerr << "*owner = " << *owner << "\n";
+streamsize
+DebugBuf::xsputn (const char* s,
+                  streamsize num)
+  // Writing num characters of the char array s: our implementation
+  // of the virtual function streambuf::xsputn().
+{
   if ((owner->getLevel() < owner->getVerboseLevel())
       || (!owner->active())) {
     if ((num >= 1) && (s[num-1] == '\n')) {
-      //      cerr << "HERE1\n";
       _lineBegin = true;
       // Set back level to verboseLevel so that stream will
       // print everything until the next explicit setLevel() call.
-      //      cerr << "HERE2\n";
       owner->setLevel(owner->getVerboseLevel());
       owner->flush();
-      //      cerr << "HERE3\n";
     }
-    //    cerr << "(xsputn end1) ";
     return num;
   }
-  //  cerr << "HERE4\n";
   if (_lineBegin) {
-    //    cerr << "HERE5\n";
-    //    cerr << "lineHeader = " <<lineHeader()<<"\n";
-    *(owner->outstream) << lineHeader();
-    //    cerr << "HERE6\n";
+    *(owner->outstream) << lineHeader(_indent);
     _lineBegin = false;
   }
-  //cerr << "HERE7\n";
+  // With setfill(), this seems to sometimes print some garbage.
   *(owner->outstream) << s;
-  //int a = (dynamic_cast<streambuf*>(this))->xsputn(s,num);
-  //AAcerr << "HERE8\n";
   if ((num >= 1) && (s[num-1] == '\n')) {
     _lineBegin = true;
     // Set back level to verboseLevel so that stream will
     // print everything until the next explicit setLevel() call.
     owner->setLevel(owner->getVerboseLevel());
     owner->flush();
-    //    cerr << "HERE9\n";
   }
-  //  cerr << "(xsputn end2) ";  
   return num;
 }
 
 DebugStream::DebugStream(const string& iname, bool active) :
-    ostream(0), _verboseLevel(0), _level(0)
+  ostream(0), _verboseLevel(0), _level(0), _indent(0)
 {
   _dbgbuf = new DebugBuf();
   init(_dbgbuf);
@@ -123,5 +102,23 @@ void DebugStream::setActive(const bool active)
     outstream = &cerr;
   } else {
     outstream = 0;
+  }
+}
+
+void DebugStream::indent(void)
+{
+  if (_indent >= 10) {
+    cerr << "\n\nWarning: DebugStream indent overflow" << "\n";
+  } else {
+    indent++;
+  }
+}
+
+void DebugStream::indent(void)
+{
+  if (_indent == 0) {
+    cerr << "\n\nWarning: DebugStream indent underflow" << "\n";
+  } else {
+    indent--;
   }
 }
