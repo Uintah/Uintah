@@ -147,13 +147,13 @@ static const string AdvAccumRect =
 "TEMP R0; \n"
 "TEMP R1; \n"
 "TEMP R2; \n"
-"TEX R0, fragment.texcoord[1], texture[1], RECT; \n"
+"TEX R0, fragment.texcoord[0], texture[0], RECT; \n"
 "MAD R1.zw, R0.xyxy, c[1].x, -c[1].y; \n"
-"TEX R1.xy, R1.zwzw, texture[0], RECT; \n"
+"TEX R1.xy, R1.zwzw, texture[1], 2D; \n"
 "ADD R1.xy, R1, -c[1].y; \n"
 "ADD R1.zw, R1, c[2].xyxy; \n"
 "MUL R1.xy, c[0].x, R1; \n"
-"TEX R2.x, R1.zwzw, texture[2], RECT; \n"
+"TEX R2.x, R1.zwzw, texture[2], 2D; \n"
 "MAD result.color.xy, R1, c[1].z, R0; \n"
 "MAD result.color.z, R2.x, c[3].x, R0; \n"
 "ADD result.color.w, R0, c[3].x; \n"
@@ -163,7 +163,7 @@ static const string AdvRewireRect =
 "!!ARBfp1.0 \n"
 "PARAM c[1] = { { 1 } }; \n"
 "TEMP R0; \n"
-"TEX R0.zw, fragment.texcoord[0], texture[1], RECT; \n"
+"TEX R0.zw, fragment.texcoord[0], texture[0], RECT; \n"
 "RCP R0.x, R0.w; \n"
 "MUL result.color.xyz, R0.z, R0.x; \n"
 "MOV result.color.w, c[0].x; \n"
@@ -255,7 +255,7 @@ static const string default_shader =
 
 static const string default_shader_rect =
 "!!ARBfp1.0 \n"
-"TEX result.color, fragment.texcoord[0], texture[0], 2D; \n"
+"TEX result.color, fragment.texcoord[0], texture[0], RECT; \n"
 "END";
 
 
