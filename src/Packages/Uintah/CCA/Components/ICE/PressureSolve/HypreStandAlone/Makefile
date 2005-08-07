@@ -18,9 +18,13 @@ CCFLAGS    = -ggdb -MD -Wall # Allow .d files, output all warnings
 HYPRE_DEFS = -DHYPRE_TIMING -DHAVE_CONFIG_H
 MPI_INC    = -I/usr/local/lam-mpi/include
 MPI_LIB    = -L/usr/local/lam-mpi/lib -lmpi -llam -lutil -lpthread -ldl
-
 HYPRE_INC  = -I$(HYPRE_SRC)/hypre/include $(HYPRE_DEFS)
 HYPRE_LIB  = -L$(HYPRE_SRC)/hypre/lib -lHYPRE_sstruct_ls -lHYPRE_sstruct_mv -lHYPRE_struct_ls -lHYPRE_struct_mv -lHYPRE_parcsr_ls -lHYPRE_DistributedMatrixPilutSolver -lHYPRE_ParaSails -lHYPRE_Euclid -lHYPRE_MatrixMatrix -lHYPRE_DistributedMatrix -lHYPRE_IJ_mv -lHYPRE_parcsr_mv -lHYPRE_seq_mv -lHYPRE_krylov -lHYPRE_utilities -llapack -lg2c
+
+# Home cygwin configuration
+#HYPRE_SRC  = /home/livne/hypre-1.9.0b/src
+#MPI_LIB    =
+#HYPRE_LIB  = -L$(HYPRE_SRC)/hypre/lib -lHYPRE_sstruct_ls -lHYPRE_sstruct_mv -lHYPRE_struct_ls -lHYPRE_struct_mv -lHYPRE_parcsr_ls -lHYPRE_DistributedMatrixPilutSolver -lHYPRE_ParaSails -lHYPRE_Euclid -lHYPRE_MatrixMatrix -lHYPRE_DistributedMatrix -lHYPRE_IJ_mv -lHYPRE_parcsr_mv -lHYPRE_seq_mv -lHYPRE_krylov -lHYPRE_utilities -lg2c
 
 ##################################################################
 # Targets

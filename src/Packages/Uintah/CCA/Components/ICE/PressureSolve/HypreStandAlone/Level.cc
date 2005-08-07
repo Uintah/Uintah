@@ -1,6 +1,6 @@
 #include "Level.h"
 #include "util.h"
-#include <math.h>
+#include "DebugStream.h"
 
 Level::Level(const Counter numDims,
              const double& h) {

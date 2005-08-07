@@ -9,9 +9,9 @@ enum FuncPlace {
   FEnd
 };
 
-string lineHeader(const Counter ident);
-void funcPrint(const string& name, const FuncPlace& p);
-void linePrint(const string& s, const Counter len);
+std::string lineHeader(const Counter indent);
+void funcPrint(const std::string& name, const FuncPlace& p);
+void linePrint(const std::string& s, const Counter len);
 
 /* I/O, MPI */
 int clean(void);
