@@ -21,9 +21,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
-//#include <values.h>
 #include <assert.h>
-#include "DebugStream.h"
 
 /*------------- Useful constants -------------*/
 
@@ -33,8 +31,9 @@
 #define PI 3.14159265358979323846264338327950L
 #endif
 
-/*------------- Type definitions -------------*/
+/*------------- Type definitions and forward declarations -------------*/
 
+class DebugStream;
 template<class VAR> class Vector;
 typedef unsigned short Counter;            // Non-negative integer/counter
 typedef Vector<double> Location;           // Data node location in d-dim space

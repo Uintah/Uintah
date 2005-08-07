@@ -1,6 +1,7 @@
 #ifndef __DEBUGSTREAM_H__
 #define __DEBUGSTREAM_H__
 
+#include "Macros.h"
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -8,7 +9,7 @@ using std::string;
 
 class DebugStream;
 class DebugBuf;
-extern std::string lineHeader(void);
+extern std::string lineHeader(const Counter& indent);
 
 class DebugBuf: public std::streambuf {
  public:
@@ -30,10 +31,10 @@ class DebugStream: public std::ostream {
     bool defaulton = true);
   ~DebugStream(void);
 
-  bool    active(void) { return _isactive; };
-  int     getVerboseLevel(void) { return _verboseLevel; }
-  int     getLevel(void) { return _level; }
-  Counter getIndent(void) { return _indent; }
+  bool    active(void) const { return _isactive; };
+  int     getVerboseLevel(void) const { return _verboseLevel; }
+  int     getLevel(void) const { return _level; }
+  Counter getIndent(void) const { return _indent; }
 
   void setActive(const bool active);
   void setVerboseLevel(const int verboseLevel) { _verboseLevel = verboseLevel; }

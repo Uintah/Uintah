@@ -4,6 +4,7 @@
 
 #include "Error.h"
 #include "util.h"
+#include "DebugStream.h"
 
 std::string
 Error::summary(void) const

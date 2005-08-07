@@ -25,7 +25,7 @@ int DebugBuf::overflow(int ch)
     return 0;
   }
   if (_lineBegin) {
-    *(owner->outstream) << lineHeader(_indent);
+    *(owner->outstream) << lineHeader(owner->getIndent());
     _lineBegin = false;
   }
   if (ch == '\n') {
@@ -56,7 +56,7 @@ DebugBuf::xsputn (const char* s,
     return num;
   }
   if (_lineBegin) {
-    *(owner->outstream) << lineHeader(_indent);
+    *(owner->outstream) << lineHeader(owner->getIndent());
     _lineBegin = false;
   }
   // With setfill(), this seems to sometimes print some garbage.
@@ -110,15 +110,15 @@ void DebugStream::indent(void)
   if (_indent >= 10) {
     cerr << "\n\nWarning: DebugStream indent overflow" << "\n";
   } else {
-    indent++;
+    _indent++;
   }
 }
 
-void DebugStream::indent(void)
+void DebugStream::unindent(void)
 {
   if (_indent == 0) {
     cerr << "\n\nWarning: DebugStream indent underflow" << "\n";
   } else {
-    indent--;
+    _indent--;
   }
 }
