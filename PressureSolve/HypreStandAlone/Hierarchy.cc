@@ -43,6 +43,7 @@ Hierarchy::make()
     dbg0 << "procMap at level " << level << "\n";
     dbg0 << procMap << "\n";
 
+    dbg.setLevel(10);
     dbg << "Setting refinement ratio" << "\n";
     /* Set Refinement ratio w.r.t. parent level. Hard-coded to be
        constant (1:2) in all dimensions and all levels for now. */
@@ -57,6 +58,7 @@ Hierarchy::make()
       }
     }
 
+    dbg.setLevel(10);
     dbg << "Setting meshsize" << "\n";
     double h;
     /* Compute meshsize, assumed the same in all directions at each level */
@@ -68,6 +70,7 @@ Hierarchy::make()
                                                           all dims */
     }
     
+    dbg.setLevel(10);
     dbg << "Initializing Level object and adding it to hier:" << "\n";
     _levels.push_back(new Level(numDims,h));
     Level* lev = _levels[level];
@@ -79,11 +82,12 @@ Hierarchy::make()
     /* Mesh box extents (lower left corner, upper right corner) */
     /* This is where the specific geometry of the hierarchy is
        hard-coded. */
+    dbg.setLevel(1);
     dbg << "numPatches = " << numPatches << "\n";
     for (Counter i = 0; i < numPatches; i++) {
       int owner = (i+offset) % numProcs; // Owner of patch i, hard-coded
-      dbg
-          << "Creating Patch i = " << setw(2) << right << i
+      dbg.setLevel(1);
+      dbg << "Creating Patch i = " << setw(2) << right << i
           << " owned by proc " << setw(2) << right << owner;
       Vector<int> lower(0,numDims);
       Vector<int> upper(0,numDims);
@@ -111,18 +115,18 @@ Hierarchy::make()
         } // end switch (level)
       } // for dim
       
+      dbg.setLevel(10);
       dbg << " lower = " << lower
           << " upper = " << upper
           << "\n";
       // Create patch object from the geometry parameters above and
       // add it to the level's appropriate list of patches.
       Patch* patch = new Patch(owner,level,Box(lower,upper));
+      dbg.setLevel(10);
       dbg << "box = " << patch->_box << "\n";
       dbg << "box.get(Left ) = " << patch->_box.get(Left) << "\n";
       dbg << "box.get(Right) = " << patch->_box.get(Right) << "\n";
-      //        Print("Doing setDomainBoundaries\n");
       patch->setDomainBoundaries(*lev);
-      //        Print("Done setDomainBoundaries\n");
       lev->_patchList[owner].push_back(patch);
     } // end for i (patches)
   } // end for level
@@ -136,7 +140,7 @@ Hierarchy::make()
 void
 Hierarchy::getPatchesFromOtherProcs()
 {
-  dbg << "Hierarchy::getPatchesFromOtherProcs() begin" << "\n";
+  funcPrint("Hierarchy::getPatchesFromOtherProcs()",FBegin);
   /* Types for arrays that are sent/received through MPI are int;
      convert to Counter later on, but don't risk having MPI_INT and
      Counter mixed up in the same call. */
@@ -287,7 +291,7 @@ Hierarchy::getPatchesFromOtherProcs()
     delete [] sendPatchInfo;
     delete [] patchInfo;
   } // end for level
-  dbg << "Hierarchy::getPatchesFromOtherProcs() end" << "\n";
+  funcPrint("Hierarchy::getPatchesFromOtherProcs()",FEnd);
 } // getPatchesFromOtherProcs()
 
 void
