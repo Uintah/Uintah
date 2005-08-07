@@ -99,6 +99,8 @@ class Solver {
   void makeGraph(const Hierarchy& hier,
                  const HYPRE_SStructGrid& grid,
                  const HYPRE_SStructStencil& stencil);
+
+  void makeUnderlyingIdentity(const Box& coarseUnderFine);
   void makeLinearSystem(const Hierarchy& hier,
                         const HYPRE_SStructGrid& grid,
                         const HYPRE_SStructStencil& stencil);
