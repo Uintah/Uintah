@@ -75,12 +75,6 @@ class Solver {
                               const HYPRE_SStructGrid& grid);
   virtual void assemble(void);
   
-  void printValues(const Patch* patch,
-                   const int stencilSize,
-                   const double* values = 0,
-                   const double* rhsValues = 0,
-                   const double* solutionValues = 0);
-
   /*===== Data Members =====*/
 
   /* SStruct objects */ // We assume Solver is an SStruct solver
@@ -100,11 +94,18 @@ class Solver {
                  const HYPRE_SStructGrid& grid,
                  const HYPRE_SStructStencil& stencil);
 
-  void makeUnderlyingIdentity(const Box& coarseUnderFine);
+  void makeUnderlyingIdentity(const Counter level,
+			      const HYPRE_SStructStencil& stencil,
+			      const Box& coarseUnderFine);
   void makeLinearSystem(const Hierarchy& hier,
                         const HYPRE_SStructGrid& grid,
                         const HYPRE_SStructStencil& stencil);
 
+  void printValues(const Counter numCells,
+                   const Counter stencilSize,
+                   const double* values = 0,
+                   const double* rhsValues = 0,
+                   const double* solutionValues = 0);
 };
 
 #endif // __SOLVER_H__
