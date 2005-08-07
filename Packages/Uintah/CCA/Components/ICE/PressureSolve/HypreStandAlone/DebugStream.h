@@ -29,21 +29,27 @@ class DebugStream: public std::ostream {
   DebugStream(const std::string& name,
     bool defaulton = true);
   ~DebugStream(void);
-  bool active(void) { return _isactive; };
-  int getVerboseLevel(void) { return _verboseLevel; }
-  int getLevel(void) { return _level; }
+
+  bool    active(void) { return _isactive; };
+  int     getVerboseLevel(void) { return _verboseLevel; }
+  int     getLevel(void) { return _level; }
+  Counter getIndent(void) { return _indent; }
+
   void setActive(const bool active);
   void setVerboseLevel(const int verboseLevel) { _verboseLevel = verboseLevel; }
   void setLevel(const int level) { _level = level; }
+  void indent(void);
+  void unindent(void);
   
-  std::ostream *outstream; // ostream that output redirected to. default: cout
+  std::ostream *outstream;   // ostream that output redirected to. default: cout
   
  private: 
-  std::string    _name;         // identifies me uniquely
-  DebugBuf* _dbgbuf;       // the buffer that is used for output redirection
-  bool      _isactive;     // if false, all input is ignored
-  int       _verboseLevel; // verbose level for printouts, badly implemented...
-  int       _level; // verbose level for printouts, badly implemented...
+  std::string _name;         // Uniquely identifies me
+  DebugBuf*   _dbgbuf;       // Buffer that is used for output redirection
+  bool        _isactive;     // If false, all input is ignored
+  int         _verboseLevel; // Verbose level for printouts, badly implemented...
+  int         _level;        // Current level for printouts, badly implemented...
+  Counter     _indent;       // # spaces for line indentation 
 };
     
 #endif // __DEBUGSTREAM_H__

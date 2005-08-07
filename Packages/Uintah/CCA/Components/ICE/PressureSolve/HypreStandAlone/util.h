@@ -9,7 +9,7 @@ enum FuncPlace {
   FEnd
 };
 
-string lineHeader(void);
+string lineHeader(const Counter ident);
 void funcPrint(const string& name, const FuncPlace& p);
 void linePrint(const string& s, const Counter len);
 
