@@ -40,6 +40,8 @@
 #include <Core/Geometry/Ray.h>
 #include <Core/Thread/Mutex.h>
 
+#include <sci_gl.h>
+
 namespace SCIRun {
 
 class Pbuffer;

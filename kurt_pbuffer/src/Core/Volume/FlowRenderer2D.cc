@@ -66,6 +66,31 @@ namespace SCIRun {
 
 const int BufferSize = 512;
 
+void print_pbuffer(Pbuffer*& pb)
+{
+
+
+    int tex_size = pb->width()* pb->height();
+    float *texture = new float[tex_size*4];
+
+    for( unsigned int i=0; i<tex_size; i++ ){
+      texture[i*4] = 0.75;
+      texture[i*4+1] = 0.75;
+      texture[i*4+2] = 0.75;
+      texture[i*4+3] = 0.75;
+    } 
+
+    pb->set_use_texture_matrix(true);
+    pb->bind(GL_FRONT);
+    glGetTexImage( GL_TEXTURE_RECTANGLE_NV, 0, GL_RGBA, GL_FLOAT, texture );
+    pb->release(GL_FRONT);
+
+    for( unsigned int i=0; i< ((tex_size > 1000) ?  5 : tex_size); i++ )
+      cerr << "(" << texture[i*4] <<", "<< texture[i*4+1]<<", "
+           << texture[i*4+2]<<", "<< texture[i*4+3]<<") ";
+    cerr<<"\n";
+}
+
 //static SCIRun::DebugStream dbg("FlowRenderer2D", false);
 
 FlowRenderer2D::FlowRenderer2D(FieldHandle field,
@@ -122,7 +147,7 @@ FlowRenderer2D::FlowRenderer2D(FieldHandle field,
   is_initialized_(false)
 {
   mode_ = MODE_LIC;
-  
+  srand48( 10 );
   for(int i = 0; i < 500; i++){
     pair<float,float> v( drand48(), drand48());
     shift_list_.push_back( v );
@@ -264,12 +289,10 @@ FlowRenderer2D::draw()
   //--------------------------------------------------------------------------
   // build textures
   build_flow_tex(); // must be done first, change later
-  build_noise();
+  build_noise(10);
   build_colormap();
   //--------------------------------------------------------------------------
-  // load textures
-  load_flow_tex(); 
-  load_noise();
+  // load/bind colormap to texture register 3
   load_colormap();
   //--------------------------------------------------------------------------
   bind_colormap(3);
@@ -285,21 +308,32 @@ FlowRenderer2D::draw()
   float pixely = 1.f/(float)h_;
 
   if( adv_buffer_ && use_pbuffer_ ){
-    float scale = 1.0;
-  
+    load_flow_tex();//(GL_TEXTURE_RECTANGLE_NV);
+    load_noise();
     // the following should be removed when done testing
 //     if( re_accum_ ){ build_adv( scale, shift_list_[c_shift] );}
 
     // This should put noise in adv_buffer_
+//     draw_noise_in_pbuffer(adv_buffer_);
     adv_init(adv_buffer_,scale, shift_list_[c_shift]);
-    reload_noise_ = flow_dirty_ = true;
+//       print_pbuffer( adv_buffer_ );
+//       cerr<<"\n*********************initialized***********************\n\n";
      for(int i = 0; i < adv_accums_; i++){
+//        cerr<<"shift = "<<shift_list_[c_shift].first<<", "<<shift_list_[c_shift].second<<"\n";
       adv_acc( adv_buffer_, pixelx, pixely, scale, shift_list_[c_shift] );
+//       print_pbuffer( adv_buffer_ );
+//       cerr<<"\n********************advect-"<<i<<"****************************\n\n";
       next_shift(&c_shift);
-    }
-     adv_rew( adv_buffer_ );
+     }
+      adv_rew( adv_buffer_ );
+//       print_pbuffer( adv_buffer_ );
+//       cerr<<"\n********************corrected****************************\n\n";
+//       print_pbuffer( adv_buffer_ );
     //conv_acc etc...
-  }//  else  if( re_accum_ ){
+  } else {
+    load_flow_tex(); 
+    load_noise();
+    //  if( re_accum_ ){
 //     cerr<<"accumulating ";
 //     build_adv( scale, shift_list_[c_shift] );
 //     //load_adv();
@@ -327,7 +361,7 @@ FlowRenderer2D::draw()
 //     bind_2d_texture( conv_tex_, 1 );
 //   }
   
-  
+  } 
  
   //temporary: make texture1 active bind adv_buffer as texture
   CHECK_OPENGL_ERROR("");
@@ -355,23 +389,6 @@ FlowRenderer2D::draw()
     glActiveTexture(GL_TEXTURE1);
     adv_buffer_->set_use_texture_matrix(true);
     adv_buffer_->bind(GL_FRONT);  // hopefully binds the noise
-
-    int tex_size = adv_buffer_->width()* adv_buffer_->height();
-    float *texture = new float[tex_size*4];
-
-    for( unsigned int i=0; i<tex_size; i++ ){
-      texture[i*4] = 0.75;
-      texture[i*4+1] = 0.75;
-      texture[i*4+2] = 0.75;
-      texture[i*4+3] = 0.75;
-    } 
-
-    glGetTexImage( GL_TEXTURE_RECTANGLE_NV, 0, GL_RGBA, GL_FLOAT, texture );
-
-    for( unsigned int i=0; i< ((tex_size > 1000) ?  1000 : tex_size); i++ )
-      cerr << "(" << texture[i*4] <<", "<< texture[i*4+1]<<", "
-           << texture[i*4+2]<<", "<< texture[i*4+3]<<") ";
-    cerr<<"\n";
     glActiveTexture(GL_TEXTURE0);
   } else {
   // to see what this should look like comment out the above if
@@ -433,7 +450,7 @@ FlowRenderer2D::draw_noise_in_pbuffer(Pbuffer*& pb)
   //-----------------------------------------------------
   // set up shader
   FragmentProgramARB* shader; // = adv_accum_;
-  shader = new FragmentProgramARB( default_shader );
+  shader = new FragmentProgramARB( default_shader_rect );
   //-----------------------------------------------------
   if( shader ){
     if(!shader->valid()) {
@@ -447,10 +464,18 @@ FlowRenderer2D::draw_noise_in_pbuffer(Pbuffer*& pb)
   glClear(GL_COLOR_BUFFER_BIT);
 //   pb->swapBuffers();
 
-  bind_2d_texture(noise_tex_, 0);  //noise texture bound to GL_TEXTURE2
+  bind_rectangle_texture(noise_tex_, 0);  //noise texture bound to GL_TEXTURE2
   float tex_coords [] = {0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0};
   float pos_coords [] = {0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
                          1.0, 1.0, 0.0, 0.0, 1.0, 0.0};
+  // need to scale the texture coords for RECT
+  {
+    glMatrixMode(GL_TEXTURE);
+    glPushMatrix();
+    glLoadIdentity();
+    glScalef(buffer_width_, buffer_height_, 1.0);
+    glMatrixMode(GL_MODELVIEW);
+  }
 
   glBegin( GL_QUADS );
   {
@@ -468,6 +493,12 @@ FlowRenderer2D::draw_noise_in_pbuffer(Pbuffer*& pb)
   pb->swapBuffers();
   release_2d_texture( 0 ); // noise_tex_
   shader->release();
+
+  { //to un-scale the texture coords for RECT
+    glMatrixMode(GL_TEXTURE);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+  }
   pb->deactivate();
 //   pb->set_use_texture_matrix(true);
 }
@@ -477,11 +508,9 @@ FlowRenderer2D::adv_init( Pbuffer*& pb, float scale,
                           pair<float, float>& shift)
   {
 
-  cerr<<"activating pbuffer \n";
+//   cerr<<"activating pbuffer \n";
   pb->activate();
-  FragmentProgramARB* shader;
-  shader = new FragmentProgramARB( default_shader );
-
+  FragmentProgramARB* shader = adv_init_;
 //       ( pb->need_shader() ? adv_init_rect_ : adv_init_ );
 
   if( shader ) {
@@ -489,8 +518,8 @@ FlowRenderer2D::adv_init( Pbuffer*& pb, float scale,
       if(shader->create()) {
         cerr<<"error in adv_init, couldn't create shader\n";
       }
-      shader->setLocalParam(1, scale, 1.0, 1.0, 1.0);
-      shader->setLocalParam(2, shift.first, shift.second, 1.0, 1.0);
+      shader->setLocalParam(1, shift.first, shift.second, 1.0, 1.0);
+      shader->setLocalParam(2, scale, 1.0, 1.0, 1.0);
     }
     shader->bind(); // fragment program (see FlowShaders.h AdvInit) 
                     // looks at TEXTURE0.
@@ -501,8 +530,9 @@ FlowRenderer2D::adv_init( Pbuffer*& pb, float scale,
   glClear(GL_COLOR_BUFFER_BIT);
 
   //bind_noise in pbuffer context
-//   bind_2d_texture(noise_tex_, 0);  //noise texture bound to GL_TEXTURE2
   bind_2d_texture(noise_tex_, 0);  //noise texture bound to GL_TEXTURE2
+//   bind_rectangle_texture(noise_tex_, 0);  //noise texture bound to 
+                                          //GL_TEXTURE_RECTANGLE_NV
 
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
 //   glActiveTexture(GL_TEXTURE0);
@@ -521,6 +551,15 @@ FlowRenderer2D::adv_init( Pbuffer*& pb, float scale,
   float tex_coords [] = {0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0};
   float pos_coords [] = {0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
                          1.0, 1.0, 0.0, 0.0, 1.0, 0.0};
+   
+  // need to scale the texture coords for RECT
+//   {
+//     glMatrixMode(GL_TEXTURE);
+//     glPushMatrix();
+//     glLoadIdentity();
+//     glScalef(buffer_width_, buffer_height_, 1.0);
+//     glMatrixMode(GL_MODELVIEW);
+//   }
   
   glBegin( GL_QUADS );
   {
@@ -540,6 +579,13 @@ FlowRenderer2D::adv_init( Pbuffer*& pb, float scale,
 
   pb->swapBuffers();  // won't this put the texture in the back buffer?
 
+//   { //to un-scale the texture coords for RECT
+//     glMatrixMode(GL_TEXTURE);
+//     glPopMatrix();
+//     glMatrixMode(GL_MODELVIEW);
+//   }
+
+
   ///////////////////////// temp ///////////////////
     //adv_array_.resize(pb->height(), pb->width(), 4);
 //   glReadPixels(0, 0, pb->width(), pb->height(), GL_RGBA,
@@ -553,7 +599,7 @@ FlowRenderer2D::adv_init( Pbuffer*& pb, float scale,
 #endif
 
   pb->deactivate();
-  delete shader;
+
 
 }
 
@@ -562,8 +608,6 @@ FlowRenderer2D::adv_acc( Pbuffer*& pb, float pixel_x, float pixel_y,
                          float scale, pair<float,float>&  shift)
 {
   pb->activate();
-  pb->set_use_texture_matrix(true);
-  pb->set_use_default_shader(false);
 
   FragmentProgramARB* shader = adv_accum_rect_; 
   //adv_accum_rect_;
@@ -573,39 +617,43 @@ FlowRenderer2D::adv_acc( Pbuffer*& pb, float pixel_x, float pixel_y,
     shader->create();
   }
   shader->setLocalParam(0, pixel_x, pixel_y, 1.0, 1.0);
-  shader->setLocalParam(2, shift.first, shift.second, 1.0, 1.0);
+  shader->setLocalParam(2, shift.first/pb->width(), shift.second/pb->height(),
+                        1.0, 1.0);
   shader->setLocalParam(3, scale, 1.0, 1.0, 1.0);
   shader->bind();
  
   CHECK_OPENGL_ERROR("adv_init()");
+  glClearColor(0.0, 0.0, 0.0, 0.0);
+  glClear(GL_COLOR_BUFFER_BIT);
   
 
-//   bind_2d_texture( flow_tex_, 1 );
-//   bind_2d_texture( noise_tex_, 2 );
-  load_flow_tex(GL_TEXTURE_RECTANGLE_NV);
-  load_noise(GL_TEXTURE_RECTANGLE_NV);
-  bind_rectangle_texture( flow_tex_, 1 );
-  bind_rectangle_texture( noise_tex_, 2 );
+  bind_2d_texture( flow_tex_, 1 );
+//   bind_rectangle_texture( flow_tex_, 1 );
+  bind_2d_texture( noise_tex_, 2 );
+//   bind_rectangle_texture( noise_tex_, 2 );
 
-#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
-  glActiveTexture(GL_TEXTURE0);
-#endif
-  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+//   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
+  float w = 1.0/pb->width();
+  float h = 1.0/pb->height();
   // cover the viewport
   float tex_coords [] = {0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0};
+  float noise_coords [] = {0.0, 0.0, w, 0.0, w, h, 0.0, h};
   float pos_coords [] = {0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
                          1.0, 1.0, 0.0, 0.0, 1.0, 0.0};
-
+  glActiveTexture(GL_TEXTURE0);
+  pb->set_use_texture_matrix(true);
+  pb->set_use_default_shader(false);
   pb->bind(GL_FRONT);
+  glActiveTexture(GL_TEXTURE0);
   glBegin( GL_QUADS );
   {
     for (int i = 0; i < 4; i++) {
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
       // set coordinates for TEXTURE2
       glMultiTexCoord2fv(GL_TEXTURE0,tex_coords+i*2);
-      glMultiTexCoord2fv(GL_TEXTURE1,tex_coords_+i*2);
-      glMultiTexCoord2fv(GL_TEXTURE2,tex_coords+i*2);
+      glMultiTexCoord2fv(GL_TEXTURE1,noise_coords+i*2);
+      glMultiTexCoord2fv(GL_TEXTURE2,noise_coords+i*2);
 //       glMultiTexCoord2fv(GL_TEXTURE3,tex_coords+i*2);
 #else
       glTexCoord2fv(tex_coords+i*2);
@@ -615,19 +663,21 @@ FlowRenderer2D::adv_acc( Pbuffer*& pb, float pixel_x, float pixel_y,
   }
   glEnd();
   CHECK_OPENGL_ERROR("");
+  glActiveTexture(GL_TEXTURE0);
   pb->release(GL_FRONT);
   pb->swapBuffers();  // won't this put the texture in the back buffer?
+  glActiveTexture(GL_TEXTURE0);
 
   CHECK_OPENGL_ERROR("");
   shader->release();
 
   CHECK_OPENGL_ERROR("");
-//   release_2d_texture( 2 ); // noise_tex_
-//   release_2d_texture( 1 ); // flow_tex_
-  release_rectangle_texture( 2 ); // noise_tex_
-  release_rectangle_texture( 1 ); // flow_tex_
+  release_2d_texture( 2 ); // noise_tex_
+  release_2d_texture( 1 ); // flow_tex_
+//   release_rectangle_texture( 2 ); // noise_tex_
+//   release_rectangle_texture( 1 ); // flow_tex_
   pb->deactivate();
-  pb->set_use_texture_matrix(true);
+  pb->set_use_texture_matrix(false);
 
 
 }
@@ -636,8 +686,8 @@ void
 FlowRenderer2D::adv_rew( Pbuffer*& pb )
 {
 
-  FragmentProgramARB* shader =
-    ( pb->need_shader() ? adv_rewire_rect_ : adv_rewire_ );
+  FragmentProgramARB* shader =  adv_rewire_rect_;
+    //    ( pb->need_shader() ? adv_rewire_rect_ : adv_rewire_ );
 
   if(!shader->valid()) {
     shader->create();
@@ -661,9 +711,11 @@ FlowRenderer2D::adv_rew( Pbuffer*& pb )
 
   // cover the viewport
   float tex_coords [] = {0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0};
-  float pos_coords [] = {0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0};
+  float pos_coords [] = {0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+                         1.0, 1.0, 0.0, 0.0, 1.0, 0.0};
 
-//   glActiveTexture(GL_TEXTURE1);
+
+  //  glActiveTexture(GL_TEXTURE1);
   pb->bind(GL_FRONT);
   glActiveTexture(GL_TEXTURE0);
   glBegin( GL_QUADS );
@@ -679,7 +731,7 @@ FlowRenderer2D::adv_rew( Pbuffer*& pb )
     }
   }
   glEnd();
-//   glActiveTexture(GL_TEXTURE1);
+  //  glActiveTexture(GL_TEXTURE1);
   pb->release(GL_FRONT);
   glActiveTexture(GL_TEXTURE0);
 
@@ -687,7 +739,7 @@ FlowRenderer2D::adv_rew( Pbuffer*& pb )
 
   shader->release();
   pb->deactivate();
-  pb->set_use_texture_matrix(true);
+  pb->set_use_texture_matrix(false);
 
 
 }
@@ -1096,8 +1148,8 @@ FlowRenderer2D::load_flow_tex(unsigned int tex_target)
     //           glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
     glTexParameteri(tex_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(tex_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(tex_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(tex_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(tex_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(tex_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexImage2D(tex_target, 0, GL_LUMINANCE16_ALPHA16, 
                  // Note the dim1, dim2 switch here.
                  flow_array_.dim2(), flow_array_.dim1(), 
@@ -1135,7 +1187,6 @@ FlowRenderer2D::bind_2d_texture( unsigned int tex, int reg ){
 void 
 FlowRenderer2D::release_2d_texture( int reg )
 {
-  NOT_FINISHED("FlowRenderer2D::release_adv()");  
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
   if (ShaderProgramARB::shaders_supported())
   {
@@ -1171,7 +1222,6 @@ FlowRenderer2D::bind_rectangle_texture( unsigned int tex, int reg ){
 void 
 FlowRenderer2D::release_rectangle_texture( int reg )
 {
-  NOT_FINISHED("FlowRenderer2D::release_adv()");  
 #if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
   if (ShaderProgramARB::shaders_supported())
   {
@@ -1483,7 +1533,8 @@ void FlowRenderer2D::build_noise( int seed )
 {
   if(build_noise_){
     noise_array_.resize(buffer_height_, buffer_width_, 4);
-    srand48( seed );
+    if( seed != 0 )
+      srand48( seed );
     for(int i = 0; i < noise_array_.dim1(); i++){
       for(int j = 0; j < noise_array_.dim2(); j++){
         float val = drand48();
@@ -1505,25 +1556,36 @@ FlowRenderer2D::load_noise(unsigned int tex_target,
     // Update 2D texture.
     glDeleteTextures(1, &noise_tex_);
     glGenTextures(1, &noise_tex_);
+  CHECK_OPENGL_ERROR("FlowRenderer2D::build_noise()");
     glBindTexture(tex_target, noise_tex_);
     //           glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
+  CHECK_OPENGL_ERROR("FlowRenderer2D::build_noise()");
+    glTexParameteri(tex_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  CHECK_OPENGL_ERROR("FlowRenderer2D::build_noise()");
+    glTexParameteri(tex_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  CHECK_OPENGL_ERROR("FlowRenderer2D::build_noise()");
     glTexParameteri(tex_target, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  CHECK_OPENGL_ERROR("FlowRenderer2D::build_noise()");
     glTexParameteri(tex_target, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(tex_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(tex_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  CHECK_OPENGL_ERROR("FlowRenderer2D::build_noise()");
     glTexImage2D(tex_target, 0, GL_RGBA16,
                  // Note the dim1, dim2 switch here.
                  noise_array_.dim2(), noise_array_.dim1(), 
                  0, GL_RGBA, GL_FLOAT, &noise_array_(0,0,0));
+  CHECK_OPENGL_ERROR("FlowRenderer2D::build_noise()");
     glBindTexture(tex_target, 0);
     reload_noise_ = false; 
+  CHECK_OPENGL_ERROR("FlowRenderer2D::build_noise()");
   } else { // noise_array has already been built, just reload
     glBindTexture(tex_target, noise_tex_);
+  CHECK_OPENGL_ERROR("FlowRenderer2D::build_noise()");
     glTexSubImage2D(tex_target, 0, 0, 0,
                     // Note the dim1, dim2 switch here.
                     noise_array_.dim2(), noise_array_.dim1(), 
                     GL_RGBA, GL_FLOAT, &noise_array_(0,0,0));
+  CHECK_OPENGL_ERROR("FlowRenderer2D::build_noise()");
     glBindTexture(tex_target, 0);
+  CHECK_OPENGL_ERROR("FlowRenderer2D::build_noise()");
   }
   
 #endif
