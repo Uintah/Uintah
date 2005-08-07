@@ -9,7 +9,7 @@ using std::string;
 
 class DebugStream;
 class DebugBuf;
-extern std::string lineHeader(const Counter& indent);
+extern std::string lineHeader(const Counter indent);
 
 class DebugBuf: public std::streambuf {
  public:
@@ -35,12 +35,22 @@ class DebugStream: public std::ostream {
   int     getVerboseLevel(void) const { return _verboseLevel; }
   int     getLevel(void) const { return _level; }
   Counter getIndent(void) const { return _indent; }
+  bool    getStickyLevel(void) const { return _stickyLevel; }
 
   void setActive(const bool active);
   void setVerboseLevel(const int verboseLevel) { _verboseLevel = verboseLevel; }
   void setLevel(const int level) { _level = level; }
   void indent(void);
   void unindent(void);
+  void setStickyLevel(const bool stickyLevel)
+    {
+      _stickyLevel = stickyLevel;
+      if (stickyLevel) {
+        _prevLevel = _level; // Save level before setting to sticky
+      } else {
+        setLevel(_prevLevel); // When removing sticky, go back to the previous level
+      }
+    }
   
   std::ostream *outstream;   // ostream that output redirected to. default: cout
   
@@ -51,6 +61,8 @@ class DebugStream: public std::ostream {
   int         _verboseLevel; // Verbose level for printouts, badly implemented...
   int         _level;        // Current level for printouts, badly implemented...
   Counter     _indent;       // # spaces for line indentation 
+  bool        _stickyLevel;  // Is level sticky or not?
+  int         _prevLevel;    // for removing sticky level
 };
     
 #endif // __DEBUGSTREAM_H__

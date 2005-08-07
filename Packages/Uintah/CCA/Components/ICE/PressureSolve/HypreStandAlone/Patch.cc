@@ -22,7 +22,7 @@ Patch::Patch(const int procID,
              const Box& box) :
   _box(box)
 {
-  dbg << "Patch::Patch() begin" << "\n";
+  funcPrint("Patch::Patch()",FBegin);
   if (!initialized) {
     init();
     initialized = true;
@@ -35,11 +35,12 @@ Patch::Patch(const int procID,
   Vector<int> sz(0,numDims);
   _numCells = box.volume();
   _patchID = 987654; // Dummy value to indicate something is wrong
-  dbg << "numDims  = " << numDims << "\n";
-  dbg << "numCells = " << _numCells << "\n";
-  dbg << "box      = " << box << "\n";
-  dbg << "box      = " << _box << "\n";
-  dbg << "Patch::Patch() end" << "\n";
+  dbg.setLevel(10);
+  dbg << "_numDims  = " << numDims << "\n"
+      << "_numCells = " << _numCells << "\n"
+      << "_box      = " << _box << "\n"
+      << "box       = " << box << "\n";
+  funcPrint("Patch::Patch()",FEnd);
 }
 
 Patch::BoundaryType
