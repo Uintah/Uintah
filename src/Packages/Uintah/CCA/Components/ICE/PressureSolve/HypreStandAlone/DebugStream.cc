@@ -11,7 +11,7 @@ DebugBuf::~DebugBuf(void)
 
 int DebugBuf::overflow(int ch)
 {
-  //  cerr << " (xsputn begin) ";
+  //  cerr << " (overflow begin) ";
   //  cerr << "*owner = " << *owner << "\n";
   if ((owner->getLevel() < owner->getVerboseLevel())
       || (!owner->active())) {
@@ -25,7 +25,7 @@ int DebugBuf::overflow(int ch)
       owner->flush();
       //      cerr << "HERE3\n";
     }
-    //    cerr << "(xsputn end1) ";
+    //    cerr << "(overflow end1) ";
     return 0;
   }
   //  cerr << "HERE4\n";
@@ -44,7 +44,7 @@ int DebugBuf::overflow(int ch)
     owner->flush();
     //    cerr << "HERE9\n";
   }
-  //  cerr << "HERE7\n";
+  //  cerr << " (overflow end2)\n";
   return(*(owner->outstream) << (char)ch ? 0 : EOF);
   //  return 0;
 }
@@ -76,9 +76,10 @@ streamsize DebugBuf::xsputn (const char* s,
     //    cerr << "HERE6\n";
     _lineBegin = false;
   }
-  //  cerr << "HERE7\n";
+  //cerr << "HERE7\n";
   *(owner->outstream) << s;
-  //  cerr << "HERE8\n";
+  //int a = (dynamic_cast<streambuf*>(this))->xsputn(s,num);
+  //AAcerr << "HERE8\n";
   if ((num >= 1) && (s[num-1] == '\n')) {
     _lineBegin = true;
     // Set back level to verboseLevel so that stream will

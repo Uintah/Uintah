@@ -268,7 +268,17 @@ Solver::makeGraph(const Hierarchy& hier,
               
               // Find all coarse cells that nbhr this finePatch boundary
               
-              // Loop over the coarse nbhrs
+              // Set the coarse side connections of each C/F boundary
+              // of these fine patches.
+              
+              // Delete the underlying coarse cell equations (under each
+              // fine patch).
+
+              // Note: some of the functions can be written for graph and A
+              // together. Make a structured code with appropriate functions
+              // implementing the operations outlined above.
+              
+              // The following is old stuff, HYPRE call should be similar though.
               for (Counter cell = 0; !eoc;
                    cell++,
                      IndexPlusPlus(coarseNbhrLower,coarseNbhrUpper,
@@ -743,8 +753,7 @@ Solver::makeLinearSystem(const Hierarchy& hier,
                                                numGraphEntries,
                                                graphEntries,
                                                graphValues);
-                dbg << "      Done HYPRE_SStructMatrixAddToValues 2"
-<< "\n";
+                dbg << "      Done HYPRE_SStructMatrixAddToValues 2" << "\n";
 
                 // Subtract the C-F flux from the coarse cell equation
                 // - stencil part
