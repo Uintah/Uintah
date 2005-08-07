@@ -44,23 +44,26 @@ makeGrid(const Param* param,
     and add all patches from this proc to it.
     _____________________________________________________________________*/
 {
+  serializeProcsBegin();
+  funcPrint("makeGrid()",FBegin);
   HYPRE_SStructVariable vars[NUM_VARS] =
     {HYPRE_SSTRUCT_VARIABLE_CELL}; // We use cell centered vars
   const Counter numDims   = param->numDims;
   const Counter numLevels = hier._levels.size();
+  serializeProcsEnd();
 
   /* Create an empty grid in numDims dimensions with # parts = numLevels. */
   HYPRE_SStructGridCreate(MPI_COMM_WORLD, numDims, numLevels, &grid);
 
   serializeProcsBegin();
-  dbg << "makeGrid() begin" << "\n";
   /* Add the patches that this proc owns at all levels to grid */
   for (Counter level = 0; level < numLevels; level++) {
     Level* lev = hier._levels[level];
-    dbg
-        << "Level " << level 
+    dbg.setLevel(1);
+    dbg << "Level " << level 
         << ", meshSize = " << lev->_meshSize[0]
         << ", resolution = " << lev->_resolution << "\n";
+    dbg.indent();
     for (Counter i = 0; i < lev->_patchList[MYID].size(); i++) {
       Patch* patch = lev->_patchList[MYID][i];
       /* Add this patch to the grid */
@@ -68,12 +71,13 @@ makeGrid(const Param* param,
                                   patch->_box.get(Left ).getData(),
                                   patch->_box.get(Right).getData());
       HYPRE_SStructGridSetVariables(grid, level, NUM_VARS, vars);
-      dbg
-          << "  Patch " << setw(2) << left << i
+      dbg.setLevel(1);
+      dbg << "  Patch " << setw(2) << left << i
           << ", ID "    << setw(2) << left << patch->_patchID << " ";
       dbg << patch->_box;
       dbg << "\n";
     }
+    dbg.unindent();
   }
 
   /*
@@ -81,14 +85,20 @@ makeGrid(const Param* param,
     data from all processors. On exit from this function, the grid is
     ready.
   */
-  //  dbg << "Before the end of makeGrid()" << "\n";
+  dbg.setLevel(10);
+  dbg << "Before HYPRE Grid Assemble call" << "\n";
   serializeProcsEnd();
 
   HYPRE_SStructGridAssemble(grid);
+
+  serializeProcsBegin();
+  dbg.setLevel(1);
   dbg0 << "" << "\n";
   dbg0 << "Assembled grid, "
        << "num parts " << hypre_SStructGridNParts(grid) << "\n";
-    dbg0 << "\n";
+  dbg0 << "\n";
+  funcPrint("makeGrid()",FEnd);
+  serializeProcsEnd();
 }
 
 void
@@ -101,10 +111,13 @@ makeStencil(const Param* param,
     Create Hypre stencil object "stencil" on output.
     _____________________________________________________________________*/
 {
+  funcPrint("makeStencil()",FBegin);
+  serializeProcsBegin();
   const Counter numDims   = param->numDims;
   Counter               stencilSize = 2*numDims+1;
   Vector< Vector<int> > stencil_offsets;
-
+  serializeProcsEnd();
+  
   /* Create an empty stencil */
   HYPRE_SStructStencilCreate(numDims, stencilSize, &stencil);
   
@@ -116,39 +129,48 @@ makeStencil(const Param* param,
     Its entries are also defined here and assumed to be constant over the
     structured mesh. If not, define it later during matrix setup.
   */
-  //  dbg << "stencilSize = %d   numDims = %d\n",stencilSize,numDims);
+  dbg.setLevel(10);
+  dbg << "stencilSize = " << stencilSize << ",  numDims = " << numDims << "\n";
   stencil_offsets.resize(0,stencilSize);
-  int entry;
   /* Order them as follows: center, xminus, xplus, yminus, yplus, etc. */
   /* Central coeffcient */
-  entry = 0;
+  Counter entry = 0;
   stencil_offsets[entry].resize(0,numDims);
   for (Counter dim = 0; dim < numDims; dim++) {
-    //    dbg << "Init entry = %d, dim = %d\n",entry,dim);
+    dbg << "Init entry = " << setw(2) << left << entry
+        << ", dim = " << dim << "\n";
     stencil_offsets[entry][dim] = 0;
   }
   for (Counter dim = 0; dim < numDims; dim++) {
     for (int s = Left; s <= Right; s += 2) {
       entry++;
+      dbg << "Init    entry = " << setw(2) << left << entry
+          << ", dim = " << dim << "\n";
       stencil_offsets[entry].resize(0,numDims);
-      //      dbg << "entry = %d, dim = %d\n",entry,dim);
+      dbg.indent();
       for (Counter d = 0; d < numDims; d++) {
-        //        dbg << "d = %d  size = %d\n",d,stencil_offsets[entry].size());
+        dbg << "d = " << d
+            << "  size = " << stencil_offsets[entry].getLen() << "\n";
         stencil_offsets[entry][d] = 0;
       }
-      //      dbg << "Setting entry = %d, dim = %d\n",entry,dim);
+      dbg.unindent();
+      dbg << "Setting entry = " << setw(2) << left << entry
+          << ", dim = " << dim << "\n";
       stencil_offsets[entry][dim] = s;
     }
   }
   
   /* Add stencil entries */
   dbg0 << "Stencil offsets:" << "\n";
+  dbg0.indent();
   for (entry = 0; entry < stencilSize; entry++) {
     HYPRE_SStructStencilSetEntry(stencil, entry,
                                  stencil_offsets[entry].getData(), 0);
-    dbg0 << "    entry = " << entry
-         << ",  stencil_offsets = " << stencil_offsets[entry] << "\n";
+    dbg0 << "entry = " << entry
+         << "  stencil_offsets = " << stencil_offsets[entry] << "\n";
   }
+  dbg0.unindent();
+  funcPrint("makeStencil()",FEnd);
   serializeProcsEnd();
 }
 
@@ -163,6 +185,7 @@ main(int argc, char *argv[]) {
   param->solverType    = Param::AMG; // Hypre solver
   param->numLevels     = 2;          // # AMR levels
   param->printSystem   = true;
+  param->verboseLevel  = 2;
 
   /* Grid hierarchy & stencil objects */
   Hierarchy             hier(param);
@@ -200,11 +223,13 @@ main(int argc, char *argv[]) {
   if (MYID == 0) {
     dbg0.setActive(true);
   }
-  dbg.setVerboseLevel(param->verboseLevel);
   dbg0.setVerboseLevel(param->verboseLevel);
-  dbg.setLevel(param->verboseLevel);
+  dbg0.setStickyLevel(true);
   dbg0.setLevel(param->verboseLevel);
-
+  dbg.setVerboseLevel(param->verboseLevel);
+  dbg.setStickyLevel(true);
+  dbg.setLevel(param->verboseLevel);
+  
   serializeProcsBegin();
   const int numLevels = param->numLevels;
   const int numDims   = param->numDims;
@@ -221,7 +246,8 @@ main(int argc, char *argv[]) {
 
   if (myid == 0) {
     /* Read and check arguments, parameters */
-    dbg << "Checking arguments and parameters ... ";
+    dbg0 << "dbg Verbose level = " << dbg.getVerboseLevel() << "\n";
+    dbg0 << "Checking arguments and parameters ... ";
     if ((param->solverType == Param::FAC) &&
         ((numLevels < 2) || (numDims != 3))) {
       cerr << "\n\nFAC solver needs a 3D problem and at least 2 levels."
@@ -229,10 +255,10 @@ main(int argc, char *argv[]) {
       clean();
       exit(1);
     }
-    dbg << "done" << "\n";
+    dbg0 << "done" << "\n";
 
-    dbg << "Checking # procs ... ";
-    dbg << "numProcs = " << numProcs << ", done" << "\n";
+    dbg0 << "Checking # procs ... ";
+    dbg0 << "numProcs = " << numProcs << ", done" << "\n";
     //    int correct = mypow(2,numDims);
     int correct = int(pow(2.0,numDims));
     if (numProcs != correct) {
@@ -242,7 +268,7 @@ main(int argc, char *argv[]) {
       exit(1);
     }
 
-    dbg << "\n";
+    dbg0 << "\n";
   }
 
   int time_index = hypre_InitializeTiming("SStruct Interface");
@@ -298,7 +324,6 @@ main(int argc, char *argv[]) {
   hypre_PrintTiming("SStruct Interface", MPI_COMM_WORLD);
   hypre_FinalizeTiming(time_index);
   hypre_ClearTiming();
-  dbg << "End timing" << "\n";
 
   /*-----------------------------------------------------------
    * Print out the system and initial guess
@@ -346,10 +371,12 @@ main(int argc, char *argv[]) {
   linePrint("-",50);
 
   /* Destroy grid objects */
+  dbg.setLevel(2);
   dbg << "Destroying grid objects" << "\n";
   HYPRE_SStructGridDestroy(grid);
    
   /* Destroy stencil objects */
+  dbg.setLevel(2);
   dbg << "Destroying stencil objects" << "\n";
   HYPRE_SStructStencilDestroy(stencil);
    
@@ -358,6 +385,7 @@ main(int argc, char *argv[]) {
    
   clean();
 
+  dbg.setLevel(0);
   dbg << argv[0] << ": Going down successfully" << "\n";
 
   return 0;
