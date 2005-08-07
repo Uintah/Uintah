@@ -9,11 +9,11 @@
 
 #include "util.h"
 #include "Vector.h"
+#include "DebugStream.h"
 #include <utilities.h>
-#include <iostream>
 using namespace std;
 
-string lineHeader(Const Counter indent)
+string lineHeader(const Counter indent)
   // Print header for each output line printed using DebugStream
 {
   ostringstream os;
