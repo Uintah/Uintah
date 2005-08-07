@@ -22,6 +22,26 @@ string lineHeader(void)
   return os.str();
 }
 
+void funcPrint(const string& name, const FuncPlace& p)
+{
+  dbg.setLevel(10);
+  string funcPlaceStr;
+  if (p == FBegin) {
+    funcPlaceStr = "begin";
+  } else {
+    funcPlaceStr = "end";
+  }
+  dbg << name << " " << funcPlaceStr << "\n";  
+}
+
+void linePrint(const string& s, const Counter len)
+{
+  for (Counter i = 0; i < len; i++) {
+    dbg0 << s;
+  }
+  dbg0 << "\n";
+}
+
 int
 clean(void)
   /*_____________________________________________________________________
