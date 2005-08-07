@@ -45,6 +45,7 @@ Hierarchy::make()
 
     dbg.setLevel(10);
     dbg << "Setting refinement ratio" << "\n";
+
     /* Set Refinement ratio w.r.t. parent level. Hard-coded to be
        constant (1:2) in all dimensions and all levels for now. */
     Vector<Counter> refRat(0,numDims);
@@ -84,11 +85,13 @@ Hierarchy::make()
        hard-coded. */
     dbg.setLevel(1);
     dbg << "numPatches = " << numPatches << "\n";
+    dbg.indent();
     for (Counter i = 0; i < numPatches; i++) {
       int owner = (i+offset) % numProcs; // Owner of patch i, hard-coded
       dbg.setLevel(1);
       dbg << "Creating Patch i = " << setw(2) << right << i
-          << " owned by proc " << setw(2) << right << owner;
+          << " owned by proc " << setw(2) << right << owner << "\n";
+      dbg.indent();
       Vector<int> lower(0,numDims);
       Vector<int> upper(0,numDims);
       for (Counter dim = 0; dim < numDims; dim++) {
@@ -123,12 +126,16 @@ Hierarchy::make()
       // add it to the level's appropriate list of patches.
       Patch* patch = new Patch(owner,level,Box(lower,upper));
       dbg.setLevel(10);
-      dbg << "box = " << patch->_box << "\n";
-      dbg << "box.get(Left ) = " << patch->_box.get(Left) << "\n";
-      dbg << "box.get(Right) = " << patch->_box.get(Right) << "\n";
+      dbg << "box = " << patch->_box << "\n"
+          << "box.get(Left ) = " << patch->_box.get(Left) << "\n"
+          << "box.get(Right) = " << patch->_box.get(Right) << "\n";
       patch->setDomainBoundaries(*lev);
       lev->_patchList[owner].push_back(patch);
+      dbg.unindent();
     } // end for i (patches)
+    dbg.unindent();
+    dbg.setLevel(1);
+    dbg << "\n";
   } // end for level
 
   serializeProcsEnd();
@@ -140,6 +147,7 @@ Hierarchy::make()
 void
 Hierarchy::getPatchesFromOtherProcs()
 {
+  serializeProcsBegin();
   funcPrint("Hierarchy::getPatchesFromOtherProcs()",FBegin);
   /* Types for arrays that are sent/received through MPI are int;
      convert to Counter later on, but don't risk having MPI_INT and
@@ -149,8 +157,11 @@ Hierarchy::getPatchesFromOtherProcs()
                                      So this array will look like : 5 0 0 0 0. */
   int numPatches[_param->numProcs];  // After assembling sendbuf from all procs
   Counter globalPatchID = 0;
+  serializeProcsEnd();
 
   for (Counter level = 0; level < _levels.size(); level++) {
+    if (level > 0) dbg0 << "\n";
+    serializeProcsBegin();
     Level* lev = _levels[level];
     //    const Vector<Counter>& resolution = lev->_resolution;
     // clear sendbuf
@@ -161,12 +172,14 @@ Hierarchy::getPatchesFromOtherProcs()
         sendbuf[index] = 0;
       }
     }
+    serializeProcsEnd();
 
     // Talk to all procs to find out how many patches they have on
     // this level.
     MPI_Allreduce(sendbuf, numPatches, _param->numProcs,
                   MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
+    serializeProcsBegin();
     int totalPatches = 0;
     int startPosition = 0;
     for(int index = 0; index < _param->numProcs; index++ ) {
@@ -177,7 +190,8 @@ Hierarchy::getPatchesFromOtherProcs()
         startPosition += numPatches[index];
     }
 
-    dbg0 << "Got totalPatches of " << totalPatches << "\n";
+    dbg0 << "Computing global patch IDs at level = " << level << "\n"
+         << "Got totalPatches of " << totalPatches << " from MPI_AllReduce()" << "\n";
 
     // Put our patch information into a big Vector, share it with
     // all other procs
@@ -189,6 +203,7 @@ Hierarchy::getPatchesFromOtherProcs()
       patchInfo[index] = -1;
     }
     int count = startPosition * recordSize;
+    dbg.indent();
     for(Counter index = 0; index < lev->_patchList[MYID].size(); index++ ) {
       Patch* patch = lev->_patchList[MYID][index];
       sendPatchInfo[count++] = patch->_procID;
@@ -196,11 +211,13 @@ Hierarchy::getPatchesFromOtherProcs()
         sendPatchInfo[count++] = patch->_box.get(Left)[d];
       for (Counter d = 0; d < _param->numDims; d++)
         sendPatchInfo[count++] = patch->_box.get(Right)[d];
-    }
+    } // end for index (patches)
+    serializeProcsEnd();
 
     MPI_Allreduce(sendPatchInfo, patchInfo, totalPatches*recordSize,
                   MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     
+    serializeProcsBegin();
     //    for(int index = 0; index < recordSize*totalPatches; index++ ) {
     //Proc0Print("%3d: %3d %3d\n",index,sendPatchInfo[index],patchInfo[index]);
     //}
@@ -217,6 +234,7 @@ Hierarchy::getPatchesFromOtherProcs()
         globalPatchID++;
         continue;
       }
+      dbg.setLevel(1);
       dbg << "Processing global ID for patch " << globalPatchID << "\n";
       Patch* patch = lev->_patchList[MYID][patchIndex];
       patch->_patchID = globalPatchID; // Save the global patch index in _patchID
@@ -248,20 +266,6 @@ Hierarchy::getPatchesFromOtherProcs()
           otherilower[d] = patchInfo[recordSize*other + d + 1];
           otheriupper[d] = patchInfo[recordSize*other + _param->numDims + d + 1];
         }
-        /*
-          Print("Comparing patch index=%d: from ",index);
-          printIndex(ilower);
-          PrintNP(" to ");
-          printIndex(iupper);
-          PrintNP("  owned by proc %d",patchInfo[recordSize*index]);
-          PrintNP("\n");
-          Print("To patch other=%d: from ",other);
-          printIndex(otherilower);
-          PrintNP(" to ");
-          printIndex(otheriupper);
-          PrintNP("  owned by proc %d",patchInfo[recordSize*other]);
-          PrintNP("\n");
-        */
         for (Counter d = 0; d < _param->numDims; d++) {
           /* Check if patch has a nbhring patch on its left */
           if (ilower[d] == otheriupper[d]+1) {
@@ -287,10 +291,13 @@ Hierarchy::getPatchesFromOtherProcs()
           }
         }
       } // end for other
-    } // end for index
+    } // end for index (patches)
+    dbg.unindent();
     delete [] sendPatchInfo;
     delete [] patchInfo;
+    serializeProcsEnd();
   } // end for level
+  dbg0 << "\n";
   funcPrint("Hierarchy::getPatchesFromOtherProcs()",FEnd);
 } // getPatchesFromOtherProcs()
 
@@ -320,7 +327,7 @@ Hierarchy::printPatchBoundaries()
   } // end for level
   dbg << "\n";
   serializeProcsEnd();
-} // end getPatchesFromOtherProcs()
+} // end printPatchBoundaries()
 
 std::vector<Patch*>
 Hierarchy::finePatchesOverMe(const Patch& patch)
@@ -345,6 +352,5 @@ Hierarchy::finePatchesOverMe(const Patch& patch)
     }
   }
   
-
-    return finePatchList;
+  return finePatchList;
 }

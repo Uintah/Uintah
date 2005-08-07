@@ -115,9 +115,9 @@ operator << (std::ostream& os,
              const Box& a)
   // Print the box to output stream os.
 {
-  os << "Box extents: from " 
+  os << "Box extents: " 
      << a.get(Left)
-     << " to "
+     << " .. "
      << a.get(Right);
   return os;
 }
