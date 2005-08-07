@@ -4,7 +4,14 @@
 #include "IntMatrix.h"
 
 /* Printouts */
+enum FuncPlace {
+  FBegin,
+  FEnd
+};
+
 string lineHeader(void);
+void funcPrint(const string& name, const FuncPlace& p);
+void linePrint(const string& s, const Counter len);
 
 /* I/O, MPI */
 int clean(void);

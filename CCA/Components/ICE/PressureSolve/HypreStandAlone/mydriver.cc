@@ -200,19 +200,24 @@ main(int argc, char *argv[]) {
   if (MYID == 0) {
     dbg0.setActive(true);
   }
+  dbg.setVerboseLevel(param->verboseLevel);
+  dbg0.setVerboseLevel(param->verboseLevel);
+  dbg.setLevel(param->verboseLevel);
+  dbg0.setLevel(param->verboseLevel);
 
   serializeProcsBegin();
   const int numLevels = param->numLevels;
   const int numDims   = param->numDims;
 
-  dbg0 << "================================================" << "\n";
+  linePrint("=",70);
   dbg0 << argv[0]
        << ": Hypre solver interface test program for diffusion PDEs" << "\n";
-  dbg0 << "================================================" << "\n";
+  linePrint("=",70);
   dbg0 << "" << "\n";
-  dbg0 << "-----------------------------------------------" << "\n";
+
+  linePrint("-",50);
   dbg0 << "Initialize some stuff" << "\n";
-  dbg0 << "-----------------------------------------------" << "\n";
+  linePrint("-",50);
 
   if (myid == 0) {
     /* Read and check arguments, parameters */
@@ -227,6 +232,7 @@ main(int argc, char *argv[]) {
     dbg << "done" << "\n";
 
     dbg << "Checking # procs ... ";
+    dbg << "numProcs = " << numProcs << ", done" << "\n";
     //    int correct = mypow(2,numDims);
     int correct = int(pow(2.0,numDims));
     if (numProcs != correct) {
@@ -235,7 +241,7 @@ main(int argc, char *argv[]) {
       clean();
       exit(1);
     }
-    dbg << "numProcs = " << numProcs << ", done" << "\n";
+
     dbg << "\n";
   }
 
@@ -255,9 +261,9 @@ main(int argc, char *argv[]) {
     0 and a quarter of level 1. Each processor gets the patches covering a
     quadrant of the physical domain.
     *----------------------------------------------------------------------*/
-  dbg0 << "----------------------------------------------------" << "\n";
+  linePrint("-",50);
   dbg0 << "Set up the grid (AMR levels, patches)" << "\n";
-  dbg0 << "----------------------------------------------------" << "\n";
+  linePrint("-",50);
 
   serializeProcsEnd();
   hier.make();
@@ -267,9 +273,9 @@ main(int argc, char *argv[]) {
   /*-----------------------------------------------------------
    * Set up the stencils
    *-----------------------------------------------------------*/
-  dbg0 << "----------------------------------------------------" << "\n";
+  linePrint("-",50);
   dbg0 << "Set up the stencils on all the patchs" << "\n";
-  dbg0 << "----------------------------------------------------" << "\n";
+  linePrint("-",50);
   makeStencil(param, hier, stencil);
 
   /*-----------------------------------------------------------
@@ -282,9 +288,9 @@ main(int argc, char *argv[]) {
     Galerkin coarsening to replace the equations in a coarse patch underlying
     a fine patch.
   */
-  dbg0 << "----------------------------------------------------" << "\n";
-  dbg0 << "Set up the SStruct matrix" << "\n";
-  dbg0 << "----------------------------------------------------" << "\n";
+  linePrint("-",50);
+  dbg0 << "Initialize the solver (Set up SStruct graph, matrix)" << "\n";
+  linePrint("-",50);
   solver->initialize(hier, grid, stencil);
 
   /* Print total time for setting up the grid, stencil, graph, solver */
@@ -297,9 +303,9 @@ main(int argc, char *argv[]) {
   /*-----------------------------------------------------------
    * Print out the system and initial guess
    *-----------------------------------------------------------*/
-  dbg0 << "----------------------------------------------------" << "\n";
+  linePrint("-",50);
   dbg0 << "Print out the system and initial guess" << "\n";
-  dbg0 << "----------------------------------------------------" << "\n"; 
+  linePrint("-",50);
   solver->printMatrix("output_A");
   solver->printRHS("output_b");
   solver->printSolution("output_x0");
@@ -307,25 +313,25 @@ main(int argc, char *argv[]) {
   /*-----------------------------------------------------------
    * Solver setup phase
    *-----------------------------------------------------------*/
-  dbg0 << "----------------------------------------------------" << "\n";
+  linePrint("-",50);
   dbg0 << "Solver setup phase" << "\n";
-  dbg0 << "----------------------------------------------------" << "\n";
+  linePrint("-",50);
   solver->setup();  // Depends only on A
 
   /*-----------------------------------------------------------
    * Solve the linear system A*x=b
    *-----------------------------------------------------------*/
-  dbg0 << "----------------------------------------------------" << "\n";
+  linePrint("-",50);
   dbg0 << "Solve the linear system A*x=b" << "\n";
-  dbg0 << "----------------------------------------------------" << "\n";
+  linePrint("-",50);
   solver->solve();  // Depends on A and b
 
   /*-----------------------------------------------------------
    * Print the solution and other info
    *-----------------------------------------------------------*/
-  dbg0 << "----------------------------------------------------" << "\n";
+  linePrint("-",50);
   dbg0 << "Print the solution vector" << "\n";
-  dbg0 << "----------------------------------------------------" << "\n";
+  linePrint("-",50);
   solver->printSolution("output_x1");
   dbg0 << "Iterations = " << solver->_results.numIterations << "\n";
   dbg0 << "Final Relative Residual Norm = "
@@ -335,9 +341,9 @@ main(int argc, char *argv[]) {
   /*-----------------------------------------------------------
    * Finalize things
    *-----------------------------------------------------------*/
-  dbg0 << "----------------------------------------------------" << "\n";
+  linePrint("-",50);
   dbg0 << "Finalize things" << "\n";
-  dbg0 << "----------------------------------------------------" << "\n";
+  linePrint("-",50);
 
   /* Destroy grid objects */
   dbg << "Destroying grid objects" << "\n";

@@ -149,7 +149,7 @@ Box::coarseNbhrExtents(const Vector<Counter>& refRat,
     refRat is the refinement ratio at level k.
     _____________________________________________________________________*/
 {
-  dbg << "Box::coarseNbhrExtents() begin" << "\n";
+  funcPrint("Box::coarseNbhrExtents",FBegin);
   const Counter numDims = getNumDims();
   Box coarseNbhr(numDims);
   for (Counter dim = 0; dim < numDims; dim++) {
@@ -163,7 +163,7 @@ Box::coarseNbhrExtents(const Vector<Counter>& refRat,
   coarseNbhr.get(Left)[d] += s;
   coarseNbhr.get(Right)[d] += s;
 
-  dbg << "Box::coarseNbhrExtents() end" << "\n";
+  funcPrint("Box::coarseNbhrExtents",FEnd);
   return coarseNbhr;
 }
 
