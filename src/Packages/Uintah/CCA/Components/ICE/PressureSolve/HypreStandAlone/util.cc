@@ -19,19 +19,19 @@ string lineHeader(const Counter indent)
   ostringstream os;
   os << "P"
      << setw(2) << left << MYID << ": ";
-  for (Counter i = 0; i < 2*indent; i++) os << "  ";
+  for (Counter i = 0; i < 2*indent; i++) os << " ";
   return os.str();
 }
 
 void funcPrint(const string& name, const FuncPlace& p)
 {
-  dbg.setLevel(10);
   string funcPlaceStr;
   if (p == FBegin) {
     funcPlaceStr = "begin";
   } else {
     funcPlaceStr = "end";
   }
+  dbg.setLevel(3);
   dbg << name << " " << funcPlaceStr << "\n";  
 }
 

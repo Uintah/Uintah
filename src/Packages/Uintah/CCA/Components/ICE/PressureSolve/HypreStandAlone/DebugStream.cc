@@ -13,13 +13,15 @@ int DebugBuf::overflow(int ch)
   // Writing one character: our implementation of the streambuf virtual
   // overflow(). Not sure that it properly works yet.
 {
-  if ((owner->getLevel() < owner->getVerboseLevel())
+  if ((owner->getLevel() > owner->getVerboseLevel())
       || (!owner->active())) {
     if (ch == '\n') {
       _lineBegin = true;
-      // Set back level to verboseLevel so that stream will
-      // print everything until the next explicit setLevel() call.
-      owner->setLevel(owner->getVerboseLevel());
+      // To set back level to verboseLevel so that stream will
+      // print everything until the next explicit setLevel() call:
+      if (!owner->getStickyLevel()) {
+        owner->setLevel(owner->getVerboseLevel());
+      }
       owner->flush();
     }
     return 0;
@@ -30,9 +32,11 @@ int DebugBuf::overflow(int ch)
   }
   if (ch == '\n') {
     _lineBegin = true;
-    // Set back level to verboseLevel so that stream will
-    // print everything until the next explicit setLevel() call.
-    owner->setLevel(owner->getVerboseLevel());
+    // To set back level to verboseLevel so that stream will
+    // print everything until the next explicit setLevel() call:
+    if (!owner->getStickyLevel()) {
+      owner->setLevel(owner->getVerboseLevel());
+    }
     owner->flush();
   }
   return(*(owner->outstream) << (char)ch ? 0 : EOF);
@@ -44,13 +48,17 @@ DebugBuf::xsputn (const char* s,
   // Writing num characters of the char array s: our implementation
   // of the virtual function streambuf::xsputn().
 {
-  if ((owner->getLevel() < owner->getVerboseLevel())
+  //  cerr << "verbose=" << owner->getVerboseLevel() 
+  //       << " level=" << owner->getLevel() << "\n";
+  if ((owner->getLevel() > owner->getVerboseLevel())
       || (!owner->active())) {
     if ((num >= 1) && (s[num-1] == '\n')) {
       _lineBegin = true;
-      // Set back level to verboseLevel so that stream will
-      // print everything until the next explicit setLevel() call.
-      owner->setLevel(owner->getVerboseLevel());
+      // To set back level to verboseLevel so that stream will
+      // print everything until the next explicit setLevel() call:
+      if (!owner->getStickyLevel()) {
+        owner->setLevel(owner->getVerboseLevel());
+      }
       owner->flush();
     }
     return num;
@@ -63,16 +71,18 @@ DebugBuf::xsputn (const char* s,
   *(owner->outstream) << s;
   if ((num >= 1) && (s[num-1] == '\n')) {
     _lineBegin = true;
-    // Set back level to verboseLevel so that stream will
-    // print everything until the next explicit setLevel() call.
-    owner->setLevel(owner->getVerboseLevel());
+    // To set back level to verboseLevel so that stream will
+    // print everything until the next explicit setLevel() call:
+    if (!owner->getStickyLevel()) {
+      owner->setLevel(owner->getVerboseLevel());
+    }
     owner->flush();
   }
   return num;
 }
 
 DebugStream::DebugStream(const string& iname, bool active) :
-  ostream(0), _verboseLevel(0), _level(0), _indent(0)
+  ostream(0), _verboseLevel(0), _level(0), _indent(0), _stickyLevel(false)
 {
   _dbgbuf = new DebugBuf();
   init(_dbgbuf);
@@ -112,6 +122,7 @@ void DebugStream::indent(void)
   } else {
     _indent++;
   }
+  //  cerr << "(indent=" << _indent << ") ";
 }
 
 void DebugStream::unindent(void)
@@ -121,4 +132,5 @@ void DebugStream::unindent(void)
   } else {
     _indent--;
   }
+  //  cerr << "(indent=" << _indent << ") ";
 }
