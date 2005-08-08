@@ -57,6 +57,7 @@ makeGrid(const Param* param,
 
   serializeProcsBegin();
   /* Add the patches that this proc owns at all levels to grid */
+  dbg0 << "Adding hier patches to HYPRE grid:" << "\n";
   for (Counter level = 0; level < numLevels; level++) {
     Level* lev = hier._levels[level];
     dbg.setLevel(1);
@@ -185,7 +186,7 @@ main(int argc, char *argv[]) {
   param->solverType    = Param::AMG; // Hypre solver
   param->numLevels     = 2;          // # AMR levels
   param->printSystem   = true;
-  param->verboseLevel  = 2;
+  param->verboseLevel  = 1;
 
   /* Grid hierarchy & stencil objects */
   Hierarchy             hier(param);

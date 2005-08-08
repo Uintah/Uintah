@@ -23,6 +23,12 @@ class Solver {
   /*========================== PUBLIC SECTION ==========================*/
  public:
   
+  /*------------- Types -------------*/
+  enum ConstructionStatus {
+    Graph,
+    Matrix
+  };
+
   struct Results {
     Counter    numIterations;   // Number of solver iterations performed
     double     finalResNorm;    // Final residual norm ||A*x-b||_2
@@ -90,10 +96,18 @@ class Solver {
 
   /*========================== PRIVATE SECTION ==========================*/
  private:
+  /* Graph construction */
+  void makeFCConnections(const Counter level,
+                         const Level* lev,
+                         const ConstructionStatus& status);
+  void makeCFConnections(const Counter level,
+                         const Level* lev,
+                         const ConstructionStatus& status);
   void makeGraph(const Hierarchy& hier,
                  const HYPRE_SStructGrid& grid,
                  const HYPRE_SStructStencil& stencil);
 
+  /* SStruct matrix construction */
   void makeUnderlyingIdentity(const Counter level,
 			      const HYPRE_SStructStencil& stencil,
 			      const Box& coarseUnderFine);
