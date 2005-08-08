@@ -1023,8 +1023,9 @@ ImageMesh<Basis>::node_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    td = scinew TypeDescription(ImageMesh<Basis>::type_name(-1) + 
-				string("::Node"),
+    const TypeDescription *me = 
+      SCIRun::get_type_description((ImageMesh<Basis> *)0);
+    td = scinew TypeDescription(me->get_name() + "::Node",
 				string(__FILE__),
 				"SCIRun");
   }
@@ -1038,7 +1039,10 @@ get_type_description(ImageMesh<Basis> *)
   static TypeDescription *td = 0;
   if (!td)
   {
-    td = scinew TypeDescription(ImageMesh<Basis>::type_name(-1),
+    const TypeDescription *sub = SCIRun::get_type_description((Basis*)0);
+    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+    (*subs)[0] = sub;
+    td = scinew TypeDescription(ImageMesh<Basis>::type_name(0), subs,
 				string(__FILE__),
 				"SCIRun");
   }
@@ -1052,8 +1056,9 @@ ImageMesh<Basis>::edge_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    td = scinew TypeDescription(ImageMesh<Basis>::type_name(-1) + 
-				string("::Edge"),
+    const TypeDescription *me = 
+      SCIRun::get_type_description((ImageMesh<Basis> *)0);
+    td = scinew TypeDescription(me->get_name() + "::Edge",
 				string(__FILE__),
 				"SCIRun");
   }
@@ -1067,8 +1072,9 @@ ImageMesh<Basis>::face_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    td = scinew TypeDescription(ImageMesh<Basis>::type_name(-1) +
-				string("::Face"),
+    const TypeDescription *me = 
+      SCIRun::get_type_description((ImageMesh<Basis> *)0);
+    td = scinew TypeDescription(me->get_name() + "::Face",
 				string(__FILE__),
 				"SCIRun");
   }
@@ -1082,8 +1088,9 @@ ImageMesh<Basis>::cell_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    td = scinew TypeDescription(ImageMesh<Basis>::type_name(-1) +
-				string("::Cell"),
+    const TypeDescription *me = 
+      SCIRun::get_type_description((ImageMesh<Basis> *)0);
+    td = scinew TypeDescription(me->get_name() + "::Cell",
 				string(__FILE__),
 				"SCIRun");
   }

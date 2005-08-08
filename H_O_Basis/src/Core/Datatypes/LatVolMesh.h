@@ -744,8 +744,12 @@ const TypeDescription* get_type_description(LatVolMesh<Basis> *)
   static TypeDescription *td = 0;
   if (!td)
   {
-    td = scinew TypeDescription(LatVolMesh<Basis>::type_name(-1), 
-				string(__FILE__), "SCIRun");
+    const TypeDescription *sub = SCIRun::get_type_description((Basis*)0);
+    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+    (*subs)[0] = sub;
+    td = scinew TypeDescription(LatVolMesh<Basis>::type_name(0), subs,
+				string(__FILE__),
+				"SCIRun");
   }
   return td;
 }
@@ -757,8 +761,11 @@ LatVolMesh<Basis>::node_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    td = scinew TypeDescription(LatVolMesh<Basis>::type_name(-1) + "::Node",
-				string(__FILE__), "SCIRun");
+    const TypeDescription *me = 
+      SCIRun::get_type_description((LatVolMesh<Basis> *)0);
+    td = scinew TypeDescription(me->get_name() + "::Node",
+				string(__FILE__),
+				"SCIRun");
   }
   return td;
 }
@@ -770,8 +777,11 @@ LatVolMesh<Basis>::edge_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    td = scinew TypeDescription(LatVolMesh<Basis>::type_name(-1) + "::Edge",
-				string(__FILE__)," SCIRun");
+    const TypeDescription *me = 
+      SCIRun::get_type_description((LatVolMesh<Basis> *)0);
+    td = scinew TypeDescription(me->get_name() + "::Edge",
+				string(__FILE__),
+				"SCIRun");
   }
   return td;
 }
@@ -783,8 +793,11 @@ LatVolMesh<Basis>::face_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    td = scinew TypeDescription(LatVolMesh<Basis>::type_name(-1) + "::Face",
-				string(__FILE__), "SCIRun");
+    const TypeDescription *me = 
+      SCIRun::get_type_description((LatVolMesh<Basis> *)0);
+    td = scinew TypeDescription(me->get_name() + "::Face",
+				string(__FILE__),
+				"SCIRun");
   }
   return td;
 }
@@ -796,8 +809,11 @@ LatVolMesh<Basis>::cell_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    td = scinew TypeDescription(LatVolMesh<Basis>::type_name(-1) + "::Cell",
-				string(__FILE__), "SCIRun");
+    const TypeDescription *me = 
+      SCIRun::get_type_description((LatVolMesh<Basis> *)0);
+    td = scinew TypeDescription(me->get_name() + "::Cell",
+				string(__FILE__),
+				"SCIRun");
   }
   return td;
 }
@@ -808,9 +824,11 @@ LatVolMesh<Basis>::node_index_type_description()
 {
   static TypeDescription* td = 0;
   if(!td){
-    td = scinew TypeDescription(LatVolMesh<Basis>::type_name(-1) + 
-				"::NodeIndex",
-				string(__FILE__), "SCIRun");
+    const TypeDescription *me = 
+      SCIRun::get_type_description((LatVolMesh<Basis> *)0);
+    td = scinew TypeDescription(me->get_name() + "::NodeIndex",
+				string(__FILE__),
+				"SCIRun");
   }
   return td;
 }
@@ -822,9 +840,11 @@ LatVolMesh<Basis>::cell_index_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    td = scinew TypeDescription(LatVolMesh<Basis>::type_name(-1) + 
-				"::CellIndex",
-				string(__FILE__), "SCIRun");
+    const TypeDescription *me = 
+      SCIRun::get_type_description((LatVolMesh<Basis> *)0);
+    td = scinew TypeDescription(me->get_name() + "::CellIndex",
+				string(__FILE__),
+				"SCIRun");
   }
   return td;
 }

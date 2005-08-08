@@ -102,6 +102,13 @@ template class GenericField<TVMesh, TFDushortBasis, vector<unsigned short> >;
 template class GenericField<TVMesh, TFDucharBasis,  vector<unsigned char> >;
 template class GenericField<TVMesh, TFDulongBasis,  vector<unsigned long> >;
 
+PersistentTypeID backwards_compat_TVFd("TetVolField<double>", "Field",
+				       GenericField<TVMesh, TFDdoubleBasis, 
+				       vector<double> >::maker);
+
+
+
+
 typedef TetQuadraticLgn<Tensor>                TQFDTensorBasis;
 typedef TetQuadraticLgn<Vector>                TQFDVectorBasis;
 typedef TetQuadraticLgn<double>                TQFDdoubleBasis;

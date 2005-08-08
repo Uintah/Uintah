@@ -54,7 +54,7 @@
 
 using namespace std;
 
-#define DEBUG 0
+#define DEBUG 1
 
 namespace SCIRun {
 
@@ -234,16 +234,16 @@ Piostream::begin_class(const string& classname, int current_version)
   }
   have_peekname_ = false;
 
-  if (dir == Read)
-  {
-    if (classname != gname)
-    {
-      err = true;
-      reporter_->error(string("Expecting class: ") + classname +
-                       ", got class: " + gname + ".");
-      return 0;
-    }
-  }
+//   if (dir == Read)
+//   {
+//     if (classname != gname)
+//     {
+//       err = true;
+//       reporter_->error(string("Expecting class: ") + classname +
+//                        ", got class: " + gname + ".");
+//       return 0;
+//     }
+//   }
 
   io(version);
 
