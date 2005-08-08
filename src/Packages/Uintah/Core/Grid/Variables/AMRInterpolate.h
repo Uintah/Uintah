@@ -12,6 +12,23 @@ namespace Uintah {
 
 
 /*___________________________________________________________________
+ Function~  AMRICE::piecewiseConstantInterpolation--
+ ____________________________________________________________________*/
+template<class T>
+  void piecewiseConstantInterpolation(constCCVariable<T>& q_CL,// course level
+                           const Level* fineLevel,
+                           const IntVector& fl,
+                           const IntVector& fh,
+                           CCVariable<T>& q_FineLevel)
+{ 
+  for(CellIterator iter(fl,fh); !iter.done(); iter++){
+    IntVector f_cell = *iter;
+    IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
+    q_FineLevel[f_cell] = q_CL[c_cell];                       
+  }
+}
+
+/*___________________________________________________________________
  Function~  AMRICE::linearInterpolation--
  
  X-Y PLANE 1
@@ -289,6 +306,9 @@ template<class T>
                           CCVariable<T>& q_FineLevel)
 {
   switch(orderOfInterpolation){
+  case 0:
+    piecewiseConstantInterpolation(q_CL, fineLevel,fl, fh, q_FineLevel);
+    break;
   case 1:
     linearInterpolation<T>(q_CL, coarseLevel, fineLevel,
                           refineRatio, fl,fh, q_FineLevel); 
@@ -299,7 +319,7 @@ template<class T>
     break;
   default:
     throw InternalError("ERROR:AMR: You're trying to use an interpolator"
-                        " that doesn't exist.  <orderOfInterpolation> must be 1 or 2",__FILE__,__LINE__);
+                        " that doesn't exist.  <orderOfInterpolation> must be 0,1,2",__FILE__,__LINE__);
   break;
   }
 }
@@ -415,6 +435,9 @@ template<class T>
     constCCVariable<T> q_CL_const(q_CoarseLevel);
     
     switch(orderOfInterpolation){
+    case 0:
+      piecewiseConstantInterpolation(q_CL, fineLevel,fl, fh, q_FineLevel);
+      break;
     case 1:
       linearInterpolation<T>(q_CL_const, coarseLevel, fineLevel,
                             refineRatio, fl,fh, q_FineLevel); 
