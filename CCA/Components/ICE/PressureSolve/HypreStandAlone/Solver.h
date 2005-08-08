@@ -100,7 +100,8 @@ class Solver {
   void makeFCConnections(const Counter level,
                          const Level* lev,
                          const ConstructionStatus& status);
-  void makeCFConnections(const Counter level,
+  void makeCFConnections(const Hierarchy& hier,
+                         const Counter level,
                          const Level* lev,
                          const ConstructionStatus& status);
   void makeGraph(const Hierarchy& hier,
