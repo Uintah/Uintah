@@ -330,7 +330,7 @@ Hierarchy::printPatchBoundaries()
 } // end printPatchBoundaries()
 
 std::vector<Patch*>
-Hierarchy::finePatchesOverMe(const Patch& patch)
+Hierarchy::finePatchesOverMe(const Patch& patch) const
 {
   std::vector<Patch*> finePatchList;
   const Counter& level = patch._levelID;
@@ -343,14 +343,40 @@ Hierarchy::finePatchesOverMe(const Patch& patch)
   }
 
   const Counter fineLevel = level+1;
+  dbg.setLevel(2);
+  dbg << "Searching for level " << fineLevel << " patches on top of patch "
+      << "ID=" << setw(2) << left << patch._patchID << " "
+      << "owner=" << setw(2) << left << patch._procID << " "    
+      << patch._box << "\n";
+  const Vector<Counter>& refRat = _levels[fineLevel]->_refRat;
+  Box coarseRefined(patch._box.get(Left) * refRat,
+                    (patch._box.get(Right) + 1) * refRat - 1);
+  dbg << "coarseRefined " << coarseRefined << "\n";
+  dbg.indent();
   for (int owner = 0; owner < numProcs; owner++) {
+    //    dbg.setLevel(3);
+    dbg << "Looking in patch list of owner = " << owner << "\n";
     vector<Patch*>& ownerList = _levels[fineLevel]->_patchList[owner];
     for (vector<Patch*>::iterator iter = ownerList.begin();
          iter != ownerList.end(); ++iter) {
-      Patch* patch = *iter;
-      
+      Patch* finePatch = *iter;
+      //      dbg.setLevel(3);
+      dbg << "Considering patch "
+          << "ID=" << setw(2) << left << finePatch->_patchID << " "
+          << "owner=" << setw(2) << left << finePatch->_procID << " "
+          << finePatch->_box << " ..." << "\n";
+      if (!coarseRefined.intersect(finePatch->_box).degenerate()) {
+        // Non-empty patch, finePatch intersection ==> add to list
+        dbg.setLevel(2);
+        dbg << "Found patch "
+            << "ID=" << setw(2) << left << finePatch->_patchID << " "
+            << "owner=" << setw(2) << left << finePatch->_procID << " "
+            << finePatch->_box << "\n";
+        finePatchList.push_back(*iter);
+      }
     }
   }
-  
+  dbg.unindent();
+
   return finePatchList;
 }
