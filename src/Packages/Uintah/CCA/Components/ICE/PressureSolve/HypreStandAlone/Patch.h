@@ -31,6 +31,8 @@ public:
   Patch(const int procID, 
         const Counter levelID,
         const Box& box);
+  Patch(const Patch& other);
+  Patch& operator = (const Patch& other);
 
   /* Boundary conditions get & set */
   BoundaryType getBoundaryType(const Counter d,
@@ -50,6 +52,7 @@ public:
   /* Static members & functions */
   static bool initialized /* = false */;
   static std::map<BoundaryType, std::string> boundaryTypeString;  
+  static std::map<BoundaryCondition, std::string> bcString;
   static void init(void);
 
   int         _procID;    // Owning processor's ID
@@ -63,5 +66,8 @@ public:
   
  private:
 };
+
+std::ostream&
+operator << (std::ostream& os, const Patch& patch);
 
 #endif // __PATCH_H__

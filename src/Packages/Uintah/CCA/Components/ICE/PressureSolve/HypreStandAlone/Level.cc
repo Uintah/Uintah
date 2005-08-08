@@ -1,6 +1,7 @@
 #include "Level.h"
 #include "util.h"
 #include "DebugStream.h"
+#include "Patch.h"
 
 Level::Level(const Counter numDims,
              const double& h) {
@@ -20,3 +21,17 @@ Level::Level(const Counter numDims,
   }
   funcPrint("Level::Level()",FEnd);
 }
+
+std::ostream&
+operator << (std::ostream& os, const Level& level)
+  // Write the Level to the output stream os.
+{
+  for (Counter owner = 0; owner < level._patchList.size(); owner++) {
+    os << "==== Owned by Proc #" << owner << " ====" << "\n";
+    for (Counter index = 0; index < level._patchList[owner].size(); index++) {
+      os << "#### Patch #" << index << " ####" << "\n";
+      os << *(level._patchList[owner][index]) << "\n";
+    } // end for index
+  } // end for owner
+  return os;
+} // end operator <<
