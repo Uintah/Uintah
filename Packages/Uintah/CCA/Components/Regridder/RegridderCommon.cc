@@ -249,16 +249,17 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
 void RegridderCommon::problemSetup_BulletProofing(const int k){
 
   if(k == 0){  
-    if (d_maxTimestepsBetweenRegrids > d_cellCreationDilation.x()+1 || 
-        d_maxTimestepsBetweenRegrids > d_cellCreationDilation.y()+1 || 
-        d_maxTimestepsBetweenRegrids > d_cellCreationDilation.z()+1) {
-      throw ProblemSetupException("Problem Setup: Regridder: max_timestep_interval can be at most 1 greater than any component of \ncell_creation_dilation", __FILE__, __LINE__);
+    for(int dir = 0; dir <3; dir++){
+      if (d_cellNum[k][dir] > 1 ) {  // ignore portions of this check for 1D and 2D problems
+        if (d_maxTimestepsBetweenRegrids > (d_cellCreationDilation[dir] + 1)) {
+          throw ProblemSetupException("Problem Setup: Regridder: max_timestep_interval can be at most 1 greater than any component of \ncell_creation_dilation", __FILE__, __LINE__);
+        }
+      }
     }
   }
 
   // For 2D problems the lattice refinement ratio 
   // and the cell refinement ratio must be 1 in that plane
-#if 0
   for(int dir = 0; dir <3; dir++){
     if(d_cellNum[k][dir] == 1 && (d_latticeRefinementRatio[k][dir] != 1 || d_cellRefinementRatio[k][dir] != 1) ){
     ostringstream msg;
@@ -286,7 +287,6 @@ void RegridderCommon::problemSetup_BulletProofing(const int k){
     
     }
   }
-#endif
   
   if ( Mod( d_patchSize[k], d_latticeRefinementRatio[k] ) != IntVector(0,0,0) ) {
     ostringstream msg;
