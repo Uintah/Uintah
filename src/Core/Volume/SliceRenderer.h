@@ -100,6 +100,10 @@ public:
   void set_draw_level( int i, bool b){ draw_level_[i] = b; }
 
 protected:
+
+  void draw_level_outline(vector<float>& vertex, vector<int>& poly,
+                          bool use_fog);
+  
   Point control_point_;
   bool draw_x_;
   bool draw_y_;

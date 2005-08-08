@@ -482,16 +482,7 @@ SliceRenderer::multi_level_draw()
 	  b->compute_polygon(r, t, vertex, texcoord, size);
 	}
 	draw_polygons(vertex, texcoord, size, true, use_fog, 0);
-	if( draw_level_outline_ ){
-	  if(use_stencil_){
-	    glDisable(GL_STENCIL_TEST);
-	  }
-	  glColor4f(0.8,0.8,0.8,1.0);
-	  draw_polygons_wireframe(vertex, texcoord, size, true, use_fog, 0);
-	  if(use_stencil_){
-	    glEnable(GL_STENCIL_TEST);
-	  }
-	}
+        draw_level_outline(vertex, size, use_fog);
       }
     }
     if(draw_phi1_) {
@@ -524,17 +515,7 @@ SliceRenderer::multi_level_draw()
 	  b->compute_polygon(r, t, vertex, texcoord, size);
 	}
 	draw_polygons(vertex, texcoord, size, true, use_fog, 0);
-	if( draw_level_outline_ ){
-	  if(use_stencil_){
-	    glDisable(GL_STENCIL_TEST);
-	  }
-	  glColor4f(0.8,0.8,0.8,1.0);
-	  draw_polygons_wireframe(vertex, texcoord, size, true, use_fog, 0);
-	  if(use_stencil_){
-	    glEnable(GL_STENCIL_TEST);
-	  }
-	}
-	    
+        draw_level_outline(vertex, size, use_fog);	    
       }
     }
     if(draw_z_) {
@@ -565,16 +546,7 @@ SliceRenderer::multi_level_draw()
 	  b->compute_polygon(view_ray, t, vertex, texcoord, size);
 	}
 	draw_polygons(vertex, texcoord, size, true, use_fog, 0);
-	if( draw_level_outline_ ){
-	  if(use_stencil_){
-	    glDisable(GL_STENCIL_TEST);
-	  }
-	  glColor4f(0.8,0.8,0.8,1.0);
-	  draw_polygons_wireframe(vertex, texcoord, size, true, use_fog, 0);
-	  if(use_stencil_){
-	    glEnable(GL_STENCIL_TEST);
-	  }
-	}
+        draw_level_outline(vertex, size, use_fog);
       }
 
     } else {
@@ -615,16 +587,7 @@ SliceRenderer::multi_level_draw()
 	      b->compute_polygon(r, t, vertex, texcoord, size);
 	    }
 	    draw_polygons(vertex, texcoord, size, true, use_fog, 0);
-	    if( draw_level_outline_ ){
-	      if(use_stencil_){
-		glDisable(GL_STENCIL_TEST);
-	      }
-	      glColor4f(0.8,0.8,0.8,1.0);
-	      draw_polygons_wireframe(vertex, texcoord, size, true, use_fog, 0);
-	      if(use_stencil_){
-		glEnable(GL_STENCIL_TEST);
-	      }
-	    }
+            draw_level_outline(vertex, size, use_fog);
 	  }
 	}
       }
@@ -665,16 +628,7 @@ SliceRenderer::multi_level_draw()
 	    }
 	  }
 	  draw_polygons(vertex, texcoord, size, true, use_fog, 0);
-	  if( draw_level_outline_ ){
-	    if(use_stencil_){
-	      glDisable(GL_STENCIL_TEST);
-	    }
-	    glColor4f(0.8,0.8,0.8,1.0);
-	    draw_polygons_wireframe(vertex, texcoord, size, true, use_fog, 0);
-	    if(use_stencil_){
-	      glEnable(GL_STENCIL_TEST);
-	    }
-	  }
+          draw_level_outline(vertex, size, use_fog);
 	}
       }
       if(draw_z_) {
@@ -718,17 +672,8 @@ SliceRenderer::multi_level_draw()
 	  r.planeIntersectParameter(-r.direction(), control_point_, t);
 	  b->compute_polygon(r, t, vertex, texcoord, size);
 	}
-	draw_polygons(vertex, texcoord, size, true, use_fog, 0);     
-	if( draw_level_outline_ ){
-	  if(use_stencil_){
-	    glDisable(GL_STENCIL_TEST);
-	  }
-	  glColor4f(0.8,0.8,0.8,1.0);
-	  draw_polygons_wireframe(vertex, texcoord, size, true, use_fog, 0);
-	  if(use_stencil_){
-	    glEnable(GL_STENCIL_TEST);
-	  }
-	}
+	draw_polygons(vertex, texcoord, size, true, use_fog, 0);
+        draw_level_outline(vertex, size, use_fog);
       }
     }
   }
@@ -930,5 +875,28 @@ SliceRenderer::draw_wireframe()
 }
 
 #endif // SCI_OPENGL
+
+void SliceRenderer::draw_level_outline(vector<float>& vertex,
+                                       vector<int>& poly,
+                                       bool use_fog)
+{
+  if( draw_level_outline_ ){
+    if(use_stencil_){
+      glDisable(GL_STENCIL_TEST);
+    }
+    // We don't need these so pass in dummy ones.
+    vector<float> texcoord;
+    // If we don't disable the texturing we won't get the color we
+    // specify here.
+    glDisable(GL_TEXTURE_3D);
+    glColor4f(0.8,0.8,0.8,1.0);
+    draw_polygons_wireframe(vertex, texcoord, poly, true, use_fog, 0);
+    // Renable the texturing.
+    glEnable(GL_TEXTURE_3D);
+    if(use_stencil_){
+      glEnable(GL_STENCIL_TEST);
+    }
+  }
+}
 
 } // namespace SCIRun
