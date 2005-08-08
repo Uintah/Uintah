@@ -300,8 +300,9 @@ public:
     static TypeDescription *td = 0;
     if (!td)
     {
-      td = scinew TypeDescription(CurveMesh<Basis>::type_name(-1) +
-				  string("::Cell"),
+      const TypeDescription *me = 
+	SCIRun::get_type_description((CurveMesh<Basis> *)0);
+      td = scinew TypeDescription(me->get_name() + "::Cell",
 				  string(__FILE__),
 				  "SCIRun");
     }
@@ -314,8 +315,9 @@ public:
     static TypeDescription *td = 0;
     if (!td)
     {
-      td = scinew TypeDescription(CurveMesh<Basis>::type_name(-1) +
-				  string("::Node"),
+      const TypeDescription *me = 
+	SCIRun::get_type_description((CurveMesh<Basis> *)0);
+      td = scinew TypeDescription(me->get_name() + "::Node",
 				  string(__FILE__),
 				  "SCIRun");
     }
@@ -328,8 +330,9 @@ public:
     static TypeDescription *td = 0;
     if (!td)
     {
-      td = scinew TypeDescription(CurveMesh<Basis>::type_name(-1) +
-				  string("::Edge"),
+      const TypeDescription *me = 
+	SCIRun::get_type_description((CurveMesh<Basis> *)0);
+      td = scinew TypeDescription(me->get_name() + "::Edge",
 				  string(__FILE__),
 				  "SCIRun");
     }
@@ -342,8 +345,9 @@ public:
     static TypeDescription *td = 0;
     if (!td)
     {
-      td = scinew TypeDescription(CurveMesh<Basis>::type_name(-1) +
-				  string("::Face"),
+      const TypeDescription *me = 
+	SCIRun::get_type_description((CurveMesh<Basis> *)0);
+      td = scinew TypeDescription(me->get_name() + "::Face",
 				  string(__FILE__),
 				  "SCIRun");
     }
@@ -375,8 +379,12 @@ const TypeDescription* get_type_description(CurveMesh<Basis> *)
   static TypeDescription *td = 0;
   if (!td)
   {
-    td = scinew TypeDescription(CurveMesh<Basis>::type_name(-1), 
-				string(__FILE__), "SCIRun");
+    const TypeDescription *sub = SCIRun::get_type_description((Basis*)0);
+    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+    (*subs)[0] = sub;
+    td = scinew TypeDescription(CurveMesh<Basis>::type_name(0), subs,
+				string(__FILE__),
+				"SCIRun");
   }
   return td;
 }

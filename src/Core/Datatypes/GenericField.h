@@ -127,6 +127,8 @@ public:
   virtual void freeze();
   virtual void thaw();
 
+  static Persistent *maker();
+
 private:
   friend class ElemData;
 
@@ -274,7 +276,6 @@ private:
     unsigned                                     index_;
   };
 
-  static Persistent *maker();
 
 protected:
 
@@ -343,7 +344,7 @@ GenericField<Mesh, Basis, FData>::resize_fdata()
 
 
 // PIO
-const int GENERICFIELD_VERSION = 2;
+const int GENERICFIELD_VERSION = 3;
 
 
 template <class Mesh, class Basis, class FData>
@@ -361,20 +362,25 @@ GenericField<Mesh, Basis, FData>::type_id(type_name(-1), "Field", maker);
 template <class Mesh, class Basis, class FData>
 void GenericField<Mesh, Basis, FData>::io(Piostream& stream)
 {
+  cerr << "start ::io GenericField" << std::endl;
   // we need to pass -1 to type_name() on SGI to fix a compile bug
   int version = stream.begin_class(type_name(-1), GENERICFIELD_VERSION);
+  cerr << "1 ::io GenericField" << std::endl;
   Field::io(stream);
+  cerr << "2 ::io GenericField" << std::endl;
   if (version < 2)
     mesh_->io(stream);
   else
     Pio(stream, mesh_);
   mesh_->freeze();
-  if (version >= 2) { 
+  cerr << "done mesh_ in ::io GenericField" << std::endl;
+  if (version >= 3) { 
     basis_.io(stream);
   }
   Pio(stream, fdata_);
   freeze();
   stream.end_class();
+  cerr << "end ::io GenericField" << std::endl;
 }
 
 

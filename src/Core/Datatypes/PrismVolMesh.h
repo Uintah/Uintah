@@ -2357,10 +2357,14 @@ const TypeDescription*
 get_type_description(PrismVolMesh<Basis> *)
 {
   static TypeDescription *td = 0;
-  if (!td)
-    td = scinew TypeDescription(PrismVolMesh<Basis>::type_name(-1),
+  if (!td) {
+    const TypeDescription *sub = SCIRun::get_type_description((Basis*)0);
+    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+    (*subs)[0] = sub;
+    td = scinew TypeDescription(PrismVolMesh<Basis>::type_name(0), subs,
 				string(__FILE__),
 				"SCIRun");
+  }
 
   return td;
 }
@@ -2370,11 +2374,13 @@ const TypeDescription*
 PrismVolMesh<Basis>::node_type_description()
 {
   static TypeDescription *td = 0;
-  if (!td)
-    td = scinew TypeDescription(PrismVolMesh<Basis>::type_name(-1) + "::Node",
+  if (!td) {
+    const TypeDescription *me = 
+      SCIRun::get_type_description((PrismVolMesh<Basis> *)0);
+    td = scinew TypeDescription(me->get_name() + "::Node",
 				string(__FILE__),
 				"SCIRun");
-  
+  }
   return td;
 }
 
@@ -2384,10 +2390,13 @@ PrismVolMesh<Basis>::edge_type_description()
 {
   static TypeDescription *td = 0;
   if (!td)
-    td = scinew TypeDescription(PrismVolMesh<Basis>::type_name(-1) + "::Edge",
+  {
+    const TypeDescription *me = 
+      SCIRun::get_type_description((PrismVolMesh<Basis> *)0);
+    td = scinew TypeDescription(me->get_name() + "::Edge",
 				string(__FILE__),
 				"SCIRun");
-
+  }
   return td;
 }
 
@@ -2397,10 +2406,13 @@ PrismVolMesh<Basis>::face_type_description()
 {
   static TypeDescription *td = 0;
   if (!td)
-    td = scinew TypeDescription(PrismVolMesh<Basis>::type_name(-1) + "::Face",
+  {
+    const TypeDescription *me = 
+      SCIRun::get_type_description((PrismVolMesh<Basis> *)0);
+    td = scinew TypeDescription(me->get_name() + "::Face",
 				string(__FILE__),
 				"SCIRun");
-
+  }
   return td;
 }
 
@@ -2410,10 +2422,13 @@ PrismVolMesh<Basis>::cell_type_description()
 {
   static TypeDescription *td = 0;
   if (!td)
-    td = scinew TypeDescription(PrismVolMesh<Basis>::type_name(-1) + "::Cell",
+  {
+    const TypeDescription *me = 
+      SCIRun::get_type_description((PrismVolMesh<Basis> *)0);
+    td = scinew TypeDescription(me->get_name() + "::Cell",
 				string(__FILE__),
 				"SCIRun");
-
+  }
   return td;
 }
 

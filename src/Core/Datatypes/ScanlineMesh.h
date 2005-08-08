@@ -548,7 +548,10 @@ get_type_description(ScanlineMesh<Basis> *)
   static TypeDescription *td = 0;
   if (!td)
   {
-    td = scinew TypeDescription(ScanlineMesh<Basis>::type_name(-1),
+    const TypeDescription *sub = SCIRun::get_type_description((Basis*)0);
+    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+    (*subs)[0] = sub;
+    td = scinew TypeDescription(ScanlineMesh<Basis>::type_name(0), subs,
 				string(__FILE__),
 				"SCIRun");
   }
@@ -562,7 +565,9 @@ ScanlineMesh<Basis>::node_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    td = scinew TypeDescription(type_name(-1) + "::Node",
+    const TypeDescription *me = 
+      SCIRun::get_type_description((ScanlineMesh<Basis> *)0);
+    td = scinew TypeDescription(me->get_name() + "::Node",
 				string(__FILE__),
 				"SCIRun");
   }
@@ -576,7 +581,9 @@ ScanlineMesh<Basis>::edge_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    td = scinew TypeDescription(type_name(-1) + "::Edge",
+    const TypeDescription *me = 
+      SCIRun::get_type_description((ScanlineMesh<Basis> *)0);
+    td = scinew TypeDescription(me->get_name() + "::Edge",
 				string(__FILE__),
 				"SCIRun");
   }
@@ -590,7 +597,9 @@ ScanlineMesh<Basis>::face_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    td = scinew TypeDescription(type_name(-1) + "::Face",
+    const TypeDescription *me = 
+      SCIRun::get_type_description((ScanlineMesh<Basis> *)0);
+    td = scinew TypeDescription(me->get_name() + "::Face",
 				string(__FILE__),
 				"SCIRun");
   }
@@ -604,7 +613,9 @@ ScanlineMesh<Basis>::cell_type_description()
   static TypeDescription *td = 0;
   if (!td)
   {
-    td = scinew TypeDescription(type_name(-1) + "::Cell",
+    const TypeDescription *me = 
+      SCIRun::get_type_description((ScanlineMesh<Basis> *)0);
+    td = scinew TypeDescription(me->get_name() + "::Cell",
 				string(__FILE__),
 				"SCIRun");
   }
