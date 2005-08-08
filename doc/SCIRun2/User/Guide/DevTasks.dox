@@ -5,7 +5,6 @@
 
 \subsection ayla Ayla
 
-\li Bug #2731: TBD
 \li Replace Qt GUI toolkit: TBD
 \li Migrate loading/saving network files to a Framework service: TBD
 <!-- MPICH done, others? -->
