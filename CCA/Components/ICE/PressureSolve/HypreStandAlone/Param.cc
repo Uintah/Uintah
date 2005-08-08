@@ -22,8 +22,8 @@ void Param::setDomain(const Counter baseResolution,
 {
   if (domain) delete domain;
   domain = new Level(numDims,1.0/baseResolution);
-  vector<int> ilower(numDims,0), iupper(numDims,baseResolution);
-  Patch* box = new Patch(-1,-1,ilower,iupper);
+  vector<int> lower(numDims,0), upper(numDims,baseResolution);
+  Patch* box = new Patch(-1,-1,Box(lower,upper));
   box->setAllBC(bc);
   domain->_patchList.push_back(box);
 }

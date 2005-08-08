@@ -30,4 +30,7 @@ public:
 
 };
 
+std::ostream&
+operator << (std::ostream& os, const Hierarchy& hier);
+
 #endif // __HIERARCHY_H__

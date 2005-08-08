@@ -128,7 +128,7 @@ Box::faceExtents(const Counter d,
   /*_____________________________________________________________________
     Function faceExtents:
     Compute face box extents of the numDims-dimensional box *this.
-    are ilower,iupper. This is the face in the d-dimension; s = Left
+    are lower,upper. This is the face in the d-dimension; s = Left
     means the left face, s = Right the right face (so d=1, s=Left is the
     x-left face). Face extents are returned as a box.
     _____________________________________________________________________*/
@@ -174,12 +174,12 @@ Box::iterator::operator ++ (void)
     Increment the d-dimensional subscript sub. This is useful when looping
     over a volume or an area. active is a d- boolean array. Indices with
     active=false are kept fixed, and those with active=true are updated.
-    ilower,iupper specify the extents of the hypercube we loop over.
+    lower,upper specify the extents of the hypercube we loop over.
     eof is returned as 1 if we're at the end of the cube (the value of sub
-    is set to ilower for active=1 indices; i.e. we do a periodic looping)
+    is set to lower for active=1 indices; i.e. we do a periodic looping)
     and 0 otherwise.
-    E.g., incrementing sub=(2,0,1) with active=(0,1,0), ilower=(0,0,0)
-    and iupper=(2,2,2) results in sub=(0,0,2) and eof=1. If sub were
+    E.g., incrementing sub=(2,0,1) with active=(0,1,0), lower=(0,0,0)
+    and upper=(2,2,2) results in sub=(0,0,2) and eof=1. If sub were
     (2,0,2) then sub=(0,0,0) and eof=1.
     _____________________________________________________________________*/
 {
@@ -229,6 +229,11 @@ Box::intersect(const Box& b) const {
 bool
 Box::degenerate() const {
   return (!(_lower <= _upper));
+}
+
+bool
+Box::degenerate(const Counter d) const {
+  return (!(_lower[d] <= _upper[d]));
 }
 
 #if 0
