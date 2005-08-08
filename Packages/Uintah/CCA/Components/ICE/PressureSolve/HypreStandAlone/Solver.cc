@@ -108,9 +108,9 @@ Solver::solve(void)
   //-----------------------------------------------------------
   // Solver solve phase
   //-----------------------------------------------------------
-  dbg0 << "----------------------------------------------------" << "\n";
+  linePrint("#",40);
   dbg0 << "Solver solve phase" << "\n";
-  dbg0 << "----------------------------------------------------" << "\n";
+  linePrint("#",40);
 
   this->solve(); // which setup will this be? The derived class's?
 
@@ -119,9 +119,9 @@ Solver::solve(void)
   //-----------------------------------------------------------
   // TODO: SolverSStruct is derived from Solver; implement the following
   // in SolverSStruct. For SolverStruct (PFMG), another gather vector required.
-  dbg0 << "----------------------------------------------------" << "\n";
+  linePrint("#",40);
   dbg0 << "Gather the solution vector" << "\n";
-  dbg0 << "----------------------------------------------------" << "\n";
+  linePrint("#",40);
 
   HYPRE_SStructVectorGather(_x);
 } //end solve()
@@ -133,9 +133,10 @@ Solver::makeFCConnections(const Counter level,
                           const ConstructionStatus& status)
   // Build the fine-to-coarse connections at all patches of level "level".
 {
-  if (level == 0) return; // Coarsest level cannot be the fine level at C/F boundaries
+  if (level == 0) return; // Coarsest level is never the fine level at C/F bdry
   linePrint("=",30);
-  dbg0 << "Building fine-to-coarse (FC) connections at level = " << level << "\n";
+  dbg0 << "Building fine-to-coarse (FC) connections at level = "
+       << level << "\n";
   linePrint("=",30);
   const int numDims   = _param->numDims;
   const Vector<Counter>& refRat = lev->_refRat;
@@ -151,14 +152,14 @@ Solver::makeFCConnections(const Counter level,
       for (Side s = Left; s <= Right; ++s) {
         if (patch->getBoundaryType(d,s) == Patch::CoarseFine) {
           dbg
-            << "\t--- Processing Fine-to-Coarse face d = " << d
+            << "--- Processing Fine-to-Coarse face d = " << d
             << " , s = " << s << " ---" << "\n";
           // Fine cells of this face
           Box faceFineBox = patch->_box.faceExtents(d,s);
           char c = d + 'x';
           string cc = "a";
           cc[0] = c;
-          dbg << "\tFace(d = " << cc
+          dbg << "Face(d = " << cc
               << ", s = " << s << ") "
               << faceFineBox << "\n";
           
@@ -184,7 +185,7 @@ Solver::makeFCConnections(const Counter level,
             offset[d] = 0;
             Vector<int> cellFaceUpper = cellFaceLower + offset;
               
-            Box fineCellFace( cellFaceLower, cellFaceUpper );
+            Box fineCellFace(cellFaceLower,cellFaceUpper);
 
             // Loop over the fine cells that neighbor the coarse cell.
             for( Box::iterator fine_iter = fineCellFace.begin();
@@ -209,7 +210,8 @@ Solver::makeFCConnections(const Counter level,
                                              level,(*fine_iter).getData(),
                                              0); 
               } else { // status == Matrix
-                // TODO: move matrix connection stuff here from makeLinearSystem()
+                // TODO: move matrix connection stuff here from
+                // makeLinearSystem()
               } // end if status
             } // end for fine_iter
           } // end for coarse_iter
@@ -230,7 +232,8 @@ Solver::makeCFConnections(const Hierarchy& hier,
   const int numLevels = hier._levels.size();
   if (level == numLevels-1) return; // Finest level cannot be the coarse level at C/F boundaries
   linePrint("=",30);
-  dbg0 << "Building coarse-to-fine (CF) connections at level = " << level << "\n";
+  dbg0 << "Building coarse-to-fine (CF) connections at level = "
+       << level << "\n";
   linePrint("=",30);
   //  const int numDims   = _param->numDims;
   //  const Vector<Counter>& refRat = lev->_refRat;
@@ -297,11 +300,11 @@ void
 Solver::makeGraph(const Hierarchy& hier,
                   const HYPRE_SStructGrid& grid,
                   const HYPRE_SStructStencil& stencil)
-//_____________________________________________________________________
-// Function Solver::makeGraph~
-// Initialize the graph from stencils (interior equations) and C/F
-// interface connections. Create Hypre graph object "_graph" on output.
-//_____________________________________________________________________
+  //_____________________________________________________________________
+  // Function Solver::makeGraph~
+  // Initialize the graph from stencils (interior equations) and C/F
+  // interface connections. Create Hypre graph object "_graph" on output.
+  //_____________________________________________________________________
 {
   serializeProcsBegin();
   dbg << "Solver::makeGraph() begin" << "\n";
@@ -361,8 +364,8 @@ void
 Solver::makeUnderlyingIdentity(const Counter level,
 			       const HYPRE_SStructStencil& stencil,
 			       const Box& coarseUnderFine)
-// Replace the matrix equations for the underlying coarse box
-// with the identity matrix.
+  // Replace the matrix equations for the underlying coarse box
+  // with the identity matrix.
 {
   dbg << "Putting identity on underlying coarse data, "
       << coarseUnderFine << "\n";
@@ -420,169 +423,159 @@ Solver::makeUnderlyingIdentity(const Counter level,
 } // end makeUnderlyingIdentity
 
 void
-Solver::makeLinearSystem(const Hierarchy& hier,
-			 const HYPRE_SStructGrid& grid,
-			 const HYPRE_SStructStencil& stencil)
-//_____________________________________________________________________
-// Function Solver::makeLinearSystem~
-// Initialize the linear system: set up the values on the links of the
-// graph of the LHS matrix A and value of the RHS vector b at all
-// patches of all levels. Delete coarse data underlying fine patches.
-//_____________________________________________________________________
+Solver::makeInteriorEquations(const Counter level,
+                              const Hierarchy& hier,
+                              const HYPRE_SStructGrid& grid,
+                              const HYPRE_SStructStencil& stencil)
+  //_____________________________________________________________________
+  // Function Solver::makeInteriorEquations~
+  // Initialize the linear system equations (LHS matrix A, RHS vector b)
+  // at the interior of all patches at this level.
+  //_____________________________________________________________________
 {
-  dbg0 << "Solver::makeLinearSystem() begin" << "\n";
-  serializeProcsBegin();
-  const int numDims   = _param->numDims;
-  const int numLevels = hier._levels.size();
-  //
-  // Add equations at all interior cells of every patch owned by this proc
-  // to A. Eliminate boundary conditions at domain boundaries.
-
-  dbg0 << "Adding interior equations to A" << "\n";
-
+  funcPrint("Solver::makeLinearSystem()",FBegin);
+  const Counter& numDims   = _param->numDims;
   Counter stencilSize = hypre_SStructStencilSize(stencil);
   int* entries = new int[stencilSize];
+  for (Counter entry = 0; entry < stencilSize; entry++) {
+    entries[entry] = entry;
+  }
+  const Level* lev = hier._levels[level];
+  const Vector<double>& h = lev->_meshSize;
+  //const Vector<Counter>& resolution = lev->_resolution;
+  Vector<double> offset = 0.5 * h;
+  double cellVolume = h.prod();
+  for (Counter i = 0; i < lev->_patchList[MYID].size(); i++) {
+    dbg0 << "At patch = " << i << "\n";
+    // Add equations of interior cells of this patch to A
+    Patch* patch = lev->_patchList[MYID][i];
+    double* values    = new double[stencilSize * patch->_numCells];
+    double* rhsValues = new double[patch->_numCells];
+    double* solutionValues = new double[patch->_numCells];
 
-  for (Counter entry = 0; entry < stencilSize; entry++) entries[entry] = entry;
+    dbg << "  Adding interior equations at Patch " << i
+        << ", Extents = ";
+    dbg << patch->_box << "\n";
+    dbg << "Looping over cells in this patch:" << "\n";
 
-  for (Counter level = 0; level < numLevels; level++) {
-    dbg0 << "At level = level" << "\n";
-    const Level* lev = hier._levels[level];
-    const Vector<double>& h = lev->_meshSize;
-    //const Vector<Counter>& resolution = lev->_resolution;
-    Vector<double> offset = 0.5 * h;
-    double cellVolume = h.prod();
-    for (Counter i = 0; i < lev->_patchList[MYID].size(); i++) {
-      dbg0 << "At patch = " << i << "\n";
-      // Add equations of interior cells of this patch to A
-      Patch* patch = lev->_patchList[MYID][i];
-      double* values    = new double[stencilSize * patch->_numCells];
-      double* rhsValues = new double[patch->_numCells];
-      double* solutionValues = new double[patch->_numCells];
+    Counter cell = 0;
+    for( Box::iterator iter = patch->_box.begin();
+         iter != patch->_box.end(); ++iter, cell++ ) {
 
-      dbg << "  Adding interior equations at Patch " << i
-	  << ", Extents = ";
-      dbg << patch->_box << "\n";
-      dbg << "Looping over cells in this patch:" << "\n";
+      dbg << "  sub = " << *iter << "\n";
 
-      Counter cell = 0;
-      for( Box::iterator iter = patch->_box.begin();
-	   iter != patch->_box.end(); ++iter, cell++ ) {
+      int offsetValues    = stencilSize * cell;
+      int offsetRhsValues = cell;
+      // Initialize the stencil values of this cell's equation to 0
+      for (Counter entry = 0; entry < stencilSize; entry++) {
+        values[offsetValues + entry] = 0.0;
+      }
 
-	dbg << "  sub = " << *iter << "\n";
+      // Compute RHS integral over the cell. Using the mid-point
+      // rule, and assuming that xCell is also the centroid of the
+      // cell.
 
-	int offsetValues    = stencilSize * cell;
-	int offsetRhsValues = cell;
-	// Initialize the stencil values of this cell's equation to 0
-	for (Counter entry = 0; entry < stencilSize; entry++) {
-	  values[offsetValues + entry] = 0.0;
-	}
+      Vector<double> xCell = offset + (h * (*iter));;
 
-	// Compute RHS integral over the cell. Using the mid-point
-	// rule, and assuming that xCell is also the centroid of the
-	// cell.
+      rhsValues[offsetRhsValues] = cellVolume * _param->rhs(xCell);
 
-	Vector<double> xCell = offset + (h * (*iter));;
-
-	rhsValues[offsetRhsValues] = cellVolume * _param->rhs(xCell);
-
-	// Assuming a constant initial guess
-	solutionValues[offsetRhsValues] = 1234.56;
+      // Assuming a constant initial guess
+      solutionValues[offsetRhsValues] = 1234.56;
         
-	// Loop over directions
-	Counter entry = 1;
-	for (Counter d = 0; d < numDims; d++) {
-	  double faceArea = cellVolume / h[d];
-	  for (Side s = Left; s <= Right; ++s) {
-	    dbg << "--- d = " << d
-		<< " , s = " << s
-		<< " , entry = " << entry
-		<< " ---" << "\n";
-	    // Compute coordinates of:
-	    // This cell's center: xCell
-	    // The neighboring's cell data point: xNbhr
-	    // The face crossing between xCell and xNbhr: xFace
-	    Vector<double> xNbhr  = xCell;
+      // Loop over directions
+      Counter entry = 1;
+      for (Counter d = 0; d < numDims; d++) {
+        double faceArea = cellVolume / h[d];
+        for (Side s = Left; s <= Right; ++s) {
+          dbg << "--- d = " << d
+              << " , s = " << s
+              << " , entry = " << entry
+              << " ---" << "\n";
+          // Compute coordinates of:
+          // This cell's center: xCell
+          // The neighboring's cell data point: xNbhr
+          // The face crossing between xCell and xNbhr: xFace
+          Vector<double> xNbhr  = xCell;
             
-	    xNbhr[d] += s*h[d];
+          xNbhr[d] += s*h[d];
 
-	    dbg << "1) xCell = " << xCell
-		<< ", xNbhr = " << xNbhr << "\n";
+          dbg << "1) xCell = " << xCell
+              << ", xNbhr = " << xNbhr << "\n";
 
-	    if( (patch->getBoundaryType(d,s) == Patch::Domain) && 
-		((*iter)[d] == patch->_box.get(s)[d]) ) {
-	      // Cell near a domain boundary
+          if( (patch->getBoundaryType(d,s) == Patch::Domain) && 
+              ((*iter)[d] == patch->_box.get(s)[d]) ) {
+            // Cell near a domain boundary
               
-	      if (patch->getBC(d,s) == Patch::Dirichlet) {
-		dbg << "Near Dirichlet boundary, update xNbhr"
-		    << "\n";
-		xNbhr[d] = xCell[d] + 0.5*s*h[d];
-	      } else {
-		// TODO: put something in this loop?
+            if (patch->getBC(d,s) == Patch::Dirichlet) {
+              dbg << "Near Dirichlet boundary, update xNbhr"
+                  << "\n";
+              xNbhr[d] = xCell[d] + 0.5*s*h[d];
+            } else {
+              // TODO: put something in this loop?
 
-		// Neumann B.C., xNbhr is outside the domain. We
-		// assume that a, du/dn can be continously extended
-		// outside the domain to make the B.C. a du/dn = rhsBC
-		// meaningful using a central difference and a
-		// harmonic avg of a over the line of that central
-		// difference. Otherwise, go back to the Dirichlet
-		// code at the expense of larger truncation errors
-		// near these boundaries, that should not matter, as
-		// in the Dirichlet case.
-	      }
+              // Neumann B.C., xNbhr is outside the domain. We
+              // assume that a, du/dn can be continously extended
+              // outside the domain to make the B.C. a du/dn = rhsBC
+              // meaningful using a central difference and a
+              // harmonic avg of a over the line of that central
+              // difference. Otherwise, go back to the Dirichlet
+              // code at the expense of larger truncation errors
+              // near these boundaries, that should not matter, as
+              // in the Dirichlet case.
+            }
                             
-	    } // end cell near domain boundary
+          } // end cell near domain boundary
 
-	    Vector<double> xFace = xCell;
-	    xFace[d] = 0.5*(xCell[d] + xNbhr[d]);
-	    dbg << "xCell = " << xCell
-		<< ", xFace = " << xFace
-		<< ", xNbhr = " << xNbhr << "\n";
+          Vector<double> xFace = xCell;
+          xFace[d] = 0.5*(xCell[d] + xNbhr[d]);
+          dbg << "xCell = " << xCell
+              << ", xFace = " << xFace
+              << ", xNbhr = " << xNbhr << "\n";
 
-	    //--- Compute flux ---
-	    // Harmonic average of diffusion for this face 
-	    double a    = _param->harmonicAvg(xCell,xNbhr,xFace); 
-	    double diff = fabs(xNbhr[d] - xCell[d]);  // for FD approx of flux
-	    double flux = a * faceArea / diff;        // total flux thru face
+          //--- Compute flux ---
+          // Harmonic average of diffusion for this face 
+          double a    = _param->harmonicAvg(xCell,xNbhr,xFace); 
+          double diff = fabs(xNbhr[d] - xCell[d]);  // for FD approx of flux
+          double flux = a * faceArea / diff;        // total flux thru face
 
-	    // Accumulate this flux's contribution to values
-	    // if we are not near a C/F boundary.
-	    // TODO: CHECK THIS!!!
-	    if (!((patch->getBoundaryType(d,s) == Patch::CoarseFine) &&
-		  ((*iter)[d] == patch->_box.get(s)[d]))) {
-	      values[offsetValues        ] += flux;
-	      values[offsetValues + entry] -= flux;
-	    }
+          // Accumulate this flux's contribution to values
+          // if we are not near a C/F boundary.
+          // TODO: CHECK THIS!!!
+          if (!((patch->getBoundaryType(d,s) == Patch::CoarseFine) &&
+                ((*iter)[d] == patch->_box.get(s)[d]))) {
+            values[offsetValues        ] += flux;
+            values[offsetValues + entry] -= flux;
+          }
 
-	    // If we are next to a domain boundary, eliminate boundary variable
-	    // from the linear system.
-	    if( (patch->getBoundaryType(d,s) == Patch::Domain) && 
-		((*iter)[d] == patch->_box.get(s)[d]) ) {
-	      // Cell near a domain boundary
-	      // Nbhr is at the boundary, eliminate it from values
+          // If we are next to a domain boundary, eliminate boundary variable
+          // from the linear system.
+          if( (patch->getBoundaryType(d,s) == Patch::Domain) && 
+              ((*iter)[d] == patch->_box.get(s)[d]) ) {
+            // Cell near a domain boundary
+            // Nbhr is at the boundary, eliminate it from values
 
-	      if (patch->getBC(d,s) == Patch::Dirichlet) {
-		dbg << "Near Dirichlet boundary, eliminate nbhr, "
-		    << "coef = " << values[offsetValues + entry]
-		    << ", rhsBC = " << _param->rhsBC(xNbhr) << "\n";
-		// Pass boundary value to RHS
-		rhsValues[offsetRhsValues] -= 
-		  values[offsetValues + entry] * _param->rhsBC(xNbhr);
+            if (patch->getBC(d,s) == Patch::Dirichlet) {
+              dbg << "Near Dirichlet boundary, eliminate nbhr, "
+                  << "coef = " << values[offsetValues + entry]
+                  << ", rhsBC = " << _param->rhsBC(xNbhr) << "\n";
+              // Pass boundary value to RHS
+              rhsValues[offsetRhsValues] -= 
+                values[offsetValues + entry] * _param->rhsBC(xNbhr);
 
-		values[offsetValues + entry] = 0.0; // Eliminate connection
-		// TODO:
-		// Add to rhsValues if this is a non-zero Dirichlet B.C. !!
-	      } else { // Neumann B.C.
-		dbg << "Near Neumann boundary, eliminate nbhr"
-		    << "\n";
-		// TODO:
-		// DO NOT ADD FLUX ABOVE, and add to rhsValues appropriately,
-		// if this is a non-zero Neumann B.C.
-	      }
-	    }
-	    entry++;
-	  } // end for s
-	} // end for d
+              values[offsetValues + entry] = 0.0; // Eliminate connection
+              // TODO:
+              // Add to rhsValues if this is a non-zero Dirichlet B.C. !!
+            } else { // Neumann B.C.
+              dbg << "Near Neumann boundary, eliminate nbhr"
+                  << "\n";
+              // TODO:
+              // DO NOT ADD FLUX ABOVE, and add to rhsValues appropriately,
+              // if this is a non-zero Neumann B.C.
+            }
+          }
+          entry++;
+        } // end for s
+      } // end for d
 
 	//======== BEGIN GOOD DEBUGGING CHECK =========
 	// This will set the diagonal entry of this cell's equation
@@ -593,48 +586,80 @@ Solver::makeLinearSystem(const Hierarchy& hier,
 	//        values[offsetValues] = cell;
 	//======== END GOOD DEBUGGING CHECK =========
 
-      } // end for cell
+    } // end for cell
       
-      dbg0 << "Calling HYPRE SetBoxValues()" << "\n";
-      printValues(patch->_box.volume(),stencilSize,
-		  values,rhsValues,solutionValues);
+    dbg0 << "Calling HYPRE SetBoxValues()" << "\n";
+    printValues(patch->_box.volume(),stencilSize,
+                values,rhsValues,solutionValues);
 
-      // Add this patch's interior equations to the LHS matrix A 
-      dbg0 << "Calling HYPRE_SStructMatrixSetBoxValues A" << "\n";
-      HYPRE_SStructMatrixSetBoxValues(_A, level, 
-				      patch->_box.get(Left).getData(),
-				      patch->_box.get(Right).getData(),
-				      0, stencilSize, entries, values);
+    // Add this patch's interior equations to the LHS matrix A 
+    dbg0 << "Calling HYPRE_SStructMatrixSetBoxValues A" << "\n";
+    HYPRE_SStructMatrixSetBoxValues(_A, level, 
+                                    patch->_box.get(Left).getData(),
+                                    patch->_box.get(Right).getData(),
+                                    0, stencilSize, entries, values);
 
-      // Add this patch's interior RHS to the RHS vector b 
-      dbg0 << "Calling HYPRE_SStructVectorSetBoxValues b" << "\n";
-      HYPRE_SStructVectorSetBoxValues(_b, level,
-				      patch->_box.get(Left).getData(),
-				      patch->_box.get(Right).getData(),
-				      0, rhsValues);
+    // Add this patch's interior RHS to the RHS vector b 
+    dbg0 << "Calling HYPRE_SStructVectorSetBoxValues b" << "\n";
+    HYPRE_SStructVectorSetBoxValues(_b, level,
+                                    patch->_box.get(Left).getData(),
+                                    patch->_box.get(Right).getData(),
+                                    0, rhsValues);
 
-      // Add this patch's interior initial guess to the solution vector x 
-      dbg0 << "Calling HYPRE_SStructVectorSetBoxValues x" << "\n";
-      HYPRE_SStructVectorSetBoxValues(_x, level,
-				      patch->_box.get(Left).getData(),
-				      patch->_box.get(Right).getData(),
-				      0, solutionValues);
+    // Add this patch's interior initial guess to the solution vector x 
+    dbg0 << "Calling HYPRE_SStructVectorSetBoxValues x" << "\n";
+    HYPRE_SStructVectorSetBoxValues(_x, level,
+                                    patch->_box.get(Left).getData(),
+                                    patch->_box.get(Right).getData(),
+                                    0, solutionValues);
 
-      delete[] values;
-      delete[] rhsValues;
-      delete[] solutionValues;
-    } // end for patch
+    delete[] values;
+    delete[] rhsValues;
+    delete[] solutionValues;
+  } // end for patch
+  delete entries;
+  funcPrint("Solver::makeInteriorEquations()",FEnd);
+} // end makeInteriorEquations()
+
+void
+Solver::makeLinearSystem(const Hierarchy& hier,
+			 const HYPRE_SStructGrid& grid,
+			 const HYPRE_SStructStencil& stencil)
+  //_____________________________________________________________________
+  // Function Solver::makeLinearSystem~
+  // Initialize the linear system: set up the values on the links of the
+  // graph of the LHS matrix A and value of the RHS vector b at all
+  // patches of all levels. Delete coarse data underlying fine patches.
+  //_____________________________________________________________________
+{
+  serializeProcsBegin();
+  funcPrint("Solver::makeLinearSystem()",FBegin);
+  const int numDims   = _param->numDims;
+  const int numLevels = hier._levels.size();
+  serializeProcsEnd();
+
+  //-----------------------------------------------------------------------
+  // Add equations at all interior cells of every patch owned by this proc
+  // to A. Eliminate boundary conditions at domain boundaries.
+  //-----------------------------------------------------------------------
+  for (Counter level = 0; level < numLevels; level++) {
+    serializeProcsBegin();
+    linePrint("=",30);
+    dbg0 << "Adding interior equations to A, level = "
+         << level << "\n";
+    linePrint("=",30);
+    makeInteriorEquations(level,hier,grid,stencil);
+    serializeProcsEnd();
   } // end for level
 
-  delete entries;
-  dbg0 << "Done adding interior equations" << "\n";
-
+  serializeProcsBegin();
   dbg0 << "Begin C/F interface equation construction" << "\n";
   // 
   // Set the values on the graph links of the unstructured part
   // connecting the coarse and fine level at every C/F boundary.
   //
 
+  dbg.setLevel(2);
   for (Counter level = 1; level < numLevels; level++) {
     dbg0 << "  Updating coarse-fine boundaries at level "
 	 << level << "\n";
@@ -656,20 +681,21 @@ Solver::makeLinearSystem(const Hierarchy& hier,
       dbg << "Patch i = " << setw(2) << left << i
 	  << "extends from " << patch->_box << "\n";
       
-      // Compute the extents of the box [coarseilower,coarseiupper] at
+      // Compute the extents of the box [coarselower,coarseupper] at
       // the coarse patch that underlies fine patch i
-      Vector<int> coarseilower(0,numDims);
-      Vector<int> coarseiupper(0,numDims);
+      Vector<int> coarselower(0,numDims);
+      Vector<int> coarseupper(0,numDims);
 
       Box coarseUnderFine( patch->_box.get(Left) / refRat, 
 			   patch->_box.get(Right) / refRat );
 
-      makeUnderlyingIdentity(level,stencil,coarseUnderFine);
+      makeUnderlyingIdentity(level-1,stencil,coarseUnderFine);
         
       dbg << "Finished deleting underlying coarse data" << "\n";
 
       dbg << "Looping over C/F boundaries of Patch " << i
 	  << ", Level " << patch->_levelID << "\n";
+      Counter stencilSize = hypre_SStructStencilSize(stencil);
       // Loop over C/F boundaries of this patch
       for (Counter d = 0; d < numDims; d++) {
 	double faceArea = cellVolume / h[d];
@@ -895,8 +921,8 @@ Solver::makeLinearSystem(const Hierarchy& hier,
   } // end for level
 
   dbg << "End C/F interface equation construction" << "\n";
+  funcPrint("Solver::makeLinearSystem()",FEnd);
   serializeProcsEnd();
-  dbg0 << "Solver::makeLinearSystem() end" << "\n";
 } // end makeLinearSystem()
 
 void
@@ -939,7 +965,7 @@ Solver::printValues(const Counter numCells,
                     const double* values /* = 0 */,
                     const double* rhsValues /* = 0 */,
                     const double* solutionValues /* = 0 */)
-// Print values, rhsValues vectors
+  // Print values, rhsValues vectors
 {
   dbg << "--- Printing values,rhsValues,solutionValues arrays ---" << "\n";
   for (Counter cell = 0; cell < numCells; cell++) {
@@ -950,18 +976,18 @@ Solver::printValues(const Counter numCells,
       for (Counter entry = 0; entry < stencilSize; entry++) {
         dbg << "values   ["
             << setw(5) << left << offsetValues + entry
-            << " = " << values[offsetValues + entry] << "\n";
+            << "] = " << values[offsetValues + entry] << "\n";
       }
     }
     if (rhsValues) {
       dbg << "rhsValues["
           << setw(5) << left << offsetRhsValues
-          << " = " << rhsValues[offsetRhsValues] << "\n";
+          << "] = " << rhsValues[offsetRhsValues] << "\n";
     }
     if (solutionValues) {
       dbg << "solutionValues["
           << setw(5) << left << offsetRhsValues
-          << " = " << solutionValues[offsetRhsValues] << "\n";
+          << "] = " << solutionValues[offsetRhsValues] << "\n";
     }
     dbg << "-------------------------------" << "\n";
   } // end for cell

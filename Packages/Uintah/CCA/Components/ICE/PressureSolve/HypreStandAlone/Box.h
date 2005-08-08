@@ -58,11 +58,11 @@ class Box {
     }
   const Point&  get(const Side& s) const;
   Point&        get(const Side& s);
-  void                set(const Side& s,
-                          const Point& value);
-  void                set(const Counter d,
-                          const Side& s,
-                          const int& value);
+  void          set(const Side& s,
+                    const Point& value);
+  void          set(const Counter d,
+                    const Side& s,
+                    const int& value);
   iterator      begin(void) const 
     /* Points to lower */
     { 
@@ -81,21 +81,22 @@ class Box {
     }
 
   Point         size(void) const;
-  Counter             volume(void) const;
-  bool                overlaps(const Box&, double epsilon=1.e-6) const;
-  bool                contains(const Point& p) const;
-  Box                 intersect(const Box& b) const;
-  bool                degenerate(void) const;
-  Box                 faceExtents(const Counter d,
-                                  const Side& s); 
-  Box                 coarseNbhrExtents(const Vector<Counter>& refRat,
-                                        const Counter d,
-                                        const Side& s) const;
-  friend std::ostream& operator << (std::ostream& os, const Box& a);
-
+  Counter       volume(void) const;
+  bool          overlaps(const Box&, double epsilon=1.e-6) const;
+  bool          contains(const Point& p) const;
+  Box           intersect(const Box& b) const;
+  bool          degenerate(void) const;
+  bool          degenerate(const Counter d) const;
+  Box           faceExtents(const Counter d,
+                            const Side& s); 
+  Box           coarseNbhrExtents(const Vector<Counter>& refRat,
+                                  const Counter d,
+                                  const Side& s) const;
  protected:
   Point   _lower;   // Lower-left corner of box
   Point   _upper;   // Upper-right corner of box
 };
+
+std::ostream& operator << (std::ostream& os, const Box& a);
 
 #endif // __BOX_H__
