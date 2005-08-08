@@ -186,7 +186,7 @@ main(int argc, char *argv[]) {
   param->solverType    = Param::AMG; // Hypre solver
   param->numLevels     = 2;          // # AMR levels
   param->printSystem   = true;
-  param->verboseLevel  = 1;
+  param->verboseLevel  = 2;
 
   /* Grid hierarchy & stencil objects */
   Hierarchy             hier(param);

@@ -23,7 +23,7 @@ public:
   std::vector<Level*>      _levels;
   const Param*             _param;
 
-  std::vector<Patch*> finePatchesOverMe(const Patch& patch);
+  std::vector<Patch*> finePatchesOverMe(const Patch& patch) const;
 
  private:
   void getPatchesFromOtherProcs();
