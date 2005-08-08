@@ -27,5 +27,7 @@ public:
 private:
 }; 
 
-#endif // __LEVEL_H__
+std::ostream&
+operator << (std::ostream& os, const Level& level);
 
+#endif // __LEVEL_H__

@@ -51,6 +51,7 @@ clean(void)
     of the program.
     _____________________________________________________________________*/
 {
+  dbg.setLevel(10);
   dbg << "Cleaning" << "\n";
 #if DRIVER_DEBUG
   hypre_FinalizeMemoryDebug();

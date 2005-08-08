@@ -7,14 +7,19 @@
 using namespace std;
 
 map<Patch::BoundaryType, string> Patch::boundaryTypeString; 
+map<Patch::BoundaryCondition, string> Patch::bcString; 
 bool Patch::initialized = false;
 
 void
 Patch::init(void)
 {
-  boundaryTypeString[Domain    ] = "Domain";
+  boundaryTypeString[Domain    ] = "Domain    ";
   boundaryTypeString[CoarseFine] = "CoarseFine";
-  boundaryTypeString[Neighbor  ] = "Neighbor";
+  boundaryTypeString[Neighbor  ] = "Neighbor  ";
+
+  bcString[NA       ] = "NA       ";
+  bcString[Dirichlet] = "Dirichlet";
+  bcString[Neumann  ] = "Neumann  ";
 }
 
 Patch::Patch(const int procID, 
@@ -41,6 +46,30 @@ Patch::Patch(const int procID,
       << "_box      = " << _box << "\n"
       << "box       = " << box << "\n";
   funcPrint("Patch::Patch()",FEnd);
+}
+
+Patch::Patch(const Patch& other) :
+  _procID(other._procID),
+  _levelID(other._levelID),
+  _box(other._box),
+  _numCells(other._numCells),
+  _patchID(other._patchID),
+  _boundaries(other._boundaries),
+  _bc(other._bc)
+{
+}
+
+Patch&
+Patch::operator = (const Patch& other)
+{
+  _procID = other._procID;
+  _levelID = other._levelID;
+  _box = other._box;
+  _numCells = other._numCells;
+  _patchID = other._patchID;
+  _boundaries = other._boundaries;
+  _bc = other._bc;
+  return *this;
 }
 
 Patch::BoundaryType
@@ -88,8 +117,11 @@ Patch::setBC(const Counter d,
 void
 Patch::setDomainBoundaries(const Level& lev)
 {
-  /* Figure out whether you are next to the domain boundary and set
-     boundary condition there. */
+  // Figure out whether you are next to the domain boundary and set
+  // boundary condition there.
+  // Hardcoded to one domain box of size [0,0] to [resolution].
+  // TODO: L-shaped domain with its own makeHierarchy() function of
+  // patches. Right now hard-coded to two levels and 2^d processors.
   const Counter numDims = _box.getNumDims();
   Box domainBox(Vector<int>(0,numDims,0,"",0),lev._resolution - 1);
   for (Side s = Left; s <= Right; ++s) {
@@ -105,4 +137,27 @@ Patch::setDomainBoundaries(const Level& lev)
       }
     } // end for d
   } // end for s
+}
+
+std::ostream&
+operator << (std::ostream& os, const Patch& patch)
+  // Write the Patch to the output stream os.
+{
+  os << "Patch ID = " << patch._patchID
+     << ", owned by proc " << patch._procID << "\n";
+  os << patch._box;
+  os << "\n";
+  const Counter numDims = patch._box.getNumDims();
+  for (Counter d = 0; d < numDims; d++) {
+    for (Side s = Left; s <= Right; ++s) {
+      os << "BOUNDARY(d = " << d
+         << " , s = " << s << "): "
+         << "boundary type = "
+         << Patch::boundaryTypeString[patch.getBoundaryType(d,s)].c_str()
+         << "  bc = "
+         << Patch::bcString[patch.getBC(d,s)].c_str()
+         << "\n";
+    }
+  }
+  return os;
 }

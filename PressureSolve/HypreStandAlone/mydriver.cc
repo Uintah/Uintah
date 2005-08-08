@@ -295,7 +295,9 @@ main(int argc, char *argv[]) {
   serializeProcsEnd();
   hier.make();
   makeGrid(param, hier, grid);             // Make Hypre grid from hier
-  hier.printPatchBoundaries();
+  //hier.printPatchBoundaries();
+  dbg0 << "Printing hierarchy:" << "\n";
+  dbg0 << hier;                            // Print the patch hierarchy
 
   /*-----------------------------------------------------------
    * Set up the stencils
@@ -367,6 +369,7 @@ main(int argc, char *argv[]) {
   /*-----------------------------------------------------------
    * Finalize things
    *-----------------------------------------------------------*/
+  serializeProcsBegin();
   linePrint("-",50);
   dbg0 << "Finalize things" << "\n";
   linePrint("-",50);
@@ -384,10 +387,9 @@ main(int argc, char *argv[]) {
   delete param;
   delete solver;
    
-  clean();
-
   dbg.setLevel(0);
   dbg << argv[0] << ": Going down successfully" << "\n";
-
+  serializeProcsEnd();
+  clean();
   return 0;
 } // end main()

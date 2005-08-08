@@ -145,158 +145,105 @@ Hierarchy::make()
 
 
 void
-Hierarchy::getPatchesFromOtherProcs()
+Hierarchy::getPatchesFromOtherProcs(void)
+  //_____________________________________________________________________
+  // Function Hierarchy::getPatchesFromOtherProcs()
+  // Assemble all processors' data on patches and generate global patch IDs
+  // across all levels and owning procs. We do not seem patch IDs right now.
+  // In addition, send boundary information for all patches. Again, as
+  // all procs know about all patches now, we don't need MPI_AllReduce().
+  //_____________________________________________________________________
 {
   serializeProcsBegin();
   funcPrint("Hierarchy::getPatchesFromOtherProcs()",FBegin);
-  /* Types for arrays that are sent/received through MPI are int;
-     convert to Counter later on, but don't risk having MPI_INT and
-     Counter mixed up in the same call. */
-  int sendbuf[_param->numProcs];  /* Suppose this proc is #0 has 5 patches,
-                                     don't know what everyone else has.
-                                     So this array will look like : 5 0 0 0 0. */
-  int numPatches[_param->numProcs];  // After assembling sendbuf from all procs
   Counter globalPatchID = 0;
-  serializeProcsEnd();
-
   for (Counter level = 0; level < _levels.size(); level++) {
     if (level > 0) dbg0 << "\n";
-    serializeProcsBegin();
-    Level* lev = _levels[level];
-    //    const Vector<Counter>& resolution = lev->_resolution;
-    // clear sendbuf
-    for( int index = 0; index < _param->numProcs; index++ ) {
-      if (index == MYID) {
-        sendbuf[index] = lev->_patchList[MYID].size();
-      } else {
-        sendbuf[index] = 0;
-      }
-    }
-    serializeProcsEnd();
-
-    // Talk to all procs to find out how many patches they have on
-    // this level.
-    MPI_Allreduce(sendbuf, numPatches, _param->numProcs,
-                  MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-
-    serializeProcsBegin();
-    int totalPatches = 0;
-    int startPosition = 0;
-    for(int index = 0; index < _param->numProcs; index++ ) {
-      //      Proc0Print("has %d patches on level %d\n",
-      // numPatches[index], level);
-      totalPatches += numPatches[index];
-      if( index < MYID )
-        startPosition += numPatches[index];
-    }
-
-    dbg0 << "Computing global patch IDs at level = " << level << "\n"
-         << "Got totalPatches of " << totalPatches << " from MPI_AllReduce()" << "\n";
-
-    // Put our patch information into a big Vector, share it with
-    // all other procs
-    int recordSize = 2*_param->numDims+1;
-    int * sendPatchInfo = new int[ recordSize * totalPatches ];
-    int * patchInfo     = new int[ recordSize * totalPatches ];
-    for( int index = 0; index < recordSize*totalPatches; index++ ) {
-      sendPatchInfo[index] = 0;
-      patchInfo[index] = -1;
-    }
-    int count = startPosition * recordSize;
+    dbg0 << "Computing global patch IDs & BC info at level = "
+         << level << "\n";
+    dbg.setLevel(2);
+    dbg << "Computing global patch IDs & BC info at level = "
+         << level << "\n";
     dbg.indent();
-    for(Counter index = 0; index < lev->_patchList[MYID].size(); index++ ) {
-      Patch* patch = lev->_patchList[MYID][index];
-      sendPatchInfo[count++] = patch->_procID;
-      for (Counter d = 0; d < _param->numDims; d++)
-        sendPatchInfo[count++] = patch->_box.get(Left)[d];
-      for (Counter d = 0; d < _param->numDims; d++)
-        sendPatchInfo[count++] = patch->_box.get(Right)[d];
-    } // end for index (patches)
-    serializeProcsEnd();
+    Level* lev = _levels[level];
+    for (Counter owner = 0; owner < lev->_patchList.size(); owner++) {
+      dbg.setLevel(2);
+      dbg << "==== Owner = " << owner << " ====" << "\n";
+      dbg.indent();
+      for (Counter index = 0; index < lev->_patchList[owner].size();index++) {
+        Patch* patch = lev->_patchList[owner][index];
+        const Box& box = patch->_box;
 
-    MPI_Allreduce(sendPatchInfo, patchInfo, totalPatches*recordSize,
-                  MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    
-    serializeProcsBegin();
-    //    for(int index = 0; index < recordSize*totalPatches; index++ ) {
-    //Proc0Print("%3d: %3d %3d\n",index,sendPatchInfo[index],patchInfo[index]);
-    //}
-    //    Print("Looping over patches and setting their boundary types\n");
-    Vector<int> ilower(0,_param->numDims);
-    Vector<int> iupper(0,_param->numDims);
-    Vector<int> otherilower(0,_param->numDims);
-    Vector<int> otheriupper(0,_param->numDims);
-    int patchIndex = 0;
-
-    for (Counter index = 0; index < totalPatches; index++ ) {
-      int owner = patchInfo[recordSize*index];
-      if (MYID != owner) {   // This patch is processed only on its owning proc
+        // Set global patch ID
+        patch->_patchID = globalPatchID;
+        dbg.setLevel(10);
+        dbg << "Updated patch:" << "\n";
+        dbg << *patch << "\n";
         globalPatchID++;
-        continue;
-      }
-      dbg.setLevel(1);
-      dbg << "Processing global ID for patch " << globalPatchID << "\n";
-      Patch* patch = lev->_patchList[MYID][patchIndex];
-      patch->_patchID = globalPatchID; // Save the global patch index in _patchID
-      patchIndex++;
-      globalPatchID++;
-      for (Counter d = 0; d < _param->numDims; d++) {
-        ilower[d] = patchInfo[recordSize*index + d + 1];
-        iupper[d] = patchInfo[recordSize*index + _param->numDims + d + 1];
-
-        /* Defaults: boundary is a C/F boundary; boundary condition is
-           not applicable. */
-        for (Side s = Left; s <= Right; ++s) {
-          if (patch->getBoundaryType(d,s) != Patch::Domain) {
-            patch->setBoundaryType(d,s,Patch::CoarseFine);
-            patch->setBC(d,s,Patch::NA);
-          }
-        }
-
-        /* Check if patch is near a domain boundary */
-        // Hardcoded to one domain box of size [0,0] to [resolution].
-        // TODO: L-shaped domain with its own makeHierarchy() function of
-        // patches. Right now hard-coded to two levels and 2^d processors.
-      }
-
-      for (Counter other = 0; other < totalPatches; other++) {
-        if (other == index)
-          continue;
+        
+        // Set defaults internal boundaries to C/F, bc = not applicable.
         for (Counter d = 0; d < _param->numDims; d++) {
-          otherilower[d] = patchInfo[recordSize*other + d + 1];
-          otheriupper[d] = patchInfo[recordSize*other + _param->numDims + d + 1];
-        }
-        for (Counter d = 0; d < _param->numDims; d++) {
-          /* Check if patch has a nbhring patch on its left */
-          if (ilower[d] == otheriupper[d]+1) {
-            for (Counter d2 = 0; d2 < _param->numDims; d2++) {
-              if (d2 == d) continue;
-              // TODO: put that in Box::intersect()
-              if (max(ilower[d2],otherilower[d2]) <=
-                  min(iupper[d2],otheriupper[d2])) {
-                patch->setBoundaryType(d,Left,Patch::Neighbor);
-              }
-            }
-          }
-
-          /* Check if patch has a nbhring patch on its right */
-          if (iupper[d] == otherilower[d]-1) {
-            for (Counter d2 = 0; d2 < _param->numDims; d2++) {
-              if (d2 == d) continue;
-              if (max(ilower[d2],otherilower[d2]) <=
-                  min(iupper[d2],otheriupper[d2])) {
-                patch->setBoundaryType(d,Right,Patch::Neighbor);
-              }
+          for (Side s = Left; s <= Right; ++s) {
+            if (patch->getBoundaryType(d,s) != Patch::Domain) {
+              patch->setBoundaryType(d,s,Patch::CoarseFine);
+              patch->setBC(d,s,Patch::NA);
             }
           }
         }
-      } // end for other
-    } // end for index (patches)
+
+        // Check for nbhring patches of this patch at the same level
+        dbg.indent();
+        for (Counter owner2 = 0; owner2 < lev->_patchList.size(); owner2++) {
+          for (Counter index2 = 0; index2 < lev->_patchList[owner2].size();
+               index2++) {
+            Patch* otherPatch = lev->_patchList[owner2][index2];
+            if (otherPatch == patch) {
+              continue;
+            }
+            dbg.setLevel(3);
+            dbg << "==== Comparing ====" << "\n";
+            dbg << "Patch = " << "\n";
+            dbg << *patch << "\n";
+            dbg << "otherPatch = " << "\n";
+            dbg << *otherPatch << "\n";
+            const Box& otherBox = otherPatch->_box;
+            const Box& intersectBox = box.intersect(otherBox);
+            for (Counter d = 0; d < _param->numDims; d++) {
+              dbg.setLevel(3);
+              dbg << "Looping, d = " << d << "\n";
+              for (Side s = Left; s <= Right; ++s) {
+                dbg.setLevel(3);
+                dbg << "Looping, s = " << s
+                    << "  box.get(s)[d] + int(s) = " << box.get(s)[d] + int(s)
+                    << "  otherBox.get(-s)[d]     = "
+                    << otherBox.get(Side(-s))[d]
+                    << "\n";
+                // Check if otherPatch is a nbhr on side "side" of patch
+                if (box.get(s)[d] + int(s) == otherBox.get(Side(-s))[d]) {
+                  dbg.setLevel(3);
+                  dbg << "otherBox nbhring box for (d = " << d
+                      << " , s = " << s << ")" << "\n";
+                  for (Counter d2 = 0; d2 < _param->numDims; d2++) {
+                    if ((d2 != d) && (!intersectBox.degenerate(d2))) {
+                      patch->setBoundaryType(d,s,Patch::Neighbor);
+                      dbg.setLevel(2);
+                      dbg << "Marking patch boundary (d = " << d
+                          << " , s = " << s << ") to Neighbor" << "\n";
+                      break; // Forgotten in the original code?
+                    } // end if (d2 != d) && non-empty intersection
+                  } // end for d2
+                } // end if otherBox nbhring box in the (d,s) face
+              } // end for s
+            } // end for d
+          } // end for index2 (other patches)
+        } // end for owner2
+        dbg.unindent();
+      } // end for index (patches)
+      dbg.unindent();
+    } // end for owner
     dbg.unindent();
-    delete [] sendPatchInfo;
-    delete [] patchInfo;
-    serializeProcsEnd();
   } // end for level
+  serializeProcsEnd();
   dbg0 << "\n";
   funcPrint("Hierarchy::getPatchesFromOtherProcs()",FEnd);
 } // getPatchesFromOtherProcs()
@@ -306,6 +253,7 @@ Hierarchy::printPatchBoundaries()
 {
   serializeProcsBegin();
   /* Print boundary types */
+  dbg.setLevel(2);
   for(Counter level = 0; level < _levels.size(); level++ ) {
     dbg << "---- Patch boundaries at level " << level << " ----" << "\n";
     Level* lev = _levels[level];
@@ -354,13 +302,13 @@ Hierarchy::finePatchesOverMe(const Patch& patch) const
   dbg << "coarseRefined " << coarseRefined << "\n";
   dbg.indent();
   for (int owner = 0; owner < numProcs; owner++) {
-    //    dbg.setLevel(3);
+    dbg.setLevel(3);
     dbg << "Looking in patch list of owner = " << owner << "\n";
     vector<Patch*>& ownerList = _levels[fineLevel]->_patchList[owner];
     for (vector<Patch*>::iterator iter = ownerList.begin();
          iter != ownerList.end(); ++iter) {
       Patch* finePatch = *iter;
-      //      dbg.setLevel(3);
+      dbg.setLevel(3);
       dbg << "Considering patch "
           << "ID=" << setw(2) << left << finePatch->_patchID << " "
           << "owner=" << setw(2) << left << finePatch->_procID << " "
@@ -380,3 +328,14 @@ Hierarchy::finePatchesOverMe(const Patch& patch) const
 
   return finePatchList;
 }
+
+std::ostream&
+operator << (std::ostream& os, const Hierarchy& hier)
+  // Write the Hierarchy to the output stream os.
+{
+  for (Counter level = 0; level < hier._levels.size(); level++) {
+    os << "---- Level " << level << " ----" << "\n";
+    os << *(hier._levels[level]) << "\n";
+  } // end for level
+  return os;
+} // end operator <<
