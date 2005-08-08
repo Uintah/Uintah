@@ -83,12 +83,12 @@ Hierarchy::make()
     /* Mesh box extents (lower left corner, upper right corner) */
     /* This is where the specific geometry of the hierarchy is
        hard-coded. */
-    dbg.setLevel(1);
+    dbg.setLevel(2);
     dbg << "numPatches = " << numPatches << "\n";
     dbg.indent();
     for (Counter i = 0; i < numPatches; i++) {
       int owner = (i+offset) % numProcs; // Owner of patch i, hard-coded
-      dbg.setLevel(1);
+      dbg.setLevel(2);
       dbg << "Creating Patch i = " << setw(2) << right << i
           << " owned by proc " << setw(2) << right << owner << "\n";
       dbg.indent();
@@ -134,7 +134,7 @@ Hierarchy::make()
       dbg.unindent();
     } // end for i (patches)
     dbg.unindent();
-    dbg.setLevel(1);
+    dbg.setLevel(2);
     dbg << "\n";
   } // end for level
 
