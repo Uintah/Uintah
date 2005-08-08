@@ -155,11 +155,13 @@ Solver::makeFCConnections(const Counter level,
             << " , s = " << s << " ---" << "\n";
           // Fine cells of this face
           Box faceFineBox = patch->_box.faceExtents(d,s);
-          dbg
-            << "\tFace(d = " << char(d+'x')
-            << ", s = " << s << ") "
-            << faceFineBox << "\n";
-
+          char c = d + 'x';
+          string cc = "a";
+          cc[0] = c;
+          dbg << "\tFace(d = " << cc
+              << ", s = " << s << ") "
+              << faceFineBox << "\n";
+          
           Box faceCoarseBox = faceFineBox.coarseNbhrExtents( refRat, d, s );
 
           // Loop over the coarse cells that border the fine face.
@@ -219,11 +221,14 @@ Solver::makeFCConnections(const Counter level,
 } // end makeFCConnections
 
 void
-Solver::makeCFConnections(const Counter level,
+Solver::makeCFConnections(const Hierarchy& hier,
+                          const Counter level,
                           const Level* lev,
                           const ConstructionStatus& status)
   // Build the coarse-to-fine connections at all patches of level "level".
 {
+  const int numLevels = hier._levels.size();
+  if (level == numLevels-1) return; // Finest level cannot be the coarse level at C/F boundaries
   linePrint("=",30);
   dbg0 << "Building coarse-to-fine (CF) connections at level = " << level << "\n";
   linePrint("=",30);
@@ -232,9 +237,13 @@ Solver::makeCFConnections(const Counter level,
   dbg.indent();
   // Loop over patches of this proc
   for (Counter i = 0; i < lev->_patchList[MYID].size(); i++) {
-#if 0
+    const Patch* patch = lev->_patchList[MYID][i];
+    // Find all next-finer level patches that cover this patch
+    std::vector<Patch*> finePatchList = hier.finePatchesOverMe(*patch);
+
     // Loop over coarse-to-fine internal boundaries of this patch
     // Pseudo-code
+#if 0
     for (all finePatch that patch intersects) {
       
       for (Counter d = 0; d < numDims; d++) {
@@ -337,7 +346,7 @@ Solver::makeGraph(const Hierarchy& hier,
     dbg.setLevel(1);
     const Level* lev = hier._levels[level];
     makeFCConnections(level,lev,Graph);
-    makeCFConnections(level,lev,Graph);
+    makeCFConnections(hier,level,lev,Graph);
   } // end for level
   serializeProcsEnd();
 
