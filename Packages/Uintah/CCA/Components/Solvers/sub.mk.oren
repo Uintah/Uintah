@@ -13,7 +13,10 @@ ifeq ($(HAVE_HYPRE),yes)
 SRCS += $(SRCDIR)/HypreSolver.cc \
 	$(SRCDIR)/HypreSolverAMR.cc \
 	$(SRCDIR)/HypreSolverParams.cc \
-	$(SRCDIR)/HypreDriver.cc
+	$(SRCDIR)/HypreDriver.cc \
+        $(SRCDIR)/HypreGenericSolver.cc \
+        $(SRCDIR)/HypreSolverAMG.cc \
+        $(SRCDIR)/HypreSolverFAC.cc
 endif
 
 PSELIBS := \
