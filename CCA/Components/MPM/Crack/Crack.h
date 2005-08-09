@@ -175,17 +175,17 @@ class Crack
     int    NJ;                     // rJ = NJ*min_dCell
     double rJ;                     // NJ = rJ/min_dCell
     double rdadx;                  // Ratio of crack incremental to cell-size
+    double computeJKInterval;      // Interval of calculating fracture parameters
+                                   // zero by default (every time step) 
+    double growCrackInterval;      // Interval of crack propagation
+                                   // zero by default (every time step)     
     bool useVolumeIntegral;        // Use volume integral in J, "no" by default
     bool saveCrackGeometry;        // Save crack geometry, "yes" by default
     bool smoothCrackFront;         // Smoothe crack-front, "no" by default
-    string d_calFractParameters;   // Calculate J or K, "no" by default
-    string d_doCrackPropagation;   // Do crack propagation, "no" by default
-    short calFractParameters;      // Calculate J or K at this step
-    short doCrackPropagation;      // Do crack propagation at this step
-    double calFractParasInterval;  // Interval of calculating fracture parameters
-                                   // zero by default (every time step) 
-    double crackPropInterval;      // Interval of crack propagation
-                                   // zero by default (every time step) 
+    bool d_calFractParameters;     // Calculate J or K, "no" by default
+    bool d_doCrackPropagation;     // Do crack propagation, "no" by default
+    bool calFractParameters;       // Calculate J or K at this step
+    bool doCrackPropagation;       // Do crack propagation at this step
 
     // Physical parameters of cracks
     vector<string> crackType;      // Crack contact type
