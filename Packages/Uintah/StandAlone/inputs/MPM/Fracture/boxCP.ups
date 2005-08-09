@@ -29,8 +29,8 @@
     <MPM>
 	<time_integrator>fracture</time_integrator>
 	<nodes8or27>8</nodes8or27>
-        <calculate_fracture_parameters>every_time_step</calculate_fracture_parameters>
-        <do_crack_propagation>every_time_step</do_crack_propagation>
+        <calculate_fracture_parameters>true</calculate_fracture_parameters>
+        <do_crack_propagation>true</do_crack_propagation>
         <dadx>0.5</dadx>
     </MPM>
 
