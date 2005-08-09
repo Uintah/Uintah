@@ -17,15 +17,16 @@ GENERAL INFORMATION
    Copyright (C) 2005 SCI Group
 
 KEYWORDS
-   HypreSolverAMR, HypreInterface, HypreSolverParams, HypreGenericSolver.
+  HypreSolverAMR, HypreDriver, HypreSolverParams, HypreGenericSolver.
 
-DESCRIPTION
-   Class HypreSolverAMR is the main solver component that interfaces to Hypre's
-   structured and semi-structured system interfaces. It requires Uintah data from the
-   ICE component (currently implemented for the elliptic pressure equation in implicit
-   ICE AMR mode. HypreSolverAMR schedules a task in sus called
-   scheduleSolve() that carries out the solve operation. It is based on
-   the one-level solver class HypreSolver2.
+DESCRIPTION 
+   Class HypreSolverAMR is the main solver component that
+   interfaces to Hypre's structured and semi-structured system
+   interfaces. It requires Uintah data from the ICE component
+   (currently implemented for the elliptic pressure equation in
+   implicit ICE AMR mode. HypreSolverAMR schedules a task in sus
+   called scheduleSolve() that carries out the solve operation. It is
+   based on the one-level solver class HypreSolver2.
   
 WARNING
    * This interface is written for Hypre 1.9.0b (released 2005). However,

@@ -17,15 +17,15 @@ GENERAL INFORMATION
    Copyright (C) 2005 SCI Group
 
 KEYWORDS
-   HypreDriver, HypreInterface, HypreSolverParams.
+   HypreDriver, HypreSolverParams.
 
 DESCRIPTION
    Class HypreGenericSolver is a base class for Hypre solvers. It uses the
-   generic HypreInterface and fetches only the data it can work with (either
+   generic HypreDriver and fetches only the data it can work with (either
    Struct, SStruct, or 
 
    preconditioners. It does not know about the internal Hypre interfaces
-   like Struct and SStruct. Instead, it uses the generic HypreInterface
+   like Struct and SStruct. Instead, it uses the generic HypreDriver
    and HypreGenericSolver::newSolver to determine the specific Hypre
    interface and solver, based on the parameters in HypreSolverParams.
    The solver is called through the solve() function. This is also the
@@ -40,7 +40,7 @@ WARNING
 #ifndef Packages_Uintah_CCA_Components_Solvers_HypreGenericSolver_h
 #define Packages_Uintah_CCA_Components_Solvers_HypreGenericSolver_h
 
-#include <Packages/Uintah/CCA/Components/Solvers/HypreInterface.h>
+#include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
 
 namespace Uintah {
 
@@ -68,15 +68,15 @@ namespace Uintah {
     };
     
     HypreGenericSolver(const SolverType& solverType,
-                       HypreInterface& hypreInterface)
+                       HypreDriver::HypreInterface& hypreInterface)
       : _solverType(solverType), _hypreInterface(hypreInterface)
       {
         _results.numIterations = 0;
-        _results.finalResNorm  = 1e+30; // Large number
+        _results.finalResNorm  = 1.23456e+30; // Large number
       }
   
     virtual ~HypreGenericSolver(void) {
-      // TODO: move to HypreInterface
+      // TODO: move to HypreDriver
       /* Destroy graph objects */
       //      HYPRE_SStructGraphDestroy(_graph);
 
@@ -97,28 +97,20 @@ namespace Uintah {
     /*========================== PROTECTED SECTION ==========================*/
   protected:
 
-    virtual void initializeData();
-    virtual void assemble(void);
-  
     /* Utilities */
     static SolverType solverFromTitle(const string& solverTitle);
     static PrecondType precondFromTitle(const string& precondTitle);
-    static HypreInterface::InterfaceType solverInterface(const SolverType& solverType);
-    void printValues(const Patch* patch,
-                     const int stencilSize,
-                     const int numCells,
-                     const double* values = 0,
-                     const double* rhsValues = 0,
-                     const double* solutionValues = 0);
+    static HypreDriver::InterfaceType solverInterface
+      (const SolverType& solverType);
 
     /*========================== PRIVATE SECTION ==========================*/
   private:
     /*---------- Data members ----------*/
     SolverType            _solverType;
-    HypreInterface&       _hypreInterface;
+    HypreDriver::HypreInterface& _hypreInterface;
     bool                  _requiresPar;   // Does solver require Par input?
     int                   _solverID;      // Hypre solver ID
-    Results               _results;       // Solver results are outputted to here
+    Results               _results;       // Solver results are stored to here
 
     void makeGraph();
   };
