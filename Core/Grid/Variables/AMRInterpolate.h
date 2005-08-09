@@ -440,7 +440,7 @@ template<class T>
     
     switch(orderOfInterpolation){
     case 0:
-      piecewiseConstantInterpolation(q_CL, fineLevel,fl, fh, q_FineLevel);
+      piecewiseConstantInterpolation(q_CL_const, fineLevel,fl, fh, q_FineLevel);
       break;
     case 1:
       linearInterpolation<T>(q_CL_const, coarseLevel, fineLevel,
