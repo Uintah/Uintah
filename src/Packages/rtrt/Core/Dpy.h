@@ -143,7 +143,12 @@ class Dpy : public DpyBase {
 
   // Inherited from DpyBase
   virtual bool should_close();
-    
+
+  // Displays the framerate in the corner of the window.
+  void display_frame_rate(double framerate);
+
+  // This saves an image or a frame of a movie.
+  void save_frame(Image* image);
 public:
   Dpy(Scene* scene, RTRT* rtrt_endinge, char* criteria1, char* criteria2,
       bool bench, int ncounters, int c0, int c1,

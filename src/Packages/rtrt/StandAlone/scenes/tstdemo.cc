@@ -1,3 +1,16 @@
+/*
+
+  This is an example to get it going:
+
+  -scene scenes/tstdemo -type nrrdlist demo/t-rad -gridconfig demo/fire-rad.cfg -varnames 7 x y z p.mass p.temperature "Material index" radius -minmax -0.00125 -0.10125 -0.00125 0.10125 0.30125 0.10125 -min 300 -max 2100 -rate 10 -radius_index 6 -repeatlast 15
+
+  demo/t-rad looks like this:
+
+/usr/sci/data/CSAFE/DEMO/jp8/temp_CC/temp_CC_0173.nrrd
+/usr/sci/data/CSAFE/DEMO/jp8/radius/littleendian/sd173.raw
+  
+*/
+
 #include <Packages/rtrt/Core/SelectableGroup.h>
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/BrickArray3.h>
@@ -925,6 +938,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   // is preprocessed.
   if (var_names) display->set_var_names(var_names);
   (new Thread(display, "GridSpheres display thread\n"))->detach();
+  //  display->setup_vars();
 
   // Do the preprocessing here
   int num_threads =  Min(nworkers, 16);
