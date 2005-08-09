@@ -24,6 +24,11 @@ class Solver {
  public:
   
   /*------------- Types -------------*/
+  enum CoarseFineViewpoint {
+    CoarseToFine,
+    FineToCoarse
+  };
+
   enum ConstructionStatus {
     Graph,
     Matrix
@@ -96,19 +101,22 @@ class Solver {
 
   /*========================== PRIVATE SECTION ==========================*/
  private:
-  /* Graph construction */
-  void makeFCConnections(const Counter level,
-                         const Level* lev,
-                         const ConstructionStatus& status);
-  void makeCFConnections(const Hierarchy& hier,
-                         const Counter level,
-                         const Level* lev,
-                         const ConstructionStatus& status);
+  // C/F graph & matrix construction
+  void makeConnections(const ConstructionStatus& status,
+                       const Hierarchy& hier,
+                       const HYPRE_SStructStencil& stencil,
+                       const Counter level,
+                       const Patch* patch,
+                       const Counter& d,
+                       const Side& s,
+                       const CoarseFineViewpoint& viewpoint);
+
+  // Graph construction
   void makeGraph(const Hierarchy& hier,
                  const HYPRE_SStructGrid& grid,
                  const HYPRE_SStructStencil& stencil);
 
-  /* SStruct matrix construction */
+  // SStruct matrix construction
   void makeInteriorEquations(const Counter level,
                              const Hierarchy& hier,
                              const HYPRE_SStructGrid& grid,
@@ -120,11 +128,17 @@ class Solver {
                         const HYPRE_SStructGrid& grid,
                         const HYPRE_SStructStencil& stencil);
 
+  // Utilities
   void printValues(const Counter numCells,
                    const Counter stencilSize,
                    const double* values = 0,
                    const double* rhsValues = 0,
                    const double* solutionValues = 0);
 };
+
+std::ostream&
+operator << (std::ostream& os, const Solver::CoarseFineViewpoint& v);
+std::ostream&
+operator << (std::ostream& os, const Solver::ConstructionStatus& s);
 
 #endif // __SOLVER_H__

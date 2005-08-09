@@ -77,7 +77,7 @@ Hierarchy::make()
     Level* lev = _levels[level];
     lev->_refRat = refRat;
     lev->_patchList.resize(numProcs);
-    int offset = 0; //level; // For tests where the fine patch is owned by
+    int offset = level; // For tests where the fine patch is owned by
     // one proc, and its parent patch is owned by another proc
 
     /* Mesh box extents (lower left corner, upper right corner) */
@@ -267,8 +267,7 @@ Hierarchy::printPatchBoundaries()
         for (Side s = Left; s <= Right; ++s) {
           dbg << "  boundary(d = " << d
               << " , s = " << s << ") = "
-              << Patch::boundaryTypeString
-            [patch->getBoundaryType(d,s)].c_str() << "\n";
+              << patch->getBoundaryType(d,s) << "\n";
         }
       }
     }
@@ -292,7 +291,8 @@ Hierarchy::finePatchesOverMe(const Patch& patch) const
 
   const Counter fineLevel = level+1;
   dbg.setLevel(2);
-  dbg << "Searching for level " << fineLevel << " patches on top of patch "
+  dbg << "======== finePatchesOverMe BEGIN ========" << "\n";
+  dbg << "Searching level " << fineLevel << " patches above patch "
       << "ID=" << setw(2) << left << patch._patchID << " "
       << "owner=" << setw(2) << left << patch._procID << " "    
       << patch._box << "\n";
@@ -325,7 +325,8 @@ Hierarchy::finePatchesOverMe(const Patch& patch) const
     }
   }
   dbg.unindent();
-
+  dbg.setLevel(2);
+  dbg << "======== finePatchesOverMe END ========" << "\n";
   return finePatchList;
 }
 
