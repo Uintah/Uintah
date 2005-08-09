@@ -222,16 +222,17 @@ ICELabel::ICELabel()
    AMR_SyncTaskgraphLabel = 
     VarLabel::create("AMR_SyncTaskgraph",CCVariable<int>::getTypeDescription()); 
   
-  rho_CC_gradLabel = 
-    VarLabel::create("rho_CC_grad",     CCVariable<Vector>::getTypeDescription());
-  temp_CC_gradLabel = 
-    VarLabel::create("temp_CC_grad",    CCVariable<Vector>::getTypeDescription());  
-  vel_CC_mag_gradLabel = 
-    VarLabel::create("vel_CC_mag_grad", CCVariable<Vector>::getTypeDescription());  
-  vol_frac_CC_gradLabel = 
-    VarLabel::create("vol_frac_CC_grad",CCVariable<Vector>::getTypeDescription());
-  press_CC_gradLabel = 
-    VarLabel::create("press_CC_grad",   CCVariable<Vector>::getTypeDescription());
+  // magnitude of the gradient of q_CC
+  mag_grad_rho_CCLabel = 
+    VarLabel::create("mag_grad_rho_CC",     CCVariable<double>::getTypeDescription());
+  mag_grad_temp_CCLabel = 
+    VarLabel::create("mag_grad_temp_CC",    CCVariable<double>::getTypeDescription());  
+  mag_div_vel_CCLabel = 
+    VarLabel::create("mag_div_vel_CC",      CCVariable<double>::getTypeDescription());  
+  mag_grad_vol_frac_CCLabel = 
+    VarLabel::create("mag_grad_vol_frac_CC",CCVariable<double>::getTypeDescription());
+  mag_grad_press_CCLabel = 
+    VarLabel::create("mag_grad_press_CC",   CCVariable<double>::getTypeDescription());
     
   mass_X_FC_fluxLabel = 
     VarLabel::create("mass_X_FC_flux",  SFCXVariable<double>::getTypeDescription());
@@ -371,11 +372,13 @@ ICELabel::~ICELabel()
     
     // AMR variables
     VarLabel::destroy(AMR_SyncTaskgraphLabel);
-    VarLabel::destroy(rho_CC_gradLabel);
-    VarLabel::destroy(temp_CC_gradLabel);
-    VarLabel::destroy(vel_CC_mag_gradLabel);
-    VarLabel::destroy(vol_frac_CC_gradLabel);
-    VarLabel::destroy(press_CC_gradLabel);
+    // magnitude of the gradient of ()
+    VarLabel::destroy(mag_grad_rho_CCLabel);
+    VarLabel::destroy(mag_grad_temp_CCLabel);
+    VarLabel::destroy(mag_div_vel_CCLabel);
+    VarLabel::destroy(mag_grad_vol_frac_CCLabel);
+    VarLabel::destroy(mag_grad_press_CCLabel);
+    
     VarLabel::destroy(mass_X_FC_fluxLabel);
     VarLabel::destroy(mass_Y_FC_fluxLabel);
     VarLabel::destroy(mass_Z_FC_fluxLabel);
