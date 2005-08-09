@@ -1359,9 +1359,13 @@ void Patch::computeExtents(VariableBasis basis,
 }
 
 void Patch::getOtherLevelPatches(int levelOffset,
-				 Patch::selectType& selected_patches) const
+				 Patch::selectType& selected_patches,
+                                 int numGhostCells /*=0*/) const
 {
   ASSERT(levelOffset == 1 || levelOffset == -1);
+
+  // include in the final low/high
+  IntVector gc(numGhostCells, numGhostCells, numGhostCells);
 
   const LevelP& otherLevel = d_level->getRelativeLevel(levelOffset);
   IntVector low = 
@@ -1393,9 +1397,10 @@ void Patch::getOtherLevelPatches(int levelOffset,
     low = low - IntVector(2,2,2);
     
   }
-  //cout << "  Patch:Golp: " << low << " " << high << endl;
+
+  //cout << "  Patch:Golp: " << low-gc << " " << high+gc << endl;
   Level::selectType patches;
-  otherLevel->selectPatches(low, high, patches); 
+  otherLevel->selectPatches(low-gc, high+gc, patches); 
   
   // based on the expanded range above to search for extra cells, we might
   // have grabbed more patches than we wanted, so refine them here
